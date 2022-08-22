@@ -605,12 +605,12 @@ TEST_F(LibInputDeviceOnMouse, hi_res_scroll_is_picked_up)
     process_events(mouse);
 }
 
-TEST_F(LibInputDeviceOnMouse, hi_res_scroll_does_not_combine_with_discrete)
+TEST_F(LibInputDeviceOnMouse, hi_res_scroll_does_not_combine_with_precise)
 {
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, 1.0f)));
 
     mouse.start(&mock_sink, &mock_builder);
-    env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_1, {}, 1.0f, 0.0f, 120.0f);
+    env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_1, {}, 1.0f, 0.0f, 250.0f);
     process_events(mouse);
 }
 
