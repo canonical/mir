@@ -59,10 +59,10 @@ template<typename Tag>
 std::ostream& operator<<(std::ostream& out, mev::ScrollAxisV1<Tag> const& axis)
 {
     return out
-        << "precise: " << axis.precise
+        << "(precise: " << axis.precise
         << ", discrete: " << axis.discrete
         << ", value120: " << axis.value120
-        << ", stop: " << axis.stop;
+        << ", stop: " << axis.stop << ")";
 }
 }
 }
@@ -666,18 +666,22 @@ TEST_F(LibInputDeviceOnMouse, hi_res_scroll_scroll_is_accumulated)
     env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_1, {}, 1.0f, 0.0f, 50.0f);
     process_events(mouse);
 
-    Mock::VerifyAndClearExpectations(fake_device);
+    Mock::VerifyAndClearExpectations(&mock_builder);
+    ASSERT_THAT(env.mock_libinput.events.size(), Eq(0));
+
     EXPECT_CALL(mock_builder, pointer_event(
         _, _, _, _, _, _, _,
         mev::ScrollAxisV{geom::DeltaYF{1}, geom::DeltaY{0}, geom::DeltaY{50}, false}));
-    env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_1, {}, 1.0f, 0.0f, 50.0f);
+    env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_2, {}, 1.0f, 0.0f, 50.0f);
     process_events(mouse);
 
-    Mock::VerifyAndClearExpectations(fake_device);
+    Mock::VerifyAndClearExpectations(&mock_builder);
+    ASSERT_THAT(env.mock_libinput.events.size(), Eq(0));
+
     EXPECT_CALL(mock_builder, pointer_event(
         _, _, _, _, _, _, _,
         mev::ScrollAxisV{geom::DeltaYF{1}, geom::DeltaY{1}, geom::DeltaY{50}, false}));
-    env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_1, {}, 1.0f, 0.0f, 50.0f);
+    env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_3, {}, 1.0f, 0.0f, 50.0f);
     process_events(mouse);
 }
 #endif
@@ -693,11 +697,13 @@ TEST_F(LibInputDeviceOnMouse, hi_res_scroll_scroll_is_accumulated_negative)
     env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_1, {}, -1.0f, 0.0f, -350.0f);
     process_events(mouse);
 
-    Mock::VerifyAndClearExpectations(fake_device);
+    Mock::VerifyAndClearExpectations(&mock_builder);
+    ASSERT_THAT(env.mock_libinput.events.size(), Eq(0));
+
     EXPECT_CALL(mock_builder, pointer_event(
         _, _, _, _, _, _, _,
         mev::ScrollAxisV{geom::DeltaYF{-1}, geom::DeltaY{-1}, geom::DeltaY{-10}, false}));
-    env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_1, {}, -1.0f, 0.0f, -10.0f);
+    env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_2, {}, -1.0f, 0.0f, -10.0f);
     process_events(mouse);
 }
 #endif
