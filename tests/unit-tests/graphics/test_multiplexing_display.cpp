@@ -274,7 +274,7 @@ TEST(MultiplexingDisplay, apply_if_confguration_preserves_display_buffers_fails_
 
     // Each Display should get a configure() call with only its own configuration
     EXPECT_CALL(*d1, apply_if_configuration_preserves_display_buffers(IsConfigurationOfCard(5)))
-        .WillOnce(Return(true));
+        .WillRepeatedly(Return(true));
     EXPECT_CALL(*d2, apply_if_configuration_preserves_display_buffers(IsConfigurationOfCard(42)))
         .WillOnce(Return(false));
 
@@ -286,4 +286,75 @@ TEST(MultiplexingDisplay, apply_if_confguration_preserves_display_buffers_fails_
     auto conf = display.configuration();
 
     EXPECT_THAT(display.apply_if_configuration_preserves_display_buffers(*conf), Eq(false));
+}
+
+TEST(MultiplexingDisplay, apply_if_configuration_preserves_display_buffers_fails_to_previous_configuration)
+{
+    using namespace testing;
+
+    DisplayConfigurationOutputGenerator gen1{5}, gen2{42};
+
+    auto d1 = std::make_unique<NiceMock<mtd::MockDisplay>>();
+    auto d2 = std::make_unique<NiceMock<mtd::MockDisplay>>();
+
+    auto d1_conf = std::make_unique<mtd::StubDisplayConfig>(
+        std::vector<mg::DisplayConfigurationOutput>{
+            gen1.generate_output(),
+            gen1.generate_output()
+        });
+
+    auto d2_conf = std::make_unique<mtd::StubDisplayConfig>(
+        std::vector<mg::DisplayConfigurationOutput>{
+            gen2.generate_output(),
+            gen2.generate_output(),
+            gen2.generate_output()
+        });
+
+    ON_CALL(*d1, configuration())
+        .WillByDefault(
+            Invoke(
+                [&d1_conf]()
+                {
+                    return d1_conf->clone();
+                }));
+    ON_CALL(*d2, configuration())
+        .WillByDefault(
+            Invoke(
+                [&d2_conf]()
+                {
+                    return d2_conf->clone();
+                }));
+
+    // Each Display should get a configure() call with only its own configuration
+    EXPECT_CALL(*d1, apply_if_configuration_preserves_display_buffers(IsConfigurationOfCard(5)))
+        .WillRepeatedly(
+            Invoke(
+                [&d1_conf](auto const& config)
+                {
+                    auto real_config = dynamic_cast<mtd::StubDisplayConfig const&>(config);
+                    d1_conf->outputs = real_config.outputs;
+                    return true;
+                }));
+    EXPECT_CALL(*d2, apply_if_configuration_preserves_display_buffers(IsConfigurationOfCard(42)))
+        .WillOnce(Return(false));
+
+    std::vector<std::unique_ptr<mg::Display>> displays;
+    displays.push_back(std::move(d1));
+    displays.push_back(std::move(d2));
+
+    mg::MultiplexingDisplay display{std::move(displays)};
+    auto preexisting_conf = display.configuration();
+    auto changed_conf = display.configuration();
+
+    changed_conf->for_each_output(
+        [](mg::UserDisplayConfigurationOutput& output)
+        {
+            output.orientation = mir_orientation_inverted;
+        });
+
+    ASSERT_THAT(display.apply_if_configuration_preserves_display_buffers(*changed_conf), Eq(false));
+    auto new_conf = display.configuration();
+
+    EXPECT_THAT(*new_conf, Eq(std::cref(*preexisting_conf)));    // We need std::cref() to stop GTest trying to treat
+                                                                 // preexisting_conf as a(n impossible) value rather than reference
 }

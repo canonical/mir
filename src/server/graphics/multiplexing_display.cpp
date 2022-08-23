@@ -19,6 +19,9 @@
 #include "mir/renderer/gl/context.h"
 #include <functional>
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
+
 namespace mg = mir::graphics;
 
 mg::MultiplexingDisplay::MultiplexingDisplay(std::vector<std::unique_ptr<Display>> displays)
@@ -93,10 +96,26 @@ auto mg::MultiplexingDisplay::apply_if_configuration_preserves_display_buffers(
     DisplayConfiguration const& conf) -> bool
 {
     auto const& real_conf = dynamic_cast<CompositeDisplayConfiguration const&>(conf);
+    std::vector<std::pair<mg::Display*, std::unique_ptr<mg::DisplayConfiguration>>> previous_configs;
 
     for (auto i = 0u; i < displays.size(); ++i)
     {
-        displays[i]->apply_if_configuration_preserves_display_buffers(*real_conf.components[i]);
+        previous_configs.push_back(std::make_pair(displays[i].get(), displays[i]->configuration()));
+        if (!displays[i]->apply_if_configuration_preserves_display_buffers(*real_conf.components[i]))
+        {
+            // We don't need to revert the last change; that didn't succeed.
+            previous_configs.pop_back();
+
+            for (auto i = previous_configs.crbegin() ; i != previous_configs.crend(); ++i)
+            {
+                if (!i->first->apply_if_configuration_preserves_display_buffers(*i->second))
+                {
+                    BOOST_THROW_EXCEPTION((
+                        std::runtime_error{"Failure attempting to undo partially-applied configuration"}));
+                }
+            }
+            return false;
+        }
     }
     return true;
 }
