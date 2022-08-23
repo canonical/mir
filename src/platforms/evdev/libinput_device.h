@@ -88,8 +88,10 @@ private:
     InputDeviceInfo info;
     mir::geometry::PointF pointer_pos;
     MirPointerButtons button_state;
-    double vertical_scroll_scale{1.0};
-    double horizontal_scroll_scale{1.0};
+    mir::geometry::DeltaYF vertical_scroll_scale{1.0};
+    mir::geometry::DeltaXF horizontal_scroll_scale{1.0};
+    mir::geometry::DeltaY vertical_scroll_value120_accum;
+    mir::geometry::DeltaX horizontal_scroll_value120_accum;
     mir::optional_value<TouchscreenSettings> touchscreen;
 
     struct ContactData

@@ -16,6 +16,9 @@
 
 #include "mir/test/doubles/mock_libinput.h"
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
+
 namespace mtd = mir::test::doubles;
 using namespace testing;
 
@@ -235,12 +238,22 @@ double libinput_event_pointer_get_scroll_value_v120(libinput_event_pointer* even
 {
     return global_libinput->libinput_event_pointer_get_scroll_value_v120(event, axis);
 }
+
+double libinput_event_pointer_get_scroll_value(libinput_event_pointer* event, libinput_pointer_axis axis)
+{
+    return global_libinput->libinput_event_pointer_get_scroll_value(event, axis);
+}
 #else
 double libinput_event_pointer_get_scroll_value_v120(libinput_event_pointer* event, libinput_pointer_axis axis)
 {
     return global_libinput->libinput_event_pointer_get_axis_value_discrete(event, axis) * 120;
 }
 #endif
+
+libinput_event* libinput_event_pointer_get_base_event(libinput_event_pointer* event)
+{
+    return global_libinput->libinput_event_pointer_get_base_event(event);
+}
 
 int libinput_event_pointer_has_axis(libinput_event_pointer* event, libinput_pointer_axis axis)
 {
@@ -808,9 +821,12 @@ libinput_event* mtd::MockLibInput::setup_button_event(libinput_device* dev, uint
 libinput_event* mtd::MockLibInput::setup_axis_event(
     libinput_device* dev, uint64_t event_time,
     std::optional<double> horizontal, std::optional<double> vertical,
-    double horizontal_discrete, double vertical_discrete,
-    double horizontal_value120, double vertical_value120)
+    double horizontal_discrete, double vertical_discrete)
 {
+#ifdef MIR_LIBINPUT_HAS_VALUE120
+    return setup_pointer_scroll_wheel_event(dev, event_time, horizontal, vertical,
+                                            120*horizontal_discrete, 120*vertical_discrete);
+#else
     auto event = get_next_fake_ptr<libinput_event*>();
     auto pointer_event = reinterpret_cast<libinput_event_pointer*>(event);
     push_back(event);
@@ -833,14 +849,76 @@ libinput_event* mtd::MockLibInput::setup_axis_event(
         .WillByDefault(Return(vertical_discrete));
     ON_CALL(*this, libinput_event_pointer_get_axis_value_discrete(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
         .WillByDefault(Return(horizontal_discrete));
-    ON_CALL(*this, libinput_event_pointer_get_scroll_value_v120(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
-        .WillByDefault(Return(vertical_value120));
-    ON_CALL(*this, libinput_event_pointer_get_scroll_value_v120(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
-        .WillByDefault(Return(horizontal_value120));
     ON_CALL(*this, libinput_event_pointer_get_axis_value(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
         .WillByDefault(Return(vertical.value_or(0.0)));
     ON_CALL(*this, libinput_event_pointer_get_axis_value(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
         .WillByDefault(Return(horizontal.value_or(0.0)));
+    return event;
+#endif
+}
+
+libinput_event* mtd::MockLibInput::setup_pointer_scroll_wheel_event(
+    libinput_device* dev, uint64_t event_time,
+    std::optional<double> horizontal, std::optional<double> vertical,
+    double horizontal_value120, double vertical_value120)
+{
+    auto event = get_next_fake_ptr<libinput_event*>();
+    auto pointer_event = reinterpret_cast<libinput_event_pointer*>(event);
+    push_back(event);
+
+#ifdef MIR_LIBINPUT_HAS_VALUE120
+    ON_CALL(*this, libinput_event_get_type(event))
+        .WillByDefault(Return(LIBINPUT_EVENT_POINTER_SCROLL_WHEEL));
+    ON_CALL(*this, libinput_event_pointer_get_scroll_value(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
+        .WillByDefault(Return(vertical.value_or(0.0)));
+    ON_CALL(*this, libinput_event_pointer_get_scroll_value(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
+        .WillByDefault(Return(horizontal.value_or(0.0)));
+    ON_CALL(*this, libinput_event_pointer_get_scroll_value_v120(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
+        .WillByDefault(Return(vertical_value120));
+    ON_CALL(*this, libinput_event_pointer_get_scroll_value_v120(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
+        .WillByDefault(Return(horizontal_value120));
+    ON_CALL(*this, libinput_event_pointer_get_axis_value_discrete(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
+        .WillByDefault(
+            InvokeWithoutArgs(
+                []() -> double
+                {
+                    BOOST_THROW_EXCEPTION((
+                        std::logic_error{"axis_value_discrete only returns a non-zero value on EVENT_POINTER_AXIS events"}));
+                }));
+    ON_CALL(*this, libinput_event_pointer_get_axis_value_discrete(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
+        .WillByDefault(
+            InvokeWithoutArgs(
+                []() -> double
+                {
+                    BOOST_THROW_EXCEPTION((
+                        std::logic_error{"axis_value_discrete only returns a non-zero value on EVENT_POINTER_AXIS events"}));
+                }));
+#else
+    ON_CALL(*this, libinput_event_get_type(event))
+        .WillByDefault(Return(LIBINPUT_EVENT_POINTER_AXIS));
+    ON_CALL(*this, libinput_event_pointer_get_axis_value_discrete(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
+        .WillByDefault(Return(vertical_value120/120));
+    ON_CALL(*this, libinput_event_pointer_get_axis_value_discrete(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
+        .WillByDefault(Return(horizontal_value120/120));
+    ON_CALL(*this, libinput_event_pointer_get_axis_value(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
+        .WillByDefault(Return(vertical.value_or(0.0)));
+    ON_CALL(*this, libinput_event_pointer_get_axis_value(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
+        .WillByDefault(Return(horizontal.value_or(0.0)));
+#endif
+    ON_CALL(*this, libinput_event_get_pointer_event(event))
+        .WillByDefault(Return(pointer_event));
+    ON_CALL(*this, libinput_event_get_device(event))
+        .WillByDefault(Return(dev));
+    ON_CALL(*this, libinput_event_pointer_get_time_usec(pointer_event))
+        .WillByDefault(Return(event_time));
+    ON_CALL(*this, libinput_event_pointer_get_axis_source(pointer_event))
+        .WillByDefault(Return(LIBINPUT_POINTER_AXIS_SOURCE_WHEEL));
+    ON_CALL(*this, libinput_event_pointer_has_axis(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
+        .WillByDefault(Return(horizontal.operator bool()));
+    ON_CALL(*this, libinput_event_pointer_has_axis(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
+        .WillByDefault(Return(vertical.operator bool()));
+    ON_CALL(*this, libinput_event_pointer_get_base_event(pointer_event))
+        .WillByDefault(Return(event));
     return event;
 }
 
@@ -853,9 +931,25 @@ libinput_event* mtd::MockLibInput::setup_finger_axis_event(
     auto event = get_next_fake_ptr<libinput_event*>();
     auto pointer_event = reinterpret_cast<libinput_event_pointer*>(event);
     push_back(event);
-
+#ifdef MIR_LIBINPUT_HAS_VALUE120
+    ON_CALL(*this, libinput_event_get_type(event))
+        .WillByDefault(Return(LIBINPUT_EVENT_POINTER_SCROLL_FINGER));
+    ON_CALL(*this, libinput_event_pointer_get_scroll_value(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
+        .WillByDefault(Return(vertical.value_or(0.0)));
+    ON_CALL(*this, libinput_event_pointer_get_scroll_value(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
+        .WillByDefault(Return(horizontal.value_or(0.0)));
+    ON_CALL(*this, libinput_event_pointer_get_scroll_value_v120(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
+        .WillByDefault(Return(0));
+    ON_CALL(*this, libinput_event_pointer_get_scroll_value_v120(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
+        .WillByDefault(Return(0));
+#else
     ON_CALL(*this, libinput_event_get_type(event))
         .WillByDefault(Return(LIBINPUT_EVENT_POINTER_AXIS));
+    ON_CALL(*this, libinput_event_pointer_get_axis_value(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
+        .WillByDefault(Return(vertical.value_or(0.0)));
+    ON_CALL(*this, libinput_event_pointer_get_axis_value(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
+        .WillByDefault(Return(horizontal.value_or(0.0)));
+#endif
     ON_CALL(*this, libinput_event_get_device(event))
         .WillByDefault(Return(dev));
     ON_CALL(*this, libinput_event_get_pointer_event(event))
@@ -868,10 +962,8 @@ libinput_event* mtd::MockLibInput::setup_finger_axis_event(
         .WillByDefault(Return(horizontal.operator bool()));
     ON_CALL(*this, libinput_event_pointer_has_axis(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
         .WillByDefault(Return(vertical.operator bool()));
-    ON_CALL(*this, libinput_event_pointer_get_axis_value(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
-        .WillByDefault(Return(vertical.value_or(0.0)));
-    ON_CALL(*this, libinput_event_pointer_get_axis_value(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
-        .WillByDefault(Return(horizontal.value_or(0.0)));
+    ON_CALL(*this, libinput_event_pointer_get_base_event(pointer_event))
+        .WillByDefault(Return(event));
     return event;
 }
 

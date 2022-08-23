@@ -50,8 +50,11 @@ public:
     libinput_event* setup_axis_event(
         libinput_device* dev, uint64_t event_time,
         std::optional<double> horizontal, std::optional<double> vertical,
-        double horizontal_discrete = 0.0, double vertical_discrete = 0.0,
-        double horizontal_value120 = 0.0, double vertical_value120 = 0.0);
+        double horizontal_discrete = 0.0, double vertical_discrete = 0.0);
+    libinput_event* setup_pointer_scroll_wheel_event(
+        libinput_device* dev, uint64_t event_time,
+        std::optional<double> horizontal, std::optional<double> vertical,
+        double horizontal_value120, double vertical_value120);
     libinput_event* setup_finger_axis_event(
         libinput_device* dev, uint64_t event_time,
         std::optional<double> horizontal, std::optional<double> vertical);
@@ -92,6 +95,8 @@ public:
     MOCK_METHOD1(libinput_event_pointer_get_axis_source, libinput_pointer_axis_source(libinput_event_pointer*));
     MOCK_METHOD2(libinput_event_pointer_get_axis_value_discrete, double(libinput_event_pointer*, libinput_pointer_axis));
     MOCK_METHOD2(libinput_event_pointer_get_scroll_value_v120, double(libinput_event_pointer*, libinput_pointer_axis));
+    MOCK_METHOD(libinput_event*, libinput_event_pointer_get_base_event, (libinput_event_pointer* event));
+    MOCK_METHOD(double, libinput_event_pointer_get_scroll_value, (libinput_event_pointer* event, libinput_pointer_axis axis));
     MOCK_METHOD2(libinput_event_pointer_has_axis,int(libinput_event_pointer *,libinput_pointer_axis));
 
     MOCK_METHOD1(libinput_event_touch_get_time, uint32_t(libinput_event_touch*));
