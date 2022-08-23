@@ -573,13 +573,8 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_scroll)
     InSequence seq;
     // expect two scroll events..
 
-#ifdef MIR_LIBINPUT_HAS_VALUE120
     mev::ScrollAxisV const scroll_axis_v_1{geom::DeltaYF{-20}, geom::DeltaY{2}, geom::DeltaY{240}, false};
     mev::ScrollAxisH const scroll_axis_h_2{geom::DeltaXF{5}, geom::DeltaX{1}, geom::DeltaX{120}, false};
-#else
-    mev::ScrollAxisV const scroll_axis_v_1{geom::DeltaYF{-20}, geom::DeltaY{2}, geom::DeltaY{240}, false};
-    mev::ScrollAxisH const scroll_axis_h_2{geom::DeltaXF{5}, geom::DeltaX{1}, geom::DeltaX{120}, false};
-#endif
 
     EXPECT_CALL(mock_builder, pointer_event(
         {time_stamp_1}, mir_pointer_action_motion, 0,
