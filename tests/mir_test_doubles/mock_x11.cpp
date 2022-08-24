@@ -221,7 +221,14 @@ XErrorHandler XSetErrorHandler(XErrorHandler handler)
 
 Status XInitThreads()
 {
-    return global_mock->XInitThreads();
+    if (global_mock)
+    {
+        return global_mock->XInitThreads();
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 int XSetWMHints(Display* display, Window window, XWMHints* wmhints)
