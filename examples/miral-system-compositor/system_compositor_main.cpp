@@ -33,7 +33,7 @@ int main(int argc, char const* argv[])
 
     std::atomic<bool> allow_quit{true};
 
-    CommandLineOption disable_quit{
+    ConfigurationOption disable_quit{
         [&](bool disable_quit) { allow_quit = !disable_quit; },
         "disable-quit",
         "Disable Ctrl-Alt-Shift-BkSp to quit"};
