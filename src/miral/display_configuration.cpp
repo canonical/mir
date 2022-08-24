@@ -109,9 +109,9 @@ void miral::DisplayConfiguration::operator()(mir::Server& server) const
         });
 }
 
-auto miral::DisplayConfiguration::layout_option() -> miral::CommandLineOption
+auto miral::DisplayConfiguration::layout_option() -> miral::ConfigurationOption
 {
-    return pre_init(CommandLineOption{
+    return pre_init(ConfigurationOption{
         [this](std::string const& layout) { select_layout(layout); },
         "display-layout",
         "Display configuration layout from `" + self->name + "'\n"

@@ -48,7 +48,8 @@ add_library(miral SHARED
     application_authorizer.cpp          ${miral_include}/miral/application_authorizer.h
     application_info.cpp                ${miral_include}/miral/application_info.h
     canonical_window_manager.cpp        ${miral_include}/miral/canonical_window_manager.h
-    command_line_option.cpp             ${miral_include}/miral/command_line_option.h
+    configuration_option.cpp            ${miral_include}/miral/configuration_option.h
+                                        ${miral_include}/miral/command_line_option.h
     cursor_theme.cpp                    ${miral_include}/miral/cursor_theme.h
     display_configuration.cpp           ${miral_include}/miral/display_configuration.h
     external_client.cpp                 ${miral_include}/miral/external_client.h

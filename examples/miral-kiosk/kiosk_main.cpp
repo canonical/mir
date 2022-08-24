@@ -86,7 +86,7 @@ int main(int argc, char const* argv[])
 
     SwSplash splash;
 
-    CommandLineOption startup_only{
+    ConfigurationOption startup_only{
         [&](bool startup_only) {KioskAuthorizer::startup_only = startup_only; },
         "kiosk-startup-apps-only",
         "Only allow applications to connect during startup",
@@ -108,7 +108,7 @@ int main(int argc, char const* argv[])
 
     DisplayConfiguration display_config{runner};
  
-    CommandLineOption show_splash{
+    ConfigurationOption show_splash{
         [&](bool show_splash) {splash.enable(show_splash); },
         "show-splash",
         "Set to false to suppress display of splash on startup",
@@ -130,7 +130,7 @@ int main(int argc, char const* argv[])
             startup_only,
             launcher,
             wayland_extensions,
-            CommandLineOption{run_startup_apps, "startup-apps", "Colon separated list of startup apps", ""},
+            ConfigurationOption{run_startup_apps, "startup-apps", "Colon separated list of startup apps", ""},
             StartupInternalClient{splash}
         });
 }
