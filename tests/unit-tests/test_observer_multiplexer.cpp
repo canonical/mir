@@ -206,6 +206,42 @@ TEST(ObserverMultiplexer, each_added_observer_recieves_observations)
     executor.drain_work();
 }
 
+TEST(ObserverMultiplexer, observer_recieves_multiple_observations)
+{
+    using namespace testing;
+    TestObserverMultiplexer multiplexer{mir::immediate_executor};
+    std::string const value0 = "Hello, my name is Inigo Montoya.";
+    std::string const value1 = "You killed my father. Prepare to die.";
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+
+    EXPECT_CALL(*observer, observation_made(StrEq(value0))).Times(1);
+    EXPECT_CALL(*observer, observation_made(StrEq(value1))).Times(1);
+
+    multiplexer.register_interest(observer);
+    multiplexer.observation_made(value0);
+    multiplexer.observation_made(value1);
+}
+
+TEST(ObserverMultiplexer, can_remove_observer)
+{
+    using namespace testing;
+    std::string const value = "Goldfinger";
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+    ThreadedExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
+    multiplexer.register_interest(observer);
+
+    EXPECT_CALL(*observer, observation_made(StrEq(value))).Times(1);
+
+    multiplexer.observation_made(value);
+    executor.drain_work();
+
+    multiplexer.unregister_interest(*observer);
+    multiplexer.observation_made(value);
+}
+
 TEST(ObserverMultiplexer, removed_observers_do_not_recieve_observations)
 {
     using namespace testing;
@@ -613,6 +649,31 @@ TEST(ObserverMultiplexer, can_trigger_observer_during_observation_from_other_thr
     multiplexer.observation_made(first_observation);
 
     executor.drain_work();
+}
+
+TEST(ObserverMultiplexer, can_trigger_observer_during_observation_from_other_thread_with_immediate_executor)
+{
+    using namespace testing;
+    constexpr char const* first_observation = "Elementary, my dear Watson";
+    constexpr char const* second_observation = "You're one microscopic cog in his catastrophic plan";
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+
+    TestObserverMultiplexer multiplexer{mir::immediate_executor};
+
+    EXPECT_CALL(*observer, observation_made(StrEq(first_observation)))
+        .WillOnce(InvokeWithoutArgs([&]()
+            {
+                mt::AutoJoinThread([&]()
+                    {
+                        multiplexer.observation_made(second_observation);
+                    });
+            }));
+    EXPECT_CALL(*observer, observation_made(StrEq(second_observation)));
+
+    multiplexer.register_interest(observer);
+
+    multiplexer.observation_made(first_observation);
 }
 
 TEST(ObserverMultiplexer, can_trigger_single_observer_during_single_observer_observation_from_other_thread)
