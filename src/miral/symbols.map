@@ -39,9 +39,9 @@ global:
     miral::CanonicalWindowManagerPolicy::handle_request_drag_and_drop*;
     miral::CanonicalWindowManagerPolicy::handle_window_ready*;
     miral::CanonicalWindowManagerPolicy::place_new_window*;
-    miral::CommandLineOption::?CommandLineOption*;
-    miral::CommandLineOption::CommandLineOption*;
-    miral::CommandLineOption::operator*;
+    miral::ConfigurationOption::?ConfigurationOption*;
+    miral::ConfigurationOption::ConfigurationOption*;
+    miral::ConfigurationOption::operator*;
     miral::CursorTheme::?CursorTheme*;
     miral::CursorTheme::CursorTheme*;
     miral::CursorTheme::operator*;
@@ -392,7 +392,7 @@ global:
     typeinfo?for?miral::ApplicationInfo;
     typeinfo?for?miral::BasicSetApplicationAuthorizer;
     typeinfo?for?miral::CanonicalWindowManagerPolicy;
-    typeinfo?for?miral::CommandLineOption;
+    typeinfo?for?miral::ConfigurationOption;
     typeinfo?for?miral::CursorTheme;
     typeinfo?for?miral::DisplayConfiguration;
     typeinfo?for?miral::ExternalClientLauncher;
@@ -428,7 +428,7 @@ global:
     vtable?for?miral::ApplicationInfo;
     vtable?for?miral::BasicSetApplicationAuthorizer;
     vtable?for?miral::CanonicalWindowManagerPolicy;
-    vtable?for?miral::CommandLineOption;
+    vtable?for?miral::ConfigurationOption;
     vtable?for?miral::CursorTheme;
     vtable?for?miral::DisplayConfiguration;
     vtable?for?miral::ExternalClientLauncher;

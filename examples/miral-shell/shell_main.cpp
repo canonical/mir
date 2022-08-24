@@ -120,10 +120,10 @@ int main(int argc, char const* argv[])
             config_keymap,
             AppendEventFilter{quit_on_ctrl_alt_bksp},
             StartupInternalClient{spinner},
-            CommandLineOption{run_startup_apps, "startup-apps", "Colon separated list of startup apps", ""},
-            pre_init(CommandLineOption{[&](std::string const& typeface) { ::wallpaper::font_file(typeface); },
-                                       "shell-wallpaper-font", "font file to use for wallpaper", ::wallpaper::font_file()}),
-            CommandLineOption{[&](std::string const& cmd) { terminal_cmd = cmd; },
-                              "shell-terminal-emulator", "terminal emulator to use", terminal_cmd}
+            ConfigurationOption{run_startup_apps, "startup-apps", "Colon separated list of startup apps", ""},
+            pre_init(ConfigurationOption{[&](std::string const& typeface) { ::wallpaper::font_file(typeface); },
+                                         "shell-wallpaper-font", "font file to use for wallpaper", ::wallpaper::font_file()}),
+            ConfigurationOption{[&](std::string const& cmd) { terminal_cmd = cmd; },
+                                "shell-terminal-emulator", "terminal emulator to use", terminal_cmd}
         });
 }

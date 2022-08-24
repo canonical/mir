@@ -49,7 +49,7 @@ struct OptionType<int>
 };
 }
 
-struct miral::CommandLineOption::Self
+struct miral::ConfigurationOption::Self
 {
     template<typename Value_t>
     Self(std::function<void(Value_t value)> callback,
@@ -128,7 +128,7 @@ struct miral::CommandLineOption::Self
     std::function<void(mir::Server& server)> callback;
 };
 
-miral::CommandLineOption::CommandLineOption(
+miral::ConfigurationOption::ConfigurationOption(
     std::function<void(int value)> callback,
     std::string const& option,
     std::string const& description,
@@ -137,7 +137,7 @@ miral::CommandLineOption::CommandLineOption(
 {
 }
 
-miral::CommandLineOption::CommandLineOption(
+miral::ConfigurationOption::ConfigurationOption(
     std::function<void(double value)> callback,
     std::string const& option,
     std::string const& description,
@@ -146,7 +146,7 @@ miral::CommandLineOption::CommandLineOption(
 {
 }
 
-miral::CommandLineOption::CommandLineOption(
+miral::ConfigurationOption::ConfigurationOption(
     std::function<void(std::string const& value)> callback,
     std::string const& option,
     std::string const& description,
@@ -155,7 +155,7 @@ miral::CommandLineOption::CommandLineOption(
 {
 }
 
-miral::CommandLineOption::CommandLineOption(
+miral::ConfigurationOption::ConfigurationOption(
     std::function<void(std::string const& value)> callback,
     std::string const& option,
     std::string const& description,
@@ -164,7 +164,7 @@ miral::CommandLineOption::CommandLineOption(
 {
 }
 
-miral::CommandLineOption::CommandLineOption(
+miral::ConfigurationOption::ConfigurationOption(
     std::function<void(bool value)> callback,
     std::string const& option,
     std::string const& description,
@@ -173,7 +173,7 @@ miral::CommandLineOption::CommandLineOption(
 {
 }
 
-miral::CommandLineOption::CommandLineOption(
+miral::ConfigurationOption::ConfigurationOption(
     std::function<void(mir::optional_value<int> const& value)> callback,
     std::string const& option,
     std::string const& description) :
@@ -181,7 +181,7 @@ miral::CommandLineOption::CommandLineOption(
 {
 }
 
-miral::CommandLineOption::CommandLineOption(
+miral::ConfigurationOption::ConfigurationOption(
     std::function<void(mir::optional_value<std::string> const& value)> callback,
     std::string const& option,
     std::string const& description) :
@@ -189,7 +189,7 @@ miral::CommandLineOption::CommandLineOption(
 {
 }
 
-miral::CommandLineOption::CommandLineOption(
+miral::ConfigurationOption::ConfigurationOption(
     std::function<void(mir::optional_value<bool> const& value)> callback,
     std::string const& option,
     std::string const& description) :
@@ -197,7 +197,7 @@ miral::CommandLineOption::CommandLineOption(
 {
 }
 
-miral::CommandLineOption::CommandLineOption(
+miral::ConfigurationOption::ConfigurationOption(
     std::function<void(bool is_set)> callback,
     std::string const& option,
     std::string const& description) :
@@ -205,7 +205,7 @@ miral::CommandLineOption::CommandLineOption(
 {
 }
 
-miral::CommandLineOption::CommandLineOption(
+miral::ConfigurationOption::ConfigurationOption(
     std::function<void(std::vector<std::string> const&)> callback, std::string const& option,
     std::string const& description) :
     self{std::make_shared<Self>(callback, option, description)}
@@ -213,13 +213,13 @@ miral::CommandLineOption::CommandLineOption(
 
 }
 
-auto miral::pre_init(CommandLineOption const& clo) -> CommandLineOption
+auto miral::pre_init(ConfigurationOption const& clo) -> ConfigurationOption
 {
     clo.self->pre_init = true;
     return clo;
 }
 
-void miral::CommandLineOption::operator()(mir::Server& server) const
+void miral::ConfigurationOption::operator()(mir::Server& server) const
 {
     self->setup(server);
 
@@ -229,6 +229,6 @@ void miral::CommandLineOption::operator()(mir::Server& server) const
         server.add_init_callback([&]{ self->callback(server); });
 }
 
-miral::CommandLineOption::~CommandLineOption() = default;
-miral::CommandLineOption::CommandLineOption(CommandLineOption const&) = default;
-auto miral::CommandLineOption::operator=(CommandLineOption const&) -> CommandLineOption& = default;
+miral::ConfigurationOption::~ConfigurationOption() = default;
+miral::ConfigurationOption::ConfigurationOption(ConfigurationOption const&) = default;
+auto miral::ConfigurationOption::operator=(ConfigurationOption const&) -> ConfigurationOption& = default;
