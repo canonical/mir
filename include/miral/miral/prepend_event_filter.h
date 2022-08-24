@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIRAL_APPEND_EVENT_FILTER_H
-#define MIRAL_APPEND_EVENT_FILTER_H
+#ifndef MIRAL_PREPEND_EVENT_FILTER_H
+#define MIRAL_PREPEND_EVENT_FILTER_H
 
 #include <functional>
 #include <memory>
@@ -43,4 +43,4 @@ private:
 };
 }
 
-#endif //MIRAL_APPEND_EVENT_FILTER_H
+#endif //MIRAL_PREPEND_EVENT_FILTER_H
