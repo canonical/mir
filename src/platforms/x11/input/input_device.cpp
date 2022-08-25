@@ -210,7 +210,8 @@ void mix::XInputDevice::pointer_axis_motion(
     MirPointerAxisSource axis_source,
     EventTime event_time,
     mir::geometry::PointF pos,
-    mir::geometry::DisplacementF scroll)
+    mir::geometry::DisplacementF scroll_precise,
+    mir::geometry::Displacement scroll_discrete)
 {
     auto const movement = pos - pointer_pos;
     pointer_pos = pos;
@@ -221,6 +222,6 @@ void mix::XInputDevice::pointer_axis_motion(
         pointer_pos,
         movement,
         axis_source,
-        {scroll.dx, {}, false},
-        {scroll.dy, {}, false}));
+        {scroll_precise.dx, scroll_discrete.dx, false},
+        {scroll_precise.dy, scroll_discrete.dy, false}));
 }

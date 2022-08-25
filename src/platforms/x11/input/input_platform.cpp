@@ -415,19 +415,19 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
         switch (press_ev->detail)
         {
         case button_scroll_up:
-            core_pointer->pointer_axis_motion(mir_pointer_axis_source_wheel, event_time, pos, {0, -scroll_factor});
+            scroll(event_time, pos, {0, -1});
             break;
 
         case button_scroll_down:
-            core_pointer->pointer_axis_motion(mir_pointer_axis_source_wheel, event_time, pos, {0, scroll_factor});
+            scroll(event_time, pos, {0, 1});
             break;
 
         case button_scroll_left:
-            core_pointer->pointer_axis_motion(mir_pointer_axis_source_wheel, event_time, pos, {-scroll_factor, 0});
+            scroll(event_time, pos, {-1, 0});
             break;
 
         case button_scroll_right:
-            core_pointer->pointer_axis_motion(mir_pointer_axis_source_wheel, event_time, pos, {scroll_factor, 0});
+            scroll(event_time, pos, {1, 0});
             break;
 
         default:core_pointer->pointer_press(event_time, press_ev->detail, pos);
@@ -554,6 +554,16 @@ void mix::XInputPlatform::process_xkb_event(xcb_generic_event_t* event)
 
     default:;
     }
+}
+
+void mix::XInputPlatform::scroll(std::chrono::nanoseconds event_time, geom::PointF pos, geom::Displacement scroll)
+{
+    core_pointer->pointer_axis_motion(
+        mir_pointer_axis_source_wheel,
+        event_time,
+        pos,
+        geom::DisplacementF{scroll} * scroll_factor,
+        scroll);
 }
 
 void mix::XInputPlatform::key_pressed(std::optional<std::chrono::nanoseconds> event_time, xcb_keycode_t xcb_keycode)
