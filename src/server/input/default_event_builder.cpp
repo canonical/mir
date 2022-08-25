@@ -32,7 +32,6 @@ mi::DefaultEventBuilder::DefaultEventBuilder(
     std::shared_ptr<mi::Seat> const& seat)
     : device_id(device_id),
       clock(clock),
-      timestamp_offset(Timestamp::max()),
       cookie_authority(cookie_authority),
       seat(seat)
 {
@@ -207,12 +206,8 @@ auto mi::DefaultEventBuilder::calibrate_timestamp(std::optional<Timestamp> times
     {
         return clock->now().time_since_epoch();
     }
-    auto offset = timestamp_offset.load();
-    if (offset == Timestamp::max())
+    else
     {
-        // If used from multiple threads this could happen multiple times at once, but that's not a problem
-        offset = clock->now().time_since_epoch() - timestamp.value();
-        timestamp_offset.store(offset);
+        return timestamp.value();
     }
-    return timestamp.value() + offset;
 }
