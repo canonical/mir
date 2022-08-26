@@ -35,6 +35,11 @@ public:
     {
     }
 
+    AdvanceableClock(mir::time::Timestamp start_time)
+        : current_time{start_time}
+    {
+    }
+
     mir::time::Timestamp now() const override
     {
         std::lock_guard lock{mutex};
