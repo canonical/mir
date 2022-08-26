@@ -31,7 +31,6 @@ mi::DefaultEventBuilder::DefaultEventBuilder(
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority)
     : device_id(device_id),
       clock(clock),
-      timestamp_offset(Timestamp::max()),
       cookie_authority(cookie_authority)
 {
 }
@@ -42,7 +41,7 @@ mir::EventUPtr mi::DefaultEventBuilder::key_event(
     xkb_keysym_t keysym,
     int scan_code)
 {
-    auto const timestamp = calibrate_timestamp(source_timestamp);
+    auto const timestamp = value_or_now(source_timestamp);
     auto const cookie = cookie_authority->make_cookie(timestamp.count());
     return me::make_key_event(
         device_id, timestamp, cookie->serialize(), action, keysym, scan_code, mir_input_event_modifier_none);
@@ -58,7 +57,7 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_event(
     const float x_axis_value = 0;
     const float y_axis_value = 0;
     std::vector<uint8_t> vec_cookie{};
-    auto const timestamp = calibrate_timestamp(source_timestamp);
+    auto const timestamp = value_or_now(source_timestamp);
     if (action == mir_pointer_action_button_up || action == mir_pointer_action_button_down)
     {
         auto const cookie = cookie_authority->make_cookie(timestamp.count());
@@ -79,7 +78,7 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_event(
     float relative_x_value, float relative_y_value)
 {
     std::vector<uint8_t> vec_cookie{};
-    auto const timestamp = calibrate_timestamp(source_timestamp);
+    auto const timestamp = value_or_now(source_timestamp);
     if (action == mir_pointer_action_button_up || action == mir_pointer_action_button_down)
     {
         auto const cookie = cookie_authority->make_cookie(timestamp.count());
@@ -100,7 +99,7 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_axis_event(
     float relative_x_value, float relative_y_value)
 {
     std::vector<uint8_t> vec_cookie{};
-    auto const timestamp = calibrate_timestamp(source_timestamp);
+    auto const timestamp = value_or_now(source_timestamp);
     if (action == mir_pointer_action_button_up || action == mir_pointer_action_button_down)
     {
         auto const cookie = cookie_authority->make_cookie(timestamp.count());
@@ -122,7 +121,7 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_axis_with_stop_event(
     float relative_x_value, float relative_y_value)
 {
     std::vector<uint8_t> vec_cookie{};
-    auto const timestamp = calibrate_timestamp(source_timestamp);
+    auto const timestamp = value_or_now(source_timestamp);
     if (action == mir_pointer_action_button_up || action == mir_pointer_action_button_down)
     {
         auto const cookie = cookie_authority->make_cookie(timestamp.count());
@@ -139,7 +138,7 @@ mir::EventUPtr mir::input::DefaultEventBuilder::pointer_axis_discrete_scroll_eve
     float vscroll_discrete)
 {
     std::vector<uint8_t> vec_cookie{};
-    auto const timestamp = calibrate_timestamp(source_timestamp);
+    auto const timestamp = value_or_now(source_timestamp);
     if (action == mir_pointer_action_button_up || action == mir_pointer_action_button_down)
     {
         auto const cookie = cookie_authority->make_cookie(timestamp.count());
@@ -161,7 +160,7 @@ mir::EventUPtr mir::input::DefaultEventBuilder::pointer_event(
     events::ScrollAxisV1V v_scroll)
 {
     std::vector<uint8_t> vec_cookie{};
-    auto const timestamp = calibrate_timestamp(source_timestamp);
+    auto const timestamp = value_or_now(source_timestamp);
     if (action == mir_pointer_action_button_up || action == mir_pointer_action_button_down)
     {
         auto const cookie = cookie_authority->make_cookie(timestamp.count());
@@ -186,7 +185,7 @@ mir::EventUPtr mi::DefaultEventBuilder::touch_event(
     std::vector<events::ContactState> const& contacts)
 {
     std::vector<uint8_t> vec_cookie{};
-    auto const timestamp = calibrate_timestamp(source_timestamp);
+    auto const timestamp = value_or_now(source_timestamp);
     for (auto const& contact : contacts)
     {
         if (contact.action == mir_touch_action_up || contact.action == mir_touch_action_down)
@@ -199,34 +198,14 @@ mir::EventUPtr mi::DefaultEventBuilder::touch_event(
     return me::make_touch_event(device_id, timestamp, vec_cookie, mir_input_event_modifier_none, contacts);
 }
 
-auto mi::DefaultEventBuilder::calibrate_timestamp(std::optional<Timestamp> timestamp) -> Timestamp
+auto mi::DefaultEventBuilder::value_or_now(std::optional<Timestamp> timestamp) -> Timestamp
 {
-    using namespace std::chrono_literals;
-
-    auto const now = clock->now().time_since_epoch();
-    auto offset = timestamp_offset.load();
-    if (!timestamp)
+    if (timestamp)
     {
-        return now;
+        return timestamp.value();
     }
     else
     {
-        // If the offset has not been set yet or timestamp + offset is in the future, the offset needs to be set
-        if (offset == Timestamp::max() || timestamp.value() + offset > now)
-        {
-            // If the timestamp is in the future or more than 1 second in the past, the platform must be using a
-            // different time base
-            if (timestamp.value() > now || timestamp.value() < now - 1s)
-            {
-                // Therefore the offset should be set to give the event the current time
-                timestamp_offset = offset = now - timestamp.value();
-            }
-            else
-            {
-                // Otherwise, the platform is using the same time base so it's timestamps should be unchanged
-                timestamp_offset = offset = 0s;
-            }
-        }
-        return timestamp.value() + offset;
+        return clock->now().time_since_epoch();
     }
 }

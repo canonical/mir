@@ -63,35 +63,3 @@ TEST_F(DefaultEventBuilder, when_no_timestamp_is_given_then_clock_timestamp_is_u
     clock.advance_by(2s);
     EXPECT_THAT(event_timestamp(std::nullopt), Eq(14s));
 }
-
-TEST_F(DefaultEventBuilder, when_timestamp_matches_clock_then_correct_timestamp_used)
-{
-    clock.advance_by(12s);
-    EXPECT_THAT(event_timestamp(12s), Eq(12s));
-}
-
-TEST_F(DefaultEventBuilder, when_timestamp_is_slightly_older_than_clock_then_given_timestamp_is_used)
-{
-    clock.advance_by(12s);
-    EXPECT_THAT(event_timestamp(12s - 10ms), Eq(12s - 10ms));
-}
-
-TEST_F(DefaultEventBuilder, when_timestamp_is_slightly_newer_than_clock_then_clock_timestamp_is_used)
-{
-    clock.advance_by(12s);
-    EXPECT_THAT(event_timestamp(12s + 10ms), Eq(12s));
-}
-
-TEST_F(DefaultEventBuilder, when_timestamp_is_much_older_than_clock_then_clock_timestamp_is_used)
-{
-    clock.advance_by(400s);
-    EXPECT_THAT(event_timestamp(20s), Eq(400s));
-}
-
-TEST_F(DefaultEventBuilder, when_timestamp_is_much_older_than_clock_then_offset_persists)
-{
-    clock.advance_by(400s);
-    event_timestamp(20s);
-    clock.advance_by(2s);
-    EXPECT_THAT(event_timestamp(22s - 10ms), Eq(402s - 10ms));
-}

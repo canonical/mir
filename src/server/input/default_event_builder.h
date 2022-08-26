@@ -105,12 +105,10 @@ public:
         events::ScrollAxisV1V v_scroll) override;
 
 private:
-    auto calibrate_timestamp(std::optional<Timestamp> source_timestamp) -> Timestamp;
+    auto value_or_now(std::optional<Timestamp> timestamp) -> Timestamp;
 
     MirInputDeviceId const device_id;
     std::shared_ptr<time::Clock> const clock;
-    /// Added to input timestams to get calibrated timestamps for events. Is Timestamp::max() until initial event.
-    std::atomic<Timestamp> timestamp_offset;
     std::shared_ptr<cookie::Authority> const cookie_authority;
 };
 }
