@@ -57,8 +57,7 @@ struct X11PlatformTest : ::testing::Test
     mir::input::DefaultEventBuilder builder{
         0,
         mt::fake_shared(clock),
-        mir::cookie::Authority::create(),
-        mt::fake_shared(mock_seat)};
+        mir::cookie::Authority::create()};
 
     mir::input::X::XInputPlatform x11_platform{
         mt::fake_shared(mock_registry),

@@ -325,7 +325,7 @@ void mi::DefaultInputDeviceHub::RegisteredDevice::start(std::shared_ptr<Seat> co
     multiplexer->add_watch(queue);
 
     this->seat = seat;
-    builder = std::make_unique<DefaultEventBuilder>(device_id, clock, cookie_authority, seat);
+    builder = std::make_unique<DefaultEventBuilder>(device_id, clock, cookie_authority);
     device->start(this, builder.get());
 }
 

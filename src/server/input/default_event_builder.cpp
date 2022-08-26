@@ -28,13 +28,11 @@ namespace mi = mir::input;
 mi::DefaultEventBuilder::DefaultEventBuilder(
     MirInputDeviceId device_id,
     std::shared_ptr<time::Clock> const& clock,
-    std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
-    std::shared_ptr<mi::Seat> const& seat)
+    std::shared_ptr<mir::cookie::Authority> const& cookie_authority)
     : device_id(device_id),
       clock(clock),
       timestamp_offset(Timestamp::max()),
-      cookie_authority(cookie_authority),
-      seat(seat)
+      cookie_authority(cookie_authority)
 {
 }
 
