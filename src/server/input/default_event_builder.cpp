@@ -32,6 +32,7 @@ mi::DefaultEventBuilder::DefaultEventBuilder(
     std::shared_ptr<mi::Seat> const& seat)
     : device_id(device_id),
       clock(clock),
+      timestamp_offset(Timestamp::max()),
       cookie_authority(cookie_authority),
       seat(seat)
 {
@@ -202,12 +203,32 @@ mir::EventUPtr mi::DefaultEventBuilder::touch_event(
 
 auto mi::DefaultEventBuilder::calibrate_timestamp(std::optional<Timestamp> timestamp) -> Timestamp
 {
+    using namespace std::chrono_literals;
+
+    auto const now = clock->now().time_since_epoch();
+    auto offset = timestamp_offset.load();
     if (!timestamp)
     {
-        return clock->now().time_since_epoch();
+        return now;
     }
     else
     {
-        return timestamp.value();
+        // If the offset has not been set yet or timestamp + offset is in the future, the offset needs to be set
+        if (offset == Timestamp::max() || timestamp.value() + offset > now)
+        {
+            // If the timestamp is in the future or more than 1 second in the past, the platform must be using a
+            // different time base
+            if (timestamp.value() > now || timestamp.value() < now - 1s)
+            {
+                // Therefore the offset should be set to give the event the current time
+                timestamp_offset = offset = now - timestamp.value();
+            }
+            else
+            {
+                // Otherwise, the platform is using the same time base so it's timestamps should be unchanged
+                timestamp_offset = offset = 0s;
+            }
+        }
+        return timestamp.value() + offset;
     }
 }
