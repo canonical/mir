@@ -21,7 +21,6 @@
 #include "mir/test/doubles/mock_input_dispatcher.h"
 #include "mir/test/doubles/mock_cursor_listener.h"
 #include "mir/test/doubles/mock_touch_visualizer.h"
-#include "mir/test/doubles/mock_input_seat.h"
 #include "mir/test/doubles/mock_seat_report.h"
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/event_matchers.h"
@@ -51,7 +50,6 @@ struct SeatInputDeviceTracker : ::testing::Test
     Nice<mtd::MockInputDispatcher> mock_dispatcher;
     Nice<mtd::MockCursorListener> mock_cursor_listener;
     Nice<mtd::MockTouchVisualizer> mock_visualizer;
-    Nice<mtd::MockInputSeat> mock_seat;
     Nice<mtd::MockSeatObserver> mock_seat_report;
     MirInputDeviceId some_device{8712};
     MirInputDeviceId another_device{1246};
@@ -62,18 +60,15 @@ struct SeatInputDeviceTracker : ::testing::Test
     mi::DefaultEventBuilder some_device_builder{
         some_device,
         mt::fake_shared(clock),
-        cookie_factory,
-        mt::fake_shared(mock_seat)};
+        cookie_factory};
     mi::DefaultEventBuilder another_device_builder{
         another_device,
         mt::fake_shared(clock),
-        cookie_factory,
-        mt::fake_shared(mock_seat)};
+        cookie_factory};
     mi::DefaultEventBuilder third_device_builder{
         third_device,
         mt::fake_shared(clock),
-        cookie_factory,
-        mt::fake_shared(mock_seat)};
+        cookie_factory};
     mi::receiver::XKBMapper mapper;
     mi::SeatInputDeviceTracker tracker{
         mt::fake_shared(mock_dispatcher), mt::fake_shared(mock_visualizer), mt::fake_shared(mock_cursor_listener),
