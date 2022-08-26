@@ -18,6 +18,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_idle_poking_dispatcher.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_validator.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_keymap.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_default_event_builder.cpp
 )
 
 list(APPEND UMOCK_UNIT_TEST_SOURCES
