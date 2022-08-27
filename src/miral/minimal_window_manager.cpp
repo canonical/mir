@@ -39,6 +39,13 @@ enum class Gesture
     touch_resizing,
 };
 
+auto pointer_position(MirPointerEvent const* event) -> mir::geometry::Point
+{
+    return {
+        mir_pointer_event_axis_value(event, mir_pointer_axis_x),
+        mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
+}
+
 auto touch_center(MirTouchEvent const* event) -> mir::geometry::Point
 {
     auto const count = mir_touch_event_point_count(event);
@@ -296,6 +303,7 @@ bool miral::MinimalWindowManager::Impl::begin_pointer_gesture(
         return false;
 
     MirPointerEvent const* const pointer_event = mir_input_event_get_pointer_event(input_event);
+    old_cursor = pointer_position(pointer_event);
     gesture = gesture_;
     gesture_window = window_info.window();
     gesture_shift_keys = mir_pointer_event_modifiers(pointer_event) & shift_states;
@@ -328,6 +336,7 @@ bool miral::MinimalWindowManager::Impl::begin_touch_gesture(
         return false;
 
     MirTouchEvent const* const touch_event = mir_input_event_get_touch_event(input_event);
+    old_touch = touch_center(touch_event);
     gesture = gesture_;
     gesture_window = window_info.window();
     gesture_shift_keys = mir_touch_event_modifiers(touch_event) & shift_states;
@@ -342,9 +351,7 @@ bool miral::MinimalWindowManager::Impl::handle_pointer_event(MirPointerEvent con
 {
     auto const action = mir_pointer_event_action(event);
     auto const shift_keys = mir_pointer_event_modifiers(event) & shift_states;
-    Point const new_cursor{
-        mir_pointer_event_axis_value(event, mir_pointer_axis_x),
-        mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
+    auto const new_cursor = pointer_position(event);
 
     bool consumes_event = false;
 
