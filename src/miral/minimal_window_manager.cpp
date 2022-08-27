@@ -300,7 +300,6 @@ bool miral::MinimalWindowManager::Impl::prepare_for_gesture(
     Point input_pos,
     Gesture gesture)
 {
-    (void)input_pos;
     switch (gesture)
     {
     case Gesture::pointer_moving:
@@ -323,6 +322,11 @@ bool miral::MinimalWindowManager::Impl::prepare_for_gesture(
                 mods.size() ? mods.size().value() : window_info.window().size()};
             // Keep the window's top edge in the same place
             placement.top_left.y = window_info.window().top_left().y;
+            // Keep the window under the cursor/touch
+            placement.top_left.x = std::min(placement.top_left.x, input_pos.x);
+            placement.top_left.x = std::max(placement.top_left.x, input_pos.x - as_delta(placement.size.width));
+            placement.top_left.y = std::min(placement.top_left.y, input_pos.y);
+            placement.top_left.y = std::max(placement.top_left.y, input_pos.y - as_delta(placement.size.height));
             mods.top_left() = placement.top_left;
             mods.size() = placement.size;
             tools.modify_window(window_info, mods);
