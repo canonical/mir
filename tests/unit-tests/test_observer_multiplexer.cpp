@@ -189,7 +189,6 @@ TEST(ObserverMultiplexer, each_added_observer_recieves_observations)
     TestObserverMultiplexer multiplexer{executor};
     std::string const value = "Hello, my name is Inigo Montoya.";
 
-
     auto observer_one = std::make_shared<NiceMock<MockObserver>>();
     auto observer_two = std::make_shared<NiceMock<MockObserver>>();
 
@@ -239,6 +238,30 @@ TEST(ObserverMultiplexer, can_remove_observer)
     executor.drain_work();
 
     multiplexer.unregister_interest(*observer);
+    multiplexer.observation_made(value);
+}
+
+TEST(ObserverMultiplexer, can_remove_observer_on_different_thread_than_it_was_added_on)
+{
+    using namespace testing;
+    std::string const value = "Goldfinger";
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+    ThreadedExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
+    multiplexer.register_interest(observer);
+
+    EXPECT_CALL(*observer, observation_made(StrEq(value))).Times(1);
+
+    multiplexer.observation_made(value);
+    executor.drain_work();
+
+    mt::AutoJoinThread(
+        [&]()
+        {
+            multiplexer.unregister_interest(*observer);
+            executor.drain_work();
+        });
     multiplexer.observation_made(value);
 }
 
