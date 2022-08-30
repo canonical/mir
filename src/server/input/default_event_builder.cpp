@@ -31,7 +31,6 @@ mi::DefaultEventBuilder::DefaultEventBuilder(
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority)
     : device_id(device_id),
       clock(clock),
-      timestamp_offset(Timestamp::max()),
       cookie_authority(cookie_authority)
 {
 }
@@ -204,7 +203,9 @@ auto mi::DefaultEventBuilder::calibrate_timestamp(std::optional<Timestamp> times
     using namespace std::chrono_literals;
 
     auto const now = clock->now().time_since_epoch();
-    if (timestamp && timestamp.value() <= now && timestamp.value() >= now - 1s)
+    /// Only use timestamp if it is within the last 10 seconds (otherwise, a time source other than CLOCK_MONOTONIC
+    /// is probably being used, which we ignore)
+    if (timestamp && timestamp.value() <= now && timestamp.value() >= now - 10s)
     {
         return timestamp.value();
     }
