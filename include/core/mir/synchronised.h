@@ -83,10 +83,7 @@ public:
         void drop()
         {
             value = nullptr;
-            if (lock.owns_lock())
-            {
-                lock.unlock();
-            }
+            lock.unlock();
         }
 
         /**
