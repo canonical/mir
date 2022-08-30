@@ -31,6 +31,21 @@
 
 namespace mir
 {
+/**
+ * A threadsafe mechanism for keeping track of a set of observers and distributing notifications to them.
+ *
+ * Each time an observer is added, a WeakObserver is created for it. This WeakObserver may outlive the observer, and may
+ * continue to exist after the observer has been removed and observations have ended. Each WeakObserver may delegate
+ * observations to a different Executor, and each keeps track of when observations should stop being sent due to the
+ * observer being removed.
+ *
+ * A WeakObserver may dispatch multiple observations at the same time, either on different threads or (in the case of
+ * a blocking executor) if an observation is sent from within another observation.
+ *
+ * When an observer is removed a WeakObserver is marked as reset and removed from the observers list.
+ * ObserverMultiplexer::unregister_interest() does not return until the related WeakObserver has been reset. This
+ * happens once all in-flight observations have either completed, or are on threads that have removed the observer.
+ */
 template<class Observer>
 class ObserverMultiplexer : public ObserverRegistrar<Observer>, public Observer
 {
