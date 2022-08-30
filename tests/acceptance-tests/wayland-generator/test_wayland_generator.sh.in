@@ -4,7 +4,7 @@ set -euo pipefail
 RET_CODE=0
 
 compare() {
-    if git diff --no-index --color "$1" "$2"; then
+    if diff --color=auto "$1" "$2"; then
         echo "- $1 and $2 match"
         echo
     else
