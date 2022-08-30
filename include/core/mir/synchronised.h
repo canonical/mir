@@ -83,7 +83,21 @@ public:
         void drop()
         {
             value = nullptr;
-            lock.unlock();
+            if (lock.owns_lock())
+            {
+                lock.unlock();
+            }
+        }
+
+        /**
+         * Allows waiting for a condition variable
+         *
+         * The protected data may be accessed both in the predicate and after this method completes.
+         */
+        template<typename Cv, typename Predicate>
+        void wait(Cv& cv, Predicate stop_waiting)
+        {
+            cv.wait(lock, stop_waiting);
         }
 
     private:
