@@ -80,8 +80,7 @@ struct MockEventBuilder : mi::EventBuilder
     mi::DefaultEventBuilder builder{
         MirInputDeviceId{3},
         mt::fake_shared(clock),
-        cookie_authority,
-        mt::fake_shared(seat)};
+        cookie_authority};
     MockEventBuilder()
     {
         ON_CALL(*this, key_event(_,_,_,_)).WillByDefault(

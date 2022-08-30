@@ -26,7 +26,7 @@ namespace mir { class Server; }
 namespace miral
 {
 class MirRunner;
-class CommandLineOption;
+class ConfigurationOption;
 
 /// Enable display configuration.
 /// The config file (miral::MirRunner::display_config_file()) is located via
@@ -39,7 +39,7 @@ public:
     explicit DisplayConfiguration(MirRunner const& mir_runner);
 
     /// Provide the default 'display-layout' configuration option
-    auto layout_option() -> CommandLineOption;
+    auto layout_option() -> ConfigurationOption;
 
     /// Select a layout from the configuration
     void select_layout(std::string const& layout);

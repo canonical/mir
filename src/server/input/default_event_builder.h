@@ -41,8 +41,7 @@ public:
     explicit DefaultEventBuilder(
         MirInputDeviceId device_id,
         std::shared_ptr<time::Clock> const& clock,
-        std::shared_ptr<cookie::Authority> const& cookie_authority,
-        std::shared_ptr<Seat> const& seat);
+        std::shared_ptr<cookie::Authority> const& cookie_authority);
 
     EventUPtr key_event(
         std::optional<Timestamp> source_timestamp,
@@ -113,7 +112,6 @@ private:
     /// Added to input timestams to get calibrated timestamps for events. Is Timestamp::max() until initial event.
     std::atomic<Timestamp> timestamp_offset;
     std::shared_ptr<cookie::Authority> const cookie_authority;
-    std::shared_ptr<Seat> const seat;
 };
 }
 }

@@ -328,7 +328,11 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
     if (!has_initialized)
     {
         egl_window = wl_egl_window_create(surface, size.width.as_int(), size.height.as_int());
-        eglsurface = eglCreatePlatformWindowSurface(owner->egldisplay, owner->eglconfig, egl_window, nullptr);
+        eglsurface = eglCreateWindowSurface(
+            owner->egldisplay,
+            owner->eglconfig,
+            reinterpret_cast<EGLNativeWindowType>(egl_window),
+            nullptr);
         has_initialized = true;
     }
     else if (size_is_changed)
@@ -504,7 +508,7 @@ mgw::DisplayClient::DisplayClient(
     if (!eglInitialize(egldisplay, &major, &minor))
         BOOST_THROW_EXCEPTION(egl_error("Can't eglInitialize"));
 
-    if (major != 1 || minor < 4)
+    if (std::tuple{major, minor} < std::tuple{1, 4})
         BOOST_THROW_EXCEPTION(egl_error("EGL version is not at least 1.4"));
 
     EGLint neglconfigs;
