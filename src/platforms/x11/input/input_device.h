@@ -65,7 +65,8 @@ public:
         MirPointerAxisSource axis_source,
         EventTime event_time,
         mir::geometry::PointF pos,
-        mir::geometry::DisplacementF scroll);
+        mir::geometry::DisplacementF scroll_precise,
+        mir::geometry::Displacement scroll_discrete);
 
 private:
     MirPointerButtons button_state{0};

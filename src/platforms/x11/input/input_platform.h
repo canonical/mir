@@ -17,6 +17,7 @@
 #define MIR_INPUT_X_INPUT_PLATFORM_H_
 
 #include "mir/input/platform.h"
+#include "mir/geometry/forward.h"
 #include <memory>
 #include <functional>
 #include <optional>
@@ -67,6 +68,7 @@ private:
     void process_input_events();
     void process_input_event(xcb_generic_event_t* event);
     void process_xkb_event(xcb_generic_event_t* event);
+    void scroll(std::chrono::nanoseconds event_time, geometry::PointF pos, geometry::Displacement scroll);
     void key_pressed(std::optional<std::chrono::nanoseconds> event_time, xcb_keycode_t key);
     void key_released(std::optional<std::chrono::nanoseconds> event_time, xcb_keycode_t key);
     /// Defer work until all pending events are processed. Should only be called while processing events.
