@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <mutex>
 #include <thread>
+#include <condition_variable>
 
 namespace mir
 {
@@ -104,7 +105,6 @@ private:
             if (live_observer.get() == &candidate_observer)
             {
                 executor->spawn(std::move(work));
-
             }
         }
 
@@ -119,7 +119,7 @@ private:
             {
                 auto const state = synchronised_state.lock();
                 // If this observer is being reset or has been reset no new observations should be made
-                if (state->pending_reset || !state->live_lock.owns_lock())
+                if (state->status != Status::active)
                 {
                     return;
                 }
@@ -139,10 +139,10 @@ private:
                     {
                         state->threads_in_use.erase(it);
                     }
-                    if (state->pending_reset && state->threads_in_use.empty() && state->live_lock.owns_lock())
+                    if (state->status == Status::reset_pending && state->threads_in_use.empty())
                     {
-                        // If we are currently resetting and there are no longer any observations in progress
-                        state->live_lock.unlock();
+                        state->status = Status::reset_complete;
+                        reset_cv.notify_all();
                     }
                 }};
             auto const invokable_mem_fn = std::mem_fn(f);
@@ -158,7 +158,7 @@ private:
             {
                 // `this` holds the unregistered observer
                 auto state = synchronised_state.lock();
-                if (state->live_lock.owns_lock())
+                if (state->status != Status::reset_complete)
                 {
                     // Remove *all* instances of the current thread from threads_in_use. This means even if several
                     // observations are made recursively, the observer can still be removed from within an observation.
@@ -171,16 +171,18 @@ private:
                     if (state->threads_in_use.empty())
                     {
                         // If no other threads are making observations we can safely mark this observer as reset
-                        state->live_lock.unlock();
+                        state->status = Status::reset_complete;
+                        reset_cv.notify_all();
                     }
                     else
                     {
                         // Other thread(s) are making observations, so ask them to unlock live_lock when they're done
-                        state->pending_reset = true;
-                        state.drop();
-                        // Wait for live_mutex to become available, which indicates all observatins have finished (we
-                        // deliberately do not hold on to live_mutex)
-                        std::lock_guard{live_mutex};
+                        state->status = Status::reset_pending;
+                        // Wait for the reset to complete
+                        state.wait(reset_cv, [&]()
+                            {
+                                return state->status == Status::reset_complete;
+                            });
                     }
                 }
                 return true;
@@ -198,28 +200,32 @@ private:
 
         std::weak_ptr<Observer> const observer;
 
-        /// Locked (by State::live_lock) until this observer is reset
-        std::mutex live_mutex;
+        enum class Status
+        {
+            /// Can receive observations.
+            active,
+            /// Used when a reset has been requested, but observations are still in progress. New observatins will not
+            /// be sent. Reset will complete when all observations have ended.
+            reset_pending,
+            /// No observatins are in progress and no new observatins will be sent.
+            reset_complete,
+        };
 
         struct State
         {
-            State(std::mutex& live_mutex)
-                : live_lock{live_mutex}
-            {
-            }
+            /// Starts as active. Changes to reset_pending (if needed) and then finally to reset_complete. Never goes
+            /// backwards.
+            Status status{Status::active};
 
             /// All threads that are currently making observations. If a thread makes an observation from within an
             /// observation, it appears multiple times. Number of times an ID appears does matter, but order does not.
             std::vector<std::thread::id> threads_in_use;
-            /// Locked until this observer is reset
-            std::unique_lock<std::mutex> live_lock;
-            /// Set to true when this observer is reset, but there are other in-progress observations. When the final
-            /// observation completes live_lock will be unlocked. No new observations are started when pending_reset is
-            /// true.
-            bool pending_reset{false};
         };
 
-        Synchronised<State> synchronised_state{live_mutex};
+        Synchronised<State> synchronised_state;
+
+        /// Notified when State::status changes to reset_complete
+        std::condition_variable reset_cv;
     };
 
     PosixRWMutex observer_mutex;
