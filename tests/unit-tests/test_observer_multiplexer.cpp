@@ -346,6 +346,37 @@ TEST(ObserverMultiplexer, can_remove_observer_from_callback_with_immediate_execu
     multiplexer.observation_made(value);
 }
 
+TEST(ObserverMultiplexer, can_remove_observer_from_recursive_callback_with_immediate_executor)
+{
+    using namespace testing;
+    std::string const value = "Goldfinger";
+
+    auto observer_one = std::make_shared<NiceMock<MockObserver>>();
+    auto observer_two = std::make_shared<NiceMock<MockObserver>>();
+
+    TestObserverMultiplexer multiplexer{mir::immediate_executor};
+
+    EXPECT_CALL(*observer_one, observation_made(StrEq(value)))
+        .WillOnce(Invoke(
+            [&](auto)
+            {
+                multiplexer.observation_made(value);
+            }))
+        .WillOnce(Invoke(
+            [&](auto)
+            {
+                multiplexer.unregister_interest(*observer_one);
+                multiplexer.observation_made(value);
+            }));
+    EXPECT_CALL(*observer_two, observation_made(StrEq(value)))
+        .Times(3);
+
+    multiplexer.register_interest(observer_one);
+    multiplexer.register_interest(observer_two);
+
+    multiplexer.observation_made(value);
+}
+
 TEST(ObserverMultiplexer, observer_not_called_after_unregistered_from_other_observer)
 {
     using namespace testing;
