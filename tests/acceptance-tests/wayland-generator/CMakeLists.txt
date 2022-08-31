@@ -18,4 +18,4 @@ set(TEST_SCRIPT "${CMAKE_BINARY_DIR}/bin/test_wayland_generator.sh")
 configure_file("test_wayland_generator.sh.in" "${TEST_SCRIPT}" @ONLY)
 configure_file("update_wayland_generator_test.sh.in" "${CMAKE_BINARY_DIR}/bin/update_wayland_generator_test.sh" @ONLY)
 
-add_test(test_wayland_generator "${TEST_SCRIPT}")
+mir_add_test(NAME test_wayland_generator COMMAND "${TEST_SCRIPT}")
