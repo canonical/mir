@@ -184,6 +184,16 @@ void miral::MirRunner::add_stop_callback(std::function<void()> const& stop_callb
     self->stop_callback = updated;
 }
 
+void miral::MirRunner::add_alarm_callback(std::function<void()> const& alarm_callback, std::chrono::milliseconds delay)
+{
+    std::lock_guard lock{self->mutex};
+
+    // TODO - this may be hacky. Not sure if it's always true that weak_server exists.
+    auto const server = self->weak_server.lock();
+    auto alarm = server->the_main_loop()->create_alarm(alarm_callback);
+    alarm.get()->reschedule_in(delay);
+}
+
 void miral::MirRunner::set_exception_handler(std::function<void()> const& handler)
 {
     std::lock_guard lock{self->mutex};

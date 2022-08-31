@@ -18,6 +18,7 @@
 #define MIRAL_RUNNER_H
 
 #include "mir/optional_value.h"
+#include "mir/time/types.h"
 
 #include <functional>
 #include <initializer_list>
@@ -48,6 +49,11 @@ public:
     /// Add a callback to be invoked when the server is about to stop,
     /// If multiple callbacks are added they will be invoked in the reverse sequence added.
     void add_stop_callback(std::function<void()> const& stop_callback);
+
+    /// Add a callback to be invoked when the alarm is triggered,
+    /// If multiple callbacks are added they will be invoked in the sequence added.
+    /// \remark Since MirAL 3.6
+    void add_alarm_callback(std::function<void()> const& alarm_callback, std::chrono::milliseconds delay);
 
     /// Set a handler for exceptions caught in run_with().
     /// run_with() invokes handler() in catch (...) blocks before returning EXIT_FAILURE.
