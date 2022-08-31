@@ -337,11 +337,6 @@ private:
 
 struct DisplayServerMainLoopEvents : testing::Test
 {
-    DisplayServerMainLoopEvents()
-    {
-        if (getenv("XDG_RUNTIME_DIR") == nullptr)
-            env.emplace_back("XDG_RUNTIME_DIR", "/tmp");
-    }
     void use_config_for_expectations(TestMainLoopServerConfig& server_config)
     {
         mock_compositor = server_config.the_mock_compositor();

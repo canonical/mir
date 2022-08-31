@@ -53,9 +53,6 @@ std::string const get_log_filename(const ::testing::TestInfo* test_info)
 mtf::AsyncServerRunner::AsyncServerRunner()
 : output_filename{get_log_filename(::testing::UnitTest::GetInstance()->current_test_info())}
 {
-    if (getenv("XDG_RUNTIME_DIR") == nullptr)
-        add_to_environment("XDG_RUNTIME_DIR", "/tmp");
-
     unsetenv("WAYLAND_DISPLAY");    // We don't want to conflict with any existing Wayland server
     configure_from_commandline(server);
 
