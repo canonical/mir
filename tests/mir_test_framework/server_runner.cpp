@@ -34,8 +34,6 @@ namespace mtf = mir_test_framework;
 mtf::ServerRunner::ServerRunner()
 {
     unsetenv("WAYLAND_DISPLAY");    // We don't want to conflict with any existing server
-    if (getenv("XDG_RUNTIME_DIR") == nullptr)
-        env.emplace_back("XDG_RUNTIME_DIR", "/tmp");
 }
 
 void mtf::ServerRunner::start_server()

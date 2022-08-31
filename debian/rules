@@ -11,6 +11,7 @@ export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
 # Enable verbose debugging output from the testsuite
 export MIR_SERVER_LOGGING = on
 override_dh_auto_test:
+	export XDG_RUNTIME_DIR=/tmp
 ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
   ifeq ($(DEB_HOST_ARCH_ENDIAN),little)
 	GTEST_OUTPUT=xml:./ dh_auto_build -- ARGS="-V" ptest
