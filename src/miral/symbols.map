@@ -459,3 +459,11 @@ global:
   };
 local: *;
 };
+
+MIRAL_3.7 {
+global:
+  extern "C++" {
+    miral::MirRunner::add_alarm_callback*;
+  };
+local: *;
+};
