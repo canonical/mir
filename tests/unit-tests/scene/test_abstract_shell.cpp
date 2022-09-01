@@ -956,7 +956,7 @@ TEST_F(AbstractShell, makes_parent_focused_when_switching_back_from_child)
     */
 }
 
-TEST_F(AbstractShell, removing_focus_from_menu_closes_it)
+TEST_F(AbstractShell, menu_can_be_made_within_popup_grab_tree)
 {
     auto const surface_parent = create_surface(mock_surface);
 
@@ -967,10 +967,99 @@ TEST_F(AbstractShell, removing_focus_from_menu_closes_it)
         .WillByDefault(Return(mir_window_type_menu));
 
     msh::FocusController& focus_controller = shell;
-    focus_controller.set_focus_to(surface_menu->session().lock(), surface_menu);
+    focus_controller.set_popup_grab_tree(surface_parent);
+
+    EXPECT_CALL(mock_surface1, request_client_surface_close()).Times(0);
+
+    shell.surface_ready(surface_menu);
+}
+
+TEST_F(AbstractShell, menu_closed_when_made_outside_of_popup_grab_tree)
+{
+    auto const surface_parent = create_surface(mock_surface);
+
+    auto const surface_menu = create_surface(mock_surface1);
+    ON_CALL(mock_surface1, parent())
+        .WillByDefault(Return(surface_parent));
+    ON_CALL(mock_surface1, type())
+        .WillByDefault(Return(mir_window_type_menu));
+
+    auto const other_surface = create_surface(mock_surface2);
+
+    msh::FocusController& focus_controller = shell;
+    focus_controller.set_popup_grab_tree(other_surface);
 
     EXPECT_CALL(mock_surface1, request_client_surface_close());
-    focus_controller.set_focus_to(surface_parent->session().lock(), surface_parent);
+
+    shell.surface_ready(surface_menu);
+}
+
+TEST_F(AbstractShell, menu_closed_when_popup_grab_tree_changes)
+{
+    auto const surface_parent = create_surface(mock_surface);
+
+    auto const surface_menu = create_surface(mock_surface1);
+    ON_CALL(mock_surface1, parent())
+        .WillByDefault(Return(surface_parent));
+    ON_CALL(mock_surface1, type())
+        .WillByDefault(Return(mir_window_type_menu));
+
+    auto const other_surface = create_surface(mock_surface2);
+
+    msh::FocusController& focus_controller = shell;
+    focus_controller.set_popup_grab_tree(surface_parent);
+    shell.surface_ready(surface_menu);
+
+    EXPECT_CALL(mock_surface1, request_client_surface_close());
+
+    focus_controller.set_popup_grab_tree(other_surface);
+}
+
+TEST_F(AbstractShell, popup_grab_tree_not_set_based_on_focus)
+{
+    auto const surface_parent = create_surface(mock_surface);
+
+    auto const surface_menu = create_surface(mock_surface1);
+    ON_CALL(mock_surface1, parent())
+        .WillByDefault(Return(surface_parent));
+    ON_CALL(mock_surface1, type())
+        .WillByDefault(Return(mir_window_type_menu));
+
+    auto const other_surface = create_surface(mock_surface2);
+
+    msh::FocusController& focus_controller = shell;
+    focus_controller.set_popup_grab_tree(surface_parent);
+    shell.surface_ready(surface_menu);
+
+    EXPECT_CALL(mock_surface1, request_client_surface_close()).Times(0);
+
+    focus_controller.set_focus_to(other_surface->session().lock(), other_surface);
+}
+
+TEST_F(AbstractShell, popup_grab_tree_can_be_set_based_on_child)
+{
+    auto const surface_parent = create_surface(mock_surface);
+
+    auto const surface_menu = create_surface(mock_surface1);
+    ON_CALL(mock_surface1, parent())
+        .WillByDefault(Return(surface_parent));
+    ON_CALL(mock_surface1, type())
+        .WillByDefault(Return(mir_window_type_menu));
+
+    auto const surface_tip = create_surface(mock_surface2);
+    ON_CALL(mock_surface1, parent())
+        .WillByDefault(Return(surface_parent));
+    ON_CALL(mock_surface1, type())
+        .WillByDefault(Return(mir_window_type_tip));
+
+    msh::FocusController& focus_controller = shell;
+    shell.surface_ready(surface_tip);
+    shell.surface_ready(surface_menu);
+    focus_controller.set_popup_grab_tree(surface_tip);
+
+    EXPECT_CALL(mock_surface1, request_client_surface_close()).Times(0);
+
+    focus_controller.set_popup_grab_tree(surface_tip);
 }
 
 // Regression test for https://github.com/MirServer/mir/issues/2279
