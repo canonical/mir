@@ -458,6 +458,11 @@ void msh::AbstractShell::notify_active_surfaces(
     std::shared_ptr<ms::Surface> const& new_keyboard_focus_surface,
     std::vector<std::shared_ptr<ms::Surface>> new_active_surfaces)
 {
+    bool const toplevel_changed =
+        notified_active_surfaces.empty() ||
+        new_active_surfaces.empty() ||
+        notified_active_surfaces.back().lock() != new_active_surfaces.back();
+
     SurfaceSet new_active_set{begin(new_active_surfaces), end(new_active_surfaces)};
 
     for (auto const& current_active_weak: notified_active_surfaces)
@@ -470,8 +475,13 @@ void msh::AbstractShell::notify_active_surfaces(
                 // If a surface that was previously active is not in the set of new active surfaces, notify it
                 current_active->set_focus_state(mir_window_focus_state_unfocused);
 
-                // When a menu loses focus we should close and unmap it
-                if (current_active->type() == mir_window_type_menu || current_active->type() == mir_window_type_gloss)
+                // When a menu loses focus we should close and unmap it if the new focus is part of a different tree.
+                // Hoever if the toplevel hasn't changed (same window tree), the client can do what it likes. Dismissing
+                // the popup in this case would lead to https://github.com/MirServer/mir/issues/2241 or
+                // https://github.com/MirServer/mir/issues/2604
+                if (toplevel_changed && (
+                        current_active->type() == mir_window_type_menu ||
+                        current_active->type() == mir_window_type_gloss))
                 {
                     current_active->request_client_surface_close();
                     current_active->hide();
