@@ -197,6 +197,7 @@ void mir::frontend::WlPointer::event(MirPointerEvent const* event, WlSurface& ro
     {
         case mir_pointer_action_button_down:
         case mir_pointer_action_button_up:
+            enter_or_motion(event, root_surface);
             buttons(event);
             break;
         case mir_pointer_action_enter:
