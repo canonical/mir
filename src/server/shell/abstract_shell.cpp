@@ -457,8 +457,6 @@ void msh::AbstractShell::set_focus_to(
 {
     std::unique_lock lock(focus_mutex);
 
-    set_popup_parent(get_toplevel(focus_surface));
-
     if (last_requested_focus_surface.lock() != focus_surface)
     {
         last_requested_focus_surface = focus_surface;

@@ -1576,6 +1576,7 @@ auto miral::BasicWindowManager::select_active_window(Window const& hint) -> mira
     {
         if (prev_window)
         {
+            focus_controller->set_popup_grab_tree(hint);
             focus_controller->set_focus_to(hint.application(), hint);
             policy->advise_focus_lost(info_for(prev_window));
         }
@@ -1629,6 +1630,7 @@ auto miral::BasicWindowManager::select_active_window(Window const& hint) -> mira
         }
 
         mru_active_windows.push(hint);
+        focus_controller->set_popup_grab_tree(hint);
         focus_controller->set_focus_to(hint.application(), hint);
 
         if (prev_window && prev_window != hint)
