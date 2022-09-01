@@ -134,7 +134,7 @@ public:
 
     std::shared_ptr<scene::Session> focused_session() const override;
 
-    // More useful than FocusController::set_focus_to()!
+    void set_popup_grab_tree(std::shared_ptr<scene::Surface> const& surface) override;
     void set_focus_to(
         std::shared_ptr<scene::Session> const& focus_session,
         std::shared_ptr<scene::Surface> const& focus_surface) override;

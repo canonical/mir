@@ -445,6 +445,12 @@ std::shared_ptr<ms::Surface> msh::AbstractShell::focused_surface() const
     return focus_surface.lock();
 }
 
+void msh::AbstractShell::set_popup_grab_tree(std::shared_ptr<scene::Surface> const& surface)
+{
+    std::lock_guard lock(focus_mutex);
+    set_popup_parent(get_toplevel(surface));
+}
+
 void msh::AbstractShell::set_focus_to(
     std::shared_ptr<ms::Session> const& focus_session,
     std::shared_ptr<ms::Surface> const& focus_surface)
