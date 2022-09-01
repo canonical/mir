@@ -118,7 +118,11 @@ void mc::MultiMonitorArbiter::add_current_buffer_user(mc::CompositorID id)
     // First try and find an empty slot in our vector…
     for (auto& slot : current_buffer_users)
     {
-        if (!slot)
+        if (slot == id)
+        {
+            return;
+        }
+        else if (!slot)
         {
             slot = id;
             return;
