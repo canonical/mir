@@ -52,6 +52,11 @@ ifeq ($(USER) $(DEB_HOST_ARCH),buildd riscv64)
   endif
 endif
 
+# Disable pre-compiled headers on GCC-12
+ifneq ($(shell gcc --version | grep '12.[[:digit:]]\+.[[:digit:]]\+$$'),)
+  COMMON_CONFIGURE_OPTIONS += -DMIR_USE_PRECOMPILED_HEADERS=OFF
+endif
+
 export DEB_BUILD_MAINT_OPTIONS
 
 $(info COMMON_CONFIGURE_OPTIONS: ${COMMON_CONFIGURE_OPTIONS})
