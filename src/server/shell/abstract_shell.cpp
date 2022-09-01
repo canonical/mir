@@ -42,6 +42,17 @@ namespace geom = mir::geometry;
 
 namespace
 {
+auto get_toplevel(std::shared_ptr<ms::Surface> surface) -> std::shared_ptr<ms::Surface>
+{
+    std::shared_ptr<ms::Surface> prev;
+    while (surface)
+    {
+        prev = std::move(surface);
+        surface = prev->parent();
+    }
+    return prev;
+}
+
 auto get_non_popup_parent(std::shared_ptr<ms::Surface> surface) -> std::shared_ptr<ms::Surface>
 {
     while (surface)
@@ -220,6 +231,11 @@ auto msh::AbstractShell::create_surface(
 void msh::AbstractShell::surface_ready(std::shared_ptr<ms::Surface> const& surface)
 {
     window_manager->surface_ready(surface);
+    if (surface->type() == mir_window_type_menu)
+    {
+        std::lock_guard lock(focus_mutex);
+        add_grabbing_popup(surface);
+    }
 }
 
 void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface, SurfaceSpecification const& modifications)
@@ -435,6 +451,8 @@ void msh::AbstractShell::set_focus_to(
 {
     std::unique_lock lock(focus_mutex);
 
+    set_popup_parent(get_toplevel(focus_surface));
+
     if (last_requested_focus_surface.lock() != focus_surface)
     {
         last_requested_focus_surface = focus_surface;
@@ -458,11 +476,6 @@ void msh::AbstractShell::notify_active_surfaces(
     std::shared_ptr<ms::Surface> const& new_keyboard_focus_surface,
     std::vector<std::shared_ptr<ms::Surface>> new_active_surfaces)
 {
-    bool const toplevel_changed =
-        notified_active_surfaces.empty() ||
-        new_active_surfaces.empty() ||
-        notified_active_surfaces.back().lock() != new_active_surfaces.back();
-
     SurfaceSet new_active_set{begin(new_active_surfaces), end(new_active_surfaces)};
 
     for (auto const& current_active_weak: notified_active_surfaces)
@@ -474,18 +487,6 @@ void msh::AbstractShell::notify_active_surfaces(
             {
                 // If a surface that was previously active is not in the set of new active surfaces, notify it
                 current_active->set_focus_state(mir_window_focus_state_unfocused);
-
-                // When a menu loses focus we should close and unmap it if the new focus is part of a different tree.
-                // Hoever if the toplevel hasn't changed (same window tree), the client can do what it likes. Dismissing
-                // the popup in this case would lead to https://github.com/MirServer/mir/issues/2241 or
-                // https://github.com/MirServer/mir/issues/2604
-                if (toplevel_changed && (
-                        current_active->type() == mir_window_type_menu ||
-                        current_active->type() == mir_window_type_gloss))
-                {
-                    current_active->request_client_surface_close();
-                    current_active->hide();
-                }
             }
         }
     }
@@ -597,6 +598,36 @@ void msh::AbstractShell::update_focus_locked(
     }
     focus_surface = surface;
     report->input_focus_set_to(session.get(), surface.get());
+}
+
+void msh::AbstractShell::set_popup_parent(std::shared_ptr<scene::Surface> const& new_popup_parent)
+{
+    if (new_popup_parent == popup_parent.lock())
+    {
+        return;
+    }
+    popup_parent = new_popup_parent;
+    for (auto it = grabbing_popups.rbegin(); it != grabbing_popups.rend(); it++)
+    {
+        if (auto const popup = it->lock())
+        {
+            popup->request_client_surface_close();
+            popup->hide();
+        }
+    }
+}
+
+void msh::AbstractShell::add_grabbing_popup(std::shared_ptr<scene::Surface> const& popup)
+{
+    if (get_toplevel(popup) == popup_parent.lock())
+    {
+        grabbing_popups.push_back(popup);
+    }
+    else
+    {
+        popup->request_client_surface_close();
+        popup->hide();
+    }
 }
 
 void msh::AbstractShell::add_display(geometry::Rectangle const& area)
