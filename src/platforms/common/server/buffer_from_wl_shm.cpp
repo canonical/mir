@@ -26,6 +26,8 @@
 #include <boost/throw_exception.hpp>
 #include <mutex>
 #include <atomic>
+#include <thread>
+#include <unordered_set>
 
 #include <GLES2/gl2.h>
 
@@ -319,13 +321,14 @@ public:
 
     void bind() override
     {
+        auto const thread_id = std::this_thread::get_id();
         ShmBuffer::bind();
         std::lock_guard lock{upload_mutex};
-        if (!uploaded)
+        if (threads_uploaded.find(thread_id) == end(threads_uploaded))
         {
             auto const mapping = map_readable();
             upload_to_texture(mapping->data(), mapping->stride());
-            uploaded = true;
+            threads_uploaded.insert(thread_id);
         }
     }
 
@@ -469,9 +472,9 @@ private:
     std::function<void()> on_consumed;
 
     std::mutex upload_mutex;
-    bool uploaded{false};
     SharedWlBuffer const buffer;
     mir::geometry::Stride const stride_;
+    std::unordered_set<std::thread::id> threads_uploaded;
 };
 
 auto mg::wayland::buffer_from_wl_shm(
