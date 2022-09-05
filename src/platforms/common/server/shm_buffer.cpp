@@ -165,6 +165,7 @@ void mgc::ShmBuffer::upload_to_texture(void const* pixels, geom::Stride const& s
         // Be nice to other users of the GL context by reverting our changes to shared state
         glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, 0);     // 0 is default, meaning “use width”
         glPixelStorei(GL_UNPACK_ALIGNMENT, 4);          // 4 is default; word alignment.
+        glFinish();
     }
     else
     {
