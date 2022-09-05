@@ -347,7 +347,6 @@ public:
     template<typename T>
     auto map_generic() -> std::unique_ptr<mir::renderer::software::Mapping<T>>
     {
-        notify_consumed();
 
         class Mapping : public mir::renderer::software::Mapping<T>
         {
@@ -360,6 +359,7 @@ public:
                   parent{parent}
             {
                 wl_shm_buffer_begin_access(shm_buffer);
+                parent->notify_consumed();
             }
 
             ~Mapping()
