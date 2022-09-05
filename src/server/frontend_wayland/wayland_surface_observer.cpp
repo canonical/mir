@@ -19,13 +19,11 @@
 #include "window_wl_surface_role.h"
 
 #include <mir/executor.h>
-#include <mir/events/event_builders.h>
 #include <mir/log.h>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
-namespace mev = mir::events;
 namespace mi = mir::input;
 namespace mw = mir::wayland;
 
@@ -110,8 +108,7 @@ void mf::WaylandSurfaceObserver::input_consumed(ms::Surface const*, std::shared_
         run_on_wayland_thread_unless_window_destroyed(
             [event](Impl* impl, WindowWlSurfaceRole*)
             {
-                auto const input_event = mir_event_get_input_event(event.get());
-                impl->input_dispatcher->handle_event(input_event);
+                impl->input_dispatcher->handle_event(event);
             });
     }
 }

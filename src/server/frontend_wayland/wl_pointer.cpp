@@ -108,9 +108,9 @@ static auto const button_mapping = {
     std::make_pair(mir_pointer_button_extra, BTN_EXTRA)
 };
 
-auto timestamp_of(MirPointerEvent const* event) -> uint32_t
+auto timestamp_of(std::shared_ptr<MirPointerEvent const> const& event) -> uint32_t
 {
-    return mir_input_event_get_wayland_timestamp(mir_pointer_event_input_event(event));
+    return mir_input_event_get_wayland_timestamp(mir_pointer_event_input_event(event.get()));
 }
 
 auto wayland_axis_source(MirPointerAxisSource mir_source) -> std::optional<uint32_t>
@@ -191,9 +191,9 @@ void mir::frontend::WlPointer::set_relative_pointer(mir::wayland::RelativePointe
     relative_pointer = make_weak(relative_ptr);
 }
 
-void mir::frontend::WlPointer::event(MirPointerEvent const* event, WlSurface& root_surface)
+void mir::frontend::WlPointer::event(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface)
 {
-    switch(mir_pointer_event_action(event))
+    switch(mir_pointer_event_action(event.get()))
     {
         case mir_pointer_action_button_down:
         case mir_pointer_action_button_up:
@@ -219,7 +219,7 @@ void mir::frontend::WlPointer::event(MirPointerEvent const* event, WlSurface& ro
     maybe_frame();
 }
 
-void mf::WlPointer::leave(std::optional<MirPointerEvent const*> event)
+void mf::WlPointer::leave(std::optional<std::shared_ptr<MirPointerEvent const>> const& event)
 {
     (void)event;
     if (!surface_under_cursor)
@@ -237,9 +237,9 @@ void mf::WlPointer::leave(std::optional<MirPointerEvent const*> event)
     destroy_listener_id = {};
 }
 
-void mf::WlPointer::buttons(MirPointerEvent const* event)
+void mf::WlPointer::buttons(std::shared_ptr<MirPointerEvent const> const& event)
 {
-    MirPointerButtons const event_buttons = mir_pointer_event_buttons(event);
+    MirPointerButtons const event_buttons = mir_pointer_event_buttons(event.get());
 
     for (auto const& mapping : button_mapping)
     {
@@ -258,7 +258,10 @@ void mf::WlPointer::buttons(MirPointerEvent const* event)
 }
 
 template<typename Tag>
-auto mf::WlPointer::axis(MirPointerEvent const* event, events::ScrollAxis<Tag> axis, uint32_t wayland_axis) -> bool
+auto mf::WlPointer::axis(
+    std::shared_ptr<MirPointerEvent const> const& event,
+    events::ScrollAxis<Tag> axis,
+    uint32_t wayland_axis) -> bool
 {
     bool event_sent = false;
 
@@ -292,7 +295,7 @@ auto mf::WlPointer::axis(MirPointerEvent const* event, events::ScrollAxis<Tag> a
     return event_sent;
 }
 
-void mf::WlPointer::axes(MirPointerEvent const* event)
+void mf::WlPointer::axes(std::shared_ptr<MirPointerEvent const> const& event)
 {
     bool axis_event_sent = false;
 
@@ -309,11 +312,11 @@ void mf::WlPointer::axes(MirPointerEvent const* event)
     }
 }
 
-void mf::WlPointer::enter_or_motion(MirPointerEvent const* event, WlSurface& root_surface)
+void mf::WlPointer::enter_or_motion(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface)
 {
     auto const root_position = std::make_pair(
-        mir_pointer_event_axis_value(event, mir_pointer_axis_x),
-        mir_pointer_event_axis_value(event, mir_pointer_axis_y));
+        mir_pointer_event_axis_value(event.get(), mir_pointer_axis_x),
+        mir_pointer_event_axis_value(event.get(), mir_pointer_axis_y));
 
     WlSurface* target_surface;
     if (current_buttons != 0 && surface_under_cursor)
@@ -373,15 +376,15 @@ void mf::WlPointer::enter_or_motion(MirPointerEvent const* event, WlSurface& roo
     }
 }
 
-void mf::WlPointer::relative_motion(MirPointerEvent const* event)
+void mf::WlPointer::relative_motion(std::shared_ptr<MirPointerEvent const> const& event)
 {
     if (!relative_pointer)
     {
         return;
     }
     auto const motion = std::make_pair(
-        mir_pointer_event_axis_value(event, mir_pointer_axis_relative_x),
-        mir_pointer_event_axis_value(event, mir_pointer_axis_relative_y));
+        mir_pointer_event_axis_value(event.get(), mir_pointer_axis_relative_x),
+        mir_pointer_event_axis_value(event.get(), mir_pointer_axis_relative_y));
     if (motion.first || motion.second)
     {
         auto const timestamp = timestamp_of(event);

@@ -46,17 +46,17 @@ mf::WlTouch::~WlTouch()
     }
 }
 
-void mf::WlTouch::event(MirTouchEvent const* event, WlSurface& root_surface)
+void mf::WlTouch::event(std::shared_ptr<MirTouchEvent const> const& event, WlSurface& root_surface)
 {
-    std::chrono::milliseconds timestamp{mir_input_event_get_wayland_timestamp(mir_touch_event_input_event(event))};
+    std::chrono::milliseconds timestamp{mir_input_event_get_wayland_timestamp(mir_touch_event_input_event(event.get()))};
 
-    for (auto i = 0u; i < mir_touch_event_point_count(event); ++i)
+    for (auto i = 0u; i < mir_touch_event_point_count(event.get()); ++i)
     {
         auto const position = std::make_pair(
-            mir_touch_event_axis_value(event, i, mir_touch_axis_x),
-            mir_touch_event_axis_value(event, i, mir_touch_axis_y));
-        int const touch_id = mir_touch_event_id(event, i);
-        MirTouchAction const action = mir_touch_event_action(event, i);
+            mir_touch_event_axis_value(event.get(), i, mir_touch_axis_x),
+            mir_touch_event_axis_value(event.get(), i, mir_touch_axis_y));
+        int const touch_id = mir_touch_event_id(event.get(), i);
+        MirTouchAction const action = mir_touch_event_action(event.get(), i);
 
         switch (action)
         {

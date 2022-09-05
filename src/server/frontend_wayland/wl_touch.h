@@ -48,7 +48,7 @@ public:
 
     /// Convert the Mir event into Wayland events and send them to the client. root_surface is the one that received
     /// the Mir event, but the final Wayland event may be sent to a subsurface.
-    void event(MirTouchEvent const* event, WlSurface& root_surface);
+    void event(std::shared_ptr<MirTouchEvent const> const& event, WlSurface& root_surface);
 
 private:
     struct TouchedSurface

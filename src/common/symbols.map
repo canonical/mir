@@ -524,3 +524,10 @@ MIR_COMMON_2.9 {
     MirPointerEvent::axis_source*;
   };
 } MIR_COMMON_2.8;
+
+MIR_COMMON_2.10 {
+  extern "C++" {
+    typeinfo?for?MirPointerEvent;
+    typeinfo?for?MirTouchEvent;
+  };
+} MIR_COMMON_2.9;

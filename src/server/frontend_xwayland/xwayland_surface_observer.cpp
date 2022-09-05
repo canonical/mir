@@ -99,8 +99,7 @@ void mf::XWaylandSurfaceObserver::input_consumed(ms::Surface const*, std::shared
         aquire_input_dispatcher(
             [owned_event](auto input_dispatcher)
             {
-                auto const input_event = mir_event_get_input_event(owned_event.get());
-                input_dispatcher->handle_event(input_event);
+                input_dispatcher->handle_event(owned_event);
             });
     }
 }
