@@ -64,6 +64,10 @@ struct StubShell : public shell::Shell
         return std::make_shared<StubSession>();
     }
 
+    void set_popup_grab_tree(std::shared_ptr<scene::Surface> const&) override
+    {
+    }
+
     void set_focus_to(
         std::shared_ptr<scene::Session> const& /*focus_session*/,
         std::shared_ptr<scene::Surface> const& /*focus_surface*/) override

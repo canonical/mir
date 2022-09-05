@@ -42,6 +42,7 @@ public:
 
     virtual auto focused_session() const -> std::shared_ptr<scene::Session> = 0;
 
+    virtual void set_popup_grab_tree(std::shared_ptr<scene::Surface> const& surface) = 0;
     virtual void set_focus_to(
         std::shared_ptr<scene::Session> const& focus_session,
         std::shared_ptr<scene::Surface> const& focus_surface) = 0;

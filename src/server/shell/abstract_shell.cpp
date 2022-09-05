@@ -42,6 +42,17 @@ namespace geom = mir::geometry;
 
 namespace
 {
+auto get_toplevel(std::shared_ptr<ms::Surface> surface) -> std::shared_ptr<ms::Surface>
+{
+    std::shared_ptr<ms::Surface> prev;
+    while (surface)
+    {
+        prev = std::move(surface);
+        surface = prev->parent();
+    }
+    return prev;
+}
+
 auto get_non_popup_parent(std::shared_ptr<ms::Surface> surface) -> std::shared_ptr<ms::Surface>
 {
     while (surface)
@@ -220,6 +231,11 @@ auto msh::AbstractShell::create_surface(
 void msh::AbstractShell::surface_ready(std::shared_ptr<ms::Surface> const& surface)
 {
     window_manager->surface_ready(surface);
+    if (surface->type() == mir_window_type_menu)
+    {
+        std::lock_guard lock(focus_mutex);
+        add_grabbing_popup(surface);
+    }
 }
 
 void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface, SurfaceSpecification const& modifications)
@@ -429,6 +445,12 @@ std::shared_ptr<ms::Surface> msh::AbstractShell::focused_surface() const
     return focus_surface.lock();
 }
 
+void msh::AbstractShell::set_popup_grab_tree(std::shared_ptr<scene::Surface> const& surface)
+{
+    std::lock_guard lock(focus_mutex);
+    set_popup_parent(get_toplevel(surface));
+}
+
 void msh::AbstractShell::set_focus_to(
     std::shared_ptr<ms::Session> const& focus_session,
     std::shared_ptr<ms::Surface> const& focus_surface)
@@ -469,13 +491,6 @@ void msh::AbstractShell::notify_active_surfaces(
             {
                 // If a surface that was previously active is not in the set of new active surfaces, notify it
                 current_active->set_focus_state(mir_window_focus_state_unfocused);
-
-                // When a menu loses focus we should close and unmap it
-                if (current_active->type() == mir_window_type_menu || current_active->type() == mir_window_type_gloss)
-                {
-                    current_active->request_client_surface_close();
-                    current_active->hide();
-                }
             }
         }
     }
@@ -587,6 +602,36 @@ void msh::AbstractShell::update_focus_locked(
     }
     focus_surface = surface;
     report->input_focus_set_to(session.get(), surface.get());
+}
+
+void msh::AbstractShell::set_popup_parent(std::shared_ptr<scene::Surface> const& new_popup_parent)
+{
+    if (new_popup_parent == popup_parent.lock())
+    {
+        return;
+    }
+    popup_parent = new_popup_parent;
+    for (auto it = grabbing_popups.rbegin(); it != grabbing_popups.rend(); it++)
+    {
+        if (auto const popup = it->lock())
+        {
+            popup->request_client_surface_close();
+            popup->hide();
+        }
+    }
+}
+
+void msh::AbstractShell::add_grabbing_popup(std::shared_ptr<scene::Surface> const& popup)
+{
+    if (get_toplevel(popup) == popup_parent.lock())
+    {
+        grabbing_popups.push_back(popup);
+    }
+    else
+    {
+        popup->request_client_surface_close();
+        popup->hide();
+    }
 }
 
 void msh::AbstractShell::add_display(geometry::Rectangle const& area)

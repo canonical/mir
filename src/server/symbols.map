@@ -913,3 +913,10 @@ MIR_SERVER_2.9 {
   };
  local: *;
 };
+
+MIR_SERVER_2.10 {
+  global:
+    extern "C++" {
+      mir::shell::ShellWrapper::set_popup_grab_tree*;
+    };
+} MIR_SERVER_2.9;
