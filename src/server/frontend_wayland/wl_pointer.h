@@ -102,6 +102,7 @@ private:
     ///@}
 
     wayland::Weak<WlSurface> surface_under_cursor;
+    std::optional<uint32_t> enter_serial;
     wayland::DestroyListenerId destroy_listener_id; ///< ID of this pointer's destroy listener on surface_under_cursor
     bool needs_frame{false};
     MirPointerButtons current_buttons{0};
