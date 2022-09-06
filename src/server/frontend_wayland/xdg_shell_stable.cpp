@@ -432,12 +432,12 @@ void mf::XdgToplevelStable::show_window_menu(struct wl_resource* seat, uint32_t 
     // TODO
 }
 
-void mf::XdgToplevelStable::move(struct wl_resource* /*seat*/, uint32_t /*serial*/)
+void mf::XdgToplevelStable::move(struct wl_resource* /*seat*/, uint32_t serial)
 {
-    initiate_interactive_move();
+    initiate_interactive_move(serial);
 }
 
-void mf::XdgToplevelStable::resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t edges)
+void mf::XdgToplevelStable::resize(struct wl_resource* /*seat*/, uint32_t serial, uint32_t edges)
 {
     MirResizeEdge edge = mir_resize_edge_none;
 
@@ -478,7 +478,7 @@ void mf::XdgToplevelStable::resize(struct wl_resource* /*seat*/, uint32_t /*seri
     default:;
     }
 
-    initiate_interactive_resize(edge);
+    initiate_interactive_resize(edge, serial);
 }
 
 void mf::XdgToplevelStable::set_max_size(int32_t width, int32_t height)

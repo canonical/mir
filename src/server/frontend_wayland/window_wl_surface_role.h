@@ -79,8 +79,8 @@ public:
     void set_pending_height(std::optional<geometry::Height> const& height);
     void set_title(std::string const& title);
     void set_application_id(std::string const& application_id);
-    void initiate_interactive_move();
-    void initiate_interactive_resize(MirResizeEdge edge);
+    void initiate_interactive_move(uint32_t serial);
+    void initiate_interactive_resize(MirResizeEdge edge, uint32_t serial);
     void set_parent(std::optional<std::shared_ptr<scene::Surface>> const& parent);
     void set_max_size(int32_t width, int32_t height);
     void set_min_size(int32_t width, int32_t height);

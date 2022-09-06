@@ -162,16 +162,18 @@ void mf::WindowWlSurfaceRole::set_application_id(std::string const& application_
     spec().application_id = application_id;
 }
 
-void mf::WindowWlSurfaceRole::initiate_interactive_move()
+void mf::WindowWlSurfaceRole::initiate_interactive_move(uint32_t serial)
 {
+    (void)serial;
     if (auto const scene_surface = weak_scene_surface.lock())
     {
         shell->request_move(session, scene_surface, observer->latest_timestamp().count());
     }
 }
 
-void mf::WindowWlSurfaceRole::initiate_interactive_resize(MirResizeEdge edge)
+void mf::WindowWlSurfaceRole::initiate_interactive_resize(MirResizeEdge edge, uint32_t serial)
 {
+    (void)serial;
     if (auto const scene_surface = weak_scene_surface.lock())
     {
         shell->request_resize(session, scene_surface, observer->latest_timestamp().count(), edge);
