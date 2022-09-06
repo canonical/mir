@@ -134,7 +134,7 @@ public:
 
     std::shared_ptr<scene::Session> focused_session() const override;
 
-    // More useful than FocusController::set_focus_to()!
+    void set_popup_grab_tree(std::shared_ptr<scene::Surface> const& surface) override;
     void set_focus_to(
         std::shared_ptr<scene::Session> const& focus_session,
         std::shared_ptr<scene::Surface> const& focus_surface) override;
@@ -174,6 +174,8 @@ private:
     std::vector<std::weak_ptr<scene::Surface>> notified_active_surfaces;
     std::weak_ptr<scene::Surface> last_requested_focus_surface;
     std::weak_ptr<scene::Surface> notified_keyboard_focus_surface;
+    std::weak_ptr<scene::Surface> popup_parent;
+    std::vector<std::weak_ptr<scene::Surface>> grabbing_popups;
     std::shared_ptr<SurfaceConfinementUpdater> const surface_confinement_updater;
 
     void notify_active_surfaces(
@@ -189,6 +191,10 @@ private:
         std::unique_lock<std::mutex> const& lock,
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface);
+
+    void set_popup_parent(std::shared_ptr<scene::Surface> const& new_popup_parent);
+
+    void add_grabbing_popup(std::shared_ptr<scene::Surface> const& popup);
 
     void update_confinement_for(std::shared_ptr<scene::Surface> const& surface) const;
 

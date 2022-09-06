@@ -55,6 +55,11 @@ std::shared_ptr<ms::Session> msh::ShellWrapper::focused_session() const
     return wrapped->focused_session();
 }
 
+void msh::ShellWrapper::set_popup_grab_tree(std::shared_ptr<scene::Surface> const& surface)
+{
+    wrapped->set_popup_grab_tree(surface);
+}
+
 void msh::ShellWrapper::set_focus_to(
     std::shared_ptr<scene::Session> const& focus_session,
     std::shared_ptr<scene::Surface> const& focus_surface)

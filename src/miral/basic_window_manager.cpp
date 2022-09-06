@@ -1576,6 +1576,7 @@ auto miral::BasicWindowManager::select_active_window(Window const& hint) -> mira
     {
         if (prev_window)
         {
+            focus_controller->set_popup_grab_tree(hint);
             focus_controller->set_focus_to(hint.application(), hint);
             policy->advise_focus_lost(info_for(prev_window));
         }
@@ -1593,6 +1594,7 @@ auto miral::BasicWindowManager::select_active_window(Window const& hint) -> mira
 
     if (info_for_hint.focus_mode() == mir_focus_mode_disabled)
     {
+        focus_controller->set_popup_grab_tree(hint);
         if (prev_windows_focus_mode == mir_focus_mode_disabled)
         {
             return {};
@@ -1628,6 +1630,7 @@ auto miral::BasicWindowManager::select_active_window(Window const& hint) -> mira
         }
 
         mru_active_windows.push(hint);
+        focus_controller->set_popup_grab_tree(hint);
         focus_controller->set_focus_to(hint.application(), hint);
 
         if (prev_window && prev_window != hint)
@@ -1643,6 +1646,7 @@ auto miral::BasicWindowManager::select_active_window(Window const& hint) -> mira
             return select_active_window(parent);
     }
 
+    focus_controller->set_popup_grab_tree({});
     return {};
 }
 

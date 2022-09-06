@@ -46,6 +46,8 @@ struct StubFocusController : mir::shell::FocusController
 
     auto focused_session() const -> std::shared_ptr<mir::scene::Session> override { return {}; }
 
+    void set_popup_grab_tree(std::shared_ptr<mir::scene::Surface> const& /*surface*/) override {}
+
     void set_focus_to(
         std::shared_ptr<mir::scene::Session> const& /*focus_session*/,
         std::shared_ptr<mir::scene::Surface> const& /*focus_surface*/) override {}
