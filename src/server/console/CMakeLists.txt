@@ -1,4 +1,7 @@
-include_directories(${DRM_INCLUDE_DIRS})
+include_directories(
+  ${DRM_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_BINARY_DIR}
+)
 
 add_library(
   mirconsole OBJECT
@@ -8,7 +11,7 @@ add_library(
   minimal_console_services.h                minimal_console_services.cpp
   default_configuration.cpp
   ioctl_vt_switcher.cpp                     ioctl_vt_switcher.h
-  
+
   ${CMAKE_CURRENT_BINARY_DIR}/logind-seat.c
   ${CMAKE_CURRENT_BINARY_DIR}/logind-seat.h
   ${CMAKE_CURRENT_BINARY_DIR}/logind-session.c
