@@ -40,24 +40,21 @@ mf::WaylandInputDispatcher::WaylandInputDispatcher(
 {
 }
 
-void mf::WaylandInputDispatcher::handle_event(std::shared_ptr<MirEvent const> const& event)
+void mf::WaylandInputDispatcher::handle_event(std::shared_ptr<MirInputEvent const> const& event)
 {
-    auto const input_ev = mir_event_get_input_event(event.get());
-
-    if (!wl_surface || !input_ev)
+    if (!wl_surface)
     {
         return;
     }
 
     // Remember the timestamp of any events "signed" with a cookie
-    if (mir_input_event_has_cookie(input_ev))
+    if (mir_input_event_has_cookie(event.get()))
     {
-        timestamp = std::chrono::nanoseconds{mir_input_event_get_event_time(input_ev)};
+        timestamp = std::chrono::nanoseconds{mir_input_event_get_event_time(event.get())};
     }
 
-    switch (mir_input_event_get_type(input_ev))
+    switch (mir_input_event_get_type(event.get()))
     {
-
     case mir_input_event_type_pointer:
     {
         auto const pointer_event = dynamic_pointer_cast<MirPointerEvent const>(event);

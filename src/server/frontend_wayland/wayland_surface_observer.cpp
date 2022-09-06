@@ -20,6 +20,7 @@
 
 #include <mir/executor.h>
 #include <mir/log.h>
+#include <mir/events/input_event.h>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -108,7 +109,7 @@ void mf::WaylandSurfaceObserver::input_consumed(ms::Surface const*, std::shared_
         run_on_wayland_thread_unless_window_destroyed(
             [event](Impl* impl, WindowWlSurfaceRole*)
             {
-                impl->input_dispatcher->handle_event(event);
+                impl->input_dispatcher->handle_event(std::dynamic_pointer_cast<MirInputEvent const>(event));
             });
     }
 }
