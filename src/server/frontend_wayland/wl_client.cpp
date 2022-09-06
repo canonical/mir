@@ -123,6 +123,21 @@ auto mf::WlClient::from(wl_client* client) -> WlClient*
     return ctx ? ctx->client.get() : nullptr;
 }
 
+auto mf::WlClient::from_or_throw(wl_client* client) -> WlClient&
+{
+    auto const result = from(client);
+    if (result)
+    {
+        return *result;
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error{
+            std::string{client ? "unknown" : "null"} +
+            " wl_client given to WlClient::from_or_throw()"});
+    }
+}
+
 mf::WlClient::~WlClient()
 {
     shell->close_session(session);

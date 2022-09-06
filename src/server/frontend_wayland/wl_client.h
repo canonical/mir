@@ -53,6 +53,7 @@ public:
         std::function<void(WlClient&)>&& client_created_callback);
 
     static auto from(wl_client* client) -> WlClient*;
+    static auto from_or_throw(wl_client* client) -> WlClient&;
 
     ~WlClient();
 
