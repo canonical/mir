@@ -32,6 +32,7 @@
 
 struct wl_client;
 struct wl_resource;
+struct MirInputEvent;
 
 namespace mir
 {
@@ -118,6 +119,8 @@ protected:
 
     void commit(WlSurfaceState const& state) override;
     void surface_destroyed() override;
+
+    auto input_event_for(uint32_t serial) -> std::shared_ptr<MirInputEvent const>;
 
 private:
     wayland::Weak<WlSurface> const surface;

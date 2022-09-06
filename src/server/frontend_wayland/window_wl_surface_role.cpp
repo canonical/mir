@@ -21,15 +21,14 @@
 #include "wl_surface.h"
 #include "wayland_surface_observer.h"
 #include "wl_seat.h"
-
-#include "mir/shell/surface_specification.h"
-#include "mir/shell/shell.h"
-
-#include "mir/frontend/wayland.h"
 #include "null_event_sink.h"
 
-#include "mir/log.h"
+#include "mir/frontend/wayland.h"
+#include "mir/shell/surface_specification.h"
+#include "mir/shell/shell.h"
 #include "mir/scene/surface.h"
+#include "mir/events/input_event.h"
+#include "mir/log.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -166,10 +165,9 @@ void mf::WindowWlSurfaceRole::initiate_interactive_move(uint32_t serial)
 {
     if (auto const scene_surface = weak_scene_surface.lock())
     {
-        auto const ev = weak_client.value().event_for(serial);
-        if (ev && ev.value() && mir_event_get_type(ev.value().get()) == mir_event_type_input)
+        if (auto const ev = input_event_for(serial))
         {
-            auto const timestamp = mir_input_event_get_event_time(mir_event_get_input_event(ev.value().get()));
+            auto const timestamp = mir_input_event_get_event_time(mir_event_get_input_event(ev.get()));
             shell->request_move(session, scene_surface, timestamp);
         }
     }
@@ -177,13 +175,11 @@ void mf::WindowWlSurfaceRole::initiate_interactive_move(uint32_t serial)
 
 void mf::WindowWlSurfaceRole::initiate_interactive_resize(MirResizeEdge edge, uint32_t serial)
 {
-    (void)serial;
     if (auto const scene_surface = weak_scene_surface.lock())
     {
-        auto const ev = weak_client.value().event_for(serial);
-        if (ev && ev.value() && mir_event_get_type(ev.value().get()) == mir_event_type_input)
+        if (auto const ev = input_event_for(serial))
         {
-            auto const timestamp = mir_input_event_get_event_time(mir_event_get_input_event(ev.value().get()));
+            auto const timestamp = mir_input_event_get_event_time(mir_event_get_input_event(ev.get()));
             shell->request_resize(session, scene_surface, timestamp, edge);
         }
     }
@@ -427,6 +423,19 @@ void mf::WindowWlSurfaceRole::surface_destroyed()
         // derived class doesn't end up using the now-defunct surface.
         delete this;
     }
+}
+
+auto mf::WindowWlSurfaceRole::input_event_for(uint32_t serial) -> std::shared_ptr<MirInputEvent const>
+{
+    if (weak_client)
+    {
+        auto const ev = weak_client.value().event_for(serial);
+        if (ev && ev.value() && mir_event_get_type(ev.value().get()) == mir_event_type_input)
+        {
+            return std::dynamic_pointer_cast<MirInputEvent const>(ev.value());
+        }
+    }
+    return {};
 }
 
 mir::shell::SurfaceSpecification& mf::WindowWlSurfaceRole::spec()
