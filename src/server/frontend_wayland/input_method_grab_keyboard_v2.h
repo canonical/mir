@@ -30,6 +30,7 @@ class CompositeEventFilter;
 namespace frontend
 {
 class WlSeat;
+class WlClient;
 
 /// A keyboard that sends all key events to it's client without ever entering a surface
 class InputMethodGrabKeyboardV2
@@ -48,6 +49,7 @@ private:
 
     std::shared_ptr<Handler> const handler;
     std::unique_ptr<KeyboardHelper> const helper;
+    WlClient& wl_client;
 
     /// KeyboardImpl overrides
     /// @{

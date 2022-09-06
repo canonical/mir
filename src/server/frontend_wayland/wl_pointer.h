@@ -43,6 +43,7 @@ class Executor;
 namespace frontend
 {
 class WlSurface;
+class WlClient;
 
 class CommitHandler
 {
@@ -74,7 +75,7 @@ public:
     struct Cursor;
 
 private:
-    wl_display* const display;
+    WlClient& wl_client;
 
     void leave(std::optional<std::shared_ptr<MirPointerEvent const>> const& event);
     void buttons(std::shared_ptr<MirPointerEvent const> const& event);

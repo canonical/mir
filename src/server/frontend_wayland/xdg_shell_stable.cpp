@@ -250,7 +250,7 @@ void mf::XdgSurfaceStable::ack_configure(uint32_t serial)
 
 void mf::XdgSurfaceStable::send_configure()
 {
-    auto const serial = wl_display_next_serial(wl_client_get_display(mw::XdgSurface::client));
+    auto const serial = WlClient::from(mw::XdgSurface::client)->next_serial(nullptr);
     send_configure_event(serial);
 }
 

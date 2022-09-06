@@ -19,6 +19,7 @@
 #include "wayland_utils.h"
 #include "wl_surface.h"
 #include "wl_seat.h"
+#include "wl_client.h"
 
 #include "mir/executor.h"
 #include "mir_toolkit/events/event.h"
@@ -32,7 +33,8 @@ namespace geom = mir::geometry;
 
 mf::WlTouch::WlTouch(wl_resource* new_resource, std::shared_ptr<time::Clock> const& clock)
     : Touch(new_resource, Version<8>()),
-      clock{clock}
+      clock{clock},
+      wl_client{WlClient::from_or_throw(client)}
 {
 }
 
@@ -63,13 +65,13 @@ void mf::WlTouch::event(std::shared_ptr<MirTouchEvent const> const& event, WlSur
         {
         case mir_touch_action_down:
         {
-            auto const serial = wl_display_next_serial(wl_client_get_display(client));
+            auto const serial = wl_client.next_serial(event);
             down(serial, timestamp, touch_id, root_surface, position);
         }   break;
 
         case mir_touch_action_up:
         {
-            auto const serial = wl_display_next_serial(wl_client_get_display(client));
+            auto const serial = wl_client.next_serial(event);
             up(serial, timestamp, touch_id);
         }   break;
 
@@ -101,7 +103,7 @@ void mf::WlTouch::down(
     auto const listener_id = target_surface->add_destroy_listener(
         [this, touch_id]()
         {
-            auto const serial = wl_display_next_serial(wl_client_get_display(client));
+            auto const serial = wl_client.next_serial(nullptr);
             auto const timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
                 clock->now().time_since_epoch());
             up(serial, timestamp, touch_id);
