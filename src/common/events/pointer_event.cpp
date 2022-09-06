@@ -74,6 +74,16 @@ void MirPointerEvent::set_position(std::optional<mir::geometry::PointF> value)
     position_ = value;
 }
 
+auto MirPointerEvent::local_position() const -> std::optional<mir::geometry::PointF>
+{
+    return local_position_;
+}
+
+void MirPointerEvent::set_local_position(std::optional<mir::geometry::PointF> value)
+{
+    local_position_ = value;
+}
+
 auto MirPointerEvent::motion() const -> mir::geometry::DisplacementF
 {
     return motion_;

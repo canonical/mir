@@ -532,6 +532,10 @@ MIR_COMMON_2.10 {
     typeinfo?for?MirKeyboardEvent;
     MirTouchEvent::set_position*;
     MirTouchEvent::position*;
+    MirTouchEvent::set_local_position*;
+    MirTouchEvent::local_position*;
+    MirPointerEvent::set_local_position*;
+    MirPointerEvent::local_position*;
   };
 } MIR_COMMON_2.9;
 

@@ -84,6 +84,20 @@ void MirTouchEvent::set_position(size_t index, geom::PointF position)
     contacts[index].position = position;
 }
 
+std::optional<geom::PointF> MirTouchEvent::local_position(size_t index) const
+{
+    throw_if_out_of_bounds(index);
+
+    return contacts[index].local_position;
+}
+
+void MirTouchEvent::set_local_position(size_t index, std::optional<geom::PointF> position)
+{
+    throw_if_out_of_bounds(index);
+
+    contacts[index].local_position = position;
+}
+
 float MirTouchEvent::touch_major(size_t index) const
 {
     throw_if_out_of_bounds(index);

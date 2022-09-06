@@ -41,6 +41,9 @@ struct MirTouchEvent : MirInputEvent
     mir::geometry::PointF position(size_t index) const;
     void set_position(size_t index, mir::geometry::PointF position);
 
+    std::optional<mir::geometry::PointF> local_position(size_t index) const;
+    void set_local_position(size_t index, std::optional<mir::geometry::PointF> position);
+
     float touch_major(size_t index) const;
     void set_touch_major(size_t index, float major);
 
