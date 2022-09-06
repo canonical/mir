@@ -336,11 +336,6 @@ auto mf::WindowWlSurfaceRole::is_active() const -> bool
     }
 }
 
-auto mf::WindowWlSurfaceRole::latest_timestamp() const -> std::chrono::nanoseconds
-{
-    return observer->latest_timestamp();
-}
-
 void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
 {
     if (!surface)

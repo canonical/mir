@@ -62,9 +62,6 @@ public:
     void input_consumed(scene::Surface const*, std::shared_ptr<MirEvent const> const& event) override;
     ///@}
 
-    /// Can be called from any thread
-    auto latest_timestamp() const -> std::chrono::nanoseconds;
-
 private:
     struct ThreadsafeInputDispatcher
     {

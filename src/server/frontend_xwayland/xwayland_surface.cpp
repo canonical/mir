@@ -1131,19 +1131,6 @@ void mf::XWaylandSurface::request_scene_surface_state(MirWindowState new_state)
     }
 }
 
-auto mf::XWaylandSurface::latest_input_timestamp(ProofOfMutexLock const&) -> std::chrono::nanoseconds
-{
-    if (surface_observer)
-    {
-        return surface_observer.value()->latest_timestamp();
-    }
-    else
-    {
-        log_warning("Can not get timestamp because surface_observer is null");
-        return {};
-    }
-}
-
 void mf::XWaylandSurface::apply_any_mods_to_scene_surface()
 {
     std::shared_ptr<mir::scene::Surface> scene_surface;

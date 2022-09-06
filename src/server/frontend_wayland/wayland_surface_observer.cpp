@@ -114,11 +114,6 @@ void mf::WaylandSurfaceObserver::input_consumed(ms::Surface const*, std::shared_
     }
 }
 
-auto mf::WaylandSurfaceObserver::latest_timestamp() const -> std::chrono::nanoseconds
-{
-    return impl->input_dispatcher->latest_timestamp();
-}
-
 void mf::WaylandSurfaceObserver::run_on_wayland_thread_unless_window_destroyed(
     std::function<void(Impl* impl, WindowWlSurfaceRole* window)>&& work)
 {

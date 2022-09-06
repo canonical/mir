@@ -50,8 +50,6 @@ public:
 
     void handle_event(std::shared_ptr<MirInputEvent const> const& event);
 
-    auto latest_timestamp() const -> std::chrono::nanoseconds { return timestamp; }
-
 private:
     WaylandInputDispatcher(WaylandInputDispatcher const&) = delete;
     WaylandInputDispatcher& operator=(WaylandInputDispatcher const&) = delete;
@@ -59,8 +57,6 @@ private:
     WlSeat* const seat;
     wl_client* const client;
     wayland::Weak<WlSurface> const wl_surface;
-
-    std::chrono::nanoseconds timestamp{0};
 };
 }
 }

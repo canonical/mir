@@ -115,7 +115,6 @@ protected:
 
     auto window_state() const -> MirWindowState;
     auto is_active() const -> bool;
-    auto latest_timestamp() const -> std::chrono::nanoseconds;
 
     void commit(WlSurfaceState const& state) override;
     void surface_destroyed() override;

@@ -161,15 +161,6 @@ void mf::XWaylandSurfaceObserver::input_consumed(ms::Surface const*, std::shared
     }
 }
 
-auto mf::XWaylandSurfaceObserver::latest_timestamp() const -> std::chrono::nanoseconds
-{
-    std::lock_guard lock{input_dispatcher->mutex};
-    if (input_dispatcher->dispatcher)
-        return input_dispatcher->dispatcher.value()->latest_timestamp();
-    else
-        return {};
-}
-
 mf::XWaylandSurfaceObserver::ThreadsafeInputDispatcher::ThreadsafeInputDispatcher(
     std::unique_ptr<WaylandInputDispatcher> dispatcher)
     : dispatcher{std::move(dispatcher)}

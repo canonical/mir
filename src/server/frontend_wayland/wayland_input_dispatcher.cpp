@@ -47,12 +47,6 @@ void mf::WaylandInputDispatcher::handle_event(std::shared_ptr<MirInputEvent cons
         return;
     }
 
-    // Remember the timestamp of any events "signed" with a cookie
-    if (mir_input_event_has_cookie(event.get()))
-    {
-        timestamp = std::chrono::nanoseconds{mir_input_event_get_event_time(event.get())};
-    }
-
     switch (mir_input_event_get_type(event.get()))
     {
     case mir_input_event_type_pointer:

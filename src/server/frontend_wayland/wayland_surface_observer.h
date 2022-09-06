@@ -65,9 +65,6 @@ public:
     }
 
     /// Should only be called from the Wayland thread
-    auto latest_timestamp() const -> std::chrono::nanoseconds;
-
-    /// Should only be called from the Wayland thread
     auto state() const -> MirWindowState
     {
         return impl->current_state;
