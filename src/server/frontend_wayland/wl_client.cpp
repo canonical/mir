@@ -143,9 +143,16 @@ mf::WlClient::~WlClient()
     shell->close_session(session);
 }
 
+auto mf::WlClient::next_serial(std::shared_ptr<MirEvent const> event) -> uint32_t
+{
+    (void)event;
+    return wl_display_next_serial(display);
+}
+
 mf::WlClient::WlClient(wl_client* client, std::shared_ptr<ms::Session> const& session, msh::Shell* shell)
     : shell{shell},
       client{client},
+      display{wl_client_get_display(client)},
       session{session}
 {
 }
