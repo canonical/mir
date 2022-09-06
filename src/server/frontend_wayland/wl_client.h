@@ -23,6 +23,8 @@ struct wl_display;
 
 #include <memory>
 #include <functional>
+#include <optional>
+#include <deque>
 
 #include "mir/wayland/wayland_base.h"
 
@@ -73,6 +75,10 @@ public:
     /// Generate a new serial, and keep track of it attached to the given event. Event may be null.
     auto next_serial(std::shared_ptr<MirEvent const> event) -> uint32_t;
 
+    /// Returns the event associated with the given serial. Returns optional{nullptr} if the serial is known, but not
+    /// associated with an event. Returns nullopt if the serial is unkown/invalid.
+    auto event_for(uint32_t serial) -> std::optional<std::shared_ptr<MirEvent const>>;
+
     /// The XDG output protocol implementation sends the Mir-internal logical position and scale of outputs multiplied
     /// by this. It's currently just used by XWayland.
     /// @{
@@ -91,6 +97,7 @@ private:
     wl_display* const display;
     std::shared_ptr<scene::Session> const session;
 
+    std::deque<std::pair<uint32_t, std::shared_ptr<MirEvent const>>> serial_event_pairs;
     float output_geometry_scale_{1};
 };
 }

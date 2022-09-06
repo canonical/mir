@@ -31,6 +31,8 @@ namespace msh = mir::shell;
 
 namespace
 {
+static const int max_serial_event_pairs = 100;
+
 /// The context required for creating new WlClient's from wl_client*s
 struct ConstructionCtx
 {
@@ -145,8 +147,25 @@ mf::WlClient::~WlClient()
 
 auto mf::WlClient::next_serial(std::shared_ptr<MirEvent const> event) -> uint32_t
 {
-    (void)event;
-    return wl_display_next_serial(display);
+    auto const serial = wl_display_next_serial(display);
+    serial_event_pairs.push_front({serial, event});
+    while (serial_event_pairs.size() > max_serial_event_pairs)
+    {
+        serial_event_pairs.pop_back();
+    }
+    return serial;
+}
+
+auto mf::WlClient::event_for(uint32_t serial) -> std::optional<std::shared_ptr<MirEvent const>>
+{
+    for (auto const& pair : serial_event_pairs)
+    {
+        if (pair.first == serial)
+        {
+            return pair.second;
+        }
+    }
+    return std::nullopt;
 }
 
 mf::WlClient::WlClient(wl_client* client, std::shared_ptr<ms::Session> const& session, msh::Shell* shell)
