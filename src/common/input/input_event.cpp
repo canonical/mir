@@ -220,9 +220,9 @@ float mir_touch_event_axis_value(MirTouchEvent const* event,
     switch (axis)
     {
     case mir_touch_axis_x:
-        return event->x(touch_index);
+        return event->position(touch_index).x.as_value();
     case mir_touch_axis_y:
-        return event->y(touch_index);
+        return event->position(touch_index).y.as_value();
     case mir_touch_axis_pressure:
         return event->pressure(touch_index);
     case mir_touch_axis_touch_major:

@@ -231,8 +231,7 @@ void mev::add_touch(
 
     tev->set_id(current_index, touch_id);
     tev->set_tool_type(current_index, tooltype);
-    tev->set_x(current_index, x_axis_value);
-    tev->set_y(current_index, y_axis_value);
+    tev->set_position(current_index, {x_axis_value, y_axis_value});
     tev->set_pressure(current_index, pressure_value);
     tev->set_touch_major(current_index, touch_major_value);
     tev->set_touch_minor(current_index, touch_minor_value);
@@ -405,10 +404,7 @@ void mev::transform_positions(MirEvent& event, mir::geometry::Displacement const
             auto tev = event.to_input()->to_touch();
             for (unsigned i = 0; i < tev->pointer_count(); i++)
             {
-                auto x = tev->x(i);
-                auto y = tev->y(i);
-                tev->set_x(i, x - movement.dx.as_int());
-                tev->set_y(i, y - movement.dy.as_int());
+                tev->set_position(i, tev->position(i) - geom::DisplacementF{movement});
             }
         }
     }
@@ -432,8 +428,7 @@ void mev::scale_positions(MirEvent& event, float scale)
             auto tev = event.to_input()->to_touch();
             for (unsigned i = 0; i < tev->pointer_count(); i++)
             {
-                tev->set_x(i, tev->x(i) * scale);
-                tev->set_y(i, tev->y(i) * scale);
+                tev->set_position(i, as_point(as_displacement(tev->position(i)) * scale));
             }
         }
     }

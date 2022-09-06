@@ -38,11 +38,8 @@ struct MirTouchEvent : MirInputEvent
     int id(size_t index) const;
     void set_id(size_t index, int id);
 
-    float x(size_t index) const;
-    void set_x(size_t index, float x);
-
-    float y(size_t index) const;
-    void set_y(size_t index, float y);
+    mir::geometry::PointF position(size_t index) const;
+    void set_position(size_t index, mir::geometry::PointF position);
 
     float touch_major(size_t index) const;
     void set_touch_major(size_t index, float major);

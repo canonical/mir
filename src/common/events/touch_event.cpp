@@ -70,32 +70,18 @@ void MirTouchEvent::set_id(size_t index, int id)
     contacts[index].touch_id = id;
 }
 
-float MirTouchEvent::x(size_t index) const
+geom::PointF MirTouchEvent::position(size_t index) const
 {
     throw_if_out_of_bounds(index);
 
-    return contacts[index].position.x.as_value();
+    return contacts[index].position;
 }
 
-void MirTouchEvent::set_x(size_t index, float x)
+void MirTouchEvent::set_position(size_t index, geom::PointF position)
 {
     throw_if_out_of_bounds(index);
 
-    contacts[index].position.x = geom::XF{x};
-}
-
-float MirTouchEvent::y(size_t index) const
-{
-    throw_if_out_of_bounds(index);
-
-    return contacts[index].position.y.as_value();
-}
-
-void MirTouchEvent::set_y(size_t index, float y)
-{
-    throw_if_out_of_bounds(index);
-
-    contacts[index].position.y = geom::YF{y};
+    contacts[index].position = position;
 }
 
 float MirTouchEvent::touch_major(size_t index) const
