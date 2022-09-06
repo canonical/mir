@@ -101,7 +101,7 @@ mf::XWaylandSurfaceObserver::~XWaylandSurfaceObserver()
 
 auto mf::XWaylandSurfaceObserver::latest_move_resize_event() -> std::shared_ptr<MirInputEvent const>
 {
-    return *_latest_move_resize_event.lock();
+    return *latest_move_resize_event_.lock();
 }
 
 void mf::XWaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAttrib attrib, int value)
@@ -150,7 +150,7 @@ void mf::XWaylandSurfaceObserver::input_consumed(ms::Surface const*, std::shared
 
         if (is_move_resize_event(mir_event_get_input_event(owned_event.get())))
         {
-            *_latest_move_resize_event.lock() = owned_event;
+            *latest_move_resize_event_.lock() = owned_event;
         }
 
         aquire_input_dispatcher(

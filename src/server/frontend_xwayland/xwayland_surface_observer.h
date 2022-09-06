@@ -79,7 +79,7 @@ private:
     Executor& wayland_executor;
     std::shared_ptr<ThreadsafeInputDispatcher> const input_dispatcher;
     float const scale;
-    Synchronised<std::shared_ptr<MirInputEvent const>> _latest_move_resize_event;
+    Synchronised<std::shared_ptr<MirInputEvent const>> latest_move_resize_event_;
 
     /// Runs work on the Wayland thread if the input dispatcher still exists
     /// Does nothing if the input dispatcher has already been destroyed
