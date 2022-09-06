@@ -1,6 +1,6 @@
 include_directories(
   ${DRM_INCLUDE_DIRS}
-  ${CMAKE_CURRENT_BINARY_DIR}/src/server/console
+  ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 add_library(
