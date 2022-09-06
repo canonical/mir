@@ -17,6 +17,7 @@
 #include "buffer_from_wl_shm.h"
 #include "shm_buffer.h"
 
+#include "mir/graphics/egl_context_executor.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/executor.h"
 
@@ -310,11 +311,12 @@ public:
         mir::geometry::Stride stride,
         MirPixelFormat format,
         std::function<void()>&& on_consumed)
-        : ShmBuffer(size, format, std::move(egl_delegate)),
+        : ShmBuffer(size, format, egl_delegate),
           on_consumed{std::move(on_consumed)},
           buffer{std::move(buffer)},
           stride_{stride}
     {
+        egl_delegate->spawn([this](){ bind(); });
     }
 
     void bind() override
