@@ -164,10 +164,14 @@ void mf::WindowWlSurfaceRole::set_application_id(std::string const& application_
 
 void mf::WindowWlSurfaceRole::initiate_interactive_move(uint32_t serial)
 {
-    (void)serial;
     if (auto const scene_surface = weak_scene_surface.lock())
     {
-        shell->request_move(session, scene_surface, observer->latest_timestamp().count());
+        auto const ev = weak_client.value().event_for(serial);
+        if (ev && ev.value() && mir_event_get_type(ev.value().get()) == mir_event_type_input)
+        {
+            auto const timestamp = mir_input_event_get_event_time(mir_event_get_input_event(ev.value().get()));
+            shell->request_move(session, scene_surface, timestamp);
+        }
     }
 }
 
@@ -176,7 +180,12 @@ void mf::WindowWlSurfaceRole::initiate_interactive_resize(MirResizeEdge edge, ui
     (void)serial;
     if (auto const scene_surface = weak_scene_surface.lock())
     {
-        shell->request_resize(session, scene_surface, observer->latest_timestamp().count(), edge);
+        auto const ev = weak_client.value().event_for(serial);
+        if (ev && ev.value() && mir_event_get_type(ev.value().get()) == mir_event_type_input)
+        {
+            auto const timestamp = mir_input_event_get_event_time(mir_event_get_input_event(ev.value().get()));
+            shell->request_resize(session, scene_surface, timestamp, edge);
+        }
     }
 }
 
