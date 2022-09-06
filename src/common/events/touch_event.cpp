@@ -19,6 +19,8 @@
 
 #include <stdexcept>
 
+namespace geom = mir::geometry;
+
 MirTouchEvent::MirTouchEvent() : MirInputEvent(mir_input_event_type_touch)
 {
 }
@@ -27,7 +29,7 @@ MirTouchEvent::MirTouchEvent(MirInputDeviceId id,
                              std::chrono::nanoseconds timestamp,
                              std::vector<uint8_t> const& cookie,
                              MirInputEventModifiers modifiers,
-                             std::vector<mir::events::ContactState> const& contacts)
+                             std::vector<mir::events::TouchContact> const& contacts)
     : MirInputEvent(mir_input_event_type_touch, id, timestamp, modifiers, cookie),
       contacts{contacts}
 {
@@ -72,28 +74,28 @@ float MirTouchEvent::x(size_t index) const
 {
     throw_if_out_of_bounds(index);
 
-    return contacts[index].x;
+    return contacts[index].position.x.as_value();
 }
 
 void MirTouchEvent::set_x(size_t index, float x)
 {
     throw_if_out_of_bounds(index);
 
-    contacts[index].x = x;
+    contacts[index].position.x = geom::XF{x};
 }
 
 float MirTouchEvent::y(size_t index) const
 {
     throw_if_out_of_bounds(index);
 
-    return contacts[index].y;
+    return contacts[index].position.y.as_value();
 }
 
 void MirTouchEvent::set_y(size_t index, float y)
 {
     throw_if_out_of_bounds(index);
 
-    contacts[index].y = y;
+    contacts[index].position.y = geom::YF{y};
 }
 
 float MirTouchEvent::touch_major(size_t index) const

@@ -393,18 +393,17 @@ mir::EventUPtr mie::LibInputDevice::convert_touch_frame(libinput_event_touch* to
     // TODO make libinput indicate tool type
     auto const tool = mir_touch_tooltype_finger;
 
-    std::vector<events::ContactState> contacts;
+    std::vector<events::TouchContact> contacts;
     for(auto it = begin(last_seen_properties); it != end(last_seen_properties);)
     {
         auto & id = it->first;
         auto & data = it->second;
 
-        contacts.push_back(events::ContactState{
+        contacts.push_back(events::TouchContact{
                            id,
                            data.action,
                            tool,
-                           data.x,
-                           data.y,
+                           {data.x, data.y},
                            data.pressure,
                            data.major,
                            data.minor,
@@ -428,7 +427,7 @@ mir::EventUPtr mie::LibInputDevice::convert_touch_frame(libinput_event_touch* to
     int emptyTouches = 0;
     for (const auto &contact: contacts)
     {
-        if (contact.x == 0 && contact.y == 0)
+        if (contact.position == geom::PointF{})
             emptyTouches++;
     }
     if (contacts.empty() || emptyTouches > 1)

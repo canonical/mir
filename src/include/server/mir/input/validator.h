@@ -17,7 +17,7 @@
 #ifndef MIR_INPUT_VALIDATOR_H_
 #define MIR_INPUT_VALIDATOR_H_
 
-#include "mir/events/contact_state.h"
+#include "mir/events/touch_contact.h"
 
 #include <memory>
 #include <unordered_map>
@@ -39,13 +39,13 @@ public:
 private:
     std::mutex state_guard;
     std::function<void(MirEvent const&)> const dispatch_valid_event;
-    std::unordered_map<MirInputDeviceId, std::vector<events::ContactState>> last_event_by_device;
+    std::unordered_map<MirInputDeviceId, std::vector<events::TouchContact>> last_event_by_device;
 
     void handle_touch_event(MirEvent const& event);
     void ensure_stream_validity_locked(std::lock_guard<std::mutex> const& lg,
-                                       std::vector<events::ContactState> const& new_state,
-                                       std::vector<events::ContactState> & last_state,
-                                       std::function<void(std::vector<events::ContactState> const&)> const&);
+                                       std::vector<events::TouchContact> const& new_state,
+                                       std::vector<events::TouchContact> & last_state,
+                                       std::function<void(std::vector<events::TouchContact> const&)> const&);
 };
 }
 }

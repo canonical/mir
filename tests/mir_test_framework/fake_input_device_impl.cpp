@@ -243,7 +243,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
     {
         auto touch_event = builder->touch_event(
             event_time,
-            {{MirTouchId{1}, touch_action, mir_touch_tooltype_finger, abs_x, abs_y, 1.0f, 8.0f, 5.0f, 0.0f}});
+            {{MirTouchId{1}, touch_action, mir_touch_tooltype_finger, {abs_x, abs_y}, 1.0f, 8.0f, 5.0f, 0.0f}});
         touch_event->to_input()->set_event_time(event_time);
 
         sink->handle_input(std::move(touch_event));

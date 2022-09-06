@@ -444,7 +444,21 @@ mir::EventUPtr mev::make_touch_event(
     std::chrono::nanoseconds timestamp,
     std::vector<uint8_t> const& cookie,
     MirInputEventModifiers modifiers,
-    std::vector<mev::ContactState> const& contacts)
+    std::vector<mev::TouchContactV1> const& contacts)
+{
+    std::vector<mev::TouchContact> contacts_new{begin(contacts), end(contacts)};
+    auto e = new_event<MirTouchEvent>(device_id, timestamp, cookie, modifiers, contacts_new);
+    return make_uptr_event(e);
+}
+
+// Intentionally uses TouchContactV2 instad of TouchContact as a reminder that a new copy of this function will be needed
+// for each TouchContact struct version.
+mir::EventUPtr mev::make_touch_event(
+    MirInputDeviceId device_id,
+    std::chrono::nanoseconds timestamp,
+    std::vector<uint8_t> const& cookie,
+    MirInputEventModifiers modifiers,
+    std::vector<mev::TouchContactV2> const& contacts)
 {
     auto e = new_event<MirTouchEvent>(device_id, timestamp, cookie, modifiers, contacts);
     return make_uptr_event(e);

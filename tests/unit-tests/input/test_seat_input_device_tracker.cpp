@@ -37,6 +37,7 @@ namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
+namespace mev = mir::events;
 namespace
 {
 
@@ -110,7 +111,7 @@ TEST_F(SeatInputDeviceTracker, throws_on_unknown_device)
     EXPECT_CALL(mock_dispatcher, dispatch(_)).Times(0);
     EXPECT_THROW(
         {
-            tracker.dispatch(some_device_builder.touch_event(arbitrary_timestamp,{}));
+            tracker.dispatch(some_device_builder.touch_event(arbitrary_timestamp, std::vector<mev::TouchContact>{}));
         },
         std::logic_error);
 }
@@ -120,7 +121,7 @@ TEST_F(SeatInputDeviceTracker, dispatch_posts_to_input_dispatcher)
     EXPECT_CALL(mock_dispatcher, dispatch(_));
 
     tracker.add_device(some_device);
-    tracker.dispatch(some_device_builder.touch_event(arbitrary_timestamp, {}));
+    tracker.dispatch(some_device_builder.touch_event(arbitrary_timestamp, std::vector<mev::TouchContact>{}));
 }
 
 TEST_F(SeatInputDeviceTracker, forwards_touch_spots_to_visualizer)

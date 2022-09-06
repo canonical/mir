@@ -26,19 +26,21 @@ namespace mev = mir::events;
 
 namespace
 {
-std::vector<mev::ContactState> get_contact_state(MirTouchEvent const* event)
+std::vector<mev::TouchContact> get_touch_contact(MirTouchEvent const* event)
 {
-    std::vector<mev::ContactState> ret;
+    std::vector<mev::TouchContact> ret;
     ret.reserve(mir_touch_event_point_count(event));
 
     for (size_t i = 0, count = mir_touch_event_point_count(event); i != count; ++i)
     {
-        ret.push_back(mev::ContactState{
+        ret.push_back(mev::TouchContact{
                       mir_touch_event_id(event, i),
                       mir_touch_event_action(event, i),
                       mir_touch_event_tooltype(event, i),
-                      mir_touch_event_axis_value(event, i, mir_touch_axis_x),
-                      mir_touch_event_axis_value(event, i, mir_touch_axis_y),
+                      {
+                          mir_touch_event_axis_value(event, i, mir_touch_axis_x),
+                          mir_touch_event_axis_value(event, i, mir_touch_axis_y),
+                      },
                       mir_touch_event_axis_value(event, i, mir_touch_axis_pressure),
                       mir_touch_event_axis_value(event, i, mir_touch_axis_touch_major),
                       mir_touch_event_axis_value(event, i, mir_touch_axis_touch_minor),
@@ -95,9 +97,9 @@ void mi::Validator::validate_and_dispatch(MirEvent const& event)
 // has appeared before its gone down and thus we must inject an event signifying this touch going down.
 void mi::Validator::ensure_stream_validity_locked(
     std::lock_guard<std::mutex> const&,
-    std::vector<mev::ContactState> const& new_event,
-    std::vector<mev::ContactState>& last_state,
-    std::function<void(std::vector<mev::ContactState> const&)> const& dispatch)
+    std::vector<mev::TouchContact> const& new_event,
+    std::vector<mev::TouchContact>& last_state,
+    std::function<void(std::vector<mev::TouchContact> const&)> const& dispatch)
 {
     using TouchSet = std::set<MirTouchId>;
     TouchSet expected;
@@ -150,13 +152,13 @@ void mi::Validator::handle_touch_event(MirEvent const& event)
     auto const input_event = mir_event_get_input_event(&event);
     auto const id = mir_input_event_get_device_id(input_event);
     auto const touch_event = mir_input_event_get_touch_event(input_event);
-    auto new_state = get_contact_state(touch_event);
+    auto new_state = get_touch_contact(touch_event);
 
     ensure_stream_validity_locked(
         lg,
         new_state,
         last_event_by_device[id],
-        [this, touch_event, id](std::vector<events::ContactState> const& contacts)
+        [this, touch_event, id](std::vector<events::TouchContact> const& contacts)
         {
             dispatch_valid_event(*mev::make_touch_event(
                 id,

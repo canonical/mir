@@ -29,7 +29,7 @@ struct MirTouchEvent : MirInputEvent
                   std::chrono::nanoseconds timestamp,
                   std::vector<uint8_t> const& cookie,
                   MirInputEventModifiers modifiers,
-                  std::vector<mir::events::ContactState> const& contacts);
+                  std::vector<mir::events::TouchContact> const& contacts);
     auto clone() const -> MirTouchEvent* override;
 
     size_t pointer_count() const;
@@ -63,7 +63,7 @@ struct MirTouchEvent : MirInputEvent
     void set_action(size_t index, MirTouchAction action);
 
 private:
-    std::vector<mir::events::ContactState> contacts;
+    std::vector<mir::events::TouchContact> contacts;
     void throw_if_out_of_bounds(size_t index) const;
 };
 
