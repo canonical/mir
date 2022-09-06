@@ -19,6 +19,7 @@
 #include "wl_surface.h"
 #include "wl_seat.h"
 #include "mir/log.h"
+#include "mir/events/keyboard_event.h"
 
 #include <xkbcommon/xkbcommon.h>
 #include <cstring> // memcpy
@@ -40,7 +41,7 @@ mf::WlKeyboard::~WlKeyboard()
     seat.remove_focus_listener(client, this);
 }
 
-void mf::WlKeyboard::handle_event(MirInputEvent const* event)
+void mf::WlKeyboard::handle_event(std::shared_ptr<MirEvent const> const& event)
 {
     helper->handle_event(event);
 }
@@ -104,10 +105,12 @@ void mf::WlKeyboard::send_keymap_xkb_v1(mir::Fd const& fd, size_t length)
     send_keymap_event(KeymapFormat::xkb_v1, fd, length);
 }
 
-void mf::WlKeyboard::send_key(uint32_t timestamp, int scancode, bool down)
+void mf::WlKeyboard::send_key(std::shared_ptr<MirKeyboardEvent const> const& event)
 {
     auto const serial = wl_display_next_serial(wl_client_get_display(client));
-    auto const state = down ? KeyState::pressed : KeyState::released;
+    auto const timestamp = mir_input_event_get_wayland_timestamp(event.get());
+    int const scancode = event->scan_code();
+    auto const state = (event->action() == mir_keyboard_action_down) ? KeyState::pressed : KeyState::released;
     send_key_event(serial, timestamp, scancode, state);
 }
 

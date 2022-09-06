@@ -150,7 +150,7 @@ public:
         {
             seat.for_each_listener(seat.focused_surface.value().client, [&](WlKeyboard* keyboard)
                 {
-                    keyboard->handle_event(mir_event_get_input_event(event.get()));
+                    keyboard->handle_event(event);
                 });
         }
     }

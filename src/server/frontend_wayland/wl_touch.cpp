@@ -22,6 +22,7 @@
 
 #include "mir/executor.h"
 #include "mir_toolkit/events/event.h"
+#include "mir/events/touch_event.h"
 #include "mir/log.h"
 #include "mir/time/clock.h"
 
