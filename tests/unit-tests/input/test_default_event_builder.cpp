@@ -88,10 +88,10 @@ TEST_F(DefaultEventBuilder, when_timestamp_is_much_older_than_clock_then_clock_t
     EXPECT_THAT(event_timestamp(20s), Eq(400s));
 }
 
-TEST_F(DefaultEventBuilder, when_timestamp_is_much_older_than_clock_then_offset_persists)
+TEST_F(DefaultEventBuilder, when_timestamp_is_much_older_than_clock_repeatedly_then_clock_timestamp_is_used)
 {
     clock.advance_by(400s);
     event_timestamp(20s);
     clock.advance_by(2s);
-    EXPECT_THAT(event_timestamp(22s - 10ms), Eq(402s - 10ms));
+    EXPECT_THAT(event_timestamp(22s - 10ms), Eq(402s));
 }

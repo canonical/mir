@@ -115,8 +115,6 @@ private:
 
     MirInputDeviceId const device_id;
     std::shared_ptr<time::Clock> const clock;
-    /// Added to input timestams to get calibrated timestamps for events. Is Timestamp::max() until initial event.
-    std::atomic<Timestamp> timestamp_offset;
     std::shared_ptr<cookie::Authority> const cookie_authority;
 };
 }
