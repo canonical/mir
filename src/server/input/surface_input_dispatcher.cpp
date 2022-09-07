@@ -21,7 +21,7 @@
 #include "mir/scene/null_observer.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/null_surface_observer.h"
-#include "mir/events/event_builders.h"
+#include "mir/events/event_helpers.h"
 #include "mir/events/pointer_event.h"
 #include "mir_toolkit/mir_cookie.h"
 
@@ -122,7 +122,7 @@ void deliver_without_relative_motion(
         0.0f,
         0.0f);
 
-    mev::transform_positions(*to_deliver, geom::Displacement{bounds.top_left.x.as_int(), bounds.top_left.y.as_int()});
+    mev::set_local_position(*to_deliver, geom::DisplacementF{as_displacement(bounds.top_left)});
     if (!drag_and_drop_handle.empty())
         mev::set_drag_and_drop_handle(*to_deliver, drag_and_drop_handle);
     surface->consume(std::move(to_deliver));
@@ -139,7 +139,7 @@ void deliver(
         mev::set_drag_and_drop_handle(*to_deliver, drag_and_drop_handle);
 
     auto const& bounds = surface->input_bounds();
-    mev::transform_positions(*to_deliver, geom::Displacement{bounds.top_left.x.as_int(), bounds.top_left.y.as_int()});
+    mev::set_local_position(*to_deliver, geom::DisplacementF{as_displacement(bounds.top_left)});
     surface->consume(std::move(to_deliver));
 }
 
