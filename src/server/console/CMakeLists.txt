@@ -1,4 +1,7 @@
-include_directories(${DRM_INCLUDE_DIRS})
+include_directories(
+  ${DRM_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_BINARY_DIR}
+)
 
 add_library(
   mirconsole OBJECT
@@ -6,10 +9,14 @@ add_library(
   linux_virtual_terminal.cpp                linux_virtual_terminal.h
   logind_console_services.cpp               logind_console_services.h
   minimal_console_services.h                minimal_console_services.cpp
-  logind-seat.c                             logind-seat.h
-  logind-session.c                          logind-session.h
   default_configuration.cpp
-  ioctl_vt_switcher.cpp                     ioctl_vt_switcher.h)
+  ioctl_vt_switcher.cpp                     ioctl_vt_switcher.h
+
+  ${CMAKE_CURRENT_BINARY_DIR}/logind-seat.c
+  ${CMAKE_CURRENT_BINARY_DIR}/logind-seat.h
+  ${CMAKE_CURRENT_BINARY_DIR}/logind-session.c
+  ${CMAKE_CURRENT_BINARY_DIR}/logind-session.h
+)
 
 set_source_files_properties(
   logind-seat.c
@@ -35,7 +42,7 @@ set_property(
     PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
 
 add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/logind-seat.h
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/logind-seat.h
   COMMAND
     gdbus-codegen
     --header
@@ -43,11 +50,11 @@ add_custom_command(
     --interface-prefix org.freedesktop.login1
     --c-namespace Logind
     ${CMAKE_CURRENT_SOURCE_DIR}/logind-seat.xml
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/logind-seat.c
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/logind-seat.c
   COMMAND
     gdbus-codegen
     --body
@@ -55,11 +62,11 @@ add_custom_command(
     --interface-prefix org.freedesktop.login1
     --c-namespace Logind
     ${CMAKE_CURRENT_SOURCE_DIR}/logind-seat.xml
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/logind-session.h
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/logind-session.h
   COMMAND
     gdbus-codegen
     --header
@@ -67,11 +74,11 @@ add_custom_command(
     --interface-prefix org.freedesktop.login1
     --c-namespace Logind
     ${CMAKE_CURRENT_SOURCE_DIR}/logind-session.xml
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/logind-session.c
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/logind-session.c
   COMMAND
     gdbus-codegen
     --body
@@ -79,7 +86,7 @@ add_custom_command(
     --interface-prefix org.freedesktop.login1
     --c-namespace Logind
     ${CMAKE_CURRENT_SOURCE_DIR}/logind-session.xml
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 set_directory_properties(PROPERTIES CLEAN_NO_CUSTOM 1)
