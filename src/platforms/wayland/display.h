@@ -20,7 +20,7 @@
 #include "displayclient.h"
 
 #include <mir/fd.h>
-#include <mir/events/contact_state.h>
+#include <mir/events/touch_contact.h>
 #include <mir/graphics/display.h>
 #include <mir/graphics/display_report.h>
 #include <mir/renderer/gl/context_source.h>
@@ -141,7 +141,7 @@ private:
     geometry::DisplacementF pointer_scroll;
     std::chrono::nanoseconds pointer_time;
     MirPointerAxisSource pointer_axis_source_ = mir_pointer_axis_source_none;
-    std::vector<events::ContactState> touch_contacts;
+    std::vector<events::TouchContact> touch_contacts;
     std::chrono::nanoseconds touch_time;
 
     std::thread runner;

@@ -81,7 +81,7 @@ class NullPointerInput : public mir::input::wayland::PointerInput
 
 class NullTouchInput : public mir::input::wayland::TouchInput
 {
-    void touch_event(std::chrono::nanoseconds, std::vector<mir::events::ContactState> const&) override
+    void touch_event(std::chrono::nanoseconds, std::vector<mir::events::TouchContact> const&) override
     {
     }
 };
@@ -442,8 +442,9 @@ void mir::graphics::wayland::Display::touch_down(
 
         touch_time = std::chrono::milliseconds{time};
         contact->action = mir_touch_action_down;
-        contact->x = wl_fixed_to_double(x) + touch_displacement.dx.as_int();
-        contact->y = wl_fixed_to_double(y) + touch_displacement.dy.as_int();
+        contact->position = geom::PointF{
+            wl_fixed_to_double(x) + touch_displacement.dx.as_int(),
+            wl_fixed_to_double(y) + touch_displacement.dy.as_int()};
     }
 }
 
@@ -471,8 +472,9 @@ void mir::graphics::wayland::Display::touch_motion(wl_touch* touch, uint32_t tim
 
         touch_time = std::chrono::milliseconds{time};
         contact->action = mir_touch_action_change;
-        contact->x = wl_fixed_to_double(x) + touch_displacement.dx.as_int();
-        contact->y = wl_fixed_to_double(y) + touch_displacement.dy.as_int();
+        contact->position = geom::PointF{
+            wl_fixed_to_double(x) + touch_displacement.dx.as_int(),
+            wl_fixed_to_double(y) + touch_displacement.dy.as_int()};
     }
 
     DisplayClient::touch_motion(touch, time, id, x, y);

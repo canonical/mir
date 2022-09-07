@@ -18,7 +18,7 @@
 #define MIR_INPUT_EVENT_BUILDER_H_
 
 #include "mir_toolkit/event.h"
-#include "mir/events/contact_state.h"
+#include "mir/events/touch_contact.h"
 #include "mir/events/scroll_axis.h"
 #include <memory>
 #include <chrono>
@@ -83,9 +83,10 @@ public:
         float hscroll_value, float vscroll_value,
         float hscroll_discrete, float vscroll_discrete) = 0;
 
+    [[deprecated("use the newest version of touch_event() instead")]]
     virtual EventUPtr touch_event(
         std::optional<Timestamp> timestamp,
-        std::vector<mir::events::ContactState> const& contacts) = 0;
+        std::vector<mir::events::TouchContactV1> const& contacts) = 0;
 
     [[deprecated("use the pointer_event() that includes all properties instead")]]
     virtual EventUPtr pointer_axis_with_stop_event(
@@ -107,6 +108,10 @@ public:
         MirPointerAxisSource axis_source,
         events::ScrollAxisH h_scroll,
         events::ScrollAxisV v_scroll) = 0;
+
+    virtual EventUPtr touch_event(
+        std::optional<Timestamp> timestamp,
+        std::vector<mir::events::TouchContact> const& contacts) = 0;
 
 protected:
     EventBuilder(EventBuilder const&) = delete;
