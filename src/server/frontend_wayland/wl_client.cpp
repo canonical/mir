@@ -141,6 +141,7 @@ auto mf::WlClient::from_or_throw(wl_client* client) -> WlClient&
 
 mf::WlClient::~WlClient()
 {
+    mark_destroyed();
     shell->close_session(session);
 }
 
