@@ -316,7 +316,13 @@ public:
           buffer{std::move(buffer)},
           stride_{stride}
     {
-        egl_delegate->spawn([this](){ bind(); });
+        // All this heavyweight sync around uploading is for testing
+        // If it works we can think more deeply about what really needs fixing
+        std::unique_lock lock{upload_mutex};
+        std::condition_variable cv;
+
+        egl_delegate->spawn([this, &cv](){ bind(); cv.notify_one(); });
+        cv.wait(lock, [&]{ return uploaded;});
     }
 
     void bind() override
