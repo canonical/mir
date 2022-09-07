@@ -68,8 +68,7 @@ struct ClientCtx
 
     static auto from(wl_listener* listener) -> ClientCtx*
     {
-        ClientCtx* ctx;
-        ctx = wl_container_of(listener, ctx, destroy_listener);
+        ClientCtx* ctx = listener ? wl_container_of(listener, ctx, destroy_listener) : nullptr;
         return ctx;
     }
 
