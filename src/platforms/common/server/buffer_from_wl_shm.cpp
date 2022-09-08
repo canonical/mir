@@ -316,25 +316,34 @@ public:
           buffer{std::move(buffer)},
           stride_{stride}
     {
-        // All this heavyweight sync around uploading is for testing
-        // If it works we can think more deeply about what really needs fixing
-        std::unique_lock lock{upload_mutex};
-        std::condition_variable cv;
+        egl_delegate->spawn([this]()
+        {
+            ShmBuffer::bind();
+            {
+                std::lock_guard lock{upload_mutex};
+                auto const mapping = map_readable();
+                upload_to_texture(mapping->data(), mapping->stride());
+                uploaded = true;
+            }
+            upload_cv.notify_one();
+        });
+    }
 
-        egl_delegate->spawn([this, &cv](){ bind(); cv.notify_one(); });
-        cv.wait(lock, [&]{ return uploaded;});
+    ~WlShmBuffer()
+    {
+        wait_for_upload();
     }
 
     void bind() override
     {
+        wait_for_upload();
         ShmBuffer::bind();
-        std::lock_guard lock{upload_mutex};
-        if (!uploaded)
-        {
-            auto const mapping = map_readable();
-            upload_to_texture(mapping->data(), mapping->stride());
-            uploaded = true;
-        }
+    }
+
+    void wait_for_upload() const
+    {
+        std::unique_lock lock{upload_mutex};
+        upload_cv.wait(lock, [&] { return uploaded; });
     }
 
     auto map_readable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char const>> override
@@ -476,7 +485,8 @@ private:
     std::atomic<bool> consumed{false};
     std::function<void()> on_consumed;
 
-    std::mutex upload_mutex;
+    std::mutex mutable upload_mutex;
+    std::condition_variable mutable upload_cv;
     bool uploaded{false};
     SharedWlBuffer const buffer;
     mir::geometry::Stride const stride_;
