@@ -51,7 +51,7 @@ public:
 
     EventUPtr touch_event(
         std::optional<Timestamp> source_timestamp,
-        std::vector<events::ContactState> const& contacts) override;
+        std::vector<events::TouchContactV1> const& contacts) override;
 
     EventUPtr pointer_event(
         std::optional<Timestamp> source_timestamp,
@@ -104,13 +104,17 @@ public:
         events::ScrollAxisV1H h_scroll,
         events::ScrollAxisV1V v_scroll) override;
 
+    // Intentionally uses TouchContactV2* instad of TouchContact* as a reminder that a new copy of this function will be
+    // needed for each TouchContact struct version.
+    EventUPtr touch_event(
+        std::optional<Timestamp> timestamp,
+        std::vector<mir::events::TouchContactV2> const& contacts) override;
+
 private:
     auto calibrate_timestamp(std::optional<Timestamp> source_timestamp) -> Timestamp;
 
     MirInputDeviceId const device_id;
     std::shared_ptr<time::Clock> const clock;
-    /// Added to input timestams to get calibrated timestamps for events. Is Timestamp::max() until initial event.
-    std::atomic<Timestamp> timestamp_offset;
     std::shared_ptr<cookie::Authority> const cookie_authority;
 };
 }

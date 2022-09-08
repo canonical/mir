@@ -29,7 +29,7 @@ struct MirTouchEvent : MirInputEvent
                   std::chrono::nanoseconds timestamp,
                   std::vector<uint8_t> const& cookie,
                   MirInputEventModifiers modifiers,
-                  std::vector<mir::events::ContactState> const& contacts);
+                  std::vector<mir::events::TouchContact> const& contacts);
     auto clone() const -> MirTouchEvent* override;
 
     size_t pointer_count() const;
@@ -38,11 +38,8 @@ struct MirTouchEvent : MirInputEvent
     int id(size_t index) const;
     void set_id(size_t index, int id);
 
-    float x(size_t index) const;
-    void set_x(size_t index, float x);
-
-    float y(size_t index) const;
-    void set_y(size_t index, float y);
+    mir::geometry::PointF position(size_t index) const;
+    void set_position(size_t index, mir::geometry::PointF position);
 
     float touch_major(size_t index) const;
     void set_touch_major(size_t index, float major);
@@ -63,7 +60,7 @@ struct MirTouchEvent : MirInputEvent
     void set_action(size_t index, MirTouchAction action);
 
 private:
-    std::vector<mir::events::ContactState> contacts;
+    std::vector<mir::events::TouchContact> contacts;
     void throw_if_out_of_bounds(size_t index) const;
 };
 

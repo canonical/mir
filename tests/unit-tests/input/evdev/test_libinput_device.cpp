@@ -90,7 +90,7 @@ struct MockEventBuilder : mi::EventBuilder
             });
 
         ON_CALL(*this, touch_event(_, _)).WillByDefault(
-            [this](std::optional<Timestamp> time, std::vector<mir::events::ContactState> const& contacts)
+            [this](std::optional<Timestamp> time, std::vector<mir::events::TouchContact> const& contacts)
             {
                 return builder.touch_event(time, contacts);
             });
@@ -115,7 +115,13 @@ struct MockEventBuilder : mi::EventBuilder
     using EventBuilder::Timestamp;
 
     MOCK_METHOD(mir::EventUPtr, key_event, (std::optional<Timestamp>, MirKeyboardAction, xkb_keysym_t, int));
-    MOCK_METHOD(mir::EventUPtr, touch_event, (std::optional<Timestamp>, std::vector<mir::events::ContactState> const&));
+
+    mir::EventUPtr touch_event(std::optional<Timestamp>, std::vector<mir::events::TouchContactV1> const&)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error{"Deprecated touch_event() called"});
+    }
+
+    MOCK_METHOD(mir::EventUPtr, touch_event, (std::optional<Timestamp>, std::vector<mir::events::TouchContactV2> const&));
     MOCK_METHOD(mir::EventUPtr, pointer_event,
                 (std::optional<Timestamp>, MirPointerAction, MirPointerButtons, std::optional<mir::geometry::PointF>,
                  mir::geometry::DisplacementF, MirPointerAxisSource, mir::events::ScrollAxisH,
@@ -907,8 +913,8 @@ TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_down_events)
     float x = 100;
     float y = 7;
 
-    std::vector<mev::ContactState> contacts{
-        {slot, mir_touch_action_down, mir_touch_tooltype_finger, x, y, pressure,
+    std::vector<mev::TouchContact> contacts{
+        {slot, mir_touch_action_down, mir_touch_tooltype_finger, {x, y}, pressure,
             major, minor, orientation}};
 
     InSequence seq;
@@ -932,8 +938,8 @@ TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_move_events)
     float x = 100;
     float y = 7;
 
-    std::vector<mev::ContactState> contacts{
-        {slot, mir_touch_action_change, mir_touch_tooltype_finger, x, y,
+    std::vector<mev::TouchContact> contacts{
+        {slot, mir_touch_action_change, mir_touch_tooltype_finger, {x, y},
          pressure, major, minor, orientation}};
 
     InSequence seq;
@@ -956,9 +962,9 @@ TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_up_events_withou
     float x = 30;
     float y = 20;
     float orientation = 0;
-    std::vector<mev::ContactState> contact_down{{slot, mir_touch_action_down, mir_touch_tooltype_finger, x, y,
+    std::vector<mev::TouchContact> contact_down{{slot, mir_touch_action_down, mir_touch_tooltype_finger, {x, y},
         pressure, major, minor, orientation}};
-    std::vector<mev::ContactState> contact_up{{slot, mir_touch_action_up, mir_touch_tooltype_finger, x, y,
+    std::vector<mev::TouchContact> contact_up{{slot, mir_touch_action_up, mir_touch_tooltype_finger, {x, y},
         pressure, major, minor, orientation}};
 
 

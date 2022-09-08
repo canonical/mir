@@ -126,7 +126,7 @@ public:
     TouchInputDevice(std::shared_ptr<dispatch::ActionQueue> const& action_queue);
 
 private:
-    void touch_event(std::chrono::nanoseconds event_time, std::vector<events::ContactState> const& contacts) override;
+    void touch_event(std::chrono::nanoseconds event_time, std::vector<events::TouchContact> const& contacts) override;
 };
 }
 }

@@ -76,8 +76,7 @@ auto touch_ev() -> std::shared_ptr<MirEvent>
     auto const touch_ev = std::make_shared<MirTouchEvent>();
     touch_ev->set_pointer_count(1);
     touch_ev->set_action(0, mir_touch_action_down);
-    touch_ev->set_x(0, 0);
-    touch_ev->set_y(0, 0);
+    touch_ev->set_position(0, {});
     return touch_ev;
 }
 }

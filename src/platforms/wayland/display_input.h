@@ -18,7 +18,7 @@
 #define MIR_PLATFORMS_WAYLAND_DISPLAY_INPUT_H_
 
 #include <mir/fd.h>
-#include <mir/events/contact_state.h>
+#include <mir/events/touch_contact.h>
 #include <mir/geometry/point.h>
 #include <mir/geometry/displacement.h>
 
@@ -78,7 +78,7 @@ public:
 class TouchInput
 {
 public:
-    virtual void touch_event(std::chrono::nanoseconds event_time, std::vector<events::ContactState> const& contacts) = 0;
+    virtual void touch_event(std::chrono::nanoseconds event_time, std::vector<events::TouchContact> const& contacts) = 0;
 
     TouchInput() = default;
     virtual ~TouchInput() = default;
