@@ -59,7 +59,7 @@ private:
     };
 
     std::shared_ptr<time::Clock> const clock;
-    WlClient& wl_client;
+    wayland::Weak<WlClient> wl_client;
 
     /// Maps touch IDs to the surfaces the touch is on
     std::unordered_map<int32_t, TouchedSurface> touch_id_to_surface;

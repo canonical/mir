@@ -49,7 +49,7 @@ private:
 
     std::shared_ptr<Handler> const handler;
     std::unique_ptr<KeyboardHelper> const helper;
-    WlClient& wl_client;
+    wayland::Weak<WlClient> wl_client;
 
     /// KeyboardImpl overrides
     /// @{

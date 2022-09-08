@@ -42,7 +42,7 @@ public:
 
 private:
     WlSeat& seat;
-    WlClient& wl_client;
+    wayland::Weak<WlClient> wl_client;
     std::unique_ptr<KeyboardHelper> const helper;
     wayland::Weak<WlSurface> focused_surface;
 

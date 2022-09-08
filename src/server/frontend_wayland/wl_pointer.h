@@ -75,7 +75,7 @@ public:
     struct Cursor;
 
 private:
-    WlClient& wl_client;
+    wayland::Weak<WlClient> wl_client;
 
     void leave(std::optional<std::shared_ptr<MirPointerEvent const>> const& event);
     void buttons(std::shared_ptr<MirPointerEvent const> const& event);
