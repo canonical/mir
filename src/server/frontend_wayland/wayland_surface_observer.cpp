@@ -122,7 +122,7 @@ void mf::WaylandSurfaceObserver::run_on_wayland_thread_unless_window_destroyed(
     wayland_executor.spawn(
         [impl=impl, work=std::move(work)]
         {
-            if (impl->window)
+            if (impl->client && impl->window)
             {
                 work(impl.get(), &impl->window.value());
             }
