@@ -126,9 +126,9 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"miral::Output::used() const@MIRAL_3.6" 3.6.0
  (c++)"miral::Output::valid() const@MIRAL_3.6" 3.6.0
  (c++)"miral::Output::~Output()@MIRAL_3.6" 3.6.0
- (c++)"miral::PrintTo(miral::Window const&, std::basic_ostream<char, std::char_traits<char> >*)@MIRAL_3.6" 3.6.0
  (c++)"miral::PrependEventFilter::PrependEventFilter(std::function<bool (MirEvent const*)> const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::PrependEventFilter::operator()(mir::Server&)@MIRAL_3.6" 3.6.0
+ (c++)"miral::PrintTo(miral::Window const&, std::basic_ostream<char, std::char_traits<char> >*)@MIRAL_3.6" 3.6.0
  (c++)"miral::SetCommandLineHandler::SetCommandLineHandler(std::function<void (int, char const* const*)> const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::SetCommandLineHandler::operator()(mir::Server&) const@MIRAL_3.6" 3.6.0
  (c++)"miral::SetCommandLineHandler::~SetCommandLineHandler()@MIRAL_3.6" 3.6.0
@@ -355,6 +355,7 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"miral::Zone::Zone(miral::Zone const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::Zone::extents() const@MIRAL_3.6" 3.6.0
  (c++)"miral::Zone::extents(mir::geometry::generic::Rectangle<int> const&)@MIRAL_3.6" 3.6.0
+ (c++)"miral::Zone::id() const@MIRAL_3.6" 3.6.0
  (c++)"miral::Zone::is_same_zone(miral::Zone const&) const@MIRAL_3.6" 3.6.0
  (c++)"miral::Zone::operator=(miral::Zone const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::Zone::operator==(miral::Zone const&) const@MIRAL_3.6" 3.6.0
@@ -411,4 +412,5 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"vtable for miral::CanonicalWindowManagerPolicy@MIRAL_3.6" 3.6.0
  (c++)"vtable for miral::MinimalWindowManager@MIRAL_3.6" 3.6.0
  (c++)"vtable for miral::WindowManagementPolicy@MIRAL_3.6" 3.6.0
- (c++)"miral::Zone::id() const@MIRAL_3.6" 3.6.0
+ MIRAL_3.7@MIRAL_3.7 3.7.0
+ (c++)"miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&, MirInputEventModifier)@MIRAL_3.7" 3.7.0

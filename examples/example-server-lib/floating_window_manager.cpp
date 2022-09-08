@@ -87,15 +87,7 @@ bool FloatingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* ev
 
         if (auto const window = tools.active_window())
         {
-            if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
-            {
-                if (modifiers == mir_input_event_modifier_alt)
-                {
-                    begin_pointer_move(tools.info_for(window), mir_pointer_event_input_event(event));
-                    consumes_event = true;
-                }
-            }
-            else if (mir_pointer_event_button_state(event, mir_pointer_button_tertiary))
+            if (mir_pointer_event_button_state(event, mir_pointer_button_tertiary))
             {
                 if (modifiers == mir_input_event_modifier_alt)
                 {

@@ -67,7 +67,9 @@ global:
     miral::Keymap::operator*;
     miral::Keymap::set_keymap*;
     miral::MinimalWindowManager::?MinimalWindowManager*;
-    miral::MinimalWindowManager::MinimalWindowManager*;
+# We only want to match miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&)
+#    miral::MinimalWindowManager::MinimalWindowManager*;
+    "miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&)";
     miral::MinimalWindowManager::advise_focus_gained*;
     miral::MinimalWindowManager::begin_pointer_move*;
     miral::MinimalWindowManager::begin_pointer_resize*;
@@ -459,3 +461,10 @@ global:
   };
 local: *;
 };
+
+MIRAL_3.7 {
+global:
+  extern "C++" {
+    "miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&, MirInputEventModifier)";
+  };
+} MIRAL_3.6;
