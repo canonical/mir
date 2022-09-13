@@ -34,7 +34,7 @@ namespace geom = mir::geometry;
 mf::WlTouch::WlTouch(wl_resource* new_resource, std::shared_ptr<time::Clock> const& clock)
     : Touch(new_resource, Version<8>()),
       clock{clock},
-      wl_client{WlClient::from(client)}
+      wl_client{&WlClient::from(client)}
 {
 }
 

@@ -75,7 +75,7 @@ mf::InputMethodGrabKeyboardV2::InputMethodGrabKeyboardV2(
     : wayland::InputMethodKeyboardGrabV2{resource, Version<1>()},
       handler{std::make_shared<Handler>(this, wayland_executor)},
       helper{seat.make_keyboard_helper(this)},
-      wl_client{WlClient::from(client)}
+      wl_client{&WlClient::from(client)}
 {
     event_filter.prepend(handler);
     // On cleanup the handler will be dropped and automatically removed from the filter

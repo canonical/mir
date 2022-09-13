@@ -457,7 +457,7 @@ void mf::LayerSurfaceV1::configure()
         configure_size.height = client_size.committed().height;
     }
 
-    auto const serial = WlClient::from_or_throw(wayland::LayerSurfaceV1::client).next_serial(nullptr);
+    auto const serial = WlClient::from(wayland::LayerSurfaceV1::client).next_serial(nullptr);
     if (!inflight_configures.empty() && serial <= inflight_configures.back().first)
         BOOST_THROW_EXCEPTION(std::runtime_error("Generated invalid configure serial"));
     inflight_configures.push_back(std::make_pair(serial, configure_size));

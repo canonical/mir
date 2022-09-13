@@ -32,7 +32,7 @@ namespace mi = mir::input;
 mf::WlKeyboard::WlKeyboard(wl_resource* new_resource, WlSeat& seat)
     : wayland::Keyboard{new_resource, Version<8>()},
       seat{seat},
-      wl_client{WlClient::from(client)},
+      wl_client{&WlClient::from(client)},
       helper{seat.make_keyboard_helper(this)}
 {
     seat.add_focus_listener(client, this);

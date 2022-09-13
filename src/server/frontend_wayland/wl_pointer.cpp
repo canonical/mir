@@ -176,7 +176,7 @@ auto mf::WlPointer::linux_button_to_mir_button(int linux_button) -> std::optiona
 
 mf::WlPointer::WlPointer(wl_resource* new_resource)
     : Pointer(new_resource, Version<8>()),
-      wl_client{WlClient::from(client)},
+      wl_client{&WlClient::from(client)},
       cursor{std::make_unique<NullCursor>()}
 {
 }

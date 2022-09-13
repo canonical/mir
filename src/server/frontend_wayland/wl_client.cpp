@@ -22,6 +22,7 @@
 #include "mir/frontend/session_credentials.h"
 #include "mir/shell/shell.h"
 #include "mir/scene/session.h"
+#include "mir/fatal.h"
 
 #include <wayland-server-core.h>
 
@@ -113,30 +114,23 @@ void mf::WlClient::setup_new_client_handler(
     wl_display_add_destroy_listener(display, &context->display_destruction_listener);
 }
 
-auto mf::WlClient::from(wl_client* client) -> WlClient*
+auto mf::WlClient::from(wl_client* client) -> WlClient&
 {
     if (!client)
     {
-        return nullptr;
+        fatal_error("WlClient::from(): wl_client is null");
     }
     auto listener = wl_client_get_destroy_listener(client, &cleanup_client_ctx);
+    if (!listener)
+    {
+        fatal_error("WlClient::from(): listener is null");
+    }
     auto ctx = ClientCtx::from(listener);
-    return ctx ? ctx->client.get() : nullptr;
-}
-
-auto mf::WlClient::from_or_throw(wl_client* client) -> WlClient&
-{
-    auto const result = from(client);
-    if (result)
+    if (!ctx)
     {
-        return *result;
+        fatal_error("WlClient::from(): ctx is null");
     }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error{
-            std::string{client ? "unknown" : "null"} +
-            " wl_client given to WlClient::from_or_throw()"});
-    }
+    return *ctx->client.get();
 }
 
 mf::WlClient::~WlClient()

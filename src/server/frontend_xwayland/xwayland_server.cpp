@@ -145,7 +145,7 @@ auto connect_xwayland_wl_client(
             {
                 std::lock_guard lock{ctx->mutex};
                 ctx->client = wl_client_create(display, wayland_fd);
-                mf::WlClient::from_or_throw(ctx->client).set_output_geometry_scale(scale);
+                mf::WlClient::from(ctx->client).set_output_geometry_scale(scale);
                 ctx->ready = true;
             }
             ctx->condition_variable.notify_one();

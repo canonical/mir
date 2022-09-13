@@ -36,7 +36,7 @@ mf::WaylandSurfaceObserver::WaylandSurfaceObserver(
     WindowWlSurfaceRole* window)
     : wayland_executor{wayland_executor},
       impl{std::make_shared<Impl>(
-          mw::make_weak(&WlClient::from_or_throw(surface->client)),
+          mw::make_weak(&WlClient::from(surface->client)),
           mw::make_weak(window),
           std::make_unique<WaylandInputDispatcher>(seat, surface))}
 {

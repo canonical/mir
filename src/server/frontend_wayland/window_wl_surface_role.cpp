@@ -67,7 +67,7 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
     std::shared_ptr<msh::Shell> const& shell,
     OutputManager* output_manager)
     : surface{surface},
-      weak_client{WlClient::from(client)},
+      weak_client{&WlClient::from(client)},
       shell{shell},
       session{weak_client.value().client_session()},
       output_manager{output_manager},
