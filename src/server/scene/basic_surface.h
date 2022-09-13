@@ -19,7 +19,7 @@
 
 #include "mir/scene/surface.h"
 #include "mir/proof_of_mutex_lock.h"
-#include "mir/wayland/wayland_base.h"
+#include "mir/wayland/weak.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_toolkit/common.h"
 #include "mir/synchronised.h"

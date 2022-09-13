@@ -17,6 +17,7 @@
 #include "foreign_toplevel_manager_v1.h"
 
 #include "wayland_utils.h"
+#include "mir/wayland/weak.h"
 #include "mir/frontend/surface_stack.h"
 #include "mir/shell/shell.h"
 #include "mir/shell/surface_specification.h"

@@ -17,6 +17,7 @@
 #ifndef MIR_WAYLAND_WEAK_H_
 #define MIR_WAYLAND_WEAK_H_
 
+#include <memory>
 #include <boost/throw_exception.hpp>
 
 namespace mir

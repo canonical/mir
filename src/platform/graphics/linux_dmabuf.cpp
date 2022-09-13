@@ -20,6 +20,7 @@
 
 
 #include "wayland_wrapper.h"
+#include "mir/wayland/protocol_error.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/renderer/gl/context.h"

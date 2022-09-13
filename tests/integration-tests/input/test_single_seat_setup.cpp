@@ -48,7 +48,6 @@
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_device_info.h"
 #include "mir/geometry/rectangles.h"
-#include "mir/wayland/wayland_base.h"
 #include "mir/test/input_config_matchers.h"
 #include "mir/test/fd_utils.h"
 

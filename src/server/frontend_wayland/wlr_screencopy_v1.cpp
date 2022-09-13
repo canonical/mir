@@ -23,6 +23,8 @@
 #include "mir/scene/scene_change_notification.h"
 #include "mir/frontend/surface_stack.h"
 #include "mir/geometry/rectangles.h"
+#include "mir/wayland/weak.h"
+#include "mir/wayland/protocol_error.h"
 #include "mir/executor.h"
 #include "wayland_wrapper.h"
 #include "wayland_timespec.h"
@@ -31,6 +33,7 @@
 #include <boost/throw_exception.hpp>
 #include <mutex>
 #include <optional>
+
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;

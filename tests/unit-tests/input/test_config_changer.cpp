@@ -22,7 +22,6 @@
 #include "mir/scene/session_event_handler_register.h"
 #include "mir/input/input_device_observer.h"
 #include "mir/input/mir_touchscreen_config.h"
-#include "mir/wayland/wayland_base.h"
 
 #include "mir/test/doubles/mock_input_device_hub.h"
 #include "mir/test/doubles/mock_input_manager.h"

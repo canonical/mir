@@ -22,7 +22,6 @@
 #include "mir/graphics/display_configuration_observer.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/scene/null_surface_observer.h"
-#include "mir/wayland/wayland_base.h"
 #include "src/server/scene/basic_surface.h"
 #include "src/include/server/mir/scene/session_event_sink.h"
 #include "src/server/report/null_report_factory.h"

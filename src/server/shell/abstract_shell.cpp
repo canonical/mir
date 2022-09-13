@@ -27,7 +27,7 @@
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/input/seat.h"
-#include "mir/wayland/wayland_base.h"
+#include "mir/wayland/weak.h"
 #include "decoration/manager.h"
 
 #include <algorithm>

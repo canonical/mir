@@ -28,6 +28,7 @@
 
 #include <cstring>
 #include <sys/mman.h>
+#include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;

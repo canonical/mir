@@ -25,7 +25,7 @@
 #include <mir/shell/focus_controller.h>
 #include <mir/shell/persistent_surface_store.h>
 #include "mir/graphics/display_configuration_observer.h"
-#include <mir/wayland/wayland_base.h>
+#include <mir/wayland/weak.h>
 
 #include <mir/test/doubles/stub_session.h>
 #include <mir/test/doubles/stub_surface.h>

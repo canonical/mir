@@ -19,6 +19,8 @@
 #include "wl_pointer.h"
 #include "output_manager.h"
 
+#include "mir/wayland/weak.h"
+#include "mir/wayland/protocol_error.h"
 #include "mir/input/virtual_input_device.h"
 #include "mir/input/input_device_registry.h"
 #include "mir/input/device.h"

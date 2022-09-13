@@ -48,7 +48,8 @@ Emitter header_includes()
         "#include \"mir/fd.h\"",
         "#include <wayland-server-core.h>",
         empty_line,
-        "#include \"mir/wayland/wayland_base.h\"",
+        "#include \"mir/wayland/resource.h\"",
+        "#include \"mir/wayland/global.h\"",
     };
 }
 
@@ -63,6 +64,7 @@ Emitter impl_includes(std::string const& protocol_name)
         "#include <wayland-server-core.h>",
         empty_line,
         "#include \"mir/log.h\"",
+        "#include \"mir/wayland/protocol_error.h\"",
     };
 }
 
