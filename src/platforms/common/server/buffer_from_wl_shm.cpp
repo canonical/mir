@@ -338,6 +338,7 @@ public:
     {
         wait_for_upload();
         ShmBuffer::bind();
+        notify_consumed();
     }
 
     void wait_for_upload() const
@@ -364,8 +365,6 @@ public:
     template<typename T>
     auto map_generic() -> std::unique_ptr<mir::renderer::software::Mapping<T>>
     {
-        notify_consumed();
-
         class Mapping : public mir::renderer::software::Mapping<T>
         {
         public:
