@@ -19,6 +19,7 @@
 
 #include <miral/window_management_policy.h>
 #include <miral/window_manager_tools.h>
+#include <mir_toolkit/events/enums.h>
 
 namespace miral
 {
@@ -28,6 +29,12 @@ class MinimalWindowManager : public WindowManagementPolicy
 {
 public:
     explicit MinimalWindowManager(WindowManagerTools const& tools);
+
+    /// Allows shells to change the modifer used to identify a window drag gesture
+    /// The default is mir_input_event_modifier_alt
+    /// \remark Since MirAL 3.7
+    MinimalWindowManager(WindowManagerTools const& tools, MirInputEventModifier pointer_drag_modifier);
+
     ~MinimalWindowManager();
 
     /// Honours the requested specification

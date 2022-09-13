@@ -185,6 +185,21 @@ add_subdirectory(mir_test/)
 add_subdirectory(mir_test_framework/)
 add_subdirectory(mir_test_doubles/)
 
+set_target_properties(
+  mir-public-test
+  PROPERTIES COMPILE_OPTIONS -fno-lto  # Make double sure we don't generate LTO objects
+)
+
+set_target_properties(
+  mir-public-test-doubles
+  PROPERTIES COMPILE_OPTIONS -fno-lto  # Make double sure we don't generate LTO objects
+)
+
+set_target_properties(
+  mir-public-test-framework
+  PROPERTIES COMPILE_OPTIONS -fno-lto  # Make double sure we don't generate LTO objects
+)
+
 add_library(mir-test-assist STATIC
   $<TARGET_OBJECTS:mir-public-test>
   $<TARGET_OBJECTS:mir-public-test-doubles>

@@ -353,10 +353,10 @@ void mf::WlPointer::enter_or_motion(std::shared_ptr<MirPointerEvent const> const
     {
         // We need to switch surfaces
         leave(event); // If we're currently on a surface, leave it
-        auto const serial = wl_client.value().next_serial(event);
+        enter_serial = wl_client.value().next_serial(event);
         cursor->apply_to(target_surface);
         send_enter_event(
-            serial,
+            enter_serial.value(),
             target_surface->raw_resource(),
             position_on_target.first,
             position_on_target.second);
@@ -485,6 +485,11 @@ void mf::WlPointer::set_cursor(
     std::optional<wl_resource*> const& surface,
     int32_t hotspot_x, int32_t hotspot_y)
 {
+    if (!enter_serial || serial != enter_serial.value())
+    {
+        return;
+    }
+
     // We need an explicit conversion before calling make_unique
     // (the compiler should elide this variable)
     CommitHandler* const commit_handler = this;
@@ -508,8 +513,6 @@ void mf::WlPointer::set_cursor(
         if (surface_under_cursor)
             cursor->apply_to(&surface_under_cursor.value());
     }
-
-    (void)serial;
 }
 
 void mf::WlPointer::on_commit(WlSurface* surface)

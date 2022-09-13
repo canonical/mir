@@ -112,15 +112,22 @@ endif()
 # Link time optimization allows leaner, cleaner libraries
 option(MIR_LINK_TIME_OPTIMIZATION "Enables the linker to optimize binaries." OFF)
 if(MIR_LINK_TIME_OPTIMIZATION)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
   if(${CMAKE_COMPILER_IS_GNUCXX})
-    # clang defaults to fat LTO, but gcc needs an option to specify
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffat-lto-objects")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffat-lto-objects")
+    # Disable fat LTO for a (small) compile performance improvement
+    # We don't ship any LTO-enabled static libraries.
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-fat-lto-objects")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-fat-lto-objects")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
     set(CMAKE_NM "gcc-nm")
     set(CMAKE_AR "gcc-ar")
     set(CMAKE_RANLIB "gcc-ranlib")
+  endif()
+  if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+    # On clang we can use Thin LTO for a rather more
+    # substantial compile performance improvement
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto=thin")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto=thin")
   endif()
 endif()
 

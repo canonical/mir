@@ -65,7 +65,8 @@ auto touch_center(MirTouchEvent const* event) -> mir::geometry::Point
 
 struct miral::MinimalWindowManager::Impl
 {
-    Impl(WindowManagerTools const& tools) : tools{tools} {}
+    Impl(WindowManagerTools const& tools, MirInputEventModifier pointer_drag_modifier) :
+        tools{tools}, pointer_drag_modifier{pointer_drag_modifier} {}
     WindowManagerTools tools;
 
     Gesture gesture = Gesture::none;
@@ -91,11 +92,18 @@ struct miral::MinimalWindowManager::Impl
     bool handle_touch_event(MirTouchEvent const* event);
 
     void apply_resize_by(Displacement movement);
+
+    MirInputEventModifier const pointer_drag_modifier;
 };
 
-miral::MinimalWindowManager::MinimalWindowManager(WindowManagerTools const& tools):
+miral::MinimalWindowManager::MinimalWindowManager(WindowManagerTools const& tools) :
+    MinimalWindowManager{tools, mir_input_event_modifier_alt}
+{
+}
+
+miral::MinimalWindowManager::MinimalWindowManager(WindowManagerTools const& tools, MirInputEventModifier pointer_drag_modifier):
     tools{tools},
-    self{new Impl{tools}}
+    self{new Impl{tools, pointer_drag_modifier}}
 {
 }
 
@@ -425,6 +433,21 @@ bool miral::MinimalWindowManager::Impl::handle_pointer_event(MirPointerEvent con
         if (auto const window = tools.window_at(new_cursor))
         {
             tools.select_active_window(window);
+        }
+
+        if (auto const window = tools.active_window())
+        {
+            if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
+            {
+                if (shift_keys == pointer_drag_modifier)
+                {
+                    begin_pointer_gesture(
+                        tools.info_for(window),
+                        mir_pointer_event_input_event(event),
+                        Gesture::pointer_moving, mir_resize_edge_none);
+                    consumes_event = true;
+                }
+            }
         }
     }
 

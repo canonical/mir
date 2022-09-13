@@ -143,6 +143,7 @@ void mf::KeyboardHelper::set_keymap(std::shared_ptr<mi::Keymap> const& new_keyma
 {
     if (!new_keymap || new_keymap == current_keymap)
     {
+        refresh_internal_state();
         return;
     }
 
