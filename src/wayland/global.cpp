@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 Canonical Ltd.
+ * Copyright © 2022 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -14,13 +14,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_WAYLAND_BASE_H_
-#define MIR_WAYLAND_BASE_H_
+#include "mir/wayland/global.h"
 
-#include "lifetime_tracker.h"
-#include "weak.h"
-#include "resource.h"
-#include "global.h"
-#include "protocol_error.h"
+#include <boost/throw_exception.hpp>
+#include <wayland-server-core.h>
 
-#endif // MIR_WAYLAND_BASE_H_
+namespace mw = mir::wayland;
+
+mw::Global::Global(wl_global* global)
+    : global{global}
+{
+    if (global == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+}
+
+mw::Global::~Global()
+{
+    wl_global_destroy(global);
+}

@@ -5,7 +5,10 @@ add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mirwayland")
 add_subdirectory(generator/)
 
 set(STANDARD_SOURCES
-  wayland_base.cpp
+  lifetime_tracker.cpp
+  resource.cpp
+  global.cpp
+  protocol_error.cpp
 )
 
 add_library(mirwayland SHARED
