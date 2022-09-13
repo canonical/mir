@@ -31,6 +31,10 @@ COMMON_CONFIGURE_OPTIONS = \
   -DMIR_BUILD_INTERPROCESS_TESTS=OFF\
   -DMIR_LINK_TIME_OPTIMIZATION=ON\
 
+ifeq ($(filter ppc64el,$(DEB_HOST_ARCH)),ppc64el)
+	COMMON_CONFIGURE_OPTIONS += -DMIR_COMPILER_QUIRKS="libinput_environment.cpp:restrict"
+endif
+
 # Disable LTO if optimizations are off
 ifeq ($(filter noopt,$(DEB_BUILD_OPTIONS)),noopt)
 	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=OFF
