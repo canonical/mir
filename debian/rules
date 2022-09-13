@@ -34,6 +34,9 @@ COMMON_CONFIGURE_OPTIONS = \
 ifeq ($(filter ppc64el,$(DEB_HOST_ARCH)),ppc64el)
 	COMMON_CONFIGURE_OPTIONS += -DMIR_COMPILER_QUIRKS="libinput_environment.cpp:restrict"
 endif
+ifeq ($(filter riscv64,$(DEB_HOST_ARCH)),riscv64)
+	COMMON_CONFIGURE_OPTIONS += -DMIR_COMPILER_QUIRKS="test_linearising_executor.cpp:use-after-free"
+endif
 
 # Disable LTO if optimizations are off
 ifeq ($(filter noopt,$(DEB_BUILD_OPTIONS)),noopt)
