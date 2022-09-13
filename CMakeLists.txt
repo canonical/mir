@@ -74,7 +74,7 @@ if(MIR_FATAL_COMPILE_WARNINGS)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
 endif()
 
-set(MIR_COMPILER_QUIRKS "" CACHE STRING "List of compiler quirks to enable")
+set(MIR_COMPILER_QUIRKS "" CACHE STRING "Semicolon-separated list of compiler quirks to enable")
 
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag(-Wmismatched-tags HAS_W_MISMATCHED_TAGS)
