@@ -22,6 +22,7 @@
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
+#include "mir/wayland/weak.h"
 
 #include <sys/eventfd.h>
 
