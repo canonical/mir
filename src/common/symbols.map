@@ -527,6 +527,9 @@ MIR_COMMON_2.9 {
 
 MIR_COMMON_2.10 {
   extern "C++" {
+    typeinfo?for?MirPointerEvent;
+    typeinfo?for?MirTouchEvent;
+    typeinfo?for?MirKeyboardEvent;
     MirTouchEvent::set_position*;
     MirTouchEvent::position*;
   };
