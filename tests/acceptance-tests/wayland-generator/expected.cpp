@@ -777,7 +777,10 @@ struct mw::DataOffer::Thunks
 int const mw::DataOffer::Thunks::supported_version = 3;
 
 mw::DataOffer::DataOffer(DataDevice const& parent)
-    : Resource{wl_resource_create(client, &wl_data_offer_interface_data, wl_resource_get_version(parent.resource), 0)}
+    : Resource{wl_resource_create(
+          wl_resource_get_client(parent.resource),
+          &wl_data_offer_interface_data,
+          wl_resource_get_version(parent.resource), 0)}
 {
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }

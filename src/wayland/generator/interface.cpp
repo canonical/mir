@@ -251,7 +251,10 @@ Emitter Interface::constructor_impl(std::string const& parent_interface) const
 {
     return Lines{
         {nmspace, generated_name, "(", constructor_args(parent_interface), ")"},
-        {"    : Resource{wl_resource_create(client, &", wl_name, "_interface_data, wl_resource_get_version(parent.resource), 0)}"},
+        {"    : Resource{wl_resource_create("},
+        {"          wl_resource_get_client(parent.resource),"},
+        {"          &", wl_name, "_interface_data,"},
+        {"          wl_resource_get_version(parent.resource), 0)}"},
         Block{
             "wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);",
         }
