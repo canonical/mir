@@ -51,8 +51,6 @@ public:
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         std::function<void(WlClient&)>&& client_created_callback);
 
-    static auto from(wl_client* client) -> wayland::Client&;
-
     ~WlClient();
 
     /// The underlying Wayland client

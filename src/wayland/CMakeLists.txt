@@ -9,6 +9,7 @@ set(STANDARD_SOURCES
   resource.cpp
   global.cpp
   protocol_error.cpp
+  client.cpp
 )
 
 add_library(mirwayland SHARED
@@ -43,6 +44,7 @@ target_link_libraries(mirwayland
 target_include_directories(mirwayland
   PUBLIC
     ${PROJECT_SOURCE_DIR}/include/wayland
+    ${PROJECT_SOURCE_DIR}/src/include/wayland
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 

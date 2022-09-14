@@ -38,6 +38,9 @@ namespace wayland
 class Client : public wayland::LifetimeTracker
 {
 public:
+    /// Returns the Client object for the given libwayland client
+    static auto from(wl_client* client) -> Client&;
+
     /// The underlying Wayland client
     virtual auto raw_client() const -> wl_client* = 0;
 
@@ -62,6 +65,10 @@ public:
     virtual void set_output_geometry_scale(float scale) = 0;
     virtual auto output_geometry_scale() -> float = 0;
     /// @}
+
+protected:
+    static void register_client(Client* client);
+    static void unregister_client(Client* client);
 };
 }
 }

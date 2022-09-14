@@ -114,28 +114,10 @@ void mf::WlClient::setup_new_client_handler(
     wl_display_add_destroy_listener(display, &context->display_destruction_listener);
 }
 
-auto mf::WlClient::from(wl_client* client) -> Client&
-{
-    if (!client)
-    {
-        fatal_error("WlClient::from(): wl_client is null");
-    }
-    auto listener = wl_client_get_destroy_listener(client, &cleanup_client_ctx);
-    if (!listener)
-    {
-        fatal_error("WlClient::from(): listener is null");
-    }
-    auto ctx = ClientCtx::from(listener);
-    if (!ctx)
-    {
-        fatal_error("WlClient::from(): ctx is null");
-    }
-    return *ctx->client.get();
-}
-
 mf::WlClient::~WlClient()
 {
     mark_destroyed();
+    unregister_client(this);
     shell->close_session(session);
 }
 
@@ -197,6 +179,7 @@ void mf::WlClient::handle_client_created(wl_listener* listener, void* data)
     // Can't use std::make_unique because WlClient constructor is private
     auto wl_client = std::unique_ptr<mf::WlClient>{
         new mf::WlClient{client, session, construction_context->shell.get()}};
+    register_client(wl_client.get());
     auto client_context = new ClientCtx{std::move(wl_client)};
     client_context->destroy_listener.notify = &cleanup_client_ctx;
     wl_client_add_destroy_listener(client, &client_context->destroy_listener);
