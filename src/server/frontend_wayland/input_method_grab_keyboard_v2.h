@@ -29,6 +29,10 @@ namespace input
 {
 class CompositeEventFilter;
 }
+namespace wayland
+{
+class Client;
+}
 namespace frontend
 {
 class WlSeat;
@@ -51,7 +55,7 @@ private:
 
     std::shared_ptr<Handler> const handler;
     std::unique_ptr<KeyboardHelper> const helper;
-    wayland::Weak<WlClient> wl_client;
+    wayland::Weak<wayland::Client> wl_client;
 
     /// KeyboardImpl overrides
     /// @{

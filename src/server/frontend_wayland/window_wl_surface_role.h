@@ -124,7 +124,7 @@ protected:
 
 private:
     wayland::Weak<WlSurface> const surface;
-    wayland::Weak<WlClient> const weak_client;
+    wayland::Weak<wayland::Client> const weak_client;
     std::shared_ptr<shell::Shell> const shell;
     std::shared_ptr<scene::Session> const session;
     OutputManager* output_manager;

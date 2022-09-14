@@ -78,7 +78,7 @@ private:
     WlSurface* const surface;
     /// This class is responsible for removing itself from the parent's children list when needed
     wayland::Weak<WlSurface> const parent;
-    wayland::Weak<WlClient> const weak_client;
+    wayland::Weak<wayland::Client> const weak_client;
     bool synchronized_;
     std::optional<WlSurfaceState> cached_state;
 };

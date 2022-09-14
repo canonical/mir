@@ -17,7 +17,6 @@
 #ifndef MIR_FRONTEND_WL_CLIENT_H_
 #define MIR_FRONTEND_WL_CLIENT_H_
 
-struct wl_client;
 struct wl_listener;
 struct wl_display;
 
@@ -26,7 +25,7 @@ struct wl_display;
 #include <optional>
 #include <deque>
 
-#include "mir/wayland/lifetime_tracker.h"
+#include "mir/wayland/client.h"
 
 struct MirEvent;
 
@@ -36,16 +35,12 @@ namespace shell
 {
 class Shell;
 }
-namespace scene
-{
-class Session;
-}
 
 namespace frontend
 {
 class SessionAuthorizer;
 
-class WlClient : public wayland::LifetimeTracker
+class WlClient : public wayland::Client
 {
 public:
     /// Initializes a ConstructionCtx that will create a WlClient for each wl_client created on the display. Should only
@@ -56,12 +51,12 @@ public:
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         std::function<void(WlClient&)>&& client_created_callback);
 
-    static auto from(wl_client* client) -> WlClient&;
+    static auto from(wl_client* client) -> wayland::Client&;
 
     ~WlClient();
 
     /// The underlying Wayland client
-    auto raw_client() const -> wl_client* { return client; }
+    auto raw_client() const -> wl_client* override { return client; }
 
     /// The Mir session associated with this client. Be careful when using this that it's actually the session you want.
     /// All clients have a session but the surfaces they create may get associated with additional sessions.
@@ -69,20 +64,20 @@ public:
     /// For example all surfaces from a single XWayland server are attached to a single WlClient with a single cleint
     /// session, but their scene::Surfaces are associated with multiple sessions created in the XWayland frontend for
     /// individual apps.
-    auto client_session() const -> std::shared_ptr<scene::Session> { return session; }
+    auto client_session() const -> std::shared_ptr<scene::Session> override { return session; }
 
     /// Generate a new serial, and keep track of it attached to the given event. Event may be null.
-    auto next_serial(std::shared_ptr<MirEvent const> event) -> uint32_t;
+    auto next_serial(std::shared_ptr<MirEvent const> event) -> uint32_t override;
 
     /// Returns the event associated with the given serial. Returns optional{nullptr} if the serial is known, but not
     /// associated with an event. Returns nullopt if the serial is unkown/invalid.
-    auto event_for(uint32_t serial) -> std::optional<std::shared_ptr<MirEvent const>>;
+    auto event_for(uint32_t serial) -> std::optional<std::shared_ptr<MirEvent const>> override;
 
     /// The XDG output protocol implementation sends the Mir-internal logical position and scale of outputs multiplied
     /// by this. It's currently just used by XWayland.
     /// @{
-    auto set_output_geometry_scale(float scale) { output_geometry_scale_ = scale; }
-    auto output_geometry_scale() -> float { return output_geometry_scale_; }
+    void set_output_geometry_scale(float scale) override { output_geometry_scale_ = scale; }
+    auto output_geometry_scale() -> float override { return output_geometry_scale_; }
     /// @}
 
 private:

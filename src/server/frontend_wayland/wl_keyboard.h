@@ -25,10 +25,13 @@
 
 namespace mir
 {
+namespace wayland
+{
+class Client;
+}
 namespace frontend
 {
 class WlSurface;
-class WlClient;
 
 class WlKeyboard
     : public wayland::Keyboard,
@@ -44,7 +47,7 @@ public:
 
 private:
     WlSeat& seat;
-    wayland::Weak<WlClient> wl_client;
+    wayland::Weak<wayland::Client> wl_client;
     std::unique_ptr<KeyboardHelper> const helper;
     wayland::Weak<WlSurface> focused_surface;
 

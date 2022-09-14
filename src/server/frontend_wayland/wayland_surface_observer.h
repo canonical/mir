@@ -31,11 +31,14 @@ struct wl_client;
 namespace mir
 {
 class Executor;
+namespace wayland
+{
+class Client;
+}
 namespace frontend
 {
 class WlSeat;
 class WlSurface;
-class WlClient;
 class WindowWlSurfaceRole;
 class WaylandInputDispatcher;
 
@@ -76,7 +79,7 @@ private:
     struct Impl
     {
         Impl(
-            wayland::Weak<WlClient> client,
+            wayland::Weak<wayland::Client> client,
             wayland::Weak<WindowWlSurfaceRole> window,
             std::unique_ptr<WaylandInputDispatcher> input_dispatcher)
             : client{client},
@@ -85,7 +88,7 @@ private:
         {
         }
 
-        wayland::Weak<WlClient> const client;
+        wayland::Weak<wayland::Client> const client;
         wayland::Weak<WindowWlSurfaceRole> const window;
         std::unique_ptr<WaylandInputDispatcher> const input_dispatcher;
 

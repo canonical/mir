@@ -34,11 +34,14 @@ namespace time
 {
 class Clock;
 }
+namespace wayland
+{
+class Client;
+}
 
 namespace frontend
 {
 class WlSurface;
-class WlClient;
 
 class WlTouch : public wayland::Touch
 {
@@ -59,7 +62,7 @@ private:
     };
 
     std::shared_ptr<time::Clock> const clock;
-    wayland::Weak<WlClient> wl_client;
+    wayland::Weak<wayland::Client> wl_client;
 
     /// Maps touch IDs to the surfaces the touch is on
     std::unordered_map<int32_t, TouchedSurface> touch_id_to_surface;

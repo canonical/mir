@@ -36,14 +36,17 @@ struct MirPointerEvent;
 
 namespace mir
 {
-namespace wayland { class RelativePointerV1; }
+namespace wayland
+{
+class RelativePointerV1;
+class Client;
+}
 
 class Executor;
 
 namespace frontend
 {
 class WlSurface;
-class WlClient;
 
 class CommitHandler
 {
@@ -75,7 +78,7 @@ public:
     struct Cursor;
 
 private:
-    wayland::Weak<WlClient> wl_client;
+    wayland::Weak<wayland::Client> wl_client;
 
     void leave(std::optional<std::shared_ptr<MirPointerEvent const>> const& event);
     void buttons(std::shared_ptr<MirPointerEvent const> const& event);

@@ -114,7 +114,7 @@ void mf::WlClient::setup_new_client_handler(
     wl_display_add_destroy_listener(display, &context->display_destruction_listener);
 }
 
-auto mf::WlClient::from(wl_client* client) -> WlClient&
+auto mf::WlClient::from(wl_client* client) -> Client&
 {
     if (!client)
     {
