@@ -18,9 +18,9 @@
 
 #include "wl_surface.h"
 #include "wl_seat.h"
-#include "wl_client.h"
 #include "mir/log.h"
 #include "mir/events/keyboard_event.h"
+#include "mir/wayland/client.h"
 
 #include <xkbcommon/xkbcommon.h>
 #include <cstring> // memcpy
@@ -32,7 +32,7 @@ namespace mi = mir::input;
 mf::WlKeyboard::WlKeyboard(wl_resource* new_resource, WlSeat& seat)
     : wayland::Keyboard{new_resource, Version<8>()},
       seat{seat},
-      wl_client{&WlClient::from(client)},
+      wl_client{&mw::Client::from(client)},
       helper{seat.make_keyboard_helper(this)}
 {
     seat.add_focus_listener(client, this);

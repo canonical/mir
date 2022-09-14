@@ -17,10 +17,10 @@
 #include "xdg_output_v1.h"
 
 #include "wl_surface.h"
-#include "wl_client.h"
 #include "xdg-output-unstable-v1_wrapper.h"
 #include "mir/log.h"
 #include "output_manager.h"
+#include "mir/wayland/client.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -101,7 +101,7 @@ mf::XdgOutputV1::XdgOutputV1(
     OutputGlobal& output_global,
     wl_resource* wl_output_resource)
     : mw::XdgOutputV1(new_resource, Version<3>()),
-      geometry_scale{WlClient::from(client).output_geometry_scale()},
+      geometry_scale{mw::Client::from(client).output_geometry_scale()},
       output_global{mw::make_weak(&output_global)}
 {
     output_global.add_listener(this);

@@ -19,13 +19,13 @@
 #include "wayland_utils.h"
 #include "wl_surface.h"
 #include "wl_seat.h"
-#include "wl_client.h"
 
 #include "mir/executor.h"
 #include "mir_toolkit/events/event.h"
 #include "mir/events/touch_event.h"
 #include "mir/log.h"
 #include "mir/time/clock.h"
+#include "mir/wayland/client.h"
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
@@ -34,7 +34,7 @@ namespace geom = mir::geometry;
 mf::WlTouch::WlTouch(wl_resource* new_resource, std::shared_ptr<time::Clock> const& clock)
     : Touch(new_resource, Version<8>()),
       clock{clock},
-      wl_client{&WlClient::from(client)}
+      wl_client{&mw::Client::from(client)}
 {
 }
 

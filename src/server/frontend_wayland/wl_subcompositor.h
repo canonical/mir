@@ -20,7 +20,6 @@
 #include "wayland_wrapper.h"
 #include "wl_surface_role.h"
 #include "wl_surface.h"
-#include "wl_client.h"
 
 #include <vector>
 #include <memory>
@@ -30,6 +29,10 @@ namespace mir
 namespace shell
 {
 class StreamSpecification;
+}
+namespace wayland
+{
+class Client;
 }
 namespace frontend
 {

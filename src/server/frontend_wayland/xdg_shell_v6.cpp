@@ -21,6 +21,7 @@
 #include "wayland_utils.h"
 
 #include "mir/wayland/protocol_error.h"
+#include "mir/wayland/client.h"
 #include "mir/frontend/wayland.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/scene/surface.h"
@@ -255,7 +256,7 @@ void mf::XdgSurfaceV6::ack_configure(uint32_t serial)
 
 void mf::XdgSurfaceV6::send_configure()
 {
-    auto const serial = WlClient::from(mw::XdgSurfaceV6::client).next_serial(nullptr);
+    auto const serial = mw::Client::from(mw::XdgSurfaceV6::client).next_serial(nullptr);
     send_configure_event(serial);
 }
 

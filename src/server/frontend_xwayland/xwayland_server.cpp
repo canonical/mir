@@ -18,9 +18,9 @@
 
 #include "xwayland_server.h"
 #include "xwayland_spawner.h"
-#include "wl_client.h"
 #include "wayland_connector.h"
 #include "mir/log.h"
+#include "mir/wayland/client.h"
 
 #include <boost/throw_exception.hpp>
 #include <sys/socket.h>
@@ -34,6 +34,7 @@
 
 namespace mf = mir::frontend;
 namespace md = mir::dispatch;
+namespace mw = mir::wayland;
 using namespace std::chrono_literals;
 
 namespace
@@ -145,7 +146,7 @@ auto connect_xwayland_wl_client(
             {
                 std::lock_guard lock{ctx->mutex};
                 ctx->client = wl_client_create(display, wayland_fd);
-                mf::WlClient::from(ctx->client).set_output_geometry_scale(scale);
+                mw::Client::from(ctx->client).set_output_geometry_scale(scale);
                 ctx->ready = true;
             }
             ctx->condition_variable.notify_one();

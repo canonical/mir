@@ -18,9 +18,9 @@
 #define MIR_FRONTEND_WINDOW_WL_SURFACE_ROLE_H
 
 #include "wl_surface_role.h"
-#include "wl_client.h"
 
 #include "mir/wayland/weak.h"
+#include "mir/wayland/lifetime_tracker.h"
 #include "mir/geometry/displacement.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
@@ -46,6 +46,10 @@ namespace shell
 {
 struct SurfaceSpecification;
 class Shell;
+}
+namespace wayland
+{
+class Client;
 }
 namespace frontend
 {

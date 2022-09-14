@@ -24,6 +24,7 @@
 #include "null_event_sink.h"
 
 #include "mir/frontend/wayland.h"
+#include "mir/wayland/client.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/shell/shell.h"
 #include "mir/scene/surface.h"
@@ -67,7 +68,7 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
     std::shared_ptr<msh::Shell> const& shell,
     OutputManager* output_manager)
     : surface{surface},
-      weak_client{&WlClient::from(client)},
+      weak_client{&mw::Client::from(client)},
       shell{shell},
       session{weak_client.value().client_session()},
       output_manager{output_manager},

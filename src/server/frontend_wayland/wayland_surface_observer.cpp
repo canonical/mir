@@ -22,6 +22,7 @@
 #include <mir/executor.h>
 #include <mir/log.h>
 #include <mir/events/input_event.h>
+#include <mir/wayland/client.h>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -36,7 +37,7 @@ mf::WaylandSurfaceObserver::WaylandSurfaceObserver(
     WindowWlSurfaceRole* window)
     : wayland_executor{wayland_executor},
       impl{std::make_shared<Impl>(
-          mw::make_weak(&WlClient::from(surface->client)),
+          mw::make_weak(&mw::Client::from(surface->client)),
           mw::make_weak(window),
           std::make_unique<WaylandInputDispatcher>(seat, surface))}
 {

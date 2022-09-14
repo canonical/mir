@@ -19,6 +19,7 @@
 #include "wl_subcompositor.h"
 #include "wl_surface.h"
 
+#include "mir/wayland/client.h"
 #include "mir/geometry/rectangle.h"
 
 namespace mf = mir::frontend;
@@ -67,7 +68,7 @@ mf::WlSubsurface::WlSubsurface(wl_resource* new_subsurface, WlSurface* surface, 
     : wayland::Subsurface(new_subsurface, Version<1>()),
       surface{surface},
       parent{parent_surface},
-      weak_client{&WlClient::from(client)},
+      weak_client{&mw::Client::from(client)},
       synchronized_{true}
 {
     parent_surface->add_subsurface(this);

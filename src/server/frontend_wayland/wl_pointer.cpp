@@ -19,7 +19,6 @@
 #include "wayland_utils.h"
 #include "wl_surface.h"
 #include "wl_seat.h"
-#include "wl_client.h"
 #include "relative-pointer-unstable-v1_wrapper.h"
 
 #include "mir/log.h"
@@ -33,6 +32,7 @@
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/events/pointer_event.h"
+#include "mir/wayland/client.h"
 
 #include <linux/input-event-codes.h>
 #include <boost/throw_exception.hpp>
@@ -176,7 +176,7 @@ auto mf::WlPointer::linux_button_to_mir_button(int linux_button) -> std::optiona
 
 mf::WlPointer::WlPointer(wl_resource* new_resource)
     : Pointer(new_resource, Version<8>()),
-      wl_client{&WlClient::from(client)},
+      wl_client{&mw::Client::from(client)},
       cursor{std::make_unique<NullCursor>()}
 {
 }
