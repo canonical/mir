@@ -327,24 +327,19 @@ public:
             }
             upload_cv.notify_one();
         });
+
+        std::unique_lock lock{upload_mutex};
+        upload_cv.wait(lock, [&] { return uploaded; });
     }
 
     ~WlShmBuffer()
     {
-        wait_for_upload();
     }
 
     void bind() override
     {
-        wait_for_upload();
         ShmBuffer::bind();
         notify_consumed();
-    }
-
-    void wait_for_upload() const
-    {
-        std::unique_lock lock{upload_mutex};
-        upload_cv.wait(lock, [&] { return uploaded; });
     }
 
     auto map_readable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char const>> override
