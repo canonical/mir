@@ -19,6 +19,7 @@
 
 #include "wayland_input_dispatcher.h"
 #include <mir/scene/null_surface_observer.h>
+#include <mir/wayland/weak.h>
 
 #include <memory>
 #include <optional>

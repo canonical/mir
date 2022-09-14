@@ -23,6 +23,7 @@
 #include "mir/input/mir_input_config.h"
 #include "mir/client_visible_error.h"
 #include "mir/shell/surface_specification.h"
+#include "mir/wayland/weak.h"
 
 #include <gmock/gmock.h>
 

@@ -28,7 +28,6 @@
 
 #include "mir/geometry/rectangles.h"
 #include "mir/cookie/authority.h"
-#include "mir/wayland/weak.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
