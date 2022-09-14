@@ -137,7 +137,7 @@ public:
         std::shared_ptr<MainLoop> const& main_loop,
         bool arw_socket,
         std::unique_ptr<WaylandExtensions> extensions,
-        WaylandProtocolExtensionFilter const& extension_filter,
+        WaylandProtocolExtensionFilter&& extension_filter,
         bool enable_key_repeat);
 
     ~WaylandConnector() override;

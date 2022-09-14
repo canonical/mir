@@ -55,8 +55,8 @@ public:
         wl_display* display,
         std::shared_ptr<shell::Shell> const& shell,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
-        std::function<void(WlClient&)> const& client_created_callback,
-        std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const& extension_filter);
+        std::function<void(WlClient&)>&& client_created_callback,
+        std::function<bool(std::shared_ptr<scene::Session> const&, char const*)>&& extension_filter);
 
     static auto from(wl_client* client) -> WlClient&;
 

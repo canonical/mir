@@ -232,7 +232,7 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<MainLoop> const& main_loop,
     bool arw_socket,
     std::unique_ptr<WaylandExtensions> extensions_,
-    WaylandProtocolExtensionFilter const& extension_filter,
+    WaylandProtocolExtensionFilter&& extension_filter,
     bool enable_key_repeat)
     : display{wl_display_create(), &cleanup_display},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
@@ -355,7 +355,7 @@ mf::WaylandConnector::WaylandConnector(
                 callback(client.client_session());
             }
         },
-        extension_filter);
+        move(extension_filter));
 
     pause_source = wl_event_loop_add_fd(wayland_loop, pause_signal, WL_EVENT_READABLE, &halt_eventloop, display.get());
 }

@@ -315,7 +315,7 @@ std::shared_ptr<mf::Connector>
                     wayland_extensions,
                     options->is_set(mo::x11_display_opt),
                     wayland_extension_hooks),
-                wayland_extension_filter,
+                WaylandProtocolExtensionFilter{wayland_extension_filter},
                 enable_repeat);
         });
 }
