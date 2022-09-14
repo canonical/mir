@@ -16,10 +16,17 @@
 
 #include "mir/wayland/resource.h"
 
+#include <boost/throw_exception.hpp>
 #include <wayland-server-core.h>
 
 namespace mw = mir::wayland;
 
-mw::Resource::Resource()
+mw::Resource::Resource(wl_resource* resource)
+    : resource{resource},
+      client{wl_resource_get_client(resource)}
 {
+    if (resource == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
 }

@@ -120,7 +120,6 @@ Emitter Interface::declaration() const
             },
             event_prototypes(),
             (has_destroy_request ? nullptr : "void destroy_and_delete() const;"),
-            member_vars(),
             enum_declarations(),
             event_opcodes(),
             (thunks_impl_contents().is_valid() ? "struct Thunks;" : nullptr),
@@ -235,13 +234,8 @@ Emitter Interface::constructor_impl() const
     {
         impls.push_back(Lines{
             {nmspace, generated_name, "(", constructor_args(), ")"},
-            {"    : client{wl_resource_get_client(resource)},"},
-            {"      resource{resource}"},
+            {"    : Resource{resource}"},
             Block{
-                "if (resource == nullptr)",
-                Block{
-                    "BOOST_THROW_EXCEPTION((std::bad_alloc{}));",
-                },
                 "wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);",
             }
         });
@@ -257,13 +251,8 @@ Emitter Interface::constructor_impl(std::string const& parent_interface) const
 {
     return Lines{
         {nmspace, generated_name, "(", constructor_args(parent_interface), ")"},
-        {"    : client{wl_resource_get_client(parent.resource)},"},
-        {"      resource{wl_resource_create(client, &", wl_name, "_interface_data, wl_resource_get_version(parent.resource), 0)}"},
+        {"    : Resource{wl_resource_create(client, &", wl_name, "_interface_data, wl_resource_get_version(parent.resource), 0)}"},
         Block{
-            "if (resource == nullptr)",
-            Block{
-                "BOOST_THROW_EXCEPTION((std::bad_alloc{}));",
-            },
             "wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);",
         }
     };
@@ -323,15 +312,6 @@ Emitter Interface::event_impls() const
     }
     return EmptyLineList{impls};
 }
-
-Emitter Interface::member_vars() const
-{
-    return Lines{
-        {"struct wl_client* const client;"},
-        {"struct wl_resource* const resource;"}
-    };
-}
-
 
 Emitter Interface::is_instance_prototype() const
 {

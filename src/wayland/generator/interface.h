@@ -60,7 +60,6 @@ private:
     Emitter virtual_request_prototypes() const;
     Emitter event_prototypes() const;
     Emitter event_impls() const;
-    Emitter member_vars() const;
     Emitter enum_declarations() const;
     Emitter enum_impls() const;
     Emitter event_opcodes() const;

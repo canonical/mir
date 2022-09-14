@@ -58,9 +58,7 @@ Emitter impl_includes(std::string const& protocol_name)
     return Lines{
         {"#include \"", protocol_name, "_wrapper.h\""},
         empty_line,
-        "#include <boost/throw_exception.hpp>",
         "#include <boost/exception/diagnostic_information.hpp>",
-        empty_line,
         "#include <wayland-server-core.h>",
         empty_line,
         "#include \"mir/log.h\"",

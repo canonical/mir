@@ -20,6 +20,7 @@
 #include "lifetime_tracker.h"
 
 struct wl_resource;
+struct wl_client;
 
 namespace mir
 {
@@ -34,7 +35,10 @@ public:
     {
     };
 
-    Resource();
+    Resource(wl_resource* resource);
+
+    wl_resource* const resource;
+    wl_client* const client;
 };
 }
 }
