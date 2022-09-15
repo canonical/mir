@@ -18,6 +18,7 @@
 #define MIR_FRONTEND_WAYLAND_INPUT_DISPATCHER_H
 
 #include "mir_toolkit/common.h"
+#include "mir_toolkit/events/event.h"
 #include "mir/geometry/point.h"
 #include "mir/wayland/wayland_base.h"
 
@@ -25,7 +26,6 @@
 #include <chrono>
 
 struct wl_client;
-struct MirInputEvent;
 
 namespace mir
 {
@@ -48,7 +48,9 @@ public:
         WlSurface* wl_surface);
     ~WaylandInputDispatcher() = default;
 
-    void handle_event(std::shared_ptr<MirInputEvent const> const& event);
+    void handle_event(MirInputEvent const* event);
+
+    auto latest_timestamp() const -> std::chrono::nanoseconds { return timestamp; }
 
 private:
     WaylandInputDispatcher(WaylandInputDispatcher const&) = delete;
@@ -57,6 +59,8 @@ private:
     WlSeat* const seat;
     wl_client* const client;
     wayland::Weak<WlSurface> const wl_surface;
+
+    std::chrono::nanoseconds timestamp{0};
 };
 }
 }

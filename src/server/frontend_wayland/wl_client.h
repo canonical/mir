@@ -23,12 +23,8 @@ struct wl_display;
 
 #include <memory>
 #include <functional>
-#include <optional>
-#include <deque>
 
 #include "mir/wayland/wayland_base.h"
-
-struct MirEvent;
 
 namespace mir
 {
@@ -56,7 +52,7 @@ public:
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         std::function<void(WlClient&)>&& client_created_callback);
 
-    static auto from(wl_client* client) -> WlClient&;
+    static auto from(wl_client* client) -> WlClient*;
 
     ~WlClient();
 
@@ -70,13 +66,6 @@ public:
     /// session, but their scene::Surfaces are associated with multiple sessions created in the XWayland frontend for
     /// individual apps.
     auto client_session() const -> std::shared_ptr<scene::Session> { return session; }
-
-    /// Generate a new serial, and keep track of it attached to the given event. Event may be null.
-    auto next_serial(std::shared_ptr<MirEvent const> event) -> uint32_t;
-
-    /// Returns the event associated with the given serial. Returns optional{nullptr} if the serial is known, but not
-    /// associated with an event. Returns nullopt if the serial is unkown/invalid.
-    auto event_for(uint32_t serial) -> std::optional<std::shared_ptr<MirEvent const>>;
 
     /// The XDG output protocol implementation sends the Mir-internal logical position and scale of outputs multiplied
     /// by this. It's currently just used by XWayland.
@@ -93,10 +82,8 @@ private:
     /// This shell is owned by the ClientSessionConstructor, which outlives all clients.
     shell::Shell* const shell;
     wl_client* const client;
-    wl_display* const display;
     std::shared_ptr<scene::Session> const session;
 
-    std::deque<std::pair<uint32_t, std::shared_ptr<MirEvent const>>> serial_event_pairs;
     float output_geometry_scale_{1};
 };
 }

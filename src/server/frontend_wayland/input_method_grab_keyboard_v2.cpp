@@ -16,11 +16,10 @@
 
 #include "input_method_grab_keyboard_v2.h"
 #include "wl_seat.h"
-#include "wl_client.h"
 
 #include "mir/input/composite_event_filter.h"
 #include "mir/input/event_filter.h"
-#include "mir/events/keyboard_event.h"
+#include "mir/events/input_event.h"
 #include "mir/events/event_builders.h"
 #include "mir/executor.h"
 
@@ -53,7 +52,8 @@ public:
                     {
                         if (keyboard)
                         {
-                            keyboard.value().helper->handle_event(owned_event);
+                            keyboard.value().helper->handle_event(
+                                mir_event_get_input_event(owned_event.get()));
                         }
                     });
                 return true;
@@ -74,8 +74,7 @@ mf::InputMethodGrabKeyboardV2::InputMethodGrabKeyboardV2(
     input::CompositeEventFilter& event_filter)
     : wayland::InputMethodKeyboardGrabV2{resource, Version<1>()},
       handler{std::make_shared<Handler>(this, wayland_executor)},
-      helper{seat.make_keyboard_helper(this)},
-      wl_client{&WlClient::from(client)}
+      helper{seat.make_keyboard_helper(this)}
 {
     event_filter.prepend(handler);
     // On cleanup the handler will be dropped and automatically removed from the filter
@@ -91,18 +90,10 @@ void mf::InputMethodGrabKeyboardV2::send_keymap_xkb_v1(mir::Fd const& fd, size_t
     send_keymap_event(mw::Keyboard::KeymapFormat::xkb_v1, fd, length);
 }
 
-void mf::InputMethodGrabKeyboardV2::send_key(std::shared_ptr<MirKeyboardEvent const> const& event)
+void mf::InputMethodGrabKeyboardV2::send_key(uint32_t timestamp, int scancode, bool down)
 {
-    if (!wl_client)
-    {
-        return;
-    }
-    auto const serial = wl_client.value().next_serial(event);
-    auto const timestamp = mir_input_event_get_wayland_timestamp(event.get());
-    int const scancode = event->scan_code();
-    auto const state = (event->action() == mir_keyboard_action_down) ?
-        mw::Keyboard::KeyState::pressed :
-        mw::Keyboard::KeyState::released;
+    auto const serial = wl_display_next_serial(wl_client_get_display(client));
+    auto const state = down ? mw::Keyboard::KeyState::pressed : mw::Keyboard::KeyState::released;
     send_key_event(serial, timestamp, scancode, state);
 }
 

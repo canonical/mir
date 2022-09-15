@@ -101,7 +101,7 @@ mf::XdgOutputV1::XdgOutputV1(
     OutputGlobal& output_global,
     wl_resource* wl_output_resource)
     : mw::XdgOutputV1(new_resource, Version<3>()),
-      geometry_scale{WlClient::from(client).output_geometry_scale()},
+      geometry_scale{WlClient::from(client)->output_geometry_scale()},
       output_global{mw::make_weak(&output_global)}
 {
     output_global.add_listener(this);

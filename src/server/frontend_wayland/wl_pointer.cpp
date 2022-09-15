@@ -19,7 +19,6 @@
 #include "wayland_utils.h"
 #include "wl_surface.h"
 #include "wl_seat.h"
-#include "wl_client.h"
 #include "relative-pointer-unstable-v1_wrapper.h"
 
 #include "mir/log.h"
@@ -109,9 +108,9 @@ static auto const button_mapping = {
     std::make_pair(mir_pointer_button_extra, BTN_EXTRA)
 };
 
-auto timestamp_of(std::shared_ptr<MirPointerEvent const> const& event) -> uint32_t
+auto timestamp_of(MirPointerEvent const* event) -> uint32_t
 {
-    return mir_input_event_get_wayland_timestamp(mir_pointer_event_input_event(event.get()));
+    return mir_input_event_get_wayland_timestamp(mir_pointer_event_input_event(event));
 }
 
 auto wayland_axis_source(MirPointerAxisSource mir_source) -> std::optional<uint32_t>
@@ -176,7 +175,7 @@ auto mf::WlPointer::linux_button_to_mir_button(int linux_button) -> std::optiona
 
 mf::WlPointer::WlPointer(wl_resource* new_resource)
     : Pointer(new_resource, Version<8>()),
-      wl_client{&WlClient::from(client)},
+      display{wl_client_get_display(client)},
       cursor{std::make_unique<NullCursor>()}
 {
 }
@@ -192,9 +191,9 @@ void mir::frontend::WlPointer::set_relative_pointer(mir::wayland::RelativePointe
     relative_pointer = make_weak(relative_ptr);
 }
 
-void mir::frontend::WlPointer::event(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface)
+void mir::frontend::WlPointer::event(MirPointerEvent const* event, WlSurface& root_surface)
 {
-    switch(mir_pointer_event_action(event.get()))
+    switch(mir_pointer_event_action(event))
     {
         case mir_pointer_action_button_down:
         case mir_pointer_action_button_up:
@@ -220,16 +219,13 @@ void mir::frontend::WlPointer::event(std::shared_ptr<MirPointerEvent const> cons
     maybe_frame();
 }
 
-void mf::WlPointer::leave(std::optional<std::shared_ptr<MirPointerEvent const>> const& event)
+void mf::WlPointer::leave(std::optional<MirPointerEvent const*> event)
 {
-    if (!wl_client)
-    {
-        return;
-    }
+    (void)event;
     if (!surface_under_cursor)
         return;
     surface_under_cursor.value().remove_destroy_listener(destroy_listener_id);
-    auto const serial = wl_client.value().next_serial(event.value_or(nullptr));
+    auto const serial = wl_display_next_serial(display);
     send_leave_event(
         serial,
         surface_under_cursor.value().raw_resource());
@@ -241,13 +237,9 @@ void mf::WlPointer::leave(std::optional<std::shared_ptr<MirPointerEvent const>> 
     destroy_listener_id = {};
 }
 
-void mf::WlPointer::buttons(std::shared_ptr<MirPointerEvent const> const& event)
+void mf::WlPointer::buttons(MirPointerEvent const* event)
 {
-    if (!wl_client)
-    {
-        return;
-    }
-    MirPointerButtons const event_buttons = mir_pointer_event_buttons(event.get());
+    MirPointerButtons const event_buttons = mir_pointer_event_buttons(event);
 
     for (auto const& mapping : button_mapping)
     {
@@ -256,7 +248,7 @@ void mf::WlPointer::buttons(std::shared_ptr<MirPointerEvent const> const& event)
         {
             bool const pressed = (mapping.first & event_buttons);
             auto const state = pressed ? ButtonState::pressed : ButtonState::released;
-            auto const serial = wl_client.value().next_serial(event);;
+            auto const serial = wl_display_next_serial(display);
             send_button_event(serial, timestamp_of(event), mapping.second, state);
             needs_frame = true;
         }
@@ -266,10 +258,7 @@ void mf::WlPointer::buttons(std::shared_ptr<MirPointerEvent const> const& event)
 }
 
 template<typename Tag>
-auto mf::WlPointer::axis(
-    std::shared_ptr<MirPointerEvent const> const& event,
-    events::ScrollAxis<Tag> axis,
-    uint32_t wayland_axis) -> bool
+auto mf::WlPointer::axis(MirPointerEvent const* event, events::ScrollAxis<Tag> axis, uint32_t wayland_axis) -> bool
 {
     bool event_sent = false;
 
@@ -303,7 +292,7 @@ auto mf::WlPointer::axis(
     return event_sent;
 }
 
-void mf::WlPointer::axes(std::shared_ptr<MirPointerEvent const> const& event)
+void mf::WlPointer::axes(MirPointerEvent const* event)
 {
     bool axis_event_sent = false;
 
@@ -320,16 +309,11 @@ void mf::WlPointer::axes(std::shared_ptr<MirPointerEvent const> const& event)
     }
 }
 
-void mf::WlPointer::enter_or_motion(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface)
+void mf::WlPointer::enter_or_motion(MirPointerEvent const* event, WlSurface& root_surface)
 {
-    if (!wl_client)
-    {
-        return;
-    }
-
     auto const root_position = std::make_pair(
-        mir_pointer_event_axis_value(event.get(), mir_pointer_axis_x),
-        mir_pointer_event_axis_value(event.get(), mir_pointer_axis_y));
+        mir_pointer_event_axis_value(event, mir_pointer_axis_x),
+        mir_pointer_event_axis_value(event, mir_pointer_axis_y));
 
     WlSurface* target_surface;
     if (current_buttons != 0 && surface_under_cursor)
@@ -353,7 +337,7 @@ void mf::WlPointer::enter_or_motion(std::shared_ptr<MirPointerEvent const> const
     {
         // We need to switch surfaces
         leave(event); // If we're currently on a surface, leave it
-        enter_serial = wl_client.value().next_serial(event);
+        enter_serial = wl_display_next_serial(display);
         cursor->apply_to(target_surface);
         send_enter_event(
             enter_serial.value(),
@@ -362,11 +346,12 @@ void mf::WlPointer::enter_or_motion(std::shared_ptr<MirPointerEvent const> const
             position_on_target.second);
         current_position = position_on_target;
         needs_frame = true;
-        destroy_listener_id = target_surface->add_destroy_listener([this]()
-            {
+        destroy_listener_id = target_surface->add_destroy_listener(
+            [this]()
+                {
                 leave(std::nullopt);
                 maybe_frame();
-            });
+                });
         surface_under_cursor = mw::make_weak(target_surface);
     }
     else if (position_on_target != current_position)
@@ -388,15 +373,15 @@ void mf::WlPointer::enter_or_motion(std::shared_ptr<MirPointerEvent const> const
     }
 }
 
-void mf::WlPointer::relative_motion(std::shared_ptr<MirPointerEvent const> const& event)
+void mf::WlPointer::relative_motion(MirPointerEvent const* event)
 {
     if (!relative_pointer)
     {
         return;
     }
     auto const motion = std::make_pair(
-        mir_pointer_event_axis_value(event.get(), mir_pointer_axis_relative_x),
-        mir_pointer_event_axis_value(event.get(), mir_pointer_axis_relative_y));
+        mir_pointer_event_axis_value(event, mir_pointer_axis_relative_x),
+        mir_pointer_event_axis_value(event, mir_pointer_axis_relative_y));
     if (motion.first || motion.second)
     {
         auto const timestamp = timestamp_of(event);

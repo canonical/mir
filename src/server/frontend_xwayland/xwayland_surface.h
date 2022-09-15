@@ -118,6 +118,8 @@ private:
     /// Should NOT be called under lock
     void request_scene_surface_state(MirWindowState new_state);
 
+    auto latest_input_timestamp(ProofOfMutexLock const&) -> std::chrono::nanoseconds;
+
     /// Appplies any mods in nullable_pending_spec to the scene_surface (if any)
     void apply_any_mods_to_scene_surface();
 

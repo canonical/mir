@@ -22,8 +22,6 @@
 #include "wl_touch.h"
 
 #include <mir/input/keymap.h>
-#include <mir/events/pointer_event.h>
-#include <mir/events/touch_event.h>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -40,18 +38,25 @@ mf::WaylandInputDispatcher::WaylandInputDispatcher(
 {
 }
 
-void mf::WaylandInputDispatcher::handle_event(std::shared_ptr<MirInputEvent const> const& event)
+void mf::WaylandInputDispatcher::handle_event(MirInputEvent const* event)
 {
     if (!wl_surface)
     {
         return;
     }
 
-    switch (mir_input_event_get_type(event.get()))
+    // Remember the timestamp of any events "signed" with a cookie
+    if (mir_input_event_has_cookie(event))
     {
+        timestamp = std::chrono::nanoseconds{mir_input_event_get_event_time(event)};
+    }
+
+    switch (mir_input_event_get_type(event))
+    {
+
     case mir_input_event_type_pointer:
     {
-        auto const pointer_event = dynamic_pointer_cast<MirPointerEvent const>(event);
+        auto const pointer_event = mir_input_event_get_pointer_event(event);
         seat->for_each_listener(client, [&](WlPointer* pointer)
             {
                 pointer->event(pointer_event, wl_surface.value());
@@ -60,7 +65,7 @@ void mf::WaylandInputDispatcher::handle_event(std::shared_ptr<MirInputEvent cons
 
     case mir_input_event_type_touch:
     {
-        auto const touch_event = dynamic_pointer_cast<MirTouchEvent const>(event);
+        auto const touch_event = mir_input_event_get_touch_event(event);
         seat->for_each_listener(client, [&](WlTouch* touch)
             {
                 touch->event(touch_event, wl_surface.value());

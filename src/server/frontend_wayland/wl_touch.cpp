@@ -19,11 +19,9 @@
 #include "wayland_utils.h"
 #include "wl_surface.h"
 #include "wl_seat.h"
-#include "wl_client.h"
 
 #include "mir/executor.h"
 #include "mir_toolkit/events/event.h"
-#include "mir/events/touch_event.h"
 #include "mir/log.h"
 #include "mir/time/clock.h"
 
@@ -33,8 +31,7 @@ namespace geom = mir::geometry;
 
 mf::WlTouch::WlTouch(wl_resource* new_resource, std::shared_ptr<time::Clock> const& clock)
     : Touch(new_resource, Version<8>()),
-      clock{clock},
-      wl_client{&WlClient::from(client)}
+      clock{clock}
 {
 }
 
@@ -49,34 +46,29 @@ mf::WlTouch::~WlTouch()
     }
 }
 
-void mf::WlTouch::event(std::shared_ptr<MirTouchEvent const> const& event, WlSurface& root_surface)
+void mf::WlTouch::event(MirTouchEvent const* event, WlSurface& root_surface)
 {
-    if (!wl_client)
-    {
-        return;
-    }
+    std::chrono::milliseconds timestamp{mir_input_event_get_wayland_timestamp(mir_touch_event_input_event(event))};
 
-    std::chrono::milliseconds timestamp{mir_input_event_get_wayland_timestamp(mir_touch_event_input_event(event.get()))};
-
-    for (auto i = 0u; i < mir_touch_event_point_count(event.get()); ++i)
+    for (auto i = 0u; i < mir_touch_event_point_count(event); ++i)
     {
         auto const position = std::make_pair(
-            mir_touch_event_axis_value(event.get(), i, mir_touch_axis_x),
-            mir_touch_event_axis_value(event.get(), i, mir_touch_axis_y));
-        int const touch_id = mir_touch_event_id(event.get(), i);
-        MirTouchAction const action = mir_touch_event_action(event.get(), i);
+            mir_touch_event_axis_value(event, i, mir_touch_axis_x),
+            mir_touch_event_axis_value(event, i, mir_touch_axis_y));
+        int const touch_id = mir_touch_event_id(event, i);
+        MirTouchAction const action = mir_touch_event_action(event, i);
 
         switch (action)
         {
         case mir_touch_action_down:
         {
-            auto const serial = wl_client.value().next_serial(event);
+            auto const serial = wl_display_next_serial(wl_client_get_display(client));
             down(serial, timestamp, touch_id, root_surface, position);
         }   break;
 
         case mir_touch_action_up:
         {
-            auto const serial = wl_client.value().next_serial(event);
+            auto const serial = wl_display_next_serial(wl_client_get_display(client));
             up(serial, timestamp, touch_id);
         }   break;
 
@@ -98,11 +90,6 @@ void mf::WlTouch::down(
     WlSurface& root_surface,
     std::pair<float, float> const& root_position)
 {
-    if (!wl_client)
-    {
-        return;
-    }
-
     geom::Point root_point{root_position.first, root_position.second};
     auto const target_surface = root_surface.subsurface_at(root_point).value_or(&root_surface);
     auto const offset = target_surface->total_offset();
@@ -113,11 +100,7 @@ void mf::WlTouch::down(
     auto const listener_id = target_surface->add_destroy_listener(
         [this, touch_id]()
         {
-            if (!wl_client)
-            {
-                return;
-            }
-            auto const serial = wl_client.value().next_serial(nullptr);
+            auto const serial = wl_display_next_serial(wl_client_get_display(client));
             auto const timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
                 clock->now().time_since_epoch());
             up(serial, timestamp, touch_id);

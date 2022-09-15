@@ -67,7 +67,7 @@ mf::WlSubsurface::WlSubsurface(wl_resource* new_subsurface, WlSurface* surface, 
     : wayland::Subsurface(new_subsurface, Version<1>()),
       surface{surface},
       parent{parent_surface},
-      weak_client{&WlClient::from(client)},
+      weak_client{WlClient::from(client)},
       synchronized_{true}
 {
     parent_surface->add_subsurface(this);

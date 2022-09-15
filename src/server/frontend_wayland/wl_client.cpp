@@ -22,7 +22,6 @@
 #include "mir/frontend/session_credentials.h"
 #include "mir/shell/shell.h"
 #include "mir/scene/session.h"
-#include "mir/fatal.h"
 
 #include <wayland-server-core.h>
 
@@ -32,8 +31,6 @@ namespace msh = mir::shell;
 
 namespace
 {
-static const int max_serial_event_pairs = 100;
-
 /// The context required for creating new WlClient's from wl_client*s
 struct ConstructionCtx
 {
@@ -69,7 +66,8 @@ struct ClientCtx
 
     static auto from(wl_listener* listener) -> ClientCtx*
     {
-        ClientCtx* ctx = listener ? wl_container_of(listener, ctx, destroy_listener) : nullptr;
+        ClientCtx* ctx;
+        ctx = wl_container_of(listener, ctx, destroy_listener);
         return ctx;
     }
 
@@ -114,58 +112,25 @@ void mf::WlClient::setup_new_client_handler(
     wl_display_add_destroy_listener(display, &context->display_destruction_listener);
 }
 
-auto mf::WlClient::from(wl_client* client) -> WlClient&
+auto mf::WlClient::from(wl_client* client) -> WlClient*
 {
     if (!client)
     {
-        fatal_error("WlClient::from(): wl_client is null");
+        return nullptr;
     }
     auto listener = wl_client_get_destroy_listener(client, &cleanup_client_ctx);
-    if (!listener)
-    {
-        fatal_error("WlClient::from(): listener is null");
-    }
     auto ctx = ClientCtx::from(listener);
-    if (!ctx)
-    {
-        fatal_error("WlClient::from(): ctx is null");
-    }
-    return *ctx->client.get();
+    return ctx ? ctx->client.get() : nullptr;
 }
 
 mf::WlClient::~WlClient()
 {
-    mark_destroyed();
     shell->close_session(session);
-}
-
-auto mf::WlClient::next_serial(std::shared_ptr<MirEvent const> event) -> uint32_t
-{
-    auto const serial = wl_display_next_serial(display);
-    serial_event_pairs.push_front({serial, event});
-    while (serial_event_pairs.size() > max_serial_event_pairs)
-    {
-        serial_event_pairs.pop_back();
-    }
-    return serial;
-}
-
-auto mf::WlClient::event_for(uint32_t serial) -> std::optional<std::shared_ptr<MirEvent const>>
-{
-    for (auto const& pair : serial_event_pairs)
-    {
-        if (pair.first == serial)
-        {
-            return pair.second;
-        }
-    }
-    return std::nullopt;
 }
 
 mf::WlClient::WlClient(wl_client* client, std::shared_ptr<ms::Session> const& session, msh::Shell* shell)
     : shell{shell},
       client{client},
-      display{wl_client_get_display(client)},
       session{session}
 {
 }

@@ -89,6 +89,8 @@ set(EXPECTED_FAILURES
   AllSurfaceTypes/TouchTest.sends_touch_up_on_surface_destroy/4 # Fixed by https://github.com/MirServer/wlcs/pull/199
   AllSurfaceTypes/TouchTest.sends_touch_up_on_surface_destroy/5 # Fixed by https://github.com/MirServer/wlcs/pull/199
 
+  XdgToplevelStableTest.touch_can_not_steal_pointer_based_move # https://github.com/MirServer/mir/issues/1792
+
   ForeignToplevelHandleTest.can_maximize_foreign_while_fullscreen # https://github.com/MirServer/mir/issues/2164
 
   # See https://github.com/MirServer/mir/issues/2324

@@ -17,15 +17,15 @@
 #include "wayland_surface_observer.h"
 #include "wayland_utils.h"
 #include "window_wl_surface_role.h"
-#include "wl_surface.h"
 
 #include <mir/executor.h>
+#include <mir/events/event_builders.h>
 #include <mir/log.h>
-#include <mir/events/input_event.h>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
+namespace mev = mir::events;
 namespace mi = mir::input;
 namespace mw = mir::wayland;
 
@@ -36,7 +36,6 @@ mf::WaylandSurfaceObserver::WaylandSurfaceObserver(
     WindowWlSurfaceRole* window)
     : wayland_executor{wayland_executor},
       impl{std::make_shared<Impl>(
-          mw::make_weak(&WlClient::from(surface->client)),
           mw::make_weak(window),
           std::make_unique<WaylandInputDispatcher>(seat, surface))}
 {
@@ -111,9 +110,15 @@ void mf::WaylandSurfaceObserver::input_consumed(ms::Surface const*, std::shared_
         run_on_wayland_thread_unless_window_destroyed(
             [event](Impl* impl, WindowWlSurfaceRole*)
             {
-                impl->input_dispatcher->handle_event(std::dynamic_pointer_cast<MirInputEvent const>(event));
+                auto const input_event = mir_event_get_input_event(event.get());
+                impl->input_dispatcher->handle_event(input_event);
             });
     }
+}
+
+auto mf::WaylandSurfaceObserver::latest_timestamp() const -> std::chrono::nanoseconds
+{
+    return impl->input_dispatcher->latest_timestamp();
 }
 
 void mf::WaylandSurfaceObserver::run_on_wayland_thread_unless_window_destroyed(
@@ -122,7 +127,7 @@ void mf::WaylandSurfaceObserver::run_on_wayland_thread_unless_window_destroyed(
     wayland_executor.spawn(
         [impl=impl, work=std::move(work)]
         {
-            if (impl->client && impl->window)
+            if (impl->window)
             {
                 work(impl.get(), &impl->window.value());
             }

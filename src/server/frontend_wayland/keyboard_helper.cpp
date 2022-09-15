@@ -58,16 +58,16 @@ mf::KeyboardHelper::KeyboardHelper(
     callbacks->send_repeat_info(enable_key_repeat ? 25 : 0, 600);
 }
 
-void mf::KeyboardHelper::handle_event(std::shared_ptr<MirEvent const> const& event)
+void mf::KeyboardHelper::handle_event(MirInputEvent const* event)
 {
-    switch (mir_input_event_get_type(mir_event_get_input_event(event.get())))
+    switch (mir_input_event_get_type(event))
     {
     case mir_input_event_type_keyboard_resync:
         refresh_internal_state();
         break;
 
     case mir_input_event_type_key:
-        handle_keyboard_event(dynamic_pointer_cast<MirKeyboardEvent const>(event));
+        handle_keyboard_event(mir_input_event_get_keyboard_event(event));
         break;
 
     default:;
@@ -114,27 +114,33 @@ auto mf::KeyboardHelper::pressed_key_scancodes() const -> std::vector<uint32_t>
     return std::vector<uint32_t>{pressed_keys.begin(), pressed_keys.end()};
 }
 
-void mf::KeyboardHelper::handle_keyboard_event(std::shared_ptr<MirKeyboardEvent const> const& event)
+void mf::KeyboardHelper::handle_keyboard_event(MirKeyboardEvent const* event)
 {
-    auto const action = mir_keyboard_event_action(event.get());
-    switch (action)
+    bool down;
+    switch (mir_keyboard_event_action(event))
     {
     case mir_keyboard_action_down:
+        down = true;
+        break;
+
     case mir_keyboard_action_up:
+        down = false;
         break;
 
     default:
         return;
     }
 
+    auto const timestamp = mir_input_event_get_wayland_timestamp(mir_keyboard_event_input_event(event));
+    int const scancode = mir_keyboard_event_scan_code(event);
+
     set_keymap(event->keymap());
-    callbacks->send_key(event);
+    callbacks->send_key(timestamp, scancode, down);
     /*
     * HACK! Maintain our own XKB state, so we can serialise it for
     * wl_keyboard_send_modifiers
     */
-    xkb_key_direction const xkb_state = (action == mir_keyboard_action_down) ? XKB_KEY_DOWN : XKB_KEY_UP;
-    int const scancode = mir_keyboard_event_scan_code(event.get());
+    xkb_key_direction const xkb_state = down ? XKB_KEY_DOWN : XKB_KEY_UP;
     xkb_state_update_key(state.get(), scancode + 8, xkb_state);
     update_modifier_state();
 }

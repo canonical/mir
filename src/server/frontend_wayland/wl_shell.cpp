@@ -155,12 +155,12 @@ protected:
     {
     }
 
-    void move(struct wl_resource* /*seat*/, uint32_t serial) override
+    void move(struct wl_resource* /*seat*/, uint32_t /*serial*/) override
     {
-        WindowWlSurfaceRole::initiate_interactive_move(serial);
+        WindowWlSurfaceRole::initiate_interactive_move();
     }
 
-    void resize(struct wl_resource* /*seat*/, uint32_t serial, uint32_t edges) override
+    void resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t edges) override
     {
         MirResizeEdge edge = mir_resize_edge_none;
 
@@ -201,7 +201,7 @@ protected:
         default:;
         }
 
-        WindowWlSurfaceRole::initiate_interactive_resize(edge, serial);
+        WindowWlSurfaceRole::initiate_interactive_resize(edge);
     }
 
     void set_class(std::string const& /*class_*/) override
