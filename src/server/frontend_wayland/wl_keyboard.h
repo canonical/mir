@@ -26,6 +26,7 @@ namespace mir
 namespace frontend
 {
 class WlSurface;
+class WlClient;
 
 class WlKeyboard
     : public wayland::Keyboard,
@@ -37,10 +38,11 @@ public:
 
     ~WlKeyboard();
 
-    void handle_event(MirInputEvent const* event);
+    void handle_event(std::shared_ptr<MirEvent const> const& event);
 
 private:
     WlSeat& seat;
+    wayland::Weak<WlClient> wl_client;
     std::unique_ptr<KeyboardHelper> const helper;
     wayland::Weak<WlSurface> focused_surface;
 
@@ -56,7 +58,7 @@ private:
     /// @{
     void send_repeat_info(int32_t rate, int32_t delay) override;
     void send_keymap_xkb_v1(mir::Fd const& fd, size_t length) override;
-    void send_key(uint32_t timestamp, int scancode, bool down) override;
+    void send_key(std::shared_ptr<MirKeyboardEvent const> const& event) override;
     void send_modifiers(uint32_t depressed, uint32_t latched, uint32_t locked, uint32_t group) override;
     /// @}
 };

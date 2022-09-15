@@ -30,6 +30,7 @@ class CompositeEventFilter;
 namespace frontend
 {
 class WlSeat;
+class WlClient;
 
 /// A keyboard that sends all key events to it's client without ever entering a surface
 class InputMethodGrabKeyboardV2
@@ -48,12 +49,13 @@ private:
 
     std::shared_ptr<Handler> const handler;
     std::unique_ptr<KeyboardHelper> const helper;
+    wayland::Weak<WlClient> wl_client;
 
     /// KeyboardImpl overrides
     /// @{
     void send_repeat_info(int32_t rate, int32_t delay) override;
     void send_keymap_xkb_v1(mir::Fd const& fd, size_t length) override;
-    void send_key(uint32_t timestamp, int scancode, bool down) override;
+    void send_key(std::shared_ptr<MirKeyboardEvent const> const& event) override;
     void send_modifiers(uint32_t depressed, uint32_t latched, uint32_t locked, uint32_t group) override;
     /// @}
 };
