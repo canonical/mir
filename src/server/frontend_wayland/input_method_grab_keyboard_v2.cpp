@@ -74,8 +74,7 @@ mf::InputMethodGrabKeyboardV2::InputMethodGrabKeyboardV2(
     input::CompositeEventFilter& event_filter)
     : wayland::InputMethodKeyboardGrabV2{resource, Version<1>()},
       handler{std::make_shared<Handler>(this, wayland_executor)},
-      helper{seat.make_keyboard_helper(this)},
-      wl_client{&mw::Client::from(client)}
+      helper{seat.make_keyboard_helper(this)}
 {
     event_filter.prepend(handler);
     // On cleanup the handler will be dropped and automatically removed from the filter
@@ -108,6 +107,6 @@ void mf::InputMethodGrabKeyboardV2::send_key(std::shared_ptr<MirKeyboardEvent co
 
 void mf::InputMethodGrabKeyboardV2::send_modifiers(uint32_t depressed, uint32_t latched, uint32_t locked, uint32_t group)
 {
-    auto const serial = wl_display_get_serial(wl_client_get_display(client));
+    auto const serial = client.next_serial(nullptr);
     send_modifiers_event(serial, depressed, latched, locked, group);
 }

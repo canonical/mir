@@ -18,9 +18,9 @@
 #include "mir/graphics/linux_dmabuf.h"
 #include "mir/graphics/drm_formats.h"
 
-
 #include "wayland_wrapper.h"
 #include "mir/wayland/protocol_error.h"
+#include "mir/wayland/client.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/renderer/gl/context.h"
@@ -628,10 +628,10 @@ private:
 
         try
         {
-            auto const buffer_resource = wl_resource_create(client, &wl_buffer_interface, 1, 0);
+            auto const buffer_resource = wl_resource_create(client.raw_client(), &wl_buffer_interface, 1, 0);
             if (!buffer_resource)
             {
-                wl_client_post_no_memory(client);
+                wl_client_post_no_memory(client.raw_client());
                 return;
             }
 

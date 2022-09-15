@@ -27,6 +27,7 @@
 #include "wayland_frontend.tp.h"
 
 #include "mir/wayland/protocol_error.h"
+#include "mir/wayland/client.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/scene/session.h"
 #include "mir/frontend/wayland.h"
@@ -86,7 +87,7 @@ mf::WlSurface::WlSurface(
     std::shared_ptr<Executor> const& frame_callback_executor,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator)
     : Surface(new_resource, Version<4>()),
-        session{get_session(client)},
+        session{client.client_session()},
         stream{session->create_buffer_stream({{}, mir_pixel_format_invalid, graphics::BufferUsage::undefined})},
         allocator{allocator},
         wayland_executor{wayland_executor},
@@ -111,7 +112,7 @@ mf::WlSurface::~WlSurface()
     }
     catch (...)
     {
-        mw::internal_error_processing_request(client, "WlSurface::~WlSurface()");
+        mw::internal_error_processing_request(client.raw_client(), "WlSurface::~WlSurface()");
     }
 }
 

@@ -22,6 +22,7 @@
 #include "mir/scene/text_input_hub.h"
 
 #include <boost/throw_exception.hpp>
+#include <mir/wayland/client.h>
 #include <deque>
 
 namespace mf = mir::frontend;
@@ -259,12 +260,12 @@ mf::TextInputV2::TextInputV2(
       seat{seat},
       handler{std::make_shared<Handler>(this, ctx->wayland_executor)}
 {
-    seat.add_focus_listener(client, this);
+    seat.add_focus_listener(client.raw_client(), this);
 }
 
 mf::TextInputV2::~TextInputV2()
 {
-    seat.remove_focus_listener(client, this);
+    seat.remove_focus_listener(client.raw_client(), this);
 }
 
 void mf::TextInputV2::send_text_change(ms::TextInputChange const& change)
@@ -307,13 +308,13 @@ void mf::TextInputV2::focus_on(WlSurface* surface)
 {
     if (current_surface)
     {
-        auto const serial = wl_display_get_serial(wl_client_get_display(client));
+        auto const serial = client.next_serial(nullptr);
         send_leave_event(serial, current_surface.value().resource);
     }
     current_surface = mw::make_weak(surface);
     if (surface)
     {
-        auto const serial = wl_display_get_serial(wl_client_get_display(client));
+        auto const serial = client.next_serial(nullptr);
         send_enter_event(serial, surface->resource);
     }
     else

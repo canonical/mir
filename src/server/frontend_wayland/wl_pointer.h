@@ -78,8 +78,6 @@ public:
     struct Cursor;
 
 private:
-    wayland::Weak<wayland::Client> wl_client;
-
     void leave(std::optional<std::shared_ptr<MirPointerEvent const>> const& event);
     void buttons(std::shared_ptr<MirPointerEvent const> const& event);
     /// Returns true if any axis events were sent

@@ -252,7 +252,7 @@ void mf::XdgSurfaceStable::ack_configure(uint32_t serial)
 
 void mf::XdgSurfaceStable::send_configure()
 {
-    auto const serial = mw::Client::from(mw::XdgSurface::client).next_serial(nullptr);
+    auto const serial = client.next_serial(nullptr);
     send_configure_event(serial);
 }
 

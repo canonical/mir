@@ -25,6 +25,7 @@
 #include "wl_touch.h"
 
 #include "mir/executor.h"
+#include "mir/wayland/client.h"
 #include "mir/observer_registrar.h"
 #include "mir/input/input_device_observer.h"
 #include "mir/input/input_device_hub.h"
@@ -148,7 +149,7 @@ public:
     {
         if (seat.focused_surface)
         {
-            seat.for_each_listener(seat.focused_surface.value().client, [&](WlKeyboard* keyboard)
+            seat.for_each_listener(seat.focused_surface.value().client.raw_client(), [&](WlKeyboard* keyboard)
                 {
                     keyboard->handle_event(event);
                 });
@@ -259,7 +260,7 @@ void mf::WlSeat::bind(wl_resource* new_wl_seat)
 
 void mf::WlSeat::set_focus_to(WlSurface* new_surface)
 {
-    auto const new_client = new_surface ? new_surface->client : nullptr;
+    auto const new_client = new_surface ? new_surface->client.raw_client() : nullptr;
     if (new_client != focused_client)
     {
         focus_listeners->for_each(focused_client, [](FocusListener* listener)
@@ -303,11 +304,11 @@ mf::WlSeat::Instance::Instance(wl_resource* new_resource, mf::WlSeat* seat)
 void mf::WlSeat::Instance::get_pointer(wl_resource* new_pointer)
 {
     auto const pointer = new WlPointer{new_pointer};
-    seat->pointer_listeners->register_listener(client, pointer);
+    seat->pointer_listeners->register_listener(client.raw_client(), pointer);
     pointer->add_destroy_listener(
-        [listeners = seat->pointer_listeners, listener = pointer, client = client]()
+        [listeners = seat->pointer_listeners, listener = pointer, client = &client]()
         {
-            listeners->unregister_listener(client, listener);
+            listeners->unregister_listener(client->raw_client(), listener);
         });
 }
 
@@ -315,22 +316,22 @@ void mf::WlSeat::Instance::get_keyboard(wl_resource* new_keyboard)
 {
     auto const keyboard = new WlKeyboard{new_keyboard, *seat};
 
-    seat->keyboard_listeners->register_listener(client, keyboard);
+    seat->keyboard_listeners->register_listener(client.raw_client(), keyboard);
     keyboard->add_destroy_listener(
-        [listeners = seat->keyboard_listeners, listener = keyboard, client = client]()
+        [listeners = seat->keyboard_listeners, listener = keyboard, client = &client]()
         {
-            listeners->unregister_listener(client, listener);
+            listeners->unregister_listener(client->raw_client(), listener);
         });
 }
 
 void mf::WlSeat::Instance::get_touch(wl_resource* new_touch)
 {
     auto const touch = new WlTouch{new_touch, seat->clock};
-    seat->touch_listeners->register_listener(client, touch);
+    seat->touch_listeners->register_listener(client.raw_client(), touch);
     touch->add_destroy_listener(
-        [listeners = seat->touch_listeners, listener = touch, client = client]()
+        [listeners = seat->touch_listeners, listener = touch, client = &client]()
         {
-            listeners->unregister_listener(client, listener);
+            listeners->unregister_listener(client->raw_client(), listener);
         });
 }
 

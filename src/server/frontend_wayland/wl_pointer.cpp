@@ -176,7 +176,6 @@ auto mf::WlPointer::linux_button_to_mir_button(int linux_button) -> std::optiona
 
 mf::WlPointer::WlPointer(wl_resource* new_resource)
     : Pointer(new_resource, Version<8>()),
-      wl_client{&mw::Client::from(client)},
       cursor{std::make_unique<NullCursor>()}
 {
 }
@@ -222,14 +221,10 @@ void mir::frontend::WlPointer::event(std::shared_ptr<MirPointerEvent const> cons
 
 void mf::WlPointer::leave(std::optional<std::shared_ptr<MirPointerEvent const>> const& event)
 {
-    if (!wl_client)
-    {
-        return;
-    }
     if (!surface_under_cursor)
         return;
     surface_under_cursor.value().remove_destroy_listener(destroy_listener_id);
-    auto const serial = wl_client.value().next_serial(event.value_or(nullptr));
+    auto const serial = client.next_serial(event.value_or(nullptr));
     send_leave_event(
         serial,
         surface_under_cursor.value().raw_resource());
@@ -243,10 +238,6 @@ void mf::WlPointer::leave(std::optional<std::shared_ptr<MirPointerEvent const>> 
 
 void mf::WlPointer::buttons(std::shared_ptr<MirPointerEvent const> const& event)
 {
-    if (!wl_client)
-    {
-        return;
-    }
     MirPointerButtons const event_buttons = mir_pointer_event_buttons(event.get());
 
     for (auto const& mapping : button_mapping)
@@ -256,7 +247,7 @@ void mf::WlPointer::buttons(std::shared_ptr<MirPointerEvent const> const& event)
         {
             bool const pressed = (mapping.first & event_buttons);
             auto const state = pressed ? ButtonState::pressed : ButtonState::released;
-            auto const serial = wl_client.value().next_serial(event);;
+            auto const serial = client.next_serial(event);;
             send_button_event(serial, timestamp_of(event), mapping.second, state);
             needs_frame = true;
         }
@@ -322,11 +313,6 @@ void mf::WlPointer::axes(std::shared_ptr<MirPointerEvent const> const& event)
 
 void mf::WlPointer::enter_or_motion(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface)
 {
-    if (!wl_client)
-    {
-        return;
-    }
-
     auto const root_position = std::make_pair(
         mir_pointer_event_axis_value(event.get(), mir_pointer_axis_x),
         mir_pointer_event_axis_value(event.get(), mir_pointer_axis_y));
@@ -353,7 +339,7 @@ void mf::WlPointer::enter_or_motion(std::shared_ptr<MirPointerEvent const> const
     {
         // We need to switch surfaces
         leave(event); // If we're currently on a surface, leave it
-        enter_serial = wl_client.value().next_serial(event);
+        enter_serial = client.next_serial(event);
         cursor->apply_to(target_surface);
         send_enter_event(
             enter_serial.value(),

@@ -79,16 +79,13 @@ private:
     struct Impl
     {
         Impl(
-            wayland::Weak<wayland::Client> client,
             wayland::Weak<WindowWlSurfaceRole> window,
             std::unique_ptr<WaylandInputDispatcher> input_dispatcher)
-            : client{client},
-              window{window},
+            : window{window},
               input_dispatcher{std::move(input_dispatcher)}
         {
         }
 
-        wayland::Weak<wayland::Client> const client;
         wayland::Weak<WindowWlSurfaceRole> const window;
         std::unique_ptr<WaylandInputDispatcher> const input_dispatcher;
 

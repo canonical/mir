@@ -20,6 +20,7 @@
 #include "wl_surface.h"
 #include "mir/executor.h"
 #include "mir/scene/text_input_hub.h"
+#include "mir/wayland/client.h"
 
 #include <boost/throw_exception.hpp>
 #include <deque>
@@ -274,12 +275,12 @@ mf::TextInputV3::TextInputV3(
       seat{seat},
       handler{std::make_shared<Handler>(this, ctx->wayland_executor)}
 {
-    seat.add_focus_listener(client, this);
+    seat.add_focus_listener(client.raw_client(), this);
 }
 
 mf::TextInputV3::~TextInputV3()
 {
-    seat.remove_focus_listener(client, this);
+    seat.remove_focus_listener(client.raw_client(), this);
     ctx->text_input_hub->deactivate_handler(handler);
 }
 

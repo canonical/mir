@@ -192,7 +192,7 @@ void mf::OutputGlobal::handle_configuration_changed(mg::DisplayConfigurationOutp
 }
 
 void mf::OutputGlobal::for_each_output_bound_by(
-    wl_client* client,
+    wayland::Client* client,
     std::function<void(OutputInstance*)> const& functor)
 {
     auto const resources = instances.find(client);
@@ -221,14 +221,14 @@ void mf::OutputGlobal::remove_listener(OutputConfigListener* listener)
 void mf::OutputGlobal::bind(wl_resource* resource)
 {
     auto const instance = new OutputInstance(resource, this);
-    instances[wl_resource_get_client(resource)].push_back(instance);
+    instances[&instance->client].push_back(instance);
     instance->output_config_changed(output_config);
     instance->send_done();
 }
 
 void mf::OutputGlobal::instance_destroyed(OutputInstance* instance)
 {
-    auto const iter = instances.find(instance->client);
+    auto const iter = instances.find(&instance->client);
     if (iter == instances.end())
     {
         return;

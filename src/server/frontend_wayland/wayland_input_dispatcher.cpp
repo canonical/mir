@@ -22,6 +22,7 @@
 #include "wl_touch.h"
 
 #include <mir/input/keymap.h>
+#include <mir/wayland/client.h>
 #include <mir/events/pointer_event.h>
 #include <mir/events/touch_event.h>
 
@@ -35,7 +36,7 @@ mf::WaylandInputDispatcher::WaylandInputDispatcher(
     WlSeat* seat,
     WlSurface* wl_surface)
     : seat{seat},
-      client{wl_surface->client},
+      client{wl_surface->client.raw_client()},
       wl_surface{mw::make_weak(wl_surface)}
 {
 }

@@ -33,8 +33,7 @@ namespace geom = mir::geometry;
 
 mf::WlTouch::WlTouch(wl_resource* new_resource, std::shared_ptr<time::Clock> const& clock)
     : Touch(new_resource, Version<8>()),
-      clock{clock},
-      wl_client{&mw::Client::from(client)}
+      clock{clock}
 {
 }
 
@@ -51,11 +50,6 @@ mf::WlTouch::~WlTouch()
 
 void mf::WlTouch::event(std::shared_ptr<MirTouchEvent const> const& event, WlSurface& root_surface)
 {
-    if (!wl_client)
-    {
-        return;
-    }
-
     std::chrono::milliseconds timestamp{mir_input_event_get_wayland_timestamp(mir_touch_event_input_event(event.get()))};
 
     for (auto i = 0u; i < mir_touch_event_point_count(event.get()); ++i)
@@ -70,13 +64,13 @@ void mf::WlTouch::event(std::shared_ptr<MirTouchEvent const> const& event, WlSur
         {
         case mir_touch_action_down:
         {
-            auto const serial = wl_client.value().next_serial(event);
+            auto const serial = client.next_serial(event);
             down(serial, timestamp, touch_id, root_surface, position);
         }   break;
 
         case mir_touch_action_up:
         {
-            auto const serial = wl_client.value().next_serial(event);
+            auto const serial = client.next_serial(event);
             up(serial, timestamp, touch_id);
         }   break;
 
@@ -98,11 +92,6 @@ void mf::WlTouch::down(
     WlSurface& root_surface,
     std::pair<float, float> const& root_position)
 {
-    if (!wl_client)
-    {
-        return;
-    }
-
     geom::Point root_point{root_position.first, root_position.second};
     auto const target_surface = root_surface.subsurface_at(root_point).value_or(&root_surface);
     auto const offset = target_surface->total_offset();
@@ -113,11 +102,7 @@ void mf::WlTouch::down(
     auto const listener_id = target_surface->add_destroy_listener(
         [this, touch_id]()
         {
-            if (!wl_client)
-            {
-                return;
-            }
-            auto const serial = wl_client.value().next_serial(nullptr);
+            auto const serial = client.next_serial(nullptr);
             auto const timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
                 clock->now().time_since_epoch());
             up(serial, timestamp, touch_id);

@@ -23,12 +23,18 @@
 namespace mw = mir::wayland;
 
 mw::Resource::Resource(wl_resource* resource)
-    : resource{resource},
-      client{wl_resource_get_client(resource)},
-      shared_client{Client::shared_from(client)}
+    : owned_client{Client::shared_from(wl_resource_get_client(resource))},
+      resource{resource},
+      client{*owned_client}
 {
     if (resource == nullptr)
     {
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
+}
+
+mw::Resource::~Resource()
+{
+    // Run destroy listeners before client is dropped
+    mark_destroyed();
 }

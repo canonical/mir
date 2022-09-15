@@ -73,7 +73,7 @@ public:
     static auto from_or_throw(wl_resource* output) -> OutputGlobal&;
 
     void handle_configuration_changed(graphics::DisplayConfigurationOutput const& config);
-    void for_each_output_bound_by(wl_client* client, std::function<void(OutputInstance*)> const& functor);
+    void for_each_output_bound_by(wayland::Client* client, std::function<void(OutputInstance*)> const& functor);
     auto current_config() -> graphics::DisplayConfigurationOutput const& { return output_config; }
 
     void add_listener(OutputConfigListener* listener);
@@ -87,7 +87,7 @@ private:
 
     graphics::DisplayConfigurationOutput output_config;
     std::vector<OutputConfigListener*> listeners;
-    std::unordered_map<wl_client*, std::vector<OutputInstance*>> instances;
+    std::unordered_map<wayland::Client*, std::vector<OutputInstance*>> instances;
 };
 
 class OutputManager

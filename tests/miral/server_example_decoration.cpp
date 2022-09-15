@@ -71,7 +71,7 @@ struct ServerDecorationManager : mw::ServerDecorationManager::Global
         void create(wl_resource* new_resource, wl_resource* surface) override
         {
             new ServerDecoration{new_resource};
-            manager->callback(client, surface);
+            manager->callback(wl_resource_get_client(resource), surface);
         }
 
         ::ServerDecorationManager* const manager;
