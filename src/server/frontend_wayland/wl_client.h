@@ -53,30 +53,16 @@ public:
 
     ~WlClient();
 
-    /// The underlying Wayland client
     auto raw_client() const -> wl_client* override { return client; }
 
-    /// The Mir session associated with this client. Be careful when using this that it's actually the session you want.
-    /// All clients have a session but the surfaces they create may get associated with additional sessions.
-    ///
-    /// For example all surfaces from a single XWayland server are attached to a single WlClient with a single cleint
-    /// session, but their scene::Surfaces are associated with multiple sessions created in the XWayland frontend for
-    /// individual apps.
     auto client_session() const -> std::shared_ptr<scene::Session> override { return session; }
 
-    /// Generate a new serial, and keep track of it attached to the given event. Event may be null.
     auto next_serial(std::shared_ptr<MirEvent const> event) -> uint32_t override;
 
-    /// Returns the event associated with the given serial. Returns optional{nullptr} if the serial is known, but not
-    /// associated with an event. Returns nullopt if the serial is unkown/invalid.
     auto event_for(uint32_t serial) -> std::optional<std::shared_ptr<MirEvent const>> override;
 
-    /// The XDG output protocol implementation sends the Mir-internal logical position and scale of outputs multiplied
-    /// by this. It's currently just used by XWayland.
-    /// @{
     void set_output_geometry_scale(float scale) override { output_geometry_scale_ = scale; }
     auto output_geometry_scale() -> float override { return output_geometry_scale_; }
-    /// @}
 
 private:
     WlClient(wl_client* client, std::shared_ptr<scene::Session> const& session, shell::Shell* shell);
