@@ -17,6 +17,7 @@
 #include "buffer_from_wl_shm.h"
 #include "shm_buffer.h"
 
+#include "mir/graphics/egl_context_executor.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/executor.h"
 
@@ -310,23 +311,35 @@ public:
         mir::geometry::Stride stride,
         MirPixelFormat format,
         std::function<void()>&& on_consumed)
-        : ShmBuffer(size, format, std::move(egl_delegate)),
+        : ShmBuffer(size, format, egl_delegate),
           on_consumed{std::move(on_consumed)},
           buffer{std::move(buffer)},
           stride_{stride}
+    {
+        egl_delegate->spawn([this]()
+        {
+            ShmBuffer::bind();
+            {
+                std::lock_guard lock{upload_mutex};
+                auto const mapping = map_readable();
+                upload_to_texture(mapping->data(), mapping->stride());
+                uploaded = true;
+            }
+            upload_cv.notify_one();
+        });
+
+        std::unique_lock lock{upload_mutex};
+        upload_cv.wait(lock, [&] { return uploaded; });
+    }
+
+    ~WlShmBuffer()
     {
     }
 
     void bind() override
     {
         ShmBuffer::bind();
-        std::lock_guard lock{upload_mutex};
-        if (!uploaded)
-        {
-            auto const mapping = map_readable();
-            upload_to_texture(mapping->data(), mapping->stride());
-            uploaded = true;
-        }
+        notify_consumed();
     }
 
     auto map_readable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char const>> override
@@ -347,8 +360,6 @@ public:
     template<typename T>
     auto map_generic() -> std::unique_ptr<mir::renderer::software::Mapping<T>>
     {
-        notify_consumed();
-
         class Mapping : public mir::renderer::software::Mapping<T>
         {
         public:
@@ -468,7 +479,8 @@ private:
     std::atomic<bool> consumed{false};
     std::function<void()> on_consumed;
 
-    std::mutex upload_mutex;
+    std::mutex mutable upload_mutex;
+    std::condition_variable mutable upload_cv;
     bool uploaded{false};
     SharedWlBuffer const buffer;
     mir::geometry::Stride const stride_;
