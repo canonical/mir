@@ -43,7 +43,6 @@ class Executor;
 namespace frontend
 {
 class WlSurface;
-class WlClient;
 
 class CommitHandler
 {
@@ -70,26 +69,24 @@ public:
 
     /// Convert the Mir event into Wayland events and send them to the client. root_surface is the one that received
     /// the Mir event, but the final Wayland event may be sent to a subsurface.
-    void event(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface);
+    void event(MirPointerEvent const* event, WlSurface& root_surface);
 
     struct Cursor;
 
 private:
-    wayland::Weak<WlClient> wl_client;
+    wl_display* const display;
 
-    void leave(std::optional<std::shared_ptr<MirPointerEvent const>> const& event);
-    void buttons(std::shared_ptr<MirPointerEvent const> const& event);
+    void leave(std::optional<MirPointerEvent const*> event);
+    void buttons(MirPointerEvent const* event);
     /// Returns true if any axis events were sent
     template<typename Tag>
-    auto axis(
-        std::shared_ptr<MirPointerEvent const> const& event,
-        events::ScrollAxis<Tag> axis, uint32_t wayland_axis) -> bool;
-    void axes(std::shared_ptr<MirPointerEvent const> const& event);
+    auto axis(MirPointerEvent const* event, events::ScrollAxis<Tag> axis, uint32_t wayland_axis) -> bool;
+    void axes(MirPointerEvent const* event);
     /// Handles finding the correct subsurface and position on that subsurface if needed
     /// Giving it an already transformed surface and position is also fine
-    void enter_or_motion(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface);
+    void enter_or_motion(MirPointerEvent const* event, WlSurface& root_surface);
     /// Sends relative motion only if the relative pointer is set
-    void relative_motion(std::shared_ptr<MirPointerEvent const> const& event);
+    void relative_motion(MirPointerEvent const* event);
     /// Sends a frame event only if needed, leaves needs_frame false
     void maybe_frame();
     /// The cursor surface has committed

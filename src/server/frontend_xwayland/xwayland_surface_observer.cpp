@@ -24,7 +24,6 @@
 
 #include <mir/executor.h>
 #include <mir/events/event_builders.h>
-#include <mir/events/input_event.h>
 
 #include <mir/log.h>
 
@@ -33,51 +32,6 @@ namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mev = mir::events;
 namespace mi = mir::input;
-
-namespace
-{
-/// Returns true if this input event could potentially start a move/resize
-auto is_move_resize_event(MirInputEvent const* event) -> bool
-{
-    switch (mir_input_event_get_type(event))
-    {
-    case mir_input_event_type_pointer:
-        switch (mir_pointer_event_action(mir_input_event_get_pointer_event(event)))
-        {
-        case mir_pointer_action_button_up:
-        case mir_pointer_action_button_down:
-        case mir_pointer_action_enter:
-            return true;
-
-        default:
-            return false;
-        }
-
-    case mir_input_event_type_touch:
-    {
-        auto const touch_ev = mir_input_event_get_touch_event(event);
-        for (unsigned i = 0; i < mir_touch_event_point_count(touch_ev); i++)
-        {
-            switch (mir_touch_event_action(touch_ev, i))
-            {
-            case mir_touch_action_down:
-                return true;
-
-            default:
-                break;
-            }
-        }
-        return false;
-    }
-
-    case mir_input_event_type_key:
-    case mir_input_event_type_keyboard_resync:
-    case mir_input_event_types:
-        return false;
-    }
-    return false; // make compiler happy
-}
-}
 
 mf::XWaylandSurfaceObserver::XWaylandSurfaceObserver(
     Executor& wayland_executor,
@@ -97,11 +51,6 @@ mf::XWaylandSurfaceObserver::~XWaylandSurfaceObserver()
 {
     std::lock_guard lock{input_dispatcher->mutex};
     input_dispatcher->dispatcher = std::nullopt;
-}
-
-auto mf::XWaylandSurfaceObserver::latest_move_resize_event() -> std::shared_ptr<MirInputEvent const>
-{
-    return *latest_move_resize_event_.lock();
 }
 
 void mf::XWaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAttrib attrib, int value)
@@ -144,21 +93,25 @@ void mf::XWaylandSurfaceObserver::input_consumed(ms::Surface const*, std::shared
     if (mir_event_get_type(event.get()) == mir_event_type_input)
     {
         // Must clone the event so we can scale the positions to XWayland scale
-        auto const owned_event = std::dynamic_pointer_cast<MirInputEvent>(
-            std::shared_ptr<MirEvent>(mev::clone_event(*event)));
+        std::shared_ptr<MirEvent> owned_event = mev::clone_event(*event);
         mev::scale_positions(*owned_event, scale);
-
-        if (is_move_resize_event(mir_event_get_input_event(owned_event.get())))
-        {
-            *latest_move_resize_event_.lock() = owned_event;
-        }
 
         aquire_input_dispatcher(
             [owned_event](auto input_dispatcher)
             {
-                input_dispatcher->handle_event(owned_event);
+                auto const input_event = mir_event_get_input_event(owned_event.get());
+                input_dispatcher->handle_event(input_event);
             });
     }
+}
+
+auto mf::XWaylandSurfaceObserver::latest_timestamp() const -> std::chrono::nanoseconds
+{
+    std::lock_guard lock{input_dispatcher->mutex};
+    if (input_dispatcher->dispatcher)
+        return input_dispatcher->dispatcher.value()->latest_timestamp();
+    else
+        return {};
 }
 
 mf::XWaylandSurfaceObserver::ThreadsafeInputDispatcher::ThreadsafeInputDispatcher(

@@ -18,7 +18,6 @@
 #define MIR_FRONTEND_XWAYLAND_SURFACE_OBSERVER_H
 
 #include "mir/scene/null_surface_observer.h"
-#include "mir/synchronised.h"
 
 #include <memory>
 #include <mutex>
@@ -51,8 +50,6 @@ public:
         float scale);
     ~XWaylandSurfaceObserver();
 
-    auto latest_move_resize_event() -> std::shared_ptr<MirInputEvent const>;
-
     /// Overrides from scene::SurfaceObserver
     ///@{
     void attrib_changed(scene::Surface const*, MirWindowAttrib attrib, int value) override;
@@ -61,6 +58,9 @@ public:
     void client_surface_close_requested(scene::Surface const*) override;
     void input_consumed(scene::Surface const*, std::shared_ptr<MirEvent const> const& event) override;
     ///@}
+
+    /// Can be called from any thread
+    auto latest_timestamp() const -> std::chrono::nanoseconds;
 
 private:
     struct ThreadsafeInputDispatcher
@@ -79,7 +79,6 @@ private:
     Executor& wayland_executor;
     std::shared_ptr<ThreadsafeInputDispatcher> const input_dispatcher;
     float const scale;
-    Synchronised<std::shared_ptr<MirInputEvent const>> latest_move_resize_event_;
 
     /// Runs work on the Wayland thread if the input dispatcher still exists
     /// Does nothing if the input dispatcher has already been destroyed

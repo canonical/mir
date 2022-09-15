@@ -30,6 +30,8 @@ struct wl_global;
 struct wl_array;
 
 struct wl_display * wl_client_get_display(struct wl_client *client);
+uint32_t wl_display_next_serial(struct wl_display *display);
+uint32_t wl_display_get_serial(struct wl_display *display);
 
 void wl_array_init(struct wl_array *array);
 void wl_array_release(struct wl_array *array);

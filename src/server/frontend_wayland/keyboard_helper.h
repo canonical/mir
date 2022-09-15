@@ -22,7 +22,7 @@
 #include <vector>
 #include <functional>
 
-struct MirEvent;
+struct MirInputEvent;
 struct MirKeyboardEvent;
 
 // from <xkbcommon/xkbcommon.h>
@@ -48,7 +48,7 @@ public:
 
     virtual void send_repeat_info(int32_t rate, int32_t delay) = 0;
     virtual void send_keymap_xkb_v1(mir::Fd const& fd, size_t length) = 0;
-    virtual void send_key(std::shared_ptr<MirKeyboardEvent const> const& event) = 0;
+    virtual void send_key(uint32_t timestamp, int scancode, bool down) = 0;
     virtual void send_modifiers(uint32_t depressed, uint32_t latched, uint32_t locked, uint32_t group) = 0;
 
 private:
@@ -65,14 +65,13 @@ public:
         std::shared_ptr<input::Seat> const& seat,
         bool enable_key_repeat);
 
-    void handle_event(std::shared_ptr<MirEvent const> const& event);
-
+    void handle_event(MirInputEvent const* event);
     /// Returns the scancodes of pressed keys
     auto refresh_internal_state() -> std::vector<uint32_t>;
 
 private:
     auto pressed_key_scancodes() const -> std::vector<uint32_t>;
-    void handle_keyboard_event(std::shared_ptr<MirKeyboardEvent const> const& event);
+    void handle_keyboard_event(MirKeyboardEvent const* event);
     void set_keymap(std::shared_ptr<mir::input::Keymap> const& new_keymap);
     void update_modifier_state();
 

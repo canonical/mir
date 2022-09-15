@@ -518,7 +518,8 @@ bool mf::WaylandConnector::wl_display_global_filter_func(wl_client const* client
 
 auto mir::frontend::get_session(wl_client* wl_client) -> std::shared_ptr<scene::Session>
 {
-    return WlClient::from(wl_client).client_session();
+    auto const client = WlClient::from(wl_client);
+    return client ? client->client_session() : nullptr;
 }
 
 auto mf::get_session(wl_resource* surface) -> std::shared_ptr<ms::Session>

@@ -32,7 +32,6 @@
 
 struct wl_client;
 struct wl_resource;
-struct MirInputEvent;
 
 namespace mir
 {
@@ -80,8 +79,8 @@ public:
     void set_pending_height(std::optional<geometry::Height> const& height);
     void set_title(std::string const& title);
     void set_application_id(std::string const& application_id);
-    void initiate_interactive_move(uint32_t serial);
-    void initiate_interactive_resize(MirResizeEdge edge, uint32_t serial);
+    void initiate_interactive_move();
+    void initiate_interactive_resize(MirResizeEdge edge);
     void set_parent(std::optional<std::shared_ptr<scene::Surface>> const& parent);
     void set_max_size(int32_t width, int32_t height);
     void set_min_size(int32_t width, int32_t height);
@@ -116,11 +115,10 @@ protected:
 
     auto window_state() const -> MirWindowState;
     auto is_active() const -> bool;
+    auto latest_timestamp() const -> std::chrono::nanoseconds;
 
     void commit(WlSurfaceState const& state) override;
     void surface_destroyed() override;
-
-    auto input_event_for(uint32_t serial) -> std::shared_ptr<MirInputEvent const>;
 
 private:
     wayland::Weak<WlSurface> const surface;
