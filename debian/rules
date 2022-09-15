@@ -32,10 +32,16 @@ COMMON_CONFIGURE_OPTIONS = \
   -DMIR_LINK_TIME_OPTIMIZATION=ON\
 
 ifeq ($(filter ppc64el,$(DEB_HOST_ARCH)),ppc64el)
-	COMMON_CONFIGURE_OPTIONS += -DMIR_COMPILER_QUIRKS="libinput_environment.cpp:restrict"
+	# Disable spurious error on GCC-12
+	ifneq ($(shell gcc --version | grep '12.[[:digit:]]\+.[[:digit:]]\+$$'),)
+		COMMON_CONFIGURE_OPTIONS += -DMIR_COMPILER_QUIRKS="libinput_environment.cpp:restrict"
+	endif
 endif
 ifeq ($(filter riscv64,$(DEB_HOST_ARCH)),riscv64)
-	COMMON_CONFIGURE_OPTIONS += -DMIR_COMPILER_QUIRKS="test_linearising_executor.cpp:use-after-free"
+	# Disable spurious error on GCC-12
+	ifneq ($(shell gcc --version | grep '12.[[:digit:]]\+.[[:digit:]]\+$$'),)
+		COMMON_CONFIGURE_OPTIONS += -DMIR_COMPILER_QUIRKS="test_linearising_executor.cpp:use-after-free"
+	endif
 endif
 
 # Disable LTO if optimizations are off
