@@ -275,12 +275,12 @@ mf::TextInputV3::TextInputV3(
       seat{seat},
       handler{std::make_shared<Handler>(this, ctx->wayland_executor)}
 {
-    seat.add_focus_listener(client.raw_client(), this);
+    seat.add_focus_listener(&client, this);
 }
 
 mf::TextInputV3::~TextInputV3()
 {
-    seat.remove_focus_listener(client.raw_client(), this);
+    seat.remove_focus_listener(&client, this);
     ctx->text_input_hub->deactivate_handler(handler);
 }
 

@@ -255,7 +255,7 @@ TextInputV1::~TextInputV1()
 {
     if (seat)
     {
-        seat.value()->remove_focus_listener(client.raw_client(), this);
+        seat.value()->remove_focus_listener(&client, this);
     }
 
     on_new_input_field = false;
@@ -325,7 +325,7 @@ void TextInputV1::activate(wl_resource *seat_resource, wl_resource *surface)
         BOOST_THROW_EXCEPTION(std::runtime_error("failed to resolve WlSeat activating TextInputV1"));
     }
     this->seat = std::make_optional(wl_seat);
-    wl_seat->add_focus_listener(client.raw_client(), this);
+    wl_seat->add_focus_listener(&client, this);
 
     if (current_surface)
     {

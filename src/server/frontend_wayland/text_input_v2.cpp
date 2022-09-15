@@ -260,12 +260,12 @@ mf::TextInputV2::TextInputV2(
       seat{seat},
       handler{std::make_shared<Handler>(this, ctx->wayland_executor)}
 {
-    seat.add_focus_listener(client.raw_client(), this);
+    seat.add_focus_listener(&client, this);
 }
 
 mf::TextInputV2::~TextInputV2()
 {
-    seat.remove_focus_listener(client.raw_client(), this);
+    seat.remove_focus_listener(&client, this);
 }
 
 void mf::TextInputV2::send_text_change(ms::TextInputChange const& change)

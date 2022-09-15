@@ -36,7 +36,6 @@ mf::WaylandInputDispatcher::WaylandInputDispatcher(
     WlSeat* seat,
     WlSurface* wl_surface)
     : seat{seat},
-      client{wl_surface->client.raw_client()},
       wl_surface{mw::make_weak(wl_surface)}
 {
 }
@@ -53,7 +52,7 @@ void mf::WaylandInputDispatcher::handle_event(std::shared_ptr<MirInputEvent cons
     case mir_input_event_type_pointer:
     {
         auto const pointer_event = dynamic_pointer_cast<MirPointerEvent const>(event);
-        seat->for_each_listener(client, [&](WlPointer* pointer)
+        seat->for_each_listener(&wl_surface.value().client, [&](WlPointer* pointer)
             {
                 pointer->event(pointer_event, wl_surface.value());
             });
@@ -62,7 +61,7 @@ void mf::WaylandInputDispatcher::handle_event(std::shared_ptr<MirInputEvent cons
     case mir_input_event_type_touch:
     {
         auto const touch_event = dynamic_pointer_cast<MirTouchEvent const>(event);
-        seat->for_each_listener(client, [&](WlTouch* touch)
+        seat->for_each_listener(&wl_surface.value().client, [&](WlTouch* touch)
             {
                 touch->event(touch_event, wl_surface.value());
             });

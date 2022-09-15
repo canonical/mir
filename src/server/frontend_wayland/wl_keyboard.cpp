@@ -34,12 +34,12 @@ mf::WlKeyboard::WlKeyboard(wl_resource* new_resource, WlSeat& seat)
       seat{seat},
       helper{seat.make_keyboard_helper(this)}
 {
-    seat.add_focus_listener(client.raw_client(), this);
+    seat.add_focus_listener(&client, this);
 }
 
 mf::WlKeyboard::~WlKeyboard()
 {
-    seat.remove_focus_listener(client.raw_client(), this);
+    seat.remove_focus_listener(&client, this);
 }
 
 void mf::WlKeyboard::handle_event(std::shared_ptr<MirEvent const> const& event)

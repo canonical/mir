@@ -65,9 +65,9 @@ public:
 
     static auto from(struct wl_resource* resource) -> WlSeat*;
 
-    void for_each_listener(wl_client* client, std::function<void(WlPointer*)> func);
-    void for_each_listener(wl_client* client, std::function<void(WlKeyboard*)> func);
-    void for_each_listener(wl_client* client, std::function<void(WlTouch*)> func);
+    void for_each_listener(wayland::Client* client, std::function<void(WlPointer*)> func);
+    void for_each_listener(wayland::Client* client, std::function<void(WlKeyboard*)> func);
+    void for_each_listener(wayland::Client* client, std::function<void(WlTouch*)> func);
 
     class FocusListener
     {
@@ -85,13 +85,13 @@ public:
     auto make_keyboard_helper(KeyboardCallbacks* callbacks) -> std::unique_ptr<KeyboardHelper>;
 
     /// Adds the listener for future use, and makes a call into it to inform of initial state
-    void add_focus_listener(wl_client* client, FocusListener* listener);
-    void remove_focus_listener(wl_client* client, FocusListener* listener);
+    void add_focus_listener(wayland::Client* client, FocusListener* listener);
+    void remove_focus_listener(wayland::Client* client, FocusListener* listener);
 
 private:
     void set_focus_to(WlSurface* surface);
 
-    wl_client* focused_client{nullptr}; ///< Can be null
+    wayland::Client* focused_client{nullptr}; ///< Can be null
     wayland::Weak<WlSurface> focused_surface;
     wayland::DestroyListenerId focused_surface_destroy_listener_id{};
 
