@@ -55,6 +55,8 @@ public:
 
     auto raw_client() const -> wl_client* override { return client; }
 
+    auto is_being_destroyed() const -> bool override { return !owned_self; }
+
     auto client_session() const -> std::shared_ptr<scene::Session> override { return session; }
 
     auto next_serial(std::shared_ptr<MirEvent const> event) -> uint32_t override;

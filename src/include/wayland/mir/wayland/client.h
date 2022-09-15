@@ -46,6 +46,10 @@ public:
     /// The underlying Wayland client
     virtual auto raw_client() const -> wl_client* = 0;
 
+    /// True if the client's destroy listener has fired. The client object continues to exist after this until all
+    /// resources have been cleaned up.
+    virtual auto is_being_destroyed() const -> bool = 0;
+
     /// The Mir session associated with this client. Be careful when using this that it's actually the session you want.
     /// All clients have a session but the surfaces they create may get associated with additional sessions.
     ///
