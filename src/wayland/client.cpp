@@ -27,35 +27,48 @@ namespace
 {
 /// All operations for the same display should happen on the same thread, but since in theory a single process could
 /// manage multiple Wayland displays, best to keep global state threadsafe.
-mir::Synchronised<std::vector<std::pair<wl_client*, mw::Client*>>> client_map;
+mir::Synchronised<std::vector<std::pair<wl_client*, std::weak_ptr<mw::Client>>>> client_map;
 }
 
 auto mw::Client::from(wl_client* client) -> Client&
 {
-    auto const map = client_map.lock();
-    for (auto const& pair : *map)
-    {
-        if (pair.first == client)
-        {
-            return *pair.second;
-        }
-    }
-    fatal_error("Client::from(): wl_client %p is %s", static_cast<void*>(client), client ? "unknown" : "null");
-    abort(); // Make compiler happy
+    return *shared_from(client);
 }
 
-void mw::Client::register_client(Client* client)
+void mw::Client::register_client(wl_client* raw, std::shared_ptr<Client> const& shared)
 {
-    auto const map = client_map.lock();
-    map->push_back({client->raw_client(), client});
+    client_map.lock()->push_back({raw, shared});
 }
 
-void mw::Client::unregister_client(Client* client)
+void mw::Client::unregister_client(wl_client* raw)
 {
     auto const map = client_map.lock();
     map->erase(remove_if(
             begin(*map),
             end(*map),
-            [&](auto& item){ return item.second == client; }),
+            [&](auto& item){ return item.first == raw; }),
         end(*map));
+}
+
+auto mw::Client::shared_from(wl_client* client) -> std::shared_ptr<Client>
+{
+    auto const locked = client_map.lock();
+    for (auto& info : *locked)
+    {
+        if (info.first == client)
+        {
+            if (auto const shared = info.second.lock())
+            {
+                return shared;
+            }
+            else
+            {
+                // The client should remove itself from the map in it's destructor and should be destroyed/accessed on a
+                // single thread, so this should never happen
+                mir::fatal_error("wl_client %p expired");
+            }
+        }
+    }
+    mir::fatal_error("wl_client %p is %s", static_cast<void*>(client), client ? "unknown" : "null");
+    abort(); // Make compiler happy
 }

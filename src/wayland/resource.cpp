@@ -15,6 +15,7 @@
  */
 
 #include "mir/wayland/resource.h"
+#include "mir/wayland/client.h"
 
 #include <boost/throw_exception.hpp>
 #include <wayland-server-core.h>
@@ -23,7 +24,8 @@ namespace mw = mir::wayland;
 
 mw::Resource::Resource(wl_resource* resource)
     : resource{resource},
-      client{wl_resource_get_client(resource)}
+      client{wl_resource_get_client(resource)},
+      shared_client{Client::shared_from(client)}
 {
     if (resource == nullptr)
     {

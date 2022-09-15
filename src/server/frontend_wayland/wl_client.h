@@ -82,6 +82,7 @@ private:
     WlClient(wl_client* client, std::shared_ptr<scene::Session> const& session, shell::Shell* shell);
 
     static void handle_client_created(wl_listener* listener, void* data);
+    static void handle_client_destroyed(wl_listener* listener, void* data);
 
     /// This shell is owned by the ClientSessionConstructor, which outlives all clients.
     shell::Shell* const shell;
@@ -89,6 +90,7 @@ private:
     wl_display* const display;
     std::shared_ptr<scene::Session> const session;
 
+    std::shared_ptr<WlClient> owned_self;
     std::deque<std::pair<uint32_t, std::shared_ptr<MirEvent const>>> serial_event_pairs;
     float output_geometry_scale_{1};
 };

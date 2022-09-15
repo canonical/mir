@@ -35,6 +35,8 @@ class Session;
 
 namespace wayland
 {
+class Resource;
+
 class Client : public wayland::LifetimeTracker
 {
 public:
@@ -67,8 +69,12 @@ public:
     /// @}
 
 protected:
-    static void register_client(Client* client);
-    static void unregister_client(Client* client);
+    static void register_client(wl_client* raw, std::shared_ptr<Client> const& shared);
+    static void unregister_client(wl_client* raw);
+
+private:
+    friend Resource;
+    static auto shared_from(wl_client* client) -> std::shared_ptr<Client>;
 };
 }
 }

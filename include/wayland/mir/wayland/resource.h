@@ -26,6 +26,8 @@ namespace mir
 {
 namespace wayland
 {
+class Client;
+
 class Resource
     : public virtual LifetimeTracker
 {
@@ -39,6 +41,9 @@ public:
 
     wl_resource* const resource;
     wl_client* const client;
+
+private:
+    std::shared_ptr<Client> shared_client;
 };
 }
 }

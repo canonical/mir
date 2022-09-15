@@ -62,18 +62,7 @@ static_assert(
 /// Intermediary between the wl_client* and WlClient
 struct ClientCtx
 {
-    ClientCtx(std::unique_ptr<mf::WlClient>&& client)
-        : client{std::move(client)}
-    {
-    }
-
-    static auto from(wl_listener* listener) -> ClientCtx*
-    {
-        ClientCtx* ctx = listener ? wl_container_of(listener, ctx, destroy_listener) : nullptr;
-        return ctx;
-    }
-
-    mir::StdLayoutUPtr<mf::WlClient> const client;
+    mf::WlClient* const client;
     wl_listener destroy_listener;
 };
 
@@ -86,15 +75,6 @@ void cleanup_construction_ctx(wl_listener* listener, void*)
     ConstructionCtx* construction_context;
     construction_context = wl_container_of(listener, construction_context, display_destruction_listener);
     delete construction_context;
-}
-
-void cleanup_client_ctx(wl_listener* listener, void* /*data*/)
-{
-    auto const ctx = ClientCtx::from(listener);
-    // This ensures that further calls to wl_client_get_destroy_listener(client, &cleanup_client_ctx) - and hence
-    // WlClient::from(client) - return nullptr.
-    wl_list_remove(&ctx->destroy_listener.link);
-    delete ctx;
 }
 }
 
@@ -116,9 +96,8 @@ void mf::WlClient::setup_new_client_handler(
 
 mf::WlClient::~WlClient()
 {
-    mark_destroyed();
-    unregister_client(this);
     shell->close_session(session);
+    unregister_client(client);
 }
 
 auto mf::WlClient::next_serial(std::shared_ptr<MirEvent const> event) -> uint32_t
@@ -176,13 +155,23 @@ void mf::WlClient::handle_client_created(wl_listener* listener, void* data)
         "",
         std::make_shared<mf::NullEventSink>());
 
-    // Can't use std::make_unique because WlClient constructor is private
-    auto wl_client = std::unique_ptr<mf::WlClient>{
+    // Can't use std::make_shared because WlClient constructor is private
+    auto shared = std::shared_ptr<mf::WlClient>{
         new mf::WlClient{client, session, construction_context->shell.get()}};
-    register_client(wl_client.get());
-    auto client_context = new ClientCtx{std::move(wl_client)};
-    client_context->destroy_listener.notify = &cleanup_client_ctx;
+    register_client(client, shared);
+
+    auto client_context = new ClientCtx{shared.get(), {}};
+    client_context->destroy_listener.notify = &handle_client_destroyed;
     wl_client_add_destroy_listener(client, &client_context->destroy_listener);
 
-    (*construction_context->client_created_callback)(*client_context->client.get());
+    client_context->client->owned_self = move(shared);
+
+    (*construction_context->client_created_callback)(*client_context->client);
+}
+
+void mf::WlClient::handle_client_destroyed(wl_listener* listener, void* /*data*/)
+{
+    ClientCtx* ctx = wl_container_of(listener, ctx, destroy_listener);
+    ctx->client->owned_self.reset();
+    delete ctx;
 }
