@@ -815,7 +815,6 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
 void mf::XWaylandSurface::move_resize(uint32_t detail)
 {
     std::shared_ptr<scene::Surface> scene_surface;
-    std::chrono::nanoseconds timestamp;
     std::shared_ptr<MirInputEvent const> event;
     {
         std::lock_guard lock{mutex};
@@ -824,22 +823,20 @@ void mf::XWaylandSurface::move_resize(uint32_t detail)
         {
             event = surface_observer.value()->latest_move_resize_event();
         }
+        if (!scene_surface || !event)
+        {
+            return;
+        }
     }
 
     auto const action = static_cast<NetWmMoveresize>(detail);
     if (action == NetWmMoveresize::MOVE)
     {
-        if (scene_surface)
-        {
-            shell->request_move(scene_surface->session().lock(), scene_surface, event->event_time().count());
-        }
+        shell->request_move(scene_surface->session().lock(), scene_surface, event->event_time().count());
     }
     else if (auto const edge = wm_resize_edge_to_mir_resize_edge(action))
     {
-        if (scene_surface)
-        {
-            shell->request_resize(scene_surface->session().lock(), scene_surface, timestamp.count(), edge.value());
-        }
+        shell->request_resize(scene_surface->session().lock(), scene_surface, event->event_time().count(), edge.value());
     }
     else
     {
