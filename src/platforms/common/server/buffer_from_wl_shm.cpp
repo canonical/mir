@@ -189,6 +189,14 @@ public:
         }
         return LockedHandle{};
     }
+
+    // This is non-null IFF lock() returns an empty handle (ie: the client has deleted the buffer)
+    // In this case, retained_data() will point to the underlying buffer storage
+    void* retained_data() const
+    {
+        // Synchronised by the previous call to lock()
+        return resource->data;
+    }    
 private:
     struct WlResource
     {
@@ -199,6 +207,18 @@ private:
         {
             destruction_listener.notify = &on_buffer_destroyed;
             wl_resource_add_destroy_listener(buffer, &destruction_listener);
+        }
+
+        ~WlResource()
+        {
+            if (retained_pool)
+            {
+                wayland_executor->spawn(
+                    [pool = retained_pool]()
+                    {
+                        wl_shm_pool_unref(pool);
+                    });
+            }
         }
 
         void put()
@@ -254,6 +274,11 @@ private:
         std::mutex mutex;
         wl_resource* buffer;
         std::shared_ptr<mir::Executor> const wayland_executor;
+        // If the buffer is destroyed before our handles to it are, these keep
+        // the underlying storage live and provide access into it.
+        wl_shm_pool* retained_pool{nullptr};
+        void* data{nullptr};
+
         wl_listener destruction_listener;
     };
 
@@ -266,6 +291,11 @@ private:
 
         {
             std::lock_guard lock{resource->mutex};
+            // Stash the buffer's underlying storage for safe keeping
+            auto shm_buffer = wl_shm_buffer_get(resource->buffer);
+            resource->retained_pool = wl_shm_buffer_ref_pool(shm_buffer);
+            resource->data = wl_shm_buffer_get_data(shm_buffer);
+
             resource->buffer = nullptr;
         }
         // Release the wl_resource's ownership
@@ -317,20 +347,6 @@ public:
           buffer{std::move(buffer)},
           stride_{stride}
     {
-        egl_delegate->spawn([this]()
-        {
-            ShmBuffer::bind();
-            {
-                std::lock_guard lock{upload_mutex};
-                auto const mapping = map_generic<unsigned char const>();
-                upload_to_texture(mapping->data(), mapping->stride());
-                uploaded = true;
-            }
-            upload_cv.notify_one();
-        });
-
-        std::unique_lock lock{upload_mutex};
-        upload_cv.wait(lock, [&] { return uploaded; });
     }
 
     ~WlShmBuffer()
@@ -340,7 +356,16 @@ public:
     void bind() override
     {
         ShmBuffer::bind();
-        notify_consumed();
+        std::lock_guard lk{upload_mutex};
+        if (!uploaded)
+        {
+            auto mapping = map_readable();
+            upload_to_texture(mapping->data(), stride_);
+            glFinish();    /* Here to ensure that all contexts see the texture (fixes multi-head rendering)
+                            * TODO: Replace with fences
+                            */
+            uploaded = true;
+        }
     }
 
     auto map_readable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char const>> override
@@ -369,17 +394,26 @@ public:
         public:
             Mapping(
                 SharedWlBuffer::LockedHandle&& buffer,
+                wl_shm_buffer* shm_buffer,
+                void* retained_data,
                 WlShmBuffer* parent)
                 : buffer{std::move(buffer)},
-                  shm_buffer{wl_shm_buffer_get(this->buffer)},
+                  shm_buffer{shm_buffer},
+                  retained_data{retained_data},
                   parent{parent}
             {
-                wl_shm_buffer_begin_access(shm_buffer);
+                if (this->buffer)
+                {
+                    wl_shm_buffer_begin_access(shm_buffer);
+                }
             }
 
             ~Mapping()
             {
-                wl_shm_buffer_end_access(shm_buffer);
+                if (this->buffer)
+                {
+                    wl_shm_buffer_end_access(shm_buffer);
+                }
             }
 
             auto format() const -> MirPixelFormat override
@@ -399,7 +433,11 @@ public:
 
             auto data() -> T* override
             {
-                return static_cast<T*>(wl_shm_buffer_get_data(shm_buffer));
+                if (shm_buffer)
+                {
+                    return static_cast<T*>(wl_shm_buffer_get_data(shm_buffer));
+                }
+                return static_cast<T*>(retained_data);
             }
 
             auto len() const -> size_t override
@@ -410,63 +448,18 @@ public:
         private:
             SharedWlBuffer::LockedHandle const buffer;
             wl_shm_buffer* const shm_buffer;
+            void* const retained_data;
             WlShmBuffer* const parent;
         };
 
+        notify_consumed();
         if (auto locked_buffer = buffer.lock())
         {
-            return std::make_unique<Mapping>(std::move(locked_buffer), this);
+            return std::make_unique<Mapping>(std::move(locked_buffer), wl_shm_buffer_get(locked_buffer), nullptr, this);
         }
         else
         {
-            mir::log_debug("Wayland buffer destroyed before use; rendering will be incomplete");
-            class FallbackMapping : public mir::renderer::software::Mapping<T>
-            {
-            public:
-                FallbackMapping(
-                    MirPixelFormat format,
-                    mir::geometry::Size size,
-                    mir::geometry::Stride stride)
-                    : buffer{std::make_unique<unsigned char[]>(size.height.as_uint32_t() * stride.as_uint32_t())},
-                      format_{format},
-                      size_{size},
-                      stride_{stride}
-                {
-                    ::memset(buffer.get(), 0, len());
-                }
-
-                auto format() const -> MirPixelFormat override
-                {
-                    return format_;
-                }
-
-                auto stride() const -> mir::geometry::Stride override
-                {
-                    return stride_;
-                }
-
-                auto size() const -> mir::geometry::Size override
-                {
-                    return size_;
-                }
-
-                auto data() -> T* override
-                {
-                    return buffer.get();
-                }
-
-                auto len() const -> size_t override
-                {
-                    return size().height.as_uint32_t() * stride().as_uint32_t();
-                }
-            private:
-                std::unique_ptr<unsigned char[]> const buffer;
-                MirPixelFormat format_;
-                mir::geometry::Size size_;
-                mir::geometry::Stride stride_;
-            };
-
-            return std::make_unique<FallbackMapping>(pixel_format(), size(), stride_);
+            return std::make_unique<Mapping>(buffer.lock(), nullptr, buffer.retained_data(), this);
         }
     }
 
@@ -487,9 +480,9 @@ private:
     std::atomic<bool> consumed{false};
     std::function<void()> on_consumed;
 
-    std::mutex mutable upload_mutex;
-    std::condition_variable mutable upload_cv;
+    std::mutex upload_mutex;
     bool uploaded{false};
+
     SharedWlBuffer const buffer;
     mir::geometry::Stride const stride_;
 };
