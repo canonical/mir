@@ -86,7 +86,7 @@ execute: |
     echo "${CCACHE_DIR} ${CCACHE_DIR} none rw,bind 0 0" >> /etc/schroot/sbuild/fstab
 
     # Running the tests under QEMU fails to entirely correctly support libwayland's SIGSEGV handler
-    if [[ ${DEB_HOST_ARCH} == armhf ]]; then
+    if [[ ${DEB_HOST_ARCH} == arm* ]]; then
       echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_BAD_BUFFER_TEST_ENVIRONMENT_BROKEN=ON" >> debian/opts.mk
     fi
 
