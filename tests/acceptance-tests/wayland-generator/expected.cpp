@@ -6,12 +6,11 @@
 
 #include "protocol_wrapper.h"
 
-#include <boost/throw_exception.hpp>
 #include <boost/exception/diagnostic_information.hpp>
-
 #include <wayland-server-core.h>
 
 #include "mir/log.h"
+#include "mir/wayland/protocol_error.h"
 
 namespace mir
 {
@@ -71,13 +70,8 @@ struct mw::Callback::Thunks
 int const mw::Callback::Thunks::supported_version = 1;
 
 mw::Callback::Callback(struct wl_resource* resource, Version<1>)
-    : client{wl_resource_get_client(resource)},
-      resource{resource}
+    : Resource{resource}
 {
-    if (resource == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-    }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
@@ -212,13 +206,8 @@ struct mw::Compositor::Thunks
 int const mw::Compositor::Thunks::supported_version = 4;
 
 mw::Compositor::Compositor(struct wl_resource* resource, Version<4>)
-    : client{wl_resource_get_client(resource)},
-      resource{resource}
+    : Resource{resource}
 {
-    if (resource == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-    }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
@@ -357,13 +346,8 @@ struct mw::ShmPool::Thunks
 int const mw::ShmPool::Thunks::supported_version = 1;
 
 mw::ShmPool::ShmPool(struct wl_resource* resource, Version<1>)
-    : client{wl_resource_get_client(resource)},
-      resource{resource}
+    : Resource{resource}
 {
-    if (resource == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-    }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
@@ -476,13 +460,8 @@ struct mw::Shm::Thunks
 int const mw::Shm::Thunks::supported_version = 1;
 
 mw::Shm::Shm(struct wl_resource* resource, Version<1>)
-    : client{wl_resource_get_client(resource)},
-      resource{resource}
+    : Resource{resource}
 {
-    if (resource == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-    }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
@@ -647,13 +626,8 @@ struct mw::Buffer::Thunks
 int const mw::Buffer::Thunks::supported_version = 1;
 
 mw::Buffer::Buffer(struct wl_resource* resource, Version<1>)
-    : client{wl_resource_get_client(resource)},
-      resource{resource}
+    : Resource{resource}
 {
-    if (resource == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-    }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
@@ -803,13 +777,11 @@ struct mw::DataOffer::Thunks
 int const mw::DataOffer::Thunks::supported_version = 3;
 
 mw::DataOffer::DataOffer(DataDevice const& parent)
-    : client{wl_resource_get_client(parent.resource)},
-      resource{wl_resource_create(client, &wl_data_offer_interface_data, wl_resource_get_version(parent.resource), 0)}
+    : Resource{wl_resource_create(
+          wl_resource_get_client(parent.resource),
+          &wl_data_offer_interface_data,
+          wl_resource_get_version(parent.resource), 0)}
 {
-    if (resource == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-    }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
@@ -985,13 +957,8 @@ struct mw::DataSource::Thunks
 int const mw::DataSource::Thunks::supported_version = 3;
 
 mw::DataSource::DataSource(struct wl_resource* resource, Version<3>)
-    : client{wl_resource_get_client(resource)},
-      resource{resource}
+    : Resource{resource}
 {
-    if (resource == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-    }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
@@ -1225,13 +1192,8 @@ struct mw::DataDevice::Thunks
 int const mw::DataDevice::Thunks::supported_version = 3;
 
 mw::DataDevice::DataDevice(struct wl_resource* resource, Version<3>)
-    : client{wl_resource_get_client(resource)},
-      resource{resource}
+    : Resource{resource}
 {
-    if (resource == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-    }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
@@ -1436,13 +1398,8 @@ struct mw::DataDeviceManager::Thunks
 int const mw::DataDeviceManager::Thunks::supported_version = 3;
 
 mw::DataDeviceManager::DataDeviceManager(struct wl_resource* resource, Version<3>)
-    : client{wl_resource_get_client(resource)},
-      resource{resource}
+    : Resource{resource}
 {
-    if (resource == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-    }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
@@ -1577,13 +1534,8 @@ struct mw::Shell::Thunks
 int const mw::Shell::Thunks::supported_version = 1;
 
 mw::Shell::Shell(struct wl_resource* resource, Version<1>)
-    : client{wl_resource_get_client(resource)},
-      resource{resource}
+    : Resource{resource}
 {
-    if (resource == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-    }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
@@ -1849,13 +1801,8 @@ struct mw::ShellSurface::Thunks
 int const mw::ShellSurface::Thunks::supported_version = 1;
 
 mw::ShellSurface::ShellSurface(struct wl_resource* resource, Version<1>)
-    : client{wl_resource_get_client(resource)},
-      resource{resource}
+    : Resource{resource}
 {
-    if (resource == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-    }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
@@ -2194,13 +2141,8 @@ struct mw::Surface::Thunks
 int const mw::Surface::Thunks::supported_version = 4;
 
 mw::Surface::Surface(struct wl_resource* resource, Version<4>)
-    : client{wl_resource_get_client(resource)},
-      resource{resource}
+    : Resource{resource}
 {
-    if (resource == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-    }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
@@ -2421,13 +2363,8 @@ struct mw::Seat::Thunks
 int const mw::Seat::Thunks::supported_version = 8;
 
 mw::Seat::Seat(struct wl_resource* resource, Version<8>)
-    : client{wl_resource_get_client(resource)},
-      resource{resource}
+    : Resource{resource}
 {
-    if (resource == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-    }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
@@ -2592,13 +2529,8 @@ struct mw::Pointer::Thunks
 int const mw::Pointer::Thunks::supported_version = 8;
 
 mw::Pointer::Pointer(struct wl_resource* resource, Version<8>)
-    : client{wl_resource_get_client(resource)},
-      resource{resource}
+    : Resource{resource}
 {
-    if (resource == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-    }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
@@ -2863,13 +2795,8 @@ struct mw::Keyboard::Thunks
 int const mw::Keyboard::Thunks::supported_version = 8;
 
 mw::Keyboard::Keyboard(struct wl_resource* resource, Version<8>)
-    : client{wl_resource_get_client(resource)},
-      resource{resource}
+    : Resource{resource}
 {
-    if (resource == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-    }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
@@ -3011,13 +2938,8 @@ struct mw::Touch::Thunks
 int const mw::Touch::Thunks::supported_version = 8;
 
 mw::Touch::Touch(struct wl_resource* resource, Version<8>)
-    : client{wl_resource_get_client(resource)},
-      resource{resource}
+    : Resource{resource}
 {
-    if (resource == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-    }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
@@ -3211,13 +3133,8 @@ struct mw::Output::Thunks
 int const mw::Output::Thunks::supported_version = 3;
 
 mw::Output::Output(struct wl_resource* resource, Version<3>)
-    : client{wl_resource_get_client(resource)},
-      resource{resource}
+    : Resource{resource}
 {
-    if (resource == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-    }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
@@ -3429,13 +3346,8 @@ struct mw::Region::Thunks
 int const mw::Region::Thunks::supported_version = 1;
 
 mw::Region::Region(struct wl_resource* resource, Version<1>)
-    : client{wl_resource_get_client(resource)},
-      resource{resource}
+    : Resource{resource}
 {
-    if (resource == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-    }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
@@ -3554,13 +3466,8 @@ struct mw::Subcompositor::Thunks
 int const mw::Subcompositor::Thunks::supported_version = 1;
 
 mw::Subcompositor::Subcompositor(struct wl_resource* resource, Version<1>)
-    : client{wl_resource_get_client(resource)},
-      resource{resource}
+    : Resource{resource}
 {
-    if (resource == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-    }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
@@ -3739,13 +3646,8 @@ struct mw::Subsurface::Thunks
 int const mw::Subsurface::Thunks::supported_version = 1;
 
 mw::Subsurface::Subsurface(struct wl_resource* resource, Version<1>)
-    : client{wl_resource_get_client(resource)},
-      resource{resource}
+    : Resource{resource}
 {
-    if (resource == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-    }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 

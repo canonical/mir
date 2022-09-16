@@ -20,7 +20,7 @@
 #include "wl_surface_role.h"
 #include "wl_client.h"
 
-#include "mir/wayland/wayland_base.h"
+#include "mir/wayland/weak.h"
 #include "mir/geometry/displacement.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"

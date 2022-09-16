@@ -20,6 +20,7 @@
 #include "window_wl_surface_role.h"
 #include "wayland_utils.h"
 
+#include "mir/wayland/protocol_error.h"
 #include "mir/frontend/wayland.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/scene/surface.h"

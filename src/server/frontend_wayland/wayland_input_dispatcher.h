@@ -20,7 +20,7 @@
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/events/event.h"
 #include "mir/geometry/point.h"
-#include "mir/wayland/wayland_base.h"
+#include "mir/wayland/weak.h"
 
 #include <memory>
 #include <chrono>

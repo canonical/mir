@@ -26,6 +26,7 @@
 
 #include "wayland_frontend.tp.h"
 
+#include "mir/wayland/protocol_error.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/scene/session.h"
 #include "mir/frontend/wayland.h"

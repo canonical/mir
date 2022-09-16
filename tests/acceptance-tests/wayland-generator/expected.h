@@ -12,7 +12,8 @@
 #include "mir/fd.h"
 #include <wayland-server-core.h>
 
-#include "mir/wayland/wayland_base.h"
+#include "mir/wayland/resource.h"
+#include "mir/wayland/global.h"
 
 namespace mir
 {
@@ -54,9 +55,6 @@ public:
 
     void destroy_and_delete() const;
 
-    struct wl_client* const client;
-    struct wl_resource* const resource;
-
     struct Opcode
     {
         static uint32_t const done = 0;
@@ -80,9 +78,6 @@ public:
     virtual ~Compositor();
 
     void destroy_and_delete() const;
-
-    struct wl_client* const client;
-    struct wl_resource* const resource;
 
     struct Thunks;
 
@@ -115,9 +110,6 @@ public:
     ShmPool(struct wl_resource* resource, Version<1>);
     virtual ~ShmPool();
 
-    struct wl_client* const client;
-    struct wl_resource* const resource;
-
     struct Thunks;
 
     static bool is_instance(wl_resource* resource);
@@ -140,9 +132,6 @@ public:
     void send_format_event(uint32_t format) const;
 
     void destroy_and_delete() const;
-
-    struct wl_client* const client;
-    struct wl_resource* const resource;
 
     struct Error
     {
@@ -250,9 +239,6 @@ public:
 
     void send_release_event() const;
 
-    struct wl_client* const client;
-    struct wl_resource* const resource;
-
     struct Opcode
     {
         static uint32_t const release = 0;
@@ -282,9 +268,6 @@ public:
     bool version_supports_action();
     void send_action_event_if_supported(uint32_t dnd_action) const;
     void send_action_event(uint32_t dnd_action) const;
-
-    struct wl_client* const client;
-    struct wl_resource* const resource;
 
     struct Error
     {
@@ -335,9 +318,6 @@ public:
     void send_action_event_if_supported(uint32_t dnd_action) const;
     void send_action_event(uint32_t dnd_action) const;
 
-    struct wl_client* const client;
-    struct wl_resource* const resource;
-
     struct Error
     {
         static uint32_t const invalid_action_mask = 0;
@@ -380,9 +360,6 @@ public:
     void send_drop_event() const;
     void send_selection_event(std::optional<struct wl_resource*> const& id) const;
 
-    struct wl_client* const client;
-    struct wl_resource* const resource;
-
     struct Error
     {
         static uint32_t const role = 0;
@@ -418,9 +395,6 @@ public:
     virtual ~DataDeviceManager();
 
     void destroy_and_delete() const;
-
-    struct wl_client* const client;
-    struct wl_resource* const resource;
 
     struct DndAction
     {
@@ -463,9 +437,6 @@ public:
 
     void destroy_and_delete() const;
 
-    struct wl_client* const client;
-    struct wl_resource* const resource;
-
     struct Error
     {
         static uint32_t const role = 0;
@@ -506,9 +477,6 @@ public:
     void send_popup_done_event() const;
 
     void destroy_and_delete() const;
-
-    struct wl_client* const client;
-    struct wl_resource* const resource;
 
     struct Resize
     {
@@ -573,9 +541,6 @@ public:
     void send_enter_event(struct wl_resource* output) const;
     void send_leave_event(struct wl_resource* output) const;
 
-    struct wl_client* const client;
-    struct wl_resource* const resource;
-
     struct Error
     {
         static uint32_t const invalid_scale = 0;
@@ -618,9 +583,6 @@ public:
     bool version_supports_name();
     void send_name_event_if_supported(std::string const& name) const;
     void send_name_event(std::string const& name) const;
-
-    struct wl_client* const client;
-    struct wl_resource* const resource;
 
     struct Capability
     {
@@ -693,9 +655,6 @@ public:
     void send_axis_value120_event_if_supported(uint32_t axis, int32_t value120) const;
     void send_axis_value120_event(uint32_t axis, int32_t value120) const;
 
-    struct wl_client* const client;
-    struct wl_resource* const resource;
-
     struct Error
     {
         static uint32_t const role = 0;
@@ -762,9 +721,6 @@ public:
     void send_repeat_info_event_if_supported(int32_t rate, int32_t delay) const;
     void send_repeat_info_event(int32_t rate, int32_t delay) const;
 
-    struct wl_client* const client;
-    struct wl_resource* const resource;
-
     struct KeymapFormat
     {
         static uint32_t const no_keymap = 0;
@@ -816,9 +772,6 @@ public:
     void send_orientation_event_if_supported(int32_t id, double orientation) const;
     void send_orientation_event(int32_t id, double orientation) const;
 
-    struct wl_client* const client;
-    struct wl_resource* const resource;
-
     struct Opcode
     {
         static uint32_t const down = 0;
@@ -855,9 +808,6 @@ public:
     bool version_supports_scale();
     void send_scale_event_if_supported(int32_t factor) const;
     void send_scale_event(int32_t factor) const;
-
-    struct wl_client* const client;
-    struct wl_resource* const resource;
 
     struct Subpixel
     {
@@ -924,9 +874,6 @@ public:
     Region(struct wl_resource* resource, Version<1>);
     virtual ~Region();
 
-    struct wl_client* const client;
-    struct wl_resource* const resource;
-
     struct Thunks;
 
     static bool is_instance(wl_resource* resource);
@@ -945,9 +892,6 @@ public:
 
     Subcompositor(struct wl_resource* resource, Version<1>);
     virtual ~Subcompositor();
-
-    struct wl_client* const client;
-    struct wl_resource* const resource;
 
     struct Error
     {
@@ -983,9 +927,6 @@ public:
 
     Subsurface(struct wl_resource* resource, Version<1>);
     virtual ~Subsurface();
-
-    struct wl_client* const client;
-    struct wl_resource* const resource;
 
     struct Error
     {

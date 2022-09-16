@@ -15,7 +15,6 @@
  */
 
 #include "mir/compositor/display_listener.h"
-#include "mir/wayland/wayland_base.h"
 #include "mir/renderer/renderer_factory.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/surface_stack.h"

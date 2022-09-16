@@ -24,6 +24,8 @@
 
 #include "mir/shell/surface_specification.h"
 #include "mir/log.h"
+#include "mir/wayland/weak.h"
+#include "mir/wayland/protocol_error.h"
 #include <boost/throw_exception.hpp>
 #include <deque>
 #include <vector>

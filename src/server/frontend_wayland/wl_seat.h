@@ -18,6 +18,7 @@
 #define MIR_FRONTEND_WL_SEAT_H
 
 #include "wayland_wrapper.h"
+#include "mir/wayland/weak.h"
 
 #include <unordered_map>
 #include <vector>

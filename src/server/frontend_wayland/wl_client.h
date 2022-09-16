@@ -24,7 +24,7 @@ struct wl_display;
 #include <memory>
 #include <functional>
 
-#include "mir/wayland/wayland_base.h"
+#include "mir/wayland/lifetime_tracker.h"
 
 namespace mir
 {

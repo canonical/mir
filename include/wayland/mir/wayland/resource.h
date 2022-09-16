@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 Canonical Ltd.
+ * Copyright © 2022 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -14,13 +14,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_WAYLAND_BASE_H_
-#define MIR_WAYLAND_BASE_H_
+#ifndef MIR_WAYLAND_RESOURCE_H_
+#define MIR_WAYLAND_RESOURCE_H_
 
 #include "lifetime_tracker.h"
-#include "weak.h"
-#include "resource.h"
-#include "global.h"
-#include "protocol_error.h"
 
-#endif // MIR_WAYLAND_BASE_H_
+struct wl_resource;
+struct wl_client;
+
+namespace mir
+{
+namespace wayland
+{
+class Resource
+    : public virtual LifetimeTracker
+{
+public:
+    template<int V>
+    struct Version
+    {
+    };
+
+    Resource(wl_resource* resource);
+
+    wl_resource* const resource;
+    wl_client* const client;
+};
+}
+}
+
+#endif // MIR_WAYLAND_RESOURCE_H_

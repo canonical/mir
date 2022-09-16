@@ -18,7 +18,6 @@
 #define MIR_FRONTEND_WLR_SCREENCOPY_V1_H
 
 #include "wlr-screencopy-unstable-v1_wrapper.h"
-#include "mir/wayland/wayland_base.h"
 #include "mir/geometry/rectangle.h"
 
 #include <memory>

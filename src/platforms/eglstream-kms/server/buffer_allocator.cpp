@@ -33,7 +33,7 @@
 #include "mir/renderer/gl/context_source.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/raii.h"
-#include "mir/wayland/wayland_base.h"
+#include "mir/wayland/protocol_error.h"
 
 #define MIR_LOG_COMPONENT "platform-eglstream-kms"
 #include "mir/log.h"
