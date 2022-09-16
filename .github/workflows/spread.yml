@@ -32,21 +32,21 @@ jobs:
                  "lxd:ubuntu-20.04:spread/build/ubuntu:asan_clang"
                  "lxd:ubuntu-20.04:spread/build/ubuntu:tsan_clang"
                  "lxd:ubuntu-20.04:spread/build/ubuntu:ubsan_clang"'
-        else
-          TASKS='"lxd:alpine-3.15:spread/build/alpine:amd64"
-                 "lxd:alpine-edge:spread/build/alpine:amd64"
-                 "lxd:ubuntu-22.04:spread/build/sbuild:debian_sid"
-                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu"
-                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_jammy"
-                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_arm64"
-                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_armhf"
-                 "lxd:ubuntu-20.04:spread/build/ubuntu:rpi"
-                 "lxd:ubuntu-20.04:spread/build/ubuntu:clang"
-                 "lxd:fedora-35:spread/build/fedora:amd64"
-                 "lxd:fedora-36:spread/build/fedora:amd64"
-                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_devel"
-                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_proposed"'
         fi
+
+        TASKS+='"lxd:alpine-3.15:spread/build/alpine:amd64"
+                "lxd:alpine-edge:spread/build/alpine:amd64"
+                "lxd:ubuntu-22.04:spread/build/sbuild:debian_sid"
+                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu"
+                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_jammy"
+                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_arm64"
+                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_armhf"
+                "lxd:ubuntu-20.04:spread/build/ubuntu:rpi"
+                "lxd:ubuntu-20.04:spread/build/ubuntu:clang"
+                "lxd:fedora-35:spread/build/fedora:amd64"
+                "lxd:fedora-36:spread/build/fedora:amd64"
+                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_devel"
+                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_proposed"'
 
         echo ${TASKS:-} | jq -cs '{ "spread-task": .  }' | awk '{ print "::set-output name=matrix::" $0 }'
 
