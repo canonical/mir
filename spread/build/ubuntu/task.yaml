@@ -89,6 +89,7 @@ execute: |
       apt-get install --yes --no-install-recommends clang
       echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_C_COMPILER=clang" >> debian/opts.mk
       echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_CXX_COMPILER=clang++" >> debian/opts.mk
+      echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_CXX_FLAGS=-fpch-validate-input-files-content" >> debian/opts.mk
     fi
 
     # enable valgrind
