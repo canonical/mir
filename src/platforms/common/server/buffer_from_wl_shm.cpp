@@ -361,9 +361,6 @@ public:
         {
             auto mapping = map_readable();
             upload_to_texture(mapping->data(), stride_);
-            glFinish();    /* Here to ensure that all contexts see the texture (fixes multi-head rendering)
-                            * TODO: Replace with fences
-                            */
             uploaded = true;
         }
     }
