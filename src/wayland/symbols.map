@@ -536,5 +536,6 @@ global:
     mir::wayland::Client::from*;
     mir::wayland::Client::register_client*;
     mir::wayland::Client::unregister_client*;
+    virtual?thunk?to?mir::wayland::Resource::~Resource*;
   };
 } MIRWAYLAND_2.9;
