@@ -109,3 +109,5 @@ execute: |
 
     # build and run tests
     debian/rules build
+
+    ccache --show-stats --zero-stats > ${CCACHE_DIR}/ccache.stats

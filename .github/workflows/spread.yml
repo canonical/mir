@@ -104,3 +104,6 @@ jobs:
 
     - name: Run Spread task
       run: snap run spread -v ${{ matrix.spread-task }}
+
+    - name: CCache stats
+      run: cat ${CCACHE_DIR}/ccache.stats

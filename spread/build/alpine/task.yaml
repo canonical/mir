@@ -47,3 +47,5 @@ execute: |
 
     export XDG_RUNTIME_DIR=/tmp
     cmake --build $BUILD_DIR -- ptest
+
+    ccache --show-stats --zero-stats > ${CCACHE_DIR}/ccache.stats
