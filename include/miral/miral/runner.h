@@ -49,6 +49,23 @@ public:
     /// If multiple callbacks are added they will be invoked in the reverse sequence added.
     void add_stop_callback(std::function<void()> const& stop_callback);
 
+    /// Add signal handler at startup
+    /// \remark Since MirAL 3.7
+    void register_signal_handler(
+        std::initializer_list<int> signals,
+        std::function<void(int)> const& handler);
+    
+    /// Add a watch on a file descriptor
+    /// \remark Since MirAL 3.7
+    void register_fd_handler(
+        std::initializer_list<int> fds,
+        void const* owner,
+        std::function<void(int)> const& handler);
+
+    /// Remove watch on file descriptor
+    /// \remark Since MirAL 3.7
+    void unregister_fd_handler(void const* owner);
+
     /// Set a handler for exceptions caught in run_with().
     /// run_with() invokes handler() in catch (...) blocks before returning EXIT_FAILURE.
     /// Hence the exception can be re-thrown to retrieve type information.

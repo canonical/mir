@@ -184,6 +184,44 @@ void miral::MirRunner::add_stop_callback(std::function<void()> const& stop_callb
     self->stop_callback = updated;
 }
 
+void miral::MirRunner::register_signal_handler(
+    std::initializer_list<int> signals,
+    std::function<void(int)> const& handler)
+{
+    std::lock_guard lock{self->mutex};
+    
+    if (auto const server = self->weak_server.lock())
+    {
+        auto const main_loop = server->the_main_loop();
+        main_loop->register_signal_handler(signals, handler);
+    }
+}
+
+void miral::MirRunner::register_fd_handler(
+    std::initializer_list<int> fds,
+    void const* owner,
+    std::function<void(int)> const& handler)
+{
+    std::lock_guard lock{self->mutex};
+
+    if (auto const server = self->weak_server.lock())
+    {
+        auto const main_loop = server->the_main_loop();
+        main_loop->register_fd_handler(fds, owner, handler);
+    }
+}
+
+void miral::MirRunner::unregister_fd_handler(void const* owner)
+{
+    std::lock_guard lock{self->mutex};
+
+    if (auto const server = self->weak_server.lock())
+    {
+        auto const main_loop = server->the_main_loop();
+        main_loop->unregister_fd_handler(owner);
+    }
+}
+
 void miral::MirRunner::set_exception_handler(std::function<void()> const& handler)
 {
     std::lock_guard lock{self->mutex};
