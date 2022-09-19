@@ -11,6 +11,7 @@
 
 #include "mir/log.h"
 #include "mir/wayland/protocol_error.h"
+#include "mir/wayland/client.h"
 
 namespace mir
 {
@@ -817,7 +818,7 @@ void mw::DataOffer::send_source_actions_event(uint32_t source_actions) const
     }
     else
     {
-        tried_to_send_unsupported_event(client, resource, "source_actions", 3);
+        tried_to_send_unsupported_event(client.raw_client(), resource, "source_actions", 3);
     }
 }
 
@@ -842,7 +843,7 @@ void mw::DataOffer::send_action_event(uint32_t dnd_action) const
     }
     else
     {
-        tried_to_send_unsupported_event(client, resource, "action", 3);
+        tried_to_send_unsupported_event(client.raw_client(), resource, "action", 3);
     }
 }
 
@@ -1010,7 +1011,7 @@ void mw::DataSource::send_dnd_drop_performed_event() const
     }
     else
     {
-        tried_to_send_unsupported_event(client, resource, "dnd_drop_performed", 3);
+        tried_to_send_unsupported_event(client.raw_client(), resource, "dnd_drop_performed", 3);
     }
 }
 
@@ -1035,7 +1036,7 @@ void mw::DataSource::send_dnd_finished_event() const
     }
     else
     {
-        tried_to_send_unsupported_event(client, resource, "dnd_finished", 3);
+        tried_to_send_unsupported_event(client.raw_client(), resource, "dnd_finished", 3);
     }
 }
 
@@ -1060,7 +1061,7 @@ void mw::DataSource::send_action_event(uint32_t dnd_action) const
     }
     else
     {
-        tried_to_send_unsupported_event(client, resource, "action", 3);
+        tried_to_send_unsupported_event(client.raw_client(), resource, "action", 3);
     }
 }
 
@@ -2401,7 +2402,7 @@ void mw::Seat::send_name_event(std::string const& name) const
     }
     else
     {
-        tried_to_send_unsupported_event(client, resource, "name", 2);
+        tried_to_send_unsupported_event(client.raw_client(), resource, "name", 2);
     }
 }
 
@@ -2590,7 +2591,7 @@ void mw::Pointer::send_frame_event() const
     }
     else
     {
-        tried_to_send_unsupported_event(client, resource, "frame", 5);
+        tried_to_send_unsupported_event(client.raw_client(), resource, "frame", 5);
     }
 }
 
@@ -2615,7 +2616,7 @@ void mw::Pointer::send_axis_source_event(uint32_t axis_source) const
     }
     else
     {
-        tried_to_send_unsupported_event(client, resource, "axis_source", 5);
+        tried_to_send_unsupported_event(client.raw_client(), resource, "axis_source", 5);
     }
 }
 
@@ -2640,7 +2641,7 @@ void mw::Pointer::send_axis_stop_event(uint32_t time, uint32_t axis) const
     }
     else
     {
-        tried_to_send_unsupported_event(client, resource, "axis_stop", 5);
+        tried_to_send_unsupported_event(client.raw_client(), resource, "axis_stop", 5);
     }
 }
 
@@ -2665,7 +2666,7 @@ void mw::Pointer::send_axis_discrete_event(uint32_t axis, int32_t discrete) cons
     }
     else
     {
-        tried_to_send_unsupported_event(client, resource, "axis_discrete", 5);
+        tried_to_send_unsupported_event(client.raw_client(), resource, "axis_discrete", 5);
     }
 }
 
@@ -2690,7 +2691,7 @@ void mw::Pointer::send_axis_value120_event(uint32_t axis, int32_t value120) cons
     }
     else
     {
-        tried_to_send_unsupported_event(client, resource, "axis_value120", 8);
+        tried_to_send_unsupported_event(client.raw_client(), resource, "axis_value120", 8);
     }
 }
 
@@ -2852,7 +2853,7 @@ void mw::Keyboard::send_repeat_info_event(int32_t rate, int32_t delay) const
     }
     else
     {
-        tried_to_send_unsupported_event(client, resource, "repeat_info", 4);
+        tried_to_send_unsupported_event(client.raw_client(), resource, "repeat_info", 4);
     }
 }
 
@@ -3002,7 +3003,7 @@ void mw::Touch::send_shape_event(int32_t id, double major, double minor) const
     }
     else
     {
-        tried_to_send_unsupported_event(client, resource, "shape", 6);
+        tried_to_send_unsupported_event(client.raw_client(), resource, "shape", 6);
     }
 }
 
@@ -3029,7 +3030,7 @@ void mw::Touch::send_orientation_event(int32_t id, double orientation) const
     }
     else
     {
-        tried_to_send_unsupported_event(client, resource, "orientation", 6);
+        tried_to_send_unsupported_event(client.raw_client(), resource, "orientation", 6);
     }
 }
 
@@ -3176,7 +3177,7 @@ void mw::Output::send_done_event() const
     }
     else
     {
-        tried_to_send_unsupported_event(client, resource, "done", 2);
+        tried_to_send_unsupported_event(client.raw_client(), resource, "done", 2);
     }
 }
 
@@ -3201,7 +3202,7 @@ void mw::Output::send_scale_event(int32_t factor) const
     }
     else
     {
-        tried_to_send_unsupported_event(client, resource, "scale", 2);
+        tried_to_send_unsupported_event(client.raw_client(), resource, "scale", 2);
     }
 }
 
