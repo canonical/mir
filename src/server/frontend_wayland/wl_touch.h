@@ -38,6 +38,7 @@ class Clock;
 namespace frontend
 {
 class WlSurface;
+class WlClient;
 
 class WlTouch : public wayland::Touch
 {
@@ -48,7 +49,7 @@ public:
 
     /// Convert the Mir event into Wayland events and send them to the client. root_surface is the one that received
     /// the Mir event, but the final Wayland event may be sent to a subsurface.
-    void event(MirTouchEvent const* event, WlSurface& root_surface);
+    void event(std::shared_ptr<MirTouchEvent const> const& event, WlSurface& root_surface);
 
 private:
     struct TouchedSurface
@@ -58,6 +59,8 @@ private:
     };
 
     std::shared_ptr<time::Clock> const clock;
+    wayland::Weak<WlClient> wl_client;
+
     /// Maps touch IDs to the surfaces the touch is on
     std::unordered_map<int32_t, TouchedSurface> touch_id_to_surface;
     bool needs_frame{false};

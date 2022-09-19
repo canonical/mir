@@ -27,6 +27,7 @@
 #include "mir/scene/surface.h"
 #include "mir/shell/shell.h"
 #include "mir/shell/surface_specification.h"
+#include "mir/events/input_event.h"
 
 #include "boost/throw_exception.hpp"
 
@@ -814,27 +815,28 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
 void mf::XWaylandSurface::move_resize(uint32_t detail)
 {
     std::shared_ptr<scene::Surface> scene_surface;
-    std::chrono::nanoseconds timestamp;
+    std::shared_ptr<MirInputEvent const> event;
     {
         std::lock_guard lock{mutex};
         scene_surface = weak_scene_surface.lock();
-        timestamp = latest_input_timestamp(lock);
+        if (surface_observer)
+        {
+            event = surface_observer.value()->latest_move_resize_event();
+        }
+        if (!scene_surface || !event)
+        {
+            return;
+        }
     }
 
     auto const action = static_cast<NetWmMoveresize>(detail);
     if (action == NetWmMoveresize::MOVE)
     {
-        if (scene_surface)
-        {
-            shell->request_move(scene_surface->session().lock(), scene_surface, timestamp.count());
-        }
+        shell->request_move(scene_surface->session().lock(), scene_surface, event->event_time().count());
     }
     else if (auto const edge = wm_resize_edge_to_mir_resize_edge(action))
     {
-        if (scene_surface)
-        {
-            shell->request_resize(scene_surface->session().lock(), scene_surface, timestamp.count(), edge.value());
-        }
+        shell->request_resize(scene_surface->session().lock(), scene_surface, event->event_time().count(), edge.value());
     }
     else
     {
@@ -1123,19 +1125,6 @@ void mf::XWaylandSurface::request_scene_surface_state(MirWindowState new_state)
         mods.state = new_state;
         // Just state is set so no need for scale_surface_spec()
         shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
-    }
-}
-
-auto mf::XWaylandSurface::latest_input_timestamp(ProofOfMutexLock const&) -> std::chrono::nanoseconds
-{
-    if (surface_observer)
-    {
-        return surface_observer.value()->latest_timestamp();
-    }
-    else
-    {
-        log_warning("Can not get timestamp because surface_observer is null");
-        return {};
     }
 }
 

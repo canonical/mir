@@ -35,6 +35,7 @@ namespace frontend
 {
 class WlSeat;
 class WlSurface;
+class WlClient;
 class WindowWlSurfaceRole;
 class WaylandInputDispatcher;
 
@@ -66,9 +67,6 @@ public:
     }
 
     /// Should only be called from the Wayland thread
-    auto latest_timestamp() const -> std::chrono::nanoseconds;
-
-    /// Should only be called from the Wayland thread
     auto state() const -> MirWindowState
     {
         return impl->current_state;
@@ -78,13 +76,16 @@ private:
     struct Impl
     {
         Impl(
+            wayland::Weak<WlClient> client,
             wayland::Weak<WindowWlSurfaceRole> window,
             std::unique_ptr<WaylandInputDispatcher> input_dispatcher)
-            : window{window},
+            : client{client},
+              window{window},
               input_dispatcher{std::move(input_dispatcher)}
         {
         }
 
+        wayland::Weak<WlClient> const client;
         wayland::Weak<WindowWlSurfaceRole> const window;
         std::unique_ptr<WaylandInputDispatcher> const input_dispatcher;
 
