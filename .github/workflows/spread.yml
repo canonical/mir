@@ -71,7 +71,7 @@ jobs:
 
     - name: Set up Spread
       run: |
-        curl -s -O https://people.canonical.com/~chrishr/spread.snap
+        curl -s -O https://people.canonical.com/~msawicz/spread.snap
         sudo snap install --dangerous spread.snap
         sudo snap connect spread:lxd lxd:lxd
         lxc profile set default security.privileged=true security.nesting=true
