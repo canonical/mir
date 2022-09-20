@@ -234,13 +234,13 @@ mf::WaylandConnector::WaylandConnector(
     std::unique_ptr<WaylandExtensions> extensions_,
     WaylandProtocolExtensionFilter const& extension_filter,
     bool enable_key_repeat)
-    : display{wl_display_create(), &cleanup_display},
+    : extension_filter{extension_filter},
+      display{wl_display_create(), &cleanup_display},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
       executor{std::make_shared<WaylandExecutor>(wl_display_get_event_loop(display.get()))},
       allocator{allocator_for_display(allocator, display.get(), executor)},
       shell{shell},
-      extensions{std::move(extensions_)},
-      extension_filter{extension_filter}
+      extensions{std::move(extensions_)}
 {
     if (pause_signal == mir::Fd::invalid)
     {

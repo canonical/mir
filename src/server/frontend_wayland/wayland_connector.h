@@ -164,6 +164,17 @@ private:
     bool wl_display_global_filter_func(wl_client const* client, wl_global const* global) const;
     static bool wl_display_global_filter_func_thunk(wl_client const* client, wl_global const* global, void* data);
 
+    /* The wayland global filter is called during wl_global_remove
+     * (libwayland needs to know if it should broadcast the removal)
+     *
+     * This means the filter needs to outlive any extension object
+     * that provides a wl_global (which is all of them).
+     *
+     * For safety, just ensure it outlives the wl_display. libwayland
+     * cannot *possibly* call it after then :)
+     */
+    WaylandProtocolExtensionFilter const extension_filter;
+
     std::unique_ptr<wl_display, void(*)(wl_display*)> const display;
     mir::Fd const pause_signal;
     std::unique_ptr<WlCompositor> compositor_global;
@@ -178,8 +189,6 @@ private:
     std::thread dispatch_thread;
     wl_event_source* pause_source;
     std::string wayland_display;
-
-    WaylandProtocolExtensionFilter const extension_filter;
 
     // Only accessed on event loop
     std::unordered_map<int, std::function<void(std::shared_ptr<scene::Session> const& session)>> mutable connect_handlers;
