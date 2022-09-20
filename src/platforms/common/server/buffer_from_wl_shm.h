@@ -38,6 +38,14 @@ class EGLContextExecutor;
 namespace wayland
 {
 /**
+ * Perform initialisation of SHM handling
+ *
+ * The returned handle must be kept live for as long as any buffer
+ * returned by buffer_from_wl_shm is live.
+ */
+auto init_shm_handling() -> std::shared_ptr<void>;
+
+/**
  * Get a mir::graphics::Buffer with the content of the shm buffer.
  *
  * The returned buffer will support the mg::gl::Texture and

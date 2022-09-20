@@ -20,6 +20,7 @@
 #include "mir/graphics/egl_context_executor.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/executor.h"
+#include <sys/mman.h>
 
 #define MIR_LOG_COMPONENT "wayland-gfx-helpers"
 #include "mir/log.h"
@@ -34,6 +35,7 @@
 #include <wayland-server-protocol.h>
 #include <cassert>
 #include <cstring>
+#include <csignal>
 
 namespace mg = mir::graphics;
 namespace mgc = mir::graphics::common;
@@ -73,6 +75,148 @@ MirPixelFormat wl_format_to_mir_format(uint32_t format)
         return mir_pixel_format_invalid;
     }
 }
+
+class ShmBufferSIGBUSHandler
+{
+public:
+    ShmBufferSIGBUSHandler()
+    {
+        struct sigaction sig_handler_desc;
+        sigfillset(&sig_handler_desc.sa_mask);
+        sig_handler_desc.sa_flags = SA_SIGINFO;
+        sig_handler_desc.sa_sigaction = &sigbus_handler;
+        auto old_handler = new struct sigaction;
+
+        if (sigaction(SIGBUS, &sig_handler_desc, old_handler))
+        {
+            using namespace std::string_literals;
+            delete old_handler;
+            BOOST_THROW_EXCEPTION((
+                std::system_error{
+                    errno,
+                    std::system_category(),
+                    "Failed to install SIGBUS handler for Wayland SHM"
+                }));
+        }
+        previous_handler = old_handler;
+    }
+ 
+    ~ShmBufferSIGBUSHandler()
+    {
+        sigaction(SIGBUS, previous_handler.load(), nullptr);
+        delete previous_handler;
+    }
+ 
+    class AccessProtector
+    {
+        friend class ShmBufferSIGBUSHandler;
+    public:
+        AccessProtector(AccessProtector const&) = delete;
+        AccessProtector(AccessProtector&&) = delete;
+        auto operator=(AccessProtector const&) = delete;
+        auto operator=(AccessProtector&&) = delete;
+ 
+        auto invalid_access_prevented() -> bool
+        {
+            return used;
+        }
+
+        auto within_protected_region(void* access) -> bool
+        {
+            auto fault_addr = reinterpret_cast<uintptr_t>(access);
+            auto protected_addr = reinterpret_cast<uintptr_t>(addr);
+            return fault_addr > protected_addr &&
+                fault_addr < protected_addr + len;
+        }
+
+        auto provide_fallback_mapping() -> bool
+        {
+            // Replace the existing mapping with a fallback
+            if (mmap(
+                addr, len,
+                PROT_READ | PROT_WRITE,
+                MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS,
+                -1, 0) == addr)
+            {
+                // We've successfully replaced any existing mapping with a new,
+                // all-0, mapping that will not SIGBUS on access.
+                used = true;
+                return true;
+            }
+            return false;
+        }
+
+        ~AccessProtector()
+        {
+            if (used)
+            {
+                munmap(addr, len);
+            }
+        }
+    private:
+        AccessProtector(void* addr, size_t len)
+            : addr{addr},
+              len{len}
+        {
+        }
+
+        void* addr;
+        size_t len;
+        std::atomic<bool> used{false};    // Atomic only to ensure signal-safety
+    };
+
+    /**
+     * Prepare to safely access a region of memory
+     *
+     * Ensure that accesses within the memory range [addr, addr+len) can be accessed
+     * without crashing with SIGBUS.
+     *
+     * \returns A handle representing this memory access guard. As long as the guard is
+     *          live, accesses within the protected range are safe.
+     * \note    The returned value is THREAD LOCAL. It must not be passed across threads.
+     */
+    auto static protect_access_to(void* addr, size_t len) -> std::shared_ptr<AccessProtector>
+    {
+        auto protector = std::shared_ptr<AccessProtector>{new AccessProtector{addr, len}};
+        current_access = protector;
+        return protector;
+    }
+
+private:
+    friend class AccessProtector;
+    static void sigbus_handler(int sig, siginfo_t* info, void* ucontext)
+    {
+        if (auto protector = current_access.load().lock())
+        {
+            if (protector->within_protected_region(info->si_addr) &&
+                protector->provide_fallback_mapping())
+            {
+                // We've replaced the client-provided mapping with one that will
+                // not fault; it is now safe to continue.
+                return;
+            }
+        }
+
+        // We're not protecting access on this thread, the access is not in our
+        // protected range, or the fallback mapping failed. We cannot save you now.
+        // Call the previous SIGBUS handler.
+        sigaction(SIGBUS, previous_handler.load(), nullptr);
+        if (previous_handler.load()->sa_flags & SA_SIGINFO)
+        {
+            (previous_handler.load()->sa_sigaction)(sig, info, ucontext);
+        }
+        else
+        {
+            (previous_handler.load()->sa_handler)(sig);
+        }
+    }
+    static thread_local std::atomic<std::weak_ptr<AccessProtector>> current_access;
+    static std::atomic<struct sigaction*> previous_handler;
+};
+std::weak_ptr<ShmBufferSIGBUSHandler> sigbus_handler;
+std::atomic<struct sigaction*> ShmBufferSIGBUSHandler::previous_handler;
+thread_local std::atomic<std::weak_ptr<ShmBufferSIGBUSHandler::AccessProtector>>
+    ShmBufferSIGBUSHandler::current_access;
 
 /**
  * A shared-pointer-like handle to a wl_buffer
@@ -391,25 +535,33 @@ public:
         public:
             Mapping(
                 SharedWlBuffer::LockedHandle&& buffer,
-                wl_shm_buffer* shm_buffer,
-                void* retained_data,
+                void* data,
                 WlShmBuffer* parent)
                 : buffer{std::move(buffer)},
-                  shm_buffer{shm_buffer},
-                  retained_data{retained_data},
-                  parent{parent}
+                  data_{data},
+                  parent{parent},
+                  protector{ShmBufferSIGBUSHandler::protect_access_to(data, len())}
             {
-                if (this->buffer)
-                {
-                    wl_shm_buffer_begin_access(shm_buffer);
-                }
             }
 
             ~Mapping()
             {
-                if (this->buffer)
+                if (protector->invalid_access_prevented())
                 {
-                    wl_shm_buffer_end_access(shm_buffer);
+                    if (buffer)
+                    {
+                        wl_resource_post_error(
+                                buffer,
+                                WL_SHM_ERROR_INVALID_FD,
+                                "Error accessing SHM buffer");
+                    }
+                    else
+                    {
+                        mir::log(
+                            mir::logging::Severity::warning,
+                            "Wayland SHM",
+                            "Client submitted invalid buffer; rendering will be incomplete");
+                    }
                 }
             }
 
@@ -430,11 +582,7 @@ public:
 
             auto data() -> T* override
             {
-                if (shm_buffer)
-                {
-                    return static_cast<T*>(wl_shm_buffer_get_data(shm_buffer));
-                }
-                return static_cast<T*>(retained_data);
+                return reinterpret_cast<T*>(data_);
             }
 
             auto len() const -> size_t override
@@ -444,19 +592,21 @@ public:
 
         private:
             SharedWlBuffer::LockedHandle const buffer;
-            wl_shm_buffer* const shm_buffer;
-            void* const retained_data;
+            void* const data_;
             WlShmBuffer* const parent;
+            std::shared_ptr<ShmBufferSIGBUSHandler::AccessProtector> const protector;
         };
 
         notify_consumed();
         if (auto locked_buffer = buffer.lock())
         {
-            return std::make_unique<Mapping>(std::move(locked_buffer), wl_shm_buffer_get(locked_buffer), nullptr, this);
+            auto wlshm = wl_shm_buffer_get(locked_buffer);
+            auto data = wl_shm_buffer_get_data(wlshm);
+            return std::make_unique<Mapping>(std::move(locked_buffer), data, this);
         }
         else
         {
-            return std::make_unique<Mapping>(buffer.lock(), nullptr, buffer.retained_data(), this);
+            return std::make_unique<Mapping>(buffer.lock(), buffer.retained_data(), this);
         }
     }
 
@@ -483,6 +633,17 @@ private:
     SharedWlBuffer const buffer;
     mir::geometry::Stride const stride_;
 };
+
+auto mg::wayland::init_shm_handling() -> std::shared_ptr<void>
+{
+    if (auto handler = sigbus_handler.lock())
+    {
+        return handler;
+    }
+    auto new_sigbus_handler = std::make_shared<ShmBufferSIGBUSHandler>();
+    sigbus_handler = new_sigbus_handler;
+    return new_sigbus_handler;
+}
 
 auto mg::wayland::buffer_from_wl_shm(
     wl_resource* buffer,

@@ -200,6 +200,7 @@ void mgg::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
             "Detailed error: ");
     }
 
+    shm_handler = mg::wayland::init_shm_handling();
     this->wayland_executor = std::move(wayland_executor);
 }
 
@@ -214,6 +215,7 @@ void mgg::BufferAllocator::unbind_display(wl_display* display)
 
         mg::wayland::unbind_display(dpy, display, *egl_extensions);
     }
+    shm_handler = nullptr;
 }
 
 std::shared_ptr<mg::Buffer> mgg::BufferAllocator::buffer_from_resource(

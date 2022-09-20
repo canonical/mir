@@ -416,6 +416,7 @@ void mir::graphics::eglstream::BufferAllocator::bind_display(
         BOOST_THROW_EXCEPTION((std::runtime_error{message.str()}));
     }
 
+    shm_handler = mg::wayland::init_shm_handling();
     mir::log_info("Bound EGLStreams-backed Wayland display");
 }
 
@@ -426,6 +427,7 @@ void mir::graphics::eglstream::BufferAllocator::unbind_display(wl_display* displ
         [this]() { wayland_ctx->release_current(); });
     auto dpy = eglGetCurrentDisplay();
 
+    shm_handler = nullptr;
     if (extensions(dpy).eglUnbindWaylandDisplayWL(dpy, display) != EGL_TRUE)
     {
         BOOST_THROW_EXCEPTION((mg::egl_error("Failed to unbind Wayland EGL display")));

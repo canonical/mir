@@ -152,6 +152,7 @@ void mgw::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
             "No EGL_EXT_image_dma_buf_import_modifiers support, disabling linux-dmabuf import");
     }
 
+    shm_handler = mg::wayland::init_shm_handling();
     this->wayland_executor = std::move(wayland_executor);
 }
 
@@ -166,6 +167,7 @@ void mgw::BufferAllocator::unbind_display(wl_display* display)
 
         mg::wayland::unbind_display(dpy, display, *egl_extensions);
     }
+    shm_handler = nullptr;
 }
 
 auto mgw::BufferAllocator::buffer_from_resource(

@@ -89,6 +89,7 @@ private:
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     std::unique_ptr<gl::Program> shader;
     static struct wl_eglstream_controller_interface const impl;
+    std::shared_ptr<void> shm_handler;
 };
 
 }
