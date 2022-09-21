@@ -305,3 +305,58 @@ TEST_F(ApplicationZone, removing_all_outputs_in_logical_group_deletes_applicatio
 
     EXPECT_TRUE(deleted_zone.is_same_zone(zone_b_c));
 }
+
+TEST_F(ApplicationZone, removing_only_output_does_not_change_application_zone)
+{
+    EXPECT_CALL(*window_manager_policy, advise_application_zone_create(_)).Times(AnyNumber());
+    notify_configuration_applied(create_fake_display_configuration({display_area_a}));
+    Mock::VerifyAndClearExpectations(window_manager_policy);
+
+    EXPECT_CALL(*window_manager_policy, advise_application_zone_create(_)).Times(0);
+    EXPECT_CALL(*window_manager_policy, advise_application_zone_delete(_)).Times(0);
+    EXPECT_CALL(*window_manager_policy, advise_application_zone_update(_, _)).Times(0);
+    notify_configuration_applied(create_fake_display_configuration(std::vector<miral::Rectangle>{}));
+}
+
+TEST_F(ApplicationZone, removing_all_outputs_does_not_change_application_zone)
+{
+    EXPECT_CALL(*window_manager_policy, advise_application_zone_create(_)).Times(AnyNumber());
+    notify_configuration_applied(create_fake_display_configuration({display_area_a}));
+    notify_configuration_applied(create_fake_display_configuration({display_area_a, display_area_b}));
+    Mock::VerifyAndClearExpectations(window_manager_policy);
+
+    EXPECT_CALL(*window_manager_policy, advise_application_zone_create(_)).Times(0);
+    EXPECT_CALL(*window_manager_policy, advise_application_zone_delete(_)).Times(0);
+    EXPECT_CALL(*window_manager_policy, advise_application_zone_update(_, _)).Times(0);
+    notify_configuration_applied(create_fake_display_configuration(std::vector<miral::Rectangle>{}));
+}
+
+TEST_F(ApplicationZone, readding_output_does_not_change_application_zone)
+{
+    EXPECT_CALL(*window_manager_policy, advise_application_zone_create(_)).Times(AnyNumber());
+    notify_configuration_applied(create_fake_display_configuration({display_area_a}));
+    notify_configuration_applied(create_fake_display_configuration(std::vector<miral::Rectangle>{}));
+    Mock::VerifyAndClearExpectations(window_manager_policy);
+
+    EXPECT_CALL(*window_manager_policy, advise_application_zone_create(_)).Times(0);
+    EXPECT_CALL(*window_manager_policy, advise_application_zone_delete(_)).Times(0);
+    EXPECT_CALL(*window_manager_policy, advise_application_zone_update(_, _)).Times(0);
+    notify_configuration_applied(create_fake_display_configuration({display_area_a}));
+}
+
+TEST_F(ApplicationZone, readding_single_output_after_two_removed_removes_second_application_zone)
+{
+    EXPECT_CALL(*window_manager_policy, advise_application_zone_create(_)).Times(AnyNumber());
+    notify_configuration_applied(create_fake_display_configuration({display_area_a, display_area_b}));
+    notify_configuration_applied(create_fake_display_configuration(std::vector<miral::Rectangle>{}));
+    Mock::VerifyAndClearExpectations(window_manager_policy);
+
+    miral::Zone zone_b{{{}, {}}};
+    EXPECT_CALL(*window_manager_policy, advise_application_zone_create(_)).Times(0);
+    EXPECT_CALL(*window_manager_policy, advise_application_zone_update(_, _)).Times(0);
+    EXPECT_CALL(*window_manager_policy, advise_application_zone_delete(_))
+        .Times(1)
+        .WillOnce(Invoke([&](Zone const& zone){ zone_b = zone; }));
+    notify_configuration_applied(create_fake_display_configuration({display_area_a}));
+    EXPECT_THAT(zone_b.extents(), Eq(display_area_b));
+}
