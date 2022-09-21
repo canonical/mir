@@ -41,6 +41,8 @@ public:
     MirRunner(int argc, char const* argv[], char const* config_file);
     ~MirRunner();
 
+    struct FdHandle;
+
     /// Add a callback to be invoked when the server has started,
     /// If multiple callbacks are added they will be invoked in the sequence added.
     void add_start_callback(std::function<void()> const& start_callback);
@@ -57,14 +59,11 @@ public:
     
     /// Add a watch on a file descriptor
     /// \remark Since MirAL 3.7
-    void register_fd_handler(
-        std::initializer_list<int> fds,
+    auto register_fd_handler(
+        int fd,
         void const* owner,
-        std::function<void(int)> const& handler);
-
-    /// Remove watch on file descriptor
-    /// \remark Since MirAL 3.7
-    void unregister_fd_handler(void const* owner);
+        std::function<void(int)> const& handler) 
+    -> MirRunner::FdHandle;
 
     /// Set a handler for exceptions caught in run_with().
     /// run_with() invokes handler() in catch (...) blocks before returning EXIT_FAILURE.
@@ -107,6 +106,8 @@ private:
     MirRunner& operator=(MirRunner const&) = delete;
     struct Self;
     std::unique_ptr<Self> const self;
+
+    void unregister_fd_handler(void const* owner);
 };
 }
 

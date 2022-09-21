@@ -197,18 +197,44 @@ void miral::MirRunner::register_signal_handler(
     }
 }
 
-void miral::MirRunner::register_fd_handler(
-    std::initializer_list<int> fds,
+struct miral::MirRunner::FdHandle
+{
+public:
+    FdHandle(MirRunner &runner, int fd, void const* owner)
+    : runner{runner},
+      fd{fd},
+      owner{owner}
+    {
+    }
+
+    ~FdHandle()
+    {
+        runner.unregister_fd_handler(owner);
+    }
+
+    auto get_fd() -> int { return fd; }
+
+private:
+    MirRunner &runner;
+    int fd;
+    void const* owner;
+};
+
+auto miral::MirRunner::register_fd_handler(
+    int fd,
     void const* owner,
-    std::function<void(int)> const& handler)
+    std::function<void(int)> const& handler) 
+-> FdHandle
 {
     std::lock_guard lock{self->mutex};
 
     if (auto const server = self->weak_server.lock())
     {
         auto const main_loop = server->the_main_loop();
-        main_loop->register_fd_handler(fds, owner, handler);
+        main_loop->register_fd_handler({fd}, owner, handler);
     }
+
+    return FdHandle(*this, fd, owner);
 }
 
 void miral::MirRunner::unregister_fd_handler(void const* owner)
