@@ -18,6 +18,7 @@
 #define MIRAL_RUNNER_H
 
 #include "mir/optional_value.h"
+#include "mir/fd.h"
 
 #include <functional>
 #include <initializer_list>
@@ -60,9 +61,9 @@ public:
     /// Add a watch on a file descriptor
     /// \remark Since MirAL 3.7
     auto register_fd_handler(
-        int fd,
+        mir::Fd fd,
         void const* owner,
-        std::function<void(int)> const& handler) 
+        std::function<void(int)> const& handler)
     -> MirRunner::FdHandle;
 
     /// Set a handler for exceptions caught in run_with().

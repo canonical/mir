@@ -221,7 +221,7 @@ private:
 };
 
 auto miral::MirRunner::register_fd_handler(
-    int fd,
+    mir::Fd fd,
     void const* owner,
     std::function<void(int)> const& handler) 
 -> FdHandle
