@@ -226,6 +226,8 @@ private:
         /// can be empty or (in the case of logical output groups) contain multiple outputs
         /// if all outputs are removed the next call to update_application_zones() will drop this DisplayArea
         std::vector<Output> contained_outputs;
+        /// Only set if this display area represents a single output
+        std::optional<int> output_id;
         /// Only set if this display area represents a logical group of multiple outputs
         std::optional<int> logical_output_group_id;
         std::set<Window> attached_windows; ///< Maximized/anchored/etc windows attached to this area
@@ -316,10 +318,11 @@ private:
         mir::geometry::Rectangle const& exclusive_rect_global_coords,
         MirPlacementGravity attached_edges) -> mir::geometry::Rectangle;
 
-    /// Returns the new display area (or null if none was created)
-    auto add_output_to_display_areas(Locker const&, Output const& output);
-    /// Returns any old display areas that have been removed
-    auto remove_output_from_display_areas(Locker const&, Output const& output);
+    /// Adds the given output to an existing display area, or creates a new display area for it
+    void add_output_to_display_areas(Locker const&, Output const& output);
+    /// Removes the given output from it's display area. A future call to
+    /// update_application_zones_and_attached_windows() may be needed to remove the display area.
+    void remove_output_from_display_areas(Locker const&, Output const& output);
     void advise_output_create(Output const& output) override;
     void advise_output_update(Output const& updated, Output const& original) override;
     void advise_output_delete(Output const& output) override;
