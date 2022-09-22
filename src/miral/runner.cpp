@@ -200,16 +200,15 @@ void miral::MirRunner::register_signal_handler(
 struct miral::MirRunner::FdHandle
 {
 public:
-    FdHandle(MirRunner &runner, int fd, void const* owner)
+    FdHandle(MirRunner &runner, int fd)
     : runner{runner},
-      fd{fd},
-      owner{owner}
+      fd{fd}
     {
     }
 
     ~FdHandle()
     {
-        runner.unregister_fd_handler(owner);
+        runner.unregister_fd_handler(this);
     }
 
     auto get_fd() -> int { return fd; }
@@ -217,24 +216,24 @@ public:
 private:
     MirRunner &runner;
     int fd;
-    void const* owner;
 };
 
 auto miral::MirRunner::register_fd_handler(
     mir::Fd fd,
-    void const* owner,
     std::function<void(int)> const& handler) 
--> FdHandle
+-> std::unique_ptr<FdHandle>
 {
     std::lock_guard lock{self->mutex};
+
+    auto handle = std::make_unique<FdHandle>(*this, fd);
 
     if (auto const server = self->weak_server.lock())
     {
         auto const main_loop = server->the_main_loop();
-        main_loop->register_fd_handler({fd}, owner, handler);
+        main_loop->register_fd_handler({fd}, handle.get(), handler);
     }
 
-    return FdHandle(*this, fd, owner);
+    return handle;
 }
 
 void miral::MirRunner::unregister_fd_handler(void const* owner)
