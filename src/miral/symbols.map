@@ -466,8 +466,8 @@ MIRAL_3.7 {
 global:
   extern "C++" {
     "miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&, MirInputEventModifier)";
-    "miral::MirRunner::register_signal_handler*";
-    "miral::MirRunner::register_fd_handler*";
-    "miral::MirRunner::unregister_fd_handler*";
+    miral::MirRunner::register_signal_handler*;
+    miral::MirRunner::register_fd_handler*;
+    miral::MirRunner::unregister_fd_handler*;
   };
 } MIRAL_3.6;
