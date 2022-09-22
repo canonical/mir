@@ -680,6 +680,40 @@ TEST_P(WindowPlacementAttached, window_placed_correctly_when_output_id_changes)
     EXPECT_THAT(window.size(), Eq(placement.size));
 }
 
+// Regression test for https://github.com/MirServer/mir/issues/2580
+TEST_P(WindowPlacementAttached, exclusive_zone_remains_after_removing_and_readding_only_output)
+{
+    AttachedEdges const edges = GetParam();
+    Size const window_size{120, 80};
+    Rectangle exclusive_rect{{0, 0}, window_size};
+
+    notify_configuration_applied(create_fake_display_configuration({display_area}));
+
+    Window window;
+    {
+        mir::shell::SurfaceSpecification params;
+        params.state = mir_window_state_attached;
+        params.attached_edges = edges;
+        params.set_size(window_size);
+        params.exclusive_rect = exclusive_rect;
+        window = create_window(params);
+    }
+
+    notify_configuration_applied(create_fake_display_configuration(std::vector<Rectangle>{}));
+    notify_configuration_applied(create_fake_display_configuration({display_area}));
+
+    Window normal;
+    {
+        mir::shell::SurfaceSpecification params;
+        params.state = mir_window_state_maximized;
+        normal = create_window(params);
+    }
+    Rectangle zone = apply_exclusive_zone(display_area, exclusive_rect, window_size, edges);
+
+    EXPECT_THAT(normal.top_left(), Eq(zone.top_left));
+    EXPECT_THAT(normal.size(), Eq(zone.size));
+}
+
 TEST_P(WindowPlacementAttached, window_is_placed_correctly_for_logical_output_groups)
 {
     AttachedEdges edges = GetParam();
