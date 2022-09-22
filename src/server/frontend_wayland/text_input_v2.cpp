@@ -265,6 +265,7 @@ mf::TextInputV2::TextInputV2(
 mf::TextInputV2::~TextInputV2()
 {
     seat.remove_focus_listener(client, this);
+    ctx->text_input_hub->deactivate_handler(handler);
 }
 
 void mf::TextInputV2::send_text_change(ms::TextInputChange const& change)
