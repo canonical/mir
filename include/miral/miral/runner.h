@@ -42,6 +42,8 @@ public:
     MirRunner(int argc, char const* argv[], char const* config_file);
     ~MirRunner();
 
+    /// A handle returned by register_fd_handler() which keeps a file descriptor open and
+    /// watched in the main loop until it is no longer held.
     struct FdHandle;
 
     /// Add a callback to be invoked when the server has started,
