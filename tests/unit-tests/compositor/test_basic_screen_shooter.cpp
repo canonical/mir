@@ -46,9 +46,7 @@ namespace
 class MockBufferRenderTarget: public mrg::BufferRenderTarget
 {
 public:
-    MOCK_METHOD(void, set_buffer, (
-        std::shared_ptr<mrs::WriteMappableBuffer> const& buffer,
-        geom::Size const& size), (override));
+    MOCK_METHOD(void, set_buffer, (std::shared_ptr<mrs::WriteMappableBuffer> const& buffer), (override));
     MOCK_METHOD(void, make_current, (), (override));
     MOCK_METHOD(void, release_current, (), (override));
     MOCK_METHOD(void, swap_buffers, (), (override));
@@ -146,7 +144,7 @@ TEST_F(BasicScreenShooter, sets_buffer_before_render)
         });
     InSequence seq;
     EXPECT_CALL(render_target, make_current());
-    EXPECT_CALL(render_target, set_buffer(Eq(mt::fake_shared(buffer)), Eq(viewport_rect.size)));
+    EXPECT_CALL(render_target, set_buffer(Eq(mt::fake_shared(buffer))));
     EXPECT_CALL(render_target, bind());
     EXPECT_CALL(renderer, render(_));
     EXPECT_CALL(render_target, release_current());

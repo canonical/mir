@@ -36,9 +36,7 @@ class BasicBufferRenderTarget: public BufferRenderTarget
 public:
     BasicBufferRenderTarget(std::shared_ptr<Context> const& ctx);
 
-    void set_buffer(
-        std::shared_ptr<software::WriteMappableBuffer> const& buffer,
-        geometry::Size const& size) override;
+    void set_buffer(std::shared_ptr<software::WriteMappableBuffer> const& buffer) override;
 
     void make_current() override;
     void release_current() override;

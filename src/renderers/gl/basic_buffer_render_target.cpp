@@ -113,17 +113,15 @@ mrg::BasicBufferRenderTarget::BasicBufferRenderTarget(std::shared_ptr<Context> c
 {
 }
 
-void mrg::BasicBufferRenderTarget::set_buffer(
-    std::shared_ptr<software::WriteMappableBuffer> const& buffer,
-    geometry::Size const& size)
+void mrg::BasicBufferRenderTarget::set_buffer(std::shared_ptr<software::WriteMappableBuffer> const& buffer)
 {
     this->buffer = buffer;
-    if (framebuffer && framebuffer->size == size)
+    if (framebuffer && framebuffer->size == buffer->size())
     {
         return;
     }
     framebuffer.reset();
-    framebuffer.emplace(size);
+    framebuffer.emplace(buffer->size());
 }
 
 void mrg::BasicBufferRenderTarget::make_current()
