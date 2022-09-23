@@ -22,6 +22,7 @@
 #include "src/platforms/common/server/buffer_from_wl_shm.h"
 #include "mir/graphics/egl_context_executor.h"
 #include "mir/test/doubles/null_gl_context.h"
+#include "mir/renderer/sw/pixel_source.h"
 #include <wayland-server.h>
 
 #include <vector>
@@ -33,16 +34,12 @@ namespace geometry = mir::geometry;
 
 namespace
 {
-inline void memcpy_from_shm_buffer(struct wl_shm_buffer* buffer)
+inline void memcpy_from_mapping(mir::renderer::software::ReadMappableBuffer& buffer)
 {
-    auto const height = wl_shm_buffer_get_height(buffer);
-    auto const stride = wl_shm_buffer_get_stride(buffer);
-    // The 32 here is a workaround for a spurious(?) Valgrind failure
-    auto dummy_destination = std::make_unique<unsigned char[]>(height * stride + 32);
+    auto const mapping = buffer.map_readable();
+    auto dummy_destination = std::make_unique<unsigned char[]>(mapping->len());
 
-    wl_shm_buffer_begin_access(buffer);
-    memcpy(dummy_destination.get(), wl_shm_buffer_get_data(buffer), height * stride);
-    wl_shm_buffer_end_access(buffer);
+    memcpy(dummy_destination.get(), mapping->data(), mapping->len());
 }
 }
 
@@ -76,14 +73,17 @@ auto mtd::StubBufferAllocator::buffer_from_shm(
     std::shared_ptr<mir::Executor> executor,
     std::function<void()>&& on_consumed) -> std::shared_ptr<mg::Buffer>
 {
-    // Temporary(?!) hack to actually use the buffer, for WLCS test
-    // Transitioning the StubGraphicsPlatform to use the MESA surfaceless GL platform would
-    // allow us to test more of Mir, and drop this hack
-    memcpy_from_shm_buffer(wl_shm_buffer_get(resource));
-
-    return mg::wayland::buffer_from_wl_shm(
+    auto buffer = mg::wayland::buffer_from_wl_shm(
         resource,
         std::move(executor),
         std::make_shared<mg::common::EGLContextExecutor>(std::make_unique<mtd::NullGLContext>()),
         std::move(on_consumed));
+
+    // Temporary(?!) hack to actually use the buffer, for WLCS test
+    // Transitioning the StubGraphicsPlatform to use the MESA surfaceless GL platform would
+    // allow us to test more of Mir, and drop this hack
+    auto read_mappable = mir::renderer::software::as_read_mappable_buffer(buffer);
+    memcpy_from_mapping(*read_mappable);
+
+    return buffer;
 }

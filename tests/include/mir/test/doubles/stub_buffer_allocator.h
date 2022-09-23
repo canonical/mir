@@ -27,8 +27,9 @@ namespace test
 namespace doubles
 {
 
-struct StubBufferAllocator : public graphics::GraphicBufferAllocator
+class StubBufferAllocator : public graphics::GraphicBufferAllocator
 {
+public:
     auto alloc_software_buffer(geometry::Size sz, MirPixelFormat pf) -> std::shared_ptr<graphics::Buffer> override;
 
     auto supported_pixel_formats() -> std::vector<MirPixelFormat> override;
