@@ -149,6 +149,18 @@ try
         main_loop->enqueue(this, std::move(start_callback));
     });
 
+    for (auto const& signal : signal_backlog)
+    {
+        auto const main_loop = server->the_main_loop();
+        main_loop->register_signal_handler(signal.signals, signal.handler);
+    }
+
+    for (auto const& fd : fd_backlog)
+    {
+        auto const main_loop = server->the_main_loop();
+        main_loop->register_fd_handler({fd.fd}, fd.owner, fd.handler);
+    }
+
     server->run();
 
     return server->exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
