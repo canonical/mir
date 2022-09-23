@@ -90,6 +90,10 @@ public:
 
     void bind() override;
 
+    auto format() const -> MirPixelFormat override { return ShmBuffer::pixel_format(); }
+    auto stride() const -> geometry::Stride override { return stride_; }
+    auto size() const -> geometry::Size override { return ShmBuffer::size(); }
+
     MemoryBackedShmBuffer(MemoryBackedShmBuffer const&) = delete;
     MemoryBackedShmBuffer& operator=(MemoryBackedShmBuffer const&) = delete;
 private:

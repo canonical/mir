@@ -37,6 +37,7 @@
 
 namespace mg = mir::graphics;
 namespace mgc = mir::graphics::common;
+namespace geom = mir::geometry;
 
 namespace mir
 {
@@ -390,7 +391,7 @@ public:
 
             auto size() const -> mir::geometry::Size override
             {
-                return parent->size();
+                return parent->ShmBuffer::size();
             }
 
             auto data() -> T* override
@@ -462,9 +463,13 @@ public:
                 mir::geometry::Stride stride_;
             };
 
-            return std::make_unique<FallbackMapping>(pixel_format(), size(), stride_);
+            return std::make_unique<FallbackMapping>(pixel_format(), ShmBuffer::size(), stride_);
         }
     }
+
+    auto format() const -> MirPixelFormat override { return ShmBuffer::pixel_format(); }
+    auto stride() const -> geom::Stride override { return stride_; }
+    auto size() const -> geom::Size override { return ShmBuffer::size(); }
 
 private:
     void notify_consumed()

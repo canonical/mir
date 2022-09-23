@@ -66,7 +66,7 @@ public:
 /**
  * A Buffer that can be mapped into CPU-accessible memory and directly written to.
  */
-class WriteMappableBuffer
+class WriteMappableBuffer : public virtual BufferDescriptor
 {
 public:
     virtual ~WriteMappableBuffer() = default;
@@ -88,7 +88,7 @@ public:
 /**
  * A Buffer that can be mapped into CPU-readable memory.
  */
-class ReadMappableBuffer
+class ReadMappableBuffer : public virtual BufferDescriptor
 {
 public:
     virtual ~ReadMappableBuffer() = default;
