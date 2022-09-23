@@ -122,9 +122,6 @@ private:
         std::function<void(int)> handler;
     };
 
-    std::vector<SignalInfo> signal_backlog;
-    std::vector<FdInfo> fd_backlog;
-
     void unregister_fd_handler(void const* owner);
 };
 }

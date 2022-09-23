@@ -60,6 +60,9 @@ struct miral::MirRunner::Self
     std::function<void()> stop_callback{[this]{ join_client_threads(weak_server.lock().get()); }};
     std::function<void()> exception_handler{static_cast<void(*)()>(mir::report_exception)};
     std::weak_ptr<mir::Server> weak_server;
+    
+    std::vector<SignalInfo> signal_backlog;
+    std::vector<FdInfo> fd_backlog;
 };
 
 miral::MirRunner::MirRunner(int argc, char const* argv[]) :
@@ -198,7 +201,7 @@ void miral::MirRunner::register_signal_handler(
     else
     {
         auto const signal_info = SignalInfo{signals, handler};
-        signal_backlog.push_back(signal_info);
+        self->signal_backlog.push_back(signal_info);
     }
 }
 
@@ -235,7 +238,7 @@ auto miral::MirRunner::register_fd_handler(mir::Fd fd, std::function<void(int)> 
     else
     {
         auto const fd_info = FdInfo{fd, handle.get(), handler};
-        fd_backlog.push_back(fd_info);
+        self->fd_backlog.push_back(fd_info);
     }
 
     return handle;
@@ -253,7 +256,8 @@ void miral::MirRunner::unregister_fd_handler(void const* owner)
     else
     {
         // Remove all entries with same owner from backlog
-        fd_backlog.erase(remove_if(begin(fd_backlog), end(fd_backlog), [&](auto& info){ return info.owner == owner; }), end(fd_backlog));
+        auto& backlog = self->fd_backlog;
+        backlog.erase(remove_if(begin(backlog), end(backlog), [&](auto& info){ return info.owner == owner; }), end(backlog));
     }
 }
 
