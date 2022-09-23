@@ -602,33 +602,31 @@ void mrg::Renderer::update_gl_viewport()
      * the logical viewport aspect ratio doesn't match the display aspect.
      * This keeps pixels square. Note "black"-bars are really glClearColor.
      */
-    render_target.ensure_current();
+
+    auto const buf_size = render_target.size();
+    GLint const buf_width = buf_size.width.as_value(), buf_height = buf_size.height.as_value();
+    if (!buf_width || !buf_height)
+    {
+        return;
+    }
 
     auto transformed_viewport = display_transform *
                                 glm::vec4(viewport.size.width.as_int(),
                                           viewport.size.height.as_int(), 0, 1);
     auto viewport_width = fabs(transformed_viewport[0]);
     auto viewport_height = fabs(transformed_viewport[1]);
-    auto dpy = eglGetCurrentDisplay();
-    auto surf = eglGetCurrentSurface(EGL_DRAW);
-    EGLint buf_width = 0, buf_height = 0;
 
-    if (viewport_width > 0.0f && viewport_height > 0.0f &&
-        eglQuerySurface(dpy, surf, EGL_WIDTH, &buf_width) && buf_width > 0 &&
-        eglQuerySurface(dpy, surf, EGL_HEIGHT, &buf_height) && buf_height > 0)
-    {
-        GLint reduced_width = buf_width, reduced_height = buf_height;
-        // if viewport_aspect_ratio >= buf_aspect_ratio
-        if (viewport_width * buf_height >= buf_width * viewport_height)
-            reduced_height = buf_width * viewport_height / viewport_width;
-        else
-            reduced_width = buf_height * viewport_width / viewport_height;
+    GLint reduced_width = buf_width, reduced_height = buf_height;
+    // if viewport_aspect_ratio >= buf_aspect_ratio
+    if (viewport_width * buf_height >= buf_width * viewport_height)
+        reduced_height = buf_width * viewport_height / viewport_width;
+    else
+        reduced_width = buf_height * viewport_width / viewport_height;
 
-        GLint offset_x = (buf_width - reduced_width) / 2;
-        GLint offset_y = (buf_height - reduced_height) / 2;
+    GLint offset_x = (buf_width - reduced_width) / 2;
+    GLint offset_y = (buf_height - reduced_height) / 2;
 
-        glViewport(offset_x, offset_y, reduced_width, reduced_height);
-    }
+    glViewport(offset_x, offset_y, reduced_width, reduced_height);
 }
 
 void mrg::Renderer::set_output_transform(glm::mat2 const& t)
@@ -644,4 +642,3 @@ void mrg::Renderer::set_output_transform(glm::mat2 const& t)
 void mrg::Renderer::suspend()
 {
 }
-
