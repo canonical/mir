@@ -195,6 +195,11 @@ void miral::MirRunner::register_signal_handler(
         auto const main_loop = server->the_main_loop();
         main_loop->register_signal_handler(signals, handler);
     }
+    else
+    {
+        auto const signal_info = SignalInfo{signals, handler};
+        signal_backlog.push_back(signal_info);
+    }
 }
 
 struct miral::MirRunner::FdHandle
@@ -214,9 +219,8 @@ private:
     MirRunner &runner;
 };
 
-auto miral::MirRunner::register_fd_handler(
-    mir::Fd fd,
-    std::function<void(int)> const& handler) 
+
+auto miral::MirRunner::register_fd_handler(mir::Fd fd, std::function<void(int)> const& handler)
 -> std::unique_ptr<FdHandle>
 {
     std::lock_guard lock{self->mutex};
@@ -227,6 +231,11 @@ auto miral::MirRunner::register_fd_handler(
     {
         auto const main_loop = server->the_main_loop();
         main_loop->register_fd_handler({fd}, handle.get(), handler);
+    }
+    else
+    {
+        auto const fd_info = FdInfo{fd, handle.get(), handler};
+        fd_backlog.push_back(fd_info);
     }
 
     return handle;
@@ -240,6 +249,11 @@ void miral::MirRunner::unregister_fd_handler(void const* owner)
     {
         auto const main_loop = server->the_main_loop();
         main_loop->unregister_fd_handler(owner);
+    }
+    else
+    {
+        // Remove all entries with same owner from backlog
+        fd_backlog.erase(remove_if(begin(fd_backlog), end(fd_backlog), [&](auto& info){ return info.owner == owner; }), end(fd_backlog));
     }
 }
 

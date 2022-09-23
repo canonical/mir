@@ -109,6 +109,22 @@ private:
     struct Self;
     std::unique_ptr<Self> const self;
 
+    struct SignalInfo
+    {
+        std::initializer_list<int> signals;
+        std::function<void(int)> const& handler;
+    };
+
+    struct FdInfo
+    {
+        mir::Fd fd;
+        void* owner;
+        std::function<void(int)> handler;
+    };
+
+    std::vector<SignalInfo> signal_backlog;
+    std::vector<FdInfo> fd_backlog;
+
     void unregister_fd_handler(void const* owner);
 };
 }
