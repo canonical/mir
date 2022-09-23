@@ -47,6 +47,7 @@ class MockBufferRenderTarget: public mrg::BufferRenderTarget
 {
 public:
     MOCK_METHOD(void, set_buffer, (std::shared_ptr<mrs::WriteMappableBuffer> const& buffer), (override));
+    MOCK_METHOD(geom::Size, size, (), (const, override));
     MOCK_METHOD(void, make_current, (), (override));
     MOCK_METHOD(void, release_current, (), (override));
     MOCK_METHOD(void, swap_buffers, (), (override));

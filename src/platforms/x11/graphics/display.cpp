@@ -182,6 +182,7 @@ mgx::Display::Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources
             configuration->id,
             *window,
             configuration->extents(),
+            actual_size,
             shared_egl.context(),
             last_frame,
             report,
@@ -342,7 +343,8 @@ void mgx::Display::OutputInfo::set_size(geometry::Size const& size)
         return;
     }
     config->modes[0].size = size;
-    display_buffer->set_view_area({display_buffer->view_area().top_left, size});
+    display_buffer->set_size(size);
+    display_buffer->set_view_area(config->extents());
     auto const handlers = owner->config_change_handlers;
 
     lock.unlock();

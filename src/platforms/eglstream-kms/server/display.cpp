@@ -139,6 +139,7 @@ public:
           layer{output.output_layer()},
           crtc_id{output.crtc_id()},
           view_area_{output.extents()},
+          output_size{output.size()},
           transform{output.transformation()},
           drm_node{std::move(drm_node)},
           event_handler{std::move(event_handler)},
@@ -172,8 +173,8 @@ public:
         };
 
         EGLint const surface_attribs[] = {
-            EGL_WIDTH, output.size().width.as_int(),
-            EGL_HEIGHT, output.size().height.as_int(),
+            EGL_WIDTH, output_size.width.as_int(),
+            EGL_HEIGHT, output_size.height.as_int(),
             EGL_NONE,
         };
         surface = eglCreateStreamProducerSurfaceKHR(dpy, config, output_stream, surface_attribs);
@@ -193,6 +194,11 @@ public:
     }
 
     /* gl::RenderTarget */
+    auto size() const -> mir::geometry::Size override
+    {
+        return output_size;
+    }
+
     void make_current() override
     {
         if (eglMakeCurrent(dpy, surface, surface, ctx) != EGL_TRUE)
@@ -285,6 +291,7 @@ private:
     EGLOutputLayerEXT layer;
     uint32_t crtc_id;
     mir::geometry::Rectangle const view_area_;
+    mir::geometry::Size const output_size;
     glm::mat2 const transform;
     EGLStreamKHR output_stream;
     EGLSurface surface;

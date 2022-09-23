@@ -49,18 +49,21 @@ public:
             DisplayConfigurationOutputId output_id,
             xcb_window_t win,
             geometry::Rectangle const& view_area,
+            geometry::Size const& window_size,
             EGLContext const shared_context,
             std::shared_ptr<AtomicFrame> const& f,
             std::shared_ptr<DisplayReport> const& r,
             GLConfig const& gl_config);
 
     geometry::Rectangle view_area() const override;
+    auto size() const -> geometry::Size override;
     void make_current() override;
     void release_current() override;
     void swap_buffers() override;
     void bind() override;
     bool overlay(RenderableList const& renderlist) override;
     void set_view_area(geometry::Rectangle const& a);
+    void set_size(geometry::Size const& size);
     void set_transformation(glm::mat2 const& t);
 
     void for_each_display_buffer(
@@ -74,6 +77,7 @@ public:
 private:
     std::shared_ptr<DisplayReport> const report;
     geometry::Rectangle area;
+    geometry::Size window_size;
     glm::mat2 transform;
     helpers::EGLHelper const egl;
     std::shared_ptr<AtomicFrame> const last_frame;

@@ -729,6 +729,11 @@ void mgg::DisplayBuffer::wait_for_page_flip()
     }
 }
 
+auto mgg::DisplayBuffer::size() const -> geometry::Size
+{
+    return surface.size();
+}
+
 void mgg::DisplayBuffer::make_current()
 {
     surface.make_current();
@@ -777,6 +782,10 @@ mgg::GBMOutputSurface::GBMOutputSurface(GBMOutputSurface&& from)
 {
 }
 
+auto mgg::GBMOutputSurface::GBMOutputSurface::size() const -> geometry::Size
+{
+    return {width, height};
+}
 
 void mgg::GBMOutputSurface::make_current()
 {

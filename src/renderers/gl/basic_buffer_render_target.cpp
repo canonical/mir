@@ -124,6 +124,18 @@ void mrg::BasicBufferRenderTarget::set_buffer(std::shared_ptr<software::WriteMap
     framebuffer.emplace(buffer->size());
 }
 
+auto mrg::BasicBufferRenderTarget::size() const -> geometry::Size
+{
+    if (framebuffer)
+    {
+        return framebuffer.value().size;
+    }
+    else
+    {
+        return {};
+    }
+}
+
 void mrg::BasicBufferRenderTarget::make_current()
 {
     ctx->make_current();

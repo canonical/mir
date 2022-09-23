@@ -55,6 +55,11 @@ mrg::CurrentRenderTarget::~CurrentRenderTarget()
     render_target->release_current();
 }
 
+auto mrg::CurrentRenderTarget::size() const -> geom::Size
+{
+    return render_target->size();
+}
+
 void mrg::CurrentRenderTarget::ensure_current()
 {
     render_target->make_current();

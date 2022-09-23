@@ -35,6 +35,7 @@
 #include <system_error>
 
 namespace mgw = mir::graphics::wayland;
+namespace geom = mir::geometry;
 
 class mgw::DisplayClient::Output  :
     public DisplaySyncGroup,
@@ -56,6 +57,7 @@ public:
     Output& operator=(Output&&) = delete;
 
     DisplayConfigurationOutput dcout;
+    geom::Size output_size;
 
     wl_output* const output;
     DisplayClient* const owner;
@@ -102,6 +104,7 @@ public:
     auto native_display_buffer() -> NativeDisplayBuffer* override;
 
     // RenderTarget implementation
+    auto size() const -> geom::Size override;
     void make_current() override;
     void release_current() override;
     void swap_buffers() override;
@@ -324,10 +327,10 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
         !dcout.custom_logical_size || dcout.custom_logical_size.value() != pending_toplevel_size.value());
     dcout.custom_logical_size = pending_toplevel_size.value();
     pending_toplevel_size.reset();
-    auto const size = dcout.extents().size * dcout.scale;
+    output_size = dcout.extents().size * dcout.scale;
     if (!has_initialized)
     {
-        egl_window = wl_egl_window_create(surface, size.width.as_int(), size.height.as_int());
+        egl_window = wl_egl_window_create(surface, output_size.width.as_int(), output_size.height.as_int());
         eglsurface = eglCreateWindowSurface(
             owner->egldisplay,
             owner->eglconfig,
@@ -339,7 +342,7 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
     {
         if (egl_window)
         {
-            wl_egl_window_resize(egl_window, size.width.as_int(), size.height.as_int(), 0, 0);
+            wl_egl_window_resize(egl_window, output_size.width.as_int(), output_size.height.as_int(), 0, 0);
         }
         on_change();
     }
@@ -377,6 +380,11 @@ auto mgw::DisplayClient::Output::transformation() const -> glm::mat2
 auto mgw::DisplayClient::Output::native_display_buffer() -> NativeDisplayBuffer*
 {
     return this;
+}
+
+auto mgw::DisplayClient::Output::size() const -> geom::Size
+{
+    return output_size;
 }
 
 void mgw::DisplayClient::Output::make_current()
