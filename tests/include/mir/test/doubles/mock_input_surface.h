@@ -31,12 +31,12 @@ class MockInputSurface : public input::Surface
 {
 public:
     ~MockInputSurface() noexcept {}
-    MOCK_CONST_METHOD0(name, std::string());
-    MOCK_CONST_METHOD0(input_bounds, geometry::Rectangle());
-    MOCK_CONST_METHOD1(input_area_contains, bool(geometry::Point const&));
-    MOCK_CONST_METHOD0(cursor_image, std::shared_ptr<graphics::CursorImage>());
-    MOCK_CONST_METHOD0(reception_mode, input::InputReceptionMode());
-    MOCK_METHOD1(consume, void(std::shared_ptr<MirEvent const> const&));
+    MOCK_METHOD(std::string, name, (), (const override));
+    MOCK_METHOD(geometry::Rectangle, input_bounds, (), (const override));
+    MOCK_METHOD(bool, input_area_contains, (geometry::Point const&), (const override));
+    MOCK_METHOD(std::shared_ptr<graphics::CursorImage>, cursor_image, (), (const override));
+    MOCK_METHOD(input::InputReceptionMode, reception_mode, (), (const override));
+    MOCK_METHOD(void, consume, (std::shared_ptr<MirEvent const> const&), (override));
 };
 
 }
