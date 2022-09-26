@@ -34,12 +34,29 @@
 #include <mutex>
 #include <optional>
 
-
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
+
+namespace
+{
+auto translate_and_scale(
+    geom::Rectangle rect,
+    geom::Rectangle input_space,
+    geom::Rectangle output_space) -> geom::Rectangle
+{
+    auto const x_scale = static_cast<double>(output_space.size.width.as_value()) / input_space.size.width.as_value();
+    auto const y_scale = static_cast<double>(output_space.size.height.as_value()) / input_space.size.height.as_value();
+    rect.size.width = rect.size.width * x_scale;
+    rect.size.height = rect.size.height * y_scale;
+    auto displacement = rect.top_left - input_space.top_left;
+    rect.top_left.x = output_space.top_left.x + displacement.dx * x_scale;
+    rect.top_left.y = output_space.top_left.y + displacement.dy * y_scale;
+    return rect;
+}
+}
 
 class mf::WlrScreencopyV1DamageTracker::Area
 {
@@ -63,7 +80,7 @@ private:
     /// The amount of damage since the last frame was captured (should be none unless pending_frame is null)
     DamageAmount damage_amount;
     /// Only has meaning when damage_amount is partial
-    geom::Rectangle damage_rect;
+    geom::Rectangle output_space_damage;
     /// The frame that will be captured once this capture area takes damage
     wayland::Weak<Frame> pending_frame;
 };
@@ -133,14 +150,12 @@ public:
     /// @{
     auto destroyed_flag() const -> std::shared_ptr<bool const> override { return LifetimeTracker::destroyed_flag(); }
     auto parameters() const -> WlrScreencopyV1DamageTracker::FrameParams const& override { return params; }
-    void capture(std::optional<geometry::Rectangle> const& local_damage) override;
+    void capture(geometry::Rectangle buffer_space_damage) override;
     /// @}
 
 private:
     void prepare_target(wl_resource* buffer);
-    void report_result(
-        std::optional<time::Timestamp> captured_time,
-        std::optional<geom::Rectangle> const& local_damage);
+    void report_result(std::optional<time::Timestamp> captured_time, geom::Rectangle buffer_space_damage);
 
     /// From wayland::WlrScreencopyFrameV1
     /// @{
@@ -213,7 +228,7 @@ void mf::WlrScreencopyV1DamageTracker::capture_on_damage(Frame* frame)
     {
         // We capture the given frame immediately, and also push an empty capture area so that if we get another
         // capture request with the same params it will wait for damage since this frame.
-        frame->capture(std::nullopt);
+        frame->capture(frame_params.full_buffer_space_damage());
         // If an unusually high number of capture areas have been created for some reason, clear the list rather than
         // getting bogged down (it's ok, worst case scenario waiting for damage doesn't work)
         if (areas.size() > 100)
@@ -260,20 +275,17 @@ void mf::WlrScreencopyV1DamageTracker::Area::apply_damage(std::optional<geom::Re
 {
     if (damage && damage_amount != DamageAmount::full)
     {
-        auto const intersection = intersection_of(damage.value(), params.area);
+        auto const intersection = intersection_of(damage.value(), params.output_space_area);
         if (intersection.size != geom::Size{})
         {
-            geom::Rectangle const local_damage{
-                intersection.top_left - as_displacement(params.area.top_left),
-                intersection.size};
             if (damage_amount == DamageAmount::partial)
             {
-                damage_rect = geom::Rectangles{damage_rect, local_damage}.bounding_rectangle();
+                output_space_damage = geom::Rectangles{output_space_damage, intersection}.bounding_rectangle();
             }
             else // damage_amount == DamageAmount::none
             {
                 damage_amount = DamageAmount::partial;
-                damage_rect = local_damage;
+                output_space_damage = intersection;
             }
         }
     }
@@ -316,11 +328,14 @@ void mf::WlrScreencopyV1DamageTracker::Area::capture_frame()
     }   break;
 
     case DamageAmount::partial:
-        pending_frame.value().capture(damage_rect);
+        pending_frame.value().capture(translate_and_scale(
+            output_space_damage,
+            params.output_space_area,
+            {{}, params.buffer_size}));
         break;
 
     case DamageAmount::full:
-        pending_frame.value().capture(std::nullopt);
+        pending_frame.value().capture(params.full_buffer_space_damage());
     }
 
     damage_amount = DamageAmount::none;
@@ -360,8 +375,10 @@ void mf::WlrScreencopyManagerV1::capture_output(
     wl_resource* output)
 {
     (void)overlay_cursor;
-    auto const extents = OutputGlobal::from_or_throw(output).current_config().extents();
-    new WlrScreencopyFrameV1{frame, this, ctx, {extents, output}};
+    auto const& output_config = OutputGlobal::from_or_throw(output).current_config();
+    auto const extents = output_config.extents();
+    auto const buffer_size = output_config.modes[output_config.current_mode_index].size;
+    new WlrScreencopyFrameV1{frame, this, ctx, {output, extents, buffer_size}};
 }
 
 void mf::WlrScreencopyManagerV1::capture_output_region(
@@ -372,9 +389,12 @@ void mf::WlrScreencopyManagerV1::capture_output_region(
     int32_t width, int32_t height)
 {
     (void)overlay_cursor;
-    auto const extents = OutputGlobal::from_or_throw(output).current_config().extents();
+    auto const& output_config = OutputGlobal::from_or_throw(output).current_config();
+    auto const extents = output_config.extents();
     auto const intersection = intersection_of({{x, y}, {width, height}}, extents);
-    new WlrScreencopyFrameV1{frame, this, ctx, {intersection, output}};
+    auto const output_size = output_config.modes[output_config.current_mode_index].size;
+    auto const buffer_size = translate_and_scale(intersection, extents, {{}, output_size}).size;
+    new WlrScreencopyFrameV1{frame, this, ctx, {output, intersection, buffer_size}};
 }
 
 mf::WlrScreencopyFrameV1::WlrScreencopyFrameV1(
@@ -386,17 +406,17 @@ mf::WlrScreencopyFrameV1::WlrScreencopyFrameV1(
       manager{manager},
       ctx{ctx},
       params{params},
-      stride{params.area.size.width.as_uint32_t() * 4}
+      stride{params.buffer_size.width.as_uint32_t() * 4}
 {
     send_buffer_event(
         wayland::Shm::Format::argb8888,
-        params.area.size.width.as_uint32_t(),
-        params.area.size.height.as_uint32_t(),
+        params.buffer_size.width.as_uint32_t(),
+        params.buffer_size.height.as_uint32_t(),
         stride.as_uint32_t());
     send_buffer_done_event_if_supported();
 }
 
-void mf::WlrScreencopyFrameV1::capture(std::optional<geom::Rectangle> const& local_damage)
+void mf::WlrScreencopyFrameV1::capture(geom::Rectangle buffer_space_damage)
 {
     if (!target)
     {
@@ -404,15 +424,15 @@ void mf::WlrScreencopyFrameV1::capture(std::optional<geom::Rectangle> const& loc
             "WlrScreencopyFrameV1::capture() called without a target, copy %s been called",
             copy_has_been_called ? "has" : "has not");
     }
-    ctx->screen_shooter->capture(std::move(target), params.area,
-        [wayland_executor=ctx->wayland_executor, local_damage, self=mw::make_weak(this)]
+    ctx->screen_shooter->capture(std::move(target), params.output_space_area,
+        [wayland_executor=ctx->wayland_executor, buffer_space_damage, self=mw::make_weak(this)]
             (std::optional<time::Timestamp> captured_time)
         {
-            wayland_executor->spawn([self, captured_time, local_damage]()
+            wayland_executor->spawn([self, captured_time, buffer_space_damage]()
                 {
                     if (self)
                     {
-                        self.value().report_result(captured_time, local_damage);
+                        self.value().report_result(captured_time, buffer_space_damage);
                     }
                 });
         });
@@ -437,7 +457,7 @@ void mf::WlrScreencopyFrameV1::prepare_target(wl_resource* buffer)
             "Invalid pixel format %d",
             graphics_buffer->pixel_format()));
     }
-    if (graphics_buffer->size() != params.area.size)
+    if (graphics_buffer->size() != params.buffer_size)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
             resource,
@@ -445,8 +465,8 @@ void mf::WlrScreencopyFrameV1::prepare_target(wl_resource* buffer)
             "Invalid buffer size %dx%d, should be %dx%d",
             graphics_buffer->size().width.as_int(),
             graphics_buffer->size().height.as_int(),
-            params.area.size.width.as_int(),
-            params.area.size.height.as_int()));
+            params.buffer_size.width.as_int(),
+            params.buffer_size.height.as_int()));
     }
     auto const buffer_stride = geom::Stride{wl_shm_buffer_get_stride(wl_shm_buffer_get(buffer))};
     if (buffer_stride != stride)
@@ -467,7 +487,7 @@ void mf::WlrScreencopyFrameV1::prepare_target(wl_resource* buffer)
 
 void mf::WlrScreencopyFrameV1::report_result(
     std::optional<time::Timestamp> captured_time,
-    std::optional<geom::Rectangle> const& local_damage)
+    geom::Rectangle buffer_space_damage)
 {
     if (captured_time)
     {
@@ -475,12 +495,11 @@ void mf::WlrScreencopyFrameV1::report_result(
 
         if (should_send_damage)
         {
-            geom::Rectangle const damage = local_damage.value_or(geom::Rectangle{{}, params.area.size});
             send_damage_event(
-                damage.top_left.x.as_uint32_t(),
-                damage.top_left.y.as_uint32_t(),
-                damage.size.width.as_uint32_t(),
-                damage.size.height.as_uint32_t());
+                buffer_space_damage.top_left.x.as_uint32_t(),
+                buffer_space_damage.top_left.y.as_uint32_t(),
+                buffer_space_damage.size.width.as_uint32_t(),
+                buffer_space_damage.size.height.as_uint32_t());
         }
 
         WaylandTimespec const timespec{captured_time.value()};
@@ -498,7 +517,7 @@ void mf::WlrScreencopyFrameV1::report_result(
 void mf::WlrScreencopyFrameV1::copy(wl_resource* buffer)
 {
     prepare_target(buffer);
-    capture(std::nullopt);
+    capture(params.full_buffer_space_damage());
 }
 
 void mf::WlrScreencopyFrameV1::copy_with_damage(wl_resource* buffer)
@@ -511,6 +530,6 @@ void mf::WlrScreencopyFrameV1::copy_with_damage(wl_resource* buffer)
     }
     else
     {
-        capture(std::nullopt);
+        capture(params.full_buffer_space_damage());
     }
 }

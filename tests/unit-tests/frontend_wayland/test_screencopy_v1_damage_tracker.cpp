@@ -39,8 +39,13 @@ namespace
 struct MockFrame : mf::WlrScreencopyV1DamageTracker::Frame, mw::LifetimeTracker
 {
 public:
-    MockFrame(geom::Rectangle const& rect)
-        : params{rect, nullptr}
+    MockFrame(geom::Rectangle output_space_area)
+        : params{nullptr, output_space_area, output_space_area.size}
+    {
+    }
+
+    MockFrame(geom::Rectangle output_space_area, geom::Size buffer_size)
+        : params{nullptr, output_space_area, buffer_size}
     {
     }
 
@@ -54,7 +59,7 @@ public:
         return params;
     }
 
-    MOCK_METHOD(void, capture, (std::optional<geom::Rectangle> const& damage), (override));
+    MOCK_METHOD(void, capture, (geom::Rectangle damage), (override));
 
     mf::WlrScreencopyV1DamageTracker::FrameParams params;
 };
@@ -84,9 +89,9 @@ struct DamageTrackerV1 : Test
         executor.execute();
     }
 
-    void capture_frame_with_area(geom::Rectangle const& area)
+    void capture_frame(geom::Rectangle area, geom::Size buffer_size)
     {
-        NiceMock<MockFrame> frame{area};
+        NiceMock<MockFrame> frame{area, buffer_size};
         tracker.capture_on_damage(&frame);
         executor.execute();
     }
@@ -116,7 +121,7 @@ TEST_F(DamageTrackerV1, captures_first_frame_immediately_when_requested)
 {
     geom::Rectangle const area{{}, {20, 30}};
     StrictMock<MockFrame> frame{area};
-    EXPECT_CALL(frame, capture(Eq(std::nullopt)));
+    EXPECT_CALL(frame, capture(Eq(geom::Rectangle{{}, {20, 30}})));
     tracker.capture_on_damage(&frame);
     executor.execute();
 }
@@ -124,13 +129,13 @@ TEST_F(DamageTrackerV1, captures_first_frame_immediately_when_requested)
 TEST_F(DamageTrackerV1, when_scene_changed_second_frame_is_captured)
 {
     geom::Rectangle const area{{}, {20, 30}};
-    capture_frame_with_area(area);
+    capture_frame(area, area.size);
 
     StrictMock<MockFrame> frame{area};
     tracker.capture_on_damage(&frame);
     executor.execute();
 
-    EXPECT_CALL(frame, capture(Eq(std::nullopt)));
+    EXPECT_CALL(frame, capture(Eq(geom::Rectangle{{}, {20, 30}})));
     damage_whole_scene();
     executor.execute();
 }
@@ -138,7 +143,7 @@ TEST_F(DamageTrackerV1, when_scene_changed_second_frame_is_captured)
 TEST_F(DamageTrackerV1, when_area_damaged_second_frame_is_captured)
 {
     geom::Rectangle const area{{}, {20, 30}};
-    capture_frame_with_area(area);
+    capture_frame(area, area.size);
 
     StrictMock<MockFrame> frame{area};
     tracker.capture_on_damage(&frame);
@@ -153,7 +158,7 @@ TEST_F(DamageTrackerV1, when_area_inside_capture_area_is_damaged_frame_is_captur
 {
     geom::Rectangle const capture_area{{}, {20, 30}};
     geom::Rectangle const area_inside_capture_area{{2, 4}, {5, 7}};
-    capture_frame_with_area(capture_area);
+    capture_frame(capture_area, capture_area.size);
 
     StrictMock<MockFrame> frame{capture_area};
     tracker.capture_on_damage(&frame);
@@ -169,7 +174,7 @@ TEST_F(DamageTrackerV1, damage_clipped_to_capture_area)
     geom::Rectangle const capture_area{{}, {20, 30}};
     geom::Rectangle const area_intersecting_with_capture_area{{-10, 5}, {45, 66}};
     geom::Rectangle const expected_damage_area{{0, 5}, {20, 25}};
-    capture_frame_with_area(capture_area);
+    capture_frame(capture_area, capture_area.size);
 
     StrictMock<MockFrame> frame{capture_area};
     tracker.capture_on_damage(&frame);
@@ -185,7 +190,7 @@ TEST_F(DamageTrackerV1, damage_is_relative_to_capture_area_position)
     geom::Rectangle const capture_area{{5, 12}, {20, 30}};
     geom::Rectangle const area_inside_capture_area{{10, 14}, {5, 5}};
     geom::Rectangle const expected_damage_area{{5, 2}, {5, 5}};
-    capture_frame_with_area(capture_area);
+    capture_frame(capture_area, capture_area.size);
 
     StrictMock<MockFrame> frame{capture_area};
     tracker.capture_on_damage(&frame);
@@ -196,11 +201,94 @@ TEST_F(DamageTrackerV1, damage_is_relative_to_capture_area_position)
     executor.execute();
 }
 
+TEST_F(DamageTrackerV1, full_damage_is_scaled_to_buffer_size)
+{
+    geom::Rectangle const capture_area{{}, {20, 30}};
+    geom::Size const buffer_size{40, 60};
+    geom::Rectangle const expected_damage_area{{}, buffer_size};
+    capture_frame(capture_area, buffer_size);
+
+    StrictMock<MockFrame> frame{capture_area, buffer_size};
+    EXPECT_CALL(frame, capture(Eq(expected_damage_area)));
+
+    tracker.capture_on_damage(&frame);
+    damage_whole_scene();
+    executor.execute();
+}
+
+TEST_F(DamageTrackerV1, partial_damage_is_scaled_to_buffer_size)
+{
+    geom::Rectangle const capture_area{{}, {20, 30}};
+    geom::Rectangle const area_of_damage{{}, {10, 10}};
+    geom::Size const buffer_size{40, 60};
+    geom::Rectangle const expected_buffer_damage{{}, {20, 20}};
+    capture_frame(capture_area, buffer_size);
+
+    StrictMock<MockFrame> frame{capture_area, buffer_size};
+    tracker.capture_on_damage(&frame);
+    executor.execute();
+
+    EXPECT_CALL(frame, capture(Eq(expected_buffer_damage)));
+    damage_area(area_of_damage);
+    executor.execute();
+}
+
+TEST_F(DamageTrackerV1, damage_position_offset_is_scaled_to_buffer_size)
+{
+    geom::Rectangle const capture_area{{4, 6}, {20, 30}};
+    geom::Rectangle const area_of_damage{{8, 20}, {10, 10}};
+    geom::Size const buffer_size{40, 60};
+    geom::Rectangle const expected_buffer_damage{{8, 28}, {20, 20}};
+    capture_frame(capture_area, buffer_size);
+
+    StrictMock<MockFrame> frame{capture_area, buffer_size};
+    tracker.capture_on_damage(&frame);
+    executor.execute();
+
+    EXPECT_CALL(frame, capture(Eq(expected_buffer_damage)));
+    damage_area(area_of_damage);
+    executor.execute();
+}
+
+TEST_F(DamageTrackerV1, damage_size_can_be_scaled_fractionally)
+{
+    geom::Rectangle const capture_area{{}, {20, 30}};
+    geom::Rectangle const area_of_damage{{4, 12}, {10, 10}};
+    geom::Size const buffer_size{30, 45};
+    geom::Rectangle const expected_buffer_damage{{6, 18}, {15, 15}};
+    capture_frame(capture_area, buffer_size);
+
+    StrictMock<MockFrame> frame{capture_area, buffer_size};
+    tracker.capture_on_damage(&frame);
+    executor.execute();
+
+    EXPECT_CALL(frame, capture(Eq(expected_buffer_damage)));
+    damage_area(area_of_damage);
+    executor.execute();
+}
+
+TEST_F(DamageTrackerV1, damage_size_x_and_y_can_be_scaled_independently)
+{
+    geom::Rectangle const capture_area{{}, {20, 30}};
+    geom::Rectangle const area_of_damage{{4, 12}, {10, 10}};
+    geom::Size const buffer_size{30, 15};
+    geom::Rectangle const expected_buffer_damage{{6, 6}, {15, 5}};
+    capture_frame(capture_area, buffer_size);
+
+    StrictMock<MockFrame> frame{capture_area, buffer_size};
+    tracker.capture_on_damage(&frame);
+    executor.execute();
+
+    EXPECT_CALL(frame, capture(Eq(expected_buffer_damage)));
+    damage_area(area_of_damage);
+    executor.execute();
+}
+
 TEST_F(DamageTrackerV1, when_damage_is_outside_of_frames_area_frame_is_not_captured)
 {
     geom::Rectangle const area{{}, {20, 30}};
     geom::Rectangle const damage{{25, 0}, {5, 5}};
-    capture_frame_with_area(area);
+    capture_frame(area, area.size);
 
     StrictMock<MockFrame> frame{area};
     tracker.capture_on_damage(&frame);
@@ -214,7 +302,7 @@ TEST_F(DamageTrackerV1, when_damage_is_outside_of_frames_area_frame_is_not_captu
 TEST_F(DamageTrackerV1, when_scene_has_changed_since_first_frame_the_second_frame_is_captured_immediately)
 {
     geom::Rectangle const area{{}, {20, 30}};
-    capture_frame_with_area(area);
+    capture_frame(area, area.size);
 
     damage_whole_scene();
     executor.execute();
@@ -228,7 +316,7 @@ TEST_F(DamageTrackerV1, when_scene_has_changed_since_first_frame_the_second_fram
 TEST_F(DamageTrackerV1, when_area_has_been_damaged_since_first_frame_the_second_frame_is_captured_immediately)
 {
     geom::Rectangle const area{{}, {20, 30}};
-    capture_frame_with_area(area);
+    capture_frame(area, area.size);
 
     damage_area(area);
     executor.execute();
@@ -242,16 +330,16 @@ TEST_F(DamageTrackerV1, when_area_has_been_damaged_since_first_frame_the_second_
 TEST_F(DamageTrackerV1, when_second_frame_is_captured_immediately_the_third_frame_is_not_captured_until_there_is_damage)
 {
     geom::Rectangle const area{{}, {20, 30}};
-    capture_frame_with_area(area);
+    capture_frame(area, area.size);
 
     damage_whole_scene();
-    capture_frame_with_area(area);
+    capture_frame(area, area.size);
 
     StrictMock<MockFrame> frame{area};
     tracker.capture_on_damage(&frame);
     executor.execute();
 
-    EXPECT_CALL(frame, capture(Eq(std::nullopt)));
+    EXPECT_CALL(frame, capture(Eq(geom::Rectangle{{}, {20, 30}})));
     damage_whole_scene();
     executor.execute();
 }
@@ -259,14 +347,14 @@ TEST_F(DamageTrackerV1, when_second_frame_is_captured_immediately_the_third_fram
 TEST_F(DamageTrackerV1, captures_third_frame_immediately_after_getting_damage)
 {
     geom::Rectangle const area{{}, {20, 30}};
-    capture_frame_with_area(area);
+    capture_frame(area, area.size);
 
     damage_whole_scene();
-    capture_frame_with_area(area);
+    capture_frame(area, area.size);
     damage_whole_scene();
 
     StrictMock<MockFrame> frame{area};
-    EXPECT_CALL(frame, capture(Eq(std::nullopt)));
+    EXPECT_CALL(frame, capture(Eq(geom::Rectangle{{}, {20, 30}})));
     tracker.capture_on_damage(&frame);
     executor.execute();
 }
@@ -276,9 +364,9 @@ TEST_F(DamageTrackerV1, when_there_are_multiple_frames_and_only_one_is_damaged_t
     geom::Rectangle const area_a{{ 0, 0}, {20, 30}};
     geom::Rectangle const area_b{{25, 0}, {20, 30}};
     geom::Rectangle const area_c{{50, 0}, {20, 30}};
-    capture_frame_with_area(area_a);
-    capture_frame_with_area(area_b);
-    capture_frame_with_area(area_c);
+    capture_frame(area_a, area_a.size);
+    capture_frame(area_b, area_a.size);
+    capture_frame(area_c, area_a.size);
 
     StrictMock<MockFrame> frame_a{area_a};
     EXPECT_CALL(frame_a, capture(_)).Times(0);
@@ -334,7 +422,7 @@ TEST_F(DamageTrackerV1, creating_new_areas_does_not_result_in_pending_frames_bei
     for (int i = 0; i < 20; i++)
     {
         geom::Rectangle area{{i * 10, 0}, {5, 5}};
-        capture_frame_with_area(area);
+        capture_frame(area, area.size);
         frames.push_back(std::make_shared<StrictMock<MockFrame>>(area));
         EXPECT_CALL(*frames.back(), capture(_)).Times(0);
         tracker.capture_on_damage(frames.back().get());
@@ -344,7 +432,7 @@ TEST_F(DamageTrackerV1, creating_new_areas_does_not_result_in_pending_frames_bei
 TEST_F(DamageTrackerV1, when_additional_frame_is_queued_with_same_area_then_pending_frame_is_captured_immediately)
 {
     geom::Rectangle const area{{}, {20, 30}};
-    capture_frame_with_area(area);
+    capture_frame(area, area.size);
 
     StrictMock<MockFrame> frame_a{area};
     tracker.capture_on_damage(&frame_a);
@@ -359,7 +447,7 @@ TEST_F(DamageTrackerV1, when_additional_frame_is_queued_with_same_area_then_pend
 TEST_F(DamageTrackerV1, when_outputs_are_different_allows_multiple_pending_frames_with_the_same_area)
 {
     geom::Rectangle const area{{}, {20, 30}};
-    capture_frame_with_area(area);
+    capture_frame(area, area.size);
     wl_resource* output_a{reinterpret_cast<wl_resource*>(1)};
     wl_resource* output_b{reinterpret_cast<wl_resource*>(2)};
 
@@ -395,8 +483,8 @@ TEST_F(DamageTrackerV1, when_second_area_is_already_damaged_and_first_area_has_p
 {
     geom::Rectangle const area_a{{ 0, 0}, {20, 30}};
     geom::Rectangle const area_b{{25, 0}, {20, 30}};
-    capture_frame_with_area(area_a);
-    capture_frame_with_area(area_b);
+    capture_frame(area_a, area_a.size);
+    capture_frame(area_b, area_b.size);
 
     damage_area(area_b);
     executor.execute();
@@ -415,7 +503,7 @@ TEST_F(DamageTrackerV1, when_second_area_is_already_damaged_and_first_area_has_p
 TEST_F(DamageTrackerV1, when_partial_damage_is_followed_by_full_damage_frame_is_captured_with_full_damage)
 {
     geom::Rectangle const area{{}, {20, 30}};
-    capture_frame_with_area(area);
+    capture_frame(area, area.size);
 
     damage_area(area);
     executor.execute();
@@ -424,7 +512,7 @@ TEST_F(DamageTrackerV1, when_partial_damage_is_followed_by_full_damage_frame_is_
     executor.execute();
 
     StrictMock<MockFrame> frame{area};
-    EXPECT_CALL(frame, capture(Eq(std::nullopt)));
+    EXPECT_CALL(frame, capture(Eq(geom::Rectangle{{}, {20, 30}})));
     tracker.capture_on_damage(&frame);
     executor.execute();
 }
@@ -432,7 +520,7 @@ TEST_F(DamageTrackerV1, when_partial_damage_is_followed_by_full_damage_frame_is_
 TEST_F(DamageTrackerV1, when_full_damage_is_followed_by_partial_damage_frame_is_captured_with_full_damage)
 {
     geom::Rectangle const area{{}, {20, 30}};
-    capture_frame_with_area(area);
+    capture_frame(area, area.size);
 
     damage_whole_scene();
     executor.execute();
@@ -441,7 +529,7 @@ TEST_F(DamageTrackerV1, when_full_damage_is_followed_by_partial_damage_frame_is_
     executor.execute();
 
     StrictMock<MockFrame> frame{area};
-    EXPECT_CALL(frame, capture(Eq(std::nullopt)));
+    EXPECT_CALL(frame, capture(Eq(geom::Rectangle{{}, {20, 30}})));
     tracker.capture_on_damage(&frame);
     executor.execute();
 }
@@ -452,7 +540,7 @@ TEST_F(DamageTrackerV1, when_multiple_damages_happen_before_capture_frame_is_cap
     geom::Rectangle const damage_a{{0, 5}, {10, 6}};
     geom::Rectangle const damage_b{{5, 5}, {10, 8}};
     geom::Rectangle const damage_combined{{0, 5}, {15, 8}};
-    capture_frame_with_area(area);
+    capture_frame(area, area.size);
 
     damage_area(damage_a);
     executor.execute();
