@@ -20,12 +20,47 @@
 #include "x11_resources.h"
 
 #include <X11/Xlib-xcb.h>
+#include <boost/throw_exception.hpp>
 
 namespace mg=mir::graphics;
 namespace mx = mir::X;
 
 namespace
 {
+auto get_visual(xcb_screen_t* screen, xcb_visualid_t id) -> xcb_visualtype_t
+{
+    for (auto depth_iter = xcb_screen_allowed_depths_iterator(screen);
+             depth_iter.rem;
+             xcb_depth_next(&depth_iter))
+    {
+        for (auto visual_iter = xcb_depth_visuals_iterator(depth_iter.data);
+                visual_iter.rem;
+                xcb_visualtype_next(&visual_iter))
+        {
+            if (id == visual_iter.data->visual_id)
+            {
+                return *visual_iter.data;
+            }
+        }
+    }
+    BOOST_THROW_EXCEPTION(std::runtime_error{"Could not find visual with ID " + std::to_string(id)});
+}
+
+auto pixel_format_for_visual(xcb_visualtype_t const& visual) -> MirPixelFormat
+{
+    switch (visual.red_mask)
+    {
+    case 0xFF0000:
+        return mir_pixel_format_argb_8888;
+    case 0x0000FF:
+        return mir_pixel_format_abgr_8888;
+    }
+    BOOST_THROW_EXCEPTION(std::runtime_error{
+        "X11 visual has unknown pixel format. "
+        "bits_per_rgb_value: " + std::to_string(visual.bits_per_rgb_value) +
+        ", red_mask: " + std::to_string(visual.red_mask)});
+}
+
 class BasicXCBConnection : public mx::XCBConnection
 {
 public:
@@ -74,6 +109,12 @@ public:
     auto generate_id() const -> uint32_t override
     {
         return xcb_generate_id(conn);
+    }
+
+    auto default_pixel_format() const -> MirPixelFormat override
+    {
+        auto visual = get_visual(screen_, screen_->root_visual);
+        return pixel_format_for_visual(visual);
     }
 
     void create_window(

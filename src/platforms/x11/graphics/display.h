@@ -57,12 +57,10 @@ public:
     ~X11Window();
 
     operator xcb_window_t() const;
-    unsigned long red_mask() const;
 
 private:
     mir::X::X11Resources* const x11_resources;
     xcb_window_t win;
-    unsigned long r_mask;
 };
 
 class Display : public graphics::Display

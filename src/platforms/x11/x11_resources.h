@@ -18,6 +18,7 @@
 #define MIR_X11_RESOURCES_H_
 
 #include "mir/geometry/forward.h"
+#include "mir_toolkit/common.h"
 
 #include <xcb/xcb.h>
 #include <optional>
@@ -52,6 +53,7 @@ public:
     virtual auto intern_atom(std::string const& name) const -> xcb_atom_t = 0;
     virtual auto get_extension_data(xcb_extension_t *ext) const -> xcb_query_extension_reply_t const* = 0;
     virtual auto generate_id() const -> uint32_t = 0;
+    virtual auto default_pixel_format() const -> MirPixelFormat = 0;
     virtual void create_window(
         xcb_window_t window,
         int16_t x, int16_t y,
