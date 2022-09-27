@@ -34,7 +34,7 @@
 
 namespace
 {
-constexpr std::array const fatal_error_signals = {SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS };
+constexpr std::array const fatal_error_signals = {SIGABRT, SIGFPE, SIGSEGV, SIGBUS };
 
 std::weak_ptr<mir::EmergencyCleanup> weak_emergency_cleanup;
 
@@ -118,7 +118,7 @@ public:
     }
 
 private:
-    static constexpr std::array const intercepted = { SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS };
+    static constexpr std::array const intercepted = { SIGABRT, SIGFPE, SIGSEGV, SIGBUS };
     /* We *might* be able to get away with just a volatile array, but we *know* that atomic provides the necessary
      * guarantees
      */
@@ -220,11 +220,11 @@ void mir::run_mir(
     if ((sigaction(SIGHUP, nullptr, &old_action) == 0) && (old_action.sa_handler == SIG_IGN))
     {
         // If our parent process is ignoring SIGHUP (e.g. is nohup) then we do the same
-        main_loop->register_signal_handler({SIGINT, SIGTERM}, terminator);
+        main_loop->register_signal_handler({SIGINT, SIGTERM, SIGQUIT}, terminator);
     }
     else
     {
-        main_loop->register_signal_handler({SIGINT, SIGHUP, SIGTERM}, terminator);
+        main_loop->register_signal_handler({SIGINT, SIGHUP, SIGTERM, SIGQUIT}, terminator);
     }
 
     FatalErrorStrategy fatal_error_strategy{config.the_fatal_error_strategy()};
