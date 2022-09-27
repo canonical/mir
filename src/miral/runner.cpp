@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2018 Canonical Ltd.
+ * Copyright © 2016-2022 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "miral/fd_manager.h"
 #include "miral/runner.h"
 #include "join_client_threads.h"
 #include "launch_app.h"
@@ -46,7 +47,8 @@ inline auto filename(std::string path) -> std::string
 struct miral::MirRunner::Self
 {
     Self(int argc, char const* argv[], std::string const& config_file) :
-        argc(argc), argv(argv), config_file{config_file}, display_config_file{filename(argv[0])+ ".display"} {}
+        argc(argc), argv(argv), config_file{config_file}, display_config_file{filename(argv[0])+ ".display"},
+        fd_manager{FdManager{weak_server}} {}
 
     auto run_with(std::initializer_list<std::function<void(::mir::Server&)>> options) -> int;
 
@@ -60,9 +62,9 @@ struct miral::MirRunner::Self
     std::function<void()> stop_callback{[this]{ join_client_threads(weak_server.lock().get()); }};
     std::function<void()> exception_handler{static_cast<void(*)()>(mir::report_exception)};
     std::weak_ptr<mir::Server> weak_server;
+    miral::FdManager fd_manager;
     
     std::vector<SignalInfo> signal_backlog;
-    std::vector<FdInfo> fd_backlog;
 };
 
 miral::MirRunner::MirRunner(int argc, char const* argv[]) :
@@ -155,11 +157,7 @@ try
         main_loop->register_signal_handler(signal.signals, signal.handler);
     }
 
-    for (auto const& fd : fd_backlog)
-    {
-        auto const main_loop = server->the_main_loop();
-        main_loop->register_fd_handler({fd.fd}, fd.owner, fd.handler);
-    }
+    fd_manager.process_backlog();
 
     server->run();
 
@@ -217,60 +215,18 @@ void miral::MirRunner::register_signal_handler(
     }
 }
 
-struct miral::MirRunner::FdHandle
-{
-public:
-    FdHandle(MirRunner &runner)
-    : runner{runner}
-    {
-    }
-
-    ~FdHandle()
-    {
-        runner.unregister_fd_handler(this);
-    }
-
-private:
-    MirRunner &runner;
-};
-
 
 auto miral::MirRunner::register_fd_handler(mir::Fd fd, std::function<void(int)> const& handler)
--> std::unique_ptr<FdHandle>
+-> std::unique_ptr<miral::FdHandle>
 {
     std::lock_guard lock{self->mutex};
-
-    auto handle = std::make_unique<FdHandle>(*this);
-
-    if (auto const server = self->weak_server.lock())
-    {
-        auto const main_loop = server->the_main_loop();
-        main_loop->register_fd_handler({fd}, handle.get(), handler);
-    }
-    else
-    {
-        auto const fd_info = FdInfo{fd, handle.get(), handler};
-        self->fd_backlog.push_back(fd_info);
-    }
-
-    return handle;
+    return self->fd_manager.register_handler(fd, handler);
 }
 
 void miral::MirRunner::unregister_fd_handler(void const* owner)
 {
     std::lock_guard lock{self->mutex};
-
-    if (auto const server = self->weak_server.lock())
-    {
-        auto const main_loop = server->the_main_loop();
-        main_loop->unregister_fd_handler(owner);
-    }
-    else
-    {
-        // Remove all entries with same owner from backlog
-        auto& backlog = self->fd_backlog;
-        backlog.erase(remove_if(begin(backlog), end(backlog), [&](auto& info){ return info.owner == owner; }), end(backlog));
-    }
+    return self->fd_manager.unregister_handler(owner);
 }
 
 void miral::MirRunner::set_exception_handler(std::function<void()> const& handler)

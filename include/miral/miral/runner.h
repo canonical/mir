@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2019 Canonical Ltd.
+ * Copyright © 2016-2022 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -33,6 +33,7 @@ namespace mir { class Server; }
  */
 namespace miral
 {
+struct FdHandle;
 
 /// Runner for applying initialization options to Mir.
 class MirRunner
@@ -41,10 +42,6 @@ public:
     MirRunner(int argc, char const* argv[]);
     MirRunner(int argc, char const* argv[], char const* config_file);
     ~MirRunner();
-
-    /// A handle returned by register_fd_handler() which keeps a file descriptor open and
-    /// watched in the main loop until it is no longer held.
-    struct FdHandle;
 
     /// Add a callback to be invoked when the server has started,
     /// If multiple callbacks are added they will be invoked in the sequence added.
@@ -65,7 +62,7 @@ public:
     auto register_fd_handler(
         mir::Fd fd,
         std::function<void(int)> const& handler)
-    -> std::unique_ptr<MirRunner::FdHandle>;
+    -> std::unique_ptr<miral::FdHandle>;
 
     /// Set a handler for exceptions caught in run_with().
     /// run_with() invokes handler() in catch (...) blocks before returning EXIT_FAILURE.
@@ -113,13 +110,6 @@ private:
     {
         std::initializer_list<int> signals;
         std::function<void(int)> const& handler;
-    };
-
-    struct FdInfo
-    {
-        mir::Fd fd;
-        void* owner;
-        std::function<void(int)> handler;
     };
 
     void unregister_fd_handler(void const* owner);
