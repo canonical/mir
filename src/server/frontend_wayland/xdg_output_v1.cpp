@@ -62,11 +62,10 @@ public:
 
 private:
     auto output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool override;
-    void send_info(graphics::DisplayConfigurationOutput const& config, bool is_initializing);
 
     float const geometry_scale;
-    geometry::Point cached_position;
-    geometry::Size cached_size;
+    std::optional<geometry::Point> cached_position;
+    std::optional<geometry::Size> cached_size;
     wayland::Weak<OutputGlobal> const output_global;
 };
 
@@ -109,7 +108,14 @@ mf::XdgOutputV1::XdgOutputV1(
 {
     output_global.add_listener(this);
 
-    send_info(output_global.current_config(), true);
+    // Name may only be sent the first time
+    // TODO: Better output names that are consistant between sessions
+    auto output_name = "OUT-" + std::to_string(output_global.current_config().id.as_value());
+    send_name_event_if_supported(output_name);
+    // not sending description is allowed
+    // send_description_event_if_supported("TODO: set this");
+
+    output_config_changed(output_global.current_config());
 
     /* xdg-output-unstable-v1.xml:
      * For objects version 3 onwards, after all xdg_output properties have been
@@ -145,35 +151,19 @@ mf::XdgOutputV1::~XdgOutputV1()
 
 auto mf::XdgOutputV1::output_config_changed(mg::DisplayConfigurationOutput const& config) -> bool
 {
-    send_info(config, false);
-    return true;
-}
-
-void mf::XdgOutputV1::send_info(graphics::DisplayConfigurationOutput const& config, bool is_initializing)
-{
     auto extents = config.extents();
     geom::Point position = as_point(as_displacement(extents.top_left) * geometry_scale);
     geom::Size size = extents.size * geometry_scale;
-    if (is_initializing || position != cached_position)
+    if (position != cached_position)
     {
         send_logical_position_event(position.x.as_value(), position.y.as_value());
     }
-    if (is_initializing || size != cached_size)
+    if (size != cached_size)
     {
         send_logical_size_event(size.width.as_value(), size.height.as_value());
     }
     cached_position = position;
     cached_size = size;
-
-    // Name may only be sent the first time
-    if (is_initializing)
-    {
-        // TODO: Better output names that are consistant between sessions
-        auto output_name = "OUT-" + std::to_string(config.id.as_value());
-        send_name_event_if_supported(output_name);
-        // not sending description is allowed
-        // send_description_event_if_supported("TODO: set this");
-    }
 
     /* xdg-output-unstable-v1.xml:
     * For objects version 3 onwards, this event is deprecated. Compositors
@@ -186,4 +176,6 @@ void mf::XdgOutputV1::send_info(graphics::DisplayConfigurationOutput const& conf
     }
 
     // wl_output.done is sent by the caller or once the output change we're responding to has completed
+
+    return true;
 }
