@@ -391,7 +391,7 @@ public:
 
             auto size() const -> mir::geometry::Size override
             {
-                return parent->ShmBuffer::size();
+                return parent->size();
             }
 
             auto data() -> T* override
@@ -463,7 +463,7 @@ public:
                 mir::geometry::Stride stride_;
             };
 
-            return std::make_unique<FallbackMapping>(pixel_format(), ShmBuffer::size(), stride_);
+            return std::make_unique<FallbackMapping>(pixel_format(), size(), stride_);
         }
     }
 
