@@ -53,6 +53,7 @@ public:
     glm::mat2 transformation() const override;
     NativeDisplayBuffer* native_display_buffer() override;
 
+    auto size() const -> geometry::Size override;
     void make_current() override;
     void release_current() override;
     void swap_buffers() override;
