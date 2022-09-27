@@ -65,6 +65,8 @@ private:
     void send_info(graphics::DisplayConfigurationOutput const& config, bool is_initializing);
 
     float const geometry_scale;
+    geometry::Point cached_position;
+    geometry::Size cached_size;
     wayland::Weak<OutputGlobal> const output_global;
 };
 
@@ -150,12 +152,18 @@ auto mf::XdgOutputV1::output_config_changed(mg::DisplayConfigurationOutput const
 void mf::XdgOutputV1::send_info(graphics::DisplayConfigurationOutput const& config, bool is_initializing)
 {
     auto extents = config.extents();
-    send_logical_position_event(
-        extents.top_left.x.as_int() * geometry_scale,
-        extents.top_left.y.as_int() * geometry_scale);
-    send_logical_size_event(
-        extents.size.width.as_int() * geometry_scale,
-        extents.size.height.as_int() * geometry_scale);
+    geom::Point position = as_point(as_displacement(extents.top_left) * geometry_scale);
+    geom::Size size = extents.size * geometry_scale;
+    if (is_initializing || position != cached_position)
+    {
+        send_logical_position_event(position.x.as_value(), position.y.as_value());
+    }
+    if (is_initializing || size != cached_size)
+    {
+        send_logical_size_event(size.width.as_value(), size.height.as_value());
+    }
+    cached_position = position;
+    cached_size = size;
 
     // Name may only be sent the first time
     if (is_initializing)
