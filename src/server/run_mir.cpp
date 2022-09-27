@@ -160,11 +160,7 @@ extern "C" [[noreturn]] void fatal_signal_cleanup(int sig, siginfo_t* info, void
          */
         constexpr char const* warning = "!!! Fatal signal received. Attempting cleanup, but deadlock may occur\n";
         constexpr size_t len = std::char_traits<char>::length(warning);
-        // We cannot possibly do anything sensible if this write fails, so ignore the return value.
-        // Note: static_cast<void>() is *not* sufficient to silence this warning on all compilers,
-        // nor is (void) without storing it in a variable.
-        int n = write(STDERR_FILENO, warning, len);
-        (void)(n);
+        [[maybe_unused]]auto n = write(STDERR_FILENO, warning, len);
     }
     perform_emergency_cleanup();
 
