@@ -62,6 +62,7 @@ public:
 
 private:
     auto output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool override;
+    void send_info(graphics::DisplayConfigurationOutput const& config, bool is_initializing);
 
     float const geometry_scale;
     wayland::Weak<OutputGlobal> const output_global;
@@ -106,7 +107,7 @@ mf::XdgOutputV1::XdgOutputV1(
 {
     output_global.add_listener(this);
 
-    output_config_changed(output_global.current_config());
+    send_info(output_global.current_config(), true);
 
     /* xdg-output-unstable-v1.xml:
      * For objects version 3 onwards, after all xdg_output properties have been
@@ -142,6 +143,12 @@ mf::XdgOutputV1::~XdgOutputV1()
 
 auto mf::XdgOutputV1::output_config_changed(mg::DisplayConfigurationOutput const& config) -> bool
 {
+    send_info(config, false);
+    return true;
+}
+
+void mf::XdgOutputV1::send_info(graphics::DisplayConfigurationOutput const& config, bool is_initializing)
+{
     auto extents = config.extents();
     send_logical_position_event(
         extents.top_left.x.as_int() * geometry_scale,
@@ -149,11 +156,16 @@ auto mf::XdgOutputV1::output_config_changed(mg::DisplayConfigurationOutput const
     send_logical_size_event(
         extents.size.width.as_int() * geometry_scale,
         extents.size.height.as_int() * geometry_scale);
-    // TODO: Better output names that are consistant between sessions
-    auto output_name = "OUT-" + std::to_string(config.id.as_value());
-    send_name_event_if_supported(output_name);
-    // not sending description is allowed
-    // send_description_event_if_supported("TODO: set this");
+
+    // Name may only be sent the first time
+    if (is_initializing)
+    {
+        // TODO: Better output names that are consistant between sessions
+        auto output_name = "OUT-" + std::to_string(config.id.as_value());
+        send_name_event_if_supported(output_name);
+        // not sending description is allowed
+        // send_description_event_if_supported("TODO: set this");
+    }
 
     /* xdg-output-unstable-v1.xml:
     * For objects version 3 onwards, this event is deprecated. Compositors
@@ -165,5 +177,5 @@ auto mf::XdgOutputV1::output_config_changed(mg::DisplayConfigurationOutput const
         send_done_event();
     }
 
-    return true;
+    // wl_output.done is sent by the caller or once the output change we're responding to has completed
 }
