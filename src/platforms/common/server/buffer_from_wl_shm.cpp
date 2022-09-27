@@ -84,10 +84,14 @@ public:
  
     ~ShmBufferSIGBUSHandler()
     {
-        if (previous_handler.load())
+        /* We're going to free previous_handler, so in order for it to be safe
+         * to instantiate a ShmBufferSIGBUSHandler, free it, and instantiate a
+         * new one we need to ensure previous_handler is nulled by this destructor.
+         */
+        if (auto last_handler = previous_handler.exchange(nullptr))
         {
-            sigaction(SIGBUS, previous_handler.load(), nullptr);
-            delete previous_handler;
+            sigaction(SIGBUS, last_handler, nullptr);
+            delete last_handler;
         }
     }
  
