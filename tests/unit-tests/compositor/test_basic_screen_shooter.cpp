@@ -130,7 +130,6 @@ TEST_F(BasicScreenShooter, sets_viewport_correctly_before_render)
             callback.Call(time);
         });
     Sequence a, b;
-    EXPECT_CALL(renderer, set_output_transform(Eq(glm::mat2{1}))).InSequence(a);
     EXPECT_CALL(renderer, set_viewport(Eq(viewport_rect))).InSequence(b);
     EXPECT_CALL(renderer, render(_)).InSequence(a, b);
     EXPECT_CALL(callback, Call(std::make_optional(clock.now()))).InSequence(a, b);
