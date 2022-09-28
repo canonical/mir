@@ -992,12 +992,6 @@ void mf::XWaylandSurface::inform_client_of_window_state(
     {
         std::lock_guard lock{mutex};
 
-        if ((!new_window_state && cached.withdrawn) ||
-            (new_window_state && !cached.withdrawn && *new_window_state == cached.state))
-        {
-            return;
-        }
-
         if (new_window_state)
         {
             if (!cached.withdrawn && *new_window_state == cached.state)
