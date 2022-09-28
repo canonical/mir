@@ -64,6 +64,8 @@ private:
     auto output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool override;
 
     float const geometry_scale;
+    std::optional<geometry::Point> cached_position;
+    std::optional<geometry::Size> cached_size;
     wayland::Weak<OutputGlobal> const output_global;
 };
 
@@ -106,6 +108,13 @@ mf::XdgOutputV1::XdgOutputV1(
 {
     output_global.add_listener(this);
 
+    // Name may only be sent the first time
+    // TODO: Better output names that are consistant between sessions
+    auto output_name = "OUT-" + std::to_string(output_global.current_config().id.as_value());
+    send_name_event_if_supported(output_name);
+    // not sending description is allowed
+    // send_description_event_if_supported("TODO: set this");
+
     output_config_changed(output_global.current_config());
 
     /* xdg-output-unstable-v1.xml:
@@ -143,17 +152,18 @@ mf::XdgOutputV1::~XdgOutputV1()
 auto mf::XdgOutputV1::output_config_changed(mg::DisplayConfigurationOutput const& config) -> bool
 {
     auto extents = config.extents();
-    send_logical_position_event(
-        extents.top_left.x.as_int() * geometry_scale,
-        extents.top_left.y.as_int() * geometry_scale);
-    send_logical_size_event(
-        extents.size.width.as_int() * geometry_scale,
-        extents.size.height.as_int() * geometry_scale);
-    // TODO: Better output names that are consistant between sessions
-    auto output_name = "OUT-" + std::to_string(config.id.as_value());
-    send_name_event_if_supported(output_name);
-    // not sending description is allowed
-    // send_description_event_if_supported("TODO: set this");
+    geom::Point position = as_point(as_displacement(extents.top_left) * geometry_scale);
+    geom::Size size = extents.size * geometry_scale;
+    if (position != cached_position)
+    {
+        send_logical_position_event(position.x.as_value(), position.y.as_value());
+    }
+    if (size != cached_size)
+    {
+        send_logical_size_event(size.width.as_value(), size.height.as_value());
+    }
+    cached_position = position;
+    cached_size = size;
 
     /* xdg-output-unstable-v1.xml:
     * For objects version 3 onwards, this event is deprecated. Compositors
@@ -164,6 +174,8 @@ auto mf::XdgOutputV1::output_config_changed(mg::DisplayConfigurationOutput const
     {
         send_done_event();
     }
+
+    // wl_output.done is sent by the caller or once the output change we're responding to has completed
 
     return true;
 }
