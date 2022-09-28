@@ -47,8 +47,7 @@ inline auto filename(std::string path) -> std::string
 struct miral::MirRunner::Self
 {
     Self(int argc, char const* argv[], std::string const& config_file) :
-        argc(argc), argv(argv), config_file{config_file}, display_config_file{filename(argv[0])+ ".display"},
-        fd_manager{FdManager{weak_server}} {}
+        argc(argc), argv(argv), config_file{config_file}, display_config_file{filename(argv[0])+ ".display"} {}
 
     auto run_with(std::initializer_list<std::function<void(::mir::Server&)>> options) -> int;
 
@@ -146,6 +145,8 @@ try
         server->apply_settings();
         apply_env_hacks(*server);
 
+        fd_manager.set_weak_main_loop(server->the_main_loop());
+        
         weak_server = server;
     }
 

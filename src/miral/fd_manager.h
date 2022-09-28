@@ -24,7 +24,7 @@
 #include <vector>
 #include <functional>
 
-namespace mir { class Server; }
+namespace mir { class MainLoop; }
 
 namespace miral
 {
@@ -36,7 +36,7 @@ struct FdInfo;
 class FdManager : std::enable_shared_from_this<FdManager>
 {
 public:
-    FdManager(std::weak_ptr<mir::Server> weak_server);
+    FdManager();
     ~FdManager();
 
     auto register_handler(mir::Fd fd, std::function<void(int)> const& handler)
@@ -46,8 +46,10 @@ public:
 
     void process_backlog();
 
+    void set_weak_main_loop(std::weak_ptr<mir::MainLoop> weak_main_loop) { this->weak_main_loop = weak_main_loop; }
+
 private:
-    std::weak_ptr<mir::Server> weak_server;
+    std::weak_ptr<mir::MainLoop> weak_main_loop;
 
     // Backlog of FdInfo used to register all handlers 
     // sent to register_handler() before the Server started

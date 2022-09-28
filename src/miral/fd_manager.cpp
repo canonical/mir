@@ -16,14 +16,12 @@
 
 #include "fd_manager.h"
 #include "mir/main_loop.h"
-#include "mir/server.h"
 
 #include <boost/throw_exception.hpp>
 
 using namespace miral;
 
-FdManager::FdManager(std::weak_ptr<mir::Server> weak_server)
-: weak_server{weak_server}
+FdManager::FdManager()
 {
 }
 
@@ -36,9 +34,8 @@ auto FdManager::register_handler(mir::Fd fd, std::function<void(int)> const& han
 {
     auto handle = std::make_unique<FdHandle>(shared_from_this(), fd, handler);
 
-    if (auto const server = weak_server.lock().get())
+    if (auto const main_loop = weak_main_loop.lock().get())
     {
-        auto const main_loop = server->the_main_loop().get();
         main_loop->register_fd_handler({fd}, &handle, handler);
     }
     else
@@ -52,9 +49,8 @@ auto FdManager::register_handler(mir::Fd fd, std::function<void(int)> const& han
 
 void FdManager::unregister_handler(void const* owner)
 {
-    if (auto const server = weak_server.lock().get())
+    if (auto const main_loop = weak_main_loop.lock().get())
     {
-        auto const main_loop = server->the_main_loop().get();
         main_loop->unregister_fd_handler(owner);
     }
     else
@@ -66,10 +62,8 @@ void FdManager::unregister_handler(void const* owner)
 
 void FdManager::process_backlog()
 {
-    if (auto const server = weak_server.lock().get())
-    {
-        auto const main_loop = server->the_main_loop().get();
-        
+    if (auto const main_loop = weak_main_loop.lock().get())
+    {   
         for (auto const& handle : backlog)
         {
             main_loop->register_fd_handler({handle.fd}, handle.owner, handle.handler);
