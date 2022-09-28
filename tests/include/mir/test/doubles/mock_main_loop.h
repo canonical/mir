@@ -55,6 +55,7 @@ public:
     MOCK_METHOD1(unregister_fd_handler, void(void const*));
 
     MOCK_METHOD2(enqueue, void(void const*, ServerAction const&));
+    MOCK_METHOD(void, enqueue_with_guaranteed_execution, (ServerAction const&));
     MOCK_METHOD1(pause_processing_for,void (void const*));
     MOCK_METHOD1(resume_processing_for,void (void const*));
 
