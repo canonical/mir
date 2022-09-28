@@ -61,7 +61,7 @@ struct miral::MirRunner::Self
     std::function<void()> stop_callback{[this]{ join_client_threads(weak_server.lock().get()); }};
     std::function<void()> exception_handler{static_cast<void(*)()>(mir::report_exception)};
     std::weak_ptr<mir::Server> weak_server;
-    miral::FdManager fd_manager;
+    std::shared_ptr<miral::FdManager> fd_manager = std::make_shared<miral::FdManager>();
 
     struct SignalInfo
     {
@@ -145,7 +145,7 @@ try
         server->apply_settings();
         apply_env_hacks(*server);
 
-        fd_manager.set_weak_main_loop(server->the_main_loop());
+        fd_manager->set_weak_main_loop(server->the_main_loop());
         
         weak_server = server;
     }
@@ -164,7 +164,7 @@ try
         main_loop->register_signal_handler(signal.signals, signal.handler);
     }
 
-    fd_manager.process_backlog();
+    fd_manager->process_backlog();
 
     server->run();
 
@@ -226,7 +226,7 @@ auto miral::MirRunner::register_fd_handler(mir::Fd fd, std::function<void(int)> 
 -> std::unique_ptr<miral::FdHandle>
 {
     std::lock_guard lock{self->mutex};
-    return self->fd_manager.register_handler(fd, handler);
+    return self->fd_manager->register_handler(fd, handler);
 }
 
 void miral::MirRunner::set_exception_handler(std::function<void()> const& handler)

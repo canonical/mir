@@ -33,7 +33,7 @@ struct FdInfo;
 
 /// Used to create FdHandles which registers file descriptors onto the Server
 /// and automatically deregisters them once the handle is dropped
-class FdManager : std::enable_shared_from_this<FdManager>
+class FdManager : public std::enable_shared_from_this<FdManager>
 {
 public:
     FdManager();
