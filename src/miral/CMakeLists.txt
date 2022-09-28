@@ -16,6 +16,7 @@ add_library(miral-internal STATIC
     application_info_internal.cpp       application_info_internal.h
     basic_window_manager.cpp            basic_window_manager.h window_manager_tools_implementation.h
     display_configuration_listeners.cpp display_configuration_listeners.h
+    fd_manager.cpp                      fd_manager.h
     launch_app.cpp                      launch_app.h
     mru_window_list.cpp                 mru_window_list.h
     open_desktop_entry.cpp              open_desktop_entry.h
@@ -53,7 +54,6 @@ add_library(miral SHARED
     cursor_theme.cpp                    ${miral_include}/miral/cursor_theme.h
     display_configuration.cpp           ${miral_include}/miral/display_configuration.h
     external_client.cpp                 ${miral_include}/miral/external_client.h
-    fd_manager.cpp                      ${miral_include}/miral/fd_manager.h
     keymap.cpp                          ${miral_include}/miral/keymap.h
     minimal_window_manager.cpp          ${miral_include}/miral/minimal_window_manager.h
     runner.cpp                          ${miral_include}/miral/runner.h

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/fd_manager.h"
+#include "fd_manager.h"
 #include "mir/main_loop.h"
 #include "mir/server.h"
 

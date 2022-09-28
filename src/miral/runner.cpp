@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/fd_manager.h"
 #include "miral/runner.h"
+#include "fd_manager.h"
 #include "join_client_threads.h"
 #include "launch_app.h"
 
