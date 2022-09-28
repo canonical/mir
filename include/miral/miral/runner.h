@@ -105,12 +105,6 @@ private:
     MirRunner& operator=(MirRunner const&) = delete;
     struct Self;
     std::unique_ptr<Self> const self;
-
-    struct SignalInfo
-    {
-        std::initializer_list<int> signals;
-        std::function<void(int)> const& handler;
-    };
 };
 }
 

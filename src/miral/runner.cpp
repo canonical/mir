@@ -63,6 +63,12 @@ struct miral::MirRunner::Self
     std::function<void()> exception_handler{static_cast<void(*)()>(mir::report_exception)};
     std::weak_ptr<mir::Server> weak_server;
     miral::FdManager fd_manager;
+
+    struct SignalInfo
+    {
+        std::initializer_list<int> signals;
+        std::function<void(int)> const& handler;
+    };
     
     std::vector<SignalInfo> signal_backlog;
 };
@@ -210,7 +216,7 @@ void miral::MirRunner::register_signal_handler(
     }
     else
     {
-        auto const signal_info = SignalInfo{signals, handler};
+        auto const signal_info = Self::SignalInfo{signals, handler};
         self->signal_backlog.push_back(signal_info);
     }
 }
