@@ -138,6 +138,7 @@ private:
     auto plausible_parent(ProofOfMutexLock const&) -> std::shared_ptr<scene::Surface>;
     /// Applies cached.transient_for and cached.type to the spec
     void apply_cached_transient_for_and_type(ProofOfMutexLock const& lock);
+    void wm_hints(std::vector<int32_t> const& hints);
     void wm_size_hints(std::vector<int32_t> const& hints);
     void motif_wm_hints(std::vector<uint32_t> const& hints);
 
@@ -165,6 +166,9 @@ private:
 
         /// If the window is withdrawn. Should only be modified by inform_client_of_window_state().
         bool withdrawn{true};
+
+        /// If this window needs the server to give it input focus
+        bool input_hint{true};
 
         bool override_redirect;
 
