@@ -34,6 +34,7 @@ public:
     using StubDisplayBuffer::StubDisplayBuffer;
     StubGLDisplayBuffer(StubGLDisplayBuffer const& s) : StubDisplayBuffer(s) {}
 
+    auto size() const -> geometry::Size override { return {}; }
     void make_current() override {}
     void release_current() override {}
     void swap_buffers() override {}

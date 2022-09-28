@@ -37,6 +37,7 @@
 
 namespace mg = mir::graphics;
 namespace mgc = mir::graphics::common;
+namespace geom = mir::geometry;
 
 namespace mir
 {
@@ -465,6 +466,10 @@ public:
             return std::make_unique<FallbackMapping>(pixel_format(), size(), stride_);
         }
     }
+
+    auto format() const -> MirPixelFormat override { return ShmBuffer::pixel_format(); }
+    auto stride() const -> geom::Stride override { return stride_; }
+    auto size() const -> geom::Size override { return ShmBuffer::size(); }
 
 private:
     void notify_consumed()

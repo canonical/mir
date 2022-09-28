@@ -30,12 +30,14 @@ mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
                                   DisplayConfigurationOutputId output_id,
                                   xcb_window_t win,
                                   geometry::Rectangle const& view_area,
+                                  geometry::Size const& window_size,
                                   EGLContext const shared_context,
                                   std::shared_ptr<AtomicFrame> const& f,
                                   std::shared_ptr<DisplayReport> const& r,
                                   GLConfig const& gl_config)
                                   : report{r},
                                     area{view_area},
+                                    window_size{window_size},
                                     transform(1),
                                     egl{gl_config, x_dpy, win, shared_context},
                                     last_frame{f},
@@ -82,6 +84,11 @@ mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
 geom::Rectangle mgx::DisplayBuffer::view_area() const
 {
     return area;
+}
+
+auto mgx::DisplayBuffer::size() const -> geom::Size
+{
+    return window_size;
 }
 
 void mgx::DisplayBuffer::make_current()
@@ -150,6 +157,11 @@ glm::mat2 mgx::DisplayBuffer::transformation() const
 void mgx::DisplayBuffer::set_view_area(geom::Rectangle const& a)
 {
     area = a;
+}
+
+void mgx::DisplayBuffer::set_size(geom::Size const& size)
+{
+    window_size = size;
 }
 
 void mgx::DisplayBuffer::set_transformation(glm::mat2 const& t)

@@ -324,6 +324,11 @@ mg::NativeDisplayBuffer* mg::rpi::DisplayBuffer::native_display_buffer()
     return this;
 }
 
+auto mg::rpi::DisplayBuffer::size() const -> geometry::Size
+{
+    return view.size;
+}
+
 void mg::rpi::DisplayBuffer::make_current()
 {
     if (eglMakeCurrent(dpy, surface, surface, ctx) != EGL_TRUE)

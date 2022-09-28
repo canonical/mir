@@ -126,6 +126,10 @@ public:
 
     virtual MirPixelFormat pixel_format() const override { return buf_pixel_format; }
 
+    auto format() const -> MirPixelFormat override { return buf_pixel_format; }
+
+    auto stride() const -> geometry::Stride override { return buf_stride; }
+
     template<typename T>
     class Mapping : public mir::renderer::software::Mapping<T>
     {

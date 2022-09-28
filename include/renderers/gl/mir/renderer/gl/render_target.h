@@ -17,6 +17,8 @@
 #ifndef MIR_RENDERER_GL_RENDER_TARGET_H_
 #define MIR_RENDERER_GL_RENDER_TARGET_H_
 
+#include <mir/geometry/forward.h>
+
 namespace mir
 {
 namespace renderer
@@ -29,6 +31,8 @@ class RenderTarget
 public:
     virtual ~RenderTarget() = default;
 
+    /** Returns the current size in pixels of the render target */
+    virtual auto size() const -> geometry::Size = 0;
     /** Makes GL render target current to calling thread */
     virtual void make_current() = 0;
     /** Releases the current GL render target. */
