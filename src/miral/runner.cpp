@@ -215,18 +215,11 @@ void miral::MirRunner::register_signal_handler(
     }
 }
 
-
 auto miral::MirRunner::register_fd_handler(mir::Fd fd, std::function<void(int)> const& handler)
 -> std::unique_ptr<miral::FdHandle>
 {
     std::lock_guard lock{self->mutex};
     return self->fd_manager.register_handler(fd, handler);
-}
-
-void miral::MirRunner::unregister_fd_handler(void const* owner)
-{
-    std::lock_guard lock{self->mutex};
-    return self->fd_manager.unregister_handler(owner);
 }
 
 void miral::MirRunner::set_exception_handler(std::function<void()> const& handler)

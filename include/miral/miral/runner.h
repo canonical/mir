@@ -111,8 +111,6 @@ private:
         std::initializer_list<int> signals;
         std::function<void(int)> const& handler;
     };
-
-    void unregister_fd_handler(void const* owner);
 };
 }
 
