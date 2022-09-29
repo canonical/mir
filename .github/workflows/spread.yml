@@ -94,13 +94,13 @@ jobs:
         echo "::set-output name=merge-base::$( git merge-base origin/main ${{ github.sha }} )"
 
     - name: CCache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         key: ccache-${{ matrix.spread-task }}-${{ steps.setup-ccache.outputs.merge-base }}
         # if exact match isn't found, use the most recent entry for the task
         restore-keys: |
           ccache-${{ matrix.spread-task }}-
-        path: ${{ env.CCACHE_DIR }}/**
+        path: ${{ env.CCACHE_DIR }}
 
     - name: Run Spread task
       run: snap run spread -v ${{ matrix.spread-task }}
