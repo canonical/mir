@@ -56,12 +56,20 @@ class WlrScreencopyV1DamageTracker : public wayland::LifetimeTracker
 public:
     struct FrameParams
     {
-        geometry::Rectangle area;
         wl_resource* output;
+        geometry::Rectangle output_space_area;
+        geometry::Size buffer_size;
 
         auto operator==(FrameParams const& other) const -> bool
         {
-            return area == other.area && output == other.output;
+            return output == other.output &&
+                   output_space_area == other.output_space_area &&
+                   buffer_size == other.buffer_size;
+        }
+
+        auto full_buffer_space_damage() const -> geometry::Rectangle
+        {
+            return {{}, buffer_size};
         }
     };
 
@@ -71,7 +79,7 @@ public:
         virtual ~Frame() = default;
         virtual auto destroyed_flag() const -> std::shared_ptr<bool const> = 0;
         virtual auto parameters() const -> FrameParams const& = 0;
-        virtual void capture(std::optional<geometry::Rectangle> const& damage) = 0;
+        virtual void capture(geometry::Rectangle buffer_space_damage) = 0;
     };
 
     WlrScreencopyV1DamageTracker(Executor& wayland_executor, SurfaceStack& surface_stack);

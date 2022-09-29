@@ -37,9 +37,7 @@ namespace gl
 class BufferRenderTarget: public RenderTarget
 {
 public:
-    virtual void set_buffer(
-        std::shared_ptr<software::WriteMappableBuffer> const& buffer,
-        geometry::Size const& size) = 0;
+    virtual void set_buffer(std::shared_ptr<software::WriteMappableBuffer> const& buffer) = 0;
 };
 
 }

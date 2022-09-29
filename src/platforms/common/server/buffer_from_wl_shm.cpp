@@ -37,6 +37,7 @@
 
 namespace mg = mir::graphics;
 namespace mgc = mir::graphics::common;
+namespace geom = mir::geometry;
 
 namespace mir
 {
@@ -321,7 +322,7 @@ public:
             ShmBuffer::bind();
             {
                 std::lock_guard lock{upload_mutex};
-                auto const mapping = map_readable();
+                auto const mapping = map_generic<unsigned char const>();
                 upload_to_texture(mapping->data(), mapping->stride());
                 uploaded = true;
             }
@@ -344,16 +345,19 @@ public:
 
     auto map_readable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char const>> override
     {
+        notify_consumed();
         return map_generic<unsigned char const>();
     }
 
     auto map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>> override
     {
+        notify_consumed();
         return map_generic<unsigned char>();
     }
 
     auto map_rw() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>> override
     {
+        notify_consumed();
         return map_generic<unsigned char>();
     }
 
@@ -465,6 +469,10 @@ public:
             return std::make_unique<FallbackMapping>(pixel_format(), size(), stride_);
         }
     }
+
+    auto format() const -> MirPixelFormat override { return ShmBuffer::pixel_format(); }
+    auto stride() const -> geom::Stride override { return stride_; }
+    auto size() const -> geom::Size override { return ShmBuffer::size(); }
 
 private:
     void notify_consumed()

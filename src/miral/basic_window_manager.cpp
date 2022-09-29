@@ -2550,28 +2550,31 @@ auto miral::BasicWindowManager::apply_exclusive_rect_to_application_zone(
     return zone;
 }
 
-auto miral::BasicWindowManager::add_output_to_display_areas(Locker const&, Output const& output)
+void miral::BasicWindowManager::add_output_to_display_areas(Locker const&, Output const& output)
 {
-    std::shared_ptr<DisplayArea> existing_area;
+    auto matching_area = display_areas.end();
 
-    if (output.logical_group_id())
+    if (auto const group_id = output.logical_group_id())
     {
-        auto const area_iter = std::find_if(display_areas.begin(), display_areas.end(), [&](auto const& area)
+        matching_area = std::find_if(display_areas.begin(), display_areas.end(), [&](auto const& area)
             {
-                return (
-                    area->logical_output_group_id &&
-                    area->logical_output_group_id.value() == output.logical_group_id());
+                return area->logical_output_group_id && area->logical_output_group_id == group_id;
             });
-        if (area_iter != display_areas.end())
-        {
-            existing_area = *area_iter;
-        }
+    }
+    else
+    {
+        auto const output_id = output.id();
+        matching_area = std::find_if(display_areas.begin(), display_areas.end(), [&](auto const& area)
+            {
+                return area->output_id && area->output_id == output_id;
+            });
     }
 
-    if (existing_area)
+    if (matching_area != display_areas.end())
     {
-        existing_area->contained_outputs.push_back(output);
-        existing_area->area = existing_area->bounding_rectangle_of_contained_outputs();
+        auto const area = matching_area->get();
+        area->contained_outputs.push_back(output);
+        area->area = area->bounding_rectangle_of_contained_outputs();
     }
     else
     {
@@ -2580,11 +2583,15 @@ auto miral::BasicWindowManager::add_output_to_display_areas(Locker const&, Outpu
         {
             new_area->logical_output_group_id = output.logical_group_id();
         }
+        else
+        {
+            new_area->output_id = output.id();
+        }
         display_areas.push_back(new_area);
     }
 }
 
-auto miral::BasicWindowManager::remove_output_from_display_areas(Locker const&, Output const& output)
+void miral::BasicWindowManager::remove_output_from_display_areas(Locker const&, Output const& output)
 {
     // Remove the output from all areas that contain it
     for (auto const& area : display_areas)
@@ -2685,6 +2692,12 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
         {
             return area->is_alive();
         });
+
+    // If no display areas remain, do nothing until a new output appears
+    if (split == display_areas.begin())
+    {
+        return;
+    }
 
     // Move areas after the split into a new vector
     std::vector<std::shared_ptr<DisplayArea>> removed_areas;

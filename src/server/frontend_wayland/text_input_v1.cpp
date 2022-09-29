@@ -260,6 +260,7 @@ TextInputV1::~TextInputV1()
 
     on_new_input_field = false;
     pending_state.reset();
+    ctx->text_input_hub->deactivate_handler(handler);
 }
 
 void TextInputV1::send_text_change(ms::TextInputChange const& change)

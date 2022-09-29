@@ -348,8 +348,10 @@ if (MIR_ENABLE_TESTS)
     COMMAND /bin/sh -c "! grep -rl --exclude-dir=protocol --exclude=org_kde* 'GNU Lesser' ${PROJECT_SOURCE_DIR}/src/server ${PROJECT_SOURCE_DIR}/include/server ${PROJECT_SOURCE_DIR}/src/include/server ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/examples"
   )
 
-  mir_add_test(NAME package-abis
-    COMMAND /bin/sh -c "cd ${PROJECT_SOURCE_DIR} && tools/update_package_abis.sh --check --verbose")
+  if (IS_DIRECTORY "${PROJECT_SOURCE_DIR}/debian")
+    mir_add_test(NAME package-abis
+      COMMAND /bin/sh -c "cd ${PROJECT_SOURCE_DIR} && tools/update_package_abis.sh --check --verbose")
+  endif ()
 endif ()
 
 enable_coverage_report(mirserver)

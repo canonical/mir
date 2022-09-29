@@ -31,10 +31,11 @@ class MockGLDisplayBuffer : public MockDisplayBuffer,
                             public renderer::gl::RenderTarget
 {
 public:
-    MOCK_METHOD0(make_current, void());
-    MOCK_METHOD0(release_current, void());
-    MOCK_METHOD0(swap_buffers, void());
-    MOCK_METHOD0(bind, void());
+    MOCK_METHOD(geometry::Size, size, (), (const, override));
+    MOCK_METHOD(void, make_current, (), (override));
+    MOCK_METHOD(void, release_current, (), (override));
+    MOCK_METHOD(void, swap_buffers, (), (override));
+    MOCK_METHOD(void, bind, (), (override));
 };
 
 }

@@ -59,10 +59,9 @@ auto mc::BasicScreenShooter::Self::render(
     scene_elements.clear();
 
     render_target->make_current();
-    render_target->set_buffer(buffer, area.size);
+    render_target->set_buffer(buffer);
 
     render_target->bind();
-    renderer->set_output_transform(glm::mat2{1});
     renderer->set_viewport(area);
     renderer->render(renderable_list);
 

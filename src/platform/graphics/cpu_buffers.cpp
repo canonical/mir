@@ -118,6 +118,10 @@ auto mrs::as_read_mappable_buffer(
                     &noop>>(buffer);
         }
 
+        auto format() const -> MirPixelFormat override { return buffer->format(); }
+        auto stride() const -> geometry::Stride override { return buffer->stride(); }
+        auto size() const -> geometry::Size override { return buffer->size(); }
+
     private:
         std::shared_ptr<ReadTransferableBuffer> const buffer;
 
@@ -158,6 +162,10 @@ auto as_write_mappable_buffer(
                     &noop,
                     &write_to_buffer>>(buffer);
         }
+
+        auto format() const -> MirPixelFormat override { return buffer->format(); }
+        auto stride() const -> geom::Stride override { return buffer->stride(); }
+        auto size() const -> geom::Size override { return buffer->size(); }
 
     private:
         std::shared_ptr<mrs::WriteTransferableBuffer> const buffer;

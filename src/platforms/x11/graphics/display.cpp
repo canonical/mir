@@ -135,11 +135,6 @@ mgx::X11Window::operator xcb_window_t() const
     return win;
 }
 
-unsigned long mgx::X11Window::red_mask() const
-{
-    return r_mask;
-}
-
 mgx::Display::Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources,
                       std::string const title,
                       std::vector<X11OutputConfig> const& requested_sizes,
@@ -164,10 +159,7 @@ mgx::Display::Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources
             shared_egl.display(),
             actual_size,
             shared_egl.config());
-        auto red_mask = window->red_mask();
-        auto pf = (red_mask == 0xFF0000 ?
-            mir_pixel_format_argb_8888 :
-            mir_pixel_format_abgr_8888);
+        auto pf = x11_resources->conn->default_pixel_format();
         auto configuration = DisplayConfiguration::build_output(
             pf,
             actual_size,
@@ -182,6 +174,7 @@ mgx::Display::Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources
             configuration->id,
             *window,
             configuration->extents(),
+            actual_size,
             shared_egl.context(),
             last_frame,
             report,
@@ -342,7 +335,8 @@ void mgx::Display::OutputInfo::set_size(geometry::Size const& size)
         return;
     }
     config->modes[0].size = size;
-    display_buffer->set_view_area({display_buffer->view_area().top_left, size});
+    display_buffer->set_size(size);
+    display_buffer->set_view_area(config->extents());
     auto const handlers = owner->config_change_handlers;
 
     lock.unlock();

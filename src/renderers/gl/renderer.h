@@ -43,6 +43,7 @@ public:
     CurrentRenderTarget(RenderTarget& render_target);
     ~CurrentRenderTarget();
 
+    auto size() const -> geometry::Size;
     void ensure_current();
     void bind();
     void swap_buffers();

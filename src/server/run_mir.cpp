@@ -29,6 +29,7 @@
 #include <mutex>
 #include <csignal>
 #include <cassert>
+#include <unistd.h>
 #include <boost/throw_exception.hpp>
 
 namespace
@@ -145,6 +146,22 @@ auto signum_to_string(int sig) -> std::string
 
 extern "C" [[noreturn]] void fatal_signal_cleanup(int sig, siginfo_t* info, void* ucontext)
 {
+    {
+        /* Oh. Oh no.
+         *
+         * We've received a fatal signal. Time to crash!
+         *
+         * The rest of this handler consists almost entierly of *wildly* un-signal-safe
+         * calls, and since it calls code distributed throughout Mir it is unreasonable
+         * to try to make this signal-safe.
+         *
+         * Since we're crashing *anyway*, start with a log that *is* signal-safe, and
+         * then cross our fingers for the rest.
+         */
+        constexpr char const* warning = "!!! Fatal signal received. Attempting cleanup, but deadlock may occur\n";
+        constexpr size_t len = std::char_traits<char>::length(warning);
+        [[maybe_unused]]auto n = write(STDERR_FILENO, warning, len);
+    }
     perform_emergency_cleanup();
 
     auto const old_handler = old_handlers.at(sig);
