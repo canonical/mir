@@ -102,3 +102,40 @@ TEST(ShmBacking, can_get_rw_range_covering_whole_pool)
         EXPECT_THAT(mapping->data()[i], Eq(fill_value));
     }
 }
+
+TEST(ShmBacking, get_rw_range_checks_the_range_fits)
+{
+    using namespace testing;
+
+    constexpr size_t const shm_size = 4000;
+    auto shm_fd = make_shm_fd(shm_size);
+    auto backing = std::make_shared<mir::RWShmBacking>(shm_fd, shm_size);
+
+    // Check each range from [0, shm_size + 1] - [shm_size - 1, shm_size + 1]
+    for (auto i = 0u; i < shm_size - 1; ++i)
+    {
+        EXPECT_THROW(
+            mir::RWShmBacking::get_rw_range(backing, i, shm_size + 1 - i),
+            std::runtime_error
+        );
+    }
+}
+
+TEST(ShmBacking, get_rw_range_checks_handle_overflows)
+{
+    using namespace testing;
+
+    constexpr size_t const shm_size = 4000;
+    auto shm_fd = make_shm_fd(shm_size);
+    auto backing = std::make_shared<mir::RWShmBacking>(shm_fd, shm_size);
+
+    EXPECT_THROW(
+        mir::RWShmBacking::get_rw_range(backing, std::numeric_limits<size_t>::max() - 1, 2),
+        std::runtime_error
+    );
+
+    EXPECT_THROW(
+        mir::RWShmBacking::get_rw_range(backing, 2, std::numeric_limits<size_t>::max() - 1),
+        std::runtime_error
+    );
+}
