@@ -503,6 +503,11 @@ void mf::XWaylandSurface::close()
 
 void mf::XWaylandSurface::take_focus()
 {
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug("%s taking focus", connection->window_debug_string(window).c_str());
+    }
+
     bool supports_take_focus;
     {
         std::lock_guard lock{mutex};
