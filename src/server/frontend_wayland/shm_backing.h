@@ -51,7 +51,7 @@ public:
 private:
 
     void* mapped_address;
-    [[maybe_unused]]size_t size;
+    size_t size;
     bool size_is_trustworthy{false};
 };
 }
