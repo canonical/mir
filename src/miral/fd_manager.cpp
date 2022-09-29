@@ -74,7 +74,7 @@ void FdManager::process_backlog()
     else
     {
         // This should never be hit
-        BOOST_THROW_EXCEPTION(std::runtime_error{"File descriptor backlog processed before Server started"});
+        BOOST_THROW_EXCEPTION(std::runtime_error{"File descriptor backlog processed before MainLoop started"});
     }
 }
 
