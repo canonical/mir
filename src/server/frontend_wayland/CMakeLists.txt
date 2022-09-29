@@ -52,6 +52,8 @@ set(
   ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.c
   ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.h
   std_layout_uptr.h
+#  shm.cpp                       shm.h
+  shm_backing.cpp               shm_backing.h
 )
 
 add_custom_command(
