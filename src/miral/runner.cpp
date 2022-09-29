@@ -164,6 +164,7 @@ try
     {
         main_loop->register_signal_handler(signal.signals, signal.handler);
     }
+    signal_backlog.clear();
 
     server->run();
 
