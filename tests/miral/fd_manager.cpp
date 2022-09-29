@@ -25,19 +25,67 @@ using namespace testing;
 
 using namespace mir::test::doubles;
 
-TEST(MockMainLoop, dropping_fd_handle_before_server_started_removes_fd_from_backlog)
+TEST(MockMainLoop, dropping_fd_handle_after_main_loop_created_unregisters_handler)
 {
-    auto manager = std::make_shared<miral::FdManager>();
-    auto main_loop = std::make_shared<MockMainLoop>();
+    auto const manager = std::make_shared<miral::FdManager>();
+    auto const main_loop = std::make_shared<NiceMock<MockMainLoop>>();
 
-    main_loop->run();
-
+    // MirRunner::run_with() triggers the following
     manager->set_weak_main_loop(main_loop);
+    manager->process_backlog();
 
-    auto fd = mir::Fd{42};
+    auto const fd = mir::Fd{42};
 
     {
         auto handle = manager->register_handler(fd, [this](int) { std::function<void(int)>(); });
         EXPECT_CALL(*main_loop.get(), unregister_fd_handler(_));
     }
+}
+
+TEST(MockMainLoop, dropping_fd_handle_before_main_loop_created_does_not_register_handler)
+{
+    auto const manager = std::make_shared<miral::FdManager>();
+    auto const main_loop = std::make_shared<NiceMock<MockMainLoop>>();
+
+    auto const fd = mir::Fd{42};
+
+    {
+        EXPECT_CALL(*main_loop.get(), register_fd_handler(_, _, _))
+            .Times(0);
+        auto handle = manager->register_handler(fd, [this](int) { std::function<void(int)>(); });
+    }
+}
+
+TEST(MockMainLoop, register_handler_after_main_loop_created_registers_fd_handler)
+{
+    auto const manager = std::make_shared<miral::FdManager>();
+    auto const main_loop = std::make_shared<NiceMock<MockMainLoop>>();
+
+    // MirRunner::run_with() triggers the following
+    manager->set_weak_main_loop(main_loop);
+    manager->process_backlog();
+
+    auto const fd = mir::Fd{42};
+
+    EXPECT_CALL(*main_loop.get(), register_fd_handler(_, _, _));
+    auto handle = manager->register_handler(fd, [this](int) { std::function<void(int)>(); });
+}
+
+TEST(MockMainLoop, register_handler_before_main_loop_created_registers_fd_handler_after_main_loop_created)
+{
+    auto const manager = std::make_shared<miral::FdManager>();
+    auto const main_loop = std::make_shared<NiceMock<MockMainLoop>>();
+
+    auto const fd = mir::Fd{42};
+
+    EXPECT_CALL(*main_loop.get(), register_fd_handler(_, _, _))
+        .Times(0);
+    auto handle = manager->register_handler(fd, [this](int) { std::function<void(int)>(); });
+    
+    EXPECT_CALL(*main_loop.get(), register_fd_handler(_, _, _))
+        .Times(1);
+    
+    // MirRunner::run_with() triggers the following
+    manager->set_weak_main_loop(main_loop);
+    manager->process_backlog();
 }
