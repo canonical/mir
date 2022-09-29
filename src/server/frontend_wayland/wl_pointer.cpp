@@ -224,7 +224,7 @@ void mf::WlPointer::leave(std::optional<std::shared_ptr<MirPointerEvent const>> 
     if (!surface_under_cursor)
         return;
     surface_under_cursor.value().remove_destroy_listener(destroy_listener_id);
-    auto const serial = client.next_serial(event.value_or(nullptr));
+    auto const serial = client->next_serial(event.value_or(nullptr));
     send_leave_event(
         serial,
         surface_under_cursor.value().raw_resource());
@@ -247,7 +247,7 @@ void mf::WlPointer::buttons(std::shared_ptr<MirPointerEvent const> const& event)
         {
             bool const pressed = (mapping.first & event_buttons);
             auto const state = pressed ? ButtonState::pressed : ButtonState::released;
-            auto const serial = client.next_serial(event);;
+            auto const serial = client->next_serial(event);;
             send_button_event(serial, timestamp_of(event), mapping.second, state);
             needs_frame = true;
         }
@@ -339,7 +339,7 @@ void mf::WlPointer::enter_or_motion(std::shared_ptr<MirPointerEvent const> const
     {
         // We need to switch surfaces
         leave(event); // If we're currently on a surface, leave it
-        enter_serial = client.next_serial(event);
+        enter_serial = client->next_serial(event);
         cursor->apply_to(target_surface);
         send_enter_event(
             enter_serial.value(),

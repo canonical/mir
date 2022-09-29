@@ -66,7 +66,7 @@ public:
     WindowWlSurfaceRole(
         Executor& wayland_executor,
         WlSeat* seat,
-        wayland::Client& client,
+        wayland::Client* client,
         WlSurface* surface,
         std::shared_ptr<shell::Shell> const& shell,
         OutputManager* output_manager);
@@ -128,7 +128,7 @@ protected:
 
 private:
     wayland::Weak<WlSurface> const surface;
-    wayland::Client& client;
+    wayland::Client* const client;
     std::shared_ptr<shell::Shell> const shell;
     std::shared_ptr<scene::Session> const session;
     OutputManager* output_manager;

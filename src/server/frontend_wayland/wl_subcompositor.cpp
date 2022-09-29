@@ -200,7 +200,7 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
 
 void mf::WlSubsurface::surface_destroyed()
 {
-    if (!client.is_being_destroyed())
+    if (!client->is_being_destroyed())
     {
         // "When a client wants to destroy a wl_surface, they must destroy this 'role object' wl_surface"
         BOOST_THROW_EXCEPTION(std::runtime_error{

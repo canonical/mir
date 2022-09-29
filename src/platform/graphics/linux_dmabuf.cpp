@@ -628,10 +628,10 @@ private:
 
         try
         {
-            auto const buffer_resource = wl_resource_create(client.raw_client(), &wl_buffer_interface, 1, 0);
+            auto const buffer_resource = wl_resource_create(client->raw_client(), &wl_buffer_interface, 1, 0);
             if (!buffer_resource)
             {
-                wl_client_post_no_memory(client.raw_client());
+                wl_client_post_no_memory(client->raw_client());
                 return;
             }
 

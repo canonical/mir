@@ -44,7 +44,7 @@ public:
     virtual ~Resource();
 
     wl_resource* const resource;
-    Client& client;
+    Client* const client;
 };
 }
 }

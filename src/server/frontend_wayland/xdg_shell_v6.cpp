@@ -256,7 +256,7 @@ void mf::XdgSurfaceV6::ack_configure(uint32_t serial)
 
 void mf::XdgSurfaceV6::send_configure()
 {
-    auto const serial = client.next_serial(nullptr);
+    auto const serial = client->next_serial(nullptr);
     send_configure_event(serial);
 }
 

@@ -63,14 +63,14 @@ inline void clear_pending_if_unchanged(mir::optional_value<T>& pending, T& cache
 mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
     Executor& wayland_executor,
     WlSeat* seat,
-    mw::Client& client,
+    mw::Client* client,
     WlSurface* surface,
     std::shared_ptr<msh::Shell> const& shell,
     OutputManager* output_manager)
     : surface{surface},
       client{client},
       shell{shell},
-      session{client.client_session()},
+      session{client->client_session()},
       output_manager{output_manager},
       wayland_executor{wayland_executor},
       observer{std::make_shared<WaylandSurfaceObserver>(wayland_executor, seat, surface, this)},
@@ -408,7 +408,7 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
 
 void mf::WindowWlSurfaceRole::surface_destroyed()
 {
-    if (!client.is_being_destroyed())
+    if (!client->is_being_destroyed())
     {
         // "When a client wants to destroy a wl_surface, they must destroy this 'role object' before the wl_surface"
         // NOTE: the wl_shell_surface specification seems contradictory, so this method is overridden in its implementation
@@ -428,7 +428,7 @@ void mf::WindowWlSurfaceRole::surface_destroyed()
 
 auto mf::WindowWlSurfaceRole::input_event_for(uint32_t serial) -> std::shared_ptr<MirInputEvent const>
 {
-    auto const ev = client.event_for(serial);
+    auto const ev = client->event_for(serial);
     if (ev && ev.value() && mir_event_get_type(ev.value().get()) == mir_event_type_input)
     {
         return std::dynamic_pointer_cast<MirInputEvent const>(ev.value());
@@ -489,7 +489,7 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
             if (output)
             {
                 output.value()->for_each_output_bound_by(
-                    &client,
+                    client,
                     [&](OutputInstance* output)
                     {
                         surface.value().send_enter_event(output->resource);

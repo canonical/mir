@@ -98,13 +98,13 @@ mf::WlDataDevice::WlDataDevice(
 {
     clipboard.register_interest(clipboard_observer, wayland_executor);
     // this will call focus_on() with the initial state
-    seat.add_focus_listener(&client, this);
+    seat.add_focus_listener(client, this);
 }
 
 mf::WlDataDevice::~WlDataDevice()
 {
     clipboard.unregister_interest(*clipboard_observer);
-    seat.remove_focus_listener(&client, this);
+    seat.remove_focus_listener(client, this);
 }
 
 void mf::WlDataDevice::set_selection(std::optional<wl_resource*> const& source, uint32_t serial)

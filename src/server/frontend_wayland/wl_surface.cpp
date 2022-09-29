@@ -87,7 +87,7 @@ mf::WlSurface::WlSurface(
     std::shared_ptr<Executor> const& frame_callback_executor,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator)
     : Surface(new_resource, Version<4>()),
-        session{client.client_session()},
+        session{client->client_session()},
         stream{session->create_buffer_stream({{}, mir_pixel_format_invalid, graphics::BufferUsage::undefined})},
         allocator{allocator},
         wayland_executor{wayland_executor},
@@ -112,7 +112,7 @@ mf::WlSurface::~WlSurface()
     }
     catch (...)
     {
-        mw::internal_error_processing_request(client.raw_client(), "WlSurface::~WlSurface()");
+        mw::internal_error_processing_request(client->raw_client(), "WlSurface::~WlSurface()");
     }
 }
 

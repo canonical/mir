@@ -25,7 +25,7 @@ namespace mw = mir::wayland;
 mw::Resource::Resource(wl_resource* resource)
     : owned_client{Client::shared_from(wl_resource_get_client(resource))},
       resource{resource},
-      client{*owned_client}
+      client{owned_client.get()}
 {
     if (resource == nullptr)
     {

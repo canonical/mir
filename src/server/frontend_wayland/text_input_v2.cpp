@@ -260,12 +260,12 @@ mf::TextInputV2::TextInputV2(
       seat{seat},
       handler{std::make_shared<Handler>(this, ctx->wayland_executor)}
 {
-    seat.add_focus_listener(&client, this);
+    seat.add_focus_listener(client, this);
 }
 
 mf::TextInputV2::~TextInputV2()
 {
-    seat.remove_focus_listener(&client, this);
+    seat.remove_focus_listener(client, this);
     ctx->text_input_hub->deactivate_handler(handler);
 }
 
@@ -309,13 +309,13 @@ void mf::TextInputV2::focus_on(WlSurface* surface)
 {
     if (current_surface)
     {
-        auto const serial = client.next_serial(nullptr);
+        auto const serial = client->next_serial(nullptr);
         send_leave_event(serial, current_surface.value().resource);
     }
     current_surface = mw::make_weak(surface);
     if (surface)
     {
-        auto const serial = client.next_serial(nullptr);
+        auto const serial = client->next_serial(nullptr);
         send_enter_event(serial, surface->resource);
     }
     else
