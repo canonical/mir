@@ -37,7 +37,7 @@ TEST(MockMainLoop, dropping_fd_handle_after_main_loop_created_unregisters_handle
     auto const fd = mir::Fd{42};
 
     {
-        auto handle = manager->register_handler(fd, [this](int) { std::function<void(int)>(); });
+        auto const handle = manager->register_handler(fd, [](int) { std::function<void(int)>(); });
         EXPECT_CALL(*main_loop.get(), unregister_fd_handler(_));
     }
 }
@@ -52,7 +52,7 @@ TEST(MockMainLoop, dropping_fd_handle_before_main_loop_created_does_not_register
     {
         EXPECT_CALL(*main_loop.get(), register_fd_handler(_, _, _))
             .Times(0);
-        auto handle = manager->register_handler(fd, [this](int) { std::function<void(int)>(); });
+        auto const handle = manager->register_handler(fd, [](int) { std::function<void(int)>(); });
     }
 }
 
@@ -68,7 +68,7 @@ TEST(MockMainLoop, register_handler_after_main_loop_created_registers_fd_handler
     auto const fd = mir::Fd{42};
 
     EXPECT_CALL(*main_loop.get(), register_fd_handler(_, _, _));
-    auto handle = manager->register_handler(fd, [this](int) { std::function<void(int)>(); });
+    auto const handle = manager->register_handler(fd, [](int) { std::function<void(int)>(); });
 }
 
 TEST(MockMainLoop, register_handler_before_main_loop_created_registers_fd_handler_after_main_loop_created)
@@ -80,7 +80,7 @@ TEST(MockMainLoop, register_handler_before_main_loop_created_registers_fd_handle
 
     EXPECT_CALL(*main_loop.get(), register_fd_handler(_, _, _))
         .Times(0);
-    auto handle = manager->register_handler(fd, [this](int) { std::function<void(int)>(); });
+    auto const handle = manager->register_handler(fd, [](int) { std::function<void(int)>(); });
     
     EXPECT_CALL(*main_loop.get(), register_fd_handler(_, _, _))
         .Times(1);
