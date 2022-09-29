@@ -69,7 +69,6 @@ public:
 private:
     std::shared_ptr<FdManager> manager;
     mir::Fd fd;
-    void const* owner;
     std::function<void(int)> const& handler;
 };
 
