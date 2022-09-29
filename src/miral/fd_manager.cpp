@@ -49,7 +49,7 @@ auto FdManager::register_handler(mir::Fd fd, std::function<void(int)> const& han
 
 void FdManager::unregister_handler(void const* owner)
 {
-    if (auto const main_loop = weak_main_loop.lock().get())
+    if (auto const main_loop = weak_main_loop.lock())
     {
         main_loop->unregister_fd_handler(owner);
     }
@@ -62,7 +62,7 @@ void FdManager::unregister_handler(void const* owner)
 
 void FdManager::process_backlog()
 {
-    if (auto const main_loop = weak_main_loop.lock().get())
+    if (auto const main_loop = weak_main_loop.lock())
     {   
         for (auto const& handle : backlog)
         {
