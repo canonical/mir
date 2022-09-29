@@ -98,6 +98,12 @@ private:
 auto mir::RWShmBacking::get_rw_range(std::shared_ptr<RWShmBacking> pool, size_t start, size_t len)
     -> std::unique_ptr<RWMappableRange>
 {
+    // This slightly weird comparison is to avoid integer overflow
+    if ((start > pool->size) ||
+        (pool->size - start < len))
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Attempt to get a range outside the SHM backing"}));
+    }
     auto start_addr = static_cast<char*>(pool->mapped_address) + start;
     return std::make_unique<::RWMappableRange>(start_addr, len);
 }
