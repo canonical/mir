@@ -49,6 +49,39 @@ enum class WmState: uint32_t
     ICONIC = 3,
 };
 
+/// See ICCCM 4.1.3.1 (https://tronche.com/gui/x/icccm/sec-4.html#WM_HINTS)
+namespace WmHintsIndices
+{
+enum WmHintsIndices: uint32_t
+{
+    FLAGS = 0,
+    INPUT,
+    INITIAL_STATE,
+    ICON_PIXMAP,
+    ICON_WINDOW,
+    ICON_X,
+    ICON_Y,
+    ICON_MASK,
+};
+}
+
+/// See ICCCM 4.1.3.1 (https://tronche.com/gui/x/icccm/sec-4.html#WM_HINTS)
+namespace WmHintsFlags
+{
+enum WmHintsFlags: uint32_t
+{
+    INPUT = 1,
+    STATE = 2,
+    ICON_PIXMAP = 4,
+    ICON_WINDOW = 8,
+    ICON_POSITION = 16,
+    ICON_MASK = 32,
+    WINDOW_GROUP = 64,
+    MESSAGE = 128,
+    URGENCY = 256,
+};
+}
+
 // See ICCCM 4.1.2.3 (https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.2.3)
 // except actually I'm pretty sure that mistakenly drops min size/aspect so actually see anything that implements it
 // such as https://stackoverflow.com/a/59762666
@@ -377,6 +410,14 @@ mf::XWaylandSurface::XWaylandSurface(
           property_handler<std::vector<int32_t>>(
               connection,
               window,
+              connection->WM_HINTS,
+              [this](auto hints)
+              {
+                  wm_hints(hints);
+              }),
+          property_handler<std::vector<int32_t>>(
+              connection,
+              window,
               connection->WM_NORMAL_HINTS,
               [this](auto hints)
               {
@@ -536,20 +577,19 @@ void mf::XWaylandSurface::take_focus()
         uint32_t const client_message_data[]{
             connection->WM_TAKE_FOCUS,
             XCB_TIME_CURRENT_TIME};
-
-        connection->send_client_message<XCBType::WM_PROTOCOLS>(
-            window,
-            XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT,
-            client_message_data);
+        uint32_t const event_mask = cached.input_hint ? XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT : XCB_EVENT_MASK_NO_EVENT;
+        connection->send_client_message<XCBType::WM_PROTOCOLS>(window, event_mask, client_message_data);
     }
 
-    // TODO: only send if allowed based on wm hints input mode
-    // see https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.7
-    xcb_set_input_focus(
-        *connection,
-        XCB_INPUT_FOCUS_POINTER_ROOT,
-        window,
-        XCB_CURRENT_TIME);
+    // See https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.7
+    if (cached.input_hint)
+    {
+        xcb_set_input_focus(
+            *connection,
+            XCB_INPUT_FOCUS_POINTER_ROOT,
+            window,
+            XCB_CURRENT_TIME);
+    }
 
     connection->flush();
 }
@@ -992,12 +1032,6 @@ void mf::XWaylandSurface::inform_client_of_window_state(
     {
         std::lock_guard lock{mutex};
 
-        if ((!new_window_state && cached.withdrawn) ||
-            (new_window_state && !cached.withdrawn && *new_window_state == cached.state))
-        {
-            return;
-        }
-
         if (new_window_state)
         {
             if (!cached.withdrawn && *new_window_state == cached.state)
@@ -1307,6 +1341,24 @@ void mf::XWaylandSurface::apply_cached_transient_for_and_type(ProofOfMutexLock c
     auto& spec = pending_spec(lock);
     spec.parent = parent;
     spec.type = type;
+}
+
+void mf::XWaylandSurface::wm_hints(std::vector<int32_t> const& hints)
+{
+    // See ICCCM 4.1.2.4 (https://tronche.com/gui/x/icccm/sec-4.html#WM_HINTS)
+    std::lock_guard lock{mutex};
+    auto const flags = static_cast<uint32_t>(hints[WmHintsIndices::FLAGS]);
+    if (flags & WmHintsFlags::INPUT)
+    {
+        cached.input_hint = hints[WmHintsIndices::INPUT];
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_debug(
+                "%s input hint set to %s",
+                connection->window_debug_string(window).c_str(),
+                hints[WmHintsIndices::INPUT] ? "true" : "false");
+        }
+    }
 }
 
 void mf::XWaylandSurface::wm_size_hints(std::vector<int32_t> const& hints)
