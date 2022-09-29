@@ -32,7 +32,7 @@ class Resource
     : public virtual LifetimeTracker
 {
 private:
-    std::shared_ptr<Client> owned_client;
+    std::shared_ptr<Client> const owned_client;
 
 public:
     template<int V>
