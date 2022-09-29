@@ -414,5 +414,5 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"miral::Zone::id() const@MIRAL_3.6" 3.6.0
  MIRAL_3.7@MIRAL_3.7 3.7.0
  (c++)"miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&, MirInputEventModifier)@MIRAL_3.7" 3.7.0
- (c++)"miral::MirRunner::register_signal_handler(std::initializer_list<int> signals, std::function<void(int)> const& handler)@MIRAL_3.7" 3.7.0
- (c++)"miral::MirRunner::register_fd_handler(mir::Fd fd, void const* owner, std::function<void(int)> const& handler)@MIRAL_3.7" 3.7.0
+ (c++)"miral::MirRunner::register_signal_handler(std::initializer_list<int>, std::function<void (int)> const&)@MIRAL_3.7" 3.7.0
+ (c++)"miral::MirRunner::register_fd_handler(mir::Fd, std::function<void (int)> const&)@MIRAL_3.7" 3.7.0
