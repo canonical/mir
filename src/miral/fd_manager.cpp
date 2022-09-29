@@ -32,7 +32,7 @@ FdManager::~FdManager()
 auto FdManager::register_handler(mir::Fd fd, std::function<void(int)> const& handler)
 -> std::unique_ptr<FdHandle>
 {
-    auto handle = std::make_unique<FdHandle>(shared_from_this(), fd, handler);
+    auto handle = std::make_unique<FdHandle>(shared_from_this());
 
     if (auto const main_loop = weak_main_loop.lock().get())
     {
@@ -78,10 +78,8 @@ void FdManager::process_backlog()
     }
 }
 
-FdHandle::FdHandle(std::shared_ptr<FdManager> manager, mir::Fd fd, std::function<void(int)> const& handler)
-: manager{manager},
-  fd{fd},
-  handler{handler}
+FdHandle::FdHandle(std::shared_ptr<FdManager> manager)
+: manager{manager}
 {
 }
 

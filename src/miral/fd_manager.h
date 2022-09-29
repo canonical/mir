@@ -61,15 +61,13 @@ private:
 struct FdHandle
 {
 public:
-    FdHandle(std::shared_ptr<FdManager> manager, mir::Fd fd, std::function<void(int)> const& handler);
+    FdHandle(std::shared_ptr<FdManager> manager);
     ~FdHandle();
 
     friend class FdManager;
 
 private:
     std::shared_ptr<FdManager> manager;
-    mir::Fd fd;
-    std::function<void(int)> const& handler;
 };
 
 /// A struct holding the necessary info to register a file descriptor if FdManager::register_handler()
