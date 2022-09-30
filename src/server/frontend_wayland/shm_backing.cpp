@@ -12,6 +12,7 @@ class ShmBacking
 {
 public:
     ShmBacking(mir::Fd const& backing_store, size_t claimed_size, int prot);
+    ~ShmBacking();
 
     template<typename Mapping>
     auto get_range(size_t start, size_t len)
@@ -53,6 +54,11 @@ ShmBacking::ShmBacking(mir::Fd const& backing_store, size_t claimed_size, int pr
             size_is_trustworthy = static_cast<size_t>(file_info.st_size) >= claimed_size;
         }
     }
+}
+
+ShmBacking::~ShmBacking()
+{
+    munmap(mapped_address, size);
 }
 
 template<typename Mapping>
