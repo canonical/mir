@@ -22,6 +22,7 @@
 #include <sys/syscall.h>
 #include <fcntl.h>
 #include <boost/throw_exception.hpp>
+#include <experimental/type_traits>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -81,6 +82,50 @@ auto make_shm_fd(size_t size) -> mir::Fd
 
     return mir::Fd{fd};
 }
+}
+
+template<typename pool>
+using can_get_wo_range =
+    decltype(mir::shm::get_wo_range(pool{}, size_t{}, size_t{}));
+
+template<typename pool>
+using can_get_ro_range =
+    decltype(mir::shm::get_ro_range(pool{}, mir::Fd{}, size_t{}));
+
+template<typename pool>
+using can_get_rw_range =
+    decltype(mir::shm::get_rw_range(pool{}, mir::Fd{}, size_t{}));
+
+TEST(ShmBacking, can_not_get_writeable_range_on_ro_pool)
+{
+    constexpr bool can_get_writable_range =
+        std::experimental::is_detected_v<
+            can_get_wo_range,
+            decltype(mir::shm::make_shm_backing_store<PROT_READ>(mir::Fd{}, size_t{}))>;
+
+    constexpr bool can_get_readwrite_range =
+        std::experimental::is_detected_v<
+            can_get_rw_range,
+            decltype(mir::shm::make_shm_backing_store<PROT_READ>(mir::Fd{}, size_t{}))>;
+
+    EXPECT_FALSE(can_get_writable_range);
+    EXPECT_FALSE(can_get_readwrite_range);
+}
+
+TEST(ShmBacking, can_not_get_readable_range_on_wo_pool)
+{
+    constexpr bool can_get_readable_range =
+        std::experimental::is_detected_v<
+            can_get_ro_range,
+            decltype(mir::shm::make_shm_backing_store<PROT_WRITE>(mir::Fd{}, size_t{}))>;
+
+    constexpr bool can_get_readwrite_range =
+        std::experimental::is_detected_v<
+            can_get_rw_range,
+            decltype(mir::shm::make_shm_backing_store<PROT_WRITE>(mir::Fd{}, size_t{}))>;
+
+    EXPECT_FALSE(can_get_readable_range);
+    EXPECT_FALSE(can_get_readwrite_range);
 }
 
 TEST(ShmBacking, can_get_rw_range_covering_whole_pool)
