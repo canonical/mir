@@ -139,3 +139,37 @@ TEST(ShmBacking, get_rw_range_checks_handle_overflows)
         std::runtime_error
     );
 }
+
+TEST(ShmBacking, two_rw_ranges_see_each_others_changes)
+{
+    using namespace testing;
+
+    constexpr size_t const shm_size = 4000;
+    auto shm_fd = make_shm_fd(shm_size);
+    auto backing = std::make_shared<mir::RWShmBacking>(shm_fd, shm_size);
+
+    auto range_one = mir::RWShmBacking::get_rw_range(backing, 0, shm_size);
+    auto range_two = mir::RWShmBacking::get_rw_range(backing, shm_size / 2, shm_size / 2);
+
+    auto map_one = range_one->map_rw();
+    auto map_two = range_two->map_rw();
+
+    int const mapping_one_fill = 0xaa;
+    int const mapping_two_fill = 0xce;
+    ::memset(map_one->data(), mapping_one_fill, map_one->len());
+    ::memset(map_two->data(), mapping_two_fill, map_two->len());
+
+    for (auto const& a : std::span(map_two->data(), map_two->len()))
+    {
+        EXPECT_THAT(a, Eq(mapping_two_fill));
+    }
+
+    for (auto i = 0; i < shm_size / 2; ++i)
+    {
+        EXPECT_THAT(map_one->data()[i], Eq(mapping_one_fill));
+    }
+    for (auto i = shm_size / 2; i < shm_size; ++i)
+    {
+        EXPECT_THAT(map_one->data()[i], Eq(mapping_two_fill));
+    }
+}
