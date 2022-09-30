@@ -89,9 +89,9 @@ TEST(ShmBacking, can_get_rw_range_covering_whole_pool)
 
     constexpr size_t const shm_size = 4000;
     auto shm_fd = make_shm_fd(shm_size);
-    auto backing = std::make_shared<mir::RWShmBacking>(shm_fd, shm_size);
+    auto backing = mir::shm::make_shm_backing_store<PROT_READ | PROT_WRITE>(shm_fd, shm_size);
 
-    auto mappable = mir::RWShmBacking::get_rw_range(backing, 0, shm_size);
+    auto mappable = mir::shm::get_rw_range(backing, 0, shm_size);
 
     auto mapping = mappable->map_rw();
 
@@ -109,13 +109,13 @@ TEST(ShmBacking, get_rw_range_checks_the_range_fits)
 
     constexpr size_t const shm_size = 4000;
     auto shm_fd = make_shm_fd(shm_size);
-    auto backing = std::make_shared<mir::RWShmBacking>(shm_fd, shm_size);
+    auto backing = mir::shm::make_shm_backing_store<PROT_READ | PROT_WRITE>(shm_fd, shm_size);
 
     // Check each range from [0, shm_size + 1] - [shm_size - 1, shm_size + 1]
     for (auto i = 0u; i < shm_size - 1; ++i)
     {
         EXPECT_THROW(
-            mir::RWShmBacking::get_rw_range(backing, i, shm_size + 1 - i),
+            mir::shm::get_rw_range(backing, i, shm_size + 1 - i),
             std::runtime_error
         );
     }
@@ -127,15 +127,15 @@ TEST(ShmBacking, get_rw_range_checks_handle_overflows)
 
     constexpr size_t const shm_size = 4000;
     auto shm_fd = make_shm_fd(shm_size);
-    auto backing = std::make_shared<mir::RWShmBacking>(shm_fd, shm_size);
+    auto backing = mir::shm::make_shm_backing_store<PROT_READ | PROT_WRITE>(shm_fd, shm_size);
 
     EXPECT_THROW(
-        mir::RWShmBacking::get_rw_range(backing, std::numeric_limits<size_t>::max() - 1, 2),
+        mir::shm::get_rw_range(backing, std::numeric_limits<size_t>::max() - 1, 2),
         std::runtime_error
     );
 
     EXPECT_THROW(
-        mir::RWShmBacking::get_rw_range(backing, 2, std::numeric_limits<size_t>::max() - 1),
+        mir::shm::get_rw_range(backing, 2, std::numeric_limits<size_t>::max() - 1),
         std::runtime_error
     );
 }
@@ -146,10 +146,10 @@ TEST(ShmBacking, two_rw_ranges_see_each_others_changes)
 
     constexpr size_t const shm_size = 4000;
     auto shm_fd = make_shm_fd(shm_size);
-    auto backing = std::make_shared<mir::RWShmBacking>(shm_fd, shm_size);
+    auto backing = mir::shm::make_shm_backing_store<PROT_READ | PROT_WRITE>(shm_fd, shm_size);
 
-    auto range_one = mir::RWShmBacking::get_rw_range(backing, 0, shm_size);
-    auto range_two = mir::RWShmBacking::get_rw_range(backing, shm_size / 2, shm_size / 2);
+    auto range_one = mir::shm::get_rw_range(backing, 0, shm_size);
+    auto range_two = mir::shm::get_rw_range(backing, shm_size / 2, shm_size / 2);
 
     auto map_one = range_one->map_rw();
     auto map_two = range_two->map_rw();

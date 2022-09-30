@@ -6,10 +6,26 @@
 #include <system_error>
 #include <boost/throw_exception.hpp>
 
-mir::RWShmBacking::RWShmBacking(mir::Fd const& backing_store, size_t claimed_size)
+namespace
+{
+class ShmBacking
+{
+public:
+    ShmBacking(mir::Fd const& backing_store, size_t claimed_size, int prot);
+
+    template<typename Mapping>
+    auto get_range(size_t start, size_t len)
+        -> std::unique_ptr<Mapping>;
+private:
+    void* mapped_address;
+    size_t size;
+    bool size_is_trustworthy{false};
+};
+
+ShmBacking::ShmBacking(mir::Fd const& backing_store, size_t claimed_size, int prot)
     : size{claimed_size}
 {
-    mapped_address = mmap(nullptr, claimed_size, PROT_READ | PROT_WRITE, MAP_SHARED, backing_store, 0);
+    mapped_address = mmap(nullptr, claimed_size, prot, MAP_SHARED, backing_store, 0);
     if (mapped_address == MAP_FAILED)
     {
         BOOST_THROW_EXCEPTION((std::system_error{
@@ -39,8 +55,20 @@ mir::RWShmBacking::RWShmBacking(mir::Fd const& backing_store, size_t claimed_siz
     }
 }
 
-namespace
+template<typename Mapping>
+auto ShmBacking::get_range(size_t start, size_t len)
+    -> std::unique_ptr<Mapping>
 {
+    // This slightly weird comparison is to avoid integer overflow
+    if ((start > size) ||
+        (size - start < len))
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Attempt to get a range outside the SHM backing"}));
+    }
+    auto start_addr = static_cast<char*>(mapped_address) + start;
+    return std::make_unique<Mapping>(start_addr, len);
+}
+
 template<typename T>
 class ShmBackedMapping : public mir::Mapping<T>
 {
@@ -95,15 +123,39 @@ private:
 };
 }
 
-auto mir::RWShmBacking::get_rw_range(std::shared_ptr<RWShmBacking> pool, size_t start, size_t len)
-    -> std::unique_ptr<RWMappableRange>
+template<int prot>
+class mir::shm::Backing
 {
-    // This slightly weird comparison is to avoid integer overflow
-    if ((start > pool->size) ||
-        (pool->size - start < len))
+public:
+    Backing(mir::Fd const& backing, size_t claimed_size)
+        : backing{backing, claimed_size, prot}
     {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Attempt to get a range outside the SHM backing"}));
     }
-    auto start_addr = static_cast<char*>(pool->mapped_address) + start;
-    return std::make_unique<::RWMappableRange>(start_addr, len);
+
+    ::ShmBacking backing;    
+};
+
+template<int prot>
+auto mir::shm::make_shm_backing_store(mir::Fd const& backing, size_t claimed_size)
+    -> std::shared_ptr<Backing<prot>>
+{
+    return std::make_shared<Backing<prot>>(backing, claimed_size);
 }
+
+template
+auto mir::shm::make_shm_backing_store<PROT_READ>(mir::Fd const&, size_t)
+  -> std::shared_ptr<Backing<PROT_READ>>;
+template
+auto mir::shm::make_shm_backing_store<PROT_WRITE>(mir::Fd const&, size_t)
+  -> std::shared_ptr<Backing<PROT_WRITE>>;
+template
+auto mir::shm::make_shm_backing_store<PROT_WRITE | PROT_READ>(mir::Fd const&, size_t)
+  -> std::shared_ptr<Backing<PROT_WRITE | PROT_READ>>;
+
+template<>
+auto mir::shm::get_rw_range(std::shared_ptr<mir::shm::Backing<PROT_READ | PROT_WRITE>> pool, size_t start, size_t len)
+    -> std::unique_ptr<mir::RWMappableRange>
+{
+    return pool->backing.get_range<::RWMappableRange>(start, len);
+}
+
