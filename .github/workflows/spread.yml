@@ -102,6 +102,11 @@ jobs:
           ccache-${{ matrix.spread-task }}-
         path: ${{ env.CCACHE_DIR }}
 
+    - name: Ensure ccache size
+      run: |
+        # a full build yielded at most 650M cache
+        echo "max_size = 800M" > ${CCACHE_DIR}/ccache.conf
+
     - name: Run Spread task
       run: snap run spread -v ${{ matrix.spread-task }}
 
