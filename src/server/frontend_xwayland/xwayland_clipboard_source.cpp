@@ -337,9 +337,8 @@ void mf::XWaylandClipboardSource::xfixes_selection_notify_event(xcb_xfixes_selec
     {
         if (verbose_xwayland_logging_enabled())
         {
-            log_info("Clearing old X11 clipboard source");
+            log_info("Invalidating X11 clipboard source");
         }
-        clipboard->clear_paste_source(*source_to_reset);
         source_to_reset->invalidate_owner();
     }
 }
