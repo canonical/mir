@@ -40,18 +40,25 @@ public:
     virtual auto map_rw() -> std::unique_ptr<Mapping<unsigned char>> = 0;
 };
 
-class RWShmBacking
+namespace shm
 {
-public:
-    RWShmBacking(mir::Fd const& backing_store, size_t claimed_size);
+template<int prot>
+class Backing;
 
-    static auto get_rw_range(std::shared_ptr<RWShmBacking> pool, size_t start, size_t len)
-        -> std::unique_ptr<RWMappableRange>;
+template<int prot>
+auto make_shm_backing_store(mir::Fd const& backing, size_t claimed_size)
+    -> std::shared_ptr<Backing<prot>>;
 
-private:
+template<int prot, typename = std::enable_if_t<(prot & PROT_READ) && (prot & PROT_WRITE)>>
+auto get_rw_range(std::shared_ptr<Backing<prot>> pool, size_t start, size_t len)
+    -> std::unique_ptr<RWMappableRange>;
 
-    void* mapped_address;
-    size_t size;
-    bool size_is_trustworthy{false};
-};
+template<int prot, typename = std::enable_if_t<(prot & PROT_READ)>>
+auto get_ro_range(std::shared_ptr<Backing<prot>> pool, size_t start, size_t len)
+    -> std::unique_ptr<ReadMappableRange>;
+
+template<int prot, typename = std::enable_if_t<(prot & PROT_WRITE)>>
+auto get_wo_range(std::shared_ptr<Backing<prot>> pool, size_t start, size_t len)
+    -> std::unique_ptr<WriteMappableRange>;
+}
 }
