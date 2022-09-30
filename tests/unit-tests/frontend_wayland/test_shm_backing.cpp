@@ -185,6 +185,69 @@ TEST(ShmBacking, get_rw_range_checks_handle_overflows)
     );
 }
 
+TEST(ShmBackingDeathTest, reads_from_range_fault_after_range_and_backing_are_destroyed)
+{
+    using namespace testing;
+
+    constexpr size_t const shm_size = 4000;
+    auto shm_fd = make_shm_fd(shm_size);
+    auto backing = mir::shm::make_shm_backing_store<PROT_READ | PROT_WRITE>(shm_fd, shm_size);
+
+    auto range = mir::shm::get_rw_range(backing, 0, shm_size);
+    auto map = range->map_rw();
+    std::span data{map->data(), map->len()};
+
+    // First demonstrate that we *can* read it while the range/backing is live
+    for (auto const& c : data)
+    {
+        // We haven't written anything explicitly, so the kernel has helpfully 0-initialised it
+        EXPECT_THAT(c, Eq(0));
+    }
+
+    // Free all the resources!
+    map = nullptr;
+    range = nullptr;
+    backing = nullptr;
+    EXPECT_EXIT(
+        {
+            for (auto const& c : data)
+            {
+                EXPECT_THAT(c, Eq(0));
+            }
+        },
+        KilledBySignal(SIGSEGV),
+        ""
+    );
+}
+
+TEST(ShmBackingDeathTest, writes_to_range_fault_after_range_and_backing_are_destroyed)
+{
+    using namespace testing;
+
+    constexpr size_t const shm_size = 4000;
+    auto shm_fd = make_shm_fd(shm_size);
+    auto backing = mir::shm::make_shm_backing_store<PROT_READ | PROT_WRITE>(shm_fd, shm_size);
+
+    auto range = mir::shm::get_rw_range(backing, 0, shm_size);
+    auto map = range->map_rw();
+    std::span data{map->data(), map->len()};
+
+    // First demonstrate that we *can* read it while the range/backing is live
+    ::memset(data.data(), 'a', data.size_bytes());
+
+    // Free all the resources!
+    map = nullptr;
+    range = nullptr;
+    backing = nullptr;
+    EXPECT_EXIT(
+        {
+            ::memset(data.data(), 'a', data.size_bytes());
+        },
+        KilledBySignal(SIGSEGV),
+        ""
+    );
+}
+
 TEST(ShmBacking, two_rw_ranges_see_each_others_changes)
 {
     using namespace testing;
