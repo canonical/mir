@@ -94,8 +94,6 @@ TEST(MockMainLoop, register_handler_before_main_loop_created_registers_fd_handle
 
     auto const fd = mir::Fd{42};
 
-    EXPECT_CALL(*main_loop.get(), register_fd_handler(_, _, _))
-        .Times(0);
     auto const handle = manager->register_handler(fd, [](int) { std::function<void(int)>(); });
     
     EXPECT_CALL(*main_loop.get(), register_fd_handler(_, _, _))
