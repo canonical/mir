@@ -31,7 +31,7 @@ TEST(MockMainLoop, dropping_fd_handle_after_main_loop_created_unregisters_handle
     auto const main_loop = std::make_shared<NiceMock<MockMainLoop>>();
 
     // MirRunner::run_with() triggers the following
-    manager->set_weak_main_loop(main_loop);
+    manager->set_main_loop(main_loop);
 
     auto const fd = mir::Fd{42};
 
@@ -61,7 +61,7 @@ TEST(MockMainLoop, register_handler_after_main_loop_created_registers_fd_handler
     auto const main_loop = std::make_shared<NiceMock<MockMainLoop>>();
 
     // MirRunner::run_with() triggers the following
-    manager->set_weak_main_loop(main_loop);
+    manager->set_main_loop(main_loop);
 
     auto const fd = mir::Fd{42};
 
@@ -84,5 +84,5 @@ TEST(MockMainLoop, register_handler_before_main_loop_created_registers_fd_handle
         .Times(1);
     
     // MirRunner::run_with() triggers the following
-    manager->set_weak_main_loop(main_loop);
+    manager->set_main_loop(main_loop);
 }

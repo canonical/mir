@@ -45,7 +45,7 @@ public:
 
     void unregister_handler(void const* owner);
 
-    void set_weak_main_loop(std::shared_ptr<mir::MainLoop> main_loop);
+    void set_main_loop(std::shared_ptr<mir::MainLoop> main_loop);
 
 private:
     std::mutex mutex;

@@ -64,8 +64,10 @@ void FdManager::unregister_handler(void const* owner)
     }
 }
 
-void FdManager::set_weak_main_loop(std::shared_ptr<mir::MainLoop> main_loop)
+void FdManager::set_main_loop(std::shared_ptr<mir::MainLoop> main_loop)
 {
+    std::lock_guard<std::mutex> lock{mutex};
+    
     for (auto const& handle : backlog)
     {
         main_loop->register_fd_handler({handle.fd}, handle.owner, handle.handler);
