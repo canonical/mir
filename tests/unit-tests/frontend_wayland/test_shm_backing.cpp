@@ -233,7 +233,7 @@ TEST(ShmBacking, two_rw_ranges_see_each_others_changes)
     }
 }
 
-TEST(ShmBacking, DISABLED_range_stays_vaild_after_backing_destroyed)
+TEST(ShmBacking, range_stays_vaild_after_backing_destroyed)
 {
     using namespace testing;
 
