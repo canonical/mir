@@ -61,7 +61,7 @@ struct miral::MirRunner::Self
     std::function<void()> stop_callback{[this]{ join_client_threads(weak_server.lock().get()); }};
     std::function<void()> exception_handler{static_cast<void(*)()>(mir::report_exception)};
     std::weak_ptr<mir::Server> weak_server;
-    std::shared_ptr<miral::FdManager> fd_manager = std::make_shared<miral::FdManager>();
+    std::shared_ptr<miral::FdManager> const fd_manager = std::make_shared<miral::FdManager>();
 
     struct SignalInfo
     {
@@ -224,7 +224,6 @@ void miral::MirRunner::register_signal_handler(
 auto miral::MirRunner::register_fd_handler(mir::Fd fd, std::function<void(int)> const& handler)
 -> std::unique_ptr<miral::FdHandle>
 {
-    std::lock_guard lock{self->mutex};
     return self->fd_manager->register_handler(fd, handler);
 }
 
