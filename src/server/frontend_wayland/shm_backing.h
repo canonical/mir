@@ -1,7 +1,7 @@
 #include "mir/fd.h"
 #include "mir/renderer/sw/pixel_source.h"
 
-#include <span>
+#include <cstddef>
 #include <sys/mman.h>
 
 namespace mir
@@ -14,6 +14,19 @@ public:
 
     virtual T* data() = 0;
     virtual size_t len() const = 0;
+
+    auto operator[](size_t idx) -> T&
+    {
+        return data()[idx];
+    }
+    auto begin() -> T*
+    {
+        return data();
+    }
+    auto end() -> T*
+    {
+        return data() + len();
+    }
 };
 
 class ReadMappableRange
@@ -21,7 +34,7 @@ class ReadMappableRange
 public:
     virtual ~ReadMappableRange() = default;
 
-    virtual auto map_ro() -> std::unique_ptr<Mapping<unsigned char const>> = 0;
+    virtual auto map_ro() -> std::unique_ptr<Mapping<std::byte const>> = 0;
 };
 
 class WriteMappableRange
@@ -29,7 +42,7 @@ class WriteMappableRange
 public:
     virtual ~WriteMappableRange() = default;
 
-    virtual auto map_wo() -> std::unique_ptr<Mapping<unsigned char>> = 0;
+    virtual auto map_wo() -> std::unique_ptr<Mapping<std::byte>> = 0;
 };
 
 class RWMappableRange : public ReadMappableRange, public WriteMappableRange
@@ -37,28 +50,38 @@ class RWMappableRange : public ReadMappableRange, public WriteMappableRange
 public:
     virtual ~RWMappableRange() = default;
 
-    virtual auto map_rw() -> std::unique_ptr<Mapping<unsigned char>> = 0;
+    virtual auto map_rw() -> std::unique_ptr<Mapping<std::byte>> = 0;
 };
 
 namespace shm
 {
-template<int prot>
-class Backing;
+class ReadOnlyPool
+{
+public:
+    ReadOnlyPool() = default;
+    virtual ~ReadOnlyPool() = default;
 
-template<int prot>
-auto make_shm_backing_store(mir::Fd const& backing, size_t claimed_size)
-    -> std::shared_ptr<Backing<prot>>;
+    virtual auto get_ro_range(size_t start, size_t len) -> std::unique_ptr<ReadMappableRange> = 0;    
+};
 
-template<int prot, typename = std::enable_if_t<(prot & PROT_READ) && (prot & PROT_WRITE)>>
-auto get_rw_range(std::shared_ptr<Backing<prot>> pool, size_t start, size_t len)
-    -> std::unique_ptr<RWMappableRange>;
+class WriteOnlyPool
+{
+public:
+    WriteOnlyPool() = default;
+    virtual ~WriteOnlyPool() = default;
 
-template<int prot, typename = std::enable_if_t<(prot & PROT_READ)>>
-auto get_ro_range(std::shared_ptr<Backing<prot>> pool, size_t start, size_t len)
-    -> std::unique_ptr<ReadMappableRange>;
+    virtual auto get_wo_range(size_t start, size_t len) -> std::unique_ptr<WriteMappableRange> = 0;
+};
 
-template<int prot, typename = std::enable_if_t<(prot & PROT_WRITE)>>
-auto get_wo_range(std::shared_ptr<Backing<prot>> pool, size_t start, size_t len)
-    -> std::unique_ptr<WriteMappableRange>;
+class ReadWritePool : public ReadOnlyPool, public WriteOnlyPool
+{
+public:
+    ReadWritePool() = default;
+    virtual ~ReadWritePool() = default;
+
+    virtual auto get_rw_range(size_t start, size_t len) -> std::unique_ptr<RWMappableRange> = 0;
+};
+
+auto rw_pool_from_fd(mir::Fd const& backing, size_t claimed_size) -> std::shared_ptr<ReadWritePool>;
 }
 }
