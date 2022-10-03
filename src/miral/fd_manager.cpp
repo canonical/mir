@@ -60,22 +60,16 @@ void FdManager::unregister_handler(void const* owner)
     }
 }
 
-void FdManager::process_backlog()
+void FdManager::set_weak_main_loop(std::shared_ptr<mir::MainLoop> main_loop)
 {
-    if (auto const main_loop = weak_main_loop.lock())
-    {   
-        for (auto const& handle : backlog)
-        {
-            main_loop->register_fd_handler({handle.fd}, handle.owner, handle.handler);
-        }
-
-        backlog.clear();
-    }
-    else
+    for (auto const& handle : backlog)
     {
-        // This should never be hit
-        BOOST_THROW_EXCEPTION(std::runtime_error{"File descriptor backlog processed before MainLoop started"});
+        main_loop->register_fd_handler({handle.fd}, handle.owner, handle.handler);
     }
+    
+    backlog.clear();
+
+    weak_main_loop = main_loop;
 }
 
 FdHandle::FdHandle(std::shared_ptr<FdManager> manager)

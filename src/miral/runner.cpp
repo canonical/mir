@@ -155,7 +155,6 @@ try
         signal_backlog.clear();
 
         fd_manager->set_weak_main_loop(std::move(main_loop));
-        fd_manager->process_backlog();
     }
 
     server->add_init_callback([server, this]

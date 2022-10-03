@@ -44,9 +44,7 @@ public:
 
     void unregister_handler(void const* owner);
 
-    void process_backlog();
-
-    void set_weak_main_loop(std::weak_ptr<mir::MainLoop> weak_main_loop) { this->weak_main_loop = weak_main_loop; }
+    void set_weak_main_loop(std::shared_ptr<mir::MainLoop> main_loop);
 
 private:
     std::weak_ptr<mir::MainLoop> weak_main_loop;

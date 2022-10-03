@@ -32,7 +32,6 @@ TEST(MockMainLoop, dropping_fd_handle_after_main_loop_created_unregisters_handle
 
     // MirRunner::run_with() triggers the following
     manager->set_weak_main_loop(main_loop);
-    manager->process_backlog();
 
     auto const fd = mir::Fd{42};
 
@@ -63,7 +62,6 @@ TEST(MockMainLoop, register_handler_after_main_loop_created_registers_fd_handler
 
     // MirRunner::run_with() triggers the following
     manager->set_weak_main_loop(main_loop);
-    manager->process_backlog();
 
     auto const fd = mir::Fd{42};
 
@@ -87,5 +85,4 @@ TEST(MockMainLoop, register_handler_before_main_loop_created_registers_fd_handle
     
     // MirRunner::run_with() triggers the following
     manager->set_weak_main_loop(main_loop);
-    manager->process_backlog();
 }
