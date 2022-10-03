@@ -15,8 +15,8 @@ public:
     ShmBacking(mir::Fd const& backing_store, size_t claimed_size, int prot);
     ~ShmBacking();
 
-    template<typename Mapping>
-    auto get_range(size_t start, size_t len)
+    template<typename Mapping, typename Parent>
+    auto get_range(size_t start, size_t len, std::shared_ptr<Parent> parent)
         -> std::unique_ptr<Mapping>;
 private:
     void* mapped_address;
@@ -62,8 +62,8 @@ ShmBacking::~ShmBacking()
     munmap(mapped_address, size);
 }
 
-template<typename Mapping>
-auto ShmBacking::get_range(size_t start, size_t len)
+template<typename Mapping, typename Parent>
+auto ShmBacking::get_range(size_t start, size_t len, std::shared_ptr<Parent> parent)
     -> std::unique_ptr<Mapping>
 {
     // This slightly weird comparison is to avoid integer overflow
@@ -73,7 +73,7 @@ auto ShmBacking::get_range(size_t start, size_t len)
         BOOST_THROW_EXCEPTION((std::runtime_error{"Attempt to get a range outside the SHM backing"}));
     }
     auto start_addr = static_cast<char*>(mapped_address) + start;
-    return std::make_unique<Mapping>(start_addr, len);
+    return std::make_unique<Mapping>(start_addr, len, std::move(parent));
 }
 
 template<typename T>
@@ -103,9 +103,10 @@ private:
 class ROMappableRange : public mir::ReadMappableRange
 {
 public:
-    ROMappableRange(void* ptr, size_t len)
+    ROMappableRange(void* ptr, size_t len, std::shared_ptr<mir::shm::ReadOnlyPool> parent)
         : ptr{ptr},
-          len{len}
+          len{len},
+          parent{std::move(parent)}
     {
     }
 
@@ -116,14 +117,16 @@ public:
 private:
     void* const ptr;
     size_t const len;
+    std::shared_ptr<mir::shm::ReadOnlyPool> const parent;
 };
 
 class WOMappableRange : public mir::WriteMappableRange
 {
 public:
-    WOMappableRange(void* ptr, size_t len)
+    WOMappableRange(void* ptr, size_t len, std::shared_ptr<mir::shm::WriteOnlyPool> parent)
         : ptr{ptr},
-          len{len}
+          len{len},
+          parent{std::move(parent)}
     {
     }
 
@@ -134,14 +137,18 @@ public:
 private:
     void* const ptr;
     size_t const len;
+    std::shared_ptr<mir::shm::WriteOnlyPool> const parent;
 };
+
+class RWShmBackedPool;
 
 class RWMappableRange : public mir::RWMappableRange
 {
 public:
-    RWMappableRange(void* ptr, size_t len)
+    RWMappableRange(void* ptr, size_t len, std::shared_ptr<RWShmBackedPool> parent)
         : ptr{ptr},
-          len{len}
+          len{len},
+          parent{std::move(parent)}
     {
     }
 
@@ -162,6 +169,7 @@ public:
 private:
     void* const ptr;
     size_t const len;
+    std::shared_ptr<RWShmBackedPool> const parent;
 };
 
 class RWShmBackedPool : public mir::shm::ReadWritePool, public std::enable_shared_from_this<RWShmBackedPool>
@@ -174,17 +182,17 @@ public:
 
     auto get_rw_range(size_t start, size_t len) -> std::unique_ptr<mir::RWMappableRange> override
     {
-        return backing_store.get_range<RWMappableRange>(start, len);
+        return backing_store.get_range<RWMappableRange>(start, len, shared_from_this());
     }
 
     auto get_ro_range(size_t start, size_t len) -> std::unique_ptr<mir::ReadMappableRange> override
     {
-        return backing_store.get_range<ROMappableRange>(start, len);
+        return backing_store.get_range<ROMappableRange>(start, len, shared_from_this());
     }
 
     auto get_wo_range(size_t start, size_t len) -> std::unique_ptr<mir::WriteMappableRange> override
     {
-        return backing_store.get_range<WOMappableRange>(start, len);
+        return backing_store.get_range<WOMappableRange>(start, len, shared_from_this());
     }
 private:
     ShmBacking backing_store; 
