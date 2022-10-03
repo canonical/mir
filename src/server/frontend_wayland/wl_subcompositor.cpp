@@ -19,6 +19,7 @@
 #include "wl_subcompositor.h"
 #include "wl_surface.h"
 
+#include "mir/wayland/client.h"
 #include "mir/geometry/rectangle.h"
 
 namespace mf = mir::frontend;
@@ -67,7 +68,6 @@ mf::WlSubsurface::WlSubsurface(wl_resource* new_subsurface, WlSurface* surface, 
     : wayland::Subsurface(new_subsurface, Version<1>()),
       surface{surface},
       parent{parent_surface},
-      weak_client{&WlClient::from(client)},
       synchronized_{true}
 {
     parent_surface->add_subsurface(this);
@@ -200,7 +200,7 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
 
 void mf::WlSubsurface::surface_destroyed()
 {
-    if (weak_client)
+    if (!client->is_being_destroyed())
     {
         // "When a client wants to destroy a wl_surface, they must destroy this 'role object' wl_surface"
         BOOST_THROW_EXCEPTION(std::runtime_error{

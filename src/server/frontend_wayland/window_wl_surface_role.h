@@ -18,9 +18,9 @@
 #define MIR_FRONTEND_WINDOW_WL_SURFACE_ROLE_H
 
 #include "wl_surface_role.h"
-#include "wl_client.h"
 
 #include "mir/wayland/weak.h"
+#include "mir/wayland/lifetime_tracker.h"
 #include "mir/geometry/displacement.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
@@ -47,6 +47,10 @@ namespace shell
 struct SurfaceSpecification;
 class Shell;
 }
+namespace wayland
+{
+class Client;
+}
 namespace frontend
 {
 class WaylandSurfaceObserver;
@@ -62,7 +66,7 @@ public:
     WindowWlSurfaceRole(
         Executor& wayland_executor,
         WlSeat* seat,
-        wl_client* client,
+        wayland::Client* client,
         WlSurface* surface,
         std::shared_ptr<shell::Shell> const& shell,
         OutputManager* output_manager);
@@ -124,7 +128,7 @@ protected:
 
 private:
     wayland::Weak<WlSurface> const surface;
-    wayland::Weak<WlClient> const weak_client;
+    wayland::Client* const client;
     std::shared_ptr<shell::Shell> const shell;
     std::shared_ptr<scene::Session> const session;
     OutputManager* output_manager;

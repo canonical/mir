@@ -15,6 +15,7 @@
  */
 
 #include "mir/wayland/resource.h"
+#include "mir/wayland/client.h"
 
 #include <boost/throw_exception.hpp>
 #include <wayland-server-core.h>
@@ -22,11 +23,18 @@
 namespace mw = mir::wayland;
 
 mw::Resource::Resource(wl_resource* resource)
-    : resource{resource},
-      client{wl_resource_get_client(resource)}
+    : owned_client{Client::shared_from(wl_resource_get_client(resource))},
+      resource{resource},
+      client{owned_client.get()}
 {
     if (resource == nullptr)
     {
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
+}
+
+mw::Resource::~Resource()
+{
+    // Run destroy listeners before client is dropped
+    mark_destroyed();
 }

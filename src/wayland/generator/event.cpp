@@ -78,7 +78,7 @@ Emitter Event::impl() const
                 "else",
                 Block{
                     {"tried_to_send_unsupported_event(",
-                        "client, resource, \"", name, "\", ", std::to_string(min_version), ");"},
+                        "client->raw_client(), resource, \"", name, "\", ", std::to_string(min_version), ");"},
                 },
             },
         };

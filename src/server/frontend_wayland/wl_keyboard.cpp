@@ -18,9 +18,9 @@
 
 #include "wl_surface.h"
 #include "wl_seat.h"
-#include "wl_client.h"
 #include "mir/log.h"
 #include "mir/events/keyboard_event.h"
+#include "mir/wayland/client.h"
 
 #include <xkbcommon/xkbcommon.h>
 #include <cstring> // memcpy
@@ -32,7 +32,6 @@ namespace mi = mir::input;
 mf::WlKeyboard::WlKeyboard(wl_resource* new_resource, WlSeat& seat)
     : wayland::Keyboard{new_resource, Version<8>()},
       seat{seat},
-      wl_client{&WlClient::from(client)},
       helper{seat.make_keyboard_helper(this)}
 {
     seat.add_focus_listener(client, this);
@@ -50,14 +49,14 @@ void mf::WlKeyboard::handle_event(std::shared_ptr<MirEvent const> const& event)
 
 void mf::WlKeyboard::focus_on(WlSurface* surface)
 {
-    if (as_nullable_ptr(focused_surface) == surface || !wl_client)
+    if (as_nullable_ptr(focused_surface) == surface)
     {
         return;
     }
 
     if (focused_surface)
     {
-        auto const serial = wl_client.value().next_serial(nullptr);
+        auto const serial = client->next_serial(nullptr);
         send_leave_event(serial, focused_surface.value().raw_resource());
     }
 
@@ -88,7 +87,7 @@ void mf::WlKeyboard::focus_on(WlSurface* surface)
                 pressed_keys.size() * sizeof(decltype(pressed_keys)::value_type));
         }
 
-        auto const serial = wl_client.value().next_serial(nullptr);
+        auto const serial = client->next_serial(nullptr);
         send_enter_event(serial, surface->raw_resource(), &key_state);
         wl_array_release(&key_state);
         send_modifiers_event(serial, depressed_modifiers, latched_modifiers, locked_modifiers, group_modifiers);
@@ -109,11 +108,7 @@ void mf::WlKeyboard::send_keymap_xkb_v1(mir::Fd const& fd, size_t length)
 
 void mf::WlKeyboard::send_key(std::shared_ptr<MirKeyboardEvent const> const& event)
 {
-    if (!wl_client)
-    {
-        return;
-    }
-    auto const serial = wl_client.value().next_serial(event);;
+    auto const serial = client->next_serial(event);;
     auto const timestamp = mir_input_event_get_wayland_timestamp(event.get());
     int const scancode = event->scan_code();
     auto const state = (event->action() == mir_keyboard_action_down) ? KeyState::pressed : KeyState::released;
@@ -129,7 +124,7 @@ void mf::WlKeyboard::send_modifiers(uint32_t depressed, uint32_t latched, uint32
 
     if (focused_surface)
     {
-        auto const serial = wl_display_get_serial(wl_client_get_display(client));
+        auto const serial = client->next_serial(nullptr);
         send_modifiers_event(serial, depressed, latched, locked, group);
     }
 }

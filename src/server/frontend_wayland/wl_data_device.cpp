@@ -17,6 +17,7 @@
 #include "wl_data_device.h"
 #include "wl_data_source.h"
 #include "mir/scene/clipboard.h"
+#include "mir/wayland/client.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;

@@ -25,6 +25,7 @@
 #include "wl_touch.h"
 
 #include "mir/executor.h"
+#include "mir/wayland/client.h"
 #include "mir/observer_registrar.h"
 #include "mir/input/input_device_observer.h"
 #include "mir/input/input_device_hub.h"
@@ -53,12 +54,12 @@ public:
     ListenerList(ListenerList const&) = delete;
     ListenerList& operator=(ListenerList const&) = delete;
 
-    void register_listener(wl_client* client, T* listener)
+    void register_listener(mw::Client* client, T* listener)
     {
         listeners[client].push_back(listener);
     }
 
-    void unregister_listener(wl_client* client, T const* listener)
+    void unregister_listener(mw::Client* client, T const* listener)
     {
         std::vector<T*>& client_listeners = listeners[client];
         client_listeners.erase(
@@ -71,14 +72,14 @@ public:
             listeners.erase(client);
     }
 
-    void for_each(wl_client* client, std::function<void(T*)> func)
+    void for_each(mw::Client* client, std::function<void(T*)> func)
     {
         for (auto listener: listeners[client])
             func(listener);
     }
 
 private:
-    std::unordered_map<wl_client*, std::vector<T*>> listeners;
+    std::unordered_map<mw::Client*, std::vector<T*>> listeners;
 };
 
 class mf::WlSeat::ConfigObserver : public mi::InputDeviceObserver
@@ -232,17 +233,17 @@ auto mf::WlSeat::from(struct wl_resource* resource) -> WlSeat*
     return instance ? instance->seat : nullptr;
 }
 
-void mf::WlSeat::for_each_listener(wl_client* client, std::function<void(WlPointer*)> func)
+void mf::WlSeat::for_each_listener(mw::Client* client, std::function<void(WlPointer*)> func)
 {
     pointer_listeners->for_each(client, func);
 }
 
-void mf::WlSeat::for_each_listener(wl_client* client, std::function<void(WlKeyboard*)> func)
+void mf::WlSeat::for_each_listener(mw::Client* client, std::function<void(WlKeyboard*)> func)
 {
     keyboard_listeners->for_each(client, func);
 }
 
-void mf::WlSeat::for_each_listener(wl_client* client, std::function<void(WlTouch*)> func)
+void mf::WlSeat::for_each_listener(mw::Client* client, std::function<void(WlTouch*)> func)
 {
     touch_listeners->for_each(client, func);
 }
@@ -334,7 +335,7 @@ void mf::WlSeat::Instance::get_touch(wl_resource* new_touch)
         });
 }
 
-void mf::WlSeat::add_focus_listener(wl_client* client, FocusListener* listener)
+void mf::WlSeat::add_focus_listener(mw::Client* client, FocusListener* listener)
 {
     focus_listeners->register_listener(client, listener);
     if (focused_client == client)
@@ -347,7 +348,7 @@ void mf::WlSeat::add_focus_listener(wl_client* client, FocusListener* listener)
     }
 }
 
-void mf::WlSeat::remove_focus_listener(wl_client* client, FocusListener* listener)
+void mf::WlSeat::remove_focus_listener(mw::Client* client, FocusListener* listener)
 {
     focus_listeners->unregister_listener(client, listener);
 }

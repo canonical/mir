@@ -529,3 +529,13 @@ global:
     virtual?thunk?to?mir::wayland::VirtualPointerV1::?VirtualPointerV1*;
   };
 } MIRWAYLAND_2.8;
+
+MIRWAYLAND_2.10 {
+global:
+  extern "C++" {
+    mir::wayland::Client::from*;
+    mir::wayland::Client::register_client*;
+    mir::wayland::Client::unregister_client*;
+    virtual?thunk?to?mir::wayland::Resource::?Resource*;
+  };
+} MIRWAYLAND_2.9;

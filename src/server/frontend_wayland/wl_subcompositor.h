@@ -20,7 +20,6 @@
 #include "wayland_wrapper.h"
 #include "wl_surface_role.h"
 #include "wl_surface.h"
-#include "wl_client.h"
 
 #include <vector>
 #include <memory>
@@ -30,6 +29,10 @@ namespace mir
 namespace shell
 {
 class StreamSpecification;
+}
+namespace wayland
+{
+class Client;
 }
 namespace frontend
 {
@@ -78,7 +81,6 @@ private:
     WlSurface* const surface;
     /// This class is responsible for removing itself from the parent's children list when needed
     wayland::Weak<WlSurface> const parent;
-    wayland::Weak<WlClient> const weak_client;
     bool synchronized_;
     std::optional<WlSurfaceState> cached_state;
 };

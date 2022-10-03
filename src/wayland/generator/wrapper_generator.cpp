@@ -63,6 +63,7 @@ Emitter impl_includes(std::string const& protocol_name)
         empty_line,
         "#include \"mir/log.h\"",
         "#include \"mir/wayland/protocol_error.h\"",
+        "#include \"mir/wayland/client.h\"",
     };
 }
 
