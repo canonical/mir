@@ -21,6 +21,7 @@
 #include "mir/fd.h"
 
 #include <memory>
+#include <mutex>
 #include <vector>
 #include <functional>
 
@@ -47,6 +48,7 @@ public:
     void set_weak_main_loop(std::shared_ptr<mir::MainLoop> main_loop);
 
 private:
+    std::mutex mutex;
     std::weak_ptr<mir::MainLoop> weak_main_loop;
 
     // Backlog of FdInfo used to register all handlers 
