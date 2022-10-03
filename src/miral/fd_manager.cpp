@@ -30,11 +30,11 @@ FdManager::~FdManager()
 }
 
 auto FdManager::register_handler(mir::Fd fd, std::function<void(int)> const& handler)
--> std::unique_ptr<FdHandle>
+-> FdHandle
 {
     std::lock_guard<std::mutex> lock{mutex};
     
-    auto handle = std::make_unique<FdHandle>(shared_from_this());
+    auto handle = FdHandle(shared_from_this());
 
     if (auto const main_loop = weak_main_loop.lock().get())
     {
@@ -42,7 +42,7 @@ auto FdManager::register_handler(mir::Fd fd, std::function<void(int)> const& han
     }
     else
     {
-        auto fd_info = FdInfo{fd, handle.get(), handler};
+        auto fd_info = FdInfo{fd, &handle, handler};
         backlog.push_back(fd_info);
     }
 
@@ -70,7 +70,7 @@ void FdManager::set_weak_main_loop(std::shared_ptr<mir::MainLoop> main_loop)
     {
         main_loop->register_fd_handler({handle.fd}, handle.owner, handle.handler);
     }
-    
+
     backlog.clear();
 
     weak_main_loop = main_loop;

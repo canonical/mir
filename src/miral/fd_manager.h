@@ -41,7 +41,7 @@ public:
     ~FdManager();
 
     auto register_handler(mir::Fd fd, std::function<void(int)> const& handler)
-    -> std::unique_ptr<FdHandle>;
+    -> FdHandle;
 
     void unregister_handler(void const* owner);
 
@@ -61,12 +61,16 @@ private:
 struct FdHandle
 {
 public:
-    FdHandle(std::shared_ptr<FdManager> manager);
     ~FdHandle();
 
+private:
     friend class FdManager;
 
-private:
+    FdHandle(std::shared_ptr<FdManager> manager);
+    FdHandle(FdHandle const&) = delete;
+    FdHandle& operator=(FdHandle const&) = delete;
+    FdHandle(FdHandle&&) = default;
+
     std::shared_ptr<FdManager> manager;
 };
 
