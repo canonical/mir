@@ -144,10 +144,9 @@ try
         server->set_command_line(argc, argv);
         server->apply_settings();
         apply_env_hacks(*server);
-        
         weak_server = server;
 
-        auto const main_loop = server->the_main_loop();
+        auto main_loop = server->the_main_loop();
 
         for (auto const& signal : signal_backlog)
         {
