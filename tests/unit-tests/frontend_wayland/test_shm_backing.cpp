@@ -1,4 +1,3 @@
-
 /*
  * Copyright © 2022 Canonical Ltd.
  *
@@ -84,67 +83,23 @@ auto make_shm_fd(size_t size) -> mir::Fd
 }
 }
 
-template<typename pool>
-using can_get_wo_range =
-    decltype(mir::shm::get_wo_range(pool{}, size_t{}, size_t{}));
-
-template<typename pool>
-using can_get_ro_range =
-    decltype(mir::shm::get_ro_range(pool{}, mir::Fd{}, size_t{}));
-
-template<typename pool>
-using can_get_rw_range =
-    decltype(mir::shm::get_rw_range(pool{}, mir::Fd{}, size_t{}));
-
-TEST(ShmBacking, can_not_get_writeable_range_on_ro_pool)
-{
-    constexpr bool can_get_writable_range =
-        std::experimental::is_detected_v<
-            can_get_wo_range,
-            decltype(mir::shm::make_shm_backing_store<PROT_READ>(mir::Fd{}, size_t{}))>;
-
-    constexpr bool can_get_readwrite_range =
-        std::experimental::is_detected_v<
-            can_get_rw_range,
-            decltype(mir::shm::make_shm_backing_store<PROT_READ>(mir::Fd{}, size_t{}))>;
-
-    EXPECT_FALSE(can_get_writable_range);
-    EXPECT_FALSE(can_get_readwrite_range);
-}
-
-TEST(ShmBacking, can_not_get_readable_range_on_wo_pool)
-{
-    constexpr bool can_get_readable_range =
-        std::experimental::is_detected_v<
-            can_get_ro_range,
-            decltype(mir::shm::make_shm_backing_store<PROT_WRITE>(mir::Fd{}, size_t{}))>;
-
-    constexpr bool can_get_readwrite_range =
-        std::experimental::is_detected_v<
-            can_get_rw_range,
-            decltype(mir::shm::make_shm_backing_store<PROT_WRITE>(mir::Fd{}, size_t{}))>;
-
-    EXPECT_FALSE(can_get_readable_range);
-    EXPECT_FALSE(can_get_readwrite_range);
-}
-
 TEST(ShmBacking, can_get_rw_range_covering_whole_pool)
 {
     using namespace testing;
 
     constexpr size_t const shm_size = 4000;
     auto shm_fd = make_shm_fd(shm_size);
-    auto backing = mir::shm::make_shm_backing_store<PROT_READ | PROT_WRITE>(shm_fd, shm_size);
+    auto backing = mir::shm::rw_pool_from_fd(shm_fd, shm_size);
 
-    auto mappable = mir::shm::get_rw_range(backing, 0, shm_size);
+    auto mappable = backing->get_rw_range(0, shm_size);
 
     auto mapping = mappable->map_rw();
 
-    constexpr unsigned char const fill_value{0xab};
-    ::memset(mapping->data(), fill_value, shm_size);
+    constexpr std::byte const fill_value{0xab};
+    ::memset(mapping->data(), std::to_integer<int>(fill_value), shm_size);
     for(auto i = 0; i < shm_size; ++i)
     {
-        EXPECT_THAT(mapping->data()[i], Eq(fill_value));
+        EXPECT_THAT((*mapping)[i], Eq(fill_value));
     }
 }
 
@@ -154,13 +109,13 @@ TEST(ShmBacking, get_rw_range_checks_the_range_fits)
 
     constexpr size_t const shm_size = 4000;
     auto shm_fd = make_shm_fd(shm_size);
-    auto backing = mir::shm::make_shm_backing_store<PROT_READ | PROT_WRITE>(shm_fd, shm_size);
+    auto backing = mir::shm::rw_pool_from_fd(shm_fd, shm_size);
 
     // Check each range from [0, shm_size + 1] - [shm_size - 1, shm_size + 1]
     for (auto i = 0u; i < shm_size - 1; ++i)
     {
         EXPECT_THROW(
-            mir::shm::get_rw_range(backing, i, shm_size + 1 - i),
+            backing->get_rw_range(i, shm_size + 1 - i),
             std::runtime_error
         );
     }
@@ -172,15 +127,15 @@ TEST(ShmBacking, get_rw_range_checks_handle_overflows)
 
     constexpr size_t const shm_size = 4000;
     auto shm_fd = make_shm_fd(shm_size);
-    auto backing = mir::shm::make_shm_backing_store<PROT_READ | PROT_WRITE>(shm_fd, shm_size);
+    auto backing = mir::shm::rw_pool_from_fd(shm_fd, shm_size);
 
     EXPECT_THROW(
-        mir::shm::get_rw_range(backing, std::numeric_limits<size_t>::max() - 1, 2),
+        backing->get_rw_range(std::numeric_limits<size_t>::max() - 1, 2),
         std::runtime_error
     );
 
     EXPECT_THROW(
-        mir::shm::get_rw_range(backing, 2, std::numeric_limits<size_t>::max() - 1),
+        backing->get_rw_range(2, std::numeric_limits<size_t>::max() - 1),
         std::runtime_error
     );
 }
@@ -191,28 +146,26 @@ TEST(ShmBackingDeathTest, reads_from_range_fault_after_range_and_backing_are_des
 
     constexpr size_t const shm_size = 4000;
     auto shm_fd = make_shm_fd(shm_size);
-    auto backing = mir::shm::make_shm_backing_store<PROT_READ | PROT_WRITE>(shm_fd, shm_size);
+    auto backing = mir::shm::rw_pool_from_fd(shm_fd, shm_size);
 
-    auto range = mir::shm::get_rw_range(backing, 0, shm_size);
+    auto range = backing->get_rw_range(0, shm_size);
     auto map = range->map_rw();
-    std::span data{map->data(), map->len()};
 
     // First demonstrate that we *can* read it while the range/backing is live
-    for (auto const& c : data)
+    for (auto const& c : *map)
     {
         // We haven't written anything explicitly, so the kernel has helpfully 0-initialised it
-        EXPECT_THAT(c, Eq(0));
+        EXPECT_THAT(c, Eq(std::byte{0}));
     }
 
     // Free all the resources!
-    map = nullptr;
     range = nullptr;
     backing = nullptr;
     EXPECT_EXIT(
         {
-            for (auto const& c : data)
+            for (auto const& c : *map)
             {
-                EXPECT_THAT(c, Eq(0));
+                EXPECT_THAT(c, Eq(std::byte{0}));
             }
         },
         KilledBySignal(SIGSEGV),
@@ -226,22 +179,20 @@ TEST(ShmBackingDeathTest, writes_to_range_fault_after_range_and_backing_are_dest
 
     constexpr size_t const shm_size = 4000;
     auto shm_fd = make_shm_fd(shm_size);
-    auto backing = mir::shm::make_shm_backing_store<PROT_READ | PROT_WRITE>(shm_fd, shm_size);
+    auto backing = mir::shm::rw_pool_from_fd(shm_fd, shm_size);
 
-    auto range = mir::shm::get_rw_range(backing, 0, shm_size);
+    auto range = backing->get_rw_range(0, shm_size);
     auto map = range->map_rw();
-    std::span data{map->data(), map->len()};
 
     // First demonstrate that we *can* read it while the range/backing is live
-    ::memset(data.data(), 'a', data.size_bytes());
+    ::memset(map->data(), 'a', map->len());
 
     // Free all the resources!
-    map = nullptr;
     range = nullptr;
     backing = nullptr;
     EXPECT_EXIT(
         {
-            ::memset(data.data(), 'a', data.size_bytes());
+            ::memset(map->data(), 'a', map->len());
         },
         KilledBySignal(SIGSEGV),
         ""
@@ -254,30 +205,51 @@ TEST(ShmBacking, two_rw_ranges_see_each_others_changes)
 
     constexpr size_t const shm_size = 4000;
     auto shm_fd = make_shm_fd(shm_size);
-    auto backing = mir::shm::make_shm_backing_store<PROT_READ | PROT_WRITE>(shm_fd, shm_size);
+    auto backing = mir::shm::rw_pool_from_fd(shm_fd, shm_size);
 
-    auto range_one = mir::shm::get_rw_range(backing, 0, shm_size);
-    auto range_two = mir::shm::get_rw_range(backing, shm_size / 2, shm_size / 2);
+    auto range_one = backing->get_rw_range(0, shm_size);
+    auto range_two = backing->get_rw_range(shm_size / 2, shm_size / 2);
 
     auto map_one = range_one->map_rw();
     auto map_two = range_two->map_rw();
 
-    int const mapping_one_fill = 0xaa;
-    int const mapping_two_fill = 0xce;
-    ::memset(map_one->data(), mapping_one_fill, map_one->len());
-    ::memset(map_two->data(), mapping_two_fill, map_two->len());
+    auto const mapping_one_fill = std::byte{0xaa};
+    auto const mapping_two_fill = std::byte{0xce};
+    ::memset(map_one->data(), std::to_integer<int>(mapping_one_fill), map_one->len());
+    ::memset(map_two->data(), std::to_integer<int>(mapping_two_fill), map_two->len());
 
-    for (auto const& a : std::span(map_two->data(), map_two->len()))
+    for (auto const& a : *map_two)
     {
         EXPECT_THAT(a, Eq(mapping_two_fill));
     }
 
     for (auto i = 0; i < shm_size / 2; ++i)
     {
-        EXPECT_THAT(map_one->data()[i], Eq(mapping_one_fill));
+        EXPECT_THAT((*map_one)[i], Eq(mapping_one_fill));
     }
     for (auto i = shm_size / 2; i < shm_size; ++i)
     {
-        EXPECT_THAT(map_one->data()[i], Eq(mapping_two_fill));
+        EXPECT_THAT((*map_one)[i], Eq(mapping_two_fill));
+    }
+}
+
+TEST(ShmBacking, DISABLED_range_stays_vaild_after_backing_destroyed)
+{
+    using namespace testing;
+
+    constexpr size_t const shm_size = 4000;
+    auto shm_fd = make_shm_fd(shm_size);
+    auto backing = mir::shm::rw_pool_from_fd(shm_fd, shm_size);
+
+    auto range = backing->get_rw_range(0, shm_size);
+
+    backing = nullptr;
+
+    auto map = range->map_rw();
+    ::memset(map->data(), 's', map->len());
+
+    for (auto const& a : *map)
+    {
+        EXPECT_THAT(a, Eq(std::byte{'s'}));
     }
 }

@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <system_error>
+#include <memory>
 #include <boost/throw_exception.hpp>
 
 namespace
@@ -94,10 +95,45 @@ public:
     {
         return size;
     }
-
 private:
     T* const ptr;
     size_t const size;
+};
+
+class ROMappableRange : public mir::ReadMappableRange
+{
+public:
+    ROMappableRange(void* ptr, size_t len)
+        : ptr{ptr},
+          len{len}
+    {
+    }
+
+    auto map_ro() -> std::unique_ptr<mir::Mapping<std::byte const>> override
+    {
+        return std::make_unique<ShmBackedMapping<std::byte const>>(static_cast<std::byte const*>(ptr), len);
+    }
+private:
+    void* const ptr;
+    size_t const len;
+};
+
+class WOMappableRange : public mir::WriteMappableRange
+{
+public:
+    WOMappableRange(void* ptr, size_t len)
+        : ptr{ptr},
+          len{len}
+    {
+    }
+
+    auto map_wo() -> std::unique_ptr<mir::Mapping<std::byte>> override
+    {
+        return std::make_unique<ShmBackedMapping<std::byte>>(static_cast<std::byte*>(ptr), len);
+    }
+private:
+    void* const ptr;
+    size_t const len;
 };
 
 class RWMappableRange : public mir::RWMappableRange
@@ -109,59 +145,53 @@ public:
     {
     }
 
-    auto map_rw() -> std::unique_ptr<mir::Mapping<unsigned char>>
+    auto map_rw() -> std::unique_ptr<mir::Mapping<std::byte>> override
     {
-        return std::make_unique<ShmBackedMapping<unsigned char>>(static_cast<unsigned char*>(ptr), len);
+        return std::make_unique<ShmBackedMapping<std::byte>>(static_cast<std::byte*>(ptr), len);
     }
 
-    auto map_wo() -> std::unique_ptr<mir::Mapping<unsigned char>>
+    auto map_ro() -> std::unique_ptr<mir::Mapping<std::byte const>> override
     {
-        return std::make_unique<ShmBackedMapping<unsigned char>>(static_cast<unsigned char*>(ptr), len);
+        return std::make_unique<ShmBackedMapping<std::byte const>>(static_cast<std::byte*>(ptr), len);
     }
 
-    auto map_ro() -> std::unique_ptr<mir::Mapping<unsigned char const>>
+    auto map_wo() -> std::unique_ptr<mir::Mapping<std::byte>> override
     {
-        return std::make_unique<ShmBackedMapping<unsigned char const>>(static_cast<unsigned char*>(ptr), len);
+        return std::make_unique<ShmBackedMapping<std::byte>>(static_cast<std::byte*>(ptr), len);
     }
 private:
     void* const ptr;
     size_t const len;
 };
-}
 
-template<int prot>
-class mir::shm::Backing
+class RWShmBackedPool : public mir::shm::ReadWritePool, public std::enable_shared_from_this<RWShmBackedPool>
 {
 public:
-    Backing(mir::Fd const& backing, size_t claimed_size)
-        : backing{backing, claimed_size, prot}
+    RWShmBackedPool(mir::Fd const& backing, size_t claimed_size)
+        : backing_store{backing, claimed_size, PROT_READ | PROT_WRITE}
     {
     }
 
-    ::ShmBacking backing;    
+    auto get_rw_range(size_t start, size_t len) -> std::unique_ptr<mir::RWMappableRange> override
+    {
+        return backing_store.get_range<RWMappableRange>(start, len);
+    }
+
+    auto get_ro_range(size_t start, size_t len) -> std::unique_ptr<mir::ReadMappableRange> override
+    {
+        return backing_store.get_range<ROMappableRange>(start, len);
+    }
+
+    auto get_wo_range(size_t start, size_t len) -> std::unique_ptr<mir::WriteMappableRange> override
+    {
+        return backing_store.get_range<WOMappableRange>(start, len);
+    }
+private:
+    ShmBacking backing_store; 
 };
-
-template<int prot>
-auto mir::shm::make_shm_backing_store(mir::Fd const& backing, size_t claimed_size)
-    -> std::shared_ptr<Backing<prot>>
-{
-    return std::make_shared<Backing<prot>>(backing, claimed_size);
 }
 
-template
-auto mir::shm::make_shm_backing_store<PROT_READ>(mir::Fd const&, size_t)
-  -> std::shared_ptr<Backing<PROT_READ>>;
-template
-auto mir::shm::make_shm_backing_store<PROT_WRITE>(mir::Fd const&, size_t)
-  -> std::shared_ptr<Backing<PROT_WRITE>>;
-template
-auto mir::shm::make_shm_backing_store<PROT_WRITE | PROT_READ>(mir::Fd const&, size_t)
-  -> std::shared_ptr<Backing<PROT_WRITE | PROT_READ>>;
-
-template<>
-auto mir::shm::get_rw_range(std::shared_ptr<mir::shm::Backing<PROT_READ | PROT_WRITE>> pool, size_t start, size_t len)
-    -> std::unique_ptr<mir::RWMappableRange>
+auto mir::shm::rw_pool_from_fd(mir::Fd const& backing, size_t claimed_size) -> std::shared_ptr<ReadWritePool>
 {
-    return pool->backing.get_range<::RWMappableRange>(start, len);
+    return std::make_shared<RWShmBackedPool>(backing, claimed_size);
 }
-
