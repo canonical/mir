@@ -20,7 +20,6 @@
 
 #include <sys/mman.h>
 #include <fcntl.h>
-#include <linux/memfd.h>
 #include <sys/syscall.h>
 
 #include <system_error>
@@ -37,11 +36,6 @@ bool error_indicates_tmpfile_not_supported(int error)
         error == EOPNOTSUPP ||    // Filesystem that directory resides on does not support O_TMPFILE
         error == EINVAL;    // There apparently exists at least one development board that has a kernel
                             // that incorrectly returns EINVAL. Yay.
-}
-
-int memfd_create(char const* name, unsigned int flags)
-{
-    return static_cast<int>(syscall(SYS_memfd_create, name, flags));
 }
 
 mir::Fd create_anonymous_file(size_t size)
