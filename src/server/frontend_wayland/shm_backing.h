@@ -64,7 +64,8 @@ public:
     ReadOnlyPool() = default;
     virtual ~ReadOnlyPool() = default;
 
-    virtual auto get_ro_range(size_t start, size_t len) -> std::unique_ptr<ReadMappableRange> = 0;    
+    virtual auto get_ro_range(size_t start, size_t len) -> std::unique_ptr<ReadMappableRange> = 0;
+    virtual void resize(size_t new_size) = 0;
 };
 
 class WriteOnlyPool
@@ -74,6 +75,7 @@ public:
     virtual ~WriteOnlyPool() = default;
 
     virtual auto get_wo_range(size_t start, size_t len) -> std::unique_ptr<WriteMappableRange> = 0;
+    virtual void resize(size_t new_size) = 0;
 };
 
 class ReadWritePool : public ReadOnlyPool, public WriteOnlyPool
@@ -83,6 +85,7 @@ public:
     virtual ~ReadWritePool() = default;
 
     virtual auto get_rw_range(size_t start, size_t len) -> std::unique_ptr<RWMappableRange> = 0;
+    void resize(size_t new_size) override = 0;
 };
 
 auto rw_pool_from_fd(mir::Fd const& backing, size_t claimed_size) -> std::shared_ptr<ReadWritePool>;
