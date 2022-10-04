@@ -313,6 +313,7 @@ void TextInputV1::focus_on(mf::WlSurface* surface)
     else
     {
         deactivate(nullptr);
+        ctx->text_input_hub->deactivate_handler(handler);
     }
 }
 
