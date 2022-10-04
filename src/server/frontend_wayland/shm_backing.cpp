@@ -342,7 +342,7 @@ public:
 
     auto access_fault() const -> bool override
     {
-        return false;
+        return sigbus_guard->invalid_access_prevented();
     }
 private:
     void* const ptr;
@@ -373,7 +373,7 @@ public:
 
     auto access_fault() const -> bool override
     {
-        return false;
+        return sigbus_guard->invalid_access_prevented();
     }
 private:
     void* const ptr;
@@ -416,7 +416,7 @@ public:
 
     auto access_fault() const -> bool override
     {
-        return false;
+        return sigbus_guard->invalid_access_prevented();
     }
 private:
     void* const ptr;
