@@ -293,3 +293,24 @@ TEST(ShmBacking, read_from_invalid_memory_returns_0)
         EXPECT_THAT(a, Eq(std::byte{0}));
     }
 }
+
+TEST(ShmBacking, access_fault_is_true_after_invaild_read)
+{
+    using namespace testing;
+
+    constexpr size_t const shm_size = 4000;
+    constexpr size_t const claimed_size = shm_size * 2;    // Lie about our backing size
+    auto shm_fd = make_shm_fd(shm_size);
+    auto backing = mir::shm::rw_pool_from_fd(shm_fd, claimed_size);
+
+    auto range = backing->get_rw_range(0, claimed_size);
+
+    auto map = range->map_ro();
+
+    for (auto const& a : *map)
+    {
+        EXPECT_THAT(a, Eq(std::byte{0}));
+    }
+
+    EXPECT_TRUE(range->access_fault());
+}
