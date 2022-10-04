@@ -419,3 +419,31 @@ TEST(ShmBacking, doesnt_install_sigbus_handler_when_backing_is_safe)
 
     EXPECT_THAT(new_sigbus_handler, SignalHandlerIsEqual(initial_sigbus_handler));
 }
+
+TEST(ShmBacking, can_resize_pool)
+{
+    using namespace testing;
+
+    constexpr size_t const initial_size = 4000;
+    constexpr size_t const new_size = initial_size + 400;
+
+    auto shm_fd = make_shm_fd(initial_size);
+    auto backing = mir::shm::rw_pool_from_fd(shm_fd, initial_size);
+
+    if (ftruncate(shm_fd, new_size) == -1)
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to resize shm fd"}));
+    }
+    backing->resize(new_size);
+
+    auto range = backing->get_rw_range(0, new_size);
+    auto map = range->map_rw();
+
+    std::byte const expected_content{0xfa};
+    ::memset(map->data(), std::to_integer<int>(expected_content), map->len());
+
+    for(auto const& a : *map)
+    {
+        EXPECT_THAT(a, Eq(expected_content));
+    }
+}
