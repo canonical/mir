@@ -50,7 +50,7 @@ auto make_shm_fd(size_t size) -> mir::Fd
         // Workaround for filesystems that don't support O_TMPFILE
         if (fd == -1 && error_indicates_tmpfile_not_supported(errno))
         {
-            char template_filename[] = "/dev/shm/wlcs-buffer-XXXXXX";
+            char template_filename[] = "/dev/shm/test-shm-XXXXXX";
             fd = mkostemp(template_filename, O_CLOEXEC);
             if (fd != -1)
             {
