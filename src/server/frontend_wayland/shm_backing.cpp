@@ -233,6 +233,8 @@ public:
     template<typename Mapping, typename Parent>
     auto get_range(size_t start, size_t len, std::shared_ptr<Parent> parent)
         -> std::unique_ptr<Mapping>;
+
+    void resize(size_t new_size);
 private:
     std::shared_ptr<ShmBufferSIGBUSHandler> const sigbus_handler;
     void* mapped_address;
@@ -294,6 +296,12 @@ auto ShmBacking::get_range(size_t start, size_t len, std::shared_ptr<Parent> par
         start_addr, len,
         std::move(parent),
         size_is_trustworthy ? nullptr : sigbus_handler->protect_access_to(start_addr, len));
+}
+
+void ShmBacking::resize(size_t new_size)
+{
+    mapped_address = ::mremap(mapped_address, size, new_size, MREMAP_MAYMOVE);
+    size = new_size;
 }
 
 template<typename T>
@@ -446,6 +454,11 @@ public:
     auto get_wo_range(size_t start, size_t len) -> std::unique_ptr<mir::WriteMappableRange> override
     {
         return backing_store.get_range<WOMappableRange>(start, len, shared_from_this());
+    }
+
+    void resize(size_t new_size) override
+    {
+        backing_store.resize(new_size);
     }
 private:
     ShmBacking backing_store; 
