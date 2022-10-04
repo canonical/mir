@@ -16,6 +16,7 @@
 
 #include "src/server/frontend_wayland/shm_backing.h"
 
+#include <linux/memfd.h>
 #include <sys/mman.h>
 #include <sys/syscall.h>
 #include <fcntl.h>
@@ -24,6 +25,8 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <system_error>
+#include <unistd.h>
 
 namespace
 {
@@ -74,6 +77,25 @@ auto make_shm_fd(size_t size) -> mir::Fd
     }
 
     return mir::Fd{fd};
+}
+
+auto make_shm_fd_with_seals(size_t size, int seals) -> mir::Fd
+{
+    mir::Fd fd{memfd_create("mir-shm-test", MFD_CLOEXEC | MFD_ALLOW_SEALING)};
+    if (fd == mir::Fd::invalid)
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to create memfd"}));
+    }
+    if (fcntl(fd, F_ADD_SEALS, seals) == -1)
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to seal memfd"}));
+    }
+    if (ftruncate(fd, size) == -1)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::system_error(errno, std::system_category(), "Failed to resize temporary file"));
+    }
+    return fd;
 }
 }
 
@@ -347,4 +369,53 @@ TEST(ShmBacking, access_into_invalid_range_works_even_after_backing_destroyed)
         // We've not initialised anything, so we expect the kernel to 0-initialise
         EXPECT_THAT(a, Eq(std::byte{0}));
     }
+}
+
+MATCHER_P(SignalHandlerIsEqual, handler, "")
+{
+    using namespace testing;
+
+    // TODO: Should test handler.sa_mask, but that requires introspecting the opaque sigset_t and is annoying
+    bool is_equal = ExplainMatchResult(Eq(handler.sa_flags), arg.sa_flags, result_listener);
+    if (handler.sa_flags & SA_SIGINFO)
+    {
+        is_equal &= ExplainMatchResult(Eq(handler.sa_sigaction), arg.sa_sigaction, result_listener);
+    }
+    else
+    {
+        is_equal &= ExplainMatchResult(Eq(handler.sa_handler), arg.sa_handler, result_listener);
+    }
+    return is_equal;
+}
+
+TEST(ShmBacking, doesnt_install_sigbus_handler_when_backing_is_safe)
+{
+    using namespace testing;
+
+    constexpr size_t const shm_size = 4000;
+
+    mir::Fd shm_fd;
+    try
+    {
+        shm_fd = make_shm_fd_with_seals(shm_size, F_SEAL_SHRINK);
+    }
+    catch (std::system_error const&)
+    {
+        GTEST_SKIP();    // We can't allocate a memfd, so we can't test F_SEAL
+    }
+
+    // Store the initial SIGBUS handler
+    struct sigaction initial_sigbus_handler;
+    sigaction(SIGBUS, nullptr, &initial_sigbus_handler);
+
+    // Construct a backing, a range from it, and map from the range.
+    // This should install a SIGBUS handler if it were necessary
+    auto backing = mir::shm::rw_pool_from_fd(shm_fd, shm_size);
+    auto range = backing->get_rw_range(0, shm_size);
+    auto map = range->map_rw();
+
+    struct sigaction new_sigbus_handler;
+    sigaction(SIGBUS, nullptr, &new_sigbus_handler);
+
+    EXPECT_THAT(new_sigbus_handler, SignalHandlerIsEqual(initial_sigbus_handler));
 }

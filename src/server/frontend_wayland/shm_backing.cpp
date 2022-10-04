@@ -293,7 +293,7 @@ auto ShmBacking::get_range(size_t start, size_t len, std::shared_ptr<Parent> par
     return std::make_unique<Mapping>(
         start_addr, len,
         std::move(parent),
-        sigbus_handler->protect_access_to(start_addr, len));
+        size_is_trustworthy ? nullptr : sigbus_handler->protect_access_to(start_addr, len));
 }
 
 template<typename T>
@@ -342,7 +342,7 @@ public:
 
     auto access_fault() const -> bool override
     {
-        return sigbus_guard->invalid_access_prevented();
+        return sigbus_guard ? sigbus_guard->invalid_access_prevented() : false;
     }
 private:
     void* const ptr;
@@ -373,7 +373,7 @@ public:
 
     auto access_fault() const -> bool override
     {
-        return sigbus_guard->invalid_access_prevented();
+        return sigbus_guard ? sigbus_guard->invalid_access_prevented() : false;
     }
 private:
     void* const ptr;
@@ -416,7 +416,7 @@ public:
 
     auto access_fault() const -> bool override
     {
-        return sigbus_guard->invalid_access_prevented();
+        return sigbus_guard ? sigbus_guard->invalid_access_prevented() : false;
     }
 private:
     void* const ptr;
