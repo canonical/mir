@@ -314,3 +314,43 @@ TEST(ShmBacking, access_fault_is_true_after_invaild_read)
 
     EXPECT_TRUE(range->access_fault());
 }
+
+TEST(ShmBacking, access_fault_is_true_after_invaild_write)
+{
+    using namespace testing;
+
+    constexpr size_t const shm_size = 4000;
+    constexpr size_t const claimed_size = shm_size * 2;    // Lie about our backing size
+    auto shm_fd = make_shm_fd(shm_size);
+    auto backing = mir::shm::rw_pool_from_fd(shm_fd, claimed_size);
+
+    auto range = backing->get_rw_range(0, claimed_size);
+
+    auto map = range->map_wo();
+
+    ::memset(map->data(), 0xab, map->len());
+
+    EXPECT_TRUE(range->access_fault());
+}
+
+TEST(ShmBacking, access_into_invalid_range_works_even_after_backing_destroyed)
+{
+    using namespace testing;
+
+    constexpr size_t const shm_size = 4000;
+    constexpr size_t const claimed_size = shm_size * 2;
+    auto shm_fd = make_shm_fd(shm_size);
+    auto backing = mir::shm::rw_pool_from_fd(shm_fd, claimed_size);
+
+    auto range = backing->get_rw_range(0, claimed_size);
+
+    backing = nullptr;
+
+    auto map = range->map_rw();
+
+    for (auto const& a : *map)
+    {
+        // We've not initialised anything, so we expect the kernel to 0-initialise
+        EXPECT_THAT(a, Eq(std::byte{0}));
+    }
+}
