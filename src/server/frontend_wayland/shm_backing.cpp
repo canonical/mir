@@ -260,13 +260,13 @@ ShmBacking::ShmBacking(mir::Fd const& backing_store, size_t claimed_size, int pr
         // If we can't do that optimisation, we're done.
         return;
     }
-    struct stat file_info;
     if (file_seals & F_SEAL_SHRINK)
     {
         /* The kernel promises that the underlying file cannot get smaller, so we can
          * usefully check to see if it's big enough now, and if so, we don't have to do the SIGBUS
          * dance
          */
+        struct stat file_info;
         if (fstat(backing_store, &file_info) >= 0)
         {
             size_is_trustworthy = static_cast<size_t>(file_info.st_size) >= claimed_size;
