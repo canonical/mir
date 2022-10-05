@@ -158,9 +158,17 @@ mf::XWaylandWM::XWaylandWM(
 
     xcb_composite_redirect_subwindows(*connection, connection->root_window(), XCB_COMPOSITE_REDIRECT_MANUAL);
 
+    /*
+    Not supported:
+    _NET_WM_STATE_FOCUSED
+    _NET_WM_STATE_MODAL
+    _NET_CLIENT_LIST
+    _NET_CLIENT_LIST_STACKING
+    */
     xcb_atom_t const supported[]{
         connection->_NET_WM_MOVERESIZE,
         connection->_NET_WM_STATE,
+        connection->_NET_WM_STATE_HIDDEN,
         connection->_NET_WM_STATE_FULLSCREEN,
         connection->_NET_WM_STATE_MAXIMIZED_VERT,
         connection->_NET_WM_STATE_MAXIMIZED_HORZ,

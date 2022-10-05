@@ -47,6 +47,22 @@ class WlSeat;
 class XWaylandWM;
 class XWaylandSurfaceObserver;
 
+/// See ICCCM 4.1.3.1 (https://tronche.com/gui/x/icccm/sec-4.html)
+enum class WmState: uint32_t
+{
+    WITHDRAWN = 0,
+    NORMAL = 1,
+    ICONIC = 3,
+};
+
+// See https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html#idm45805407959456
+enum class NetWmStateAction: uint32_t
+{
+    REMOVE = 0,
+    ADD = 1,
+    TOGGLE = 2,
+};
+
 class XWaylandSurface
     : public XWaylandSurfaceRoleSurface,
       public XWaylandSurfaceObserverSurface
@@ -75,6 +91,52 @@ public:
     void move_resize(uint32_t detail);
 
 private:
+    struct StateTracker
+    {
+        static auto make_withdrawn() -> StateTracker
+        {
+            return StateTracker{scene::SurfaceStateTracker(mir_window_state_restored), true};
+        }
+
+        auto operator==(StateTracker other) const -> bool
+        {
+            return mir_state == other.mir_state && withdrawn == other.withdrawn;
+        }
+
+        auto active_mir_state() const -> MirWindowState
+        {
+            return withdrawn ? mir_window_state_hidden : mir_state.active_state();
+        }
+        auto with_active_mir_state(MirWindowState state) const
+        {
+            return StateTracker{mir_state.with_active_state(state), false};
+        }
+        auto with_withdrawn(bool is_withdrawn) const -> StateTracker { return StateTracker{mir_state, is_withdrawn}; }
+
+        auto wm_state() const -> WmState;
+        auto with_wm_state(WmState wm_state) const -> StateTracker;
+
+        auto net_wm_state(XCBConnection const& conn) const -> std::optional<std::vector<xcb_atom_t>>;
+        auto with_net_wm_state_change(
+            XCBConnection const& conn,
+            NetWmStateAction action,
+            xcb_atom_t net_wm_state) const -> StateTracker;
+
+        // Can be freely copied and assigned
+        StateTracker(const StateTracker&) = default;
+        StateTracker& operator=(const StateTracker&) = default;
+
+    private:
+        explicit StateTracker(scene::SurfaceStateTracker mir_state, bool withdrawn)
+            : mir_state{mir_state},
+              withdrawn{withdrawn}
+        {
+        }
+
+        scene::SurfaceStateTracker mir_state;
+        bool withdrawn;
+    };
+
     /// Overrides from XWaylandSurfaceObserverSurface
     /// @{
     void scene_surface_focus_set(bool has_focus) override;
@@ -103,7 +165,7 @@ private:
 
     /// Updates the window's WM_STATE and _NET_WM_STATE properties. Should NOT be called under lock. Calling with
     /// nullopt withdraws the window.
-    void inform_client_of_window_state(std::optional<scene::SurfaceStateTracker> const& state);
+    void inform_client_of_window_state(std::unique_lock<std::mutex> lock, StateTracker new_state);
 
     /// Calls connection->configure_window() with the given position and size, as well as tracking the calls made so
     /// future configure notifies can determine if the source was us or the client
@@ -161,11 +223,7 @@ private:
     {
         /// Reflects the _NET_WM_STATE and WM_STATE we have currently set on the window.
         /// Should only be modified by inform_client_of_window_state().
-        /// Initially set to hidden, which means withdrawn in X11.
-        scene::SurfaceStateTracker state{mir_window_state_restored};
-
-        /// If the window is withdrawn. Should only be modified by inform_client_of_window_state().
-        bool withdrawn{true};
+        StateTracker state{StateTracker::make_withdrawn()};
 
         /// If this window needs the server to give it input focus
         bool input_hint{true};
