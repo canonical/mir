@@ -209,10 +209,6 @@ auto mir::frontend::WaylandExtensions::get_extension(std::string const& name) co
     return {};
 }
 
-void mf::WaylandExtensions::run_builders(wl_display*, std::function<void(std::function<void()>&& work)> const&)
-{
-}
-
 mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<msh::Shell> const& shell,
     std::shared_ptr<time::Clock> const& clock,
