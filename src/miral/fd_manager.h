@@ -29,9 +29,6 @@ namespace mir { class MainLoop; }
 
 namespace miral
 {
-struct FdHandle;
-struct FdInfo;
-
 /// Used to create FdHandles which registers file descriptors onto the Server
 /// and automatically deregisters them once the handle is dropped
 class FdManager : public std::enable_shared_from_this<FdManager>
@@ -48,6 +45,15 @@ public:
     void set_main_loop(std::shared_ptr<mir::MainLoop> main_loop);
 
 private:
+    /// A struct holding the necessary info to register a file descriptor if FdManager::register_handler()
+    /// is called before the Server has started.
+    struct FdInfo
+    {
+        mir::Fd fd;
+        void const* owner;
+        std::function<void(int)> handler;
+    };
+
     std::mutex mutex;
     std::shared_ptr<mir::MainLoop> main_loop;
 
