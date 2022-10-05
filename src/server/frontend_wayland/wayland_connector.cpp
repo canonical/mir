@@ -407,6 +407,12 @@ void mf::WaylandConnector::stop()
     {
         mir::log_warning("WaylandConnector::stop() called on not-running connector?");
     }
+    wl_list* client_list = wl_display_get_client_list(display.get());
+    wl_client* client;
+    wl_client_for_each(client, client_list)
+    {
+        wl_client_destroy(client);
+    }
 }
 
 int mf::WaylandConnector::client_socket_fd() const
