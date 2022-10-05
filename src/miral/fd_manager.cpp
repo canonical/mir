@@ -34,11 +34,11 @@ auto FdManager::register_handler(mir::Fd fd, std::function<void(int)> const& han
 {
     std::lock_guard<std::mutex> lock{mutex};
     
-    auto handle = FdHandle(shared_from_this());
+    auto handle = std::make_unique<FdHandleImpl>(fd, shared_from_this());
 
     if (!main_loop.use_count() == 0)
     {
-        main_loop->register_fd_handler({fd}, &handle, handler);
+        main_loop->register_fd_handler({fd}, handle.get(), handler);
     }
     else
     {
@@ -78,12 +78,13 @@ void FdManager::set_main_loop(std::shared_ptr<mir::MainLoop> main_loop)
     this->main_loop = main_loop;
 }
 
-FdHandle::FdHandle(std::shared_ptr<FdManager> manager)
-: manager{manager}
+FdHandleImpl::FdHandleImpl(mir::Fd fd, std::shared_ptr<FdManager> manager)
+: fd{fd},
+  manager{manager}
 {
 }
 
-FdHandle::~FdHandle()
+FdHandleImpl::~FdHandleImpl()
 {
     manager->unregister_handler(this);
 }

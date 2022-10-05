@@ -56,31 +56,21 @@ private:
     std::vector<FdInfo> backlog;
 };
 
-/// A handle returned by FdManager::register_handler() which keeps a file descriptor open and
-/// watched in the main loop until it is no longer held.
-struct FdHandle
+struct FdHandleImpl : public FdHandle
 {
 public:
-    ~FdHandle();
+    FdHandleImpl(mir::Fd fd, std::shared_ptr<FdManager> manager);
+    ~FdHandleImpl() override;
+    FdHandleImpl(FdHandleImpl&&) = default;
 
 private:
     friend class FdManager;
+    
+    FdHandleImpl(FdHandle const&) = delete;
+    FdHandleImpl& operator=(FdHandleImpl const&) = delete;
 
-    FdHandle(std::shared_ptr<FdManager> manager);
-    FdHandle(FdHandle const&) = delete;
-    FdHandle& operator=(FdHandle const&) = delete;
-    FdHandle(FdHandle&&) = default;
-
-    std::shared_ptr<FdManager> manager;
-};
-
-/// A struct holding the necessary info to register a file descriptor if FdManager::register_handler()
-/// is called before the Server has started.
-struct FdInfo
-{
     mir::Fd fd;
-    void const* owner;
-    std::function<void(int)> handler;
+    std::shared_ptr<FdManager> manager;
 };
 }
 
