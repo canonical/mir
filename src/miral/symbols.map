@@ -468,5 +468,6 @@ global:
     "miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&, MirInputEventModifier)";
     miral::MirRunner::register_signal_handler*;
     miral::MirRunner::register_fd_handler*;
+    miral::FdHandle::?FdHandle*;
   };
 } MIRAL_3.6;

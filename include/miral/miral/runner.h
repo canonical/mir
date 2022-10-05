@@ -19,6 +19,7 @@
 
 #include "mir/optional_value.h"
 #include "mir/fd.h"
+#include "miral/fd_handle.h"
 
 #include <functional>
 #include <initializer_list>
@@ -33,8 +34,6 @@ namespace mir { class Server; }
  */
 namespace miral
 {
-struct FdHandle;
-
 /// Runner for applying initialization options to Mir.
 class MirRunner
 {
