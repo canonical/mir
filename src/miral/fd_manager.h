@@ -49,7 +49,7 @@ public:
 
 private:
     std::mutex mutex;
-    std::weak_ptr<mir::MainLoop> weak_main_loop;
+    std::shared_ptr<mir::MainLoop> main_loop;
 
     // Backlog of FdInfo used to register all handlers 
     // sent to register_handler() before the Server started
