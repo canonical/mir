@@ -30,7 +30,7 @@ FdManager::~FdManager()
 }
 
 auto FdManager::register_handler(mir::Fd fd, std::function<void(int)> const& handler)
--> FdHandle
+-> std::unique_ptr<FdHandle>
 {
     std::lock_guard<std::mutex> lock{mutex};
     
@@ -42,7 +42,7 @@ auto FdManager::register_handler(mir::Fd fd, std::function<void(int)> const& han
     }
     else
     {
-        auto fd_info = FdInfo{fd, &handle, handler};
+        auto fd_info = FdInfo{fd, handle.get(), handler};
         backlog.push_back(fd_info);
     }
 

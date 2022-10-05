@@ -222,7 +222,7 @@ void miral::MirRunner::register_signal_handler(
 }
 
 auto miral::MirRunner::register_fd_handler(mir::Fd fd, std::function<void(int)> const& handler)
--> miral::FdHandle
+-> std::unique_ptr<miral::FdHandle>
 {
     return self->fd_manager->register_handler(fd, handler);
 }

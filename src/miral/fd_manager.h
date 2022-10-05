@@ -41,7 +41,7 @@ public:
     ~FdManager();
 
     auto register_handler(mir::Fd fd, std::function<void(int)> const& handler)
-    -> FdHandle;
+    -> std::unique_ptr<FdHandle>;
 
     void unregister_handler(void const* owner);
 

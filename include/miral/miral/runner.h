@@ -62,7 +62,7 @@ public:
     auto register_fd_handler(
         mir::Fd fd,
         std::function<void(int)> const& handler)
-    -> miral::FdHandle;
+    -> std::unique_ptr<miral::FdHandle>;
 
     /// Set a handler for exceptions caught in run_with().
     /// run_with() invokes handler() in catch (...) blocks before returning EXIT_FAILURE.
