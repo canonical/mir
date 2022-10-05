@@ -537,5 +537,31 @@ global:
     mir::wayland::Client::register_client*;
     mir::wayland::Client::unregister_client*;
     virtual?thunk?to?mir::wayland::Resource::?Resource*;
+
+    mir::wayland::PrimarySelectionDeviceManagerV1::*;
+    non-virtual?thunk?to?mir::wayland::PrimarySelectionDeviceManagerV1::*;
+    typeinfo?for?mir::wayland::PrimarySelectionDeviceManagerV1;
+    vtable?for?mir::wayland::PrimarySelectionDeviceManagerV1;
+    typeinfo?for?mir::wayland::PrimarySelectionDeviceManagerV1::Global;
+    vtable?for?mir::wayland::PrimarySelectionDeviceManagerV1::Global;
+    virtual?thunk?to?mir::wayland::PrimarySelectionDeviceManagerV1::?PrimarySelectionDeviceManagerV1*;
+
+    mir::wayland::PrimarySelectionDeviceV1::*;
+    non-virtual?thunk?to?mir::wayland::PrimarySelectionDeviceV1::*;
+    typeinfo?for?mir::wayland::PrimarySelectionDeviceV1;
+    vtable?for?mir::wayland::PrimarySelectionDeviceV1;
+    virtual?thunk?to?mir::wayland::PrimarySelectionDeviceV1::?PrimarySelectionDeviceV1*;
+
+    mir::wayland::PrimarySelectionOfferV1::*;
+    non-virtual?thunk?to?mir::wayland::PrimarySelectionOfferV1::*;
+    typeinfo?for?mir::wayland::PrimarySelectionOfferV1;
+    vtable?for?mir::wayland::PrimarySelectionOfferV1;
+    virtual?thunk?to?mir::wayland::PrimarySelectionOfferV1::?PrimarySelectionOfferV1*;
+
+    mir::wayland::PrimarySelectionSourceV1::*;
+    non-virtual?thunk?to?mir::wayland::PrimarySelectionSourceV1::*;
+    typeinfo?for?mir::wayland::PrimarySelectionSourceV1;
+    vtable?for?mir::wayland::PrimarySelectionSourceV1;
+    virtual?thunk?to?mir::wayland::PrimarySelectionSourceV1::?PrimarySelectionSourceV1*;
   };
 } MIRWAYLAND_2.9;
