@@ -36,6 +36,7 @@
 #include "input_method_v2.h"
 #include "idle_inhibit_v1.h"
 #include "wlr_screencopy_v1.h"
+#include "primary_selection_v1.h"
 
 #include "mir/graphics/platform.h"
 #include "mir/options/default_configuration.h"
@@ -167,6 +168,10 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 ctx.graphic_buffer_allocator,
                 ctx.screen_shooter,
                 ctx.surface_stack);
+        }),
+    make_extension_builder<mw::PrimarySelectionDeviceManagerV1>([](auto const& ctx)
+        {
+            return mf::create_primary_selection_device_manager_v1(ctx.display);
         }),
 };
 
