@@ -145,16 +145,6 @@ try
         server->apply_settings();
         apply_env_hacks(*server);
         weak_server = server;
-
-        auto main_loop = server->the_main_loop();
-
-        for (auto const& signal : signal_backlog)
-        {
-            main_loop->register_signal_handler(signal.signals, signal.handler);
-        }
-        signal_backlog.clear();
-
-        fd_manager->set_main_loop(std::move(main_loop));
     }
 
     server->add_init_callback([server, this]
@@ -164,6 +154,16 @@ try
         auto const main_loop = server->the_main_loop();
         main_loop->enqueue(this, std::move(start_callback));
     });
+
+    auto main_loop = server->the_main_loop();
+
+    for (auto const& signal : signal_backlog)
+    {
+        main_loop->register_signal_handler(signal.signals, signal.handler);
+    }
+    signal_backlog.clear();
+
+    fd_manager->set_main_loop(main_loop);
 
     server->run();
 
