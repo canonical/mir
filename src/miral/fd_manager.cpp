@@ -36,7 +36,7 @@ auto FdManager::register_handler(mir::Fd fd, std::function<void(int)> const& han
     
     auto handle = std::make_unique<FdHandleImpl>(fd, shared_from_this());
 
-    if (!main_loop.use_count() == 0)
+    if (auto const main_loop = weak_main_loop.lock())
     {
         main_loop->register_fd_handler({fd}, handle.get(), handler);
     }
@@ -53,7 +53,7 @@ void FdManager::unregister_handler(void const* owner)
 {
     std::lock_guard<std::mutex> lock{mutex};
 
-    if (!main_loop.use_count() == 0)
+    if (auto const main_loop = weak_main_loop.lock())
     {
         main_loop->unregister_fd_handler(owner);
     }
@@ -75,7 +75,7 @@ void FdManager::set_main_loop(std::shared_ptr<mir::MainLoop> main_loop)
 
     backlog.clear();
 
-    this->main_loop = main_loop;
+    weak_main_loop = main_loop;
 }
 
 FdHandleImpl::FdHandleImpl(mir::Fd fd, std::shared_ptr<FdManager> manager)
