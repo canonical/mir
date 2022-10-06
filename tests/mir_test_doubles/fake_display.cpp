@@ -95,7 +95,8 @@ void mtd::FakeDisplay::register_configuration_change_handler(
     handlers.register_fd_handler(
         {wakeup_trigger},
         this,
-        [this, handler](int fd)
+        make_module_ptr<std::function<void(int)>>(
+            [handler, this](int fd)
             {
                 eventfd_t value;
                 if (eventfd_read(fd, &value) == -1)
@@ -107,7 +108,7 @@ void mtd::FakeDisplay::register_configuration_change_handler(
                     handler();
                     handler_called = true;
                 }
-            });
+            }));
 }
 
 bool mtd::FakeDisplay::apply_if_configuration_preserves_display_buffers(graphics::DisplayConfiguration const& new_config)
