@@ -15,6 +15,7 @@
  */
 
 #include "mir/terminate_with_current_exception.h"
+#include "mir/log.h"
 
 #include <unistd.h>
 #include <csignal>
@@ -47,6 +48,12 @@ void mir::terminate_with_current_exception()
     if (!termination_exception)
     {
         termination_exception = std::current_exception();
+
+        log(logging::Severity::critical,
+            MIR_LOG_COMPONENT,
+            termination_exception,
+            "terminate_with_current_exception()");
+
         kill(getpid(), SIGTERM);
     }
 }
