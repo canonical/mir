@@ -64,6 +64,7 @@ public:
     }
 
 private:
+    friend mf::WlDataDevice;
     wayland::Weak<WlDataDevice> const device;
     std::shared_ptr<scene::ClipboardSource> const source;
 };
@@ -127,22 +128,25 @@ void mf::WlDataDevice::set_selection(std::optional<wl_resource*> const& source, 
 void mf::WlDataDevice::focus_on(WlSurface* surface)
 {
     has_focus = static_cast<bool>(surface);
-    auto const paste_source = clipboard.paste_source();
-    if (has_focus && paste_source && !current_offer)
-    {
-        current_offer = wayland::make_weak(new Offer{this, paste_source});
-    }
+    paste_source_set(clipboard.paste_source());
 }
 
 void mf::WlDataDevice::paste_source_set(std::shared_ptr<scene::ClipboardSource> const& source)
 {
     if (source && has_focus)
     {
-        current_offer = wayland::make_weak(new Offer{this, source});
+        if (!current_offer || current_offer.value().source != source)
+        {
+            current_offer = wayland::make_weak(new Offer{this, source});
+            send_selection_event(current_offer.value().resource);
+        }
     }
     else
     {
-        current_offer = {};
-        send_selection_event(std::nullopt);
+        if (current_offer)
+        {
+            current_offer = {};
+            send_selection_event(std::nullopt);
+        }
     }
 }
