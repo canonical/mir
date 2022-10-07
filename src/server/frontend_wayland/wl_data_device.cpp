@@ -78,12 +78,14 @@ mf::WlDataDevice::Offer::Offer(WlDataDevice* device, std::shared_ptr<scene::Clip
     {
         send_offer_event(type);
     }
-    device->send_selection_event(resource);
 }
 
 void mf::WlDataDevice::Offer::receive(std::string const& mime_type, mir::Fd fd)
 {
-    source->initiate_send(mime_type, fd);
+    if (device && device.value().current_offer.is(*this))
+    {
+        source->initiate_send(mime_type, fd);;
+    }
 }
 
 mf::WlDataDevice::WlDataDevice(
