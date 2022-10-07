@@ -22,6 +22,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <fcntl.h>
+
 using namespace testing;
 
 namespace
@@ -71,6 +73,53 @@ TEST_F(Runner, x11_socket_is_not_returned_by_default)
     miral::TestServer::SetUp();
 
     miral::TestServer::invoke_runner([](auto& runner){ EXPECT_FALSE(runner.x11_display().is_set()); });
+}
+
+TEST_F(Runner, register_signal_handler_before_setup_invokes_callback_after_setup)
+{
+    int const signum{SIGUSR1};
+    register_signal_handler({signum}, [this](int) { callback(); });
+
+    miral::TestServer::SetUp();
+
+    EXPECT_CALL(*this, callback())
+        .Times(AtLeast(1));
+    kill(getpid(), signum);
+}
+
+TEST_F(Runner, register_signal_handler_after_setup_invokes_callback_when_signal_raised)
+{
+    miral::TestServer::SetUp();
+
+    int const signum{SIGUSR1};
+    register_signal_handler({signum}, [this](int) { callback(); });
+
+    EXPECT_CALL(*this, callback())
+        .Times(AtLeast(1));
+    kill(getpid(), signum);
+}
+
+TEST_F(Runner, register_fd_handler_before_setup_invokes_callback_after_setup)
+{
+    auto const fd = mir::Fd{::open("/dev/null", O_RDWR | O_CLOEXEC)};
+
+    auto const handle = register_fd_handler(fd, [this](int) { callback(); });
+
+    miral::TestServer::SetUp();
+
+    EXPECT_CALL(*this, callback())
+        .Times(AtLeast(1));
+}
+
+TEST_F(Runner, register_fd_handler_after_setup_invokes_callback_when_fd_written_to)
+{
+    miral::TestServer::SetUp();
+    auto const fd = mir::Fd{::open("/dev/null", O_RDWR | O_CLOEXEC)};
+
+    auto const handle = register_fd_handler(fd, [this](int) { callback(); });
+
+    EXPECT_CALL(*this, callback())
+        .Times(AtLeast(1));
 }
 
 // We can't spin up the X11 subsystem during LP builds. We would get:

@@ -182,6 +182,17 @@ void TestDisplayServer::add_stop_callback(std::function<void()> const& stop_call
     runner.add_stop_callback(stop_callback);
 }
 
+void TestDisplayServer::register_signal_handler(std::initializer_list<int> signals, std::function<void(int)> const& handler)
+{
+    runner.register_signal_handler(signals, handler);
+}
+
+auto TestDisplayServer::register_fd_handler(mir::Fd fd, std::function<void(int)> const& handler)
+-> std::unique_ptr<miral::FdHandle>
+{
+    return runner.register_fd_handler(fd, handler);
+}
+
 void TestDisplayServer::set_exception_handler(std::function<void()> const& handler)
 {
     runner.set_exception_handler(handler);
