@@ -177,7 +177,8 @@ public:
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<EmergencyCleanup>       the_emergency_cleanup() override;
     std::shared_ptr<cookie::Authority>      the_cookie_authority() override;
-    std::shared_ptr<scene::Clipboard>       the_clipboard() override;
+    std::shared_ptr<scene::Clipboard>       the_main_clipboard() override;
+    std::shared_ptr<scene::Clipboard>       the_primary_selection_clipboard() override;
     std::shared_ptr<scene::TextInputHub>    the_text_input_hub() override;
     std::shared_ptr<scene::IdleHub>         the_idle_hub() override;
     std::shared_ptr<shell::IdleHandler>     the_idle_handler() override;

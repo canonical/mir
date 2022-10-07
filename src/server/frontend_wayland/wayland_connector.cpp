@@ -225,7 +225,8 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
     std::shared_ptr<SurfaceStack> const& surface_stack,
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar,
-    std::shared_ptr<ms::Clipboard> const& clipboard,
+    std::shared_ptr<ms::Clipboard> const& main_clipboard,
+    std::shared_ptr<ms::Clipboard> const& primary_selection_clipboard,
     std::shared_ptr<ms::TextInputHub> const& text_input_hub,
     std::shared_ptr<ms::IdleHub> const& idle_hub,
     std::shared_ptr<mc::ScreenShooter> const& screen_shooter,
@@ -290,13 +291,14 @@ mf::WaylandConnector::WaylandConnector(
         executor,
         display_config_registrar);
 
-    data_device_manager_global = std::make_unique<WlDataDeviceManager>(display.get(), executor, clipboard);
+    data_device_manager_global = std::make_unique<WlDataDeviceManager>(display.get(), executor, main_clipboard);
 
     extensions->init(WaylandExtensions::Context{
         display.get(),
         executor,
         shell,
-        clipboard,
+        main_clipboard,
+        primary_selection_clipboard,
         text_input_hub,
         idle_hub,
         seat_global.get(),

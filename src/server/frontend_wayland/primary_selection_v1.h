@@ -21,9 +21,15 @@
 
 namespace mir
 {
+namespace scene
+{
+class Clipboard;
+}
 namespace frontend
 {
-auto create_primary_selection_device_manager_v1(wl_display* display)
+auto create_primary_selection_device_manager_v1(
+    wl_display* display,
+    std::shared_ptr<scene::Clipboard> clipboard)
 -> std::shared_ptr<wayland::PrimarySelectionDeviceManagerV1::Global>;
 }
 }

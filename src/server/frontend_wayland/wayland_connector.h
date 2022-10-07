@@ -81,7 +81,8 @@ public:
         wl_display* display;
         std::shared_ptr<Executor> wayland_executor;
         std::shared_ptr<shell::Shell> shell;
-        std::shared_ptr<scene::Clipboard> clipboard;
+        std::shared_ptr<scene::Clipboard> main_clipboard;
+        std::shared_ptr<scene::Clipboard> primary_selection_clipboard;
         std::shared_ptr<scene::TextInputHub> text_input_hub;
         std::shared_ptr<scene::IdleHub> idle_hub;
         WlSeat* seat;
@@ -130,7 +131,8 @@ public:
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         std::shared_ptr<SurfaceStack> const& surface_stack,
         std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar,
-        std::shared_ptr<scene::Clipboard> const& clipboard,
+        std::shared_ptr<scene::Clipboard> const& main_clipboard,
+        std::shared_ptr<scene::Clipboard> const& primary_selection_clipboard,
         std::shared_ptr<scene::TextInputHub> const& text_input_hub,
         std::shared_ptr<scene::IdleHub> const& idle_hub,
         std::shared_ptr<compositor::ScreenShooter> const& screen_shooter,
