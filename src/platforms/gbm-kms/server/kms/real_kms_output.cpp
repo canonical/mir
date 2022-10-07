@@ -129,6 +129,10 @@ void mgg::RealKMSOutput::reset()
 
 geom::Size mgg::RealKMSOutput::size() const
 {
+    // Disconnected hardware has no modes: invent a size
+    if (connector->connection == DRM_MODE_DISCONNECTED)
+        return {0, 0};
+
     drmModeModeInfo const& mode(connector->modes[mode_index]);
     return {mode.hdisplay, mode.vdisplay};
 }
