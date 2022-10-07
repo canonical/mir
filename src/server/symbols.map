@@ -918,5 +918,7 @@ MIR_SERVER_2.10 {
   global:
     extern "C++" {
       mir::shell::ShellWrapper::set_popup_grab_tree*;
+      mir::DefaultServerConfiguration::the_main_clipboard*;
+      mir::DefaultServerConfiguration::the_primary_selection_clipboard*;
     };
 } MIR_SERVER_2.9;

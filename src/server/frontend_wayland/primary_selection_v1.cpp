@@ -18,6 +18,7 @@
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
+namespace ms = mir::scene;
 
 namespace
 {
@@ -53,8 +54,9 @@ public:
 class PrimarySelectionManager : public mw::PrimarySelectionDeviceManagerV1
 {
 public:
-    PrimarySelectionManager(wl_resource* manager)
-        : PrimarySelectionDeviceManagerV1{manager, Version<1>()}
+    PrimarySelectionManager(wl_resource* manager, std::shared_ptr<ms::Clipboard> clipboard)
+        : PrimarySelectionDeviceManagerV1{manager, Version<1>()},
+          clipboard{move(clipboard)}
     {
     }
 
@@ -68,25 +70,32 @@ public:
         new PrimarySelectionDevice{id};
         (void)seat;
     }
+
+    std::shared_ptr<ms::Clipboard> const clipboard;
 };
 
 class PrimarySelectionGlobal : public mw::PrimarySelectionDeviceManagerV1::Global
 {
 public:
-    PrimarySelectionGlobal(wl_display* display)
-        : Global{display, Version<1>()}
+    PrimarySelectionGlobal(wl_display* display, std::shared_ptr<ms::Clipboard> clipboard)
+        : Global{display, Version<1>()},
+          clipboard{move(clipboard)}
     {
     }
 
     void bind(wl_resource* manager) override
     {
-        new PrimarySelectionManager{manager};
+        new PrimarySelectionManager{manager, clipboard};
     }
+
+    std::shared_ptr<ms::Clipboard> const clipboard;
 };
 }
 
-auto mf::create_primary_selection_device_manager_v1(wl_display* display)
+auto mf::create_primary_selection_device_manager_v1(
+    wl_display* display,
+    std::shared_ptr<ms::Clipboard> clipboard)
 -> std::shared_ptr<mw::PrimarySelectionDeviceManagerV1::Global>
 {
-    return std::make_shared<PrimarySelectionGlobal>(display);
+    return std::make_shared<PrimarySelectionGlobal>(display, move(clipboard));
 }
