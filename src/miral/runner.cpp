@@ -154,17 +154,15 @@ try
         // ensuring that the server has really and fully started.
         auto const main_loop = server->the_main_loop();
         main_loop->enqueue(this, std::move(start_callback));
+
+        for (auto const& signal : signal_backlog)
+        {
+            main_loop->register_signal_handler(signal.signals, signal.handler);
+        }
+        signal_backlog.clear();
+
+        fd_manager->set_main_loop(main_loop);
     });
-
-    auto main_loop = server->the_main_loop();
-
-    for (auto const& signal : signal_backlog)
-    {
-        main_loop->register_signal_handler(signal.signals, signal.handler);
-    }
-    signal_backlog.clear();
-
-    fd_manager->set_main_loop(main_loop);
 
     server->run();
 
