@@ -66,7 +66,7 @@ struct miral::MirRunner::Self
     struct SignalInfo
     {
         std::initializer_list<int> signals;
-        std::function<void(int)> const& handler;
+        std::function<void(int)> const handler;
     };
     
     std::vector<SignalInfo> signal_backlog;
@@ -144,6 +144,7 @@ try
         server->set_command_line(argc, argv);
         server->apply_settings();
         apply_env_hacks(*server);
+
         weak_server = server;
     }
 
