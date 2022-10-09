@@ -23,6 +23,7 @@
 #include "src/server/compositor/schedule.h"
 
 #include <gtest/gtest.h>
+#include <array>
 using namespace testing;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;

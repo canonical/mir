@@ -32,6 +32,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <array>
 #include <thread>
 
 namespace mt = mir::test;

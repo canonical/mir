@@ -26,6 +26,7 @@
 #include <shared_mutex>
 #include <thread>
 #include <atomic>
+#include <array>
 
 #include <gtest/gtest.h>
 

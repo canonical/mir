@@ -39,6 +39,7 @@
 #include <future>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <array>
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
