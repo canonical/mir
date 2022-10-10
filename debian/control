@@ -521,7 +521,7 @@ Description: Developer files for the Mir Lomiri compatibility library
  Contains header files required for development using the Lomiri compatibility
  library.
 
-Package: libmirwayland3
+Package: libmirwayland4
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -539,7 +539,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirwayland3 (= ${binary:Version}),
+Depends: libmirwayland4 (= ${binary:Version}),
          libmircore-dev (= ${binary:Version}),
          ${misc:Depends},
          libmirwayland-bin (= ${binary:Version})
