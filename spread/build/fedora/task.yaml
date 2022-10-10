@@ -49,5 +49,6 @@ execute: |
     cmake $BUILD_DIR
     export VERBOSE=1
     cmake --build $BUILD_DIR -- -j`nproc`
+    export XDG_RUNTIME_DIR=/tmp
     cmake --build $BUILD_DIR -- ptest
 
