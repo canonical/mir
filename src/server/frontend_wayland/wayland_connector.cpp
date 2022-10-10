@@ -146,7 +146,13 @@ namespace
 {
 int halt_eventloop(int fd, uint32_t /*mask*/, void* data)
 {
-    auto display = reinterpret_cast<wl_display*>(data);
+    auto const display = reinterpret_cast<wl_display*>(data);
+    wl_list* const client_list = wl_display_get_client_list(display);
+    wl_client* client;
+    wl_client_for_each(client, client_list)
+    {
+        wl_client_destroy(client);
+    }
     wl_display_terminate(display);
 
     eventfd_t ignored;
@@ -406,12 +412,6 @@ void mf::WaylandConnector::stop()
     else
     {
         mir::log_warning("WaylandConnector::stop() called on not-running connector?");
-    }
-    wl_list* client_list = wl_display_get_client_list(display.get());
-    wl_client* client;
-    wl_client_for_each(client, client_list)
-    {
-        wl_client_destroy(client);
     }
 }
 
