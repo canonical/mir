@@ -1,3 +1,53 @@
+mir (2.10.0) UNRELEASED; urgency=medium
+
+  * New upstream release 2.10.0
+
+    - ABI summary:
+      . miral ABI unchanged at 5
+      . mircommon ABI unchanged at 9
+      . mircookie ABI unchanged at 2
+      . mircore ABI unchanged at 2
+      . miroil ABI unchanged at 2
+      . mirplatform ABI unchanged at 23
+      . mirserver ABI unchanged at 58
+      . mirwayland ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 20
+      . mirinputplatform ABI unchanged at 8
+    - Enhancements:
+      . Verify wl_pointer.set_cursor() serial matches latest
+        wl_pointer.enter() serial (#2532)
+      . MinimalWindowManager: allow moving window from the maximized
+        state (#2593)
+      . X11 platform: send discrete scroll (#2579)
+      . Verify serials for move/resize requests (#2622)
+      . Modernize touch events (#2623)
+      . Implement Modifier+Drag window move gesture (#2626)
+      . Improve Client class lifetime management (#2644)
+      . Implement X11 platform pixel format selection correctly (#2648)
+      . Deactivate text input in destructor for v1 and v2 protocols (#2657)
+      . gbm-kms/quirks: Quirk off AST devices (#2679)
+    - Bugs fixed:
+      . Incorrect rendering when a surface spans multiple outputs (#1753)
+      . [Xwayland] weird focus problems with CLion (#2255)
+      . Maximized windows end up behind panels after screen going off (#2580)
+      . Menus of panels don't close when losing (or don't lose) focus (#2585)
+      . CapsLock state gets stuck (#2592)
+      . Popups dismissed by Mir when parent clicked (#2604)
+      . Latest swaybg (on 22.10) doesn't paint on Mir (#2620)
+      . Shutdown crash when OSK is running (#2639) 
+      . Cursor only updates once per enter on XWayland (#2643)
+      . OSK stays on screen with unfocused app (#2651)
+      . Scaling messes up screencopy (#2653)
+      . Mir sometimes shuts down when moving to a different TTY when
+        logind-driven (#2661)
+      . Bug in implementation of xdg_output (#2666)
+      . Waking screens up after idle-timeout often stops
+        or locks Mir up (#2674)
+      . In CLion cut & paste only works up to the last \n in the source
+        text (#2677)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Mon, 10 Oct 2022 09:26:55 +0200
+
 mir (2.9.0) UNRELEASED; urgency=medium
 
   [ Alan Griffiths ]
