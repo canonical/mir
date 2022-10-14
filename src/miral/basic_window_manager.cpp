@@ -1356,7 +1356,7 @@ void miral::BasicWindowManager::place_and_size_for_state(
         {
             if (modifications.output_id().is_set())
             {
-                if (std::shared_ptr<DisplayArea> result = display_area_for_output_id(modifications.output_id().value()))
+                if (auto const result = display_area_for_output_id(modifications.output_id().value()))
                 {
                     return result;
                 }
