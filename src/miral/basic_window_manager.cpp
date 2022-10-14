@@ -1380,18 +1380,18 @@ void miral::BasicWindowManager::place_and_size_for_state(
 
     case mir_window_state_fullscreen:
     {
-        auto const new_display_area = [&]
+        auto const fullscreen_area = [&]
             {
                 if (modifications.output_id().is_set())
                 {
                     if (auto const result = display_area_for_output_id(modifications.output_id().value()))
                     {
-                        return result;
+                        return result->area;
                     }
                 }
-                return display_area;
+                return display_area->area;
             }();
-        rect = policy->confirm_placement_on_display(window_info, new_state, new_display_area->area);
+        rect = policy->confirm_placement_on_display(window_info, new_state, fullscreen_area);
         break;
     }
 
