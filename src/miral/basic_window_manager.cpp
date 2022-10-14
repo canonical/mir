@@ -1352,7 +1352,19 @@ void miral::BasicWindowManager::place_and_size_for_state(
     if (modifications.size().is_set())
         restore_rect.size = modifications.size().value();
 
-    auto const display_area = display_area_for(window_info);
+    auto const display_area = [&]
+        {
+            if (modifications.output_id().is_set())
+            {
+                if (std::shared_ptr<DisplayArea> result = display_area_for_output_id(modifications.output_id().value()))
+                {
+                    return result;
+                }
+            }
+
+            return display_area_for(window_info);
+        }();
+
     auto const application_zone = display_area->application_zone.extents();
     Rectangle rect;
 
@@ -1380,18 +1392,7 @@ void miral::BasicWindowManager::place_and_size_for_state(
 
     case mir_window_state_fullscreen:
     {
-        auto const fullscreen_area = [&]
-            {
-                if (modifications.output_id().is_set())
-                {
-                    if (auto const result = display_area_for_output_id(modifications.output_id().value()))
-                    {
-                        return result->area;
-                    }
-                }
-                return display_area->area;
-            }();
-        rect = policy->confirm_placement_on_display(window_info, new_state, fullscreen_area);
+        rect = policy->confirm_placement_on_display(window_info, new_state, display_area->area);
         break;
     }
 
