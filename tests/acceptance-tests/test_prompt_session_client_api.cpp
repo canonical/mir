@@ -38,6 +38,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <atomic>
+#include <array>
 
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;

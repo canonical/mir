@@ -33,6 +33,7 @@
 #include "mir/raii.h"
 
 #include <atomic>
+#include <array>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 

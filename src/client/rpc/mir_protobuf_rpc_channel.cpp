@@ -47,6 +47,7 @@
 
 #include <stdexcept>
 #include <cstring>
+#include <array>
 
 namespace mf = mir::frontend;
 namespace mev = mir::events;
