@@ -1377,6 +1377,21 @@ void miral::BasicWindowManager::place_and_size_for_state(
     {
     case mir_window_state_restored:
         rect = restore_rect;
+        if (!rect.overlaps(application_zone))
+        {
+            rect.top_left = application_zone.top_left;
+
+            if (rect.size.width < application_zone.size.width)
+            {
+                rect.top_left.x += 0.5*(application_zone.size.width - rect.size.width);
+            }
+
+            if (rect.size.height < application_zone.size.height)
+            {
+                rect.top_left.y += 0.3*(application_zone.size.height - rect.size.height);
+            }
+        }
+        rect = policy->confirm_placement_on_display(window_info, new_state, rect);
         break;
 
     case mir_window_state_maximized:
@@ -1386,12 +1401,30 @@ void miral::BasicWindowManager::place_and_size_for_state(
     case mir_window_state_horizmaximized:
         rect.top_left = {application_zone.left(), restore_rect.top()};
         rect.size = {application_zone.size.width, restore_rect.size.height};
+        if (!rect.overlaps(application_zone))
+        {
+            rect.top_left.y = application_zone.top_left.y;
+
+            if (rect.size.height < application_zone.size.height)
+            {
+                rect.top_left.y += 0.5*(application_zone.size.height - rect.size.height);
+            }
+        }
         rect = policy->confirm_placement_on_display(window_info, new_state, rect);
         break;
 
     case mir_window_state_vertmaximized:
         rect.top_left = {restore_rect.left(), application_zone.top()};
         rect.size = {restore_rect.size.width, application_zone.size.height};
+        if (!rect.overlaps(application_zone))
+        {
+            rect.top_left.x = application_zone.top_left.x;
+
+            if (rect.size.width < application_zone.size.width)
+            {
+                rect.top_left.x += 0.5*(application_zone.size.width - rect.size.width);
+            }
+        }
         rect = policy->confirm_placement_on_display(window_info, new_state, rect);
         break;
 
