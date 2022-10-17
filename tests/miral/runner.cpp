@@ -14,10 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <miral/test_server.h>
-#include <miral/x11_support.h>
+#include "miral/test_server.h"
+#include "miral/x11_support.h"
 
 #include <mir/test/signal.h>
+#include "mir/test/signal.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -25,6 +26,8 @@
 #include <fcntl.h>
 
 using namespace testing;
+
+namespace mt = mir::test;
 
 namespace
 {
@@ -49,7 +52,7 @@ TEST_F(Runner, stop_callback_is_called)
 
 TEST_F(Runner, start_callback_is_called)
 {
-    mir::test::Signal signal;
+    mt::Signal signal;
 
     add_start_callback([this] { callback(); });
     EXPECT_CALL(*this, callback())
