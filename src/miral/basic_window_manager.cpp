@@ -33,6 +33,19 @@
 using namespace mir;
 using namespace mir::geometry;
 
+namespace
+{
+void clamp_left(Rectangle const& zone, Rectangle& rect)
+{
+    rect.top_left.x = zone.top_left.x + 0.5 * std::max(DeltaX{}, zone.size.width - rect.size.width);
+}
+
+void clamp_top(Rectangle const& zone, Rectangle& rect)
+{
+    rect.top_left.y = zone.top_left.y + 0.5 * std::max(DeltaY{}, zone.size.height - rect.size.height);
+}
+}
+
 auto miral::BasicWindowManager::DisplayArea::bounding_rectangle_of_contained_outputs() const -> Rectangle
 {
     Rectangles box;
@@ -1379,17 +1392,8 @@ void miral::BasicWindowManager::place_and_size_for_state(
         rect = restore_rect;
         if (!rect.overlaps(application_zone))
         {
-            rect.top_left = application_zone.top_left;
-
-            if (rect.size.width < application_zone.size.width)
-            {
-                rect.top_left.x += 0.5*(application_zone.size.width - rect.size.width);
-            }
-
-            if (rect.size.height < application_zone.size.height)
-            {
-                rect.top_left.y += 0.3*(application_zone.size.height - rect.size.height);
-            }
+            clamp_left(application_zone, rect);
+            clamp_top(application_zone, rect);
         }
         rect = policy->confirm_placement_on_display(window_info, new_state, rect);
         break;
@@ -1403,12 +1407,7 @@ void miral::BasicWindowManager::place_and_size_for_state(
         rect.size = {application_zone.size.width, restore_rect.size.height};
         if (!rect.overlaps(application_zone))
         {
-            rect.top_left.y = application_zone.top_left.y;
-
-            if (rect.size.height < application_zone.size.height)
-            {
-                rect.top_left.y += 0.5*(application_zone.size.height - rect.size.height);
-            }
+            clamp_top(application_zone, rect);
         }
         rect = policy->confirm_placement_on_display(window_info, new_state, rect);
         break;
@@ -1418,12 +1417,7 @@ void miral::BasicWindowManager::place_and_size_for_state(
         rect.size = {restore_rect.size.width, application_zone.size.height};
         if (!rect.overlaps(application_zone))
         {
-            rect.top_left.x = application_zone.top_left.x;
-
-            if (rect.size.width < application_zone.size.width)
-            {
-                rect.top_left.x += 0.5*(application_zone.size.width - rect.size.width);
-            }
+            clamp_left(application_zone, rect);
         }
         rect = policy->confirm_placement_on_display(window_info, new_state, rect);
         break;
