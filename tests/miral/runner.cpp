@@ -17,13 +17,11 @@
 #include "miral/test_server.h"
 #include "miral/x11_support.h"
 
-#include <mir/test/signal.h>
+#include "mir/test/pipe.h"
 #include "mir/test/signal.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-
-#include <fcntl.h>
 
 using namespace testing;
 
@@ -40,6 +38,23 @@ struct Runner : miral::TestServer
     }
 
     MOCK_METHOD0(callback, void());
+
+    void WaitForLockingCallback()
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        ready_to_tear_down = false;
+    }
+
+    void LockingCallback()
+    {
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+            ready_to_tear_down = true;
+        }
+
+        cv.notify_all();
+        callback();
+    }
 };
 }
 
@@ -81,13 +96,17 @@ TEST_F(Runner, x11_socket_is_not_returned_by_default)
 TEST_F(Runner, register_signal_handler_before_setup_invokes_callback_after_setup)
 {
     int const signum{SIGUSR1};
-    register_signal_handler({signum}, [this](int) { callback(); });
+
+    WaitForLockingCallback();
+    register_signal_handler({signum}, [this](int) { LockingCallback(); });
 
     miral::TestServer::SetUp();
 
     EXPECT_CALL(*this, callback())
         .Times(AtLeast(1));
     kill(getpid(), signum);
+
+    miral::TestServer::TearDown();
 }
 
 TEST_F(Runner, register_signal_handler_after_setup_invokes_callback_when_signal_raised)
@@ -95,34 +114,50 @@ TEST_F(Runner, register_signal_handler_after_setup_invokes_callback_when_signal_
     miral::TestServer::SetUp();
 
     int const signum{SIGUSR1};
-    register_signal_handler({signum}, [this](int) { callback(); });
+
+    WaitForLockingCallback();
+    register_signal_handler({signum}, [this](int) { LockingCallback(); });
 
     EXPECT_CALL(*this, callback())
         .Times(AtLeast(1));
     kill(getpid(), signum);
+
+    miral::TestServer::TearDown();
 }
 
 TEST_F(Runner, register_fd_handler_before_setup_invokes_callback_after_setup)
 {
-    auto const fd = mir::Fd{::open("/dev/null", O_RDWR | O_CLOEXEC)};
+    mt::Pipe pipe;
+    char const data_to_write{'a'};
 
-    auto const handle = register_fd_handler(fd, [this](int) { callback(); });
+    WaitForLockingCallback();
+    auto const handle = register_fd_handler(pipe.read_fd(), [this](int) { LockingCallback(); });
 
     miral::TestServer::SetUp();
 
     EXPECT_CALL(*this, callback())
         .Times(AtLeast(1));
+    write(pipe.write_fd(), &data_to_write, 1);
+
+    miral::TestServer::TearDown();
 }
 
 TEST_F(Runner, register_fd_handler_after_setup_invokes_callback_when_fd_written_to)
 {
-    miral::TestServer::SetUp();
-    auto const fd = mir::Fd{::open("/dev/null", O_RDWR | O_CLOEXEC)};
+    mt::Pipe pipe;
+    char const data_to_write{'a'};
 
-    auto const handle = register_fd_handler(fd, [this](int) { callback(); });
+    miral::TestServer::SetUp();
+
+    WaitForLockingCallback();
+    auto const handle = register_fd_handler(pipe.read_fd(), [this](int) { LockingCallback(); });
 
     EXPECT_CALL(*this, callback())
         .Times(AtLeast(1));
+
+    write(pipe.write_fd(), &data_to_write, 1);
+
+    miral::TestServer::TearDown();
 }
 
 // We can't spin up the X11 subsystem during LP builds. We would get:

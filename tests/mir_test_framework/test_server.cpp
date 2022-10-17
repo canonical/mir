@@ -28,6 +28,10 @@ void miral::TestServer::SetUp()
 
 void miral::TestServer::TearDown()
 {
+    std::unique_lock<std::mutex> lock(mutex);
+    cv.wait(lock, [this]{ return ready_to_tear_down; });
+    lock.unlock();
+
     stop_server();
     testing::Test::TearDown();
 }
