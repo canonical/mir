@@ -100,11 +100,9 @@ TEST_P(WhenOutputIsSpecified, window_is_moved_to_it)
 }
 
 INSTANTIATE_TEST_SUITE_P(WindowPlacementOutput, WhenOutputIsSpecified, ::testing::Values(
+    mir_window_state_restored,
     mir_window_state_maximized,
-    mir_window_state_fullscreen
-// These don't work with the existing place_and_size_for_state code (which uses the "restore_rect"
-// and ignores the output). But maybe they should work if the output_id is supplied?
-//    mir_window_state_restored,
-//    mir_window_state_vertmaximized,
-//    mir_window_state_horizmaximized,
+    mir_window_state_vertmaximized,
+    mir_window_state_fullscreen,
+    mir_window_state_horizmaximized
 ));
