@@ -989,7 +989,6 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     COPY_IF_SET(height_inc);
     COPY_IF_SET(min_aspect);
     COPY_IF_SET(max_aspect);
-    COPY_IF_SET(output_id);
     COPY_IF_SET(preferred_orientation);
     COPY_IF_SET(confine_pointer);
     COPY_IF_SET(userdata);
@@ -1001,6 +1000,12 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     COPY_IF_SET(focus_mode);
 
 #undef COPY_IF_SET
+
+    // If we're setting the state of the window, we don't want any stale output_id
+    if (modifications.output_id().is_set() || modifications.state().is_set())
+    {
+        window_info_tmp.output_id(modifications.output_id());
+    }
 
     if (modifications.parent().is_set())
     {
