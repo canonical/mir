@@ -447,3 +447,35 @@ TEST(ShmBacking, can_resize_pool)
         EXPECT_THAT(a, Eq(expected_content));
     }
 }
+
+TEST(ShmBacking, ranges_remain_valid_after_resize)
+{
+    using namespace testing;
+
+    constexpr size_t const initial_size = 4000;
+    constexpr size_t const new_size = initial_size + 400;
+
+    auto shm_fd = make_shm_fd(initial_size);
+    auto backing = mir::shm::rw_pool_from_fd(shm_fd, initial_size);
+
+    // *First*, get a range from the pool...
+    auto range = backing->get_rw_range(0, initial_size);
+
+    if (ftruncate(shm_fd, new_size) == -1)
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to resize shm fd"}));
+    }
+    // ...then resize the pool...
+    backing->resize(new_size);
+
+    // ...and map the range.
+    auto map = range->map_rw();
+
+    std::byte const expected_content{0xfa};
+    ::memset(map->data(), std::to_integer<int>(expected_content), map->len());
+
+    for(auto const& a : *map)
+    {
+        EXPECT_THAT(a, Eq(expected_content));
+    }
+}
