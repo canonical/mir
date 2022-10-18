@@ -191,7 +191,8 @@ private:
                     }
                     else
                     {
-                        // Other thread(s) are making observations, so ask them to unlock live_lock when they're done
+                        // Other thread(s) are making observations, so set state to reset_pending. This asks them to set
+                        // state to reset and notify the condition variable when they are done.
                         state->status = Status::reset_pending;
                         // Wait for the reset to complete
                         state.wait(reset_cv, [&]()
@@ -219,10 +220,10 @@ private:
         {
             /// Can receive observations.
             active,
-            /// Used when a reset has been requested, but observations are still in progress. New observatins will not
+            /// Used when a reset has been requested, but observations are still in progress. New observations will not
             /// be sent. Reset will complete when all observations have ended.
             reset_pending,
-            /// No observatins are in progress and no new observatins will be sent.
+            /// No observations are in progress and no new observations will be sent.
             reset_complete,
         };
 
