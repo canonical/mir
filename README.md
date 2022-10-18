@@ -48,4 +48,4 @@ Website
 -------
 Mir's website is hosted on <https://mir-server.io/>.
 
-\copyright Copyright © 2012-2018 Canonical Ltd.
+Copyright © 2012-2022 Canonical Ltd.
