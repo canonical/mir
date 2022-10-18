@@ -132,7 +132,7 @@ TEST(ShmBacking, get_rw_range_checks_the_range_fits)
     {
         EXPECT_THROW(
             backing->get_rw_range(i, shm_size + 1 - i),
-            std::runtime_error
+            std::logic_error
         );
     }
 }
@@ -147,12 +147,12 @@ TEST(ShmBacking, get_rw_range_checks_handle_overflows)
 
     EXPECT_THROW(
         backing->get_rw_range(std::numeric_limits<size_t>::max() - 1, 2),
-        std::runtime_error
+        std::logic_error
     );
 
     EXPECT_THROW(
         backing->get_rw_range(2, std::numeric_limits<size_t>::max() - 1),
-        std::runtime_error
+        std::logic_error
     );
 }
 
