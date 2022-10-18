@@ -25,14 +25,21 @@ using namespace testing;
 
 using namespace mir::test::doubles;
 
-TEST(FdManager, dropping_fd_handle_after_main_loop_created_unregisters_handler)
+struct FdManager : public testing::Test
 {
-    auto const manager = std::make_shared<miral::FdManager>();
-    auto const main_loop = std::make_shared<NiceMock<MockMainLoop>>();
+    std::shared_ptr<miral::FdManager> const manager = std::make_shared<miral::FdManager>();
+    std::shared_ptr<NiceMock<MockMainLoop>> const main_loop = std::make_shared<NiceMock<MockMainLoop>>();
+    mir::Fd fd = mir::Fd{42};
 
-    manager->set_main_loop(main_loop);
+    void attach_main_loop()
+    {
+        manager->set_main_loop(main_loop);
+    }
+};
 
-    auto const fd = mir::Fd{42};
+TEST_F(FdManager, dropping_fd_handle_after_main_loop_created_unregisters_handler)
+{
+    attach_main_loop();
 
     {
         auto const handle = manager->register_handler(fd, [](int) { std::function<void(int)>(); });
@@ -40,27 +47,15 @@ TEST(FdManager, dropping_fd_handle_after_main_loop_created_unregisters_handler)
     }
 }
 
-TEST(FdManager, dropping_fd_handle_before_main_loop_created_does_not_register_handler)
+TEST_F(FdManager, dropping_fd_handle_before_main_loop_created_does_not_register_handler)
 {
-    auto const manager = std::make_shared<miral::FdManager>();
-    auto const main_loop = std::make_shared<NiceMock<MockMainLoop>>();
-
-    auto const fd = mir::Fd{42};
-
-    {
-        EXPECT_CALL(*main_loop.get(), register_fd_handler(_, _, _))
-            .Times(0);
-        auto const handle = manager->register_handler(fd, [](int) { std::function<void(int)>(); });
-    }
+    EXPECT_CALL(*main_loop.get(), register_fd_handler(_, _, _))
+        .Times(0);
+    auto const handle = manager->register_handler(fd, [](int) { std::function<void(int)>(); });
 }
 
-TEST(FdManager, dropping_fd_handle_before_main_loop_created_does_not_register_handler_after_main_loop_created)
+TEST_F(FdManager, dropping_fd_handle_before_main_loop_created_does_not_register_handler_after_main_loop_created)
 {
-    auto const manager = std::make_shared<miral::FdManager>();
-    auto const main_loop = std::make_shared<NiceMock<MockMainLoop>>();
-
-    auto const fd = mir::Fd{42};
-
     {
         auto const handle = manager->register_handler(fd, [](int) { std::function<void(int)>(); });
     }
@@ -68,33 +63,23 @@ TEST(FdManager, dropping_fd_handle_before_main_loop_created_does_not_register_ha
     EXPECT_CALL(*main_loop.get(), register_fd_handler(_, _, _))
         .Times(0);
     
-    manager->set_main_loop(main_loop);
+    attach_main_loop();
 }
 
-TEST(FdManager, register_handler_after_main_loop_created_registers_fd_handler)
+TEST_F(FdManager, register_handler_after_main_loop_created_registers_fd_handler)
 {
-    auto const manager = std::make_shared<miral::FdManager>();
-    auto const main_loop = std::make_shared<NiceMock<MockMainLoop>>();
-
-    manager->set_main_loop(main_loop);
-
-    auto const fd = mir::Fd{42};
+    attach_main_loop();
 
     EXPECT_CALL(*main_loop.get(), register_fd_handler(_, _, _));
     auto const handle = manager->register_handler(fd, [](int) { std::function<void(int)>(); });
 }
 
-TEST(FdManager, register_handler_before_main_loop_created_registers_fd_handler_after_main_loop_created)
+TEST_F(FdManager, register_handler_before_main_loop_created_registers_fd_handler_after_main_loop_created)
 {
-    auto const manager = std::make_shared<miral::FdManager>();
-    auto const main_loop = std::make_shared<NiceMock<MockMainLoop>>();
-
-    auto const fd = mir::Fd{42};
-
     auto const handle = manager->register_handler(fd, [](int) { std::function<void(int)>(); });
     
     EXPECT_CALL(*main_loop.get(), register_fd_handler(_, _, _))
         .Times(1);
     
-    manager->set_main_loop(main_loop);
+    attach_main_loop();
 }
