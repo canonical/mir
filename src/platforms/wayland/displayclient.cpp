@@ -659,7 +659,7 @@ void mgw::DisplayClient::keyboard_keymap(wl_keyboard* /*keyboard*/, uint32_t for
         BOOST_THROW_EXCEPTION(std::runtime_error("platform currently requires a keymap"));
     }
 
-    char* keymap_string = static_cast<decltype(keymap_string)>(mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0));
+    char* keymap_string = static_cast<decltype(keymap_string)>(mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0));
     xkb_keymap_unref(keyboard_map_);
     keyboard_map_ = xkb_keymap_new_from_string(keyboard_context(), keymap_string, XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS);
     munmap(keymap_string, size);
