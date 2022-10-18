@@ -30,7 +30,6 @@ TEST(FdManager, dropping_fd_handle_after_main_loop_created_unregisters_handler)
     auto const manager = std::make_shared<miral::FdManager>();
     auto const main_loop = std::make_shared<NiceMock<MockMainLoop>>();
 
-    // MirRunner::run_with() triggers the following
     manager->set_main_loop(main_loop);
 
     auto const fd = mir::Fd{42};
@@ -69,7 +68,6 @@ TEST(FdManager, dropping_fd_handle_before_main_loop_created_does_not_register_ha
     EXPECT_CALL(*main_loop.get(), register_fd_handler(_, _, _))
         .Times(0);
     
-    // MirRunner::run_with() triggers the following
     manager->set_main_loop(main_loop);
 }
 
@@ -78,7 +76,6 @@ TEST(FdManager, register_handler_after_main_loop_created_registers_fd_handler)
     auto const manager = std::make_shared<miral::FdManager>();
     auto const main_loop = std::make_shared<NiceMock<MockMainLoop>>();
 
-    // MirRunner::run_with() triggers the following
     manager->set_main_loop(main_loop);
 
     auto const fd = mir::Fd{42};
@@ -99,6 +96,5 @@ TEST(FdManager, register_handler_before_main_loop_created_registers_fd_handler_a
     EXPECT_CALL(*main_loop.get(), register_fd_handler(_, _, _))
         .Times(1);
     
-    // MirRunner::run_with() triggers the following
     manager->set_main_loop(main_loop);
 }
