@@ -32,17 +32,6 @@ struct TestServer : TestDisplayServer, testing::Test
 
     // Stop the server
     void TearDown() override;
-
-    // When preceded by WaitForLockingCallback, prevents TearDown until triggered.
-    // Triggers MockMethod callback()
-    void LockingCallback();
-
-    // Prevents TearDown until LockingCallback is triggered
-    void WaitForLockingCallback();
-
-    std::mutex mutex;
-    std::condition_variable cv;
-    bool ready_to_tear_down = true;
 };
 }
 
