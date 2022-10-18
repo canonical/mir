@@ -85,7 +85,7 @@ void mf::WlDataDevice::Offer::receive(std::string const& mime_type, mir::Fd fd)
 {
     if (device && device.value().current_offer.is(*this))
     {
-        source->initiate_send(mime_type, fd);;
+        source->initiate_send(mime_type, fd);
     }
 }
 
