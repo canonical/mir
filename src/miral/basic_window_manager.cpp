@@ -33,6 +33,19 @@
 using namespace mir;
 using namespace mir::geometry;
 
+namespace
+{
+void clamp_left(Rectangle const& zone, Rectangle& rect)
+{
+    rect.top_left.x = zone.top_left.x + 0.5 * std::max(DeltaX{}, zone.size.width - rect.size.width);
+}
+
+void clamp_top(Rectangle const& zone, Rectangle& rect)
+{
+    rect.top_left.y = zone.top_left.y + 0.5 * std::max(DeltaY{}, zone.size.height - rect.size.height);
+}
+}
+
 auto miral::BasicWindowManager::DisplayArea::bounding_rectangle_of_contained_outputs() const -> Rectangle
 {
     Rectangles box;
@@ -989,7 +1002,6 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     COPY_IF_SET(height_inc);
     COPY_IF_SET(min_aspect);
     COPY_IF_SET(max_aspect);
-    COPY_IF_SET(output_id);
     COPY_IF_SET(preferred_orientation);
     COPY_IF_SET(confine_pointer);
     COPY_IF_SET(userdata);
@@ -1001,6 +1013,12 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     COPY_IF_SET(focus_mode);
 
 #undef COPY_IF_SET
+
+    // If we're setting the state of the window, we don't want any stale output_id
+    if (modifications.output_id().is_set() || modifications.state().is_set())
+    {
+        window_info_tmp.output_id(modifications.output_id());
+    }
 
     if (modifications.parent().is_set())
     {
@@ -1372,6 +1390,12 @@ void miral::BasicWindowManager::place_and_size_for_state(
     {
     case mir_window_state_restored:
         rect = restore_rect;
+        if (!rect.overlaps(application_zone))
+        {
+            clamp_left(application_zone, rect);
+            clamp_top(application_zone, rect);
+        }
+        rect = policy->confirm_placement_on_display(window_info, new_state, rect);
         break;
 
     case mir_window_state_maximized:
@@ -1381,12 +1405,20 @@ void miral::BasicWindowManager::place_and_size_for_state(
     case mir_window_state_horizmaximized:
         rect.top_left = {application_zone.left(), restore_rect.top()};
         rect.size = {application_zone.size.width, restore_rect.size.height};
+        if (!rect.overlaps(application_zone))
+        {
+            clamp_top(application_zone, rect);
+        }
         rect = policy->confirm_placement_on_display(window_info, new_state, rect);
         break;
 
     case mir_window_state_vertmaximized:
         rect.top_left = {restore_rect.left(), application_zone.top()};
         rect.size = {restore_rect.size.width, application_zone.size.height};
+        if (!rect.overlaps(application_zone))
+        {
+            clamp_left(application_zone, rect);
+        }
         rect = policy->confirm_placement_on_display(window_info, new_state, rect);
         break;
 
