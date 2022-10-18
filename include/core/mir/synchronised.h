@@ -86,6 +86,17 @@ public:
             lock.unlock();
         }
 
+        /**
+         * Allows waiting for a condition variable
+         *
+         * The protected data may be accessed both in the predicate and after this method completes.
+         */
+        template<typename Cv, typename Predicate>
+        void wait(Cv& cv, Predicate stop_waiting)
+        {
+            cv.wait(lock, stop_waiting);
+        }
+
     private:
         friend class Synchronised;
         LockedImpl(std::unique_lock<std::mutex>&& lock, U& value)

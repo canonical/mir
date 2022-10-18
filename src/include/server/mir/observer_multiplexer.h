@@ -20,13 +20,32 @@
 #include "mir/observer_registrar.h"
 #include "mir/posix_rw_mutex.h"
 #include "mir/executor.h"
+#include "mir/raii.h"
+#include "mir/synchronised.h"
 
 #include <vector>
 #include <algorithm>
 #include <mutex>
+#include <thread>
+#include <condition_variable>
 
 namespace mir
 {
+/**
+ * A threadsafe mechanism for keeping track of a set of observers and distributing notifications to them.
+ *
+ * Each time an observer is added, a WeakObserver is created for it. This WeakObserver may outlive the observer, and may
+ * continue to exist after the observer has been removed and observations have ended. Each WeakObserver may delegate
+ * observations to a different Executor, and each keeps track of when observations should stop being sent due to the
+ * observer being removed.
+ *
+ * A WeakObserver may dispatch multiple observations at the same time, either on different threads or (in the case of
+ * a blocking executor) if an observation is sent from within another observation.
+ *
+ * When an observer is removed a WeakObserver is marked as reset and removed from the observers list.
+ * ObserverMultiplexer::unregister_interest() does not return until the related WeakObserver has been reset. This
+ * happens once all in-flight observations have either completed, or are on threads that have removed the observer.
+ */
 template<class Observer>
 class ObserverMultiplexer : public ObserverRegistrar<Observer>, public Observer
 {
@@ -85,47 +104,6 @@ private:
         {
         }
 
-        /// A handle that excludes attempts to unregister or destroy the Observer
-        class LockedObserver
-        {
-        public:
-            LockedObserver(
-                std::shared_ptr<Observer>&& observer,
-                std::unique_lock<std::recursive_mutex>&& lock)
-                : lock{std::move(lock)},
-                  observer{std::move(observer)}
-            {
-            }
-
-            Observer& operator*() const
-            {
-                return *observer;
-            }
-
-            operator bool() const
-            {
-                return static_cast<bool>(observer);
-            }
-
-        private:
-            std::unique_lock<std::recursive_mutex> const lock;
-            std::shared_ptr<Observer> const observer;
-        };
-
-        LockedObserver lock()
-        {
-            std::unique_lock lock{expired_mutex};
-            auto live_observer = observer.lock();
-            if (live_observer && !expired)
-            {
-                return LockedObserver{std::move(live_observer), std::move(lock)};
-            }
-            else
-            {
-                return LockedObserver{nullptr, {}};
-            }
-        }
-
         void spawn(std::function<void()>&& work)
         {
             // Executor only guaranteed to be alive as long as observer
@@ -145,15 +123,84 @@ private:
             }
         }
 
-        /// Called when the given observer is unregistered. Returns true if this observer is now invalid (either because
-        /// this held the unregistered observer or this->observer has expired)
+        template<typename MemberFn, typename... Args>
+        void invoke(MemberFn f, Args&&... args)
+        {
+            auto const live_observer = observer.lock();
+            if (!live_observer)
+            {
+                return;
+            }
+            {
+                auto const state = synchronised_state.lock();
+                // If this observer is being reset or has been reset no new observations should be made
+                if (state->status != Status::active)
+                {
+                    return;
+                }
+                state->threads_in_use.push_back(std::this_thread::get_id());
+            }
+            raii::PairedCalls cleanup{[](){}, [this]()
+                {
+                    // This will run after the observation is made, even if the observer throws
+                    auto const state = synchronised_state.lock();
+                    // Remove only a single copy of this thread's ID from the vector (to match the single copy we
+                    // pushed above)
+                    auto const it = std::find(
+                        begin(state->threads_in_use),
+                        end(state->threads_in_use),
+                        std::this_thread::get_id());
+                    if (it != end(state->threads_in_use))
+                    {
+                        state->threads_in_use.erase(it);
+                    }
+                    if (state->status == Status::reset_pending && state->threads_in_use.empty())
+                    {
+                        state->status = Status::reset_complete;
+                        reset_cv.notify_all();
+                    }
+                }};
+            auto const invokable_mem_fn = std::mem_fn(f);
+            invokable_mem_fn(live_observer.get(), std::forward<Args>(args)...);
+        }
+
+        /// Called when the given observer is unregistered. Returns true if the observer held by `this` is now reset
+        /// (either because `this`s observer was unregistered_observer or `this`s observer has expired)
         auto maybe_reset(Observer const* const unregistered_observer) -> bool
         {
             auto const self = observer.lock().get();
             if (self == unregistered_observer)
             {
-                std::lock_guard run_lock{expired_mutex};
-                expired = true;
+                // `this` holds the unregistered observer
+                auto state = synchronised_state.lock();
+                if (state->status != Status::reset_complete)
+                {
+                    // Remove *all* instances of the current thread from threads_in_use. This means even if several
+                    // observations are made recursively, the observer can still be removed from within an observation.
+                    state->threads_in_use.erase(
+                        std::remove(
+                            begin(state->threads_in_use),
+                            end(state->threads_in_use),
+                            std::this_thread::get_id()),
+                        end(state->threads_in_use));
+                    if (state->threads_in_use.empty())
+                    {
+                        // If no other threads are making observations we can safely mark this observer as reset
+                        state->status = Status::reset_complete;
+                        reset_cv.notify_all();
+                    }
+                    else
+                    {
+                        // Other thread(s) are making observations, so set state to reset_pending. This asks them to set
+                        // state to reset and notify the condition variable when they are done.
+                        state->status = Status::reset_pending;
+                        // Wait for the reset to complete
+                        state.wait(reset_cv, [&]()
+                            {
+                                return state->status == Status::reset_complete;
+                            });
+                    }
+                }
                 return true;
             }
             else
@@ -169,11 +216,32 @@ private:
 
         std::weak_ptr<Observer> const observer;
 
-        /// mutex-guarded boolean to signal when this WeakObserver has been unregistered,
-        /// is not currently dispatching an observation and will not dispatch any future
-        /// observations.
-        std::recursive_mutex expired_mutex;
-        bool expired{false};
+        enum class Status
+        {
+            /// Can receive observations.
+            active,
+            /// Used when a reset has been requested, but observations are still in progress. New observations will not
+            /// be sent. Reset will complete when all observations have ended.
+            reset_pending,
+            /// No observations are in progress and no new observations will be sent.
+            reset_complete,
+        };
+
+        struct State
+        {
+            /// Starts as active. Changes to reset_pending (if needed) and then finally to reset_complete. Never goes
+            /// backwards.
+            Status status{Status::active};
+
+            /// All threads that are currently making observations. If a thread makes an observation from within an
+            /// observation, it appears multiple times. Number of times an ID appears does matter, but order does not.
+            std::vector<std::thread::id> threads_in_use;
+        };
+
+        Synchronised<State> synchronised_state;
+
+        /// Notified when State::status changes to reset_complete
+        std::condition_variable reset_cv;
     };
 
     PosixRWMutex observer_mutex;
@@ -227,7 +295,6 @@ void ObserverMultiplexer<Observer>::for_each_observer(MemberFn f, Args&&... args
     static_assert(
         std::is_member_function_pointer<MemberFn>::value,
         "f must be of type (Observer::*)(Args...), a pointer to an Observer member function.");
-    auto const invokable_mem_fn = std::mem_fn(f);
     decltype(observers) local_observers;
     {
         std::lock_guard lock{observer_mutex};
@@ -236,12 +303,9 @@ void ObserverMultiplexer<Observer>::for_each_observer(MemberFn f, Args&&... args
     for (auto& weak_observer: local_observers)
     {
         weak_observer->spawn(
-            [invokable_mem_fn, weak_observer = std::move(weak_observer), args...]() mutable
+            [f, weak_observer = std::move(weak_observer), args...]() mutable
             {
-                if (auto observer = weak_observer->lock())
-                {
-                    invokable_mem_fn(observer, std::forward<Args>(args)...);
-                }
+                weak_observer->invoke(f, std::forward<Args>(args)...);
             });
     }
 }
@@ -253,7 +317,6 @@ void ObserverMultiplexer<Observer>::for_single_observer(Observer const& target_o
     static_assert(
         std::is_member_function_pointer<MemberFn>::value,
         "f must be of type (Observer::*)(Args...), a pointer to an Observer member function.");
-    auto const invokable_mem_fn = std::mem_fn(f);
     decltype(observers) local_observers;
     {
         std::lock_guard lock{observer_mutex};
@@ -262,12 +325,9 @@ void ObserverMultiplexer<Observer>::for_single_observer(Observer const& target_o
     for (auto& weak_observer: local_observers)
     {
         weak_observer->spawn_if_eq(target_observer,
-            [invokable_mem_fn, weak_observer = std::move(weak_observer), args...]() mutable
+            [f, weak_observer = std::move(weak_observer), args...]() mutable
             {
-                if (auto observer = weak_observer->lock())
-                {
-                    invokable_mem_fn(observer, std::forward<Args>(args)...);
-                }
+                weak_observer->invoke(f, std::forward<Args>(args)...);
             });
     }
 }
