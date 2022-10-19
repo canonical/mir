@@ -44,8 +44,7 @@ mgg::RealKMSDisplayConfiguration::RealKMSDisplayConfiguration(
     RealKMSDisplayConfiguration const& conf)
     : KMSDisplayConfiguration(),
       displays{conf.displays},
-    // Vivid GCC is apparently confused by trying to copy-construct card from conf.card?
-      card{conf.card.id, conf.card.max_simultaneous_outputs},
+      card{conf.card},
       outputs{conf.outputs}
 {
 }
