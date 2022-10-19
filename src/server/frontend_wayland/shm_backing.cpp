@@ -242,32 +242,8 @@ public:
         -> std::pair<std::unique_ptr<mir::Mapping<T>>, std::shared_ptr<ShmBufferSIGBUSHandler::AccessProtector>>;
 
 private:
-    template<typename T>
-    class Mapping : public mir::Mapping<T>
-    {
-    public:
-        auto data() -> T* override
-        {
-            return ptr;
-        }
-
-        auto len() const -> size_t override
-        {
-            return size;
-        }
-    private:
-        friend class ShmBacking;
-        Mapping(T* data, size_t size)
-            : ptr{data},
-              size{size}
-        {
-        }
-
-        T* const ptr;
-        size_t const size;
-    };
-
     std::shared_ptr<ShmBufferSIGBUSHandler> const sigbus_handler;
+
     class CurrentMapping
     {
     public:
@@ -288,13 +264,42 @@ private:
         CurrentMapping(CurrentMapping&&) = delete;
         auto operator=(CurrentMapping&&) = delete;
 
-        void* mapped_address;
+        void* const mapped_address;
         size_t size;
         bool size_is_trustworthy;
     };
+    
+    template<typename T>
+    class Mapping : public mir::Mapping<T>
+    {
+    public:
+        auto data() -> T* override
+        {
+            return ptr;
+        }
+
+        auto len() const -> size_t override
+        {
+            return size;
+        }
+    private:
+        friend class ShmBacking;
+        Mapping(T* data, size_t size, std::shared_ptr<void const> lifetime_manager)
+            : ptr{data},
+              size{size},
+              lifetime_manager{std::move(lifetime_manager)}
+        {
+        }
+
+        T* const ptr;
+        size_t const size;
+        std::shared_ptr<void const> const lifetime_manager;
+    };
+
     // Really we only need std::atomic<std::shared_ptr<>>, but 20.04!
     mir::Synchronised<std::shared_ptr<CurrentMapping const>> current_mapping;
     mir::Fd const backing_store;
+    int const prot;
 };
 
 auto backing_size_is_guaranteed_at_least(mir::Fd const& backing_store, size_t size) -> bool
@@ -323,21 +328,10 @@ auto backing_size_is_guaranteed_at_least(mir::Fd const& backing_store, size_t si
 
 ShmBacking::ShmBacking(mir::Fd backing_store, size_t claimed_size, int prot)
     : sigbus_handler{ShmBufferSIGBUSHandler::get_sigbus_handler()},
-      backing_store{std::move(backing_store)}
+      backing_store{std::move(backing_store)},
+      prot{prot}
 {
-    void* mapped_address = mmap(nullptr, claimed_size, prot, MAP_SHARED, this->backing_store, 0);
-    if (mapped_address == MAP_FAILED)
-    {
-        BOOST_THROW_EXCEPTION((std::system_error{
-            errno,
-            std::system_category(),
-            "Failed to map client-provided SHM pool"}));
-    }
-    
-    *current_mapping.lock() = std::make_shared<CurrentMapping>(
-        mapped_address,
-        claimed_size,
-        backing_size_is_guaranteed_at_least(this->backing_store, claimed_size));
+    resize(claimed_size);
 }
 
 template<typename Range, typename Parent>
@@ -364,19 +358,25 @@ auto ShmBacking::lock_range(size_t start, size_t len)
 
     auto start_addr = static_cast<char*>(mapping->mapped_address) + start;
     return std::make_pair(
-        std::unique_ptr<mir::Mapping<T>>{new Mapping<T>{reinterpret_cast<T*>(start_addr), len}},
+        std::unique_ptr<mir::Mapping<T>>{new Mapping<T>{reinterpret_cast<T*>(start_addr), len, mapping}},
         mapping->size_is_trustworthy ? nullptr : sigbus_handler->protect_access_to(start_addr, len));
 }
 
 void ShmBacking::resize(size_t new_size)
 {
-    auto old_mapping = *current_mapping.lock();
-
-    auto new_address = ::mremap(old_mapping->mapped_address, old_mapping->size, new_size, MREMAP_MAYMOVE);
+    void* mapped_address = mmap(nullptr, new_size, prot, MAP_SHARED, backing_store, 0);
+    if (mapped_address == MAP_FAILED)
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{
+            errno,
+            std::system_category(),
+            "Failed to map client-provided SHM pool"}));
+    }
+    
     *current_mapping.lock() = std::make_shared<CurrentMapping>(
-        new_address,
+        mapped_address,
         new_size,
-        backing_size_is_guaranteed_at_least(backing_store, new_size));
+        backing_size_is_guaranteed_at_least(this->backing_store, new_size));
 }
 
 class ROMappableRange : public mir::ReadMappableRange
