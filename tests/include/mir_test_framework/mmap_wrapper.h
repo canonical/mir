@@ -41,6 +41,26 @@ using MmapHandler =
  *          mmap() handler.
  */
 MmapHandlerHandle add_mmap_handler(MmapHandler handler);
+
+using MunmapHandlerHandle = std::unique_ptr<void, void(*)(void*)>;
+using MunmapHandler =
+    std::function<std::optional<int>(void* addr, size_t length)>;
+
+/**
+ * Add a function to the munmap() interposer.
+ *
+ * When code calls ::munmap() the test framework first checks against all of the registered
+ * handlers, returning the value from the first handler to return an occupied optional<int>
+ *
+ * \note    The new handler is added to the \em start of the handler chain; it will be called
+ *          before any existing handler on munmap().
+ *
+ * \param handler [in]  Handler to call when munmap() is called. The handler should return an
+ *                      occupied optional<int> only when it wants to claim this invocation.
+ * \return  An opaque handle to this instance of the handler. Dropping the handle unregisters the
+ *          munmap() handler.
+ */
+MunmapHandlerHandle add_munmap_handler(MunmapHandler handler);
 }
 
 #endif //MIR_TEST_FRAMEWORK_MMAP_WRAPPER_H_
