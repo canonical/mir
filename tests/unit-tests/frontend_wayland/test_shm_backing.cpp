@@ -16,17 +16,20 @@
 
 #include "src/server/frontend_wayland/shm_backing.h"
 
+#include "mir_test_framework/mmap_wrapper.h"
+
 #include <linux/memfd.h>
 #include <sys/mman.h>
 #include <sys/syscall.h>
 #include <fcntl.h>
 #include <boost/throw_exception.hpp>
-#include <experimental/type_traits>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <system_error>
 #include <unistd.h>
+
+namespace mtf = mir_test_framework;
 
 namespace
 {
@@ -156,7 +159,7 @@ TEST(ShmBacking, get_rw_range_checks_handle_overflows)
     );
 }
 
-TEST(ShmBackingDeathTest, reads_from_range_fault_after_range_and_backing_are_destroyed)
+TEST(ShmBacking, unmaps_memory_on_destruction)
 {
     using namespace testing;
 
@@ -167,52 +170,28 @@ TEST(ShmBackingDeathTest, reads_from_range_fault_after_range_and_backing_are_des
     auto range = backing->get_rw_range(0, shm_size);
     auto map = range->map_rw();
 
-    // First demonstrate that we *can* read it while the range/backing is live
-    for (auto const& c : *map)
-    {
-        // We haven't written anything explicitly, so the kernel has helpfully 0-initialised it
-        EXPECT_THAT(c, Eq(std::byte{0}));
-    }
+    void* const mapping_start = map->data();
+    size_t const mapping_length = map->len();
 
-    // Free all the resources!
-    range = nullptr;
-    backing = nullptr;
-    EXPECT_EXIT(
+    bool unmap_called{false};
+    auto interposer = mtf::add_munmap_handler(
+        [mapping_start, mapping_length, &unmap_called](void* addr, size_t len) -> std::optional<int>
         {
-            for (auto const& c : *map)
+            if (addr == mapping_start && len == mapping_length)
             {
-                EXPECT_THAT(c, Eq(std::byte{0}));
+                unmap_called = true;
+                return 0;
             }
-        },
-        KilledBySignal(SIGSEGV),
-        ""
-    );
-}
+            return {};
+        });
 
-TEST(ShmBackingDeathTest, writes_to_range_fault_after_range_and_backing_are_destroyed)
-{
-    using namespace testing;
-
-    constexpr size_t const shm_size = 4000;
-    auto shm_fd = make_shm_fd(shm_size);
-    auto backing = mir::shm::rw_pool_from_fd(shm_fd, shm_size);
-
-    auto range = backing->get_rw_range(0, shm_size);
-    auto map = range->map_rw();
-
-    // First demonstrate that we *can* read it while the range/backing is live
-    ::memset(map->data(), 'a', map->len());
-
-    // Free all the resources!
-    range = nullptr;
+    ASSERT_FALSE(unmap_called);
+    // Destroy everything
     backing = nullptr;
-    EXPECT_EXIT(
-        {
-            ::memset(map->data(), 'a', map->len());
-        },
-        KilledBySignal(SIGSEGV),
-        ""
-    );
+    range = nullptr;
+    map = nullptr;
+
+    EXPECT_TRUE(unmap_called);
 }
 
 TEST(ShmBacking, two_rw_ranges_see_each_others_changes)
