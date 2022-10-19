@@ -68,6 +68,8 @@ struct Runner : miral::TestServer
     std::mutex mutex;
     std::condition_variable cv;
     bool ready_to_tear_down = true;
+    mt::Pipe pipe;
+    char const data_to_write = 'a';
 };
 }
 
@@ -111,12 +113,13 @@ TEST_F(Runner, register_signal_handler_before_setup_invokes_callback_after_setup
     int const signum{SIGUSR1};
 
     wait_for_locking_callback();
-    register_signal_handler({signum}, [this](int) { locking_callback(); });
+    register_signal_handler({signum}, [this](int){ locking_callback(); });
 
     miral::TestServer::SetUp();
 
     EXPECT_CALL(*this, callback())
         .Times(AtLeast(1));
+
     kill(getpid(), signum);
 
     TearDown();
@@ -129,10 +132,11 @@ TEST_F(Runner, register_signal_handler_after_setup_invokes_callback_when_signal_
     int const signum{SIGUSR1};
 
     wait_for_locking_callback();
-    register_signal_handler({signum}, [this](int) { locking_callback(); });
+    register_signal_handler({signum}, [this](int){ locking_callback(); });
 
     EXPECT_CALL(*this, callback())
         .Times(AtLeast(1));
+
     kill(getpid(), signum);
 
     TearDown();
@@ -144,14 +148,14 @@ TEST_F(Runner, register_fd_handler_before_setup_invokes_callback_after_setup)
     char const data_to_write{'a'};
 
     wait_for_locking_callback();
-    auto const handle = register_fd_handler(pipe.read_fd(), [this](int) { locking_callback(); });
+    auto const handle = register_fd_handler(pipe.read_fd(), [this](int){ locking_callback(); });
 
     miral::TestServer::SetUp();
 
     EXPECT_CALL(*this, callback())
         .Times(AtLeast(1));
-    write(pipe.write_fd(), &data_to_write, 1);
-
+    
+    write(pipe.write_fd(), &data_to_write, sizeof(data_to_write));
     TearDown();
 }
 
@@ -163,14 +167,12 @@ TEST_F(Runner, register_fd_handler_after_setup_invokes_callback_when_fd_written_
     miral::TestServer::SetUp();
 
     wait_for_locking_callback();
-    auto const handle = register_fd_handler(pipe.read_fd(), [this](int) { locking_callback(); });
+    auto const handle = register_fd_handler(pipe.read_fd(), [this](int){ locking_callback(); });
 
     EXPECT_CALL(*this, callback())
         .Times(AtLeast(1));
 
-    write(pipe.write_fd(), &data_to_write, 1);
-
-    TearDown();
+    write(pipe.write_fd(), &data_to_write, sizeof(data_to_write));
 }
 
 // We can't spin up the X11 subsystem during LP builds. We would get:
