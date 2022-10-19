@@ -37,15 +37,6 @@ struct Runner : miral::TestServer
     {
     }
 
-    void TearDown() override
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        cv.wait(lock, [this]{ return ready_to_tear_down; });
-        lock.unlock();
-
-        miral::TestServer::TearDown();
-    }
-
     MOCK_METHOD0(callback, void());
 
     void wait_for_locking_callback()
@@ -63,6 +54,13 @@ struct Runner : miral::TestServer
 
         cv.notify_one();
         callback();
+    }
+
+    void wait_to_tear_down()
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        cv.wait(lock, [this] { return ready_to_tear_down; });
+        lock.unlock();
     }
 
     std::mutex mutex;
@@ -121,8 +119,7 @@ TEST_F(Runner, register_signal_handler_before_setup_invokes_callback_after_setup
         .Times(AtLeast(1));
 
     kill(getpid(), signum);
-
-    TearDown();
+    wait_to_tear_down();
 }
 
 TEST_F(Runner, register_signal_handler_after_setup_invokes_callback_when_signal_raised)
@@ -138,15 +135,11 @@ TEST_F(Runner, register_signal_handler_after_setup_invokes_callback_when_signal_
         .Times(AtLeast(1));
 
     kill(getpid(), signum);
-
-    TearDown();
+    wait_to_tear_down();
 }
 
 TEST_F(Runner, register_fd_handler_before_setup_invokes_callback_after_setup)
 {
-    mt::Pipe pipe;
-    char const data_to_write{'a'};
-
     wait_for_locking_callback();
     auto const handle = register_fd_handler(pipe.read_fd(), [this](int){ locking_callback(); });
 
@@ -156,14 +149,11 @@ TEST_F(Runner, register_fd_handler_before_setup_invokes_callback_after_setup)
         .Times(AtLeast(1));
     
     write(pipe.write_fd(), &data_to_write, sizeof(data_to_write));
-    TearDown();
+    wait_to_tear_down();
 }
 
 TEST_F(Runner, register_fd_handler_after_setup_invokes_callback_when_fd_written_to)
 {
-    mt::Pipe pipe;
-    char const data_to_write{'a'};
-
     miral::TestServer::SetUp();
 
     wait_for_locking_callback();
@@ -173,6 +163,7 @@ TEST_F(Runner, register_fd_handler_after_setup_invokes_callback_when_fd_written_
         .Times(AtLeast(1));
 
     write(pipe.write_fd(), &data_to_write, sizeof(data_to_write));
+    wait_to_tear_down();
 }
 
 // We can't spin up the X11 subsystem during LP builds. We would get:
