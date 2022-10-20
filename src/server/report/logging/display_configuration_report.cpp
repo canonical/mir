@@ -203,8 +203,7 @@ void mrl::DisplayConfigurationReport::catastrophic_configuration_error(
 
 void mrl::DisplayConfigurationReport::configuration_updated_for_session(
     std::shared_ptr<scene::Session> const& session,
-    std::shared_ptr<graphics::DisplayConfiguration const> const& config)
+    std::shared_ptr<graphics::DisplayConfiguration const> const& /*config*/)
 {
     logger->log(component, severity, "Sending display configuration to session %s:", session->name().c_str());
-    log_configuration(severity, *config);
 }
