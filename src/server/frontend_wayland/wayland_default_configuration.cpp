@@ -171,7 +171,7 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
         }),
     make_extension_builder<mw::PrimarySelectionDeviceManagerV1>([](auto const& ctx)
         {
-            return mf::create_primary_selection_device_manager_v1(ctx.display, ctx.primary_selection_clipboard);
+            return mf::create_primary_selection_device_manager_v1(ctx.display, ctx.wayland_executor, ctx.primary_selection_clipboard);
         }),
 };
 
