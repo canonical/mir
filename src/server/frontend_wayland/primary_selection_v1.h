@@ -29,7 +29,7 @@ namespace frontend
 {
 auto create_primary_selection_device_manager_v1(
     wl_display* display,
-    std::shared_ptr<scene::Clipboard> clipboard)
+    std::shared_ptr<scene::Clipboard> primary_selection_clipboard)
 -> std::shared_ptr<wayland::PrimarySelectionDeviceManagerV1::Global>;
 }
 }
