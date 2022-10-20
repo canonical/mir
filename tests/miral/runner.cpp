@@ -23,9 +23,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <condition_variable>
-#include <mutex>
-
 using namespace testing;
 
 namespace mt = mir::test;
