@@ -104,7 +104,7 @@ public:
     std::shared_ptr<ms::ClipboardSource> const source;
 };
 
-class PrimarySelectionDevice : public mw::PrimarySelectionDeviceV1
+class PrimarySelectionDevice : public mw::PrimarySelectionDeviceV1, public mf::WlSeat::FocusListener
 {
 private:
     class ClipboardObserver : public ms::ClipboardObserver
@@ -137,6 +137,7 @@ public:
           seat{seat}
     {
         this->primary_selection_clipboard->register_interest(clipboard_observer, mir::immediate_executor);
+        seat.add_focus_listener(client, this);
     }
 
     ~PrimarySelectionDevice()
@@ -146,6 +147,7 @@ public:
         {
             primary_selection_clipboard->clear_paste_source(*current.source);
         }
+        seat.remove_focus_listener(client, this);
     }
 
 private:
@@ -167,6 +169,12 @@ private:
         }
     }
 
+    void focus_on(mf::WlSurface* surface) override
+    {
+        has_focus = static_cast<bool>(surface);
+        paste_source_set(primary_selection_clipboard->paste_source());
+    }
+
     void paste_source_set(std::shared_ptr<ms::ClipboardSource> const& source)
     {
         if (pending.source == source)
@@ -178,7 +186,7 @@ private:
             current = std::move(pending);
             pending = {};
         }
-        if (source)
+        if (source && has_focus)
         {
             if (!current_offer || current_offer.value().source != source)
             {
@@ -207,6 +215,7 @@ private:
         mw::Weak<PrimarySelectionSource> wrapper;
     };
 
+    bool has_focus{false};
     Selection pending, current;
     mw::Weak<PrimarySelectionOffer> current_offer;
     std::shared_ptr<ClipboardObserver> clipboard_observer;
