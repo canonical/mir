@@ -30,6 +30,7 @@ namespace mt = mir::test;
 namespace
 {
 auto const a_long_time = std::chrono::seconds(1);
+auto const a_short_time = std::chrono::milliseconds(250);
 
 struct Runner : miral::TestServer
 {
@@ -102,6 +103,16 @@ TEST_F(Runner, register_signal_handler_after_setup_invokes_callback_when_signal_
     EXPECT_TRUE(signal->wait_for(a_long_time));
 }
 
+TEST_F(Runner, register_signal_handler_does_not_invoke_callback_if_signal_not_raised)
+{
+    auto signal = std::make_shared<mt::Signal>();
+    miral::TestServer::SetUp();
+
+    register_signal_handler({signum}, [signal](int){ signal->raise(); });
+
+    EXPECT_FALSE(signal->wait_for(a_long_time));
+}
+
 TEST_F(Runner, register_fd_handler_before_setup_invokes_callback_after_setup)
 {
     auto signal = std::make_shared<mt::Signal>();
@@ -121,7 +132,17 @@ TEST_F(Runner, register_fd_handler_after_setup_invokes_callback_when_fd_written_
     auto const handle = register_fd_handler(pipe.read_fd(), [signal](int){ signal->raise(); });
 
     write(pipe.write_fd(), &data_to_write, sizeof(data_to_write));
-    EXPECT_TRUE(signal->wait_for(a_long_time));
+    EXPECT_TRUE(signal->wait_for(a_short_time));
+}
+
+TEST_F(Runner, register_fd_handler_does_not_invoke_callback_when_fd_not_written_to)
+{
+    auto signal = std::make_shared<mt::Signal>();
+    miral::TestServer::SetUp();
+
+    auto const handle = register_fd_handler(pipe.read_fd(), [signal](int){ signal->raise(); });
+
+    EXPECT_FALSE(signal->wait_for(a_short_time));
 }
 
 // We can't spin up the X11 subsystem during LP builds. We would get:
