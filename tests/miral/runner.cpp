@@ -45,10 +45,7 @@ struct Runner : miral::TestServer
     int const signum{SIGUSR1};
     mt::Pipe pipe;
     char const data_to_write = 'a';
-
-    std::condition_variable cv;
-    std::mutex mutex;
-    std::chrono::seconds const wait_time{1};
+    mt::Signal signal;
 };
 }
 
@@ -61,8 +58,6 @@ TEST_F(Runner, stop_callback_is_called)
 
 TEST_F(Runner, start_callback_is_called)
 {
-    mt::Signal signal;
-
     add_start_callback([this] { callback(); });
     EXPECT_CALL(*this, callback())
         .WillOnce(InvokeWithoutArgs([&] { signal.raise(); }));
@@ -89,8 +84,7 @@ TEST_F(Runner, x11_socket_is_not_returned_by_default)
 
 TEST_F(Runner, register_signal_handler_before_setup_invokes_callback_after_setup)
 {
-    std::unique_lock<std::mutex> lock(mutex);
-    register_signal_handler({signum}, [&, this](int){ callback(); cv.notify_one(); });
+    register_signal_handler({signum}, [&, this](int){ callback(); signal.raise(); });
 
     miral::TestServer::SetUp();
 
@@ -98,27 +92,25 @@ TEST_F(Runner, register_signal_handler_before_setup_invokes_callback_after_setup
         .Times(AtLeast(1));
 
     kill(getpid(), signum);
-    cv.wait_for(lock, wait_time);
+    signal.wait_for(a_long_time);
 }
 
 TEST_F(Runner, register_signal_handler_after_setup_invokes_callback_when_signal_raised)
 {
-    std::unique_lock<std::mutex> lock(mutex);
     miral::TestServer::SetUp();
 
-    register_signal_handler({signum}, [&, this](int){ callback(); cv.notify_one(); });
+    register_signal_handler({signum}, [&, this](int){ callback(); signal.raise(); });
 
     EXPECT_CALL(*this, callback())
         .Times(AtLeast(1));
 
     kill(getpid(), signum);
-    cv.wait_for(lock, wait_time);
+    signal.wait_for(a_long_time);
 }
 
 TEST_F(Runner, register_fd_handler_before_setup_invokes_callback_after_setup)
 {
-    std::unique_lock<std::mutex> lock(mutex);
-    auto const handle = register_fd_handler(pipe.read_fd(), [&, this](int){ callback(); cv.notify_one(); });
+    auto const handle = register_fd_handler(pipe.read_fd(), [&, this](int){ callback(); signal.raise(); });
 
     miral::TestServer::SetUp();
 
@@ -126,21 +118,20 @@ TEST_F(Runner, register_fd_handler_before_setup_invokes_callback_after_setup)
         .Times(AtLeast(1));
     
     write(pipe.write_fd(), &data_to_write, sizeof(data_to_write));
-    cv.wait_for(lock, wait_time);
+    signal.wait_for(a_long_time);
 }
 
 TEST_F(Runner, register_fd_handler_after_setup_invokes_callback_when_fd_written_to)
 {
-    std::unique_lock<std::mutex> lock(mutex);
     miral::TestServer::SetUp();
 
-    auto const handle = register_fd_handler(pipe.read_fd(), [&, this](int){ callback(); cv.notify_one(); });
+    auto const handle = register_fd_handler(pipe.read_fd(), [&, this](int){ callback(); signal.raise(); });
 
     EXPECT_CALL(*this, callback())
         .Times(AtLeast(1));
 
     write(pipe.write_fd(), &data_to_write, sizeof(data_to_write));
-    cv.wait_for(lock, wait_time);
+    signal.wait_for(a_long_time);
 }
 
 // We can't spin up the X11 subsystem during LP builds. We would get:
