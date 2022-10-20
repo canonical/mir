@@ -54,9 +54,9 @@ public:
 class PrimarySelectionManager : public mw::PrimarySelectionDeviceManagerV1
 {
 public:
-    PrimarySelectionManager(wl_resource* manager, std::shared_ptr<ms::Clipboard> clipboard)
+    PrimarySelectionManager(wl_resource* manager, std::shared_ptr<ms::Clipboard> primary_selection_clipboard)
         : PrimarySelectionDeviceManagerV1{manager, Version<1>()},
-          clipboard{move(clipboard)}
+          primary_selection_clipboard{move(primary_selection_clipboard)}
     {
     }
 
@@ -71,15 +71,15 @@ public:
         (void)seat;
     }
 
-    std::shared_ptr<ms::Clipboard> const clipboard;
+    std::shared_ptr<ms::Clipboard> const primary_selection_clipboard;
 };
 
 class PrimarySelectionGlobal : public mw::PrimarySelectionDeviceManagerV1::Global
 {
 public:
-    PrimarySelectionGlobal(wl_display* display, std::shared_ptr<ms::Clipboard> clipboard)
+    PrimarySelectionGlobal(wl_display* display, std::shared_ptr<ms::Clipboard> primary_selection_clipboard)
         : Global{display, Version<1>()},
-          clipboard{move(clipboard)}
+          clipboard{move(primary_selection_clipboard)}
     {
     }
 
@@ -94,8 +94,8 @@ public:
 
 auto mf::create_primary_selection_device_manager_v1(
     wl_display* display,
-    std::shared_ptr<ms::Clipboard> clipboard)
+    std::shared_ptr<ms::Clipboard> primary_selection_clipboard)
 -> std::shared_ptr<mw::PrimarySelectionDeviceManagerV1::Global>
 {
-    return std::make_shared<PrimarySelectionGlobal>(display, move(clipboard));
+    return std::make_shared<PrimarySelectionGlobal>(display, move(primary_selection_clipboard));
 }
