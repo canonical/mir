@@ -23,6 +23,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <condition_variable>
+#include <mutex>
+
 using namespace testing;
 
 namespace mt = mir::test;
@@ -39,35 +42,13 @@ struct Runner : miral::TestServer
 
     MOCK_METHOD0(callback, void());
 
-    void wait_for_locking_callback()
-    {
-        std::lock_guard<std::mutex> lock(mutex);
-        ready_to_tear_down = false;
-    }
-
-    void locking_callback()
-    {
-        {
-            std::lock_guard<std::mutex> lock(mutex);
-            ready_to_tear_down = true;
-        }
-
-        cv.notify_one();
-        callback();
-    }
-
-    void wait_to_tear_down()
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        cv.wait(lock, [this] { return ready_to_tear_down; });
-        lock.unlock();
-    }
-
-    std::mutex mutex;
-    std::condition_variable cv;
-    bool ready_to_tear_down = true;
+    int const signum{SIGUSR1};
     mt::Pipe pipe;
     char const data_to_write = 'a';
+
+    std::condition_variable cv;
+    std::mutex mutex;
+    std::chrono::seconds const wait_time{1};
 };
 }
 
@@ -108,10 +89,8 @@ TEST_F(Runner, x11_socket_is_not_returned_by_default)
 
 TEST_F(Runner, register_signal_handler_before_setup_invokes_callback_after_setup)
 {
-    int const signum{SIGUSR1};
-
-    wait_for_locking_callback();
-    register_signal_handler({signum}, [this](int){ locking_callback(); });
+    std::unique_lock<std::mutex> lock(mutex);
+    register_signal_handler({signum}, [&, this](int){ callback(); cv.notify_one(); });
 
     miral::TestServer::SetUp();
 
@@ -119,29 +98,27 @@ TEST_F(Runner, register_signal_handler_before_setup_invokes_callback_after_setup
         .Times(AtLeast(1));
 
     kill(getpid(), signum);
-    wait_to_tear_down();
+    cv.wait_for(lock, wait_time);
 }
 
 TEST_F(Runner, register_signal_handler_after_setup_invokes_callback_when_signal_raised)
 {
+    std::unique_lock<std::mutex> lock(mutex);
     miral::TestServer::SetUp();
 
-    int const signum{SIGUSR1};
-
-    wait_for_locking_callback();
-    register_signal_handler({signum}, [this](int){ locking_callback(); });
+    register_signal_handler({signum}, [&, this](int){ callback(); cv.notify_one(); });
 
     EXPECT_CALL(*this, callback())
         .Times(AtLeast(1));
 
     kill(getpid(), signum);
-    wait_to_tear_down();
+    cv.wait_for(lock, wait_time);
 }
 
 TEST_F(Runner, register_fd_handler_before_setup_invokes_callback_after_setup)
 {
-    wait_for_locking_callback();
-    auto const handle = register_fd_handler(pipe.read_fd(), [this](int){ locking_callback(); });
+    std::unique_lock<std::mutex> lock(mutex);
+    auto const handle = register_fd_handler(pipe.read_fd(), [&, this](int){ callback(); cv.notify_one(); });
 
     miral::TestServer::SetUp();
 
@@ -149,21 +126,21 @@ TEST_F(Runner, register_fd_handler_before_setup_invokes_callback_after_setup)
         .Times(AtLeast(1));
     
     write(pipe.write_fd(), &data_to_write, sizeof(data_to_write));
-    wait_to_tear_down();
+    cv.wait_for(lock, wait_time);
 }
 
 TEST_F(Runner, register_fd_handler_after_setup_invokes_callback_when_fd_written_to)
 {
+    std::unique_lock<std::mutex> lock(mutex);
     miral::TestServer::SetUp();
 
-    wait_for_locking_callback();
-    auto const handle = register_fd_handler(pipe.read_fd(), [this](int){ locking_callback(); });
+    auto const handle = register_fd_handler(pipe.read_fd(), [&, this](int){ callback(); cv.notify_one(); });
 
     EXPECT_CALL(*this, callback())
         .Times(AtLeast(1));
 
     write(pipe.write_fd(), &data_to_write, sizeof(data_to_write));
-    wait_to_tear_down();
+    cv.wait_for(lock, wait_time);
 }
 
 // We can't spin up the X11 subsystem during LP builds. We would get:
