@@ -98,9 +98,7 @@ public:
     WaylandExtensions(WaylandExtensions const&) = delete;
     WaylandExtensions& operator=(WaylandExtensions const&) = delete;
 
-    virtual void run_builders(
-        wl_display* display,
-        std::function<void(std::function<void()>&& work)> const& run_on_wayland_mainloop) = 0;
+    virtual void run_builders(wl_display* display, std::function<void(std::function<void()>&& work)> const& run_on_wayland_mainloop);
 
     void init(Context const& context);
 
