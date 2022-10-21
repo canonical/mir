@@ -63,6 +63,16 @@ struct TestDisplayServer : private TestRuntimeEnvironment
     /// \note call before start_server()
     void add_stop_callback(std::function<void()> const& stop_callback);
 
+    /// Add signal handler to the server's main loop.
+    /// \remark Since MirAL 3.7
+    void register_signal_handler(std::initializer_list<int> signals, std::function<void(int)> const& handler);
+
+    /// Add a watch on a file descriptor. 
+    /// The handler will be triggered when there is data to read on the Fd.
+    /// \remark Since MirAL 3.7
+    auto register_fd_handler(mir::Fd fd, std::function<void(int)> const& handler)
+    -> std::unique_ptr<miral::FdHandle>;
+
     /// Set a handler for exceptions caught in run_with().
     /// The default action is to call mir::report_exception(std::cerr)
     /// \note call before start_server()

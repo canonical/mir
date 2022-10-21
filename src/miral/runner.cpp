@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2018 Canonical Ltd.
+ * Copyright © 2016-2022 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -15,6 +15,7 @@
  */
 
 #include "miral/runner.h"
+#include "fd_manager.h"
 #include "join_client_threads.h"
 #include "launch_app.h"
 
@@ -60,6 +61,15 @@ struct miral::MirRunner::Self
     std::function<void()> stop_callback{[this]{ join_client_threads(weak_server.lock().get()); }};
     std::function<void()> exception_handler{static_cast<void(*)()>(mir::report_exception)};
     std::weak_ptr<mir::Server> weak_server;
+    std::shared_ptr<miral::FdManager> const fd_manager = std::make_shared<miral::FdManager>();
+
+    struct SignalInfo
+    {
+        std::initializer_list<int> signals;
+        std::function<void(int)> const handler;
+    };
+    
+    std::vector<SignalInfo> signal_backlog;
 };
 
 miral::MirRunner::MirRunner(int argc, char const* argv[]) :
@@ -144,6 +154,14 @@ try
         // ensuring that the server has really and fully started.
         auto const main_loop = server->the_main_loop();
         main_loop->enqueue(this, std::move(start_callback));
+
+        for (auto const& signal : signal_backlog)
+        {
+            main_loop->register_signal_handler(signal.signals, signal.handler);
+        }
+        signal_backlog.clear();
+
+        fd_manager->set_main_loop(main_loop);
     });
 
     server->run();
@@ -182,6 +200,30 @@ void miral::MirRunner::add_stop_callback(std::function<void()> const& stop_callb
         };
 
     self->stop_callback = updated;
+}
+
+void miral::MirRunner::register_signal_handler(
+    std::initializer_list<int> signals,
+    std::function<void(int)> const& handler)
+{
+    std::lock_guard lock{self->mutex};
+    
+    if (auto const server = self->weak_server.lock())
+    {
+        auto const main_loop = server->the_main_loop();
+        main_loop->register_signal_handler(signals, handler);
+    }
+    else
+    {
+        auto const signal_info = Self::SignalInfo{signals, handler};
+        self->signal_backlog.push_back(signal_info);
+    }
+}
+
+auto miral::MirRunner::register_fd_handler(mir::Fd fd, std::function<void(int)> const& handler)
+-> std::unique_ptr<miral::FdHandle>
+{
+    return self->fd_manager->register_handler(fd, handler);
 }
 
 void miral::MirRunner::set_exception_handler(std::function<void()> const& handler)

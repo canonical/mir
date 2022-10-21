@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2019 Canonical Ltd.
+ * Copyright © 2016-2022 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -18,6 +18,7 @@
 #define MIRAL_RUNNER_H
 
 #include "mir/optional_value.h"
+#include "mir/fd.h"
 
 #include <functional>
 #include <initializer_list>
@@ -32,6 +33,8 @@ namespace mir { class Server; }
  */
 namespace miral
 {
+/// A handle which keeps a file descriptor registered to the main loop until it is dropped
+struct FdHandle { public: virtual ~FdHandle() {} };
 
 /// Runner for applying initialization options to Mir.
 class MirRunner
@@ -48,6 +51,20 @@ public:
     /// Add a callback to be invoked when the server is about to stop,
     /// If multiple callbacks are added they will be invoked in the reverse sequence added.
     void add_stop_callback(std::function<void()> const& stop_callback);
+
+    /// Add signal handler to the server's main loop
+    /// \remark Since MirAL 3.7
+    void register_signal_handler(
+        std::initializer_list<int> signals,
+        std::function<void(int)> const& handler);
+    
+    /// Add a watch on a file descriptor. 
+    /// The handler will be triggered when there is data to read on the Fd.
+    /// \remark Since MirAL 3.7
+    auto register_fd_handler(
+        mir::Fd fd,
+        std::function<void(int)> const& handler)
+    -> std::unique_ptr<miral::FdHandle>;
 
     /// Set a handler for exceptions caught in run_with().
     /// run_with() invokes handler() in catch (...) blocks before returning EXIT_FAILURE.
