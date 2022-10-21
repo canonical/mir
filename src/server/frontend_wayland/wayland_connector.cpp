@@ -146,13 +146,7 @@ namespace
 {
 int halt_eventloop(int fd, uint32_t /*mask*/, void* data)
 {
-    auto const display = reinterpret_cast<wl_display*>(data);
-    wl_list* const client_list = wl_display_get_client_list(display);
-    wl_client* client;
-    wl_client_for_each(client, client_list)
-    {
-        wl_client_destroy(client);
-    }
+    auto display = reinterpret_cast<wl_display*>(data);
     wl_display_terminate(display);
 
     eventfd_t ignored;
@@ -213,6 +207,10 @@ auto mir::frontend::WaylandExtensions::get_extension(std::string const& name) co
         return result->second;
 
     return {};
+}
+
+void mf::WaylandExtensions::run_builders(wl_display*, std::function<void(std::function<void()>&& work)> const&)
+{
 }
 
 mf::WaylandConnector::WaylandConnector(
