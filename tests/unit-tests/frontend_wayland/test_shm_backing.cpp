@@ -534,3 +534,49 @@ TEST(ShmBacking, resize_rechecks_backing_size)
         EXPECT_THAT((*map)[i], Eq(std::byte{0}));
     }
 }
+
+TEST(ShmBacking, resize_doesnt_install_sigbus_handler_when_safe)
+{
+    using namespace testing;
+
+    constexpr size_t const shm_size = 4000;
+
+    mir::Fd shm_fd;
+    try
+    {
+        shm_fd = make_shm_fd_with_seals(shm_size, F_SEAL_SHRINK);
+    }
+    catch (std::system_error const&)
+    {
+        GTEST_SKIP();    // We can't allocate a memfd, so we can't test F_SEAL
+    }
+
+    // Store the initial SIGBUS handler
+    struct sigaction initial_sigbus_handler;
+    sigaction(SIGBUS, nullptr, &initial_sigbus_handler);
+
+    // Construct a backing, a range from it, and map from the range.
+    // This should install a SIGBUS handler if it were necessary
+    auto backing = mir::shm::rw_pool_from_fd(shm_fd, shm_size);
+    auto range = backing->get_rw_range(0, shm_size);
+    auto map = range->map_rw();
+
+    struct sigaction new_sigbus_handler;
+    sigaction(SIGBUS, nullptr, &new_sigbus_handler);
+
+    ASSERT_THAT(new_sigbus_handler, SignalHandlerIsEqual(initial_sigbus_handler));
+
+    size_t const bigger_size = shm_size + 1024;
+    if (ftruncate(shm_fd, bigger_size) != 0)
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to resize memfd"}));
+    }
+    backing->resize(bigger_size);
+
+    range = backing->get_rw_range(0, bigger_size);
+    map = range->map_rw();
+
+    // SIGBUS handler should remain unset.
+    sigaction(SIGBUS, nullptr, &new_sigbus_handler);
+    EXPECT_THAT(new_sigbus_handler, SignalHandlerIsEqual(initial_sigbus_handler));
+}
