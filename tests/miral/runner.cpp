@@ -119,8 +119,8 @@ TEST_F(Runner, register_fd_handler_before_setup_invokes_callback_after_setup)
     auto const handle = register_fd_handler(pipe.read_fd(), [signal](int){ signal->raise(); });
 
     miral::TestServer::SetUp();
-    
-    write(pipe.write_fd(), &data_to_write, sizeof(data_to_write));
+
+    EXPECT_THAT(write(pipe.write_fd(), &data_to_write, sizeof(data_to_write)), Gt(0));
     EXPECT_TRUE(signal->wait_for(a_long_time));
 }
 
@@ -131,7 +131,7 @@ TEST_F(Runner, register_fd_handler_after_setup_invokes_callback_when_fd_written_
 
     auto const handle = register_fd_handler(pipe.read_fd(), [signal](int){ signal->raise(); });
 
-    write(pipe.write_fd(), &data_to_write, sizeof(data_to_write));
+    EXPECT_THAT(write(pipe.write_fd(), &data_to_write, sizeof(data_to_write)), Gt(0));
     EXPECT_TRUE(signal->wait_for(a_short_time));
 }
 
