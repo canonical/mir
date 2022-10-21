@@ -489,3 +489,48 @@ TEST(ShmBacking, mapping_remains_valid_after_resize)
         EXPECT_THAT(a, Eq(expected_content));
     }
 }
+
+TEST(ShmBacking, resize_rechecks_backing_size)
+{
+    using namespace testing;
+
+    constexpr size_t const shm_size = 4000;
+
+    mir::Fd shm_fd;
+    try
+    {
+        shm_fd = make_shm_fd_with_seals(shm_size, F_SEAL_SHRINK);
+    }
+    catch (std::system_error const&)
+    {
+        GTEST_SKIP();    // We can't allocate a memfd, so we can't test F_SEAL
+    }
+
+    // Verifyably claim that we're shm_size...
+    auto backing = mir::shm::rw_pool_from_fd(shm_fd, shm_size);
+    // ...verify we can fill the mapping...
+    std::byte const fill{0xae};
+    {
+        auto range = backing->get_rw_range(0, shm_size);
+        auto map = range->map_wo();
+        for (auto& byte : *map)
+        {
+            byte = fill;
+        }
+    }
+    // ...and then lie that we're now bigger...
+    backing->resize(shm_size * 2);
+
+    // ...now, check that our lies can't crash the process.
+    auto range = backing->get_rw_range(0, shm_size * 2);
+    auto map = range->map_rw();
+
+    for (auto i = 0; i < shm_size; ++i)
+    {
+        EXPECT_THAT((*map)[i], Eq(fill));
+    }
+    for (auto i = shm_size; i < shm_size * 2; ++i)
+    {
+        EXPECT_THAT((*map)[i], Eq(std::byte{0}));
+    }
+}
