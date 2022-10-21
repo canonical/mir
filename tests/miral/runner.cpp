@@ -59,7 +59,7 @@ TEST_F(Runner, start_callback_is_called)
 
     add_start_callback([this] { callback(); });
     EXPECT_CALL(*this, callback())
-        .WillOnce(InvokeWithoutArgs([&] { signal->raise(); }));
+        .WillOnce(InvokeWithoutArgs([signal] { signal->raise(); }));
 
     miral::TestServer::SetUp();
 
