@@ -255,7 +255,7 @@ public:
 
     template<typename T>
     auto lock_range(size_t start, size_t len)
-        -> std::pair<std::unique_ptr<mir::Mapping<T>>, std::shared_ptr<ShmBufferSIGBUSHandler::AccessProtector>>;
+        -> std::unique_ptr<mir::Mapping<T>>;
 
 private:
     std::shared_ptr<ShmBufferSIGBUSHandler> const sigbus_handler;
@@ -298,18 +298,28 @@ private:
         {
             return size;
         }
+
+        auto access_fault() const -> bool override
+        {
+            return access_guard ? access_guard->invalid_access_prevented() : false;
+        }
     private:
         friend class ShmBacking;
-        Mapping(T* data, size_t size, std::shared_ptr<void const> lifetime_manager)
+        Mapping(
+            T* data, size_t size,
+            std::shared_ptr<void const> lifetime_manager,
+            std::shared_ptr<ShmBufferSIGBUSHandler::AccessProtector> guard)
             : ptr{data},
               size{size},
-              lifetime_manager{std::move(lifetime_manager)}
+              lifetime_manager{std::move(lifetime_manager)},
+              access_guard{std::move(guard)}
         {
         }
 
         T* const ptr;
         size_t const size;
         std::shared_ptr<void const> const lifetime_manager;
+        std::shared_ptr<ShmBufferSIGBUSHandler::AccessProtector> const access_guard;
     };
 
     // Really we only need std::atomic<std::shared_ptr<>>, but 20.04!
@@ -368,14 +378,17 @@ auto ShmBacking::get_range(size_t start, size_t len, std::shared_ptr<Parent> par
 
 template<typename T>
 auto ShmBacking::lock_range(size_t start, size_t len)
-    -> std::pair<std::unique_ptr<mir::Mapping<T>>, std::shared_ptr<ShmBufferSIGBUSHandler::AccessProtector>>
+    -> std::unique_ptr<mir::Mapping<T>>
 {
     auto mapping = *current_mapping.lock();
 
     auto start_addr = static_cast<char*>(mapping->mapped_address) + start;
-    return std::make_pair(
-        std::unique_ptr<mir::Mapping<T>>{new Mapping<T>{reinterpret_cast<T*>(start_addr), len, mapping}},
-        mapping->size_is_trustworthy ? nullptr : sigbus_handler->protect_access_to(start_addr, len));
+    return
+        std::unique_ptr<mir::Mapping<T>>{
+            new Mapping<T>{
+                reinterpret_cast<T*>(start_addr), len,
+                mapping,
+                mapping->size_is_trustworthy ? nullptr : sigbus_handler->protect_access_to(start_addr, len)}};
 }
 
 void ShmBacking::resize(size_t new_size)
@@ -410,20 +423,12 @@ public:
 
     auto map_ro() -> std::unique_ptr<mir::Mapping<std::byte const>> override
     {
-        auto [mapping, guard] = parent->lock_range<std::byte const>(offset, len);
-        sigbus_guard = std::move(guard);
-        return std::move(mapping);
-    }
-
-    auto access_fault() const -> bool override
-    {
-        return sigbus_guard ? sigbus_guard->invalid_access_prevented() : false;
+        return parent->lock_range<std::byte const>(offset, len);
     }
 private:
     size_t const offset;
     size_t const len;
     std::shared_ptr<ShmBacking> const parent;
-    std::shared_ptr<ShmBufferSIGBUSHandler::AccessProtector> sigbus_guard;
 };
 
 class WOMappableRange : public mir::WriteMappableRange
@@ -441,20 +446,12 @@ public:
 
     auto map_wo() -> std::unique_ptr<mir::Mapping<std::byte>> override
     {
-        auto [mapping, guard] = parent->lock_range<std::byte>(offset, len);
-        sigbus_guard = std::move(guard);
-        return std::move(mapping);
-    }
-
-    auto access_fault() const -> bool override
-    {
-        return sigbus_guard ? sigbus_guard->invalid_access_prevented() : false;
+        return parent->lock_range<std::byte>(offset, len);
     }
 private:
     size_t const offset;
     size_t const len;
     std::shared_ptr<ShmBacking> const parent;
-    std::shared_ptr<ShmBufferSIGBUSHandler::AccessProtector> sigbus_guard;
 };
 
 class RWShmBackedPool;
@@ -474,34 +471,22 @@ public:
 
     auto map_rw() -> std::unique_ptr<mir::Mapping<std::byte>> override
     {
-        auto [mapping, guard] = parent->lock_range<std::byte>(offset, len);
-        sigbus_guard = std::move(guard);
-        return std::move(mapping);
+        return parent->lock_range<std::byte>(offset, len);
     }
 
     auto map_ro() -> std::unique_ptr<mir::Mapping<std::byte const>> override
     {
-        auto [mapping, guard] = parent->lock_range<std::byte const>(offset, len);
-        sigbus_guard = std::move(guard);
-        return std::move(mapping);
+        return parent->lock_range<std::byte const>(offset, len);
     }
 
     auto map_wo() -> std::unique_ptr<mir::Mapping<std::byte>> override
     {
-        auto [mapping, guard] = parent->lock_range<std::byte>(offset, len);
-        sigbus_guard = std::move(guard);
-        return std::move(mapping);
-    }
-
-    auto access_fault() const -> bool override
-    {
-        return sigbus_guard ? sigbus_guard->invalid_access_prevented() : false;
+        return parent->lock_range<std::byte>(offset, len);
     }
 private:
     size_t const offset;
     size_t const len;
     std::shared_ptr<ShmBacking> const parent;
-    std::shared_ptr<ShmBufferSIGBUSHandler::AccessProtector> sigbus_guard;
 };
 
 class RWShmBackedPool : public mir::shm::ReadWritePool, public std::enable_shared_from_this<RWShmBackedPool>
