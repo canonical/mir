@@ -213,3 +213,10 @@ MIR_PLATFORM_2.8 {
     vtable?for?mir::graphics::common::EGLContextExecutor;
    };
 } MIRPLATFORM_2.7;
+
+MIR_PLATFORM_2.11 {
+ global:
+  extern "C++" {
+    mir::graphics::DRMFormat::as_mir_format*;
+  };
+} MIR_PLATFORM_2.8;
