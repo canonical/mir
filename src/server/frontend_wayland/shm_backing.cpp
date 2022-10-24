@@ -492,8 +492,8 @@ private:
 class RWShmBackedPool : public mir::shm::ReadWritePool, public std::enable_shared_from_this<RWShmBackedPool>
 {
 public:
-    RWShmBackedPool(mir::Fd const& backing, size_t claimed_size)
-        : backing_store{backing, claimed_size, PROT_READ | PROT_WRITE}
+    RWShmBackedPool(mir::Fd backing, size_t claimed_size)
+        : backing_store{std::move(backing), claimed_size, PROT_READ | PROT_WRITE}
     {
     }
 
@@ -521,7 +521,7 @@ private:
 };
 }
 
-auto mir::shm::rw_pool_from_fd(mir::Fd const& backing, size_t claimed_size) -> std::shared_ptr<ReadWritePool>
+auto mir::shm::rw_pool_from_fd(mir::Fd backing, size_t claimed_size) -> std::shared_ptr<ReadWritePool>
 {
-    return std::make_shared<RWShmBackedPool>(backing, claimed_size);
+    return std::make_shared<RWShmBackedPool>(std::move(backing), claimed_size);
 }
