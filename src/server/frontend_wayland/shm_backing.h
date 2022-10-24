@@ -31,6 +31,8 @@ public:
     virtual T* data() = 0;
     virtual size_t len() const = 0;
 
+    virtual auto access_fault() const -> bool = 0;
+
     auto operator[](size_t idx) -> T&
     {
         return data()[idx];
@@ -51,7 +53,6 @@ public:
     virtual ~ReadMappableRange() = default;
 
     virtual auto map_ro() -> std::unique_ptr<Mapping<std::byte const>> = 0;
-    virtual auto access_fault() const -> bool = 0;
 };
 
 class WriteMappableRange
@@ -60,7 +61,6 @@ public:
     virtual ~WriteMappableRange() = default;
 
     virtual auto map_wo() -> std::unique_ptr<Mapping<std::byte>> = 0;
-    virtual auto access_fault() const -> bool = 0;
 };
 
 class RWMappableRange : public ReadMappableRange, public WriteMappableRange
@@ -69,7 +69,6 @@ public:
     virtual ~RWMappableRange() = default;
 
     virtual auto map_rw() -> std::unique_ptr<Mapping<std::byte>> = 0;
-    auto access_fault() const -> bool override = 0;
 };
 
 namespace shm
