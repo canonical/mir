@@ -48,7 +48,7 @@ jobs:
                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_devel"
                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_proposed"'
 
-        echo ${TASKS:-} | jq -cs '{ "spread-task": .  }' | awk '{ print "::set-output name=matrix::" $0 }'
+        echo ${TASKS:-} | jq -cs '{ "spread-task": .  }' | awk '{ print "matrix=" $0 }' >> $GITHUB_OUTPUT
 
   BuildAndTest:
     needs: GetMatrix
@@ -91,7 +91,7 @@ jobs:
 
         # Find the merge base to avoid populating the cache with short lived cache entries
         # and evicting those we care for - from `main`
-        echo "::set-output name=merge-base::$( git merge-base origin/main ${{ github.sha }} )"
+        echo "merge-base=$( git merge-base origin/main ${{ github.sha }} )" >> $GITHUB_OUTPUT
 
     - name: CCache
       uses: actions/cache@v3
