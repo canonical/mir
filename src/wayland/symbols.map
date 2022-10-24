@@ -537,7 +537,12 @@ global:
     mir::wayland::Client::register_client*;
     mir::wayland::Client::unregister_client*;
     virtual?thunk?to?mir::wayland::Resource::?Resource*;
+  };
+} MIRWAYLAND_2.9;
 
+MIRWAYLAND_2.11 {
+global:
+  extern "C++" {
     mir::wayland::PrimarySelectionDeviceManagerV1::*;
     non-virtual?thunk?to?mir::wayland::PrimarySelectionDeviceManagerV1::*;
     typeinfo?for?mir::wayland::PrimarySelectionDeviceManagerV1;
@@ -564,4 +569,4 @@ global:
     vtable?for?mir::wayland::PrimarySelectionSourceV1;
     virtual?thunk?to?mir::wayland::PrimarySelectionSourceV1::?PrimarySelectionSourceV1*;
   };
-} MIRWAYLAND_2.9;
+} MIRWAYLAND_2.10;
