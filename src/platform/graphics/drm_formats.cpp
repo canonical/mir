@@ -503,6 +503,33 @@ mg::DRMFormat::operator uint32_t() const
     return info->format;
 }
 
+auto mg::DRMFormat::as_mir_format() const -> std::optional<MirPixelFormat>
+{
+    switch (info->format)
+    {
+    case DRM_FORMAT_ARGB8888:
+        return mir_pixel_format_argb_8888;
+    case DRM_FORMAT_XRGB8888:
+        return mir_pixel_format_xrgb_8888;
+    case DRM_FORMAT_RGBA4444:
+        return mir_pixel_format_rgba_4444;
+    case DRM_FORMAT_RGBA5551:
+        return mir_pixel_format_rgba_5551;
+    case DRM_FORMAT_RGB565:
+        return mir_pixel_format_rgb_565;
+    case DRM_FORMAT_RGB888:
+        return mir_pixel_format_rgb_888;
+    case DRM_FORMAT_BGR888:
+        return mir_pixel_format_bgr_888;
+    case DRM_FORMAT_XBGR8888:
+        return mir_pixel_format_xbgr_8888;
+    case DRM_FORMAT_ABGR8888:
+        return mir_pixel_format_abgr_8888;
+    default:
+        return {};
+    }
+}    
+
 auto mg::drm_modifier_to_string(uint64_t modifier) -> std::string
 {
 #ifdef MIR_HAVE_DRM_GET_MODIFIER_NAME
