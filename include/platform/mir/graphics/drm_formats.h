@@ -17,6 +17,7 @@
 #ifndef MIR_PLATFORM_GRAPHICS_DRM_FORMATS_H_
 #define MIR_PLATFORM_GRAPHICS_DRM_FORMATS_H_
 
+#include "mir_toolkit/common.h"
 #include <cstdint>
 #include <string>
 #include <optional>
@@ -48,6 +49,7 @@ public:
 
     operator uint32_t() const;
 
+    auto as_mir_format() const -> std::optional<MirPixelFormat>;
     struct FormatInfo;
 private:
     FormatInfo const* info;
