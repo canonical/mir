@@ -103,6 +103,6 @@ public:
     void resize(size_t new_size) override = 0;
 };
 
-auto rw_pool_from_fd(mir::Fd const& backing, size_t claimed_size) -> std::shared_ptr<ReadWritePool>;
+auto rw_pool_from_fd(mir::Fd backing, size_t claimed_size) -> std::shared_ptr<ReadWritePool>;
 }
 }
