@@ -26,6 +26,7 @@ mir (2.10.0) UNRELEASED; urgency=medium
       . Implement X11 platform pixel format selection correctly (#2648)
       . Deactivate text input in destructor for v1 and v2 protocols (#2657)
       . gbm-kms/quirks: Quirk off AST devices (#2679)
+      . [MirAL] Expose wait features (#2646)
     - Bugs fixed:
       . Incorrect rendering when a surface spans multiple outputs (#1753)
       . [Xwayland] weird focus problems with CLion (#2255)
