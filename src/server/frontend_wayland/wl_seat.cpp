@@ -263,6 +263,10 @@ void mf::WlSeat::set_focus_to(WlSurface* new_surface)
     auto const new_client = new_surface ? new_surface->client : nullptr;
     if (new_client != focused_client)
     {
+        keyboard_listeners->for_each(focused_client, [](WlKeyboard* keyboard)
+            {
+                keyboard->focus_on(nullptr);
+            });
         focus_listeners->for_each(focused_client, [](FocusListener* listener)
             {
                 listener->focus_on(nullptr);
@@ -286,6 +290,10 @@ void mf::WlSeat::set_focus_to(WlSurface* new_surface)
     {
         focused_surface_destroy_listener_id = {};
     }
+    keyboard_listeners->for_each(focused_client, [&](WlKeyboard* keyboard)
+        {
+            keyboard->focus_on(new_surface);
+        });
     focus_listeners->for_each(new_client, [&](FocusListener* listener)
         {
             listener->focus_on(new_surface);
