@@ -267,7 +267,7 @@ TEST(ShmBacking, map_into_valid_memory_is_not_marked_as_faulted)
         EXPECT_THAT(a, Eq(std::byte{'s'}));
     }
 
-    EXPECT_FALSE(range->access_fault());
+    EXPECT_FALSE(map->access_fault());
 }
 
 TEST(ShmBacking, read_from_invalid_memory_returns_0)
@@ -307,7 +307,7 @@ TEST(ShmBacking, access_fault_is_true_after_invaild_read)
         EXPECT_THAT(a, Eq(std::byte{0}));
     }
 
-    EXPECT_TRUE(range->access_fault());
+    EXPECT_TRUE(map->access_fault());
 }
 
 TEST(ShmBacking, access_fault_is_true_after_invaild_write)
@@ -325,7 +325,7 @@ TEST(ShmBacking, access_fault_is_true_after_invaild_write)
 
     ::memset(map->data(), 0xab, map->len());
 
-    EXPECT_TRUE(range->access_fault());
+    EXPECT_TRUE(map->access_fault());
 }
 
 TEST(ShmBacking, access_into_invalid_range_works_even_after_backing_destroyed)
