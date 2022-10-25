@@ -44,7 +44,6 @@ public:
     void focus_on(WlSurface* surface);
 
 private:
-    WlSeat& seat;
     std::unique_ptr<KeyboardHelper> const helper;
     wayland::Weak<WlSurface> focused_surface;
 
