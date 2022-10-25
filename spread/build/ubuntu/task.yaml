@@ -22,6 +22,7 @@ execute: |
     apt-get install \
       --yes \
       --no-install-recommends \
+      ccache \
       devscripts \
       dpkg-dev \
       equivs
@@ -88,6 +89,7 @@ execute: |
       apt-get install --yes --no-install-recommends clang
       echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_C_COMPILER=clang" >> debian/opts.mk
       echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_CXX_COMPILER=clang++" >> debian/opts.mk
+      echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_CXX_FLAGS=-fpch-validate-input-files-content" >> debian/opts.mk
     fi
 
     # enable valgrind
@@ -101,5 +103,11 @@ execute: |
     # Quirk for the GitHub actions CI environment
     echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_BAD_BUFFER_TEST_ENVIRONMENT_BROKEN=ON" >> debian/opts.mk
 
+    # use ccache
+    echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_C_COMPILER_LAUNCHER=ccache" >> debian/opts.mk
+    echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_CXX_COMPILER_LAUNCHER=ccache" >> debian/opts.mk
+
     # build and run tests
     debian/rules build
+
+    ccache --show-stats --zero-stats > ${CCACHE_DIR}/ccache.stats

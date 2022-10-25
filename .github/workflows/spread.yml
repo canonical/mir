@@ -26,34 +26,29 @@ jobs:
         set -euo pipefail
 
         if ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}; then
-          TASKS='"google:ubuntu-20.04-64:spread/build/ubuntu:asan"
-                 "google:ubuntu-20.04-64:spread/build/ubuntu:tsan"
-                 "google:ubuntu-20.04-64:spread/build/ubuntu:ubsan"
-                 "google:ubuntu-20.04-64:spread/build/ubuntu:asan_clang"
-                 "google:ubuntu-20.04-64:spread/build/ubuntu:tsan_clang"
-                 "google:ubuntu-20.04-64:spread/build/ubuntu:ubsan_clang"'
-        else
-          TASKS='"lxd:alpine-3.15:spread/build/alpine:amd64"
-                 "lxd:alpine-edge:spread/build/alpine:amd64"'
-
-          # Only run if we have access to secrets.
-          if ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}; then
-            TASKS+='"google:ubuntu-22.04-64:spread/build/sbuild:debian_sid"
-                    "google:ubuntu-22.04-64:spread/build/sbuild:ubuntu"
-                    "google:ubuntu-22.04-64:spread/build/sbuild:ubuntu_jammy"
-                    "google:ubuntu-22.04-64:spread/build/sbuild:ubuntu_arm64"
-                    "google:ubuntu-22.04-64:spread/build/sbuild:ubuntu_armhf"
-                    "google:ubuntu-20.04-64:spread/build/ubuntu:rpi"
-                    "google:ubuntu-20.04-64:spread/build/ubuntu:clang"
-                    "google:fedora-35-64:spread/build/fedora:amd64"
-                    "google:fedora-36-64:spread/build/fedora:amd64"
-                    "google:ubuntu-22.04-64:spread/build/sbuild:ubuntu_devel"
-                    "google:ubuntu-22.04-64:spread/build/sbuild:ubuntu_proposed"
-                    "google:fedora-rawhide-64:spread/build/fedora:amd64"'
-          fi
+          TASKS='"lxd:ubuntu-20.04:spread/build/ubuntu:asan"
+                 "lxd:ubuntu-20.04:spread/build/ubuntu:tsan"
+                 "lxd:ubuntu-20.04:spread/build/ubuntu:ubsan"
+                 "lxd:ubuntu-20.04:spread/build/ubuntu:asan_clang"
+                 "lxd:ubuntu-20.04:spread/build/ubuntu:tsan_clang"
+                 "lxd:ubuntu-20.04:spread/build/ubuntu:ubsan_clang"'
         fi
 
-        echo ${TASKS:-} | jq -cs '{ "spread-task": .  }' | awk '{ print "::set-output name=matrix::" $0 }'
+        TASKS+='"lxd:alpine-3.15:spread/build/alpine:amd64"
+                "lxd:alpine-edge:spread/build/alpine:amd64"
+                "lxd:ubuntu-22.04:spread/build/sbuild:debian_sid"
+                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu"
+                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_jammy"
+                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_arm64"
+                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_armhf"
+                "lxd:ubuntu-20.04:spread/build/ubuntu:rpi"
+                "lxd:ubuntu-20.04:spread/build/ubuntu:clang"
+                "lxd:fedora-35:spread/build/fedora:amd64"
+                "lxd:fedora-36:spread/build/fedora:amd64"
+                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_devel"
+                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_proposed"'
+
+        echo ${TASKS:-} | jq -cs '{ "spread-task": .  }' | awk '{ print "matrix=" $0 }' >> $GITHUB_OUTPUT
 
   BuildAndTest:
     needs: GetMatrix
@@ -68,30 +63,52 @@ jobs:
       DEBFULLNAME: "Mir CI Bot"
       DEBEMAIL: "mir-ci-bot@canonical.com"
       SPREAD_PATH: "/tmp/spread"
+      CCACHE_DIR: "/tmp/ccache"
 
     steps:
     - name: Set up LXD
-      if: ${{ startsWith(matrix.spread-task, 'lxd:') }}
       uses: whywaita/setup-lxd@v1
 
     - name: Set up Spread
       run: |
-        set -e
-        if ${{ !startsWith(matrix.spread-task, 'lxd:') }}; then
-          sudo snap install spread
-          timeout 600 sh -c 'while snap changes | grep Doing; do sleep 5; done'
-          sudo snap connect spread:home
-        else
-          curl -s -O https://people.canonical.com/~chrishr/spread.snap
-          sudo snap install --dangerous spread.snap
-          sudo snap connect spread:lxd lxd:lxd
-          echo "LXD_DIR=/var/snap/lxd/common/lxd" >> $GITHUB_ENV
-        fi
+        curl -s -O https://people.canonical.com/~msawicz/spread.snap
+        sudo snap install --dangerous spread.snap
+        sudo snap connect spread:lxd lxd:lxd
+        lxc profile set default security.privileged=true security.nesting=true
+        sudo apt-get install --yes binfmt-support qemu-user-static
+        echo "LXD_DIR=/var/snap/lxd/common/lxd" >> $GITHUB_ENV
 
     - name: Check out code
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Set up CCache
+      id: setup-ccache
+      run: |
+        mkdir --parents ${CCACHE_DIR}
+        /snap/bin/lxc profile device add default ccache disk source=${CCACHE_DIR} path=/root/.ccache
+
+        # Find the merge base to avoid populating the cache with short lived cache entries
+        # and evicting those we care for - from `main`
+        echo "merge-base=$( git merge-base origin/main ${{ github.sha }} )" >> $GITHUB_OUTPUT
+
+    - name: CCache
+      uses: actions/cache@v3
+      with:
+        key: ccache-${{ matrix.spread-task }}-${{ steps.setup-ccache.outputs.merge-base }}
+        # if exact match isn't found, use the most recent entry for the task
+        restore-keys: |
+          ccache-${{ matrix.spread-task }}-
+        path: ${{ env.CCACHE_DIR }}
+
+    - name: Ensure ccache size
+      run: |
+        # a full build yielded at most 650M cache
+        echo "max_size = 800M" > ${CCACHE_DIR}/ccache.conf
 
     - name: Run Spread task
-      env:
-        SPREAD_GOOGLE_KEY: ${{ secrets.SPREAD_GOOGLE_KEY }}
       run: snap run spread -v ${{ matrix.spread-task }}
+
+    - name: CCache stats
+      run: cat ${CCACHE_DIR}/ccache.stats

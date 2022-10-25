@@ -1,5 +1,5 @@
 environment:
-    DEB_BUILD_OPTIONS: "noopt ${NOCHECK}"
+    DEB_BUILD_OPTIONS: "${NOCHECK}"
     NO_PKG_MANGLE: 1
 
 systems: [ubuntu-*]
@@ -8,6 +8,7 @@ variants:
 - debian*
 
 summary: Build Deb packages
+kill-timeout: 90m
 
 execute: |
     cd $SPREAD_PATH
@@ -38,6 +39,7 @@ execute: |
     MKSBUILD_OPTS=(
       mk-sbuild
       --distro ${DISTRO}
+      --debootstrap-include=ccache
       ${RELEASE}
     )
 
@@ -48,6 +50,8 @@ execute: |
       --build=${DEB_BUILD_ARCH}
       --host=${DEB_HOST_ARCH}
     )
+
+    SCHROOT_NAME="${RELEASE}-${DEB_BUILD_ARCH}"
 
     [ "${PROPOSED}" == "true" ] || MKSBUILD_OPTS+=("--skip-proposed")
 
@@ -64,6 +68,7 @@ execute: |
 
       # Quirk for the eglexternalplatform-dev build dependency
       sed -i 's/\(eglexternalplatform-dev\)/\1:all/' debian/control
+      SCHROOT_NAME="${SCHROOT_NAME}-${DEB_HOST_ARCH}"
     fi
 
     # If release not in yet
@@ -75,9 +80,19 @@ execute: |
 
     echo "export XDG_RUNTIME_DIR=/tmp" >> debian/opts.mk
 
+    # use ccache
+    echo "export CCACHE_DIR=${CCACHE_DIR}" >> debian/opts.mk
+    echo "export CCACHE_SLOPPINESS=${CCACHE_SLOPPINESS}" >> debian/opts.mk
+    echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_C_COMPILER_LAUNCHER=ccache" >> debian/opts.mk
+    echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_CXX_COMPILER_LAUNCHER=ccache" >> debian/opts.mk
+
+    echo "${CCACHE_DIR} ${CCACHE_DIR} none rw,bind 0 0" >> /etc/schroot/sbuild/fstab
+
     # Running the tests under QEMU fails to entirely correctly support libwayland's SIGSEGV handler
-    if [[ ${DEB_HOST_ARCH} == armhf ]]; then
+    if [[ ${DEB_HOST_ARCH} == arm* ]]; then
       echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_BAD_BUFFER_TEST_ENVIRONMENT_BROKEN=ON" >> debian/opts.mk
     fi
 
     sbuild "${SBUILD_OPTS[@]}"
+
+    schroot -c chroot:${SCHROOT_NAME} --directory /build -- env CCACHE_DIR=${CCACHE_DIR} ccache --show-stats --zero-stats > ${CCACHE_DIR}/ccache.stats
