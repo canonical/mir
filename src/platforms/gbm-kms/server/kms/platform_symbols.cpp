@@ -211,6 +211,31 @@ auto probe_display_platform(
                         std::string{"Failed to set DRM interface version on device "} + device.devnode()};
                 }
 
+                // For now, we *also* require our DisplayPlatform to support creating a HW EGL context                
+                mgg::helpers::GBMHelper gbm_device{tmp_fd};
+                mgg::helpers::EGLHelper egl{MinimalGLConfig()};
+
+                egl.setup(gbm_device);
+
+                egl.make_current();
+
+                auto const renderer_string = reinterpret_cast<char const*>(glGetString(GL_RENDERER));
+                if (!renderer_string)
+                {
+                    throw mg::gl_error(
+                        "Probe failed to query GL renderer");
+                }
+
+                if (strncmp(
+                    "llvmpipe",
+                    renderer_string,
+                    strlen("llvmpipe")) == 0)
+                {
+                    mir::log_info("KMS device only has associated software renderer: %s, device unsuitable", renderer_string);
+                    supported_devices.back().support_level = mg::PlatformPriority::unsupported;
+                    continue;
+                }
+
                 /* Check if modesetting is supported on this DRM node
                  * This must be done after drmSetInterfaceVersion() as, for Hysterical Raisins,
                  * drmGetBusid() will return nullptr unless drmSetInterfaceVersion() has already been called
