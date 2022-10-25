@@ -226,10 +226,8 @@ auto probe_display_platform(
                         "Probe failed to query GL renderer");
                 }
 
-                if (strncmp(
-                    "llvmpipe",
-                    renderer_string,
-                    strlen("llvmpipe")) == 0)
+                using namespace std::literals::string_literals;
+                if ("llvmpipe"s == renderer_string)
                 {
                     mir::log_info("KMS device only has associated software renderer: %s, device unsuitable", renderer_string);
                     supported_devices.back().support_level = mg::PlatformPriority::unsupported;
