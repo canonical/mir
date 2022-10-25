@@ -21,6 +21,7 @@
 #include <mir/server.h>
 #include <mir/scene/session.h>
 #include <mir/raii.h>
+#include <wayland-client-core.h>
 
 #define MIR_LOG_COMPONENT "miral::Internal Client"
 #include <mir/log.h>
@@ -125,7 +126,14 @@ void WlInternalClientRunner<Base>::run(mir::Server& server)
                 {
                     auto const deleter = mir::raii::deleter_for(display, &wl_display_disconnect);
                     client_code(display);
-                    wl_display_roundtrip(display);
+                    /* If the client code encountered a protocol error then the display
+                     * is no longer useable. Empirically, this tends to mean that
+                     * wl_display_roundtrip() hangs indifinitely.
+                     */
+                    if (!wl_display_get_error(display))
+                    {
+                        wl_display_roundtrip(display);
+                    }
                 }
             }
             catch (std::exception const&)
