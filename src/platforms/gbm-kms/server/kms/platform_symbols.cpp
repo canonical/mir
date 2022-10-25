@@ -21,6 +21,7 @@
 #include "gbm_platform.h"
 #include "display_helpers.h"
 #include "quirks.h"
+#include "kms-utils/drm_mode_resources.h"
 #include "mir/options/program_option.h"
 #include "mir/options/option.h"
 #include "mir/options/configuration.h"
@@ -228,11 +229,18 @@ auto probe_display_platform(
                 }
                 else
                 {
+                    mg::kms::DRMModeResources kms_resources{tmp_fd};
                     switch (auto err = -drmCheckModesettingSupported(busid.get()))
                     {
                     case 0:
-                        // We've got a DRM device that supports KMS. Full marks!
-                        supported_devices.back().support_level = mg::PlatformPriority::best;
+                        // We've got a DRM device that supports KMS. Let's see if it's got any output hardware!
+                        if ((kms_resources.num_connectors() > 0) &&
+                            (kms_resources.num_crtcs() > 0) &&
+                            (kms_resources.num_encoders() > 0))
+                        {
+                            // It supports KMS *and* can drive at least one physical output! Top hole!
+                            supported_devices.back().support_level = mg::PlatformPriority::best;
+                        }
                         break;
 
                     case ENOSYS:
