@@ -9,6 +9,6 @@ status = [
           "BuildAndTest (google:fedora-36-64:spread/build/fedora:amd64)",
 ]
 block-labels = [ "no-merge" ]
-timeout-sec = 3600
+timeout-sec = 5400
 delete-merged-branches = true
 update_base_for_deletes = true
