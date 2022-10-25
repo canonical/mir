@@ -264,6 +264,11 @@ auto probe_display_platform(
                             // It supports KMS *and* can drive at least one physical output! Top hole!
                             supported_devices.back().support_level = mg::PlatformPriority::best;
                         }
+                        else
+                        {
+                            mir::log_info("KMS support found, but device has no output hardware.");
+                            mir::log_info("This is probably a render-only hybrid graphics device");
+                        }
                         break;
 
                     case ENOSYS:
