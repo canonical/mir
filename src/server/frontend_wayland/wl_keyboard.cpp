@@ -31,7 +31,6 @@ namespace mi = mir::input;
 
 mf::WlKeyboard::WlKeyboard(wl_resource* new_resource, WlSeat& seat)
     : wayland::Keyboard{new_resource, Version<8>()},
-      seat{seat},
       helper{seat.make_keyboard_helper(this)}
 {
 }
