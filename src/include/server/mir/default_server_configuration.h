@@ -393,7 +393,8 @@ protected:
     CachedPtr<scene::SurfaceFactory> surface_factory;
     CachedPtr<scene::SessionContainer>  session_container;
     CachedPtr<scene::SessionListener> session_listener;
-    CachedPtr<scene::Clipboard>         clipboard;
+    CachedPtr<scene::Clipboard>         main_clipboard;
+    CachedPtr<scene::Clipboard>         primary_selection_clipboard;
     CachedPtr<scene::TextInputHub>      text_input_hub;
     CachedPtr<scene::IdleHub>           idle_hub;
     CachedPtr<shell::IdleHandler>       idle_handler;
