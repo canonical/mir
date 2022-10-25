@@ -35,18 +35,15 @@ class WlSurface;
 
 class WlKeyboard
     : public wayland::Keyboard,
-      private WlSeat::FocusListener,
       private KeyboardCallbacks
 {
 public:
     WlKeyboard(wl_resource* new_resource, WlSeat& seat);
 
-    ~WlKeyboard();
-
     void handle_event(std::shared_ptr<MirEvent const> const& event);
+    void focus_on(WlSurface* surface);
 
 private:
-    WlSeat& seat;
     std::unique_ptr<KeyboardHelper> const helper;
     wayland::Weak<WlSurface> focused_surface;
 
@@ -54,9 +51,6 @@ private:
     uint32_t latched_modifiers = 0;
     uint32_t locked_modifiers = 0;
     uint32_t group_modifiers = 0;
-
-    /// WlSeat::FocusListener override
-    void focus_on(WlSurface* surface) override;
 
     /// KeyboardCallbacks overrides
     /// @{

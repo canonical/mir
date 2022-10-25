@@ -177,7 +177,8 @@ public:
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<EmergencyCleanup>       the_emergency_cleanup() override;
     std::shared_ptr<cookie::Authority>      the_cookie_authority() override;
-    std::shared_ptr<scene::Clipboard>       the_clipboard() override;
+    std::shared_ptr<scene::Clipboard>       the_main_clipboard() override;
+    std::shared_ptr<scene::Clipboard>       the_primary_selection_clipboard() override;
     std::shared_ptr<scene::TextInputHub>    the_text_input_hub() override;
     std::shared_ptr<scene::IdleHub>         the_idle_hub() override;
     std::shared_ptr<shell::IdleHandler>     the_idle_handler() override;
@@ -392,7 +393,8 @@ protected:
     CachedPtr<scene::SurfaceFactory> surface_factory;
     CachedPtr<scene::SessionContainer>  session_container;
     CachedPtr<scene::SessionListener> session_listener;
-    CachedPtr<scene::Clipboard>         clipboard;
+    CachedPtr<scene::Clipboard>         main_clipboard;
+    CachedPtr<scene::Clipboard>         primary_selection_clipboard;
     CachedPtr<scene::TextInputHub>      text_input_hub;
     CachedPtr<scene::IdleHub>           idle_hub;
     CachedPtr<shell::IdleHandler>       idle_handler;

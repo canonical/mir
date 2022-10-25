@@ -31,15 +31,8 @@ namespace mi = mir::input;
 
 mf::WlKeyboard::WlKeyboard(wl_resource* new_resource, WlSeat& seat)
     : wayland::Keyboard{new_resource, Version<8>()},
-      seat{seat},
       helper{seat.make_keyboard_helper(this)}
 {
-    seat.add_focus_listener(client, this);
-}
-
-mf::WlKeyboard::~WlKeyboard()
-{
-    seat.remove_focus_listener(client, this);
 }
 
 void mf::WlKeyboard::handle_event(std::shared_ptr<MirEvent const> const& event)

@@ -190,10 +190,20 @@ mir::DefaultServerConfiguration::the_prompt_session_manager()
         });
 }
 
-auto mir::DefaultServerConfiguration::the_clipboard()
+auto mir::DefaultServerConfiguration::the_main_clipboard()
 -> std::shared_ptr<ms::Clipboard>
 {
-    return clipboard(
+    return main_clipboard(
+        []()
+        {
+            return std::make_shared<ms::BasicClipboard>();
+        });
+}
+
+auto mir::DefaultServerConfiguration::the_primary_selection_clipboard()
+-> std::shared_ptr<ms::Clipboard>
+{
+    return primary_selection_clipboard(
         []()
         {
             return std::make_shared<ms::BasicClipboard>();

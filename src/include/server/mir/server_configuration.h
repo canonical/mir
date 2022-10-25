@@ -92,7 +92,8 @@ public:
     virtual std::shared_ptr<cookie::Authority> the_cookie_authority() = 0;
     virtual auto the_fatal_error_strategy() -> void (*)(char const* reason, ...) = 0;
     virtual std::shared_ptr<scene::ApplicationNotRespondingDetector> the_application_not_responding_detector() = 0;
-    virtual std::shared_ptr<scene::Clipboard> the_clipboard() = 0;
+    virtual std::shared_ptr<scene::Clipboard> the_main_clipboard() = 0;
+    virtual std::shared_ptr<scene::Clipboard> the_primary_selection_clipboard() = 0;
     virtual std::shared_ptr<scene::TextInputHub> the_text_input_hub() = 0;
     virtual std::shared_ptr<scene::IdleHub> the_idle_hub() = 0;
     virtual std::shared_ptr<shell::IdleHandler> the_idle_handler() = 0;

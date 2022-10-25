@@ -36,6 +36,7 @@
 #include "input_method_v2.h"
 #include "idle_inhibit_v1.h"
 #include "wlr_screencopy_v1.h"
+#include "primary_selection_v1.h"
 
 #include "mir/graphics/platform.h"
 #include "mir/options/default_configuration.h"
@@ -168,6 +169,10 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 ctx.screen_shooter,
                 ctx.surface_stack);
         }),
+    make_extension_builder<mw::PrimarySelectionDeviceManagerV1>([](auto const& ctx)
+        {
+            return mf::create_primary_selection_device_manager_v1(ctx.display, ctx.wayland_executor, ctx.primary_selection_clipboard);
+        }),
 };
 
 ExtensionBuilder const xwayland_builder {
@@ -176,7 +181,7 @@ ExtensionBuilder const xwayland_builder {
             return std::make_shared<mf::XWaylandWMShell>(
                 ctx.wayland_executor,
                 ctx.shell,
-                ctx.clipboard,
+                ctx.main_clipboard,
                 *ctx.seat,
                 ctx.surface_stack);
         }
@@ -305,7 +310,8 @@ std::shared_ptr<mf::Connector>
                 the_session_authorizer(),
                 the_frontend_surface_stack(),
                 the_display_configuration_observer_registrar(),
-                the_clipboard(),
+                the_main_clipboard(),
+                the_primary_selection_clipboard(),
                 the_text_input_hub(),
                 the_idle_hub(),
                 the_screen_shooter(),
