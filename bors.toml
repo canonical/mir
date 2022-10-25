@@ -1,12 +1,12 @@
 status = [
           "BuildAndTest (lxd:alpine-3.15:spread/build/alpine:amd64)",
-          "BuildAndTest (google:ubuntu-22.04-64:spread/build/sbuild:ubuntu)",
-          "BuildAndTest (google:ubuntu-22.04-64:spread/build/sbuild:ubuntu_jammy)",
-          "BuildAndTest (google:ubuntu-22.04-64:spread/build/sbuild:ubuntu_arm64)",
-          "BuildAndTest (google:ubuntu-22.04-64:spread/build/sbuild:ubuntu_armhf)",
-          "BuildAndTest (google:ubuntu-20.04-64:spread/build/ubuntu:clang)",
-          "BuildAndTest (google:fedora-35-64:spread/build/fedora:amd64)",
-          "BuildAndTest (google:fedora-36-64:spread/build/fedora:amd64)",
+          "BuildAndTest (lxd:ubuntu-22.04:spread/build/sbuild:ubuntu)",
+          "BuildAndTest (lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_jammy)",
+          "BuildAndTest (lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_arm64)",
+          "BuildAndTest (lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_armhf)",
+          "BuildAndTest (lxd:ubuntu-20.04:spread/build/ubuntu:clang)",
+          "BuildAndTest (lxd:fedora-35:spread/build/fedora:amd64)",
+          "BuildAndTest (lxd:fedora-36:spread/build/fedora:amd64)",
 ]
 block-labels = [ "no-merge" ]
 timeout-sec = 5400
