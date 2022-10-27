@@ -76,3 +76,13 @@ void MirKeyboardEvent::set_keymap(std::shared_ptr<mir::input::Keymap> keymap)
 {
     keymap_ = std::move(keymap);
 }
+
+auto MirKeyboardEvent::xkb_modifiers() const -> std::optional<MirXkbModifiers>
+{
+    return xkb_modifiers_;
+}
+
+void MirKeyboardEvent::set_xkb_modifiers(std::optional<MirXkbModifiers> mods)
+{
+    xkb_modifiers_ = mods;
+}

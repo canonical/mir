@@ -316,6 +316,11 @@ mir::EventUPtr mi::SeatInputDeviceTracker::create_device_state() const
     return out_ev;
 }
 
+auto mi::SeatInputDeviceTracker::xkb_modifiers() const -> MirXkbModifiers
+{
+    return key_mapper->xkb_modifiers();
+}
+
 void mi::SeatInputDeviceTracker::DeviceData::update_scan_codes(MirKeyboardEvent const* event)
 {
     auto const action = mir_keyboard_event_action(event);

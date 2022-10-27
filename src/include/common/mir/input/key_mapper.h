@@ -19,6 +19,7 @@
 
 #include "mir_toolkit/client_types.h"
 #include "mir_toolkit/event.h"
+#include "mir/events/xkb_modifiers.h"
 
 #include <vector>
 #include <memory>
@@ -78,6 +79,7 @@ public:
     virtual void map_event(MirEvent& event) = 0;
     virtual MirInputEventModifiers modifiers() const = 0;
     virtual MirInputEventModifiers device_modifiers(MirInputDeviceId id) const = 0;
+    virtual auto xkb_modifiers() const -> MirXkbModifiers = 0;
 
 protected:
     KeyMapper(KeyMapper const&) = delete;

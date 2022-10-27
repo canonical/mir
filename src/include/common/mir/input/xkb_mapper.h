@@ -20,6 +20,7 @@
 #include "mir/input/key_mapper.h"
 #include "mir/input/keymap.h"
 #include "mir/optional_value.h"
+#include "mir/events/xkb_modifiers.h"
 
 #include <xkbcommon/xkbcommon.h>
 #include <xkbcommon/xkbcommon-compose.h>
@@ -55,6 +56,7 @@ public:
     void map_event(MirEvent& event) override;
     MirInputEventModifiers modifiers() const override;
     MirInputEventModifiers device_modifiers(MirInputDeviceId di) const override;
+    auto xkb_modifiers() const -> MirXkbModifiers override;
 
 protected:
     XKBMapper(XKBMapper const&) = delete;
@@ -83,9 +85,15 @@ private:
         void set_key_state(std::vector<uint32_t> const& key_state);
 
         bool update_and_map(MirEvent& event, ComposeState* compose_state);
-        xkb_keysym_t update_state(uint32_t scan_code, MirKeyboardAction direction, ComposeState* compose_state, std::string& text);
         MirInputEventModifiers modifiers() const;
+        auto xkb_modifiers() const -> MirXkbModifiers;
     private:
+        /// Returns a pair containing the keysym for the given scancode and if any XKB modifiers have been changed
+        auto update_state(
+            uint32_t scan_code,
+            MirKeyboardAction direction,
+            ComposeState* compose_state,
+            std::string& text) -> std::pair<xkb_keysym_t, bool>;
         void press_modifier(MirInputEventModifiers mod);
         void release_modifier(MirInputEventModifiers mod);
 
@@ -102,6 +110,8 @@ private:
     std::shared_ptr<Keymap> default_keymap;
     std::shared_ptr<xkb_keymap> default_compiled_keymap;
     XKBComposeTablePtr compose_table;
+    MirXkbModifiers xkb_modifiers_;
+    MirInputDeviceId last_device_id;
 
     mir::optional_value<MirInputEventModifiers> modifier_state;
     std::unordered_map<MirInputDeviceId, std::unique_ptr<XkbMappingState>> device_mapping;

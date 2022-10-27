@@ -38,8 +38,8 @@ struct MockKeyMapper : input::KeyMapper
     MOCK_METHOD1(map_event, void(MirEvent& event));
     MOCK_CONST_METHOD0(modifiers, MirInputEventModifiers());
     MOCK_CONST_METHOD1(device_modifiers, MirInputEventModifiers(MirInputDeviceId));
+    MOCK_CONST_METHOD0(xkb_modifiers, MirXkbModifiers());
 };
-
 
 }
 }
