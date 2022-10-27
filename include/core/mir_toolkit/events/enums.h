@@ -87,6 +87,8 @@ typedef enum {
     /* System policy has triggered a key repeat on a key
        which was already down */
     mir_keyboard_action_repeat,
+    /* Modifiers have been updated without a key event. keysym, scan_code and text are not set. */
+    mir_keyboard_action_modifiers,
 
     mir_keyboard_actions
 } MirKeyboardAction;

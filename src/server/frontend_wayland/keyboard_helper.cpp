@@ -105,18 +105,12 @@ void mf::KeyboardHelper::refresh_modifiers()
 void mf::KeyboardHelper::handle_keyboard_event(std::shared_ptr<MirKeyboardEvent const> const& event)
 {
     auto const action = mir_keyboard_event_action(event.get());
-    switch (action)
-    {
-    case mir_keyboard_action_down:
-    case mir_keyboard_action_up:
-        break;
-
-    default:
-        return;
-    }
 
     set_keymap(event->keymap());
-    callbacks->send_key(event);
+    if (action == mir_keyboard_action_down || action == mir_keyboard_action_up)
+    {
+        callbacks->send_key(event);
+    }
     if (auto const mods = event->xkb_modifiers())
     {
         set_modifiers(mods.value());
