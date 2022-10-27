@@ -218,4 +218,11 @@ void mf::VirtualKeyboardV1::modifiers(
         mods_latched,
         mods_locked,
         group};
+    std::chrono::nanoseconds nano = std::chrono::steady_clock::now().time_since_epoch();
+    keyboard_device->if_started_then([&](input::InputSink* sink, input::EventBuilder* builder)
+        {
+            auto key_event = builder->key_event(nano, mir_keyboard_action_modifiers, 0, 0);
+            key_event->to_input()->to_keyboard()->set_xkb_modifiers(xkb_modifiers);
+            sink->handle_input(move(key_event));
+        });
 }
