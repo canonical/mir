@@ -217,6 +217,11 @@ mir::EventUPtr mi::BasicSeat::create_device_state()
     return input_state_tracker.create_device_state();
 }
 
+auto mi::BasicSeat::xkb_modifiers() const -> MirXkbModifiers
+{
+    return input_state_tracker.xkb_modifiers();
+}
+
 void mi::BasicSeat::set_key_state(Device const& dev, std::vector<uint32_t> const& scan_codes)
 {
     input_state_tracker.set_key_state(dev.id(), scan_codes);

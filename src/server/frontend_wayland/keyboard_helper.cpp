@@ -22,7 +22,6 @@
 #include "mir/input/seat.h"
 #include "mir/fatal.h"
 
-#include <xkbcommon/xkbcommon.h>
 #include <cstring> // memcpy
 #include <unordered_set>
 
@@ -39,7 +38,6 @@ mf::KeyboardHelper::KeyboardHelper(
       mir_seat{seat},
       current_keymap{nullptr}, // will be set later in the constructor by set_keymap()
       compiled_keymap{nullptr, &xkb_keymap_unref},
-      state{nullptr, &xkb_state_unref},
       context{xkb_context_new(XKB_CONTEXT_NO_FLAGS), &xkb_context_unref}
 {
     if (!context)
@@ -63,7 +61,7 @@ void mf::KeyboardHelper::handle_event(std::shared_ptr<MirEvent const> const& eve
     switch (mir_input_event_get_type(mir_event_get_input_event(event.get())))
     {
     case mir_input_event_type_keyboard_resync:
-        refresh_internal_state();
+        refresh_modifiers();
         break;
 
     case mir_input_event_type_key:
@@ -72,21 +70,6 @@ void mf::KeyboardHelper::handle_event(std::shared_ptr<MirEvent const> const& eve
 
     default:;
     }
-}
-
-auto mf::KeyboardHelper::refresh_internal_state() -> std::vector<uint32_t>
-{
-    auto const pressed_keys{pressed_key_scancodes()};
-    // Rebuild xkb state
-    state = decltype(state)(xkb_state_new(compiled_keymap.get()), &xkb_state_unref);
-    for (auto scancode : pressed_keys)
-    {
-        xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_DOWN);
-    }
-
-    update_modifier_state();
-
-    return pressed_keys;
 }
 
 auto mf::KeyboardHelper::pressed_key_scancodes() const -> std::vector<uint32_t>
@@ -114,6 +97,11 @@ auto mf::KeyboardHelper::pressed_key_scancodes() const -> std::vector<uint32_t>
     return std::vector<uint32_t>{pressed_keys.begin(), pressed_keys.end()};
 }
 
+void mf::KeyboardHelper::refresh_modifiers()
+{
+    set_modifiers(mir_seat->xkb_modifiers());
+}
+
 void mf::KeyboardHelper::handle_keyboard_event(std::shared_ptr<MirKeyboardEvent const> const& event)
 {
     auto const action = mir_keyboard_event_action(event.get());
@@ -129,21 +117,16 @@ void mf::KeyboardHelper::handle_keyboard_event(std::shared_ptr<MirKeyboardEvent 
 
     set_keymap(event->keymap());
     callbacks->send_key(event);
-    /*
-    * HACK! Maintain our own XKB state, so we can serialise it for
-    * wl_keyboard_send_modifiers
-    */
-    xkb_key_direction const xkb_state = (action == mir_keyboard_action_down) ? XKB_KEY_DOWN : XKB_KEY_UP;
-    int const scancode = mir_keyboard_event_scan_code(event.get());
-    xkb_state_update_key(state.get(), scancode + 8, xkb_state);
-    update_modifier_state();
+    if (auto const mods = event->xkb_modifiers())
+    {
+        set_modifiers(mods.value());
+    }
 }
 
 void mf::KeyboardHelper::set_keymap(std::shared_ptr<mi::Keymap> const& new_keymap)
 {
     if (!new_keymap || new_keymap == current_keymap)
     {
-        refresh_internal_state();
         return;
     }
 
@@ -155,9 +138,6 @@ void mf::KeyboardHelper::set_keymap(std::shared_ptr<mi::Keymap> const& new_keyma
 
     current_keymap = new_keymap;
     compiled_keymap = new_keymap->make_unique_xkb_keymap(context.get());
-
-    // TODO: We might need to copy across the existing depressed keys?
-    state = decltype(state)(xkb_state_new(compiled_keymap.get()), &xkb_state_unref);
 
     std::unique_ptr<char, void(*)(void*)> buffer{xkb_keymap_get_as_string(
         compiled_keymap.get(),
@@ -172,34 +152,11 @@ void mf::KeyboardHelper::set_keymap(std::shared_ptr<mi::Keymap> const& new_keyma
     callbacks->send_keymap_xkb_v1(Fd{IntOwnedFd{shm_buffer.fd()}}, length);
 }
 
-void mf::KeyboardHelper::update_modifier_state()
+void mf::KeyboardHelper::set_modifiers(MirXkbModifiers const& new_modifiers)
 {
-    // TODO?
-    // assert_on_wayland_event_loop()
-
-    auto new_depressed_mods = xkb_state_serialize_mods(
-        state.get(),
-        XKB_STATE_MODS_DEPRESSED);
-    auto new_latched_mods = xkb_state_serialize_mods(
-        state.get(),
-        XKB_STATE_MODS_LATCHED);
-    auto new_locked_mods = xkb_state_serialize_mods(
-        state.get(),
-        XKB_STATE_MODS_LOCKED);
-    auto new_group = xkb_state_serialize_layout(
-        state.get(),
-        XKB_STATE_LAYOUT_EFFECTIVE);
-
-    if ((new_depressed_mods != mods_depressed) ||
-        (new_latched_mods != mods_latched) ||
-        (new_locked_mods != mods_locked) ||
-        (new_group != group))
+    if (new_modifiers != modifiers)
     {
-        mods_depressed = new_depressed_mods;
-        mods_latched = new_latched_mods;
-        mods_locked = new_locked_mods;
-        group = new_group;
-
-        callbacks->send_modifiers(mods_depressed, mods_latched, mods_locked, group);
+        modifiers = new_modifiers;
+        callbacks->send_modifiers(new_modifiers);
     }
 }

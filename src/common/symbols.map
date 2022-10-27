@@ -534,3 +534,10 @@ MIR_COMMON_2.10 {
     MirTouchEvent::position*;
   };
 } MIR_COMMON_2.9;
+
+MIR_COMMON_2.11 {
+  extern "C++" {
+    MirKeyboardEvent::xkb_modifiers*;
+    MirKeyboardEvent::set_xkb_modifiers*;
+  };
+} MIR_COMMON_2.10;

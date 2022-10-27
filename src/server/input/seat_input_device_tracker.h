@@ -23,6 +23,7 @@
 #include "mir/geometry/size.h"
 #include "mir/optional_value.h"
 #include "mir_toolkit/event.h"
+#include "mir/events/xkb_modifiers.h"
 
 #include <atomic>
 #include <unordered_map>
@@ -69,6 +70,7 @@ public:
     MirPointerButtons button_state() const;
 
     EventUPtr create_device_state() const;
+    auto xkb_modifiers() const -> MirXkbModifiers;
 
     void set_key_state(MirInputDeviceId id, std::vector<uint32_t> const& scan_codes);
     void set_pointer_state(MirInputDeviceId id, MirPointerButtons buttons);

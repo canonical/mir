@@ -62,7 +62,7 @@ private:
     void send_repeat_info(int32_t rate, int32_t delay) override;
     void send_keymap_xkb_v1(mir::Fd const& fd, size_t length) override;
     void send_key(std::shared_ptr<MirKeyboardEvent const> const& event) override;
-    void send_modifiers(uint32_t depressed, uint32_t latched, uint32_t locked, uint32_t group) override;
+    void send_modifiers(MirXkbModifiers const& modifiers) override;
     /// @}
 };
 }

@@ -105,8 +105,13 @@ void mf::InputMethodGrabKeyboardV2::send_key(std::shared_ptr<MirKeyboardEvent co
     send_key_event(serial, timestamp, scancode, state);
 }
 
-void mf::InputMethodGrabKeyboardV2::send_modifiers(uint32_t depressed, uint32_t latched, uint32_t locked, uint32_t group)
+void mf::InputMethodGrabKeyboardV2::send_modifiers(MirXkbModifiers const& modifiers)
 {
     auto const serial = client->next_serial(nullptr);
-    send_modifiers_event(serial, depressed, latched, locked, group);
+    send_modifiers_event(
+        serial,
+        modifiers.depressed,
+        modifiers.latched,
+        modifiers.locked,
+        modifiers.effective_layout);
 }
