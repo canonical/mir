@@ -53,7 +53,7 @@ Emitter Global::implementation() const
             {"    : wayland::Global{"},
             {"          wl_global_create("},
             {"              display,"},
-            {"              &", wl_name, "_interface_data,"},
+            {"              &", wl_name, "_interface,"},
             {"              Thunks::supported_version,"},
             {"              this,"},
             {"              &Thunks::bind_thunk)}"},
@@ -78,7 +78,7 @@ Emitter Global::bind_thunk_impl() const
             {"auto resource = wl_resource_create("},
             Emitter::layout(Lines{
                 "client,",
-                {"&", wl_name, "_interface_data,"},
+                {"&", wl_name, "_interface,"},
                 {"std::min((int)version, Thunks::supported_version),"},
                 "id);",
             }, true, true, Emitter::single_indent),

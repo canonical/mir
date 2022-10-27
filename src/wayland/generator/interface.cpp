@@ -165,7 +165,7 @@ Emitter Interface::implementation() const
                         {"if (resource &&"},
                         {"    wl_resource_instance_of(resource, &",
                             wl_name,
-                            "_interface_data, ",
+                            "_interface, ",
                             generated_name,
                             "::Thunks::request_vtable))"},
                         Block{
@@ -185,7 +185,7 @@ Emitter Interface::implementation() const
 Emitter Interface::wl_interface_init() const
 {
     return Lines{
-        {"struct wl_interface const ", wl_name, "_interface_data ",
+        {"struct wl_interface const ", wl_name, "_interface",
             BraceList{
                 {nmspace, "interface_name"},
                 {nmspace, "Thunks::supported_version"},
@@ -208,6 +208,11 @@ void Interface::populate_required_interfaces(std::set<std::string>& interfaces) 
     {
         event.populate_required_interfaces(interfaces);
     }
+}
+
+auto Interface::is_core() const -> bool
+{
+    return wl_name.starts_with("wl_");
 }
 
 Emitter Interface::constructor_prototypes() const
@@ -253,7 +258,7 @@ Emitter Interface::constructor_impl(std::string const& parent_interface) const
         {nmspace, generated_name, "(", constructor_args(parent_interface), ")"},
         {"    : Resource{wl_resource_create("},
         {"          wl_resource_get_client(parent.resource),"},
-        {"          &", wl_name, "_interface_data,"},
+        {"          &", wl_name, "_interface,"},
         {"          wl_resource_get_version(parent.resource), 0)}"},
         Block{
             "wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);",
@@ -325,7 +330,7 @@ Emitter Interface::is_instance_impl() const
 {
     return Lines{
         {"bool ", nmspace, "is_instance(wl_resource* resource)"},
-        Block{"return wl_resource_instance_of(resource, &" + wl_name + "_interface_data, Thunks::request_vtable);"}
+        Block{"return wl_resource_instance_of(resource, &" + wl_name + "_interface, Thunks::request_vtable);"}
     };
 }
 

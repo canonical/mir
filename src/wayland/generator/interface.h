@@ -48,6 +48,7 @@ public:
     Emitter implementation() const;
     Emitter wl_interface_init() const;
     void populate_required_interfaces(std::set<std::string>& interfaces) const; // fills the set with interfaces used
+    bool is_core() const;
 
 private:
     Emitter constructor_prototypes() const;

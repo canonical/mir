@@ -13,32 +13,26 @@
 #include "mir/wayland/protocol_error.h"
 #include "mir/wayland/client.h"
 
-namespace mir
-{
-namespace wayland
-{
-extern struct wl_interface const wl_buffer_interface_data;
-extern struct wl_interface const wl_callback_interface_data;
-extern struct wl_interface const wl_compositor_interface_data;
-extern struct wl_interface const wl_data_device_interface_data;
-extern struct wl_interface const wl_data_device_manager_interface_data;
-extern struct wl_interface const wl_data_offer_interface_data;
-extern struct wl_interface const wl_data_source_interface_data;
-extern struct wl_interface const wl_keyboard_interface_data;
-extern struct wl_interface const wl_output_interface_data;
-extern struct wl_interface const wl_pointer_interface_data;
-extern struct wl_interface const wl_region_interface_data;
-extern struct wl_interface const wl_seat_interface_data;
-extern struct wl_interface const wl_shell_interface_data;
-extern struct wl_interface const wl_shell_surface_interface_data;
-extern struct wl_interface const wl_shm_interface_data;
-extern struct wl_interface const wl_shm_pool_interface_data;
-extern struct wl_interface const wl_subcompositor_interface_data;
-extern struct wl_interface const wl_subsurface_interface_data;
-extern struct wl_interface const wl_surface_interface_data;
-extern struct wl_interface const wl_touch_interface_data;
-}
-}
+extern struct wl_interface const wl_buffer_interface;
+extern struct wl_interface const wl_callback_interface;
+extern struct wl_interface const wl_compositor_interface;
+extern struct wl_interface const wl_data_device_interface;
+extern struct wl_interface const wl_data_device_manager_interface;
+extern struct wl_interface const wl_data_offer_interface;
+extern struct wl_interface const wl_data_source_interface;
+extern struct wl_interface const wl_keyboard_interface;
+extern struct wl_interface const wl_output_interface;
+extern struct wl_interface const wl_pointer_interface;
+extern struct wl_interface const wl_region_interface;
+extern struct wl_interface const wl_seat_interface;
+extern struct wl_interface const wl_shell_interface;
+extern struct wl_interface const wl_shell_surface_interface;
+extern struct wl_interface const wl_shm_interface;
+extern struct wl_interface const wl_shm_pool_interface;
+extern struct wl_interface const wl_subcompositor_interface;
+extern struct wl_interface const wl_subsurface_interface;
+extern struct wl_interface const wl_surface_interface;
+extern struct wl_interface const wl_touch_interface;
 
 namespace mw = mir::wayland;
 
@@ -88,7 +82,7 @@ void mw::Callback::send_done_event(uint32_t callback_data) const
 
 bool mw::Callback::is_instance(wl_resource* resource)
 {
-    return wl_resource_instance_of(resource, &wl_callback_interface_data, Thunks::request_vtable);
+    return wl_resource_instance_of(resource, &wl_callback_interface, Thunks::request_vtable);
 }
 
 void mw::Callback::destroy_and_delete() const
@@ -106,7 +100,7 @@ void const* mw::Callback::Thunks::request_vtable[] {
 mw::Callback* mw::Callback::from(struct wl_resource* resource)
 {
     if (resource &&
-        wl_resource_instance_of(resource, &wl_callback_interface_data, Callback::Thunks::request_vtable))
+        wl_resource_instance_of(resource, &wl_callback_interface, Callback::Thunks::request_vtable))
     {
         return static_cast<Callback*>(wl_resource_get_user_data(resource));
     }
@@ -125,7 +119,7 @@ struct mw::Compositor::Thunks
     static void create_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         wl_resource* id_resolved{
-            wl_resource_create(client, &wl_surface_interface_data, wl_resource_get_version(resource), id)};
+            wl_resource_create(client, &wl_surface_interface, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -149,7 +143,7 @@ struct mw::Compositor::Thunks
     static void create_region_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         wl_resource* id_resolved{
-            wl_resource_create(client, &wl_region_interface_data, wl_resource_get_version(resource), id)};
+            wl_resource_create(client, &wl_region_interface, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -180,7 +174,7 @@ struct mw::Compositor::Thunks
         auto me = static_cast<Compositor::Global*>(data);
         auto resource = wl_resource_create(
             client,
-            &wl_compositor_interface_data,
+            &wl_compositor_interface,
             std::min((int)version, Thunks::supported_version),
             id);
         if (resource == nullptr)
@@ -219,7 +213,7 @@ mw::Compositor::~Compositor()
 
 bool mw::Compositor::is_instance(wl_resource* resource)
 {
-    return wl_resource_instance_of(resource, &wl_compositor_interface_data, Thunks::request_vtable);
+    return wl_resource_instance_of(resource, &wl_compositor_interface, Thunks::request_vtable);
 }
 
 void mw::Compositor::destroy_and_delete() const
@@ -232,7 +226,7 @@ mw::Compositor::Global::Global(wl_display* display, Version<4>)
     : wayland::Global{
           wl_global_create(
               display,
-              &wl_compositor_interface_data,
+              &wl_compositor_interface,
               Thunks::supported_version,
               this,
               &Thunks::bind_thunk)}
@@ -245,10 +239,10 @@ auto mw::Compositor::Global::interface_name() const -> char const*
 }
 
 struct wl_interface const* mw::Compositor::Thunks::create_surface_types[] {
-    &wl_surface_interface_data};
+    &wl_surface_interface};
 
 struct wl_interface const* mw::Compositor::Thunks::create_region_types[] {
-    &wl_region_interface_data};
+    &wl_region_interface};
 
 struct wl_message const mw::Compositor::Thunks::request_messages[] {
     {"create_surface", "n", create_surface_types},
@@ -261,7 +255,7 @@ void const* mw::Compositor::Thunks::request_vtable[] {
 mw::Compositor* mw::Compositor::from(struct wl_resource* resource)
 {
     if (resource &&
-        wl_resource_instance_of(resource, &wl_compositor_interface_data, Compositor::Thunks::request_vtable))
+        wl_resource_instance_of(resource, &wl_compositor_interface, Compositor::Thunks::request_vtable))
     {
         return static_cast<Compositor*>(wl_resource_get_user_data(resource));
     }
@@ -280,7 +274,7 @@ struct mw::ShmPool::Thunks
     static void create_buffer_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format)
     {
         wl_resource* id_resolved{
-            wl_resource_create(client, &wl_buffer_interface_data, wl_resource_get_version(resource), id)};
+            wl_resource_create(client, &wl_buffer_interface, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -359,11 +353,11 @@ mw::ShmPool::~ShmPool()
 
 bool mw::ShmPool::is_instance(wl_resource* resource)
 {
-    return wl_resource_instance_of(resource, &wl_shm_pool_interface_data, Thunks::request_vtable);
+    return wl_resource_instance_of(resource, &wl_shm_pool_interface, Thunks::request_vtable);
 }
 
 struct wl_interface const* mw::ShmPool::Thunks::create_buffer_types[] {
-    &wl_buffer_interface_data,
+    &wl_buffer_interface,
     nullptr,
     nullptr,
     nullptr,
@@ -383,7 +377,7 @@ void const* mw::ShmPool::Thunks::request_vtable[] {
 mw::ShmPool* mw::ShmPool::from(struct wl_resource* resource)
 {
     if (resource &&
-        wl_resource_instance_of(resource, &wl_shm_pool_interface_data, ShmPool::Thunks::request_vtable))
+        wl_resource_instance_of(resource, &wl_shm_pool_interface, ShmPool::Thunks::request_vtable))
     {
         return static_cast<ShmPool*>(wl_resource_get_user_data(resource));
     }
@@ -402,7 +396,7 @@ struct mw::Shm::Thunks
     static void create_pool_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, int32_t fd, int32_t size)
     {
         wl_resource* id_resolved{
-            wl_resource_create(client, &wl_shm_pool_interface_data, wl_resource_get_version(resource), id)};
+            wl_resource_create(client, &wl_shm_pool_interface, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -434,7 +428,7 @@ struct mw::Shm::Thunks
         auto me = static_cast<Shm::Global*>(data);
         auto resource = wl_resource_create(
             client,
-            &wl_shm_interface_data,
+            &wl_shm_interface,
             std::min((int)version, Thunks::supported_version),
             id);
         if (resource == nullptr)
@@ -478,7 +472,7 @@ void mw::Shm::send_format_event(uint32_t format) const
 
 bool mw::Shm::is_instance(wl_resource* resource)
 {
-    return wl_resource_instance_of(resource, &wl_shm_interface_data, Thunks::request_vtable);
+    return wl_resource_instance_of(resource, &wl_shm_interface, Thunks::request_vtable);
 }
 
 void mw::Shm::destroy_and_delete() const
@@ -553,7 +547,7 @@ mw::Shm::Global::Global(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
               display,
-              &wl_shm_interface_data,
+              &wl_shm_interface,
               Thunks::supported_version,
               this,
               &Thunks::bind_thunk)}
@@ -566,7 +560,7 @@ auto mw::Shm::Global::interface_name() const -> char const*
 }
 
 struct wl_interface const* mw::Shm::Thunks::create_pool_types[] {
-    &wl_shm_pool_interface_data,
+    &wl_shm_pool_interface,
     nullptr,
     nullptr};
 
@@ -582,7 +576,7 @@ void const* mw::Shm::Thunks::request_vtable[] {
 mw::Shm* mw::Shm::from(struct wl_resource* resource)
 {
     if (resource &&
-        wl_resource_instance_of(resource, &wl_shm_interface_data, Shm::Thunks::request_vtable))
+        wl_resource_instance_of(resource, &wl_shm_interface, Shm::Thunks::request_vtable))
     {
         return static_cast<Shm*>(wl_resource_get_user_data(resource));
     }
@@ -644,7 +638,7 @@ void mw::Buffer::send_release_event() const
 
 bool mw::Buffer::is_instance(wl_resource* resource)
 {
-    return wl_resource_instance_of(resource, &wl_buffer_interface_data, Thunks::request_vtable);
+    return wl_resource_instance_of(resource, &wl_buffer_interface, Thunks::request_vtable);
 }
 
 struct wl_message const mw::Buffer::Thunks::request_messages[] {
@@ -659,7 +653,7 @@ void const* mw::Buffer::Thunks::request_vtable[] {
 mw::Buffer* mw::Buffer::from(struct wl_resource* resource)
 {
     if (resource &&
-        wl_resource_instance_of(resource, &wl_buffer_interface_data, Buffer::Thunks::request_vtable))
+        wl_resource_instance_of(resource, &wl_buffer_interface, Buffer::Thunks::request_vtable))
     {
         return static_cast<Buffer*>(wl_resource_get_user_data(resource));
     }
@@ -780,7 +774,7 @@ int const mw::DataOffer::Thunks::supported_version = 3;
 mw::DataOffer::DataOffer(DataDevice const& parent)
     : Resource{wl_resource_create(
           wl_resource_get_client(parent.resource),
-          &wl_data_offer_interface_data,
+          &wl_data_offer_interface,
           wl_resource_get_version(parent.resource), 0)}
 {
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
@@ -849,7 +843,7 @@ void mw::DataOffer::send_action_event(uint32_t dnd_action) const
 
 bool mw::DataOffer::is_instance(wl_resource* resource)
 {
-    return wl_resource_instance_of(resource, &wl_data_offer_interface_data, Thunks::request_vtable);
+    return wl_resource_instance_of(resource, &wl_data_offer_interface, Thunks::request_vtable);
 }
 
 uint32_t const mw::DataOffer::Error::invalid_finish;
@@ -879,7 +873,7 @@ void const* mw::DataOffer::Thunks::request_vtable[] {
 mw::DataOffer* mw::DataOffer::from(struct wl_resource* resource)
 {
     if (resource &&
-        wl_resource_instance_of(resource, &wl_data_offer_interface_data, DataOffer::Thunks::request_vtable))
+        wl_resource_instance_of(resource, &wl_data_offer_interface, DataOffer::Thunks::request_vtable))
     {
         return static_cast<DataOffer*>(wl_resource_get_user_data(resource));
     }
@@ -1067,7 +1061,7 @@ void mw::DataSource::send_action_event(uint32_t dnd_action) const
 
 bool mw::DataSource::is_instance(wl_resource* resource)
 {
-    return wl_resource_instance_of(resource, &wl_data_source_interface_data, Thunks::request_vtable);
+    return wl_resource_instance_of(resource, &wl_data_source_interface, Thunks::request_vtable);
 }
 
 uint32_t const mw::DataSource::Error::invalid_action_mask;
@@ -1094,7 +1088,7 @@ void const* mw::DataSource::Thunks::request_vtable[] {
 mw::DataSource* mw::DataSource::from(struct wl_resource* resource)
 {
     if (resource &&
-        wl_resource_instance_of(resource, &wl_data_source_interface_data, DataSource::Thunks::request_vtable))
+        wl_resource_instance_of(resource, &wl_data_source_interface, DataSource::Thunks::request_vtable))
     {
         return static_cast<DataSource*>(wl_resource_get_user_data(resource));
     }
@@ -1249,33 +1243,33 @@ void mw::DataDevice::send_selection_event(std::optional<struct wl_resource*> con
 
 bool mw::DataDevice::is_instance(wl_resource* resource)
 {
-    return wl_resource_instance_of(resource, &wl_data_device_interface_data, Thunks::request_vtable);
+    return wl_resource_instance_of(resource, &wl_data_device_interface, Thunks::request_vtable);
 }
 
 uint32_t const mw::DataDevice::Error::role;
 
 struct wl_interface const* mw::DataDevice::Thunks::start_drag_types[] {
-    &wl_data_source_interface_data,
-    &wl_surface_interface_data,
-    &wl_surface_interface_data,
+    &wl_data_source_interface,
+    &wl_surface_interface,
+    &wl_surface_interface,
     nullptr};
 
 struct wl_interface const* mw::DataDevice::Thunks::set_selection_types[] {
-    &wl_data_source_interface_data,
+    &wl_data_source_interface,
     nullptr};
 
 struct wl_interface const* mw::DataDevice::Thunks::data_offer_types[] {
-    &wl_data_offer_interface_data};
+    &wl_data_offer_interface};
 
 struct wl_interface const* mw::DataDevice::Thunks::enter_types[] {
     nullptr,
-    &wl_surface_interface_data,
+    &wl_surface_interface,
     nullptr,
     nullptr,
-    &wl_data_offer_interface_data};
+    &wl_data_offer_interface};
 
 struct wl_interface const* mw::DataDevice::Thunks::selection_types[] {
-    &wl_data_offer_interface_data};
+    &wl_data_offer_interface};
 
 struct wl_message const mw::DataDevice::Thunks::request_messages[] {
     {"start_drag", "?oo?ou", start_drag_types},
@@ -1298,7 +1292,7 @@ void const* mw::DataDevice::Thunks::request_vtable[] {
 mw::DataDevice* mw::DataDevice::from(struct wl_resource* resource)
 {
     if (resource &&
-        wl_resource_instance_of(resource, &wl_data_device_interface_data, DataDevice::Thunks::request_vtable))
+        wl_resource_instance_of(resource, &wl_data_device_interface, DataDevice::Thunks::request_vtable))
     {
         return static_cast<DataDevice*>(wl_resource_get_user_data(resource));
     }
@@ -1317,7 +1311,7 @@ struct mw::DataDeviceManager::Thunks
     static void create_data_source_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         wl_resource* id_resolved{
-            wl_resource_create(client, &wl_data_source_interface_data, wl_resource_get_version(resource), id)};
+            wl_resource_create(client, &wl_data_source_interface, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -1341,7 +1335,7 @@ struct mw::DataDeviceManager::Thunks
     static void get_data_device_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* seat)
     {
         wl_resource* id_resolved{
-            wl_resource_create(client, &wl_data_device_interface_data, wl_resource_get_version(resource), id)};
+            wl_resource_create(client, &wl_data_device_interface, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -1372,7 +1366,7 @@ struct mw::DataDeviceManager::Thunks
         auto me = static_cast<DataDeviceManager::Global*>(data);
         auto resource = wl_resource_create(
             client,
-            &wl_data_device_manager_interface_data,
+            &wl_data_device_manager_interface,
             std::min((int)version, Thunks::supported_version),
             id);
         if (resource == nullptr)
@@ -1411,7 +1405,7 @@ mw::DataDeviceManager::~DataDeviceManager()
 
 bool mw::DataDeviceManager::is_instance(wl_resource* resource)
 {
-    return wl_resource_instance_of(resource, &wl_data_device_manager_interface_data, Thunks::request_vtable);
+    return wl_resource_instance_of(resource, &wl_data_device_manager_interface, Thunks::request_vtable);
 }
 
 void mw::DataDeviceManager::destroy_and_delete() const
@@ -1429,7 +1423,7 @@ mw::DataDeviceManager::Global::Global(wl_display* display, Version<3>)
     : wayland::Global{
           wl_global_create(
               display,
-              &wl_data_device_manager_interface_data,
+              &wl_data_device_manager_interface,
               Thunks::supported_version,
               this,
               &Thunks::bind_thunk)}
@@ -1442,11 +1436,11 @@ auto mw::DataDeviceManager::Global::interface_name() const -> char const*
 }
 
 struct wl_interface const* mw::DataDeviceManager::Thunks::create_data_source_types[] {
-    &wl_data_source_interface_data};
+    &wl_data_source_interface};
 
 struct wl_interface const* mw::DataDeviceManager::Thunks::get_data_device_types[] {
-    &wl_data_device_interface_data,
-    &wl_seat_interface_data};
+    &wl_data_device_interface,
+    &wl_seat_interface};
 
 struct wl_message const mw::DataDeviceManager::Thunks::request_messages[] {
     {"create_data_source", "n", create_data_source_types},
@@ -1459,7 +1453,7 @@ void const* mw::DataDeviceManager::Thunks::request_vtable[] {
 mw::DataDeviceManager* mw::DataDeviceManager::from(struct wl_resource* resource)
 {
     if (resource &&
-        wl_resource_instance_of(resource, &wl_data_device_manager_interface_data, DataDeviceManager::Thunks::request_vtable))
+        wl_resource_instance_of(resource, &wl_data_device_manager_interface, DataDeviceManager::Thunks::request_vtable))
     {
         return static_cast<DataDeviceManager*>(wl_resource_get_user_data(resource));
     }
@@ -1478,7 +1472,7 @@ struct mw::Shell::Thunks
     static void get_shell_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface)
     {
         wl_resource* id_resolved{
-            wl_resource_create(client, &wl_shell_surface_interface_data, wl_resource_get_version(resource), id)};
+            wl_resource_create(client, &wl_shell_surface_interface, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -1509,7 +1503,7 @@ struct mw::Shell::Thunks
         auto me = static_cast<Shell::Global*>(data);
         auto resource = wl_resource_create(
             client,
-            &wl_shell_interface_data,
+            &wl_shell_interface,
             std::min((int)version, Thunks::supported_version),
             id);
         if (resource == nullptr)
@@ -1547,7 +1541,7 @@ mw::Shell::~Shell()
 
 bool mw::Shell::is_instance(wl_resource* resource)
 {
-    return wl_resource_instance_of(resource, &wl_shell_interface_data, Thunks::request_vtable);
+    return wl_resource_instance_of(resource, &wl_shell_interface, Thunks::request_vtable);
 }
 
 void mw::Shell::destroy_and_delete() const
@@ -1562,7 +1556,7 @@ mw::Shell::Global::Global(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
               display,
-              &wl_shell_interface_data,
+              &wl_shell_interface,
               Thunks::supported_version,
               this,
               &Thunks::bind_thunk)}
@@ -1575,8 +1569,8 @@ auto mw::Shell::Global::interface_name() const -> char const*
 }
 
 struct wl_interface const* mw::Shell::Thunks::get_shell_surface_types[] {
-    &wl_shell_surface_interface_data,
-    &wl_surface_interface_data};
+    &wl_shell_surface_interface,
+    &wl_surface_interface};
 
 struct wl_message const mw::Shell::Thunks::request_messages[] {
     {"get_shell_surface", "no", get_shell_surface_types}};
@@ -1587,7 +1581,7 @@ void const* mw::Shell::Thunks::request_vtable[] {
 mw::Shell* mw::Shell::from(struct wl_resource* resource)
 {
     if (resource &&
-        wl_resource_instance_of(resource, &wl_shell_interface_data, Shell::Thunks::request_vtable))
+        wl_resource_instance_of(resource, &wl_shell_interface, Shell::Thunks::request_vtable))
     {
         return static_cast<Shell*>(wl_resource_get_user_data(resource));
     }
@@ -1829,7 +1823,7 @@ void mw::ShellSurface::send_popup_done_event() const
 
 bool mw::ShellSurface::is_instance(wl_resource* resource)
 {
-    return wl_resource_instance_of(resource, &wl_shell_surface_interface_data, Thunks::request_vtable);
+    return wl_resource_instance_of(resource, &wl_shell_surface_interface, Thunks::request_vtable);
 }
 
 void mw::ShellSurface::destroy_and_delete() const
@@ -1854,16 +1848,16 @@ uint32_t const mw::ShellSurface::FullscreenMethod::driver;
 uint32_t const mw::ShellSurface::FullscreenMethod::fill;
 
 struct wl_interface const* mw::ShellSurface::Thunks::move_types[] {
-    &wl_seat_interface_data,
+    &wl_seat_interface,
     nullptr};
 
 struct wl_interface const* mw::ShellSurface::Thunks::resize_types[] {
-    &wl_seat_interface_data,
+    &wl_seat_interface,
     nullptr,
     nullptr};
 
 struct wl_interface const* mw::ShellSurface::Thunks::set_transient_types[] {
-    &wl_surface_interface_data,
+    &wl_surface_interface,
     nullptr,
     nullptr,
     nullptr};
@@ -1871,18 +1865,18 @@ struct wl_interface const* mw::ShellSurface::Thunks::set_transient_types[] {
 struct wl_interface const* mw::ShellSurface::Thunks::set_fullscreen_types[] {
     nullptr,
     nullptr,
-    &wl_output_interface_data};
+    &wl_output_interface};
 
 struct wl_interface const* mw::ShellSurface::Thunks::set_popup_types[] {
-    &wl_seat_interface_data,
+    &wl_seat_interface,
     nullptr,
-    &wl_surface_interface_data,
+    &wl_surface_interface,
     nullptr,
     nullptr,
     nullptr};
 
 struct wl_interface const* mw::ShellSurface::Thunks::set_maximized_types[] {
-    &wl_output_interface_data};
+    &wl_output_interface};
 
 struct wl_message const mw::ShellSurface::Thunks::request_messages[] {
     {"pong", "u", all_null_types},
@@ -1916,7 +1910,7 @@ void const* mw::ShellSurface::Thunks::request_vtable[] {
 mw::ShellSurface* mw::ShellSurface::from(struct wl_resource* resource)
 {
     if (resource &&
-        wl_resource_instance_of(resource, &wl_shell_surface_interface_data, ShellSurface::Thunks::request_vtable))
+        wl_resource_instance_of(resource, &wl_shell_surface_interface, ShellSurface::Thunks::request_vtable))
     {
         return static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
     }
@@ -1990,7 +1984,7 @@ struct mw::Surface::Thunks
     static void frame_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t callback)
     {
         wl_resource* callback_resolved{
-            wl_resource_create(client, &wl_callback_interface_data, wl_resource_get_version(resource), callback)};
+            wl_resource_create(client, &wl_callback_interface, wl_resource_get_version(resource), callback)};
         if (callback_resolved == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -2164,31 +2158,31 @@ void mw::Surface::send_leave_event(struct wl_resource* output) const
 
 bool mw::Surface::is_instance(wl_resource* resource)
 {
-    return wl_resource_instance_of(resource, &wl_surface_interface_data, Thunks::request_vtable);
+    return wl_resource_instance_of(resource, &wl_surface_interface, Thunks::request_vtable);
 }
 
 uint32_t const mw::Surface::Error::invalid_scale;
 uint32_t const mw::Surface::Error::invalid_transform;
 
 struct wl_interface const* mw::Surface::Thunks::attach_types[] {
-    &wl_buffer_interface_data,
+    &wl_buffer_interface,
     nullptr,
     nullptr};
 
 struct wl_interface const* mw::Surface::Thunks::frame_types[] {
-    &wl_callback_interface_data};
+    &wl_callback_interface};
 
 struct wl_interface const* mw::Surface::Thunks::set_opaque_region_types[] {
-    &wl_region_interface_data};
+    &wl_region_interface};
 
 struct wl_interface const* mw::Surface::Thunks::set_input_region_types[] {
-    &wl_region_interface_data};
+    &wl_region_interface};
 
 struct wl_interface const* mw::Surface::Thunks::enter_types[] {
-    &wl_output_interface_data};
+    &wl_output_interface};
 
 struct wl_interface const* mw::Surface::Thunks::leave_types[] {
-    &wl_output_interface_data};
+    &wl_output_interface};
 
 struct wl_message const mw::Surface::Thunks::request_messages[] {
     {"destroy", "", all_null_types},
@@ -2221,7 +2215,7 @@ void const* mw::Surface::Thunks::request_vtable[] {
 mw::Surface* mw::Surface::from(struct wl_resource* resource)
 {
     if (resource &&
-        wl_resource_instance_of(resource, &wl_surface_interface_data, Surface::Thunks::request_vtable))
+        wl_resource_instance_of(resource, &wl_surface_interface, Surface::Thunks::request_vtable))
     {
         return static_cast<Surface*>(wl_resource_get_user_data(resource));
     }
@@ -2240,7 +2234,7 @@ struct mw::Seat::Thunks
     static void get_pointer_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         wl_resource* id_resolved{
-            wl_resource_create(client, &wl_pointer_interface_data, wl_resource_get_version(resource), id)};
+            wl_resource_create(client, &wl_pointer_interface, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -2264,7 +2258,7 @@ struct mw::Seat::Thunks
     static void get_keyboard_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         wl_resource* id_resolved{
-            wl_resource_create(client, &wl_keyboard_interface_data, wl_resource_get_version(resource), id)};
+            wl_resource_create(client, &wl_keyboard_interface, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -2288,7 +2282,7 @@ struct mw::Seat::Thunks
     static void get_touch_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         wl_resource* id_resolved{
-            wl_resource_create(client, &wl_touch_interface_data, wl_resource_get_version(resource), id)};
+            wl_resource_create(client, &wl_touch_interface, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -2335,7 +2329,7 @@ struct mw::Seat::Thunks
         auto me = static_cast<Seat::Global*>(data);
         auto resource = wl_resource_create(
             client,
-            &wl_seat_interface_data,
+            &wl_seat_interface,
             std::min((int)version, Thunks::supported_version),
             id);
         if (resource == nullptr)
@@ -2408,7 +2402,7 @@ void mw::Seat::send_name_event(std::string const& name) const
 
 bool mw::Seat::is_instance(wl_resource* resource)
 {
-    return wl_resource_instance_of(resource, &wl_seat_interface_data, Thunks::request_vtable);
+    return wl_resource_instance_of(resource, &wl_seat_interface, Thunks::request_vtable);
 }
 
 uint32_t const mw::Seat::Capability::pointer;
@@ -2420,7 +2414,7 @@ mw::Seat::Global::Global(wl_display* display, Version<8>)
     : wayland::Global{
           wl_global_create(
               display,
-              &wl_seat_interface_data,
+              &wl_seat_interface,
               Thunks::supported_version,
               this,
               &Thunks::bind_thunk)}
@@ -2433,13 +2427,13 @@ auto mw::Seat::Global::interface_name() const -> char const*
 }
 
 struct wl_interface const* mw::Seat::Thunks::get_pointer_types[] {
-    &wl_pointer_interface_data};
+    &wl_pointer_interface};
 
 struct wl_interface const* mw::Seat::Thunks::get_keyboard_types[] {
-    &wl_keyboard_interface_data};
+    &wl_keyboard_interface};
 
 struct wl_interface const* mw::Seat::Thunks::get_touch_types[] {
-    &wl_touch_interface_data};
+    &wl_touch_interface};
 
 struct wl_message const mw::Seat::Thunks::request_messages[] {
     {"get_pointer", "n", get_pointer_types},
@@ -2460,7 +2454,7 @@ void const* mw::Seat::Thunks::request_vtable[] {
 mw::Seat* mw::Seat::from(struct wl_resource* resource)
 {
     if (resource &&
-        wl_resource_instance_of(resource, &wl_seat_interface_data, Seat::Thunks::request_vtable))
+        wl_resource_instance_of(resource, &wl_seat_interface, Seat::Thunks::request_vtable))
     {
         return static_cast<Seat*>(wl_resource_get_user_data(resource));
     }
@@ -2697,7 +2691,7 @@ void mw::Pointer::send_axis_value120_event(uint32_t axis, int32_t value120) cons
 
 bool mw::Pointer::is_instance(wl_resource* resource)
 {
-    return wl_resource_instance_of(resource, &wl_pointer_interface_data, Thunks::request_vtable);
+    return wl_resource_instance_of(resource, &wl_pointer_interface, Thunks::request_vtable);
 }
 
 uint32_t const mw::Pointer::Error::role;
@@ -2712,19 +2706,19 @@ uint32_t const mw::Pointer::AxisSource::wheel_tilt;
 
 struct wl_interface const* mw::Pointer::Thunks::set_cursor_types[] {
     nullptr,
-    &wl_surface_interface_data,
+    &wl_surface_interface,
     nullptr,
     nullptr};
 
 struct wl_interface const* mw::Pointer::Thunks::enter_types[] {
     nullptr,
-    &wl_surface_interface_data,
+    &wl_surface_interface,
     nullptr,
     nullptr};
 
 struct wl_interface const* mw::Pointer::Thunks::leave_types[] {
     nullptr,
-    &wl_surface_interface_data};
+    &wl_surface_interface};
 
 struct wl_message const mw::Pointer::Thunks::request_messages[] {
     {"set_cursor", "u?oii", set_cursor_types},
@@ -2749,7 +2743,7 @@ void const* mw::Pointer::Thunks::request_vtable[] {
 mw::Pointer* mw::Pointer::from(struct wl_resource* resource)
 {
     if (resource &&
-        wl_resource_instance_of(resource, &wl_pointer_interface_data, Pointer::Thunks::request_vtable))
+        wl_resource_instance_of(resource, &wl_pointer_interface, Pointer::Thunks::request_vtable))
     {
         return static_cast<Pointer*>(wl_resource_get_user_data(resource));
     }
@@ -2859,7 +2853,7 @@ void mw::Keyboard::send_repeat_info_event(int32_t rate, int32_t delay) const
 
 bool mw::Keyboard::is_instance(wl_resource* resource)
 {
-    return wl_resource_instance_of(resource, &wl_keyboard_interface_data, Thunks::request_vtable);
+    return wl_resource_instance_of(resource, &wl_keyboard_interface, Thunks::request_vtable);
 }
 
 uint32_t const mw::Keyboard::KeymapFormat::no_keymap;
@@ -2869,12 +2863,12 @@ uint32_t const mw::Keyboard::KeyState::pressed;
 
 struct wl_interface const* mw::Keyboard::Thunks::enter_types[] {
     nullptr,
-    &wl_surface_interface_data,
+    &wl_surface_interface,
     nullptr};
 
 struct wl_interface const* mw::Keyboard::Thunks::leave_types[] {
     nullptr,
-    &wl_surface_interface_data};
+    &wl_surface_interface};
 
 struct wl_message const mw::Keyboard::Thunks::request_messages[] {
     {"release", "3", all_null_types}};
@@ -2893,7 +2887,7 @@ void const* mw::Keyboard::Thunks::request_vtable[] {
 mw::Keyboard* mw::Keyboard::from(struct wl_resource* resource)
 {
     if (resource &&
-        wl_resource_instance_of(resource, &wl_keyboard_interface_data, Keyboard::Thunks::request_vtable))
+        wl_resource_instance_of(resource, &wl_keyboard_interface, Keyboard::Thunks::request_vtable))
     {
         return static_cast<Keyboard*>(wl_resource_get_user_data(resource));
     }
@@ -3036,13 +3030,13 @@ void mw::Touch::send_orientation_event(int32_t id, double orientation) const
 
 bool mw::Touch::is_instance(wl_resource* resource)
 {
-    return wl_resource_instance_of(resource, &wl_touch_interface_data, Thunks::request_vtable);
+    return wl_resource_instance_of(resource, &wl_touch_interface, Thunks::request_vtable);
 }
 
 struct wl_interface const* mw::Touch::Thunks::down_types[] {
     nullptr,
     nullptr,
-    &wl_surface_interface_data,
+    &wl_surface_interface,
     nullptr,
     nullptr,
     nullptr};
@@ -3065,7 +3059,7 @@ void const* mw::Touch::Thunks::request_vtable[] {
 mw::Touch* mw::Touch::from(struct wl_resource* resource)
 {
     if (resource &&
-        wl_resource_instance_of(resource, &wl_touch_interface_data, Touch::Thunks::request_vtable))
+        wl_resource_instance_of(resource, &wl_touch_interface, Touch::Thunks::request_vtable))
     {
         return static_cast<Touch*>(wl_resource_get_user_data(resource));
     }
@@ -3107,7 +3101,7 @@ struct mw::Output::Thunks
         auto me = static_cast<Output::Global*>(data);
         auto resource = wl_resource_create(
             client,
-            &wl_output_interface_data,
+            &wl_output_interface,
             std::min((int)version, Thunks::supported_version),
             id);
         if (resource == nullptr)
@@ -3208,7 +3202,7 @@ void mw::Output::send_scale_event(int32_t factor) const
 
 bool mw::Output::is_instance(wl_resource* resource)
 {
-    return wl_resource_instance_of(resource, &wl_output_interface_data, Thunks::request_vtable);
+    return wl_resource_instance_of(resource, &wl_output_interface, Thunks::request_vtable);
 }
 
 uint32_t const mw::Output::Subpixel::unknown;
@@ -3232,7 +3226,7 @@ mw::Output::Global::Global(wl_display* display, Version<3>)
     : wayland::Global{
           wl_global_create(
               display,
-              &wl_output_interface_data,
+              &wl_output_interface,
               Thunks::supported_version,
               this,
               &Thunks::bind_thunk)}
@@ -3269,7 +3263,7 @@ void const* mw::Output::Thunks::request_vtable[] {
 mw::Output* mw::Output::from(struct wl_resource* resource)
 {
     if (resource &&
-        wl_resource_instance_of(resource, &wl_output_interface_data, Output::Thunks::request_vtable))
+        wl_resource_instance_of(resource, &wl_output_interface, Output::Thunks::request_vtable))
     {
         return static_cast<Output*>(wl_resource_get_user_data(resource));
     }
@@ -3359,7 +3353,7 @@ mw::Region::~Region()
 
 bool mw::Region::is_instance(wl_resource* resource)
 {
-    return wl_resource_instance_of(resource, &wl_region_interface_data, Thunks::request_vtable);
+    return wl_resource_instance_of(resource, &wl_region_interface, Thunks::request_vtable);
 }
 
 struct wl_message const mw::Region::Thunks::request_messages[] {
@@ -3375,7 +3369,7 @@ void const* mw::Region::Thunks::request_vtable[] {
 mw::Region* mw::Region::from(struct wl_resource* resource)
 {
     if (resource &&
-        wl_resource_instance_of(resource, &wl_region_interface_data, Region::Thunks::request_vtable))
+        wl_resource_instance_of(resource, &wl_region_interface, Region::Thunks::request_vtable))
     {
         return static_cast<Region*>(wl_resource_get_user_data(resource));
     }
@@ -3410,7 +3404,7 @@ struct mw::Subcompositor::Thunks
     static void get_subsurface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface, struct wl_resource* parent)
     {
         wl_resource* id_resolved{
-            wl_resource_create(client, &wl_subsurface_interface_data, wl_resource_get_version(resource), id)};
+            wl_resource_create(client, &wl_subsurface_interface, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -3441,7 +3435,7 @@ struct mw::Subcompositor::Thunks
         auto me = static_cast<Subcompositor::Global*>(data);
         auto resource = wl_resource_create(
             client,
-            &wl_subcompositor_interface_data,
+            &wl_subcompositor_interface,
             std::min((int)version, Thunks::supported_version),
             id);
         if (resource == nullptr)
@@ -3479,7 +3473,7 @@ mw::Subcompositor::~Subcompositor()
 
 bool mw::Subcompositor::is_instance(wl_resource* resource)
 {
-    return wl_resource_instance_of(resource, &wl_subcompositor_interface_data, Thunks::request_vtable);
+    return wl_resource_instance_of(resource, &wl_subcompositor_interface, Thunks::request_vtable);
 }
 
 uint32_t const mw::Subcompositor::Error::bad_surface;
@@ -3488,7 +3482,7 @@ mw::Subcompositor::Global::Global(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
               display,
-              &wl_subcompositor_interface_data,
+              &wl_subcompositor_interface,
               Thunks::supported_version,
               this,
               &Thunks::bind_thunk)}
@@ -3501,9 +3495,9 @@ auto mw::Subcompositor::Global::interface_name() const -> char const*
 }
 
 struct wl_interface const* mw::Subcompositor::Thunks::get_subsurface_types[] {
-    &wl_subsurface_interface_data,
-    &wl_surface_interface_data,
-    &wl_surface_interface_data};
+    &wl_subsurface_interface,
+    &wl_surface_interface,
+    &wl_surface_interface};
 
 struct wl_message const mw::Subcompositor::Thunks::request_messages[] {
     {"destroy", "", all_null_types},
@@ -3516,7 +3510,7 @@ void const* mw::Subcompositor::Thunks::request_vtable[] {
 mw::Subcompositor* mw::Subcompositor::from(struct wl_resource* resource)
 {
     if (resource &&
-        wl_resource_instance_of(resource, &wl_subcompositor_interface_data, Subcompositor::Thunks::request_vtable))
+        wl_resource_instance_of(resource, &wl_subcompositor_interface, Subcompositor::Thunks::request_vtable))
     {
         return static_cast<Subcompositor*>(wl_resource_get_user_data(resource));
     }
@@ -3659,16 +3653,16 @@ mw::Subsurface::~Subsurface()
 
 bool mw::Subsurface::is_instance(wl_resource* resource)
 {
-    return wl_resource_instance_of(resource, &wl_subsurface_interface_data, Thunks::request_vtable);
+    return wl_resource_instance_of(resource, &wl_subsurface_interface, Thunks::request_vtable);
 }
 
 uint32_t const mw::Subsurface::Error::bad_surface;
 
 struct wl_interface const* mw::Subsurface::Thunks::place_above_types[] {
-    &wl_surface_interface_data};
+    &wl_surface_interface};
 
 struct wl_interface const* mw::Subsurface::Thunks::place_below_types[] {
-    &wl_surface_interface_data};
+    &wl_surface_interface};
 
 struct wl_message const mw::Subsurface::Thunks::request_messages[] {
     {"destroy", "", all_null_types},
@@ -3689,7 +3683,7 @@ void const* mw::Subsurface::Thunks::request_vtable[] {
 mw::Subsurface* mw::Subsurface::from(struct wl_resource* resource)
 {
     if (resource &&
-        wl_resource_instance_of(resource, &wl_subsurface_interface_data, Subsurface::Thunks::request_vtable))
+        wl_resource_instance_of(resource, &wl_subsurface_interface, Subsurface::Thunks::request_vtable))
     {
         return static_cast<Subsurface*>(wl_resource_get_user_data(resource));
     }
@@ -3699,130 +3693,3 @@ mw::Subsurface* mw::Subsurface::from(struct wl_resource* resource)
     }
 }
 
-namespace mir
-{
-namespace wayland
-{
-
-struct wl_interface const wl_callback_interface_data {
-    mw::Callback::interface_name,
-    mw::Callback::Thunks::supported_version,
-    0, nullptr,
-    1, mw::Callback::Thunks::event_messages};
-
-struct wl_interface const wl_compositor_interface_data {
-    mw::Compositor::interface_name,
-    mw::Compositor::Thunks::supported_version,
-    2, mw::Compositor::Thunks::request_messages,
-    0, nullptr};
-
-struct wl_interface const wl_shm_pool_interface_data {
-    mw::ShmPool::interface_name,
-    mw::ShmPool::Thunks::supported_version,
-    3, mw::ShmPool::Thunks::request_messages,
-    0, nullptr};
-
-struct wl_interface const wl_shm_interface_data {
-    mw::Shm::interface_name,
-    mw::Shm::Thunks::supported_version,
-    1, mw::Shm::Thunks::request_messages,
-    1, mw::Shm::Thunks::event_messages};
-
-struct wl_interface const wl_buffer_interface_data {
-    mw::Buffer::interface_name,
-    mw::Buffer::Thunks::supported_version,
-    1, mw::Buffer::Thunks::request_messages,
-    1, mw::Buffer::Thunks::event_messages};
-
-struct wl_interface const wl_data_offer_interface_data {
-    mw::DataOffer::interface_name,
-    mw::DataOffer::Thunks::supported_version,
-    5, mw::DataOffer::Thunks::request_messages,
-    3, mw::DataOffer::Thunks::event_messages};
-
-struct wl_interface const wl_data_source_interface_data {
-    mw::DataSource::interface_name,
-    mw::DataSource::Thunks::supported_version,
-    3, mw::DataSource::Thunks::request_messages,
-    6, mw::DataSource::Thunks::event_messages};
-
-struct wl_interface const wl_data_device_interface_data {
-    mw::DataDevice::interface_name,
-    mw::DataDevice::Thunks::supported_version,
-    3, mw::DataDevice::Thunks::request_messages,
-    6, mw::DataDevice::Thunks::event_messages};
-
-struct wl_interface const wl_data_device_manager_interface_data {
-    mw::DataDeviceManager::interface_name,
-    mw::DataDeviceManager::Thunks::supported_version,
-    2, mw::DataDeviceManager::Thunks::request_messages,
-    0, nullptr};
-
-struct wl_interface const wl_shell_interface_data {
-    mw::Shell::interface_name,
-    mw::Shell::Thunks::supported_version,
-    1, mw::Shell::Thunks::request_messages,
-    0, nullptr};
-
-struct wl_interface const wl_shell_surface_interface_data {
-    mw::ShellSurface::interface_name,
-    mw::ShellSurface::Thunks::supported_version,
-    10, mw::ShellSurface::Thunks::request_messages,
-    3, mw::ShellSurface::Thunks::event_messages};
-
-struct wl_interface const wl_surface_interface_data {
-    mw::Surface::interface_name,
-    mw::Surface::Thunks::supported_version,
-    10, mw::Surface::Thunks::request_messages,
-    2, mw::Surface::Thunks::event_messages};
-
-struct wl_interface const wl_seat_interface_data {
-    mw::Seat::interface_name,
-    mw::Seat::Thunks::supported_version,
-    4, mw::Seat::Thunks::request_messages,
-    2, mw::Seat::Thunks::event_messages};
-
-struct wl_interface const wl_pointer_interface_data {
-    mw::Pointer::interface_name,
-    mw::Pointer::Thunks::supported_version,
-    2, mw::Pointer::Thunks::request_messages,
-    10, mw::Pointer::Thunks::event_messages};
-
-struct wl_interface const wl_keyboard_interface_data {
-    mw::Keyboard::interface_name,
-    mw::Keyboard::Thunks::supported_version,
-    1, mw::Keyboard::Thunks::request_messages,
-    6, mw::Keyboard::Thunks::event_messages};
-
-struct wl_interface const wl_touch_interface_data {
-    mw::Touch::interface_name,
-    mw::Touch::Thunks::supported_version,
-    1, mw::Touch::Thunks::request_messages,
-    7, mw::Touch::Thunks::event_messages};
-
-struct wl_interface const wl_output_interface_data {
-    mw::Output::interface_name,
-    mw::Output::Thunks::supported_version,
-    1, mw::Output::Thunks::request_messages,
-    4, mw::Output::Thunks::event_messages};
-
-struct wl_interface const wl_region_interface_data {
-    mw::Region::interface_name,
-    mw::Region::Thunks::supported_version,
-    3, mw::Region::Thunks::request_messages,
-    0, nullptr};
-
-struct wl_interface const wl_subcompositor_interface_data {
-    mw::Subcompositor::interface_name,
-    mw::Subcompositor::Thunks::supported_version,
-    2, mw::Subcompositor::Thunks::request_messages,
-    0, nullptr};
-
-struct wl_interface const wl_subsurface_interface_data {
-    mw::Subsurface::interface_name,
-    mw::Subsurface::Thunks::supported_version,
-    6, mw::Subsurface::Thunks::request_messages,
-    0, nullptr};
-
-}
-}

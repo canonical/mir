@@ -168,7 +168,7 @@ Emitter Argument::call_fragment() const
 Emitter Argument::object_type_fragment() const
 {
     if (interface)
-        return {"&", interface.value(), "_interface_data"};
+        return {"&", interface.value(), "_interface"};
     else
         return nullptr;
 }

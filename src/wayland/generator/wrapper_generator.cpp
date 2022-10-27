@@ -124,15 +124,57 @@ Emitter source_file(std::string input_file_path, std::vector<Interface> const& i
     for (auto const& interface : interfaces)
     {
         interface_emitters.push_back(interface.implementation());
-        wl_interface_init_emitters.push_back(interface.wl_interface_init());
+        if (!interface.is_core())
+        {
+            wl_interface_init_emitters.push_back(interface.wl_interface_init());
+        }
         interface.populate_required_interfaces(fwd_declare_interfaces);
     }
 
     std::vector<Emitter> fwd_declare_interface_emitters;
+    std::vector<Emitter> fwd_declare_core_interface_emitters;
     for (auto const& interface_name : fwd_declare_interfaces)
     {
-        fwd_declare_interface_emitters.push_back({"extern struct wl_interface const ", interface_name, "_interface_data;"});
+        if (interface_name.starts_with("wl_"))
+        {
+            fwd_declare_core_interface_emitters.push_back({"extern struct wl_interface const ", interface_name, "_interface;"});
+        }
+        else
+        {
+            fwd_declare_interface_emitters.push_back({"extern struct wl_interface const ", interface_name, "_interface;"});
+        }
     }
+
+    auto [fwd_decl_wl_interfaces_emitter, wl_interfaces_emitter] =
+        [&]() -> std::pair<Emitter, Emitter>
+        {
+            if (fwd_declare_interface_emitters.empty())
+            {
+                return std::make_pair(Emitter{""}, Emitter{""});
+            }
+            return std::make_pair(
+                Lines{
+                    empty_line,
+                    "namespace mir",
+                    "{",
+                    "namespace wayland",
+                    "{",
+                    Lines{fwd_declare_interface_emitters},
+                    "}",
+                    "}",
+                },
+                Lines{
+                    "namespace mir",
+                    "{",
+                    "namespace wayland",
+                    "{",
+                    empty_line,
+                    EmptyLineList{wl_interface_init_emitters},
+                    empty_line,
+                    "}",
+                    "}",
+                });
+        }();
 
     std::string protocol_name = file_name_from_path(input_file_path);
     if (protocol_name.substr(protocol_name.size() - 4) == ".xml")
@@ -143,13 +185,8 @@ Emitter source_file(std::string input_file_path, std::vector<Interface> const& i
         empty_line,
         impl_includes(protocol_name),
         empty_line,
-        "namespace mir",
-        "{",
-        "namespace wayland",
-        "{",
-        Lines{fwd_declare_interface_emitters},
-        "}",
-        "}",
+        Lines{fwd_declare_core_interface_emitters},
+        fwd_decl_wl_interfaces_emitter,
         empty_line,
         "namespace mw = mir::wayland;",
         empty_line,
@@ -161,15 +198,7 @@ Emitter source_file(std::string input_file_path, std::vector<Interface> const& i
         empty_line,
         EmptyLineList{interface_emitters},
         empty_line,
-        "namespace mir",
-        "{",
-        "namespace wayland",
-        "{",
-        empty_line,
-        EmptyLineList{wl_interface_init_emitters},
-        empty_line,
-        "}",
-        "}",
+        wl_interfaces_emitter,
     };
 }
 
