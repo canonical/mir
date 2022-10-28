@@ -33,4 +33,9 @@ inline auto operator==(MirXkbModifiers const& lhs, MirXkbModifiers const& rhs) -
            lhs.effective_layout == rhs.effective_layout;
 }
 
+inline auto operator!=(MirXkbModifiers const& lhs, MirXkbModifiers const& rhs) -> bool
+{
+    return !(lhs == rhs);
+}
+
 #endif /* MIR_COMMON_XKB_MODIFIERS_H_ */
