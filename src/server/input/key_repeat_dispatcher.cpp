@@ -222,6 +222,8 @@ void mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
     case mir_keyboard_action_repeat:
         // Should we consume existing repeats?
         break;
+    case mir_keyboard_action_modifiers:
+        break;
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Unexpected key event action"));
     }

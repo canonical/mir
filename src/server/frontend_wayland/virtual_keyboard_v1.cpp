@@ -24,6 +24,10 @@
 #include "mir/input/virtual_input_device.h"
 #include "mir/input/mir_keyboard_config.h"
 #include "mir/input/buffer_keymap.h"
+#include "mir/events/xkb_modifiers.h"
+#include "mir/events/event.h"
+#include "mir/events/input_event.h"
+#include "mir/events/keyboard_event.h"
 #include "mir/log.h"
 
 #include <cstring>
@@ -126,6 +130,7 @@ private:
     std::shared_ptr<VirtualKeyboardV1Ctx> const ctx;
     std::shared_ptr<input::VirtualInputDevice> const keyboard_device;
     std::weak_ptr<input::Device> const device_handle;
+    std::optional<MirXkbModifiers> xkb_modifiers;
 };
 }
 }
@@ -196,7 +201,9 @@ void mf::VirtualKeyboardV1::key(uint32_t time, uint32_t key, uint32_t state)
     std::chrono::nanoseconds nano = std::chrono::milliseconds{time};
     keyboard_device->if_started_then([&](input::InputSink* sink, input::EventBuilder* builder)
         {
-            sink->handle_input(builder->key_event(nano, mir_keyboard_action(state), 0, key));
+            auto key_event = builder->key_event(nano, mir_keyboard_action(state), 0, key);
+            key_event->to_input()->to_keyboard()->set_xkb_modifiers(xkb_modifiers);
+            sink->handle_input(move(key_event));
         });
 }
 
@@ -206,10 +213,16 @@ void mf::VirtualKeyboardV1::modifiers(
     uint32_t mods_locked,
     uint32_t group)
 {
-    (void)mods_depressed;
-    (void)mods_latched;
-    (void)mods_locked;
-    (void)group;
-    log_info("Ignoring zwp_virtual_keyboard_v1.modifiers()");
-    // Currently we keep track of and send modifiers in the Wayland frontend, so handling this is not needed
+    xkb_modifiers = MirXkbModifiers{
+        mods_depressed,
+        mods_latched,
+        mods_locked,
+        group};
+    std::chrono::nanoseconds nano = std::chrono::steady_clock::now().time_since_epoch();
+    keyboard_device->if_started_then([&](input::InputSink* sink, input::EventBuilder* builder)
+        {
+            auto key_event = builder->key_event(nano, mir_keyboard_action_modifiers, 0, 0);
+            key_event->to_input()->to_keyboard()->set_xkb_modifiers(xkb_modifiers);
+            sink->handle_input(move(key_event));
+        });
 }

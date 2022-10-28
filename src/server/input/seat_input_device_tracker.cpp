@@ -316,6 +316,11 @@ mir::EventUPtr mi::SeatInputDeviceTracker::create_device_state() const
     return out_ev;
 }
 
+auto mi::SeatInputDeviceTracker::xkb_modifiers() const -> MirXkbModifiers
+{
+    return key_mapper->xkb_modifiers();
+}
+
 void mi::SeatInputDeviceTracker::DeviceData::update_scan_codes(MirKeyboardEvent const* event)
 {
     auto const action = mir_keyboard_event_action(event);
@@ -384,6 +389,11 @@ void mir::input::SeatInputDeviceTracker::remove_pointing_device()
 bool mi::SeatInputDeviceTracker::DeviceData::allowed_scan_code_action(MirKeyboardEvent const* event) const
 {
     auto const action = mir_keyboard_event_action(event);
+    if (action == mir_keyboard_action_modifiers)
+    {
+        return true;
+    }
+
     auto const scan_code = mir_keyboard_event_scan_code(event);
     bool found = find(begin(scan_codes), end(scan_codes), scan_code) != end(scan_codes);
 

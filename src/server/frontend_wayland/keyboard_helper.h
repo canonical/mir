@@ -18,6 +18,7 @@
 #define MIR_FRONTEND_KEYBOARD_HELPER_H
 
 #include "wayland_wrapper.h"
+#include "mir/events/xkb_modifiers.h"
 
 #include <vector>
 #include <functional>
@@ -49,7 +50,7 @@ public:
     virtual void send_repeat_info(int32_t rate, int32_t delay) = 0;
     virtual void send_keymap_xkb_v1(mir::Fd const& fd, size_t length) = 0;
     virtual void send_key(std::shared_ptr<MirKeyboardEvent const> const& event) = 0;
-    virtual void send_modifiers(uint32_t depressed, uint32_t latched, uint32_t locked, uint32_t group) = 0;
+    virtual void send_modifiers(MirXkbModifiers const& modifiers) = 0;
 
 private:
     KeyboardCallbacks(KeyboardCallbacks const&) = delete;
@@ -68,25 +69,21 @@ public:
     void handle_event(std::shared_ptr<MirEvent const> const& event);
 
     /// Returns the scancodes of pressed keys
-    auto refresh_internal_state() -> std::vector<uint32_t>;
+    auto pressed_key_scancodes() const -> std::vector<uint32_t>;
+    /// Updates the modifiers from the seat
+    void refresh_modifiers();
 
 private:
-    auto pressed_key_scancodes() const -> std::vector<uint32_t>;
     void handle_keyboard_event(std::shared_ptr<MirKeyboardEvent const> const& event);
     void set_keymap(std::shared_ptr<mir::input::Keymap> const& new_keymap);
-    void update_modifier_state();
+    void set_modifiers(MirXkbModifiers const& new_modifiers);
 
     KeyboardCallbacks* const callbacks;
     std::shared_ptr<input::Seat> const mir_seat;
+    MirXkbModifiers modifiers;
     std::shared_ptr<mir::input::Keymap> current_keymap;
     std::unique_ptr<xkb_keymap, void (*)(xkb_keymap *)> compiled_keymap;
-    std::unique_ptr<xkb_state, void (*)(xkb_state *)> state;
     std::unique_ptr<xkb_context, void (*)(xkb_context *)> const context;
-
-    uint32_t mods_depressed{0};
-    uint32_t mods_latched{0};
-    uint32_t mods_locked{0};
-    uint32_t group{0};
 };
 }
 }

@@ -19,6 +19,7 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/rectangles.h"
+#include "mir/events/xkb_modifiers.h"
 #include "mir_toolkit/event.h"
 
 #include <memory>
@@ -41,6 +42,7 @@ public:
     virtual void remove_device(Device const& device) = 0;
     virtual void dispatch_event(std::shared_ptr<MirEvent> const& event) = 0;
     virtual EventUPtr create_device_state() = 0;
+    virtual auto xkb_modifiers() const -> MirXkbModifiers = 0;
 
     virtual void set_key_state(Device const& dev, std::vector<uint32_t> const& scan_codes) = 0;
     virtual void set_pointer_state(Device const& dev, MirPointerButtons buttons) = 0;

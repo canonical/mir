@@ -57,7 +57,7 @@ void mf::WlKeyboard::focus_on(WlSurface* surface)
     {
         // TODO: Send the surface's keymap here
 
-        auto const pressed_keys = helper->refresh_internal_state();
+        auto const pressed_keys = helper->pressed_key_scancodes();
 
         wl_array key_state;
         wl_array_init(&key_state);
@@ -83,7 +83,7 @@ void mf::WlKeyboard::focus_on(WlSurface* surface)
         auto const serial = client->next_serial(nullptr);
         send_enter_event(serial, surface->raw_resource(), &key_state);
         wl_array_release(&key_state);
-        send_modifiers_event(serial, depressed_modifiers, latched_modifiers, locked_modifiers, group_modifiers);
+        helper->refresh_modifiers();
     }
 
     focused_surface = mw::make_weak(surface);
@@ -108,16 +108,16 @@ void mf::WlKeyboard::send_key(std::shared_ptr<MirKeyboardEvent const> const& eve
     send_key_event(serial, timestamp, scancode, state);
 }
 
-void mf::WlKeyboard::send_modifiers(uint32_t depressed, uint32_t latched, uint32_t locked, uint32_t group)
+void mf::WlKeyboard::send_modifiers(MirXkbModifiers const& modifiers)
 {
-    depressed_modifiers = depressed;
-    latched_modifiers = latched;
-    locked_modifiers = locked;
-    group_modifiers = group;
-
     if (focused_surface)
     {
         auto const serial = client->next_serial(nullptr);
-        send_modifiers_event(serial, depressed, latched, locked, group);
+        send_modifiers_event(
+            serial,
+            modifiers.depressed,
+            modifiers.latched,
+            modifiers.locked,
+            modifiers.effective_layout);
     }
 }

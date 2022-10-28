@@ -60,6 +60,7 @@ public:
     geometry::Rectangle bounding_rectangle() const override;
     input::OutputInfo output_info(uint32_t output_id) const override;
     EventUPtr create_device_state() override;
+    auto xkb_modifiers() const -> MirXkbModifiers override;
     void set_confinement_regions(geometry::Rectangles const& regions) override;
     void reset_confinement_regions() override;
 
