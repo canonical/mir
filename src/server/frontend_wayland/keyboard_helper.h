@@ -80,7 +80,7 @@ private:
 
     KeyboardCallbacks* const callbacks;
     std::shared_ptr<input::Seat> const mir_seat;
-    std::optional<MirXkbModifiers> modifiers;
+    MirXkbModifiers modifiers;
     std::shared_ptr<mir::input::Keymap> current_keymap;
     std::unique_ptr<xkb_keymap, void (*)(xkb_keymap *)> compiled_keymap;
     std::unique_ptr<xkb_context, void (*)(xkb_context *)> const context;
