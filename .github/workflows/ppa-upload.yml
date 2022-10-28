@@ -16,6 +16,7 @@ jobs:
         release:
         - "20.04"
         - "22.04"
+        - "22.10"
         - "devel"
 
     runs-on: ubuntu-latest
