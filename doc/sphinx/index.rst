@@ -16,11 +16,18 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
 
-Docs
-====
+MirAL
+=====
+.. doxygennamespace:: miral
 
+Mir
+===
+.. doxygennamespace:: mir
+
+Full
+====
 .. doxygenindex::
+   :outline:
    :allow-dot-graphs:
