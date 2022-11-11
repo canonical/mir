@@ -33,4 +33,16 @@ if(DOXYGEN_FOUND)
                     SOURCES ${PROJECT_BINARY_DIR}/Doxyfile
                     DEPENDS guides)
   install(DIRECTORY ${CMAKE_BINARY_DIR}/doc/html DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/mir-doc/ OPTIONAL)
+
+  find_program(SPHINX sphinx-build)
+  if(SPHINX)
+    # TODO: This setup shouldn't be repeated
+    EXECUTE_PROCESS(COMMAND "pip" "install" "sphinx_rtd_theme" "breathe" "graphviz")
+
+    add_custom_target(sphinx
+            COMMAND mkdir -p ${CMAKE_BINARY_DIR}/doc/sphinx
+            COMMAND sphinx-build -Dbreathe_projects.Mir=${CMAKE_BINARY_DIR}/doc/xml ${PROJECT_SOURCE_DIR}/doc/sphinx  ${CMAKE_BINARY_DIR}/doc/sphinx
+            COMMAND xdg-open ${CMAKE_BINARY_DIR}/doc/sphinx/index.html
+    )
+  endif()
 endif()
