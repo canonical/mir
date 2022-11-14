@@ -37,7 +37,7 @@ if(DOXYGEN_FOUND)
   find_program(SPHINX sphinx-build)
   if(SPHINX)
     # TODO: This setup shouldn't be repeated
-    EXECUTE_PROCESS(COMMAND "pip" "install" "sphinx_rtd_theme" "breathe" "graphviz")
+    EXECUTE_PROCESS(COMMAND "pip" "install" "sphinx_rtd_theme" "breathe" "graphviz" "furo")
 
     add_custom_target(sphinx
             COMMAND mkdir -p ${CMAKE_BINARY_DIR}/doc/sphinx
