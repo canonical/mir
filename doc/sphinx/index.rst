@@ -10,24 +10,11 @@ Welcome to Mir's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-
+   about
+   api/library_root
 
 Indices and tables
 ==================
 
 * :ref:`genindex`
 * :ref:`search`
-
-MirAL
-=====
-.. doxygennamespace:: miral
-
-Mir
-===
-.. doxygennamespace:: mir
-
-Full
-====
-.. doxygenindex::
-   :outline:
-   :allow-dot-graphs:
