@@ -164,7 +164,7 @@ void mf::WlClient::handle_client_created(wl_listener* listener, void* data)
     client_context->destroy_listener.notify = &handle_client_destroyed;
     wl_client_add_destroy_listener(client, &client_context->destroy_listener);
 
-    client_context->client->owned_self = move(shared);
+    client_context->client->owned_self = std::move(shared);
 
     (*construction_context->client_created_callback)(*client_context->client);
 }
