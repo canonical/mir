@@ -71,9 +71,8 @@ jobs:
 
     - name: Set up Spread
       run: |
-        curl -s -O https://people.canonical.com/~msawicz/spread.snap
-        sudo snap install --dangerous spread.snap
-        sudo snap connect spread:lxd lxd:lxd
+        sudo snap install spread-mir-ci
+        sudo snap connect spread-mir-ci:lxd lxd:lxd
         lxc profile set default security.privileged=true security.nesting=true
         sudo apt-get install --yes binfmt-support qemu-user-static
         echo "LXD_DIR=/var/snap/lxd/common/lxd" >> $GITHUB_ENV
@@ -108,7 +107,7 @@ jobs:
         echo "max_size = 800M" > ${CCACHE_DIR}/ccache.conf
 
     - name: Run Spread task
-      run: snap run spread -v ${{ matrix.spread-task }}
+      run: snap run spread-mir-ci.spread -v ${{ matrix.spread-task }}
 
     - name: CCache stats
       run: cat ${CCACHE_DIR}/ccache.stats
