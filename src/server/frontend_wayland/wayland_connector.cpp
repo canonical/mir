@@ -292,7 +292,7 @@ mf::WaylandConnector::WaylandConnector(
         executor,
         display_config_registrar);
 
-    data_device_manager_global = std::make_unique<WlDataDeviceManager>(display.get(), executor, main_clipboard);
+    data_device_manager_global = std::make_unique<WlDataDeviceManager>(display.get(), executor, main_clipboard, composite_event_filter);
 
     extensions->init(WaylandExtensions::Context{
         display.get(),

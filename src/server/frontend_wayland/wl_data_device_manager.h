@@ -17,6 +17,7 @@
 #ifndef MIR_FRONTEND_WL_DATA_DEVICE_MANAGER_H_
 #define MIR_FRONTEND_WL_DATA_DEVICE_MANAGER_H_
 
+#include "mir/input/composite_event_filter.h"
 #include "wayland_wrapper.h"
 
 namespace mir
@@ -27,6 +28,11 @@ namespace scene
 class Clipboard;
 }
 
+namespace input
+{
+class CompositeEventFilter;
+}
+
 namespace frontend
 {
 class WlDataDeviceManager : public wayland::DataDeviceManager::Global
@@ -35,12 +41,14 @@ public:
     WlDataDeviceManager(
         struct wl_display* display,
         std::shared_ptr<Executor> const& wayland_executor,
-        std::shared_ptr<scene::Clipboard> const& clipboard);
+        std::shared_ptr<scene::Clipboard> const& clipboard,
+        std::shared_ptr<input::CompositeEventFilter> const& composite_event_filter);
     ~WlDataDeviceManager();
 
 private:
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<scene::Clipboard> const clipboard;
+    std::shared_ptr<input::CompositeEventFilter> const composite_event_filter;
 
     void bind(wl_resource* new_resource) override;
 

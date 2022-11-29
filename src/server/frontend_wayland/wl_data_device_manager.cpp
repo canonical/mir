@@ -15,21 +15,25 @@
  */
 
 #include "wl_data_device_manager.h"
+#include "mir/input/composite_event_filter.h"
 #include "wl_data_device.h"
 #include "wl_data_source.h"
 #include "wl_seat.h"
 
 namespace mf = mir::frontend;
+namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace mw = mir::wayland;
 
 mf::WlDataDeviceManager::WlDataDeviceManager(
     struct wl_display* display,
     std::shared_ptr<mir::Executor> const& wayland_executor,
-    std::shared_ptr<ms::Clipboard> const& clipboard) :
+    std::shared_ptr<ms::Clipboard> const& clipboard,
+    std::shared_ptr<mi::CompositeEventFilter> const& composite_event_filter) :
     Global(display, Version<3>()),
     wayland_executor{wayland_executor},
-    clipboard{clipboard}
+    clipboard{clipboard},
+    composite_event_filter{composite_event_filter}
 {
 }
 
@@ -51,7 +55,7 @@ void mf::WlDataDeviceManager::Instance::create_data_source(wl_resource* new_data
 void mf::WlDataDeviceManager::Instance::get_data_device(wl_resource* new_data_device, wl_resource* seat)
 {
     auto const realseat = mf::WlSeat::from(seat);
-    new WlDataDevice{new_data_device, *manager->wayland_executor, *manager->clipboard, *realseat};
+    new WlDataDevice{new_data_device, *manager->wayland_executor, *manager->clipboard, *realseat, *manager->composite_event_filter};
 }
 
 void mf::WlDataDeviceManager::bind(wl_resource* new_resource)
