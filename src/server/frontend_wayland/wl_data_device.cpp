@@ -27,6 +27,7 @@
 #include "mir_toolkit/events/enums.h"
 #include "mir_toolkit/events/input/pointer_event.h"
 #include "mir_toolkit/events/input/touch_event.h"
+#include "mir/events/pointer_event.h"
 
 namespace mf = mir::frontend;
 namespace mi = mir::input;
@@ -56,8 +57,9 @@ private:
 class mf::WlDataDevice::CursorObserverHandler : public mi::EventFilter
 {
 public:
-    CursorObserverHandler(mf::DragWlSurface& surface)
-        : surface{surface}
+    CursorObserverHandler(mf::DragWlSurface& surface, mf::WlDataDevice& data_device)
+        : surface{surface},
+          data_device{data_device}
     {}
           
     bool handle(MirEvent const& event) override
@@ -80,6 +82,13 @@ public:
                 std::shared_ptr<MirEvent> owned_event = mev::clone_event(event);
                 auto const pointer_event = owned_event->to_input()->to_pointer();
 
+                if (pointer_event->buttons() != mir_pointer_button_primary)
+                {
+                    // DESTROY SURFACE
+                    data_device.end_drag();
+                    return true;
+                }
+
                 auto const x = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x);
                 auto const y = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y);
 
@@ -95,6 +104,7 @@ public:
 
 private:
     mf::DragWlSurface& surface;
+    mf::WlDataDevice& data_device;
 };
 
 class mf::WlDataDevice::Offer : public wayland::DataOffer
@@ -198,10 +208,16 @@ void mf::WlDataDevice::start_drag(
     drag_surface.emplace(DragWlSurface(icon_surface));
     drag_surface->create_scene_surface();
 
-    cursor_observer_handler = std::make_shared<CursorObserverHandler>(drag_surface.value());
+    cursor_observer_handler = std::make_shared<CursorObserverHandler>(drag_surface.value(), *this);
     composite_event_filter.prepend(cursor_observer_handler);
 
     // TODO: set initial position of drag_surface to current cursor position
+}
+
+void mf::WlDataDevice::end_drag()
+{
+    cursor_observer_handler.reset();
+    drag_surface.reset();
 }
 
 void mf::WlDataDevice::focus_on(WlSurface* surface)

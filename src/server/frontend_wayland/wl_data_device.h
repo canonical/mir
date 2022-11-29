@@ -61,11 +61,15 @@ public:
     /// Wayland requests
     /// @{
     void start_drag(
-        std::optional<wl_resource*> const& source, wl_resource* origin,
-        std::optional<wl_resource*> const& icon, uint32_t serial) override;
+        std::optional<wl_resource*> const& source,
+        wl_resource* origin,
+        std::optional<wl_resource*> const& icon,
+        uint32_t serial) override;
 
     void set_selection(std::optional<wl_resource*> const& source, uint32_t serial) override;
     /// @}
+
+    void end_drag();
 
 private:
     class ClipboardObserver;
