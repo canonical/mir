@@ -18,6 +18,7 @@
 #include "mir/graphics/drm_formats.h"
 #include "../shm_backing.h"
 #include "mir/log.h"
+#include "mir/wayland/protocol_error.h"
 
 #include "mir/wayland/weak.h"
 #include "mir/executor.h"
@@ -256,7 +257,22 @@ void mf::ShmPool::create_buffer(
     uint32_t format)
 {
     auto const size = stride * height;
-    auto backing_range = backing_store->get_rw_range(offset, size);
+    std::unique_ptr<shm::RWMappableRange> backing_range;
+    try
+    {
+        backing_range = backing_store->get_rw_range(offset, size);
+    }
+    catch (std::logic_error const&)
+    {
+        /* get_*_range throws a logic error when attempting to access outside the backing
+         * store. This should be translated into a ProtocolError.
+         */
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Attempt to create_buffer outside the range of the backing store"};
+    }
+
     new ShmBuffer{
         id,
         wayland_executor,
