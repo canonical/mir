@@ -29,6 +29,7 @@
 #include "wayland_wrapper.h"
 #include "wayland_timespec.h"
 #include "output_manager.h"
+#include "shm.h"
 
 #include <boost/throw_exception.hpp>
 #include <mutex>
@@ -448,41 +449,59 @@ void mf::WlrScreencopyFrameV1::prepare_target(wl_resource* buffer)
             "Attempted to copy frame multiple times"));
     }
     copy_has_been_called = true;
-    auto graphics_buffer = ctx->allocator->buffer_from_shm(buffer, ctx->wayland_executor, [](){});
-    if (graphics_buffer->pixel_format() != mir_pixel_format_argb_8888)
+    auto shm_buffer = mf::ShmBuffer::from(buffer);
+    if (!shm_buffer)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::invalid_buffer,
+            "Copy target is not a wl_shm buffer"));
+    }
+    auto shm_data = shm_buffer->data();
+    if (shm_data->format() != mir_pixel_format_argb_8888)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
             resource,
             Error::invalid_buffer,
             "Invalid pixel format %d",
-            graphics_buffer->pixel_format()));
+            shm_data->format()));
     }
-    if (graphics_buffer->size() != params.buffer_size)
+    if (shm_data->size() != params.buffer_size)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
             resource,
             Error::invalid_buffer,
             "Invalid buffer size %dx%d, should be %dx%d",
-            graphics_buffer->size().width.as_int(),
-            graphics_buffer->size().height.as_int(),
+            shm_data->size().width.as_int(),
+            shm_data->size().height.as_int(),
             params.buffer_size.width.as_int(),
             params.buffer_size.height.as_int()));
     }
-    auto const buffer_stride = geom::Stride{wl_shm_buffer_get_stride(wl_shm_buffer_get(buffer))};
-    if (buffer_stride != stride)
+    if (shm_data->stride() != stride)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
             resource,
             Error::invalid_buffer,
             "Invalid stride %d, should be %d",
-            buffer_stride.as_int(),
+            shm_data->stride().as_int(),
             stride.as_int()));
     }
-    target = std::dynamic_pointer_cast<renderer::software::WriteMappableBuffer>(std::move(graphics_buffer));
-    if (!target)
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("Failed to get write-mappable buffer out of Wayland SHM buffer"));
-    }
+
+    target = std::shared_ptr<mir::renderer::software::WriteMappableBuffer>{
+        shm_data.get(),
+        [shm_data, weak_buffer = mw::make_weak(shm_buffer), executor = ctx->wayland_executor](auto*)
+        {
+            // Send release event for underlying buffer if necessary
+            executor->spawn(
+                [shm_data, weak_buffer]()
+                {
+                    if (weak_buffer)
+                    {
+                        weak_buffer.value().send_release_event();
+                    }
+                });
+        }
+    };
 }
 
 void mf::WlrScreencopyFrameV1::report_result(

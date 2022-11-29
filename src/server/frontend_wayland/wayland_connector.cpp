@@ -22,6 +22,7 @@
 #include "wl_subcompositor.h"
 #include "wl_seat.h"
 #include "wl_region.h"
+#include "shm.h"
 #include "frame_executor.h"
 #include "output_manager.h"
 #include "wayland_executor.h"
@@ -309,7 +310,7 @@ mf::WaylandConnector::WaylandConnector(
         allocator,
         screen_shooter});
 
-    wl_display_init_shm(display.get());
+    shm_global = std::make_unique<WlShm>(display.get(), executor);
 
     char const* wayland_display = nullptr;
 

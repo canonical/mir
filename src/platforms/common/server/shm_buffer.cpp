@@ -15,6 +15,7 @@
  */
 
 #include "mir/graphics/gl_format.h"
+#include "mir/renderer/sw/pixel_source.h"
 #include "shm_buffer.h"
 #include "mir/graphics/program_factory.h"
 #include "mir/graphics/program.h"
@@ -286,3 +287,78 @@ void mgc::ShmBuffer::add_syncpoint()
 {
 }
 
+mgc::MappableBackedShmBuffer::MappableBackedShmBuffer(
+    std::shared_ptr<mrs::RWMappableBuffer> data,
+    std::shared_ptr<EGLContextExecutor> egl_delegate)
+    : ShmBuffer(data->size(), data->format(), std::move(egl_delegate)),
+      data{std::move(data)}
+{
+}
+
+auto mgc::MappableBackedShmBuffer::map_writeable() -> std::unique_ptr<mrs::Mapping<unsigned char>>
+{
+    return data->map_writeable();
+}
+
+auto mgc::MappableBackedShmBuffer::map_readable() -> std::unique_ptr<mrs::Mapping<unsigned char const>>
+{
+    return data->map_readable();
+}
+
+auto mgc::MappableBackedShmBuffer::map_rw() -> std::unique_ptr<mrs::Mapping<unsigned char>>
+{
+    return data->map_rw();
+}
+
+void mgc::MappableBackedShmBuffer::bind()
+{
+    mgc::ShmBuffer::bind();
+    std::lock_guard lock{uploaded_mutex};
+    if (!uploaded)
+    {
+        auto mapping = data->map_readable();
+        upload_to_texture(mapping->data(), mapping->stride());
+        uploaded = true;
+    }
+}
+
+auto mgc::MappableBackedShmBuffer::format() const -> MirPixelFormat
+{
+    return data->format();
+}
+
+auto mgc::MappableBackedShmBuffer::stride() const -> geometry::Stride
+{
+    return data->stride();
+}
+
+auto mgc::MappableBackedShmBuffer::size() const -> geometry::Size
+{
+    return data->size();
+}
+
+mgc::NotifyingMappableBackedShmBuffer::NotifyingMappableBackedShmBuffer(
+    std::shared_ptr<mrs::RWMappableBuffer> data,
+    std::shared_ptr<mgc::EGLContextExecutor> egl_delegate,
+    std::function<void()>&& on_consumed,
+    std::function<void()>&& on_release)
+    :  MappableBackedShmBuffer(std::move(data), std::move(egl_delegate)),
+       on_consumed{std::move(on_consumed)},
+       on_release{std::move(on_release)}
+{
+}
+
+mgc::NotifyingMappableBackedShmBuffer::~NotifyingMappableBackedShmBuffer()
+{
+    on_release();
+}
+
+auto mgc::NotifyingMappableBackedShmBuffer::map_readable() -> std::unique_ptr<mrs::Mapping<unsigned char const>>
+{
+    {
+        std::lock_guard lock{consumed_mutex};
+        on_consumed();
+        on_consumed = [](){};
+    }
+    return MappableBackedShmBuffer::map_readable();
+}
