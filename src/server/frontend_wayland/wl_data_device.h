@@ -34,6 +34,21 @@ namespace frontend
 {
 class DragIconController;
 
+class DragWlSurface : public NullWlSurfaceRole
+{
+public:
+    DragWlSurface(WlSurface* icon, std::shared_ptr<DragIconController> drag_icon_controller);
+    ~DragWlSurface();
+
+    auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> override;
+
+private:
+    wayland::Weak<WlSurface> const surface;
+    std::shared_ptr<scene::Surface> shared_scene_surface;
+    std::shared_ptr<DragIconController> const drag_icon_controller;
+
+};
+
 class WlDataDevice : public wayland::DataDevice, public WlSeat::FocusListener
 {
 public:
@@ -48,11 +63,11 @@ public:
     /// Wayland requests
     /// @{
     void start_drag(
-        std::optional<wl_resource*> const& source, wl_resource* origin,
-        std::optional<wl_resource*> const& icon, uint32_t serial) override
-    {
-        (void)source, (void)origin, (void)icon, (void)serial;
-    }
+        std::optional<wl_resource*> const& source,
+        wl_resource* origin,
+        std::optional<wl_resource*> const& icon,
+        uint32_t serial) override;
+
     void set_selection(std::optional<wl_resource*> const& source, uint32_t serial) override;
     /// @}
 
@@ -72,6 +87,7 @@ private:
     std::shared_ptr<DragIconController> const drag_icon_controller;
     bool has_focus = false;
     wayland::Weak<Offer> current_offer;
+    std::optional<DragWlSurface> drag_surface;
 };
 }
 }

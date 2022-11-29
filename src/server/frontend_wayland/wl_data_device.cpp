@@ -16,12 +16,20 @@
 
 #include "wl_data_device.h"
 #include "wl_data_source.h"
+#include "wl_surface.h"
+
+#include "mir/frontend/drag_icon_controller.h"
 #include "mir/scene/clipboard.h"
+#include "mir/scene/session.h"
+#include "mir/scene/surface.h"
+#include "mir/shell/surface_specification.h"
 #include "mir/wayland/client.h"
+#include "mir/wayland/protocol_error.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mw = mir::wayland;
+using namespace mir::geometry;
 
 class mf::WlDataDevice::ClipboardObserver : public ms::ClipboardObserver
 {
@@ -89,6 +97,50 @@ void mf::WlDataDevice::Offer::receive(std::string const& mime_type, mir::Fd fd)
     }
 }
 
+mf::DragWlSurface::DragWlSurface(WlSurface* icon, std::shared_ptr<DragIconController> drag_icon_controller)
+    : NullWlSurfaceRole(icon),
+      surface{icon},
+      drag_icon_controller{std::move(drag_icon_controller)}
+{
+    icon->set_role(this);
+
+    auto spec = shell::SurfaceSpecification();
+    spec.width = surface.value().buffer_size()->width;
+    spec.height = surface.value().buffer_size()->height;
+    spec.streams = std::vector<shell::StreamSpecification>{};
+    spec.input_shape = std::vector<Rectangle>{};
+    spec.depth_layer = mir_depth_layer_overlay;
+
+    // TODO - handle
+    surface.value().populate_surface_data(spec.streams.value(), spec.input_shape.value(), {});
+
+    auto const& session = surface.value().session;
+
+    shared_scene_surface =
+        session->create_surface(session, wayland::Weak<WlSurface>(surface), spec, nullptr, nullptr);
+
+    DragWlSurface::drag_icon_controller->set_drag_icon(shared_scene_surface);
+}
+
+mf::DragWlSurface::~DragWlSurface()
+{
+    if (surface)
+    {
+        surface.value().clear_role();
+
+        if (shared_scene_surface)
+        {
+            auto const& session = surface.value().session;
+            session->destroy_surface(shared_scene_surface);
+        }
+    }
+}
+
+auto mf::DragWlSurface::scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>
+{
+    return shared_scene_surface;
+}
+
 mf::WlDataDevice::WlDataDevice(
     wl_resource* new_resource,
     Executor& wayland_executor,
@@ -125,6 +177,39 @@ void mf::WlDataDevice::set_selection(std::optional<wl_resource*> const& source, 
     {
         clipboard.clear_paste_source();
     }
+}
+
+void mf::WlDataDevice::start_drag(
+    std::optional<wl_resource*> const& source,
+    wl_resource* origin,
+    std::optional<wl_resource*> const& icon,
+    uint32_t serial)
+{
+    // TODO: "The [origin surface] and client must have an active implicit grab that matches the serial"
+    (void)source;
+    if (!origin)
+    {
+        BOOST_THROW_EXCEPTION(
+            mw::ProtocolError(resource, Error::role, "Origin surface does not exist."));
+    }
+ 
+    if (icon)
+    {
+        auto const icon_surface = WlSurface::from(icon.value());
+
+        auto const drag_event = client->event_for(serial);
+        if (drag_event && drag_event.value() && mir_event_get_type(drag_event.value().get()) == mir_event_type_input)
+        {
+            auto const input_ev = mir_event_get_input_event(drag_event.value().get());
+            auto const& ev_type = mir_input_event_get_type(input_ev);
+            if (ev_type == mir_input_event_type_pointer)
+            {
+                drag_surface.emplace(icon_surface, drag_icon_controller);
+            }
+        }
+    }
+
+    // TODO {arg} start the drag logic
 }
 
 void mf::WlDataDevice::focus_on(WlSurface* surface)
