@@ -18,7 +18,6 @@
 #include "shm_buffer.h"
 #include "display.h"
 #include "mir/graphics/egl_context_executor.h"
-#include "buffer_from_wl_shm.h"
 
 #include <mir/anonymous_shm_file.h>
 #include <mir/fatal.h>

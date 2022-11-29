@@ -11,8 +11,6 @@ add_library(server_platform_common STATIC
   shm_buffer.cpp
   one_shot_device_observer.h
   one_shot_device_observer.cpp
-  buffer_from_wl_shm.h
-  buffer_from_wl_shm.cpp
 )
 
 target_link_libraries(server_platform_common

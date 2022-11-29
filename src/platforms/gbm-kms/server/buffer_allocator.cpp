@@ -29,7 +29,6 @@
 #include "mir/renderer/gl/context.h"
 #include "mir/renderer/gl/context_source.h"
 #include "mir/graphics/egl_wayland_allocator.h"
-#include "buffer_from_wl_shm.h"
 #include "mir/executor.h"
 
 #include <boost/throw_exception.hpp>
