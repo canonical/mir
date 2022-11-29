@@ -560,13 +560,13 @@ mir::graphics::eglstream::BufferAllocator::buffer_from_resource(
 }
 
 auto mge::BufferAllocator::buffer_from_shm(
-    wl_resource* buffer,
-    std::shared_ptr<Executor> wayland_executor,
-    std::function<void()>&& on_consumed) -> std::shared_ptr<Buffer>
+    std::shared_ptr<renderer::software::RWMappableBuffer> data,
+    std::function<void()>&& on_consumed,
+    std::function<void()>&& on_release) -> std::shared_ptr<Buffer>
 {
-    return mg::wayland::buffer_from_wl_shm(
-        buffer,
-        std::move(wayland_executor),
+    return std::make_shared<mgc::NotifyingMappableBackedShmBuffer>(
+        std::move(data),
         egl_delegate,
-        std::move(on_consumed));
+        std::move(on_consumed),
+        std::move(on_release));
 }

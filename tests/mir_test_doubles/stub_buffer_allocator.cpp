@@ -19,7 +19,7 @@
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir_test_framework/stub_platform_native_buffer.h"
 #include "mir_toolkit/client_types.h"
-#include "src/platforms/common/server/buffer_from_wl_shm.h"
+#include "src/platforms/common/server/shm_buffer.h"
 #include "mir/graphics/egl_context_executor.h"
 #include "mir/test/doubles/null_gl_context.h"
 #include "mir/renderer/sw/pixel_source.h"
@@ -30,7 +30,6 @@
 
 namespace mtd = mir::test::doubles;
 namespace mg = mir::graphics;
-namespace geometry = mir::geometry;
 
 namespace
 {
@@ -69,21 +68,20 @@ auto mtd::StubBufferAllocator::buffer_from_resource(wl_resource*, std::function<
 }
 
 auto mtd::StubBufferAllocator::buffer_from_shm(
-    wl_resource* resource,
-    std::shared_ptr<mir::Executor> executor,
-    std::function<void()>&& on_consumed) -> std::shared_ptr<mg::Buffer>
+    std::shared_ptr<mir::renderer::software::RWMappableBuffer> data,
+    std::function<void()>&& on_consumed,
+    std::function<void()>&& on_release) -> std::shared_ptr<mg::Buffer>
 {
-    auto buffer = mg::wayland::buffer_from_wl_shm(
-        resource,
-        std::move(executor),
+    auto buffer = std::make_shared<mg::common::NotifyingMappableBackedShmBuffer>(
+        std::move(data),
         std::make_shared<mg::common::EGLContextExecutor>(std::make_unique<mtd::NullGLContext>()),
-        std::move(on_consumed));
+        std::move(on_consumed),
+        std::move(on_release));
 
     // Temporary(?!) hack to actually use the buffer, for WLCS test
     // Transitioning the StubGraphicsPlatform to use the MESA surfaceless GL platform would
     // allow us to test more of Mir, and drop this hack
-    auto read_mappable = mir::renderer::software::as_read_mappable_buffer(buffer);
-    memcpy_from_mapping(*read_mappable);
+    memcpy_from_mapping(*buffer);
 
     return buffer;
 }

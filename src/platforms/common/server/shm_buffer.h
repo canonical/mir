@@ -109,6 +109,51 @@ private:
     bool uploaded{false};
 };
 
+class MappableBackedShmBuffer :
+    public ShmBuffer,
+    public renderer::software::RWMappableBuffer
+{
+public:
+    MappableBackedShmBuffer(
+        std::shared_ptr<renderer::software::RWMappableBuffer> data,
+        std::shared_ptr<EGLContextExecutor> egl_delegate);
+
+    auto map_writeable() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override;
+    auto map_readable() -> std::unique_ptr<renderer::software::Mapping<unsigned char const>> override;
+    auto map_rw() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override;
+
+    void bind() override;
+
+    auto format() const -> MirPixelFormat override;
+    auto stride() const -> geometry::Stride override;
+    auto size() const -> geometry::Size override;
+
+    MappableBackedShmBuffer(MappableBackedShmBuffer const&) = delete;
+    MappableBackedShmBuffer& operator=(MappableBackedShmBuffer const&) = delete;
+private:
+    std::shared_ptr<renderer::software::RWMappableBuffer> const data;
+    std::mutex uploaded_mutex;
+    bool uploaded{false};
+};
+
+class NotifyingMappableBackedShmBuffer : public MappableBackedShmBuffer
+{
+public:
+    NotifyingMappableBackedShmBuffer(
+        std::shared_ptr<renderer::software::RWMappableBuffer> data,
+        std::shared_ptr<common::EGLContextExecutor> egl_delegate,
+        std::function<void()>&& on_consumed,
+        std::function<void()>&& on_release);
+
+    ~NotifyingMappableBackedShmBuffer() override;
+
+    auto map_readable() -> std::unique_ptr<renderer::software::Mapping<unsigned char const>> override;
+
+private:
+    std::mutex consumed_mutex;
+    std::function<void()> on_consumed;
+    std::function<void()> const on_release;
+};
 }
 }
 }

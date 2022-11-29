@@ -38,6 +38,7 @@ namespace mg  = mir::graphics;
 namespace mgw = mg::wayland;
 namespace mgc = mg::common;
 namespace geom = mir::geometry;
+namespace mrs = mir::renderer::software;
 
 namespace
 {
@@ -194,13 +195,13 @@ auto mgw::BufferAllocator::buffer_from_resource(
 }
 
 auto mgw::BufferAllocator::buffer_from_shm(
-    wl_resource* buffer,
-    std::shared_ptr<Executor> wayland_executor,
-    std::function<void()>&& on_consumed) -> std::shared_ptr<Buffer>
+    std::shared_ptr<mrs::RWMappableBuffer> shm_data,
+    std::function<void()>&& on_consumed,
+    std::function<void()>&& on_release) -> std::shared_ptr<Buffer>
 {
-    return mg::wayland::buffer_from_wl_shm(
-        buffer,
-        std::move(wayland_executor),
+    return std::make_shared<mgc::NotifyingMappableBackedShmBuffer>(
+        std::move(shm_data),
         egl_delegate,
-        std::move(on_consumed));
+        std::move(on_consumed),
+        std::move(on_release));
 }

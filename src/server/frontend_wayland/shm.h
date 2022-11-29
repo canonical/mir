@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/geometry/size.h"
 #include "mir/wayland/weak.h"
 #include "wayland_wrapper.h"
 #include "mir/graphics/drm_formats.h"
-#include "mir/renderer/sw/pixel_source.h"
 
 #include <sys/mman.h>
 #include <fcntl.h>
@@ -35,21 +35,20 @@ class RWMappableRange;
 class ReadWritePool;
 }
 
+namespace mir::renderer::software
+{
+class RWMappableBuffer;
+}
+
 namespace mir::frontend
 {
 class Shm;
 class ShmPool;
 
-class ShmBuffer : public wayland::Buffer, public renderer::software::RWMappableBuffer
+class ShmBuffer : public wayland::Buffer
 {
 public:
-    auto map_rw() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override;
-    auto map_readable() -> std::unique_ptr<renderer::software::Mapping<unsigned char const>> override;
-    auto map_writeable() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override;
-
-    auto format() const -> MirPixelFormat override;
-    auto stride() const -> geometry::Stride override;
-    auto size() const -> geometry::Size override;
+    auto data() -> std::shared_ptr<renderer::software::RWMappableBuffer>;
 
     static auto from(wl_resource* resource) -> ShmBuffer*;
 private:
@@ -57,14 +56,14 @@ private:
     ShmBuffer(
         struct wl_resource* resource,
         std::shared_ptr<Executor> wayland_executor,
-        std::unique_ptr<shm::RWMappableRange> data,
+        std::shared_ptr<shm::RWMappableRange> data,
         geometry::Size size,
         geometry::Stride stride,
         graphics::DRMFormat format);
 
     wayland::Weak<ShmBuffer> const weak_me;
     std::shared_ptr<Executor> const wayland_executor;
-    std::unique_ptr<shm::RWMappableRange> const data;
+    std::shared_ptr<shm::RWMappableRange> const data_;
     geometry::Size const size_;
     geometry::Stride const stride_;
     graphics::DRMFormat const format_;
@@ -72,8 +71,6 @@ private:
 
 class ShmPool : public wayland::ShmPool
 {
-public:
-    ~ShmPool() override = default;
 private:
     friend class Shm;
     ShmPool(
@@ -98,21 +95,22 @@ private:
 class Shm : public wayland::Shm
 {
 public:
-    class Global : public wayland::Shm::Global
-    {
-    public:
-        Global(wl_display* display, std::shared_ptr<Executor> wayland_executor);
-
-    private:
-        void bind(wl_resource* new_wl_shm) override;
-
-        std::shared_ptr<Executor> const wayland_executor;
-    };
 private:
-    friend class Global;
+    friend class WlShm;
     Shm(struct wl_resource* resource, std::shared_ptr<Executor> wayland_executor);
 
     void create_pool(struct wl_resource* id, Fd fd, int32_t size) override;
+
+    std::shared_ptr<Executor> const wayland_executor;
+};
+
+class WlShm : public wayland::Shm::Global
+{
+public:
+    WlShm(wl_display* display, std::shared_ptr<Executor> wayland_executor);
+
+private:
+    void bind(wl_resource* new_wl_shm) override;
 
     std::shared_ptr<Executor> const wayland_executor;
 };

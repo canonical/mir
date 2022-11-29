@@ -30,6 +30,11 @@ namespace mir
 {
 class Executor;
 
+namespace renderer::software
+{
+class RWMappableBuffer;
+}
+
 namespace graphics
 {
 
@@ -82,9 +87,9 @@ public:
         std::function<void()>&& on_release) = 0;
 
     virtual auto buffer_from_shm(
-        wl_resource* buffer,
-        std::shared_ptr<mir::Executor> wayland_executor,
-        std::function<void()>&& on_consumed) -> std::shared_ptr<Buffer> = 0;
+        std::shared_ptr<renderer::software::RWMappableBuffer> shm_data,
+        std::function<void()>&& on_consumed,
+        std::function<void()>&& on_release) -> std::shared_ptr<Buffer> = 0;
 
 protected:
     GraphicBufferAllocator() = default;

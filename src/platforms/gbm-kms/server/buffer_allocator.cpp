@@ -17,6 +17,7 @@
 #include "buffer_allocator.h"
 #include "mir/graphics/linux_dmabuf.h"
 #include "mir/anonymous_shm_file.h"
+#include "mir/renderer/sw/pixel_source.h"
 #include "shm_buffer.h"
 #include "display_helpers.h"
 #include "mir/graphics/egl_context_executor.h"
@@ -242,13 +243,13 @@ std::shared_ptr<mg::Buffer> mgg::BufferAllocator::buffer_from_resource(
 }
 
 auto mgg::BufferAllocator::buffer_from_shm(
-    wl_resource* buffer,
-    std::shared_ptr<Executor> wayland_executor,
-    std::function<void()>&& on_consumed) -> std::shared_ptr<Buffer>
+    std::shared_ptr<renderer::software::RWMappableBuffer> data,
+    std::function<void()>&& on_consumed,
+    std::function<void()>&& on_release) -> std::shared_ptr<Buffer>
 {
-    return mg::wayland::buffer_from_wl_shm(
-        buffer,
-        std::move(wayland_executor),
+    return std::make_shared<mgc::NotifyingMappableBackedShmBuffer>(
+        std::move(data),
         egl_delegate,
-        std::move(on_consumed));
+        std::move(on_consumed),
+        std::move(on_release));
 }

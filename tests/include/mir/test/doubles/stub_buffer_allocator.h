@@ -42,9 +42,9 @@ public:
         -> std::shared_ptr<graphics::Buffer> override;
 
     auto buffer_from_shm(
-        wl_resource* resource,
-        std::shared_ptr<mir::Executor> executor,
-        std::function<void()>&& on_consumed) -> std::shared_ptr<graphics::Buffer> override;
+        std::shared_ptr<renderer::software::RWMappableBuffer> data,
+        std::function<void()>&& on_consumed,
+        std::function<void()>&& on_release) -> std::shared_ptr<graphics::Buffer>;
 };
 
 }
