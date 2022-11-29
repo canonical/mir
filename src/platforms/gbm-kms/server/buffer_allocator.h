@@ -81,7 +81,6 @@ private:
     std::unique_ptr<LinuxDmaBufUnstable, std::function<void(LinuxDmaBufUnstable*)>> dmabuf_extension;
     std::shared_ptr<EGLExtensions> const egl_extensions;
     bool egl_display_bound{false};
-    std::shared_ptr<void> shm_handler;
 };
 
 }

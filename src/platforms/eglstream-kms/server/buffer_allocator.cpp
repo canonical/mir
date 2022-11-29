@@ -19,7 +19,6 @@
 #include "buffer_allocator.h"
 #include "mir/anonymous_shm_file.h"
 #include "shm_buffer.h"
-#include "buffer_from_wl_shm.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/renderer/gl/context_source.h"
 #include "mir/renderer/gl/context.h"
@@ -416,7 +415,6 @@ void mir::graphics::eglstream::BufferAllocator::bind_display(
         BOOST_THROW_EXCEPTION((std::runtime_error{message.str()}));
     }
 
-    shm_handler = mg::wayland::init_shm_handling();
     mir::log_info("Bound EGLStreams-backed Wayland display");
 }
 
@@ -427,7 +425,6 @@ void mir::graphics::eglstream::BufferAllocator::unbind_display(wl_display* displ
         [this]() { wayland_ctx->release_current(); });
     auto dpy = eglGetCurrentDisplay();
 
-    shm_handler = nullptr;
     if (extensions(dpy).eglUnbindWaylandDisplayWL(dpy, display) != EGL_TRUE)
     {
         BOOST_THROW_EXCEPTION((mg::egl_error("Failed to unbind Wayland EGL display")));
