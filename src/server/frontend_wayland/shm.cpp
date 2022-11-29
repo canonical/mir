@@ -257,6 +257,16 @@ void mf::ShmPool::create_buffer(
             "Attempt to create_buffer outside the range of the backing store"};
     }
 
+    // TODO: Extend DRMFormat to include bytes-per-pixel info and drop this hardcoded "4"
+    if (stride < (width * 4))
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Invalid stride %d (too small for width %d. Did you specify stride in pixels?)",
+            stride, width};
+    }
+
     new ShmBuffer{
         id,
         wayland_executor,
