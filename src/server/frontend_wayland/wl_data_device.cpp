@@ -215,8 +215,11 @@ void mf::WlDataDevice::start_drag(
 
 void mf::WlDataDevice::end_drag()
 {
+    // TODO - detect if on surface expecting data, then copy into it
+    send_leave_event();
     cursor_observer.reset();
     drag_surface.reset();
+    current_offer = {};
 }
 
 void mf::WlDataDevice::focus_on(WlSurface* surface)
