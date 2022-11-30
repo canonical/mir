@@ -54,10 +54,10 @@ private:
     wayland::Weak<WlDataDevice> const device;
 };
 
-class mf::WlDataDevice::CursorObserverHandler : public mi::EventFilter
+class mf::WlDataDevice::CursorObserver : public mi::EventFilter
 {
 public:
-    CursorObserverHandler(mf::DragWlSurface& surface, mf::WlDataDevice& data_device)
+    CursorObserver(mf::DragWlSurface& surface, mf::WlDataDevice& data_device)
         : surface{surface},
           data_device{data_device}
     {}
@@ -84,7 +84,6 @@ public:
 
                 if (pointer_event->buttons() != mir_pointer_button_primary)
                 {
-                    // DESTROY SURFACE
                     data_device.end_drag();
                     return true;
                 }
@@ -208,15 +207,15 @@ void mf::WlDataDevice::start_drag(
     drag_surface.emplace(DragWlSurface(icon_surface));
     drag_surface->create_scene_surface();
 
-    cursor_observer_handler = std::make_shared<CursorObserverHandler>(drag_surface.value(), *this);
-    composite_event_filter.prepend(cursor_observer_handler);
+    cursor_observer = std::make_shared<CursorObserver>(drag_surface.value(), *this);
+    composite_event_filter.prepend(cursor_observer);
 
     // TODO: set initial position of drag_surface to current cursor position
 }
 
 void mf::WlDataDevice::end_drag()
 {
-    cursor_observer_handler.reset();
+    cursor_observer.reset();
     drag_surface.reset();
 }
 
