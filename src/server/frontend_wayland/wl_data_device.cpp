@@ -199,8 +199,13 @@ void mf::WlDataDevice::start_drag(
 {
     // TODO: "The [origin surface] and client must have an active implicit grab that matches the serial"
     (void)origin;
-    
-    set_selection(source, serial);
+    (void)serial;
+
+    if (source)
+    {
+        auto const source_surface = WlSurface::from(source.value());
+        focus_on(source_surface);
+    }
 
     auto const icon_surface = WlSurface::from(icon.value_or(nullptr));  // TODO - is this safe?
 
