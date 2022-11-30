@@ -72,6 +72,8 @@ public:
             {
                 // TODO
 
+                // TODO - send_motion_event()
+
                 // std::shared_ptr<MirEvent> owned_event = mev::clone_event(event);
                 // auto const touch_event = owned_event->to_input()->to_touch();
 
@@ -94,6 +96,9 @@ public:
                 auto const top_left = mir::geometry::Point{x, y};
 
                 surface.scene_surface().value()->move_to(top_left);
+
+                // TODO - send_motion_event()
+
                 return true;
             }
         }
