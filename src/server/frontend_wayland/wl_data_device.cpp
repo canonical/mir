@@ -18,6 +18,8 @@
 #include "wl_data_source.h"
 #include "wl_surface.h"
 
+#include "mir/events/pointer_event.h"
+#include "mir/events/touch_event.h"
 #include "mir/geometry/forward.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/scene/clipboard.h"
@@ -25,9 +27,6 @@
 #include "mir/wayland/client.h"
 
 #include "mir_toolkit/events/enums.h"
-#include "mir_toolkit/events/input/pointer_event.h"
-#include "mir_toolkit/events/input/touch_event.h"
-#include "mir/events/pointer_event.h"
 
 namespace mf = mir::frontend;
 namespace mi = mir::input;
