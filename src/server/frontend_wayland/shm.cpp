@@ -9,7 +9,7 @@
 #include "mir/renderer/sw/pixel_source.h"
 #include "wayland_wrapper.h"
 
-#include <drm/drm_fourcc.h>
+#include <drm_fourcc.h>
 #include <boost/throw_exception.hpp>
 #include <wayland-server-protocol.h>
 
