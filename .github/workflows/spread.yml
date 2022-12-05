@@ -14,7 +14,7 @@ on:
 
 jobs:
   GetMatrix:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -57,7 +57,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.GetMatrix.outputs.matrix) }}
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     env:
       DEBFULLNAME: "Mir CI Bot"
