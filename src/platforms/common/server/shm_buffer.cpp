@@ -353,12 +353,33 @@ mgc::NotifyingMappableBackedShmBuffer::~NotifyingMappableBackedShmBuffer()
     on_release();
 }
 
+void mgc::NotifyingMappableBackedShmBuffer::notify_consumed()
+{
+    std::lock_guard lock{consumed_mutex};
+    on_consumed();
+    on_consumed = [](){};
+}
+
+void mgc::NotifyingMappableBackedShmBuffer::bind()
+{
+    MappableBackedShmBuffer::bind();
+    notify_consumed();
+}
+
 auto mgc::NotifyingMappableBackedShmBuffer::map_readable() -> std::unique_ptr<mrs::Mapping<unsigned char const>>
 {
-    {
-        std::lock_guard lock{consumed_mutex};
-        on_consumed();
-        on_consumed = [](){};
-    }
+    notify_consumed();
     return MappableBackedShmBuffer::map_readable();
+}
+
+auto mgc::NotifyingMappableBackedShmBuffer::map_writeable() -> std::unique_ptr<mrs::Mapping<unsigned char>>
+{
+    notify_consumed();
+    return MappableBackedShmBuffer::map_writeable();
+}
+
+auto mgc::NotifyingMappableBackedShmBuffer::map_rw() -> std::unique_ptr<mrs::Mapping<unsigned char>>
+{
+    notify_consumed();
+    return MappableBackedShmBuffer::map_rw();
 }
