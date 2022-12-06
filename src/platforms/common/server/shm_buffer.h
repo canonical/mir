@@ -147,9 +147,15 @@ public:
 
     ~NotifyingMappableBackedShmBuffer() override;
 
+    void bind() override;
+
     auto map_readable() -> std::unique_ptr<renderer::software::Mapping<unsigned char const>> override;
+    auto map_writeable() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override;
+    auto map_rw() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override;
 
 private:
+    void notify_consumed();
+
     std::mutex consumed_mutex;
     std::function<void()> on_consumed;
     std::function<void()> const on_release;
