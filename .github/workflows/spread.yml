@@ -14,7 +14,7 @@ on:
 
 jobs:
   GetMatrix:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -57,7 +57,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.GetMatrix.outputs.matrix) }}
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     env:
       DEBFULLNAME: "Mir CI Bot"
@@ -67,7 +67,7 @@ jobs:
 
     steps:
     - name: Set up LXD
-      uses: whywaita/setup-lxd@v1
+      uses: canonical/setup-lxd@main
 
     - name: Set up Spread
       run: |

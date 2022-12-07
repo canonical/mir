@@ -10,7 +10,7 @@ on:
 
 jobs:
   mir-core20:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     timeout-minutes: 30
 
@@ -33,7 +33,7 @@ jobs:
 
     needs: [mir-core20]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     timeout-minutes: 30
 
