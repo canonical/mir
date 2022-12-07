@@ -44,6 +44,8 @@ public:
     //bit of a convenient kludge. take care not to close or otherwise destroy the FD.
     operator int() const;
 
+    /// Prevent accidental calling of ::close()
+    friend auto close(Fd const& fd) -> int = delete;
 private:
     std::shared_ptr<int> fd;
 };
