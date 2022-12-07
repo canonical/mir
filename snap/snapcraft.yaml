@@ -1,5 +1,5 @@
-name: mir-core20
-base: core20
+name: mir-libs
+base: core22
 summary: The fast, open and secure display server for any device - build environment
 description: |
   Mir is a display server running on linux systems, with a focus on efficiency,
@@ -99,6 +99,6 @@ parts:
     - libxrender1
     - libyaml-cpp0.6
     override-pull: |
-      snapcraftctl pull
-      snapcraftctl set-version $( git describe | awk -F- '{ gsub(/^v/, "", $1); printf $1; if ($2) { printf "+dev" $2 "-" $3 } }' )
-      snapcraftctl set-grade $( [[ $( git describe ) =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && echo stable || echo devel )
+      craftctl default
+      craftctl set version=$( git describe | awk -F- '{ gsub(/^v/, "", $1); printf $1; if ($2) { printf "+dev" $2 "-" $3 } }' )
+      craftctl set grade=$( [[ $( git describe ) =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && echo stable || echo devel )
