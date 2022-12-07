@@ -98,6 +98,10 @@ function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAK
       list(APPEND test_exclusion_filter "AnonymousShmFile.*" "MesaBufferAllocatorTest.software_buffers_dont_bypass" "MesaBufferAllocatorTest.creates_software_rendering_buffer")
   endif()
 
+  if(MIR_BAD_BUFFER_TEST_ENVIRONMENT_BROKEN)
+      list(APPEND test_exclusion_filter "ShmBacking.*")
+  endif()
+
   # liblttng-ust is unsafe if you fork() without exec(), such as we do in the test suite
   # We need to load liblttng-ust-fork.so to make this work reliably.
   list(APPEND test_env "LD_PRELOAD=liblttng-ust-fork.so")
