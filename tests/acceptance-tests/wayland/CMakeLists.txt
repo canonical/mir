@@ -98,11 +98,8 @@ set(EXPECTED_FAILURES
   XdgPopupStable/XdgPopupTest.grabbed_popup_gets_keyboard_focus/0
   LayerShellPopup/XdgPopupTest.grabbed_popup_gets_keyboard_focus/0
 
-  # Fixed by https://github.com/MirServer/wlcs/pull/245
-  PrimarySelection.source_sees_request
-  PrimarySelection.source_can_supply_request
-  PrimarySelection.sink_can_request
-  PrimarySelection.sink_can_listen
+  # Fixed by https://github.com/MirServer/mir/pull/2645
+  BadBufferTest.client_lies_about_buffer_size
 )
 
 if (MIR_BAD_BUFFER_TEST_ENVIRONMENT_BROKEN)
