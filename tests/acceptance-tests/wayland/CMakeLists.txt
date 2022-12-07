@@ -97,9 +97,6 @@ set(EXPECTED_FAILURES
   XdgPopupUnstableV6/XdgPopupTest.grabbed_popup_gets_keyboard_focus/0
   XdgPopupStable/XdgPopupTest.grabbed_popup_gets_keyboard_focus/0
   LayerShellPopup/XdgPopupTest.grabbed_popup_gets_keyboard_focus/0
-
-  # Fixed by https://github.com/MirServer/mir/pull/2645
-  BadBufferTest.client_lies_about_buffer_size
 )
 
 if (MIR_BAD_BUFFER_TEST_ENVIRONMENT_BROKEN)
