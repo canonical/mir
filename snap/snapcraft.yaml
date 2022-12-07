@@ -52,10 +52,10 @@ parts:
     - python3-pil
     - systemtap-sdt-dev
     stage-packages:
-    - libboost-filesystem1.71.0
-    - libboost-iostreams1.71.0
-    - libboost-program-options1.71.0
-    - libcapnp-0.7.0
+    - libboost-filesystem1.74.0
+    - libboost-iostreams1.74.0
+    - libboost-program-options1.74.0
+    - libcapnp-0.8.0
     - libdrm2
     - libegl1
     - libepoxy0
@@ -68,17 +68,17 @@ parts:
     - libglvnd0
     - libgoogle-glog0v5
     - libgudev-1.0-0
-    - libicu66
+    - libicu70
     - libinput10
-    - liblttng-ust0
+    - liblttng-ust1
     - libmtdev1
     - libnuma1
     - libnvidia-egl-wayland1
     - libpng16-16
     - libsigc++-2.0-0v5
     - libunwind8
-    - liburcu6
-    - libwacom2
+    - liburcu8
+    - libwacom9
     - libwayland-client0
     - libwayland-egl1
     - libwayland-server0
@@ -97,7 +97,7 @@ parts:
     - libxml++2.6-2v5
     - libxml2
     - libxrender1
-    - libyaml-cpp0.6
+    - libyaml-cpp0.7
     override-pull: |
       craftctl default
       craftctl set version=$( git describe | awk -F- '{ gsub(/^v/, "", $1); printf $1; if ($2) { printf "+dev" $2 "-" $3 } }' )
