@@ -29,7 +29,11 @@ template<typename T>
 class Mapping
 {
 public:
+    Mapping() = default;
     virtual ~Mapping() = default;
+
+    Mapping(Mapping const&) = delete;
+    auto operator=(Mapping const&) = delete;
 
     virtual T* data() = 0;
     virtual size_t len() const = 0;
