@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "src/server/frontend_wayland/shm_backing.h"
+#include "src/server/shm_backing.h"
 
 #include "mir_test_framework/mmap_wrapper.h"
 
