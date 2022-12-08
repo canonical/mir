@@ -98,7 +98,7 @@ function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAK
       list(APPEND test_exclusion_filter "AnonymousShmFile.*" "MesaBufferAllocatorTest.software_buffers_dont_bypass" "MesaBufferAllocatorTest.creates_software_rendering_buffer")
   endif()
 
-  if(MIR_BAD_BUFFER_TEST_ENVIRONMENT_BROKEN)
+  if(MIR_SIGBUS_HANDLER_ENVIRONMENT_BROKEN)
       list(APPEND test_exclusion_filter "ShmBacking.*")
   endif()
 
