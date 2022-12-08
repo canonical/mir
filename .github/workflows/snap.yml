@@ -35,10 +35,13 @@ jobs:
 
     strategy:
       matrix:
-        snap:
-        - MirServer/mir-test-tools
-        - MirServer/egmde-confined-desktop
-        - MirServer/ubuntu-frame
+        include:
+        - snap: MirServer/mir-test-tools
+          track: 22
+        - snap: MirServer/egmde-confined-desktop
+          track: latest
+        - snap: MirServer/ubuntu-frame
+          track: 22
 
     steps:
     - name: Check out code
@@ -57,4 +60,4 @@ jobs:
       with:
         snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
         publish: true
-        publish-channel: 22/edge/mir-pr${{ github.event.number }}
+        publish-channel: ${{ matrix.track }}/edge/mir-pr${{ github.event.number }}
