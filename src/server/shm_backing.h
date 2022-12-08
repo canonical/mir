@@ -22,6 +22,9 @@
 
 namespace mir
 {
+namespace shm
+{
+
 template<typename T>
 class Mapping
 {
@@ -71,8 +74,6 @@ public:
     virtual auto map_rw() -> std::unique_ptr<Mapping<std::byte>> = 0;
 };
 
-namespace shm
-{
 class ReadOnlyPool
 {
 public:

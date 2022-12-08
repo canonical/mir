@@ -255,7 +255,7 @@ public:
 
     template<typename T>
     auto lock_range(size_t start, size_t len)
-        -> std::unique_ptr<mir::Mapping<T>>;
+        -> std::unique_ptr<mir::shm::Mapping<T>>;
 
 private:
     std::shared_ptr<ShmBufferSIGBUSHandler> const sigbus_handler;
@@ -286,7 +286,7 @@ private:
     };
     
     template<typename T>
-    class Mapping : public mir::Mapping<T>
+    class Mapping : public mir::shm::Mapping<T>
     {
     public:
         auto data() -> T* override
@@ -378,13 +378,13 @@ auto ShmBacking::get_range(size_t start, size_t len, std::shared_ptr<Parent> par
 
 template<typename T>
 auto ShmBacking::lock_range(size_t start, size_t len)
-    -> std::unique_ptr<mir::Mapping<T>>
+    -> std::unique_ptr<mir::shm::Mapping<T>>
 {
     auto mapping = *current_mapping.lock();
 
     auto start_addr = static_cast<char*>(mapping->mapped_address) + start;
     return
-        std::unique_ptr<mir::Mapping<T>>{
+        std::unique_ptr<mir::shm::Mapping<T>>{
             new Mapping<T>{
                 reinterpret_cast<T*>(start_addr), len,
                 mapping,
@@ -408,7 +408,7 @@ void ShmBacking::resize(size_t new_size)
         backing_size_is_guaranteed_at_least(this->backing_store, new_size));
 }
 
-class ROMappableRange : public mir::ReadMappableRange
+class ROMappableRange : public mir::shm::ReadMappableRange
 {
 public:
     ROMappableRange(
@@ -421,7 +421,7 @@ public:
     {
     }
 
-    auto map_ro() -> std::unique_ptr<mir::Mapping<std::byte const>> override
+    auto map_ro() -> std::unique_ptr<mir::shm::Mapping<std::byte const>> override
     {
         return parent->lock_range<std::byte const>(offset, len);
     }
@@ -431,7 +431,7 @@ private:
     std::shared_ptr<ShmBacking> const parent;
 };
 
-class WOMappableRange : public mir::WriteMappableRange
+class WOMappableRange : public mir::shm::WriteMappableRange
 {
 public:
     WOMappableRange(
@@ -444,7 +444,7 @@ public:
     {
     }
 
-    auto map_wo() -> std::unique_ptr<mir::Mapping<std::byte>> override
+    auto map_wo() -> std::unique_ptr<mir::shm::Mapping<std::byte>> override
     {
         return parent->lock_range<std::byte>(offset, len);
     }
@@ -456,7 +456,7 @@ private:
 
 class RWShmBackedPool;
 
-class RWMappableRange : public mir::RWMappableRange
+class RWMappableRange : public mir::shm::RWMappableRange
 {
 public:
     RWMappableRange(
@@ -469,17 +469,17 @@ public:
     {
     }
 
-    auto map_rw() -> std::unique_ptr<mir::Mapping<std::byte>> override
+    auto map_rw() -> std::unique_ptr<mir::shm::Mapping<std::byte>> override
     {
         return parent->lock_range<std::byte>(offset, len);
     }
 
-    auto map_ro() -> std::unique_ptr<mir::Mapping<std::byte const>> override
+    auto map_ro() -> std::unique_ptr<mir::shm::Mapping<std::byte const>> override
     {
         return parent->lock_range<std::byte const>(offset, len);
     }
 
-    auto map_wo() -> std::unique_ptr<mir::Mapping<std::byte>> override
+    auto map_wo() -> std::unique_ptr<mir::shm::Mapping<std::byte>> override
     {
         return parent->lock_range<std::byte>(offset, len);
     }
@@ -497,17 +497,17 @@ public:
     {
     }
 
-    auto get_rw_range(size_t start, size_t len) -> std::unique_ptr<mir::RWMappableRange> override
+    auto get_rw_range(size_t start, size_t len) -> std::unique_ptr<mir::shm::RWMappableRange> override
     {
         return backing_store.get_range<RWMappableRange>(start, len, shared_from_this());
     }
 
-    auto get_ro_range(size_t start, size_t len) -> std::unique_ptr<mir::ReadMappableRange> override
+    auto get_ro_range(size_t start, size_t len) -> std::unique_ptr<mir::shm::ReadMappableRange> override
     {
         return backing_store.get_range<ROMappableRange>(start, len, shared_from_this());
     }
 
-    auto get_wo_range(size_t start, size_t len) -> std::unique_ptr<mir::WriteMappableRange> override
+    auto get_wo_range(size_t start, size_t len) -> std::unique_ptr<mir::shm::WriteMappableRange> override
     {
         return backing_store.get_range<WOMappableRange>(start, len, shared_from_this());
     }
