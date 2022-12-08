@@ -75,6 +75,7 @@ set(
   test_report_exception.cpp
   test_thread_pool_executor.cpp
   test_linearising_executor.cpp
+  test_shm_backing.cpp
 )
 
 if (HAVE_PTHREAD_GETNAME_NP)
