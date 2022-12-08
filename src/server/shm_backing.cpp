@@ -293,6 +293,10 @@ private:
         {
             return ptr;
         }
+        auto data() const -> T const* override
+        {
+            return ptr;
+        }
 
         auto len() const -> size_t override
         {

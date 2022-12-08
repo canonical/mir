@@ -36,6 +36,7 @@ public:
     auto operator=(Mapping const&) = delete;
 
     virtual T* data() = 0;
+    virtual T const* data() const = 0;
     virtual size_t len() const = 0;
 
     virtual auto access_fault() const -> bool = 0;
@@ -44,11 +45,34 @@ public:
     {
         return data()[idx];
     }
+    auto operator[](size_t idx) const -> T const&
+    {
+        return data()[idx];
+    }
+
     auto begin() -> T*
     {
         return data();
     }
     auto end() -> T*
+    {
+        return data() + len();
+    }
+
+    auto begin() const -> T const*
+    {
+        return data();
+    }
+    auto end() const -> T const*
+    {
+        return data() + len();
+    }
+
+    auto cbegin() const -> T const*
+    {
+        return data();
+    }
+    auto cend() const -> T const*
     {
         return data() + len();
     }
