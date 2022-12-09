@@ -1,10 +1,9 @@
 status = [
           "BuildAndTest (lxd:alpine-3.17:spread/build/alpine:amd64)",
           "BuildAndTest (lxd:ubuntu-22.04:spread/build/sbuild:ubuntu)",
-          "BuildAndTest (lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_jammy)",
           "BuildAndTest (lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_arm64)",
           "BuildAndTest (lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_armhf)",
-          "BuildAndTest (lxd:ubuntu-20.04:spread/build/ubuntu:clang)",
+          "BuildAndTest (lxd:ubuntu-22.04:spread/build/ubuntu:clang)",
           "BuildAndTest (lxd:fedora-36:spread/build/fedora:amd64)",
           "BuildAndTest (lxd:fedora-37:spread/build/fedora:amd64)",
 ]

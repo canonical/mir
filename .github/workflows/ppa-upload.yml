@@ -14,7 +14,6 @@ jobs:
       fail-fast: true
       matrix:
         release:
-        - "20.04"
         - "22.04"
         - "22.10"
         - "23.04"
