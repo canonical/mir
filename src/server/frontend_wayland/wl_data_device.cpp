@@ -231,7 +231,7 @@ void mf::WlDataDevice::start_drag(
             auto const y = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y);
             auto const top_left = mir::geometry::Point{x, y};
 
-            drag_surface->scene_surface().value()->move_to(geometry::Point{top_left.x, top_left.y});
+            drag_surface->scene_surface().value()->move_to(top_left);
         }
     }
 
