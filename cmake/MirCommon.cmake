@@ -70,7 +70,7 @@ function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAK
 
   if(ENABLE_MEMCHECK_OPTION)
     set(test_cmd ${VALGRIND_CMD} ${test_cmd_no_memcheck})
-    set(test_no_memcheck_filter "*DeathTest.*:ClientLatency.*")
+    set(test_no_memcheck_filter "*DeathTest.*" "ClientLatency.*")
   endif()
 
   if(cmake_build_type_lower MATCHES "threadsanitizer")
@@ -83,19 +83,19 @@ function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAK
     # Space after ${TSAN_EXTRA_OPTIONS} works around bug in TSAN env. variable parsing 
     list(APPEND test_env "TSAN_OPTIONS=\"suppressions=${CMAKE_SOURCE_DIR}/tools/tsan-suppressions second_deadlock_stack=1 halt_on_error=1 history_size=7 die_after_fork=0 ${TSAN_EXTRA_OPTIONS} \"")
      # TSan does not support starting threads after fork
-    set(test_exclusion_filter "${test_exclusion_filter}:ThreadedDispatcherSignalTest.keeps_dispatching_after_signal_interruption")
+    list(APPEND test_exclusion_filter "ThreadedDispatcherSignalTest.keeps_dispatching_after_signal_interruption")
     # tsan "eats" SIGQUIT, so ignore two more tests that involve it
-    set(test_exclusion_filter "${test_exclusion_filter}:ServerSignal/AbortDeathTest.cleanup_handler_is_called_for/0")
-    set(test_exclusion_filter "${test_exclusion_filter}:ServerShutdown/OnSignalDeathTest.removes_endpoint/0")
+    list(APPEND test_exclusion_filter "ServerSignal/AbortDeathTest.cleanup_handler_is_called_for/0")
+    list(APPEND test_exclusion_filter "ServerShutdown/OnSignalDeathTest.removes_endpoint/0")
   endif()
 
   if(cmake_build_type_lower MATCHES "ubsanitizer")
     list(APPEND test_env "UBSAN_OPTIONS=\"suppressions=${CMAKE_SOURCE_DIR}/tools/ubsan-suppressions print_stacktrace=1 die_after_fork=0\"")
-    set(test_exclusion_filter "${test_exclusion_filter}:*DeathTest*")
+    list(APPEND test_exclusion_filter "*DeathTest*")
   endif()
 
   if(SYSTEM_SUPPORTS_O_TMPFILE EQUAL 1)
-      set(test_exclusion_filter "${test_exclusion_filter}:AnonymousShmFile.*:MesaBufferAllocatorTest.software_buffers_dont_bypass:MesaBufferAllocatorTest.creates_software_rendering_buffer")
+      list(APPEND test_exclusion_filter "AnonymousShmFile.*" "MesaBufferAllocatorTest.software_buffers_dont_bypass" "MesaBufferAllocatorTest.creates_software_rendering_buffer")
   endif()
 
   # liblttng-ust is unsafe if you fork() without exec(), such as we do in the test suite
@@ -126,12 +126,33 @@ function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAK
     set(test_env ${env_without_preloads})
   endif()
 
-  # Final commands
-  set(test_cmd "${test_cmd}" "--gtest_filter=-${test_no_memcheck_filter}:${test_exclusion_filter}")
-  set(test_cmd_no_memcheck "${test_cmd_no_memcheck}" "--gtest_death_test_style=threadsafe" "--gtest_filter=${test_no_memcheck_filter}:-${test_exclusion_filter}")
   if(DETECT_FD_LEAKS)
     set(test_cmd ${CMAKE_SOURCE_DIR}/tools/detect_fd_leaks.bash ${test_cmd})
   endif()
+
+  # ptest
+  list(JOIN test_env " --env " discover_env)
+  string(PREPEND discover_env "--env ")
+
+  list(JOIN test_cmd " " discover_cmd)
+  list(JOIN test_cmd_no_memcheck " " discover_cmd_no_memcheck)
+
+  list(JOIN test_exclusion_filter ":" test_exclusion_str)
+  list(JOIN test_no_memcheck_filter ":" memcheck_exclusion_str)
+
+  if (test_no_memcheck_filter)
+    file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
+      "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh ${discover_env} --test-name ${test_name} --gtest-exclude ${test_exclusion_str} --gtest-exclude ${memcheck_exclusion_str} -- ${discover_cmd}\n")
+    file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
+      "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh ${discover_env} --test-name ${test_name}_no_memcheck --gtest-exclude ${test_exclusion_str} --gtest-include ${memcheck_exclusion_str} -- ${discover_cmd_no_memcheck}\n")
+  else()
+    file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
+      "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh ${discover_env} --test-name ${test_name} --gtest-exclude ${test_exclusion_str} -- ${discover_cmd}\n")
+  endif()
+
+  # Final commands
+  set(test_cmd "${test_cmd}" "--gtest_filter=-${memcheck_exclusion_str}:${test_exclusion_str}")
+  set(test_cmd_no_memcheck "${test_cmd_no_memcheck}" "--gtest_death_test_style=threadsafe" "--gtest_filter=${memcheck_exclusion_str}:-${test_exclusion_str}")
 
   # Normal
   add_test(${test_name} ${test_cmd})
@@ -141,17 +162,6 @@ function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAK
     set_property(TEST ${test_name}_no_memcheck PROPERTY ENVIRONMENT ${test_env})
   endif()
 
-  # ptest
-  list_to_string("${test_env}" "--env" discover_env)
-  list_to_string("${test_cmd}" "" discover_cmd)
-  list_to_string("${test_cmd_no_memcheck}" "" discover_cmd_no_memcheck)
-
-  file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
-    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh ${discover_env} --test-name ${test_name} -- ${discover_cmd}\n")
-  if (test_no_memcheck_filter)
-    file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
-      "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh ${discover_env} --test-name ${test_name}_no_memcheck -- ${discover_cmd_no_memcheck}\n")
-  endif()
 endfunction ()
 
 function (mir_discover_tests EXECUTABLE)
