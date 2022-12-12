@@ -19,7 +19,6 @@
 #include "wl_surface.h"
 
 #include "mir/events/pointer_event.h"
-#include "mir/events/touch_event.h"
 #include "mir/geometry/forward.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/scene/clipboard.h"
@@ -68,18 +67,7 @@ public:
         {
             auto const input_ev = mir_event_get_input_event(&event);
             auto const ev_type = mir_input_event_get_type(input_ev);
-            if (ev_type == mir_input_event_type_touch)
-            {
-                // TODO
-
-                // TODO - send_motion_event()
-
-                // std::shared_ptr<MirEvent> owned_event = mev::clone_event(event);
-                // auto const touch_event = owned_event->to_input()->to_touch();
-
-                return true;
-            }
-            else if (ev_type == mir_input_event_type_pointer)
+            if (ev_type == mir_input_event_type_pointer)
             {
                 std::shared_ptr<MirEvent> owned_event = mev::clone_event(event);
                 auto const pointer_event = owned_event->to_input()->to_pointer();
@@ -220,10 +208,6 @@ void mf::WlDataDevice::start_drag(
     {
         auto const input_ev = mir_event_get_input_event(drag_event.get());
         auto const ev_type = mir_input_event_get_type(input_ev);
-        if (ev_type == mir_input_event_type_touch)
-        {
-            // TODO - Implement touch
-        }
         if (ev_type == mir_input_event_type_pointer)
         {
             auto const pointer_event = input_ev->to_pointer();
