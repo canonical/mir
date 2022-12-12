@@ -91,12 +91,7 @@ then
     testname=$(basename $test_binary)
 fi
 
-if [ -z "$includes" ];
-then
-    discover_filter="-$excludes"
-else
-    discover_filter="$includes:-$excludes"
-fi
+discover_filter="${includes:+$includes:}-$excludes"
 
 tests=$($test_binary --gtest_list_tests --gtest_filter=$discover_filter | grep -v '^ ' | cut -d' ' -f1 | grep '\.' | sed 's/$/*/')
 
