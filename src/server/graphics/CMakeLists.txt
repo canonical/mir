@@ -8,7 +8,6 @@ add_library(
 
   default_configuration.cpp
   default_display_configuration_policy.cpp
-  gl_extensions_base.cpp
   software_cursor.cpp
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/graphics/display_configuration_observer.h
   display_configuration_observer_multiplexer.cpp
