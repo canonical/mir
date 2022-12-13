@@ -66,7 +66,7 @@ public:
         if (mir_event_get_type(&event) == mir_event_type_input)
         {
             auto const input_ev = mir_event_get_input_event(&event);
-            auto const ev_type = mir_input_event_get_type(input_ev);
+            auto const& ev_type = mir_input_event_get_type(input_ev);
             if (ev_type == mir_input_event_type_pointer)
             {
                 std::shared_ptr<MirEvent> owned_event = mev::clone_event(event);
@@ -207,7 +207,7 @@ void mf::WlDataDevice::start_drag(
     if (mir_event_get_type(drag_event.get()) == mir_event_type_input)
     {
         auto const input_ev = mir_event_get_input_event(drag_event.get());
-        auto const ev_type = mir_input_event_get_type(input_ev);
+        auto const& ev_type = mir_input_event_get_type(input_ev);
         if (ev_type == mir_input_event_type_pointer)
         {
             auto const pointer_event = input_ev->to_pointer();
