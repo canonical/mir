@@ -76,7 +76,7 @@ public:
                 if (pointer_event->buttons() != mir_pointer_button_primary)
                 {
                     data_device.end_drag();
-                    return true;
+                    return false;
                 }
 
                 auto const x = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x);
@@ -88,7 +88,7 @@ public:
 
                 // TODO - send_motion_event()
 
-                return true;
+                return false;
             }
         }
 
