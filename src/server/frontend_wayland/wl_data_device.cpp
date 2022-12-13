@@ -70,7 +70,7 @@ public:
             if (ev_type == mir_input_event_type_pointer)
             {
                 std::shared_ptr<MirEvent> owned_event = mev::clone_event(event);
-                auto const pointer_event = owned_event->to_input()->to_pointer();
+                auto const pointer_event = mir_input_event_get_pointer_event(owned_event->to_input());
 
                 if (pointer_event->buttons() != mir_pointer_button_primary)
                 {
@@ -210,7 +210,7 @@ void mf::WlDataDevice::start_drag(
         auto const& ev_type = mir_input_event_get_type(input_ev);
         if (ev_type == mir_input_event_type_pointer)
         {
-            auto const pointer_event = input_ev->to_pointer();
+            auto const pointer_event = mir_input_event_get_pointer_event(input_ev);
             auto const x = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x);
             auto const y = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y);
             auto const top_left = mir::geometry::Point{x, y};
