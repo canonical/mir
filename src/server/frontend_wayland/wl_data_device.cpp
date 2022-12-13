@@ -24,6 +24,7 @@
 #include "mir/scene/clipboard.h"
 #include "mir/scene/surface.h"
 #include "mir/wayland/client.h"
+#include "mir/wayland/protocol_error.h"
 
 #include "mir_toolkit/events/enums.h"
 #include "mir_toolkit/events/event.h"
@@ -194,7 +195,8 @@ void mf::WlDataDevice::start_drag(
     (void)source;
     if (!origin)
     {
-        return;
+        BOOST_THROW_EXCEPTION(
+            mw::ProtocolError(resource, Error::role, "Origin surface does not exist."));
     }
 
     auto const icon_surface = WlSurface::from(icon.value_or(nullptr));  // TODO - is this safe?
