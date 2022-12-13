@@ -108,7 +108,23 @@ jobs:
         echo "max_size = 800M" > ${CCACHE_DIR}/ccache.conf
 
     - name: Run Spread task
-      run: snap run spread-mir-ci.spread -v ${{ matrix.spread-task }}
+      run: |
+        # Ensure core dumps can be generated
+        ulimit -c unlimited
+        # Dump cores in a known directory, for later upload
+        mkdir coredumps
+        echo "$PWD/coredumps/corefile-%e-%p-%t" | sudo tee /proc/sys/kernel/core_pattern
+
+        snap run spread-mir-ci.spread -v ${{ matrix.spread-task }}
+
+    - name: Upload core dumps (if generated)
+      uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: core-dumps
+        path: ./coredumps/*
+        retention-days: 5
+        if-no-files-found: ignore
 
     - name: CCache stats
       run: cat ${CCACHE_DIR}/ccache.stats
