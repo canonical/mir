@@ -114,6 +114,8 @@ jobs:
         # Dump cores in a known directory, for later upload
         mkdir coredumps
         echo "$PWD/coredumps/corefile-%e-%p-%t" | sudo tee /proc/sys/kernel/core_pattern
+        # schroot runs suid, so we need to relax core dump security policies
+        sudo sysctl fs.suid_dumpable=2
 
         snap run spread-mir-ci.spread -v ${{ matrix.spread-task }}
 
