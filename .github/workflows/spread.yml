@@ -74,7 +74,7 @@ jobs:
       run: |
         sudo snap install spread-mir-ci
         sudo snap connect spread-mir-ci:lxd lxd:lxd
-        lxc profile set default security.privileged=true security.nesting=true
+        lxc profile set default security.privileged=true security.nesting=true limits.kernel.core=unlimited
         sudo apt-get update
         sudo apt-get install --yes binfmt-support qemu-user-static
         echo "LXD_DIR=/var/snap/lxd/common/lxd" >> $GITHUB_ENV
@@ -111,8 +111,6 @@ jobs:
 
     - name: Run Spread task
       run: |
-        # Ensure core dumps can be generated
-        ulimit -c unlimited
         # Dump cores in a known directory, for later upload
         mkdir "${COREDUMPS_DIR}"
         echo "${COREDUMPS_DIR}/corefile-%e-%p-%t" | sudo tee /proc/sys/kernel/core_pattern
