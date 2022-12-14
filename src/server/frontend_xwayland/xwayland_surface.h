@@ -24,6 +24,7 @@
 #include "xwayland_client_manager.h"
 #include "xwayland_surface_role_surface.h"
 #include "xwayland_surface_observer_surface.h"
+#include "mir/events/input_event.h"
 #include "mir/scene/surface_state_tracker.h"
 #include "mir/proof_of_mutex_lock.h"
 
@@ -248,8 +249,24 @@ private:
     /// before it
     std::deque<geometry::Rectangle> inflight_configures;
 
-    /// Set in set_wl_surface and cleared when a scene surface is created from it
-    std::optional<std::shared_ptr<XWaylandSurfaceObserver>> surface_observer;
+    /// Manages the XWaylandSurfaceObserver
+    class XWaylandSurfaceObserverManager
+    {
+        std::weak_ptr<scene::Surface> weak_scene_surface;
+        std::shared_ptr<XWaylandSurfaceObserver> surface_observer;
+    public:
+        XWaylandSurfaceObserverManager(
+            std::shared_ptr<scene::Surface> scene_surface,
+            std::shared_ptr<XWaylandSurfaceObserver> surface_observer);
+        XWaylandSurfaceObserverManager();
+        XWaylandSurfaceObserverManager(XWaylandSurfaceObserverManager const&) = delete;
+        XWaylandSurfaceObserverManager(XWaylandSurfaceObserverManager&&) = default;
+        ~XWaylandSurfaceObserverManager();
+        auto operator=(XWaylandSurfaceObserverManager const&) -> XWaylandSurfaceObserverManager& = delete;
+        auto operator=(XWaylandSurfaceObserverManager&&) -> XWaylandSurfaceObserverManager& = default;
+
+        auto try_get_resize_event() -> std::shared_ptr<MirInputEvent const>;
+    } surface_observer_manager;
     std::unique_ptr<shell::SurfaceSpecification> nullable_pending_spec;
     std::shared_ptr<XWaylandClientManager::Session> client_session;
     std::weak_ptr<scene::Surface> weak_scene_surface;
