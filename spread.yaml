@@ -50,6 +50,7 @@ environment:
     NOCHECK/asan,tsan,ubsan,asan_clang,tsan_clang,ubsan_clang: nocheck
     CTEST_OUTPUT_ON_FAILURE: 1
     CCACHE_DIR: /root/.ccache
+    COREDUMPS_DIR: /tmp/coredumps
     # Needed for precompiled headers (https://ccache.dev/manual/latest.html#_precompiled_headers)
     CCACHE_SLOPPINESS: time_macros,pch_defines,include_file_mtime,include_file_ctime
 

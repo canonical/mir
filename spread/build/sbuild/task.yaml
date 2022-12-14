@@ -87,6 +87,7 @@ execute: |
     echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_CXX_COMPILER_LAUNCHER=ccache" >> debian/opts.mk
 
     echo "${CCACHE_DIR} ${CCACHE_DIR} none rw,bind 0 0" >> /etc/schroot/sbuild/fstab
+    echo "${COREDUMPS_DIR} ${COREDUMPS_DIR} none rw,bind 0 0" >> /etc/schroot/sbuild/fstab
 
     # Running the tests under QEMU fails to entirely correctly support libwayland's SIGSEGV handler
     if [[ ${DEB_HOST_ARCH} == arm* ]]; then

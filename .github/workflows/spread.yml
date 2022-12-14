@@ -64,6 +64,7 @@ jobs:
       DEBEMAIL: "mir-ci-bot@canonical.com"
       SPREAD_PATH: "/tmp/spread"
       CCACHE_DIR: "/tmp/ccache"
+      COREDUMPS_DIR: "/tmp/coredumps"
 
     steps:
     - name: Set up LXD
@@ -88,6 +89,7 @@ jobs:
       run: |
         mkdir --parents ${CCACHE_DIR}
         /snap/bin/lxc profile device add default ccache disk source=${CCACHE_DIR} path=/root/.ccache
+        /snap/bin/lxc profile device add default coredumps disk source=${COREDUMPS_DIR} path=${COREDUMPS_DIR}
 
         # Find the merge base to avoid populating the cache with short lived cache entries
         # and evicting those we care for - from `main`
@@ -112,8 +114,8 @@ jobs:
         # Ensure core dumps can be generated
         ulimit -c unlimited
         # Dump cores in a known directory, for later upload
-        mkdir coredumps
-        echo "$PWD/coredumps/corefile-%e-%p-%t" | sudo tee /proc/sys/kernel/core_pattern
+        mkdir "${COREDUMPS_DIR}"
+        echo "${COREDUMPS_DIR}/corefile-%e-%p-%t" | sudo tee /proc/sys/kernel/core_pattern
         # schroot runs suid, so we need to relax core dump security policies
         sudo sysctl fs.suid_dumpable=2
 
@@ -124,7 +126,7 @@ jobs:
       if: failure()
       with:
         name: core-dumps
-        path: ./coredumps/*
+        path: ${{ env.COREDUMPS_DIR }}/*
         retention-days: 5
         if-no-files-found: ignore
 
