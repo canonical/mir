@@ -74,6 +74,7 @@ jobs:
         sudo snap install spread-mir-ci
         sudo snap connect spread-mir-ci:lxd lxd:lxd
         lxc profile set default security.privileged=true security.nesting=true
+        sudo apt-get update
         sudo apt-get install --yes binfmt-support qemu-user-static
         echo "LXD_DIR=/var/snap/lxd/common/lxd" >> $GITHUB_ENV
 
