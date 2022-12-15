@@ -44,7 +44,11 @@ public:
     virtual void refresh_surface_data_now() = 0;
     virtual void commit(WlSurfaceState const& state) = 0;
     virtual void surface_destroyed() = 0;
+
+    WlSurfaceRole() = default;
     virtual ~WlSurfaceRole() = default;
+    WlSurfaceRole(WlSurfaceRole const&) = delete;
+    WlSurfaceRole& operator=(WlSurfaceRole const&) = delete;
 };
 }
 }
