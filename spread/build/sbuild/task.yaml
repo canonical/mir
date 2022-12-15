@@ -74,7 +74,7 @@ execute: |
         # Running the tests under QEMU fails to entirely correctly support libwayland's SIGSEGV handler
         echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_BAD_BUFFER_TEST_ENVIRONMENT_BROKEN=ON" >> debian/opts.mk
         # This test inexplicably tends to die under qemu (MirServer/mir#2748)
-        echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_EXCLUDE_TEST=Anchor/LayerSurfaceLayoutTest.*" >> debian/opts.mk
+        echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_EXCLUDE_TESTS=Anchor/LayerSurfaceLayoutTest.*" >> debian/opts.mk
       fi
     fi
 
