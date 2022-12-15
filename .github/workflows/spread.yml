@@ -119,6 +119,10 @@ jobs:
 
         snap run spread-mir-ci.spread -v ${{ matrix.spread-task }}
 
+    - name: Own core dumps
+      if: failure()
+      run: sudo chown ${UID} ${COREDUMPS_DIR}/*
+
     - name: Upload core dumps (if generated)
       uses: actions/upload-artifact@v3
       if: failure()
