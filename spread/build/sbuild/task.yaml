@@ -69,6 +69,13 @@ execute: |
       # Quirk for the eglexternalplatform-dev build dependency
       sed -i 's/\(eglexternalplatform-dev\)/\1:all/' debian/control
       SCHROOT_NAME="${SCHROOT_NAME}-${DEB_HOST_ARCH}"
+
+      if [[ ${DEB_HOST_ARCH} == arm* ]]; then
+        # Running the tests under QEMU fails to entirely correctly support libwayland's SIGSEGV handler
+        echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_BAD_BUFFER_TEST_ENVIRONMENT_BROKEN=ON" >> debian/opts.mk
+        # This test inexplicably tends to die under qemu (MirServer/mir#2748)
+        echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_EXCLUDE_TEST=Anchor/LayerSurfaceLayoutTest.*" >> debian/opts.mk
+      fi
     fi
 
     # If release not in yet
@@ -87,11 +94,6 @@ execute: |
     echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_CXX_COMPILER_LAUNCHER=ccache" >> debian/opts.mk
 
     echo "${CCACHE_DIR} ${CCACHE_DIR} none rw,bind 0 0" >> /etc/schroot/sbuild/fstab
-
-    # Running the tests under QEMU fails to entirely correctly support libwayland's SIGSEGV handler
-    if [[ ${DEB_HOST_ARCH} == arm* ]]; then
-      echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_BAD_BUFFER_TEST_ENVIRONMENT_BROKEN=ON" >> debian/opts.mk
-    fi
 
     sbuild "${SBUILD_OPTS[@]}"
 

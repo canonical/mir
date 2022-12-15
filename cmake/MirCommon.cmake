@@ -66,7 +66,7 @@ function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAK
       set(test_name ${EXECUTABLE})
   endif()
   set(test_no_memcheck_filter)
-  set(test_exclusion_filter)
+  list(APPEND test_exclusion_filter ${MIR_EXCLUDE_TESTS})
 
   if(ENABLE_MEMCHECK_OPTION)
     set(test_cmd ${VALGRIND_CMD} ${test_cmd_no_memcheck})
