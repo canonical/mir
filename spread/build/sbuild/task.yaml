@@ -28,7 +28,9 @@ execute: |
         schroot \
         ubuntu-dev-tools
 
-    printf "\$mailto = 'null@example.com';\n1;\n" > ~/.sbuildrc
+    printf "\$mailto = 'null@example.com';\n" > ~/.sbuildrc
+    printf "\$build_environment = { 'COREDUMPS_DIR' => '${COREDUMPS_DIR}' };\n" >> ~/.sbuildrc
+    printf "1;\n" >> ~/.sbuildrc
 
     adduser $USER sbuild
     # set host and build environment up

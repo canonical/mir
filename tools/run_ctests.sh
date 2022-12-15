@@ -14,7 +14,7 @@ print_help_and_exit()
 }
 
 TEST_DIR=$(mktemp -d --tmpdir mir-ctests-XXXXX);
-trap "if [ -d \"$TEST_DIR\" ]; then rm -r \"$TEST_DIR\"; fi" INT TERM EXIT
+trap "if [ -d \"$COREDUMPS_DIR\" ]; then cp $TEST_DIR/qemu*.core $COREDUMPS_DIR/; fi; if [ -d \"$TEST_DIR\" ]; then rm -r \"$TEST_DIR\"; fi" INT TERM EXIT
 
 while [ $# -gt 0 ];
 do
