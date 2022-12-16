@@ -112,7 +112,7 @@ public:
 
 private:
     wayland::Weak<WlSurface> const surface;
-    std::weak_ptr<scene::Surface> weak_scene_surface;
+    std::shared_ptr<scene::Surface> shared_scene_surface;
 };
 
 class WlSurface : public wayland::Surface

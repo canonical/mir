@@ -201,7 +201,7 @@ void mf::WlDataDevice::start_drag(
 
     auto const icon_surface = WlSurface::from(icon.value_or(nullptr));  // TODO - is this safe?
 
-    drag_surface.emplace(DragWlSurface(icon_surface));
+    drag_surface.emplace(icon_surface);
     drag_surface->create_scene_surface();
 
     // serial is never null
