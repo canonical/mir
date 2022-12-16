@@ -417,3 +417,5 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"miral::MirRunner::register_signal_handler(std::initializer_list<int>, std::function<void (int)> const&)@MIRAL_3.7" 3.7.0
  (c++)"miral::MirRunner::register_fd_handler(mir::Fd, std::function<void (int)> const&)@MIRAL_3.7" 3.7.0
  (c++)"miral::FdHandle::~FdHandle()@MIRAL_3.7" 3.7.0
+ MIRAL_3.8@MIRAL_3.8 3.8.0
+ (c++)"miral::DynamicDisplayConfiguration::operator()(mir::Server&) const@MIRAL_3.8" 3.8.0
