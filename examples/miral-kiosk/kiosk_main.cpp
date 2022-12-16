@@ -15,6 +15,8 @@
  */
 
 #include "kiosk_window_manager.h"
+#include "miral/append_event_filter.h"
+#include "mir_toolkit/event.h"
 
 #include <miral/runner.h>
 #include <miral/application_authorizer.h>
@@ -106,8 +108,37 @@ int main(int argc, char const* argv[])
 
     MirRunner runner{argc, argv};
 
-    DisplayConfiguration display_config{runner};
- 
+    DynamicDisplayConfiguration display_config{runner};
+
+    auto const reload_display_config = [&](MirEvent const* event)
+        {
+            if (mir_event_get_type(event) != mir_event_type_input)
+                return false;
+
+            MirInputEvent const* input_event = mir_event_get_input_event(event);
+            if (mir_input_event_get_type(input_event) != mir_input_event_type_key)
+                return false;
+
+            MirKeyboardEvent const* kev = mir_input_event_get_keyboard_event(input_event);
+            if (mir_keyboard_event_action(kev) != mir_keyboard_action_down)
+                return false;
+
+            MirInputEventModifiers mods = mir_keyboard_event_modifiers(kev);
+            if (!(mods & mir_input_event_modifier_alt) || !(mods & mir_input_event_modifier_ctrl))
+                return false;
+
+            switch (mir_keyboard_event_keysym(kev))
+            {
+            case XKB_KEY_r:
+            case XKB_KEY_R:display_config.reload();
+                return true;
+
+            default:
+                return false;
+            };
+        };
+
+
     ConfigurationOption show_splash{
         [&](bool show_splash) {splash.enable(show_splash); },
         "show-splash",
@@ -131,6 +162,7 @@ int main(int argc, char const* argv[])
             launcher,
             wayland_extensions,
             ConfigurationOption{run_startup_apps, "startup-apps", "Colon separated list of startup apps", ""},
-            StartupInternalClient{splash}
+            StartupInternalClient{splash},
+            AppendEventFilter{reload_display_config}
         });
 }

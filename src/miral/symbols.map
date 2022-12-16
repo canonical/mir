@@ -471,3 +471,11 @@ global:
     miral::FdHandle::?FdHandle*;
   };
 } MIRAL_3.6;
+
+MIRAL_3.8 {
+global:
+  extern "C++" {
+    "miral::DynamicDisplayConfiguration::reload()";
+    "miral::DynamicDisplayConfiguration::operator()(mir::Server&) const";
+  };
+} MIRAL_3.7;

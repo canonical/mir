@@ -54,8 +54,18 @@ public:
     auto operator=(DisplayConfiguration const&) -> DisplayConfiguration&;
 
 private:
+    friend class DynamicDisplayConfiguration;
     struct Self;
     std::shared_ptr<Self> self;
+};
+
+class DynamicDisplayConfiguration : public DisplayConfiguration
+{
+public:
+    using DisplayConfiguration::DisplayConfiguration;
+
+    void reload();
+    void operator()(mir::Server& server) const;
 };
 }
 
