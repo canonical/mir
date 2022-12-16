@@ -71,9 +71,10 @@ public:
             if (ev_type == mir_input_event_type_pointer)
             {
                 std::shared_ptr<MirEvent> owned_event = mev::clone_event(event);
-                auto const pointer_event = mir_input_event_get_pointer_event(owned_event->to_input());
+                auto const owned_input_event = mir_event_get_input_event(owned_event.get());
+                auto const& pointer_event = mir_input_event_get_pointer_event(owned_input_event);
 
-                if (pointer_event->buttons() != mir_pointer_button_primary)
+                if (mir_pointer_event_buttons(pointer_event) != mir_pointer_button_primary)
                 {
                     data_device.end_drag();
                     return false;
