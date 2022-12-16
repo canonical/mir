@@ -70,10 +70,10 @@ execute: |
       sed -i 's/\(eglexternalplatform-dev\)/\1:all/' debian/control
       SCHROOT_NAME="${SCHROOT_NAME}-${DEB_HOST_ARCH}"
 
-      if [[ ${DEB_HOST_ARCH} == arm* ]]; then
-        # Running the tests under QEMU fails to entirely correctly support libwayland's SIGSEGV handler
+      if [[ ${DEB_HOST_ARCH} == armhf ]]; then
+        # Running the tests under QEMU/armhf fails to entirely correctly support libwayland's SIGSEGV handler
         echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_SIGBUS_HANDLER_ENVIRONMENT_BROKEN=ON" >> debian/opts.mk
-        # This test inexplicably tends to die under qemu (MirServer/mir#2748)
+        # This test inexplicably tends to die under qemu/armhf (MirServer/mir#2748)
         echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_EXCLUDE_TESTS=Anchor/LayerSurfaceLayoutTest.*" >> debian/opts.mk
       fi
     fi
