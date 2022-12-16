@@ -74,7 +74,7 @@ struct ServerConfigurationOptions : mir_test_framework::HeadlessTest
 
     static constexpr char const* const not_found = "not found";
     std::string const config_filename{"test.config"};
-    static constexpr char const* const test_config_key = "config_dir";
+    static constexpr char const* const test_config_key = "config_path";
 
     void create_config_file_in(std::string const& dir)
     {

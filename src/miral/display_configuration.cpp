@@ -26,13 +26,14 @@
 #include <unistd.h>
 
 #include <fstream>
+#include <mutex>
 #include <sstream>
 
-struct miral::DisplayConfiguration::Self : StaticDisplayConfig
+class miral::DisplayConfiguration::Self : public StaticDisplayConfig
 {
-    Self(std::string const& name) : name{name} {}
-    std::string const name;
-    std::weak_ptr<mir::shell::DisplayConfigurationController> the_display_configuration_controller;
+public:
+    Self(std::string const& basename) : basename{basename} {}
+    std::string const basename;
 
     void find_and_load_config()
     {
@@ -53,7 +54,7 @@ struct miral::DisplayConfiguration::Self : StaticDisplayConfig
         /* Read options from config files */
         for (std::string config_root; getline(config_stream, config_root, ':');)
         {
-            auto const& filename = config_root + "/" + name;
+            auto const& filename = config_root + "/" + basename;
 
             if (std::ifstream config_file{filename})
             {
@@ -78,7 +79,7 @@ struct miral::DisplayConfiguration::Self : StaticDisplayConfig
         }
         else
         {
-            auto const filename = config_dir + "/" + name;
+            auto const filename = config_dir + "/" + basename;
 
             if (access(filename.c_str(), F_OK))
             {
@@ -94,6 +95,21 @@ struct miral::DisplayConfiguration::Self : StaticDisplayConfig
 
         StaticDisplayConfig::dump_config(print_template_config);
     }
+
+    auto the_display_configuration_controller() const
+    {
+        std::lock_guard lock{mutex};
+        return the_display_configuration_controller_.lock();
+    }
+
+    void the_display_configuration_controller(std::weak_ptr<mir::shell::DisplayConfigurationController> value)
+    {
+        std::lock_guard lock{mutex};
+        the_display_configuration_controller_ = std::move(value);
+    }
+private:
+    std::mutex mutable mutex;
+    std::weak_ptr<mir::shell::DisplayConfigurationController> the_display_configuration_controller_;
 };
 
 miral::DisplayConfiguration::DisplayConfiguration(MirRunner const& mir_runner) :
@@ -123,7 +139,7 @@ auto miral::DisplayConfiguration::layout_option() -> miral::ConfigurationOption
     return pre_init(ConfigurationOption{
         [this](std::string const& layout) { select_layout(layout); },
         "display-layout",
-        "Display configuration layout from `" + self->name + "'\n"
+        "Display configuration layout from `" + self->basename + "'\n"
         "(Found in $XDG_CONFIG_HOME or $HOME/.config, followed by $XDG_CONFIG_DIRS)",
         "default"});
 }
@@ -143,7 +159,7 @@ void miral::DynamicDisplayConfiguration::reload()
 {
     self->find_and_load_config();
 
-    if (auto const the_display_configuration_controller = self->the_display_configuration_controller.lock())
+    if (auto const the_display_configuration_controller = self->the_display_configuration_controller())
     {
         auto config = the_display_configuration_controller->base_configuration();
         self->apply_to(*config);
@@ -155,7 +171,7 @@ void miral::DynamicDisplayConfiguration::operator()(mir::Server& server) const
 {
     server.add_init_callback([self=self, &server]
         {
-            self->the_display_configuration_controller = server.the_display_configuration_controller();
+            self->the_display_configuration_controller(server.the_display_configuration_controller());
         });
     DisplayConfiguration::operator()(server);
 }
