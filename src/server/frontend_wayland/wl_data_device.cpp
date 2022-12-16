@@ -205,11 +205,10 @@ void mf::WlDataDevice::start_drag(
     drag_surface.emplace(icon_surface);
     drag_surface->create_scene_surface();
 
-    // serial is never null
-    auto const drag_event = client->event_for(serial).value();
-    if (mir_event_get_type(drag_event.get()) == mir_event_type_input)
+    auto const drag_event = client->event_for(serial);
+    if (drag_event && drag_event.value() && mir_event_get_type(drag_event.value().get()) == mir_event_type_input)
     {
-        auto const input_ev = mir_event_get_input_event(drag_event.get());
+        auto const input_ev = mir_event_get_input_event(drag_event.value().get());
         auto const& ev_type = mir_input_event_get_type(input_ev);
         if (ev_type == mir_input_event_type_pointer)
         {
@@ -220,6 +219,10 @@ void mf::WlDataDevice::start_drag(
 
             drag_surface->scene_surface().value()->move_to(top_left);
         }
+    }
+    else
+    {
+        return;
     }
 
     cursor_observer = std::make_shared<CursorObserver>(drag_surface.value(), *this);
