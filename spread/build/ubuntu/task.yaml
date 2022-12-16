@@ -101,7 +101,7 @@ execute: |
     echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_BUILD_TYPE=${BUILD_TYPE}" >> debian/opts.mk
 
     # Quirk for the GitHub actions CI environment
-    echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_BAD_BUFFER_TEST_ENVIRONMENT_BROKEN=ON" >> debian/opts.mk
+    echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_SIGBUS_HANDLER_ENVIRONMENT_BROKEN=ON" >> debian/opts.mk
 
     # use ccache
     echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_C_COMPILER_LAUNCHER=ccache" >> debian/opts.mk

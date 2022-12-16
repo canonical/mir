@@ -31,6 +31,7 @@ namespace mtf = mir_test_framework;
 namespace
 {
 using MmapInterposer = mtf::InterposerHandlers<void*, void *, size_t, int, int, int, off_t>;
+using MunmapInterposer = mtf::InterposerHandlers<int, void *, size_t>;
 }
 
 mtf::MmapHandlerHandle mtf::add_mmap_handler(MmapHandler handler)
@@ -67,5 +68,29 @@ void* mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
         BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find mmap() symbol: "s + dlerror()}));
     }
     return (*real_mmap)(addr, length, prot, flags, fd, offset);
+}
+
+mtf::MunmapHandlerHandle mtf::add_munmap_handler(MunmapHandler handler)
+{
+    return MunmapInterposer::add(std::move(handler));
+}
+
+int munmap(void *addr, size_t length)
+{
+    if (auto val = MunmapInterposer::run(addr, length))
+    {
+        return *val;
+    }
+
+    int (*real_munmap)(void *addr, size_t length);
+    *(void **)(&real_munmap) = dlsym(RTLD_NEXT, "munmap");
+
+    if (!real_munmap)
+    {
+        using namespace std::literals::string_literals;
+        // Oops! What has gone on here?!
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find munmap() symbol: "s + dlerror()}));
+    }
+    return (*real_munmap)(addr, length);
 }
 

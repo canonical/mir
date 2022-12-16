@@ -102,7 +102,7 @@ set(EXPECTED_FAILURES
   BadBufferTest.client_lies_about_buffer_size
 )
 
-if (MIR_BAD_BUFFER_TEST_ENVIRONMENT_BROKEN)
+if (MIR_SIGBUS_HANDLER_ENVIRONMENT_BROKEN)
   list(APPEND EXPECTED_FAILURES BadBufferTest.test_truncated_shm_file)
 endif ()
 
