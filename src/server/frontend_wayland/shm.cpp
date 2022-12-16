@@ -132,12 +132,12 @@ private:
 };
 
 ErrorNotifyingRWMappableBuffer::ErrorNotifyingRWMappableBuffer(
-        mir::wayland::Weak<mf::ShmBuffer> buffer,
-        std::shared_ptr<mir::Executor> wayland_executor,
-        std::shared_ptr<mir::shm::RWMappableRange> data,
-        mir::geometry::Size size,
-        mir::geometry::Stride stride,
-        MirPixelFormat format)
+    mir::wayland::Weak<mf::ShmBuffer> buffer,
+    std::shared_ptr<mir::Executor> wayland_executor,
+    std::shared_ptr<mir::shm::RWMappableRange> data,
+    mir::geometry::Size size,
+    mir::geometry::Stride stride,
+    MirPixelFormat format)
     : weak_buffer{buffer},
       wayland_executor{std::move(wayland_executor)},
       data{std::move(data)},
