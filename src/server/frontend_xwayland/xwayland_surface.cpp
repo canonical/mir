@@ -444,21 +444,15 @@ void mf::XWaylandSurface::close()
 {
     std::shared_ptr<XWaylandClientManager::Session> local_client_session;
     std::shared_ptr<scene::Surface> scene_surface;
-    std::shared_ptr<XWaylandSurfaceObserver> observer;
+    XWaylandSurfaceObserverManager local_surface_observer_manager;
 
     {
         std::lock_guard lock{mutex};
 
         local_client_session = std::move(client_session);
-
+        local_surface_observer_manager = std::move(surface_observer_manager);
         scene_surface = weak_scene_surface.lock();
         weak_scene_surface.reset();
-
-        if (surface_observer)
-        {
-            observer = surface_observer.value();
-        }
-        surface_observer = std::nullopt;
     }
 
     if (scene_surface)
@@ -473,11 +467,6 @@ void mf::XWaylandSurface::close()
     xcb_unmap_window(*connection, window);
     connection->flush();
 
-    if (scene_surface && observer)
-    {
-        scene_surface->unregister_interest(*observer);
-    }
-
     if (scene_surface)
     {
         shell->destroy_surface(scene_surface->session().lock(), scene_surface);
@@ -486,19 +475,6 @@ void mf::XWaylandSurface::close()
     }
 
     local_client_session.reset();
-
-    if (observer)
-    {
-        // make sure surface observer is deleted and will not spew any more events
-        std::weak_ptr<XWaylandSurfaceObserver> const weak_observer{observer};
-        observer.reset();
-        if (auto const should_be_dead_observer = weak_observer.lock())
-        {
-            fatal_error(
-                "surface observer should have been deleted, but was not (use count %d)",
-                should_be_dead_observer.use_count());
-        }
-    }
 }
 
 void mf::XWaylandSurface::take_focus()
@@ -690,11 +666,6 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     {
         std::lock_guard lock{mutex};
 
-        if (surface_observer || weak_scene_surface.lock())
-            BOOST_THROW_EXCEPTION(std::runtime_error("XWaylandSurface::attach_wl_surface() called multiple times"));
-
-        surface_observer = observer;
-
         state = cached.state;
 
         XWaylandSurfaceRole::populate_surface_data_scaled(wl_surface, scale, spec, keep_alive_until_spec_is_used);
@@ -756,6 +727,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     }
 
     auto const surface = shell->create_surface(session, mw::make_weak(wl_surface), spec, observer, nullptr);
+    XWaylandSurfaceObserverManager local_surface_observer_manager{surface, std::move(observer)};
     inform_client_of_window_state(std::unique_lock{mutex}, state);
     auto const top_left = scaled_top_left_of(*surface) + scaled_content_offset_of(*surface);
     auto const size = scaled_content_size_of(*surface);
@@ -771,6 +743,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         std::lock_guard lock{mutex};
         client_session = local_client_session;
         weak_scene_surface = surface;
+        surface_observer_manager = std::move(local_surface_observer_manager);
     }
 
     xwm->remember_scene_surface(surface, window);
@@ -788,10 +761,8 @@ void mf::XWaylandSurface::move_resize(uint32_t detail)
     {
         std::lock_guard lock{mutex};
         scene_surface = weak_scene_surface.lock();
-        if (surface_observer)
-        {
-            event = surface_observer.value()->latest_move_resize_event();
-        }
+        event = surface_observer_manager.try_get_resize_event();
+
         if (!scene_surface || !event)
         {
             return;
@@ -1423,4 +1394,48 @@ auto mf::XWaylandSurface::xcb_window_get_scene_surface(
     }
 
     return {};
+}
+
+mf::XWaylandSurface::XWaylandSurfaceObserverManager::XWaylandSurfaceObserverManager() = default;
+
+mf::XWaylandSurface::XWaylandSurfaceObserverManager::XWaylandSurfaceObserverManager(
+    std::shared_ptr<scene::Surface> scene_surface,
+    std::shared_ptr<XWaylandSurfaceObserver> surface_observer) :
+    weak_scene_surface{scene_surface},
+    surface_observer{std::move(surface_observer)}
+{
+}
+
+mf::XWaylandSurface::XWaylandSurfaceObserverManager::~XWaylandSurfaceObserverManager()
+{
+    if (auto const scene_surface = weak_scene_surface.lock())
+    {
+        scene_surface->unregister_interest(*surface_observer);
+    }
+
+    if (surface_observer)
+    {
+        // make sure surface observer is deleted and will not spew any more events
+        std::weak_ptr<XWaylandSurfaceObserver> const weak_observer{surface_observer};
+        surface_observer.reset();
+        if (auto const should_be_dead_observer = weak_observer.lock())
+        {
+            fatal_error(
+                "surface observer should have been deleted, but was not (use count %d)",
+                should_be_dead_observer.use_count());
+        }
+    }
+}
+
+auto mf::XWaylandSurface::XWaylandSurfaceObserverManager::try_get_resize_event()
+-> std::shared_ptr<MirInputEvent const>
+{
+    if (surface_observer)
+    {
+        return surface_observer->latest_move_resize_event();
+    }
+    else
+    {
+        return std::shared_ptr<MirInputEvent const>{};
+    }
 }
