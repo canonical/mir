@@ -181,6 +181,7 @@ function (mir_discover_external_gtests)
   string(REPLACE ";" ":" EXPECTED_FAILURE_STRING "${TEST_EXPECTED_FAILURES}")
   # The excluded tests (broken or expected failures), in a colon-delimited list for GTest
   list(APPEND TEST_BROKEN_TESTS ${TEST_EXPECTED_FAILURES})
+  list(APPEND TEST_BROKEN_TESTS ${MIR_EXCLUDE_TESTS})
   string(REPLACE ";" ":" EXCLUDED_TESTS "${TEST_BROKEN_TESTS}")
   # The command line arguments, as would be passed to the shell
   string(REPLACE ";" " " TEST_ARGS_STRING "${TEST_ARGS}")
