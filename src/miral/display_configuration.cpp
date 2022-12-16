@@ -20,13 +20,18 @@
 #include "static_display_config.h"
 
 #include <mir/server.h>
-#include "mir/shell/display_configuration_controller.h"
+#include <mir/shell/display_configuration_controller.h>
+#include <mir/main_loop.h>
 #include <mir/log.h>
 
 #include <unistd.h>
+#include <sys/inotify.h>
+
+#include <boost/throw_exception.hpp>
 
 #include <fstream>
 #include <mutex>
+#include <optional>
 #include <sstream>
 
 class miral::DisplayConfiguration::Self : public StaticDisplayConfig
@@ -49,6 +54,7 @@ public:
         else
             config_roots += "/etc/xdg";
 
+        decltype(config_path) new_config_path;
         std::istringstream config_stream(config_roots);
 
         /* Read options from config files */
@@ -59,9 +65,13 @@ public:
             if (std::ifstream config_file{filename})
             {
                 load_config(config_file, "ERROR: in display configuration file: '" + filename + "' : ");
+                new_config_path = config_root;
                 break;
             }
         }
+
+        std::lock_guard lock{mutex};
+        config_path = new_config_path;
     }
 
     void dump_config(std::function<void(std::ostream&)> const& print_template_config) override
@@ -80,6 +90,7 @@ public:
         else
         {
             auto const filename = config_dir + "/" + basename;
+            decltype(config_path) new_config_path;
 
             if (access(filename.c_str(), F_OK))
             {
@@ -90,6 +101,15 @@ public:
                     "%s display configuration template: %s",
                     out ? "Written" : "Failed writing",
                     filename.c_str());
+
+                if (out)
+                {
+                    new_config_path = config_dir;
+
+                }
+
+                std::lock_guard lock{mutex};
+                config_path = new_config_path;
             }
         }
 
@@ -107,9 +127,81 @@ public:
         std::lock_guard lock{mutex};
         the_display_configuration_controller_ = std::move(value);
     }
+
+    auto the_main_loop() const
+    {
+        std::lock_guard lock{mutex};
+        return the_main_loop_.lock();
+    }
+
+    void the_main_loop(std::weak_ptr<mir::MainLoop> value)
+    {
+        std::lock_guard lock{mutex};
+        the_main_loop_ = std::move(value);
+    }
+
+    auto inotify_config_path() -> std::optional<mir::Fd>
+    {
+        std::lock_guard lock{mutex};
+
+        if (!config_path) return std::nullopt;
+
+        mir::Fd inotify_fd{inotify_init()};
+
+        if (inotify_fd < 0)
+            BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to initialize inotify_fd"}));
+
+        config_path_wd = inotify_add_watch(inotify_fd, config_path.value().c_str(), IN_CLOSE_WRITE|IN_CREATE|IN_DELETE);
+
+        return inotify_fd;
+    }
+
+    void auto_reload()
+    {
+        if (auto const icf = inotify_config_path())
+        {
+            if (auto const ml = the_main_loop())
+            {
+                ml->register_fd_handler({icf.value()}, this, [icf=icf.value(), this] (int)
+                    {
+                        union
+                        {
+                            inotify_event event;
+                            char buffer[sizeof(inotify_event) + NAME_MAX + 1];
+                        } inotify_buffer;
+
+                        if (read(icf, &inotify_buffer, sizeof(inotify_buffer)) < static_cast<ssize_t>(sizeof(inotify_event)))
+                            return;
+
+                        if (inotify_buffer.event.mask & (IN_CLOSE_WRITE | IN_CREATE)
+                            && inotify_buffer.event.name == basename)
+                        {
+                            find_and_load_config();
+                            if (auto const dcc = the_display_configuration_controller())
+                            {
+                                auto config = dcc->base_configuration();
+                                apply_to(*config);
+                                dcc->set_base_configuration(config);
+                            }
+                        }
+                    });
+            }
+        }
+    }
+
+    ~Self()
+    {
+        if (auto const ml = the_main_loop())
+        {
+            ml->unregister_fd_handler(this);
+        }
+    }
 private:
     std::mutex mutable mutex;
     std::weak_ptr<mir::shell::DisplayConfigurationController> the_display_configuration_controller_;
+    std::weak_ptr<mir::MainLoop> the_main_loop_;
+    std::optional<std::string> config_path;
+    std::optional<int> config_path_wd;
 };
 
 miral::DisplayConfiguration::DisplayConfiguration(MirRunner const& mir_runner) :
@@ -155,23 +247,14 @@ miral::DisplayConfiguration::DisplayConfiguration(miral::DisplayConfiguration co
 
 auto miral::DisplayConfiguration::operator=(miral::DisplayConfiguration const&) -> miral::DisplayConfiguration& = default;
 
-void miral::DynamicDisplayConfiguration::reload()
-{
-    self->find_and_load_config();
-
-    if (auto const the_display_configuration_controller = self->the_display_configuration_controller())
-    {
-        auto config = the_display_configuration_controller->base_configuration();
-        self->apply_to(*config);
-        the_display_configuration_controller->set_base_configuration(config);
-    }
-}
-
 void miral::DynamicDisplayConfiguration::operator()(mir::Server& server) const
 {
+    DisplayConfiguration::operator()(server);
+
     server.add_init_callback([self=self, &server]
         {
             self->the_display_configuration_controller(server.the_display_configuration_controller());
+            self->the_main_loop(server.the_main_loop());
+            self->auto_reload();
         });
-    DisplayConfiguration::operator()(server);
 }

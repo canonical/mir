@@ -64,7 +64,6 @@ class DynamicDisplayConfiguration : public DisplayConfiguration
 public:
     using DisplayConfiguration::DisplayConfiguration;
 
-    void reload();
     void operator()(mir::Server& server) const;
 };
 }
