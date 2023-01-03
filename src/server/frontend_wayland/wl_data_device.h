@@ -73,7 +73,7 @@ public:
 
 private:
     class ClipboardObserver;
-    class CursorObserver;
+    class CursorEventFilter;
     class Offer;
 
     /// Override from WlSeat::FocusListener
@@ -85,7 +85,7 @@ private:
     scene::Clipboard& clipboard;
     WlSeat& seat;
     input::CompositeEventFilter& composite_event_filter;
-    std::shared_ptr<CursorObserver> cursor_observer;
+    std::shared_ptr<CursorEventFilter> cursor_event_filter;
     std::shared_ptr<ClipboardObserver> const clipboard_observer;
     bool has_focus = false;
     wayland::Weak<Offer> current_offer;

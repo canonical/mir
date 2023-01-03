@@ -54,10 +54,10 @@ private:
     wayland::Weak<WlDataDevice> const device;
 };
 
-class mf::WlDataDevice::CursorObserver : public mi::EventFilter
+class mf::WlDataDevice::CursorEventFilter : public mi::EventFilter
 {
 public:
-    CursorObserver(mf::DragWlSurface& surface, mf::WlDataDevice& data_device)
+    CursorEventFilter(mf::DragWlSurface& surface, mf::WlDataDevice& data_device)
         : surface{surface},
           data_device{data_device}
     {}
@@ -225,8 +225,8 @@ void mf::WlDataDevice::start_drag(
         return;
     }
 
-    cursor_observer = std::make_shared<CursorObserver>(drag_surface.value(), *this);
-    composite_event_filter.prepend(cursor_observer);
+    cursor_event_filter = std::make_shared<CursorEventFilter>(drag_surface.value(), *this);
+    composite_event_filter.prepend(cursor_event_filter);
 
     // TODO: set initial position of drag_surface to current cursor position
 }
@@ -235,7 +235,7 @@ void mf::WlDataDevice::end_drag()
 {
     // TODO - detect if on surface expecting data, then copy into it
     send_leave_event();
-    cursor_observer.reset();
+    cursor_event_filter.reset();
     drag_surface.reset();
     current_offer = {};
 }
