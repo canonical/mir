@@ -199,8 +199,15 @@ void mf::WlDataDevice::start_drag(
         BOOST_THROW_EXCEPTION(
             mw::ProtocolError(resource, Error::role, "Origin surface does not exist."));
     }
+ 
+    if (!icon)
+    {
+        // TODO - icon is allowed to be null according to the protocol, but this is an issue to be fixed in the PR
+        // which implements the data transfer.
+        return;
+    }
 
-    auto const icon_surface = WlSurface::from(icon.value_or(nullptr));  // TODO - is this safe?
+    auto const icon_surface = WlSurface::from(icon.value());
 
     drag_surface.emplace(wayland_executor, icon_surface);
     drag_surface->create_scene_surface();
