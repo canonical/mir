@@ -84,8 +84,7 @@ public:
                 auto const y = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y);
 
                 auto const top_left = mir::geometry::Point{x, y};
-
-                surface.scene_surface().value()->move_to(top_left);
+                surface.move_scene_surface_to(top_left);
 
                 // TODO - send_motion_event()
 
@@ -155,6 +154,7 @@ mf::WlDataDevice::WlDataDevice(
     mf::WlSeat& seat,
     mi::CompositeEventFilter& composite_event_filter)
     : mw::DataDevice(new_resource, Version<3>()),
+      wayland_executor{wayland_executor},
       clipboard{clipboard},
       seat{seat},
       composite_event_filter{composite_event_filter},
@@ -202,7 +202,7 @@ void mf::WlDataDevice::start_drag(
 
     auto const icon_surface = WlSurface::from(icon.value_or(nullptr));  // TODO - is this safe?
 
-    drag_surface.emplace(icon_surface);
+    drag_surface.emplace(wayland_executor, icon_surface);
     drag_surface->create_scene_surface();
 
     auto const drag_event = client->event_for(serial);
@@ -217,7 +217,7 @@ void mf::WlDataDevice::start_drag(
             auto const y = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y);
             auto const top_left = mir::geometry::Point{x, y};
 
-            drag_surface->scene_surface().value()->move_to(top_left);
+            drag_surface->move_scene_surface_to(top_left);
         }
     }
     else

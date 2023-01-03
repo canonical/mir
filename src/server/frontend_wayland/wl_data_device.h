@@ -18,7 +18,9 @@
 #define MIR_FRONTEND_WL_DATA_DEVICE_H_
 
 #include "mir/events/input_event.h"
+#include "mir/executor.h"
 #include "mir/input/event_filter.h"
+#include "mir/scene/surface.h"
 #include "wayland_wrapper.h"
 #include "wl_seat.h"
 #include "wl_surface.h"
@@ -42,9 +44,24 @@ namespace frontend
 class DragWlSurface : public DragWlSurfaceRole
 {
 public:
-    DragWlSurface(WlSurface* icon)
-        : DragWlSurfaceRole(icon)
+    DragWlSurface(Executor& wayland_executor, WlSurface* icon)
+        : DragWlSurfaceRole(icon),
+          wayland_executor{wayland_executor}
     {}
+
+    // Moves scene_surface (if it exists) using the Wayland thread
+    void move_scene_surface_to(geometry::Point top_left)
+    {
+        wayland_executor.spawn([this, top_left] {
+            if (this->scene_surface())
+            {
+                this->scene_surface().value()->move_to(top_left);
+            }
+        });
+    }
+
+private:
+    Executor& wayland_executor;
 };
 
 class WlDataDevice : public wayland::DataDevice, public WlSeat::FocusListener
@@ -82,6 +99,7 @@ private:
     /// Called by the clipboard observer
     void paste_source_set(std::shared_ptr<scene::ClipboardSource> const& source);
 
+    Executor& wayland_executor;
     scene::Clipboard& clipboard;
     WlSeat& seat;
     input::CompositeEventFilter& composite_event_filter;
