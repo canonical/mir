@@ -17,6 +17,7 @@ mir (2.11.0) UNRELEASED; urgency=medium
     - Enhancements:
       . [miroil] Cleanup miroil mirbuffer and align with upstream qtmir
     - Bugs fixed:
+      . [Xwayland] Fix race (Fixes: #2733)
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Wed, 5 Jan 2023 17:52:00 +0000
 
