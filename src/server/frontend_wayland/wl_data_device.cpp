@@ -234,8 +234,6 @@ void mf::WlDataDevice::start_drag(
 
     cursor_event_filter = std::make_shared<CursorEventFilter>(drag_surface.value(), *this);
     composite_event_filter.prepend(cursor_event_filter);
-
-    // TODO: set initial position of drag_surface to current cursor position
 }
 
 void mf::WlDataDevice::end_drag()
