@@ -21,40 +21,37 @@
 #include <mir/version.h>
 #include <memory>
 
-#include <GL/gl.h>
+namespace mir {
+    namespace graphics {
+        class Buffer;
 
-namespace mir { namespace graphics { class Buffer; }}
+        namespace gl {
+            class Texture;
+        }
+    }
+}
 
 namespace miroil
 {
 class GLBuffer
 {
 public:
-    GLBuffer();
     ~GLBuffer();
     explicit GLBuffer(std::shared_ptr<mir::graphics::Buffer> const& buffer);
 
-    operator bool() const;
     bool has_alpha_channel() const;
     mir::geometry::Size size() const;
+    void bind();
+
+    void reset(std::shared_ptr<mir::graphics::Buffer> const& buffer);
 
     void reset();
-    void reset(std::shared_ptr<mir::graphics::Buffer> const& buffer);
-    void bind();
-#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 3, 0)
-    void gl_bind_tex();
-#endif
+    bool empty();
+
+    static std::shared_ptr<GLBuffer> from_mir_buffer(std::shared_ptr<mir::graphics::Buffer> const& buffer);
 
 private:
-    void init();
-    void destroy();
-
     std::shared_ptr<mir::graphics::Buffer> wrapped;
-    GLuint m_textureId;
-#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 3, 0)
-    bool m_isOldTex = false;
-    bool m_inited = false;
-#endif
 };
 }
 
