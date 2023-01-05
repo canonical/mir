@@ -21,15 +21,7 @@
 #include <mir/version.h>
 #include <memory>
 
-namespace mir {
-    namespace graphics {
-        class Buffer;
-
-        namespace gl {
-            class Texture;
-        }
-    }
-}
+namespace mir { namespace graphics { class Buffer; }}
 
 namespace miroil
 {
