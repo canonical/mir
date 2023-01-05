@@ -536,19 +536,3 @@ void mf::DragWlSurfaceRole::create_scene_surface()
 
     shared_scene_surface = session->create_surface(session, wayland::Weak<mf::WlSurface>(surface), spec, nullptr, nullptr);
 }
-
-void mf::DragWlSurfaceRole::commit(WlSurfaceState const& state)
-{
-    if (!surface)
-    {
-        return;
-    }
-
-    if (!shared_scene_surface)
-    {
-        create_scene_surface();
-    }
-
-    // TODO - handle
-    surface.value().commit(state);
-}

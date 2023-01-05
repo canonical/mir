@@ -107,7 +107,6 @@ public:
     DragWlSurfaceRole(WlSurface* surface);
     ~DragWlSurfaceRole();
     auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> override;
-    void commit(WlSurfaceState const& state) override;
     void create_scene_surface();
 
 private:
