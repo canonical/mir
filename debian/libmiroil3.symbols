@@ -1,4 +1,4 @@
-libmiroil.so.2 libmiroil2 #MINVER#
+libmiroil.so.3 libmiroil3 #MINVER#
  MIROIL_1.0@MIROIL_1.0 2.8.0
  (c++)"miroil::Compositor::~Compositor()@MIROIL_1.0" 2.8.0
  (c++)"miroil::DisplayConfigurationControllerWrapper::DisplayConfigurationControllerWrapper(std::shared_ptr<mir::shell::DisplayConfigurationController> const&)@MIROIL_1.0" 2.8.0
@@ -27,11 +27,11 @@ libmiroil.so.2 libmiroil2 #MINVER#
 
  (c++)"miroil::EventBuilder::store(MirInputEvent const*, unsigned long)@MIROIL_1.0" 2.8.0
  (c++)"miroil::EventBuilder::~EventBuilder()@MIROIL_1.0" 2.8.0
- (c++)"miroil::GLBuffer::GLBuffer()@MIROIL_1.0" 2.8.0
  (c++)"miroil::GLBuffer::GLBuffer(std::shared_ptr<mir::graphics::Buffer> const&)@MIROIL_1.0" 2.8.0
  (c++)"miroil::GLBuffer::bind()@MIROIL_1.0" 2.8.0
+ (c++)"miroil::GLBuffer::empty()@MIROIL_1.0" 2.8.0
+ (c++)"miroil::GLBuffer::from_mir_buffer(std::shared_ptr<mir::graphics::Buffer> const&)@MIROIL_1.0" 2.8.0
  (c++)"miroil::GLBuffer::has_alpha_channel() const@MIROIL_1.0" 2.8.0
- (c++)"miroil::GLBuffer::operator bool() const@MIROIL_1.0" 2.8.0
  (c++)"miroil::GLBuffer::reset()@MIROIL_1.0" 2.8.0
  (c++)"miroil::GLBuffer::reset(std::shared_ptr<mir::graphics::Buffer> const&)@MIROIL_1.0" 2.8.0
  (c++)"miroil::GLBuffer::size() const@MIROIL_1.0" 2.8.0
