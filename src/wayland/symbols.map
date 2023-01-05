@@ -568,7 +568,12 @@ global:
     typeinfo?for?mir::wayland::PrimarySelectionSourceV1;
     vtable?for?mir::wayland::PrimarySelectionSourceV1;
     virtual?thunk?to?mir::wayland::PrimarySelectionSourceV1::?PrimarySelectionSourceV1*;
+  };
+} MIRWAYLAND_2.10;
 
+MIRWAYLAND_2.12 {
+global:
+  extern "C++" {
     mir::wayland::Shm::*;
     non-virtual?thunk?to?mir::wayland::Shm::*;
     typeinfo?for?mir::wayland::Shm;
@@ -581,4 +586,4 @@ global:
     vtable?for?mir::wayland::ShmPool;
     virtual?thunk?to?mir::wayland::ShmPool::?ShmPool*;
   };
-} MIRWAYLAND_2.10;
+} MIRWAYLAND_2.11;
