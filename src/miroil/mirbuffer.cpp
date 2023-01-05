@@ -1,4 +1,5 @@
 /*
+ * Copyright 2021 UBports Foundation.
  * Copyright © 2017-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -19,65 +20,40 @@
 #include <mir/graphics/buffer.h>
 #include <mir/graphics/texture.h>
 
-#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 3, 0)
-#include <mir/gl/texture.h>
-#include <mir/renderer/gl/texture_source.h>
-#endif
-
 #include <stdexcept>
 
-miroil::GLBuffer::GLBuffer() = default;
-miroil::GLBuffer::~GLBuffer()
-{
-    destroy();
-}
+miroil::GLBuffer::~GLBuffer() = default;
 
 miroil::GLBuffer::GLBuffer(std::shared_ptr<mir::graphics::Buffer> const& buffer) :
-    wrapped(buffer),
-    m_textureId(0)
-#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 3, 0)
-    ,
-    m_isOldTex(false)
-#endif
+    wrapped(buffer)
 {
-    init();
+    auto texture = dynamic_cast<mir::graphics::gl::Texture*>(buffer->native_buffer_base());
+    if (!texture)
+        throw std::runtime_error("Incompatible buffer for GLTextureBuffer");
 }
 
-void miroil::GLBuffer::init()
+std::shared_ptr<miroil::GLBuffer> miroil::GLBuffer::from_mir_buffer(std::shared_ptr<mir::graphics::Buffer> const& buffer)
 {
-#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 3, 0)
-    if (m_inited)
-        return;
-
-    if (!dynamic_cast<mir::graphics::gl::Texture*>(wrapped->native_buffer_base()))
-    {
-        glGenTextures(1, &m_textureId);
-        m_isOldTex = true;
-    }
-
-    m_inited = true;
-#endif
-}
-
-void miroil::GLBuffer::destroy()
-{
-    if (m_textureId) {
-        glDeleteTextures(1, &m_textureId);
-        m_textureId = 0;
-#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 3, 0)
-        m_isOldTex = false;
-#endif
-    }
+    return std::make_shared<miroil::GLBuffer>(buffer);
 }
 
 void miroil::GLBuffer::reset(std::shared_ptr<mir::graphics::Buffer> const& buffer)
 {
+    auto texture = dynamic_cast<mir::graphics::gl::Texture*>(buffer->native_buffer_base());
+    if (!texture)
+        throw std::runtime_error("Incompatible buffer for GLTextureBuffer");
+
     wrapped = buffer;
 }
 
-miroil::GLBuffer::operator bool() const
+void miroil::GLBuffer::reset()
 {
-    return !!wrapped;
+    wrapped.reset();
+}
+
+bool miroil::GLBuffer::empty()
+{
+    return !wrapped;
 }
 
 bool miroil::GLBuffer::has_alpha_channel() const
@@ -92,36 +68,14 @@ mir::geometry::Size miroil::GLBuffer::size() const
     return wrapped->size();
 }
 
-void miroil::GLBuffer::reset()
-{
-    wrapped.reset();
-}
-
-#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 3, 0)
-void miroil::GLBuffer::gl_bind_tex()
-{
-    if (m_isOldTex)
-        glBindTexture(GL_TEXTURE_2D, m_textureId);
-}
-#endif
-
 void miroil::GLBuffer::bind()
 {
-#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 3, 0)
-    if (m_isOldTex) {
-        auto const texsource = dynamic_cast<mir::renderer::gl::TextureSource*>(wrapped->native_buffer_base());
+    if (!wrapped)
+        throw std::logic_error("Bind called without any buffers!");
 
-        texsource->gl_bind_to_texture();
-        texsource->secure_for_render();
-        return;
-    }
-#endif
-    if (auto const texture = dynamic_cast<mir::graphics::gl::Texture*>(wrapped->native_buffer_base()))
-    {
+    if (auto const texture = dynamic_cast<mir::graphics::gl::Texture*>(wrapped->native_buffer_base())) {
         texture->bind();
-    }
-    else
-    {
+    } else {
         throw std::logic_error("Buffer does not support GL rendering");
     }
 }
