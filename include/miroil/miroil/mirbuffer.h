@@ -48,6 +48,7 @@ public:
     void reset();
     bool empty();
 
+    [[deprecated("Use constructor instead")]]
     static std::shared_ptr<GLBuffer> from_mir_buffer(std::shared_ptr<mir::graphics::Buffer> const& buffer);
 
 private:
