@@ -203,7 +203,7 @@ void mf::VirtualKeyboardV1::key(uint32_t time, uint32_t key, uint32_t state)
         {
             auto key_event = builder->key_event(nano, mir_keyboard_action(state), 0, key);
             key_event->to_input()->to_keyboard()->set_xkb_modifiers(xkb_modifiers);
-            sink->handle_input(move(key_event));
+            sink->handle_input(std::move(key_event));
         });
 }
 
@@ -223,6 +223,6 @@ void mf::VirtualKeyboardV1::modifiers(
         {
             auto key_event = builder->key_event(nano, mir_keyboard_action_modifiers, 0, 0);
             key_event->to_input()->to_keyboard()->set_xkb_modifiers(xkb_modifiers);
-            sink->handle_input(move(key_event));
+            sink->handle_input(std::move(key_event));
         });
 }

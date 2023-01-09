@@ -37,8 +37,8 @@ private:
             std::shared_ptr<mir::Executor> wayland_executor,
             std::vector<std::string> types)
             : owner{std::move(owner)},
-              wayland_executor{move(wayland_executor)},
-              types{move(types)}
+              wayland_executor{std::move(wayland_executor)},
+              types{std::move(types)}
         {
         }
 
@@ -72,7 +72,7 @@ public:
         wl_resource* resource,
         std::shared_ptr<mir::Executor> wayland_executor)
         : PrimarySelectionSourceV1{resource, Version<1>()},
-          wayland_executor{move(wayland_executor)}
+          wayland_executor{std::move(wayland_executor)}
     {
     }
 
@@ -92,7 +92,7 @@ class PrimarySelectionOffer : public mw::PrimarySelectionOfferV1
 public:
     PrimarySelectionOffer(mw::PrimarySelectionDeviceV1& parent, std::shared_ptr<ms::ClipboardSource> source)
         : PrimarySelectionOfferV1{parent},
-          source{move(source)}
+          source{std::move(source)}
     {
     }
 
@@ -133,7 +133,7 @@ public:
         mf::WlSeat& seat)
         : PrimarySelectionDeviceV1{resource, Version<1>()},
           clipboard_observer{std::make_shared<ClipboardObserver>(this)},
-          primary_selection_clipboard{move(primary_selection_clipboard)},
+          primary_selection_clipboard{std::move(primary_selection_clipboard)},
           seat{seat}
     {
         this->primary_selection_clipboard->register_interest(clipboard_observer, mir::immediate_executor);
@@ -231,8 +231,8 @@ public:
         std::shared_ptr<mir::Executor> wayland_executor,
         std::shared_ptr<ms::Clipboard> primary_selection_clipboard)
         : PrimarySelectionDeviceManagerV1{manager, Version<1>()},
-          wayland_executor{move(wayland_executor)},
-          primary_selection_clipboard{move(primary_selection_clipboard)}
+          wayland_executor{std::move(wayland_executor)},
+          primary_selection_clipboard{std::move(primary_selection_clipboard)}
     {
     }
 
@@ -264,8 +264,8 @@ public:
         std::shared_ptr<mir::Executor> wayland_executor,
         std::shared_ptr<ms::Clipboard> primary_selection_clipboard)
         : Global{display, Version<1>()},
-          wayland_executor{move(wayland_executor)},
-          primary_selection_clipboard{move(primary_selection_clipboard)}
+          wayland_executor{std::move(wayland_executor)},
+          primary_selection_clipboard{std::move(primary_selection_clipboard)}
     {
     }
 
@@ -287,6 +287,6 @@ auto mf::create_primary_selection_device_manager_v1(
 {
     return std::make_shared<PrimarySelectionGlobal>(
         display,
-        move(wayland_executor),
-        move(primary_selection_clipboard));
+        std::move(wayland_executor),
+        std::move(primary_selection_clipboard));
 }
