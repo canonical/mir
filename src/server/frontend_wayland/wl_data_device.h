@@ -41,27 +41,20 @@ class CompositeEventFilter;
 
 namespace frontend
 {
-class DragWlSurface : public DragWlSurfaceRole
+class DragWlSurface : public NullWlSurfaceRole
 {
 public:
-    DragWlSurface(Executor& wayland_executor, WlSurface* icon)
-        : DragWlSurfaceRole(icon),
-          wayland_executor{wayland_executor}
-    {}
+    DragWlSurface(Executor& wayland_executor, WlSurface* icon);
+    ~DragWlSurface();
 
-    // Moves scene_surface (if it exists) using the Wayland thread
-    void move_scene_surface_to(geometry::Point top_left)
-    {
-        wayland_executor.spawn([this, top_left] {
-            if (this->scene_surface())
-            {
-                this->scene_surface().value()->move_to(top_left);
-            }
-        });
-    }
+    auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> override;
+    void create_scene_surface();
+    void surface_destroyed() override;
 
 private:
     Executor& wayland_executor;
+    wayland::Weak<WlSurface> const surface;
+    std::shared_ptr<scene::Surface> shared_scene_surface;
 };
 
 class WlDataDevice : public wayland::DataDevice, public WlSeat::FocusListener

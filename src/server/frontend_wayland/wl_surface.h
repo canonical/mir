@@ -101,19 +101,6 @@ private:
     WlSurface* const surface;
 };
 
-class DragWlSurfaceRole : public NullWlSurfaceRole
-{
-public:
-    DragWlSurfaceRole(WlSurface* surface);
-    ~DragWlSurfaceRole();
-    auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> override;
-    void create_scene_surface();
-
-private:
-    wayland::Weak<WlSurface> const surface;
-    std::shared_ptr<scene::Surface> shared_scene_surface;
-};
-
 class WlSurface : public wayland::Surface
 {
 public:

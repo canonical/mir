@@ -22,13 +22,16 @@
 #include "mir/geometry/forward.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/scene/clipboard.h"
+#include "mir/scene/session.h"
 #include "mir/scene/surface.h"
+#include "mir/shell/surface_specification.h"
 #include "mir/wayland/client.h"
 #include "mir/wayland/protocol_error.h"
 
 #include "mir_toolkit/events/enums.h"
 #include "mir_toolkit/events/event.h"
 
+namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mi = mir::input;
 namespace ms = mir::scene;
@@ -145,6 +148,60 @@ void mf::WlDataDevice::Offer::receive(std::string const& mime_type, mir::Fd fd)
     {
         source->initiate_send(mime_type, fd);
     }
+}
+
+mf::DragWlSurface::DragWlSurface(Executor& wayland_executor, WlSurface* icon)
+    : NullWlSurfaceRole(icon),
+      wayland_executor{wayland_executor},
+      surface{icon}
+{
+    icon->set_role(this);
+    create_scene_surface();
+}
+
+mf::DragWlSurface::~DragWlSurface()
+{
+    if (surface)
+    {
+        surface.value().clear_role();
+    }
+
+    surface_destroyed();
+}
+
+auto mf::DragWlSurface::scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>
+{
+    return shared_scene_surface;
+}
+
+void mf::DragWlSurface::create_scene_surface()
+{
+    if (shared_scene_surface || !surface)
+    {
+        return;
+    }
+
+    // TODO - check surface has value
+
+    auto spec = shell::SurfaceSpecification();
+    spec.width = surface.value().buffer_size()->width;
+    spec.height = surface.value().buffer_size()->height;
+    spec.streams = std::vector<shell::StreamSpecification>{};
+    spec.input_shape = std::vector<geom::Rectangle>{};
+
+    // TODO - handle
+    surface.value().populate_surface_data(spec.streams.value(), spec.input_shape.value(), {});
+
+    auto const& session = surface.value().session;
+
+    shared_scene_surface =
+        session->create_surface(session, wayland::Weak<mf::WlSurface>(surface), spec, nullptr, nullptr);
+}
+
+void mf::DragWlSurface::surface_destroyed()
+{
+    auto const& session = surface.value().session;
+    session->destroy_surface(shared_scene_surface);
 }
 
 mf::WlDataDevice::WlDataDevice(
