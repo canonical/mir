@@ -36,7 +36,6 @@
 #include "mir/executor.h"
 #include "shm_buffer.h"
 #include "buffer_allocator.h"
-#include "buffer_from_wl_shm.h"
 
 #define MIR_LOG_COMPONENT "rpi-dispmanx"
 #include <mir/log.h>
@@ -416,52 +415,22 @@ std::shared_ptr<mg::Buffer> mg::rpi::BufferAllocator::buffer_from_resource(
         std::move(on_release));
 }
 
-namespace
-{
-MirPixelFormat wl_format_to_mir_format(uint32_t format)
-{
-    switch (format)
-    {
-        case WL_SHM_FORMAT_ARGB8888:
-            return mir_pixel_format_argb_8888;
-        case WL_SHM_FORMAT_XRGB8888:
-            return mir_pixel_format_xrgb_8888;
-        case WL_SHM_FORMAT_RGBA4444:
-            return mir_pixel_format_rgba_4444;
-        case WL_SHM_FORMAT_RGBA5551:
-            return mir_pixel_format_rgba_5551;
-        case WL_SHM_FORMAT_RGB565:
-            return mir_pixel_format_rgb_565;
-        case WL_SHM_FORMAT_RGB888:
-            return mir_pixel_format_rgb_888;
-        case WL_SHM_FORMAT_BGR888:
-            return mir_pixel_format_bgr_888;
-        case WL_SHM_FORMAT_XBGR8888:
-            return mir_pixel_format_xbgr_8888;
-        case WL_SHM_FORMAT_ABGR8888:
-            return mir_pixel_format_abgr_8888;
-        default:
-            return mir_pixel_format_invalid;
-    }
-}
-
 class DispmanxWlShmBuffer : public DispmanxShmBuffer
 {
 public:
     DispmanxWlShmBuffer(
-        wl_shm_buffer* buffer,
+        std::shared_ptr<mir::renderer::software::RWMappableBuffer> shm_data,
         std::shared_ptr<mg::common::EGLContextExecutor> egl_executor,
         std::function<void()>&& on_consumed)
         : DispmanxShmBuffer(
-            geom::Size{wl_shm_buffer_get_width(buffer), wl_shm_buffer_get_height(buffer)},
-            geom::Stride{wl_shm_buffer_get_stride(buffer)},
-            wl_format_to_mir_format(wl_shm_buffer_get_format(buffer)),
+            shm_data->size(),
+            shm_data->stride(),
+            shm_data->format(),
             std::move(egl_executor)),
           on_consumed(std::move(on_consumed))
     {
-        wl_shm_buffer_begin_access(buffer);
-        transfer_into_buffer(static_cast<unsigned char*>(wl_shm_buffer_get_data(buffer)));
-        wl_shm_buffer_end_access(buffer);
+        auto mapping = shm_data->map_readable();
+        transfer_into_buffer(mapping->data());
     }
 
     void bind() override
@@ -484,25 +453,18 @@ private:
     std::mutex consumption_mutex;
     std::function<void()> on_consumed;
 };
-}
 
 auto mg::rpi::BufferAllocator::buffer_from_shm(
-    wl_resource* buffer,
-    std::shared_ptr<mir::Executor> /*wayland_executor*/,
-    std::function<void()>&& on_consumed) -> std::shared_ptr<Buffer>
+    std::shared_ptr<renderer::software::RWMappableBuffer> shm_data,
+    std::function<void()>&& on_consumed,
+    std::function<void()>&& on_release) -> std::shared_ptr<Buffer>
 {
-    auto shm_buffer = wl_shm_buffer_get(buffer);
-    if (shm_buffer == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Attempt to allocate Shm buffer from non-shm wl_resource"}));
-    }
-
     auto const mir_buffer = std::make_shared<DispmanxWlShmBuffer>(
-        shm_buffer,
+        std::move(shm_data),
         egl_executor,
         std::move(on_consumed));
 
     // DispmanxWlShmBuffer eagerly copies out of the wl_shm_buffer, so we're done with it here.
-    wl_resource_post_event(buffer, WL_BUFFER_RELEASE);
+    on_release();
     return mir_buffer;
 }

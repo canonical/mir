@@ -568,5 +568,17 @@ global:
     typeinfo?for?mir::wayland::PrimarySelectionSourceV1;
     vtable?for?mir::wayland::PrimarySelectionSourceV1;
     virtual?thunk?to?mir::wayland::PrimarySelectionSourceV1::?PrimarySelectionSourceV1*;
+
+    mir::wayland::Shm::*;
+    non-virtual?thunk?to?mir::wayland::Shm::*;
+    typeinfo?for?mir::wayland::Shm;
+    vtable?for?mir::wayland::Shm;
+    virtual?thunk?to?mir::wayland::Shm::?Shm*;
+
+    mir::wayland::ShmPool::*;
+    non-virtual?thunk?to?mir::wayland::ShmPool::*;
+    typeinfo?for?mir::wayland::ShmPool;
+    vtable?for?mir::wayland::ShmPool;
+    virtual?thunk?to?mir::wayland::ShmPool::?ShmPool*;
   };
 } MIRWAYLAND_2.10;

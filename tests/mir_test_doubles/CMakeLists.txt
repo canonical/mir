@@ -31,6 +31,29 @@ set(
   stub_buffer_allocator.cpp
 )
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  check_cxx_compiler_flag("-Wno-attributes=clang::" SUPPORTS_SCOPED_W_NO_ATTRIBUTES)
+  if (SUPPORTS_SCOPED_W_NO_ATTRIBUTE)
+    set_source_files_properties(
+      stub_buffer_allocator.cpp
+      PROPERTIES
+        COMPILE_OPTIONS "-Wno-attributes=clang::"
+    )
+  else()
+    set_source_files_properties(
+      stub_buffer_allocator.cpp
+      PROPERTIES
+        COMPILE_OPTIONS "-Wno-attributes"
+    )
+  endif()
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set_source_files_properties(
+    stub_buffer_allocator.cpp
+    PROPERTIES
+      COMPILE_OPTIONS "-Wno-unknown-attributes"
+  )
+endif()
+
 set(MIR_TEST_DOUBLES_UDEV_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/mock_udev.cpp)
 
 set(

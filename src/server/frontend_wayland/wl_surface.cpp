@@ -20,6 +20,7 @@
 #include "wl_surface_role.h"
 #include "wl_subcompositor.h"
 #include "wl_region.h"
+#include "shm.h"
 #include "deleted_for_resource.h"
 
 #include "wayland_wrapper.h"
@@ -305,36 +306,6 @@ void mf::WlSurface::set_input_region(std::optional<wl_resource*> const& region)
     }
 }
 
-namespace
-{
-MirPixelFormat wl_format_to_mir_format(uint32_t format)
-{
-    switch (format)
-    {
-        case WL_SHM_FORMAT_ARGB8888:
-            return mir_pixel_format_argb_8888;
-        case WL_SHM_FORMAT_XRGB8888:
-            return mir_pixel_format_xrgb_8888;
-        case WL_SHM_FORMAT_RGBA4444:
-            return mir_pixel_format_rgba_4444;
-        case WL_SHM_FORMAT_RGBA5551:
-            return mir_pixel_format_rgba_5551;
-        case WL_SHM_FORMAT_RGB565:
-            return mir_pixel_format_rgb_565;
-        case WL_SHM_FORMAT_RGB888:
-            return mir_pixel_format_rgb_888;
-        case WL_SHM_FORMAT_BGR888:
-            return mir_pixel_format_bgr_888;
-        case WL_SHM_FORMAT_XBGR8888:
-            return mir_pixel_format_xbgr_8888;
-        case WL_SHM_FORMAT_ABGR8888:
-            return mir_pixel_format_abgr_8888;
-        default:
-            return mir_pixel_format_invalid;
-    }
-}
-}
-
 void mf::WlSurface::commit(WlSurfaceState const& state)
 {
     // We're going to lose the value of state, so copy the frame_callbacks first. We have to maintain a list of
@@ -374,28 +345,21 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         }
         else
         {
+            std::shared_ptr<bool> buffer_destroyed = deleted_flag_for_resource(buffer);
+            auto release_buffer = [executor = wayland_executor, buffer = buffer, destroyed = buffer_destroyed]()
+                {
+                    executor->spawn(run_unless(
+                        destroyed,
+                        [buffer](){ wl_resource_post_event(buffer, wayland::Buffer::Opcode::release); }));
+                };
             std::shared_ptr<graphics::Buffer> mir_buffer;
 
-            if (auto const shm_buffer = wl_shm_buffer_get(buffer))
+            if (auto const shm_buffer = ShmBuffer::from(buffer))
             {
-                auto const stride = wl_shm_buffer_get_stride(shm_buffer);
-                auto const width = wl_shm_buffer_get_width(shm_buffer);
-                auto const format = wl_format_to_mir_format(wl_shm_buffer_get_format(shm_buffer));
-                if (stride < width * MIR_BYTES_PER_PIXEL(format)) {
-                    wl_resource_post_error(
-                        buffer,
-                        WL_SHM_ERROR_INVALID_STRIDE,
-                        "Stride (%u) is less than width × bytes per pixel (%u×%u). "
-                        "Did you accidentally specify stride in pixels?",
-                        stride, width, MIR_BYTES_PER_PIXEL(format));
-
-                    BOOST_THROW_EXCEPTION((
-                                              std::runtime_error{"Buffer has invalid stride"}));
-                }
                 mir_buffer = allocator->buffer_from_shm(
-                    buffer,
-                    wayland_executor,
-                    std::move(executor_send_frame_callbacks));
+                    shm_buffer->data(),
+                    std::move(executor_send_frame_callbacks),
+                    std::move(release_buffer));
                 tracepoint(
                     mir_server_wayland,
                     sw_buffer_committed,
@@ -404,15 +368,6 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
             }
             else
             {
-                std::shared_ptr<bool> buffer_destroyed = deleted_flag_for_resource(buffer);
-
-                auto release_buffer = [executor = wayland_executor, buffer = buffer, destroyed = buffer_destroyed]()
-                    {
-                        executor->spawn(run_unless(
-                            destroyed,
-                            [buffer](){ wl_resource_post_event(buffer, wayland::Buffer::Opcode::release); }));
-                    };
-
                 mir_buffer = allocator->buffer_from_resource(
                     buffer,
                     std::move(executor_send_frame_callbacks),

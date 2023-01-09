@@ -52,6 +52,7 @@ set(
   ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.c
   ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.h
   std_layout_uptr.h
+  shm.cpp                       shm.h
 )
 
 add_custom_command(
@@ -100,3 +101,7 @@ target_link_libraries(mirfrontend-wayland
     mircore
 )
 
+target_include_directories(mirfrontend-wayland
+  PRIVATE
+    ${DRM_INCLUDE_DIRS}
+)

@@ -67,9 +67,9 @@ public:
         std::function<void()>&& on_release) override;
 
     auto buffer_from_shm(
-        wl_resource* buffer,
-        std::shared_ptr<Executor> wayland_executor,
-        std::function<void()>&& on_consumed) -> std::shared_ptr<Buffer> override;
+        std::shared_ptr<renderer::software::RWMappableBuffer> shm_data,
+        std::function<void()>&& on_consumed,
+        std::function<void()>&& on_release) -> std::shared_ptr<Buffer> override;
 
 private:
     static void create_buffer_eglstream_resource(

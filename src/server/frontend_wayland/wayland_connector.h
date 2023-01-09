@@ -71,6 +71,7 @@ class SessionAuthorizer;
 class WlDataDeviceManager;
 class WlSurface;
 class SurfaceStack;
+class WlShm;
 
 class WaylandExtensions
 {
@@ -184,6 +185,7 @@ private:
     std::unique_ptr<WlSeat> seat_global;
     std::unique_ptr<OutputManager> output_manager;
     std::unique_ptr<WlDataDeviceManager> data_device_manager_global;
+    std::unique_ptr<WlShm> shm_global;
     std::shared_ptr<Executor> const executor;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<shell::Shell> const shell;

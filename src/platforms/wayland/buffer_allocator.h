@@ -17,6 +17,7 @@
 #ifndef  MIR_GRAPHICS_WAYLAND_BUFFER_ALLOCATOR_
 #define  MIR_GRAPHICS_WAYLAND_BUFFER_ALLOCATOR_
 
+#include "mir/renderer/sw/pixel_source.h"
 #include <mir/graphics/egl_extensions.h>
 #include <mir/graphics/graphic_buffer_allocator.h>
 #include <mir/renderer/gl/context.h>
@@ -53,9 +54,9 @@ public:
         std::function<void()>&& on_release) -> std::shared_ptr<Buffer> override;
 
     auto buffer_from_shm(
-        wl_resource* buffer,
-        std::shared_ptr<Executor> wayland_executor,
-        std::function<void()>&& on_consumed) -> std::shared_ptr<Buffer> override;
+        std::shared_ptr<renderer::software::RWMappableBuffer> shm_data,
+        std::function<void()>&& on_consumed,
+        std::function<void()>&& on_release) -> std::shared_ptr<Buffer> override;
 
     std::vector<MirPixelFormat> supported_pixel_formats() override;
 

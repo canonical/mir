@@ -19,9 +19,10 @@
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir_test_framework/stub_platform_native_buffer.h"
 #include "mir_toolkit/client_types.h"
-#include "src/platforms/common/server/buffer_from_wl_shm.h"
+#include "src/platforms/common/server/shm_buffer.h"
 #include "mir/graphics/egl_context_executor.h"
 #include "mir/test/doubles/null_gl_context.h"
+#include "mir/renderer/sw/pixel_source.h"
 #include <wayland-server.h>
 
 #include <vector>
@@ -29,20 +30,34 @@
 
 namespace mtd = mir::test::doubles;
 namespace mg = mir::graphics;
-namespace geometry = mir::geometry;
 
 namespace
 {
-inline void memcpy_from_shm_buffer(struct wl_shm_buffer* buffer)
+/*
+ * Oh, no.
+ *
+ * Testing that we correctly handle bad Shm buffers sent from clients requires that
+ * we *actually read* from the buffer so that the kernel can generate an access fault.
+ * To that end, we `memcpy` from the submitted buffer to a bit of scratch memory in
+ * order to read every byte of the submitted buffer.
+ *
+ * Unfortunately, the optimiser can now see that we don't *do anything* with the
+ * scratch memory, and so is now deciding to optimise out the memcpy.
+ *
+ * Rather than try to obfuscate the code enough that the optimiser can't prove that
+ * we don't do anything with the contents of `buffer`, just annotate the function
+ * with a “kindly don't optimise this” attribute.
+ *
+ * Of course, this isn't a standardised attribute, so apply the gcc *and* the clang
+ * one. And if we need to build with another compiler...
+ */
+[[clang::optnone, gnu::optimize(0)]]
+inline void memcpy_from_mapping(mir::renderer::software::ReadMappableBuffer& buffer)
 {
-    auto const height = wl_shm_buffer_get_height(buffer);
-    auto const stride = wl_shm_buffer_get_stride(buffer);
-    // The 32 here is a workaround for a spurious(?) Valgrind failure
-    auto dummy_destination = std::make_unique<unsigned char[]>(height * stride + 32);
+    auto const mapping = buffer.map_readable();
+    auto dummy_destination = std::make_unique<unsigned char[]>(mapping->len());
 
-    wl_shm_buffer_begin_access(buffer);
-    memcpy(dummy_destination.get(), wl_shm_buffer_get_data(buffer), height * stride);
-    wl_shm_buffer_end_access(buffer);
+    memcpy(dummy_destination.get(), mapping->data(), mapping->len());
 }
 }
 
@@ -72,18 +87,20 @@ auto mtd::StubBufferAllocator::buffer_from_resource(wl_resource*, std::function<
 }
 
 auto mtd::StubBufferAllocator::buffer_from_shm(
-    wl_resource* resource,
-    std::shared_ptr<mir::Executor> executor,
-    std::function<void()>&& on_consumed) -> std::shared_ptr<mg::Buffer>
+    std::shared_ptr<mir::renderer::software::RWMappableBuffer> data,
+    std::function<void()>&& on_consumed,
+    std::function<void()>&& on_release) -> std::shared_ptr<mg::Buffer>
 {
+    auto buffer = std::make_shared<mg::common::NotifyingMappableBackedShmBuffer>(
+        std::move(data),
+        std::make_shared<mg::common::EGLContextExecutor>(std::make_unique<mtd::NullGLContext>()),
+        std::move(on_consumed),
+        std::move(on_release));
+
     // Temporary(?!) hack to actually use the buffer, for WLCS test
     // Transitioning the StubGraphicsPlatform to use the MESA surfaceless GL platform would
     // allow us to test more of Mir, and drop this hack
-    memcpy_from_shm_buffer(wl_shm_buffer_get(resource));
+    memcpy_from_mapping(*buffer);
 
-    return mg::wayland::buffer_from_wl_shm(
-        resource,
-        std::move(executor),
-        std::make_shared<mg::common::EGLContextExecutor>(std::make_unique<mtd::NullGLContext>()),
-        std::move(on_consumed));
+    return buffer;
 }

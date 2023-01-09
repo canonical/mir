@@ -67,11 +67,13 @@ public:
     void unbind_display(wl_display* display) override;
     std::shared_ptr<Buffer> buffer_from_resource(
         wl_resource* resource,
-	std::function<void()>&& ,
-	std::function<void()>&&) override;
+        std::function<void()>&&,
+        std::function<void()>&&) override;
 
-    std::shared_ptr<Buffer> buffer_from_shm(wl_resource* buffer, std::shared_ptr<mir::Executor> wayland_executor,
-                                            std::function<void()>&& on_consumed) override;
+    auto buffer_from_shm(
+        std::shared_ptr<renderer::software::RWMappableBuffer> shm_data,
+        std::function<void()>&& on_consumed,
+        std::function<void()>&& on_release) -> std::shared_ptr<Buffer> override;
 
 private:
     std::shared_ptr<EGLExtensions> const egl_extensions;
