@@ -1,7 +1,7 @@
 /*
  * Convenience functions to make logging in Mir easy
  * ~~~
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 2 or 3,

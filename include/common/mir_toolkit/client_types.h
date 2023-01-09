@@ -1,7 +1,7 @@
 /*
  * client_types.h: Type definitions used in client apps and libmirclient.
  *
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 2 or 3,

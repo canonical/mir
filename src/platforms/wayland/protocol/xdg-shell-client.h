@@ -22,12 +22,12 @@ extern "C" {
  * @section page_copyright_xdg_shell Copyright
  * <pre>
  *
- * Copyright © 2008-2013 Kristian Høgsberg
- * Copyright © 2013      Rafael Antognolli
- * Copyright © 2013      Jasper St. Pierre
- * Copyright © 2010-2013 Intel Corporation
- * Copyright © 2015-2017 Samsung Electronics Co., Ltd
- * Copyright © 2015-2017 Red Hat Inc.
+ * Copyright © Kristian Høgsberg
+ * Copyright ©      Rafael Antognolli
+ * Copyright ©      Jasper St. Pierre
+ * Copyright © Intel Corporation
+ * Copyright © Samsung Electronics Co., Ltd
+ * Copyright © Red Hat Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),

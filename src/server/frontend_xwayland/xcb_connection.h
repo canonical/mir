@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2018 Marius Gripsgard <marius@ubports.com>
- * Copyright (C) 2020 Canonical Ltd.
+ * Copyright (C) Marius Gripsgard <marius@ubports.com>
+ * Copyright (C) Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
