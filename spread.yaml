@@ -76,3 +76,5 @@ path:
 
 exclude:
     - .git
+    - build-*
+    - install-*

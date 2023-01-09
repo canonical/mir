@@ -84,7 +84,8 @@ execute: |
       ln -vs "${DEBOOTSTRAP_SCRIPTS}/gutsy" "${DEBOOTSTRAP_SCRIPTS}/${RELEASE}"
     fi
 
-    sg sbuild -c "${MKSBUILD_OPTS[*]}"
+    # Build the schroot, if it doesn't already exist
+    [ -f /etc/schroot/chroot.d/sbuild-${SCHROOT_NAME} ] || sg sbuild -c "${MKSBUILD_OPTS[*]}"
 
     echo "export XDG_RUNTIME_DIR=/tmp" >> debian/opts.mk
 
@@ -94,6 +95,7 @@ execute: |
     echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_C_COMPILER_LAUNCHER=ccache" >> debian/opts.mk
     echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_CXX_COMPILER_LAUNCHER=ccache" >> debian/opts.mk
 
+    mkdir --parents ${CCACHE_DIR}
     echo "${CCACHE_DIR} ${CCACHE_DIR} none rw,bind 0 0" >> /etc/schroot/sbuild/fstab
 
     sbuild "${SBUILD_OPTS[@]}"
