@@ -49,6 +49,7 @@ execute: |
       --dist=${RELEASE}
       --build=${DEB_BUILD_ARCH}
       --host=${DEB_HOST_ARCH}
+      --purge=never
     )
 
     SCHROOT_NAME="${RELEASE}-${DEB_BUILD_ARCH}"
