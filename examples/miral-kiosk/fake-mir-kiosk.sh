@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 bindir=$(dirname $0)
 if [ "${bindir}" != "" ]; then bindir="${bindir}/"; fi
