@@ -87,7 +87,7 @@ auto xcb_error_to_string(int error) -> std::string
         case XCB_CONN_CLOSED_FDPASSING_FAILED: return "XCB_CONN_CLOSED_FDPASSING_FAILED";
         default:;
     }
-    return "unknwon XCB error " + std::to_string(error);
+    return "unknown XCB error " + std::to_string(error);
 }
 
 auto connect_to_fd(mir::Fd const& fd) -> xcb_connection_t*

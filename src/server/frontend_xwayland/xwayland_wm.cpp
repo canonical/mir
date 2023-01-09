@@ -204,7 +204,7 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
                         else
                         {
                             log_warning(
-                                "Faild to load geometry and attributes for %s",
+                                "Failed to load geometry and attributes for %s",
                                 connection->window_debug_string(window).c_str());
                         }
                     });
