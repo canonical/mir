@@ -33,6 +33,22 @@ namespace mg = mir::graphics;
 
 namespace
 {
+/*
+ * Oh, no.
+ *
+ * Testing that we correctly handle bad Shm buffers sent from clients requires that
+ * we *actually read* from the buffer so that the kernel can generate an access fault.
+ * To that end, we `memcpy` from the submitted buffer to a bit of scratch memory in
+ * order to read every byte of the submitted buffer.
+ *
+ * Unfortunately, the optimiser can now see that we don't *do anything* with the
+ * scratch memory, and so is now deciding to optimise out the memcpy.
+ *
+ * Rather than try to obfuscate the code enough that the optimiser can't prove that
+ * we don't do anything with the contents of `buffer`, just annotate the function
+ * with a “kindly don't optimise this” attribute
+ */
+[[clang::optnone, gnu::optimize(0)]]
 inline void memcpy_from_mapping(mir::renderer::software::ReadMappableBuffer& buffer)
 {
     auto const mapping = buffer.map_readable();
