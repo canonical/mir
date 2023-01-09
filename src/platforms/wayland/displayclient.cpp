@@ -1,6 +1,6 @@
 /*
- * Copyright © 2018-2019 Octopull Ltd.
- * Copyright © 2019 Canonical Ltd.
+ * Copyright © Octopull Ltd.
+ * Copyright © Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 2 or 3,

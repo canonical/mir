@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 2 or 3,
@@ -16,7 +16,7 @@
  * This file also contains a subset of EGL definitions taken from eglext.h.
  * These are:
  *
- * Copyright (c) 2013-2017 The Khronos Group Inc.
+ * Copyright (c) The Khronos Group Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and/or associated documentation files (the

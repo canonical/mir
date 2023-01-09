@@ -21,7 +21,7 @@ struct wl_resource;
  * @section page_copyright_wl_eglstream_controller Copyright
  * <pre>
  *
- * Copyright (c) 2017, NVIDIA CORPORATION. All rights reserved.
+ * Copyright (c), NVIDIA CORPORATION. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),

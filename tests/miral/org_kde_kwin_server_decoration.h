@@ -19,7 +19,7 @@ extern "C" {
  * @section page_copyright_server_decoration Copyright
  * <pre>
  *
- * Copyright (C) 2015 Martin Gräßlin
+ * Copyright (C) Martin Gräßlin
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
