@@ -46,7 +46,10 @@ namespace
  *
  * Rather than try to obfuscate the code enough that the optimiser can't prove that
  * we don't do anything with the contents of `buffer`, just annotate the function
- * with a “kindly don't optimise this” attribute
+ * with a “kindly don't optimise this” attribute.
+ *
+ * Of course, this isn't a standardised attribute, so apply the gcc *and* the clang
+ * one. And if we need to build with another compiler...
  */
 [[clang::optnone, gnu::optimize(0)]]
 inline void memcpy_from_mapping(mir::renderer::software::ReadMappableBuffer& buffer)
