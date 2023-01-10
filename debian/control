@@ -192,6 +192,7 @@ Description: Display server for Ubuntu - demonstration programs
 Package: mir-doc
 Section: doc
 Architecture: all
+Multi-Arch: foreign
 Depends: ${misc:Depends},
 Description: API documentation for mir
  This package installs the mir API documentation.
