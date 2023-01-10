@@ -49,6 +49,7 @@ execute: |
       --dist=${RELEASE}
       --build=${DEB_BUILD_ARCH}
       --host=${DEB_HOST_ARCH}
+      --purge=never
     )
 
     SCHROOT_NAME="${RELEASE}-${DEB_BUILD_ARCH}"
@@ -67,7 +68,7 @@ execute: |
       MKSBUILD_OPTS+=("--arch=${DEB_BUILD_ARCH}" "--target=${DEB_HOST_ARCH}")
 
       # Quirk for the eglexternalplatform-dev build dependency
-      sed -i 's/\(eglexternalplatform-dev\)/\1:all/' debian/control
+      sed -i '/:all,$/n; s/\(eglexternalplatform-dev\)/\1:all/' debian/control
       SCHROOT_NAME="${SCHROOT_NAME}-${DEB_HOST_ARCH}"
 
       if [[ ${DEB_HOST_ARCH} == armhf ]]; then
@@ -83,7 +84,8 @@ execute: |
       ln -vs "${DEBOOTSTRAP_SCRIPTS}/gutsy" "${DEBOOTSTRAP_SCRIPTS}/${RELEASE}"
     fi
 
-    sg sbuild -c "${MKSBUILD_OPTS[*]}"
+    # Build the schroot, if it doesn't already exist
+    [ -f /etc/schroot/chroot.d/sbuild-${SCHROOT_NAME} ] || sg sbuild -c "${MKSBUILD_OPTS[*]}"
 
     echo "export XDG_RUNTIME_DIR=/tmp" >> debian/opts.mk
 
@@ -93,6 +95,7 @@ execute: |
     echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_C_COMPILER_LAUNCHER=ccache" >> debian/opts.mk
     echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_CXX_COMPILER_LAUNCHER=ccache" >> debian/opts.mk
 
+    mkdir --parents ${CCACHE_DIR}
     echo "${CCACHE_DIR} ${CCACHE_DIR} none rw,bind 0 0" >> /etc/schroot/sbuild/fstab
 
     sbuild "${SBUILD_OPTS[@]}"

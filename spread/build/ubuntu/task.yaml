@@ -12,7 +12,7 @@ summary: Build Ubuntu packages
 execute: |
     cd $SPREAD_PATH
 
-    apt-get update
+    apt-get install --yes software-properties-common
 
     # Add Mir dev PPA for any out-of-archive packages needed
     # (Currently: a newer version of WLCS)
