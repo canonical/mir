@@ -1,10 +1,6 @@
 name: Snap
 
 on:
-  push:
-    branches:
-    - staging
-    - trying
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
 
