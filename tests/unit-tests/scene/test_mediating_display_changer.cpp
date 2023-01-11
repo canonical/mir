@@ -124,7 +124,7 @@ struct MediatingDisplayChangerTest : public ::testing::Test
     ms::BroadcastingSessionEventSink session_event_sink;
     mtd::StubDisplayConfig base_config;
     StubServerActionQueue server_action_queue;
-    mtd::MockDisplayConfigurationObserver display_configuration_observer;
+    testing::NiceMock<mtd::MockDisplayConfigurationObserver> display_configuration_observer;
     mtd::FakeAlarmFactory alarm_factory;
     std::shared_ptr<ms::MediatingDisplayChanger> changer;
 };
