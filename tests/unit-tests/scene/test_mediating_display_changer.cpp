@@ -53,7 +53,7 @@ class MockDisplayConfigurationPolicy : public mg::DisplayConfigurationPolicy
 {
 public:
     ~MockDisplayConfigurationPolicy() noexcept {}
-    MOCK_METHOD1(apply_to, void(mg::DisplayConfiguration&));
+    MOCK_METHOD(void, apply_to, (mg::DisplayConfiguration&));
 };
 
 
@@ -96,18 +96,16 @@ struct MockServerActionQueue : mir::ServerActionQueue
         ON_CALL(*this, enqueue(_, _)).WillByDefault(InvokeArgument<1>());
         ON_CALL(*this, enqueue_with_guaranteed_execution(_)).WillByDefault(InvokeArgument<0>());
     }
-    MOCK_METHOD2(enqueue, void(void const*, mir::ServerAction const&));
-    MOCK_METHOD1(enqueue_with_guaranteed_execution, void(mir::ServerAction const&));
-    MOCK_METHOD1(pause_processing_for, void(void const*));
-    MOCK_METHOD1(resume_processing_for, void(void const*));
+    MOCK_METHOD(void, enqueue, (void const*, mir::ServerAction const&));
+    MOCK_METHOD(void, enqueue_with_guaranteed_execution, (mir::ServerAction const&));
+    MOCK_METHOD(void, pause_processing_for, (void const*));
+    MOCK_METHOD(void, resume_processing_for, (void const*));
 };
 
 struct MediatingDisplayChangerTest : public ::testing::Test
 {
     MediatingDisplayChangerTest()
     {
-        using namespace testing;
-
         changer = std::make_shared<ms::MediatingDisplayChanger>(
                       mt::fake_shared(mock_display),
                       mt::fake_shared(mock_compositor),
@@ -135,16 +133,12 @@ struct MediatingDisplayChangerTest : public ::testing::Test
 
 TEST_F(MediatingDisplayChangerTest, returns_base_configuration_from_display_at_startup)
 {
-    using namespace testing;
-
     auto const base_conf = changer->base_configuration();
     EXPECT_THAT(*base_conf, mt::DisplayConfigMatches(std::ref(*mock_display.configuration())));
 }
 
 TEST_F(MediatingDisplayChangerTest, power_mode_can_be_set)
 {
-    using namespace testing;
-
     auto const expect_power_mode_eq = [&](MirPowerMode expected)
         {
             bool has_output = false;
@@ -170,7 +164,6 @@ TEST_F(MediatingDisplayChangerTest, power_mode_can_be_set)
 
 TEST_F(MediatingDisplayChangerTest, pauses_system_when_applying_new_configuration_for_focused_session_would_invalidate_display_buffers)
 {
-    using namespace testing;
     mtd::NullDisplayConfiguration conf;
     auto session = std::make_shared<mtd::StubSession>();
 
@@ -191,7 +184,6 @@ TEST_F(MediatingDisplayChangerTest, pauses_system_when_applying_new_configuratio
 
 TEST_F(MediatingDisplayChangerTest, does_not_pause_system_when_applying_new_configuration_for_focused_session_would_preserve_display_buffers)
 {
-    using namespace testing;
     mtd::NullDisplayConfiguration conf;
     auto session = std::make_shared<mtd::StubSession>();
 
@@ -209,7 +201,6 @@ TEST_F(MediatingDisplayChangerTest, does_not_pause_system_when_applying_new_conf
 
 TEST_F(MediatingDisplayChangerTest, sends_error_when_applying_new_configuration_for_focused_session_fails)
 {
-    using namespace testing;
     mtd::NullDisplayConfiguration conf;
     auto session = std::make_shared<mtd::MockSceneSession>();
 
@@ -224,7 +215,6 @@ TEST_F(MediatingDisplayChangerTest, sends_error_when_applying_new_configuration_
 
 TEST_F(MediatingDisplayChangerTest, reapplies_old_config_when_applying_new_configuration_fails)
 {
-    using namespace testing;
     mtd::NullDisplayConfiguration conf;
     auto session = std::make_shared<NiceMock<mtd::MockSceneSession>>();
     auto existing_configuration = changer->base_configuration();
@@ -241,7 +231,6 @@ TEST_F(MediatingDisplayChangerTest, reapplies_old_config_when_applying_new_confi
 
 TEST_F(MediatingDisplayChangerTest, doesnt_apply_config_for_unfocused_session)
 {
-    using namespace testing;
     mtd::NullDisplayConfiguration conf;
 
     EXPECT_CALL(mock_compositor, stop()).Times(0);
@@ -254,7 +243,6 @@ TEST_F(MediatingDisplayChangerTest, doesnt_apply_config_for_unfocused_session)
 
 TEST_F(MediatingDisplayChangerTest, returns_updated_base_configuration_after_hardware_change)
 {
-    using namespace testing;
 
     mtd::StubDisplayConfig conf{2};
 
@@ -267,7 +255,6 @@ TEST_F(MediatingDisplayChangerTest, returns_updated_base_configuration_after_har
 
 TEST_F(MediatingDisplayChangerTest, handles_hardware_change_when_display_buffers_are_invalidated)
 {
-    using namespace testing;
     mtd::NullDisplayConfiguration conf;
 
     ON_CALL(mock_display, apply_if_configuration_preserves_display_buffers(_))
@@ -285,7 +272,6 @@ TEST_F(MediatingDisplayChangerTest, handles_hardware_change_when_display_buffers
 
 TEST_F(MediatingDisplayChangerTest, handles_error_when_applying_hardware_change)
 {
-    using namespace testing;
     mtd::NullDisplayConfiguration conf;
 
 
@@ -304,7 +290,6 @@ TEST_F(MediatingDisplayChangerTest, handles_error_when_applying_hardware_change)
 
 TEST_F(MediatingDisplayChangerTest, handles_hardware_change_when_display_buffers_are_preserved)
 {
-    using namespace testing;
     mtd::NullDisplayConfiguration conf;
 
     {
@@ -324,8 +309,6 @@ TEST_F(MediatingDisplayChangerTest, handles_hardware_change_when_display_buffers
 
 TEST_F(MediatingDisplayChangerTest, handles_hardware_change_when_display_buffers_are_preserved_but_new_outputs_are_enabled)
 {
-    using namespace testing;
-
     auto conf = changer->base_configuration();
 
     bool new_output_enabled{false};
@@ -359,8 +342,6 @@ TEST_F(MediatingDisplayChangerTest, handles_hardware_change_when_display_buffers
 
 TEST_F(MediatingDisplayChangerTest, hardware_change_doesnt_apply_base_config_if_per_session_config_is_active)
 {
-    using namespace testing;
-
     auto conf = std::make_shared<mtd::NullDisplayConfiguration>();
     auto session1 = std::make_shared<mtd::StubSession>();
 
@@ -382,7 +363,6 @@ TEST_F(MediatingDisplayChangerTest, hardware_change_doesnt_apply_base_config_if_
 
 TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_hardware_config_change)
 {
-    using namespace testing;
     mtd::NullDisplayConfiguration conf;
     mtd::MockSceneSession mock_session1;
     mtd::MockSceneSession mock_session2;
@@ -398,7 +378,6 @@ TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_hardware_config_cha
 
 TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_when_hardware_config_change_fails)
 {
-    using namespace testing;
     mtd::NullDisplayConfiguration conf;
     mtd::MockSceneSession mock_session1;
     mtd::MockSceneSession mock_session2;
@@ -432,7 +411,6 @@ TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_when_hardware_config_c
 
 TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_db_preserving_attached_config_applies_config)
 {
-    using namespace testing;
     auto conf = std::make_shared<mtd::NullDisplayConfiguration>();
     auto session1 = std::make_shared<mtd::StubSession>();
 
@@ -451,7 +429,6 @@ TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_db_preserving_attach
 
 TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_db_preserving_but_output_adding_attached_config_applies_config)
 {
-    using namespace testing;
     auto session1 = std::make_shared<mtd::StubSession>();
 
     auto conf = changer->base_configuration();
@@ -488,7 +465,6 @@ TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_db_preserving_but_ou
 
 TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_db_invalidating_attached_config_applies_config)
 {
-    using namespace testing;
     auto conf = std::make_shared<mtd::NullDisplayConfiguration>();
     auto session1 = std::make_shared<mtd::StubSession>();
 
@@ -508,7 +484,6 @@ TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_db_invalidating_atta
 
 TEST_F(MediatingDisplayChangerTest, failure_to_apply_session_config_on_focus_sends_error)
 {
-    using namespace testing;
     auto conf = std::make_shared<mtd::NullDisplayConfiguration>();
     auto session1 = std::make_shared<mtd::MockSceneSession>();
 
@@ -530,7 +505,6 @@ TEST_F(MediatingDisplayChangerTest, failure_to_apply_session_config_on_focus_sen
 
 TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_applies_base_config_pausing_if_db_invalidated)
 {
-    using namespace testing;
     auto conf = std::make_shared<mtd::NullDisplayConfiguration>();
     auto session1 = std::make_shared<mtd::StubSession>();
     auto session2 = std::make_shared<mtd::StubSession>();
@@ -556,7 +530,6 @@ TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_a
 
 TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_applies_base_config_not_pausing_if_db_preserved)
 {
-    using namespace testing;
     std::shared_ptr<mg::DisplayConfiguration> conf = base_config.clone();
     conf->for_each_output(
         [](mg::UserDisplayConfigurationOutput& output)
@@ -593,7 +566,6 @@ TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_a
 
 TEST_F(MediatingDisplayChangerTest, losing_focus_applies_base_config)
 {
-    using namespace testing;
     auto conf = std::make_shared<mtd::NullDisplayConfiguration>();
     auto session1 = std::make_shared<mtd::StubSession>();
 
@@ -615,7 +587,6 @@ TEST_F(MediatingDisplayChangerTest, losing_focus_applies_base_config)
 
 TEST_F(MediatingDisplayChangerTest, base_config_is_not_applied_if_already_active)
 {
-    using namespace testing;
     auto conf = std::make_shared<mtd::NullDisplayConfiguration>();
     auto session1 = std::make_shared<mtd::StubSession>();
     auto session2 = std::make_shared<mtd::StubSession>();
@@ -634,7 +605,6 @@ TEST_F(MediatingDisplayChangerTest, base_config_is_not_applied_if_already_active
 
 TEST_F(MediatingDisplayChangerTest, hardware_change_invalidates_session_configs)
 {
-    using namespace testing;
     auto conf = std::make_shared<mtd::NullDisplayConfiguration>();
     auto session1 = std::make_shared<mtd::StubSession>();
 
@@ -659,7 +629,6 @@ TEST_F(MediatingDisplayChangerTest, hardware_change_invalidates_session_configs)
 
 TEST_F(MediatingDisplayChangerTest, session_stopping_invalidates_session_config)
 {
-    using namespace testing;
     auto conf = std::make_shared<mtd::NullDisplayConfiguration>();
     auto session1 = std::make_shared<mtd::StubSession>();
 
@@ -684,8 +653,6 @@ TEST_F(MediatingDisplayChangerTest, session_stopping_invalidates_session_config)
 
 TEST_F(MediatingDisplayChangerTest, uses_server_action_queue_for_configuration_actions)
 {
-    using namespace testing;
-
     auto const conf = std::make_shared<mtd::NullDisplayConfiguration>();
     auto const session1 = std::make_shared<mtd::StubSession>();
     auto const session2 = std::make_shared<mtd::StubSession>();
@@ -738,8 +705,6 @@ TEST_F(MediatingDisplayChangerTest, uses_server_action_queue_for_configuration_a
 
 TEST_F(MediatingDisplayChangerTest, does_not_block_IPC_thread_for_inactive_sessions)
 {
-    using namespace testing;
-
     auto const conf = std::make_shared<mtd::NullDisplayConfiguration>();
     auto const active_session = std::make_shared<mtd::StubSession>();
     auto const inactive_session = std::make_shared<mtd::StubSession>();
@@ -769,8 +734,6 @@ TEST_F(MediatingDisplayChangerTest, does_not_block_IPC_thread_for_inactive_sessi
 
 TEST_F(MediatingDisplayChangerTest, set_base_configuration_doesnt_override_session_configuration)
 {
-    using namespace testing;
-
     auto conf = std::make_shared<mtd::NullDisplayConfiguration>();
     auto session1 = std::make_shared<mtd::StubSession>();
 
@@ -789,8 +752,6 @@ TEST_F(MediatingDisplayChangerTest, set_base_configuration_doesnt_override_sessi
 
 TEST_F(MediatingDisplayChangerTest, set_base_configuration_overrides_base_configuration)
 {
-    using namespace testing;
-
     auto conf = std::make_shared<mtd::NullDisplayConfiguration>();
     auto session1 = std::make_shared<mtd::StubSession>();
 
@@ -806,8 +767,6 @@ TEST_F(MediatingDisplayChangerTest, set_base_configuration_overrides_base_config
 
 TEST_F(MediatingDisplayChangerTest, stores_new_base_config_on_set_default_configuration)
 {
-    using namespace testing;
-
     auto default_conf = std::make_shared<mtd::StubDisplayConfig>(2);
     auto session_conf = std::make_shared<mtd::StubDisplayConfig>(4);
 
@@ -841,8 +800,6 @@ TEST_F(MediatingDisplayChangerTest, stores_new_base_config_on_set_default_config
 TEST_F(MediatingDisplayChangerTest,
        returns_updated_base_configuration_after_set_base_configuration)
 {
-    using namespace testing;
-
     mtd::StubDisplayConfig conf{2};
 
     changer->set_base_configuration(mt::fake_shared(conf));
@@ -853,8 +810,6 @@ TEST_F(MediatingDisplayChangerTest,
 
 TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_set_base_configuration)
 {
-    using namespace testing;
-
     mtd::NullDisplayConfiguration conf;
     mtd::MockSceneSession mock_session1;
     mtd::MockSceneSession mock_session2;
@@ -870,10 +825,6 @@ TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_set_base_configurat
 
 TEST_F(MediatingDisplayChangerTest, notifies_observer_on_set_base_configuration)
 {
-    using namespace testing;
-
-    mtd::MockDisplayConfigurationObserver display_configuration_observer;
-
     changer = std::make_shared<ms::MediatingDisplayChanger>(
         mt::fake_shared(mock_display),
         mt::fake_shared(mock_compositor),
@@ -893,8 +844,6 @@ TEST_F(MediatingDisplayChangerTest, notifies_observer_on_set_base_configuration)
 
 TEST_F(MediatingDisplayChangerTest, notifies_session_on_preview_base_configuration)
 {
-    using namespace testing;
-
     mtd::NullDisplayConfiguration conf;
     auto const mock_session = std::make_shared<NiceMock<mtd::MockSceneSession>>();
 
@@ -910,8 +859,6 @@ TEST_F(MediatingDisplayChangerTest, notifies_session_on_preview_base_configurati
 
 TEST_F(MediatingDisplayChangerTest, reverts_to_previous_configuration_on_timeout)
 {
-    using namespace testing;
-
     auto new_config = std::make_shared<mtd::StubDisplayConfig>(1);
     auto old_config = changer->base_configuration();
 
@@ -943,8 +890,6 @@ TEST_F(MediatingDisplayChangerTest, reverts_to_previous_configuration_on_timeout
 
 TEST_F(MediatingDisplayChangerTest, only_configuring_client_receives_preview_notifications)
 {
-    using namespace testing;
-
     mtd::NullDisplayConfiguration conf;
     auto const mock_session1 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
     auto const mock_session2 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
@@ -972,8 +917,6 @@ TEST_F(MediatingDisplayChangerTest, only_configuring_client_receives_preview_not
 
 TEST_F(MediatingDisplayChangerTest, only_one_client_can_preview_configuration_change_at_once)
 {
-    using namespace testing;
-
     auto const mock_session1 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
     auto const mock_session2 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
 
@@ -1001,8 +944,6 @@ TEST_F(MediatingDisplayChangerTest, only_one_client_can_preview_configuration_ch
 
 TEST_F(MediatingDisplayChangerTest, confirmed_configuration_doesnt_revert_after_timeout)
 {
-    using namespace testing;
-
     auto new_config = std::make_shared<mtd::StubDisplayConfig>(1);
     auto old_config = changer->base_configuration();
 
@@ -1034,8 +975,6 @@ TEST_F(MediatingDisplayChangerTest, confirmed_configuration_doesnt_revert_after_
 
 TEST_F(MediatingDisplayChangerTest, all_sessions_get_notified_on_configuration_confirmation)
 {
-    using namespace testing;
-
     mtd::NullDisplayConfiguration conf;
     auto const mock_session1 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
     auto const mock_session2 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
