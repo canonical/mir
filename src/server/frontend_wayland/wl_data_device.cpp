@@ -278,7 +278,9 @@ void mf::WlDataDevice::start_drag(
             auto const y = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y);
             auto const top_left = mir::geometry::Point{x, y};
 
-            drag_surface->move_scene_surface_to(top_left);
+            // It is known that drag_surface will have a value from the emplace above and
+            // that the scene_surface will have a value as it's set up in the DragWlSurface constructor.
+            drag_surface.value().scene_surface().value()->move_to(top_left);
         }
     }
     else
