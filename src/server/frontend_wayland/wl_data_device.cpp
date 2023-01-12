@@ -265,7 +265,6 @@ void mf::WlDataDevice::start_drag(
     auto const icon_surface = WlSurface::from(icon.value());
 
     drag_surface.emplace(wayland_executor, icon_surface);
-    drag_surface->create_scene_surface();
 
     auto const drag_event = client->event_for(serial);
     if (drag_event && drag_event.value() && mir_event_get_type(drag_event.value().get()) == mir_event_type_input)
