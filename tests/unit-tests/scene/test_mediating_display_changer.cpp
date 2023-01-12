@@ -145,21 +145,25 @@ TEST_F(MediatingDisplayChangerTest, power_mode_can_be_set)
             mock_display.config->for_each_output([&](mg::DisplayConfigurationOutput const& output)
                 {
                     has_output = true;
-                    EXPECT_THAT(output.power_mode, Eq(expected));
+                    if (output.used) { EXPECT_THAT(output.power_mode, Eq(expected)); }
                 });
             EXPECT_THAT(has_output, Eq(true));
         };
 
-    mock_display.config->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
-        {
-            output.used = true;
-        });
     changer->set_power_mode(mir_power_mode_off);
     expect_power_mode_eq(mir_power_mode_off);
     changer->set_power_mode(mir_power_mode_standby);
     expect_power_mode_eq(mir_power_mode_standby);
     changer->set_power_mode(mir_power_mode_on);
     expect_power_mode_eq(mir_power_mode_on);
+}
+
+TEST_F(MediatingDisplayChangerTest, power_mode_sets_base_configuration)
+{
+    EXPECT_CALL(display_configuration_observer, base_configuration_updated(_)).Times(3);
+    changer->set_power_mode(mir_power_mode_off);
+    changer->set_power_mode(mir_power_mode_standby);
+    changer->set_power_mode(mir_power_mode_on);
 }
 
 TEST_F(MediatingDisplayChangerTest, pauses_system_when_applying_new_configuration_for_focused_session_would_invalidate_display_buffers)
