@@ -32,7 +32,7 @@ Build-Depends: cmake,
 # only enable valgrind once it's been tested to work on each architecture:
                valgrind [amd64 i386 armhf arm64],
                libglib2.0-dev,
-               libfreetype6-dev,
+               libfreetype-dev,
                libevdev-dev,
                libinput-dev (>= 0.21),
                uuid-dev,
@@ -192,6 +192,7 @@ Description: Display server for Ubuntu - demonstration programs
 Package: mir-doc
 Section: doc
 Architecture: all
+Multi-Arch: foreign
 Depends: ${misc:Depends},
 Description: API documentation for mir
  This package installs the mir API documentation.

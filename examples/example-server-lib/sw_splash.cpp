@@ -143,6 +143,7 @@ void SwSplash::Self::operator()(struct wl_display* display)
     }
     while (std::chrono::steady_clock::now() < time_limit);
 
+    app.roundtrip();
     ctx.surface.reset();
     ctx.shm.reset();
 }
