@@ -33,6 +33,7 @@ class WlSeat;
 class OutputManager;
 class WlSurface;
 class XdgSurfaceStable;
+class XdgPositionerStable;
 
 class XdgShellStable : public wayland::XdgWmBase::Global
 {
@@ -63,7 +64,7 @@ public:
         wl_resource* new_resource,
         XdgSurfaceStable* xdg_surface,
         std::optional<WlSurfaceRole*> parent_role,
-        wl_resource* positioner,
+        XdgPositionerStable& positioner,
         WlSurface* surface);
 
     /// Used when the aux rect needs to be adjusted due to the parent logical Wayland surface not lining up with the
@@ -71,6 +72,7 @@ public:
     void set_aux_rect_offset_now(geometry::Displacement const& new_aux_rect_offset);
 
     void grab(struct wl_resource* seat, uint32_t serial) override;
+    void reposition(wl_resource* positioner, uint32_t token) override;
 
     void handle_commit() override {};
     void handle_state_change(MirWindowState /*new_state*/) override {};
@@ -85,11 +87,16 @@ public:
 private:
     std::optional<geometry::Point> cached_top_left;
     std::optional<geometry::Size> cached_size;
+    bool initial_configure_pending{true};
+    std::optional<uint32_t> reposition_token;
+    bool reactive;
+    geometry::Rectangle aux_rect;
+    geometry::Displacement aux_rect_offset;
 
     std::shared_ptr<shell::Shell> const shell;
     XdgSurfaceStable* const xdg_surface;
-    geometry::Rectangle aux_rect;
-    geometry::Displacement aux_rect_offset;
+
+    auto popup_rect() const -> std::optional<geometry::Rectangle>;
 };
 
 }
