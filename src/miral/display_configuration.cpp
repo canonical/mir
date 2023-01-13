@@ -175,6 +175,7 @@ public:
 
                         if (inotify_buffer.event.mask & (IN_CLOSE_WRITE | IN_CREATE)
                             && inotify_buffer.event.name == basename)
+                        try
                         {
                             find_and_load_config();
                             if (auto const dcc = the_display_configuration_controller())
@@ -183,6 +184,10 @@ public:
                                 apply_to(*config);
                                 dcc->set_base_configuration(config);
                             }
+                        }
+                        catch (mir::AbnormalExit const& except)
+                        {
+                            mir::log_warning("Failed to reload display configuration: %s", except.what());
                         }
                     });
             }
