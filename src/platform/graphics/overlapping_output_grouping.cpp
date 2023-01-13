@@ -114,7 +114,8 @@ void mg::OverlappingOutputGrouping::add_output(DisplayConfigurationOutput const&
                  * handle it for now... until proven otherwise.
                  */
                 if (conf_o.extents().overlaps(rect_output) &&
-                    conf_o.transformation() == conf_output.transformation())
+                    conf_o.transformation() == conf_output.transformation() &&
+                    conf_o.scale == conf_output.scale)
                     found_overlap = true;
             });
 
