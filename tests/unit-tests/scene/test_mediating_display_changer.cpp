@@ -145,21 +145,25 @@ TEST_F(MediatingDisplayChangerTest, power_mode_can_be_set)
             mock_display.config->for_each_output([&](mg::DisplayConfigurationOutput const& output)
                 {
                     has_output = true;
-                    EXPECT_THAT(output.power_mode, Eq(expected));
+                    if (output.used) { EXPECT_THAT(output.power_mode, Eq(expected)); }
                 });
             EXPECT_THAT(has_output, Eq(true));
         };
 
-    mock_display.config->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
-        {
-            output.used = true;
-        });
     changer->set_power_mode(mir_power_mode_off);
     expect_power_mode_eq(mir_power_mode_off);
     changer->set_power_mode(mir_power_mode_standby);
     expect_power_mode_eq(mir_power_mode_standby);
     changer->set_power_mode(mir_power_mode_on);
     expect_power_mode_eq(mir_power_mode_on);
+}
+
+TEST_F(MediatingDisplayChangerTest, power_mode_sets_base_configuration)
+{
+    EXPECT_CALL(display_configuration_observer, base_configuration_updated(_)).Times(3);
+    changer->set_power_mode(mir_power_mode_off);
+    changer->set_power_mode(mir_power_mode_standby);
+    changer->set_power_mode(mir_power_mode_on);
 }
 
 TEST_F(MediatingDisplayChangerTest, pauses_system_when_applying_new_configuration_for_focused_session_would_invalidate_display_buffers)
@@ -246,7 +250,7 @@ TEST_F(MediatingDisplayChangerTest, returns_updated_base_configuration_after_har
 
     mtd::StubDisplayConfig conf{2};
 
-    changer->configure_for_hardware_change(
+    changer->configure(
         mt::fake_shared(conf));
 
     auto const base_conf = changer->base_configuration();
@@ -267,7 +271,7 @@ TEST_F(MediatingDisplayChangerTest, handles_hardware_change_when_display_buffers
     EXPECT_CALL(mock_display, configure(Ref(conf)));
     EXPECT_CALL(mock_compositor, start());
 
-    changer->configure_for_hardware_change(mt::fake_shared(conf));
+    changer->configure(mt::fake_shared(conf));
 }
 
 TEST_F(MediatingDisplayChangerTest, handles_error_when_applying_hardware_change)
@@ -283,7 +287,7 @@ TEST_F(MediatingDisplayChangerTest, handles_error_when_applying_hardware_change)
     auto const previous_base_config = changer->base_configuration();
     ASSERT_THAT(conf, Not(mt::DisplayConfigMatches(std::cref(*previous_base_config))));
 
-    changer->configure_for_hardware_change(mt::fake_shared(conf));
+    changer->configure(mt::fake_shared(conf));
 
     EXPECT_THAT(*changer->base_configuration(), mt::DisplayConfigMatches(std::cref(*previous_base_config)));
 }
@@ -304,7 +308,7 @@ TEST_F(MediatingDisplayChangerTest, handles_hardware_change_when_display_buffers
     EXPECT_CALL(mock_display, configure(_)).Times(0);
     EXPECT_CALL(mock_compositor, start()).Times(0);
 
-    changer->configure_for_hardware_change(mt::fake_shared(conf));
+    changer->configure(mt::fake_shared(conf));
 }
 
 TEST_F(MediatingDisplayChangerTest, handles_hardware_change_when_display_buffers_are_preserved_but_new_outputs_are_enabled)
@@ -337,7 +341,7 @@ TEST_F(MediatingDisplayChangerTest, handles_hardware_change_when_display_buffers
     EXPECT_CALL(mock_display, configure(Ref(*conf)));
     EXPECT_CALL(mock_compositor, start()).Times(1);
 
-    changer->configure_for_hardware_change(conf);
+    changer->configure(conf);
 }
 
 TEST_F(MediatingDisplayChangerTest, hardware_change_doesnt_apply_base_config_if_per_session_config_is_active)
@@ -358,7 +362,7 @@ TEST_F(MediatingDisplayChangerTest, hardware_change_doesnt_apply_base_config_if_
     EXPECT_CALL(mock_display, configure(_)).Times(0);
     EXPECT_CALL(mock_compositor, start()).Times(0);
 
-    changer->configure_for_hardware_change(conf);
+    changer->configure(conf);
 }
 
 TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_hardware_config_change)
@@ -373,7 +377,7 @@ TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_hardware_config_cha
     EXPECT_CALL(display_configuration_observer, configuration_updated_for_session(Eq(mt::fake_shared(mock_session1)), _));
     EXPECT_CALL(display_configuration_observer, configuration_updated_for_session(Eq(mt::fake_shared(mock_session2)), _));
 
-    changer->configure_for_hardware_change(mt::fake_shared(conf));
+    changer->configure(mt::fake_shared(conf));
 }
 
 TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_when_hardware_config_change_fails)
@@ -406,7 +410,7 @@ TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_when_hardware_config_c
             Eq(mt::fake_shared(mock_session2)),
             mt::DisplayConfigMatches(std::cref(*previous_base_config))));
 
-    changer->configure_for_hardware_change(mt::fake_shared(conf));
+    changer->configure(mt::fake_shared(conf));
 }
 
 TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_db_preserving_attached_config_applies_config)
@@ -611,7 +615,7 @@ TEST_F(MediatingDisplayChangerTest, hardware_change_invalidates_session_configs)
     session_container.insert_session(session1);
     changer->configure(session1, conf);
 
-    changer->configure_for_hardware_change(conf);
+    changer->configure(conf);
 
     Mock::VerifyAndClearExpectations(&mock_compositor);
     Mock::VerifyAndClearExpectations(&mock_display);
@@ -683,7 +687,7 @@ TEST_F(MediatingDisplayChangerTest, uses_server_action_queue_for_configuration_a
     Mock::VerifyAndClearExpectations(&mock_server_action_queue);
 
     EXPECT_CALL(mock_server_action_queue, enqueue(owner, _));
-    display_changer.configure_for_hardware_change(conf);
+    display_changer.configure(conf);
     Mock::VerifyAndClearExpectations(&mock_server_action_queue);
 
     EXPECT_CALL(mock_server_action_queue, enqueue(owner, _));

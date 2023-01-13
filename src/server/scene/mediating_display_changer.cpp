@@ -288,8 +288,7 @@ ms::MediatingDisplayChanger::base_configuration()
     return base_configuration_->clone();
 }
 
-void ms::MediatingDisplayChanger::configure_for_hardware_change(
-    std::shared_ptr<graphics::DisplayConfiguration> const& conf)
+void ms::MediatingDisplayChanger::configure(std::shared_ptr<graphics::DisplayConfiguration> const& conf)
 {
     {
         std::lock_guard lg{pending_configuration_mutex};
@@ -318,6 +317,16 @@ void ms::MediatingDisplayChanger::configure_for_hardware_change(
             auto existing_configuration = base_configuration_;
 
             display_configuration_policy->apply_to(*conf);
+            {
+                std::lock_guard lock{power_mode_mutex};
+                conf->for_each_output([this](mg::UserDisplayConfigurationOutput &output)
+                    {
+                        if (output.used)
+                        {
+                            output.power_mode = power_mode;
+                        }
+                    });
+            }
             base_configuration_ = conf;
             if (base_configuration_applied)
             {
@@ -516,20 +525,23 @@ void ms::MediatingDisplayChanger::set_base_configuration(std::shared_ptr<mg::Dis
 
 void ms::MediatingDisplayChanger::set_power_mode(MirPowerMode new_power_mode)
 {
-    std::lock_guard lock{power_mode_mutex};
-    if (new_power_mode == power_mode)
     {
-        return;
-    }
-    power_mode = new_power_mode;
-    std::shared_ptr<graphics::DisplayConfiguration> const config = display->configuration();
-    config->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
+        std::lock_guard lock{power_mode_mutex};
+        if (new_power_mode == power_mode)
         {
-            if (output.used)
-            {
-                output.power_mode = new_power_mode;
-            }
-        });
-    apply_config(config);
+            return;
+        }
+        power_mode = new_power_mode;
+    }
+    auto const config = base_configuration();
+
+    config->for_each_output([&](mg::UserDisplayConfigurationOutput &output)
+    {
+        if (output.used)
+        {
+            output.power_mode = new_power_mode;
+        }
+    });
+    configure(config);
 }
 
