@@ -288,8 +288,7 @@ ms::MediatingDisplayChanger::base_configuration()
     return base_configuration_->clone();
 }
 
-void ms::MediatingDisplayChanger::configure_for_hardware_change(
-    std::shared_ptr<graphics::DisplayConfiguration> const& conf)
+void ms::MediatingDisplayChanger::configure(std::shared_ptr<graphics::DisplayConfiguration> const& conf)
 {
     {
         std::lock_guard lg{pending_configuration_mutex};
@@ -534,11 +533,7 @@ void ms::MediatingDisplayChanger::set_power_mode(MirPowerMode new_power_mode)
         }
         power_mode = new_power_mode;
     }
-    decltype(base_configuration_) const config = [this]
-        {
-            std::lock_guard lg{configuration_mutex};
-            return base_configuration_->clone();
-        }();
+    auto const config = base_configuration();
 
     config->for_each_output([&](mg::UserDisplayConfigurationOutput &output)
     {
@@ -547,6 +542,6 @@ void ms::MediatingDisplayChanger::set_power_mode(MirPowerMode new_power_mode)
             output.power_mode = new_power_mode;
         }
     });
-    configure_for_hardware_change(config);
+    configure(config);
 }
 

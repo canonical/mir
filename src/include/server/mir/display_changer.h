@@ -31,8 +31,7 @@ class DisplayChanger
 public:
     virtual ~DisplayChanger() = default;
 
-    virtual void configure_for_hardware_change(
-        std::shared_ptr<graphics::DisplayConfiguration> const& conf) = 0;
+    virtual void configure(std::shared_ptr<graphics::DisplayConfiguration> const& conf) = 0;
 
     virtual void pause_display_config_processing() = 0;
     virtual void resume_display_config_processing() = 0;

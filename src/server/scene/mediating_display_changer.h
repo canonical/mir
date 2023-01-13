@@ -79,8 +79,7 @@ public:
         std::shared_ptr<graphics::DisplayConfiguration> const& confirmed_conf) override;
 
     /* From mir::DisplayChanger */
-    void configure_for_hardware_change(
-        std::shared_ptr<graphics::DisplayConfiguration> const& conf) override;
+    void configure(std::shared_ptr<graphics::DisplayConfiguration> const& conf) override;
 
     void pause_display_config_processing() override;
     void resume_display_config_processing() override;
@@ -121,7 +120,7 @@ private:
 
     /// Mutex protecting pending_configuration
     std::mutex pending_configuration_mutex;
-    /// See configure_for_hardware_change(). The config that will be applied by a currently in-flight server action.
+    /// See configure(). The config that will be applied by a currently in-flight server action.
     /// If null, there is no config to apply or hardware config server action queued.
     std::shared_ptr<graphics::DisplayConfiguration> pending_configuration;
 

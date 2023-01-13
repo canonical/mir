@@ -188,7 +188,7 @@ struct mir::DisplayServer::Private
         std::shared_ptr<graphics::DisplayConfiguration> conf =
             display->configuration();
 
-        display_changer->configure_for_hardware_change(conf);
+        display_changer->configure(conf);
     }
 
     std::shared_ptr<EmergencyCleanup> const emergency_cleanup; // Hold this so it does not get freed prematurely
