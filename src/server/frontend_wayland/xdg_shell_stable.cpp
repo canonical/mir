@@ -113,6 +113,8 @@ class XdgPositionerStable : public mw::XdgPositioner, public shell::SurfaceSpeci
 public:
     XdgPositionerStable(wl_resource* new_resource);
 
+    void ensure_complete() const;
+
     bool reactive{false};
 
 private:
@@ -301,6 +303,7 @@ mf::XdgPopupStable::XdgPopupStable(
       shell{xdg_surface->xdg_shell.shell},
       xdg_surface{xdg_surface}
 {
+    positioner.ensure_complete();
     positioner.type = mir_window_type_gloss;
     positioner.placement_hints = mir_placement_hints_slide_any;
     if (parent_role)
@@ -352,6 +355,7 @@ void mf::XdgPopupStable::reposition(wl_resource* positioner_resource, uint32_t t
     auto const& positioner = *static_cast<XdgPositionerStable*>(
         static_cast<mw::XdgPositioner*>(
             wl_resource_get_user_data(positioner_resource)));
+    positioner.ensure_complete();
 
     reactive = positioner.reactive;
     aux_rect = positioner.aux_rect ? positioner.aux_rect.value() : geom::Rectangle{};
@@ -528,7 +532,15 @@ void mf::XdgToplevelStable::resize(struct wl_resource* /*seat*/, uint32_t serial
         edge = mir_resize_edge_southeast;
         break;
 
-    default:;
+    case ResizeEdge::none:
+        edge = mir_resize_edge_none;
+        break;
+
+    default:
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::invalid_resize_edge,
+            "Invalid resize edge %d", edges));
     }
 
     initiate_interactive_resize(edge, serial);
@@ -653,14 +665,39 @@ mf::XdgPositionerStable::XdgPositionerStable(wl_resource* new_resource)
     aux_rect_placement_gravity = mir_placement_gravity_center;
 }
 
+void mf::XdgPositionerStable::ensure_complete() const
+{
+    if (!width || !height || !aux_rect)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            mw::XdgWmBase::Error::invalid_positioner,
+            "Incomplete positioner"));
+    }
+}
+
 void mf::XdgPositionerStable::set_size(int32_t width, int32_t height)
 {
+    if (width <= 0 || height <= 0)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            mw::XdgPositioner::Error::invalid_input,
+            "Invalid popup positioner size: %dx%d", width, height));
+    }
     this->width = geom::Width{width};
     this->height = geom::Height{height};
 }
 
 void mf::XdgPositionerStable::set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t height)
 {
+    if (width < 0 || height < 0)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            mw::XdgPositioner::Error::invalid_input,
+            "Invalid popup anchor rect size: %dx%d", width, height));
+    }
     aux_rect = geom::Rectangle{{x, y}, {width, height}};
 }
 
@@ -747,8 +784,15 @@ void mf::XdgPositionerStable::set_gravity(uint32_t gravity)
             placement = mir_placement_gravity_northwest;
             break;
 
-        default:
+        case Gravity::none:
             placement = mir_placement_gravity_center;
+            break;
+
+        default:
+            BOOST_THROW_EXCEPTION(mw::ProtocolError(
+                resource,
+                mw::XdgPositioner::Error::invalid_input,
+                "Invalid gravity value %d", gravity));
     }
 
     surface_placement_gravity = placement;
