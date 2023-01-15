@@ -358,3 +358,74 @@ TEST(MultiplexingDisplay, apply_if_configuration_preserves_display_buffers_fails
     EXPECT_THAT(*new_conf, Eq(std::cref(*preexisting_conf)));    // We need std::cref() to stop GTest trying to treat
                                                                  // preexisting_conf as a(n impossible) value rather than reference
 }
+
+TEST(MultiplexingDisplay, apply_if_configuration_preserves_display_buffers_throws_on_unrecoverable_error)
+{
+    using namespace testing;
+
+    DisplayConfigurationOutputGenerator gen1{5}, gen2{42};
+
+    auto d1 = std::make_unique<NiceMock<mtd::MockDisplay>>();
+    auto d2 = std::make_unique<NiceMock<mtd::MockDisplay>>();
+
+    auto d1_conf = std::make_unique<mtd::StubDisplayConfig>(
+        std::vector<mg::DisplayConfigurationOutput>{
+            gen1.generate_output(),
+            gen1.generate_output()
+        });
+
+    auto d2_conf = std::make_unique<mtd::StubDisplayConfig>(
+        std::vector<mg::DisplayConfigurationOutput>{
+            gen2.generate_output(),
+            gen2.generate_output(),
+            gen2.generate_output()
+        });
+
+    ON_CALL(*d1, configuration())
+        .WillByDefault(
+            Invoke(
+                [&d1_conf]()
+                {
+                    return d1_conf->clone();
+                }));
+    ON_CALL(*d2, configuration())
+        .WillByDefault(
+            Invoke(
+                [&d2_conf]()
+                {
+                    return d2_conf->clone();
+                }));
+
+    // The first display will get two configuration requests…
+    EXPECT_CALL(*d1, apply_if_configuration_preserves_display_buffers(IsConfigurationOfCard(5)))
+        .WillOnce(
+            Invoke(
+                [&d1_conf](auto const& config)
+                {
+                    auto real_config = dynamic_cast<mtd::StubDisplayConfig const&>(config);
+                    d1_conf->outputs = real_config.outputs;
+                    return true;        // The first will succeed, changing state…
+                }))
+        .WillOnce(
+            Return(false));            // The second (to return to initial configuration) will fail
+    EXPECT_CALL(*d2, apply_if_configuration_preserves_display_buffers(IsConfigurationOfCard(42)))
+        .WillOnce(Return(false));
+
+    std::vector<std::unique_ptr<mg::Display>> displays;
+    displays.push_back(std::move(d1));
+    displays.push_back(std::move(d2));
+
+    mg::MultiplexingDisplay display{std::move(displays)};
+    auto preexisting_conf = display.configuration();
+    auto changed_conf = display.configuration();
+
+    changed_conf->for_each_output(
+        [](mg::UserDisplayConfigurationOutput& output)
+        {
+            output.orientation = mir_orientation_inverted;
+        });
+
+    EXPECT_THROW(
+        { display.apply_if_configuration_preserves_display_buffers(*changed_conf); },
+        mg::Display::IncompleteConfigurationApplied);
+}

@@ -111,7 +111,7 @@ auto mg::MultiplexingDisplay::apply_if_configuration_preserves_display_buffers(
                 if (!i->first->apply_if_configuration_preserves_display_buffers(*i->second))
                 {
                     BOOST_THROW_EXCEPTION((
-                        std::runtime_error{"Failure attempting to undo partially-applied configuration"}));
+                        mg::Display::IncompleteConfigurationApplied{"Failure attempting to undo partially-applied configuration"}));
                 }
             }
             return false;
