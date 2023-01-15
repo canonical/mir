@@ -42,7 +42,7 @@ install(
 
 install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/include/cookie/mir
-  DESTINATION "include/mircookie"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mircookie"
 )
 
 install(

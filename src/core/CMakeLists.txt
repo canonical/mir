@@ -58,7 +58,7 @@ install(TARGETS mircore LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
     DIRECTORY ${CMAKE_SOURCE_DIR}/include/core/mir ${CMAKE_SOURCE_DIR}/include/core/mir_toolkit
-    DESTINATION "include/mircore"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mircore"
 )
 
 install(

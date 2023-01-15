@@ -96,11 +96,11 @@ install(TARGETS mircommon LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/include/common/mir
-  DESTINATION "include/mircommon"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mircommon"
 )
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mircommon.pc.in
     ${CMAKE_CURRENT_BINARY_DIR}/mircommon.pc
     @ONLY
 )
-install(FILES       ${CMAKE_CURRENT_BINARY_DIR}/mircommon.pc    DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}/pkgconfig")
+install(FILES       ${CMAKE_CURRENT_BINARY_DIR}/mircommon.pc    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")

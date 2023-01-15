@@ -4,7 +4,7 @@ configure_file(miral-shell.desktop.in ${CMAKE_CURRENT_BINARY_DIR}/miral-shell.de
 configure_file(mir-shell.desktop.in ${CMAKE_CURRENT_BINARY_DIR}/mir-shell.desktop @ONLY)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/miral-shell.desktop
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/share/applications
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/applications
 )
 
 add_custom_target(mir-shell ALL
@@ -12,13 +12,13 @@ add_custom_target(mir-shell ALL
 )
 
 install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir-shell
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mir-shell.desktop
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/share/wayland-sessions
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/wayland-sessions
 )
 
 install(FILES ${ICON_NAME}.svg
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/apps
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps
 )

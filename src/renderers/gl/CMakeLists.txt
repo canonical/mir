@@ -6,7 +6,7 @@ configure_file(
 
 install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/include/renderers/gl/mir
-  DESTINATION "include/mirrenderer"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mirrenderer"
 )
 
 install(

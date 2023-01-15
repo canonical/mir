@@ -1,6 +1,6 @@
 install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/include/renderer/mir
-  DESTINATION "include/mirrenderer"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mirrenderer"
 )
 
 configure_file(
