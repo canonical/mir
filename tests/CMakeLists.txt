@@ -204,12 +204,10 @@ PRIVATE
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
-set(PREFIX "${CMAKE_INSTALL_PREFIX}")
-set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
-set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirtest")
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mirtest.pc.in
   ${CMAKE_CURRENT_BINARY_DIR}/mirtest.pc
+  @ONLY
 )
 
 install(TARGETS mir-test-assist
