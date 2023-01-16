@@ -397,8 +397,20 @@ void ms::MediatingDisplayChanger::apply_config(
     auto existing_configuration = display->configuration();
     try
     {
+        auto interruption_free_configuration_successful =
+            [&]()
+            {
+                try
+                {
+                    return display->apply_if_configuration_preserves_display_buffers(*conf);
+                }
+                catch (mg::Display::IncompleteConfigurationApplied const&)
+                {
+                    return false;
+                }
+            };
         if (configuration_has_new_outputs_enabled(*display->configuration(), *conf) ||
-            !display->apply_if_configuration_preserves_display_buffers(*conf))
+            !interruption_free_configuration_successful())
         {
             ApplyNowAndRevertOnScopeExit comp{
                 [this] { compositor->stop(); },
