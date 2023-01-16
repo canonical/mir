@@ -1,7 +1,6 @@
 usr/bin/miral-shell
 usr/bin/miral-kiosk
 usr/bin/miral-app
-usr/bin/fake-mir-kiosk
 usr/bin/miral-terminal
 usr/bin/mir-shell
 usr/bin/miral-system-compositor

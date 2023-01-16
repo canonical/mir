@@ -10,6 +10,3 @@ if(DEFINED MIR_CHROOT)
     target_link_libraries(miral-kiosk EGL ${GLESv2_LDFLAGS})
 endif()
 
-install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/fake-mir-kiosk
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-)
