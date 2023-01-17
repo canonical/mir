@@ -28,6 +28,7 @@ mir (2.12.0) UNRELEASED; urgency=medium
       . Fix overlapping outputs of different scale. (Fixes: #2758)
       . After idle timeout the powermode change needs to be applied to the base
         display configuration. (Fixes: #2757, Fixes: #2695)
+      . [Xwayland] Do not abort when nothing is wrong. (Fixes: #2790)
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Mon, 16 Jan 2023 10:23:07 +0000
 
