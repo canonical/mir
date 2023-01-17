@@ -1412,19 +1412,6 @@ mf::XWaylandSurface::XWaylandSurfaceObserverManager::~XWaylandSurfaceObserverMan
     {
         scene_surface->unregister_interest(*surface_observer);
     }
-
-    if (surface_observer)
-    {
-        // make sure surface observer is deleted and will not spew any more events
-        std::weak_ptr<XWaylandSurfaceObserver> const weak_observer{surface_observer};
-        surface_observer.reset();
-        if (auto const should_be_dead_observer = weak_observer.lock())
-        {
-            fatal_error(
-                "surface observer should have been deleted, but was not (use count %d)",
-                should_be_dead_observer.use_count());
-        }
-    }
 }
 
 auto mf::XWaylandSurface::XWaylandSurfaceObserverManager::try_get_resize_event()
