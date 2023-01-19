@@ -43,8 +43,8 @@ jobs:
                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_armhf"
                 "lxd:ubuntu-20.04:spread/build/ubuntu:rpi"
                 "lxd:ubuntu-20.04:spread/build/ubuntu:clang"
-                "lxd:fedora-35:spread/build/fedora:amd64"
                 "lxd:fedora-36:spread/build/fedora:amd64"
+                "lxd:fedora-37:spread/build/fedora:amd64"
                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_devel"
                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_proposed"'
 
