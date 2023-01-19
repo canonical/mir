@@ -46,7 +46,7 @@ struct StaticDisplayConfig : Test
     mg::DisplayConfigurationOutput vga1;
     mg::DisplayConfigurationOutput hdmi1;
 
-    miral::StaticDisplayConfig sdc;
+    miral::YamlFileDisplayConfig sdc;
 
     std::shared_ptr<MockLogger> const mock_logger{std::make_shared<NiceMock<MockLogger>>()};
 

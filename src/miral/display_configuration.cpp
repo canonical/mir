@@ -34,27 +34,157 @@
 #include <optional>
 #include <sstream>
 
-class miral::DisplayConfiguration::Self : public StaticDisplayConfig
+using namespace std::string_literals;
+
+miral::ReloadingYamlFileDisplayConfig::ReloadingYamlFileDisplayConfig(std::string basename) :
+    basename{std::move(basename)}
+{
+}
+
+miral::ReloadingYamlFileDisplayConfig::~ReloadingYamlFileDisplayConfig()
+{
+    if (auto const ml = the_main_loop())
+    {
+        ml->unregister_fd_handler(this);
+    }
+}
+
+void miral::ReloadingYamlFileDisplayConfig::init_auto_reload(mir::Server& server)
+{
+    {
+        std::lock_guard lock{mutex};
+        the_display_configuration_controller_ = server.the_display_configuration_controller();
+        the_main_loop_ = server.the_main_loop();
+    }
+    auto_reload();
+}
+
+void miral::ReloadingYamlFileDisplayConfig::dump_config(std::function<void(std::ostream&)> const& print_template_config)
+{
+    if (!config_path_)
+    {
+        mir::log_debug("Nowhere to write display configuration template: Neither XDG_CONFIG_HOME or HOME is set");
+    }
+    else
+    {
+        auto const filename = config_path_.value() + "/" + basename;
+
+        if (access(filename.c_str(), F_OK))
+        {
+            std::ofstream out{filename};
+            print_template_config(out);
+
+            mir::log_debug(
+                "%s display configuration template: %s",
+                out ? "Written" : "Failed writing",
+                filename.c_str());
+        }
+    }
+
+    YamlFileDisplayConfig::dump_config(print_template_config);
+}
+
+
+auto miral::ReloadingYamlFileDisplayConfig::the_main_loop() const -> std::shared_ptr<mir::MainLoop>
+{
+    std::lock_guard lock{mutex};
+    return the_main_loop_.lock();
+}
+
+auto miral::ReloadingYamlFileDisplayConfig::the_display_configuration_controller() const -> std::shared_ptr<mir::shell::DisplayConfigurationController>
+{
+    std::lock_guard lock{mutex};
+    return the_display_configuration_controller_.lock();
+}
+
+auto miral::ReloadingYamlFileDisplayConfig::inotify_config_path() -> std::optional<mir::Fd>
+{
+    std::lock_guard lock{mutex};
+
+    if (!config_path_) return std::nullopt;
+
+    mir::Fd inotify_fd{inotify_init()};
+
+    if (inotify_fd < 0)
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to initialize inotify_fd"}));
+
+    config_path_wd = inotify_add_watch(inotify_fd, config_path_.value().c_str(), IN_CLOSE_WRITE | IN_CREATE | IN_DELETE);
+
+    return inotify_fd;
+}
+
+void miral::ReloadingYamlFileDisplayConfig::auto_reload()
+{
+    if (auto const icf = inotify_config_path())
+    {
+        if (auto const ml = the_main_loop())
+        {
+            ml->register_fd_handler({icf.value()}, this, [icf=icf.value(), this] (int)
+                {
+                union
+                {
+                    inotify_event event;
+                    char buffer[sizeof(inotify_event) + NAME_MAX + 1];
+                } inotify_buffer;
+
+                if (read(icf, &inotify_buffer, sizeof(inotify_buffer)) < static_cast<ssize_t>(sizeof(inotify_event)))
+                    return;
+
+                if (inotify_buffer.event.mask & (IN_CLOSE_WRITE | IN_CREATE)
+                    && inotify_buffer.event.name == basename)
+                    try
+                    {
+                        auto const& filename = config_path_.value() + "/" + basename;
+
+                        if (std::ifstream config_file{filename})
+                        {
+                            load_config(config_file, "ERROR: in display configuration file: '" + filename + "' : ");
+
+                            if (auto const dcc = the_display_configuration_controller())
+                            {
+                                auto config = dcc->base_configuration();
+                                apply_to(*config);
+                                dcc->set_base_configuration(config);
+                            }
+                        }
+                        else
+                        {
+                            mir::log_warning("Failed to open display configuration: %s", filename.c_str());
+                        }
+                    }
+                    catch (mir::AbnormalExit const& except)
+                    {
+                        mir::log_warning("Failed to reload display configuration: %s", except.what());
+                    }
+                });
+        }
+    }
+}
+
+class miral::DisplayConfiguration::Self : public ReloadingYamlFileDisplayConfig
 {
 public:
-    Self(std::string const& basename) : basename{basename} { find_and_load_config(); }
-    std::string const basename;
 
-    void find_and_load_config()
+    Self(std::string const& basename) : ReloadingYamlFileDisplayConfig{basename}
     {
         std::string config_roots;
 
         if (auto config_home = getenv("XDG_CONFIG_HOME"))
+        {
             (config_roots = config_home) += ":";
+            config_path(config_home);
+        }
         else if (auto home = getenv("HOME"))
+        {
             (config_roots = home) += "/.config:";
+            config_path(home + "/.config"s);
+        }
 
         if (auto config_dirs = getenv("XDG_CONFIG_DIRS"))
             config_roots += config_dirs;
         else
             config_roots += "/etc/xdg";
 
-        decltype(config_path) new_config_path;
         std::istringstream config_stream(config_roots);
 
         /* Read options from config files */
@@ -65,148 +195,12 @@ public:
             if (std::ifstream config_file{filename})
             {
                 load_config(config_file, "ERROR: in display configuration file: '" + filename + "' : ");
-                new_config_path = config_root;
+                config_path(config_root);
                 break;
             }
         }
-
-        std::lock_guard lock{mutex};
-        config_path = new_config_path;
     }
 
-    void dump_config(std::function<void(std::ostream&)> const& print_template_config) override
-    {
-        std::string config_dir;
-
-        if (auto config_home = getenv("XDG_CONFIG_HOME"))
-            config_dir = config_home;
-        else if (auto home = getenv("HOME"))
-            (config_dir = home) += "/.config";
-
-        if (config_dir.empty())
-        {
-            mir::log_debug("Nowhere to write display configuration template: Neither XDG_CONFIG_HOME or HOME is set");
-        }
-        else
-        {
-            auto const filename = config_dir + "/" + basename;
-            decltype(config_path) new_config_path;
-
-            if (access(filename.c_str(), F_OK))
-            {
-                std::ofstream out{filename};
-                print_template_config(out);
-
-                mir::log_debug(
-                    "%s display configuration template: %s",
-                    out ? "Written" : "Failed writing",
-                    filename.c_str());
-
-                if (out)
-                {
-                    new_config_path = config_dir;
-
-                }
-
-                std::lock_guard lock{mutex};
-                config_path = new_config_path;
-            }
-        }
-
-        StaticDisplayConfig::dump_config(print_template_config);
-    }
-
-    auto the_display_configuration_controller() const
-    {
-        std::lock_guard lock{mutex};
-        return the_display_configuration_controller_.lock();
-    }
-
-    void the_display_configuration_controller(std::weak_ptr<mir::shell::DisplayConfigurationController> value)
-    {
-        std::lock_guard lock{mutex};
-        the_display_configuration_controller_ = std::move(value);
-    }
-
-    auto the_main_loop() const
-    {
-        std::lock_guard lock{mutex};
-        return the_main_loop_.lock();
-    }
-
-    void the_main_loop(std::weak_ptr<mir::MainLoop> value)
-    {
-        std::lock_guard lock{mutex};
-        the_main_loop_ = std::move(value);
-    }
-
-    auto inotify_config_path() -> std::optional<mir::Fd>
-    {
-        std::lock_guard lock{mutex};
-
-        if (!config_path) return std::nullopt;
-
-        mir::Fd inotify_fd{inotify_init()};
-
-        if (inotify_fd < 0)
-            BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to initialize inotify_fd"}));
-
-        config_path_wd = inotify_add_watch(inotify_fd, config_path.value().c_str(), IN_CLOSE_WRITE|IN_CREATE|IN_DELETE);
-
-        return inotify_fd;
-    }
-
-    void auto_reload()
-    {
-        if (auto const icf = inotify_config_path())
-        {
-            if (auto const ml = the_main_loop())
-            {
-                ml->register_fd_handler({icf.value()}, this, [icf=icf.value(), this] (int)
-                    {
-                        union
-                        {
-                            inotify_event event;
-                            char buffer[sizeof(inotify_event) + NAME_MAX + 1];
-                        } inotify_buffer;
-
-                        if (read(icf, &inotify_buffer, sizeof(inotify_buffer)) < static_cast<ssize_t>(sizeof(inotify_event)))
-                            return;
-
-                        if (inotify_buffer.event.mask & (IN_CLOSE_WRITE | IN_CREATE)
-                            && inotify_buffer.event.name == basename)
-                        try
-                        {
-                            find_and_load_config();
-                            if (auto const dcc = the_display_configuration_controller())
-                            {
-                                auto config = dcc->base_configuration();
-                                apply_to(*config);
-                                dcc->set_base_configuration(config);
-                            }
-                        }
-                        catch (mir::AbnormalExit const& except)
-                        {
-                            mir::log_warning("Failed to reload display configuration: %s", except.what());
-                        }
-                    });
-            }
-        }
-    }
-
-    ~Self()
-    {
-        if (auto const ml = the_main_loop())
-        {
-            ml->unregister_fd_handler(this);
-        }
-    }
-private:
-    std::mutex mutable mutex;
-    std::weak_ptr<mir::shell::DisplayConfigurationController> the_display_configuration_controller_;
-    std::weak_ptr<mir::MainLoop> the_main_loop_;
-    std::optional<std::string> config_path;
-    std::optional<int> config_path_wd;
 };
 
 miral::DisplayConfiguration::DisplayConfiguration(MirRunner const& mir_runner) :
@@ -231,9 +225,7 @@ void miral::DisplayConfiguration::operator()(mir::Server& server) const
 
     server.add_init_callback([self=self, &server]
         {
-            self->the_display_configuration_controller(server.the_display_configuration_controller());
-            self->the_main_loop(server.the_main_loop());
-            self->auto_reload();
+            self->init_auto_reload(server);
         });
 }
 
