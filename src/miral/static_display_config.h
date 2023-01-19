@@ -98,7 +98,7 @@ private:
     std::optional<int> config_path_wd;
 };
 
-class StaticDisplayConfig : public YamlFileDisplayConfig
+class StaticDisplayConfig : public ReloadingYamlFileDisplayConfig
 {
 public:
     StaticDisplayConfig(std::string const& filename);

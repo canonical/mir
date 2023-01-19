@@ -167,7 +167,9 @@ void miral::display_configuration_options(mir::Server& server)
                 {
                     mir::fatal_error("Display scale option can't be used with static display configuration");
                 }
-                layout_selector = std::make_shared<StaticDisplayConfig>(display_layout.substr(strlen(static_opt_val)));
+                auto sdc = std::make_shared<StaticDisplayConfig>(display_layout.substr(strlen(static_opt_val)));
+                server.add_init_callback([sdc, &server]{ sdc->init_auto_reload(server); });
+                layout_selector = std::move(sdc);
             }
 
             if (scale != 1.0)

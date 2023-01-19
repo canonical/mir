@@ -33,6 +33,9 @@
 
 
 #include "yaml-cpp/yaml.h"
+#include <string.h>
+#include <libgen.h>
+#undef basename
 
 #include <algorithm>
 #include <fstream>
@@ -106,9 +109,11 @@ auto select_mode_index(size_t mode_index, std::vector<mg::DisplayConfigurationMo
 }
 }
 
-
-miral::StaticDisplayConfig::StaticDisplayConfig(std::string const& filename)
+miral::StaticDisplayConfig::StaticDisplayConfig(std::string const& filename) :
+    ReloadingYamlFileDisplayConfig(::basename(filename.c_str()))
 {
+    config_path(filename.substr(0, filename.size() - basename.size()));
+
     std::ifstream config_file{filename};
 
     if (config_file)
@@ -117,7 +122,7 @@ miral::StaticDisplayConfig::StaticDisplayConfig(std::string const& filename)
     }
     else
     {
-        mir::log_warning("Cannot read static display configuration file: '" + filename + "'");
+        mir::log_info("Cannot read static display configuration file: '" + filename + "'");
     }
 }
 
