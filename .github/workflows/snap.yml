@@ -17,7 +17,7 @@ jobs:
         fetch-depth: 0  # needed for version determination
 
     - name: Build and publish the snap
-      uses: canonical/actions/build-snap@release
+      uses: canonical/actions/build-snap@add-outputs
       with:
         snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
         publish: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
@@ -54,7 +54,7 @@ jobs:
         sed -i 's@- mir-core20@\0/latest/edge/pr${{ github.event.number }}@' snap/snapcraft.yaml
 
     - name: Build and publish the snap
-      uses: canonical/actions/build-snap@release
+      uses: canonical/actions/build-snap@add-outputs
       with:
         snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
         publish: true
