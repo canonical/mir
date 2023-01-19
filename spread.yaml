@@ -9,8 +9,8 @@ backends:
             - alpine-edge
             - ubuntu-20.04
             - ubuntu-22.04
-            - fedora-35
             - fedora-36
+            - fedora-37
     google:
         key: "$(HOST: echo $SPREAD_GOOGLE_KEY)"
         plan: n1-highcpu-8
@@ -19,8 +19,8 @@ backends:
         systems:
             - ubuntu-20.04-64
             - ubuntu-22.04-64
-            - fedora-35-64
             - fedora-36-64
+            - fedora-37-64
             - fedora-rawhide-64
 
 environment:
