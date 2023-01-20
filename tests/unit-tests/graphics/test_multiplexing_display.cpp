@@ -29,6 +29,8 @@ namespace mtd = mir::test::doubles;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
+using namespace testing;
+
 namespace
 {
 
@@ -88,8 +90,6 @@ private:
 
 TEST(MultiplexingDisplay, forwards_for_each_display_sync_group)
 {
-    using namespace testing;
-
     std::vector<std::unique_ptr<mg::Display>> displays;
 
     for (int i = 0u; i < 2; ++i)
@@ -106,8 +106,6 @@ TEST(MultiplexingDisplay, forwards_for_each_display_sync_group)
 
 TEST(MultiplexingDisplay, configuration_is_union_of_all_displays)
 {
-    using namespace testing;
-
     std::vector<mg::DisplayConfigurationOutput> first_display_conf, second_display_conf, third_display_conf;
 
     DisplayConfigurationOutputGenerator card_one{1}, card_two{3}, card_three{42};
@@ -162,8 +160,6 @@ TEST(MultiplexingDisplay, configuration_is_union_of_all_displays)
 
 TEST(MultiplexingDisplay, dispatches_configure_to_associated_platform)
 {
-    using namespace testing;
-
     DisplayConfigurationOutputGenerator gen1{5}, gen2{42};
 
     auto d1 = std::make_unique<NiceMock<mtd::MockDisplay>>();
@@ -206,8 +202,6 @@ MATCHER_P(IsConfigurationOfCard, cardid, "")
 
 TEST(MultiplexingDisplay, apply_if_confguration_preserves_display_buffers_succeeds_if_all_succeed)
 {
-    using namespace testing;
-
     DisplayConfigurationOutputGenerator gen1{5}, gen2{42};
 
     auto d1 = std::make_unique<NiceMock<mtd::MockDisplay>>();
@@ -248,8 +242,6 @@ TEST(MultiplexingDisplay, apply_if_confguration_preserves_display_buffers_succee
 
 TEST(MultiplexingDisplay, apply_if_confguration_preserves_display_buffers_fails_if_any_fail)
 {
-    using namespace testing;
-
     DisplayConfigurationOutputGenerator gen1{5}, gen2{42};
 
     auto d1 = std::make_unique<NiceMock<mtd::MockDisplay>>();
@@ -290,8 +282,6 @@ TEST(MultiplexingDisplay, apply_if_confguration_preserves_display_buffers_fails_
 
 TEST(MultiplexingDisplay, apply_if_configuration_preserves_display_buffers_fails_to_previous_configuration)
 {
-    using namespace testing;
-
     DisplayConfigurationOutputGenerator gen1{5}, gen2{42};
 
     auto d1 = std::make_unique<NiceMock<mtd::MockDisplay>>();
@@ -361,8 +351,6 @@ TEST(MultiplexingDisplay, apply_if_configuration_preserves_display_buffers_fails
 
 TEST(MultiplexingDisplay, apply_if_configuration_preserves_display_buffers_throws_on_unrecoverable_error)
 {
-    using namespace testing;
-
     DisplayConfigurationOutputGenerator gen1{5}, gen2{42};
 
     auto d1 = std::make_unique<NiceMock<mtd::MockDisplay>>();
