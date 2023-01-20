@@ -5,7 +5,7 @@ kill-timeout: 45m
 backends:
     lxd:
         systems:
-            - alpine-3.15
+            - alpine-3.17
             - alpine-edge
             - ubuntu-20.04
             - ubuntu-22.04
