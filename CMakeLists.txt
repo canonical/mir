@@ -322,6 +322,10 @@ endif()
 
 set(MIR_TRACEPOINT_LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/mir/tools)
 
+mir_make_pkgconfig_variable(PKGCONFIG_LIBDIR "${CMAKE_INSTALL_LIBDIR}")
+mir_make_pkgconfig_variable(PKGCONFIG_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}")
+include(JoinPaths)
+
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(src/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})

@@ -15,7 +15,7 @@ add_custom_target(mir-smoke-test-runner ALL
 )
 
 install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir-smoke-test-runner
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 find_program(XVFB_RUN_EXECUTABLE xvfb-run)

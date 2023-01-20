@@ -1,10 +1,10 @@
-prefix=@PREFIX@
-libdir=@LIBDIR@
-includedir=@INCLUDEDIR@
+prefix=@CMAKE_INSTALL_PREFIX@
+libdir=@PKGCONFIG_LIBDIR@
+includedir=@PKGCONFIG_INCLUDEDIR@/mirtest
 
 Name: mirtest
 Description: Mir test assist library
 Version: @MIR_VERSION@
 Requires: miral mirserver mirplatform mircommon mir-renderer-gl-dev
-Libs: -L@LIBDIR@ -lmir-test-assist -ldl -lboost_filesystem -lboost_system
-Cflags: -I@INCLUDEDIR@
+Libs: -L${libdir} -lmir-test-assist -ldl -lboost_filesystem -lboost_system
+Cflags: -I${includedir}

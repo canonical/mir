@@ -1,5 +1,5 @@
 prefix=@CMAKE_INSTALL_PREFIX@
-includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+includedir=@PKGCONFIG_INCLUDEDIR@
 
 Name: mirrenderer
 Description: Mir renderer
