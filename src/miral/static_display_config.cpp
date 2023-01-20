@@ -34,8 +34,6 @@
 
 #include "yaml-cpp/yaml.h"
 #include <string.h>
-#include <libgen.h>
-#undef basename
 
 #include <algorithm>
 #include <fstream>
