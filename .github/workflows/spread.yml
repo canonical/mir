@@ -34,19 +34,7 @@ jobs:
                  "lxd:ubuntu-20.04:spread/build/ubuntu:ubsan_clang"'
         fi
 
-        TASKS+='"lxd:alpine-3.17:spread/build/alpine:amd64"
-                "lxd:alpine-edge:spread/build/alpine:amd64"
-                "lxd:ubuntu-22.04:spread/build/sbuild:debian_sid"
-                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu"
-                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_jammy"
-                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_arm64"
-                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_armhf"
-                "lxd:ubuntu-20.04:spread/build/ubuntu:rpi"
-                "lxd:ubuntu-20.04:spread/build/ubuntu:clang"
-                "lxd:fedora-36:spread/build/fedora:amd64"
-                "lxd:fedora-37:spread/build/fedora:amd64"
-                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_devel"
-                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_proposed"'
+        TASKS+='"lxd:alpine-3.17:spread/build/alpine:amd64"'
 
         echo ${TASKS:-} | jq -cs '{ "spread-task": .  }' | awk '{ print "matrix=" $0 }' >> $GITHUB_OUTPUT
 
@@ -108,7 +96,10 @@ jobs:
         echo "max_size = 800M" > ${CCACHE_DIR}/ccache.conf
 
     - name: Run Spread task
-      run: snap run spread-mir-ci.spread -v ${{ matrix.spread-task }}
+      run: snap run spread-mir-ci.spread -reuse -v ${{ matrix.spread-task }}
+
+    - if: always()
+      uses: lhotari/action-upterm@v1
 
     - name: CCache stats
       run: cat ${CCACHE_DIR}/ccache.stats
