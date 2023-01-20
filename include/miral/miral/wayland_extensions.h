@@ -217,6 +217,8 @@ public:
     /// to respect the extension options the user provided, it is not required. Unlike enable() and disable(),
     /// conditionally_enable() can override the user options. The callback may be called multiple times for a each
     /// client/extension pair (for example, once each time a client creates or destroys a wl_registry).
+    /// All client processing will be blocked while the callback is being executed. To minimise the impact on client
+    /// responsiveness users may want to cache the result of any expensive checks made in the callback.
     /// \remark Since MirAL 3.4
     auto conditionally_enable(std::string name, EnableCallback const& callback) -> WaylandExtensions&;
 
