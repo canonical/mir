@@ -361,7 +361,18 @@ void mf::XdgPopupStable::reposition(wl_resource* positioner_resource, uint32_t t
     aux_rect = positioner.aux_rect ? positioner.aux_rect.value() : geom::Rectangle{};
     reposition_token = token;
 
-    apply_spec(positioner);
+    auto const scene_surface_{scene_surface()};
+    if (scene_surface_)
+    {
+        shell->modify_surface(
+            scene_surface_.value()->session().lock(),
+            scene_surface_.value(),
+            positioner);
+    }
+    else
+    {
+        apply_spec(positioner);
+    }
 }
 
 void mf::XdgPopupStable::handle_resize(
