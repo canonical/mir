@@ -19,6 +19,7 @@
 
 #include "mir/graphics/display_configuration.h"
 #include "mir/test/doubles/mock_display.h"
+#include "mir/test/doubles/mock_main_loop.h"
 #include "mir/test/doubles/stub_display_configuration.h"
 
 #include "mir_toolkit/common.h"
@@ -416,4 +417,21 @@ TEST(MultiplexingDisplay, apply_if_configuration_preserves_display_buffers_throw
     EXPECT_THROW(
         { display.apply_if_configuration_preserves_display_buffers(*changed_conf); },
         mg::Display::IncompleteConfigurationApplied);
+}
+
+TEST(MultiplexingDisplay, delegates_registering_configuration_change_handlers)
+{
+    std::vector<std::unique_ptr<mg::Display>> mock_displays;
+
+    for (auto i = 0; i < 5 ; ++i)
+    {
+        auto mock_display = std::make_unique<NiceMock<mtd::MockDisplay>>();
+        EXPECT_CALL(*mock_display, register_configuration_change_handler(_,_));
+        mock_displays.push_back(std::move(mock_display));
+    }
+
+    mg::MultiplexingDisplay display{std::move(mock_displays)};
+
+    mtd::MockMainLoop ml;
+    display.register_configuration_change_handler(ml, [](){});
 }

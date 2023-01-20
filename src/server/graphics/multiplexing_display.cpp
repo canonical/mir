@@ -130,9 +130,20 @@ void mg::MultiplexingDisplay::configure(DisplayConfiguration const& conf)
 }
 
 void mg::MultiplexingDisplay::register_configuration_change_handler(
-    EventHandlerRegister& /*handlers*/,
-    DisplayConfigurationChangeHandler const& /*conf_change_handler*/)
+    EventHandlerRegister& handlers,
+    DisplayConfigurationChangeHandler const& conf_change_handler)
 {
+    /* We don't need to, and can't reasonably, do any aggregation here.
+     *
+     * The conf_change_handler is called by the Display if/when a hardware change
+     * is detected on the hardware it controls; if multiple Displays detect a hardware
+     * change the conf_change_handler will be called once per change, but that's not
+     * actually different to today.
+     */
+    for (auto& display : displays)
+    {
+        display->register_configuration_change_handler(handlers, conf_change_handler);
+    }
 }
 
 void mg::MultiplexingDisplay::pause()
