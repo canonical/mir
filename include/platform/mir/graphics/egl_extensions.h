@@ -45,6 +45,7 @@
 #include <optional>
 #include <mutex>
 #include <atomic>
+#include <stdexcept>
 
 #include <boost/throw_exception.hpp>
 

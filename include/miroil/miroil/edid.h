@@ -17,6 +17,7 @@
 #ifndef MIROIL_EDID_H
 #define MIROIL_EDID_H
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
