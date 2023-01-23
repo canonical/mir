@@ -389,6 +389,37 @@ bool configuration_has_new_outputs_enabled(
         });
     return has_new_output;
 }
+
+bool configuration_changes_require_recompositing(
+        mg::DisplayConfiguration const& existing,
+        mg::DisplayConfiguration const& updated)
+{
+    struct O_S { MirOrientation orientation; float scale; bool operator<=>(O_S const&) const = default; };
+    std::unordered_map<mg::DisplayConfigurationOutputId, O_S> configs;
+
+    existing.for_each_output([&configs](auto const& output)
+    {
+        if (output.used)
+        {
+            configs.emplace(output.id, O_S{output.orientation, output.scale});
+        }
+    });
+
+    bool result = false;
+
+    updated.for_each_output([&configs, &result](auto const& output)
+    {
+        if (result) return;
+
+        auto const i = configs.find(output.id);
+        if (i != end(configs) && i->second != O_S{output.orientation, output.scale})
+        {
+            result = true;
+        }
+    });
+
+    return result;
+}
 }
 
 void ms::MediatingDisplayChanger::apply_config(
@@ -404,6 +435,13 @@ void ms::MediatingDisplayChanger::apply_config(
                 [this] { compositor->stop(); },
                 [this] { compositor->start(); }};
             display->configure(*conf);
+        }
+        else if (configuration_changes_require_recompositing(*existing_configuration, *conf))
+        {
+            // Workaround for #2807: we could do better if Compositor had a `schedule_compositing(damage)` method
+            ApplyNowAndRevertOnScopeExit comp{
+                    [this] { compositor->stop(); },
+                    [this] { compositor->start(); }};
         }
 
         observer->configuration_applied(conf);
