@@ -31,20 +31,23 @@ namespace doubles
 class MockConsoleServices : public ConsoleServices
 {
 public:
-    MOCK_METHOD3(register_switch_handlers,
-                 void(graphics::EventHandlerRegister&,
-                      std::function<bool()> const&,
-                      std::function<bool()> const&));
-    MOCK_METHOD0(restore, void());
-    MOCK_METHOD3(
+    MOCK_METHOD(
+        void,
+         register_switch_handlers, 
+        (graphics::EventHandlerRegister&,
+         std::function<bool()> const&,
+         std::function<bool()> const&),
+        (override));
+    MOCK_METHOD(void, restore, (), (override));
+    MOCK_METHOD(
+        std::unique_ptr<Device>,
         acquire_device_immediate,
-        std::unique_ptr<Device>(
-            int,int,
-            Device::Observer*));
+        (int, int, Device::Observer*),
+        ());
 
     std::future<std::unique_ptr<Device>> acquire_device(
         int major, int minor,
-        std::unique_ptr<Device::Observer> observer  )
+        std::unique_ptr<Device::Observer> observer) override
     {
         std::promise<std::unique_ptr<Device>> promise;
         try
