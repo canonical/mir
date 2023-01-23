@@ -23,6 +23,7 @@
 #include <mir/fd.h>
 
 #include <map>
+#include <mutex>
 #include <optional>
 #include <functional>
 #include <iosfwd>

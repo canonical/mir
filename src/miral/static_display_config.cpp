@@ -14,29 +14,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <optional>
-#include <mutex>
-#include <boost/throw_exception.hpp>
-#include <sys/inotify.h>
-#include <unistd.h>
+#include "static_display_config.h"
+
+#include <mir/output_type_names.h>
+#include <mir/log.h>
 #include <mir/main_loop.h>
 #include <mir/shell/display_configuration_controller.h>
 #include <mir/server.h>
 #include "miral/command_line_option.h"
-#include "miral/runner.h"
 #include "miral/display_configuration.h"
-#include "static_display_config.h"
-
-#include <mir/output_type_names.h>
-
-#include <mir/log.h>
-
+#include "miral/runner.h"
 
 #include "yaml-cpp/yaml.h"
 #include <string.h>
 
+#include <sys/inotify.h>
+#include <unistd.h>
+
+#include <boost/throw_exception.hpp>
+
 #include <algorithm>
 #include <fstream>
+#include <optional>
 #include <sstream>
 
 namespace mg = mir::graphics;
