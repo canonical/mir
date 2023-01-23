@@ -112,6 +112,7 @@ mf::XdgOutputV1::XdgOutputV1(
     // TODO: Better output names that are consistant between sessions
     auto output_name = "OUT-" + std::to_string(output_global.current_config().id.as_value());
     send_name_event_if_supported(output_name);
+    send_done_event();
     // not sending description is allowed
     // send_description_event_if_supported("TODO: set this");
 
