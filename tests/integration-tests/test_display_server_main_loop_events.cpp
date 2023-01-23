@@ -15,6 +15,7 @@
  */
 
 #include "mir/compositor/compositor.h"
+#include "mir/console_services.h"
 #include "mir/frontend/connector.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_policy.h"
@@ -33,6 +34,7 @@
 #include "mir/test/doubles/mock_compositor.h"
 #include "mir/test/doubles/null_display.h"
 #include "mir/test/doubles/mock_server_status_listener.h"
+#include "mir/test/doubles/mock_console_services.h"
 #include "mir/run_mir.h"
 
 #include <gtest/gtest.h>
@@ -72,17 +74,59 @@ public:
     auto socket_name() const -> mir::optional_value<std::string> override { return {}; }
 };
 
+class MockConsoleServices : public mtd::MockConsoleServices
+{
+public:
+    MockConsoleServices(int pause_signal, int resume_signal)
+        : pause_signal{pause_signal},
+          resume_signal{resume_signal}
+    {
+    }
+
+    void register_switch_handlers(
+        mg::EventHandlerRegister& handlers,
+        std::function<bool()> const& switch_away,
+        std::function<bool()> const& switch_back) override
+    {
+        handlers.register_signal_handler(
+            {pause_signal},
+            [this,switch_away](int)
+            {
+                switch_away();
+                pause_handler_invoked_ = true;
+            });
+        handlers.register_signal_handler(
+            {resume_signal},
+            [this,switch_back](int)
+            {
+                switch_back();
+                resume_handler_invoked_ = true;
+            });
+    }
+
+    bool pause_handler_invoked()
+    {
+        return pause_handler_invoked_.exchange(false);
+    }
+
+    bool resume_handler_invoked()
+    {
+        return resume_handler_invoked_.exchange(false);
+    }
+
+private:
+    int const pause_signal;
+    int const resume_signal;
+    std::atomic<bool> pause_handler_invoked_;
+    std::atomic<bool> resume_handler_invoked_;
+};
+
 class MockDisplay : public mtd::NullDisplay
 {
 public:
-    MockDisplay(std::shared_ptr<mg::Display> const& display,
-                int pause_signal, int resume_signal, int fd)
+    MockDisplay(std::shared_ptr<mg::Display> const& display, int fd)
         : display{display},
-          pause_signal{pause_signal},
-          resume_signal{resume_signal},
           fd{fd},
-          pause_handler_invoked_{false},
-          resume_handler_invoked_{false},
           conf_change_handler_invoked_{false}
     {
     }
@@ -119,39 +163,8 @@ public:
             });
     }
 
-    void register_pause_resume_handlers(
-        mg::EventHandlerRegister& handlers,
-        mg::DisplayPauseHandler const& pause_handler,
-        mg::DisplayResumeHandler const& resume_handler) override
-    {
-        handlers.register_signal_handler(
-            {pause_signal},
-            [this,pause_handler](int)
-            {
-                pause_handler();
-                pause_handler_invoked_ = true;
-            });
-        handlers.register_signal_handler(
-            {resume_signal},
-            [this,resume_handler](int)
-            {
-                resume_handler();
-                resume_handler_invoked_ = true;
-            });
-    }
-
     MOCK_METHOD0(pause, void());
     MOCK_METHOD0(resume, void());
-
-    bool pause_handler_invoked()
-    {
-        return pause_handler_invoked_.exchange(false);
-    }
-
-    bool resume_handler_invoked()
-    {
-        return resume_handler_invoked_.exchange(false);
-    }
 
     bool conf_change_handler_invoked()
     {
@@ -160,11 +173,7 @@ public:
 
 private:
     std::shared_ptr<mg::Display> const display;
-    int const pause_signal;
-    int const resume_signal;
     int const fd;
-    std::atomic<bool> pause_handler_invoked_;
-    std::atomic<bool> resume_handler_invoked_;
     std::atomic<bool> conf_change_handler_invoked_;
 };
 
@@ -217,12 +226,19 @@ public:
         {
             auto display = mtf::TestingServerConfiguration::the_display();
             mock_display = std::make_shared<MockDisplay>(display,
-                                                         pause_signal,
-                                                         resume_signal,
                                                          p.read_fd());
         }
 
         return mock_display;
+    }
+
+    std::shared_ptr<mir::ConsoleServices> the_console_services() override
+    {
+        if (!mock_console_services)
+        {
+            mock_console_services = std::make_shared<MockConsoleServices>(pause_signal, resume_signal);
+        }
+        return mock_console_services;
     }
 
     std::shared_ptr<mc::Compositor> the_compositor() override
@@ -276,14 +292,14 @@ public:
     void emit_pause_event_and_wait_for_handler()
     {
         kill(getpid(), pause_signal);
-        while (!mock_display->pause_handler_invoked())
+        while (!mock_console_services->pause_handler_invoked())
             std::this_thread::sleep_for(std::chrono::microseconds{500});
     }
 
     void emit_resume_event_and_wait_for_handler()
     {
         kill(getpid(), resume_signal);
-        while (!mock_display->resume_handler_invoked())
+        while (!mock_console_services->resume_handler_invoked())
             std::this_thread::sleep_for(std::chrono::microseconds{500});
     }
 
@@ -305,6 +321,7 @@ public:
 
 private:
     std::shared_ptr<mtd::MockCompositor> mock_compositor;
+    std::shared_ptr<MockConsoleServices> mock_console_services;
     std::shared_ptr<MockDisplay> mock_display;
     std::shared_ptr<mtd::MockInputManager> mock_input_manager;
     std::shared_ptr<mtd::MockInputDispatcher> mock_input_dispatcher;

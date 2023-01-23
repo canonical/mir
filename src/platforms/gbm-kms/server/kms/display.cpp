@@ -282,14 +282,6 @@ void mgg::Display::register_configuration_change_handler(
             }));
 }
 
-void mgg::Display::register_pause_resume_handlers(
-    EventHandlerRegister& handlers,
-    DisplayPauseHandler const& pause_handler,
-    DisplayResumeHandler const& resume_handler)
-{
-    vt->register_switch_handlers(handlers, pause_handler, resume_handler);
-}
-
 void mgg::Display::pause()
 {
     if (auto c = cursor.lock()) c->suspend();

@@ -70,6 +70,7 @@ class MainLoop;
 class ServerStatusListener;
 class DisplayChanger;
 class EmergencyCleanup;
+class ConsoleServices;
 
 class ServerConfiguration
 {
@@ -86,6 +87,7 @@ public:
     virtual std::shared_ptr<MainLoop> the_main_loop() = 0;
     virtual std::shared_ptr<ServerStatusListener> the_server_status_listener() = 0;
     virtual std::shared_ptr<DisplayChanger> the_display_changer() = 0;
+    virtual auto the_console_services() -> std::shared_ptr<ConsoleServices> = 0;
     virtual auto the_display_platforms() -> std::vector<std::shared_ptr<graphics::DisplayPlatform>> const& = 0;
     virtual auto the_rendering_platforms() -> std::vector<std::shared_ptr<graphics::RenderingPlatform>> const& = 0;
     virtual std::shared_ptr<EmergencyCleanup> the_emergency_cleanup() = 0;
