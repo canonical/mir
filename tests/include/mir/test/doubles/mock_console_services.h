@@ -39,6 +39,7 @@ public:
          std::function<bool()> const&),
         (override));
     MOCK_METHOD(void, restore, (), (override));
+    MOCK_METHOD(std::unique_ptr<VTSwitcher>, create_vt_switcher, (), (override));
     MOCK_METHOD(
         std::unique_ptr<Device>,
         acquire_device_immediate,
