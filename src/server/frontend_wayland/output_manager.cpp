@@ -72,7 +72,7 @@ auto transform_size(Size const& size, MirOrientation orientation) -> Size
 }
 
 mf::OutputInstance::OutputInstance(wl_resource* resource, OutputGlobal* global)
-    : Output{resource, Version<3>()},
+    : Output{resource, Version<4>()},
       global{mw::make_weak(global)}
 {
     global->add_listener(this);
@@ -137,7 +137,7 @@ void mf::OutputInstance::send_done()
 }
 
 mf::OutputGlobal::OutputGlobal(wl_display* display, mg::DisplayConfigurationOutput const& initial_configuration)
-    : Global{display, Version<3>{}},
+    : Global{display, Version<4>{}},
       output_config{initial_configuration}
 {
 }
