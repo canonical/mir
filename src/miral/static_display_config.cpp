@@ -106,6 +106,11 @@ auto select_mode_index(size_t mode_index, std::vector<mg::DisplayConfigurationMo
 }
 }
 
+// Ugly hack because Alpine's string.h doesn't declare the basename overloads
+#ifndef __GLIBC__
+extern "C" { char const* basename(char const*); }
+#endif
+
 miral::StaticDisplayConfig::StaticDisplayConfig(std::string const& filename) :
     ReloadingYamlFileDisplayConfig(::basename(filename.c_str()))
 {
