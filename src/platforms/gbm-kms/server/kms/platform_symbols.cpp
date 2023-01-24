@@ -67,9 +67,8 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
         mg::initialise_egl_logger();
     }
 
-    auto bypass_option = mgg::BypassOption::allowed;
-    if (!options->get<bool>(bypass_option_name))
-        bypass_option = mgg::BypassOption::prohibited;
+    auto const bypass_option =
+        options->get<bool>(bypass_option_name) ? mgg::BypassOption::allowed : mgg::BypassOption::prohibited;
 
     auto quirks = std::make_unique<mgg::Quirks>(*options);
 
@@ -93,7 +92,7 @@ void add_graphics_platform_options(boost::program_options::options_description& 
     mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
     config.add_options()
         (bypass_option_name,
-         boost::program_options::value<bool>()->default_value(false),
+         boost::program_options::value<bool>()->default_value(true),
          "[platform-specific] utilize the bypass optimization for fullscreen surfaces.");
     mgg::Quirks::add_quirks_option(config);
 }
