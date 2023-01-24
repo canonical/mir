@@ -97,6 +97,6 @@ tests=$($test_binary --gtest_list_tests --gtest_filter=$discover_filter | grep -
 
 for t in $tests;
 do
-    echo "add_test($testname.$t $cmd \"--gtest_filter=$t:-$excludes\")"
+    echo "add_test($testname.$t $cmd \"--gtest_death_test_style=threadsafe\" \"--gtest_filter=$t:-$excludes\")"
     echo "set_tests_properties($testname.$t PROPERTIES $env)"
 done
