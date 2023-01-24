@@ -29,6 +29,7 @@ namespace
 mg::DisplayConfigurationOutput const tmpl_output
 {
     mg::DisplayConfigurationOutputId{3},
+    "OUT-3",
     mg::DisplayConfigurationCardId{2},
     mg::DisplayConfigurationLogicalGroupId{4},
     mg::DisplayConfigurationOutputType::dvid,

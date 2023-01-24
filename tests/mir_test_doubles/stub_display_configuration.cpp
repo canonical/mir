@@ -20,6 +20,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <stdexcept>
+#include <string>
 
 namespace mtd = mir::test::doubles;
 
@@ -75,6 +76,7 @@ mtd::StubDisplayConfigurationOutput::StubDisplayConfigurationOutput(
     MirSubpixelArrangement subpixel_arrangement) :
         DisplayConfigurationOutput{
             id,
+            "OUT-" + std::to_string(id.as_value()),
             graphics::DisplayConfigurationCardId{0},
             graphics::DisplayConfigurationLogicalGroupId{0},
             graphics::DisplayConfigurationOutputType::lvds,
@@ -106,6 +108,7 @@ mtd::StubDisplayConfigurationOutput::StubDisplayConfigurationOutput(
     std::vector<MirPixelFormat> formats)
     : DisplayConfigurationOutput{
         id,
+        "OUT-" + std::to_string(id.as_value()),
         graphics::DisplayConfigurationCardId{0},
         graphics::DisplayConfigurationLogicalGroupId{0},
         graphics::DisplayConfigurationOutputType::edp,
@@ -209,8 +212,10 @@ mtd::StubDisplayConfig::StubDisplayConfig(unsigned int num_displays, std::vector
 
         geometry::Size physical_size{};
         geometry::Point top_left{};
+        int const id = i + 1;
         graphics::DisplayConfigurationOutput output{
-            graphics::DisplayConfigurationOutputId{static_cast<int>(i + 1)},
+            graphics::DisplayConfigurationOutputId{id},
+            "OUT-" + std::to_string(id), 
             graphics::DisplayConfigurationCardId{0},
             graphics::DisplayConfigurationLogicalGroupId{0},
             graphics::DisplayConfigurationOutputType::vga,
@@ -245,6 +250,7 @@ mtd::StubDisplayConfig::StubDisplayConfig(std::vector<geometry::Rectangle> const
         graphics::DisplayConfigurationOutput output
             {
                 graphics::DisplayConfigurationOutputId{id},
+                "OUT-" + std::to_string(id),
                 graphics::DisplayConfigurationCardId{0},
                 graphics::DisplayConfigurationLogicalGroupId{0},
                 graphics::DisplayConfigurationOutputType::vga,

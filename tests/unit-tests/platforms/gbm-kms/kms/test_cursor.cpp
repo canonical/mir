@@ -98,6 +98,7 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
           stub_config{
             {{
                 mg::DisplayConfigurationOutputId{0},
+                "OUT-0",
                 mg::DisplayConfigurationCardId{},
                 mg::DisplayConfigurationLogicalGroupId{},
                 mg::DisplayConfigurationOutputType::vga,
@@ -125,6 +126,7 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
             },
             {
                 mg::DisplayConfigurationOutputId{1},
+                "OUT-1",
                 mg::DisplayConfigurationCardId{},
                 mg::DisplayConfigurationLogicalGroupId{},
                 mg::DisplayConfigurationOutputType::vga,
@@ -152,6 +154,7 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
             },
             {
                 mg::DisplayConfigurationOutputId{2},
+                "OUT-2",
                 mg::DisplayConfigurationCardId{},
                 mg::DisplayConfigurationLogicalGroupId{},
                 mg::DisplayConfigurationOutputType::vga,

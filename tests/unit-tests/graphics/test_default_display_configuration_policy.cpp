@@ -48,6 +48,7 @@ DisplayConfigurationOutput default_output(DisplayConfigurationOutputId id)
     // We name the return value just to work around an apparent clang bug/quirk
     DisplayConfigurationOutput ret{
         id,
+        "OUT-" + std::to_string(id.as_value()),
         DisplayConfigurationCardId{1},
         DisplayConfigurationLogicalGroupId{0},
         DisplayConfigurationOutputType::vga,

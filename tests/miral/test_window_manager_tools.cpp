@@ -336,8 +336,10 @@ auto mt::TestWindowManagerTools::create_fake_display_configuration(
     for (auto i = 0u; i < outputs.size(); i++)
     {
         auto const& rect = outputs[i].second;
+        int const id = i + 1;
         config_outputs.push_back(mir::graphics::DisplayConfigurationOutput{
-            mir::graphics::DisplayConfigurationOutputId{(int)(i + 1)}, // id
+            mir::graphics::DisplayConfigurationOutputId{id}, // id
+            "OUT-" + std::to_string(id), // name
             mir::graphics::DisplayConfigurationCardId{1}, // card_id
             outputs[i].first, // logical_group_id
             mir::graphics::DisplayConfigurationOutputType::unknown, // type
