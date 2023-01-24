@@ -106,8 +106,6 @@ auto mf::OutputInstance::output_config_changed(mg::DisplayConfigurationOutput co
         "Fake model",
         mw::Output::Transform::normal);
 
-    send_done();
-
     for (size_t i = 0; i < config.modes.size(); ++i)
     {
         auto const& mode = config.modes[i];
