@@ -96,6 +96,8 @@ struct DisplayConfigurationOutput
 {
     /** The output's id. */
     DisplayConfigurationOutputId id;
+    /** The output's displayable name. */
+    std::string name;
     /** The id of the card the output is connected to. */
     DisplayConfigurationCardId card_id;
     /** The id of the logical output group (aka display wall) this output belongs to, or 0 for none. */
