@@ -532,7 +532,7 @@ TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_a
     session_event_sink.handle_focus_change(session2);
 }
 
-TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_applies_base_config_not_pausing_if_db_preserved)
+TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_applies_base_config_pausing_if_db_content_not_preserved)
 {
     std::shared_ptr<mg::DisplayConfiguration> conf = base_config.clone();
     conf->for_each_output(
@@ -542,6 +542,42 @@ TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_a
             {
                 output.orientation =
                     output.orientation == mir_orientation_normal ? mir_orientation_left : mir_orientation_normal;
+            }
+        });
+
+    auto session1 = std::make_shared<mtd::StubSession>();
+    auto session2 = std::make_shared<mtd::StubSession>();
+
+    session_container.insert_session(session1);
+    changer->configure(session1, conf);
+
+    session_event_sink.handle_focus_change(session1);
+
+    Mock::VerifyAndClearExpectations(&mock_compositor);
+    Mock::VerifyAndClearExpectations(&mock_display);
+
+    EXPECT_CALL(
+        mock_display,
+        apply_if_configuration_preserves_display_buffers(mt::DisplayConfigMatches(std::cref(base_config))))
+            .WillOnce(Return(true));
+
+    EXPECT_CALL(mock_compositor, stop()).Times(1);
+    EXPECT_CALL(mock_display, configure(_)).Times(0);
+    EXPECT_CALL(mock_compositor, start()).Times(1);
+
+    session_event_sink.handle_focus_change(session2);
+}
+
+TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_applies_base_config_not_pausing_if_db_content_preserved)
+{
+    std::shared_ptr<mg::DisplayConfiguration> conf = base_config.clone();
+    conf->for_each_output(
+        [](mg::UserDisplayConfigurationOutput& output)
+        {
+            if (output.used)
+            {
+                output.form_factor =
+                    output.form_factor == mir_form_factor_monitor ? mir_form_factor_tv : mir_form_factor_monitor;
             }
         });
 
