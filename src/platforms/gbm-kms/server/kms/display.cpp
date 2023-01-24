@@ -173,14 +173,12 @@ void log_drm_details(std::vector<std::shared_ptr<mgg::helpers::DRMHelper>> const
 
 mgg::Display::Display(std::vector<std::shared_ptr<helpers::DRMHelper>> const& drm,
                       std::shared_ptr<helpers::GBMHelper> const& gbm,
-                      std::shared_ptr<ConsoleServices> const& vt,
                       mgg::BypassOption bypass_option,
                       std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                       std::shared_ptr<GLConfig> const& gl_config,
                       std::shared_ptr<DisplayReport> const& listener)
     : drm{drm},
       gbm(gbm),
-      vt(vt),
       listener(listener),
       monitor(mir::udev::Context()),
       shared_egl{*gl_config},

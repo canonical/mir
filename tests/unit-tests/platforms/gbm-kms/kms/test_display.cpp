@@ -119,7 +119,7 @@ public:
     {
         return std::make_shared<mgg::Platform>(
                mir::report::null_display_report(),
-               std::make_shared<mtd::StubConsoleServices>(),
+               *std::make_shared<mtd::StubConsoleServices>(),
                *std::make_shared<mtd::NullEmergencyCleanup>(),
                mgg::BypassOption::allowed,
                std::make_unique<mgg::Quirks>(mir::options::ProgramOption{}));
@@ -131,7 +131,6 @@ public:
         return std::make_shared<mgg::Display>(
             platform->drm,
             platform->gbm,
-            platform->vt,
             platform->bypass_option(),
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
             std::make_shared<mtd::StubGLConfig>(),
@@ -634,7 +633,6 @@ TEST_F(MesaDisplayTest, successful_creation_of_display_reports_successful_setup_
     auto display = std::make_shared<mgg::Display>(
                         platform->drm,
                         platform->gbm,
-                        platform->vt,
                         platform->bypass_option(),
                         std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
                         std::make_shared<mtd::StubGLConfig>(),
@@ -855,7 +853,6 @@ TEST_F(MesaDisplayTest, respects_gl_config)
     mgg::Display display{
         platform->drm,
         platform->gbm,
-        platform->vt,
         platform->bypass_option(),
         std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
         mir::test::fake_shared(mock_gl_config),
@@ -883,7 +880,6 @@ TEST_F(MesaDisplayTest, uses_xrgb8888_framebuffer_when_argb8888_is_not_supported
     mgg::Display display{
         platform->drm,
         platform->gbm,
-        platform->vt,
         platform->bypass_option(),
         std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
         std::make_shared<NiceMock<mtd::MockGLConfig>>(),
@@ -911,7 +907,6 @@ TEST_F(MesaDisplayTest, uses_argb8888_framebuffer_when_xrgb8888_is_not_supported
     mgg::Display display{
         platform->drm,
         platform->gbm,
-        platform->vt,
         platform->bypass_option(),
         std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
         std::make_shared<NiceMock<mtd::MockGLConfig>>(),

@@ -31,7 +31,6 @@
 
 namespace mir
 {
-class ConsoleServices;
 namespace graphics
 {
 
@@ -59,7 +58,6 @@ class Display : public graphics::Display
 public:
     Display(std::vector<std::shared_ptr<helpers::DRMHelper>> const& drm,
             std::shared_ptr<helpers::GBMHelper> const& gbm,
-            std::shared_ptr<ConsoleServices> const& vt,
             BypassOption bypass_option,
             std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
             std::shared_ptr<GLConfig> const& gl_config,
@@ -93,7 +91,6 @@ private:
     mutable std::mutex configuration_mutex;
     std::vector<std::shared_ptr<helpers::DRMHelper>> const drm;
     std::shared_ptr<helpers::GBMHelper> const gbm;
-    std::shared_ptr<ConsoleServices> const vt;
     std::shared_ptr<DisplayReport> const listener;
     mir::udev::Monitor monitor;
     helpers::EGLHelper shared_egl;
