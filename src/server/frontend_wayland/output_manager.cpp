@@ -76,6 +76,7 @@ mf::OutputInstance::OutputInstance(wl_resource* resource, OutputGlobal* global)
       global{mw::make_weak(global)}
 {
     global->add_listener(this);
+    send_name_event_if_supported(global->output_config.name);
 }
 
 mf::OutputInstance::~OutputInstance()
