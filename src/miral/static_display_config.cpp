@@ -521,7 +521,7 @@ void miral::ReloadingYamlFileDisplayConfig::dump_config(std::function<void(std::
 
             mir::log_debug(
                 "%s display configuration template: %s",
-                out ? "Written" : "Failed writing",
+                out ? "Wrote" : "Failed writing",
                 filename.c_str());
         }
     }
