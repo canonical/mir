@@ -155,7 +155,7 @@ function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAK
   endif()
 
   # Final commands
-  set(test_cmd "${test_cmd}" "--gtest_filter=-${memcheck_exclusion_str}:${test_exclusion_str}")
+  set(test_cmd "${test_cmd}" "--gtest_death_test_style=threadsafe" "--gtest_filter=-${memcheck_exclusion_str}:${test_exclusion_str}")
   set(test_cmd_no_memcheck "${test_cmd_no_memcheck}" "--gtest_death_test_style=threadsafe" "--gtest_filter=${memcheck_exclusion_str}:-${test_exclusion_str}")
 
   # Normal
