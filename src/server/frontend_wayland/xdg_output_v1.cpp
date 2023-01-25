@@ -109,7 +109,6 @@ mf::XdgOutputV1::XdgOutputV1(
     output_global.add_listener(this);
 
     // Name may only be sent the first time
-    // TODO: Better output names that are consistant between sessions
     send_name_event_if_supported(output_global.current_config().name);
     
     // not sending description is allowed

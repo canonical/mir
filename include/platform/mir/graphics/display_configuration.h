@@ -96,8 +96,6 @@ struct DisplayConfigurationOutput
 {
     /** The output's id. */
     DisplayConfigurationOutputId id;
-    /** The output's displayable name. */
-    std::string name;
     /** The id of the card the output is connected to. */
     DisplayConfigurationCardId card_id;
     /** The id of the logical output group (aka display wall) this output belongs to, or 0 for none. */
@@ -142,6 +140,10 @@ struct DisplayConfigurationOutput
     std::vector<uint8_t> edid;
 
     mir::optional_value<geometry::Size> custom_logical_size;
+
+    /** The output's displayable name. */
+    // TODO: Better output names that are consistant between sessions
+    std::string name = "OUT-" + std::to_string(id.as_value());
 
     /** The logical rectangle occupied by the output, based on its position,
         current mode and orientation (rotation) */

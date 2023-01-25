@@ -286,7 +286,6 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
     {
         {
             mg::DisplayConfigurationOutputId{0},
-            "OUT-0",
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::hdmia,
@@ -311,7 +310,6 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
         },
         {
             mg::DisplayConfigurationOutputId{0},
-            "OUT-0",
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::unknown,
@@ -336,7 +334,6 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
         },
         {
             mg::DisplayConfigurationOutputId{0},
-            "OUT-0",
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::edp,
@@ -572,7 +569,6 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
     {
         {
             mg::DisplayConfigurationOutputId{0},
-            "OUT-0",
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::composite,
@@ -597,7 +593,6 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
         },
         {
             mg::DisplayConfigurationOutputId{0},
-            "OUT-0",
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::vga,
@@ -626,7 +621,6 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
     {
         {
             mg::DisplayConfigurationOutputId{0},
-            "OUT-0",
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::composite,
@@ -651,7 +645,6 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
         },
         {
             mg::DisplayConfigurationOutputId{0},
-            "OUT-0",
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::vga,
@@ -803,7 +796,6 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
     {
         {
             mg::DisplayConfigurationOutputId{0},
-            "OUT-0",
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::composite,
@@ -832,7 +824,6 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
     {
         {
             mg::DisplayConfigurationOutputId{0},
-            "OUT-0",
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::composite,

@@ -68,7 +68,6 @@ public:
             mg::DisplayConfigurationOutput output
             {
                 mg::DisplayConfigurationOutputId(i),
-                "OUT-" + std::to_string(i),
                 mg::DisplayConfigurationCardId{1},
                 mg::DisplayConfigurationLogicalGroupId{0},
                 mg::DisplayConfigurationOutputType::svideo,

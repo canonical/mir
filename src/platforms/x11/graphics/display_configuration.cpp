@@ -16,7 +16,6 @@
 
 #include "display_configuration.h"
 #include <boost/throw_exception.hpp>
-#include <string>
 
 namespace mg = mir::graphics;
 namespace mgx = mg::X;
@@ -36,7 +35,6 @@ std::shared_ptr<mg::DisplayConfigurationOutput> mgx::DisplayConfiguration::build
     return std::shared_ptr<DisplayConfigurationOutput>(
         new DisplayConfigurationOutput{
             mg::DisplayConfigurationOutputId{last_output_id},
-            "OUT-" + std::to_string(last_output_id),
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::unknown,
