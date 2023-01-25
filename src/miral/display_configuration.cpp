@@ -61,7 +61,7 @@ public:
 
             if (std::ifstream config_file{filename})
             {
-                load_config(config_file, "ERROR: in display configuration file: '" + filename + "' : ");
+                load_config(config_file, filename);
                 config_path(config_root);
                 break;
             }

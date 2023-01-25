@@ -41,7 +41,7 @@ namespace miral
 class YamlFileDisplayConfig : public mir::graphics::DisplayConfigurationPolicy
 {
 public:
-    void load_config(std::istream& config_file, std::string const& error_prefix);
+    void load_config(std::istream& config_file, std::string const& filename);
 
     virtual void apply_to(mir::graphics::DisplayConfiguration& conf);
 
