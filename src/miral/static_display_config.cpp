@@ -553,7 +553,7 @@ auto miral::ReloadingYamlFileDisplayConfig::inotify_config_path() -> std::option
     if (inotify_fd < 0)
         BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to initialize inotify_fd"}));
 
-    config_path_wd = inotify_add_watch(inotify_fd, config_path_.value().c_str(), IN_CLOSE_WRITE | IN_CREATE | IN_DELETE);
+    config_path_wd = inotify_add_watch(inotify_fd, config_path_.value().c_str(), IN_CLOSE_WRITE | IN_CREATE | IN_MOVED_TO);
 
     return inotify_fd;
 }
@@ -575,7 +575,7 @@ void miral::ReloadingYamlFileDisplayConfig::auto_reload()
                 if (read(icf, &inotify_buffer, sizeof(inotify_buffer)) < static_cast<ssize_t>(sizeof(inotify_event)))
                     return;
 
-                if (inotify_buffer.event.mask & (IN_CLOSE_WRITE | IN_CREATE)
+                if (inotify_buffer.event.mask & (IN_CLOSE_WRITE | IN_CREATE | IN_MOVED_TO)
                     && inotify_buffer.event.name == basename)
                     try
                     {
