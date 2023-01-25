@@ -114,7 +114,6 @@ mf::XdgOutputV1::XdgOutputV1(
     
     // not sending description is allowed
     // send_description_event_if_supported("TODO: set this");
-    // send_done_event();
 
     output_config_changed(output_global.current_config());
 
