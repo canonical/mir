@@ -189,6 +189,7 @@ struct UserDisplayConfigurationOutput
     MirOutputGammaSupported const& gamma_supported;
     std::vector<uint8_t const> const& edid;
     mir::optional_value<geometry::Size>& custom_logical_size;
+    std::string const name = "OUT-" + std::to_string(id.as_value());
 
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& main);
     geometry::Rectangle extents() const;
