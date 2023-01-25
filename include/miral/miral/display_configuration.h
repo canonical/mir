@@ -33,6 +33,8 @@ class ConfigurationOption;
 /// the XDG Base Directory Specification. Vis:
 ///($XDG_CONFIG_HOME or $HOME/.config followed by $XDG_CONFIG_DIRS)
 /// \remark Since MirAL 2.4
+/// \note From MirAL 3.8 will monitor the configuration file or, if none found,
+/// for the creation of a file in $XDG_CONFIG_HOME or $HOME/.config
 class DisplayConfiguration
 {
 public:

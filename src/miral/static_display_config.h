@@ -99,6 +99,8 @@ private:
     std::optional<int> config_path_wd;
 };
 
+// Monitors dirname(filename) for changes to basename(filename) and reload,
+// does not monitor for the creation of dirname(filename)
 class StaticDisplayConfig : public ReloadingYamlFileDisplayConfig
 {
 public:
