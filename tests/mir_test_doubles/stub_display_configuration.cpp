@@ -209,9 +209,8 @@ mtd::StubDisplayConfig::StubDisplayConfig(unsigned int num_displays, std::vector
 
         geometry::Size physical_size{};
         geometry::Point top_left{};
-        int const id = i + 1;
         graphics::DisplayConfigurationOutput output{
-            graphics::DisplayConfigurationOutputId{id},
+            graphics::DisplayConfigurationOutputId{static_cast<int>(i + 1)},
             graphics::DisplayConfigurationCardId{0},
             graphics::DisplayConfigurationLogicalGroupId{0},
             graphics::DisplayConfigurationOutputType::vga,
