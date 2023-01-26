@@ -78,6 +78,8 @@ void FdManager::set_main_loop(std::shared_ptr<mir::MainLoop> main_loop)
     weak_main_loop = main_loop;
 }
 
+miral::FdHandle::~FdHandle() = default;
+
 FdHandleImpl::FdHandleImpl(mir::Fd fd, std::shared_ptr<FdManager> manager)
 : fd{fd},
   manager{manager}

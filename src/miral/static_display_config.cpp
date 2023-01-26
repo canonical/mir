@@ -17,14 +17,25 @@
 #include "static_display_config.h"
 
 #include <mir/output_type_names.h>
-
 #include <mir/log.h>
-
+#include <mir/main_loop.h>
+#include <mir/shell/display_configuration_controller.h>
+#include <mir/server.h>
+#include "miral/command_line_option.h"
+#include "miral/display_configuration.h"
+#include "miral/runner.h"
 
 #include "yaml-cpp/yaml.h"
+#include <string.h>
+
+#include <sys/inotify.h>
+#include <unistd.h>
+
+#include <boost/throw_exception.hpp>
 
 #include <algorithm>
 #include <fstream>
+#include <optional>
 #include <sstream>
 
 namespace mg = mir::graphics;
@@ -95,24 +106,36 @@ auto select_mode_index(size_t mode_index, std::vector<mg::DisplayConfigurationMo
 }
 }
 
+// Ugly hack because Alpine's string.h doesn't declare the basename overloads
+#ifndef __GLIBC__
+extern "C" { char const* basename(char const*); }
+#endif
 
-miral::StaticDisplayConfig::StaticDisplayConfig() = default;
-
-miral::StaticDisplayConfig::StaticDisplayConfig(std::string const& filename)
+miral::StaticDisplayConfig::StaticDisplayConfig(std::string const& filename) :
+    ReloadingYamlFileDisplayConfig(::basename(filename.c_str()))
 {
+    config_path(filename.substr(0, filename.size() - basename.size()));
+
     std::ifstream config_file{filename};
 
     if (config_file)
     {
-        load_config(config_file, "ERROR: in display configuration file: '" + filename + "' : ");
+        load_config(config_file, filename);
     }
     else
     {
-        mir::log_warning("Cannot read static display configuration file: '" + filename + "'");
+        mir::log_info("Cannot read static display configuration file: '" + filename + "'");
+    }
+}
+namespace
+{
+    auto error_prefix(std::string const& filename)
+    {
+        return "ERROR: in display configuration file: '" + filename + "' : ";
     }
 }
 
-void miral::StaticDisplayConfig::load_config(std::istream& config_file, std::string const& error_prefix)
+void miral::YamlFileDisplayConfig::load_config(std::istream& config_file, std::string const& filename)
 try
 {
     decltype(config) new_config;
@@ -123,11 +146,11 @@ try
 
     auto const parsed_config = Load(config_file);
     if (!parsed_config.IsDefined() || !parsed_config.IsMap())
-        throw mir::AbnormalExit{error_prefix + "unrecognized content"};
+        throw mir::AbnormalExit{error_prefix(filename) + "unrecognized content"};
 
     Node layouts = parsed_config["layouts"];
     if (!layouts.IsDefined() || !layouts.IsMap())
-        throw mir::AbnormalExit{error_prefix + "no layouts"};
+        throw mir::AbnormalExit{error_prefix(filename) + "no layouts"};
 
     for (auto const& ll : layouts)
     {
@@ -135,7 +158,7 @@ try
 
         if (!layout.IsDefined() || !layout.IsMap())
         {
-            throw mir::AbnormalExit{error_prefix + "invalid '" + ll.first.as<std::string>() + "' layout"};
+            throw mir::AbnormalExit{error_prefix(filename) + "invalid '" + ll.first.as<std::string>() + "' layout"};
         }
 
         Id2Config layout_config;
@@ -143,7 +166,7 @@ try
         Node cards = layout["cards"];
 
         if (!cards.IsDefined() || !cards.IsSequence())
-            throw mir::AbnormalExit{error_prefix + "invalid 'cards' in '" + ll.first.as<std::string>() + "' layout"};
+            throw mir::AbnormalExit{error_prefix(filename) + "invalid 'cards' in '" + ll.first.as<std::string>() + "' layout"};
 
         for (Node const& card : cards)
         {
@@ -155,7 +178,7 @@ try
             }
 
             if (!card.IsDefined() || !(card.IsMap() || card.IsNull()))
-                throw mir::AbnormalExit{error_prefix + "invalid card: " + std::to_string(card_no.as_value())};
+                throw mir::AbnormalExit{error_prefix(filename) + "invalid card: " + std::to_string(card_no.as_value())};
 
             for (std::pair<Node, Node> port : card)
             {
@@ -169,7 +192,7 @@ try
                 if (port_config.IsDefined() && !port_config.IsNull())
                 {
                     if (!port_config.IsMap())
-                        throw mir::AbnormalExit{error_prefix + "invalid port: " + port_name};
+                        throw mir::AbnormalExit{error_prefix(filename) + "invalid port: " + port_name};
 
                     Id const output_id{card_no, output_type_from(port_name), output_index_from(port_name)};
                     Config   output_config;
@@ -178,7 +201,7 @@ try
                     {
                         auto const state = s.as<std::string>();
                         if (state != state_enabled && state != state_disabled)
-                            throw mir::AbnormalExit{error_prefix + "invalid 'state' (" + state + ") for port: " + port_name};
+                            throw mir::AbnormalExit{error_prefix(filename) + "invalid 'state' (" + state + ") for port: " + port_name};
                         output_config.disabled = (state == state_disabled);
                     }
 
@@ -231,7 +254,7 @@ try
                         output_config.orientation = as_orientation(orientation);
 
                         if (!output_config.orientation)
-                            throw mir::AbnormalExit{error_prefix + "invalid 'orientation' (" +
+                            throw mir::AbnormalExit{error_prefix(filename) + "invalid 'orientation' (" +
                                                     orientation + ") for port: " + port_name};
                     }
 
@@ -248,13 +271,14 @@ try
     }
 
     config = new_config;
+    mir::log_debug("Loaded display configuration file: %s", filename.c_str());
 }
 catch (YAML::Exception const& x)
 {
-    throw mir::AbnormalExit{error_prefix + x.what()};
+    throw mir::AbnormalExit{error_prefix(filename) + x.what()};
 }
 
-void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
+void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
 {
     auto const current_config = config.find(layout);
 
@@ -433,7 +457,7 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
     dump_config(print_template_config);
 }
 
-void miral::StaticDisplayConfig::dump_config(std::function<void(std::ostream&)> const& print_template_config)
+void miral::YamlFileDisplayConfig::dump_config(std::function<void(std::ostream&)> const& print_template_config)
 {
     std::ostringstream out;
     out << "Display config:\n8>< ---------------------------------------------------\n";
@@ -442,12 +466,12 @@ void miral::StaticDisplayConfig::dump_config(std::function<void(std::ostream&)> 
     mir::log_info(out.str());
 }
 
-void miral::StaticDisplayConfig::select_layout(std::string const& layout)
+void miral::YamlFileDisplayConfig::select_layout(std::string const& layout)
 {
     this->layout = layout;
 }
 
-auto miral::StaticDisplayConfig::list_layouts() const -> std::vector<std::string>
+auto miral::YamlFileDisplayConfig::list_layouts() const -> std::vector<std::string>
 {
     std::vector<std::string> result;
 
@@ -459,3 +483,138 @@ auto miral::StaticDisplayConfig::list_layouts() const -> std::vector<std::string
     return result;
 }
 
+miral::ReloadingYamlFileDisplayConfig::ReloadingYamlFileDisplayConfig(std::string basename) :
+    basename{std::move(basename)}
+{
+}
+
+miral::ReloadingYamlFileDisplayConfig::~ReloadingYamlFileDisplayConfig()
+{
+    if (auto const ml = the_main_loop())
+    {
+        ml->unregister_fd_handler(this);
+    }
+}
+
+void miral::ReloadingYamlFileDisplayConfig::init_auto_reload(mir::Server& server)
+{
+    {
+        std::lock_guard lock{mutex};
+        if (the_display_configuration_controller_.use_count() || the_main_loop_.use_count())
+        {
+            mir::fatal_error("Init function should only be called once: %s", __PRETTY_FUNCTION__);
+        }
+
+        the_display_configuration_controller_ = server.the_display_configuration_controller();
+        the_main_loop_ = server.the_main_loop();
+    }
+    auto_reload();
+}
+
+void miral::ReloadingYamlFileDisplayConfig::config_path(std::string newpath)
+{
+    std::lock_guard lock{mutex};
+    config_path_ = newpath;
+}
+
+void miral::ReloadingYamlFileDisplayConfig::dump_config(std::function<void(std::ostream&)> const& print_template_config)
+{
+    if (!config_path_)
+    {
+        mir::log_debug("Nowhere to write display configuration template: Neither XDG_CONFIG_HOME or HOME is set");
+    }
+    else
+    {
+        auto const filename = config_path_.value() + "/" + basename;
+
+        if (access(filename.c_str(), F_OK))
+        {
+            std::ofstream out{filename};
+            print_template_config(out);
+
+            mir::log_debug(
+                "%s display configuration template: %s",
+                out ? "Wrote" : "Failed writing",
+                filename.c_str());
+        }
+    }
+
+    YamlFileDisplayConfig::dump_config(print_template_config);
+}
+
+
+auto miral::ReloadingYamlFileDisplayConfig::the_main_loop() const -> std::shared_ptr<mir::MainLoop>
+{
+    std::lock_guard lock{mutex};
+    return the_main_loop_.lock();
+}
+
+auto miral::ReloadingYamlFileDisplayConfig::the_display_configuration_controller() const -> std::shared_ptr<mir::shell::DisplayConfigurationController>
+{
+    std::lock_guard lock{mutex};
+    return the_display_configuration_controller_.lock();
+}
+
+auto miral::ReloadingYamlFileDisplayConfig::inotify_config_path() -> std::optional<mir::Fd>
+{
+    std::lock_guard lock{mutex};
+
+    if (!config_path_) return std::nullopt;
+
+    mir::Fd inotify_fd{inotify_init()};
+
+    if (inotify_fd < 0)
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to initialize inotify_fd"}));
+
+    config_path_wd = inotify_add_watch(inotify_fd, config_path_.value().c_str(), IN_CLOSE_WRITE | IN_CREATE | IN_MOVED_TO);
+
+    return inotify_fd;
+}
+
+void miral::ReloadingYamlFileDisplayConfig::auto_reload()
+{
+    if (auto const icf = inotify_config_path())
+    {
+        if (auto const ml = the_main_loop())
+        {
+            ml->register_fd_handler({icf.value()}, this, [icf=icf.value(), this] (int)
+                {
+                union
+                {
+                    inotify_event event;
+                    char buffer[sizeof(inotify_event) + NAME_MAX + 1];
+                } inotify_buffer;
+
+                if (read(icf, &inotify_buffer, sizeof(inotify_buffer)) < static_cast<ssize_t>(sizeof(inotify_event)))
+                    return;
+
+                if (inotify_buffer.event.mask & (IN_CLOSE_WRITE | IN_CREATE | IN_MOVED_TO)
+                    && inotify_buffer.event.name == basename)
+                    try
+                    {
+                        auto const& filename = config_path_.value() + "/" + basename;
+
+                        if (std::ifstream config_file{filename})
+                        {
+                            load_config(config_file, filename);
+
+                            if (auto const dcc = the_display_configuration_controller())
+                            {
+                                auto config = dcc->base_configuration();
+                                apply_to(*config);
+                                dcc->set_base_configuration(config);
+                            }
+                        }
+                        else
+                        {
+                            mir::log_warning("Failed to open display configuration: %s", filename.c_str());
+                        }
+                    }
+                    catch (mir::AbnormalExit const& except)
+                    {
+                        mir::log_warning("Failed to reload display configuration: %s", except.what());
+                    }
+                });
+        }
+    }
+}
