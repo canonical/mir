@@ -797,7 +797,7 @@ public:
 
     static Output* from(struct wl_resource*);
 
-    Output(struct wl_resource* resource, Version<3>);
+    Output(struct wl_resource* resource, Version<4>);
     virtual ~Output();
 
     void send_geometry_event(int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, int32_t subpixel, std::string const& make, std::string const& model, int32_t transform) const;
@@ -808,6 +808,12 @@ public:
     bool version_supports_scale();
     void send_scale_event_if_supported(int32_t factor) const;
     void send_scale_event(int32_t factor) const;
+    bool version_supports_name();
+    void send_name_event_if_supported(std::string const& name) const;
+    void send_name_event(std::string const& name) const;
+    bool version_supports_description();
+    void send_description_event_if_supported(std::string const& description) const;
+    void send_description_event(std::string const& description) const;
 
     struct Subpixel
     {
@@ -843,6 +849,8 @@ public:
         static uint32_t const mode = 1;
         static uint32_t const done = 2;
         static uint32_t const scale = 3;
+        static uint32_t const name = 4;
+        static uint32_t const description = 5;
     };
 
     struct Thunks;
@@ -852,7 +860,7 @@ public:
     class Global : public wayland::Global
     {
     public:
-        Global(wl_display* display, Version<3>);
+        Global(wl_display* display, Version<4>);
 
         auto interface_name() const -> char const* override;
 

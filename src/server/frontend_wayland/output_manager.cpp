@@ -72,10 +72,11 @@ auto transform_size(Size const& size, MirOrientation orientation) -> Size
 }
 
 mf::OutputInstance::OutputInstance(wl_resource* resource, OutputGlobal* global)
-    : Output{resource, Version<3>()},
+    : Output{resource, Version<4>()},
       global{mw::make_weak(global)}
 {
     global->add_listener(this);
+    send_name_event_if_supported(global->output_config.name);
 }
 
 mf::OutputInstance::~OutputInstance()
@@ -105,6 +106,7 @@ auto mf::OutputInstance::output_config_changed(mg::DisplayConfigurationOutput co
         "Fake manufacturer",
         "Fake model",
         mw::Output::Transform::normal);
+
     for (size_t i = 0; i < config.modes.size(); ++i)
     {
         auto const& mode = config.modes[i];
@@ -137,7 +139,7 @@ void mf::OutputInstance::send_done()
 }
 
 mf::OutputGlobal::OutputGlobal(wl_display* display, mg::DisplayConfigurationOutput const& initial_configuration)
-    : Global{display, Version<3>{}},
+    : Global{display, Version<4>{}},
       output_config{initial_configuration}
 {
 }

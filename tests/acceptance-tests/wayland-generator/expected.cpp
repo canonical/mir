@@ -3131,9 +3131,9 @@ struct mw::Output::Thunks
     static void const* request_vtable[];
 };
 
-int const mw::Output::Thunks::supported_version = 3;
+int const mw::Output::Thunks::supported_version = 4;
 
-mw::Output::Output(struct wl_resource* resource, Version<3>)
+mw::Output::Output(struct wl_resource* resource, Version<4>)
     : Resource{resource}
 {
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
@@ -3206,6 +3206,60 @@ void mw::Output::send_scale_event(int32_t factor) const
     }
 }
 
+bool mw::Output::version_supports_name()
+{
+    return wl_resource_get_version(resource) >= 4;
+}
+
+void mw::Output::send_name_event_if_supported(std::string const& name) const
+{
+    if (wl_resource_get_version(resource) >= 4)
+    {
+        const char* name_resolved = name.c_str();
+        wl_resource_post_event(resource, Opcode::name, name_resolved);
+    }
+}
+
+void mw::Output::send_name_event(std::string const& name) const
+{
+    if (wl_resource_get_version(resource) >= 4)
+    {
+        const char* name_resolved = name.c_str();
+        wl_resource_post_event(resource, Opcode::name, name_resolved);
+    }
+    else
+    {
+        tried_to_send_unsupported_event(client->raw_client(), resource, "name", 4);
+    }
+}
+
+bool mw::Output::version_supports_description()
+{
+    return wl_resource_get_version(resource) >= 4;
+}
+
+void mw::Output::send_description_event_if_supported(std::string const& description) const
+{
+    if (wl_resource_get_version(resource) >= 4)
+    {
+        const char* description_resolved = description.c_str();
+        wl_resource_post_event(resource, Opcode::description, description_resolved);
+    }
+}
+
+void mw::Output::send_description_event(std::string const& description) const
+{
+    if (wl_resource_get_version(resource) >= 4)
+    {
+        const char* description_resolved = description.c_str();
+        wl_resource_post_event(resource, Opcode::description, description_resolved);
+    }
+    else
+    {
+        tried_to_send_unsupported_event(client->raw_client(), resource, "description", 4);
+    }
+}
+
 bool mw::Output::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &wl_output_interface_data, Thunks::request_vtable);
@@ -3228,7 +3282,7 @@ uint32_t const mw::Output::Transform::flipped_270;
 uint32_t const mw::Output::Mode::current;
 uint32_t const mw::Output::Mode::preferred;
 
-mw::Output::Global::Global(wl_display* display, Version<3>)
+mw::Output::Global::Global(wl_display* display, Version<4>)
     : wayland::Global{
           wl_global_create(
               display,
@@ -3261,7 +3315,9 @@ struct wl_message const mw::Output::Thunks::event_messages[] {
     {"geometry", "iiiiissi", geometry_types},
     {"mode", "uiii", all_null_types},
     {"done", "2", all_null_types},
-    {"scale", "2i", all_null_types}};
+    {"scale", "2i", all_null_types},
+    {"name", "4s", all_null_types},
+    {"description", "4s", all_null_types}};
 
 void const* mw::Output::Thunks::request_vtable[] {
     (void*)Thunks::release_thunk};
@@ -3804,7 +3860,7 @@ struct wl_interface const wl_output_interface_data {
     mw::Output::interface_name,
     mw::Output::Thunks::supported_version,
     1, mw::Output::Thunks::request_messages,
-    4, mw::Output::Thunks::event_messages};
+    6, mw::Output::Thunks::event_messages};
 
 struct wl_interface const wl_region_interface_data {
     mw::Region::interface_name,
