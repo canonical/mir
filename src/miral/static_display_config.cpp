@@ -301,97 +301,19 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
     conf.for_each_output([&](mg::UserDisplayConfigurationOutput& conf_output)
         {
             auto& card_data = card_map[conf_output.card_id];
-            auto& out = card_data.out;
             auto const type = static_cast<MirOutputType>(conf_output.type);
             auto const index_by_type = ++card_data.output_counts[type];
 
-            auto const& conf = (current_config != end(config)) ?
-                         current_config->second[Id{conf_output.card_id, type, index_by_type}] :
-                          Config{};
-
-            if (conf_output.connected && conf_output.modes.size() > 0 && !conf.disabled)
+            if (current_config != end(config))
             {
-                conf_output.used = true;
-                conf_output.power_mode = mir_power_mode_on;
-                conf_output.orientation = mir_orientation_normal;
-
-                if (conf.position.is_set())
-                {
-                    conf_output.top_left = conf.position.value();
-                }
-                else
-                {
-                    conf_output.top_left = Point{0, 0};
-                }
-
-                size_t preferred_mode_index{select_mode_index(conf_output.preferred_mode_index, conf_output.modes)};
-                conf_output.current_mode_index = preferred_mode_index;
-
-                if (conf.size.is_set())
-                {
-                    bool matched_mode = false;
-
-                    for (auto mode = begin(conf_output.modes); mode != end(conf_output.modes); ++mode)
-                    {
-                        if (mode->size == conf.size.value())
-                        {
-                            if (conf.refresh.is_set())
-                            {
-                                if (std::abs(conf.refresh.value() - mode->vrefresh_hz) < 1.0)
-                                {
-                                    conf_output.current_mode_index = distance(begin(conf_output.modes), mode);
-                                    matched_mode = true;
-                                }
-                            }
-                            else if (conf_output.modes[conf_output.current_mode_index].size != conf.size.value()
-                                  || conf_output.modes[conf_output.current_mode_index].vrefresh_hz < mode->vrefresh_hz)
-                            {
-                                conf_output.current_mode_index = distance(begin(conf_output.modes), mode);
-                                matched_mode = true;
-                            }
-                        }
-                    }
-
-                    if (!matched_mode)
-                    {
-                        if (conf.refresh.is_set())
-                        {
-                            mir::log_warning("Display config contains unmatched mode: '%dx%d@%2.1f'",
-                                conf.size.value().width.as_int(), conf.size.value().height.as_int(), conf.refresh.value());
-                        }
-                        else
-                        {
-                            mir::log_warning("Display config contains unmatched mode: '%dx%d'",
-                                             conf.size.value().width.as_int(), conf.size.value().height.as_int());
-                        }
-                    }
-                }
-
-                if (conf.scale.is_set())
-                {
-                    conf_output.scale = conf.scale.value();
-                }
-
-                if (conf.orientation.is_set())
-                {
-                    conf_output.orientation = conf.orientation.value();
-                }
-
-                if (conf.group_id.is_set())
-                {
-                    conf_output.logical_group_id = mg::DisplayConfigurationLogicalGroupId{conf.group_id.value()};
-                }
-                else
-                {
-                    conf_output.logical_group_id = mg::DisplayConfigurationLogicalGroupId{};
-                }
+                apply_to_output(conf_output, current_config->second[Id{conf_output.card_id, type, index_by_type}]);
             }
             else
             {
-                conf_output.used = false;
-                conf_output.power_mode = mir_power_mode_off;
+                apply_to_output(conf_output, Config{});
             }
 
+            auto& out = card_data.out;
             out << "\n      " << mir::output_type_name(type);
             if (conf_output.card_id.as_value() > 0)
                 out << '-' << conf_output.card_id.as_value();
@@ -455,6 +377,94 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
         };
 
     dump_config(print_template_config);
+}
+
+void miral::YamlFileDisplayConfig::apply_to_output(
+    mg::UserDisplayConfigurationOutput& conf_output,
+    Config const& conf) const
+{
+    if (conf_output.connected && conf_output.modes.size() > 0 && !conf.disabled)
+    {
+        conf_output.used = true;
+        conf_output.power_mode = mir_power_mode_on;
+        conf_output.orientation = mir_orientation_normal;
+
+        if (conf.position.is_set())
+        {
+            conf_output.top_left = conf.position.value();
+        }
+        else
+        {
+            conf_output.top_left = Point{0, 0};
+        }
+
+        size_t preferred_mode_index{select_mode_index(conf_output.preferred_mode_index, conf_output.modes)};
+        conf_output.current_mode_index = preferred_mode_index;
+
+        if (conf.size.is_set())
+        {
+            bool matched_mode = false;
+
+            for (auto mode = begin(conf_output.modes); mode != end(conf_output.modes); ++mode)
+            {
+                if (mode->size == conf.size.value())
+                {
+                    if (conf.refresh.is_set())
+                    {
+                        if (std::abs(conf.refresh.value() - mode->vrefresh_hz) < 1.0)
+                        {
+                            conf_output.current_mode_index = distance(begin(conf_output.modes), mode);
+                            matched_mode = true;
+                        }
+                    }
+                    else if (conf_output.modes[conf_output.current_mode_index].size != conf.size.value()
+                          || conf_output.modes[conf_output.current_mode_index].vrefresh_hz < mode->vrefresh_hz)
+                    {
+                        conf_output.current_mode_index = distance(begin(conf_output.modes), mode);
+                        matched_mode = true;
+                    }
+                }
+            }
+
+            if (!matched_mode)
+            {
+                if (conf.refresh.is_set())
+                {
+                    mir::log_warning("Display config contains unmatched mode: '%dx%d@%2.1f'",
+                        conf.size.value().width.as_int(), conf.size.value().height.as_int(), conf.refresh.value());
+                }
+                else
+                {
+                    mir::log_warning("Display config contains unmatched mode: '%dx%d'",
+                                     conf.size.value().width.as_int(), conf.size.value().height.as_int());
+                }
+            }
+        }
+
+        if (conf.scale.is_set())
+        {
+            conf_output.scale = conf.scale.value();
+        }
+
+        if (conf.orientation.is_set())
+        {
+            conf_output.orientation = conf.orientation.value();
+        }
+
+        if (conf.group_id.is_set())
+        {
+            conf_output.logical_group_id = mg::DisplayConfigurationLogicalGroupId{conf.group_id.value()};
+        }
+        else
+        {
+            conf_output.logical_group_id = mg::DisplayConfigurationLogicalGroupId{};
+        }
+    }
+    else
+    {
+        conf_output.used = false;
+        conf_output.power_mode = mir_power_mode_off;
+    }
 }
 
 void miral::YamlFileDisplayConfig::dump_config(std::function<void(std::ostream&)> const& print_template_config)

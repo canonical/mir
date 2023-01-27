@@ -68,6 +68,8 @@ private:
     using Id2Config = std::map<Id, Config>;
     using Layout2Id2Config = std::map<std::string, Id2Config>;
     Layout2Id2Config config;
+
+    void apply_to_output(mir::graphics::UserDisplayConfigurationOutput& conf_output, Config const& conf) const;
 };
 
 class ReloadingYamlFileDisplayConfig : public YamlFileDisplayConfig
