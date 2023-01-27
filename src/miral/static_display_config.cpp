@@ -313,48 +313,7 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                 apply_to_output(conf_output, Config{});
             }
 
-            auto& out = card_data.out;
-            out << "\n      " << mir::output_type_name(type);
-            if (conf_output.card_id.as_value() > 0)
-                out << '-' << conf_output.card_id.as_value();
-            out << '-' << index_by_type << ':';
-
-            if (conf_output.connected && conf_output.modes.size() > 0)
-            {
-                out << "\n        # This output supports the following modes:";
-                for (size_t i = 0; i < conf_output.modes.size(); ++i)
-                {
-                    if (i) out << ',';
-                    if ((i % 5) != 2) out << ' ';
-                    else out << "\n        # ";
-                    out << conf_output.modes[i];
-                }
-                out << "\n        #"
-                       "\n        # Uncomment the following to enforce the selected configuration."
-                       "\n        # Or amend as desired."
-                       "\n        #"
-                       "\n        # state: " << (conf_output.used ? state_enabled : state_disabled)
-                    << "\t# {enabled, disabled}, defaults to enabled";
-
-                if (conf_output.used) // The following are only set when used
-                {
-                    out << "\n        # mode: " << conf_output.modes[conf_output.current_mode_index]
-                        << "\t# Defaults to preferred mode"
-                           "\n        # position: [" << conf_output.top_left.x << ", " << conf_output.top_left.y << ']'
-                        << "\t# Defaults to [0, 0]"
-                           "\n        # orientation: " << as_string(conf_output.orientation)
-                        << "\t# {normal, left, right, inverted}, defaults to normal"
-                           "\n        # scale: " << conf_output.scale
-                        << "\n        # group: " << conf_output.logical_group_id.as_value()
-                        << "\t# Outputs with the same non-zero value are treated as a single display";
-                }
-            }
-            else
-            {
-                out << "\n        # (disconnected)";
-            }
-
-            out << "\n";
+            serialize_output_configuration(card_data.out, conf_output, index_by_type);
         });
 
     auto print_template_config = [&card_map](std::ostream& out)
@@ -379,9 +338,55 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
     dump_config(print_template_config);
 }
 
-void miral::YamlFileDisplayConfig::apply_to_output(
-    mg::UserDisplayConfigurationOutput& conf_output,
-    Config const& conf) const
+void miral::YamlFileDisplayConfig::serialize_output_configuration(
+    std::ostream& out, mg::UserDisplayConfigurationOutput& conf_output, int index_by_type)
+{
+    auto const type = static_cast<MirOutputType>(conf_output.type);
+
+    out << "\n      " << mir::output_type_name(type);
+    if (conf_output.card_id.as_value() > 0)
+        out << '-' << conf_output.card_id.as_value();
+    out << '-' << index_by_type << ':';
+
+    if (conf_output.connected && conf_output.modes.size() > 0)
+    {
+        out << "\n        # This output supports the following modes:";
+        for (size_t i = 0; i < conf_output.modes.size(); ++i)
+        {
+            if (i) out << ',';
+            if ((i % 5) != 2) out << ' ';
+            else out << "\n        # ";
+            out << conf_output.modes[i];
+        }
+        out << "\n        #"
+               "\n        # Uncomment the following to enforce the selected configuration."
+               "\n        # Or amend as desired."
+               "\n        #"
+               "\n        # state: " << (conf_output.used ? state_enabled : state_disabled)
+            << "\t# {enabled, disabled}, defaults to enabled";
+
+        if (conf_output.used) // The following are only set when used
+        {
+            out << "\n        # mode: " << conf_output.modes[conf_output.current_mode_index]
+                << "\t# Defaults to preferred mode"
+                   "\n        # position: [" << conf_output.top_left.x << ", " << conf_output.top_left.y << ']'
+                << "\t# Defaults to [0, 0]"
+                   "\n        # orientation: " << as_string(conf_output.orientation)
+                << "\t# {normal, left, right, inverted}, defaults to normal"
+                   "\n        # scale: " << conf_output.scale
+                << "\n        # group: " << conf_output.logical_group_id.as_value()
+                << "\t# Outputs with the same non-zero value are treated as a single display";
+        }
+    }
+    else
+    {
+        out << "\n        # (disconnected)";
+    }
+
+    out << "\n";
+}
+
+void miral::YamlFileDisplayConfig::apply_to_output(mg::UserDisplayConfigurationOutput& conf_output, Config const& conf)
 {
     if (conf_output.connected && conf_output.modes.size() > 0 && !conf.disabled)
     {
