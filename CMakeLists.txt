@@ -201,7 +201,6 @@ include_directories (SYSTEM
 )
 
 add_compile_definitions(EGL_NO_X11)
-add_compile_definitions(MESA_EGL_NO_X11_HEADERS) # Can be removed when all platforms support EGL_NO_X11
 
 pkg_check_modules(WAYLAND_EGLSTREAM wayland-eglstream)
 
