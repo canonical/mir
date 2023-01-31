@@ -20,6 +20,8 @@
 #include <memory>
 #include <functional>
 
+#include "mir/geometry/point.h"
+
 namespace mir
 {
 namespace scene
@@ -40,7 +42,7 @@ class Scene
 public:
     virtual ~Scene() = default;
 
-    virtual void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& callback) = 0;
+    virtual auto input_surface_at(geometry::Point point) const -> std::shared_ptr<input::Surface> = 0;
 
     virtual void add_observer(std::shared_ptr<scene::Observer> const& observer) = 0;
     virtual void remove_observer(std::weak_ptr<scene::Observer> const& observer) = 0;

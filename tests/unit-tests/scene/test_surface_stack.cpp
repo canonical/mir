@@ -531,9 +531,7 @@ TEST_F(SurfaceStack, scene_observer_can_query_scene_within_surface_exists_notifi
     MockSceneObserver observer;
 
     auto const scene_query = [&]{
-        stack.for_each([&](std::shared_ptr<mi::Surface> const& surface){
-            EXPECT_THAT(surface.get(), Eq(stub_surface1.get()));
-        });
+        EXPECT_THAT(stack.input_surface_at({}).get(), Eq(stub_surface1.get()));
     };
     EXPECT_CALL(observer, surface_exists(stub_surface1)).Times(1)
         .WillOnce(InvokeWithoutArgs(scene_query));
@@ -549,9 +547,7 @@ TEST_F(SurfaceStack, scene_observer_can_async_query_scene_within_surface_exists_
     MockSceneObserver observer;
 
     auto const scene_query = [&]{
-        stack.for_each([&](std::shared_ptr<mi::Surface> const& surface){
-            EXPECT_THAT(surface.get(), Eq(stub_surface1.get()));
-        });
+        EXPECT_THAT(stack.input_surface_at({}).get(), Eq(stub_surface1.get()));
     };
 
     auto const async_scene_query = [&]{
@@ -874,8 +870,10 @@ TEST_F(SurfaceStack, scene_observer_notified_of_add_and_remove_input_visualizati
     stack.remove_input_visualization(mt::fake_shared(r));
 }
 
-TEST_F(SurfaceStack, overlays_do_not_appear_in_input_enumeration)
+TEST_F(SurfaceStack, overlays_do_not_interfere_with_finding_input_surface)
 {
+    using namespace ::testing;
+
     mtd::StubRenderable r;
 
     stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
@@ -887,12 +885,7 @@ TEST_F(SurfaceStack, overlays_do_not_appear_in_input_enumeration)
 
     stack.add_input_visualization(mt::fake_shared(r));
 
-    unsigned int observed_input_targets = 0;
-    stack.for_each([&observed_input_targets](std::shared_ptr<mi::Surface> const&)
-        {
-            observed_input_targets++;
-        });
-    EXPECT_EQ(2, observed_input_targets);
+    EXPECT_THAT(stack.input_surface_at({}).get(), Eq(stub_surface2.get()));
 }
 
 TEST_F(SurfaceStack, overlays_appear_at_top_of_renderlist)
@@ -952,7 +945,7 @@ TEST_F(SurfaceStack, scene_observers_notified_of_generic_scene_change)
     stack.emit_scene_changed();
 }
 
-TEST_F(SurfaceStack, for_each_enumerates_all_input_surfaces)
+TEST_F(SurfaceStack, input_surface_at_finds_top_surface)
 {
     using namespace ::testing;
 
@@ -964,13 +957,7 @@ TEST_F(SurfaceStack, for_each_enumerates_all_input_surfaces)
     stub_surface2->configure(mir_window_attrib_visibility, MirWindowVisibility::mir_window_visibility_occluded);
     stub_surface3->configure(mir_window_attrib_visibility, MirWindowVisibility::mir_window_visibility_occluded);
 
-    int num_exposed_surfaces = 0;
-    auto const count_exposed_surfaces = [&num_exposed_surfaces](std::shared_ptr<mi::Surface> const&){
-        num_exposed_surfaces++;
-    };
-
-    stack.for_each(count_exposed_surfaces);
-    EXPECT_THAT(num_exposed_surfaces, Eq(3));
+    EXPECT_THAT(stack.input_surface_at({}).get(), Eq(stub_surface3.get()));
 }
 
 using namespace ::testing;

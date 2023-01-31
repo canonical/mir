@@ -205,12 +205,6 @@ struct StubScene : public mtd::StubInputScene
     {
     }
 
-    void for_each(std::function<void(std::shared_ptr<mi::Surface> const&)> const& callback) override
-    {
-        for (auto const& target : targets)
-            callback(target);
-    }
-
     void add_observer(std::shared_ptr<ms::Observer> const& observer) override
     {
         observers.add(observer);

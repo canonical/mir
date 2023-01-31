@@ -28,8 +28,9 @@ namespace doubles
 
 class StubInputScene : public input::Scene
 {
-    void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& ) override
+    auto input_surface_at(geometry::Point) const -> std::shared_ptr<input::Surface> override
     {
+        return nullptr;
     }
     void add_observer(std::shared_ptr<scene::Observer> const& /* observer */) override
     {

@@ -88,13 +88,6 @@ struct StubInputScene : public mtd::StubInputScene
     {
         return add_surface({{0, 0}, {1, 1}});
     }
-    
-    void for_each(std::function<void(std::shared_ptr<mi::Surface> const&)> const& exec) override
-    {
-	surfaces.for_each([&exec](std::shared_ptr<mi::Surface> const& surface) {
-            exec(surface);
-        });
-    }
 
     void add_observer(std::shared_ptr<ms::Observer> const& new_observer) override
     {

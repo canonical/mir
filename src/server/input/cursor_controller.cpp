@@ -176,19 +176,6 @@ private:
     std::map<ms::Surface*, std::shared_ptr<ms::SurfaceObserver>> surface_observers;
 };
 
-std::shared_ptr<mi::Surface> topmost_surface_containing_point(
-    std::shared_ptr<mi::Scene> const& targets, geom::Point const& point)
-{
-    std::shared_ptr<mi::Surface> top_surface_at_point;
-    targets->for_each([&top_surface_at_point, &point]
-        (std::shared_ptr<mi::Surface> const& surface) 
-        {
-            if (surface->input_area_contains(point))
-                top_surface_at_point = surface;
-        });
-    return top_surface_at_point;
-}
-
 bool is_empty(std::shared_ptr<mg::CursorImage> const& image)
 {
     auto const size = image->size();
@@ -248,8 +235,7 @@ void mi::CursorController::set_cursor_image_locked(std::unique_lock<std::mutex>&
 
 void mi::CursorController::update_cursor_image_locked(std::unique_lock<std::mutex>& lock)
 {
-    auto surface = topmost_surface_containing_point(input_targets, cursor_location);
-    if (surface)
+    if (auto const surface = input_targets->input_surface_at(cursor_location))
     {
         set_cursor_image_locked(lock, surface->cursor_image());
     }
