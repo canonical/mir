@@ -237,7 +237,7 @@ public:
     {
         if (!mock_console_services)
         {
-            mock_console_services = std::make_shared<MockConsoleServices>(pause_signal, resume_signal);
+            mock_console_services = std::make_shared<testing::NiceMock<MockConsoleServices>>(pause_signal, resume_signal);
         }
         return mock_console_services;
     }
