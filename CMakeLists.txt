@@ -307,9 +307,6 @@ pkg_check_modules(GL REQUIRED glesv2)
 
 if (MIR_BUILD_PLATFORM_GBM_KMS)
   pkg_check_modules( GBM REQUIRED gbm>=11.0.0)
-  if (DRM_VERSION VERSION_GREATER 2.4.84)
-    add_compile_definitions(MIR_DRMMODEADDFB_HAS_CONST_SIGNATURE)
-  endif()
 endif()
 
 if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
