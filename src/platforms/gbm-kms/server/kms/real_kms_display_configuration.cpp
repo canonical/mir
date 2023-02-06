@@ -15,17 +15,20 @@
  */
 
 #include "real_kms_display_configuration.h"
+#include "kms_output.h"
+#include "kms_output_container.h"
 #include "mir/graphics/pixel_format_utils.h"
 #include "mir/log.h"
-#include "kms_output_container.h"
-#include "kms_output.h"
-
-#include <limits>
+#include "mir/output_type_names.h"
 
 #include <boost/throw_exception.hpp>
-#include <stdexcept>
+
 #include <algorithm>
 #include <cstring>
+#include <limits>
+#include <map>
+#include <sstream>
+#include <stdexcept>
 
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
@@ -127,6 +130,27 @@ void populate_default_mir_config(mg::DisplayConfigurationOutput& to_populate)
     to_populate.current_format = mir_pixel_format_xrgb_8888;
     to_populate.current_mode_index = std::numeric_limits<uint32_t>::max();
 }
+
+void name_outputs(auto& outputs)
+{
+    std::map<mg::DisplayConfigurationCardId, std::map<MirOutputType, int>> card_map;
+
+    for (auto& output_pair : outputs)
+    {
+        auto& conf_output = output_pair.first;
+        auto const type = static_cast<MirOutputType>(conf_output.type);
+        auto const index_by_type = ++card_map[conf_output.card_id][type];
+
+        std::ostringstream out;
+
+        out << mir::output_type_name(type);
+        if (conf_output.card_id.as_value() > 0)
+            out << '-' << conf_output.card_id.as_value();
+        out << '-' << index_by_type;
+
+        conf_output.name = out.str();
+    }
+}
 }
 
 void mgg::RealKMSDisplayConfiguration::update()
@@ -162,6 +186,7 @@ void mgg::RealKMSDisplayConfiguration::update()
             new_outputs.emplace_back(mir_config, output);
         });
 
+    name_outputs(new_outputs);
     outputs = new_outputs;
 
     /*

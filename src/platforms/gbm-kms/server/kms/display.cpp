@@ -242,9 +242,8 @@ std::unique_ptr<mg::DisplayConfiguration> mgg::Display::configuration() const
         current_display_configuration.update();
         dirty_configuration = false;
     }
-    return std::unique_ptr<mg::DisplayConfiguration>(
-        new mgg::RealKMSDisplayConfiguration(current_display_configuration)
-        );
+
+    return std::make_unique<mgg::RealKMSDisplayConfiguration>(current_display_configuration);
 }
 
 void mgg::Display::configure(mg::DisplayConfiguration const& conf)
