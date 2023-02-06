@@ -63,11 +63,10 @@ private:
         mir::optional_value<MirOrientation>  orientation;
         mir::optional_value<int> group_id;
     };
-    using Id = std::tuple<mir::graphics::DisplayConfigurationCardId, MirOutputType, int>;
 
-    using Id2Config = std::map<Id, Config>;
-    using Layout2Id2Config = std::map<std::string, Id2Config>;
-    Layout2Id2Config config;
+    using Port2Config = std::map<std::string, Config>;
+    using Layout2Port2Config = std::map<std::string, Port2Config>;
+    Layout2Port2Config config;
 
     static void apply_to_output(mir::graphics::UserDisplayConfigurationOutput& conf_output, Config const& conf);
 

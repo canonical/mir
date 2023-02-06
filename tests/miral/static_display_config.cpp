@@ -65,6 +65,7 @@ struct StaticDisplayConfig : Test
         vga1.modes.push_back(another_mode);
         vga1.power_mode = mir_power_mode_on;
         vga1.orientation = mir_orientation_normal;
+        vga1.name = "VGA-1";
 
         hdmi1.id = mg::DisplayConfigurationOutputId{1};
         hdmi1.card_id = mg::DisplayConfigurationCardId{0};
@@ -78,6 +79,7 @@ struct StaticDisplayConfig : Test
         hdmi1.modes.push_back(another_mode);
         hdmi1.power_mode = mir_power_mode_on;
         hdmi1.orientation = mir_orientation_normal;
+        hdmi1.name = "HDMI-A-1";
 
         EXPECT_CALL(dc, for_each_output(_)).WillRepeatedly(DoAll(
             InvokeArgument<0>(mg::UserDisplayConfigurationOutput{vga1}),
