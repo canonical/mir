@@ -131,7 +131,7 @@ void populate_default_mir_config(mg::DisplayConfigurationOutput& to_populate)
     to_populate.current_mode_index = std::numeric_limits<uint32_t>::max();
 }
 
-void name_outputs(auto& outputs)
+void name_outputs(std::vector<std::pair<mg::DisplayConfigurationOutput, std::shared_ptr<mgg::KMSOutput>>>& outputs)
 {
     std::map<mg::DisplayConfigurationCardId, std::map<MirOutputType, int>> card_map;
 
