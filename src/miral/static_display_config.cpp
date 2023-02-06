@@ -313,7 +313,7 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                 apply_to_output(conf_output, Config{});
             }
 
-            serialize_output_configuration(card_data.out, conf_output, index_by_type);
+            serialize_output_configuration(card_data.out, conf_output);
         });
 
     auto print_template_config = [&card_map](std::ostream& out)
@@ -339,14 +339,9 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
 }
 
 void miral::YamlFileDisplayConfig::serialize_output_configuration(
-    std::ostream& out, mg::UserDisplayConfigurationOutput& conf_output, int index_by_type)
+    std::ostream& out, mg::UserDisplayConfigurationOutput& conf_output)
 {
-    auto const type = static_cast<MirOutputType>(conf_output.type);
-
-    out << "\n      " << mir::output_type_name(type);
-    if (conf_output.card_id.as_value() > 0)
-        out << '-' << conf_output.card_id.as_value();
-    out << '-' << index_by_type << ':';
+    out << "\n      " << conf_output.name << ':';
 
     if (conf_output.connected && conf_output.modes.size() > 0)
     {
