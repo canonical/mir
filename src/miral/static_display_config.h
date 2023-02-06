@@ -71,7 +71,9 @@ private:
     static void apply_to_output(mir::graphics::UserDisplayConfigurationOutput& conf_output, Config const& conf);
 
     static void serialize_output_configuration(
-        std::ostream& out, mir::graphics::UserDisplayConfigurationOutput& conf_output);
+        std::ostream& out, mir::graphics::UserDisplayConfigurationOutput const& conf_output);
+
+    static void serialize_configuration(std::ostream& out, mir::graphics::DisplayConfiguration& conf);
 };
 
 class ReloadingYamlFileDisplayConfig : public YamlFileDisplayConfig
