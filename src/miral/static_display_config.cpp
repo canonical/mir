@@ -282,17 +282,18 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
             });
     }
 
-    dump_config([&conf](std::ostream& out)
-        {
-            out << "layouts:"
-                   "\n# keys here are layout labels (used for atomically switching between them)"
-                   "\n# when enabling displays, surfaces should be matched in reverse recency order"
-                   "\n"
-                   "\n  default:                         # the default layout"
-                   "\n";
+    std::ostringstream out;
+    out << "Display config:\n8>< ---------------------------------------------------\n";
+    out << "layouts:"
+           "\n# keys here are layout labels (used for atomically switching between them)"
+           "\n# when enabling displays, surfaces should be matched in reverse recency order"
+           "\n"
+           "\n  default:                         # the default layout"
+           "\n";
 
-            serialize_configuration(out, conf);
-        });
+    serialize_configuration(out, conf);
+    out << "8>< ---------------------------------------------------";
+    mir::log_info(out.str());
 }
 
 void miral::YamlFileDisplayConfig::serialize_configuration(std::ostream& out, mg::DisplayConfiguration& conf)
@@ -444,15 +445,6 @@ void miral::YamlFileDisplayConfig::apply_to_output(mg::UserDisplayConfigurationO
     }
 }
 
-void miral::YamlFileDisplayConfig::dump_config(std::function<void(std::ostream&)> const& print_template_config)
-{
-    std::ostringstream out;
-    out << "Display config:\n8>< ---------------------------------------------------\n";
-    print_template_config(out);
-    out << "8>< ---------------------------------------------------";
-    mir::log_info(out.str());
-}
-
 void miral::YamlFileDisplayConfig::select_layout(std::string const& layout)
 {
     this->layout = layout;
@@ -504,8 +496,10 @@ void miral::ReloadingYamlFileDisplayConfig::config_path(std::string newpath)
     config_path_ = newpath;
 }
 
-void miral::ReloadingYamlFileDisplayConfig::dump_config(std::function<void(std::ostream&)> const& print_template_config)
+void miral::ReloadingYamlFileDisplayConfig::apply_to(mir::graphics::DisplayConfiguration& conf)
 {
+    YamlFileDisplayConfig::apply_to(conf);
+
     if (!config_path_)
     {
         mir::log_debug("Nowhere to write display configuration template: Neither XDG_CONFIG_HOME or HOME is set");
@@ -517,7 +511,15 @@ void miral::ReloadingYamlFileDisplayConfig::dump_config(std::function<void(std::
         if (access(filename.c_str(), F_OK))
         {
             std::ofstream out{filename};
-            print_template_config(out);
+
+            out << "layouts:"
+                   "\n# keys here are layout labels (used for atomically switching between them)"
+                   "\n# when enabling displays, surfaces should be matched in reverse recency order"
+                   "\n"
+                   "\n  default:                         # the default layout"
+                   "\n";
+
+            serialize_configuration(out, conf);
 
             mir::log_debug(
                 "%s display configuration template: %s",
@@ -525,10 +527,7 @@ void miral::ReloadingYamlFileDisplayConfig::dump_config(std::function<void(std::
                 filename.c_str());
         }
     }
-
-    YamlFileDisplayConfig::dump_config(print_template_config);
 }
-
 
 auto miral::ReloadingYamlFileDisplayConfig::the_main_loop() const -> std::shared_ptr<mir::MainLoop>
 {
@@ -605,3 +604,4 @@ void miral::ReloadingYamlFileDisplayConfig::auto_reload()
         }
     }
 }
+
