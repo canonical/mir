@@ -282,18 +282,22 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
             });
     }
 
-    dump_config([&conf](std::ostream& out){ serialize_configuration(out, conf); });
+    dump_config([&conf](std::ostream& out)
+        {
+            out << "layouts:"
+                   "\n# keys here are layout labels (used for atomically switching between them)"
+                   "\n# when enabling displays, surfaces should be matched in reverse recency order"
+                   "\n"
+                   "\n  default:                         # the default layout"
+                   "\n";
+
+            serialize_configuration(out, conf);
+        });
 }
 
 void miral::YamlFileDisplayConfig::serialize_configuration(std::ostream& out, mg::DisplayConfiguration& conf)
 {
-    out << "layouts:"
-           "\n# keys here are layout labels (used for atomically switching between them)"
-           "\n# when enabling displays, surfaces should be matched in reverse recency order"
-           "\n"
-           "\n  default:                         # the default layout"
-           "\n"
-           "\n    cards:"
+    out << "\n    cards:"
            "\n    # a list of cards (currently matched by card-id)";
 
     std::map<mg::DisplayConfigurationCardId, std::ostringstream> card_map;
