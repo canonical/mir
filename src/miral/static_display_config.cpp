@@ -285,11 +285,7 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
     std::ostringstream out;
     out << "Display config:\n8>< ---------------------------------------------------\n";
     out << "layouts:"
-           "\n# keys here are layout labels (used for atomically switching between them)"
-           "\n# when enabling displays, surfaces should be matched in reverse recency order"
-           "\n"
-           "\n  default:                         # the default layout"
-           "\n";
+           "\n  default:                         # the default layout";
 
     serialize_configuration(out, conf);
     out << "8>< ---------------------------------------------------";
@@ -510,16 +506,23 @@ void miral::ReloadingYamlFileDisplayConfig::apply_to(mir::graphics::DisplayConfi
 
         if (access(filename.c_str(), F_OK))
         {
+            auto const side_by_side_config = conf.clone();
+            mg::SideBySideDisplayConfigurationPolicy{}.apply_to(*side_by_side_config);
+
             std::ofstream out{filename};
 
             out << "layouts:"
-                   "\n# keys here are layout labels (used for atomically switching between them)"
-                   "\n# when enabling displays, surfaces should be matched in reverse recency order"
+                   "\n# keys here are layout labels (used for atomically switching between them)."
+                   "\n# The yaml anchor 'the_default' is used to alias the 'default' label"
                    "\n"
-                   "\n  default:                         # the default layout"
-                   "\n";
-
+                   "\n  all_at_00: &the_default          # outputs all at {0, 0}";
             serialize_configuration(out, conf);
+
+            out << "\n  side_by_side:                    # the side-by-side layout";
+            serialize_configuration(out, *side_by_side_config);
+
+            out << "\n  default: *the_default"
+                   "\n";
 
             mir::log_debug(
                 "%s display configuration template: %s",
