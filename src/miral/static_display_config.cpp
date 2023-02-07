@@ -330,19 +330,19 @@ void miral::YamlFileDisplayConfig::serialize_output_configuration(
                "\n        # Uncomment the following to enforce the selected configuration."
                "\n        # Or amend as desired."
                "\n        #"
-               "\n        # state: " << (conf_output.used ? state_enabled : state_disabled)
+               "\n        state: " << (conf_output.used ? state_enabled : state_disabled)
             << "\t# {enabled, disabled}, defaults to enabled";
 
         if (conf_output.used) // The following are only set when used
         {
-            out << "\n        # mode: " << conf_output.modes[conf_output.current_mode_index]
+            out << "\n        mode: " << conf_output.modes[conf_output.current_mode_index]
                 << "\t# Defaults to preferred mode"
-                   "\n        # position: [" << conf_output.top_left.x << ", " << conf_output.top_left.y << ']'
+                   "\n        position: [" << conf_output.top_left.x << ", " << conf_output.top_left.y << ']'
                 << "\t# Defaults to [0, 0]"
-                   "\n        # orientation: " << as_string(conf_output.orientation)
+                   "\n        orientation: " << as_string(conf_output.orientation)
                 << "\t# {normal, left, right, inverted}, defaults to normal"
-                   "\n        # scale: " << conf_output.scale
-                << "\n        # group: " << conf_output.logical_group_id.as_value()
+                   "\n        scale: " << conf_output.scale
+                << "\n        group: " << conf_output.logical_group_id.as_value()
                 << "\t# Outputs with the same non-zero value are treated as a single display";
         }
     }
