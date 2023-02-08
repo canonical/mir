@@ -133,17 +133,17 @@ void populate_default_mir_config(mg::DisplayConfigurationOutput& to_populate)
 
 void name_outputs(std::vector<std::pair<mg::DisplayConfigurationOutput, std::shared_ptr<mgg::KMSOutput>>>& outputs)
 {
-    std::map<mg::DisplayConfigurationCardId, std::map<MirOutputType, int>> card_map;
+    std::map<mg::DisplayConfigurationCardId, std::map<mg::DisplayConfigurationOutputType, int>> card_map;
 
     for (auto& output_pair : outputs)
     {
         auto& conf_output = output_pair.first;
-        auto const type = static_cast<MirOutputType>(conf_output.type);
+        auto const type = conf_output.type;
         auto const index_by_type = ++card_map[conf_output.card_id][type];
 
         std::ostringstream out;
 
-        out << mir::output_type_name(type);
+        out << mir::output_type_name(static_cast<unsigned>(type));
         if (conf_output.card_id.as_value() > 0)
             out << '-' << conf_output.card_id.as_value();
         out << '-' << index_by_type;

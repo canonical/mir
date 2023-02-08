@@ -76,24 +76,6 @@ auto as_orientation(std::string const& orientation) -> mir::optional_value<MirOr
     return {};
 }
 
-auto output_type_from(std::string const& output) -> MirOutputType
-{
-    for (int i = 0; auto const name = mir::output_type_name(static_cast<MirOutputType>(i)); ++i)
-    {
-        if (output.find(name) == 0)
-            return static_cast<MirOutputType>(i);
-    }
-    return mir_output_type_unknown;
-}
-
-auto output_index_from(std::string const& output) -> int
-{
-    std::istringstream in{output.substr(output.rfind('-')+1)};
-    int result = 0;
-    in >> result;
-    return result;
-}
-
 auto select_mode_index(size_t mode_index, std::vector<mg::DisplayConfigurationMode> const & modes) -> size_t
 {
     if (modes.empty())
@@ -161,7 +143,7 @@ try
             throw mir::AbnormalExit{error_prefix(filename) + "invalid '" + ll.first.as<std::string>() + "' layout"};
         }
 
-        Id2Config layout_config;
+        Port2Config layout_config;
 
         Node cards = layout["cards"];
 
@@ -194,7 +176,6 @@ try
                     if (!port_config.IsMap())
                         throw mir::AbnormalExit{error_prefix(filename) + "invalid port: " + port_name};
 
-                    Id const output_id{card_no, output_type_from(port_name), output_index_from(port_name)};
                     Config   output_config;
 
                     if (auto const s = port_config[state])
@@ -263,7 +244,7 @@ try
                         output_config.scale = s.as<float>();
                     }
 
-                    layout_config[output_id] = output_config;
+                    layout_config[port_name] = output_config;
                 }
             }
         }
@@ -285,61 +266,53 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
     if (current_config != end(config))
     {
         mir::log_debug("Display config using layout: '%s'", layout.c_str());
+
+        conf.for_each_output([&config=current_config->second](mg::UserDisplayConfigurationOutput& conf_output)
+            {
+                apply_to_output(conf_output, config[conf_output.name]);
+            });
     }
     else
     {
         mir::log_warning("Display config does not contain layout '%s'", layout.c_str());
+
+        conf.for_each_output([config=Config{}](mg::UserDisplayConfigurationOutput& conf_output)
+            {
+                apply_to_output(conf_output, config);
+            });
     }
 
-    struct card_data
-    {
-        std::ostringstream out;
-        std::map<MirOutputType, int> output_counts;
-    };
-    std::map<mg::DisplayConfigurationCardId, card_data> card_map;
+    dump_config([&conf](std::ostream& out){ serialize_configuration(out, conf); });
+}
 
-    conf.for_each_output([&](mg::UserDisplayConfigurationOutput& conf_output)
+void miral::YamlFileDisplayConfig::serialize_configuration(std::ostream& out, mg::DisplayConfiguration& conf)
+{
+    out << "layouts:"
+           "\n# keys here are layout labels (used for atomically switching between them)"
+           "\n# when enabling displays, surfaces should be matched in reverse recency order"
+           "\n"
+           "\n  default:                         # the default layout"
+           "\n"
+           "\n    cards:"
+           "\n    # a list of cards (currently matched by card-id)";
+
+    std::map<mg::DisplayConfigurationCardId, std::ostringstream> card_map;
+
+    conf.for_each_output([&card_map](mg::UserDisplayConfigurationOutput const& conf_output)
         {
-            auto& card_data = card_map[conf_output.card_id];
-            auto const type = static_cast<MirOutputType>(conf_output.type);
-            auto const index_by_type = ++card_data.output_counts[type];
-
-            if (current_config != end(config))
-            {
-                apply_to_output(conf_output, current_config->second[Id{conf_output.card_id, type, index_by_type}]);
-            }
-            else
-            {
-                apply_to_output(conf_output, Config{});
-            }
-
-            serialize_output_configuration(card_data.out, conf_output);
+            serialize_output_configuration(card_map[conf_output.card_id], conf_output);
         });
 
-    auto print_template_config = [&card_map](std::ostream& out)
-        {
-            out << "layouts:"
-                   "\n# keys here are layout labels (used for atomically switching between them)"
-                   "\n# when enabling displays, surfaces should be matched in reverse recency order"
-                   "\n"
-                   "\n  default:                         # the default layout"
-                   "\n"
-                   "\n    cards:"
-                   "\n    # a list of cards (currently matched by card-id)";
-
-            for (auto const& co : card_map)
-            {
-                out << "\n"
-                       "\n    - card-id: " << co.first.as_value()
-                    << co.second.out.str();
-            }
-        };
-
-    dump_config(print_template_config);
+    for (auto const& co : card_map)
+    {
+        out << "\n"
+               "\n    - card-id: " << co.first.as_value()
+            << co.second.str();
+    }
 }
 
 void miral::YamlFileDisplayConfig::serialize_output_configuration(
-    std::ostream& out, mg::UserDisplayConfigurationOutput& conf_output)
+    std::ostream& out, mg::UserDisplayConfigurationOutput const& conf_output)
 {
     out << "\n      " << conf_output.name << ':';
 
