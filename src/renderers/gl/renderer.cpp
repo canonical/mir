@@ -415,32 +415,34 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
         return;
     }
 
-    auto const& prog =
-        [this, &texture](bool alpha) -> Program const&
+    // All the programs are held by program_factory through its lifetime. Using pointers avoids
+    // -Wdangling-reference.
+    auto const* prog =
+        [this, &texture](bool alpha) -> Program const*
         {
                 auto const& family = static_cast<::Program const&>(texture->shader(*program_factory));
                 if (alpha)
                 {
-                    return family.alpha;
+                    return &family.alpha;
                 }
-                return family.opaque;
+                return &family.opaque;
         }(renderable.alpha() < 1.0f);
 
-    glUseProgram(prog.id);
-    if (prog.last_used_frameno != frameno)
+    glUseProgram(prog->id);
+    if (prog->last_used_frameno != frameno)
     {   // Avoid reloading the screen-global uniforms on every renderable
         // TODO: We actually only need to bind these *once*, right? Not once per frame?
-        prog.last_used_frameno = frameno;
-        for (auto i = 0u; i < prog.tex_uniforms.size(); ++i)
+        prog->last_used_frameno = frameno;
+        for (auto i = 0u; i < prog->tex_uniforms.size(); ++i)
         {
-            if (prog.tex_uniforms[i] != -1)
+            if (prog->tex_uniforms[i] != -1)
             {
-                glUniform1i(prog.tex_uniforms[i], i);
+                glUniform1i(prog->tex_uniforms[i], i);
             }
         }
-        glUniformMatrix4fv(prog.display_transform_uniform, 1, GL_FALSE,
+        glUniformMatrix4fv(prog->display_transform_uniform, 1, GL_FALSE,
                            glm::value_ptr(display_transform));
-        glUniformMatrix4fv(prog.screen_to_gl_coords_uniform, 1, GL_FALSE,
+        glUniformMatrix4fv(prog->screen_to_gl_coords_uniform, 1, GL_FALSE,
                            glm::value_ptr(screen_to_gl_coords));
     }
 
@@ -451,7 +453,7 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
                       rect.size.width.as_int() / 2.0f;
     GLfloat centrey = rect.top_left.y.as_int() +
                       rect.size.height.as_int() / 2.0f;
-    glUniform2f(prog.centre_uniform, centrex, centrey);
+    glUniform2f(prog->centre_uniform, centrex, centrey);
 
     glm::mat4 transform = renderable.transformation();
     if (texture->layout() == mg::gl::Texture::Layout::TopRowFirst)
@@ -466,14 +468,14 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
         };
     }
 
-    glUniformMatrix4fv(prog.transform_uniform, 1, GL_FALSE,
+    glUniformMatrix4fv(prog->transform_uniform, 1, GL_FALSE,
                        glm::value_ptr(transform));
 
-    if (prog.alpha_uniform >= 0)
-        glUniform1f(prog.alpha_uniform, renderable.alpha());
+    if (prog->alpha_uniform >= 0)
+        glUniform1f(prog->alpha_uniform, renderable.alpha());
 
-    glEnableVertexAttribArray(prog.position_attr);
-    glEnableVertexAttribArray(prog.texcoord_attr);
+    glEnableVertexAttribArray(prog->position_attr);
+    glEnableVertexAttribArray(prog->texcoord_attr);
 
     primitives.clear();
     tessellate(primitives, renderable);
@@ -515,10 +517,10 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
             blend = client_blend;
             texture->bind();
 
-            glVertexAttribPointer(prog.position_attr, 3, GL_FLOAT,
+            glVertexAttribPointer(prog->position_attr, 3, GL_FLOAT,
                                   GL_FALSE, sizeof(mgl::Vertex),
                                   &p.vertices[0].position);
-            glVertexAttribPointer(prog.texcoord_attr, 2, GL_FLOAT,
+            glVertexAttribPointer(prog->texcoord_attr, 2, GL_FLOAT,
                                   GL_FALSE, sizeof(mgl::Vertex),
                                   &p.vertices[0].texcoord);
 
@@ -544,8 +546,8 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
         report_exception();
     }
 
-    glDisableVertexAttribArray(prog.texcoord_attr);
-    glDisableVertexAttribArray(prog.position_attr);
+    glDisableVertexAttribArray(prog->texcoord_attr);
+    glDisableVertexAttribArray(prog->position_attr);
     if (renderable.clip_area())
     {
         glDisable(GL_SCISSOR_TEST);
