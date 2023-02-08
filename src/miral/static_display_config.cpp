@@ -504,42 +504,39 @@ void miral::ReloadingYamlFileDisplayConfig::apply_to(mir::graphics::DisplayConfi
     {
         auto const filename = config_path_.value() + "/" + basename;
 
-        if (access(filename.c_str(), F_OK))
-        {
-            // We don't want to write a .display config if running on an X11 or Wayland platform
-            // (We can not configure those this way). We guess the platform based on the output names
-            // because KMS sets realistic names.
-            bool all_fake_outputs = true;
-            conf.for_each_output([&all_fake_outputs](mg::UserDisplayConfigurationOutput const& conf_output)
-                {
-                    all_fake_outputs &= conf_output.name.starts_with("OUT-");
-                });
-
-            if (!all_fake_outputs)
+        // We don't want to write a .display config if running on an X11 or Wayland platform
+        // (We can not configure those this way). We guess the platform based on the output names
+        // because KMS sets realistic names.
+        bool all_fake_outputs = true;
+        conf.for_each_output([&all_fake_outputs](mg::UserDisplayConfigurationOutput const& conf_output)
             {
-                auto const side_by_side_config = conf.clone();
-                mg::SideBySideDisplayConfigurationPolicy{}.apply_to(*side_by_side_config);
+                all_fake_outputs &= conf_output.name.starts_with("OUT-");
+            });
 
-                std::ofstream out{filename};
+        if (!all_fake_outputs && access(filename.c_str(), F_OK))
+        {
+            auto const side_by_side_config = conf.clone();
+            mg::SideBySideDisplayConfigurationPolicy{}.apply_to(*side_by_side_config);
 
-                out << "layouts:"
-                       "\n# keys here are layout labels (used for atomically switching between them)."
-                       "\n# The yaml anchor 'the_default' is used to alias the 'default' label"
-                       "\n"
-                       "\n  all_at_00: &the_default          # outputs all at {0, 0}";
-                serialize_configuration(out, conf);
+            std::ofstream out{filename};
 
-                out << "\n  side_by_side:                    # the side-by-side layout";
-                serialize_configuration(out, *side_by_side_config);
+            out << "layouts:"
+                   "\n# keys here are layout labels (used for atomically switching between them)."
+                   "\n# The yaml anchor 'the_default' is used to alias the 'default' label"
+                   "\n"
+                   "\n  all_at_00: &the_default          # outputs all at {0, 0}";
+            serialize_configuration(out, conf);
 
-                out << "\n  default: *the_default"
-                       "\n";
+            out << "\n  side_by_side:                    # the side-by-side layout";
+            serialize_configuration(out, *side_by_side_config);
 
-                mir::log_debug(
-                    "%s display configuration template: %s",
-                    out ? "Wrote" : "Failed writing",
-                    filename.c_str());
-            }
+            out << "\n  default: *the_default"
+                   "\n";
+
+            mir::log_debug(
+                "%s display configuration template: %s",
+                out ? "Wrote" : "Failed writing",
+                filename.c_str());
         }
     }
 }
