@@ -417,7 +417,7 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
 
     // All the programs are held by program_factory through its lifetime. Using pointers avoids
     // -Wdangling-reference.
-    auto const* prog =
+    auto const* const prog =
         [this, &texture](bool alpha) -> Program const*
         {
                 auto const& family = static_cast<::Program const&>(texture->shader(*program_factory));
