@@ -11,6 +11,8 @@ backends:
             - ubuntu-22.04
             - fedora-36
             - fedora-37
+            - fedora-rawhide:
+                image: images:fedora/37
     google:
         key: "$(HOST: echo $SPREAD_GOOGLE_KEY)"
         plan: n1-highcpu-8
