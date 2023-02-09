@@ -532,7 +532,7 @@ void miral::ReloadingYamlFileDisplayConfig::apply_to(mir::graphics::DisplayConfi
                    "\n# keys here are layout labels (used for atomically switching between them)."
                    "\n# The yaml anchor 'the_default' is used to alias the 'default' label"
                    "\n"
-                   "\n  default:                         # outputs all at {0, 0}";
+                   "\n  default:";
             serialize_configuration(out, conf);
 
             for (auto const& strategy : layout_strategies)
@@ -540,7 +540,7 @@ void miral::ReloadingYamlFileDisplayConfig::apply_to(mir::graphics::DisplayConfi
                 auto const resulting_layout = conf.clone();
                 strategy.strategy(*resulting_layout);
 
-                out << "\n  " << strategy.name << ":                    # the side-by-side layout";
+                out << "\n  " << strategy.name << ":";
                 serialize_configuration(out, *resulting_layout);
             }
 
