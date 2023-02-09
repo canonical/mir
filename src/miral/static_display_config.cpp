@@ -285,7 +285,7 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
     std::ostringstream out;
     out << "Display config:\n8>< ---------------------------------------------------\n";
     out << "layouts:"
-           "\n  default:                         # the default layout";
+           "\n  " << layout << ":                         # the current layout";
 
     serialize_configuration(out, conf);
     out << "8>< ---------------------------------------------------";
@@ -515,14 +515,13 @@ void miral::ReloadingYamlFileDisplayConfig::apply_to(mir::graphics::DisplayConfi
                    "\n# keys here are layout labels (used for atomically switching between them)."
                    "\n# The yaml anchor 'the_default' is used to alias the 'default' label"
                    "\n"
-                   "\n  all_at_00: &the_default          # outputs all at {0, 0}";
+                   "\n  default:                         # outputs all at {0, 0}";
             serialize_configuration(out, conf);
 
             out << "\n  side_by_side:                    # the side-by-side layout";
             serialize_configuration(out, *side_by_side_config);
 
-            out << "\n  default: *the_default"
-                   "\n";
+            out << "\n";
 
             mir::log_debug(
                 "%s display configuration template: %s",
