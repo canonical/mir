@@ -282,18 +282,19 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
             });
     }
 
-    dump_config([&conf](std::ostream& out){ serialize_configuration(out, conf); });
+    std::ostringstream out;
+    out << "Display config:\n8>< ---------------------------------------------------\n";
+    out << "layouts:"
+           "\n  " << layout << ":                         # the current layout";
+
+    serialize_configuration(out, conf);
+    out << "8>< ---------------------------------------------------";
+    mir::log_info(out.str());
 }
 
 void miral::YamlFileDisplayConfig::serialize_configuration(std::ostream& out, mg::DisplayConfiguration& conf)
 {
-    out << "layouts:"
-           "\n# keys here are layout labels (used for atomically switching between them)"
-           "\n# when enabling displays, surfaces should be matched in reverse recency order"
-           "\n"
-           "\n  default:                         # the default layout"
-           "\n"
-           "\n    cards:"
+    out << "\n    cards:"
            "\n    # a list of cards (currently matched by card-id)";
 
     std::map<mg::DisplayConfigurationCardId, std::ostringstream> card_map;
@@ -330,19 +331,19 @@ void miral::YamlFileDisplayConfig::serialize_output_configuration(
                "\n        # Uncomment the following to enforce the selected configuration."
                "\n        # Or amend as desired."
                "\n        #"
-               "\n        # state: " << (conf_output.used ? state_enabled : state_disabled)
+               "\n        state: " << (conf_output.used ? state_enabled : state_disabled)
             << "\t# {enabled, disabled}, defaults to enabled";
 
         if (conf_output.used) // The following are only set when used
         {
-            out << "\n        # mode: " << conf_output.modes[conf_output.current_mode_index]
+            out << "\n        mode: " << conf_output.modes[conf_output.current_mode_index]
                 << "\t# Defaults to preferred mode"
-                   "\n        # position: [" << conf_output.top_left.x << ", " << conf_output.top_left.y << ']'
+                   "\n        position: [" << conf_output.top_left.x << ", " << conf_output.top_left.y << ']'
                 << "\t# Defaults to [0, 0]"
-                   "\n        # orientation: " << as_string(conf_output.orientation)
+                   "\n        orientation: " << as_string(conf_output.orientation)
                 << "\t# {normal, left, right, inverted}, defaults to normal"
-                   "\n        # scale: " << conf_output.scale
-                << "\n        # group: " << conf_output.logical_group_id.as_value()
+                   "\n        scale: " << conf_output.scale
+                << "\n        group: " << conf_output.logical_group_id.as_value()
                 << "\t# Outputs with the same non-zero value are treated as a single display";
         }
     }
@@ -440,15 +441,6 @@ void miral::YamlFileDisplayConfig::apply_to_output(mg::UserDisplayConfigurationO
     }
 }
 
-void miral::YamlFileDisplayConfig::dump_config(std::function<void(std::ostream&)> const& print_template_config)
-{
-    std::ostringstream out;
-    out << "Display config:\n8>< ---------------------------------------------------\n";
-    print_template_config(out);
-    out << "8>< ---------------------------------------------------";
-    mir::log_info(out.str());
-}
-
 void miral::YamlFileDisplayConfig::select_layout(std::string const& layout)
 {
     this->layout = layout;
@@ -500,8 +492,10 @@ void miral::ReloadingYamlFileDisplayConfig::config_path(std::string newpath)
     config_path_ = newpath;
 }
 
-void miral::ReloadingYamlFileDisplayConfig::dump_config(std::function<void(std::ostream&)> const& print_template_config)
+void miral::ReloadingYamlFileDisplayConfig::apply_to(mir::graphics::DisplayConfiguration& conf)
 {
+    YamlFileDisplayConfig::apply_to(conf);
+
     if (!config_path_)
     {
         mir::log_debug("Nowhere to write display configuration template: Neither XDG_CONFIG_HOME or HOME is set");
@@ -512,8 +506,22 @@ void miral::ReloadingYamlFileDisplayConfig::dump_config(std::function<void(std::
 
         if (access(filename.c_str(), F_OK))
         {
+            auto const side_by_side_config = conf.clone();
+            mg::SideBySideDisplayConfigurationPolicy{}.apply_to(*side_by_side_config);
+
             std::ofstream out{filename};
-            print_template_config(out);
+
+            out << "layouts:"
+                   "\n# keys here are layout labels (used for atomically switching between them)."
+                   "\n# The yaml anchor 'the_default' is used to alias the 'default' label"
+                   "\n"
+                   "\n  default:                         # outputs all at {0, 0}";
+            serialize_configuration(out, conf);
+
+            out << "\n  side_by_side:                    # the side-by-side layout";
+            serialize_configuration(out, *side_by_side_config);
+
+            out << "\n";
 
             mir::log_debug(
                 "%s display configuration template: %s",
@@ -521,10 +529,7 @@ void miral::ReloadingYamlFileDisplayConfig::dump_config(std::function<void(std::
                 filename.c_str());
         }
     }
-
-    YamlFileDisplayConfig::dump_config(print_template_config);
 }
-
 
 auto miral::ReloadingYamlFileDisplayConfig::the_main_loop() const -> std::shared_ptr<mir::MainLoop>
 {
@@ -601,3 +606,4 @@ void miral::ReloadingYamlFileDisplayConfig::auto_reload()
         }
     }
 }
+
