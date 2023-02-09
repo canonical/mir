@@ -504,16 +504,7 @@ void miral::ReloadingYamlFileDisplayConfig::apply_to(mir::graphics::DisplayConfi
     {
         auto const filename = config_path_.value() + "/" + basename;
 
-        // We don't want to write a .display config if running on an X11 or Wayland platform
-        // (We can not configure those this way). We guess the platform based on the output names
-        // because KMS sets realistic names.
-        bool all_fake_outputs = true;
-        conf.for_each_output([&all_fake_outputs](mg::UserDisplayConfigurationOutput const& conf_output)
-            {
-                all_fake_outputs &= conf_output.name.starts_with("OUT-");
-            });
-
-        if (!all_fake_outputs && access(filename.c_str(), F_OK))
+        if (access(filename.c_str(), F_OK))
         {
             auto const side_by_side_config = conf.clone();
             mg::SideBySideDisplayConfigurationPolicy{}.apply_to(*side_by_side_config);
