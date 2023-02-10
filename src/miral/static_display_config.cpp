@@ -273,6 +273,14 @@ catch (YAML::Exception const& x)
 
 void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
 {
+    auto const i = std::find_if(std::begin(layout_strategies), std::end(layout_strategies),
+                                [layout=layout](auto strategy) { return strategy.name == layout; });
+
+    if (i != std::end(layout_strategies))
+    {
+        i->strategy(conf);
+    }
+
     std::lock_guard lock{mutex};
     auto const current_config = config.find(layout);
 
@@ -285,22 +293,14 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                 apply_to_output(conf_output, config[conf_output.name]);
             });
     }
+    else if (i != std::end(layout_strategies))
+    {
+        mir::log_debug("Display config using layout strategy: '%s'", layout.c_str());
+    }
     else
     {
         mir::log_warning("Display config does not contain layout '%s'", layout.c_str());
-
-        auto const i = std::find_if(std::begin(layout_strategies), std::end(layout_strategies),
-                                    [layout=layout](auto strategy) { return strategy.name == layout; });
-
-        if (i != std::end(layout_strategies))
-        {
-                mir::log_debug("Display config using layout strategy: '%s'", layout.c_str());
-                i->strategy(conf);
-        }
-        else
-        {
-            apply_default_configuration(conf);
-        }
+        apply_default_configuration(conf);
     }
 
     std::ostringstream out;
