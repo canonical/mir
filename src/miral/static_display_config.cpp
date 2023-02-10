@@ -43,6 +43,16 @@ using namespace mir::geometry;
 
 namespace
 {
+// A table of known layout strategies that can be used when `display-layout` doesn't match
+// the configuration file, and will be added to the generated .display configuration
+const struct {
+    std::string name;
+    std::function<void(mg::DisplayConfiguration& conf)> strategy;
+} layout_strategies[] =
+    {
+        {"side_by_side", [](auto& config) { mg::SideBySideDisplayConfigurationPolicy{}.apply_to(config); }}
+    };
+
 char const* const card_id = "card-id";
 char const* const state = "state";
 char const* const state_enabled  = "enabled";
@@ -276,6 +286,16 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
     {
         mir::log_warning("Display config does not contain layout '%s'", layout.c_str());
 
+        for (auto const& strategy : layout_strategies)
+        {
+            if (strategy.name == layout)
+            {
+                mir::log_debug("Display config using layout strategy: '%s'", layout.c_str());
+                strategy.strategy(conf);
+                break;
+            }
+        }
+
         conf.for_each_output([config=Config{}](mg::UserDisplayConfigurationOutput& conf_output)
             {
                 apply_to_output(conf_output, config);
@@ -506,22 +526,23 @@ void miral::ReloadingYamlFileDisplayConfig::apply_to(mir::graphics::DisplayConfi
 
         if (access(filename.c_str(), F_OK))
         {
-            auto const side_by_side_config = conf.clone();
-            mg::SideBySideDisplayConfigurationPolicy{}.apply_to(*side_by_side_config);
-
             std::ofstream out{filename};
 
             out << "layouts:"
                    "\n# keys here are layout labels (used for atomically switching between them)."
                    "\n# The yaml anchor 'the_default' is used to alias the 'default' label"
                    "\n"
-                   "\n  default:                         # outputs all at {0, 0}";
+                   "\n  default:";
             serialize_configuration(out, conf);
 
-            out << "\n  side_by_side:                    # the side-by-side layout";
-            serialize_configuration(out, *side_by_side_config);
+            for (auto const& strategy : layout_strategies)
+            {
+                auto const resulting_layout = conf.clone();
+                strategy.strategy(*resulting_layout);
 
-            out << "\n";
+                out << "\n  " << strategy.name << ":";
+                serialize_configuration(out, *resulting_layout);
+            }
 
             mir::log_debug(
                 "%s display configuration template: %s",
