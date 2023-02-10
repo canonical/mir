@@ -52,6 +52,7 @@ public:
     static void serialize_configuration(std::ostream& out, mir::graphics::DisplayConfiguration& conf);
 
 private:
+    std::mutex mutable mutex;
     std::string layout = "default";
     struct Config
     {

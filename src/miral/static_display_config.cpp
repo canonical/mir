@@ -261,6 +261,7 @@ try
         new_config[ll.first.Scalar()] = layout_config;
     }
 
+    std::lock_guard lock{mutex};
     config = new_config;
     mir::log_debug("Loaded display configuration file: %s", filename.c_str());
 }
@@ -271,6 +272,7 @@ catch (YAML::Exception const& x)
 
 void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
 {
+    std::lock_guard lock{mutex};
     auto const current_config = config.find(layout);
 
     if (current_config != end(config))
@@ -463,6 +465,7 @@ void miral::YamlFileDisplayConfig::apply_to_output(mg::UserDisplayConfigurationO
 
 void miral::YamlFileDisplayConfig::select_layout(std::string const& layout)
 {
+    std::lock_guard lock{mutex};
     this->layout = layout;
 }
 
@@ -470,6 +473,7 @@ auto miral::YamlFileDisplayConfig::list_layouts() const -> std::vector<std::stri
 {
     std::vector<std::string> result;
 
+    std::lock_guard lock{mutex};
     for (auto const& c: config)
     {
         result.push_back(c.first);
