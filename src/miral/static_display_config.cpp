@@ -514,8 +514,6 @@ void miral::ReloadingYamlFileDisplayConfig::config_path(std::string newpath)
 
 void miral::ReloadingYamlFileDisplayConfig::apply_to(mir::graphics::DisplayConfiguration& conf)
 {
-    YamlFileDisplayConfig::apply_to(conf);
-
     if (!config_path_)
     {
         mir::log_debug("Nowhere to write display configuration template: Neither XDG_CONFIG_HOME or HOME is set");
@@ -550,6 +548,8 @@ void miral::ReloadingYamlFileDisplayConfig::apply_to(mir::graphics::DisplayConfi
                 filename.c_str());
         }
     }
+
+    YamlFileDisplayConfig::apply_to(conf);
 }
 
 auto miral::ReloadingYamlFileDisplayConfig::the_main_loop() const -> std::shared_ptr<mir::MainLoop>
