@@ -300,6 +300,7 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
     else
     {
         mir::log_warning("Display config does not contain layout '%s'", layout.c_str());
+        mir::log_debug("Display config using layout strategy: 'default'");
         apply_default_configuration(conf);
     }
 

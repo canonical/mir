@@ -313,7 +313,7 @@ TEST_F(StaticDisplayConfig, selecting_layout_works)
     EXPECT_THAT(hdmi1.orientation, Eq(mir_orientation_normal));
 }
 
-TEST_F(StaticDisplayConfig, missing_default_layout_is_reported_and_ignored)
+TEST_F(StaticDisplayConfig, missing_default_layout_is_reported_and_default_strategy_used)
 {
     EXPECT_CALL(*mock_logger, log(Ne(ml::Severity::warning), _, _)).Times(AnyNumber());
 
@@ -323,9 +323,50 @@ TEST_F(StaticDisplayConfig, missing_default_layout_is_reported_and_ignored)
         "    cards:\n"
         "    - HDMI-A-1:\n"};
 
-    EXPECT_CALL(*mock_logger, log(ml::Severity::warning, HasSubstr("default"), _));
+    EXPECT_CALL(*mock_logger, log(ml::Severity::debug, HasSubstr("Display config using layout strategy: 'default'"), _));
 
     sdc.load_config(stream, "");
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(hdmi1.orientation, Eq(mir_orientation_normal));
+}
+
+TEST_F(StaticDisplayConfig, missing_side_by_side_layout_is_reported_and_side_by_side_strategy_used)
+{
+    EXPECT_CALL(*mock_logger, log(Ne(ml::Severity::warning), _, _)).Times(AnyNumber());
+
+    std::istringstream stream{
+        "layouts:\n"
+        "  unknown:\n"
+        "    cards:\n"
+        "    - HDMI-A-1:\n"};
+
+    EXPECT_CALL(*mock_logger, log(ml::Severity::debug, HasSubstr("Display config using layout strategy: 'side_by_side'"), _));
+
+    sdc.load_config(stream, "");
+    sdc.select_layout("side_by_side");
+
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(hdmi1.orientation, Eq(mir_orientation_normal));
+}
+
+TEST_F(StaticDisplayConfig, missing_foo_layout_is_reported_and_default_strategy_used)
+{
+    EXPECT_CALL(*mock_logger, log(Ne(ml::Severity::warning), _, _)).Times(AnyNumber());
+
+    std::istringstream stream{
+        "layouts:\n"
+        "  unknown:\n"
+        "    cards:\n"
+        "    - HDMI-A-1:\n"};
+
+    EXPECT_CALL(*mock_logger, log(ml::Severity::warning, HasSubstr("Display config does not contain layout 'foo'"), _));
+    EXPECT_CALL(*mock_logger, log(ml::Severity::debug, HasSubstr("Display config using layout strategy: 'default"), _));
+
+    sdc.load_config(stream, "");
+    sdc.select_layout("foo");
+
     sdc.apply_to(dc);
 
     EXPECT_THAT(hdmi1.orientation, Eq(mir_orientation_normal));
