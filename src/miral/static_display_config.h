@@ -51,6 +51,8 @@ public:
 
     static void serialize_configuration(std::ostream& out, mir::graphics::DisplayConfiguration& conf);
 
+    static void apply_default_configuration(mir::graphics::DisplayConfiguration& conf);
+
 private:
     std::mutex mutable mutex;
     std::string layout = "default";

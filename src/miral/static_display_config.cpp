@@ -50,6 +50,7 @@ const struct {
     std::function<void(mg::DisplayConfiguration& conf)> strategy;
 } layout_strategies[] =
     {
+        {"default", [](auto& config) { miral::YamlFileDisplayConfig::apply_default_configuration(config); }},
         {"side_by_side", [](auto& config) { mg::SideBySideDisplayConfigurationPolicy{}.apply_to(config); }}
     };
 
@@ -288,20 +289,18 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
     {
         mir::log_warning("Display config does not contain layout '%s'", layout.c_str());
 
-        for (auto const& strategy : layout_strategies)
-        {
-            if (strategy.name == layout)
-            {
-                mir::log_debug("Display config using layout strategy: '%s'", layout.c_str());
-                strategy.strategy(conf);
-                break;
-            }
-        }
+        auto const i = std::find_if(std::begin(layout_strategies), std::end(layout_strategies),
+                                    [layout=layout](auto strategy) { return strategy.name == layout; });
 
-        conf.for_each_output([config=Config{}](mg::UserDisplayConfigurationOutput& conf_output)
-            {
-                apply_to_output(conf_output, config);
-            });
+        if (i != std::end(layout_strategies))
+        {
+                mir::log_debug("Display config using layout strategy: '%s'", layout.c_str());
+                i->strategy(conf);
+        }
+        else
+        {
+            apply_default_configuration(conf);
+        }
     }
 
     std::ostringstream out;
@@ -312,6 +311,14 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
     serialize_configuration(out, conf);
     out << "8>< ---------------------------------------------------";
     mir::log_info(out.str());
+}
+
+void miral::YamlFileDisplayConfig::apply_default_configuration(mg::DisplayConfiguration& conf)
+{
+    conf.for_each_output([config=Config{}](mg::UserDisplayConfigurationOutput& conf_output)
+        {
+            apply_to_output(conf_output, config);
+        });
 }
 
 void miral::YamlFileDisplayConfig::serialize_configuration(std::ostream& out, mg::DisplayConfiguration& conf)
@@ -533,9 +540,7 @@ void miral::ReloadingYamlFileDisplayConfig::apply_to(mir::graphics::DisplayConfi
             out << "layouts:"
                    "\n# keys here are layout labels (used for atomically switching between them)."
                    "\n# The yaml anchor 'the_default' is used to alias the 'default' label"
-                   "\n"
-                   "\n  default:";
-            serialize_configuration(out, conf);
+                   "\n";
 
             for (auto const& strategy : layout_strategies)
             {
