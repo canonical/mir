@@ -82,6 +82,7 @@ public:
         wl_display* display;
         std::shared_ptr<Executor> wayland_executor;
         std::shared_ptr<shell::Shell> shell;
+        std::shared_ptr<SessionAuthorizer> session_authorizer;
         std::shared_ptr<scene::Clipboard> main_clipboard;
         std::shared_ptr<scene::Clipboard> primary_selection_clipboard;
         std::shared_ptr<scene::TextInputHub> text_input_hub;

@@ -20,6 +20,10 @@
 #include "mir/shell/shell.h"
 #include "mir/scene/session.h"
 #include "mir/log.h"
+#include "mir/frontend/session_authorizer.h"
+#include "mir/frontend/session_credentials.h"
+
+#include <sys/stat.h>
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
@@ -43,8 +47,10 @@ auto mf::XWaylandClientManager::Session::session() const -> std::shared_ptr<scen
     return _session;
 }
 
-mf::XWaylandClientManager::XWaylandClientManager(std::shared_ptr<shell::Shell> const& shell)
-    : shell{shell}
+mf::XWaylandClientManager::XWaylandClientManager(std::shared_ptr<shell::Shell> const& shell,
+                                                 std::shared_ptr<SessionAuthorizer> const& session_authorizer)
+    : shell{shell},
+      session_authorizer{session_authorizer}
 {
 }
 
@@ -80,6 +86,18 @@ auto mf::XWaylandClientManager::session_for_client(pid_t client_pid) -> std::sha
     }
     else
     {
+        struct stat proc_stat;
+        std::string proc = "/proc/";
+        proc += std::to_string(client_pid);
+        stat(proc.c_str(), &proc_stat);
+        auto const uid = proc_stat.st_uid;
+        auto const gid = proc_stat.st_gid;
+
+        if (!session_authorizer->connection_is_allowed({client_pid, uid, gid}))
+        {
+            log_error("X11 session not authorized for PID %d, rejecting!", client_pid);
+            return nullptr;
+        }
         session = std::make_shared<Session>(this, client_pid);
         sessions_by_pid[client_pid] = session;
         if (verbose_xwayland_logging_enabled())

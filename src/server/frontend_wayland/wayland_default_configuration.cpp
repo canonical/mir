@@ -181,6 +181,7 @@ ExtensionBuilder const xwayland_builder {
             return std::make_shared<mf::XWaylandWMShell>(
                 ctx.wayland_executor,
                 ctx.shell,
+                ctx.session_authorizer,
                 ctx.main_clipboard,
                 *ctx.seat,
                 ctx.surface_stack);
