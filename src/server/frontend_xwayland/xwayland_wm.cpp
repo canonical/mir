@@ -148,7 +148,7 @@ mf::XWaylandWM::XWaylandWM(
       clipboard_provider{std::make_unique<XWaylandClipboardProvider>(connection, dispatcher, wm_shell->clipboard)},
       wm_window{create_wm_window(*connection)},
       scene_observer{std::make_shared<XWaylandSceneObserver>(this)},
-      client_manager{std::make_shared<XWaylandClientManager>(wm_shell->shell)},
+      client_manager{std::make_shared<XWaylandClientManager>(wm_shell->shell, wm_shell->session_authorizer)},
       assumed_surface_scale{assumed_surface_scale}
 {
     uint32_t const attrib_values[]{

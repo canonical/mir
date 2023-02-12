@@ -35,6 +35,8 @@ class Session;
 }
 namespace frontend
 {
+class SessionAuthorizer;
+
 /// Keeps track of which session is associated with which XWayland client PID
 class XWaylandClientManager
 {
@@ -55,7 +57,8 @@ public:
         std::shared_ptr<scene::Session> const _session;
     };
 
-    XWaylandClientManager(std::shared_ptr<shell::Shell> const& shell);
+    XWaylandClientManager(std::shared_ptr<shell::Shell> const& shell,
+                          std::shared_ptr<SessionAuthorizer> const& session_authorizer);
     ~XWaylandClientManager();
 
     auto session_for_client(pid_t client_pid) -> std::shared_ptr<Session>;
@@ -64,6 +67,7 @@ private:
     void drop_expired(pid_t client_pid);
 
     std::shared_ptr<shell::Shell> const shell;
+    std::shared_ptr<SessionAuthorizer> const session_authorizer;
     std::mutex mutex;
     std::unordered_map<pid_t, std::weak_ptr<Session>> sessions_by_pid;
 };

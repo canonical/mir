@@ -688,12 +688,18 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
 
     std::shared_ptr<XWaylandClientManager::Session> local_client_session;
     std::shared_ptr<ms::Session> session;
+    bool rejected = false;
     reply_functions.push_back(connection->read_property(
         window, connection->_NET_WM_PID,
         XCBConnection::Handler<uint32_t>{
             [&](uint32_t pid)
             {
                 local_client_session = client_manager->session_for_client(pid);
+                if (!local_client_session)
+                {
+                    rejected = true;
+                    return;
+                }
                 session = local_client_session->session();
             },
             [&](std::string const&)
@@ -707,6 +713,13 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     for (auto const& reply_function : reply_functions)
     {
         reply_function();
+    }
+
+    if (rejected)
+    {
+        scene_surface_close_requested();
+        close();
+        return;
     }
 
     if (!session)
