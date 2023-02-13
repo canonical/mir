@@ -108,6 +108,7 @@ miral::StaticDisplayConfig::StaticDisplayConfig(std::string const& filename) :
     ReloadingYamlFileDisplayConfig(::basename(filename.c_str()))
 {
     config_path(filename.substr(0, filename.size() - basename.size()));
+    check_for_layout_override();
 
     std::ifstream config_file{filename};
 
@@ -520,12 +521,17 @@ void miral::ReloadingYamlFileDisplayConfig::init_auto_reload(mir::Server& server
 
 void miral::ReloadingYamlFileDisplayConfig::config_path(std::string newpath)
 {
-    std::lock_guard lock{mutex};
-    config_path_ = newpath;
+    {
+        std::lock_guard lock{mutex};
+        config_path_ = newpath;
+    }
+
+    check_for_layout_override();
 }
 
 void miral::ReloadingYamlFileDisplayConfig::apply_to(mir::graphics::DisplayConfiguration& conf)
 {
+    std::lock_guard lock{mutex};
     if (!config_path_)
     {
         mir::log_debug("Nowhere to write display configuration template: Neither XDG_CONFIG_HOME or HOME is set");
@@ -598,35 +604,46 @@ void miral::ReloadingYamlFileDisplayConfig::auto_reload()
         {
             ml->register_fd_handler({icf.value()}, this, [icf=icf.value(), this] (int)
                 {
-                union
-                {
-                    inotify_event event;
-                    char buffer[sizeof(inotify_event) + NAME_MAX + 1];
-                } inotify_buffer;
+                    union
+                    {
+                        inotify_event event;
+                        char buffer[sizeof(inotify_event) + NAME_MAX + 1];
+                    } inotify_buffer;
 
-                if (read(icf, &inotify_buffer, sizeof(inotify_buffer)) < static_cast<ssize_t>(sizeof(inotify_event)))
-                    return;
+                    if (read(icf, &inotify_buffer, sizeof(inotify_buffer)) < static_cast<ssize_t>(sizeof(inotify_event)))
+                        return;
 
-                if (inotify_buffer.event.mask & (IN_CLOSE_WRITE | IN_CREATE | IN_MOVED_TO)
-                    && inotify_buffer.event.name == basename)
+                    if (inotify_buffer.event.mask & (IN_CLOSE_WRITE | IN_CREATE | IN_MOVED_TO))
                     try
                     {
-                        auto const& filename = config_path_.value() + "/" + basename;
-
-                        if (std::ifstream config_file{filename})
+                        if (inotify_buffer.event.name == basename)
                         {
-                            load_config(config_file, filename);
+                            std::lock_guard lock{mutex};
+                            auto const& filename = config_path_.value() + "/" + basename;
 
-                            if (auto const dcc = the_display_configuration_controller())
+                            if (std::ifstream config_file{filename})
                             {
-                                auto config = dcc->base_configuration();
-                                apply_to(*config);
-                                dcc->set_base_configuration(config);
+                                load_config(config_file, filename);
                             }
+                            else
+                            {
+                                mir::log_warning("Failed to open display configuration: %s", filename.c_str());
+                            }
+                        }
+                        else if (inotify_buffer.event.name == basename + "-layout")
+                        {
+                            check_for_layout_override();
                         }
                         else
                         {
-                            mir::log_warning("Failed to open display configuration: %s", filename.c_str());
+                            return;
+                        }
+
+                        if (auto const dcc = the_display_configuration_controller())
+                        {
+                            auto config = dcc->base_configuration();
+                            apply_to(*config);
+                            dcc->set_base_configuration(config);
                         }
                     }
                     catch (mir::AbnormalExit const& except)
@@ -638,3 +655,15 @@ void miral::ReloadingYamlFileDisplayConfig::auto_reload()
     }
 }
 
+void miral::ReloadingYamlFileDisplayConfig::check_for_layout_override()
+{
+    std::lock_guard lock{mutex};
+    if (!config_path_) return;
+
+    if (std::ifstream layout_file{config_path_.value() + "/" + basename + "-layout"})
+    {
+        std::string new_layout;
+        layout_file >> new_layout;
+        select_layout(new_layout);
+    }
+}
