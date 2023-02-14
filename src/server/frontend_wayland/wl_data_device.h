@@ -44,7 +44,7 @@ namespace frontend
 class DragWlSurface : public NullWlSurfaceRole
 {
 public:
-    DragWlSurface(Executor& wayland_executor, WlSurface* icon);
+    DragWlSurface(WlSurface* icon);
     ~DragWlSurface();
 
     auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> override;
@@ -52,7 +52,6 @@ public:
     void surface_destroyed() override;
 
 private:
-    Executor& wayland_executor;
     wayland::Weak<WlSurface> const surface;
     std::shared_ptr<scene::Surface> shared_scene_surface;
 };
