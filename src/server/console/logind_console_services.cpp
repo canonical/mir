@@ -266,6 +266,11 @@ mir::LogindConsoleServices::LogindConsoleServices(std::shared_ptr<mir::GLibMainL
                 std::string{"Logind TakeControl call failed: "} + error_msg}));
     }
 
+    if (!logind_session_call_set_type_sync(session_proxy.get(), "wayland", nullptr, &error))
+    {
+        mir::log_debug("Failed to set logind session type: %s", error ? error->message : "unknown error");
+    }
+
     g_signal_connect(
         G_OBJECT(session_proxy.get()),
         "notify::active",
