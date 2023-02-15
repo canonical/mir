@@ -64,6 +64,7 @@ char const* const orientation = "orientation";
 char const* const scale = "scale";
 char const* const group = "group";
 char const* const orientation_value[] = { "normal", "left", "inverted", "right" };
+char const* const layout_suffix = "-layout";
 
 auto as_string(MirOrientation orientation) -> char const*
 {
@@ -630,7 +631,7 @@ void miral::ReloadingYamlFileDisplayConfig::auto_reload()
                                 mir::log_warning("Failed to open display configuration: %s", filename.c_str());
                             }
                         }
-                        else if (inotify_buffer.event.name == basename + "-layout")
+                        else if (inotify_buffer.event.name == basename + layout_suffix)
                         {
                             check_for_layout_override();
                         }
@@ -660,7 +661,7 @@ void miral::ReloadingYamlFileDisplayConfig::check_for_layout_override()
     std::lock_guard lock{mutex};
     if (!config_path_) return;
 
-    if (std::ifstream layout_file{config_path_.value() + "/" + basename + "-layout"})
+    if (std::ifstream layout_file{config_path_.value() + "/" + basename + layout_suffix})
     {
         std::string new_layout;
         layout_file >> new_layout;
