@@ -393,7 +393,7 @@ bool mgn::Display::apply_if_configuration_preserves_display_buffers(
 
         {
             std::lock_guard<decltype(outputs_mutex)> outputs_lock{outputs_mutex};
-            for (auto const existing_output : outputs)
+            for (auto const& existing_output : outputs)
             {
                 // O(n²) here, but n < 10 and this is isn't a hot path.
                 if (!std::any_of(
