@@ -262,6 +262,8 @@ wl_output_listener const mgw::DisplayClient::Output::output_listener = {
     &mode,
     &done,
     &scale,
+    nullptr,
+    nullptr,
 };
 
 void mgw::DisplayClient::Output::done(void* data, struct wl_output* /*wl_output*/)

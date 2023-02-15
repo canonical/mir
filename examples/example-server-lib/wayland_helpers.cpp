@@ -144,6 +144,8 @@ wl_output_listener const Output::output_listener = {
     &output_mode,
     &Output::output_done,
     &output_scale,
+    nullptr,
+    nullptr,
 };
 
 Output::Output(

@@ -287,6 +287,8 @@ MirEglApp::MirEglApp(struct wl_display* display) :
         &output_mode,
         &output_done,
         &output_scale,
+        nullptr,
+        nullptr,
     };
 
     for (auto const output : outputs)
