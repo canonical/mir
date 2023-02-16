@@ -410,13 +410,15 @@ void mf::WindowWlSurfaceRole::surface_destroyed()
 {
     if (!client->is_being_destroyed())
     {
+        mark_destroyed();
+
         // "When a client wants to destroy a wl_surface, they must destroy this 'role object' before the wl_surface"
         // NOTE: the wl_shell_surface specification seems contradictory, so this method is overridden in its implementation
         // NOTE: it's also overridden in layer shell, for reasons explained there
-        BOOST_THROW_EXCEPTION(std::runtime_error{
-            "wl_surface@" +
-            (surface ? std::to_string(wl_resource_get_id(surface.value().resource)) : "?") +
-            " destroyed before associated role"});
+        log_warning("wl_surface@%s destroyed before associated role",
+                    (surface ? std::to_string(wl_resource_get_id(surface.value().resource)) : "?").c_str());
+
+        delete this;
     }
     else
     {
