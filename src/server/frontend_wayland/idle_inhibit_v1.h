@@ -21,6 +21,7 @@
 #include "mir/scene/idle_hub.h"
 
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
