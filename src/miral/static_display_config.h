@@ -90,6 +90,8 @@ public:
 
     void apply_to(mir::graphics::DisplayConfiguration& conf) override;
 
+    void check_for_layout_override();
+
 private:
     auto the_main_loop() const -> std::shared_ptr<mir::MainLoop>;
 
