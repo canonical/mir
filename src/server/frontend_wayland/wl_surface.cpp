@@ -22,22 +22,24 @@
 #include "wl_region.h"
 #include "shm.h"
 #include "deleted_for_resource.h"
+#include "idle_inhibit_v1.h"
 
 #include "wayland_wrapper.h"
 
 #include "wayland_frontend.tp.h"
 
-#include "mir/wayland/protocol_error.h"
-#include "mir/wayland/client.h"
-#include "mir/graphics/buffer_properties.h"
-#include "mir/scene/session.h"
-#include "mir/frontend/wayland.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/executor.h"
+#include "mir/frontend/wayland.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/log.h"
+#include "mir/scene/null_surface_observer.h"
+#include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/shell/surface_specification.h"
-#include "mir/log.h"
+#include "mir/wayland/client.h"
+#include "mir/wayland/protocol_error.h"
 
 #include <chrono>
 #include <boost/throw_exception.hpp>
@@ -102,6 +104,8 @@ mf::WlSurface::WlSurface(
 
 mf::WlSurface::~WlSurface()
 {
+    unregister_visibility_observer();
+
     // We can't use a function try block as we want to access `client`:
     // "Before any catch clauses of a function-try-block on a destructor are entered,
     // all bases and non-variant members have already been destroyed."
@@ -416,6 +420,8 @@ void mf::WlSurface::commit()
     auto const state = std::move(pending);
     pending = WlSurfaceState();
     role->commit(state);
+
+    register_visibility_observer();
 }
 
 void mf::WlSurface::set_buffer_transform(int32_t transform)
@@ -440,6 +446,100 @@ auto mf::WlSurface::confine_pointer_state() const -> MirPointerConfinementState
     }
 
     return mir_pointer_unconfined;
+}
+
+class mf::WlSurface::VisibilityObserver : public mir::scene::NullSurfaceObserver
+{
+public:
+    VisibilityObserver(wayland::Weak<IdleInhibitorV1> inhibitor, std::shared_ptr<mir::Executor> const executor) :
+        executor{std::move(executor)},
+        inhibitor{std::move(inhibitor)} {}
+
+    void attrib_changed(mir::scene::Surface const*, MirWindowAttrib attrib, int value) override
+    {
+        if (attrib == mir_window_attrib_visibility)
+        {
+            {
+                std::lock_guard lock{mutex};
+                visible = value == mir_window_visibility_exposed;
+            }
+
+            executor->spawn([this] { notify(); });
+        }
+    }
+
+    void hidden_set_to(const mir::scene::Surface*, bool hide) override
+    {
+        {
+            std::lock_guard lock{mutex};
+            hidden = hide;
+        }
+
+        executor->spawn([this] { notify(); });
+    }
+
+    void notify() const
+    {
+        if (inhibitor)
+        {
+            std::lock_guard lock{mutex};
+            if (visible && !hidden)
+            {
+                inhibitor.value().exposed();
+            }
+            else
+            {
+                inhibitor.value().occluded();
+            }
+        }
+    }
+
+private:
+    std::shared_ptr<mir::Executor> const executor;
+    wayland::Weak<IdleInhibitorV1> const inhibitor;
+
+    std::mutex mutable mutex;
+    bool visible = true;
+    bool hidden = false;
+};
+
+void mf::WlSurface::idle_inhibitor(wayland::Weak<IdleInhibitorV1> inhibitor)
+{
+    unregister_visibility_observer();
+    visibility_observer = std::make_shared<VisibilityObserver>(std::move(inhibitor), frame_callback_executor);
+    register_visibility_observer();
+}
+
+void mf::WlSurface::unregister_visibility_observer()
+{
+    if (visibility_observer_registered && visibility_observer)
+    {
+        if (auto const maybe_scene_surface = scene_surface())
+        {
+            if (auto const scene_surface = *maybe_scene_surface)
+            {
+                scene_surface->unregister_interest(*visibility_observer);
+            }
+        }
+    }
+
+    visibility_observer_registered = false;
+    visibility_observer.reset();
+}
+
+void mf::WlSurface::register_visibility_observer()
+{
+    if (!visibility_observer_registered && visibility_observer)
+    {
+        if (auto const maybe_scene_surface = scene_surface())
+        {
+            if (auto const scene_surface = *maybe_scene_surface)
+            {
+                scene_surface->register_interest(visibility_observer);
+                visibility_observer_registered = true;
+            }
+        }
+    }
 }
 
 mf::NullWlSurfaceRole::NullWlSurfaceRole(WlSurface* surface) :

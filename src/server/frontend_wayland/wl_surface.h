@@ -54,6 +54,7 @@ namespace frontend
 {
 class WlSurface;
 class WlSubsurface;
+class IdleInhibitorV1;
 
 struct WlSurfaceState
 {
@@ -131,6 +132,7 @@ public:
                                geometry::Displacement const& parent_offset) const;
     void commit(WlSurfaceState const& state);
     auto confine_pointer_state() const -> MirPointerConfinementState;
+    void idle_inhibitor(wayland::Weak<IdleInhibitorV1> inhibitor);
 
     std::shared_ptr<scene::Session> const session;
     std::shared_ptr<compositor::BufferStream> const stream;
@@ -151,6 +153,9 @@ private:
     std::optional<geometry::Size> buffer_size_;
     std::vector<wayland::Weak<WlSurfaceState::Callback>> frame_callbacks;
     std::optional<std::vector<mir::geometry::Rectangle>> input_shape;
+    class VisibilityObserver;
+    std::shared_ptr<VisibilityObserver> visibility_observer;
+    bool visibility_observer_registered = false;
 
     void send_frame_callbacks();
 
@@ -163,6 +168,8 @@ private:
     void damage_buffer(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void set_buffer_transform(int32_t transform) override;
     void set_buffer_scale(int32_t scale) override;
+    void unregister_visibility_observer();
+    void register_visibility_observer();
 };
 }
 }

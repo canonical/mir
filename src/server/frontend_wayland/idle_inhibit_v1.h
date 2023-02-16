@@ -36,6 +36,22 @@ auto create_idle_inhibit_manager_v1(
     std::shared_ptr<Executor> wayland_executor,
     std::shared_ptr<scene::IdleHub> idle_hub)
 -> std::shared_ptr<wayland::IdleInhibitManagerV1::Global>;
+
+class IdleInhibitorV1 : public mir::wayland::IdleInhibitorV1
+{
+public:
+    IdleInhibitorV1(wl_resource *resource, std::shared_ptr<scene::IdleHub> idle_hub);
+    ~IdleInhibitorV1();
+
+    void exposed();
+    void occluded();
+
+private:
+    std::shared_ptr<scene::IdleHub> const idle_hub;
+
+    std::mutex mutex;
+    std::shared_ptr<scene::IdleHub::WakeLock> wake_lock;
+};
 }
 }
 

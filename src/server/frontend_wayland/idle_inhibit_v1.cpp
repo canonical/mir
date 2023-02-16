@@ -18,6 +18,7 @@
 
 #include "mir/executor.h"
 #include "mir/scene/surface.h"
+#include "mir/scene/null_surface_observer.h"
 
 #include "wl_surface.h"
 
@@ -56,18 +57,6 @@ private:
     std::shared_ptr<IdleInhibitV1Ctx> const ctx;
 };
 
-class IdleInhibitorV1 : public mw::IdleInhibitorV1
-{
-public:
-    IdleInhibitorV1(wl_resource *resource, std::shared_ptr<IdleInhibitV1Ctx> const& ctx);
-
-    ~IdleInhibitorV1();
-
-private:
-    std::shared_ptr<IdleInhibitV1Ctx> const ctx;
-    std::shared_ptr<ms::IdleHub::WakeLock> const wake_lock;
-};
-
 auto mf::create_idle_inhibit_manager_v1(
     wl_display* display,
     std::shared_ptr<Executor> wayland_executor,
@@ -103,16 +92,32 @@ IdleInhibitManagerV1::IdleInhibitManagerV1(
 
 void IdleInhibitManagerV1::create_inhibitor(struct wl_resource* id, struct wl_resource* surface)
 {
-    new IdleInhibitorV1{id, ctx};
+    auto inhibitor = new mf::IdleInhibitorV1{id, ctx->idle_hub};
+
+    mf::WlSurface::from(surface)->idle_inhibitor(mw::Weak{inhibitor});
 }
 
-IdleInhibitorV1::IdleInhibitorV1(wl_resource *resource, std::shared_ptr<IdleInhibitV1Ctx> const& ctx)
+mf::IdleInhibitorV1::IdleInhibitorV1(wl_resource *resource, std::shared_ptr<scene::IdleHub> idle_hub)
     : mw::IdleInhibitorV1{resource, Version<1>()},
-      ctx{ctx},
-      wake_lock{ctx->idle_hub->inhibit_idle()}
+      idle_hub{std::move(idle_hub)}
 {
 }
 
-IdleInhibitorV1::~IdleInhibitorV1()
+mf::IdleInhibitorV1::~IdleInhibitorV1()
 {
+}
+
+void mf::IdleInhibitorV1::exposed()
+{
+    std::lock_guard lock{mutex};
+    if (!wake_lock)
+    {
+        wake_lock = idle_hub->inhibit_idle();
+    }
+}
+
+void mf::IdleInhibitorV1::occluded()
+{
+    std::lock_guard lock{mutex};
+    wake_lock.reset();
 }
