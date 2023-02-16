@@ -103,15 +103,7 @@ IdleInhibitManagerV1::IdleInhibitManagerV1(
 
 void IdleInhibitManagerV1::create_inhibitor(struct wl_resource* id, struct wl_resource* surface)
 {
-    auto wl_surface = mf::WlSurface::from(surface);
-
-    if (auto const scene_surface = wl_surface->scene_surface())
-    {
-        if (scene_surface.value()->focus_state() != mir_window_focus_state_unfocused)
-        {
-            new IdleInhibitorV1{id, ctx};
-        }
-    }
+    new IdleInhibitorV1{id, ctx};
 }
 
 IdleInhibitorV1::IdleInhibitorV1(wl_resource *resource, std::shared_ptr<IdleInhibitV1Ctx> const& ctx)
