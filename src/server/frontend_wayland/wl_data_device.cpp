@@ -77,6 +77,7 @@ public:
 
                 if (mir_pointer_event_buttons(pointer_event) != mir_pointer_button_primary)
                 {
+                    // TODO {arg} this ought to called on the Wayland thread
                     data_device.end_drag();
                     return false;
                 }
@@ -88,7 +89,7 @@ public:
 
                 surface.scene_surface().value()->move_to(top_left);
 
-                // TODO - send_motion_event()
+                // TODO {arg} send_motion_event() on the Wayland thread
 
                 return false;
             }
@@ -256,6 +257,7 @@ void mf::WlDataDevice::start_drag(
  
     if (!icon)
     {
+        // TODO {arg} We should not need an icon to continue
         // TODO - icon is allowed to be null according to the protocol, but this is an issue to be fixed in the PR
         // which implements the data transfer.
         return;
