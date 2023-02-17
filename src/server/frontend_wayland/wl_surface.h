@@ -54,7 +54,6 @@ namespace frontend
 {
 class WlSurface;
 class WlSubsurface;
-class IdleInhibitorV1;
 
 struct WlSurfaceState
 {
@@ -112,6 +111,8 @@ public:
 
     ~WlSurface();
 
+    using SceneSurfaceCreatedCallback = std::function<void(std::shared_ptr<scene::Surface>)>;
+
     geometry::Displacement offset() const { return offset_; }
     geometry::Displacement total_offset() const { return offset_ + role->total_offset(); }
     std::optional<geometry::Size> buffer_size() const { return buffer_size_; }
@@ -119,6 +120,9 @@ public:
     auto subsurface_at(geometry::Point point) -> std::optional<WlSurface*>;
     wl_resource* raw_resource() const { return resource; }
     auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>;
+    /// Callback is called immediately if the surface already has a scene::Surface, or else on the first commit where
+    /// one exists
+    void on_scene_surface_created(SceneSurfaceCreatedCallback&& callback);
 
     void set_role(WlSurfaceRole* role_);
     void clear_role();
@@ -132,7 +136,6 @@ public:
                                geometry::Displacement const& parent_offset) const;
     void commit(WlSurfaceState const& state);
     auto confine_pointer_state() const -> MirPointerConfinementState;
-    void idle_inhibitor(wayland::Weak<IdleInhibitorV1> inhibitor);
 
     std::shared_ptr<scene::Session> const session;
     std::shared_ptr<compositor::BufferStream> const stream;
@@ -153,9 +156,7 @@ private:
     std::optional<geometry::Size> buffer_size_;
     std::vector<wayland::Weak<WlSurfaceState::Callback>> frame_callbacks;
     std::optional<std::vector<mir::geometry::Rectangle>> input_shape;
-    class VisibilityObserver;
-    std::shared_ptr<VisibilityObserver> visibility_observer;
-    bool visibility_observer_registered = false;
+    std::vector<SceneSurfaceCreatedCallback> scene_surface_created_callbacks;
 
     void send_frame_callbacks();
 
@@ -168,8 +169,6 @@ private:
     void damage_buffer(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void set_buffer_transform(int32_t transform) override;
     void set_buffer_scale(int32_t scale) override;
-    void unregister_visibility_observer();
-    void register_visibility_observer();
 };
 }
 }
