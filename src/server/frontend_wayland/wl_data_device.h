@@ -91,7 +91,6 @@ private:
     /// Called by the clipboard observer
     void paste_source_set(std::shared_ptr<scene::ClipboardSource> const& source);
 
-    Executor& wayland_executor;
     scene::Clipboard& clipboard;
     WlSeat& seat;
     input::CompositeEventFilter& composite_event_filter;

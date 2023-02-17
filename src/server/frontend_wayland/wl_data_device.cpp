@@ -209,7 +209,6 @@ mf::WlDataDevice::WlDataDevice(
     mf::WlSeat& seat,
     mi::CompositeEventFilter& composite_event_filter)
     : mw::DataDevice(new_resource, Version<3>()),
-      wayland_executor{wayland_executor},
       clipboard{clipboard},
       seat{seat},
       composite_event_filter{composite_event_filter},
