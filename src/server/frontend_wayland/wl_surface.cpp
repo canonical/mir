@@ -150,6 +150,18 @@ auto mf::WlSurface::scene_surface() const -> std::optional<std::shared_ptr<scene
     return role->scene_surface();
 }
 
+void mf::WlSurface::on_scene_surface_created(SceneSurfaceCreatedCallback&& callback)
+{
+    if (auto const surface = scene_surface(); surface && surface.value())
+    {
+        callback(surface.value());
+    }
+    else
+    {
+        scene_surface_created_callbacks.push_back(std::move(callback));
+    }
+}
+
 void mf::WlSurface::set_role(WlSurfaceRole* role_)
 {
     if (role != &null_role)
@@ -416,6 +428,18 @@ void mf::WlSurface::commit()
     auto const state = std::move(pending);
     pending = WlSurfaceState();
     role->commit(state);
+
+    if (scene_surface_created_callbacks.size())
+    {
+        if (auto const surface = scene_surface(); surface && surface.value())
+        {
+            for (auto const& callback : scene_surface_created_callbacks)
+            {
+                callback(surface.value());
+            }
+            scene_surface_created_callbacks.clear();
+        }
+    }
 }
 
 void mf::WlSurface::set_buffer_transform(int32_t transform)
