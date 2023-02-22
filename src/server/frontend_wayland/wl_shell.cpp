@@ -207,6 +207,11 @@ protected:
     void set_class(std::string const& /*class_*/) override
     {
     }
+
+    void destroy_role() const override
+    {
+        wl_resource_destroy(resource);
+    }
 };
 
 class WlShell : public wayland::Shell::Global

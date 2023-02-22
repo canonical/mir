@@ -104,6 +104,7 @@ public:
 private:
     static XdgToplevelStable* from(wl_resource* surface);
     void send_toplevel_configure();
+    void destroy_role() const override;
 
     XdgSurfaceStable* const xdg_surface;
 };
@@ -386,6 +387,11 @@ auto mf::XdgPopupStable::from(wl_resource* resource) -> XdgPopupStable*
     return popup;
 }
 
+void mf::XdgPopupStable::destroy_role() const
+{
+    wl_resource_destroy(resource);
+}
+
 // XdgToplevelStable
 
 mf::XdgToplevelStable::XdgToplevelStable(wl_resource* new_resource, XdgSurfaceStable* xdg_surface, WlSurface* surface)
@@ -590,6 +596,11 @@ mf::XdgToplevelStable* mf::XdgToplevelStable::from(wl_resource* surface)
 {
     auto* tmp = wl_resource_get_user_data(surface);
     return static_cast<XdgToplevelStable*>(static_cast<mw::XdgToplevel*>(tmp));
+}
+
+void mf::XdgToplevelStable::destroy_role() const
+{
+    wl_resource_destroy(resource);
 }
 
 // XdgPositionerStable

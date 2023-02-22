@@ -191,6 +191,11 @@ private:
     void handle_close_request() override;
     void surface_destroyed() override;
 
+    void destroy_role() const override
+    {
+        wl_resource_destroy(resource);
+    }
+
     DoubleBuffered<uint32_t> exclusive_zone{0};
     DoubleBuffered<Anchors> anchors;
     DoubleBuffered<Margin> margin;

@@ -93,6 +93,8 @@ private:
     std::optional<geom::Size> cached_size;
 
     XdgSurfaceV6* const xdg_surface;
+
+    void destroy_role() const override;
 };
 
 class XdgToplevelV6 : mw::XdgToplevelV6, public WindowWlSurfaceRole
@@ -125,6 +127,7 @@ public:
 private:
     static XdgToplevelV6* from(wl_resource* surface);
     void send_toplevel_configure();
+    void destroy_role() const override;
 
     XdgSurfaceV6* const xdg_surface;
 };
@@ -343,6 +346,11 @@ void mf::XdgPopupV6::handle_close_request()
     send_popup_done_event();
 }
 
+void mf::XdgPopupV6::destroy_role() const
+{
+    wl_resource_destroy(resource);
+}
+
 // XdgToplevelV6
 
 mf::XdgToplevelV6::XdgToplevelV6(struct wl_resource* new_resource, XdgSurfaceV6* xdg_surface, WlSurface* surface)
@@ -546,6 +554,11 @@ mf::XdgToplevelV6* mf::XdgToplevelV6::from(wl_resource* surface)
 {
     auto* tmp = wl_resource_get_user_data(surface);
     return static_cast<XdgToplevelV6*>(static_cast<mw::XdgToplevelV6*>(tmp));
+}
+
+void mf::XdgToplevelV6::destroy_role() const
+{
+    wl_resource_destroy(resource);
 }
 
 // XdgPositionerV6

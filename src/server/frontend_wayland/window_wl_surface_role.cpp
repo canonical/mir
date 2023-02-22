@@ -418,7 +418,7 @@ void mf::WindowWlSurfaceRole::surface_destroyed()
         log_warning("wl_surface@%s destroyed before associated role",
                     (surface ? std::to_string(wl_resource_get_id(surface.value().resource)) : "?").c_str());
 
-        delete this;
+        destroy_role();
     }
     else
     {
