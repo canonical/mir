@@ -416,7 +416,7 @@ TEST_F(BasicIdleHub, when_observer_is_registered_after_wakelock_acquired_observe
     executor.execute();
 }
 
-TEST_F(BasicIdleHub, when_weaklock_is_held_new_observer_marked_initially_active)
+TEST_F(BasicIdleHub, when_wakelock_is_held_new_observer_marked_initially_active)
 {
     auto const wake_lock = hub->inhibit_idle();
     advance_by(6s);
