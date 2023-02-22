@@ -670,15 +670,13 @@ void mf::LayerSurfaceV1::handle_close_request()
 
 void mf::LayerSurfaceV1::surface_destroyed()
 {
-    // Squeekboard (and possibly other purism apps) violate the protocol by destroying the surface before the role.
-    // Until it gets fixed we ignore this error for layer shell specifically.
-    // See: https://gitlab.gnome.org/World/Phosh/squeekboard/-/issues/285
-    try
+    if (!Resource::client->is_being_destroyed())
     {
-        WindowWlSurfaceRole::surface_destroyed();
-    }
-    catch (std::exception const& err)
-    {
-        log_warning("Ignoring layer shell protocol violation: %s", err.what());
+        // Squeekboard (and possibly other purism apps) violate the protocol by destroying the surface before the role.
+        // Until it gets fixed we ignore this error for layer shell specifically.
+        // See: https://gitlab.gnome.org/World/Phosh/squeekboard/-/issues/285
+        log_warning(
+            "Ignoring layer shell protocol violation: wl_surface destroyed before associated zwlr_layer_surface_v1@%d",
+            wl_resource_get_id(resource));
     }
 }

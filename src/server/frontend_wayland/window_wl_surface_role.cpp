@@ -418,6 +418,10 @@ void mf::WindowWlSurfaceRole::surface_destroyed()
         log_warning("wl_surface@%s destroyed before associated role",
                     (surface ? std::to_string(wl_resource_get_id(surface.value().resource)) : "?").c_str());
 
+        // This isn't strictly correct (as it only applies to wl-shell) but is commonly assumed (e.g. by SDL2) and
+        // implemented (e.g. Mutter for xdg-shell)
+        // wl_shell_surface: "On the server side the object is automatically destroyed when the related wl_surface is
+        // destroyed"
         destroy_role();
     }
     else
