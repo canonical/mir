@@ -103,6 +103,11 @@ auto miral::Output::logical_group_id() const -> int
     return self->logical_group_id.as_value();
 }
 
+auto miral::Output::name() const -> std::string
+{
+    return self->name;
+}
+
 bool miral::operator==(Output::PhysicalSizeMM const& lhs, Output::PhysicalSizeMM const& rhs)
 {
     return lhs.width == rhs.width && lhs.height == rhs.height;

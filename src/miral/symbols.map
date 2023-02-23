@@ -470,3 +470,14 @@ global:
     miral::MirRunner::register_fd_handler*;
   };
 } MIRAL_3.6;
+
+MIRAL_3.8 {
+global:
+  extern "C++" {
+    miral::FdHandle::?FdHandle*;
+    miral::Output::name*;
+    non-virtual?thunk?to?miral::FdHandle::?FdHandle*;
+    typeinfo?for?miral::FdHandle;
+    vtable?for?miral::FdHandle;
+  };
+} MIRAL_3.7;

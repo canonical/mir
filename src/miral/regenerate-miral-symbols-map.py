@@ -549,9 +549,15 @@ MIRAL_3.7 {
 global:
   extern "C++" {
     "miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&, MirInputEventModifier)";
-  };'''
+    miral::MirRunner::register_signal_handler*;
+    miral::MirRunner::register_fd_handler*;
+  };
+} MIRAL_3.6;
 
-END_NEW_STANZA = '} MIRAL_3.6;'
+MIRAL_3.8 {
+global:'''
+
+END_NEW_STANZA = '} MIRAL_3.7;'
 
 def _print_report():
     print(OLD_STANZAS)
