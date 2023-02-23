@@ -84,6 +84,7 @@ private:
         std::optional<time::Duration> alarm_timeout;
     };
 
+    void poke_locked(State& state);
     void alarm_fired(State& state);
     void schedule_alarm(State& state, time::Timestamp current_time);
 
