@@ -3,6 +3,12 @@ systems: [fedora-*]
 variants: [amd64]
 
 execute: |
+    if [[ "${SPREAD_SYSTEM}" == "fedora-rawhide" ]]; then
+      dnf --refresh --assumeyes upgrade
+      dnf --assumeyes install fedora-repos-rawhide
+      dnf --refresh --assumeyes --enablerepo=rawhide distro-sync
+    fi
+
     dnf install --assumeyes --allowerasing \
         cmake \
         make \

@@ -74,7 +74,7 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     auto quirks = std::make_unique<mgg::Quirks>(*options);
 
     return mir::make_module_ptr<mgg::Platform>(
-        report, console, *emergency_cleanup_registry, bypass_option, std::move(quirks));
+        report, *console, *emergency_cleanup_registry, bypass_option, std::move(quirks));
 }
 
 auto create_rendering_platform(

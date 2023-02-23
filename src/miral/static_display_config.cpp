@@ -43,6 +43,17 @@ using namespace mir::geometry;
 
 namespace
 {
+// A table of known layout strategies that can be used when `display-layout` doesn't match
+// the configuration file, and will be added to the generated .display configuration
+const struct {
+    std::string name;
+    std::function<void(mg::DisplayConfiguration& conf)> strategy;
+} layout_strategies[] =
+    {
+        {"default", [](auto& config) { miral::YamlFileDisplayConfig::apply_default_configuration(config); }},
+        {"side_by_side", [](auto& config) { mg::SideBySideDisplayConfigurationPolicy{}.apply_to(config); }}
+    };
+
 char const* const card_id = "card-id";
 char const* const state = "state";
 char const* const state_enabled  = "enabled";
@@ -53,6 +64,7 @@ char const* const orientation = "orientation";
 char const* const scale = "scale";
 char const* const group = "group";
 char const* const orientation_value[] = { "normal", "left", "inverted", "right" };
+char const* const layout_suffix = "-layout";
 
 auto as_string(MirOrientation orientation) -> char const*
 {
@@ -76,24 +88,6 @@ auto as_orientation(std::string const& orientation) -> mir::optional_value<MirOr
     return {};
 }
 
-auto output_type_from(std::string const& output) -> MirOutputType
-{
-    for (int i = 0; auto const name = mir::output_type_name(static_cast<MirOutputType>(i)); ++i)
-    {
-        if (output.find(name) == 0)
-            return static_cast<MirOutputType>(i);
-    }
-    return mir_output_type_unknown;
-}
-
-auto output_index_from(std::string const& output) -> int
-{
-    std::istringstream in{output.substr(output.rfind('-')+1)};
-    int result = 0;
-    in >> result;
-    return result;
-}
-
 auto select_mode_index(size_t mode_index, std::vector<mg::DisplayConfigurationMode> const & modes) -> size_t
 {
     if (modes.empty())
@@ -115,6 +109,7 @@ miral::StaticDisplayConfig::StaticDisplayConfig(std::string const& filename) :
     ReloadingYamlFileDisplayConfig(::basename(filename.c_str()))
 {
     config_path(filename.substr(0, filename.size() - basename.size()));
+    check_for_layout_override();
 
     std::ifstream config_file{filename};
 
@@ -161,7 +156,7 @@ try
             throw mir::AbnormalExit{error_prefix(filename) + "invalid '" + ll.first.as<std::string>() + "' layout"};
         }
 
-        Id2Config layout_config;
+        Port2Config layout_config;
 
         Node cards = layout["cards"];
 
@@ -194,7 +189,6 @@ try
                     if (!port_config.IsMap())
                         throw mir::AbnormalExit{error_prefix(filename) + "invalid port: " + port_name};
 
-                    Id const output_id{card_no, output_type_from(port_name), output_index_from(port_name)};
                     Config   output_config;
 
                     if (auto const s = port_config[state])
@@ -263,13 +257,14 @@ try
                         output_config.scale = s.as<float>();
                     }
 
-                    layout_config[output_id] = output_config;
+                    layout_config[port_name] = output_config;
                 }
             }
         }
         new_config[ll.first.Scalar()] = layout_config;
     }
 
+    std::lock_guard lock{mutex};
     config = new_config;
     mir::log_debug("Loaded display configuration file: %s", filename.c_str());
 }
@@ -280,73 +275,79 @@ catch (YAML::Exception const& x)
 
 void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
 {
+    auto const i = std::find_if(std::begin(layout_strategies), std::end(layout_strategies),
+                                [layout=layout](auto strategy) { return strategy.name == layout; });
+
+    if (i != std::end(layout_strategies))
+    {
+        i->strategy(conf);
+    }
+
+    std::lock_guard lock{mutex};
     auto const current_config = config.find(layout);
 
     if (current_config != end(config))
     {
         mir::log_debug("Display config using layout: '%s'", layout.c_str());
+
+        conf.for_each_output([&config=current_config->second](mg::UserDisplayConfigurationOutput& conf_output)
+            {
+                apply_to_output(conf_output, config[conf_output.name]);
+            });
+    }
+    else if (i != std::end(layout_strategies))
+    {
+        mir::log_debug("Display config using layout strategy: '%s'", layout.c_str());
     }
     else
     {
         mir::log_warning("Display config does not contain layout '%s'", layout.c_str());
+        mir::log_debug("Display config using layout strategy: 'default'");
+        apply_default_configuration(conf);
     }
 
-    struct card_data
-    {
-        std::ostringstream out;
-        std::map<MirOutputType, int> output_counts;
-    };
-    std::map<mg::DisplayConfigurationCardId, card_data> card_map;
+    std::ostringstream out;
+    out << "Display config:\n8>< ---------------------------------------------------\n";
+    out << "layouts:"
+           "\n  " << layout << ":                         # the current layout";
 
-    conf.for_each_output([&](mg::UserDisplayConfigurationOutput& conf_output)
+    serialize_configuration(out, conf);
+    out << "8>< ---------------------------------------------------";
+    mir::log_info(out.str());
+}
+
+void miral::YamlFileDisplayConfig::apply_default_configuration(mg::DisplayConfiguration& conf)
+{
+    conf.for_each_output([config=Config{}](mg::UserDisplayConfigurationOutput& conf_output)
         {
-            auto& card_data = card_map[conf_output.card_id];
-            auto const type = static_cast<MirOutputType>(conf_output.type);
-            auto const index_by_type = ++card_data.output_counts[type];
+            apply_to_output(conf_output, config);
+        });
+}
 
-            if (current_config != end(config))
-            {
-                apply_to_output(conf_output, current_config->second[Id{conf_output.card_id, type, index_by_type}]);
-            }
-            else
-            {
-                apply_to_output(conf_output, Config{});
-            }
+void miral::YamlFileDisplayConfig::serialize_configuration(std::ostream& out, mg::DisplayConfiguration& conf)
+{
+    out << "\n    cards:"
+           "\n    # a list of cards (currently matched by card-id)";
 
-            serialize_output_configuration(card_data.out, conf_output, index_by_type);
+    std::map<mg::DisplayConfigurationCardId, std::ostringstream> card_map;
+
+    conf.for_each_output([&card_map](mg::UserDisplayConfigurationOutput const& conf_output)
+        {
+            serialize_output_configuration(card_map[conf_output.card_id], conf_output);
         });
 
-    auto print_template_config = [&card_map](std::ostream& out)
-        {
-            out << "layouts:"
-                   "\n# keys here are layout labels (used for atomically switching between them)"
-                   "\n# when enabling displays, surfaces should be matched in reverse recency order"
-                   "\n"
-                   "\n  default:                         # the default layout"
-                   "\n"
-                   "\n    cards:"
-                   "\n    # a list of cards (currently matched by card-id)";
-
-            for (auto const& co : card_map)
-            {
-                out << "\n"
-                       "\n    - card-id: " << co.first.as_value()
-                    << co.second.out.str();
-            }
-        };
-
-    dump_config(print_template_config);
+    for (auto const& co : card_map)
+    {
+        out << "\n"
+               "\n    - card-id: " << co.first.as_value()
+            << co.second.str();
+    }
 }
 
 void miral::YamlFileDisplayConfig::serialize_output_configuration(
-    std::ostream& out, mg::UserDisplayConfigurationOutput& conf_output, int index_by_type)
+    std::ostream& out, mg::UserDisplayConfigurationOutput const& conf_output)
 {
-    auto const type = static_cast<MirOutputType>(conf_output.type);
-
-    out << "\n      " << mir::output_type_name(type);
-    if (conf_output.card_id.as_value() > 0)
-        out << '-' << conf_output.card_id.as_value();
-    out << '-' << index_by_type << ':';
+    out << "\n      " << conf_output.name << ':';
 
     if (conf_output.connected && conf_output.modes.size() > 0)
     {
@@ -362,19 +363,19 @@ void miral::YamlFileDisplayConfig::serialize_output_configuration(
                "\n        # Uncomment the following to enforce the selected configuration."
                "\n        # Or amend as desired."
                "\n        #"
-               "\n        # state: " << (conf_output.used ? state_enabled : state_disabled)
+               "\n        state: " << (conf_output.used ? state_enabled : state_disabled)
             << "\t# {enabled, disabled}, defaults to enabled";
 
         if (conf_output.used) // The following are only set when used
         {
-            out << "\n        # mode: " << conf_output.modes[conf_output.current_mode_index]
+            out << "\n        mode: " << conf_output.modes[conf_output.current_mode_index]
                 << "\t# Defaults to preferred mode"
-                   "\n        # position: [" << conf_output.top_left.x << ", " << conf_output.top_left.y << ']'
+                   "\n        position: [" << conf_output.top_left.x << ", " << conf_output.top_left.y << ']'
                 << "\t# Defaults to [0, 0]"
-                   "\n        # orientation: " << as_string(conf_output.orientation)
+                   "\n        orientation: " << as_string(conf_output.orientation)
                 << "\t# {normal, left, right, inverted}, defaults to normal"
-                   "\n        # scale: " << conf_output.scale
-                << "\n        # group: " << conf_output.logical_group_id.as_value()
+                   "\n        scale: " << conf_output.scale
+                << "\n        group: " << conf_output.logical_group_id.as_value()
                 << "\t# Outputs with the same non-zero value are treated as a single display";
         }
     }
@@ -472,17 +473,9 @@ void miral::YamlFileDisplayConfig::apply_to_output(mg::UserDisplayConfigurationO
     }
 }
 
-void miral::YamlFileDisplayConfig::dump_config(std::function<void(std::ostream&)> const& print_template_config)
-{
-    std::ostringstream out;
-    out << "Display config:\n8>< ---------------------------------------------------\n";
-    print_template_config(out);
-    out << "8>< ---------------------------------------------------";
-    mir::log_info(out.str());
-}
-
 void miral::YamlFileDisplayConfig::select_layout(std::string const& layout)
 {
+    std::lock_guard lock{mutex};
     this->layout = layout;
 }
 
@@ -490,6 +483,7 @@ auto miral::YamlFileDisplayConfig::list_layouts() const -> std::vector<std::stri
 {
     std::vector<std::string> result;
 
+    std::lock_guard lock{mutex};
     for (auto const& c: config)
     {
         result.push_back(c.first);
@@ -528,12 +522,17 @@ void miral::ReloadingYamlFileDisplayConfig::init_auto_reload(mir::Server& server
 
 void miral::ReloadingYamlFileDisplayConfig::config_path(std::string newpath)
 {
-    std::lock_guard lock{mutex};
-    config_path_ = newpath;
+    {
+        std::lock_guard lock{mutex};
+        config_path_ = newpath;
+    }
+
+    check_for_layout_override();
 }
 
-void miral::ReloadingYamlFileDisplayConfig::dump_config(std::function<void(std::ostream&)> const& print_template_config)
+void miral::ReloadingYamlFileDisplayConfig::apply_to(mir::graphics::DisplayConfiguration& conf)
 {
+    std::lock_guard lock{mutex};
     if (!config_path_)
     {
         mir::log_debug("Nowhere to write display configuration template: Neither XDG_CONFIG_HOME or HOME is set");
@@ -545,7 +544,20 @@ void miral::ReloadingYamlFileDisplayConfig::dump_config(std::function<void(std::
         if (access(filename.c_str(), F_OK))
         {
             std::ofstream out{filename};
-            print_template_config(out);
+
+            out << "layouts:"
+                   "\n# keys here are layout labels (used for atomically switching between them)."
+                   "\n# The yaml anchor 'the_default' is used to alias the 'default' label"
+                   "\n";
+
+            for (auto const& strategy : layout_strategies)
+            {
+                auto const resulting_layout = conf.clone();
+                strategy.strategy(*resulting_layout);
+
+                out << "\n  " << strategy.name << ":";
+                serialize_configuration(out, *resulting_layout);
+            }
 
             mir::log_debug(
                 "%s display configuration template: %s",
@@ -554,9 +566,8 @@ void miral::ReloadingYamlFileDisplayConfig::dump_config(std::function<void(std::
         }
     }
 
-    YamlFileDisplayConfig::dump_config(print_template_config);
+    YamlFileDisplayConfig::apply_to(conf);
 }
-
 
 auto miral::ReloadingYamlFileDisplayConfig::the_main_loop() const -> std::shared_ptr<mir::MainLoop>
 {
@@ -594,35 +605,46 @@ void miral::ReloadingYamlFileDisplayConfig::auto_reload()
         {
             ml->register_fd_handler({icf.value()}, this, [icf=icf.value(), this] (int)
                 {
-                union
-                {
-                    inotify_event event;
-                    char buffer[sizeof(inotify_event) + NAME_MAX + 1];
-                } inotify_buffer;
+                    union
+                    {
+                        inotify_event event;
+                        char buffer[sizeof(inotify_event) + NAME_MAX + 1];
+                    } inotify_buffer;
 
-                if (read(icf, &inotify_buffer, sizeof(inotify_buffer)) < static_cast<ssize_t>(sizeof(inotify_event)))
-                    return;
+                    if (read(icf, &inotify_buffer, sizeof(inotify_buffer)) < static_cast<ssize_t>(sizeof(inotify_event)))
+                        return;
 
-                if (inotify_buffer.event.mask & (IN_CLOSE_WRITE | IN_CREATE | IN_MOVED_TO)
-                    && inotify_buffer.event.name == basename)
+                    if (inotify_buffer.event.mask & (IN_CLOSE_WRITE | IN_CREATE | IN_MOVED_TO))
                     try
                     {
-                        auto const& filename = config_path_.value() + "/" + basename;
-
-                        if (std::ifstream config_file{filename})
+                        if (inotify_buffer.event.name == basename)
                         {
-                            load_config(config_file, filename);
+                            std::lock_guard lock{mutex};
+                            auto const& filename = config_path_.value() + "/" + basename;
 
-                            if (auto const dcc = the_display_configuration_controller())
+                            if (std::ifstream config_file{filename})
                             {
-                                auto config = dcc->base_configuration();
-                                apply_to(*config);
-                                dcc->set_base_configuration(config);
+                                load_config(config_file, filename);
                             }
+                            else
+                            {
+                                mir::log_warning("Failed to open display configuration: %s", filename.c_str());
+                            }
+                        }
+                        else if (inotify_buffer.event.name == basename + layout_suffix)
+                        {
+                            check_for_layout_override();
                         }
                         else
                         {
-                            mir::log_warning("Failed to open display configuration: %s", filename.c_str());
+                            return;
+                        }
+
+                        if (auto const dcc = the_display_configuration_controller())
+                        {
+                            auto config = dcc->base_configuration();
+                            apply_to(*config);
+                            dcc->set_base_configuration(config);
                         }
                     }
                     catch (mir::AbnormalExit const& except)
@@ -631,5 +653,18 @@ void miral::ReloadingYamlFileDisplayConfig::auto_reload()
                     }
                 });
         }
+    }
+}
+
+void miral::ReloadingYamlFileDisplayConfig::check_for_layout_override()
+{
+    std::lock_guard lock{mutex};
+    if (!config_path_) return;
+
+    if (std::ifstream layout_file{config_path_.value() + "/" + basename + layout_suffix})
+    {
+        std::string new_layout;
+        layout_file >> new_layout;
+        select_layout(new_layout);
     }
 }

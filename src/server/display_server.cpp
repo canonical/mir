@@ -19,6 +19,7 @@
 #include "mir/main_loop.h"
 #include "mir/server_status_listener.h"
 #include "mir/display_changer.h"
+#include "mir/console_services.h"
 
 #include "mir/compositor/compositor.h"
 #include "mir/frontend/connector.h"
@@ -82,13 +83,14 @@ struct mir::DisplayServer::Private
           server_status_listener{config.the_server_status_listener()},
           display_changer{config.the_display_changer()},
           idle_handler{config.the_idle_handler()},
-          stop_callback{config.the_stop_callback()}
+          stop_callback{config.the_stop_callback()},
+          console_services{config.the_console_services()}
     {
         display->register_configuration_change_handler(
             *main_loop,
             [this] { return configure_display(); });
 
-        display->register_pause_resume_handlers(
+        console_services->register_switch_handlers(
             *main_loop,
             [this] { return pause(); },
             [this] { return resume(); });
@@ -204,7 +206,7 @@ struct mir::DisplayServer::Private
     std::shared_ptr<mir::DisplayChanger> const display_changer;
     std::shared_ptr<msh::IdleHandler> const idle_handler;
     std::function<void()> const stop_callback;
-
+    std::shared_ptr<mir::ConsoleServices> const console_services;
 };
 
 mir::DisplayServer::DisplayServer(ServerConfiguration& config) :

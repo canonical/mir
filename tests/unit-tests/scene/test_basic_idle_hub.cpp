@@ -386,3 +386,45 @@ TEST_F(BasicIdleHub, when_a_wake_lock_is_held_calling_poke_does_not_restart_idle
         executor.execute();
     }
 }
+
+TEST_F(BasicIdleHub, when_observer_is_idle_and_a_wake_lock_is_acquired_observer_becomes_active)
+{
+    auto const observer = std::make_shared<NiceMock<MockObserver>>();
+    hub->register_interest(observer, executor, 5s);
+    EXPECT_CALL(*observer, idle()).Times(AnyNumber());
+    advance_by(6s);
+    executor.execute();
+
+    {
+        auto const wake_lock = hub->inhibit_idle();
+        EXPECT_CALL(*observer, active());
+        executor.execute();
+    }
+}
+
+TEST_F(BasicIdleHub, when_observer_is_registered_after_wakelock_acquired_observer_does_not_become_idle)
+{
+    auto const wake_lock = hub->inhibit_idle();
+
+    auto const observer = std::make_shared<NiceMock<MockObserver>>();
+    EXPECT_CALL(*observer, active()).Times(AnyNumber());
+    hub->register_interest(observer, executor, 5s);
+    EXPECT_CALL(*observer, idle()).Times(0);
+    executor.execute();
+
+    advance_by(6s);
+    executor.execute();
+}
+
+TEST_F(BasicIdleHub, when_wakelock_is_held_new_observer_marked_initially_active)
+{
+    auto const wake_lock = hub->inhibit_idle();
+    advance_by(6s);
+    executor.execute();
+
+    auto const observer = std::make_shared<NiceMock<MockObserver>>();
+    EXPECT_CALL(*observer, active()).Times(1);
+    EXPECT_CALL(*observer, idle()).Times(0);
+    hub->register_interest(observer, executor, 5s);
+    executor.execute();
+}

@@ -43,15 +43,18 @@ class YamlFileDisplayConfig : public mir::graphics::DisplayConfigurationPolicy
 public:
     void load_config(std::istream& config_file, std::string const& filename);
 
-    virtual void apply_to(mir::graphics::DisplayConfiguration& conf);
-
-    virtual void dump_config(std::function<void(std::ostream&)> const& print_template_config);
+    void apply_to(mir::graphics::DisplayConfiguration& conf) override;
 
     void select_layout(std::string const& layout);
 
     auto list_layouts() const -> std::vector<std::string>;
 
+    static void serialize_configuration(std::ostream& out, mir::graphics::DisplayConfiguration& conf);
+
+    static void apply_default_configuration(mir::graphics::DisplayConfiguration& conf);
+
 private:
+    std::mutex mutable mutex;
     std::string layout = "default";
     struct Config
     {
@@ -63,16 +66,15 @@ private:
         mir::optional_value<MirOrientation>  orientation;
         mir::optional_value<int> group_id;
     };
-    using Id = std::tuple<mir::graphics::DisplayConfigurationCardId, MirOutputType, int>;
 
-    using Id2Config = std::map<Id, Config>;
-    using Layout2Id2Config = std::map<std::string, Id2Config>;
-    Layout2Id2Config config;
+    using Port2Config = std::map<std::string, Config>;
+    using Layout2Port2Config = std::map<std::string, Port2Config>;
+    Layout2Port2Config config;
 
     static void apply_to_output(mir::graphics::UserDisplayConfigurationOutput& conf_output, Config const& conf);
 
     static void serialize_output_configuration(
-        std::ostream& out, mir::graphics::UserDisplayConfigurationOutput& conf_output, int index_by_type);
+        std::ostream& out, mir::graphics::UserDisplayConfigurationOutput const& conf_output);
 };
 
 class ReloadingYamlFileDisplayConfig : public YamlFileDisplayConfig
@@ -86,7 +88,9 @@ public:
 
     void config_path(std::string newpath);
 
-    void dump_config(std::function<void(std::ostream&)> const& print_template_config) override;
+    void apply_to(mir::graphics::DisplayConfiguration& conf) override;
+
+    void check_for_layout_override();
 
 private:
     auto the_main_loop() const -> std::shared_ptr<mir::MainLoop>;

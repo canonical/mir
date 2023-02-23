@@ -39,9 +39,6 @@ public:
     MOCK_METHOD2(register_configuration_change_handler,
                  void(graphics::EventHandlerRegister&, graphics::DisplayConfigurationChangeHandler const&));
 
-    MOCK_METHOD3(register_pause_resume_handlers, void(graphics::EventHandlerRegister&,
-                                                      graphics::DisplayPauseHandler const&,
-                                                      graphics::DisplayResumeHandler const&));
     MOCK_METHOD0(pause, void());
     MOCK_METHOD0(resume, void());
     MOCK_METHOD0(create_hardware_cursor, std::shared_ptr<graphics::Cursor>());

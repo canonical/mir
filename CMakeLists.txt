@@ -201,7 +201,6 @@ include_directories (SYSTEM
 )
 
 add_compile_definitions(EGL_NO_X11)
-add_compile_definitions(MESA_EGL_NO_X11_HEADERS) # Can be removed when all platforms support EGL_NO_X11
 
 pkg_check_modules(WAYLAND_EGLSTREAM wayland-eglstream)
 
@@ -307,9 +306,6 @@ pkg_check_modules(GL REQUIRED glesv2)
 
 if (MIR_BUILD_PLATFORM_GBM_KMS)
   pkg_check_modules( GBM REQUIRED gbm>=11.0.0)
-  if (DRM_VERSION VERSION_GREATER 2.4.84)
-    add_compile_definitions(MIR_DRMMODEADDFB_HAS_CONST_SIGNATURE)
-  endif()
 endif()
 
 if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)

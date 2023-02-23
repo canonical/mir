@@ -99,7 +99,7 @@ void miral::DisplayConfiguration::operator()(mir::Server& server) const
 auto miral::DisplayConfiguration::layout_option() -> miral::ConfigurationOption
 {
     return pre_init(ConfigurationOption{
-        [this](std::string const& layout) { select_layout(layout); },
+        [this](std::string const& layout) { select_layout(layout); self->check_for_layout_override(); },
         "display-layout",
         "Display configuration layout from `" + self->basename + "'\n"
         "(Found in $XDG_CONFIG_HOME or $HOME/.config, followed by $XDG_CONFIG_DIRS)",

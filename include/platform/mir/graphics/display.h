@@ -140,17 +140,6 @@ public:
         DisplayConfigurationChangeHandler const& conf_change_handler) = 0;
 
     /**
-     * Registers handlers for pausing and resuming the display subsystem.
-     *
-     * The implementation should use the functionality provided by the EventHandlerRegister
-     * to register the handlers in a way appropriate for the platform.
-     */
-    virtual void register_pause_resume_handlers(
-        EventHandlerRegister& handlers,
-        DisplayPauseHandler const& pause_handler,
-        DisplayResumeHandler const& resume_handler) = 0;
-
-    /**
      * Pauses the display.
      *
      * This method may temporarily (until resumed) release any resources

@@ -111,6 +111,8 @@ public:
 
     ~WlSurface();
 
+    using SceneSurfaceCreatedCallback = std::function<void(std::shared_ptr<scene::Surface>)>;
+
     geometry::Displacement offset() const { return offset_; }
     geometry::Displacement total_offset() const { return offset_ + role->total_offset(); }
     std::optional<geometry::Size> buffer_size() const { return buffer_size_; }
@@ -118,6 +120,9 @@ public:
     auto subsurface_at(geometry::Point point) -> std::optional<WlSurface*>;
     wl_resource* raw_resource() const { return resource; }
     auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>;
+    /// Callback is called immediately if the surface already has a scene::Surface, or else on the first commit where
+    /// one exists
+    void on_scene_surface_created(SceneSurfaceCreatedCallback&& callback);
 
     void set_role(WlSurfaceRole* role_);
     void clear_role();
@@ -151,6 +156,7 @@ private:
     std::optional<geometry::Size> buffer_size_;
     std::vector<wayland::Weak<WlSurfaceState::Callback>> frame_callbacks;
     std::optional<std::vector<mir::geometry::Rectangle>> input_shape;
+    std::vector<SceneSurfaceCreatedCallback> scene_surface_created_callbacks;
 
     void send_frame_callbacks();
 
