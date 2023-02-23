@@ -72,8 +72,7 @@ struct ms::BasicIdleHub::Multiplexer: ObserverMultiplexer<IdleStateObserver>
 
     void register_and_send_initial_state(
         std::weak_ptr<IdleStateObserver> const& observer,
-        NonBlockingExecutor& executor,
-        bool is_active)
+        NonBlockingExecutor& executor)
     {
         register_interest(observer, executor);
         if (auto const locked = observer.lock())
@@ -91,13 +90,24 @@ struct ms::BasicIdleHub::Multiplexer: ObserverMultiplexer<IdleStateObserver>
 
     void idle() override
     {
-        for_each_observer(&IdleStateObserver::idle);
+        if (is_active)
+        {
+            is_active = false;
+            for_each_observer(&IdleStateObserver::idle);
+        }
     }
 
     void active() override
     {
-        for_each_observer(&IdleStateObserver::active);
+        if (!is_active)
+        {
+            is_active = true;
+            for_each_observer(&IdleStateObserver::active);
+        }
     }
+
+private:
+    bool is_active{true};
 };
 
 struct ms::BasicIdleHub::PendingRegistration
@@ -130,23 +140,7 @@ ms::BasicIdleHub::~BasicIdleHub()
 
 void ms::BasicIdleHub::poke()
 {
-    auto state = synchronised_state.lock();
-    if (!state->wake_lock.expired())
-    {
-        return;
-    }
-
-    state->poke_time = clock->now();
-    schedule_alarm(*state, state->poke_time);
-    if (!state->idle_multiplexers.empty())
-    {
-        auto const idle = std::move(state->idle_multiplexers);
-        state->idle_multiplexers.clear();
-        for (auto const& multiplexer : idle)
-        {
-            multiplexer->active();
-        }
-    }
+    poke_locked(*synchronised_state.lock());
 }
 
 void ms::BasicIdleHub::register_interest(
@@ -177,7 +171,7 @@ void ms::BasicIdleHub::register_interest(
         // In case this changes the first timeout
         state->first_timeout = state->timeouts.begin()->first;
         // Check if the current alarm will overshoot the new timeout (or there isn't an alarm at all)
-        if (!state->alarm_timeout || state->alarm_timeout.value() > timeout)
+        if (state->wake_lock.expired() && (!state->alarm_timeout || state->alarm_timeout.value() > timeout))
         {
             // The alarm will not be fired before we hit our timeout
             auto const current_time = clock->now() - state->poke_time;
@@ -191,6 +185,7 @@ void ms::BasicIdleHub::register_interest(
             else
             {
                 // Our timeout has already been passed, so we are idle
+                multiplexer->idle();
                 state->idle_multiplexers.push_back(multiplexer);
             }
         }
@@ -200,8 +195,7 @@ void ms::BasicIdleHub::register_interest(
         multiplexer = iter->second;
     }
 
-    auto const is_active = (state->alarm_timeout && state->alarm_timeout.value() <= timeout);
-    multiplexer->register_and_send_initial_state(observer, executor, is_active);
+    multiplexer->register_and_send_initial_state(observer, executor);
 }
 
 void ms::BasicIdleHub::unregister_interest(IdleStateObserver const& observer)
@@ -218,6 +212,26 @@ void ms::BasicIdleHub::unregister_interest(IdleStateObserver const& observer)
     state->first_timeout = state->timeouts.empty() ?
         std::nullopt :
         std::make_optional(state->timeouts.begin()->first);
+}
+
+void ms::BasicIdleHub::poke_locked(State& state)
+{
+    if (!state.wake_lock.expired())
+    {
+        return;
+    }
+
+    state.poke_time = clock->now();
+    schedule_alarm(state, state.poke_time);
+    if (!state.idle_multiplexers.empty())
+    {
+        auto const idle = std::move(state.idle_multiplexers);
+        state.idle_multiplexers.clear();
+        for (auto const& multiplexer : idle)
+        {
+            multiplexer->active();
+        }
+    }
 }
 
 void ms::BasicIdleHub::alarm_fired(State& state)
@@ -292,6 +306,7 @@ auto ms::BasicIdleHub::inhibit_idle() -> std::shared_ptr<WakeLock>
     }
     else // wake_lock is not being held
     {
+        poke_locked(*state);
         auto result = std::make_shared<WakeLock>(shared_from_this());
         alarm->cancel();
         state->wake_lock = result;
