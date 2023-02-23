@@ -11,6 +11,7 @@ mir (2.12.1) UNRELEASED; urgency=medium
       . Enabling zwp_idle_inhibit_manager_v1 causes Mir to crash with some
         applications (#2836)
       . [Wayland] idle_inhibit_unstable_v1 is badly broken (#2838)
+      . A couple ShmBacking.* tests failing on PowerPC (#2774)
 
  -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 23 Feb 2023 14:30:10 +0100
 
