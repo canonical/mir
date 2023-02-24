@@ -34,5 +34,6 @@ FILTER=${FILTER:-}${FILTER:+:}"BadBufferTest.test_truncated_shm_file"
 FILTER=${FILTER:-}${FILTER:+:}"XdgPopupUnstableV6/XdgPopupTest.grabbed_popup_does_not_get_keyboard_focus/0"
 FILTER=${FILTER:-}${FILTER:+:}"XdgPopupStable/XdgPopupTest.grabbed_popup_does_not_get_keyboard_focus/0"
 
+export XDG_RUNTIME_DIR=/tmp
 
 $(${CROSS_COMPILE}pkg-config --variable test_runner wlcs) /usr/lib/$(dpkg-architecture -q DEB_HOST_MULTIARCH)/mir/miral_wlcs_integration.so --gtest_filter=-${FILTER}
