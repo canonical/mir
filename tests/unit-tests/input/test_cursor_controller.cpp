@@ -205,6 +205,19 @@ struct StubScene : public mtd::StubInputScene
     {
     }
 
+    auto input_surface_at(geom::Point point) const -> std::shared_ptr<mi::Surface> override
+    {
+        std::shared_ptr<mi::Surface> result;
+        for (auto target : targets)
+        {
+            if (target->input_area_contains(point))
+            {
+                result = target;
+            }
+        }
+        return result;
+    }
+
     void add_observer(std::shared_ptr<ms::Observer> const& observer) override
     {
         observers.add(observer);

@@ -94,7 +94,7 @@ struct StubSurface : public ms::BasicSurface
             {},
             {},
             "stub",
-            {{},{}},
+            {{-1, -1}, {2, 2}},
             mir_pointer_unconfined,
             std::list<ms::StreamInfo> { { stream, {}, {} } },
             {},
@@ -888,6 +888,19 @@ TEST_F(SurfaceStack, overlays_do_not_interfere_with_finding_input_surface)
     EXPECT_THAT(stack.input_surface_at({}).get(), Eq(stub_surface2.get()));
 }
 
+TEST_F(SurfaceStack, overlays_do_not_interfere_with_surface_at)
+{
+    using namespace ::testing;
+
+    mtd::StubRenderable r{{{-1, -1}, {2, 2}}};
+
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_input_visualization(mt::fake_shared(r));
+
+    EXPECT_THAT(stack.surface_at({}).get(), Eq(stub_surface1.get()));
+    EXPECT_THAT(stack.input_surface_at({}).get(), Eq(stub_surface1.get()));
+}
+
 TEST_F(SurfaceStack, overlays_appear_at_top_of_renderlist)
 {
     using namespace ::testing;
@@ -953,16 +966,12 @@ TEST_F(SurfaceStack, input_surface_at_finds_top_surface)
     stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
     stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
 
-    stub_surface1->configure(mir_window_attrib_visibility, MirWindowVisibility::mir_window_visibility_exposed);
-    stub_surface2->configure(mir_window_attrib_visibility, MirWindowVisibility::mir_window_visibility_occluded);
-    stub_surface3->configure(mir_window_attrib_visibility, MirWindowVisibility::mir_window_visibility_occluded);
-
     EXPECT_THAT(stack.input_surface_at({}).get(), Eq(stub_surface3.get()));
 }
 
 using namespace ::testing;
 
-TEST_F(SurfaceStack, returns_top_surface_under_cursor)
+TEST_F(SurfaceStack, surface_at_returns_top_surface_under_cursor)
 {
     geom::Point const cursor_over_all {100, 100};
     geom::Point const cursor_over_12  {200, 100};
@@ -983,7 +992,51 @@ TEST_F(SurfaceStack, returns_top_surface_under_cursor)
     EXPECT_THAT(stack.surface_at(cursor_over_none).get(), IsNull());
 }
 
-TEST_F(SurfaceStack, returns_top_visible_surface_under_cursor)
+TEST_F(SurfaceStack, input_surface_at_returns_top_surface_under_cursor)
+{
+    geom::Point const cursor_over_all {100, 100};
+    geom::Point const cursor_over_12  {200, 100};
+    geom::Point const cursor_over_1   {600, 600};
+    geom::Point const cursor_over_none{999, 999};
+
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
+
+    stub_surface1->resize({900, 900});
+    stub_surface2->resize({500, 200});
+    stub_surface3->resize({200, 500});
+
+    EXPECT_THAT(stack.surface_at(cursor_over_all),  Eq(stub_surface3));
+    EXPECT_THAT(stack.surface_at(cursor_over_12),   Eq(stub_surface2));
+    EXPECT_THAT(stack.surface_at(cursor_over_1),    Eq(stub_surface1));
+    EXPECT_THAT(stack.surface_at(cursor_over_none).get(), IsNull());
+}
+
+TEST_F(SurfaceStack, surface_at_returns_top_visible_surface_under_cursor)
+{
+    geom::Point const cursor_over_all {100, 100};
+    geom::Point const cursor_over_12  {200, 100};
+    geom::Point const cursor_over_1   {600, 600};
+    geom::Point const cursor_over_none{999, 999};
+
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
+    stack.add_surface(invisible_stub_surface, mi::InputReceptionMode::normal);
+
+    stub_surface1->resize({900, 900});
+    stub_surface2->resize({500, 200});
+    stub_surface3->resize({200, 500});
+    invisible_stub_surface->resize({999, 999});
+
+    EXPECT_THAT(stack.surface_at(cursor_over_all),  Eq(stub_surface3));
+    EXPECT_THAT(stack.surface_at(cursor_over_12),   Eq(stub_surface2));
+    EXPECT_THAT(stack.surface_at(cursor_over_1),    Eq(stub_surface1));
+    EXPECT_THAT(stack.surface_at(cursor_over_none).get(), IsNull());
+}
+
+TEST_F(SurfaceStack, input_surface_at_returns_top_visible_surface_under_cursor)
 {
     geom::Point const cursor_over_all {100, 100};
     geom::Point const cursor_over_12  {200, 100};
