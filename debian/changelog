@@ -1,3 +1,21 @@
+mir (2.12.1) UNRELEASED; urgency=medium
+
+  * New upstream release 2.12.1
+
+    - Bugs fixed:
+      . Add missing #include statements (#2802)
+      . mir_wayland_generator generated code that include non public
+        header (#2804)
+      . Building docs fails when trying to not remove doc/html/cppguide (#2800)
+      . wayland: Add missing cstdint includes (#2821)
+      . Enabling zwp_idle_inhibit_manager_v1 causes Mir to crash with some
+        applications (#2836)
+      . [Wayland] idle_inhibit_unstable_v1 is badly broken (#2838)
+      . A couple ShmBacking.* tests failing on PowerPC (#2774)
+      . Fix BasicIdleHub behavior (#2843)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 23 Feb 2023 14:30:10 +0100
+
 mir (2.12.0) UNRELEASED; urgency=medium
 
   [ Alan Griffiths ]
