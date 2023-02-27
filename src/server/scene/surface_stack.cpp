@@ -339,16 +339,9 @@ auto ms::SurfaceStack::surface_at(geometry::Point cursor) const
     return {};
 }
 
-void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::Surface> const&)> const& callback)
+auto ms::SurfaceStack::input_surface_at(geometry::Point point) const -> std::shared_ptr<input::Surface>
 {
-    RecursiveReadLock lg(guard);
-    for (auto const& layer : surface_layers)
-    {
-        for (auto const& surface : layer)
-        {
-            callback(surface);
-        }
-    }
+    return surface_at(point);
 }
 
 void ms::SurfaceStack::raise(Surface const* surface)

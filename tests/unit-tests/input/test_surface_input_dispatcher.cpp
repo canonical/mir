@@ -88,12 +88,18 @@ struct StubInputScene : public mtd::StubInputScene
     {
         return add_surface({{0, 0}, {1, 1}});
     }
-    
-    void for_each(std::function<void(std::shared_ptr<mi::Surface> const&)> const& exec) override
+
+    auto input_surface_at(geom::Point point) const -> std::shared_ptr<mi::Surface> override
     {
-	surfaces.for_each([&exec](std::shared_ptr<mi::Surface> const& surface) {
-            exec(surface);
-        });
+        std::shared_ptr<mi::Surface> result;
+        surfaces.for_each([&](auto surface)
+            {
+                if (surface->input_area_contains(point))
+                {
+                    result = surface;
+                }
+            });
+        return result;
     }
 
     void add_observer(std::shared_ptr<ms::Observer> const& new_observer) override
@@ -112,7 +118,7 @@ struct StubInputScene : public mtd::StubInputScene
         observer.reset();
     }
     
-    mir::ThreadSafeList<std::shared_ptr<ms::Surface>> surfaces;
+    mir::ThreadSafeList<std::shared_ptr<ms::Surface>> mutable surfaces;
 
     std::shared_ptr<ms::Observer> observer;
 };

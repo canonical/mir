@@ -331,7 +331,7 @@ void mi::SurfaceInputDispatcher::surface_moved(ms::Surface const* moved_surface)
     auto ctx = context_for_event(
         last_pointer_event.get(),
         [this](auto id) { return &this->ensure_pointer_state(id).current_target; },
-        [this](auto point) { return this->find_target_surface(point); });
+        [this](auto point) { return scene->input_surface_at(point); });
 
     // If we're in a move/resize gesture we don't need to synthesize an event
     if (ensure_pointer_state(mir_input_event_get_device_id(ctx.iev)).gesture_owner)
@@ -362,7 +362,7 @@ void mi::SurfaceInputDispatcher::surface_resized()
     auto ctx = context_for_event(
         last_pointer_event.get(),
         [this](auto id) { return &this->ensure_pointer_state(id).current_target; },
-        [this](auto point) { return this->find_target_surface(point); });
+        [this](auto point) { return scene->input_surface_at(point); });
 
     auto const entered_surface_changed = dispatch_scene_change_enter_exit_events(
         ctx,
@@ -417,16 +417,6 @@ bool is_gesture_terminator(MirPointerEvent const* pev)
     for_pressed_buttons(pev, [&any_pressed](MirPointerButton){ any_pressed = true; });
     return !any_pressed && mir_pointer_event_action(pev) == mir_pointer_action_button_up;
 }
-}
-
-std::shared_ptr<mi::Surface> mi::SurfaceInputDispatcher::find_target_surface(geom::Point const& point)
-{
-    std::shared_ptr<mi::Surface> top_target = nullptr;
-    scene->for_each([&top_target, &point](std::shared_ptr<mi::Surface> const& target) {
-            if (target->input_area_contains(point))
-                top_target = target;
-    });
-    return top_target;
 }
 
 void mi::SurfaceInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surface> const& surface,
@@ -486,7 +476,7 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, std::shar
 
         if (gesture_terminated || !drag_and_drop_handle.empty())
         {
-            auto target = find_target_surface(event_x_y);
+            auto target = scene->input_surface_at(event_x_y);
 
             if (pointer_state.current_target != target)
             {
@@ -513,7 +503,7 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, std::shar
     }
     else
     {
-        auto target = find_target_surface(event_x_y);
+        auto target = scene->input_surface_at(event_x_y);
         bool sent_ev = false;
         if (pointer_state.current_target != target)
         {
@@ -591,7 +581,7 @@ bool mi::SurfaceInputDispatcher::dispatch_touch(MirInputDeviceId id, MirEvent co
         geom::Point event_x_y = { mir_touch_event_axis_value(tev, 0, mir_touch_axis_x),
                                   mir_touch_event_axis_value(tev, 0, mir_touch_axis_y) };
 
-        gesture_owner = find_target_surface(event_x_y);
+        gesture_owner = scene->input_surface_at(event_x_y);
     }
 
     if (gesture_owner)
