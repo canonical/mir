@@ -22,6 +22,7 @@
 #include <mir/geometry/rectangle.h>
 
 #include <memory>
+#include <optional>
 
 namespace mir { namespace graphics { struct DisplayConfigurationOutput; } }
 
@@ -99,6 +100,10 @@ public:
     /// The output name. This matches that suppled to clients through wl_output
     /// \remark Since MirAL 3.8
     auto name() const -> std::string;
+
+    /// A custom attribute value
+    /// \remark Since MirAL 3.8
+    auto attribute(std::string const& key) const -> std::optional<std::string> const;
 
     auto valid() const -> bool;
 
