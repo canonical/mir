@@ -28,8 +28,10 @@
 #include <glm/glm.hpp>
 
 #include <functional>
-#include <vector>
+#include <map>
 #include <memory>
+#include <optional>
+#include <vector>
 
 namespace mir
 {
@@ -145,6 +147,9 @@ struct DisplayConfigurationOutput
     // TODO: Better output names that are consistant between sessions
     std::string name = "OUT-" + std::to_string(id.as_value());
 
+    /// Custom attributes (typically set via the .display configuration file
+    std::map<std::string const, std::optional<std::string>> custom_attribute = {};
+
     /** The logical rectangle occupied by the output, based on its position,
         current mode and orientation (rotation) */
     geometry::Rectangle extents() const;
@@ -190,6 +195,8 @@ struct UserDisplayConfigurationOutput
     std::vector<uint8_t const> const& edid;
     mir::optional_value<geometry::Size>& custom_logical_size;
     std::string const& name;
+    /// Custom attributes (typically set by the .display configuration file
+    std::map<std::string const, std::optional<std::string>> const& custom_attribute;
 
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& main);
     geometry::Rectangle extents() const;

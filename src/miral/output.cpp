@@ -108,6 +108,11 @@ auto miral::Output::name() const -> std::string
     return self->name;
 }
 
+auto miral::Output::attribute(std::string const& /*key*/) const -> std::optional<std::string> const
+{
+    return std::nullopt;
+}
+
 bool miral::operator==(Output::PhysicalSizeMM const& lhs, Output::PhysicalSizeMM const& rhs)
 {
     return lhs.width == rhs.width && lhs.height == rhs.height;

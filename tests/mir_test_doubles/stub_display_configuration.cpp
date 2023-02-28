@@ -95,6 +95,7 @@ mtd::StubDisplayConfigurationOutput::StubDisplayConfigurationOutput(
             {},
             mir_output_gamma_unsupported,
             {},
+            {},
             {}
         }
 {
@@ -125,6 +126,7 @@ mtd::StubDisplayConfigurationOutput::StubDisplayConfigurationOutput(
         mir_subpixel_arrangement_unknown,
         {},
         mir_output_gamma_unsupported,
+        {},
         {},
         {}
     }
