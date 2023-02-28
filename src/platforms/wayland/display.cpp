@@ -129,13 +129,6 @@ void mgw::Display::register_configuration_change_handler(
     config_change_handlers.push_back(conf_change_handler);
 }
 
-void mgw::Display::register_pause_resume_handlers(
-    EventHandlerRegister& /*handlers*/,
-    DisplayPauseHandler const& /*pause_handler*/,
-    DisplayResumeHandler const& /*resume_handler*/)
-{
-}
-
 void mgw::Display::pause()
 {
    BOOST_THROW_EXCEPTION(std::runtime_error("'Display::pause()' not yet supported on wayland platform"));

@@ -109,9 +109,8 @@ mf::XdgOutputV1::XdgOutputV1(
     output_global.add_listener(this);
 
     // Name may only be sent the first time
-    // TODO: Better output names that are consistant between sessions
-    auto output_name = "OUT-" + std::to_string(output_global.current_config().id.as_value());
-    send_name_event_if_supported(output_name);
+    send_name_event_if_supported(output_global.current_config().name);
+    
     // not sending description is allowed
     // send_description_event_if_supported("TODO: set this");
 

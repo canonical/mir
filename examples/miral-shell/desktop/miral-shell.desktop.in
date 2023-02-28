@@ -16,3 +16,4 @@ X-Ubuntu-Single-Instance=true
 X-Ubuntu-Default-Department-ID=miral-shell
 #X-Screenshot=
 X-Ubuntu-Splash-Color=#FFFFFF
+X-AppStream-Ignore=true

@@ -34,7 +34,7 @@ namespace mir { class Server; }
 namespace miral
 {
 /// A handle which keeps a file descriptor registered to the main loop until it is dropped
-struct FdHandle { public: virtual ~FdHandle() {} };
+struct FdHandle { public: virtual ~FdHandle(); };
 
 /// Runner for applying initialization options to Mir.
 class MirRunner

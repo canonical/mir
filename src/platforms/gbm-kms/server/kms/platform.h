@@ -37,7 +37,7 @@ class Platform : public graphics::DisplayPlatform
 {
 public:
     explicit Platform(std::shared_ptr<DisplayReport> const& reporter,
-                      std::shared_ptr<ConsoleServices> const& vt,
+                      ConsoleServices& vt,
                       EmergencyCleanupRegistry& emergency_cleanup_registry,
                       BypassOption bypass_option,
                       std::unique_ptr<Quirks> quirks);
@@ -52,7 +52,6 @@ public:
     std::shared_ptr<helpers::GBMHelper> const gbm;
 
     std::shared_ptr<DisplayReport> const listener;
-    std::shared_ptr<ConsoleServices> const vt;
 
     BypassOption bypass_option() const;
 private:

@@ -82,7 +82,7 @@ public:
     void unregister_compositor(compositor::CompositorID id) override;
 
     // From Scene
-    void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& callback) override;
+    auto input_surface_at(geometry::Point point) const -> std::shared_ptr<input::Surface> override;
 
     virtual void remove_surface(std::weak_ptr<Surface> const& surface) override;
 

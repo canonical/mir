@@ -20,34 +20,42 @@
 #include <mir/abnormal_exit.h>
 #include <mir/graphics/default_display_configuration_policy.h>
 #include <mir/graphics/display_configuration.h>
+#include <mir/fd.h>
 
 #include <map>
+#include <mutex>
+#include <optional>
 #include <functional>
 #include <iosfwd>
+#include "mir/log.h"
+
+namespace mir
+{
+class MainLoop;
+class Server;
+namespace shell { class DisplayConfigurationController; }
+}
 
 namespace miral
 {
-class StaticDisplayConfig : public mir::graphics::DisplayConfigurationPolicy
+class YamlFileDisplayConfig : public mir::graphics::DisplayConfigurationPolicy
 {
 public:
-    StaticDisplayConfig();
-    StaticDisplayConfig(std::string const& filename);
+    void load_config(std::istream& config_file, std::string const& filename);
 
-    virtual void apply_to(mir::graphics::DisplayConfiguration& conf);
-
-    void load_config(std::istream& config_file, std::string const& error_prefix);
+    void apply_to(mir::graphics::DisplayConfiguration& conf) override;
 
     void select_layout(std::string const& layout);
 
     auto list_layouts() const -> std::vector<std::string>;
 
-    virtual void dump_config(std::function<void(std::ostream&)> const& print_template_config);
+    static void serialize_configuration(std::ostream& out, mir::graphics::DisplayConfiguration& conf);
+
+    static void apply_default_configuration(mir::graphics::DisplayConfiguration& conf);
 
 private:
-
+    std::mutex mutable mutex;
     std::string layout = "default";
-
-    using Id = std::tuple<mir::graphics::DisplayConfigurationCardId, MirOutputType, int>;
     struct Config
     {
         bool  disabled = false;
@@ -59,10 +67,53 @@ private:
         mir::optional_value<int> group_id;
     };
 
-    using Id2Config = std::map<Id, Config>;
-    using Layout2Id2Config = std::map<std::string, Id2Config>;
+    using Port2Config = std::map<std::string, Config>;
+    using Layout2Port2Config = std::map<std::string, Port2Config>;
+    Layout2Port2Config config;
 
-    Layout2Id2Config config;
+    static void apply_to_output(mir::graphics::UserDisplayConfigurationOutput& conf_output, Config const& conf);
+
+    static void serialize_output_configuration(
+        std::ostream& out, mir::graphics::UserDisplayConfigurationOutput const& conf_output);
+};
+
+class ReloadingYamlFileDisplayConfig : public YamlFileDisplayConfig
+{
+public:
+    explicit ReloadingYamlFileDisplayConfig(std::string basename);
+    ~ReloadingYamlFileDisplayConfig();
+    std::string const basename;
+
+    void init_auto_reload(mir::Server& server);
+
+    void config_path(std::string newpath);
+
+    void apply_to(mir::graphics::DisplayConfiguration& conf) override;
+
+    void check_for_layout_override();
+
+private:
+    auto the_main_loop() const -> std::shared_ptr<mir::MainLoop>;
+
+    auto the_display_configuration_controller() const -> std::shared_ptr<mir::shell::DisplayConfigurationController>;
+
+    auto inotify_config_path() -> std::optional<mir::Fd>;
+
+    void auto_reload();
+
+    std::mutex mutable mutex;
+    std::weak_ptr<mir::shell::DisplayConfigurationController> the_display_configuration_controller_;
+    std::weak_ptr<mir::MainLoop> the_main_loop_;
+    std::optional<std::string> config_path_;
+    std::optional<int> config_path_wd;
+};
+
+// Monitors dirname(filename) for changes to basename(filename) and reload,
+// does not monitor for the creation of dirname(filename)
+class StaticDisplayConfig : public ReloadingYamlFileDisplayConfig
+{
+public:
+    StaticDisplayConfig(std::string const& filename);
 };
 }
 

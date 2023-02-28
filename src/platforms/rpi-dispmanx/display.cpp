@@ -241,13 +241,6 @@ void mg::rpi::Display::register_configuration_change_handler(
 {
 }
 
-void mg::rpi::Display::register_pause_resume_handlers(
-    mg::EventHandlerRegister&,
-    mg::DisplayPauseHandler const&,
-    mg::DisplayResumeHandler const&)
-{
-}
-
 void mg::rpi::Display::pause()
 {
 }

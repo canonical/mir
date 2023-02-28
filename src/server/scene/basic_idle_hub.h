@@ -20,7 +20,7 @@
 #include "mir/scene/idle_hub.h"
 #include "mir/observer_multiplexer.h"
 #include "mir/time/types.h"
-#include "mir/proof_of_mutex_lock.h"
+#include "mir/synchronised.h"
 
 #include <mutex>
 #include <map>
@@ -65,26 +65,32 @@ public:
     auto inhibit_idle() -> std::shared_ptr<IdleHub::WakeLock> override;
 
 private:
+    class AlarmCallback;
     struct Multiplexer;
     struct PendingRegistration;
 
-    void alarm_fired(ProofOfMutexLock const& lock);
-    void schedule_alarm(ProofOfMutexLock const& lock, time::Timestamp current_time);
+    struct State
+    {
+        std::weak_ptr<IdleHub::WakeLock> wake_lock;
+        /// Maps timeouts (times from last poke) to the multiplexers that need to be fired at those times.
+        std::map<time::Duration, std::shared_ptr<Multiplexer>> timeouts;
+        /// Should always be equal to timeouts.begin()->first, or nullopt if timeouts is empty. Only purpose is so we don't
+        /// need to do a map lookup on every poke (we are poked for every input event).
+        std::optional<time::Duration> first_timeout;
+        std::vector<std::shared_ptr<Multiplexer>> idle_multiplexers;
+        /// The timestamp when we were last poked
+        time::Timestamp poke_time;
+        /// Amount of time after the poke time before the alarm fires, or none if the alarm is not scheduled
+        std::optional<time::Duration> alarm_timeout;
+    };
+
+    void poke_locked(State& state);
+    void alarm_fired(State& state);
+    void schedule_alarm(State& state, time::Timestamp current_time);
 
     std::shared_ptr<time::Clock> const clock;
     std::unique_ptr<time::Alarm> const alarm;
-    std::mutex mutex;
-    std::weak_ptr<IdleHub::WakeLock> wake_lock;
-    /// Maps timeouts (times from last poke) to the multiplexers that need to be fired at those times.
-    std::map<time::Duration, std::shared_ptr<Multiplexer>> timeouts;
-    /// Should always be equal to timeouts.begin()->first, or nullopt if timeouts is empty. Only purpose is so we don't
-    /// need to do a map lookup on every poke (we are poked for every input event).
-    std::optional<time::Duration> first_timeout;
-    std::vector<std::shared_ptr<Multiplexer>> idle_multiplexers;
-    /// The timestamp when we were last poked
-    time::Timestamp poke_time;
-    /// Amount of time after the poke time before the alarm fires, or none if the alarm is not scheduled
-    std::optional<time::Duration> alarm_timeout;
+    mir::Synchronised<State> synchronised_state;
 };
 }
 }

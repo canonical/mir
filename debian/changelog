@@ -1,3 +1,78 @@
+mir (2.12.1) UNRELEASED; urgency=medium
+
+  * New upstream release 2.12.1
+
+    - Bugs fixed:
+      . Add missing #include statements (#2802)
+      . mir_wayland_generator generated code that include non public
+        header (#2804)
+      . Building docs fails when trying to not remove doc/html/cppguide (#2800)
+      . wayland: Add missing cstdint includes (#2821)
+      . Enabling zwp_idle_inhibit_manager_v1 causes Mir to crash with some
+        applications (#2836)
+      . [Wayland] idle_inhibit_unstable_v1 is badly broken (#2838)
+      . A couple ShmBacking.* tests failing on PowerPC (#2774)
+      . Fix BasicIdleHub behavior (#2843)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 23 Feb 2023 14:30:10 +0100
+
+mir (2.12.0) UNRELEASED; urgency=medium
+
+  [ Alan Griffiths ]
+  * New upstream release 2.12.0
+
+    - ABI summary:
+      . miral ABI unchanged at 5
+      . mircommon ABI unchanged at 9
+      . mircookie ABI unchanged at 2
+      . mircore ABI unchanged at 2
+      . miroil ABI unchanged at 3
+      . mirplatform ABI unchanged at 23
+      . mirserver ABI unchanged at 58
+      . mirwayland ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 20
+      . mirinputplatform ABI unchanged at 8
+    - Enhancements:
+      . [Wayland] Implement wp_primary_selection_unstable_v1 (Fixes #2699,
+        Fixes #2583)
+      . [platform] Add DRMFormat::as_mir_format()
+      . [Wayland] Manually implement wl_shm/wl_shm_pool. (Closes: #2669)
+    - Bugs fixed:
+      . [miral] InternalClient don't use a dead wl_display (Fixes: #2344)
+      . [input] Move XKB modifier tracking from Wayland frontend to KeyMapper.
+        (Fixes #2720, Fixes #2145)
+      . [gbm-kms] Ensure that a candidate device has the hardware to support
+        at least one physical display. (Fixes: #2258)
+      . Fix overlapping outputs of different scale. (Fixes: #2758)
+      . After idle timeout the powermode change needs to be applied to the base
+        display configuration. (Fixes: #2757, Fixes: #2695)
+      . [Xwayland] Do not abort when nothing is wrong. (Fixes: #2790)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Mon, 16 Jan 2023 10:23:07 +0000
+
+mir (2.11.0) UNRELEASED; urgency=medium
+
+  [ Alan Griffiths ]
+  * New upstream release 2.11.0
+
+    - ABI summary:
+      . miral ABI unchanged at 5
+      . mircommon ABI unchanged at 9
+      . mircookie ABI unchanged at 2
+      . mircore ABI unchanged at 2
+      . miroil ABI bumped to 3
+      . mirplatform ABI unchanged at 23
+      . mirserver ABI unchanged at 58
+      . mirwayland ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 20
+      . mirinputplatform ABI unchanged at 8
+    - Enhancements:
+      . [miroil] Cleanup miroil mirbuffer and align with upstream qtmir
+    - Bugs fixed:
+      . [Xwayland] Fix race (Fixes: #2733)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Wed, 5 Jan 2023 17:52:00 +0000
+
 mir (2.10.0) UNRELEASED; urgency=medium
 
   * New upstream release 2.10.0

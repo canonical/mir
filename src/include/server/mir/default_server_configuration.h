@@ -172,6 +172,7 @@ public:
     std::shared_ptr<MainLoop>               the_main_loop() override;
     std::shared_ptr<ServerStatusListener>   the_server_status_listener() override;
     std::shared_ptr<DisplayChanger>         the_display_changer() override;
+    std::shared_ptr<ConsoleServices>        the_console_services() override;
     std::vector<std::shared_ptr<graphics::DisplayPlatform>> const& the_display_platforms() override;
     auto the_rendering_platforms() -> std::vector<std::shared_ptr<graphics::RenderingPlatform>> const& override;
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
@@ -335,7 +336,6 @@ public:
     virtual std::shared_ptr<ServerActionQueue> the_server_action_queue();
     virtual std::shared_ptr<SharedLibraryProberReport>  the_shared_library_prober_report();
 
-    virtual std::shared_ptr<ConsoleServices> the_console_services();
     auto default_reports() -> std::shared_ptr<void>;
 
 protected:

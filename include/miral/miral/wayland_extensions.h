@@ -117,7 +117,9 @@ public:
     using EnableCallback = std::function<bool(EnableInfo const& info)>;
 
     /// Set an extension filter callback to control the extensions available to specific clients. Deprecated in favor of
-    /// conditionally_enable(), and not be used in conjunction with conditionally_enable().
+    /// conditionally_enable(), and not be used in conjunction with conditionally_enable(). The filter may be called
+    /// multiple times for a each client/extension pair (for example, once each time a client creates or destroys a
+    /// wl_registry).
     /// \remark Since MirAL 2.5
     /// \deprecated In MirAL 3.4, use conditionally_enable() instead
     [[deprecated("use conditionally_enable() instead")]]
@@ -213,7 +215,10 @@ public:
 
     /// Enable a Wayland extension only when the callback returns true. The callback can use info.user_preference()
     /// to respect the extension options the user provided, it is not required. Unlike enable() and disable(),
-    /// conditionally_enable() can override the user options.
+    /// conditionally_enable() can override the user options. The callback may be called multiple times for a each
+    /// client/extension pair (for example, once each time a client creates or destroys a wl_registry).
+    /// All client processing will be blocked while the callback is being executed. To minimise the impact on client
+    /// responsiveness users may want to cache the result of any expensive checks made in the callback.
     /// \remark Since MirAL 3.4
     auto conditionally_enable(std::string name, EnableCallback const& callback) -> WaylandExtensions&;
 

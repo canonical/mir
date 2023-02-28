@@ -25,10 +25,6 @@
 namespace mir
 {
 class Executor;
-namespace scene
-{
-class IdleHub;
-}
 namespace frontend
 {
 auto create_idle_inhibit_manager_v1(

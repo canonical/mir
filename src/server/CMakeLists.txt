@@ -164,10 +164,10 @@ install(TARGETS mirserver
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 install(DIRECTORY
-  ${CMAKE_SOURCE_DIR}/include/platform/mir DESTINATION "include/mirplatform"
+  ${CMAKE_SOURCE_DIR}/include/platform/mir DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mirplatform"
 )
 install(DIRECTORY
-  ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
+  ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mirserver"
 )
 
 set(MIRSERVER_ABI 58) # Be sure to increment MIR_VERSION_MINOR at the same time

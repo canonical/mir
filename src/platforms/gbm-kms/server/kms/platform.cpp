@@ -31,19 +31,18 @@ namespace mgg = mg::gbm;
 namespace mgmh = mgg::helpers;
 
 mgg::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
-                        std::shared_ptr<ConsoleServices> const& vt,
+                        ConsoleServices& vt,
                         EmergencyCleanupRegistry&,
                         BypassOption bypass_option,
                         std::unique_ptr<Quirks> quirks)
     : udev{std::make_shared<mir::udev::Context>()},
-      drm{helpers::DRMHelper::open_all_devices(udev, *vt, *quirks)},
+      drm{helpers::DRMHelper::open_all_devices(udev, vt, *quirks)},
       // We assume the first DRM device is the boot GPU, and arbitrarily pick it as our
       // shell renderer.
       //
       // TODO: expose multiple rendering GPUs to the shell.
       gbm{std::make_shared<mgmh::GBMHelper>(drm.front()->fd)},
       listener{listener},
-      vt{vt},
       bypass_option_{bypass_option}
 {
 }
@@ -66,7 +65,6 @@ mir::UniqueModulePtr<mg::Display> mgg::Platform::create_display(
     return make_module_ptr<mgg::Display>(
         drm,
         gbm,
-        vt,
         bypass_option_,
         initial_conf_policy,
         gl_config,

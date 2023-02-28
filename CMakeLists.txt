@@ -25,8 +25,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 2)
-set(MIR_VERSION_MINOR 10)
-set(MIR_VERSION_PATCH 0)
+set(MIR_VERSION_MINOR 12)
+set(MIR_VERSION_PATCH 1)
 
 add_compile_definitions(MIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
 add_compile_definitions(MIR_VERSION_MINOR=${MIR_VERSION_MINOR})
@@ -201,7 +201,6 @@ include_directories (SYSTEM
 )
 
 add_compile_definitions(EGL_NO_X11)
-add_compile_definitions(MESA_EGL_NO_X11_HEADERS) # Can be removed when all platforms support EGL_NO_X11
 
 pkg_check_modules(WAYLAND_EGLSTREAM wayland-eglstream)
 
@@ -307,9 +306,6 @@ pkg_check_modules(GL REQUIRED glesv2)
 
 if (MIR_BUILD_PLATFORM_GBM_KMS)
   pkg_check_modules( GBM REQUIRED gbm>=11.0.0)
-  if (DRM_VERSION VERSION_GREATER 2.4.84)
-    add_compile_definitions(MIR_DRMMODEADDFB_HAS_CONST_SIGNATURE)
-  endif()
 endif()
 
 if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
@@ -321,6 +317,10 @@ if (MIR_BUILD_PLATFORM_WAYLAND)
 endif()
 
 set(MIR_TRACEPOINT_LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/mir/tools)
+
+mir_make_pkgconfig_variable(PKGCONFIG_LIBDIR "${CMAKE_INSTALL_LIBDIR}")
+mir_make_pkgconfig_variable(PKGCONFIG_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}")
+include(JoinPaths)
 
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(src/)

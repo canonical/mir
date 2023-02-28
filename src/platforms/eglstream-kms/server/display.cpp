@@ -416,13 +416,6 @@ void mge::Display::register_configuration_change_handler(
             }));
 }
 
-void mge::Display::register_pause_resume_handlers(
-    EventHandlerRegister& /*handlers*/,
-    DisplayPauseHandler const& /*pause_handler*/,
-    DisplayResumeHandler const& /*resume_handler*/)
-{
-}
-
 void mge::Display::pause()
 {
 

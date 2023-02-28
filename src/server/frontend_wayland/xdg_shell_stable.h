@@ -85,6 +85,8 @@ public:
     static auto from(wl_resource* resource) -> XdgPopupStable*;
 
 private:
+    void destroy_role() const override;
+
     std::optional<geometry::Point> cached_top_left;
     std::optional<geometry::Size> cached_size;
     bool initial_configure_pending{true};

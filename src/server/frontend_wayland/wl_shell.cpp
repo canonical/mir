@@ -50,15 +50,6 @@ public:
     ~WlShellSurface() = default;
 
 protected:
-    void surface_destroyed() override
-    {
-        // The spec is a little contradictory:
-        // wl_surface: When a client wants to destroy a wl_surface, they must destroy this 'role object' before the wl_surface
-        // wl_shell_surface: On the server side the object is automatically destroyed when the related wl_surface is destroyed
-        // Without a destroy request, it seems the latter must be correct, so that is what we implement
-        destroy_and_delete();
-    }
-
     void set_toplevel() override
     {
     }
@@ -206,6 +197,11 @@ protected:
 
     void set_class(std::string const& /*class_*/) override
     {
+    }
+
+    void destroy_role() const override
+    {
+        wl_resource_destroy(resource);
     }
 };
 

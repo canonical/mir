@@ -161,6 +161,9 @@ private:
     std::unique_ptr<shell::SurfaceSpecification> pending_changes;
 
     shell::SurfaceSpecification& spec();
+
+    // Ask the derived class to destroy the wayland role object (as only it can do that)
+    virtual void destroy_role() const = 0;
 };
 
 }

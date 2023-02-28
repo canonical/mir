@@ -20,50 +20,48 @@
 #include "mir/time/clock.h"
 #include "mir/lockable_callback.h"
 #include "mir/executor.h"
+#include "mir/fatal.h"
 
 #include <set>
 
 namespace ms = mir::scene;
 namespace mt = mir::time;
 
-namespace
-{
 /// The callback used by the alarm. Does not need to be threadsafe because it is only called into by the alarm when it
 /// is fired.
-class AlarmCallback: public mir::LockableCallback
+class ms::BasicIdleHub::AlarmCallback: public mir::LockableCallback
 {
 public:
-    AlarmCallback(std::mutex& mutex, std::function<void(mir::ProofOfMutexLock const& lock)> const& func)
-        : mutex{mutex},
+    AlarmCallback(Synchronised<State>& synchronised_state, std::function<void(State& state)> const& func)
+        : synchronised_state{synchronised_state},
           func{func}
     {
     }
 
     void operator()() override
     {
-        if (!lock_)
+        if (!locked)
         {
             mir::fatal_error("AlarmCallback called while unlocked");
         }
-        func(*lock_);
+        func(*locked.value());
     }
 
     void lock() override
     {
-        lock_ = std::make_unique<std::lock_guard<std::mutex>>(mutex);
+        locked.emplace(synchronised_state.lock());
     }
 
     void unlock() override
     {
-        lock_.reset();
+        locked.reset();
     }
 
 private:
-    std::mutex& mutex;
-    std::function<void(mir::ProofOfMutexLock const& lock)> const func;
-    std::unique_ptr<std::lock_guard<std::mutex>> lock_;
+    Synchronised<State>& synchronised_state;
+    std::function<void(State& state)> const func;
+    std::optional<Synchronised<State>::Locked> locked;
 };
-}
 
 struct ms::BasicIdleHub::Multiplexer: ObserverMultiplexer<IdleStateObserver>
 {
@@ -74,8 +72,7 @@ struct ms::BasicIdleHub::Multiplexer: ObserverMultiplexer<IdleStateObserver>
 
     void register_and_send_initial_state(
         std::weak_ptr<IdleStateObserver> const& observer,
-        NonBlockingExecutor& executor,
-        bool is_active)
+        NonBlockingExecutor& executor)
     {
         register_interest(observer, executor);
         if (auto const locked = observer.lock())
@@ -93,13 +90,24 @@ struct ms::BasicIdleHub::Multiplexer: ObserverMultiplexer<IdleStateObserver>
 
     void idle() override
     {
-        for_each_observer(&IdleStateObserver::idle);
+        if (is_active)
+        {
+            is_active = false;
+            for_each_observer(&IdleStateObserver::idle);
+        }
     }
 
     void active() override
     {
-        for_each_observer(&IdleStateObserver::active);
+        if (!is_active)
+        {
+            is_active = true;
+            for_each_observer(&IdleStateObserver::active);
+        }
     }
+
+private:
+    bool is_active{true};
 };
 
 struct ms::BasicIdleHub::PendingRegistration
@@ -117,9 +125,9 @@ ms::BasicIdleHub::BasicIdleHub(
     mt::AlarmFactory& alarm_factory)
     : clock{clock},
       alarm{alarm_factory.create_alarm(
-          std::make_unique<AlarmCallback>(mutex, [this](ProofOfMutexLock const& lock)
+          std::make_unique<AlarmCallback>(synchronised_state, [this](State& state)
               {
-                  alarm_fired(lock);
+                  alarm_fired(state);
               }))}
 {
     poke();
@@ -132,23 +140,7 @@ ms::BasicIdleHub::~BasicIdleHub()
 
 void ms::BasicIdleHub::poke()
 {
-    std::lock_guard lock{mutex};
-    if (!wake_lock.expired())
-    {
-        return;
-    }
-
-    poke_time = clock->now();
-    schedule_alarm(lock, poke_time);
-    if (!idle_multiplexers.empty())
-    {
-        auto const idle = std::move(idle_multiplexers);
-        idle_multiplexers.clear();
-        for (auto const& multiplexer : idle)
-        {
-            multiplexer->active();
-        }
-    }
+    poke_locked(*synchronised_state.lock());
 }
 
 void ms::BasicIdleHub::register_interest(
@@ -169,31 +161,32 @@ void ms::BasicIdleHub::register_interest(
         return;
     }
 
-    std::lock_guard lock{mutex};
-    auto const iter = timeouts.find(timeout);
+    auto state = synchronised_state.lock();
+    auto const iter = state->timeouts.find(timeout);
     std::shared_ptr<Multiplexer> multiplexer;
-    if (iter == timeouts.end())
+    if (iter == state->timeouts.end())
     {
         multiplexer = std::make_shared<Multiplexer>();
-        timeouts.insert({timeout, multiplexer});
+        state->timeouts.insert({timeout, multiplexer});
         // In case this changes the first timeout
-        first_timeout = timeouts.begin()->first;
+        state->first_timeout = state->timeouts.begin()->first;
         // Check if the current alarm will overshoot the new timeout (or there isn't an alarm at all)
-        if (!alarm_timeout || alarm_timeout.value() > timeout)
+        if (state->wake_lock.expired() && (!state->alarm_timeout || state->alarm_timeout.value() > timeout))
         {
             // The alarm will not be fired before we hit our timeout
-            auto const current_time = clock->now() - poke_time;
+            auto const current_time = clock->now() - state->poke_time;
             if (current_time < timeout)
             {
                 // As it stands, the alarm will be fired after we hit our timout,
                 // but we have not hit it yet so the alarm needs to be moved up
-                alarm_timeout = timeout;
+                state->alarm_timeout = timeout;
                 alarm->reschedule_in(std::chrono::duration_cast<std::chrono::milliseconds>(timeout - current_time));
             }
             else
             {
                 // Our timeout has already been passed, so we are idle
-                idle_multiplexers.push_back(multiplexer);
+                multiplexer->idle();
+                state->idle_multiplexers.push_back(multiplexer);
             }
         }
     }
@@ -202,66 +195,87 @@ void ms::BasicIdleHub::register_interest(
         multiplexer = iter->second;
     }
 
-    auto const is_active = (alarm_timeout && alarm_timeout.value() <= timeout);
-    multiplexer->register_and_send_initial_state(observer, executor, is_active);
+    multiplexer->register_and_send_initial_state(observer, executor);
 }
 
 void ms::BasicIdleHub::unregister_interest(IdleStateObserver const& observer)
 {
-    std::lock_guard lock{mutex};
-    for (auto i = timeouts.begin(); i != timeouts.end();) {
+    auto state = synchronised_state.lock();
+    for (auto i = state->timeouts.begin(); i != state->timeouts.end();) {
         i->second->unregister_interest(observer);
         if (i->second->empty()) {
-            i = timeouts.erase(i);
+            i = state->timeouts.erase(i);
         } else {
             ++i;
         }
     }
-    first_timeout = timeouts.empty() ? std::nullopt : std::make_optional(timeouts.begin()->first);
+    state->first_timeout = state->timeouts.empty() ?
+        std::nullopt :
+        std::make_optional(state->timeouts.begin()->first);
 }
 
-void ms::BasicIdleHub::alarm_fired(ProofOfMutexLock const& lock)
+void ms::BasicIdleHub::poke_locked(State& state)
 {
-    if (!alarm_timeout)
+    if (!state.wake_lock.expired())
+    {
+        return;
+    }
+
+    state.poke_time = clock->now();
+    schedule_alarm(state, state.poke_time);
+    if (!state.idle_multiplexers.empty())
+    {
+        auto const idle = std::move(state.idle_multiplexers);
+        state.idle_multiplexers.clear();
+        for (auto const& multiplexer : idle)
+        {
+            multiplexer->active();
+        }
+    }
+}
+
+void ms::BasicIdleHub::alarm_fired(State& state)
+{
+    if (!state.alarm_timeout)
     {
         // Possible if the alarm is fired but fails to get the lock until after it's been canceled
         return;
     }
-    auto const iter = timeouts.find(alarm_timeout.value());
-    if (iter != timeouts.end())
+    auto const iter = state.timeouts.find(state.alarm_timeout.value());
+    if (iter != state.timeouts.end())
     {
         iter->second->idle();
-        idle_multiplexers.push_back(iter->second);
+        state.idle_multiplexers.push_back(iter->second);
     }
-    schedule_alarm(lock, poke_time + alarm_timeout.value());
+    schedule_alarm(state, state.poke_time + state.alarm_timeout.value());
 }
 
-void ms::BasicIdleHub::schedule_alarm(ProofOfMutexLock const&, time::Timestamp current_time)
+void ms::BasicIdleHub::schedule_alarm(State& state, time::Timestamp current_time)
 {
     std::optional<time::Duration> next_timeout;
-    if (poke_time == current_time)
+    if (state.poke_time == current_time)
     {
         // Don't do map lookup for every poke
-        next_timeout = first_timeout;
+        next_timeout = state.first_timeout;
     }
     else
     {
-        time::Duration const idle_time = current_time - poke_time;
-        auto const iter = timeouts.upper_bound(idle_time);
-        if (iter != timeouts.end())
+        time::Duration const idle_time = current_time - state.poke_time;
+        auto const iter = state.timeouts.upper_bound(idle_time);
+        if (iter != state.timeouts.end())
         {
             next_timeout = iter->first;
         }
     }
     if (next_timeout)
     {
-        alarm->reschedule_for(poke_time + next_timeout.value());
-        alarm_timeout = next_timeout.value();
+        alarm->reschedule_for(state.poke_time + next_timeout.value());
+        state.alarm_timeout = next_timeout.value();
     }
     else
     {
         alarm->cancel();
-        alarm_timeout = std::nullopt;
+        state.alarm_timeout = std::nullopt;
     }
 }
 
@@ -285,16 +299,17 @@ private:
 
 auto ms::BasicIdleHub::inhibit_idle() -> std::shared_ptr<WakeLock>
 {
-    std::lock_guard<std::mutex> lock(mutex);
-    if (auto const shared_wake_lock = wake_lock.lock()) // wake_lock is already held
+    auto state = synchronised_state.lock();
+    if (auto const shared_wake_lock = state->wake_lock.lock()) // wake_lock is already held
     {
         return shared_wake_lock;
     }
     else // wake_lock is not being held
     {
+        poke_locked(*state);
         auto result = std::make_shared<WakeLock>(shared_from_this());
         alarm->cancel();
-        wake_lock = result;
+        state->wake_lock = result;
         return result;
     }
 }

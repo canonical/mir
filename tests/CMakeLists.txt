@@ -204,25 +204,23 @@ PRIVATE
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
-set(PREFIX "${CMAKE_INSTALL_PREFIX}")
-set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
-set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirtest")
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mirtest.pc.in
   ${CMAKE_CURRENT_BINARY_DIR}/mirtest.pc
+  @ONLY
 )
 
 install(TARGETS mir-test-assist
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/test/mir
-  DESTINATION "include/mirtest"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mirtest"
 )
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/test/mir_test_framework
-  DESTINATION "include/mirtest"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mirtest"
 )
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/test/miral
-  DESTINATION "include/mirtest"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mirtest"
 )
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mirtest.pc
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig

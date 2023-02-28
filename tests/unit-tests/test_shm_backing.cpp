@@ -274,8 +274,16 @@ TEST(ShmBacking, read_from_invalid_memory_returns_0)
 {
     using namespace testing;
 
-    constexpr size_t const shm_size = 4000;
-    constexpr size_t const claimed_size = shm_size * 2;    // Lie about our backing size
+    /* mmap maps ranges in multiples of PAGE_SIZE. If we want to test invalid accesses,
+     * we need to make sure our invalid access will try to touch an address *not* in the
+     * same page as our valid memory.
+     *
+     * To do this, make our valid region exactly 1 page large. mmap() will map it at
+     * a page-aligned address, so that means *any* access outside the valid region
+     * will hit a different page.
+     */
+    size_t const shm_size = sysconf(_SC_PAGE_SIZE);
+    size_t const claimed_size = shm_size + 1;    // Lie about our backing size
     auto shm_fd = make_shm_fd(shm_size);
     auto backing = mir::shm::rw_pool_from_fd(shm_fd, claimed_size);
 
@@ -293,8 +301,8 @@ TEST(ShmBacking, access_fault_is_true_after_invaild_read)
 {
     using namespace testing;
 
-    constexpr size_t const shm_size = 4000;
-    constexpr size_t const claimed_size = shm_size * 2;    // Lie about our backing size
+    size_t const shm_size = sysconf(_SC_PAGE_SIZE);
+    size_t const claimed_size = shm_size + 1;    // Lie about our backing size
     auto shm_fd = make_shm_fd(shm_size);
     auto backing = mir::shm::rw_pool_from_fd(shm_fd, claimed_size);
 
@@ -314,8 +322,8 @@ TEST(ShmBacking, access_fault_is_true_after_invaild_write)
 {
     using namespace testing;
 
-    constexpr size_t const shm_size = 4000;
-    constexpr size_t const claimed_size = shm_size * 2;    // Lie about our backing size
+    size_t const shm_size = sysconf(_SC_PAGE_SIZE);
+    size_t const claimed_size = shm_size + 1;    // Lie about our backing size
     auto shm_fd = make_shm_fd(shm_size);
     auto backing = mir::shm::rw_pool_from_fd(shm_fd, claimed_size);
 
@@ -332,8 +340,8 @@ TEST(ShmBacking, access_into_invalid_range_works_even_after_backing_destroyed)
 {
     using namespace testing;
 
-    constexpr size_t const shm_size = 4000;
-    constexpr size_t const claimed_size = shm_size * 2;
+    size_t const shm_size = sysconf(_SC_PAGE_SIZE);
+    size_t const claimed_size = shm_size + 1;    // Lie about our backing size
     auto shm_fd = make_shm_fd(shm_size);
     auto backing = mir::shm::rw_pool_from_fd(shm_fd, claimed_size);
 
@@ -403,8 +411,8 @@ TEST(ShmBacking, can_resize_pool)
 {
     using namespace testing;
 
-    constexpr size_t const initial_size = 4000;
-    constexpr size_t const new_size = initial_size + 400;
+    size_t const initial_size = sysconf(_SC_PAGE_SIZE);
+    size_t const new_size = initial_size + 400;
 
     auto shm_fd = make_shm_fd(initial_size);
     auto backing = mir::shm::rw_pool_from_fd(shm_fd, initial_size);
@@ -431,8 +439,8 @@ TEST(ShmBacking, ranges_remain_valid_after_resize)
 {
     using namespace testing;
 
-    constexpr size_t const initial_size = 4000;
-    constexpr size_t const new_size = initial_size + 400;
+    size_t const initial_size = sysconf(_SC_PAGE_SIZE);
+    size_t const new_size = initial_size + 400;
 
     auto shm_fd = make_shm_fd(initial_size);
     auto backing = mir::shm::rw_pool_from_fd(shm_fd, initial_size);
@@ -463,8 +471,8 @@ TEST(ShmBacking, mapping_remains_valid_after_resize)
 {
     using namespace testing;
 
-    constexpr size_t const initial_size = 4000;
-    constexpr size_t const new_size = initial_size + 400;
+    size_t const initial_size = sysconf(_SC_PAGE_SIZE);
+    size_t const new_size = initial_size + 400;
 
     auto shm_fd = make_shm_fd(initial_size);
     auto backing = mir::shm::rw_pool_from_fd(shm_fd, initial_size);
@@ -494,7 +502,7 @@ TEST(ShmBacking, resize_rechecks_backing_size)
 {
     using namespace testing;
 
-    constexpr size_t const shm_size = 4000;
+    size_t const shm_size = sysconf(_SC_PAGE_SIZE);
 
     mir::Fd shm_fd;
     try
@@ -539,7 +547,7 @@ TEST(ShmBacking, resize_doesnt_install_sigbus_handler_when_safe)
 {
     using namespace testing;
 
-    constexpr size_t const shm_size = 4000;
+    size_t const shm_size = sysconf(_SC_PAGE_SIZE);
 
     mir::Fd shm_fd;
     try

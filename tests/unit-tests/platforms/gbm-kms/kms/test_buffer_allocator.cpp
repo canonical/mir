@@ -86,7 +86,7 @@ protected:
 
         platform = std::make_shared<mgg::Platform>(
                 mir::report::null_display_report(),
-                std::make_shared<mtd::StubConsoleServices>(),
+                *std::make_shared<mtd::StubConsoleServices>(),
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
                 mgg::BypassOption::allowed,
                 std::make_unique<mgg::Quirks>(mo::ProgramOption{}));

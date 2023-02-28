@@ -271,13 +271,6 @@ void mgx::Display::register_configuration_change_handler(
     config_change_handlers.push_back(change_handler);
 }
 
-void mgx::Display::register_pause_resume_handlers(
-    EventHandlerRegister& /*handlers*/,
-    DisplayPauseHandler const& /*pause_handler*/,
-    DisplayResumeHandler const& /*resume_handler*/)
-{
-}
-
 void mgx::Display::pause()
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("'Display::pause()' not yet supported on x11 platform"));

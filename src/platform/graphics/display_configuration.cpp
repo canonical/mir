@@ -322,7 +322,8 @@ mg::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput(
         gamma(main.gamma),
         gamma_supported(main.gamma_supported),
         edid(*reinterpret_cast<std::vector<uint8_t const>*>(&main.edid)),
-        custom_logical_size(main.custom_logical_size)
+        custom_logical_size(main.custom_logical_size),
+        name(main.name)
 {
 }
 

@@ -20,77 +20,59 @@
 #include "static_display_config.h"
 
 #include <mir/server.h>
-#include <mir/log.h>
 
-#include <unistd.h>
+#include <boost/throw_exception.hpp>
 
 #include <fstream>
 #include <sstream>
 
-struct miral::DisplayConfiguration::Self : StaticDisplayConfig
-{
-    Self(std::string const& name) : name{name} {}
-    std::string const name;
+using namespace std::string_literals;
 
-    void dump_config(std::function<void(std::ostream&)> const& print_template_config) override
+class miral::DisplayConfiguration::Self : public ReloadingYamlFileDisplayConfig
+{
+public:
+
+    Self(std::string const& basename) : ReloadingYamlFileDisplayConfig{basename}
     {
-        std::string config_dir;
+        std::string config_roots;
 
         if (auto config_home = getenv("XDG_CONFIG_HOME"))
-            config_dir = config_home;
-        else if (auto home = getenv("HOME"))
-            (config_dir = home) += "/.config";
-
-        if (config_dir.empty())
         {
-            mir::log_debug("Nowhere to write display configuration template: Neither XDG_CONFIG_HOME or HOME is set");
+            (config_roots = config_home) += ":";
+            config_path(config_home);
         }
-        else
+        else if (auto home = getenv("HOME"))
         {
-            auto const filename = config_dir + "/" + name;
+            (config_roots = home) += "/.config:";
+            config_path(home + "/.config"s);
+        }
 
-            if (access(filename.c_str(), F_OK))
+        if (auto config_dirs = getenv("XDG_CONFIG_DIRS"))
+            config_roots += config_dirs;
+        else
+            config_roots += "/etc/xdg";
+
+        std::istringstream config_stream(config_roots);
+
+        /* Read options from config files */
+        for (std::string config_root; getline(config_stream, config_root, ':');)
+        {
+            auto const& filename = config_root + "/" + basename;
+
+            if (std::ifstream config_file{filename})
             {
-                std::ofstream out{filename};
-                print_template_config(out);
-
-                if (!out)
-                    mir::log_debug("Failed writing display configuration template: %s", filename.c_str());
+                load_config(config_file, filename);
+                config_path(config_root);
+                break;
             }
         }
-
-        StaticDisplayConfig::dump_config(print_template_config);
     }
+
 };
 
 miral::DisplayConfiguration::DisplayConfiguration(MirRunner const& mir_runner) :
     self{std::make_shared<Self>(mir_runner.display_config_file())}
 {
-    std::string config_roots;
-
-    if (auto config_home = getenv("XDG_CONFIG_HOME"))
-        (config_roots = config_home) += ":";
-    else if (auto home = getenv("HOME"))
-        (config_roots = home) += "/.config:";
-
-    if (auto config_dirs = getenv("XDG_CONFIG_DIRS"))
-        config_roots += config_dirs;
-    else
-        config_roots += "/etc/xdg";
-
-    std::istringstream config_stream(config_roots);
-
-    /* Read options from config files */
-    for (std::string config_root; getline(config_stream, config_root, ':');)
-    {
-        auto const& filename = config_root + "/" + self->name;
-
-        if (std::ifstream config_file{filename})
-        {
-            self->load_config(config_file, "ERROR: in display configuration file: '" + filename + "' : ");
-            break;
-        }
-    }
 }
 
 void miral::DisplayConfiguration::select_layout(std::string const& layout)
@@ -107,14 +89,19 @@ void miral::DisplayConfiguration::operator()(mir::Server& server) const
         {
             return self;
         });
+
+    server.add_init_callback([self=self, &server]
+        {
+            self->init_auto_reload(server);
+        });
 }
 
 auto miral::DisplayConfiguration::layout_option() -> miral::ConfigurationOption
 {
     return pre_init(ConfigurationOption{
-        [this](std::string const& layout) { select_layout(layout); },
+        [this](std::string const& layout) { select_layout(layout); self->check_for_layout_override(); },
         "display-layout",
-        "Display configuration layout from `" + self->name + "'\n"
+        "Display configuration layout from `" + self->basename + "'\n"
         "(Found in $XDG_CONFIG_HOME or $HOME/.config, followed by $XDG_CONFIG_DIRS)",
         "default"});
 }

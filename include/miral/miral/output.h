@@ -97,6 +97,10 @@ public:
     /// mostly useful for matching against a miral::WindowInfo::output_id
     auto id() const -> int;
 
+    /// The output name. This matches that suppled to clients through wl_output
+    /// \remark Since MirAL 3.8
+    auto name() const -> std::string;
+
     auto valid() const -> bool;
 
     auto is_same_output(Output const& other) const -> bool;

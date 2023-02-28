@@ -18,6 +18,7 @@
 #define MIR_WAYLAND_PROTOCOL_ERROR_H_
 
 #include <stdexcept>
+#include <cstdint>
 
 struct wl_resource;
 struct wl_client;

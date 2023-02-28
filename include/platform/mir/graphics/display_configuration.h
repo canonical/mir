@@ -141,6 +141,10 @@ struct DisplayConfigurationOutput
 
     mir::optional_value<geometry::Size> custom_logical_size;
 
+    /** The output's displayable name. */
+    // TODO: Better output names that are consistant between sessions
+    std::string name = "OUT-" + std::to_string(id.as_value());
+
     /** The logical rectangle occupied by the output, based on its position,
         current mode and orientation (rotation) */
     geometry::Rectangle extents() const;
@@ -185,6 +189,7 @@ struct UserDisplayConfigurationOutput
     MirOutputGammaSupported const& gamma_supported;
     std::vector<uint8_t const> const& edid;
     mir::optional_value<geometry::Size>& custom_logical_size;
+    std::string const& name;
 
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& main);
     geometry::Rectangle extents() const;

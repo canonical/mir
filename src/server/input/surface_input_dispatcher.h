@@ -79,8 +79,6 @@ private:
     void send_enter_exit_event(std::shared_ptr<input::Surface> const& surface,
         MirPointerEvent const* triggering_ev, MirPointerAction action);
 
-    std::shared_ptr<input::Surface> find_target_surface(geometry::Point const& target);
-
     void set_focus_locked(std::lock_guard<std::mutex> const&, std::shared_ptr<input::Surface> const&);
 
     void surface_removed(std::shared_ptr<scene::Surface> surface);
