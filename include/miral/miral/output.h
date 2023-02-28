@@ -20,7 +20,6 @@
 #include <mir_toolkit/common.h>
 
 #include <mir/geometry/rectangle.h>
-#include <mir/int_wrapper.h>
 
 #include <memory>
 
