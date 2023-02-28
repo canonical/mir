@@ -55,9 +55,6 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
-// For Wayland extensions
-#include <EGL/eglmesaext.h>
-
 /*
  * Just enough polyfill for RPi's EGL headers...
  */
