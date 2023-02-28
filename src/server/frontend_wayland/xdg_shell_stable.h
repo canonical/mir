@@ -89,7 +89,7 @@ private:
     std::optional<geometry::Size> cached_size;
 
     std::shared_ptr<shell::Shell> const shell;
-    XdgSurfaceStable* const xdg_surface;
+    wayland::Weak<XdgSurfaceStable> const xdg_surface;
     geometry::Rectangle aux_rect;
     geometry::Displacement aux_rect_offset;
 };

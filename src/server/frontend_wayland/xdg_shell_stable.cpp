@@ -40,7 +40,7 @@ namespace mir
 namespace frontend
 {
 
-class XdgSurfaceStable : mw::XdgSurface
+class XdgSurfaceStable : public mw::XdgSurface
 {
 public:
     static XdgSurfaceStable* from(wl_resource* surface);
@@ -67,7 +67,7 @@ private:
     void set_window_role(WindowWlSurfaceRole* role);
 
     mw::Weak<WindowWlSurfaceRole> window_role_;
-    WlSurface* const surface;
+    mw::Weak<WlSurface> const surface;
 
 public:
     XdgShellStable const& xdg_shell;
@@ -106,7 +106,7 @@ private:
     void send_toplevel_configure();
     void destroy_role() const override;
 
-    XdgSurfaceStable* const xdg_surface;
+    mw::Weak<XdgSurfaceStable> const xdg_surface;
 };
 
 class XdgPositionerStable : public mw::XdgPositioner, public shell::SurfaceSpecification
@@ -200,7 +200,14 @@ mf::XdgSurfaceStable::XdgSurfaceStable(wl_resource* new_resource, WlSurface* sur
 
 void mf::XdgSurfaceStable::get_toplevel(wl_resource* new_toplevel)
 {
-    auto toplevel = new XdgToplevelStable{new_toplevel, this, surface};
+    if (!surface)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            mw::generic_error_code,
+            "Tried to create toplevel after destroying surface"));
+    }
+    auto toplevel = new XdgToplevelStable{new_toplevel, this, &surface.value()};
     set_window_role(toplevel);
 }
 
@@ -224,7 +231,14 @@ void mf::XdgSurfaceStable::get_popup(
         }
     }
 
-    auto popup = new XdgPopupStable{new_popup, this, parent_role, positioner, surface};
+    if (!surface)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            mw::generic_error_code,
+            "Tried to create popup after destroying surface"));
+    }
+    auto popup = new XdgPopupStable{new_popup, this, parent_role, positioner, &surface.value()};
     set_window_role(popup);
 }
 
@@ -370,7 +384,7 @@ void mf::XdgPopupStable::handle_resize(
                              cached_top_left.value().y.as_int(),
                              cached_size.value().width.as_int(),
                              cached_size.value().height.as_int());
-        xdg_surface->send_configure();
+        if (xdg_surface) xdg_surface.value().send_configure();
     }
 }
 
@@ -589,7 +603,7 @@ void mf::XdgToplevelStable::send_toplevel_configure()
     send_configure_event(size.width.as_int(), size.height.as_int(), &states);
     wl_array_release(&states);
 
-    xdg_surface->send_configure();
+    if (xdg_surface) xdg_surface.value().send_configure();
 }
 
 mf::XdgToplevelStable* mf::XdgToplevelStable::from(wl_resource* surface)
