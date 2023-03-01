@@ -111,8 +111,9 @@ auto miral::DisplayConfiguration::list_layouts() -> std::vector<std::string>
     return self->list_layouts();
 }
 
-void miral::DisplayConfiguration::add_output_attribute(std::string const& /*key*/)
+void miral::DisplayConfiguration::add_output_attribute(std::string const& key)
 {
+    self->add_output_attribute(key);
 }
 
 miral::DisplayConfiguration::~DisplayConfiguration() = default;

@@ -263,6 +263,10 @@ try
                         {
                             output_config.custom_attribute[key] = value.Scalar();
                         }
+                        else
+                        {
+                            output_config.custom_attribute[key] = std::nullopt;
+                        }
                     }
 
                     layout_config[port_name] = output_config;
