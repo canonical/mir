@@ -196,7 +196,7 @@ struct UserDisplayConfigurationOutput
     mir::optional_value<geometry::Size>& custom_logical_size;
     std::string const& name;
     /// Custom attributes (typically set by the .display configuration file
-    std::map<std::string const, std::optional<std::string>> const& custom_attribute;
+    std::map<std::string const, std::optional<std::string>>& custom_attribute;
 
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& main);
     geometry::Rectangle extents() const;
