@@ -38,7 +38,7 @@ namespace mir
 namespace frontend
 {
 
-class XdgSurfaceV6 : mw::XdgSurfaceV6
+class XdgSurfaceV6 : public mw::XdgSurfaceV6
 {
 public:
     static XdgSurfaceV6* from(wl_resource* surface);
@@ -62,7 +62,7 @@ private:
     void set_window_role(WindowWlSurfaceRole* role);
 
     mw::Weak<WindowWlSurfaceRole> window_role_;
-    WlSurface* const surface;
+    mw::Weak<WlSurface> const surface;
 
 public:
     XdgShellV6 const& xdg_shell;
@@ -92,7 +92,7 @@ private:
     std::optional<geom::Point> cached_top_left;
     std::optional<geom::Size> cached_size;
 
-    XdgSurfaceV6* const xdg_surface;
+    mw::Weak<XdgSurfaceV6> const xdg_surface;
 
     void destroy_role() const override;
 };
@@ -129,7 +129,7 @@ private:
     void send_toplevel_configure();
     void destroy_role() const override;
 
-    XdgSurfaceV6* const xdg_surface;
+    mw::Weak<XdgSurfaceV6> const xdg_surface;
 };
 
 class XdgPositionerV6 : public mw::XdgPositionerV6, public shell::SurfaceSpecification
@@ -224,13 +224,27 @@ mf::XdgSurfaceV6::XdgSurfaceV6(wl_resource* new_resource, WlSurface* surface,
 
 void mf::XdgSurfaceV6::get_toplevel(wl_resource* new_toplevel)
 {
-    auto toplevel = new XdgToplevelV6{new_toplevel, this, surface};
+    if (!surface)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            mw::generic_error_code,
+            "Tried to create toplevel v6 after destroying surface"));
+    }
+    auto toplevel = new XdgToplevelV6{new_toplevel, this, &surface.value()};
     set_window_role(toplevel);
 }
 
 void mf::XdgSurfaceV6::get_popup(wl_resource* new_popup, struct wl_resource* parent_surface, struct wl_resource* positioner)
 {
-    auto popup = new XdgPopupV6{new_popup, this, XdgSurfaceV6::from(parent_surface), positioner, surface};
+    if (!surface)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            mw::generic_error_code,
+            "Tried to create popup v6 after destroying surface"));
+    }
+    auto popup = new XdgPopupV6{new_popup, this, XdgSurfaceV6::from(parent_surface), positioner, &surface.value()};
     set_window_role(popup);
 }
 
@@ -337,7 +351,7 @@ void mf::XdgPopupV6::handle_resize(
                              cached_top_left.value().y.as_int(),
                              cached_size.value().width.as_int(),
                              cached_size.value().height.as_int());
-        xdg_surface->send_configure();
+        if (xdg_surface) xdg_surface.value().send_configure();
     }
 }
 
@@ -547,7 +561,7 @@ void mf::XdgToplevelV6::send_toplevel_configure()
     send_configure_event(size.width.as_int(), size.height.as_int(), &states);
     wl_array_release(&states);
 
-    xdg_surface->send_configure();
+    if (xdg_surface) xdg_surface.value().send_configure();
 }
 
 mf::XdgToplevelV6* mf::XdgToplevelV6::from(wl_resource* surface)

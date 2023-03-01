@@ -96,7 +96,7 @@ private:
     geometry::Displacement aux_rect_offset;
 
     std::shared_ptr<shell::Shell> const shell;
-    XdgSurfaceStable* const xdg_surface;
+    wayland::Weak<XdgSurfaceStable> const xdg_surface;
 
     auto popup_rect() const -> std::optional<geometry::Rectangle>;
 };

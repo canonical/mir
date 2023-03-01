@@ -257,6 +257,18 @@ try
                         output_config.scale = s.as<float>();
                     }
 
+                    for (auto const& key : custom_output_attributes)
+                    {
+                        if (auto const value = port_config[key])
+                        {
+                            output_config.custom_attribute[key] = value.Scalar();
+                        }
+                        else
+                        {
+                            output_config.custom_attribute[key] = std::nullopt;
+                        }
+                    }
+
                     layout_config[port_name] = output_config;
                 }
             }
@@ -471,6 +483,8 @@ void miral::YamlFileDisplayConfig::apply_to_output(mg::UserDisplayConfigurationO
         conf_output.used = false;
         conf_output.power_mode = mir_power_mode_off;
     }
+
+    conf_output.custom_attribute = conf.custom_attribute;
 }
 
 void miral::YamlFileDisplayConfig::select_layout(std::string const& layout)
@@ -490,6 +504,11 @@ auto miral::YamlFileDisplayConfig::list_layouts() const -> std::vector<std::stri
     }
 
     return result;
+}
+
+void miral::YamlFileDisplayConfig::add_output_attribute(std::string const& key)
+{
+    custom_output_attributes.insert(key);
 }
 
 miral::ReloadingYamlFileDisplayConfig::ReloadingYamlFileDisplayConfig(std::string basename) :

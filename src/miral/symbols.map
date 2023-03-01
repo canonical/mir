@@ -474,7 +474,9 @@ global:
 MIRAL_3.8 {
 global:
   extern "C++" {
+    miral::DisplayConfiguration::add_output_attribute*;
     miral::FdHandle::?FdHandle*;
+    miral::Output::attribute*;
     miral::Output::name*;
     non-virtual?thunk?to?miral::FdHandle::?FdHandle*;
     typeinfo?for?miral::FdHandle;

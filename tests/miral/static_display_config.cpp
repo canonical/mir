@@ -28,6 +28,7 @@ using namespace mir::geometry;
 namespace mg  = mir::graphics;
 namespace ml  = mir::logging;
 namespace mtd = mir::test::doubles;
+using namespace std::string_literals;
 
 namespace
 {
@@ -449,4 +450,92 @@ TEST_F(StaticDisplayConfig, group_can_be_set)
     sdc.apply_to(dc);
 
     EXPECT_THAT(hdmi1.logical_group_id, Eq(mg::DisplayConfigurationLogicalGroupId{2}));
+}
+
+TEST_F(StaticDisplayConfig, given_custom_attributes_when_they_are_not_added_they_are_not_applied)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    cards:\n"
+        "    - HDMI-A-1:\n"
+        "        custom-1: 1\n"
+        "        custom-2: two\n"};
+
+    sdc.load_config(stream, "");
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(hdmi1.custom_attribute, ElementsAre());
+}
+
+TEST_F(StaticDisplayConfig, given_custom_attributes_when_they_are_added_they_are_applied)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    cards:\n"
+        "    - HDMI-A-1:\n"
+        "        custom-1: 1\n"
+        "        custom-2: two\n"};
+
+    sdc.add_output_attribute("custom-1");
+    sdc.add_output_attribute("custom-2");
+
+    sdc.load_config(stream, "");
+    sdc.apply_to(dc);
+
+    using KV = decltype(hdmi1.custom_attribute)::value_type;
+
+    EXPECT_THAT(hdmi1.custom_attribute, ElementsAre(KV{"custom-1"s, "1"s}, KV{"custom-2"s, "two"s}));
+}
+
+TEST_F(StaticDisplayConfig, given_no_custom_attributes_when_they_are_added_they_are_applied)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    cards:\n"
+        "    - HDMI-A-1:\n"};
+
+    sdc.add_output_attribute("custom-1");
+    sdc.add_output_attribute("custom-2");
+
+    sdc.load_config(stream, "");
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(hdmi1.custom_attribute, ElementsAre());
+}
+
+TEST_F(StaticDisplayConfig, given_no_custom_attributes_when_they_are_added_existing_attributes_are_cleared)
+{
+    {
+        std::istringstream stream{
+            "layouts:\n"
+            "  default:\n"
+            "    cards:\n"
+            "    - HDMI-A-1:\n"
+            "        custom-1: 1\n"
+            "        custom-2: two\n"
+        };
+
+        sdc.add_output_attribute("custom-1");
+        sdc.add_output_attribute("custom-2");
+
+        sdc.load_config(stream, "");
+        sdc.apply_to(dc);
+    }
+
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    cards:\n"
+        "    - HDMI-A-1:\n"};
+
+    sdc.add_output_attribute("custom-1");
+    sdc.add_output_attribute("custom-2");
+
+    sdc.load_config(stream, "");
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(hdmi1.custom_attribute, ElementsAre());
 }

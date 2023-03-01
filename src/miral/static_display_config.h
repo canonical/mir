@@ -18,16 +18,17 @@
 #define MIRAL_STATIC_DISPLAY_CONFIG_H_
 
 #include <mir/abnormal_exit.h>
+#include <mir/fd.h>
 #include <mir/graphics/default_display_configuration_policy.h>
 #include <mir/graphics/display_configuration.h>
-#include <mir/fd.h>
+#include <mir/log.h>
 
+#include <functional>
+#include <iosfwd>
 #include <map>
 #include <mutex>
 #include <optional>
-#include <functional>
-#include <iosfwd>
-#include "mir/log.h"
+#include <set>
 
 namespace mir
 {
@@ -49,6 +50,8 @@ public:
 
     auto list_layouts() const -> std::vector<std::string>;
 
+    void add_output_attribute(std::string const& key);
+
     static void serialize_configuration(std::ostream& out, mir::graphics::DisplayConfiguration& conf);
 
     static void apply_default_configuration(mir::graphics::DisplayConfiguration& conf);
@@ -65,11 +68,14 @@ private:
         mir::optional_value<float>  scale;
         mir::optional_value<MirOrientation>  orientation;
         mir::optional_value<int> group_id;
+        std::map<std::string const, std::optional<std::string>> custom_attribute;
     };
 
     using Port2Config = std::map<std::string, Config>;
     using Layout2Port2Config = std::map<std::string, Port2Config>;
     Layout2Port2Config config;
+
+    std::set<std::string> custom_output_attributes;
 
     static void apply_to_output(mir::graphics::UserDisplayConfigurationOutput& conf_output, Config const& conf);
 
