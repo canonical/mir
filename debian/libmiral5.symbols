@@ -419,4 +419,5 @@ libmiral.so.5 libmiral5 #MINVER#
  MIRAL_3.8@MIRAL_3.8 3.8.0
  (c++)"miral::DisplayConfiguration::add_output_attribute(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_3.8" 3.8.0
  (c++)"miral::Output::attribute(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) const@MIRAL_3.8" 3.8.0
+ (c++)"miral::Output::attributes_map[abi:cxx11]() const@MIRAL_3.8" 3.8.0
  (c++)"miral::Output::name[abi:cxx11]() const@MIRAL_3.8" 3.8.0
