@@ -21,6 +21,7 @@
 
 #include <mir/graphics/display_configuration_observer.h>
 
+#include <functional>
 #include <mutex>
 #include <vector>
 

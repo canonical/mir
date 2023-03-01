@@ -97,7 +97,7 @@ void miral::DisplayConfigurationListeners::configuration_applied(std::shared_ptr
                 for (auto const l : active_output_listeners)
                     l->advise_output_create(o);
             }
-            else if (!equivalent_display_area(o, *op))
+            else if (!equivalent_display_area(o, *op) || o.attributes_map() != op->attributes_map())
             {
                 for (auto const l : active_output_listeners)
                     l->advise_output_update(o, *op);

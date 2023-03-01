@@ -52,6 +52,10 @@ public:
     /// List all layouts found in the config file
     auto list_layouts() -> std::vector<std::string>;
 
+    /// Enable a custom output attribute in the .display YAML
+    /// \remark Since MirAL 3.8
+    void add_output_attribute(std::string const& key);
+
     void operator()(mir::Server& server) const;
 
     ~DisplayConfiguration();
