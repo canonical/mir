@@ -32,7 +32,9 @@ class miral::DisplayConfiguration::Self : public ReloadingYamlFileDisplayConfig
 {
 public:
 
-    Self(std::string const& basename) : ReloadingYamlFileDisplayConfig{basename}
+    using ReloadingYamlFileDisplayConfig::ReloadingYamlFileDisplayConfig;
+
+    void load()
     {
         std::string config_roots;
 
@@ -82,6 +84,8 @@ void miral::DisplayConfiguration::select_layout(std::string const& layout)
 
 void miral::DisplayConfiguration::operator()(mir::Server& server) const
 {
+    self->load();
+
     namespace mg = mir::graphics;
 
     server.wrap_display_configuration_policy([this](std::shared_ptr<mg::DisplayConfigurationPolicy> const&)
