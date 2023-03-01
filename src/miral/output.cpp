@@ -109,7 +109,7 @@ auto miral::Output::name() const -> std::string
     return self->name;
 }
 
-auto miral::Output::attribute(std::string const& key) const -> std::optional<std::string> const
+auto miral::Output::attribute(std::string const& key) const -> std::optional<std::string>
 {
     if (auto i = self->custom_attribute.find(key); i != std::end(self->custom_attribute))
     {
@@ -120,6 +120,11 @@ auto miral::Output::attribute(std::string const& key) const -> std::optional<std
         mir::log_warning("Attempt to read custom output attribute (%s) that wasn't added", key.c_str());
         return std::nullopt;
     }
+}
+
+auto miral::Output::attributes_map() const -> std::map<std::string const, std::optional<std::string>>
+{
+    return self->custom_attribute;
 }
 
 bool miral::operator==(Output::PhysicalSizeMM const& lhs, Output::PhysicalSizeMM const& rhs)
