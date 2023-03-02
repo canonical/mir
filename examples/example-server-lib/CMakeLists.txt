@@ -19,4 +19,4 @@ target_include_directories(example-shell-lib
     PRIVATE
         ${FREETYPE_INCLUDE_DIRS}
 )
-target_link_libraries(example-shell-lib PUBLIC miral PRIVATE ${WAYLAND_CLIENT_LDFLAGS} ${FREETYPE_LDFLAGS})
+target_link_libraries(example-shell-lib PUBLIC miral PRIVATE ${WAYLAND_CLIENT_LDFLAGS} ${FREETYPE_LIBRARIES})
