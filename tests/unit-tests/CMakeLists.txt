@@ -19,10 +19,6 @@ endif()
 include_directories(
   ${CMAKE_SOURCE_DIR}
 
-  ${DRM_INCLUDE_DIRS}
-  ${GBM_INCLUDE_DIRS}
-  ${UMOCKDEV_INCLUDE_DIRS}
-
   ${PROJECT_SOURCE_DIR}/include/renderers/sw
   ${PROJECT_SOURCE_DIR}/src/include/cookie
   ${PROJECT_SOURCE_DIR}/src/include/platform
@@ -33,8 +29,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/platforms/common/client
   ${PROJECT_SOURCE_DIR}/src/platforms/common/server
   ${CMAKE_BINARY_DIR}/src/server/console
-  ${GLIB_INCLUDE_DIRS}
-  ${GIO_INCLUDE_DIRS}
 )
 
 add_library(example SHARED library_example.cpp)

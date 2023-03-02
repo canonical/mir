@@ -2,13 +2,6 @@ include_directories(
   ${server_common_include_dirs}
 )
 
-include_directories(
-    ${DRM_INCLUDE_DIRS}
-    ${EGL_INCLUDE_DIRS}
-    ${GL_INCLUDE_DIRS}
-    ${UDEV_INCLUDE_DIRS}
-)
-
 add_library(
   mirplatformgraphicsx11objects OBJECT
 

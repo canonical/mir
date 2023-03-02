@@ -28,5 +28,7 @@ target_link_libraries(mirshell
     mirplatform
     mircommon
     mircore
+  PRIVATE
+    PkgConfig::UUID
 )
 

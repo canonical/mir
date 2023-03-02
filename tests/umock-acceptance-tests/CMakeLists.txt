@@ -3,7 +3,6 @@ include(CMakeDependentOption)
 include_directories(
   ${CMAKE_SOURCE_DIR}
   ${CMAKE_SOURCE_DIR}/tests/include/
-  ${UMOCKDEV_INCLUDE_DIRS}
 )
 
 mir_add_wrapped_executable(mir_umock_acceptance_tests NOINSTALL

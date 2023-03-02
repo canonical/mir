@@ -9,7 +9,6 @@ include_directories(
 
   ${Boost_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}
-  ${DRM_INCLUDE_DIRS}
 )
 
 set(
@@ -78,7 +77,6 @@ endif()
 if (MIR_BUILD_PLATFORM_GBM_KMS)
   include_directories(
           ${PROJECT_SOURCE_DIR}/src/platforms/gbm-kms/server
-    ${GBM_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}
   )
   list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
@@ -131,6 +129,8 @@ target_link_libraries(mir-public-test-doubles-platform
   PUBLIC
     mircommon
     mircore
+  PRIVATE
+    PkgConfig::DRM
 )
 
 add_library(

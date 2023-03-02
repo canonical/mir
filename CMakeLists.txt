@@ -263,10 +263,6 @@ foreach(platform IN LISTS MIR_PLATFORM)
   endif()
 endforeach(platform)
 
-include_directories (SYSTEM ${GLESv2_INCLUDE_DIRS})
-include_directories (SYSTEM ${EGL_INCLUDE_DIRS})
-include_directories (SYSTEM ${GLM_INCLUDE_DIRS})
-
 pkg_check_modules(DRM REQUIRED IMPORTED_TARGET libdrm)
 pkg_check_modules(EGL REQUIRED IMPORTED_TARGET egl)
 pkg_check_modules(GFlags REQUIRED IMPORTED_TARGET gflags)

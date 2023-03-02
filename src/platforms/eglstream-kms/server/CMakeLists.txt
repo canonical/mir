@@ -1,10 +1,5 @@
 include_directories(
   ${server_common_include_dirs}
-  ${DRM_INCLUDE_DIRS}
-  ${GBM_INCLUDE_DIRS}
-  ${EGL_INCLUDE_DIRS}
-  ${GLESv2_INCLUDE_DIRS}
-  ${EPOXY_INCLUDE_DIRS}
 )
 
 configure_file(

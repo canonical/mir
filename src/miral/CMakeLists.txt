@@ -95,7 +95,6 @@ endif()
 
 target_include_directories(miral-internal
     PRIVATE "${miral_include}"
-    PRIVATE ${MIRSERVER_INCLUDE_DIRS} ${GIO_INCLUDE_DIRS}
 )
 
 target_link_libraries(miral-internal
@@ -108,7 +107,6 @@ target_link_libraries(miral-internal
 
 target_include_directories(miral
     PUBLIC  "${miral_include}"
-    PRIVATE ${MIRSERVER_INCLUDE_DIRS}
 )
 
 target_link_libraries(miral

@@ -1,5 +1,4 @@
 pkg_check_modules(WLCS REQUIRED IMPORTED_TARGET wlcs)
-include_directories(${WLCS_INCLUDE_DIRS})
 
 add_library(
   miral_wlcs_integration MODULE

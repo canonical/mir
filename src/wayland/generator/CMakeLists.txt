@@ -1,7 +1,5 @@
 pkg_check_modules(XMLPP libxml++-2.6 REQUIRED IMPORTED_TARGET)
 
-include_directories(SYSTEM ${XMLPP_INCLUDE_DIRS})
-
 add_executable(mir_wayland_generator
   wrapper_generator.cpp
   utils.cpp                 utils.h

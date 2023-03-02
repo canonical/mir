@@ -6,9 +6,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/include/renderers/sw
   ${Boost_INCLUDE_DIRS}
-  ${GLESv2_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}
-  ${UMOCKDEV_INCLUDE_DIRS}
 )
 
 add_compile_definitions(
@@ -55,6 +53,8 @@ target_link_libraries(mir-public-test-framework
     mirplatform
     mircommon
     mircore
+  PRIVATE
+    PkgConfig::UMOCKDEV
 )
 
 set_property(
@@ -92,6 +92,9 @@ target_link_libraries(mir-libinput-test-framework
 
 add_library(mir-umock-test-framework OBJECT udev_environment.cpp)
 
+target_link_libraries(mir-umock-test-framework
+  PRIVATE PkgConfig::UMOCKDEV
+)
 
 add_library(mir-test-framework-static STATIC
   $<TARGET_OBJECTS:mir-public-test-framework>

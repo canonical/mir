@@ -35,7 +35,7 @@ add_library(miroil SHARED
 
 target_include_directories(miroil
     PUBLIC  "${miroil_include}"
-    PRIVATE ${MIRSERVER_INCLUDE_DIRS}  ${MIRCLIENT_INCLUDE_DIRS}
+    PRIVATE
     ${PROJECT_SOURCE_DIR}/include/platform
     ${PROJECT_SOURCE_DIR}/src/include/gl
     ${PROJECT_SOURCE_DIR}/include/renderers/gl

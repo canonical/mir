@@ -24,11 +24,8 @@ target_link_libraries(mirplatformgraphicsrpidispmanxobjects
 target_include_directories(
   mirplatformgraphicsrpidispmanxobjects
     PRIVATE
-      ${BCM_HOST_INCLUDE_DIRS}
       ${server_common_include_dirs}
       ${PROJECT_SOURCE_DIR}/src/include/common
-      ${WAYLAND_SERVER_INCLUDE_DIRS}
-      ${UDEV_INCLUDE_DIRS}
 )
 
 target_compile_options(

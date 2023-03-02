@@ -1,5 +1,5 @@
 include_directories(
-  ${GL_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}
   ${PROJECT_SOURCE_DIR}/include/renderers/sw
 )
 

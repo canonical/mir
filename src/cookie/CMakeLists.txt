@@ -20,7 +20,6 @@ target_include_directories(mircookie
     ${PROJECT_SOURCE_DIR}/include/cookie
   PRIVATE
     ${PROJECT_SOURCE_DIR}/src/include/cookie
-    ${NETTLE_INCLUDE_DIRS}
 )
 
 set_target_properties(mircookie

@@ -101,8 +101,6 @@ target_include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
     ${PROJECT_SOURCE_DIR}/include/platform
   PRIVATE
-    ${GL_INCLUDE_DIRS}
-    ${DRM_INCLUDE_DIRS}
     ${PROJECT_SOURCE_DIR}/include/renderers/gl
 )
 

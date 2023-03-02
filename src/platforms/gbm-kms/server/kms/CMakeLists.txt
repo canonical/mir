@@ -4,12 +4,6 @@ include_directories(
 )
 
 include_directories(
-    ${DRM_INCLUDE_DIRS}
-    ${GBM_INCLUDE_DIRS}
-    ${EGL_INCLUDE_DIRS}
-    ${GL_INCLUDE_DIRS}
-    ${WAYLAND_SERVER_INCLUDE_DIRS}
-    ${UDEV_INCLUDE_DIRS}
     ${CMAKE_CURRENT_BINARY_DIR}/../
 )
 

@@ -15,8 +15,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/cookie
   ${PROJECT_SOURCE_DIR}/src/include/wayland
-  ${GLIB_INCLUDE_DIRS}
-  ${GIO_INCLUDE_DIRS}
 )
 add_compile_definitions(MIR_SERVER_INPUT_PLATFORM_VERSION="${MIR_SERVER_INPUT_PLATFORM_VERSION}")
 
@@ -73,6 +71,9 @@ target_link_libraries(mirserverobjects
     mircommon
     mircookie
     mircore
+  PRIVATE
+    PkgConfig::GLIB
+    PkgConfig::GIO
 )
 
 set_property(
@@ -145,16 +146,6 @@ target_link_libraries(mirserver
     PkgConfig::LTTNG_UST
     PkgConfig::FREETYPE
     atomic
-)
-
-target_include_directories(mirshelldecoration
-  PRIVATE
-    ${FREETYPE_INCLUDE_DIRS}
-)
-
-target_include_directories(mirshell
-  PUBLIC
-    ${UUID_INCLUDE_DIRS}
 )
 
 set(MIRSERVER_INCLUDE_DIRS ${UUID_INCLUDE_DIRS} PARENT_SCOPE)

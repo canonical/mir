@@ -16,13 +16,6 @@ add_library(mirplatformwayland-graphics STATIC
 target_include_directories(mirplatformwayland-graphics
 PUBLIC
     ${server_common_include_dirs}
-    ${GBM_INCLUDE_DIRS}
-    ${DRM_INCLUDE_DIRS}
-    ${EGL_INCLUDE_DIRS}
-    ${GLESv2_INCLUDE_DIRS}
-    ${EPOXY_INCLUDE_DIRS}
-    ${WAYLAND_CLIENT_INCLUDE_DIRS}
-    ${WAYLAND_EGL_INCLUDE_DIRS}
 )
 
 target_link_libraries(mirplatformwayland-graphics

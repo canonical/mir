@@ -4,7 +4,6 @@ endif()
 
 include_directories(
   ${server_common_include_dirs}
-  ${GL_INCLUDE_DIRS}
 )
 
 add_library(server_platform_common STATIC

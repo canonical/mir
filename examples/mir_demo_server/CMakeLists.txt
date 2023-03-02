@@ -16,7 +16,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/include/renderers/gl
   ${PROJECT_SOURCE_DIR}/include/renderers/sw
-  ${GL_INCLUDE_DIRS}
 )
 
 mir_add_wrapped_executable(mir_demo_server

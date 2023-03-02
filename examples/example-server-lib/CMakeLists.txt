@@ -16,7 +16,5 @@ add_library(example-shell-lib STATIC
 target_include_directories(example-shell-lib
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
-    PRIVATE
-        ${FREETYPE_INCLUDE_DIRS}
 )
 target_link_libraries(example-shell-lib PUBLIC miral PRIVATE PkgConfig::WAYLAND_CLIENT PkgConfig::FREETYPE)
