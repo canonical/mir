@@ -196,7 +196,7 @@ PUBLIC
   miral
   mirserver
 
-  ${Boost_LIBRARIES}
+  Boost::system
   ${GTEST_BOTH_LIBRARIES}
 PRIVATE
   ${GMOCK_MAIN_LIBRARY}

@@ -29,5 +29,5 @@ target_link_libraries(mir_demo_server
   exampleserverconfig
   PkgConfig::GLog
   PkgConfig::GFlags
-  ${Boost_LIBRARIES}
+  Boost::system
 )

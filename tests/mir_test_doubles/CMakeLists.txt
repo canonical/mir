@@ -7,7 +7,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/src/include/cookie
 
-  ${Boost_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}
 )
 
@@ -115,7 +114,7 @@ target_link_libraries(mir-test-doubles-static
 
   mir-test-framework-static
 
-  ${Boost_LIBRARIES}
+  Boost::system
   ${GMOCK_LIBRARIES}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.

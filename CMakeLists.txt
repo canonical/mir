@@ -195,10 +195,7 @@ enable_testing()
 find_package(PkgConfig)
 
 # Check for boost
-find_package(Boost 1.48.0 COMPONENTS date_time system program_options filesystem iostreams REQUIRED)
-include_directories (SYSTEM
-  ${Boost_INCLUDE_DIRS}
-)
+find_package(Boost 1.48.0 COMPONENTS system program_options filesystem iostreams REQUIRED)
 
 add_compile_definitions(EGL_NO_X11)
 

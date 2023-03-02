@@ -44,7 +44,7 @@ target_link_libraries(
   mirplatform
   server_platform_common
   kms_utils
-  ${Boost_PROGRAM_OPTIONS_LIBRARY}
+  Boost::program_options
   PkgConfig::DRM
   PkgConfig::EGL
   PkgConfig::GLESv2

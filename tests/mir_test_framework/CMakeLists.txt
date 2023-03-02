@@ -5,7 +5,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/include/renderers/sw
-  ${Boost_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}
 )
 
@@ -107,7 +106,7 @@ add_dependencies(mir-test-framework-static GMock)
 target_link_libraries(mir-test-framework-static
 
   mirserver
-  ${Boost_LIBRARIES}
+  Boost::system
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
   PkgConfig::UMOCKDEV

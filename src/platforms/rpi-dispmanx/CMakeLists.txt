@@ -51,9 +51,8 @@ target_link_libraries(
   PRIVATE
   mirplatform
   server_platform_common
-  ${Boost_PROGRAM_OPTIONS_LIBRARY}
-  ${Boost_IOSTREAMS_LIBRARY}
-  ${Boost_THREAD_LIBRARY}
+  Boost::program_options
+  Boost::iostreams
   PkgConfig::BCM_HOST
   PkgConfig::WAYLAND_SERVER
 )

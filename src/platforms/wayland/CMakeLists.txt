@@ -22,7 +22,7 @@ target_link_libraries(mirplatformwayland-graphics
 PUBLIC
     mirplatform
     server_platform_common
-    ${Boost_PROGRAM_OPTIONS_LIBRARY}
+    Boost::program_options
     PkgConfig::EGL
     PkgConfig::GLESv2
     PkgConfig::EPOXY

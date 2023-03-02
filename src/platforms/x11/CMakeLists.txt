@@ -40,7 +40,7 @@ target_link_libraries(
   X11
   X11-xcb
   server_platform_common
-  ${Boost_PROGRAM_OPTIONS_LIBRARY}
+  Boost::program_options
 )
 
 set_target_properties(

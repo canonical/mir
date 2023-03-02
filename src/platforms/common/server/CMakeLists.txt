@@ -18,7 +18,7 @@ target_link_libraries(server_platform_common
     mircommon
     mircore
     ${KMS_UTILS_STATIC_LIBRARY}
-    ${Boost_SYSTEM_LIBRARY}
+    Boost::system
     PkgConfig::WAYLAND_SERVER
     PkgConfig::GL
 )

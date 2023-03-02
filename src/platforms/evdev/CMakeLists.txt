@@ -50,7 +50,7 @@ set_target_properties(
 
 target_link_libraries(mirplatforminputevdev
   mirplatform # udev wrapper
-  ${Boost_PROGRAM_OPTIONS_LIBRARY}
+  Boost::program_options
   PkgConfig::LIBINPUT
 )
 
