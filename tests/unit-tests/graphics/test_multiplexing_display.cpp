@@ -17,6 +17,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <boost/throw_exception.hpp>
+
 #include "mir/graphics/display_configuration.h"
 #include "mir/test/doubles/mock_display.h"
 #include "mir/test/doubles/mock_main_loop.h"
@@ -40,22 +42,20 @@ class DisplayConfigurationOutputGenerator
 public:
     DisplayConfigurationOutputGenerator(int card_id)
         : card{mg::DisplayConfigurationCardId{card_id}},
-          next_id{23}
+          next_id{1}
     {
     }
 
     auto generate_output()
         -> mg::DisplayConfigurationOutput
     {
+        auto const output_id = next_output_id();
         return mg::DisplayConfigurationOutput {
-            next_output_id(),
+            output_id,
             card,
             mg::DisplayConfigurationLogicalGroupId{1},
             mg::DisplayConfigurationOutputType::edp,
-            {
-                mir_pixel_format_argb_8888,
-                mir_pixel_format_xrgb_8888
-            },
+            pixel_formats_for_output_id(output_id),
             {
                 {geom::Size{3840, 2160}, 59.98},
             },
@@ -65,7 +65,7 @@ public:
             true,
             geom::Point{0,0},
             0,
-            mir_pixel_format_xrgb_8888,
+            pixel_formats_for_output_id(output_id)[0],
             mir_power_mode_on,
             mir_orientation_normal,
             2.0f,
@@ -79,6 +79,31 @@ public:
     }
 
 private:
+    auto pixel_formats_for_output_id(mg::DisplayConfigurationOutputId id)
+        -> std::vector<MirPixelFormat>
+    {
+        std::vector<MirPixelFormat> distinguishing_formats;
+
+        int remainder = id.as_value();
+        int minimum_choice = 1;
+        while (remainder > 0)
+        {
+            int num_current_choices = mir_pixel_formats - minimum_choice;
+            if (num_current_choices == 0)
+            {
+                BOOST_THROW_EXCEPTION((std::runtime_error{"Attempted to create more distinguishable DisplayConfigurations than curretly possible"}));
+            }
+            auto choice = remainder % num_current_choices;
+            if (choice > 0)
+            {
+                distinguishing_formats.push_back(static_cast<MirPixelFormat>(choice));
+            }
+            remainder = remainder / num_current_choices;
+            num_current_choices--;
+        }
+        return distinguishing_formats;
+    }
+
     auto next_output_id() -> mg::DisplayConfigurationOutputId
     {
         return mg::DisplayConfigurationOutputId{++next_id};
@@ -87,6 +112,16 @@ private:
     mg::DisplayConfigurationCardId const card;
     int next_id;
 };
+
+MATCHER_P(OutputConfigurationEqualIgnoringId, output, "")
+{
+    mg::DisplayConfigurationOutput arg_copy = arg;
+    arg_copy.id = output.id;
+    return ExplainMatchResult(
+        Eq(output),
+        arg_copy,
+        result_listener);
+}
 }
 
 TEST(MultiplexingDisplay, forwards_for_each_display_sync_group)
@@ -103,6 +138,54 @@ TEST(MultiplexingDisplay, forwards_for_each_display_sync_group)
     mg::MultiplexingDisplay display{std::move(displays)};
 
     display.for_each_display_sync_group([](auto const&) {});
+}
+
+TEST(MultiplexingDisplay, each_display_in_configuration_has_unique_id)
+{
+    std::vector<mg::DisplayConfigurationOutput> first_display_conf, second_display_conf, third_display_conf;
+
+    DisplayConfigurationOutputGenerator card_one{1}, card_two{3}, card_three{42};
+
+    for (auto i = 0u; i < 3; ++i)
+    {
+        first_display_conf.push_back(card_one.generate_output());
+    }
+    for (auto i = 0u; i < 4; ++i)
+    {
+        second_display_conf.push_back(card_two.generate_output());
+    }
+    for (auto i = 0u; i < 2; ++i)
+    {
+        third_display_conf.push_back(card_three.generate_output());
+    }
+
+    std::vector<std::unique_ptr<mg::Display>> displays;
+
+    for (auto const& conf : {first_display_conf, second_display_conf, third_display_conf})
+    {
+        auto display = std::make_unique<NiceMock<mtd::MockDisplay>>();
+        ON_CALL(*display, configuration())
+            .WillByDefault(
+                Invoke(
+                    [conf]()
+                    {
+                        return std::make_unique<mtd::StubDisplayConfig>(conf);
+                    }));
+
+        displays.push_back(std::move(display));
+    }
+
+    mg::MultiplexingDisplay display{std::move(displays)};
+
+    auto conf = display.configuration();
+
+    std::vector<mg::DisplayConfigurationOutputId> seen_ids;
+    conf->for_each_output(
+        [&seen_ids](mg::UserDisplayConfigurationOutput const& conf)
+        {
+            EXPECT_THAT(seen_ids, Not(Contains(conf.id)));
+            seen_ids.push_back(conf.id);
+        });
 }
 
 TEST(MultiplexingDisplay, configuration_is_union_of_all_displays)
@@ -151,11 +234,21 @@ TEST(MultiplexingDisplay, configuration_is_union_of_all_displays)
             visible_conf.push_back(conf);
         });
 
-    std::vector<mg::DisplayConfigurationOutput> expected_outputs;
+    std::vector<Matcher<mg::DisplayConfigurationOutput>> expected_outputs;
     // Deliberately insert these out of order, to ensure the test doesn't mistakenly enforce ordering
-    expected_outputs.insert(expected_outputs.end(), second_display_conf.begin(), second_display_conf.end());
-    expected_outputs.insert(expected_outputs.end(), first_display_conf.begin(), first_display_conf.end());
-    expected_outputs.insert(expected_outputs.end(), third_display_conf.begin(), third_display_conf.end());
+    std::transform(
+        second_display_conf.begin(), second_display_conf.end(),
+        std::back_inserter(expected_outputs),
+        [](auto const& output) { return OutputConfigurationEqualIgnoringId(output); });
+    std::transform(
+        first_display_conf.begin(), first_display_conf.end(),
+        std::back_inserter(expected_outputs),
+        [](auto const& output) { return OutputConfigurationEqualIgnoringId(output); });
+    std::transform(
+        third_display_conf.begin(), third_display_conf.end(),
+        std::back_inserter(expected_outputs),
+        [](auto const& output) { return OutputConfigurationEqualIgnoringId(output); });
+
     EXPECT_THAT(visible_conf, UnorderedElementsAreArray(expected_outputs));
 }
 
@@ -434,4 +527,65 @@ TEST(MultiplexingDisplay, delegates_registering_configuration_change_handlers)
 
     mtd::MockMainLoop ml;
     display.register_configuration_change_handler(ml, [](){});
+}
+
+TEST(MultiplexingDisplay, delegates_last_frame_on_to_appropriate_platform)
+{
+    DisplayConfigurationOutputGenerator gen1{5}, gen2{42};
+
+    auto d1 = std::make_unique<NiceMock<mtd::MockDisplay>>();
+    auto d2 = std::make_unique<NiceMock<mtd::MockDisplay>>();
+
+    auto d1_conf = std::make_unique<mtd::StubDisplayConfig>(
+        std::vector<mg::DisplayConfigurationOutput>{
+            gen1.generate_output(),
+            gen1.generate_output(),
+            gen1.generate_output(),
+            gen1.generate_output()
+        });
+
+    auto d2_conf = std::make_unique<mtd::StubDisplayConfig>(
+        std::vector<mg::DisplayConfigurationOutput>{
+            gen2.generate_output(),
+            gen2.generate_output(),
+            gen2.generate_output()
+        });
+
+    ON_CALL(*d1, configuration())
+        .WillByDefault(
+            Invoke(
+                [&d1_conf]()
+                {
+                    return d1_conf->clone();
+                }));
+    ON_CALL(*d2, configuration())
+        .WillByDefault(
+            Invoke(
+                [&d2_conf]()
+                {
+                    return d2_conf->clone();
+                }));
+
+    // Each output can expect to get exactly one call.
+    d1->configuration()->for_each_output(
+        [&d1](mg::DisplayConfigurationOutput const& output)
+        {
+            EXPECT_CALL(*d1, last_frame_on(Eq(output.id.as_value()))).Times(1);
+        });
+    d2->configuration()->for_each_output(
+        [&d2](mg::DisplayConfigurationOutput const& output)
+        {
+            EXPECT_CALL(*d2, last_frame_on(Eq(output.id.as_value()))).Times(1);
+        });
+
+    std::vector<std::unique_ptr<mg::Display>> displays;
+    displays.push_back(std::move(d1));
+    displays.push_back(std::move(d2));
+
+    mg::MultiplexingDisplay display{std::move(displays)};
+    display.configuration()->for_each_output(
+        [&display](mg::UserDisplayConfigurationOutput& output)
+        {
+            display.last_frame_on(output.id.as_value());
+        });
 }
