@@ -104,7 +104,7 @@ set(MIR_SERVER_OBJECTS
 set(MIR_SERVER_REFERENCES
   PkgConfig::DRM
   PkgConfig::EGL
-  PkgConfig::GL
+  PkgConfig::GLESv2
   PkgConfig::EPOXY
   PkgConfig::UDEV
   PkgConfig::GLIB
@@ -133,7 +133,7 @@ target_link_libraries(mirserver
     Boost::iostreams
     PkgConfig::DRM
     PkgConfig::EGL
-    PkgConfig::GL
+    PkgConfig::GLESv2
     PkgConfig::EPOXY
     PkgConfig::UDEV
     PkgConfig::GLIB

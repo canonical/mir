@@ -296,8 +296,6 @@ if (HAVE_SYS_SDT_H)
   add_compile_definitions(LTTNG_UST_HAVE_SDT_INTEGRATION)
 endif()
 
-pkg_check_modules(GL REQUIRED IMPORTED_TARGET glesv2)
-
 if (MIR_BUILD_PLATFORM_GBM_KMS)
   pkg_check_modules(GBM REQUIRED IMPORTED_TARGET gbm>=11.0.0)
 endif()

@@ -66,7 +66,7 @@ target_link_libraries(
     PkgConfig::DRM
     PkgConfig::GBM
     PkgConfig::EGL
-    PkgConfig::GL
+    PkgConfig::GLESv2
     PkgConfig::WAYLAND_SERVER
 )
 

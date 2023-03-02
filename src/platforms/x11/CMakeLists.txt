@@ -29,7 +29,7 @@ target_link_libraries(
   PRIVATE
   mirplatform
   PkgConfig::EGL
-  PkgConfig::GL
+  PkgConfig::GLESv2
   PkgConfig::XCB
   PkgConfig::XCB_COMPOSITE
   PkgConfig::XCB_XFIXES

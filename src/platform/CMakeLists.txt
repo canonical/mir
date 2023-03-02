@@ -17,7 +17,7 @@ set(MIR_PLATFORM_OBJECTS
 
 set(MIR_PLATFORM_REFERENCES
   PkgConfig::EGL
-  PkgConfig::GL
+  PkgConfig::GLESv2
   mirwayland
 )
 
