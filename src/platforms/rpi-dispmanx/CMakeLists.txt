@@ -19,6 +19,8 @@ target_link_libraries(mirplatformgraphicsrpidispmanxobjects
     mirplatform
     mircommon
     mircore
+  PRIVATE
+    PkgConfig::BCM_HOST
 )
 
 target_include_directories(
