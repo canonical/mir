@@ -589,3 +589,22 @@ TEST(MultiplexingDisplay, delegates_last_frame_on_to_appropriate_platform)
             display.last_frame_on(output.id.as_value());
         });
 }
+
+TEST(MultiplexingDisplay, delegates_pause_resume_to_underlying_platforms)
+{
+    std::vector<std::unique_ptr<mg::Display>> mock_displays;
+
+    for (auto i = 0; i < 5 ; ++i)
+    {
+        auto mock_display = std::make_unique<NiceMock<mtd::MockDisplay>>();
+        InSequence seq;
+        EXPECT_CALL(*mock_display, pause);
+        EXPECT_CALL(*mock_display, resume);
+        mock_displays.push_back(std::move(mock_display));
+    }
+
+    mg::MultiplexingDisplay display{std::move(mock_displays)};
+
+    display.pause();
+    display.resume();
+}

@@ -258,10 +258,18 @@ void mg::MultiplexingDisplay::register_configuration_change_handler(
 
 void mg::MultiplexingDisplay::pause()
 {
+    for (auto& display : displays)
+    {
+        display->pause();
+    }
 }
 
 void mg::MultiplexingDisplay::resume()
 {
+    for (auto& display : displays)
+    {
+        display->resume();
+    }
 }
 
 auto mg::MultiplexingDisplay::create_hardware_cursor() -> std::shared_ptr<Cursor>
