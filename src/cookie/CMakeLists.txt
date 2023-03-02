@@ -1,4 +1,4 @@
-pkg_check_modules(NETTLE REQUIRED nettle)
+pkg_check_modules(NETTLE REQUIRED IMPORTED_TARGET nettle)
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mircookie.pc.in
@@ -32,7 +32,7 @@ set_target_properties(mircookie
 
 target_link_libraries(mircookie
   PRIVATE
-    ${NETTLE_LDFLAGS}
+    PkgConfig::NETTLE
 )
 
 install(

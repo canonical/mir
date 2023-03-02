@@ -1,5 +1,4 @@
-pkg_check_modules(UUID REQUIRED uuid)
-pkg_check_modules(FREETYPE freetype2 REQUIRED) # For rendering decorated window titles
+pkg_check_modules(FREETYPE freetype2 REQUIRED IMPORTED_TARGET) # For rendering decorated window titles
 
 add_compile_definitions(
   MIR_LOG_COMPONENT_FALLBACK="mirserver"
@@ -102,15 +101,15 @@ set(MIR_SERVER_OBJECTS
 )
 
 set(MIR_SERVER_REFERENCES
-  ${DRM_LDFLAGS}
-  ${EGL_LIBRARIES}
-  ${GL_LDFLAGS}
-  ${EPOXY_LDFLAGS}
-  ${UDEV_LDFLAGS}
-  ${GLIB_LDFLAGS}
-  ${GIO_LDFLAGS}
-  ${UUID_LDFLAGS}
-  ${LTTNG_UST_LDFLAGS}
+  PkgConfig::DRM
+  PkgConfig::EGL
+  PkgConfig::GL
+  PkgConfig::EPOXY
+  PkgConfig::UDEV
+  PkgConfig::GLIB
+  PkgConfig::GIO
+  PkgConfig::UUID
+  PkgConfig::LTTNG_UST
 )
 
 set(MIR_SERVER_OBJECTS ${MIR_SERVER_OBJECTS} PARENT_SCOPE)
@@ -130,21 +129,21 @@ target_link_libraries(mirserver
     mirwayland
 
     server_platform_common
-    ${DRM_LDFLAGS}
-    ${EGL_LIBRARIES}
-    ${GL_LDFLAGS}
-    ${EPOXY_LDFLAGS}
-    ${UDEV_LDFLAGS}
-    ${GLIB_LDFLAGS}
-    ${GIO_LDFLAGS}
-    ${UUID_LDFLAGS}
-    ${XCB_LDFLAGS}
-    ${XCB_COMPOSITE_LDFLAGS}
-    ${XCB_XFIXES_LDFLAGS}
-    ${XCB_RENDER_LDFLAGS}
-    ${X11_XCURSOR_LDFLAGS}
-    ${LTTNG_UST_LDFLAGS}
-    ${FREETYPE_LDFLAGS}
+    PkgConfig::DRM
+    PkgConfig::EGL
+    PkgConfig::GL
+    PkgConfig::EPOXY
+    PkgConfig::UDEV
+    PkgConfig::GLIB
+    PkgConfig::GIO
+    PkgConfig::UUID
+    PkgConfig::XCB
+    PkgConfig::XCB_COMPOSITE
+    PkgConfig::XCB_XFIXES
+    PkgConfig::XCB_RENDER
+    PkgConfig::X11_XCURSOR
+    PkgConfig::LTTNG_UST
+    PkgConfig::FREETYPE
     atomic
 )
 

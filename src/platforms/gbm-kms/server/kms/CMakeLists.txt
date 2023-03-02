@@ -70,11 +70,11 @@ target_link_libraries(
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
     ${Boost_IOSTREAMS_LIBRARY}
     ${Boost_THREAD_LIBRARY}
-    ${DRM_LDFLAGS}
-    ${GBM_LIBRARIES}
-    ${EGL_LIBRARIES}
-    ${GL_LDFLAGS}
-    ${WAYLAND_SERVER_LDFLAGS}
+    PkgConfig::DRM
+    PkgConfig::GBM
+    PkgConfig::EGL
+    PkgConfig::GL
+    PkgConfig::WAYLAND_SERVER
 )
 
 set_target_properties(

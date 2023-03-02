@@ -1,5 +1,3 @@
-pkg_check_modules(LIBINPUT REQUIRED libinput>=1.1)
-
 if ("${LIBINPUT_VERSION}" VERSION_GREATER_EQUAL "1.19")
   add_compile_definitions(MIR_LIBINPUT_HAS_VALUE120)
 endif ()
@@ -53,7 +51,7 @@ set_target_properties(
 target_link_libraries(mirplatforminputevdev
   mirplatform # udev wrapper
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
-  ${LIBINPUT_LDFLAGS}
+  PkgConfig::LIBINPUT
 )
 
 install(TARGETS mirplatforminputevdev LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})

@@ -107,7 +107,7 @@ target_link_libraries(mir-test-framework-static
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
-  ${UMOCKDEV_LDFLAGS}
+  PkgConfig::UMOCKDEV
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
@@ -160,7 +160,7 @@ target_link_libraries(
   mir-test-framework-static
   mir-test-doubles-static
   PUBLIC
-  ${UMOCKDEV_LDFLAGS}
+  PkgConfig::UMOCKDEV
 )
 
 set_target_properties(

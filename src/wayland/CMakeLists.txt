@@ -37,7 +37,7 @@ mir_generate_protocol_wrapper(mirwayland "zwlr_" protocol/wlr-virtual-pointer-un
 target_link_libraries(mirwayland
   PUBLIC
     mircore
-    ${WAYLAND_SERVER_LIBRARIES}
+    PkgConfig::WAYLAND_SERVER
   PRIVATE
     mircommon
 )

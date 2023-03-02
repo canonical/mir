@@ -1,7 +1,6 @@
-find_package(PkgConfig)
-pkg_check_modules(WAYLAND_CLIENT REQUIRED wayland-client)
-pkg_check_modules(WAYLAND_EGL REQUIRED wayland-egl)
-pkg_check_modules(XKBCOMMON xkbcommon REQUIRED)
+pkg_check_modules(WAYLAND_CLIENT REQUIRED IMPORTED_TARGET wayland-client)
+pkg_check_modules(WAYLAND_EGL REQUIRED IMPORTED_TARGET wayland-egl)
+pkg_check_modules(XKBCOMMON xkbcommon REQUIRED IMPORTED_TARGET)
 
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="wayland")
 
@@ -31,14 +30,14 @@ PUBLIC
     mirplatform
     server_platform_common
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
-    ${EGL_LIBRARIES}
-    ${GLESv2_LIBRARIES}
-    ${EPOXY_LDFLAGS}
-    ${WAYLAND_CLIENT_LDFLAGS}
-    ${WAYLAND_EGL_LDFLAGS}
-    ${DRM_LDFLAGS}
-    ${GBM_LDFLAGS}
-    ${XKBCOMMON_LDFLAGS}
+    PkgConfig::EGL
+    PkgConfig::GLESv2
+    PkgConfig::EPOXY
+    PkgConfig::WAYLAND_CLIENT
+    PkgConfig::WAYLAND_EGL
+    PkgConfig::DRM
+    PkgConfig::GBM
+    PkgConfig::XKBCOMMON
 )
 
 add_library(mirplatformwayland-input STATIC

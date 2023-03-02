@@ -57,8 +57,8 @@ target_link_libraries(
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
   ${Boost_IOSTREAMS_LIBRARY}
   ${Boost_THREAD_LIBRARY}
-  ${BCM_HOST_LDFLAGS}
-  ${WAYLAND_SERVER_LDFLAGS}
+  PkgConfig::BCM_HOST
+  PkgConfig::WAYLAND_SERVER
 )
 
 set_target_properties(

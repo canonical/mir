@@ -184,7 +184,7 @@ target_link_libraries(
   mircommon
 
   ${Boost_LIBRARIES}
-  ${WAYLAND_SERVER_LDFLAGS}
+  PkgConfig::WAYLAND_SERVER
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
@@ -217,8 +217,8 @@ target_link_libraries(
   mir-test-framework-static
 
   ${Boost_LIBRARIES}
-  ${UMOCKDEV_LDFLAGS}
-  ${LIBINPUT_LIBRARIES}
+  PkgConfig::UMOCKDEV
+  PkgConfig::LIBINPUT
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 

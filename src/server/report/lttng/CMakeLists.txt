@@ -54,7 +54,7 @@ add_library(mirserverlttng SHARED tracepoints.c)
 target_link_libraries(
   mirserverlttng
 
-  ${LTTNG_UST_LIBRARIES}
+  PkgConfig::LTTNG_UST
 )
 
 install(TARGETS mirserverlttng

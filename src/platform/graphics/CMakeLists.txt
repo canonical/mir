@@ -45,7 +45,7 @@ if (DRM_VERSION VERSION_GREATER 2.4.107)
   target_link_libraries(
     mirplatformgraphicscommon
     PUBLIC
-      ${DRM_LDFLAGS})
+      PkgConfig::DRM)
 endif()
 
 add_custom_command(
@@ -111,7 +111,7 @@ target_link_libraries(
 
   PUBLIC
     mirwayland
-    ${EGL_LIBRARIES}
+    PkgConfig::EGL
   PRIVATE
     mircommon
 )

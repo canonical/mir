@@ -50,12 +50,12 @@ target_link_libraries(
   server_platform_common
   kms_utils
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
-  ${DRM_LDFLAGS}
-  ${EGL_LIBRARIES}
-  ${GLESv2_LIBRARIES}
-  ${WAYLAND_SERVER_LDFLAGS}
-  ${EPOXY_LDFLAGS}
-  ${WAYLAND_EGLSTREAM_LDFLAGS}
+  PkgConfig::DRM
+  PkgConfig::EGL
+  PkgConfig::GLESv2
+  PkgConfig::WAYLAND_SERVER
+  PkgConfig::EPOXY
+  PkgConfig::WAYLAND_EGLSTREAM
 )
 
 set_target_properties(

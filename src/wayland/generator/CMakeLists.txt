@@ -1,4 +1,4 @@
-pkg_check_modules(XMLPP libxml++-2.6 REQUIRED)
+pkg_check_modules(XMLPP libxml++-2.6 REQUIRED IMPORTED_TARGET)
 
 include_directories(SYSTEM ${XMLPP_INCLUDE_DIRS})
 
@@ -16,7 +16,7 @@ add_executable(mir_wayland_generator
 )
 
 target_link_libraries(mir_wayland_generator
-  ${XMLPP_LDFLAGS}
+  PkgConfig::XMLPP
 )
 
 install(TARGETS mir_wayland_generator
