@@ -61,7 +61,6 @@ target_link_libraries(
   Boost::system
   # GBM platform dependencies
   PkgConfig::DRM
-  PkgConfig::GBM
   # Shared platform dependencies
   PkgConfig::EGL
   PkgConfig::GLESv2

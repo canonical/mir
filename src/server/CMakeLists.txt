@@ -105,7 +105,6 @@ set(MIR_SERVER_REFERENCES
   PkgConfig::DRM
   PkgConfig::EGL
   PkgConfig::GLESv2
-  PkgConfig::EPOXY
   PkgConfig::UDEV
   PkgConfig::GLIB
   PkgConfig::GIO
@@ -134,7 +133,6 @@ target_link_libraries(mirserver
     PkgConfig::DRM
     PkgConfig::EGL
     PkgConfig::GLESv2
-    PkgConfig::EPOXY
     PkgConfig::UDEV
     PkgConfig::GLIB
     PkgConfig::GIO
