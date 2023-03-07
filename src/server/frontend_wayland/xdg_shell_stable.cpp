@@ -742,12 +742,10 @@ void mf::XdgPositionerStable::set_constraint_adjustment(uint32_t constraint_adju
     if (constraint_adjustment & ConstraintAdjustment::flip_x)
     {
         new_placement_hints |= mir_placement_hints_flip_x;
-        new_placement_hints |= mir_placement_hints_antipodes;
     }
     if (constraint_adjustment & ConstraintAdjustment::flip_x)
     {
         new_placement_hints |= mir_placement_hints_flip_y;
-        new_placement_hints |= mir_placement_hints_antipodes;
     }
     if (constraint_adjustment & ConstraintAdjustment::resize_x)
     {
