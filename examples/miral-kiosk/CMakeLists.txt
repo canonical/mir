@@ -7,6 +7,6 @@ target_link_libraries(miral-kiosk example-shell-lib)
 
 # I'm not sure why this is needed in a chroot, but it's not worth finding out
 if(DEFINED MIR_CHROOT)
-    target_link_libraries(miral-kiosk EGL ${GLESv2_LDFLAGS})
+    target_link_libraries(miral-kiosk EGL PkgConfig::GLESv2)
 endif()
 

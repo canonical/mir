@@ -43,7 +43,7 @@ target_link_libraries(
 
   server_platform_common
 
-  ${DRM_LDFLAGS}
+  PkgConfig::DRM
 )
 
 if (MIR_RUN_UNIT_TESTS)

@@ -50,7 +50,7 @@ list(APPEND MIR_COMMON_SOURCES
 )
 
 list(APPEND MIR_COMMON_REFERENCES
-  ${Boost_LIBRARIES}
+  Boost::filesystem
   dl
 )
 

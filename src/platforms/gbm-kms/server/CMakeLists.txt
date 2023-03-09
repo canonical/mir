@@ -12,7 +12,6 @@ target_include_directories(
   mirsharedgbmservercommon-static
   PUBLIC
     ${server_common_include_dirs}
-    ${DRM_INCLUDE_DIRS}
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 

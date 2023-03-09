@@ -1,4 +1,4 @@
-find_package(XKBCOMMON REQUIRED)
+pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
 
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mircommon")
 
@@ -80,7 +80,7 @@ target_link_libraries(mircommon
     mircookie
     mircore
     ${MIR_COMMON_REFERENCES}
-    ${XKBCOMMON_LIBRARIES}
+    PkgConfig::XKBCOMMON
 )
 
 

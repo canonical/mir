@@ -17,8 +17,8 @@ target_link_libraries(
   mir-test-doubles-platform-static
 
   server_platform_common
-  ${EPOXY_LDFLAGS}
-  ${WAYLAND_EGLSTREAM_LDFLAGS}
+  PkgConfig::EPOXY
+  PkgConfig::WAYLAND_EGLSTREAM
 )
 
 if (MIR_RUN_UNIT_TESTS)

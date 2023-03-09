@@ -3,7 +3,6 @@ include(CMakeDependentOption)
 include_directories(
   ${CMAKE_SOURCE_DIR}
   ${CMAKE_SOURCE_DIR}/tests/include/
-  ${UMOCKDEV_INCLUDE_DIRS}
 )
 
 mir_add_wrapped_executable(mir_umock_acceptance_tests NOINSTALL
@@ -23,7 +22,7 @@ target_link_libraries(mir_umock_acceptance_tests
   mir-test-framework-static
   mir-test-doubles-static
 
-  ${UMOCKDEV_LDFLAGS}
+  PkgConfig::UMOCKDEV
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 

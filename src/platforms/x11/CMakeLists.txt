@@ -28,19 +28,19 @@ target_link_libraries(
   mirplatformserverx11
   PRIVATE
   mirplatform
-  ${EGL_LIBRARIES}
-  ${GL_LDFLAGS}
-  ${XCB_LDFLAGS}
-  ${XCB_COMPOSITE_LDFLAGS}
-  ${XCB_XFIXES_LDFLAGS}
-  ${XCB_RENDER_LDFLAGS}
+  PkgConfig::EGL
+  PkgConfig::GLESv2
+  PkgConfig::XCB
+  PkgConfig::XCB_COMPOSITE
+  PkgConfig::XCB_XFIXES
+  PkgConfig::XCB_RENDER
   xkbcommon
   xcb-xkb
   xkbcommon-x11
   X11
   X11-xcb
   server_platform_common
-  ${Boost_PROGRAM_OPTIONS_LIBRARY}
+  Boost::program_options
 )
 
 set_target_properties(

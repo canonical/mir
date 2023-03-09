@@ -100,8 +100,3 @@ target_link_libraries(mirfrontend-wayland
     mircommon
     mircore
 )
-
-target_include_directories(mirfrontend-wayland
-  PRIVATE
-    ${DRM_INCLUDE_DIRS}
-)

@@ -4,12 +4,6 @@ include_directories(
 )
 
 include_directories(
-    ${DRM_INCLUDE_DIRS}
-    ${GBM_INCLUDE_DIRS}
-    ${EGL_INCLUDE_DIRS}
-    ${GL_INCLUDE_DIRS}
-    ${WAYLAND_SERVER_INCLUDE_DIRS}
-    ${UDEV_INCLUDE_DIRS}
     ${CMAKE_CURRENT_BINARY_DIR}/../
 )
 
@@ -67,14 +61,13 @@ target_link_libraries(
     mirplatform
     mirplatformgraphicsgbmkmsobjects
     mirsharedgbmservercommon-static
-    ${Boost_PROGRAM_OPTIONS_LIBRARY}
-    ${Boost_IOSTREAMS_LIBRARY}
-    ${Boost_THREAD_LIBRARY}
-    ${DRM_LDFLAGS}
-    ${GBM_LIBRARIES}
-    ${EGL_LIBRARIES}
-    ${GL_LDFLAGS}
-    ${WAYLAND_SERVER_LDFLAGS}
+    Boost::program_options
+    Boost::iostreams
+    PkgConfig::DRM
+    PkgConfig::GBM
+    PkgConfig::EGL
+    PkgConfig::GLESv2
+    PkgConfig::WAYLAND_SERVER
 )
 
 set_target_properties(

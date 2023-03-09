@@ -81,8 +81,8 @@ set_source_files_properties(server_example_decoration.cpp PROPERTIES COMPILE_FLA
 
 target_link_libraries(miral-test
     mir-test-assist
-    ${WAYLAND_CLIENT_LDFLAGS}
-    ${UUID_LDFLAGS}
+    PkgConfig::WAYLAND_CLIENT
+    PkgConfig::UUID
 )
 
 option(MIR_RUN_MIRAL_TESTS "Run miral tests as part of testsuite" ON)

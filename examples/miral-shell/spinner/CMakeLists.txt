@@ -14,10 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pkg_check_modules(WAYLAND_CLIENT REQUIRED wayland-client)
-pkg_check_modules(GLIB REQUIRED glib-2.0)
-find_package(GLESv2 REQUIRED)
 find_package(PIL REQUIRED)
+pkg_check_modules(GLESv2 REQUIRED IMPORTED_TARGET glesv2)
+pkg_check_modules(WAYLAND_CLIENT REQUIRED IMPORTED_TARGET wayland-client)
+pkg_check_modules(GLIB REQUIRED IMPORTED_TARGET glib-2.0)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-overlength-strings")
 
@@ -43,8 +43,6 @@ png2header(
 )
 
 include_directories(
-  ${GLIB_INCLUDE_DIRS}
-  ${GLESv2_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
 )
 
@@ -63,14 +61,14 @@ set_property(
   SOURCE eglspinner.cpp
   PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
 
-pkg_check_modules(WAYLAND_EGL REQUIRED wayland-egl)
+pkg_check_modules(WAYLAND_EGL REQUIRED IMPORTED_TARGET wayland-egl)
 
 target_link_libraries(miral-spinner
   example-shell-lib
-  EGL
-  ${WAYLAND_EGL_LDFLAGS}
-  ${GLIB_LDFLAGS}
-  ${GLESv2_LIBRARIES}
+  PkgConfig::EGL
+  PkgConfig::WAYLAND_EGL
+  PkgConfig::GLIB
+  PkgConfig::GLESv2
 )
 
 target_include_directories(miral-spinner

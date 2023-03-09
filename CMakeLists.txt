@@ -195,14 +195,11 @@ enable_testing()
 find_package(PkgConfig)
 
 # Check for boost
-find_package(Boost 1.48.0 COMPONENTS date_time system program_options filesystem iostreams REQUIRED)
-include_directories (SYSTEM
-  ${Boost_INCLUDE_DIRS}
-)
+find_package(Boost 1.48.0 COMPONENTS system program_options filesystem iostreams REQUIRED)
 
 add_compile_definitions(EGL_NO_X11)
 
-pkg_check_modules(WAYLAND_EGLSTREAM wayland-eglstream)
+pkg_check_modules(WAYLAND_EGLSTREAM wayland-eglstream IMPORTED_TARGET)
 
 # Set the default platforms based on availability of NVIDIA libraries
 if (WAYLAND_EGLSTREAM_FOUND)
@@ -259,36 +256,37 @@ foreach(platform IN LISTS MIR_PLATFORM)
   endif()
   if (platform STREQUAL "rpi-dispmanx")
     set(MIR_BUILD_PLATFORM_RPI_DISPMANX TRUE)
-    pkg_check_modules(BCM_HOST REQUIRED bcm_host)
+    pkg_check_modules(BCM_HOST REQUIRED IMPORTED_TARGET bcm_host)
   endif()
 endforeach(platform)
 
-find_package(EGL REQUIRED)
-find_package(GLESv2 REQUIRED)
-find_package(GLM REQUIRED)
-find_package(GLog REQUIRED)
-find_package(GFlags REQUIRED)
-
-pkg_check_modules(LTTNG_UST REQUIRED lttng-ust>=2.9)
-pkg_check_modules(UDEV REQUIRED libudev)
-pkg_check_modules(GLIB REQUIRED glib-2.0)
-pkg_check_modules(GIO REQUIRED gio-2.0 gio-unix-2.0)
-pkg_check_modules(WAYLAND_SERVER REQUIRED wayland-server)
-pkg_check_modules(WAYLAND_CLIENT REQUIRED wayland-client)
-pkg_check_modules(XCB REQUIRED xcb)
-pkg_check_modules(XCB_COMPOSITE REQUIRED xcb-composite)
-pkg_check_modules(XCB_XFIXES REQUIRED xcb-xfixes)
-pkg_check_modules(XCB_RENDER REQUIRED xcb-render)
-pkg_check_modules(X11_XCURSOR REQUIRED xcursor)
-pkg_check_modules(DRM REQUIRED libdrm)
-
-include_directories (SYSTEM ${GLESv2_INCLUDE_DIRS})
-include_directories (SYSTEM ${EGL_INCLUDE_DIRS})
-include_directories (SYSTEM ${GLM_INCLUDE_DIRS})
+pkg_check_modules(GLM glm)
+if(NOT GLM_FOUND)
+  find_package(glm REQUIRED)  # There's no glm.pc on Fedora, but find_package(glm) fails on Ubuntu...
+endif()
+pkg_check_modules(DRM REQUIRED IMPORTED_TARGET libdrm)
+pkg_check_modules(EGL REQUIRED IMPORTED_TARGET egl)
+pkg_check_modules(GFlags REQUIRED IMPORTED_TARGET gflags)
+pkg_check_modules(GIO REQUIRED IMPORTED_TARGET gio-2.0 gio-unix-2.0)
+pkg_check_modules(GLESv2 REQUIRED IMPORTED_TARGET glesv2)
+pkg_check_modules(GLIB REQUIRED IMPORTED_TARGET glib-2.0)
+pkg_check_modules(GLog REQUIRED IMPORTED_TARGET libglog)
+pkg_check_modules(LIBINPUT REQUIRED IMPORTED_TARGET libinput>=1.1)
+pkg_check_modules(LTTNG_UST REQUIRED IMPORTED_TARGET lttng-ust>=2.9)
+pkg_check_modules(UDEV REQUIRED IMPORTED_TARGET libudev)
+pkg_check_modules(UUID REQUIRED IMPORTED_TARGET uuid)
+pkg_check_modules(WAYLAND_CLIENT REQUIRED IMPORTED_TARGET wayland-client)
+pkg_check_modules(WAYLAND_SERVER REQUIRED IMPORTED_TARGET wayland-server)
+pkg_check_modules(X11_XCURSOR REQUIRED IMPORTED_TARGET xcursor)
+pkg_check_modules(XCB REQUIRED IMPORTED_TARGET xcb)
+pkg_check_modules(XCB_COMPOSITE REQUIRED IMPORTED_TARGET xcb-composite)
+pkg_check_modules(XCB_RENDER REQUIRED IMPORTED_TARGET xcb-render)
+pkg_check_modules(XCB_XFIXES REQUIRED IMPORTED_TARGET xcb-xfixes)
 
 include(CheckCXXSymbolExists)
 list(APPEND CMAKE_REQUIRED_INCLUDES ${DRM_INCLUDE_DIRS})
 list(APPEND CMAKE_REQUIRED_LIBRARIES ${DRM_LIBRARIES})
+include_directories(SYSTEM ${DRM_INCLUDE_DIRS})
 
 # Add USDT hooks to all LTTNG tracepoints
 #
@@ -302,18 +300,16 @@ if (HAVE_SYS_SDT_H)
   add_compile_definitions(LTTNG_UST_HAVE_SDT_INTEGRATION)
 endif()
 
-pkg_check_modules(GL REQUIRED glesv2)
-
 if (MIR_BUILD_PLATFORM_GBM_KMS)
-  pkg_check_modules( GBM REQUIRED gbm>=11.0.0)
+  pkg_check_modules(GBM REQUIRED IMPORTED_TARGET gbm>=11.0.0)
 endif()
 
 if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
-  pkg_check_modules(EPOXY REQUIRED epoxy)
+  pkg_check_modules(EPOXY REQUIRED IMPORTED_TARGET epoxy)
 endif()
 
 if (MIR_BUILD_PLATFORM_WAYLAND)
-  pkg_check_modules(EPOXY REQUIRED epoxy)
+  pkg_check_modules(EPOXY REQUIRED IMPORTED_TARGET epoxy)
 endif()
 
 set(MIR_TRACEPOINT_LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/mir/tools)
@@ -337,7 +333,7 @@ add_subdirectory(cmake/)
 
 if (MIR_ENABLE_TESTS)
   find_package(GtestGmock REQUIRED)
-  pkg_check_modules(LIBEVDEV REQUIRED libevdev)
+  pkg_check_modules(LIBEVDEV REQUIRED IMPORTED_TARGET libevdev)
   include_directories(${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
   add_subdirectory(tests/)
 

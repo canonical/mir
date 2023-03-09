@@ -16,8 +16,8 @@ set(MIR_PLATFORM_OBJECTS
 )
 
 set(MIR_PLATFORM_REFERENCES
-  ${EGL_LIBRARIES}
-  ${GL_LDFLAGS}
+  PkgConfig::EGL
+  PkgConfig::GLESv2
   mirwayland
 )
 

@@ -19,16 +19,15 @@ target_link_libraries(mirplatformgraphicsrpidispmanxobjects
     mirplatform
     mircommon
     mircore
+  PRIVATE
+    PkgConfig::BCM_HOST
 )
 
 target_include_directories(
   mirplatformgraphicsrpidispmanxobjects
     PRIVATE
-      ${BCM_HOST_INCLUDE_DIRS}
       ${server_common_include_dirs}
       ${PROJECT_SOURCE_DIR}/src/include/common
-      ${WAYLAND_SERVER_INCLUDE_DIRS}
-      ${UDEV_INCLUDE_DIRS}
 )
 
 target_compile_options(
@@ -54,11 +53,10 @@ target_link_libraries(
   PRIVATE
   mirplatform
   server_platform_common
-  ${Boost_PROGRAM_OPTIONS_LIBRARY}
-  ${Boost_IOSTREAMS_LIBRARY}
-  ${Boost_THREAD_LIBRARY}
-  ${BCM_HOST_LDFLAGS}
-  ${WAYLAND_SERVER_LDFLAGS}
+  Boost::program_options
+  Boost::iostreams
+  PkgConfig::BCM_HOST
+  PkgConfig::WAYLAND_SERVER
 )
 
 set_target_properties(

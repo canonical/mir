@@ -1,5 +1,4 @@
 include_directories(
-  ${DRM_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
 )
 
@@ -35,6 +34,8 @@ target_link_libraries(mirconsole
     mirplatform
     mircommon
     mircore
+  PRIVATE
+    PkgConfig::GIO
 )
 
 set_property(

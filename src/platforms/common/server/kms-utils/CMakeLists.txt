@@ -1,5 +1,4 @@
 include_directories(
-  ${DRM_INCLUDE_DIRS}
   ${PROJECT_SOURCE_DIR}/src/include/common
 )
 
@@ -14,5 +13,5 @@ add_library(${KMS_UTILS_STATIC_LIBRARY} STATIC
 )
 
 target_link_libraries(${KMS_UTILS_STATIC_LIBRARY}
-  ${DRM_LDFLAGS}
+  PkgConfig::DRM
 )

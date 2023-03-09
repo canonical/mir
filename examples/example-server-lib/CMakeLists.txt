@@ -1,5 +1,5 @@
 find_package(PIL REQUIRED)
-pkg_check_modules(FREETYPE freetype2 REQUIRED)
+pkg_check_modules(FREETYPE freetype2 REQUIRED IMPORTED_TARGET)
 
 add_library(example-shell-lib STATIC
     tiling_window_manager.cpp   tiling_window_manager.h
@@ -16,7 +16,5 @@ add_library(example-shell-lib STATIC
 target_include_directories(example-shell-lib
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
-    PRIVATE
-        ${FREETYPE_INCLUDE_DIRS}
 )
-target_link_libraries(example-shell-lib PUBLIC miral PRIVATE ${WAYLAND_CLIENT_LDFLAGS} ${FREETYPE_LIBRARIES})
+target_link_libraries(example-shell-lib PUBLIC miral PRIVATE PkgConfig::WAYLAND_CLIENT PkgConfig::FREETYPE)

@@ -4,7 +4,6 @@ endif()
 
 include_directories(
   ${server_common_include_dirs}
-  ${GL_INCLUDE_DIRS}
 )
 
 add_library(server_platform_common STATIC
@@ -19,7 +18,7 @@ target_link_libraries(server_platform_common
     mircommon
     mircore
     ${KMS_UTILS_STATIC_LIBRARY}
-    ${Boost_SYSTEM_LIBRARY}
-    ${WAYLAND_SERVER_LDFLAGS}
-    ${GL_LDFLAGS}
+    Boost::system
+    PkgConfig::WAYLAND_SERVER
+    PkgConfig::GLESv2
 )

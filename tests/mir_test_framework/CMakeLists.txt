@@ -5,10 +5,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/include/renderers/sw
-  ${Boost_INCLUDE_DIRS}
-  ${GLESv2_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}
-  ${UMOCKDEV_INCLUDE_DIRS}
 )
 
 add_compile_definitions(
@@ -55,6 +52,8 @@ target_link_libraries(mir-public-test-framework
     mirplatform
     mircommon
     mircore
+  PRIVATE
+    PkgConfig::UMOCKDEV
 )
 
 set_property(
@@ -92,6 +91,9 @@ target_link_libraries(mir-libinput-test-framework
 
 add_library(mir-umock-test-framework OBJECT udev_environment.cpp)
 
+target_link_libraries(mir-umock-test-framework
+  PRIVATE PkgConfig::UMOCKDEV
+)
 
 add_library(mir-test-framework-static STATIC
   $<TARGET_OBJECTS:mir-public-test-framework>
@@ -104,10 +106,10 @@ add_dependencies(mir-test-framework-static GMock)
 target_link_libraries(mir-test-framework-static
 
   mirserver
-  ${Boost_LIBRARIES}
+  Boost::system
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
-  ${UMOCKDEV_LDFLAGS}
+  PkgConfig::UMOCKDEV
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
@@ -160,7 +162,7 @@ target_link_libraries(
   mir-test-framework-static
   mir-test-doubles-static
   PUBLIC
-  ${UMOCKDEV_LDFLAGS}
+  PkgConfig::UMOCKDEV
 )
 
 set_target_properties(

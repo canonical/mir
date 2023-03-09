@@ -45,7 +45,7 @@ if (DRM_VERSION VERSION_GREATER 2.4.107)
   target_link_libraries(
     mirplatformgraphicscommon
     PUBLIC
-      ${DRM_LDFLAGS})
+      PkgConfig::DRM)
 endif()
 
 add_custom_command(
@@ -101,8 +101,6 @@ target_include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
     ${PROJECT_SOURCE_DIR}/include/platform
   PRIVATE
-    ${GL_INCLUDE_DIRS}
-    ${DRM_INCLUDE_DIRS}
     ${PROJECT_SOURCE_DIR}/include/renderers/gl
 )
 
@@ -111,7 +109,7 @@ target_link_libraries(
 
   PUBLIC
     mirwayland
-    ${EGL_LIBRARIES}
+    PkgConfig::EGL
   PRIVATE
     mircommon
 )

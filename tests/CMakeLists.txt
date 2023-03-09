@@ -62,7 +62,7 @@ add_compile_definitions(GTEST_VERSION_MAJOR=${GTEST_VERSION_MAJOR})
 add_compile_definitions(GTEST_VERSION_MINOR=${GTEST_VERSION_MINOR})
 add_compile_definitions(GTEST_VERSION_PATCH=${GTEST_VERSION_PATCH})
 
-pkg_check_modules(UMOCKDEV REQUIRED umockdev-1.0>=0.6)
+pkg_check_modules(UMOCKDEV REQUIRED IMPORTED_TARGET umockdev-1.0>=0.6)
 if (NOT UMOCKDEV_FOUND)
   message(FATAL_ERROR "Umockdev not found, cannot build without disabling tests (via MIR_ENABLE_TESTS).")
 endif()
@@ -196,7 +196,7 @@ PUBLIC
   miral
   mirserver
 
-  ${Boost_LIBRARIES}
+  Boost::system
   ${GTEST_BOTH_LIBRARIES}
 PRIVATE
   ${GMOCK_MAIN_LIBRARY}

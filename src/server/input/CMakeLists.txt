@@ -49,4 +49,6 @@ target_link_libraries(mirinput
     mircommon
     mircookie
     mircore
+  PRIVATE
+    PkgConfig::GLIB
 )

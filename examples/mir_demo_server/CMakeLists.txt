@@ -16,7 +16,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/include/renderers/gl
   ${PROJECT_SOURCE_DIR}/include/renderers/sw
-  ${GL_INCLUDE_DIRS}
 )
 
 mir_add_wrapped_executable(mir_demo_server
@@ -28,7 +27,7 @@ mir_add_wrapped_executable(mir_demo_server
 target_link_libraries(mir_demo_server
   example-shell-lib
   exampleserverconfig
-  ${GLog_LIBRARY}
-  ${GFlags_LIBRARY}
-  ${Boost_LDFLAGS}
+  PkgConfig::GLog
+  PkgConfig::GFlags
+  Boost::system
 )

@@ -1,5 +1,4 @@
-pkg_check_modules(WLCS REQUIRED wlcs)
-include_directories(${WLCS_INCLUDE_DIRS})
+pkg_check_modules(WLCS REQUIRED IMPORTED_TARGET wlcs)
 
 add_library(
   miral_wlcs_integration MODULE
@@ -12,7 +11,14 @@ target_link_libraries(
   miral_wlcs_integration
 
   mir-test-assist
-  ${WAYLAND_CLIENT_LDFLAGS}
+  PkgConfig::WAYLAND_CLIENT
+)
+
+target_include_directories(
+  miral_wlcs_integration
+
+  PRIVATE
+    PkgConfig::WLCS
 )
 
 set(SYMBOL_FILE ${CMAKE_CURRENT_SOURCE_DIR}/symbol.map)

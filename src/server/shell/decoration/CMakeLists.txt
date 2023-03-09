@@ -23,4 +23,6 @@ target_link_libraries(mirshelldecoration
     mirplatform
     mircommon
     mircore
+  PRIVATE
+    PkgConfig::FREETYPE
 )

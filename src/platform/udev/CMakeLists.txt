@@ -13,7 +13,7 @@ target_link_libraries(
   mirudev
 
   PRIVATE
-    ${UDEV_LDFLAGS}
+    PkgConfig::UDEV
 )
 
 list(APPEND MIR_PLATFORM_REFERENCES ${UDEV_LDFLAGS})
