@@ -97,6 +97,9 @@ set(EXPECTED_FAILURES
   XdgPopupUnstableV6/XdgPopupTest.grabbed_popup_gets_keyboard_focus/0
   XdgPopupStable/XdgPopupTest.grabbed_popup_gets_keyboard_focus/0
   LayerShellPopup/XdgPopupTest.grabbed_popup_gets_keyboard_focus/0
+
+  # Not yet implemented, see https://github.com/MirServer/mir/issues/2861
+  XdgPopupTest.when_parent_surface_is_moved_a_reactive_popup_is_moved
 )
 
 if (MIR_SIGBUS_HANDLER_ENVIRONMENT_BROKEN)
