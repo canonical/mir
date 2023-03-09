@@ -319,7 +319,6 @@ mf::XdgPopupV6::XdgPopupV6(
     auto parent_scene_surface = parent_role ? parent_role.value().scene_surface() : std::nullopt;
 
     specification->type = mir_window_type_gloss;
-    specification->placement_hints = mir_placement_hints_slide_any;
     if (parent_scene_surface)
         specification->parent = parent_scene_surface.value();
     else
@@ -583,6 +582,7 @@ mf::XdgPositionerV6::XdgPositionerV6(wl_resource* new_resource)
     // specifying gravity is not required by the xdg shell protocol, but is by Mir window managers
     surface_placement_gravity = mir_placement_gravity_center;
     aux_rect_placement_gravity = mir_placement_gravity_center;
+    placement_hints = static_cast<MirPlacementHints>(0);
 }
 
 void mf::XdgPositionerV6::set_size(int32_t width, int32_t height)
@@ -636,8 +636,32 @@ void mf::XdgPositionerV6::set_gravity(uint32_t gravity)
 
 void mf::XdgPositionerV6::set_constraint_adjustment(uint32_t constraint_adjustment)
 {
-    (void)constraint_adjustment;
-    // TODO
+    uint32_t new_placement_hints{0};
+    if (constraint_adjustment & ConstraintAdjustment::slide_x)
+    {
+        new_placement_hints |= mir_placement_hints_slide_x;
+    }
+    if (constraint_adjustment & ConstraintAdjustment::slide_y)
+    {
+        new_placement_hints |= mir_placement_hints_slide_y;
+    }
+    if (constraint_adjustment & ConstraintAdjustment::flip_x)
+    {
+        new_placement_hints |= mir_placement_hints_flip_x;
+    }
+    if (constraint_adjustment & ConstraintAdjustment::flip_x)
+    {
+        new_placement_hints |= mir_placement_hints_flip_y;
+    }
+    if (constraint_adjustment & ConstraintAdjustment::resize_x)
+    {
+        new_placement_hints |= mir_placement_hints_resize_x;
+    }
+    if (constraint_adjustment & ConstraintAdjustment::resize_y)
+    {
+        new_placement_hints |= mir_placement_hints_resize_y;
+    }
+    placement_hints = static_cast<MirPlacementHints>(new_placement_hints);
 }
 
 void mf::XdgPositionerV6::set_offset(int32_t x, int32_t y)
