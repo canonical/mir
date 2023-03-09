@@ -23,9 +23,14 @@
 
 namespace mg = mir::graphics;
 
-mg::MultiplexingDisplay::MultiplexingDisplay(std::vector<std::unique_ptr<Display>> displays)
+mg::MultiplexingDisplay::MultiplexingDisplay(
+    std::vector<std::unique_ptr<Display>> displays,
+    DisplayConfigurationPolicy& initial_configuration_policy)
     : displays{std::move(displays)}
 {
+    auto conf = configuration();
+    initial_configuration_policy.apply_to(*conf);
+    configure(*conf);
 }
 
 mg::MultiplexingDisplay::~MultiplexingDisplay() = default;

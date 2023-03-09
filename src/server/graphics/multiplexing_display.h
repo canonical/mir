@@ -15,6 +15,7 @@
  */
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/display_configuration_policy.h"
 
 #include <vector>
 #include <memory>
@@ -24,7 +25,9 @@ namespace mir::graphics
 class MultiplexingDisplay : public Display
 {
 public:
-    MultiplexingDisplay(std::vector<std::unique_ptr<Display>> displays);
+    MultiplexingDisplay(
+        std::vector<std::unique_ptr<Display>> displays,
+        DisplayConfigurationPolicy& initial_configuration_policy);
     ~MultiplexingDisplay() override;
 
     void for_each_display_sync_group(std::function<void(DisplaySyncGroup&)> const& f) override;
