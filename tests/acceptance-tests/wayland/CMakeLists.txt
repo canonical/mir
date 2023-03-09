@@ -14,6 +14,13 @@ target_link_libraries(
   PkgConfig::WAYLAND_CLIENT
 )
 
+target_include_directories(
+  miral_wlcs_integration
+
+  PRIVATE
+    PkgConfig::WLCS
+)
+
 set(SYMBOL_FILE ${CMAKE_CURRENT_SOURCE_DIR}/symbol.map)
 
 set_target_properties(
