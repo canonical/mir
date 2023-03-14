@@ -1024,6 +1024,15 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     {
         if (auto const& parent_window = modifications.parent().value().lock())
         {
+            Window ancestor{info_for(parent_window).window()};
+            while (ancestor)
+            {
+                if (window_info.window() == ancestor)
+                {
+                    BOOST_THROW_EXCEPTION(std::runtime_error("cyclic parent-child relationship detected"));
+                }
+                ancestor = info_for(ancestor).parent();
+            }
             window_info_tmp.parent(info_for(parent_window).window());
         }
         else
