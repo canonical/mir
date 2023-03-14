@@ -114,6 +114,10 @@ class XdgPositionerStable : public mw::XdgPositioner, public shell::SurfaceSpeci
 public:
     XdgPositionerStable(wl_resource* new_resource);
 
+    void ensure_complete() const;
+
+    bool reactive{false};
+
 private:
     void set_size(int32_t width, int32_t height) override;
     void set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t height) override;
@@ -121,6 +125,9 @@ private:
     void set_gravity(uint32_t gravity) override;
     void set_constraint_adjustment(uint32_t constraint_adjustment) override;
     void set_offset(int32_t x, int32_t y) override;
+    void set_reactive() override;
+    void set_parent_size(int32_t parent_width, int32_t parent_height) override;
+    void set_parent_configure(uint32_t serial) override;
 };
 
 }
@@ -148,7 +155,7 @@ mf::XdgShellStable::XdgShellStable(
     std::shared_ptr<msh::Shell> shell,
     WlSeat& seat,
     OutputManager* output_manager)
-    : Global(display, Version<1>()),
+    : Global(display, Version<5>()),
       wayland_executor{wayland_executor},
       shell{shell},
       seat{seat},
@@ -162,7 +169,7 @@ void mf::XdgShellStable::bind(wl_resource* new_resource)
 }
 
 mf::XdgShellStable::Instance::Instance(wl_resource* new_resource, mf::XdgShellStable* shell)
-    : XdgWmBase{new_resource, Version<1>()},
+    : XdgWmBase{new_resource, Version<5>()},
       shell{shell}
 {
 }
@@ -192,7 +199,7 @@ mf::XdgSurfaceStable* mf::XdgSurfaceStable::from(wl_resource* surface)
 }
 
 mf::XdgSurfaceStable::XdgSurfaceStable(wl_resource* new_resource, WlSurface* surface, XdgShellStable const& xdg_shell)
-    : mw::XdgSurface(new_resource, Version<1>()),
+    : mw::XdgSurface(new_resource, Version<5>()),
       surface{surface},
       xdg_shell{xdg_shell}
 {
@@ -231,6 +238,10 @@ void mf::XdgSurfaceStable::get_popup(
         }
     }
 
+    auto xdg_positioner = static_cast<XdgPositionerStable*>(
+        static_cast<mw::XdgPositioner*>(
+            wl_resource_get_user_data(positioner)));
+
     if (!surface)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
@@ -238,7 +249,8 @@ void mf::XdgSurfaceStable::get_popup(
             mw::generic_error_code,
             "Tried to create popup after destroying surface"));
     }
-    auto popup = new XdgPopupStable{new_popup, this, parent_role, positioner, &surface.value()};
+
+    auto popup = new XdgPopupStable{new_popup, this, parent_role, *xdg_positioner, &surface.value()};
     set_window_role(popup);
 }
 
@@ -292,9 +304,9 @@ mf::XdgPopupStable::XdgPopupStable(
     wl_resource* new_resource,
     XdgSurfaceStable* xdg_surface,
     std::optional<WlSurfaceRole*> parent_role,
-    struct wl_resource* positioner,
+    XdgPositionerStable& positioner,
     WlSurface* surface)
-    : mw::XdgPopup(new_resource, Version<1>()),
+    : mw::XdgPopup(new_resource, Version<5>()),
       WindowWlSurfaceRole(
           xdg_surface->xdg_shell.wayland_executor,
           &xdg_surface->xdg_shell.seat,
@@ -302,29 +314,22 @@ mf::XdgPopupStable::XdgPopupStable(
           surface,
           xdg_surface->xdg_shell.shell,
           xdg_surface->xdg_shell.output_manager),
+      reactive{positioner.reactive},
+      aux_rect{positioner.aux_rect ? positioner.aux_rect.value() : geom::Rectangle{}},
       shell{xdg_surface->xdg_shell.shell},
       xdg_surface{xdg_surface}
 {
-    auto specification = static_cast<mir::shell::SurfaceSpecification*>(
-                                static_cast<XdgPositionerStable*>(
-                                    static_cast<mw::XdgPositioner*>(
-                                        wl_resource_get_user_data(positioner))));
-
-    if (specification->aux_rect)
-    {
-        aux_rect = specification->aux_rect.value();
-    }
-
-    specification->type = mir_window_type_gloss;
+    positioner.ensure_complete();
+    positioner.type = mir_window_type_gloss;
     if (parent_role)
     {
         if (auto scene_surface = parent_role.value()->scene_surface())
         {
-            specification->parent = scene_surface.value();
+            positioner.parent = scene_surface.value();
         }
     }
 
-    apply_spec(*specification);
+    apply_spec(positioner);
 }
 
 void mf::XdgPopupStable::set_aux_rect_offset_now(geom::Displacement const& new_aux_rect_offset)
@@ -360,30 +365,60 @@ void mf::XdgPopupStable::grab(struct wl_resource* seat, uint32_t serial)
     set_type(mir_window_type_menu);
 }
 
+void mf::XdgPopupStable::reposition(wl_resource* positioner_resource, uint32_t token)
+{
+    auto const& positioner = *static_cast<XdgPositionerStable*>(
+        static_cast<mw::XdgPositioner*>(
+            wl_resource_get_user_data(positioner_resource)));
+    positioner.ensure_complete();
+
+    reactive = positioner.reactive;
+    aux_rect = positioner.aux_rect ? positioner.aux_rect.value() : geom::Rectangle{};
+    reposition_token = token;
+
+    auto const scene_surface_{scene_surface()};
+    if (scene_surface_)
+    {
+        shell->modify_surface(
+            scene_surface_.value()->session().lock(),
+            scene_surface_.value(),
+            positioner);
+    }
+    else
+    {
+        apply_spec(positioner);
+    }
+}
+
 void mf::XdgPopupStable::handle_resize(
-    std::optional<geometry::Point> const& new_top_left_,
+    std::optional<geometry::Point> const& new_top_left,
     geometry::Size const& new_size)
 {
-    auto new_top_left{new_top_left_};
+    auto const prev_rect = popup_rect();
     if (new_top_left)
     {
-        new_top_left.value() -= aux_rect_offset;
+        cached_top_left = new_top_left.value() - aux_rect_offset;
     }
-
-    bool const needs_configure = (new_top_left != cached_top_left) || (new_size != cached_size);
-
-    if (new_top_left)
-        cached_top_left = new_top_left;
-
     cached_size = new_size;
+    auto const new_rect = popup_rect();
 
-    if (needs_configure && cached_top_left && cached_size)
+    bool const configure_appropriate =
+        reposition_token ||
+        initial_configure_pending ||
+        (reactive && new_rect != prev_rect);
+    if (new_rect && configure_appropriate)
     {
+        if (reposition_token)
+        {
+            send_repositioned_event(reposition_token.value());
+            reposition_token = std::nullopt;
+        }
         send_configure_event(cached_top_left.value().x.as_int(),
                              cached_top_left.value().y.as_int(),
                              cached_size.value().width.as_int(),
                              cached_size.value().height.as_int());
         if (xdg_surface) xdg_surface.value().send_configure();
+        initial_configure_pending = false;
     }
 }
 
@@ -400,6 +435,18 @@ auto mf::XdgPopupStable::from(wl_resource* resource) -> XdgPopupStable*
     return popup;
 }
 
+auto mf::XdgPopupStable::popup_rect() const -> std::optional<geometry::Rectangle>
+{
+    if (cached_top_left && cached_size)
+    {
+        return geometry::Rectangle{cached_top_left.value(), cached_size.value()};
+    }
+    else
+    {
+        return std::nullopt;
+    }
+}
+
 void mf::XdgPopupStable::destroy_role() const
 {
     wl_resource_destroy(resource);
@@ -408,7 +455,7 @@ void mf::XdgPopupStable::destroy_role() const
 // XdgToplevelStable
 
 mf::XdgToplevelStable::XdgToplevelStable(wl_resource* new_resource, XdgSurfaceStable* xdg_surface, WlSurface* surface)
-    : mw::XdgToplevel(new_resource, Version<1>()),
+    : mw::XdgToplevel(new_resource, Version<5>()),
       WindowWlSurfaceRole(
           xdg_surface->xdg_shell.wayland_executor,
           &xdg_surface->xdg_shell.seat,
@@ -418,6 +465,26 @@ mf::XdgToplevelStable::XdgToplevelStable(wl_resource* new_resource, XdgSurfaceSt
           xdg_surface->xdg_shell.output_manager),
       xdg_surface{xdg_surface}
 {
+    if (version_supports_wm_capabilities())
+    {
+        std::vector<uint32_t> capabilities{
+            WmCapabilities::maximize,
+            WmCapabilities::minimize,
+            WmCapabilities::fullscreen,
+        };
+        wl_array capability_array;
+        wl_array_init(&capability_array);
+        for (auto& capability : capabilities)
+        {
+            if (uint32_t *item = static_cast<decltype(item)>(wl_array_add(&capability_array, sizeof *item)))
+            {
+                *item = capability;
+            }
+        }
+        send_wm_capabilities_event(&capability_array);
+        wl_array_release(&capability_array);
+    }
+
     wl_array states;
     wl_array_init(&states);
     send_configure_event(0, 0, &states);
@@ -496,7 +563,15 @@ void mf::XdgToplevelStable::resize(struct wl_resource* /*seat*/, uint32_t serial
         edge = mir_resize_edge_southeast;
         break;
 
-    default:;
+    case ResizeEdge::none:
+        edge = mir_resize_edge_none;
+        break;
+
+    default:
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::invalid_resize_edge,
+            "Invalid resize edge %d", edges));
     }
 
     initiate_interactive_resize(edge, serial);
@@ -619,7 +694,7 @@ void mf::XdgToplevelStable::destroy_role() const
 // XdgPositionerStable
 
 mf::XdgPositionerStable::XdgPositionerStable(wl_resource* new_resource)
-    : mw::XdgPositioner(new_resource, Version<1>())
+    : mw::XdgPositioner(new_resource, Version<5>())
 {
     // specifying gravity is not required by the xdg shell protocol, but is by Mir window managers
     surface_placement_gravity = mir_placement_gravity_center;
@@ -627,14 +702,39 @@ mf::XdgPositionerStable::XdgPositionerStable(wl_resource* new_resource)
     placement_hints = static_cast<MirPlacementHints>(0);
 }
 
+void mf::XdgPositionerStable::ensure_complete() const
+{
+    if (!width || !height || !aux_rect)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            mw::XdgWmBase::Error::invalid_positioner,
+            "Incomplete positioner"));
+    }
+}
+
 void mf::XdgPositionerStable::set_size(int32_t width, int32_t height)
 {
+    if (width <= 0 || height <= 0)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            mw::XdgPositioner::Error::invalid_input,
+            "Invalid popup positioner size: %dx%d", width, height));
+    }
     this->width = geom::Width{width};
     this->height = geom::Height{height};
 }
 
 void mf::XdgPositionerStable::set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t height)
 {
+    if (width < 0 || height < 0)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            mw::XdgPositioner::Error::invalid_input,
+            "Invalid popup anchor rect size: %dx%d", width, height));
+    }
     aux_rect = geom::Rectangle{{x, y}, {width, height}};
 }
 
@@ -721,8 +821,15 @@ void mf::XdgPositionerStable::set_gravity(uint32_t gravity)
             placement = mir_placement_gravity_northwest;
             break;
 
-        default:
+        case Gravity::none:
             placement = mir_placement_gravity_center;
+            break;
+
+        default:
+            BOOST_THROW_EXCEPTION(mw::ProtocolError(
+                resource,
+                mw::XdgPositioner::Error::invalid_input,
+                "Invalid gravity value %d", gravity));
     }
 
     surface_placement_gravity = placement;
@@ -762,6 +869,26 @@ void mf::XdgPositionerStable::set_offset(int32_t x, int32_t y)
 {
     aux_rect_placement_offset_x = x;
     aux_rect_placement_offset_y = y;
+}
+
+void mf::XdgPositionerStable::set_reactive()
+{
+    reactive = true;
+}
+
+void mf::XdgPositionerStable::set_parent_size(int32_t parent_width, int32_t parent_height)
+{
+    (void)parent_width;
+    (void)parent_height;
+    // TODO
+    log_warning("xdg_positioner.set_parent_size not implemented");
+}
+
+void mf::XdgPositionerStable::set_parent_configure(uint32_t serial)
+{
+    (void)serial;
+    // TODO
+    log_warning("xdg_positioner.set_parent_configure not implemented");
 }
 
 auto mf::XdgShellStable::get_window(wl_resource* surface) -> std::shared_ptr<scene::Surface>
