@@ -165,6 +165,16 @@ private:
         std::vector<mg::DisplayConfigurationOutput>& backing_store;
         struct OutputInfo
         {
+            OutputInfo(
+                mg::DisplayConfiguration* owner,
+                mg::DisplayConfigurationOutputId internal_id,
+                size_t output_index)
+                : owner{owner},
+                  internal_id{internal_id},
+                  output_index{output_index}
+            {
+            }
+
             mg::DisplayConfiguration* const owner;
             mg::DisplayConfigurationOutputId const internal_id;
             size_t const output_index;
