@@ -43,6 +43,5 @@ public:
 GbmKmsPlatformEnv platform_harness;
 }
 
-INSTANTIATE_TEST_SUITE_P(GbmKms, RenderingPlatformTest, testing::Values(&platform_harness));
 INSTANTIATE_TEST_SUITE_P(GbmKms, DisplayPlatformTest, testing::Values(&platform_harness));
 

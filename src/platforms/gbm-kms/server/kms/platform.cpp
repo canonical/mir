@@ -15,7 +15,6 @@
  */
 
 #include "platform.h"
-#include "buffer_allocator.h"
 #include "display.h"
 #include "mir/console_services.h"
 #include "mir/emergency_cleanup_registry.h"
@@ -45,18 +44,6 @@ mgg::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
       listener{listener},
       bypass_option_{bypass_option}
 {
-}
-
-mgg::RenderingPlatform::RenderingPlatform(
-    mir::udev::Device const&,
-    std::vector<std::shared_ptr<mg::DisplayPlatform>> const&)
-{
-}
-
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgg::RenderingPlatform::create_buffer_allocator(
-    mg::Display const& output)
-{
-    return make_module_ptr<mgg::BufferAllocator>(output);
 }
 
 mir::UniqueModulePtr<mg::Display> mgg::Platform::create_display(

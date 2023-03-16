@@ -17,11 +17,6 @@
 #include "rendering_platform.h"
 #include "buffer_allocator.h"
 
-#define MIR_LOG_COMPONENT "platform-graphics-gbm-kms"
-#include "mir/log.h"
-
-#include <wayland-server-protocol.h>
-
 namespace mg = mir::graphics;
 namespace mge = mg::egl::generic;
 
