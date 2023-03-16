@@ -1,3 +1,38 @@
+mir (2.13.0) UNRELEASED; urgency=medium
+
+  [ Alan Griffiths ]
+  * New upstream release 2.13.0
+
+    - ABI summary:
+      . miral ABI unchanged at 5
+      . mircommon ABI unchanged at 9
+      . mircookie ABI unchanged at 2
+      . mircore ABI unchanged at 2
+      . miroil ABI unchanged at 3
+      . mirplatform ABI bumped to 24
+      . mirserver ABI unchanged at 58
+      . mirwayland ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 20
+      . mirinputplatform ABI unchanged at 8
+    - Enhancements:
+      . Document that extension filter callbacks are called multiple times
+      . [miral] Automate reloading display configuration
+      . [miral] Add a side-by-side layout to the .display configuration
+      . [miral] Add a .display-layout configuration file
+      . [miral] Provide output names
+      . [miral] Add an API for adding custom attributes to outputs
+      . [platform] Display: Remove register_pause_resume_handlers
+      . [platforms] Sensible output names on kms based platforms. (Fixes: #2815)
+      . [Wayland] bump wl_output to version 4 (Fixes #2792)
+      . [Wayland] Detect cyclic parent-child relationships
+      . [Wayland] Bump XDG shell stable protocol to version 5 (Fixes #2778)
+      . [console] Set the logind session(Fixes: #2833)
+    - Bugs fixed:
+      . Recomposite when display configuration changes need it. (Fixes: #2807)
+      . Implement XDG poup constraint adjustment support. (Fixes #2857)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Thu, 16 Mar 2023 10:40:57 +0000
+
 mir (2.12.1) UNRELEASED; urgency=medium
 
   * New upstream release 2.12.1
