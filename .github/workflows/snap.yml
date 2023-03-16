@@ -58,4 +58,4 @@ jobs:
       with:
         snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
         publish: true
-        publish-channel: edge/mir-pr${{ github.event.number }}
+        publish-channel: 20/edge/mir-pr${{ github.event.number }}
