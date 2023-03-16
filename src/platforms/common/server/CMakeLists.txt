@@ -12,6 +12,12 @@ add_library(server_platform_common STATIC
   one_shot_device_observer.cpp
 )
 
+target_include_directories(
+  server_platform_common
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 target_link_libraries(server_platform_common
   PUBLIC
     mirplatform
