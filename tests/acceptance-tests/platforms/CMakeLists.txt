@@ -3,6 +3,7 @@ add_library(mirplatformtest OBJECT
   test_display_platform.cpp
   test_rendering_platform.h
   test_rendering_platform.cpp
+  renderer_generic_egl_platform.cpp
 )
 
 if (MIR_BUILD_PLATFORM_GBM_KMS)
