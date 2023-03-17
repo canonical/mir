@@ -57,13 +57,15 @@ auto probe_rendering_platform(
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
 
     std::vector<mg::SupportedDevice> supported_devices;
-    supported_devices.emplace_back(
-        nullptr,                          // We aren't associated with any particular device
+    supported_devices.push_back(
+        mg::SupportedDevice {
+            nullptr,                          // We aren't associated with any particular device
     
-        mg::PlatformPriority::supported,  // We should be fully-functional, but let any hardware-specific
-                                          // platform claim a higher priority, if it exists.
+            mg::PlatformPriority::supported,  // We should be fully-functional, but let any hardware-specific
+                                              // platform claim a higher priority, if it exists.
     
-        nullptr);                         // No platform-specific data
+            nullptr                           // No platform-specific data
+        });
     return supported_devices;
 }
 
