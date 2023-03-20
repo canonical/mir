@@ -38,7 +38,7 @@ jobs:
         include:
         - snap: MirServer/mir-test-tools
           track: 22
-        - snap: MirServer/egmde-confined-desktop
+        - snap: MirServer/confined-shell-wip
           track: latest
         - snap: MirServer/ubuntu-frame
           track: 22
