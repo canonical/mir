@@ -4,6 +4,10 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
 
+concurrency:
+  group: ${{ github.workflow }}-pr${{ github.event.number }}
+  cancel-in-progress: true
+
 jobs:
   mir-core20:
     runs-on: ubuntu-latest
