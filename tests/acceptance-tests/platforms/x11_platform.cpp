@@ -43,5 +43,4 @@ public:
 X11PlatformEnv platform_harness;
 }
 
-INSTANTIATE_TEST_SUITE_P(X11, RenderingPlatformTest, testing::Values(&platform_harness));
 INSTANTIATE_TEST_SUITE_P(X11, DisplayPlatformTest, testing::Values(&platform_harness));

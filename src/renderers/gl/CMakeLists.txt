@@ -14,21 +14,23 @@ install(
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
 
-include_directories(
-  ${PROJECT_SOURCE_DIR}/include/server
-  ${PROJECT_SOURCE_DIR}/include/renderer
-  ${PROJECT_SOURCE_DIR}/include/renderers/gl
-  ${PROJECT_SOURCE_DIR}/src/include/platform
-  ${PROJECT_SOURCE_DIR}/src/include/server
-  ${PROJECT_SOURCE_DIR}/src/include/gl
-)
-
 ADD_LIBRARY(
   mirrenderergl OBJECT
 
   renderer.cpp
   renderer_factory.cpp
   basic_buffer_render_target.cpp
+)
+
+target_include_directories(
+  mirrenderergl
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/renderer
+    ${PROJECT_SOURCE_DIR}/include/renderers/gl
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include/platform
+    ${PROJECT_SOURCE_DIR}/src/include/server
+    ${PROJECT_SOURCE_DIR}/src/include/gl
 )
 
 target_link_libraries(mirrenderergl

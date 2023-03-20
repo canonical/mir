@@ -14,35 +14,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_GBM_GBM_PLATFORM_H_
-#define MIR_GRAPHICS_GBM_GBM_PLATFORM_H_
+#ifndef MIR_GRAPHICS_RENDERING_EGL_GENERIC_H_
+#define MIR_GRAPHICS_RENDERING_EGL_GENERIC_H_
 
 #include "mir/graphics/platform.h"
-#include "display_helpers.h"
-#include "platform_common.h"
-#include "buffer_allocator.h"
 
 namespace mir
 {
-namespace graphics
+class EmergencyCleanupRegistry;
+class ConsoleServices;
+
+namespace graphics::egl::generic
 {
-namespace gbm
-{
-class GBMPlatform : public graphics::RenderingPlatform
+
+class RenderingPlatform : public graphics::RenderingPlatform
 {
 public:
-    GBMPlatform(
-        std::shared_ptr<mir::udev::Context> const& udev,
-        std::shared_ptr<helpers::DRMHelper> const& drm);
+    explicit RenderingPlatform();
 
-    UniqueModulePtr<GraphicBufferAllocator>
-        create_buffer_allocator(Display const& output) override;
-private:
-    std::shared_ptr<mir::udev::Context> udev;
-    std::shared_ptr<graphics::gbm::helpers::DRMHelper> drm;
-    std::shared_ptr<helpers::GBMHelper> const gbm;
+    auto create_buffer_allocator(
+        graphics::Display const& output) -> UniqueModulePtr<graphics::GraphicBufferAllocator> override;
 };
+
 }
 }
-}
-#endif /* MIR_GRAPHICS_GBM_GBM_PLATFORM_H_ */
+#endif /* MIR_GRAPHICS_RENDERING_EGL_GENERIC_H_ */

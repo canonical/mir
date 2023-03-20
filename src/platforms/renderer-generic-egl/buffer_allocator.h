@@ -14,62 +14,69 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef  MIR_GRAPHICS_WAYLAND_BUFFER_ALLOCATOR_
-#define  MIR_GRAPHICS_WAYLAND_BUFFER_ALLOCATOR_
+#ifndef MIR_GRAPHICS_EGL_GENERIC_BUFFER_ALLOCATOR_H_
+#define MIR_GRAPHICS_EGL_GENERIC_BUFFER_ALLOCATOR_H_
 
-#include "mir/renderer/sw/pixel_source.h"
-#include <mir/graphics/egl_extensions.h>
-#include <mir/graphics/graphic_buffer_allocator.h>
-#include <mir/renderer/gl/context.h>
+#include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/graphics/linux_dmabuf.h"
+
+#include <EGL/egl.h>
+#include <wayland-server-core.h>
 
 #include <memory>
 
 namespace mir
 {
+namespace renderer
+{
+namespace gl
+{
+class Context;
+}
+}
 namespace graphics
 {
 class Display;
-class LinuxDmaBufUnstable;
+struct EGLExtensions;
 
 namespace common
 {
 class EGLContextExecutor;
 }
 
-namespace wayland
+namespace egl::generic
 {
-class BufferAllocator: public GraphicBufferAllocator
+
+class BufferAllocator:
+    public graphics::GraphicBufferAllocator
 {
 public:
-    BufferAllocator(graphics::Display const& output);
+    explicit BufferAllocator(Display const& output);
 
-    std::shared_ptr<Buffer> alloc_software_buffer(geometry::Size size, MirPixelFormat format) override;
+    std::shared_ptr<Buffer> alloc_software_buffer(geometry::Size size, MirPixelFormat) override;
+    std::vector<MirPixelFormat> supported_pixel_formats() override;
 
     void bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor) override;
     void unbind_display(wl_display* display) override;
-
     auto buffer_from_resource(
         wl_resource* buffer,
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release) -> std::shared_ptr<Buffer> override;
-
     auto buffer_from_shm(
-        std::shared_ptr<renderer::software::RWMappableBuffer> shm_data,
+        std::shared_ptr<renderer::software::RWMappableBuffer> data,
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release) -> std::shared_ptr<Buffer> override;
-
-    std::vector<MirPixelFormat> supported_pixel_formats() override;
-
 private:
-    std::shared_ptr<Executor> wayland_executor;
-    std::shared_ptr<EGLExtensions> const egl_extensions;
     std::shared_ptr<renderer::gl::Context> const ctx;
-    std::unique_ptr<LinuxDmaBufUnstable, std::function<void(LinuxDmaBufUnstable*)>> dmabuf_extension;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
+    std::shared_ptr<Executor> wayland_executor;
+    std::unique_ptr<LinuxDmaBufUnstable, std::function<void(LinuxDmaBufUnstable*)>> dmabuf_extension;
+    std::shared_ptr<EGLExtensions> const egl_extensions;
     bool egl_display_bound{false};
 };
+
 }
 }
 }
 
-#endif //  MIR_GRAPHICS_WAYLAND_BUFFER_ALLOCATOR_
+#endif // MIR_GRAPHICS_EGL_GENERIC_BUFFER_ALLOCATOR_H_

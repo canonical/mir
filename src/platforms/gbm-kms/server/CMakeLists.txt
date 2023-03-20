@@ -3,9 +3,7 @@ add_subdirectory(kms/)
 add_library(
   mirsharedgbmservercommon-static STATIC
 
-  buffer_allocator.cpp
   display_helpers.cpp
-  gbm_platform.cpp
 )
 
 target_include_directories(
@@ -21,5 +19,4 @@ target_link_libraries(
   server_platform_common
   kms_utils
   mirplatform
-  mirwayland
 )

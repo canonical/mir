@@ -14,23 +14,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "gbm_platform.h"
+#include "rendering_platform.h"
 #include "buffer_allocator.h"
 
 namespace mg = mir::graphics;
-namespace mgg = mir::graphics::gbm;
+namespace mge = mg::egl::generic;
 
-mgg::GBMPlatform::GBMPlatform(
-    std::shared_ptr<mir::udev::Context> const& udev,
-    std::shared_ptr<mgg::helpers::DRMHelper> const& drm) :
-    udev(udev),
-    drm(drm),
-    gbm{std::make_shared<mgg::helpers::GBMHelper>(drm->fd)}
+mge::RenderingPlatform::RenderingPlatform()
 {
 }
 
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgg::GBMPlatform::create_buffer_allocator(
-    Display const& output)
+auto mge::RenderingPlatform::create_buffer_allocator(
+    mg::Display const& output) -> mir::UniqueModulePtr<mg::GraphicBufferAllocator>
 {
-    return make_module_ptr<mgg::BufferAllocator>(output);
+    return make_module_ptr<mge::BufferAllocator>(output);
 }

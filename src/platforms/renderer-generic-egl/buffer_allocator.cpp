@@ -15,33 +15,49 @@
  */
 
 #include "buffer_allocator.h"
+#include "mir/graphics/linux_dmabuf.h"
+#include "mir/anonymous_shm_file.h"
+#include "mir/renderer/sw/pixel_source.h"
 #include "shm_buffer.h"
-#include "display.h"
 #include "mir/graphics/egl_context_executor.h"
-
-#include <mir/anonymous_shm_file.h>
-#include <mir/fatal.h>
-#include <mir/log.h>
-#include <mir/graphics/buffer_properties.h>
-#include <mir/graphics/egl_wayland_allocator.h>
-#include <mir/graphics/linux_dmabuf.h>
-#include <mir/raii.h>
-#include <mir/log.h>
+#include "mir/graphics/egl_extensions.h"
+#include "mir/graphics/egl_error.h"
+#include "mir/graphics/buffer_properties.h"
+#include "mir/raii.h"
+#include "mir/graphics/display.h"
+#include "mir/renderer/gl/context.h"
+#include "mir/renderer/gl/context_source.h"
+#include "mir/graphics/egl_wayland_allocator.h"
+#include "mir/executor.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+
+#include <algorithm>
+#include <stdexcept>
 #include <system_error>
+#include <cassert>
+#include <fcntl.h>
+
+#include <wayland-server.h>
+
+#define MIR_LOG_COMPONENT "gbm-kms-buffer-allocator"
+#include <mir/log.h>
+#include <mutex>
 
 namespace mg  = mir::graphics;
-namespace mgw = mg::wayland;
+namespace mge = mg::egl::generic;
 namespace mgc = mg::common;
 namespace geom = mir::geometry;
-namespace mrs = mir::renderer::software;
 
 namespace
 {
-std::unique_ptr<mir::renderer::gl::Context> context_for_output(mg::Display const& output)
+auto context_for_output(mg::Display const& output) -> std::unique_ptr<mir::renderer::gl::Context>
 {
     try
     {
@@ -62,24 +78,27 @@ std::unique_ptr<mir::renderer::gl::Context> context_for_output(mg::Display const
     catch (std::bad_cast const& err)
     {
         std::throw_with_nested(
-            boost::enable_error_info(std::runtime_error{"Output platform cannot provide a GL context"})
-                    << boost::throw_function(__PRETTY_FUNCTION__)
-                    << boost::throw_line(__LINE__)
-                    << boost::throw_file(__FILE__));
+            boost::enable_error_info(
+                std::runtime_error{"Output platform cannot provide a GL context"})
+                << boost::throw_function(__PRETTY_FUNCTION__)
+                << boost::throw_line(__LINE__)
+                << boost::throw_file(__FILE__));
     }
 }
 }
 
-mgw::BufferAllocator::BufferAllocator(graphics::Display const& output) :
-    egl_extensions(std::make_shared<mg::EGLExtensions>()),
-    ctx{context_for_output(output)},
-    egl_delegate{std::make_shared<mgc::EGLContextExecutor>(context_for_output(output))}
+mge::BufferAllocator::BufferAllocator(mg::Display const& output)
+    : ctx{context_for_output(output)},
+      egl_delegate{
+          std::make_shared<mgc::EGLContextExecutor>(context_for_output(output))},
+      egl_extensions(std::make_shared<mg::EGLExtensions>())
 {
 }
 
-std::shared_ptr<mg::Buffer> mgw::BufferAllocator::alloc_software_buffer(geom::Size size, MirPixelFormat format)
+std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_software_buffer(
+    geom::Size size, MirPixelFormat format)
 {
-    if (!mgc::ShmBuffer::supports(format))
+    if (!mgc::MemoryBackedShmBuffer::supports(format))
     {
         BOOST_THROW_EXCEPTION(
             std::runtime_error(
@@ -89,12 +108,33 @@ std::shared_ptr<mg::Buffer> mgw::BufferAllocator::alloc_software_buffer(geom::Si
     return std::make_shared<mgc::MemoryBackedShmBuffer>(size, format, egl_delegate);
 }
 
-std::vector<MirPixelFormat> mgw::BufferAllocator::supported_pixel_formats()
+std::vector<MirPixelFormat> mge::BufferAllocator::supported_pixel_formats()
 {
-    return {mir_pixel_format_argb_8888, mir_pixel_format_xrgb_8888};
+    /*
+     * supported_pixel_formats() is kind of a kludge. The right answer depends
+     * on whether you're using hardware or software, and it depends on
+     * the usage type (e.g. scanout). In the future it's also expected to
+     * depend on the GPU model in use at runtime.
+     *   To be precise, ShmBuffer now supports OpenGL compositing of all
+     * but one MirPixelFormat (bgr_888). But GBM only supports [AX]RGB.
+     * So since we don't yet have an adequate API in place to query what the
+     * intended usage will be, we need to be conservative and report the
+     * intersection of ShmBuffer and GBM's pixel format support. That is
+     * just these two. Be aware however you can create a software surface
+     * with almost any pixel format and it will also work...
+     *   TODO: Convert this to a loop that just queries the intersection of
+     * gbm_device_is_format_supported and ShmBuffer::supports(), however not
+     * yet while the former is buggy. (FIXME: LP: #1473901)
+     */
+    static std::vector<MirPixelFormat> const pixel_formats{
+        mir_pixel_format_argb_8888,
+        mir_pixel_format_xrgb_8888
+    };
+
+    return pixel_formats;
 }
 
-void mgw::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor)
+void mge::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor)
 {
     auto context_guard = mir::raii::paired_calls(
         [this]() { ctx->make_current(); },
@@ -146,16 +186,21 @@ void mgw::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
                 });
         mir::log_info("Enabled linux-dmabuf import support");
     }
-    catch (std::runtime_error const&)
+    catch (std::runtime_error const& error)
     {
         mir::log_info(
-            "No EGL_EXT_image_dma_buf_import_modifiers support, disabling linux-dmabuf import");
+            "Cannot enable linux-dmabuf import support: %s", error.what());
+        mir::log(
+            mir::logging::Severity::debug,
+            MIR_LOG_COMPONENT,
+            std::current_exception(),
+            "Detailed error: ");
     }
 
     this->wayland_executor = std::move(wayland_executor);
 }
 
-void mgw::BufferAllocator::unbind_display(wl_display* display)
+void mge::BufferAllocator::unbind_display(wl_display* display)
 {
     if (egl_display_bound)
     {
@@ -168,10 +213,10 @@ void mgw::BufferAllocator::unbind_display(wl_display* display)
     }
 }
 
-auto mgw::BufferAllocator::buffer_from_resource(
+std::shared_ptr<mg::Buffer> mge::BufferAllocator::buffer_from_resource(
     wl_resource* buffer,
     std::function<void()>&& on_consumed,
-    std::function<void()>&& on_release) -> std::shared_ptr<Buffer>
+    std::function<void()>&& on_release)
 {
     auto context_guard = mir::raii::paired_calls(
         [this]() { ctx->make_current(); },
@@ -193,13 +238,13 @@ auto mgw::BufferAllocator::buffer_from_resource(
         egl_delegate);
 }
 
-auto mgw::BufferAllocator::buffer_from_shm(
-    std::shared_ptr<mrs::RWMappableBuffer> shm_data,
+auto mge::BufferAllocator::buffer_from_shm(
+    std::shared_ptr<renderer::software::RWMappableBuffer> data,
     std::function<void()>&& on_consumed,
     std::function<void()>&& on_release) -> std::shared_ptr<Buffer>
 {
     return std::make_shared<mgc::NotifyingMappableBackedShmBuffer>(
-        std::move(shm_data),
+        std::move(data),
         egl_delegate,
         std::move(on_consumed),
         std::move(on_release));

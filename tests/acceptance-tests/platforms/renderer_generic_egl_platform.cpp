@@ -15,7 +15,6 @@
  */
 
 #include "test_rendering_platform.h"
-#include "test_display_platform.h"
 
 #include "mir_test_framework/executable_path.h"
 
@@ -23,7 +22,7 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-class WaylandPlatformEnv : public mir::test::PlatformTestHarness
+class RenderingGenericEGLEnv : public mir::test::PlatformTestHarness
 {
 public:
     void setup() override
@@ -36,11 +35,12 @@ public:
 
     auto platform_module() -> std::shared_ptr<mir::SharedLibrary> override
     {
-        return std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-wayland"));
+        return std::make_shared<mir::SharedLibrary>(mtf::server_platform("renderer-egl-generic"));
     }
 };
 
-WaylandPlatformEnv platform_harness;
+RenderingGenericEGLEnv platform_harness;
 }
 
-INSTANTIATE_TEST_SUITE_P(Wayland, DisplayPlatformTest, testing::Values(&platform_harness));
+INSTANTIATE_TEST_SUITE_P(RenderingGenericEGL, RenderingPlatformTest, testing::Values(&platform_harness));
+

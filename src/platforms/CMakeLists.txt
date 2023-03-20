@@ -49,6 +49,8 @@ set(client_common_include_dirs
 
 add_subdirectory(common/)
 
+add_subdirectory(renderer-generic-egl/)
+
 if (MIR_BUILD_PLATFORM_GBM_KMS)
     add_subdirectory(gbm-kms/)
 endif()
