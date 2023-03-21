@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  mir-core20:
+  mir-libs:
     runs-on: ubuntu-latest
 
     timeout-minutes: 30
@@ -31,7 +31,7 @@ jobs:
     # Only run if we have access to secrets.
     if: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
 
-    needs: [mir-core20]
+    needs: [mir-libs]
 
     runs-on: ubuntu-latest
 
@@ -39,27 +39,29 @@ jobs:
 
     strategy:
       matrix:
-        snap:
-        - MirServer/mir-kiosk
-        - MirServer/mir-test-tools
-        - MirServer/egmde-confined-desktop
-        - MirServer/ubuntu-frame
+        include:
+        - snap: MirServer/mir-test-tools
+          track: 22
+        - snap: MirServer/confined-shell-wip
+          track: latest
+        - snap: MirServer/ubuntu-frame
+          track: 22
 
     steps:
     - name: Check out code
       uses: actions/checkout@v3
       with:
         repository: ${{ matrix.snap }}
-        ref: mir-build-snap
+        ref: mir-libs-build
         fetch-depth: 0  # needed for version determination
 
     - name: Tweak the stage snap
       run: |
-        sed -i 's@- mir-core20@\0/latest/edge/pr${{ github.event.number }}@' snap/snapcraft.yaml
+        sed -i 's@- mir-libs@\0/latest/edge/pr${{ github.event.number }}@' snap/snapcraft.yaml
 
     - name: Build and publish the snap
       uses: canonical/actions/build-snap@release
       with:
         snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
         publish: true
-        publish-channel: edge/mir-pr${{ github.event.number }}
+        publish-channel: ${{ matrix.track }}/edge/mir-pr${{ github.event.number }}

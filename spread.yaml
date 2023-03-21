@@ -7,7 +7,6 @@ backends:
         systems:
             - alpine-3.17
             - alpine-edge
-            - ubuntu-20.04
             - ubuntu-22.04
             - fedora-36
             - fedora-37
@@ -19,7 +18,6 @@ backends:
         location: snapd-spread/us-east1-b
         halt-timeout: 2h
         systems:
-            - ubuntu-20.04-64
             - ubuntu-22.04-64
             - fedora-36-64
             - fedora-37-64
@@ -32,9 +30,8 @@ environment:
     ARCH/rpi: armhf
     DISTRO: ubuntu
     DISTRO/debian_sid: debian
-    RELEASE: focal
-    RELEASE/ubuntu: focal
-    RELEASE/ubuntu_jammy: jammy
+    RELEASE: jammy
+    RELEASE/ubuntu: jammy
     RELEASE/ubuntu_devel: kinetic
     RELEASE/debian_sid: sid
     PROPOSED: false
