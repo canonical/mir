@@ -231,9 +231,9 @@ auto mg::MultiplexingDisplay::apply_if_configuration_preserves_display_buffers(
             // We don't need to revert the last change; that didn't succeed.
             previous_configs.pop_back();
 
-            for (auto i = previous_configs.crbegin() ; i != previous_configs.crend(); ++i)
+            for (auto saved_config = previous_configs.crbegin(); saved_config != previous_configs.crend(); ++saved_config)
             {
-                if (!i->first->apply_if_configuration_preserves_display_buffers(*i->second))
+                if (!saved_config->first->apply_if_configuration_preserves_display_buffers(*saved_config->second))
                 {
                     BOOST_THROW_EXCEPTION((
                         mg::Display::IncompleteConfigurationApplied{"Failure attempting to undo partially-applied configuration"}));
