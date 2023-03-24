@@ -25,7 +25,7 @@ jobs:
       with:
         snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
         publish: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
-        publish-channel: edge/pr${{ github.event.number }}
+        publish-channel: 22/edge/pr${{ github.event.number }}
 
   snap:
     # Only run if we have access to secrets.
