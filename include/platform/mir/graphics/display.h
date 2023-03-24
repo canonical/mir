@@ -98,6 +98,12 @@ public:
      */
     virtual std::unique_ptr<DisplayConfiguration> configuration() const = 0;
 
+
+    class IncompleteConfigurationApplied : public std::runtime_error
+    {
+    public:
+        using runtime_error::runtime_error;
+    };
     /**
      * Applying a display configuration only if it will not invalidate existing DisplayBuffers
      *
@@ -113,6 +119,8 @@ public:
      *
      * \param conf [in] Configuration to possibly apply.
      * \return      \c true if \p conf has been applied as the new output configuration.
+     * \throws     IncompleteConfigurationApplied if the configuration has been partially applied.
+     *             Users should fall back to a full configure() to return to a consistent state.
      */
     virtual bool apply_if_configuration_preserves_display_buffers(DisplayConfiguration const& conf) = 0;
 

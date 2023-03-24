@@ -18,6 +18,7 @@
 #define MIR_TEST_DOUBLES_MOCK_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/display_configuration.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/main_loop.h"
 #include <gmock/gmock.h>
@@ -32,19 +33,16 @@ namespace doubles
 struct MockDisplay : public graphics::Display
 {
 public:
-    MOCK_METHOD1(for_each_display_sync_group, void (std::function<void(graphics::DisplaySyncGroup&)> const&));
-    MOCK_CONST_METHOD0(configuration, std::unique_ptr<graphics::DisplayConfiguration>());
-    MOCK_METHOD1(apply_if_configuration_preserves_display_buffers, bool(graphics::DisplayConfiguration const&));
-    MOCK_METHOD1(configure, void(graphics::DisplayConfiguration const&));
-    MOCK_METHOD2(register_configuration_change_handler,
-                 void(graphics::EventHandlerRegister&, graphics::DisplayConfigurationChangeHandler const&));
-
-    MOCK_METHOD0(pause, void());
-    MOCK_METHOD0(resume, void());
-    MOCK_METHOD0(create_hardware_cursor, std::shared_ptr<graphics::Cursor>());
-    MOCK_CONST_METHOD1(last_frame_on, graphics::Frame(unsigned));
-
-    MOCK_CONST_METHOD0(create_gl_context, std::unique_ptr<mir::renderer::gl::Context>());
+    MOCK_METHOD(void, for_each_display_sync_group, (std::function<void(graphics::DisplaySyncGroup&)> const&), (override));
+    MOCK_METHOD(std::unique_ptr<graphics::DisplayConfiguration>, configuration, (), (const override));
+    MOCK_METHOD(bool, apply_if_configuration_preserves_display_buffers, (graphics::DisplayConfiguration const&), (override));
+    MOCK_METHOD(void, configure, (graphics::DisplayConfiguration const&), (override));
+    MOCK_METHOD(void, register_configuration_change_handler, (graphics::EventHandlerRegister&, graphics::DisplayConfigurationChangeHandler const&), (override));
+    MOCK_METHOD(void, pause, (), (override));
+    MOCK_METHOD(void, resume, (), (override));
+    MOCK_METHOD(std::unique_ptr<renderer::gl::Context>, create_gl_context, (), (const override));
+    MOCK_METHOD(std::shared_ptr<graphics::Cursor>, create_hardware_cursor, (), (override));
+    MOCK_METHOD(graphics::Frame, last_frame_on, (unsigned), (const override));
 };
 
 }

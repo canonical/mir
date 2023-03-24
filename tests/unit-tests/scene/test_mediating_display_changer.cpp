@@ -31,6 +31,7 @@
 #include "mir/test/doubles/fake_alarm_factory.h"
 #include "mir/test/doubles/mock_display_configuration_observer.h"
 
+#include "gmock/gmock.h"
 #include <mutex>
 #include <boost/throw_exception.hpp>
 
@@ -197,6 +198,55 @@ TEST_F(MediatingDisplayChangerTest, does_not_pause_system_when_applying_new_conf
     EXPECT_CALL(mock_compositor, stop()).Times(0);
     EXPECT_CALL(mock_compositor, start()).Times(0);
     EXPECT_CALL(mock_display, configure(_)).Times(0);
+
+    session_event_sink.handle_focus_change(session);
+    changer->configure(session,
+                       mt::fake_shared(conf));
+}
+
+TEST_F(MediatingDisplayChangerTest, does_full_stop_start_configuration_if_preserving_db_applies_incomplete_configuration)
+{
+    mtd::NullDisplayConfiguration conf;
+    auto session = std::make_shared<mtd::StubSession>();
+
+    InSequence seq;
+
+    EXPECT_CALL(mock_display, apply_if_configuration_preserves_display_buffers(Ref(conf)))
+        .WillOnce(Throw(mg::Display::IncompleteConfigurationApplied{"Quack!"}));
+
+    EXPECT_CALL(mock_compositor, stop());
+    EXPECT_CALL(mock_display, configure(Ref(conf)));
+    EXPECT_CALL(mock_compositor, start());
+
+    session_event_sink.handle_focus_change(session);
+    changer->configure(session,
+                       mt::fake_shared(conf));
+}
+
+TEST_F(MediatingDisplayChangerTest, sends_error_when_incomplete_fallback_configuration_fails)
+{
+    mtd::NullDisplayConfiguration conf;
+    auto session = std::make_shared<mtd::StubSession>();
+
+    InSequence seq;
+
+    // First we try pause-less configuration, which fails awkwardly…
+    EXPECT_CALL(mock_display, apply_if_configuration_preserves_display_buffers(Ref(conf)))
+        .WillOnce(Throw(mg::Display::IncompleteConfigurationApplied{"Quack!"}));
+
+    // …then we go through the full tear-down-and-rebuild configuration path…
+    EXPECT_CALL(mock_compositor, stop());
+    EXPECT_CALL(mock_display, configure(Ref(conf)))
+        .WillOnce(Throw(std::runtime_error{"Oooof"}));    //… which also fails! Awkward!
+    EXPECT_CALL(mock_compositor, start());
+
+    // So we notify of error, and then…
+    EXPECT_CALL(display_configuration_observer, configuration_failed(Pointee(Ref(conf)), _));
+
+    // …we revert to the previous configuration
+    EXPECT_CALL(mock_compositor, stop());
+    EXPECT_CALL(mock_display, configure(_));
+    EXPECT_CALL(mock_compositor, start());
 
     session_event_sink.handle_focus_change(session);
     changer->configure(session,
