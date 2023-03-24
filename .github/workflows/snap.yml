@@ -57,7 +57,7 @@ jobs:
 
     - name: Tweak the stage snap
       run: |
-        sed -i 's@- mir-libs@\0/latest/edge/pr${{ github.event.number }}@' snap/snapcraft.yaml
+        sed -i 's@- mir-libs.*$@\0/pr${{ github.event.number }}@' snap/snapcraft.yaml
 
     - name: Build and publish the snap
       uses: canonical/actions/build-snap@release
