@@ -35,7 +35,7 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
-    'sphinx.ext.imgmath', 
+    'sphinx.ext.imgmath',
     'sphinx.ext.todo',
     'breathe',
     'exhale',
@@ -51,11 +51,11 @@ exhale_args = {
     # Heavily encouraged optional argument (see docs)
     "rootFileTitle":         "Mir API",
     # Suggested optional arguments
-    "createTreeView":        True,
+    "createTreeView":        False,
     # TIP: if using the sphinx-bootstrap-theme, you need
     # "treeViewIsBootstrap": True,
     "exhaleExecutesDoxygen": True,
-    "exhaleDoxygenStdin":    "INPUT = ../../include"
+    "exhaleUseDoxyfile": True,
 }
 
 
@@ -65,7 +65,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = ['.sphinx']
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -73,13 +73,14 @@ exclude_patterns = []
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'furo'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 # html_static_path = ['_static']
 
+breathe_projects = {"Mir": "./doxygen/xml/"}
 breathe_default_project = "Mir"
 breathe_default_members = ('members', 'undoc-members')
 breathe_order_parameters_first = True
