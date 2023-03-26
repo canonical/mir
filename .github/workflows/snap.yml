@@ -25,7 +25,7 @@ jobs:
       with:
         snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
         publish: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
-        publish-channel: edge/pr${{ github.event.number }}
+        publish-channel: 22/edge/pr${{ github.event.number }}
 
   snap:
     # Only run if we have access to secrets.
@@ -57,7 +57,7 @@ jobs:
 
     - name: Tweak the stage snap
       run: |
-        sed -i 's@- mir-libs@\0/latest/edge/pr${{ github.event.number }}@' snap/snapcraft.yaml
+        sed -i 's@- mir-libs.*$@\0/pr${{ github.event.number }}@' snap/snapcraft.yaml
 
     - name: Build and publish the snap
       uses: canonical/actions/build-snap@release
