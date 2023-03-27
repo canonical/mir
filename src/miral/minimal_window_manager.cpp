@@ -286,6 +286,7 @@ bool miral::MinimalWindowManager::Impl::prepare_for_gesture(
         case mir_window_state_maximized:
         case mir_window_state_vertmaximized:
         case mir_window_state_horizmaximized:
+        case mir_window_state_attached:
         {
             WindowSpecification mods;
             mods.state() = mir_window_state_restored;
