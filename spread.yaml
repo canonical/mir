@@ -27,7 +27,6 @@ environment:
     ARCH: amd64
     ARCH/ubuntu_arm64: arm64
     ARCH/ubuntu_armhf: armhf
-    ARCH/rpi: armhf
     DISTRO: ubuntu
     DISTRO/debian_sid: debian
     RELEASE: jammy
@@ -41,7 +40,6 @@ environment:
     VALGRIND: 0
     VALGRIND/valgrind: 1
     BUILD_TYPE: RelWithDebInfo
-    BUILD_TYPE/rpi: Debug
     BUILD_TYPE/asan,asan_clang: AddressSanitizer
     BUILD_TYPE/tsan,tsan_clang: ThreadSanitizer
     BUILD_TYPE/ubsan,ubsan_clang: UBSanitizer
