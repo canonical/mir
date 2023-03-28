@@ -30,12 +30,6 @@ if (MIR_BUILD_PLATFORM_WAYLAND)
     PUBLIC
       wayland_platform.cpp)
 endif()
-if (MIR_BUILD_PLATFORM_RPI_DISPMANX)
-  target_sources(
-    mirplatformtest
-    PUBLIC
-      rpi-dispmanx_platform.cpp)
-endif()
 
 target_compile_definitions(
   mirplatformtest
