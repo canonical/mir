@@ -45,11 +45,7 @@ void miroil::InputDevice::apply_keymap(std::string const& layout, std::string co
     if (auto const kbd_conf = device->keyboard_configuration())
     {
         // TODO work out how to support this functionality on OSK etc.
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(2, 5, 0)
         if (auto const old_keymap = std::dynamic_pointer_cast<ParameterKeymap const>(kbd_conf.value().device_keymap()))
-#else
-        if (auto const* const old_keymap = dynamic_cast<ParameterKeymap const*>(&kbd_conf.value().device_keymap()))
-#endif
         {
             // preserve the model and options
             device->apply_keyboard_configuration(MirKeyboardConfig{old_keymap->with_layout(layout, variant)});
