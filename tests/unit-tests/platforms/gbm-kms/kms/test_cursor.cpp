@@ -383,23 +383,6 @@ TEST_F(MesaCursorTest, respects_drm_cap_cursor)
                            std::make_shared<StubCurrentConfiguration>(output_container)};
 }
 
-TEST_F(MesaCursorTest, can_force_64x64_cursor)
-{
-    auto const drm_buffer_size = 255;
-    ON_CALL(mock_drm, drmGetCap(_, DRM_CAP_CURSOR_WIDTH, _))
-        .WillByDefault(Invoke([](int , uint64_t , uint64_t *value) { *value = drm_buffer_size; return 0; }));
-
-    ON_CALL(mock_drm, drmGetCap(_, DRM_CAP_CURSOR_HEIGHT, _))
-        .WillByDefault(Invoke([](int , uint64_t , uint64_t *value) { *value = drm_buffer_size; return 0; }));
-
-    mir_test_framework::TemporaryEnvironmentValue mir_drm_cursor_64x64{"MIR_DRM_CURSOR_64x64", "on"};
-
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_, 64, 64, _, _));
-
-    mgg::Cursor cursor_tmp{output_container,
-                           std::make_shared<StubCurrentConfiguration>(output_container)};
-}
-
 TEST_F(MesaCursorTest, show_cursor_writes_to_bo)
 {
     using namespace testing;
