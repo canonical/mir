@@ -35,9 +35,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-const uint64_t fallback_cursor_size = 64;
-char const* const mir_drm_cursor_64x64 = "MIR_DRM_CURSOR_64x64";
-
 // Transforms a relative position within the display bounds described by \a rect which is rotated with \a orientation
 geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement const& vector, MirOrientation orientation)
 {
@@ -54,35 +51,18 @@ geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement con
         return vector;
     }
 }
-// support for older drm headers
-#ifndef DRM_CAP_CURSOR_WIDTH
-#define DRM_CAP_CURSOR_WIDTH            0x8
-#define DRM_CAP_CURSOR_HEIGHT           0x9
-#endif
 
-// In certain combinations of DRI backends and drivers GBM
-// returns a stride size that matches the requested buffers size,
-// instead of the underlying buffer:
-// https://bugs.freedesktop.org/show_bug.cgi?id=89164
 int get_drm_cursor_height(int fd)
 {
-    // on some older hardware drm incorrectly reports the cursor size
-    bool const force_64x64_cursor = getenv(mir_drm_cursor_64x64);
-
-    uint64_t height = fallback_cursor_size;
-    if (!force_64x64_cursor)
-       drmGetCap(fd, DRM_CAP_CURSOR_HEIGHT, &height);
+    uint64_t height;
+    drmGetCap(fd, DRM_CAP_CURSOR_HEIGHT, &height);
     return int(height);
 }
 
 int get_drm_cursor_width(int fd)
 {
-    // on some older hardware drm incorrectly reports the cursor size
-    bool const force_64x64_cursor = getenv(mir_drm_cursor_64x64);
-
-    uint64_t width = fallback_cursor_size;
-    if (!force_64x64_cursor)
-       drmGetCap(fd, DRM_CAP_CURSOR_WIDTH, &width);
+    uint64_t width;
+    drmGetCap(fd, DRM_CAP_CURSOR_WIDTH, &width);
     return int(width);
 }
 
