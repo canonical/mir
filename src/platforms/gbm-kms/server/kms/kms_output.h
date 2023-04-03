@@ -91,30 +91,6 @@ public:
      */
     virtual void update_from_hardware_state(DisplayConfigurationOutput& to_update) const = 0;
 
-    // TODO: Move these to a DRM-device level object
-    /**
-     * Get a DRM FB backed by the buffer referred to by a gbm_bo.
-     *
-     * \param   [in] bo The GBM bo containing the image
-     * \return  An opaque handle to a DRM FB, usable in other KMSOutput calls.
-     *
-     * \note    As suggested by the shared_ptr return value, returned FB handle may be
-     *          a reference to an existing FB rather than a new import.
-     */
-    virtual auto fb_for(gbm_bo* bo) const -> std::shared_ptr<FBHandle const> = 0;
-    virtual auto fb_for(DMABufBuffer const& buffer) const -> std::shared_ptr<FBHandle const> = 0;
-
-    /**
-     * Check whether buffer need to be migrated to GPU-private memory for display.
-     *
-     * \param [in] bo   GBM buffer to test
-     * \return  True if buffer must be migrated to display-private memory in order to be displayed.
-     *          If this method returns true the caller should probably copy it to a new buffer before
-     *          calling fb_for(buffer), as acquiring a FBHandle to the buffer will likely make it
-     *          unusable for rendering on the original GPU.
-     */
-    virtual bool buffer_requires_migration(gbm_bo* bo) const = 0;
-
     virtual int drm_fd() const = 0;
 protected:
     KMSOutput() = default;

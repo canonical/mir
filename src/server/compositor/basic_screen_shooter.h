@@ -30,7 +30,7 @@ namespace renderer
 class Renderer;
 namespace gl
 {
-class BufferRenderTarget;
+class BufferOutputSurface;
 }
 }
 namespace compositor
@@ -44,7 +44,7 @@ public:
         std::shared_ptr<Scene> const& scene,
         std::shared_ptr<time::Clock> const& clock,
         Executor& executor,
-        std::unique_ptr<renderer::gl::BufferRenderTarget>&& render_target,
+        std::unique_ptr<renderer::gl::BufferOutputSurface>&& render_target,
         std::unique_ptr<renderer::Renderer>&& renderer);
 
     void capture(
@@ -58,7 +58,7 @@ private:
         Self(
             std::shared_ptr<Scene> const& scene,
             std::shared_ptr<time::Clock> const& clock,
-            std::unique_ptr<renderer::gl::BufferRenderTarget>&& render_target,
+            std::unique_ptr<renderer::gl::BufferOutputSurface>&& render_target,
             std::unique_ptr<renderer::Renderer>&& renderer);
 
         auto render(
@@ -67,7 +67,7 @@ private:
 
         std::mutex mutex;
         std::shared_ptr<Scene> const scene;
-        std::unique_ptr<renderer::gl::BufferRenderTarget> const render_target;
+        std::unique_ptr<renderer::gl::BufferOutputSurface> const render_target;
         std::unique_ptr<renderer::Renderer> const renderer;
         std::shared_ptr<time::Clock> const clock;
     };

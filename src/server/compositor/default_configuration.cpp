@@ -19,24 +19,18 @@
 #include "mir/shell/shell.h"
 #include "buffer_stream_factory.h"
 #include "default_display_buffer_compositor_factory.h"
+#include "mir/executor.h"
 #include "multi_threaded_compositor.h"
 #include "gl/renderer_factory.h"
 #include "basic_screen_shooter.h"
 #include "null_screen_shooter.h"
 #include "mir/main_loop.h"
-#include "mir/graphics/display.h"
-#include "mir/executor.h"
-#include "mir/renderer/gl/basic_buffer_render_target.h"
-#include "mir/renderer/gl/context.h"
-#include "mir/renderer/renderer.h"
-#include "mir/log.h"
-
+#include "mir/graphics/platform.h"
 #include "mir/options/configuration.h"
 
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
-namespace mf = mir::frontend;
-namespace mrg = mir::renderer::gl;
+namespace mg = mir::graphics;
 
 std::shared_ptr<ms::BufferStreamFactory>
 mir::DefaultServerConfiguration::the_buffer_stream_factory()
@@ -54,8 +48,14 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
     return display_buffer_compositor_factory(
         [this]()
         {
-            return wrap_display_buffer_compositor_factory(std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
-                the_renderer_factory(), the_compositor_report()));
+            auto rendering_platform = the_rendering_platforms().back();
+            if (auto gl_provider =
+                mg::RenderingPlatform::acquire_interface<mg::GLRenderingProvider>(std::move(rendering_platform)))
+            {
+                return wrap_display_buffer_compositor_factory(std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
+                    std::move(gl_provider), the_gl_config(), the_renderer_factory(), the_compositor_report()));
+            }
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Selected rendering platform does not support GL"}));
         });
 }
 
@@ -98,9 +98,9 @@ std::shared_ptr<mir::renderer::RendererFactory> mir::DefaultServerConfiguration:
 auto mir::DefaultServerConfiguration::the_screen_shooter() -> std::shared_ptr<compositor::ScreenShooter>
 {
     return screen_shooter(
-        [this]() -> std::shared_ptr<compositor::ScreenShooter>
+        []() -> std::shared_ptr<compositor::ScreenShooter>
         {
-            try
+/*            try
             {
                 auto render_target = std::make_unique<mrg::BasicBufferRenderTarget>(the_display()->create_gl_context());
                 auto renderer = the_renderer_factory()->create_renderer_for(*render_target);
@@ -109,7 +109,7 @@ auto mir::DefaultServerConfiguration::the_screen_shooter() -> std::shared_ptr<co
                     the_clock(),
                     thread_pool_executor,
                     std::move(render_target),
-                    std::move(renderer));
+                    );    // TODO: WE'VE BROKEN THE SCREENSHOOTER FOR NOW
             }
             catch (...)
             {
@@ -120,5 +120,7 @@ auto mir::DefaultServerConfiguration::the_screen_shooter() -> std::shared_ptr<co
                     "failed to create BasicScreenShooter");
                 return std::make_shared<compositor::NullScreenShooter>(thread_pool_executor);
             }
+*/
+        return std::make_shared<compositor::NullScreenShooter>(thread_pool_executor);
         });
 }

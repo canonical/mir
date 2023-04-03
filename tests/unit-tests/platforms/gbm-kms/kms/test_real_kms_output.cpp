@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "kms/kms_framebuffer.h"
 #include "src/platforms/gbm-kms/server/kms/real_kms_output.h"
 #include "src/platforms/gbm-kms/server/kms/page_flipper.h"
 #include "mir/fatal.h"
@@ -52,6 +53,23 @@ class MockPageFlipper : public mgg::PageFlipper
 public:
     MOCK_METHOD3(schedule_flip, bool(uint32_t,uint32_t,uint32_t));
     MOCK_METHOD1(wait_for_flip, mg::Frame(uint32_t));
+};
+
+class MockKMSFramebuffer : public mgg::FBHandle
+{
+public:
+    MockKMSFramebuffer(uint32_t fb_id)
+        : fb_id{fb_id}
+    {
+    }
+
+    operator uint32_t() const override
+    {
+        return fb_id;
+    }
+
+private:
+    uint32_t const fb_id;
 };
 
 class RealKMSOutputTest : public ::testing::Test
@@ -164,7 +182,6 @@ public:
     char const* const drm_device = "/dev/dri/card0";
     int const drm_fd;
 
-    gbm_bo* const fake_bo{reinterpret_cast<gbm_bo*>(0x123ba)};
     uint32_t const invalid_id;
     std::vector<uint32_t> const crtc_ids;
     std::vector<uint32_t> const encoder_ids;
@@ -182,7 +199,7 @@ TEST_F(RealKMSOutputTest, operations_use_existing_crtc)
     setup_outputs_connected_crtc();
 
     uint32_t const fb_id{42};
-    append_fb_id(fb_id);
+    auto const fb = std::make_shared<MockKMSFramebuffer>(fb_id);
 
     {
         InSequence s;
@@ -209,8 +226,6 @@ TEST_F(RealKMSOutputTest, operations_use_existing_crtc)
         mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
 
-    auto fb = output.fb_for(fake_bo);
-
     EXPECT_TRUE(output.set_crtc(*fb));
     EXPECT_TRUE(output.schedule_page_flip(*fb));
     output.wait_for_page_flip();
@@ -221,6 +236,7 @@ TEST_F(RealKMSOutputTest, operations_use_possible_crtc)
     using namespace testing;
 
     uint32_t const fb_id{67};
+    auto const fb = std::make_shared<MockKMSFramebuffer>(fb_id);
 
     setup_outputs_no_connected_crtc();
 
@@ -244,14 +260,10 @@ TEST_F(RealKMSOutputTest, operations_use_possible_crtc)
             .Times(1);
     }
 
-    append_fb_id(fb_id);
-
     mgg::RealKMSOutput output{
         drm_fd,
         mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
-
-    auto fb = output.fb_for(fake_bo);
 
     EXPECT_TRUE(output.set_crtc(*fb));
     EXPECT_TRUE(output.schedule_page_flip(*fb));
@@ -264,6 +276,7 @@ TEST_F(RealKMSOutputTest, set_crtc_failure_is_handled_gracefully)
     using namespace testing;
 
     uint32_t const fb_id{67};
+    auto const fb = std::make_shared<MockKMSFramebuffer>(fb_id);
 
     setup_outputs_connected_crtc();
 
@@ -284,14 +297,10 @@ TEST_F(RealKMSOutputTest, set_crtc_failure_is_handled_gracefully)
             .Times(0);
     }
 
-    append_fb_id(fb_id);
-
     mgg::RealKMSOutput output{
         drm_fd,
         mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
-
-    auto fb = output.fb_for(fake_bo);
 
     EXPECT_FALSE(output.set_crtc(*fb));
 
@@ -372,7 +381,7 @@ TEST_F(RealKMSOutputTest, cursor_move_permission_failure_is_non_fatal)
         mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
 
-    auto fb = output.fb_for(fake_bo);
+    auto const fb = std::make_shared<MockKMSFramebuffer>(4);
 
     EXPECT_TRUE(output.set_crtc(*fb));
     EXPECT_NO_THROW({
@@ -400,7 +409,7 @@ TEST_F(RealKMSOutputTest, cursor_set_permission_failure_is_non_fatal)
         mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
 
-    auto fb = output.fb_for(fake_bo);
+    auto const fb = std::make_shared<MockKMSFramebuffer>(0x42);
 
     EXPECT_TRUE(output.set_crtc(*fb));
     struct gbm_bo *dummy = reinterpret_cast<struct gbm_bo*>(0x1234567);
@@ -429,7 +438,7 @@ TEST_F(RealKMSOutputTest, has_no_cursor_if_no_hardware_support)
         mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
 
-    auto fb = output.fb_for(fake_bo);
+    auto const fb = std::make_shared<MockKMSFramebuffer>(42);
 
     EXPECT_TRUE(output.set_crtc(*fb));
     struct gbm_bo *dummy = reinterpret_cast<struct gbm_bo*>(0x1234567);
@@ -507,9 +516,7 @@ TEST_F(RealKMSOutputTest, drm_set_gamma)
                                               const_cast<uint16_t*>(gamma.blue.data())))
         .Times(1);
 
-    append_fb_id(fb_id);
-
-    auto fb = output.fb_for(fake_bo);
+    auto const fb = std::make_shared<MockKMSFramebuffer>(fb_id);
 
     EXPECT_TRUE(output.set_crtc(*fb));
 
@@ -538,9 +545,7 @@ TEST_F(RealKMSOutputTest, drm_set_gamma_failure_does_not_throw)
                                               const_cast<uint16_t*>(gamma.blue.data())))
         .WillOnce(Return(-ENOSYS));
 
-    append_fb_id(fb_id);
-
-    auto fb = output.fb_for(fake_bo);
+    auto const fb = std::make_shared<MockKMSFramebuffer>(fb_id);
 
     EXPECT_TRUE(output.set_crtc(*fb));
 

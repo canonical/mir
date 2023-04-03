@@ -201,13 +201,28 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
                 auto describe_module = platform->load_function<mg::DescribeModule>(
                     "describe_graphics_module",
                     MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
-
+                
                 auto description = describe_module();
-                mir::log_info("Selected display driver: %s (version %d.%d.%d)",
-                              description->name,
-                              description->major_version,
-                              description->minor_version,
-                              description->micro_version);
+                if (!device.device)
+                {
+                    mir::log_info(
+                        "Selected display driver: %s (version %d.%d.%d) for platform",
+                        description->name,
+                        description->major_version,
+                        description->minor_version,
+                        description->micro_version);
+                }
+                else
+                {
+                    mir::log_info(
+                        "Selected display driver: %s (version %d.%d.%d) for device (%s: %s)",
+                        description->name,
+                        description->major_version,
+                        description->minor_version,
+                        description->micro_version,
+                        device.device->driver(),
+                        device.device->devnode());
+                }
 
                 // TODO: Do we want to be able to continue on partial failure here?
                 display_platforms.push_back(
@@ -306,11 +321,26 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                     MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
 
                 auto description = describe_module();
-                mir::log_info("Selected rendering driver: %s (version %d.%d.%d)",
-                              description->name,
-                              description->major_version,
-                              description->minor_version,
-                              description->micro_version);
+                if (!device.device)
+                {
+                    mir::log_info(
+                        "Selected rendering driver: %s (version %d.%d.%d) for platform",
+                        description->name,
+                        description->major_version,
+                        description->minor_version,
+                        description->micro_version);
+                }
+                else
+                {
+                    mir::log_info(
+                        "Selected rendering driver: %s (version %d.%d.%d) for device (%s: %s)",
+                        description->name,
+                        description->major_version,
+                        description->minor_version,
+                        description->micro_version,
+                        device.device->driver(),
+                        device.device->devnode());
+                }
 
                 // TODO: Do we want to be able to continue on partial failure here?
                 rendering_platforms.push_back(
@@ -352,7 +382,7 @@ mir::DefaultServerConfiguration::the_buffer_allocator()
         [&]() -> std::shared_ptr<graphics::GraphicBufferAllocator>
         {
             // TODO: More than one BufferAllocator
-            return the_rendering_platforms().front()->create_buffer_allocator(*the_display());
+            return the_rendering_platforms().back()->create_buffer_allocator(*the_display());
         });
 }
 
@@ -362,7 +392,7 @@ mir::DefaultServerConfiguration::the_display()
     return display(
         [this]() -> std::shared_ptr<mg::Display>
         {
-            return the_display_platforms().front()->create_display(
+            return the_display_platforms().back()->create_display(
                 the_display_configuration_policy(),
                 the_gl_config());
         });

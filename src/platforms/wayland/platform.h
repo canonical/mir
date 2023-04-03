@@ -47,6 +47,9 @@ public:
         std::shared_ptr<GLConfig> const& gl_config) override;
 
 private:
+    auto maybe_create_interface(DisplayInterfaceBase::Tag const& tag)
+        -> std::shared_ptr<DisplayInterfaceBase> override;
+
     struct wl_display* const wl_display;
     std::shared_ptr<DisplayReport> const report;
 };

@@ -15,6 +15,7 @@
  */
 
 #include "mir/graphics/event_handler_register.h"
+#include "platform_common.h"
 #include "src/platforms/gbm-kms/server/kms/platform.h"
 #include "src/platforms/gbm-kms/server/kms/quirks.h"
 #include "src/server/report/null_report_factory.h"
@@ -76,16 +77,6 @@ public:
         fake_devices.add_standard_device("standard-drm-devices");
     }
 
-    std::shared_ptr<mgg::Platform> create_platform()
-    {
-        return std::make_shared<mgg::Platform>(
-                mir::report::null_display_report(),
-                *std::make_shared<mtd::StubConsoleServices>(),
-                *std::make_shared<mtd::NullEmergencyCleanup>(),
-                mgg::BypassOption::allowed,
-                std::make_unique<mgg::Quirks>(mir::options::ProgramOption{}));
-    }
-
     auto parsed_options_from_args(
         std::initializer_list<char const*> const& options,
         boost::program_options::options_description const& description) const
@@ -114,12 +105,33 @@ TEST_F(MesaGraphicsPlatform, a_failure_while_creating_a_platform_results_in_an_e
 {
     using namespace ::testing;
 
+    mtf::UdevEnvironment udev_environment;
+    boost::program_options::options_description po;
+    mir::options::ProgramOption options;
+    auto const stub_vt = std::make_shared<mtd::StubConsoleServices>();
+    auto const udev = std::make_shared<mir::udev::Context>();
+
+    udev_environment.add_standard_device("standard-drm-devices");
+
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-gbm-kms")};
+    auto probe = platform_lib.load_function<mg::PlatformProbe>(display_platform_probe_symbol);
+    auto supported_devices = probe(stub_vt, udev, options);    
+    
     EXPECT_CALL(mock_drm, open(_,_))
-            .WillRepeatedly(SetErrnoAndReturn(EINVAL, -1));
+        .WillRepeatedly(SetErrnoAndReturn(EINVAL, -1));
 
     try
     {
-        auto platform = create_platform();
+        for (auto& device : supported_devices)
+        {
+            mgg::Platform{
+                *device.device,
+                mir::report::null_display_report(),
+                *std::make_shared<mtd::StubConsoleServices>(),
+                *std::make_shared<mtd::NullEmergencyCleanup>(),
+                mgg::BypassOption::allowed
+            };
+        }
     } catch(std::exception const&)
     {
         return;

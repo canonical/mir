@@ -147,12 +147,17 @@ public:
 
     std::shared_ptr<mgg::Platform> create_platform()
     {
+        mir::udev::Context ctx;
+        // Caution: non-local state!
+        // This works because standard-drm-devices contains a udev device with 226:0 and devnode /dev/dri/card0
+        auto device = ctx.char_device_from_devnum(makedev(226, 0));
+       
         return std::make_shared<mgg::Platform>(
-               mir::report::null_display_report(),
-               *std::make_shared<mtd::StubConsoleServices>(),
-               *std::make_shared<mtd::NullEmergencyCleanup>(),
-               mgg::BypassOption::allowed,
-               std::make_unique<mgg::Quirks>(mir::options::ProgramOption{}));
+            *device,
+            mir::report::null_display_report(),
+            *std::make_shared<mtd::StubConsoleServices>(),
+            *std::make_shared<mtd::NullEmergencyCleanup>(),
+            mgg::BypassOption::allowed);
     }
 
     std::shared_ptr<mg::Display> create_display_cloned(
@@ -301,39 +306,6 @@ TEST_F(MesaDisplayMultiMonitorTest, create_display_sets_all_connected_crtcs)
     auto display = create_display_cloned(create_platform());
 }
 
-TEST_F(MesaDisplayMultiMonitorTest, create_display_creates_shared_egl_contexts)
-{
-    using namespace testing;
-
-    int const num_connected_outputs{3};
-    int const num_disconnected_outputs{2};
-    EGLContext const shared_context{reinterpret_cast<EGLContext>(0x77)};
-
-    setup_outputs(num_connected_outputs, num_disconnected_outputs);
-
-    /* Will create only one shared context */
-    EXPECT_CALL(mock_egl, eglCreateContext(_, _, EGL_NO_CONTEXT, _))
-        .WillOnce(Return(shared_context));
-
-    /* Will use the shared context when creating other contexts */
-    EXPECT_CALL(mock_egl, eglCreateContext(_, _, shared_context, _))
-        .Times(AtLeast(1));
-
-    {
-        InSequence s;
-
-        /* Contexts are made current to initialize DisplayBuffers */
-        EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,Ne(shared_context)))
-            .Times(AtLeast(1));
-
-        /* Contexts are released at teardown */
-        EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,EGL_NO_CONTEXT))
-            .Times(AtLeast(1));
-    }
-
-    auto display = create_display_cloned(create_platform());
-}
-
 namespace
 {
 
@@ -384,20 +356,38 @@ TEST_F(MesaDisplayMultiMonitorTest, flip_flips_all_connected_crtcs)
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[1]), Return(0)))
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[2]), Return(0)));
 
-    auto display = create_display_cloned(create_platform());
+    auto platform = create_platform();
+    auto display = create_display_cloned(platform);
+    auto allocator_provider = mg::DisplayPlatform::acquire_interface<mg::DumbDisplayProvider>(std::move(platform));
 
     /* First frame: Page flips are scheduled, but not waited for */
-    display->for_each_display_sync_group([](mg::DisplaySyncGroup& group)
-    {
-        group.post();
-    });
+    display->for_each_display_sync_group(
+        [allocator_provider](mg::DisplaySyncGroup& group)
+        {
+            group.for_each_display_buffer(
+                [allocator_provider](mg::DisplayBuffer& db)
+                {
+                    auto allocator = allocator_provider->allocator_for_db(db);
+                    auto fb = allocator->acquire();
+                    db.set_next_image(std::move(fb));
+                });
+           group.post();
+        });
 
     /* Second frame: Previous page flips finish (drmHandleEvent) and new ones
        are scheduled */
-    display->for_each_display_sync_group([](mg::DisplaySyncGroup& group)
-    {
-        group.post();
-    });
+    display->for_each_display_sync_group(
+        [allocator_provider](mg::DisplaySyncGroup& group)
+        {
+            group.for_each_display_buffer(
+                [allocator_provider](mg::DisplayBuffer& db)
+                {
+                    auto allocator = allocator_provider->allocator_for_db(db);
+                    auto fb = allocator->acquire();
+                    db.set_next_image(std::move(fb));
+                });
+           group.post();
+        });
 }
 
 namespace

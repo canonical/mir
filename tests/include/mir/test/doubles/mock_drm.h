@@ -17,6 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_DRM_H_
 #define MIR_TEST_DOUBLES_MOCK_DRM_H_
 
+#include "mir_test_framework/mmap_wrapper.h"
 #include "mir_test_framework/open_wrapper.h"
 #include "mir/geometry/forward.h"
 
@@ -162,6 +163,9 @@ public:
 
     MOCK_METHOD1(drmCheckModesettingSupported, int(char const*));
 
+    MOCK_METHOD(void*, mmap, (void* addr, size_t length, int prot, int flags, int fd, off_t offset));
+    MOCK_METHOD(int, munmap, (void* addr, size_t length));
+
     void add_crtc(
         char const* device,
         uint32_t id,
@@ -194,8 +198,30 @@ public:
 private:
     std::unordered_map<std::string, FakeDRMResources> fake_drms;
     std::unordered_map<int, FakeDRMResources&> fd_to_drm;
+
+    class TransparentUPtrComparator
+    {
+    public:
+        auto operator()(std::unique_ptr<char[]> const& a, void* b) const -> bool
+        {
+            return a.get() < b;
+        }
+        auto operator()(void*a, std::unique_ptr<char[]> const& b) const -> bool
+        {
+            return a < b.get();
+        }
+        auto operator()(std::unique_ptr<char[]> const& a, std::unique_ptr<char[]> const& b) const -> bool
+        {
+            return a.get() < b.get();
+        }
+        struct is_transparent;
+    };
+
+    std::map<std::unique_ptr<char[]>, size_t, TransparentUPtrComparator> mmapings;
     drmModeObjectProperties empty_object_props;
-    mir_test_framework::OpenHandlerHandle open_interposer;
+    mir_test_framework::OpenHandlerHandle const open_interposer;
+    mir_test_framework::MmapHandlerHandle const mmap_interposer;
+    mir_test_framework::MunmapHandlerHandle const munmap_interposer;
 };
 
 testing::Matcher<int> IsFdOfDevice(char const* device);

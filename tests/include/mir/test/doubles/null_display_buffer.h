@@ -26,13 +26,14 @@ namespace test
 namespace doubles
 {
 
-class NullDisplayBuffer : public graphics::DisplayBuffer, public graphics::NativeDisplayBuffer
+class NullDisplayBuffer : public graphics::DisplayBuffer
 {
 public:
     geometry::Rectangle view_area() const override { return geometry::Rectangle(); }
-    bool overlay(graphics::RenderableList const&) override { return false; }
+    bool overlay(std::vector<mir::graphics::DisplayElement> const&) override { return false; }
+    void set_next_image(std::unique_ptr<mir::graphics::Framebuffer>) override { }
     glm::mat2 transformation() const override { return glm::mat2(1); }
-    NativeDisplayBuffer* native_display_buffer() override { return this; }
+    auto owner() const -> std::shared_ptr<graphics::DisplayPlatform> override { return {};}
 };
 
 }

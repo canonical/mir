@@ -44,4 +44,3 @@ EGLStreamKMSPlatformEnv platform_harness;
 }
 
 INSTANTIATE_TEST_SUITE_P(EGLStreamKMS, RenderingPlatformTest, testing::Values(&platform_harness));
-INSTANTIATE_TEST_SUITE_P(EGLStreamKMS, DisplayPlatformTest, testing::Values(&platform_harness));

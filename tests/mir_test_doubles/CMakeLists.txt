@@ -27,6 +27,9 @@ set(
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/null_display_configuration_policy.h
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/stub_buffer_allocator.h
   stub_buffer_allocator.cpp
+  ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/stub_gl_rendering_provider.h
+  ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/mock_gl_rendering_provider.h
+  ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/mock_output_surface.h
 )
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -104,6 +107,12 @@ target_link_libraries(mir-public-test-doubles
 add_library(mir-test-doubles-static STATIC
   $<TARGET_OBJECTS:mir-public-test-doubles>
   ${TEST_UTILS_SRCS}
+)
+
+target_include_directories(
+  mir-test-doubles-static
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/tests/include
 )
 
 add_dependencies(mir-test-doubles-static GMock)

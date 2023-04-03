@@ -17,8 +17,8 @@
 #ifndef MIR_RENDERER_GL_BUFFER_RENDER_TARGET_H_
 #define MIR_RENDERER_GL_BUFFER_RENDER_TARGET_H_
 
-#include "render_target.h"
 #include "mir/geometry/size.h"
+#include "mir/renderer/gl/gl_surface.h"
 
 #include <memory>
 
@@ -34,7 +34,7 @@ namespace gl
 {
 
 /// Not threadsafe, do not use concurrently
-class BufferRenderTarget: public RenderTarget
+class BufferOutputSurface: public graphics::gl::OutputSurface
 {
 public:
     virtual void set_buffer(std::shared_ptr<software::WriteMappableBuffer> const& buffer) = 0;

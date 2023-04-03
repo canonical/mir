@@ -63,8 +63,6 @@ public:
 
     std::shared_ptr<Cursor> create_hardware_cursor() override;
 
-    std::unique_ptr<renderer::gl::Context> create_gl_context() const override;
-
 private:
     mir::Fd const drm_node;
     EGLDisplay display;

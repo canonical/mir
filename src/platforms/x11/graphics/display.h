@@ -34,8 +34,6 @@ namespace mir
 namespace graphics
 {
 
-class AtomicFrame;
-class GLConfig;
 class DisplayReport;
 struct DisplayConfigurationOutput;
 class DisplayConfigurationPolicy;
@@ -51,9 +49,7 @@ class X11Window
 public:
     X11Window(mir::X::X11Resources* x11_resources,
               std::string title,
-              EGLDisplay egl_dpy,
-              geometry::Size const size,
-              EGLConfig const egl_cfg);
+              geometry::Size const size);
     ~X11Window();
 
     operator xcb_window_t() const;
@@ -66,12 +62,13 @@ private:
 class Display : public graphics::Display
 {
 public:
-    explicit Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources,
-                     std::string const title,
-                     std::vector<X11OutputConfig> const& requested_size,
-                     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
-                     std::shared_ptr<GLConfig> const& gl_config,
-                     std::shared_ptr<DisplayReport> const& report);
+    Display(
+        std::shared_ptr<DisplayPlatform> parent,
+        std::shared_ptr<mir::X::X11Resources> const& x11_resources,
+        std::string const title,
+        std::vector<X11OutputConfig> const& requested_size,
+        std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
+        std::shared_ptr<DisplayReport> const& report);
     ~Display() noexcept;
 
     void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override;
@@ -90,8 +87,6 @@ public:
     void resume() override;
 
     std::shared_ptr<Cursor> create_hardware_cursor() override;
-
-    std::unique_ptr<renderer::gl::Context> create_gl_context() const override;
 
 private:
     struct OutputInfo : ::mir::X::X11Resources::VirtualOutput
@@ -112,12 +107,10 @@ private:
         std::shared_ptr<DisplayConfigurationOutput> const config;
     };
 
-    helpers::EGLHelper const shared_egl;
+    std::shared_ptr<DisplayPlatform> const parent;
     std::shared_ptr<mir::X::X11Resources> const x11_resources;
-    std::shared_ptr<GLConfig> const gl_config;
     geometry::SizeF pixel_size_mm;
     std::shared_ptr<DisplayReport> const report;
-    std::shared_ptr<AtomicFrame> const last_frame;
 
     std::mutex mutable mutex;
     std::vector<std::unique_ptr<OutputInfo>> outputs;

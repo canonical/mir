@@ -18,6 +18,7 @@
 #define MIR_TEST_DOUBLES_MOCK_DISPLAY_BUFFER_H_
 
 #include <mir/graphics/display_buffer.h>
+#include <mir/graphics/platform.h>
 
 #include <gmock/gmock.h>
 
@@ -28,8 +29,7 @@ namespace test
 namespace doubles
 {
 
-class MockDisplayBuffer : public graphics::DisplayBuffer,
-                          public graphics::NativeDisplayBuffer
+class MockDisplayBuffer : public graphics::DisplayBuffer
 {
 public:
     MockDisplayBuffer()
@@ -37,13 +37,12 @@ public:
         using namespace testing;
         ON_CALL(*this, view_area())
             .WillByDefault(Return(geometry::Rectangle{{0,0},{0,0}}));
-        ON_CALL(*this, native_display_buffer())
-            .WillByDefault(Return(this));
     }
-    MOCK_CONST_METHOD0(view_area, geometry::Rectangle());
-    MOCK_METHOD1(overlay, bool(graphics::RenderableList const&));
-    MOCK_CONST_METHOD0(transformation, glm::mat2());
-    MOCK_METHOD0(native_display_buffer, graphics::NativeDisplayBuffer*());
+    MOCK_METHOD(geometry::Rectangle, view_area, (), (const override));
+    MOCK_METHOD(bool, overlay, (std::vector<graphics::DisplayElement> const&), (override));
+    MOCK_METHOD(void, set_next_image, (std::unique_ptr<graphics::Framebuffer>), (override));
+    MOCK_METHOD(glm::mat2, transformation, (), (const override));
+    MOCK_METHOD(std::shared_ptr<graphics::DisplayPlatform>, owner, (), (const override));
 };
 
 }

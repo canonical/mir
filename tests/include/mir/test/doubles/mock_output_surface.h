@@ -14,29 +14,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_TEST_AS_RENDER_TARGET_H_
-#define MIR_TEST_AS_RENDER_TARGET_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_OUTPUT_SURFACE_H_
+#define MIR_TEST_DOUBLES_MOCK_OUTPUT_SURFACE_H_
 
-#include "mir/graphics/display_buffer.h"
-#include "mir/renderer/gl/render_target.h"
+#include <gmock/gmock.h>
 
-#include <stdexcept>
+#include "mir/renderer/gl/gl_surface.h"
 
-namespace mir
+namespace mir::test::doubles
 {
-namespace test
+class MockOutputSurface : public mir::graphics::gl::OutputSurface
 {
-
-inline auto as_render_target(graphics::DisplayBuffer& display_buffer)
-{
-    auto const render_target =
-        dynamic_cast<renderer::gl::RenderTarget*>(display_buffer.native_display_buffer());
-    if (!render_target)
-        throw std::logic_error{"DisplayBuffer doesn't support GL rendering"};
-    return render_target;
+public:
+    MOCK_METHOD(void, bind, (), (override));
+    MOCK_METHOD(void, make_current, (), (override));
+    MOCK_METHOD(std::unique_ptr<graphics::Framebuffer>, commit, (), (override));
+    MOCK_METHOD(mir::geometry::Size, size, (), (const override));
+    MOCK_METHOD(Layout, layout, (), (const override));
+};
 }
 
-}
-}
-
-#endif
+#endif //MIR_TEST_DOUBLES_MOCK_OUTPUT_SURFACE_H_

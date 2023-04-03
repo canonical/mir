@@ -33,3 +33,9 @@ mir::UniqueModulePtr<mg::Display> mgw::Platform::create_display(
 {
   return mir::make_module_ptr<mgw::Display>(wl_display, gl_config, report);
 }
+
+auto mgw::Platform::maybe_create_interface(
+    const DisplayInterfaceBase::Tag& /*tag*/) -> std::shared_ptr<DisplayInterfaceBase>
+{
+    return {};
+}

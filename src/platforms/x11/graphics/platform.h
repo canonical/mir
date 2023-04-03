@@ -21,6 +21,8 @@
 #include "mir/graphics/platform.h"
 #include "mir/geometry/size.h"
 
+#include <mutex>
+
 namespace mir
 {
 namespace X
@@ -68,7 +70,15 @@ public:
     UniqueModulePtr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) override;
+
+protected:
+    auto maybe_create_interface(DisplayInterfaceBase::Tag const& type_tag)
+        -> std::shared_ptr<DisplayInterfaceBase> override;
+
 private:
+    class EGLDisplayProvider;
+    std::once_flag provider_constructed;
+    std::shared_ptr<EGLDisplayProvider> egl_provider;
     std::shared_ptr<mir::X::X11Resources> const x11_resources;
     std::string const title;
     std::shared_ptr<DisplayReport> const report;

@@ -36,6 +36,12 @@ class NullDisplayPlatform : public graphics::DisplayPlatform
     {
         return mir::make_module_ptr<NullDisplay>();
     }
+
+    auto maybe_create_interface(graphics::DisplayInterfaceBase::Tag const&)
+        -> std::shared_ptr<graphics::DisplayInterfaceBase> override
+    {
+        return nullptr;
+    }
 };
 
 class NullRenderingPlatform : public graphics::RenderingPlatform
@@ -43,6 +49,13 @@ class NullRenderingPlatform : public graphics::RenderingPlatform
 public:
     auto create_buffer_allocator(graphics::Display const&)
         -> mir::UniqueModulePtr<graphics::GraphicBufferAllocator> override
+    {
+        return nullptr;
+    }
+
+protected:
+    auto maybe_create_interface(
+        graphics::RendererInterfaceBase::Tag const&) -> std::shared_ptr<graphics::RendererInterfaceBase> override
     {
         return nullptr;
     }

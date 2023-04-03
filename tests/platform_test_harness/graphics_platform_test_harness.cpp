@@ -26,6 +26,7 @@
 #include "mir/renderer/renderer_factory.h"
 #include "mir/renderer/renderer.h"
 #include "mir/main_loop.h"
+#include "mir/renderer/gl/gl_surface.h"
 
 #include "../../src/include/platform/mir/graphics/pixel_format_utils.h"
 #include "mir/default_server_configuration.h"
@@ -37,7 +38,6 @@
 #include <chrono>
 #include <iostream>
 #include <mir/geometry/displacement.h>
-#include <mir/renderer/gl/render_target.h>
 #include <thread>
 #include <unistd.h>
 
@@ -240,29 +240,6 @@ auto test_display_has_at_least_one_enabled_output(mg::Display& display) -> bool
     return output_count > 0;
 }
 
-auto test_display_buffers_support_gl(mg::Display& display) -> bool
-{
-    bool all_support_gl{true};
-    for_each_display_buffer(
-        display,
-        [&all_support_gl](mg::DisplayBuffer& db)
-        {
-            all_support_gl &=
-                dynamic_cast<mir::renderer::gl::RenderTarget*>(db.native_display_buffer()) != nullptr;
-        });
-
-    if (all_support_gl)
-    {
-        std::cout << "DisplayBuffers support GL rendering" << std::endl;
-    }
-    else
-    {
-        std::cout << "DisplayBuffers do *not* support GL rendering" << std::endl;
-    }
-
-    return all_support_gl;
-}
-
 auto dump_egl_config(mg::Display& display) -> bool
 {
     auto& context_source = dynamic_cast<mir::renderer::gl::ContextSource&>(display);
@@ -279,7 +256,7 @@ auto dump_egl_config(mg::Display& display) -> bool
 
     return true;
 }
-
+/*
 auto hex_to_gl(unsigned char colour) -> GLclampf
 {
     return static_cast<float>(colour) / 255;
@@ -322,7 +299,7 @@ void basic_display_swapping(mg::Display& display)
             }
         });
 }
-
+*/
 std::shared_ptr<mg::Buffer> alloc_and_fill_sw_buffer(
     mg::GraphicBufferAllocator& allocator,
     mir::geometry::Size size,
@@ -391,8 +368,9 @@ auto bounce_within(
 [[maybe_unused]]
 void basic_software_buffer_drawing(
     mg::Display& display,
+    std::shared_ptr<mg::RenderingPlatform> platform,
     mg::GraphicBufferAllocator& allocator,
-    mir::renderer::RendererFactory& factory)
+    mir::renderer::RendererFactory& /*factory*/)
 {
     uint32_t const transparent_orange = 0x002054e9;
     uint32_t const translucent_aubergine = 0xaa77216f;
@@ -407,17 +385,19 @@ void basic_software_buffer_drawing(
     int min_height{std::numeric_limits<int>::max()}, min_width{std::numeric_limits<int>::max()};
     for_each_display_buffer(
         display,
-        [&renderers, &factory, &min_height, &min_width](mg::DisplayBuffer& db)
+        [platform, /*&renderers, &factory,*/ &min_height, &min_width](mg::DisplayBuffer& db)
         {
-            auto const render_target = dynamic_cast<mir::renderer::gl::RenderTarget*>(db.native_display_buffer());
-            if (!render_target)
+            if (auto gl_interface = mg::RenderingPlatform::acquire_interface<mg::GLRenderingProvider>(platform))
             {
-                BOOST_THROW_EXCEPTION(std::logic_error("DisplayBuffer does not support GL rendering"));
+//                auto output_surface = gl_interface->surface_for_output(db, );
+//                renderers.push_back(factory.create_renderer_for(std::move(output_surface), gl_interface));
+                min_height = std::min(min_height, db.view_area().bottom().as_int());
+                min_width = std::min(min_width, db.view_area().right().as_int());
             }
-            renderers.push_back(factory.create_renderer_for(*render_target));
-            renderers.back()->set_viewport(db.view_area());
-            min_height = std::min(min_height, db.view_area().bottom().as_int());
-            min_width = std::min(min_width, db.view_area().right().as_int());
+            else
+            {
+                BOOST_THROW_EXCEPTION((std::runtime_error{"Platform does not support GL"}));
+            }
         });
 
     class DummyRenderable : public mg::Renderable
@@ -564,8 +544,8 @@ int main(int argc, char const** argv)
             {
                 success &= dump_egl_config(*display);
                 success &= test_display_has_at_least_one_enabled_output(*display);
-                success &= test_display_buffers_support_gl(*display);
-                basic_display_swapping(*display);
+//                success &= test_display_buffers_support_gl(*display);
+//                basic_display_swapping(*display);
 
                 // TODO: Update for display/render platform split
 //                auto buffer_allocator = platform->create_buffer_allocator(*display);

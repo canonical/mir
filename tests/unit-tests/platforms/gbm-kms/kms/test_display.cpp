@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <boost/throw_exception.hpp>
+#include "mir/test/doubles/null_gl_config.h"
 #include "src/platforms/gbm-kms/server/kms/platform.h"
 #include "src/platforms/gbm-kms/server/kms/display.h"
 #include "src/platforms/gbm-kms/server/kms/quirks.h"
@@ -22,7 +23,6 @@
 #include "mir/logging/logger.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/default_display_configuration_policy.h"
-#include "mir/renderer/gl/render_target.h"
 #include "mir/time/steady_clock.h"
 #include "mir/glib_main_loop.h"
 #include "mir/fatal.h"
@@ -46,7 +46,6 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/auto_unblock_thread.h"
 #include "mir/test/signal.h"
-#include "mir/test/as_render_target.h"
 
 #include <gtest/gtest.h>
 #include <memory>
@@ -117,24 +116,55 @@ public:
 
     std::shared_ptr<mgg::Platform> create_platform()
     {
+        mir::udev::Context ctx;
+        // Caution: non-local state!
+        // This works because standard-drm-devices contains a udev device with 226:0 and devnode /dev/dri/card0
+        auto device = ctx.char_device_from_devnum(makedev(226, 0));
+       
         return std::make_shared<mgg::Platform>(
+<<<<<<< HEAD
                mir::report::null_display_report(),
                *std::make_shared<mtd::StubConsoleServices>(),
                *std::make_shared<mtd::NullEmergencyCleanup>(),
                mgg::BypassOption::allowed,
                std::make_unique<mgg::Quirks>(mir::options::ProgramOption{}));
+||||||| da02aa60d3
+               mir::report::null_display_report(),
+               std::make_shared<mtd::StubConsoleServices>(),
+               *std::make_shared<mtd::NullEmergencyCleanup>(),
+               mgg::BypassOption::allowed,
+               std::make_unique<mgg::Quirks>(mir::options::ProgramOption{}));
+=======
+            *device,
+            mir::report::null_display_report(),
+            std::make_shared<mtd::StubConsoleServices>(),
+            *std::make_shared<mtd::NullEmergencyCleanup>(),
+            mgg::BypassOption::allowed);
+>>>>>>> new-platform-API
     }
 
     std::shared_ptr<mgg::Display> create_display(
         std::shared_ptr<mgg::Platform> const& platform)
     {
+<<<<<<< HEAD
         return std::make_shared<mgg::Display>(
             platform->drm,
             platform->gbm,
             platform->bypass_option(),
+||||||| da02aa60d3
+        return std::make_shared<mgg::Display>(
+            platform->drm,
+            platform->gbm,
+            platform->vt,
+            platform->bypass_option(),
+=======
+        std::shared_ptr<mg::Display> display = platform->create_display(
+>>>>>>> new-platform-API
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
-            std::make_shared<mtd::StubGLConfig>(),
-            null_report);
+            std::make_shared<mtd::NullGLConfig>()
+        );
+        
+        return std::dynamic_pointer_cast<mgg::Display>(display);
     }
 
     void setup_post_update_expectations()
@@ -535,8 +565,8 @@ TEST_F(MesaDisplayTest, post_update)
     auto display = create_display(create_platform());
 
     display->for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
-        group.for_each_display_buffer([](mg::DisplayBuffer& db) {
-            mt::as_render_target(db)->swap_buffers();
+        group.for_each_display_buffer([](mg::DisplayBuffer&) {
+            // Do thing that submits framebuffer here
         });
         group.post();
     });
@@ -594,8 +624,8 @@ TEST_F(MesaDisplayTest, post_update_flip_failure)
     {
         auto display = create_display(create_platform());
         display->for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
-            group.for_each_display_buffer([](mg::DisplayBuffer& db) {
-                mt::as_render_target(db)->swap_buffers();
+            group.for_each_display_buffer([](mg::DisplayBuffer&) {
+                // Do whatever Framebuffer stuff is necessary…
             });
             group.post();
         });
@@ -631,12 +661,29 @@ TEST_F(MesaDisplayTest, successful_creation_of_display_reports_successful_setup_
 
     auto platform = create_platform();
     auto display = std::make_shared<mgg::Display>(
+<<<<<<< HEAD
                         platform->drm,
                         platform->gbm,
                         platform->bypass_option(),
                         std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
                         std::make_shared<mtd::StubGLConfig>(),
                         mock_report);
+||||||| da02aa60d3
+                        platform->drm,
+                        platform->gbm,
+                        platform->vt,
+                        platform->bypass_option(),
+                        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
+                        std::make_shared<mtd::StubGLConfig>(),
+                        mock_report);
+=======
+        nullptr,
+        platform->drm,
+        platform->vt,
+        platform->bypass_option(),
+        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
+        mock_report);
+>>>>>>> new-platform-API
 }
 
 TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_setup_of_native_resources)
@@ -803,6 +850,7 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
     EXPECT_EQ(expected_call_count, call_count);
 }
 
+<<<<<<< HEAD
 TEST_F(MesaDisplayTest, respects_gl_config)
 {
     using namespace testing;
@@ -859,6 +907,66 @@ TEST_F(MesaDisplayTest, respects_gl_config)
         null_report};
 }
 
+||||||| da02aa60d3
+TEST_F(MesaDisplayTest, respects_gl_config)
+{
+    using namespace testing;
+
+    mtd::MockGLConfig mock_gl_config;
+    EGLint const depth_bits{24};
+    EGLint const stencil_bits{8};
+
+    EXPECT_CALL(mock_gl_config, depth_buffer_bits())
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(depth_bits));
+    EXPECT_CALL(mock_gl_config, stencil_buffer_bits())
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(stencil_bits));
+
+    // We create at least one rendering context, with the requested attributes…
+    EXPECT_CALL(mock_egl,
+                eglChooseConfig(
+                    _,
+                    AllOf(mtd::EGLConfigContainsAttrib(EGL_DEPTH_SIZE, depth_bits),
+                          mtd::EGLConfigContainsAttrib(EGL_STENCIL_SIZE, stencil_bits)),
+                    NotNull(),_,_))
+        .Times(AtLeast(1))
+        .WillRepeatedly(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
+                        SetArgPointee<4>(1),
+                        Return(EGL_TRUE)));
+    //…we *also* create zero-or-more non-rendering contexts; we don't care what they ask for
+    EXPECT_CALL(mock_egl,
+                eglChooseConfig(
+                    _,
+                    Pointee(EGL_NONE),
+                    NotNull(),_,_))
+        .Times(AnyNumber())
+        .WillRepeatedly(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
+                        SetArgPointee<4>(1),
+                        Return(EGL_TRUE)));
+    /* We actually want the default behaviour here, but because we've made an
+     * EXPECT_CALL for eglChooseConfig GMock will ignore the ON_CALL behaviour
+     */
+    EXPECT_CALL(mock_egl, eglChooseConfig(_,_,nullptr,_,_))
+        .Times(AnyNumber())
+        .WillRepeatedly(
+            DoAll(
+                SetArgPointee<4>(1),
+                Return(EGL_TRUE)));
+
+    auto platform = create_platform();
+    mgg::Display display{
+        platform->drm,
+        platform->gbm,
+        platform->vt,
+        platform->bypass_option(),
+        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
+        mir::test::fake_shared(mock_gl_config),
+        null_report};
+}
+
+=======
+>>>>>>> new-platform-API
 TEST_F(MesaDisplayTest, uses_xrgb8888_framebuffer_when_argb8888_is_not_supported_by_EGL)
 {
     using namespace testing;
@@ -878,11 +986,18 @@ TEST_F(MesaDisplayTest, uses_xrgb8888_framebuffer_when_argb8888_is_not_supported
 
     auto platform = create_platform();
     mgg::Display display{
+        {}, // Hopefully DisplayPlatform{nullptr} is enough for now?
         platform->drm,
+<<<<<<< HEAD
         platform->gbm,
+||||||| da02aa60d3
+        platform->gbm,
+        platform->vt,
+=======
+        platform->vt,
+>>>>>>> new-platform-API
         platform->bypass_option(),
         std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
-        std::make_shared<NiceMock<mtd::MockGLConfig>>(),
         null_report};
 }
 
@@ -905,11 +1020,18 @@ TEST_F(MesaDisplayTest, uses_argb8888_framebuffer_when_xrgb8888_is_not_supported
 
     auto platform = create_platform();
     mgg::Display display{
+        {}, // Hopefully DisplayPlatform{nullptr} is enough for now?
         platform->drm,
+<<<<<<< HEAD
         platform->gbm,
+||||||| da02aa60d3
+        platform->gbm,
+        platform->vt,
+=======
+        platform->vt,
+>>>>>>> new-platform-API
         platform->bypass_option(),
         std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
-        std::make_shared<NiceMock<mtd::MockGLConfig>>(),
         null_report};
 }
 

@@ -80,12 +80,17 @@ public:
 
     std::shared_ptr<mg::Platform> create_platform()
     {
-      return std::make_shared<mgg::Platform>(
-              mir::report::null_display_report(),
-              std::make_shared<mtd::StubConsoleServices>(),
-              *std::make_shared<mtd::NullEmergencyCleanup>(),
-              mgg::BypassOption::allowed,
-              std::make_unique<mgg::Quirks>(mtd::MockOption{}));
+        mir::udev::Context ctx;
+        // Caution: non-local state!
+        // This works because standard-drm-devices contains a udev device with 226:0 and devnode /dev/dri/card0
+        auto device = ctx.char_device_from_devnum(makedev(226, 0));
+       
+        return std::make_shared<mgg::Platform>(
+            *device,
+            mir::report::null_display_report(),
+            std::make_shared<mtd::StubConsoleServices>(),
+            *std::make_shared<mtd::NullEmergencyCleanup>(),
+            mgg::BypassOption::allowed);
     }
 
     std::shared_ptr<ml::Logger> logger;

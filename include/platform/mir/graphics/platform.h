@@ -19,10 +19,16 @@
 
 #include <boost/program_options/options_description.hpp>
 #include <any>
+#include <span>
+#include <gbm.h>
 
+#include "mir/graphics/drm_formats.h"
 #include "mir/module_properties.h"
 #include "mir/module_deleter.h"
 #include "mir/udev/wrapper.h"
+#include "mir/renderer/sw/pixel_source.h"
+
+#include <EGL/egl.h>
 
 namespace mir
 {
@@ -38,17 +44,76 @@ namespace options
 class Option;
 class ProgramOption;
 }
+namespace renderer::software
+{
+class WriteMappableBuffer;
+}
 
 /// Graphics subsystem. Mediates interaction between core system and
 /// the graphics environment.
 namespace graphics
 {
 class Buffer;
+class Framebuffer;
 class Display;
+class DisplayBuffer;
 class DisplayReport;
 class DisplayConfigurationPolicy;
 class GraphicBufferAllocator;
 class GLConfig;
+
+class RendererInterfaceBase
+{
+public:
+    class Tag
+    {
+    public:
+        Tag() = default;
+        virtual ~Tag() = default;
+    };
+
+    virtual ~RendererInterfaceBase() = default;
+
+    class FramebufferProvider
+    {
+    public:
+        FramebufferProvider() = default;
+        virtual ~FramebufferProvider() = default;
+
+        FramebufferProvider(FramebufferProvider const&) = delete;
+        auto operator=(FramebufferProvider const&) = delete;
+
+        /**
+         *
+         * \note    The returned Framebuffer may share ownership of the provided Buffer.
+         *          It is not necessary for calling code to retain a reference to the Buffer.
+         * \param buffer
+         * \return
+         */
+        virtual auto buffer_to_framebuffer(std::shared_ptr<Buffer> buffer) -> std::unique_ptr<Framebuffer> = 0;
+    };
+
+    virtual auto make_framebuffer_provider(DisplayBuffer const& target)
+        -> std::unique_ptr<FramebufferProvider> = 0;
+};
+
+namespace gl
+{
+class Texture;
+class OutputSurface;
+}
+
+class GLRenderingProvider : public RendererInterfaceBase
+{
+public:
+    class Tag : public RendererInterfaceBase::Tag
+    {
+    };
+
+    virtual auto as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture> = 0;
+
+    virtual auto surface_for_output(DisplayBuffer& db, GLConfig const& config) -> std::unique_ptr<gl::OutputSurface> = 0;
+};
 
 /**
  * \defgroup platform_enablement Mir platform enablement
@@ -71,11 +136,229 @@ public:
     /**
      * Creates the buffer allocator subsystem.
      */
-    virtual UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator(
-        Display const& output) = 0;
+    virtual UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator(Display const& output) = 0;
+
+    /**
+     * Attempt to acquire a platform-specific interface from this RenderingPlatform
+     *
+     * Any given platform is not guaranteed to implement any specific interface,
+     * and the set of supported interfaces may depend on the runtime environment.
+     *
+     * Since this may result in a runtime probe the call may be costly, and the
+     * result should be saved rather than re-acquiring an interface each time.
+     *
+     * \tparam Interface
+     * \return  On success: an occupied std::shared_ptr<Interface>
+     *          On failure: std::shared_ptr<Interface>{nullptr}
+     */
+    template<typename Interface>
+    static auto acquire_interface(std::shared_ptr<RenderingPlatform> platform) -> std::shared_ptr<Interface>
+    {
+        static_assert(
+            std::is_convertible_v<Interface*, RendererInterfaceBase*>,
+            "Can only acquire a Renderer interface; Interface must implement RendererInterfaceBase");
+
+        if (auto const base_interface = platform->maybe_create_interface(typename Interface::Tag{}))
+        {
+            if (auto const requested_interface = std::dynamic_pointer_cast<Interface>(base_interface))
+            {
+                return requested_interface;
+            }
+            BOOST_THROW_EXCEPTION((
+                std::logic_error{
+                    "Implementation error! Platform returned object that does not support requested interface"}));
+        }
+        return nullptr;
+    }
+
+protected:
+    /**
+     * Acquire a specific hardware interface
+     *
+     * This should perform any runtime checks necessary to verify the requested interface is
+     * expected to work and return a pointer to an implementation of that interface.
+     *
+     * This function is guaranteed to be called with `this` managed by a `shared_ptr`; if
+     * the returned value needs to share ownership with `this`, calls to std::shared_from_this
+     * can be expected to work.
+     *
+     * \param type_tag  [in]    An instance of the Tag type for the requested interface.
+     *                          Implementations are expected to dynamic_cast<> this to
+     *                          discover the specific interface being requested.
+     * \return      A pointer to an implementation of the RenderInterfaceBase-derived
+     *              interface that corresponds to the most-derived type of tag_type.
+     */
+    virtual auto maybe_create_interface(
+        RendererInterfaceBase::Tag const& type_tag) -> std::shared_ptr<RendererInterfaceBase> = 0;
 };
 
-class DisplayPlatform
+class DisplayInterfaceBase
+{
+public:
+    class Tag
+    {
+    public:
+        Tag() = default;
+        virtual ~Tag() = default;
+    };
+
+    virtual ~DisplayInterfaceBase() = default;
+};
+
+
+class Framebuffer
+{
+public:
+    Framebuffer() = default;
+    virtual ~Framebuffer() = default;
+};
+
+
+class DumbDisplayProvider : public DisplayInterfaceBase
+{
+public:
+    class Tag : public DisplayInterfaceBase::Tag
+    {
+    };
+
+    class MappableFB :
+        public Framebuffer,
+        public mir::renderer::software::WriteMappableBuffer
+    {
+    public:
+        MappableFB() = default;
+        virtual ~MappableFB() override = default;
+    };
+
+    class Allocator
+    {
+    public:
+        Allocator() = default;
+        virtual ~Allocator() = default;
+
+        /**
+         * Acquire a buffer for rendering into
+         *
+         * This
+         *
+         * \return
+         */
+        virtual auto acquire() -> std::unique_ptr<MappableFB> = 0;
+    };
+
+    DumbDisplayProvider() = default;
+
+    virtual auto allocator_for_db(DisplayBuffer const& db)
+        -> std::unique_ptr<Allocator> = 0;
+};
+
+class GBMDisplayProvider : public DisplayInterfaceBase
+{
+public:
+    class Tag : public DisplayInterfaceBase::Tag
+    {
+    };
+
+    /**
+     * Check if the provided UDev device is the same hardware device as this display
+     *
+     * This can be either because they point to the same device node, or because
+     * the provided device is a Rendernode associated with the display hardware
+     */
+    virtual auto is_same_device(mir::udev::Device const& render_device) const -> bool = 0;
+ 
+    /**
+     * Check if the provided DisplayBuffer is driven by this device
+     */
+    virtual auto is_same_device(DisplayBuffer const& db) const -> bool = 0;
+
+    /**
+     * Get the GBM device for this display
+     */
+    virtual auto gbm_device() const -> std::shared_ptr<struct gbm_device> = 0;
+
+   /**
+    * Formats supported for output
+    */
+    virtual auto supported_formats() const -> std::vector<DRMFormat> = 0;
+
+    /**
+     * Modifiers supported
+     */
+    virtual auto modifiers_for_format(DRMFormat format) const -> std::vector<uint64_t> = 0;
+
+    class GBMSurface
+    {
+    public:
+        GBMSurface() = default;
+        virtual ~GBMSurface() = default;
+
+        virtual operator gbm_surface*() const = 0;
+
+        /**
+         * Commit the current EGL front buffer as a KMS-displayable Framebuffer
+         *
+         * Like the underlying gbm_sufrace_lock_front_buffer GBM API, it is a this
+         * must be called after at least one call to eglSwapBuffers, and at most
+         * once per eglSwapBuffers call.
+         *
+         * The Framebuffer should not be retained; a GBMSurface has a limited number
+         * of buffers available and attempting to claim a framebuffer when no buffers
+         * are free will result in an EBUSY std::system_error being raised.
+         */
+        virtual auto claim_framebuffer() -> std::unique_ptr<Framebuffer> = 0;
+    };
+
+    virtual auto make_surface(geometry::Size size, DRMFormat format, std::span<uint64_t> modifiers) -> std::unique_ptr<GBMSurface> = 0;
+};
+
+class DmaBufBuffer;
+
+class DmaBufDisplayProvider : public DisplayInterfaceBase
+{
+public:
+    class Tag : public DisplayInterfaceBase::Tag
+    {
+    };
+
+    virtual auto framebuffer_for(std::shared_ptr<DmaBufBuffer> buffer)
+        -> std::unique_ptr<Framebuffer> = 0;
+};
+
+#ifndef EGLStreamKHR
+typedef void* EGLStreamKHR;
+#endif
+
+class EGLStreamDisplayProvider : public DisplayInterfaceBase
+{
+public:
+    class Tag : public DisplayInterfaceBase::Tag
+    {
+    };
+
+    virtual auto claim_stream_for_output(DisplayBuffer& db) -> EGLStreamKHR = 0;
+};
+
+class GenericEGLDisplayProvider : public DisplayInterfaceBase
+{
+public:
+    class Tag : public DisplayInterfaceBase::Tag
+    {
+    };
+
+    virtual auto get_egl_display() -> EGLDisplay = 0;
+
+    class EGLFramebuffer : public graphics::Framebuffer
+    {
+    public:
+        virtual void make_current() = 0;
+        virtual auto clone_handle() -> std::unique_ptr<EGLFramebuffer> = 0;
+    };
+
+    virtual auto framebuffer_for_db(DisplayBuffer& db, GLConfig const& config, EGLContext share_context) -> std::unique_ptr<EGLFramebuffer> = 0;
+};
+
+class DisplayPlatform : public std::enable_shared_from_this<DisplayPlatform>
 {
 public:
     DisplayPlatform() = default;
@@ -90,6 +373,58 @@ public:
     virtual UniqueModulePtr<Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) = 0;
+
+    /**
+     * Attempt to acquire a platform-specific interface from this DisplayPlatform
+     *
+     * Any given platform is not guaranteed to implement any specific interface,
+     * and the set of supported interfaces may depend on the runtime environment.
+     *
+     * Since this may result in a runtime probe the call may be costly, and the
+     * result should be saved rather than re-acquiring an interface each time.
+     *
+     * \tparam Interface
+     * \return  On success: an occupied std::shared_ptr<Interface>
+     *          On failure: std::shared_ptr<Interface>{nullptr}
+     */
+    template<typename Interface>
+    static auto acquire_interface(std::shared_ptr<DisplayPlatform> const& platform) -> std::shared_ptr<Interface>
+    {
+        static_assert(
+            std::is_convertible_v<Interface*, DisplayInterfaceBase*>,
+            "Can only acquire a Display interface; Interface must implement DisplayInterfaceBase");
+
+        if (auto const base_interface = platform->maybe_create_interface(typename Interface::Tag{}))
+        {
+            if (auto const requested_interface = std::dynamic_pointer_cast<Interface>(base_interface))
+            {
+                return requested_interface;
+            }
+            BOOST_THROW_EXCEPTION((std::logic_error{
+                "Implementation error! Platform returned object that does not support requested interface"}));
+        }
+        return nullptr;
+    }
+
+protected:
+    /**
+     * Acquire a specific hardware interface
+     *
+     * This should perform any runtime checks necessary to verify the requested interface is
+     * expected to work and return a pointer to an implementation of that interface.
+     *
+     * This function is guaranteed to be called with `this` managed by a `shared_ptr`; if
+     * the returned value needs to share ownership with `this`, calls to std::shared_from_this
+     * can be expected to work.
+     *
+     * \param type_tag  [in]    An instance of the Tag type for the requested interface.
+     *                          Implementations are expected to dynamic_cast<> this to
+     *                          discover the specific interface being requested.
+     * \return      A pointer to an implementation of the RenderInterfaceBase-derived
+     *              interface that corresponds to the most-derived type of tag_type.
+     */
+    virtual auto maybe_create_interface(DisplayInterfaceBase::Tag const& type_tag)
+        -> std::shared_ptr<DisplayInterfaceBase> = 0;
 };
 
 /**

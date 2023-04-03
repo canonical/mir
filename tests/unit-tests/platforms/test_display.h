@@ -22,17 +22,6 @@
 #include "mir/renderer/gl/context_source.h"
 #include "mir/test/display_config_matchers.h"
 
-namespace
-{
-auto as_context_source(mg::Display* display)
-{
-    auto const ctx = dynamic_cast<mir::renderer::gl::ContextSource*>(display);
-    if (!ctx)
-        BOOST_THROW_EXCEPTION(std::logic_error("Display does not support GL rendering"));
-    return ctx;
-}
-}
-
 TEST_F(DisplayTestGeneric, configure_disallows_invalid_configuration)
 {
     using namespace testing;
@@ -46,77 +35,6 @@ TEST_F(DisplayTestGeneric, configure_disallows_invalid_configuration)
 
     // Determining what counts as a valid configuration is a much trickier
     // platform-dependent exercise, so won't be tested here.
-}
-
-#ifdef MIR_DISABLE_TESTS_ON_X11
-TEST_F(DisplayTestGeneric, DISABLED_gl_context_make_current_uses_shared_context)
-#else
-TEST_F(DisplayTestGeneric, gl_context_make_current_uses_shared_context)
-#endif
-{
-    using namespace testing;
-    EGLContext const shared_context{reinterpret_cast<EGLContext>(0x111)};
-    EGLContext const display_buffer_context{reinterpret_cast<EGLContext>(0x222)};
-    EGLContext const new_context{reinterpret_cast<EGLContext>(0x333)};
-
-    EXPECT_CALL(mock_egl, eglCreateContext(_,_,EGL_NO_CONTEXT,_))
-        .WillOnce(Return(shared_context));
-    EXPECT_CALL(mock_egl, eglCreateContext(_,_,shared_context,_))
-        .WillOnce(Return(display_buffer_context));
-
-    auto display = create_display();
-
-    Mock::VerifyAndClearExpectations(&mock_egl);
-
-    {
-        InSequence s;
-        EXPECT_CALL(mock_egl, eglCreateContext(_,_,shared_context,_))
-            .WillOnce(Return(new_context));
-        EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,new_context));
-        EXPECT_CALL(mock_egl, eglGetCurrentContext())
-           .WillOnce(Return(new_context));
-        EXPECT_CALL(mock_egl, eglMakeCurrent(_,EGL_NO_SURFACE,EGL_NO_SURFACE,EGL_NO_CONTEXT));
-
-        auto const gl_ctx = as_context_source(display.get())->create_gl_context();
-
-        ASSERT_NE(nullptr, gl_ctx);
-
-        gl_ctx->make_current();
-    }
-
-    Mock::VerifyAndClearExpectations(&mock_egl);
-
-    /* Possible display shutdown sequence, depending on the platform */
-    EXPECT_CALL(mock_egl, eglGetCurrentContext())
-        .Times(AtLeast(0));
-    EXPECT_CALL(mock_egl, eglMakeCurrent(_,EGL_NO_SURFACE,EGL_NO_SURFACE,EGL_NO_CONTEXT))
-        .Times(AtLeast(0));
-}
-
-TEST_F(DisplayTestGeneric, gl_context_releases_context)
-{
-    using namespace testing;
-
-    auto display = create_display();
-
-    {
-        InSequence s;
-        EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,Ne(EGL_NO_CONTEXT)));
-        EXPECT_CALL(mock_egl, eglMakeCurrent(_,EGL_NO_SURFACE,EGL_NO_SURFACE,EGL_NO_CONTEXT));
-
-        auto const gl_ctx = as_context_source(display.get())->create_gl_context();
-
-        ASSERT_NE(nullptr, gl_ctx);
-
-        gl_ctx->make_current();
-        gl_ctx->release_current();
-
-        Mock::VerifyAndClearExpectations(&mock_egl);
-    }
-
-    /* Possible display shutdown sequence, depending on the platform */
-    EXPECT_CALL(mock_egl, eglMakeCurrent(_,EGL_NO_SURFACE,EGL_NO_SURFACE,EGL_NO_CONTEXT))
-        .Times(AtLeast(0));
 }
 
 #ifdef MIR_DISABLE_TESTS_ON_X11

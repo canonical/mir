@@ -19,6 +19,7 @@
 
 #include "mir/renderer/renderer.h"
 #include "mir/graphics/renderable.h"
+#include "mir/graphics/buffer.h"
 #include <thread>
 
 namespace mir
@@ -35,12 +36,14 @@ public:
     void set_output_transform(glm::mat2 const&) override {}
     void suspend() override {}
 
-    void render(graphics::RenderableList const& renderables) const override
+    auto render(graphics::RenderableList const& renderables) const -> std::unique_ptr<graphics::Framebuffer> override
     {
         for (auto const& r : renderables)
             r->buffer(); // We need to consume a buffer to unblock client tests
         // Yield to reduce runtime under valgrind
         std::this_thread::yield();
+
+        return {};
     }
 };
 

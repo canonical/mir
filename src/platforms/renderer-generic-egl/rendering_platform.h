@@ -19,10 +19,10 @@
 
 #include "mir/graphics/platform.h"
 
+#include <EGL/egl.h>
+
 namespace mir
 {
-class EmergencyCleanupRegistry;
-class ConsoleServices;
 
 namespace graphics::egl::generic
 {
@@ -30,10 +30,18 @@ namespace graphics::egl::generic
 class RenderingPlatform : public graphics::RenderingPlatform
 {
 public:
-    explicit RenderingPlatform();
+    explicit RenderingPlatform(std::vector<std::shared_ptr<DisplayPlatform>> const& displays);
 
     auto create_buffer_allocator(
         graphics::Display const& output) -> UniqueModulePtr<graphics::GraphicBufferAllocator> override;
+
+protected:
+    auto maybe_create_interface(
+        RendererInterfaceBase::Tag const& type_tag) -> std::shared_ptr<RendererInterfaceBase> override;
+
+private:
+    EGLDisplay const dpy;
+    EGLContext const ctx;
 };
 
 }

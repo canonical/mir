@@ -4,6 +4,8 @@ add_library(
   mirsharedgbmservercommon-static STATIC
 
   display_helpers.cpp
+  buffer_allocator.cpp
+  buffer_allocator.h
 )
 
 target_include_directories(

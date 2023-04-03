@@ -40,7 +40,6 @@ public:
     MOCK_METHOD(void, register_configuration_change_handler, (graphics::EventHandlerRegister&, graphics::DisplayConfigurationChangeHandler const&), (override));
     MOCK_METHOD(void, pause, (), (override));
     MOCK_METHOD(void, resume, (), (override));
-    MOCK_METHOD(std::unique_ptr<renderer::gl::Context>, create_gl_context, (), (const override));
     MOCK_METHOD(std::shared_ptr<graphics::Cursor>, create_hardware_cursor, (), (override));
     MOCK_METHOD(graphics::Frame, last_frame_on, (unsigned), (const override));
 };

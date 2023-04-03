@@ -123,12 +123,6 @@ auto make_safe_mock_display() -> std::unique_ptr<mtd::MockDisplay>
             {
                 return std::make_unique<mtd::StubDisplayConfig>();
             });
-    ON_CALL(*display, create_gl_context())
-        .WillByDefault(
-            []()
-            {
-                return std::make_unique<mtd::NullGLContext>();
-            });
     return display;
 }
 }

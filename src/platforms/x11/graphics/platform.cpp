@@ -16,6 +16,10 @@
 
 #include "platform.h"
 #include "display.h"
+#include "display_buffer.h"
+#include "egl_helper.h"
+#include "mir/graphics/egl_error.h"
+#include "mir/graphics/platform.h"
 #include "mir/options/option.h"
 
 
@@ -119,7 +123,43 @@ mgx::Platform::Platform(std::shared_ptr<mir::X::X11Resources> const& x11_resourc
 
 mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
-    std::shared_ptr<GLConfig> const& gl_config)
+    std::shared_ptr<GLConfig> const& /*gl_config*/)
 {
-    return make_module_ptr<mgx::Display>(x11_resources, title, output_sizes, initial_conf_policy, gl_config, report);
+    return make_module_ptr<mgx::Display>(shared_from_this(), x11_resources, title, output_sizes, initial_conf_policy, report);
+}
+
+class mgx::Platform::EGLDisplayProvider : public mg::GenericEGLDisplayProvider
+{
+public:
+    EGLDisplayProvider(::Display* const x_dpy)
+        : egl_helper{x_dpy}
+    {
+    }
+
+    auto get_egl_display() -> EGLDisplay
+    {
+        return egl_helper.display();
+    }
+
+    auto framebuffer_for_db(mg::DisplayBuffer& db, mg::GLConfig const& config, EGLContext share_context)
+        -> std::unique_ptr<mg::GenericEGLDisplayProvider::EGLFramebuffer>
+    {
+        auto& x11db = dynamic_cast<mgx::DisplayBuffer&>(db);
+        return egl_helper.framebuffer_for_window(config, x11db.x11_window(), share_context);   
+    }    
+private:
+    mgx::helpers::EGLHelper egl_helper;
+};
+
+auto mgx::Platform::maybe_create_interface(mir::graphics::DisplayInterfaceBase::Tag const& type_tag)
+    -> std::shared_ptr<DisplayInterfaceBase>
+{
+    if (dynamic_cast<mg::GenericEGLDisplayProvider::Tag const*>(&type_tag))
+    {
+        std::call_once(
+            provider_constructed, 
+            [this]() { egl_provider = std::make_shared<EGLDisplayProvider>(x11_resources->xlib_dpy); });
+        return egl_provider;
+    }
+    return {};
 }

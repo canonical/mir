@@ -21,11 +21,19 @@
 
 #include "platform_test_harness.h"
 
+namespace mir
+{
+class SharedLibrary;
+}
+
 class RenderingPlatformTest : public testing::TestWithParam<mir::test::PlatformTestHarness*>
 {
 public:
     RenderingPlatformTest();
     virtual ~RenderingPlatformTest() override;
+
+protected:
+    std::shared_ptr<mir::SharedLibrary> platform_module;
 };
 
 #endif //MIR_TEST_RENDERING_PLATFORM_H

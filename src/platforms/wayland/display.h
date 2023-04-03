@@ -86,8 +86,6 @@ public:
 
     auto create_hardware_cursor() -> std::shared_ptr<Cursor>override;
 
-    auto create_gl_context() const -> std::unique_ptr<mir::renderer::gl::Context> override;
-
 private:
 
     void keyboard_key(wl_keyboard* keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state) override;

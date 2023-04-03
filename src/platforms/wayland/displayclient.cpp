@@ -16,6 +16,7 @@
  */
 
 #include "displayclient.h"
+#include "mir/graphics/platform.h"
 #include "mir/graphics/egl_error.h"
 #include <mir/graphics/pixel_format_utils.h>
 
@@ -39,8 +40,6 @@ namespace geom = mir::geometry;
 
 class mgw::DisplayClient::Output  :
     public DisplaySyncGroup,
-    public renderer::gl::RenderTarget,
-    public NativeDisplayBuffer,
     public DisplayBuffer
 {
 public:
@@ -60,7 +59,7 @@ public:
     geom::Size output_size;
 
     wl_output* const output;
-    DisplayClient* const owner;
+    DisplayClient* const owner_;
 
     wl_surface* const surface;
     xdg_surface* shell_surface{nullptr};
@@ -99,16 +98,13 @@ public:
 
     // DisplayBuffer implementation
     auto view_area() const -> geometry::Rectangle override;
-    bool overlay(RenderableList const& renderlist) override;
+    bool overlay(std::vector<DisplayElement> const& renderlist) override;
     auto transformation() const -> glm::mat2 override;
-    auto native_display_buffer() -> NativeDisplayBuffer* override;
+    auto owner() const -> std::shared_ptr<DisplayPlatform> override;
+    void set_next_image(std::unique_ptr<Framebuffer> content) override;
 
-    // RenderTarget implementation
-    auto size() const -> geom::Size override;
-    void make_current() override;
-    void release_current() override;
-    void swap_buffers() override;
-    void bind() override;
+private:
+    std::unique_ptr<Framebuffer> next_frame;
 };
 
 namespace
@@ -125,7 +121,7 @@ mgw::DisplayClient::Output::Output(
     DisplayClient* owner,
     std::function<void()> on_change) :
     output{output},
-    owner{owner},
+    owner_{owner},
     surface{wl_compositor_create_surface(owner->compositor)},
     on_change{std::move(on_change)}
 {
@@ -176,7 +172,7 @@ mgw::DisplayClient::Output::~Output()
 
     if (eglsurface != EGL_NO_SURFACE)
     {
-        eglDestroySurface(owner->egldisplay, eglsurface);
+        eglDestroySurface(owner_->egldisplay, eglsurface);
     }
 
     if (egl_window != nullptr)
@@ -186,7 +182,7 @@ mgw::DisplayClient::Output::~Output()
 
     if (eglctx != EGL_NO_CONTEXT)
     {
-        eglDestroyContext(owner->egldisplay, eglctx);
+        eglDestroyContext(owner_->egldisplay, eglctx);
     }
 }
 
@@ -290,7 +286,7 @@ void mgw::DisplayClient::Output::done()
         static xdg_surface_listener const shell_surface_listener{
             [](void* self, auto, auto... args) { static_cast<Output*>(self)->surface_configure(args...); },
         };
-        shell_surface = xdg_wm_base_get_xdg_surface(owner->shell, surface);
+        shell_surface = xdg_wm_base_get_xdg_surface(owner_->shell, surface);
         xdg_surface_add_listener(shell_surface, &shell_surface_listener, this);
 
         static xdg_toplevel_listener const shell_toplevel_listener{
@@ -331,11 +327,7 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
     if (!has_initialized)
     {
         egl_window = wl_egl_window_create(surface, output_size.width.as_int(), output_size.height.as_int());
-        eglsurface = eglCreateWindowSurface(
-            owner->egldisplay,
-            owner->eglconfig,
-            reinterpret_cast<EGLNativeWindowType>(egl_window),
-            nullptr);
+        eglsurface = eglCreatePlatformWindowSurface(owner_->egldisplay, owner_->eglconfig, egl_window, nullptr);
         has_initialized = true;
     }
     else if (size_is_changed)
@@ -355,54 +347,6 @@ void mgw::DisplayClient::Output::for_each_display_buffer(std::function<void(Disp
 
 void mgw::DisplayClient::Output::post()
 {
-}
-
-auto mgw::DisplayClient::Output::recommended_sleep() const -> std::chrono::milliseconds
-{
-    return std::chrono::milliseconds{0};
-}
-
-auto mgw::DisplayClient::Output::view_area() const -> geometry::Rectangle
-{
-    return dcout.extents();
-}
-
-bool mgw::DisplayClient::Output::overlay(mir::graphics::RenderableList const&)
-{
-    return false;
-}
-
-auto mgw::DisplayClient::Output::transformation() const -> glm::mat2
-{
-    return glm::mat2{1};
-}
-
-auto mgw::DisplayClient::Output::native_display_buffer() -> NativeDisplayBuffer*
-{
-    return this;
-}
-
-auto mgw::DisplayClient::Output::size() const -> geom::Size
-{
-    return output_size;
-}
-
-void mgw::DisplayClient::Output::make_current()
-{
-    if (eglctx == EGL_NO_CONTEXT)
-        eglctx = eglCreateContext(owner->egldisplay, owner->eglconfig, owner->eglctx, ctxattribs);
-
-    if (!eglMakeCurrent(owner->egldisplay, eglsurface, eglsurface, eglctx))
-        BOOST_THROW_EXCEPTION(egl_error("Can't eglMakeCurrent"));
-}
-
-void mgw::DisplayClient::Output::release_current()
-{
-    eglMakeCurrent(owner->egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-}
-
-void mgw::DisplayClient::Output::swap_buffers()
-{
     struct FrameSync
     {
         explicit FrameSync(wl_surface* surface):
@@ -416,7 +360,7 @@ void mgw::DisplayClient::Output::swap_buffers()
             static struct wl_callback_listener const frame_listener =
                 {
                     [](void* data, auto... args)
-                        { static_cast<FrameSync*>(data)->frame_done(args...); },
+                    { static_cast<FrameSync*>(data)->frame_done(args...); },
                 };
             wl_callback_add_listener(callback, &frame_listener, this);
         }
@@ -450,23 +394,49 @@ void mgw::DisplayClient::Output::swap_buffers()
     };
 
     auto const frame_sync = std::make_shared<FrameSync>(surface);
-    owner->spawn([frame_sync]()
-        {
-            frame_sync->init();
-        });
+    owner_->spawn([frame_sync]()
+                  {
+                      frame_sync->init();
+                  });
 
     // Avoid throttling compositing by blocking in eglSwapBuffers().
     // Instead we use the frame "done" notification.
-    eglSwapInterval(owner->egldisplay, 0);
+    eglSwapInterval(owner_->egldisplay, 0);
 
-    if (eglSwapBuffers(owner->egldisplay, eglsurface) != EGL_TRUE)
+    if (eglSwapBuffers(owner_->egldisplay, eglsurface) != EGL_TRUE)
         BOOST_THROW_EXCEPTION(egl_error("Failed to perform buffer swap"));
 
     frame_sync->wait_for_done();
 }
 
-void mgw::DisplayClient::Output::bind()
+auto mgw::DisplayClient::Output::recommended_sleep() const -> std::chrono::milliseconds
 {
+    return std::chrono::milliseconds{0};
+}
+
+auto mgw::DisplayClient::Output::view_area() const -> geometry::Rectangle
+{
+    return dcout.extents();
+}
+
+bool mgw::DisplayClient::Output::overlay(std::vector<DisplayElement> const&)
+{
+    return false;
+}
+
+auto mgw::DisplayClient::Output::transformation() const -> glm::mat2
+{
+    return glm::mat2{1};
+}
+
+auto mgw::DisplayClient::Output::owner() const -> std::shared_ptr<DisplayPlatform>
+{
+    return {};
+}
+
+void mgw::DisplayClient::Output::set_next_image(std::unique_ptr<Framebuffer> content)
+{
+    next_frame = std::move(content);
 }
 
 mgw::DisplayClient::DisplayClient(

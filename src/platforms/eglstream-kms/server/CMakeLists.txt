@@ -13,17 +13,8 @@ add_library(mirplatformgraphicseglstreamkmsobjects OBJECT
   platform.cpp
   buffer_allocator.cpp
   buffer_allocator.h
-  display.cpp
-  display.h
-  kms_display_configuration.h
-  kms_display_configuration.cpp
-  egl_output.h
-  egl_output.cpp
   utils.cpp
   utils.h
-  drm_event_handler.h
-  threaded_drm_event_handler.h
-  threaded_drm_event_handler.cpp
 )
 
 target_link_libraries(mirplatformgraphicseglstreamkmsobjects

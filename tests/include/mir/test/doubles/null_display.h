@@ -60,11 +60,6 @@ class NullDisplay : public graphics::Display
     {
          return {}; 
     }
-    std::unique_ptr<renderer::gl::Context> create_gl_context() const override
-    {
-        return std::unique_ptr<NullGLContext>{new NullGLContext()};
-    }
-
     NullDisplaySyncGroup group;
 };
 

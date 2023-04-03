@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/graphics/platform.h"
 #define MIR_LOG_COMPONENT "gbm-kms"
 #include "mir/log.h"
 
@@ -52,7 +53,7 @@ char const* bypass_option_name{"bypass"};
 }
 
 mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
-    mg::SupportedDevice const&,
+    mg::SupportedDevice const& device,
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mir::ConsoleServices> const& console,
@@ -70,10 +71,19 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     if (!options->get<bool>(bypass_option_name))
         bypass_option = mgg::BypassOption::prohibited;
 
-    auto quirks = std::make_unique<mgg::Quirks>(*options);
-
     return mir::make_module_ptr<mgg::Platform>(
-        report, *console, *emergency_cleanup_registry, bypass_option, std::move(quirks));
+        *device.device, report, *console, *emergency_cleanup_registry, bypass_option);
+}
+
+auto create_rendering_platform(
+    mg::SupportedDevice const& device,
+    std::vector<std::shared_ptr<mg::DisplayPlatform>> const& displays,
+    mo::Option const&,
+    mir::EmergencyCleanupRegistry&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
+{
+    mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
+
+    return mir::make_module_ptr<mgg::RenderingPlatform>(*device.device, displays);
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& config)

@@ -17,7 +17,7 @@
 #ifndef MIR_GRAPHICS_GBM_EGL_HELPER_H_
 #define MIR_GRAPHICS_GBM_EGL_HELPER_H_
 
-#include "display_helpers.h"
+#include "../display_helpers.h"
 #include "mir/graphics/egl_extensions.h"
 #include <stdexcept>
 #include <EGL/egl.h>
@@ -49,13 +49,14 @@ public:
 
     void setup(GBMHelper const& gbm);
     void setup(GBMHelper const& gbm, EGLContext shared_context);
-    void setup(GBMHelper const& gbm, gbm_surface* surface_gbm, uint32_t gbm_format, EGLContext shared_context, bool owns_egl);
+    void setup(gbm_device* const device, gbm_surface* surface_gbm, uint32_t gbm_format, EGLContext shared_context, bool owns_egl);
 
     bool swap_buffers();
     bool make_current() const;
     bool release_current() const;
 
     EGLContext context() const { return egl_context; }
+    auto display() const -> EGLDisplay { return egl_display; }
 
     void report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)>);
 

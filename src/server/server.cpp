@@ -24,7 +24,6 @@
 #include "mir/input/composite_event_filter.h"
 #include "mir/input/event_filter.h"
 #include "mir/options/default_configuration.h"
-#include "mir/renderer/gl/render_target.h"
 #include "mir/default_server_configuration.h"
 #include "mir/logging/logger.h"
 #include "mir/log.h"
