@@ -297,11 +297,6 @@ bool mgx::Display::apply_if_configuration_preserves_display_buffers(
     return false;
 }
 
-mg::Frame mgx::Display::last_frame_on(unsigned) const
-{
-    return last_frame->load();
-}
-
 mgx::Display::OutputInfo::OutputInfo(
     Display* owner,
     std::unique_ptr<X11Window> window,

@@ -292,14 +292,6 @@ auto mg::MultiplexingDisplay::create_hardware_cursor() -> std::shared_ptr<Cursor
     return {};
 }
 
-auto mg::MultiplexingDisplay::last_frame_on(unsigned output_id) const -> Frame
-{
-    auto optimise_this_out = configuration();
-    auto& real_conf = dynamic_cast<CompositeDisplayConfiguration const&>(*optimise_this_out);
-    auto const [idx, internal_id] = real_conf.index_for_id(mg::DisplayConfigurationOutputId{static_cast<int>(output_id)});
-    return displays[idx]->last_frame_on(internal_id.as_value());
-}
-
 auto mg::MultiplexingDisplay::create_gl_context() const -> std::unique_ptr<renderer::gl::Context>
 {
     // This will disappear in the New Platform API™; just return the first underlying Display's context for now.

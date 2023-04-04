@@ -592,69 +592,6 @@ TEST(MultiplexingDisplay, delegates_registering_configuration_change_handlers)
     display.register_configuration_change_handler(ml, [](){});
 }
 
-TEST(MultiplexingDisplay, delegates_last_frame_on_to_appropriate_platform)
-{
-    DisplayConfigurationOutputGenerator gen;
-    mg::DisplayConfigurationCardId const card1{5}, card2{2};
-
-    auto d1 = std::make_unique<NiceMock<mtd::MockDisplay>>();
-    auto d2 = std::make_unique<NiceMock<mtd::MockDisplay>>();
-
-    auto d1_conf = std::make_unique<mtd::StubDisplayConfig>(
-        std::vector<mg::DisplayConfigurationOutput>{
-            gen.generate_output(card1),
-            gen.generate_output(card1),
-            gen.generate_output(card1),
-            gen.generate_output(card1)
-        });
-
-    auto d2_conf = std::make_unique<mtd::StubDisplayConfig>(
-        std::vector<mg::DisplayConfigurationOutput>{
-            gen.generate_output(card2),
-            gen.generate_output(card2),
-            gen.generate_output(card2)
-        });
-
-    ON_CALL(*d1, configuration())
-        .WillByDefault(
-            Invoke(
-                [&d1_conf]()
-                {
-                    return d1_conf->clone();
-                }));
-    ON_CALL(*d2, configuration())
-        .WillByDefault(
-            Invoke(
-                [&d2_conf]()
-                {
-                    return d2_conf->clone();
-                }));
-
-    // Each output can expect to get exactly one call.
-    d1->configuration()->for_each_output(
-        [&d1](mg::DisplayConfigurationOutput const& output)
-        {
-            EXPECT_CALL(*d1, last_frame_on(Eq(output.id.as_value()))).Times(1);
-        });
-    d2->configuration()->for_each_output(
-        [&d2](mg::DisplayConfigurationOutput const& output)
-        {
-            EXPECT_CALL(*d2, last_frame_on(Eq(output.id.as_value()))).Times(1);
-        });
-
-    std::vector<std::unique_ptr<mg::Display>> displays;
-    displays.push_back(std::move(d1));
-    displays.push_back(std::move(d2));
-
-    mtd::NullDisplayConfigurationPolicy policy;
-    mg::MultiplexingDisplay display{std::move(displays), policy};
-    display.configuration()->for_each_output(
-        [&display](mg::UserDisplayConfigurationOutput& output)
-        {
-            display.last_frame_on(output.id.as_value());
-        });
-}
-
 TEST(MultiplexingDisplay, delegates_pause_resume_to_underlying_platforms)
 {
     std::vector<std::unique_ptr<mg::Display>> mock_displays;

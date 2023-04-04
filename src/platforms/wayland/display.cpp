@@ -150,12 +150,6 @@ bool mgw::Display::apply_if_configuration_preserves_display_buffers(DisplayConfi
     return false;
 }
 
-auto mgw::Display::last_frame_on(unsigned) const -> Frame
-{
-    fatal_error(__PRETTY_FUNCTION__);
-    return {};
-}
-
 auto mgw::Display::create_gl_context() const -> std::unique_ptr<mrg::Context>
 {
     EGLint const static context_attr[] = {
