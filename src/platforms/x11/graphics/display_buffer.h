@@ -51,7 +51,6 @@ public:
             geometry::Rectangle const& view_area,
             geometry::Size const& window_size,
             EGLContext const shared_context,
-            std::shared_ptr<AtomicFrame> const& f,
             std::shared_ptr<DisplayReport> const& r,
             GLConfig const& gl_config);
 
@@ -80,13 +79,7 @@ private:
     geometry::Size window_size;
     glm::mat2 transform;
     helpers::EGLHelper const egl;
-    std::shared_ptr<AtomicFrame> const last_frame;
     DisplayConfigurationOutputId const output_id;
-
-    typedef EGLBoolean (EGLAPIENTRY EglGetSyncValuesCHROMIUM)
-        (EGLDisplay dpy, EGLSurface surface, int64_t *ust,
-         int64_t *msc, int64_t *sbc);
-    EglGetSyncValuesCHROMIUM* eglGetSyncValues;
 };
 
 }

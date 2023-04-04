@@ -21,7 +21,6 @@
 #include "mir/graphics/egl_error.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/graphics/gl_config.h"
-#include "mir/graphics/atomic_frame.h"
 #include "display_configuration.h"
 #include "display.h"
 #include "platform.h"
@@ -145,8 +144,7 @@ mgx::Display::Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources
       x11_resources{x11_resources},
       gl_config{gl_config},
       pixel_size_mm{get_pixel_size_mm(x11_resources->conn.get())},
-      report{report},
-      last_frame{std::make_shared<AtomicFrame>()}
+      report{report}
 {
     geom::Point top_left{0, 0};
 
@@ -176,7 +174,6 @@ mgx::Display::Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources
             configuration->extents(),
             actual_size,
             shared_egl.context(),
-            last_frame,
             report,
             *gl_config);
         top_left.x += as_delta(configuration->extents().size.width);
