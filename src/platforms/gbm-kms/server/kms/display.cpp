@@ -392,13 +392,6 @@ bool mgg::Display::apply_if_configuration_preserves_display_buffers(
     return result;
 }
 
-mg::Frame mgg::Display::last_frame_on(unsigned output_id) const
-{
-    auto output = current_display_configuration.get_output_for(
-        DisplayConfigurationOutputId{static_cast<int>(output_id)});
-    return output->last_frame();
-}
-
 namespace
 {
 /*

@@ -83,8 +83,6 @@ public:
 
     std::unique_ptr<renderer::gl::Context> create_gl_context() const override;
 
-    Frame last_frame_on(unsigned output_id) const override;
-
 private:
     void clear_connected_unused_outputs();
 

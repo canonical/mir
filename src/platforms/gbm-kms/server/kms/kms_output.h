@@ -75,7 +75,6 @@ public:
 
     virtual void set_power_mode(MirPowerMode mode) = 0;
     virtual void set_gamma(GammaCurves const& gamma) = 0;
-    virtual Frame last_frame() const = 0;
 
     /**
      * Re-probe the hardware state of this connector.

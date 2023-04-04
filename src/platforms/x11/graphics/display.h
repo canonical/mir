@@ -93,8 +93,6 @@ public:
 
     std::unique_ptr<renderer::gl::Context> create_gl_context() const override;
 
-    Frame last_frame_on(unsigned output_id) const override;
-
 private:
     struct OutputInfo : ::mir::X::X11Resources::VirtualOutput
     {

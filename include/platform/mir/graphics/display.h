@@ -165,22 +165,6 @@ public:
      */
     virtual std::shared_ptr<Cursor> create_hardware_cursor() = 0;
 
-    /**
-     * Returns timing information for the last frame displayed on a given
-     * output.
-     *
-     * Frame timing will be provided to clients only when they request it.
-     * This is to ensure idle clients never get woken by unwanted events.
-     * It is also distinctly separate from the display configuration as this
-     * timing information changes many times per second and should not interfere
-     * with the more static display configuration.
-     *
-     * Note: Using unsigned here because DisplayConfigurationOutputId is
-     * troublesome (can't be forward declared) and including
-     * display_configuration.h to get it would be an overkill.
-     */
-    virtual Frame last_frame_on(unsigned output_id) const = 0;
-
     Display() = default;
     virtual ~Display() = default;
 private:
