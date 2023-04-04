@@ -17,7 +17,6 @@
 #ifndef MIR_GRAPHICS_GBM_REAL_KMS_OUTPUT_H_
 #define MIR_GRAPHICS_GBM_REAL_KMS_OUTPUT_H_
 
-#include "mir/graphics/atomic_frame.h"
 #include "kms_output.h"
 #include "kms-utils/drm_mode_resources.h"
 
@@ -62,8 +61,6 @@ public:
     void set_power_mode(MirPowerMode mode) override;
     void set_gamma(GammaCurves const& gamma) override;
 
-    Frame last_frame() const override;
-
     void refresh_hardware_state() override;
     void update_from_hardware_state(DisplayConfigurationOutput& output) const override;
 
@@ -107,8 +104,6 @@ private:
     int dpms_enum_id;
 
     std::mutex power_mutex;
-
-    AtomicFrame last_frame_;
 };
 
 }
