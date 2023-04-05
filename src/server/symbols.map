@@ -928,3 +928,10 @@ MIR_SERVER_2.11 {
       mir::DefaultServerConfiguration::the_primary_selection_clipboard*;
     };
 } MIR_SERVER_2.10;
+
+MIR_SERVER_2.14 {
+  global:
+    extern "C++" {
+      "mir::DefaultServerConfiguration::the_drag_icon_controller()";
+    };
+} MIR_SERVER_2.11;

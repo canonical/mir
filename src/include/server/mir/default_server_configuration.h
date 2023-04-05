@@ -57,10 +57,11 @@ class CompositorReport;
 namespace frontend
 {
 class Connector;
-class SessionAuthorizer;
-class EventSink;
 class DisplayChanger;
+class DragIconController;
+class EventSink;
 class InputConfigurationChanger;
+class SessionAuthorizer;
 class SurfaceStack;
 }
 
@@ -252,6 +253,7 @@ public:
      *  @{ */
     virtual std::shared_ptr<frontend::SessionAuthorizer>      the_session_authorizer();
     virtual std::shared_ptr<frontend::DisplayChanger>         the_frontend_display_changer();
+    virtual std::shared_ptr<frontend::DragIconController>     the_drag_icon_controller();
     /** @name frontend configuration - internal dependencies
      * internal dependencies of frontend
      *  @{ */
@@ -363,6 +365,7 @@ protected:
     CachedPtr<frontend::Connector>   connector;
     CachedPtr<frontend::Connector>   wayland_connector;
     CachedPtr<frontend::Connector>   xwayland_connector;
+    CachedPtr<frontend::DragIconController> drag_icon_controller;
 
     CachedPtr<input::InputReport> input_report;
     CachedPtr<input::EventFilterChainDispatcher> event_filter_chain_dispatcher;

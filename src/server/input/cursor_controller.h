@@ -18,6 +18,7 @@
 #define MIR_INPUT_CURSOR_CONTROLLER_H_
 
 #include "mir/input/cursor_listener.h"
+#include "mir/frontend/drag_icon_controller.h"
 #include "mir/geometry/point.h"
 
 #include <memory>
@@ -39,7 +40,7 @@ namespace input
 {
 class Scene;
 
-class CursorController : public CursorListener
+class CursorController : public CursorListener, public frontend::DragIconController
 {
 public:
     CursorController(std::shared_ptr<Scene> const& input_targets,
@@ -57,6 +58,8 @@ public:
 
     void pointer_unusable() override;
 
+    void set_drag_icon(std::weak_ptr<scene::Surface> icon) override;
+
 private:
     std::shared_ptr<Scene> const input_targets;
     std::shared_ptr<graphics::Cursor> const cursor;
@@ -67,6 +70,7 @@ private:
     geometry::Point cursor_location;
     std::shared_ptr<graphics::CursorImage> current_cursor;
     bool usable = false;
+    std::weak_ptr<scene::Surface> drag_icon;
 
     // Used only to serialize calls to pointer_usable()/pointer_unusable()
     std::mutex serialize_pointer_usable_unusable;

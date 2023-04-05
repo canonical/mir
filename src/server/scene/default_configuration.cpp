@@ -16,14 +16,16 @@
 
 #include "mir/default_server_configuration.h"
 
+#include "mir/frontend/drag_icon_controller.h"
 #include "mir/graphics/display.h"
+#include "mir/input/cursor_listener.h"
+#include "mir/input/scene.h"
+#include "mir/main_loop.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/renderer/gl/context_source.h"
-#include "mir/input/scene.h"
 #include "mir/scene/session.h"
 #include "mir/scene/session_container.h"
 #include "mir/shell/display_configuration_controller.h"
-#include "mir/main_loop.h"
 
 #include "broadcasting_session_event_sink.h"
 #include "mediating_display_changer.h"
@@ -150,6 +152,12 @@ std::shared_ptr<mf::DisplayChanger>
 mir::DefaultServerConfiguration::the_frontend_display_changer()
 {
     return the_mediating_display_changer();
+}
+
+std::shared_ptr<mf::DragIconController> mir::DefaultServerConfiguration::the_drag_icon_controller()
+{
+    return drag_icon_controller(
+        [this] { return std::dynamic_pointer_cast<mf::DragIconController>(the_cursor_listener()); });
 }
 
 std::shared_ptr<mir::DisplayChanger>
