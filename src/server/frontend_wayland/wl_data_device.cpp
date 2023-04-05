@@ -93,11 +93,13 @@ mf::WlDataDevice::WlDataDevice(
     wl_resource* new_resource,
     Executor& wayland_executor,
     scene::Clipboard& clipboard,
-    mf::WlSeat& seat)
+    mf::WlSeat& seat,
+    std::shared_ptr<DragIconController> drag_icon_controller)
     : mw::DataDevice(new_resource, Version<3>()),
       clipboard{clipboard},
       seat{seat},
-      clipboard_observer{std::make_shared<ClipboardObserver>(this)}
+      clipboard_observer{std::make_shared<ClipboardObserver>(this)},
+      drag_icon_controller{std::move(drag_icon_controller)}
 {
     clipboard.register_interest(clipboard_observer, wayland_executor);
     // this will call focus_on() with the initial state

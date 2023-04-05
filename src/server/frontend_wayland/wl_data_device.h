@@ -19,6 +19,7 @@
 
 #include "wayland_wrapper.h"
 #include "wl_seat.h"
+#include "wl_surface.h"
 
 namespace mir
 {
@@ -31,6 +32,8 @@ class DataExchangeSource;
 
 namespace frontend
 {
+class DragIconController;
+
 class WlDataDevice : public wayland::DataDevice, public WlSeat::FocusListener
 {
 public:
@@ -38,7 +41,8 @@ public:
         wl_resource* new_resource,
         Executor& wayland_executor,
         scene::Clipboard& clipboard,
-        WlSeat& seat);
+        WlSeat& seat,
+        std::shared_ptr<DragIconController> drag_icon_controller);
     ~WlDataDevice();
 
     /// Wayland requests
@@ -65,6 +69,7 @@ private:
     scene::Clipboard& clipboard;
     WlSeat& seat;
     std::shared_ptr<ClipboardObserver> const clipboard_observer;
+    std::shared_ptr<DragIconController> const drag_icon_controller;
     bool has_focus = false;
     wayland::Weak<Offer> current_offer;
 };

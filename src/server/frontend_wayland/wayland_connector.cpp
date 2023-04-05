@@ -222,6 +222,7 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
     std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<mi::CompositeEventFilter> const& composite_event_filter,
+    std::shared_ptr<DragIconController> drag_icon_controller,
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
     std::shared_ptr<SurfaceStack> const& surface_stack,
@@ -292,7 +293,11 @@ mf::WaylandConnector::WaylandConnector(
         executor,
         display_config_registrar);
 
-    data_device_manager_global = std::make_unique<WlDataDeviceManager>(display.get(), executor, main_clipboard);
+    data_device_manager_global = std::make_unique<WlDataDeviceManager>(
+        display.get(),
+        executor,
+        main_clipboard,
+        std::move(drag_icon_controller));
 
     extensions->init(WaylandExtensions::Context{
         display.get(),

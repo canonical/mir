@@ -26,10 +26,12 @@ namespace mw = mir::wayland;
 mf::WlDataDeviceManager::WlDataDeviceManager(
     struct wl_display* display,
     std::shared_ptr<mir::Executor> const& wayland_executor,
-    std::shared_ptr<ms::Clipboard> const& clipboard) :
+    std::shared_ptr<ms::Clipboard> const& clipboard,
+    std::shared_ptr<DragIconController> drag_icon_controller) :
     Global(display, Version<3>()),
     wayland_executor{wayland_executor},
-    clipboard{clipboard}
+    clipboard{clipboard},
+    drag_icon_controller{std::move(drag_icon_controller)}
 {
 }
 
@@ -51,7 +53,12 @@ void mf::WlDataDeviceManager::Instance::create_data_source(wl_resource* new_data
 void mf::WlDataDeviceManager::Instance::get_data_device(wl_resource* new_data_device, wl_resource* seat)
 {
     auto const realseat = mf::WlSeat::from(seat);
-    new WlDataDevice{new_data_device, *manager->wayland_executor, *manager->clipboard, *realseat};
+    new WlDataDevice{
+        new_data_device,
+        *manager->wayland_executor,
+        *manager->clipboard,
+        *realseat,
+        manager->drag_icon_controller};
 }
 
 void mf::WlDataDeviceManager::bind(wl_resource* new_resource)
