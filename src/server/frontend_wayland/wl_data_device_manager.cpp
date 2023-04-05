@@ -26,10 +26,12 @@ namespace mw = mir::wayland;
 mf::WlDataDeviceManager::WlDataDeviceManager(
     struct wl_display* display,
     std::shared_ptr<mir::Executor> const& wayland_executor,
-    std::shared_ptr<ms::Clipboard> const& clipboard) :
+    std::shared_ptr<ms::Clipboard> const& clipboard,
+    std::shared_ptr<DragIconController> drag_icon_controller) :
     Global(display, Version<3>()),
     wayland_executor{wayland_executor},
-    clipboard{clipboard}
+    clipboard{clipboard},
+    drag_icon_controller{std::move(drag_icon_controller)}
 {
 }
 
