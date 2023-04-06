@@ -28,6 +28,7 @@
 
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/stub_surface.h"
+#include "mir/test/doubles/mock_surface.h"
 #include "mir/test/doubles/stub_input_scene.h"
 
 #include <gtest/gtest.h>
@@ -267,6 +268,9 @@ struct TestCursorController : public testing::Test
 
     MockCursor cursor;
     std::shared_ptr<mg::CursorImage> const default_cursor_image;
+
+    geom::Point const initial_cursor_position{0, 0};
+    geom::Point const another_cursor_position{123, 456};
 };
 }
 
@@ -503,4 +507,60 @@ TEST_F(TestCursorController, zero_sized_image_hides_cursor)
     EXPECT_CALL(cursor, hide()).Times(1);
 
     targets.add_surface(mt::fake_shared(surface));
+}
+
+struct TestCursorControllerDragIcon : public TestCursorController
+{
+    NiceMock<MockCursor> cursor;
+    StubScene targets{};
+    TestController controller{targets, cursor, default_cursor_image};
+};
+
+TEST_F(TestCursorControllerDragIcon, when_drag_icon_is_set_it_is_moved_to_cursor_location)
+{
+    {
+        auto const drag_icon = std::make_shared<testing::NiceMock<mtd::MockSurface>>();
+
+        EXPECT_CALL(*drag_icon, move_to(initial_cursor_position)).Times(1);
+
+        controller.set_drag_icon(drag_icon);
+    }
+
+    controller.cursor_moved_to(another_cursor_position.x.as_int(), another_cursor_position.y.as_int());
+
+    {
+        auto const drag_icon = std::make_shared<testing::NiceMock<mtd::MockSurface>>();
+
+        EXPECT_CALL(*drag_icon, move_to(another_cursor_position)).Times(1);
+
+        controller.set_drag_icon(drag_icon);
+    }
+}
+
+TEST_F(TestCursorControllerDragIcon, given_drag_icon_is_set_when_cursor_moves_it_moves)
+{
+    auto const drag_icon = std::make_shared<testing::NiceMock<mtd::MockSurface>>();
+    controller.set_drag_icon(drag_icon);
+
+    EXPECT_CALL(*drag_icon, move_to(another_cursor_position)).Times(1);
+    controller.cursor_moved_to(another_cursor_position.x.as_int(), another_cursor_position.y.as_int());
+}
+
+TEST_F(TestCursorControllerDragIcon, given_drag_icon_is_set_when_cursor_hidden_it_hides)
+{
+    auto const drag_icon = std::make_shared<testing::NiceMock<mtd::MockSurface>>();
+    controller.set_drag_icon(drag_icon);
+
+    EXPECT_CALL(*drag_icon, hide()).Times(1);
+    controller.pointer_unusable();
+}
+
+TEST_F(TestCursorControllerDragIcon, given_drag_icon_is_set_when_cursor_unhidden_it_shows)
+{
+    auto const drag_icon = std::make_shared<testing::NiceMock<mtd::MockSurface>>();
+    controller.pointer_unusable();
+    controller.set_drag_icon(drag_icon);
+
+    EXPECT_CALL(*drag_icon, show()).Times(1);
+    controller.pointer_usable();
 }
