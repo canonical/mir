@@ -192,24 +192,30 @@ void mf::WlDataDevice::start_drag(
         BOOST_THROW_EXCEPTION(
             mw::ProtocolError(resource, Error::role, "Origin surface does not exist."));
     }
- 
+
+    auto const drag_event = client->event_for(serial);
+
+    if (!drag_event || !drag_event.value() || mir_event_get_type(drag_event.value().get()) != mir_event_type_input)
+    {
+        BOOST_THROW_EXCEPTION(
+            mw::ProtocolError(resource, Error::role, "Serial does not correspond to an input event"));
+    }
+
+    auto const input_ev = mir_event_get_input_event(drag_event.value().get());
+    if (mir_input_event_get_type(input_ev) != mir_input_event_type_pointer)
+    {
+        BOOST_THROW_EXCEPTION(
+            mw::ProtocolError(resource, Error::role, "Serial does not correspond to a pointer event"));
+    }
+
+    // TODO {arg} start the drag logic
+
     if (icon)
     {
         auto const icon_surface = WlSurface::from(icon.value());
 
-        auto const drag_event = client->event_for(serial);
-        if (drag_event && drag_event.value() && mir_event_get_type(drag_event.value().get()) == mir_event_type_input)
-        {
-            auto const input_ev = mir_event_get_input_event(drag_event.value().get());
-            auto const& ev_type = mir_input_event_get_type(input_ev);
-            if (ev_type == mir_input_event_type_pointer)
-            {
-                drag_surface.emplace(icon_surface, drag_icon_controller);
-            }
-        }
+        drag_surface.emplace(icon_surface, drag_icon_controller);
     }
-
-    // TODO {arg} start the drag logic
 }
 
 void mf::WlDataDevice::focus_on(WlSurface* surface)
