@@ -255,15 +255,21 @@ void mi::CursorController::cursor_moved_to(float abs_x, float abs_y)
 {
     auto const new_location = geom::Point{geom::X{abs_x}, geom::Y{abs_y}};
 
+    std::shared_ptr<ms::Surface> di;
     {
         std::unique_lock lock(cursor_state_guard);
 
         cursor_location = new_location;
 
         update_cursor_image_locked(lock);
+        di = drag_icon.lock();
     }
 
     cursor->move_to(new_location);
+    if (di)
+    {
+        di->move_to(new_location);
+    }
 }
 
 void mir::input::CursorController::pointer_usable()
@@ -271,26 +277,58 @@ void mir::input::CursorController::pointer_usable()
     std::lock_guard lock(serialize_pointer_usable_unusable);
     bool became_usable = false;
     std::shared_ptr<mg::CursorImage> image;
+    std::shared_ptr<ms::Surface> di;
+
     {
         std::lock_guard lock(cursor_state_guard);
         became_usable = !usable;
         image = current_cursor;
         usable = true;
+        di = drag_icon.lock();
     }
 
     if (became_usable)
     {
         if (image && !is_empty(image))
             cursor->show(*image);
+        if (di)
+        {
+            di->show();
+        }
     }
 }
 
 void mir::input::CursorController::pointer_unusable()
 {
     std::lock_guard lock(serialize_pointer_usable_unusable);
+    std::shared_ptr<ms::Surface> di;
+
     {
         std::lock_guard lock(cursor_state_guard);
         usable = false;
+        di = drag_icon.lock();
     }
+
     cursor->hide();
+    if (di)
+    {
+        di->hide();
+    }
+}
+
+void mir::input::CursorController::set_drag_icon(std::weak_ptr<scene::Surface> icon)
+{
+    std::shared_ptr<ms::Surface> di;
+
+    {
+        std::lock_guard lock{cursor_state_guard};
+        drag_icon = std::move(icon);
+
+        di = drag_icon.lock();
+    }
+
+    if (di)
+    {
+        di->move_to(cursor_location);
+    }
 }

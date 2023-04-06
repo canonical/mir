@@ -53,32 +53,38 @@ struct MockSurface : public scene::BasicSurface
                 {
                     BasicSurface::set_focus_state(focus_state);
                 }));
+        ON_CALL(*this, move_to(testing::_))
+            .WillByDefault(testing::Invoke([this](geometry::Point const& top_left)
+               {
+                    BasicSurface::move_to(top_left);
+               }));
     }
 
     ~MockSurface() noexcept {}
 
-    MOCK_CONST_METHOD0(type, MirWindowType());
-    MOCK_METHOD0(hide, void());
-    MOCK_METHOD0(show, void());
-    MOCK_CONST_METHOD0(visible, bool());
+    MOCK_METHOD(MirWindowType, type, (), (const));
+    MOCK_METHOD(void, hide, ());
+    MOCK_METHOD(void, show, ());
+    MOCK_METHOD(bool, visible, (), (const));
+    MOCK_METHOD(void, move_to, (geometry::Point const& ));
 
-    MOCK_METHOD0(force_requests_to_complete, void());
-    MOCK_METHOD0(advance_client_buffer, std::shared_ptr<graphics::Buffer>());
+    MOCK_METHOD(void, force_requests_to_complete, ());
+    MOCK_METHOD(std::shared_ptr<graphics::Buffer>, advance_client_buffer, ());
 
-    MOCK_CONST_METHOD0(size, geometry::Size());
-    MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
+    MOCK_METHOD(geometry::Size, size, (), (const));
+    MOCK_METHOD(MirPixelFormat, pixel_format, (), (const));
 
-    MOCK_METHOD0(request_client_surface_close, void());
-    MOCK_CONST_METHOD0(parent, std::shared_ptr<scene::Surface>());
-    MOCK_METHOD2(configure, int(MirWindowAttrib, int));
-    MOCK_METHOD1(register_interest, void(std::weak_ptr<scene::SurfaceObserver> const&));
-    MOCK_METHOD1(unregister_interest, void(scene::SurfaceObserver const&));
-    MOCK_METHOD1(consume, void(std::shared_ptr<MirEvent const> const& event));
+    MOCK_METHOD(void, request_client_surface_close, ());
+    MOCK_METHOD(std::shared_ptr<scene::Surface>, parent, (), (const));
+    MOCK_METHOD(int, configure, (MirWindowAttrib, int));
+    MOCK_METHOD(void, register_interest, (std::weak_ptr<scene::SurfaceObserver> const&));
+    MOCK_METHOD(void, unregister_interest, (scene::SurfaceObserver const&));
+    MOCK_METHOD(void, consume, (std::shared_ptr<MirEvent const> const& event));
 
-    MOCK_CONST_METHOD0(primary_buffer_stream, std::shared_ptr<frontend::BufferStream>());
-    MOCK_METHOD1(set_streams, void(std::list<scene::StreamInfo> const&));
+    MOCK_METHOD(std::shared_ptr<frontend::BufferStream>, primary_buffer_stream, (), (const));
+    MOCK_METHOD(void, set_streams, (std::list<scene::StreamInfo> const&));
 
-    MOCK_METHOD1(set_focus_state, void(MirWindowFocusState));
+    MOCK_METHOD(void, set_focus_state, (MirWindowFocusState));
 
     std::shared_ptr<MockBufferStream> const stream;
 };
