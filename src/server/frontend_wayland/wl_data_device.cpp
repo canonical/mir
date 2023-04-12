@@ -18,7 +18,9 @@
 #include "wl_data_source.h"
 #include "wl_surface.h"
 
+#include "mir/events/pointer_event.h"
 #include "mir/frontend/drag_icon_controller.h"
+#include "mir/log.h"
 #include "mir/scene/clipboard.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
@@ -46,6 +48,24 @@ private:
             device.value().paste_source_set(source);
         }
     }
+
+    void drag_n_drop_source_set(std::shared_ptr<ms::DataExchangeSource> const& source) override
+    {
+        if (device)
+        {
+            device.value().drag_n_drop_source_set(source);
+        }
+    }
+
+    void drag_n_drop_source_cleared(std::shared_ptr<ms::DataExchangeSource> const& source) override
+    {
+        if (device)
+        {
+            device.value().drag_n_drop_source_cleared(source);
+        }
+    }
+
+private:
 
     wayland::Weak<WlDataDevice> const device;
 };
@@ -97,7 +117,7 @@ void mf::WlDataDevice::Offer::receive(std::string const& mime_type, mir::Fd fd)
     }
 }
 
-mf::DragWlSurface::DragWlSurface(WlSurface* icon, std::shared_ptr<DragIconController> drag_icon_controller)
+mf::DragIconSurface::DragIconSurface(WlSurface* icon, std::shared_ptr<DragIconController> drag_icon_controller)
     : NullWlSurfaceRole(icon),
       surface{icon},
       drag_icon_controller{std::move(drag_icon_controller)}
@@ -119,10 +139,10 @@ mf::DragWlSurface::DragWlSurface(WlSurface* icon, std::shared_ptr<DragIconContro
     shared_scene_surface =
         session->create_surface(session, wayland::Weak<WlSurface>(surface), spec, nullptr, nullptr);
 
-    DragWlSurface::drag_icon_controller->set_drag_icon(shared_scene_surface);
+    DragIconSurface::drag_icon_controller->set_drag_icon(shared_scene_surface);
 }
 
-mf::DragWlSurface::~DragWlSurface()
+mf::DragIconSurface::~DragIconSurface()
 {
     if (surface)
     {
@@ -136,7 +156,7 @@ mf::DragWlSurface::~DragWlSurface()
     }
 }
 
-auto mf::DragWlSurface::scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>
+auto mf::DragIconSurface::scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>
 {
     return shared_scene_surface;
 }
@@ -185,14 +205,14 @@ void mf::WlDataDevice::start_drag(
     std::optional<wl_resource*> const& icon,
     uint32_t serial)
 {
-    // TODO: "The [origin surface] and client must have an active implicit grab that matches the serial"
-    (void)source;
+    // "The [origin surface] and client must have an active implicit grab that matches the serial"
     if (!origin)
     {
         BOOST_THROW_EXCEPTION(
             mw::ProtocolError(resource, Error::role, "Origin surface does not exist."));
     }
 
+    // TODO {arg} does this check really belong in DataDevice?
     auto const drag_event = client->event_for(serial);
 
     if (!drag_event || !drag_event.value() || mir_event_get_type(drag_event.value().get()) != mir_event_type_input)
@@ -208,18 +228,22 @@ void mf::WlDataDevice::start_drag(
             mw::ProtocolError(resource, Error::role, "Serial does not correspond to a pointer event"));
     }
 
-    // TODO {arg} start the drag logic
-
-    if (icon)
+    if (auto const wl_source = WlDataSource::from(source.value()))
     {
-        auto const icon_surface = WlSurface::from(icon.value());
+        wl_source->set_drag_n_drop_source();
 
-        drag_surface.emplace(icon_surface, drag_icon_controller);
+        if (icon)
+        {
+            auto const icon_surface = WlSurface::from(icon.value());
+
+            drag_surface.emplace(icon_surface, drag_icon_controller);
+        }
     }
 }
 
 void mf::WlDataDevice::focus_on(WlSurface* surface)
 {
+    weak_surface = make_weak(surface);
     has_focus = static_cast<bool>(surface);
     paste_source_set(clipboard.paste_source());
 }
@@ -242,4 +266,92 @@ void mf::WlDataDevice::paste_source_set(std::shared_ptr<ms::DataExchangeSource> 
             send_selection_event(std::nullopt);
         }
     }
+}
+
+void mf::WlDataDevice::drag_n_drop_source_set(std::shared_ptr<scene::DataExchangeSource> const& source)
+{
+    seat.for_each_listener(client, [this](PointerEventDispatcher* pointer)
+        {
+            pointer->start_dispatch_to_data_device(this);
+        });
+
+    if (source && has_focus)
+    {
+        if (!current_offer || current_offer.value().source != source)
+        {
+            if (weak_surface)
+            {
+                current_offer = wayland::make_weak(new Offer{this, source});
+
+                auto const serial = client->next_serial(nullptr);
+                auto x = 0; // TODO {arg} where do we get a relative cursor position
+                auto y = 0; // TODO {arg} where do we get a relative cursor position
+                send_enter_event(serial, weak_surface.value().resource, x, y, current_offer.value().resource);
+            }
+        }
+    }
+    else
+    {
+        if (current_offer)
+        {
+            current_offer = {};
+            drag_surface.reset();
+        }
+    }
+}
+
+void mf::WlDataDevice::event(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface)
+{
+    switch(mir_pointer_event_action(event.get()))
+    {
+    case mir_pointer_action_button_down:
+    case mir_pointer_action_button_up:
+        if (current_offer)
+        {
+            send_drop_event();
+            clipboard.clear_drag_n_drop_source(current_offer.value().source);
+        }
+        break;
+    case mir_pointer_action_enter:
+        break;
+    case mir_pointer_action_leave:
+        send_leave_event();
+        break;
+    case mir_pointer_action_motion:
+    {
+        if (!event->local_position())
+        {
+            log_error("pointer event cannot be sent to wl_surface as it lacks a local poisition");
+            return;
+        }
+
+        auto const root_position = event->local_position().value();
+        WlSurface* target_surface;
+
+        Point root_point{root_position};
+        target_surface = root_surface.subsurface_at(root_point).value_or(&root_surface);
+
+        auto const position_on_target = root_position - DisplacementF{target_surface->total_offset()};
+        auto const timestamp = mir_input_event_get_wayland_timestamp(mir_pointer_event_input_event(event.get()));
+
+        send_motion_event(timestamp, position_on_target.x.as_value(), position_on_target.y.as_value());
+        break;
+    }
+    case mir_pointer_actions:
+        break;
+    }
+}
+
+void mf::WlDataDevice::drag_n_drop_source_cleared(std::shared_ptr<scene::DataExchangeSource> const& source)
+{
+    if (!current_offer || current_offer.value().source == source)
+    {
+        current_offer = {};
+        drag_surface.reset();
+    }
+
+    seat.for_each_listener(client, [](PointerEventDispatcher* pointer)
+    {
+        pointer->stop_dispatch_to_data_device();
+    });
 }

@@ -39,6 +39,8 @@ public:
     /// does not remain locked when notifying observers, so clipboard->paste_source() may return a different value than
     /// source.
     virtual void paste_source_set(std::shared_ptr<DataExchangeSource> const& source) = 0;
+    virtual void drag_n_drop_source_set(std::shared_ptr<DataExchangeSource> const& source) { (void)source; }
+    virtual void drag_n_drop_source_cleared(std::shared_ptr<DataExchangeSource> const& source) { (void)source; }
 
 private:
     ClipboardObserver(ClipboardObserver const&) = delete;
@@ -60,6 +62,11 @@ public:
 
     /// Clears the current copy-paste source ONLY if it is the same as the given source, otherwise does nothing.
     virtual void clear_paste_source(DataExchangeSource const& source) = 0;
+
+    /// Sets the given source to be the current drag & drop source for all clients.
+    virtual void set_drag_n_drop_source(std::shared_ptr<DataExchangeSource> const& source) = 0;
+    /// Clears the current drag-n-drop source ONLY if it is the same as the given source, otherwise does nothing.
+    virtual void clear_drag_n_drop_source(std::shared_ptr<DataExchangeSource> const& source) = 0;
 };
 }
 }

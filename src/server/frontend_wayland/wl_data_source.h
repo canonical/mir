@@ -42,6 +42,7 @@ public:
     static auto from(struct wl_resource* resource) -> WlDataSource*;
 
     void set_clipboard_paste_source();
+    void set_drag_n_drop_source();
 
     /// Wayland requests
     /// @{
@@ -57,6 +58,8 @@ private:
     class Source;
 
     void paste_source_set(std::shared_ptr<scene::DataExchangeSource> const& source);
+    void drag_n_drop_source_set(std::shared_ptr<scene::DataExchangeSource> const& source);
+    void drag_n_drop_source_cleared(std::shared_ptr<scene::DataExchangeSource> const& source);
 
     std::shared_ptr<Executor> const wayland_executor;
     scene::Clipboard& clipboard;
@@ -64,6 +67,9 @@ private:
     std::vector<std::string> mime_types;
     std::weak_ptr<scene::DataExchangeSource> paste_source;
     bool clipboards_paste_source_is_ours{false};
+
+    std::weak_ptr<scene::DataExchangeSource> dnd_source;
+    bool dnd_source_source_is_ours{false};
 };
 }
 }

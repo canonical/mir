@@ -58,8 +58,12 @@ public:
     explicit PointerEventDispatcher(WlPointer* wl_pointer);
 
     void event(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface);
+
+    void start_dispatch_to_data_device(WlDataDevice* wl_data_device);
+    void stop_dispatch_to_data_device();
 private:
     wayland::Weak<WlPointer> wl_pointer;
+    wayland::Weak<WlDataDevice> wl_data_device;
 };
 
 class WlSeat : public wayland::Seat::Global

@@ -41,6 +41,22 @@ private:
         }
     }
 
+    void drag_n_drop_source_set(std::shared_ptr<ms::DataExchangeSource> const& source) override
+    {
+        if (owner)
+        {
+            owner.value().drag_n_drop_source_set(source);
+        }
+    }
+
+    void drag_n_drop_source_cleared(std::shared_ptr<ms::DataExchangeSource> const& source) override
+    {
+        if (owner)
+        {
+            owner.value().drag_n_drop_source_cleared(source);
+        }
+    }
+
     wayland::Weak<WlDataSource> const owner;
 };
 
@@ -114,6 +130,14 @@ void mf::WlDataSource::set_clipboard_paste_source()
     clipboard.set_paste_source(source);
 }
 
+void mf::WlDataSource::set_drag_n_drop_source()
+{
+    send_target_event(std::nullopt);
+    auto const source = std::make_shared<Source>(*this);
+    dnd_source = source;
+    clipboard.set_drag_n_drop_source(source);
+}
+
 void mf::WlDataSource::offer(std::string const& mime_type)
 {
     mime_types.push_back(mime_type);
@@ -132,5 +156,30 @@ void mf::WlDataSource::paste_source_set(std::shared_ptr<ms::DataExchangeSource> 
         paste_source.reset();
         clipboards_paste_source_is_ours = false;
         send_cancelled_event();
+    }
+}
+
+void mf::WlDataSource::drag_n_drop_source_set(std::shared_ptr<scene::DataExchangeSource> const& source)
+{
+    if (source && dnd_source.lock() == source)
+    {
+        dnd_source_source_is_ours = true;
+        send_action_event(0);
+    }
+    else if (dnd_source_source_is_ours)
+    {
+        dnd_source.reset();
+        dnd_source_source_is_ours = false;
+        send_cancelled_event();
+    }
+}
+
+void mf::WlDataSource::drag_n_drop_source_cleared(std::shared_ptr<scene::DataExchangeSource> const& source)
+{
+    if (source && dnd_source.lock() == source)
+    {
+        send_dnd_drop_performed_event_if_supported();
+        dnd_source.reset();
+        dnd_source_source_is_ours = false;
     }
 }

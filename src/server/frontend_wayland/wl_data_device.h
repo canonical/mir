@@ -34,11 +34,11 @@ namespace frontend
 {
 class DragIconController;
 
-class DragWlSurface : public NullWlSurfaceRole
+class DragIconSurface : public NullWlSurfaceRole
 {
 public:
-    DragWlSurface(WlSurface* icon, std::shared_ptr<DragIconController> drag_icon_controller);
-    ~DragWlSurface();
+    DragIconSurface(WlSurface* icon, std::shared_ptr<DragIconController> drag_icon_controller);
+    ~DragIconSurface();
 
     auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> override;
 
@@ -71,6 +71,8 @@ public:
     void set_selection(std::optional<wl_resource*> const& source, uint32_t serial) override;
     /// @}
 
+    void event(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface);
+
 private:
     class ClipboardObserver;
     class Offer;
@@ -80,6 +82,8 @@ private:
 
     /// Called by the clipboard observer
     void paste_source_set(std::shared_ptr<scene::DataExchangeSource> const& source);
+    void drag_n_drop_source_set(std::shared_ptr<scene::DataExchangeSource> const& source);
+    void drag_n_drop_source_cleared(std::shared_ptr<scene::DataExchangeSource> const& source);
 
     scene::Clipboard& clipboard;
     WlSeat& seat;
@@ -87,7 +91,8 @@ private:
     std::shared_ptr<DragIconController> const drag_icon_controller;
     bool has_focus = false;
     wayland::Weak<Offer> current_offer;
-    std::optional<DragWlSurface> drag_surface;
+    wayland::Weak<WlSurface> weak_surface;
+    std::optional<DragIconSurface> drag_surface;
 };
 }
 }
