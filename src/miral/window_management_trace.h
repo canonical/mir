@@ -70,8 +70,6 @@ private:
     virtual void focus_prev_within_application() override;
 
     virtual void raise_tree(Window const& root) override;
-    virtual void start_drag_and_drop(WindowInfo& window_info, std::vector<uint8_t> const& handle) override;
-    virtual void end_drag_and_drop() override;
 
     virtual void modify_window(WindowInfo& window_info, WindowSpecification const& modifications) override;
 

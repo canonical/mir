@@ -941,17 +941,6 @@ void miral::BasicWindowManager::raise_tree(Window const& root)
     focus_controller->raise({begin(windows), end(windows)});
 }
 
-void miral::BasicWindowManager::start_drag_and_drop(WindowInfo& window_info, std::vector<uint8_t> const& handle)
-{
-    std::shared_ptr<scene::Surface>(window_info.window())->start_drag_and_drop(handle);
-    focus_controller->set_drag_and_drop_handle(handle);
-}
-
-void miral::BasicWindowManager::end_drag_and_drop()
-{
-    focus_controller->clear_drag_and_drop_handle();
-}
-
 void miral::BasicWindowManager::move_tree(miral::WindowInfo& root, mir::geometry::Displacement movement)
 {
     if (movement == mir::geometry::Displacement{})

@@ -35,6 +35,5 @@ void ms::NullSurfaceObserver::renamed(Surface const*, std::string const&) {}
 void ms::NullSurfaceObserver::cursor_image_removed(Surface const*) {}
 void ms::NullSurfaceObserver::placed_relative(Surface const*, geometry::Rectangle const&) {}
 void ms::NullSurfaceObserver::input_consumed(Surface const*, std::shared_ptr<MirEvent const> const&) {}
-void ms::NullSurfaceObserver::start_drag_and_drop(Surface const*, std::vector<uint8_t> const&) {}
 void ms::NullSurfaceObserver::depth_layer_set_to(Surface const*, MirDepthLayer) {}
 void ms::NullSurfaceObserver::application_id_set_to(Surface const*, std::string const&) {}
