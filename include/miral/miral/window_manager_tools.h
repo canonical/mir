@@ -175,10 +175,13 @@ public:
      *
      * @param window_info source window
      * @param handle      drag handle
+     * \deprecated legacy of mirclient API
      */
+    [[deprecated("Not meaningful: legacy of mirclient API")]]
     void start_drag_and_drop(WindowInfo& window_info, std::vector<uint8_t> const& handle);
 
     /// End drag and drop
+    [[deprecated("Not meaningful: legacy of mirclient API")]]
     void end_drag_and_drop();
 
     /// Apply modifications to a window

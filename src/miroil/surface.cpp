@@ -54,8 +54,6 @@ public:
   reception_mode_set_to(mir::scene::Surface const * /*surf*/,
                         mir::input::InputReceptionMode /*mode*/) override{};
   void renamed(mir::scene::Surface const *surf, std::string const& name) override;
-  void start_drag_and_drop(mir::scene::Surface const *surf,
-                           std::vector<uint8_t> const &handle) override;
   void transformation_set_to(mir::scene::Surface const *surf,
                              glm::mat4 const &t) override;
   void window_resized_to(mir::scene::Surface const *surf,
@@ -148,11 +146,6 @@ void miroil::SurfaceObserverImpl::placed_relative(mir::scene::Surface const* sur
 void miroil::SurfaceObserverImpl::renamed(mir::scene::Surface const* surf, std::string const& name)
 {
     listener->renamed(surf, name.c_str());
-}
-
-void miroil::SurfaceObserverImpl::start_drag_and_drop(mir::scene::Surface const* surf, std::vector<uint8_t> const& handle)
-{
-    listener->start_drag_and_drop(surf, handle);
 }
 
 void miroil::SurfaceObserverImpl::transformation_set_to(mir::scene::Surface const* surf, glm::mat4 const& t)

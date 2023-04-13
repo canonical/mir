@@ -130,11 +130,6 @@ public:
         for_each_observer(&SurfaceObserver::input_consumed, surf, event);
     }
 
-    void start_drag_and_drop(Surface const* surf, std::vector<uint8_t> const& handle) override
-    {
-        for_each_observer(&SurfaceObserver::start_drag_and_drop, surf, handle);
-    }
-
     void depth_layer_set_to(Surface const* surf, MirDepthLayer depth_layer) override
     {
         for_each_observer(&SurfaceObserver::depth_layer_set_to, surf, depth_layer);
@@ -820,11 +815,6 @@ MirPointerConfinementState ms::BasicSurface::confine_pointer_state() const
 void ms::BasicSurface::placed_relative(geometry::Rectangle const& placement)
 {
     observers->placed_relative(this, placement);
-}
-
-void mir::scene::BasicSurface::start_drag_and_drop(std::vector<uint8_t> const& handle)
-{
-    observers->start_drag_and_drop(this, handle);
 }
 
 auto mir::scene::BasicSurface::depth_layer() const -> MirDepthLayer

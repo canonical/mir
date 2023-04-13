@@ -182,9 +182,6 @@ public:
     auto active_application_zone() -> Zone override;
 
     void raise_tree(Window const& root) override;
-    void start_drag_and_drop(WindowInfo& window_info, std::vector<uint8_t> const& handle) override;
-    void end_drag_and_drop() override;
-
     void modify_window(WindowInfo& window_info, WindowSpecification const& modifications) override;
 
     auto info_for_window_id(std::string const& id) const -> WindowInfo& override;

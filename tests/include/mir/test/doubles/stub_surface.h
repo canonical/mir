@@ -71,7 +71,6 @@ struct StubSurface : scene::Surface
     void set_confine_pointer_state(MirPointerConfinementState) override {}
     MirPointerConfinementState confine_pointer_state() const override { return mir_pointer_unconfined; }
     void placed_relative(geometry::Rectangle const&) override {}
-    void start_drag_and_drop(std::vector<uint8_t> const&) override {}
     MirDepthLayer depth_layer() const override { return mir_depth_layer_application; }
     void set_depth_layer(MirDepthLayer) override {}
     std::optional<geometry::Rectangle> clip_area() const override { return std::nullopt; }

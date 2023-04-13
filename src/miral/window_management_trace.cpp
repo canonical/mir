@@ -585,24 +585,6 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
-void miral::WindowManagementTrace::start_drag_and_drop(miral::WindowInfo& window_info, std::vector<uint8_t> const& handle)
-try {
-    log_input();
-    mir::log_info("%s window_info=%s", __func__, dump_of(window_info).c_str());
-    trace_count++;
-    wrapped.start_drag_and_drop(window_info, handle);
-}
-MIRAL_TRACE_EXCEPTION
-
-void miral::WindowManagementTrace::end_drag_and_drop()
-try {
-    log_input();
-    mir::log_info("%s", __func__);
-    trace_count++;
-    wrapped.end_drag_and_drop();
-}
-MIRAL_TRACE_EXCEPTION
-
 void miral::WindowManagementTrace::modify_window(
     miral::WindowInfo& window_info, miral::WindowSpecification const& modifications)
 try {
