@@ -69,7 +69,7 @@ auto map2vec(std::map<std::string, xcb_atom_t> const& map) -> std::vector<std::s
 }
 }
 
-class mf::XWaylandClipboardSource::ClipboardSource : public scene::ClipboardSource
+class mf::XWaylandClipboardSource::ClipboardSource : public ms::DataExchangeSource
 {
 public:
     ClipboardSource(std::map<std::string, xcb_atom_t>&& mime_types_map, XWaylandClipboardSource* owner)
@@ -197,7 +197,7 @@ mf::XWaylandClipboardSource::XWaylandClipboardSource(
 {
 }
 
-auto mf::XWaylandClipboardSource::source_is_from(ms::ClipboardSource* source, XCBConnection& connection) -> bool
+auto mf::XWaylandClipboardSource::source_is_from(ms::DataExchangeSource* source, XCBConnection& connection) -> bool
 {
     if (auto const xwayland_source = dynamic_cast<ClipboardSource*>(source))
     {

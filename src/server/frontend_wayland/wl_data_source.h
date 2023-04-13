@@ -25,7 +25,7 @@ class Executor;
 namespace scene
 {
 class Clipboard;
-class ClipboardSource;
+class DataExchangeSource;
 }
 
 namespace frontend
@@ -56,13 +56,13 @@ private:
     class ClipboardObserver;
     class Source;
 
-    void paste_source_set(std::shared_ptr<scene::ClipboardSource> const& source);
+    void paste_source_set(std::shared_ptr<scene::DataExchangeSource> const& source);
 
     std::shared_ptr<Executor> const wayland_executor;
     scene::Clipboard& clipboard;
     std::shared_ptr<ClipboardObserver> const clipboard_observer;
     std::vector<std::string> mime_types;
-    std::weak_ptr<scene::ClipboardSource> paste_source;
+    std::weak_ptr<scene::DataExchangeSource> paste_source;
     bool clipboards_paste_source_is_ours{false};
 };
 }

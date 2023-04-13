@@ -20,13 +20,13 @@
 
 namespace ms = mir::scene;
 
-auto ms::BasicClipboard::paste_source() const -> std::shared_ptr<ClipboardSource>
+auto ms::BasicClipboard::paste_source() const -> std::shared_ptr<DataExchangeSource>
 {
     std::lock_guard lock{paste_mutex};
     return paste_source_;
 }
 
-void ms::BasicClipboard::set_paste_source(std::shared_ptr<ClipboardSource> const& source)
+void ms::BasicClipboard::set_paste_source(std::shared_ptr<DataExchangeSource> const& source)
 {
     if (!source)
     {
@@ -64,7 +64,7 @@ void ms::BasicClipboard::clear_paste_source()
     }
 }
 
-void ms::BasicClipboard::clear_paste_source(ClipboardSource const& source)
+void ms::BasicClipboard::clear_paste_source(DataExchangeSource const& source)
 {
     bool notify{false};
     {

@@ -33,7 +33,7 @@ public:
     }
 
 private:
-    void paste_source_set(std::shared_ptr<ms::ClipboardSource> const& source) override
+    void paste_source_set(std::shared_ptr<ms::DataExchangeSource> const& source) override
     {
         if (owner)
         {
@@ -44,7 +44,7 @@ private:
     wayland::Weak<WlDataSource> const owner;
 };
 
-class mf::WlDataSource::Source : public ms::ClipboardSource
+class mf::WlDataSource::Source : public ms::DataExchangeSource
 {
 public:
     Source(WlDataSource& wl_data_source)
@@ -73,7 +73,7 @@ public:
 private:
     std::shared_ptr<Executor> const wayland_executor;
     wayland::Weak<WlDataSource> const wl_data_source;
-    std::vector<std::string> types;
+    std::vector<std::string> const types;
 };
 
 mf::WlDataSource::WlDataSource(
@@ -119,7 +119,7 @@ void mf::WlDataSource::offer(std::string const& mime_type)
     mime_types.push_back(mime_type);
 }
 
-void mf::WlDataSource::paste_source_set(std::shared_ptr<scene::ClipboardSource> const& source)
+void mf::WlDataSource::paste_source_set(std::shared_ptr<ms::DataExchangeSource> const& source)
 {
     if (source && source == paste_source.lock())
     {

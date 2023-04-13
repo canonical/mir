@@ -31,7 +31,7 @@ public:
     }
 
 private:
-    void paste_source_set(std::shared_ptr<ms::ClipboardSource> const& source) override
+    void paste_source_set(std::shared_ptr<ms::DataExchangeSource> const& source) override
     {
         if (device)
         {
@@ -45,7 +45,7 @@ private:
 class mf::WlDataDevice::Offer : public wayland::DataOffer
 {
 public:
-    Offer(WlDataDevice* device, std::shared_ptr<scene::ClipboardSource> const& source);
+    Offer(WlDataDevice* device, std::shared_ptr<ms::DataExchangeSource> const& source);
 
     void accept(uint32_t serial, std::optional<std::string> const& mime_type) override
     {
@@ -66,10 +66,10 @@ public:
 private:
     friend mf::WlDataDevice;
     wayland::Weak<WlDataDevice> const device;
-    std::shared_ptr<scene::ClipboardSource> const source;
+    std::shared_ptr<ms::DataExchangeSource> const source;
 };
 
-mf::WlDataDevice::Offer::Offer(WlDataDevice* device, std::shared_ptr<scene::ClipboardSource> const& source) :
+mf::WlDataDevice::Offer::Offer(WlDataDevice* device, std::shared_ptr<ms::DataExchangeSource> const& source) :
     mw::DataOffer(*device),
     device{device},
     source{source}
@@ -131,7 +131,7 @@ void mf::WlDataDevice::focus_on(WlSurface* surface)
     paste_source_set(clipboard.paste_source());
 }
 
-void mf::WlDataDevice::paste_source_set(std::shared_ptr<scene::ClipboardSource> const& source)
+void mf::WlDataDevice::paste_source_set(std::shared_ptr<ms::DataExchangeSource> const& source)
 {
     if (source && has_focus)
     {

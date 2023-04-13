@@ -29,7 +29,7 @@ namespace
 class PrimarySelectionSource : public mw::PrimarySelectionSourceV1
 {
 private:
-    class Source : public ms::ClipboardSource
+class Source : public ms::DataExchangeSource
     {
     public:
         Source(
@@ -81,7 +81,7 @@ public:
         mime_types.push_back(mime_type);
     }
 
-    auto make_source() const -> std::shared_ptr<ms::ClipboardSource>
+    auto make_source() const -> std::shared_ptr<ms::DataExchangeSource>
     {
         return std::make_shared<Source>(this, wayland_executor, mime_types);
     }
@@ -90,7 +90,7 @@ public:
 class PrimarySelectionOffer : public mw::PrimarySelectionOfferV1
 {
 public:
-    PrimarySelectionOffer(mw::PrimarySelectionDeviceV1& parent, std::shared_ptr<ms::ClipboardSource> source)
+    PrimarySelectionOffer(mw::PrimarySelectionDeviceV1& parent, std::shared_ptr<ms::DataExchangeSource> source)
         : PrimarySelectionOfferV1{parent},
           source{std::move(source)}
     {
@@ -101,7 +101,7 @@ public:
         source->initiate_send(mime_type, fd);
     }
 
-    std::shared_ptr<ms::ClipboardSource> const source;
+    std::shared_ptr<ms::DataExchangeSource> const source;
 };
 
 class PrimarySelectionDevice : public mw::PrimarySelectionDeviceV1, public mf::WlSeat::FocusListener
@@ -115,7 +115,7 @@ private:
         }
 
     private:
-        void paste_source_set(std::shared_ptr<ms::ClipboardSource> const& source) override
+        void paste_source_set(std::shared_ptr<ms::DataExchangeSource> const& source) override
         {
             if (owner)
             {
@@ -175,7 +175,7 @@ private:
         paste_source_set(primary_selection_clipboard->paste_source());
     }
 
-    void paste_source_set(std::shared_ptr<ms::ClipboardSource> const& source)
+    void paste_source_set(std::shared_ptr<ms::DataExchangeSource> const& source)
     {
         if (pending.source == source)
         {
@@ -211,7 +211,7 @@ private:
     }
 
     struct Selection {
-        std::shared_ptr<ms::ClipboardSource> source;
+        std::shared_ptr<ms::DataExchangeSource> source;
         mw::Weak<PrimarySelectionSource> wrapper;
     };
 

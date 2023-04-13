@@ -25,7 +25,7 @@ using namespace testing;
 namespace ms = mir::scene;
 namespace mt = mir::test;
 
-struct MockClipboardSource : ms::ClipboardSource
+struct MockClipboardSource : ms::DataExchangeSource
 {
     auto mime_types() const -> std::vector<std::string> const& override
     {
@@ -41,7 +41,7 @@ struct MockClipboardSource : ms::ClipboardSource
 
 struct MockClipboardObserver : ms::ClipboardObserver
 {
-    MOCK_METHOD1(paste_source_set, void(std::shared_ptr<ms::ClipboardSource> const&));
+    MOCK_METHOD(void, paste_source_set, (std::shared_ptr<ms::DataExchangeSource> const&));
 };
 
 struct BasicClipboardTest : Test

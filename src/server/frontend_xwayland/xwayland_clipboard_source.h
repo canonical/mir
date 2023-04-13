@@ -26,7 +26,7 @@ namespace mir
 namespace scene
 {
 class Clipboard;
-class ClipboardSource;
+class DataExchangeSource;
 }
 namespace dispatch
 {
@@ -47,7 +47,7 @@ public:
     /// Return's if the given clipboard source is an XWayland source for the given connection. This is used to prevent
     /// stealing the X11 clipboard when the source is from X11. It must check if the connection is the same because
     /// if we're running multiple XWaylands sources coming from different ones should be treated like any other.
-    static auto source_is_from(scene::ClipboardSource* source, XCBConnection& connection) -> bool;
+    static auto source_is_from(scene::DataExchangeSource* source, XCBConnection& connection) -> bool;
 
     /// Called by the source, indicates the XWayland buffer needs to be sent to the given fd
     void initiate_send(xcb_atom_t target_type, Fd const& receiver_fd);

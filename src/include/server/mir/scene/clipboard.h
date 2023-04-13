@@ -17,34 +17,16 @@
 #ifndef MIR_SCENE_CLIPBOARD_H_
 #define MIR_SCENE_CLIPBOARD_H_
 
+#include "mir/scene/data_exchange.h"
+
 #include "mir/observer_registrar.h"
-#include "mir/fd.h"
 
 #include <memory>
-#include <vector>
 
 namespace mir
 {
 namespace scene
 {
-/// Interface representing a data source (such as an offer by a client to transfer data). Implemented by the
-/// frontend. Implementations must be threadsafe.
-class ClipboardSource
-{
-public:
-    ClipboardSource() = default;
-    virtual ~ClipboardSource() = default;
-
-    /// Returns the list of supported mime types.
-    virtual auto mime_types() const -> std::vector<std::string> const& = 0;
-
-    /// Instructs the source to start sending it's data in the given mime type to the given fd.
-    virtual void initiate_send(std::string const& mime_type, Fd const& target_fd) = 0;
-
-private:
-    ClipboardSource(ClipboardSource const&) = delete;
-    ClipboardSource& operator=(ClipboardSource const&) = delete;
-};
 
 /// Allows the frontend to listen for changes in the clipboard state
 class ClipboardObserver
@@ -56,7 +38,7 @@ public:
     /// The copy-paste data source has been set or cleared. If cleared, source is null. Note that the clipboard's mutex
     /// does not remain locked when notifying observers, so clipboard->paste_source() may return a different value than
     /// source.
-    virtual void paste_source_set(std::shared_ptr<ClipboardSource> const& source) = 0;
+    virtual void paste_source_set(std::shared_ptr<DataExchangeSource> const& source) = 0;
 
 private:
     ClipboardObserver(ClipboardObserver const&) = delete;
@@ -68,16 +50,16 @@ class Clipboard : public ObserverRegistrar<ClipboardObserver>
 {
 public:
     /// Get the current copy-paste source.
-    virtual auto paste_source() const -> std::shared_ptr<ClipboardSource> = 0;
+    virtual auto paste_source() const -> std::shared_ptr<DataExchangeSource> = 0;
 
     /// Sets the given source to be the current copy-paste source for all clients.
-    virtual void set_paste_source(std::shared_ptr<ClipboardSource> const& source) = 0;
+    virtual void set_paste_source(std::shared_ptr<DataExchangeSource> const& source) = 0;
 
     /// Clears the current copy-paste source
     virtual void clear_paste_source() = 0;
 
     /// Clears the current copy-paste source ONLY if it is the same as the given source, otherwise does nothing.
-    virtual void clear_paste_source(ClipboardSource const& source) = 0;
+    virtual void clear_paste_source(DataExchangeSource const& source) = 0;
 };
 }
 }

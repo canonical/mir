@@ -34,7 +34,7 @@ public:
     {
     }
 
-    void paste_source_set(std::shared_ptr<ClipboardSource> const& source) override
+    void paste_source_set(std::shared_ptr<DataExchangeSource> const& source) override
     {
         for_each_observer(&ClipboardObserver::paste_source_set, source);
     }
@@ -44,10 +44,10 @@ public:
 class BasicClipboard : public Clipboard
 {
 public:
-    auto paste_source() const -> std::shared_ptr<ClipboardSource> override;
-    void set_paste_source(std::shared_ptr<ClipboardSource> const& source) override;
+    auto paste_source() const -> std::shared_ptr<DataExchangeSource> override;
+    void set_paste_source(std::shared_ptr<DataExchangeSource> const& source) override;
     void clear_paste_source() override;
-    void clear_paste_source(ClipboardSource const& source) override;
+    void clear_paste_source(DataExchangeSource const& source) override;
 
     /// Implement ObserverRegistrar<ClipboardObserver>
     /// @{
@@ -69,7 +69,7 @@ private:
     ClipboardObserverMultiplexer multiplexer;
 
     std::mutex mutable paste_mutex;
-    std::shared_ptr<ClipboardSource> paste_source_; ///< Can be null
+    std::shared_ptr<DataExchangeSource> paste_source_; ///< Can be null
 };
 }
 }
