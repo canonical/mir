@@ -29,7 +29,7 @@ namespace
 class PrimarySelectionSource : public mw::PrimarySelectionSourceV1
 {
 private:
-class Source : public ms::DataExchangeSource
+    class Source : public ms::DataExchangeSource
     {
     public:
         Source(

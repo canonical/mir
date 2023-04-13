@@ -17,9 +17,10 @@
 #ifndef MIR_SCENE_DATA_EXCHANGE_H_
 #define MIR_SCENE_DATA_EXCHANGE_H_
 
+#include "mir/fd.h"
+
 #include <vector>
 #include <string>
-#include "mir/fd.h"
 
 namespace mir
 {
