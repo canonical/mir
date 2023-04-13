@@ -18,6 +18,7 @@
 #define MIR_FRONTEND_XWAYLAND_CLIPBOARD_PROVIDER_H_
 
 #include "xcb_connection.h"
+#include "mir/scene/data_exchange.h"
 
 #include <map>
 
@@ -28,7 +29,7 @@ namespace mir
 namespace scene
 {
 class Clipboard;
-class ClipboardSource;
+class DataExchangeSource;
 }
 namespace dispatch
 {
@@ -92,7 +93,7 @@ private:
         std::string const& mime_type);
 
     /// Called by the observer, indicates the paste source has been set by someone (could be us or Wayland)
-    void paste_source_set(std::shared_ptr<scene::ClipboardSource> const& source);
+    void paste_source_set(std::shared_ptr<scene::DataExchangeSource> const& source);
 
     /// Called by the sender, indicates sending should resume when the sender's property is deleted
     void defer_incremental_send(std::shared_ptr<SelectionSender> sender, xcb_window_t window, xcb_atom_t property);
@@ -109,7 +110,7 @@ private:
     /// received the event we need to set it.
     xcb_timestamp_t clipboard_ownership_timestamp{XCB_TIME_CURRENT_TIME};
     /// The source X11 clients can paste from. Should never be a source from this XWayland connection. Can be null
-    std::shared_ptr<scene::ClipboardSource> current_source;
+    std::shared_ptr<scene::DataExchangeSource> current_source;
     /// Maps window/property pairs to SelectionSender's that are waiting for those properties to be deleted in order to
     /// continue an incremental send.
     std::map<std::pair<xcb_window_t, xcb_atom_t>, std::shared_ptr<SelectionSender>> pending_incremental_sends;

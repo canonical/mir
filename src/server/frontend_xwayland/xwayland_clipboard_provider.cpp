@@ -281,7 +281,7 @@ public:
     {
     }
 
-    void paste_source_set(std::shared_ptr<ms::ClipboardSource> const& source) override
+    void paste_source_set(std::shared_ptr<ms::DataExchangeSource> const& source) override
     {
         owner->paste_source_set(source);
     }
@@ -471,7 +471,7 @@ void mf::XWaylandClipboardProvider::send_data(
         target));
 }
 
-void mf::XWaylandClipboardProvider::paste_source_set(std::shared_ptr<ms::ClipboardSource> const& source)
+void mf::XWaylandClipboardProvider::paste_source_set(std::shared_ptr<ms::DataExchangeSource> const& source)
 {
     std::unique_lock lock{mutex};
 

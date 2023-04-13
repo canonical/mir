@@ -26,7 +26,7 @@ class Executor;
 namespace scene
 {
 class Clipboard;
-class ClipboardSource;
+class DataExchangeSource;
 }
 
 namespace frontend
@@ -60,7 +60,7 @@ private:
     void focus_on(WlSurface* surface) override;
 
     /// Called by the clipboard observer
-    void paste_source_set(std::shared_ptr<scene::ClipboardSource> const& source);
+    void paste_source_set(std::shared_ptr<scene::DataExchangeSource> const& source);
 
     scene::Clipboard& clipboard;
     WlSeat& seat;
