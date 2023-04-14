@@ -174,6 +174,12 @@ private:
             auto to_delete = previous_handler.exchange(old_handler);
             delete to_delete;
         }
+        else
+        {
+            // This is our handler; we don't need to save it, but we *do* need to
+            // delete the struct sigaction we've new'd above.
+            delete old_handler;
+        }
     }
 
     static void sigbus_handler(int sig, siginfo_t* info, void* ucontext)
