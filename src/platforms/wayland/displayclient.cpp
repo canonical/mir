@@ -626,7 +626,7 @@ void mgw::DisplayClient::new_global(
     else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
     {
         static xdg_wm_base_listener const shell_listener{
-            [](void*, xdg_wm_base* shell, uint32_t serial){ xdg_wm_base_pong(shell, serial); },
+            [](void* self, auto... args) { static_cast<DisplayClient*>(self)->shell_ping(args...); },
         };
         self->shell = static_cast<decltype(self->shell)>(
             wl_registry_bind(registry, id, &xdg_wm_base_interface, std::min(version, 1u)));
@@ -650,6 +650,11 @@ void mgw::DisplayClient::remove_global(
         self->on_display_config_changed();
     }
     // TODO: We should probably also delete any other globals we've bound to that disappear.
+}
+
+void mgw::DisplayClient::shell_ping(xdg_wm_base* shell, uint32_t serial)
+{
+    xdg_wm_base_pong(shell, serial);
 }
 
 void mgw::DisplayClient::keyboard_keymap(wl_keyboard* /*keyboard*/, uint32_t format, int32_t fd, uint32_t size)
