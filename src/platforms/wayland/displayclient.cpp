@@ -655,6 +655,7 @@ void mgw::DisplayClient::remove_global(
 void mgw::DisplayClient::shell_ping(xdg_wm_base* shell, uint32_t serial)
 {
     xdg_wm_base_pong(shell, serial);
+    wl_display_flush(display);
 }
 
 void mgw::DisplayClient::keyboard_keymap(wl_keyboard* /*keyboard*/, uint32_t format, int32_t fd, uint32_t size)
