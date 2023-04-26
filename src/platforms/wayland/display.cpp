@@ -257,6 +257,8 @@ try
             }
         }
 
+        wl_display_flush(display);
+
         if (poll(fds, indices, -1) == -1)
         {
             wl_display_cancel_read(display);
@@ -289,7 +291,6 @@ try
                 lock.lock();
             }
             lock.unlock();
-            wl_display_flush(display);
         }
     }
 }
