@@ -257,6 +257,26 @@ try
             }
         }
 
+        if (wl_display_flush(display) < 0)
+        {
+            // wl_display_flush may fail with errno == EAGAIN if the write buffer is full
+            if (errno == EAGAIN)
+            {
+                // In this case, we should also wake if the display_fd is writable, so we can
+                // finish flushing.
+                fds[display_fd].events |= POLLOUT;
+            }
+            else
+            {
+                BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to flush Wayland events"}));
+            }
+        }
+        else
+        {
+            // We've fully flushed our pending events to the server; we don't need to wake-on-writable
+            fds[display_fd].events &= ~POLLOUT;
+        }
+
         if (poll(fds, indices, -1) == -1)
         {
             wl_display_cancel_read(display);
@@ -289,7 +309,6 @@ try
                 lock.lock();
             }
             lock.unlock();
-            wl_display_flush(display);
         }
     }
 }
