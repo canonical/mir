@@ -15,6 +15,7 @@
  */
 
 #include "mir/fatal.h"
+#include "platform.h"
 #include "display_buffer.h"
 #include "display_configuration.h"
 #include "mir/graphics/display_report.h"
@@ -25,7 +26,7 @@ namespace mg=mir::graphics;
 namespace mgx=mg::X;
 namespace geom=mir::geometry;
 
-mgx::DisplayBuffer::DisplayBuffer(std::shared_ptr<DisplayPlatform> parent,
+mgx::DisplayBuffer::DisplayBuffer(std::shared_ptr<Platform> parent,
                                   xcb_window_t win,
                                   geometry::Rectangle const& view_area)
                                   : parent{std::move(parent)},
@@ -78,9 +79,9 @@ void mgx::DisplayBuffer::set_view_area(geom::Rectangle const& a)
     area = a;
 }
 
-auto mgx::DisplayBuffer::owner() const -> std::shared_ptr<DisplayPlatform>
+auto mgx::DisplayBuffer::display_provider() const -> std::shared_ptr<DisplayInterfaceProvider>
 {
-    return parent;
+    return parent->provider_for_window(x_win);
 }
 
 void mgx::DisplayBuffer::set_transformation(glm::mat2 const& t)

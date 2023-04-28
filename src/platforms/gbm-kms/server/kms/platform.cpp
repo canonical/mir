@@ -75,11 +75,12 @@ mgg::Platform::Platform(
       listener{listener},
       device_handle{std::move(std::get<0>(drm))},
       drm_fd{std::move(std::get<1>(drm))},
+      provider{std::make_shared<KMSDisplayInterfaceProvider>(drm_fd)},
       bypass_option_{bypass_option}
 {
     if (drm_fd == mir::Fd::invalid)
     {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"WTF?"}));
+        BOOST_THROW_EXCEPTION((std::logic_error{"Invalid DRM device FD"}));
     }
 }
 
@@ -87,7 +88,7 @@ namespace
 {
 auto gbm_device_for_udev_device(
     mir::udev::Device const& device,
-    std::vector<std::shared_ptr<mg::DisplayPlatform>> const& displays)
+    std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays)
      -> std::variant<std::shared_ptr<mg::GBMDisplayProvider>, std::shared_ptr<gbm_device>>
 {
     /* First check to see whether our device exactly matches a display device.
@@ -95,7 +96,7 @@ auto gbm_device_for_udev_device(
      */
     for(auto const& display_device : displays)
     {
-        if (auto gbm_display = mg::DisplayPlatform::acquire_interface<mg::GBMDisplayProvider>(display_device))
+        if (auto gbm_display = display_device->acquire_interface<mg::GBMDisplayProvider>())
         {
             if (gbm_display->is_same_device(device))
             {
@@ -219,7 +220,7 @@ struct gbm_device_from_hw
 
 mgg::RenderingPlatform::RenderingPlatform(
     mir::udev::Device const& device,
-    std::vector<std::shared_ptr<mg::DisplayPlatform>> const& displays)
+    std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays)
     : RenderingPlatform(device.clone(), gbm_device_for_udev_device(device, displays))
 {
 }
@@ -229,7 +230,6 @@ mgg::RenderingPlatform::RenderingPlatform(
     std::variant<std::shared_ptr<mg::GBMDisplayProvider>, std::shared_ptr<gbm_device>> hw)
     : udev_device{std::move(udev_device)},
       device{std::visit(gbm_device_from_hw{}, hw)},
-      bound_display{std::visit(display_provider_or_nothing{}, hw)},
       dpy{initialise_egl(dpy_for_gbm_device(device.get()), 1, 4)},
       share_ctx{make_share_only_context(dpy)}
 {
@@ -251,35 +251,51 @@ auto mgg::RenderingPlatform::maybe_create_interface(
     }
     return nullptr;
 }
+class mgg::Platform::KMSDisplayInterfaceProvider : public mg::DisplayInterfaceProvider
+{
+public:
+    KMSDisplayInterfaceProvider(mir::Fd drm_fd)
+        : drm_fd{std::move(drm_fd)}
+    {
+    }
+
+protected:
+    auto maybe_create_interface(mg::DisplayInterfaceBase::Tag const& type_tag)
+        -> std::shared_ptr<mg::DisplayInterfaceBase>
+    {
+        if (dynamic_cast<mg::GBMDisplayProvider::Tag const*>(&type_tag))
+        {
+            mir::log_debug("Using GBMDisplayProvider");
+            return std::make_shared<mgg::GBMDisplayProvider>(drm_fd);
+        }
+        if (dynamic_cast<mg::DumbDisplayProvider::Tag const*>(&type_tag))
+        {
+            mir::log_debug("Using DumbDisplayProvider");
+            return std::make_shared<mgg::DumbDisplayProvider>(drm_fd);
+        }
+        return {};  
+    }
+private:
+    mir::Fd const drm_fd;
+};
 
 mir::UniqueModulePtr<mg::Display> mgg::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy, std::shared_ptr<GLConfig> const&)
 {
     return make_module_ptr<mgg::Display>(
-        shared_from_this(),
+        std::make_shared<KMSDisplayInterfaceProvider>(drm_fd),
         drm_fd,
         bypass_option_,
         initial_conf_policy,
         listener);
 }
 
+auto mgg::Platform::interface_for() -> std::shared_ptr<DisplayInterfaceProvider>
+{
+    return provider;
+}
+
 mgg::BypassOption mgg::Platform::bypass_option() const
 {
     return bypass_option_;
-}
-
-auto mgg::Platform::maybe_create_interface(DisplayInterfaceBase::Tag const& type_tag)
-    -> std::shared_ptr<DisplayInterfaceBase>
-{
-    if (dynamic_cast<GBMDisplayProvider::Tag const*>(&type_tag))
-    {
-        mir::log_debug("Using GBMDisplayProvider");
-        return std::make_shared<mgg::GBMDisplayProvider>(drm_fd, this);
-    }
-    if (dynamic_cast<DumbDisplayProvider::Tag const*>(&type_tag))
-    {
-        mir::log_debug("Using DumbDisplayProvider");
-        return std::make_shared<mgg::DumbDisplayProvider>();
-    }
-    return {};
 }

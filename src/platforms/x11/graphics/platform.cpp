@@ -21,9 +21,9 @@
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/platform.h"
 #include "mir/options/option.h"
+#include <optional>
 
 
-namespace mo = mir::options;
 namespace mg = mir::graphics;
 namespace mgx = mg::X;
 namespace geom = mir::geometry;
@@ -112,7 +112,8 @@ mgx::Platform::Platform(std::shared_ptr<mir::X::X11Resources> const& x11_resourc
                         std::string title,
                         std::vector<X11OutputConfig> output_sizes,
                         std::shared_ptr<mg::DisplayReport> const& report)
-    : x11_resources{x11_resources},
+    : egl_provider{std::make_shared<InterfaceProvider>(x11_resources->xlib_dpy)},
+      x11_resources{x11_resources},
       title{std::move(title)},
       report{report},
       output_sizes{std::move(output_sizes)}
@@ -125,41 +126,86 @@ mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<GLConfig> const& /*gl_config*/)
 {
-    return make_module_ptr<mgx::Display>(shared_from_this(), x11_resources, title, output_sizes, initial_conf_policy, report);
+    return make_module_ptr<mgx::Display>(
+        std::dynamic_pointer_cast<Platform>(shared_from_this()),
+        x11_resources,
+        title,
+        output_sizes,
+        initial_conf_policy,
+        report);
 }
 
-class mgx::Platform::EGLDisplayProvider : public mg::GenericEGLDisplayProvider
+class mgx::Platform::InterfaceProvider : public mg::DisplayInterfaceProvider
 {
 public:
-    EGLDisplayProvider(::Display* const x_dpy)
-        : egl_helper{x_dpy}
+    InterfaceProvider(::Display* x_dpy)
+        : egl{std::make_shared<mgx::helpers::EGLHelper>(x_dpy)},
+          connection{nullptr},
+          win{std::nullopt}
     {
     }
 
-    auto get_egl_display() -> EGLDisplay
+    InterfaceProvider(
+        InterfaceProvider const& from,
+        std::shared_ptr<mir::X::X11Resources> connection,
+        xcb_window_t win)
+        : egl{from.egl},
+          connection{std::move(connection)},
+          win{win}
     {
-        return egl_helper.display();
     }
 
-    auto framebuffer_for_db(mg::DisplayBuffer& db, mg::GLConfig const& config, EGLContext share_context)
-        -> std::unique_ptr<mg::GenericEGLDisplayProvider::EGLFramebuffer>
+    class EGLDisplayProvider : public mg::GenericEGLDisplayProvider
     {
-        auto& x11db = dynamic_cast<mgx::DisplayBuffer&>(db);
-        return egl_helper.framebuffer_for_window(config, x11db.x11_window(), share_context);   
-    }    
+    public:
+        EGLDisplayProvider(
+            std::shared_ptr<mgx::helpers::EGLHelper> egl,
+            std::shared_ptr<mir::X::X11Resources> connection,
+            std::optional<xcb_window_t> x_win)
+            : egl{std::move(egl)},
+              connection{std::move(connection)},
+              x_win{std::move(x_win)}
+        {
+        }
+
+        auto get_egl_display() -> EGLDisplay
+        {
+            return egl->display();
+        }
+
+        auto alloc_framebuffer(mg::GLConfig const& config, EGLContext share_context)
+            -> std::unique_ptr<mg::GenericEGLDisplayProvider::EGLFramebuffer>
+        {        
+            return egl->framebuffer_for_window(config, connection->conn->connection(), x_win.value(), share_context); 
+        }    
+    private:
+        std::shared_ptr<mgx::helpers::EGLHelper> const egl;
+        std::shared_ptr<mir::X::X11Resources> const connection;
+        std::optional<xcb_window_t> const x_win;
+    };
+
+    auto maybe_create_interface(mir::graphics::DisplayInterfaceBase::Tag const& type_tag)
+        -> std::shared_ptr<DisplayInterfaceBase>
+    {
+        if (dynamic_cast<mg::GenericEGLDisplayProvider::Tag const*>(&type_tag))
+        {
+            return std::make_shared<EGLDisplayProvider>(egl, connection, win);
+        }
+        return {};
+    }
+
 private:
-    mgx::helpers::EGLHelper egl_helper;
+    std::shared_ptr<mgx::helpers::EGLHelper> const egl;
+    std::shared_ptr<mir::X::X11Resources> const connection;
+    std::optional<xcb_window_t> const win;
 };
 
-auto mgx::Platform::maybe_create_interface(mir::graphics::DisplayInterfaceBase::Tag const& type_tag)
-    -> std::shared_ptr<DisplayInterfaceBase>
+auto mgx::Platform::interface_for() -> std::shared_ptr<DisplayInterfaceProvider>
 {
-    if (dynamic_cast<mg::GenericEGLDisplayProvider::Tag const*>(&type_tag))
-    {
-        std::call_once(
-            provider_constructed, 
-            [this]() { egl_provider = std::make_shared<EGLDisplayProvider>(x11_resources->xlib_dpy); });
-        return egl_provider;
-    }
-    return {};
+    return egl_provider;
+}
+
+auto mgx::Platform::provider_for_window(xcb_window_t x_win) -> std::shared_ptr<DisplayInterfaceProvider>
+{
+    return std::make_shared<InterfaceProvider>(*egl_provider, x11_resources, x_win);
 }

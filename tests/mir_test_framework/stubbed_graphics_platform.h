@@ -40,10 +40,8 @@ protected:
         mir::graphics::RendererInterfaceBase::Tag const& tag)
         -> std::shared_ptr<mir::graphics::RendererInterfaceBase> override;
 
-    auto maybe_create_interface(
-        mir::graphics::DisplayInterfaceBase::Tag const& tag)
-        -> std::shared_ptr<mir::graphics::DisplayInterfaceBase> override;
-
+    auto interface_for()
+        -> std::shared_ptr<mir::graphics::DisplayInterfaceProvider> override;
 private:
     std::vector<mir::geometry::Rectangle> const display_rects;
 };

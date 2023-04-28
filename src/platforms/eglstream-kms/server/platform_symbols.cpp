@@ -47,7 +47,7 @@ namespace mge = mir::graphics::eglstream;
 
 auto create_rendering_platform(
     mg::SupportedDevice const& device,
-    std::vector<std::shared_ptr<mg::DisplayPlatform>> const& /*displays*/,
+    std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& /*displays*/,
     mo::Option const&,
     mir::EmergencyCleanupRegistry&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
 {

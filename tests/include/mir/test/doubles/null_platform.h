@@ -37,8 +37,9 @@ class NullDisplayPlatform : public graphics::DisplayPlatform
         return mir::make_module_ptr<NullDisplay>();
     }
 
-    auto maybe_create_interface(graphics::DisplayInterfaceBase::Tag const&)
-        -> std::shared_ptr<graphics::DisplayInterfaceBase> override
+protected:
+    auto interface_for()
+        -> std::shared_ptr<graphics::DisplayInterfaceProvider> override
     {
         return nullptr;
     }

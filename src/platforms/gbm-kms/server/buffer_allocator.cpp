@@ -366,7 +366,7 @@ public:
     CPUCopyOutputSurface(
         EGLDisplay dpy,
         EGLContext ctx,
-        std::unique_ptr<mg::DumbDisplayProvider::Allocator> allocator,
+        std::shared_ptr<mg::DumbDisplayProvider> allocator,
         geom::Size size)
         : allocator{std::move(allocator)},
           dpy{dpy},
@@ -429,7 +429,7 @@ public:
 
     auto commit() -> std::unique_ptr<mg::Framebuffer> override
     {
-        auto fb = allocator->acquire();
+        auto fb = allocator->alloc_fb(size_);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         {
             auto mapping = fb->map_writeable();
@@ -460,7 +460,7 @@ public:
     }
 
 private:
-    std::unique_ptr<mg::DumbDisplayProvider::Allocator> const allocator;
+    std::shared_ptr<mg::DumbDisplayProvider> const allocator;
     EGLDisplay const dpy;
     EGLContext const ctx;
     geom::Size const size_;
@@ -674,29 +674,38 @@ private:
 };
 }
 
-auto mgg::GLRenderingProvider::surface_for_output(DisplayBuffer& db, GLConfig const& config)
+auto mgg::GLRenderingProvider::surface_for_output(
+    std::shared_ptr<DisplayInterfaceProvider> target,
+    geom::Size size,
+    GLConfig const& config)
     -> std::unique_ptr<gl::OutputSurface>
 {
-    if (bound_display && bound_display->is_same_device(db))
+    if (bound_display)
     {
-        return std::make_unique<GBMOutputSurface>(
-            dpy,
-            ctx,
-            config,
-            *bound_display,
-            DRMFormat{DRM_FORMAT_XRGB8888},
-            db.view_area().size);
+        if (auto gbm_provider = target->acquire_interface<GBMDisplayProvider>())
+        {
+            if (bound_display->gbm_device() == gbm_provider->gbm_device())
+            {
+                return std::make_unique<GBMOutputSurface>(
+                    dpy,
+                    ctx,
+                    config,
+                    *bound_display,
+                    DRMFormat{DRM_FORMAT_XRGB8888},
+                    size);
+            }
+        }        
     }
-    auto dumb_display = DisplayPlatform::acquire_interface<DumbDisplayProvider>(db.owner());
+    auto dumb_display = target->acquire_interface<DumbDisplayProvider>();
     
     return std::make_unique<CPUCopyOutputSurface>(
         dpy,
         ctx,
-        dumb_display->allocator_for_db(db),
-        db.view_area().size);
+        std::move(dumb_display),
+        size);
 }
 
-auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplayBuffer const& /*target*/)
+auto mgg::GLRenderingProvider::make_framebuffer_provider(std::shared_ptr<DisplayInterfaceProvider> /*target*/)
     -> std::unique_ptr<FramebufferProvider>
 {
     // TODO: Make this not a null implementation, so bypass/overlays can work again

@@ -64,6 +64,8 @@ public:
     {
         return operator_uint32_thunk();
     }
+
+    MOCK_METHOD(mir::geometry::Size, size, (), (const override));
 };
 }
 
@@ -168,7 +170,7 @@ protected:
     StubGLConfig gl_config;
     std::shared_ptr<mir::graphics::Framebuffer> const bypass_framebuffer;
     std::vector<mir::graphics::DisplayElement> const bypassable_list;
-    std::shared_ptr<mir::graphics::DisplayPlatform> const parent_platform;
+    std::shared_ptr<mir::graphics::DisplayInterfaceProvider> const parent_platform;
 };
 
 TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)

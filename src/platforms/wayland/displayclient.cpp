@@ -100,7 +100,7 @@ public:
     auto view_area() const -> geometry::Rectangle override;
     bool overlay(std::vector<DisplayElement> const& renderlist) override;
     auto transformation() const -> glm::mat2 override;
-    auto owner() const -> std::shared_ptr<DisplayPlatform> override;
+    auto display_provider() const -> std::shared_ptr<DisplayInterfaceProvider> override;
     void set_next_image(std::unique_ptr<Framebuffer> content) override;
 
 private:
@@ -429,7 +429,7 @@ auto mgw::DisplayClient::Output::transformation() const -> glm::mat2
     return glm::mat2{1};
 }
 
-auto mgw::DisplayClient::Output::owner() const -> std::shared_ptr<DisplayPlatform>
+auto mgw::DisplayClient::Output::display_provider() const -> std::shared_ptr<DisplayInterfaceProvider>
 {
     return {};
 }

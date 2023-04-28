@@ -21,6 +21,7 @@
 
 #include <gmock/gmock.h>
 
+#include "mir/graphics/gl_config.h"
 #include "mir/graphics/platform.h"
 
 namespace mir::test::doubles
@@ -29,7 +30,11 @@ class MockGlRenderingPlatform : public graphics::GLRenderingProvider
 {
 public:
     MOCK_METHOD(std::shared_ptr<graphics::gl::Texture>, as_texture, (std::shared_ptr<graphics::Buffer>), (override));
-    MOCK_METHOD(std::unique_ptr<graphics::gl::OutputSurface>, surface_for_output, (graphics::DisplayBuffer&), (override));
+    MOCK_METHOD(
+      std::unique_ptr<graphics::gl::OutputSurface>,
+      surface_for_output,
+      (std::shared_ptr<graphics::DisplayInterfaceProvider>, geometry::Size, graphics::GLConfig const&),
+      (override));
 };
 }
 

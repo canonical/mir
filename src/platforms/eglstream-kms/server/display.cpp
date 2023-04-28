@@ -125,7 +125,7 @@ class DisplayBuffer
 {
 public:
     DisplayBuffer(
-        std::shared_ptr<mg::DisplayPlatform> owner,
+        std::shared_ptr<mg::DisplayInterfaceProvider> owner,
         mir::Fd drm_node,
         EGLDisplay dpy,
         EGLContext ctx,
@@ -281,7 +281,7 @@ public:
 
 private:
 
-    std::shared_ptr<mg::DisplayPlatform> const owner;
+    std::shared_ptr<mg::DisplayInterfaceProvider> const owner;
     EGLDisplay dpy;
     EGLContext ctx;
     EGLOutputLayerEXT layer;

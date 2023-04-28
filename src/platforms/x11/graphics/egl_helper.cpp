@@ -48,14 +48,20 @@ public:
     EGLSurface const surf;
 };
 
-mgxh::Framebuffer::Framebuffer(EGLDisplay dpy, EGLContext ctx, EGLSurface surf)
-    : Framebuffer(std::make_shared<EGLState>(dpy, ctx, surf))
+mgxh::Framebuffer::Framebuffer(EGLDisplay dpy, EGLContext ctx, EGLSurface surf, geometry::Size size)
+    : Framebuffer(std::make_shared<EGLState>(dpy, ctx, surf), size)
 {
 }
 
-mgxh::Framebuffer::Framebuffer(std::shared_ptr<EGLState const> state)
-    : state{std::move(state)}
+mgxh::Framebuffer::Framebuffer(std::shared_ptr<EGLState const> state, geometry::Size size)
+    : state{std::move(state)},
+      size_{size}
 {
+}
+
+auto mgxh::Framebuffer::size() const -> geometry::Size
+{
+    return size_;
 }
 
 void mgxh::Framebuffer::make_current()
@@ -76,7 +82,7 @@ void mgxh::Framebuffer::swap_buffers()
 
 auto mgxh::Framebuffer::clone_handle() -> std::unique_ptr<mg::GenericEGLDisplayProvider::EGLFramebuffer>
 {
-    return std::unique_ptr<mg::GenericEGLDisplayProvider::EGLFramebuffer>{new Framebuffer(state)};
+    return std::unique_ptr<mg::GenericEGLDisplayProvider::EGLFramebuffer>{new Framebuffer(state, size_)};
 }
 
 mgxh::EGLHelper::EGLHelper(::Display* const x_dpy)
@@ -153,8 +159,24 @@ mgxh::EGLHelper::EGLHelper(int stencil_bits, int depth_bits)
 {
 }
 
+namespace
+{
+auto size_for_x_win(xcb_connection_t* xcb_conn, xcb_window_t win) -> mir::geometry::Size
+{
+    auto cookie = xcb_get_geometry(xcb_conn, win);
+    if (auto reply = xcb_get_geometry_reply(xcb_conn, cookie, nullptr))
+    {
+        mir::geometry::Size const window_size{reply->width, reply->height};
+        free(reply);
+        return window_size;
+    }
+    BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to get X11 window size"}));
+}
+}
+
 auto mgxh::EGLHelper::framebuffer_for_window(
     GLConfig const& conf,
+    xcb_connection_t* xcb_conn,
     xcb_window_t win,
     EGLContext shared_context) -> std::unique_ptr<Framebuffer>
 {
@@ -192,7 +214,11 @@ auto mgxh::EGLHelper::framebuffer_for_window(
     if (egl_context == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
 
-    return std::make_unique<Framebuffer>(egl_display, egl_context, egl_surface);
+    return std::make_unique<Framebuffer>(
+        egl_display,
+        egl_context,
+        egl_surface,
+        size_for_x_win(xcb_conn, win));
 }
 
 void mgxh::EGLHelper::setup_internal(::Display* x_dpy, bool initialize)

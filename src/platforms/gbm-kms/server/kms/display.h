@@ -35,7 +35,7 @@ namespace mir
 namespace graphics
 {
 
-class DisplayPlatform;
+class DisplayInterfaceProvider;
 class DisplayReport;
 class DisplayBuffer;
 class DisplayConfigurationPolicy;
@@ -59,7 +59,7 @@ class Display : public graphics::Display
 {
 public:
     Display(
-        std::shared_ptr<DisplayPlatform> parent,
+        std::shared_ptr<DisplayInterfaceProvider> parent,
         mir::Fd drm_fd,
         BypassOption bypass_option,
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
@@ -86,7 +86,7 @@ public:
 private:
     void clear_connected_unused_outputs();
 
-    std::shared_ptr<DisplayPlatform> const owner;
+    std::shared_ptr<DisplayInterfaceProvider> const owner;
     mutable std::mutex configuration_mutex;
     mir::Fd const drm_fd;
     std::shared_ptr<DisplayReport> const listener;
@@ -107,20 +107,22 @@ private:
 class DumbDisplayProvider : public graphics::DumbDisplayProvider
 {
 public:
-    DumbDisplayProvider();
+    explicit DumbDisplayProvider(mir::Fd drm_fd);
 
-    auto allocator_for_db(graphics::DisplayBuffer const& db)
-        -> std::unique_ptr<graphics::DumbDisplayProvider::Allocator> override;
+    auto alloc_fb(geometry::Size pixel_size)
+        -> std::unique_ptr<MappableFB> override;
+
+private:
+    mir::Fd const drm_fd;
+    bool const supports_modifiers;
 };
 
 class GBMDisplayProvider : public graphics::GBMDisplayProvider
 {
 public:
-    GBMDisplayProvider(mir::Fd drm_fd, DisplayPlatform const* parent);
+    GBMDisplayProvider(mir::Fd drm_fd);
     
     auto is_same_device(mir::udev::Device const& render_device) const -> bool override;
-    
-    auto is_same_device(graphics::DisplayBuffer const& db) const -> bool override;
     
     auto gbm_device() const -> std::shared_ptr<struct gbm_device> override;
 
@@ -132,7 +134,6 @@ public:
 private:
     mir::Fd const fd;
     std::shared_ptr<struct gbm_device> const gbm;
-    DisplayPlatform const* const parent;
 };
 }
 }

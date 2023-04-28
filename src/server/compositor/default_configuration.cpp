@@ -98,29 +98,26 @@ std::shared_ptr<mir::renderer::RendererFactory> mir::DefaultServerConfiguration:
 auto mir::DefaultServerConfiguration::the_screen_shooter() -> std::shared_ptr<compositor::ScreenShooter>
 {
     return screen_shooter(
-        []() -> std::shared_ptr<compositor::ScreenShooter>
+        [/*this*/]() -> std::shared_ptr<compositor::ScreenShooter>
         {
-/*            try
-            {
-                auto render_target = std::make_unique<mrg::BasicBufferRenderTarget>(the_display()->create_gl_context());
-                auto renderer = the_renderer_factory()->create_renderer_for(*render_target);
-                return std::make_shared<compositor::BasicScreenShooter>(
-                    the_scene(),
-                    the_clock(),
-                    thread_pool_executor,
-                    std::move(render_target),
-                    );    // TODO: WE'VE BROKEN THE SCREENSHOOTER FOR NOW
-            }
-            catch (...)
-            {
-                mir::log(
-                    ::mir::logging::Severity::error,
-                    "",
-                    std::current_exception(),
-                    "failed to create BasicScreenShooter");
-                return std::make_shared<compositor::NullScreenShooter>(thread_pool_executor);
-            }
-*/
+            // try
+            // {
+            //     return std::make_shared<compositor::BasicScreenShooter>(
+            //         the_scene(),
+            //         the_clock(),
+            //         thread_pool_executor,
+            //         the_renderer_factory());
+            // }
+            // catch (...)
+            // {
+            //     mir::log(
+            //         ::mir::logging::Severity::error,
+            //         "",
+            //         std::current_exception(),
+            //         "failed to create BasicScreenShooter");
+            //     return std::make_shared<compositor::NullScreenShooter>(thread_pool_executor);
+            // }
+
         return std::make_shared<compositor::NullScreenShooter>(thread_pool_executor);
         });
 }

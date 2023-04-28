@@ -119,6 +119,7 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
         std::shared_ptr<mg::GLRenderingProvider> const render_platform;
         std::shared_ptr<PassthroughTracker> const tracker;
     };
-    auto output_surface = render_platform->surface_for_output(db, *gl_config);
+    auto output_surface =
+        render_platform->surface_for_output(db.display_provider(), db.view_area().size, *gl_config);
     return std::make_unique<HeadlessDBC>(db, std::move(output_surface), render_platform, tracker);
 }

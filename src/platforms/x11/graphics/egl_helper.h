@@ -48,7 +48,9 @@ public:
      *          final handle generated from this Framebuffer is released,
      *          the EGL resources \param ctx and \param surff will be freed.
      */
-    Framebuffer(EGLDisplay dpy, EGLContext ctx, EGLSurface surf);
+    Framebuffer(EGLDisplay dpy, EGLContext ctx, EGLSurface surf, geometry::Size size);
+
+    auto size() const -> geometry::Size override;
 
     void make_current() override;
     auto clone_handle() -> std::unique_ptr<GenericEGLDisplayProvider::EGLFramebuffer> override;
@@ -56,9 +58,10 @@ public:
     void swap_buffers();
 private:
     class EGLState;
-    Framebuffer(std::shared_ptr<EGLState const> surf);
+    Framebuffer(std::shared_ptr<EGLState const> surf, geometry::Size size);
 
     std::shared_ptr<EGLState const> const state;
+    geometry::Size const size_;
 };
 
 class EGLHelper
@@ -74,7 +77,11 @@ public:
     EGLHelper(GLConfig const& gl_config, ::Display* const x_dpy, xcb_window_t win, EGLContext shared_context);
     ~EGLHelper() noexcept;
 
-    auto framebuffer_for_window(GLConfig const& conf, xcb_window_t win, EGLContext shared_context)
+    auto framebuffer_for_window(
+        GLConfig const& conf,
+        xcb_connection_t* xcb_conn,
+        xcb_window_t win,
+        EGLContext shared_context)
         -> std::unique_ptr<Framebuffer>;
 
     EGLDisplay display() const { return egl_display; }

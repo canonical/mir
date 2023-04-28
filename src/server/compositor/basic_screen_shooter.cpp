@@ -22,6 +22,7 @@
 #include "mir/compositor/scene.h"
 #include "mir/log.h"
 #include "mir/executor.h"
+#include "mir/graphics/platform.h"
 
 namespace mc = mir::compositor;
 namespace mr = mir::renderer;

@@ -83,7 +83,7 @@ mtf::StubbedServerConfiguration::StubbedServerConfiguration(
 mtf::StubbedServerConfiguration::~StubbedServerConfiguration() = default;
 
 auto mtf::StubbedServerConfiguration::the_display_platforms()
--> std::vector<std::shared_ptr<graphics::DisplayPlatform>> const&
+    -> std::vector<std::shared_ptr<graphics::DisplayPlatform>> const&
 {
     if (display_platform.empty())
     {

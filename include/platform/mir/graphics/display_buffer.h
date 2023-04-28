@@ -30,7 +30,7 @@ namespace graphics
 {
 
 class Framebuffer;
-class DisplayPlatform;
+class DisplayInterfaceProvider;
 
 struct DisplayElement
 {
@@ -95,7 +95,7 @@ public:
      */
     virtual glm::mat2 transformation() const = 0;
 
-    virtual auto owner() const -> std::shared_ptr<DisplayPlatform> = 0;
+    virtual auto display_provider() const -> std::shared_ptr<DisplayInterfaceProvider> = 0;
 protected:
     DisplayBuffer() = default;
     DisplayBuffer(DisplayBuffer const& c) = delete;

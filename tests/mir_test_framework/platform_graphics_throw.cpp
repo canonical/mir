@@ -67,10 +67,9 @@ protected:
         return nullptr;
     }
 
-    auto maybe_create_interface(
-        mg::DisplayInterfaceBase::Tag const&) -> std::shared_ptr<mg::DisplayInterfaceBase> override
+    auto interface_for() -> std::shared_ptr<mg::DisplayInterfaceProvider> override
     {
-        return nullptr;
+        return mg::DisplayPlatform::interface_for(stub_display_platform);
     }
 
 public:
@@ -123,7 +122,7 @@ private:
 
     std::unordered_map<ExceptionLocation, bool, std::hash<uint32_t>> const should_throw;
     mir::UniqueModulePtr<mg::RenderingPlatform> stub_render_platform;
-    mir::UniqueModulePtr<mg::DisplayPlatform> stub_display_platform;
+    std::shared_ptr<mg::DisplayPlatform> stub_display_platform;
 };
 
 }
@@ -181,7 +180,7 @@ void add_graphics_platform_options(boost::program_options::options_description&)
 
 mir::UniqueModulePtr<mg::RenderingPlatform> create_rendering_platform(
     mg::SupportedDevice const&,
-    std::vector<std::shared_ptr<mg::DisplayPlatform>> const&,
+    std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const&,
     mo::Option const&,
     mir::EmergencyCleanupRegistry&)
 {

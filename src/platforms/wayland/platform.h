@@ -46,9 +46,9 @@ public:
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) override;
 
+protected:
+    auto interface_for() -> std::shared_ptr<DisplayInterfaceProvider> override;
 private:
-    auto maybe_create_interface(DisplayInterfaceBase::Tag const& tag)
-        -> std::shared_ptr<DisplayInterfaceBase> override;
 
     struct wl_display* const wl_display;
     std::shared_ptr<DisplayReport> const report;

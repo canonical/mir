@@ -27,11 +27,11 @@ namespace mge = mg::egl::generic;
 
 namespace
 {
-auto egl_display_from_platforms(std::vector<std::shared_ptr<mg::DisplayPlatform>> const& displays) -> EGLDisplay
+auto egl_display_from_platforms(std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays) -> EGLDisplay
 {
     for (auto const& display : displays)
     {
-        if (auto egl_provider = mg::DisplayPlatform::acquire_interface<mg::GenericEGLDisplayProvider>(display))
+        if (auto egl_provider = display->acquire_interface<mg::GenericEGLDisplayProvider>())
         {
             return egl_provider->get_egl_display();
         }
@@ -78,7 +78,7 @@ auto make_share_only_context(EGLDisplay dpy) -> EGLContext
 }
 }
 
-mge::RenderingPlatform::RenderingPlatform(std::vector<std::shared_ptr<DisplayPlatform>> const& displays)
+mge::RenderingPlatform::RenderingPlatform(std::vector<std::shared_ptr<DisplayInterfaceProvider>> const& displays)
     : dpy{egl_display_from_platforms(displays)},
       ctx{make_share_only_context(dpy)}
 {

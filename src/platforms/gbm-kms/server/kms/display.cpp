@@ -144,7 +144,7 @@ void log_drm_details(mir::Fd const& drm_fd)
 }
 
 mgg::Display::Display(
-    std::shared_ptr<DisplayPlatform> parent,
+    std::shared_ptr<DisplayInterfaceProvider> parent,
     mir::Fd drm_fd,
     mgg::BypassOption bypass_option,
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
@@ -452,44 +452,26 @@ auto drm_get_cap_checked(mir::Fd const& drm_fd, uint64_t cap) -> uint64_t
     uint64_t value;
     if (drmGetCap(drm_fd, cap, &value))
     {
-
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                errno,
+                std::system_category(),
+                "Failed to query DRM capabilities"}));
     }
     return value;
 }
-
-
-class DumbAllocator : public mg::DumbDisplayProvider::Allocator
-{
-public:
-    DumbAllocator(mir::Fd drm_fd, mg::DisplayBuffer const& db)
-        : drm_fd(std::move(drm_fd)),
-          supports_modifiers{drm_get_cap_checked(this->drm_fd, DRM_CAP_ADDFB2_MODIFIERS) == 1},
-          size{db.view_area().size}
-    {
-    }
-
-    auto acquire() -> std::unique_ptr<mg::DumbDisplayProvider::MappableFB> override
-    {
-        return std::make_unique<mgg::DumbFB>(drm_fd, supports_modifiers, size);
-    }
-
-private:
-    mir::Fd const drm_fd;
-    bool const supports_modifiers;
-    mir::geometry::Size const size;
-};
-
 }
 
-mgg::DumbDisplayProvider::DumbDisplayProvider()
+mgg::DumbDisplayProvider::DumbDisplayProvider(mir::Fd drm_fd)
+    : drm_fd{std::move(drm_fd)},
+      supports_modifiers{drm_get_cap_checked(this->drm_fd, DRM_CAP_ADDFB2_MODIFIERS) == 1}
 {
 }
 
-auto mgg::DumbDisplayProvider::allocator_for_db(
-    mg::DisplayBuffer const& db) -> std::unique_ptr<mg::DumbDisplayProvider::Allocator>
+auto mgg::DumbDisplayProvider::alloc_fb(
+    geom::Size size) -> std::unique_ptr<MappableFB>
 {
-    auto const& kms_db = dynamic_cast<mgg::DisplayBuffer const&>(db);
-    return std::make_unique<DumbAllocator>(kms_db.drm_fd(), db);
+    return std::make_unique<mgg::DumbFB>(drm_fd, supports_modifiers, size);
 }
 
 namespace
@@ -520,11 +502,9 @@ auto gbm_create_device_checked(mir::Fd fd) -> std::shared_ptr<struct gbm_device>
 }
 
 mgg::GBMDisplayProvider::GBMDisplayProvider(
-    mir::Fd drm_fd,
-    mg::DisplayPlatform const* parent)
+    mir::Fd drm_fd)
     : fd{std::move(drm_fd)},
-      gbm{gbm_create_device_checked(fd)},
-      parent{parent}
+      gbm{gbm_create_device_checked(fd)}
 {
 }
 
@@ -532,7 +512,6 @@ auto mgg::GBMDisplayProvider::gbm_device() const -> std::shared_ptr<struct gbm_d
 {
     return gbm;
 }
-
 
 auto mgg::GBMDisplayProvider::is_same_device(mir::udev::Device const& render_device) const -> bool
 {
@@ -587,12 +566,6 @@ auto mgg::GBMDisplayProvider::is_same_device(mir::udev::Device const& render_dev
     
     return result;
 #endif
-}
-
-auto mgg::GBMDisplayProvider::is_same_device(mg::DisplayBuffer const& db) const -> bool
-{
-    mir::log_debug("Is %p the same as %p?", db.owner().get(), parent);
-    return db.owner().get() == parent;
 }
 
 auto mgg::GBMDisplayProvider::supported_formats() const -> std::vector<DRMFormat>
@@ -654,6 +627,14 @@ public:
     operator uint32_t() const override
     {
         return *fb_id;
+    }
+
+    auto size() const -> geom::Size override
+    {
+        return 
+            geom::Size{
+                gbm_bo_get_width(bo.get()),
+                gbm_bo_get_height(bo.get())};
     }
 private:
     GBMBoFramebuffer(LockedFrontBuffer bo, std::shared_ptr<uint32_t const> fb)

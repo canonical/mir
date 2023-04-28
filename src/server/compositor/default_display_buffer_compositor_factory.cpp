@@ -55,7 +55,8 @@ mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
      * GL surface could be the common case, and not allocating it would save a
      * potentially-significant amount of GPU memory.
      */
-    auto output_surface = allocator->surface_for_output(display_buffer, *gl_config);
+    auto output_surface = allocator->surface_for_output(
+        display_buffer.display_provider(), display_buffer.view_area().size, *gl_config);
     auto renderer = renderer_factory->create_renderer_for(std::move(output_surface), allocator);
     renderer->set_viewport(display_buffer.view_area());
     return std::make_unique<DefaultDisplayBufferCompositor>(

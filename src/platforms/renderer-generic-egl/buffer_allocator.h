@@ -88,12 +88,15 @@ public:
          EGLDisplay dpy,
          EGLContext ctx);
 
-    auto make_framebuffer_provider(DisplayBuffer const& target)
+    auto make_framebuffer_provider(std::shared_ptr<DisplayInterfaceProvider> target)
         -> std::unique_ptr<FramebufferProvider> override;
 
     auto as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture> override;
 
-    auto surface_for_output(DisplayBuffer& db, GLConfig const& config) -> std::unique_ptr<gl::OutputSurface> override;
+    auto surface_for_output(
+        std::shared_ptr<DisplayInterfaceProvider> framebuffer_provider,
+        geometry::Size size,
+        GLConfig const& config) -> std::unique_ptr<gl::OutputSurface> override;
 
 private:
     EGLDisplay const dpy;

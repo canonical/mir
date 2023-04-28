@@ -37,13 +37,14 @@ class DisplayReport;
 
 namespace X
 {
+class Platform;
 
 class DisplayBuffer : public graphics::DisplayBuffer,
                       public graphics::DisplaySyncGroup
 {
 public:
     DisplayBuffer(
-            std::shared_ptr<DisplayPlatform> parent,
+            std::shared_ptr<Platform> parent,
             xcb_window_t win,
             geometry::Rectangle const& view_area);
 
@@ -54,7 +55,7 @@ public:
 
     glm::mat2 transformation() const override;
 
-    auto owner() const -> std::shared_ptr<DisplayPlatform> override;
+    auto display_provider() const -> std::shared_ptr<DisplayInterfaceProvider> override;
 
     void set_view_area(geometry::Rectangle const& a);
     void set_transformation(glm::mat2 const& t);
@@ -66,7 +67,7 @@ public:
 
     auto x11_window() const -> xcb_window_t;
 private:
-    std::shared_ptr<DisplayPlatform> const parent;
+    std::shared_ptr<Platform> const parent;
     std::shared_ptr<helpers::Framebuffer> next_frame;
     geometry::Rectangle area;
     glm::mat2 transform;

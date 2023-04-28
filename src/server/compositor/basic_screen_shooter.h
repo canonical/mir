@@ -18,6 +18,8 @@
 #define MIR_COMPOSITOR_BASIC_SCREEN_SHOOTER_H_
 
 #include "mir/compositor/screen_shooter.h"
+#include "mir/graphics/platform.h"
+#include "mir/renderer/renderer_factory.h"
 #include "mir/time/clock.h"
 
 #include <mutex>
@@ -28,6 +30,7 @@ class Executor;
 namespace renderer
 {
 class Renderer;
+class RendererFactory;
 namespace gl
 {
 class BufferOutputSurface;
@@ -44,8 +47,8 @@ public:
         std::shared_ptr<Scene> const& scene,
         std::shared_ptr<time::Clock> const& clock,
         Executor& executor,
-        std::unique_ptr<renderer::gl::BufferOutputSurface>&& render_target,
-        std::unique_ptr<renderer::Renderer>&& renderer);
+        graphics::GLRenderingProvider& platform,
+        renderer::RendererFactory& render_factory);
 
     void capture(
         std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
@@ -58,18 +61,19 @@ private:
         Self(
             std::shared_ptr<Scene> const& scene,
             std::shared_ptr<time::Clock> const& clock,
-            std::unique_ptr<renderer::gl::BufferOutputSurface>&& render_target,
-            std::unique_ptr<renderer::Renderer>&& renderer);
+            std::unique_ptr<renderer::Renderer> renderer);
 
         auto render(
             std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
             geometry::Rectangle const& area) -> time::Timestamp;
 
+        class HeadlessDisplay;
+
         std::mutex mutex;
         std::shared_ptr<Scene> const scene;
-        std::unique_ptr<renderer::gl::BufferOutputSurface> const render_target;
         std::unique_ptr<renderer::Renderer> const renderer;
         std::shared_ptr<time::Clock> const clock;
+        std::shared_ptr<HeadlessDisplay> const output;
     };
     std::shared_ptr<Self> const self;
     Executor& executor;

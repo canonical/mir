@@ -35,11 +35,11 @@ namespace mge = mg::egl::generic;
 
 auto create_rendering_platform(
     mg::SupportedDevice const&,
-    std::vector<std::shared_ptr<mg::DisplayPlatform>> const& displays,
+    std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays,
     mo::Option const&,
     mir::EmergencyCleanupRegistry&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
 {
-    mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
+   mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
 
     return mir::make_module_ptr<mge::RenderingPlatform>(displays);
 }

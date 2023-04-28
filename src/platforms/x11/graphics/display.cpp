@@ -103,7 +103,7 @@ mgx::X11Window::operator xcb_window_t() const
 }
 
 mgx::Display::Display(
-    std::shared_ptr<DisplayPlatform> parent,
+    std::shared_ptr<Platform> parent,
     std::shared_ptr<mir::X::X11Resources> const& x11_resources,
     std::string const title,
     std::vector<X11OutputConfig> const& requested_sizes,

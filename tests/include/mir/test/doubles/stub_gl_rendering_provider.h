@@ -51,13 +51,14 @@ public:
     }
 
     auto surface_for_output(
-        graphics::DisplayBuffer&,
+        std::shared_ptr<graphics::DisplayInterfaceProvider>,
+        geometry::Size,
         graphics::GLConfig const&) -> std::unique_ptr<graphics::gl::OutputSurface> override
     {
         return std::make_unique<testing::NiceMock<MockOutputSurface>>();
     }
 
-    auto make_framebuffer_provider(graphics::DisplayBuffer const& /*target*/)
+    auto make_framebuffer_provider(std::shared_ptr<graphics::DisplayInterfaceProvider> /*target*/)
         -> std::unique_ptr<FramebufferProvider> override
     {
         class NullFramebufferProvider : public FramebufferProvider

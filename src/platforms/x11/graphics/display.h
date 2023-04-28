@@ -43,6 +43,7 @@ namespace X
 
 class DisplayBuffer;
 class X11OutputConfig;
+class Platform;
 
 class X11Window
 {
@@ -63,7 +64,7 @@ class Display : public graphics::Display
 {
 public:
     Display(
-        std::shared_ptr<DisplayPlatform> parent,
+        std::shared_ptr<Platform> parent,
         std::shared_ptr<mir::X::X11Resources> const& x11_resources,
         std::string const title,
         std::vector<X11OutputConfig> const& requested_size,
@@ -107,7 +108,7 @@ private:
         std::shared_ptr<DisplayConfigurationOutput> const config;
     };
 
-    std::shared_ptr<DisplayPlatform> const parent;
+    std::shared_ptr<Platform> const parent;
     std::shared_ptr<mir::X::X11Resources> const x11_resources;
     geometry::SizeF pixel_size_mm;
     std::shared_ptr<DisplayReport> const report;

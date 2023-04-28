@@ -16,6 +16,7 @@
 
 #include "platform.h"
 #include "display.h"
+#include "mir/graphics/platform.h"
 
 namespace mg = mir::graphics;
 namespace mgw = mir::graphics::wayland;
@@ -31,11 +32,11 @@ mir::UniqueModulePtr<mg::Display> mgw::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const&,
     std::shared_ptr<GLConfig> const& gl_config)
 {
-  return mir::make_module_ptr<mgw::Display>(wl_display, gl_config, report);
+    return mir::make_module_ptr<mgw::Display>(wl_display, gl_config, report);
 }
 
-auto mgw::Platform::maybe_create_interface(
-    const DisplayInterfaceBase::Tag& /*tag*/) -> std::shared_ptr<DisplayInterfaceBase>
+auto mgw::Platform::interface_for() -> std::shared_ptr<DisplayInterfaceProvider>
 {
-    return {};
+    return nullptr; 
 }
+

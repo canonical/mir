@@ -590,7 +590,7 @@ class CPUCopyOutputSurface : public mg::gl::OutputSurface
 public:
     CPUCopyOutputSurface(
         std::unique_ptr<mir::renderer::gl::Context> ctx,
-        std::unique_ptr<mg::DumbDisplayProvider::Allocator> allocator,
+        std::shared_ptr<mg::DumbDisplayProvider> allocator,
         geom::Size size)
         : allocator{std::move(allocator)},
           ctx{std::move(ctx)},
@@ -647,7 +647,7 @@ public:
 
     auto commit() -> std::unique_ptr<mg::Framebuffer> override
     {
-        auto fb = allocator->acquire();
+        auto fb = allocator->alloc_fb(size_);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         {
             auto mapping = fb->map_writeable();
@@ -678,7 +678,7 @@ public:
     }
 
 private:
-    std::unique_ptr<mg::DumbDisplayProvider::Allocator> const allocator;
+    std::shared_ptr<mg::DumbDisplayProvider> const allocator;
     std::unique_ptr<mir::renderer::gl::Context> const ctx;
     geom::Size const size_;
     RenderbufferHandle const colour_buffer;
@@ -814,10 +814,11 @@ auto mir::graphics::eglstream::GLRenderingProvider::as_texture(std::shared_ptr<B
 }
 
 auto mge::GLRenderingProvider::surface_for_output(
-    mg::DisplayBuffer& db,
+    std::shared_ptr<mg::DisplayInterfaceProvider> target,
+    geom::Size size,
     mg::GLConfig const& gl_config) -> std::unique_ptr<gl::OutputSurface>
 {
-    if (auto stream_platform = DisplayPlatform::acquire_interface<EGLStreamDisplayProvider>(db.owner()))
+    if (auto stream_platform = target->acquire_interface<EGLStreamDisplayProvider>())
     {
         try
         {
@@ -825,8 +826,8 @@ auto mge::GLRenderingProvider::surface_for_output(
                 dpy,
                 pick_stream_surface_config(dpy, gl_config),
                 static_cast<EGLContext>(*ctx),
-                stream_platform->claim_stream_for_output(db),
-                db.view_area().size);
+                stream_platform->claim_stream(),
+                size);
         }
         catch (std::exception const& err)
         {
@@ -835,17 +836,17 @@ auto mge::GLRenderingProvider::surface_for_output(
                 err.what());
         }
     }
-    auto dumb_display = DisplayPlatform::acquire_interface<DumbDisplayProvider>(db.owner());
+    auto dumb_display = target->acquire_interface<DumbDisplayProvider>();
 
     auto fb_context = ctx->make_share_context();
     fb_context->make_current();
     return std::make_unique<CPUCopyOutputSurface>(
         std::move(fb_context),
-        dumb_display->allocator_for_db(db),
-        db.view_area().size);
+        dumb_display,
+        size);
 }
 
-auto mge::GLRenderingProvider::make_framebuffer_provider(mir::graphics::DisplayBuffer const& /*target*/)
+auto mge::GLRenderingProvider::make_framebuffer_provider(std::shared_ptr<mg::DisplayInterfaceProvider> /*target*/)
     -> std::unique_ptr<FramebufferProvider>
 {
     // TODO: *Can* we provide overlay support?

@@ -62,6 +62,8 @@ class DisplayConfigurationPolicy;
 class GraphicBufferAllocator;
 class GLConfig;
 
+class DisplayInterfaceProvider;
+
 class RendererInterfaceBase
 {
 public:
@@ -90,10 +92,11 @@ public:
          * \param buffer
          * \return
          */
-        virtual auto buffer_to_framebuffer(std::shared_ptr<Buffer> buffer) -> std::unique_ptr<Framebuffer> = 0;
+        virtual auto buffer_to_framebuffer(std::shared_ptr<Buffer> buffer)
+            -> std::unique_ptr<Framebuffer> = 0;
     };
 
-    virtual auto make_framebuffer_provider(DisplayBuffer const& target)
+    virtual auto make_framebuffer_provider(std::shared_ptr<DisplayInterfaceProvider> target)
         -> std::unique_ptr<FramebufferProvider> = 0;
 };
 
@@ -112,7 +115,10 @@ public:
 
     virtual auto as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture> = 0;
 
-    virtual auto surface_for_output(DisplayBuffer& db, GLConfig const& config) -> std::unique_ptr<gl::OutputSurface> = 0;
+    virtual auto surface_for_output(
+        std::shared_ptr<DisplayInterfaceProvider> framebuffer_provider,
+        geometry::Size size,
+        GLConfig const& config) -> std::unique_ptr<gl::OutputSurface> = 0;
 };
 
 /**
@@ -211,6 +217,11 @@ class Framebuffer
 public:
     Framebuffer() = default;
     virtual ~Framebuffer() = default;
+
+    /**
+     * The size of this framebuffer, in pixels
+     */
+    virtual auto size() const -> geometry::Size = 0;
 };
 
 
@@ -230,26 +241,8 @@ public:
         virtual ~MappableFB() override = default;
     };
 
-    class Allocator
-    {
-    public:
-        Allocator() = default;
-        virtual ~Allocator() = default;
-
-        /**
-         * Acquire a buffer for rendering into
-         *
-         * This
-         *
-         * \return
-         */
-        virtual auto acquire() -> std::unique_ptr<MappableFB> = 0;
-    };
-
-    DumbDisplayProvider() = default;
-
-    virtual auto allocator_for_db(DisplayBuffer const& db)
-        -> std::unique_ptr<Allocator> = 0;
+    virtual auto alloc_fb(geometry::Size pixel_size)
+        -> std::unique_ptr<MappableFB> = 0;
 };
 
 class GBMDisplayProvider : public DisplayInterfaceBase
@@ -267,11 +260,6 @@ public:
      */
     virtual auto is_same_device(mir::udev::Device const& render_device) const -> bool = 0;
  
-    /**
-     * Check if the provided DisplayBuffer is driven by this device
-     */
-    virtual auto is_same_device(DisplayBuffer const& db) const -> bool = 0;
-
     /**
      * Get the GBM device for this display
      */
@@ -336,7 +324,7 @@ public:
     {
     };
 
-    virtual auto claim_stream_for_output(DisplayBuffer& db) -> EGLStreamKHR = 0;
+    virtual auto claim_stream() -> EGLStreamKHR = 0;
 };
 
 class GenericEGLDisplayProvider : public DisplayInterfaceBase
@@ -355,7 +343,69 @@ public:
         virtual auto clone_handle() -> std::unique_ptr<EGLFramebuffer> = 0;
     };
 
-    virtual auto framebuffer_for_db(DisplayBuffer& db, GLConfig const& config, EGLContext share_context) -> std::unique_ptr<EGLFramebuffer> = 0;
+    virtual auto alloc_framebuffer(GLConfig const& config, EGLContext share_context) -> std::unique_ptr<EGLFramebuffer> = 0;
+};
+
+class DisplayInterfaceProvider : public std::enable_shared_from_this<DisplayInterfaceProvider>
+{
+public:
+    DisplayInterfaceProvider() = default;
+    virtual ~DisplayInterfaceProvider() = default;
+
+    DisplayInterfaceProvider(DisplayInterfaceProvider const&) = delete;
+    auto operator=(DisplayInterfaceProvider const&) -> DisplayInterfaceProvider& = delete;
+
+    /**
+     * Attempt to acquire a platform-specific interface from this DisplayPlatform
+     *
+     * Any given platform is not guaranteed to implement any specific interface,
+     * and the set of supported interfaces may depend on the runtime environment.
+     *
+     * Since this may result in a runtime probe the call may be costly, and the
+     * result should be saved rather than re-acquiring an interface each time.
+     *
+     * \tparam Interface
+     * \return  On success: an occupied std::shared_ptr<Interface>
+     *          On failure: std::shared_ptr<Interface>{nullptr}
+     */
+    template<typename Interface>
+    auto acquire_interface() -> std::shared_ptr<Interface>
+    {
+        static_assert(
+            std::is_convertible_v<Interface*, DisplayInterfaceBase*>,
+            "Can only acquire a Display interface; Interface must implement DisplayInterfaceBase");
+
+        if (auto const base_interface = maybe_create_interface(typename Interface::Tag{}))
+        {
+            if (auto const requested_interface = std::dynamic_pointer_cast<Interface>(base_interface))
+            {
+                return requested_interface;
+            }
+            BOOST_THROW_EXCEPTION((std::logic_error{
+                "Implementation error! Platform returned object that does not support requested interface"}));
+        }
+        return nullptr;
+    }   
+
+protected:
+    /**
+     * Acquire a specific hardware interface
+     *
+     * This should perform any runtime checks necessary to verify the requested interface is
+     * expected to work and return a pointer to an implementation of that interface.
+     *
+     * This function is guaranteed to be called with `this` managed by a `shared_ptr`; if
+     * the returned value needs to share ownership with `this`, calls to `std::shared_from_this`
+     * can be expected to work.
+     *
+     * \param type_tag  [in]    An instance of the Tag type for the requested interface.
+     *                          Implementations are expected to dynamic_cast<> this to
+     *                          discover the specific interface being requested.
+     * \return      A pointer to an implementation of the DisplayInterfaceBase-derived
+     *              interface that corresponds to the most-derived type of tag_type.
+     */
+    virtual auto maybe_create_interface(DisplayInterfaceBase::Tag const& type_tag)
+        -> std::shared_ptr<DisplayInterfaceBase> = 0;
 };
 
 class DisplayPlatform : public std::enable_shared_from_this<DisplayPlatform>
@@ -374,57 +424,13 @@ public:
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) = 0;
 
-    /**
-     * Attempt to acquire a platform-specific interface from this DisplayPlatform
-     *
-     * Any given platform is not guaranteed to implement any specific interface,
-     * and the set of supported interfaces may depend on the runtime environment.
-     *
-     * Since this may result in a runtime probe the call may be costly, and the
-     * result should be saved rather than re-acquiring an interface each time.
-     *
-     * \tparam Interface
-     * \return  On success: an occupied std::shared_ptr<Interface>
-     *          On failure: std::shared_ptr<Interface>{nullptr}
-     */
-    template<typename Interface>
-    static auto acquire_interface(std::shared_ptr<DisplayPlatform> const& platform) -> std::shared_ptr<Interface>
+    static auto interface_for(std::shared_ptr<DisplayPlatform> platform)
+        -> std::shared_ptr<DisplayInterfaceProvider>
     {
-        static_assert(
-            std::is_convertible_v<Interface*, DisplayInterfaceBase*>,
-            "Can only acquire a Display interface; Interface must implement DisplayInterfaceBase");
-
-        if (auto const base_interface = platform->maybe_create_interface(typename Interface::Tag{}))
-        {
-            if (auto const requested_interface = std::dynamic_pointer_cast<Interface>(base_interface))
-            {
-                return requested_interface;
-            }
-            BOOST_THROW_EXCEPTION((std::logic_error{
-                "Implementation error! Platform returned object that does not support requested interface"}));
-        }
-        return nullptr;
+        return platform->interface_for();
     }
-
 protected:
-    /**
-     * Acquire a specific hardware interface
-     *
-     * This should perform any runtime checks necessary to verify the requested interface is
-     * expected to work and return a pointer to an implementation of that interface.
-     *
-     * This function is guaranteed to be called with `this` managed by a `shared_ptr`; if
-     * the returned value needs to share ownership with `this`, calls to std::shared_from_this
-     * can be expected to work.
-     *
-     * \param type_tag  [in]    An instance of the Tag type for the requested interface.
-     *                          Implementations are expected to dynamic_cast<> this to
-     *                          discover the specific interface being requested.
-     * \return      A pointer to an implementation of the RenderInterfaceBase-derived
-     *              interface that corresponds to the most-derived type of tag_type.
-     */
-    virtual auto maybe_create_interface(DisplayInterfaceBase::Tag const& type_tag)
-        -> std::shared_ptr<DisplayInterfaceBase> = 0;
+    virtual auto interface_for() -> std::shared_ptr<DisplayInterfaceProvider> = 0;
 };
 
 /**
@@ -487,7 +493,7 @@ typedef mir::UniqueModulePtr<mir::graphics::DisplayPlatform>(*CreateDisplayPlatf
 
 typedef mir::UniqueModulePtr<mir::graphics::RenderingPlatform>(*CreateRenderPlatform)(
     mir::graphics::SupportedDevice const& device,
-    std::vector<std::shared_ptr<mir::graphics::DisplayPlatform>> const& displays,
+    std::vector<std::shared_ptr<mir::graphics::DisplayInterfaceProvider>> const& displays,
     mir::options::Option const& options,
     mir::EmergencyCleanupRegistry& emergency_cleanup_registry);
 
@@ -535,7 +541,7 @@ mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
 
 mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
     mir::graphics::SupportedDevice const& device,
-    std::vector<std::shared_ptr<mir::graphics::DisplayPlatform>> const& displays,
+    std::vector<std::shared_ptr<mir::graphics::DisplayInterfaceProvider>> const& displays,
     mir::options::Option const& options,
     mir::EmergencyCleanupRegistry& emergency_cleanup_registry);
 

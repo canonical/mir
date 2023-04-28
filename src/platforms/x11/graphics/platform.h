@@ -21,6 +21,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/geometry/size.h"
 
+#include <xcb/xcb.h>
 #include <mutex>
 
 namespace mir
@@ -60,25 +61,25 @@ public:
     // Parses colon separated list of sizes in the form WIDTHxHEIGHT^SCALE (^SCALE is optional)
     static auto parse_output_sizes(std::string output_sizes) -> std::vector<X11OutputConfig>;
 
-    explicit Platform(std::shared_ptr<mir::X::X11Resources> const& x11_resources,
-                      std::string const title,
-                      std::vector<X11OutputConfig> output_sizes,
-                      std::shared_ptr<DisplayReport> const& report);
+    Platform(
+        std::shared_ptr<mir::X::X11Resources> const& x11_resources,
+        std::string const title,
+        std::vector<X11OutputConfig> output_sizes,
+        std::shared_ptr<DisplayReport> const& report);
     ~Platform() = default;
 
     /* From Platform */
-    UniqueModulePtr<graphics::Display> create_display(
+    auto create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
-        std::shared_ptr<GLConfig> const& gl_config) override;
+        std::shared_ptr<GLConfig> const& gl_config) -> UniqueModulePtr<graphics::Display> override;
 
+    auto provider_for_window(xcb_window_t x_win) -> std::shared_ptr<DisplayInterfaceProvider>;
 protected:
-    auto maybe_create_interface(DisplayInterfaceBase::Tag const& type_tag)
-        -> std::shared_ptr<DisplayInterfaceBase> override;
+    auto interface_for() -> std::shared_ptr<DisplayInterfaceProvider> override;
 
 private:
-    class EGLDisplayProvider;
-    std::once_flag provider_constructed;
-    std::shared_ptr<EGLDisplayProvider> egl_provider;
+    class InterfaceProvider;
+    std::shared_ptr<InterfaceProvider> const egl_provider;
     std::shared_ptr<mir::X::X11Resources> const x11_resources;
     std::string const title;
     std::shared_ptr<DisplayReport> const report;

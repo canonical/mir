@@ -366,12 +366,12 @@ public:
     CPUCopyOutputSurface(
         EGLDisplay dpy,
         EGLContext ctx,
-        std::unique_ptr<mg::DumbDisplayProvider::Allocator> allocator,
+        std::shared_ptr<mg::DumbDisplayProvider> allocator,
         geom::Size size)
         : allocator{std::move(allocator)},
           dpy{dpy},
           ctx{ctx},
-          size_{std::move(size)}
+          size_{size}
     {
         if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx) != EGL_TRUE)
         {
@@ -429,7 +429,7 @@ public:
 
     auto commit() -> std::unique_ptr<mg::Framebuffer> override
     {
-        auto fb = allocator->acquire();
+        auto fb = allocator->alloc_fb(size());
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         {
             auto mapping = fb->map_writeable();
@@ -460,7 +460,7 @@ public:
     }
 
 private:
-    std::unique_ptr<mg::DumbDisplayProvider::Allocator> const allocator;
+    std::shared_ptr<mg::DumbDisplayProvider> const allocator;
     EGLDisplay const dpy;
     EGLContext const ctx;
     geom::Size const size_;
@@ -472,10 +472,8 @@ class EGLOutputSurface : public mg::gl::OutputSurface
 {
 public:
     EGLOutputSurface(
-        std::unique_ptr<mg::GenericEGLDisplayProvider::EGLFramebuffer> fb,
-        geom::Size size)
-        : fb{std::move(fb)},
-          size_{size}
+        std::unique_ptr<mg::GenericEGLDisplayProvider::EGLFramebuffer> fb)
+        : fb{std::move(fb)}
     {
     }
 
@@ -495,7 +493,7 @@ public:
 
     auto size() const -> geom::Size override
     {
-        return size_;
+        return fb->size();
     }
 
     auto layout() const -> Layout override
@@ -505,32 +503,32 @@ public:
 
 private:
     std::unique_ptr<mg::GenericEGLDisplayProvider::EGLFramebuffer> const fb;
-    geom::Size const size_;
 };
 }
 
-auto mge::GLRenderingProvider::surface_for_output(DisplayBuffer& db, GLConfig const& config)
+auto mge::GLRenderingProvider::surface_for_output(
+    std::shared_ptr<DisplayInterfaceProvider> framebuffer_provider,
+    geometry::Size size,
+    GLConfig const& config)
     -> std::unique_ptr<gl::OutputSurface>
 {
-    if (auto egl_display = DisplayPlatform::acquire_interface<GenericEGLDisplayProvider>(db.owner()))
+    if (auto egl_display = framebuffer_provider->acquire_interface<GenericEGLDisplayProvider>())
     {
-        return std::make_unique<EGLOutputSurface>(
-            egl_display->framebuffer_for_db(db, config, ctx),
-            db.view_area().size);
+        return std::make_unique<EGLOutputSurface>(egl_display->alloc_framebuffer(config, ctx));
     }
-    auto dumb_display = DisplayPlatform::acquire_interface<DumbDisplayProvider>(db.owner());
+    auto dumb_display = framebuffer_provider->acquire_interface<DumbDisplayProvider>();
     
     return std::make_unique<CPUCopyOutputSurface>(
         dpy,
         ctx,
-        dumb_display->allocator_for_db(db),
-        db.view_area().size);
+        std::move(dumb_display),
+        size);
 }
 
-auto mge::GLRenderingProvider::make_framebuffer_provider(DisplayBuffer const& /*target*/)
+auto mge::GLRenderingProvider::make_framebuffer_provider(std::shared_ptr<DisplayInterfaceProvider> /*target*/)
     -> std::unique_ptr<FramebufferProvider>
 {
-    // TODO: Make this not a null implementation, so bypass/overlays can work again
+    // TODO: Work out under what circumstances the EGL renderer *can* provide overlayable framebuffers
     class NullFramebufferProvider : public FramebufferProvider
     {
     public:
