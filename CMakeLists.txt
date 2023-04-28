@@ -50,7 +50,7 @@ endif()
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
 include (GNUInstallDirs)
-include (cmake/Doxygen.cmake)
+add_subdirectory (doc/sphinx)
 
 set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer;ThreadSanitizer;UBSanitizer")
 # Change informational string for CMAKE_BUILD_TYPE

@@ -18,11 +18,11 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Mir'
-copyright = '2022, mir-team'
+copyright = '@YEAR_TODAY@, mir-team'
 author = 'mir-team'
 
 # The full version, including alpha/beta/rc tags
-release = '2.10'
+release = '@MIR_VERSION_MAJOR@.@MIR_VERSION_MINOR@'
 
 
 # -- General configuration ---------------------------------------------------
@@ -80,7 +80,7 @@ html_theme = 'furo'
 # so a file named "default.css" will overwrite the builtin "default.css".
 # html_static_path = ['_static']
 
-breathe_projects = {"Mir": "./doxygen/xml/"}
+breathe_projects = {"Mir": "./doc/xml/"}
 breathe_default_project = "Mir"
 breathe_default_members = ('members', 'undoc-members')
 breathe_order_parameters_first = True
