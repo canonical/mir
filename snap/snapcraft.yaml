@@ -76,7 +76,6 @@ parts:
     - libnvidia-egl-wayland1
     - libpng16-16
     - libsigc++-2.0-0v5
-    - libunwind8
     - liburcu8
     - libwacom9
     - libwayland-client0
