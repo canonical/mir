@@ -23,8 +23,8 @@ if(SPHINX)
       ${CMAKE_CURRENT_BINARY_DIR}/_static/custom.css @ONLY IMMEDIATE)
 
   add_custom_target(doc
-          COMMAND sphinx-build -b html  ${CMAKE_CURRENT_BINARY_DIR}  ${CMAKE_BINARY_DIR}/doc/html
-          #COMMAND xdg-open ${CMAKE_BINARY_DIR}/doc/html/index.html
-        )
+      COMMAND sphinx-build -b html  ${CMAKE_CURRENT_BINARY_DIR}  ${CMAKE_BINARY_DIR}/doc/html
+      #COMMAND xdg-open ${CMAKE_BINARY_DIR}/doc/html/index.html
+  )
 endif()
 endif()
