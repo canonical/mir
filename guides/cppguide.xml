@@ -535,7 +535,7 @@ Thomas Voss
                  <CODE_SNIPPET>
                    #include "a.h"
 
-                   DEFINE_BOOL(someflag, false, "dummy flag");
+                   DEFINE_BOOL(someflag, false, "placeholder flag");
 
                    class C;  // Forward declaration of class C in the global namespace.
                    namespace a { class A; }  // Forward declaration of a::A.
