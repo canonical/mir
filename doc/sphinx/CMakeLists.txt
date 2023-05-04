@@ -1,10 +1,7 @@
-find_program(SPHINX sphinx-build)
 find_package(Doxygen 1.8.0)
 
 if(DOXYGEN_FOUND)
-if(SPHINX)
   execute_process(COMMAND "date" "+%Y" OUTPUT_VARIABLE YEAR_TODAY OUTPUT_STRIP_TRAILING_WHITESPACE)
-  execute_process(COMMAND "pip" "install" "sphinx_rtd_theme" "breathe" "graphviz" "furo" "exhale")
 
   configure_file(
       ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in
@@ -22,9 +19,16 @@ if(SPHINX)
       ${CMAKE_CURRENT_SOURCE_DIR}/_static/custom.css
       ${CMAKE_CURRENT_BINARY_DIR}/_static/custom.css @ONLY IMMEDIATE)
 
+  set(VENVDIR ${CMAKE_CURRENT_BINARY_DIR}/.venv)
+  set(VENV ${VENVDIR}/bin/activate)
+
+  execute_process(
+      COMMAND "python3" "-m" "venv" "${VENVDIR}"
+      COMMAND sh -c ". ${VENV}; for x in sphinx sphinx_rtd_theme breathe graphviz furo exhale; do pip install $x; done"
+  )
+
   add_custom_target(doc
-      COMMAND sphinx-build -b html  ${CMAKE_CURRENT_BINARY_DIR}  ${CMAKE_BINARY_DIR}/doc/html
+      COMMAND sh -xc '. ${VENV}\; sphinx-build -b html  ${CMAKE_CURRENT_BINARY_DIR}  ${CMAKE_BINARY_DIR}/doc/html'
       #COMMAND xdg-open ${CMAKE_BINARY_DIR}/doc/html/index.html
   )
-endif()
 endif()
