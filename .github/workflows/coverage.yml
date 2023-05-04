@@ -92,7 +92,7 @@ jobs:
       run: cmake --build build --target test
 
     - name: Measure coverage
-      timeout-minutes: 5
+      timeout-minutes: 10
       run: cmake --build build --target coverage
 
     - name: Send coverage report
