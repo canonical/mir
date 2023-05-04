@@ -11,6 +11,9 @@ jobs:
   Run:
     runs-on: ubuntu-latest
 
+    env:
+      CCACHE_DIR: "/tmp/ccache"
+
     timeout-minutes: 60
     steps:
     - name: Check out code
@@ -20,23 +23,25 @@ jobs:
       id: setup-ccache
       run: |
         sudo apt-get install ccache
-        ccache --max-size=2G
+        mkdir --parents ${CCACHE_DIR}
 
-        # Determine common base between main and HEAD to use as cache key.
-        if [ "${{ github.event_name }}" == "push" ]; then
-          BASE=$( git rev-parse HEAD )
-        else
-          BASE=$( git cat-file -p HEAD | awk '/parent/ { print $2; exit }' )
-        fi
-        echo "::set-output name=key::${BASE}"
+        # Find the merge base to avoid populating the cache with short lived cache entries
+        # and evicting those we care for - from `main`
+        echo "merge-base=$( git merge-base origin/main ${{ github.sha }} )" >> $GITHUB_OUTPUT
 
     - name: CCache
       uses: actions/cache@v3
       with:
-        key: ccache-${{ steps.setup-ccache.outputs.key }}
+        key: ccache-coverage-${{ steps.setup-ccache.outputs.merge-base }}
+        # if exact match isn't found, use the most recent entry for the task
         restore-keys: |
-          ccache-
-        path: ~/.ccache/**
+          ccache-coverage-
+        path: ${{ env.CCACHE_DIR }}
+
+    - name: Ensure ccache size
+      run: |
+        # a full build yielded 180M cache
+        echo "max_size = 250" > ${CCACHE_DIR}/ccache.conf
 
     - name: Install dependencies
       run: |
