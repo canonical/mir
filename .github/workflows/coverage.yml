@@ -85,6 +85,7 @@ jobs:
       timeout-minutes: 5
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
+        XDG_RUNTIME_DIR: /tmp
       run: cmake --build build --target test
 
     - name: Measure coverage
