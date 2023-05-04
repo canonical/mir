@@ -56,6 +56,12 @@ jobs:
           lcov \
           ninja-build
 
+        # deal with incompataibles preinstalled
+        sudo apt-get remove --yes \
+          libunwind-14-dev \
+          libunwind-dev \
+          libunwind-14
+
         sudo apt-get build-dep ./
 
     - name: Configure
