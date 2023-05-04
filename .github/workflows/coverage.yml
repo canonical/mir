@@ -46,15 +46,13 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-add-repository --yes ppa:mir-team/dev
-        sudo apt install --no-install-recommends \
-          devscripts \
+        sudo apt-get install --no-install-recommends \
           dmz-cursor-theme \
-          equivs \
           gcovr \
           lcov \
           ninja-build
 
-        mk-build-deps --root-cmd sudo --install
+        sudo apt-get build-dep ./
 
     - name: Configure
       run: >
