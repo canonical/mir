@@ -91,3 +91,9 @@ jobs:
         directory: build
         fail_ci_if_error: true
         verbose: true
+
+    - if: ${{ failure() && runner.debug }}
+      name: Setup upterm session
+      uses: lhotari/action-upterm@v1
+      with:
+        limit-access-to-actor: true
