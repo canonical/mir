@@ -197,11 +197,15 @@ public:
                     pending_devices.erase(pending_iter);
                 }
 
+                printf("\nadding libinput device %s\n", devnode.c_str());
                 if (!libinput_path_add_device(lib.get(), devnode.c_str()))
                 {
+                    printf("didn't work\n");
                     // Oops, libinput didn't want this after all.
                     device_fds.remove_fd(raw_fd);
                     device_watchers.erase(devnum);
+                } else {
+                    printf("device added\n");
                 }
             });
     }
