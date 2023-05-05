@@ -55,7 +55,6 @@ jobs:
         sudo apt-add-repository --yes ppa:mir-team/dev
         sudo apt-get install --no-install-recommends \
           dmz-cursor-theme \
-          gcovr \
           lcov \
           ninja-build
 
