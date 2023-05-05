@@ -1,4 +1,6 @@
-A brief guide for versioning symbols in the Mir DSOs {#dso_versioning_guide}
+.. _dso_versioning_guide:
+
+A brief guide for versioning symbols in the Mir DSOs
 ====================================================
 
 So, what do I have to do?
@@ -62,7 +64,7 @@ Load-time version detection
 
 When using versioned symbols the linker adds an extra, special symbol containing
 the version(s) exported from the library. Consumers of the library resolve this
-on library load. For example:
+on library load. For example::
 
     $ objdump -C -T lib/libmirclient.so
     …
@@ -80,10 +82,11 @@ needed a symbol versioned with `MIR_CLIENT_9`, it would try to resolve this at
 load time and fail, rather than failing when the symbol was first referenced -
 possibly much later, and more confusingly.
 
-### So what do I have to do to make this work?
+So what do I have to do to make this work?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When you add new symbols, add them to a new `version` block in the relevant
-`symbols.map` file, like so:
+`symbols.map` file, like so::
 
     MIR_CLIENT_0.17 {
         global:
@@ -125,7 +128,7 @@ implementation. Binaries linked against the new library will resolve to the new
 
 ### So, what do I have to do to make this work?
 For example, if you wanted to change the signature of
-`mir_connection_create_surface` to take a new parameter:
+`mir_connection_create_surface` to take a new parameter::
 
 `mir_connection_api.cpp`:
 
@@ -176,7 +179,8 @@ changed use of those symbols will break.
 By versioning the symbols we ensure that code always gets exactly the symbol
 implementation it expects, even when multiple library versions are loaded.
 
-### So, what do I have to do to make this work?
+So, what do I have to do to make this work?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Ensure that different implementations of a symbol have different versions.
 
@@ -186,6 +190,6 @@ versions. For the moment, we can not bother trying to make this work.
 
 See also: 
 ---------
-[Binutils manual](https://sourceware.org/binutils/docs/ld/VERSION.html)
+`Binutils manual <https://sourceware.org/binutils/docs/ld/VERSION.html>`_
 
-[Former glibc maintainer's DSO guide](http://www.akkadia.org/drepper/dsohowto.pdf)
+`Former glibc maintainer's DSO guide <http://www.akkadia.org/drepper/dsohowto.pdf>`_

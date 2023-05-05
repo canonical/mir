@@ -16,6 +16,22 @@ if(DOXYGEN_FOUND)
       ${CMAKE_CURRENT_BINARY_DIR}/index.rst @ONLY IMMEDIATE)
 
   configure_file(
+      ${CMAKE_CURRENT_SOURCE_DIR}/getting_and_using_mir.rst
+      ${CMAKE_CURRENT_BINARY_DIR}/getting_and_using_mir.rst @ONLY IMMEDIATE)
+
+  configure_file(
+      ${CMAKE_CURRENT_SOURCE_DIR}/getting_involved_in_mir.rst
+      ${CMAKE_CURRENT_BINARY_DIR}/getting_involved_in_mir.rst @ONLY IMMEDIATE)
+
+  configure_file(
+      ${CMAKE_CURRENT_SOURCE_DIR}/component_reports.rst
+      ${CMAKE_CURRENT_BINARY_DIR}/component_reports.rst @ONLY IMMEDIATE)
+
+  configure_file(
+      ${CMAKE_CURRENT_SOURCE_DIR}/dso_versioning_guide.rst
+      ${CMAKE_CURRENT_BINARY_DIR}/dso_versioning_guide.rst @ONLY IMMEDIATE)
+
+  configure_file(
       ${CMAKE_CURRENT_SOURCE_DIR}/_static/custom.css
       ${CMAKE_CURRENT_BINARY_DIR}/_static/custom.css @ONLY IMMEDIATE)
 
