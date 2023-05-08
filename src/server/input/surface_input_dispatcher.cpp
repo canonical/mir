@@ -122,7 +122,9 @@ void deliver_without_relative_motion(
         0.0f,
         0.0f);
 
-    mev::set_local_position(*to_deliver, geom::DisplacementF{as_displacement(bounds.top_left)});
+    mev::set_local_position_from_input_bounds_top_left(
+        *to_deliver,
+        geom::DisplacementF{as_displacement(bounds.top_left)});
     if (!drag_and_drop_handle.empty())
         mev::set_drag_and_drop_handle(*to_deliver, drag_and_drop_handle);
     surface->consume(std::move(to_deliver));
@@ -139,7 +141,9 @@ void deliver(
         mev::set_drag_and_drop_handle(*to_deliver, drag_and_drop_handle);
 
     auto const& bounds = surface->input_bounds();
-    mev::set_local_position(*to_deliver, geom::DisplacementF{as_displacement(bounds.top_left)});
+    mev::set_local_position_from_input_bounds_top_left(
+        *to_deliver,
+        geom::DisplacementF{as_displacement(bounds.top_left)});
     surface->consume(std::move(to_deliver));
 }
 
@@ -430,7 +434,7 @@ void mi::SurfaceInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surfa
     pointer_ev->set_action(action);
     if (pointer_ev->position())
     {
-        mev::set_local_position(*event, surface_displacement);
+        mev::set_local_position_from_input_bounds_top_left(*event, surface_displacement);
     }
     if (!drag_and_drop_handle.empty())
     {

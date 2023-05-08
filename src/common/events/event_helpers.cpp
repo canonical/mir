@@ -22,7 +22,9 @@
 namespace mev = mir::events;
 namespace geom = mir::geometry;
 
-void mev::set_local_position(MirEvent& event, mir::geometry::DisplacementF const& offset_from_global)
+void mev::set_local_position_from_input_bounds_top_left(
+    MirEvent& event,
+    mir::geometry::DisplacementF const& input_bounds_top_left)
 {
     if (event.type() == mir_event_type_input)
     {
@@ -32,7 +34,7 @@ void mev::set_local_position(MirEvent& event, mir::geometry::DisplacementF const
             auto pev = event.to_input()->to_pointer();
             if (auto const position = pev->position())
             {
-                pev->set_local_position(position.value() - offset_from_global);
+                pev->set_local_position(position.value() - input_bounds_top_left);
             }
         }
         else if (input_type == mir_input_event_type_touch)
@@ -40,7 +42,7 @@ void mev::set_local_position(MirEvent& event, mir::geometry::DisplacementF const
             auto tev = event.to_input()->to_touch();
             for (unsigned i = 0; i < tev->pointer_count(); i++)
             {
-                tev->set_local_position(i, tev->position(i) - offset_from_global);
+                tev->set_local_position(i, tev->position(i) - input_bounds_top_left);
             }
         }
     }

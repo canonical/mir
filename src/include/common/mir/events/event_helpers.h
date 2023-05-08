@@ -23,7 +23,9 @@ namespace mir
 {
 namespace events
 {
-void set_local_position(MirEvent& event, mir::geometry::DisplacementF const& offset_from_global);
+void set_local_position_from_input_bounds_top_left(
+    MirEvent& event,
+    mir::geometry::DisplacementF const& input_bounds_top_left);
 void scale_local_position(MirEvent& event, float scale);
 }
 }
