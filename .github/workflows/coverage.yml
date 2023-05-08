@@ -15,6 +15,16 @@ jobs:
   Run:
     runs-on: ubuntu-latest
 
+    # This should really use a single build, but the time to store and retrieve the built tree
+    # is significantly longer than building when ccache is in effect.
+    #
+    # All other options are meh enough that I felt this has to do.
+    #
+    # https://github.com/actions/upload-artifact/issues/199
+    strategy:
+      matrix:
+        suite: [acceptance, integration, miral, performance, smoke, unit, wlcs]
+
     env:
       CCACHE_DIR: "/tmp/ccache"
 
@@ -70,7 +80,13 @@ jobs:
       run: >
         cmake
         -DCMAKE_BUILD_TYPE=Coverage
-        -DMIR_RUN_PERFORMANCE_TESTS=ON
+        -DMIR_RUN_ACCEPTANCE_TESTS=${{ matrix.suite == 'acceptance' && 'ON' || 'OFF' }}
+        -DMIR_RUN_INTEGRATION_TESTS=${{ matrix.suite == 'integration' && 'ON' || 'OFF' }}
+        -DMIR_RUN_MIRAL_TESTS=${{ matrix.suite == 'miral' && 'ON' || 'OFF' }}
+        -DMIR_RUN_PERFORMANCE_TESTS=${{ matrix.suite == 'performance' && 'ON' || 'OFF' }}
+        -DMIR_RUN_SMOKE_TESTS=${{ matrix.suite == 'smoke' && 'ON' || 'OFF' }}
+        -DMIR_RUN_UNIT_TESTS=${{ matrix.suite == 'unit' && 'ON' || 'OFF' }}
+        -DMIR_RUN_WLCS_TESTS=${{ matrix.suite == 'wlcs' && 'ON' || 'OFF' }}
         -DCMAKE_C_COMPILER_LAUNCHER=ccache
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
         -GNinja
@@ -97,6 +113,7 @@ jobs:
     - name: Send coverage report
       uses: codecov/codecov-action@v3
       with:
+        flags: ${{ matrix.suite }}
         directory: build
         fail_ci_if_error: true
         verbose: true
