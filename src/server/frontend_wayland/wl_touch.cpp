@@ -56,6 +56,7 @@ void mf::WlTouch::event(std::shared_ptr<MirTouchEvent const> const& event, WlSur
     {
         if (!event->local_position(i))
         {
+            log_error("touch event cannot be sent to wl_surface as it lacks a local poisition");
             continue;
         }
         auto const position = event->local_position(i).value();

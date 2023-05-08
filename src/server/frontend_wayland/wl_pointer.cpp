@@ -315,6 +315,7 @@ void mf::WlPointer::enter_or_motion(std::shared_ptr<MirPointerEvent const> const
 {
     if (!event->local_position())
     {
+        log_error("pointer event cannot be sent to wl_surface as it lacks a local poisition");
         return;
     }
 
