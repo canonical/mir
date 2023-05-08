@@ -430,7 +430,7 @@ void mi::SurfaceInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surfa
     pointer_ev->set_action(action);
     if (pointer_ev->position())
     {
-        pointer_ev->set_position(pointer_ev->position().value() - surface_displacement);
+        mev::set_local_position(*event, surface_displacement);
     }
     if (!drag_and_drop_handle.empty())
     {
