@@ -21,7 +21,9 @@ environment:
     DISTRO/debian_sid: debian
     RELEASE: jammy
     RELEASE/ubuntu: jammy
-    RELEASE/ubuntu_devel: kinetic
+    RELEASE/ubuntu_kinetic: kinetic
+    RELEASE/ubuntu_lunar: lunar
+    RELEASE/ubuntu_devel: mantic
     RELEASE/debian_sid: sid
     PROPOSED: false
     PROPOSED/ubuntu_proposed: true
