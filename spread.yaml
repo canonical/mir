@@ -12,16 +12,6 @@ backends:
             - fedora-37
             - fedora-rawhide:
                 image: images:fedora/37
-    google:
-        key: "$(HOST: echo $SPREAD_GOOGLE_KEY)"
-        plan: n1-highcpu-8
-        location: snapd-spread/us-east1-b
-        halt-timeout: 2h
-        systems:
-            - ubuntu-22.04-64
-            - fedora-36-64
-            - fedora-37-64
-            - fedora-rawhide-64
 
 environment:
     ARCH: amd64
