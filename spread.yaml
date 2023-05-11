@@ -10,8 +10,9 @@ backends:
             - ubuntu-22.04
             - fedora-36
             - fedora-37
+            - fedora-38
             - fedora-rawhide:
-                image: images:fedora/37
+                image: images:fedora/38
 
 environment:
     ARCH: amd64
