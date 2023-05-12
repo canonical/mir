@@ -692,38 +692,10 @@ void mir::LogindConsoleServices::on_pause_device(
         }
         else if ("gone"s == suspend_type)
         {
-            if (major == 226)
-            {
-                /* This is a DRM device.
-                 *
-                 * During startup, we TakeDevice during probe() to check that we can
-                 * actually use the DRM device; we ReleaseDevice it before returning from probe().
-                 *
-                 * Then, during Platform construction we TakeDevice again.
-                 * For some reason, logind feels the need to send a “gone” signal after the
-                 * second TakeDevice call, which would result in us dropping the device and
-                 * everything breaking.
-                 *
-                 * A DRM device is quite unlikely to *actually* be gone, so just ignore
-                 * PauseDevice("gone") signals for DRM devices.
-                 */
-                mir::log_debug(
-                    "Ignoring logind PauseDevice(\"gone\") event for DRM device %i:%i",
-                    major, minor);
-                return;
-            }
             it->second->emit_removed();
-            // The device is gone; logind promises not to send further events for it
+            // The device is gone; we don't need to keep any reference around.
+            // logind does *not* require that we call ReleaseDevice for this device.
             me->acquired_devices.erase(it);
-            // …unfortunately, logind is a FILTHY LIAR.
-            // We're safe to call this asynchronously; there must be a running main loop,
-            // because we've been dispatched from it.
-            logind_session_call_release_device(
-                me->session_proxy.get(),
-                major, minor,
-                nullptr,
-                &complete_release_device_call,
-                nullptr);
         }
         else
         {
