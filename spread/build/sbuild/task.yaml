@@ -1,5 +1,5 @@
 environment:
-    DEB_BUILD_OPTIONS: "${NOCHECK}"
+    DEB_BUILD_OPTIONS: "${DEB_BUILD_EXTRA}"
     NO_PKG_MANGLE: 1
 
 systems: [ubuntu-*]
