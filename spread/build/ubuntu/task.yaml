@@ -12,16 +12,19 @@ summary: Build Ubuntu packages
 execute: |
     cd $SPREAD_PATH
 
+    NODBG=$( [[ "${DEB_BUILD_OPTIONS}" != *nostrip* ]] && echo true || echo false )
+
     # Add Mir dev PPA for any out-of-archive packages needed
     # (Currently: a newer version of WLCS)
-    add-apt-repository ppa:mir-team/dev
+    add-apt-repository ppa:mir-team/dev --component "main $( $NODBG || echo main/debug )"
 
     # to get dpkg-architecture and mk-build-deps
     apt-get install \
       --yes \
       ccache \
       devscripts \
-      dpkg-dev
+      dpkg-dev \
+      $( $NODBG || echo wlcs-dbgsym )
 
     # set host and build environment up
     source <( dpkg-architecture --print-set --host-arch ${ARCH} )
