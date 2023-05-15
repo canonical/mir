@@ -37,63 +37,6 @@ mir::ModuleProperties const description = {
     MIR_VERSION_MICRO,
     mir::libname()
 };
-
-bool can_open_input_devices(mir::ConsoleServices& console)
-{
-    mu::Enumerator input_enumerator{std::make_shared<mu::Context>()};
-    input_enumerator.match_subsystem("input");
-    input_enumerator.scan_devices();
-
-    bool device_found = false;
-
-    for (auto& device : input_enumerator)
-    {
-        if (device.devnode() != nullptr)
-        {
-            class Observer : public mir::Device::Observer
-            {
-            public:
-                Observer(mir::Fd& to_store)
-                    : fd{to_store},
-                      triggered{false}
-                {
-                }
-
-                void activated(mir::Fd&& device_fd) override
-                {
-                    if (!triggered.exchange(true))
-                    {
-                        fd = std::move(device_fd);
-                    }
-                }
-
-                void suspended() override
-                {
-                }
-
-                void removed() override
-                {
-                }
-
-            private:
-                mir::Fd& fd;
-                std::atomic<bool> triggered;
-            };
-            device_found = true;
-            mir::Fd input_device;
-
-            console.acquire_device(
-                major(device.devnum()),
-                minor(device.devnum()),
-                std::make_unique<Observer>(input_device)).get();
-
-            if (input_device > 0)
-                return true;
-        }
-    }
-    return ! device_found;
-}
-
 }
 
 mir::UniqueModulePtr<mi::Platform> create_input_platform(
@@ -120,13 +63,10 @@ void add_input_platform_options(
 
 mi::PlatformPriority probe_input_platform(
     mo::Option const& /*options*/,
-    mir::ConsoleServices& console)
+    mir::ConsoleServices& /*console*/)
 {
     mir::assert_entry_point_signature<mi::ProbePlatform>(&probe_input_platform);
-    if (can_open_input_devices(console))
-        return mi::PlatformPriority::supported;
-
-    return mi::PlatformPriority::unsupported;
+    return mi::PlatformPriority::supported;
 }
 
 mir::ModuleProperties const* describe_input_module()
