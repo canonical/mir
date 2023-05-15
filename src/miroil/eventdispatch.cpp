@@ -22,6 +22,7 @@
 #include <mir/events/event_helpers.h>
 
 namespace mev = mir::events;
+namespace geom = mir::geometry;
 
 void miroil::dispatch_input_event(const miral::Window& window, const MirInputEvent* event)
 {
@@ -32,8 +33,13 @@ void miroil::dispatch_input_event(const miral::Window& window, const MirInputEve
             {
                 if (!local)
                 {
-                    // Unclear if this is the right thing to do
+                    // If local position is not set, local position is confunsingly being stored in global positon. This
+                    // is a remnant of before Mir stored local and global positon in separate variables within the
+                    // event.
                     local = global;
+                    std::shared_ptr<mir::scene::Surface> const surface{window};
+                    auto surface_displacement = geom::DisplacementF{as_displacement(surface->input_bounds().top_left)};
+                    global = local.value() + surface_displacement;
                 }
                 return std::make_pair(global, local);
             });
