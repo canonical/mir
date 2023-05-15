@@ -6,22 +6,14 @@ backends:
     lxd:
         systems:
             - alpine-3.17
+            - alpine-3.18
             - alpine-edge
             - ubuntu-22.04
             - fedora-36
             - fedora-37
+            - fedora-38
             - fedora-rawhide:
-                image: images:fedora/37
-    google:
-        key: "$(HOST: echo $SPREAD_GOOGLE_KEY)"
-        plan: n1-highcpu-8
-        location: snapd-spread/us-east1-b
-        halt-timeout: 2h
-        systems:
-            - ubuntu-22.04-64
-            - fedora-36-64
-            - fedora-37-64
-            - fedora-rawhide-64
+                image: images:fedora/38
 
 environment:
     ARCH: amd64
@@ -31,7 +23,9 @@ environment:
     DISTRO/debian_sid: debian
     RELEASE: jammy
     RELEASE/ubuntu: jammy
-    RELEASE/ubuntu_devel: kinetic
+    RELEASE/ubuntu_kinetic: kinetic
+    RELEASE/ubuntu_lunar: lunar
+    RELEASE/ubuntu_devel: mantic
     RELEASE/debian_sid: sid
     PROPOSED: false
     PROPOSED/ubuntu_proposed: true
