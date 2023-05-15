@@ -548,7 +548,6 @@ MIR_COMMON_2.14 {
     MirTouchEvent::local_position*;
     MirPointerEvent::set_local_position*;
     MirPointerEvent::local_position*;
-    mir::events::set_local_position*;
-    mir::events::scale_local_position*;
+    mir::events::map_positions*;
   };
 } MIR_COMMON_2.11;

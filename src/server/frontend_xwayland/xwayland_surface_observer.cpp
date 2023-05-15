@@ -146,7 +146,16 @@ void mf::XWaylandSurfaceObserver::input_consumed(ms::Surface const*, std::shared
         // Must clone the event so we can scale the positions to XWayland scale
         auto const owned_event = std::dynamic_pointer_cast<MirInputEvent>(
             std::shared_ptr<MirEvent>{mev::clone_event(*event)});
-        mev::scale_local_position(*owned_event, scale);
+
+        mev::map_positions(*owned_event, [&](auto global, auto local)
+            {
+                if (local)
+                {
+                    // Scale positions based on the XWayland scale
+                    local = as_point(as_displacement(local.value()) * scale);
+                }
+                return std::make_pair(global, local);
+            });
 
         if (is_move_resize_event(mir_event_get_input_event(owned_event.get())))
         {

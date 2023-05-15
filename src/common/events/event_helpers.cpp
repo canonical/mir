@@ -22,9 +22,7 @@
 namespace mev = mir::events;
 namespace geom = mir::geometry;
 
-void mev::set_local_position_from_input_bounds_top_left(
-    MirEvent& event,
-    mir::geometry::DisplacementF const& input_bounds_top_left)
+void mev::map_positions(MirEvent& event, MapPositionFunc const& func)
 {
     if (event.type() == mir_event_type_input)
     {
@@ -32,9 +30,12 @@ void mev::set_local_position_from_input_bounds_top_left(
         if (input_type == mir_input_event_type_pointer)
         {
             auto pev = event.to_input()->to_pointer();
-            if (auto const position = pev->position())
+            auto const global = pev->position();
+            if (global)
             {
-                pev->set_local_position(position.value() - input_bounds_top_left);
+                auto const updated = func(global.value(), pev->local_position());
+                pev->set_position(updated.first);
+                pev->set_local_position(updated.second);
             }
         }
         else if (input_type == mir_input_event_type_touch)
@@ -42,34 +43,9 @@ void mev::set_local_position_from_input_bounds_top_left(
             auto tev = event.to_input()->to_touch();
             for (unsigned i = 0; i < tev->pointer_count(); i++)
             {
-                tev->set_local_position(i, tev->position(i) - input_bounds_top_left);
-            }
-        }
-    }
-}
-
-void mev::scale_local_position(MirEvent& event, float scale)
-{
-    if (event.type() == mir_event_type_input)
-    {
-        auto const input_type = event.to_input()->input_type();
-        if (input_type == mir_input_event_type_pointer)
-        {
-            auto pev = event.to_input()->to_pointer();
-            if (auto const local_position = pev->local_position())
-            {
-                pev->set_local_position(as_point(as_displacement(local_position.value()) * scale));
-            }
-        }
-        else if (input_type == mir_input_event_type_touch)
-        {
-            auto tev = event.to_input()->to_touch();
-            for (unsigned i = 0; i < tev->pointer_count(); i++)
-            {
-                if (auto const local_position = tev->local_position(i))
-                {
-                    tev->set_local_position(i, as_point(as_displacement(local_position.value()) * scale));
-                }
+                auto const updated = func(tev->position(i), tev->local_position(i));
+                tev->set_position(i, updated.first);
+                tev->set_local_position(i, updated.second);
             }
         }
     }

@@ -91,6 +91,17 @@ struct InputDispatcherSceneObserver :
     std::function<void()> const on_surface_resized;
 };
 
+void set_local_positions_based_on_surface_input_bounds(
+    MirEvent& event,
+    mir::geometry::Rectangle const& input_bounds)
+{
+    mev::map_positions(event, [&](auto global, auto local)
+        {
+            local = global - geom::DisplacementF{as_displacement(input_bounds.top_left)};
+            return std::make_pair(global, local);
+        });
+}
+
 void deliver_without_relative_motion(
     std::shared_ptr<mi::Surface> const& surface,
     MirEvent const* ev,
@@ -122,9 +133,7 @@ void deliver_without_relative_motion(
         0.0f,
         0.0f);
 
-    mev::set_local_position_from_input_bounds_top_left(
-        *to_deliver,
-        geom::DisplacementF{as_displacement(bounds.top_left)});
+    set_local_positions_based_on_surface_input_bounds(*to_deliver, bounds);
     if (!drag_and_drop_handle.empty())
         mev::set_drag_and_drop_handle(*to_deliver, drag_and_drop_handle);
     surface->consume(std::move(to_deliver));
@@ -141,9 +150,7 @@ void deliver(
         mev::set_drag_and_drop_handle(*to_deliver, drag_and_drop_handle);
 
     auto const& bounds = surface->input_bounds();
-    mev::set_local_position_from_input_bounds_top_left(
-        *to_deliver,
-        geom::DisplacementF{as_displacement(bounds.top_left)});
+    set_local_positions_based_on_surface_input_bounds(*to_deliver, bounds);
     surface->consume(std::move(to_deliver));
 }
 
@@ -427,14 +434,13 @@ void mi::SurfaceInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surfa
                                                        MirPointerEvent const* pev,
                                                        MirPointerAction action)
 {
-    geom::DisplacementF const surface_displacement{as_displacement(surface->input_bounds().top_left)};
     auto const* input_ev = mir_pointer_event_input_event(pev);
     auto event = mev::clone_event(*mir_input_event_get_event(input_ev));
     auto const pointer_ev = static_cast<MirPointerEvent*>(event.get());
     pointer_ev->set_action(action);
     if (pointer_ev->position())
     {
-        mev::set_local_position_from_input_bounds_top_left(*event, surface_displacement);
+        set_local_positions_based_on_surface_input_bounds(*event, surface->input_bounds());
     }
     if (!drag_and_drop_handle.empty())
     {

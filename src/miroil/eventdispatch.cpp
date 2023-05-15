@@ -21,13 +21,22 @@
 #include <mir/events/input_event.h>
 #include <mir/events/event_helpers.h>
 
+namespace mev = mir::events;
+
 void miroil::dispatch_input_event(const miral::Window& window, const MirInputEvent* event)
 {
     if (auto surface = std::shared_ptr<mir::scene::Surface>(window))
     {
-        std::shared_ptr<MirEvent> const clone = mir::events::clone_event(*event);
-        // Unclear if this is the right thing to do
-        mir::events::set_local_position_from_input_bounds_top_left(*clone, {});
+        std::shared_ptr<MirEvent> const clone = mev::clone_event(*event);
+        mev::map_positions(*clone, [&](auto global, auto local)
+            {
+                if (!local)
+                {
+                    // Unclear if this is the right thing to do
+                    local = global;
+                }
+                return std::make_pair(global, local);
+            });
         surface->consume(clone);
     }
 }

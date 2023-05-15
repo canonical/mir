@@ -19,14 +19,21 @@
 
 #include "event.h"
 
+#include <functional>
+
 namespace mir
 {
 namespace events
 {
-void set_local_position_from_input_bounds_top_left(
-    MirEvent& event,
-    mir::geometry::DisplacementF const& input_bounds_top_left);
-void scale_local_position(MirEvent& event, float scale);
+/// A function that takes and returns a global and optional local position
+using MapPositionFunc = std::function<
+    std::pair<geometry::PointF, std::optional<geometry::PointF>>(
+        geometry::PointF global,
+        std::optional<geometry::PointF> local)>;
+
+/// Calls the given function for all positions in the event (could be multiple in the case of touch events) and updates
+/// the local and global positions based on the returned values.
+void map_positions(MirEvent& event, MapPositionFunc const& func);
 }
 }
 
