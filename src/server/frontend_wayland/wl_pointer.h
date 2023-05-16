@@ -110,7 +110,7 @@ private:
     wayland::DestroyListenerId destroy_listener_id; ///< ID of this pointer's destroy listener on surface_under_cursor
     bool needs_frame{false};
     MirPointerButtons current_buttons{0};
-    std::optional<std::pair<float, float>> current_position;
+    std::optional<geometry::PointF> current_position;
     std::unique_ptr<Cursor> cursor;
     wayland::Weak<wayland::RelativePointerV1> relative_pointer;
     geometry::Displacement cursor_hotspot;

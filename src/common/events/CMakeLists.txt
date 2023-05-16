@@ -27,6 +27,7 @@ set(EVENT_SOURCES
   orientation_event.cpp
   resize_event.cpp
   window_output_event.cpp
+  event_helpers.cpp
   window_placement_event.cpp ${PROJECT_SOURCE_DIR}/src/include/common/mir/events/window_placement_event.h
 )
 
