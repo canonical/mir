@@ -118,8 +118,6 @@ mgx::Platform::Platform(std::shared_ptr<mir::X::X11Resources> const& x11_resourc
       report{report},
       output_sizes{std::move(output_sizes)}
 {
-    if (!x11_resources)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
 }
 
 mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
