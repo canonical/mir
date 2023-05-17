@@ -19,7 +19,8 @@ jobs:
       env:
         SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
       run: |
-        snapcraft close mir-core20 "edge/pr${{ github.event.number }}" || true
-        for snap in mir-kiosk mir-test-tools egmde-confined-desktop ubuntu-frame; do
-          snapcraft close "$snap" "edge/mir-pr${{ github.event.number }}" || true
+        snapcraft close mir-libs "22/edge/pr${{ github.event.number }}" || true
+        snapcraft close confined-shell "edge/mir-pr${{ github.event.number }}" || true
+        for snap in mir-test-tools ubuntu-frame; do
+          snapcraft close "$snap" "22/edge/mir-pr${{ github.event.number }}" || true
         done
