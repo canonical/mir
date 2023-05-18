@@ -72,11 +72,11 @@ private:
         std::chrono::milliseconds const& ms,
         int32_t touch_id,
         WlSurface& root_surface,
-        geometry::PointF root_position);
+        std::pair<float, float> const& root_position);
     void motion(
         std::chrono::milliseconds const& ms,
         int32_t touch_id,
-        geometry::PointF root_position);
+        std::pair<float, float> const& root_position);
     void up(uint32_t serial, std::chrono::milliseconds const& ms, int32_t touch_id);
     void maybe_frame();
 };

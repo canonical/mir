@@ -21,8 +21,6 @@
 #include "contact_state.h"
 #include "mir/geometry/point.h"
 
-#include <optional>
-
 namespace mir
 {
 namespace events
@@ -94,7 +92,6 @@ struct TouchContactV2
     MirTouchAction action;
     MirTouchTooltype tooltype;
     geometry::PointF position;
-    std::optional<geometry::PointF> local_position;
     float pressure;
     float touch_major;
     float touch_minor;

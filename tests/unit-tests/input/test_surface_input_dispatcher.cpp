@@ -481,8 +481,8 @@ TEST_F(SurfaceInputDispatcher, touch_delivered_to_surface)
     auto surface = scene.add_surface({{1, 1}, {1, 1}});
 
     InSequence seq;
-    EXPECT_CALL(*surface, consume(mt::TouchEvent(1,1))).Times(1);
-    EXPECT_CALL(*surface, consume(mt::TouchUpEvent(1,1))).Times(1);
+    EXPECT_CALL(*surface, consume(mt::TouchEvent(0,0))).Times(1);
+    EXPECT_CALL(*surface, consume(mt::TouchUpEvent(0,0))).Times(1);
 
     dispatcher.start();
 
@@ -497,16 +497,16 @@ TEST_F(SurfaceInputDispatcher, touch_delivered_only_to_top_surface)
     auto surface = scene.add_surface({{1, 1}, {3, 3}});
 
     InSequence seq;
-    EXPECT_CALL(*surface, consume(mt::TouchEvent(1,1))).Times(1);
+    EXPECT_CALL(*surface, consume(mt::TouchEvent(0,0))).Times(1);
     EXPECT_CALL(*surface, consume(mt::TouchUpEvent(1,1))).Times(1);
-    EXPECT_CALL(*bottom_surface, consume(mt::TouchEvent(1,1))).Times(0);
-    EXPECT_CALL(*bottom_surface, consume(mt::TouchUpEvent(1,1))).Times(0);
+    EXPECT_CALL(*bottom_surface, consume(mt::TouchEvent(0,0))).Times(0);
+    EXPECT_CALL(*bottom_surface, consume(mt::TouchUpEvent(0,0))).Times(0);
 
     dispatcher.start();
 
     FakeToucher toucher;
     EXPECT_TRUE(dispatcher.dispatch(toucher.touch_at({1,1})));
-    EXPECT_TRUE(dispatcher.dispatch(toucher.release_at({1,1})));
+    EXPECT_TRUE(dispatcher.dispatch(toucher.release_at({2,2})));
 }
 
 TEST_F(SurfaceInputDispatcher, gestures_persist_over_touch_down)

@@ -313,13 +313,9 @@ void mf::WlPointer::axes(std::shared_ptr<MirPointerEvent const> const& event)
 
 void mf::WlPointer::enter_or_motion(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface)
 {
-    if (!event->local_position())
-    {
-        log_error("pointer event cannot be sent to wl_surface as it lacks a local poisition");
-        return;
-    }
-
-    auto const root_position = event->local_position().value();
+    auto const root_position = std::make_pair(
+        mir_pointer_event_axis_value(event.get(), mir_pointer_axis_x),
+        mir_pointer_event_axis_value(event.get(), mir_pointer_axis_y));
 
     WlSurface* target_surface;
     if (current_buttons != 0 && surface_under_cursor)
@@ -330,11 +326,14 @@ void mf::WlPointer::enter_or_motion(std::shared_ptr<MirPointerEvent const> const
     else
     {
         // Else choose whatever subsurface we are over top of
-        geom::Point root_point{root_position};
+        geom::Point root_point{root_position.first, root_position.second};
         target_surface = root_surface.subsurface_at(root_point).value_or(&root_surface);
     }
 
-    auto const position_on_target = root_position - geom::DisplacementF{target_surface->total_offset()};
+    auto const offset = target_surface->total_offset();
+    auto const position_on_target = std::make_pair(
+        root_position.first - offset.dx.as_int(),
+        root_position.second - offset.dy.as_int());
 
     if (!surface_under_cursor || &surface_under_cursor.value() != target_surface)
     {
@@ -345,8 +344,8 @@ void mf::WlPointer::enter_or_motion(std::shared_ptr<MirPointerEvent const> const
         send_enter_event(
             enter_serial.value(),
             target_surface->raw_resource(),
-            position_on_target.x.as_value(),
-            position_on_target.y.as_value());
+            position_on_target.first,
+            position_on_target.second);
         current_position = position_on_target;
         needs_frame = true;
         destroy_listener_id = target_surface->add_destroy_listener([this]()
@@ -367,8 +366,8 @@ void mf::WlPointer::enter_or_motion(std::shared_ptr<MirPointerEvent const> const
         default:
             send_motion_event(
                 timestamp_of(event),
-                position_on_target.x.as_value(),
-                position_on_target.y.as_value());
+                position_on_target.first,
+                position_on_target.second);
             current_position = position_on_target;
             needs_frame = true;
         }
