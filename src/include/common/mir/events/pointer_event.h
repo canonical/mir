@@ -47,9 +47,6 @@ struct MirPointerEvent : MirInputEvent
     auto position() const -> std::optional<mir::geometry::PointF>;
     void set_position(std::optional<mir::geometry::PointF> value);
 
-    auto local_position() const -> std::optional<mir::geometry::PointF>;
-    void set_local_position(std::optional<mir::geometry::PointF> value);
-
     auto motion() const -> mir::geometry::DisplacementF;
     void set_motion(mir::geometry::DisplacementF value);
 
@@ -69,7 +66,6 @@ struct MirPointerEvent : MirInputEvent
     MirBlob* dnd_handle() const;
 
 private:
-    std::optional<mir::geometry::PointF> local_position_;
     std::optional<mir::geometry::PointF> position_;
     mir::geometry::DisplacementF motion_;
     MirPointerAxisSource axis_source_;

@@ -54,12 +54,9 @@ void mf::WlTouch::event(std::shared_ptr<MirTouchEvent const> const& event, WlSur
 
     for (auto i = 0u; i < mir_touch_event_point_count(event.get()); ++i)
     {
-        if (!event->local_position(i))
-        {
-            log_error("touch event cannot be sent to wl_surface as it lacks a local poisition");
-            continue;
-        }
-        auto const position = event->local_position(i).value();
+        auto const position = std::make_pair(
+            mir_touch_event_axis_value(event.get(), i, mir_touch_axis_x),
+            mir_touch_event_axis_value(event.get(), i, mir_touch_axis_y));
         int const touch_id = mir_touch_event_id(event.get(), i);
         MirTouchAction const action = mir_touch_event_action(event.get(), i);
 
@@ -93,12 +90,14 @@ void mf::WlTouch::down(
     std::chrono::milliseconds const& ms,
     int32_t touch_id,
     WlSurface& root_surface,
-    geometry::PointF root_position)
+    std::pair<float, float> const& root_position)
 {
-    geom::Point root_point{root_position};
+    geom::Point root_point{root_position.first, root_position.second};
     auto const target_surface = root_surface.subsurface_at(root_point).value_or(&root_surface);
     auto const offset = target_surface->total_offset();
-    auto const position_on_target = root_position - geom::DisplacementF{offset};
+    auto const position_on_target = std::make_pair(
+        root_position.first - offset.dx.as_int(),
+        root_position.second - offset.dy.as_int());
 
     auto const listener_id = target_surface->add_destroy_listener(
         [this, touch_id]()
@@ -116,15 +115,15 @@ void mf::WlTouch::down(
         ms.count(),
         target_surface->raw_resource(),
         touch_id,
-        position_on_target.x.as_value(),
-        position_on_target.y.as_value());
+        position_on_target.first,
+        position_on_target.second);
     needs_frame = true;
 }
 
 void mf::WlTouch::motion(
     std::chrono::milliseconds const& ms,
     int32_t touch_id,
-    geometry::PointF root_position)
+    std::pair<float, float> const& root_position)
 {
     auto const touch = touch_id_to_surface.find(touch_id);
 
@@ -140,13 +139,15 @@ void mf::WlTouch::motion(
     }
 
     auto const offset = touch->second.surface.value().total_offset();
-    auto const position_on_target = root_position - geom::DisplacementF{offset};
+    auto const position_on_target = std::make_pair(
+        root_position.first - offset.dx.as_int(),
+        root_position.second - offset.dy.as_int());
 
     send_motion_event(
         ms.count(),
         touch_id,
-        position_on_target.x.as_value(),
-        position_on_target.y.as_value());
+        position_on_target.first,
+        position_on_target.second);
     needs_frame = true;
 }
 
