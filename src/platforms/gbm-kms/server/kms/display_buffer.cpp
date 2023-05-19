@@ -16,7 +16,7 @@
 
 #include "display_buffer.h"
 #include "kms_output.h"
-#include "dumb_fb.h"
+#include "cpu_addressable_fb.h"
 #include "mir/fd.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/transformation.h"
@@ -63,7 +63,7 @@ mgg::DisplayBuffer::DisplayBuffer(
 {
     listener->report_successful_setup_of_native_resources();
 
-    auto initial_fb = std::make_shared<mgg::DumbFB>(std::move(drm_fd), false, area.size);
+    auto initial_fb = std::make_shared<mgg::CPUAddressableFB>(std::move(drm_fd), false, area.size);
 
     auto mapping = initial_fb->map_writeable();
     ::memset(mapping->data(), 24, mapping->len());

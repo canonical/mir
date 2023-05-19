@@ -104,10 +104,10 @@ private:
     std::weak_ptr<Cursor> cursor;
 };
 
-class DumbDisplayProvider : public graphics::DumbDisplayProvider
+class CPUAddressableDisplayProvider : public graphics::CPUAddressableDisplayProvider
 {
 public:
-    explicit DumbDisplayProvider(mir::Fd drm_fd);
+    explicit CPUAddressableDisplayProvider(mir::Fd drm_fd);
 
     auto alloc_fb(geometry::Size pixel_size)
         -> std::unique_ptr<MappableFB> override;

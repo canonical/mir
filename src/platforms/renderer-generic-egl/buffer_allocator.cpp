@@ -366,7 +366,7 @@ public:
     CPUCopyOutputSurface(
         EGLDisplay dpy,
         EGLContext ctx,
-        std::shared_ptr<mg::DumbDisplayProvider> allocator,
+        std::shared_ptr<mg::CPUAddressableDisplayProvider> allocator,
         geom::Size size)
         : allocator{std::move(allocator)},
           dpy{dpy},
@@ -460,7 +460,7 @@ public:
     }
 
 private:
-    std::shared_ptr<mg::DumbDisplayProvider> const allocator;
+    std::shared_ptr<mg::CPUAddressableDisplayProvider> const allocator;
     EGLDisplay const dpy;
     EGLContext const ctx;
     geom::Size const size_;
@@ -516,12 +516,12 @@ auto mge::GLRenderingProvider::surface_for_output(
     {
         return std::make_unique<EGLOutputSurface>(egl_display->alloc_framebuffer(config, ctx));
     }
-    auto dumb_display = framebuffer_provider->acquire_interface<DumbDisplayProvider>();
+    auto cpu_provider = framebuffer_provider->acquire_interface<CPUAddressableDisplayProvider>();
     
     return std::make_unique<CPUCopyOutputSurface>(
         dpy,
         ctx,
-        std::move(dumb_display),
+        std::move(cpu_provider),
         size);
 }
 

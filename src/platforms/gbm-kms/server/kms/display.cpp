@@ -24,7 +24,7 @@
 #include "kms_output.h"
 #include "kms_page_flipper.h"
 #include "kms_framebuffer.h"
-#include "dumb_fb.h"
+#include "cpu_addressable_fb.h"
 #include "mir/console_services.h"
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/event_handler_register.h"
@@ -462,16 +462,16 @@ auto drm_get_cap_checked(mir::Fd const& drm_fd, uint64_t cap) -> uint64_t
 }
 }
 
-mgg::DumbDisplayProvider::DumbDisplayProvider(mir::Fd drm_fd)
+mgg::CPUAddressableDisplayProvider::CPUAddressableDisplayProvider(mir::Fd drm_fd)
     : drm_fd{std::move(drm_fd)},
       supports_modifiers{drm_get_cap_checked(this->drm_fd, DRM_CAP_ADDFB2_MODIFIERS) == 1}
 {
 }
 
-auto mgg::DumbDisplayProvider::alloc_fb(
+auto mgg::CPUAddressableDisplayProvider::alloc_fb(
     geom::Size size) -> std::unique_ptr<MappableFB>
 {
-    return std::make_unique<mgg::DumbFB>(drm_fd, supports_modifiers, size);
+    return std::make_unique<mgg::CPUAddressableFB>(drm_fd, supports_modifiers, size);
 }
 
 namespace

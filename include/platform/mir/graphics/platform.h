@@ -225,7 +225,7 @@ public:
 };
 
 
-class DumbDisplayProvider : public DisplayInterfaceBase
+class CPUAddressableDisplayProvider : public DisplayInterfaceBase
 {
 public:
     class Tag : public DisplayInterfaceBase::Tag

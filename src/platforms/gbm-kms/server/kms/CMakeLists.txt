@@ -38,8 +38,8 @@ add_library(
   quirks.cpp
   quirks.h
   kms_framebuffer.h
-  dumb_fb.cpp
-  dumb_fb.h
+  cpu_addressable_fb.cpp
+  cpu_addressable_fb.h
 )
 
 target_link_libraries(

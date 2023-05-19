@@ -26,11 +26,11 @@
 
 namespace mir::graphics::gbm
 {
-class DumbFB : public FBHandle, public DumbDisplayProvider::MappableFB
+class CPUAddressableFB : public FBHandle, public CPUAddressableDisplayProvider::MappableFB
 {
 public:
-    DumbFB(mir::Fd const& drm_fd, bool supports_modifiers, mir::geometry::Size const& size);
-    ~DumbFB() override;
+    CPUAddressableFB(mir::Fd const& drm_fd, bool supports_modifiers, mir::geometry::Size const& size);
+    ~CPUAddressableFB() override;
 
     auto map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>> override;
 
@@ -40,17 +40,17 @@ public:
 
     operator uint32_t() const override;
     
-    DumbFB(DumbFB const&) = delete;
-    DumbFB& operator=(DumbFB const&) = delete;
+    CPUAddressableFB(CPUAddressableFB const&) = delete;
+    CPUAddressableFB& operator=(CPUAddressableFB const&) = delete;
 private:
-    class DumbBuffer;
+    class Buffer;
 
-    DumbFB(mir::Fd drm_fd, bool supports_modifiers, std::unique_ptr<DumbBuffer> buffer);
-    static auto fb_id_for_buffer(mir::Fd const& drm_fd, bool supports_modifiers, DumbBuffer const& buf) -> uint32_t;
+    CPUAddressableFB(mir::Fd drm_fd, bool supports_modifiers, std::unique_ptr<Buffer> buffer);
+    static auto fb_id_for_buffer(mir::Fd const& drm_fd, bool supports_modifiers, Buffer const& buf) -> uint32_t;
 
     mir::Fd const drm_fd;
     uint32_t const fb_id;
-    std::unique_ptr<DumbBuffer> const buffer;
+    std::unique_ptr<Buffer> const buffer;
 };
 
 }

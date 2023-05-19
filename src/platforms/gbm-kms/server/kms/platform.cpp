@@ -268,10 +268,10 @@ protected:
             mir::log_debug("Using GBMDisplayProvider");
             return std::make_shared<mgg::GBMDisplayProvider>(drm_fd);
         }
-        if (dynamic_cast<mg::DumbDisplayProvider::Tag const*>(&type_tag))
+        if (dynamic_cast<mg::CPUAddressableDisplayProvider::Tag const*>(&type_tag))
         {
             mir::log_debug("Using DumbDisplayProvider");
-            return std::make_shared<mgg::DumbDisplayProvider>(drm_fd);
+            return std::make_shared<mgg::CPUAddressableDisplayProvider>(drm_fd);
         }
         return {};  
     }

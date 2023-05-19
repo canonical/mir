@@ -358,7 +358,7 @@ TEST_F(MesaDisplayMultiMonitorTest, flip_flips_all_connected_crtcs)
 
     auto platform = create_platform();
     auto display = create_display_cloned(platform);
-    auto provider = mg::DisplayPlatform::interface_for(std::move(platform))->acquire_interface<mg::DumbDisplayProvider>();
+    auto provider = mg::DisplayPlatform::interface_for(std::move(platform))->acquire_interface<mg::CPUAddressableDisplayProvider>();
 
     /* First frame: Page flips are scheduled, but not waited for */
     display->for_each_display_sync_group(

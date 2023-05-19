@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "dumb_fb.h"
+#include "cpu_addressable_fb.h"
 
 #include "mir/geometry/forward.h"
 #include "mir/log.h"
@@ -30,7 +30,7 @@
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
 
-class mgg::DumbFB::DumbBuffer : public mir::renderer::software::RWMappableBuffer
+class mgg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappableBuffer
 {
     template<typename T>
     class Mapping : public mir::renderer::software::Mapping<T>
@@ -95,7 +95,7 @@ class mgg::DumbFB::DumbBuffer : public mir::renderer::software::RWMappableBuffer
     };
 
 public:
-    ~DumbBuffer()
+    ~Buffer()
     {
         struct drm_mode_destroy_dumb params = { gem_handle };
 
@@ -105,8 +105,8 @@ public:
         }
     }
 
-    static auto create_dumb_buffer(mir::Fd drm_fd,  mir::geometry::Size const& size) ->
-        std::unique_ptr<DumbBuffer>
+    static auto create_kms_dumb_buffer(mir::Fd drm_fd,  mir::geometry::Size const& size) ->
+        std::unique_ptr<Buffer>
     {
         struct drm_mode_create_dumb params = {};
 
@@ -123,8 +123,8 @@ public:
                     "Failed to allocate CPU-accessible buffer"}));
         }
 
-        return std::unique_ptr<DumbBuffer>{
-            new DumbBuffer{std::move(drm_fd), params}};
+        return std::unique_ptr<Buffer>{
+            new Buffer{std::move(drm_fd), params}};
     }
 
     auto map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>> override
@@ -191,7 +191,7 @@ public:
         return geometry::Size{width_, height_};
     }
 private:
-    DumbBuffer(
+    Buffer(
         mir::Fd fd,
         struct drm_mode_create_dumb const& params)
         : drm_fd{std::move(fd)},
@@ -239,52 +239,52 @@ private:
     size_t const size_;
 };
 
-mgg::DumbFB::DumbFB(mir::Fd const& drm_fd, bool supports_modifiers, mir::geometry::Size const& size)
-    : DumbFB(drm_fd, supports_modifiers, DumbBuffer::create_dumb_buffer(drm_fd, size))
+mgg::CPUAddressableFB::CPUAddressableFB(mir::Fd const& drm_fd, bool supports_modifiers, mir::geometry::Size const& size)
+    : CPUAddressableFB(drm_fd, supports_modifiers, Buffer::create_kms_dumb_buffer(drm_fd, size))
 {
 }
 
-mgg::DumbFB::~DumbFB()
+mgg::CPUAddressableFB::~CPUAddressableFB()
 {
     drmModeRmFB(drm_fd, fb_id);
 }
 
-mgg::DumbFB::DumbFB(
+mgg::CPUAddressableFB::CPUAddressableFB(
     mir::Fd drm_fd,
     bool supports_modifiers,
-    std::unique_ptr<DumbBuffer> buffer)
+    std::unique_ptr<Buffer> buffer)
     : drm_fd{std::move(drm_fd)},
       fb_id{fb_id_for_buffer(this->drm_fd, supports_modifiers, *buffer)},
       buffer{std::move(buffer)}
 {
 }
 
-auto mgg::DumbFB::map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>>
+auto mgg::CPUAddressableFB::map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>>
 {
     return buffer->map_writeable();
 }
 
-auto mgg::DumbFB::format() const -> MirPixelFormat
+auto mgg::CPUAddressableFB::format() const -> MirPixelFormat
 {
     return buffer->format();
 }
 
-auto mgg::DumbFB::stride() const -> geometry::Stride
+auto mgg::CPUAddressableFB::stride() const -> geometry::Stride
 {
     return buffer->stride();
 }
 
-auto mgg::DumbFB::size() const -> geometry::Size
+auto mgg::CPUAddressableFB::size() const -> geometry::Size
 {
     return buffer->size();
 }
 
-mgg::DumbFB::operator uint32_t() const
+mgg::CPUAddressableFB::operator uint32_t() const
 {
     return fb_id;
 }
 
-auto mgg::DumbFB::fb_id_for_buffer(mir::Fd const &drm_fd, bool supports_modifiers, DumbBuffer const& buf) -> uint32_t
+auto mgg::CPUAddressableFB::fb_id_for_buffer(mir::Fd const &drm_fd, bool supports_modifiers, Buffer const& buf) -> uint32_t
 {
     uint32_t fb_id;
     uint32_t const pitches[4] = { buf.pitch(), 0, 0, 0 };

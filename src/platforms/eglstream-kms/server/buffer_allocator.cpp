@@ -590,7 +590,7 @@ class CPUCopyOutputSurface : public mg::gl::OutputSurface
 public:
     CPUCopyOutputSurface(
         std::unique_ptr<mir::renderer::gl::Context> ctx,
-        std::shared_ptr<mg::DumbDisplayProvider> allocator,
+        std::shared_ptr<mg::CPUAddressableDisplayProvider> allocator,
         geom::Size size)
         : allocator{std::move(allocator)},
           ctx{std::move(ctx)},
@@ -678,7 +678,7 @@ public:
     }
 
 private:
-    std::shared_ptr<mg::DumbDisplayProvider> const allocator;
+    std::shared_ptr<mg::CPUAddressableDisplayProvider> const allocator;
     std::unique_ptr<mir::renderer::gl::Context> const ctx;
     geom::Size const size_;
     RenderbufferHandle const colour_buffer;
@@ -836,13 +836,13 @@ auto mge::GLRenderingProvider::surface_for_output(
                 err.what());
         }
     }
-    auto dumb_display = target->acquire_interface<DumbDisplayProvider>();
+    auto cpu_provider = target->acquire_interface<CPUAddressableDisplayProvider>();
 
     auto fb_context = ctx->make_share_context();
     fb_context->make_current();
     return std::make_unique<CPUCopyOutputSurface>(
         std::move(fb_context),
-        dumb_display,
+        cpu_provider,
         size);
 }
 
