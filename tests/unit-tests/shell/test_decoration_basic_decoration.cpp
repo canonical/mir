@@ -29,6 +29,7 @@
 #include "mir/test/doubles/explicit_executor.h"
 #include "mir/test/doubles/stub_cursor_image.h"
 #include "mir/events/event_builders.h"
+#include "mir/events/event_helpers.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -262,16 +263,21 @@ auto pointer_event(
     geom::Point position,
     std::chrono::nanoseconds timestamp = 0ns) -> mir::EventUPtr
 {
-    return mev::make_pointer_event(
+    auto ev = mev::make_pointer_event(
         (MirInputDeviceId)1,
         timestamp + 1s,
         std::vector<uint8_t>{},
         mir_input_event_modifier_none,
         action,
         buttons_pressed,
-        position.x.as_int(), position.y.as_int(),
+        0, 0,
         0, 0,
         0, 0);
+    mev::map_positions(*ev, [&](auto global, auto)
+        {
+            return std::make_pair(global, geom::PointF{position});
+        });
+    return ev;
 }
 
 auto touch_event(
@@ -289,8 +295,12 @@ auto touch_event(
         *ev,
         touch_id,
         action, mir_touch_tooltype_finger,
-        position.x.as_int(), position.y.as_int(),
+        0, 0,
         1.0, 1.0, 1.0, 1.0);
+    mev::map_positions(*ev, [&](auto global, auto)
+        {
+            return std::make_pair(global, geom::PointF{position});
+        });
     return ev;
 }
 }
