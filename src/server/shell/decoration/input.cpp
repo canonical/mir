@@ -21,6 +21,8 @@
 
 #include "mir/scene/surface.h"
 #include "mir/scene/null_surface_observer.h"
+#include "mir/events/pointer_event.h"
+#include "mir/events/touch_event.h"
 #include "mir_toolkit/cursors.h"
 
 namespace ms = mir::scene;
@@ -61,11 +63,11 @@ struct msd::InputManager::Observer
             case mir_pointer_action_motion:
             case mir_pointer_action_enter:
             {
-                geom::Point const location{
-                    mir_pointer_event_axis_value(pointer_ev, mir_pointer_axis_x),
-                    mir_pointer_event_axis_value(pointer_ev, mir_pointer_axis_y)};
-                bool pressed = mir_pointer_event_button_state(pointer_ev, mir_pointer_button_primary);
-                manager->pointer_event(timestamp, location, pressed);
+                if (auto const position = pointer_ev->local_position())
+                {
+                    bool pressed = mir_pointer_event_button_state(pointer_ev, mir_pointer_button_primary);
+                    manager->pointer_event(timestamp, geom::Point{position.value()}, pressed);
+                }
             }   break;
 
             case mir_pointer_action_leave:
@@ -89,10 +91,10 @@ struct msd::InputManager::Observer
                 case mir_touch_action_down:
                 case mir_touch_action_change:
                 {
-                    geom::Point const location{
-                        mir_touch_event_axis_value(touch_ev, i, mir_touch_axis_x),
-                        mir_touch_event_axis_value(touch_ev, i, mir_touch_axis_y)};
-                    manager->touch_event(id, timestamp, location);
+                    if (auto const position = touch_ev->local_position(i))
+                    {
+                        manager->touch_event(id, timestamp, geom::Point{position.value()});
+                    }
                 }   break;
                 case mir_touch_action_up:
                 {
