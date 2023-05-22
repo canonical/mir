@@ -846,6 +846,20 @@ auto mge::GLRenderingProvider::surface_for_output(
         size);
 }
 
+auto mge::GLRenderingProvider::suitability_for_display(
+    std::shared_ptr<mg::DisplayInterfaceProvider> const& target) -> probe::Result
+{
+    if (target->acquire_interface<EGLStreamDisplayProvider>())
+    {
+        return probe::best;
+    }
+    if (target->acquire_interface<CPUAddressableDisplayProvider>())
+    {
+        return probe::supported;
+    }
+    return probe::unsupported;
+}
+
 auto mge::GLRenderingProvider::make_framebuffer_provider(std::shared_ptr<mg::DisplayInterfaceProvider> /*target*/)
     -> std::unique_ptr<FramebufferProvider>
 {

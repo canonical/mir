@@ -44,7 +44,7 @@ class DefaultDisplayBufferCompositorFactory : public DisplayBufferCompositorFact
 {
 public:
     DefaultDisplayBufferCompositorFactory(
-        std::shared_ptr<graphics::GLRenderingProvider> render_platform,
+        std::vector<std::shared_ptr<graphics::GLRenderingProvider>> render_platforms,
         std::shared_ptr<graphics::GLConfig> gl_config,
         std::shared_ptr<renderer::RendererFactory> const& renderer_factory,
         std::shared_ptr<CompositorReport> const& report);
@@ -52,8 +52,7 @@ public:
     std::unique_ptr<DisplayBufferCompositor> create_compositor_for(graphics::DisplayBuffer& display_buffer) override;
 
 private:
-    // TODO: This should be a per-DisplayBuffer decision
-    std::shared_ptr<graphics::GLRenderingProvider> const allocator;
+    std::vector<std::shared_ptr<graphics::GLRenderingProvider>> const platforms;
     std::shared_ptr<graphics::GLConfig> const gl_config;
     std::shared_ptr<renderer::RendererFactory> const renderer_factory;
     std::shared_ptr<CompositorReport> const report;

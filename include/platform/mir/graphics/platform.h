@@ -64,6 +64,24 @@ class GLConfig;
 
 class DisplayInterfaceProvider;
 
+namespace probe
+{
+    using Result = uint32_t;
+    Result const unsupported = 0;    /**< Unable to function at all on this device */
+    Result const dummy = 1;          /**< Used only for dummy or stub platforms.
+                                      */
+    Result const supported = 128;    /**< Capable of providing a functionality on this device;
+                                      *   possibly with degraded performance or features.
+                                      */
+    Result const hosted = 192;       /**< Capable of providing fully-featured functionality on this device;
+                                      *   running nested under some other display server rather than with
+                                      *   exclusive hardware access.
+                                      */
+    Result const best = 256;         /**< Capable of providing the best features and performance this device
+                                      *   is capable of.
+                                      */
+}
+
 class RendererInterfaceBase
 {
 public:
@@ -86,15 +104,28 @@ public:
         auto operator=(FramebufferProvider const&) = delete;
 
         /**
+         * Get a directly-displayable handle for a buffer, if cheaply possible
+         *
+         * Some buffer types can be passed as-is to the display hardware. If this
+         * buffer can be used in this way (on the DisplayInterfaceProvider associated
+         * with this FramebufferProvider), this method creates a handle that can be
+         * passed to the overlay method of an associated DisplayBuffer.
          *
          * \note    The returned Framebuffer may share ownership of the provided Buffer.
          *          It is not necessary for calling code to retain a reference to the Buffer.
          * \param buffer
-         * \return
+         * \return  A handle to a directly submittable buffer, or nullptr if this buffer
+                    is not pasable as-is to the display hardware.
          */
         virtual auto buffer_to_framebuffer(std::shared_ptr<Buffer> buffer)
             -> std::unique_ptr<Framebuffer> = 0;
     };
+
+    /**
+     * Check how well this Renderer can support a particular display target 
+     */ 
+    virtual auto suitability_for_display(std::shared_ptr<DisplayInterfaceProvider> const& target)
+        -> probe::Result = 0;
 
     virtual auto make_framebuffer_provider(std::shared_ptr<DisplayInterfaceProvider> target)
         -> std::unique_ptr<FramebufferProvider> = 0;

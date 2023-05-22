@@ -15,6 +15,7 @@
  */
 
 #include "mir/compositor/display_listener.h"
+#include "mir/graphics/platform.h"
 #include "mir/renderer/renderer_factory.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/surface_stack.h"
@@ -183,7 +184,7 @@ struct SurfaceStackCompositor : public Test
     StubDisplayListener stub_display_listener;
 
     mc::DefaultDisplayBufferCompositorFactory dbc_factory{
-        std::make_shared<mtd::StubGlRenderingPlatform>(),
+        std::vector<std::shared_ptr<mg::GLRenderingProvider>>{std::make_shared<mtd::StubGlRenderingPlatform>()},
         std::make_shared<mtd::NullGLConfig>(),
         mt::fake_shared(renderer_factory),
         null_comp_report};

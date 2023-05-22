@@ -506,6 +506,30 @@ private:
 };
 }
 
+auto mge::GLRenderingProvider::suitability_for_display(
+    std::shared_ptr<DisplayInterfaceProvider> const& target) -> probe::Result
+{
+    if (target->acquire_interface<GenericEGLDisplayProvider>())
+    {
+        /* We're effectively hosted on an underlying EGL platform.
+         *
+         * We'll work fine, but if there's a hardware-specific platform
+         * let it take over.
+         */
+        return probe::hosted;
+    }
+
+    if (target->acquire_interface<CPUAddressableDisplayProvider>())
+    {
+        /* We can *work* on a CPU-backed surface, but if anything's better
+         * we should use something else!
+         */
+        return probe::supported;
+    }
+
+    return probe::unsupported;
+}
+
 auto mge::GLRenderingProvider::surface_for_output(
     std::shared_ptr<DisplayInterfaceProvider> framebuffer_provider,
     geometry::Size size,

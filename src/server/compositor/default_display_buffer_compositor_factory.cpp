@@ -31,11 +31,11 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
 mc::DefaultDisplayBufferCompositorFactory::DefaultDisplayBufferCompositorFactory(
-    std::shared_ptr<mg::GLRenderingProvider> render_platform,
+    std::vector<std::shared_ptr<mg::GLRenderingProvider>> render_platforms,
     std::shared_ptr<mg::GLConfig> gl_config,
     std::shared_ptr<mir::renderer::RendererFactory> const& renderer_factory,
     std::shared_ptr<mc::CompositorReport> const& report) :
-        allocator{std::move(render_platform)},
+        platforms{std::move(render_platforms)},
         gl_config{std::move(gl_config)},
         renderer_factory{renderer_factory},
         report{report}
@@ -55,10 +55,34 @@ mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
      * GL surface could be the common case, and not allocating it would save a
      * potentially-significant amount of GPU memory.
      */
-    auto output_surface = allocator->surface_for_output(
+
+    auto const display_provider = display_buffer.display_provider();
+
+    /* In a heterogeneous system, different providers may be better at driving a specific
+     * display. Select the best one.
+     */
+    std::pair<mg::probe::Result, std::shared_ptr<mg::GLRenderingProvider>> best_provider = std::make_pair(mg::probe::unsupported, nullptr);
+    for (auto const& provider : platforms)
+    {
+        auto suitability = provider->suitability_for_display(display_provider);
+        if (suitability > best_provider.first)
+        {
+            best_provider = std::make_pair(suitability, provider);
+        }
+    }
+    if (best_provider.first == mg::probe::unsupported)
+    {
+        // We should not get here; the rendering platforms have already had
+        // an opportunity to claim they don't support any present hardware
+        BOOST_THROW_EXCEPTION((std::logic_error{"No rendering platform claims to support this output"}));
+    }
+
+    auto const chosen_allocator = best_provider.second;
+    
+    auto output_surface = chosen_allocator->surface_for_output(
         display_buffer.display_provider(), display_buffer.view_area().size, *gl_config);
-    auto renderer = renderer_factory->create_renderer_for(std::move(output_surface), allocator);
+    auto renderer = renderer_factory->create_renderer_for(std::move(output_surface), chosen_allocator);
     renderer->set_viewport(display_buffer.view_area());
     return std::make_unique<DefaultDisplayBufferCompositor>(
-        display_buffer, *allocator, std::move(renderer), report);
+        display_buffer, *chosen_allocator, std::move(renderer), report);
 }

@@ -674,6 +674,32 @@ private:
 };
 }
 
+auto mgg::GLRenderingProvider::suitability_for_display(
+    std::shared_ptr<DisplayInterfaceProvider> const& target) -> probe::Result
+{
+    if (bound_display)
+    {
+        if (auto gbm_provider = target->acquire_interface<GBMDisplayProvider>())
+        {
+            if (bound_display->gbm_device() == gbm_provider->gbm_device())
+            {
+                /* We're rendering on the same device as display;
+                 * it doesn't get better than this!
+                 */
+                return probe::best;
+            }
+        }        
+    }
+
+    if (target->acquire_interface<CPUAddressableDisplayProvider>())
+    {
+        // We *can* render to CPU buffers, but if anyone can do better, let them.
+        return probe::supported;
+    }
+
+    return probe::unsupported;
+}
+
 auto mgg::GLRenderingProvider::surface_for_output(
     std::shared_ptr<DisplayInterfaceProvider> target,
     geom::Size size,

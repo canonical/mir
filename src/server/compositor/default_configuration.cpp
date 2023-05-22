@@ -48,14 +48,22 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
     return display_buffer_compositor_factory(
         [this]()
         {
-            auto rendering_platform = the_rendering_platforms().back();
-            if (auto gl_provider =
-                mg::RenderingPlatform::acquire_interface<mg::GLRenderingProvider>(std::move(rendering_platform)))
+            std::vector<std::shared_ptr<mg::GLRenderingProvider>> providers;
+            providers.reserve(the_rendering_platforms().size());
+            for (auto const& platform : the_rendering_platforms())
             {
-                return wrap_display_buffer_compositor_factory(std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
-                    std::move(gl_provider), the_gl_config(), the_renderer_factory(), the_compositor_report()));
+                if (auto gl_provider = mg::RenderingPlatform::acquire_interface<mg::GLRenderingProvider>(platform))
+                {
+                    providers.push_back(gl_provider);            
+                }
             }
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Selected rendering platform does not support GL"}));
+            if (providers.empty())
+            {
+                BOOST_THROW_EXCEPTION((std::runtime_error{"Selected rendering platform does not support GL"}));
+            }
+            return wrap_display_buffer_compositor_factory(
+                std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
+                    std::move(providers), the_gl_config(), the_renderer_factory(), the_compositor_report()));
         });
 }
 
