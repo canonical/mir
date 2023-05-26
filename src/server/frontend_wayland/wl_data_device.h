@@ -21,6 +21,8 @@
 #include "wl_seat.h"
 #include "wl_surface.h"
 
+#include "mir/events/event.h"
+
 namespace mir
 {
 class Executor;
@@ -84,6 +86,8 @@ private:
     void paste_source_set(std::shared_ptr<scene::DataExchangeSource> const& source);
     void drag_n_drop_source_set(std::shared_ptr<scene::DataExchangeSource> const& source);
     void drag_n_drop_source_cleared(std::shared_ptr<scene::DataExchangeSource> const& source);
+
+    void validate_pointer_event(std::optional<std::shared_ptr<MirEvent const>> drag_event) const;
 
     scene::Clipboard& clipboard;
     WlSeat& seat;

@@ -212,21 +212,7 @@ void mf::WlDataDevice::start_drag(
             mw::ProtocolError(resource, Error::role, "Origin surface does not exist."));
     }
 
-    // TODO {arg} does this check really belong in DataDevice?
-    auto const drag_event = client->event_for(serial);
-
-    if (!drag_event || !drag_event.value() || mir_event_get_type(drag_event.value().get()) != mir_event_type_input)
-    {
-        BOOST_THROW_EXCEPTION(
-            mw::ProtocolError(resource, Error::role, "Serial does not correspond to an input event"));
-    }
-
-    auto const input_ev = mir_event_get_input_event(drag_event.value().get());
-    if (mir_input_event_get_type(input_ev) != mir_input_event_type_pointer)
-    {
-        BOOST_THROW_EXCEPTION(
-            mw::ProtocolError(resource, Error::role, "Serial does not correspond to a pointer event"));
-    }
+    validate_pointer_event(client->event_for(serial));
 
     if (auto const wl_source = WlDataSource::from(source.value()))
     {
@@ -238,6 +224,22 @@ void mf::WlDataDevice::start_drag(
 
             drag_surface.emplace(icon_surface, drag_icon_controller);
         }
+    }
+}
+
+void mf::WlDataDevice::validate_pointer_event(std::optional<std::shared_ptr<MirEvent const>> drag_event) const
+{
+    if (!drag_event || !drag_event.value() || mir_event_get_type(drag_event.value().get()) != mir_event_type_input)
+    {
+        BOOST_THROW_EXCEPTION(
+            mw::ProtocolError(this->resource, Error::role, "Serial does not correspond to an input event"));
+    }
+
+    auto const input_ev = mir_event_get_input_event(drag_event.value().get());
+    if (mir_input_event_get_type(input_ev) != mir_input_event_type_pointer)
+    {
+        BOOST_THROW_EXCEPTION(
+            mw::ProtocolError(this->resource, Error::role, "Serial does not correspond to a pointer event"));
     }
 }
 
