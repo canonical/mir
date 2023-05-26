@@ -25,11 +25,9 @@ namespace mg = mir::graphics;
 namespace
 {
 auto probe_module(
-    mir::graphics::PlatformProbe const& probe,
+    std::function<std::vector<mg::SupportedDevice>()> const& probe,
     mir::SharedLibrary& module,
-    char const* platform_type_name,
-    mir::options::ProgramOption const& options,
-    std::shared_ptr<mir::ConsoleServices> const& console) -> std::vector<mg::SupportedDevice>
+    char const* platform_type_name) -> std::vector<mg::SupportedDevice>
 {
     auto describe = module.load_function<mir::graphics::DescribeModule>(
         "describe_graphics_module",
@@ -43,7 +41,7 @@ auto probe_module(
                   desc->minor_version,
                   desc->micro_version);
 
-    auto supported_devices = probe(console, std::make_shared<mir::udev::Context>(), options);
+    auto supported_devices = probe();
     if (supported_devices.empty())
     {
         mir::log_info("(Unsupported by system environment)");
@@ -80,13 +78,15 @@ auto mir::graphics::probe_display_module(
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<SupportedDevice>
 {
     return probe_module(
-        module.load_function<mir::graphics::PlatformProbe>(
-            "probe_display_platform",
-            MIR_SERVER_GRAPHICS_PLATFORM_VERSION),
+        [&console, &options, &module]() -> std::vector<mg::SupportedDevice>
+        {
+            auto probe = module.load_function<mir::graphics::PlatformProbe>(
+                "probe_display_platform",
+                MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+            return probe(console, std::make_shared<mir::udev::Context>(), options);
+        },
         module,
-        "display",
-        options,
-        console);
+        "display");
 }
 
 auto mir::graphics::probe_rendering_module(
@@ -95,13 +95,15 @@ auto mir::graphics::probe_rendering_module(
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<SupportedDevice>
 {
     return probe_module(
-        module.load_function<mir::graphics::PlatformProbe>(
-            "probe_rendering_platform",
-            MIR_SERVER_GRAPHICS_PLATFORM_VERSION),
+        [&console, &options, &module]() -> std::vector<mg::SupportedDevice>
+        {
+            auto probe = module.load_function<mir::graphics::PlatformProbe>(
+                "probe_rendering_platform",
+                MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+            return probe(console, std::make_shared<mir::udev::Context>(), options);
+        },
         module,
-        "rendering",
-        options,
-        console);
+        "rendering");
 }
 
 namespace
