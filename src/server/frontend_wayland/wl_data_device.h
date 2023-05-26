@@ -93,6 +93,7 @@ private:
     wayland::Weak<Offer> current_offer;
     wayland::Weak<WlSurface> weak_surface;
     std::optional<DragIconSurface> drag_surface;
+    bool sent_enter = false;
 };
 }
 }

@@ -282,11 +282,7 @@ void mf::WlDataDevice::drag_n_drop_source_set(std::shared_ptr<scene::DataExchang
             if (weak_surface)
             {
                 current_offer = wayland::make_weak(new Offer{this, source});
-
-                auto const serial = client->next_serial(nullptr);
-                auto x = 0; // TODO {arg} where do we get a relative cursor position
-                auto y = 0; // TODO {arg} where do we get a relative cursor position
-                send_enter_event(serial, weak_surface.value().resource, x, y, current_offer.value().resource);
+                sent_enter = false;
             }
         }
     }
@@ -332,9 +328,21 @@ void mf::WlDataDevice::event(std::shared_ptr<MirPointerEvent const> const& event
         target_surface = root_surface.subsurface_at(root_point).value_or(&root_surface);
 
         auto const position_on_target = root_position - DisplacementF{target_surface->total_offset()};
-        auto const timestamp = mir_input_event_get_wayland_timestamp(mir_pointer_event_input_event(event.get()));
+        auto const x = position_on_target.x.as_value();
+        auto const y = position_on_target.y.as_value();
 
-        send_motion_event(timestamp, position_on_target.x.as_value(), position_on_target.y.as_value());
+        if (sent_enter)
+        {
+            auto const timestamp = mir_input_event_get_wayland_timestamp(mir_pointer_event_input_event(event.get()));
+
+            send_motion_event(timestamp, x, y);
+        }
+        else
+        {
+            auto const serial = client->next_serial(nullptr);
+            send_enter_event(serial, weak_surface.value().resource, x, y, current_offer.value().resource);
+            sent_enter = true;
+        }
         break;
     }
     case mir_pointer_actions:
