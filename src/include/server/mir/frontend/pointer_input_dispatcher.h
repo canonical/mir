@@ -33,8 +33,8 @@ public:
     virtual ~PointerInputDispatcher() = default;
 
     // Sometimes (e.g. drag-n-drop) the frontend wants routing to ignore the surface on which gestures start
-    virtual void start_ignore_gesture_owner() = 0;
-    virtual void end_ignore_gesture_owner() = 0;
+    virtual void disable_dispatch_to_gesture_owner() = 0;
+    virtual void enable_dispatch_to_gesture_owner() = 0;
 
 protected:
     PointerInputDispatcher() = default;

@@ -69,9 +69,9 @@ public:
         Executor& executor) override;
     void unregister_interest(KeyboardObserver const& observer) override;
 
-    void start_ignore_gesture_owner() override;
+    void disable_dispatch_to_gesture_owner() override;
 
-    void end_ignore_gesture_owner() override;
+    void enable_dispatch_to_gesture_owner() override;
 
 private:
     bool dispatch_key(std::shared_ptr<MirEvent const> const& ev);

@@ -205,7 +205,7 @@ mf::WlSeat::WlSeat(
         keyboard_observer_registrar{keyboard_observer_registrar},
         keyboard_observer{std::make_shared<KeyboardObserver>(*this)},
         focus_listeners{std::make_shared<ListenerList<FocusListener>>()},
-        pointer_listeners{std::make_shared<ListenerList<WlPointer>>()},
+        pointer_listeners{std::make_shared<ListenerList<PointerEventDispatcher>>()},
         keyboard_listeners{std::make_shared<ListenerList<WlKeyboard>>()},
         touch_listeners{std::make_shared<ListenerList<WlTouch>>()},
         clock{clock},
@@ -233,7 +233,7 @@ auto mf::WlSeat::from(struct wl_resource* resource) -> WlSeat*
     return instance ? instance->seat : nullptr;
 }
 
-void mf::WlSeat::for_each_listener(mw::Client* client, std::function<void(WlPointer*)> func)
+void mf::WlSeat::for_each_listener(mw::Client* client, std::function<void(PointerEventDispatcher*)> func)
 {
     pointer_listeners->for_each(client, func);
 }
@@ -312,11 +312,13 @@ mf::WlSeat::Instance::Instance(wl_resource* new_resource, mf::WlSeat* seat)
 void mf::WlSeat::Instance::get_pointer(wl_resource* new_pointer)
 {
     auto const pointer = new WlPointer{new_pointer};
-    seat->pointer_listeners->register_listener(client, pointer);
+    auto dispatcher = std::make_shared<PointerEventDispatcher>(pointer);
+
+    seat->pointer_listeners->register_listener(client, dispatcher.get());
     pointer->add_destroy_listener(
-        [listeners = seat->pointer_listeners, listener = pointer, client = client]()
+        [listeners = seat->pointer_listeners, listener = std::move(dispatcher), client = client]()
         {
-            listeners->unregister_listener(client, listener);
+            listeners->unregister_listener(client, listener.get());
         });
 }
 
@@ -359,4 +361,17 @@ void mf::WlSeat::add_focus_listener(mw::Client* client, FocusListener* listener)
 void mf::WlSeat::remove_focus_listener(mw::Client* client, FocusListener* listener)
 {
     focus_listeners->unregister_listener(client, listener);
+}
+
+mf::PointerEventDispatcher::PointerEventDispatcher(WlPointer* wl_pointer) :
+    wl_pointer{wl_pointer}
+{
+}
+
+void mf::PointerEventDispatcher::event(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface)
+{
+    if (wl_pointer)
+    {
+        wl_pointer.value().event(event, root_surface);
+    }
 }

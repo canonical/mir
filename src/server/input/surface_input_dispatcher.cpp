@@ -657,12 +657,14 @@ void mir::input::SurfaceInputDispatcher::unregister_interest(KeyboardObserver co
     keyboard_multiplexer.unregister_interest(observer);
 }
 
-void mir::input::SurfaceInputDispatcher::start_ignore_gesture_owner()
+void mir::input::SurfaceInputDispatcher::disable_dispatch_to_gesture_owner()
 {
+    std::lock_guard lg(dispatcher_mutex);
     dispatch_to_gesture_owner = false;
 }
 
-void mir::input::SurfaceInputDispatcher::end_ignore_gesture_owner()
+void mir::input::SurfaceInputDispatcher::enable_dispatch_to_gesture_owner()
 {
+    std::lock_guard lg(dispatcher_mutex);
     dispatch_to_gesture_owner = true;
 }
