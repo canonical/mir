@@ -24,6 +24,8 @@
 #include <vector>
 #include <functional>
 
+struct MirPointerEvent;
+
 namespace mir
 {
 class Executor;
@@ -46,8 +48,19 @@ class WlPointer;
 class WlKeyboard;
 class WlTouch;
 class WlSurface;
+class WlDataDevice;
 class KeyboardCallbacks;
 class KeyboardHelper;
+
+class PointerEventDispatcher
+{
+public:
+    explicit PointerEventDispatcher(WlPointer* wl_pointer);
+
+    void event(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface);
+private:
+    wayland::Weak<WlPointer> wl_pointer;
+};
 
 class WlSeat : public wayland::Seat::Global
 {
@@ -65,7 +78,7 @@ public:
 
     static auto from(struct wl_resource* resource) -> WlSeat*;
 
-    void for_each_listener(wayland::Client* client, std::function<void(WlPointer*)> func);
+    void for_each_listener(wayland::Client* client, std::function<void(PointerEventDispatcher*)> func);
     void for_each_listener(wayland::Client* client, std::function<void(WlKeyboard*)> func);
     void for_each_listener(wayland::Client* client, std::function<void(WlTouch*)> func);
 
@@ -109,7 +122,7 @@ private:
 
     // listener list are shared pointers so devices can keep them around long enough to remove themselves
     std::shared_ptr<ListenerList<FocusListener>> const focus_listeners;
-    std::shared_ptr<ListenerList<WlPointer>> const pointer_listeners;
+    std::shared_ptr<ListenerList<PointerEventDispatcher>> const pointer_listeners;
     std::shared_ptr<ListenerList<WlKeyboard>> const keyboard_listeners;
     std::shared_ptr<ListenerList<WlTouch>> const touch_listeners;
 
