@@ -15,6 +15,7 @@
  */
 
 #include "test_window_manager_tools.h"
+#include "mir/events/event_builders.h"
 
 using namespace miral;
 using namespace testing;
@@ -48,6 +49,9 @@ struct IgnoredRequests : mt::TestWindowManagerTools, WithParamInterface<IgnoredR
 {
     Size const window_size{200, 200};
     mir::shell::SurfaceSpecification simple_modification;
+    mir::EventUPtr event{
+        mir::events::make_pointer_event({}, std::chrono::nanoseconds{100}, {}, {}, {}, {}, {}, {}, {}, {}, {})};
+    MirInputEvent const* input_ev = mir_event_get_input_event(event.get());
 
     void SetUp() override
     {
@@ -135,14 +139,14 @@ TEST_P(IgnoredRequests, drag_and_drop_unknown_surface_noops)
 TEST_P(IgnoredRequests, move_unknown_surface_noops)
 {
     auto const window = GetParam().window(*this);
-    basic_window_manager.handle_request_move(session, window, 100);
+    basic_window_manager.handle_request_move(session, window, input_ev);
 }
 
 TEST_P(IgnoredRequests, resize_unknown_surface_noops)
 {
     auto const window = GetParam().window(*this);
 
-    basic_window_manager.handle_request_resize(session, window, 100, mir_resize_edge_southeast);
+    basic_window_manager.handle_request_resize(session, window, input_ev, mir_resize_edge_southeast);
 }
 
 TEST_F(IgnoredRequests, remove_session_twice_noops)

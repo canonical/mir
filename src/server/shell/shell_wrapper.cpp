@@ -152,18 +152,18 @@ void msh::ShellWrapper::request_drag_and_drop(
 void msh::ShellWrapper::request_move(
     std::shared_ptr<ms::Session> const& session,
     std::shared_ptr<ms::Surface> const& surface,
-    uint64_t timestamp)
+    MirInputEvent const* event)
 {
-    wrapped->request_move(session, surface, timestamp);
+    wrapped->request_move(session, surface, event);
 }
 
 void msh::ShellWrapper::request_resize(
     std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
-    uint64_t timestamp,
+    MirInputEvent const* event,
     MirResizeEdge edge)
 {
-    wrapped->request_resize(session, surface, timestamp, edge);
+    wrapped->request_resize(session, surface, event, edge);
 }
 
 void msh::ShellWrapper::add_display(geometry::Rectangle const& area)

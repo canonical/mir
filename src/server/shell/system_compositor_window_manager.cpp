@@ -229,14 +229,14 @@ void msh::SystemCompositorWindowManager::handle_request_drag_and_drop(
 void msh::SystemCompositorWindowManager::handle_request_move(
     std::shared_ptr<ms::Session> const& /*session*/,
     std::shared_ptr<ms::Surface> const& /*surface*/,
-    uint64_t /*timestamp*/)
+    MirInputEvent const* /*event*/)
 {
 }
 
 void msh::SystemCompositorWindowManager::handle_request_resize(
     std::shared_ptr<scene::Session> const& /*session*/,
     std::shared_ptr<scene::Surface> const& /*surface*/,
-    uint64_t /*timestamp*/,
+    MirInputEvent const* /*event*/,
     MirResizeEdge /*edge*/)
 {
 }

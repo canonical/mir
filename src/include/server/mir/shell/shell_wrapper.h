@@ -104,12 +104,12 @@ public:
     void request_move(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
-        uint64_t timestamp) override;
+        MirInputEvent const* event) override;
 
     void request_resize(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
-        uint64_t timestamp,
+        MirInputEvent const* event,
         MirResizeEdge edge) override;
 
     void add_display(geometry::Rectangle const& area) override;

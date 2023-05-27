@@ -27,6 +27,8 @@
 #include <chrono>
 #include <optional>
 
+struct MirInputEvent;
+
 namespace mir
 {
 class Executor;
@@ -76,8 +78,8 @@ public:
     void window_state_updated();
     void input_state_updated();
 
-    void request_move(std::chrono::nanoseconds const& timestamp);
-    void request_resize(std::chrono::nanoseconds const& timestamp, MirResizeEdge edge);
+    void request_move(MirInputEvent const* event);
+    void request_resize(MirInputEvent const* event, MirResizeEdge edge);
     void request_toggle_maximize();
     void request_minimize();
     void request_close();

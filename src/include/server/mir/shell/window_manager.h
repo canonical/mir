@@ -86,12 +86,12 @@ public:
     virtual void handle_request_move(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
-        uint64_t timestamp) = 0;
+        MirInputEvent const* event) = 0;
 
     virtual void handle_request_resize(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
-        uint64_t timestamp,
+        MirInputEvent const* event,
         MirResizeEdge edge) = 0;
 
     virtual ~WindowManager() = default;

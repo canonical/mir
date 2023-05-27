@@ -139,12 +139,12 @@ struct MockShell
     MOCK_METHOD3(request_move, void(
         std::shared_ptr<ms::Session> const&,
         std::shared_ptr<ms::Surface> const&,
-        uint64_t));
+        MirInputEvent const*));
 
     MOCK_METHOD4(request_resize, void(
         std::shared_ptr<ms::Session> const&,
         std::shared_ptr<ms::Surface> const&,
-        uint64_t,
+        MirInputEvent const*,
         MirResizeEdge));
 
     MOCK_METHOD5(create_surface, std::shared_ptr<ms::Surface>(

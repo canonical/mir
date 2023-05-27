@@ -772,11 +772,11 @@ void mf::XWaylandSurface::move_resize(uint32_t detail)
     auto const action = static_cast<NetWmMoveresize>(detail);
     if (action == NetWmMoveresize::MOVE)
     {
-        shell->request_move(scene_surface->session().lock(), scene_surface, event->event_time().count());
+        shell->request_move(scene_surface->session().lock(), scene_surface, event.get());
     }
     else if (auto const edge = wm_resize_edge_to_mir_resize_edge(action))
     {
-        shell->request_resize(scene_surface->session().lock(), scene_surface, event->event_time().count(), edge.value());
+        shell->request_resize(scene_surface->session().lock(), scene_surface, event.get(), edge.value());
     }
     else
     {

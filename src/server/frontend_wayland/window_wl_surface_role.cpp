@@ -168,8 +168,7 @@ void mf::WindowWlSurfaceRole::initiate_interactive_move(uint32_t serial)
     {
         if (auto const ev = input_event_for(serial))
         {
-            auto const timestamp = mir_input_event_get_event_time(mir_event_get_input_event(ev.get()));
-            shell->request_move(session, scene_surface, timestamp);
+            shell->request_move(session, scene_surface, mir_event_get_input_event(ev.get()));
         }
     }
 }
@@ -180,8 +179,7 @@ void mf::WindowWlSurfaceRole::initiate_interactive_resize(MirResizeEdge edge, ui
     {
         if (auto const ev = input_event_for(serial))
         {
-            auto const timestamp = mir_input_event_get_event_time(mir_event_get_input_event(ev.get()));
-            shell->request_resize(session, scene_surface, timestamp, edge);
+            shell->request_resize(session, scene_surface, mir_event_get_input_event(ev.get()), edge);
         }
     }
 }
