@@ -72,7 +72,7 @@ TEST_P(RenderingPlatformTest, has_render_platform_entrypoints)
 
     try
     {
-        platform_module->load_function<mg::PlatformProbe>(
+        platform_module->load_function<mg::RenderProbe>(
             "probe_rendering_platform",
             MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
     }

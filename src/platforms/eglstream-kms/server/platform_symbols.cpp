@@ -80,11 +80,39 @@ void add_graphics_platform_options(boost::program_options::options_description& 
 }
 
 auto probe_rendering_platform(
-    std::shared_ptr<mir::ConsoleServices> const& /*console*/,
+    std::span<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays,
+    mir::ConsoleServices& /*console*/,
     std::shared_ptr<mir::udev::Context> const& udev,
     mo::ProgramOption const& /*options*/) -> std::vector<mg::SupportedDevice>
 {
-    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
+    mir::assert_entry_point_signature<mg::RenderProbe>(&probe_rendering_platform);
+
+    mg::PlatformPriority maximum_suitability = mg::PlatformPriority::unsupported;
+    // First check if there are any displays we can possibly drive
+    for (auto const& display_provider : displays)
+    {
+        if (display_provider->acquire_interface<mg::EGLStreamDisplayProvider>())
+        {
+            // We can optimally drive an EGLStream display
+            mir::log_debug("EGLStream-capable display found");
+            maximum_suitability = mg::PlatformPriority::best;
+            break;
+        }
+        if (display_provider->acquire_interface<mg::CPUAddressableDisplayProvider>())
+        {
+            /* We *can* support this output, but with slower buffer copies 
+             * If another platform supports this device better, let it.
+             */
+            maximum_suitability = mg::PlatformPriority::supported;
+        }
+    }
+
+    if (maximum_suitability == mg::PlatformPriority::unsupported)
+    {
+        mir::log_debug("No outputs capable of accepting EGLStream input detected");
+        mir::log_debug("Probing will be skipped");
+        return {};
+    }
 
     std::vector<char const*> missing_extensions;
     for (char const* extension : {
@@ -192,7 +220,7 @@ auto probe_rendering_platform(
             if (missing_extensions.empty())
             {
                 // We've got EGL, and we've got the necessary EGL extensions. We're good.
-                supported_devices.back().support_level = mg::PlatformPriority::best;
+                supported_devices.back().support_level = maximum_suitability;
             }
         }
     }

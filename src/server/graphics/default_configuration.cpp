@@ -271,6 +271,14 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                 throw std::runtime_error(msg.c_str());
             }
 
+            std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> display_interfaces;
+            display_interfaces.reserve(the_display_platforms().size());
+
+            for (auto& display : the_display_platforms())
+            {
+                display_interfaces.push_back(mg::DisplayPlatform::interface_for(display));
+            }
+
             if (the_options()->is_set(options::platform_rendering_libs))
             {
                 auto const manually_selected_platforms =
@@ -280,6 +288,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                 {
                     auto supported_devices =
                         graphics::probe_rendering_module(
+                            display_interfaces,
                             *platform,
                             dynamic_cast<mir::options::ProgramOption&>(*the_options()),
                             the_console_services());
@@ -307,16 +316,9 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
             }
             else
             {
-                platform_modules = mir::graphics::rendering_modules_for_device(platforms, dynamic_cast<mir::options::ProgramOption&>(*the_options()), the_console_services());
+                platform_modules = mir::graphics::rendering_modules_for_device(platforms, display_interfaces, dynamic_cast<mir::options::ProgramOption&>(*the_options()), the_console_services());
             }
 
-            std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> display_interfaces;
-            display_interfaces.reserve(the_display_platforms().size());
-
-            for (auto& display : the_display_platforms())
-            {
-                display_interfaces.push_back(mg::DisplayPlatform::interface_for(display));
-            }
             for (auto const& [device, platform]: platform_modules)
             {
                 auto create_rendering_platform = platform->load_function<mg::CreateRenderPlatform>(

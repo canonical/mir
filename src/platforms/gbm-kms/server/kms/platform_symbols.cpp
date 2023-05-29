@@ -307,11 +307,39 @@ auto probe_display_platform(
 }
 
 auto probe_rendering_platform(
-    std::shared_ptr<mir::ConsoleServices> const&,
+    std::span<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays,
+    mir::ConsoleServices&,
     std::shared_ptr<mir::udev::Context> const& udev,
     mir::options::ProgramOption const& options) -> std::vector<mir::graphics::SupportedDevice>
 {
-    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
+    mir::assert_entry_point_signature<mg::RenderProbe>(&probe_rendering_platform);
+
+    mg::PlatformPriority maximum_suitability = mg::PlatformPriority::unsupported;
+    // First check if there are any displays we can possibly drive
+    for (auto const& display_provider : displays)
+    {
+        if (display_provider->acquire_interface<mg::GBMDisplayProvider>())
+        {
+            // We can optimally drive a GBM-backed display
+            mir::log_debug("GBM-capable display found");
+            maximum_suitability = mg::PlatformPriority::best;
+            break;
+        }
+        if (display_provider->acquire_interface<mg::CPUAddressableDisplayProvider>())
+        {
+            /* We *can* support this output, but with slower buffer copies 
+             * If another platform supports this device better, let it.
+             */
+            maximum_suitability = mg::PlatformPriority::supported;
+        }
+    }
+
+    if (maximum_suitability == mg::PlatformPriority::unsupported)
+    {
+        mir::log_debug("No outputs capable of accepting GBM input detected");
+        mir::log_debug("Probing will be skipped");
+        return {};
+    }
 
     mgg::Quirks quirks{options};
 
@@ -393,8 +421,7 @@ auto probe_rendering_platform(
             }
 
             // We know we've got a device that we *might* be able to use
-            // Mark it as “supported” because we should *at least* be able to get a software context on it.
-            supported_devices.emplace_back(mg::SupportedDevice{device.clone(), mg::PlatformPriority::supported, nullptr});
+            supported_devices.emplace_back(mg::SupportedDevice{device.clone(), mg::PlatformPriority::unsupported, nullptr});
             if (tmp_fd != mir::Fd::invalid)
             {
                 mgg::helpers::GBMHelper gbm_device{tmp_fd};
@@ -421,11 +448,12 @@ auto probe_rendering_platform(
                     mir::log_info("Detected software renderer: %s", renderer_string);
                     // Leave the priority at ::supported; if we've got a software renderer then
                     // we *don't* support *this* device very well.
+                    supported_devices.back().support_level = std::min(maximum_suitability, mg::PlatformPriority::supported);
                 }
                 else
                 {
                     // We've got a non-software renderer. That's our cue!
-                    supported_devices.back().support_level = mg::PlatformPriority::best;
+                    supported_devices.back().support_level = maximum_suitability;
                 }
             }
         }

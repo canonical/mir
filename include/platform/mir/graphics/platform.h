@@ -536,6 +536,12 @@ typedef std::vector<mir::graphics::SupportedDevice>(*PlatformProbe)(
     std::shared_ptr<mir::udev::Context> const&,
     mir::options::ProgramOption const& options);
 
+typedef std::vector<mir::graphics::SupportedDevice>(*RenderProbe)(
+    std::span<std::shared_ptr<mir::graphics::DisplayInterfaceProvider>> const&,
+    mir::ConsoleServices&,
+    std::shared_ptr<mir::udev::Context> const&,
+    mir::options::ProgramOption const&);
+
 typedef mir::ModuleProperties const*(*DescribeModule)();
 }
 }
@@ -595,7 +601,8 @@ auto probe_display_platform(
     mir::options::ProgramOption const& options) -> std::vector<mir::graphics::SupportedDevice>;
 
 auto probe_rendering_platform(
-    std::shared_ptr<mir::ConsoleServices> const& console,
+    std::span<std::shared_ptr<mir::graphics::DisplayInterfaceProvider>> const& display_providers,
+    mir::ConsoleServices& console,
     std::shared_ptr<mir::udev::Context> const& udev,
     mir::options::ProgramOption const& options) -> std::vector<mir::graphics::SupportedDevice>;
 
