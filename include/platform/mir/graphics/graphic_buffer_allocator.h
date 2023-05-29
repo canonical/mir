@@ -75,7 +75,7 @@ public:
      * Deinitialise the BufferAllocator for this Wayland display
      *
      * This should do whatever is required to clean up before the Wayland loop is stopped. For
-     * example, calling eglUnindWaylandDisplayWL.
+     * example, calling eglUnbindWaylandDisplayWL.
      *
      * \param display [in] The Wayland display to unbind from
      */
