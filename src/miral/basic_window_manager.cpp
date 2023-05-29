@@ -108,9 +108,6 @@ miral::BasicWindowManager::BasicWindowManager(
 miral::BasicWindowManager::~BasicWindowManager()
 {
     display_config_monitor->delete_listener(this);
-
-    if (last_input_event)
-        mir_event_unref(last_input_event);
 }
 void miral::BasicWindowManager::add_session(std::shared_ptr<scene::Session> const& session)
 {
@@ -408,23 +405,23 @@ void miral::BasicWindowManager::handle_request_drag_and_drop(
 void miral::BasicWindowManager::handle_request_move(
     std::shared_ptr<mir::scene::Session> const& /*session*/,
     std::shared_ptr<mir::scene::Surface> const& surface,
-    uint64_t timestamp)
+    MirInputEvent const* event)
 {
     std::lock_guard lock(mutex);
 
     if (!surface_known(surface, "move"))
         return;
 
-    if (timestamp >= last_input_event_timestamp && last_input_event)
+    if (mir_input_event_get_event_time(event) >= static_cast<int64_t>(last_input_event_timestamp))
     {
-        policy->handle_request_move(info_for(surface), mir_event_get_input_event(last_input_event));
+        policy->handle_request_move(info_for(surface), event);
     }
 }
 
 void miral::BasicWindowManager::handle_request_resize(
     std::shared_ptr<mir::scene::Session> const& /*session*/,
     std::shared_ptr<mir::scene::Surface> const& surface,
-    uint64_t timestamp,
+    MirInputEvent const* event,
     MirResizeEdge edge)
 {
     std::lock_guard lock(mutex);
@@ -432,9 +429,9 @@ void miral::BasicWindowManager::handle_request_resize(
     if (!surface_known(surface, "resize"))
         return;
 
-    if (timestamp >= last_input_event_timestamp && last_input_event)
+    if (mir_input_event_get_event_time(event) >= static_cast<int64_t>(last_input_event_timestamp))
     {
-        policy->handle_request_resize(info_for(surface), mir_event_get_input_event(last_input_event), edge);
+        policy->handle_request_resize(info_for(surface), event, edge);
     }
 }
 
@@ -1595,10 +1592,6 @@ void miral::BasicWindowManager::update_event_timestamp(MirTouchEvent const* tev)
 void miral::BasicWindowManager::update_event_timestamp(MirInputEvent const* iev)
 {
     last_input_event_timestamp = mir_input_event_get_event_time(iev);
-
-    if (last_input_event)
-        mir_event_unref(last_input_event);
-    last_input_event = mir_event_ref(mir_input_event_get_event(iev));
 }
 
 void miral::BasicWindowManager::invoke_under_lock(std::function<void()> const& callback)

@@ -50,7 +50,6 @@ struct msd::InputManager::Observer
         if (mir_event_get_type(event.get()) != mir_event_type_input)
             return;
         MirInputEvent const* const input_ev = mir_event_get_input_event(event.get());
-        auto const timestamp = std::chrono::nanoseconds{mir_input_event_get_event_time(input_ev)};
         switch (mir_input_event_get_type(input_ev))
         {
         case mir_input_event_type_pointer:
@@ -66,13 +65,13 @@ struct msd::InputManager::Observer
                 if (auto const position = pointer_ev->local_position())
                 {
                     bool pressed = mir_pointer_event_button_state(pointer_ev, mir_pointer_button_primary);
-                    manager->pointer_event(timestamp, geom::Point{position.value()}, pressed);
+                    manager->pointer_event(event, geom::Point{position.value()}, pressed);
                 }
             }   break;
 
             case mir_pointer_action_leave:
             {
-                manager->pointer_leave(timestamp);
+                manager->pointer_leave(event);
             }   break;
 
             case mir_pointer_actions:
@@ -93,12 +92,12 @@ struct msd::InputManager::Observer
                 {
                     if (auto const position = touch_ev->local_position(i))
                     {
-                        manager->touch_event(id, timestamp, geom::Point{position.value()});
+                        manager->touch_event(event, id, geom::Point{position.value()});
                     }
                 }   break;
                 case mir_touch_action_up:
                 {
-                    manager->touch_up(id, timestamp);
+                    manager->touch_up(event, id);
                 }   break;
                 case mir_touch_actions:
                     break;
@@ -274,10 +273,10 @@ auto msd::InputManager::resize_edge_rect(
     }
 }
 
-void msd::InputManager::pointer_event(std::chrono::nanoseconds timestamp, geom::Point location, bool pressed)
+void msd::InputManager::pointer_event(std::shared_ptr<MirEvent const> const& event, geom::Point location, bool pressed)
 {
     std::lock_guard lock{mutex};
-    event_timestamp = timestamp;
+    latest_event = event;
     if (!pointer)
     {
         pointer = Device{location, pressed};
@@ -301,19 +300,19 @@ void msd::InputManager::pointer_event(std::chrono::nanoseconds timestamp, geom::
     }
 }
 
-void msd::InputManager::pointer_leave(std::chrono::nanoseconds timestamp)
+void msd::InputManager::pointer_leave(std::shared_ptr<MirEvent const> const& event)
 {
     std::lock_guard lock{mutex};
-    event_timestamp = timestamp;
+    latest_event = event;
     if (pointer)
         process_leave(pointer.value());
     pointer = std::nullopt;
 }
 
-void msd::InputManager::touch_event(int32_t id, std::chrono::nanoseconds timestamp, geom::Point location)
+void msd::InputManager::touch_event(std::shared_ptr<MirEvent const> const& event, int32_t id, geom::Point location)
 {
     std::lock_guard lock{mutex};
-    event_timestamp = timestamp;
+    latest_event = event;
     auto device = touches.find(id);
     if (device == touches.end())
     {
@@ -329,10 +328,10 @@ void msd::InputManager::touch_event(int32_t id, std::chrono::nanoseconds timesta
     }
 }
 
-void msd::InputManager::touch_up(int32_t id, std::chrono::nanoseconds timestamp)
+void msd::InputManager::touch_up(std::shared_ptr<MirEvent const> const& event, int32_t id)
 {
     std::lock_guard lock{mutex};
-    event_timestamp = timestamp;
+    latest_event = event;
     auto device = touches.find(id);
     if (device != touches.end())
     {
@@ -372,7 +371,8 @@ void msd::InputManager::process_up(Device& device)
     {
         widget_up(*device.active_widget.value());
     }
-    previous_up_timestamp = event_timestamp;
+    auto const input_ev = mir_event_get_input_event(latest_event.get());
+    previous_up_timestamp = std::chrono::nanoseconds{mir_input_event_get_event_time(input_ev)};
 }
 
 void msd::InputManager::process_move(Device& device)
@@ -451,6 +451,8 @@ void msd::InputManager::widget_up(Widget& widget)
 {
     if (widget.state == ButtonState::Down)
     {
+        auto const input_ev = mir_event_get_input_event(latest_event.get());
+        auto const event_timestamp = std::chrono::nanoseconds{mir_input_event_get_event_time(input_ev)};
         if (previous_up_timestamp > 0ns &&
             event_timestamp - previous_up_timestamp <= double_click_threshold)
         {
@@ -510,24 +512,24 @@ void msd::InputManager::widget_drag(Widget& widget)
 
             if (edge == mir_resize_edge_none)
             {
-                decoration->spawn([timestamp = event_timestamp](BasicDecoration* decoration)
+                decoration->spawn([event = latest_event](BasicDecoration* decoration)
                     {
-                        decoration->request_move(timestamp);
+                        decoration->request_move(mir_event_get_input_event(event.get()));
                     });
             }
             else
             {
-                decoration->spawn([timestamp = event_timestamp, edge](BasicDecoration* decoration)
+                decoration->spawn([event = latest_event, edge](BasicDecoration* decoration)
                     {
-                        decoration->request_resize(timestamp, edge);
+                        decoration->request_resize(mir_event_get_input_event(event.get()), edge);
                     });
             }
         }
         else if (widget.button)
         {
-            decoration->spawn([timestamp = event_timestamp](BasicDecoration* decoration)
+            decoration->spawn([event = latest_event](BasicDecoration* decoration)
                 {
-                    decoration->request_move(timestamp);
+                    decoration->request_move(mir_event_get_input_event(event.get()));
                 });
         }
         widget.state = ButtonState::Up;

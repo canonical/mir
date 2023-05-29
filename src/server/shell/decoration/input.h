@@ -27,6 +27,8 @@
 #include <map>
 #include <optional>
 
+struct MirEvent;
+
 namespace mir
 {
 namespace scene
@@ -122,10 +124,10 @@ private:
         WindowState const& window_state,
         StaticGeometry const& static_geometry,
         MirResizeEdge resize_edge) -> geometry::Rectangle;
-    void pointer_event(std::chrono::nanoseconds timestamp, geometry::Point location, bool pressed);
-    void pointer_leave(std::chrono::nanoseconds timestamp);
-    void touch_event(int32_t id, std::chrono::nanoseconds timestamp, geometry::Point location);
-    void touch_up(int32_t id, std::chrono::nanoseconds timestamp);
+    void pointer_event(std::shared_ptr<MirEvent const> const& event, geometry::Point location, bool pressed);
+    void pointer_leave(std::shared_ptr<MirEvent const> const& event);
+    void touch_event(std::shared_ptr<MirEvent const> const& event, int32_t id, geometry::Point location);
+    void touch_up(std::shared_ptr<MirEvent const> const& event, int32_t id);
 
     class Observer;
 
@@ -135,8 +137,8 @@ private:
     std::shared_ptr<Observer> const observer;
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> decoration;
     std::vector<geometry::Rectangle> input_shape;
-    /// Timestamp of the most recent event, or the event currently being processed
-    std::chrono::nanoseconds event_timestamp{0};
+    /// The most recent event, or the event currently being processed
+    std::shared_ptr<MirEvent const> latest_event;
     /// Timestamp of the previous up event (not the one currently being processed)
     std::chrono::nanoseconds previous_up_timestamp{0};
     std::string current_cursor_name{""};

@@ -373,18 +373,18 @@ void msh::AbstractShell::request_drag_and_drop(
 void msh::AbstractShell::request_move(
     std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
-    uint64_t timestamp)
+    MirInputEvent const* event)
 {
-    window_manager->handle_request_move(session, surface, timestamp);
+    window_manager->handle_request_move(session, surface, event);
 }
 
 void msh::AbstractShell::request_resize(
     std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
-    uint64_t timestamp,
+    MirInputEvent const* event,
     MirResizeEdge edge)
 {
-    window_manager->handle_request_resize(session, surface, timestamp, edge);
+    window_manager->handle_request_resize(session, surface, event, edge);
 }
 
 void msh::AbstractShell::focus_next_session()

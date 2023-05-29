@@ -226,14 +226,14 @@ void msd::BasicDecoration::input_state_updated()
     update(window_state.get(), previous_input_state.get());
 }
 
-void msd::BasicDecoration::request_move(std::chrono::nanoseconds const& timestamp)
+void msd::BasicDecoration::request_move(MirInputEvent const* event)
 {
-    shell->request_move(session, window_surface, timestamp.count());
+    shell->request_move(session, window_surface, event);
 }
 
-void msd::BasicDecoration::request_resize(std::chrono::nanoseconds const& timestamp, MirResizeEdge edge)
+void msd::BasicDecoration::request_resize(MirInputEvent const* event, MirResizeEdge edge)
 {
-    shell->request_resize(session, window_surface, timestamp.count(), edge);
+    shell->request_resize(session, window_surface, event, edge);
 }
 
 void msd::BasicDecoration::request_toggle_maximize()

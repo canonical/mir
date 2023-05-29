@@ -105,12 +105,12 @@ private:
     void handle_request_move(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
-        uint64_t timestamp) override;
+        MirInputEvent const* event) override;
 
     void handle_request_resize(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
-        uint64_t timestamp,
+        MirInputEvent const* event,
         MirResizeEdge edge) override;
 
     int set_surface_attribute(
