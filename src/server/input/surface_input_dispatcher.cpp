@@ -348,7 +348,7 @@ void mi::SurfaceInputDispatcher::surface_moved(ms::Surface const* moved_surface)
         send_motion_event_to_moved_surface(
             ctx,
             moved_surface,
-            [this](auto surf, auto ev) { deliver_without_relative_motion(surf, ev); });
+            [](auto surf, auto ev) { deliver_without_relative_motion(surf, ev); });
     }
 }
 
