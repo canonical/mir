@@ -53,9 +53,6 @@ public:
 
     virtual void raise(SurfaceSet const& surfaces) = 0;
 
-    virtual void set_drag_and_drop_handle(std::vector<uint8_t> const& handle) = 0;
-    virtual void clear_drag_and_drop_handle() = 0;
-
 protected:
     FocusController() = default;
     FocusController(FocusController const&) = delete;

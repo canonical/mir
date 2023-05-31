@@ -56,11 +56,6 @@ void MirWindowEvent::set_value(int value)
     value_ = value;
 }
 
-void MirWindowEvent::set_dnd_handle(std::vector<uint8_t> const& handle)
-{
-    dnd_handle_ = handle;
-}
-
 namespace
 {
 struct MyMirBlob : MirBlob
@@ -71,23 +66,5 @@ struct MyMirBlob : MirBlob
 
     std::vector<uint8_t> data_;
 };
-}
-
-MirBlob* MirWindowEvent::dnd_handle() const
-{
-    if (!dnd_handle_)
-        return nullptr;
-
-    auto blob = std::make_unique<MyMirBlob>();
-
-    auto reader = *dnd_handle_;
-
-    blob->data_.reserve(reader.size());
-
-    // Can't use std::copy() as the CapnP iterators don't provide an iterator category
-    for (auto p = reader.begin(); p != reader.end(); ++p)
-        blob->data_.push_back(*p);
-
-    return blob.release();
 }
 

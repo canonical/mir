@@ -34,9 +34,6 @@ struct StubInputTargeter : public shell::InputTargeter
     void clear_focus() override
     {
     }
-
-    void set_drag_and_drop_handle(std::vector<uint8_t> const&) override {}
-    void clear_drag_and_drop_handle() override {}
 };
 
 }

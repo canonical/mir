@@ -141,14 +141,6 @@ void msh::ShellWrapper::raise_surface(
     wrapped->raise_surface(session, surface, timestamp);
 }
 
-void msh::ShellWrapper::request_drag_and_drop(
-    std::shared_ptr<ms::Session> const& session,
-    std::shared_ptr<ms::Surface> const& surface,
-    uint64_t timestamp)
-{
-    wrapped->request_drag_and_drop(session, surface, timestamp);
-}
-
 void msh::ShellWrapper::request_move(
     std::shared_ptr<ms::Session> const& session,
     std::shared_ptr<ms::Surface> const& surface,
@@ -194,14 +186,4 @@ auto msh::ShellWrapper::surface_at(geometry::Point cursor) const -> std::shared_
 void msh::ShellWrapper::raise(SurfaceSet const& surfaces)
 {
     return wrapped->raise(surfaces);
-}
-
-void msh::ShellWrapper::set_drag_and_drop_handle(std::vector<uint8_t> const& handle)
-{
-    wrapped->set_drag_and_drop_handle(handle);
-}
-
-void msh::ShellWrapper::clear_drag_and_drop_handle()
-{
-    wrapped->clear_drag_and_drop_handle();
 }

@@ -124,11 +124,6 @@ void MirPointerEvent::set_action(MirPointerAction action)
     action_ = action;
 }
 
-void MirPointerEvent::set_dnd_handle(std::vector<uint8_t> const& handle)
-{
-    dnd_handle_ = handle;
-}
-
 namespace
 {
 struct MyMirBlob : MirBlob
@@ -139,23 +134,6 @@ struct MyMirBlob : MirBlob
 
     std::vector<uint8_t> data_;
 };
-}
-
-MirBlob* MirPointerEvent::dnd_handle() const
-{
-    if (!dnd_handle_)
-        return nullptr;
-
-    auto const dnd_handle = *dnd_handle_;
-
-    auto blob = std::make_unique<MyMirBlob>();
-    blob->data_.reserve(dnd_handle.size());
-
-    // Can't use std::copy() as the CapnP iterators don't provide an iterator category
-    for (auto p = dnd_handle.begin(); p != dnd_handle.end(); ++p)
-        blob->data_.push_back(*p);
-
-    return blob.release();
 }
 
 auto MirPointerEvent::axis_source() const -> MirPointerAxisSource

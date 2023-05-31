@@ -65,9 +65,6 @@ struct MirPointerEvent : MirInputEvent
     MirPointerButtons buttons() const;
     void set_buttons(MirPointerButtons buttons);
 
-    void set_dnd_handle(std::vector<uint8_t> const& handle);
-    MirBlob* dnd_handle() const;
-
 private:
     std::optional<mir::geometry::PointF> local_position_;
     std::optional<mir::geometry::PointF> position_;

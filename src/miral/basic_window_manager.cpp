@@ -388,20 +388,6 @@ void miral::BasicWindowManager::handle_raise_surface(
         policy->handle_raise_window(info_for(surface));
 }
 
-void miral::BasicWindowManager::handle_request_drag_and_drop(
-    std::shared_ptr<mir::scene::Session> const& /*session*/,
-    std::shared_ptr<mir::scene::Surface> const& surface,
-    uint64_t timestamp)
-{
-    Locker lock{this};
-
-    if (!surface_known(surface, "drag-and-drop"))
-        return;
-
-    if (timestamp >= last_input_event_timestamp)
-        policy->handle_request_drag_and_drop(info_for(surface));
-}
-
 void miral::BasicWindowManager::handle_request_move(
     std::shared_ptr<mir::scene::Session> const& /*session*/,
     std::shared_ptr<mir::scene::Surface> const& surface,

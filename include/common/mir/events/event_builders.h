@@ -200,8 +200,8 @@ EventUPtr make_touch_event(
 EventUPtr clone_event(MirEvent const& event);
 void set_window_id(MirEvent& event, int window_id);
 
+[[deprecated("Not meaningful: legacy of mirclient API")]]
 EventUPtr make_start_drag_and_drop_event(frontend::SurfaceId const& surface_id, std::vector<uint8_t> const& handle);
-void set_drag_and_drop_handle(MirEvent& event, std::vector<uint8_t> const& handle);
 
 [[deprecated("Internally functions from event_helpers.h should be used, externally this should not be needed")]]
 void transform_positions(MirEvent& event, mir::geometry::Displacement const& movement);

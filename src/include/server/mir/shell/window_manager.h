@@ -78,11 +78,6 @@ public:
         std::shared_ptr<scene::Surface> const& surface,
         uint64_t timestamp) = 0;
 
-    virtual void handle_request_drag_and_drop(
-        std::shared_ptr<scene::Session> const& session,
-        std::shared_ptr<scene::Surface> const& surface,
-        uint64_t timestamp) = 0;
-
     virtual void handle_request_move(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,

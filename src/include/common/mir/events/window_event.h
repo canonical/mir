@@ -38,14 +38,10 @@ struct MirWindowEvent : MirEvent
     int value() const;
     void set_value(int value);
 
-    void set_dnd_handle(std::vector<uint8_t> const& handle);
-    MirBlob* dnd_handle() const;
-
 private:
     int id_ = 0;
     MirWindowAttrib attrib_ = {};
     int value_ = 0;
-    std::optional<std::vector<uint8_t>> dnd_handle_;
 };
 
 #endif /* MIR_COMMON_WINDOW_EVENT_H_ */

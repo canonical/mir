@@ -87,7 +87,7 @@ mir::EventUPtr mev::make_window_configure_event(mf::SurfaceId const& surface_id,
     return make_uptr_event(e);
 }
 
-auto mev::make_start_drag_and_drop_event(frontend::SurfaceId const& surface_id, std::vector<uint8_t> const& handle)
+auto mev::make_start_drag_and_drop_event(frontend::SurfaceId const& surface_id, std::vector<uint8_t> const& /*handle*/)
     -> EventUPtr
 {
     auto e = new_event<MirWindowEvent>();
@@ -95,7 +95,6 @@ auto mev::make_start_drag_and_drop_event(frontend::SurfaceId const& surface_id, 
     e->set_id(surface_id.as_value());
     e->set_attrib(mir_window_attribs);
     e->set_value(0);
-    e->set_dnd_handle(handle);
 
     return make_uptr_event(e);
 
@@ -491,14 +490,3 @@ void mev::set_window_id(MirEvent& event, int window_id)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Event has no window id."));
     }
 }
-
-void mev::set_drag_and_drop_handle(MirEvent& event, std::vector<uint8_t> const& handle)
-{
-    if (event.type() == mir_event_type_input)
-    {
-        auto const input_event = event.to_input();
-        if (mir_input_event_get_type(input_event) == mir_input_event_type_pointer)
-            const_cast<MirPointerEvent*>(mir_input_event_get_pointer_event(input_event))->set_dnd_handle(handle);
-    }
-}
-

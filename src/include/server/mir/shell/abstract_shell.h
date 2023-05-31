@@ -95,11 +95,6 @@ public:
         std::shared_ptr<scene::Surface> const& surface,
         uint64_t timestamp) override;
 
-    void request_drag_and_drop(
-        std::shared_ptr<scene::Session> const& session,
-        std::shared_ptr<scene::Surface> const& surface,
-        uint64_t timestamp) override;
-
     void request_move(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
@@ -151,9 +146,6 @@ public:
     void remove_display(geometry::Rectangle const& area) override;
 
     bool handle(MirEvent const& event) override;
-
-    void set_drag_and_drop_handle(std::vector<uint8_t> const& handle) override;
-    void clear_drag_and_drop_handle() override;
 
 protected:
     std::shared_ptr<InputTargeter> const input_targeter;

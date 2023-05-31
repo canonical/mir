@@ -130,12 +130,6 @@ TEST_P(IgnoredRequests, raise_unknown_surface_noops)
     basic_window_manager.handle_raise_surface(session, window, 100);
 }
 
-TEST_P(IgnoredRequests, drag_and_drop_unknown_surface_noops)
-{
-    auto const window = GetParam().window(*this);
-    basic_window_manager.handle_request_drag_and_drop(session, window, 100);
-}
-
 TEST_P(IgnoredRequests, move_unknown_surface_noops)
 {
     auto const window = GetParam().window(*this);
