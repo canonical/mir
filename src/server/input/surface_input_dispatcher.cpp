@@ -463,15 +463,10 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, std::shar
     {
         deliver(pointer_state.gesture_owner, ev);
 
-        auto const gesture_terminated = is_gesture_terminator(pev);
-
-        if (gesture_terminated)
+        if (is_gesture_terminator(pev))
         {
             pointer_state.gesture_owner.reset();
-        }
 
-        if (gesture_terminated)
-        {
             auto target = scene->input_surface_at(event_x_y);
 
             if (pointer_state.current_target != target)
@@ -482,9 +477,6 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, std::shar
                 pointer_state.current_target = target;
                 if (target)
                     send_enter_exit_event(target, pev, mir_pointer_action_enter);
-
-                if (!gesture_terminated)
-                    pointer_state.gesture_owner = target;
             }
         }
 
