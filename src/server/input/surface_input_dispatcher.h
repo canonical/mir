@@ -71,7 +71,6 @@ public:
     void unregister_interest(KeyboardObserver const& observer) override;
 
 private:
-    void device_reset(MirInputDeviceId reset_device_id, std::chrono::nanoseconds when);
     bool dispatch_key(std::shared_ptr<MirEvent const> const& ev);
     bool dispatch_pointer(MirInputDeviceId id, std::shared_ptr<MirEvent const> const& ev);
     bool dispatch_touch(MirInputDeviceId id, MirEvent const* tev);
