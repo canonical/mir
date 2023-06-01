@@ -235,6 +235,7 @@ public:
      *
      * @param window_info   the window
      */
+    [[deprecated("Not meaningful: legacy of mirclient API")]]
     virtual void handle_request_drag_and_drop(WindowInfo& window_info) = 0;
 
     /** request from client to initiate move

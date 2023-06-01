@@ -60,9 +60,6 @@ public:
     void set_focus(std::shared_ptr<input::Surface> const& target) override;
     void clear_focus() override;
 
-    void set_drag_and_drop_handle(std::vector<uint8_t> const& handle) override;
-    void clear_drag_and_drop_handle() override;
-
     // ObserverRegistrar
     void register_interest(std::weak_ptr<KeyboardObserver> const& observer) override;
     void register_interest(
@@ -126,7 +123,6 @@ private:
     std::mutex dispatcher_mutex;
     std::shared_ptr<MirEvent const> last_pointer_event;
     std::weak_ptr<input::Surface> focus_surface;
-    std::vector<uint8_t> drag_and_drop_handle;
     bool started;
 };
 

@@ -102,10 +102,7 @@ void set_local_positions_based_on_surface_input_bounds(
         });
 }
 
-void deliver_without_relative_motion(
-    std::shared_ptr<mi::Surface> const& surface,
-    MirEvent const* ev,
-    std::vector<uint8_t> const& drag_and_drop_handle)
+void deliver_without_relative_motion(std::shared_ptr<mi::Surface> const& surface, MirEvent const* ev)
 {
     auto const* input_ev = mir_event_get_input_event(ev);
     auto const* pev = mir_input_event_get_pointer_event(input_ev);
@@ -134,20 +131,12 @@ void deliver_without_relative_motion(
         0.0f);
 
     set_local_positions_based_on_surface_input_bounds(*to_deliver, bounds);
-    if (!drag_and_drop_handle.empty())
-        mev::set_drag_and_drop_handle(*to_deliver, drag_and_drop_handle);
     surface->consume(std::move(to_deliver));
 }
 
-void deliver(
-    std::shared_ptr<mi::Surface> const& surface,
-    MirEvent const* ev,
-    std::vector<uint8_t> const& drag_and_drop_handle)
+void deliver(std::shared_ptr<mi::Surface> const& surface, MirEvent const* ev)
 {
     auto to_deliver = mev::clone_event(*ev);
-
-    if (!drag_and_drop_handle.empty())
-        mev::set_drag_and_drop_handle(*to_deliver, drag_and_drop_handle);
 
     auto const& bounds = surface->input_bounds();
     set_local_positions_based_on_surface_input_bounds(*to_deliver, bounds);
@@ -359,7 +348,7 @@ void mi::SurfaceInputDispatcher::surface_moved(ms::Surface const* moved_surface)
         send_motion_event_to_moved_surface(
             ctx,
             moved_surface,
-            [this](auto surf, auto ev) { deliver_without_relative_motion(surf, ev, drag_and_drop_handle); });
+            [](auto surf, auto ev) { deliver_without_relative_motion(surf, ev); });
     }
 }
 
@@ -426,10 +415,7 @@ void mi::SurfaceInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surfa
     {
         set_local_positions_based_on_surface_input_bounds(*event, surface->input_bounds());
     }
-    if (!drag_and_drop_handle.empty())
-    {
-        mev::set_drag_and_drop_handle(*event, drag_and_drop_handle);
-    }
+
     surface->consume(std::move(event));
 }
 
@@ -459,17 +445,12 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, std::shar
 
     if (pointer_state.gesture_owner)
     {
-        deliver(pointer_state.gesture_owner, ev, drag_and_drop_handle);
+        deliver(pointer_state.gesture_owner, ev);
 
-        auto const gesture_terminated = is_gesture_terminator(pev);
-
-        if (gesture_terminated)
+        if (is_gesture_terminator(pev))
         {
             pointer_state.gesture_owner.reset();
-        }
 
-        if (gesture_terminated || !drag_and_drop_handle.empty())
-        {
             auto target = scene->input_surface_at(event_x_y);
 
             if (pointer_state.current_target != target)
@@ -480,9 +461,6 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, std::shar
                 pointer_state.current_target = target;
                 if (target)
                     send_enter_exit_event(target, pev, mir_pointer_action_enter);
-
-                if (!gesture_terminated)
-                    pointer_state.gesture_owner = target;
             }
         }
 
@@ -520,11 +498,11 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, std::shar
         if (sent_ev)
         {
             if (action != mir_pointer_action_motion)
-                deliver_without_relative_motion(target, ev, drag_and_drop_handle);
+                deliver_without_relative_motion(target, ev);
         }
         else
         {
-            deliver(target, ev, drag_and_drop_handle);
+            deliver(target, ev);
         }
         return true;
     }
@@ -580,7 +558,7 @@ bool mi::SurfaceInputDispatcher::dispatch_touch(MirInputDeviceId id, MirEvent co
 
     if (gesture_owner)
     {
-        deliver(gesture_owner, ev, drag_and_drop_handle);
+        deliver(gesture_owner, ev);
 
         if (is_gesture_end(tev))
             gesture_owner.reset();
@@ -648,18 +626,6 @@ void mi::SurfaceInputDispatcher::clear_focus()
 {
     std::lock_guard lg(dispatcher_mutex);
     set_focus_locked(lg, nullptr);
-}
-
-void mir::input::SurfaceInputDispatcher::set_drag_and_drop_handle(std::vector<uint8_t> const& handle)
-{
-    std::lock_guard lg(dispatcher_mutex);
-    drag_and_drop_handle = handle;
-}
-
-void mir::input::SurfaceInputDispatcher::clear_drag_and_drop_handle()
-{
-    std::lock_guard lg(dispatcher_mutex);
-    drag_and_drop_handle.clear();
 }
 
 void mir::input::SurfaceInputDispatcher::register_interest(std::weak_ptr<KeyboardObserver> const& observer)

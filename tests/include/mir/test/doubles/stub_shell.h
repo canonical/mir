@@ -87,14 +87,6 @@ struct StubShell : public shell::Shell
     void raise(shell::SurfaceSet const& /*surfaces*/) override
     {
     }
-
-    void set_drag_and_drop_handle(std::vector<uint8_t> const& /*handle*/) override
-    {
-    }
-
-    void clear_drag_and_drop_handle() override
-    {
-    }
     /// @}
 
     /// Overrides from shell::Shell
@@ -173,13 +165,6 @@ struct StubShell : public shell::Shell
     }
 
     void raise_surface(
-        std::shared_ptr<scene::Session> const& /*session*/,
-        std::shared_ptr<scene::Surface> const& /*surface*/,
-        uint64_t /*timestamp*/) override
-    {
-    }
-
-    void request_drag_and_drop(
         std::shared_ptr<scene::Session> const& /*session*/,
         std::shared_ptr<scene::Surface> const& /*surface*/,
         uint64_t /*timestamp*/) override

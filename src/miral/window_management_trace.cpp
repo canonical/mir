@@ -817,12 +817,15 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 void miral::WindowManagementTrace::handle_request_drag_and_drop(miral::WindowInfo& window_info)
 try {
     mir::log_info("%s window_info=%s", __func__, dump_of(window_info).c_str());
     policy->handle_request_drag_and_drop(window_info);
 }
 MIRAL_TRACE_EXCEPTION
+#pragma GCC diagnostic pop
 
 void miral::WindowManagementTrace::handle_request_move(miral::WindowInfo& window_info, MirInputEvent const* input_event)
 try {

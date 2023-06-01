@@ -58,10 +58,6 @@ struct StubFocusController : mir::shell::FocusController
 
     virtual auto surface_at(mir::geometry::Point /*cursor*/) const -> std::shared_ptr<mir::scene::Surface> override
         { return {}; }
-
-    void set_drag_and_drop_handle(std::vector<uint8_t> const& /*handle*/) override {}
-
-    void clear_drag_and_drop_handle() override {}
 };
 
 struct StubDisplayLayout : mir::shell::DisplayLayout
