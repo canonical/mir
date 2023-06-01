@@ -385,22 +385,6 @@ void mi::SurfaceInputDispatcher::surface_resized()
     }
 }
 
-void mi::SurfaceInputDispatcher::device_reset(MirInputDeviceId reset_device_id, std::chrono::nanoseconds /* when */)
-{
-    std::lock_guard lg(dispatcher_mutex);
-
-    if (!started)
-        return;
-
-    auto pointer_it = pointer_state_by_id.find(reset_device_id);
-    if (pointer_it != pointer_state_by_id.end())
-        pointer_state_by_id.erase(pointer_it);
-    
-    auto touch_it = touch_state_by_id.find(reset_device_id);
-    if (touch_it != touch_state_by_id.end())
-        touch_state_by_id.erase(touch_it);
-}
-
 bool mi::SurfaceInputDispatcher::dispatch_key(std::shared_ptr<MirEvent const> const& ev)
 {
     keyboard_multiplexer.keyboard_event(ev);
