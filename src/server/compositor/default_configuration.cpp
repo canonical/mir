@@ -16,6 +16,7 @@
 
 #include "mir/default_server_configuration.h"
 
+#include "mir/log.h"
 #include "mir/shell/shell.h"
 #include "buffer_stream_factory.h"
 #include "default_display_buffer_compositor_factory.h"
@@ -106,26 +107,38 @@ std::shared_ptr<mir::renderer::RendererFactory> mir::DefaultServerConfiguration:
 auto mir::DefaultServerConfiguration::the_screen_shooter() -> std::shared_ptr<compositor::ScreenShooter>
 {
     return screen_shooter(
-        [/*this*/]() -> std::shared_ptr<compositor::ScreenShooter>
+        [this]() -> std::shared_ptr<compositor::ScreenShooter>
         {
-            // try
-            // {
-            //     return std::make_shared<compositor::BasicScreenShooter>(
-            //         the_scene(),
-            //         the_clock(),
-            //         thread_pool_executor,
-            //         the_renderer_factory());
-            // }
-            // catch (...)
-            // {
-            //     mir::log(
-            //         ::mir::logging::Severity::error,
-            //         "",
-            //         std::current_exception(),
-            //         "failed to create BasicScreenShooter");
-            //     return std::make_shared<compositor::NullScreenShooter>(thread_pool_executor);
-            // }
-
-        return std::make_shared<compositor::NullScreenShooter>(thread_pool_executor);
+            try
+            {
+                std::vector<std::shared_ptr<mg::GLRenderingProvider>> providers;
+                providers.reserve(the_rendering_platforms().size());
+                for (auto& platform : the_rendering_platforms())
+                {
+                    if (auto gl_provider = mg::RenderingPlatform::acquire_interface<mg::GLRenderingProvider>(platform))
+                    {
+                        providers.push_back(gl_provider);
+                    }
+                }
+                if (providers.empty())
+                {
+                    BOOST_THROW_EXCEPTION((std::runtime_error{"No platform provides GL rendering support"}));
+                }
+                return std::make_shared<compositor::BasicScreenShooter>(
+                    the_scene(),
+                    the_clock(),
+                    thread_pool_executor,
+                    providers,
+                    the_renderer_factory());
+            }
+            catch (...)
+            {
+                mir::log(
+                    ::mir::logging::Severity::error,
+                    "",
+                    std::current_exception(),
+                    "failed to create BasicScreenShooter");
+                return std::make_shared<compositor::NullScreenShooter>(thread_pool_executor);
+            }
         });
 }

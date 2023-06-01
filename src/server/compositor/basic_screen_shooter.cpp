@@ -15,6 +15,7 @@
  */
 
 #include "basic_screen_shooter.h"
+#include "mir/graphics/gl_config.h"
 #include "mir/renderer/gl/buffer_render_target.h"
 #include "mir/renderer/renderer.h"
 #include "mir/renderer/gl/context.h"
@@ -23,6 +24,8 @@
 #include "mir/log.h"
 #include "mir/executor.h"
 #include "mir/graphics/platform.h"
+#include "mir/renderer/renderer_factory.h"
+#include "mir/renderer/sw/pixel_source.h"
 
 namespace mc = mir::compositor;
 namespace mr = mir::renderer;
@@ -31,15 +34,90 @@ namespace mrg = mir::renderer::gl;
 namespace mrs = mir::renderer::software;
 namespace geom = mir::geometry;
 
+class mc::BasicScreenShooter::Self::OneShotBufferDisplayProvider : public mg::CPUAddressableDisplayProvider
+{
+public:
+    OneShotBufferDisplayProvider() = default;
+
+    class FB : public mg::CPUAddressableDisplayProvider::MappableFB
+    {
+    public:
+        FB(std::shared_ptr<mrs::WriteMappableBuffer> buffer)
+            : buffer{std::move(buffer)}
+        {
+        }
+
+        auto map_writeable() -> std::unique_ptr<mrs::Mapping<unsigned char>> override
+        {
+            return buffer->map_writeable();
+        }
+        auto size() const -> geom::Size override
+        {
+            return buffer->size();
+        }
+        auto format() const -> MirPixelFormat override
+        {
+            return buffer->format();
+        }
+        auto stride() const -> geom::Stride override
+        {
+            return buffer->stride();
+        }
+    private:
+        std::shared_ptr<mrs::WriteMappableBuffer> const buffer;
+    };
+
+    auto alloc_fb(geom::Size pixel_size) -> std::unique_ptr<MappableFB> override
+    {
+        if (pixel_size != next_buffer->size())
+        {
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Mismatched buffer sizes?"}));
+        }
+        return std::make_unique<FB>(std::exchange(next_buffer, nullptr));
+    }
+
+    void set_next_buffer(std::shared_ptr<mrs::WriteMappableBuffer> buffer)
+    {
+        if (next_buffer)
+        {
+            BOOST_THROW_EXCEPTION((std::logic_error{"Attempt to set next buffer with a buffer already pending"}));
+        }
+        next_buffer = std::move(buffer);
+    }
+private:
+    std::shared_ptr<mrs::WriteMappableBuffer> next_buffer;
+};
+
+class InterfaceProvider : public mg::DisplayInterfaceProvider
+{
+public:
+    InterfaceProvider(std::shared_ptr<mg::CPUAddressableDisplayProvider> provider)
+        : provider {std::move(provider)}
+    {
+    }
+protected:
+    auto maybe_create_interface(mg::DisplayInterfaceBase::Tag const& type_tag)
+        -> std::shared_ptr<mg::DisplayInterfaceBase> override
+    {
+        if (dynamic_cast<mg::CPUAddressableDisplayProvider::Tag const*>(&type_tag))
+        {
+            return provider;
+        }
+        return nullptr;
+    }
+private:
+    std::shared_ptr<mg::CPUAddressableDisplayProvider> const provider;
+};
+
 mc::BasicScreenShooter::Self::Self(
     std::shared_ptr<Scene> const& scene,
     std::shared_ptr<time::Clock> const& clock,
-    std::unique_ptr<mrg::BufferOutputSurface>&& render_target,
-    std::unique_ptr<mr::Renderer>&& renderer)
+    std::shared_ptr<mg::GLRenderingProvider> render_provider,
+    std::shared_ptr<mr::RendererFactory> renderer_factory)
     : scene{scene},
-      render_target{std::move(render_target)},
-      renderer{std::move(renderer)},
-      clock{clock}
+      clock{clock},
+      render_provider{std::move(render_provider)},
+      renderer_factory{std::move(renderer_factory)}
 {
 }
 
@@ -59,25 +137,72 @@ auto mc::BasicScreenShooter::Self::render(
     }
     scene_elements.clear();
 
-    render_target->make_current();
-    render_target->set_buffer(buffer);
-
-    render_target->bind();
-    renderer->set_viewport(area);
-//    renderer->render(renderable_list);
-
-    renderable_list.clear();
+    auto& renderer = renderer_for_buffer(buffer);
+    renderer.set_viewport(area);
+    /* We don't need the result of this `render` call, as we know it's
+     * going into the buffer we just set
+     */
+    renderer.render(renderable_list);
 
     return captured_time;
+}
+
+auto mc::BasicScreenShooter::Self::renderer_for_buffer(std::shared_ptr<mrs::WriteMappableBuffer> buffer)
+    -> mr::Renderer&
+{
+    if (buffer->size() != last_rendered_size)
+    {
+        // We need to build a new Renderer, at the new size
+        class NoAuxConfig : public graphics::GLConfig
+        {
+        public:
+            auto depth_buffer_bits() const -> int override
+            {
+                return 0;
+            }
+            auto stencil_buffer_bits() const -> int override
+            {
+                return 0;
+            }
+        };
+        auto interface_provider = std::make_shared<InterfaceProvider>(output);
+        auto gl_surface = render_provider->surface_for_output(interface_provider, buffer->size(), NoAuxConfig{});
+        current_renderer = renderer_factory->create_renderer_for(std::move(gl_surface), render_provider);
+    }
+
+    return *current_renderer;
+}
+
+auto mc::BasicScreenShooter::select_provider(
+    std::span<std::shared_ptr<mg::GLRenderingProvider>> const& providers)
+    -> std::shared_ptr<mg::GLRenderingProvider>
+{
+    auto display_provider = std::make_shared<Self::OneShotBufferDisplayProvider>();
+    auto interface_provider = std::make_shared<InterfaceProvider>(display_provider);
+
+    for (auto const& render_provider : providers)
+    {
+        /* TODO: There might be more sensible ways to select a provider
+         * (one in use by at least one DisplayBuffer, the only one in use, the lowest-powered one,...)
+         * That will be a job for a policy object, later.
+         *
+         * For now, just use the first that claims to work.
+         */
+        if (render_provider->suitability_for_display(interface_provider) >= mg::probe::supported)
+        {
+            return render_provider;
+        }
+    }
+    BOOST_THROW_EXCEPTION((std::runtime_error{"No rendering provider claims to support a CPU addressable target"}));
 }
 
 mc::BasicScreenShooter::BasicScreenShooter(
     std::shared_ptr<Scene> const& scene,
     std::shared_ptr<time::Clock> const& clock,
     Executor& executor,
-    std::unique_ptr<mrg::BufferOutputSurface>&& render_target,
-    std::unique_ptr<mr::Renderer>&& renderer)
-    : self{std::make_shared<Self>(scene, clock, std::move(render_target), std::move(renderer))},
+    std::span<std::shared_ptr<mg::GLRenderingProvider>> const& providers,
+    std::shared_ptr<mr::RendererFactory> render_factory)
+    : self{std::make_shared<Self>(scene, clock, select_provider(providers), std::move(render_factory))},
       executor{executor}
 {
 }
@@ -89,7 +214,7 @@ void mc::BasicScreenShooter::capture(
 {
     // TODO: use an atomic to keep track of number of in-flight captures, and error if it's too many
 
-    executor.spawn([weak_self=std::weak_ptr<Self>{self}, buffer, area, callback=std::move(callback)]
+    executor.spawn([weak_self=std::weak_ptr{self}, buffer, area, callback=std::move(callback)]
         {
             if (auto const self = weak_self.lock())
             {
