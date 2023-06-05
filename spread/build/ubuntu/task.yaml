@@ -93,6 +93,6 @@ execute: |
     echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_CXX_COMPILER_LAUNCHER=ccache" >> debian/opts.mk
 
     # build and run tests
-    debian/rules build
+    UBSAN_OPTIONS=halt_on_error=1 debian/rules build
 
     ccache --show-stats --zero-stats > ${CCACHE_DIR}/ccache.stats
