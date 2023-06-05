@@ -41,7 +41,8 @@ namespace
 {
 struct AbstractGLMark2Test : testing::Test, mtf::AsyncServerRunner {
     void SetUp() override {
-        miral::set_window_management_policy<miral::MinimalWindowManager>()(server);
+        auto const set_window_management_policy = miral::set_window_management_policy<miral::MinimalWindowManager>();
+        set_window_management_policy(server);
         start_server();
     }
 

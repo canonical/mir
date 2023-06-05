@@ -56,10 +56,6 @@ private:
     std::list<TemporaryEnvironmentValue> env;
     mir::test::AutoJoinThread server_thread;
 
-    // Once we migrate away from "legacy" window management stubs this can become
-    // SetWindowManagementPolicy set_window_management_policy;
-    std::function<void(mir::Server&)> set_window_management_policy;
-
     std::mutex mutex;
     std::condition_variable started;
     bool server_running{false};
