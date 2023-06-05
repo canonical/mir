@@ -21,6 +21,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <vector>
+#include <stdexcept>
 
 namespace ms = mir::scene;
 namespace mg = mir::graphics;

@@ -20,6 +20,8 @@
 #include "mir/graphics/buffer.h"
 
 #include <boost/throw_exception.hpp>
+#include <stdexcept>
+
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 

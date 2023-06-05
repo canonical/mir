@@ -19,6 +19,7 @@
 #include "queueing_schedule.h"
 #include <boost/throw_exception.hpp>
 #include <algorithm>
+#include <stdexcept>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;

@@ -33,6 +33,7 @@
 #include <signal.h>
 #include <atomic>
 #include <mutex>
+#include <cstdio>
 
 #include "spinner_glow.h"
 #include "spinner_logo.h"

@@ -19,6 +19,7 @@
 #include "mir/client/client_buffer.h"
 #include "buffer.h"
 #include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 namespace mcl = mir::client;
 #pragma GCC diagnostic push

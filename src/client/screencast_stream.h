@@ -32,6 +32,7 @@
 #include <queue>
 #include <memory>
 #include <mutex>
+#include <string>
 
 namespace google
 {

@@ -20,6 +20,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <sys/eventfd.h>
+#include <system_error>
 
 mir::dispatch::ActionQueue::ActionQueue()
     : event_fd{eventfd(0, EFD_CLOEXEC|EFD_NONBLOCK|EFD_SEMAPHORE)}

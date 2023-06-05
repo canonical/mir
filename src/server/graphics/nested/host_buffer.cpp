@@ -19,6 +19,7 @@
 #include "host_buffer.h"
 #include "mir_toolkit/mir_buffer_private.h"
 #include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;

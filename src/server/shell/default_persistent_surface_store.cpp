@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <unordered_map>
 #include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 namespace msh = mir::shell;
 namespace ms = mir::scene;

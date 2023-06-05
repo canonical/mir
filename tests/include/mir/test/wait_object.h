@@ -24,6 +24,7 @@
 #include <condition_variable>
 #include <chrono>
 #include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 namespace mir
 {

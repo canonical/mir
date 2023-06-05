@@ -20,6 +20,7 @@
 
 #include <numeric>
 #include <algorithm>
+#include <stdexcept>
 
 namespace mtd = mir::test::doubles;
 namespace mt = mir::time;
