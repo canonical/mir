@@ -30,7 +30,6 @@
 
 namespace mir
 {
-namespace shell { class InputTargeter; }
 namespace graphics { class CursorImage; }
 namespace compositor { class BufferStream; }
 namespace scene

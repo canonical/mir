@@ -155,7 +155,6 @@ void deliver(std::shared_ptr<mi::Surface> const& surface, MirEvent const* ev)
 
 mi::SurfaceInputDispatcher::SurfaceInputDispatcher(std::shared_ptr<mi::Scene> const& scene)
     : scene(scene),
-      started(false),
       screen_is_locked(false)
 {
     scene_observer = std::make_shared<InputDispatcherSceneObserver>(
@@ -613,15 +612,10 @@ bool mi::SurfaceInputDispatcher::dispatch(std::shared_ptr<MirEvent const> const&
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("InputDispatcher got an input event of unknown type"));
     }
-    
-    return true;
 }
 
 void mi::SurfaceInputDispatcher::start()
 {
-    std::lock_guard lg(dispatcher_mutex);
-
-    started = true;
 }
 
 void mi::SurfaceInputDispatcher::stop()
@@ -631,8 +625,6 @@ void mi::SurfaceInputDispatcher::stop()
     pointer_state_by_id.clear();
     touch_state_by_id.clear();
     last_pointer_event.reset();
-    
-    started = false;
 }
 
 void mi::SurfaceInputDispatcher::set_focus_locked(std::lock_guard<std::mutex> const&, std::shared_ptr<mi::Surface> const& target)
