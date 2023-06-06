@@ -717,8 +717,9 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
 
     if (rejected)
     {
-        scene_surface_close_requested();
+        xcb_kill_client(*connection, window);
         close();
+        connection->flush();
         return;
     }
 
