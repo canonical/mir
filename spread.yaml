@@ -5,11 +5,9 @@ kill-timeout: 45m
 backends:
     lxd:
         systems:
-            - alpine-3.17
             - alpine-3.18
             - alpine-edge
             - ubuntu-22.04
-            - fedora-36
             - fedora-37
             - fedora-38
             - fedora-rawhide:
