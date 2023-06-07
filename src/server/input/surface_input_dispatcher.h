@@ -17,13 +17,14 @@
 #ifndef MIR_INPUT_DEFAULT_INPUT_DISPATCHER_H_
 #define MIR_INPUT_DEFAULT_INPUT_DISPATCHER_H_
 
+#include "mir/executor.h"
+#include "mir/frontend/pointer_input_dispatcher.h"
+#include "mir/geometry/point.h"
 #include "mir/input/input_dispatcher.h"
 #include "mir/input/keyboard_observer.h"
-#include "mir/shell/input_targeter.h"
-#include "mir/geometry/point.h"
-#include "mir/observer_registrar.h"
 #include "mir/observer_multiplexer.h"
-#include "mir/executor.h"
+#include "mir/observer_registrar.h"
+#include "mir/shell/input_targeter.h"
 
 #include <memory>
 #include <mutex>
@@ -45,6 +46,7 @@ class Scene;
 class SurfaceInputDispatcher :
     public input::InputDispatcher,
     public shell::InputTargeter,
+    public frontend::PointerInputDispatcher,
     public ObserverRegistrar<KeyboardObserver>
 {
 public:
@@ -66,6 +68,10 @@ public:
         std::weak_ptr<KeyboardObserver> const& observer,
         Executor& executor) override;
     void unregister_interest(KeyboardObserver const& observer) override;
+
+    void start_ignore_gesture_owner() override;
+
+    void end_ignore_gesture_owner() override;
 
 private:
     bool dispatch_key(std::shared_ptr<MirEvent const> const& ev);
@@ -119,6 +125,13 @@ private:
     std::shared_ptr<MirEvent const> last_pointer_event;
     std::weak_ptr<input::Surface> focus_surface;
     bool screen_is_locked;
+    bool ignore_gesture_owner = false;
+
+    bool send_to_surface(
+        std::shared_ptr<input::Surface> const& target,
+        MirPointerEvent const* pev,
+        MirPointerAction const& action,
+        MirEvent const* ev);
 };
 
 }

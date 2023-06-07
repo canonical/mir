@@ -20,6 +20,7 @@
 
 #include "mir/events/pointer_event.h"
 #include "mir/frontend/drag_icon_controller.h"
+#include "mir/frontend/pointer_input_dispatcher.h"
 #include "mir/log.h"
 #include "mir/scene/clipboard.h"
 #include "mir/scene/session.h"
@@ -165,13 +166,15 @@ mf::WlDataDevice::WlDataDevice(
     wl_resource* new_resource,
     Executor& wayland_executor,
     scene::Clipboard& clipboard,
-    mf::WlSeat& seat,
-    std::shared_ptr<DragIconController> drag_icon_controller)
+    WlSeat& seat,
+    std::shared_ptr<DragIconController> drag_icon_controller,
+    std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher)
     : mw::DataDevice(new_resource, Version<3>()),
       clipboard{clipboard},
       seat{seat},
       clipboard_observer{std::make_shared<ClipboardObserver>(this)},
-      drag_icon_controller{std::move(drag_icon_controller)}
+      drag_icon_controller{std::move(drag_icon_controller)},
+      pointer_input_dispatcher{std::move(pointer_input_dispatcher)}
 {
     clipboard.register_interest(clipboard_observer, wayland_executor);
     // this will call focus_on() with the initial state
@@ -216,6 +219,8 @@ void mf::WlDataDevice::start_drag(
 
     if (auto const wl_source = WlDataSource::from(source.value()))
     {
+        pointer_input_dispatcher->start_ignore_gesture_owner();
+
         wl_source->set_drag_n_drop_source();
 
         if (icon)
@@ -272,6 +277,7 @@ void mf::WlDataDevice::paste_source_set(std::shared_ptr<ms::DataExchangeSource> 
 
 void mf::WlDataDevice::drag_n_drop_source_set(std::shared_ptr<scene::DataExchangeSource> const& source)
 {
+    weak_source = source;
     seat.for_each_listener(client, [this](PointerEventDispatcher* pointer)
         {
             pointer->start_dispatch_to_data_device(this);
@@ -288,14 +294,6 @@ void mf::WlDataDevice::drag_n_drop_source_set(std::shared_ptr<scene::DataExchang
             }
         }
     }
-    else
-    {
-        if (current_offer)
-        {
-            current_offer = {};
-            drag_surface.reset();
-        }
-    }
 }
 
 void mf::WlDataDevice::event(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface)
@@ -310,18 +308,25 @@ void mf::WlDataDevice::event(std::shared_ptr<MirPointerEvent const> const& event
             clipboard.clear_drag_n_drop_source(current_offer.value().source);
         }
         break;
-    case mir_pointer_action_enter:
-        break;
     case mir_pointer_action_leave:
         send_leave_event();
         break;
+    case mir_pointer_action_enter:
+        if (auto const source = weak_source.lock())
+        {
+            current_offer = wayland::make_weak(new Offer{this, source});
+            sent_enter = false;
+        }
+        [[fallthrough]];
     case mir_pointer_action_motion:
     {
         if (!event->local_position())
         {
             log_error("pointer event cannot be sent to wl_surface as it lacks a local poisition");
-            return;
+            break;
         }
+
+        if (!current_offer) break;
 
         auto const root_position = event->local_position().value();
         WlSurface* target_surface;
@@ -342,7 +347,7 @@ void mf::WlDataDevice::event(std::shared_ptr<MirPointerEvent const> const& event
         else
         {
             auto const serial = client->next_serial(nullptr);
-            send_enter_event(serial, weak_surface.value().resource, x, y, current_offer.value().resource);
+            send_enter_event(serial, target_surface->resource, x, y, current_offer.value().resource);
             sent_enter = true;
         }
         break;
@@ -358,6 +363,8 @@ void mf::WlDataDevice::drag_n_drop_source_cleared(std::shared_ptr<scene::DataExc
     {
         current_offer = {};
         drag_surface.reset();
+        pointer_input_dispatcher->end_ignore_gesture_owner();
+        weak_source.reset();
     }
 
     seat.for_each_listener(client, [](PointerEventDispatcher* pointer)

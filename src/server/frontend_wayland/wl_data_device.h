@@ -35,6 +35,7 @@ class DataExchangeSource;
 namespace frontend
 {
 class DragIconController;
+class PointerInputDispatcher;
 
 class DragIconSurface : public NullWlSurfaceRole
 {
@@ -59,7 +60,8 @@ public:
         Executor& wayland_executor,
         scene::Clipboard& clipboard,
         WlSeat& seat,
-        std::shared_ptr<DragIconController> drag_icon_controller);
+        std::shared_ptr<DragIconController> drag_icon_controller,
+        std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher);
     ~WlDataDevice();
 
     /// Wayland requests
@@ -93,7 +95,9 @@ private:
     WlSeat& seat;
     std::shared_ptr<ClipboardObserver> const clipboard_observer;
     std::shared_ptr<DragIconController> const drag_icon_controller;
+    std::shared_ptr<PointerInputDispatcher> const pointer_input_dispatcher;
     bool has_focus = false;
+    std::weak_ptr<scene::DataExchangeSource> weak_source;
     wayland::Weak<Offer> current_offer;
     wayland::Weak<WlSurface> weak_surface;
     std::optional<DragIconSurface> drag_surface;
