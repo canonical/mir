@@ -61,6 +61,7 @@ class DisplayChanger;
 class DragIconController;
 class EventSink;
 class InputConfigurationChanger;
+class PointerInputDispatcher;
 class SessionAuthorizer;
 class SurfaceStack;
 }
@@ -254,6 +255,7 @@ public:
     virtual std::shared_ptr<frontend::SessionAuthorizer>      the_session_authorizer();
     virtual std::shared_ptr<frontend::DisplayChanger>         the_frontend_display_changer();
     virtual std::shared_ptr<frontend::DragIconController>     the_drag_icon_controller();
+    virtual std::shared_ptr<frontend::PointerInputDispatcher> the_pointer_input_dispatcher();
     /** @name frontend configuration - internal dependencies
      * internal dependencies of frontend
      *  @{ */

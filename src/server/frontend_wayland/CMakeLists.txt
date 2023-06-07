@@ -54,6 +54,7 @@ set(
   ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.h
   std_layout_uptr.h
   shm.cpp                       shm.h
+  ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/pointer_input_dispatcher.h
 )
 
 add_custom_command(

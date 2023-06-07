@@ -223,6 +223,7 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<mi::CompositeEventFilter> const& composite_event_filter,
     std::shared_ptr<DragIconController> drag_icon_controller,
+    std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher,
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
     std::shared_ptr<SurfaceStack> const& surface_stack,
@@ -297,7 +298,8 @@ mf::WaylandConnector::WaylandConnector(
         display.get(),
         executor,
         main_clipboard,
-        std::move(drag_icon_controller));
+        std::move(drag_icon_controller),
+        std::move(pointer_input_dispatcher));
 
     extensions->init(WaylandExtensions::Context{
         display.get(),

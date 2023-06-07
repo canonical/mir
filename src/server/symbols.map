@@ -933,5 +933,6 @@ MIR_SERVER_2.14 {
   global:
     extern "C++" {
       "mir::DefaultServerConfiguration::the_drag_icon_controller()";
+      "mir::DefaultServerConfiguration::the_pointer_input_dispatcher()";
     };
 } MIR_SERVER_2.11;

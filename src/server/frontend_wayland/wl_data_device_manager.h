@@ -30,6 +30,7 @@ class Clipboard;
 namespace frontend
 {
 class DragIconController;
+class PointerInputDispatcher;
 
 class WlDataDeviceManager : public wayland::DataDeviceManager::Global
 {
@@ -38,13 +39,15 @@ public:
         struct wl_display* display,
         std::shared_ptr<Executor> const& wayland_executor,
         std::shared_ptr<scene::Clipboard> const& clipboard,
-        std::shared_ptr<DragIconController> drag_icon_controller);
+        std::shared_ptr<DragIconController> drag_icon_controller,
+        std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher);
     ~WlDataDeviceManager();
 
 private:
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<scene::Clipboard> const clipboard;
     std::shared_ptr<DragIconController> const drag_icon_controller;
+    std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher;
 
     void bind(wl_resource* new_resource) override;
 

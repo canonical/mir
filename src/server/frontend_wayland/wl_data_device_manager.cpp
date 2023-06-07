@@ -18,6 +18,7 @@
 #include "wl_data_device.h"
 #include "wl_data_source.h"
 #include "wl_seat.h"
+#include "mir/frontend/pointer_input_dispatcher.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -27,11 +28,13 @@ mf::WlDataDeviceManager::WlDataDeviceManager(
     struct wl_display* display,
     std::shared_ptr<mir::Executor> const& wayland_executor,
     std::shared_ptr<ms::Clipboard> const& clipboard,
-    std::shared_ptr<DragIconController> drag_icon_controller) :
+    std::shared_ptr<DragIconController> drag_icon_controller,
+    std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher) :
     Global(display, Version<3>()),
     wayland_executor{wayland_executor},
     clipboard{clipboard},
-    drag_icon_controller{std::move(drag_icon_controller)}
+    drag_icon_controller{std::move(drag_icon_controller)},
+    pointer_input_dispatcher{std::move(pointer_input_dispatcher)}
 {
 }
 
