@@ -17,8 +17,8 @@
 #include "src/server/frontend_xwayland/xwayland_client_manager.h"
 #include "mir/test/doubles/stub_shell.h"
 #include "mir/test/doubles/stub_session.h"
+#include "mir/test/doubles/stub_session_authorizer.h"
 #include "mir/test/fake_shared.h"
-
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -42,6 +42,7 @@ struct MockShell : mtd::StubShell
 struct XWaylandClientManagerTest : Test
 {
     NiceMock<MockShell> shell;
+    NiceMock<mtd::MockSessionAuthorizer> auth;
     mtd::StubSession session_1;
     mtd::StubSession session_2;
     mtd::StubSession session_3;
@@ -57,12 +58,12 @@ struct XWaylandClientManagerTest : Test
 
 TEST_F(XWaylandClientManagerTest, can_be_created)
 {
-    mf::XWaylandClientManager manager{mt::fake_shared(shell)};
+    mf::XWaylandClientManager manager{mt::fake_shared(shell), mt::fake_shared(auth)};
 }
 
 TEST_F(XWaylandClientManagerTest, get_session_initially_creates_session)
 {
-    mf::XWaylandClientManager manager{mt::fake_shared(shell)};
+    mf::XWaylandClientManager manager{mt::fake_shared(shell), mt::fake_shared(auth)};
 
     EXPECT_CALL(shell, open_session(1, _, _, _))
         .Times(1)
@@ -74,7 +75,7 @@ TEST_F(XWaylandClientManagerTest, get_session_initially_creates_session)
 
 TEST_F(XWaylandClientManagerTest, repeated_get_session_with_same_pid_returns_same_session)
 {
-    mf::XWaylandClientManager manager{mt::fake_shared(shell)};
+    mf::XWaylandClientManager manager{mt::fake_shared(shell), mt::fake_shared(auth)};
 
     EXPECT_CALL(shell, open_session(1, _, _, _))
         .Times(1)
@@ -89,7 +90,7 @@ TEST_F(XWaylandClientManagerTest, repeated_get_session_with_same_pid_returns_sam
 
 TEST_F(XWaylandClientManagerTest, repeated_get_session_with_different_pids_creates_new_sessions)
 {
-    mf::XWaylandClientManager manager{mt::fake_shared(shell)};
+    mf::XWaylandClientManager manager{mt::fake_shared(shell), mt::fake_shared(auth)};
 
     EXPECT_CALL(shell, open_session(_, _, _, _))
         .Times(3)
@@ -108,7 +109,7 @@ TEST_F(XWaylandClientManagerTest, repeated_get_session_with_different_pids_creat
 
 TEST_F(XWaylandClientManagerTest, resetting_client_session_closes_session)
 {
-    mf::XWaylandClientManager manager{mt::fake_shared(shell)};
+    mf::XWaylandClientManager manager{mt::fake_shared(shell), mt::fake_shared(auth)};
 
     EXPECT_CALL(shell, open_session(_, _, _, _))
         .Times(1)
@@ -126,7 +127,7 @@ TEST_F(XWaylandClientManagerTest, resetting_client_session_closes_session)
 
 TEST_F(XWaylandClientManagerTest, reset_does_not_close_session_if_multiple_owners)
 {
-    mf::XWaylandClientManager manager{mt::fake_shared(shell)};
+    mf::XWaylandClientManager manager{mt::fake_shared(shell), mt::fake_shared(auth)};
 
     EXPECT_CALL(shell, open_session(_, _, _, _))
         .Times(1)
@@ -143,7 +144,7 @@ TEST_F(XWaylandClientManagerTest, reset_does_not_close_session_if_multiple_owner
 
 TEST_F(XWaylandClientManagerTest, session_closed_when_all_client_sessions_reset)
 {
-    mf::XWaylandClientManager manager{mt::fake_shared(shell)};
+    mf::XWaylandClientManager manager{mt::fake_shared(shell), mt::fake_shared(auth)};
 
     EXPECT_CALL(shell, open_session(_, _, _, _))
         .Times(1)
@@ -162,7 +163,7 @@ TEST_F(XWaylandClientManagerTest, session_closed_when_all_client_sessions_reset)
 
 TEST_F(XWaylandClientManagerTest, new_session_created_after_old_session_for_same_pid_closed)
 {
-    mf::XWaylandClientManager manager{mt::fake_shared(shell)};
+    mf::XWaylandClientManager manager{mt::fake_shared(shell), mt::fake_shared(auth)};
     auto client_session_1 = manager.session_for_client(1);
     client_session_1.reset();
 

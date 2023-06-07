@@ -39,6 +39,7 @@ class SurfaceStack;
 class WlSeat;
 class WlSurface;
 class XWaylandSurface;
+class SessionAuthorizer;
 
 class XWaylandWMShell
 {
@@ -46,11 +47,13 @@ public:
     XWaylandWMShell(
         std::shared_ptr<Executor> const& wayland_executor,
         std::shared_ptr<shell::Shell> const& shell,
+        std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         std::shared_ptr<scene::Clipboard> const& clipboard,
         WlSeat& seat,
         std::shared_ptr<SurfaceStack> const& surface_stack)
         : wayland_executor{wayland_executor},
           shell{shell},
+          session_authorizer{session_authorizer},
           clipboard{clipboard},
           seat{seat},
           surface_stack{surface_stack}
@@ -59,6 +62,7 @@ public:
 
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
+    std::shared_ptr<SessionAuthorizer> const session_authorizer;
     std::shared_ptr<scene::Clipboard> const clipboard;
     WlSeat& seat;
     std::shared_ptr<SurfaceStack> const surface_stack;

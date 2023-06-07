@@ -298,6 +298,7 @@ mf::WaylandConnector::WaylandConnector(
         display.get(),
         executor,
         shell,
+        session_authorizer,
         main_clipboard,
         primary_selection_clipboard,
         text_input_hub,
