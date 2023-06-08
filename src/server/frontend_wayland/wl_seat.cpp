@@ -35,6 +35,7 @@
 #include "mir/input/mir_keyboard_config.h"
 #include "mir/input/keyboard_observer.h"
 #include "mir/scene/surface.h"
+#include "mir_toolkit/events/input/pointer_event.h"
 
 #include <mutex>
 #include <algorithm>

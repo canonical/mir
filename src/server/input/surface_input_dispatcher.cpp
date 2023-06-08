@@ -464,7 +464,6 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId /*id*/, std::
 
             if (is_gesture_terminator(pev))
             {
-                deliver(gesture_owner, ev);
                 gesture_owner.reset();
             }
 

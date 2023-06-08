@@ -78,13 +78,18 @@ public:
 
     void accept(uint32_t serial, std::optional<std::string> const& mime_type) override
     {
-        (void)serial, (void)mime_type;
+        (void)serial;
+        accepted_mime_type = mime_type;
     }
 
     void receive(std::string const& mime_type, mir::Fd fd) override;
 
     void finish() override
     {
+        if (device && device.value().current_offer.is(*this))
+        {
+            device.value().clipboard.clear_drag_n_drop_source(source);
+        }
     }
 
     void set_actions(uint32_t dnd_actions, uint32_t preferred_action) override
@@ -96,6 +101,7 @@ private:
     friend mf::WlDataDevice;
     wayland::Weak<WlDataDevice> const device;
     std::shared_ptr<ms::DataExchangeSource> const source;
+    std::optional<std::string> accepted_mime_type;
 };
 
 mf::WlDataDevice::Offer::Offer(WlDataDevice* device, std::shared_ptr<ms::DataExchangeSource> const& source) :
@@ -108,6 +114,9 @@ mf::WlDataDevice::Offer::Offer(WlDataDevice* device, std::shared_ptr<ms::DataExc
     {
         send_offer_event(type);
     }
+    
+    send_action_event(0);
+    send_source_actions_event_if_supported(mf::WlDataDevice::Offer::source->actions());
 }
 
 void mf::WlDataDevice::Offer::receive(std::string const& mime_type, mir::Fd fd)
@@ -305,7 +314,15 @@ void mf::WlDataDevice::event(std::shared_ptr<MirPointerEvent const> const& event
         if (current_offer)
         {
             send_drop_event();
-            clipboard.clear_drag_n_drop_source(current_offer.value().source);
+            if (!current_offer.value().accepted_mime_type && wl_resource_get_version(resource) >= 3)
+            {
+                current_offer.value().source->cancelled();
+                clipboard.clear_drag_n_drop_source(current_offer.value().source);
+            }
+            else
+            {
+                current_offer.value().source->dnd_drop_performed();
+            }
         }
         break;
     case mir_pointer_action_leave:

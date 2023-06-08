@@ -40,6 +40,15 @@ public:
     /// Instructs the source to start sending it's data in the given mime type to the given fd.
     virtual void initiate_send(std::string const& mime_type, Fd const& target_fd) = 0;
 
+    /// The destination has cancelled the (DnD) transfer
+    virtual void cancelled() {}
+
+    /// The user has dropped the (DnD) transfer
+    virtual void dnd_drop_performed() {}
+
+    /// The DnD actions supported
+    virtual auto actions() -> uint32_t { return 0; }
+
 private:
     DataExchangeSource(DataExchangeSource const&) = delete;
     DataExchangeSource& operator=(DataExchangeSource const&) = delete;

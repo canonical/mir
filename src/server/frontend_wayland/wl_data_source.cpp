@@ -86,6 +86,34 @@ public:
             });
     }
 
+    void cancelled() override
+    {
+        if (wl_data_source)
+        {
+            wl_data_source.value().send_cancelled_event();
+        }
+    }
+
+    void dnd_drop_performed() override
+    {
+        if (wl_data_source)
+        {
+            return wl_data_source.value().send_dnd_drop_performed_event_if_supported();
+        }
+    }
+
+    auto actions() -> uint32_t override
+    {
+        if (wl_data_source)
+        {
+            return wl_data_source.value().dnd_actions;
+        }
+        else
+        {
+            return DataExchangeSource::actions();
+        }
+    }
+
 private:
     std::shared_ptr<Executor> const wayland_executor;
     wayland::Weak<WlDataSource> const wl_data_source;
@@ -178,8 +206,12 @@ void mf::WlDataSource::drag_n_drop_source_cleared(std::shared_ptr<scene::DataExc
 {
     if (source && dnd_source.lock() == source)
     {
-        send_dnd_drop_performed_event_if_supported();
         dnd_source.reset();
         dnd_source_source_is_ours = false;
     }
+}
+
+void mir::frontend::WlDataSource::set_actions(uint32_t dnd_actions)
+{
+    this->dnd_actions = dnd_actions;
 }

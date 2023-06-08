@@ -47,10 +47,7 @@ public:
     /// Wayland requests
     /// @{
     void offer(std::string const& mime_type) override;
-    void set_actions(uint32_t dnd_actions) override
-    {
-        (void)dnd_actions;
-    }
+    void set_actions(uint32_t dnd_actions) override;
     /// @}
 
 private:
@@ -70,6 +67,7 @@ private:
 
     std::weak_ptr<scene::DataExchangeSource> dnd_source;
     bool dnd_source_source_is_ours{false};
+    uint32_t dnd_actions;
 };
 }
 }
