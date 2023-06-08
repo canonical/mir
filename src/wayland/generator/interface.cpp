@@ -60,22 +60,14 @@ auto matching_keys_to_vector(
 
 auto vec_has_destroy_request(std::vector<Request> const& requests) -> bool
 {
-    int count = 0;
     for (auto const& request : requests)
     {
         if (request.is_destroy())
         {
-            count++;
+            return true;
         }
     }
-    if (count > 1)
-    {
-        throw std::runtime_error{"interface has multiple destroy requests"};
-    }
-    else
-    {
-        return count;
-    }
+    return false;
 }
 }
 
