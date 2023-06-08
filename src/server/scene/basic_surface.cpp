@@ -828,6 +828,16 @@ void mir::scene::BasicSurface::set_depth_layer(MirDepthLayer depth_layer)
     observers->depth_layer_set_to(this, depth_layer);
 }
 
+auto mir::scene::BasicSurface::visible_on_lock_screen() const -> bool
+{
+    return synchronised_state.lock()->visible_on_lock_screen;
+}
+
+void mir::scene::BasicSurface::set_visible_on_lock_screen(bool visible)
+{
+    synchronised_state.lock()->visible_on_lock_screen = visible;
+}
+
 std::optional<geom::Rectangle> mir::scene::BasicSurface::clip_area() const
 {
     return synchronised_state.lock()->clip_area;

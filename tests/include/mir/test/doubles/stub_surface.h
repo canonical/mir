@@ -73,6 +73,8 @@ struct StubSurface : scene::Surface
     void placed_relative(geometry::Rectangle const&) override {}
     MirDepthLayer depth_layer() const override { return mir_depth_layer_application; }
     void set_depth_layer(MirDepthLayer) override {}
+    auto visible_on_lock_screen() const -> bool { return false; }
+    void set_visible_on_lock_screen(bool) {}
     std::optional<geometry::Rectangle> clip_area() const override { return std::nullopt; }
     void set_clip_area(std::optional<geometry::Rectangle> const&) override {}
     MirWindowFocusState focus_state() const override { return mir_window_focus_state_unfocused; }
