@@ -103,7 +103,7 @@ public:
     struct BasicScreenLockHandle;
 
     auto stacking_order_of(SurfaceSet const& surfaces) const -> SurfaceList override;
-    auto lock_screen() -> std::shared_ptr<ScreenLockHandle> override;
+    auto lock_screen() -> std::shared_ptr<frontend::ScreenLockHandle> override;
     auto screen_is_locked() const -> bool override;
 
     // Intended for input overlays, as described in mir::input::Scene documentation.
@@ -139,7 +139,7 @@ private:
 
     Observers observers;
     /// If not expired the screen is locked (and only surfaces that appear on the lock screen should be shown)
-    std::weak_ptr<ScreenLockHandle> screen_lock_handle;
+    std::weak_ptr<frontend::ScreenLockHandle> screen_lock_handle;
     std::atomic<bool> scene_changed;
     std::shared_ptr<SurfaceObserver> surface_observer;
 };

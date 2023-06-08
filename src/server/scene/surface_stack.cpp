@@ -36,6 +36,7 @@ namespace ms = mir::scene;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
+namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 
 namespace
@@ -498,7 +499,7 @@ auto ms::SurfaceStack::stacking_order_of(SurfaceSet const& surfaces) const -> Su
     return result;
 }
 
-struct ms::SurfaceStack::BasicScreenLockHandle : ScreenLockHandle
+struct ms::SurfaceStack::BasicScreenLockHandle : mf::ScreenLockHandle
 {
     BasicScreenLockHandle(std::weak_ptr<SurfaceStack> surface_stack) : surface_stack{std::move(surface_stack)}
     {
@@ -517,9 +518,9 @@ private:
     std::weak_ptr<SurfaceStack> surface_stack;
 };
 
-auto ms::SurfaceStack::lock_screen() -> std::shared_ptr<ScreenLockHandle>
+auto ms::SurfaceStack::lock_screen() -> std::shared_ptr<mf::ScreenLockHandle>
 {
-    std::shared_ptr<ScreenLockHandle> result;
+    std::shared_ptr<mf::ScreenLockHandle> result;
     bool is_new{false};
     {
         RecursiveWriteLock lk(guard);

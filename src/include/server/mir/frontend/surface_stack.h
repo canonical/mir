@@ -32,20 +32,20 @@ using SurfaceList = std::vector<std::weak_ptr<scene::Surface>>;
 }
 namespace frontend
 {
+struct ScreenLockHandle
+{
+    ScreenLockHandle(ScreenLockHandle const&) = delete;
+    ScreenLockHandle& operator=(ScreenLockHandle const&) = delete;
+
+protected:
+    ScreenLockHandle() = default;
+};
+
 class SurfaceStack
 {
 public:
     SurfaceStack() = default;
     virtual ~SurfaceStack() = default;
-
-    struct ScreenLockHandle
-    {
-        ScreenLockHandle(ScreenLockHandle const&) = delete;
-        ScreenLockHandle& operator=(ScreenLockHandle const&) = delete;
-
-    protected:
-        ScreenLockHandle() = default;
-    };
 
     virtual void add_observer(std::shared_ptr<scene::Observer> const& observer) = 0;
     virtual void remove_observer(std::weak_ptr<scene::Observer> const& observer) = 0;
