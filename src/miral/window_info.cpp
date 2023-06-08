@@ -479,3 +479,9 @@ auto miral::WindowInfo::focus_mode() const -> MirFocusMode
         return mir_focus_mode_disabled;
     }
 }
+
+auto miral::WindowInfo::visible_on_lock_screen() const -> bool
+{
+    std::shared_ptr<mir::scene::Surface> const surface = self->window;
+    return surface ? surface->visible_on_lock_screen() : false;
+}

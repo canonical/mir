@@ -483,3 +483,11 @@ global:
     vtable?for?miral::FdHandle;
   };
 } MIRAL_3.7;
+
+MIRAL_3.9 {
+global:
+  extern "C++" {
+    miral::WindowInfo::visible_on_lock_screen*;
+    miral::WindowSpecification::visible_on_lock_screen*;
+  };
+} MIRAL_3.8;

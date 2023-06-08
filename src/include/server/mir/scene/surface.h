@@ -122,10 +122,7 @@ public:
     virtual void set_depth_layer(MirDepthLayer depth_layer) = 0;
 
     /// If this surface should be shown while the compositor is locked
-    /// @{
-    virtual auto visible_on_lock_screen() const -> bool = 0;
     virtual void set_visible_on_lock_screen(bool visible) = 0;
-    /// @}
 
     virtual std::optional<geometry::Rectangle> clip_area() const = 0;
     virtual void set_clip_area(std::optional<geometry::Rectangle> const& area) = 0;

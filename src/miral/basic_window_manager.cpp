@@ -983,6 +983,7 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     COPY_IF_SET(exclusive_rect);
     COPY_IF_SET(application_id);
     COPY_IF_SET(focus_mode);
+    COPY_IF_SET(visible_on_lock_screen);
 
 #undef COPY_IF_SET
 

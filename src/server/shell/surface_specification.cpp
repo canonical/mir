@@ -75,7 +75,8 @@ bool msh::SurfaceSpecification::is_empty() const
         !exclusive_rect.is_set() &&
         !application_id.is_set() &&
         !server_side_decorated.is_set() &&
-        !focus_mode.is_set();
+        !focus_mode.is_set() &&
+        !visible_on_lock_screen.is_set();
 }
 
 void msh::SurfaceSpecification::update_from(SurfaceSpecification const& that)
@@ -158,6 +159,8 @@ void msh::SurfaceSpecification::update_from(SurfaceSpecification const& that)
         server_side_decorated = that.server_side_decorated;
     if (that.focus_mode.is_set())
         focus_mode = that.focus_mode;
+    if (that.visible_on_lock_screen.is_set())
+        visible_on_lock_screen = that.visible_on_lock_screen;
 }
 
 bool msh::operator==(
@@ -206,7 +209,8 @@ bool msh::operator==(
         lhs.exclusive_rect == rhs.exclusive_rect &&
         lhs.application_id == rhs.application_id &&
         lhs.server_side_decorated == rhs.server_side_decorated &&
-        lhs.focus_mode == rhs.focus_mode;
+        lhs.focus_mode == rhs.focus_mode &&
+        lhs.visible_on_lock_screen == rhs.visible_on_lock_screen;
 }
 
 bool msh::operator!=(

@@ -111,6 +111,7 @@ auto miral::make_surface_spec(WindowSpecification const& window_spec) -> mir::sh
     copy_if_set(result.application_id, spec.application_id);
     copy_if_set(result.server_side_decorated, spec.server_side_decorated);
     copy_if_set(result.focus_mode, spec.focus_mode);
+    copy_if_set(result.visible_on_lock_screen, spec.visible_on_lock_screen);
 
     if (spec.size.is_set())
     {

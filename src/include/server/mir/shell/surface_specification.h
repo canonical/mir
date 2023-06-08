@@ -106,6 +106,7 @@ struct SurfaceSpecification
     /// Child surfaces are by default created on the same layer as their parent, and updating the depth layer of a parent
     /// also updates all children.
     optional_value<MirDepthLayer> depth_layer;
+    optional_value<bool> visible_on_lock_screen;
 
     optional_value<MirPlacementGravity> attached_edges;
     optional_value<optional_value<geometry::Rectangle>> exclusive_rect;
