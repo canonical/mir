@@ -117,10 +117,16 @@ struct StubInputScene : public mtd::StubInputScene
         observer->end_observation();
         observer.reset();
     }
+
+    bool screen_is_locked() const override
+    {
+        return is_locked;
+    }
     
     mir::ThreadSafeList<std::shared_ptr<ms::Surface>> mutable surfaces;
 
     std::shared_ptr<ms::Observer> observer;
+    bool is_locked = false;
 };
 
 struct SurfaceInputDispatcher : public testing::Test
@@ -334,6 +340,68 @@ TEST_F(SurfaceInputDispatcher, keyboard_focus_clear_delivered_to_keyboard_observ
 
     EXPECT_CALL(*kb_observer, keyboard_focus_set(Eq(nullptr)));
     dispatcher.set_focus(nullptr);
+    executor.execute();
+}
+
+TEST_F(SurfaceInputDispatcher, keyboard_focus_clear_delivered_to_keyboard_observer_when_screen_is_locked)
+{
+    auto surface = scene.add_surface();
+    mtd::ExplicitExecutor executor;
+
+    auto const kb_observer = std::make_shared<NiceMock<MockKeyboardObserver>>();
+
+    dispatcher.start();
+    dispatcher.register_interest(kb_observer, executor);
+    dispatcher.set_focus(surface);
+    executor.execute();
+
+    EXPECT_CALL(*kb_observer, keyboard_focus_set(Eq(nullptr)));
+    scene.is_locked = true;
+    scene.observer->scene_changed();
+    executor.execute();
+}
+
+TEST_F(SurfaceInputDispatcher, keyboard_focus_not_set_when_screen_is_locked)
+{
+    auto surface = scene.add_surface();
+    mtd::ExplicitExecutor executor;
+
+    auto const kb_observer = std::make_shared<NiceMock<MockKeyboardObserver>>();
+
+    dispatcher.start();
+    dispatcher.register_interest(kb_observer, executor);
+    executor.execute();
+
+    scene.is_locked = true;
+    scene.observer->scene_changed();
+    executor.execute();
+
+    EXPECT_CALL(*kb_observer, keyboard_focus_set(_)).Times(0);
+    dispatcher.set_focus(surface);
+    executor.execute();
+}
+
+TEST_F(SurfaceInputDispatcher, keyboard_focus_can_be_set_after_screen_is_unlocked)
+{
+    auto surface = scene.add_surface();
+    mtd::ExplicitExecutor executor;
+
+    auto const kb_observer = std::make_shared<NiceMock<MockKeyboardObserver>>();
+
+    dispatcher.start();
+    dispatcher.register_interest(kb_observer, executor);
+    executor.execute();
+
+    scene.is_locked = true;
+    scene.observer->scene_changed();
+    executor.execute();
+
+    scene.is_locked = false;
+    scene.observer->scene_changed();
+    executor.execute();
+
+    EXPECT_CALL(*kb_observer, keyboard_focus_set(Eq(surface)));
+    dispatcher.set_focus(surface);
     executor.execute();
 }
 
