@@ -157,7 +157,7 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
     {
         for (auto const& surface : layer)
         {
-            if (surface->visible())
+            if (surface_can_be_shown(surface) && surface->visible())
             {
                 for (auto& renderable : surface->generate_renderables(id))
                 {
@@ -187,7 +187,7 @@ int ms::SurfaceStack::frames_pending(mc::CompositorID id) const
     {
         for (auto const& surface : layer)
         {
-            if (surface->visible())
+            if (surface_can_be_shown(surface) && surface->visible())
             {
                 auto const tracker = rendering_trackers.find(surface.get());
                 if (tracker != rendering_trackers.end() && tracker->second->is_exposed_in(id))
@@ -331,7 +331,7 @@ auto ms::SurfaceStack::surface_at(geometry::Point cursor) const
             // TODO be maintained and whether this test will detect clicks on
             // TODO decorations (it should) as these may be outside the area
             // TODO known to the client.  But it works for now.
-            if (surface->input_area_contains(cursor))
+            if (surface_can_be_shown(surface) && surface->input_area_contains(cursor))
                     return surface;
         }
     }
@@ -449,6 +449,11 @@ void ms::SurfaceStack::insert_surface_at_top_of_depth_layer(std::shared_ptr<Surf
     surface_layers[depth_index].push_back(surface);
 }
 
+auto ms::SurfaceStack::surface_can_be_shown(std::shared_ptr<Surface> const& surface) const -> bool
+{
+    return screen_lock_handle.expired() || surface->visible_on_lock_screen();
+}
+
 void ms::SurfaceStack::add_observer(std::shared_ptr<ms::Observer> const& observer)
 {
     observers.add(observer);
@@ -491,6 +496,51 @@ auto ms::SurfaceStack::stacking_order_of(SurfaceSet const& surfaces) const -> Su
         }
     }
     return result;
+}
+
+struct ms::SurfaceStack::BasicScreenLockHandle : ScreenLockHandle
+{
+    BasicScreenLockHandle(std::weak_ptr<SurfaceStack> surface_stack) : surface_stack{std::move(surface_stack)}
+    {
+    }
+
+    ~BasicScreenLockHandle()
+    {
+        if (auto const shared = surface_stack.lock())
+        {
+            // shared->screen_is_locked() should already be false
+            shared->emit_scene_changed();
+        }
+    }
+
+private:
+    std::weak_ptr<SurfaceStack> surface_stack;
+};
+
+auto ms::SurfaceStack::lock_screen() -> std::shared_ptr<ScreenLockHandle>
+{
+    std::shared_ptr<ScreenLockHandle> result;
+    bool is_new{false};
+    {
+        RecursiveWriteLock lk(guard);
+        result = screen_lock_handle.lock();
+        if (!result)
+        {
+            screen_lock_handle = result = std::make_shared<BasicScreenLockHandle>(shared_from_this());
+            is_new = true;
+        }
+    }
+    if (is_new)
+    {
+        emit_scene_changed();
+    }
+    return result;
+}
+
+auto ms::SurfaceStack::screen_is_locked() const -> bool
+{
+    RecursiveReadLock lk(guard);
+    return !screen_lock_handle.expired();
 }
 
 void ms::Observers::surface_added(std::shared_ptr<Surface> const& surface)

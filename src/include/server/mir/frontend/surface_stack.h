@@ -38,12 +38,27 @@ public:
     SurfaceStack() = default;
     virtual ~SurfaceStack() = default;
 
+    struct ScreenLockHandle
+    {
+        ScreenLockHandle(ScreenLockHandle const&) = delete;
+        ScreenLockHandle& operator=(ScreenLockHandle const&) = delete;
+
+    protected:
+        ScreenLockHandle() = default;
+    };
+
     virtual void add_observer(std::shared_ptr<scene::Observer> const& observer) = 0;
     virtual void remove_observer(std::weak_ptr<scene::Observer> const& observer) = 0;
 
     /// Returns the stacking order of the given surfaces, bottom to top
     /// If a surface is not known to the surface stack it will not be in the returned list
     virtual auto stacking_order_of(scene::SurfaceSet const& surfaces) const -> scene::SurfaceList = 0;
+
+    /// Locks the screen or returns a handle to the existing screen lock if the screen is already locked. The screen is
+    /// unlocked when the last copy of ScreenLockHandle is dropped.
+    virtual auto lock_screen() -> std::shared_ptr<ScreenLockHandle> = 0;
+    /// Returns if the screen is currently locked
+    virtual auto screen_is_locked() const -> bool = 0;
 
 private:
     SurfaceStack(SurfaceStack const&) = delete;
