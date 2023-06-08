@@ -44,10 +44,12 @@ struct InputDispatcherSceneObserver :
     InputDispatcherSceneObserver(
         std::function<void(std::shared_ptr<ms::Surface>)> const& on_removed,
         std::function<void(ms::Surface const*)> const& on_surface_moved,
-        std::function<void()> const& on_surface_resized)
+        std::function<void()> const& on_surface_resized,
+        std::function<void()> const& on_scene_changed)
         : on_removed(on_removed),
           on_surface_moved{on_surface_moved},
-          on_surface_resized{on_surface_resized}
+          on_surface_resized{on_surface_resized},
+          on_scene_changed{on_scene_changed}
     {
     }
 
@@ -59,6 +61,11 @@ struct InputDispatcherSceneObserver :
     void surface_removed(std::shared_ptr<ms::Surface> const& surface) override
     {
         on_removed(surface);
+    }
+
+    void scene_changed() override
+    {
+        on_scene_changed();
     }
 
     void surface_exists(std::shared_ptr<ms::Surface> const& surface) override
@@ -89,6 +96,7 @@ struct InputDispatcherSceneObserver :
     std::function<void(std::shared_ptr<ms::Surface>)> const on_removed;
     std::function<void(ms::Surface const*)> const on_surface_moved;
     std::function<void()> const on_surface_resized;
+    std::function<void()> const on_scene_changed;
 };
 
 void set_local_positions_based_on_surface_input_bounds(
@@ -147,12 +155,14 @@ void deliver(std::shared_ptr<mi::Surface> const& surface, MirEvent const* ev)
 
 mi::SurfaceInputDispatcher::SurfaceInputDispatcher(std::shared_ptr<mi::Scene> const& scene)
     : scene(scene),
-      started(false)
+      started(false),
+      screen_is_locked(false)
 {
     scene_observer = std::make_shared<InputDispatcherSceneObserver>(
         [this](std::shared_ptr<ms::Surface> const& s) { surface_removed(s); },
         [this](scene::Surface const* s) { surface_moved(s); },
-        [this] { surface_resized(); });
+        [this] { surface_resized(); },
+        [this] { scene_changed(); });
     scene->add_observer(scene_observer);
 }
 
@@ -372,6 +382,21 @@ void mi::SurfaceInputDispatcher::surface_resized()
     {
         ctx.current_target = ctx.target_surface;
     }
+}
+
+void mi::SurfaceInputDispatcher::scene_changed()
+{
+    std::lock_guard lock{dispatcher_mutex};
+    bool const screen_is_locked_new = scene->screen_is_locked();
+    if (screen_is_locked != screen_is_locked_new && screen_is_locked_new)
+    {
+        auto const focused = focus_surface.lock();
+        if (focused && !focused->visible_on_lock_screen())
+        {
+            set_focus_locked(lock, nullptr);
+        }
+    }
+    screen_is_locked = screen_is_locked_new;
 }
 
 bool mi::SurfaceInputDispatcher::dispatch_key(std::shared_ptr<MirEvent const> const& ev)
@@ -612,6 +637,10 @@ void mi::SurfaceInputDispatcher::stop()
 
 void mi::SurfaceInputDispatcher::set_focus_locked(std::lock_guard<std::mutex> const&, std::shared_ptr<mi::Surface> const& target)
 {
+    if (screen_is_locked && target && !target->visible_on_lock_screen())
+    {
+        return;
+    }
     focus_surface = target;
     keyboard_multiplexer.keyboard_focus_set(target);
 }

@@ -46,6 +46,8 @@ struct MockInputScene : mtd::StubInputScene
                  void(std::weak_ptr<mg::Renderable> const&));
 
     MOCK_METHOD0(emit_scene_changed, void());
+
+    MOCK_CONST_METHOD0(screen_is_locked, bool());
 };
 
 struct StubCursorImage : mg::CursorImage
