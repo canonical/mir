@@ -144,7 +144,9 @@ struct SurfaceStack : public ::testing::Test
     std::shared_ptr<ms::Surface> invisible_stub_surface;
 
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
-    ms::SurfaceStack stack{report};
+    // The surface stack must be a shared pointer so shared_from_this() works
+    std::shared_ptr<ms::SurfaceStack> shared_stack = std::make_shared<ms::SurfaceStack>(report);
+    ms::SurfaceStack& stack = *shared_stack;
     void const* compositor_id{&stack};
     mtd::ExplicitExecutor executor;
 };
@@ -1305,5 +1307,64 @@ TEST_F(SurfaceStack, all_depth_layers_are_handled)
                 SceneElementForStream(stub_buffer_stream2)))
             << "A surface at " << depth_layer_names[i] << " could not be raised over another on the same layer";
     }
+}
 
+TEST_F(SurfaceStack, screen_can_be_locked)
+{
+    NiceMock<MockSceneObserver> observer;
+    stack.add_observer(mt::fake_shared(observer));
+    EXPECT_THAT(stack.screen_is_locked(), Eq(false));
+    EXPECT_CALL(observer, scene_changed());
+
+    auto handle = stack.lock_screen();
+    EXPECT_THAT(stack.screen_is_locked(), Eq(true));
+    Mock::VerifyAndClearExpectations(&observer);
+}
+
+TEST_F(SurfaceStack, screen_can_be_unlocked)
+{
+    auto handle = stack.lock_screen();
+    EXPECT_THAT(stack.screen_is_locked(), Eq(true));
+
+    NiceMock<MockSceneObserver> observer;
+    stack.add_observer(mt::fake_shared(observer));
+    EXPECT_CALL(observer, scene_changed());
+
+    handle.reset();
+    EXPECT_THAT(stack.screen_is_locked(), Eq(false));
+    Mock::VerifyAndClearExpectations(&observer);
+}
+
+TEST_F(SurfaceStack, screen_is_not_unlocked_until_all_handles_are_dropped)
+{
+    NiceMock<MockSceneObserver> observer;
+    stack.add_observer(mt::fake_shared(observer));
+    EXPECT_CALL(observer, scene_changed());
+
+    auto handle1 = stack.lock_screen();
+    Mock::VerifyAndClearExpectations(&observer);
+    EXPECT_CALL(observer, scene_changed()).Times(0);
+
+    auto handle2 = stack.lock_screen();
+    auto handle3 = stack.lock_screen();
+    EXPECT_THAT(stack.screen_is_locked(), Eq(true));
+    handle2.reset();
+    EXPECT_THAT(stack.screen_is_locked(), Eq(true));
+    handle1.reset();
+    EXPECT_THAT(stack.screen_is_locked(), Eq(true));
+    EXPECT_CALL(observer, scene_changed());
+
+    handle3.reset();
+    EXPECT_THAT(stack.screen_is_locked(), Eq(false));
+}
+
+TEST_F(SurfaceStack, when_screen_is_locked_surface_ignores_surface)
+{
+    geom::Point const cursor_position{100, 100};
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stub_surface1->resize({200, 200});
+    EXPECT_THAT(stack.surface_at(cursor_position), Eq(stub_surface1));
+
+    auto handle = stack.lock_screen();
+    EXPECT_THAT(stack.surface_at(cursor_position).get(), IsNull());
 }
