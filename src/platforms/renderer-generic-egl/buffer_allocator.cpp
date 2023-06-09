@@ -427,6 +427,11 @@ public:
         eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx);
     }
 
+    void release_current() override
+    {
+        eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    }
+
     auto commit() -> std::unique_ptr<mg::Framebuffer> override
     {
         auto fb = allocator->alloc_fb(size());
@@ -484,6 +489,11 @@ public:
     void make_current() override
     {
         fb->make_current();
+    }
+
+    void release_current() override
+    {
+        fb->release_current();
     }
 
     auto commit() -> std::unique_ptr<mg::Framebuffer> override

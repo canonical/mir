@@ -72,6 +72,14 @@ void mgxh::Framebuffer::make_current()
     }
 }
 
+void mgxh::Framebuffer::release_current()
+{
+    if (eglMakeCurrent(state->dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to release EGL context"));
+    }
+}
+
 void mgxh::Framebuffer::swap_buffers()
 {
     if (eglSwapBuffers(state->dpy, state->surf) != EGL_TRUE)

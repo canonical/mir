@@ -53,6 +53,7 @@ public:
     auto size() const -> geometry::Size override;
 
     void make_current() override;
+    void release_current() override;
     auto clone_handle() -> std::unique_ptr<GenericEGLDisplayProvider::EGLFramebuffer> override;
 
     void swap_buffers();

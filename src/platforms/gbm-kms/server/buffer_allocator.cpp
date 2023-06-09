@@ -427,6 +427,11 @@ public:
         eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx);
     }
 
+    void release_current() override
+    {
+        eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    }
+
     auto commit() -> std::unique_ptr<mg::Framebuffer> override
     {
         auto fb = allocator->alloc_fb(size_);
@@ -498,6 +503,14 @@ public:
         if (eglMakeCurrent(dpy, egl_surf, egl_surf, ctx) != EGL_TRUE)
         {
             BOOST_THROW_EXCEPTION(mg::egl_error("Failed to make EGL context current"));
+        }
+    }
+
+    void release_current() override
+    {
+        if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE)
+        {
+            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to release EGL context"));
         }
     }
 

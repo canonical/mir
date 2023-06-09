@@ -371,6 +371,7 @@ public:
     {
     public:
         virtual void make_current() = 0;
+        virtual void release_current() = 0;
         virtual auto clone_handle() -> std::unique_ptr<EGLFramebuffer> = 0;
     };
 

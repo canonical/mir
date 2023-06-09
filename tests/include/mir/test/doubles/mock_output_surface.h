@@ -28,6 +28,7 @@ class MockOutputSurface : public mir::graphics::gl::OutputSurface
 public:
     MOCK_METHOD(void, bind, (), (override));
     MOCK_METHOD(void, make_current, (), (override));
+    MOCK_METHOD(void, release_current, (), (override));
     MOCK_METHOD(std::unique_ptr<graphics::Framebuffer>, commit, (), (override));
     MOCK_METHOD(mir::geometry::Size, size, (), (const override));
     MOCK_METHOD(Layout, layout, (), (const override));

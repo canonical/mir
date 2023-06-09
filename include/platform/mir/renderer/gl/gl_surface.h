@@ -38,6 +38,7 @@ public:
     virtual void bind() = 0;
 
     virtual void make_current() = 0;
+    virtual void release_current() = 0;
 
     // Naming: SwapBuffers? Commit? Claim current buffer?
     virtual auto commit() -> std::unique_ptr<graphics::Framebuffer> = 0;
