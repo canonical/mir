@@ -666,7 +666,8 @@ public:
                   format,
                   modifiers.empty() ? nullptr : modifiers.data(),
                   modifiers.size(),
-                  GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT)}
+                  GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT),
+              [](auto surface) { gbm_surface_destroy(surface); }}
     {
         if (!surface)
         {
@@ -676,7 +677,6 @@ public:
 
     ~GBMSurfaceImpl()
     {
-        gbm_surface_destroy(surface);
     }    
 
     GBMSurfaceImpl(GBMSurfaceImpl const&) = delete;
@@ -684,12 +684,12 @@ public:
     
     operator gbm_surface*() const override
     {
-        return surface;
+        return surface.get();
     }
     
     auto claim_framebuffer() -> std::unique_ptr<mg::Framebuffer> override
     {
-        if (!gbm_surface_has_free_buffers(surface))
+        if (!gbm_surface_has_free_buffers(surface.get()))
         {
             BOOST_THROW_EXCEPTION((
                 std::system_error{
@@ -699,8 +699,8 @@ public:
         }
         
         LockedFrontBuffer bo{
-            gbm_surface_lock_front_buffer(surface),
-            [this](gbm_bo* bo) { gbm_surface_release_buffer(surface, bo); }};
+            gbm_surface_lock_front_buffer(surface.get()),
+            [shared_surface = surface](gbm_bo* bo) { gbm_surface_release_buffer(shared_surface.get(), bo); }};
         
         if (!bo)
         {
@@ -711,7 +711,7 @@ public:
     }
 private:
     mir::Fd const drm_fd;
-    gbm_surface* const surface;
+    std::shared_ptr<gbm_surface> const surface;
 };
 }
 
