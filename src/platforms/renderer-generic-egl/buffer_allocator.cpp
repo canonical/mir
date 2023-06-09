@@ -386,6 +386,15 @@ auto select_format_from(mg::CPUAddressableDisplayProvider const& provider) -> mg
     BOOST_THROW_EXCEPTION((std::runtime_error{"Non-?RGB8888 formats not yet supported for display"}));
 }
 
+auto ensure_context_current(EGLDisplay dpy, EGLContext ctx)
+    -> EGLContext
+{
+    if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx) != EGL_TRUE)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to make share context current"));
+    }
+    return ctx;
+}
 
 class CPUCopyOutputSurface : public mg::gl::OutputSurface
 {
@@ -397,7 +406,7 @@ public:
         geom::Size size)
         : allocator{std::move(allocator)},
           dpy{dpy},
-          ctx{ctx},
+          ctx{ensure_context_current(dpy, ctx)},
           size_{size},
           format{select_format_from(*this->allocator)}
     {
