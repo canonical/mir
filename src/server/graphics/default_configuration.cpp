@@ -20,6 +20,7 @@
 #include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
+#include "multiplexing_display.h"
 #include "null_cursor.h"
 #include "software_cursor.h"
 #include "platform_probe.h"
@@ -401,9 +402,18 @@ mir::DefaultServerConfiguration::the_display()
     return display(
         [this]() -> std::shared_ptr<mg::Display>
         {
-            return the_display_platforms().back()->create_display(
-                the_display_configuration_policy(),
-                the_gl_config());
+            std::vector<std::unique_ptr<mg::Display>> displays;
+            displays.reserve(the_display_platforms().size());
+            for (auto const& platform : the_display_platforms())
+            {
+                displays.push_back(
+                    platform->create_display(
+                        the_display_configuration_policy(),
+                        the_gl_config()));
+            }
+            return std::make_shared<mg::MultiplexingDisplay>(
+                std::move(displays),
+                *the_display_configuration_policy());
         });
 }
 
