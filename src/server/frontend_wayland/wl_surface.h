@@ -54,6 +54,7 @@ namespace frontend
 {
 class WlSurface;
 class WlSubsurface;
+class ResourceLifetimeTracker;
 
 struct WlSurfaceState
 {
@@ -70,10 +71,10 @@ struct WlSurfaceState
 
     bool surface_data_needs_refresh() const;
 
-    // NOTE: buffer can be both nullopt and nullptr (I know, sounds dumb, but bare with me)
-    // if it's nullopt, there is not a new buffer and no value should be copied to current state
-    // if it's nullptr, there is a new buffer and it is a null buffer, which should replace the current buffer
-    std::optional<wl_resource*> buffer;
+    // NOTE: nullopt has a distinct meaning from the optional containing a null Weak here
+    // nullopt: the current state should not be changed
+    // null Weak: the current buffer, if any, should be cleared
+    std::optional<wayland::Weak<ResourceLifetimeTracker>> buffer;
 
     std::optional<int> scale;
     std::optional<geometry::Displacement> offset;

@@ -21,7 +21,7 @@
 #include "wl_subcompositor.h"
 #include "wl_region.h"
 #include "shm.h"
-#include "deleted_for_resource.h"
+#include "resource_lifetime_tracker.h"
 
 #include "wayland_wrapper.h"
 
@@ -270,7 +270,7 @@ void mf::WlSurface::attach(std::optional<wl_resource*> const& buffer, int32_t x,
         mir::log_warning("Client requested unimplemented non-zero attach offset. Rendering will be incorrect.");
     }
 
-    pending.buffer = buffer.value_or(nullptr);
+    pending.buffer = mw::make_weak(buffer ? ResourceLifetimeTracker::from(buffer.value()) : nullptr);
 }
 
 void mf::WlSurface::damage(int32_t x, int32_t y, int32_t width, int32_t height)
@@ -347,9 +347,9 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
 
     if (state.buffer)
     {
-        wl_resource * buffer = *state.buffer;
+        mw::Weak<ResourceLifetimeTracker> const& weak_buffer = state.buffer.value();
 
-        if (buffer == nullptr)
+        if (!weak_buffer)
         {
             // TODO: unmap surface, and unmap all subsurfaces
             buffer_size_ = std::nullopt;
@@ -357,16 +357,19 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         }
         else
         {
-            std::shared_ptr<bool> buffer_destroyed = deleted_flag_for_resource(buffer);
-            auto release_buffer = [executor = wayland_executor, buffer = buffer, destroyed = buffer_destroyed]()
+            auto release_buffer = [executor = wayland_executor, weak_buffer]()
                 {
-                    executor->spawn(run_unless(
-                        destroyed,
-                        [buffer](){ wl_resource_post_event(buffer, wayland::Buffer::Opcode::release); }));
+                    executor->spawn([weak_buffer]()
+                        {
+                            if (weak_buffer)
+                            {
+                                wl_resource_post_event(weak_buffer.value(), wayland::Buffer::Opcode::release);
+                            }
+                        });
                 };
             std::shared_ptr<graphics::Buffer> mir_buffer;
 
-            if (auto const shm_buffer = ShmBuffer::from(buffer))
+            if (auto const shm_buffer = ShmBuffer::from(weak_buffer.value()))
             {
                 mir_buffer = allocator->buffer_from_shm(
                     shm_buffer->data(),
@@ -381,7 +384,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
             else
             {
                 mir_buffer = allocator->buffer_from_resource(
-                    buffer,
+                    weak_buffer.value(),
                     std::move(executor_send_frame_callbacks),
                     std::move(release_buffer));
                 tracepoint(
