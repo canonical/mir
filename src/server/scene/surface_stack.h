@@ -100,10 +100,8 @@ public:
     void add_observer(std::shared_ptr<Observer> const& observer) override;
     void remove_observer(std::weak_ptr<Observer> const& observer) override;
 
-    struct BasicScreenLockHandle;
-
     auto stacking_order_of(SurfaceSet const& surfaces) const -> SurfaceList override;
-    auto lock_screen() -> std::shared_ptr<frontend::ScreenLockHandle> override;
+    auto lock_screen() -> std::unique_ptr<frontend::ScreenLockHandle> override;
     auto screen_is_locked() const -> bool override;
 
     // Intended for input overlays, as described in mir::input::Scene documentation.
@@ -119,6 +117,9 @@ private:
     void update_rendering_tracker_compositors();
     void insert_surface_at_top_of_depth_layer(std::shared_ptr<Surface> const& surface);
     auto surface_can_be_shown(std::shared_ptr<Surface> const& surface) const -> bool;
+
+    struct SharedScreenLock;
+    struct BasicScreenLockHandle;
 
     RecursiveReadWriteMutex mutable guard;
 
@@ -139,7 +140,7 @@ private:
 
     Observers observers;
     /// If not expired the screen is locked (and only surfaces that appear on the lock screen should be shown)
-    std::weak_ptr<frontend::ScreenLockHandle> screen_lock_handle;
+    std::weak_ptr<SharedScreenLock> screen_lock_handle;
     std::atomic<bool> scene_changed;
     std::shared_ptr<SurfaceObserver> surface_observer;
 };

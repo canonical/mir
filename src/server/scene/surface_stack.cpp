@@ -499,13 +499,13 @@ auto ms::SurfaceStack::stacking_order_of(SurfaceSet const& surfaces) const -> Su
     return result;
 }
 
-struct ms::SurfaceStack::BasicScreenLockHandle : mf::ScreenLockHandle
+struct ms::SurfaceStack::SharedScreenLock
 {
-    BasicScreenLockHandle(std::weak_ptr<SurfaceStack> surface_stack) : surface_stack{std::move(surface_stack)}
+    SharedScreenLock(std::weak_ptr<ms::SurfaceStack> surface_stack) : surface_stack{std::move(surface_stack)}
     {
     }
 
-    ~BasicScreenLockHandle()
+    ~SharedScreenLock()
     {
         if (auto const shared = surface_stack.lock())
         {
@@ -515,19 +515,48 @@ struct ms::SurfaceStack::BasicScreenLockHandle : mf::ScreenLockHandle
     }
 
 private:
-    std::weak_ptr<SurfaceStack> surface_stack;
+    std::weak_ptr<ms::SurfaceStack> surface_stack;
 };
 
-auto ms::SurfaceStack::lock_screen() -> std::shared_ptr<mf::ScreenLockHandle>
+struct ms::SurfaceStack::BasicScreenLockHandle : mf::ScreenLockHandle
 {
-    std::shared_ptr<mf::ScreenLockHandle> result;
+    BasicScreenLockHandle(std::shared_ptr<SharedScreenLock> lock)
+        : lock{new std::shared_ptr<SharedScreenLock>{std::move(lock)}}
+    {
+    }
+
+    ~BasicScreenLockHandle()
+    {
+        if (allowed_to_be_dropped)
+        {
+            delete lock;
+        }
+        else
+        {
+            fatal_error("The screen was not properly unlocked");
+        }
+    }
+
+    void allow_to_be_dropped() override
+    {
+        allowed_to_be_dropped = true;
+    }
+
+private:
+    std::shared_ptr<SharedScreenLock> const* const lock;
+    bool allowed_to_be_dropped{false};
+};
+
+auto ms::SurfaceStack::lock_screen() -> std::unique_ptr<mf::ScreenLockHandle>
+{
+    std::shared_ptr<SharedScreenLock> shared;
     bool is_new{false};
     {
         RecursiveWriteLock lk(guard);
-        result = screen_lock_handle.lock();
-        if (!result)
+        shared = screen_lock_handle.lock();
+        if (!shared)
         {
-            screen_lock_handle = result = std::make_shared<BasicScreenLockHandle>(shared_from_this());
+            screen_lock_handle = shared = std::make_shared<SharedScreenLock>(shared_from_this());
             is_new = true;
         }
     }
@@ -535,7 +564,7 @@ auto ms::SurfaceStack::lock_screen() -> std::shared_ptr<mf::ScreenLockHandle>
     {
         emit_scene_changed();
     }
-    return result;
+    return std::make_unique<BasicScreenLockHandle>(shared);
 }
 
 auto ms::SurfaceStack::screen_is_locked() const -> bool

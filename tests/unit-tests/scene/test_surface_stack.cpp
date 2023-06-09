@@ -1319,6 +1319,7 @@ TEST_F(SurfaceStack, screen_can_be_locked)
     auto handle = stack.lock_screen();
     EXPECT_THAT(stack.screen_is_locked(), Eq(true));
     Mock::VerifyAndClearExpectations(&observer);
+    handle->allow_to_be_dropped();
 }
 
 TEST_F(SurfaceStack, screen_can_be_unlocked)
@@ -1330,6 +1331,7 @@ TEST_F(SurfaceStack, screen_can_be_unlocked)
     stack.add_observer(mt::fake_shared(observer));
     EXPECT_CALL(observer, scene_changed());
 
+    handle->allow_to_be_dropped();
     handle.reset();
     EXPECT_THAT(stack.screen_is_locked(), Eq(false));
     Mock::VerifyAndClearExpectations(&observer);
@@ -1348,12 +1350,15 @@ TEST_F(SurfaceStack, screen_is_not_unlocked_until_all_handles_are_dropped)
     auto handle2 = stack.lock_screen();
     auto handle3 = stack.lock_screen();
     EXPECT_THAT(stack.screen_is_locked(), Eq(true));
+    handle2->allow_to_be_dropped();
     handle2.reset();
     EXPECT_THAT(stack.screen_is_locked(), Eq(true));
+    handle1->allow_to_be_dropped();
     handle1.reset();
     EXPECT_THAT(stack.screen_is_locked(), Eq(true));
     EXPECT_CALL(observer, scene_changed());
 
+    handle3->allow_to_be_dropped();
     handle3.reset();
     EXPECT_THAT(stack.screen_is_locked(), Eq(false));
 }
@@ -1367,4 +1372,5 @@ TEST_F(SurfaceStack, when_screen_is_locked_surface_ignores_surface)
 
     auto handle = stack.lock_screen();
     EXPECT_THAT(stack.surface_at(cursor_position).get(), IsNull());
+    handle->allow_to_be_dropped();
 }

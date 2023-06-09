@@ -21,6 +21,7 @@
 #include "output_manager.h"
 
 #include "mir/shell/surface_specification.h"
+#include "mir/fatal.h"
 #include "mir/wayland/client.h"
 #include "mir/wayland/protocol_error.h"
 #include "mir/frontend/surface_stack.h"
@@ -55,13 +56,13 @@ class SessionLockV1 : wayland::SessionLockV1
 {
 public:
     SessionLockV1(wl_resource* new_resource, mf::SessionLockManagerV1& manager);
-    ~SessionLockV1() = default;
+    ~SessionLockV1();
 
 private:
     void get_lock_surface(wl_resource* id, wl_resource* surface, wl_resource* output) override;
 
     mf::SessionLockManagerV1& manager;
-    std::shared_ptr<frontend::ScreenLockHandle> const lock_handle;
+    std::unique_ptr<frontend::ScreenLockHandle> const lock_handle;
 };
 
 class SessionLockSurfaceV1 : wayland::SessionLockSurfaceV1, public WindowWlSurfaceRole
@@ -132,6 +133,18 @@ mf::SessionLockV1::SessionLockV1(wl_resource* new_resource, mf::SessionLockManag
       lock_handle{manager.surface_stack->lock_screen()}
 {
     send_locked_event();
+}
+
+mf::SessionLockV1::~SessionLockV1()
+{
+    if (client->is_being_destroyed())
+    {
+        fatal_error("Screen locker died while screen was locked");
+    }
+    else
+    {
+        lock_handle->allow_to_be_dropped();
+    }
 }
 
 void mf::SessionLockV1::get_lock_surface(wl_resource* id, wl_resource* surface_resource, wl_resource* output)
