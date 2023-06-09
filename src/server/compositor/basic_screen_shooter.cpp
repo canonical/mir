@@ -31,7 +31,6 @@
 namespace mc = mir::compositor;
 namespace mr = mir::renderer;
 namespace mg = mir::graphics;
-namespace mrg = mir::renderer::gl;
 namespace mrs = mir::renderer::software;
 namespace geom = mir::geometry;
 
@@ -131,7 +130,8 @@ mc::BasicScreenShooter::Self::Self(
     : scene{scene},
       clock{clock},
       render_provider{std::move(render_provider)},
-      renderer_factory{std::move(renderer_factory)}
+      renderer_factory{std::move(renderer_factory)},
+      output{std::make_shared<OneShotBufferDisplayProvider>()}
 {
 }
 
@@ -158,13 +158,18 @@ auto mc::BasicScreenShooter::Self::render(
      */
     renderer.render(renderable_list);
 
+    // Because we might be called on a different thread next time we need to
+    // ensure the renderer doesn't keep the EGL context current
+    renderer.suspend();
     return captured_time;
 }
 
 auto mc::BasicScreenShooter::Self::renderer_for_buffer(std::shared_ptr<mrs::WriteMappableBuffer> buffer)
     -> mr::Renderer&
 {
-    if (buffer->size() != last_rendered_size)
+    auto const buffer_size = buffer->size();
+    output->set_next_buffer(std::move(buffer));
+    if (buffer_size != last_rendered_size)
     {
         // We need to build a new Renderer, at the new size
         class NoAuxConfig : public graphics::GLConfig
@@ -180,10 +185,9 @@ auto mc::BasicScreenShooter::Self::renderer_for_buffer(std::shared_ptr<mrs::Writ
             }
         };
         auto interface_provider = std::make_shared<InterfaceProvider>(output);
-        auto gl_surface = render_provider->surface_for_output(interface_provider, buffer->size(), NoAuxConfig{});
+        auto gl_surface = render_provider->surface_for_output(interface_provider, buffer_size, NoAuxConfig{});
         current_renderer = renderer_factory->create_renderer_for(std::move(gl_surface), render_provider);
     }
-
     return *current_renderer;
 }
 
