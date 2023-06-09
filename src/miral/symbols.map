@@ -477,6 +477,7 @@ global:
     miral::DisplayConfiguration::add_output_attribute*;
     miral::FdHandle::?FdHandle*;
     miral::Output::attribute*;
+    miral::Output::attributes_map*;
     miral::Output::name*;
     non-virtual?thunk?to?miral::FdHandle::?FdHandle*;
     typeinfo?for?miral::FdHandle;

@@ -132,7 +132,7 @@ struct WindowInfo
     auto focus_mode() const -> MirFocusMode;
 
     /// If this surface should be shown while the compositor is locked
-    /// \remark Since MirAL 3.3
+    /// \remark Since MirAL 3.9
     auto visible_on_lock_screen() const -> bool;
 
 private:
