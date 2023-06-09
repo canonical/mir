@@ -230,6 +230,7 @@ mgg::RenderingPlatform::RenderingPlatform(
     std::variant<std::shared_ptr<mg::GBMDisplayProvider>, std::shared_ptr<gbm_device>> hw)
     : udev_device{std::move(udev_device)},
       device{std::visit(gbm_device_from_hw{}, hw)},
+      bound_display{std::visit(display_provider_or_nothing{}, hw)},
       dpy{initialise_egl(dpy_for_gbm_device(device.get()), 1, 4)},
       share_ctx{make_share_only_context(dpy)}
 {
@@ -251,11 +252,13 @@ auto mgg::RenderingPlatform::maybe_create_interface(
     }
     return nullptr;
 }
+
 class mgg::Platform::KMSDisplayInterfaceProvider : public mg::DisplayInterfaceProvider
 {
 public:
-    KMSDisplayInterfaceProvider(mir::Fd drm_fd)
-        : drm_fd{std::move(drm_fd)}
+    explicit KMSDisplayInterfaceProvider(mir::Fd drm_fd)
+        : drm_fd{std::move(drm_fd)},
+          gbm_provider{std::make_shared<mgg::GBMDisplayProvider>(this->drm_fd)}
     {
     }
 
@@ -265,25 +268,26 @@ protected:
     {
         if (dynamic_cast<mg::GBMDisplayProvider::Tag const*>(&type_tag))
         {
-            mir::log_debug("Using GBMDisplayProvider");
-            return std::make_shared<mgg::GBMDisplayProvider>(drm_fd);
+            return gbm_provider;
         }
         if (dynamic_cast<mg::CPUAddressableDisplayProvider::Tag const*>(&type_tag))
         {
-            mir::log_debug("Using DumbDisplayProvider");
             return std::make_shared<mgg::CPUAddressableDisplayProvider>(drm_fd);
         }
         return {};  
     }
 private:
     mir::Fd const drm_fd;
+    // We rely on the GBM provider being stable over probe, so we construct one at startup
+    // and reuse it.
+    std::shared_ptr<mgg::GBMDisplayProvider> const gbm_provider;
 };
 
 mir::UniqueModulePtr<mg::Display> mgg::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy, std::shared_ptr<GLConfig> const&)
 {
     return make_module_ptr<mgg::Display>(
-        std::make_shared<KMSDisplayInterfaceProvider>(drm_fd),
+        provider,
         drm_fd,
         bypass_option_,
         initial_conf_policy,
