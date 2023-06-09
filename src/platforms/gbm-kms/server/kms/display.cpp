@@ -468,10 +468,17 @@ mgg::CPUAddressableDisplayProvider::CPUAddressableDisplayProvider(mir::Fd drm_fd
 {
 }
 
-auto mgg::CPUAddressableDisplayProvider::alloc_fb(
-    geom::Size size) -> std::unique_ptr<MappableFB>
+auto mgg::CPUAddressableDisplayProvider::supported_formats() const
+    -> std::vector<mg::DRMFormat>
 {
-    return std::make_unique<mgg::CPUAddressableFB>(drm_fd, supports_modifiers, size);
+    // TODO: Pull out of DRM info
+    return {mg::DRMFormat{DRM_FORMAT_XRGB8888}, mg::DRMFormat{DRM_FORMAT_ARGB8888}};
+}
+
+auto mgg::CPUAddressableDisplayProvider::alloc_fb(
+    geom::Size size, DRMFormat format) -> std::unique_ptr<MappableFB>
+{
+    return std::make_unique<mgg::CPUAddressableFB>(drm_fd, supports_modifiers, format, size);
 }
 
 namespace

@@ -20,6 +20,7 @@
 #include "buffer_allocator.h"
 #include "mir/anonymous_shm_file.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/graphics/drm_formats.h"
 #include "mir/graphics/egl_resources.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/platform.h"
@@ -47,6 +48,7 @@
 #include <wayland-server-core.h>
 
 #include <mutex>
+#include <drm_fourcc.h>
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -585,6 +587,31 @@ using RenderbufferHandle = GLHandle<&glGenRenderbuffers, &glDeleteRenderbuffers>
 using FramebufferHandle = GLHandle<&glGenFramebuffers, &glDeleteFramebuffers>;
 using TextureHandle = GLHandle<&glGenTextures, &glDeleteTextures>;
 
+auto select_format_from(mg::CPUAddressableDisplayProvider const& provider) -> mg::DRMFormat
+{
+    std::optional<mg::DRMFormat> best_format;
+    for (auto const format : provider.supported_formats())
+    {
+        switch(static_cast<uint32_t>(format))
+        {
+        case DRM_FORMAT_ARGB8888:
+        case DRM_FORMAT_XRGB8888:
+            // ?RGB8888 is the easiest for us
+            return format;
+        case DRM_FORMAT_RGBA8888:
+        case DRM_FORMAT_RGBX8888:
+            // RGB?8888 requires an EGL extension, but is OK
+            best_format = format;
+            break;
+        }
+    }
+    if (best_format)
+    {
+        return *best_format;
+    }
+    BOOST_THROW_EXCEPTION((std::runtime_error{"Non-?RGB8888 formats not yet supported for display"}));
+}
+
 class CPUCopyOutputSurface : public mg::gl::OutputSurface
 {
 public:
@@ -594,7 +621,8 @@ public:
         geom::Size size)
         : allocator{std::move(allocator)},
           ctx{std::move(ctx)},
-          size_{std::move(size)}
+          size_{std::move(size)},
+          format{select_format_from(*this->allocator)}
     {
         glBindRenderbuffer(GL_RENDERBUFFER, colour_buffer);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8_OES, size_.width.as_int(), size_.height.as_int());
@@ -652,9 +680,19 @@ public:
 
     auto commit() -> std::unique_ptr<mg::Framebuffer> override
     {
-        auto fb = allocator->alloc_fb(size_);
+        auto fb = allocator->alloc_fb(size_, format);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         {
+            /* TODO: We can usefully put this *into* DRMFormat */
+            GLenum pixel_layout = GL_INVALID_ENUM;
+            if (format == DRM_FORMAT_ARGB8888 || format == DRM_FORMAT_XRGB8888)
+            {
+                pixel_layout = GL_RGBA;
+            }
+            else if (format == DRM_FORMAT_RGBA8888 || format == DRM_FORMAT_RGBX8888)
+            {
+                pixel_layout = GL_BGRA_EXT;
+            }
             auto mapping = fb->map_writeable();
             /*
              * TODO: This introduces a pipeline stall; GL must wait for all previous rendering commands
@@ -667,7 +705,7 @@ public:
             glReadPixels(
                 0, 0,
                 size_.width.as_int(), size_.height.as_int(),
-                GL_RGBA, GL_UNSIGNED_BYTE, mapping->data());
+                pixel_layout, GL_UNSIGNED_BYTE, mapping->data());
         }
         return fb;
     }
@@ -686,6 +724,7 @@ private:
     std::shared_ptr<mg::CPUAddressableDisplayProvider> const allocator;
     std::unique_ptr<mir::renderer::gl::Context> const ctx;
     geom::Size const size_;
+    mg::DRMFormat const format;
     RenderbufferHandle const colour_buffer;
     FramebufferHandle const fbo;
 };

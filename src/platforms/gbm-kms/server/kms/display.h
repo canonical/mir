@@ -109,7 +109,10 @@ class CPUAddressableDisplayProvider : public graphics::CPUAddressableDisplayProv
 public:
     explicit CPUAddressableDisplayProvider(mir::Fd drm_fd);
 
-    auto alloc_fb(geometry::Size pixel_size)
+    auto supported_formats() const
+        -> std::vector<DRMFormat> override;
+
+    auto alloc_fb(geometry::Size pixel_size, DRMFormat format)
         -> std::unique_ptr<MappableFB> override;
 
 private:

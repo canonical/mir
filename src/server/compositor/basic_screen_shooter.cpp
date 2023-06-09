@@ -15,6 +15,7 @@
  */
 
 #include "basic_screen_shooter.h"
+#include "mir/graphics/drm_formats.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/renderer/gl/buffer_render_target.h"
 #include "mir/renderer/renderer.h"
@@ -67,11 +68,24 @@ public:
         std::shared_ptr<mrs::WriteMappableBuffer> const buffer;
     };
 
-    auto alloc_fb(geom::Size pixel_size) -> std::unique_ptr<MappableFB> override
+    auto supported_formats() const -> std::vector<graphics::DRMFormat> override
+    {
+        if (!next_buffer)
+        {
+            BOOST_THROW_EXCEPTION((std::logic_error{"Attempted to query supported_formats before assigning a buffer"}));
+        }
+        return {mg::DRMFormat::from_mir_format(next_buffer->format())};
+    }
+
+    auto alloc_fb(geom::Size pixel_size, mg::DRMFormat format) -> std::unique_ptr<MappableFB> override
     {
         if (pixel_size != next_buffer->size())
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{"Mismatched buffer sizes?"}));
+        }
+        if (format.as_mir_format().value_or(mir_pixel_format_invalid) != next_buffer->format())
+        {
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Mismatched pixel formats"}));
         }
         return std::make_unique<FB>(std::exchange(next_buffer, nullptr));
     }

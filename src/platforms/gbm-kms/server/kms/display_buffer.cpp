@@ -63,7 +63,12 @@ mgg::DisplayBuffer::DisplayBuffer(
 {
     listener->report_successful_setup_of_native_resources();
 
-    auto initial_fb = std::make_shared<mgg::CPUAddressableFB>(std::move(drm_fd), false, area.size);
+    // TODO: Pull a supported format out of KMS rather than assuming XRGB8888
+    auto initial_fb = std::make_shared<mgg::CPUAddressableFB>(
+        std::move(drm_fd),
+        false,
+        DRMFormat{DRM_FORMAT_XRGB8888},
+        area.size);
 
     auto mapping = initial_fb->map_writeable();
     ::memset(mapping->data(), 24, mapping->len());

@@ -272,7 +272,10 @@ public:
         virtual ~MappableFB() override = default;
     };
 
-    virtual auto alloc_fb(geometry::Size pixel_size)
+    virtual auto supported_formats() const
+        -> std::vector<DRMFormat> = 0;
+
+    virtual auto alloc_fb(geometry::Size pixel_size, DRMFormat format)
         -> std::unique_ptr<MappableFB> = 0;
 };
 

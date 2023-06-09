@@ -39,10 +39,12 @@ class mgg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappable
         Mapping(
             uint32_t width, uint32_t height,
             uint32_t pitch,
+            MirPixelFormat format,
             T* data,
             size_t len)
             : size_{width, height},
               stride_{pitch},
+              format_{format},
               data_{data},
               len_{len}
         {
@@ -60,7 +62,7 @@ class mgg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappable
         [[nodiscard]]
         auto format() const -> MirPixelFormat
         {
-            return mir_pixel_format_xrgb_8888;
+            return format_;
         }
 
         [[nodiscard]]
@@ -90,6 +92,7 @@ class mgg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappable
     private:
         mir::geometry::Size const size_;
         mir::geometry::Stride const stride_;
+        MirPixelFormat const format_;
         T* const data_;
         size_t const len_;
     };
@@ -105,7 +108,7 @@ public:
         }
     }
 
-    static auto create_kms_dumb_buffer(mir::Fd drm_fd,  mir::geometry::Size const& size) ->
+    static auto create_kms_dumb_buffer(mir::Fd drm_fd, DRMFormat format, mir::geometry::Size const& size) ->
         std::unique_ptr<Buffer>
     {
         struct drm_mode_create_dumb params = {};
@@ -124,7 +127,7 @@ public:
         }
 
         return std::unique_ptr<Buffer>{
-            new Buffer{std::move(drm_fd), params}};
+            new Buffer{std::move(drm_fd), params, format}};
     }
 
     auto map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>> override
@@ -133,6 +136,7 @@ public:
         return std::make_unique<Mapping<unsigned char>>(
             width(), height(),
             pitch(),
+            format(),
             static_cast<unsigned char*>(data),
             size_);
     }
@@ -140,7 +144,7 @@ public:
     {
         auto const data = mmap_buffer(PROT_READ);
         return std::make_unique<Mapping<unsigned char const>>(
-            width(), height(),pitch(),
+            width(), height(), pitch(), format(),
             static_cast<unsigned char const*>(data),
             size_);
     }
@@ -151,6 +155,7 @@ public:
         return std::make_unique<Mapping<unsigned char>>(
             width(), height(),
             pitch(),
+            format(),
             static_cast<unsigned char*>(data),
             size_);
     }
@@ -178,7 +183,7 @@ public:
 
     auto format() const -> MirPixelFormat override
     {
-        return mir_pixel_format_xrgb_8888;
+        return format_.as_mir_format().value_or(mir_pixel_format_invalid);
     }
 
     auto stride() const -> geometry::Stride override
@@ -193,11 +198,13 @@ public:
 private:
     Buffer(
         mir::Fd fd,
-        struct drm_mode_create_dumb const& params)
+        struct drm_mode_create_dumb const& params,
+        DRMFormat format)
         : drm_fd{std::move(fd)},
           width_{params.width},
           height_{params.height},
           pitch_{params.pitch},
+          format_{format},
           gem_handle{params.handle},
           size_{params.size}
     {
@@ -235,12 +242,17 @@ private:
     uint32_t const width_;
     uint32_t const height_;
     uint32_t const pitch_;
+    DRMFormat const format_;
     uint32_t const gem_handle;
     size_t const size_;
 };
 
-mgg::CPUAddressableFB::CPUAddressableFB(mir::Fd const& drm_fd, bool supports_modifiers, mir::geometry::Size const& size)
-    : CPUAddressableFB(drm_fd, supports_modifiers, Buffer::create_kms_dumb_buffer(drm_fd, size))
+mgg::CPUAddressableFB::CPUAddressableFB(
+    mir::Fd const& drm_fd,
+    bool supports_modifiers,
+    DRMFormat format,
+    mir::geometry::Size const& size)
+    : CPUAddressableFB(drm_fd, supports_modifiers, format, Buffer::create_kms_dumb_buffer(drm_fd, format, size))
 {
 }
 
@@ -252,9 +264,10 @@ mgg::CPUAddressableFB::~CPUAddressableFB()
 mgg::CPUAddressableFB::CPUAddressableFB(
     mir::Fd drm_fd,
     bool supports_modifiers,
+    DRMFormat format,
     std::unique_ptr<Buffer> buffer)
     : drm_fd{std::move(drm_fd)},
-      fb_id{fb_id_for_buffer(this->drm_fd, supports_modifiers, *buffer)},
+      fb_id{fb_id_for_buffer(this->drm_fd, supports_modifiers, format, *buffer)},
       buffer{std::move(buffer)}
 {
 }
@@ -284,7 +297,11 @@ mgg::CPUAddressableFB::operator uint32_t() const
     return fb_id;
 }
 
-auto mgg::CPUAddressableFB::fb_id_for_buffer(mir::Fd const &drm_fd, bool supports_modifiers, Buffer const& buf) -> uint32_t
+auto mgg::CPUAddressableFB::fb_id_for_buffer(
+    mir::Fd const &drm_fd,
+    bool supports_modifiers,
+    DRMFormat format,
+    Buffer const& buf) -> uint32_t
 {
     uint32_t fb_id;
     uint32_t const pitches[4] = { buf.pitch(), 0, 0, 0 };
@@ -297,7 +314,7 @@ auto mgg::CPUAddressableFB::fb_id_for_buffer(mir::Fd const &drm_fd, bool support
             drm_fd,
             buf.width(),
             buf.height(),
-            DRM_FORMAT_XRGB8888,
+            format,
             handles,
             pitches,
             offsets,
@@ -317,7 +334,7 @@ auto mgg::CPUAddressableFB::fb_id_for_buffer(mir::Fd const &drm_fd, bool support
             drm_fd,
             buf.width(),
             buf.height(),
-            DRM_FORMAT_XRGB8888,
+            format,
             handles,
             pitches,
             offsets,
