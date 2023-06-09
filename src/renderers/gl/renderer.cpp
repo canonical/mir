@@ -353,6 +353,7 @@ void mrg::Renderer::tessellate(std::vector<mgl::Primitive>& primitives,
 
 auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> std::unique_ptr<mg::Framebuffer>
 {
+    output_surface->make_current();
     output_surface->bind();
 
     glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
@@ -639,4 +640,5 @@ void mrg::Renderer::set_output_transform(glm::mat2 const& t)
 
 void mrg::Renderer::suspend()
 {
+    output_surface->release_current();
 }
