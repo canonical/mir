@@ -174,8 +174,8 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
 
     if (cached_state.value().buffer)
     {
-        auto const currently_mapped = static_cast<bool>(surface->buffer_size());
-        auto const pending_mapped = cached_state.value().buffer.value() != nullptr;
+        bool const currently_mapped = static_cast<bool>(surface->buffer_size());
+        bool const pending_mapped = cached_state.value().buffer.value();
         if (currently_mapped != pending_mapped)
         {
             cached_state.value().invalidate_surface_data();
