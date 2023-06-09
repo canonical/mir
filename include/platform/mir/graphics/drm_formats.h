@@ -50,6 +50,8 @@ public:
     operator uint32_t() const;
 
     auto as_mir_format() const -> std::optional<MirPixelFormat>;
+    static auto from_mir_format(MirPixelFormat format) -> DRMFormat;
+
     struct FormatInfo;
 private:
     FormatInfo const* info;

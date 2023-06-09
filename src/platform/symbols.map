@@ -220,3 +220,10 @@ MIR_PLATFORM_2.11 {
     mir::graphics::DRMFormat::as_mir_format*;
   };
 } MIR_PLATFORM_2.8;
+
+MIR_PLATFORM_2.13 {
+ global:
+  extern "C++" {
+   mir::graphics::DRMFormat::from_mir_format*;
+  };
+} MIR_PLATFORM_2.11;
