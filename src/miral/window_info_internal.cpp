@@ -238,3 +238,9 @@ void miral::WindowInfo::focus_mode(MirFocusMode focus_mode)
     if (std::shared_ptr<mir::scene::Surface> const surface = self->window)
         surface->set_focus_mode(focus_mode);
 }
+
+void miral::WindowInfo::visible_on_lock_screen(bool visible)
+{
+    if (std::shared_ptr<mir::scene::Surface> const surface = self->window)
+        surface->set_visible_on_lock_screen(visible);
+}

@@ -587,3 +587,28 @@ global:
     virtual?thunk?to?mir::wayland::ShmPool::?ShmPool*;
   };
 } MIRWAYLAND_2.11;
+
+MIRWAYLAND_2.14 {
+global:
+  extern "C++" {
+    mir::wayland::SessionLockManagerV1::*;
+    non-virtual?thunk?to?mir::wayland::SessionLockManagerV1::*;
+    typeinfo?for?mir::wayland::SessionLockManagerV1;
+    vtable?for?mir::wayland::SessionLockManagerV1;
+    typeinfo?for?mir::wayland::SessionLockManagerV1::Global;
+    vtable?for?mir::wayland::SessionLockManagerV1::Global;
+    virtual?thunk?to?mir::wayland::SessionLockManagerV1::?SessionLockManagerV1*;
+
+    mir::wayland::SessionLockV1::*;
+    non-virtual?thunk?to?mir::wayland::SessionLockV1::*;
+    typeinfo?for?mir::wayland::SessionLockV1;
+    vtable?for?mir::wayland::SessionLockV1;
+    virtual?thunk?to?mir::wayland::SessionLockV1::?SessionLockV1*;
+
+    mir::wayland::SessionLockSurfaceV1::*;
+    non-virtual?thunk?to?mir::wayland::SessionLockSurfaceV1::*;
+    typeinfo?for?mir::wayland::SessionLockSurfaceV1;
+    vtable?for?mir::wayland::SessionLockSurfaceV1;
+    virtual?thunk?to?mir::wayland::SessionLockSurfaceV1::?SessionLockSurfaceV1*;
+  };
+} MIRWAYLAND_2.12;

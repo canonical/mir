@@ -555,9 +555,23 @@ global:
 } MIRAL_3.6;
 
 MIRAL_3.8 {
+global:
+  extern "C++" {
+    miral::DisplayConfiguration::add_output_attribute*;
+    miral::FdHandle::?FdHandle*;
+    miral::Output::attribute*;
+    miral::Output::attributes_map*;
+    miral::Output::name*;
+    non-virtual?thunk?to?miral::FdHandle::?FdHandle*;
+    typeinfo?for?miral::FdHandle;
+    vtable?for?miral::FdHandle;
+  };
+} MIRAL_3.7;
+
+MIRAL_3.9 {
 global:'''
 
-END_NEW_STANZA = '} MIRAL_3.7;'
+END_NEW_STANZA = '} MIRAL_3.8;'
 
 def _print_report():
     print(OLD_STANZAS)

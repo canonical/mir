@@ -168,6 +168,13 @@ public:
     auto focus_mode() -> mir::optional_value<MirFocusMode>&;
     ///@}
 
+    /// If this surface should be shown while the compositor is locked
+    /// \remark Since MirAL 3.9
+    ///@{
+    auto visible_on_lock_screen() const -> mir::optional_value<bool> const&;
+    auto visible_on_lock_screen() -> mir::optional_value<bool>&;
+    ///@}
+
 private:
     friend auto make_surface_spec(WindowSpecification const& miral_spec) -> mir::shell::SurfaceSpecification;
     struct Self;

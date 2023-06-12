@@ -54,7 +54,8 @@ miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& s
     exclusive_rect(spec.exclusive_rect),
     application_id(spec.application_id),
     server_side_decorated(spec.server_side_decorated),
-    focus_mode(spec.focus_mode)
+    focus_mode(spec.focus_mode),
+    visible_on_lock_screen(spec.visible_on_lock_screen)
 {
     if (spec.aux_rect_placement_offset_x.is_set() && spec.aux_rect_placement_offset_y.is_set())
         aux_rect_placement_offset = Displacement{spec.aux_rect_placement_offset_x.value(), spec.aux_rect_placement_offset_y.value()};
@@ -437,6 +438,16 @@ auto miral::WindowSpecification::focus_mode() const -> mir::optional_value<MirFo
 auto miral::WindowSpecification::focus_mode() -> mir::optional_value<MirFocusMode>&
 {
     return self->focus_mode;
+}
+
+auto miral::WindowSpecification::visible_on_lock_screen() const -> mir::optional_value<bool> const&
+{
+    return self->visible_on_lock_screen;
+}
+
+auto miral::WindowSpecification::visible_on_lock_screen() -> mir::optional_value<bool>&
+{
+    return self->visible_on_lock_screen;
 }
 
 auto miral::WindowSpecification::userdata() -> mir::optional_value<std::shared_ptr<void>>&

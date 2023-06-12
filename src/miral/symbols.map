@@ -477,9 +477,19 @@ global:
     miral::DisplayConfiguration::add_output_attribute*;
     miral::FdHandle::?FdHandle*;
     miral::Output::attribute*;
+    miral::Output::attributes_map*;
     miral::Output::name*;
     non-virtual?thunk?to?miral::FdHandle::?FdHandle*;
     typeinfo?for?miral::FdHandle;
     vtable?for?miral::FdHandle;
   };
 } MIRAL_3.7;
+
+MIRAL_3.9 {
+global:
+  extern "C++" {
+    miral::WaylandExtensions::ext_session_lock_manager_v1*;
+    miral::WindowInfo::visible_on_lock_screen*;
+    miral::WindowSpecification::visible_on_lock_screen*;
+  };
+} MIRAL_3.8;

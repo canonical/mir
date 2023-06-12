@@ -49,6 +49,11 @@ class StubInputScene : public input::Scene
     void emit_scene_changed() override
     {
     }
+
+    bool screen_is_locked() const override
+    {
+        return false;
+    }
 };
 
 }

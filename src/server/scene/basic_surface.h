@@ -145,6 +145,9 @@ public:
     auto depth_layer() const -> MirDepthLayer override;
     void set_depth_layer(MirDepthLayer depth_layer) override;
 
+    auto visible_on_lock_screen() const -> bool override;
+    void set_visible_on_lock_screen(bool visible) override;
+
     std::optional<geometry::Rectangle> clip_area() const override;
     void set_clip_area(std::optional<geometry::Rectangle> const& area) override;
 
@@ -203,6 +206,7 @@ private:
         MirOrientationMode pref_orientation_mode = mir_orientation_mode_any;
         MirPointerConfinementState confine_pointer_state = mir_pointer_unconfined;
         MirDepthLayer depth_layer = mir_depth_layer_application;
+        bool visible_on_lock_screen = false;
 
         std::optional<geometry::Rectangle> clip_area{std::nullopt};
         std::string application_id{""};

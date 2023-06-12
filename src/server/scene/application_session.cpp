@@ -144,6 +144,8 @@ auto ms::ApplicationSession::create_surface(
         surface->set_application_id(params.application_id.value());
     if (params.focus_mode.is_set())
         surface->set_focus_mode(params.focus_mode.value());
+    if (params.visible_on_lock_screen.is_set())
+        surface->set_visible_on_lock_screen(params.visible_on_lock_screen.value());
 
     return surface;
 }

@@ -131,6 +131,10 @@ struct WindowInfo
     /// \remark Since MirAL 3.3
     auto focus_mode() const -> MirFocusMode;
 
+    /// If this surface should be shown while the compositor is locked
+    /// \remark Since MirAL 3.9
+    auto visible_on_lock_screen() const -> bool;
+
 private:
     friend class BasicWindowManager;
     void name(std::string const& name);
@@ -157,6 +161,7 @@ private:
     void exclusive_rect(mir::optional_value<mir::geometry::Rectangle> const& rect);
     void application_id(std::string const& application_id);
     void focus_mode(MirFocusMode focus_mode);
+    void visible_on_lock_screen(bool visible);
 
     struct Self;
     std::unique_ptr<Self> self;

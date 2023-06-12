@@ -58,6 +58,9 @@ public:
     // TODO: How can something like SurfaceObserver be adapted to work with non surface renderables?
     virtual void emit_scene_changed() = 0;
 
+    /// Returns if the screen is currently locked
+    virtual auto screen_is_locked() const -> bool = 0;
+
 protected:
     Scene() = default;
     Scene(Scene const&) = delete;

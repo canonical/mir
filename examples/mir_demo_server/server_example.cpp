@@ -138,7 +138,8 @@ try
             .enable(miral::WaylandExtensions::zwp_virtual_keyboard_manager_v1)
             .enable(miral::WaylandExtensions::zwlr_virtual_pointer_manager_v1)
             .enable(miral::WaylandExtensions::zwp_input_method_manager_v2)
-            .enable(miral::WaylandExtensions::zwlr_screencopy_manager_v1),
+            .enable(miral::WaylandExtensions::zwlr_screencopy_manager_v1)
+            .enable(miral::WaylandExtensions::ext_session_lock_manager_v1),
         miral::set_window_management_policy<miral::MinimalWindowManager>(),
         me::add_input_device_configuration_options_to,
         add_timeout_option_to,

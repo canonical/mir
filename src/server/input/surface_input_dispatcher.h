@@ -81,6 +81,7 @@ private:
 
     void surface_moved(scene::Surface const* moved_surface);
     void surface_resized();
+    void scene_changed();
 
     // Look in to homognizing index on KeyInputState and PointerInputState (wrt to device id)
     struct PointerInputState
@@ -124,6 +125,7 @@ private:
     std::shared_ptr<MirEvent const> last_pointer_event;
     std::weak_ptr<input::Surface> focus_surface;
     bool started;
+    bool screen_is_locked;
 };
 
 }

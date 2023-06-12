@@ -48,6 +48,7 @@ set(
   wlr_screencopy_v1.cpp         wlr_screencopy_v1.h
   text_input_v1.cpp             text_input_v1.h
   primary_selection_v1.cpp      primary_selection_v1.h
+  session_lock_v1.cpp           session_lock_v1.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/wayland.h
   ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.c
   ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.h
