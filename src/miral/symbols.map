@@ -488,6 +488,7 @@ global:
 MIRAL_3.9 {
 global:
   extern "C++" {
+    miral::WaylandExtensions::ext_session_lock_manager_v1*;
     miral::WindowInfo::visible_on_lock_screen*;
     miral::WindowSpecification::visible_on_lock_screen*;
   };

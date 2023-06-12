@@ -171,6 +171,10 @@ public:
     /// \remark Since MirAL 3.6
     static char const* const zwlr_virtual_pointer_manager_v1;
 
+    /// Allows clients to act as a screen lock.
+    /// \remark Since MirAL 3.6
+    static char const* const ext_session_lock_manager_v1;
+
     /**
      * \remark Since MirAL 3.3
      * \deprecated Use the *_manager_* versions instead
