@@ -10,6 +10,8 @@ add_library(server_platform_common STATIC
   shm_buffer.cpp
   one_shot_device_observer.h
   one_shot_device_observer.cpp
+  cpu_copy_output_surface.cpp
+  cpu_copy_output_surface.h
 )
 
 target_include_directories(
