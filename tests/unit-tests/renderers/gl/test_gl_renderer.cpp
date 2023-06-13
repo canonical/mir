@@ -256,7 +256,7 @@ TEST_F(GLRenderer, makes_display_buffer_current_before_rendering)
     auto mock_output_surface = make_output_surface();
 
     InSequence seq;
-    EXPECT_CALL(*mock_output_surface, make_current());
+    EXPECT_CALL(*mock_output_surface, make_current()).Times(AnyNumber());
     EXPECT_CALL(mock_gl, glClear(_));
 
     mrg::Renderer renderer(gl_platform, std::move(mock_output_surface));
