@@ -19,7 +19,6 @@
 
 #include "wayland_wrapper.h"
 #include "wl_seat.h"
-#include "wl_surface.h"
 
 #include "mir/events/event.h"
 
@@ -34,24 +33,6 @@ class DataExchangeSource;
 
 namespace frontend
 {
-class DragIconController;
-class PointerInputDispatcher;
-
-class DragIconSurface : public NullWlSurfaceRole
-{
-public:
-    DragIconSurface(WlSurface* icon, std::shared_ptr<DragIconController> drag_icon_controller);
-    ~DragIconSurface();
-
-    auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> override;
-
-private:
-    wayland::Weak<WlSurface> const surface;
-    std::shared_ptr<scene::Surface> shared_scene_surface;
-    std::shared_ptr<DragIconController> const drag_icon_controller;
-
-};
-
 class WlDataDevice : public wayland::DataDevice, public WlSeat::FocusListener
 {
 public:
@@ -59,9 +40,7 @@ public:
         wl_resource* new_resource,
         Executor& wayland_executor,
         scene::Clipboard& clipboard,
-        WlSeat& seat,
-        std::shared_ptr<DragIconController> drag_icon_controller,
-        std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher);
+        WlSeat& seat);
     ~WlDataDevice();
 
     /// Wayland requests
@@ -94,13 +73,10 @@ private:
     scene::Clipboard& clipboard;
     WlSeat& seat;
     std::shared_ptr<ClipboardObserver> const clipboard_observer;
-    std::shared_ptr<DragIconController> const drag_icon_controller;
-    std::shared_ptr<PointerInputDispatcher> const pointer_input_dispatcher;
     bool has_focus = false;
     std::weak_ptr<scene::DataExchangeSource> weak_source;
     wayland::Weak<Offer> current_offer;
     wayland::Weak<WlSurface> weak_surface;
-    std::optional<DragIconSurface> drag_surface;
     bool sent_enter = false;
 };
 }

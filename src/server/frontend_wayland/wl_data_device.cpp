@@ -19,13 +19,8 @@
 #include "wl_surface.h"
 
 #include "mir/events/pointer_event.h"
-#include "mir/frontend/drag_icon_controller.h"
-#include "mir/frontend/pointer_input_dispatcher.h"
 #include "mir/log.h"
 #include "mir/scene/clipboard.h"
-#include "mir/scene/session.h"
-#include "mir/scene/surface.h"
-#include "mir/shell/surface_specification.h"
 #include "mir/wayland/client.h"
 #include "mir/wayland/protocol_error.h"
 
@@ -127,63 +122,15 @@ void mf::WlDataDevice::Offer::receive(std::string const& mime_type, mir::Fd fd)
     }
 }
 
-mf::DragIconSurface::DragIconSurface(WlSurface* icon, std::shared_ptr<DragIconController> drag_icon_controller)
-    : NullWlSurfaceRole(icon),
-      surface{icon},
-      drag_icon_controller{std::move(drag_icon_controller)}
-{
-    icon->set_role(this);
-
-    auto spec = shell::SurfaceSpecification();
-    spec.width = surface.value().buffer_size()->width;
-    spec.height = surface.value().buffer_size()->height;
-    spec.streams = std::vector<shell::StreamSpecification>{};
-    spec.input_shape = std::vector<Rectangle>{};
-    spec.depth_layer = mir_depth_layer_overlay;
-
-    // TODO - handle
-    surface.value().populate_surface_data(spec.streams.value(), spec.input_shape.value(), {});
-
-    auto const& session = surface.value().session;
-
-    shared_scene_surface =
-        session->create_surface(session, wayland::Weak<WlSurface>(surface), spec, nullptr, nullptr);
-
-    DragIconSurface::drag_icon_controller->set_drag_icon(shared_scene_surface);
-}
-
-mf::DragIconSurface::~DragIconSurface()
-{
-    if (surface)
-    {
-        surface.value().clear_role();
-
-        if (shared_scene_surface)
-        {
-            auto const& session = surface.value().session;
-            session->destroy_surface(shared_scene_surface);
-        }
-    }
-}
-
-auto mf::DragIconSurface::scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>
-{
-    return shared_scene_surface;
-}
-
 mf::WlDataDevice::WlDataDevice(
     wl_resource* new_resource,
     Executor& wayland_executor,
     scene::Clipboard& clipboard,
-    WlSeat& seat,
-    std::shared_ptr<DragIconController> drag_icon_controller,
-    std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher)
+    WlSeat& seat)
     : mw::DataDevice(new_resource, Version<3>()),
       clipboard{clipboard},
       seat{seat},
-      clipboard_observer{std::make_shared<ClipboardObserver>(this)},
-      drag_icon_controller{std::move(drag_icon_controller)},
-      pointer_input_dispatcher{std::move(pointer_input_dispatcher)}
+      clipboard_observer{std::make_shared<ClipboardObserver>(this)}
 {
     clipboard.register_interest(clipboard_observer, wayland_executor);
     // this will call focus_on() with the initial state
@@ -228,16 +175,7 @@ void mf::WlDataDevice::start_drag(
 
     if (auto const wl_source = WlDataSource::from(source.value()))
     {
-        pointer_input_dispatcher->start_ignore_gesture_owner();
-
-        wl_source->set_drag_n_drop_source();
-
-        if (icon)
-        {
-            auto const icon_surface = WlSurface::from(icon.value());
-
-            drag_surface.emplace(icon_surface, drag_icon_controller);
-        }
+        wl_source->start_drag_n_drop_gesture(icon);
     }
 }
 
@@ -317,7 +255,6 @@ void mf::WlDataDevice::event(std::shared_ptr<MirPointerEvent const> const& event
             if (!current_offer.value().accepted_mime_type && wl_resource_get_version(resource) >= 3)
             {
                 current_offer.value().source->cancelled();
-                clipboard.clear_drag_n_drop_source(current_offer.value().source);
             }
             else
             {
@@ -374,15 +311,9 @@ void mf::WlDataDevice::event(std::shared_ptr<MirPointerEvent const> const& event
     }
 }
 
-void mf::WlDataDevice::drag_n_drop_source_cleared(std::shared_ptr<scene::DataExchangeSource> const& source)
+void mf::WlDataDevice::drag_n_drop_source_cleared(std::shared_ptr<scene::DataExchangeSource> const& /*source*/)
 {
-    if (!current_offer || current_offer.value().source == source)
-    {
-        current_offer = {};
-        drag_surface.reset();
-        pointer_input_dispatcher->end_ignore_gesture_owner();
-        weak_source.reset();
-    }
+    weak_source.reset();
 
     seat.for_each_listener(client, [](PointerEventDispatcher* pointer)
     {

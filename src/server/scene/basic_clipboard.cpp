@@ -86,7 +86,7 @@ void mir::scene::BasicClipboard::set_drag_n_drop_source(std::shared_ptr<DataExch
 {
     if (!source)
     {
-        fatal_error("BasicClipboard::set_drag_n_drop_source(nullptr)");
+        fatal_error("BasicClipboard::start_drag_n_drop_gesture(nullptr)");
     }
     bool notify{false};
     {
