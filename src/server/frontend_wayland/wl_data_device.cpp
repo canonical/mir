@@ -75,6 +75,7 @@ public:
     {
         (void)serial;
         accepted_mime_type = mime_type;
+        source->offer_accepted(mime_type);
     }
 
     void receive(std::string const& mime_type, mir::Fd fd) override;

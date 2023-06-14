@@ -174,6 +174,18 @@ public:
         }
     }
 
+    void offer_accepted(const std::optional<std::string> &mime_type) override
+    {
+        if (wl_data_source)
+        {
+            wl_data_source.value().send_target_event(mime_type);
+        }
+        else
+        {
+            return DataExchangeSource::offer_accepted(mime_type);
+        }
+    }
+
 private:
     std::shared_ptr<Executor> const wayland_executor;
     wayland::Weak<WlDataSource> const wl_data_source;

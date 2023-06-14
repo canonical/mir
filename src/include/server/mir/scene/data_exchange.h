@@ -19,8 +19,9 @@
 
 #include "mir/fd.h"
 
-#include <vector>
+#include <optional>
 #include <string>
+#include <vector>
 
 namespace mir
 {
@@ -48,6 +49,9 @@ public:
 
     /// The DnD actions supported
     virtual auto actions() -> uint32_t { return 0; }
+
+    /// target accepted a mime type
+    virtual void offer_accepted(std::optional<std::string> const& mime_type) {(void)mime_type; }
 
 private:
     DataExchangeSource(DataExchangeSource const&) = delete;
