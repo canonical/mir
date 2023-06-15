@@ -83,14 +83,8 @@ private:
     void surface_resized();
     void scene_changed();
 
-    // Look in to homognizing index on KeyInputState and PointerInputState (wrt to device id)
-    struct PointerInputState
-    {
-        std::shared_ptr<input::Surface> current_target;
-        std::shared_ptr<input::Surface> gesture_owner;
-    };
-    std::unordered_map<MirInputDeviceId, PointerInputState> pointer_state_by_id;
-    PointerInputState& ensure_pointer_state(MirInputDeviceId id);
+    std::shared_ptr<input::Surface> current_target;
+    std::shared_ptr<input::Surface> gesture_owner;
 
     struct TouchInputState
     {
