@@ -23,7 +23,6 @@
 
 namespace mir { 
     namespace scene { class Surface; } 
-    namespace shell { class InputTargeter; }
     namespace graphics { class CursorImage; }
     namespace compositor { class BufferStream; }
 }

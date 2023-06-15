@@ -124,7 +124,6 @@ private:
     std::mutex dispatcher_mutex;
     std::shared_ptr<MirEvent const> last_pointer_event;
     std::weak_ptr<input::Surface> focus_surface;
-    bool started;
     bool screen_is_locked;
 };
 
