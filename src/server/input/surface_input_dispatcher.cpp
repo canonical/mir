@@ -215,7 +215,7 @@ struct SceneChangeContext
 
 SceneChangeContext context_for_event(
     MirEvent const* last_pointer_event,
-    std::function<std::shared_ptr<mi::Surface>*(MirInputDeviceId)> const& get_current_target,
+    std::shared_ptr<mi::Surface>& current_target,
     std::function<std::shared_ptr<mi::Surface>(geom::Point const&)> const& surface_under_point)
 {
     auto const iev = mir_event_get_input_event(last_pointer_event);
@@ -228,7 +228,7 @@ SceneChangeContext context_for_event(
     return SceneChangeContext{
         iev,
         pev,
-        *get_current_target(mir_input_event_get_device_id(iev)),
+        current_target,
         surface_under_point(event_x_y)
     };
 }
@@ -335,7 +335,7 @@ void mi::SurfaceInputDispatcher::surface_moved(ms::Surface const* moved_surface)
 
     auto ctx = context_for_event(
         last_pointer_event.get(),
-        [this](auto /*id*/) { return &current_target; },
+        current_target,
         [this](auto point) { return scene->input_surface_at(point); });
 
     // If we're in a move/resize gesture we don't need to synthesize an event
@@ -366,7 +366,7 @@ void mi::SurfaceInputDispatcher::surface_resized()
 
     auto ctx = context_for_event(
         last_pointer_event.get(),
-        [this](auto /*id*/) { return &current_target; },
+        current_target,
         [this](auto point) { return scene->input_surface_at(point); });
 
     auto const entered_surface_changed = dispatch_scene_change_enter_exit_events(
