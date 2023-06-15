@@ -186,6 +186,18 @@ public:
         }
     }
 
+    uint32_t offer_set_actions(uint32_t dnd_actions, uint32_t preferred_action) override
+    {
+        if (wl_data_source)
+        {
+            return wl_data_source.value().drag_n_drop_set_actions(dnd_actions, preferred_action);
+        }
+        else
+        {
+            return DataExchangeSource::offer_set_actions(dnd_actions, preferred_action);
+        }
+    }
+
 private:
     std::shared_ptr<Executor> const wayland_executor;
     wayland::Weak<WlDataSource> const wl_data_source;
@@ -276,7 +288,6 @@ void mf::WlDataSource::drag_n_drop_source_set(std::shared_ptr<scene::DataExchang
     if (source && dnd_source.lock() == source)
     {
         dnd_source_source_is_ours = true;
-        send_action_event(0);
     }
     else if (dnd_source_source_is_ours)
     {
@@ -295,12 +306,12 @@ void mf::WlDataSource::drag_n_drop_source_cleared(std::shared_ptr<scene::DataExc
     }
 }
 
-void mir::frontend::WlDataSource::set_actions(uint32_t dnd_actions)
+void mf::WlDataSource::set_actions(uint32_t dnd_actions)
 {
     this->dnd_actions = dnd_actions;
 }
 
-void mir::frontend::WlDataSource::end_drag_n_drop_gesture()
+void mf::WlDataSource::end_drag_n_drop_gesture()
 {
     pointer_input_dispatcher->end_ignore_gesture_owner();
     drag_surface.reset();
@@ -308,4 +319,32 @@ void mir::frontend::WlDataSource::end_drag_n_drop_gesture()
     {
         clipboard.clear_drag_n_drop_source(source);
     }
+}
+
+uint32_t mf::WlDataSource::drag_n_drop_set_actions(uint32_t dnd_actions, uint32_t preferred_action)
+{
+    using DndAction = mw::DataDeviceManager::DndAction;
+
+    if (preferred_action == DndAction::ask)
+    {
+        preferred_action = DndAction::move;
+    }
+
+    if (dnd_actions | DndAction::ask)
+    {
+        preferred_action |= DndAction::move;
+    }
+
+    auto const acceptable_options = this->dnd_actions | dnd_actions;
+
+    for (auto action : {preferred_action, DndAction::copy, DndAction::move, DndAction::none})
+    {
+        if (action | acceptable_options)
+        {
+            send_action_event_if_supported(action);
+            return action;
+        }
+    }
+
+    return DndAction::none;
 }

@@ -90,7 +90,7 @@ public:
 
     void set_actions(uint32_t dnd_actions, uint32_t preferred_action) override
     {
-        (void)dnd_actions, (void)preferred_action;
+        send_action_event_if_supported(source->offer_set_actions(dnd_actions, preferred_action));
     }
 
 private:
@@ -110,9 +110,9 @@ mf::WlDataDevice::Offer::Offer(WlDataDevice* device, std::shared_ptr<ms::DataExc
     {
         send_offer_event(type);
     }
-    
-    send_action_event(0);
-    send_source_actions_event_if_supported(mf::WlDataDevice::Offer::source->actions());
+
+    send_action_event_if_supported(mw::DataDeviceManager::DndAction::none);
+    send_source_actions_event_if_supported(source->actions());
 }
 
 void mf::WlDataDevice::Offer::receive(std::string const& mime_type, mir::Fd fd)

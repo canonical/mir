@@ -53,6 +53,10 @@ public:
     /// target accepted a mime type
     virtual void offer_accepted(std::optional<std::string> const& mime_type) {(void)mime_type; }
 
+    /// target indicated an action
+    virtual uint32_t offer_set_actions(uint32_t dnd_actions, uint32_t preferred_action)
+        { (void)dnd_actions; (void)preferred_action; return 0; }
+
 private:
     DataExchangeSource(DataExchangeSource const&) = delete;
     DataExchangeSource& operator=(DataExchangeSource const&) = delete;
