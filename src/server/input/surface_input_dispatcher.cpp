@@ -190,14 +190,10 @@ void mi::SurfaceInputDispatcher::surface_removed(std::shared_ptr<ms::Surface> su
         set_focus_locked(lg, nullptr);
     }
 
-    for (auto& kv : pointer_state_by_id)
-    {
-        auto& state = kv.second;
-        if (compare_surfaces(state.current_target, surface.get()))
-            state.current_target.reset();
-        if (compare_surfaces(state.gesture_owner, surface.get()))
-            state.gesture_owner.reset();
-    }
+    if (compare_surfaces(current_target, surface.get()))
+        current_target.reset();
+    if (compare_surfaces(gesture_owner, surface.get()))
+        gesture_owner.reset();
 
     for (auto& kv : touch_state_by_id)
     {
@@ -219,7 +215,7 @@ struct SceneChangeContext
 
 SceneChangeContext context_for_event(
     MirEvent const* last_pointer_event,
-    std::function<std::shared_ptr<mi::Surface>*(MirInputDeviceId)> const& get_current_target,
+    std::shared_ptr<mi::Surface>& current_target,
     std::function<std::shared_ptr<mi::Surface>(geom::Point const&)> const& surface_under_point)
 {
     auto const iev = mir_event_get_input_event(last_pointer_event);
@@ -232,7 +228,7 @@ SceneChangeContext context_for_event(
     return SceneChangeContext{
         iev,
         pev,
-        *get_current_target(mir_input_event_get_device_id(iev)),
+        current_target,
         surface_under_point(event_x_y)
     };
 }
@@ -339,11 +335,11 @@ void mi::SurfaceInputDispatcher::surface_moved(ms::Surface const* moved_surface)
 
     auto ctx = context_for_event(
         last_pointer_event.get(),
-        [this](auto id) { return &this->ensure_pointer_state(id).current_target; },
+        current_target,
         [this](auto point) { return scene->input_surface_at(point); });
 
     // If we're in a move/resize gesture we don't need to synthesize an event
-    if (ensure_pointer_state(mir_input_event_get_device_id(ctx.iev)).gesture_owner)
+    if (gesture_owner)
         return;
 
     auto const entered_surface_changed = dispatch_scene_change_enter_exit_events(
@@ -370,7 +366,7 @@ void mi::SurfaceInputDispatcher::surface_resized()
 
     auto ctx = context_for_event(
         last_pointer_event.get(),
-        [this](auto id) { return &this->ensure_pointer_state(id).current_target; },
+        current_target,
         [this](auto point) { return scene->input_surface_at(point); });
 
     auto const entered_surface_changed = dispatch_scene_change_enter_exit_events(
@@ -443,19 +439,13 @@ void mi::SurfaceInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surfa
     surface->consume(std::move(event));
 }
 
-mi::SurfaceInputDispatcher::PointerInputState& mi::SurfaceInputDispatcher::ensure_pointer_state(MirInputDeviceId id)
-{
-    pointer_state_by_id.insert(std::make_pair(id, PointerInputState()));
-    return pointer_state_by_id[id];
-}
-
 mi::SurfaceInputDispatcher::TouchInputState& mi::SurfaceInputDispatcher::ensure_touch_state(MirInputDeviceId id)
 {
     touch_state_by_id.insert(std::make_pair(id, TouchInputState()));
     return touch_state_by_id[id];
 }
 
-bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, std::shared_ptr<MirEvent const> const& event)
+bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId /*id*/, std::shared_ptr<MirEvent const> const& event)
 {
     auto const ev = event.get();
     std::lock_guard lg(dispatcher_mutex);
@@ -463,26 +453,25 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, std::shar
     auto const* input_ev = mir_event_get_input_event(ev);
     auto const* pev = mir_input_event_get_pointer_event(input_ev);
     auto action = mir_pointer_event_action(pev);
-    auto& pointer_state = ensure_pointer_state(id);
     geom::Point event_x_y = { mir_pointer_event_axis_value(pev,mir_pointer_axis_x),
                               mir_pointer_event_axis_value(pev,mir_pointer_axis_y) };
 
-    if (pointer_state.gesture_owner)
+    if (gesture_owner)
     {
-        deliver(pointer_state.gesture_owner, ev);
+        deliver(gesture_owner, ev);
 
         if (is_gesture_terminator(pev))
         {
-            pointer_state.gesture_owner.reset();
+            gesture_owner.reset();
 
             auto target = scene->input_surface_at(event_x_y);
 
-            if (pointer_state.current_target != target)
+            if (current_target != target)
             {
-                if (pointer_state.current_target)
-                    send_enter_exit_event(pointer_state.current_target, pev, mir_pointer_action_leave);
+                if (current_target)
+                    send_enter_exit_event(current_target, pev, mir_pointer_action_leave);
 
-                pointer_state.current_target = target;
+                current_target = target;
                 if (target)
                     send_enter_exit_event(target, pev, mir_pointer_action_enter);
             }
@@ -501,12 +490,12 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, std::shar
     {
         auto target = scene->input_surface_at(event_x_y);
         bool sent_ev = false;
-        if (pointer_state.current_target != target)
+        if (current_target != target)
         {
-            if (pointer_state.current_target)
-                send_enter_exit_event(pointer_state.current_target, pev, mir_pointer_action_leave);
+            if (current_target)
+                send_enter_exit_event(current_target, pev, mir_pointer_action_leave);
 
-            pointer_state.current_target = target;
+            current_target = target;
             if (target)
                 send_enter_exit_event(target, pev, mir_pointer_action_enter);
 
@@ -516,7 +505,7 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, std::shar
             return sent_ev;
         if (action == mir_pointer_action_button_down)
         {
-            pointer_state.gesture_owner = target;
+            gesture_owner = target;
         }
 
         if (sent_ev)
@@ -622,7 +611,8 @@ void mi::SurfaceInputDispatcher::stop()
 {
     std::lock_guard lg(dispatcher_mutex);
 
-    pointer_state_by_id.clear();
+    gesture_owner.reset();
+    current_target.reset();
     touch_state_by_id.clear();
     last_pointer_event.reset();
 }
