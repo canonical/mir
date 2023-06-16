@@ -74,11 +74,11 @@ public:
     /// Convert the Mir event into Wayland events and send them to the client. root_surface is the one that received
     /// the Mir event, but the final Wayland event may be sent to a subsurface.
     void event(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface);
+    void leave(std::optional<std::shared_ptr<MirPointerEvent const>> const& event);
 
     struct Cursor;
 
 private:
-    void leave(std::optional<std::shared_ptr<MirPointerEvent const>> const& event);
     void buttons(std::shared_ptr<MirPointerEvent const> const& event);
     /// Returns true if any axis events were sent
     template<typename Tag>

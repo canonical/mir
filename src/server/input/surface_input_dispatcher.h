@@ -126,7 +126,6 @@ private:
     std::weak_ptr<input::Surface> focus_surface;
     bool screen_is_locked;
     bool dispatch_to_gesture_owner = true;
-
 };
 
 }

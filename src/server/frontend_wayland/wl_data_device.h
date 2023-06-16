@@ -20,6 +20,8 @@
 #include "wayland_wrapper.h"
 #include "wl_seat.h"
 
+#include "mir/events/event.h"
+
 namespace mir
 {
 class Executor;
@@ -44,13 +46,15 @@ public:
     /// Wayland requests
     /// @{
     void start_drag(
-        std::optional<wl_resource*> const& source, wl_resource* origin,
-        std::optional<wl_resource*> const& icon, uint32_t serial) override
-    {
-        (void)source, (void)origin, (void)icon, (void)serial;
-    }
+        std::optional<wl_resource*> const& source,
+        wl_resource* origin,
+        std::optional<wl_resource*> const& icon,
+        uint32_t serial) override;
+
     void set_selection(std::optional<wl_resource*> const& source, uint32_t serial) override;
     /// @}
+
+    void event(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface);
 
 private:
     class ClipboardObserver;
@@ -61,12 +65,20 @@ private:
 
     /// Called by the clipboard observer
     void paste_source_set(std::shared_ptr<scene::DataExchangeSource> const& source);
+    void drag_n_drop_source_set(std::shared_ptr<scene::DataExchangeSource> const& source);
+    void drag_n_drop_source_cleared(std::shared_ptr<scene::DataExchangeSource> const& source);
+
+    void validate_pointer_event(std::optional<std::shared_ptr<MirEvent const>> drag_event) const;
+    void make_new_dnd_offer_if_possible(std::shared_ptr<mir::scene::DataExchangeSource> const& source);
 
     scene::Clipboard& clipboard;
     WlSeat& seat;
     std::shared_ptr<ClipboardObserver> const clipboard_observer;
     bool has_focus = false;
+    std::weak_ptr<scene::DataExchangeSource> weak_source;
     wayland::Weak<Offer> current_offer;
+    wayland::Weak<WlSurface> weak_surface;
+    bool sent_enter = false;
 };
 }
 }

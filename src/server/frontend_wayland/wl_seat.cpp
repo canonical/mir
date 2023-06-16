@@ -23,6 +23,7 @@
 #include "wl_keyboard.h"
 #include "wl_pointer.h"
 #include "wl_touch.h"
+#include "wl_data_device.h"
 
 #include "mir/executor.h"
 #include "mir/wayland/client.h"
@@ -34,6 +35,7 @@
 #include "mir/input/mir_keyboard_config.h"
 #include "mir/input/keyboard_observer.h"
 #include "mir/scene/surface.h"
+#include "mir_toolkit/events/input/pointer_event.h"
 
 #include <mutex>
 #include <algorithm>
@@ -370,8 +372,27 @@ mf::PointerEventDispatcher::PointerEventDispatcher(WlPointer* wl_pointer) :
 
 void mf::PointerEventDispatcher::event(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface)
 {
-    if (wl_pointer)
+    if (wl_data_device)
+    {
+        wl_data_device.value().event(event, root_surface);
+    }
+    else if (wl_pointer)
     {
         wl_pointer.value().event(event, root_surface);
     }
+}
+
+void mf::PointerEventDispatcher::start_dispatch_to_data_device(WlDataDevice* wl_data_device)
+{
+    this->wl_data_device = wayland::Weak<WlDataDevice>{wl_data_device};
+
+    if (wl_pointer)
+    {
+        wl_pointer.value().leave(std::nullopt);
+    }
+}
+
+void mf::PointerEventDispatcher::stop_dispatch_to_data_device()
+{
+    wl_data_device = wayland::Weak<WlDataDevice>{};
 }
