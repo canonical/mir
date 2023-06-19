@@ -33,6 +33,8 @@ class DataExchangeSource;
 
 namespace frontend
 {
+class PointerInputDispatcher;
+
 class WlDataDevice : public wayland::DataDevice, public WlSeat::FocusListener
 {
 public:
@@ -40,7 +42,8 @@ public:
         wl_resource* new_resource,
         Executor& wayland_executor,
         scene::Clipboard& clipboard,
-        WlSeat& seat);
+        WlSeat& seat,
+        std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher);
     ~WlDataDevice();
 
     /// Wayland requests
@@ -74,6 +77,7 @@ private:
     scene::Clipboard& clipboard;
     WlSeat& seat;
     std::shared_ptr<ClipboardObserver> const clipboard_observer;
+    std::shared_ptr<PointerInputDispatcher> const pointer_input_dispatcher;
     bool has_focus = false;
     std::weak_ptr<scene::DataExchangeSource> weak_source;
     wayland::Weak<Offer> current_offer;

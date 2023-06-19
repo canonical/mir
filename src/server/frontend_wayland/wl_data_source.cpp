@@ -18,7 +18,6 @@
 
 #include "mir/executor.h"
 #include "mir/frontend/drag_icon_controller.h"
-#include "mir/frontend/pointer_input_dispatcher.h"
 #include "mir/scene/clipboard.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
@@ -120,14 +119,6 @@ public:
     {
     }
 
-    ~Source()
-    {
-        if (wl_data_source)
-        {
-            wl_data_source.value().end_drag_n_drop_gesture();
-        }
-    }
-
     auto mime_types() const -> std::vector<std::string> const& override
     {
         return types;
@@ -220,14 +211,12 @@ mf::WlDataSource::WlDataSource(
     wl_resource* new_resource,
     std::shared_ptr<Executor> const& wayland_executor,
     scene::Clipboard& clipboard,
-    std::shared_ptr<DragIconController> drag_icon_controller,
-    std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher)
+    std::shared_ptr<DragIconController> drag_icon_controller)
     : mw::DataSource{new_resource, Version<3>()},
       wayland_executor{wayland_executor},
       clipboard{clipboard},
       clipboard_observer{std::make_shared<ClipboardObserver>(this)},
-      drag_icon_controller{std::move(drag_icon_controller)},
-      pointer_input_dispatcher{std::move(pointer_input_dispatcher)}
+      drag_icon_controller{std::move(drag_icon_controller)}
 {
     clipboard.register_interest(clipboard_observer, *wayland_executor);
 }
@@ -264,7 +253,6 @@ void mf::WlDataSource::start_drag_n_drop_gesture(std::optional<wl_resource*> con
     auto const source = std::make_shared<Source>(*this);
     dnd_source = source;
     clipboard.set_drag_n_drop_source(source);
-    pointer_input_dispatcher->disable_dispatch_to_gesture_owner();
 
     if (icon)
     {
@@ -325,7 +313,6 @@ void mf::WlDataSource::set_actions(uint32_t dnd_actions)
 
 void mf::WlDataSource::end_drag_n_drop_gesture()
 {
-    pointer_input_dispatcher->enable_dispatch_to_gesture_owner();
     drag_surface.reset();
     if (auto const source = dnd_source.lock())
     {

@@ -53,14 +53,18 @@ void mf::WlDataDeviceManager::Instance::create_data_source(wl_resource* new_data
         new_data_source,
         manager->wayland_executor,
         *manager->clipboard,
-        manager->drag_icon_controller,
-        manager->pointer_input_dispatcher};
+        manager->drag_icon_controller};
 }
 
 void mf::WlDataDeviceManager::Instance::get_data_device(wl_resource* new_data_device, wl_resource* seat)
 {
     auto const realseat = mf::WlSeat::from(seat);
-    new WlDataDevice{new_data_device, *manager->wayland_executor, *manager->clipboard, *realseat};
+    new WlDataDevice{
+        new_data_device,
+        *manager->wayland_executor,
+        *manager->clipboard,
+        *realseat,
+        manager->pointer_input_dispatcher};
 }
 
 void mf::WlDataDeviceManager::bind(wl_resource* new_resource)

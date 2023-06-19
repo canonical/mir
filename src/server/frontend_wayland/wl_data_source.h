@@ -32,7 +32,6 @@ class DataExchangeSource;
 namespace frontend
 {
 class DragIconController;
-class PointerInputDispatcher;
 
 class WlDataSource : public wayland::DataSource
 {
@@ -41,8 +40,7 @@ public:
         wl_resource* new_resource,
         std::shared_ptr<Executor> const& wayland_executor,
         scene::Clipboard& clipboard,
-        std::shared_ptr<DragIconController> drag_icon_controller,
-        std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher);
+        std::shared_ptr<DragIconController> drag_icon_controller);
     ~WlDataSource();
 
     static auto from(struct wl_resource* resource) -> WlDataSource*;
@@ -83,7 +81,6 @@ private:
     scene::Clipboard& clipboard;
     std::shared_ptr<ClipboardObserver> const clipboard_observer;
     std::shared_ptr<DragIconController> const drag_icon_controller;
-    std::shared_ptr<PointerInputDispatcher> const pointer_input_dispatcher;
     std::vector<std::string> mime_types;
     std::weak_ptr<scene::DataExchangeSource> paste_source;
     bool clipboards_paste_source_is_ours{false};

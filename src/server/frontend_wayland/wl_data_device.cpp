@@ -19,6 +19,7 @@
 #include "wl_surface.h"
 
 #include "mir/events/pointer_event.h"
+#include "mir/frontend/pointer_input_dispatcher.h"
 #include "mir/log.h"
 #include "mir/scene/clipboard.h"
 #include "mir/wayland/client.h"
@@ -120,11 +121,13 @@ mf::WlDataDevice::WlDataDevice(
     wl_resource* new_resource,
     Executor& wayland_executor,
     scene::Clipboard& clipboard,
-    WlSeat& seat)
+    WlSeat& seat,
+    std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher)
     : mw::DataDevice(new_resource, Version<3>()),
       clipboard{clipboard},
       seat{seat},
-      clipboard_observer{std::make_shared<ClipboardObserver>(this)}
+      clipboard_observer{std::make_shared<ClipboardObserver>(this)},
+      pointer_input_dispatcher{std::move(pointer_input_dispatcher)}
 {
     clipboard.register_interest(clipboard_observer, wayland_executor);
     // this will call focus_on() with the initial state
@@ -166,6 +169,13 @@ void mf::WlDataDevice::start_drag(
     }
 
     validate_pointer_event(client->event_for(serial));
+
+    pointer_input_dispatcher->disable_dispatch_to_gesture_owner();
+
+    seat.for_each_listener(client, [this](PointerEventDispatcher* pointer)
+        {
+            pointer->start_dispatch_to_data_device(this);
+        });
 
     if (auto const wl_source = WlDataSource::from(source.value()))
     {
@@ -227,6 +237,7 @@ void mf::WlDataDevice::drag_n_drop_source_set(std::shared_ptr<scene::DataExchang
     if (has_focus)
     {
         make_new_dnd_offer_if_possible(source);
+        sent_enter = false;
     }
 }
 
@@ -234,11 +245,15 @@ void mf::WlDataDevice::event(std::shared_ptr<MirPointerEvent const> const& event
 {
     switch(mir_pointer_event_action(event.get()))
     {
-    case mir_pointer_action_button_down:
     case mir_pointer_action_button_up:
+        send_drop_event();
+        pointer_input_dispatcher->enable_dispatch_to_gesture_owner();
+        seat.for_each_listener(client, [](PointerEventDispatcher* pointer)
+            {
+                pointer->stop_dispatch_to_data_device();
+            });
         if (current_offer)
         {
-            send_drop_event();
             if (!current_offer.value().accepted_mime_type && wl_resource_get_version(resource) >= 3)
             {
                 current_offer.value().source->cancelled();
@@ -251,8 +266,18 @@ void mf::WlDataDevice::event(std::shared_ptr<MirPointerEvent const> const& event
         break;
     case mir_pointer_action_leave:
         send_leave_event();
+        if (!current_offer)
+        {
+            pointer_input_dispatcher->enable_dispatch_to_gesture_owner();
+            seat.for_each_listener(client, [](PointerEventDispatcher* pointer)
+                {
+                    pointer->stop_dispatch_to_data_device();
+                });
+        }
         break;
-    case mir_pointer_action_enter:make_new_dnd_offer_if_possible(weak_source.lock());
+    case mir_pointer_action_enter:
+        make_new_dnd_offer_if_possible(weak_source.lock());
+        sent_enter = false;
         [[fallthrough]];
     case mir_pointer_action_motion:
     {
@@ -261,8 +286,6 @@ void mf::WlDataDevice::event(std::shared_ptr<MirPointerEvent const> const& event
             log_error("pointer event cannot be sent to wl_surface as it lacks a local poisition");
             break;
         }
-
-        if (!current_offer) break;
 
         auto const root_position = event->local_position().value();
 
@@ -281,11 +304,20 @@ void mf::WlDataDevice::event(std::shared_ptr<MirPointerEvent const> const& event
         else
         {
             auto const serial = client->next_serial(nullptr);
-            send_enter_event(serial, target_surface->resource, x, y, current_offer.value().resource);
+            if (current_offer)
+            {
+                send_enter_event(serial, target_surface->resource, x, y, current_offer.value().resource);
+            }
+            else
+            {
+                send_enter_event(serial, target_surface->resource, x, y, std::nullopt);
+            }
+
             sent_enter = true;
         }
         break;
     }
+    case mir_pointer_action_button_down:
     case mir_pointer_actions:
         break;
     }
@@ -308,6 +340,5 @@ void mf::WlDataDevice::make_new_dnd_offer_if_possible(std::shared_ptr<mir::scene
         current_offer = wayland::make_weak(new Offer{this, source});
         current_offer.value().send_action_event_if_supported(mw::DataDeviceManager::DndAction::none);
         current_offer.value().send_source_actions_event_if_supported(source->actions());
-        sent_enter = false; // We still need to send data_device.enter() with the offer
     }
 }
