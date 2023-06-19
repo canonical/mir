@@ -71,9 +71,8 @@ class mf::WlDataDevice::Offer : public wayland::DataOffer
 public:
     Offer(WlDataDevice* device, std::shared_ptr<ms::DataExchangeSource> const& source);
 
-    void accept(uint32_t serial, std::optional<std::string> const& mime_type) override
+    void accept(uint32_t /*serial*/, std::optional<std::string> const& mime_type) override
     {
-        (void)serial;
         accepted_mime_type = mime_type;
         source->offer_accepted(mime_type);
     }
@@ -160,10 +159,10 @@ void mf::WlDataDevice::start_drag(
     uint32_t serial)
 {
     // "The [origin surface] and client must have an active implicit grab that matches the serial"
-    if (!origin)
+    if (!weak_surface || weak_surface.value().resource != origin)
     {
         BOOST_THROW_EXCEPTION(
-            mw::ProtocolError(resource, Error::role, "Origin surface does not exist."));
+            mw::ProtocolError(resource, Error::role, "Origin surface does have input focus"));
     }
 
     validate_pointer_event(client->event_for(serial));
