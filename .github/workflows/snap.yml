@@ -46,6 +46,9 @@ jobs:
           track: latest
         - snap: MirServer/ubuntu-frame
           track: 22
+        - snap: Miriway/Miriway
+          track: latest
+          review-opts: --allow-classic
 
     steps:
     - name: Check out code
@@ -62,6 +65,7 @@ jobs:
     - name: Build and publish the snap
       uses: canonical/actions/build-snap@release
       with:
+        review-opts: ${{ matrix.review-opts }}
         snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
         publish: true
         publish-channel: ${{ matrix.track }}/edge/mir-pr${{ github.event.number }}
