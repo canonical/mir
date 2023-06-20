@@ -234,30 +234,6 @@ mgmh::GBMHelper::GBMHelper(mir::Fd const& drm_fd)
             std::runtime_error("Failed to create GBM device"));
 }
 
-mgg::GBMSurfaceUPtr mgmh::GBMHelper::create_scanout_surface(
-    uint32_t width,
-    uint32_t height,
-    uint32_t gbm_format,
-    bool sharable) const
-{
-    auto format_flags = GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT;
-
-    if (sharable)
-    {
-        format_flags |= GBM_BO_USE_LINEAR;
-    }
-
-    auto surface_raw = gbm_surface_create(device, width, height, gbm_format, format_flags);
-
-    auto gbm_surface_deleter = [](gbm_surface *p) { if (p) gbm_surface_destroy(p); };
-    GBMSurfaceUPtr surface{surface_raw, gbm_surface_deleter};
-
-    if (!surface)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create GBM scanout surface"));
-
-    return surface;
-}
-
 mgmh::GBMHelper::~GBMHelper()
 {
     if (device)
