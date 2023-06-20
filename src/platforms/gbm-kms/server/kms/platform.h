@@ -92,10 +92,8 @@ protected:
 
 private:
     RenderingPlatform(
-        std::unique_ptr<udev::Device> udev_device,
         std::variant<std::shared_ptr<GBMDisplayProvider>, std::shared_ptr<gbm_device>> hw);
     
-    std::unique_ptr<udev::Device> const udev_device;
     std::shared_ptr<gbm_device> const device;                   ///< gbm_device this platform is created on, always valid.
     std::shared_ptr<GBMDisplayProvider> const bound_display;    ///< Associated Display, if any (nullptr is valid)
     EGLDisplay const dpy;

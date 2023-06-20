@@ -613,12 +613,10 @@ auto mgg::GLRenderingProvider::make_framebuffer_provider(std::shared_ptr<Display
 }
 
 mgg::GLRenderingProvider::GLRenderingProvider(
-    udev::Device const& device,
     std::shared_ptr<mg::GBMDisplayProvider> associated_display,
     EGLDisplay dpy,
     EGLContext ctx)
-    : device{device},
-      bound_display{std::move(associated_display)},
+    : bound_display{std::move(associated_display)},
       dpy{dpy},
       ctx{ctx}
 {

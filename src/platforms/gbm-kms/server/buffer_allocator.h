@@ -84,10 +84,9 @@ class GLRenderingProvider : public graphics::GLRenderingProvider
 {
 public:
     GLRenderingProvider(
-        udev::Device const& device,
-         std::shared_ptr<GBMDisplayProvider> associated_display,
-         EGLDisplay dpy,
-         EGLContext ctx);
+        std::shared_ptr<GBMDisplayProvider> associated_display,
+        EGLDisplay dpy,
+        EGLContext ctx);
 
     auto make_framebuffer_provider(std::shared_ptr<DisplayInterfaceProvider> target)
         -> std::unique_ptr<FramebufferProvider> override;
@@ -102,7 +101,6 @@ public:
         GLConfig const& config) -> std::unique_ptr<gl::OutputSurface> override;
 
 private:
-    udev::Device const& device;
     std::shared_ptr<GBMDisplayProvider> const bound_display;    ///< Associated Display provider (if any - null is valid)
     EGLDisplay const dpy;
     EGLContext const ctx;

@@ -221,15 +221,13 @@ struct gbm_device_from_hw
 mgg::RenderingPlatform::RenderingPlatform(
     mir::udev::Device const& device,
     std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays)
-    : RenderingPlatform(device.clone(), gbm_device_for_udev_device(device, displays))
+    : RenderingPlatform(gbm_device_for_udev_device(device, displays))
 {
 }
 
 mgg::RenderingPlatform::RenderingPlatform(
-    std::unique_ptr<mir::udev::Device> udev_device,
     std::variant<std::shared_ptr<mg::GBMDisplayProvider>, std::shared_ptr<gbm_device>> hw)
-    : udev_device{std::move(udev_device)},
-      device{std::visit(gbm_device_from_hw{}, hw)},
+    : device{std::visit(gbm_device_from_hw{}, hw)},
       bound_display{std::visit(display_provider_or_nothing{}, hw)},
       dpy{initialise_egl(dpy_for_gbm_device(device.get()), 1, 4)},
       share_ctx{make_share_only_context(dpy)}
@@ -248,7 +246,7 @@ auto mgg::RenderingPlatform::maybe_create_interface(
 {
     if (dynamic_cast<GLRenderingProvider::Tag const*>(&type_tag))
     {
-        return std::make_shared<mgg::GLRenderingProvider>(*udev_device, bound_display, dpy, share_ctx);
+        return std::make_shared<mgg::GLRenderingProvider>(bound_display, dpy, share_ctx);
     }
     return nullptr;
 }
