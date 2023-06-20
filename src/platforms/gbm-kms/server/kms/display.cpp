@@ -613,7 +613,7 @@ public:
             }};
         uint32_t handles[4] = {gbm_bo_get_handle(bo.get()).u32, 0, 0, 0};
         uint32_t strides[4] = {gbm_bo_get_stride(bo.get()), 0, 0, 0};
-        uint32_t offsets[4] = {0, 0, 0, 0};
+        uint32_t offsets[4] = {gbm_bo_get_offset(bo.get(), 0), 0, 0, 0};
 
         auto format = gbm_bo_get_format(bo.get());
 
