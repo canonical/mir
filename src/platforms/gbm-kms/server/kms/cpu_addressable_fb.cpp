@@ -206,7 +206,10 @@ private:
           pitch_{params.pitch},
           format_{format},
           gem_handle{params.handle},
-          size_{params.size}
+          size_{static_cast<size_t>(params.size)}    /* params.size is a u64, but the kernel cannot possibly return a value outside the range of size_t
+                                                      * On 64bit systems this is trivial, as sizeof(size_t) == sizeof(u64)
+                                                      * On 32bit systems sizeof(size_t) < sizeof(u64), so this cast is necessary.
+                                                      */
     {
     }
 
