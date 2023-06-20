@@ -654,30 +654,59 @@ private:
     std::shared_ptr<uint32_t const> const fb_id;
 };
 
+namespace
+{
+auto create_gbm_surface(gbm_device* gbm, geom::Size size, mg::DRMFormat format, std::span<uint64_t> modifiers)
+    -> std::shared_ptr<gbm_surface>
+{
+    auto const surface =
+        [&]()
+        {
+            if (modifiers.empty())
+            {
+                // If we have no no modifiers don't use the with-modifiers creation path.
+                auto foo = GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT;
+                return gbm_surface_create(
+                    gbm,
+                    size.width.as_uint32_t(), size.height.as_uint32_t(),
+                    format,
+                    foo);
+            }
+            else
+            {
+                return gbm_surface_create_with_modifiers2(
+                    gbm,
+                    size.width.as_uint32_t(), size.height.as_uint32_t(),
+                    format,
+                    modifiers.data(),
+                    modifiers.size(),
+                    GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT);
+            }
+        }();
+
+    if (!surface)
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                errno,
+                std::system_category(),
+                "Failed to create GBM surface"}));
+
+    }
+    return std::shared_ptr<gbm_surface>{
+        surface,
+        [](auto surface) { gbm_surface_destroy(surface); }};
+}
+}
+
 class GBMSurfaceImpl : public mgg::GBMDisplayProvider::GBMSurface
 {
 public:
     GBMSurfaceImpl(mir::Fd drm_fd, gbm_device* gbm, geom::Size size, mg::DRMFormat const format, std::span<uint64_t> modifiers)
         : drm_fd{std::move(drm_fd)},
-          surface{
-              gbm_surface_create_with_modifiers2(
-                  gbm,
-                  size.width.as_uint32_t(), size.height.as_uint32_t(),
-                  format,
-                  modifiers.empty() ? nullptr : modifiers.data(),
-                  modifiers.size(),
-                  GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT),
-              [](auto surface) { gbm_surface_destroy(surface); }}
+          surface{create_gbm_surface(gbm, size, format, modifiers)}
     {
-        if (!surface)
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to create GBM surface"}));
-        }
     }
-
-    ~GBMSurfaceImpl()
-    {
-    }    
 
     GBMSurfaceImpl(GBMSurfaceImpl const&) = delete;
     auto operator=(GBMSurfaceImpl const&) -> GBMSurfaceImpl const& = delete;
