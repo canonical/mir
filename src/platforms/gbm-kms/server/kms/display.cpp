@@ -735,8 +735,13 @@ public:
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to acquire GBM front buffer"}));
         }
-        
-        return GBMBoFramebuffer::framebuffer_for_frontbuffer(drm_fd, std::move(bo));
+
+        auto fb = GBMBoFramebuffer::framebuffer_for_frontbuffer(drm_fd, std::move(bo));
+        if (!fb)
+        {
+            BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to make DRM FB"}));
+        }
+        return fb;
     }
 private:
     mir::Fd const drm_fd;
