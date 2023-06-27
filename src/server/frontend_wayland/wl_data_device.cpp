@@ -87,7 +87,13 @@ public:
 
     void set_actions(uint32_t dnd_actions, uint32_t preferred_action) override
     {
-        send_action_event_if_supported(source->offer_set_actions(dnd_actions, preferred_action));
+        const auto action = source->offer_set_actions(dnd_actions, preferred_action);
+
+        if (!dnd_action || dnd_action.value() != action)
+        {
+            dnd_action = action;
+            send_action_event_if_supported(action);
+        }
     }
 
 private:
@@ -95,6 +101,7 @@ private:
     wayland::Weak<WlDataDevice> const device;
     std::shared_ptr<ms::DataExchangeSource> const source;
     std::optional<std::string> accepted_mime_type;
+    std::optional<uint32_t> dnd_action;
 };
 
 mf::WlDataDevice::Offer::Offer(WlDataDevice* device, std::shared_ptr<ms::DataExchangeSource> const& source) :

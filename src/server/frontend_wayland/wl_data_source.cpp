@@ -340,7 +340,11 @@ uint32_t mf::WlDataSource::drag_n_drop_set_actions(uint32_t dnd_actions, uint32_
     {
         if (action | acceptable_options)
         {
-            send_action_event_if_supported(action);
+            if (!dnd_action || dnd_action.value() != action)
+            {
+                dnd_action = action;
+                send_action_event_if_supported(action);
+            }
             return action;
         }
     }

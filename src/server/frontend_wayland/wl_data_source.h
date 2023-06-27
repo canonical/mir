@@ -88,6 +88,7 @@ private:
     std::weak_ptr<scene::DataExchangeSource> dnd_source;
     bool dnd_source_source_is_ours{false};
     uint32_t dnd_actions;
+    std::optional<uint32_t> dnd_action;
     std::optional<DragIconSurface> drag_surface;
 };
 }
