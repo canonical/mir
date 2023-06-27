@@ -252,6 +252,7 @@ void mf::WlDataDevice::event(std::shared_ptr<MirPointerEvent const> const& event
             {
                 pointer->stop_dispatch_to_data_device();
             });
+        send_leave_event();
         if (current_offer)
         {
             if (!current_offer.value().accepted_mime_type && wl_resource_get_version(resource) >= 3)
