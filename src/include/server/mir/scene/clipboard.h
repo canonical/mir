@@ -39,8 +39,8 @@ public:
     /// does not remain locked when notifying observers, so clipboard->paste_source() may return a different value than
     /// source.
     virtual void paste_source_set(std::shared_ptr<DataExchangeSource> const& source) = 0;
-    virtual void drag_n_drop_source_set(std::shared_ptr<DataExchangeSource> const& source) { (void)source; }
-    virtual void drag_n_drop_source_cleared(std::shared_ptr<DataExchangeSource> const& source) { (void)source; }
+    virtual void drag_n_drop_source_set(std::shared_ptr<DataExchangeSource> const& source) = 0;
+    virtual void drag_n_drop_source_cleared(std::shared_ptr<DataExchangeSource> const& source) = 0;
 
 private:
     ClipboardObserver(ClipboardObserver const&) = delete;

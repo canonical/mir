@@ -287,6 +287,9 @@ public:
     }
 
 private:
+    void drag_n_drop_source_set(const std::shared_ptr<ms::DataExchangeSource>&) override {}
+    void drag_n_drop_source_cleared(const std::shared_ptr<ms::DataExchangeSource>&) override {}
+
     XWaylandClipboardProvider* const owner;
 };
 

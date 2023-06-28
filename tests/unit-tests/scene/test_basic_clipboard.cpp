@@ -42,6 +42,9 @@ struct MockClipboardSource : ms::DataExchangeSource
 struct MockClipboardObserver : ms::ClipboardObserver
 {
     MOCK_METHOD(void, paste_source_set, (std::shared_ptr<ms::DataExchangeSource> const&));
+
+    void drag_n_drop_source_set(const std::shared_ptr<ms::DataExchangeSource>&) override {}
+    void drag_n_drop_source_cleared(const std::shared_ptr<ms::DataExchangeSource>&) override {}
 };
 
 struct BasicClipboardTest : Test
