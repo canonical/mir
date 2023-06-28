@@ -69,7 +69,7 @@ private:
     /// Called by the clipboard observer
     void paste_source_set(std::shared_ptr<scene::DataExchangeSource> const& source);
     void drag_n_drop_source_set(std::shared_ptr<scene::DataExchangeSource> const& source);
-    void drag_n_drop_source_cleared(std::shared_ptr<scene::DataExchangeSource> const& source);
+    void drag_n_drop_source_cleared();
 
     void validate_pointer_event(std::optional<std::shared_ptr<MirEvent const>> drag_event) const;
     void make_new_dnd_offer_if_possible(std::shared_ptr<mir::scene::DataExchangeSource> const& source);

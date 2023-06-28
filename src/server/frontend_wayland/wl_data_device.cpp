@@ -54,11 +54,11 @@ private:
         }
     }
 
-    void drag_n_drop_source_cleared(std::shared_ptr<ms::DataExchangeSource> const& source) override
+    void drag_n_drop_source_cleared(std::shared_ptr<ms::DataExchangeSource> const& /*source*/) override
     {
         if (device)
         {
-            device.value().drag_n_drop_source_cleared(source);
+            device.value().drag_n_drop_source_cleared();
         }
     }
 
@@ -327,7 +327,7 @@ void mf::WlDataDevice::event(std::shared_ptr<MirPointerEvent const> const& event
     }
 }
 
-void mf::WlDataDevice::drag_n_drop_source_cleared(std::shared_ptr<scene::DataExchangeSource> const& /*source*/)
+void mf::WlDataDevice::drag_n_drop_source_cleared()
 {
     weak_source.reset();
 
