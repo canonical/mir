@@ -73,6 +73,7 @@ private:
 
     void validate_pointer_event(std::optional<std::shared_ptr<MirEvent const>> drag_event) const;
     void make_new_dnd_offer_if_possible(std::shared_ptr<mir::scene::DataExchangeSource> const& source);
+    void end_of_dnd_gesture();
 
     scene::Clipboard& clipboard;
     WlSeat& seat;

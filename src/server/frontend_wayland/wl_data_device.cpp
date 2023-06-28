@@ -255,11 +255,7 @@ void mf::WlDataDevice::event(std::shared_ptr<MirPointerEvent const> const& event
     case mir_pointer_action_button_up:
         send_drop_event();
         pointer_input_dispatcher->enable_dispatch_to_gesture_owner();
-        seat.for_each_listener(client, [](PointerEventDispatcher* pointer)
-            {
-                pointer->stop_dispatch_to_data_device();
-            });
-        send_leave_event();
+            end_of_dnd_gesture();
         if (current_offer)
         {
             if (!current_offer.value().accepted_mime_type && wl_resource_get_version(resource) >= 3)
@@ -335,6 +331,12 @@ void mf::WlDataDevice::drag_n_drop_source_cleared(std::shared_ptr<scene::DataExc
 {
     weak_source.reset();
 
+    end_of_dnd_gesture();
+}
+
+void mf::WlDataDevice::end_of_dnd_gesture()
+{
+    send_leave_event();
     seat.for_each_listener(client, [](PointerEventDispatcher* pointer)
     {
         pointer->stop_dispatch_to_data_device();
