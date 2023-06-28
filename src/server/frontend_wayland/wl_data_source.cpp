@@ -161,7 +161,7 @@ public:
         }
         else
         {
-            return DataExchangeSource::actions();
+            return 0;
         }
     }
 
@@ -170,10 +170,6 @@ public:
         if (wl_data_source)
         {
             wl_data_source.value().send_target_event(mime_type);
-        }
-        else
-        {
-            return DataExchangeSource::offer_accepted(mime_type);
         }
     }
 
@@ -185,7 +181,7 @@ public:
         }
         else
         {
-            return DataExchangeSource::offer_set_actions(dnd_actions, preferred_action);
+            return mw::DataDeviceManager::DndAction::none;
         }
     }
 
@@ -194,10 +190,6 @@ public:
         if (wl_data_source)
         {
             return wl_data_source.value().send_dnd_finished_event_if_supported();
-        }
-        else
-        {
-            DataExchangeSource::dnd_finished();
         }
     }
 

@@ -42,23 +42,22 @@ public:
     virtual void initiate_send(std::string const& mime_type, Fd const& target_fd) = 0;
 
     /// The destination has cancelled the (DnD) transfer
-    virtual void cancelled() {}
+    virtual void cancelled() = 0;
 
     /// The user has dropped the (DnD) transfer
-    virtual void dnd_drop_performed() {}
+    virtual void dnd_drop_performed() = 0;
 
     /// The DnD actions supported
-    virtual auto actions() -> uint32_t { return 0; }
+    virtual auto actions() -> uint32_t = 0;
 
     /// target accepted a mime type
-    virtual void offer_accepted(std::optional<std::string> const& mime_type) {(void)mime_type; }
+    virtual void offer_accepted(std::optional<std::string> const& mime_type) = 0;
 
     /// target indicated an action
-    virtual uint32_t offer_set_actions(uint32_t dnd_actions, uint32_t preferred_action)
-        { (void)dnd_actions; (void)preferred_action; return 0; }
+    virtual uint32_t offer_set_actions(uint32_t dnd_actions, uint32_t preferred_action) = 0;
 
     /// The client has finished the (DnD) transfer
-    virtual void dnd_finished() {}
+    virtual void dnd_finished() = 0;
 private:
     DataExchangeSource(DataExchangeSource const&) = delete;
     DataExchangeSource& operator=(DataExchangeSource const&) = delete;

@@ -110,6 +110,13 @@ public:
     void* const connection;
 
 private:
+    void cancelled() override {}
+    void dnd_drop_performed() override {}
+    auto actions() -> uint32_t override { return 0; }
+    void offer_accepted(const std::optional<std::string>&) override {}
+    uint32_t offer_set_actions(uint32_t, uint32_t) override { return 0; }
+    void dnd_finished() override {}
+
     std::vector<std::string> const mime_types_vec;
     std::map<std::string, xcb_atom_t> const mime_types_map;
     std::mutex mutex;
