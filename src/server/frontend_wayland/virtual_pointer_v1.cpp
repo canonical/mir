@@ -19,16 +19,17 @@
 #include "wl_pointer.h"
 #include "output_manager.h"
 
-#include "mir/wayland/weak.h"
-#include "mir/wayland/protocol_error.h"
-#include "mir/input/virtual_input_device.h"
-#include "mir/input/input_device_registry.h"
-#include "mir/input/device.h"
-#include "mir/input/input_sink.h"
-#include "mir/input/event_builder.h"
 #include "mir/events/pointer_event.h"
+#include "mir/executor.h"
 #include "mir/geometry/rectangles.h"
+#include "mir/input/device.h"
+#include "mir/input/event_builder.h"
+#include "mir/input/input_device_registry.h"
+#include "mir/input/input_sink.h"
+#include "mir/input/virtual_input_device.h"
 #include "mir/log.h"
+#include "mir/wayland/protocol_error.h"
+#include "mir/wayland/weak.h"
 
 #include <boost/throw_exception.hpp>
 #include <linux/input-event-codes.h>
@@ -120,6 +121,11 @@ private:
         events::ScrollAxisV scroll_v;
         MirPointerButtons buttons_pressed;
     };
+    static void create_and_dispatch_event(
+        input::VirtualInputDevice* pointer_device,
+        Pending pending,
+        geometry::PointF position,
+        MirPointerButtons buttons_pressed);
 
     geometry::Rectangle absolute_motion_area;
     MirPointerButtons buttons_pressed{0};
@@ -263,6 +269,21 @@ void mf::VirtualPointerV1::axis(uint32_t time, uint32_t axis, double value)
 
 void mf::VirtualPointerV1::frame()
 {
+    mir::linearising_executor.spawn(
+        [pointer_device=pointer_device, pending=pending, position=position, buttons_pressed=buttons_pressed]
+        { create_and_dispatch_event(pointer_device.get(), pending, position, buttons_pressed); });
+
+    buttons_pressed = pending.buttons_pressed;
+    position = pending.position;
+    pending = Pending{position, buttons_pressed};
+}
+
+void mf::VirtualPointerV1::create_and_dispatch_event(
+    input::VirtualInputDevice* pointer_device,
+    Pending const pending,
+    geometry::PointF const position,
+    MirPointerButtons const buttons_pressed)
+{
     pointer_device->if_started_then([&](input::InputSink* sink, input::EventBuilder* builder)
         {
             if (pending.has_absolute_motion ||
@@ -308,9 +329,6 @@ void mf::VirtualPointerV1::frame()
                     {}, {}, mir_pointer_axis_source_none, {}, {}));
             }
         });
-    buttons_pressed = pending.buttons_pressed;
-    position = pending.position;
-    pending = Pending{position, buttons_pressed};
 }
 
 void mf::VirtualPointerV1::axis_source(uint32_t axis_source)
