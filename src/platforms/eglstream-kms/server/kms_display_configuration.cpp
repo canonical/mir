@@ -20,13 +20,16 @@
 #include "kms-utils/drm_mode_resources.h"
 #include "mir/graphics/pixel_format_utils.h"
 #include "mir/graphics/egl_error.h"
+#include "mir/graphics/pixel_format_utils.h"
+#include "mir/output_type_names.h"
 
 #include <cmath>
 #include <limits>
 
 #include <boost/throw_exception.hpp>
-#include <stdexcept>
 #include <algorithm>
+#include <sstream>
+#include <stdexcept>
 
 namespace mg = mir::graphics;
 namespace mge = mir::graphics::eglstream;
@@ -70,6 +73,26 @@ mg::DisplayConfigurationOutputType
 kms_connector_type_to_output_type(uint32_t connector_type)
 {
     return static_cast<mg::DisplayConfigurationOutputType>(connector_type);
+}
+
+void name_outputs(std::vector<std::shared_ptr<mge::kms::EGLOutput>>& outputs)
+{
+    std::map<mg::DisplayConfigurationCardId, std::map<mg::DisplayConfigurationOutputType, int>> card_map;
+
+    for (auto& output : outputs)
+    {
+        auto const type = output->type;
+        auto const index_by_type = ++card_map[output->card_id][type];
+
+        std::ostringstream out;
+
+        out << mir::output_type_name(static_cast<unsigned>(type));
+        if ((*output).card_id.as_value() > 0)
+            out << '-' << output->card_id.as_value();
+        out << '-' << index_by_type;
+
+        output->name = out.str();
+    }
 }
 
 std::vector<std::shared_ptr<mge::kms::EGLOutput>> create_outputs(int drm_fd, EGLDisplay display)
@@ -150,6 +173,8 @@ std::vector<std::shared_ptr<mge::kms::EGLOutput>> create_outputs(int drm_fd, EGL
         output->form_factor = mir_form_factor_monitor;
         output->used = false;
     }
+
+    name_outputs(outputs);
 
     return outputs;
 }
