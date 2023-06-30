@@ -73,12 +73,14 @@ private:
 
     void validate_pointer_event(std::optional<std::shared_ptr<MirEvent const>> drag_event) const;
     void make_new_dnd_offer_if_possible(std::shared_ptr<mir::scene::DataExchangeSource> const& source);
+    void end_of_gesture();
     void end_of_dnd_gesture();
 
     scene::Clipboard& clipboard;
     WlSeat& seat;
     std::shared_ptr<ClipboardObserver> const clipboard_observer;
     std::shared_ptr<PointerInputDispatcher> const pointer_input_dispatcher;
+    std::function<void()> const end_of_gesture_callback;
     bool has_focus = false;
     std::weak_ptr<scene::DataExchangeSource> weak_source;
     wayland::Weak<Offer> current_offer;

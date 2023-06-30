@@ -448,7 +448,7 @@ mi::SurfaceInputDispatcher::TouchInputState& mi::SurfaceInputDispatcher::ensure_
 bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId /*id*/, std::shared_ptr<MirEvent const> const& event)
 {
     auto const ev = event.get();
-    std::lock_guard lg(dispatcher_mutex);
+    std::unique_lock lg(dispatcher_mutex);
     last_pointer_event = event;
     auto const* input_ev = mir_event_get_input_event(ev);
     auto const* pev = mir_input_event_get_pointer_event(input_ev);
@@ -517,6 +517,12 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId /*id*/, std::
         if (is_gesture_terminator(pev))
         {
             gesture_owner.reset();
+            dispatch_to_gesture_owner = true;
+            auto end_gesture = on_end_gesture;
+            on_end_gesture = []{};
+            lg.unlock();
+
+            end_gesture();
         }
 
         return sent_ev;
@@ -657,10 +663,11 @@ void mir::input::SurfaceInputDispatcher::unregister_interest(KeyboardObserver co
     keyboard_multiplexer.unregister_interest(observer);
 }
 
-void mir::input::SurfaceInputDispatcher::disable_dispatch_to_gesture_owner()
+void mir::input::SurfaceInputDispatcher::disable_dispatch_to_gesture_owner(std::function<void()> on_end_gesture)
 {
     std::lock_guard lg(dispatcher_mutex);
     dispatch_to_gesture_owner = false;
+    this->on_end_gesture = std::move(on_end_gesture);
 }
 
 void mir::input::SurfaceInputDispatcher::enable_dispatch_to_gesture_owner()

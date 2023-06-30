@@ -69,7 +69,7 @@ public:
         Executor& executor) override;
     void unregister_interest(KeyboardObserver const& observer) override;
 
-    void disable_dispatch_to_gesture_owner() override;
+    void disable_dispatch_to_gesture_owner(std::function<void()> on_end_gesture) override;
 
     void enable_dispatch_to_gesture_owner() override;
 
@@ -126,6 +126,7 @@ private:
     std::weak_ptr<input::Surface> focus_surface;
     bool screen_is_locked;
     bool dispatch_to_gesture_owner = true;
+    std::function<void()> on_end_gesture = []{};
 };
 
 }
