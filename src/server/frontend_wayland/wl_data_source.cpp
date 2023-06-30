@@ -17,11 +17,7 @@
 #include "wl_data_source.h"
 
 #include "mir/executor.h"
-#include "mir/frontend/drag_icon_controller.h"
 #include "mir/scene/clipboard.h"
-#include "mir/scene/session.h"
-#include "mir/scene/surface.h"
-#include "mir/shell/surface_specification.h"
 #include "mir/wayland/weak.h"
 
 #include <vector>
@@ -29,7 +25,6 @@
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mw = mir::wayland;
-using namespace mir::geometry;
 
 class mf::WlDataSource::ClipboardObserver : public ms::ClipboardObserver
 {
@@ -65,49 +60,6 @@ private:
 
     wayland::Weak<WlDataSource> const owner;
 };
-
-mf::WlDataSource::DragIconSurface::DragIconSurface(WlSurface* icon, std::shared_ptr<DragIconController> drag_icon_controller)
-    : NullWlSurfaceRole(icon),
-      surface{icon},
-      drag_icon_controller{std::move(drag_icon_controller)}
-{
-    icon->set_role(this);
-
-    auto spec = shell::SurfaceSpecification();
-    spec.width = surface.value().buffer_size()->width;
-    spec.height = surface.value().buffer_size()->height;
-    spec.streams = std::vector<shell::StreamSpecification>{};
-    spec.input_shape = std::vector<Rectangle>{};
-    spec.depth_layer = mir_depth_layer_overlay;
-
-    surface.value().populate_surface_data(spec.streams.value(), spec.input_shape.value(), {});
-
-    auto const& session = surface.value().session;
-
-    shared_scene_surface =
-        session->create_surface(session, wayland::Weak<WlSurface>(surface), spec, nullptr, nullptr);
-
-    DragIconSurface::drag_icon_controller->set_drag_icon(shared_scene_surface);
-}
-
-mf::WlDataSource::DragIconSurface::~DragIconSurface()
-{
-    if (surface)
-    {
-        surface.value().clear_role();
-
-        if (shared_scene_surface)
-        {
-            auto const& session = surface.value().session;
-            session->destroy_surface(shared_scene_surface);
-        }
-    }
-}
-
-auto mf::WlDataSource::DragIconSurface::scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>
-{
-    return shared_scene_surface;
-}
 
 class mf::WlDataSource::Source : public ms::DataExchangeSource
 {
@@ -202,13 +154,11 @@ private:
 mf::WlDataSource::WlDataSource(
     wl_resource* new_resource,
     std::shared_ptr<Executor> const& wayland_executor,
-    scene::Clipboard& clipboard,
-    std::shared_ptr<DragIconController> drag_icon_controller)
+    scene::Clipboard& clipboard)
     : mw::DataSource{new_resource, Version<3>()},
       wayland_executor{wayland_executor},
       clipboard{clipboard},
-      clipboard_observer{std::make_shared<ClipboardObserver>(this)},
-      drag_icon_controller{std::move(drag_icon_controller)}
+      clipboard_observer{std::make_shared<ClipboardObserver>(this)}
 {
     clipboard.register_interest(clipboard_observer, *wayland_executor);
 }
@@ -239,19 +189,12 @@ void mf::WlDataSource::set_clipboard_paste_source()
     clipboard.set_paste_source(source);
 }
 
-void mf::WlDataSource::start_drag_n_drop_gesture(std::optional<wl_resource*> const& icon)
+void mf::WlDataSource::start_drag_n_drop_gesture()
 {
     send_target_event(std::nullopt);
     auto const source = std::make_shared<Source>(*this);
     dnd_source = source;
     clipboard.set_drag_n_drop_source(source);
-
-    if (icon)
-    {
-        auto const icon_surface = WlSurface::from(icon.value());
-
-        drag_surface.emplace(icon_surface, drag_icon_controller);
-    }
 }
 
 void mf::WlDataSource::offer(std::string const& mime_type)
@@ -305,7 +248,6 @@ void mf::WlDataSource::set_actions(uint32_t dnd_actions)
 
 void mf::WlDataSource::end_drag_n_drop_gesture()
 {
-    drag_surface.reset();
     if (auto const source = dnd_source.lock())
     {
         clipboard.clear_drag_n_drop_source(source);

@@ -20,9 +20,13 @@
 
 #include "mir/events/pointer_event.h"
 #include "mir/executor.h"
+#include "mir/frontend/drag_icon_controller.h"
 #include "mir/frontend/pointer_input_dispatcher.h"
 #include "mir/log.h"
 #include "mir/scene/clipboard.h"
+#include "mir/scene/session.h"
+#include "mir/scene/surface.h"
+#include "mir/shell/surface_specification.h"
 #include "mir/wayland/client.h"
 #include "mir/wayland/protocol_error.h"
 
@@ -130,12 +134,14 @@ mf::WlDataDevice::WlDataDevice(
     Executor& wayland_executor,
     scene::Clipboard& clipboard,
     WlSeat& seat,
-    std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher)
+    std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher,
+    std::shared_ptr<DragIconController> drag_icon_controller)
     : mw::DataDevice(new_resource, Version<3>()),
       clipboard{clipboard},
       seat{seat},
       clipboard_observer{std::make_shared<ClipboardObserver>(this)},
       pointer_input_dispatcher{std::move(pointer_input_dispatcher)},
+      drag_icon_controller{std::move(drag_icon_controller)},
       end_of_gesture_callback{[this, &wayland_executor] { wayland_executor.spawn([this] { end_of_gesture(); }); }}
 {
     clipboard.register_interest(clipboard_observer, wayland_executor);
@@ -189,9 +195,16 @@ void mf::WlDataDevice::start_drag(
             pointer->start_dispatch_to_data_device(this);
         });
 
+    if (icon)
+    {
+        auto const icon_surface = WlSurface::from(icon.value());
+
+        drag_surface.emplace(icon_surface, drag_icon_controller);
+    }
+
     if (auto const wl_source = WlDataSource::from(source.value()))
     {
-        wl_source->start_drag_n_drop_gesture(icon);
+        wl_source->start_drag_n_drop_gesture();
     }
 }
 
@@ -333,6 +346,7 @@ void mf::WlDataDevice::end_of_dnd_gesture()
     {
         pointer->stop_dispatch_to_data_device();
     });
+    drag_surface.reset();
 }
 
 void mf::WlDataDevice::make_new_dnd_offer_if_possible(std::shared_ptr<mir::scene::DataExchangeSource> const& source)
@@ -345,7 +359,7 @@ void mf::WlDataDevice::make_new_dnd_offer_if_possible(std::shared_ptr<mir::scene
     }
 }
 
-void mir::frontend::WlDataDevice::end_of_gesture()
+void mf::WlDataDevice::end_of_gesture()
 {
     end_of_dnd_gesture();
     if (current_offer)
@@ -360,3 +374,47 @@ void mir::frontend::WlDataDevice::end_of_gesture()
         }
     }
 }
+
+mf::WlDataDevice::DragIconSurface::DragIconSurface(WlSurface* icon, std::shared_ptr<DragIconController> drag_icon_controller)
+    : NullWlSurfaceRole(icon),
+      surface{icon},
+      drag_icon_controller{std::move(drag_icon_controller)}
+{
+    icon->set_role(this);
+
+    auto spec = shell::SurfaceSpecification();
+    spec.width = surface.value().buffer_size()->width;
+    spec.height = surface.value().buffer_size()->height;
+    spec.streams = std::vector<shell::StreamSpecification>{};
+    spec.input_shape = std::vector<Rectangle>{};
+    spec.depth_layer = mir_depth_layer_overlay;
+
+    surface.value().populate_surface_data(spec.streams.value(), spec.input_shape.value(), {});
+
+    auto const& session = surface.value().session;
+
+    shared_scene_surface =
+        session->create_surface(session, wayland::Weak<WlSurface>(surface), spec, nullptr, nullptr);
+
+    DragIconSurface::drag_icon_controller->set_drag_icon(shared_scene_surface);
+}
+
+mf::WlDataDevice::DragIconSurface::~DragIconSurface()
+{
+    if (surface)
+    {
+        surface.value().clear_role();
+
+        if (shared_scene_surface)
+        {
+            auto const& session = surface.value().session;
+            session->destroy_surface(shared_scene_surface);
+        }
+    }
+}
+
+auto mf::WlDataDevice::DragIconSurface::scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>
+{
+    return shared_scene_surface;
+}
+

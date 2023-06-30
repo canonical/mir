@@ -19,6 +19,7 @@
 
 #include "wayland_wrapper.h"
 #include "wl_seat.h"
+#include "wl_surface.h"
 
 #include "mir/events/event.h"
 
@@ -34,6 +35,7 @@ class DataExchangeSource;
 namespace frontend
 {
 class PointerInputDispatcher;
+class DragIconController;
 
 class WlDataDevice : public wayland::DataDevice, public WlSeat::FocusListener
 {
@@ -43,7 +45,8 @@ public:
         Executor& wayland_executor,
         scene::Clipboard& clipboard,
         WlSeat& seat,
-        std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher);
+        std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher,
+        std::shared_ptr<DragIconController> drag_icon_controller);
     ~WlDataDevice();
 
     /// Wayland requests
@@ -62,6 +65,19 @@ public:
 private:
     class ClipboardObserver;
     class Offer;
+    class DragIconSurface : public NullWlSurfaceRole
+    {
+    public:
+        DragIconSurface(WlSurface* icon, std::shared_ptr<DragIconController> drag_icon_controller);
+        ~DragIconSurface();
+
+        auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> override;
+
+    private:
+        wayland::Weak<WlSurface> const surface;
+        std::shared_ptr<scene::Surface> shared_scene_surface;
+        std::shared_ptr<DragIconController> const drag_icon_controller;
+    };
 
     /// Override from WlSeat::FocusListener
     void focus_on(WlSurface* surface) override;
@@ -80,12 +96,14 @@ private:
     WlSeat& seat;
     std::shared_ptr<ClipboardObserver> const clipboard_observer;
     std::shared_ptr<PointerInputDispatcher> const pointer_input_dispatcher;
+    std::shared_ptr<DragIconController> const drag_icon_controller;
     std::function<void()> const end_of_gesture_callback;
     bool has_focus = false;
     std::weak_ptr<scene::DataExchangeSource> weak_source;
     wayland::Weak<Offer> current_offer;
     wayland::Weak<WlSurface> weak_surface;
     bool sent_enter = false;
+    std::optional<DragIconSurface> drag_surface;
 };
 }
 }
