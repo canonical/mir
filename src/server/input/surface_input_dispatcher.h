@@ -71,8 +71,6 @@ public:
 
     void disable_dispatch_to_gesture_owner(std::function<void()> on_end_gesture) override;
 
-    void enable_dispatch_to_gesture_owner() override;
-
 private:
     bool dispatch_key(std::shared_ptr<MirEvent const> const& ev);
     bool dispatch_pointer(MirInputDeviceId id, std::shared_ptr<MirEvent const> const& ev);

@@ -34,7 +34,6 @@ public:
 
     // Sometimes (e.g. drag-n-drop) the frontend wants routing to ignore the surface on which gestures start
     virtual void disable_dispatch_to_gesture_owner(std::function<void()> on_end_gesture) = 0;
-    virtual void enable_dispatch_to_gesture_owner() = 0;
 
 protected:
     PointerInputDispatcher() = default;

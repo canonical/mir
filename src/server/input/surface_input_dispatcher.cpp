@@ -669,9 +669,3 @@ void mir::input::SurfaceInputDispatcher::disable_dispatch_to_gesture_owner(std::
     dispatch_to_gesture_owner = false;
     this->on_end_gesture = std::move(on_end_gesture);
 }
-
-void mir::input::SurfaceInputDispatcher::enable_dispatch_to_gesture_owner()
-{
-    std::lock_guard lg(dispatcher_mutex);
-    dispatch_to_gesture_owner = true;
-}
