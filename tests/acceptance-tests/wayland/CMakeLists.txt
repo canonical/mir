@@ -114,6 +114,10 @@ endif ()
 
 set(BROKEN_TESTS
   ClientSurfaceEventsTest.buffer_release # Has been removed upstream
+
+  # See https://github.com/MirServer/wlcs/issues/293
+  # (Tests pass with https://github.com/MirServer/wlcs/pull/294)
+  VirtualPointerV1Test.*
 )
 
 if (MIR_RUN_WLCS_TESTS)
