@@ -275,14 +275,6 @@ void mf::WlDataDevice::event(std::shared_ptr<MirPointerEvent const> const& event
         break;
     case mir_pointer_action_leave:
         send_leave_event();
-        if (!current_offer)
-        {
-            pointer_input_dispatcher->enable_dispatch_to_gesture_owner();
-            seat.for_each_listener(client, [](PointerEventDispatcher* pointer)
-                {
-                    pointer->stop_dispatch_to_data_device();
-                });
-        }
         break;
     case mir_pointer_action_enter:
         make_new_dnd_offer_if_possible(weak_source.lock());
