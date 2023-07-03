@@ -124,18 +124,6 @@ void MirPointerEvent::set_action(MirPointerAction action)
     action_ = action;
 }
 
-namespace
-{
-struct MyMirBlob : MirBlob
-{
-
-    size_t size() const override { return data_.size(); }
-    virtual void const* data() const override { return data_.data(); }
-
-    std::vector<uint8_t> data_;
-};
-}
-
 auto MirPointerEvent::axis_source() const -> MirPointerAxisSource
 {
     return axis_source_;

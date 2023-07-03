@@ -60,21 +60,6 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-
-class MockConnector : public mf::Connector
-{
-public:
-    MOCK_METHOD0(start, void());
-    MOCK_METHOD0(stop, void());
-    /*
-     * We don't have expectations for these, so use stubs
-     * to silence gmock warnings.
-     */
-    int client_socket_fd() const override { return 0; }
-    int client_socket_fd(std::function<void(std::shared_ptr<ms::Session> const&)> const&) const override { return 0; }
-    auto socket_name() const -> mir::optional_value<std::string> override { return {}; }
-};
-
 class MockConsoleServices : public mtd::MockConsoleServices
 {
 public:
