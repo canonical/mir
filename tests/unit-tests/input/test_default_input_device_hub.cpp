@@ -87,8 +87,6 @@ struct InputDeviceHubTest : ::testing::Test
     NiceMock<mtd::MockInputDevice> mouse{"mouse","dev-4", mi::DeviceCapability::pointer};
     NiceMock<mtd::MockInputDevice> touchpad{"tpd","dev-5", mi::DeviceCapability::touchpad|mi::DeviceCapability::pointer};
 
-    std::chrono::nanoseconds arbitrary_timestamp;
-
     void capture_input_sink(NiceMock<mtd::MockInputDevice>& dev, mi::InputSink*& sink, mi::EventBuilder*& builder)
     {
         ON_CALL(dev,start(_,_))
