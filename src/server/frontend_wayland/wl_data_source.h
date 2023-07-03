@@ -56,8 +56,7 @@ private:
 
     void paste_source_set(std::shared_ptr<scene::DataExchangeSource> const& source);
     void drag_n_drop_source_set(std::shared_ptr<scene::DataExchangeSource> const& source);
-    void drag_n_drop_source_cleared(std::shared_ptr<scene::DataExchangeSource> const& source);
-    void end_drag_n_drop_gesture();
+
     uint32_t drag_n_drop_set_actions(uint32_t dnd_actions, uint32_t preferred_action);
 
     std::shared_ptr<Executor> const wayland_executor;

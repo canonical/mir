@@ -50,12 +50,8 @@ private:
         }
     }
 
-    void drag_n_drop_source_cleared(std::shared_ptr<ms::DataExchangeSource> const& source) override
+    void drag_n_drop_source_cleared(std::shared_ptr<ms::DataExchangeSource> const& /*source*/) override
     {
-        if (owner)
-        {
-            owner.value().drag_n_drop_source_cleared(source);
-        }
     }
 
     wayland::Weak<WlDataSource> const owner;
@@ -92,7 +88,6 @@ public:
         if (wl_data_source)
         {
             wl_data_source.value().send_cancelled_event();
-            wl_data_source.value().end_drag_n_drop_gesture();
         }
     }
 
@@ -101,7 +96,6 @@ public:
         if (wl_data_source)
         {
             wl_data_source.value().send_dnd_drop_performed_event_if_supported();
-            wl_data_source.value().end_drag_n_drop_gesture();
         }
     }
 
@@ -170,6 +164,10 @@ mf::WlDataSource::~WlDataSource()
     {
         clipboard.clear_paste_source(*source);
     }
+    if (auto const source = dnd_source.lock())
+    {
+        clipboard.clear_drag_n_drop_source(source);
+    }
 }
 
 auto mf::WlDataSource::from(struct wl_resource* resource) -> WlDataSource*
@@ -232,26 +230,9 @@ void mf::WlDataSource::drag_n_drop_source_set(std::shared_ptr<scene::DataExchang
     }
 }
 
-void mf::WlDataSource::drag_n_drop_source_cleared(std::shared_ptr<scene::DataExchangeSource> const& source)
-{
-    if (source && dnd_source.lock() == source)
-    {
-        dnd_source.reset();
-        dnd_source_source_is_ours = false;
-    }
-}
-
 void mf::WlDataSource::set_actions(uint32_t dnd_actions)
 {
     this->dnd_actions = dnd_actions;
-}
-
-void mf::WlDataSource::end_drag_n_drop_gesture()
-{
-    if (auto const source = dnd_source.lock())
-    {
-        clipboard.clear_drag_n_drop_source(source);
-    }
 }
 
 uint32_t mf::WlDataSource::drag_n_drop_set_actions(uint32_t dnd_actions, uint32_t preferred_action)
