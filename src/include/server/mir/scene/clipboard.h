@@ -41,6 +41,7 @@ public:
     virtual void paste_source_set(std::shared_ptr<DataExchangeSource> const& source) = 0;
     virtual void drag_n_drop_source_set(std::shared_ptr<DataExchangeSource> const& source) = 0;
     virtual void drag_n_drop_source_cleared(std::shared_ptr<DataExchangeSource> const& source) = 0;
+    virtual void end_of_dnd_gesture() = 0;
 
 private:
     ClipboardObserver(ClipboardObserver const&) = delete;
@@ -67,6 +68,8 @@ public:
     virtual void set_drag_n_drop_source(std::shared_ptr<DataExchangeSource> const& source) = 0;
     /// Clears the current drag-n-drop source ONLY if it is the same as the given source, otherwise does nothing.
     virtual void clear_drag_n_drop_source(std::shared_ptr<DataExchangeSource> const& source) = 0;
+    /// Notifies the end of a dnd gesture
+    virtual void end_of_dnd_gesture() = 0;
 };
 }
 }

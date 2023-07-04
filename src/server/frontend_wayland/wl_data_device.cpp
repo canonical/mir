@@ -67,7 +67,13 @@ private:
         }
     }
 
-private:
+    void end_of_dnd_gesture() override
+    {
+        if (device)
+        {
+            device.value().end_of_dnd_gesture();
+        }
+    }
 
     wayland::Weak<WlDataDevice> const device;
 };
@@ -142,7 +148,8 @@ mf::WlDataDevice::WlDataDevice(
       clipboard_observer{std::make_shared<ClipboardObserver>(this)},
       pointer_input_dispatcher{std::move(pointer_input_dispatcher)},
       drag_icon_controller{std::move(drag_icon_controller)},
-      end_of_gesture_callback{[this, &wayland_executor] { wayland_executor.spawn([this] { drag_surface.reset(); }); }}
+      end_of_gesture_callback{[this, &wayland_executor] { wayland_executor.spawn([this]
+        { this->clipboard.end_of_dnd_gesture(); drag_surface.reset(); }); }}
 {
     clipboard.register_interest(clipboard_observer, wayland_executor);
     // this will call focus_on() with the initial state
@@ -272,7 +279,6 @@ void mf::WlDataDevice::event(std::shared_ptr<MirPointerEvent const> const& event
     {
     case mir_pointer_action_button_up:
         send_drop_event();
-        end_of_dnd_gesture();
         if (current_offer)
         {
             if (!current_offer.value().accepted_mime_type && wl_resource_get_version(resource) >= 3)
@@ -339,8 +345,6 @@ void mf::WlDataDevice::event(std::shared_ptr<MirPointerEvent const> const& event
 void mf::WlDataDevice::drag_n_drop_source_cleared()
 {
     weak_source.reset();
-
-    end_of_dnd_gesture();
 }
 
 void mf::WlDataDevice::end_of_dnd_gesture()

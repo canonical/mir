@@ -54,6 +54,10 @@ private:
     {
     }
 
+    void end_of_dnd_gesture() override
+    {
+    }
+
     wayland::Weak<WlDataSource> const owner;
 };
 

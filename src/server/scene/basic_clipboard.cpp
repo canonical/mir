@@ -123,3 +123,8 @@ void mir::scene::BasicClipboard::clear_drag_n_drop_source(std::shared_ptr<DataEx
         multiplexer.drag_n_drop_source_cleared(source);
     }
 }
+
+void mir::scene::BasicClipboard::end_of_dnd_gesture()
+{
+    multiplexer.end_of_dnd_gesture();
+}

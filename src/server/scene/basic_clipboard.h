@@ -48,6 +48,11 @@ public:
     {
         for_each_observer(&ClipboardObserver::drag_n_drop_source_cleared, source);
     }
+
+    void end_of_dnd_gesture() override
+    {
+        for_each_observer(&ClipboardObserver::end_of_dnd_gesture);
+    }
 };
 
 /// Interface for the global object that manages data transfers between clients (such as copy-paste)
@@ -61,6 +66,7 @@ public:
     void set_drag_n_drop_source(std::shared_ptr<DataExchangeSource> const& source) override;
 
     void clear_drag_n_drop_source(std::shared_ptr<DataExchangeSource> const& source) override;
+    void end_of_dnd_gesture() override;
 
     /// Implement ObserverRegistrar<ClipboardObserver>
     /// @{

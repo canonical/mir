@@ -124,6 +124,7 @@ private:
     private:
         void drag_n_drop_source_set(const std::shared_ptr<ms::DataExchangeSource>&) override {}
         void drag_n_drop_source_cleared(const std::shared_ptr<ms::DataExchangeSource>&) override {}
+        void end_of_dnd_gesture() override {}
 
         void paste_source_set(std::shared_ptr<ms::DataExchangeSource> const& source) override
         {
