@@ -345,7 +345,6 @@ void mf::WlDataDevice::drag_n_drop_source_cleared()
 
 void mf::WlDataDevice::end_of_dnd_gesture()
 {
-    send_leave_event();
     seat.for_each_listener(client, [](PointerEventDispatcher* pointer)
     {
         pointer->stop_dispatch_to_data_device();
