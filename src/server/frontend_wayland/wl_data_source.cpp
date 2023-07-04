@@ -56,6 +56,14 @@ private:
 
     void end_of_dnd_gesture() override
     {
+        if (owner)
+        {
+            if (auto const s = owner.value().dnd_source.lock())
+            {
+                // Relies on WlDataSource::Source::cancelled() doing nothing if performed or cancelled already happened
+                s->cancelled();
+            }
+        }
     }
 
     wayland::Weak<WlDataSource> const owner;
@@ -89,17 +97,19 @@ public:
 
     void cancelled() override
     {
-        if (wl_data_source)
+        if (wl_data_source && !performed_or_cancelled)
         {
             wl_data_source.value().send_cancelled_event();
+            performed_or_cancelled = true;
         }
     }
 
     void dnd_drop_performed() override
     {
-        if (wl_data_source)
+        if (wl_data_source && !performed_or_cancelled)
         {
             wl_data_source.value().send_dnd_drop_performed_event_if_supported();
+            performed_or_cancelled = true;
         }
     }
 
@@ -147,6 +157,7 @@ private:
     std::shared_ptr<Executor> const wayland_executor;
     wayland::Weak<WlDataSource> const wl_data_source;
     std::vector<std::string> const types;
+    bool performed_or_cancelled{false};
 };
 
 mf::WlDataSource::WlDataSource(
