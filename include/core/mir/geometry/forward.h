@@ -86,7 +86,7 @@ using Rectangle = generic::Rectangle<int>;
 using PointF = generic::Point<float>;
 using SizeF = generic::Size<float>;
 using DisplacementF = generic::Displacement<float>;
-using RectangleF = generic::Rectangle<int>;
+using RectangleF = generic::Rectangle<float>;
 }
 }
 
