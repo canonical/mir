@@ -279,6 +279,7 @@ void mf::WlDataDevice::event(std::shared_ptr<MirPointerEvent const> const& event
     {
     case mir_pointer_action_button_up:
         send_drop_event();
+        send_leave_event();
         if (current_offer)
         {
             if (!current_offer.value().accepted_mime_type && wl_resource_get_version(resource) >= 3)
