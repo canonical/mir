@@ -290,8 +290,19 @@ public:
     /// Sets an override functor for creating the shell.
     void override_the_shell(Builder<shell::Shell> const& wrapper);
 
-    /// Sets an override functor for creating the window manager.
+    /// Sets an override functor for creating the window manager. If left unset, the server
+    /// will create a DefaultWindowManager, unless another default was specified via
+    /// override_the_default_window_manager_builder.
+    /// \see DefaultWindowManager src/miral/default_window_manager.h
     void override_the_window_manager_builder(shell::WindowManagerBuilder const wmb);
+
+    /// Sets an override for the default window manager creation behavior.
+    /// If no window manager override is specified via override_the_window_manager_builder,
+    /// the system will fallback to a creator function that returns DefaultWindowManager.
+    /// Implementors may override the DefaultWindowManager via this method.
+    /// \param wmb The default window manager creation function.
+    /// \see Server::override_the_window_manager_builder
+    void override_the_default_window_manager_builder(shell::WindowManagerBuilder const wmb);
 
     /// Sets an override functor for creating the application not responding detector.
     void override_the_application_not_responding_detector(

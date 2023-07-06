@@ -144,6 +144,7 @@ MIR_SERVER_2.9 {
     mir::Server::override_the_session_listener*;
     mir::Server::override_the_shell*;
     mir::Server::override_the_window_manager_builder*;
+    mir::Server::override_the_default_window_manager_builder*;
     mir::Server::run*;
     mir::Server::set_command_line*;
     mir::Server::set_command_line_handler*;

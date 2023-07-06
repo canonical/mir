@@ -15,6 +15,7 @@ add_library(miral-internal STATIC
     active_outputs.cpp                  active_outputs.h
     application_info_internal.cpp       application_info_internal.h
     basic_window_manager.cpp            basic_window_manager.h window_manager_tools_implementation.h
+    default_window_manager.cpp          default_window_manager.h
     display_configuration_listeners.cpp display_configuration_listeners.h
     fd_manager.cpp                      fd_manager.h
     launch_app.cpp                      launch_app.h

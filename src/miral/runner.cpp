@@ -15,6 +15,7 @@
  */
 
 #include "miral/runner.h"
+#include "default_window_manager.h"
 #include "fd_manager.h"
 #include "join_client_threads.h"
 #include "launch_app.h"
@@ -142,6 +143,17 @@ try
 
         // Provide the command line and run the server
         server->set_command_line(argc, argv);
+
+        // TODO: This is a band-aid solution, and perhaps not the best one. The mir core libraries provide a default
+        // window manager, but mirAL would like to provide a different default window manager.
+        server->override_the_default_window_manager_builder([&server](mir::shell::FocusController* focus_controller) -> std::shared_ptr<mir::shell::WindowManager>
+        {
+            return std::make_shared<DefaultWindowManager>(
+                focus_controller,
+                server->the_shell_display_layout(),
+                server->the_session_coordinator()
+            );
+        });
         server->apply_settings();
         apply_env_hacks(*server);
 

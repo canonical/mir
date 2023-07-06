@@ -172,6 +172,7 @@ struct mir::Server::Self
     FOREACH_OVERRIDE(MIR_SERVER_BUILDER)
 
     shell::WindowManagerBuilder wmb;
+    shell::WindowManagerBuilder default_wmb;
 
     FOREACH_WRAPPER(MIR_SERVER_WRAPPER)
 };
@@ -227,6 +228,7 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
     auto the_window_manager_builder() -> shell::WindowManagerBuilder override
     {
         if (self->wmb) return self->wmb;
+        if (self->default_wmb) return self->default_wmb;
         return mir::DefaultServerConfiguration::the_window_manager_builder();
     }
 
@@ -549,6 +551,12 @@ void mir::Server::override_the_window_manager_builder(shell::WindowManagerBuilde
 {
     verify_setting_allowed(self->server_config);
     self->wmb = wmb;
+}
+
+void mir::Server::override_the_default_window_manager_builder(shell::WindowManagerBuilder const wmb)
+{
+    verify_setting_allowed(self->server_config);
+    self->default_wmb = wmb;
 }
 
 #define MIR_SERVER_WRAP(name)\
