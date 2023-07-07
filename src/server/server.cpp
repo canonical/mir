@@ -553,12 +553,6 @@ void mir::Server::override_the_window_manager_builder(shell::WindowManagerBuilde
     self->wmb = wmb;
 }
 
-void mir::Server::override_the_default_window_manager_builder(shell::WindowManagerBuilder const wmb)
-{
-    verify_setting_allowed(self->server_config);
-    self->default_wmb = wmb;
-}
-
 #define MIR_SERVER_WRAP(name)\
 void mir::Server::wrap_##name(decltype(Self::name##_wrapper) const& value)\
 {\

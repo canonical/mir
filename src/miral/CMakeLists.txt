@@ -12,23 +12,23 @@ pkg_check_modules(GIO REQUIRED IMPORTED_TARGET gio-2.0 gio-unix-2.0)
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="miral" MIRAL_ENABLE_DEPRECATIONS=0)
 
 add_library(miral-internal STATIC
-    active_outputs.cpp                  active_outputs.h
-    application_info_internal.cpp       application_info_internal.h
-    basic_window_manager.cpp            basic_window_manager.h window_manager_tools_implementation.h
-    default_window_manager.cpp          default_window_manager.h
-    display_configuration_listeners.cpp display_configuration_listeners.h
-    fd_manager.cpp                      fd_manager.h
-    launch_app.cpp                      launch_app.h
-    mru_window_list.cpp                 mru_window_list.h
-    open_desktop_entry.cpp              open_desktop_entry.h
-    static_display_config.cpp           static_display_config.h
-    window_info_internal.cpp            window_info_internal.h
-    window_management_trace.cpp         window_management_trace.h
-    xcursor_loader.cpp                  xcursor_loader.h
-    xcursor.c                           xcursor.h
-                                        join_client_threads.h
-                                        window_info_defaults.h
-    window_specification_internal.cpp   window_specification_internal.h
+    active_outputs.cpp                   active_outputs.h
+    application_info_internal.cpp        application_info_internal.h
+    basic_window_manager.cpp             basic_window_manager.h window_manager_tools_implementation.h
+    system_compositor_window_manager.cpp system_compositor_window_manager.h
+    display_configuration_listeners.cpp  display_configuration_listeners.h
+    fd_manager.cpp                       fd_manager.h
+    launch_app.cpp                       launch_app.h
+    mru_window_list.cpp                  mru_window_list.h
+    open_desktop_entry.cpp               open_desktop_entry.h
+    static_display_config.cpp            static_display_config.h
+    window_info_internal.cpp             window_info_internal.h
+    window_management_trace.cpp          window_management_trace.h
+    xcursor_loader.cpp                   xcursor_loader.h
+    xcursor.c                            xcursor.h
+                                         join_client_threads.h
+                                         window_info_defaults.h
+    window_specification_internal.cpp    window_specification_internal.h
 )
 
 # Already implied by the linker's symbol version script, but can avoid accidents
