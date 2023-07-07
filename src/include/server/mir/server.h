@@ -292,7 +292,7 @@ public:
 
     /// Sets an override functor for creating the window manager. If left unset, the server
     /// will create a SystemCompositorWindowManager.
-    /// \see SystemCompositorWindowManager src/miral/default_window_manager.h
+    /// \see SystemCompositorWindowManager src/miral/system_compositor_window_manager.h
     void override_the_window_manager_builder(shell::WindowManagerBuilder const wmb);
 
     /// Sets an override functor for creating the application not responding detector.
