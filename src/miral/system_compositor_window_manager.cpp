@@ -154,23 +154,6 @@ void miral::SystemCompositorWindowManager::remove_surface(
 
 void miral::SystemCompositorWindowManager::add_display(mir::geometry::Rectangle const& /*area*/)
 {
-    std::lock_guard lock{mutex};
-
-    for (auto const& so : output_map)
-    {
-        if (auto surface = so.first.lock())
-        {
-            auto const output_id = so.second;
-
-            mir::geometry::Rectangle rect{surface->top_left(), surface->window_size()};
-
-            if (display_layout->place_in_output(output_id, rect))
-            {
-                surface->move_to(rect.top_left);
-                surface->resize(rect.size);
-            }
-        }
-    }
 }
 
 void miral::SystemCompositorWindowManager::remove_display(mir::geometry::Rectangle const& /*area*/)
@@ -283,14 +266,47 @@ void miral::SystemCompositorWindowManager::handle_request_resize(
 {
 }
 
-void miral::SystemCompositorWindowManager::advise_output_create(const miral::Output &output) {
-    ActiveOutputsListener::advise_output_create(output);
+void miral::SystemCompositorWindowManager::advise_output_create(const miral::Output &/*output*/)
+{
+    // When a display gets added, we reposition all surfaces across their outputs, most likely to fit them to the screen.
+    for (auto const& surface_output_pair : output_map)
+    {
+        if (auto surface = surface_output_pair.first.lock())
+        {
+            auto const output_id = surface_output_pair.second;
+            reposition_surface_in_output(surface, output_id);
+        }
+    }
 }
 
-void miral::SystemCompositorWindowManager::advise_output_update(const miral::Output &updated, const miral::Output &original) {
-    ActiveOutputsListener::advise_output_update(updated, original);
+void miral::SystemCompositorWindowManager::advise_output_update(const miral::Output &/*updated*/, const miral::Output &/*original*/)
+{
+    std::lock_guard lock{mutex};
+
+    // When a display gets updated, we reposition all surfaces across their outputs, most likely to fit them to the screen.
+    for (auto const& surface_output_pair : output_map)
+    {
+        if (auto surface = surface_output_pair.first.lock())
+        {
+            auto const output_id = surface_output_pair.second;
+            reposition_surface_in_output(surface, output_id);
+        }
+    }
 }
 
-void miral::SystemCompositorWindowManager::advise_output_delete(const miral::Output &output) {
-    ActiveOutputsListener::advise_output_delete(output);
+void miral::SystemCompositorWindowManager::advise_output_delete(const miral::Output &/*output*/)
+{
+}
+
+void miral::SystemCompositorWindowManager::reposition_surface_in_output(
+    std::shared_ptr<mir::scene::Surface> const& surface,
+    mir::graphics::DisplayConfigurationOutputId output_id
+)
+{
+    mir::geometry::Rectangle surface_rect{surface->top_left(), surface->window_size()};
+    if (display_layout->place_in_output(output_id, surface_rect))
+    {
+        surface->move_to(surface_rect.top_left);
+        surface->resize(surface_rect.size);
+    }
 }

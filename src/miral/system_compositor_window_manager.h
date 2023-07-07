@@ -136,6 +136,15 @@ private:
     void advise_output_create(Output const& output) override;
     void advise_output_update(Output const& updated, Output const& original) override;
     void advise_output_delete(Output const& output) override;
+
+    /// Called when an output change occurs. This will attempt to reposition
+    /// a surface within an output.
+    /// \param surface The surface in need of repositioning
+    /// \param output_id The ID of the output in which we are positioning the surface
+    void reposition_surface_in_output(
+        std::shared_ptr<mir::scene::Surface> const& surface,
+        mir::graphics::DisplayConfigurationOutputId output_id
+    );
 };
 }
 
