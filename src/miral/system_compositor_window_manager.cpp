@@ -15,6 +15,7 @@
  */
 
 #include "system_compositor_window_manager.h"
+#include "display_configuration_listeners.h"
 #include <miral/output.h>
 
 #include <mir/shell/display_layout.h>
@@ -39,11 +40,19 @@ namespace geom = mir::geometry;
 miral::SystemCompositorWindowManager::SystemCompositorWindowManager(
     msh::FocusController* focus_controller,
     std::shared_ptr<msh::DisplayLayout> const& display_layout,
-    std::shared_ptr<ms::SessionCoordinator> const& session_coordinator) :
+    std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
+    mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>& display_configuration_observers) :
     focus_controller{focus_controller},
     display_layout{display_layout},
-    session_coordinator{session_coordinator}
+    session_coordinator{session_coordinator},
+    display_config_monitor{std::make_shared<DisplayConfigurationListeners>()}
 {
+    display_config_monitor->add_listener(this);
+    display_configuration_observers.register_interest(display_config_monitor);
+}
+
+miral::SystemCompositorWindowManager::~SystemCompositorWindowManager() noexcept {
+    display_config_monitor->delete_listener(this);
 }
 
 void miral::SystemCompositorWindowManager::add_session(std::shared_ptr<ms::Session> const& session)
@@ -272,4 +281,16 @@ void miral::SystemCompositorWindowManager::handle_request_resize(
     MirInputEvent const* /*event*/,
     MirResizeEdge /*edge*/)
 {
+}
+
+void miral::SystemCompositorWindowManager::advise_output_create(const miral::Output &output) {
+    ActiveOutputsListener::advise_output_create(output);
+}
+
+void miral::SystemCompositorWindowManager::advise_output_update(const miral::Output &updated, const miral::Output &original) {
+    ActiveOutputsListener::advise_output_update(updated, original);
+}
+
+void miral::SystemCompositorWindowManager::advise_output_delete(const miral::Output &output) {
+    ActiveOutputsListener::advise_output_delete(output);
 }

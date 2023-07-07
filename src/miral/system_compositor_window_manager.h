@@ -17,8 +17,11 @@
 #ifndef MIRAL_SYSTEM_COMPOSITOR_WINDOW_MANAGER_H
 #define MIRAL_SYSTEM_COMPOSITOR_WINDOW_MANAGER_H
 
+#include "active_outputs.h"
+
 #include <mir/shell/window_manager.h>
 #include <mir/graphics/display_configuration.h>
+#include <mir/observer_registrar.h>
 
 #include <map>
 #include <mutex>
@@ -27,9 +30,12 @@ namespace mir
 {
 namespace shell { class DisplayLayout; class FocusController; }
 namespace scene { class SessionCoordinator; }
+namespace graphics { class DisplayConfigurationObserver; }
 }
 
 namespace miral {
+
+class DisplayConfigurationListeners;
 
 /// A newer iteration of the SystemCompositorWindowManager which provides much of
 /// the same functionality as its predecessor, but relies upon newer concepts
@@ -37,13 +43,17 @@ namespace miral {
 /// other is specified.
 ///
 /// (TODO: It will be a good idea to deprecate: src/include/server/mir/shell/system_compositor_window_manager.h
-class SystemCompositorWindowManager: public mir::shell::WindowManager
+class SystemCompositorWindowManager: public mir::shell::WindowManager,
+    private ActiveOutputsListener
 {
 public:
     SystemCompositorWindowManager(
         mir::shell::FocusController* focus_controller,
         std::shared_ptr<mir::shell::DisplayLayout> const& display_layout,
-        std::shared_ptr<mir::scene::SessionCoordinator> const& session_coordinator);
+        std::shared_ptr<mir::scene::SessionCoordinator> const& session_coordinator,
+        mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>& display_configuration_observers);
+
+    ~SystemCompositorWindowManager();
 
 /** @name Customization points
  * These are the likely events that a system compositor will care about
@@ -69,6 +79,7 @@ private:
 
     std::mutex mutable mutex;
     OutputMap output_map;
+    std::shared_ptr<DisplayConfigurationListeners> const display_config_monitor;
 
     void add_session(std::shared_ptr<mir::scene::Session> const& session) override;
 
@@ -121,6 +132,10 @@ private:
         std::shared_ptr<mir::scene::Surface> const& surface,
         MirWindowAttrib attrib,
         int value) override;
+
+    void advise_output_create(Output const& output) override;
+    void advise_output_update(Output const& updated, Output const& original) override;
+    void advise_output_delete(Output const& output) override;
 };
 }
 

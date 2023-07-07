@@ -141,9 +141,10 @@ try
         server->override_the_window_manager_builder([&server](mir::shell::FocusController* focus_controller) -> std::shared_ptr<mir::shell::WindowManager>
         {
             return std::make_shared<SystemCompositorWindowManager>(
-                    focus_controller,
-                    server->the_shell_display_layout(),
-                    server->the_session_coordinator()
+                focus_controller,
+                server->the_shell_display_layout(),
+                server->the_session_coordinator(),
+                *server->the_display_configuration_observer_registrar()
             );
         });
 
