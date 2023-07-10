@@ -68,17 +68,15 @@ public:
     virtual void on_session_ready(std::shared_ptr<mir::scene::Session> const& session) const;
 /** @} */
 
-protected:
-    mir::shell::FocusController* const focus_controller;
-    std::shared_ptr<mir::shell::DisplayLayout> const display_layout;
-    std::shared_ptr<mir::scene::SessionCoordinator> const session_coordinator;
-
 private:
     using OutputMap = std::map<std::weak_ptr<mir::scene::Surface>, mir::graphics::DisplayConfigurationOutputId, std::owner_less<std::weak_ptr<mir::scene::Surface>>>;
     using MirSurfaceCreator = std::function<std::shared_ptr<mir::scene::Surface>(std::shared_ptr<mir::scene::Session> const& session, mir::shell::SurfaceSpecification const& params)>;
 
     std::mutex mutable mutex;
     OutputMap output_map;
+    mir::shell::FocusController* const focus_controller;
+    std::shared_ptr<mir::shell::DisplayLayout> const display_layout;
+    std::shared_ptr<mir::scene::SessionCoordinator> const session_coordinator;
     std::shared_ptr<DisplayConfigurationListeners> const display_config_monitor;
 
     void add_session(std::shared_ptr<mir::scene::Session> const& session) override;

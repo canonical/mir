@@ -279,17 +279,20 @@ void miral::SystemCompositorWindowManager::advise_output_create(const miral::Out
     }
 }
 
-void miral::SystemCompositorWindowManager::advise_output_update(const miral::Output &/*updated*/, const miral::Output &/*original*/)
+void miral::SystemCompositorWindowManager::advise_output_update(const miral::Output & updated, const miral::Output &/*original*/)
 {
     std::lock_guard lock{mutex};
 
-    // When a display gets updated, we reposition all surfaces across their outputs, most likely to fit them to the screen.
+    // When a display gets updated, we reposition any surface that is on the updated Output.
     for (auto const& surface_output_pair : output_map)
     {
         if (auto surface = surface_output_pair.first.lock())
         {
             auto const output_id = surface_output_pair.second;
-            reposition_surface_in_output(surface, output_id);
+            if (updated.id() == output_id.as_value())
+            {
+                reposition_surface_in_output(surface, output_id);
+            }
         }
     }
 }
