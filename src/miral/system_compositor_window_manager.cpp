@@ -51,7 +51,7 @@ miral::SystemCompositorWindowManager::SystemCompositorWindowManager(
     display_configuration_observers.register_interest(display_config_monitor);
 }
 
-miral::SystemCompositorWindowManager::~SystemCompositorWindowManager() noexcept {
+miral::SystemCompositorWindowManager::~SystemCompositorWindowManager() {
     display_config_monitor->delete_listener(this);
 }
 
