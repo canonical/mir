@@ -35,7 +35,6 @@ pkg_get_variable(WLCS_BINARY wlcs test_runner)
 
 set(EXPECTED_FAILURES
 
-  ClientSurfaceEventsTest.frame_timestamp_increases
   ClientSurfaceEventsTest.surface_gets_enter_event
   ClientSurfaceEventsTest.surface_gets_leave_event
   SubsurfaceTest.place_above_simple
