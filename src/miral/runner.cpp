@@ -15,6 +15,7 @@
  */
 
 #include "miral/runner.h"
+#include "system_compositor_window_manager.h"
 #include "fd_manager.h"
 #include "join_client_threads.h"
 #include "launch_app.h"
@@ -135,6 +136,18 @@ try
 
         enable_env_hacks(*server);
 
+        // TODO: This is a band-aid solution, and perhaps not the best one. The mir core libraries provide a default
+        // window manager, but mirAL would like to provide a different default window manager.
+        server->override_the_window_manager_builder([&server](mir::shell::FocusController* focus_controller) -> std::shared_ptr<mir::shell::WindowManager>
+        {
+            return std::make_shared<SystemCompositorWindowManager>(
+                focus_controller,
+                server->the_shell_display_layout(),
+                server->the_session_coordinator(),
+                *server->the_display_configuration_observer_registrar()
+            );
+        });
+
         for (auto& option : options)
             option(*server);
 
@@ -142,6 +155,7 @@ try
 
         // Provide the command line and run the server
         server->set_command_line(argc, argv);
+
         server->apply_settings();
         apply_env_hacks(*server);
 
