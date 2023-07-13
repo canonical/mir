@@ -31,10 +31,20 @@ class MockGlRenderingPlatform : public graphics::GLRenderingProvider
 public:
     MOCK_METHOD(std::shared_ptr<graphics::gl::Texture>, as_texture, (std::shared_ptr<graphics::Buffer>), (override));
     MOCK_METHOD(
-      std::unique_ptr<graphics::gl::OutputSurface>,
-      surface_for_output,
-      (std::shared_ptr<graphics::DisplayInterfaceProvider>, geometry::Size, graphics::GLConfig const&),
-      (override));
+        std::unique_ptr<graphics::gl::OutputSurface>,
+        surface_for_output,
+        (std::shared_ptr<graphics::DisplayInterfaceProvider>, geometry::Size, graphics::GLConfig const&),
+        (override));
+    MOCK_METHOD(
+        graphics::probe::Result,
+        suitability_for_display,
+        (std::shared_ptr<graphics::DisplayInterfaceProvider> const&),
+        (override));
+    MOCK_METHOD(
+        std::unique_ptr<FramebufferProvider>,
+        make_framebuffer_provider,
+        (std::shared_ptr<graphics::DisplayInterfaceProvider>),
+        (override));
 };
 }
 
