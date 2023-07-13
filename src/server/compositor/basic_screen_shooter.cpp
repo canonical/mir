@@ -167,6 +167,10 @@ auto mc::BasicScreenShooter::Self::renderer_for_buffer(std::shared_ptr<mrs::Writ
     -> mr::Renderer&
 {
     auto const buffer_size = buffer->size();
+    if (buffer_size.height == geom::Height{0} || buffer_size.width == geom::Width{0})
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Attempt to capture to a zero-sized buffer"}));
+    }
     output->set_next_buffer(std::move(buffer));
     if (buffer_size != last_rendered_size)
     {
