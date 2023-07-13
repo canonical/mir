@@ -32,10 +32,6 @@ namespace renderer
 {
 class Renderer;
 class RendererFactory;
-namespace gl
-{
-class BufferOutputSurface;
-}
 }
 namespace compositor
 {
