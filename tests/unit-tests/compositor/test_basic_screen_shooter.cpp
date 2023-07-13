@@ -59,11 +59,17 @@ struct BasicScreenShooter : Test
     {
         ON_CALL(*scene, scene_elements_for(_)).WillByDefault(Return(scene_elements));
         ON_CALL(*renderer_factory, create_renderer_for(_,_)).WillByDefault(
-            InvokeWithoutArgs(
-                [this]()
+                [this](auto output_surface, auto)
                 {
+                    ON_CALL(*next_renderer, render(_))
+                        .WillByDefault(
+                            [surface = std::shared_ptr<mg::gl::OutputSurface>(std::move(output_surface))]()
+                            {
+                                return surface->commit();
+                            });
+
                     return std::move(next_renderer);
-                }));
+                });
         ON_CALL(*gl_provider, as_texture(_))
             .WillByDefault(
                 [this](auto buffer)
@@ -72,9 +78,22 @@ struct BasicScreenShooter : Test
                 });
         ON_CALL(*gl_provider, surface_for_output(_, _, _))
             .WillByDefault(
-                [this](std::shared_ptr<mg::DisplayInterfaceProvider> provider, auto size, mg::GLConfig const& config)
+                [](std::shared_ptr<mg::DisplayInterfaceProvider> provider, auto size, auto const&)
+                    -> std::unique_ptr<mg::gl::OutputSurface>
                 {
-                    return default_gl_behaviour_provider.surface_for_output(std::move(provider), size, config);
+                    if (auto cpu_provider = provider->acquire_interface<mg::CPUAddressableDisplayProvider>())
+                    {
+                        auto surface = std::make_unique<testing::NiceMock<mtd::MockOutputSurface>>();
+                        auto format = cpu_provider->supported_formats().front();
+                        ON_CALL(*surface, commit())
+                            .WillByDefault(
+                                [cpu_provider, size, format]()
+                                {
+                                    return cpu_provider->alloc_fb(size, format);
+                                });
+                        return surface;
+                    }
+                    BOOST_THROW_EXCEPTION((std::runtime_error{"CPU output support not available?!"}));
                 });
         ON_CALL(*gl_provider, suitability_for_display(_))
             .WillByDefault(Return(mg::probe::supported));
