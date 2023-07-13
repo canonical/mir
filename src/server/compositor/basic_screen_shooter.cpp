@@ -190,6 +190,7 @@ auto mc::BasicScreenShooter::Self::renderer_for_buffer(std::shared_ptr<mrs::Writ
         auto interface_provider = std::make_shared<InterfaceProvider>(output);
         auto gl_surface = render_provider->surface_for_output(interface_provider, buffer_size, NoAuxConfig{});
         current_renderer = renderer_factory->create_renderer_for(std::move(gl_surface), render_provider);
+        last_rendered_size = buffer_size;
     }
     return *current_renderer;
 }
