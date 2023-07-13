@@ -222,10 +222,10 @@ TEST_F(BasicScreenShooter, throw_in_surface_for_output_handled_gracefully)
 
 TEST_F(BasicScreenShooter, throw_in_render_causes_graceful_failure)
 {
-    ON_CALL(*next_renderer, render(_)).WillByDefault(Invoke([](auto) -> std::unique_ptr<mg::Framebuffer>
+    EXPECT_CALL(*next_renderer, render(_)).WillOnce([](auto) -> std::unique_ptr<mg::Framebuffer>
         {
             throw std::runtime_error{"throw in render()!"};
-        }));
+        });
     shooter->capture(buffer, viewport_rect, [&](auto time)
         {
             callback.Call(time);
