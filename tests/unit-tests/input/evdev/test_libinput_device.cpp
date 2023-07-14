@@ -604,13 +604,8 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_scroll)
 
 TEST_F(LibInputDeviceOnMouse, hi_res_scroll_is_picked_up)
 {
-#ifdef MIR_LIBINPUT_HAS_VALUE120
     auto const expected_v120 = 165;
     auto const expected_discrete = 1;
-#else
-    auto const expected_v120 = 120;
-    auto const expected_discrete = 1;
-#endif
 
     EXPECT_CALL(mock_builder, pointer_event(
         {time_stamp_1}, mir_pointer_action_motion, 0,
@@ -655,7 +650,6 @@ TEST_F(LibInputDeviceOnMouse, hi_res_scroll_scroll_can_be_negative)
     process_events(mouse);
 }
 
-#ifdef MIR_LIBINPUT_HAS_VALUE120
 TEST_F(LibInputDeviceOnMouse, hi_res_scroll_scroll_is_accumulated)
 {
     mouse.start(&mock_sink, &mock_builder);
@@ -684,9 +678,7 @@ TEST_F(LibInputDeviceOnMouse, hi_res_scroll_scroll_is_accumulated)
     env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_3, {}, 1.0f, 0.0f, 50.0f);
     process_events(mouse);
 }
-#endif
 
-#ifdef MIR_LIBINPUT_HAS_VALUE120
 TEST_F(LibInputDeviceOnMouse, hi_res_scroll_scroll_is_accumulated_negative)
 {
     mouse.start(&mock_sink, &mock_builder);
@@ -706,7 +698,6 @@ TEST_F(LibInputDeviceOnMouse, hi_res_scroll_scroll_is_accumulated_negative)
     env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_2, {}, -1.0f, 0.0f, -10.0f);
     process_events(mouse);
 }
-#endif
 
 TEST_F(LibInputDeviceOnTouchScreen, process_event_ignores_uncorrelated_touch_up_events)
 {

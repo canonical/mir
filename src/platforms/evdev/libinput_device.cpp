@@ -96,7 +96,6 @@ auto get_scroll_axis(
         return {};
     }
 
-#ifdef MIR_LIBINPUT_HAS_VALUE120
     auto const libinput_event_type = libinput_event_get_type(libinput_event_pointer_get_base_event(event));
 
     mir::geometry::generic::Value<float, Tag> const precise{
@@ -110,24 +109,12 @@ auto get_scroll_axis(
     accumulator += value120;
     mir::geometry::generic::Value<int, Tag> const discrete{accumulator / 120};
     accumulator = geom::generic::Value<int, Tag>{accumulator.as_value() % 120};
-#else
-    (void)accumulator;
-    mir::geometry::generic::Value<float, Tag> const precise{
-        libinput_event_pointer_get_axis_value(event, axis) * scale};
-    auto const stop = precise.as_value() == 0;
-    mir::geometry::generic::Value<int, Tag> const discrete{
-        libinput_event_pointer_get_axis_source(event) == LIBINPUT_POINTER_AXIS_SOURCE_WHEEL ?
-        libinput_event_pointer_get_axis_value_discrete(event, axis) :
-        0};
-    mir::geometry::generic::Value<int, Tag> const value120{discrete * 120};
-#endif
 
     return {precise, discrete, value120, stop};
 }
 
 auto get_axis_source(libinput_event_pointer* pointer) -> MirPointerAxisSource
 {
-#ifdef MIR_LIBINPUT_HAS_VALUE120
     switch (libinput_event_get_type(libinput_event_pointer_get_base_event(pointer)))
     {
     case LIBINPUT_EVENT_POINTER_SCROLL_WHEEL:       return mir_pointer_axis_source_wheel;
@@ -135,16 +122,6 @@ auto get_axis_source(libinput_event_pointer* pointer) -> MirPointerAxisSource
     case LIBINPUT_EVENT_POINTER_SCROLL_CONTINUOUS:  return mir_pointer_axis_source_continuous;
     default:                                        return mir_pointer_axis_source_none;
     }
-#else
-    switch (libinput_event_pointer_get_axis_source(pointer))
-    {
-    case LIBINPUT_POINTER_AXIS_SOURCE_WHEEL:        return mir_pointer_axis_source_wheel;
-    case LIBINPUT_POINTER_AXIS_SOURCE_FINGER:       return mir_pointer_axis_source_finger;
-    case LIBINPUT_POINTER_AXIS_SOURCE_CONTINUOUS:   return mir_pointer_axis_source_continuous;
-    case LIBINPUT_POINTER_AXIS_SOURCE_WHEEL_TILT:   return mir_pointer_axis_source_wheel_tilt;
-    default:                                        return mir_pointer_axis_source_none;
-    }
-#endif
 }
 }
 
@@ -220,19 +197,9 @@ void mie::LibInputDevice::process_event(libinput_event* event)
         case LIBINPUT_EVENT_POINTER_BUTTON:
             sink->handle_input(convert_button_event(libinput_event_get_pointer_event(event)));
             break;
-#ifdef MIR_LIBINPUT_HAS_VALUE120
         case LIBINPUT_EVENT_POINTER_SCROLL_WHEEL:
         case LIBINPUT_EVENT_POINTER_SCROLL_FINGER:
         case LIBINPUT_EVENT_POINTER_SCROLL_CONTINUOUS:
-#else
-        /*
-        * This event is deprecated as of libinput 1.19. Use
-        * @ref LIBINPUT_EVENT_POINTER_SCROLL_WHEEL,
-        * @ref LIBINPUT_EVENT_POINTER_SCROLL_FINGER, and
-        * @ref LIBINPUT_EVENT_POINTER_SCROLL_CONTINUOUS instead.
-        */
-        case LIBINPUT_EVENT_POINTER_AXIS:
-#endif
             sink->handle_input(convert_axis_event(libinput_event_get_pointer_event(event)));
             break;
         // touch events are processed as a batch of changes over all touch pointts
