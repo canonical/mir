@@ -23,10 +23,6 @@
 namespace mir
 {
 
-namespace detail
-{
-}
-
 class AnonymousShmFile : public ShmFile
 {
 public:

@@ -985,7 +985,13 @@ EXCLUDE_PATTERNS       = *.capnp.c++ \
 EXCLUDE_SYMBOLS        = google \
                          mfd \
                          mgg \
-                         mp
+                         mp \
+                         mir::frontend \
+                         mir::graphics \
+                         mir::scene \
+                         mir::shell \
+                         mir::compositor \
+                         mir::input
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or directories
 # that contain example code fragments that are included (see the \include
