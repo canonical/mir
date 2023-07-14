@@ -37,7 +37,7 @@ namespace
 {
 struct size_less
 {
-    bool operator() (geom::Size const& a, geom::Size const& b)
+    bool operator() (geom::Size const& a, geom::Size const& b) const
     {
         return a.width < b.width && a.height < b.height;
     }
