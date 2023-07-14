@@ -318,6 +318,8 @@ std::shared_ptr<mf::Connector>
                 the_keyboard_observer_registrar(),
                 the_input_device_registry(),
                 the_composite_event_filter(),
+                the_drag_icon_controller(),
+                the_pointer_input_dispatcher(),
                 the_buffer_allocator(),
                 the_session_authorizer(),
                 the_frontend_surface_stack(),

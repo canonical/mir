@@ -15,8 +15,9 @@
  */
 
 #include "wl_data_source.h"
-#include "mir/scene/clipboard.h"
+
 #include "mir/executor.h"
+#include "mir/scene/clipboard.h"
 #include "mir/wayland/weak.h"
 
 #include <vector>
@@ -41,16 +42,40 @@ private:
         }
     }
 
+    void drag_n_drop_source_set(std::shared_ptr<ms::DataExchangeSource> const& source) override
+    {
+        if (owner)
+        {
+            owner.value().drag_n_drop_source_set(source);
+        }
+    }
+
+    void drag_n_drop_source_cleared(std::shared_ptr<ms::DataExchangeSource> const& /*source*/) override
+    {
+    }
+
+    void end_of_dnd_gesture() override
+    {
+        if (owner)
+        {
+            if (auto const s = owner.value().dnd_source.lock())
+            {
+                // Relies on WlDataSource::Source::cancelled() doing nothing if performed or cancelled already happened
+                s->cancelled();
+            }
+        }
+    }
+
     wayland::Weak<WlDataSource> const owner;
 };
 
 class mf::WlDataSource::Source : public ms::DataExchangeSource
 {
 public:
-    Source(WlDataSource& wl_data_source)
-        : wayland_executor{wl_data_source.wayland_executor},
-          wl_data_source{&wl_data_source},
-          types{wl_data_source.mime_types}
+    Source(WlDataSource& wl_data_source) :
+        wayland_executor{wl_data_source.wayland_executor},
+        wl_data_source{&wl_data_source},
+        types{wl_data_source.mime_types}
     {
     }
 
@@ -70,10 +95,69 @@ public:
             });
     }
 
+    void cancelled() override
+    {
+        if (wl_data_source && !performed_or_cancelled)
+        {
+            wl_data_source.value().send_cancelled_event();
+            performed_or_cancelled = true;
+        }
+    }
+
+    void dnd_drop_performed() override
+    {
+        if (wl_data_source && !performed_or_cancelled)
+        {
+            wl_data_source.value().send_dnd_drop_performed_event_if_supported();
+            performed_or_cancelled = true;
+        }
+    }
+
+    auto actions() -> uint32_t override
+    {
+        if (wl_data_source)
+        {
+            return wl_data_source.value().dnd_actions;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    void offer_accepted(const std::optional<std::string> &mime_type) override
+    {
+        if (wl_data_source)
+        {
+            wl_data_source.value().send_target_event(mime_type);
+        }
+    }
+
+    uint32_t offer_set_actions(uint32_t dnd_actions, uint32_t preferred_action) override
+    {
+        if (wl_data_source)
+        {
+            return wl_data_source.value().drag_n_drop_set_actions(dnd_actions, preferred_action);
+        }
+        else
+        {
+            return mw::DataDeviceManager::DndAction::none;
+        }
+    }
+
+    void dnd_finished() override
+    {
+        if (wl_data_source)
+        {
+            return wl_data_source.value().send_dnd_finished_event_if_supported();
+        }
+    }
+
 private:
     std::shared_ptr<Executor> const wayland_executor;
     wayland::Weak<WlDataSource> const wl_data_source;
     std::vector<std::string> const types;
+    bool performed_or_cancelled{false};
 };
 
 mf::WlDataSource::WlDataSource(
@@ -95,6 +179,10 @@ mf::WlDataSource::~WlDataSource()
     {
         clipboard.clear_paste_source(*source);
     }
+    if (auto const source = dnd_source.lock())
+    {
+        clipboard.clear_drag_n_drop_source(source);
+    }
 }
 
 auto mf::WlDataSource::from(struct wl_resource* resource) -> WlDataSource*
@@ -112,6 +200,14 @@ void mf::WlDataSource::set_clipboard_paste_source()
     paste_source = source;
     clipboards_paste_source_is_ours = false; // set to true once our observer gets notified of the change
     clipboard.set_paste_source(source);
+}
+
+void mf::WlDataSource::start_drag_n_drop_gesture()
+{
+    send_target_event(std::nullopt);
+    auto const source = std::make_shared<Source>(*this);
+    dnd_source = source;
+    clipboard.set_drag_n_drop_source(source);
 }
 
 void mf::WlDataSource::offer(std::string const& mime_type)
@@ -133,4 +229,55 @@ void mf::WlDataSource::paste_source_set(std::shared_ptr<ms::DataExchangeSource> 
         clipboards_paste_source_is_ours = false;
         send_cancelled_event();
     }
+}
+
+void mf::WlDataSource::drag_n_drop_source_set(std::shared_ptr<scene::DataExchangeSource> const& source)
+{
+    if (source && dnd_source.lock() == source)
+    {
+        dnd_source_source_is_ours = true;
+    }
+    else if (dnd_source_source_is_ours)
+    {
+        dnd_source.reset();
+        dnd_source_source_is_ours = false;
+        send_cancelled_event();
+    }
+}
+
+void mf::WlDataSource::set_actions(uint32_t dnd_actions)
+{
+    this->dnd_actions = dnd_actions;
+}
+
+uint32_t mf::WlDataSource::drag_n_drop_set_actions(uint32_t dnd_actions, uint32_t preferred_action)
+{
+    using DndAction = mw::DataDeviceManager::DndAction;
+
+    if (preferred_action == DndAction::ask)
+    {
+        preferred_action = DndAction::move;
+    }
+
+    if (dnd_actions | DndAction::ask)
+    {
+        preferred_action |= DndAction::move;
+    }
+
+    auto const acceptable_options = this->dnd_actions | dnd_actions;
+
+    for (auto action : {preferred_action, DndAction::copy, DndAction::move, DndAction::none})
+    {
+        if (action | acceptable_options)
+        {
+            if (!dnd_action || dnd_action.value() != action)
+            {
+                dnd_action = action;
+                send_action_event_if_supported(action);
+            }
+            return action;
+        }
+    }
+
+    return DndAction::none;
 }

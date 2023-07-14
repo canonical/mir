@@ -131,6 +131,12 @@ mir::DefaultServerConfiguration::the_surface_input_dispatcher()
         });
 }
 
+std::shared_ptr<mir::frontend::PointerInputDispatcher>
+mir::DefaultServerConfiguration::the_pointer_input_dispatcher()
+{
+    return the_surface_input_dispatcher();
+}
+
 std::shared_ptr<mi::InputDispatcher>
 mir::DefaultServerConfiguration::the_input_dispatcher()
 {

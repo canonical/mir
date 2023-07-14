@@ -59,6 +59,13 @@ private:
         }
 
     private:
+        void cancelled() override {}
+        void dnd_drop_performed() override {}
+        auto actions() -> uint32_t override { return 0; }
+        void offer_accepted(const std::optional<std::string>&) override {}
+        uint32_t offer_set_actions(uint32_t, uint32_t) override { return 0; }
+        void dnd_finished() override {}
+
         mw::Weak<PrimarySelectionSource const> const owner;
         std::shared_ptr<mir::Executor> const wayland_executor;
         std::vector<std::string> const types;
@@ -115,6 +122,10 @@ private:
         }
 
     private:
+        void drag_n_drop_source_set(const std::shared_ptr<ms::DataExchangeSource>&) override {}
+        void drag_n_drop_source_cleared(const std::shared_ptr<ms::DataExchangeSource>&) override {}
+        void end_of_dnd_gesture() override {}
+
         void paste_source_set(std::shared_ptr<ms::DataExchangeSource> const& source) override
         {
             if (owner)

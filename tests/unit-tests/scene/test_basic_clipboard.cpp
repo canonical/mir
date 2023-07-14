@@ -36,12 +36,23 @@ struct MockClipboardSource : ms::DataExchangeSource
     {
     }
 
+    void cancelled() override {}
+    void dnd_drop_performed() override {}
+    auto actions() -> uint32_t override { return 0; }
+    void offer_accepted(const std::optional<std::string>&) override {}
+    uint32_t offer_set_actions(uint32_t, uint32_t) override { return 0; }
+    void dnd_finished() override {}
+
     std::vector<std::string> types;
 };
 
 struct MockClipboardObserver : ms::ClipboardObserver
 {
     MOCK_METHOD(void, paste_source_set, (std::shared_ptr<ms::DataExchangeSource> const&));
+
+    void drag_n_drop_source_set(const std::shared_ptr<ms::DataExchangeSource>&) override {}
+    void drag_n_drop_source_cleared(const std::shared_ptr<ms::DataExchangeSource>&) override {}
+    void end_of_dnd_gesture() override {}
 };
 
 struct BasicClipboardTest : Test

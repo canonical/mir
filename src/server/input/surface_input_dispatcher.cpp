@@ -448,7 +448,7 @@ mi::SurfaceInputDispatcher::TouchInputState& mi::SurfaceInputDispatcher::ensure_
 bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId /*id*/, std::shared_ptr<MirEvent const> const& event)
 {
     auto const ev = event.get();
-    std::lock_guard lg(dispatcher_mutex);
+    std::unique_lock lg(dispatcher_mutex);
     last_pointer_event = event;
     auto const* input_ev = mir_event_get_input_event(ev);
     auto const* pev = mir_input_event_get_pointer_event(input_ev);
@@ -456,7 +456,7 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId /*id*/, std::
     geom::Point event_x_y = { mir_pointer_event_axis_value(pev,mir_pointer_axis_x),
                               mir_pointer_event_axis_value(pev,mir_pointer_axis_y) };
 
-    if (gesture_owner)
+    if (gesture_owner && dispatch_to_gesture_owner)
     {
         deliver(gesture_owner, ev);
 
@@ -479,16 +479,9 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId /*id*/, std::
 
         return true;
     }
-    else if (action == mir_pointer_action_button_up)
-    {
-        // If we have an up but no gesture owner
-        // then we never delivered the corresponding
-        // down to anyone, so we drop this event.
-        return false;
-    }
     else
     {
-        auto target = scene->input_surface_at(event_x_y);
+        auto const target = scene->input_surface_at(event_x_y);
         bool sent_ev = false;
         if (current_target != target)
         {
@@ -501,25 +494,39 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId /*id*/, std::
 
             sent_ev = true;
         }
-        if (!target)
-            return sent_ev;
-        if (action == mir_pointer_action_button_down)
+
+        if (target)
         {
-            gesture_owner = target;
+            if (action == mir_pointer_action_button_down)
+            {
+                gesture_owner = target;
+            }
+
+            if (sent_ev)
+            {
+                if (action != mir_pointer_action_motion)
+                    deliver_without_relative_motion(target, ev);
+            }
+            else
+            {
+                deliver(target, ev);
+            }
+            sent_ev = true;
         }
 
-        if (sent_ev)
+        if (is_gesture_terminator(pev))
         {
-            if (action != mir_pointer_action_motion)
-                deliver_without_relative_motion(target, ev);
+            gesture_owner.reset();
+            dispatch_to_gesture_owner = true;
+            auto end_gesture = on_end_gesture;
+            on_end_gesture = []{};
+            lg.unlock();
+
+            end_gesture();
         }
-        else
-        {
-            deliver(target, ev);
-        }
-        return true;
+
+        return sent_ev;
     }
-    return false;
 }
 
 namespace
@@ -654,4 +661,11 @@ void mir::input::SurfaceInputDispatcher::register_interest(
 void mir::input::SurfaceInputDispatcher::unregister_interest(KeyboardObserver const& observer)
 {
     keyboard_multiplexer.unregister_interest(observer);
+}
+
+void mir::input::SurfaceInputDispatcher::disable_dispatch_to_gesture_owner(std::function<void()> on_end_gesture)
+{
+    std::lock_guard lg(dispatcher_mutex);
+    dispatch_to_gesture_owner = false;
+    this->on_end_gesture = std::move(on_end_gesture);
 }

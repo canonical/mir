@@ -342,6 +342,7 @@ void mf::WlPointer::enter_or_motion(std::shared_ptr<MirPointerEvent const> const
         leave(event); // If we're currently on a surface, leave it
         enter_serial = client->next_serial(event);
         cursor->apply_to(target_surface);
+        buttons(event);
         send_enter_event(
             enter_serial.value(),
             target_surface->raw_resource(),

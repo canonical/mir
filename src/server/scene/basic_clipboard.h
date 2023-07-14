@@ -38,6 +38,21 @@ public:
     {
         for_each_observer(&ClipboardObserver::paste_source_set, source);
     }
+
+    void drag_n_drop_source_set(std::shared_ptr<DataExchangeSource> const& source) override
+    {
+        for_each_observer(&ClipboardObserver::drag_n_drop_source_set, source);
+    }
+
+    void drag_n_drop_source_cleared(std::shared_ptr<DataExchangeSource> const& source) override
+    {
+        for_each_observer(&ClipboardObserver::drag_n_drop_source_cleared, source);
+    }
+
+    void end_of_dnd_gesture() override
+    {
+        for_each_observer(&ClipboardObserver::end_of_dnd_gesture);
+    }
 };
 
 /// Interface for the global object that manages data transfers between clients (such as copy-paste)
@@ -48,6 +63,10 @@ public:
     void set_paste_source(std::shared_ptr<DataExchangeSource> const& source) override;
     void clear_paste_source() override;
     void clear_paste_source(DataExchangeSource const& source) override;
+    void set_drag_n_drop_source(std::shared_ptr<DataExchangeSource> const& source) override;
+
+    void clear_drag_n_drop_source(std::shared_ptr<DataExchangeSource> const& source) override;
+    void end_of_dnd_gesture() override;
 
     /// Implement ObserverRegistrar<ClipboardObserver>
     /// @{
@@ -70,6 +89,7 @@ private:
 
     std::mutex mutable paste_mutex;
     std::shared_ptr<DataExchangeSource> paste_source_; ///< Can be null
+    std::shared_ptr<DataExchangeSource> dnd_source_; ///< Can be null
 };
 }
 }

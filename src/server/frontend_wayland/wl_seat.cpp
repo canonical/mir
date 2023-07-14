@@ -23,6 +23,7 @@
 #include "wl_keyboard.h"
 #include "wl_pointer.h"
 #include "wl_touch.h"
+#include "wl_data_device.h"
 
 #include "mir/executor.h"
 #include "mir/wayland/client.h"
@@ -34,6 +35,7 @@
 #include "mir/input/mir_keyboard_config.h"
 #include "mir/input/keyboard_observer.h"
 #include "mir/scene/surface.h"
+#include "mir_toolkit/events/input/pointer_event.h"
 
 #include <mutex>
 #include <algorithm>
@@ -205,7 +207,7 @@ mf::WlSeat::WlSeat(
         keyboard_observer_registrar{keyboard_observer_registrar},
         keyboard_observer{std::make_shared<KeyboardObserver>(*this)},
         focus_listeners{std::make_shared<ListenerList<FocusListener>>()},
-        pointer_listeners{std::make_shared<ListenerList<WlPointer>>()},
+        pointer_listeners{std::make_shared<ListenerList<PointerEventDispatcher>>()},
         keyboard_listeners{std::make_shared<ListenerList<WlKeyboard>>()},
         touch_listeners{std::make_shared<ListenerList<WlTouch>>()},
         clock{clock},
@@ -233,7 +235,7 @@ auto mf::WlSeat::from(struct wl_resource* resource) -> WlSeat*
     return instance ? instance->seat : nullptr;
 }
 
-void mf::WlSeat::for_each_listener(mw::Client* client, std::function<void(WlPointer*)> func)
+void mf::WlSeat::for_each_listener(mw::Client* client, std::function<void(PointerEventDispatcher*)> func)
 {
     pointer_listeners->for_each(client, func);
 }
@@ -312,11 +314,13 @@ mf::WlSeat::Instance::Instance(wl_resource* new_resource, mf::WlSeat* seat)
 void mf::WlSeat::Instance::get_pointer(wl_resource* new_pointer)
 {
     auto const pointer = new WlPointer{new_pointer};
-    seat->pointer_listeners->register_listener(client, pointer);
+    auto dispatcher = std::make_shared<PointerEventDispatcher>(pointer);
+
+    seat->pointer_listeners->register_listener(client, dispatcher.get());
     pointer->add_destroy_listener(
-        [listeners = seat->pointer_listeners, listener = pointer, client = client]()
+        [listeners = seat->pointer_listeners, listener = std::move(dispatcher), client = client]()
         {
-            listeners->unregister_listener(client, listener);
+            listeners->unregister_listener(client, listener.get());
         });
 }
 
@@ -359,4 +363,36 @@ void mf::WlSeat::add_focus_listener(mw::Client* client, FocusListener* listener)
 void mf::WlSeat::remove_focus_listener(mw::Client* client, FocusListener* listener)
 {
     focus_listeners->unregister_listener(client, listener);
+}
+
+mf::PointerEventDispatcher::PointerEventDispatcher(WlPointer* wl_pointer) :
+    wl_pointer{wl_pointer}
+{
+}
+
+void mf::PointerEventDispatcher::event(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface)
+{
+    if (wl_data_device)
+    {
+        wl_data_device.value().event(event, root_surface);
+    }
+    else if (wl_pointer)
+    {
+        wl_pointer.value().event(event, root_surface);
+    }
+}
+
+void mf::PointerEventDispatcher::start_dispatch_to_data_device(WlDataDevice* wl_data_device)
+{
+    this->wl_data_device = wayland::Weak<WlDataDevice>{wl_data_device};
+
+    if (wl_pointer)
+    {
+        wl_pointer.value().leave(std::nullopt);
+    }
+}
+
+void mf::PointerEventDispatcher::stop_dispatch_to_data_device()
+{
+    wl_data_device = wayland::Weak<WlDataDevice>{};
 }

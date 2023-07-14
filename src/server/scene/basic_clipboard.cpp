@@ -80,3 +80,51 @@ void ms::BasicClipboard::clear_paste_source(DataExchangeSource const& source)
         multiplexer.paste_source_set(nullptr);
     }
 }
+
+
+void mir::scene::BasicClipboard::set_drag_n_drop_source(std::shared_ptr<DataExchangeSource> const& source)
+{
+    if (!source)
+    {
+        fatal_error("BasicClipboard::start_drag_n_drop_gesture(nullptr)");
+    }
+    bool notify{false};
+    {
+        std::lock_guard lock{paste_mutex};
+        if (dnd_source_ != source)
+        {
+            notify = true;
+            dnd_source_ = source;
+        }
+    }
+    if (notify)
+    {
+        multiplexer.drag_n_drop_source_set(source);
+    }
+}
+
+void mir::scene::BasicClipboard::clear_drag_n_drop_source(std::shared_ptr<DataExchangeSource> const& source)
+{
+    if (!source)
+    {
+        fatal_error("BasicClipboard::clear_drag_n_drop_source(nullptr)");
+    }
+    bool notify{false};
+    {
+        std::lock_guard lock{paste_mutex};
+        if (dnd_source_ == source)
+        {
+            notify = true;
+            dnd_source_.reset();
+        }
+    }
+    if (notify)
+    {
+        multiplexer.drag_n_drop_source_cleared(source);
+    }
+}
+
+void mir::scene::BasicClipboard::end_of_dnd_gesture()
+{
+    multiplexer.end_of_dnd_gesture();
+}

@@ -18,8 +18,10 @@
 #define MIR_FRONTEND_WAYLAND_CONNECTOR_H_
 
 #include "wayland_wrapper.h"
-#include "mir/frontend/connector.h"
+
 #include "mir/fd.h"
+#include "mir/frontend/connector.h"
+#include "mir/frontend/drag_icon_controller.h"
 #include "mir/optional_value.h"
 
 #include <wayland-server-core.h>
@@ -27,13 +29,18 @@
 #include <unordered_set>
 #include <thread>
 #include <vector>
-#include <mir/server_configuration.h>
 
 namespace mir
 {
 class Executor;
+class MainLoop;
 template<typename>
 class ObserverRegistrar;
+
+namespace compositor
+{
+class ScreenShooter;
+}
 
 namespace input
 {
@@ -54,7 +61,10 @@ class Shell;
 }
 namespace scene
 {
+class Clipboard;
+class IdleHub;
 class Surface;
+class TextInputHub;
 }
 namespace time
 {
@@ -62,16 +72,17 @@ class Clock;
 }
 namespace frontend
 {
-class WlCompositor;
-class WlSubcompositor;
-class WlApplication;
-class WlSeat;
 class OutputManager;
+class PointerInputDispatcher;
 class SessionAuthorizer;
-class WlDataDeviceManager;
-class WlSurface;
 class SurfaceStack;
+class WlApplication;
+class WlCompositor;
+class WlDataDeviceManager;
+class WlSeat;
 class WlShm;
+class WlSubcompositor;
+class WlSurface;
 
 class WaylandExtensions
 {
@@ -129,6 +140,8 @@ public:
         std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
         std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry,
         std::shared_ptr<input::CompositeEventFilter> const& composite_event_filter,
+        std::shared_ptr<frontend::DragIconController> drag_icon_controller,
+        std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         std::shared_ptr<SurfaceStack> const& surface_stack,
