@@ -1,3 +1,40 @@
+mir (2.14.0) UNRELEASED; urgency=medium
+
+  [ Alan Griffiths ]
+  * New upstream release 2.14.0
+
+    - ABI summary:
+      . miral ABI unchanged at 5
+      . mircommon ABI unchanged at 9
+      . mircookie ABI unchanged at 2
+      . mircore ABI unchanged at 2
+      . miroil ABI unchanged at 3
+      . mirplatform ABI bumped to 26
+      . mirserver ABI unchanged at 58
+      . mirwayland ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 20
+      . mirinputplatform ABI unchanged at 8
+    - Enhancements:
+      . [Wayland] Support screen lockers (`ext-session-lock-v1`)
+      . [Wayland] Support drag and drop
+      . [platforms] Consolidate RenderingPlatform implementations
+      . [platforms] aggregate multiple `Display`s into a combined configuration
+      . [platforms] Drop the dispmanx platform
+      . [platforms] Drop unused `last_frame_on` interface
+      . [Window management] "attached" windows can be "restored" by drag gesture
+      . [Xwayland] Ensure to call connection_is_allowed on xwayland sessions
+        (partial fix for #2830)
+      . Add support for cursor drag icons
+    - Bugs fixed:
+      . [platforms] Handle libinput device rejections better
+      . [platforms] Assume evdev platform is supported (Fixes: #2837)
+      . [platforms] Fix naming of outputs on Nvidia cards (Fixes: #2968)
+      . server/ShmBacking: Fix leak in `install_sigbus_handler`
+      . [Wayland] flush display before polling (Fixes #2902)
+      . [doc] ignore namespaces that we do not want exported (Fixes #2365)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Tue, 17 Jul 2023 11:55:37 +0100
+
 mir (2.13.0) UNRELEASED; urgency=medium
 
   [ Alan Griffiths ]
