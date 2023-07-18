@@ -160,6 +160,9 @@ public:
     /// make the prev surface active within the active application
     void focus_prev_within_application();
 
+    /// Returns true if the application is focusable, otherwise false.
+    auto can_focus_application(Application application) -> bool;
+
     /// Retrieve information about the application following the provided application
     auto get_next_application_info(ApplicationInfo) -> ApplicationInfo;
 

@@ -7,7 +7,6 @@
 
 #include <miral/window_manager_tools.h>
 #include <miral/application.h>
-#include <functional>
 
 namespace miral
 {

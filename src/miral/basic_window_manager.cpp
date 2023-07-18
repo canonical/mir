@@ -889,6 +889,11 @@ void miral::BasicWindowManager::focus_prev_within_application()
     }
 }
 
+auto miral::BasicWindowManager::can_focus_application(Application application) -> bool
+{
+    return can_activate_window_for_session(application);
+}
+
 auto miral::BasicWindowManager::get_next_application_info(ApplicationInfo info) -> ApplicationInfo
 {
     auto session = focus_controller->get_next_session(info.application());

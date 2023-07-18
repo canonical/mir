@@ -64,6 +64,7 @@ public:
     virtual void focus_prev_application() = 0;
     virtual void focus_next_within_application() = 0;
     virtual void focus_prev_within_application() = 0;
+    virtual auto can_focus_application(Application application) -> bool = 0;
     virtual auto get_next_application_info(ApplicationInfo) -> ApplicationInfo = 0;
     virtual auto get_previous_application_info(ApplicationInfo) -> ApplicationInfo = 0;
     virtual void todo_bring_application_to_front(Application application) = 0;

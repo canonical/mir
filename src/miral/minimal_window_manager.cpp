@@ -67,8 +67,11 @@ auto touch_center(MirTouchEvent const* event) -> mir::geometry::Point
 
 struct miral::MinimalWindowManager::Impl
 {
-    Impl(WindowManagerTools const& tools, MirInputEventModifier pointer_drag_modifier) :
-        tools{tools}, application_selector(tools), pointer_drag_modifier{pointer_drag_modifier} {}
+    Impl(WindowManagerTools const& tools,
+         MirInputEventModifier pointer_drag_modifier) :
+        tools{tools},
+        application_selector(tools),
+        pointer_drag_modifier{pointer_drag_modifier} {}
     WindowManagerTools tools;
 
     Gesture gesture = Gesture::none;
@@ -108,7 +111,7 @@ miral::MinimalWindowManager::MinimalWindowManager(WindowManagerTools const& tool
 
 miral::MinimalWindowManager::MinimalWindowManager(WindowManagerTools const& tools, MirInputEventModifier pointer_drag_modifier):
     tools{tools},
-    self{new Impl{tools, pointer_drag_modifier}}
+    self{new Impl{tools,pointer_drag_modifier}}
 {
 }
 

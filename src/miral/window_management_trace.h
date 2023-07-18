@@ -70,6 +70,8 @@ private:
     virtual void focus_next_within_application() override;
     virtual void focus_prev_within_application() override;
 
+    virtual auto can_focus_application(Application) -> bool override;
+
     virtual auto get_next_application_info(ApplicationInfo) -> ApplicationInfo override;
     virtual auto get_previous_application_info(ApplicationInfo) -> ApplicationInfo override;
 

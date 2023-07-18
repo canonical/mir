@@ -585,6 +585,15 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
+auto miral::WindowManagementTrace::can_focus_application(Application app) -> bool
+try {
+    log_input();
+    mir::log_info("%s", __func__);
+    trace_count++;
+    return wrapped.can_focus_application(app);
+}
+MIRAL_TRACE_EXCEPTION
+
 auto miral::WindowManagementTrace::get_next_application_info(ApplicationInfo info) -> ApplicationInfo
 try {
     log_input();

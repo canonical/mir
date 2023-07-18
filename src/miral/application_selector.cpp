@@ -7,8 +7,8 @@
 
 using namespace miral;
 
-ApplicationSelector::ApplicationSelector(const miral::WindowManagerTools & in_tools) :
-    tools{in_tools}
+ApplicationSelector::ApplicationSelector(const miral::WindowManagerTools& in_tools)
+    : tools{in_tools}
 {}
 
 void ApplicationSelector::start(bool in_reverse)
@@ -48,7 +48,9 @@ auto ApplicationSelector::complete() -> Application
 
     printf("Complete\n");
     is_started = false;
-    tools.focus_this_application(selected.application());
+    if (tools.can_focus_application(selected.application())) {
+        tools.focus_this_application(selected.application());
+    }
     return selected.application();
 }
 
@@ -59,7 +61,10 @@ auto ApplicationSelector::is_active() -> bool
 
 void ApplicationSelector::raise_next()
 {
-    auto app_info = reverse ? tools.get_previous_application_info(selected) : tools.get_next_application_info(selected);
+    auto app_info = selected;
+    do {
+        app_info = reverse ? tools.get_previous_application_info(app_info) : tools.get_next_application_info(app_info);
+    } while (!tools.can_focus_application(app_info.application()));
     tools.raise_tree(tools.info_for(app_info.application()->default_surface()).window());
     selected = app_info;
 }
