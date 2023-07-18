@@ -50,6 +50,7 @@ auto ApplicationSelector::complete() -> Application
     is_started = false;
     if (tools.can_focus_application(selected.application())) {
         tools.focus_this_application(selected.application());
+        tools.todo_bring_application_to_front(selected.application());
     }
     return selected.application();
 }
