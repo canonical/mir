@@ -67,14 +67,14 @@ void miral::WindowManagerTools::focus_next_application()
 void miral::WindowManagerTools::focus_prev_application()
 { tools->focus_prev_application(); }
 
-void miral::WindowManagerTools::focus_application(miral::Application app)
-{ tools->focus_application(app); }
-
 void miral::WindowManagerTools::focus_next_within_application()
 { tools->focus_next_within_application(); }
 
 void miral::WindowManagerTools::focus_prev_within_application()
 { tools->focus_prev_within_application(); }
+
+void miral::WindowManagerTools::todo_bring_application_to_front(Application application)
+{ tools->todo_bring_application_to_front(application); }
 
 auto miral::WindowManagerTools::window_at(mir::geometry::Point cursor) const -> Window
 { return tools->window_at(cursor); }

@@ -87,7 +87,6 @@ struct miral::MinimalWindowManager::Impl
     Point old_cursor{};
     Point old_touch{};
     AltTabState alt_tab_state = AltTabState::none;
-    unsigned tab_jump = 0;
 
     bool prepare_for_gesture(WindowInfo& window_info, Point input_pos, Gesture gesture);
 
@@ -171,12 +170,8 @@ bool miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const* 
         case KEY_TAB:
             if (self->alt_tab_state == AltTabState::none) {
                 self->alt_tab_state = AltTabState::forward;
-                self->tab_jump = 1;
             }
-            else
-            {
-                self->tab_jump++;
-            }
+            tools.focus_next_application();
             return true;
 
         case KEY_GRAVE:
@@ -211,13 +206,9 @@ bool miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const* 
             case KEY_LEFTALT:
                 if (self->alt_tab_state == AltTabState::forward) {
                     // TODO: Implement jump
-                    tools.for_each_application([&](ApplicationInfo& info)
-                       {
-                           tools.
-                       });
-                    tools.focus_next_application();
-
-                    self->tab_jump = 0;
+                    auto active_window = tools.active_window();
+                    auto active_application = active_window.application();
+                    tools.todo_bring_application_to_front(active_application);
                     self->alt_tab_state = AltTabState::none;
                 }
                 break;

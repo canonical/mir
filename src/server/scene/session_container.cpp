@@ -23,11 +23,7 @@
 
 namespace ms = mir::scene;
 
-ms::SessionContainer::SessionContainer(SessionContainerFocusStrategy strategy) :
-    focus_strategy(strategy)
-{
-}
-
+ms::SessionContainer::SessionContainer() = default;
 ms::SessionContainer::~SessionContainer() = default;
 
 void ms::SessionContainer::insert_session(std::shared_ptr<Session> const& session)
@@ -108,22 +104,4 @@ auto mir::scene::SessionContainer::predecessor_of(std::shared_ptr<Session> const
     }
 
     BOOST_THROW_EXCEPTION(std::logic_error("Invalid session"));
-}
-
-void mir::scene::SessionContainer::set_focus_to(std::shared_ptr<Session> const& session)
-{
-    switch (focus_strategy)
-    {
-        case SessionContainerFocusStrategy::focus_order:
-            for (auto it = apps.begin(); it != apps.end(); it++)
-            {
-                if (*it == session)
-                {
-                    std::rotate(apps.begin(), it, it + 1);
-                    break;
-                }
-            }
-            break;
-        default: break;
-    }
 }

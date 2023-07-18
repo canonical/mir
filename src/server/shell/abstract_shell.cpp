@@ -384,7 +384,7 @@ void msh::AbstractShell::focus_next_session()
     std::unique_lock lock(focus_mutex);
     auto const focused_session = focus_session.lock();
     auto successor = session_coordinator->successor_of(focused_session);
-    focus_session(successor);
+    focus_this_session(successor);
 }
 
 void msh::AbstractShell::focus_prev_session()
@@ -392,10 +392,10 @@ void msh::AbstractShell::focus_prev_session()
     std::unique_lock lock(focus_mutex);
     auto const focused_session = focus_session.lock();
     auto predecessor = session_coordinator->predecessor_of(focused_session);
-    focus_session(predecessor);
+    focus_this_session(predecessor);
 }
 
-void msh::AbstractShell::focus_session(std::shared_ptr<scene::Session> session)
+void msh::AbstractShell::focus_this_session(std::shared_ptr<scene::Session> session)
 {
     std::unique_lock lock(focus_mutex);
     auto sentinel = session;

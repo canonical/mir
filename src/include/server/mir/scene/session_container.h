@@ -28,29 +28,12 @@ namespace scene
 {
 class Session;
 
-enum class SessionContainerFocusStrategy
-{
-    /// Successor and predecessor sessions will be determined by
-    /// their order of insertion into the list.
-    /// e.g. If the session list contains A, B, C and D,
-    /// then B will always be the successor of A, C the successor
-    /// of B, and so forth.
-    insertion_order,
-
-    /// Successor and predecessor sessions will be determined by
-    /// which sessions were most recently focused.
-    /// e.g. If the session list contains A, B, C, and D
-    /// and D gains focus, then the focus order will be
-    /// D, A, B, and C such that A is now the successor of D.
-    focus_order
-};
-
 /// Provides access to the ordered list of active sessions.
 /// TODO: Perhaps we could provide an organization policy here?
 class SessionContainer
 {
 public:
-    SessionContainer(SessionContainerFocusStrategy);
+    SessionContainer();
     ~SessionContainer();
 
     void insert_session(std::shared_ptr<Session> const& session);
@@ -72,13 +55,10 @@ public:
     /// TODO: Rename to someting like "access previous".
     auto predecessor_of(std::shared_ptr<Session> const&) const -> std::shared_ptr<Session> ;
 
-    void set_focus_to(std::shared_ptr<Session> const&);
-
     SessionContainer(const SessionContainer&) = delete;
     SessionContainer& operator=(const SessionContainer&) = delete;
 
 private:
-    SessionContainerFocusStrategy focus_strategy = SessionContainerFocusStrategy::insertion_order;
     std::vector<std::shared_ptr<Session>> apps;
     mutable std::mutex guard;
 };

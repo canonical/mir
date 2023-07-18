@@ -642,56 +642,6 @@ void miral::BasicWindowManager::focus_prev_application()
     select_active_window(focussed_surface ? info_for(focussed_surface).window() : Window{});
 }
 
-void miral::BasicWindowManager::focus_application(Application application)
-{
-    if (auto const prev = active_window())
-    {
-        auto const workspaces_containing_window = workspaces_containing(prev);
-
-        if (!workspaces_containing_window.empty())
-        {
-            do
-            {
-                focus_controller->focus_next_session();
-
-                if (can_activate_window_for_session_in_workspace(
-                    application,
-                    workspaces_containing_window))
-                {
-                    return;
-                }
-            }
-            while (focus_controller->focused_session() != prev.application());
-        }
-        else
-        {
-            do
-            {
-                focus_controller->focus_next_session();
-
-                if (can_activate_window_for_session(application))
-                {
-                    return;
-                }
-            }
-            while (focus_controller->focused_session() != prev.application());
-        }
-    }
-    else
-    {
-        focus_controller->focus_next_session();
-
-        if (can_activate_window_for_session(focus_controller->focused_session()))
-        {
-            return;
-        }
-    }
-
-    // Last resort: accept wherever focus_controller places focus
-    auto const focussed_surface = focus_controller->focused_surface();
-    select_active_window(focussed_surface ? info_for(focussed_surface).window() : Window{});
-}
-
 auto miral::BasicWindowManager::workspaces_containing(Window const& window) const
 -> std::vector<std::shared_ptr<Workspace>>
 {
@@ -929,6 +879,10 @@ void miral::BasicWindowManager::focus_prev_within_application()
                 ++current;
         }
     }
+}
+
+void miral::BasicWindowManager::todo_bring_application_to_front(Application /*application*/)
+{
 }
 
 auto miral::BasicWindowManager::window_at(geometry::Point cursor) const

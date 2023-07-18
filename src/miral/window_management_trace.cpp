@@ -576,6 +576,15 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
+void miral::WindowManagementTrace::todo_bring_application_to_front(Application application)
+try {
+    log_input();
+    mir::log_info("%s", __func__);
+    trace_count++;
+    wrapped.todo_bring_application_to_front(application);
+}
+MIRAL_TRACE_EXCEPTION
+
 void miral::WindowManagementTrace::raise_tree(miral::Window const& root)
 try {
     log_input();

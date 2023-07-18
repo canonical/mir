@@ -167,10 +167,11 @@ public:
 
     void focus_next_application() override;
     void focus_prev_application() override;
-    void focus_application(Application application) override;
 
     void focus_next_within_application() override;
     void focus_prev_within_application() override;
+
+    void todo_bring_application_to_front(Application application) override;
 
     auto window_at(mir::geometry::Point cursor) const -> Window override;
 

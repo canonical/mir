@@ -150,14 +150,14 @@ public:
     /// \remark Since MirAL 2.5
     void focus_prev_application();
 
-    /// make the provided application active
-    void focus_application(Application);
-
     /// make the next surface active within the active application
     void focus_next_within_application();
 
     /// make the prev surface active within the active application
     void focus_prev_within_application();
+
+    /// moves the provided application to the front of the application queue
+    void todo_bring_application_to_front(Application);
 
     /// Find the topmost window at the cursor
     auto window_at(mir::geometry::Point cursor) const -> Window;

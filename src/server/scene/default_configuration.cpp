@@ -126,8 +126,7 @@ std::shared_ptr<ms::SessionContainer>
 mir::DefaultServerConfiguration::the_session_container()
 {
     return session_container(
-        []{ return std::make_shared<ms::SessionContainer>(
-            ms::SessionContainerFocusStrategy::focus_order); });
+        []{ return std::make_shared<ms::SessionContainer>(); });
 }
 
 std::shared_ptr<ms::MediatingDisplayChanger>
