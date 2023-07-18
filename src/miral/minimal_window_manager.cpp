@@ -40,13 +40,6 @@ enum class Gesture
     touch_resizing,
 };
 
-enum class AltTabState
-{
-    none,
-    forward,
-    backward
-};
-
 auto pointer_position(MirPointerEvent const* event) -> mir::geometry::Point
 {
     return {
@@ -86,7 +79,7 @@ struct miral::MinimalWindowManager::Impl
     Size resize_size;
     Point old_cursor{};
     Point old_touch{};
-    AltTabState alt_tab_state = AltTabState::none;
+    bool is_alt_tabbing = false;
 
     bool prepare_for_gesture(WindowInfo& window_info, Point input_pos, Gesture gesture);
 
@@ -168,9 +161,7 @@ bool miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const* 
             return true;
 
         case KEY_TAB:
-            if (self->alt_tab_state == AltTabState::none) {
-                self->alt_tab_state = AltTabState::forward;
-            }
+            self->is_alt_tabbing = true;
             tools.focus_next_application();
             return true;
 
@@ -188,6 +179,7 @@ bool miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const* 
         switch (mir_keyboard_event_scan_code(event))
         {
         case KEY_TAB:
+            self->is_alt_tabbing = true;
             tools.focus_prev_application();
             return true;
 
@@ -204,11 +196,11 @@ bool miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const* 
         switch (mir_keyboard_event_scan_code(event))
         {
             case KEY_LEFTALT:
-                if (self->alt_tab_state == AltTabState::forward) {
+                if (self->is_alt_tabbing) {
                     auto active_window = tools.active_window();
                     auto active_application = active_window.application();
                     tools.todo_bring_application_to_front(active_application);
-                    self->alt_tab_state = AltTabState::none;
+                    self->is_alt_tabbing = false;
                 }
                 break;
             default:;
