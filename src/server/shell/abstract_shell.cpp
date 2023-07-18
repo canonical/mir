@@ -438,6 +438,11 @@ auto msh::AbstractShell::get_next_session(std::shared_ptr<scene::Session> sessio
             break;
     }
 
+    auto const surface = successor ? successor->default_surface() : nullptr;
+
+    if (!surface)
+        successor = nullptr;
+
     return successor;
 }
 
