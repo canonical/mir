@@ -18,6 +18,7 @@
 #define MIRAL_WINDOW_MANAGER_TOOLS_H
 
 #include "miral/application.h"
+#include "miral/application_info.h"
 #include "window_info.h"
 
 #include <mir/geometry/displacement.h>
@@ -34,7 +35,6 @@ namespace miral
 {
 class Window;
 struct WindowInfo;
-struct ApplicationInfo;
 class WindowSpecification;
 class Zone;
 
@@ -155,6 +155,12 @@ public:
 
     /// make the prev surface active within the active application
     void focus_prev_within_application();
+
+    /// Retrieve information about the application following the currently selected application.
+    auto get_next_application_info() -> ApplicationInfo;
+
+    /// Retrieve information about the application behind the currently selected application.
+    auto get_previous_application_info() -> ApplicationInfo;
 
     /// moves the provided application to the front of the application queue
     void todo_bring_application_to_front(Application);

@@ -69,6 +69,9 @@ private:
     virtual void focus_next_within_application() override;
     virtual void focus_prev_within_application() override;
 
+    virtual auto get_next_application_info() -> ApplicationInfo override;
+    virtual auto get_previous_application_info() -> ApplicationInfo override;
+
     virtual void todo_bring_application_to_front(Application application) override;
 
     virtual void raise_tree(Window const& root) override;

@@ -881,6 +881,18 @@ void miral::BasicWindowManager::focus_prev_within_application()
     }
 }
 
+auto miral::BasicWindowManager::get_next_application_info() -> ApplicationInfo
+{
+    auto session = focus_controller->get_next_session();
+    return info_for(session);
+}
+
+auto miral::BasicWindowManager::get_previous_application_info() -> ApplicationInfo
+{
+    auto session = focus_controller->get_prev_session();
+    return info_for(session);
+}
+
 void miral::BasicWindowManager::todo_bring_application_to_front(Application application)
 {
     focus_controller->todo_bring_application_to_front(application);

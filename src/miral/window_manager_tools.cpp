@@ -73,6 +73,12 @@ void miral::WindowManagerTools::focus_next_within_application()
 void miral::WindowManagerTools::focus_prev_within_application()
 { tools->focus_prev_within_application(); }
 
+auto miral::WindowManagerTools::get_next_application_info() -> ApplicationInfo
+{ return tools->get_next_application_info(); }
+
+auto miral::WindowManagerTools::get_previous_application_info() -> ApplicationInfo
+{ return tools->get_next_application_info(); }
+
 void miral::WindowManagerTools::todo_bring_application_to_front(Application application)
 { tools->todo_bring_application_to_front(application); }
 

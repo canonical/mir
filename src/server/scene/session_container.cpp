@@ -109,5 +109,8 @@ auto mir::scene::SessionContainer::predecessor_of(std::shared_ptr<Session> const
 void mir::scene::SessionContainer::todo_bring_application_to_front(std::shared_ptr<Session> const& session)
 {
     auto it = std::find(apps.begin(), apps.end(), session);
-    std::rotate(apps.begin(), it, it + 1);
+    if (it != apps.end())
+    {
+        std::rotate(apps.begin(), it, it + 1);
+    }
 }

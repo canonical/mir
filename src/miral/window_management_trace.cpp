@@ -576,6 +576,24 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
+auto miral::WindowManagementTrace::get_next_application_info() -> ApplicationInfo
+try {
+    log_input();
+    mir::log_info("%s", __func__);
+    trace_count++;
+    return wrapped.get_next_application_info();
+}
+MIRAL_TRACE_EXCEPTION
+
+auto miral::WindowManagementTrace::get_previous_application_info() -> ApplicationInfo
+try {
+    log_input();
+    mir::log_info("%s", __func__);
+    trace_count++;
+    return wrapped.get_previous_application_info();
+}
+MIRAL_TRACE_EXCEPTION
+
 void miral::WindowManagementTrace::todo_bring_application_to_front(Application application)
 try {
     log_input();
