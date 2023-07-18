@@ -143,6 +143,10 @@ public:
     /// move the window
     void drag_window(Window const& window, mir::geometry::Displacement movement);
 
+    /// make the provided application active
+    /// \param application To focus
+    void focus_this_application(Application application);
+
     /// make the next application active
     void focus_next_application();
 
@@ -156,11 +160,11 @@ public:
     /// make the prev surface active within the active application
     void focus_prev_within_application();
 
-    /// Retrieve information about the application following the currently selected application.
-    auto get_next_application_info() -> ApplicationInfo;
+    /// Retrieve information about the application following the provided application
+    auto get_next_application_info(ApplicationInfo) -> ApplicationInfo;
 
-    /// Retrieve information about the application behind the currently selected application.
-    auto get_previous_application_info() -> ApplicationInfo;
+    /// Retrieve information about the application behind the provided application.
+    auto get_previous_application_info(ApplicationInfo) -> ApplicationInfo;
 
     /// moves the provided application to the front of the application queue
     void todo_bring_application_to_front(Application);

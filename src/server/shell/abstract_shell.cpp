@@ -425,18 +425,26 @@ void msh::AbstractShell::focus_prev_session()
     update_focus_locked(lock, predecessor, surface);
 }
 
-auto msh::AbstractShell::get_next_session() -> std::shared_ptr<scene::Session>
+auto msh::AbstractShell::get_next_session(std::shared_ptr<scene::Session> session) -> std::shared_ptr<scene::Session>
 {
     std::unique_lock lock(focus_mutex);
-    auto const focused_session = focus_session.lock();
-    return session_coordinator->successor_of(focused_session);
+    auto successor = session_coordinator->successor_of(session);
+    auto sentinel = successor;
+    while (successor != nullptr &&
+           successor->default_surface() == nullptr)
+    {
+        successor = session_coordinator->successor_of(successor);
+        if (successor == sentinel)
+            break;
+    }
+
+    return successor;
 }
 
-auto msh::AbstractShell::get_prev_session() -> std::shared_ptr<scene::Session>
+auto msh::AbstractShell::get_prev_session(std::shared_ptr<scene::Session> session) -> std::shared_ptr<scene::Session>
 {
     std::unique_lock lock(focus_mutex);
-    auto const focused_session = focus_session.lock();
-    return session_coordinator->predecessor_of(focused_session);
+    return session_coordinator->predecessor_of(session);
 }
 
 void msh::AbstractShell::todo_bring_application_to_front(std::shared_ptr<scene::Session> const& session)

@@ -540,6 +540,15 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
+void miral::WindowManagementTrace::focus_this_application(Application app)
+try {
+    log_input();
+    mir::log_info("%s", __func__);
+    trace_count++;
+    wrapped.focus_this_application(app);
+}
+MIRAL_TRACE_EXCEPTION
+
 void miral::WindowManagementTrace::focus_next_application()
 try {
     log_input();
@@ -576,21 +585,21 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
-auto miral::WindowManagementTrace::get_next_application_info() -> ApplicationInfo
+auto miral::WindowManagementTrace::get_next_application_info(ApplicationInfo info) -> ApplicationInfo
 try {
     log_input();
     mir::log_info("%s", __func__);
     trace_count++;
-    return wrapped.get_next_application_info();
+    return wrapped.get_next_application_info(info);
 }
 MIRAL_TRACE_EXCEPTION
 
-auto miral::WindowManagementTrace::get_previous_application_info() -> ApplicationInfo
+auto miral::WindowManagementTrace::get_previous_application_info(ApplicationInfo info) -> ApplicationInfo
 try {
     log_input();
     mir::log_info("%s", __func__);
     trace_count++;
-    return wrapped.get_previous_application_info();
+    return wrapped.get_previous_application_info(info);
 }
 MIRAL_TRACE_EXCEPTION
 

@@ -592,6 +592,14 @@ void miral::BasicWindowManager::focus_next_application()
     select_active_window(focussed_surface ? info_for(focussed_surface).window() : Window{});
 }
 
+void miral::BasicWindowManager::focus_this_application(Application application)
+{
+    focus_controller->set_focus_to(
+        application,
+        application->default_surface()
+    );
+}
+
 void miral::BasicWindowManager::focus_prev_application()
 {
     if (auto const prev = active_window())
@@ -881,15 +889,15 @@ void miral::BasicWindowManager::focus_prev_within_application()
     }
 }
 
-auto miral::BasicWindowManager::get_next_application_info() -> ApplicationInfo
+auto miral::BasicWindowManager::get_next_application_info(ApplicationInfo info) -> ApplicationInfo
 {
-    auto session = focus_controller->get_next_session();
+    auto session = focus_controller->get_next_session(info.application());
     return info_for(session);
 }
 
-auto miral::BasicWindowManager::get_previous_application_info() -> ApplicationInfo
+auto miral::BasicWindowManager::get_previous_application_info(ApplicationInfo info) -> ApplicationInfo
 {
-    auto session = focus_controller->get_prev_session();
+    auto session = focus_controller->get_prev_session(info.application());
     return info_for(session);
 }
 

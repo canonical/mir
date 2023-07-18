@@ -13,10 +13,10 @@ namespace miral
 {
 
 /// Manages the selection of applications using keyboard shortcuts,
-/// most likely via Alt + Tab. While "start" is called, the next application
-/// in the SessionContainer's list after the currently focus application
+/// most likely via Alt + Tab. When "start" is called, the next application
+/// in the SessionContainer's list after the currently focuse application
 /// will be raised. When "next" is called, the application after that will be
-/// raised, and so on. When "stop" is called, the currently raised application
+/// raised, and so on. When "complete" is called, the currently raised application
 /// will gain focus and be returned.
 class ApplicationSelector
 {
@@ -26,7 +26,8 @@ public:
     /// Begins application selection by raising the application
     /// that immediately follows the currently selected application
     /// in the SessionContainer's list.
-    void start();
+    /// \param reverse If true, selection will happen in reverse, otherwise forward.
+    void start(bool reverse);
 
     /// Lowers the currently raised application and raises the application
     /// that follows it.
@@ -35,11 +36,22 @@ public:
 
     /// Focuses the currently selected Application.
     /// \returns The newly selected application
-    auto stop() -> Application ;
+    auto complete() -> Application ;
+
+    /// Retrieve whether or not the selector is in progress.
+    /// \return true if it is running, otherwise false
+    auto is_active() -> bool;
 
 private:
     WindowManagerTools tools;
-    bool is_active = false;
+    bool reverse = false;
+    bool is_started = false;
+
+    /// The raised application
+    ApplicationInfo selected;
+
+    /// Figure out the next application in the list and then raise it.
+    void raise_next();
 };
 
 }

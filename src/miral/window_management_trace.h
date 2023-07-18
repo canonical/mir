@@ -63,14 +63,15 @@ private:
 
     void drag_window(Window const& window, mir::geometry::Displacement& movement) override;
 
+    virtual void focus_this_application(Application) override;
     virtual void focus_next_application() override;
     virtual void focus_prev_application() override;
 
     virtual void focus_next_within_application() override;
     virtual void focus_prev_within_application() override;
 
-    virtual auto get_next_application_info() -> ApplicationInfo override;
-    virtual auto get_previous_application_info() -> ApplicationInfo override;
+    virtual auto get_next_application_info(ApplicationInfo) -> ApplicationInfo override;
+    virtual auto get_previous_application_info(ApplicationInfo) -> ApplicationInfo override;
 
     virtual void todo_bring_application_to_front(Application application) override;
 
