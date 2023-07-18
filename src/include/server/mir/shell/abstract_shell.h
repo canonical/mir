@@ -127,6 +127,8 @@ public:
     void focus_next_session() override;
     void focus_prev_session() override;
 
+    void todo_bring_application_to_front(std::shared_ptr<scene::Session> const& surface) override;
+
     std::shared_ptr<scene::Session> focused_session() const override;
 
     void set_popup_grab_tree(std::shared_ptr<scene::Surface> const& surface) override;

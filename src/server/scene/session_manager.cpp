@@ -167,6 +167,11 @@ void ms::SessionManager::unset_focus()
     observers->unfocused();
 }
 
+void ms::SessionManager::todo_bring_application_to_front(std::shared_ptr<Session> const& session)
+{
+    app_container->todo_bring_application_to_front(session);
+}
+
 void ms::SessionManager::close_session(std::shared_ptr<Session> const& session)
 {
     anr_detector->unregister_session(session.get());

@@ -425,6 +425,12 @@ void msh::AbstractShell::focus_prev_session()
     update_focus_locked(lock, predecessor, surface);
 }
 
+void msh::AbstractShell::todo_bring_application_to_front(std::shared_ptr<scene::Session> const& session)
+{
+    std::unique_lock lock(focus_mutex);
+    session_coordinator->todo_bring_application_to_front(session);
+}
+
 std::shared_ptr<ms::Session> msh::AbstractShell::focused_session() const
 {
     std::unique_lock lg(focus_mutex);

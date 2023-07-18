@@ -205,7 +205,6 @@ bool miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const* 
         {
             case KEY_LEFTALT:
                 if (self->alt_tab_state == AltTabState::forward) {
-                    // TODO: Implement jump
                     auto active_window = tools.active_window();
                     auto active_application = active_window.application();
                     tools.todo_bring_application_to_front(active_application);

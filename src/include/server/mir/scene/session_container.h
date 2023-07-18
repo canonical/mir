@@ -55,6 +55,8 @@ public:
     /// TODO: Rename to someting like "access previous".
     auto predecessor_of(std::shared_ptr<Session> const&) const -> std::shared_ptr<Session> ;
 
+    void todo_bring_application_to_front(std::shared_ptr<Session> const& session);
+
     SessionContainer(const SessionContainer&) = delete;
     SessionContainer& operator=(const SessionContainer&) = delete;
 

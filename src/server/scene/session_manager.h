@@ -78,6 +78,7 @@ public:
 
     void set_focus_to(std::shared_ptr<Session> const& focus) override;
     void unset_focus() override;
+    void todo_bring_application_to_front(std::shared_ptr<Session> const&) override;
 
     void add_listener(std::shared_ptr<SessionListener> const& listener) override;
     void remove_listener(std::shared_ptr<SessionListener> const& listener) override;

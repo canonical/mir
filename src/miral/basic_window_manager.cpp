@@ -881,8 +881,9 @@ void miral::BasicWindowManager::focus_prev_within_application()
     }
 }
 
-void miral::BasicWindowManager::todo_bring_application_to_front(Application /*application*/)
+void miral::BasicWindowManager::todo_bring_application_to_front(Application application)
 {
+    focus_controller->todo_bring_application_to_front(application);
 }
 
 auto miral::BasicWindowManager::window_at(geometry::Point cursor) const

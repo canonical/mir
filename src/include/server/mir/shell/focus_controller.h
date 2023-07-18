@@ -39,6 +39,7 @@ public:
 
     virtual void focus_next_session() = 0;
     virtual void focus_prev_session() = 0;
+    virtual void todo_bring_application_to_front(std::shared_ptr<scene::Session> const& session) = 0;
 
     virtual auto focused_session() const -> std::shared_ptr<scene::Session> = 0;
 
