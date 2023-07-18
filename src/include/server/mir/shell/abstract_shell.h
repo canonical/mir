@@ -126,7 +126,6 @@ public:
  *  @{ */
     void focus_next_session() override;
     void focus_prev_session() override;
-    void focus_this_session(std::shared_ptr<scene::Session>) override;
 
     std::shared_ptr<scene::Session> focused_session() const override;
 

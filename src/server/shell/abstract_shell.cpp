@@ -384,7 +384,22 @@ void msh::AbstractShell::focus_next_session()
     std::unique_lock lock(focus_mutex);
     auto const focused_session = focus_session.lock();
     auto successor = session_coordinator->successor_of(focused_session);
-    focus_this_session(successor);
+    auto const sentinel = successor;
+
+    while (successor != nullptr &&
+           successor->default_surface() == nullptr)
+    {
+        successor = session_coordinator->successor_of(successor);
+        if (successor == sentinel)
+            break;
+    }
+
+    auto const surface = successor ? successor->default_surface() : nullptr;
+
+    if (!surface)
+        successor = nullptr;
+
+    update_focus_locked(lock, successor, surface);
 }
 
 void msh::AbstractShell::focus_prev_session()
@@ -392,30 +407,22 @@ void msh::AbstractShell::focus_prev_session()
     std::unique_lock lock(focus_mutex);
     auto const focused_session = focus_session.lock();
     auto predecessor = session_coordinator->predecessor_of(focused_session);
-    focus_this_session(predecessor);
-}
+    auto const sentinel = predecessor;
 
-void msh::AbstractShell::focus_this_session(std::shared_ptr<scene::Session> session)
-{
-    std::unique_lock lock(focus_mutex);
-    auto sentinel = session;
-
-    // A session has been found as the successor, yet that session may not have a surface.
-    // If that is the case, we find a new successor based off of the old successor.
-    while (session != nullptr &&
-        session->default_surface() == nullptr)
+    while (predecessor != nullptr &&
+           predecessor->default_surface() == nullptr)
     {
-        session = session_coordinator->predecessor_of(session);
-        if (session == sentinel)
+        predecessor = session_coordinator->predecessor_of(predecessor);
+        if (predecessor == sentinel)
             break;
     }
 
-    auto const surface = session ? session->default_surface() : nullptr;
+    auto const surface = predecessor ? predecessor->default_surface() : nullptr;
 
     if (!surface)
-        session = nullptr;
+        predecessor = nullptr;
 
-    update_focus_locked(lock, session, surface);
+    update_focus_locked(lock, predecessor, surface);
 }
 
 std::shared_ptr<ms::Session> msh::AbstractShell::focused_session() const
