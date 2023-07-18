@@ -159,6 +159,7 @@ void ms::SessionManager::set_focus_to(std::shared_ptr<Session> const& session)
 {
     session_event_sink->handle_focus_change(session);
     observers->focused(session);
+    app_container->set_focus_to(session);
 }
 
 void ms::SessionManager::unset_focus()

@@ -16,6 +16,7 @@
 
 #include <miral/minimal_window_manager.h>
 #include <miral/toolkit_event.h>
+#include <miral/application_info.h>
 #include <linux/input.h>
 #include <gmpxx.h>
 
@@ -37,6 +38,13 @@ enum class Gesture
     pointer_resizing,
     touch_moving,
     touch_resizing,
+};
+
+enum class AltTabState
+{
+    none,
+    forward,
+    backward
 };
 
 auto pointer_position(MirPointerEvent const* event) -> mir::geometry::Point
@@ -78,6 +86,8 @@ struct miral::MinimalWindowManager::Impl
     Size resize_size;
     Point old_cursor{};
     Point old_touch{};
+    AltTabState alt_tab_state = AltTabState::none;
+    unsigned tab_jump = 0;
 
     bool prepare_for_gesture(WindowInfo& window_info, Point input_pos, Gesture gesture);
 
@@ -159,7 +169,14 @@ bool miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const* 
             return true;
 
         case KEY_TAB:
-            tools.focus_next_application();
+            if (self->alt_tab_state == AltTabState::none) {
+                self->alt_tab_state = AltTabState::forward;
+                self->tab_jump = 1;
+            }
+            else
+            {
+                self->tab_jump++;
+            }
             return true;
 
         case KEY_GRAVE:
@@ -184,6 +201,27 @@ bool miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const* 
             return true;
 
         default:;
+        }
+    }
+
+    if (action == mir_keyboard_action_up)
+    {
+        switch (mir_keyboard_event_scan_code(event))
+        {
+            case KEY_LEFTALT:
+                if (self->alt_tab_state == AltTabState::forward) {
+                    // TODO: Implement jump
+                    tools.for_each_application([&](ApplicationInfo& info)
+                       {
+                           tools.
+                       });
+                    tools.focus_next_application();
+
+                    self->tab_jump = 0;
+                    self->alt_tab_state = AltTabState::none;
+                }
+                break;
+            default:;
         }
     }
 

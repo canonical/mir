@@ -28,10 +28,29 @@ namespace scene
 {
 class Session;
 
+enum class SessionContainerFocusStrategy
+{
+    /// Successor and predecessor sessions will be determined by
+    /// their order of insertion into the list.
+    /// e.g. If the session list contains A, B, C and D,
+    /// then B will always be the successor of A, C the successor
+    /// of B, and so forth.
+    insertion_order,
+
+    /// Successor and predecessor sessions will be determined by
+    /// which sessions were most recently focused.
+    /// e.g. If the session list contains A, B, C, and D
+    /// and D gains focus, then the focus order will be
+    /// D, A, B, and C such that A is now the successor of D.
+    focus_order
+};
+
+/// Provides access to the ordered list of active sessions.
+/// TODO: Perhaps we could provide an organization policy here?
 class SessionContainer
 {
 public:
-    SessionContainer();
+    SessionContainer(SessionContainerFocusStrategy);
     ~SessionContainer();
 
     void insert_session(std::shared_ptr<Session> const& session);
@@ -39,15 +58,27 @@ public:
 
     void for_each(std::function<void(std::shared_ptr<Session> const&)> f) const;
 
-    // For convenience the successor of the null session is defined as the last session
-    // which would be passed to the for_each callback
+    /// Retrieves the session that immediately follows the provided session in the list.
+    /// If the session is the last session in the list, the first session in the list is returned.
+    /// For convenience the successor of the null session is defined as the last session
+    /// which would be passed to the for_each callback
+    /// TODO: Rename to something like "access next".
     auto successor_of(std::shared_ptr<Session> const&) const -> std::shared_ptr<Session> ;
+
+    /// Retrieves the session that occurs immediately before the provided session in the list.
+    /// If the session is the first in the list, the last session in the list is returned.
+    /// For convenience the predecessor of the null session is defined as the first session
+    /// in the list.
+    /// TODO: Rename to someting like "access previous".
     auto predecessor_of(std::shared_ptr<Session> const&) const -> std::shared_ptr<Session> ;
+
+    void set_focus_to(std::shared_ptr<Session> const&);
 
     SessionContainer(const SessionContainer&) = delete;
     SessionContainer& operator=(const SessionContainer&) = delete;
 
 private:
+    SessionContainerFocusStrategy focus_strategy = SessionContainerFocusStrategy::insertion_order;
     std::vector<std::shared_ptr<Session>> apps;
     mutable std::mutex guard;
 };

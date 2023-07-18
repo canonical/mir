@@ -67,6 +67,9 @@ void miral::WindowManagerTools::focus_next_application()
 void miral::WindowManagerTools::focus_prev_application()
 { tools->focus_prev_application(); }
 
+void miral::WindowManagerTools::focus_application(miral::Application app)
+{ tools->focus_application(app); }
+
 void miral::WindowManagerTools::focus_next_within_application()
 { tools->focus_next_within_application(); }
 

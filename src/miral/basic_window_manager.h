@@ -167,6 +167,7 @@ public:
 
     void focus_next_application() override;
     void focus_prev_application() override;
+    void focus_application(Application application) override;
 
     void focus_next_within_application() override;
     void focus_prev_within_application() override;
