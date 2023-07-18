@@ -286,6 +286,9 @@ auto miral::MinimalWindowManager::confirm_inherited_move(WindowInfo const& windo
 void miral::MinimalWindowManager::advise_focus_gained(WindowInfo const& window_info)
 {
     tools.raise_tree(window_info.window());
+    if (!self->is_alt_tabbing) {
+        tools.todo_bring_application_to_front(window_info.window().application());
+    }
 }
 
 bool miral::MinimalWindowManager::Impl::prepare_for_gesture(
