@@ -20,7 +20,7 @@ jobs:
       id: get-version
       run: |
         if ${{ github.event_name == 'push' }}; then
-          version="$( echo '${{ github.ref }}' | sed 's/^v//' )"
+          version="$( echo '${{ github.ref }}' | sed 's@^refs/tags/v@@' )"
         else
           version='${{ inputs.version }}'
         fi
