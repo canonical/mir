@@ -106,7 +106,7 @@ auto mir::scene::SessionContainer::predecessor_of(std::shared_ptr<Session> const
     BOOST_THROW_EXCEPTION(std::logic_error("Invalid session"));
 }
 
-void mir::scene::SessionContainer::todo_bring_application_to_front(std::shared_ptr<Session> const& session)
+void mir::scene::SessionContainer::move_to_front_of_list(std::shared_ptr<Session> const& session)
 {
     auto it = std::find(apps.begin(), apps.end(), session);
     if (it != apps.end())

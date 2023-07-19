@@ -176,7 +176,6 @@ public:
 
     auto get_next_application_info(ApplicationInfo) -> ApplicationInfo override;
     auto get_previous_application_info(ApplicationInfo) -> ApplicationInfo override;
-    void todo_bring_application_to_front(Application application) override;
 
     auto window_at(mir::geometry::Point cursor) const -> Window override;
 

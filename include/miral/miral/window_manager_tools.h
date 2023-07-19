@@ -169,9 +169,6 @@ public:
     /// Retrieve information about the application behind the provided application.
     auto get_previous_application_info(ApplicationInfo) -> ApplicationInfo;
 
-    /// moves the provided application to the front of the application queue
-    void todo_bring_application_to_front(Application);
-
     /// Find the topmost window at the cursor
     auto window_at(mir::geometry::Point cursor) const -> Window;
 

@@ -49,8 +49,8 @@ auto ApplicationSelector::complete() -> Application
     printf("Complete\n");
     is_started = false;
     if (tools.can_focus_application(selected.application())) {
-        tools.focus_this_application(selected.application());
-        tools.todo_bring_application_to_front(selected.application());
+        auto window = tools.info_for(selected.application()->default_surface()).window();
+        tools.select_active_window(window);
     }
     return selected.application();
 }

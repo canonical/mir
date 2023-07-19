@@ -129,8 +129,6 @@ public:
     auto get_next_session(std::shared_ptr<scene::Session>) -> std::shared_ptr<scene::Session> override;
     auto get_prev_session(std::shared_ptr<scene::Session>) -> std::shared_ptr<scene::Session> override;
 
-    void todo_bring_application_to_front(std::shared_ptr<scene::Session> const& surface) override;
-
     std::shared_ptr<scene::Session> focused_session() const override;
 
     void set_popup_grab_tree(std::shared_ptr<scene::Surface> const& surface) override;

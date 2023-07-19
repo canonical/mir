@@ -75,8 +75,6 @@ private:
     virtual auto get_next_application_info(ApplicationInfo) -> ApplicationInfo override;
     virtual auto get_previous_application_info(ApplicationInfo) -> ApplicationInfo override;
 
-    virtual void todo_bring_application_to_front(Application application) override;
-
     virtual void raise_tree(Window const& root) override;
 
     virtual void modify_window(WindowInfo& window_info, WindowSpecification const& modifications) override;

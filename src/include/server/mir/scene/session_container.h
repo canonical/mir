@@ -45,17 +45,18 @@ public:
     /// If the session is the last session in the list, the first session in the list is returned.
     /// For convenience the successor of the null session is defined as the last session
     /// which would be passed to the for_each callback
-    /// TODO: Rename to something like "access next".
     auto successor_of(std::shared_ptr<Session> const&) const -> std::shared_ptr<Session> ;
 
     /// Retrieves the session that occurs immediately before the provided session in the list.
     /// If the session is the first in the list, the last session in the list is returned.
     /// For convenience the predecessor of the null session is defined as the first session
     /// in the list.
-    /// TODO: Rename to someting like "access previous".
     auto predecessor_of(std::shared_ptr<Session> const&) const -> std::shared_ptr<Session> ;
 
-    void todo_bring_application_to_front(std::shared_ptr<Session> const& session);
+    /// Moves the provided session to the front of the apps list such that its successor
+    /// is now the previous head of the list and its predecessor is the tail of the list.
+    /// \param session Session to move to the front of the list
+    void move_to_front_of_list(std::shared_ptr<Session> const& session);
 
     SessionContainer(const SessionContainer&) = delete;
     SessionContainer& operator=(const SessionContainer&) = delete;

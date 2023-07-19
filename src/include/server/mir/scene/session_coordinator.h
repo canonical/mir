@@ -42,7 +42,6 @@ class SessionCoordinator
 public:
     virtual void set_focus_to(std::shared_ptr<Session> const& focus) = 0;
     virtual void unset_focus() = 0;
-    virtual void todo_bring_application_to_front(std::shared_ptr<Session> const&) = 0;
 
     virtual auto open_session(
         pid_t client_pid,

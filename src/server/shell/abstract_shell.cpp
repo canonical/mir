@@ -452,12 +452,6 @@ auto msh::AbstractShell::get_prev_session(std::shared_ptr<scene::Session> sessio
     return session_coordinator->predecessor_of(session);
 }
 
-void msh::AbstractShell::todo_bring_application_to_front(std::shared_ptr<scene::Session> const& session)
-{
-    std::unique_lock lock(focus_mutex);
-    session_coordinator->todo_bring_application_to_front(session);
-}
-
 std::shared_ptr<ms::Session> msh::AbstractShell::focused_session() const
 {
     std::unique_lock lg(focus_mutex);

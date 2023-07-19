@@ -85,9 +85,6 @@ auto miral::WindowManagerTools::get_next_application_info(ApplicationInfo info) 
 auto miral::WindowManagerTools::get_previous_application_info(ApplicationInfo info) -> ApplicationInfo
 { return tools->get_previous_application_info(info); }
 
-void miral::WindowManagerTools::todo_bring_application_to_front(Application application)
-{ tools->todo_bring_application_to_front(application); }
-
 auto miral::WindowManagerTools::window_at(mir::geometry::Point cursor) const -> Window
 { return tools->window_at(cursor); }
 

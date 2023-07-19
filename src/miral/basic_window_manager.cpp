@@ -891,7 +891,44 @@ void miral::BasicWindowManager::focus_prev_within_application()
 
 auto miral::BasicWindowManager::can_focus_application(Application application) -> bool
 {
-    return can_activate_window_for_session(application);
+    bool can_focus = false;
+    miral::Window new_focus;
+    auto const prev_window = active_window();
+
+    // We return "false" in the enumeration when we set "can_focus" to true
+    // because we only stop looking when we return false from the enumerator.
+    mru_active_windows.enumerate([&](miral::Window& window)
+     {
+        // We don't want to select a different application
+         if (window.application() != application) {
+             return true;
+         }
+
+         // Check if the previous window has to remain focused
+         auto const prev_windows_focus_mode = prev_window ? info_for(prev_window).focus_mode() : mir_focus_mode_focusable;
+         if (prev_windows_focus_mode == mir_focus_mode_grabbing)
+         {
+             return true;
+         }
+
+         // Check if the new window selection has selection disabled
+         auto& desired_window_selection = info_for(window);
+         if (desired_window_selection.focus_mode() == mir_focus_mode_disabled)
+         {
+             return true;
+         }
+
+         // Check if we can activate it at all.
+         if (desired_window_selection.can_be_active() && desired_window_selection.state() != mir_window_state_hidden)
+         {
+             can_focus = true;
+             return false;
+         }
+
+         return true;
+     });
+
+    return can_focus;
 }
 
 auto miral::BasicWindowManager::get_next_application_info(ApplicationInfo info) -> ApplicationInfo
@@ -904,11 +941,6 @@ auto miral::BasicWindowManager::get_previous_application_info(ApplicationInfo in
 {
     auto session = focus_controller->get_prev_session(info.application());
     return info_for(session);
-}
-
-void miral::BasicWindowManager::todo_bring_application_to_front(Application application)
-{
-    focus_controller->todo_bring_application_to_front(application);
 }
 
 auto miral::BasicWindowManager::window_at(geometry::Point cursor) const

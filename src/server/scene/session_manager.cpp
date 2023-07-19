@@ -159,17 +159,13 @@ void ms::SessionManager::set_focus_to(std::shared_ptr<Session> const& session)
 {
     session_event_sink->handle_focus_change(session);
     observers->focused(session);
+    app_container->move_to_front_of_list(session);
 }
 
 void ms::SessionManager::unset_focus()
 {
     session_event_sink->handle_no_focus();
     observers->unfocused();
-}
-
-void ms::SessionManager::todo_bring_application_to_front(std::shared_ptr<Session> const& session)
-{
-    app_container->todo_bring_application_to_front(session);
 }
 
 void ms::SessionManager::close_session(std::shared_ptr<Session> const& session)
