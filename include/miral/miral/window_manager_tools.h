@@ -161,13 +161,13 @@ public:
     void focus_prev_within_application();
 
     /// Returns true if the application is focusable, otherwise false.
-    auto can_focus_application(Application application) -> bool;
+    auto can_focus_application(Application application) const -> bool;
 
     /// Retrieve information about the application following the provided application
-    auto get_next_application_info(ApplicationInfo) -> ApplicationInfo;
+    auto get_next_application_info(ApplicationInfo) const -> ApplicationInfo;
 
     /// Retrieve information about the application behind the provided application.
-    auto get_previous_application_info(ApplicationInfo) -> ApplicationInfo;
+    auto get_previous_application_info(ApplicationInfo) const -> ApplicationInfo;
 
     /// Find the topmost window at the cursor
     auto window_at(mir::geometry::Point cursor) const -> Window;

@@ -59,12 +59,12 @@ struct StubShell : public shell::Shell
     {
     }
 
-    auto get_next_session(std::shared_ptr<scene::Session>) -> std::shared_ptr<scene::Session> override
+    auto get_next_session(std::shared_ptr<scene::Session>) const -> std::shared_ptr<scene::Session> override
     {
         return std::make_shared<StubSession>();
     }
 
-    auto get_prev_session(std::shared_ptr<scene::Session>) -> std::shared_ptr<scene::Session> override
+    auto get_prev_session(std::shared_ptr<scene::Session>) const -> std::shared_ptr<scene::Session> override
     {
         return std::make_shared<StubSession>();
     }

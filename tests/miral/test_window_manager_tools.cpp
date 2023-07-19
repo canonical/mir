@@ -52,7 +52,8 @@ struct StubFocusController : mir::shell::FocusController
         focused = get_prev_session(focused);
     }
 
-    auto get_next_session(std::shared_ptr<mir::scene::Session> session) -> std::shared_ptr<mir::scene::Session> override
+    auto get_next_session(std::shared_ptr<mir::scene::Session> session) const
+        -> std::shared_ptr<mir::scene::Session> override
     {
         auto it = std::find(session_list.begin(), session_list.end(), session);
         if (it == session_list.end())
@@ -64,7 +65,8 @@ struct StubFocusController : mir::shell::FocusController
         return *(++it);
     }
 
-    auto get_prev_session(std::shared_ptr<mir::scene::Session> session) -> std::shared_ptr<mir::scene::Session> override
+    auto get_prev_session(std::shared_ptr<mir::scene::Session> session) const
+        -> std::shared_ptr<mir::scene::Session> override
     {
         auto it = std::find(session_list.begin(), session_list.end(), session);
         if (it == session_list.end())

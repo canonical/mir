@@ -585,7 +585,7 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
-auto miral::WindowManagementTrace::can_focus_application(Application app) -> bool
+auto miral::WindowManagementTrace::can_focus_application(Application app) const -> bool
 try {
     log_input();
     mir::log_info("%s", __func__);
@@ -594,7 +594,7 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
-auto miral::WindowManagementTrace::get_next_application_info(ApplicationInfo info) -> ApplicationInfo
+auto miral::WindowManagementTrace::get_next_application_info(ApplicationInfo info) const -> ApplicationInfo
 try {
     log_input();
     mir::log_info("%s", __func__);
@@ -603,7 +603,7 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
-auto miral::WindowManagementTrace::get_previous_application_info(ApplicationInfo info) -> ApplicationInfo
+auto miral::WindowManagementTrace::get_previous_application_info(ApplicationInfo info) const -> ApplicationInfo
 try {
     log_input();
     mir::log_info("%s", __func__);

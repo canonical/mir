@@ -915,7 +915,7 @@ void miral::BasicWindowManager::focus_prev_within_application()
     }
 }
 
-auto miral::BasicWindowManager::can_focus_application(Application application) -> bool
+auto miral::BasicWindowManager::can_focus_application(Application application) const -> bool
 {
     bool can_focus = false;
     miral::Window new_focus;
@@ -957,13 +957,13 @@ auto miral::BasicWindowManager::can_focus_application(Application application) -
     return can_focus;
 }
 
-auto miral::BasicWindowManager::get_next_application_info(ApplicationInfo info) -> ApplicationInfo
+auto miral::BasicWindowManager::get_next_application_info(ApplicationInfo info) const -> ApplicationInfo
 {
     auto session = focus_controller->get_next_session(info.application());
     return info_for(session);
 }
 
-auto miral::BasicWindowManager::get_previous_application_info(ApplicationInfo info) -> ApplicationInfo
+auto miral::BasicWindowManager::get_previous_application_info(ApplicationInfo info) const -> ApplicationInfo
 {
     auto session = focus_controller->get_prev_session(info.application());
     return info_for(session);

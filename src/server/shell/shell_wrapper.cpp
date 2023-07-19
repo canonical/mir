@@ -50,13 +50,13 @@ void msh::ShellWrapper::focus_prev_session()
     wrapped->focus_prev_session();
 }
 
-auto msh::ShellWrapper::get_next_session(std::shared_ptr<scene::Session> session)
+auto msh::ShellWrapper::get_next_session(std::shared_ptr<scene::Session> session) const
     -> std::shared_ptr<scene::Session>
 {
     return wrapped->get_next_session(session);
 }
 
-auto msh::ShellWrapper::get_prev_session(std::shared_ptr<scene::Session> session)
+auto msh::ShellWrapper::get_prev_session(std::shared_ptr<scene::Session> session) const
     -> std::shared_ptr<scene::Session>
 {
     return wrapped->get_prev_session(session);
