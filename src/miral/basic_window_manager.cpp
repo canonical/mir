@@ -594,10 +594,36 @@ void miral::BasicWindowManager::focus_next_application()
 
 void miral::BasicWindowManager::focus_this_application(Application application)
 {
+    // First, attempt to focus the provided application immediately
     focus_controller->set_focus_to(
         application,
         application->default_surface()
     );
+
+    // Next, we check if we can focus the window provided the current session constraints.
+    if (auto const prev = active_window())
+    {
+        auto const workspaces_containing_window = workspaces_containing(prev);
+
+        if (!workspaces_containing_window.empty())
+        {
+            if (can_activate_window_for_session_in_workspace(application, workspaces_containing_window))
+            {
+                return;
+            }
+        }
+        else if (can_activate_window_for_session(focus_controller->focused_session()))
+        {
+            return;
+        }
+    }
+    else if (can_activate_window_for_session(focus_controller->focused_session()))
+    {
+        return;
+    }
+
+    // Finally, if we cannot focus the window, then we focus the next applicaiton as a safe fallback
+    focus_next_application();
 }
 
 void miral::BasicWindowManager::focus_prev_application()
