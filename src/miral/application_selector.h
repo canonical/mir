@@ -25,7 +25,7 @@ namespace miral
 
 /// Manages the selection of applications using keyboard shortcuts,
 /// most likely via Alt + Tab. When "start" is called, the next application
-/// in the SessionContainer's list after the currently focuse application
+/// in the SessionContainer's list after the currently focused application
 /// will be raised. When "next" is called, the application after that will be
 /// raised, and so on. When "complete" is called, the currently raised application
 /// will gain focus and be returned.
@@ -62,7 +62,7 @@ private:
     /// The raised application
     ApplicationInfo selected;
 
-    /// Figure out the next application in the list and then raise it.
+    /// Finds the next application in the list and raises it
     void raise_next();
 };
 

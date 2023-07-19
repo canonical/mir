@@ -622,7 +622,7 @@ void miral::BasicWindowManager::focus_this_application(Application application)
         return;
     }
 
-    // Finally, if we cannot focus the window, then we focus the next applicaiton as a safe fallback
+    // Finally, if we cannot focus the window, then we focus the next application as a safe fallback
     focus_next_application();
 }
 
