@@ -50,6 +50,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     ignored_requests.cpp
     focus_mode.cpp
     fd_manager.cpp
+    application_selector.cpp
     ${MIRAL_TEST_SOURCES}
 )
 

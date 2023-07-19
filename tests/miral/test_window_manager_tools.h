@@ -20,7 +20,7 @@
 #include "basic_window_manager.h"
 
 #include <miral/canonical_window_manager.h>
-
+#include <miral/window.h>
 #include <mir/shell/surface_specification.h>
 #include <mir/scene/surface.h>
 
@@ -92,6 +92,14 @@ public:
         -> std::shared_ptr<graphics::DisplayConfiguration const>;
     void notify_configuration_applied(
         std::shared_ptr<graphics::DisplayConfiguration const> display_config);
+
+    /// Creates a new session, adds a surface to the session, and then sets the resulting window as
+    /// the active window. This simulates a client's experience of opening up a window. (Note:
+    /// this method also helpfully mocks the interactions that AbstractShell would handle to make
+    /// a more realistic experience.)
+    /// \param creation_parameters
+    /// \returns The active window
+    auto create_and_select_window(mir::shell::SurfaceSpecification creation_parameters) -> miral::Window;
 };
 
 }

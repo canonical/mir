@@ -38,7 +38,8 @@ public:
     /// that immediately follows the currently selected application
     /// in the SessionContainer's list.
     /// \param reverse If true, selection will happen in reverse, otherwise forward.
-    void start(bool reverse);
+    /// \returns The raised application
+    auto start(bool reverse) -> Application;
 
     /// Lowers the currently raised application and raises the application
     /// that follows it.

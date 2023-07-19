@@ -30,6 +30,7 @@
 #include <mir/test/doubles/stub_session.h>
 #include <mir/test/doubles/stub_surface.h>
 #include <mir/test/fake_shared.h>
+#include <mir/scene/session_coordinator.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -41,18 +42,53 @@ namespace
 
 struct StubFocusController : mir::shell::FocusController
 {
-    void focus_next_session() override {}
-    void focus_prev_session() override {}
-    auto get_next_session(std::shared_ptr<mir::scene::Session>) -> std::shared_ptr<mir::scene::Session> override { return {}; }
-    auto get_prev_session(std::shared_ptr<mir::scene::Session>) -> std::shared_ptr<mir::scene::Session> override { return {}; }
+    void focus_next_session() override
+    {
+        focused = get_next_session(focused);
+    }
 
-    auto focused_session() const -> std::shared_ptr<mir::scene::Session> override { return {}; }
+    void focus_prev_session() override
+    {
+        focused = get_prev_session(focused);
+    }
+
+    auto get_next_session(std::shared_ptr<mir::scene::Session> session) -> std::shared_ptr<mir::scene::Session> override
+    {
+        auto it = std::find(session_list.begin(), session_list.end(), session);
+        if (it == session_list.end())
+            return nullptr;
+
+        if (it == session_list.end() - 1)
+            return *(session_list.begin());
+
+        return *(++it);
+    }
+
+    auto get_prev_session(std::shared_ptr<mir::scene::Session> session) -> std::shared_ptr<mir::scene::Session> override
+    {
+        auto it = std::find(session_list.begin(), session_list.end(), session);
+        if (it == session_list.end())
+            return nullptr;
+
+        if (it == session_list.begin())
+            return *(session_list.end() - 1);
+
+        return *(--it);
+    }
+
+    auto focused_session() const -> std::shared_ptr<mir::scene::Session> override
+    {
+        return focused;
+    }
 
     void set_popup_grab_tree(std::shared_ptr<mir::scene::Surface> const& /*surface*/) override {}
 
     void set_focus_to(
-        std::shared_ptr<mir::scene::Session> const& /*focus_session*/,
-        std::shared_ptr<mir::scene::Surface> const& /*focus_surface*/) override {}
+        std::shared_ptr<mir::scene::Session> const& focus_session,
+        std::shared_ptr<mir::scene::Surface> const& /*focus_surface*/) override
+    {
+        focused = focus_session;
+    }
 
     auto focused_surface() const -> std::shared_ptr<mir::scene::Surface> override { return {}; }
 
@@ -60,6 +96,24 @@ struct StubFocusController : mir::shell::FocusController
 
     virtual auto surface_at(mir::geometry::Point /*cursor*/) const -> std::shared_ptr<mir::scene::Surface> override
         { return {}; }
+
+    /// Used to fake Shell::open_session. Adding sessions to the list
+    /// ensures that methods like "focused_session" and "get_next_session" behave
+    /// as one would expect.
+    void mock_open_session(std::shared_ptr<mir::scene::Session> session)
+    {
+        session_list.push_back(session);
+    }
+
+    /// Used to fake Shell::close_session.
+    void mock_close_session(std::shared_ptr<mir::scene::Session>const& session)
+    {
+        std::remove(session_list.begin(), session_list.end(), session);
+    }
+
+private:
+    std::vector<std::shared_ptr<mir::scene::Session>> session_list;
+    std::shared_ptr<mir::scene::Session> focused;
 };
 
 struct StubDisplayLayout : mir::shell::DisplayLayout
@@ -280,7 +334,6 @@ struct mt::TestWindowManagerTools::Self
     StubDisplayLayout display_layout;
     StubPersistentSurfaceStore persistent_surface_store;
     FakeDisplayConfigurationObserverRegistrar display_configuration_observer;
-
 };
 
 mt::TestWindowManagerTools::TestWindowManagerTools()
@@ -366,4 +419,27 @@ void mt::TestWindowManagerTools::notify_configuration_applied(
     std::shared_ptr<graphics::DisplayConfiguration const> display_config)
 {
     self->display_configuration_observer.notify_configuration_applied(display_config);
+}
+
+auto mt::TestWindowManagerTools::create_and_select_window(
+    mir::shell::SurfaceSpecification creation_parameters) -> miral::Window
+{
+    miral::Window result;
+
+    EXPECT_CALL(*window_manager_policy, advise_new_window(testing::_))
+        .WillOnce(
+            testing::Invoke(
+                [&result](miral::WindowInfo const& window_info)
+                { result = window_info.window(); }));
+
+    auto session_to_add = std::make_shared<StubStubSession>();
+    self->focus_controller.mock_open_session(session_to_add);
+    basic_window_manager.add_session(session_to_add);
+    basic_window_manager.add_surface(session_to_add, creation_parameters, &create_surface);
+    basic_window_manager.select_active_window(result);
+
+    // Clear the expectations used to capture parent & child
+    testing::Mock::VerifyAndClearExpectations(window_manager_policy);
+
+    return result;
 }

@@ -491,15 +491,9 @@ global:
     miral::WaylandExtensions::ext_session_lock_manager_v1*;
     miral::WindowInfo::visible_on_lock_screen*;
     miral::WindowSpecification::visible_on_lock_screen*;
-  };
-} MIRAL_3.8;
-
-MIRAL_3.10 {
-global:
-  extern "C++" {
     miral::WindowManagerTools::focus_this_application*;
     miral::WindowManagerTools::can_focus_application*;
-    miral::WindowManagerTools::get_next_application_info*;
     miral::WindowManagerTools::get_previous_application_info*;
+    miral::WindowManagerTools::get_next_application_info*;
   };
-} MIRAL_3.9;
+} MIRAL_3.8;
