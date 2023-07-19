@@ -38,16 +38,16 @@ public:
     /// that immediately follows the currently selected application
     /// in the SessionContainer's list.
     /// \param reverse If true, selection will happen in reverse, otherwise forward.
-    /// \returns The raised application
+    /// \returns The raised application, or nullptr in the case of a failure
     auto start(bool reverse) -> Application;
 
     /// Lowers the currently raised application and raises the application
     /// that follows it.
-    /// \returns The raised application
+    /// \returns The raised application, or nullptr in the case of a failure
     auto next() -> Application ;
 
     /// Focuses the currently selected Application.
-    /// \returns The newly selected application
+    /// \returns The newly selected application, or nullptr in the case of a failure
     auto complete() -> Application ;
 
     /// Retrieve whether or not the selector is in progress.

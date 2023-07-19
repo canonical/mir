@@ -32,6 +32,8 @@ struct ApplicationSelectorTest : mt::TestWindowManagerTools
     {}
 };
 
+/// Testing if we can cycle through 3 windows and then select one
+/// with a "forward" selection strategy.
 TEST_F(ApplicationSelectorTest, run_forward)
 {
     // Create three windows on our display
@@ -62,6 +64,8 @@ TEST_F(ApplicationSelectorTest, run_forward)
     EXPECT_TRUE(application == window2.application());
 }
 
+/// Testing if we can cycle through 3 windows and then select one
+/// with a "reverse" selection strategy.
 TEST_F(ApplicationSelectorTest, run_backward)
 {
     // Create three windows on our display
@@ -87,7 +91,16 @@ TEST_F(ApplicationSelectorTest, run_backward)
     application = application_selector.next();
     EXPECT_TRUE(application == window1.application());
 
-    // Stop the selector and assert that window2 is selected
+    // Stop the selector and assert that window1 is selected
     application = application_selector.complete();
     EXPECT_TRUE(application == window1.application());
+}
+
+/// Testing if we can start the selector when there are no sessions started.
+TEST_F(ApplicationSelectorTest, run_with_no_sessions)
+{
+    // Start the selector and assert that an application could not be raised
+    auto application = application_selector.start(false);
+    EXPECT_TRUE(application == nullptr);
+    EXPECT_FALSE(application_selector.is_active());
 }
