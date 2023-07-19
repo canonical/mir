@@ -23,6 +23,7 @@
 #include <xcb/xfixes.h>
 #include <string.h>
 #include <unistd.h>
+#include <algorithm>
 #include <map>
 #include <set>
 
@@ -141,7 +142,8 @@ public:
         }
         else
         {
-            data.insert(data.end(), new_data.begin(), new_data.end());
+            data.reserve(data.size() + new_data.size());
+            std::copy(new_data.begin(), new_data.end(), std::back_inserter(data));
             return false;
         }
     }
