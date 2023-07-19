@@ -29,7 +29,6 @@ namespace scene
 class Session;
 
 /// Provides access to the ordered list of active sessions.
-/// TODO: Perhaps we could provide an organization policy here?
 class SessionContainer
 {
 public:
