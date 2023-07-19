@@ -936,3 +936,13 @@ MIR_SERVER_2.14 {
       "mir::DefaultServerConfiguration::the_pointer_input_dispatcher()";
     };
 } MIR_SERVER_2.11;
+
+MIR_SERVER_2.15 {
+  global:
+    extern "C++" {
+      mir::shell::AbstractShell::get_next_session*;
+      mir::shell::AbstractShell::get_prev_session*;
+      mir::shell::ShellWrapper::get_next_session*;
+      mir::shell::ShellWrapper::get_prev_session*;
+    };
+} MIR_SERVER_2.14;
