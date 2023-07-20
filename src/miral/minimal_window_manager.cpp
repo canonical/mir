@@ -281,9 +281,20 @@ auto miral::MinimalWindowManager::confirm_inherited_move(WindowInfo const& windo
     return {window_info.window().top_left()+movement, window_info.window().size()};
 }
 
+void miral::MinimalWindowManager::advise_new_app(miral::ApplicationInfo& app_info)
+{
+    self->application_selector.advise_new_app(app_info.application());
+}
+
 void miral::MinimalWindowManager::advise_focus_gained(WindowInfo const& window_info)
 {
     tools.raise_tree(window_info.window());
+    self->application_selector.advise_focus_gained(window_info);
+}
+
+void miral::MinimalWindowManager::advise_delete_app(miral::ApplicationInfo const &app_info)
+{
+    self->application_selector.advise_delete_app(app_info.application());
 }
 
 bool miral::MinimalWindowManager::Impl::prepare_for_gesture(

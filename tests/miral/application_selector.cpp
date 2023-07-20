@@ -48,20 +48,32 @@ TEST_F(ApplicationSelectorTest, run_forward)
     creation_parameters.name = "window3";
     auto window3 = create_and_select_window(creation_parameters);
 
+    // Inform the application selector about the windows
+    application_selector.advise_new_app(window1.application());
+    application_selector.advise_focus_gained(window_manager_tools.info_for(window1));
+    application_selector.advise_new_app(window2.application());
+    application_selector.advise_focus_gained(window_manager_tools.info_for(window2));
+    application_selector.advise_new_app(window3.application());
+    application_selector.advise_focus_gained(window_manager_tools.info_for(window3));
+
     // Make sure that window3 (the last one added) is the active one
     EXPECT_TRUE(window3 == basic_window_manager.active_window());
 
-    // Start the selector and assert that the raised application is window1
+    // Start the selector and assert that the selected application is window2
     auto application = application_selector.next(false);
-    EXPECT_TRUE(application == window1.application());
-
-    // Call next and assert that we have moved to window2
-    application = application_selector.next(false);
     EXPECT_TRUE(application == window2.application());
+
+    // Call next and assert that we have moved to window1
+    application = application_selector.next(false);
+    EXPECT_TRUE(application == window1.application());
 
     // Stop the selector and assert that window2 is selected
     application = application_selector.next(false);
-    EXPECT_TRUE(application == window2.application());
+    EXPECT_TRUE(application == window3.application());
+
+    application_selector.advise_delete_app(window1.application());
+    application_selector.advise_delete_app(window2.application());
+    application_selector.advise_delete_app(window3.application());
 }
 
 /// Testing if we can cycle through 3 windows and then select one
@@ -80,20 +92,32 @@ TEST_F(ApplicationSelectorTest, run_backward)
     creation_parameters.name = "window3";
     auto window3 = create_and_select_window(creation_parameters);
 
+    // Inform the application selector about the windows
+    application_selector.advise_new_app(window1.application());
+    application_selector.advise_focus_gained(window_manager_tools.info_for(window1));
+    application_selector.advise_new_app(window2.application());
+    application_selector.advise_focus_gained(window_manager_tools.info_for(window2));
+    application_selector.advise_new_app(window3.application());
+    application_selector.advise_focus_gained(window_manager_tools.info_for(window3));
+
     // Make sure that window3 (the last one added) is the active one
     EXPECT_TRUE(window3 == basic_window_manager.active_window());
 
     // Start the selector and assert that the raised application is window2
     auto application = application_selector.next(true);
-    EXPECT_TRUE(application == window2.application());
+    EXPECT_TRUE(application == window1.application());
 
     // Call next and assert that we have moved to window1
     application = application_selector.next(true);
-    EXPECT_TRUE(application == window1.application());
+    EXPECT_TRUE(application == window2.application());
 
     // Stop the selector and assert that window1 is selected
     application = application_selector.complete();
-    EXPECT_TRUE(application == window1.application());
+    EXPECT_TRUE(application == window2.application());
+
+    application_selector.advise_delete_app(window1.application());
+    application_selector.advise_delete_app(window2.application());
+    application_selector.advise_delete_app(window3.application());
 }
 
 /// Testing if we can start the selector when there are no sessions started.
@@ -116,6 +140,10 @@ TEST_F(ApplicationSelectorTest, run_in_circle)
     creation_parameters.set_size({600, 400});
     auto window1 = create_and_select_window(creation_parameters);
 
+    // Inform the application selector about the window
+    application_selector.advise_new_app(window1.application());
+    application_selector.advise_focus_gained(window_manager_tools.info_for(window1));
+
     // Make sure that window3 (the last one added) is the active one
     EXPECT_TRUE(window1 == basic_window_manager.active_window());
 
@@ -130,4 +158,6 @@ TEST_F(ApplicationSelectorTest, run_in_circle)
     // Stop the selector and assert that window1 is selected
     application = application_selector.complete();
     EXPECT_TRUE(application == window1.application());
+
+    application_selector.advise_delete_app(window1.application());
 }

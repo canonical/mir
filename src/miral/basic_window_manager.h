@@ -165,7 +165,6 @@ public:
 
     void drag_window(Window const& window, Displacement& movement) override;
 
-    void focus_this_application(Application application) override;
     void focus_next_application() override;
     void focus_prev_application() override;
 
@@ -173,9 +172,6 @@ public:
     void focus_prev_within_application() override;
 
     auto can_focus_application(Application application) const -> bool override;
-
-    auto get_next_application(Application) const -> Application override;
-    auto get_previous_application(Application) const -> Application override;
 
     auto window_at(mir::geometry::Point cursor) const -> Window override;
 

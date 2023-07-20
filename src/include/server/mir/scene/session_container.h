@@ -28,7 +28,7 @@ namespace scene
 {
 class Session;
 
-/// Provides access to the ordered list of active sessions.
+/// Provides access to the list of active sessions.
 class SessionContainer
 {
 public:
@@ -51,11 +51,6 @@ public:
     /// For convenience the predecessor of the null session is defined as the first session
     /// in the list.
     auto predecessor_of(std::shared_ptr<Session> const&) const -> std::shared_ptr<Session> ;
-
-    /// Moves the provided session to the front of the apps list such that its successor
-    /// is now the previous head of the list and its predecessor is the tail of the list.
-    /// \param session Session to move to the front of the list
-    void move_to_front_of_list(std::shared_ptr<Session> const& session);
 
     SessionContainer(const SessionContainer&) = delete;
     SessionContainer& operator=(const SessionContainer&) = delete;

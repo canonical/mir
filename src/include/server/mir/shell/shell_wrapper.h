@@ -30,8 +30,6 @@ public:
 
     void focus_next_session() override;
     void focus_prev_session() override;
-    auto get_next_session(std::shared_ptr<scene::Session>) const -> std::shared_ptr<scene::Session> override;
-    auto get_prev_session(std::shared_ptr<scene::Session>) const -> std::shared_ptr<scene::Session> override;
 
     auto focused_session() const -> std::shared_ptr<scene::Session> override;
 

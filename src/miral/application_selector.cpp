@@ -25,51 +25,91 @@ ApplicationSelector::ApplicationSelector(const miral::WindowManagerTools& in_too
     : tools{in_tools}
 {}
 
-auto ApplicationSelector::next(bool reverse) -> Application
+void ApplicationSelector::advise_new_app(Application const& application)
 {
-    // First, we find the currently focused application
+    focus_list.push_back(application);
+}
+
+void ApplicationSelector::advise_focus_gained(WindowInfo const& window_info)
+{
+    auto window = window_info.window();
+    if (!window)
+    {
+        return;
+    }
+
+    auto application = window.application();
+    if (!application)
+    {
+        return;
+    }
+
+    auto it = std::find(focus_list.begin(), focus_list.end(), application);
     if (!is_active())
     {
-        auto active_window = tools.active_window();
-        if (!active_window)
+        // If we are not active, we move the newly focused item to the front of the list.
+        if (it != focus_list.end())
         {
-            return nullptr;
+            std::rotate(focus_list.begin(), it, it + 1);
         }
+    }
+}
 
-        auto application = active_window.application();
-        if (!application)
-        {
-            return nullptr;
-        }
+void ApplicationSelector::advise_delete_app(Application const& application)
+{
+    auto it = std::find(focus_list.begin(), focus_list.end(), application);
+    if (it != focus_list.end())
+    {
+        focus_list.erase(it);
+    }
+}
 
-        root = application;
-        selected = root;
+auto ApplicationSelector::next(bool reverse) -> Application
+{
+    if (focus_list.empty())
+    {
+        return nullptr;
     }
 
-    // Then, we find a suitable application in the list based off of the direction.
-    // If we encounter theApplicationSelectorTest.run_in_circle presently selected application again, that means
-    // we have gone all the way around the list, so we can "break".
-    auto next_selected = selected;
+    if (!is_active())
+    {
+        originally_selected = focus_list.front();
+        selected = originally_selected;
+    }
+
+    // Attempt to focus the next application after the originally selected application.
+    auto it = std::find(focus_list.begin(), focus_list.end(), selected);
     do {
-        next_selected = reverse ? tools.get_previous_application(next_selected)
-                                : tools.get_next_application(next_selected);
-        if (next_selected == selected) break;
-    } while (!tools.can_focus_application(next_selected));
+        if (reverse)
+        {
+            if (it == focus_list.begin())
+            {
+                it = focus_list.end() - 1;
+            }
+            else
+            {
+                it--;
+            }
+        }
+        else
+        {
+            if (it == focus_list.end() - 1)
+            {
+                it = focus_list.begin();
+            }
+            else
+            {
+                it++;
+            }
+        }
+    } while (!tools.can_focus_application(*it));
 
-    // Next, raise the window, but note that we do not actually focus it.
-    // Note: The null checks here are mostly to accommodate the tests, however they are a good idea.
-    auto surface = next_selected ? next_selected->default_surface() : nullptr;
-    if (surface)
+    if (!try_select_application(*it))
     {
-        auto window = tools.info_for(surface).window();
-        tools.raise_tree(window);
-    }
-    else
-    {
-        mir::log_warning("ApplicationSelector::raise_next: Failed to raise the newly selected window.");
+        mir::log_warning("ApplicationSelector::next: Failed to select the next application.");
     }
 
-    selected = next_selected;
+    selected = *it;
     return selected;
 }
 
@@ -81,29 +121,30 @@ auto ApplicationSelector::complete() -> Application
         return nullptr;
     }
 
-    if (!try_select_application(selected))
+    // Place the newly selected item at the front of the list.
+    auto it = std::find(focus_list.begin(), focus_list.end(), selected);
+    if (it != focus_list.end())
     {
-        mir::log_warning("ApplicationSelector::complete: Failed to select the active window.");
+        std::rotate(focus_list.begin(), it, it + 1);
     }
 
-    root = nullptr;
+    originally_selected = nullptr;
     return selected;
 }
 
 void ApplicationSelector::cancel()
 {
-    if (!try_select_application(root))
+    if (!try_select_application(originally_selected))
     {
         mir::log_warning("ApplicationSelector::cancel: Failed to select the root.");
     }
-    
-    root = nullptr;
-    selected = nullptr;
+
+    originally_selected = nullptr;
 }
 
 auto ApplicationSelector::is_active() -> bool
 {
-    return root != nullptr;
+    return originally_selected != nullptr;
 }
 
 auto ApplicationSelector::try_select_application(Application application) -> bool

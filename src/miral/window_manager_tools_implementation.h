@@ -59,14 +59,11 @@ public:
     virtual auto select_active_window(Window const& hint) -> Window = 0;
     virtual void drag_active_window(mir::geometry::Displacement movement) = 0;
     virtual void drag_window(Window const& window, mir::geometry::Displacement& movement) = 0;
-    virtual void focus_this_application(Application application) = 0;
     virtual void focus_next_application() = 0;
     virtual void focus_prev_application() = 0;
     virtual void focus_next_within_application() = 0;
     virtual void focus_prev_within_application() = 0;
     virtual auto can_focus_application(Application application) const -> bool = 0;
-    virtual auto get_next_application(Application) const -> Application = 0;
-    virtual auto get_previous_application(Application) const -> Application = 0;
     virtual auto window_at(mir::geometry::Point cursor) const -> Window = 0;
     virtual auto active_output() -> mir::geometry::Rectangle const = 0;
     virtual auto active_application_zone() -> Zone = 0;

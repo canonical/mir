@@ -61,9 +61,6 @@ void miral::WindowManagerTools::drag_active_window(mir::geometry::Displacement m
 void miral::WindowManagerTools::drag_window(Window const& window, mir::geometry::Displacement movement)
 { tools->drag_window(window, movement); }
 
-void miral::WindowManagerTools::focus_this_application(miral::Application application)
-{ tools->focus_this_application(application); }
-
 void miral::WindowManagerTools::focus_next_application()
 { tools->focus_next_application(); }
 
@@ -78,12 +75,6 @@ void miral::WindowManagerTools::focus_prev_within_application()
 
 auto miral::WindowManagerTools::can_focus_application(Application application) const -> bool
 { return tools->can_focus_application(application); }
-
-auto miral::WindowManagerTools::get_next_application(Application application) const -> Application
-{ return tools->get_next_application(application); }
-
-auto miral::WindowManagerTools::get_previous_application(Application application) const -> Application
-{ return tools->get_previous_application(application); }
 
 auto miral::WindowManagerTools::window_at(mir::geometry::Point cursor) const -> Window
 { return tools->window_at(cursor); }

@@ -44,38 +44,10 @@ struct StubFocusController : mir::shell::FocusController
 {
     void focus_next_session() override
     {
-        focused = get_next_session(focused);
     }
 
     void focus_prev_session() override
     {
-        focused = get_prev_session(focused);
-    }
-
-    auto get_next_session(std::shared_ptr<mir::scene::Session> session) const
-        -> std::shared_ptr<mir::scene::Session> override
-    {
-        auto it = std::find(session_list.begin(), session_list.end(), session);
-        if (it == session_list.end())
-            return nullptr;
-
-        if (it == session_list.end() - 1)
-            return *(session_list.begin());
-
-        return *(++it);
-    }
-
-    auto get_prev_session(std::shared_ptr<mir::scene::Session> session) const
-        -> std::shared_ptr<mir::scene::Session> override
-    {
-        auto it = std::find(session_list.begin(), session_list.end(), session);
-        if (it == session_list.end())
-            return nullptr;
-
-        if (it == session_list.begin())
-            return *(session_list.end() - 1);
-
-        return *(--it);
     }
 
     auto focused_session() const -> std::shared_ptr<mir::scene::Session> override

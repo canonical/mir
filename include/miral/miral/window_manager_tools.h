@@ -143,11 +143,6 @@ public:
     /// move the window
     void drag_window(Window const& window, mir::geometry::Displacement movement);
 
-    /// make the provided application active
-    /// \param application To focus
-    /// \remark Since MirAL 3.10
-    void focus_this_application(Application application);
-
     /// make the next application active
     void focus_next_application();
 
@@ -164,14 +159,6 @@ public:
     /// Returns true if the application is focusable, otherwise false.
     /// \remark Since MirAL 3.10
     auto can_focus_application(Application application) const -> bool;
-
-    /// Retrieve information about the application following the provided application
-    /// \remark Since MirAL 3.10
-    auto get_next_application(Application) const -> Application;
-
-    /// Retrieve information about the application behind the provided application.
-    /// \remark Since MirAL 3.10
-    auto get_previous_application(Application) const -> Application;
 
     /// Find the topmost window at the cursor
     auto window_at(mir::geometry::Point cursor) const -> Window;
