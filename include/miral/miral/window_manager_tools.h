@@ -18,7 +18,6 @@
 #define MIRAL_WINDOW_MANAGER_TOOLS_H
 
 #include "miral/application.h"
-#include "miral/application_info.h"
 #include "window_info.h"
 
 #include <mir/geometry/displacement.h>
@@ -37,6 +36,7 @@ class Window;
 struct WindowInfo;
 class WindowSpecification;
 class Zone;
+struct ApplicationInfo;
 
 /**
  * Workspace is intentionally opaque in the miral API. Its only purpose is to
@@ -164,10 +164,10 @@ public:
     auto can_focus_application(Application application) const -> bool;
 
     /// Retrieve information about the application following the provided application
-    auto get_next_application_info(ApplicationInfo) const -> ApplicationInfo;
+    auto get_next_application(Application) const -> Application;
 
     /// Retrieve information about the application behind the provided application.
-    auto get_previous_application_info(ApplicationInfo) const -> ApplicationInfo;
+    auto get_previous_application(Application) const -> Application;
 
     /// Find the topmost window at the cursor
     auto window_at(mir::geometry::Point cursor) const -> Window;

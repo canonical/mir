@@ -15,6 +15,7 @@
  */
 
 #include "application_selector.h"
+#include <miral/application_info.h>
 #include <mir/scene/session.h>
 #include <mir/log.h>
 
@@ -45,11 +46,10 @@ auto ApplicationSelector::start(bool in_reverse) -> Application
         return nullptr;
     }
 
-    selected = tools.info_for(application);
     reverse = in_reverse;
     is_started = true;
     raise_next();
-    return selected.application();
+    return selected;
 }
 
 auto ApplicationSelector::next() -> Application
@@ -62,7 +62,7 @@ auto ApplicationSelector::next() -> Application
     }
 
     raise_next();
-    return selected.application();
+    return selected;
 }
 
 auto ApplicationSelector::complete() -> Application
@@ -75,10 +75,9 @@ auto ApplicationSelector::complete() -> Application
     }
 
     is_started = false;
-    if (tools.can_focus_application(selected.application())) {
+    if (tools.can_focus_application(selected)) {
         // Note: The null checks here are mostly to accommodate the tests, however they are a good idea.
-        auto application = selected.application();
-        auto surface = application ? application->default_surface() : nullptr;
+        auto surface = selected ? selected->default_surface() : nullptr;
         if (surface)
         {
             auto window = tools.info_for(surface).window();
@@ -91,7 +90,7 @@ auto ApplicationSelector::complete() -> Application
         }
     }
 
-    return selected.application();
+    return selected;
 }
 
 auto ApplicationSelector::is_active() -> bool
@@ -104,18 +103,16 @@ void ApplicationSelector::raise_next()
     // First, find a suitable application in the list based off of the direction.
     // If we encounter the presently selected application again, that means
     // we have gone all the way around the list, so we can "break".
-    auto selected_app = selected.application();
-    auto app_info = selected;
+    auto next_selected = selected;
     do {
-        app_info = reverse ? tools.get_previous_application_info(app_info)
-            : tools.get_next_application_info(app_info);
-        if (app_info.application() == selected_app) break;
-    } while (!tools.can_focus_application(app_info.application()));
+        next_selected = reverse ? tools.get_previous_application(selected)
+            : tools.get_next_application(selected);
+        if (next_selected == selected) break;
+    } while (!tools.can_focus_application(next_selected));
 
     // Next, raise the window, but note that we do not actually focus it.
     // Note: The null checks here are mostly to accommodate the tests, however they are a good idea.
-    auto application = app_info.application();
-    auto surface = application ? application->default_surface() : nullptr;
+    auto surface = next_selected ? next_selected->default_surface() : nullptr;
     if (surface)
     {
         auto window = tools.info_for(surface).window();
@@ -126,5 +123,5 @@ void ApplicationSelector::raise_next()
         mir::log(mir::logging::Severity::warning, MIR_LOG_COMPONENT,
                  "ApplicationSelector::raise_next: Failed to raise the newly selected window.");
     }
-    selected = app_info;
+    selected = next_selected;
 }

@@ -594,21 +594,21 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
-auto miral::WindowManagementTrace::get_next_application_info(ApplicationInfo info) const -> ApplicationInfo
+auto miral::WindowManagementTrace::get_next_application(Application application) const -> Application
 try {
     log_input();
     mir::log_info("%s", __func__);
     trace_count++;
-    return wrapped.get_next_application_info(info);
+    return wrapped.get_next_application(application);
 }
 MIRAL_TRACE_EXCEPTION
 
-auto miral::WindowManagementTrace::get_previous_application_info(ApplicationInfo info) const -> ApplicationInfo
+auto miral::WindowManagementTrace::get_previous_application(Application application) const -> Application
 try {
     log_input();
     mir::log_info("%s", __func__);
     trace_count++;
-    return wrapped.get_previous_application_info(info);
+    return wrapped.get_previous_application(application);
 }
 MIRAL_TRACE_EXCEPTION
 

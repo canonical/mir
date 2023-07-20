@@ -65,8 +65,8 @@ public:
     virtual void focus_next_within_application() = 0;
     virtual void focus_prev_within_application() = 0;
     virtual auto can_focus_application(Application application) const -> bool = 0;
-    virtual auto get_next_application_info(ApplicationInfo) const -> ApplicationInfo = 0;
-    virtual auto get_previous_application_info(ApplicationInfo) const -> ApplicationInfo = 0;
+    virtual auto get_next_application(Application) const -> Application = 0;
+    virtual auto get_previous_application(Application) const -> Application = 0;
     virtual auto window_at(mir::geometry::Point cursor) const -> Window = 0;
     virtual auto active_output() -> mir::geometry::Rectangle const = 0;
     virtual auto active_application_zone() -> Zone = 0;

@@ -174,8 +174,8 @@ public:
 
     auto can_focus_application(Application application) const -> bool override;
 
-    auto get_next_application_info(ApplicationInfo) const -> ApplicationInfo override;
-    auto get_previous_application_info(ApplicationInfo) const -> ApplicationInfo override;
+    auto get_next_application(Application) const -> Application override;
+    auto get_previous_application(Application) const -> Application override;
 
     auto window_at(mir::geometry::Point cursor) const -> Window override;
 

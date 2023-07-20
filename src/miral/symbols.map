@@ -493,7 +493,7 @@ global:
     miral::WindowSpecification::visible_on_lock_screen*;
     miral::WindowManagerTools::focus_this_application*;
     miral::WindowManagerTools::can_focus_application*;
-    miral::WindowManagerTools::get_previous_application_info*;
-    miral::WindowManagerTools::get_next_application_info*;
+    miral::WindowManagerTools::get_previous_application*;
+    miral::WindowManagerTools::get_next_application*;
   };
 } MIRAL_3.8;

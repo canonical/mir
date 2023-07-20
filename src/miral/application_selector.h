@@ -44,11 +44,11 @@ public:
     /// Lowers the currently raised application and raises the application
     /// that follows it.
     /// \returns The raised application, or nullptr in the case of a failure
-    auto next() -> Application ;
+    auto next() -> Application;
 
     /// Focuses the currently selected Application.
     /// \returns The newly selected application, or nullptr in the case of a failure
-    auto complete() -> Application ;
+    auto complete() -> Application;
 
     /// Retrieve whether or not the selector is in progress.
     /// \return true if it is running, otherwise false
@@ -60,7 +60,7 @@ private:
     bool is_started = false;
 
     /// The raised application
-    ApplicationInfo selected;
+    Application selected;
 
     /// Finds the next application in the list and raises it
     void raise_next();

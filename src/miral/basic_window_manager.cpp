@@ -957,16 +957,14 @@ auto miral::BasicWindowManager::can_focus_application(Application application) c
     return can_focus;
 }
 
-auto miral::BasicWindowManager::get_next_application_info(ApplicationInfo info) const -> ApplicationInfo
+auto miral::BasicWindowManager::get_next_application(Application application) const -> Application
 {
-    auto session = focus_controller->get_next_session(info.application());
-    return info_for(session);
+    return focus_controller->get_next_session(application);
 }
 
-auto miral::BasicWindowManager::get_previous_application_info(ApplicationInfo info) const -> ApplicationInfo
+auto miral::BasicWindowManager::get_previous_application(Application application) const -> Application
 {
-    auto session = focus_controller->get_prev_session(info.application());
-    return info_for(session);
+    return focus_controller->get_prev_session(application);
 }
 
 auto miral::BasicWindowManager::window_at(geometry::Point cursor) const

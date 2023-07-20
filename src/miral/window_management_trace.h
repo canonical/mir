@@ -72,8 +72,8 @@ private:
 
     virtual auto can_focus_application(Application) const -> bool override;
 
-    virtual auto get_next_application_info(ApplicationInfo) const -> ApplicationInfo override;
-    virtual auto get_previous_application_info(ApplicationInfo) const -> ApplicationInfo override;
+    virtual auto get_next_application(Application) const -> Application override;
+    virtual auto get_previous_application(Application) const -> Application override;
 
     virtual void raise_tree(Window const& root) override;
 
