@@ -145,6 +145,7 @@ public:
 
     /// make the provided application active
     /// \param application To focus
+    /// \remark Since MirAL 3.10
     void focus_this_application(Application application);
 
     /// make the next application active
@@ -161,12 +162,15 @@ public:
     void focus_prev_within_application();
 
     /// Returns true if the application is focusable, otherwise false.
+    /// \remark Since MirAL 3.10
     auto can_focus_application(Application application) const -> bool;
 
     /// Retrieve information about the application following the provided application
+    /// \remark Since MirAL 3.10
     auto get_next_application(Application) const -> Application;
 
     /// Retrieve information about the application behind the provided application.
+    /// \remark Since MirAL 3.10
     auto get_previous_application(Application) const -> Application;
 
     /// Find the topmost window at the cursor
