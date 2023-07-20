@@ -25,88 +25,34 @@ ApplicationSelector::ApplicationSelector(const miral::WindowManagerTools& in_too
     : tools{in_tools}
 {}
 
-auto ApplicationSelector::start(bool in_reverse) -> Application
+auto ApplicationSelector::next(bool reverse) -> Application
 {
-    if (is_active())
-    {
-        mir::log(mir::logging::Severity::warning, MIR_LOG_COMPONENT,
-                 "Cannot call ApplicationSelector::start when the ApplicationSelector is active.");
-        return nullptr;
-    }
-
-    auto active_window = tools.active_window();
-    if (!active_window)
-    {
-        return nullptr;
-    }
-
-    auto application = active_window.application();
-    if (!application)
-    {
-        return nullptr;
-    }
-
-    reverse = in_reverse;
-    is_started = true;
-    raise_next();
-    return selected;
-}
-
-auto ApplicationSelector::next() -> Application
-{
+    // First, we find the currently focused application
     if (!is_active())
     {
-        mir::log(mir::logging::Severity::warning, MIR_LOG_COMPONENT,
-                 "Cannot call ApplicationSelector::next when the ApplicationSelector is not active. Call ApplicationSelector::start first.");
-        return nullptr;
-    }
-
-    raise_next();
-    return selected;
-}
-
-auto ApplicationSelector::complete() -> Application
-{
-    if (!is_active())
-    {
-        mir::log(mir::logging::Severity::warning, MIR_LOG_COMPONENT,
-                 "Cannot call ApplicationSelector::stop when the ApplicationSelector is not active. Call ApplicationSelector::start first.");
-        return nullptr;
-    }
-
-    is_started = false;
-    if (tools.can_focus_application(selected)) {
-        // Note: The null checks here are mostly to accommodate the tests, however they are a good idea.
-        auto surface = selected ? selected->default_surface() : nullptr;
-        if (surface)
+        auto active_window = tools.active_window();
+        if (!active_window)
         {
-            auto window = tools.info_for(surface).window();
-            tools.select_active_window(window);
+            return nullptr;
         }
-        else
+
+        auto application = active_window.application();
+        if (!application)
         {
-            mir::log(mir::logging::Severity::warning, MIR_LOG_COMPONENT,
-                     "ApplicationSelector::complete: Failed to select the active window.");
+            return nullptr;
         }
+
+        root = application;
+        selected = root;
     }
 
-    return selected;
-}
-
-auto ApplicationSelector::is_active() -> bool
-{
-    return is_started;
-}
-
-void ApplicationSelector::raise_next()
-{
-    // First, find a suitable application in the list based off of the direction.
-    // If we encounter the presently selected application again, that means
+    // Then, we find a suitable application in the list based off of the direction.
+    // If we encounter theApplicationSelectorTest.run_in_circle presently selected application again, that means
     // we have gone all the way around the list, so we can "break".
     auto next_selected = selected;
     do {
-        next_selected = reverse ? tools.get_previous_application(selected)
-            : tools.get_next_application(selected);
+        next_selected = reverse ? tools.get_previous_application(next_selected)
+                                : tools.get_next_application(next_selected);
         if (next_selected == selected) break;
     } while (!tools.can_focus_application(next_selected));
 
@@ -120,8 +66,65 @@ void ApplicationSelector::raise_next()
     }
     else
     {
-        mir::log(mir::logging::Severity::warning, MIR_LOG_COMPONENT,
-                 "ApplicationSelector::raise_next: Failed to raise the newly selected window.");
+        mir::log_warning("ApplicationSelector::raise_next: Failed to raise the newly selected window.");
     }
+
     selected = next_selected;
+    return selected;
+}
+
+auto ApplicationSelector::complete() -> Application
+{
+    if (!is_active())
+    {
+        mir::log_warning("Cannot call ApplicationSelector::stop when the ApplicationSelector is not active. Call ApplicationSelector::start first.");
+        return nullptr;
+    }
+
+    if (!try_select_application(selected))
+    {
+        mir::log_warning("ApplicationSelector::complete: Failed to select the active window.");
+    }
+
+    root = nullptr;
+    return selected;
+}
+
+void ApplicationSelector::cancel()
+{
+    if (!try_select_application(root))
+    {
+        mir::log_warning("ApplicationSelector::cancel: Failed to select the root.");
+    }
+    
+    root = nullptr;
+    selected = nullptr;
+}
+
+auto ApplicationSelector::is_active() -> bool
+{
+    return root != nullptr;
+}
+
+auto ApplicationSelector::try_select_application(Application application) -> bool
+{
+    if (!application)
+    {
+        return false;
+    }
+
+    if (!tools.can_focus_application(application))
+    {
+        return false;
+    }
+
+    auto surface = application->default_surface();
+    if (!surface)
+    {
+        return false;
+    }
+
+    auto window = tools.info_for(surface).window();
+    tools.select_active_window(window);
+    return true;
 }

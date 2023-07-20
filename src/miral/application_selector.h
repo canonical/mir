@@ -34,21 +34,18 @@ class ApplicationSelector
 public:
     ApplicationSelector(WindowManagerTools const&);
 
-    /// Begins application selection by raising the application
-    /// that immediately follows the currently selected application
-    /// in the SessionContainer's list.
-    /// \param reverse If true, selection will happen in reverse, otherwise forward.
+    /// Raises the next selectable application in the list for focus selection.
+    /// \param reverse If true, the selector will move in reverse through the list of applications
+    /// otherwise it will move forward through the list of applications.
     /// \returns The raised application, or nullptr in the case of a failure
-    auto start(bool reverse) -> Application;
-
-    /// Lowers the currently raised application and raises the application
-    /// that follows it.
-    /// \returns The raised application, or nullptr in the case of a failure
-    auto next() -> Application;
+    auto next(bool reverse) -> Application;
 
     /// Focuses the currently selected Application.
     /// \returns The newly selected application, or nullptr in the case of a failure
     auto complete() -> Application;
+
+    /// Cancel the selector if it has been triggered. This will refocus the original application.
+    void cancel();
 
     /// Retrieve whether or not the selector is in progress.
     /// \return true if it is running, otherwise false
@@ -56,14 +53,14 @@ public:
 
 private:
     WindowManagerTools tools;
-    bool reverse = false;
-    bool is_started = false;
+
+    /// The application that was focused when "next" was first called
+    Application root;
 
     /// The raised application
     Application selected;
 
-    /// Finds the next application in the list and raises it
-    void raise_next();
+    auto try_select_application(Application) -> bool;
 };
 
 }

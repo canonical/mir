@@ -167,14 +167,7 @@ bool miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const* 
             return true;
 
         case KEY_TAB:
-            if (self->application_selector.is_active())
-            {
-                self->application_selector.next();
-            }
-            else
-            {
-                self->application_selector.start(false);
-            }
+            self->application_selector.next(false);
             return true;
 
         case KEY_GRAVE:
@@ -191,14 +184,7 @@ bool miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const* 
         switch (mir_keyboard_event_scan_code(event))
         {
         case KEY_TAB:
-            if (self->application_selector.is_active())
-            {
-                self->application_selector.next();
-            }
-            else
-            {
-                self->application_selector.start(true);
-            }
+            self->application_selector.next(true);
             return true;
 
         case KEY_GRAVE:
