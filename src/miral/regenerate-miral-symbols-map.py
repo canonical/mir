@@ -569,9 +569,18 @@ global:
 } MIRAL_3.7;
 
 MIRAL_3.9 {
+global:
+  extern "C++" {
+    miral::WaylandExtensions::ext_session_lock_manager_v1*;
+    miral::WindowInfo::visible_on_lock_screen*;
+    miral::WindowSpecification::visible_on_lock_screen*;
+  };
+} MIRAL_3.8;
+
+MIRAL_3.10 {
 global:'''
 
-END_NEW_STANZA = '} MIRAL_3.8;'
+END_NEW_STANZA = '} MIRAL_3.9;'
 
 def _print_report():
     print(OLD_STANZAS)
