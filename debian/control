@@ -75,7 +75,7 @@ Description: Display server for Ubuntu - server library
  .
  Contains the shared library needed by server applications for Mir.
 
-Package: libmirplatform25
+Package: libmirplatform26
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -123,7 +123,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirplatform25 (= ${binary:Version}),
+Depends: libmirplatform26 (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libboost-program-options-dev,
          ${misc:Depends},
