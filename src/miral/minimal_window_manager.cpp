@@ -290,6 +290,11 @@ void miral::MinimalWindowManager::advise_focus_gained(WindowInfo const& window_i
     self->application_selector.advise_focus_gained(window_info);
 }
 
+void  miral::MinimalWindowManager::advise_focus_lost(const miral::WindowInfo &window_info)
+{
+    self->application_selector.advise_focus_lost(window_info);
+}
+
 void miral::MinimalWindowManager::advise_delete_app(miral::ApplicationInfo const &app_info)
 {
     self->application_selector.advise_delete_app(app_info.application());

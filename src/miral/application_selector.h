@@ -37,8 +37,16 @@ class ApplicationSelector
 public:
     ApplicationSelector(WindowManagerTools const&);
 
+    /// Called when a new application has been added to the list.
     void advise_new_app(Application const&);
+
+    /// Called when focus is given to a window.
     void advise_focus_gained(WindowInfo const&);
+
+    /// Called when focus is lost on a window.
+    void advise_focus_lost(WindowInfo const&);
+
+    /// Called when an application is deleted.
     void advise_delete_app(Application const&);
 
     /// Raises the next selectable application in the list for focus selection.

@@ -79,6 +79,9 @@ public:
     /// Raises newly focused window and notifies the application selector
     void advise_focus_gained(WindowInfo const& window_info) override;
 
+    /// Notifies the application selector that focus was lost.
+    void advise_focus_lost(WindowInfo const& window_info) override;
+
     /// Notifies the application selector about the new app
     void advise_new_app(miral::ApplicationInfo &app_info) override;
 

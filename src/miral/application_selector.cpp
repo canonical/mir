@@ -45,7 +45,22 @@ void ApplicationSelector::advise_focus_gained(WindowInfo const& window_info)
     }
 
     auto it = std::find(focus_list.begin(), focus_list.end(), application);
-    if (!is_active())
+    if (is_active())
+    {
+        if (application != selected)
+        {
+            // An application has opened while we were in the selection process.
+            // The most reasonable thing to do will be to insert it after the
+            // selected element and set it as selected
+            auto selected_it = std::find(focus_list.begin(), focus_list.end(), selected);
+            if (selected_it != focus_list.end())
+            {
+                std::rotate(selected_it, it, it + 1);
+                selected = application;
+            }
+        }
+    }
+    else
     {
         // If we are not active, we move the newly focused item to the front of the list.
         if (it != focus_list.end())
@@ -53,15 +68,55 @@ void ApplicationSelector::advise_focus_gained(WindowInfo const& window_info)
             std::rotate(focus_list.begin(), it, it + 1);
         }
     }
+
+    // Update the current selection
+    selected = application;
+}
+
+void ApplicationSelector::advise_focus_lost(const miral::WindowInfo &window_info)
+{
+    auto window = window_info.window();
+    if (!window)
+    {
+        return;
+    }
+
+    auto application = window.application();
+    if (!application)
+    {
+        return;
+    }
+
+    if (selected == application)
+    {
+        selected = nullptr;
+    }
 }
 
 void ApplicationSelector::advise_delete_app(Application const& application)
 {
     auto it = std::find(focus_list.begin(), focus_list.end(), application);
-    if (it != focus_list.end())
+    if (it == focus_list.end())
     {
-        focus_list.erase(it);
+        mir::log_warning("ApplicationSelector::advise_delete_app could not delete the app.");
+        return;
     }
+
+    if (is_active() && selected == application)
+    {
+        // We have removed the selected application while we were selecting an application.
+        // Let's select the application that follows it.
+        auto next_it = it + 1;
+        if (next_it == focus_list.end())
+            next_it = focus_list.begin();
+
+        if (focus_list.size() != 1)
+        {
+            try_select_application(*next_it);
+        }
+    }
+
+    focus_list.erase(it);
 }
 
 auto ApplicationSelector::next(bool reverse) -> Application
@@ -109,15 +164,14 @@ auto ApplicationSelector::next(bool reverse) -> Application
         mir::log_warning("ApplicationSelector::next: Failed to select the next application.");
     }
 
-    selected = *it;
-    return selected;
+    return *it;
 }
 
 auto ApplicationSelector::complete() -> Application
 {
     if (!is_active())
     {
-        mir::log_warning("Cannot call ApplicationSelector::stop when the ApplicationSelector is not active. Call ApplicationSelector::start first.");
+        mir::log_warning("Cannot call ApplicationSelector::stop when the ApplicationSelector is not active.");
         return nullptr;
     }
 

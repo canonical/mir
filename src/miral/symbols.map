@@ -500,5 +500,6 @@ global:
     miral::WindowManagerTools::can_focus_application*;
     miral::MinimalWindowManager::advise_new_app*;
     miral::MinimalWindowManager::advise_delete_app*;
+    miral::MinimalWindowManager::advise_focus_lost*;
   };
 } MIRAL_3.9;
