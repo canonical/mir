@@ -45,6 +45,20 @@ struct ApplicationSelectorTest : mt::TestWindowManagerTools
         return window;
     }
 
+    auto create_unfocusable_window() -> Window
+    {
+        mir::shell::SurfaceSpecification creation_parameters;
+        creation_parameters.type = mir_window_type_normal;
+        creation_parameters.focus_mode = MirFocusMode::mir_focus_mode_disabled;
+        creation_parameters.set_size({600, 400});
+        auto window = create_and_select_window(creation_parameters);
+
+        // Simulates a new application opening and gaining focus
+        application_selector.advise_new_app(window.application());
+        application_selector.advise_focus_gained(window_manager_tools.info_for(window));
+        return window;
+    }
+
     auto create_window_list(int num_windows) -> std::vector<Window>
     {
         std::vector<Window> window_list;

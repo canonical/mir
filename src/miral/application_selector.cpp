@@ -117,6 +117,7 @@ auto ApplicationSelector::next(bool reverse) -> Application
 
     // Attempt to focus the next application after the originally selected application.
     auto it = std::find(focus_list.begin(), focus_list.end(), selected);
+    auto start_it = it;
     do {
         if (reverse)
         {
@@ -137,6 +138,10 @@ auto ApplicationSelector::next(bool reverse) -> Application
                 it = focus_list.begin();
             }
         }
+
+        // We made it all the way through the list but failed to find anything.
+        if (it == start_it)
+            break;
     } while (!tools.try_select_application(*it));
 
     return *it;
