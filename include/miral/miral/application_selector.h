@@ -17,8 +17,8 @@
 #ifndef MIR_APPLICATION_SELECTOR_H
 #define MIR_APPLICATION_SELECTOR_H
 
-#include <miral/window_manager_tools.h>
-#include <miral/application.h>
+#include "window_manager_tools.h"
+#include "application.h"
 
 namespace miral
 {
@@ -65,6 +65,10 @@ public:
     /// Retrieve whether or not the selector is in progress.
     /// \return true if it is running, otherwise false
     auto is_active() -> bool;
+
+    /// Retrieve the focused application.
+    /// \returns The focused application
+    auto get_focused() -> Application;
 
 private:
     WindowManagerTools tools;

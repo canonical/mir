@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "application_selector.h"
+#include <miral/application_selector.h>
 #include <miral/application_info.h>
 #include <miral/application.h>
 #include <mir/log.h>
@@ -28,7 +28,6 @@ ApplicationSelector::ApplicationSelector(const miral::WindowManagerTools& in_too
 void ApplicationSelector::advise_new_app(Application const& application)
 {
     focus_list.push_back(application);
-    printf("Online: %d\n", pid_of(application));
 }
 
 void ApplicationSelector::advise_focus_gained(WindowInfo const& window_info)
@@ -86,6 +85,18 @@ void ApplicationSelector::advise_delete_app(Application const& application)
     {
         mir::log_warning("ApplicationSelector::advise_delete_app could not delete the app.");
         return;
+    }
+
+    if (application == selected)
+    {
+        auto new_selected_it = it + 1;
+        if (new_selected_it == focus_list.end())
+            new_selected_it = focus_list.begin();
+
+        if (focus_list.size() > 1)
+            selected = *new_selected_it;
+        else
+            selected = nullptr;
     }
 
     focus_list.erase(it);
@@ -163,4 +174,9 @@ void ApplicationSelector::cancel()
 auto ApplicationSelector::is_active() -> bool
 {
     return originally_selected != nullptr;
+}
+
+auto ApplicationSelector::get_focused() -> Application
+{
+    return selected;
 }

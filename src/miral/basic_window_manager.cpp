@@ -244,7 +244,6 @@ void miral::BasicWindowManager::remove_window(Application const& application, mi
     policy->advise_delete_window(info);
 
     info_for(application).remove_window(info.window());
-    printf("erased\n");
     mru_active_windows.erase(info.window());
     fullscreen_surfaces.erase(info.window());
     for (auto& area : display_areas)
