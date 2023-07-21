@@ -1,3 +1,25 @@
+mir (2.14.1) UNRELEASED; urgency=medium
+
+  [ Alan Griffiths ]
+  * New upstream release 2.14.1
+
+    - ABI summary:
+      . miral ABI unchanged at 5
+      . mircommon ABI unchanged at 9
+      . mircookie ABI unchanged at 2
+      . mircore ABI unchanged at 2
+      . miroil ABI unchanged at 3
+      . mirplatform ABI unchanged at 26
+      . mirserver ABI unchanged at 58
+      . mirwayland ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 20
+      . mirinputplatform ABI unchanged at 8
+    - Bugs fixed:
+      . Fix FTBFS on Debian/sid and Ubuntu/Mantic
+      . ci: fix tarball generation on tags
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Fri, 21 Jul 2023 10:35:44 +0100
+
 mir (2.14.0) UNRELEASED; urgency=medium
 
   [ Alan Griffiths ]
