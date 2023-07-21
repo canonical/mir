@@ -69,7 +69,7 @@ private:
     virtual void focus_next_within_application() override;
     virtual void focus_prev_within_application() override;
 
-    virtual auto can_focus_application(Application) const -> bool override;
+    virtual auto try_select_application(Application) -> bool override;
 
     virtual void raise_tree(Window const& root) override;
 

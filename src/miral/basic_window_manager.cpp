@@ -244,6 +244,7 @@ void miral::BasicWindowManager::remove_window(Application const& application, mi
     policy->advise_delete_window(info);
 
     info_for(application).remove_window(info.window());
+    printf("erased\n");
     mru_active_windows.erase(info.window());
     fullscreen_surfaces.erase(info.window());
     for (auto& area : display_areas)
@@ -881,7 +882,7 @@ void miral::BasicWindowManager::focus_prev_within_application()
     }
 }
 
-auto miral::BasicWindowManager::can_focus_application(Application application) const -> bool
+auto miral::BasicWindowManager::try_select_application(Application application) -> bool
 {
     bool can_focus = false;
     miral::Window new_focus;
@@ -890,35 +891,36 @@ auto miral::BasicWindowManager::can_focus_application(Application application) c
     // We return "false" in the enumeration when we set "can_focus" to true
     // because we only stop looking when we return false from the enumerator.
     mru_active_windows.enumerate([&](miral::Window& window)
-     {
+    {
         // We don't want to select a different application
-         if (window.application() != application) {
+        if (window.application() != application) {
              return true;
-         }
+        }
 
-         // Check if the previous window has to remain focused
-         auto const prev_windows_focus_mode = prev_window ? info_for(prev_window).focus_mode() : mir_focus_mode_focusable;
-         if (prev_windows_focus_mode == mir_focus_mode_grabbing)
-         {
-             return true;
-         }
+        // Check if the previous window has to remain focused
+        auto const prev_windows_focus_mode = prev_window ? info_for(prev_window).focus_mode() : mir_focus_mode_focusable;
+        if (prev_windows_focus_mode == mir_focus_mode_grabbing)
+        {
+            return true;
+        }
 
-         // Check if the new window selection has selection disabled
-         auto& desired_window_selection = info_for(window);
-         if (desired_window_selection.focus_mode() == mir_focus_mode_disabled)
-         {
-             return true;
-         }
+        // Check if the new window selection has selection disabled
+        auto& desired_window_selection = info_for(window);
+        if (desired_window_selection.focus_mode() == mir_focus_mode_disabled)
+        {
+            return true;
+        }
 
-         // Check if we can activate it at all.
-         if (desired_window_selection.can_be_active() && desired_window_selection.state() != mir_window_state_hidden)
-         {
-             can_focus = true;
-             return false;
-         }
+        // Check if we can activate it at all.
+        if (desired_window_selection.can_be_active() && desired_window_selection.state() != mir_window_state_hidden)
+        {
+            can_focus = true;
+            select_active_window(desired_window_selection.window());
+            return false;
+        }
 
-         return true;
-     });
+        return true;
+    });
 
     return can_focus;
 }

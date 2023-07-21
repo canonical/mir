@@ -34,9 +34,9 @@ namespace miral
 {
 class Window;
 struct WindowInfo;
+struct ApplicationInfo;
 class WindowSpecification;
 class Zone;
-struct ApplicationInfo;
 
 /**
  * Workspace is intentionally opaque in the miral API. Its only purpose is to
@@ -156,9 +156,9 @@ public:
     /// make the prev surface active within the active application
     void focus_prev_within_application();
 
-    /// Returns true if the application is focusable, otherwise false.
+    /// Returns true if the application was selected, otherwise false.
     /// \remark Since MirAL 3.10
-    auto can_focus_application(Application application) const -> bool;
+    auto try_select_application(Application) -> bool;
 
     /// Find the topmost window at the cursor
     auto window_at(mir::geometry::Point cursor) const -> Window;

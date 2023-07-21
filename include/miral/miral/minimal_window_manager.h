@@ -76,16 +76,13 @@ public:
     /// Honours the requested movement
     auto confirm_inherited_move(WindowInfo const& window_info, Displacement movement) -> Rectangle override;
 
-    /// Raises newly focused window and notifies the application selector
+    /// Raises newly focused window
     void advise_focus_gained(WindowInfo const& window_info) override;
 
-    /// Notifies the application selector that focus was lost.
     void advise_focus_lost(WindowInfo const& window_info) override;
 
-    /// Notifies the application selector about the new app
     void advise_new_app(miral::ApplicationInfo &app_info) override;
 
-    /// Notifies the application selector about the deleted app
     void advise_delete_app(miral::ApplicationInfo const &app_info) override;
 
 protected:

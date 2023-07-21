@@ -16,7 +16,7 @@
 
 #include "application_selector.h"
 #include <miral/application_info.h>
-#include <mir/scene/session.h>
+#include <miral/application.h>
 #include <mir/log.h>
 
 using namespace miral;
@@ -28,6 +28,7 @@ ApplicationSelector::ApplicationSelector(const miral::WindowManagerTools& in_too
 void ApplicationSelector::advise_new_app(Application const& application)
 {
     focus_list.push_back(application);
+    printf("Online: %d\n", pid_of(application));
 }
 
 void ApplicationSelector::advise_focus_gained(WindowInfo const& window_info)
@@ -45,22 +46,7 @@ void ApplicationSelector::advise_focus_gained(WindowInfo const& window_info)
     }
 
     auto it = std::find(focus_list.begin(), focus_list.end(), application);
-    if (is_active())
-    {
-        if (application != selected)
-        {
-            // An application has opened while we were in the selection process.
-            // The most reasonable thing to do will be to insert it after the
-            // selected element and set it as selected
-            auto selected_it = std::find(focus_list.begin(), focus_list.end(), selected);
-            if (selected_it != focus_list.end())
-            {
-                std::rotate(selected_it, it, it + 1);
-                selected = application;
-            }
-        }
-    }
-    else
+    if (!is_active())
     {
         // If we are not active, we move the newly focused item to the front of the list.
         if (it != focus_list.end())
@@ -102,20 +88,6 @@ void ApplicationSelector::advise_delete_app(Application const& application)
         return;
     }
 
-    if (is_active() && selected == application)
-    {
-        // We have removed the selected application while we were selecting an application.
-        // Let's select the application that follows it.
-        auto next_it = it + 1;
-        if (next_it == focus_list.end())
-            next_it = focus_list.begin();
-
-        if (focus_list.size() != 1)
-        {
-            try_select_application(*next_it);
-        }
-    }
-
     focus_list.erase(it);
 }
 
@@ -148,21 +120,13 @@ auto ApplicationSelector::next(bool reverse) -> Application
         }
         else
         {
-            if (it == focus_list.end() - 1)
+            it++;
+            if (it == focus_list.end())
             {
                 it = focus_list.begin();
             }
-            else
-            {
-                it++;
-            }
         }
-    } while (!tools.can_focus_application(*it));
-
-    if (!try_select_application(*it))
-    {
-        mir::log_warning("ApplicationSelector::next: Failed to select the next application.");
-    }
+    } while (!tools.try_select_application(*it));
 
     return *it;
 }
@@ -188,7 +152,7 @@ auto ApplicationSelector::complete() -> Application
 
 void ApplicationSelector::cancel()
 {
-    if (!try_select_application(originally_selected))
+    if (!tools.try_select_application(originally_selected))
     {
         mir::log_warning("ApplicationSelector::cancel: Failed to select the root.");
     }
@@ -199,27 +163,4 @@ void ApplicationSelector::cancel()
 auto ApplicationSelector::is_active() -> bool
 {
     return originally_selected != nullptr;
-}
-
-auto ApplicationSelector::try_select_application(Application application) -> bool
-{
-    if (!application)
-    {
-        return false;
-    }
-
-    if (!tools.can_focus_application(application))
-    {
-        return false;
-    }
-
-    auto surface = application->default_surface();
-    if (!surface)
-    {
-        return false;
-    }
-
-    auto window = tools.info_for(surface).window();
-    tools.select_active_window(window);
-    return true;
 }

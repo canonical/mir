@@ -171,7 +171,7 @@ public:
     void focus_next_within_application() override;
     void focus_prev_within_application() override;
 
-    auto can_focus_application(Application application) const -> bool override;
+    auto try_select_application(Application application) -> bool override;
 
     auto window_at(mir::geometry::Point cursor) const -> Window override;
 

@@ -78,8 +78,6 @@ private:
 
     /// The application that is currently selected.
     Application selected;
-
-    auto try_select_application(Application) -> bool;
 };
 
 }
