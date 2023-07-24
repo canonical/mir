@@ -100,10 +100,12 @@ void ApplicationSelector::advise_delete_app(Application const& application)
 
             if (it == original_it)
             {
-                selected = nullptr;
                 break;
             }
         } while (!tools.can_select_application(*it, active_window));
+
+        if (it != original_it)
+            selected = *it;
     }
 
     focus_list.erase(it);
