@@ -21,7 +21,6 @@
 #include "mir/log.h"
 #include "mir/events/keyboard_event.h"
 #include "mir/wayland/client.h"
-#include <iostream>
 
 #include <xkbcommon/xkbcommon.h>
 #include <cstring> // memcpy
