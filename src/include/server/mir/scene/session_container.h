@@ -28,7 +28,6 @@ namespace scene
 {
 class Session;
 
-/// Provides access to the list of active sessions.
 class SessionContainer
 {
 public:
@@ -40,17 +39,10 @@ public:
 
     void for_each(std::function<void(std::shared_ptr<Session> const&)> f) const;
 
-    /// Retrieves the session that immediately follows the provided session in the list.
-    /// If the session is the last session in the list, the first session in the list is returned.
-    /// For convenience the successor of the null session is defined as the last session
-    /// which would be passed to the for_each callback
-    auto successor_of(std::shared_ptr<Session> const&) const -> std::shared_ptr<Session>;
-
-    /// Retrieves the session that occurs immediately before the provided session in the list.
-    /// If the session is the first in the list, the last session in the list is returned.
-    /// For convenience the predecessor of the null session is defined as the first session
-    /// in the list.
-    auto predecessor_of(std::shared_ptr<Session> const&) const -> std::shared_ptr<Session>;
+    // For convenience the successor of the null session is defined as the last session
+    // which would be passed to the for_each callback
+    auto successor_of(std::shared_ptr<Session> const&) const -> std::shared_ptr<Session> ;
+    auto predecessor_of(std::shared_ptr<Session> const&) const -> std::shared_ptr<Session> ;
 
     SessionContainer(const SessionContainer&) = delete;
     SessionContainer& operator=(const SessionContainer&) = delete;
