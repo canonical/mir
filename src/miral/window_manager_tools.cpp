@@ -91,6 +91,9 @@ void miral::WindowManagerTools::raise_tree(Window const& root)
 void miral::WindowManagerTools::swap_tree_order(Window const& first, Window const& second)
 { tools->swap_tree_order(first, second); }
 
+void miral::WindowManagerTools::send_tree_to_back(Window const& root)
+{ tools->send_tree_to_back(root); }
+
 void miral::WindowManagerTools::start_drag_and_drop(WindowInfo& /*window_info*/, std::vector<uint8_t> const& /*handle*/)
 { }
 

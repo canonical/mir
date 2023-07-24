@@ -433,7 +433,7 @@ void ms::SurfaceStack::swap_z_order(const scene::SurfaceSet &first, const scene:
         {
             // The goal is to second the first set with the second set such that their Z-order is swapped.
 
-            // Find the elements that we'll need in order
+            // Find the elements that we'll need to move
             int first_index = -1;
             int second_index = -1;
             std::vector<std::shared_ptr<Surface>> first_move;
@@ -454,7 +454,7 @@ void ms::SurfaceStack::swap_z_order(const scene::SurfaceSet &first, const scene:
                 }
             }
 
-            // Nothing to swap here
+            // Break early if there is nothing to swap here
             if (second_index < 0 || first_index < 0)
                 continue;
 
@@ -484,6 +484,44 @@ void ms::SurfaceStack::swap_z_order(const scene::SurfaceSet &first, const scene:
     }
 
     observers.surfaces_reordered(first);
+}
+
+void ms::SurfaceStack::send_to_back(const mir::scene::SurfaceSet &ss)
+{
+    bool surfaces_reordered{false};
+    {
+        RecursiveWriteLock ul(guard);
+        for (auto& layer : surface_layers)
+        {
+            auto const old_layer = layer;
+
+            // Put all the surfaces to send to the back at the end of the list (preserving order)
+            auto split = std::stable_partition(
+                begin(layer), end(layer),
+                [&](std::weak_ptr<Surface> const& s) { return !ss.count(s); });
+
+            // Make a new vector with only the surfaces to send to the back
+            auto to_send_to_back = std::vector<std::shared_ptr<Surface>>{split, layer.end()};
+
+            // Chop off the surfaces we are moving from the old vector (they are now only in to_send_to_back)
+            layer.erase(split, layer.end());
+
+            // One by one insert to_send_to_back surfaces at the front of the vector
+            for (auto const& surface : to_send_to_back)
+            {
+                layer.insert(layer.begin(), surface);
+            }
+
+            // Only set surfaces_reordered if the end result is different than before
+            if (old_layer != layer)
+                surfaces_reordered = true;
+        }
+    }
+
+    if (surfaces_reordered)
+    {
+        observers.surfaces_reordered(ss);
+    }
 }
 
 void ms::SurfaceStack::create_rendering_tracker_for(std::shared_ptr<Surface> const& surface)

@@ -603,6 +603,15 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
+void miral::WindowManagementTrace::send_tree_to_back(const miral::Window &root)
+try {
+    log_input();
+    mir::log_info("%s root=%s", __func__, dump_of(root).c_str());
+    trace_count++;
+    wrapped.send_tree_to_back(root);
+}
+MIRAL_TRACE_EXCEPTION
+
 void miral::WindowManagementTrace::modify_window(
     miral::WindowInfo& window_info, miral::WindowSpecification const& modifications)
 try {

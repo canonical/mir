@@ -499,6 +499,7 @@ global:
   extern "C++" {
     miral::WindowManagerTools::can_select_application*;
     miral::WindowManagerTools::swap_tree_order*;
+    miral::WindowManagerTools::send_tree_to_back*;
     miral::MinimalWindowManager::advise_new_app*;
     miral::MinimalWindowManager::advise_delete_app*;
     miral::MinimalWindowManager::advise_focus_lost*;

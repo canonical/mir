@@ -42,6 +42,8 @@ public:
 
     void swap_z_order(scene::SurfaceSet const& first, scene::SurfaceSet const& second) override;
 
+    void send_to_back(scene::SurfaceSet const& surfaces) override;
+
 protected:
     std::shared_ptr<SurfaceStack> const wrapped;
 };

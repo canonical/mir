@@ -69,6 +69,7 @@ public:
     virtual auto active_application_zone() -> Zone = 0;
     virtual void raise_tree(Window const& root) = 0;
     virtual void swap_tree_order(Window const& first, Window const& second) = 0;
+    virtual void send_tree_to_back(Window const& root) = 0;
     virtual void modify_window(WindowInfo& window_info, WindowSpecification const& modifications) = 0;
     virtual auto info_for_window_id(std::string const& id) const -> WindowInfo& = 0;
     virtual auto id_for_window(Window const& window) const -> std::string = 0;

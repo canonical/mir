@@ -683,3 +683,8 @@ void msh::AbstractShell::swap_z_order(const mir::shell::SurfaceSet &first, const
 {
     surface_stack->swap_z_order(first, second);
 }
+
+void msh::AbstractShell::send_to_back(const mir::shell::SurfaceSet &surfaces)
+{
+    surface_stack->send_to_back(surfaces);
+}

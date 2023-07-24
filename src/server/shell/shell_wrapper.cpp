@@ -192,3 +192,8 @@ void msh::ShellWrapper::swap_z_order(SurfaceSet const& first, SurfaceSet const& 
 {
     return wrapped->swap_z_order(first, second);
 }
+
+void msh::ShellWrapper::send_to_back(const mir::shell::SurfaceSet &surfaces)
+{
+    return wrapped->send_to_back(surfaces);
+}

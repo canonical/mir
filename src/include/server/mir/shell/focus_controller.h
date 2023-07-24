@@ -55,6 +55,8 @@ public:
 
     virtual void swap_z_order(SurfaceSet const& first, SurfaceSet const& second) = 0;
 
+    virtual void send_to_back(SurfaceSet const& surfaces) = 0;
+
 protected:
     FocusController() = default;
     FocusController(FocusController const&) = delete;

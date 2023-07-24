@@ -100,6 +100,9 @@ struct StubSurfaceStack : public msh::SurfaceStack
     void swap_z_order(ms::SurfaceSet const&, ms::SurfaceSet const&) override
     {
     }
+    void send_to_back(ms::SurfaceSet const&) override
+    {
+    }
 };
 
 struct ApplicationSession : public testing::Test

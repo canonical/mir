@@ -82,6 +82,7 @@ private:
 
     /// The application that is currently selected.
     Application selected;
+    Window active_window;
 };
 
 }

@@ -75,6 +75,8 @@ private:
 
     virtual void swap_tree_order(Window const& first, Window const& second) override;
 
+    virtual void send_tree_to_back(Window const& root) override;
+
     virtual void modify_window(WindowInfo& window_info, WindowSpecification const& modifications) override;
 
     virtual void invoke_under_lock(std::function<void()> const& callback) override;

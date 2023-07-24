@@ -57,6 +57,7 @@ void ApplicationSelector::advise_focus_gained(WindowInfo const& window_info)
 
     // Update the current selection
     selected = application;
+    active_window = window;
 }
 
 void ApplicationSelector::advise_focus_lost(const miral::WindowInfo &window_info)
@@ -88,16 +89,21 @@ void ApplicationSelector::advise_delete_app(Application const& application)
         return;
     }
 
+    // If we delete the selected application, we will try to select the next available one.
     if (application == selected)
     {
-        auto new_selected_it = it + 1;
-        if (new_selected_it == focus_list.end())
-            new_selected_it = focus_list.begin();
+        auto original_it = it;
+        do {
+            it++;
+            if (it == focus_list.end())
+                it = focus_list.begin();
 
-        if (focus_list.size() > 1)
-            selected = *new_selected_it;
-        else
-            selected = nullptr;
+            if (it == original_it)
+            {
+                selected = nullptr;
+                break;
+            }
+        } while (!tools.can_select_application(*it, active_window));
     }
 
     focus_list.erase(it);
@@ -148,17 +154,20 @@ auto ApplicationSelector::next(bool reverse) -> Application
     } while (!tools.can_select_application(*it, next_window));
 
     // Swap the tree order first and then select the new window
-    auto previous_window = tools.info_for(selected).windows()[0];
-    tools.swap_tree_order(next_window, previous_window);
-    tools.select_active_window(next_window);
-
-    // Edge case: if we have gone full circle around the list back to the original app
-    // then we will wind up in a situation where the original app - now in the second z-order
-    // position - will be swapped with the final app, putting the final app in the second position.
     if (*it == originally_selected)
     {
-
+        // Edge case: if we have gone full circle around the list back to the original app
+        // then we will wind up in a situation where the original app - now in the second z-order
+        // position - will be swapped with the final app, putting the final app in the second position.
+        for (auto window: tools.info_for(selected).windows())
+            tools.send_tree_to_back(window);
     }
+    else
+    {
+        tools.swap_tree_order(next_window, active_window);
+    }
+
+    tools.select_active_window(next_window);
 
     return *it;
 }

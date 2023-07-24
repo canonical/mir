@@ -996,6 +996,31 @@ void miral::BasicWindowManager::swap_tree_order(Window const& first, Window cons
         {begin(second_windows), end(second_windows)});
 }
 
+void miral::BasicWindowManager::send_tree_to_back(Window const& root)
+{
+    auto const& info = info_for(root);
+
+    if (auto parent = info.parent())
+        raise_tree(parent);
+
+    std::vector<Window> windows;
+
+    std::function<void(WindowInfo const& info)> const add_children =
+        [&,this](WindowInfo const& info)
+        {
+            for (auto const& child : info.children())
+            {
+                windows.push_back(child);
+                add_children(info_for(child));
+            }
+        };
+
+    windows.push_back(root);
+    add_children(info);
+
+    focus_controller->send_to_back({begin(windows), end(windows)});
+}
+
 void miral::BasicWindowManager::move_tree(miral::WindowInfo& root, mir::geometry::Displacement movement)
 {
     if (movement == mir::geometry::Displacement{})

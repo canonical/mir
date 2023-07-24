@@ -58,3 +58,8 @@ void msh::SurfaceStackWrapper::swap_z_order(scene::SurfaceSet const& first, scen
 {
     wrapped->swap_z_order(first, second);
 }
+
+void msh::SurfaceStackWrapper::send_to_back(const scene::SurfaceSet &surfaces)
+{
+    wrapped->send_to_back(surfaces);
+}
