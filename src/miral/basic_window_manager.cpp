@@ -941,6 +941,24 @@ auto miral::BasicWindowManager::active_application_zone() -> Zone
     return active_display_area()->application_zone;
 }
 
+auto miral::BasicWindowManager::collect_windows(WindowInfo const& info) -> std::vector<Window>
+{
+    std::vector<Window> windows;
+    std::function<void(WindowInfo const& info)> const add_children =
+        [&,this](WindowInfo const& info)
+        {
+            for (auto const& child : info.children())
+            {
+                windows.push_back(child);
+                add_children(info_for(child));
+            }
+        };
+
+    windows.push_back(info.window());
+    add_children(info);
+    return windows;
+}
+
 void miral::BasicWindowManager::raise_tree(Window const& root)
 {
     auto const& info = info_for(root);
@@ -948,20 +966,7 @@ void miral::BasicWindowManager::raise_tree(Window const& root)
     if (auto parent = info.parent())
         raise_tree(parent);
 
-    std::vector<Window> windows;
-
-    std::function<void(WindowInfo const& info)> const add_children =
-        [&,this](WindowInfo const& info)
-            {
-                for (auto const& child : info.children())
-                {
-                    windows.push_back(child);
-                    add_children(info_for(child));
-                }
-            };
-
-    windows.push_back(root);
-    add_children(info);
+    std::vector<Window> windows = collect_windows(info);
 
     policy->advise_raise(windows);
     focus_controller->raise({begin(windows), end(windows)});
@@ -973,23 +978,8 @@ void miral::BasicWindowManager::swap_tree_order(Window const& first, Window cons
     auto const& info_second = info_for(second);
 
     // Collect the windows that we need to swap
-    std::vector<Window> first_windows;
-    std::vector<Window> second_windows;
-
-    std::function<void(WindowInfo const& info, std::vector<Window>& windows)> const add_children =
-        [&,this](WindowInfo const& info,std::vector<Window>& windows)
-        {
-            for (auto const& child : info.children())
-            {
-                windows.push_back(child);
-                add_children(info_for(child), windows);
-            }
-        };
-
-    first_windows.push_back(first);
-    add_children(info_first, first_windows);
-    second_windows.push_back(second);
-    add_children(info_second, second_windows);
+    std::vector<Window> first_windows = collect_windows(info_first);
+    std::vector<Window> second_windows = collect_windows(info_second);
 
     focus_controller->swap_z_order(
         {begin(first_windows), end(first_windows)},
@@ -1003,21 +993,7 @@ void miral::BasicWindowManager::send_tree_to_back(Window const& root)
     if (auto parent = info.parent())
         raise_tree(parent);
 
-    std::vector<Window> windows;
-
-    std::function<void(WindowInfo const& info)> const add_children =
-        [&,this](WindowInfo const& info)
-        {
-            for (auto const& child : info.children())
-            {
-                windows.push_back(child);
-                add_children(info_for(child));
-            }
-        };
-
-    windows.push_back(root);
-    add_children(info);
-
+    std::vector<Window> windows = collect_windows(info);
     focus_controller->send_to_back({begin(windows), end(windows)});
 }
 

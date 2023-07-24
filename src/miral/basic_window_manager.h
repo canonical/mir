@@ -324,6 +324,9 @@ private:
     void advise_output_end() override;
     /// Updates the application zones of all display areas and moves attached windows as needed
     void update_application_zones_and_attached_windows();
+
+    /// Collects all children windows provided a WindowInfo
+    auto collect_windows(WindowInfo const& info) -> std::vector<Window>;
 };
 }
 
