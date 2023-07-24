@@ -21,6 +21,7 @@
 #include "mir/log.h"
 #include "mir/events/keyboard_event.h"
 #include "mir/wayland/client.h"
+#include <iostream>
 
 #include <xkbcommon/xkbcommon.h>
 #include <cstring> // memcpy
@@ -83,10 +84,16 @@ void mf::WlKeyboard::focus_on(WlSurface* surface)
         auto const serial = client->next_serial(nullptr);
         send_enter_event(serial, surface->raw_resource(), &key_state);
         wl_array_release(&key_state);
-        helper->refresh_modifiers();
     }
 
     focused_surface = mw::make_weak(surface);
+
+    if (surface)
+    {
+        // This must happen after the focused_surface is assigned so that a possible
+        // call to send_modifiers is successful.
+        helper->refresh_modifiers();
+    }
 }
 
 void mf::WlKeyboard::send_repeat_info(int32_t rate, int32_t delay)
