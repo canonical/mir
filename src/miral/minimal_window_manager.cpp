@@ -197,7 +197,8 @@ bool miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const* 
         switch (mir_keyboard_event_scan_code(event))
         {
             case KEY_LEFTALT:
-                self->application_selector.complete();
+                if (self->application_selector.complete() != nullptr)
+                    return true;
                 break;
             default:;
         }
