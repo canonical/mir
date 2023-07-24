@@ -58,6 +58,8 @@ struct StubFocusController : mir::shell::FocusController
 
     virtual auto surface_at(mir::geometry::Point /*cursor*/) const -> std::shared_ptr<mir::scene::Surface> override
         { return {}; }
+
+    void swap_z_order(mir::shell::SurfaceSet const& /*first*/, mir::shell::SurfaceSet const& /*second*/) override {}
 };
 
 struct StubDisplayLayout : mir::shell::DisplayLayout

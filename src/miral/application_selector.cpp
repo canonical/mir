@@ -18,6 +18,7 @@
 #include <miral/application_info.h>
 #include <miral/application.h>
 #include <mir/log.h>
+#include <iostream>
 
 using namespace miral;
 
@@ -115,9 +116,11 @@ auto ApplicationSelector::next(bool reverse) -> Application
         selected = originally_selected;
     }
 
-    // Attempt to focus the next application after the originally selected application.
+    // Attempt to focus the next application after the selected application.
     auto it = std::find(focus_list.begin(), focus_list.end(), selected);
     auto start_it = it;
+
+    Window next_window;
     do {
         if (reverse)
         {
@@ -142,7 +145,20 @@ auto ApplicationSelector::next(bool reverse) -> Application
         // We made it all the way through the list but failed to find anything.
         if (it == start_it)
             break;
-    } while (!tools.try_select_application(*it));
+    } while (!tools.can_select_application(*it, next_window));
+
+    // Swap the tree order first and then select the new window
+    auto previous_window = tools.info_for(selected).windows()[0];
+    tools.swap_tree_order(next_window, previous_window);
+    tools.select_active_window(next_window);
+
+    // Edge case: if we have gone full circle around the list back to the original app
+    // then we will wind up in a situation where the original app - now in the second z-order
+    // position - will be swapped with the final app, putting the final app in the second position.
+    if (*it == originally_selected)
+    {
+
+    }
 
     return *it;
 }
@@ -168,7 +184,12 @@ auto ApplicationSelector::complete() -> Application
 
 void ApplicationSelector::cancel()
 {
-    if (!tools.try_select_application(originally_selected))
+    Window window_to_select;
+    if (tools.can_select_application(originally_selected, window_to_select))
+    {
+        tools.select_active_window(window_to_select);
+    }
+    else
     {
         mir::log_warning("ApplicationSelector::cancel: Failed to select the root.");
     }

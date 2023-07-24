@@ -934,5 +934,7 @@ MIR_SERVER_2.14 {
     extern "C++" {
       "mir::DefaultServerConfiguration::the_drag_icon_controller()";
       "mir::DefaultServerConfiguration::the_pointer_input_dispatcher()";
+      mir::shell::SurfaceStackWrapper::swap_z_order*;
+      mir::shell::ShellWrapper::swap_z_order*;
     };
 } MIR_SERVER_2.11;

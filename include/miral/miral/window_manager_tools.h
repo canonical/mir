@@ -156,9 +156,9 @@ public:
     /// make the prev surface active within the active application
     void focus_prev_within_application();
 
-    /// Returns true if the application was selected, otherwise false.
+    /// Returns true if the application can be selected, otherwise false.
     /// \remark Since MirAL 3.10
-    auto try_select_application(Application) -> bool;
+    auto can_select_application(const Application, Window&) const -> bool;
 
     /// Find the topmost window at the cursor
     auto window_at(mir::geometry::Point cursor) const -> Window;
@@ -172,6 +172,12 @@ public:
 
     /// Raise window and all its children
     void raise_tree(Window const& root);
+
+    /// Swaps the position of the windows in regards to Z order
+    /// \param first
+    /// \param second
+    /// \remark SinceMirAL 3.10
+    void swap_tree_order(Window const& first, Window const& second);
 
     /** Start drag and drop. The handle will be passed to the client which can
      * then use it to talk to the whatever service is being used to support drag

@@ -576,12 +576,12 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
-auto miral::WindowManagementTrace::try_select_application(Application app) -> bool
+auto miral::WindowManagementTrace::can_select_application(const Application app, Window& window_hint) const -> bool
 try {
     log_input();
     mir::log_info("%s", __func__);
     trace_count++;
-    return wrapped.try_select_application(app);
+    return wrapped.can_select_application(app, window_hint);
 }
 MIRAL_TRACE_EXCEPTION
 
@@ -591,6 +591,15 @@ try {
     mir::log_info("%s root=%s", __func__, dump_of(root).c_str());
     trace_count++;
     wrapped.raise_tree(root);
+}
+MIRAL_TRACE_EXCEPTION
+
+void miral::WindowManagementTrace::swap_tree_order(Window const& first, Window const& second)
+try {
+    log_input();
+    mir::log_info("%s first=%s second=%s", __func__, dump_of(first).c_str(), dump_of(second).c_str());
+    trace_count++;
+    wrapped.swap_tree_order(first, second);
 }
 MIRAL_TRACE_EXCEPTION
 

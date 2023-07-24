@@ -881,7 +881,7 @@ void miral::BasicWindowManager::focus_prev_within_application()
     }
 }
 
-auto miral::BasicWindowManager::try_select_application(Application application) -> bool
+auto miral::BasicWindowManager::can_select_application(const Application application, Window& out_hint) const -> bool
 {
     bool can_focus = false;
     miral::Window new_focus;
@@ -914,7 +914,7 @@ auto miral::BasicWindowManager::try_select_application(Application application) 
         if (desired_window_selection.can_be_active() && desired_window_selection.state() != mir_window_state_hidden)
         {
             can_focus = true;
-            select_active_window(desired_window_selection.window());
+            out_hint = window;
             return false;
         }
 
@@ -965,6 +965,35 @@ void miral::BasicWindowManager::raise_tree(Window const& root)
 
     policy->advise_raise(windows);
     focus_controller->raise({begin(windows), end(windows)});
+}
+
+void miral::BasicWindowManager::swap_tree_order(Window const& first, Window const& second)
+{
+    auto const& info_first = info_for(first);
+    auto const& info_second = info_for(second);
+
+    // Collect the windows that we need to swap
+    std::vector<Window> first_windows;
+    std::vector<Window> second_windows;
+
+    std::function<void(WindowInfo const& info, std::vector<Window>& windows)> const add_children =
+        [&,this](WindowInfo const& info,std::vector<Window>& windows)
+        {
+            for (auto const& child : info.children())
+            {
+                windows.push_back(child);
+                add_children(info_for(child), windows);
+            }
+        };
+
+    first_windows.push_back(first);
+    add_children(info_first, first_windows);
+    second_windows.push_back(second);
+    add_children(info_second, second_windows);
+
+    focus_controller->swap_z_order(
+        {begin(first_windows), end(first_windows)},
+        {begin(second_windows), end(second_windows)});
 }
 
 void miral::BasicWindowManager::move_tree(miral::WindowInfo& root, mir::geometry::Displacement movement)

@@ -171,7 +171,7 @@ public:
     void focus_next_within_application() override;
     void focus_prev_within_application() override;
 
-    auto try_select_application(Application application) -> bool override;
+    auto can_select_application(const Application application, Window& out_hint) const -> bool override;
 
     auto window_at(mir::geometry::Point cursor) const -> Window override;
 
@@ -179,6 +179,7 @@ public:
     auto active_application_zone() -> Zone override;
 
     void raise_tree(Window const& root) override;
+    void swap_tree_order(Window const& first, Window const& second) override;
     void modify_window(WindowInfo& window_info, WindowSpecification const& modifications) override;
 
     auto info_for_window_id(std::string const& id) const -> WindowInfo& override;

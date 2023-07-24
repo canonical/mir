@@ -90,6 +90,7 @@ public:
     void raise(Surface const* surface);
     virtual void raise(std::weak_ptr<Surface> const& surface) override;
     void raise(SurfaceSet const& surfaces) override;
+    void swap_z_order(scene::SurfaceSet const& first, scene::SurfaceSet const& second) override;
 
     void add_surface(
         std::shared_ptr<Surface> const& surface,

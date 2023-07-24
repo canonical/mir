@@ -73,8 +73,8 @@ void miral::WindowManagerTools::focus_next_within_application()
 void miral::WindowManagerTools::focus_prev_within_application()
 { tools->focus_prev_within_application(); }
 
-auto miral::WindowManagerTools::try_select_application(Application application) -> bool
-{ return tools->try_select_application(application); }
+auto miral::WindowManagerTools::can_select_application(const Application application, Window& window_hint) const -> bool
+{ return tools->can_select_application(application, window_hint); }
 
 auto miral::WindowManagerTools::window_at(mir::geometry::Point cursor) const -> Window
 { return tools->window_at(cursor); }
@@ -87,6 +87,9 @@ auto miral::WindowManagerTools::active_application_zone() const -> Zone
 
 void miral::WindowManagerTools::raise_tree(Window const& root)
 { tools->raise_tree(root); }
+
+void miral::WindowManagerTools::swap_tree_order(Window const& first, Window const& second)
+{ tools->swap_tree_order(first, second); }
 
 void miral::WindowManagerTools::start_drag_and_drop(WindowInfo& /*window_info*/, std::vector<uint8_t> const& /*handle*/)
 { }

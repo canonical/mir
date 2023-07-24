@@ -430,4 +430,5 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"miral::MinimalWindowManager::advise_delete_app(miral::ApplicationInfo const&)@MIRAL_3.10" 3.10.0
  (c++)"miral::MinimalWindowManager::advise_focus_lost(miral::WindowInfo const&)@MIRAL_3.10" 3.10.0
  (c++)"miral::MinimalWindowManager::advise_new_app(miral::ApplicationInfo&)@MIRAL_3.10" 3.10.0
- (c++)"miral::WindowManagerTools::try_select_application(std::shared_ptr<mir::scene::Session>)@MIRAL_3.10" 3.10.0
+ (c++)"miral::WindowManagerTools::can_select_application(std::shared_ptr<mir::scene::Session>, miral::Window&)@MIRAL_3.10" 3.10.0
+ (c++)"miral::WindowManagerTools::swap_tree_order(miral::Window const&, miral::Window const&)@MIRAL_3.10" 3.10.0

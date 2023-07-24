@@ -40,6 +40,8 @@ public:
 
     auto surface_at(geometry::Point) const -> std::shared_ptr<scene::Surface> override;
 
+    void swap_z_order(scene::SurfaceSet const& first, scene::SurfaceSet const& second) override;
+
 protected:
     std::shared_ptr<SurfaceStack> const wrapped;
 };

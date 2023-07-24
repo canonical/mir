@@ -679,3 +679,7 @@ void msh::AbstractShell::raise(SurfaceSet const& surfaces)
     report->surfaces_raised(surfaces);
 }
 
+void msh::AbstractShell::swap_z_order(const mir::shell::SurfaceSet &first, const mir::shell::SurfaceSet &second)
+{
+    surface_stack->swap_z_order(first, second);
+}

@@ -425,6 +425,67 @@ void ms::SurfaceStack::raise(SurfaceSet const& ss)
     }
 }
 
+void ms::SurfaceStack::swap_z_order(const scene::SurfaceSet &first, const scene::SurfaceSet &second)
+{
+    {
+        RecursiveWriteLock ul(guard);
+        for (auto& layer : surface_layers)
+        {
+            // The goal is to second the first set with the second set such that their Z-order is swapped.
+
+            // Find the elements that we'll need in order
+            int first_index = -1;
+            int second_index = -1;
+            std::vector<std::shared_ptr<Surface>> first_move;
+            std::vector<std::shared_ptr<Surface>> second_move;
+            for (auto it = layer.begin(); it != layer.end(); it++)
+            {
+                if (first.count(*it))
+                {
+                    if (first_index < 0)
+                        first_index = it - layer.begin();
+                    first_move.push_back(*it);
+                }
+                else if (second.count(*it))
+                {
+                    if (second_index < 0)
+                        second_index = it - layer.begin();
+                    second_move.push_back(*it);
+                }
+            }
+
+            // Nothing to swap here
+            if (second_index < 0 || first_index < 0)
+                continue;
+
+            // Delete the swapped elements  from the list
+            for (auto it = layer.begin(); it != layer.end();)
+            {
+                auto found_first = std::find(first_move.begin(), first_move.end(), *it);
+                auto found_second = std::find(second_move.begin(), second_move.end(), *it);
+                if (found_first != first_move.end() || found_second != second_move.end())
+                     layer.erase(it);
+                else
+                    it++;
+            }
+
+            // Put them back in at the swapped positions
+            if (first_index < second_index)
+            {
+                layer.insert(layer.begin() + first_index, second_move.begin(), second_move.end());
+                layer.insert(layer.begin() + second_index, first_move.begin(), first_move.end());
+            }
+            else
+            {
+                layer.insert(layer.begin() + second_index, first_move.begin(), first_move.end());
+                layer.insert(layer.begin() + first_index, second_move.begin(), second_move.end());
+            }
+        }
+    }
+
+    observers.surfaces_reordered(first);
+}
+
 void ms::SurfaceStack::create_rendering_tracker_for(std::shared_ptr<Surface> const& surface)
 {
     auto const tracker = std::make_shared<RenderingTracker>(surface);

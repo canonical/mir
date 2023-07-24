@@ -45,6 +45,8 @@ public:
 
     void raise(SurfaceSet const& surfaces) override;
 
+    void swap_z_order(SurfaceSet const& first, SurfaceSet const& second) override;
+
     auto open_session(
         pid_t client_pid,
         Fd socket_fd,
