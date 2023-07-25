@@ -110,14 +110,11 @@ void mf::WlKeyboard::send_key(std::shared_ptr<MirKeyboardEvent const> const& eve
 
 void mf::WlKeyboard::send_modifiers(MirXkbModifiers const& modifiers)
 {
-    if (focused_surface)
-    {
-        auto const serial = client->next_serial(nullptr);
-        send_modifiers_event(
-            serial,
-            modifiers.depressed,
-            modifiers.latched,
-            modifiers.locked,
-            modifiers.effective_layout);
-    }
+    auto const serial = client->next_serial(nullptr);
+    send_modifiers_event(
+        serial,
+        modifiers.depressed,
+        modifiers.latched,
+        modifiers.locked,
+        modifiers.effective_layout);
 }
