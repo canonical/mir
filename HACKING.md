@@ -1,6 +1,20 @@
 # Mir hacking guide
 
-## Style Guide
+## Building & running
+
+There are some brief guides describing how to run the *Mir binaries* once you have
+them built. You might think it's obvious but there are some important things
+you need to know to get it working, and also to prevent your existing *X server*
+from dying at the same time.
+
+- *[Getting and Using Mir](./doc/getting_and_using_mir.md)*
+
+You can configure *Mir* to provide runtime information helpful for debugging
+by enabling component reports:
+
+- *[Component Reports](./doc/component_reports.md)*
+
+## Style guide
 
 There is a *coding style guide* in the guides subdirectory. To build it into an
 *html* file:
@@ -65,21 +79,6 @@ validity. Unless otherwise documented functions and constructors that
 take pointer parameters have validity of the referenced objects as a
 precondition. Exceptions to the rule must be of limited scope and 
 documented.
-
-
-## Running
-
-There are some brief guides describing how to run the *Mir binaries* once you have
-them built. You might think it's obvious but there are some important things
-you need to know to get it working, and also to prevent your existing *X server*
-from dying at the same time.
-
- - *[Getting and Using Mir](./doc/getting_and_using_mir.md)*
-
-You can configure *Mir* to provide runtime information helpful for debugging
-by enabling component reports:
-
- - *[Component Reports](./doc/component_reports.md)*
 
 
 ## Documentation

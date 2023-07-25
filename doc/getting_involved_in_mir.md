@@ -71,5 +71,6 @@ The Mir coding guidelines are [here](https://mir-server.io/doc/cppguide/index.ht
 
 ## Working on code
  - Hacking guidelines can be found here: [Mir Hacking Guides](../HACKING.md)
- - Information about runtime tracing can be found here: [Component Reports](./component_reports.md)
+ - You can configure *Mir* to provide runtime information helpful for debugging
+   by enabling component reports: [Component Reports](./component_reports.md)
  - A guide on versioning Mir DSOs: [DSO Versioning Guide](./dso_versioning_guide.md)
