@@ -256,7 +256,7 @@ class mgg::Platform::KMSDisplayInterfaceProvider : public mg::DisplayInterfacePr
 public:
     explicit KMSDisplayInterfaceProvider(mir::Fd drm_fd)
         : drm_fd{std::move(drm_fd)},
-          gbm_provider{std::make_shared<mgg::GBMDisplayProvider>(this->drm_fd)}
+          gbm_provider{maybe_make_gbm_provider(this->drm_fd)}
     {
     }
 
@@ -275,6 +275,20 @@ protected:
         return {};  
     }
 private:
+    static auto maybe_make_gbm_provider(mir::Fd drm_fd) -> std::shared_ptr<mgg::GBMDisplayProvider>
+    {
+        try
+        {
+            return std::make_shared<mgg::GBMDisplayProvider>(std::move(drm_fd));
+        }
+        catch (std::exception const& err)
+        {
+            mir::log_info("Failed to create GBM device for direct buffer submission");
+            mir::log_info("Output will use CPU buffer copies");
+            return {};
+        }
+    }
+
     mir::Fd const drm_fd;
     // We rely on the GBM provider being stable over probe, so we construct one at startup
     // and reuse it.
