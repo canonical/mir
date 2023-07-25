@@ -60,7 +60,7 @@ You can install the Mir examples, headers and libraries you've built with:
   
     sudo make install
 
-### Contributing to Mir
+## Contributing to Mir
 
 Please file bug reports at: https://github.com/MirServer/mir/issues
 
@@ -69,7 +69,7 @@ The Mir development mailing list can be found at: https://lists.ubuntu.com/mailm
 The Mir coding guidelines are [here](https://mir-server.io/doc/cppguide/index.html).
 
 
-### Working on code
+## Working on code
  - Hacking guidelines can be found here: \ref md_HACKING "Mir hacking guide"
  - Information about runtime tracing can be found here: \ref component_reports
  - A guide on versioning Mir DSOs: \ref dso_versioning_guide
