@@ -1,6 +1,5 @@
 # Mir hacking guide
 
-
 ## Style Guide
 
 There is a *coding style guide* in the guides subdirectory. To build it into an
@@ -81,6 +80,7 @@ You can configure *Mir* to provide runtime information helpful for debugging
 by enabling component reports:
 
  - *[Component Reports](./doc/component_reports.md)*
+
 
 ## Documentation
 

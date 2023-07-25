@@ -1,18 +1,16 @@
-Getting and Using Mir  {#getting_and_using_mir}
-=====================
+# Getting and Using Mir  {#getting_and_using_mir}
 
 Mir is a library for building things, not an end-user product, but it does come
 with some demos to illustrate the possibilities.
 
-Getting Mir demos
------------------
+## Getting Mir demos
 
 The Mir libraries and demos are available on Ubuntu, Fedora and Arch. It has 
 also been built and tested on Debian but, at the time or writing, is not in the
 archive.
 
 For Linux distributions that don't currently package Mir you need to build it
-yourself. (See \ref getting_involved_in_mir).
+yourself. (See \ref building).
 
 ## Getting Mir on Ubuntu
 
@@ -53,8 +51,7 @@ It is also useful to install qterminal:
 
 On Arch Linux, you can install the [mir](https://aur.archlinux.org/packages/mir/) package from the AUR.
 
-Using Mir demos
----------------
+## Using Mir demos
 
 For convenient testing under X11 there's a "miral-app" script that wraps the
 commands used to start a server and then launches a terminal (as the current
@@ -126,3 +123,16 @@ These options can also be specified in a configuration file. For example:
     $ cat ~/.config/miral-shell.config 
     keymap=gb
     window-manager=tiling
+
+## Using Mir for server development
+
+Install the headers and libraries for using libmiral in development:
+
+    sudo apt install libmiral-dev
+
+A `miral.pc` file is provided for use with `pkg-config` or other tools. For
+example:
+
+    pkg-config --cflags miral
+
+The server API is introduced here: \ref introducing_the_miral_api

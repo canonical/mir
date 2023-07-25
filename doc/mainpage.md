@@ -15,25 +15,14 @@ Window management is integrated into Mir with useful default behaviour
 and is extremely customisable by shell authors using a simple high-level
 API.
 
- - If you want to use the Mir snaps, see: 
-   [Make a Secure Ubuntu Web Kiosk](https://mir-server.io/docs/make-a-secure-ubuntu-web-kiosk)
+## Resources
+- The repository can be found [here](https://github.com/MirServer/mir)
+- If you want to use the Mir snaps, see: 
+  [Make a Secure Ubuntu Web Kiosk](https://mir-server.io/docs/make-a-secure-ubuntu-web-kiosk)
 
- - If you want to try out the Mir demos on desktop, see: \ref getting_and_using_mir
+- If you want to try out the Mir demos on desktop, see: \ref getting_and_using_mir
 
- - If you want to get involved in Mir development, see: \ref getting_involved_in_mir
-
-## Using Mir for server development
-
-Install the headers and libraries for using libmiral in development:
-
-    sudo apt install libmiral-dev
-
-A `miral.pc` file is provided for use with `pkg-config` or other tools. For
-example: 
-
-    pkg-config --cflags miral
-
-The server API is introduced here: \ref introducing_the_miral_api
+- If you want to get involved in Mir development, see: \ref getting_involved_in_mir
 
 ## Community
 

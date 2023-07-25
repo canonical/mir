@@ -34,8 +34,7 @@ instructions vary across distros.
 As we build these distros in Mir's CI you can copy the instructions
 from the corresponding files under `spread/build`.
 
-Building Mir
-------------
+## Building
 
     mkdir build
     cd  build
@@ -67,13 +66,10 @@ Please file bug reports at: https://github.com/MirServer/mir/issues
 
 The Mir development mailing list can be found at: https://lists.ubuntu.com/mailman/listinfo/Mir-devel
 
-The Mir coding guidelines are [here](cppguide/index.html).
+The Mir coding guidelines are [here](https://mir-server.io/doc/cppguide/index.html).
 
-### Working on Mir code
 
- - \ref md_README  "Mir Read me"
- - \ref md_HACKING "Mir hacking guide"
- - \ref component_reports
- - \ref dso_versioning_guide
- - \ref performance_framework
- - \ref latency "Measuring visual latency"
+### Working on code
+ - Hacking guidelines can be found here: \ref md_HACKING "Mir hacking guide"
+ - Information about runtime tracing can be found here: \ref component_reports
+ - A guide on versioning Mir DSOs: \ref dso_versioning_guide
