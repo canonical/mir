@@ -446,9 +446,8 @@ auto probe_rendering_platform(
                     strlen("llvmpipe")) == 0)
                 {
                     mir::log_info("Detected software renderer: %s", renderer_string);
-                    // Leave the priority at ::supported; if we've got a software renderer then
-                    // we *don't* support *this* device very well.
-                    supported_devices.back().support_level = std::min(maximum_suitability, mg::PlatformPriority::supported);
+                    // Leave the priority at ::unsupported; if we've got a software renderer then
+                    // we're not successfully using *this* rendernode.
                 }
                 else
                 {
