@@ -10,7 +10,7 @@ also been built and tested on Debian but, at the time or writing, is not in the
 archive.
 
 For Linux distributions that don't currently package Mir you need to build it
-yourself. (See \ref building).
+yourself. (See [Getting Involved in Mir](./getting_involved_in_mir.md)).
 
 ## Getting Mir on Ubuntu
 
