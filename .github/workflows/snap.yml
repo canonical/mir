@@ -38,6 +38,7 @@ jobs:
     timeout-minutes: 30
 
     strategy:
+      fail-fast: false
       matrix:
         include:
         - snap: MirServer/mir-test-tools
