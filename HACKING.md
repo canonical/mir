@@ -1,21 +1,22 @@
-Mir hacking guide
-=================
+# Mir hacking guide
 
-Coding *Mir*
-----------
 
-There's a *__coding style guide__* in the guides subdirectory. To build it into an
+## Style Guide
+
+There is a *coding style guide* in the guides subdirectory. To build it into an
 *html* file:
 
+    $ mkdir build
+    $ cd build
+    $ cmake ..
     $ make guides
 
-(Or if you're reading the web version [here](cppguide/index.html)).
+(Or if you're reading the web version [here](https://mir-server.io/doc/cppguide/index.html)).
 
 
-Code structure
---------------
+## Code structure
 
-*__Code structure: include__*
+<b><i>include/</i></b>
 
 The include subdirectory contains header files "published" by corresponding parts
 of the system. For example, *include/mir/option/option.h* provides a system-wide interface
@@ -30,22 +31,21 @@ should not expose platform or implementation technology types *etc.* (And as pub
 are normally implementations of interfaces they do not use these types.)
 
 
-*__Code structure: src__*
+<b><i>_src/_</i></b>
 
 This comprises the implementation of *Mir*. Header files for use within the component
 should be put here. The only headers from the source tree that should be included are
 ones from the current component (ones that do not require a path component).
 
 
-*__Code structure: test__*
+<b><i>_test/_</i></b>
 
 This contains unit, integration and acceptance tests written using *gtest/gmock*. Tests
 largely depend upon the public interfaces of components - but tests of units within
 a component will include headers from within the source tree.
 
 
-Error handling strategy
------------------------
+## Error handling strategy
 
 If a function cannot meet its post-conditions it throws an exception and meets
 __AT LEAST__ the basic exception safety guarantee. It is a good idea to document the
@@ -57,8 +57,7 @@ preconditions may be verified using the "*assert"* macro - which may or may
 not report problems (depending upon the __NDEBUG__ define).
 
 
-Implicit rules
---------------
+## Implicit rules
 
 There are a lot of __pointers__ (mostly smart, but a few raw ones) passed
 around in the code. We have adopted the general rule that pointers are
@@ -69,23 +68,21 @@ precondition. Exceptions to the rule must be of limited scope and
 documented.
 
 
-Running *Mir*
------------
+## Running
 
 There are some brief guides describing how to run the *Mir binaries* once you have
 them built. You might think it's obvious but there are some important things
 you need to know to get it working, and also to prevent your existing *X server*
 from dying at the same time.
 
- - *\ref getting_and_using_mir*
+ - *[Getting and Using Mir](./doc/getting_and_using_mir.md)*
 
 You can configure *Mir* to provide runtime information helpful for debugging
 by enabling component reports:
 
- - *\ref component_reports*
+ - *[Component Reports](./doc/component_reports.md)*
 
-Documentation
--------------
+## Documentation
 
 There are *design notes* and an *architecture diagram* (.dia) in the design
 subdirectory.
