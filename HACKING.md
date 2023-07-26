@@ -30,7 +30,7 @@ There is a *coding style guide* in the guides subdirectory. To build it into an
 
 ## Code structure
 
-<b><i>include/</i></b>
+_**include/**_
 
 The include subdirectory contains header files "published" by corresponding parts
 of the system. For example, *include/mir/option/option.h* provides a system-wide interface
@@ -45,14 +45,14 @@ should not expose platform or implementation technology types *etc.* (And as pub
 are normally implementations of interfaces they do not use these types.)
 
 
-<b><i>_src/_</i></b>
+_**src/**_
 
 This comprises the implementation of *Mir*. Header files for use within the component
 should be put here. The only headers from the source tree that should be included are
 ones from the current component (ones that do not require a path component).
 
 
-<b><i>_test/_</i></b>
+_**test/**_
 
 This contains unit, integration and acceptance tests written using *gtest/gmock*. Tests
 largely depend upon the public interfaces of components - but tests of units within
