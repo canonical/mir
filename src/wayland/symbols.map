@@ -610,5 +610,12 @@ global:
     typeinfo?for?mir::wayland::SessionLockSurfaceV1;
     vtable?for?mir::wayland::SessionLockSurfaceV1;
     virtual?thunk?to?mir::wayland::SessionLockSurfaceV1::?SessionLockSurfaceV1*;
+
+    mir::wayland::InputMethodV1::*;
+    non-virtual?thunk?to?mir::wayland::InputMethodV1::*;
+    typeinfo?for?mir::wayland::InputMethodV1;
+    vtable?for?mir::wayland::InputMethodV1;
+    typeinfo?for?mir::wayland::InputMethodV1::Global;
+    vtable?for?mir::wayland::InputMethodV1::Global;
   };
 } MIRWAYLAND_2.12;

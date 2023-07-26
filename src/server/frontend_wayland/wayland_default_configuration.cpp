@@ -33,6 +33,7 @@
 #include "text_input_v3.h"
 #include "text_input_v2.h"
 #include "text_input_v1.h"
+#include "input_method_v1.h"
 #include "input_method_v2.h"
 #include "idle_inhibit_v1.h"
 #include "wlr_screencopy_v1.h"
@@ -145,6 +146,12 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
     make_extension_builder<mw::TextInputManagerV3>([](auto const& ctx)
         {
             return mf::create_text_input_manager_v3(ctx.display, ctx.wayland_executor, ctx.text_input_hub);
+        }),
+    make_extension_builder<mw::InputMethodV1>([](auto const& ctx)
+        {
+            return std::make_shared<mf::InputMethodV1>(
+                ctx.display,
+                ctx.wayland_executor);
         }),
     make_extension_builder<mw::InputMethodManagerV2>([](auto const& ctx)
         {

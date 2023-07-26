@@ -42,6 +42,7 @@ set(
   virtual_pointer_v1.cpp        virtual_pointer_v1.h
   text_input_v3.cpp             text_input_v3.cpp
   text_input_v2.cpp             text_input_v2.cpp
+  input_method_v1.cpp           input_method_v1.h
   input_method_v2.cpp           input_method_v2.h
   input_method_grab_keyboard_v2.cpp input_method_grab_keyboard_v2.h
   idle_inhibit_v1.cpp           idle_inhibit_v1.h
@@ -55,6 +56,8 @@ set(
   std_layout_uptr.h
   shm.cpp                       shm.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/pointer_input_dispatcher.h
+    input_method_v1.cpp
+    input_method_v1.h
 )
 
 add_custom_command(
