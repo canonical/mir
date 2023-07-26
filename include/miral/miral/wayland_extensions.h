@@ -153,6 +153,14 @@ public:
     /// \remark Since MirAL 3.4
     static char const* const zwp_virtual_keyboard_manager_v1;
 
+    // TODO: Placeholder copy pasta
+    /// Allows clients (such as on-screen keyboards) to intercept physical key events and act as a
+    /// source of text input for other clients. Input methods are not required to display anything
+    /// to use this extension, so malicious clients could use it to intercept keys events or take
+    /// actions without user input.
+    /// \remark Since MirAL 3.10
+    static const char* const zwp_input_method_v1;
+
     /// Allows clients (such as on-screen keyboards) to intercept physical key events and act as a
     /// source of text input for other clients. Input methods are not required to display anything
     /// to use this extension, so malicious clients could use it to intercept keys events or take
