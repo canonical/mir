@@ -24,7 +24,7 @@ There is a *coding style guide* in the guides subdirectory. To build it into an
     $ cmake ..
     $ make guides
 
-(Or if you're reading the web version [here](https://mir-server.io/doc/cppguide/index.html)).
+(Or if you're reading the web version [here](cppguide/index.html)).
 
 
 ## Code structure
