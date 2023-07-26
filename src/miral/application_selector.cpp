@@ -169,7 +169,11 @@ auto ApplicationSelector::next(bool reverse) -> Application
         tools.swap_tree_order(next_window, active_window);
     }
 
-    tools.select_active_window(next_window);
+    // next_window will be a garbage window in this case, so let's not select it
+    if (it != start_it)
+    {
+        tools.select_active_window(next_window);
+    }
 
     return *it;
 }
