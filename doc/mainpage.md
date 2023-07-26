@@ -24,6 +24,19 @@ API.
 
 - If you want to get involved in Mir development, see: \ref getting_involved_in_mir
 
+## Using Mir for server development
+
+Install the headers and libraries for using libmiral in development:
+
+    sudo apt install libmiral-dev
+
+A `miral.pc` file is provided for use with `pkg-config` or other tools. For
+example:
+
+    pkg-config --cflags miral
+
+The server API is introduced here: \ref introducing_the_miral_api
+
 ## Community
 
 Developer blogs, develompent announcements, questions, process documentation, and design
