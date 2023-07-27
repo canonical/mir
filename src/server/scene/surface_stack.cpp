@@ -425,7 +425,7 @@ void ms::SurfaceStack::raise(SurfaceSet const& ss)
     }
 }
 
-void ms::SurfaceStack::swap_z_order(const scene::SurfaceSet &first, const scene::SurfaceSet &second)
+void ms::SurfaceStack::swap_z_order(SurfaceSet const& first, SurfaceSet const& second)
 {
     {
         RecursiveWriteLock ul(guard);
