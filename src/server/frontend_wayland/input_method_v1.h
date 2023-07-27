@@ -23,6 +23,10 @@
 namespace mir
 {
 class Executor;
+namespace scene
+{
+class TextInputHub;
+}
 namespace frontend
 {
 
@@ -31,14 +35,16 @@ class InputMethodV1 : public wayland::InputMethodV1::Global
 public:
     InputMethodV1(
         wl_display* display,
-        std::shared_ptr<Executor> wayland_executor);
+        std::shared_ptr<Executor> const wayland_executor,
+        std::shared_ptr<scene::TextInputHub> const text_input_hub);
 
 private:
     class Instance;
     void bind(wl_resource *new_resource) override;
 
     wl_display* display;
-    std::shared_ptr<Executor> wayland_executor;
+    std::shared_ptr<Executor> const wayland_executor;
+    std::shared_ptr<scene::TextInputHub> const text_input_hub;
 };
 
 }
