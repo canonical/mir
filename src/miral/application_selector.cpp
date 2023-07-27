@@ -182,7 +182,6 @@ auto ApplicationSelector::complete() -> Application
 {
     if (!is_active())
     {
-        mir::log_warning("Cannot call ApplicationSelector::stop when the ApplicationSelector is not active.");
         return nullptr;
     }
 

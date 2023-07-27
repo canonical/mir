@@ -892,9 +892,8 @@ auto miral::BasicWindowManager::can_select_application(const Application applica
     mru_active_windows.enumerate([&](miral::Window& window)
     {
         // We don't want to select a different application
-        if (window.application() != application) {
+        if (window.application() != application)
              return true;
-        }
 
         // Check if the previous window has to remain focused
         auto const prev_windows_focus_mode = prev_window ? info_for(prev_window).focus_mode() : mir_focus_mode_focusable;

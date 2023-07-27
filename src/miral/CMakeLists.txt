@@ -29,7 +29,6 @@ add_library(miral-internal STATIC
                                          join_client_threads.h
                                          window_info_defaults.h
     window_specification_internal.cpp    window_specification_internal.h
-    application_selector.cpp
 )
 
 # Already implied by the linker's symbol version script, but can avoid accidents
@@ -50,6 +49,7 @@ add_library(miral SHARED
     application.cpp                     ${miral_include}/miral/application.h
     application_authorizer.cpp          ${miral_include}/miral/application_authorizer.h
     application_info.cpp                ${miral_include}/miral/application_info.h
+    application_selector.cpp            ${miral_include}/miral/application_selector.h
     canonical_window_manager.cpp        ${miral_include}/miral/canonical_window_manager.h
     configuration_option.cpp            ${miral_include}/miral/configuration_option.h
                                         ${miral_include}/miral/command_line_option.h
