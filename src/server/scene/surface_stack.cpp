@@ -431,55 +431,69 @@ void ms::SurfaceStack::swap_z_order(SurfaceSet const& first, SurfaceSet const& s
         RecursiveWriteLock ul(guard);
         for (auto& layer : surface_layers)
         {
-            // The goal is to second the first set with the second set such that their Z-order is swapped.
+            // The goal is to swap the first set with the second set such that their Z-order is swapped.
 
-            // Find the elements that we'll need to move
-            int first_index = -1;
-            int second_index = -1;
-            std::vector<std::shared_ptr<Surface>> first_move;
-            std::vector<std::shared_ptr<Surface>> second_move;
+            // First, find the start and end of the range that we want to swap
+            auto swap_begin = layer.begin();
+            auto swap_end = layer.end();
+            size_t num_first_found = 0;
+            size_t num_second_found = 0;
+            bool first_to_front = true;
             for (auto it = layer.begin(); it != layer.end(); it++)
             {
+                // Once we've found them all, then we have the whole range to sort across
+                if (num_first_found == first.size() && num_second_found == second.size())
+                {
+                    swap_end = it;
+                    break;
+                }
+
+                // Find the start position and count how many we've found
                 if (first.count(*it))
                 {
-                    if (first_index < 0)
-                        first_index = it - layer.begin();
-                    first_move.push_back(*it);
+                    if (!num_first_found && !num_second_found)
+                        swap_begin = it;
+
+                    num_first_found++;
                 }
                 else if (second.count(*it))
                 {
-                    if (second_index < 0)
-                        second_index = it - layer.begin();
-                    second_move.push_back(*it);
+                    if (!num_first_found && !num_second_found)
+                    {
+                        first_to_front = false;
+                        swap_begin = it;
+                    }
+
+                    num_second_found++;
                 }
             }
 
-            // Break early if there is nothing to swap here
-            if (second_index < 0 || first_index < 0)
-                continue;
-
-            // Delete the swapped elements  from the list
-            for (auto it = layer.begin(); it != layer.end();)
+            // Finally, move the to_front items to the front of the group and the to_back to the back of the group
+            auto to_front = first_to_front ? first : second;
+            auto to_back = first_to_front ? second : first;
+            std::stable_sort(swap_begin, swap_end, [to_front, to_back](std::weak_ptr<Surface> s1, std::weak_ptr<Surface> s2)
             {
-                auto found_first = std::find(first_move.begin(), first_move.end(), *it);
-                auto found_second = std::find(second_move.begin(), second_move.end(), *it);
-                if (found_first != first_move.end() || found_second != second_move.end())
-                     layer.erase(it);
+                if (to_front.count(s1))
+                {
+                    return -1;
+                }
+                else if (to_front.count(s2))
+                {
+                    return 1;
+                }
+                else if (to_back.count(s1))
+                {
+                    return 1;
+                }
+                else if (to_back.count(s2))
+                {
+                    return -1;
+                }
                 else
-                    it++;
-            }
-
-            // Put them back in at the swapped positions
-            if (first_index < second_index)
-            {
-                layer.insert(layer.begin() + first_index, second_move.begin(), second_move.end());
-                layer.insert(layer.begin() + second_index, first_move.begin(), first_move.end());
-            }
-            else
-            {
-                layer.insert(layer.begin() + second_index, first_move.begin(), first_move.end());
-                layer.insert(layer.begin() + first_index, second_move.begin(), second_move.end());
-            }
+                {
+                    return 0;
+                }
+            });
         }
     }
 
@@ -495,22 +509,10 @@ void ms::SurfaceStack::send_to_back(const mir::scene::SurfaceSet &ss)
         {
             auto const old_layer = layer;
 
-            // Put all the surfaces to send to the back at the end of the list (preserving order)
-            auto split = std::stable_partition(
+            // "Back" in Z-order will be the front of the list.
+            std::stable_partition(
                 begin(layer), end(layer),
-                [&](std::weak_ptr<Surface> const& s) { return !ss.count(s); });
-
-            // Make a new vector with only the surfaces to send to the back
-            auto to_send_to_back = std::vector<std::shared_ptr<Surface>>{split, layer.end()};
-
-            // Chop off the surfaces we are moving from the old vector (they are now only in to_send_to_back)
-            layer.erase(split, layer.end());
-
-            // One by one insert to_send_to_back surfaces at the front of the vector
-            for (auto const& surface : to_send_to_back)
-            {
-                layer.insert(layer.begin(), surface);
-            }
+                [&](std::weak_ptr<Surface> const& s) { return ss.count(s); });
 
             // Only set surfaces_reordered if the end result is different than before
             if (old_layer != layer)
