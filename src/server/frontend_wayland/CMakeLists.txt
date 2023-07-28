@@ -56,8 +56,6 @@ set(
   std_layout_uptr.h
   shm.cpp                       shm.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/pointer_input_dispatcher.h
-    input_method_v1.cpp
-    input_method_v1.h
 )
 
 add_custom_command(

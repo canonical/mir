@@ -16,6 +16,9 @@
 
 #include "input_method_v1.h"
 #include <mir/scene/text_input_hub.h>
+#include "input-method-unstable-v1_wrapper.cpp" // TODO: Super temporary. Can't figure out why link is broken.
+#include <iostream>
+
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -88,6 +91,11 @@ private:
         {
         }
 
+        ~InputMethodContextV1() override
+        {
+            
+        }
+
     private:
         void commit_string(uint32_t /*serial*/, const std::string &/*text*/) override
         {
@@ -121,7 +129,8 @@ private:
 
         void modifiers_map(struct wl_array */*map*/) override
         {
-
+            std::cout << "Hello world" << std::endl;
+            std::cout.flush();
         }
 
         void keysym(uint32_t /*serial*/, uint32_t /*time*/, uint32_t /*sym*/, uint32_t /*state*/, uint32_t /*modifiers*/) override
