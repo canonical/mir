@@ -507,16 +507,26 @@ void ms::SurfaceStack::send_to_back(const mir::scene::SurfaceSet &ss)
         RecursiveWriteLock ul(guard);
         for (auto& layer : surface_layers)
         {
-            auto const old_layer = layer;
+            // Only reorder if "layer" contains at least one surface
+            // in "ss" and the surface(s) are not already at the beginning
+            auto it = layer.begin();
+            for (; it != layer.end(); it++)
+                if (!ss.contains(*it))
+                    break;
 
-            // "Back" in Z-order will be the front of the list.
-            std::stable_partition(
-                begin(layer), end(layer),
-                [&](std::weak_ptr<Surface> const& s) { return ss.count(s); });
+            bool needs_reorder = false;
+            for (; it != layer.end(); it++)
+                if (ss.contains(*it))
+                    needs_reorder = true;
 
-            // Only set surfaces_reordered if the end result is different than before
-            if (old_layer != layer)
+            if (needs_reorder)
+            {
+                // "Back" in Z-order will be the front of the list.
+                std::stable_partition(
+                    begin(layer), end(layer),
+                    [&](std::weak_ptr<Surface> const& s) { return ss.count(s); });
                 surfaces_reordered = true;
+            }
         }
     }
 
