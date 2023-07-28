@@ -80,7 +80,7 @@ auto create_current_context(EGLDisplay dpy, EGLContext share_ctx)
     };
 
     auto egl_extensions = eglQueryString(dpy, EGL_EXTENSIONS);
-    if (strstr(egl_extensions, "EGL_KHR_no_config_context"))
+    if (strstr(egl_extensions, "EGL_KHR_no_config_context") == nullptr)
     {
         // We do not *strictly* need this, but it means I don't need to thread a GLConfig all the way through to here.
         BOOST_THROW_EXCEPTION((std::runtime_error{"EGL implementation missing necessary EGL_KHR_no_config_context extension"}));
