@@ -26,18 +26,22 @@ namespace ms = mir::scene;
 /// Handles activation and deactivation of the InputMethodContextV1
 class mf::InputMethodV1::Instance : wayland::InputMethodV1
 {
+private:
+    class InputMethodContextV1;
+
 public:
-    Instance(wl_resource* new_resource, mf::InputMethodV1* method)
+    Instance(wl_resource* new_resource, std::shared_ptr<scene::TextInputHub> const text_input_hub, mf::InputMethodV1* method)
         : InputMethodV1{new_resource, Version<1>()},
-          method(method),
+          method(method), // TODO: Do we need the method here?
+          text_input_hub(text_input_hub),
           state_observer{std::make_shared<StateObserver>(this)}
     {
-        method->text_input_hub->register_interest(state_observer, *method->wayland_executor);
+        text_input_hub->register_interest(state_observer, *method->wayland_executor);
     }
 
     ~Instance()
     {
-        method->text_input_hub->unregister_interest(*state_observer);
+        text_input_hub->unregister_interest(*state_observer);
     }
 
     void activated(
@@ -45,18 +49,39 @@ public:
         bool /*new_input_field*/,
         scene::TextInputState const& /*state*/)
     {
-        context = std::make_unique<InputMethodContextV1>(*static_cast<wayland::InputMethodV1*>(this));
+        if (context)
+        {
+            deactivated();
+        }
+
+        context = std::make_shared<InputMethodContextV1>(
+            this,
+            text_input_hub);
+        context_list.push_back(context);
         send_activate_event(context->resource);
+        std::cout << context->resource << std::endl;
     }
 
     void deactivated()
     {
-        if (context)
+        auto resource = context->resource;
+        send_deactivate_event(resource);
+        context = nullptr;
+    }
+
+    /// The spec calls for the item to be destroyed only after deactivation is handled.
+    /// As such, we keep a reference to the InputMethodContextV1 hanging around so that
+    /// the wayland "destroy" is not called on a resource that doesn't exist.
+    /// \param ctx The destroyed context
+    void notify_destroyed(const InputMethodContextV1* ctx)
+    {
+        auto it = std::find_if(context_list.begin(), context_list.end(), [&](const std::shared_ptr<InputMethodContextV1> other_ctx)
         {
-            auto resource = context->resource;
-            context = nullptr;
-            send_deactivate_event(resource);
-        }
+            return other_ctx.get() != ctx;
+        });
+
+        if (it != context_list.end())
+            context_list.erase(it);
     }
 
 private:
@@ -83,23 +108,34 @@ private:
         Instance* const input_method;
     };
 
+    /// https://wayland.app/protocols/input-method-unstable-v1
     class InputMethodContextV1 : public wayland::InputMethodContextV1
     {
     public:
-        InputMethodContextV1(const wayland::InputMethodV1& method)
-            : wayland::InputMethodContextV1(method)
+        InputMethodContextV1(
+            mf::InputMethodV1::Instance* method,
+            std::shared_ptr<scene::TextInputHub> const text_input_hub)
+            : wayland::InputMethodContextV1(*static_cast<wayland::InputMethodV1*>(method)),
+              method(method),
+              text_input_hub(text_input_hub)
         {
         }
 
-        ~InputMethodContextV1() override
+        ~InputMethodContextV1()
         {
-            
+            method->notify_destroyed(this);
         }
 
     private:
+        void commit(uint32_t /*serial*/)
+        {
+            text_input_hub->text_changed(pending_change);
+        }
+
         void commit_string(uint32_t /*serial*/, const std::string &/*text*/) override
         {
-
+//            pending_change.commit_text = text;
+//            commit(serial);
         }
 
         void preedit_string(uint32_t /*serial*/, const std::string &/*text*/, const std::string &/*commit*/) override
@@ -129,8 +165,7 @@ private:
 
         void modifiers_map(struct wl_array */*map*/) override
         {
-            std::cout << "Hello world" << std::endl;
-            std::cout.flush();
+            std::cout << "Meow" << std::endl;
         }
 
         void keysym(uint32_t /*serial*/, uint32_t /*time*/, uint32_t /*sym*/, uint32_t /*state*/, uint32_t /*modifiers*/) override
@@ -163,11 +198,17 @@ private:
         {
 
         }
+
+        mf::InputMethodV1::Instance* method = nullptr;
+        std::shared_ptr<scene::TextInputHub> const text_input_hub;
+        scene::TextInputChange pending_change{{}};
     };
 
     mf::InputMethodV1* method;
+    std::shared_ptr<scene::TextInputHub> const text_input_hub;
     std::shared_ptr<StateObserver> const state_observer;
-    std::unique_ptr<InputMethodContextV1> context = nullptr;
+    std::shared_ptr<InputMethodContextV1> context = nullptr;
+    std::vector<std::shared_ptr<InputMethodContextV1>> context_list;
 };
 
 mf::InputMethodV1::InputMethodV1(
@@ -183,5 +224,5 @@ mf::InputMethodV1::InputMethodV1(
 
 void mf::InputMethodV1::bind(wl_resource *new_resource)
 {
-    new Instance{new_resource, this};
+    new Instance{new_resource, text_input_hub, this};
 }
