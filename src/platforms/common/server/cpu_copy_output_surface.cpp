@@ -18,6 +18,10 @@
 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+
 #include <drm_fourcc.h>
 
 #include "mir/graphics/egl_error.h"
@@ -67,9 +71,24 @@ private:
 using RenderbufferHandle = GLHandle<&glGenRenderbuffers, &glDeleteRenderbuffers>;
 using FramebufferHandle = GLHandle<&glGenFramebuffers, &glDeleteFramebuffers>;
 
-auto ensure_context_current(EGLDisplay dpy, EGLContext ctx)
+auto create_current_context(EGLDisplay dpy, EGLContext share_ctx)
     -> EGLContext
 {
+    static const EGLint context_attr[] = {
+        EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_NONE
+    };
+
+    auto egl_extensions = eglQueryString(dpy, EGL_EXTENSIONS);
+    if (strstr(egl_extensions, "EGL_KHR_no_config_context"))
+    {
+        // We do not *strictly* need this, but it means I don't need to thread a GLConfig all the way through to here.
+        BOOST_THROW_EXCEPTION((std::runtime_error{"EGL implementation missing necessary EGL_KHR_no_config_context extension"}));
+    }
+
+    eglBindAPI(EGL_OPENGL_ES_API);
+    auto ctx = eglCreateContext(dpy, EGL_NO_CONFIG_KHR, share_ctx, context_attr);
+
     if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx) != EGL_TRUE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to make context current"));
@@ -108,7 +127,7 @@ class mgc::CPUCopyOutputSurface::Impl
 public:
     Impl(
         EGLDisplay dpy,
-        EGLContext ctx,
+        EGLContext share_ctx,
         std::shared_ptr<mg::CPUAddressableDisplayProvider> allocator,
         geom::Size size);
 
@@ -134,10 +153,10 @@ private:
 
 mgc::CPUCopyOutputSurface::CPUCopyOutputSurface(
         EGLDisplay dpy,
-        EGLContext ctx,
+        EGLContext share_ctx,
         std::shared_ptr<mg::CPUAddressableDisplayProvider> allocator,
         geom::Size size)
-        : impl{std::make_unique<Impl>(dpy, ctx, std::move(allocator), size)}
+        : impl{std::make_unique<Impl>(dpy, share_ctx, std::move(allocator), size)}
 {
 }
 
@@ -175,12 +194,12 @@ auto mgc::CPUCopyOutputSurface::layout() const -> Layout
 
 mgc::CPUCopyOutputSurface::Impl::Impl(
     EGLDisplay dpy,
-    EGLContext ctx,
+    EGLContext share_ctx,
     std::shared_ptr<mg::CPUAddressableDisplayProvider> allocator,
     geom::Size size)
     : allocator{std::move(allocator)},
       dpy{dpy},
-      ctx{ensure_context_current(dpy, ctx)},
+      ctx{create_current_context(dpy, share_ctx)},
       size_{size},
       format{select_format_from(*this->allocator)}
 {

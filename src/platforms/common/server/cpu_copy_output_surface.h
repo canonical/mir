@@ -36,7 +36,7 @@ class CPUCopyOutputSurface : public gl::OutputSurface
 public:
     CPUCopyOutputSurface(
         EGLDisplay dpy,
-        EGLContext ctx,
+        EGLContext share_ctx,
         std::shared_ptr<CPUAddressableDisplayProvider> allocator,
         geometry::Size size);
 
