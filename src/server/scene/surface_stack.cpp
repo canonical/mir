@@ -471,7 +471,7 @@ void ms::SurfaceStack::swap_z_order(SurfaceSet const& first, SurfaceSet const& s
             // Finally, move the to_front items to the front of the group and the to_back to the back of the group
             auto const& to_front = first_to_front ? first : second;
             auto const& to_back = first_to_front ? second : first;
-            std::stable_sort(swap_begin, swap_end, [&](std::weak_ptr<Surface> s1, std::weak_ptr<Surface> s2)
+            std::stable_sort(swap_begin, swap_end, [&](const std::weak_ptr<Surface>& s1, const std::weak_ptr<Surface>& s2)
             {
                 if (to_front.count(s1))
                 {
