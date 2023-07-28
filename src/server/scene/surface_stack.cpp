@@ -438,7 +438,7 @@ void ms::SurfaceStack::swap_z_order(SurfaceSet const& first, SurfaceSet const& s
             auto swap_end = layer.end();
             size_t num_first_found = 0;
             size_t num_second_found = 0;
-            bool first_to_front = true;
+            bool first_to_front = false;
             for (auto it = layer.begin(); it != layer.end(); it++)
             {
                 // Once we've found them all, then we have the whole range to sort across
@@ -460,7 +460,7 @@ void ms::SurfaceStack::swap_z_order(SurfaceSet const& first, SurfaceSet const& s
                 {
                     if (!num_first_found && !num_second_found)
                     {
-                        first_to_front = false;
+                        first_to_front = true;
                         swap_begin = it;
                     }
 
@@ -471,33 +471,34 @@ void ms::SurfaceStack::swap_z_order(SurfaceSet const& first, SurfaceSet const& s
             // Finally, move the to_front items to the front of the group and the to_back to the back of the group
             auto const& to_front = first_to_front ? first : second;
             auto const& to_back = first_to_front ? second : first;
-            std::stable_sort(swap_begin, swap_end, [to_front, to_back](std::weak_ptr<Surface> s1, std::weak_ptr<Surface> s2)
+            std::stable_sort(swap_begin, swap_end, [&](std::weak_ptr<Surface> s1, std::weak_ptr<Surface> s2)
             {
                 if (to_front.count(s1))
                 {
-                    return -1;
+                    if (to_front.count(s2))
+                        return false;
+                    else
+                        return true;
                 }
                 else if (to_front.count(s2))
-                {
-                    return 1;
-                }
+                    return false;
                 else if (to_back.count(s1))
                 {
-                    return 1;
+                    if (to_back.count(s2))
+                        return false;
+                    else
+                        return true;
                 }
                 else if (to_back.count(s2))
-                {
-                    return -1;
-                }
+                    return true;
                 else
-                {
-                    return 0;
-                }
+                    return false;
             });
         }
     }
 
     observers.surfaces_reordered(first);
+    observers.surfaces_reordered(second);
 }
 
 void ms::SurfaceStack::send_to_back(const mir::scene::SurfaceSet &ss)
@@ -511,12 +512,12 @@ void ms::SurfaceStack::send_to_back(const mir::scene::SurfaceSet &ss)
             // in "ss" and the surface(s) are not already at the beginning
             auto it = layer.begin();
             for (; it != layer.end(); it++)
-                if (!ss.contains(*it))
+                if (!ss.count(*it))
                     break;
 
             bool needs_reorder = false;
             for (; it != layer.end(); it++)
-                if (ss.contains(*it))
+                if (ss.count(*it))
                     needs_reorder = true;
 
             if (needs_reorder)
