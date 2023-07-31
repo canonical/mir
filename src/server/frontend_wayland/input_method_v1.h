@@ -47,6 +47,19 @@ private:
     std::shared_ptr<scene::TextInputHub> const text_input_hub;
 };
 
+/// Interface for implementing virtual keyboards.
+class InputPanelV1 : public wayland::InputPanelV1::Global
+{
+public:
+    InputPanelV1(wl_display *display);
+
+private:
+    class Instance;
+    void bind(wl_resource* new_zwp_input_panel_v1) override;
+
+    wl_display* display;
+};
+
 }
 }
 

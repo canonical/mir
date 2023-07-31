@@ -154,6 +154,10 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 ctx.wayland_executor,
                 ctx.text_input_hub);
         }),
+    make_extension_builder<mw::InputPanelV1>([](auto const& ctx)
+      {
+          return std::make_shared<mf::InputPanelV1>(ctx.display);
+      }),
     make_extension_builder<mw::InputMethodManagerV2>([](auto const& ctx)
         {
             return mf::create_input_method_manager_v2(

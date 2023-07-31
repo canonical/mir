@@ -15,13 +15,16 @@
  */
 
 #include "input_method_v1.h"
+#include <mir/wayland/weak.h>
 #include <mir/scene/text_input_hub.h>
+#include "wl_surface.h"
 #include "input-method-unstable-v1_wrapper.cpp" // TODO: Super temporary. Can't figure out why link is broken.
 #include <iostream>
-
+#include <deque>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
+namespace mw = mir::wayland;
 
 /// Handles activation and deactivation of the InputMethodContextV1
 class mf::InputMethodV1::Instance : wayland::InputMethodV1
@@ -59,16 +62,21 @@ public:
             text_input_hub);
         context_list.push_back(context);
         send_activate_event(context->resource);
-        std::cout << context->resource << std::endl;
+
+
     }
 
     void deactivated()
     {
-        auto resource = context->resource;
-        send_deactivate_event(resource);
-        context = nullptr;
+        if (context)
+        {
+            auto resource = context->resource;
+            send_deactivate_event(resource);
+            context = nullptr;
+        }
     }
 
+    /// TODO: Complexity
     /// The spec calls for the item to be destroyed only after deactivation is handled.
     /// As such, we keep a reference to the InputMethodContextV1 hanging around so that
     /// the wayland "destroy" is not called on a resource that doesn't exist.
@@ -127,6 +135,13 @@ private:
         }
 
     private:
+
+        void debug_string(const char* x)
+        {
+            std::cout << x << std::endl;
+            std::cout.flush();
+        }
+
         void commit(uint32_t /*serial*/)
         {
             text_input_hub->text_changed(pending_change);
@@ -134,74 +149,77 @@ private:
 
         void commit_string(uint32_t /*serial*/, const std::string &/*text*/) override
         {
+            debug_string("Commit string");
 //            pending_change.commit_text = text;
 //            commit(serial);
         }
 
         void preedit_string(uint32_t /*serial*/, const std::string &/*text*/, const std::string &/*commit*/) override
         {
-
+            debug_string("Preedit string");
         }
 
         void preedit_styling(uint32_t /*index*/, uint32_t /*length*/, uint32_t /*style*/) override
         {
-
+            debug_string("Preedit style");
         }
 
         void preedit_cursor(int32_t /*index*/) override
         {
-
+            debug_string("Preedit");
         }
 
         void delete_surrounding_text(int32_t /*index*/, uint32_t /*length*/) override
         {
-
+            debug_string("Delete");
         }
 
         void cursor_position(int32_t /*index*/, int32_t /*anchor*/) override
         {
-
+            debug_string("Cursor");
         }
 
         void modifiers_map(struct wl_array */*map*/) override
         {
-            std::cout << "Meow" << std::endl;
+            debug_string("Modifiers Map");
         }
 
         void keysym(uint32_t /*serial*/, uint32_t /*time*/, uint32_t /*sym*/, uint32_t /*state*/, uint32_t /*modifiers*/) override
         {
-
+            debug_string("keysym");
         }
 
         void grab_keyboard(struct wl_resource */*keyboard*/) override
         {
-
+            debug_string("Keyboard grabbing");
         }
 
         void key(uint32_t /*serial*/, uint32_t /*time*/, uint32_t /*key*/, uint32_t /*state*/) override
         {
-
+            debug_string("Keydown");
         }
 
         void modifiers(uint32_t /*serial*/, uint32_t /*mods_depressed*/, uint32_t /*mods_latched*/, uint32_t /*mods_locked*/,
             uint32_t /*group*/) override
         {
-
+            debug_string("Modifiers");
         }
 
         void language(uint32_t /*serial*/, const std::string &/*language*/) override
         {
-
+            debug_string("Language");
         }
 
         void text_direction(uint32_t /*serial*/, uint32_t /*direction*/) override
         {
-
+            debug_string("Text direction");
         }
 
         mf::InputMethodV1::Instance* method = nullptr;
         std::shared_ptr<scene::TextInputHub> const text_input_hub;
         scene::TextInputChange pending_change{{}};
+        static size_t constexpr max_remembered_serials{10};
+        std::deque<ms::TextInputStateSerial> serials;
     };
 
     mf::InputMethodV1* method;
@@ -225,4 +243,52 @@ mf::InputMethodV1::InputMethodV1(
 void mf::InputMethodV1::bind(wl_resource *new_resource)
 {
     new Instance{new_resource, text_input_hub, this};
+}
+
+class mf::InputPanelV1::Instance : wayland::InputPanelV1
+{
+public:
+    Instance(wl_resource* new_resource)
+        : InputPanelV1{new_resource, Version<1>()}
+    {
+    }
+
+private:
+    class InputPanelSurfaceV1 : wayland::InputPanelSurfaceV1
+    {
+    public:
+        InputPanelSurfaceV1(wl_resource* resource, wl_resource* surface)
+            : wayland::InputPanelSurfaceV1(resource, Version<1>()),
+              surface(WlSurface::from(surface))
+        {
+        }
+
+    private:
+        void set_toplevel(struct wl_resource* /*output*/, uint32_t /*position*/) override
+        {
+        }
+
+        void set_overlay_panel() override
+        {
+        }
+
+        mw::Weak<WlSurface> const surface;
+    };
+
+    void get_input_panel_surface(wl_resource* id, wl_resource* surface) override
+    {
+        surface_instance = std::make_unique<InputPanelSurfaceV1>(id, surface);
+    }
+
+    std::unique_ptr<InputPanelSurfaceV1> surface_instance;
+};
+
+mf::InputPanelV1::InputPanelV1(wl_display *display)
+    : Global(display, Version<1>()),
+      display(display)
+{}
+
+void mf::InputPanelV1::bind(wl_resource *new_zwp_input_panel_v1)
+{
+    new Instance{new_zwp_input_panel_v1};
 }
