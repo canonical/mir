@@ -80,14 +80,14 @@ TEST_F(ApplicationSelectorTest, focused_app_is_latest_selected)
 TEST_F(ApplicationSelectorTest, moving_forward_once_selects_previously_selected_application)
 {
     auto windows = create_window_list(3);
-    auto application = application_selector.next(false);
+    auto application = application_selector.next();
     EXPECT_TRUE(application == windows[1].application());
 }
 
 TEST_F(ApplicationSelectorTest, moving_backward_once_selects_least_recently_selected_app)
 {
     auto windows = create_window_list(3);
-    auto application = application_selector.next(true);
+    auto application = application_selector.prev();
     EXPECT_TRUE(application == windows[0].application());
 }
 
@@ -96,7 +96,7 @@ TEST_F(ApplicationSelectorTest, can_move_forward_through_all_windows_in_the_list
     int num_windows = 3;
     auto windows = create_window_list(num_windows);
     for (int i = 0; i < 3; i++)
-        application_selector.next(true);
+        application_selector.next();
     auto application = application_selector.complete();
     EXPECT_TRUE(application == windows[2].application());
 }
@@ -109,7 +109,7 @@ TEST_F(ApplicationSelectorTest, new_selector_is_not_active)
 
 TEST_F(ApplicationSelectorTest, calling_next_with_no_windows_results_in_nullptr)
 {
-    auto application = application_selector.next(false);
+    auto application = application_selector.next();
     EXPECT_TRUE(application == nullptr);
     EXPECT_FALSE(application_selector.is_active());
 }
@@ -117,7 +117,7 @@ TEST_F(ApplicationSelectorTest, calling_next_with_no_windows_results_in_nullptr)
 TEST_F(ApplicationSelectorTest, focusing_a_new_window_while_application_selector_is_active_focuses_the_new_app)
 {
     auto windows = create_window_list(3);
-    application_selector.next(true);
+    application_selector.prev();
     auto new_window = create_window();
     auto focused = application_selector.get_focused();
     EXPECT_TRUE(focused == new_window.application());
@@ -126,16 +126,16 @@ TEST_F(ApplicationSelectorTest, focusing_a_new_window_while_application_selector
 TEST_F(ApplicationSelectorTest, apps_added_while_selection_is_active_get_added_to_end_of_list)
 {
     auto windows = create_window_list(3);
-    application_selector.next(false);
+    application_selector.next();
     auto new_window = create_window();
-    auto application = application_selector.next(true);
+    auto application = application_selector.prev();
     EXPECT_TRUE(application == windows[0].application());
 }
 
 TEST_F(ApplicationSelectorTest, deleting_selected_app_makes_the_next_app_selected)
 {
     auto windows = create_window_list(3);
-    application_selector.next(false); // windows[1] is selected
+    application_selector.next(); // windows[1] is selected
     application_selector.advise_focus_gained(window_manager_tools.info_for(windows[1]));
     application_selector.advise_delete_app(windows[1].application());
     auto application = application_selector.get_focused();

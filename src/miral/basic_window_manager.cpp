@@ -881,13 +881,12 @@ void miral::BasicWindowManager::focus_prev_within_application()
     }
 }
 
-auto miral::BasicWindowManager::can_select_application(const Application application, Window& out_hint) const -> bool
+auto miral::BasicWindowManager::window_to_select_application(const Application application) const -> std::optional<Window>
 {
-    bool can_focus = false;
-    miral::Window new_focus;
+    std::optional<Window> result = std::nullopt;
     auto const prev_window = active_window();
 
-    // We return "false" in the enumeration when we set "can_focus" to true
+    // We return "false" in the enumeration when we set "result" to a valid Window
     // because we only stop looking when we return false from the enumerator.
     mru_active_windows.enumerate([&](miral::Window& window)
     {
@@ -912,15 +911,14 @@ auto miral::BasicWindowManager::can_select_application(const Application applica
         // Check if we can activate it at all.
         if (desired_window_selection.can_be_active() && desired_window_selection.state() != mir_window_state_hidden)
         {
-            can_focus = true;
-            out_hint = window;
+            result = window;
             return false;
         }
 
         return true;
     });
 
-    return can_focus;
+    return result;
 }
 
 auto miral::BasicWindowManager::window_at(geometry::Point cursor) const

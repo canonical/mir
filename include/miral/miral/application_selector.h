@@ -36,7 +36,9 @@ namespace miral
 class ApplicationSelector
 {
 public:
-    ApplicationSelector(WindowManagerTools const&);
+    explicit ApplicationSelector(WindowManagerTools const&);
+
+    ~ApplicationSelector();
 
     /// Called when a new application has been added to the list.
     void advise_new_app(Application const&);
@@ -51,10 +53,12 @@ public:
     void advise_delete_app(Application const&);
 
     /// Raises the next selectable application in the list for focus selection.
-    /// \param reverse If true, the selector will move in reverse through the list of applications
-    /// otherwise it will move forward through the list of applications.
     /// \returns The raised application, or nullptr in the case of a failure
-    auto next(bool reverse) -> Application;
+    auto next() -> Application;
+
+    /// Raises the previous selectable application in the list for focus selection.
+    /// \returns The raised application or nullptr in the case of a failure
+    auto prev() -> Application ;
 
     /// Focuses the currently selected Application.
     /// \returns The newly selected application, or nullptr in the case of a failure
@@ -71,19 +75,11 @@ public:
     /// \returns The focused application
     auto get_focused() -> Application;
 
+
+
 private:
-    WindowManagerTools tools;
-
-    /// Represents the current order of focus by application. Most recently focused
-    /// applications are at the beginning, while least recently focused are at the end.
-    std::vector<Application> focus_list;
-
-    /// The application that was selected when next was first called
-    Application originally_selected;
-
-    /// The application that is currently selected.
-    Application selected;
-    Window active_window;
+    struct Implementation;
+    std::unique_ptr<Implementation> self;
 };
 
 }

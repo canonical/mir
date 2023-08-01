@@ -24,6 +24,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 
 namespace mir
 {
@@ -156,9 +157,9 @@ public:
     /// make the prev surface active within the active application
     void focus_prev_within_application();
 
-    /// Returns true if the application can be selected, otherwise false.
+    /// If possible, returns the application window to select, otherwise `std::nullopt`
     /// \remark Since MirAL 3.10
-    auto can_select_application(const Application, Window&) const -> bool;
+    auto window_to_select_application(const Application) const -> std::optional<Window>;
 
     /// Find the topmost window at the cursor
     auto window_at(mir::geometry::Point cursor) const -> Window;

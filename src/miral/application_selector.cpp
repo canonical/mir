@@ -6,7 +6,7 @@
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * but WITHOUT ANY WARRANTY; without even the Implementationied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
@@ -21,13 +21,39 @@
 
 using namespace miral;
 
-ApplicationSelector::ApplicationSelector(const miral::WindowManagerTools& in_tools)
-    : tools{in_tools}
+struct ApplicationSelector::Implementation
+{
+    Implementation(WindowManagerTools const& tools)
+        : tools{tools}
+    {
+    }
+
+    WindowManagerTools tools;
+
+    /// Represents the current order of focus by application. Most recently focused
+    /// applications are at the beginning, while least recently focused are at the end.
+    std::vector<Application> focus_list;
+
+    /// The application that was selected when next was first called
+    Application originally_selected;
+
+    /// The application that is currently selected.
+    Application selected;
+    Window active_window;
+
+    auto advance(bool reverse) -> Application;
+    auto is_active() -> bool;
+};
+
+ApplicationSelector::ApplicationSelector(miral::WindowManagerTools const& in_tools)
+    : self{std::make_unique<Implementation>(in_tools)}
 {}
+
+ApplicationSelector::~ApplicationSelector() = default;
 
 void ApplicationSelector::advise_new_app(Application const& application)
 {
-    focus_list.push_back(application);
+    self->focus_list.push_back(application);
 }
 
 void ApplicationSelector::advise_focus_gained(WindowInfo const& window_info)
@@ -44,22 +70,22 @@ void ApplicationSelector::advise_focus_gained(WindowInfo const& window_info)
         return;
     }
 
-    auto it = std::find(focus_list.begin(), focus_list.end(), application);
-    if (!is_active())
+    auto it = std::find(self->focus_list.begin(), self->focus_list.end(), application);
+    if (!self->is_active())
     {
         // If we are not active, we move the newly focused item to the front of the list.
-        if (it != focus_list.end())
+        if (it != self->focus_list.end())
         {
-            std::rotate(focus_list.begin(), it, it + 1);
+            std::rotate(self->focus_list.begin(), it, it + 1);
         }
     }
 
     // Update the current selection
-    selected = application;
-    active_window = window;
+    self->selected = application;
+    self->active_window = window;
 }
 
-void ApplicationSelector::advise_focus_lost(const miral::WindowInfo &window_info)
+void ApplicationSelector::advise_focus_lost(miral::WindowInfo const& window_info)
 {
     auto window = window_info.window();
     if (!window)
@@ -73,44 +99,101 @@ void ApplicationSelector::advise_focus_lost(const miral::WindowInfo &window_info
         return;
     }
 
-    if (selected == application)
+    if (self->selected == application)
     {
-        selected = nullptr;
+        self->selected = nullptr;
     }
 }
 
 void ApplicationSelector::advise_delete_app(Application const& application)
 {
-    auto it = std::find(focus_list.begin(), focus_list.end(), application);
-    if (it == focus_list.end())
+    auto it = std::find(self->focus_list.begin(), self->focus_list.end(), application);
+    if (it == self->focus_list.end())
     {
         mir::log_warning("ApplicationSelector::advise_delete_app could not delete the app.");
         return;
     }
 
     // If we delete the selected application, we will try to select the next available one.
-    if (application == selected)
+    if (application == self->selected)
     {
+        std::optional<Window> next_window = std::nullopt;
         auto original_it = it;
         do {
             it++;
-            if (it == focus_list.end())
-                it = focus_list.begin();
+            if (it == self->focus_list.end())
+                it = self->focus_list.begin();
 
             if (it == original_it)
             {
                 break;
             }
-        } while (!tools.can_select_application(*it, active_window));
+        } while ((next_window = self->tools.window_to_select_application(*it)) == std::nullopt);
+
+        if (next_window != std::nullopt)
+            self->active_window = next_window.value();
 
         if (it != original_it)
-            selected = *it;
+            self->selected = *it;
     }
 
-    focus_list.erase(it);
+    self->focus_list.erase(it);
 }
 
-auto ApplicationSelector::next(bool reverse) -> Application
+auto ApplicationSelector::next() -> Application
+{
+    return self->advance(false);
+}
+
+auto ApplicationSelector::prev() -> Application
+{
+    return self->advance(true);
+}
+
+auto ApplicationSelector::complete() -> Application
+{
+    if (!self->is_active())
+    {
+        return nullptr;
+    }
+
+    // Place the newly selected item at the front of the list.
+    auto it = std::find(self->focus_list.begin(), self->focus_list.end(), self->selected);
+    if (it != self->focus_list.end())
+    {
+        std::rotate(self->focus_list.begin(), it, it + 1);
+    }
+
+    self->originally_selected = nullptr;
+    return self->selected;
+}
+
+void ApplicationSelector::cancel()
+{
+    std::optional<Window> window_to_select;
+    if ((window_to_select = self->tools.window_to_select_application(self->originally_selected)) != std::nullopt)
+    {
+        self->tools.select_active_window(window_to_select.value());
+    }
+    else
+    {
+        mir::log_warning("ApplicationSelector::cancel: Failed to select the root.");
+    }
+
+    self->originally_selected = nullptr;
+}
+
+auto ApplicationSelector::is_active() -> bool
+{
+    return self->is_active();
+}
+
+auto ApplicationSelector::get_focused() -> Application
+{
+    return self->selected;
+}
+
+auto ApplicationSelector::Implementation::advance(bool reverse) -> Application
 {
     if (focus_list.empty())
     {
@@ -127,7 +210,7 @@ auto ApplicationSelector::next(bool reverse) -> Application
     auto it = std::find(focus_list.begin(), focus_list.end(), selected);
     auto start_it = it;
 
-    Window next_window;
+    std::optional<Window> next_window = std::nullopt;
     do {
         if (reverse)
         {
@@ -152,7 +235,7 @@ auto ApplicationSelector::next(bool reverse) -> Application
         // We made it all the way through the list but failed to find anything.
         if (it == start_it)
             break;
-    } while (!tools.can_select_application(*it, next_window));
+    } while ((next_window = tools.window_to_select_application(*it)) == std::nullopt);
 
     // Swap the tree order first and then select the new window
     if (*it == originally_selected)
@@ -163,59 +246,19 @@ auto ApplicationSelector::next(bool reverse) -> Application
         for (auto window: tools.info_for(selected).windows())
             tools.send_tree_to_back(window);
     }
-    else
-    {
-        tools.swap_tree_order(next_window, active_window);
-    }
+    else if (next_window != std::nullopt)
+        tools.swap_tree_order(next_window.value(), active_window);
 
     // next_window will be a garbage window in this case, so let's not select it
-    if (it != start_it)
+    if (it != start_it && next_window != std::nullopt)
     {
-        tools.select_active_window(next_window);
+        tools.select_active_window(next_window.value());
     }
 
     return *it;
 }
 
-auto ApplicationSelector::complete() -> Application
-{
-    if (!is_active())
-    {
-        return nullptr;
-    }
-
-    // Place the newly selected item at the front of the list.
-    auto it = std::find(focus_list.begin(), focus_list.end(), selected);
-    if (it != focus_list.end())
-    {
-        std::rotate(focus_list.begin(), it, it + 1);
-    }
-
-    originally_selected = nullptr;
-    return selected;
-}
-
-void ApplicationSelector::cancel()
-{
-    Window window_to_select;
-    if (tools.can_select_application(originally_selected, window_to_select))
-    {
-        tools.select_active_window(window_to_select);
-    }
-    else
-    {
-        mir::log_warning("ApplicationSelector::cancel: Failed to select the root.");
-    }
-
-    originally_selected = nullptr;
-}
-
-auto ApplicationSelector::is_active() -> bool
+auto ApplicationSelector::Implementation::is_active() -> bool
 {
     return originally_selected != nullptr;
-}
-
-auto ApplicationSelector::get_focused() -> Application
-{
-    return selected;
 }

@@ -576,12 +576,12 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
-auto miral::WindowManagementTrace::can_select_application(const Application app, Window& window_hint) const -> bool
+auto miral::WindowManagementTrace::window_to_select_application(const Application app) const -> std::optional<Window>
 try {
     log_input();
     mir::log_info("%s", __func__);
     trace_count++;
-    return wrapped.can_select_application(app, window_hint);
+    return wrapped.window_to_select_application(app);
 }
 MIRAL_TRACE_EXCEPTION
 

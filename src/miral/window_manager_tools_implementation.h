@@ -25,6 +25,7 @@
 #include <functional>
 #include <memory>
 #include <vector>
+#include <optional>
 
 namespace mir { namespace scene { class Surface; } }
 
@@ -63,7 +64,7 @@ public:
     virtual void focus_prev_application() = 0;
     virtual void focus_next_within_application() = 0;
     virtual void focus_prev_within_application() = 0;
-    virtual auto can_select_application(const Application application, Window& out_hint) const -> bool = 0;
+    virtual auto window_to_select_application(const Application application) const -> std::optional<Window> = 0;
     virtual auto window_at(mir::geometry::Point cursor) const -> Window = 0;
     virtual auto active_output() -> mir::geometry::Rectangle const = 0;
     virtual auto active_application_zone() -> Zone = 0;
