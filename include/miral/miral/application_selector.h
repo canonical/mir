@@ -76,8 +76,6 @@ public:
     /// \returns The focused application
     auto get_focused() -> Application;
 
-
-
 private:
     struct Implementation;
     std::unique_ptr<Implementation> self;
