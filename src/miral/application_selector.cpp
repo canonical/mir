@@ -18,7 +18,6 @@
 #include <miral/application_info.h>
 #include <miral/application.h>
 #include <mir/log.h>
-#include <iostream>
 
 using namespace miral;
 
