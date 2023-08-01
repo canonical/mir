@@ -37,8 +37,9 @@ class ApplicationSelector
 {
 public:
     explicit ApplicationSelector(WindowManagerTools const&);
-
     ~ApplicationSelector();
+    ApplicationSelector(ApplicationSelector const&);
+    auto operator=(ApplicationSelector const&) -> ApplicationSelector&;
 
     /// Called when a new application has been added to the list.
     void advise_new_app(Application const&);

@@ -505,6 +505,7 @@ global:
     miral::MinimalWindowManager::advise_focus_lost*;
     miral::ApplicationSelector::ApplicationSelector*;
     miral::ApplicationSelector::?ApplicationSelector*;
+    miral::ApplicationSelector::operator*;
     miral::ApplicationSelector::advise_new_app*;
     miral::ApplicationSelector::advise_focus_gained*;
     miral::ApplicationSelector::advise_focus_lost*;

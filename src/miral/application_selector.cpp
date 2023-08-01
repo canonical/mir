@@ -51,6 +51,17 @@ ApplicationSelector::ApplicationSelector(miral::WindowManagerTools const& in_too
 
 ApplicationSelector::~ApplicationSelector() = default;
 
+ApplicationSelector::ApplicationSelector(miral::ApplicationSelector const& other) :
+    self{std::make_unique<Implementation>(other.self->tools)}
+{
+}
+
+auto ApplicationSelector::operator=(ApplicationSelector const& other) -> ApplicationSelector&
+{
+    *self = *other.self;
+    return *this;
+}
+
 void ApplicationSelector::advise_new_app(Application const& application)
 {
     self->focus_list.push_back(application);
