@@ -475,14 +475,10 @@ void ms::SurfaceStack::swap_z_order(SurfaceSet const& first, SurfaceSet const& s
             {
                 if (to_front.count(s1))
                     return to_front.count(s2) == 0;
-                else if (to_front.count(s2))
+                else if (to_back.count(s1) || to_front.count(s2))
                     return false;
-                else if (to_back.count(s1))
-                    return to_back.count(s2) == 0;
-                else if (to_back.count(s2))
-                    return true;
                 else
-                    return false;
+                    return to_back.count(s2) == 0;
             });
         }
     }
