@@ -17,8 +17,8 @@
 #ifndef MIR_APPLICATION_SELECTOR_H
 #define MIR_APPLICATION_SELECTOR_H
 
-#include "window_manager_tools.h"
-#include "application.h"
+#include <miral/window_manager_tools.h>
+#include <miral/application.h>
 
 namespace miral
 {

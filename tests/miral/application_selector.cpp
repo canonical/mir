@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <miral/application_selector.h>
+#include "application_selector.h"
 #include "test_window_manager_tools.h"
 #include <mir/scene/session.h>
 

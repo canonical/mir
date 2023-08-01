@@ -17,7 +17,7 @@
 #include <miral/minimal_window_manager.h>
 #include <miral/toolkit_event.h>
 #include <miral/application_info.h>
-#include <miral/application_selector.h>
+#include "application_selector.h"
 #include <linux/input.h>
 #include <gmpxx.h>
 

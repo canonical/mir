@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <miral/application_selector.h>
+#include "application_selector.h"
 #include <miral/application_info.h>
 #include <miral/application.h>
 #include <mir/log.h>
