@@ -77,8 +77,21 @@ public:
     auto get_focused() -> Application;
 
 private:
-    struct Implementation;
-    std::unique_ptr<Implementation> self;
+    using WeakApplication = std::weak_ptr<mir::scene::Session>;
+    auto advance(bool reverse) -> Application;
+
+    WindowManagerTools tools;
+
+    /// Represents the current order of focus by application. Most recently focused
+    /// applications are at the beginning, while least recently focused are at the end.
+    std::vector<WeakApplication> focus_list;
+
+    /// The application that was selected when next was first called
+    WeakApplication originally_selected;
+
+    /// The application that is currently selected.
+    WeakApplication selected;
+    Window active_window;
 };
 
 }
