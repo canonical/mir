@@ -158,7 +158,7 @@ public:
     /// NOTE: a handler may be kept alive and changes may be sent to the handler after this returns.
     virtual void deactivate_handler(std::shared_ptr<TextInputChangeHandler> const& handler) = 0;
 
-    /// Used by the input method to dispatch entered text to the handler
+    /// Used by commit-statethe input method to dispatch entered text to the handler
     virtual void text_changed(TextInputChange const& change) = 0;
 };
 }

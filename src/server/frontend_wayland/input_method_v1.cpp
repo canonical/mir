@@ -15,9 +15,10 @@
  */
 
 #include "input_method_v1.h"
-#include <mir/wayland/weak.h>
-#include <mir/scene/text_input_hub.h>
+#include "mir/wayland/weak.h"
+#include "mir/scene/text_input_hub.h"
 #include "wl_surface.h"
+#include "input_method_common.h"
 #include "input-method-unstable-v1_wrapper.cpp" // TODO: Super temporary. Can't figure out why link is broken.
 #include <iostream>
 #include <deque>
@@ -48,48 +49,59 @@ public:
     }
 
     void activated(
-        scene::TextInputStateSerial /*serial*/,
-        bool /*new_input_field*/,
-        scene::TextInputState const& /*state*/)
+        scene::TextInputStateSerial serial,
+        bool new_input_field,
+        scene::TextInputState const& state)
     {
-        if (context)
+        // Create the new context if we have a new field or if we're not yet activated
+        if (!is_activated && new_input_field)
         {
-            deactivated();
+            context = std::make_shared<InputMethodContextV1>(
+                this,
+                text_input_hub);
+            cached_state = ms::TextInputState{};
+            send_activate_event(context->resource);
+            is_activated = true;
         }
 
-        context = std::make_shared<InputMethodContextV1>(
-            this,
-            text_input_hub);
-        context_list.push_back(context);
-        send_activate_event(context->resource);
+        // Notify about the surrounding text changing
+        if (cached_state.surrounding_text != state.surrounding_text ||
+            cached_state.cursor != state.cursor ||
+            cached_state.anchor != state.anchor)
+        {
+            cached_state.surrounding_text = state.surrounding_text;
+            cached_state.cursor = state.cursor;
+            cached_state.anchor = state.anchor;
+            context->send_surrounding_text_event(
+                state.surrounding_text.value_or(""),
+                state.cursor.value_or(0),
+                state.anchor.value_or(0));
+        }
 
+        // Notify about the new content type
+        if (cached_state.content_hint != state.content_hint || cached_state.content_purpose != state.content_purpose)
+        {
+            cached_state.content_hint = state.content_hint;
+            cached_state.content_purpose = state.content_purpose;
+            context->send_content_type_event(
+                mir_to_wayland_content_hint(state.content_hint.value_or(ms::TextInputContentHint::none)),
+                mir_to_wayland_content_purpose(state.content_purpose.value_or(ms::TextInputContentPurpose::normal)));
+        }
 
+        //context->send_preferred_language_event("en-us");
+        context->add_serial(serial);
     }
 
     void deactivated()
     {
-        if (context)
+        if (is_activated && context)
         {
+            is_activated = false;
             auto resource = context->resource;
+            context_on_deathbed = context;
             send_deactivate_event(resource);
             context = nullptr;
         }
-    }
-
-    /// TODO: Complexity
-    /// The spec calls for the item to be destroyed only after deactivation is handled.
-    /// As such, we keep a reference to the InputMethodContextV1 hanging around so that
-    /// the wayland "destroy" is not called on a resource that doesn't exist.
-    /// \param ctx The destroyed context
-    void notify_destroyed(const InputMethodContextV1* ctx)
-    {
-        auto it = std::find_if(context_list.begin(), context_list.end(), [&](const std::shared_ptr<InputMethodContextV1> other_ctx)
-        {
-            return other_ctx.get() != ctx;
-        });
-
-        if (it != context_list.end())
-            context_list.erase(it);
     }
 
 private:
@@ -117,6 +129,8 @@ private:
     };
 
     /// https://wayland.app/protocols/input-method-unstable-v1
+    /// The InputMethodContextV1 is associated with a single TextInput
+    /// and will be destroyed when that text input is no longer receiving text.
     class InputMethodContextV1 : public wayland::InputMethodContextV1
     {
     public:
@@ -131,7 +145,17 @@ private:
 
         ~InputMethodContextV1()
         {
-            method->notify_destroyed(this);
+        }
+
+        void add_serial(ms::TextInputStateSerial serial)
+        {
+            serials.push_back({done_event_count, serial});
+            while (serials.size() > max_remembered_serials)
+            {
+                serials.pop_front();
+            }
+            done_event_count++;
+            send_commit_state_event(done_event_count);
         }
 
     private:
@@ -142,21 +166,51 @@ private:
             std::cout.flush();
         }
 
-        void commit(uint32_t /*serial*/)
+        auto find_serial(uint32_t done_count) const -> std::optional<ms::TextInputStateSerial>
         {
-            text_input_hub->text_changed(pending_change);
+            // Loop in reverse order because the serial we're looking for will generally be at the end
+            for (auto it = serials.rbegin(); it != serials.rend(); it++)
+            {
+                std::cout << "Potential Done : " << it->first << std::endl;
+                std::cout << "Potential serial : " << it->second << std::endl;
+                std::cout.flush();
+                if (it->first == done_count)
+                {
+                    return it->second;
+                }
+            }
+            return std::nullopt;
         }
 
-        void commit_string(uint32_t /*serial*/, const std::string &/*text*/) override
+        void do_commit(uint32_t serial)
         {
-            debug_string("Commit string");
-//            pending_change.commit_text = text;
-//            commit(serial);
+            auto const mir_serial = find_serial(serial);
+            if (mir_serial)
+            {
+                pending_change.serial = *mir_serial;
+                text_input_hub->text_changed(pending_change);
+            }
+            else
+            {
+                log_warning("%s: invalid commit serial %d", interface_name, serial);
+            }
+            pending_change = ms::TextInputChange{{}};
         }
 
-        void preedit_string(uint32_t /*serial*/, const std::string &/*text*/, const std::string &/*commit*/) override
+        void commit_string(uint32_t serial, const std::string &text) override
         {
-            debug_string("Preedit string");
+            std::cout << "Commit String: Serial = " << serial << std::endl;
+            std::cout.flush();
+            pending_change.commit_text = text;
+            do_commit(serial);
+        }
+
+        void preedit_string(uint32_t serial, const std::string &text, const std::string &commit) override
+        {
+            do_commit(serial);
+            pending_change.preedit_text = text;
+            pending_change.commit_text = commit;
+            do_commit(serial);
         }
 
         void preedit_styling(uint32_t /*index*/, uint32_t /*length*/, uint32_t /*style*/) override
@@ -164,9 +218,10 @@ private:
             debug_string("Preedit style");
         }
 
-        void preedit_cursor(int32_t /*index*/) override
+        void preedit_cursor(int32_t index) override
         {
-            debug_string("Preedit");
+            pending_change.preedit_cursor_begin = index;
+            pending_change.preedit_cursor_end = index;
         }
 
         void delete_surrounding_text(int32_t /*index*/, uint32_t /*length*/) override
@@ -219,14 +274,17 @@ private:
         std::shared_ptr<scene::TextInputHub> const text_input_hub;
         scene::TextInputChange pending_change{{}};
         static size_t constexpr max_remembered_serials{10};
-        std::deque<ms::TextInputStateSerial> serials;
+        std::deque<std::pair<uint32_t , ms::TextInputStateSerial>> serials;
+        uint32_t done_event_count{0};
     };
 
     mf::InputMethodV1* method;
     std::shared_ptr<scene::TextInputHub> const text_input_hub;
     std::shared_ptr<StateObserver> const state_observer;
+    bool is_activated = false;
     std::shared_ptr<InputMethodContextV1> context = nullptr;
-    std::vector<std::shared_ptr<InputMethodContextV1>> context_list;
+    std::shared_ptr<InputMethodContextV1> context_on_deathbed = nullptr;
+    scene::TextInputState cached_state{};
 };
 
 mf::InputMethodV1::InputMethodV1(
