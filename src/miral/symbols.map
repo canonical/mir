@@ -503,18 +503,5 @@ global:
     miral::MinimalWindowManager::advise_new_app*;
     miral::MinimalWindowManager::advise_delete_app*;
     miral::MinimalWindowManager::advise_focus_lost*;
-    miral::ApplicationSelector::ApplicationSelector*;
-    miral::ApplicationSelector::?ApplicationSelector*;
-    miral::ApplicationSelector::operator*;
-    miral::ApplicationSelector::advise_new_app*;
-    miral::ApplicationSelector::advise_focus_gained*;
-    miral::ApplicationSelector::advise_focus_lost*;
-    miral::ApplicationSelector::advise_delete_app*;
-    miral::ApplicationSelector::next*;
-    miral::ApplicationSelector::prev*;
-    miral::ApplicationSelector::complete*;
-    miral::ApplicationSelector::cancel*;
-    miral::ApplicationSelector::is_active*;
-    miral::ApplicationSelector::get_focused*;
   };
 } MIRAL_3.9;
