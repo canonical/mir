@@ -79,6 +79,7 @@ public:
 private:
     using WeakApplication = std::weak_ptr<mir::scene::Session>;
     auto advance(bool reverse) -> Application;
+    auto find(WeakApplication) -> std::vector<WeakApplication>::iterator;
 
     WindowManagerTools tools;
 

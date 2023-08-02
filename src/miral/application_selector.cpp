@@ -65,10 +65,7 @@ void ApplicationSelector::advise_focus_gained(WindowInfo const& window_info)
         return;
     }
 
-    auto it = std::find_if(focus_list.begin(), focus_list.end(), [application](WeakApplication const& existing_application)
-    {
-        return existing_application.lock() == application;
-    });
+    auto it = find(application);
     if (!is_active())
     {
         // If we are not active, we move the newly focused item to the front of the list.
@@ -105,10 +102,7 @@ void ApplicationSelector::advise_focus_lost(miral::WindowInfo const& window_info
 
 void ApplicationSelector::advise_delete_app(Application const& application)
 {
-    auto it = std::find_if(focus_list.begin(), focus_list.end(), [application](WeakApplication const& existing_application)
-    {
-        return existing_application.lock() == application;
-    });
+    auto it = find(application);
     if (it == focus_list.end())
     {
         mir::log_warning("ApplicationSelector::advise_delete_app could not delete the app.");
@@ -159,10 +153,7 @@ auto ApplicationSelector::complete() -> Application
     }
 
     // Place the newly selected item at the front of the list.
-    auto it = std::find_if(focus_list.begin(), focus_list.end(), [&](WeakApplication const& existing_application)
-    {
-        return existing_application.lock() == selected.lock();
-    });
+    auto it = find(selected);
     if (it != focus_list.end())
     {
         std::rotate(focus_list.begin(), it, it + 1);
@@ -211,10 +202,7 @@ auto ApplicationSelector::advance(bool reverse) -> Application
     }
 
     // Attempt to focus the next application after the selected application.
-    auto it = std::find_if(focus_list.begin(), focus_list.end(), [&](WeakApplication const& existing_application)
-    {
-        return existing_application.lock() == selected.lock();
-    });
+    auto it = find(selected);
     auto start_it = it;
 
     std::optional<Window> next_window = std::nullopt;
@@ -263,4 +251,12 @@ auto ApplicationSelector::advance(bool reverse) -> Application
     }
 
     return it->lock();
+}
+
+auto ApplicationSelector::find(WeakApplication application) -> std::vector<WeakApplication>::iterator
+{
+    return std::find_if(focus_list.begin(), focus_list.end(), [&](WeakApplication const& existing_application)
+    {
+        return !existing_application.owner_before(application) && !application.owner_before(existing_application);
+    });
 }
