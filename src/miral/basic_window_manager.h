@@ -36,6 +36,7 @@
 #include <boost/bimap.hpp>
 #include <boost/bimap/multiset_of.hpp>
 #include <optional>
+#include <functional>
 
 #include <map>
 #include <mutex>
@@ -325,8 +326,10 @@ private:
     /// Updates the application zones of all display areas and moves attached windows as needed
     void update_application_zones_and_attached_windows();
 
-    /// Collects all children windows provided a WindowInfo
-    auto collect_windows(WindowInfo const& info) -> std::vector<Window>;
+    /// Iterates each child window of the provided WindowInfo
+    void for_each_window_in_info(WindowInfo const& info, std::function<void(const Window&)> func);
+    /// Gathers windows provided WindowInfo
+    auto collect_windows(WindowInfo const& info) -> SurfaceSet;
 };
 }
 
