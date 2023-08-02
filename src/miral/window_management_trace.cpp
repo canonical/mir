@@ -579,7 +579,7 @@ MIRAL_TRACE_EXCEPTION
 auto miral::WindowManagementTrace::window_to_select_application(Application const app) const -> std::optional<Window>
 try {
     log_input();
-    mir::log_info("%s", __func__);
+    mir::log_info("%s app=%s", __func__, dump_of(app).c_str());
     trace_count++;
     return wrapped.window_to_select_application(app);
 }
