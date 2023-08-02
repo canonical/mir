@@ -29,7 +29,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ## Resources
-The Mir project website is <http://www.mir-server.io/>,
+The Mir project website is <http://mir-server.io/>,
 the code is [hosted on GitHub](https://github.com/MirServer)
 
 For announcements and other discussions on Mir see:
