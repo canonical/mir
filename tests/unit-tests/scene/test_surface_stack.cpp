@@ -1375,7 +1375,7 @@ TEST_F(SurfaceStack, when_screen_is_locked_surface_ignores_surface)
     handle->allow_to_be_dropped();
 }
 
-TEST_F(SurfaceStack, surfaces_tht_are_sent_to_back_appear_at_the_front_of_the_list)
+TEST_F(SurfaceStack, surfaces_that_are_sent_to_back_appear_at_the_front_of_the_list)
 {
     stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
     stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
