@@ -7,10 +7,6 @@ For build instructions, and a brief guide describing how to run the *Mir binarie
 _You might think it's obvious but there are some important things you need to know to get it working,
 and also to prevent your existing *X server* from dying at the same time!_
 
-You can configure *Mir* to provide runtime information helpful for debugging
-by enabling component reports:
-
-- *[Component Reports](./doc/component_reports.md)*
 
 ## Style guide
 
