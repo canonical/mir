@@ -2,13 +2,10 @@
 
 ## Building & running
 
-For build instructions, please see:
+For build instructions, and a brief guide describing how to run the *Mir binaries* please see:
 - *[Getting and Using Mir](./doc/getting_and_using_mir.md)*.
-
-Once you have the project built, there are some brief guides in that doucment that
-describe how to run the *Mir binaries*. You might think it's obvious but there are some important things
-you need to know to get it working, and also to prevent your existing *X server*
-from dying at the same time
+_You might think it's obvious but there are some important things you need to know to get it working,
+and also to prevent your existing *X server* from dying at the same time!_
 
 You can configure *Mir* to provide runtime information helpful for debugging
 by enabling component reports:
