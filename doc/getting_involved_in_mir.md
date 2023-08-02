@@ -2,7 +2,7 @@
 
 ## Getting involved
 
-The Mir project website is <http://www.mirserver.io/>, 
+The Mir project website is <http://www.mir-server.io/>, 
 the code is [hosted on GitHub](https://github.com/MirServer) 
 
 For announcements and other discussions on Mir see: 
