@@ -576,7 +576,7 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
-auto miral::WindowManagementTrace::window_to_select_application(const Application app) const -> std::optional<Window>
+auto miral::WindowManagementTrace::window_to_select_application(Application const app) const -> std::optional<Window>
 try {
     log_input();
     mir::log_info("%s", __func__);
