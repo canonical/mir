@@ -80,4 +80,11 @@ documented.
 There are *design notes* and an *architecture diagram* (.dia) in the design
 subdirectory.
 
+## Debugging
+You can configure *Mir* to provide runtime information helpful for debugging
+by enabling component reports:
+
+- *[Component Reports](./doc/component_reports.md)*
+
+
 
