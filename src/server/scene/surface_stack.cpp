@@ -451,11 +451,7 @@ void ms::SurfaceStack::swap_z_order(SurfaceSet const& first, SurfaceSet const& s
                 // Find the start position and count how many we've found
                 bool in_first = first.count(*it) > 0;
                 bool in_second = second.contains(*it) > 0;
-                if (in_first && in_second)
-                {
-                    BOOST_THROW_EXCEPTION(std::logic_error("Swapped sets must not have any overlap"));
-                }
-                else if (in_first)
+                if (in_first)
                 {
                     if (!num_first_found && !num_second_found)
                         swap_begin = it;

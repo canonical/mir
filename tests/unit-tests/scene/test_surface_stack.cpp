@@ -1459,14 +1459,3 @@ TEST_F(SurfaceStack, multiple_surfaces_can_be_swapped)
 
     Mock::VerifyAndClearExpectations(&observer);
 }
-
-TEST_F(SurfaceStack, swapping_overlapping_surface_sets_causes_an_exception)
-{
-    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
-    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
-    stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
-
-    EXPECT_THAT([&]() { stack.swap_z_order({stub_surface1, stub_surface2}, {stub_surface2, stub_surface3}); },
-                Throws<std::logic_error>(Property(&std::logic_error::what,
-                                                    HasSubstr("Swapped sets must not have any overlap"))));
-}
