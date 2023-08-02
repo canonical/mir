@@ -232,6 +232,12 @@ auto ApplicationSelector::advance(bool reverse) -> Application
             break;
     } while ((next_window = tools.window_to_select_application(it->lock())) == std::nullopt);
 
+    if (it == start_it || next_window == std::nullopt)
+    {
+        // next_window will be a garbage window in this case, so let's not select it
+        return start_it->lock();
+    }
+
     // Swap the tree order first and then select the new window
     if (it->lock() == originally_selected.lock())
     {
@@ -241,15 +247,10 @@ auto ApplicationSelector::advance(bool reverse) -> Application
         for (auto window: tools.info_for(selected).windows())
             tools.send_tree_to_back(window);
     }
-    else if (next_window != std::nullopt)
+    else
         tools.swap_tree_order(next_window.value(), active_window);
 
-    // next_window will be a garbage window in this case, so let's not select it
-    if (it != start_it && next_window != std::nullopt)
-    {
-        tools.select_active_window(next_window.value());
-    }
-
+    tools.select_active_window(next_window.value());
     return it->lock();
 }
 
