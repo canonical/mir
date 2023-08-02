@@ -19,7 +19,7 @@ API.
 - The repository can be found [here](https://github.com/MirServer/mir)
 - If you want to use the Mir snaps, see: 
   [Make a Secure Ubuntu Web Kiosk](https://mir-server.io/docs/make-a-secure-ubuntu-web-kiosk)
-
+  [Miriway: the snap](https://discourse.ubuntu.com/t/miriway-the-snap/35821)
 - If you want to try out the Mir demos on desktop, see: \ref getting_and_using_mir
 
 - If you want to get involved in Mir development, see: \ref getting_involved_in_mir
