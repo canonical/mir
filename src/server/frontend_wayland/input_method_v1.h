@@ -65,7 +65,7 @@ public:
         wl_display *display,
         std::shared_ptr<Executor> const wayland_executor,
         std::shared_ptr<shell::Shell> shell,
-        WlSeat& seat,
+        WlSeat* seat,
         OutputManager* output_manager);
 
 private:
@@ -75,7 +75,7 @@ private:
     wl_display* display;
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
-    WlSeat& seat;
+    WlSeat* seat;
     OutputManager* const output_manager;
 };
 

@@ -319,11 +319,13 @@ mf::WlSeat::Instance::Instance(wl_resource* new_resource, mf::WlSeat* seat)
     send_name_event_if_supported("seat0");
 }
 
+#include <iostream>
 void mf::WlSeat::Instance::get_pointer(wl_resource* new_pointer)
 {
     auto const pointer = new WlPointer{new_pointer};
     auto dispatcher = std::make_shared<PointerEventDispatcher>(pointer);
 
+    std::cout.flush();
     seat->pointer_listeners->register_listener(client, dispatcher.get());
     pointer->add_destroy_listener(
         [listeners = seat->pointer_listeners, listener = std::move(dispatcher), client = client]()

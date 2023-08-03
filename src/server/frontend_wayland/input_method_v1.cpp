@@ -21,6 +21,7 @@
 #include "mir/shell/shell.h"
 #include "mir/scene/session.h"
 #include "wl_surface.h"
+#include "output_manager.h"
 #include "window_wl_surface_role.h"
 #include "input_method_common.h"
 #include "input-method-unstable-v1_wrapper.cpp" // TODO: Super temporary. Can't figure out why link is broken.
@@ -98,7 +99,7 @@ public:
 
         //context->send_preferred_language_event("en-us");
         context->add_serial(serial);
-        context->send_reset_event();
+        //context->send_reset_event();
     }
 
     void deactivated()
@@ -337,7 +338,7 @@ public:
     Instance(
         std::shared_ptr<Executor> const wayland_executor,
         std::shared_ptr<shell::Shell> const shell,
-        WlSeat& seat,
+        WlSeat* seat,
         OutputManager* const output_manager,
         wl_resource* new_resource)
         : InputPanelV1{new_resource, Version<1>()},
@@ -349,25 +350,69 @@ public:
     }
 
 private:
-    class InputPanelSurfaceV1 : wayland::InputPanelSurfaceV1
+    class InputPanelSurfaceV1 :
+        wayland::InputPanelSurfaceV1,
+        public WindowWlSurfaceRole
     {
     public:
         InputPanelSurfaceV1(
+            wl_resource* id,
+            std::shared_ptr<Executor> const wayland_executor,
+            WlSeat* seat,
+            WlSurface* surface,
             std::shared_ptr<shell::Shell> shell,
-            wl_resource* resource,
-            std::shared_ptr<scene::Surface> surface)
-            : wayland::InputPanelSurfaceV1(resource, Version<1>()),
-              shell{shell},
-              surface{surface}
+            OutputManager* const output_manager)
+            : wayland::InputPanelSurfaceV1(id, Version<1>()),
+              WindowWlSurfaceRole(
+                  *wayland_executor,
+                  seat,
+                  wayland::InputPanelSurfaceV1::client,
+                  surface,
+                  shell,
+                  output_manager),
+              output_manager(output_manager)
         {
+            mir::shell::SurfaceSpecification spec;
+            spec.state = mir_window_state_attached;
+            spec.type = MirWindowType::mir_window_type_inputmethod;
+            spec.depth_layer = MirDepthLayer::mir_depth_layer_always_on_top;
+            apply_spec(spec);
         }
 
+        virtual void handle_state_change(MirWindowState /*new_state*/) override {};
+        virtual void handle_active_change(bool /*is_now_active*/) override {};
+        virtual void handle_resize(
+            std::optional<geometry::Point> const& /*new_top_left*/,
+            geometry::Size const& /*new_size*/) override {};
+        virtual void handle_close_request() override {};
+        virtual void handle_commit() override {};
+
     private:
-        void set_toplevel(struct wl_resource* /*output*/, uint32_t /*position*/) override
+        virtual void destroy_role() const override
         {
-            shell::SurfaceSpecification change;
-            change.type = MirWindowType::mir_window_type_inputmethod;
-            shell->modify_surface(client->client_session(), surface, change);
+            wl_resource_destroy(resource);
+        };
+
+        void set_toplevel(struct wl_resource* output, uint32_t position) override
+        {
+            auto const output_id = output_manager->output_id_for(output);
+            mir::shell::SurfaceSpecification spec;
+            spec.output_id = output_id.value();
+
+            switch (position)
+            {
+                case Position::center_bottom:
+                {
+                    break;
+                }
+                default:
+                    // TODO: Throw an error
+                    break;
+            }
+
+            set_pending_width(mir::geometry::Width{1000});
+            set_pending_height(mir::geometry::Height{1000});
+            apply_spec(spec);
         }
 
         void set_overlay_panel() override
@@ -375,48 +420,31 @@ private:
             // TODO: Doesn't seemed to be called by maliit
         }
 
-        std::shared_ptr<shell::Shell> shell;
-        std::shared_ptr<scene::Surface> surface;
+        OutputManager* output_manager;
     };
 
     void get_input_panel_surface(wl_resource* id, wl_resource* surface) override
     {
-        // TODO: This may be a silly way to construct a new surface! But it seems ok so far
-        auto weak_surface = wayland::Weak<WlSurface>(WlSurface::from(surface));
-        auto session = weak_surface.value().session;
-        shell::SurfaceSpecification spec;
-        spec.type = MirWindowType::mir_window_type_inputmethod;
-        spec.width = weak_surface.value().buffer_size()->width;
-        spec.height = weak_surface.value().buffer_size()->height;
-        spec.streams = std::vector<shell::StreamSpecification>{};
-        spec.input_shape = std::vector<mir::geometry::Rectangle>{};
-        spec.depth_layer = mir_depth_layer_overlay;
-        weak_surface.value().populate_surface_data(spec.streams.value(), spec.input_shape.value(), {});
-        auto mir_surface = session->create_surface(
-            session,
-            weak_surface,
-            spec,
-            nullptr,
-            wayland_executor.get());
-        surface_instance = std::make_unique<InputPanelSurfaceV1>(
-            shell,
+        new InputPanelSurfaceV1(
             id,
-            mir_surface);
+            wayland_executor,
+            seat,
+            WlSurface::from(surface),
+            shell,
+            output_manager);
     }
 
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
-    WlSeat& seat;
+    WlSeat* seat;
     OutputManager* const output_manager;
-
-    std::unique_ptr<InputPanelSurfaceV1> surface_instance;
 };
 
 mf::InputPanelV1::InputPanelV1(
     wl_display* display,
     std::shared_ptr<Executor> const wayland_executor,
     std::shared_ptr<shell::Shell> const shell,
-    WlSeat& seat,
+    WlSeat* seat,
     OutputManager* const output_manager)
     : Global(display, Version<1>()),
       display{display},
@@ -426,7 +454,13 @@ mf::InputPanelV1::InputPanelV1(
       output_manager{output_manager}
 {}
 
-void mf::InputPanelV1::bind(wl_resource *new_zwp_input_panel_v1)
+void mf::InputPanelV1::bind(wl_resource *new_resource)
 {
-    new Instance{wayland_executor, shell, seat, output_manager, new_zwp_input_panel_v1};
+    new Instance{
+        wayland_executor,
+        shell,
+        seat,
+        output_manager,
+        new_resource
+    };
 }

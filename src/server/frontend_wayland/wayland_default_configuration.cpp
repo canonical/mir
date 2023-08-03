@@ -160,7 +160,7 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
               ctx.display,
               ctx.wayland_executor,
               ctx.shell,
-              *ctx.seat,
+              ctx.seat,
               ctx.output_manager
           );
       }),
