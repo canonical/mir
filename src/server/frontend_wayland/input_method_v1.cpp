@@ -332,6 +332,7 @@ void mf::InputMethodV1::bind(wl_resource *new_resource)
 }
 
 #include <iostream>
+#include <mir/scene/surface.h>
 class mf::InputPanelV1::Instance : wayland::InputPanelV1
 {
 public:
@@ -403,6 +404,7 @@ private:
             {
                 case Position::center_bottom:
                 {
+                    spec.surface_placement_gravity = MirPlacementGravity::mir_placement_gravity_southeast;
                     break;
                 }
                 default:
@@ -410,8 +412,10 @@ private:
                     break;
             }
 
-            set_pending_width(mir::geometry::Width{1000});
-            set_pending_height(mir::geometry::Height{1000});
+            auto scene_surface = WindowWlSurfaceRole::scene_surface().value();
+            set_pending_width(scene_surface->window_size().width);
+            set_pending_height(scene_surface->window_size().height);
+            spec.top_left = scene_surface->top_left();
             apply_spec(spec);
         }
 
