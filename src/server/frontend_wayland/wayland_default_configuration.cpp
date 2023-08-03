@@ -156,7 +156,13 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
         }),
     make_extension_builder<mw::InputPanelV1>([](auto const& ctx)
       {
-          return std::make_shared<mf::InputPanelV1>(ctx.display);
+          return std::make_shared<mf::InputPanelV1>(
+              ctx.display,
+              ctx.wayland_executor,
+              ctx.shell,
+              *ctx.seat,
+              ctx.output_manager
+          );
       }),
     make_extension_builder<mw::InputMethodManagerV2>([](auto const& ctx)
         {

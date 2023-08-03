@@ -43,6 +43,16 @@ public:
     {
         for_each_observer(&TextInputStateObserver::deactivated);
     }
+
+    void left() override
+    {
+        for_each_observer(&TextInputStateObserver::left);
+    }
+
+    void entered() override
+    {
+        for_each_observer(&TextInputStateObserver::entered);
+    }
 };
 
 class BasicTextInputHub : public TextInputHub
@@ -56,6 +66,9 @@ public:
     void deactivate_handler(std::shared_ptr<TextInputChangeHandler> const& handler) override;
 
     void text_changed(TextInputChange const& change) override;
+
+    void notify_enter() override;
+    void notify_leave() override;
 
     /// Implement ObserverRegistrar<TextInputStateObserver>
     /// @{

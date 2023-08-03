@@ -260,9 +260,17 @@ void mf::WlSeat::bind(wl_resource* new_wl_seat)
     new Instance{new_wl_seat, this};
 }
 
+#include <mir/scene/session.h>
+#include <iostream>
 void mf::WlSeat::set_focus_to(WlSurface* new_surface)
 {
     auto const new_client = new_surface ? new_surface->client : nullptr;
+//    if (new_client)
+//        std::cout << "Address: " << new_surface << std::endl;
+//    else
+//        std::cout << "NULLPTR" << std::endl;
+//    std::cout.flush();
+
     if (new_client != focused_client)
     {
         keyboard_listeners->for_each(focused_client, [](WlKeyboard* keyboard)

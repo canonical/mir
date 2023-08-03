@@ -17,7 +17,10 @@
 #include "input_method_v1.h"
 #include "mir/wayland/weak.h"
 #include "mir/scene/text_input_hub.h"
+#include "mir/shell/surface_specification.h"
+#include "mir/shell/shell.h"
 #include "wl_surface.h"
+#include "window_wl_surface_role.h"
 #include "input_method_common.h"
 #include "input-method-unstable-v1_wrapper.cpp" // TODO: Super temporary. Can't figure out why link is broken.
 #include <iostream>
@@ -54,14 +57,18 @@ public:
         scene::TextInputState const& state)
     {
         // Create the new context if we have a new field or if we're not yet activated
-        if (!is_activated && new_input_field)
+        if (!is_activated || new_input_field)
         {
+            deactivated();
+            std::cout << "Activated: " << new_input_field << std::endl;
+            std::cout.flush();
+
             context = std::make_shared<InputMethodContextV1>(
                 this,
                 text_input_hub);
+            is_activated = true;
             cached_state = ms::TextInputState{};
             send_activate_event(context->resource);
-            is_activated = true;
         }
 
         // Notify about the surrounding text changing
@@ -90,17 +97,24 @@ public:
 
         //context->send_preferred_language_event("en-us");
         context->add_serial(serial);
+        context->send_reset_event();
     }
 
     void deactivated()
     {
-        if (is_activated && context)
+        if (is_activated)
         {
+            std::cout << "Deactivated" << std::endl;
+            std::cout.flush();
+
             is_activated = false;
-            auto resource = context->resource;
-            context_on_deathbed = context;
-            send_deactivate_event(resource);
-            context = nullptr;
+            if (context)
+            {
+                auto resource = context->resource;
+                context_on_deathbed = context;
+                send_deactivate_event(resource);
+                context = nullptr;
+            }
         }
     }
 
@@ -110,6 +124,18 @@ private:
         StateObserver(Instance* input_method)
             : input_method{input_method}
         {
+        }
+
+        void entered() override
+        {
+            std::cout << "Entered" << std::endl;
+            std::cout.flush();
+        }
+
+        void left() override
+        {
+            std::cout << "Left" << std::endl;
+            std::cout.flush();
         }
 
         void activated(
@@ -149,13 +175,13 @@ private:
 
         void add_serial(ms::TextInputStateSerial serial)
         {
+            send_commit_state_event(done_event_count);
             serials.push_back({done_event_count, serial});
             while (serials.size() > max_remembered_serials)
             {
                 serials.pop_front();
             }
             done_event_count++;
-            send_commit_state_event(done_event_count);
         }
 
     private:
@@ -303,11 +329,21 @@ void mf::InputMethodV1::bind(wl_resource *new_resource)
     new Instance{new_resource, text_input_hub, this};
 }
 
+#include <iostream>
 class mf::InputPanelV1::Instance : wayland::InputPanelV1
 {
 public:
-    Instance(wl_resource* new_resource)
-        : InputPanelV1{new_resource, Version<1>()}
+    Instance(
+        std::shared_ptr<Executor> const wayland_executor,
+        std::shared_ptr<shell::Shell> const shell,
+        WlSeat& seat,
+        OutputManager* const output_manager,
+        wl_resource* new_resource)
+        : InputPanelV1{new_resource, Version<1>()},
+          wayland_executor{wayland_executor},
+          shell{shell},
+          seat{seat},
+          output_manager{output_manager}
     {
     }
 
@@ -315,8 +351,12 @@ private:
     class InputPanelSurfaceV1 : wayland::InputPanelSurfaceV1
     {
     public:
-        InputPanelSurfaceV1(wl_resource* resource, wl_resource* surface)
+        InputPanelSurfaceV1(
+            std::shared_ptr<shell::Shell> shell,
+            wl_resource* resource,
+            wl_resource* surface)
             : wayland::InputPanelSurfaceV1(resource, Version<1>()),
+              shell{shell},
               surface(WlSurface::from(surface))
         {
         }
@@ -324,29 +364,54 @@ private:
     private:
         void set_toplevel(struct wl_resource* /*output*/, uint32_t /*position*/) override
         {
+            shell::SurfaceSpecification change;
+            change.type = MirWindowType::mir_window_type_inputmethod;
+            auto const& scene_surface = surface.value().scene_surface();
+            if (scene_surface != std::nullopt)
+                shell->modify_surface(client->client_session(), scene_surface.value(), change);
         }
 
         void set_overlay_panel() override
         {
+            std::cout << "there" << std::endl;
+            std::cout.flush();
         }
 
+        std::shared_ptr<shell::Shell> shell;
         mw::Weak<WlSurface> const surface;
     };
 
     void get_input_panel_surface(wl_resource* id, wl_resource* surface) override
     {
-        surface_instance = std::make_unique<InputPanelSurfaceV1>(id, surface);
+        surface_instance = std::make_unique<InputPanelSurfaceV1>(
+            shell,
+            id,
+            surface);
     }
+
+    std::shared_ptr<Executor> const wayland_executor;
+    std::shared_ptr<shell::Shell> const shell;
+    WlSeat& seat;
+    OutputManager* const output_manager;
 
     std::unique_ptr<InputPanelSurfaceV1> surface_instance;
 };
 
-mf::InputPanelV1::InputPanelV1(wl_display *display)
+mf::InputPanelV1::InputPanelV1(
+    wl_display* display,
+    std::shared_ptr<Executor> const wayland_executor,
+    std::shared_ptr<shell::Shell> const shell,
+    WlSeat& seat,
+    OutputManager* const output_manager)
     : Global(display, Version<1>()),
-      display(display)
+      display{display},
+      wayland_executor{wayland_executor},
+      shell{shell},
+      seat{seat},
+      output_manager{output_manager}
 {}
 
 void mf::InputPanelV1::bind(wl_resource *new_zwp_input_panel_v1)
 {
-    new Instance{new_zwp_input_panel_v1};
+    new Instance{wayland_executor, shell, seat, output_manager, new_zwp_input_panel_v1};
 }

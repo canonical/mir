@@ -79,3 +79,13 @@ void ms::BasicTextInputHub::send_initial_state(std::weak_ptr<TextInputStateObser
         }
     }
 }
+
+void ms::BasicTextInputHub::notify_enter()
+{
+    multiplexer.entered();
+}
+
+void ms::BasicTextInputHub::notify_leave()
+{
+    multiplexer.left();
+}

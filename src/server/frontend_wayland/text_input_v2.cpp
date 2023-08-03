@@ -317,11 +317,13 @@ void mf::TextInputV2::focus_on(WlSurface* surface)
     {
         auto const serial = client->next_serial(nullptr);
         send_enter_event(serial, surface->resource);
+        ctx->text_input_hub->notify_enter();
     }
     else
     {
         disable(nullptr);
         ctx->text_input_hub->deactivate_handler(handler);
+        ctx->text_input_hub->notify_leave();
     }
 }
 
