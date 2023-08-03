@@ -19,6 +19,7 @@
 #include "mir/scene/text_input_hub.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/shell/shell.h"
+#include "mir/scene/session.h"
 #include "wl_surface.h"
 #include "window_wl_surface_role.h"
 #include "input_method_common.h"
@@ -354,10 +355,10 @@ private:
         InputPanelSurfaceV1(
             std::shared_ptr<shell::Shell> shell,
             wl_resource* resource,
-            wl_resource* surface)
+            std::shared_ptr<scene::Surface> surface)
             : wayland::InputPanelSurfaceV1(resource, Version<1>()),
               shell{shell},
-              surface(WlSurface::from(surface))
+              surface{surface}
         {
         }
 
@@ -366,27 +367,41 @@ private:
         {
             shell::SurfaceSpecification change;
             change.type = MirWindowType::mir_window_type_inputmethod;
-            auto const& scene_surface = surface.value().scene_surface();
-            if (scene_surface != std::nullopt)
-                shell->modify_surface(client->client_session(), scene_surface.value(), change);
+            shell->modify_surface(client->client_session(), surface, change);
         }
 
         void set_overlay_panel() override
         {
-            std::cout << "there" << std::endl;
-            std::cout.flush();
+            // TODO: Doesn't seemed to be called by maliit
         }
 
         std::shared_ptr<shell::Shell> shell;
-        mw::Weak<WlSurface> const surface;
+        std::shared_ptr<scene::Surface> surface;
     };
 
     void get_input_panel_surface(wl_resource* id, wl_resource* surface) override
     {
+        // TODO: This may be a silly way to construct a new surface! But it seems ok so far
+        auto weak_surface = wayland::Weak<WlSurface>(WlSurface::from(surface));
+        auto session = weak_surface.value().session;
+        shell::SurfaceSpecification spec;
+        spec.type = MirWindowType::mir_window_type_inputmethod;
+        spec.width = weak_surface.value().buffer_size()->width;
+        spec.height = weak_surface.value().buffer_size()->height;
+        spec.streams = std::vector<shell::StreamSpecification>{};
+        spec.input_shape = std::vector<mir::geometry::Rectangle>{};
+        spec.depth_layer = mir_depth_layer_overlay;
+        weak_surface.value().populate_surface_data(spec.streams.value(), spec.input_shape.value(), {});
+        auto mir_surface = session->create_surface(
+            session,
+            weak_surface,
+            spec,
+            nullptr,
+            wayland_executor.get());
         surface_instance = std::make_unique<InputPanelSurfaceV1>(
             shell,
             id,
-            surface);
+            mir_surface);
     }
 
     std::shared_ptr<Executor> const wayland_executor;
