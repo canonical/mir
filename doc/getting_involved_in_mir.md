@@ -1,14 +1,14 @@
-# Getting Involved in Mir  {#getting_involved_in_mir}
+# Getting Involved in Mir
 
 ## Getting involved
 
-The Mir project website is <http://mir-server.io/>, 
-the code is [hosted on GitHub](https://github.com/MirServer) 
+The Mir project website is <https://mir-server.io/>,
+the code is [hosted on GitHub](https://github.com/MirServer)
 
-For announcements and other discussions on Mir see: 
-[Mir on community.ubuntu](https://community.ubuntu.com/c/mir) 
+For announcements and other discussions on Mir see:
+[Mir on community.ubuntu](https://community.ubuntu.com/c/mir)
 
-For other questions and discussion about the Mir project: 
+For other questions and discussion about the Mir project:
 the [\#mirserver](https://web.libera.chat/?channels=#mir-server) IRC channel on Libera.Chat.
 
 
@@ -57,7 +57,7 @@ by default. You can start mir apps from the command-line. For example:
 To exit from miral-shell press Ctrl-Alt-BkSp.
 
 You can install the Mir examples, headers and libraries you've built with:
-  
+
     sudo make install
 
 ## Contributing to Mir
@@ -70,7 +70,7 @@ The Mir coding guidelines are [here](https://mir-server.io/doc/cppguide/index.ht
 
 
 ## Working on code
- - Hacking guidelines can be found here: [Mir Hacking Guides](../HACKING.md)
+ - Hacking guidelines can be found here: [Mir Hacking Guides](https://github.com/MirServer/mir/blob/main/HACKING.md)
  - You can configure *Mir* to provide runtime information helpful for debugging
-   by enabling component reports: [Component Reports](./component_reports.md)
- - A guide on versioning Mir DSOs: [DSO Versioning Guide](./dso_versioning_guide.md)
+   by enabling component reports: [Component Reports](component_reports.md)
+ - A guide on versioning Mir DSOs: [DSO Versioning Guide](dso_versioning_guide.md)

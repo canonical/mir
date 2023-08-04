@@ -1,4 +1,4 @@
-A brief guide for versioning symbols in the Mir DSOs {#dso_versioning_guide}
+A brief guide for versioning symbols in the Mir DSOs
 ====================================================
 
 So, what do I have to do?
