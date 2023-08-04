@@ -32,6 +32,12 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mw = mir::wayland;
 
+void debug_string(const char* x)
+{
+    std::cout << x << std::endl;
+    std::cout.flush();
+}
+
 /// Handles activation and deactivation of the InputMethodContextV1
 class mf::InputMethodV1::Instance : wayland::InputMethodV1
 {
@@ -63,6 +69,7 @@ public:
         {
             deactivated();
 
+            debug_string("Activation");
             context = std::make_shared<InputMethodContextV1>(
                 this,
                 text_input_hub);
@@ -106,6 +113,7 @@ public:
             is_activated = false;
             if (context)
             {
+                debug_string("Deactivation");
                 context->cleanup();
                 auto resource = context->resource;
                 context_on_deathbed = context;
@@ -223,12 +231,6 @@ private:
                 }
             }
         };
-
-        void debug_string(const char* x)
-        {
-            std::cout << x << std::endl;
-            std::cout.flush();
-        }
 
         /// The input method client will be sending up the "done_count" as their serial.
         /// We will map this done_count back to the serial of the text input.
@@ -449,14 +451,10 @@ private:
               output_manager(output_manager)
         {
             mir::shell::SurfaceSpecification spec;
-            //spec.edge_attachment = MirEdgeAttachment ::mir_edge_attachment_vertical;
-            spec.state = mir_window_state_attached;
+            spec.state = MirWindowState::mir_window_state_hidden;
             spec.type = MirWindowType::mir_window_type_inputmethod;
-            spec.depth_layer = MirDepthLayer::mir_depth_layer_overlay;
-            //spec.surface_placement_gravity = MirPlacementGravity::mir_placement_gravity_south;
+            spec.depth_layer = MirDepthLayer::mir_depth_layer_always_on_top;
             apply_spec(spec);
-            create_scene_surface();
-            surface->refresh_surface_data_now();
         }
 
         virtual void handle_state_change(MirWindowState /*new_state*/) override {};
@@ -475,9 +473,11 @@ private:
 
         void set_toplevel(struct wl_resource* output, uint32_t position) override
         {
+            debug_string("Set top level");
             auto const output_id = output_manager->output_id_for(output);
             mir::shell::SurfaceSpecification spec;
             spec.output_id = output_id.value();
+            spec.state = MirWindowState::mir_window_state_attached;
 
             switch (position)
             {
@@ -504,6 +504,7 @@ private:
 
     void get_input_panel_surface(wl_resource* id, wl_resource* surface) override
     {
+        debug_string("Get Input Panel Surface");
         new InputPanelSurfaceV1(
             id,
             wayland_executor,

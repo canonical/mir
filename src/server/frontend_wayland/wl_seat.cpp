@@ -265,12 +265,6 @@ void mf::WlSeat::bind(wl_resource* new_wl_seat)
 void mf::WlSeat::set_focus_to(WlSurface* new_surface)
 {
     auto const new_client = new_surface ? new_surface->client : nullptr;
-//    if (new_client)
-//        std::cout << "Address: " << new_surface << std::endl;
-//    else
-//        std::cout << "NULLPTR" << std::endl;
-//    std::cout.flush();
-
     if (new_client != focused_client)
     {
         keyboard_listeners->for_each(focused_client, [](WlKeyboard* keyboard)
@@ -325,7 +319,6 @@ void mf::WlSeat::Instance::get_pointer(wl_resource* new_pointer)
     auto const pointer = new WlPointer{new_pointer};
     auto dispatcher = std::make_shared<PointerEventDispatcher>(pointer);
 
-    std::cout.flush();
     seat->pointer_listeners->register_listener(client, dispatcher.get());
     pointer->add_destroy_listener(
         [listeners = seat->pointer_listeners, listener = std::move(dispatcher), client = client]()
