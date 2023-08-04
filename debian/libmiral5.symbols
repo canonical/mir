@@ -427,25 +427,9 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"miral::WindowSpecification::visible_on_lock_screen() const@MIRAL_3.9" 3.9.0
  (c++)"miral::WindowSpecification::visible_on_lock_screen()@MIRAL_3.9" 3.9.0
  MIRAL_3.10@MIRAL_3.10 3.10.0
- (c++)"miral::ApplicationSelector::ApplicationSelector(miral::ApplicationSelector const&)@MIRAL_3.10" 3.10.0
- (c++)"miral::ApplicationSelector::ApplicationSelector(miral::WindowManagerTools const&)@MIRAL_3.10" 3.10.0
- (c++)"miral::ApplicationSelector::advise_delete_app(std::shared_ptr<mir::scene::Session> const&)@MIRAL_3.10" 3.10.0
- (c++)"miral::ApplicationSelector::advise_focus_gained(miral::WindowInfo const&)@MIRAL_3.10" 3.10.0
- (c++)"miral::ApplicationSelector::advise_focus_lost(miral::WindowInfo const&)@MIRAL_3.10" 3.10.0
- (c++)"miral::ApplicationSelector::advise_new_app(std::shared_ptr<mir::scene::Session> const&)@MIRAL_3.10" 3.10.0
- (c++)"miral::ApplicationSelector::cancel()@MIRAL_3.10" 3.10.0
- (c++)"miral::ApplicationSelector::complete()@MIRAL_3.10" 3.10.0
- (c++)"miral::ApplicationSelector::get_focused()@MIRAL_3.10" 3.10.0
- (c++)"miral::ApplicationSelector::is_active()@MIRAL_3.10" 3.10.0
- (c++)"miral::ApplicationSelector::next()@MIRAL_3.10" 3.10.0
- (c++)"miral::ApplicationSelector::next(bool)@MIRAL_3.10" 3.10.0
- (c++)"miral::ApplicationSelector::operator=(miral::ApplicationSelector const&)@MIRAL_3.10" 3.10.0
- (c++)"miral::ApplicationSelector::prev()@MIRAL_3.10" 3.10.0
- (c++)"miral::ApplicationSelector::~ApplicationSelector()@MIRAL_3.10" 3.10.0
  (c++)"miral::MinimalWindowManager::advise_delete_app(miral::ApplicationInfo const&)@MIRAL_3.10" 3.10.0
  (c++)"miral::MinimalWindowManager::advise_focus_lost(miral::WindowInfo const&)@MIRAL_3.10" 3.10.0
  (c++)"miral::MinimalWindowManager::advise_new_app(miral::ApplicationInfo&)@MIRAL_3.10" 3.10.0
- (c++)"miral::WindowManagerTools::can_select_application(std::shared_ptr<mir::scene::Session>, miral::Window&) const@MIRAL_3.10" 3.10.0
  (c++)"miral::WindowManagerTools::send_tree_to_back(miral::Window const&)@MIRAL_3.10" 3.10.0
  (c++)"miral::WindowManagerTools::swap_tree_order(miral::Window const&, miral::Window const&)@MIRAL_3.10" 3.10.0
  (c++)"miral::WindowManagerTools::window_to_select_application(std::shared_ptr<mir::scene::Session>) const@MIRAL_3.10" 3.10.0
