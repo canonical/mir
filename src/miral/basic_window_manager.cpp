@@ -989,10 +989,10 @@ void miral::BasicWindowManager::swap_tree_order(Window const& first, Window cons
     auto const& info_first = info_for(first);
     auto const& info_second = info_for(second);
 
-    auto first_windows = collect_windows(info_first);
-    auto second_windows = collect_windows(info_second);
-    for (auto it = first_windows.begin(); it != first_windows.end(); it++)
-        if (second_windows.count(*it))
+    auto const& first_windows = collect_windows(info_first);
+    auto const& second_windows = collect_windows(info_second);
+    for (auto w : first_windows)
+        if (second_windows.count(w))
         {
             log_error("Unable to swap tree order due to overlap");
             return;
