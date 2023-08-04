@@ -284,6 +284,14 @@ void mf::TextInputV2::send_text_change(ms::TextInputChange const& change)
             change.preedit_style->length,
             change.preedit_style->style);
     }
+    if (change.keysym)
+    {
+        send_keysym_event(
+            change.keysym->time,
+            change.keysym->sym,
+            change.keysym->state,
+            change.keysym->modifiers);
+    }
     if (change.preedit_text || change.preedit_cursor_begin || change.preedit_cursor_end)
     {
         send_preedit_cursor_event(change.preedit_cursor_begin.value_or(0));

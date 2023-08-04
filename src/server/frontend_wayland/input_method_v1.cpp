@@ -341,9 +341,10 @@ private:
             debug_string("Modifiers Map");
         }
 
-        void keysym(uint32_t /*serial*/, uint32_t /*time*/, uint32_t /*sym*/, uint32_t /*state*/, uint32_t /*modifiers*/) override
+        void keysym(uint32_t serial, uint32_t time, uint32_t sym, uint32_t state, uint32_t modifiers) override
         {
-
+            change.pending_change.keysym = { time, sym, state, modifiers };
+            on_text_changed(serial);
         }
 
         void grab_keyboard(struct wl_resource */*keyboard*/) override
