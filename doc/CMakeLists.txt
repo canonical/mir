@@ -1,11 +1,13 @@
 find_package(Doxygen 1.8.0)
 
 if(DOXYGEN_FOUND)
-  file(
-      COPY ${CMAKE_CURRENT_SOURCE_DIR}
-      DESTINATION ${CMAKE_BINARY_DIR}
-      PATTERN *.in EXCLUDE
-  )
+  if(NOT ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+    file(
+        COPY ${CMAKE_CURRENT_SOURCE_DIR}
+        DESTINATION ${CMAKE_BINARY_DIR}
+        PATTERN *.in EXCLUDE
+    )
+  endif()
 
   configure_file(
       ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in
@@ -23,11 +25,13 @@ if(DOXYGEN_FOUND)
   )
 
   # use the starter pack Makefile
-  execute_process(
+  add_custom_command(
+      OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/.sphinx/venv
       COMMAND make -C ${CMAKE_CURRENT_BINARY_DIR} install
   )
 
   add_custom_target(doc
       COMMAND make -C ${CMAKE_CURRENT_BINARY_DIR} html
+      DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/.sphinx/venv
   )
 endif()
