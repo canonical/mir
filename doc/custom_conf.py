@@ -1,5 +1,6 @@
 import datetime
 import os
+import subprocess
 
 # Custom configuration for the Sphinx documentation builder.
 # All configuration specific to your project should be done in this file.
@@ -20,7 +21,7 @@ project = 'Mir'
 author = 'Canonical Group Ltd.'
 
 # Uncomment if your product uses release numbers
-release = '@MIR_VERSION_MAJOR@.@MIR_VERSION_MINOR@'
+release = subprocess.check_output(["git", "describe", "--always"], encoding="utf-8")
 
 # The default value uses the current year as the copyright year
 copyright = '%s, %s' % (datetime.date.today().year, author)

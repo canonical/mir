@@ -15,11 +15,6 @@ if(DOXYGEN_FOUND)
   )
 
   configure_file(
-      ${CMAKE_CURRENT_SOURCE_DIR}/custom_conf.py.in
-      ${CMAKE_CURRENT_BINARY_DIR}/custom_conf.py @ONLY IMMEDIATE
-  )
-
-  configure_file(
       ${CMAKE_CURRENT_SOURCE_DIR}/introducing_the_miral_api.md.in
       ${CMAKE_CURRENT_BINARY_DIR}/introducing_the_miral_api.md @ONLY IMMEDIATE
   )
