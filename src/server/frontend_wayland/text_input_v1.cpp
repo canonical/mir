@@ -271,6 +271,13 @@ void TextInputV1::send_text_change(ms::TextInputChange const& change)
         // We are no longer enabled, or we don't have a valid serial
         return;
     }
+    if (change.preedit_style)
+    {
+        send_preedit_styling_event(
+            change.preedit_style->index,
+            change.preedit_style->length,
+            change.preedit_style->style);
+    }
     if (change.preedit_text || change.preedit_cursor_begin || change.preedit_cursor_end)
     {
         send_preedit_cursor_event(change.preedit_cursor_begin.value_or(0));

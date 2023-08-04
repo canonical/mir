@@ -286,10 +286,13 @@ private:
             on_text_changed(serial);
         }
 
-        void preedit_styling(uint32_t /*index*/, uint32_t /*length*/, uint32_t /*style*/) override
+        /// Only defined for text inputs v1 and v2. This request will be fulfilled when
+        //  preedit_string is next called.
+        void preedit_styling(uint32_t index, uint32_t length, uint32_t style) override
         {
             // TODO: TextInputV3 seemed to kill this off and we don't seem to implement it in V1 or V2.
-            debug_string("Preedit style");
+            change.pending_change.preedit_style = { index, length, style };
+            change.waiting_status = InputMethodV1ChangeWaitingStatus::preedit_string;
         }
 
         /// Set the cursor position to the index. This request will be fulfilled when
@@ -340,7 +343,7 @@ private:
 
         void keysym(uint32_t /*serial*/, uint32_t /*time*/, uint32_t /*sym*/, uint32_t /*state*/, uint32_t /*modifiers*/) override
         {
-            debug_string("keysym");
+
         }
 
         void grab_keyboard(struct wl_resource */*keyboard*/) override

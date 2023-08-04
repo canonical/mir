@@ -103,6 +103,13 @@ struct TextInputChange
     {
     }
 
+    struct TextInputPreeditStyle
+    {
+        uint32_t index;
+        uint32_t length;
+        uint32_t style;
+    };
+
     TextInputStateSerial serial;
     std::optional<std::string> preedit_text;
     std::optional<int> preedit_cursor_begin;
@@ -110,6 +117,9 @@ struct TextInputChange
     std::optional<std::string> commit_text;
     std::optional<int> delete_before;
     std::optional<int> delete_after;
+
+    /// \remark Defined on for text input v1 and v2, not v3.
+    std::optional<TextInputPreeditStyle> preedit_style;
 };
 
 /// Gets notifications about changes in clients state (implemented by input methods)
