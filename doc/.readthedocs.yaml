@@ -10,12 +10,35 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.11"
+  # https://github.com/readthedocs/readthedocs.org/issues/9599
+  apt_packages:
+  - cmake
+  - libboost-dev
+  - libboost-iostreams-dev
+  - libboost-filesystem-dev
+  - libboost-program-options-dev
+  - libboost-system-dev
+  - libdrm-dev
+  - libegl-dev
+  - libfreetype-dev
+  - libglib2.0-dev
+  - libgles2-mesa-dev
+  - libglm-dev
+  - libgflags-dev
+  - libgoogle-glog-dev
+  - libinput-dev
+  - liblttng-ust-dev
+  - libwayland-dev
+  - libxcb-composite0-dev
+  - libxcursor-dev
+  - libxkbcommon-dev
+  - libxml++2.6-dev
+  - libyaml-cpp-dev
   jobs:
     post_checkout:
     - git fetch --unshallow
     post_install:
-    - sudo apt-get --yes build-dep ./
-    - cmake .
+    - cmake -DMIR_ENABLE_TESTS=NO -DMIR_PLATFORM=x11 .
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
