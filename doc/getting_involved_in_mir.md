@@ -2,7 +2,7 @@
 
 ## Getting involved
 
-The Mir project website is <http://www.mirserver.io/>, 
+The Mir project website is <http://mir-server.io/>, 
 the code is [hosted on GitHub](https://github.com/MirServer) 
 
 For announcements and other discussions on Mir see: 
@@ -34,8 +34,7 @@ instructions vary across distros.
 As we build these distros in Mir's CI you can copy the instructions
 from the corresponding files under `spread/build`.
 
-Building Mir
-------------
+## Building
 
     mkdir build
     cd  build
@@ -61,19 +60,17 @@ You can install the Mir examples, headers and libraries you've built with:
   
     sudo make install
 
-### Contributing to Mir
+## Contributing to Mir
 
 Please file bug reports at: https://github.com/MirServer/mir/issues
 
 The Mir development mailing list can be found at: https://lists.ubuntu.com/mailman/listinfo/Mir-devel
 
-The Mir coding guidelines are [here](cppguide/index.html).
+The Mir coding guidelines are [here](https://mir-server.io/doc/cppguide/index.html).
 
-### Working on Mir code
 
- - \ref md_README  "Mir Read me"
- - \ref md_HACKING "Mir hacking guide"
- - \ref component_reports
- - \ref dso_versioning_guide
- - \ref performance_framework
- - \ref latency "Measuring visual latency"
+## Working on code
+ - Hacking guidelines can be found here: [Mir Hacking Guides](../HACKING.md)
+ - You can configure *Mir* to provide runtime information helpful for debugging
+   by enabling component reports: [Component Reports](./component_reports.md)
+ - A guide on versioning Mir DSOs: [DSO Versioning Guide](./dso_versioning_guide.md)
