@@ -367,17 +367,21 @@ private:
               WindowWlSurfaceRole(
                   *wayland_executor,
                   seat,
-                  wayland::InputPanelSurfaceV1::client,
+                  surface->client,
                   surface,
                   shell,
                   output_manager),
               output_manager(output_manager)
         {
             mir::shell::SurfaceSpecification spec;
+            //spec.edge_attachment = MirEdgeAttachment ::mir_edge_attachment_vertical;
             spec.state = mir_window_state_attached;
             spec.type = MirWindowType::mir_window_type_inputmethod;
-            spec.depth_layer = MirDepthLayer::mir_depth_layer_always_on_top;
+            spec.depth_layer = MirDepthLayer::mir_depth_layer_overlay;
+            //spec.surface_placement_gravity = MirPlacementGravity::mir_placement_gravity_south;
             apply_spec(spec);
+            create_scene_surface();
+            surface->refresh_surface_data_now();
         }
 
         virtual void handle_state_change(MirWindowState /*new_state*/) override {};
@@ -404,7 +408,7 @@ private:
             {
                 case Position::center_bottom:
                 {
-                    spec.surface_placement_gravity = MirPlacementGravity::mir_placement_gravity_southeast;
+                    //spec.surface_placement_gravity = MirPlacementGravity::mir_placement_gravity_south;
                     break;
                 }
                 default:
@@ -412,10 +416,6 @@ private:
                     break;
             }
 
-            auto scene_surface = WindowWlSurfaceRole::scene_surface().value();
-            set_pending_width(scene_surface->window_size().width);
-            set_pending_height(scene_surface->window_size().height);
-            spec.top_left = scene_surface->top_left();
             apply_spec(spec);
         }
 
