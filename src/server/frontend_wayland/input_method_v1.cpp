@@ -62,8 +62,6 @@ public:
         if (!is_activated || new_input_field)
         {
             deactivated();
-            std::cout << "Activated: " << new_input_field << std::endl;
-            std::cout.flush();
 
             context = std::make_shared<InputMethodContextV1>(
                 this,
@@ -71,6 +69,7 @@ public:
             is_activated = true;
             cached_state = ms::TextInputState{};
             send_activate_event(context->resource);
+            context->send_reset_event();
         }
 
         // Notify about the surrounding text changing
@@ -97,21 +96,17 @@ public:
                 mir_to_wayland_content_purpose(state.content_purpose.value_or(ms::TextInputContentPurpose::normal)));
         }
 
-        //context->send_preferred_language_event("en-us");
         context->add_serial(serial);
-        //context->send_reset_event();
     }
 
     void deactivated()
     {
         if (is_activated)
         {
-            std::cout << "Deactivated" << std::endl;
-            std::cout.flush();
-
             is_activated = false;
             if (context)
             {
+                context->cleanup();
                 auto resource = context->resource;
                 context_on_deathbed = context;
                 send_deactivate_event(resource);
@@ -186,7 +181,48 @@ private:
             done_event_count++;
         }
 
+        void cleanup()
+        {
+            if (!change.fallback_commit.empty())
+            {
+                // TODO: Commit the fallback
+            }
+        }
+
     private:
+        enum class InputMethodV1ChangeWaitingStatus
+        {
+            none,
+            commit_string,
+            preedit_string
+        };
+
+        struct InputMethodV1Change
+        {
+            std::string fallback_commit;
+            scene::TextInputChange pending_change{{}};
+            InputMethodV1ChangeWaitingStatus waiting_status;
+
+            void reset()
+            {
+                pending_change = ms::TextInputChange{{}};
+                waiting_status = InputMethodV1ChangeWaitingStatus::none;
+                fallback_commit.clear();
+            }
+
+            /// TODO: Verify if this behavior is correct
+            /// If a change is waiting to be sent to the text input BUT
+            /// we encounter another change beforehand, we will nullify the
+            /// pending change.
+            void check_waiting_status(InputMethodV1ChangeWaitingStatus expected)
+            {
+                if (waiting_status != InputMethodV1ChangeWaitingStatus::none
+                    && expected != waiting_status)
+                {
+                    reset();
+                }
+            }
+        };
 
         void debug_string(const char* x)
         {
@@ -194,14 +230,15 @@ private:
             std::cout.flush();
         }
 
+        /// The input method client will be sending up the "done_count" as their serial.
+        /// We will map this done_count back to the serial of the text input.
+        /// \param done_count Serial of the input method
+        /// \returns A text input state serial
         auto find_serial(uint32_t done_count) const -> std::optional<ms::TextInputStateSerial>
         {
             // Loop in reverse order because the serial we're looking for will generally be at the end
             for (auto it = serials.rbegin(); it != serials.rend(); it++)
             {
-                std::cout << "Potential Done : " << it->first << std::endl;
-                std::cout << "Potential serial : " << it->second << std::endl;
-                std::cout.flush();
                 if (it->first == done_count)
                 {
                     return it->second;
@@ -210,56 +247,90 @@ private:
             return std::nullopt;
         }
 
-        void do_commit(uint32_t serial)
+        void on_text_changed(uint32_t serial)
         {
             auto const mir_serial = find_serial(serial);
             if (mir_serial)
             {
-                pending_change.serial = *mir_serial;
-                text_input_hub->text_changed(pending_change);
+                change.pending_change.serial = *mir_serial;
+                text_input_hub->text_changed(change.pending_change);
             }
             else
             {
                 log_warning("%s: invalid commit serial %d", interface_name, serial);
             }
-            pending_change = ms::TextInputChange{{}};
+
+            change.reset();
         }
 
+        /// Commit the provided string to the text input immediately.
+        /// \param serial The serial
+        /// \param text Text to commit
         void commit_string(uint32_t serial, const std::string &text) override
         {
-            std::cout << "Commit String: Serial = " << serial << std::endl;
-            std::cout.flush();
-            pending_change.commit_text = text;
-            do_commit(serial);
+            change.check_waiting_status(InputMethodV1ChangeWaitingStatus::commit_string);
+            change.pending_change.commit_text = text;
+            on_text_changed(serial);
         }
 
+        /// Creates a "tentative" input value that will be overridden when a string is "committed".
+        /// This let's the user see what they're typing, while also allowing for autocomplete.
+        /// \param serial The serial
+        /// \param text The preedit text
+        /// \param commit Fallback text in the event that a user unfocuses the text input
         void preedit_string(uint32_t serial, const std::string &text, const std::string &commit) override
         {
-            do_commit(serial);
-            pending_change.preedit_text = text;
-            pending_change.commit_text = commit;
-            do_commit(serial);
+            change.check_waiting_status(InputMethodV1ChangeWaitingStatus::preedit_string);
+            change.pending_change.preedit_text = text;
+            change.fallback_commit = commit;
+            on_text_changed(serial);
         }
 
         void preedit_styling(uint32_t /*index*/, uint32_t /*length*/, uint32_t /*style*/) override
         {
+            // TODO: TextInputV3 seemed to kill this off and we don't seem to implement it in V1 or V2.
             debug_string("Preedit style");
         }
 
+        /// Set the cursor position to the index. This request will be fulfilled when
+        /// preedit_string is next called.
+        /// \param index New cursor position
         void preedit_cursor(int32_t index) override
         {
-            pending_change.preedit_cursor_begin = index;
-            pending_change.preedit_cursor_end = index;
+            change.pending_change.preedit_cursor_begin = index;
+            change.pending_change.preedit_cursor_end = index;
+            change.waiting_status = InputMethodV1ChangeWaitingStatus::preedit_string;
         }
 
-        void delete_surrounding_text(int32_t /*index*/, uint32_t /*length*/) override
+        /// Deletes the text starting from index to length. This request will be fulfilled when
+        //  commit_string is next called.
+        /// \param index Start of the deletion
+        /// \param length Length of the deletion
+        void delete_surrounding_text(int32_t index, uint32_t length) override
         {
-            debug_string("Delete");
+            std::cout << index << ", " << length << std::endl;
+            std::cout.flush();
+            // First, we move the cursor position to index
+            change.pending_change.preedit_cursor_begin = index;
+            change.pending_change.preedit_cursor_end = index;
+
+            // Then we set delete_after to 0 (representing the start of the cursor position)
+            // and delete_before to the length
+            change.pending_change.delete_after = 0;
+            change.pending_change.delete_before = length;
+
+            change.waiting_status = InputMethodV1ChangeWaitingStatus::commit_string;
         }
 
-        void cursor_position(int32_t /*index*/, int32_t /*anchor*/) override
+        /// Changes the cursor position. This request will be fulfilled when
+        //  commit_string is next called.
+        /// \param index New cursor position
+        /// \param anchor New anchor position. An anchor is used to define the end of the selected region of text.
+        void cursor_position(int32_t index, int32_t anchor) override
         {
-            debug_string("Cursor");
+            change.pending_change.preedit_cursor_begin = index;
+            change.pending_change.preedit_cursor_end = index + anchor;
+            change.waiting_status = InputMethodV1ChangeWaitingStatus::commit_string;
         }
 
         void modifiers_map(struct wl_array */*map*/) override
@@ -300,7 +371,7 @@ private:
 
         mf::InputMethodV1::Instance* method = nullptr;
         std::shared_ptr<scene::TextInputHub> const text_input_hub;
-        scene::TextInputChange pending_change{{}};
+        InputMethodV1Change change;
         static size_t constexpr max_remembered_serials{10};
         std::deque<std::pair<uint32_t , ms::TextInputStateSerial>> serials;
         uint32_t done_event_count{0};
