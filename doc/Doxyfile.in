@@ -942,7 +942,10 @@ RECURSIVE              = YES
 
 EXCLUDE                = @CMAKE_SOURCE_DIR@/include/server \
                          @CMAKE_SOURCE_DIR@/include/platform \
-                         @CMAKE_SOURCE_DIR@/include/platforms
+                         @CMAKE_SOURCE_DIR@/include/platforms \
+                         @CMAKE_SOURCE_DIR@/doc \
+                         @CMAKE_SOURCE_DIR@/HACKING.md \
+                         @CMAKE_SOURCE_DIR@/README.md
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
