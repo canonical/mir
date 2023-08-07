@@ -9,7 +9,7 @@ For announcements and other discussions on Mir see:
 [Mir on community.ubuntu](https://community.ubuntu.com/c/mir)
 
 For other questions and discussion about the Mir project:
-the [\#mirserver](https://web.libera.chat/?channels=#mir-server) IRC channel on Libera.Chat.
+the [\#mir-server](https://web.libera.chat/?channels=#mir-server) IRC channel on Libera.Chat.
 
 
 ## Getting Mir source and dependencies
