@@ -139,6 +139,10 @@ disable_feedback_button = False
 
 ## Add any configuration that is not covered by the common conf.py file.
 
+primary_domain = 'cpp'
+
+highlight_language = 'cpp'
+
 # Setup the exhale extension
 exhale_args = {
     # These arguments are required
