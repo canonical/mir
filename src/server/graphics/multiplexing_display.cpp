@@ -184,9 +184,10 @@ private:
 
         static auto name_for_output(
             mg::DisplayConfigurationOutput const& output,
-            [[maybe_unused]] std::map<mg::DisplayConfigurationOutputType, unsigned>& output_counts) -> std::string
+            std::map<mg::DisplayConfigurationOutputType, unsigned>& output_counts) -> std::string
         {
-            return std::string{mir::output_type_name(static_cast<unsigned>(output.type))} + "-" + std::to_string(output.id.as_value());
+            output_counts[output.type]++;    // The map will default-initialise any as-yet-unseen types to 0
+            return std::string{mir::output_type_name(static_cast<unsigned>(output.type))} + "-" + std::to_string(output_counts[output.type]);
         }
 
         static auto construct_output_map(

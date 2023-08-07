@@ -820,3 +820,53 @@ TEST(MultiplexingDisplay, output_names_begin_with_connector_type)
             EXPECT_THAT(conf.name, StartsWith(mir::output_type_name(static_cast<unsigned>(conf.type))));
         });
 }
+
+TEST(MultiplexingDisplay, output_names_are_bucketed_by_type)
+{
+    std::vector<mg::DisplayConfigurationOutput> display_conf;
+    DisplayConfigurationOutputGenerator gen;
+    mg::DisplayConfigurationCardId card_id{45};
+
+    auto const duplicate_type = mg::DisplayConfigurationOutputType::displayport;
+    auto const single_type = mg::DisplayConfigurationOutputType::hdmia;
+    // Add three outputs, two of the same type and one with a different type
+    display_conf.push_back(gen.generate_output(card_id));
+    display_conf.back().type = duplicate_type;
+
+    display_conf.push_back(gen.generate_output(card_id));
+    display_conf.back().type = duplicate_type;
+
+    display_conf.push_back(gen.generate_output(card_id));
+    display_conf.back().type = single_type;
+
+    std::vector<std::unique_ptr<mg::Display>> displays;
+    {
+        auto display = std::make_unique<NiceMock<mtd::MockDisplay>>();
+        ON_CALL(*display, configuration())
+            .WillByDefault(
+                Invoke(
+                    [&display_conf]()
+                    {
+                        return std::make_unique<mtd::StubDisplayConfig>(display_conf);
+                    }));
+        displays.push_back(std::move(display));
+    }
+
+    mtd::NullDisplayConfigurationPolicy policy;
+    mg::MultiplexingDisplay display{std::move(displays), policy};
+
+    auto conf = display.configuration();
+
+    conf->for_each_output(
+        [](mg::DisplayConfigurationOutput const& conf)
+        {
+            if (conf.type == duplicate_type)
+            {       // We expect the duplicates to get $SOMETHING-1 and $SOMETHING-2
+                EXPECT_THAT(conf.name, AnyOf(EndsWith("-1"), EndsWith("-2")));
+            }
+            else
+            {       // The other type has only one, so should end with $SOMETHING-1
+                EXPECT_THAT(conf.name, EndsWith("-1"));
+            }
+        });
+}
