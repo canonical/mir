@@ -181,11 +181,19 @@ private:
         };
         std::vector<OutputInfo> const output_map;
 
+        static auto name_for_output(
+            mg::DisplayConfigurationOutput const& output,
+            [[maybe_unused]] std::map<mg::DisplayConfigurationOutputType, unsigned>& output_counts) -> std::string
+        {
+            return std::string{"OUT-"} + std::to_string(output.id.as_value());
+        }
+
         static auto construct_output_map(
             std::vector<std::unique_ptr<mg::DisplayConfiguration>> const& confs,
             std::vector<mg::DisplayConfigurationOutput>& backing_store) -> std::vector<OutputInfo>
         {
             std::vector<OutputInfo> outputs;
+            std::map <mg::DisplayConfigurationOutputType, unsigned> output_type_counts;
             int next_id = 1;
             for (auto const& conf : confs)
             {
@@ -194,6 +202,7 @@ private:
                     {
                         backing_store.push_back(output);
                         backing_store.back().id = mg::DisplayConfigurationOutputId{next_id};
+                        backing_store.back().name = name_for_output(backing_store.back(), output_type_counts);
                         next_id++;
                         outputs.emplace_back(
                             component,

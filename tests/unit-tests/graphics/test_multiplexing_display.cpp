@@ -719,3 +719,53 @@ TEST(MultiplexingDisplay, applies_initial_display_configuration)
             EXPECT_THAT(output.top_left, Eq(policy->expected_location_for_display(output)));
         });
 }
+
+TEST(MultiplexingDisplay, sets_output_names_to_unique_values)
+{
+    std::vector<mg::DisplayConfigurationOutput> first_display_conf, second_display_conf, third_display_conf;
+
+    DisplayConfigurationOutputGenerator gen_one, gen_two, gen_three;
+    mg::DisplayConfigurationCardId card_one{0}, card_two{1}, card_three{2};
+
+    for (auto i = 0u; i < 3; ++i)
+    {
+        first_display_conf.push_back(gen_one.generate_output(card_one));
+    }
+    for (auto i = 0u; i < 4; ++i)
+    {
+        second_display_conf.push_back(gen_two.generate_output(card_two));
+    }
+    for (auto i = 0u; i < 2; ++i)
+    {
+        third_display_conf.push_back(gen_three.generate_output(card_three));
+    }
+
+    std::vector<std::unique_ptr<mg::Display>> displays;
+
+    for (auto const& conf : {first_display_conf, second_display_conf, third_display_conf})
+    {
+        auto display = std::make_unique<NiceMock<mtd::MockDisplay>>();
+        ON_CALL(*display, configuration())
+            .WillByDefault(
+                Invoke(
+                    [conf]()
+                    {
+                        return std::make_unique<mtd::StubDisplayConfig>(conf);
+                    }));
+
+        displays.push_back(std::move(display));
+    }
+
+    mtd::NullDisplayConfigurationPolicy policy;
+    mg::MultiplexingDisplay display{std::move(displays), policy};
+
+    auto conf = display.configuration();
+
+    std::vector<std::string> seen_names;
+    conf->for_each_output(
+        [&seen_names](mg::DisplayConfigurationOutput const& conf)
+        {
+            EXPECT_THAT(seen_names, Not(Contains(conf.name)));
+            seen_names.push_back(conf.name);
+        });
+}
