@@ -26,8 +26,7 @@ instructions vary across distros.
 
 ###  On Ubuntu
 
-    sudo apt install devscripts equivs
-    mk-build-deps -i -s sudo
+    sudo apt-get build-dep ./
 
 ### On Fedora and Alpine
 
@@ -36,10 +35,9 @@ from the corresponding files under `spread/build`.
 
 ## Building
 
-    mkdir build
-    cd  build
-    cmake ..
-    make
+    cmake -S . -Bbuild
+    cd build
+    cmake --build .
 
 This creates an example shell (miral-shell) in the bin directory. This can be
 run directly:
@@ -58,7 +56,7 @@ To exit from miral-shell press Ctrl-Alt-BkSp.
 
 You can install the Mir examples, headers and libraries you've built with:
 
-    sudo make install
+    sudo cmake --build . --target install
 
 ## Contributing to Mir
 
