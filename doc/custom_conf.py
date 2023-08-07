@@ -155,6 +155,7 @@ exhale_args = {
     "createTreeView":        False,
     "exhaleExecutesDoxygen": True,
     "exhaleUseDoxyfile":     True,
+    "contentsDirectives":    False,
 }
 
 # Setup the breathe extension
