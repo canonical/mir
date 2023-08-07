@@ -60,9 +60,9 @@ You can install the Mir examples, headers and libraries you've built with:
 
 ## Contributing to Mir
 
-Please file bug reports at: https://github.com/MirServer/mir/issues
+Please file bug reports at: [https://github.com/MirServer/mir/issues](https://github.com/MirServer/mir/issues).
 
-The Mir development mailing list can be found at: https://lists.ubuntu.com/mailman/listinfo/Mir-devel
+The Mir Discourse category can be found at: [https://discourse.ubuntu.com/c/mir/15](https://discourse.ubuntu.com/c/mir/15).
 
 ```{raw} html
 The Mir coding guidelines are <a href=../_static/cppguide/>here</a>.
