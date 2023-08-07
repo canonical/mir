@@ -17,6 +17,7 @@
 #include "multiplexing_display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/renderer/gl/context.h"
+#include "mir/output_type_names.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <functional>
@@ -185,7 +186,7 @@ private:
             mg::DisplayConfigurationOutput const& output,
             [[maybe_unused]] std::map<mg::DisplayConfigurationOutputType, unsigned>& output_counts) -> std::string
         {
-            return std::string{"OUT-"} + std::to_string(output.id.as_value());
+            return std::string{mir::output_type_name(static_cast<unsigned>(output.type))} + "-" + std::to_string(output.id.as_value());
         }
 
         static auto construct_output_map(
