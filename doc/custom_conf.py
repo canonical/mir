@@ -143,6 +143,12 @@ primary_domain = 'cpp'
 
 highlight_language = 'cpp'
 
+html_extra_path = [
+    'cppguide/favicon.ico',
+    'cppguide/index.html',
+    'cppguide/styleguide.css',
+]
+
 # Setup the exhale extension
 exhale_args = {
     # These arguments are required

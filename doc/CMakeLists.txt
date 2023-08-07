@@ -29,5 +29,6 @@ if(DOXYGEN_FOUND)
   add_custom_target(doc
       COMMAND make -C ${CMAKE_CURRENT_BINARY_DIR} html
       DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/.sphinx/venv
+              guides
   )
 endif()

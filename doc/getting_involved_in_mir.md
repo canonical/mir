@@ -64,8 +64,9 @@ Please file bug reports at: https://github.com/MirServer/mir/issues
 
 The Mir development mailing list can be found at: https://lists.ubuntu.com/mailman/listinfo/Mir-devel
 
-The Mir coding guidelines are [here](https://mir-server.io/doc/cppguide/index.html).
-
+```{raw} html
+The Mir coding guidelines are <a href=../_static/cppguide/>here</a>.
+```
 
 ## Working on code
  - Hacking guidelines can be found here: [Mir Hacking Guides](https://github.com/MirServer/mir/blob/main/HACKING.md)
