@@ -418,9 +418,7 @@ public:
 
 private:
 
-    class InputPanelSurfaceV1 :
-        public wayland::InputPanelSurfaceV1,
-        public WindowWlSurfaceRole
+    class InputPanelSurfaceV1 : public wayland::InputPanelSurfaceV1
     {
     public:
         InputPanelSurfaceV1(
@@ -432,24 +430,15 @@ private:
             OutputManager* const output_manager,
             std::shared_ptr<scene::TextInputHub> text_input_hub)
             : wayland::InputPanelSurfaceV1(id, Version<1>()),
-              WindowWlSurfaceRole(
-                  *wayland_executor,
-                  seat,
-                  wayland::InputPanelSurfaceV1::client,
-                  surface,
-                  shell,
-                  output_manager),
+              wayland_executor{wayland_executor},
+              seat{seat},
+              surface{surface},
+              shell{shell},
               output_manager(output_manager),
               text_input_hub{text_input_hub},
               state_observer{std::make_shared<StateObserver>(this)}
         {
             debug_string("Created input panel surface v1");
-            mir::shell::SurfaceSpecification spec;
-            spec.state = MirWindowState::mir_window_state_attached;
-            spec.attached_edges = MirPlacementGravity::mir_placement_gravity_south;
-            spec.type = MirWindowType::mir_window_type_inputmethod;
-            spec.depth_layer = MirDepthLayer::mir_depth_layer_always_on_top;
-            apply_spec(spec);
             text_input_hub->register_interest(state_observer, *wayland_executor);
         }
 
@@ -459,29 +448,29 @@ private:
             text_input_hub->unregister_interest(*state_observer);
         }
 
-        virtual void handle_state_change(MirWindowState /*new_state*/) override {};
-        virtual void handle_active_change(bool /*is_now_active*/) override {};
-        virtual void handle_resize(
-            std::optional<geometry::Point> const& /*new_top_left*/,
-            geometry::Size const& /*new_size*/) override {};
-        virtual void handle_close_request() override {};
-        virtual void handle_commit() override {};
-
         void activated(
             scene::TextInputStateSerial,
             bool,
             scene::TextInputState const&)
         {
-            mir::shell::SurfaceSpecification spec;
-            spec.state = MirWindowState::mir_window_state_attached;
-            apply_spec(spec);
+            can_show = true;
         }
 
         void deactivated()
         {
-            mir::shell::SurfaceSpecification spec;
-            spec.state = MirWindowState::mir_window_state_hidden;
-            apply_spec(spec);
+            can_show = false;
+        }
+
+        void show()
+        {
+            if (can_show && role)
+                role->show();
+        }
+
+        void hide()
+        {
+            if (role)
+                role->hide();
         }
 
     private:
@@ -505,36 +494,84 @@ private:
                 input_panel_surface->deactivated();
             }
 
+            void show_input_panel() override
+            {
+                input_panel_surface->show();
+            }
+
+            void hide_input_panel() override
+            {
+                input_panel_surface->hide();
+            }
+
             InputPanelSurfaceV1* const input_panel_surface;
         };
 
-        virtual void destroy_role() const override
+        class InputMethodV1Role : public WindowWlSurfaceRole
         {
-            wl_resource_destroy(resource);
-        };
-
-        void set_toplevel(struct wl_resource* output, uint32_t position) override
-        {
-            std::cout << "Input Method : " << scene_surface()->get() << std::endl;
-            std::cout.flush();
-            debug_string("Set top level");
-            auto const output_id = output_manager->output_id_for(output);
-            mir::shell::SurfaceSpecification spec;
-            spec.output_id = output_id.value();
-
-            switch (position)
+        public:
+            InputMethodV1Role(
+                wl_resource* output,
+                wayland::Client* client,
+                std::shared_ptr<Executor> const wayland_executor,
+                WlSeat* seat,
+                WlSurface* surface,
+                std::shared_ptr<shell::Shell> shell,
+                OutputManager* const output_manager)
+                : WindowWlSurfaceRole(
+                      *wayland_executor,
+                      seat,
+                      client,
+                      surface,
+                      shell,
+                      output_manager)
             {
-                case Position::center_bottom:
-                {
-                    //spec.surface_placement_gravity = MirPlacementGravity::mir_placement_gravity_south;
-                    break;
-                }
-                default:
-                    // TODO: Throw an error
-                    break;
+                debug_string("Created InputMethodV1Role");
+                mir::shell::SurfaceSpecification spec;
+                auto const output_id = output_manager->output_id_for(output);
+                spec.output_id = output_id.value();
+                spec.state = mir_window_state_hidden;
+                spec.attached_edges = MirPlacementGravity::mir_placement_gravity_south;
+                spec.type = MirWindowType::mir_window_type_inputmethod;
+                spec.depth_layer = MirDepthLayer::mir_depth_layer_always_on_top;
+                apply_spec(spec);
             }
 
-            apply_spec(spec);
+            void show()
+            {
+                remove_state_now(mir_window_state_hidden);
+                add_state_now(mir_window_state_attached);
+            }
+
+            void hide()
+            {
+                add_state_now(mir_window_state_hidden);
+            }
+
+            virtual void handle_state_change(MirWindowState /*new_state*/) override {};
+            virtual void handle_active_change(bool /*is_now_active*/) override {};
+            virtual void handle_resize(
+                std::optional<geometry::Point> const& /*new_top_left*/,
+                geometry::Size const& /*new_size*/) override {};
+            virtual void handle_close_request() override {};
+            virtual void handle_commit() override {};
+            virtual void destroy_role() const override
+            {
+                //wl_resource_destroy(resource);
+            };
+        };
+
+        void set_toplevel(struct wl_resource* output, uint32_t /*position*/) override
+        {
+            if (can_show)
+                role = std::make_unique<InputMethodV1Role>(
+                    output,
+                    wayland::InputPanelSurfaceV1::client,
+                    wayland_executor,
+                    seat,
+                    surface,
+                    shell,
+                    output_manager);
         }
 
         void set_overlay_panel() override
@@ -542,9 +579,15 @@ private:
             // TODO: Doesn't seemed to be called by maliit
         }
 
+        std::shared_ptr<Executor> const wayland_executor;
+        WlSeat* seat;
+        WlSurface* surface;
+        std::shared_ptr<shell::Shell> shell;
         OutputManager* output_manager;
         std::shared_ptr<scene::TextInputHub> const text_input_hub;
         std::shared_ptr<StateObserver> const state_observer;
+        std::unique_ptr<InputMethodV1Role> role;
+        bool can_show = false;
     };
 
     void get_input_panel_surface(wl_resource* id, wl_resource* surface) override

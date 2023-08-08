@@ -143,6 +143,9 @@ public:
     virtual void activated(TextInputStateSerial serial, bool new_input_field, TextInputState const& state) = 0;
     virtual void deactivated() = 0;
 
+    virtual void show_input_panel() {};
+    virtual void hide_input_panel() {};
+
 private:
     TextInputStateObserver(TextInputStateObserver const&) = delete;
     TextInputStateObserver& operator=(TextInputStateObserver const&) = delete;
@@ -181,6 +184,12 @@ public:
 
     /// Used by commit-statethe input method to dispatch entered text to the handler
     virtual void text_changed(TextInputChange const& change) = 0;
+
+    /// Shows the virtual keyboard panel if one exists
+    virtual void show_input_panel() = 0;
+
+    /// Hides the virtual keyboard panel if one exists
+    virtual void hide_input_panel() = 0;
 };
 }
 }

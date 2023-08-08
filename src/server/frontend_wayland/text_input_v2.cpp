@@ -357,12 +357,12 @@ void mf::TextInputV2::disable(wl_resource*)
 
 void mf::TextInputV2::show_input_panel()
 {
-    // TODO
+    ctx->text_input_hub->show_input_panel();
 }
 
 void mf::TextInputV2::hide_input_panel()
 {
-    // TODO
+    ctx->text_input_hub->hide_input_panel();
 }
 
 void mf::TextInputV2::set_surrounding_text(std::string const& text, int32_t cursor, int32_t anchor)
