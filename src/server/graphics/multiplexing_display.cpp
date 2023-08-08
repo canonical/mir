@@ -184,10 +184,19 @@ private:
 
         static auto name_for_output(
             mg::DisplayConfigurationOutput const& output,
-            std::map<mg::DisplayConfigurationOutputType, unsigned>& output_counts) -> std::string
+            std::map<mg::DisplayConfigurationCardId, std::map<mg::DisplayConfigurationOutputType, unsigned>>& output_counts,
+            bool multiple_cards) -> std::string
         {
-            output_counts[output.type]++;    // The map will default-initialise any as-yet-unseen types to 0
-            return std::string{mir::output_type_name(static_cast<unsigned>(output.type))} + "-" + std::to_string(output_counts[output.type]);
+            output_counts[output.card_id][output.type]++;    // The map will default-initialise any as-yet-unseen cards to the empty map
+                                                             // and any as-yet-unseen output types to 0.
+            std::stringstream name;
+            name << mir::output_type_name(static_cast<unsigned>(output.type));
+            if (multiple_cards)
+            {
+                name << "-" << output.card_id.as_value() + 1;
+            }
+            name << "-" << output_counts[output.card_id][output.type];
+            return name.str();
         }
 
         static auto construct_output_map(
@@ -195,8 +204,9 @@ private:
             std::vector<mg::DisplayConfigurationOutput>& backing_store) -> std::vector<OutputInfo>
         {
             std::vector<OutputInfo> outputs;
-            std::map <mg::DisplayConfigurationOutputType, unsigned> output_type_counts;
+            std::map<mg::DisplayConfigurationCardId, std::map<mg::DisplayConfigurationOutputType, unsigned>> output_type_counts;
             int next_id = 1;
+            int card_index = 0;   // Really, I want std::views::enumerate here, but that's C++23
             for (auto const& conf : confs)
             {
                 conf->for_each_output(
@@ -204,13 +214,15 @@ private:
                     {
                         backing_store.push_back(output);
                         backing_store.back().id = mg::DisplayConfigurationOutputId{next_id};
-                        backing_store.back().name = name_for_output(backing_store.back(), output_type_counts);
+                        backing_store.back().card_id = mg::DisplayConfigurationCardId{card_index};
+                        backing_store.back().name = name_for_output(backing_store.back(), output_type_counts, confs.size() > 1);
                         next_id++;
                         outputs.emplace_back(
                             component,
                             output.id,
                             backing_store.size() - 1);
                     });
+                ++card_index;
             }
             return outputs;
         }

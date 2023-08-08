@@ -106,6 +106,7 @@ MATCHER_P(OutputConfigurationEqualIgnoringId, output, "")
 {
     mg::DisplayConfigurationOutput arg_copy = arg;
     arg_copy.id = output.id;
+    arg_copy.card_id = output.card_id;
     return ExplainMatchResult(
         Eq(output),
         arg_copy,
@@ -909,4 +910,70 @@ TEST(MultiplexingDisplay, output_name_does_not_contain_card_id_when_only_one_car
                 std::to_string(conf.id.as_value());
             EXPECT_THAT(conf.name, Eq(expected_name));
         });
+}
+
+TEST(MultiplexingDisplay, when_multiple_cards_exist_outputs_are_numbered_by_card)
+{
+    std::vector<std::vector<mg::DisplayConfigurationOutput>> display_confs;
+    std::vector<DisplayConfigurationOutputGenerator> gens;
+
+    // Add three cards (with strange ids, which should be ignored)
+    for (int i : { 3, 16, 9})
+    {
+        display_confs.push_back({});
+        gens.push_back({});
+
+        auto& current_conf = display_confs.back();
+        auto& current_gen = gens.back();
+
+        // For each card, add an HDMI and two DVI outputs
+        current_conf.push_back(current_gen.generate_output(mg::DisplayConfigurationCardId{i}));
+        current_conf.back().type = mg::DisplayConfigurationOutputType::hdmia;
+
+        current_conf.push_back(current_gen.generate_output(mg::DisplayConfigurationCardId{i}));
+        current_conf.back().type = mg::DisplayConfigurationOutputType::dvii;
+
+        current_conf.push_back(current_gen.generate_output(mg::DisplayConfigurationCardId{i}));
+        current_conf.back().type = mg::DisplayConfigurationOutputType::dvii;
+    }
+
+
+    std::vector<std::unique_ptr<mg::Display>> displays;
+    for (auto const& conf : display_confs)
+    {
+        auto display = std::make_unique<NiceMock<mtd::MockDisplay>>();
+        ON_CALL(*display, configuration())
+            .WillByDefault(
+                Invoke(
+                    [conf]()
+                    {
+                        return std::make_unique<mtd::StubDisplayConfig>(conf);
+                    }));
+        displays.push_back(std::move(display));
+    }
+
+    mtd::NullDisplayConfigurationPolicy policy;
+    mg::MultiplexingDisplay display{std::move(displays), policy};
+
+    auto conf = display.configuration();
+
+    std::vector<std::string> output_names;
+    conf->for_each_output(
+        [&output_names](mg::DisplayConfigurationOutput const& conf)
+        {
+            output_names.push_back(conf.name);
+        });
+    EXPECT_THAT(
+        output_names,
+        UnorderedElementsAreArray({
+            "DVI-I-1-1",
+            "DVI-I-1-2",
+            "DVI-I-2-1",
+            "DVI-I-2-2",
+            "DVI-I-3-1",
+            "DVI-I-3-2",
+            "HDMI-A-1-1",
+            "HDMI-A-2-1",
+            "HDMI-A-3-1"})
+        );
 }
