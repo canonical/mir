@@ -66,7 +66,8 @@ public:
         std::shared_ptr<Executor> const wayland_executor,
         std::shared_ptr<shell::Shell> shell,
         WlSeat* seat,
-        OutputManager* output_manager);
+        OutputManager* output_manager,
+        std::shared_ptr<scene::TextInputHub> const text_input_hub);
 
 private:
     class Instance;
@@ -77,6 +78,7 @@ private:
     std::shared_ptr<shell::Shell> const shell;
     WlSeat* seat;
     OutputManager* const output_manager;
+    std::shared_ptr<scene::TextInputHub> const text_input_hub;
 };
 
 }

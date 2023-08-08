@@ -272,6 +272,7 @@ std::shared_ptr<mf::BufferStream> ms::BasicSurface::primary_buffer_stream() cons
     return surface_buffer_stream;
 }
 
+#include <iostream>
 void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
 {
     synchronised_state.lock()->custom_input_rectangles = input_rectangles;
@@ -308,6 +309,7 @@ geom::Rectangle ms::BasicSurface::input_bounds() const
 }
 
 // TODO: Does not account for transformation().
+#include <iostream>
 bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 {
     auto state = synchronised_state.lock();
@@ -739,6 +741,7 @@ int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
 
 void ms::BasicSurface::consume(std::shared_ptr<MirEvent const> const& event)
 {
+
     observers->input_consumed(this, event);
 }
 

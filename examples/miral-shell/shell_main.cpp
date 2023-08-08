@@ -111,7 +111,9 @@ int main(int argc, char const* argv[])
     return runner.run_with(
         {
             CursorTheme{"default:DMZ-White"},
-            WaylandExtensions{},
+            WaylandExtensions{}
+                .enable(miral::WaylandExtensions::zwp_input_method_v1)
+                .enable(miral::WaylandExtensions::zwp_input_panel_v1),
             X11Support{},
             window_managers,
             display_configuration_options,

@@ -161,7 +161,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
               ctx.wayland_executor,
               ctx.shell,
               ctx.seat,
-              ctx.output_manager
+              ctx.output_manager,
+              ctx.text_input_hub
           );
       }),
     make_extension_builder<mw::InputMethodManagerV2>([](auto const& ctx)

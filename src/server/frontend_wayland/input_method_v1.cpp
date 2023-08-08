@@ -131,18 +131,6 @@ private:
         {
         }
 
-        void entered() override
-        {
-            std::cout << "Entered" << std::endl;
-            std::cout.flush();
-        }
-
-        void left() override
-        {
-            std::cout << "Left" << std::endl;
-            std::cout.flush();
-        }
-
         void activated(
             scene::TextInputStateSerial serial,
             bool new_input_field,
@@ -418,18 +406,20 @@ public:
         std::shared_ptr<shell::Shell> const shell,
         WlSeat* seat,
         OutputManager* const output_manager,
-        wl_resource* new_resource)
+        wl_resource* new_resource,
+        std::shared_ptr<scene::TextInputHub> const text_input_hub)
         : InputPanelV1{new_resource, Version<1>()},
           wayland_executor{wayland_executor},
           shell{shell},
           seat{seat},
-          output_manager{output_manager}
-    {
-    }
+          output_manager{output_manager},
+          text_input_hub{text_input_hub}
+    {}
 
 private:
+
     class InputPanelSurfaceV1 :
-        wayland::InputPanelSurfaceV1,
+        public wayland::InputPanelSurfaceV1,
         public WindowWlSurfaceRole
     {
     public:
@@ -439,22 +429,34 @@ private:
             WlSeat* seat,
             WlSurface* surface,
             std::shared_ptr<shell::Shell> shell,
-            OutputManager* const output_manager)
+            OutputManager* const output_manager,
+            std::shared_ptr<scene::TextInputHub> text_input_hub)
             : wayland::InputPanelSurfaceV1(id, Version<1>()),
               WindowWlSurfaceRole(
                   *wayland_executor,
                   seat,
-                  surface->client,
+                  wayland::InputPanelSurfaceV1::client,
                   surface,
                   shell,
                   output_manager),
-              output_manager(output_manager)
+              output_manager(output_manager),
+              text_input_hub{text_input_hub},
+              state_observer{std::make_shared<StateObserver>(this)}
         {
+            debug_string("Created input panel surface v1");
             mir::shell::SurfaceSpecification spec;
-            spec.state = MirWindowState::mir_window_state_hidden;
+            spec.state = MirWindowState::mir_window_state_attached;
+            spec.attached_edges = MirPlacementGravity::mir_placement_gravity_south;
             spec.type = MirWindowType::mir_window_type_inputmethod;
             spec.depth_layer = MirDepthLayer::mir_depth_layer_always_on_top;
             apply_spec(spec);
+            text_input_hub->register_interest(state_observer, *wayland_executor);
+        }
+
+        ~InputPanelSurfaceV1() override
+        {
+            debug_string("Destroyed input panel surface v1");
+            text_input_hub->unregister_interest(*state_observer);
         }
 
         virtual void handle_state_change(MirWindowState /*new_state*/) override {};
@@ -465,7 +467,47 @@ private:
         virtual void handle_close_request() override {};
         virtual void handle_commit() override {};
 
+        void activated(
+            scene::TextInputStateSerial,
+            bool,
+            scene::TextInputState const&)
+        {
+            mir::shell::SurfaceSpecification spec;
+            spec.state = MirWindowState::mir_window_state_attached;
+            apply_spec(spec);
+        }
+
+        void deactivated()
+        {
+            mir::shell::SurfaceSpecification spec;
+            spec.state = MirWindowState::mir_window_state_hidden;
+            apply_spec(spec);
+        }
+
     private:
+        struct StateObserver : ms::TextInputStateObserver
+        {
+            StateObserver(InputPanelSurfaceV1* input_panel_surface)
+                : input_panel_surface{input_panel_surface}
+            {
+            }
+
+            void activated(
+                scene::TextInputStateSerial serial,
+                bool new_input_field,
+                scene::TextInputState const& state) override
+            {
+                input_panel_surface->activated(serial, new_input_field, state);
+            }
+
+            void deactivated() override
+            {
+                input_panel_surface->deactivated();
+            }
+
+            InputPanelSurfaceV1* const input_panel_surface;
+        };
+
         virtual void destroy_role() const override
         {
             wl_resource_destroy(resource);
@@ -473,11 +515,12 @@ private:
 
         void set_toplevel(struct wl_resource* output, uint32_t position) override
         {
+            std::cout << "Input Method : " << scene_surface()->get() << std::endl;
+            std::cout.flush();
             debug_string("Set top level");
             auto const output_id = output_manager->output_id_for(output);
             mir::shell::SurfaceSpecification spec;
             spec.output_id = output_id.value();
-            spec.state = MirWindowState::mir_window_state_attached;
 
             switch (position)
             {
@@ -500,6 +543,8 @@ private:
         }
 
         OutputManager* output_manager;
+        std::shared_ptr<scene::TextInputHub> const text_input_hub;
+        std::shared_ptr<StateObserver> const state_observer;
     };
 
     void get_input_panel_surface(wl_resource* id, wl_resource* surface) override
@@ -511,13 +556,15 @@ private:
             seat,
             WlSurface::from(surface),
             shell,
-            output_manager);
+            output_manager,
+            text_input_hub);
     }
 
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
     WlSeat* seat;
     OutputManager* const output_manager;
+    std::shared_ptr<scene::TextInputHub> const text_input_hub;
 };
 
 mf::InputPanelV1::InputPanelV1(
@@ -525,13 +572,15 @@ mf::InputPanelV1::InputPanelV1(
     std::shared_ptr<Executor> const wayland_executor,
     std::shared_ptr<shell::Shell> const shell,
     WlSeat* seat,
-    OutputManager* const output_manager)
+    OutputManager* const output_manager,
+    std::shared_ptr<scene::TextInputHub> const text_input_hub)
     : Global(display, Version<1>()),
       display{display},
       wayland_executor{wayland_executor},
       shell{shell},
       seat{seat},
-      output_manager{output_manager}
+      output_manager{output_manager},
+      text_input_hub{text_input_hub}
 {}
 
 void mf::InputPanelV1::bind(wl_resource *new_resource)
@@ -541,6 +590,7 @@ void mf::InputPanelV1::bind(wl_resource *new_resource)
         shell,
         seat,
         output_manager,
-        new_resource
+        new_resource,
+        text_input_hub
     };
 }

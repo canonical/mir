@@ -318,6 +318,7 @@ void mf::WlSurface::set_input_region(std::optional<wl_resource*> const& region)
     }
 }
 
+#include <iostream>
 void mf::WlSurface::commit(WlSurfaceState const& state)
 {
     // We're going to lose the value of state, so copy the frame_callbacks first. We have to maintain a list of

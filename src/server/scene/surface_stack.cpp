@@ -333,7 +333,9 @@ auto ms::SurfaceStack::surface_at(geometry::Point cursor) const
             // TODO decorations (it should) as these may be outside the area
             // TODO known to the client.  But it works for now.
             if (surface_can_be_shown(surface) && surface->input_area_contains(cursor))
-                    return surface;
+            {
+                return surface;
+            }
         }
     }
 

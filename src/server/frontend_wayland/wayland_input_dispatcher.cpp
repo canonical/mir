@@ -40,6 +40,7 @@ mf::WaylandInputDispatcher::WaylandInputDispatcher(
 {
 }
 
+#include <iostream>
 void mf::WaylandInputDispatcher::handle_event(std::shared_ptr<MirInputEvent const> const& event)
 {
     if (!wl_surface)
