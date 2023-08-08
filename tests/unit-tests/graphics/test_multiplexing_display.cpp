@@ -870,3 +870,43 @@ TEST(MultiplexingDisplay, output_names_are_bucketed_by_type)
             }
         });
 }
+
+TEST(MultiplexingDisplay, output_name_does_not_contain_card_id_when_only_one_card)
+{
+    std::vector<mg::DisplayConfigurationOutput> display_conf;
+    DisplayConfigurationOutputGenerator gen;
+    mg::DisplayConfigurationCardId card_id{45};
+
+    display_conf.push_back(gen.generate_output(card_id));
+    display_conf.push_back(gen.generate_output(card_id));
+    display_conf.push_back(gen.generate_output(card_id));
+
+    std::vector<std::unique_ptr<mg::Display>> displays;
+    {
+        auto display = std::make_unique<NiceMock<mtd::MockDisplay>>();
+        ON_CALL(*display, configuration())
+            .WillByDefault(
+                Invoke(
+                    [&display_conf]()
+                    {
+                        return std::make_unique<mtd::StubDisplayConfig>(display_conf);
+                    }));
+        displays.push_back(std::move(display));
+    }
+
+    mtd::NullDisplayConfigurationPolicy policy;
+    mg::MultiplexingDisplay display{std::move(displays), policy};
+
+    auto conf = display.configuration();
+
+    conf->for_each_output(
+        [](mg::DisplayConfigurationOutput const& conf)
+        {
+            // For a single card setup we expect $TYPE_NAME-1, etc
+            auto const expected_name =
+                std::string{mir::output_type_name(static_cast<unsigned>(conf.type))} +
+                "-" +
+                std::to_string(conf.id.as_value());
+            EXPECT_THAT(conf.name, Eq(expected_name));
+        });
+}
