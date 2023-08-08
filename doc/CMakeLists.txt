@@ -11,6 +11,11 @@ if(DOXYGEN_FOUND)
   endif()
 
   configure_file(
+      ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/custom_conf.py.in
+      ${CMAKE_CURRENT_BINARY_DIR}/sphinx/custom_conf.py @ONLY IMMEDIATE
+  )
+
+  configure_file(
       ${CMAKE_CURRENT_SOURCE_DIR}/sphinx/Doxyfile.in
       ${CMAKE_CURRENT_BINARY_DIR}/sphinx/Doxyfile @ONLY IMMEDIATE
   )

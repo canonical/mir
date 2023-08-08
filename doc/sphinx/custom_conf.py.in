@@ -21,7 +21,10 @@ project = 'Mir'
 author = 'Canonical Group Ltd.'
 
 # Uncomment if your product uses release numbers
-release = subprocess.check_output(["git", "describe", "--always"], encoding="utf-8")
+try:
+    release = subprocess.check_output(["git", "describe", "--always"], encoding="utf-8")
+except (FileNotFoundError, subprocess.CalledProcessError):
+    release = "v@MIR_VERSION_MAJOR@.@MIR_VERSION_MINOR@.@MIR_VERSION_MICRO@"
 
 # The default value uses the current year as the copyright year
 copyright = '%s, %s' % (datetime.date.today().year, author)
