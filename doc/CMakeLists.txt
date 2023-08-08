@@ -1,4 +1,14 @@
-find_package(Doxygen 1.8.0)
+option(
+  BUILD_DOXYGEN
+  "Build Doxygen documentation as part of the default build"
+  OFF
+)
+
+if(BUILD_DOXYGEN)
+  set(REQUIRED "REQUIRED")
+endif()
+
+find_package(Doxygen 1.8.0 ${REQUIRED})
 
 if(DOXYGEN_FOUND)
   cmake_path(RELATIVE_PATH CMAKE_SOURCE_DIR BASE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} OUTPUT_VARIABLE MIR_SOURCE_RELATIVE_PATH)
@@ -31,7 +41,11 @@ if(DOXYGEN_FOUND)
       COMMAND make -C ${CMAKE_CURRENT_BINARY_DIR}/sphinx install
   )
 
-  add_custom_target(doc
+  if(BUILD_DOXYGEN)
+    set(ALL "ALL")
+  endif()
+
+  add_custom_target(doc ${ALL}
       COMMAND make -C ${CMAKE_CURRENT_BINARY_DIR}/sphinx html
       DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/sphinx/.sphinx/venv
               guides
