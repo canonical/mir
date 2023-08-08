@@ -31,4 +31,10 @@ if(DOXYGEN_FOUND)
       DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/sphinx/.sphinx/venv
               guides
   )
+
+  install(
+      DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/sphinx/_build/
+      DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/mir-doc
+      OPTIONAL
+  )
 endif()
