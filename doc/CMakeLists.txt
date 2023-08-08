@@ -30,6 +30,8 @@ if(DOXYGEN_FOUND)
       COMMAND make -C ${CMAKE_CURRENT_BINARY_DIR}/sphinx html
       DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/sphinx/.sphinx/venv
               guides
+      BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/sphinx/_build
+                 ${CMAKE_CURRENT_BINARY_DIR}/sphinx/xml
   )
 
   install(
