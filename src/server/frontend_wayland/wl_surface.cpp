@@ -398,7 +398,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
             stream->submit_buffer(mir_buffer);
             auto const new_buffer_size = stream->stream_size();
 
-            if (!input_shape && std::make_optional(new_buffer_size) != buffer_size_)
+            if (std::make_optional(new_buffer_size) != buffer_size_)
             {
                 state.invalidate_surface_data(); // input shape needs to be recalculated for the new size
             }
