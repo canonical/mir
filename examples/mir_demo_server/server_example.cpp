@@ -125,6 +125,7 @@ try
 
     InputFilters input_filters;
     me::TestClientRunner test_runner;
+
     auto const server_exit_status = runner.run_with({
         // example options for display layout, logging and timeout
         miral::display_configuration_options,
@@ -136,6 +137,7 @@ try
             .enable(miral::WaylandExtensions::zxdg_output_manager_v1)
             .enable(miral::WaylandExtensions::zwp_virtual_keyboard_manager_v1)
             .enable(miral::WaylandExtensions::zwlr_virtual_pointer_manager_v1)
+            .enable(miral::WaylandExtensions::zwp_input_method_manager_v2)
             .enable(miral::WaylandExtensions::zwlr_screencopy_manager_v1)
             .enable(miral::WaylandExtensions::ext_session_lock_manager_v1),
         miral::set_window_management_policy<miral::MinimalWindowManager>(),
