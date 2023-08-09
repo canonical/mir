@@ -442,13 +442,12 @@ private:
               text_input_hub{text_input_hub},
               state_observer{std::make_shared<StateObserver>(this)}
         {
-            debug_string("Created input panel surface v1");
             text_input_hub->register_interest(state_observer, *wayland_executor);
             mir::shell::SurfaceSpecification spec;
             spec.state = mir_window_state_attached;
             spec.attached_edges = MirPlacementGravity::mir_placement_gravity_south;
             spec.type = MirWindowType::mir_window_type_inputmethod;
-            spec.depth_layer = MirDepthLayer::mir_depth_layer_always_on_top;
+            spec.depth_layer = MirDepthLayer::mir_depth_layer_below;
             apply_spec(spec);
         }
 
@@ -473,13 +472,18 @@ private:
 
         void show()
         {
-            remove_state_now(mir_window_state_hidden);
-            add_state_now(mir_window_state_attached);
+            debug_string("Showing");
+            mir::shell::SurfaceSpecification spec;
+            spec.state = mir_window_state_attached;
+            apply_spec(spec);
         }
 
         void hide()
         {
-            add_state_now(mir_window_state_hidden);
+            debug_string("Hiding");
+            mir::shell::SurfaceSpecification spec;
+            spec.state = mir_window_state_hidden;
+            apply_spec(spec);
         }
 
         virtual void handle_state_change(MirWindowState /*new_state*/) override {};
@@ -491,6 +495,7 @@ private:
         virtual void handle_commit() override {};
         virtual void destroy_role() const override
         {
+            debug_string("Destroying");
             wl_resource_destroy(resource);
         };
 
@@ -530,13 +535,15 @@ private:
 
         void set_toplevel(struct wl_resource* output, uint32_t /*position*/) override
         {
+            std::cout << "Set toplevel: " << output << std::endl;
+            std::cout.flush();
             mir::shell::SurfaceSpecification spec;
             auto const output_id = output_manager->output_id_for(output);
             spec.output_id = output_id.value();
             spec.state = mir_window_state_attached;
             spec.attached_edges = MirPlacementGravity::mir_placement_gravity_south;
             spec.type = MirWindowType::mir_window_type_inputmethod;
-            spec.depth_layer = MirDepthLayer::mir_depth_layer_always_on_top;
+            spec.depth_layer = MirDepthLayer::mir_depth_layer_below;
             apply_spec(spec);
         }
 
@@ -553,7 +560,8 @@ private:
 
     void get_input_panel_surface(wl_resource* id, wl_resource* surface) override
     {
-        debug_string("Get Input Panel Surface");
+        std::cout << "Created input panel surface v1: " << id << ", " << surface << std::endl;
+        std::cout.flush();
         new InputPanelSurfaceV1(
             id,
             wayland_executor,
