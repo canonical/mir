@@ -497,13 +497,16 @@ global:
 MIRAL_3.10 {
 global:
   extern "C++" {
-    miral::WindowManagerTools::window_to_select_application*;
-    miral::WindowManagerTools::swap_tree_order*;
-    miral::WindowManagerTools::send_tree_to_back*;
-    miral::MinimalWindowManager::advise_new_app*;
     miral::MinimalWindowManager::advise_delete_app*;
     miral::MinimalWindowManager::advise_focus_lost*;
+    miral::MinimalWindowManager::advise_new_app*;
     miral::WaylandExtensions::zwp_input_method_v1*;
     miral::WaylandExtensions::zwp_input_panel_v1*;
+    miral::WindowManagerTools::send_tree_to_back*;
+    miral::WindowManagerTools::swap_tree_order*;
+    miral::WindowManagerTools::window_to_select_application*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::advise_delete_app*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::advise_focus_lost*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::advise_new_app*;
   };
 } MIRAL_3.9;
