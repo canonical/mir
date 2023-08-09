@@ -15,11 +15,11 @@
  */
 
 #include "input_method_v1.h"
-#include "mir/wayland/weak.h"
 #include "mir/scene/text_input_hub.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/shell/shell.h"
 #include "mir/scene/session.h"
+#include "mir/log.h"
 #include "wl_surface.h"
 #include "output_manager.h"
 #include "window_wl_surface_role.h"
@@ -38,13 +38,14 @@ private:
     class InputMethodContextV1;
 
 public:
-    Instance(wl_resource* new_resource, std::shared_ptr<scene::TextInputHub> const text_input_hub, mf::InputMethodV1* method)
+    Instance(wl_resource* new_resource,
+         std::shared_ptr<scene::TextInputHub> const text_input_hub,
+         std::shared_ptr<Executor> const wayland_executor)
         : InputMethodV1{new_resource, Version<1>()},
-          method(method), // TODO: Do we need the method here?
           text_input_hub(text_input_hub),
           state_observer{std::make_shared<StateObserver>(this)}
     {
-        text_input_hub->register_interest(state_observer, *method->wayland_executor);
+        text_input_hub->register_interest(state_observer, *wayland_executor);
     }
 
     ~Instance()
@@ -165,7 +166,6 @@ private:
             mf::InputMethodV1::Instance* method,
             std::shared_ptr<scene::TextInputHub> const text_input_hub)
             : wayland::InputMethodContextV1(*static_cast<wayland::InputMethodV1*>(method)),
-              method(method),
               text_input_hub(text_input_hub)
         {
         }
@@ -293,7 +293,6 @@ private:
         //  preedit_string is next called.
         void preedit_styling(uint32_t index, uint32_t length, uint32_t style) override
         {
-            // TODO: TextInputV3 seemed to kill this off and we don't seem to implement it in V1 or V2.
             change.pending_change.preedit_style = { index, length, style };
             change.waiting_status = InputMethodV1ChangeWaitingStatus::preedit_string;
         }
@@ -374,7 +373,6 @@ private:
             // TODO
         }
 
-        mf::InputMethodV1::Instance* method = nullptr;
         std::shared_ptr<scene::TextInputHub> const text_input_hub;
         InputMethodV1Change change;
         static size_t constexpr max_remembered_serials{10};
@@ -382,7 +380,6 @@ private:
         uint32_t done_event_count{0};
     };
 
-    mf::InputMethodV1* method;
     std::shared_ptr<scene::TextInputHub> const text_input_hub;
     std::shared_ptr<StateObserver> const state_observer;
     bool is_activated = false;
@@ -404,7 +401,7 @@ mf::InputMethodV1::InputMethodV1(
 
 void mf::InputMethodV1::bind(wl_resource *new_resource)
 {
-    new Instance{new_resource, text_input_hub, this};
+    new Instance{new_resource, text_input_hub, wayland_executor};
 }
 
 class mf::InputPanelV1::Instance : wayland::InputPanelV1
@@ -465,19 +462,6 @@ private:
             text_input_hub->unregister_interest(*state_observer);
         }
 
-        void activated(
-            scene::TextInputStateSerial,
-            bool,
-            scene::TextInputState const&)
-        {
-            can_show = true;
-        }
-
-        void deactivated()
-        {
-            can_show = false;
-        }
-
         void show()
         {
             mir::shell::SurfaceSpecification spec;
@@ -513,16 +497,14 @@ private:
             }
 
             void activated(
-                scene::TextInputStateSerial serial,
-                bool new_input_field,
-                scene::TextInputState const& state) override
+                scene::TextInputStateSerial,
+                bool,
+                scene::TextInputState const&) override
             {
-                input_panel_surface->activated(serial, new_input_field, state);
             }
 
             void deactivated() override
             {
-                input_panel_surface->deactivated();
             }
 
             void show_input_panel() override
@@ -558,7 +540,6 @@ private:
         OutputManager* output_manager;
         std::shared_ptr<scene::TextInputHub> const text_input_hub;
         std::shared_ptr<StateObserver> const state_observer;
-        bool can_show = false;
     };
 
     void get_input_panel_surface(wl_resource* id, wl_resource* surface) override
