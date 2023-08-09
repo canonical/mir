@@ -739,7 +739,6 @@ int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
 
 void ms::BasicSurface::consume(std::shared_ptr<MirEvent const> const& event)
 {
-
     observers->input_consumed(this, event);
 }
 
