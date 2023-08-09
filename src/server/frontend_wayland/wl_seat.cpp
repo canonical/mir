@@ -260,8 +260,6 @@ void mf::WlSeat::bind(wl_resource* new_wl_seat)
     new Instance{new_wl_seat, this};
 }
 
-#include <mir/scene/session.h>
-#include <iostream>
 void mf::WlSeat::set_focus_to(WlSurface* new_surface)
 {
     auto const new_client = new_surface ? new_surface->client : nullptr;
@@ -313,7 +311,6 @@ mf::WlSeat::Instance::Instance(wl_resource* new_resource, mf::WlSeat* seat)
     send_name_event_if_supported("seat0");
 }
 
-#include <iostream>
 void mf::WlSeat::Instance::get_pointer(wl_resource* new_pointer)
 {
     auto const pointer = new WlPointer{new_pointer};

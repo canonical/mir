@@ -406,7 +406,6 @@ void mf::TextInputV2::set_preferred_language(std::string const&)
     // Ignored, input methods decide language for themselves
 }
 
-#include <iostream>
 void mf::TextInputV2::update_state(uint32_t client_serial, uint32_t reason)
 {
     if (pending_state && current_surface)

@@ -25,18 +25,11 @@
 #include "window_wl_surface_role.h"
 #include "input_method_common.h"
 #include "input-method-unstable-v1_wrapper.cpp" // TODO: Super temporary. Can't figure out why link is broken.
-#include <iostream>
 #include <deque>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mw = mir::wayland;
-
-void debug_string(const char* x)
-{
-    std::cout << x << std::endl;
-    std::cout.flush();
-}
 
 /// Handles activation and deactivation of the InputMethodContextV1
 class mf::InputMethodV1::Instance : wayland::InputMethodV1
@@ -69,7 +62,6 @@ public:
         {
             deactivated();
 
-            debug_string("Activation");
             context = std::make_shared<InputMethodContextV1>(
                 this,
                 text_input_hub);
@@ -130,7 +122,6 @@ public:
             is_activated = false;
             if (context)
             {
-                debug_string("Deactivation");
                 context->cleanup();
                 auto resource = context->resource;
                 context_on_deathbed = context;
@@ -323,8 +314,6 @@ private:
         /// \param length Length of the deletion
         void delete_surrounding_text(int32_t index, uint32_t length) override
         {
-            std::cout << index << ", " << length << std::endl;
-            std::cout.flush();
             // First, we move the cursor position to index
             change.pending_change.preedit_cursor_begin = index;
             change.pending_change.preedit_cursor_end = index;
@@ -350,7 +339,7 @@ private:
 
         void modifiers_map(struct wl_array */*map*/) override
         {
-            debug_string("Modifiers Map");
+            // TODO
         }
 
         void keysym(uint32_t serial, uint32_t time, uint32_t sym, uint32_t state, uint32_t modifiers) override
@@ -361,28 +350,28 @@ private:
 
         void grab_keyboard(struct wl_resource */*keyboard*/) override
         {
-            debug_string("Keyboard grabbing");
+            // TODO
         }
 
         void key(uint32_t /*serial*/, uint32_t /*time*/, uint32_t /*key*/, uint32_t /*state*/) override
         {
-            debug_string("Keydown");
+            // TODO
         }
 
         void modifiers(uint32_t /*serial*/, uint32_t /*mods_depressed*/, uint32_t /*mods_latched*/, uint32_t /*mods_locked*/,
             uint32_t /*group*/) override
         {
-            debug_string("Modifiers");
+            // TODO
         }
 
         void language(uint32_t /*serial*/, const std::string &/*language*/) override
         {
-            debug_string("Language");
+            // TODO
         }
 
         void text_direction(uint32_t /*serial*/, uint32_t /*direction*/) override
         {
-            debug_string("Text direction");
+            // TODO
         }
 
         mf::InputMethodV1::Instance* method = nullptr;
@@ -418,8 +407,6 @@ void mf::InputMethodV1::bind(wl_resource *new_resource)
     new Instance{new_resource, text_input_hub, this};
 }
 
-#include <iostream>
-#include <mir/scene/surface.h>
 class mf::InputPanelV1::Instance : wayland::InputPanelV1
 {
 public:
@@ -475,7 +462,6 @@ private:
 
         ~InputPanelSurfaceV1() override
         {
-            debug_string("Destroyed input panel surface v1");
             text_input_hub->unregister_interest(*state_observer);
         }
 
@@ -494,7 +480,6 @@ private:
 
         void show()
         {
-            debug_string("Showing");
             mir::shell::SurfaceSpecification spec;
             spec.state = mir_window_state_attached;
             apply_spec(spec);
@@ -502,7 +487,6 @@ private:
 
         void hide()
         {
-            debug_string("Hiding");
             mir::shell::SurfaceSpecification spec;
             spec.state = mir_window_state_hidden;
             apply_spec(spec);
@@ -517,7 +501,6 @@ private:
         virtual void handle_commit() override {};
         virtual void destroy_role() const override
         {
-            debug_string("Destroying");
             wl_resource_destroy(resource);
         };
 
@@ -557,8 +540,6 @@ private:
 
         void set_toplevel(struct wl_resource* output, uint32_t /*position*/) override
         {
-            std::cout << "Set toplevel: " << output << std::endl;
-            std::cout.flush();
             mir::shell::SurfaceSpecification spec;
             auto const output_id = output_manager->output_id_for(output);
             spec.output_id = output_id.value();
@@ -582,8 +563,6 @@ private:
 
     void get_input_panel_surface(wl_resource* id, wl_resource* surface) override
     {
-        std::cout << "Created input panel surface v1: " << id << ", " << surface << std::endl;
-        std::cout.flush();
         new InputPanelSurfaceV1(
             id,
             wayland_executor,
