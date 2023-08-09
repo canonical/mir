@@ -100,6 +100,15 @@ auto wayland_to_mir_content_purpose(uint32_t purpose) -> ms::TextInputContentPur
         BOOST_THROW_EXCEPTION(std::invalid_argument{"Invalid text content purpose " + std::to_string(purpose)});
     }
 }
+
+enum TextInputV2UpdateState
+{
+    text_input_v2_update_state_change,
+    text_input_v2_update_state_full,
+    text_input_v2_update_state_reset,
+    text_input_v2_update_state_enter
+};
+
 }
 
 namespace mir
@@ -397,12 +406,22 @@ void mf::TextInputV2::set_preferred_language(std::string const&)
     // Ignored, input methods decide language for themselves
 }
 
+#include <iostream>
 void mf::TextInputV2::update_state(uint32_t client_serial, uint32_t reason)
 {
-    (void)reason;
-
     if (pending_state && current_surface)
     {
+        // We can attribute any simple change to the input_method while reserving any fullter change to "other"
+        switch (reason)
+        {
+            case text_input_v2_update_state_change:
+                pending_state->change_cause = mir::scene::TextInputChangeCause::input_method;
+                break;
+            default:
+                pending_state->change_cause = mir::scene::TextInputChangeCause::other;
+                break;
+        }
+
         auto const hub_serial = ctx->text_input_hub->set_handler_state(handler, on_new_input_field, *pending_state);
         state_serials.push_back({client_serial, hub_serial});
         while (state_serials.size() > max_remembered_serials)

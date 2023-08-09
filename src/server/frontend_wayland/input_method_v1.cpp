@@ -79,6 +79,23 @@ public:
             context->send_reset_event();
         }
 
+        if (cached_state.change_cause != state.change_cause)
+        {
+            cached_state.change_cause = state.change_cause;
+            if (cached_state.change_cause.has_value())
+            {
+                switch (cached_state.change_cause.value())
+                {
+                    case mir::scene::TextInputChangeCause::other:
+                        context->reset_pending_change();
+                        context->send_reset_event();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
         // Notify about the surrounding text changing
         if (cached_state.surrounding_text != state.surrounding_text ||
             cached_state.cursor != state.cursor ||
@@ -183,6 +200,11 @@ private:
             {
                 // TODO: Commit the fallback
             }
+        }
+
+        void reset_pending_change()
+        {
+            change = InputMethodV1Change();
         }
 
     private:
