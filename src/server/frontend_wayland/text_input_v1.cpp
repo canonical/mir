@@ -363,11 +363,13 @@ void TextInputV1::deactivate(wl_resource *seat)
 void TextInputV1::show_input_panel()
 {
     commit_state(0);
+    ctx->text_input_hub->show_input_panel();
 }
 
 void TextInputV1::hide_input_panel()
 {
     ctx->text_input_hub->deactivate_handler(handler);
+    ctx->text_input_hub->hide_input_panel();
 }
 
 void TextInputV1::reset()
