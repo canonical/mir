@@ -493,3 +493,15 @@ global:
     miral::WindowSpecification::visible_on_lock_screen*;
   };
 } MIRAL_3.8;
+
+MIRAL_3.10 {
+global:
+  extern "C++" {
+    miral::WindowManagerTools::window_to_select_application*;
+    miral::WindowManagerTools::swap_tree_order*;
+    miral::WindowManagerTools::send_tree_to_back*;
+    miral::MinimalWindowManager::advise_new_app*;
+    miral::MinimalWindowManager::advise_delete_app*;
+    miral::MinimalWindowManager::advise_focus_lost*;
+  };
+} MIRAL_3.9;

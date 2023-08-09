@@ -24,6 +24,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 
 namespace mir
 {
@@ -156,6 +157,10 @@ public:
     /// make the prev surface active within the active application
     void focus_prev_within_application();
 
+    /// If possible, returns the application window to select, otherwise `std::nullopt`
+    /// \remark Since MirAL 3.10
+    auto window_to_select_application(const Application) const -> std::optional<Window>;
+
     /// Find the topmost window at the cursor
     auto window_at(mir::geometry::Point cursor) const -> Window;
 
@@ -168,6 +173,16 @@ public:
 
     /// Raise window and all its children
     void raise_tree(Window const& root);
+
+    /// Swaps the position of the windows in regards to Z order
+    /// \param first
+    /// \param second
+    /// \remark SinceMirAL 3.10
+    void swap_tree_order(Window const& first, Window const& second);
+
+    /// Moves the window to the bottom of the Z order
+    /// remark Since MirAL 3.10
+    void send_tree_to_back(Window const& root);
 
     /** Start drag and drop. The handle will be passed to the client which can
      * then use it to talk to the whatever service is being used to support drag

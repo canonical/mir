@@ -53,6 +53,12 @@ public:
 
     virtual void raise(SurfaceSet const& surfaces) = 0;
 
+    /// Swaps the position of elements in first with the elements in second.
+    /// Assumes that first and second do not have any overlap.
+    virtual void swap_z_order(SurfaceSet const& first, SurfaceSet const& second) = 0;
+
+    virtual void send_to_back(SurfaceSet const& surfaces) = 0;
+
 protected:
     FocusController() = default;
     FocusController(FocusController const&) = delete;

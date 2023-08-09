@@ -53,3 +53,13 @@ auto msh::SurfaceStackWrapper::surface_at(geometry::Point point) const -> std::s
 {
     return wrapped->surface_at(point);
 }
+
+void msh::SurfaceStackWrapper::swap_z_order(scene::SurfaceSet const& first, scene::SurfaceSet const& second)
+{
+    wrapped->swap_z_order(first, second);
+}
+
+void msh::SurfaceStackWrapper::send_to_back(const scene::SurfaceSet &surfaces)
+{
+    wrapped->send_to_back(surfaces);
+}

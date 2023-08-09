@@ -79,6 +79,12 @@ public:
     /// Raises newly focused window
     void advise_focus_gained(WindowInfo const& window_info) override;
 
+    void advise_focus_lost(WindowInfo const& window_info) override;
+
+    void advise_new_app(miral::ApplicationInfo& app_info) override;
+
+    void advise_delete_app(miral::ApplicationInfo const& app_info) override;
+
 protected:
     WindowManagerTools tools;
 

@@ -97,6 +97,12 @@ struct StubSurfaceStack : public msh::SurfaceStack
     {
         return std::shared_ptr<ms::Surface>{};
     }
+    void swap_z_order(ms::SurfaceSet const&, ms::SurfaceSet const&) override
+    {
+    }
+    void send_to_back(ms::SurfaceSet const&) override
+    {
+    }
 };
 
 struct ApplicationSession : public testing::Test

@@ -881,6 +881,46 @@ void miral::BasicWindowManager::focus_prev_within_application()
     }
 }
 
+auto miral::BasicWindowManager::window_to_select_application(const Application application) const -> std::optional<Window>
+{
+    std::optional<Window> result = std::nullopt;
+    auto const prev_window = active_window();
+
+    // We return "false" in the enumeration when we set "result" to a valid Window
+    // because we only stop looking when we return false from the enumerator.
+    mru_active_windows.enumerate([&](miral::Window& window)
+    {
+        // We don't want to select a different application
+        if (window.application() != application)
+             return true;
+
+        // Check if the previous window has to remain focused
+        auto const prev_windows_focus_mode = prev_window ? info_for(prev_window).focus_mode() : mir_focus_mode_focusable;
+        if (prev_windows_focus_mode == mir_focus_mode_grabbing)
+        {
+            return true;
+        }
+
+        // Check if the new window selection has selection disabled
+        auto& desired_window_selection = info_for(window);
+        if (desired_window_selection.focus_mode() == mir_focus_mode_disabled)
+        {
+            return true;
+        }
+
+        // Check if we can activate it at all.
+        if (desired_window_selection.can_be_active() && desired_window_selection.state() != mir_window_state_hidden)
+        {
+            result = window;
+            return false;
+        }
+
+        return true;
+    });
+
+    return result;
+}
+
 auto miral::BasicWindowManager::window_at(geometry::Point cursor) const
 -> Window
 {
@@ -898,6 +938,36 @@ auto miral::BasicWindowManager::active_application_zone() -> Zone
     return active_display_area()->application_zone;
 }
 
+auto miral::BasicWindowManager::for_each_window_in_info(
+    WindowInfo const& info,
+    std::function<void(const Window&)> func
+) -> void
+{
+    std::function<void(WindowInfo const& info)> const iterate_children =
+        [&](WindowInfo const& info)
+        {
+            for (auto const& child : info.children())
+            {
+                func(child);
+            }
+        };
+
+    func(info.window());
+    iterate_children(info);
+}
+
+auto miral::BasicWindowManager::collect_windows(const miral::WindowInfo &info) -> SurfaceSet
+{
+    SurfaceSet windows;
+
+    for_each_window_in_info(info, [&](Window const& window)
+    {
+        windows.insert(window);
+    });
+
+    return windows;
+}
+
 void miral::BasicWindowManager::raise_tree(Window const& root)
 {
     auto const& info = info_for(root);
@@ -905,23 +975,40 @@ void miral::BasicWindowManager::raise_tree(Window const& root)
     if (auto parent = info.parent())
         raise_tree(parent);
 
-    std::vector<Window> windows;
+    std::vector<Window> raised_windows;
+    for_each_window_in_info(info, [&](Window const& window)
+    {
+        raised_windows.push_back(window);
+    });
+    policy->advise_raise(raised_windows);
+    focus_controller->raise({raised_windows.begin(), raised_windows.end()});
+}
 
-    std::function<void(WindowInfo const& info)> const add_children =
-        [&,this](WindowInfo const& info)
-            {
-                for (auto const& child : info.children())
-                {
-                    windows.push_back(child);
-                    add_children(info_for(child));
-                }
-            };
+void miral::BasicWindowManager::swap_tree_order(Window const& first, Window const& second)
+{
+    auto const& info_first = info_for(first);
+    auto const& info_second = info_for(second);
 
-    windows.push_back(root);
-    add_children(info);
+    auto const& first_windows = collect_windows(info_first);
+    auto const& second_windows = collect_windows(info_second);
+    for (auto w : first_windows)
+        if (second_windows.count(w))
+        {
+            log_error("Unable to swap tree order due to overlap");
+            return;
+        }
 
-    policy->advise_raise(windows);
-    focus_controller->raise({begin(windows), end(windows)});
+    focus_controller->swap_z_order(first_windows, second_windows);
+}
+
+void miral::BasicWindowManager::send_tree_to_back(Window const& root)
+{
+    auto const& info = info_for(root);
+
+    if (auto parent = info.parent())
+        raise_tree(parent);
+
+    focus_controller->send_to_back(collect_windows(info));
 }
 
 void miral::BasicWindowManager::move_tree(miral::WindowInfo& root, mir::geometry::Displacement movement)

@@ -425,6 +425,106 @@ void ms::SurfaceStack::raise(SurfaceSet const& ss)
     }
 }
 
+void ms::SurfaceStack::swap_z_order(SurfaceSet const& first, SurfaceSet const& second)
+{
+    {
+        RecursiveWriteLock ul(guard);
+        for (auto& layer : surface_layers)
+        {
+            // The goal is to swap the first set with the second set such that their Z-order is swapped.
+
+            // First, find the start and end of the range that we want to swap
+            auto swap_begin = layer.begin();
+            auto swap_end = layer.end();
+            size_t num_first_found = 0;
+            size_t num_second_found = 0;
+            bool first_to_front = false;
+            for (auto it = layer.begin(); it != layer.end(); it++)
+            {
+                // Once we've found them all, then we have the whole range to sort across
+                if (num_first_found == first.size() && num_second_found == second.size())
+                {
+                    swap_end = it;
+                    break;
+                }
+
+                // Find the start position and count how many we've found
+                bool in_first = first.count(*it) > 0;
+                bool in_second = second.contains(*it) > 0;
+                if (in_first)
+                {
+                    if (!num_first_found && !num_second_found)
+                        swap_begin = it;
+
+                    num_first_found++;
+                }
+                else if (in_second)
+                {
+                    if (!num_first_found && !num_second_found)
+                    {
+                        first_to_front = true;
+                        swap_begin = it;
+                    }
+
+                    num_second_found++;
+                }
+            }
+
+            // Finally, move the to_front items to the front of the group and the to_back to the back of the group
+            auto const& to_front = first_to_front ? first : second;
+            auto const& to_back = first_to_front ? second : first;
+            std::stable_sort(swap_begin, swap_end, [&](std::weak_ptr<Surface> const& s1, std::weak_ptr<Surface> const& s2)
+            {
+                if (to_front.count(s1))
+                    return to_front.count(s2) == 0;
+                else if (to_back.count(s1) || to_front.count(s2))
+                    return false;
+                else
+                    return to_back.count(s2) == 0;
+            });
+        }
+    }
+
+    observers.surfaces_reordered(first);
+    observers.surfaces_reordered(second);
+}
+
+void ms::SurfaceStack::send_to_back(const mir::scene::SurfaceSet &ss)
+{
+    bool surfaces_reordered{false};
+    {
+        RecursiveWriteLock ul(guard);
+        for (auto& layer : surface_layers)
+        {
+            // Only reorder if "layer" contains at least one surface
+            // in "ss" and the surface(s) are not already at the beginning
+            auto it = layer.begin();
+            for (; it != layer.end(); it++)
+                if (!ss.count(*it))
+                    break;
+
+            bool needs_reorder = false;
+            for (; it != layer.end(); it++)
+                if (ss.count(*it))
+                    needs_reorder = true;
+
+            if (needs_reorder)
+            {
+                // "Back" in Z-order will be the front of the list.
+                std::stable_partition(
+                    begin(layer), end(layer),
+                    [&](std::weak_ptr<Surface> const& s) { return ss.count(s); });
+                surfaces_reordered = true;
+            }
+        }
+    }
+
+    if (surfaces_reordered)
+    {
+        observers.surfaces_reordered(ss);
+    }
+}
+
 void ms::SurfaceStack::create_rendering_tracker_for(std::shared_ptr<Surface> const& surface)
 {
     auto const tracker = std::make_shared<RenderingTracker>(surface);

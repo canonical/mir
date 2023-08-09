@@ -16,6 +16,8 @@
 
 #include <miral/minimal_window_manager.h>
 #include <miral/toolkit_event.h>
+#include <miral/application_info.h>
+#include "application_selector.h"
 #include <linux/input.h>
 #include <gmpxx.h>
 
@@ -66,7 +68,7 @@ auto touch_center(MirTouchEvent const* event) -> mir::geometry::Point
 struct miral::MinimalWindowManager::Impl
 {
     Impl(WindowManagerTools const& tools, MirInputEventModifier pointer_drag_modifier) :
-        tools{tools}, pointer_drag_modifier{pointer_drag_modifier} {}
+        tools{tools}, application_selector(tools), pointer_drag_modifier{pointer_drag_modifier} {}
     WindowManagerTools tools;
 
     Gesture gesture = Gesture::none;
@@ -78,6 +80,9 @@ struct miral::MinimalWindowManager::Impl
     Size resize_size;
     Point old_cursor{};
     Point old_touch{};
+
+    /// Responsible for managing Alt + Tab behavior.
+    ApplicationSelector application_selector;
 
     bool prepare_for_gesture(WindowInfo& window_info, Point input_pos, Gesture gesture);
 
@@ -159,7 +164,7 @@ bool miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const* 
             return true;
 
         case KEY_TAB:
-            tools.focus_next_application();
+            self->application_selector.next();
             return true;
 
         case KEY_GRAVE:
@@ -176,7 +181,7 @@ bool miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const* 
         switch (mir_keyboard_event_scan_code(event))
         {
         case KEY_TAB:
-            tools.focus_prev_application();
+            self->application_selector.prev();
             return true;
 
         case KEY_GRAVE:
@@ -184,6 +189,18 @@ bool miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const* 
             return true;
 
         default:;
+        }
+    }
+
+    if (action == mir_keyboard_action_up)
+    {
+        switch (mir_keyboard_event_scan_code(event))
+        {
+            case KEY_LEFTALT:
+                if (self->application_selector.complete() != nullptr)
+                    return true;
+                break;
+            default:;
         }
     }
 
@@ -263,9 +280,25 @@ auto miral::MinimalWindowManager::confirm_inherited_move(WindowInfo const& windo
     return {window_info.window().top_left()+movement, window_info.window().size()};
 }
 
+void miral::MinimalWindowManager::advise_new_app(miral::ApplicationInfo& app_info)
+{
+    self->application_selector.advise_new_app(app_info.application());
+}
+
 void miral::MinimalWindowManager::advise_focus_gained(WindowInfo const& window_info)
 {
     tools.raise_tree(window_info.window());
+    self->application_selector.advise_focus_gained(window_info);
+}
+
+void  miral::MinimalWindowManager::advise_focus_lost(const miral::WindowInfo &window_info)
+{
+    self->application_selector.advise_focus_lost(window_info);
+}
+
+void miral::MinimalWindowManager::advise_delete_app(miral::ApplicationInfo const &app_info)
+{
+    self->application_selector.advise_delete_app(app_info.application());
 }
 
 bool miral::MinimalWindowManager::Impl::prepare_for_gesture(

@@ -14,6 +14,7 @@ add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="miral" MIRAL_ENABLE_DEPRECAT
 add_library(miral-internal STATIC
     active_outputs.cpp                   active_outputs.h
     application_info_internal.cpp        application_info_internal.h
+    application_selector.cpp             application_selector.h
     basic_window_manager.cpp             basic_window_manager.h window_manager_tools_implementation.h
     system_compositor_window_manager.cpp system_compositor_window_manager.h
     display_configuration_listeners.cpp  display_configuration_listeners.h

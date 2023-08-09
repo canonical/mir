@@ -36,6 +36,7 @@
 #include <boost/bimap.hpp>
 #include <boost/bimap/multiset_of.hpp>
 #include <optional>
+#include <functional>
 
 #include <map>
 #include <mutex>
@@ -171,12 +172,16 @@ public:
     void focus_next_within_application() override;
     void focus_prev_within_application() override;
 
+    auto window_to_select_application(const Application) const -> std::optional<Window> override;
+
     auto window_at(mir::geometry::Point cursor) const -> Window override;
 
     auto active_output() -> mir::geometry::Rectangle const override;
     auto active_application_zone() -> Zone override;
 
     void raise_tree(Window const& root) override;
+    void swap_tree_order(Window const& first, Window const& second) override;
+    void send_tree_to_back(Window const& root) override;
     void modify_window(WindowInfo& window_info, WindowSpecification const& modifications) override;
 
     auto info_for_window_id(std::string const& id) const -> WindowInfo& override;
@@ -320,6 +325,11 @@ private:
     void advise_output_end() override;
     /// Updates the application zones of all display areas and moves attached windows as needed
     void update_application_zones_and_attached_windows();
+
+    /// Iterates each child window of the provided WindowInfo
+    void for_each_window_in_info(WindowInfo const& info, std::function<void(const Window&)> func);
+    /// Gathers windows provided WindowInfo
+    auto collect_windows(WindowInfo const& info) -> SurfaceSet;
 };
 }
 
