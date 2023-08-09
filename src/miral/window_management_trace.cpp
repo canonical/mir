@@ -576,12 +576,39 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
+auto miral::WindowManagementTrace::window_to_select_application(Application const app) const -> std::optional<Window>
+try {
+    log_input();
+    mir::log_info("%s app=%s", __func__, dump_of(app).c_str());
+    trace_count++;
+    return wrapped.window_to_select_application(app);
+}
+MIRAL_TRACE_EXCEPTION
+
 void miral::WindowManagementTrace::raise_tree(miral::Window const& root)
 try {
     log_input();
     mir::log_info("%s root=%s", __func__, dump_of(root).c_str());
     trace_count++;
     wrapped.raise_tree(root);
+}
+MIRAL_TRACE_EXCEPTION
+
+void miral::WindowManagementTrace::swap_tree_order(Window const& first, Window const& second)
+try {
+    log_input();
+    mir::log_info("%s first=%s second=%s", __func__, dump_of(first).c_str(), dump_of(second).c_str());
+    trace_count++;
+    wrapped.swap_tree_order(first, second);
+}
+MIRAL_TRACE_EXCEPTION
+
+void miral::WindowManagementTrace::send_tree_to_back(const miral::Window &root)
+try {
+    log_input();
+    mir::log_info("%s root=%s", __func__, dump_of(root).c_str());
+    trace_count++;
+    wrapped.send_tree_to_back(root);
 }
 MIRAL_TRACE_EXCEPTION
 

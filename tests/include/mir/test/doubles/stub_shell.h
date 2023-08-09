@@ -87,6 +87,14 @@ struct StubShell : public shell::Shell
     void raise(shell::SurfaceSet const& /*surfaces*/) override
     {
     }
+
+    void swap_z_order(shell::SurfaceSet const& /*first*/, shell::SurfaceSet const& /*second*/) override
+    {
+    }
+
+    void send_to_back(shell::SurfaceSet const& /*surfaces*/) override
+    {
+    }
     /// @}
 
     /// Overrides from shell::Shell

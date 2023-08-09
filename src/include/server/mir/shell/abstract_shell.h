@@ -140,6 +140,8 @@ public:
     auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> override;
 
     void raise(SurfaceSet const& surfaces) override;
+    void swap_z_order(SurfaceSet const& first, SurfaceSet const& second) override;
+    void send_to_back(SurfaceSet const& surfaces) override;
 /** @} */
 
     void add_display(geometry::Rectangle const& area) override;

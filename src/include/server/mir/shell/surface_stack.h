@@ -51,6 +51,10 @@ public:
 
     virtual auto surface_at(geometry::Point) const -> std::shared_ptr<scene::Surface> = 0;
 
+    virtual void swap_z_order(scene::SurfaceSet const& first, scene::SurfaceSet const& second) = 0;
+
+    virtual void send_to_back(scene::SurfaceSet const& surfaces) = 0;
+
 protected:
     SurfaceStack() = default;
     virtual ~SurfaceStack() = default;

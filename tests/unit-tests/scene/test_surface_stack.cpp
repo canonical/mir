@@ -1374,3 +1374,88 @@ TEST_F(SurfaceStack, when_screen_is_locked_surface_ignores_surface)
     EXPECT_THAT(stack.surface_at(cursor_position).get(), IsNull());
     handle->allow_to_be_dropped();
 }
+
+TEST_F(SurfaceStack, surfaces_that_are_sent_to_back_appear_at_the_front_of_the_list)
+{
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
+
+    NiceMock<MockSceneObserver> observer;
+    stack.add_observer(mt::fake_shared(observer));
+
+    EXPECT_CALL(
+        observer,
+        surfaces_reordered(UnorderedElementsAre(LockedEq(stub_surface2), LockedEq(stub_surface3))))
+        .Times(1);
+
+    stack.send_to_back({stub_surface2, stub_surface3});
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementForStream(stub_buffer_stream2),
+            SceneElementForStream(stub_buffer_stream3),
+            SceneElementForStream(stub_buffer_stream1)));
+
+    Mock::VerifyAndClearExpectations(&observer);
+}
+
+TEST_F(SurfaceStack, single_surfaces_can_be_swapped)
+{
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
+
+    NiceMock<MockSceneObserver> observer;
+    stack.add_observer(mt::fake_shared(observer));
+
+    EXPECT_CALL(
+        observer,
+        surfaces_reordered(UnorderedElementsAre(LockedEq(stub_surface1))))
+        .Times(1);
+
+    EXPECT_CALL(
+        observer,
+        surfaces_reordered(UnorderedElementsAre(LockedEq(stub_surface2))))
+        .Times(1);
+
+    stack.swap_z_order({stub_surface1}, {stub_surface2});
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementForStream(stub_buffer_stream2),
+            SceneElementForStream(stub_buffer_stream1),
+            SceneElementForStream(stub_buffer_stream3)));
+
+    Mock::VerifyAndClearExpectations(&observer);
+}
+
+TEST_F(SurfaceStack, multiple_surfaces_can_be_swapped)
+{
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
+
+    NiceMock<MockSceneObserver> observer;
+    stack.add_observer(mt::fake_shared(observer));
+
+    EXPECT_CALL(
+        observer,
+        surfaces_reordered(UnorderedElementsAre(LockedEq(stub_surface1), LockedEq(stub_surface2))))
+        .Times(1);
+
+    EXPECT_CALL(
+        observer,
+        surfaces_reordered(UnorderedElementsAre(LockedEq(stub_surface3))))
+        .Times(1);
+
+    stack.swap_z_order({stub_surface1, stub_surface2}, {stub_surface3});
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementForStream(stub_buffer_stream3),
+            SceneElementForStream(stub_buffer_stream1),
+            SceneElementForStream(stub_buffer_stream2)));
+
+    Mock::VerifyAndClearExpectations(&observer);
+}

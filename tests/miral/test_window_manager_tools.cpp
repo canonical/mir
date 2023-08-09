@@ -58,6 +58,10 @@ struct StubFocusController : mir::shell::FocusController
 
     virtual auto surface_at(mir::geometry::Point /*cursor*/) const -> std::shared_ptr<mir::scene::Surface> override
         { return {}; }
+
+    void swap_z_order(mir::shell::SurfaceSet const& /*first*/, mir::shell::SurfaceSet const& /*second*/) override {}
+
+    void send_to_back(mir::shell::SurfaceSet const& /*windows*/) override {}
 };
 
 struct StubDisplayLayout : mir::shell::DisplayLayout
@@ -364,4 +368,26 @@ void mt::TestWindowManagerTools::notify_configuration_applied(
     std::shared_ptr<graphics::DisplayConfiguration const> display_config)
 {
     self->display_configuration_observer.notify_configuration_applied(display_config);
+}
+
+auto mt::TestWindowManagerTools::create_and_select_window(
+    mir::shell::SurfaceSpecification creation_parameters) -> miral::Window
+{
+    miral::Window result;
+
+    EXPECT_CALL(*window_manager_policy, advise_new_window(testing::_))
+        .WillOnce(
+            testing::Invoke(
+                [&result](miral::WindowInfo const& window_info)
+                { result = window_info.window(); }));
+
+    auto session_to_add = std::make_shared<StubStubSession>();
+    basic_window_manager.add_session(session_to_add);
+    basic_window_manager.add_surface(session_to_add, creation_parameters, &create_surface);
+    basic_window_manager.select_active_window(result);
+
+    // Clear the expectations used to capture parent & child
+    testing::Mock::VerifyAndClearExpectations(window_manager_policy);
+
+    return result;
 }

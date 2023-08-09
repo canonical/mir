@@ -426,3 +426,10 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"miral::WindowInfo::visible_on_lock_screen() const@MIRAL_3.9" 3.9.0
  (c++)"miral::WindowSpecification::visible_on_lock_screen() const@MIRAL_3.9" 3.9.0
  (c++)"miral::WindowSpecification::visible_on_lock_screen()@MIRAL_3.9" 3.9.0
+ MIRAL_3.10@MIRAL_3.10 3.10.0
+ (c++)"miral::MinimalWindowManager::advise_delete_app(miral::ApplicationInfo const&)@MIRAL_3.10" 3.10.0
+ (c++)"miral::MinimalWindowManager::advise_focus_lost(miral::WindowInfo const&)@MIRAL_3.10" 3.10.0
+ (c++)"miral::MinimalWindowManager::advise_new_app(miral::ApplicationInfo&)@MIRAL_3.10" 3.10.0
+ (c++)"miral::WindowManagerTools::send_tree_to_back(miral::Window const&)@MIRAL_3.10" 3.10.0
+ (c++)"miral::WindowManagerTools::swap_tree_order(miral::Window const&, miral::Window const&)@MIRAL_3.10" 3.10.0
+ (c++)"miral::WindowManagerTools::window_to_select_application(std::shared_ptr<mir::scene::Session>) const@MIRAL_3.10" 3.10.0
