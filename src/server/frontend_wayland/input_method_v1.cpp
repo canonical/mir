@@ -145,12 +145,14 @@ private:
             bool new_input_field,
             scene::TextInputState const& state) override
         {
-            input_method->activated(serial, new_input_field, state);
+            if (input_method)
+                input_method->activated(serial, new_input_field, state);
         }
 
         void deactivated() override
         {
-            input_method->deactivated();
+            if (input_method)
+                input_method->deactivated();
         }
 
         Instance* const input_method;
