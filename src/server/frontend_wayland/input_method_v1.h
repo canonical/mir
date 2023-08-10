@@ -52,7 +52,6 @@ private:
     class Instance;
     void bind(wl_resource *new_resource) override;
 
-    wl_display* display;
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<scene::TextInputHub> const text_input_hub;
 };

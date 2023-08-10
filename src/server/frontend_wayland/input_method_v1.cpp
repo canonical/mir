@@ -170,10 +170,6 @@ private:
         {
         }
 
-        ~InputMethodContextV1()
-        {
-        }
-
         void add_serial(ms::TextInputStateSerial serial)
         {
             send_commit_state_event(done_event_count);
@@ -199,6 +195,8 @@ private:
         }
 
     private:
+
+        /// Certain actions "wait" for another action to happen before being committed.
         enum class InputMethodV1ChangeWaitingStatus
         {
             none,
@@ -219,7 +217,6 @@ private:
                 fallback_commit.clear();
             }
 
-            /// TODO: Verify if this behavior is correct
             /// If a change is waiting to be sent to the text input BUT
             /// we encounter another change beforehand, we will nullify the
             /// pending change.
@@ -393,7 +390,6 @@ mf::InputMethodV1::InputMethodV1(
     std::shared_ptr<Executor> const wayland_executor,
     std::shared_ptr<scene::TextInputHub> const text_input_hub)
     : Global(display, Version<1>()),
-      display(display),
       wayland_executor(wayland_executor),
       text_input_hub(text_input_hub)
 {
@@ -404,6 +400,7 @@ void mf::InputMethodV1::bind(wl_resource *new_resource)
     new Instance{new_resource, text_input_hub, wayland_executor};
 }
 
+/// Provides access to the InputPanelSurface when the get_input_panel_surface action is triggered
 class mf::InputPanelV1::Instance : wayland::InputPanelV1
 {
 public:
@@ -450,10 +447,8 @@ private:
         {
             text_input_hub->register_interest(state_observer, *wayland_executor);
             mir::shell::SurfaceSpecification spec;
-            spec.state = mir_window_state_attached;
-            spec.attached_edges = MirPlacementGravity::mir_placement_gravity_south;
             spec.type = MirWindowType::mir_window_type_inputmethod;
-            spec.depth_layer = MirDepthLayer::mir_depth_layer_below;
+            spec.depth_layer = MirDepthLayer::mir_depth_layer_always_on_top;
             apply_spec(spec);
         }
 
@@ -464,16 +459,14 @@ private:
 
         void show()
         {
-            mir::shell::SurfaceSpecification spec;
-            spec.state = mir_window_state_attached;
-            apply_spec(spec);
+            remove_state_now(mir_window_state_hidden);
+            add_state_now(mir_window_state_attached);
         }
 
         void hide()
         {
-            mir::shell::SurfaceSpecification spec;
-            spec.state = mir_window_state_hidden;
-            apply_spec(spec);
+            add_state_now(mir_window_state_hidden);
+            remove_state_now(mir_window_state_attached);
         }
 
         virtual void handle_state_change(MirWindowState /*new_state*/) override {};
@@ -499,13 +492,9 @@ private:
             void activated(
                 scene::TextInputStateSerial,
                 bool,
-                scene::TextInputState const&) override
-            {
-            }
+                scene::TextInputState const&) override {}
 
-            void deactivated() override
-            {
-            }
+            void deactivated() override {}
 
             void show_input_panel() override
             {
@@ -520,21 +509,23 @@ private:
             InputPanelSurfaceV1* const input_panel_surface;
         };
 
-        void set_toplevel(struct wl_resource* output, uint32_t /*position*/) override
+        void set_toplevel(struct wl_resource* output, uint32_t position) override
         {
             mir::shell::SurfaceSpecification spec;
             auto const output_id = output_manager->output_id_for(output);
             spec.output_id = output_id.value();
-            spec.state = mir_window_state_attached;
-            spec.attached_edges = MirPlacementGravity::mir_placement_gravity_south;
-            spec.type = MirWindowType::mir_window_type_inputmethod;
-            spec.depth_layer = MirDepthLayer::mir_depth_layer_below;
+            spec.surface_placement_gravity = mir_placement_gravity_south;
+            if (position == Position::center_bottom)
+                spec.attached_edges = MirPlacementGravity::mir_placement_gravity_south;
+            else
+                log_warning("Invalid position: %u", position);
             apply_spec(spec);
+            show();
         }
 
         void set_overlay_panel() override
         {
-            // TODO: Doesn't seemed to be called by maliit
+            // TODO: Unused by maliit-keyboard
         }
 
         OutputManager* output_manager;
