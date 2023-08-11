@@ -65,6 +65,9 @@ public:
             is_activated = true;
             cached_state = ms::TextInputState{};
             send_activate_event(context->resource);
+
+            // According to maliit's implementation, this clears the preedit string state
+            // and the cursor position state on their side of things
             context->send_reset_event();
         }
 
@@ -445,6 +448,7 @@ private:
         {
             text_input_hub->register_interest(state_observer, *wayland_executor);
             mir::shell::SurfaceSpecification spec;
+            spec.state = mir_window_state_hidden;
             spec.type = MirWindowType::mir_window_type_inputmethod;
             spec.depth_layer = MirDepthLayer::mir_depth_layer_always_on_top;
             apply_spec(spec);
@@ -512,7 +516,6 @@ private:
             mir::shell::SurfaceSpecification spec;
             auto const output_id = output_manager->output_id_for(output);
             spec.output_id = output_id.value();
-            spec.surface_placement_gravity = mir_placement_gravity_south;
             if (position == Position::center_bottom)
                 spec.attached_edges = MirPlacementGravity::mir_placement_gravity_south;
             else
