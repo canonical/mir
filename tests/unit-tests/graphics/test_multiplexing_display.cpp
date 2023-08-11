@@ -912,7 +912,7 @@ TEST(MultiplexingDisplay, output_name_does_not_contain_card_id_when_only_one_car
         });
 }
 
-TEST(MultiplexingDisplay, when_multiple_cards_exist_outputs_are_numbered_by_card)
+TEST(MultiplexingDisplay, when_additional_cards_exist_their_outputs_are_numbered_by_card)
 {
     std::vector<std::vector<mg::DisplayConfigurationOutput>> display_confs;
     std::vector<DisplayConfigurationOutputGenerator> gens;
@@ -966,14 +966,14 @@ TEST(MultiplexingDisplay, when_multiple_cards_exist_outputs_are_numbered_by_card
     EXPECT_THAT(
         output_names,
         UnorderedElementsAreArray({
+            "DVI-I-1",
+            "DVI-I-2",
             "DVI-I-1-1",
             "DVI-I-1-2",
             "DVI-I-2-1",
             "DVI-I-2-2",
-            "DVI-I-3-1",
-            "DVI-I-3-2",
+            "HDMI-A-1",
             "HDMI-A-1-1",
-            "HDMI-A-2-1",
-            "HDMI-A-3-1"})
+            "HDMI-A-2-1"})
         );
 }

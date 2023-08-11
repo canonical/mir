@@ -186,16 +186,16 @@ private:
 
         static auto name_for_output(
             mg::DisplayConfigurationOutput const& output,
-            std::map<mg::DisplayConfigurationCardId, std::map<mg::DisplayConfigurationOutputType, unsigned>>& output_counts,
-            bool multiple_cards) -> std::string
+            std::map<mg::DisplayConfigurationCardId, std::map<mg::DisplayConfigurationOutputType, unsigned>>& output_counts)
+            -> std::string
         {
             output_counts[output.card_id][output.type]++;    // The map will default-initialise any as-yet-unseen cards to the empty map
                                                              // and any as-yet-unseen output types to 0.
             std::stringstream name;
             name << mir::output_type_name(static_cast<unsigned>(output.type));
-            if (multiple_cards)
+            if (output.card_id.as_value())
             {
-                name << "-" << output.card_id.as_value() + 1;
+                name << "-" << output.card_id.as_value();
             }
             name << "-" << output_counts[output.card_id][output.type];
             return name.str();
@@ -217,7 +217,7 @@ private:
                         backing_store.push_back(output);
                         backing_store.back().id = mg::DisplayConfigurationOutputId{next_id};
                         backing_store.back().card_id = mg::DisplayConfigurationCardId{card_index};
-                        backing_store.back().name = name_for_output(backing_store.back(), output_type_counts, confs.size() > 1);
+                        backing_store.back().name = name_for_output(backing_store.back(), output_type_counts);
                         next_id++;
                         outputs.emplace_back(
                             component,
