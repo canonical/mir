@@ -20,6 +20,7 @@
 #include <boost/throw_exception.hpp>
 
 #include "mir/geometry/forward.h"
+#include "mir/output_type_names.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/test/doubles/mock_display.h"
@@ -105,6 +106,7 @@ MATCHER_P(OutputConfigurationEqualIgnoringId, output, "")
 {
     mg::DisplayConfigurationOutput arg_copy = arg;
     arg_copy.id = output.id;
+    arg_copy.card_id = output.card_id;
     return ExplainMatchResult(
         Eq(output),
         arg_copy,
@@ -718,4 +720,260 @@ TEST(MultiplexingDisplay, applies_initial_display_configuration)
         {
             EXPECT_THAT(output.top_left, Eq(policy->expected_location_for_display(output)));
         });
+}
+
+TEST(MultiplexingDisplay, sets_output_names_to_unique_values)
+{
+    std::vector<mg::DisplayConfigurationOutput> first_display_conf, second_display_conf, third_display_conf;
+
+    DisplayConfigurationOutputGenerator gen_one, gen_two, gen_three;
+    mg::DisplayConfigurationCardId card_one{0}, card_two{1}, card_three{2};
+
+    for (auto i = 0u; i < 3; ++i)
+    {
+        first_display_conf.push_back(gen_one.generate_output(card_one));
+    }
+    for (auto i = 0u; i < 4; ++i)
+    {
+        second_display_conf.push_back(gen_two.generate_output(card_two));
+    }
+    for (auto i = 0u; i < 2; ++i)
+    {
+        third_display_conf.push_back(gen_three.generate_output(card_three));
+    }
+
+    std::vector<std::unique_ptr<mg::Display>> displays;
+
+    for (auto const& conf : {first_display_conf, second_display_conf, third_display_conf})
+    {
+        auto display = std::make_unique<NiceMock<mtd::MockDisplay>>();
+        ON_CALL(*display, configuration())
+            .WillByDefault(
+                Invoke(
+                    [conf]()
+                    {
+                        return std::make_unique<mtd::StubDisplayConfig>(conf);
+                    }));
+
+        displays.push_back(std::move(display));
+    }
+
+    mtd::NullDisplayConfigurationPolicy policy;
+    mg::MultiplexingDisplay display{std::move(displays), policy};
+
+    auto conf = display.configuration();
+
+    std::vector<std::string> seen_names;
+    conf->for_each_output(
+        [&seen_names](mg::DisplayConfigurationOutput const& conf)
+        {
+            EXPECT_THAT(seen_names, Not(Contains(conf.name)));
+            seen_names.push_back(conf.name);
+        });
+}
+
+TEST(MultiplexingDisplay, output_names_begin_with_connector_type)
+{
+    std::vector<std::vector<mg::DisplayConfigurationOutput>> display_confs;
+    std::vector<DisplayConfigurationOutputGenerator> gens;
+
+    unsigned int type = 0;
+    while (type <= mir_output_type_dpi)
+    {       // TODO: It would be nice if we had a mir_output_types placeholder, in the unlikely event we
+            //       want to add any types after the (currently) final type_dpi
+        gens.push_back({});
+        display_confs.push_back({});
+
+        // Our simple generator can only generate up to mir_pixel_formats different configurations
+        // per generator, so split this up into chunks of that size.
+        auto& current_conf = display_confs.back();
+        auto& current_gen = gens.back();
+        for (int i = 1; i < mir_pixel_formats  && type <= mir_output_type_dpi; ++i)
+        {
+            current_conf.push_back(current_gen.generate_output(mg::DisplayConfigurationCardId{0}));
+            current_conf.back().type = static_cast<mg::DisplayConfigurationOutputType>(type);
+            type++;
+        }
+    }
+
+    std::vector<std::unique_ptr<mg::Display>> displays;
+    for (auto const& conf : display_confs)
+    {
+        auto display = std::make_unique<NiceMock<mtd::MockDisplay>>();
+        ON_CALL(*display, configuration())
+            .WillByDefault(
+                Invoke(
+                    [conf]()
+                    {
+                        return std::make_unique<mtd::StubDisplayConfig>(conf);
+                    }));
+        displays.push_back(std::move(display));
+    }
+
+    mtd::NullDisplayConfigurationPolicy policy;
+    mg::MultiplexingDisplay display{std::move(displays), policy};
+
+    auto conf = display.configuration();
+
+    conf->for_each_output(
+        [](mg::DisplayConfigurationOutput const& conf)
+        {
+            EXPECT_THAT(conf.name, StartsWith(mir::output_type_name(static_cast<unsigned>(conf.type))));
+        });
+}
+
+TEST(MultiplexingDisplay, output_names_are_bucketed_by_type)
+{
+    std::vector<mg::DisplayConfigurationOutput> display_conf;
+    DisplayConfigurationOutputGenerator gen;
+    mg::DisplayConfigurationCardId card_id{45};
+
+    auto const duplicate_type = mg::DisplayConfigurationOutputType::displayport;
+    auto const single_type = mg::DisplayConfigurationOutputType::hdmia;
+    // Add three outputs, two of the same type and one with a different type
+    display_conf.push_back(gen.generate_output(card_id));
+    display_conf.back().type = duplicate_type;
+
+    display_conf.push_back(gen.generate_output(card_id));
+    display_conf.back().type = duplicate_type;
+
+    display_conf.push_back(gen.generate_output(card_id));
+    display_conf.back().type = single_type;
+
+    std::vector<std::unique_ptr<mg::Display>> displays;
+    {
+        auto display = std::make_unique<NiceMock<mtd::MockDisplay>>();
+        ON_CALL(*display, configuration())
+            .WillByDefault(
+                Invoke(
+                    [&display_conf]()
+                    {
+                        return std::make_unique<mtd::StubDisplayConfig>(display_conf);
+                    }));
+        displays.push_back(std::move(display));
+    }
+
+    mtd::NullDisplayConfigurationPolicy policy;
+    mg::MultiplexingDisplay display{std::move(displays), policy};
+
+    auto conf = display.configuration();
+
+    conf->for_each_output(
+        [](mg::DisplayConfigurationOutput const& conf)
+        {
+            if (conf.type == duplicate_type)
+            {       // We expect the duplicates to get $SOMETHING-1 and $SOMETHING-2
+                EXPECT_THAT(conf.name, AnyOf(EndsWith("-1"), EndsWith("-2")));
+            }
+            else
+            {       // The other type has only one, so should end with $SOMETHING-1
+                EXPECT_THAT(conf.name, EndsWith("-1"));
+            }
+        });
+}
+
+TEST(MultiplexingDisplay, output_name_does_not_contain_card_id_when_only_one_card)
+{
+    std::vector<mg::DisplayConfigurationOutput> display_conf;
+    DisplayConfigurationOutputGenerator gen;
+    mg::DisplayConfigurationCardId card_id{45};
+
+    display_conf.push_back(gen.generate_output(card_id));
+    display_conf.push_back(gen.generate_output(card_id));
+    display_conf.push_back(gen.generate_output(card_id));
+
+    std::vector<std::unique_ptr<mg::Display>> displays;
+    {
+        auto display = std::make_unique<NiceMock<mtd::MockDisplay>>();
+        ON_CALL(*display, configuration())
+            .WillByDefault(
+                Invoke(
+                    [&display_conf]()
+                    {
+                        return std::make_unique<mtd::StubDisplayConfig>(display_conf);
+                    }));
+        displays.push_back(std::move(display));
+    }
+
+    mtd::NullDisplayConfigurationPolicy policy;
+    mg::MultiplexingDisplay display{std::move(displays), policy};
+
+    auto conf = display.configuration();
+
+    conf->for_each_output(
+        [](mg::DisplayConfigurationOutput const& conf)
+        {
+            // For a single card setup we expect $TYPE_NAME-1, etc
+            auto const expected_name =
+                std::string{mir::output_type_name(static_cast<unsigned>(conf.type))} +
+                "-" +
+                std::to_string(conf.id.as_value());
+            EXPECT_THAT(conf.name, Eq(expected_name));
+        });
+}
+
+TEST(MultiplexingDisplay, when_additional_cards_exist_their_outputs_are_numbered_by_card)
+{
+    std::vector<std::vector<mg::DisplayConfigurationOutput>> display_confs;
+    std::vector<DisplayConfigurationOutputGenerator> gens;
+
+    // Add three cards (with strange ids, which should be ignored)
+    for (int i : { 3, 16, 9})
+    {
+        display_confs.push_back({});
+        gens.push_back({});
+
+        auto& current_conf = display_confs.back();
+        auto& current_gen = gens.back();
+
+        // For each card, add an HDMI and two DVI outputs
+        current_conf.push_back(current_gen.generate_output(mg::DisplayConfigurationCardId{i}));
+        current_conf.back().type = mg::DisplayConfigurationOutputType::hdmia;
+
+        current_conf.push_back(current_gen.generate_output(mg::DisplayConfigurationCardId{i}));
+        current_conf.back().type = mg::DisplayConfigurationOutputType::dvii;
+
+        current_conf.push_back(current_gen.generate_output(mg::DisplayConfigurationCardId{i}));
+        current_conf.back().type = mg::DisplayConfigurationOutputType::dvii;
+    }
+
+
+    std::vector<std::unique_ptr<mg::Display>> displays;
+    for (auto const& conf : display_confs)
+    {
+        auto display = std::make_unique<NiceMock<mtd::MockDisplay>>();
+        ON_CALL(*display, configuration())
+            .WillByDefault(
+                Invoke(
+                    [conf]()
+                    {
+                        return std::make_unique<mtd::StubDisplayConfig>(conf);
+                    }));
+        displays.push_back(std::move(display));
+    }
+
+    mtd::NullDisplayConfigurationPolicy policy;
+    mg::MultiplexingDisplay display{std::move(displays), policy};
+
+    auto conf = display.configuration();
+
+    std::vector<std::string> output_names;
+    conf->for_each_output(
+        [&output_names](mg::DisplayConfigurationOutput const& conf)
+        {
+            output_names.push_back(conf.name);
+        });
+    EXPECT_THAT(
+        output_names,
+        UnorderedElementsAreArray({
+            "DVI-I-1",
+            "DVI-I-2",
+            "DVI-I-1-1",
+            "DVI-I-1-2",
+            "DVI-I-2-1",
+            "DVI-I-2-2",
+            "HDMI-A-1",
+            "HDMI-A-1-1",
+            "HDMI-A-2-1"})
+        );
 }
