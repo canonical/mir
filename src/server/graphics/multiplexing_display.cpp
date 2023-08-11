@@ -18,8 +18,10 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/output_type_names.h"
+
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <sstream>
 #include <functional>
 
 namespace mg = mir::graphics;
