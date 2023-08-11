@@ -24,7 +24,6 @@
 #include "output_manager.h"
 #include "window_wl_surface_role.h"
 #include "input_method_common.h"
-#include "input-method-unstable-v1_wrapper.cpp" // TODO: Super temporary. Can't figure out why link is broken.
 #include <deque>
 
 namespace mf = mir::frontend;
@@ -34,9 +33,6 @@ namespace mw = mir::wayland;
 /// Handles activation and deactivation of the InputMethodContextV1
 class mf::InputMethodV1::Instance : wayland::InputMethodV1
 {
-private:
-    class InputMethodContextV1;
-
 public:
     Instance(wl_resource* new_resource,
          std::shared_ptr<scene::TextInputHub> const text_input_hub,
