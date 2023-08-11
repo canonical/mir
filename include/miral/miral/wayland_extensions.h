@@ -153,7 +153,6 @@ public:
     /// \remark Since MirAL 3.4
     static char const* const zwp_virtual_keyboard_manager_v1;
 
-    // TODO: Placeholder copy pasta
     /// Allows clients (such as on-screen keyboards) to intercept physical key events and act as a
     /// source of text input for other clients. Input methods are not required to display anything
     /// to use this extension, so malicious clients could use it to intercept keys events or take
@@ -161,7 +160,10 @@ public:
     /// \remark Since MirAL 3.10
     static const char* const zwp_input_method_v1;
 
-    /// TODO: Comments
+    /// Allows clients to display a surface as an input panel surface. The input panel surface
+    /// is shown when a text input is active and hidden otherwise. The panel itself can either
+    /// be attached to the edge of the screen or set to float near the active input. This is
+    /// often used in conjunction with zwp_input_method_v1.
     /// \remark Since MirAL 3.10
     static const char* const zwp_input_panel_v1;
 
