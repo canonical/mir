@@ -334,9 +334,9 @@ private:
             change.waiting_status = InputMethodV1ChangeWaitingStatus::commit_string;
         }
 
-        void modifiers_map(struct wl_array */*map*/) override
+        void modifiers_map(struct wl_array *map) override
         {
-            // TODO
+            change.pending_change.modifier_map = map;
         }
 
         void keysym(uint32_t serial, uint32_t time, uint32_t sym, uint32_t state, uint32_t modifiers) override

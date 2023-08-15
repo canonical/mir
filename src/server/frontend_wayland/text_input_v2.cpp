@@ -301,6 +301,10 @@ void mf::TextInputV2::send_text_change(ms::TextInputChange const& change)
             change.keysym->state,
             change.keysym->modifiers);
     }
+    if (change.modifier_map)
+    {
+        send_modifiers_map_event(change.modifier_map.value());
+    }
     if (change.preedit_text || change.preedit_cursor_begin || change.preedit_cursor_end)
     {
         send_preedit_cursor_event(change.preedit_cursor_begin.value_or(0));

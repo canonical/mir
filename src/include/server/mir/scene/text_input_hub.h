@@ -24,6 +24,8 @@
 #include <optional>
 #include <string>
 
+struct wl_array;
+
 namespace mir
 {
 namespace scene
@@ -129,8 +131,11 @@ struct TextInputChange
     /// \remark Defined for text input v1 and v2, not v3.
     std::optional<TextInputPreeditStyle> preedit_style;
 
-    /// \remark Defined  for text input v1 and v2, not v3.
+    /// \remark Defined for text input v1 and v2, not v3.
     std::optional<TextInputKeySym> keysym;
+
+    /// \remark Defined for text input v1 and v2, not v3
+    std::optional<wl_array*> modifier_map;
 };
 
 /// Gets notifications about changes in clients state (implemented by input methods)
