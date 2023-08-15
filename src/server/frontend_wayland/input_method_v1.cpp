@@ -122,7 +122,6 @@ public:
             is_activated = false;
             if (context)
             {
-                context->cleanup();
                 auto resource = context->resource;
                 context_on_deathbed = context;
                 send_deactivate_event(resource);
@@ -182,14 +181,6 @@ private:
             done_event_count++;
         }
 
-        void cleanup()
-        {
-            if (!change.fallback_commit.empty())
-            {
-                // TODO: Commit the fallback
-            }
-        }
-
         void reset_pending_change()
         {
             change = InputMethodV1Change();
@@ -207,7 +198,6 @@ private:
 
         struct InputMethodV1Change
         {
-            std::string fallback_commit;
             scene::TextInputChange pending_change{{}};
             InputMethodV1ChangeWaitingStatus waiting_status;
 
@@ -215,7 +205,6 @@ private:
             {
                 pending_change = ms::TextInputChange{{}};
                 waiting_status = InputMethodV1ChangeWaitingStatus::none;
-                fallback_commit.clear();
             }
 
             /// If a change is waiting to be sent to the text input BUT
@@ -283,7 +272,7 @@ private:
         {
             change.check_waiting_status(InputMethodV1ChangeWaitingStatus::preedit_string);
             change.pending_change.preedit_text = text;
-            change.fallback_commit = commit;
+            change.pending_change.preedit_commit = commit;
             on_text_changed(serial);
         }
 

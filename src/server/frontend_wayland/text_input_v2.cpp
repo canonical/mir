@@ -308,7 +308,7 @@ void mf::TextInputV2::send_text_change(ms::TextInputChange const& change)
     if (change.preedit_text || change.preedit_cursor_begin || change.preedit_cursor_end)
     {
         send_preedit_cursor_event(change.preedit_cursor_begin.value_or(0));
-        send_preedit_string_event(change.preedit_text.value_or(""), "");
+        send_preedit_string_event(change.preedit_text.value_or(""), change.preedit_commit.value_or(""));
     }
     if (change.cursor_position)
     {

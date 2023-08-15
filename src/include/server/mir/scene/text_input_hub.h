@@ -128,6 +128,7 @@ struct TextInputChange
 
     TextInputStateSerial serial;
     std::optional<std::string> preedit_text;
+    std::optional<std::string> preedit_commit;
     std::optional<int> preedit_cursor_begin;
     std::optional<int> preedit_cursor_end;
     std::optional<std::string> commit_text;
