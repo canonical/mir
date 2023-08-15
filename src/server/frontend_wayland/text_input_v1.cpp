@@ -296,6 +296,10 @@ void TextInputV1::send_text_change(ms::TextInputChange const& change)
         send_preedit_cursor_event(change.preedit_cursor_begin.value_or(0));
         send_preedit_string_event(client_serial.value(), change.preedit_text.value_or(""), "");
     }
+    if (change.cursor_position)
+    {
+        send_cursor_position_event(change.cursor_position->index, change.cursor_position->anchor);
+    }
     if (change.delete_before || change.delete_after)
     {
         send_delete_surrounding_text_event(change.delete_before.value_or(0), change.delete_after.value_or(0));

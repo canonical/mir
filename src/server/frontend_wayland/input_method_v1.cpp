@@ -312,13 +312,12 @@ private:
         void delete_surrounding_text(int32_t index, uint32_t length) override
         {
             // First, we move the cursor position to index
-            change.pending_change.preedit_cursor_begin = index;
-            change.pending_change.preedit_cursor_end = index;
+            change.pending_change.cursor_position = { index, 0 };
 
-            // Then we set delete_after to 0 (representing the start of the cursor position)
-            // and delete_before to the length
-            change.pending_change.delete_after = 0;
-            change.pending_change.delete_before = length;
+            // Then we set delete_after to length (representing the start of the cursor position)
+            // and delete_before to the 0
+            change.pending_change.delete_after = length;
+            change.pending_change.delete_before = 0;
 
             change.waiting_status = InputMethodV1ChangeWaitingStatus::commit_string;
         }
@@ -329,8 +328,7 @@ private:
         /// \param anchor New anchor position. An anchor is used to define the end of the selected region of text.
         void cursor_position(int32_t index, int32_t anchor) override
         {
-            change.pending_change.preedit_cursor_begin = index;
-            change.pending_change.preedit_cursor_end = index + anchor;
+            change.pending_change.cursor_position = { index, anchor };
             change.waiting_status = InputMethodV1ChangeWaitingStatus::commit_string;
         }
 

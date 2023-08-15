@@ -120,6 +120,12 @@ struct TextInputChange
         uint32_t modifiers;
     };
 
+    struct CursorPosition
+    {
+        int index;
+        int anchor;
+    };
+
     TextInputStateSerial serial;
     std::optional<std::string> preedit_text;
     std::optional<int> preedit_cursor_begin;
@@ -134,8 +140,11 @@ struct TextInputChange
     /// \remark Defined for text input v1 and v2, not v3.
     std::optional<TextInputKeySym> keysym;
 
-    /// \remark Defined for text input v1 and v2, not v3
+    /// \remark Defined for text input v1 and v2, not v3.
     std::optional<wl_array*> modifier_map;
+
+    /// \remark Defined for text input v1 and v2, not v3.
+    std::optional<CursorPosition> cursor_position;
 };
 
 /// Gets notifications about changes in clients state (implemented by input methods)
