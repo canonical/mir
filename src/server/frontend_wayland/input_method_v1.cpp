@@ -153,6 +153,9 @@ private:
                 input_method->deactivated();
         }
 
+        void show_input_panel() override {}
+        void hide_input_panel() override {}
+
         Instance* const input_method;
     };
 

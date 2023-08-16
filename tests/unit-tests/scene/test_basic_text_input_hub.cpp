@@ -29,6 +29,8 @@ struct MockStateObserver : ms::TextInputStateObserver
 {
     MOCK_METHOD3(activated, void(ms::TextInputStateSerial, bool, ms::TextInputState const&));
     MOCK_METHOD0(deactivated, void());
+    MOCK_METHOD0(show_input_panel, void());
+    MOCK_METHOD0(hide_input_panel, void());
 };
 
 struct MockChangeHandler : ms::TextInputChangeHandler

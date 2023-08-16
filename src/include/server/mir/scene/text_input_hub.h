@@ -158,8 +158,8 @@ public:
     virtual void activated(TextInputStateSerial serial, bool new_input_field, TextInputState const& state) = 0;
     virtual void deactivated() = 0;
 
-    virtual void show_input_panel() {};
-    virtual void hide_input_panel() {};
+    virtual void show_input_panel() = 0;
+    virtual void hide_input_panel() = 0;
 
 private:
     TextInputStateObserver(TextInputStateObserver const&) = delete;
