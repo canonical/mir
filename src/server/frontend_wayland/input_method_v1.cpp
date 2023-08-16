@@ -337,28 +337,29 @@ private:
 
         void grab_keyboard(struct wl_resource */*keyboard*/) override
         {
-            // TODO
+            // TODO: Lacking use case for this request
         }
 
         void key(uint32_t /*serial*/, uint32_t /*time*/, uint32_t /*key*/, uint32_t /*state*/) override
         {
-            // TODO
+            // TODO: Relies on grab_keyboard being implemented
         }
 
         void modifiers(uint32_t /*serial*/, uint32_t /*mods_depressed*/, uint32_t /*mods_latched*/, uint32_t /*mods_locked*/,
             uint32_t /*group*/) override
         {
-            // TODO
+            // TODO: Relies on grab_keyboard being implemented
         }
 
         void language(uint32_t /*serial*/, const std::string &/*language*/) override
         {
-            // TODO
+            // Ignored because text inputs purposefully delegate the language concern to input methods
         }
 
-        void text_direction(uint32_t /*serial*/, uint32_t /*direction*/) override
+        void text_direction(uint32_t serial, uint32_t direction) override
         {
-            // TODO
+            change.pending_change.direction = direction;
+            on_text_changed(serial);
         }
 
         std::shared_ptr<scene::TextInputHub> const text_input_hub;

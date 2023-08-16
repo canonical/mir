@@ -146,6 +146,9 @@ struct TextInputChange
 
     /// \remark Defined for text input v1 and v2, not v3.
     std::optional<CursorPosition> cursor_position;
+
+    /// \remark Defined for text input v1 and v2, not v3.
+    std::optional<uint32_t> direction;
 };
 
 /// Gets notifications about changes in clients state (implemented by input methods)
