@@ -618,6 +618,7 @@ global:
   extern "C++" {
     mir::wayland::InputMethodV1::*;
     non-virtual?thunk?to?mir::wayland::InputMethodV1::*;
+    virtual?thunk?to?mir::wayland::InputMethodV1::*;
     typeinfo?for?mir::wayland::InputMethodV1;
     vtable?for?mir::wayland::InputMethodV1;
     typeinfo?for?mir::wayland::InputMethodV1::Global;
@@ -625,11 +626,13 @@ global:
 
     mir::wayland::InputMethodContextV1::*;
     non-virtual?thunk?to?mir::wayland::InputMethodContextV1::*;
+    virtual?thunk?to?mir::wayland::InputMethodContextV1::*;
     typeinfo?for?mir::wayland::InputMethodContextV1;
     vtable?for?mir::wayland::InputMethodContextV1;
 
     mir::wayland::InputPanelV1::*;
     non-virtual?thunk?to?mir::wayland::InputPanelV1::*;
+    virtual?thunk?to?mir::wayland::InputPanelV1::*;
     typeinfo?for?mir::wayland::InputPanelV1;
     vtable?for?mir::wayland::InputPanelV1;
     typeinfo?for?mir::wayland::InputPanelV1::Global;
@@ -637,6 +640,7 @@ global:
 
     mir::wayland::InputPanelSurfaceV1::*;
     non-virtual?thunk?to?mir::wayland::InputPanelSurfaceV1::*;
+    virtual?thunk?to?mir::wayland::InputPanelSurfaceV1::*;
     typeinfo?for?mir::wayland::InputPanelSurfaceV1;
     vtable?for?mir::wayland::InputPanelSurfaceV1;
   };
