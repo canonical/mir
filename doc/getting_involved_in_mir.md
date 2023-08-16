@@ -1,15 +1,15 @@
-# Getting Involved in Mir
+# Getting Involved in Mir  {#getting_involved_in_mir}
 
 ## Getting involved
 
-The Mir project website is <https://mir-server.io/>,
-the code is [hosted on GitHub](https://github.com/MirServer)
+The Mir project website is <http://mir-server.io/>, 
+the code is [hosted on GitHub](https://github.com/MirServer) 
 
-For announcements and other discussions on Mir see:
-[Mir on community.ubuntu](https://community.ubuntu.com/c/mir)
+For announcements and other discussions on Mir see: 
+[Mir on community.ubuntu](https://community.ubuntu.com/c/mir) 
 
-For other questions and discussion about the Mir project:
-the [\#mir-server](https://web.libera.chat/?channels=#mir-server) IRC channel on Libera.Chat.
+For other questions and discussion about the Mir project: 
+the [\#mirserver](https://web.libera.chat/?channels=#mir-server) IRC channel on Libera.Chat.
 
 
 ## Getting Mir source and dependencies
@@ -26,7 +26,8 @@ instructions vary across distros.
 
 ###  On Ubuntu
 
-    sudo apt-get build-dep ./
+    sudo apt install devscripts equivs
+    mk-build-deps -i -s sudo
 
 ### On Fedora and Alpine
 
@@ -35,9 +36,10 @@ from the corresponding files under `spread/build`.
 
 ## Building
 
-    cmake -S . -Bbuild
-    cd build
-    cmake --build .
+    mkdir build
+    cd  build
+    cmake ..
+    make
 
 This creates an example shell (miral-shell) in the bin directory. This can be
 run directly:
@@ -55,21 +57,20 @@ by default. You can start mir apps from the command-line. For example:
 To exit from miral-shell press Ctrl-Alt-BkSp.
 
 You can install the Mir examples, headers and libraries you've built with:
-
-    sudo cmake --build . --target install
+  
+    sudo make install
 
 ## Contributing to Mir
 
-Please file bug reports at: [https://github.com/MirServer/mir/issues](https://github.com/MirServer/mir/issues).
+Please file bug reports at: https://github.com/MirServer/mir/issues
 
-The Mir Discourse category can be found at: [https://discourse.ubuntu.com/c/mir/15](https://discourse.ubuntu.com/c/mir/15).
+The Mir development mailing list can be found at: https://lists.ubuntu.com/mailman/listinfo/Mir-devel
 
-```{raw} html
-The Mir coding guidelines are <a href=../_static/cppguide/>here</a>.
-```
+The Mir coding guidelines are [here](https://mir-server.io/doc/cppguide/index.html).
+
 
 ## Working on code
- - Hacking guidelines can be found here: [Mir Hacking Guides](https://github.com/MirServer/mir/blob/main/HACKING.md)
+ - Hacking guidelines can be found here: [Mir Hacking Guides](../HACKING.md)
  - You can configure *Mir* to provide runtime information helpful for debugging
-   by enabling component reports: [Component Reports](component_reports.md)
- - A guide on versioning Mir DSOs: [DSO Versioning Guide](dso_versioning_guide.md)
+   by enabling component reports: [Component Reports](./component_reports.md)
+ - A guide on versioning Mir DSOs: [DSO Versioning Guide](./dso_versioning_guide.md)
