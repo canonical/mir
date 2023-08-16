@@ -1,0 +1,15 @@
+Permalink
+ReadMe
+reST
+reStructuredText
+UI
+https
+MyST
+favicon
+installable
+Makefile
+Diátaxis
+RTD
+yaml
+readthedocs
+txt

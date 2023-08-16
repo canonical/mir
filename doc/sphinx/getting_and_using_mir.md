@@ -1,16 +1,16 @@
-# Getting and Using Mir  {#getting_and_using_mir}
+# Getting and Using Mir
 
 Mir is a library for building things, not an end-user product, but it does come
 with some demos to illustrate the possibilities.
 
 ## Getting Mir demos
 
-The Mir libraries and demos are available on Ubuntu, Fedora and Arch. It has 
+The Mir libraries and demos are available on Ubuntu, Fedora and Arch. It has
 also been built and tested on Debian but, at the time or writing, is not in the
 archive.
 
 For Linux distributions that don't currently package Mir you need to build it
-yourself. (See [Getting Involved in Mir](./getting_involved_in_mir.md)).
+yourself. (See [Getting Involved in Mir](getting_involved_in_mir.md)).
 
 ## Getting Mir on Ubuntu
 
@@ -65,7 +65,7 @@ run in a Window.
 
 Alternatively, to run Mir "natively" you can run the same command in a Virtual
 Terminal.
-   
+
 ### Running applications on Mir
 
 If you use the terminal launched by `miral-app` Wayland applications can be
@@ -86,7 +86,7 @@ The `miral-app` script provides options for using an alternative shell
     -terminal <terminal>        use <terminal> instead of '/usr/bin/miral-terminal'
 
 The default for `-terminal` is a script that tries to identify the system terminal
-emulator and launch that. But another terminal, or indeed any application, can be used.  
+emulator and launch that. But another terminal, or indeed any application, can be used.
 
 For  example:
 
@@ -104,14 +104,14 @@ doesn't understand to `miral-shell`. The options can be listed by
     --window-management-trace           log trace message
 
 Probably the main use for `miral-shell` is to test window-management (either of
-a client toolkit or of a server) and this logs all calls to and from the window 
+a client toolkit or of a server) and this logs all calls to and from the window
 management policy. This option is supported directly in the MirAL library and
 works for any MirAL based shell - even one you write yourself.
 
-    --window-manager arg (=floating)   window management strategy 
+    --window-manager arg (=floating)   window management strategy
                                        [{floating|tiling|system-compositor}]
 
-This allows an alternative "tiling" window manager to be selected. *Note: 
+This allows an alternative "tiling" window manager to be selected. *Note:
 `--window-manager` is only supported by `miral-shell` (not `miral-kiosk`).*
 
 For  example:
@@ -120,6 +120,6 @@ For  example:
 
 These options can also be specified in a configuration file. For example:
 
-    $ cat ~/.config/miral-shell.config 
+    $ cat ~/.config/miral-shell.config
     keymap=gb
     window-manager=tiling
