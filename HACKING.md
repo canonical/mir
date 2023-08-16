@@ -18,7 +18,7 @@ There is a *coding style guide* in the guides subdirectory. To build it into an
     $ cmake ..
     $ make guides
 
-(Or if you're reading the web version [here](cppguide/index.html)).
+(Or online, [here](https://canonical-mir.readthedocs-hosted.com/en/latest/_static/cppguide)).
 
 
 ## Code structure

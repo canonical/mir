@@ -1,4 +1,4 @@
-Mir component reports {#component_reports}
+Mir component reports
 =====================
 
 Both the server library and the client library include facilities to provide
@@ -16,15 +16,15 @@ either command-line options or environment variables. The environment variables
 are prefixed with `MIR_SERVER_` and contain underscores ('_') instead of dashes
 ('-').  The available component reports and handlers for the server are:
 
-|Environment variable                    | Command line option            | Handlers|
-|-----------------------------------------| ------------------------------ | --------|
-|MIR_SERVER_COMPOSITOR_REPORT            | --compositor-report            | log,lttng|
-|MIR_SERVER_DISPLAY_REPORT               | --display-report               | log,lttng|
-|MIR_SERVER_INPUT_REPORT                 | --input-report                 | log,lttng|
-|MIR_SERVER_LEGACY_INPUT_REPORT          | --legacy-input-report          | log|
-|MIR_SERVER_SEAT_REPORT                  | --seat-report                  | log|
-|MIR_SERVER_SCENE_REPORT                 | --scene-report                 | log,lttng|
-|MIR_SERVER_SHARED_LIBRARY_PROBER_REPORT | --shared-library-prober-report | log,lttng|
+|Environment variable                    | Command line option            | Handlers  |
+|----------------------------------------| ------------------------------ | --------- |
+|MIR_SERVER_COMPOSITOR_REPORT            | --compositor-report            | log,lttng |
+|MIR_SERVER_DISPLAY_REPORT               | --display-report               | log,lttng |
+|MIR_SERVER_INPUT_REPORT                 | --input-report                 | log,lttng |
+|MIR_SERVER_LEGACY_INPUT_REPORT          | --legacy-input-report          | log       |
+|MIR_SERVER_SEAT_REPORT                  | --seat-report                  | log       |
+|MIR_SERVER_SCENE_REPORT                 | --scene-report                 | log,lttng |
+|MIR_SERVER_SHARED_LIBRARY_PROBER_REPORT | --shared-library-prober-report | log,lttng |
 
 For example, to enable the LTTng input report, one could either use the
 `--input-report=lttng` command-line option to the server, or set the

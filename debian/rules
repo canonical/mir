@@ -106,10 +106,6 @@ endif
 	# Run cmake again to pick up wlcs tests, because reasons?
 	cmake build-$(DEB_HOST_ARCH)
 
-# Only build the docs when we need them
-override_dh_auto_build-indep:
-	dh_auto_build -- doc
-
 # Reconstruct the MirAL version
 MIRAL_VERSION_MAJOR = $(shell perl -n -e '/^set\(MIRAL_VERSION_MAJOR ([0-9]*)\)$$/ && print $$1' src/CMakeLists.txt)
 MIRAL_VERSION_MINOR = $(shell perl -n -e '/^set\(MIRAL_VERSION_MINOR ([0-9]*)\)$$/ && print $$1' src/CMakeLists.txt)

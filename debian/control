@@ -42,6 +42,7 @@ Build-Depends: cmake,
                linux-libc-dev,
                dbus,
                python3-dbusmock,
+               python3-venv:native,
                libxcb-composite0-dev,
                libxcb-xfixes0-dev,
                libxcb-render0-dev,
@@ -188,14 +189,6 @@ Description: Display server for Ubuntu - demonstration programs
  robust operation and a well-defined driver model.
  .
  Contains demo applications that use the Mir display server
-
-Package: mir-doc
-Section: doc
-Architecture: all
-Multi-Arch: foreign
-Depends: ${misc:Depends},
-Description: API documentation for mir
- This package installs the mir API documentation.
 
 Package: mir-test-tools
 Architecture: linux-any
