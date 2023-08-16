@@ -1,3 +1,30 @@
+mir (2.15.0) UNRELEASED; urgency=medium
+
+  [ Michał Sawicz ]
+  * New upstream release 2.15.0
+
+    - ABI summary:
+      . miral ABI unchanged at 5
+      . mircommon ABI unchanged at 9
+      . mircookie ABI unchanged at 2
+      . mircore ABI unchanged at 2
+      . miroil ABI unchanged at 3
+      . mirplatform ABI unchanged at 26
+      . mirserver ABI unchanged at 58
+      . mirwayland ABI bumped to 4
+      . mirplatformgraphics ABI unchanged at 20
+      . mirinputplatform ABI unchanged at 8
+    - Packaging changes:
+      . [debian] mir-doc dropped in favour of online documentation
+    - Enhancements:
+      . [doc] publish API documentation on ReadTheDocs
+        https://canonical-mir.readthedocs-hosted.com/
+      . [window management] improved Alt+Tab behaviour #2981
+    - Bugs fixed
+      . [input] keyboard meta key state gets out of step #2985
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 16 Aug 2023 18:01:07 +0200
+
 mir (2.14.1) UNRELEASED; urgency=medium
 
   [ Alan Griffiths ]
