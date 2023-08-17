@@ -28,12 +28,17 @@ namespace scene
 {
 class TextInputHub;
 }
+namespace input
+{
+class InputDeviceRegistry;
+}
 namespace frontend
 {
 auto create_text_input_manager_v3(
     wl_display* display,
     std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<scene::TextInputHub> const& text_input_hub)
+    std::shared_ptr<scene::TextInputHub> const& text_input_hub,
+    std::shared_ptr<input::InputDeviceRegistry> const device_registry)
 -> std::shared_ptr<wayland::TextInputManagerV3::Global>;
 }
 }

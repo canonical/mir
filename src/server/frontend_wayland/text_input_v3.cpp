@@ -21,13 +21,20 @@
 #include "mir/executor.h"
 #include "mir/scene/text_input_hub.h"
 #include "mir/wayland/client.h"
+#include "mir/input/virtual_input_device.h"
+#include "mir/input/device.h"
+#include "mir/input/input_device_registry.h"
+#include "mir/input/event_builder.h"
+#include "mir/input/input_sink.h"
 
 #include <boost/throw_exception.hpp>
 #include <deque>
+#include <chrono>
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 namespace ms = mir::scene;
+namespace mi = mir::input;
 
 namespace
 {
@@ -116,6 +123,22 @@ auto wayland_to_mir_content_purpose(uint32_t purpose) -> ms::TextInputContentPur
         BOOST_THROW_EXCEPTION(std::invalid_argument{"Invalid text content purpose " + std::to_string(purpose)});
     }
 }
+
+auto mir_keyboard_action(uint32_t wayland_state) -> MirKeyboardAction
+{
+    switch (wayland_state)
+    {
+        case mw::Keyboard::KeyState::pressed:
+            return mir_keyboard_action_down;
+        case mw::Keyboard::KeyState::released:
+            return mir_keyboard_action_up;
+        default:
+            // Protocol does not provide an appropriate error code, so throw a generic runtime_error. This will be expressed
+            // to the client as an implementation error
+            BOOST_THROW_EXCEPTION(std::runtime_error(
+                                      "Invalid virtual keyboard key state " + std::to_string(wayland_state)));
+    }
+}
 }
 
 namespace mir
@@ -126,6 +149,7 @@ struct TextInputV3Ctx
 {
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<scene::TextInputHub> const text_input_hub;
+    std::shared_ptr<mi::InputDeviceRegistry> const device_registry;
 };
 
 class TextInputManagerV3Global
@@ -201,6 +225,9 @@ private:
     std::deque<std::pair<uint32_t, ms::TextInputStateSerial>> state_serials;
     /// The number of commits we've received
     uint32_t commit_count{0};
+    /// The keyboard device is useful when an input-method-v1 wants to simulate a key event
+    std::shared_ptr<mi::VirtualInputDevice> const keyboard_device;
+    std::weak_ptr<mi::Device> const device_handle;
 
     /// Sends the text change to the client if possible
     void send_text_change(ms::TextInputChange const& change);
@@ -228,10 +255,11 @@ private:
 auto mf::create_text_input_manager_v3(
     wl_display* display,
     std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<scene::TextInputHub> const& text_input_hub)
+    std::shared_ptr<scene::TextInputHub> const& text_input_hub,
+    std::shared_ptr<mi::InputDeviceRegistry> const device_registry)
 -> std::shared_ptr<mw::TextInputManagerV3::Global>
 {
-    auto ctx = std::shared_ptr<TextInputV3Ctx>{new TextInputV3Ctx{wayland_executor, text_input_hub}};
+    auto ctx = std::shared_ptr<TextInputV3Ctx>{new TextInputV3Ctx{wayland_executor, text_input_hub, device_registry}};
     return std::make_shared<TextInputManagerV3Global>(display, std::move(ctx));
 }
 
@@ -273,7 +301,9 @@ mf::TextInputV3::TextInputV3(
     : wayland::TextInputV3{resource, Version<1>()},
       ctx{ctx},
       seat{seat},
-      handler{std::make_shared<Handler>(this, ctx->wayland_executor)}
+      handler{std::make_shared<Handler>(this, ctx->wayland_executor)},
+      keyboard_device{std::make_shared<mi::VirtualInputDevice>("virtual-keyboard", mi::DeviceCapability::keyboard)},
+      device_handle{ctx->device_registry->add_device(keyboard_device)}
 {
     seat.add_focus_listener(client, this);
 }
@@ -291,6 +321,26 @@ void mf::TextInputV3::send_text_change(ms::TextInputChange const& change)
     {
         // We are no longer enabled or we don't have a valid serial
         return;
+    }
+    if (change.keysym)
+    {
+        auto nano = std::chrono::milliseconds{change.keysym->time};
+        keyboard_device->if_started_then([&](input::InputSink* sink, input::EventBuilder* builder)
+            {
+                auto state = change.keysym->state;
+                auto scan_code = change.keysym->sym;
+                switch (scan_code)
+                {
+                    case XKB_KEY_Return:
+                        // TODO: kwin_wayland maps this to 28, but I am unsure how they get there
+                        scan_code = 28;
+                        break;
+                    default:
+                        break;
+                }
+                auto key_event = builder->key_event(nano, mir_keyboard_action(state), 0, scan_code);
+                sink->handle_input(std::move(key_event));
+            });
     }
     if (change.preedit_text || change.preedit_cursor_begin || change.preedit_cursor_end)
     {

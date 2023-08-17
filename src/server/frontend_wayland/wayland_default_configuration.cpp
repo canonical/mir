@@ -145,7 +145,11 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
         }),
     make_extension_builder<mw::TextInputManagerV3>([](auto const& ctx)
         {
-            return mf::create_text_input_manager_v3(ctx.display, ctx.wayland_executor, ctx.text_input_hub);
+            return mf::create_text_input_manager_v3(
+                ctx.display,
+                ctx.wayland_executor,
+                ctx.text_input_hub,
+                ctx.input_device_registry);
         }),
     make_extension_builder<mw::InputMethodV1>([](auto const& ctx)
         {

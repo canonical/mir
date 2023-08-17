@@ -138,7 +138,7 @@ struct TextInputChange
     /// \remark Defined for text input v1 and v2, not v3.
     std::optional<TextInputPreeditStyle> preedit_style;
 
-    /// \remark Defined for text input v1 and v2, not v3.
+    /// text-input v1/v2 supports keysym natively, while 
     std::optional<TextInputKeySym> keysym;
 
     /// \remark Defined for text input v1 and v2, not v3.
