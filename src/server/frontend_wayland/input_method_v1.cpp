@@ -19,6 +19,7 @@
 #include "mir/shell/surface_specification.h"
 #include "mir/shell/shell.h"
 #include "mir/scene/session.h"
+#include "mir/geometry/forward.h"
 #include "mir/log.h"
 #include "wl_surface.h"
 #include "output_manager.h"
@@ -508,11 +509,20 @@ private:
             auto const output_id = output_manager->output_id_for(output);
             spec.output_id = output_id.value();
             if (position == Position::center_bottom)
+            {
+                auto size = current_size();
+                auto const exclusive_rect = mir::geometry::Rectangle{
+                    {0, mir::geometry::as_y(size.height)},
+                    {size.width, size.height}
+                };
+                spec.state = mir_window_state_attached;
                 spec.attached_edges = MirPlacementGravity::mir_placement_gravity_south;
+                spec.exclusive_rect = mir::optional_value<mir::geometry::Rectangle>(exclusive_rect);
+            }
             else
                 log_warning("Invalid position: %u", position);
+
             apply_spec(spec);
-            show();
         }
 
         void set_overlay_panel() override
