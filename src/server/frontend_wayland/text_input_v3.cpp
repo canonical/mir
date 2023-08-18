@@ -30,6 +30,7 @@
 #include <boost/throw_exception.hpp>
 #include <deque>
 #include <chrono>
+#include <linux/input-event-codes.h>
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
@@ -331,11 +332,26 @@ void mf::TextInputV3::send_text_change(ms::TextInputChange const& change)
                 auto scan_code = change.keysym->sym;
                 switch (scan_code)
                 {
+                    case XKB_KEY_BackSpace:
+                        scan_code = KEY_BACKSPACE;
+                        break;
                     case XKB_KEY_Return:
-                        // TODO: kwin_wayland maps this to 28, but I am unsure how they get there
-                        scan_code = 28;
+                        scan_code = KEY_ENTER;
+                        break;
+                    case XKB_KEY_Left:
+                        scan_code = KEY_LEFT;
+                        break;
+                    case XKB_KEY_Right:
+                        scan_code = KEY_RIGHT;
+                        break;
+                    case XKB_KEY_Up:
+                        scan_code = KEY_UP;
+                        break;
+                    case XKB_KEY_Down:
+                        scan_code = KEY_DOWN;
                         break;
                     default:
+                        scan_code = KEY_UNKNOWN;
                         break;
                 }
                 auto key_event = builder->key_event(nano, mir_keyboard_action(state), 0, scan_code);
