@@ -315,6 +315,27 @@ mf::TextInputV3::~TextInputV3()
     ctx->text_input_hub->deactivate_handler(handler);
 }
 
+uint32_t sym_to_scan_code(uint32_t sym)
+{
+    switch (sym)
+    {
+        case XKB_KEY_BackSpace:
+            return KEY_BACKSPACE;
+        case XKB_KEY_Return:
+            return KEY_ENTER;
+        case XKB_KEY_Left:
+            return KEY_LEFT;
+        case XKB_KEY_Right:
+            return KEY_RIGHT;
+        case XKB_KEY_Up:
+            return KEY_UP;
+        case XKB_KEY_Down:
+            return KEY_DOWN;
+        default:
+            return KEY_UNKNOWN;
+    }
+}
+
 void mf::TextInputV3::send_text_change(ms::TextInputChange const& change)
 {
     auto const client_serial = find_client_serial(change.serial);
@@ -329,31 +350,7 @@ void mf::TextInputV3::send_text_change(ms::TextInputChange const& change)
         keyboard_device->if_started_then([&](input::InputSink* sink, input::EventBuilder* builder)
             {
                 auto state = change.keysym->state;
-                auto scan_code = change.keysym->sym;
-                switch (scan_code)
-                {
-                    case XKB_KEY_BackSpace:
-                        scan_code = KEY_BACKSPACE;
-                        break;
-                    case XKB_KEY_Return:
-                        scan_code = KEY_ENTER;
-                        break;
-                    case XKB_KEY_Left:
-                        scan_code = KEY_LEFT;
-                        break;
-                    case XKB_KEY_Right:
-                        scan_code = KEY_RIGHT;
-                        break;
-                    case XKB_KEY_Up:
-                        scan_code = KEY_UP;
-                        break;
-                    case XKB_KEY_Down:
-                        scan_code = KEY_DOWN;
-                        break;
-                    default:
-                        scan_code = KEY_UNKNOWN;
-                        break;
-                }
+                auto scan_code = sym_to_scan_code(change.keysym->sym);
                 auto key_event = builder->key_event(nano, mir_keyboard_action(state), 0, scan_code);
                 sink->handle_input(std::move(key_event));
             });
