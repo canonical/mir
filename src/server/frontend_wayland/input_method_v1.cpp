@@ -197,7 +197,7 @@ private:
         {
             none,
             commit_string,
-            preedit_string
+            preedit_string,
         };
 
         struct InputMethodV1Change
@@ -328,6 +328,7 @@ private:
         void modifiers_map(struct wl_array *map) override
         {
             change.pending_change.modifier_map = map;
+            change.waiting_status = InputMethodV1ChangeWaitingStatus::none;
         }
 
         void keysym(uint32_t serial, uint32_t time, uint32_t sym, uint32_t state, uint32_t modifiers) override
