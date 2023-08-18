@@ -98,6 +98,7 @@ public:
     void set_reception_mode(input::InputReceptionMode mode) override;
 
     void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) override;
+    std::vector<geometry::Rectangle> get_input_region() const override;
 
     void resize(geometry::Size const& size) override;
     geometry::Point top_left() const override;
