@@ -140,6 +140,27 @@ auto mir_keyboard_action(uint32_t wayland_state) -> MirKeyboardAction
                                       "Invalid virtual keyboard key state " + std::to_string(wayland_state)));
     }
 }
+
+uint32_t sym_to_scan_code(uint32_t sym)
+{
+    switch (sym)
+    {
+        case XKB_KEY_BackSpace:
+            return KEY_BACKSPACE;
+        case XKB_KEY_Return:
+            return KEY_ENTER;
+        case XKB_KEY_Left:
+            return KEY_LEFT;
+        case XKB_KEY_Right:
+            return KEY_RIGHT;
+        case XKB_KEY_Up:
+            return KEY_UP;
+        case XKB_KEY_Down:
+            return KEY_DOWN;
+        default:
+            return KEY_UNKNOWN;
+    }
+}
 }
 
 namespace mir
@@ -313,27 +334,6 @@ mf::TextInputV3::~TextInputV3()
 {
     seat.remove_focus_listener(client, this);
     ctx->text_input_hub->deactivate_handler(handler);
-}
-
-uint32_t sym_to_scan_code(uint32_t sym)
-{
-    switch (sym)
-    {
-        case XKB_KEY_BackSpace:
-            return KEY_BACKSPACE;
-        case XKB_KEY_Return:
-            return KEY_ENTER;
-        case XKB_KEY_Left:
-            return KEY_LEFT;
-        case XKB_KEY_Right:
-            return KEY_RIGHT;
-        case XKB_KEY_Up:
-            return KEY_UP;
-        case XKB_KEY_Down:
-            return KEY_DOWN;
-        default:
-            return KEY_UNKNOWN;
-    }
 }
 
 void mf::TextInputV3::send_text_change(ms::TextInputChange const& change)
