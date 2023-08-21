@@ -340,7 +340,6 @@ global:
     miral::WindowManagerTools::raise_tree*;
     miral::WindowManagerTools::remove_tree_from_workspace*;
     miral::WindowManagerTools::select_active_window*;
-    miral::WindowManagerTools::start_drag_and_drop*;
     miral::WindowManagerTools::window_at*;
     miral::WindowSpecification::?WindowSpecification*;
     miral::WindowSpecification::WindowSpecification*;
