@@ -4,7 +4,7 @@ mir (2.15.0) UNRELEASED; urgency=medium
   * New upstream release 2.15.0
 
     - ABI summary:
-      . miral ABI unchanged at 5
+      . miral ABI bumped to 6
       . mircommon ABI unchanged at 9
       . mircookie ABI unchanged at 2
       . mircore ABI unchanged at 2
