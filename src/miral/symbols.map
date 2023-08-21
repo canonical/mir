@@ -1,4 +1,4 @@
-MIRAL_3.6 {
+MIRAL_4.0 {
 # WaylandExtensions::Context ctor and dtor symbols are inline
 # but can be exported by unoptimized builds.
 # This makes the "regenerate" script hide them:
@@ -36,7 +36,6 @@ global:
     miral::CanonicalWindowManagerPolicy::confirm_placement_on_display*;
     miral::CanonicalWindowManagerPolicy::handle_modify_window*;
     miral::CanonicalWindowManagerPolicy::handle_raise_window*;
-    miral::CanonicalWindowManagerPolicy::handle_request_drag_and_drop*;
     miral::CanonicalWindowManagerPolicy::handle_window_ready*;
     miral::CanonicalWindowManagerPolicy::place_new_window*;
     miral::ConfigurationOption::?ConfigurationOption*;
@@ -47,6 +46,7 @@ global:
     miral::CursorTheme::operator*;
     miral::DisplayConfiguration::?DisplayConfiguration*;
     miral::DisplayConfiguration::DisplayConfiguration*;
+    miral::DisplayConfiguration::add_output_attribute*;
     miral::DisplayConfiguration::layout_option*;
     miral::DisplayConfiguration::list_layouts*;
     miral::DisplayConfiguration::operator*;
@@ -58,6 +58,7 @@ global:
     miral::ExternalClientLauncher::operator*;
     miral::ExternalClientLauncher::snapcraft_launch*;
     miral::ExternalClientLauncher::split_command*;
+    miral::FdHandle::?FdHandle*;
     miral::InternalClientLauncher::?InternalClientLauncher*;
     miral::InternalClientLauncher::InternalClientLauncher*;
     miral::InternalClientLauncher::launch*;
@@ -67,10 +68,11 @@ global:
     miral::Keymap::operator*;
     miral::Keymap::set_keymap*;
     miral::MinimalWindowManager::?MinimalWindowManager*;
-# We only want to match miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&)
-#    miral::MinimalWindowManager::MinimalWindowManager*;
-    "miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&)";
+    miral::MinimalWindowManager::MinimalWindowManager*;
+    miral::MinimalWindowManager::advise_delete_app*;
     miral::MinimalWindowManager::advise_focus_gained*;
+    miral::MinimalWindowManager::advise_focus_lost*;
+    miral::MinimalWindowManager::advise_new_app*;
     miral::MinimalWindowManager::begin_pointer_move*;
     miral::MinimalWindowManager::begin_pointer_resize*;
     miral::MinimalWindowManager::begin_touch_move*;
@@ -81,7 +83,6 @@ global:
     miral::MinimalWindowManager::handle_modify_window*;
     miral::MinimalWindowManager::handle_pointer_event*;
     miral::MinimalWindowManager::handle_raise_window*;
-    miral::MinimalWindowManager::handle_request_drag_and_drop*;
     miral::MinimalWindowManager::handle_request_move*;
     miral::MinimalWindowManager::handle_request_resize*;
     miral::MinimalWindowManager::handle_touch_event*;
@@ -93,6 +94,8 @@ global:
     miral::MirRunner::add_stop_callback*;
     miral::MirRunner::config_file*;
     miral::MirRunner::display_config_file*;
+    miral::MirRunner::register_fd_handler*;
+    miral::MirRunner::register_signal_handler*;
     miral::MirRunner::run_with*;
     miral::MirRunner::set_exception_handler*;
     miral::MirRunner::stop*;
@@ -100,12 +103,15 @@ global:
     miral::MirRunner::x11_display*;
     miral::Output::?Output*;
     miral::Output::Output*;
+    miral::Output::attribute*;
+    miral::Output::attributes_map*;
     miral::Output::connected*;
     miral::Output::extents*;
     miral::Output::form_factor*;
     miral::Output::id*;
     miral::Output::is_same_output*;
     miral::Output::logical_group_id*;
+    miral::Output::name*;
     miral::Output::operator*;
     miral::Output::orientation*;
     miral::Output::physical_size_mm*;
@@ -143,18 +149,18 @@ global:
     miral::WaylandExtensions::conditionally_enable*;
     miral::WaylandExtensions::disable*;
     miral::WaylandExtensions::enable*;
+    miral::WaylandExtensions::ext_session_lock_manager_v1*;
     miral::WaylandExtensions::operator*;
     miral::WaylandExtensions::recommended*;
-    miral::WaylandExtensions::set_filter*;
     miral::WaylandExtensions::supported*;
     miral::WaylandExtensions::zwlr_foreign_toplevel_manager_v1*;
     miral::WaylandExtensions::zwlr_layer_shell_v1*;
     miral::WaylandExtensions::zwlr_screencopy_manager_v1*;
     miral::WaylandExtensions::zwlr_virtual_pointer_manager_v1*;
     miral::WaylandExtensions::zwp_input_method_manager_v2*;
-    miral::WaylandExtensions::zwp_input_method_v2*;
+    miral::WaylandExtensions::zwp_input_method_v1*;
+    miral::WaylandExtensions::zwp_input_panel_v1*;
     miral::WaylandExtensions::zwp_virtual_keyboard_manager_v1*;
-    miral::WaylandExtensions::zwp_virtual_keyboard_v1*;
     miral::WaylandExtensions::zxdg_output_manager_v1*;
     miral::Window::?Window*;
     miral::Window::Window*;
@@ -199,6 +205,7 @@ global:
     miral::WindowInfo::state*;
     miral::WindowInfo::type*;
     miral::WindowInfo::userdata*;
+    miral::WindowInfo::visible_on_lock_screen*;
     miral::WindowInfo::width_inc*;
     miral::WindowInfo::window*;
     miral::WindowManagementPolicy::?WindowManagementPolicy*;
@@ -237,7 +244,6 @@ global:
     miral::WindowManagerTools::create_workspace*;
     miral::WindowManagerTools::drag_active_window*;
     miral::WindowManagerTools::drag_window*;
-    miral::WindowManagerTools::end_drag_and_drop*;
     miral::WindowManagerTools::find_application*;
     miral::WindowManagerTools::focus_next_application*;
     miral::WindowManagerTools::focus_next_within_application*;
@@ -257,7 +263,10 @@ global:
     miral::WindowManagerTools::raise_tree*;
     miral::WindowManagerTools::remove_tree_from_workspace*;
     miral::WindowManagerTools::select_active_window*;
+    miral::WindowManagerTools::send_tree_to_back*;
+    miral::WindowManagerTools::swap_tree_order*;
     miral::WindowManagerTools::window_at*;
+    miral::WindowManagerTools::window_to_select_application*;
     miral::WindowSpecification::?WindowSpecification*;
     miral::WindowSpecification::WindowSpecification*;
     miral::WindowSpecification::application_id*;
@@ -291,6 +300,7 @@ global:
     miral::WindowSpecification::top_left*;
     miral::WindowSpecification::type*;
     miral::WindowSpecification::userdata*;
+    miral::WindowSpecification::visible_on_lock_screen*;
     miral::WindowSpecification::width_inc*;
     miral::WindowSpecification::window_placement_gravity*;
     miral::X11Support::?X11Support*;
@@ -323,7 +333,6 @@ global:
     miral::toolkit::mir_input_event_has_cookie*;
     miral::toolkit::mir_keyboard_event_action*;
     miral::toolkit::mir_keyboard_event_input_event*;
-    miral::toolkit::mir_keyboard_event_key_code*;
     miral::toolkit::mir_keyboard_event_key_text*;
     miral::toolkit::mir_keyboard_event_keysym*;
     miral::toolkit::mir_keyboard_event_modifiers*;
@@ -348,17 +357,19 @@ global:
     non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::confirm_placement_on_display*;
     non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::handle_modify_window*;
     non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::handle_raise_window*;
-    non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::handle_request_drag_and_drop*;
     non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::handle_window_ready*;
     non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::place_new_window*;
+    non-virtual?thunk?to?miral::FdHandle::?FdHandle*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::advise_delete_app*;
     non-virtual?thunk?to?miral::MinimalWindowManager::advise_focus_gained*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::advise_focus_lost*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::advise_new_app*;
     non-virtual?thunk?to?miral::MinimalWindowManager::confirm_inherited_move*;
     non-virtual?thunk?to?miral::MinimalWindowManager::confirm_placement_on_display*;
     non-virtual?thunk?to?miral::MinimalWindowManager::handle_keyboard_event*;
     non-virtual?thunk?to?miral::MinimalWindowManager::handle_modify_window*;
     non-virtual?thunk?to?miral::MinimalWindowManager::handle_pointer_event*;
     non-virtual?thunk?to?miral::MinimalWindowManager::handle_raise_window*;
-    non-virtual?thunk?to?miral::MinimalWindowManager::handle_request_drag_and_drop*;
     non-virtual?thunk?to?miral::MinimalWindowManager::handle_request_move*;
     non-virtual?thunk?to?miral::MinimalWindowManager::handle_request_resize*;
     non-virtual?thunk?to?miral::MinimalWindowManager::handle_touch_event*;
@@ -397,6 +408,7 @@ global:
     typeinfo?for?miral::CursorTheme;
     typeinfo?for?miral::DisplayConfiguration;
     typeinfo?for?miral::ExternalClientLauncher;
+    typeinfo?for?miral::FdHandle;
     typeinfo?for?miral::InternalClientLauncher;
     typeinfo?for?miral::Keymap;
     typeinfo?for?miral::MinimalWindowManager;
@@ -433,6 +445,7 @@ global:
     vtable?for?miral::CursorTheme;
     vtable?for?miral::DisplayConfiguration;
     vtable?for?miral::ExternalClientLauncher;
+    vtable?for?miral::FdHandle;
     vtable?for?miral::InternalClientLauncher;
     vtable?for?miral::Keymap;
     vtable?for?miral::MinimalWindowManager;
@@ -458,51 +471,7 @@ global:
     vtable?for?miral::X11Support;
     vtable?for?miral::Zone;
   };
-local: *;
+
+  local: *;
 };
 
-MIRAL_3.7 {
-global:
-  extern "C++" {
-    "miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&, MirInputEventModifier)";
-    miral::MirRunner::register_signal_handler*;
-    miral::MirRunner::register_fd_handler*;
-  };
-} MIRAL_3.6;
-
-MIRAL_3.8 {
-global:
-  extern "C++" {
-    miral::DisplayConfiguration::add_output_attribute*;
-    miral::FdHandle::?FdHandle*;
-    miral::Output::attribute*;
-    miral::Output::attributes_map*;
-    miral::Output::name*;
-    non-virtual?thunk?to?miral::FdHandle::?FdHandle*;
-    typeinfo?for?miral::FdHandle;
-    vtable?for?miral::FdHandle;
-  };
-} MIRAL_3.7;
-
-MIRAL_3.9 {
-global:
-  extern "C++" {
-    miral::WaylandExtensions::ext_session_lock_manager_v1*;
-    miral::WindowInfo::visible_on_lock_screen*;
-    miral::WindowSpecification::visible_on_lock_screen*;
-  };
-} MIRAL_3.8;
-
-MIRAL_3.10 {
-global:
-  extern "C++" {
-    miral::WindowManagerTools::window_to_select_application*;
-    miral::WindowManagerTools::swap_tree_order*;
-    miral::WindowManagerTools::send_tree_to_back*;
-    miral::MinimalWindowManager::advise_new_app*;
-    miral::MinimalWindowManager::advise_delete_app*;
-    miral::MinimalWindowManager::advise_focus_lost*;
-    miral::WaylandExtensions::zwp_input_method_v1*;
-    miral::WaylandExtensions::zwp_input_panel_v1*;
-  };
-} MIRAL_3.9;
