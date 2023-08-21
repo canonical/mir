@@ -3,6 +3,14 @@ mir (2.15.0) UNRELEASED; urgency=medium
   [ Michał Sawicz ]
   * New upstream release 2.15.0
 
+    - MirAL bumped to 4.0, removed previously deprecated:
+      - `mir_keyboard_event_key_code`
+      - `WaylandExtensions::set_filter``
+      - `WaylandExtensions::zwp_virtual_keyboard_v1`
+      - `WaylandExtensions::zwp_virtual_input_v1`
+      - `WindowManagementPolicy::handle_request_drag_and_drop`
+      - `WindowManagerTools::start_drag_and_drop`
+      - `WindowManagerTools::end_drag_and_drop`
     - ABI summary:
       . miral ABI bumped to 6
       . mircommon ABI unchanged at 9
