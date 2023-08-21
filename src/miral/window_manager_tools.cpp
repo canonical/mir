@@ -94,12 +94,6 @@ void miral::WindowManagerTools::swap_tree_order(Window const& first, Window cons
 void miral::WindowManagerTools::send_tree_to_back(Window const& root)
 { tools->send_tree_to_back(root); }
 
-void miral::WindowManagerTools::start_drag_and_drop(WindowInfo& /*window_info*/, std::vector<uint8_t> const& /*handle*/)
-{ }
-
-void miral::WindowManagerTools::end_drag_and_drop()
-{ }
-
 void miral::WindowManagerTools::modify_window(WindowInfo& window_info, WindowSpecification const& modifications)
 { tools->modify_window(window_info,modifications); }
 
