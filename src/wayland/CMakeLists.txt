@@ -28,6 +28,7 @@ mir_generate_protocol_wrapper(mirwayland "zwp_"  protocol/virtual-keyboard-unsta
 mir_generate_protocol_wrapper(mirwayland "zwp_"  protocol/text-input-unstable-v3.xml)
 mir_generate_protocol_wrapper(mirwayland "zwp_"  protocol/text-input-unstable-v2.xml)
 mir_generate_protocol_wrapper(mirwayland "zwp_"  protocol/text-input-unstable-v1.xml)
+mir_generate_protocol_wrapper(mirwayland "zwp_"  protocol/input-method-unstable-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "zwp_"  protocol/input-method-unstable-v2.xml)
 mir_generate_protocol_wrapper(mirwayland "zwp_"  protocol/idle-inhibit-unstable-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "zwp_"  protocol/primary-selection-unstable-v1.xml)

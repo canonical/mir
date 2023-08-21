@@ -42,6 +42,8 @@ set(
   virtual_pointer_v1.cpp        virtual_pointer_v1.h
   text_input_v3.cpp             text_input_v3.cpp
   text_input_v2.cpp             text_input_v2.cpp
+  input_method_common.cpp       input_method_common.h
+  input_method_v1.cpp           input_method_v1.h
   input_method_v2.cpp           input_method_v2.h
   input_method_grab_keyboard_v2.cpp input_method_grab_keyboard_v2.h
   idle_inhibit_v1.cpp           idle_inhibit_v1.h

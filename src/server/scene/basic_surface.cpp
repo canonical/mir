@@ -277,6 +277,12 @@ void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& inpu
     synchronised_state.lock()->custom_input_rectangles = input_rectangles;
 }
 
+std::vector<geom::Rectangle> ms::BasicSurface::get_input_region() const
+{
+    auto state = synchronised_state.lock();
+    return state->custom_input_rectangles;
+}
+
 void ms::BasicSurface::resize(geom::Size const& desired_size)
 {
     geom::Size new_size = desired_size;

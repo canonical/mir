@@ -43,6 +43,16 @@ public:
     {
         for_each_observer(&TextInputStateObserver::deactivated);
     }
+
+    void show_input_panel() override
+    {
+        for_each_observer(&TextInputStateObserver::show_input_panel);
+    }
+
+    void hide_input_panel() override
+    {
+        for_each_observer(&TextInputStateObserver::hide_input_panel);
+    }
 };
 
 class BasicTextInputHub : public TextInputHub
@@ -74,6 +84,9 @@ public:
         multiplexer.unregister_interest(observer);
     }
     /// @}
+
+    void show_input_panel() override;
+    void hide_input_panel() override;
 
 private:
     TextInputStateObserverMultiplexer multiplexer;

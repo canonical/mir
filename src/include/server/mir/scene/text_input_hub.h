@@ -24,6 +24,8 @@
 #include <optional>
 #include <string>
 
+struct wl_array;
+
 namespace mir
 {
 namespace scene
@@ -103,13 +105,50 @@ struct TextInputChange
     {
     }
 
+    struct TextInputPreeditStyle
+    {
+        uint32_t index;
+        uint32_t length;
+        uint32_t style;
+    };
+
+    struct TextInputKeySym
+    {
+        uint32_t time;
+        uint32_t sym;
+        uint32_t state;
+        uint32_t modifiers;
+    };
+
+    struct CursorPosition
+    {
+        int index;
+        int anchor;
+    };
+
     TextInputStateSerial serial;
     std::optional<std::string> preedit_text;
+    std::optional<std::string> preedit_commit;
     std::optional<int> preedit_cursor_begin;
     std::optional<int> preedit_cursor_end;
     std::optional<std::string> commit_text;
     std::optional<int> delete_before;
     std::optional<int> delete_after;
+
+    /// \remark Defined for text input v1 and v2, not v3.
+    std::optional<TextInputPreeditStyle> preedit_style;
+
+    /// text-input v1/v2 supports keysym natively, while text-input-v3 requires us to emit a wl_keyboard.key event
+    std::optional<TextInputKeySym> keysym;
+
+    /// \remark Defined for text input v1 and v2, not v3.
+    std::optional<wl_array*> modifier_map;
+
+    /// \remark Defined for text input v1 and v2, not v3.
+    std::optional<CursorPosition> cursor_position;
+
+    /// \remark Defined for text input v1 and v2, not v3.
+    std::optional<uint32_t> direction;
 };
 
 /// Gets notifications about changes in clients state (implemented by input methods)
@@ -121,6 +160,9 @@ public:
 
     virtual void activated(TextInputStateSerial serial, bool new_input_field, TextInputState const& state) = 0;
     virtual void deactivated() = 0;
+
+    virtual void show_input_panel() = 0;
+    virtual void hide_input_panel() = 0;
 
 private:
     TextInputStateObserver(TextInputStateObserver const&) = delete;
@@ -160,6 +202,12 @@ public:
 
     /// Used by the input method to dispatch entered text to the handler
     virtual void text_changed(TextInputChange const& change) = 0;
+
+    /// Shows the virtual keyboard panel if one exists
+    virtual void show_input_panel() = 0;
+
+    /// Hides the virtual keyboard panel if one exists
+    virtual void hide_input_panel() = 0;
 };
 }
 }

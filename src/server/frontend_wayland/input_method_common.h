@@ -14,33 +14,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_FRONTEND_TEXT_INPUT_V3_H
-#define MIR_FRONTEND_TEXT_INPUT_V3_H
+#ifndef MIR_INPUT_METHOD_COMMON_H
+#define MIR_INPUT_METHOD_COMMON_H
 
+#include <cstdint>
+#include "mir/scene/text_input_hub.h"
 #include "text-input-unstable-v3_wrapper.h"
 
-#include <memory>
+namespace ms = mir::scene;
+namespace mw = mir::wayland;
 
 namespace mir
 {
-class Executor;
-namespace scene
-{
-class TextInputHub;
-}
-namespace input
-{
-class InputDeviceRegistry;
-}
 namespace frontend
 {
-auto create_text_input_manager_v3(
-    wl_display* display,
-    std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<scene::TextInputHub> const& text_input_hub,
-    std::shared_ptr<input::InputDeviceRegistry> const device_registry)
--> std::shared_ptr<wayland::TextInputManagerV3::Global>;
+auto mir_to_wayland_content_hint(ms::TextInputContentHint hint) -> uint32_t;
+auto mir_to_wayland_content_purpose(ms::TextInputContentPurpose purpose) -> uint32_t;
+auto mir_to_wayland_change_cause(ms::TextInputChangeCause cause) -> uint32_t;
 }
 }
 
-#endif // MIR_FRONTEND_TEXT_INPUT_V3_H
+#endif //MIR_INPUT_METHOD_COMMON_H

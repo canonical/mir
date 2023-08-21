@@ -503,5 +503,7 @@ global:
     miral::MinimalWindowManager::advise_new_app*;
     miral::MinimalWindowManager::advise_delete_app*;
     miral::MinimalWindowManager::advise_focus_lost*;
+    miral::WaylandExtensions::zwp_input_method_v1*;
+    miral::WaylandExtensions::zwp_input_panel_v1*;
   };
 } MIRAL_3.9;

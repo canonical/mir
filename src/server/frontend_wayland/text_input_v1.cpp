@@ -271,10 +271,38 @@ void TextInputV1::send_text_change(ms::TextInputChange const& change)
         // We are no longer enabled, or we don't have a valid serial
         return;
     }
+    if (change.preedit_style)
+    {
+        send_preedit_styling_event(
+            change.preedit_style->index,
+            change.preedit_style->length,
+            change.preedit_style->style);
+    }
+    if (change.keysym)
+    {
+        send_keysym_event(
+            client_serial.value(),
+            change.keysym->time,
+            change.keysym->sym,
+            change.keysym->state,
+            change.keysym->modifiers);
+    }
+    if (change.modifier_map)
+    {
+        send_modifiers_map_event(change.modifier_map.value());
+    }
+    if (change.direction)
+    {
+        send_text_direction_event(client_serial.value(), change.direction.value());
+    }
     if (change.preedit_text || change.preedit_cursor_begin || change.preedit_cursor_end)
     {
         send_preedit_cursor_event(change.preedit_cursor_begin.value_or(0));
-        send_preedit_string_event(client_serial.value(), change.preedit_text.value_or(""), "");
+        send_preedit_string_event(client_serial.value(), change.preedit_text.value_or(""), change.preedit_commit.value_or(""));
+    }
+    if (change.cursor_position)
+    {
+        send_cursor_position_event(change.cursor_position->index, change.cursor_position->anchor);
     }
     if (change.delete_before || change.delete_after)
     {
@@ -347,11 +375,13 @@ void TextInputV1::deactivate(wl_resource *seat)
 void TextInputV1::show_input_panel()
 {
     commit_state(0);
+    ctx->text_input_hub->show_input_panel();
 }
 
 void TextInputV1::hide_input_panel()
 {
     ctx->text_input_hub->deactivate_handler(handler);
+    ctx->text_input_hub->hide_input_panel();
 }
 
 void TextInputV1::reset()
