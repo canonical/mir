@@ -29,7 +29,6 @@ libmiral.so.6 libmiral6 #MINVER#
  (c++)"miral::CanonicalWindowManagerPolicy::confirm_placement_on_display(miral::WindowInfo const&, MirWindowState, mir::geometry::generic::Rectangle<int> const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::CanonicalWindowManagerPolicy::handle_modify_window(miral::WindowInfo&, miral::WindowSpecification const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::CanonicalWindowManagerPolicy::handle_raise_window(miral::WindowInfo&)@MIRAL_4.0" 4.0.0
- (c++)"miral::CanonicalWindowManagerPolicy::handle_request_drag_and_drop(miral::WindowInfo&)@MIRAL_4.0" 4.0.0
  (c++)"miral::CanonicalWindowManagerPolicy::handle_window_ready(miral::WindowInfo&)@MIRAL_4.0" 4.0.0
  (c++)"miral::CanonicalWindowManagerPolicy::place_new_window(miral::ApplicationInfo const&, miral::WindowSpecification const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::ConfigurationOption::ConfigurationOption(miral::ConfigurationOption const&)@MIRAL_4.0" 4.0.0
@@ -51,6 +50,7 @@ libmiral.so.6 libmiral6 #MINVER#
  (c++)"miral::CursorTheme::~CursorTheme()@MIRAL_4.0" 4.0.0
  (c++)"miral::DisplayConfiguration::DisplayConfiguration(miral::DisplayConfiguration const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::DisplayConfiguration::DisplayConfiguration(miral::MirRunner const&)@MIRAL_4.0" 4.0.0
+ (c++)"miral::DisplayConfiguration::add_output_attribute(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::DisplayConfiguration::layout_option()@MIRAL_4.0" 4.0.0
  (c++)"miral::DisplayConfiguration::list_layouts[abi:cxx11]()@MIRAL_4.0" 4.0.0
  (c++)"miral::DisplayConfiguration::operator()(mir::Server&) const@MIRAL_4.0" 4.0.0
@@ -77,7 +77,11 @@ libmiral.so.6 libmiral6 #MINVER#
  (c++)"miral::Keymap::set_keymap(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::Keymap::~Keymap()@MIRAL_4.0" 4.0.0
  (c++)"miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&)@MIRAL_4.0" 4.0.0
+ (c++)"miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&, MirInputEventModifier)@MIRAL_4.0" 4.0.0
+ (c++)"miral::MinimalWindowManager::advise_delete_app(miral::ApplicationInfo const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::MinimalWindowManager::advise_focus_gained(miral::WindowInfo const&)@MIRAL_4.0" 4.0.0
+ (c++)"miral::MinimalWindowManager::advise_focus_lost(miral::WindowInfo const&)@MIRAL_4.0" 4.0.0
+ (c++)"miral::MinimalWindowManager::advise_new_app(miral::ApplicationInfo&)@MIRAL_4.0" 4.0.0
  (c++)"miral::MinimalWindowManager::begin_pointer_move(miral::WindowInfo const&, MirInputEvent const*)@MIRAL_4.0" 4.0.0
  (c++)"miral::MinimalWindowManager::begin_pointer_resize(miral::WindowInfo const&, MirInputEvent const*, MirResizeEdge const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::MinimalWindowManager::begin_touch_move(miral::WindowInfo const&, MirInputEvent const*)@MIRAL_4.0" 4.0.0
@@ -88,7 +92,6 @@ libmiral.so.6 libmiral6 #MINVER#
  (c++)"miral::MinimalWindowManager::handle_modify_window(miral::WindowInfo&, miral::WindowSpecification const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::MinimalWindowManager::handle_pointer_event(MirPointerEvent const*)@MIRAL_4.0" 4.0.0
  (c++)"miral::MinimalWindowManager::handle_raise_window(miral::WindowInfo&)@MIRAL_4.0" 4.0.0
- (c++)"miral::MinimalWindowManager::handle_request_drag_and_drop(miral::WindowInfo&)@MIRAL_4.0" 4.0.0
  (c++)"miral::MinimalWindowManager::handle_request_move(miral::WindowInfo&, MirInputEvent const*)@MIRAL_4.0" 4.0.0
  (c++)"miral::MinimalWindowManager::handle_request_resize(miral::WindowInfo&, MirInputEvent const*, MirResizeEdge)@MIRAL_4.0" 4.0.0
  (c++)"miral::MinimalWindowManager::handle_touch_event(MirTouchEvent const*)@MIRAL_4.0" 4.0.0
@@ -101,6 +104,8 @@ libmiral.so.6 libmiral6 #MINVER#
  (c++)"miral::MirRunner::add_stop_callback(std::function<void ()> const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::MirRunner::config_file[abi:cxx11]() const@MIRAL_4.0" 4.0.0
  (c++)"miral::MirRunner::display_config_file[abi:cxx11]() const@MIRAL_4.0" 4.0.0
+ (c++)"miral::MirRunner::register_fd_handler(mir::Fd, std::function<void (int)> const&)@MIRAL_4.0" 4.0.0
+ (c++)"miral::MirRunner::register_signal_handler(std::initializer_list<int>, std::function<void (int)> const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::MirRunner::run_with(std::initializer_list<std::function<void (mir::Server&)> >)@MIRAL_4.0" 4.0.0
  (c++)"miral::MirRunner::set_exception_handler(std::function<void ()> const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::MirRunner::stop()@MIRAL_4.0" 4.0.0
@@ -109,12 +114,15 @@ libmiral.so.6 libmiral6 #MINVER#
  (c++)"miral::MirRunner::~MirRunner()@MIRAL_4.0" 4.0.0
  (c++)"miral::Output::Output(mir::graphics::DisplayConfigurationOutput const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::Output::Output(miral::Output const&)@MIRAL_4.0" 4.0.0
+ (c++)"miral::Output::attribute(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) const@MIRAL_4.0" 4.0.0
+ (c++)"miral::Output::attributes_map[abi:cxx11]() const@MIRAL_4.0" 4.0.0
  (c++)"miral::Output::connected() const@MIRAL_4.0" 4.0.0
  (c++)"miral::Output::extents() const@MIRAL_4.0" 4.0.0
  (c++)"miral::Output::form_factor() const@MIRAL_4.0" 4.0.0
  (c++)"miral::Output::id() const@MIRAL_4.0" 4.0.0
  (c++)"miral::Output::is_same_output(miral::Output const&) const@MIRAL_4.0" 4.0.0
  (c++)"miral::Output::logical_group_id() const@MIRAL_4.0" 4.0.0
+ (c++)"miral::Output::name[abi:cxx11]() const@MIRAL_4.0" 4.0.0
  (c++)"miral::Output::operator=(miral::Output const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::Output::orientation() const@MIRAL_4.0" 4.0.0
  (c++)"miral::Output::physical_size_mm() const@MIRAL_4.0" 4.0.0
@@ -126,9 +134,9 @@ libmiral.so.6 libmiral6 #MINVER#
  (c++)"miral::Output::used() const@MIRAL_4.0" 4.0.0
  (c++)"miral::Output::valid() const@MIRAL_4.0" 4.0.0
  (c++)"miral::Output::~Output()@MIRAL_4.0" 4.0.0
- (c++)"miral::PrintTo(miral::Window const&, std::basic_ostream<char, std::char_traits<char> >*)@MIRAL_4.0" 4.0.0
  (c++)"miral::PrependEventFilter::PrependEventFilter(std::function<bool (MirEvent const*)> const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::PrependEventFilter::operator()(mir::Server&)@MIRAL_4.0" 4.0.0
+ (c++)"miral::PrintTo(miral::Window const&, std::basic_ostream<char, std::char_traits<char> >*)@MIRAL_4.0" 4.0.0
  (c++)"miral::SetCommandLineHandler::SetCommandLineHandler(std::function<void (int, char const* const*)> const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::SetCommandLineHandler::operator()(mir::Server&) const@MIRAL_4.0" 4.0.0
  (c++)"miral::SetCommandLineHandler::~SetCommandLineHandler()@MIRAL_4.0" 4.0.0
@@ -152,19 +160,17 @@ libmiral.so.6 libmiral6 #MINVER#
  (c++)"miral::WaylandExtensions::conditionally_enable(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::function<bool (miral::WaylandExtensions::EnableInfo const&)> const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::WaylandExtensions::disable(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)@MIRAL_4.0" 4.0.0
  (c++)"miral::WaylandExtensions::enable(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)@MIRAL_4.0" 4.0.0
+ (c++)"miral::WaylandExtensions::ext_session_lock_manager_v1@MIRAL_4.0" 4.0.0
  (c++)"miral::WaylandExtensions::operator()(mir::Server&) const@MIRAL_4.0" 4.0.0
  (c++)"miral::WaylandExtensions::operator=(miral::WaylandExtensions const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::WaylandExtensions::recommended[abi:cxx11]()@MIRAL_4.0" 4.0.0
- (c++)"miral::WaylandExtensions::set_filter(std::function<bool (std::shared_ptr<mir::scene::Session> const&, char const*)> const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::WaylandExtensions::supported[abi:cxx11]()@MIRAL_4.0" 4.0.0
  (c++)"miral::WaylandExtensions::zwlr_foreign_toplevel_manager_v1@MIRAL_4.0" 4.0.0
  (c++)"miral::WaylandExtensions::zwlr_layer_shell_v1@MIRAL_4.0" 4.0.0
  (c++)"miral::WaylandExtensions::zwlr_screencopy_manager_v1@MIRAL_4.0" 4.0.0
  (c++)"miral::WaylandExtensions::zwlr_virtual_pointer_manager_v1@MIRAL_4.0" 4.0.0
  (c++)"miral::WaylandExtensions::zwp_input_method_manager_v2@MIRAL_4.0" 4.0.0
- (c++)"miral::WaylandExtensions::zwp_input_method_v2@MIRAL_4.0" 4.0.0
  (c++)"miral::WaylandExtensions::zwp_virtual_keyboard_manager_v1@MIRAL_4.0" 4.0.0
- (c++)"miral::WaylandExtensions::zwp_virtual_keyboard_v1@MIRAL_4.0" 4.0.0
  (c++)"miral::WaylandExtensions::zxdg_output_manager_v1@MIRAL_4.0" 4.0.0
  (c++)"miral::WaylandExtensions::~WaylandExtensions()@MIRAL_4.0" 4.0.0
  (c++)"miral::Window::Window()@MIRAL_4.0" 4.0.0
@@ -216,6 +222,7 @@ libmiral.so.6 libmiral6 #MINVER#
  (c++)"miral::WindowInfo::type() const@MIRAL_4.0" 4.0.0
  (c++)"miral::WindowInfo::userdata() const@MIRAL_4.0" 4.0.0
  (c++)"miral::WindowInfo::userdata(std::shared_ptr<void>)@MIRAL_4.0" 4.0.0
+ (c++)"miral::WindowInfo::visible_on_lock_screen() const@MIRAL_4.0" 4.0.0
  (c++)"miral::WindowInfo::width_inc() const@MIRAL_4.0" 4.0.0
  (c++)"miral::WindowInfo::window() const@MIRAL_4.0" 4.0.0
  (c++)"miral::WindowInfo::~WindowInfo()@MIRAL_4.0" 4.0.0
@@ -251,7 +258,6 @@ libmiral.so.6 libmiral6 #MINVER#
  (c++)"miral::WindowManagerTools::create_workspace()@MIRAL_4.0" 4.0.0
  (c++)"miral::WindowManagerTools::drag_active_window(mir::geometry::generic::Displacement<int>)@MIRAL_4.0" 4.0.0
  (c++)"miral::WindowManagerTools::drag_window(miral::Window const&, mir::geometry::generic::Displacement<int>)@MIRAL_4.0" 4.0.0
- (c++)"miral::WindowManagerTools::end_drag_and_drop()@MIRAL_4.0" 4.0.0
  (c++)"miral::WindowManagerTools::find_application(std::function<bool (miral::ApplicationInfo const&)> const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::WindowManagerTools::focus_next_application()@MIRAL_4.0" 4.0.0
  (c++)"miral::WindowManagerTools::focus_next_within_application()@MIRAL_4.0" 4.0.0
@@ -274,8 +280,10 @@ libmiral.so.6 libmiral6 #MINVER#
  (c++)"miral::WindowManagerTools::raise_tree(miral::Window const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::WindowManagerTools::remove_tree_from_workspace(miral::Window const&, std::shared_ptr<miral::Workspace> const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::WindowManagerTools::select_active_window(miral::Window const&)@MIRAL_4.0" 4.0.0
- (c++)"miral::WindowManagerTools::start_drag_and_drop(miral::WindowInfo&, std::vector<unsigned char, std::allocator<unsigned char> > const&)@MIRAL_4.0" 4.0.0
+ (c++)"miral::WindowManagerTools::send_tree_to_back(miral::Window const&)@MIRAL_4.0" 4.0.0
+ (c++)"miral::WindowManagerTools::swap_tree_order(miral::Window const&, miral::Window const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::WindowManagerTools::window_at(mir::geometry::generic::Point<int>) const@MIRAL_4.0" 4.0.0
+ (c++)"miral::WindowManagerTools::window_to_select_application(std::shared_ptr<mir::scene::Session>) const@MIRAL_4.0" 4.0.0
  (c++)"miral::WindowManagerTools::~WindowManagerTools()@MIRAL_4.0" 4.0.0
  (c++)"miral::WindowSpecification::WindowSpecification()@MIRAL_4.0" 4.0.0
  (c++)"miral::WindowSpecification::WindowSpecification(mir::shell::SurfaceSpecification const&)@MIRAL_4.0" 4.0.0
@@ -341,6 +349,8 @@ libmiral.so.6 libmiral6 #MINVER#
  (c++)"miral::WindowSpecification::type()@MIRAL_4.0" 4.0.0
  (c++)"miral::WindowSpecification::userdata() const@MIRAL_4.0" 4.0.0
  (c++)"miral::WindowSpecification::userdata()@MIRAL_4.0" 4.0.0
+ (c++)"miral::WindowSpecification::visible_on_lock_screen() const@MIRAL_4.0" 4.0.0
+ (c++)"miral::WindowSpecification::visible_on_lock_screen()@MIRAL_4.0" 4.0.0
  (c++)"miral::WindowSpecification::width_inc() const@MIRAL_4.0" 4.0.0
  (c++)"miral::WindowSpecification::width_inc()@MIRAL_4.0" 4.0.0
  (c++)"miral::WindowSpecification::window_placement_gravity() const@MIRAL_4.0" 4.0.0
@@ -355,6 +365,7 @@ libmiral.so.6 libmiral6 #MINVER#
  (c++)"miral::Zone::Zone(miral::Zone const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::Zone::extents() const@MIRAL_4.0" 4.0.0
  (c++)"miral::Zone::extents(mir::geometry::generic::Rectangle<int> const&)@MIRAL_4.0" 4.0.0
+ (c++)"miral::Zone::id() const@MIRAL_4.0" 4.0.0
  (c++)"miral::Zone::is_same_zone(miral::Zone const&) const@MIRAL_4.0" 4.0.0
  (c++)"miral::Zone::operator=(miral::Zone const&)@MIRAL_4.0" 4.0.0
  (c++)"miral::Zone::operator==(miral::Zone const&) const@MIRAL_4.0" 4.0.0
@@ -385,7 +396,6 @@ libmiral.so.6 libmiral6 #MINVER#
  (c++)"miral::toolkit::mir_input_event_has_cookie(MirInputEvent const*)@MIRAL_4.0" 4.0.0
  (c++)"miral::toolkit::mir_keyboard_event_action(MirKeyboardEvent const*)@MIRAL_4.0" 4.0.0
  (c++)"miral::toolkit::mir_keyboard_event_input_event(MirKeyboardEvent const*)@MIRAL_4.0" 4.0.0
- (c++)"miral::toolkit::mir_keyboard_event_key_code(MirKeyboardEvent const*)@MIRAL_4.0" 4.0.0
  (c++)"miral::toolkit::mir_keyboard_event_key_text(MirKeyboardEvent const*)@MIRAL_4.0" 4.0.0
  (c++)"miral::toolkit::mir_keyboard_event_keysym(MirKeyboardEvent const*)@MIRAL_4.0" 4.0.0
  (c++)"miral::toolkit::mir_keyboard_event_modifiers(MirKeyboardEvent const*)@MIRAL_4.0" 4.0.0
@@ -411,21 +421,3 @@ libmiral.so.6 libmiral6 #MINVER#
  (c++)"vtable for miral::CanonicalWindowManagerPolicy@MIRAL_4.0" 4.0.0
  (c++)"vtable for miral::MinimalWindowManager@MIRAL_4.0" 4.0.0
  (c++)"vtable for miral::WindowManagementPolicy@MIRAL_4.0" 4.0.0
- (c++)"miral::Zone::id() const@MIRAL_4.0" 4.0.0
- (c++)"miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&, MirInputEventModifier)@MIRAL_4.0" 4.0.0
- (c++)"miral::MirRunner::register_signal_handler(std::initializer_list<int>, std::function<void (int)> const&)@MIRAL_4.0" 4.0.0
- (c++)"miral::MirRunner::register_fd_handler(mir::Fd, std::function<void (int)> const&)@MIRAL_4.0" 4.0.0
- (c++)"miral::DisplayConfiguration::add_output_attribute(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_4.0" 4.0.0
- (c++)"miral::Output::attribute(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) const@MIRAL_4.0" 4.0.0
- (c++)"miral::Output::attributes_map[abi:cxx11]() const@MIRAL_4.0" 4.0.0
- (c++)"miral::Output::name[abi:cxx11]() const@MIRAL_4.0" 4.0.0
- (c++)"miral::WaylandExtensions::ext_session_lock_manager_v1@MIRAL_4.0" 4.0.0
- (c++)"miral::WindowInfo::visible_on_lock_screen() const@MIRAL_4.0" 4.0.0
- (c++)"miral::WindowSpecification::visible_on_lock_screen() const@MIRAL_4.0" 4.0.0
- (c++)"miral::WindowSpecification::visible_on_lock_screen()@MIRAL_4.0" 4.0.0
- (c++)"miral::MinimalWindowManager::advise_delete_app(miral::ApplicationInfo const&)@MIRAL_4.0" 4.0.0
- (c++)"miral::MinimalWindowManager::advise_focus_lost(miral::WindowInfo const&)@MIRAL_4.0" 4.0.0
- (c++)"miral::MinimalWindowManager::advise_new_app(miral::ApplicationInfo&)@MIRAL_4.0" 4.0.0
- (c++)"miral::WindowManagerTools::send_tree_to_back(miral::Window const&)@MIRAL_4.0" 4.0.0
- (c++)"miral::WindowManagerTools::swap_tree_order(miral::Window const&, miral::Window const&)@MIRAL_4.0" 4.0.0
- (c++)"miral::WindowManagerTools::window_to_select_application(std::shared_ptr<mir::scene::Session>) const@MIRAL_4.0" 4.0.0
