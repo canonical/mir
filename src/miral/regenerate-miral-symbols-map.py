@@ -81,7 +81,7 @@ def _report(publish, symbol):
     else:
         print('NOPUBLISH: {}'.format(symbol))
 
-OLD_STANZAS = '''MIRAL_3.6 {
+OLD_STANZAS = '''MIRAL_4.0 {
 # WaylandExtensions::Context ctor and dtor symbols are inline
 # but can be exported by unoptimized builds.
 # This makes the "regenerate" script hide them:
@@ -153,7 +153,10 @@ global:
 # We only want to match miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&)
 #    miral::MinimalWindowManager::MinimalWindowManager*;
     "miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&)";
+    miral::MinimalWindowManager::advise_delete_app*;
     miral::MinimalWindowManager::advise_focus_gained*;
+    miral::MinimalWindowManager::advise_focus_lost*;
+    miral::MinimalWindowManager::advise_new_app*;
     miral::MinimalWindowManager::begin_pointer_move*;
     miral::MinimalWindowManager::begin_pointer_resize*;
     miral::MinimalWindowManager::begin_touch_move*;
@@ -338,9 +341,12 @@ global:
     miral::WindowManagerTools::operator*;
     miral::WindowManagerTools::place_and_size_for_state*;
     miral::WindowManagerTools::raise_tree*;
+    miral::WindowManagerTools::send_tree_to_back*;
+    miral::WindowManagerTools::swap_tree_order*;
     miral::WindowManagerTools::remove_tree_from_workspace*;
     miral::WindowManagerTools::select_active_window*;
     miral::WindowManagerTools::window_at*;
+    miral::WindowManagerTools::window_to_select_application*;
     miral::WindowSpecification::?WindowSpecification*;
     miral::WindowSpecification::WindowSpecification*;
     miral::WindowSpecification::application_id*;
@@ -434,7 +440,10 @@ global:
     non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::handle_request_drag_and_drop*;
     non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::handle_window_ready*;
     non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::place_new_window*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::advise_delete_app*;
     non-virtual?thunk?to?miral::MinimalWindowManager::advise_focus_gained*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::advise_focus_lost*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::advise_new_app*;
     non-virtual?thunk?to?miral::MinimalWindowManager::confirm_inherited_move*;
     non-virtual?thunk?to?miral::MinimalWindowManager::confirm_placement_on_display*;
     non-virtual?thunk?to?miral::MinimalWindowManager::handle_keyboard_event*;
@@ -540,22 +549,9 @@ global:
     vtable?for?miral::WindowSpecification::AspectRatio;
     vtable?for?miral::X11Support;
     vtable?for?miral::Zone;
-  };
-local: *;
-};
-
-MIRAL_3.7 {
-global:
-  extern "C++" {
     "miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&, MirInputEventModifier)";
     miral::MirRunner::register_signal_handler*;
     miral::MirRunner::register_fd_handler*;
-  };
-} MIRAL_3.6;
-
-MIRAL_3.8 {
-global:
-  extern "C++" {
     miral::DisplayConfiguration::add_output_attribute*;
     miral::FdHandle::?FdHandle*;
     miral::Output::attribute*;
@@ -564,22 +560,17 @@ global:
     non-virtual?thunk?to?miral::FdHandle::?FdHandle*;
     typeinfo?for?miral::FdHandle;
     vtable?for?miral::FdHandle;
-  };
-} MIRAL_3.7;
-
-MIRAL_3.9 {
-global:
-  extern "C++" {
     miral::WaylandExtensions::ext_session_lock_manager_v1*;
     miral::WindowInfo::visible_on_lock_screen*;
     miral::WindowSpecification::visible_on_lock_screen*;
   };
-} MIRAL_3.8;
+  local: *;
+};
 
-MIRAL_3.10 {
+MIRAL_4.1 {
 global:'''
 
-END_NEW_STANZA = '} MIRAL_3.9;'
+END_NEW_STANZA = '} MIRAL_4.0;'
 
 def _print_report():
     print(OLD_STANZAS)
