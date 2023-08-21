@@ -166,17 +166,6 @@ public:
     /// \remark Since MirAL 3.6
     static char const* const ext_session_lock_manager_v1;
 
-    /**
-     * \remark Since MirAL 3.3
-     * \deprecated Use the *_manager_* versions instead
-     * @{ */
-    [[deprecated("use zwp_virtual_keyboard_manager_v1 instead")]]
-    static char const* const zwp_virtual_keyboard_v1;
-    [[deprecated("use zwp_input_method_manager_v2 instead")]]
-    static char const* const zwp_input_method_v2;
-    /** @} */
-    /** @} */
-
     /// Add a bespoke Wayland extension both to "supported" and "enabled by default".
     /// \remark Since MirAL 2.5
     void add_extension(Builder const& builder);
