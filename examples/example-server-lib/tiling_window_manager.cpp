@@ -703,10 +703,6 @@ void TilingWindowManagerPolicy::advise_application_zone_delete(miral::Zone const
     dirty_tiles = true;
 }
 
-void TilingWindowManagerPolicy::handle_request_drag_and_drop(WindowInfo& /*window_info*/)
-{
-}
-
 void TilingWindowManagerPolicy::handle_request_move(WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/)
 {
 }

@@ -64,9 +64,6 @@ public:
     /// Handles pre-existing move & resize gestures, plus click to focus
     bool handle_pointer_event(MirPointerEvent const* event) override;
 
-    /// Currently unimplemented
-    void handle_request_drag_and_drop(WindowInfo& window_info) override;
-
     /// Initiates a move gesture (only implemented for pointers)
     void handle_request_move(WindowInfo& window_info, MirInputEvent const* input_event) override;
 

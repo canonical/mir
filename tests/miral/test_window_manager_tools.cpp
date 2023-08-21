@@ -202,7 +202,6 @@ struct MockWindowManagerPolicy : miral::CanonicalWindowManagerPolicy
     MOCK_METHOD2(advise_output_update, void(miral::Output const&, miral::Output const&));
     MOCK_METHOD1(advise_output_delete, void(miral::Output const&));
 
-    void handle_request_drag_and_drop(miral::WindowInfo& /*window_info*/) {}
     void handle_request_move(miral::WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/) {}
     void handle_request_resize(miral::WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/, MirResizeEdge /*edge*/) {}
     mir::geometry::Rectangle confirm_placement_on_display(const miral::WindowInfo&, MirWindowState, mir::geometry::Rectangle const& new_placement)

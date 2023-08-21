@@ -230,14 +230,6 @@ public:
 /** @name handle requests originating from the client
  * The policy is expected to update the model as appropriate
  *  @{ */
-    /** request from client to initiate drag and drop
-     * \note the request has already been validated against the requesting event
-     *
-     * @param window_info   the window
-     */
-    [[deprecated("Not meaningful: legacy of mirclient API")]]
-    virtual void handle_request_drag_and_drop(WindowInfo& window_info) = 0;
-
     /** request from client to initiate move
      * \note the request has already been validated against the requesting event
      *
