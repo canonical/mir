@@ -159,7 +159,7 @@ install(DIRECTORY
   ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mirserver"
 )
 
-set(MIRSERVER_ABI 58) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 59) # Be sure to increment MIR_VERSION_MINOR at the same time
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(
