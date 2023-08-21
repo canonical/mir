@@ -1,4 +1,4 @@
-MIR_SERVER_2.9 {
+MIR_SERVER_2.15 {
  global:
   extern "C++" {
     VTT?for?mir::DefaultServerConfiguration;
@@ -903,33 +903,15 @@ MIR_SERVER_2.9 {
     vtable?for?mir::time::Alarm;
     vtable?for?mir::time::AlarmFactory;
     mir::shell::ShellWrapper::surface_ready*;
-  };
+    mir::shell::ShellWrapper::set_popup_grab_tree*;
+    mir::DefaultServerConfiguration::the_main_clipboard*;
+    mir::DefaultServerConfiguration::the_primary_selection_clipboard*;
+    "mir::DefaultServerConfiguration::the_drag_icon_controller()";
+    "mir::DefaultServerConfiguration::the_pointer_input_dispatcher()";
+    mir::shell::SurfaceStackWrapper::swap_z_order*;
+    mir::shell::SurfaceStackWrapper::send_to_back*;
+    mir::shell::ShellWrapper::swap_z_order*;
+    mir::shell::ShellWrapper::send_to_back*;
+ };
  local: *;
 };
-
-MIR_SERVER_2.10 {
-  global:
-    extern "C++" {
-      mir::shell::ShellWrapper::set_popup_grab_tree*;
-    };
-} MIR_SERVER_2.9;
-
-MIR_SERVER_2.11 {
-  global:
-    extern "C++" {
-      mir::DefaultServerConfiguration::the_main_clipboard*;
-      mir::DefaultServerConfiguration::the_primary_selection_clipboard*;
-    };
-} MIR_SERVER_2.10;
-
-MIR_SERVER_2.14 {
-  global:
-    extern "C++" {
-      "mir::DefaultServerConfiguration::the_drag_icon_controller()";
-      "mir::DefaultServerConfiguration::the_pointer_input_dispatcher()";
-      mir::shell::SurfaceStackWrapper::swap_z_order*;
-      mir::shell::SurfaceStackWrapper::send_to_back*;
-      mir::shell::ShellWrapper::swap_z_order*;
-      mir::shell::ShellWrapper::send_to_back*;
-    };
-} MIR_SERVER_2.11;
