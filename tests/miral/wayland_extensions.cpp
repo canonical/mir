@@ -91,8 +91,6 @@ struct WaylandExtensions : miral::TestServer
         cv.wait(lock, [&]{ return client_run; });
     }
 
-    static auto constexpr unavailable_extension = "zxdg_shell_v6";
-
 private:
     miral::InternalClientLauncher launcher;
     WaylandClient client;
