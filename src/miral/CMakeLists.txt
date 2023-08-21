@@ -154,7 +154,7 @@ configure_file(
 
 if(TARGET doc)
     add_custom_target(regenerate-miral-symbols-map
-            ${CMAKE_CURRENT_SOURCE_DIR}/regenerate-miral-symbols-map.py ${CMAKE_BINARY_DIR}/doc/xml/*.xml > ${symbol_map}
+            ${CMAKE_CURRENT_SOURCE_DIR}/regenerate-miral-symbols-map.py ${CMAKE_BINARY_DIR}/doc/sphinx/xml/*.xml > ${symbol_map}
             DEPENDS doc)
 endif()
 
