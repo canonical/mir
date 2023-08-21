@@ -115,8 +115,6 @@ private:
     void for_each_window_in_workspace(
         std::shared_ptr<Workspace> const& workspace, std::function<void(Window const&)> const& callback) override;
 
-    void handle_request_drag_and_drop(WindowInfo& window_info) override;
-
     void handle_request_move(WindowInfo& window_info, MirInputEvent const* input_event) override;
 
     void handle_request_resize(WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge) override;
