@@ -262,16 +262,6 @@ struct miral::WaylandExtensions::Self
         }
     }
 
-    void assert_only_one_extension_filter_type_used()
-    {
-        if (!conditional_extensions.empty() && extensions_filter)
-        {
-            BOOST_THROW_EXCEPTION(std::logic_error(
-                "Only one of WaylandExtensions::conditionally_enable() or WaylandExtensions::filter() can be used. "
-                "Convert your use of the deprecated filter() method to conditionally_enable()"));
-        }
-    }
-
     void init_server(mir::Server& server)
     {
         for (auto const& hook : wayland_extension_hooks)
@@ -488,20 +478,6 @@ void miral::WaylandExtensions::add_extension(Builder const& builder)
     self->enable_extension(builder.name);
 }
 
-void miral::WaylandExtensions::set_filter(miral::WaylandExtensions::Filter const& extension_filter)
-{
-    // Wayland calls the filter for all protocols (not just the optional extensions).
-    // To avoid accidents (like denying base protocols) we only defer to the provided
-    // extension_filter for supported_extensions.
-    self->extensions_filter = [&optional = self->supported_extensions, extension_filter]
-        (Application const& app, char const* protocol)
-        {
-            return (optional.count(protocol) == 0) || extension_filter(app, protocol);
-        };
-
-    self->assert_only_one_extension_filter_type_used();
-}
-
 void miral::WaylandExtensions::add_extension_disabled_by_default(miral::WaylandExtensions::Builder const& builder)
 {
     self->add_extension(builder);
@@ -534,7 +510,6 @@ auto miral::WaylandExtensions::conditionally_enable(
     EnableCallback const& callback) -> WaylandExtensions&
 {
     self->conditionally_enable(name, callback);
-    self->assert_only_one_extension_filter_type_used();
     return *this;
 }
 
