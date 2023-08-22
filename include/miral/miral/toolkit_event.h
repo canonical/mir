@@ -154,11 +154,6 @@ MirKeyboardAction mir_keyboard_event_action(MirKeyboardEvent const* event);
 xkb_keysym_t mir_keyboard_event_keysym(MirKeyboardEvent const* event);
 
 /**
- *   \deprecated       Returns the same thing as mir_keyboard_event_keysym(), which should be used instead.
- */
-xkb_keysym_t mir_keyboard_event_key_code(MirKeyboardEvent const* event);
-
-/**
  * Retrieve the raw hardware scan code associated with the key acted on. May
  * be interpreted as per <linux/input.h>
  *

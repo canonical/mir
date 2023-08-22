@@ -63,7 +63,7 @@ Vcs-Git: https://github.com/MirServer/mir
 
 #TODO: Packaging infrastructure for better dependency generation,
 #      ala pkg-xorg's xviddriver:Provides and ABI detection.
-Package: libmirserver58
+Package: libmirserver59
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -141,7 +141,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver58 (= ${binary:Version}),
+Depends: libmirserver59 (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libglm-dev,
@@ -490,7 +490,7 @@ Description: Display server for Ubuntu - GL Renderer development files
  Contains header files that define the interfaces through which platforms and
  renderers access the functionality needed to render with GL.
 
-Package: libmiral5
+Package: libmiral6
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -508,7 +508,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmiral5 (= ${libmiral5:Version}),
+Depends: libmiral6 (= ${libmiral6:Version}),
 # ${source:Version} is technically incorrect, but Launchpad doesn't do BinNMUs
 # so it's harmless.
          libmircommon-dev (= ${source:Version}),

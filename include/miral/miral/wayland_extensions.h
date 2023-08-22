@@ -116,22 +116,13 @@ public:
     /// \remark Since MirAL 3.4
     using EnableCallback = std::function<bool(EnableInfo const& info)>;
 
-    /// Set an extension filter callback to control the extensions available to specific clients. Deprecated in favor of
-    /// conditionally_enable(), and not be used in conjunction with conditionally_enable(). The filter may be called
-    /// multiple times for a each client/extension pair (for example, once each time a client creates or destroys a
-    /// wl_registry).
-    /// \remark Since MirAL 2.5
-    /// \deprecated In MirAL 3.4, use conditionally_enable() instead
-    [[deprecated("use conditionally_enable() instead")]]
-    void set_filter(Filter const& extension_filter);
-
     /**
      * Supported wayland extensions that are not enabled by default.
      * These can be passed into WaylandExtensions::enable() to turn them on.
      * @{ */
 
     /// Enables shell components such as panels, notifications and lock screens.
-    /// It is recommended to use this in conjunction with set_filter() as malicious
+    /// It is recommended to use this in conjunction with conditionally_enable() as malicious
     /// clients could potentially use this protocol to steal input focus or
     /// otherwise bother the user.
     /// \remark Since MirAL 2.6
@@ -188,17 +179,6 @@ public:
     /// Allows clients to act as a screen lock.
     /// \remark Since MirAL 3.6
     static char const* const ext_session_lock_manager_v1;
-
-    /**
-     * \remark Since MirAL 3.3
-     * \deprecated Use the *_manager_* versions instead
-     * @{ */
-    [[deprecated("use zwp_virtual_keyboard_manager_v1 instead")]]
-    static char const* const zwp_virtual_keyboard_v1;
-    [[deprecated("use zwp_input_method_manager_v2 instead")]]
-    static char const* const zwp_input_method_v2;
-    /** @} */
-    /** @} */
 
     /// Add a bespoke Wayland extension both to "supported" and "enabled by default".
     /// \remark Since MirAL 2.5

@@ -1,4 +1,4 @@
-MIR_SERVER_2.9 {
+MIR_SERVER_2.15 {
  global:
   extern "C++" {
     VTT?for?mir::DefaultServerConfiguration;
@@ -396,7 +396,6 @@ MIR_SERVER_2.9 {
     mir::shell::BasicWindowManager::handle_keyboard_event*;
     mir::shell::BasicWindowManager::handle_pointer_event*;
     mir::shell::BasicWindowManager::handle_raise_surface*;
-    mir::shell::BasicWindowManager::handle_request_drag_and_drop*;
     mir::shell::BasicWindowManager::handle_request_move*;
     mir::shell::BasicWindowManager::handle_touch_event*;
     mir::shell::BasicWindowManager::info_for*;
@@ -418,7 +417,6 @@ MIR_SERVER_2.9 {
     mir::shell::CanonicalWindowManagerPolicy::handle_place_new_surface*;
     mir::shell::CanonicalWindowManagerPolicy::handle_pointer_event*;
     mir::shell::CanonicalWindowManagerPolicy::handle_raise_surface*;
-    mir::shell::CanonicalWindowManagerPolicy::handle_request_drag_and_drop*;
     mir::shell::CanonicalWindowManagerPolicy::handle_session_info_updated*;
     mir::shell::CanonicalWindowManagerPolicy::handle_set_state*;
     mir::shell::CanonicalWindowManagerPolicy::handle_touch_event*;
@@ -492,7 +490,6 @@ MIR_SERVER_2.9 {
     mir::shell::SystemCompositorWindowManager::handle_keyboard_event*;
     mir::shell::SystemCompositorWindowManager::handle_pointer_event*;
     mir::shell::SystemCompositorWindowManager::handle_raise_surface*;
-    mir::shell::SystemCompositorWindowManager::handle_request_drag_and_drop*;
     mir::shell::SystemCompositorWindowManager::handle_request_move*;
     mir::shell::SystemCompositorWindowManager::handle_request_resize*;
     mir::shell::SystemCompositorWindowManager::handle_touch_event*;
@@ -622,7 +619,6 @@ MIR_SERVER_2.9 {
     non-virtual?thunk?to?mir::shell::BasicWindowManager::handle_keyboard_event*;
     non-virtual?thunk?to?mir::shell::BasicWindowManager::handle_pointer_event*;
     non-virtual?thunk?to?mir::shell::BasicWindowManager::handle_raise_surface*;
-    non-virtual?thunk?to?mir::shell::BasicWindowManager::handle_request_drag_and_drop*;
     non-virtual?thunk?to?mir::shell::BasicWindowManager::handle_request_move*;
     non-virtual?thunk?to?mir::shell::BasicWindowManager::handle_touch_event*;
     non-virtual?thunk?to?mir::shell::BasicWindowManager::info_for*;
@@ -643,7 +639,6 @@ MIR_SERVER_2.9 {
     non-virtual?thunk?to?mir::shell::CanonicalWindowManagerPolicy::handle_place_new_surface*;
     non-virtual?thunk?to?mir::shell::CanonicalWindowManagerPolicy::handle_pointer_event*;
     non-virtual?thunk?to?mir::shell::CanonicalWindowManagerPolicy::handle_raise_surface*;
-    non-virtual?thunk?to?mir::shell::CanonicalWindowManagerPolicy::handle_request_drag_and_drop*;
     non-virtual?thunk?to?mir::shell::CanonicalWindowManagerPolicy::handle_session_info_updated*;
     non-virtual?thunk?to?mir::shell::CanonicalWindowManagerPolicy::handle_set_state*;
     non-virtual?thunk?to?mir::shell::CanonicalWindowManagerPolicy::handle_touch_event*;
@@ -689,7 +684,6 @@ MIR_SERVER_2.9 {
     non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::handle_keyboard_event*;
     non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::handle_pointer_event*;
     non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::handle_raise_surface*;
-    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::handle_request_drag_and_drop*;
     non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::handle_request_move*;
     non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::handle_request_resize*;
     non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::handle_touch_event*;
@@ -815,7 +809,6 @@ MIR_SERVER_2.9 {
     virtual?thunk?to?mir::shell::BasicWindowManager::handle_keyboard_event*;
     virtual?thunk?to?mir::shell::BasicWindowManager::handle_pointer_event*;
     virtual?thunk?to?mir::shell::BasicWindowManager::handle_raise_surface*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::handle_request_drag_and_drop*;
     virtual?thunk?to?mir::shell::BasicWindowManager::handle_request_move*;
     virtual?thunk?to?mir::shell::BasicWindowManager::handle_touch_event*;
     virtual?thunk?to?mir::shell::BasicWindowManager::modify_surface*;
@@ -910,33 +903,15 @@ MIR_SERVER_2.9 {
     vtable?for?mir::time::Alarm;
     vtable?for?mir::time::AlarmFactory;
     mir::shell::ShellWrapper::surface_ready*;
-  };
+    mir::shell::ShellWrapper::set_popup_grab_tree*;
+    mir::DefaultServerConfiguration::the_main_clipboard*;
+    mir::DefaultServerConfiguration::the_primary_selection_clipboard*;
+    "mir::DefaultServerConfiguration::the_drag_icon_controller()";
+    "mir::DefaultServerConfiguration::the_pointer_input_dispatcher()";
+    mir::shell::SurfaceStackWrapper::swap_z_order*;
+    mir::shell::SurfaceStackWrapper::send_to_back*;
+    mir::shell::ShellWrapper::swap_z_order*;
+    mir::shell::ShellWrapper::send_to_back*;
+ };
  local: *;
 };
-
-MIR_SERVER_2.10 {
-  global:
-    extern "C++" {
-      mir::shell::ShellWrapper::set_popup_grab_tree*;
-    };
-} MIR_SERVER_2.9;
-
-MIR_SERVER_2.11 {
-  global:
-    extern "C++" {
-      mir::DefaultServerConfiguration::the_main_clipboard*;
-      mir::DefaultServerConfiguration::the_primary_selection_clipboard*;
-    };
-} MIR_SERVER_2.10;
-
-MIR_SERVER_2.14 {
-  global:
-    extern "C++" {
-      "mir::DefaultServerConfiguration::the_drag_icon_controller()";
-      "mir::DefaultServerConfiguration::the_pointer_input_dispatcher()";
-      mir::shell::SurfaceStackWrapper::swap_z_order*;
-      mir::shell::SurfaceStackWrapper::send_to_back*;
-      mir::shell::ShellWrapper::swap_z_order*;
-      mir::shell::ShellWrapper::send_to_back*;
-    };
-} MIR_SERVER_2.11;

@@ -222,11 +222,6 @@ bool miral::MinimalWindowManager::handle_pointer_event(MirPointerEvent const* ev
     return self->handle_pointer_event(event);
 }
 
-void miral::MinimalWindowManager::handle_request_drag_and_drop(WindowInfo& /*window_info*/)
-{
-    // TODO
-}
-
 void miral::MinimalWindowManager::handle_request_move(WindowInfo& window_info, MirInputEvent const* input_event)
 {
     if (begin_pointer_move(window_info, input_event))

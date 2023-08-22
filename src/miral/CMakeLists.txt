@@ -2,7 +2,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
-set(MIRAL_ABI 5)
+set(MIRAL_ABI 6)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 set(miral_include ${PROJECT_SOURCE_DIR}/include/miral)
 
@@ -154,7 +154,7 @@ configure_file(
 
 if(TARGET doc)
     add_custom_target(regenerate-miral-symbols-map
-            ${CMAKE_CURRENT_SOURCE_DIR}/regenerate-miral-symbols-map.py ${CMAKE_BINARY_DIR}/doc/xml/*.xml > ${symbol_map}
+            ${CMAKE_CURRENT_SOURCE_DIR}/regenerate-miral-symbols-map.py ${CMAKE_BINARY_DIR}/doc/sphinx/xml/*.xml > ${symbol_map}
             DEPENDS doc)
 endif()
 
