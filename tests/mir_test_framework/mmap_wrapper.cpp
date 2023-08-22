@@ -61,6 +61,14 @@ void* mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
     void* (*real_mmap)(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
     *(void **)(&real_mmap) = dlsym(RTLD_NEXT, real_mmap_symbol_name());
 
+#if _FILE_OFFSET_BITS == 64
+    // Empirically, mmap64 is NOT defined everywhere, but on 64-bit platforms this is appropriate
+    if (!real_mmap)
+    {
+        *(void **)(&real_mmap) = dlsym(RTLD_NEXT, "mmap");
+    }
+#endif
+
     if (!real_mmap)
     {
         using namespace std::literals::string_literals;
