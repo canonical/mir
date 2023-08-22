@@ -12,7 +12,15 @@ jobs:
   mir-libs:
     runs-on: ubuntu-latest
 
-    timeout-minutes: 45
+    timeout-minutes: 120
+
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture:
+          - amd64
+          - armhf
+          - arm64
 
     steps:
     - name: Check out code
@@ -21,8 +29,9 @@ jobs:
         fetch-depth: 0  # needed for version determination
 
     - name: Build and publish the snap
-      uses: canonical/actions/build-snap@release
+      uses: canonical/actions/build-snap@multiarch
       with:
+        architecture: ${{ matrix.architecture }}
         snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
         publish: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
         publish-channel: 22/edge/pr${{ github.event.number }}
@@ -40,6 +49,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        architecture:
+          - amd64
+          - armhf
+          - arm64
         include:
         - snap: MirServer/mir-test-tools
           track: 22
@@ -64,8 +77,9 @@ jobs:
         sed -i 's@- mir-libs.*$@\0/pr${{ github.event.number }}@' snap/snapcraft.yaml
 
     - name: Build and publish the snap
-      uses: canonical/actions/build-snap@release
+      uses: canonical/actions/build-snap@multiarch
       with:
+        architecture: ${{ matrix.architecture }}
         review-opts: ${{ matrix.review-opts }}
         snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
         publish: true
