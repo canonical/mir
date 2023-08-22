@@ -41,14 +41,23 @@ mtf::MmapHandlerHandle mtf::add_mmap_handler(MmapHandler handler)
 
 auto real_mmap_symbol_name() -> char const*
 {
-#if _FILE_OFFSET_BITS == 64
-    // mmap64 is defined everywhere, so even though off_t == off64_t on 64-bit platforms
-    // this is still appropriate.
-    return "mmap64";
-#else
-    // This will get us the 32-bit off_t version on 32-bit platforms
-    return "mmap";
-#endif
+    /* Implementations can handle large file support in two ways; they can 
+     * delegate mmap to mmap64 (the transitional LFS API), or they can
+     * have a real mmap symbol that uses 64bit off_t.
+     *
+     * Since we're using dlsym trickery we need the *real* symbol; if
+     * mmap is a preprocessor symbol #defined to something else, we
+     * need the real symbol name.
+     *
+     * Use preprocessor arcana to get it to resolve mmap to whatever
+     * symbol that would actually call. We need two macros to do this
+     * for stupid C preprocessor reasons.
+     */
+#define STRINGISE_MACRO(s) STRINGISE(s)
+#define STRINGISE(s) #s
+    return STRINGISE(mmap);
+#undef STRINGISE_MACRO
+#undef STRINGISE 
 }
 
 void* mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
