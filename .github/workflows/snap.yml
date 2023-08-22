@@ -12,7 +12,7 @@ jobs:
   mir-libs:
     runs-on: ubuntu-latest
 
-    timeout-minutes: 120
+    timeout-minutes: 180
 
     strategy:
       fail-fast: false
@@ -44,7 +44,7 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     strategy:
       fail-fast: false
