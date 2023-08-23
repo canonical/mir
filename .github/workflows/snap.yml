@@ -49,6 +49,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        snap:
+        - MirServer/mir-test-tools
+        - MirServer/confined-shell-wip
+        - MirServer/ubuntu-frame
+        - Miriway/Miriway
         architecture:
         - amd64
         - armhf
