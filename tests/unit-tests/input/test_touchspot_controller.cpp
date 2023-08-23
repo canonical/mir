@@ -48,7 +48,7 @@ struct MockBufferAllocator : public mtd::StubBufferAllocator
     {
         using namespace testing;
         ON_CALL(*this, supported_pixel_formats())
-            .WillByDefault(Return(std::initializer_list<MirPixelFormat>{ mir_pixel_format_argb_8888 }));
+            .WillByDefault(Return<std::vector<MirPixelFormat>>({ mir_pixel_format_argb_8888 }));
         ON_CALL(*this, alloc_software_buffer(_, _))
             .WillByDefault(
                 Invoke(
