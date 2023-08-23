@@ -18,9 +18,9 @@ jobs:
       fail-fast: false
       matrix:
         architecture:
-          - amd64
-          - armhf
-          - arm64
+        - amd64
+        - armhf
+        - arm64
 
     steps:
     - name: Check out code
@@ -49,10 +49,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        snap:
+        - MirServer/mir-test-tools
+        - MirServer/confined-shell-wip
+        - MirServer/ubuntu-frame
+        - Miriway/Miriway
         architecture:
-          - amd64
-          - armhf
-          - arm64
+        - amd64
+        - armhf
+        - arm64
         include:
         - snap: MirServer/mir-test-tools
           track: 22
