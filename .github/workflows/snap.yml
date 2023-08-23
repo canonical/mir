@@ -18,9 +18,9 @@ jobs:
       fail-fast: false
       matrix:
         architecture:
-          - amd64
-          - armhf
-          - arm64
+        - amd64
+        - armhf
+        - arm64
 
     steps:
     - name: Check out code
@@ -50,9 +50,9 @@ jobs:
       fail-fast: false
       matrix:
         architecture:
-          - amd64
-          - armhf
-          - arm64
+        - amd64
+        - armhf
+        - arm64
         include:
         - snap: MirServer/mir-test-tools
           track: 22
