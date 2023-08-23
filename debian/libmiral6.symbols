@@ -170,8 +170,6 @@ libmiral.so.6 libmiral6 #MINVER#
  (c++)"miral::WaylandExtensions::zwlr_screencopy_manager_v1@MIRAL_4.0" 4.0.0
  (c++)"miral::WaylandExtensions::zwlr_virtual_pointer_manager_v1@MIRAL_4.0" 4.0.0
  (c++)"miral::WaylandExtensions::zwp_input_method_manager_v2@MIRAL_4.0" 4.0.0
- (c++)"miral::WaylandExtensions::zwp_input_method_v1@MIRAL_4.0" 4.0.0
- (c++)"miral::WaylandExtensions::zwp_input_panel_v1@MIRAL_4.0" 4.0.0
  (c++)"miral::WaylandExtensions::zwp_virtual_keyboard_manager_v1@MIRAL_4.0" 4.0.0
  (c++)"miral::WaylandExtensions::zxdg_output_manager_v1@MIRAL_4.0" 4.0.0
  (c++)"miral::WaylandExtensions::~WaylandExtensions()@MIRAL_4.0" 4.0.0
@@ -423,3 +421,5 @@ libmiral.so.6 libmiral6 #MINVER#
  (c++)"vtable for miral::CanonicalWindowManagerPolicy@MIRAL_4.0" 4.0.0
  (c++)"vtable for miral::MinimalWindowManager@MIRAL_4.0" 4.0.0
  (c++)"vtable for miral::WindowManagementPolicy@MIRAL_4.0" 4.0.0
+ (c++)"miral::WaylandExtensions::zwp_input_method_v1@MIRAL_4.1" 4.1.0
+ (c++)"miral::WaylandExtensions::zwp_input_panel_v1@MIRAL_4.1" 4.1.0

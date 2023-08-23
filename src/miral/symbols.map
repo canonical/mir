@@ -158,8 +158,6 @@ global:
     miral::WaylandExtensions::zwlr_screencopy_manager_v1*;
     miral::WaylandExtensions::zwlr_virtual_pointer_manager_v1*;
     miral::WaylandExtensions::zwp_input_method_manager_v2*;
-    miral::WaylandExtensions::zwp_input_method_v1*;
-    miral::WaylandExtensions::zwp_input_panel_v1*;
     miral::WaylandExtensions::zwp_virtual_keyboard_manager_v1*;
     miral::WaylandExtensions::zxdg_output_manager_v1*;
     miral::Window::?Window*;
@@ -474,4 +472,13 @@ global:
 
   local: *;
 };
+
+MIRAL_4.1 {
+global:
+  extern "C++" {
+    miral::WaylandExtensions::zwp_input_method_v1*;
+    miral::WaylandExtensions::zwp_input_panel_v1*;
+  };
+
+} MIRAL_4.0;
 
