@@ -40,6 +40,10 @@ ifeq ($(filter ppc64el,$(DEB_HOST_ARCH)),ppc64el)
 	ifneq ($(shell gcc --version | grep '12.[[:digit:]]\+.[[:digit:]]\+$$'),)
 		COMMON_CONFIGURE_OPTIONS += -DMIR_COMPILER_QUIRKS="libinput_environment.cpp:restrict"
 	endif
+	# Disable spurious error on GCC-13
+	ifneq ($(shell gcc --version | grep '13.[[:digit:]]\+.[[:digit:]]\+$$'),)
+		COMMON_CONFIGURE_OPTIONS += -DMIR_COMPILER_QUIRKS="test_touchspot_controller.cpp:array-bounds"
+	endif
 endif
 ifeq ($(filter riscv64,$(DEB_HOST_ARCH)),riscv64)
 	# Disable spurious error on GCC-12

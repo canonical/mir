@@ -143,6 +143,12 @@ if ("test_linearising_executor.cpp:use-after-free" IN_LIST MIR_COMPILER_QUIRKS)
     PROPERTY COMPILE_OPTIONS -Wno-error=use-after-free  # riscv64 spuriously warns here
   )
 endif()
+if ("test_touchspot_controller.cpp:array-bounds" IN_LIST MIR_COMPILER_QUIRKS)
+  set_property(
+    SOURCE input/test_touchspot_controller.cpp
+    PROPERTY COMPILE_OPTIONS -Wno-error=array-bounds    # ppc64el spuriously warns here
+  )
+endif()
 
 if (MIR_USE_PRECOMPILED_HEADERS)
   target_precompile_headers(

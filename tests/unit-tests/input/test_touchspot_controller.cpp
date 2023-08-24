@@ -44,20 +44,6 @@ namespace
 
 struct MockBufferAllocator : public mtd::StubBufferAllocator
 {
-    MockBufferAllocator()
-    {
-        using namespace testing;
-        ON_CALL(*this, supported_pixel_formats())
-            .WillByDefault(Return<std::vector<MirPixelFormat>>({ mir_pixel_format_argb_8888 }));
-        ON_CALL(*this, alloc_software_buffer(_, _))
-            .WillByDefault(
-                Invoke(
-                    [this](auto size, auto pf)
-                    {
-                        return this->mtd::StubBufferAllocator::alloc_software_buffer(size, pf);
-                    }));
-    }
-
     MOCK_METHOD2(alloc_software_buffer, std::shared_ptr<mg::Buffer>(geom::Size, MirPixelFormat));
     MOCK_METHOD0(supported_pixel_formats, std::vector<MirPixelFormat>());
 };
@@ -105,6 +91,18 @@ struct TestTouchspotController : public ::testing::Test
         : allocator(std::make_shared<testing::NiceMock<MockBufferAllocator>>()),
           scene(std::make_shared<StubScene>())
     {
+        using namespace testing;
+
+        ON_CALL(*allocator, supported_pixel_formats())
+            .WillByDefault(Return(std::vector<MirPixelFormat>{ mir_pixel_format_argb_8888 }));
+
+        ON_CALL(*allocator, alloc_software_buffer(_, _))
+            .WillByDefault(
+                Invoke([this](auto size, auto pf)
+                    {
+                        return allocator->mtd::StubBufferAllocator::alloc_software_buffer(size, pf);
+                    }));
+
     }
     std::shared_ptr<MockBufferAllocator> const allocator;
     std::shared_ptr<StubScene> const scene;
