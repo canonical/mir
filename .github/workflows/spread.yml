@@ -112,7 +112,13 @@ jobs:
         echo "max_size = 800M" > ${CCACHE_DIR}/ccache.conf
 
     - name: Run Spread task
-      run: snap run spread-mir-ci.spread -v ${{ matrix.spread-task }}
+      run: snap run spread-mir-ci.spread -reuse -v ${{ matrix.spread-task }}
 
     - name: CCache stats
       run: cat ${CCACHE_DIR}/ccache.stats
+
+    - if: ${{ failure() && runner.debug }}
+      name: Setup upterm session
+      uses: lhotari/action-upterm@v1
+      with:
+        limit-access-to-actor: true
