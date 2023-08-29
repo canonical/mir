@@ -32,10 +32,8 @@ jobs:
         if ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}; then
           TASKS='"lxd:ubuntu-22.04:spread/build/ubuntu:asan"
                  "lxd:ubuntu-22.04:spread/build/ubuntu:tsan"
-                 "lxd:ubuntu-22.04:spread/build/ubuntu:ubsan"
                  "lxd:ubuntu-22.04:spread/build/ubuntu:asan_clang"
-                 "lxd:ubuntu-22.04:spread/build/ubuntu:tsan_clang"
-                 "lxd:ubuntu-22.04:spread/build/ubuntu:ubsan_clang"'
+                 "lxd:ubuntu-22.04:spread/build/ubuntu:tsan_clang"'
         fi
 
         TASKS+='"lxd:alpine-3.18:spread/build/alpine:amd64"
@@ -50,7 +48,9 @@ jobs:
                 "lxd:fedora-38:spread/build/fedora:amd64"
                 "lxd:fedora-rawhide:spread/build/fedora:amd64"
                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_devel"
-                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_proposed"'
+                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_proposed"
+                "lxd:ubuntu-22.04:spread/build/ubuntu:ubsan"
+                "lxd:ubuntu-22.04:spread/build/ubuntu:ubsan_clang"'
 
         echo ${TASKS:-} | jq -cs '{ "spread-task": .  }' | awk '{ print "matrix=" $0 }' >> $GITHUB_OUTPUT
 
