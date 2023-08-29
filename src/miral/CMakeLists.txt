@@ -78,6 +78,7 @@ add_library(miral SHARED
                                         ${miral_include}/miral/lambda_as_function.h
     x11_support.cpp                     ${miral_include}/miral/x11_support.h
     zone.cpp                            ${miral_include}/miral/zone.h
+    smooth_boot_support.cpp             ${miral_include}/miral/smooth_boot_support.h
 )
 
 #include <mir/udev/wrapper.h>

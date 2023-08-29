@@ -225,5 +225,6 @@ MIR_PLATFORM_2.13 {
  global:
   extern "C++" {
    mir::graphics::DRMFormat::from_mir_format*;
+   mir::options::smooth_boot_opt;
   };
 } MIR_PLATFORM_2.11;
