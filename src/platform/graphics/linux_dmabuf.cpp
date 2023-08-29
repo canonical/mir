@@ -746,7 +746,7 @@ public:
           has_alpha{source.format().has_alpha()},
           planes_{source.planes()},
           modifier_{source.modifier()},
-          fourcc{source.format()},
+          format{source.format()},
           egl_delegate{std::move(egl_delegate)}
     {
         eglBindAPI(EGL_OPENGL_ES_API);
@@ -782,6 +782,10 @@ public:
 
     MirPixelFormat pixel_format() const override
     {
+        if (auto mir_format = format.as_mir_format())
+        {
+            return mir_format.value();
+        }
         // There's no way to implement this corectly…
         if (has_alpha)
         {
@@ -830,7 +834,7 @@ public:
 
     auto drm_fourcc() const -> uint32_t override
     {
-        return fourcc;
+        return format;
     }
 
     auto modifier() const -> std::optional<uint64_t> override
@@ -857,7 +861,7 @@ private:
 
     std::vector<mg::DMABufBuffer::PlaneDescriptor> const planes_;
     std::optional<uint64_t> const modifier_;
-    uint32_t const fourcc;
+    mg::DRMFormat const format;
 
     std::shared_ptr<mgc::EGLContextExecutor> const egl_delegate;
 };
