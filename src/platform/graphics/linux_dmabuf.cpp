@@ -291,7 +291,7 @@ public:
         }
     }
 
-    auto format() -> uint32_t
+    auto format() -> mg::DRMFormat
     {
         return format_;
     }
@@ -723,32 +723,6 @@ GLuint get_tex_id()
     return tex;
 }
 
-bool drm_format_has_alpha(uint32_t format)
-{
-    /* TODO: We should really have something like libweston/pixel-formats.h
-     * We've said this multiple times before, so 🤷
-     */
-
-    switch (format)
-    {
-        /* This is only an optimisation, so pick a bunch of formats and hope that
-         * covers it…
-         */
-        case DRM_FORMAT_XBGR2101010:
-        case DRM_FORMAT_BGRX1010102:
-        case DRM_FORMAT_XBGR8888:
-        case DRM_FORMAT_BGRX8888:
-        case DRM_FORMAT_XRGB2101010:
-        case DRM_FORMAT_RGBX1010102:
-        case DRM_FORMAT_RGBX8888:
-        case DRM_FORMAT_XRGB8888:
-            return false;
-        default:
-        // TODO: I *think* true is a safe default, as it'll just mean we're blending something without alpha?
-            return true;
-    }
-}
-
 class WaylandDmabufTexBuffer :
     public mg::BufferBasic,
     public mg::gl::Texture,
@@ -769,7 +743,7 @@ public:
           on_release{std::move(on_release)},
           size_{source.size()},
           layout_{source.layout()},
-          has_alpha{drm_format_has_alpha(source.format())},
+          has_alpha{source.format().has_alpha()},
           planes_{source.planes()},
           modifier_{source.modifier()},
           fourcc{source.format()},
