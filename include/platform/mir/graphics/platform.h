@@ -457,7 +457,9 @@ public:
      */
     virtual UniqueModulePtr<Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
-        std::shared_ptr<GLConfig> const& gl_config) = 0;
+        std::shared_ptr<GLConfig> const& gl_config,
+        std::shared_ptr<GraphicBufferAllocator> buffer_allocator,
+        std::shared_ptr<mir::options::Option> const& options) = 0;
 
     static auto interface_for(std::shared_ptr<DisplayPlatform> platform)
         -> std::shared_ptr<DisplayInterfaceProvider>

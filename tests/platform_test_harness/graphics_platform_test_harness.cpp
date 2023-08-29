@@ -103,6 +103,11 @@ public:
         return the_gl_config();
     }
 
+    auto buffer_allocator() -> std::shared_ptr<mir::graphics::GraphicBufferAllocator>
+    {
+        return the_buffer_allocator();
+    }
+
 private:
     std::thread main_loop_thread;
     static char const* argv[];
@@ -203,7 +208,9 @@ auto test_display_construction(mir::graphics::DisplayPlatform& platform, Minimal
     {
         auto display = platform.create_display(
             env.initial_display_configuration(),
-            env.gl_config());
+            env.gl_config(),
+            env.buffer_allocator(),
+            env.options());
 
         std::cout << "Successfully created display" << std::endl;
 

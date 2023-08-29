@@ -23,6 +23,7 @@
 #include "mir/test/doubles/stub_gl_config.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "mir/test/doubles/stub_console_services.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/test/doubles/mock_drm.h"
@@ -87,7 +88,7 @@ public:
         // Caution: non-local state!
         // This works because standard-drm-devices contains a udev device with 226:0 and devnode /dev/dri/card0
         auto device = ctx.char_device_from_devnum(makedev(226, 0));
-       
+
         auto platform = std::make_shared<mgg::Platform>(
             *device,
             mir::report::null_display_report(),
@@ -96,7 +97,9 @@ public:
             mgg::BypassOption::allowed);
         return platform->create_display(
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
-            std::make_shared<mtd::StubGLConfig>());
+            std::make_shared<mtd::StubGLConfig>(),
+            std::make_shared<mtd::StubBufferAllocator>(),
+            std::make_shared<mir::options::ProgramOption>());
     }
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;

@@ -404,6 +404,7 @@ mir::DefaultServerConfiguration::the_display()
         {
             auto smooth_boot = the_options()->is_set(options::smooth_boot_opt)
                 && the_options()->get<bool>(options::smooth_boot_opt);
+
             (void)smooth_boot;
             std::vector<std::unique_ptr<mg::Display>> displays;
             displays.reserve(the_display_platforms().size());
@@ -412,7 +413,9 @@ mir::DefaultServerConfiguration::the_display()
                 displays.push_back(
                     platform->create_display(
                         the_display_configuration_policy(),
-                        the_gl_config()));
+                        the_gl_config(),
+                        the_buffer_allocator(),
+                        the_options()));
             }
             return std::make_shared<mg::MultiplexingDisplay>(
                 std::move(displays),

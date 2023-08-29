@@ -35,6 +35,7 @@
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "mir/test/doubles/stub_console_services.h"
 #include "mir/test/doubles/stub_gl_config.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
 
 #include "mir_test_framework/udev_environment.h"
 
@@ -142,7 +143,9 @@ public:
     {
         return platform->create_display(
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
-            std::make_shared<mtd::StubGLConfig>());
+            std::make_shared<mtd::StubGLConfig>(),
+            std::make_shared<mtd::StubBufferAllocator>(),
+            std::make_shared<mir::options::ProgramOption>());
     }
 
     void setup_sample_modes()

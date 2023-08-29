@@ -32,7 +32,9 @@ class NullDisplayPlatform : public graphics::DisplayPlatform
  public:
     auto create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
-        std::shared_ptr<graphics::GLConfig> const&) -> mir::UniqueModulePtr<graphics::Display> override
+        std::shared_ptr<graphics::GLConfig> const&,
+        std::shared_ptr<graphics::GraphicBufferAllocator>,
+        std::shared_ptr<mir::options::Option> const&) -> mir::UniqueModulePtr<graphics::Display> override
     {
         return mir::make_module_ptr<NullDisplay>();
     }
