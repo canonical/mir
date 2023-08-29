@@ -23,7 +23,6 @@
 #include "bypass.h"
 #include "mir/fatal.h"
 #include "mir/log.h"
-#include "native_buffer.h"
 #include "display_helpers.h"
 #include "egl_helper.h"
 #include "mir/graphics/egl_error.h"

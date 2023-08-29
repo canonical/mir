@@ -25,10 +25,6 @@
 #include <vector>
 #include <string.h>
 
-#include <boost/throw_exception.hpp>
-#include <exception>
-#include <stdexcept>
-
 namespace mir
 {
 namespace test
@@ -44,7 +40,6 @@ class StubBuffer :
 public:
     StubBuffer()
         : StubBuffer{
-              nullptr,
               graphics::BufferProperties{
                   geometry::Size{},
                   mir_pixel_format_abgr_8888,
@@ -56,7 +51,6 @@ public:
 
     StubBuffer(geometry::Size const& size)
         : StubBuffer{
-              nullptr,
               graphics::BufferProperties{
                   size,
                   mir_pixel_format_abgr_8888,
@@ -66,9 +60,8 @@ public:
     {
     }
 
-    StubBuffer(std::shared_ptr<graphics::NativeBuffer> const& native_buffer, geometry::Size const& size, MirPixelFormat const pixel_format)
+    StubBuffer(geometry::Size const& size, MirPixelFormat const pixel_format)
         : StubBuffer{
-              native_buffer,
               graphics::BufferProperties{
                   size,
                   pixel_format,
@@ -78,13 +71,8 @@ public:
     {
     }
 
-    StubBuffer(std::shared_ptr<graphics::NativeBuffer> const& native_buffer)
-        : StubBuffer{native_buffer, {}, mir_pixel_format_abgr_8888}
-    {
-    }
-
     StubBuffer(graphics::BufferProperties const& properties)
-        : StubBuffer{nullptr, properties, geometry::Stride{properties.size.width.as_int() * MIR_BYTES_PER_PIXEL(properties.format)}}
+        : StubBuffer{properties, geometry::Stride{properties.size.width.as_int() * MIR_BYTES_PER_PIXEL(properties.format)}}
     {
         written_pixels.resize(buf_size.height.as_uint32_t() * buf_stride.as_uint32_t());
         if (written_pixels.size())
@@ -95,19 +83,16 @@ public:
     }
 
     StubBuffer(graphics::BufferID id)
-        : native_buffer(nullptr),
-          buf_size{},
+        : buf_size{},
           buf_pixel_format{mir_pixel_format_abgr_8888},
           buf_stride{},
           buf_id{id}
     {
     }
 
-    StubBuffer(std::shared_ptr<graphics::NativeBuffer> const& native_buffer,
-               graphics::BufferProperties const& properties,
+    StubBuffer(graphics::BufferProperties const& properties,
                geometry::Stride stride)
-        : native_buffer(native_buffer),
-          buf_size{properties.size},
+        : buf_size{properties.size},
           buf_pixel_format{properties.format},
           buf_stride{stride},
           buf_id{graphics::BufferBasic::id()}
@@ -190,7 +175,6 @@ public:
         return this;
     }
 
-    std::shared_ptr<graphics::NativeBuffer> const native_buffer;
     geometry::Size const buf_size;
     MirPixelFormat const buf_pixel_format;
     geometry::Stride const buf_stride;

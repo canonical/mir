@@ -17,19 +17,17 @@
 #include "stubbed_graphics_platform.h"
 
 #include "mir/graphics/platform.h"
-#include "mir_test_framework/stub_platform_native_buffer.h"
 
 #include "mir_toolkit/common.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_gl_rendering_provider.h"
 #include "mir/test/doubles/fake_display.h"
-#include "mir/fd.h"
 #include "mir/assert_module_entry_point.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
-#include <system_error>
+#include <stdexcept>
 
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;

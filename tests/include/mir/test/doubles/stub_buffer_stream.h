@@ -19,7 +19,6 @@
 
 #include <mir/compositor/buffer_stream.h>
 #include <mir/test/doubles/stub_buffer.h>
-#include "mir_test_framework/stub_platform_native_buffer.h"
 
 namespace mir
 {
@@ -33,8 +32,7 @@ class StubBufferStream : public compositor::BufferStream
 public:
     StubBufferStream()
     {
-        stub_compositor_buffer = std::make_shared<StubBuffer>(
-            std::make_shared<mir_test_framework::NativeBuffer>(graphics::BufferProperties{}));
+        stub_compositor_buffer = std::make_shared<StubBuffer>();
     }
 
 
