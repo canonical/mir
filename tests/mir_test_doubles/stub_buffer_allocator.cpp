@@ -17,8 +17,6 @@
 
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_buffer.h"
-#include "mir_test_framework/stub_platform_native_buffer.h"
-#include "mir_toolkit/client_types.h"
 #include "src/platforms/common/server/shm_buffer.h"
 #include "mir/graphics/egl_context_executor.h"
 #include "mir/test/doubles/null_gl_context.h"
@@ -27,6 +25,8 @@
 
 #include <vector>
 #include <memory>
+
+#include <boost/throw_exception.hpp>
 
 namespace mtd = mir::test::doubles;
 namespace mg = mir::graphics;
@@ -64,7 +64,7 @@ inline void memcpy_from_mapping(mir::renderer::software::ReadMappableBuffer& buf
 auto mtd::StubBufferAllocator::alloc_software_buffer(geometry::Size sz, MirPixelFormat pf) -> std::shared_ptr<mg::Buffer>
 {
     graphics::BufferProperties properties{sz, pf, graphics::BufferUsage::software};
-    return std::make_shared<StubBuffer>(std::make_shared<mir_test_framework::NativeBuffer>(properties), properties, geometry::Stride{sz.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(pf)});
+    return std::make_shared<StubBuffer>(properties, geometry::Stride{sz.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(pf)});
 }
 
 auto mtd::StubBufferAllocator::supported_pixel_formats() -> std::vector<MirPixelFormat>

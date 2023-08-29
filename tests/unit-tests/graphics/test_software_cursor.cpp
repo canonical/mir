@@ -498,7 +498,6 @@ TEST_F(SoftwareCursor, handles_argb_8888_buffer_with_stride)
                         sz.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(pf) + 41
                     };
                     auto buffer = std::make_shared<mtd::StubBuffer>(
-                        nullptr,
                         mg::BufferProperties{
                             sz,
                             pf,

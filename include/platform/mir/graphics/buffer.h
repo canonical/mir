@@ -17,7 +17,6 @@
 #ifndef MIR_GRAPHICS_BUFFER_H_
 #define MIR_GRAPHICS_BUFFER_H_
 
-#include "mir/graphics/native_buffer.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
@@ -35,8 +34,8 @@ class NativeBufferBase
 protected:
     NativeBufferBase() = default;
     virtual ~NativeBufferBase() = default;
-    NativeBufferBase(NativeBuffer const&) = delete;
-    NativeBufferBase operator=(NativeBuffer const&) = delete;
+    NativeBufferBase(NativeBufferBase const&) = delete;
+    NativeBufferBase operator=(NativeBufferBase const&) = delete;
 };
 
 class Buffer
