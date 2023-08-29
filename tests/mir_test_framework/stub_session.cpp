@@ -15,8 +15,6 @@
  */
 
 #include "mir/test/doubles/stub_session.h"
-#include "mir/test/doubles/stub_buffer.h"
-#include "mir_test_framework/stub_platform_native_buffer.h"
 
 namespace mtd = mir::test::doubles;
 namespace ms = mir::scene;

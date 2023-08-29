@@ -55,18 +55,14 @@ struct MockBuffer : public graphics::Buffer, public graphics::NativeBufferBase
 
         ON_CALL(*this, id())
                 .WillByDefault(Return(graphics::BufferID{4}));
-        ON_CALL(*this, native_buffer_handle())
-                .WillByDefault(Return(std::shared_ptr<graphics::NativeBuffer>()));
     }
 
-    MOCK_CONST_METHOD0(size, geometry::Size());
-    MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
-    MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<graphics::NativeBuffer>());
+    MOCK_METHOD(geometry::Size, size, (), (const override));
+    MOCK_METHOD(MirPixelFormat, pixel_format, (), (const override));
 
-    MOCK_CONST_METHOD0(id, graphics::BufferID());
+    MOCK_METHOD(graphics::BufferID, id, (), (const override));
 
-    MOCK_METHOD0(native_buffer_base, graphics::NativeBufferBase*());
-    MOCK_METHOD0(used_as_texture, void());
+    MOCK_METHOD(graphics::NativeBufferBase*, native_buffer_base, (), (override));
 };
 
 }
