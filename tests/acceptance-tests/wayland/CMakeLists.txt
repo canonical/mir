@@ -33,6 +33,14 @@ set_target_properties(
 
 pkg_get_variable(WLCS_BINARY wlcs test_runner)
 
+if(cmake_build_type_lower MATCHES "addresssanitizer")
+  set(WLCS_BINARY ${WLCS_BINARY}.asan)
+elseif(cmake_build_type_lower MATCHES "threadsanitizer")
+  set(WLCS_BINARY ${WLCS_BINARY}.tsan)
+elseif(cmake_build_type_lower MATCHES "ubsanitizer")
+  set(WLCS_BINARY ${WLCS_BINARY}.ubsan)
+endif()
+
 set(EXPECTED_FAILURES
 
   ClientSurfaceEventsTest.surface_gets_enter_event

@@ -35,7 +35,7 @@ environment:
     BUILD_TYPE/tsan,tsan_clang: ThreadSanitizer
     BUILD_TYPE/ubsan,ubsan_clang: UBSanitizer
     NOCHECK: ""
-    NOCHECK/asan,tsan,ubsan,asan_clang,tsan_clang,ubsan_clang: nocheck
+    NOCHECK/asan,tsan,asan_clang,tsan_clang: nocheck
     CTEST_OUTPUT_ON_FAILURE: 1
     CCACHE_DIR: /root/.ccache
     # Needed for precompiled headers (https://ccache.dev/manual/latest.html#_precompiled_headers)
