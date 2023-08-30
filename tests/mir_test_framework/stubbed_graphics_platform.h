@@ -34,7 +34,6 @@ public:
     mir::UniqueModulePtr<mir::graphics::Display> create_display(
         std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<mir::graphics::GLConfig> const&,
-        std::shared_ptr<mir::graphics::GraphicBufferAllocator>,
         std::shared_ptr<mir::options::Option> const&) override;
 
 protected:

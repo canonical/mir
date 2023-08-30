@@ -414,7 +414,6 @@ mir::DefaultServerConfiguration::the_display()
                     platform->create_display(
                         the_display_configuration_policy(),
                         the_gl_config(),
-                        the_buffer_allocator(),
                         the_options()));
             }
             return std::make_shared<mg::MultiplexingDisplay>(

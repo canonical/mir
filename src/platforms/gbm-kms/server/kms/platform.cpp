@@ -298,7 +298,6 @@ private:
 mir::UniqueModulePtr<mg::Display> mgg::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<GLConfig> const&,
-    std::shared_ptr<GraphicBufferAllocator>,
     std::shared_ptr<mir::options::Option> const&)
 {
     return make_module_ptr<mgg::Display>(

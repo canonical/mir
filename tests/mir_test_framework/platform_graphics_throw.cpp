@@ -86,13 +86,12 @@ public:
     mir::UniqueModulePtr<mg::Display> create_display(
         std::shared_ptr<mg::DisplayConfigurationPolicy> const& ptr,
         std::shared_ptr<mg::GLConfig> const& shared_ptr,
-        std::shared_ptr<mg::GraphicBufferAllocator> buffer_allocator,
         std::shared_ptr<mir::options::Option> const& options) override
     {
         if (should_throw.at(ExceptionLocation::at_create_display))
             BOOST_THROW_EXCEPTION(std::runtime_error("Exception during create_display"));
 
-        return stub_display_platform->create_display(ptr, shared_ptr, buffer_allocator, options);
+        return stub_display_platform->create_display(ptr, shared_ptr, options);
     }
 
 private:

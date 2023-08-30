@@ -123,7 +123,6 @@ mgx::Platform::Platform(std::shared_ptr<mir::X::X11Resources> const& x11_resourc
 mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<GLConfig> const& /*gl_config*/,
-    std::shared_ptr<GraphicBufferAllocator> /*buffer_allocator*/,
     std::shared_ptr<mir::options::Option> const& /*options*/)
 {
     return make_module_ptr<mgx::Display>(
