@@ -99,7 +99,7 @@ public:
      * Reads the current CRTC and creates a framebuffer from its contents
      * @return Framebuffer containing the contents of the current screen.
      */
-    virtual std::shared_ptr<CPUAddressableFB> to_framebuffer() = 0;
+    virtual std::shared_ptr<CPUAddressableFB> to_framebuffer(mir::Fd const&) = 0;
 protected:
     KMSOutput() = default;
     KMSOutput(const KMSOutput&) = delete;

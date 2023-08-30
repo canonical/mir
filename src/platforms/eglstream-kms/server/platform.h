@@ -22,6 +22,7 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
 #include "mir/fd.h"
+#include "mir/renderer/gl/context_source.h"
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>

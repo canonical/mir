@@ -68,7 +68,7 @@ mgg::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<mgg::CPUAddressableFB> initial_fb = nullptr;
 
     if (smooth_transition)
-        initial_fb = outputs[0]->to_framebuffer();
+        initial_fb = outputs[0]->to_framebuffer(drm_fd);
 
     // TODO: Pull a supported format out of KMS rather than assuming XRGB8888
     if (initial_fb == nullptr)

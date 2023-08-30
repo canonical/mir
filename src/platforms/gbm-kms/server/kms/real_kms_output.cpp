@@ -599,7 +599,7 @@ int mgg::RealKMSOutput::drm_fd() const
     return drm_fd_;
 }
 
-std::shared_ptr<mgg::CPUAddressableFB> mgg::RealKMSOutput::to_framebuffer()
+std::shared_ptr<mgg::CPUAddressableFB> mgg::RealKMSOutput::to_framebuffer(mir::Fd const& fd)
 {
     auto buffer_id = saved_crtc.buffer_id;
     kms::DRMModeResources resources{drm_fd()};
@@ -651,7 +651,6 @@ std::shared_ptr<mgg::CPUAddressableFB> mgg::RealKMSOutput::to_framebuffer()
 
         mir::log_info("Creating the buffer from the current CRTC");
         geom::Size area{fb->width, fb->height};
-        auto fd = mir::Fd{drm_fd()};
         auto initial_fb = std::make_shared<mgg::CPUAddressableFB>(
             std::move(fd),
             false,
@@ -660,7 +659,6 @@ std::shared_ptr<mgg::CPUAddressableFB> mgg::RealKMSOutput::to_framebuffer()
 
         auto mapping = initial_fb->map_writeable();
         ::memcpy(mapping->data(), map, mapping->len());
-        mir::log_info("MEMCPYD the buffer from the current CRTC");
         munmap(static_cast<void*>(map), size);
         return initial_fb;
     }

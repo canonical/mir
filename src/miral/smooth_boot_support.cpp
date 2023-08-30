@@ -18,6 +18,8 @@
 
 #include <mir/server.h>
 #include <mir/options/configuration.h>
+#include <mir/graphics/display.h>
+#include <mir/graphics/display_buffer.h>
 
 namespace mg = mir::graphics;
 namespace mo = mir::options;
@@ -37,6 +39,16 @@ auto miral::SmoothBootSupport::operator=(miral::SmoothBootSupport const& other) 
 
 void miral::SmoothBootSupport::operator()(mir::Server &server) const
 {
+    server.add_init_callback([&server]()
+    {
+        server.the_display()->for_each_display_sync_group([&server](mg::DisplaySyncGroup& group)
+        {
+            group.for_each_display_buffer([&server](mg::DisplayBuffer& db)
+            {
+                db.view_area();
+            });
+        });
+    });
     server.add_configuration_option(
         mo::smooth_boot_opt,
         "When set, provides a transition from the previous screen to the compositor",
