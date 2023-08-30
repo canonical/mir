@@ -46,10 +46,13 @@ void* mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
         return *val;
     }
 
-    void* (*real_mmap)(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
+    static void* (*real_mmap)(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
 
     // Where mmap64 is defined, even if off_t == off64_t on 64-bit platforms, this is still appropriate.
-    *(void **)(&real_mmap) = dlsym(RTLD_NEXT, "mmap64");
+    if (!real_mmap)
+    {
+        *(void **)(&real_mmap) = dlsym(RTLD_NEXT, "mmap64");
+    }
 
     // Empirically, mmap64 is NOT defined everywhere, but then this is appropriate
     if (!real_mmap)
