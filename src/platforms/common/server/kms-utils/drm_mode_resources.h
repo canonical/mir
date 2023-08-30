@@ -40,11 +40,13 @@ typedef std::unique_ptr<drmModePlaneRes,void(*)(drmModePlaneRes*)> DRMModePlaneR
 typedef std::unique_ptr<drmModePlane,std::function<void(drmModePlane*)>> DRMModePlaneUPtr;
 typedef std::unique_ptr<drmModeObjectProperties,void(*)(drmModeObjectProperties*)> DRMModeObjectPropsUPtr;
 typedef std::unique_ptr<drmModePropertyRes,void(*)(drmModePropertyPtr)> DRMModePropertyUPtr;
+typedef std::unique_ptr<drmModeFB2,std::function<void(drmModeFB2*)>> DRMModeFramebuffer;
 
 DRMModeConnectorUPtr get_connector(int drm_fd, uint32_t id);
 DRMModeEncoderUPtr get_encoder(int drm_fd, uint32_t id);
 DRMModeCrtcUPtr get_crtc(int drm_fd, uint32_t id);
 DRMModePlaneUPtr get_plane(int drm_fd, uint32_t id);
+DRMModeFramebuffer get_frame_buffer(int drm_fd, uint32_t buffer_id);
 
 class DRMModeResources;
 class PlaneResources;
@@ -154,6 +156,7 @@ public:
     DRMModeConnectorUPtr connector(uint32_t id) const;
     DRMModeEncoderUPtr encoder(uint32_t id) const;
     DRMModeCrtcUPtr crtc(uint32_t id) const;
+    DRMModeFramebuffer frame_buffer(uint32_t buffer_id) const;
 
     detail::ObjectCollection<DRMModeConnectorUPtr, &get_connector> connectors() const;
     detail::ObjectCollection<DRMModeEncoderUPtr, &get_encoder> encoders() const;

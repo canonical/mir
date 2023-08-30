@@ -39,6 +39,8 @@ namespace gbm
 {
 
 class FBHandle;
+class CPUAddressableFB;
+
 
 class KMSOutput
 {
@@ -92,6 +94,12 @@ public:
     virtual void update_from_hardware_state(DisplayConfigurationOutput& to_update) const = 0;
 
     virtual int drm_fd() const = 0;
+
+    /**
+     * Reads the current CRTC and creates a framebuffer from its contents
+     * @return Framebuffer containing the contents of the current screen.
+     */
+    virtual std::shared_ptr<CPUAddressableFB> to_framebuffer() = 0;
 protected:
     KMSOutput() = default;
     KMSOutput(const KMSOutput&) = delete;

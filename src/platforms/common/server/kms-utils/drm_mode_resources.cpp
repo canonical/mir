@@ -136,6 +136,11 @@ mgk::DRMModeCrtcUPtr mgk::DRMModeResources::crtc(uint32_t id) const
     return get_crtc(drm_fd, id);
 }
 
+mgk::DRMModeFramebuffer mgk::DRMModeResources::frame_buffer(uint32_t buffer_id) const
+{
+    return get_frame_buffer(drm_fd, buffer_id);
+}
+
 mgk::DRMModeConnectorUPtr mgk::get_connector(int drm_fd, uint32_t id)
 {
     errno = 0;
@@ -205,6 +210,24 @@ mgk::DRMModePlaneUPtr mgk::get_plane(int drm_fd, uint32_t id)
         BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to get DRM plane"}));
     }
     return plane;
+}
+
+mgk::DRMModeFramebuffer mgk::get_frame_buffer(int drm_fd, uint32_t buffer_id)
+{
+    errno = 0;
+    DRMModeFramebuffer frame_buffer{drmModeGetFB2(drm_fd, buffer_id), &drmModeFreeFB2};
+
+    if (!frame_buffer)
+    {
+        if (errno == 0)
+        {
+            // drmModeGetFB2 either sets errno, or has failed in malloc()
+            errno = ENOMEM;
+        }
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to get frame buffer"}));
+    }
+
+    return frame_buffer;
 }
 
 namespace

@@ -25,6 +25,8 @@
 #include "kms_framebuffer.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/egl_extensions.h"
+#include "mir/options/option.h"
+#include "mir/options/configuration.h"
 #include "one_shot_device_observer.h"
 #include <gbm.h>
 
@@ -298,14 +300,17 @@ private:
 mir::UniqueModulePtr<mg::Display> mgg::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<GLConfig> const&,
-    std::shared_ptr<mir::options::Option> const&)
+    std::shared_ptr<mir::options::Option> const& options)
 {
+    auto smooth_boot = options->is_set(options::smooth_boot_opt)
+        && options->get<bool>(options::smooth_boot_opt);
     return make_module_ptr<mgg::Display>(
         provider,
         drm_fd,
         bypass_option_,
         initial_conf_policy,
-        listener);
+        listener,
+        smooth_boot);
 }
 
 auto mgg::Platform::interface_for() -> std::shared_ptr<DisplayInterfaceProvider>

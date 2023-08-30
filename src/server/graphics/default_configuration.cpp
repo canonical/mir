@@ -402,10 +402,6 @@ mir::DefaultServerConfiguration::the_display()
     return display(
         [this]() -> std::shared_ptr<mg::Display>
         {
-            auto smooth_boot = the_options()->is_set(options::smooth_boot_opt)
-                && the_options()->get<bool>(options::smooth_boot_opt);
-
-            (void)smooth_boot;
             std::vector<std::unique_ptr<mg::Display>> displays;
             displays.reserve(the_display_platforms().size());
             for (auto const& platform : the_display_platforms())
