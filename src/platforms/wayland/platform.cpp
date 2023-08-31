@@ -32,7 +32,8 @@ mir::UniqueModulePtr<mg::Display> mgw::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const&,
     std::shared_ptr<GLConfig> const& gl_config,
     std::shared_ptr<mir::options::Option> const&,
-    std::shared_ptr<GraphicBufferAllocator>)
+    std::shared_ptr<GraphicBufferAllocator> const&,
+    std::shared_ptr<mir::input::Scene> const&)
 {
     return mir::make_module_ptr<mgw::Display>(wl_display, gl_config, report);
 }

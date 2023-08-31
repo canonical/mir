@@ -30,6 +30,12 @@
 
 namespace mir
 {
+
+namespace input
+{
+class Scene;
+}
+
 namespace graphics
 {
 
@@ -62,7 +68,8 @@ public:
         std::vector<std::shared_ptr<KMSOutput>> const& outputs,
         geometry::Rectangle const& area,
         glm::mat2 const& transformation,
-        std::shared_ptr<GraphicBufferAllocator> buffer_allocator,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+        std::shared_ptr<input::Scene> const& scene,
         bool smooth_transition);
     ~DisplayBuffer();
 

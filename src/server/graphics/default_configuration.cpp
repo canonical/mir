@@ -411,7 +411,8 @@ mir::DefaultServerConfiguration::the_display()
                         the_display_configuration_policy(),
                         the_gl_config(),
                         the_options(),
-                        the_buffer_allocator()));
+                        the_buffer_allocator(),
+                        the_input_scene()));
             }
             return std::make_shared<mg::MultiplexingDisplay>(
                 std::move(displays),

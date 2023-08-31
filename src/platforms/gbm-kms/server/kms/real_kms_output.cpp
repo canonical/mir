@@ -44,10 +44,12 @@ public:
     RealKMSOutputContentMap(
         size_t mapping_size,
         mir::geometry::Size size,
+        mir::geometry::Stride stride,
         uint32_t pixel_format,
         char* data)
         : mapping_size{mapping_size},
           size{size},
+          stride{stride},
           pixel_format{pixel_format},
           data{data}
     {
@@ -64,6 +66,11 @@ public:
         return size;
     }
 
+    virtual auto get_stride() -> mir::geometry::Stride const& override
+    {
+        return stride;
+    }
+
     virtual auto get_pixel_format() -> mir::graphics::DRMFormat const& override
     {
         return pixel_format;
@@ -75,7 +82,7 @@ public:
     }
 
     static auto try_create(
-        uint32_t size,
+        uint32_t stride,
         uint32_t width,
         uint32_t height,
         int drm_fd,
@@ -99,13 +106,14 @@ public:
         }
 
         // Establish a memory map.
+        uint32_t size = height * stride;
         auto map = static_cast<char *>(mmap(
-                0,
-                size,
-                PROT_READ,
-                MAP_SHARED,
-                handle_fd,
-                offset));
+            0,
+            size,
+            PROT_READ,
+            MAP_SHARED,
+            handle_fd,
+            offset));
 
         if (map == MAP_FAILED) {
             mir::log_error("Failed to mmap");
@@ -115,6 +123,7 @@ public:
         return std::make_unique<RealKMSOutputContentMap>(
             size,
             mir::geometry::Size{width, height},
+            mir::geometry::Stride {stride},
             pixel_format,
             map);
     }
@@ -122,6 +131,7 @@ public:
 private:
     size_t mapping_size;
     mir::geometry::Size size;
+    mir::geometry::Stride stride;
     mir::graphics::DRMFormat pixel_format;
     char* data = nullptr;
 };
@@ -709,9 +719,8 @@ std::shared_ptr<mgg::KMSOutputContentMap> mgg::RealKMSOutput::map_content() cons
         if (is_duplicate)
             continue;
 
-        size_t size = fb->height * fb->pitches[handle_index];
         auto map = RealKMSOutputContentMap::try_create(
-            size,
+            fb->pitches[handle_index],
             fb->width,
             fb->height,
             drm_fd(),

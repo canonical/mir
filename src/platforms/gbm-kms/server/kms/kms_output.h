@@ -46,6 +46,7 @@ class KMSOutputContentMap
 public:
     virtual ~KMSOutputContentMap() = default;
     virtual auto get_size() -> mir::geometry::Size const& = 0;
+    virtual auto get_stride() -> mir::geometry::Stride const& = 0;
     virtual auto get_pixel_format() -> mir::graphics::DRMFormat const& = 0;
     virtual auto get_data() -> const char* = 0;
 };

@@ -24,6 +24,7 @@
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "mir/test/doubles/stub_console_services.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_input_scene.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/test/doubles/mock_drm.h"
@@ -99,7 +100,8 @@ public:
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
             std::make_shared<mtd::StubGLConfig>(),
             std::make_shared<mir::options::ProgramOption>(),
-            std::make_shared<mtd::StubBufferAllocator>());
+            std::make_shared<mtd::StubBufferAllocator>(),
+            std::make_shared<mtd::StubInputScene>());
     }
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;

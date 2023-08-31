@@ -30,8 +30,10 @@
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/dmabuf_buffer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/graphics/renderable.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "shm_buffer.h"
+#include "mir/input/scene.h"
 
 #include <boost/throw_exception.hpp>
 #include <EGL/egl.h>
@@ -47,6 +49,59 @@
 
 namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
+namespace mg = mir::graphics;
+
+struct SmoothTransitionRenderable : public mg::Renderable
+{
+public:
+    SmoothTransitionRenderable(std::shared_ptr<mg::Buffer> const buffer, mir::geometry::Size size)
+        : buffer_{buffer},
+          size{size}
+    {
+    }
+
+    auto id() const -> mg::Renderable::ID override
+    {
+        return this;
+    }
+
+    auto buffer() const -> std::shared_ptr<mg::Buffer> override
+    {
+        return buffer_;
+    }
+
+    auto screen_position() const -> geom::Rectangle override
+    {
+        return {
+            {-size.width.as_int() / 2, -size.height.as_value() / 2},
+            {size.width.as_int(), size.height.as_int()}
+        };
+    }
+
+    auto clip_area() const -> std::optional<geom::Rectangle> override
+    {
+        return {};
+    }
+
+    auto alpha() const -> float override
+    {
+        return 0.5f;
+    }
+
+    auto transformation() const -> glm::mat4 override
+    {
+        return glm::mat4{1};
+    }
+
+    auto shaped() const -> bool override
+    {
+        return false;
+    }
+
+private:
+    std::shared_ptr<mg::Buffer> const buffer_;
+    mir::geometry::Size size;
+};
 
 mgg::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<DisplayInterfaceProvider> provider,
@@ -56,7 +111,8 @@ mgg::DisplayBuffer::DisplayBuffer(
     std::vector<std::shared_ptr<KMSOutput>> const& outputs,
     geom::Rectangle const& area,
     glm::mat2 const& transformation,
-    std::shared_ptr<GraphicBufferAllocator> buffer_allocator,
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
+    std::shared_ptr<input::Scene> const& scene,
     bool smooth_transition)
     : provider{std::move(provider)},
       listener(listener),
@@ -91,11 +147,11 @@ mgg::DisplayBuffer::DisplayBuffer(
         if (mapping)
         {
             auto pixel_format = mapping->get_pixel_format().as_mir_format();
-            mir::renderer::software::alloc_buffer_with_content(
+            auto buffer = mir::renderer::software::alloc_buffer_with_content(
                 *buffer_allocator,
                 reinterpret_cast<const unsigned char *>(mapping->get_data()),
                 mapping->get_size(),
-                mir::geometry::Stride{},
+                mapping->get_stride(),
                 pixel_format.value());
         }
     }

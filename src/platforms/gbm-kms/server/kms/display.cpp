@@ -150,7 +150,8 @@ mgg::Display::Display(
     mgg::BypassOption bypass_option,
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<DisplayReport> const& listener,
-    std::shared_ptr<GraphicBufferAllocator> allocator,
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+    std::shared_ptr<input::Scene> const& scene,
     bool smooth_transition)
     : owner{std::move(parent)},
       drm_fd{std::move(drm_fd)},
@@ -163,7 +164,8 @@ mgg::Display::Display(
       current_display_configuration{output_container},
       dirty_configuration{false},
       bypass_option(bypass_option),
-      buffer_allocator{allocator},
+      allocator{allocator},
+      scene{scene},
       smooth_transition{smooth_transition}
 {
     monitor.filter_by_subsystem_and_type("drm", "drm_minor");
@@ -434,7 +436,8 @@ void mgg::Display::configure_locked(
                     kms_outputs,
                     bounding_rect,
                     transformation,
-                    buffer_allocator,
+                    allocator,
+                    scene,
                     smooth_transition);
 
                 display_buffers_new.push_back(std::move(db));

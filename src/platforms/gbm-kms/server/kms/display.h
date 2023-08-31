@@ -32,6 +32,11 @@
 
 namespace mir
 {
+namespace input
+{
+class Scene;
+}
+
 namespace graphics
 {
 
@@ -70,7 +75,8 @@ public:
         BypassOption bypass_option,
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<DisplayReport> const& listener,
-        std::shared_ptr<GraphicBufferAllocator> allocator,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+        std::shared_ptr<input::Scene> const& scene,
         bool smooth_boot);
     ~Display();
 
@@ -110,7 +116,8 @@ private:
 
     BypassOption bypass_option;
     std::weak_ptr<Cursor> cursor;
-    std::shared_ptr<GraphicBufferAllocator> buffer_allocator;
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator;
+    std::shared_ptr<input::Scene> const& scene;
     bool smooth_transition;
 };
 
