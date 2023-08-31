@@ -29,6 +29,7 @@
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/dmabuf_buffer.h"
+#include "shm_buffer.h"
 
 #include <boost/throw_exception.hpp>
 #include <EGL/egl.h>
@@ -64,29 +65,22 @@ mgg::DisplayBuffer::DisplayBuffer(
 {
     listener->report_successful_setup_of_native_resources();
 
-    // TODO: Multimonitor support is lacking here
-    std::shared_ptr<mgg::CPUAddressableFB> initial_fb = nullptr;
-
-    if (smooth_transition)
-        initial_fb = outputs[0]->to_framebuffer(drm_fd);
-
-    // TODO: Pull a supported format out of KMS rather than assuming XRGB8888
-    if (initial_fb == nullptr)
+    if (!smooth_transition)
     {
-        initial_fb = initial_fb = std::make_shared<mgg::CPUAddressableFB>(
+        auto initial_fb = std::make_shared<mgg::CPUAddressableFB>(
             std::move(drm_fd),
             false,
             mir::graphics::DRMFormat{DRM_FORMAT_XRGB8888},
             area.size);
         auto mapping = initial_fb->map_writeable();
         ::memset(mapping->data(), 24, mapping->len());
+        visible_fb = std::move(initial_fb);
+        for (auto& output : outputs)
+        {
+            output->set_crtc(*visible_fb);
+        }
     }
 
-    visible_fb = std::move(initial_fb);
-    for (auto& output : outputs)
-    {
-        output->set_crtc(*visible_fb);
-    }
     listener->report_successful_drm_mode_set_crtc_on_construction();
     listener->report_successful_display_construction();
 }
@@ -321,4 +315,19 @@ void mir::graphics::gbm::DisplayBuffer::set_next_image(std::unique_ptr<Framebuff
         // Oh, oh! We should be *guaranteed* to “overlay” a single Framebuffer; this is likely a programming error
         BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to post buffer to display"}));
     }
+}
+
+auto mgg::DisplayBuffer::copy_to_buffer() -> std::unique_ptr<common::MemoryBackedShmBuffer>
+{
+    if (outputs.empty())
+    {
+        mir::log_error("Unable to copy the contents of the buffer: No outputs available");
+        return nullptr;
+    }
+
+    auto output = outputs[0];
+    auto mapping = output->map_content();
+    if (mapping)
+        mir::log_debug("HERE: %d", mapping->get_size());
+    return nullptr;
 }

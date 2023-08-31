@@ -36,6 +36,8 @@ namespace graphics
 class DisplayReport;
 class GLConfig;
 
+namespace common { class MemoryBackedShmBuffer; }
+
 namespace gbm
 {
 
@@ -79,6 +81,11 @@ public:
     auto display_provider() const -> std::shared_ptr<DisplayInterfaceProvider> override;
 
     auto drm_fd() const -> mir::Fd;
+
+    /// Creates a Buffer from the current contents of the first output.
+    /// TODO: What do we do about the other outputs?
+    /// \returns A buffer
+    auto copy_to_buffer() -> std::unique_ptr<common::MemoryBackedShmBuffer>;
 private:
     bool schedule_page_flip(FBHandle const& bufobj);
     void set_crtc(FBHandle const&);

@@ -28,6 +28,7 @@
 #include "mir/console_services.h"
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/event_handler_register.h"
+#include "shm_buffer.h"
 
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/display_configuration_policy.h"
@@ -433,6 +434,7 @@ void mgg::Display::configure_locked(
                     transformation,
                     smooth_transition);
 
+                db->copy_to_buffer();
                 display_buffers_new.push_back(std::move(db));
             }
         });

@@ -36,7 +36,82 @@ namespace mgg = mg::gbm;
 namespace mgk = mg::kms;
 namespace geom = mir::geometry;
 
+namespace
+{
+class RealKMSOutputContentMap : public mgg::KMSOutputContentMap
+{
+public:
+    RealKMSOutputContentMap(uint32_t size, uint32_t pixel_format, char* data)
+        : size{size}, pixel_format{pixel_format}, data{data}
+    {
+    }
 
+    ~RealKMSOutputContentMap() override
+    {
+        if (data)
+            munmap(static_cast<void*>(data), size);
+    }
+
+    virtual auto get_size() -> uint32_t override
+    {
+        return size;
+    }
+
+    virtual auto get_pixel_format() -> uint32_t override
+    {
+        return pixel_format;
+    }
+
+    virtual auto get_data() -> const char* override
+    {
+        return data;
+    }
+
+    static auto try_create(
+        uint32_t size,
+        int drm_fd,
+        int handle,
+        uint32_t offset,
+        uint32_t pixel_format) -> std::unique_ptr<RealKMSOutputContentMap>
+    {
+        int handle_fd;
+        int error;
+
+        if (pixel_format != DRM_FORMAT_XRGB8888) {
+            mir::log_error("Unsupported pixel format");
+            return nullptr;
+        }
+
+        error = drmPrimeHandleToFD(drm_fd, handle, 0, &handle_fd);
+        if (error < 0) {
+            mir::log_error("Failed to map the provided prime handle to a file descriptor. handle=%d\n",
+                           handle);
+            return nullptr;
+        }
+
+        // Establish a memory map.
+        auto map = static_cast<char *>(mmap(
+                0,
+                size,
+                PROT_READ,
+                MAP_SHARED,
+                handle_fd,
+                offset));
+
+        if (map == MAP_FAILED) {
+            mir::log_error("Failed to mmap");
+            return nullptr;
+        }
+
+        return std::make_unique<RealKMSOutputContentMap>(size, pixel_format, map);
+    }
+
+private:
+    size_t size = 0;
+    uint32_t pixel_format = 0;
+    char* data = nullptr;
+};
+}
 
 mgg::RealKMSOutput::RealKMSOutput(
     int drm_fd,
@@ -599,7 +674,7 @@ int mgg::RealKMSOutput::drm_fd() const
     return drm_fd_;
 }
 
-std::shared_ptr<mgg::CPUAddressableFB> mgg::RealKMSOutput::to_framebuffer(mir::Fd const& fd)
+std::shared_ptr<mgg::KMSOutputContentMap> mgg::RealKMSOutput::map_content()
 {
     auto buffer_id = saved_crtc.buffer_id;
     kms::DRMModeResources resources{drm_fd()};
@@ -608,7 +683,6 @@ std::shared_ptr<mgg::CPUAddressableFB> mgg::RealKMSOutput::to_framebuffer(mir::F
     mir::log_info("Attempting to get a framebuffer from the current CRTC");
 
     for (int handle_index = 0; handle_index < 4 && fb->handles[handle_index]; handle_index++) {
-        int error;
         bool is_duplicate = false;
 
         for (int other_handle_index = 0; other_handle_index < handle_index; other_handle_index++) {
@@ -621,46 +695,19 @@ std::shared_ptr<mgg::CPUAddressableFB> mgg::RealKMSOutput::to_framebuffer(mir::F
         if (is_duplicate)
             continue;
 
-        int handle_fd;
-        error = drmPrimeHandleToFD(drm_fd_, fb->handles[handle_index], 0, &handle_fd);
-        if (error < 0) {
-            log_error("Failed to map the provided prime handle to a file descriptor. handle=%d\n",
-                      fb->handles[handle_index]);
-            continue;
-        }
-
-        // Establish a memory map.
         size_t size = fb->height * fb->pitches[handle_index];
-        char *map = static_cast<char *>(mmap(
-                0,
-                size,
-                PROT_READ,
-                MAP_SHARED,
-                handle_fd,
-                fb->offsets[handle_index]));
+        auto map = RealKMSOutputContentMap::try_create(
+            size,
+            drm_fd(),
+            fb->handles[handle_index],
+            fb->offsets[handle_index],
+            fb->pixel_format
+        );
 
-        if (map == MAP_FAILED) {
-            log_error("Failed to mmap");
+        if (!map)
             continue;
-        }
 
-        if (fb->pixel_format != DRM_FORMAT_XRGB8888) {
-            log_error("Unsupported pixel format");
-            continue;
-        }
-
-        mir::log_info("Creating the buffer from the current CRTC");
-        geom::Size area{fb->width, fb->height};
-        auto initial_fb = std::make_shared<mgg::CPUAddressableFB>(
-            std::move(fd),
-            false,
-            DRMFormat{DRM_FORMAT_XRGB8888},
-            area);
-
-        auto mapping = initial_fb->map_writeable();
-        ::memcpy(mapping->data(), map, mapping->len());
-        munmap(static_cast<void*>(map), size);
-        return initial_fb;
+        return map;
     }
 
     mir::log_info("Cannot get a framebuffer from the current CRTC");

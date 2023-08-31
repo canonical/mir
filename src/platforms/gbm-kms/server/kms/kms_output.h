@@ -39,8 +39,15 @@ namespace gbm
 {
 
 class FBHandle;
-class CPUAddressableFB;
 
+class KMSOutputContentMap
+{
+public:
+    virtual ~KMSOutputContentMap() = default;
+    virtual auto get_size() -> uint32_t = 0;
+    virtual auto get_pixel_format() -> uint32_t = 0;
+    virtual auto get_data() -> const char* = 0;
+};
 
 class KMSOutput
 {
@@ -99,7 +106,7 @@ public:
      * Reads the current CRTC and creates a framebuffer from its contents
      * @return Framebuffer containing the contents of the current screen.
      */
-    virtual std::shared_ptr<CPUAddressableFB> to_framebuffer(mir::Fd const&) = 0;
+    virtual std::shared_ptr<KMSOutputContentMap> map_content() = 0;
 protected:
     KMSOutput() = default;
     KMSOutput(const KMSOutput&) = delete;
