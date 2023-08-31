@@ -39,18 +39,6 @@ mtf::MmapHandlerHandle mtf::add_mmap_handler(MmapHandler handler)
     return MmapInterposer::add(std::move(handler));
 }
 
-auto real_mmap_symbol_name() -> char const*
-{
-#if _FILE_OFFSET_BITS == 64
-    // mmap64 is defined everywhere, so even though off_t == off64_t on 64-bit platforms
-    // this is still appropriate.
-    return "mmap64";
-#else
-    // This will get us the 32-bit off_t version on 32-bit platforms
-    return "mmap";
-#endif
-}
-
 void* mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
 {
     if (auto val = MmapInterposer::run(addr, length, prot, flags, fd, offset))
@@ -58,16 +46,19 @@ void* mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
         return *val;
     }
 
-    void* (*real_mmap)(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
-    *(void **)(&real_mmap) = dlsym(RTLD_NEXT, real_mmap_symbol_name());
+    static void* (*real_mmap)(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
 
-#if _FILE_OFFSET_BITS == 64
-    // Empirically, mmap64 is NOT defined everywhere, but on 64-bit platforms this is appropriate
+    // Where mmap64 is defined, even if off_t == off64_t on 64-bit platforms, this is still appropriate.
     if (!real_mmap)
     {
-        *(void **)(&real_mmap) = dlsym(RTLD_NEXT, "mmap");
+        *(void **)(&real_mmap) = dlsym(RTLD_NEXT, "mmap64");
     }
-#endif
+
+    // Empirically, mmap64 is NOT defined everywhere, but then this is appropriate
+    if (!real_mmap)
+    {
+        *(void **)(&real_mmap) = dlsym(RTLD_NEXT, __func__);
+    }
 
     if (!real_mmap)
     {
