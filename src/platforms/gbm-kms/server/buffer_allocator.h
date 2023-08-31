@@ -71,6 +71,7 @@ public:
         std::function<void()>&& on_release) -> std::shared_ptr<Buffer> override;
 
     auto shared_egl_context() -> EGLContext;
+    auto get_egl_delegate() -> std::shared_ptr<common::EGLContextExecutor>;
 private:
     std::unique_ptr<renderer::gl::Context> const ctx;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;

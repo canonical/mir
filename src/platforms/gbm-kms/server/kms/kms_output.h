@@ -23,6 +23,7 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/frame.h"
 #include "mir/graphics/dmabuf_buffer.h"
+#include "mir/graphics/drm_formats.h"
 #include "mir_toolkit/common.h"
 
 #include "kms-utils/drm_mode_resources.h"
@@ -44,8 +45,8 @@ class KMSOutputContentMap
 {
 public:
     virtual ~KMSOutputContentMap() = default;
-    virtual auto get_size() -> uint32_t = 0;
-    virtual auto get_pixel_format() -> uint32_t = 0;
+    virtual auto get_size() -> mir::geometry::Size const& = 0;
+    virtual auto get_pixel_format() -> mir::graphics::DRMFormat const& = 0;
     virtual auto get_data() -> const char* = 0;
 };
 
@@ -106,7 +107,7 @@ public:
      * Reads the current CRTC and creates a framebuffer from its contents
      * @return Framebuffer containing the contents of the current screen.
      */
-    virtual std::shared_ptr<KMSOutputContentMap> map_content() = 0;
+    virtual std::shared_ptr<KMSOutputContentMap> map_content() const = 0;
 protected:
     KMSOutput() = default;
     KMSOutput(const KMSOutput&) = delete;

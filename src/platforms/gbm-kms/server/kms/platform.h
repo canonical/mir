@@ -50,7 +50,8 @@ public:
     UniqueModulePtr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config,
-        std::shared_ptr<mir::options::Option> const& options) override;
+        std::shared_ptr<mir::options::Option> const& options,
+        std::shared_ptr<GraphicBufferAllocator> allocator) override;
 
     std::shared_ptr<mir::udev::Context> udev;
     
@@ -84,8 +85,7 @@ public:
         udev::Device const& device,
         std::vector<std::shared_ptr<graphics::DisplayInterfaceProvider>> const& displays);
 
-    auto create_buffer_allocator(
-        graphics::Display const&) -> UniqueModulePtr<graphics::GraphicBufferAllocator> override;
+    auto create_buffer_allocator() -> UniqueModulePtr<graphics::GraphicBufferAllocator> override;
 
 protected:
     auto maybe_create_interface(

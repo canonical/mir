@@ -58,8 +58,7 @@ mtf::StubGraphicPlatform::StubGraphicPlatform(std::vector<geom::Rectangle> const
 {
 }
 
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mtf::StubGraphicPlatform::create_buffer_allocator(
-    mg::Display const&)
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mtf::StubGraphicPlatform::create_buffer_allocator()
 {
     return mir::make_module_ptr<StubGraphicBufferAllocator>();
 }
@@ -74,7 +73,8 @@ std::unique_ptr<mg::Display> display_preset;
 mir::UniqueModulePtr<mg::Display> mtf::StubGraphicPlatform::create_display(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
     std::shared_ptr<mg::GLConfig> const&,
-    std::shared_ptr<mir::options::Option> const&)
+    std::shared_ptr<mir::options::Option> const&,
+    std::shared_ptr<mir::graphics::GraphicBufferAllocator>)
 {
     if (display_preset)
     {

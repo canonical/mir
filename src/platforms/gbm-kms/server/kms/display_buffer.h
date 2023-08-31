@@ -35,8 +35,12 @@ namespace graphics
 
 class DisplayReport;
 class GLConfig;
+class GraphicBufferAllocator;
 
-namespace common { class MemoryBackedShmBuffer; }
+namespace common {
+class MemoryBackedShmBuffer;
+class EGLContextExecutor;
+}
 
 namespace gbm
 {
@@ -58,6 +62,7 @@ public:
         std::vector<std::shared_ptr<KMSOutput>> const& outputs,
         geometry::Rectangle const& area,
         glm::mat2 const& transformation,
+        std::shared_ptr<GraphicBufferAllocator> buffer_allocator,
         bool smooth_transition);
     ~DisplayBuffer();
 
@@ -85,7 +90,8 @@ public:
     /// Creates a Buffer from the current contents of the first output.
     /// TODO: What do we do about the other outputs?
     /// \returns A buffer
-    auto copy_to_buffer() -> std::unique_ptr<common::MemoryBackedShmBuffer>;
+    auto copy_to_buffer(std::shared_ptr<graphics::common::EGLContextExecutor>&) const
+        -> std::unique_ptr<common::MemoryBackedShmBuffer>;
 private:
     bool schedule_page_flip(FBHandle const& bufobj);
     void set_crtc(FBHandle const&);

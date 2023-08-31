@@ -66,7 +66,7 @@ struct MockKMSOutput : public graphics::gbm::KMSOutput
     MOCK_CONST_METHOD1(fb_for, std::shared_ptr<graphics::gbm::FBHandle const>(graphics::DMABufBuffer const&));
     MOCK_CONST_METHOD1(buffer_requires_migration, bool(gbm_bo*));
     MOCK_CONST_METHOD0(drm_fd, int());
-    MOCK_METHOD0(map_content, std::shared_ptr<graphics::gbm::KMSOutputContentMap>());
+    MOCK_CONST_METHOD0(map_content, std::shared_ptr<graphics::gbm::KMSOutputContentMap>());
 };
 
 } // namespace test

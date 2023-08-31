@@ -84,8 +84,7 @@ mge::RenderingPlatform::RenderingPlatform(std::vector<std::shared_ptr<DisplayInt
 {
 }
 
-auto mge::RenderingPlatform::create_buffer_allocator(
-    mg::Display const& /*output*/) -> mir::UniqueModulePtr<mg::GraphicBufferAllocator>
+auto mge::RenderingPlatform::create_buffer_allocator() -> mir::UniqueModulePtr<mg::GraphicBufferAllocator>
 {
     return make_module_ptr<mge::BufferAllocator>(dpy, ctx);
 }

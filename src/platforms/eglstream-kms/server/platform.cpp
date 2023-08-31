@@ -178,8 +178,7 @@ mge::RenderingPlatform::~RenderingPlatform()
     unsetenv(mir_xwayland_option);
 }
 
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mge::RenderingPlatform::create_buffer_allocator(
-    mg::Display const&)
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mge::RenderingPlatform::create_buffer_allocator()
 {
     return mir::make_module_ptr<mge::BufferAllocator>(ctx->make_share_context());
 }

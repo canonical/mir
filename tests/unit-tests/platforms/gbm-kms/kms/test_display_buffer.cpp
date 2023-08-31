@@ -24,6 +24,7 @@
 #include "mir/test/doubles/mock_buffer.h"
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir/test/doubles/stub_gl_config.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir_test_framework/udev_environment.h"
 #include "mir/test/doubles/fake_renderable.h"
 #include "mir/graphics/transformation.h"
@@ -183,6 +184,7 @@ TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
         {mock_kms_output},
         display_area,
         identity,
+        std::make_shared<StubBufferAllocator>(),
         false);
 
     EXPECT_EQ(display_area, db.view_area());
@@ -206,6 +208,7 @@ TEST_F(MesaDisplayBufferTest, frames_requiring_gl_are_not_throttled)
         {mock_kms_output},
         display_area,
         identity,
+        std::make_shared<StubBufferAllocator>(),
         false);
 
     for (int frame = 0; frame < 5; ++frame)
@@ -228,6 +231,7 @@ TEST_F(MesaDisplayBufferTest, untransformed_with_bypassable_list_can_bypass)
         {mock_kms_output},
         display_area,
         identity,
+        std::make_shared<StubBufferAllocator>(),
         false);
 
     EXPECT_TRUE(db.overlay(bypassable_list));
@@ -254,6 +258,7 @@ TEST_F(MesaDisplayBufferTest, transformation_not_implemented_internally)
         {mock_kms_output},
         display_area,
         rotate_left,
+        std::make_shared<StubBufferAllocator>(),
         false);
 
     EXPECT_EQ(rotate_left, db.transformation());

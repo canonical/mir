@@ -29,6 +29,8 @@
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/dmabuf_buffer.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/renderer/sw/pixel_source.h"
 #include "shm_buffer.h"
 
 #include <boost/throw_exception.hpp>
@@ -54,6 +56,7 @@ mgg::DisplayBuffer::DisplayBuffer(
     std::vector<std::shared_ptr<KMSOutput>> const& outputs,
     geom::Rectangle const& area,
     glm::mat2 const& transformation,
+    std::shared_ptr<GraphicBufferAllocator> buffer_allocator,
     bool smooth_transition)
     : provider{std::move(provider)},
       listener(listener),
@@ -78,6 +81,22 @@ mgg::DisplayBuffer::DisplayBuffer(
         for (auto& output : outputs)
         {
             output->set_crtc(*visible_fb);
+        }
+    }
+    else
+    {
+        auto output = outputs[0];
+        auto mapping = output->map_content();
+
+        if (mapping)
+        {
+            auto pixel_format = mapping->get_pixel_format().as_mir_format();
+            mir::renderer::software::alloc_buffer_with_content(
+                *buffer_allocator,
+                reinterpret_cast<const unsigned char *>(mapping->get_data()),
+                mapping->get_size(),
+                mir::geometry::Stride{},
+                pixel_format.value());
         }
     }
 
@@ -317,7 +336,8 @@ void mir::graphics::gbm::DisplayBuffer::set_next_image(std::unique_ptr<Framebuff
     }
 }
 
-auto mgg::DisplayBuffer::copy_to_buffer() -> std::unique_ptr<common::MemoryBackedShmBuffer>
+auto mgg::DisplayBuffer::copy_to_buffer(std::shared_ptr<graphics::common::EGLContextExecutor>& egl_delegate) const
+    -> std::unique_ptr<common::MemoryBackedShmBuffer>
 {
     if (outputs.empty())
     {
@@ -327,7 +347,14 @@ auto mgg::DisplayBuffer::copy_to_buffer() -> std::unique_ptr<common::MemoryBacke
 
     auto output = outputs[0];
     auto mapping = output->map_content();
-    if (mapping)
-        mir::log_debug("HERE: %d", mapping->get_size());
+    if (!mapping)
+        return nullptr;
+
+    auto const pixel_format = mapping->get_pixel_format().as_mir_format();
+    auto buffer = new common::MemoryBackedShmBuffer(
+        mapping->get_size(),
+        pixel_format.value(),
+        egl_delegate);
+    (void)buffer;
     return nullptr;
 }

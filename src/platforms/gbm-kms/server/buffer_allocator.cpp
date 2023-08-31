@@ -317,6 +317,11 @@ auto mgg::BufferAllocator::shared_egl_context() -> EGLContext
     return static_cast<EGLContext>(*ctx);
 }
 
+auto mgg::BufferAllocator::get_egl_delegate() -> std::shared_ptr<common::EGLContextExecutor>
+{
+    return egl_delegate;
+}
+
 auto mgg::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture>
 {
     return std::dynamic_pointer_cast<gl::Texture>(buffer);

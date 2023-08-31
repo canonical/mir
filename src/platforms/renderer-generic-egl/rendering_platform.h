@@ -32,8 +32,7 @@ class RenderingPlatform : public graphics::RenderingPlatform
 public:
     explicit RenderingPlatform(std::vector<std::shared_ptr<DisplayInterfaceProvider>> const& displays);
 
-    auto create_buffer_allocator(
-        graphics::Display const& output) -> UniqueModulePtr<graphics::GraphicBufferAllocator> override;
+    auto create_buffer_allocator() -> UniqueModulePtr<graphics::GraphicBufferAllocator> override;
 
 protected:
     auto maybe_create_interface(

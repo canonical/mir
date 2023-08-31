@@ -17,12 +17,12 @@
 #include "real_kms_output.h"
 #include "kms_framebuffer.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/graphics/drm_formats.h"
 #include "page_flipper.h"
 #include "kms-utils/kms_connector.h"
 #include "mir/fatal.h"
 #include "mir/log.h"
 #include <string.h> // strcmp
-#include "cpu_addressable_fb.h"
 
 #include <boost/throw_exception.hpp>
 #include <system_error>
@@ -41,23 +41,30 @@ namespace
 class RealKMSOutputContentMap : public mgg::KMSOutputContentMap
 {
 public:
-    RealKMSOutputContentMap(uint32_t size, uint32_t pixel_format, char* data)
-        : size{size}, pixel_format{pixel_format}, data{data}
+    RealKMSOutputContentMap(
+        size_t mapping_size,
+        mir::geometry::Size size,
+        uint32_t pixel_format,
+        char* data)
+        : mapping_size{mapping_size},
+          size{size},
+          pixel_format{pixel_format},
+          data{data}
     {
     }
 
     ~RealKMSOutputContentMap() override
     {
         if (data)
-            munmap(static_cast<void*>(data), size);
+            munmap(static_cast<void*>(data), mapping_size);
     }
 
-    virtual auto get_size() -> uint32_t override
+    virtual auto get_size() -> mir::geometry::Size const& override
     {
         return size;
     }
 
-    virtual auto get_pixel_format() -> uint32_t override
+    virtual auto get_pixel_format() -> mir::graphics::DRMFormat const& override
     {
         return pixel_format;
     }
@@ -69,6 +76,8 @@ public:
 
     static auto try_create(
         uint32_t size,
+        uint32_t width,
+        uint32_t height,
         int drm_fd,
         int handle,
         uint32_t offset,
@@ -103,12 +112,17 @@ public:
             return nullptr;
         }
 
-        return std::make_unique<RealKMSOutputContentMap>(size, pixel_format, map);
+        return std::make_unique<RealKMSOutputContentMap>(
+            size,
+            mir::geometry::Size{width, height},
+            pixel_format,
+            map);
     }
 
 private:
-    size_t size = 0;
-    uint32_t pixel_format = 0;
+    size_t mapping_size;
+    mir::geometry::Size size;
+    mir::graphics::DRMFormat pixel_format;
     char* data = nullptr;
 };
 }
@@ -674,7 +688,7 @@ int mgg::RealKMSOutput::drm_fd() const
     return drm_fd_;
 }
 
-std::shared_ptr<mgg::KMSOutputContentMap> mgg::RealKMSOutput::map_content()
+std::shared_ptr<mgg::KMSOutputContentMap> mgg::RealKMSOutput::map_content() const
 {
     auto buffer_id = saved_crtc.buffer_id;
     kms::DRMModeResources resources{drm_fd()};
@@ -698,6 +712,8 @@ std::shared_ptr<mgg::KMSOutputContentMap> mgg::RealKMSOutput::map_content()
         size_t size = fb->height * fb->pitches[handle_index];
         auto map = RealKMSOutputContentMap::try_create(
             size,
+            fb->width,
+            fb->height,
             drm_fd(),
             fb->handles[handle_index],
             fb->offsets[handle_index],

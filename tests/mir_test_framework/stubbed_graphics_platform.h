@@ -28,13 +28,13 @@ class StubGraphicPlatform :
 public:
     StubGraphicPlatform(std::vector<mir::geometry::Rectangle> const& display_rects);
 
-    mir::UniqueModulePtr<mir::graphics::GraphicBufferAllocator> create_buffer_allocator(
-        mir::graphics::Display const& output) override;
+    mir::UniqueModulePtr<mir::graphics::GraphicBufferAllocator> create_buffer_allocator() override;
 
     mir::UniqueModulePtr<mir::graphics::Display> create_display(
         std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<mir::graphics::GLConfig> const&,
-        std::shared_ptr<mir::options::Option> const&) override;
+        std::shared_ptr<mir::options::Option> const&,
+        std::shared_ptr<mir::graphics::GraphicBufferAllocator>) override;
 
 protected:
     auto maybe_create_interface(

@@ -237,8 +237,7 @@ mgg::RenderingPlatform::RenderingPlatform(
 }
 
 
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgg::RenderingPlatform::create_buffer_allocator(
-    mg::Display const&)
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgg::RenderingPlatform::create_buffer_allocator()
 {
     return make_module_ptr<mgg::BufferAllocator>(dpy, share_ctx);
 }
@@ -300,7 +299,8 @@ private:
 mir::UniqueModulePtr<mg::Display> mgg::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<GLConfig> const&,
-    std::shared_ptr<mir::options::Option> const& options)
+    std::shared_ptr<mir::options::Option> const& options,
+    std::shared_ptr<GraphicBufferAllocator> buffer_allocator)
 {
     auto smooth_boot = options->is_set(options::smooth_boot_opt)
         && options->get<bool>(options::smooth_boot_opt);
@@ -310,6 +310,7 @@ mir::UniqueModulePtr<mg::Display> mgg::Platform::create_display(
         bypass_option_,
         initial_conf_policy,
         listener,
+        buffer_allocator,
         smooth_boot);
 }
 

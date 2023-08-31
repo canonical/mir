@@ -48,7 +48,7 @@ public:
     ~RenderingPlatform() override;
 
     UniqueModulePtr<GraphicBufferAllocator>
-        create_buffer_allocator(Display const& output) override;
+        create_buffer_allocator() override;
 
 protected:
     auto maybe_create_interface(

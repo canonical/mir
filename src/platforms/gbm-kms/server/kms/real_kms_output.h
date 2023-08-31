@@ -65,7 +65,7 @@ public:
     void update_from_hardware_state(DisplayConfigurationOutput& output) const override;
 
     int drm_fd() const override;
-    virtual std::shared_ptr<KMSOutputContentMap> map_content() override;
+    virtual std::shared_ptr<KMSOutputContentMap> map_content() const override;
 
 private:
     bool ensure_crtc();

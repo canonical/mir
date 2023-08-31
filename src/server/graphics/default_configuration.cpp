@@ -392,7 +392,7 @@ mir::DefaultServerConfiguration::the_buffer_allocator()
         [&]() -> std::shared_ptr<graphics::GraphicBufferAllocator>
         {
             // TODO: More than one BufferAllocator
-            return the_rendering_platforms().back()->create_buffer_allocator(*the_display());
+            return the_rendering_platforms().back()->create_buffer_allocator();
         });
 }
 
@@ -410,7 +410,8 @@ mir::DefaultServerConfiguration::the_display()
                     platform->create_display(
                         the_display_configuration_policy(),
                         the_gl_config(),
-                        the_options()));
+                        the_options(),
+                        the_buffer_allocator()));
             }
             return std::make_shared<mg::MultiplexingDisplay>(
                 std::move(displays),
