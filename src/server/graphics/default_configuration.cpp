@@ -419,7 +419,15 @@ mir::DefaultServerConfiguration::the_display()
                 std::move(displays),
                 *the_display_configuration_policy());
 
-            the_initial_render(multiplexed_display);
+            auto initial = multiplexed_display->create_initial_render();
+            if (initial)
+            {
+                for (auto const& renderable : initial->get_renderables())
+                {
+                    the_input_scene()->add_input_visualization(renderable);
+                }
+            }
+
             return multiplexed_display;
         });
 }
@@ -496,26 +504,5 @@ mir::DefaultServerConfiguration::the_display_configuration_observer()
         [default_executor = the_main_loop()]
         {
             return std::make_shared<mg::DisplayConfigurationObserverMultiplexer>(default_executor);
-        });
-}
-
-std::shared_ptr<mg::InitialRender>
-mir::DefaultServerConfiguration::the_initial_render(std::shared_ptr<mg::Display> in_display)
-{
-    // TODO: This got weird. It is basically a helper initialization function instead of a "the_xyz()" thingy
-    return initial_render(
-        [display = in_display, input_scene = the_input_scene()]
-        {
-            auto initial = display->create_initial_render();
-            if (initial)
-            {
-                for (auto const& renderable : initial->get_renderables())
-                {
-                    input_scene->add_input_visualization(renderable);
-                }
-            }
-
-
-            return initial;
         });
 }
