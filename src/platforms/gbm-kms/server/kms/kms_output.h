@@ -48,7 +48,7 @@ public:
     virtual auto get_size() -> mir::geometry::Size const& = 0;
     virtual auto get_stride() -> mir::geometry::Stride const& = 0;
     virtual auto get_pixel_format() -> mir::graphics::DRMFormat const& = 0;
-    virtual auto get_data() -> const char* = 0;
+    virtual auto get_data() -> const unsigned char* = 0;
 };
 
 class KMSOutput

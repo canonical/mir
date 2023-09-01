@@ -313,7 +313,33 @@ auto mgg::Display::create_hardware_cursor() -> std::shared_ptr<graphics::Cursor>
 
 std::shared_ptr<mg::InitialRender> mgg::Display::create_initial_render()
 {
-    return nullptr;
+    class GbmKmsInitialRender : public mg::InitialRender
+    {
+    public:
+        void add_renderable(std::shared_ptr<Renderable> renderable)
+        {
+            if (renderable == nullptr)
+                return;
+
+            renderables.push_back(renderable);
+        }
+
+        auto get_renderables() const -> std::vector<std::shared_ptr<Renderable>> override
+        {
+            return renderables;
+        }
+
+    private:
+        std::vector<std::shared_ptr<Renderable>> renderables;
+    };
+
+    auto initial_render = std::make_shared<GbmKmsInitialRender>();
+    for (auto const& buffer : display_buffers)
+    {
+        initial_render->add_renderable(buffer->copy_to_buffer());
+    }
+
+    return initial_render;
 }
 
 void mgg::Display::clear_connected_unused_outputs()

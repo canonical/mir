@@ -72,7 +72,7 @@ public:
     auto screen_position() const -> geom::Rectangle override
     {
         return {
-            {-size.width.as_int() / 2, -size.height.as_value() / 2},
+            {0, 0},
             {size.width.as_int(), size.height.as_int()}
         };
     }
@@ -110,7 +110,7 @@ mgg::DisplayBuffer::DisplayBuffer(
     std::vector<std::shared_ptr<KMSOutput>> const& outputs,
     geom::Rectangle const& area,
     glm::mat2 const& transformation,
-    std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<input::Scene> const&,
     bool smooth_transition)
     : provider{std::move(provider)},
@@ -119,7 +119,9 @@ mgg::DisplayBuffer::DisplayBuffer(
       area(area),
       transform{transformation},
       needs_set_crtc{false},
-      page_flips_pending{false}
+      page_flips_pending{false},
+      allocator{allocator},
+      smooth_transition{smooth_transition}
 {
     listener->report_successful_setup_of_native_resources();
 
@@ -136,22 +138,6 @@ mgg::DisplayBuffer::DisplayBuffer(
         for (auto& output : outputs)
         {
             output->set_crtc(*visible_fb);
-        }
-    }
-    else
-    {
-        auto output = outputs[0];
-        auto mapping = output->map_content();
-
-        if (mapping)
-        {
-            auto pixel_format = mapping->get_pixel_format().as_mir_format();
-            auto buffer = mir::renderer::software::alloc_buffer_with_content(
-                *buffer_allocator,
-                reinterpret_cast<const unsigned char *>(mapping->get_data()),
-                mapping->get_size(),
-                mapping->get_stride(),
-                pixel_format.value());
         }
     }
 
@@ -391,9 +377,11 @@ void mir::graphics::gbm::DisplayBuffer::set_next_image(std::unique_ptr<Framebuff
     }
 }
 
-auto mgg::DisplayBuffer::copy_to_buffer(std::shared_ptr<graphics::common::EGLContextExecutor>& egl_delegate) const
-    -> std::unique_ptr<common::MemoryBackedShmBuffer>
+auto mgg::DisplayBuffer::copy_to_buffer() const -> std::unique_ptr<mg::Renderable>
 {
+    if (!smooth_transition)
+        return nullptr;
+
     if (outputs.empty())
     {
         mir::log_error("Unable to copy the contents of the buffer: No outputs available");
@@ -402,14 +390,21 @@ auto mgg::DisplayBuffer::copy_to_buffer(std::shared_ptr<graphics::common::EGLCon
 
     auto output = outputs[0];
     auto mapping = output->map_content();
+
     if (!mapping)
         return nullptr;
 
-    auto const pixel_format = mapping->get_pixel_format().as_mir_format();
-    auto buffer = new common::MemoryBackedShmBuffer(
-        mapping->get_size(),
-        pixel_format.value(),
-        egl_delegate);
-    (void)buffer;
-    return nullptr;
+    auto pixel_format = mapping->get_pixel_format().as_mir_format();
+    auto data = mapping->get_data();
+    auto size = mapping->get_size();
+    auto stride = mapping->get_stride();
+    auto format = pixel_format.value();
+
+    auto buffer = mir::renderer::software::alloc_buffer_with_content(
+        *allocator,
+        data,
+        size,
+        stride,
+        format);
+    return std::make_unique<SmoothTransitionRenderable>(buffer, mapping->get_size());
 }

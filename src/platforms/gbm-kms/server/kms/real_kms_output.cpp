@@ -46,7 +46,7 @@ public:
         mir::geometry::Size size,
         mir::geometry::Stride stride,
         uint32_t pixel_format,
-        char* data)
+        unsigned char* data)
         : mapping_size{mapping_size},
           size{size},
           stride{stride},
@@ -76,7 +76,7 @@ public:
         return pixel_format;
     }
 
-    virtual auto get_data() -> const char* override
+    virtual auto get_data() -> const unsigned char* override
     {
         return data;
     }
@@ -107,7 +107,7 @@ public:
 
         // Establish a memory map.
         uint32_t size = height * stride;
-        auto map = static_cast<char *>(mmap(
+        auto map = static_cast<unsigned char *>(mmap(
             0,
             size,
             PROT_READ,
@@ -133,7 +133,7 @@ private:
     mir::geometry::Size size;
     mir::geometry::Stride stride;
     mir::graphics::DRMFormat pixel_format;
-    char* data = nullptr;
+    unsigned char* data = nullptr;
 };
 }
 
@@ -732,6 +732,7 @@ std::shared_ptr<mgg::KMSOutputContentMap> mgg::RealKMSOutput::map_content() cons
         if (!map)
             continue;
 
+        mir::log_info("Got one!");
         return map;
     }
 

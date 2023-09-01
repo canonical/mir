@@ -507,22 +507,15 @@ mir::DefaultServerConfiguration::the_initial_render(std::shared_ptr<mg::Display>
     return initial_render(
         [display = in_display, input_scene = the_input_scene()]
         {
-            class NoInitialRender : public mg::InitialRender
-            {
-                virtual auto get_renderables() const -> std::vector<std::shared_ptr<mg::Renderable>> override
-                {
-                    return {};
-                }
-            };
-
             auto initial = display->create_initial_render();
-            if (!initial)
-                initial = std::make_shared<NoInitialRender>();
-
-            for (auto const& renderable : initial->get_renderables())
+            if (initial)
             {
-                input_scene->add_input_visualization(renderable);
+                for (auto const& renderable : initial->get_renderables())
+                {
+                    input_scene->add_input_visualization(renderable);
+                }
             }
+
 
             return initial;
         });

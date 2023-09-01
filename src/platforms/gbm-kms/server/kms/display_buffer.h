@@ -97,8 +97,7 @@ public:
     /// Creates a Buffer from the current contents of the first output.
     /// TODO: What do we do about the other outputs?
     /// \returns A buffer
-    auto copy_to_buffer(std::shared_ptr<graphics::common::EGLContextExecutor>&) const
-        -> std::unique_ptr<common::MemoryBackedShmBuffer>;
+    auto copy_to_buffer() const -> std::unique_ptr<graphics::Renderable>;
 private:
     bool schedule_page_flip(FBHandle const& bufobj);
     void set_crtc(FBHandle const&);
@@ -122,6 +121,8 @@ private:
     std::atomic<bool> needs_set_crtc;
     std::chrono::milliseconds recommend_sleep{0};
     bool page_flips_pending;
+    std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
+    bool smooth_transition;
 };
 
 }

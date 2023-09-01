@@ -192,7 +192,6 @@ auto mrs::alloc_buffer_with_content(
     MirPixelFormat src_format) -> std::shared_ptr<graphics::Buffer>
 {
     auto const buffer = allocator.alloc_software_buffer(size, src_format);
-
     auto mapping = as_write_mappable_buffer(buffer)->map_writeable();
     if (mapping->stride() == src_stride)
     {
