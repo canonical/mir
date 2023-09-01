@@ -16,6 +16,9 @@
 
 #include "mir/graphics/default_initial_render_manager.h"
 #include "mir/input/scene.h"
+#include "mir/time/alarm_factory.h"
+#include "mir/time/clock.h"
+#include <chrono>
 
 namespace mg = mir::graphics;
 
@@ -24,15 +27,18 @@ mg::DefaultInitialRenderManager::DefaultInitialRenderManager(
     time::AlarmFactory &alarm_factory,
     std::shared_ptr<input::Scene>& scene)
     : clock{clock},
-      alarm_factory{alarm_factory},
-      scene{scene}
+     scene{scene},
+     alarm{alarm_factory.create_alarm([&]{
+         remove_renderables();
+         alarm->cancel();
+     })}
 {
-
+    time::Timestamp scheduled_time = clock->now() + std::chrono::seconds {5};
+    alarm->reschedule_for(scheduled_time);
 }
 
 mg::DefaultInitialRenderManager::~DefaultInitialRenderManager()
 {
-
 }
 
 void mg::DefaultInitialRenderManager::add_initial_render(std::shared_ptr<InitialRender> const& initial_render)
@@ -45,4 +51,16 @@ void mg::DefaultInitialRenderManager::add_initial_render(std::shared_ptr<Initial
         scene->add_input_visualization(renderable);
     }
     renderable_list.push_back(initial_render);
+}
+
+void mg::DefaultInitialRenderManager::remove_renderables()
+{
+    for (auto inital_render : renderable_list)
+    {
+        for (auto const& renderable : inital_render->get_renderables())
+        {
+            scene->remove_input_visualization(renderable);
+        }
+    }
+    renderable_list.clear();
 }

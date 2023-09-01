@@ -50,10 +50,11 @@ public:
     void add_initial_render(std::shared_ptr<InitialRender> const&) override;
 
 private:
+    void remove_renderables();
     std::shared_ptr<time::Clock> const& clock;
-    time::AlarmFactory& alarm_factory;
     std::shared_ptr<input::Scene>& scene;
     std::vector<std::shared_ptr<InitialRender>> renderable_list;
+    std::unique_ptr<time::Alarm> const alarm;
 };
 
 }

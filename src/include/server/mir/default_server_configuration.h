@@ -439,7 +439,7 @@ private:
         display_configuration_observer_multiplexer;
     CachedPtr<ObserverMultiplexer<input::SeatObserver>>
         seat_observer_multiplexer;
-    CachedPtr<graphics::InitialRenderManager> initial_render_manager;
+    std::shared_ptr<graphics::InitialRenderManager> initial_render_manager;
 
     // The following caches and factory functions are internal to the
     // default implementations of corresponding the Mir components
