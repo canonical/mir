@@ -641,12 +641,13 @@ void mgw::DisplayClient::remove_global(
 {
     DisplayClient* self = static_cast<decltype(self)>(data);
 
-    std::lock_guard lock{self->outputs_mutex};
+    std::unique_lock lock{self->outputs_mutex};
     auto const output = self->bound_outputs.find(id);
     if (output != self->bound_outputs.end())
     {
         self->outputs_to_be_deleted.push_back(std::move(output->second));
         self->bound_outputs.erase(output);
+        lock.unlock();
         self->on_display_config_changed();
     }
     // TODO: We should probably also delete any other globals we've bound to that disappear.
