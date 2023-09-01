@@ -507,7 +507,11 @@ mir::DefaultServerConfiguration::the_initial_render_manager(mg::Display& in_disp
     auto in_input_scene = the_input_scene();
     auto in_main_loop = the_main_loop();
     auto in_clock = the_clock();
-    initial_render_manager = std::make_shared<mg::DefaultInitialRenderManager>(in_clock, *in_main_loop, in_input_scene);
+    initial_render_manager = std::make_shared<mg::DefaultInitialRenderManager>(
+        the_main_loop(),
+        in_clock,
+        *in_main_loop,
+        in_input_scene);
     initial_render_manager->add_initial_render(in_display.create_initial_render());
     return initial_render_manager;
 }

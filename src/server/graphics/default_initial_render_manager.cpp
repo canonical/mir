@@ -18,20 +18,23 @@
 #include "mir/input/scene.h"
 #include "mir/time/alarm_factory.h"
 #include "mir/time/clock.h"
+#include "mir/executor.h"
 #include <chrono>
 
 namespace mg = mir::graphics;
 
 mg::DefaultInitialRenderManager::DefaultInitialRenderManager(
+    std::shared_ptr<Executor> const& scene_executor,
     std::shared_ptr<time::Clock>&clock,
     time::AlarmFactory &alarm_factory,
     std::shared_ptr<input::Scene>& scene)
-    : clock{clock},
-     scene{scene},
-     alarm{alarm_factory.create_alarm([&]{
+    : scene_executor{scene_executor},
+      clock{clock},
+      scene{scene},
+      alarm{alarm_factory.create_alarm([&]{
          remove_renderables();
          alarm->cancel();
-     })}
+      })}
 {
     time::Timestamp scheduled_time = clock->now() + std::chrono::seconds {5};
     alarm->reschedule_for(scheduled_time);
@@ -48,19 +51,22 @@ void mg::DefaultInitialRenderManager::add_initial_render(std::shared_ptr<Initial
 
     for (auto const& renderable : initial_render->get_renderables())
     {
-        scene->add_input_visualization(renderable);
+        scene_executor->spawn([scene = scene, to_add = renderable]()
+          {
+              scene->add_input_visualization(to_add);
+          });
+        renderable_list.push_back(renderable);
     }
-    renderable_list.push_back(initial_render);
 }
 
 void mg::DefaultInitialRenderManager::remove_renderables()
 {
-    for (auto inital_render : renderable_list)
+    for (auto const& renderable : renderable_list)
     {
-        for (auto const& renderable : inital_render->get_renderables())
-        {
-            scene->remove_input_visualization(renderable);
-        }
+        scene_executor->spawn([scene = scene, to_remove = renderable]()
+          {
+              scene->remove_input_visualization(to_remove);
+          });
     }
     renderable_list.clear();
 }
