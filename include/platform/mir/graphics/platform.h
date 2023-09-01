@@ -49,10 +49,6 @@ namespace renderer::software
 {
 class WriteMappableBuffer;
 }
-namespace input
-{
-class Scene;
-}
 
 /// Graphics subsystem. Mediates interaction between core system and
 /// the graphics environment.

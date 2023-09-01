@@ -99,7 +99,6 @@ mgc::ShmBuffer::ShmBuffer(
       pixel_format_{format},
       egl_delegate{std::move(egl_delegate)}
 {
-    mir::log_info("Constructed A");
 }
 
 mgc::MemoryBackedShmBuffer::MemoryBackedShmBuffer(
@@ -110,7 +109,6 @@ mgc::MemoryBackedShmBuffer::MemoryBackedShmBuffer(
       stride_{MIR_BYTES_PER_PIXEL(pixel_format) * size.width.as_uint32_t()},
       pixels{new unsigned char[stride_.as_int() * size.height.as_int()]}
 {
-    mir::log_info("Constructed B");
 }
 
 mgc::ShmBuffer::~ShmBuffer() noexcept

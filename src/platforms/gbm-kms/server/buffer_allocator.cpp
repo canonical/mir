@@ -160,7 +160,6 @@ mgg::BufferAllocator::BufferAllocator(EGLDisplay dpy, EGLContext share_with)
 std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_software_buffer(
     geom::Size size, MirPixelFormat format)
 {
-    mir::log_info("Before format");
     if (!mgc::MemoryBackedShmBuffer::supports(format))
     {
         BOOST_THROW_EXCEPTION(
@@ -168,7 +167,6 @@ std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_software_buffer(
                 "Trying to create SHM buffer with unsupported pixel format"));
     }
 
-    mir::log_info("After format");
     return std::make_shared<mgc::MemoryBackedShmBuffer>(size, format, egl_delegate);
 }
 
@@ -317,11 +315,6 @@ auto mgg::BufferAllocator::buffer_from_shm(
 auto mgg::BufferAllocator::shared_egl_context() -> EGLContext
 {
     return static_cast<EGLContext>(*ctx);
-}
-
-auto mgg::BufferAllocator::get_egl_delegate() -> std::shared_ptr<common::EGLContextExecutor>
-{
-    return egl_delegate;
 }
 
 auto mgg::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture>

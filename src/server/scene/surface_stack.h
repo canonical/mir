@@ -40,7 +40,6 @@ namespace mir
 namespace graphics
 {
 class Renderable;
-class InitialRender;
 }
 /// Management of Surface objects. Includes the model (SurfaceStack and Surface
 /// classes) and controller (SurfaceController) elements of an MVC design.

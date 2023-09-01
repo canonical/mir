@@ -31,22 +31,12 @@
 namespace mir
 {
 
-namespace input
-{
-class Scene;
-}
-
 namespace graphics
 {
 
 class DisplayReport;
 class GLConfig;
 class GraphicBufferAllocator;
-
-namespace common {
-class MemoryBackedShmBuffer;
-class EGLContextExecutor;
-}
 
 namespace gbm
 {

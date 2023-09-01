@@ -44,11 +44,6 @@ class EventHandlerRegister;
 class GLConfig;
 class GraphicBufferAllocator;
 
-namespace common
-{
-class EGLContextExecutor;
-}
-
 namespace gbm
 {
 

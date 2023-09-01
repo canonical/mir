@@ -31,8 +31,6 @@
 #include "mir/graphics/dmabuf_buffer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/renderable.h"
-#include "mir/renderer/sw/pixel_source.h"
-#include "shm_buffer.h"
 
 #include <boost/throw_exception.hpp>
 #include <EGL/egl.h>

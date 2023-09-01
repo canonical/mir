@@ -28,7 +28,6 @@
 #include "mir/console_services.h"
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/event_handler_register.h"
-#include "shm_buffer.h"
 
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/display_configuration_policy.h"
