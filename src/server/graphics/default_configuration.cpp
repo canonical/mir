@@ -28,6 +28,7 @@
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/cursor.h"
+#include "mir/graphics/initial_render.h"
 #include "display_configuration_observer_multiplexer.h"
 
 #include "mir/shared_library.h"
@@ -492,5 +493,22 @@ mir::DefaultServerConfiguration::the_display_configuration_observer()
         [default_executor = the_main_loop()]
         {
             return std::make_shared<mg::DisplayConfigurationObserverMultiplexer>(default_executor);
+        });
+}
+
+std::shared_ptr<mg::InitialRender>
+mir::DefaultServerConfiguration::the_initial_render()
+{
+    return initial_render(
+        [default_executor = the_main_loop()]
+        {
+            class NoInitialRender : public mg::InitialRender
+            {
+                virtual auto get_renderables() const -> std::vector<std::shared_ptr<mg::Renderable>> override
+                {
+                    return {};
+                }
+            };
+            return std::make_shared<NoInitialRender>();
         });
 }

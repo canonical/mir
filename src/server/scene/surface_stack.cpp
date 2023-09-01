@@ -21,6 +21,7 @@
 #include "mir/scene/scene_report.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/graphics/renderable.h"
+#include "mir/graphics/initial_render.h"
 #include "mir/depth_layer.h"
 #include "mir/executor.h"
 
@@ -130,10 +131,24 @@ private:
 
 ms::SurfaceStack::SurfaceStack(
     std::shared_ptr<SceneReport> const& report) :
+    SurfaceStack(report, nullptr)
+{
+}
+
+ms::SurfaceStack::SurfaceStack(
+    std::shared_ptr<SceneReport> const& report,
+    std::shared_ptr<graphics::InitialRender> const& initial_render) :
     report{report},
     scene_changed{false},
     surface_observer{std::make_shared<SurfaceDepthLayerObserver>(this)}
 {
+    if (initial_render)
+    {
+        for (auto const& renderable : initial_render->get_renderables())
+        {
+            add_input_visualization(renderable);
+        }
+    }
 }
 
 ms::SurfaceStack::~SurfaceStack() noexcept(true)

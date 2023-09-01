@@ -912,6 +912,7 @@ MIR_SERVER_2.15 {
     mir::shell::SurfaceStackWrapper::send_to_back*;
     mir::shell::ShellWrapper::swap_z_order*;
     mir::shell::ShellWrapper::send_to_back*;
+    mir::DefaultServerConfiguration::the_initial_render*;
  };
  local: *;
 };

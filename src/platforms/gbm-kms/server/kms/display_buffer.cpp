@@ -33,7 +33,6 @@
 #include "mir/graphics/renderable.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "shm_buffer.h"
-#include "mir/input/scene.h"
 
 #include <boost/throw_exception.hpp>
 #include <EGL/egl.h>
@@ -112,7 +111,7 @@ mgg::DisplayBuffer::DisplayBuffer(
     geom::Rectangle const& area,
     glm::mat2 const& transformation,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
-    std::shared_ptr<input::Scene> const& scene,
+    std::shared_ptr<input::Scene> const&,
     bool smooth_transition)
     : provider{std::move(provider)},
       listener(listener),

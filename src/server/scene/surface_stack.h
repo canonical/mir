@@ -40,6 +40,7 @@ namespace mir
 namespace graphics
 {
 class Renderable;
+class InitialRender;
 }
 /// Management of Surface objects. Includes the model (SurfaceStack and Surface
 /// classes) and controller (SurfaceController) elements of an MVC design.
@@ -74,6 +75,9 @@ class SurfaceStack :
 public:
     explicit SurfaceStack(
         std::shared_ptr<SceneReport> const& report);
+    explicit SurfaceStack(
+        std::shared_ptr<SceneReport> const& report,
+        std::shared_ptr<graphics::InitialRender> const& initial_render);
     virtual ~SurfaceStack() noexcept(true);
 
     // From Scene
