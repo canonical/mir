@@ -16,6 +16,7 @@ add_library(
   platform_probe.h
   multiplexing_display.h
   multiplexing_display.cpp
+  default_initial_render_manager.cpp
 )
 
 target_link_libraries(mirgraphics

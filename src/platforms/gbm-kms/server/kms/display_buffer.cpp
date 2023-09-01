@@ -48,6 +48,8 @@ namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 
+namespace
+{
 struct SmoothTransitionRenderable : public mg::Renderable
 {
 public:
@@ -99,6 +101,7 @@ private:
     std::shared_ptr<mg::Buffer> const buffer_;
     mir::geometry::Size size;
 };
+}
 
 mgg::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<DisplayInterfaceProvider> provider,
@@ -385,23 +388,35 @@ auto mgg::DisplayBuffer::copy_to_buffer() const -> std::unique_ptr<mg::Renderabl
         return nullptr;
     }
 
+    // TODO: We are only getting the first output's contents. Perhaps this is wrong?
     auto output = outputs[0];
     auto mapping = output->map_content();
 
     if (!mapping)
+    {
+        mir::log_error("Unable to copy the contents of the buffer: No mapping available");
         return nullptr;
+    }
 
     auto pixel_format = mapping->get_pixel_format().as_mir_format();
-    auto data = mapping->get_data();
-    auto size = mapping->get_size();
-    auto stride = mapping->get_stride();
-    auto format = pixel_format.value();
+    if (!pixel_format.has_value())
+    {
+        mir::log_error("Unable to copy the contents of the buffer: Pixel format unavailable");
+        return nullptr;
+    }
 
     auto buffer = mir::renderer::software::alloc_buffer_with_content(
         *allocator,
-        data,
-        size,
-        stride,
-        format);
+        mapping->get_data(),
+        mapping->get_size(),
+        mapping->get_stride(),
+        pixel_format.value());
+
+    if (!buffer)
+    {
+        mir::log_error("Unable to copy the contents of the buffer: Buffer could not be allocated");
+        return nullptr;
+    }
+
     return std::make_unique<SmoothTransitionRenderable>(buffer, mapping->get_size());
 }

@@ -108,6 +108,7 @@ class GraphicBufferAllocator;
 class Cursor;
 class CursorImage;
 class GLConfig;
+class InitialRenderManager;
 }
 namespace input
 {
@@ -347,6 +348,7 @@ protected:
     std::shared_ptr<input::DefaultInputDeviceHub>  the_default_input_device_hub();
     std::shared_ptr<graphics::DisplayConfigurationObserver> the_display_configuration_observer();
     std::shared_ptr<input::SeatObserver> the_seat_observer();
+    std::shared_ptr<graphics::InitialRenderManager> the_initial_render_manager(graphics::Display& in_display);
 
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
 
@@ -437,6 +439,7 @@ private:
         display_configuration_observer_multiplexer;
     CachedPtr<ObserverMultiplexer<input::SeatObserver>>
         seat_observer_multiplexer;
+    CachedPtr<graphics::InitialRenderManager> initial_render_manager;
 
     // The following caches and factory functions are internal to the
     // default implementations of corresponding the Mir components

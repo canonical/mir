@@ -19,6 +19,7 @@
 
 #include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/graphics/default_initial_render_manager.h"
 #include "mir/input/scene.h"
 #include "mir/graphics/display.h"
 #include "multiplexing_display.h"
@@ -415,19 +416,12 @@ mir::DefaultServerConfiguration::the_display()
                         the_options(),
                         the_buffer_allocator()));
             }
+
             auto multiplexed_display = std::make_shared<mg::MultiplexingDisplay>(
                 std::move(displays),
                 *the_display_configuration_policy());
 
-            auto initial = multiplexed_display->create_initial_render();
-            if (initial)
-            {
-                for (auto const& renderable : initial->get_renderables())
-                {
-                    the_input_scene()->add_input_visualization(renderable);
-                }
-            }
-
+            the_initial_render_manager(*multiplexed_display);
             return multiplexed_display;
         });
 }
@@ -504,5 +498,20 @@ mir::DefaultServerConfiguration::the_display_configuration_observer()
         [default_executor = the_main_loop()]
         {
             return std::make_shared<mg::DisplayConfigurationObserverMultiplexer>(default_executor);
+        });
+}
+
+std::shared_ptr<mg::InitialRenderManager>
+mir::DefaultServerConfiguration::the_initial_render_manager(mg::Display& in_display)
+{
+    return initial_render_manager(
+        [display = &in_display, this]
+        {
+            auto in_input_scene = the_input_scene();
+            auto in_main_loop = the_main_loop();
+            auto in_clock = the_clock();
+            auto render_manager = std::make_shared<mg::DefaultInitialRenderManager>(in_clock, *in_main_loop, in_input_scene);
+            render_manager->add_initial_render(display->create_initial_render());
+            return render_manager;
         });
 }

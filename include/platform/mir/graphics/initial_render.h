@@ -18,6 +18,7 @@
 #define MIR_GRAPHICS_INITIAL_RENDER_H
 
 #include <vector>
+#include <memory>
 
 namespace mir
 {
@@ -26,6 +27,8 @@ namespace graphics
 
 class Renderable;
 
+/// A Display is able to specify an initial render that it wants to show to the user
+/// (such as the plymouth buffer for a fade-in effect from startup splash to compostior).
 class InitialRender
 {
 public:
@@ -36,6 +39,14 @@ protected:
     InitialRender() = default;
     InitialRender(InitialRender const&) = delete;
     InitialRender& operator=(InitialRender const&) = delete;
+};
+
+/// Manages the lifetime of InitialRender objects
+class InitialRenderManager
+{
+public:
+    virtual ~InitialRenderManager() = default;
+    virtual void add_initial_render(std::shared_ptr<InitialRender> const&) = 0;
 };
 
 }
