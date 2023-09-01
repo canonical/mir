@@ -100,8 +100,7 @@ public:
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
             std::make_shared<mtd::StubGLConfig>(),
             std::make_shared<mir::options::ProgramOption>(),
-            std::make_shared<mtd::StubBufferAllocator>(),
-            std::make_shared<mtd::StubInputScene>());
+            std::make_shared<mtd::StubBufferAllocator>());
     }
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;

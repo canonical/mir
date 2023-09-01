@@ -87,13 +87,12 @@ public:
         std::shared_ptr<mg::DisplayConfigurationPolicy> const& ptr,
         std::shared_ptr<mg::GLConfig> const& shared_ptr,
         std::shared_ptr<mir::options::Option> const& options,
-        std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
-        std::shared_ptr<mir::input::Scene> const& scene) override
+        std::shared_ptr<mg::GraphicBufferAllocator> const& allocator) override
     {
         if (should_throw.at(ExceptionLocation::at_create_display))
             BOOST_THROW_EXCEPTION(std::runtime_error("Exception during create_display"));
 
-        return stub_display_platform->create_display(ptr, shared_ptr, options, allocator, scene);
+        return stub_display_platform->create_display(ptr, shared_ptr, options, allocator);
     }
 
 private:

@@ -46,8 +46,7 @@ public:
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config,
         std::shared_ptr<mir::options::Option> const& options,
-        std::shared_ptr<GraphicBufferAllocator> const& allocator,
-        std::shared_ptr<mir::input::Scene> const& scene) override;
+        std::shared_ptr<GraphicBufferAllocator> const& allocator) override;
 
 protected:
     auto interface_for() -> std::shared_ptr<DisplayInterfaceProvider> override;

@@ -124,8 +124,7 @@ mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<GLConfig> const& /*gl_config*/,
     std::shared_ptr<mir::options::Option> const& /*options*/,
-    std::shared_ptr<GraphicBufferAllocator> const& /*allocator*/,
-    std::shared_ptr<mir::input::Scene> const& /*scene*/)
+    std::shared_ptr<GraphicBufferAllocator> const& /*allocator*/)
 {
     return make_module_ptr<mgx::Display>(
         std::dynamic_pointer_cast<Platform>(shared_from_this()),

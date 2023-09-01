@@ -300,8 +300,7 @@ mir::UniqueModulePtr<mg::Display> mgg::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<GLConfig> const&,
     std::shared_ptr<mir::options::Option> const& options,
-    std::shared_ptr<GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<mir::input::Scene> const& scene)
+    std::shared_ptr<GraphicBufferAllocator> const& allocator)
 {
     auto smooth_boot = options->is_set(options::smooth_boot_opt)
         && options->get<bool>(options::smooth_boot_opt);
@@ -312,7 +311,6 @@ mir::UniqueModulePtr<mg::Display> mgg::Platform::create_display(
         initial_conf_policy,
         listener,
         allocator,
-        scene,
         smooth_boot);
 }
 

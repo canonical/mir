@@ -151,7 +151,6 @@ mgg::Display::Display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<DisplayReport> const& listener,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<input::Scene> const& scene,
     bool smooth_transition)
     : owner{std::move(parent)},
       drm_fd{std::move(drm_fd)},
@@ -165,7 +164,6 @@ mgg::Display::Display(
       dirty_configuration{false},
       bypass_option(bypass_option),
       allocator{allocator},
-      scene{scene},
       smooth_transition{smooth_transition}
 {
     monitor.filter_by_subsystem_and_type("drm", "drm_minor");
@@ -468,7 +466,6 @@ void mgg::Display::configure_locked(
                     bounding_rect,
                     transformation,
                     allocator,
-                    scene,
                     smooth_transition);
 
                 display_buffers_new.push_back(std::move(db));

@@ -413,8 +413,7 @@ mir::DefaultServerConfiguration::the_display()
                         the_display_configuration_policy(),
                         the_gl_config(),
                         the_options(),
-                        the_buffer_allocator(),
-                        nullptr));
+                        the_buffer_allocator()));
             }
             auto multiplexed_display = std::make_shared<mg::MultiplexingDisplay>(
                 std::move(displays),

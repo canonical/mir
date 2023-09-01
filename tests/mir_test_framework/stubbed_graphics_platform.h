@@ -34,8 +34,7 @@ public:
         std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<mir::graphics::GLConfig> const&,
         std::shared_ptr<mir::options::Option> const&,
-        std::shared_ptr<mir::graphics::GraphicBufferAllocator> const&,
-        std::shared_ptr<mir::input::Scene> const&) override;
+        std::shared_ptr<mir::graphics::GraphicBufferAllocator> const&) override;
 
 protected:
     auto maybe_create_interface(

@@ -69,7 +69,6 @@ public:
         geometry::Rectangle const& area,
         glm::mat2 const& transformation,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-        std::shared_ptr<input::Scene> const& scene,
         bool smooth_transition);
     ~DisplayBuffer();
 

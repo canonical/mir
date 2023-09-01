@@ -111,7 +111,6 @@ mgg::DisplayBuffer::DisplayBuffer(
     geom::Rectangle const& area,
     glm::mat2 const& transformation,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<input::Scene> const&,
     bool smooth_transition)
     : provider{std::move(provider)},
       listener(listener),
