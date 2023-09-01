@@ -75,9 +75,6 @@ class SurfaceStack :
 public:
     explicit SurfaceStack(
         std::shared_ptr<SceneReport> const& report);
-    explicit SurfaceStack(
-        std::shared_ptr<SceneReport> const& report,
-        std::shared_ptr<graphics::InitialRender> const& initial_render);
     virtual ~SurfaceStack() noexcept(true);
 
     // From Scene

@@ -242,6 +242,11 @@ auto mgx::Display::create_hardware_cursor() -> std::shared_ptr<Cursor>
     return nullptr;
 }
 
+std::shared_ptr<mg::InitialRender> mgx::Display::create_initial_render()
+{
+    return nullptr;
+}
+
 bool mgx::Display::apply_if_configuration_preserves_display_buffers(
     mg::DisplayConfiguration const& /*conf*/)
 {

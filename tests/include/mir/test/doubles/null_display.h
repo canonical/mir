@@ -60,6 +60,12 @@ class NullDisplay : public graphics::Display
     {
          return {}; 
     }
+
+    std::shared_ptr<graphics::InitialRender> create_initial_render() override
+    {
+        return nullptr;
+    }
+
     NullDisplaySyncGroup group;
 };
 

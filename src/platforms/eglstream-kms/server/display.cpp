@@ -434,3 +434,8 @@ bool mge::Display::apply_if_configuration_preserves_display_buffers(
     return false;
 }
 
+std::shared_ptr<mg::InitialRender> mge::Display::create_initial_render()
+{
+    return nullptr;
+}
+

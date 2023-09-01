@@ -47,6 +47,8 @@ public:
     void resume() override;
 
     auto create_hardware_cursor() -> std::shared_ptr<Cursor> override;
+
+    std::shared_ptr<InitialRender> create_initial_render() override;
 private:
     std::vector<std::unique_ptr<Display>> const displays;
 };

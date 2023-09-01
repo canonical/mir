@@ -145,6 +145,11 @@ auto mgw::Display::create_hardware_cursor() -> std::shared_ptr<Cursor>
     return cursor;
 }
 
+std::shared_ptr<mir::graphics::InitialRender> mgw::Display::create_initial_render()
+{
+    return nullptr;
+}
+
 bool mgw::Display::apply_if_configuration_preserves_display_buffers(DisplayConfiguration const& /*conf*/)
 {
     return false;

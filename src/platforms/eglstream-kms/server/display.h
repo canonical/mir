@@ -63,6 +63,8 @@ public:
 
     std::shared_ptr<Cursor> create_hardware_cursor() override;
 
+    std::shared_ptr<InitialRender> create_initial_render() override;
+
 private:
     mir::Fd const drm_node;
     EGLDisplay display;

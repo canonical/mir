@@ -19,6 +19,7 @@
 
 #include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/input/scene.h"
 #include "mir/graphics/display.h"
 #include "multiplexing_display.h"
 #include "null_cursor.h"
@@ -413,11 +414,14 @@ mir::DefaultServerConfiguration::the_display()
                         the_gl_config(),
                         the_options(),
                         the_buffer_allocator(),
-                        the_input_scene()));
+                        nullptr));
             }
-            return std::make_shared<mg::MultiplexingDisplay>(
+            auto multiplexed_display = std::make_shared<mg::MultiplexingDisplay>(
                 std::move(displays),
                 *the_display_configuration_policy());
+
+            the_initial_render(multiplexed_display);
+            return multiplexed_display;
         });
 }
 
@@ -497,10 +501,11 @@ mir::DefaultServerConfiguration::the_display_configuration_observer()
 }
 
 std::shared_ptr<mg::InitialRender>
-mir::DefaultServerConfiguration::the_initial_render()
+mir::DefaultServerConfiguration::the_initial_render(std::shared_ptr<mg::Display> in_display)
 {
+    // TODO: This got weird. It is basically a helper initialization function instead of a "the_xyz()" thingy
     return initial_render(
-        [default_executor = the_main_loop()]
+        [display = in_display, input_scene = the_input_scene()]
         {
             class NoInitialRender : public mg::InitialRender
             {
@@ -509,6 +514,16 @@ mir::DefaultServerConfiguration::the_initial_render()
                     return {};
                 }
             };
-            return std::make_shared<NoInitialRender>();
+
+            auto initial = display->create_initial_render();
+            if (!initial)
+                initial = std::make_shared<NoInitialRender>();
+
+            for (auto const& renderable : initial->get_renderables())
+            {
+                input_scene->add_input_visualization(renderable);
+            }
+
+            return initial;
         });
 }

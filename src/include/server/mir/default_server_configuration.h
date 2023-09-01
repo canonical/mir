@@ -231,7 +231,7 @@ public:
     virtual std::shared_ptr<input::CursorImages> the_cursor_images();
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>>
         the_display_configuration_observer_registrar();
-    virtual std::shared_ptr<graphics::InitialRender> the_initial_render();
+    virtual std::shared_ptr<graphics::InitialRender> the_initial_render(std::shared_ptr<graphics::Display> in_display);
 
     /** @} */
 

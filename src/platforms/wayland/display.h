@@ -86,6 +86,8 @@ public:
 
     auto create_hardware_cursor() -> std::shared_ptr<Cursor>override;
 
+    std::shared_ptr<InitialRender> create_initial_render() override;
+
 private:
 
     void keyboard_key(wl_keyboard* keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state) override;

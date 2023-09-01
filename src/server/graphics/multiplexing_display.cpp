@@ -16,6 +16,7 @@
 
 #include "multiplexing_display.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/graphics/initial_render.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/output_type_names.h"
 
@@ -25,6 +26,38 @@
 #include <functional>
 
 namespace mg = mir::graphics;
+
+namespace
+{
+class MultiplexingInitialRender : public mg::InitialRender
+{
+public:
+    explicit MultiplexingInitialRender(std::vector<std::unique_ptr<mg::Display>> const& displays)
+        : displays{displays}
+    {
+    }
+
+    auto get_renderables() const -> std::vector<std::shared_ptr<mg::Renderable>> override
+    {
+        std::vector<std::shared_ptr<mg::Renderable>> renderables;
+
+        for (auto const& display: displays)
+        {
+            auto initial_render = display->create_initial_render();
+            if (!initial_render)
+                continue;
+
+            auto display_renderables = initial_render->get_renderables();
+            renderables.insert(renderables.end(), display_renderables.begin(), display_renderables.end());
+        }
+
+        return renderables;
+    }
+
+private:
+    std::vector<std::unique_ptr<mg::Display>> const& displays;
+};
+}
 
 mg::MultiplexingDisplay::MultiplexingDisplay(
     std::vector<std::unique_ptr<Display>> displays,
@@ -315,4 +348,9 @@ void mg::MultiplexingDisplay::resume()
 auto mg::MultiplexingDisplay::create_hardware_cursor() -> std::shared_ptr<Cursor>
 {
     return {};
+}
+
+std::shared_ptr<mg::InitialRender> mg::MultiplexingDisplay::create_initial_render()
+{
+    return std::make_shared<MultiplexingInitialRender>(displays);
 }

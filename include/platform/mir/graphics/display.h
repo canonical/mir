@@ -32,6 +32,7 @@ class DisplayBuffer;
 class DisplayConfiguration;
 class Cursor;
 class EventHandlerRegister;
+class InitialRender;
 
 typedef std::function<bool()> DisplayPauseHandler;
 typedef std::function<bool()> DisplayResumeHandler;
@@ -163,6 +164,13 @@ public:
      * Create a hardware cursor object.
      */
     virtual std::shared_ptr<Cursor> create_hardware_cursor() = 0;
+
+    /**
+     * Creates an initial render for this Display. Used in instances where it is desirable to capture the
+     * previous buffer (e.g. for smooth transitions between plymouth and the compositor).
+     * @return the initial render
+     */
+    virtual std::shared_ptr<InitialRender> create_initial_render() = 0;
 
     Display() = default;
     virtual ~Display() = default;

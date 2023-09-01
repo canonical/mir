@@ -16,7 +16,6 @@
 
 #include "src/server/scene/surface_stack.h"
 #include "mir/graphics/buffer_properties.h"
-#include "mir/graphics/initial_render.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/scene/observer.h"
 #include "mir/compositor/scene_element.h"
@@ -117,14 +116,6 @@ struct StubSurface : public ms::BasicSurface
     mir::Executor& executor;
 };
 
-class StubInitialRender : public mg::InitialRender
-{
-    virtual auto get_renderables() const -> std::vector<std::shared_ptr<mg::Renderable>> override
-    {
-        return {};
-    }
-};
-
 struct SurfaceStack : public ::testing::Test
 {
     void SetUp() override
@@ -153,9 +144,8 @@ struct SurfaceStack : public ::testing::Test
     std::shared_ptr<ms::Surface> invisible_stub_surface;
 
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
-    std::shared_ptr<StubInitialRender> const initial_render = std::make_shared<StubInitialRender>();
     // The surface stack must be a shared pointer so shared_from_this() works
-    std::shared_ptr<ms::SurfaceStack> shared_stack = std::make_shared<ms::SurfaceStack>(report, initial_render);
+    std::shared_ptr<ms::SurfaceStack> shared_stack = std::make_shared<ms::SurfaceStack>(report);
     ms::SurfaceStack& stack = *shared_stack;
     void const* compositor_id{&stack};
     mtd::ExplicitExecutor executor;
@@ -247,7 +237,7 @@ TEST_F(SurfaceStack, scene_snapshot_omits_invisible_surfaces)
 TEST_F(SurfaceStack, scene_counts_pending_accurately)
 {
     using namespace testing;
-    ms::SurfaceStack stack{report, initial_render};
+    ms::SurfaceStack stack{report};
     stack.register_compositor(this);
 
     auto stream = std::make_shared<mc::Stream>(geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888);
@@ -284,7 +274,7 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_occluded_surfaces)
 {  // Regression test for LP: #1418081
     using namespace testing;
 
-    ms::SurfaceStack stack{report, initial_render};
+    ms::SurfaceStack stack{report};
     stack.register_compositor(this);
     auto stream = std::make_shared<mtd::StubBufferStream>();
     auto surface = std::make_shared<ms::BasicSurface>(
@@ -314,7 +304,7 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_partially_exposed_su
     using namespace testing;
 
     // Partially exposed means occluded in one compositor but not another
-    ms::SurfaceStack stack{report, initial_render};
+    ms::SurfaceStack stack{report};
     auto const comp1 = reinterpret_cast<mc::CompositorID>(0);
     auto const comp2 = reinterpret_cast<mc::CompositorID>(1);
 

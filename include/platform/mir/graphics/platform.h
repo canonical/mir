@@ -23,6 +23,7 @@
 #include <gbm.h>
 
 #include "mir/graphics/drm_formats.h"
+#include "mir/graphics/initial_render.h"
 #include "mir/module_properties.h"
 #include "mir/module_deleter.h"
 #include "mir/udev/wrapper.h"

@@ -96,6 +96,7 @@ public:
     void resume() override;
 
     std::shared_ptr<graphics::Cursor> create_hardware_cursor() override;
+    std::shared_ptr<InitialRender> create_initial_render() override;
 
 private:
     void clear_connected_unused_outputs();

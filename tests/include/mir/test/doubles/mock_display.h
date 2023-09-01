@@ -42,6 +42,7 @@ public:
     MOCK_METHOD(void, resume, (), (override));
     MOCK_METHOD(std::shared_ptr<graphics::Cursor>, create_hardware_cursor, (), (override));
     MOCK_METHOD(graphics::Frame, last_frame_on, (unsigned), (const override));
+    MOCK_METHOD0(create_initial_render, std::shared_ptr<graphics::InitialRender>());
 };
 
 }
