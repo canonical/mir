@@ -45,17 +45,17 @@ class DefaultInitialRenderManager : public InitialRenderManager
 public:
     DefaultInitialRenderManager(
         std::shared_ptr<Executor> const& scene_executor,
-        std::shared_ptr<time::Clock>& clock,
+        std::shared_ptr<time::Clock> const& clock,
         time::AlarmFactory& alarm_factory,
-        std::shared_ptr<input::Scene>& scene);
+        std::shared_ptr<input::Scene> const& scene);
     ~DefaultInitialRenderManager();
     void add_initial_render(std::shared_ptr<InitialRender> const&) override;
 
 private:
     void remove_renderables();
-    std::shared_ptr<Executor> const& scene_executor;
-    std::shared_ptr<time::Clock> const& clock;
-    std::shared_ptr<input::Scene>& scene;
+    std::shared_ptr<Executor> const scene_executor;
+    std::shared_ptr<time::Clock> const clock;
+    std::shared_ptr<input::Scene> const scene;
     std::vector<std::shared_ptr<Renderable>> renderable_list;
     std::unique_ptr<time::Alarm> const alarm;
 };

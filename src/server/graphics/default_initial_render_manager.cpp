@@ -19,15 +19,16 @@
 #include "mir/time/alarm_factory.h"
 #include "mir/time/clock.h"
 #include "mir/executor.h"
+#include "mir/log.h"
 #include <chrono>
 
 namespace mg = mir::graphics;
 
 mg::DefaultInitialRenderManager::DefaultInitialRenderManager(
     std::shared_ptr<Executor> const& scene_executor,
-    std::shared_ptr<time::Clock>&clock,
-    time::AlarmFactory &alarm_factory,
-    std::shared_ptr<input::Scene>& scene)
+    std::shared_ptr<time::Clock> const& clock,
+    time::AlarmFactory& alarm_factory,
+    std::shared_ptr<input::Scene>  const& scene)
     : scene_executor{scene_executor},
       clock{clock},
       scene{scene},
@@ -49,24 +50,36 @@ void mg::DefaultInitialRenderManager::add_initial_render(std::shared_ptr<Initial
     if (!initial_render)
         return;
 
+    if (!scene)
+    {
+        mir::log_error("Unable to add the initial renderables because the scene does not exist");
+        return;
+    }
+
     for (auto const& renderable : initial_render->get_renderables())
     {
-        scene_executor->spawn([scene = scene, to_add = renderable]()
-          {
-              scene->add_input_visualization(to_add);
-          });
+        scene->add_input_visualization(renderable);
         renderable_list.push_back(renderable);
     }
 }
 
 void mg::DefaultInitialRenderManager::remove_renderables()
 {
-    for (auto const& renderable : renderable_list)
+    if (!scene_executor)
     {
-        scene_executor->spawn([scene = scene, to_remove = renderable]()
-          {
-              scene->remove_input_visualization(to_remove);
-          });
+        mir::log_error("Unable to remove the initial renderables because the executor does not exist");
+        return;
     }
-    renderable_list.clear();
+
+    if (!scene)
+    {
+        mir::log_error("Unable to remove the initial renerables because the scene does not exist");
+        return;
+    }
+
+    scene_executor->spawn([the_scene = scene, to_remove = renderable_list]()
+    {
+        for (auto const& renderable : to_remove)
+            the_scene->remove_input_visualization(renderable);
+    });
 }
