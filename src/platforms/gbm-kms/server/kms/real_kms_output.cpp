@@ -732,7 +732,6 @@ std::shared_ptr<mgg::KMSOutputContentMap> mgg::RealKMSOutput::map_content() cons
         if (!map)
             continue;
 
-        mir::log_info("Got one!");
         return map;
     }
 
