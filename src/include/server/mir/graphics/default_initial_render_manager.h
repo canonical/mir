@@ -25,6 +25,11 @@ namespace mir
 {
 class Executor;
 
+namespace options
+{
+class Option;
+}
+
 namespace time
 {
 class Clock;
@@ -44,6 +49,7 @@ class DefaultInitialRenderManager : public InitialRenderManager
 {
 public:
     DefaultInitialRenderManager(
+        std::shared_ptr<options::Option> const& options,
         std::shared_ptr<Executor> const& scene_executor,
         std::shared_ptr<time::Clock> const& clock,
         time::AlarmFactory& alarm_factory,
@@ -53,6 +59,7 @@ public:
 
 private:
     void remove_renderables();
+    SmoothSupportBehavior behavior;
     std::shared_ptr<Executor> const scene_executor;
     std::shared_ptr<time::Clock> const clock;
     std::shared_ptr<input::Scene> const scene;

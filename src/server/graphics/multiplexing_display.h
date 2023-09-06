@@ -22,12 +22,15 @@
 
 namespace mir::graphics
 {
+class InitialRenderManager;
+
 class MultiplexingDisplay : public Display
 {
 public:
     MultiplexingDisplay(
         std::vector<std::unique_ptr<Display>> displays,
-        DisplayConfigurationPolicy& initial_configuration_policy);
+        DisplayConfigurationPolicy& initial_configuration_policy,
+        std::shared_ptr<InitialRenderManager> const& initial_render_manager);
     ~MultiplexingDisplay() override;
 
     void for_each_display_sync_group(std::function<void(DisplaySyncGroup&)> const& f) override;
@@ -51,5 +54,6 @@ public:
     std::shared_ptr<InitialRender> create_initial_render() override;
 private:
     std::vector<std::unique_ptr<Display>> const displays;
+    std::shared_ptr<InitialRenderManager> const initial_render_manager;
 };
 }

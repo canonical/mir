@@ -20,16 +20,34 @@
 #include "mir/time/clock.h"
 #include "mir/executor.h"
 #include "mir/log.h"
+#include "mir/options/option.h"
+#include <mir/options/configuration.h>
 #include <chrono>
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 namespace mg = mir::graphics;
+namespace mo = mir::options;
+
+mg::SmoothSupportBehavior from_option(std::string const& option)
+{
+    if (option == "fade")
+        return mg::SmoothSupportBehavior::fade;
+    else
+    {
+        std::string error_message = "Invalid option string for smooth support behavior: " + option;
+        BOOST_THROW_EXCEPTION(std::invalid_argument(error_message));
+    }
+}
 
 mg::DefaultInitialRenderManager::DefaultInitialRenderManager(
+    std::shared_ptr<options::Option> const& options,
     std::shared_ptr<Executor> const& scene_executor,
     std::shared_ptr<time::Clock> const& clock,
     time::AlarmFactory& alarm_factory,
     std::shared_ptr<input::Scene>  const& scene)
-    : scene_executor{scene_executor},
+    : behavior{from_option(options->get<std::string>(mo::smooth_boot_opt))},
+      scene_executor{scene_executor},
       clock{clock},
       scene{scene},
       alarm{alarm_factory.create_alarm([&]{
@@ -37,7 +55,7 @@ mg::DefaultInitialRenderManager::DefaultInitialRenderManager(
          alarm->cancel();
       })}
 {
-    time::Timestamp scheduled_time = clock->now() + std::chrono::seconds {5};
+    time::Timestamp scheduled_time = clock->now() + std::chrono::microseconds{500};
     alarm->reschedule_for(scheduled_time);
 }
 
@@ -56,11 +74,14 @@ void mg::DefaultInitialRenderManager::add_initial_render(std::shared_ptr<Initial
         return;
     }
 
-    for (auto const& renderable : initial_render->get_renderables())
+    initial_render->for_each_renderable([&](std::shared_ptr<Renderable> const& renderable)
     {
+        if (!renderable)
+            return;
+
         scene->add_input_visualization(renderable);
         renderable_list.push_back(renderable);
-    }
+    });
 }
 
 void mg::DefaultInitialRenderManager::remove_renderables()

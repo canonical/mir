@@ -419,9 +419,9 @@ mir::DefaultServerConfiguration::the_display()
 
             auto multiplexed_display = std::make_shared<mg::MultiplexingDisplay>(
                 std::move(displays),
-                *the_display_configuration_policy());
+                *the_display_configuration_policy(),
+                the_initial_render_manager());
 
-            the_initial_render_manager(*multiplexed_display);
             return multiplexed_display;
         });
 }
@@ -502,16 +502,15 @@ mir::DefaultServerConfiguration::the_display_configuration_observer()
 }
 
 std::shared_ptr<mg::InitialRenderManager>
-mir::DefaultServerConfiguration::the_initial_render_manager(mg::Display& in_display)
+mir::DefaultServerConfiguration::the_initial_render_manager()
 {
-    auto in_input_scene = the_input_scene();
-    auto in_main_loop = the_main_loop();
-    auto in_clock = the_clock();
-    initial_render_manager = std::make_shared<mg::DefaultInitialRenderManager>(
-        in_main_loop,
-        in_clock,
-        *in_main_loop,
-        in_input_scene);
-    initial_render_manager->add_initial_render(in_display.create_initial_render());
-    return initial_render_manager;
+    return initial_render_manager([this]
+    {
+        return std::make_shared<mg::DefaultInitialRenderManager>(
+            the_options(),
+            the_main_loop(),
+            the_clock(),
+            *the_main_loop(),
+            the_input_scene());
+    });
 }

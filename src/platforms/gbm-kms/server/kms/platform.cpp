@@ -302,8 +302,7 @@ mir::UniqueModulePtr<mg::Display> mgg::Platform::create_display(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<GraphicBufferAllocator> const& allocator)
 {
-    auto smooth_boot = options->is_set(options::smooth_boot_opt)
-        && options->get<bool>(options::smooth_boot_opt);
+    auto smooth_boot = options->is_set(options::smooth_boot_opt);
     return make_module_ptr<mgg::Display>(
         provider,
         drm_fd,

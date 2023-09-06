@@ -348,7 +348,7 @@ protected:
     std::shared_ptr<input::DefaultInputDeviceHub>  the_default_input_device_hub();
     std::shared_ptr<graphics::DisplayConfigurationObserver> the_display_configuration_observer();
     std::shared_ptr<input::SeatObserver> the_seat_observer();
-    std::shared_ptr<graphics::InitialRenderManager> the_initial_render_manager(graphics::Display& in_display);
+    std::shared_ptr<graphics::InitialRenderManager> the_initial_render_manager();
 
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
 
@@ -431,6 +431,7 @@ protected:
     CachedPtr<cookie::Authority> cookie_authority;
     CachedPtr<input::KeyMapper> key_mapper;
     std::shared_ptr<ConsoleServices> console_services;
+    CachedPtr<graphics::InitialRenderManager> initial_render_manager;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;
@@ -439,7 +440,6 @@ private:
         display_configuration_observer_multiplexer;
     CachedPtr<ObserverMultiplexer<input::SeatObserver>>
         seat_observer_multiplexer;
-    std::shared_ptr<graphics::InitialRenderManager> initial_render_manager;
 
     // The following caches and factory functions are internal to the
     // default implementations of corresponding the Mir components

@@ -32,6 +32,7 @@ public:
     void operator()(mir::Server& server) const;
 
     explicit SmoothBootSupport();
+    explicit SmoothBootSupport(uint32_t behavior);
     ~SmoothBootSupport();
     SmoothBootSupport(SmoothBootSupport const&);
     auto operator=(SmoothBootSupport const&) -> SmoothBootSupport&;

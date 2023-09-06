@@ -37,7 +37,7 @@ public:
     {
     }
 
-    auto get_renderables() const -> std::vector<std::shared_ptr<mg::Renderable>> override
+    virtual void for_each_renderable(std::function<void(std::shared_ptr<mg::Renderable> const&)> func) const override
     {
         std::vector<std::shared_ptr<mg::Renderable>> renderables;
 
@@ -47,11 +47,8 @@ public:
             if (!initial_render)
                 continue;
 
-            auto display_renderables = initial_render->get_renderables();
-            renderables.insert(renderables.end(), display_renderables.begin(), display_renderables.end());
+            initial_render->for_each_renderable(func);
         }
-
-        return renderables;
     }
 
 private:
@@ -61,12 +58,15 @@ private:
 
 mg::MultiplexingDisplay::MultiplexingDisplay(
     std::vector<std::unique_ptr<Display>> displays,
-    DisplayConfigurationPolicy& initial_configuration_policy)
-    : displays{std::move(displays)}
+    DisplayConfigurationPolicy& initial_configuration_policy,
+    std::shared_ptr<InitialRenderManager> const& initial_render_manager)
+    : displays{std::move(displays)},
+      initial_render_manager{initial_render_manager}
 {
     auto conf = configuration();
     initial_configuration_policy.apply_to(*conf);
     configure(*conf);
+    initial_render_manager->add_initial_render(std::make_shared<MultiplexingInitialRender>(displays));
 }
 
 mg::MultiplexingDisplay::~MultiplexingDisplay() = default;
@@ -352,5 +352,5 @@ auto mg::MultiplexingDisplay::create_hardware_cursor() -> std::shared_ptr<Cursor
 
 std::shared_ptr<mg::InitialRender> mg::MultiplexingDisplay::create_initial_render()
 {
-    return std::make_shared<MultiplexingInitialRender>(displays);
+    return initial_render;
 }

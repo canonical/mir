@@ -19,6 +19,7 @@
 
 #include <vector>
 #include <memory>
+#include <functional>
 
 namespace mir
 {
@@ -27,13 +28,19 @@ namespace graphics
 
 class Renderable;
 
+enum class SmoothSupportBehavior : uint32_t
+{
+    fade,
+    count
+};
+
 /// A Display is able to specify an initial render that it wants to show to the user
 /// (such as the plymouth buffer for a fade-in effect from startup splash to compostior).
 class InitialRender
 {
 public:
     virtual ~InitialRender() = default;
-    virtual auto get_renderables() const -> std::vector<std::shared_ptr<Renderable>> = 0;
+    virtual void for_each_renderable(std::function<void(std::shared_ptr<Renderable> const&)>) const = 0;
 
 protected:
     InitialRender() = default;

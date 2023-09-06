@@ -321,9 +321,10 @@ std::shared_ptr<mg::InitialRender> mgg::Display::create_initial_render()
             renderables.push_back(renderable);
         }
 
-        auto get_renderables() const -> std::vector<std::shared_ptr<Renderable>> override
+        virtual void for_each_renderable(std::function<void(std::shared_ptr<Renderable> const&)> func) const override
         {
-            return renderables;
+            for (auto const& renderable : renderables)
+                func(renderable);
         }
 
     private:
