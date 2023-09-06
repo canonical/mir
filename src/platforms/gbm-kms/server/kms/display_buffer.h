@@ -55,7 +55,8 @@ public:
         std::shared_ptr<DisplayReport> const& listener,
         std::vector<std::shared_ptr<KMSOutput>> const& outputs,
         geometry::Rectangle const& area,
-        glm::mat2 const& transformation);
+        glm::mat2 const& transformation,
+        bool smooth_transition);
     ~DisplayBuffer();
 
     geometry::Rectangle view_area() const override;

@@ -63,7 +63,8 @@ public:
         mir::Fd drm_fd,
         BypassOption bypass_option,
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
-        std::shared_ptr<DisplayReport> const& listener);
+        std::shared_ptr<DisplayReport> const& listener,
+        bool smooth_boot);
     ~Display();
 
     geometry::Rectangle view_area() const;
@@ -102,6 +103,7 @@ private:
 
     BypassOption bypass_option;
     std::weak_ptr<Cursor> cursor;
+    bool smooth_transition;
 };
 
 class CPUAddressableDisplayProvider : public graphics::CPUAddressableDisplayProvider

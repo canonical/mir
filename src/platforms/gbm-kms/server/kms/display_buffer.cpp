@@ -52,7 +52,8 @@ mgg::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<DisplayReport> const& listener,
     std::vector<std::shared_ptr<KMSOutput>> const& outputs,
     geom::Rectangle const& area,
-    glm::mat2 const& transformation)
+    glm::mat2 const& transformation,
+    bool smooth_transition)
     : provider{std::move(provider)},
       listener(listener),
       outputs(outputs),
@@ -63,22 +64,24 @@ mgg::DisplayBuffer::DisplayBuffer(
 {
     listener->report_successful_setup_of_native_resources();
 
-    // TODO: Pull a supported format out of KMS rather than assuming XRGB8888
-    auto initial_fb = std::make_shared<mgg::CPUAddressableFB>(
-        std::move(drm_fd),
-        false,
-        DRMFormat{DRM_FORMAT_XRGB8888},
-        area.size);
-
-    auto mapping = initial_fb->map_writeable();
-    ::memset(mapping->data(), 24, mapping->len());
-
-    visible_fb = std::move(initial_fb);
-    for (auto& output : outputs)
+    if (!smooth_transition)
     {
-        output->set_crtc(*visible_fb);
+        // TODO: Pull a supported format out of KMS rather than assuming XRGB8888
+        auto initial_fb = std::make_shared<mgg::CPUAddressableFB>(
+                std::move(drm_fd),
+                false,
+                DRMFormat{DRM_FORMAT_XRGB8888},
+                area.size);
+
+        auto mapping = initial_fb->map_writeable();
+        ::memset(mapping->data(), 24, mapping->len());
+
+        visible_fb = std::move(initial_fb);
+        for (auto &output: outputs) {
+            output->set_crtc(*visible_fb);
+        }
+        listener->report_successful_drm_mode_set_crtc_on_construction();
     }
-    listener->report_successful_drm_mode_set_crtc_on_construction();
     listener->report_successful_display_construction();
 }
 

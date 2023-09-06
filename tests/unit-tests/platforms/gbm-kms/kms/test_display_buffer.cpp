@@ -182,7 +182,8 @@ TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
         null_display_report(),
         {mock_kms_output},
         display_area,
-        identity);
+        identity,
+        false);
 
     EXPECT_EQ(display_area, db.view_area());
 }
@@ -204,7 +205,8 @@ TEST_F(MesaDisplayBufferTest, frames_requiring_gl_are_not_throttled)
         null_display_report(),
         {mock_kms_output},
         display_area,
-        identity);
+        identity,
+        false);
 
     for (int frame = 0; frame < 5; ++frame)
     {
@@ -225,7 +227,8 @@ TEST_F(MesaDisplayBufferTest, untransformed_with_bypassable_list_can_bypass)
         null_display_report(),
         {mock_kms_output},
         display_area,
-        identity);
+        identity,
+        false);
 
     EXPECT_TRUE(db.overlay(bypassable_list));
 }
@@ -250,7 +253,8 @@ TEST_F(MesaDisplayBufferTest, transformation_not_implemented_internally)
         null_display_report(),
         {mock_kms_output},
         display_area,
-        rotate_left);
+        rotate_left,
+        false);
 
     EXPECT_EQ(rotate_left, db.transformation());
 }

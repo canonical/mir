@@ -21,6 +21,7 @@
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/test/doubles/stub_gl_config.h"
+#include "mir/test/doubles/mock_option.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "mir/test/doubles/stub_console_services.h"
 #include "src/server/report/null_report_factory.h"
@@ -34,6 +35,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <fcntl.h>
+#include <memory>
 
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
@@ -96,7 +98,8 @@ public:
             mgg::BypassOption::allowed);
         return platform->create_display(
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
-            std::make_shared<mtd::StubGLConfig>());
+            std::make_shared<mtd::StubGLConfig>(),
+            std::make_shared<mtd::MockOption>());
     }
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;

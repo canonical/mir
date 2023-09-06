@@ -409,7 +409,8 @@ mir::DefaultServerConfiguration::the_display()
                 displays.push_back(
                     platform->create_display(
                         the_display_configuration_policy(),
-                        the_gl_config()));
+                        the_gl_config(),
+                        the_options()));
             }
             return std::make_shared<mg::MultiplexingDisplay>(
                 std::move(displays),

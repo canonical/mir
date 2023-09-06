@@ -73,7 +73,8 @@ std::unique_ptr<mg::Display> display_preset;
 
 mir::UniqueModulePtr<mg::Display> mtf::StubGraphicPlatform::create_display(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
-    std::shared_ptr<mg::GLConfig> const&)
+    std::shared_ptr<mg::GLConfig> const&,
+    std::shared_ptr<mir::options::Option> const&)
 {
     if (display_preset)
     {

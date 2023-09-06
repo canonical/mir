@@ -18,6 +18,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/options/option.h"
 #include "mir/options/program_option.h"
 #include "mir/shared_library.h"
 #include "mir/renderer/gl/context_source.h"
@@ -101,6 +102,11 @@ public:
     auto gl_config() -> std::shared_ptr<mir::graphics::GLConfig>
     {
         return the_gl_config();
+    }
+
+    auto options() -> std::shared_ptr<mir::options::Option>
+    {
+        return the_options();
     }
 
 private:
@@ -203,7 +209,8 @@ auto test_display_construction(mir::graphics::DisplayPlatform& platform, Minimal
     {
         auto display = platform.create_display(
             env.initial_display_configuration(),
-            env.gl_config());
+            env.gl_config(),
+            env.options());
 
         std::cout << "Successfully created display" << std::endl;
 
