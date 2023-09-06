@@ -18,6 +18,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/options/option.h"
 #include "mir/options/program_option.h"
 #include "mir/shared_library.h"
 #include "mir/renderer/gl/context_source.h"

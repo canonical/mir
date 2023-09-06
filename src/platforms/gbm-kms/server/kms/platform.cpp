@@ -28,6 +28,8 @@
 #include "mir/options/option.h"
 #include "mir/options/configuration.h"
 #include "one_shot_device_observer.h"
+#include "mir/options/configuration.h"
+#include "mir/options/option.h"
 #include <gbm.h>
 
 #define MIR_LOG_COMPONENT "platform-graphics-gbm-kms"

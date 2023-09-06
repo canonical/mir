@@ -61,7 +61,6 @@ char const* const mo::null_console = "none";
 char const* const mo::auto_console = "auto";
 
 char const* const mo::vt_option_name = "vt";
-
 char const* const mo::smooth_boot_opt = "smooth-boot";
 
 
