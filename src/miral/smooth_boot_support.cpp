@@ -32,6 +32,8 @@ const char* to_option(mg::SmoothSupportBehavior behavior)
 {
     switch (behavior)
     {
+        case mg::SmoothSupportBehavior::none:
+            return "none";
         case mg::SmoothSupportBehavior::fade:
             return "fade";
         default:

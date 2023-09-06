@@ -28,6 +28,7 @@
 #include "mir/test/doubles/null_gl_context.h"
 #include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/doubles/null_display_configuration_policy.h"
+#include "mir/test/doubles/null_initial_render_manager.h"
 
 #include "mir_toolkit/common.h"
 #include "src/server/graphics/multiplexing_display.h"
@@ -139,7 +140,7 @@ TEST(MultiplexingDisplay, forwards_for_each_display_sync_group)
     }
 
     mtd::NullDisplayConfigurationPolicy policy;
-    mg::MultiplexingDisplay display{std::move(displays), policy};
+    mg::MultiplexingDisplay display{std::move(displays), policy, std::make_shared<mtd::NullInitialRenderManager>()};
 
     display.for_each_display_sync_group([](auto const&) {});
 }
@@ -182,7 +183,7 @@ TEST(MultiplexingDisplay, each_display_in_configuration_has_unique_id)
     }
 
     mtd::NullDisplayConfigurationPolicy policy;
-    mg::MultiplexingDisplay display{std::move(displays), policy};
+    mg::MultiplexingDisplay display{std::move(displays), policy, std::make_shared<mtd::NullInitialRenderManager>()};
 
     auto conf = display.configuration();
 
@@ -232,7 +233,7 @@ TEST(MultiplexingDisplay, configuration_is_union_of_all_displays)
     }
 
     mtd::NullDisplayConfigurationPolicy policy;
-    mg::MultiplexingDisplay display{std::move(displays), policy};
+    mg::MultiplexingDisplay display{std::move(displays), policy, std::make_shared<mtd::NullInitialRenderManager>()};
 
     auto conf = display.configuration();
 
@@ -317,7 +318,7 @@ TEST(MultiplexingDisplay, dispatches_configure_to_associated_platform)
     displays.push_back(std::move(d2));
 
     mtd::NullDisplayConfigurationPolicy policy;
-    mg::MultiplexingDisplay display{std::move(displays), policy};
+    mg::MultiplexingDisplay display{std::move(displays), policy, std::make_shared<mtd::NullInitialRenderManager>()};
     auto conf = display.configuration();
 
     display.configure(*conf);
@@ -375,7 +376,7 @@ TEST(MultiplexingDisplay, apply_if_confguration_preserves_display_buffers_succee
     displays.push_back(std::move(d2));
 
     mtd::NullDisplayConfigurationPolicy policy;
-    mg::MultiplexingDisplay display{std::move(displays), policy};
+    mg::MultiplexingDisplay display{std::move(displays), policy, std::make_shared<mtd::NullInitialRenderManager>()};
     auto conf = display.configuration();
 
     display.apply_if_configuration_preserves_display_buffers(*conf);
@@ -422,7 +423,7 @@ TEST(MultiplexingDisplay, apply_if_confguration_preserves_display_buffers_fails_
     displays.push_back(std::move(d2));
 
     mtd::NullDisplayConfigurationPolicy policy;
-    mg::MultiplexingDisplay display{std::move(displays), policy};
+    mg::MultiplexingDisplay display{std::move(displays), policy, std::make_shared<mtd::NullInitialRenderManager>()};
     auto conf = display.configuration();
 
     EXPECT_THAT(display.apply_if_configuration_preserves_display_buffers(*conf), Eq(false));
@@ -482,7 +483,7 @@ TEST(MultiplexingDisplay, apply_if_configuration_preserves_display_buffers_fails
     displays.push_back(std::move(d2));
 
     mtd::NullDisplayConfigurationPolicy policy;
-    mg::MultiplexingDisplay display{std::move(displays), policy};
+    mg::MultiplexingDisplay display{std::move(displays), policy, std::make_shared<mtd::NullInitialRenderManager>()};
     auto preexisting_conf = display.configuration();
     auto changed_conf = display.configuration();
 
@@ -555,7 +556,7 @@ TEST(MultiplexingDisplay, apply_if_configuration_preserves_display_buffers_throw
     displays.push_back(std::move(d2));
 
     mtd::NullDisplayConfigurationPolicy policy;
-    mg::MultiplexingDisplay display{std::move(displays), policy};
+    mg::MultiplexingDisplay display{std::move(displays), policy, std::make_shared<mtd::NullInitialRenderManager>()};
     auto preexisting_conf = display.configuration();
     auto changed_conf = display.configuration();
 
@@ -582,7 +583,7 @@ TEST(MultiplexingDisplay, delegates_registering_configuration_change_handlers)
     }
 
     mtd::NullDisplayConfigurationPolicy policy;
-    mg::MultiplexingDisplay display{std::move(mock_displays), policy};
+    mg::MultiplexingDisplay display{std::move(mock_displays), policy, std::make_shared<mtd::NullInitialRenderManager>()};
 
     mtd::MockMainLoop ml;
     display.register_configuration_change_handler(ml, [](){});
@@ -602,7 +603,7 @@ TEST(MultiplexingDisplay, delegates_pause_resume_to_underlying_platforms)
     }
 
     mtd::NullDisplayConfigurationPolicy policy;
-    mg::MultiplexingDisplay display{std::move(mock_displays), policy};
+    mg::MultiplexingDisplay display{std::move(mock_displays), policy, std::make_shared<mtd::NullInitialRenderManager>()};
 
     display.pause();
     display.resume();
@@ -707,7 +708,7 @@ TEST(MultiplexingDisplay, applies_initial_display_configuration)
     displays.push_back(std::move(d1));
     displays.push_back(std::move(d2));
 
-    mg::MultiplexingDisplay display{std::move(displays), *policy};
+    mg::MultiplexingDisplay display{std::move(displays), *policy, std::make_shared<mtd::NullInitialRenderManager>()};
 
     display.configuration()->for_each_output(
         [policy](mg::DisplayConfigurationOutput const& output)
@@ -753,7 +754,7 @@ TEST(MultiplexingDisplay, sets_output_names_to_unique_values)
     }
 
     mtd::NullDisplayConfigurationPolicy policy;
-    mg::MultiplexingDisplay display{std::move(displays), policy};
+    mg::MultiplexingDisplay display{std::move(displays), policy, std::make_shared<mtd::NullInitialRenderManager>()};
 
     auto conf = display.configuration();
 
@@ -805,7 +806,7 @@ TEST(MultiplexingDisplay, output_names_begin_with_connector_type)
     }
 
     mtd::NullDisplayConfigurationPolicy policy;
-    mg::MultiplexingDisplay display{std::move(displays), policy};
+    mg::MultiplexingDisplay display{std::move(displays), policy, std::make_shared<mtd::NullInitialRenderManager>()};
 
     auto conf = display.configuration();
 
@@ -848,7 +849,7 @@ TEST(MultiplexingDisplay, output_names_are_bucketed_by_type)
     }
 
     mtd::NullDisplayConfigurationPolicy policy;
-    mg::MultiplexingDisplay display{std::move(displays), policy};
+    mg::MultiplexingDisplay display{std::move(displays), policy, std::make_shared<mtd::NullInitialRenderManager>()};
 
     auto conf = display.configuration();
 
@@ -890,7 +891,7 @@ TEST(MultiplexingDisplay, output_name_does_not_contain_card_id_when_only_one_car
     }
 
     mtd::NullDisplayConfigurationPolicy policy;
-    mg::MultiplexingDisplay display{std::move(displays), policy};
+    mg::MultiplexingDisplay display{std::move(displays), policy, std::make_shared<mtd::NullInitialRenderManager>()};
 
     auto conf = display.configuration();
 
@@ -947,7 +948,7 @@ TEST(MultiplexingDisplay, when_additional_cards_exist_their_outputs_are_numbered
     }
 
     mtd::NullDisplayConfigurationPolicy policy;
-    mg::MultiplexingDisplay display{std::move(displays), policy};
+    mg::MultiplexingDisplay display{std::move(displays), policy, std::make_shared<mtd::NullInitialRenderManager>()};
 
     auto conf = display.configuration();
 

@@ -30,6 +30,7 @@ class Renderable;
 
 enum class SmoothSupportBehavior : uint32_t
 {
+    none,
     fade,
     count
 };

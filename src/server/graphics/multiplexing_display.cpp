@@ -19,6 +19,7 @@
 #include "mir/graphics/initial_render.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/output_type_names.h"
+#include "mir/log.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -66,7 +67,7 @@ mg::MultiplexingDisplay::MultiplexingDisplay(
     auto conf = configuration();
     initial_configuration_policy.apply_to(*conf);
     configure(*conf);
-    initial_render_manager->add_initial_render(std::make_shared<MultiplexingInitialRender>(displays));
+    initial_render_manager->add_initial_render(std::make_shared<MultiplexingInitialRender>(this->displays));
 }
 
 mg::MultiplexingDisplay::~MultiplexingDisplay() = default;
@@ -352,5 +353,5 @@ auto mg::MultiplexingDisplay::create_hardware_cursor() -> std::shared_ptr<Cursor
 
 std::shared_ptr<mg::InitialRender> mg::MultiplexingDisplay::create_initial_render()
 {
-    return initial_render;
+    return std::make_shared<MultiplexingInitialRender>(displays);
 }

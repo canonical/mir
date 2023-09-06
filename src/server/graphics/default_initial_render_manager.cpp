@@ -29,15 +29,22 @@
 namespace mg = mir::graphics;
 namespace mo = mir::options;
 
+namespace
+{
+auto constexpr FADE_TIME = std::chrono::milliseconds{5000};
+
 mg::SmoothSupportBehavior from_option(std::string const& option)
 {
     if (option == "fade")
         return mg::SmoothSupportBehavior::fade;
+    else if (option == "none")
+        return mg::SmoothSupportBehavior::none;
     else
     {
         std::string error_message = "Invalid option string for smooth support behavior: " + option;
         BOOST_THROW_EXCEPTION(std::invalid_argument(error_message));
     }
+}
 }
 
 mg::DefaultInitialRenderManager::DefaultInitialRenderManager(
@@ -46,7 +53,7 @@ mg::DefaultInitialRenderManager::DefaultInitialRenderManager(
     std::shared_ptr<time::Clock> const& clock,
     time::AlarmFactory& alarm_factory,
     std::shared_ptr<input::Scene>  const& scene)
-    : behavior{from_option(options->get<std::string>(mo::smooth_boot_opt))},
+    : behavior{SmoothSupportBehavior::none},
       scene_executor{scene_executor},
       clock{clock},
       scene{scene},
@@ -55,7 +62,10 @@ mg::DefaultInitialRenderManager::DefaultInitialRenderManager(
          alarm->cancel();
       })}
 {
-    time::Timestamp scheduled_time = clock->now() + std::chrono::microseconds{500};
+    if (options->is_set(mo::smooth_boot_opt))
+        behavior = from_option(options->get<std::string>(mo::smooth_boot_opt));
+
+    time::Timestamp scheduled_time = clock->now() + FADE_TIME;
     alarm->reschedule_for(scheduled_time);
 }
 
@@ -94,7 +104,7 @@ void mg::DefaultInitialRenderManager::remove_renderables()
 
     if (!scene)
     {
-        mir::log_error("Unable to remove the initial renerables because the scene does not exist");
+        mir::log_error("Unable to remove the initial renderables because the scene does not exist");
         return;
     }
 
