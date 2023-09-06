@@ -64,7 +64,7 @@ public:
         BypassOption bypass_option,
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<DisplayReport> const& listener,
-        bool smooth_boot);
+        bool smooth_transition);
     ~Display();
 
     geometry::Rectangle view_area() const;
