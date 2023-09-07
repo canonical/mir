@@ -75,12 +75,12 @@ protected:
 public:
 
     mir::UniqueModulePtr<mir::graphics::GraphicBufferAllocator>
-    create_buffer_allocator() override
+    create_buffer_allocator(mg::Display const& output) override
     {
         if (should_throw.at(ExceptionLocation::at_create_buffer_allocator))
             BOOST_THROW_EXCEPTION(std::runtime_error("Exception during create_buffer_allocator"));
 
-        return stub_render_platform->create_buffer_allocator();
+        return stub_render_platform->create_buffer_allocator(output);
     }
 
     mir::UniqueModulePtr<mg::Display> create_display(
@@ -94,6 +94,9 @@ public:
 
         return stub_display_platform->create_display(ptr, shared_ptr, options, allocator);
     }
+
+private:
+    enum ExceptionLocation : uint32_t
     {
         at_constructor,
         at_create_buffer_allocator,
