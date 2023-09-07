@@ -26,8 +26,6 @@
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/egl_extensions.h"
 #include "one_shot_device_observer.h"
-#include "mir/options/configuration.h"
-#include "mir/options/option.h"
 #include <gbm.h>
 
 #define MIR_LOG_COMPONENT "platform-graphics-gbm-kms"
@@ -298,8 +296,7 @@ private:
 };
 
 mir::UniqueModulePtr<mg::Display> mgg::Platform::create_display(
-    std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
-    std::shared_ptr<GLConfig> const&)
+    std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy, std::shared_ptr<GLConfig> const&)
 {
     return make_module_ptr<mgg::Display>(
         provider,
