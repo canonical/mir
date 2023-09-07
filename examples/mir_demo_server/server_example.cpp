@@ -27,6 +27,7 @@
 #include <miral/set_window_management_policy.h>
 #include <miral/wayland_extensions.h>
 #include <miral/x11_support.h>
+#include <miral/smooth_boot_support.h>
 
 #include "mir/abnormal_exit.h"
 #include "mir/server.h"
@@ -140,6 +141,7 @@ try
             .enable(miral::WaylandExtensions::zwp_input_method_manager_v2)
             .enable(miral::WaylandExtensions::zwlr_screencopy_manager_v1)
             .enable(miral::WaylandExtensions::ext_session_lock_manager_v1),
+        miral::SmoothBootSupport{},
         miral::set_window_management_policy<miral::MinimalWindowManager>(),
         me::add_input_device_configuration_options_to,
         add_timeout_option_to,
