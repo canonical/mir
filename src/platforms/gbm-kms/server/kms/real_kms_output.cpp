@@ -257,6 +257,19 @@ bool mgg::RealKMSOutput::set_crtc(FBHandle const& fb)
     return true;
 }
 
+auto mgg::RealKMSOutput::get_rectangle() -> mir::geometry::Rectangle
+{
+    if (!ensure_crtc())
+    {
+        mir::log_error("Output %s has no associated CRTC to get ", mgk::connector_name(connector).c_str());
+        BOOST_THROW_EXCEPTION(std::invalid_argument("get_crtc: Output has no associated CRTC to get"));
+    }
+
+    return mir::geometry::Rectangle(
+        mir::geometry::Point(current_crtc->x, current_crtc->y),
+        mir::geometry::Size(current_crtc->width, current_crtc->height));
+}
+
 void mgg::RealKMSOutput::clear_crtc()
 {
     try

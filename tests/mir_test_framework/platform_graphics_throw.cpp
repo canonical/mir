@@ -94,9 +94,6 @@ public:
 
         return stub_display_platform->create_display(ptr, shared_ptr, options, allocator);
     }
-
-private:
-    enum ExceptionLocation : uint32_t
     {
         at_constructor,
         at_create_buffer_allocator,

@@ -422,10 +422,5 @@ libmiral.so.6 libmiral6 #MINVER#
  (c++)"vtable for miral::MinimalWindowManager@MIRAL_4.0" 4.0.0
  (c++)"vtable for miral::WindowManagementPolicy@MIRAL_4.0" 4.0.0
  MIRAL_4.1@MIRAL_4.1 4.1.0
- (c++)"miral::SmoothBootSupport::SmoothBootSupport()@MIRAL_4.1" 4.1.0
- (c++)"miral::SmoothBootSupport::SmoothBootSupport(miral::SmoothBootSupport const&)@MIRAL_4.1" 4.1.0
- (c++)"miral::SmoothBootSupport::operator()(mir::Server&) const@MIRAL_4.1" 4.1.0
- (c++)"miral::SmoothBootSupport::operator=(miral::SmoothBootSupport const&)@MIRAL_4.1" 4.1.0
- (c++)"miral::SmoothBootSupport::~SmoothBootSupport()@MIRAL_4.1" 4.1.0
  (c++)"miral::WaylandExtensions::zwp_input_method_v1@MIRAL_4.1" 4.1.0
  (c++)"miral::WaylandExtensions::zwp_input_panel_v1@MIRAL_4.1" 4.1.0

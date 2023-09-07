@@ -25,7 +25,6 @@
 #include "mir/graphics/dmabuf_buffer.h"
 #include "mir/graphics/drm_formats.h"
 #include "mir_toolkit/common.h"
-
 #include "kms-utils/drm_mode_resources.h"
 
 #include <gbm.h>
@@ -75,6 +74,7 @@ public:
     virtual int max_refresh_rate() const = 0;
 
     virtual bool set_crtc(FBHandle const& fb) = 0;
+    virtual auto get_rectangle() -> mir::geometry::Rectangle = 0;
     virtual void clear_crtc() = 0;
     virtual bool schedule_page_flip(FBHandle const& fb) = 0;
     virtual void wait_for_page_flip() = 0;

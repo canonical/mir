@@ -125,8 +125,29 @@ mgg::DisplayBuffer::DisplayBuffer(
 {
     listener->report_successful_setup_of_native_resources();
 
-    if (!smooth_transition)
+    bool needs_crtc_set = false;
+    for (auto& output : outputs)
     {
+        try
+        {
+            geometry::Rectangle rectangle = output->get_rectangle();
+            if (rectangle != area)
+            {
+                needs_crtc_set = true;
+                break;
+            }
+        }
+        catch (std::invalid_argument&)
+        {
+            needs_crtc_set = true;
+            break;
+        }
+    }
+
+    if (needs_crtc_set)
+    {
+        mir::log_info("Clearing screen due to differing encountered and target modes");
+        // TODO: Pull a supported format out of KMS rather than assuming XRGB8888
         auto initial_fb = std::make_shared<mgg::CPUAddressableFB>(
             std::move(drm_fd),
             false,
