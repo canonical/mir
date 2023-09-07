@@ -84,7 +84,7 @@ public:
 
     auto alpha() const -> float override
     {
-        return 0.5f;
+        return 1.0f;
     }
 
     auto transformation() const -> glm::mat4 override

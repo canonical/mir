@@ -510,7 +510,7 @@ mir::DefaultServerConfiguration::the_initial_render_manager()
             the_options(),
             the_main_loop(),
             the_clock(),
-            *the_main_loop(),
+            the_main_loop(),
             the_input_scene());
     });
 }

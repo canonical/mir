@@ -15,6 +15,7 @@
  */
 
 #include "mir/graphics/default_initial_render_manager.h"
+#include "mir/graphics/renderable.h"
 #include "mir/input/scene.h"
 #include "mir/time/alarm_factory.h"
 #include "mir/time/clock.h"
@@ -31,7 +32,81 @@ namespace mo = mir::options;
 
 namespace
 {
-auto constexpr FADE_TIME = std::chrono::milliseconds{5000};
+auto constexpr FADE_TIME = std::chrono::milliseconds{1000};
+auto constexpr UPDATE_TIME = std::chrono::milliseconds{16};
+
+class FadingRenderable : public mg::Renderable
+{
+public:
+    FadingRenderable(
+        std::shared_ptr<mg::Renderable> const& renderable,
+        mir::time::AlarmFactory& alarm_factory,
+        std::shared_ptr<mir::time::Clock> const& clock)
+        : renderable{renderable},
+          clock{clock},
+          start_time{clock->now()},
+          alarm{alarm_factory.create_alarm([&]{
+              auto delta_time = (clock->now().time_since_epoch() - start_time.time_since_epoch()) / std::chrono::milliseconds(1);
+              _alpha = 1.f - (static_cast<float>(delta_time) / static_cast<float>(FADE_TIME.count()));
+              mir::log_info("WE ARE HERE WITH ALPHA: %zu %zu\n", delta_time, FADE_TIME.count());
+
+              if (_alpha <= 0)
+              {
+                  alarm->cancel();
+              }
+              else
+              {
+                  mir::time::Timestamp scheduled_time = clock->now() + UPDATE_TIME;
+                  alarm->reschedule_for(scheduled_time);
+              }
+          })}
+    {
+        mir::time::Timestamp scheduled_time = clock->now() + UPDATE_TIME;
+        alarm->reschedule_for(scheduled_time);
+    }
+
+    auto id() const -> mg::Renderable::ID override
+    {
+        return renderable->id();
+    }
+
+    auto buffer() const -> std::shared_ptr<mg::Buffer> override
+    {
+        return renderable->buffer();
+    }
+
+    auto screen_position() const -> mir::geometry::Rectangle override
+    {
+        return renderable->screen_position();
+    }
+
+    auto clip_area() const -> std::optional<mir::geometry::Rectangle> override
+    {
+        return renderable->clip_area();
+    }
+
+    auto alpha() const -> float override
+    {
+        return _alpha;
+    }
+
+    auto transformation() const -> glm::mat4 override
+    {
+        return renderable->transformation();
+    }
+
+    auto shaped() const -> bool override
+    {
+        return renderable->shaped();
+    }
+
+private:
+    std::shared_ptr<mg::Renderable> const renderable;
+    std::shared_ptr<mir::time::Clock> const clock;
+    mir::time::Timestamp start_time;
+    std::unique_ptr<mir::time::Alarm> const alarm;
+    float _alpha = 1.0f;
+};
 
 mg::SmoothSupportBehavior from_option(std::string const& option)
 {
@@ -51,13 +126,14 @@ mg::DefaultInitialRenderManager::DefaultInitialRenderManager(
     std::shared_ptr<options::Option> const& options,
     std::shared_ptr<Executor> const& scene_executor,
     std::shared_ptr<time::Clock> const& clock,
-    time::AlarmFactory& alarm_factory,
+    std::shared_ptr<time::AlarmFactory> const& alarm_factory,
     std::shared_ptr<input::Scene>  const& scene)
     : behavior{SmoothSupportBehavior::none},
       scene_executor{scene_executor},
       clock{clock},
       scene{scene},
-      alarm{alarm_factory.create_alarm([&]{
+      alarm_factory{alarm_factory},
+      alarm{this->alarm_factory->create_alarm([&]{
          remove_renderables();
          alarm->cancel();
       })}
@@ -89,8 +165,9 @@ void mg::DefaultInitialRenderManager::add_initial_render(std::shared_ptr<Initial
         if (!renderable)
             return;
 
-        scene->add_input_visualization(renderable);
-        renderable_list.push_back(renderable);
+        auto fading_renderable = std::make_shared<FadingRenderable>(renderable, *alarm_factory, clock);
+        scene->add_input_visualization(fading_renderable);
+        renderable_list.push_back(fading_renderable);
     });
 }
 
