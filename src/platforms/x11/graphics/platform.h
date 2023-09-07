@@ -71,8 +71,7 @@ public:
     /* From Platform */
     auto create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
-        std::shared_ptr<GLConfig> const& gl_config,
-        std::shared_ptr<mir::options::Option> const& options) -> UniqueModulePtr<graphics::Display> override;
+        std::shared_ptr<GLConfig> const& gl_config) -> UniqueModulePtr<graphics::Display> override;
 
     auto provider_for_window(xcb_window_t x_win) -> std::shared_ptr<DisplayInterfaceProvider>;
 protected:

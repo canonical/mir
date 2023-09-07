@@ -148,8 +148,7 @@ mgg::Display::Display(
     mir::Fd drm_fd,
     mgg::BypassOption bypass_option,
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
-    std::shared_ptr<DisplayReport> const& listener,
-    bool smooth_transition)
+    std::shared_ptr<DisplayReport> const& listener)
     : owner{std::move(parent)},
       drm_fd{std::move(drm_fd)},
       listener(listener),
@@ -160,8 +159,7 @@ mgg::Display::Display(
             std::make_shared<KMSPageFlipper>(this->drm_fd, listener))},
       current_display_configuration{output_container},
       dirty_configuration{false},
-      bypass_option(bypass_option),
-      smooth_transition{smooth_transition}
+      bypass_option(bypass_option)
 {
     monitor.filter_by_subsystem_and_type("drm", "drm_minor");
     monitor.enable();
@@ -430,8 +428,7 @@ void mgg::Display::configure_locked(
                     listener,
                     kms_outputs,
                     bounding_rect,
-                    transformation,
-                    smooth_transition);
+                    transformation);
 
                 display_buffers_new.push_back(std::move(db));
             }

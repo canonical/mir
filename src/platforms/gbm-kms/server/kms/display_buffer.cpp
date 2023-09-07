@@ -52,8 +52,7 @@ mgg::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<DisplayReport> const& listener,
     std::vector<std::shared_ptr<KMSOutput>> const& outputs,
     geom::Rectangle const& area,
-    glm::mat2 const& transformation,
-    bool smooth_transition)
+    glm::mat2 const& transformation)
     : provider{std::move(provider)},
       listener(listener),
       outputs(outputs),
@@ -83,11 +82,9 @@ mgg::DisplayBuffer::DisplayBuffer(
         }
     }
 
-    if (smooth_transition && needs_crtc_set)
-        mir::log_warning("smooth_transition was requested but the CRTC requires setting");
-
     if (needs_crtc_set)
     {
+        mir::log_info("Clearing screen due to differing encountered and target modes");
         // TODO: Pull a supported format out of KMS rather than assuming XRGB8888
         auto initial_fb = std::make_shared<mgg::CPUAddressableFB>(
                 std::move(drm_fd),
