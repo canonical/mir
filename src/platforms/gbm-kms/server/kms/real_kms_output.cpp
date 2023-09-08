@@ -156,7 +156,7 @@ bool mgg::RealKMSOutput::set_crtc(FBHandle const& fb)
         return false;
     }
 
-    auto ret = drmModeSetCrtc(drm_fd_, current_crtc->crtc_id,                             
+    auto ret = drmModeSetCrtc(drm_fd_, current_crtc->crtc_id,
                               fb, fb_offset.dx.as_int(), fb_offset.dy.as_int(),
                               &connector->connector_id, 1,
                               &connector->modes[mode_index]);
