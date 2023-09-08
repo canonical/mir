@@ -22,6 +22,7 @@
 #include "kms-utils/kms_connector.h"
 #include "mir/fatal.h"
 #include "mir/log.h"
+#include "display_helpers.h"
 #include <string.h> // strcmp
 
 #include <boost/throw_exception.hpp>
@@ -42,12 +43,14 @@ class RealKMSOutputContentMap : public mgg::KMSOutputContentMap
 {
 public:
     RealKMSOutputContentMap(
-        size_t mapping_size,
+        void* map_data,
+        gbm_bo* bo,
         mir::geometry::Size size,
         mir::geometry::Stride stride,
         uint32_t pixel_format,
         unsigned char* data)
-        : mapping_size{mapping_size},
+        : map_data{map_data},
+          bo{bo},
           size{size},
           stride{stride},
           pixel_format{pixel_format},
@@ -57,8 +60,12 @@ public:
 
     ~RealKMSOutputContentMap() override
     {
-        if (data)
-            munmap(static_cast<void*>(data), mapping_size);
+        if (bo)
+        {
+            if (map_data)
+                gbm_bo_unmap(bo, map_data);
+            gbm_bo_destroy(bo);
+        }
     }
 
     virtual auto get_size() -> mir::geometry::Size const& override
@@ -81,55 +88,9 @@ public:
         return data;
     }
 
-    static auto try_create(
-        uint32_t stride,
-        uint32_t width,
-        uint32_t height,
-        int drm_fd,
-        int handle,
-        uint32_t offset,
-        uint32_t pixel_format) -> std::unique_ptr<RealKMSOutputContentMap>
-    {
-        int handle_fd;
-        int error;
-
-        if (pixel_format != DRM_FORMAT_XRGB8888) {
-            mir::log_error("Unsupported pixel format");
-            return nullptr;
-        }
-
-        error = drmPrimeHandleToFD(drm_fd, handle, 0, &handle_fd);
-        if (error < 0) {
-            mir::log_error("Failed to map the provided prime handle to a file descriptor. handle=%d\n",
-                           handle);
-            return nullptr;
-        }
-
-        // Establish a memory map.
-        uint32_t size = height * stride;
-        auto map = static_cast<unsigned char *>(mmap(
-            0,
-            size,
-            PROT_READ,
-            MAP_SHARED,
-            handle_fd,
-            offset));
-
-        if (map == MAP_FAILED) {
-            mir::log_error("Failed to mmap");
-            return nullptr;
-        }
-
-        return std::make_unique<RealKMSOutputContentMap>(
-            size,
-            mir::geometry::Size{width, height},
-            mir::geometry::Stride {stride},
-            pixel_format,
-            map);
-    }
-
 private:
-    size_t mapping_size;
+    void* map_data;
+    gbm_bo* bo;
     mir::geometry::Size size;
     mir::geometry::Stride stride;
     mir::graphics::DRMFormat pixel_format;
@@ -713,41 +674,160 @@ int mgg::RealKMSOutput::drm_fd() const
 
 std::shared_ptr<mgg::KMSOutputContentMap> mgg::RealKMSOutput::map_content() const
 {
+    const int MAX_NUM_PLANES = 4;
     auto buffer_id = saved_crtc.buffer_id;
     kms::DRMModeResources resources{drm_fd()};
     auto fb = resources.frame_buffer(buffer_id);
 
     mir::log_info("Attempting to get a framebuffer from the current CRTC");
 
-    for (int handle_index = 0; handle_index < 4 && fb->handles[handle_index]; handle_index++) {
-        bool is_duplicate = false;
 
-        for (int other_handle_index = 0; other_handle_index < handle_index; other_handle_index++) {
-            if (fb->handles[handle_index] == fb->handles[other_handle_index]) {
-                is_duplicate = true;
-                break;
-            }
-        }
+    struct ImportInfo
+    {
+        uint32_t handle = 0;
+        int fd = 0;
+        int stride = 0;
+        int offset = 0;
+    };
 
-        if (is_duplicate)
-            continue;
+    // Map each handle to its file descriptor, stride, and offset
+    // ImportInfo import_info[MAX_NUM_PLANES] = {};
+    // uint32_t num_handles = 0;
+    // for (int handle_index = 0; handle_index < MAX_NUM_PLANES; handle_index++) {
+    //     auto handle = fb->handles[handle_index];
+    //     if (!handle)
+    //         continue;
 
-        auto map = RealKMSOutputContentMap::try_create(
-            fb->pitches[handle_index],
-            fb->width,
-            fb->height,
-            drm_fd(),
-            fb->handles[handle_index],
-            fb->offsets[handle_index],
-            fb->pixel_format
-        );
+    //     int fd;
+    //     int err = drmPrimeHandleToFD(drm_fd_, handle, 0, &fd);
+    //     if (err)
+    //     {
+    //         mir::log_error("Failed to map the provided prime handle to a file descriptor. handle=%d", handle);
+    //         continue;
+    //     }
 
-        if (!map)
-            continue;
+    //     import_info[num_handles++] = {
+    //         .handle = handle,
+    //         .fd = fd,
+    //         .stride = static_cast<int>(fb->pitches[handle_index]),
+    //         .offset = static_cast<int>(fb->offsets[handle_index])
+    //     };
+    // }
 
-        return map;
+    uint32_t num_handles = 0;
+    while (fb->handles[num_handles])
+    {
+        num_handles++;
+    }
+    
+    if (num_handles == 0)
+    {
+        mir::log_error("Failed to find any handles to map");
+        return nullptr;
     }
 
-    mir::log_info("Cannot get a framebuffer from the current CRTC");
-    return nullptr;
+    struct handle_to_fd
+    {
+        uint32_t handle;
+        int fd;
+    };
+    struct handle_to_fd handle_to_fd[4] = {};
+
+    for (int i = 0; i < 4; ++i)
+    {
+        uint32_t handle = fb->handles[i];
+        if (handle)
+        {
+            struct handle_to_fd* entry = handle_to_fd;
+            while(entry->handle && (entry->handle != handle))
+            {
+                ++entry;
+            }
+            if (!entry->handle)
+            {
+                entry->handle = handle;
+                int err = drmPrimeHandleToFD(drm_fd_, entry->handle, 0, &entry->fd);
+                if (err)
+                {
+                    log_error("Could not get prime fd from handle: %s (%i)\n", strerror(err), err);
+                    exit(EXIT_FAILURE);
+                }
+            }
+        }
+    }
+
+    int plane_fds[MAX_NUM_PLANES] = {0};
+    for (uint32_t i = 0; i < num_handles; ++i)
+    {
+        struct handle_to_fd* entry = handle_to_fd;
+        while (entry->handle != fb->handles[i])
+        {
+            ++entry;
+        }
+        plane_fds[i] = entry->fd;
+    }
+
+    struct gbm_import_fd_modifier_data import_data = {
+       .width=fb->width,
+       .height=fb->height,
+       .format=fb->pixel_format,
+       .num_fds=num_handles,
+       .fds={plane_fds[0], plane_fds[1], plane_fds[2], plane_fds[3]},
+       .strides={static_cast<int>(fb->pitches[0]), static_cast<int>(fb->pitches[1]), static_cast<int>(fb->pitches[2]), static_cast<int>(fb->pitches[3])},
+       .offsets={static_cast<int>(fb->offsets[0]), static_cast<int>(fb->offsets[1]), static_cast<int>(fb->offsets[2]), static_cast<int>(fb->offsets[3])},
+       .modifier=fb->modifier
+    };
+
+    // gbm_import_fd_modifier_data import_data = {
+    //     .width=fb->width,
+    //     .height=fb->height,
+    //     .format=fb->pixel_format,
+    //     .num_fds=num_handles,
+    //     .fds={import_info[0].fd, import_info[1].fd, import_info[2].fd, import_info[3].fd},
+    //     .strides={import_info[0].stride, import_info[1].stride, import_info[2].stride, import_info[3].stride},
+    //     .offsets={import_info[0].offset, import_info[1].offset, import_info[2].offset, import_info[3].offset},
+    //     .modifier=fb->modifier
+    // };
+
+    mg::gbm::helpers::GBMHelper helper{Fd{drm_fd()}};
+    gbm_bo* bo = gbm_bo_import(
+        helper.device,
+        GBM_BO_IMPORT_FD_MODIFIER,
+        &import_data,
+        0);
+
+    if (!bo)
+    {
+        mir::log_error("gbm_bo_import failed: %d", errno);
+        return nullptr;
+    }
+
+    void* map_data;
+    uint32_t map_stride;
+    errno = 0;
+    void* data = gbm_bo_map(
+        bo,
+        0,
+        0,
+        fb->width,
+        fb->height,
+        GBM_BO_TRANSFER_READ,
+        &map_stride,
+        &map_data);
+
+    if (data == MAP_FAILED || errno)
+    {
+        mir::log_error("gbm_bo_map failed: %d", errno);
+        //gbm_bo_destroy(bo);
+        //return nullptr;
+    }
+
+    mir::log_info("Successfully mapped buffer object: %u, %u, %u", fb->width, fb->height, map_stride);
+    return std::make_shared<RealKMSOutputContentMap>(
+        map_data,
+        bo,
+        geometry::Size{fb->width, fb->height},
+        geometry::Stride{map_stride},
+        fb->pixel_format,
+        static_cast<unsigned char*>(data));
 }
