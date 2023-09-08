@@ -49,7 +49,7 @@ public:
     int max_refresh_rate() const override;
 
     bool set_crtc(FBHandle const& fb) override;
-    auto get_rectangle() -> mir::geometry::Rectangle override;
+    bool has_crtc_mismatch() override;
     void clear_crtc() override;
     bool schedule_page_flip(FBHandle const& fb) override;
     void wait_for_page_flip() override;

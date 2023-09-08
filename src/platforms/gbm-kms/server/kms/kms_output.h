@@ -63,7 +63,12 @@ public:
     virtual int max_refresh_rate() const = 0;
 
     virtual bool set_crtc(FBHandle const& fb) = 0;
-    virtual auto get_rectangle() -> mir::geometry::Rectangle = 0;
+
+    /**
+     * Check if the pending call to set_crtc is compatible with the current state of the CRTC.
+     * @returns true if a set_crtc is required, otherwise false
+     */
+    virtual bool has_crtc_mismatch() = 0;
     virtual void clear_crtc() = 0;
     virtual bool schedule_page_flip(FBHandle const& fb) = 0;
     virtual void wait_for_page_flip() = 0;
