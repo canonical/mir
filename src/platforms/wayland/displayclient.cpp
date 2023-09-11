@@ -719,7 +719,9 @@ void mgw::DisplayClient::pointer_enter(
     {
         if (surface == out.second->surface)
         {
-            pointer_displacement = out.second->dcout.top_left - geometry::Point{};
+            // Pointer events are displaced and scaled according to the surface
+            pointer_displacement = geom::DisplacementF{out.second->dcout.top_left - geometry::Point{}};
+            pointer_scale = out.second->host_scale;
             break;
         }
     }
