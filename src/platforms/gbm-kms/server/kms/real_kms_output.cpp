@@ -34,6 +34,22 @@ namespace mgk = mg::kms;
 namespace geom = mir::geometry;
 
 
+namespace
+{
+bool kms_modes_are_equal(drmModeModeInfo const& info1, drmModeModeInfo const& info2)
+{
+    return (info1.clock == info2.clock &&
+            info1.hdisplay == info2.hdisplay &&
+            info1.hsync_start == info2.hsync_start &&
+            info1.hsync_end == info2.hsync_end &&
+            info1.htotal == info2.htotal &&
+            info1.hskew == info2.hskew &&
+            info1.vdisplay == info2.vdisplay &&
+            info1.vsync_start == info2.vsync_start &&
+            info1.vsync_end == info2.vsync_end &&
+            info1.vtotal == info2.vtotal);
+}
+}
 
 mgg::RealKMSOutput::RealKMSOutput(
     int drm_fd,
@@ -153,6 +169,17 @@ bool mgg::RealKMSOutput::set_crtc(FBHandle const& fb)
 
     using_saved_crtc = false;
     return true;
+}
+
+bool mgg::RealKMSOutput::has_crtc_mismatch()
+{
+    if (!ensure_crtc())
+    {
+        mir::log_error("Output %s has no associated CRTC to get ", mgk::connector_name(connector).c_str());
+        return true;
+    }
+
+    return !kms_modes_are_equal(current_crtc->mode, connector->modes[mode_index]);
 }
 
 void mgg::RealKMSOutput::clear_crtc()
@@ -381,21 +408,6 @@ void mgg::RealKMSOutput::refresh_hardware_state()
 
 namespace
 {
-
-bool kms_modes_are_equal(drmModeModeInfo const& info1, drmModeModeInfo const& info2)
-{
-    return (info1.clock == info2.clock &&
-            info1.hdisplay == info2.hdisplay &&
-            info1.hsync_start == info2.hsync_start &&
-            info1.hsync_end == info2.hsync_end &&
-            info1.htotal == info2.htotal &&
-            info1.hskew == info2.hskew &&
-            info1.vdisplay == info2.vdisplay &&
-            info1.vsync_start == info2.vsync_start &&
-            info1.vsync_end == info2.vsync_end &&
-            info1.vtotal == info2.vtotal);
-}
-
 double calculate_vrefresh_hz(drmModeModeInfo const& mode)
 {
     if (mode.htotal == 0 || mode.vtotal == 0)

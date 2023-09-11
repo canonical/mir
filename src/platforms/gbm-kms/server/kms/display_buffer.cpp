@@ -63,22 +63,35 @@ mgg::DisplayBuffer::DisplayBuffer(
 {
     listener->report_successful_setup_of_native_resources();
 
-    // TODO: Pull a supported format out of KMS rather than assuming XRGB8888
-    auto initial_fb = std::make_shared<mgg::CPUAddressableFB>(
-        std::move(drm_fd),
-        false,
-        DRMFormat{DRM_FORMAT_XRGB8888},
-        area.size);
-
-    auto mapping = initial_fb->map_writeable();
-    ::memset(mapping->data(), 24, mapping->len());
-
-    visible_fb = std::move(initial_fb);
+    // If any of the outputs have a CRTC mismatch, we will want to set all of them
+    // so that they're all showing the same buffer.
+    bool has_crtc_mismatch = false;
     for (auto& output : outputs)
     {
-        output->set_crtc(*visible_fb);
+        has_crtc_mismatch = output->has_crtc_mismatch();
+        if (has_crtc_mismatch)
+            break;
     }
-    listener->report_successful_drm_mode_set_crtc_on_construction();
+
+    if (has_crtc_mismatch)
+    {
+        mir::log_info("Clearing screen due to differing encountered and target modes");
+        // TODO: Pull a supported format out of KMS rather than assuming XRGB8888
+        auto initial_fb = std::make_shared<mgg::CPUAddressableFB>(
+            std::move(drm_fd),
+            false,
+            DRMFormat{DRM_FORMAT_XRGB8888},
+            area.size);
+
+        auto mapping = initial_fb->map_writeable();
+        ::memset(mapping->data(), 24, mapping->len());
+
+        visible_fb = std::move(initial_fb);
+        for (auto &output: outputs) {
+            output->set_crtc(*visible_fb);
+        }
+        listener->report_successful_drm_mode_set_crtc_on_construction();
+    }
     listener->report_successful_display_construction();
 }
 
