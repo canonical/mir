@@ -16,7 +16,6 @@
 #ifndef MIR_TEST_INPUT_CONFIG_MATCHERS_H
 #define MIR_TEST_INPUT_CONFIG_MATCHERS_H
 
-#include "check_gtest_version.h"
 #include "mir/input/mir_input_config.h"
 #include <gmock/gmock.h>
 
@@ -35,12 +34,8 @@ public:
     // Constructs the matcher from a sequence of element values or
     // element matchers.
     template <typename InputIter>
-#if GTEST_AT_LEAST(1, 8, 1)
     InputConfigElementsMatcher(UnorderedMatcherRequire::Flags matcher_flags, InputIter first, InputIter last)
         : UnorderedElementsAreMatcherImplBase{matcher_flags}
-#else
-    InputConfigElementsMatcher(InputIter first, InputIter last)
-#endif
     {
         for (; first != last; ++first)
         {
@@ -76,11 +71,7 @@ public:
             return false;
         }
 
-#if GTEST_AT_LEAST(1, 8, 1)
         bool matrix_matched = VerifyMatchMatrix(element_printouts, matrix, listener);
-#else
-        bool matrix_matched = VerifyAllElementsAndMatchersAreMatched(element_printouts, matrix, listener);
-#endif
 
         return matrix_matched && FindPairing(matrix, listener);
     }
