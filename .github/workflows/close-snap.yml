@@ -20,7 +20,9 @@ jobs:
         SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
       run: |
         snapcraft close mir-libs "22/edge/pr${{ github.event.number }}" || true
-        snapcraft close confined-shell "edge/mir-pr${{ github.event.number }}" || true
-        for snap in mir-test-tools miriway ubuntu-frame; do
+        for snap in confined-shell miriway; do
+          snapcraft close "$snap" "edge/mir-pr${{ github.event.number }}" || true
+        done
+        for snap in mir-test-tools ubuntu-frame; do
           snapcraft close "$snap" "22/edge/mir-pr${{ github.event.number }}" || true
         done
