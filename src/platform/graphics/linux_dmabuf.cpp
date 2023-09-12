@@ -802,7 +802,6 @@ private:
 
 class DmabufTexBuffer :
     public mg::BufferBasic,
-    public mg::gl::Texture,
     public mg::DMABufBuffer
 {
 public:
@@ -864,29 +863,17 @@ public:
         return this;
     }
 
-    auto shader(mir::graphics::gl::ProgramFactory& cache) const
-        -> mg::gl::Program const& override
+    auto as_texture() -> DMABufTex*
     {
-        return tex.shader(cache);
-    }
-
-    Layout layout() const override
-    {
-        return tex.layout();
-    }
-
-    void bind() override
-    {
-        tex.bind();
-
-        std::lock_guard lock(consumed_mutex);
+        /* We only get asked for a texture when the Renderer is about to
+         * texture from this buffer; it's a good indication that the buffer
+         * has been consumed.
+         */
+        std::lock_guard lock{consumed_mutex};
         on_consumed();
         on_consumed = [](){};
-    }
 
-    void add_syncpoint() override
-    {
-        tex.add_syncpoint();
+        return &tex;
     }
 
     auto format() const ->mg::DRMFormat override
@@ -902,6 +889,11 @@ public:
     auto planes() const -> std::vector<PlaneDescriptor> const& override
     {
         return planes_;
+    }
+
+    auto layout() const -> mg::gl::Texture::Layout override
+    {
+        return tex.layout();
     }
 
 private:
@@ -1049,13 +1041,18 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<Buffer> buffer)
     {
         if (dmabuf_tex->on_same_egl_display(dpy))
         {
-            return dmabuf_tex;
+            auto tex = dmabuf_tex->as_texture();
+            return std::shared_ptr<gl::Texture>(std::move(dmabuf_tex), tex);
         }
         else if (auto descriptor = descriptor_for_format_and_modifiers(
                     dmabuf_tex->format(),
                     dmabuf_tex->modifier().value_or(DRM_FORMAT_MOD_INVALID),
                     *this))
         {
+            /* We're being naughty here and using the fact that `as_texture()` has a side-effect
+             * of invoking the buffer's `on_consumed()` callback.
+             */
+            dmabuf_tex->as_texture();
             return std::make_shared<DMABufTex>(
                 dpy,
                 *egl_extensions,
