@@ -768,7 +768,7 @@ public:
             });
     }
 
-    mir::graphics::gl::Program const& shader(mir::graphics::gl::ProgramFactory& cache) const override
+    mg::gl::Program const& shader(mg::gl::ProgramFactory& cache) const override
     {
         /* We rely on the fact that `desc` is a reference to a statically-allocated namespaced
          * variable, and so taking the address will give us the address of the static instance,
