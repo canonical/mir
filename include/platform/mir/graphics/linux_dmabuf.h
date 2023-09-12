@@ -38,35 +38,74 @@ class Context;
 
 namespace graphics
 {
+namespace gl
+{
+class Texture;
+}
+
 namespace common
 {
 class EGLContextExecutor;
 }
 
 class DmaBufFormatDescriptors;
+class DMABufBuffer;
+
+class DMABufEGLProvider
+{
+public:
+    DMABufEGLProvider(
+        EGLDisplay dpy,
+        std::shared_ptr<EGLExtensions> egl_extensions,
+        EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext,
+        std::shared_ptr<common::EGLContextExecutor> egl_delegate);
+
+    ~DMABufEGLProvider();
+
+    auto import_dma_buf(
+        DMABufBuffer const& dma_buf,
+        std::function<void()>&& on_consumed,
+        std::function<void()>&& on_release)
+        -> std::shared_ptr<Buffer>;
+
+    /**
+     * Validate that this provider *can* import this DMA-BUF
+     *
+     * @param dma_buf
+     * \throws  EGL exception on failure
+     */
+    void validate_import(DMABufBuffer const& dma_buf);
+
+    auto as_texture(
+        std::shared_ptr<Buffer> buffer)
+        -> std::shared_ptr<gl::Texture>;
+
+     auto supported_formats() const -> DmaBufFormatDescriptors const&;
+private:
+    EGLDisplay const dpy;
+    std::shared_ptr<EGLExtensions> const egl_extensions;
+    std::unique_ptr<DmaBufFormatDescriptors> const formats;
+    std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
+};
 
 class LinuxDmaBufUnstable : public mir::wayland::LinuxDmabufV1::Global
 {
 public:
     LinuxDmaBufUnstable(
         wl_display* display,
-        EGLDisplay dpy,
-        std::shared_ptr<EGLExtensions> egl_extensions,
-        EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext);
+        std::shared_ptr<DMABufEGLProvider> provider);
 
-    std::shared_ptr<Buffer> buffer_from_resource(
+    auto buffer_from_resource(
         wl_resource* buffer,
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release,
-        std::shared_ptr<common::EGLContextExecutor> egl_delegate);
-
+        std::shared_ptr<common::EGLContextExecutor> egl_delegate)
+        -> std::shared_ptr<Buffer>;
 private:
     class Instance;
     void bind(wl_resource* new_resource) override;
 
-    EGLDisplay const dpy;
-    std::shared_ptr<EGLExtensions> const egl_extensions;
-    std::shared_ptr<DmaBufFormatDescriptors> const formats;
+    std::shared_ptr<DMABufEGLProvider> const provider;
 };
 
 }

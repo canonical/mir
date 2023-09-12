@@ -246,7 +246,10 @@ auto mgg::RenderingPlatform::maybe_create_interface(
 {
     if (dynamic_cast<GLRenderingProvider::Tag const*>(&type_tag))
     {
-        return std::make_shared<mgg::GLRenderingProvider>(bound_display, dpy, share_ctx);
+        return std::make_shared<mgg::GLRenderingProvider>(
+            bound_display,
+            dpy,
+            share_ctx);
     }
     return nullptr;
 }

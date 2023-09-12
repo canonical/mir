@@ -17,6 +17,7 @@
 #include "buffer_allocator.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/linux_dmabuf.h"
+#include "mir/graphics/dmabuf_buffer.h"
 #include "mir/anonymous_shm_file.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/graphics/platform.h"
@@ -147,13 +148,38 @@ private:
     EGLDisplay const dpy;
     EGLContext const ctx;
 };
+
+auto maybe_make_dmabuf_provider(
+    EGLDisplay dpy,
+    std::shared_ptr<mg::EGLExtensions> egl_extensions,
+    std::shared_ptr<mgc::EGLContextExecutor> egl_delegate)
+    -> std::shared_ptr<mg::DMABufEGLProvider>
+{
+    try
+    {
+        mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
+        return std::make_shared<mg::DMABufEGLProvider>(dpy, std::move(egl_extensions), modifier_ext, std::move(egl_delegate));
+    }
+    catch (std::runtime_error const& error)
+    {
+        mir::log_info(
+            "Cannot enable linux-dmabuf import support: %s", error.what());
+        mir::log(
+            mir::logging::Severity::debug,
+            MIR_LOG_COMPONENT,
+            std::current_exception(),
+            "Detailed error: ");
+    }
+    return nullptr;
+}
 }
 
 mgg::BufferAllocator::BufferAllocator(EGLDisplay dpy, EGLContext share_with)
     : ctx{std::make_unique<SurfacelessEGLContext>(dpy, share_with)},
       egl_delegate{
           std::make_shared<mgc::EGLContextExecutor>(ctx->make_share_context())},
-      egl_extensions(std::make_shared<mg::EGLExtensions>())
+      egl_extensions(std::make_shared<mg::EGLExtensions>()),
+      dmabuf_provider{maybe_make_dmabuf_provider(dpy, egl_extensions, egl_delegate)}
 {
 }
 
@@ -219,34 +245,35 @@ void mgg::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
 
     try
     {
-        mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
-        dmabuf_extension =
-            std::unique_ptr<LinuxDmaBufUnstable, std::function<void(LinuxDmaBufUnstable*)>>(
-                new LinuxDmaBufUnstable{
-                    display,
-                    dpy,
-                    egl_extensions,
-                    modifier_ext,
-                },
-                [wayland_executor](LinuxDmaBufUnstable* global)
-                {
-                    // The global must be destroyed on the Wayland thread
-                    wayland_executor->spawn(
-                        [global]()
-                        {
-                            /* This is safe against double-frees, as the WaylandExecutor
-                             * guarantees that work scheduled will only run while the Wayland
-                             * event loop is running, and the main loop is stopped before
-                             * wl_display_destroy() frees any globals
-                             *
-                             * This will, however, leak the global if the main loop is destroyed
-                             * before the buffer allocator. Fixing that requires work in the
-                             * wrapper generator.
-                             */
-                            delete global;
-                        });
-                });
-        mir::log_info("Enabled linux-dmabuf import support");
+        if (dmabuf_provider)
+        {
+            mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
+            dmabuf_extension =
+                std::unique_ptr<LinuxDmaBufUnstable, std::function<void(LinuxDmaBufUnstable*)>>(
+                    new LinuxDmaBufUnstable{
+                        display,
+                        dmabuf_provider,
+                    },
+                    [wayland_executor](LinuxDmaBufUnstable* global)
+                    {
+                        // The global must be destroyed on the Wayland thread
+                        wayland_executor->spawn(
+                            [global]()
+                            {
+                                /* This is safe against double-frees, as the WaylandExecutor
+                                 * guarantees that work scheduled will only run while the Wayland
+                                 * event loop is running, and the main loop is stopped before
+                                 * wl_display_destroy() frees any globals
+                                 *
+                                 * This will, however, leak the global if the main loop is destroyed
+                                 * before the buffer allocator. Fixing that requires work in the
+                                 * wrapper generator.
+                                 */
+                                delete global;
+                            });
+                    });
+            mir::log_info("Enabled linux-dmabuf import support");
+        }
     }
     catch (std::runtime_error const& error)
     {
@@ -319,6 +346,10 @@ auto mgg::BufferAllocator::shared_egl_context() -> EGLContext
 
 auto mgg::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture>
 {
+    if (auto dmabuf_texture = dmabuf_provider->as_texture(buffer))
+    {
+        return dmabuf_texture;
+    }
     return std::dynamic_pointer_cast<gl::Texture>(buffer);
 }
 
@@ -618,6 +649,11 @@ mgg::GLRenderingProvider::GLRenderingProvider(
     EGLContext ctx)
     : bound_display{std::move(associated_display)},
       dpy{dpy},
-      ctx{ctx}
+      ctx{ctx},
+      egl_delegate{
+          std::make_shared<common::EGLContextExecutor>(
+              std::make_unique<SurfacelessEGLContext>(
+                  dpy,
+                  make_share_only_context(dpy, ctx)))}
 {
 }

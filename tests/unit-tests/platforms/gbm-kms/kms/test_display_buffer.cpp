@@ -13,6 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "mir/graphics/texture.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/platforms/gbm-kms/server/kms/platform.h"
@@ -49,10 +50,12 @@ namespace
 class MockDMABufBuffer : public DMABufBuffer
 {
 public:
-    MOCK_CONST_METHOD0(drm_fourcc, uint32_t());
-    MOCK_CONST_METHOD0(modifier, std::optional<uint64_t>());
-    MOCK_CONST_METHOD0(planes, std::vector<PlaneDescriptor> const&());
-    MOCK_CONST_METHOD0(size, geometry::Size());
+    MOCK_METHOD(uint32_t, drm_fourcc, (), (const override));
+    MOCK_METHOD(std::optional<uint64_t>, modifier, (), (const override));
+    MOCK_METHOD(std::vector<PlaneDescriptor> const&, planes, (), (const override));
+    MOCK_METHOD(geometry::Size, size, (), (const override));
+    MOCK_METHOD(gl::Texture::Layout, layout, (), (const override));
+    MOCK_METHOD(DRMFormat, format, (), (const override));
 };
 
 class MockKMSFramebuffer : public FBHandle

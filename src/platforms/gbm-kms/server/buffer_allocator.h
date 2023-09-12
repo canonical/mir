@@ -77,6 +77,7 @@ private:
     std::shared_ptr<Executor> wayland_executor;
     std::unique_ptr<LinuxDmaBufUnstable, std::function<void(LinuxDmaBufUnstable*)>> dmabuf_extension;
     std::shared_ptr<EGLExtensions> const egl_extensions;
+    std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
     bool egl_display_bound{false};
 };
 
@@ -104,6 +105,8 @@ private:
     std::shared_ptr<GBMDisplayProvider> const bound_display;    ///< Associated Display provider (if any - null is valid)
     EGLDisplay const dpy;
     EGLContext const ctx;
+    std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
+    std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
 };
 }
 }
