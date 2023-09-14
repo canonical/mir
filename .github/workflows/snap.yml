@@ -29,7 +29,7 @@ jobs:
         fetch-depth: 0  # needed for version determination
 
     - name: Build and publish the snap
-      uses: canonical/actions/build-snap@remote-build
+      uses: canonical/actions/build-snap@release
       with:
         architecture: ${{ matrix.architecture }}
         snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
@@ -85,7 +85,7 @@ jobs:
         sed -i 's@- mir-libs.*$@\0/pr${{ github.event.number }}@' snap/snapcraft.yaml
 
     - name: Build and publish the snap
-      uses: canonical/actions/build-snap@remote-build
+      uses: canonical/actions/build-snap@release
       with:
         architecture: ${{ matrix.architecture }}
         review-opts: ${{ matrix.review-opts }}
