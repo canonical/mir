@@ -19,6 +19,7 @@
 #include "display.h"
 #include "mir/console_services.h"
 #include "mir/emergency_cleanup_registry.h"
+#include "mir/graphics/egl_context_executor.h"
 #include "mir/graphics/platform.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/udev/wrapper.h"
@@ -26,6 +27,9 @@
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/egl_extensions.h"
 #include "one_shot_device_observer.h"
+#include "mir/graphics/linux_dmabuf.h"
+#include "mir/graphics/egl_context_executor.h"
+#include "surfaceless_egl_context.h"
 #include <gbm.h>
 
 #define MIR_LOG_COMPONENT "platform-graphics-gbm-kms"
@@ -174,37 +178,6 @@ auto dpy_for_gbm_device(gbm_device* device) -> EGLDisplay
     return egl_display;
 }
 
-auto make_share_only_context(EGLDisplay dpy) -> EGLContext
-{
-    eglBindAPI(EGL_OPENGL_ES_API);
-
-    static const EGLint context_attr[] = {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
-        EGL_NONE
-    };
-
-    EGLint const config_attr[] = {
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_NONE
-    };
-
-    EGLConfig cfg;
-    EGLint num_configs;
-    
-    if (eglChooseConfig(dpy, config_attr, &cfg, 1, &num_configs) != EGL_TRUE || num_configs != 1)
-    {
-        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to find any matching EGL config")));
-    }
-    
-    auto ctx = eglCreateContext(dpy, cfg, EGL_NO_CONTEXT, context_attr);
-    if (ctx == EGL_NO_CONTEXT)
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
-    }
-    return ctx;
-}
-
 struct display_provider_or_nothing
 {
     auto operator()(std::shared_ptr<mg::GBMDisplayProvider> provider) { return provider; }
@@ -216,6 +189,30 @@ struct gbm_device_from_hw
     auto operator()(std::shared_ptr<mg::GBMDisplayProvider> const& provider) { return provider->gbm_device(); }
     auto operator()(std::shared_ptr<gbm_device> device) { return device; }    
 };
+
+auto maybe_make_dmabuf_provider(
+    EGLDisplay dpy,
+    std::shared_ptr<mg::EGLExtensions> egl_extensions,
+    std::shared_ptr<mg::common::EGLContextExecutor> egl_delegate)
+    -> std::shared_ptr<mg::DMABufEGLProvider>
+{
+    try
+    {
+        mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
+        return std::make_shared<mg::DMABufEGLProvider>(dpy, std::move(egl_extensions), modifier_ext, std::move(egl_delegate));
+    }
+    catch (std::runtime_error const& error)
+    {
+        mir::log_info(
+            "Cannot enable linux-dmabuf import support: %s", error.what());
+        mir::log(
+            mir::logging::Severity::debug,
+            MIR_LOG_COMPONENT,
+            std::current_exception(),
+            "Detailed error: ");
+    }
+    return nullptr;
+}
 }
 
 mgg::RenderingPlatform::RenderingPlatform(
@@ -229,16 +226,21 @@ mgg::RenderingPlatform::RenderingPlatform(
     std::variant<std::shared_ptr<mg::GBMDisplayProvider>, std::shared_ptr<gbm_device>> hw)
     : device{std::visit(gbm_device_from_hw{}, hw)},
       bound_display{std::visit(display_provider_or_nothing{}, hw)},
-      dpy{initialise_egl(dpy_for_gbm_device(device.get()), 1, 4)},
-      share_ctx{make_share_only_context(dpy)}
+      share_ctx{std::make_unique<SurfacelessEGLContext>(initialise_egl(dpy_for_gbm_device(device.get()), 1, 4))},
+      egl_delegate{std::make_shared<mg::common::EGLContextExecutor>(share_ctx->make_share_context())},
+      dmabuf_provider{maybe_make_dmabuf_provider(share_ctx->egl_display(), std::make_shared<mg::EGLExtensions>(), egl_delegate)}
 {
 }
 
+mgg::RenderingPlatform::~RenderingPlatform() = default;
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgg::RenderingPlatform::create_buffer_allocator(
     mg::Display const&)
 {
-    return make_module_ptr<mgg::BufferAllocator>(dpy, share_ctx);
+    return make_module_ptr<mgg::BufferAllocator>(
+        std::make_unique<SurfacelessEGLContext>(share_ctx->egl_display(), static_cast<EGLContext>(*share_ctx)),
+        egl_delegate,
+        dmabuf_provider);
 }
 
 auto mgg::RenderingPlatform::maybe_create_interface(
@@ -248,8 +250,10 @@ auto mgg::RenderingPlatform::maybe_create_interface(
     {
         return std::make_shared<mgg::GLRenderingProvider>(
             bound_display,
-            dpy,
-            share_ctx);
+            egl_delegate,
+            dmabuf_provider,
+            share_ctx->egl_display(),
+            static_cast<EGLContext>(*share_ctx));
     }
     return nullptr;
 }

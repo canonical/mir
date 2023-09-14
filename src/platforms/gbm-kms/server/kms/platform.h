@@ -31,10 +31,18 @@ class ConsoleServices;
 
 namespace graphics
 {
+class DMABufEGLProvider;
+
+namespace common
+{
+class EGLContextExecutor;
+}
+
 namespace gbm
 {
 
 class Quirks;
+class SurfacelessEGLContext;
 
 class Platform : public graphics::DisplayPlatform
 {
@@ -83,6 +91,8 @@ public:
         udev::Device const& device,
         std::vector<std::shared_ptr<graphics::DisplayInterfaceProvider>> const& displays);
 
+    ~RenderingPlatform() override;
+
     auto create_buffer_allocator(
         graphics::Display const&) -> UniqueModulePtr<graphics::GraphicBufferAllocator> override;
 
@@ -96,8 +106,9 @@ private:
     
     std::shared_ptr<gbm_device> const device;                   ///< gbm_device this platform is created on, always valid.
     std::shared_ptr<GBMDisplayProvider> const bound_display;    ///< Associated Display, if any (nullptr is valid)
-    EGLDisplay const dpy;
-    EGLContext const share_ctx;
+    std::unique_ptr<SurfacelessEGLContext> const share_ctx;
+    std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
+    std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
 };
 }
 }

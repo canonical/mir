@@ -39,6 +39,7 @@
 #include "display_helpers.h"
 #include "mir/graphics/egl_error.h"
 #include "cpu_copy_output_surface.h"
+#include "surfaceless_egl_context.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -66,120 +67,14 @@ namespace mgg = mg::gbm;
 namespace mgc = mg::common;
 namespace geom = mir::geometry;
 
-namespace
-{
-auto make_share_only_context(EGLDisplay dpy, std::optional<EGLContext> share_with) -> EGLContext
-{
-    eglBindAPI(EGL_OPENGL_ES_API);
-
-    static const EGLint context_attr[] = {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
-        EGL_NONE
-    };
-
-    EGLint const config_attr[] = {
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_NONE
-    };
-
-    EGLConfig cfg;
-    EGLint num_configs;
-    
-    if (eglChooseConfig(dpy, config_attr, &cfg, 1, &num_configs) != EGL_TRUE || num_configs != 1)
-    {
-        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to find any matching EGL config")));
-    }
-    
-    auto ctx = eglCreateContext(dpy, cfg, share_with.value_or(EGL_NO_CONTEXT), context_attr);
-    if (ctx == EGL_NO_CONTEXT)
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
-    }
-    return ctx;
-}
-
-class SurfacelessEGLContext : public mir::renderer::gl::Context
-{
-public:
-    SurfacelessEGLContext(EGLDisplay dpy)
-        : dpy{dpy},
-          ctx{make_share_only_context(dpy, {})}
-    {
-    }
-    
-    SurfacelessEGLContext(EGLDisplay dpy, EGLContext share_with)
-        : dpy{dpy},
-          ctx{make_share_only_context(dpy, share_with)}
-    {
-    }
-
-    ~SurfacelessEGLContext() override
-    {
-        eglDestroyContext(dpy, ctx);
-    }
-    
-    void make_current() const override
-    {
-        if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx) != EGL_TRUE)
-        {
-            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to make context current"));
-        }
-    }
-    
-    void release_current() const override
-    {
-        if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE)
-        {
-            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to release current EGL context"));
-        }
-    }
-    
-    auto make_share_context() const -> std::unique_ptr<Context> override
-    {
-        return std::unique_ptr<Context>{new SurfacelessEGLContext{dpy, ctx}};
-    }
-    
-    explicit operator EGLContext() override
-    {
-        return ctx;
-    }
-private:    
-    EGLDisplay const dpy;
-    EGLContext const ctx;
-};
-
-auto maybe_make_dmabuf_provider(
-    EGLDisplay dpy,
-    std::shared_ptr<mg::EGLExtensions> egl_extensions,
-    std::shared_ptr<mgc::EGLContextExecutor> egl_delegate)
-    -> std::shared_ptr<mg::DMABufEGLProvider>
-{
-    try
-    {
-        mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
-        return std::make_shared<mg::DMABufEGLProvider>(dpy, std::move(egl_extensions), modifier_ext, std::move(egl_delegate));
-    }
-    catch (std::runtime_error const& error)
-    {
-        mir::log_info(
-            "Cannot enable linux-dmabuf import support: %s", error.what());
-        mir::log(
-            mir::logging::Severity::debug,
-            MIR_LOG_COMPONENT,
-            std::current_exception(),
-            "Detailed error: ");
-    }
-    return nullptr;
-}
-}
-
-mgg::BufferAllocator::BufferAllocator(EGLDisplay dpy, EGLContext share_with)
-    : ctx{std::make_unique<SurfacelessEGLContext>(dpy, share_with)},
-      egl_delegate{
-          std::make_shared<mgc::EGLContextExecutor>(ctx->make_share_context())},
+mgg::BufferAllocator::BufferAllocator(
+    std::unique_ptr<mgg::SurfacelessEGLContext> context,
+    std::shared_ptr<mgc::EGLContextExecutor> egl_delegate,
+    std::shared_ptr<mg::DMABufEGLProvider> dmabuf_provider)
+    : ctx{std::move(context)},
+      egl_delegate{std::move(egl_delegate)},
       egl_extensions(std::make_shared<mg::EGLExtensions>()),
-      dmabuf_provider{maybe_make_dmabuf_provider(dpy, egl_extensions, egl_delegate)}
+      dmabuf_provider{std::move(dmabuf_provider)}
 {
 }
 
@@ -350,7 +245,11 @@ auto mgg::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std
     {
         return dmabuf_texture;
     }
-    return std::dynamic_pointer_cast<gl::Texture>(buffer);
+    else if (auto tex = std::dynamic_pointer_cast<gl::Texture>(buffer))
+    {
+        return tex;
+    }
+    BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to import buffer as texture; rendering will be incomplete"}));
 }
 
 namespace
@@ -645,15 +544,14 @@ auto mgg::GLRenderingProvider::make_framebuffer_provider(std::shared_ptr<Display
 
 mgg::GLRenderingProvider::GLRenderingProvider(
     std::shared_ptr<mg::GBMDisplayProvider> associated_display,
+    std::shared_ptr<mgc::EGLContextExecutor> egl_delegate,
+    std::shared_ptr<mg::DMABufEGLProvider> dmabuf_provider,
     EGLDisplay dpy,
     EGLContext ctx)
     : bound_display{std::move(associated_display)},
       dpy{dpy},
       ctx{ctx},
-      egl_delegate{
-          std::make_shared<common::EGLContextExecutor>(
-              std::make_unique<SurfacelessEGLContext>(
-                  dpy,
-                  make_share_only_context(dpy, ctx)))}
+      dmabuf_provider{std::move(dmabuf_provider)},
+      egl_delegate{std::move(egl_delegate)}
 {
 }

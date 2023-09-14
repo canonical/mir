@@ -49,13 +49,17 @@ namespace gbm
 {
 
 class GLRenderingProvider;
+class SurfacelessEGLContext;
 
 class BufferAllocator:
     public graphics::GraphicBufferAllocator
 {
 public:
-    BufferAllocator(EGLDisplay dpy, EGLContext share_with);
-    
+    BufferAllocator(
+        std::unique_ptr<SurfacelessEGLContext> ctx,
+        std::shared_ptr<common::EGLContextExecutor> egl_delegate,
+        std::shared_ptr<DMABufEGLProvider> dmabuf_provider);
+
     std::shared_ptr<Buffer> alloc_software_buffer(geometry::Size size, MirPixelFormat) override;
     std::vector<MirPixelFormat> supported_pixel_formats() override;
 
@@ -86,6 +90,8 @@ class GLRenderingProvider : public graphics::GLRenderingProvider
 public:
     GLRenderingProvider(
         std::shared_ptr<GBMDisplayProvider> associated_display,
+        std::shared_ptr<common::EGLContextExecutor> egl_delegate,
+        std::shared_ptr<DMABufEGLProvider> dmabuf_provider,
         EGLDisplay dpy,
         EGLContext ctx);
 
