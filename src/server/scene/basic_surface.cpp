@@ -26,6 +26,7 @@
 
 #include "mir/scene/scene_report.h"
 #include "mir/scene/null_surface_observer.h"
+#include "mir/log.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -285,6 +286,8 @@ std::vector<geom::Rectangle> ms::BasicSurface::get_input_region() const
 
 void ms::BasicSurface::resize(geom::Size const& desired_size)
 {
+    log_debug("ms::BasicSurface::resize({%d, %d})", desired_size.width.as_int(), desired_size.height.as_int());
+
     geom::Size new_size = desired_size;
     if (new_size.width <= geom::Width{0})   new_size.width = geom::Width{1};
     if (new_size.height <= geom::Height{0}) new_size.height = geom::Height{1};
@@ -299,6 +302,7 @@ void ms::BasicSurface::resize(geom::Size const& desired_size)
 
         observers->window_resized_to(this, new_size);
         observers->content_resized_to(this, content_size_);
+        log_debug("ms::BasicSurface::resize(...) content_resized_to {%d, %d}", content_size_.width.as_int(), content_size_.height.as_int());
     }
 }
 
