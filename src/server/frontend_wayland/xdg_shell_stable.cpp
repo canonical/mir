@@ -629,8 +629,10 @@ void mf::XdgToplevelStable::handle_active_change(bool /*is_now_active*/)
 
 void mf::XdgToplevelStable::handle_resize(
     std::optional<geometry::Point> const& /*new_top_left*/,
-    geometry::Size const& /*new_size*/)
+    geometry::Size const& new_size)
 {
+    log_debug("mf::XdgToplevelStable::handle_resize({%d, %d})", new_size.width.as_int(), new_size.height.as_int());
+
     send_toplevel_configure();
 }
 
@@ -673,6 +675,8 @@ void mf::XdgToplevelStable::send_toplevel_configure()
 
     // 0 sizes means default for toplevel configure
     geom::Size size = requested_window_size().value_or(geom::Size{0, 0});
+
+    log_debug("mf::XdgToplevelStable::send_toplevel_configure({%d, %d})", size.width.as_int(), size.height.as_int());
 
     send_configure_event(size.width.as_int(), size.height.as_int(), &states);
     wl_array_release(&states);
