@@ -154,8 +154,7 @@ public:
 
 private:
     // Mir's gbm-kms support isn't (yet) working with nvidia
-    // Mir's gbm-kms support isn't (yet) working with evdi
-    std::unordered_set<std::string> drivers_to_skip = { "nvidia", "evdi", "ast" };
+    std::unordered_set<std::string> drivers_to_skip = { "nvidia", "ast" };
     std::unordered_set<std::string> devnodes_to_skip;
     // We know this is currently useful for virtio_gpu, vc4-drm and v3d
     std::unordered_set<std::string> skip_modesetting_support = { "virtio_gpu", "vc4-drm", "v3d" };
