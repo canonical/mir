@@ -318,7 +318,7 @@ mf::XdgPopupV6::XdgPopupV6(
     auto const& parent_role = parent_surface->window_role();
     auto parent_scene_surface = parent_role ? parent_role.value().scene_surface() : std::nullopt;
 
-    specification->type = mir_window_type_gloss;
+    specification->type = mir_window_type_tip;
     if (parent_scene_surface)
         specification->parent = parent_scene_surface.value();
     else
