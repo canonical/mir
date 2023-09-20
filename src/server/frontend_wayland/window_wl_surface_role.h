@@ -149,9 +149,6 @@ private:
     bool committed_height_set_explicitly{false};
     /// @}
 
-    /// The last committed window size (either explicitly set or taken from the surface buffer size)
-    std::optional<geometry::Size> committed_size;
-
     /// The min and max size of the window as of last commit
     /// @{
     geometry::Size committed_min_size;
@@ -164,6 +161,8 @@ private:
 
     // Ask the derived class to destroy the wayland role object (as only it can do that)
     virtual void destroy_role() const = 0;
+
+    void apply_client_size(mir::shell::SurfaceSpecification& mods);
 };
 
 }
