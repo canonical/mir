@@ -216,7 +216,7 @@ auto wm_window_type_to_mir_window_type(
                  wm_type == connection->_NET_WM_WINDOW_TYPE_DND ||
                  wm_type == connection->_NET_WM_WINDOW_TYPE_DIALOG)
         {
-            return mir_window_type_gloss;
+            return mir_window_type_tip;
         }
         else if (mir::verbose_xwayland_logging_enabled())
         {
@@ -231,7 +231,7 @@ auto wm_window_type_to_mir_window_type(
     // be taken as _NET_WM_WINDOW_TYPE_NORMAL."
     if (is_transient_for && !override_redirect)
     {
-        return mir_window_type_gloss;
+        return mir_window_type_tip;
     }
     else
     {

@@ -65,7 +65,7 @@ protected:
         mir::shell::SurfaceSpecification mods;
 
         if (flags & mw::ShellSurface::Transient::inactive)
-            mods.type = mir_window_type_gloss;
+            mods.type = mir_window_type_tip;
         if (auto parent = parent_surface.scene_surface())
             mods.parent = parent.value();
         mods.aux_rect = geom::Rectangle{{x, y}, {}};
@@ -118,7 +118,7 @@ protected:
         mir::shell::SurfaceSpecification mods;
 
         if (flags & mw::ShellSurface::Transient::inactive)
-            mods.type = mir_window_type_gloss;
+            mods.type = mir_window_type_tip;
         if (auto parent = parent_surface.scene_surface())
             mods.parent = parent.value();
         mods.aux_rect = geom::Rectangle{{x, y}, {}};
