@@ -1223,8 +1223,12 @@ void mf::XWaylandSurface::prep_surface_spec(ProofOfMutexLock const&, msh::Surfac
 
 #define SCALE_SIZE(type, prop) \
     if (mods.prop) \
-    { \
-        mods.prop = std::max(geom::type{1}, mods.prop.value() * inv_scale); \
+    {                          \
+        auto scaled_value = mods.prop.value() * inv_scale; \
+        if (scaled_value.as_int() >= 0)            \
+        {                      \
+            mods.prop = scaled_value; \
+        } \
     }
 
     SCALE_SIZE(Width, width);
