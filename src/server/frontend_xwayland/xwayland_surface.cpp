@@ -1225,8 +1225,8 @@ void mf::XWaylandSurface::prep_surface_spec(ProofOfMutexLock const&, msh::Surfac
         {
             if (optional_prop)
             {
-                using ValueType = std::remove_reference<decltype(optional_prop.value())>::type;
-                using UnderlyingType = ValueType::ValueType;
+                using ValueType = typename std::remove_reference<decltype(optional_prop.value())>::type;
+                using UnderlyingType = typename ValueType::ValueType;
                 auto constexpr raw_max = std::numeric_limits<UnderlyingType>::max();
 
                 double const double_value = optional_prop.value().as_value() * inv_scale;
