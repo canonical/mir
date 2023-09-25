@@ -78,7 +78,7 @@ This section will provide an overview of how the *Mir* codebase is organized thr
 - Unlike the `Shell`, the `Scene` knows a lot about the Z-order of the surfaces. For this reason, it is also responsible for things like locking the display or sending surfaces to the back of the Z-order.
 
 ## `/src/server/graphics`
-- An abstraction layer which connects the compositor to the specific graphics platform that its rendering on.
+- A graphics abstraction layer sitting between the compositor and the specific graphics platform that it is using to render.
 
 ## `/src/server/console`
 - Handles `logind` and virtual-terminal related tasks for the compositor
@@ -102,20 +102,20 @@ This section will provide an overview of how the *Mir* codebase is organized thr
 - Graphics and input code that is shared between platforms
 
 ## `/src/renderers` (with an "s"!)
-- The supported `Renderer` types. The renderer is used by the Compositor composite the final image.
-- Only GL is supported at the moment
+- The supported `Renderer` types. The renderer is used by the Compositor to build the final image.
+- Only GL is supported at the moment.
 
 ## `/src/renderer` (no "s")
-- Renderer code that is shared between renderers
+- Renderer code that is shared between renderers.
 
 ## `/src/wayland`
 - A subproject used to generate C++ classes from wayland protocol XML files.
 
 ## `/src/gl`
-- A short list of helpers for GL work
+- A short list of helpers for GL work.
 
 ## `/src/cookie`
-- Provides event timestamps for inputs events that are difficult to spoof
+- Provides event timestamps for inputs events that are difficult to spoof.
 
 ## `/src/common`
 - A library of common functionality that is used throughout the project, including things like loggers, clocks, executors, etc.
