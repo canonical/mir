@@ -32,7 +32,7 @@ This section will provide an overview of how the *Mir* codebase is organized thr
 - This section is organized from the highest level of abstraction to the lowest level of abstraction, meaning that those APIs which a compositor-implementer are most likely to encounter are described first while the darker corners of the codebase are described last.
 
 ## `/src/miral`
-- See [MirAL](#miral) for details on why this interface exists.
+- See [MirAL](#miral) for more details
 - The public-facing interface for this implementation is in `/include/miral/miral`
 - Most of the classes in this directory look like this:
 
@@ -52,39 +52,39 @@ This section will provide an overview of how the *Mir* codebase is organized thr
   - The `ServerConfiguration` provides a bunch of methods called `the_XYZ()` to access these various instances, where "XYZ" can be replaced with the class of interest.
 - The classes that the `Server` relies on for its runtime can be found organized in separate folders in this directory.
 
-### `/src/server/compositor`
+## `/src/server/compositor`
 - The `Compositor` is responsible for collecting the set of renderables and sending them off to the outputs to be displayed.
 
-### `/src/server/input`
+## `/src/server/input`
 - This folder deals with everything input (e.g. keyboard presses, mouse clicks)
 - The `InputManager` provides access to the specific input platform that is running (e.g. X, Wayland, or libinput).
 - The `InputDispatcher` is responsible for taking events bubbled up from the platform and sending them off to the appropriate listeners
 
-### `/src/server/frontend_wayland`
+## `/src/server/frontend_wayland`
 - The *Mir* implementation of the wayland protocol.
 - The `WaylandConnector` class is the glue between the compositor and the specific details of the wayland protocol.
 
-### `/src/server/frontent_xwayland`
+## `/src/server/frontent_xwayland`
 - The *Mir* implementation of the xwayland protocol.
 - The `XWaylandConnector` class is the glue between the compositor and the specific details of the xwayland protocol.
 - This protocol talks to the `xwayland` server, which is spawned as a subprocess.
 
-### `/src/server/shell`
+## `/src/server/shell`
 - The `Shell` is responsible for managing the surfaces that the compositor wants to show.
 - It provides an interface to create, update, and remove these surfaces from the display.
 - As an example, the `WaylandConnector` might as the `Shell` to create a new surface for it.
 
-### `/src/server/scene`
+## `/src/server/scene`
 - The `Scene` provides an interfaces for the `Compositor` to access the list of renderable items that are derived from the surfaces added to the `Shell`.
 - Unliked the `Shell`, the `Scene` knows a lot about the Z-order of the surfaces. For this reason, it is also responsible for things like locking the display or sending surfaces to the back of the Z-order.
 
-### `/src/server/graphics`
+## `/src/server/graphics`
 - An abstraction layer which connects the compositor to the specific graphics platform that its rendering on.
 
-### `/src/server/console`
+## `/src/server/console`
 - Handles `logind` and virtual-terminal related tasks for the compositor
 
-### `/src/server/report`
+## `/src/server/report`
 - Logging and other facilities to collect data about the compositor
 
 ## `/src/platforms` (with an "s"!)
@@ -99,14 +99,14 @@ This section will provide an overview of how the *Mir* codebase is organized thr
   - X11
   - Wayland
 
-### `/src/platform` (no "s")
+## `/src/platform` (no "s")
 - Graphics and input code that is shared between platforms
 
 ## `/src/renderers` (with an "s"!)
 - The supported `Renderer` types. The renderer is used by the Compositor composite the final image.
 - Only GL is supported at the moment
 
-### `/src/renderer` (no "s")
+## `/src/renderer` (no "s")
 - Renderer code that is shared between renderers
 
 ## `/src/wayland`
