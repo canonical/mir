@@ -1,4 +1,5 @@
 # Overview
+This document describes the high-level architecture of *Mir*, including a diagram and a brief introduction of the directory structure.
 
 # Concepts
 ## MirAL
@@ -16,6 +17,7 @@
   - & more!
 
 # Diagram
+TODO: Implement the diagram
 
 # Code Structure
 This section will provide an overview of how the *Mir* codebase is organized through an exploration of  the project's directory structure.
@@ -29,7 +31,7 @@ This section will provide an overview of how the *Mir* codebase is organized thr
 - The `src` folder at the root of the project comprises the core implementation of *Mir*.
 - This section is organized from the highest level of abstraction to the lowest level of abstraction, meaning that those APIs which a compositor-implementer are most likely to encounter are described first while the darker corners of the codebase are described last.
 
-## `|- /src/miral`
+## `/src/miral`
 - See [MirAL](#miral) for details on why this interface exists.
 - The public-facing interface for this implementation is in `/include/miral/miral`
 - Most of the classes in this directory look like this:
@@ -44,48 +46,48 @@ This section will provide an overview of how the *Mir* codebase is organized thr
     ```
   Instances of such a class (e.g. `X11Support`) are passed to the `MirRunner::run_with` function, wherein the overloaded operator function is called with the server as a parameter.
 
-## `|- /src/server`
+## `/src/server`
 - Provides the core *Mir* runtime, with the entry-point being the `mir::Server` class.
 - The `Server` class has a `DisplayServer` which contains the class instances that support the server's runtime.
   - The `ServerConfiguration` provides a bunch of methods called `the_XYZ()` to access these various instances, where "XYZ" can be replaced with the class of interest.
 - The classes that the `Server` relies on for its runtime can be found organized in separate folders in this directory.
 
-### `|- /src/server/compositor`
+### `/src/server/compositor`
 - The `Compositor` is responsible for collecting the set of renderables and sending them off to the outputs to be displayed.
 
-### `|- /src/server/input`
+### `/src/server/input`
 - This folder deals with everything input (e.g. keyboard presses, mouse clicks)
 - The `InputManager` provides access to the specific input platform that is running (e.g. X, Wayland, or libinput).
 - The `InputDispatcher` is responsible for taking events bubbled up from the platform and sending them off to the appropriate listeners
 
-### `|- /src/server/frontend_wayland`
+### `/src/server/frontend_wayland`
 - The *Mir* implementation of the wayland protocol.
 - The `WaylandConnector` class is the glue between the compositor and the specific details of the wayland protocol.
 
-### `|- /src/server/frontent_xwayland`
+### `/src/server/frontent_xwayland`
 - The *Mir* implementation of the xwayland protocol.
 - The `XWaylandConnector` class is the glue between the compositor and the specific details of the xwayland protocol.
 - This protocol talks to the `xwayland` server, which is spawned as a subprocess.
 
-### `|- /src/server/shell`
+### `/src/server/shell`
 - The `Shell` is responsible for managing the surfaces that the compositor wants to show.
 - It provides an interface to create, update, and remove these surfaces from the display.
 - As an example, the `WaylandConnector` might as the `Shell` to create a new surface for it.
 
-### `|- /src/server/scene`
+### `/src/server/scene`
 - The `Scene` provides an interfaces for the `Compositor` to access the list of renderable items that are derived from the surfaces added to the `Shell`.
 - Unliked the `Shell`, the `Scene` knows a lot about the Z-order of the surfaces. For this reason, it is also responsible for things like locking the display or sending surfaces to the back of the Z-order.
 
-### `|- /src/server/graphics`
+### `/src/server/graphics`
 - An abstraction layer which connects the compositor to the specific graphics platform that its rendering on.
 
-### `|- /src/server/console`
+### `/src/server/console`
 - Handles `logind` and virtual-terminal related tasks for the compositor
 
-### `|- /src/server/report`
+### `/src/server/report`
 - Logging and other facilities to collect data about the compositor
 
-## `|- /src/platforms` (with an "s"!)
+## `/src/platforms` (with an "s"!)
 - Provides both input and rendering platforms that the compositor can use depending on the environment.
 - For the rendering platforms, we have:
   - *GBM/KMS*: the platform that you would expect if you were running a *Mir*-based compositor as your daily-driver
@@ -97,26 +99,26 @@ This section will provide an overview of how the *Mir* codebase is organized thr
   - X11
   - Wayland
 
-### `|- /src/platform` (no "s")
+### `/src/platform` (no "s")
 - Graphics and input code that is shared between platforms
 
-## `|- /src/renderers` (with an "s"!)
+## `/src/renderers` (with an "s"!)
 - The supported `Renderer` types. The renderer is used by the Compositor composite the final image.
 - Only GL is supported at the moment
 
-### `|- /src/renderer` (no "s")
+### `/src/renderer` (no "s")
 - Renderer code that is shared between renderers
 
-## `|- /src/wayland`
+## `/src/wayland`
 - A subproject used to generate C++ classes from wayland protocol XML files.
 
-## `|- /src/gl`
+## `/src/gl`
 - A short list of helpers for GL work
 
-## `|- /src/cookie`
+## `/src/cookie`
 - Provides event timestamps for inputs events that are difficult to spoof
 
-## `|- /src/common`
+## `/src/common`
 - A library of common functionality that is used throughout the project, including things like loggers, clocks, executors, etc.
 
 ## `/examples`
@@ -124,3 +126,6 @@ This section will provide an overview of how the *Mir* codebase is organized thr
   - `miral-app`
   - `miral-shel`
   - `mir_demo_server`
+
+## `/tests`
+- Unit tests for the entire project.
