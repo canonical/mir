@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="mir_shell_unstable_v1">
+  <copyright>
+    Copyright © 2023 Canonical Limited
+
+    Permission to use, copy, modify, distribute, and sell this
+    software and its documentation for any purpose is hereby granted
+    without fee, provided that the above copyright notice appear in
+    all copies and that both that copyright notice and this permission
+    notice appear in supporting documentation, and that the name of
+    the copyright holders not be used in advertising or publicity
+    pertaining to distribution of the software without specific,
+    written prior permission.  The copyright holders make no
+    representations about the suitability of this software for any
+    purpose.  It is provided "as is" without express or implied
+    warranty.
+
+    THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
+    SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS, IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY
+    SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
+    AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+    ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+    THIS SOFTWARE.
+  </copyright>
+
+  <interface name="zmir_mir_shell_v1" version="1">
+    <description summary="create surface archetypes that are recognised by the desktop">
+      Clients can use this interface to assign an archetype to wl_surfaces.
+    </description>
+
+    <request name="get_normal_surface">
+      <description summary="create a normal surface from a surface">
+        Create a normal surface for an existing surface. This assigns the archetype
+        of normal_surface, or raises a protocol error if another archetype is already
+        assigned and the transisition is disallowed.
+
+        A normal surface exists in the "bottom" layer (c.f. wlr_layer_shell_unstable_v1)
+      </description>
+      <arg name="id" type="new_id" interface="zmir_mir_normal_surface_v1"/>
+      <arg name="surface" type="object" interface="wl_surface"/>
+    </request>
+
+    <request name="get_utility_surface">
+      <description summary="create a utility surface from a surface">
+        Create a utility surface for an existing surface. This assigns the archetype
+        of utility_surface, or raises a protocol error if another archetype is already
+        assigned and the transisition is disallowed.
+
+        A utility surface is "always on top" and will not be docked.
+      </description>
+      <arg name="id" type="new_id" interface="zmir_mir_utility_surface_v1"/>
+      <arg name="surface" type="object" interface="wl_surface"/>
+    </request>
+
+    <request name="get_dialog_surface">
+      <description summary="create a dialog surface from a surface">
+        Create a dialog surface for an existing surface. This assigns the archetype
+        of utility_surface, or raises a protocol error if another archetype is already
+        assigned and the transisition is disallowed.
+
+        TODO Text describing dialog behaviour
+      </description>
+      <arg name="id" type="new_id" interface="zmir_mir_dialog_surface_v1"/>
+      <arg name="surface" type="object" interface="wl_surface"/>
+    </request>
+
+    <request name="get_satellite_surface">
+      <description summary="create a dialog surface from a surface">
+        Create a satellite surface for an existing surface. This assigns the archetype
+        of satellite_surface, or raises a protocol error if another archetype is already
+        assigned and the transisition is disallowed.
+
+        TODO Text describing satellite behaviour
+      </description>
+      <arg name="id" type="new_id" interface="zmir_mir_satellite_surface_v1"/>
+      <arg name="surface" type="object" interface="wl_surface"/>
+      <arg name="positioner" type="object" interface="xdg_positioner"/>
+    </request>
+
+    <request name="get_freestyle_surface">
+      <description summary="create a freestyle surface from a surface">
+        Create a freestyle surface for an existing surface. This assigns the archetype
+        of freestyle_surface, or raises a protocol error if another archetype is already
+        assigned and the transisition is disallowed.
+
+        TODO Text describing freestyle behaviour
+      </description>
+      <arg name="id" type="new_id" interface="zmir_mir_freestyle_surface_v1"/>
+      <arg name="surface" type="object" interface="wl_surface"/>
+      <arg name="positioner" type="object" interface="xdg_positioner" allow-null="true"/>
+      <!-- TODO optional attributes describing freestyle behaviour -->
+    </request>
+
+    <enum name="error">
+      <entry name="archetype" value="0" summary="wl_surface has another archetype that prevents this assignment"/>
+    </enum>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the mir_shell object">
+        This request indicates that the client will not use the mir_shell
+        object any more. Objects that have been created through this instance
+        are not affected.
+      </description>
+    </request>
+  </interface>
+
+  <interface name="zmir_mir_normal_surface_v1" version="1">
+    <description summary="Mir metadata interface">
+      An interface that may be implemented by a wl_surface, for surfaces that
+      are designed to be rendered in a desktop-like environment.
+    </description>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the normal surface">
+        This request destroys the mir surface.
+      </description>
+    </request>
+  </interface>
+
+  <interface name="zmir_mir_utility_surface_v1" version="1">
+    <description summary="Mir metadata interface">
+      An interface that may be implemented by a wl_surface, for surfaces that
+      are designed to be rendered in a desktop-like environment.
+    </description>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the utility_surface">
+        This request destroys the mir surface.
+      </description>
+    </request>
+  </interface>
+
+  <interface name="zmir_mir_dialog_surface_v1" version="1">
+    <description summary="Mir metadata interface">
+      An interface that may be implemented by a wl_surface, for surfaces that
+      are designed to be rendered in a desktop-like environment.
+    </description>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the dialog_surface">
+        This request destroys the mir surface.
+      </description>
+    </request>
+  </interface>
+
+  <interface name="zmir_mir_satellite_surface_v1" version="1">
+    <description summary="Mir metadata interface">
+      An interface that may be implemented by a wl_surface, for surfaces that
+      are designed to be rendered in a desktop-like environment.
+    </description>
+
+    <request name="reposition">
+      <description summary="recalculate the satellite's location">
+        Reposition an already-mapped satellite. The satellite will be placed given the
+        details in the passed xdg_positioner object, and a
+        xdg_satellite.repositioned followed by xdg_satellite.configure and
+        xdg_surface.configure will be emitted in response. Any parameters set
+        by the previous positioner will be discarded.
+
+        The passed token will be sent in the corresponding
+        xdg_satellite.repositioned event. The new satellite position will not take
+        effect until the corresponding configure event is acknowledged by the
+        client. See xdg_satellite.repositioned for details. The token itself is
+        opaque, and has no other special meaning.
+
+        If multiple reposition requests are sent, the compositor may skip all
+        but the last one.
+
+        If the satellite is repositioned in response to a configure event for its
+        parent, the client should send an xdg_positioner.set_parent_configure
+        and possibly an xdg_positioner.set_parent_size request to allow the
+        compositor to properly constrain the satellite.
+
+        If the satellite is repositioned together with a parent that is being
+        resized, but not in response to a configure event, the client should
+        send an xdg_positioner.set_parent_size request.
+      </description>
+      <arg name="positioner" type="object" interface="xdg_positioner"/>
+      <arg name="token" type="uint" summary="reposition request token"/>
+    </request>
+
+    <event name="repositioned">
+      <description summary="signal the completion of a repositioned request">
+        The repositioned event is sent as part of a satellite configuration
+        sequence, together with xdg_satellite.configure and lastly
+        xdg_surface.configure to notify the completion of a reposition request.
+
+        The repositioned event is to notify about the completion of a
+        xdg_satellite.reposition request. The token argument is the token passed
+        in the xdg_satellite.reposition request.
+
+        Immediately after this event is emitted, xdg_satellite.configure and
+        xdg_surface.configure will be sent with the updated size and position,
+        as well as a new configure serial.
+
+        The client should optionally update the content of the satellite, but must
+        acknowledge the new satellite configuration for the new position to take
+        effect. See xdg_surface.ack_configure for details.
+      </description>
+      <arg name="token" type="uint" summary="reposition request token"/>
+    </event>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the satellite_surface">
+        This request destroys the mir surface.
+      </description>
+    </request>
+  </interface>
+
+  <interface name="zmir_mir_freestyle_surface_v1" version="1">
+    <description summary="Mir metadata interface">
+      An interface that may be implemented by a wl_surface, for surfaces that
+      are designed to be rendered in a desktop-like environment.
+    </description>
+
+    <request name="reposition">
+      <description summary="recalculate the freestyle's location">
+        Reposition an already-mapped freestyle. The freestyle will be placed given the
+        details in the passed xdg_positioner object, and a
+        xdg_freestyle.repositioned followed by xdg_freestyle.configure and
+        xdg_surface.configure will be emitted in response. Any parameters set
+        by the previous positioner will be discarded.
+
+        The passed token will be sent in the corresponding
+        xdg_freestyle.repositioned event. The new freestyle position will not take
+        effect until the corresponding configure event is acknowledged by the
+        client. See xdg_freestyle.repositioned for details. The token itself is
+        opaque, and has no other special meaning.
+
+        If multiple reposition requests are sent, the compositor may skip all
+        but the last one.
+
+        If the freestyle is repositioned in response to a configure event for its
+        parent, the client should send an xdg_positioner.set_parent_configure
+        and possibly an xdg_positioner.set_parent_size request to allow the
+        compositor to properly constrain the freestyle.
+
+        If the freestyle is repositioned together with a parent that is being
+        resized, but not in response to a configure event, the client should
+        send an xdg_positioner.set_parent_size request.
+      </description>
+      <arg name="positioner" type="object" interface="xdg_positioner"/>
+      <arg name="token" type="uint" summary="reposition request token"/>
+    </request>
+
+    <event name="repositioned">
+      <description summary="signal the completion of a repositioned request">
+        The repositioned event is sent as part of a freestyle configuration
+        sequence, together with xdg_freestyle.configure and lastly
+        xdg_surface.configure to notify the completion of a reposition request.
+
+        The repositioned event is to notify about the completion of a
+        xdg_freestyle.reposition request. The token argument is the token passed
+        in the xdg_freestyle.reposition request.
+
+        Immediately after this event is emitted, xdg_freestyle.configure and
+        xdg_surface.configure will be sent with the updated size and position,
+        as well as a new configure serial.
+
+        The client should optionally update the content of the freestyle, but must
+        acknowledge the new freestyle configuration for the new position to take
+        effect. See xdg_surface.ack_configure for details.
+      </description>
+      <arg name="token" type="uint" summary="reposition request token"/>
+    </event>
+
+    <!-- TODO requests/events describing freestyle behaviour -->
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the freestyle_surface">
+        This request destroys the mir surface.
+      </description>
+    </request>
+  </interface>
+</protocol>
