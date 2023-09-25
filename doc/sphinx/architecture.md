@@ -73,8 +73,9 @@ This section will provide an overview of how the *Mir* codebase is organized thr
 - As an example, the `WaylandConnector` might ask the `Shell` to create a new surface for it.
 
 ## `/src/server/scene`
-- The `Scene` provides an interface for the `Compositor` to access the list of renderable items that are derived from the surfaces added to the `Shell`.
-- Unliked the `Shell`, the `Scene` knows a lot about the Z-order of the surfaces. For this reason, it is also responsible for things like locking the display or sending surfaces to the back of the Z-order.
+- The `Scene` provides an interface for the `Compositor` to access the list of renderable items
+  - These renderables are derived from the surfaces that were added to the `Shell`.
+- Unlike the `Shell`, the `Scene` knows a lot about the Z-order of the surfaces. For this reason, it is also responsible for things like locking the display or sending surfaces to the back of the Z-order.
 
 ## `/src/server/graphics`
 - An abstraction layer which connects the compositor to the specific graphics platform that its rendering on.
