@@ -31,7 +31,7 @@ This section will provide an overview of how the *Mir* codebase is organized thr
 - The `src` folder at the root of the project comprises the core implementation of *Mir*.
 
 ## `/src/miral`
-- See [MirAL](#miral) for more details
+- Provides an interface to compositor-implementers that abstracts away many of the nitty-gritty details of *Mir*. See [MirAL](#miral) for more details
 - Most of the classes in this directory look like this:
 
     ```c++
