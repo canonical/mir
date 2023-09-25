@@ -62,7 +62,7 @@ This section will provide an overview of how the *Mir* codebase is organized thr
 - The *Mir* implementation of the wayland protocol.
 - The `WaylandConnector` class is the glue between the compositor and the specific details of the wayland protocol.
 
-## `/src/server/frontent_xwayland`
+## `/src/server/frontend_xwayland`
 - The *Mir* implementation of the xwayland protocol.
 - The `XWaylandConnector` class is the glue between the compositor and the specific details of the xwayland protocol.
 - This protocol talks to the `xwayland` server, which is spawned as a subprocess.
