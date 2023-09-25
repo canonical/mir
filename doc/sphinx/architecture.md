@@ -32,7 +32,6 @@ This section will provide an overview of how the *Mir* codebase is organized thr
 
 ## `/src/miral`
 - See [MirAL](#miral) for more details
-- The public-facing interface for this implementation is in `/include/miral/miral`
 - Most of the classes in this directory look like this:
 
     ```c++
