@@ -46,8 +46,8 @@ This section will provide an overview of how the *Mir* codebase is organized thr
 
 ## `/src/server`
 - Provides the core *Mir* runtime, with the entry-point being the `mir::Server` class.
-- The `Server` class has a `DisplayServer` which contains the class instances that support the server's runtime.
-  - The `ServerConfiguration` provides a bunch of methods called `the_XYZ()` to access these various instances, where "XYZ" can be replaced with the class of interest.
+- The `Server` class has a `DisplayServer` which provides access to the interfaces that that support the server's runtime.
+  - The `ServerConfiguration` provides a bunch of methods called `the_XYZ()` to access these various instances, where "XYZ" can be replaced with the interface of interest.
 - The classes that the `Server` relies on for its runtime can be found organized in separate folders in this directory.
 
 ## `/src/server/compositor`
