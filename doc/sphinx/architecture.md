@@ -29,7 +29,6 @@ This section will provide an overview of how the *Mir* codebase is organized thr
 
 ## `/src`
 - The `src` folder at the root of the project comprises the core implementation of *Mir*.
-- This section is organized from the highest level of abstraction to the lowest level of abstraction, meaning that those APIs which a compositor-implementer are most likely to encounter are described first while the darker corners of the codebase are described last.
 
 ## `/src/miral`
 - See [MirAL](#miral) for more details
