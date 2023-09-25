@@ -157,7 +157,15 @@ auto maybe_make_dmabuf_provider(
     try
     {
         mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
-        return std::make_shared<mg::DMABufEGLProvider>(dpy, std::move(egl_extensions), modifier_ext, std::move(egl_delegate));
+        return std::make_shared<mg::DMABufEGLProvider>(
+            dpy,
+            std::move(egl_extensions),
+            modifier_ext,
+            std::move(egl_delegate),
+            [](mg::DRMFormat, std::span<uint64_t const>, geom::Size) -> std::shared_ptr<mg::DMABufBuffer>
+            {
+                return nullptr;
+            });
     }
     catch (std::runtime_error const& error)
     {

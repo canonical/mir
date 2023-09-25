@@ -19,8 +19,11 @@
 #include "display.h"
 #include "mir/console_services.h"
 #include "mir/emergency_cleanup_registry.h"
+#include "mir/graphics/dmabuf_buffer.h"
+#include "mir/graphics/drm_formats.h"
 #include "mir/graphics/egl_context_executor.h"
 #include "mir/graphics/platform.h"
+#include "mir/graphics/texture.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/udev/wrapper.h"
 #include "kms_framebuffer.h"
@@ -30,6 +33,8 @@
 #include "mir/graphics/linux_dmabuf.h"
 #include "mir/graphics/egl_context_executor.h"
 #include "surfaceless_egl_context.h"
+#include <boost/throw_exception.hpp>
+#include <drm_fourcc.h>
 #include <gbm.h>
 
 #define MIR_LOG_COMPONENT "platform-graphics-gbm-kms"
@@ -190,7 +195,101 @@ struct gbm_device_from_hw
     auto operator()(std::shared_ptr<gbm_device> device) { return device; }    
 };
 
+class DMABufBuffer : public mg::DMABufBuffer
+{
+public:
+    DMABufBuffer(
+        mg::DRMFormat format,
+        std::optional<uint64_t> modifier,
+        std::vector<PlaneDescriptor> planes,
+        mg::gl::Texture::Layout layout,
+        mir::geometry::Size size)
+        : format_{format},
+          modifier_{modifier},
+          planes_{std::move(planes)},
+          layout_{layout},
+          size_{size}
+    {
+    }
+
+    auto format() const -> mg::DRMFormat override
+    {
+        return format_;
+    }
+    auto modifier() const -> std::optional<uint64_t> override
+    {
+        return modifier_;
+    }
+    auto planes() const -> std::vector<PlaneDescriptor> const& override
+    {
+        return planes_;
+    }
+    auto layout() const -> mg::gl::Texture::Layout override
+    {
+        return layout_;
+    }
+    auto size() const -> mir::geometry::Size override
+    {
+        return size_;
+    }
+private:
+    mg::DRMFormat format_;
+    std::optional<uint64_t> modifier_;
+    std::vector<PlaneDescriptor> planes_;
+    mg::gl::Texture::Layout layout_;
+    mir::geometry::Size size_;
+};
+
+auto alloc_dma_buf(
+    gbm_device* gbm,
+    mg::DRMFormat format,
+    std::span<uint64_t const> modifiers,
+    mir::geometry::Size size) -> std::shared_ptr<mg::DMABufBuffer>
+{
+    auto gbm_bo = std::unique_ptr<struct gbm_bo, decltype(&gbm_bo_destroy)>{
+        gbm_bo_create_with_modifiers2(
+            gbm,
+            size.width.as_uint32_t(), size.height.as_uint32_t(),
+            format,
+            modifiers.data(), modifiers.size(),
+            GBM_BO_USE_RENDERING),
+        &gbm_bo_destroy};
+
+    auto plane_count = gbm_bo_get_plane_count(gbm_bo.get());
+    std::vector<mg::DMABufBuffer::PlaneDescriptor> planes;
+    planes.reserve(plane_count);
+
+    for (int i = 0; i < plane_count; ++i)
+    {
+        planes.push_back(
+            mg::DMABufBuffer::PlaneDescriptor {
+                .dma_buf = mir::Fd{gbm_bo_get_fd_for_plane(gbm_bo.get(), i)},
+                .stride = gbm_bo_get_stride_for_plane(gbm_bo.get(), i),
+                .offset = gbm_bo_get_offset(gbm_bo.get(), i)
+            });
+    }
+
+    std::optional<uint64_t> modifier;
+    auto raw_modifier = gbm_bo_get_modifier(gbm_bo.get());
+    if (raw_modifier == DRM_FORMAT_MOD_INVALID)
+    {
+        modifier = std::nullopt;
+    }
+    else
+    {
+        modifier = raw_modifier;
+    }
+
+    return std::make_shared<DMABufBuffer>(
+        format,
+        modifier,
+        std::move(planes),
+        mg::gl::Texture::Layout::GL,
+        size);
+}
+
 auto maybe_make_dmabuf_provider(
+    std::shared_ptr<gbm_device> gbm,
     EGLDisplay dpy,
     std::shared_ptr<mg::EGLExtensions> egl_extensions,
     std::shared_ptr<mg::common::EGLContextExecutor> egl_delegate)
@@ -199,7 +298,16 @@ auto maybe_make_dmabuf_provider(
     try
     {
         mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
-        return std::make_shared<mg::DMABufEGLProvider>(dpy, std::move(egl_extensions), modifier_ext, std::move(egl_delegate));
+        return std::make_shared<mg::DMABufEGLProvider>(
+            dpy,
+            std::move(egl_extensions),
+            modifier_ext,
+            std::move(egl_delegate),
+            [gbm](mg::DRMFormat format, std::span<uint64_t const> modifiers, mir::geometry::Size size)
+                -> std::shared_ptr<mg::DMABufBuffer>
+            {
+                return alloc_dma_buf(gbm.get(), format, modifiers, size);
+            });
     }
     catch (std::runtime_error const& error)
     {
@@ -228,7 +336,7 @@ mgg::RenderingPlatform::RenderingPlatform(
       bound_display{std::visit(display_provider_or_nothing{}, hw)},
       share_ctx{std::make_unique<SurfacelessEGLContext>(initialise_egl(dpy_for_gbm_device(device.get()), 1, 4))},
       egl_delegate{std::make_shared<mg::common::EGLContextExecutor>(share_ctx->make_share_context())},
-      dmabuf_provider{maybe_make_dmabuf_provider(share_ctx->egl_display(), std::make_shared<mg::EGLExtensions>(), egl_delegate)}
+      dmabuf_provider{maybe_make_dmabuf_provider(device, share_ctx->egl_display(), std::make_shared<mg::EGLExtensions>(), egl_delegate)}
 {
 }
 

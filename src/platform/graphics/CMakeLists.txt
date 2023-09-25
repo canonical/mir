@@ -32,6 +32,8 @@ add_library(mirplatformgraphicscommon OBJECT
   ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/drm_formats.h
   ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/egl_context_executor.h
   egl_context_executor.cpp
+  egl_buffer_copy.h
+  egl_buffer_copy.cpp
 )
 
 mir_generate_protocol_wrapper(mirplatformgraphicscommon "zwp_" protocol/linux-dmabuf-unstable-v1.xml)
