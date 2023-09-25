@@ -70,7 +70,7 @@ This section will provide an overview of how the *Mir* codebase is organized thr
 ## `/src/server/shell`
 - The `Shell` is responsible for managing the surfaces that the compositor wants to show.
 - It provides an interface to create, update, and remove these surfaces from the display.
-- As an example, the `WaylandConnector` might as the `Shell` to create a new surface for it.
+- As an example, the `WaylandConnector` might ask the `Shell` to create a new surface for it.
 
 ## `/src/server/scene`
 - The `Scene` provides an interface for the `Compositor` to access the list of renderable items that are derived from the surfaces added to the `Shell`.
