@@ -196,7 +196,7 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
          xwayland,
-         glmark2-es2,
+         glmark2-es2-x11 | glmark2-es2,
          glmark2-es2-wayland,
          mesa-utils-extra,
          dmz-cursor-theme,
