@@ -147,46 +147,17 @@ private:
     EGLDisplay const dpy;
     EGLContext const ctx;
 };
+}
 
-auto maybe_make_dmabuf_provider(
+mge::BufferAllocator::BufferAllocator(
     EGLDisplay dpy,
-    std::shared_ptr<mg::EGLExtensions> egl_extensions,
-    std::shared_ptr<mgc::EGLContextExecutor> egl_delegate)
-    -> std::shared_ptr<mg::DMABufEGLProvider>
-{
-    try
-    {
-        mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
-        return std::make_shared<mg::DMABufEGLProvider>(
-            dpy,
-            std::move(egl_extensions),
-            modifier_ext,
-            std::move(egl_delegate),
-            [](mg::DRMFormat, std::span<uint64_t const>, geom::Size) -> std::shared_ptr<mg::DMABufBuffer>
-            {
-                return nullptr;
-            });
-    }
-    catch (std::runtime_error const& error)
-    {
-        mir::log_info(
-            "Cannot enable linux-dmabuf import support: %s", error.what());
-        mir::log(
-            mir::logging::Severity::debug,
-            MIR_LOG_COMPONENT,
-            std::current_exception(),
-            "Detailed error: ");
-    }
-    return nullptr;
-}
-}
-
-mge::BufferAllocator::BufferAllocator(EGLDisplay dpy, EGLContext share_with)
+    EGLContext share_with,
+    std::shared_ptr<DMABufEGLProvider> dmabuf_provider)
     : ctx{std::make_unique<SurfacelessEGLContext>(dpy, share_with)},
       egl_delegate{
           std::make_shared<mgc::EGLContextExecutor>(ctx->make_share_context())},
       egl_extensions(std::make_shared<mg::EGLExtensions>()),
-      dmabuf_provider{maybe_make_dmabuf_provider(dpy, egl_extensions, egl_delegate)}
+      dmabuf_provider{std::move(dmabuf_provider)}
 {
 }
 
@@ -354,6 +325,14 @@ auto mge::BufferAllocator::shared_egl_context() -> EGLContext
 
 auto mge::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture>
 {
+    if (dmabuf_provider)
+    {
+        if (auto tex = dmabuf_provider->as_texture(buffer))
+        {
+            return tex;
+        }
+    }
+    // TODO: Should this be abstracted, like dmabuf_provider above?
     return std::dynamic_pointer_cast<gl::Texture>(buffer);
 }
 
@@ -465,8 +444,10 @@ auto mge::GLRenderingProvider::make_framebuffer_provider(std::shared_ptr<Display
 
 mge::GLRenderingProvider::GLRenderingProvider(
     EGLDisplay dpy,
-    EGLContext ctx)
+    EGLContext ctx,
+    std::shared_ptr<mg::DMABufEGLProvider> dmabuf_provider)
     : dpy{dpy},
-      ctx{ctx}
+      ctx{ctx},
+      dmabuf_provider{std::move(dmabuf_provider)}
 {
 }

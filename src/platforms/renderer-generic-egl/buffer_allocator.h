@@ -54,7 +54,7 @@ class BufferAllocator:
     public graphics::GraphicBufferAllocator
 {
 public:
-    BufferAllocator(EGLDisplay dpy, EGLContext share_with);
+    BufferAllocator(EGLDisplay dpy, EGLContext share_with, std::shared_ptr<DMABufEGLProvider> dmabuf_provider);
     ~BufferAllocator() override;
     
     std::shared_ptr<Buffer> alloc_software_buffer(geometry::Size size, MirPixelFormat) override;
@@ -87,7 +87,8 @@ class GLRenderingProvider : public graphics::GLRenderingProvider
 public:
     GLRenderingProvider(
          EGLDisplay dpy,
-         EGLContext ctx);
+         EGLContext ctx,
+         std::shared_ptr<DMABufEGLProvider> dmabuf_provider);
 
     auto make_framebuffer_provider(std::shared_ptr<DisplayInterfaceProvider> target)
         -> std::unique_ptr<FramebufferProvider> override;
@@ -104,6 +105,7 @@ public:
 private:
     EGLDisplay const dpy;
     EGLContext const ctx;
+    std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
 };
 }
 }
