@@ -4,31 +4,48 @@ hide members
 
 ' Miral
 class miral.MirRunner
-class miral.BasicWindowManager extends mir.shell.WindowManager
+class miral.SystemCompositorWindowManager extends mir.shell.WindowManager
+class miral.MinimalWindowManager extends miral.WindowManagementPolicy
+
+miral.MirRunner <-right- mir.Server
+miral.MirRunner <-right- miral.SystemCompositorWindowManager
+miral.SystemCompositorWindowManager "n" <-d- miral.WindowManagementPolicy
+miral.WindowManagementPolicy <- miral.WindowInfo
+miral.WindowManagementPolicy <- miral.ApplicationInfo
+
 
 
 ' Server
 class mir.Server
+class mir.ServerConfiguration
 
 ' Scene
 class mir.scene.SurfaceStack
 
 ' Graphics
-class mir.graphics.MultiplexingDisplay
+class mir.graphics.MultiplexingDisplay extends mir.graphics.Display
 abstract class mir.graphics.DisplayPlatform
 abstract class mir.graphics.Display
 abstract class mir.graphics.DisplayBuffer
-class mir.graphics.gbm.Display extends mir.graphics.DisplayPlatform
-class mir.graphics.wayland.Display extends mir.graphics.DisplayPlatform
-class mir.graphics.X.Display extends mir.graphics.DisplayPlatform
-class mir.graphics.eglstrean.Display extends mir.graphics.DisplayPlatform
+class mir.graphics.gbm.Display extends mir.graphics.Display
+class mir.graphics.gbm.DisplayBuffer extends mir.graphics.DisplayBuffer
+class mir.graphics.wayland.Display extends mir.graphics.Display
+class mir.graphics.wayland.DisplayBuffer extends mir.graphics.DisplayBuffer
+class mir.graphics.X.Display extends mir.graphics.Display
+class mir.graphics.X.DisplayBuffer extends mir.graphics.DisplayBuffer
+class mir.graphics.eglstream.Display extends mir.graphics.Display
+class mir.graphics.eglstream.DisplayBuffer extends mir.graphics.DisplayBuffer
 
 ' Input
-class mir.input.InputDispatcher
-class mir.input.Platform
+class mir.input.BasicSeat
+abstract class mir.input.InputDispatcher
+class mir.input.DefaultInputDeviceHub
+abstract class mir.input.Platform
 class mir.input.evdev.Platform extends mir.input.Platform
 class mir.input.wayland.Platform extends mir.input.Platform
 class mir.input.X.Platform extends mir.input.Platform
+class mir.input.DefaultInputManager
+class mir.input.MultiplexingDispatchable
 
 ' Shell
 class mir.shell.AbstractShell
@@ -36,7 +53,7 @@ class mir.shell.WindowManager
 
 ' Compositor
 class mir.compositor.MultithreadedCompositor
-class mir.compositor.ScreenShooter
+class mir.compositor.DefaultDisplayBufferCompositorFactory
 
 ' Renderer
 class mir.renderer.RendererFactory
@@ -51,31 +68,54 @@ class mir.frontend.XWaylandConnector
 miral.MirRunner --[hidden]-> mir.Server
 
 ' Relationships
-mir.Server <-- mir.compositor.MultithreadedCompositor
-mir.Server <-- mir.input.InputDispatcher
-mir.Server <-- mir.frontend.XWaylandConnector
-mir.Server <-- mir.frontend.WaylandConnector
+mir.Server <-right- mir.ServerConfiguration
+mir.ServerConfiguration <-- mir.compositor.MultithreadedCompositor
+mir.ServerConfiguration <-- mir.input.DefaultInputDeviceHub
+mir.ServerConfiguration <-- mir.input.InputDispatcher
+mir.ServerConfiguration <-- mir.input.BasicSeat
+mir.ServerConfiguration <-- mir.frontend.XWaylandConnector
+mir.ServerConfiguration <-- mir.frontend.WaylandConnector
+mir.ServerConfiguration <-- mir.graphics.MultiplexingDisplay
+mir.ServerConfiguration <-- mir.graphics.DisplayPlatform
+mir.ServerConfiguration <-- mir.input.DefaultInputManager
 
-miral.MirRunner <-- mir.Server
-miral.MirRunner <- miral.BasicWindowManager
-miral.BasicWindowManager "n" <- miral.WindowManagementPolicy
-
-mir.compositor.MultithreadedCompositor <-- mir.renderer.RendererFactory
 mir.compositor.MultithreadedCompositor <-- mir.scene.SurfaceStack
+mir.compositor.MultithreadedCompositor <-- mir.graphics.MultiplexingDisplay
+mir.compositor.MultithreadedCompositor <-- mir.compositor.DefaultDisplayBufferCompositorFactory
+mir.compositor.DefaultDisplayBufferCompositorFactory <-- mir.renderer.RendererFactory
 
 mir.renderer.RendererFactory <-- mir.renderer.Renderer
-mir.graphics.MultiplexingDisplay "n" <-- mir.graphics.Display
-mir.graphics.DisplayPlatform <-- mir.graphics.Display
+mir.graphics.MultiplexingDisplay "n" <-right- mir.graphics.Display
+mir.graphics.DisplayPlatform <-right- mir.graphics.Display
 mir.graphics.Display "n" <-- mir.graphics.DisplayBuffer
+mir.graphics.gbm.Display "n" <-- mir.graphics.gbm.DisplayBuffer
+mir.graphics.eglstream.Display "n" <-- mir.graphics.eglstream.DisplayBuffer
+mir.graphics.X.Display "n" <-- mir.graphics.X.DisplayBuffer
+mir.graphics.wayland.Display "n" <-- mir.graphics.wayland.DisplayBuffer
 
 mir.frontend.WaylandConnector <-- mir.shell.AbstractShell
 mir.frontend.XWaylandConnector <-- mir.shell.AbstractShell
 mir.shell.AbstractShell <-- mir.scene.SurfaceStack
 mir.shell.AbstractShell <-- mir.shell.WindowManager
 
-mir.input.InputDispatcher <-- mir.input.Platform
+mir.input.DefaultInputManager <-- mir.input.Platform
+mir.input.DefaultInputManager <-- mir.input.MultiplexingDispatchable
+mir.input.BasicSeat <-- mir.input.InputDispatcher
+mir.input.DefaultInputDeviceHub <-- mir.input.BasicSeat
+mir.input.DefaultInputDeviceHub <-- mir.input.MultiplexingDispatchable
+mir.input.Platform <-- mir.input.DefaultInputDeviceHub
+mir.input.InputDispatcher <-- mir.shell.AbstractShell
 
-mir.compositor.MultithreadedCompositor <-- mir.compositor.ScreenShooter
-mir.compositor.ScreenShooter <-- mir.shell.AbstractShell
+
+package Hardware <<Rectangle>> {
+    () mouse
+    () keyboard
+    () displays
+}
+
+
+Hardware.mouse <-- mir.input.evdev
+Hardware.keyboard <-- mir.input.evdev
+Hardware.displays <-- mir.graphics.Display
 
 @enduml
