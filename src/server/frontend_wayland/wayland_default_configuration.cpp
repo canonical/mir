@@ -210,7 +210,7 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
         }),
     make_extension_builder<mw::MirShellV1>([](auto const& ctx)
         {
-            return mf::create_mir_shell_v1(ctx.display);
+            return mf::create_mir_shell_v1(ctx.display, ctx.shell);
         }),
 };
 
