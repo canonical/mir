@@ -17,7 +17,7 @@ This document describes the high-level architecture of *Mir*, including a diagra
   - & more!
 
 # Diagram
-TODO: Implement the diagram
+![Architecture Diagram](./architecture.png "Architecture Diagram")
 
 # Code Structure
 This section will provide an overview of how the *Mir* codebase is organized through an exploration of  the project's directory structure.
