@@ -75,6 +75,7 @@ This section will provide an overview of how the *Mir* codebase is organized thr
 ## `/src/server/scene`
 - The `Scene` provides an interface for the `Compositor` to access the list of renderable items
   - These renderables are derived from the surfaces that were added to the `Shell`.
+  - You can think of the `Scene` as you would think of a "scene graph" in a 3D game engine.
 - Unlike the `Shell`, the `Scene` knows a lot about the Z-order of the surfaces. For this reason, it is also responsible for things like locking the display or sending surfaces to the back of the Z-order.
 
 ## `/src/server/graphics`
