@@ -108,28 +108,6 @@ private:
 
     mw::Weak<XdgSurfaceStable> const xdg_surface;
 };
-
-class XdgPositionerStable : public mw::XdgPositioner, public shell::SurfaceSpecification
-{
-public:
-    XdgPositionerStable(wl_resource* new_resource);
-
-    void ensure_complete() const;
-
-    bool reactive{false};
-
-private:
-    void set_size(int32_t width, int32_t height) override;
-    void set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t height) override;
-    void set_anchor(uint32_t anchor) override;
-    void set_gravity(uint32_t gravity) override;
-    void set_constraint_adjustment(uint32_t constraint_adjustment) override;
-    void set_offset(int32_t x, int32_t y) override;
-    void set_reactive() override;
-    void set_parent_size(int32_t parent_width, int32_t parent_height) override;
-    void set_parent_configure(uint32_t serial) override;
-};
-
 }
 }
 namespace mf = mir::frontend;  // Keep CLion's parsing happy
