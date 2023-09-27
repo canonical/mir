@@ -256,6 +256,8 @@ foreach(platform IN LISTS MIR_PLATFORM)
   endif()
 endforeach(platform)
 
+set(MIR_BUILD_PLATFORM_VIRTUAL TRUE)
+
 pkg_check_modules(GLM glm)
 if(NOT GLM_FOUND)
   find_package(glm REQUIRED)  # There's no glm.pc on Fedora, but find_package(glm) fails on Ubuntu...

@@ -67,4 +67,8 @@ if (MIR_BUILD_PLATFORM_WAYLAND)
   add_subdirectory(wayland)
 endif()
 
+if (MIR_BUILD_PLATFORM_VIRTUAL)
+    add_subdirectory(virtual)
+endif()
+
 add_subdirectory(evdev/)
