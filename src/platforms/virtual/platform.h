@@ -22,11 +22,6 @@
 #include "mir/graphics/display.h"
 #include "mir/fd.h"
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <wayland-client.h>
-#include <wayland-egl.h>
-
 namespace mir
 {
 namespace graphics

@@ -61,6 +61,11 @@ auto probe_display_platform(
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
     std::vector<mg::SupportedDevice> result;
+    result.push_back({
+        nullptr,
+        mg::PlatformPriority::hosted,
+        nullptr
+    });
     return result;
 }
 
