@@ -68,9 +68,48 @@ public:
     }
 
 protected:
-    auto maybe_create_interface(mg::DisplayInterfaceBase::Tag const&)
+    auto maybe_create_interface(mg::DisplayInterfaceBase::Tag const& type_tag)
     -> std::shared_ptr<mg::DisplayInterfaceBase>
     {
+        class StubGenericEGLDisplayProvider : public GenericEGLDisplayProvider
+        {
+        public:
+            auto get_egl_display() -> EGLDisplay override
+            {
+                auto eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+                EGLint major, minor;
+                if (eglInitialize(eglDisplay, &major, &minor) == EGL_FALSE)
+                    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to initialize EGL display"));
+                return eglDisplay;
+            }
+
+            class StubEGLFramebuffer : public EGLFramebuffer
+            {
+            public:
+                StubEGLFramebuffer() = default;
+                StubEGLFramebuffer(StubEGLFramebuffer const&) {}
+                void make_current() override {}
+                void release_current() override {};
+                auto clone_handle() -> std::unique_ptr<EGLFramebuffer>  override
+                {
+                    return std::make_unique<StubEGLFramebuffer>(*this);
+                }
+                auto size() const -> geom::Size override
+                {
+                    return geom::Size{};
+                }
+            };
+
+            auto alloc_framebuffer(GLConfig const&, EGLContext) -> std::unique_ptr<EGLFramebuffer> override
+            {
+                return std::make_unique<StubEGLFramebuffer>();
+            }
+        };
+
+        if (dynamic_cast<mg::GenericEGLDisplayProvider::Tag const*>(&type_tag))
+        {
+            return std::make_shared<StubGenericEGLDisplayProvider>();
+        }
         return nullptr;
     }
 };
