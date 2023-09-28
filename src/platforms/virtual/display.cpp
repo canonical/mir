@@ -15,10 +15,16 @@
  */
 
 #include "display.h"
+#include "display_configuration.h"
 #include <mir/graphics/display_configuration.h>
 
 namespace mg = mir::graphics;
 namespace mgv = mir::graphics::virt;
+
+mgv::Display::Display(std::vector<VirtualOutputConfig> output_sizes)
+    : output_sizes{output_sizes}
+{
+}
 
 void mgv::Display::for_each_display_sync_group(const std::function<void(DisplaySyncGroup &)> &f)
 {
@@ -28,7 +34,13 @@ void mgv::Display::for_each_display_sync_group(const std::function<void(DisplayS
 
 std::unique_ptr<mg::DisplayConfiguration> mgv::Display::configuration() const
 {
-    return nullptr;
+    std::lock_guard lock{mutex};
+    std::vector<DisplayConfigurationOutput> output_configurations;
+    for (auto const& output : output_sizes)
+    {
+        output_configurations.push_back(mgv::DisplayConfiguration::build_output(output.size));
+    }
+    return std::make_unique<mgv::DisplayConfiguration>(output_configurations);
 }
 
 bool mgv::Display::apply_if_configuration_preserves_display_buffers(

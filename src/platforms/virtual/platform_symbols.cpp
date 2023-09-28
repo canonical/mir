@@ -36,22 +36,30 @@ mir::ModuleProperties const description = {
     MIR_VERSION_MICRO,
     mir::libname()
 };
+char const* virtual_displays_option_name{"virtual-output"};
 }
 
 mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     mg::SupportedDevice const&,
-    std::shared_ptr<mo::Option> const&,
+    std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mir::ConsoleServices> const& /*console*/,
     std::shared_ptr<mg::DisplayReport> const& report)
 {
     mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
-    return mir::make_module_ptr<mgv::Platform>(report);
+
+    auto output_sizes = mgv::Platform::parse_output_sizes(options->get<std::string>(virtual_displays_option_name));
+    return mir::make_module_ptr<mgv::Platform>(report, std::move(output_sizes));
 }
 
-void add_graphics_platform_options(boost::program_options::options_description&)
+void add_graphics_platform_options(boost::program_options::options_description& config)
 {
     mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
+    config.add_options()
+        (virtual_displays_option_name,
+         boost::program_options::value<std::string>()->default_value("1280x1024"),
+         "[mir-on-virtual specific] Colon separated list of WIDTHxHEIGHT sizes for \"output\" windows."
+         " ^SCALE may also be appended to any output");
 }
 
 auto probe_display_platform(
@@ -66,6 +74,23 @@ auto probe_display_platform(
         mg::PlatformPriority::hosted,
         nullptr
     });
+    return result;
+}
+
+auto probe_rendering_platform(
+    std::span<std::shared_ptr<mg::DisplayInterfaceProvider>> const&,
+    mir::ConsoleServices&,
+    std::shared_ptr<mir::udev::Context> const&,
+    mir::options::ProgramOption const&) -> std::vector<mir::graphics::SupportedDevice>
+{
+    mir::assert_entry_point_signature<mg::RenderProbe>(&probe_rendering_platform);
+    std::vector<mg::SupportedDevice> result;
+    result.emplace_back(
+        mg::SupportedDevice {
+            nullptr,
+            mg::PlatformPriority::supported,
+            nullptr
+        });
     return result;
 }
 

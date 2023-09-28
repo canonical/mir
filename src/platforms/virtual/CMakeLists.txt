@@ -2,6 +2,7 @@ add_library(mirplatformvirtual-graphics STATIC
     platform.cpp                platform.h
     display.cpp                 display.h
     display_buffer.cpp          display_buffer.h
+    display_configuration.cpp   display_configuration.h
 )
 
 target_include_directories(mirplatformvirtual-graphics

@@ -20,10 +20,67 @@
 
 namespace mg = mir::graphics;
 namespace mgv = mir::graphics::virt;
+namespace geom = mir::geometry;
 using namespace std::literals;
 
-mgv::Platform::Platform(std::shared_ptr<mg::DisplayReport> const& report) :
-    report{report}
+namespace
+{
+// TODO: This is copied from the X11 platform
+auto parse_size_dimension(std::string const& str) -> int
+{
+    try
+    {
+        size_t num_end = 0;
+        int const value = std::stoi(str, &num_end);
+        if (num_end != str.size())
+            BOOST_THROW_EXCEPTION(std::runtime_error("Output dimension \"" + str + "\" is not a valid number"));
+        if (value <= 0)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Output dimensions must be greater than zero"));
+        return value;
+    }
+    catch (std::invalid_argument const &)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Output dimension \"" + str + "\" is not a valid number"));
+    }
+    catch (std::out_of_range const &)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Output dimension \"" + str + "\" is out of range"));
+    }
+}
+
+auto parse_size(std::string const& str) -> mgv::VirtualOutputConfig
+{
+    auto const x = str.find('x'); // "x" between width and height
+    if (x == std::string::npos || x <= 0 || x >= str.size() - 1)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Output size \"" + str + "\" does not have two dimensions"));
+    return mgv::VirtualOutputConfig{
+        geom::Size{
+            parse_size_dimension(str.substr(0, x)),
+            parse_size_dimension(str.substr(x + 1))}};
+}
+}
+
+class mgv::Platform::VirtualDisplayInterfaceProvider : public mg::DisplayInterfaceProvider
+{
+public:
+    explicit VirtualDisplayInterfaceProvider()
+    {
+    }
+
+protected:
+    auto maybe_create_interface(mg::DisplayInterfaceBase::Tag const&)
+    -> std::shared_ptr<mg::DisplayInterfaceBase>
+    {
+        return nullptr;
+    }
+};
+
+mgv::Platform::Platform(
+    std::shared_ptr<mg::DisplayReport> const& report,
+    std::vector<VirtualOutputConfig> output_sizes)
+    : report{report},
+      provider{std::make_shared<VirtualDisplayInterfaceProvider>()},
+      output_sizes{output_sizes}
 {
 }
 
@@ -31,11 +88,23 @@ mir::UniqueModulePtr<mg::Display> mgv::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const&,
     std::shared_ptr<GLConfig> const&)
 {
-    return mir::make_module_ptr<mgv::Display>();
+    return mir::make_module_ptr<mgv::Display>(output_sizes);
 }
 
 auto mgv::Platform::interface_for() -> std::shared_ptr<DisplayInterfaceProvider>
 {
-    return nullptr; 
+    return provider;
 }
 
+auto mgv::Platform::parse_output_sizes(std::string output_sizes) -> std::vector<mgv::VirtualOutputConfig>
+{
+    std::vector<mgv::VirtualOutputConfig> sizes;
+    for (int start = 0, end; start - 1 < (int)output_sizes.size(); start = end + 1)
+    {
+        end = output_sizes.find(':', start);
+        if (end == (int)std::string::npos)
+            end = output_sizes.size();
+        sizes.push_back(parse_size(output_sizes.substr(start, end - start)));
+    }
+    return sizes;
+}
