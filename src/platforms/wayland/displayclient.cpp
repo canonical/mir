@@ -564,7 +564,7 @@ void mgw::DisplayClient::on_display_config_changed()
 
 void mgw::DisplayClient::delete_outputs_to_be_deleted()
 {
-    std::lock_guard{outputs_mutex};
+    std::lock_guard lock{outputs_mutex};
     outputs_to_be_deleted.clear();
 }
 
