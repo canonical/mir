@@ -1,27 +1,13 @@
 # Overview
-This document describes the high-level architecture of *Mir*, including a diagram and a brief introduction of the directory structure.
+This document describes the high-level architecture of *Mir*, including a diagram and a brief introduction of the libraries.
 
-# Concepts
-## MirAL
-- The "Mir Abstraction Layer" (aka `MirAL` or `miral`) is an API that makes Mir easy for compositor-implementers to work with. It provides the core window management concepts and an interface that is more ABI stable than Mir's internal mirserver API.
-- If one wishes to implement a compositor themselves, they will spend most of their time interacting with the `mirAL` API and only really touch the `mir` API when they require core concepts like a `mir::geometry::Rectangle`.
-
-## Mir
-- The core implementation of the compositor that `MirAL` uses under the hood
-- Responsible for doing the heavy-lifting of the compositor, such as:
-  - Output detection and configuration
-  - Compositing the image onto outputs
-  - Implementing the [Wayland protocol](https://wayland.app/protocols/)
-  - Providing the different platforms that can be used for both display and rendering
-  - Handling user input and bubbling it up to `MirAL`
-  - & more!
+# Audience
+This document is intended to provide contributors to *Mir* an overview of *Mir*'s systems. It is *not* intended to guide compositor-implementers, unless they are specifically interested in the internals of *Mir*.
 
 # Diagram
 ![Architecture Diagram](./architecture.png "Architecture Diagram")
 
-# Code Structure
-This section will provide an overview of how the *Mir* codebase is organized through an exploration of  the project's directory structure.
-
+# Top-Level Folders
 ## `/include`
 - The `include` folder at the root of the project provides the public-facing API.
 - This directory *strictly* includes the interfaces that are useful to a compositor-implementer.
@@ -29,97 +15,6 @@ This section will provide an overview of how the *Mir* codebase is organized thr
 
 ## `/src`
 - The `src` folder at the root of the project comprises the core implementation of *Mir*.
-
-## `/src/miral`
-- Provides an interface to compositor-implementers that abstracts away many of the nitty-gritty details of *Mir*. See [MirAL](#miral) for more details
-- Most of the classes in this directory look like this:
-
-    ```c++
-    class MyClass
-    {
-    public:
-        void operator()(mir::Server& server) const;
-        ...
-    };
-    ```
-  Instances of such a class (e.g. `X11Support`) are passed to the `MirRunner::run_with` function, wherein the overloaded operator function is called with the server as a parameter.
-
-## `/src/server`
-- Provides the core *Mir* runtime, with the entry-point being the `mir::Server` class.
-- The `Server` class has a `DisplayServer` which provides access to the interfaces that that support the server's runtime.
-  - The `ServerConfiguration` provides a bunch of methods called `the_XYZ()` to access these various instances, where "XYZ" can be replaced with the interface of interest.
-- The classes that the `Server` relies on for its runtime can be found organized in separate folders in this directory.
-
-## `/src/server/compositor`
-- The `Compositor` is responsible for collecting the set of renderables and sending them off to the outputs to be displayed.
-
-## `/src/server/input`
-- This folder deals with everything input (e.g. keyboard presses, mouse clicks)
-- The `InputManager` provides access to the specific input platform that is running (e.g. X, Wayland, or libinput).
-- The `InputDispatcher` is responsible for taking events bubbled up from the platform and sending them off to the appropriate listeners
-
-## `/src/server/frontend_wayland`
-- The *Mir* implementation of the wayland protocol.
-- The `WaylandConnector` class is the glue between the compositor and the specific details of the wayland protocol.
-
-## `/src/server/frontend_xwayland`
-- The *Mir* implementation of the xwayland protocol.
-- The `XWaylandConnector` class is the glue between the compositor and the specific details of the xwayland protocol.
-- This protocol talks to the `xwayland` server, which is spawned as a subprocess.
-
-## `/src/server/shell`
-- The `Shell` is responsible for managing the surfaces that the compositor wants to show.
-- It provides an interface to create, update, and remove these surfaces from the display.
-- As an example, the `WaylandConnector` might ask the `Shell` to create a new surface for it.
-
-## `/src/server/scene`
-- The `Scene` provides an interface for the `Compositor` to access the list of renderable items
-  - These renderables are derived from the surfaces that were added to the `Shell`.
-  - You can think of the `Scene` as you would think of a "scene graph" in a 3D game engine.
-- Unlike the `Shell`, the `Scene` knows a lot about the Z-order of the surfaces. For this reason, it is also responsible for things like locking the display or sending surfaces to the back of the Z-order.
-
-## `/src/server/graphics`
-- A graphics abstraction layer sitting between the compositor and the specific graphics platform that it is using to render.
-
-## `/src/server/console`
-- Handles `logind` and virtual-terminal related tasks for the compositor
-
-## `/src/server/report`
-- Logging and other facilities to collect data about the compositor
-
-## `/src/platforms` (with an "s"!)
-- Provides both input and rendering platforms that the compositor can use depending on the environment.
-- For the rendering platforms, we have:
-  - *GBM/KMS*: the platform that you would expect if you were running a *Mir*-based compositor as your daily-driver
-  - *X11*: a useful platform for testing locally
-  - *Wayland*: another useful platform for testing locally
-  - *EGLStreams/KMS*: like the *GBM/KMS* platform, but for Nvidia 
-- For the input platforms, we have:
-  - evdev
-  - X11
-  - Wayland
-
-## `/src/platform` (no "s")
-- Graphics and input code that is shared between platforms
-
-## `/src/renderers` (with an "s"!)
-- The supported `Renderer` types. The renderer is used by the Compositor to build the final image.
-- Only GL is supported at the moment.
-
-## `/src/renderer` (no "s")
-- Renderer code that is shared between renderers.
-
-## `/src/wayland`
-- A subproject used to generate C++ classes from wayland protocol XML files.
-
-## `/src/gl`
-- A short list of helpers for GL work.
-
-## `/src/cookie`
-- Provides event timestamps for inputs events that are difficult to spoof.
-
-## `/src/common`
-- A library of common functionality that is used throughout the project, including things like loggers, clocks, executors, etc.
 
 ## `/examples`
 - A collection of demo *Mir* compositors that are used as examples of how one might build a true compositor. Examples include:
@@ -129,3 +24,229 @@ This section will provide an overview of how the *Mir* codebase is organized thr
 
 ## `/tests`
 - Unit tests for the entire project.
+
+# Libraries
+The following is the library tree:
+```
+├── miral
+├── miroil
+├── mircore
+├── mircommon
+├── mircookie
+└── mirserver
+    ├── mircompositor
+    ├── mirinput
+    ├── mirfrontend
+    ├── mirfrontend-wayland
+    ├── mirfrontend-xwayland
+    ├── mirshell
+    ├── mirshelldecoration
+    ├── mirscene
+    ├── mirgraphics
+    ├── mirreport
+    ├── mirlttng
+    ├── mirlogging
+    ├── mirnullreport
+    ├── mirconsole
+    ├── mirgl
+    └── mirrenderergl
+├── mirplatform
+├── mirwayland
+├── graphics-gbm-kms
+├── graphics-eglstreamkms
+├── graphics-x11
+├── graphics-wayland
+├── input-evdev
+└── renderer-egl-generic
+```
+
+## miral
+- The "Mir Abstraction Layer" (aka `MirAL` or `miral`) is an API that makes Mir easy for compositor-implementers to work with. It provides the core window management concepts and an interface that is more ABI stable than Mir's internal mirserver API.
+- Public-facing
+- Directories:
+  - `include/miral`
+  - `src/miral`
+  
+## miroil
+- A custom *Mir* library for the [Lomiri](https://lomiri.com/) folks
+- This is unimportant for 99% of people
+- Directories:
+  - `include/miroil`
+  - `src/miroil`
+
+## mircore
+- Fundamental data structures like 2D points, Rectangles, File Descriptor, etc.
+- Public-facing
+- Directories:
+  - `include/core`
+  - `src/core`
+  -
+## mircommon
+- Data structures and utility functions like Mir-event building, logging, keymaps, etc.
+- Differs from `mircore` in that the concepts map strictly onto *Mir*'s concepts instead of being general concepts like a Rectangle
+- Public-facing
+- Directories:
+  - `include/common`
+  - `src/common`
+  - `src/include/common`
+
+## mircookie
+- Provides event timestamps for inputs events that are difficult to spoof.
+- Public-facing
+- Directories:
+  - `include/cookie`
+  - `src/cookie`
+  - `src/include/cookie`
+
+## mirserver
+- Provides the core *Mir* runtime, with the entry-point being the `mir::Server` class.
+- The `Server` class has a `DisplayServer` which provides access to the interfaces that that support the server's runtime.
+  - The `ServerConfiguration` provides a bunch of methods called `the_XYZ()` to access these various instances, where "XYZ" can be replaced with the interface of interest.
+- The classes that the `Server` relies on for its runtime can be found organized in separate folders in this directory.
+- Directories:
+  - `include/server`
+  - `src/server`
+  - `src/include/server`
+  
+## mircompositor
+- Included in `mirserver.so`
+- The `Compositor` is responsible for collecting the set of renderables and sending them off to the outputs to be displayed.
+- Directories:
+  - `src/include/server/mir/compositor`
+  - `src/server/compositor`
+
+## mirinput
+- Included in `mirserver.so`
+- Deals with everything input (e.g. keyboard presses, mouse clicks)
+- The `InputManager` provides access to the specific input platform that is running (e.g. X, Wayland, or libinput).
+- The `InputDispatcher` is responsible for taking events bubbled up from the platform and sending them off to the appropriate listeners
+- Directories
+  - `src/include/server/mir/input`
+  - `src/server/input`
+  
+## mirfrontend
+- TODO: How do I describe this one?
+- Directories:
+  - `src/include/server/mir/frontend`
+  - `src/server/frontend`
+  
+## mirfrontend-wayland
+- The *Mir* implementation of the wayland protocol.
+- The `WaylandConnector` class is the glue between the compositor and the specific details of the wayland protocol.
+- Directories:
+  - `src/server/frontend_wayland`
+
+## mirfrontend-xwayland
+- The *Mir* implementation of the xwayland protocol.
+- The `XWaylandConnector` class is the glue between the compositor and the specific details of the xwayland protocol.
+- This protocol talks to the `xwayland` server, which is spawned as a subprocess.
+- Directories:
+  - `src/server/frontend_xwayland`
+
+## mirshell
+- The `Shell` is responsible for managing the surfaces that the compositor wants to show.
+- It provides an interface to create, update, and remove these surfaces from the display.
+- As an example, the `WaylandConnector` might ask the `Shell` to create a new surface for it.
+- Directories:
+  - `src/include/server/mir/shell`
+  - `src/server/shell`
+  
+## mirshelldecoration
+- Manages the decoration of *Mir*'s windows
+- Directories:
+  - `src/server/shell/decoration`
+
+## mirscene
+- The `Scene` provides an interface for the `Compositor` to access the list of renderable items
+  - These renderables are derived from the surfaces that were added to the `Shell`.
+  - You can think of the `Scene` as you would think of a "scene graph" in a 3D game engine.
+- Unlike the `Shell`, the `Scene` knows a lot about the Z-order of the surfaces. For this reason, it is also responsible for things like locking the display or sending surfaces to the back of the Z-order.
+- Directories:
+  - `src/include/mir/server/scene`
+  - `src/server/scene`
+
+## mirgraphics
+- A graphics abstraction layer sitting between the compositor and the specific graphics platform that it is using to render.
+- Directories:
+  - `src/include/mir/server/graphics`
+  - `src/server/graphics`
+  
+## mirreport
+- Default logging and reporting facilities
+- Directories:
+  - `src/server/report`
+
+## mirlttng
+- Support for LTTng
+- Directories:
+  - `src/server/report/lttng`
+
+## mirlogging
+- Logging facilities
+- Directories
+  - `src/server/report/logging`
+  
+## mirnullreport
+- A null implementation of the reporting facilities
+- Directories:
+  - `src/server/report/null`
+
+## mirconsole
+- Handles `logind` and virtual-terminal related tasks for the compositor
+- Directories:
+  - `src/server/console`
+
+## mirgl
+- A short list of helpers for GL things
+- Directories:
+  - `src/gl`
+  
+## mirrenderergl
+- The only supported `Renderer` type for now
+- Future renderers will be found alongside it in the `src/renderers` directory
+- Directories:
+  - `src/renderers/gl`
+  
+## mirplatform
+- Graphics and input code that is shared between the platforms found in `src/platforms`
+- Directories
+  - `src/include/platform`
+  - `src/platform`
+
+## mirwayland
+- A subproject used to generate C++ classes from wayland protocol XML files.
+- Directories:
+  - `src/wayland`
+
+## graphics-gbm-kms
+- GBM/KMS display platform for Mir
+- This is the main display platform that one would expect to use
+- Directories:
+  - `src/platforms/gbm-kms`
+
+## graphics-gbm-kms
+- EglStreams/KMS display platform for Mir
+- This is an Nvidia-specific platform
+- Directories:
+  - `src/platforms/eglstreams-kms`
+
+## graphics-x11
+- An X11-based display/input platform
+- Primary platform used for testing
+- Directories:
+  - `src/platforms/x11`
+  
+## graphics-wayland
+- A Wayland-based display/input platform
+- Directories:
+  - `src/platforms/wayland`
+
+## input-evdev
+- A `libinput` based input platform
+- Directories
+  - `src/platforms/evdev`
+  
+## renderer-egl-generic
+- TODO: What do I put here?
+- Directories:
+  - `src/platforms/renderer-generic-egl`
