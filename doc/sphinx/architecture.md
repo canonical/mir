@@ -3,7 +3,7 @@ This document describes the high-level architecture of *Mir*, including a diagra
 
 # Concepts
 ## MirAL
-- The "Mir Abstraction Layer" (aka `mirAL` or `miral`) is a layer that makes the core Mir implementation easier for compositor-implementers to work with.
+- The "Mir Abstraction Layer" (aka `MirAL` or `miral`) is an API that makes Mir easy for compositor-implementers to work with. It provides the core window management concepts and an interface that is more ABI stable than Mir's internal mirserver API.
 - If one wishes to implement a compositor themselves, they will spend most of their time interacting with the `mirAL` API and only really touch the `mir` API when they require core concepts like a `mir::geometry::Rectangle`.
 
 ## Mir
