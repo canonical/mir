@@ -80,23 +80,6 @@ auto probe_display_platform(
     return result;
 }
 
-auto probe_rendering_platform(
-    std::span<std::shared_ptr<mg::DisplayInterfaceProvider>> const&,
-    mir::ConsoleServices&,
-    std::shared_ptr<mir::udev::Context> const&,
-    mir::options::ProgramOption const&) -> std::vector<mir::graphics::SupportedDevice>
-{
-    mir::assert_entry_point_signature<mg::RenderProbe>(&probe_rendering_platform);
-    std::vector<mg::SupportedDevice> result;
-    result.emplace_back(
-        mg::SupportedDevice {
-            nullptr,
-            mg::PlatformPriority::supported,
-            nullptr
-        });
-    return result;
-}
-
 mir::ModuleProperties const* describe_graphics_module()
 {
     mir::assert_entry_point_signature<mg::DescribeModule>(&describe_graphics_module);
