@@ -18,7 +18,6 @@
 #define MIR_PLATFORMS_VIRTUAL_DISPLAY_H_
 
 #include "platform.h"
-#include "display_buffer.h"
 #include <mir/graphics/display.h>
 
 namespace mir
@@ -33,9 +32,9 @@ class Display : public mir::graphics::Display
 public:
     Display(std::vector<VirtualOutputConfig> output_sizes);
     void for_each_display_sync_group(const std::function<void(DisplaySyncGroup &)> &f) override;
-    std::unique_ptr<DisplayConfiguration> configuration() const override;
-    bool apply_if_configuration_preserves_display_buffers(const DisplayConfiguration &conf) override;
-    void configure(const DisplayConfiguration &conf) override;
+    std::unique_ptr<mir::graphics::DisplayConfiguration> configuration() const override;
+    bool apply_if_configuration_preserves_display_buffers(const mir::graphics::DisplayConfiguration &conf) override;
+    void configure(const mir::graphics::DisplayConfiguration &conf) override;
     void register_configuration_change_handler(
         EventHandlerRegister &handlers,
        const DisplayConfigurationChangeHandler &conf_change_handler) override;
@@ -44,9 +43,7 @@ public:
     std::shared_ptr<Cursor> create_hardware_cursor() override;
 
 private:
-    std::vector<std::unique_ptr<mir::graphics::virt::DisplayBuffer>> display_buffers;
     std::vector<VirtualOutputConfig> outputs;
-    std::mutex mutable mutex;
 };
 }
 }

@@ -15,8 +15,9 @@
  */
 
 #include "display.h"
-#include "display_configuration.h"
 #include <mir/graphics/display_configuration.h>
+#include "display_configuration.h"
+#include <mir/log.h>
 
 namespace mg = mir::graphics;
 namespace mgv = mir::graphics::virt;
@@ -26,15 +27,12 @@ mgv::Display::Display(std::vector<VirtualOutputConfig> output_sizes)
 {
 }
 
-void mgv::Display::for_each_display_sync_group(const std::function<void(DisplaySyncGroup &)> &f)
+void mgv::Display::for_each_display_sync_group(const std::function<void(DisplaySyncGroup &)> &)
 {
-    for (auto& db_ptr : display_buffers)
-        f(*db_ptr);
 }
 
 std::unique_ptr<mg::DisplayConfiguration> mgv::Display::configuration() const
 {
-    std::lock_guard lock{mutex};
     std::vector<DisplayConfigurationOutput> output_configurations;
     for (auto const& output : outputs)
     {
@@ -49,26 +47,22 @@ bool mgv::Display::apply_if_configuration_preserves_display_buffers(
     return false;
 }
 
-void mgv::Display::configure(const mir::graphics::DisplayConfiguration &)
+void mgv::Display::configure(mir::graphics::DisplayConfiguration const&)
 {
-
 }
 
 void mgv::Display::register_configuration_change_handler(
     mir::graphics::EventHandlerRegister &,
     const mir::graphics::DisplayConfigurationChangeHandler &)
 {
-
 }
 
 void mgv::Display::pause()
 {
-
 }
 
 void mgv::Display::resume()
 {
-
 }
 
 std::shared_ptr<mg::Cursor> mgv::Display::create_hardware_cursor()
