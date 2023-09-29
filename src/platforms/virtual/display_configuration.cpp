@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "display_configuration.h"
+#include "platform.h"
 
 namespace mg = mir::graphics;
 namespace mgv = mir::graphics::virt;
@@ -21,10 +22,14 @@ namespace geom = mir::geometry;
 
 int mgv::DisplayConfiguration::last_output_id{0};
 
-mg::DisplayConfigurationOutput mgv::DisplayConfiguration::build_output(
-    geom::Size const size)
+mg::DisplayConfigurationOutput mgv::DisplayConfiguration::build_output(mgv::VirtualOutputConfig const& config)
 {
-    // TODO: Some of the values here are placeholder
+    if (config.sizes.size() == 0)
+        BOOST_THROW_EXCEPTION(std::runtime_error("An output must be specified with at least one size"));
+    std::vector<DisplayConfigurationMode> configuration_modes;
+    for (auto size : config.sizes)
+        configuration_modes.push_back({size, 60.0});
+
     last_output_id++;
     return  DisplayConfigurationOutput{
         mg::DisplayConfigurationOutputId{last_output_id},
@@ -32,9 +37,9 @@ mg::DisplayConfigurationOutput mgv::DisplayConfiguration::build_output(
         mg::DisplayConfigurationLogicalGroupId{0},
         mg::DisplayConfigurationOutputType::unknown,
         {MirPixelFormat ::mir_pixel_format_argb_8888},
-        {mg::DisplayConfigurationMode{size, 60.0}},
+        std::move(configuration_modes),
         0,
-        size,
+        config.sizes[0],
         true,
         true,
         {0, 0},

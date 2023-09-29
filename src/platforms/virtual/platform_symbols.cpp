@@ -48,7 +48,8 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
 {
     mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
 
-    auto output_sizes = mgv::Platform::parse_output_sizes(options->get<std::string>(virtual_displays_option_name));
+    auto outputs = options->get<std::vector<std::string>>(virtual_displays_option_name);
+    auto output_sizes = mgv::Platform::parse_output_sizes(outputs);
     return mir::make_module_ptr<mgv::Platform>(report, std::move(output_sizes));
 }
 
@@ -57,9 +58,11 @@ void add_graphics_platform_options(boost::program_options::options_description& 
     mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
     config.add_options()
         (virtual_displays_option_name,
-         boost::program_options::value<std::string>()->default_value("1280x1024"),
-         "[mir-on-virtual specific] Colon separated list of WIDTHxHEIGHT sizes for \"output\" windows."
-         " ^SCALE may also be appended to any output");
+         boost::program_options::value<std::vector<std::string>>()
+            ->default_value(std::vector<std::string>{"1280x1024"}, "1280x1024")
+            ->multitoken(),
+         "[mir-on-virtual specific] Colon separated list of WIDTHxHEIGHT sizes for the \"output\" size."
+         "Multiple outputs may be specified by providing the argument multiple times.");
 }
 
 auto probe_display_platform(

@@ -48,15 +48,14 @@ auto parse_size_dimension(std::string const& str) -> int
     }
 }
 
-auto parse_size(std::string const& str) -> mgv::VirtualOutputConfig
+auto parse_size(std::string const& str) -> geom::Size
 {
     auto const x = str.find('x'); // "x" between width and height
     if (x == std::string::npos || x <= 0 || x >= str.size() - 1)
         BOOST_THROW_EXCEPTION(std::runtime_error("Output size \"" + str + "\" does not have two dimensions"));
-    return mgv::VirtualOutputConfig{
-        geom::Size{
-            parse_size_dimension(str.substr(0, x)),
-            parse_size_dimension(str.substr(x + 1))}};
+    return geom::Size{
+        parse_size_dimension(str.substr(0, x)),
+        parse_size_dimension(str.substr(x + 1))};
 }
 }
 
@@ -116,10 +115,10 @@ protected:
 
 mgv::Platform::Platform(
     std::shared_ptr<mg::DisplayReport> const& report,
-    std::vector<VirtualOutputConfig> output_sizes)
+    std::vector<VirtualOutputConfig> outputs)
     : report{report},
       provider{std::make_shared<VirtualDisplayInterfaceProvider>()},
-      output_sizes{output_sizes}
+      outputs{outputs}
 {
 }
 
@@ -127,7 +126,7 @@ mir::UniqueModulePtr<mg::Display> mgv::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const&,
     std::shared_ptr<GLConfig> const&)
 {
-    return mir::make_module_ptr<mgv::Display>(output_sizes);
+    return mir::make_module_ptr<mgv::Display>(outputs);
 }
 
 auto mgv::Platform::interface_for() -> std::shared_ptr<DisplayInterfaceProvider>
@@ -135,15 +134,21 @@ auto mgv::Platform::interface_for() -> std::shared_ptr<DisplayInterfaceProvider>
     return provider;
 }
 
-auto mgv::Platform::parse_output_sizes(std::string output_sizes) -> std::vector<mgv::VirtualOutputConfig>
+auto mgv::Platform::parse_output_sizes(std::vector<std::string> virtual_outputs) -> std::vector<mgv::VirtualOutputConfig>
 {
-    std::vector<mgv::VirtualOutputConfig> sizes;
-    for (int start = 0, end; start - 1 < (int)output_sizes.size(); start = end + 1)
+    std::vector<VirtualOutputConfig> configs;
+    for (auto const& output : virtual_outputs)
     {
-        end = output_sizes.find(':', start);
-        if (end == (int)std::string::npos)
-            end = output_sizes.size();
-        sizes.push_back(parse_size(output_sizes.substr(start, end - start)));
+        std::vector<geom::Size > sizes;
+        for (int start = 0, end; start - 1 < (int)output.size(); start = end + 1)
+        {
+            end = output.find(':', start);
+            if (end == (int)std::string::npos)
+                end = output.size();
+            sizes.push_back(parse_size(output.substr(start, end - start)));
+        }
+
+        configs.push_back(VirtualOutputConfig(std::move(sizes)));
     }
-    return sizes;
+    return configs;
 }

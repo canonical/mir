@@ -45,7 +45,7 @@ public:
 
 private:
     std::vector<std::unique_ptr<mir::graphics::virt::DisplayBuffer>> display_buffers;
-    std::vector<VirtualOutputConfig> output_sizes;
+    std::vector<VirtualOutputConfig> outputs;
     std::mutex mutable mutex;
 };
 }

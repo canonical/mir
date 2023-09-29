@@ -31,21 +31,21 @@ namespace virt
 
 struct VirtualOutputConfig
 {
-    VirtualOutputConfig(geometry::Size const& size)
-        : size{size}
+    VirtualOutputConfig(std::vector<geometry::Size> sizes)
+        : sizes{sizes}
     {
     }
 
-    geometry::Size size;
+    std::vector<geometry::Size> sizes;
 };
 
 class Platform : public graphics::DisplayPlatform
 {
 public:
-    static auto parse_output_sizes(std::string output_sizes) -> std::vector<VirtualOutputConfig>;
+    static auto parse_output_sizes(std::vector<std::string> virtual_outputs) -> std::vector<VirtualOutputConfig>;
     Platform(
         std::shared_ptr<DisplayReport> const& report,
-        std::vector<VirtualOutputConfig> output_sizes);
+        std::vector<VirtualOutputConfig> outputs);
     ~Platform() = default;
 
 
@@ -59,7 +59,7 @@ private:
     class VirtualDisplayInterfaceProvider;
     std::shared_ptr<DisplayReport> const report;
     std::shared_ptr<VirtualDisplayInterfaceProvider> const provider;
-    std::vector<VirtualOutputConfig> const output_sizes;
+    std::vector<VirtualOutputConfig> const outputs;
 };
 }
 }

@@ -26,10 +26,11 @@ namespace graphics
 {
 namespace virt
 {
+class VirtualOutputConfig;
 class DisplayConfiguration : public mir::graphics::DisplayConfiguration
 {
 public:
-    static DisplayConfigurationOutput build_output(geometry::Size const size);
+    static DisplayConfigurationOutput build_output(VirtualOutputConfig const& config);
     DisplayConfiguration(std::vector<DisplayConfigurationOutput> const& outputs);
     DisplayConfiguration(DisplayConfiguration const&);
     virtual ~DisplayConfiguration() = default;

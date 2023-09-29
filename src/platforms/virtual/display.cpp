@@ -22,7 +22,7 @@ namespace mg = mir::graphics;
 namespace mgv = mir::graphics::virt;
 
 mgv::Display::Display(std::vector<VirtualOutputConfig> output_sizes)
-    : output_sizes{output_sizes}
+    : outputs{output_sizes}
 {
 }
 
@@ -36,9 +36,9 @@ std::unique_ptr<mg::DisplayConfiguration> mgv::Display::configuration() const
 {
     std::lock_guard lock{mutex};
     std::vector<DisplayConfigurationOutput> output_configurations;
-    for (auto const& output : output_sizes)
+    for (auto const& output : outputs)
     {
-        output_configurations.push_back(mgv::DisplayConfiguration::build_output(output.size));
+        output_configurations.push_back(mgv::DisplayConfiguration::build_output(output));
     }
     return std::make_unique<mgv::DisplayConfiguration>(output_configurations);
 }
