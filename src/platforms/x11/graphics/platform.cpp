@@ -22,7 +22,6 @@
 #include "mir/graphics/platform.h"
 #include "mir/options/option.h"
 #include "options_parsing_helpers.h"
-#include "shm_buffer.h"
 #include <optional>
 
 
@@ -34,7 +33,6 @@ namespace
 {
 auto parse_scale(std::string const& str) -> float
 {
-    mg::common::MappableBackedShmBuffer x(nullptr, nullptr);
     try
     {
         size_t num_end = 0;
