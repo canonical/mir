@@ -21,6 +21,8 @@
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/platform.h"
 #include "mir/options/option.h"
+#include "options_parsing_helpers.h"
+#include "shm_buffer.h"
 #include <optional>
 
 
@@ -30,30 +32,9 @@ namespace geom = mir::geometry;
 
 namespace
 {
-auto parse_size_dimension(std::string const& str) -> int
-{
-    try
-    {
-        size_t num_end = 0;
-        int const value = std::stoi(str, &num_end);
-        if (num_end != str.size())
-            BOOST_THROW_EXCEPTION(std::runtime_error("Output dimension \"" + str + "\" is not a valid number"));
-        if (value <= 0)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Output dimensions must be greater than zero"));
-        return value;
-    }
-    catch (std::invalid_argument const &)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Output dimension \"" + str + "\" is not a valid number"));
-    }
-    catch (std::out_of_range const &)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Output dimension \"" + str + "\" is out of range"));
-    }
-}
-
 auto parse_scale(std::string const& str) -> float
 {
+    mg::common::MappableBackedShmBuffer x(nullptr, nullptr);
     try
     {
         size_t num_end = 0;
@@ -89,8 +70,8 @@ auto parse_size(std::string const& str) -> mgx::X11OutputConfig
     }
     return mgx::X11OutputConfig{
         geom::Size{
-            parse_size_dimension(str.substr(0, x)),
-            parse_size_dimension(str.substr(x + 1, scale_start - x - 1))},
+            mir::graphics::common::parse_size_dimension(str.substr(0, x)),
+            mir::graphics::common::parse_size_dimension(str.substr(x + 1, scale_start - x - 1))},
         scale};
 }
 }

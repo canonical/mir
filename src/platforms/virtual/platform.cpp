@@ -17,47 +17,12 @@
 #include "platform.h"
 #include "display.h"
 #include "mir/graphics/platform.h"
+#include "options_parsing_helpers.h"
 
 namespace mg = mir::graphics;
 namespace mgv = mir::graphics::virt;
 namespace geom = mir::geometry;
 using namespace std::literals;
-
-namespace
-{
-// TODO: This is copied from the X11 platform
-auto parse_size_dimension(std::string const& str) -> int
-{
-    try
-    {
-        size_t num_end = 0;
-        int const value = std::stoi(str, &num_end);
-        if (num_end != str.size())
-            BOOST_THROW_EXCEPTION(std::runtime_error("Output dimension \"" + str + "\" is not a valid number"));
-        if (value <= 0)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Output dimensions must be greater than zero"));
-        return value;
-    }
-    catch (std::invalid_argument const &)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Output dimension \"" + str + "\" is not a valid number"));
-    }
-    catch (std::out_of_range const &)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Output dimension \"" + str + "\" is out of range"));
-    }
-}
-
-auto parse_size(std::string const& str) -> geom::Size
-{
-    auto const x = str.find('x'); // "x" between width and height
-    if (x == std::string::npos || x <= 0 || x >= str.size() - 1)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Output size \"" + str + "\" does not have two dimensions"));
-    return geom::Size{
-        parse_size_dimension(str.substr(0, x)),
-        parse_size_dimension(str.substr(x + 1))};
-}
-}
 
 class mgv::Platform::VirtualDisplayInterfaceProvider : public mg::DisplayInterfaceProvider
 {
@@ -145,7 +110,7 @@ auto mgv::Platform::parse_output_sizes(std::vector<std::string> virtual_outputs)
             end = output.find(':', start);
             if (end == (int)std::string::npos)
                 end = output.size();
-            sizes.push_back(parse_size(output.substr(start, end - start)));
+            sizes.push_back(common::parse_size(output.substr(start, end - start)));
         }
 
         configs.push_back(VirtualOutputConfig(std::move(sizes)));

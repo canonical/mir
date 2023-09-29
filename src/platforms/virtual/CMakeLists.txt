@@ -12,6 +12,7 @@ target_include_directories(mirplatformvirtual-graphics
 target_link_libraries(mirplatformvirtual-graphics
     PUBLIC
     mirplatform
+    server_platform_common
 )
 
 add_library(mirplatformvirtual MODULE
