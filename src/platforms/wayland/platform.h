@@ -18,14 +18,8 @@
 #define MIR_GRAPHICS_WAYLAND_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
-#include "mir/options/option.h"
 #include "mir/graphics/display.h"
-#include "mir/fd.h"
 
-#include "displayclient.h"
-
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
 #include <wayland-client.h>
 #include <wayland-egl.h>
 
@@ -35,12 +29,13 @@ namespace graphics
 {
 namespace wayland
 {
+class WlDisplayProvider;
+
 class Platform : public graphics::DisplayPlatform
 {
 public:
     Platform(struct wl_display* const wl_display, std::shared_ptr<DisplayReport> const& report);
     ~Platform() = default;
-
 
     UniqueModulePtr<Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
@@ -52,6 +47,8 @@ private:
 
     struct wl_display* const wl_display;
     std::shared_ptr<DisplayReport> const report;
+
+    std::shared_ptr<WlDisplayProvider> const provider;
 };
 }
 }

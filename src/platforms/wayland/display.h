@@ -18,6 +18,7 @@
 #define MIR_PLATFORMS_WAYLAND_DISPLAY_H_
 
 #include "displayclient.h"
+#include "platform.h"
 
 #include <mir/fd.h>
 #include <mir/events/touch_contact.h>
@@ -58,6 +59,7 @@ class Display : public mir::graphics::Display,
 public:
     Display(
         wl_display* const wl_display,
+        std::shared_ptr<WlDisplayProvider> provider,
         std::shared_ptr<GLConfig> const& gl_config,
         std::shared_ptr<DisplayReport> const& report);
 

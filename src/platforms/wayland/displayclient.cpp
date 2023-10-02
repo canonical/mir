@@ -16,8 +16,8 @@
  */
 
 #include "displayclient.h"
+#include "wl_egl_display_provider.h"
 #include "mir/graphics/platform.h"
-#include "mir/graphics/egl_error.h"
 #include <mir/graphics/pixel_format_utils.h>
 
 #include <wayland-client.h>
@@ -33,7 +33,7 @@
 #include <condition_variable>
 #include <cstring>
 #include <stdlib.h>
-#include <system_error>
+#include <stdexcept>
 
 namespace mgw = mir::graphics::wayland;
 namespace geom = mir::geometry;
@@ -45,8 +45,7 @@ class mgw::DisplayClient::Output  :
 public:
     Output(
         wl_output* output,
-        DisplayClient* owner,
-        std::function<void()> on_change);
+        DisplayClient* owner);
 
     ~Output();
 
@@ -71,7 +70,6 @@ public:
 
     std::optional<geometry::Size> pending_toplevel_size;
     bool has_initialized{false};
-    std::function<void()> on_change;
 
     // wl_output events
     void geometry(
@@ -104,26 +102,16 @@ public:
     void set_next_image(std::unique_ptr<Framebuffer> content) override;
 
 private:
-    std::unique_ptr<Framebuffer> next_frame;
+    std::unique_ptr<WlDisplayProvider::Framebuffer> next_frame;
+    std::shared_ptr<WlDisplayProvider> provider;
 };
-
-namespace
-{
-static EGLint const ctxattribs[] =
-    {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
-        EGL_NONE
-    };
-}
 
 mgw::DisplayClient::Output::Output(
     wl_output* output,
-    DisplayClient* owner,
-    std::function<void()> on_change) :
+    DisplayClient* owner) :
     output{output},
     owner_{owner},
-    surface{wl_compositor_create_surface(owner->compositor)},
-    on_change{std::move(on_change)}
+    surface{wl_compositor_create_surface(owner->compositor)}
 {
     // If building against newer Wayland protocol definitions we may miss trailing fields
     #pragma GCC diagnostic push
@@ -170,19 +158,9 @@ mgw::DisplayClient::Output::~Output()
 
     wl_surface_destroy(surface);
 
-    if (eglsurface != EGL_NO_SURFACE)
-    {
-        eglDestroySurface(owner_->egldisplay, eglsurface);
-    }
-
     if (egl_window != nullptr)
     {
         wl_egl_window_destroy(egl_window);
-    }
-
-    if (eglctx != EGL_NO_CONTEXT)
-    {
-        eglDestroyContext(owner_->egldisplay, eglctx);
     }
 }
 
@@ -304,7 +282,9 @@ void mgw::DisplayClient::Output::done()
     }
     else
     {
-        on_change();
+        /* TODO: We should handle this by raising a hardware-changed notification and reconfiguring in
+         * the subsequent `configure()` call.
+         */
     }
 }
 
@@ -326,17 +306,15 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
     output_size = dcout.extents().size * dcout.scale;
     if (!has_initialized)
     {
-        egl_window = wl_egl_window_create(surface, output_size.width.as_int(), output_size.height.as_int());
-        eglsurface = eglCreatePlatformWindowSurface(owner_->egldisplay, owner_->eglconfig, egl_window, nullptr);
         has_initialized = true;
+        provider = std::make_shared<WlDisplayProvider>(*owner_->provider, surface, output_size);
     }
     else if (size_is_changed)
     {
-        if (egl_window)
-        {
-            wl_egl_window_resize(egl_window, output_size.width.as_int(), output_size.height.as_int(), 0, 0);
-        }
-        on_change();
+        /* TODO: We should, again, handle this by storing the pending size, raising a hardware-changed
+         * notification, and then letting the `configure()` system tear down everything and bring it back
+         * up at the new size.
+         */
     }
 }
 
@@ -401,10 +379,10 @@ void mgw::DisplayClient::Output::post()
 
     // Avoid throttling compositing by blocking in eglSwapBuffers().
     // Instead we use the frame "done" notification.
-    eglSwapInterval(owner_->egldisplay, 0);
+    // TODO: We probably don't need to do this every frame!
+    eglSwapInterval(provider->get_egl_display(), 0);
 
-    if (eglSwapBuffers(owner_->egldisplay, eglsurface) != EGL_TRUE)
-        BOOST_THROW_EXCEPTION(egl_error("Failed to perform buffer swap"));
+    next_frame->swap_buffers();
 
     frame_sync->wait_for_done();
 }
@@ -431,18 +409,42 @@ auto mgw::DisplayClient::Output::transformation() const -> glm::mat2
 
 auto mgw::DisplayClient::Output::display_provider() const -> std::shared_ptr<DisplayInterfaceProvider>
 {
-    return {};
+    return provider;
+}
+
+namespace
+{
+template<typename To, typename From>
+auto unique_ptr_cast(std::unique_ptr<From> ptr) -> std::unique_ptr<To>
+{
+    From* unowned_src = ptr.release();
+    if (auto to_src = dynamic_cast<To*>(unowned_src))
+    {
+        return std::unique_ptr<To>{to_src};
+    }
+    delete unowned_src;
+    BOOST_THROW_EXCEPTION((
+        std::bad_cast()));
+}
 }
 
 void mgw::DisplayClient::Output::set_next_image(std::unique_ptr<Framebuffer> content)
 {
-    next_frame = std::move(content);
+    if (auto wl_content = unique_ptr_cast<WlDisplayProvider::Framebuffer>(std::move(content)))
+    {
+        next_frame = std::move(wl_content);
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION((std::logic_error{"set_next_image called with a Framebuffer from a different platform"}));
+    }
 }
 
 mgw::DisplayClient::DisplayClient(
     wl_display* display,
-    std::shared_ptr<GLConfig> const& gl_config) :
+    std::shared_ptr<WlDisplayProvider> provider) :
     display{display},
+    provider{std::move(provider)},
     keyboard_context_{xkb_context_new(XKB_CONTEXT_NO_FLAGS)},
     registry{nullptr, [](auto){}}
 {
@@ -459,46 +461,6 @@ mgw::DisplayClient::DisplayClient(
     };
 
     wl_registry_add_listener(registry.get(), &registry_listener, this);
-
-    auto format = shm_pixel_format;
-
-    EGLint const cfgattribs[] =
-        {
-            EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-            EGL_RED_SIZE, red_channel_depth(format),
-            EGL_GREEN_SIZE, green_channel_depth(format),
-            EGL_BLUE_SIZE, blue_channel_depth(format),
-            EGL_ALPHA_SIZE, alpha_channel_depth(format),
-            EGL_DEPTH_SIZE, gl_config->depth_buffer_bits(),
-            EGL_STENCIL_SIZE, gl_config->stencil_buffer_bits(),
-            EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-            EGL_NONE
-        };
-
-    eglBindAPI(EGL_OPENGL_ES_API);
-
-    egldisplay = eglGetDisplay((EGLNativeDisplayType)(display));
-    if (egldisplay == EGL_NO_DISPLAY)
-        BOOST_THROW_EXCEPTION(egl_error("Can't eglGetDisplay"));
-
-    EGLint major;
-    EGLint minor;
-    if (!eglInitialize(egldisplay, &major, &minor))
-        BOOST_THROW_EXCEPTION(egl_error("Can't eglInitialize"));
-
-    if (std::tuple{major, minor} < std::tuple{1, 4})
-        BOOST_THROW_EXCEPTION(egl_error("EGL version is not at least 1.4"));
-
-    EGLint neglconfigs;
-    if (!eglChooseConfig(egldisplay, cfgattribs, &eglconfig, 1, &neglconfigs))
-        BOOST_THROW_EXCEPTION(egl_error("Could not eglChooseConfig"));
-
-    if (neglconfigs == 0)
-        BOOST_THROW_EXCEPTION(egl_error("No EGL config available"));
-
-    eglctx = eglCreateContext(egldisplay, eglconfig, EGL_NO_CONTEXT, ctxattribs);
-    if (eglctx == EGL_NO_CONTEXT)
-        BOOST_THROW_EXCEPTION(egl_error("eglCreateContext failed"));
 
     auto const has_uninitialized_output = [&]()
         {
@@ -533,22 +495,17 @@ void mgw::DisplayClient::on_display_config_changed()
 
 void mgw::DisplayClient::delete_outputs_to_be_deleted()
 {
-    std::lock_guard{outputs_mutex};
+    std::lock_guard lock{outputs_mutex};
     outputs_to_be_deleted.clear();
 }
 
 mgw::DisplayClient::~DisplayClient()
 {
-    eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-
     {
         std::lock_guard lock{outputs_mutex};
         bound_outputs.clear();
     }
     registry.reset();
-
-    eglDestroyContext(egldisplay, eglctx);
-    eglTerminate(egldisplay);
 }
 
 void mgw::DisplayClient::new_global(
@@ -590,8 +547,7 @@ void mgw::DisplayClient::new_global(
                 id,
                 std::make_unique<Output>(
                     output,
-                    self,
-                    [self]() { self->on_display_config_changed(); })));
+                    self)));
     }
     else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
     {
