@@ -33,7 +33,7 @@ public:
 
 protected:
     auto maybe_create_interface(mg::DisplayInterfaceBase::Tag const& type_tag)
-    -> std::shared_ptr<mg::DisplayInterfaceBase>
+        -> std::shared_ptr<mg::DisplayInterfaceBase>
     {
         class StubGenericEGLDisplayProvider : public GenericEGLDisplayProvider
         {

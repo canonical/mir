@@ -18,6 +18,7 @@
 #define MIR_PLATFORM_OPTIONS_PARSING_HELPERS_H
 
 #include <string>
+#include <tuple>
 #include <mir/geometry/size.h>
 
 namespace mir
@@ -28,7 +29,7 @@ namespace common
 {
 
 auto parse_size(std::string const& str) -> mir::geometry::Size;
-auto parse_size_dimension(std::string const& str) -> int;
+auto parse_size_with_scale(std::string const& str) -> std::tuple<mir::geometry::Size, float>;
 
 }
 }
