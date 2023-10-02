@@ -10,7 +10,7 @@ if (MIR_BUILD_PLATFORM_X11)
   add_subdirectory(x11)
 endif()
 
-#add_subdirectory(virtual)
+add_subdirectory(virtual)
 
 set(UNIT_TEST_SOURCES
   ${UNIT_TEST_SOURCES}
