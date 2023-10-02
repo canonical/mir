@@ -40,13 +40,10 @@ protected:
         public:
             auto get_egl_display() -> EGLDisplay override
             {
-                if (egl_display == nullptr)
-                {
-                    egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-                    EGLint major, minor;
-                    if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE)
-                        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to initialize EGL display"));
-                }
+                auto egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+                EGLint major, minor;
+                if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE)
+                    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to initialize EGL display"));
                 return egl_display;
             }
 
@@ -73,7 +70,6 @@ protected:
             }
 
         private:
-            EGLDisplay egl_display = nullptr;
         };
 
         if (dynamic_cast<mg::GenericEGLDisplayProvider::Tag const*>(&type_tag))

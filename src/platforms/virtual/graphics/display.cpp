@@ -44,7 +44,7 @@ std::unique_ptr<mg::DisplayConfiguration> mgv::Display::configuration() const
 bool mgv::Display::apply_if_configuration_preserves_display_buffers(
     const mir::graphics::DisplayConfiguration &)
 {
-    return false;
+    return true;
 }
 
 void mgv::Display::configure(mir::graphics::DisplayConfiguration const&)
@@ -67,5 +67,5 @@ void mgv::Display::resume()
 
 std::shared_ptr<mg::Cursor> mgv::Display::create_hardware_cursor()
 {
-    return std::shared_ptr<Cursor>();
+    return nullptr;
 }
