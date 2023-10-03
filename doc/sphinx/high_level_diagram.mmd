@@ -30,10 +30,6 @@ classDiagram
         class X11DisplayPlatform
         class WaylandDisplayPlatform
     }
-    <<abstract>> DisplayPlatform
-    <<abstract>> Display
-    <<abstract>> DisplayBuffer
-
     ServerConfiguration *-- DisplayPlatform
     ServerConfiguration *-- MultiplexingDisplay
     DisplayPlatform *-- Display
@@ -129,7 +125,6 @@ classDiagram
         class Renderer
         class GlRenderer
     }
-    <<abstract>> Renderer
     DefaultDisplayBufferCompositorFactory *-- RendererFactory
     RendererFactory <-- Renderer
     Renderer <|-- GlRenderer

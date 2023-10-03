@@ -114,6 +114,7 @@ custom_extensions = [
     'breathe',
     'exhale',
     'sphinx.ext.graphviz',
+    'sphinxcontrib.mermaid'
 ]
 
 # Add files or directories that should be excluded from processing.
