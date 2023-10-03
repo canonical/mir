@@ -19,11 +19,11 @@ This document is intended to provide contributors to *Mir* an overview of *Mir*'
 ## `/examples`
 - A collection of demo *Mir* compositors that are used as examples of how one might build a true compositor. Examples include:
   - `miral-app`
-  - `miral-shel`
+  - `miral-shell`
   - `mir_demo_server`
 
 ## `/tests`
-- Unit tests for the entire project.
+- Tests for the project, including unit tests, integration tests, acceptance tests, and test framework.
 
 # Libraries
 The following is the library tree:
@@ -124,12 +124,6 @@ The following is the library tree:
   - `src/include/server/mir/input`
   - `src/server/input`
   
-## mirfrontend
-- TODO: How do I describe this one?
-- Directories:
-  - `src/include/server/mir/frontend`
-  - `src/server/frontend`
-  
 ## mirfrontend-wayland
 - The *Mir* implementation of the wayland protocol.
 - The `WaylandConnector` class is the glue between the compositor and the specific details of the wayland protocol.
@@ -152,7 +146,7 @@ The following is the library tree:
   - `src/server/shell`
   
 ## mirshelldecoration
-- Manages the decoration of *Mir*'s windows
+- Manages *Mir*'s server-side decoration of windows. Currently only used for X11 clients.
 - Directories:
   - `src/server/shell/decoration`
 
@@ -175,21 +169,6 @@ The following is the library tree:
 - Default logging and reporting facilities
 - Directories:
   - `src/server/report`
-
-## mirlttng
-- Support for LTTng
-- Directories:
-  - `src/server/report/lttng`
-
-## mirlogging
-- Logging facilities
-- Directories
-  - `src/server/report/logging`
-  
-## mirnullreport
-- A null implementation of the reporting facilities
-- Directories:
-  - `src/server/report/null`
 
 ## mirconsole
 - Handles `logind` and virtual-terminal related tasks for the compositor
@@ -218,35 +197,10 @@ The following is the library tree:
 - Directories:
   - `src/wayland`
 
-## graphics-gbm-kms
-- GBM/KMS display platform for Mir
-- This is the main display platform that one would expect to use
-- Directories:
-  - `src/platforms/gbm-kms`
-
-## graphics-gbm-kms
-- EglStreams/KMS display platform for Mir
-- This is an Nvidia-specific platform
-- Directories:
-  - `src/platforms/eglstreams-kms`
-
-## graphics-x11
-- An X11-based display/input platform
-- Primary platform used for testing
-- Directories:
-  - `src/platforms/x11`
-  
-## graphics-wayland
-- A Wayland-based display/input platform
-- Directories:
-  - `src/platforms/wayland`
-
-## input-evdev
-- A `libinput` based input platform
-- Directories
-  - `src/platforms/evdev`
-  
-## renderer-egl-generic
-- TODO: What do I put here?
-- Directories:
-  - `src/platforms/renderer-generic-egl`
+## platforms (the directory, not a namespace)
+- A **platform** is a backend that the compositor selects at runtime
+- There are three distinct platforms that the compositor makes use of:
+  - *DisplayPlatform*: determines what the compositor is rendering *to* (e.g gbm-kms, x11, wayland)
+  - *InputPlatform*: determines how the compositor receives input (e.g. evdev, X11, wayland)
+  - *RenderingPlatform*: determines how we render (e.g. renderer-egl-generic)
+- The platform is loaded from a `.so` file at runtime
