@@ -25,6 +25,7 @@
 #include <xkbcommon/xkbcommon.h>
 #include <xkbcommon/xkbcommon-compose.h>
 #include <mutex>
+#include <optional>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -111,7 +112,7 @@ private:
     std::shared_ptr<xkb_keymap> default_compiled_keymap;
     XKBComposeTablePtr compose_table;
     MirXkbModifiers xkb_modifiers_;
-    MirInputDeviceId last_device_id;
+    std::optional<MirInputDeviceId> last_device_id;
 
     mir::optional_value<MirInputEventModifiers> modifier_state;
     std::unordered_map<MirInputDeviceId, std::unique_ptr<XkbMappingState>> device_mapping;
