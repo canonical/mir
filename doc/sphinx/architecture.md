@@ -47,13 +47,11 @@ The `mirserver` library includes a number of concepts that are key to handling *
 - [Frontend Wayland](#frontend-wayland)
 - [Frontend XWayland](#frontend-xwayland)
 - [Shell](#shell)
-- [Shell Decoration](#shell-decoration)
 - [Scene](#scene)
 - [Graphics](#graphics)
 - [Report](#report)
 - [Console](#console)
-- [GL](#gl)
-- [RendererGL](#renderergl)
+- [RendererGL](#renderer-gl)
 - [Wayland Protocol Generation](#wayland-protocol-generation)
 
 ## Platforms
@@ -124,11 +122,6 @@ The `mirserver` library includes a number of concepts that are key to handling *
   - `src/include/server/mir/shell`
   - `src/server/shell`
   
-### Shell Decoration
-- Manages *Mir*'s server-side decoration of windows. Currently only used for X11 clients.
-- Directories:
-  - `src/server/shell/decoration`
-
 ### Scene
 - The `Scene` provides an interface for the `Compositor` to access the list of renderable items
   - These renderables are derived from the surfaces that were added to the `Shell`.
@@ -153,14 +146,10 @@ The `mirserver` library includes a number of concepts that are key to handling *
 - Handles `logind` and virtual-terminal related tasks for the compositor
 - Directories:
   - `src/server/console`
-
-### GL
-- A short list of helpers for GL things
-- Directories:
-  - `src/gl`
   
-### RendererGL
-- The only supported `Renderer` type for now
+### Renderer GL
+- The only supported `Renderer` type
+- This is used by the compositor to build the final image
 - Future renderers will be found alongside it in the `src/renderers` directory
 - Directories:
   - `src/renderers/gl`
