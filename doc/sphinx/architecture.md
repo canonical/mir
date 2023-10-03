@@ -51,13 +51,7 @@ The following is the library tree:
     ├── mirgl
     └── mirrenderergl
 ├── mirplatform
-├── mirwayland
-├── graphics-gbm-kms
-├── graphics-eglstreamkms
-├── graphics-x11
-├── graphics-wayland
-├── input-evdev
-└── renderer-egl-generic
+└──  mirwayland
 ```
 
 ## miral

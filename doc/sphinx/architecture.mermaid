@@ -1,0 +1,135 @@
+classDiagram
+    %% Miral
+    namespace miral {
+        class MirRunner
+        class SystemCompositorWindowManager
+        class WindowManagementPolicy
+    }
+
+    SystemCompositorWindowManager *-- WindowManagementPolicy
+
+    %% mir high level
+    namespace server {
+        class Server
+        class ServerConfiguration
+    }
+
+    MirRunner *-- Server
+    Server *-- ServerConfiguration
+
+
+    %% Graphics
+    namespace graphics {
+        class MultiplexingDisplay
+        class DisplayPlatform
+        class Display
+        class DisplayBuffer
+        class MultiplexingDisplay
+
+        class GbmDisplayPlatform
+        class X11DisplayPlatform
+        class WaylandDisplayPlatform
+    }
+    <<abstract>> DisplayPlatform
+    <<abstract>> Display
+    <<abstract>> DisplayBuffer
+
+    ServerConfiguration *-- DisplayPlatform
+    ServerConfiguration *-- MultiplexingDisplay
+    DisplayPlatform *-- Display
+    Display *-- DisplayBuffer
+    Display <|-- MultiplexingDisplay
+    MultiplexingDisplay *-- Display
+
+    DisplayPlatform <|-- GbmDisplayPlatform
+    DisplayPlatform <|-- X11DisplayPlatform
+    DisplayPlatform <|-- WaylandDisplayPlatform
+
+    %% Input
+    namespace input {
+        class BasicSeat
+        class InputDispatcher
+        class DefaultInputDeviceHub
+        class InputPlatform
+        class DefaultInputManager
+        class MultiplexingDispatchable
+
+        class EvdevInputPlatform
+        class X11InputPlatform
+        class WaylandInputPlatform
+    }
+
+    InputPlatform <|-- EvdevInputPlatform
+    InputPlatform <|-- X11InputPlatform
+    InputPlatform <|-- WaylandInputPlatform
+    BasicSeat *-- InputDispatcher
+    DefaultInputDeviceHub *-- BasicSeat
+    DefaultInputManager *-- InputPlatform
+    DefaultInputManager *-- MultiplexingDispatchable
+    DefaultInputDeviceHub *-- MultiplexingDispatchable
+    ServerConfiguration *-- InputPlatform
+    ServerConfiguration *-- DefaultInputDeviceHub
+    ServerConfiguration *-- InputDispatcher
+    ServerConfiguration *-- BasicSeat
+
+
+    %% Compositor
+    namespace compositor {
+        class MultithreadedCompositor
+        class DefaultDisplayBufferCompositorFactory
+    }
+    ServerConfiguration *-- MultithreadedCompositor
+    MultithreadedCompositor *-- SurfaceStack
+    MultithreadedCompositor *-- MultiplexingDisplay
+    MultithreadedCompositor *-- DefaultDisplayBufferCompositorFactory
+
+
+    %% Shell
+    namespace shell {
+        class AbstractShell
+        class WindowManager
+    }
+
+    ServerConfiguration *-- AbstractShell
+    AbstractShell *-- WindowManager
+    WindowManager <|-- SystemCompositorWindowManager
+    InputDispatcher *-- AbstractShell
+
+
+    %% Scene
+    namespace scene {
+        class SurfaceStack
+    }
+
+    MultithreadedCompositor *-- SurfaceStack
+    ServerConfiguration *-- SurfaceStack
+    AbstractShell *-- SurfaceStack
+
+    %% Frontend wayland
+    namespace frontend_wayland {
+        class WaylandConnector
+    }
+
+    WaylandConnector *-- AbstractShell
+    ServerConfiguration *-- WaylandConnector
+
+
+    %% Frontend XWayland
+    namespace frontend_xwayland {
+        class XWaylandConnector
+    }
+
+    XWaylandConnector *-- AbstractShell
+    ServerConfiguration *-- XWaylandConnector
+
+
+    %% Renderer
+    namespace renderer {
+        class RendererFactory
+        class Renderer
+        class GlRenderer
+    }
+    <<abstract>> Renderer
+    DefaultDisplayBufferCompositorFactory *-- RendererFactory
+    RendererFactory <-- Renderer
+    Renderer <|-- GlRenderer
