@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_PLATFORMS_VIRTUAL_DISPLAY_H_
-#define MIR_PLATFORMS_VIRTUAL_DISPLAY_H_
+#ifndef MIR_GRAPHICS_VIRT_DISPLAY_H_
+#define MIR_GRAPHICS_VIRT_DISPLAY_H_
 
 #include "platform.h"
 #include <mir/graphics/display.h>
@@ -30,7 +30,7 @@ namespace virt
 class Display : public mir::graphics::Display
 {
 public:
-    Display(std::vector<VirtualOutputConfig> output_sizes);
+    explicit Display(std::vector<VirtualOutputConfig> output_sizes);
     void for_each_display_sync_group(const std::function<void(DisplaySyncGroup &)> &f) override;
     std::unique_ptr<mir::graphics::DisplayConfiguration> configuration() const override;
     bool apply_if_configuration_preserves_display_buffers(const mir::graphics::DisplayConfiguration &conf) override;
@@ -50,4 +50,4 @@ private:
 }
 
 
-#endif //MIR_PLATFORMS_VIRTUAL_DISPLAY_H_
+#endif //MIR_GRAPHICS_VIRT_DISPLAY_H_
