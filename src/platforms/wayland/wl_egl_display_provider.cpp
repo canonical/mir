@@ -6,6 +6,8 @@
 #include <EGL/egl.h>
 #include <wayland-egl-core.h>
 
+#include <optional>
+
 namespace mg = mir::graphics;
 namespace mgw = mir::graphics::wayland;
 namespace geom = mir::geometry;
