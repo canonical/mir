@@ -50,7 +50,7 @@ auto egl_display_from_platforms(std::vector<std::shared_ptr<mg::DisplayInterface
         BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to create any EGL display"}));
     }
     return dpy;
-} 
+}
 
 auto make_share_only_context(EGLDisplay dpy, std::optional<EGLContext> share_context) -> EGLContext
 {
@@ -69,12 +69,12 @@ auto make_share_only_context(EGLDisplay dpy, std::optional<EGLContext> share_con
 
     EGLConfig cfg;
     EGLint num_configs;
-    
+
     if (eglChooseConfig(dpy, config_attr, &cfg, 1, &num_configs) != EGL_TRUE || num_configs != 1)
     {
         BOOST_THROW_EXCEPTION((mg::egl_error("Failed to find any matching EGL config")));
     }
-    
+
     auto ctx = eglCreateContext(dpy, cfg, share_context.value_or(EGL_NO_CONTEXT), context_attr);
     if (ctx == EGL_NO_CONTEXT)
     {
