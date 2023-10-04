@@ -32,7 +32,6 @@ bool mi::EventFilterChainDispatcher::handle(MirEvent const& event)
     std::lock_guard lg(filter_guard);
     
     auto it = filters.begin();
-    int idx = 0;
     while (it != filters.end())
     {
         auto filter = (*it).lock();
@@ -43,7 +42,6 @@ bool mi::EventFilterChainDispatcher::handle(MirEvent const& event)
         }
         if (filter->handle(event)) return true;
         ++it;
-        idx++;
     }
     return false;
 }
