@@ -16,7 +16,6 @@
 
 #include "rendering_platform.h"
 #include "buffer_allocator.h"
-#include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/renderer/gl/context.h"
@@ -136,17 +135,13 @@ private:
 
 auto maybe_make_dmabuf_provider(
     EGLDisplay dpy,
-    std::shared_ptr<mg::EGLExtensions> egl_extensions,
     std::shared_ptr<mgc::EGLContextExecutor> egl_delegate)
     -> std::shared_ptr<mg::DMABufEGLProvider>
 {
     try
     {
-        mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
         return std::make_shared<mg::DMABufEGLProvider>(
             dpy,
-            std::move(egl_extensions),
-            modifier_ext,
             std::move(egl_delegate),
             [](mg::DRMFormat, std::span<uint64_t const>, geom::Size) -> std::shared_ptr<mg::DMABufBuffer>
             {
@@ -173,7 +168,6 @@ mge::RenderingPlatform::RenderingPlatform(std::vector<std::shared_ptr<DisplayInt
       dmabuf_provider{
           maybe_make_dmabuf_provider(
               dpy,
-              std::make_shared<mg::EGLExtensions>(),
               std::make_shared<mgc::EGLContextExecutor>(ctx->make_share_context()))}
 {
 }

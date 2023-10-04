@@ -20,7 +20,6 @@
 #include "egl_buffer_copy.h"
 #include "mir/graphics/egl_context_executor.h"
 #include "mir/graphics/egl_error.h"
-#include "mir/graphics/egl_extensions.h"
 
 #include <algorithm>
 #include <exception>
@@ -315,7 +314,6 @@ public:
 private:
     std::shared_ptr<mg::common::EGLContextExecutor> const egl_delegate;
     // State accessed only on the EGL thread
-    std::shared_ptr<mg::EGLExtensions> const egl_extensions;
     struct State
     {
         ProgramHandle prog;

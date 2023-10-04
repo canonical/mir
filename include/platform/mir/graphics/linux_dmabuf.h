@@ -26,7 +26,6 @@
 
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/drm_formats.h"
-#include "mir/graphics/egl_extensions.h"
 
 namespace mir
 {
@@ -61,8 +60,6 @@ public:
         std::function<std::shared_ptr<DMABufBuffer>(DRMFormat, std::span<uint64_t const>, geometry::Size)>;
     DMABufEGLProvider(
         EGLDisplay dpy,
-        std::shared_ptr<EGLExtensions> egl_extensions,
-        EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext,
         std::shared_ptr<common::EGLContextExecutor> egl_delegate,
         EGLImageAllocator allocate_importable_image);
 
@@ -89,7 +86,6 @@ public:
      auto supported_formats() const -> DmaBufFormatDescriptors const&;
 private:
     EGLDisplay const dpy;
-    std::shared_ptr<EGLExtensions> const egl_extensions;
     std::unique_ptr<DmaBufFormatDescriptors> const formats;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     EGLImageAllocator allocate_importable_image;

@@ -25,7 +25,6 @@
 #include "wayland_wrapper.h"
 #include "mir/wayland/protocol_error.h"
 #include "mir/wayland/client.h"
-#include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/texture.h"
 #include "mir/graphics/program_factory.h"
@@ -35,6 +34,7 @@
 #include "mir/graphics/egl_context_executor.h"
 #include <cstdint>
 #include <stdexcept>
+#include <boost/throw_exception.hpp>
 
 #define MIR_LOG_COMPONENT "linux-dmabuf-import"
 #include "mir/log.h"
@@ -56,11 +56,10 @@ class mg::DmaBufFormatDescriptors
 {
 public:
     DmaBufFormatDescriptors(
-        EGLDisplay dpy,
-        mg::EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext)
+        EGLDisplay dpy)
     {
         EGLint num_formats;
-        if (dmabuf_ext.eglQueryDmaBufFormatsExt(dpy, 0, nullptr, &num_formats) != EGL_TRUE)
+        if (eglQueryDmaBufFormatsEXT(dpy, 0, nullptr, &num_formats) != EGL_TRUE)
         {
             BOOST_THROW_EXCEPTION((mg::egl_error("Failed to query number of dma-buf formats")));
         }
@@ -71,7 +70,7 @@ public:
         resize(num_formats);
 
         EGLint returned_formats;
-        if (dmabuf_ext.eglQueryDmaBufFormatsExt(
+        if (eglQueryDmaBufFormatsEXT(
             dpy, formats.size(), formats.data(), &returned_formats) != EGL_TRUE)
         {
             BOOST_THROW_EXCEPTION((mg::egl_error("Failed to list dma-buf formats")));
@@ -92,7 +91,7 @@ public:
 
             EGLint num_modifiers;
             if (
-                dmabuf_ext.eglQueryDmaBufModifiersExt(
+                eglQueryDmaBufModifiersEXT(
                     dpy,
                     format,
                     0,
@@ -107,7 +106,7 @@ public:
 
             EGLint returned_modifiers;
             if (
-                dmabuf_ext.eglQueryDmaBufModifiersExt(
+                eglQueryDmaBufModifiersEXT(
                     dpy,
                     format,
                     modifiers.size(),
@@ -405,8 +404,7 @@ auto import_egl_image(
     mg::DRMFormat format,
     std::optional<uint64_t> modifier,
     std::vector<PlaneInfo> const& planes,
-    EGLDisplay dpy,
-    mg::EGLExtensions const& egl_extensions) -> EGLImageKHR
+    EGLDisplay dpy) -> EGLImageKHR
 {
     std::vector<EGLint> attributes;
 
@@ -437,7 +435,7 @@ auto import_egl_image(
         }
     }
     attributes.push_back(EGL_NONE);
-    EGLImage image = egl_extensions.base(dpy).eglCreateImageKHR(
+    EGLImage image = eglCreateImageKHR(
         dpy,
         EGL_NO_CONTEXT,
         EGL_LINUX_DMA_BUF_EXT,
@@ -843,7 +841,6 @@ class DMABufTex : public mg::gl::Texture
 public:
     DMABufTex(
         EGLDisplay dpy,
-        mg::EGLExtensions const& extensions,
         mg::DMABufBuffer const& dma_buf,
         BufferGLDescription const& descriptor,
         std::shared_ptr<mgc::EGLContextExecutor> egl_delegate)
@@ -862,15 +859,14 @@ public:
             dma_buf.format(),
             dma_buf.modifier(),
             dma_buf.planes(),
-            dpy,
-            extensions);
+            dpy);
 
         glBindTexture(target, tex);
-        extensions.base(dpy).glEGLImageTargetTexture2DOES(target, image);
+        glEGLImageTargetTexture2DOES(target, image);
 
         // tex is now an EGLImage sibling, so we can free the EGLImage without
         // freeing the backing data.
-        extensions.base(dpy).eglDestroyImageKHR(dpy, image);
+        eglDestroyImageKHR(dpy, image);
 
         glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -927,7 +923,6 @@ public:
     // Note: Must be called with a current EGL context
     DmabufTexBuffer(
         EGLDisplay dpy,
-        mg::EGLExtensions const& extensions,
         mg::DMABufBuffer const& dma_buf,
         BufferGLDescription const& descriptor,
         std::shared_ptr<mg::DMABufEGLProvider> provider,
@@ -935,7 +930,7 @@ public:
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release)
         : dpy{dpy},
-          tex{dpy, extensions, dma_buf, descriptor, std::move(egl_delegate)},
+          tex{dpy, dma_buf, descriptor, std::move(egl_delegate)},
           provider_{std::move(provider)},
           on_consumed{std::move(on_consumed)},
           on_release{std::move(on_release)},
@@ -1108,13 +1103,10 @@ void mg::LinuxDmaBufUnstable::bind(wl_resource* new_resource)
 
 mg::DMABufEGLProvider::DMABufEGLProvider(
     EGLDisplay dpy,
-    std::shared_ptr<EGLExtensions> egl_extensions,
-    mg::EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext,
     std::shared_ptr<mgc::EGLContextExecutor> egl_delegate,
     EGLImageAllocator allocate_importable_image)
     : dpy{dpy},
-      egl_extensions{std::move(egl_extensions)},
-      formats{std::make_unique<DmaBufFormatDescriptors>(dpy, dmabuf_ext)},
+      formats{std::make_unique<DmaBufFormatDescriptors>(dpy)},
       egl_delegate{std::move(egl_delegate)},
       allocate_importable_image{std::move(allocate_importable_image)},
       blitter{std::make_unique<mg::EGLBufferCopier>(this->egl_delegate)}
@@ -1140,7 +1132,6 @@ auto mg::DMABufEGLProvider::import_dma_buf(
         *this);
     return std::make_shared<DmabufTexBuffer>(
         dpy,
-        *egl_extensions,
         dma_buf,
         *descriptor,
         shared_from_this(),
@@ -1156,12 +1147,11 @@ void mg::DMABufEGLProvider::validate_import(DMABufBuffer const& dma_buf)
         dma_buf.format(),
         dma_buf.modifier(),
         dma_buf.planes(),
-        dpy,
-        *egl_extensions);
+        dpy);
     if (image != EGL_NO_IMAGE_KHR)
     {
         // We can throw this image away immediately
-        egl_extensions->base(dpy).eglDestroyImageKHR(dpy, image);
+        eglDestroyImageKHR(dpy, image);
     }
 }
 
@@ -1186,7 +1176,6 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<Buffer> buffer)
             dmabuf_tex->as_texture();
             return std::make_shared<DMABufTex>(
                 dpy,
-                *egl_extensions,
                 *dmabuf_tex,
                 *descriptor,
                 egl_delegate);
@@ -1233,15 +1222,13 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<Buffer> buffer)
                 dmabuf_tex->format(),
                 dmabuf_tex->modifier(),
                 dmabuf_tex->planes(),
-                importing_provider->dpy,
-                *importing_provider->egl_extensions);
+                importing_provider->dpy);
             auto importable_image = import_egl_image(
                 importable_buf->size().width.as_int(), importable_buf->size().height.as_int(),
                 importable_buf->format(),
                 importable_buf->modifier(),
                 importable_buf->planes(),
-                importing_provider->dpy,
-                *importing_provider->egl_extensions);
+                importing_provider->dpy);
             auto sync = importing_provider->blitter->blit(src_image, importable_image, dmabuf_tex->size());
             if (sync)
             {
@@ -1263,7 +1250,6 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<Buffer> buffer)
                 dmabuf_tex->as_texture();
                 return std::make_shared<DMABufTex>(
                     dpy,
-                    *egl_extensions,
                     *importable_dmabuf,
                     *descriptor,
                     egl_delegate);
