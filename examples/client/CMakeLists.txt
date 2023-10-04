@@ -33,3 +33,8 @@ target_include_directories(mir_demo_client_wayland PRIVATE ${CMAKE_CURRENT_BINAR
 
 mir_add_wrapped_executable(mir_demo_client_wayland_egl_spinner spinner.cpp)
 target_link_libraries     (mir_demo_client_wayland_egl_spinner miral-spinner)
+
+
+mir_add_wrapped_executable(mir_shell_demo_client mir_shell_demo.cpp)
+target_link_libraries     (mir_shell_demo_client mir_demo_wayland_extensions)
+target_include_directories(mir_shell_demo_client PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
