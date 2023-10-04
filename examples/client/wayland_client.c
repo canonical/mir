@@ -467,11 +467,19 @@ void handle_xdg_toplevel_configure_bounds(void *data,
     (void)width_, (void)height_;
 }
 
+void handle_xdg_toplevel__capabilities(void *data,
+                        struct xdg_toplevel *xdg_toplevel,
+                        struct wl_array *capabilities)
+{
+    (void)data, (void)xdg_toplevel, (void)capabilities;
+}
+
 static struct xdg_toplevel_listener const shell_toplevel_listener =
 {
     handle_xdg_toplevel_configure,
     handle_xdg_toplevel_close,
     handle_xdg_toplevel_configure_bounds,
+    handle_xdg_toplevel__capabilities,
 };
 
 int main(int argc, char** argv)

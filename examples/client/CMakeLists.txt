@@ -1,6 +1,6 @@
 set(OUTPUT_PATH_HEADER "${CMAKE_CURRENT_BINARY_DIR}/xdg-shell.h")
 set(OUTPUT_PATH_SRC "${CMAKE_CURRENT_BINARY_DIR}/xdg-shell.c")
-set(PROTOCOL_PATH "/usr/share/wayland-protocols/stable/xdg-shell/xdg-shell.xml")
+set(PROTOCOL_PATH "${PROJECT_SOURCE_DIR}/src/wayland/protocol/xdg-shell.xml")
 
 add_custom_command(
       OUTPUT "${OUTPUT_PATH_HEADER}" "${OUTPUT_PATH_SRC}"
