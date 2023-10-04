@@ -62,7 +62,7 @@ void add_graphics_platform_options(boost::program_options::options_description& 
             ->default_value(std::vector<std::string>{"1280x1024"}, "1280x1024")
             ->multitoken(),
          "[mir-on-virtual specific] Colon separated list of WIDTHxHEIGHT sizes for the \"output\" size."
-         "Multiple outputs may be specified by providing the argument multiple times.");
+         " Multiple outputs may be specified by providing the argument multiple times.");
 }
 
 auto probe_display_platform(
