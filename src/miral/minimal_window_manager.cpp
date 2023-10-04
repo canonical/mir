@@ -272,6 +272,11 @@ bool miral::MinimalWindowManager::begin_pointer_resize(
 auto miral::MinimalWindowManager::confirm_inherited_move(WindowInfo const& window_info, Displacement movement)
 -> Rectangle
 {
+    // Satellite windows don't need to move with their parent
+    if (window_info.type() == mir_window_type_satellite)
+    {
+        return {window_info.window().top_left(), window_info.window().size()};
+    }
     return {window_info.window().top_left()+movement, window_info.window().size()};
 }
 
