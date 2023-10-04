@@ -14,116 +14,133 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-
 #include <fcntl.h>
 #include <memory>
 #include <signal.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 #include <wayland-client.h>
 #include <wayland-client-core.h>
 #include "xdg-shell.h"
+#include "mir-shell.h"
 
-static int const pixel_size = 4;
-#define NO_OF_BUFFERS 4
-
-static inline uint32_t min(uint32_t a, uint32_t b)
+namespace
 {
-    return a < b ? a : b;
+int const pixel_size = 4;
+int const no_of_buffers = 4;
+
+auto const display = wl_display_connect(NULL);
+
+namespace globals
+{
+wl_compositor* compositor;
+wl_shm* shm;
+wl_seat* seat;
+wl_output* output;
+xdg_wm_base* wm_base;
+zmir_mir_shell_v1* mir_shell;
+
+void init();
 }
 
-static struct globals
-{
-    struct wl_compositor* compositor;
-    struct wl_shm* shm;
-    struct wl_seat* seat;
-    struct wl_output* output;
-    struct xdg_wm_base *xdg_wm_base;
-} globals;
-
-void check_globals()
-{
-    bool fail = false;
-    if (!globals.compositor) { puts("ERROR: no wl_compositor*"); fail = true; }
-    if (!globals.shm) { puts("ERROR: no wl_shm*"); fail = true; }
-    if (!globals.seat) { puts("ERROR: no wl_seat*"); fail = true; }
-    if (!globals.output) { puts("ERROR: no wl_output*"); fail = true; }
-    if (!globals.xdg_wm_base) { puts("ERROR: no xdg_wm_base*"); fail = true; }
-
-    if (fail) abort();
-}
-
-static void handle_xdg_wm_base_ping(void* _, struct xdg_wm_base* shell, uint32_t serial)
-{
-    (void)_;
-    xdg_wm_base_pong(shell, serial);
-}
-
-static struct xdg_wm_base_listener const shell_listener =
-{
-    &handle_xdg_wm_base_ping,
-};
-
-static void new_global(
-    void* data,
-    struct wl_registry* registry,
+void handle_registry_global(
+    wl_registry* registry,
     uint32_t id,
     char const* interface,
     uint32_t version)
 {
-    (void)data;
-
     if (strcmp(interface, "wl_compositor") == 0)
     {
-        globals.compositor = static_cast<wl_compositor*>(wl_registry_bind(registry, id, &wl_compositor_interface, min(version, 3)));
+        globals::compositor = static_cast<wl_compositor*>(wl_registry_bind(
+            registry, id, &wl_compositor_interface, std::min(version, 3u)));
     }
     else if (strcmp(interface, "wl_shm") == 0)
     {
-        globals.shm = static_cast<wl_shm*>(wl_registry_bind(registry, id, &wl_shm_interface, min(version, 1)));
+        globals::shm = static_cast<wl_shm*>(wl_registry_bind(registry, id, &wl_shm_interface, std::min(version, 1u)));
         // Normally we'd add a listener to pick up the supported formats here
         // As luck would have it, I know that argb8888 is the only format we support :)
     }
     else if (strcmp(interface, "wl_seat") == 0)
     {
-        globals.seat = static_cast<wl_seat*>(wl_registry_bind(registry, id, &wl_seat_interface, min(version, 4)));
+        globals::seat = static_cast<wl_seat*>(wl_registry_bind(registry, id, &wl_seat_interface, std::min(version, 4u)));
     }
     else if (strcmp(interface, "wl_output") == 0)
     {
-        globals.output = static_cast<wl_output*>(wl_registry_bind(registry, id, &wl_output_interface, min(version, 2)));
+        globals::output = static_cast<wl_output*>(wl_registry_bind(
+            registry, id, &wl_output_interface, std::min(version, 2u)));
     }
     else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
     {
-        globals.xdg_wm_base = static_cast<xdg_wm_base*>(wl_registry_bind(registry, id, &xdg_wm_base_interface, min(version, 1)));
-        xdg_wm_base_add_listener(globals.xdg_wm_base, &shell_listener, NULL);
+        globals::wm_base = static_cast<xdg_wm_base*>(wl_registry_bind(
+            registry, id, &xdg_wm_base_interface, std::min(version, 1u)));
+    }
+    else if (strcmp(interface, zmir_mir_shell_v1_interface.name) == 0)
+    {
+        globals::mir_shell = static_cast<zmir_mir_shell_v1*>(wl_registry_bind(
+            registry, id, &zmir_mir_shell_v1_interface, std::min(version, 1u)));
     }
 }
 
-static void global_remove(
-    void* data,
-    struct wl_registry* registry,
-    uint32_t name)
+wl_registry_listener const registry_listener =
 {
-    (void)data;
-    (void)registry;
-    (void)name;
-}
-
-static struct wl_registry_listener const registry_listener = {
-    .global = new_global,
-    .global_remove = global_remove
+    .global = [](void*, auto... args) { handle_registry_global(args...); },
+    .global_remove = [](auto...) {},
 };
 
-static struct wl_shm_pool*
-make_shm_pool(struct wl_shm* shm, int size, void **data)
+xdg_wm_base_listener const shell_listener =
+{
+    .ping = [](void*, xdg_wm_base* shell, uint32_t serial) { xdg_wm_base_pong(shell, serial); }
+};
+
+void globals::init()
+{
+    auto const registry = wl_display_get_registry(display);
+
+    wl_registry_add_listener(registry, &registry_listener, NULL);
+
+    wl_display_roundtrip(display);
+
+    bool fail = false;
+    if (!compositor)
+    {
+        puts("ERROR: no wl_compositor*");
+        fail = true;
+    }
+    if (!shm)
+    {
+        puts("ERROR: no wl_shm*");
+        fail = true;
+    }
+    if (!seat)
+    {
+        puts("ERROR: no wl_seat*");
+        fail = true;
+    }
+    if (!output)
+    {
+        puts("ERROR: no wl_output*");
+        fail = true;
+    }
+    if (!wm_base)
+    {
+        puts("ERROR: no wm_base*");
+        fail = true;
+    }
+    if (!mir_shell)
+    {
+        puts("WARNING: no mir_shell*");
+    }
+
+    if (fail) abort();
+
+    xdg_wm_base_add_listener(globals::wm_base, &shell_listener, NULL);
+}
+
+wl_shm_pool* make_shm_pool(wl_shm* shm, int size, void** data)
 {
     static char* shm_dir = NULL;
     if (!shm_dir) shm_dir = getenv("XDG_RUNTIME_DIR");
@@ -131,7 +148,8 @@ make_shm_pool(struct wl_shm* shm, int size, void **data)
     int fd = open(shm_dir, O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU);
 
     // Workaround for filesystems that don't support O_TMPFILE
-    if (fd < 0) {
+    if (fd < 0)
+    {
         char template_filename[] = "/dev/shm/mir-buffer-XXXXXX";
         fd = mkostemp(template_filename, O_CLOEXEC);
         if (fd != -1)
@@ -144,141 +162,158 @@ make_shm_pool(struct wl_shm* shm, int size, void **data)
         }
     }
 
-    if (fd < 0) {
+    if (fd < 0)
+    {
         return NULL;
     }
 
     posix_fallocate(fd, 0, size);
 
     *data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (*data == MAP_FAILED) {
+    if (*data == MAP_FAILED)
+    {
         close(fd);
         return NULL;
     }
 
-    struct wl_shm_pool *pool = wl_shm_create_pool(shm, fd, size);
+    auto const pool = wl_shm_create_pool(shm, fd, size);
 
     close(fd);
 
     return pool;
 }
 
-typedef struct buffer
+class pulsing_window
 {
-    struct wl_buffer* buffer;
-    bool available;
+public:
+    pulsing_window(int32_t width, int32_t height);
+
+private:
+    struct buffer
+    {
+        wl_buffer* buffer;
+        bool available;
+        int width;
+        int height;
+        void* content_area;
+    } buffers[no_of_buffers];
+    wl_surface* surface;
     int width;
     int height;
-    void* content_area;
-} buffer;
+    unsigned char current_intensity = 128;
+    bool waiting_for_buffer = false;
 
-typedef struct draw_context
-{
-    struct wl_display* display;
-    struct wl_surface* surface;
-    struct wl_callback* new_frame_signal;
-    int width;
-    int height;
-    buffer buffers[NO_OF_BUFFERS];
-    bool waiting_for_buffer;
-} draw_context;
+    void draw_new_stuff(wl_callback* callback, uint32_t time);
+    void update_free_buffers(wl_buffer* buffer);
+    void prepare_buffer(buffer& b);
+    void handle_xdg_toplevel_configure(xdg_toplevel*, int32_t width_, int32_t height_, wl_array*);
+    auto find_free_buffer() -> buffer*;
 
-
-static void draw_new_stuff(void* data, struct wl_callback* callback, uint32_t time);
-
-static const struct wl_callback_listener frame_listener =
-{
-    .done = &draw_new_stuff
+    static xdg_toplevel_listener const shell_toplevel_listener;
+    static wl_callback_listener const frame_listener;
+    static wl_buffer_listener const buffer_listener;
+    static xdg_surface_listener const shell_surface_listener;
 };
 
-static void update_free_buffers(void* data, struct wl_buffer* buffer)
+xdg_toplevel_listener const pulsing_window::shell_toplevel_listener =
 {
-    auto const ctx = static_cast<draw_context*>(data);
-    for (int i = 0; i < NO_OF_BUFFERS ; ++i)
+    .configure = [](void* ctx, auto... args) { static_cast<pulsing_window*>(ctx)->handle_xdg_toplevel_configure(args...); },
+    .close = [](auto...){},
+    .configure_bounds = [](auto...){},
+    .wm_capabilities = [](auto...){},
+};
+
+wl_callback_listener const pulsing_window::frame_listener =
+{
+    .done = [](void* ctx, auto... args) { static_cast<pulsing_window*>(ctx)->draw_new_stuff(args...); },
+};
+
+wl_buffer_listener const pulsing_window::buffer_listener =
+{
+    .release = [](void* ctx, auto... args) { static_cast<pulsing_window*>(ctx)->update_free_buffers(args...); },
+};
+
+xdg_surface_listener const pulsing_window::shell_surface_listener =
+{
+    .configure= [](auto...){},
+};
+
+void pulsing_window::update_free_buffers(wl_buffer* buffer)
+{
+    for (int i = 0; i < no_of_buffers; ++i)
     {
-        if (ctx->buffers[i].buffer == buffer)
+        if (buffers[i].buffer == buffer)
         {
-            ctx->buffers[i].available = true;
+            buffers[i].available = true;
         }
     }
 
-    if (ctx->waiting_for_buffer)
+    if (waiting_for_buffer)
     {
-        struct wl_callback* fake_frame = wl_display_sync(ctx->display);
-        wl_callback_add_listener(fake_frame, &frame_listener, ctx);
+        wl_callback* fake_frame = wl_display_sync(display);
+        wl_callback_add_listener(fake_frame, &frame_listener, this);
     }
 
-    ctx->waiting_for_buffer = false;
+    waiting_for_buffer = false;
 }
 
-static struct wl_buffer_listener const buffer_listener = {
-    .release = update_free_buffers
-};
-
-static void prepare_buffer(buffer* b, draw_context* ctx)
+void pulsing_window::prepare_buffer(buffer& b)
 {
     void* pool_data = NULL;
-    struct wl_shm_pool* shm_pool = make_shm_pool(globals.shm, ctx->width * ctx->height * pixel_size, &pool_data);
+    wl_shm_pool* shm_pool = make_shm_pool(globals::shm, width * height * pixel_size, &pool_data);
 
-    b->buffer = wl_shm_pool_create_buffer(shm_pool, 0, ctx->width, ctx->height, ctx->width*pixel_size, WL_SHM_FORMAT_ARGB8888);
-    b->available = true;
-    b->width = ctx->width;
-    b->height = ctx->height;
-    b->content_area = pool_data;
-    wl_buffer_add_listener(b->buffer, &buffer_listener, ctx);
+    b.buffer = wl_shm_pool_create_buffer(
+        shm_pool, 0, width, height, width * pixel_size, WL_SHM_FORMAT_ARGB8888);
+    b.available = true;
+    b.width = width;
+    b.height = height;
+    b.content_area = pool_data;
+    wl_buffer_add_listener(b.buffer, &buffer_listener, this);
     wl_shm_pool_destroy(shm_pool);
 }
 
-static buffer*
-find_free_buffer(draw_context* ctx)
+auto pulsing_window::find_free_buffer() -> buffer*
 {
-    for (buffer* b = ctx->buffers; b != ctx->buffers + NO_OF_BUFFERS ; ++b)
+    for (auto& b : buffers)
     {
-        if (b->available)
+        if (b.available)
         {
-            if (b->width != ctx->width || b->height != ctx->height)
+            if (b.width != width || b.height != height)
             {
-                wl_buffer_destroy(b->buffer);
-                prepare_buffer(b, ctx);
+                wl_buffer_destroy(b.buffer);
+                prepare_buffer(b);
             }
 
-            b->available = false;
-            return b;
+            b.available = false;
+            return &b;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
-static void draw_new_stuff(
-    void* data,
-    struct wl_callback* callback,
-    uint32_t time)
+void pulsing_window::draw_new_stuff(wl_callback* callback, uint32_t)
 {
-    (void)time;
-    static unsigned char current_value = 128;
-    auto const ctx = static_cast<draw_context*>(data);
-
-
     wl_callback_destroy(callback);
 
-    buffer* ctx_buffer = find_free_buffer(ctx);
-    if (!ctx_buffer)
+    auto const b = find_free_buffer();
+    if (!b)
     {
-        ctx->waiting_for_buffer = false;
+        waiting_for_buffer = false;
         return;
     }
 
-    memset(ctx_buffer->content_area, current_value, ctx_buffer->width * ctx_buffer->height * pixel_size);
-    ++current_value;
+    memset(b->content_area, current_intensity, width * height * pixel_size);
+    ++current_intensity;
 
-    ctx->new_frame_signal = wl_surface_frame(ctx->surface);
-    wl_callback_add_listener(ctx->new_frame_signal, &frame_listener, ctx);
-    wl_surface_attach(ctx->surface, ctx_buffer->buffer, 0, 0);
-    wl_surface_commit(ctx->surface);
+    auto const new_frame_signal = wl_surface_frame(surface);
+    wl_callback_add_listener(new_frame_signal, &frame_listener, this);
+    wl_surface_attach(surface, b->buffer, 0, 0);
+    wl_surface_commit(surface);
 }
 
-static volatile sig_atomic_t running = 0;
-static void shutdown(int signum)
+volatile sig_atomic_t running = 0;
+
+void shutdown(int signum)
 {
     if (running)
     {
@@ -287,94 +322,42 @@ static void shutdown(int signum)
     }
 }
 
-void handle_xdg_surface_configure(void* _, struct xdg_surface* shell_surface, uint32_t serial)
+void pulsing_window::handle_xdg_toplevel_configure(
+    xdg_toplevel*,
+    int32_t width_,
+    int32_t height_,
+    wl_array*)
 {
-    (void)_, (void)shell_surface, (void)serial;
+    if (width_ > 0) width = width_;
+    if (height_ > 0) height = height_;
 }
 
-static struct xdg_surface_listener const shell_surface_listener =
+pulsing_window::pulsing_window(int32_t width, int32_t height) :
+    surface{wl_compositor_create_surface(globals::compositor)},
+    width{width},
+    height{height}
 {
-    handle_xdg_surface_configure,
-};
-
-void handle_xdg_toplevel_configure(void *data,
-                  struct xdg_toplevel *xdg_toplevel,
-                  int32_t width_,
-                  int32_t height_,
-                  struct wl_array *states)
-{
-    (void)xdg_toplevel, (void)states;
-    auto const ctx = static_cast<draw_context*>(data);
-
-
-    if (width_ > 0) ctx->width = width_;
-    if (height_ > 0) ctx->height = height_;
-}
-
-void handle_xdg_toplevel_close(void *data,
-              struct xdg_toplevel *xdg_toplevel)
-{
-    (void)data, (void)xdg_toplevel;
-}
-
-void handle_xdg_toplevel_configure_bounds(void *data,
-                         struct xdg_toplevel *xdg_toplevel,
-                         int32_t width_,
-                         int32_t height_)
-{
-    (void)data, (void)xdg_toplevel;
-    (void)width_, (void)height_;
-}
-
-void handle_xdg_toplevel__capabilities(void *data,
-                        struct xdg_toplevel *xdg_toplevel,
-                        struct wl_array *capabilities)
-{
-    (void)data, (void)xdg_toplevel, (void)capabilities;
-}
-
-static struct xdg_toplevel_listener const shell_toplevel_listener =
-{
-    handle_xdg_toplevel_configure,
-    handle_xdg_toplevel_close,
-    handle_xdg_toplevel_configure_bounds,
-    handle_xdg_toplevel__capabilities,
-};
-
-int main(int argc, char** argv)
-{
-    (void)argc;
-    (void)argv;
-
-    struct wl_display* display = wl_display_connect(NULL);
-
-    struct wl_registry* registry = wl_display_get_registry(display);
-
-    wl_registry_add_listener(registry, &registry_listener, NULL);
-
-    wl_display_roundtrip(display);
-
-    check_globals();
-
-    auto const ctx = std::make_unique<draw_context>();
-    ctx->display = display;
-    ctx->surface = wl_compositor_create_surface(globals.compositor);
-    ctx->width = 400;
-    ctx->height = 400;
-
-    for (buffer* b = ctx->buffers; b != ctx->buffers + NO_OF_BUFFERS ; ++b)
+    for (buffer& b : buffers)
     {
-        prepare_buffer(b, ctx.get());
+        prepare_buffer(b);
     }
 
-    struct xdg_surface* shell_surface = xdg_wm_base_get_xdg_surface(globals.xdg_wm_base, ctx->surface);
+    auto const shell_surface = xdg_wm_base_get_xdg_surface(globals::wm_base, surface);
     xdg_surface_add_listener(shell_surface, &shell_surface_listener, NULL);
 
-    struct xdg_toplevel* shell_toplevel = xdg_surface_get_toplevel(shell_surface);
-    xdg_toplevel_add_listener(shell_toplevel, &shell_toplevel_listener, ctx.get());
+    auto const shell_toplevel = xdg_surface_get_toplevel(shell_surface);
+    xdg_toplevel_add_listener(shell_toplevel, &shell_toplevel_listener, this);
 
-    struct wl_callback* first_frame = wl_display_sync(display);
-    wl_callback_add_listener(first_frame, &frame_listener, ctx.get());
+    auto const first_frame = wl_display_sync(display);
+    wl_callback_add_listener(first_frame, &frame_listener, this);
+}
+}
+
+int main()
+{
+    globals::init();
+
+    auto const main_window = std::make_unique<pulsing_window>(400, 400);
 
     struct sigaction sig_handler_new;
     sigfillset(&sig_handler_new.sa_mask);
