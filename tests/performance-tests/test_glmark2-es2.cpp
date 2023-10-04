@@ -205,6 +205,7 @@ struct HostedGLMark2Wayland : GLMark2Wayland
         EXPECT_TRUE(spin_wait_for_condition_or_timeout(wait_for_host, 10s));
 
         add_to_environment("MIR_SERVER_WAYLAND_HOST", host_socket);
+        add_to_environment("MIR_SERVER_PLATFORM_DISPLAY_LIBS", "mir:wayland");
 
         auto args = get_nested_args();
         server.set_command_line(args.size(), args.data());
