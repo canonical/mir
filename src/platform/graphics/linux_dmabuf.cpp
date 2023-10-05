@@ -1215,7 +1215,7 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<Buffer> buffer)
              * ARGB8888, but if the buffer is in a higher bitdepth this will lose colour information
              */
             auto const& supported_formats = *formats;
-            auto const& modifiers = 
+            auto const& modifiers =
                 [&supported_formats]() -> std::vector<uint64_t> const&
                 {
                     for (size_t i = 0; i < supported_formats.num_formats(); ++i)
