@@ -14,8 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoxy/egl.h>
-#include <epoxy/gl.h>
+#include <EGL/egl.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 
 #include "egl_buffer_copy.h"
 #include "mir/graphics/egl_context_executor.h"
@@ -23,6 +24,7 @@
 #include "mir/graphics/egl_extensions.h"
 
 #include <algorithm>
+#include <cstring>
 #include <exception>
 #include <utility>
 #include <stdexcept>
@@ -58,7 +60,7 @@ const GLchar* const fshader =
         "}\n"
     };
 
-template<void (**allocator)(GLsizei, GLuint*), void (** deleter)(GLsizei, GLuint const*)>
+template<void (*allocator)(GLsizei, GLuint*), void (* deleter)(GLsizei, GLuint const*)>
 class GLBulkHandle
 {
 public:
@@ -95,7 +97,7 @@ private:
     GLuint id;
 };
 
-template<GLuint (**allocator)(GLenum), void (** deleter)(GLuint)>
+template<GLuint (*allocator)(GLenum), void (* deleter)(GLuint)>
 class GLTypedHandle
 {
 public:
@@ -132,7 +134,7 @@ private:
     GLuint id;
 };
 
-template<GLuint (**allocator)(void), void (**deleter)(GLuint)>
+template<GLuint (*allocator)(void), void (*deleter)(GLuint)>
 class GLHandle
 {
 public:
@@ -275,7 +277,7 @@ public:
 
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, tex);
-                glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, from);
+                state->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, from);
 
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -283,7 +285,7 @@ public:
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
                 glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
-                glEGLImageTargetRenderbufferStorageOES(GL_RENDERBUFFER, to);
+                state->glEGLImageTargetRenderbufferStorageOES(GL_RENDERBUFFER, to);
 
                 glBindFramebuffer(GL_FRAMEBUFFER, fbo);
                 glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderbuffer);
@@ -323,6 +325,8 @@ private:
         GLint attrpos;
         GLBufferHandle vert_data;
         GLBufferHandle tex_data;
+        PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES;
+        PFNGLEGLIMAGETARGETRENDERBUFFERSTORAGEOESPROC glEGLImageTargetRenderbufferStorageOES;
     };
     /* This has to be initialised on the EGL thread, but it contains non-default-initialisable state.
      *
@@ -336,6 +340,17 @@ private:
     void initialise()
     {
         state = std::make_shared<State>();
+
+        // Check necessary EGL extensions
+        if (!strstr(reinterpret_cast<char const*>(glGetString(GL_EXTENSIONS)), "GL_OES_EGL_image"))
+        {
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Missing required GL_OES_EGL_image extension"}));
+        }
+        state->glEGLImageTargetRenderbufferStorageOES =
+            reinterpret_cast<PFNGLEGLIMAGETARGETRENDERBUFFERSTORAGEOESPROC>(eglGetProcAddress("glEGLImageTargetRenderbufferStorageOES"));
+        state->glEGLImageTargetTexture2DOES =
+            reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(eglGetProcAddress("glEGLImageTargetTexture2DOES"));
+
         state->prog = link_shader(compile_shader(GL_VERTEX_SHADER, vshader), compile_shader(GL_FRAGMENT_SHADER, fshader));
 
         glUseProgram(state->prog);
