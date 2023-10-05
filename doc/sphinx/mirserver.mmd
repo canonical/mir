@@ -1,12 +1,6 @@
 
 classDiagram
     Shell --> Scene: Updates
-    Server o-- Shell
-    Server o-- Scene
-    Server o-- Compositor
-    Server o-- Seat
-    Server o-- Display
-
     Shell --> miral: Get shell behavior
     Compositor --> Scene: Get renderables
     Compositor --> Display: Get outputs
