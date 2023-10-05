@@ -14,9 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <epoxy/egl.h>
-#include <epoxy/gl.h>
-
 #include "mir/graphics/linux_dmabuf.h"
 #include "mir/fd.h"
 #include "mir/graphics/drm_formats.h"
@@ -33,7 +30,10 @@
 #include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/dmabuf_buffer.h"
 #include "mir/graphics/egl_context_executor.h"
+
+#include <EGL/egl.h>
 #include <cstdint>
+#include <cstring>
 #include <stdexcept>
 
 #define MIR_LOG_COMPONENT "linux-dmabuf-import"
@@ -316,14 +316,18 @@ private:
     geom::Size const size_;
 };
 
-auto export_egl_image(EGLDisplay dpy, EGLImage image, geom::Size size) -> std::unique_ptr<mg::DMABufBuffer>
+auto export_egl_image(
+    mg::EGLExtensions::MESADmaBufExport const& ext,
+    EGLDisplay dpy,
+    EGLImage image,
+    geom::Size size) -> std::unique_ptr<mg::DMABufBuffer>
 {
     constexpr int const max_planes = 4;
 
     int fourcc;
     int num_planes;
     std::array<uint64_t, max_planes> modifiers;
-    if (eglExportDMABUFImageQueryMESA(dpy, image, &fourcc, &num_planes, modifiers.data()) != EGL_TRUE)
+    if (ext.eglExportDMABUFImageQueryMESA(dpy, image, &fourcc, &num_planes, modifiers.data()) != EGL_TRUE)
     {
         BOOST_THROW_EXCEPTION((mg::egl_error("Failed to query EGLImage for dma-buf export")));
     }
@@ -347,7 +351,7 @@ auto export_egl_image(EGLDisplay dpy, EGLImage image, geom::Size size) -> std::u
     std::array<EGLint, max_planes> strides;
     std::array<EGLint, max_planes> offsets;
 
-    if (eglExportDMABUFImageMESA(dpy, image, fds.data(), strides.data(), offsets.data()) != EGL_TRUE)
+    if (ext.eglExportDMABUFImageMESA(dpy, image, fds.data(), strides.data(), offsets.data()) != EGL_TRUE)
     {
         BOOST_THROW_EXCEPTION((mg::egl_error("Failed to export EGLImage to dma-buf(s)")));
     }
@@ -1114,6 +1118,7 @@ mg::DMABufEGLProvider::DMABufEGLProvider(
     EGLImageAllocator allocate_importable_image)
     : dpy{dpy},
       egl_extensions{std::move(egl_extensions)},
+      dmabuf_export_ext{mg::EGLExtensions::MESADmaBufExport::extension_if_supported(dpy)},
       formats{std::make_unique<DmaBufFormatDescriptors>(dpy, dmabuf_ext)},
       egl_delegate{std::move(egl_delegate)},
       allocate_importable_image{std::move(allocate_importable_image)},
@@ -1200,6 +1205,12 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<Buffer> buffer)
              */
             auto importing_provider = dmabuf_tex->provider();
 
+            if (!importing_provider->dmabuf_export_ext)
+            {
+                mir::log_warning("EGL implementation does not handle cross-GPU buffer export");
+                return nullptr;
+            }
+
             /* TODO: Be smarter about finding a shared pixel format; everything *should* do
              * ARGB8888, but if the buffer is in a higher bitdepth this will lose colour information
              */
@@ -1247,7 +1258,7 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<Buffer> buffer)
             {
                 BOOST_THROW_EXCEPTION((std::logic_error{"EGL_ANDROID_native_fence_sync support not implemented yet"}));
             }
-            auto importable_dmabuf = export_egl_image(importing_provider->dpy, importable_image, dmabuf_tex->size());
+            auto importable_dmabuf = export_egl_image(*importing_provider->dmabuf_export_ext, importing_provider->dpy, importable_image, dmabuf_tex->size());
 
             eglDestroyImage(importing_provider->dpy, src_image);
             eglDestroyImage(importing_provider->dpy, importable_image);

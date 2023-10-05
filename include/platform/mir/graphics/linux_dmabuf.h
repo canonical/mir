@@ -90,6 +90,7 @@ public:
 private:
     EGLDisplay const dpy;
     std::shared_ptr<EGLExtensions> const egl_extensions;
+    std::optional<EGLExtensions::MESADmaBufExport> const dmabuf_export_ext;
     std::unique_ptr<DmaBufFormatDescriptors> const formats;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     EGLImageAllocator allocate_importable_image;

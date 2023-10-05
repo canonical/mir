@@ -201,3 +201,30 @@ mg::EGLExtensions::EXTImageDmaBufImportModifiers::EXTImageDmaBufImportModifiers(
             std::runtime_error{"EGL_EXT_image_dma_buf_import_modifiers not supported"}));
     }
 }
+
+mg::EGLExtensions::MESADmaBufExport::MESADmaBufExport(EGLDisplay dpy)
+    : eglExportDMABUFImageMESA{
+          reinterpret_cast<PFNEGLEXPORTDMABUFIMAGEMESAPROC>(
+              eglGetProcAddress("eglExportDMABUFImageMESA"))},
+      eglExportDMABUFImageQueryMESA{
+          reinterpret_cast<PFNEGLEXPORTDMABUFIMAGEQUERYMESAPROC>(
+              eglGetProcAddress("eglExportDMABUFImageQueryMESA"))}
+    {
+        if (!strstr(eglQueryString(dpy, EGL_EXTENSIONS), "EGL_MESA_image_dma_buf_export"))
+        {
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Missing required EGL_MESA_image_dma_buf_export extension"}));
+        }
+    }
+
+auto mg::EGLExtensions::MESADmaBufExport::extension_if_supported(EGLDisplay dpy) -> std::optional<MESADmaBufExport>
+{
+    try
+    {
+        return MESADmaBufExport{dpy};
+    }
+    catch (std::runtime_error const&)
+    {
+        return std::nullopt;
+    }
+}
+
