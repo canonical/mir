@@ -14,19 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <fcntl.h>
-#include <memory>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/mman.h>
-#include <unistd.h>
+#include "make_shm_pool.h"
+#include "xdg-shell.h"
+#include "mir-shell.h"
 
 #include <wayland-client.h>
 #include <wayland-client-core.h>
-#include "xdg-shell.h"
-#include "mir-shell.h"
+
+#include <memory>
+#include <signal.h>
+#include <string.h>
 
 namespace
 {
@@ -138,49 +135,6 @@ void globals::init()
     if (fail) abort();
 
     xdg_wm_base_add_listener(globals::wm_base, &shell_listener, NULL);
-}
-
-wl_shm_pool* make_shm_pool(wl_shm* shm, int size, void** data)
-{
-    static char* shm_dir = NULL;
-    if (!shm_dir) shm_dir = getenv("XDG_RUNTIME_DIR");
-
-    int fd = open(shm_dir, O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU);
-
-    // Workaround for filesystems that don't support O_TMPFILE
-    if (fd < 0)
-    {
-        char template_filename[] = "/dev/shm/mir-buffer-XXXXXX";
-        fd = mkostemp(template_filename, O_CLOEXEC);
-        if (fd != -1)
-        {
-            if (unlink(template_filename) < 0)
-            {
-                close(fd);
-                fd = -1;
-            }
-        }
-    }
-
-    if (fd < 0)
-    {
-        return NULL;
-    }
-
-    posix_fallocate(fd, 0, size);
-
-    *data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (*data == MAP_FAILED)
-    {
-        close(fd);
-        return NULL;
-    }
-
-    auto const pool = wl_shm_create_pool(shm, fd, size);
-
-    close(fd);
-
-    return pool;
 }
 
 class pulsing_window

@@ -20,7 +20,11 @@ add_custom_command(
         COMMAND "sh" "-c" "wayland-scanner private-code  ${MIR_SHELL_X} ${MIR_SHELL_C}"
 )
 
-add_library               (mir_demo_wayland_extensions STATIC ${XDG_SHELL_C} ${XDG_SHELL_H} ${MIR_SHELL_C} ${MIR_SHELL_H})
+add_library               (mir_demo_wayland_extensions STATIC
+        ${XDG_SHELL_C} ${XDG_SHELL_H}
+        ${MIR_SHELL_C} ${MIR_SHELL_H}
+        make_shm_pool.c make_shm_pool.h
+)
 set_target_properties     (mir_demo_wayland_extensions PROPERTIES COMPILE_FLAGS "${CMAKE_CFLAGS}  -fvisibility=hidden")
 target_include_directories(mir_demo_wayland_extensions PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries     (mir_demo_wayland_extensions PUBLIC PkgConfig::WAYLAND_CLIENT)
