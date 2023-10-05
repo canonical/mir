@@ -7,13 +7,8 @@ classDiagram
     miral --> mirserver: Uses
     miroil --> mirserver: Uses
     mirwayland --> mirserver: Uses
-    Input --> InputPlatform: Receives events form
-    Input --> Shell: Sends events to
-    Shell --> Scene: Updates
-    mirserver o-- Shell: Contains
-    mirserver o-- Scene: Contains
-    Compositor --> Scene: Reads
-    Compositor --> RenderingPlatform: Renders using
-    Compositor --> DisplayPlatform: Outputs to
-    FrontendWayland --> Shell: Makes requests to
-    FrontendXWayland --> Shell: Makes request to
+
+    note for core "Universal"
+    note for common "Universal"
+    class core
+    class common
