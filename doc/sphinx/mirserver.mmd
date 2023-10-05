@@ -1,17 +1,17 @@
 
 classDiagram
+    Shell --> Scene: Updates
     Server o-- Shell
     Server o-- Scene
     Server o-- Compositor
     Server o-- Seat
     Server o-- Display
 
-    Shell --> miral: Ask for implementation of shell behavior
-    Shell --> Scene: Updates
-    Compositor --> Scene: Reads
-    Compositor --> Display: To determine outputs
-    Compositor --> RenderingPlatform: Renders using
-    Compositor --> DisplayPlatform: Outputs to
+    Shell --> miral: Get shell behavior
+    Compositor --> Scene: Get renderables
+    Compositor --> Display: Get outputs
+    Compositor --> RenderingPlatform: Handles rendering
+    Compositor --> DisplayPlatform: Outputs image to
     InputDispatcher <-- InputPlatform: Sends events to
     Seat <-- InputDispatcher: Sends events to
     Seat --> Shell: Sends events to
