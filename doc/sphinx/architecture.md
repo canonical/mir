@@ -31,7 +31,7 @@ Compositor authors may want to define their own wayland protocol extensions in a
 The `mirserver` library is the core implementation of *Mir*. It serves as the engine for both `miral` and `miroil`. This library does the heavy-lifting for the compositor and, as a result, it is the largest piece of *Mir*. This section will explain the primary concepts that drive the engine.
 
 ### Core Concepts
-At the heart of `mirserver` are two interfaces: the **Shell** and the **Scene**. The `Shell` is responsible for fielding requests from the rest system. The `Shell` then modifies the state of the `Scene` to reflect the requested changes. For example, part of the system would ask the `Shell` to move a window. The `Shell` would then decide what position to move that window to and update the state of the `Scene` to reflect that change.
+At the heart of `mirserver` are two interfaces: the **Shell** and the **Scene**. The `Shell` is responsible for fielding requests from the rest system. The `Shell` then modifies the state of the `Scene` to reflect the requested changes. For example, the `Frontend` would ask the `Shell` to initiate dragging a window. The `Shell` would then decide how to move that window to and update the state of the `Scene` to reflect that change.
 
 ### From Scene to Screen
 Knowing that the `Scene` holds the state of what is to be displayed, we can talk about the **Compositor**. The `Compositor` gets the collection of items to render from the `Scene`,
