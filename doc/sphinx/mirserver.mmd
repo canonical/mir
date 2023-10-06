@@ -1,11 +1,11 @@
 
 classDiagram
-    Shell --> Scene: Updates
-    Shell --> miral: Get shell behavior
     Compositor --> Scene: Get renderables
     Compositor --> Display: Get outputs
     Compositor --> RenderingPlatform: Handles rendering
     Compositor --> DisplayPlatform: Outputs image to
+    Shell --> miral: Get shell behavior
+    Shell --> Scene: Updates
     InputDispatcher <-- InputPlatform: Sends events to
     Seat <-- InputDispatcher: Sends events to
     Seat --> Shell: Sends events to
