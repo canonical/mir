@@ -49,7 +49,7 @@ static struct globals
     struct xdg_wm_base *xdg_wm_base;
 } globals;
 
-void check_globals()
+void check_globals(void)
 {
     bool fail = false;
     if (!globals.compositor) { puts("ERROR: no wl_compositor*"); fail = true; }
