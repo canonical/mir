@@ -18,16 +18,16 @@ This document is intended to provide contributors to *Mir* an overview of *Mir*'
 - *mirwayland*
 
 ### Miral
-The most commonly used library is `miral`. `miral` (the "*Mir* Abstraction Layer") is an API that makes *Mir* easy for compositor authors to work with. It provides core window management concepts and an interface that is more ABI stable than Mir's internal API. `miral` is built on the [*Mir* engine](#the-mir-engine), however compositor authors are encouraged to only interact with the high-level `miral` library.
+The most commonly used library is **miral**. `miral` (the "*Mir* Abstraction Layer") is an API that makes *Mir* easy for compositor authors to work with. It provides core window management concepts and an interface that is more ABI stable than Mir's internal API. While `miral` is built on the [*Mir* engine](#the-mir-engine), compositor authors are encouraged to only interact with the high-level `miral` library.
 
 ### Miroil
-`miroil` is a custom library for the [Lomiri](https://lomiri.com/) folks. Most compositor authors will not interact with `miroil`. [The *Mir* engine](#the-mir-engine) also serves as the basis for `miroil` as it does for `miral`.
+**miroil** is a custom library for the [Lomiri](https://lomiri.com/) folks. It is like `miral` in that it provides an abstraction over the [*Mir* engine](#the-mir-engine). However, most compositor authors will not interact with `miroil`.
 
 ### Mirwayland
 Compositor authors may want to define their own wayland protocol extensions in addition to the ones that the core *Mir* implementation defines. The `mirwayland` library satisfies this requirement. This library may be used in conjunction with either `miral` or `miroil`.
 
 ## The Mir engine
-The `mirserver` library is the core implementation of *Mir*. It serves as the engine for both `miral` and `miroil`. This library does the heavy-lifting for the compositor and, as a result, is the largest piece of *Mir*. This section will explain the primary concepts that drive the engine.
+The **mirserver** library is the core implementation of *Mir*. It serves as the engine for both `miral` and `miroil`. This library does the heavy-lifting for the compositor and, as a result, is the largest piece of *Mir*. This section will explain the primary concepts that drive the engine.
 
 ### Core Concepts
 At the heart of `mirserver` are two interfaces: the **Shell** and the **Scene**. The `Shell` is responsible for fielding requests from the rest system. The `Shell` modifies the state of the `Scene` to reflect the requested changes.
@@ -36,22 +36,22 @@ For example, the `Frontend` would ask the `Shell` to initiate dragging a window.
 
 ### From Scene to Screen
 Knowing that the `Scene` holds the state of what is to be displayed, we can talk about the **Compositor**. The `Compositor` gets the collection of items to render from the `Scene`,
-renders them, and sends them off to the [platform](#platforms) to be displayed.
+renders them with the help of the [rendering platform](#platforms), and sends them off to the [display platform](#platforms) to be displayed.
 
 ### From Interaction to Shell
 As stated previously, the `Shell` handles requests from the system and updates the state of the `Scene` accordingly. These requests come from a variety of sources, which we will investigate now.
 
 **Frontend Wayland**: Responsible for connecting the Wayland protocol with the rest of *Mir*. The `WaylandConnector` class connects requests made via the Wayland protocol to the core state of the compositor.
 
-**Frontend XWayland**: Responsible for connecting requests send by an `XWayland` server to the rest of *Mir*. The `XWaylandConnector` establishes this connection just like the `WaylandConnector`. This frontend spawns an `XWayland` server as a subprocess.
+**Frontend XWayland**: Responsible for connecting requests sent by an `XWayland` server to the rest of *Mir*. The `XWaylandConnector` establishes this connection. This frontend spawns an `XWayland` server as a subprocess.
 
-**Input**: Handles everything having to do with input, including mouse, keyboard, touch, and more. This system interacts with the specific input [platform](#platforms) and bubbles up events through a list of `InputDispatcher`s, which enables different pieces of the software to react to the events.
+**Input**: Handles everything having to do with input, including mouse, keyboard, touch, and more. This system interacts with the specific [input platform](#platforms) and bubbles up events through a list of `InputDispatcher`s, which enables different pieces of the software to react to events.
 
 For example, a compositor's window manager may respond to a key press event by opening up a new terminal via a request to the `Shell`.
 
 ## Platforms
 We briefly hinted at the existence of so-called "platforms" previously, but they are deserving of a dedicated section. A **Platform** is an adapter that allows the system to work across different graphics, input, and rendering stacks. They come in three flavors:
-- **Display Platform**: Determines what the compositor is rendering to. This may be to a physical monitor via GBM/KMS (or EGLStreams for Nvidia), to an X11 or Wayland window, or to a completely virtual buffer.
+- **Display Platform**: Determines what the compositor is rendering to. This may be a physical monitor via GBM/KMS (or EGLStreams for Nvidia), an X11 or Wayland window, or a completely virtual buffer.
 - **Input Platform**: Determines where the compositor is getting input from. This could be native event via `libinput`, X input events, or Wayland input events.
 - **Rendering Platform**: Determines how the compositor renders the final image. For now, only a GL backend is supported.
 
@@ -70,6 +70,6 @@ The following describes the largest chunks of *Mir* and how they relate to one a
 ```
 
 ### Mirserver Closeup
-Let's take a deeper look into the different systems at play in `mirserver`.
+The following is a deeper dive into the specifics of `mirserver`:
 ```{mermaid} mirserver.mmd
 ```
