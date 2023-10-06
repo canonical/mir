@@ -156,17 +156,21 @@ private:
     int height;
     unsigned char current_intensity = 128;
     bool waiting_for_buffer = false;
+    bool need_to_draw = true;
 
-    void draw_new_stuff(wl_callback* callback, uint32_t time);
+    void handle_frame_callback(wl_callback* callback, uint32_t);
     void update_free_buffers(wl_buffer* buffer);
     void prepare_buffer(buffer& b);
     void handle_xdg_toplevel_configure(xdg_toplevel*, int32_t width_, int32_t height_, wl_array*);
     auto find_free_buffer() -> buffer*;
+    void draw_new_frame();
 
     static xdg_toplevel_listener const shell_toplevel_listener;
     static wl_callback_listener const frame_listener;
     static wl_buffer_listener const buffer_listener;
     static xdg_surface_listener const shell_surface_listener;
+
+    void fake_frame();
 };
 
 xdg_toplevel_listener const pulsing_window::shell_toplevel_listener =
@@ -179,7 +183,7 @@ xdg_toplevel_listener const pulsing_window::shell_toplevel_listener =
 
 wl_callback_listener const pulsing_window::frame_listener =
 {
-    .done = [](void* ctx, auto... args) { static_cast<pulsing_window*>(ctx)->draw_new_stuff(args...); },
+    .done = [](void* ctx, auto... args) { static_cast<pulsing_window*>(ctx)->handle_frame_callback(args...); },
 };
 
 wl_buffer_listener const pulsing_window::buffer_listener =
@@ -204,11 +208,9 @@ void pulsing_window::update_free_buffers(wl_buffer* buffer)
 
     if (waiting_for_buffer)
     {
-        wl_callback* fake_frame = wl_display_sync(display);
-        wl_callback_add_listener(fake_frame, &frame_listener, this);
+        fake_frame();
+        waiting_for_buffer = false;
     }
-
-    waiting_for_buffer = false;
 }
 
 void pulsing_window::prepare_buffer(buffer& b)
@@ -216,8 +218,7 @@ void pulsing_window::prepare_buffer(buffer& b)
     void* pool_data = NULL;
     wl_shm_pool* shm_pool = make_shm_pool(globals::shm, width * height * pixel_size, &pool_data);
 
-    b.buffer = wl_shm_pool_create_buffer(
-        shm_pool, 0, width, height, width * pixel_size, WL_SHM_FORMAT_ARGB8888);
+    b.buffer = wl_shm_pool_create_buffer(shm_pool, 0, width, height, width * pixel_size, WL_SHM_FORMAT_ARGB8888);
     b.available = true;
     b.width = width;
     b.height = height;
@@ -245,14 +246,26 @@ auto pulsing_window::find_free_buffer() -> buffer*
     return nullptr;
 }
 
-void pulsing_window::draw_new_stuff(wl_callback* callback, uint32_t)
+void pulsing_window::handle_frame_callback(wl_callback* callback, uint32_t)
 {
     wl_callback_destroy(callback);
 
+    if (need_to_draw)
+    {
+        draw_new_frame();
+    }
+    else
+    {
+        fake_frame();
+    }
+}
+
+void pulsing_window::draw_new_frame()
+{
     auto const b = find_free_buffer();
     if (!b)
     {
-        waiting_for_buffer = false;
+        waiting_for_buffer = true;
         return;
     }
 
@@ -263,6 +276,7 @@ void pulsing_window::draw_new_stuff(wl_callback* callback, uint32_t)
     wl_callback_add_listener(new_frame_signal, &frame_listener, this);
     wl_surface_attach(surface, b->buffer, 0, 0);
     wl_surface_commit(surface);
+    need_to_draw = false;
 }
 
 volatile sig_atomic_t running = 0;
@@ -284,6 +298,17 @@ void pulsing_window::handle_xdg_toplevel_configure(
 {
     if (width_ > 0) width = width_;
     if (height_ > 0) height = height_;
+
+    if ((width_ > 0) || (height_ > 0))
+    {
+        need_to_draw = true;
+    }
+}
+
+void pulsing_window::fake_frame()
+{
+    wl_callback* fake_frame = wl_display_sync(display);
+    wl_callback_add_listener(fake_frame, &frame_listener, this);
 }
 
 pulsing_window::pulsing_window(int32_t width, int32_t height) :
@@ -302,8 +327,7 @@ pulsing_window::pulsing_window(int32_t width, int32_t height) :
     auto const shell_toplevel = xdg_surface_get_toplevel(shell_surface);
     xdg_toplevel_add_listener(shell_toplevel, &shell_toplevel_listener, this);
 
-    auto const first_frame = wl_display_sync(display);
-    wl_callback_add_listener(first_frame, &frame_listener, this);
+    fake_frame();
 }
 }
 
