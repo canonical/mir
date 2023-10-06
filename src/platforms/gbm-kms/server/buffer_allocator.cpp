@@ -16,6 +16,7 @@
 
 #include "buffer_allocator.h"
 #include "mir/graphics/gl_config.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/linux_dmabuf.h"
 #include "mir/graphics/dmabuf_buffer.h"
 #include "mir/anonymous_shm_file.h"
@@ -466,6 +467,18 @@ private:
     EGLDisplay const dpy;
     EGLContext const ctx;
 };
+}
+
+auto mgg::GLRenderingProvider::suitability_for_allocator(
+    std::shared_ptr<GraphicBufferAllocator> const& target) -> probe::Result
+{
+    // TODO: We *can* import from other allocators, maybe (anything with dma-buf is probably possible)
+    // For now, the simplest thing is to bind hard to own own allocator.
+    if (dynamic_cast<mgg::BufferAllocator*>(target.get()))
+    {
+        return probe::best;
+    }
+    return probe::unsupported;
 }
 
 auto mgg::GLRenderingProvider::suitability_for_display(

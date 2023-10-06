@@ -95,6 +95,8 @@ public:
 
     auto as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture> override;
 
+    auto suitability_for_allocator(std::shared_ptr<GraphicBufferAllocator> const& target) -> probe::Result override;
+
     auto suitability_for_display(std::shared_ptr<DisplayInterfaceProvider> const& target) -> probe::Result override;
 
     auto surface_for_output(

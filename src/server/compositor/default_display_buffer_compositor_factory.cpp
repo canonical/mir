@@ -34,10 +34,12 @@ mc::DefaultDisplayBufferCompositorFactory::DefaultDisplayBufferCompositorFactory
     std::vector<std::shared_ptr<mg::GLRenderingProvider>> render_platforms,
     std::shared_ptr<mg::GLConfig> gl_config,
     std::shared_ptr<mir::renderer::RendererFactory> const& renderer_factory,
+    std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<mc::CompositorReport> const& report) :
         platforms{std::move(render_platforms)},
         gl_config{std::move(gl_config)},
         renderer_factory{renderer_factory},
+        buffer_allocator{buffer_allocator},
         report{report}
 {
 }
@@ -65,7 +67,8 @@ mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
     for (auto const& provider : platforms)
     {
         auto suitability = provider->suitability_for_display(display_provider);
-        if (suitability > best_provider.first)
+        // We also need to make sure that the GLRenderingProvider can access client buffers...
+        if (provider->suitability_for_allocator(buffer_allocator) > mg::probe::unsupported && suitability > best_provider.first)
         {
             best_provider = std::make_pair(suitability, provider);
         }

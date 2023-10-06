@@ -36,6 +36,7 @@
 #include "mir/test/doubles/mock_output_surface.h"
 #include "mir/test/doubles/stub_gl_rendering_provider.h"
 #include "mir/test/doubles/null_gl_config.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
 
 #include <condition_variable>
 #include <mutex>
@@ -187,6 +188,7 @@ struct SurfaceStackCompositor : public Test
         std::vector<std::shared_ptr<mg::GLRenderingProvider>>{std::make_shared<mtd::StubGlRenderingPlatform>()},
         std::make_shared<mtd::NullGLConfig>(),
         mt::fake_shared(renderer_factory),
+        std::make_shared<mtd::StubBufferAllocator>(),
         null_comp_report};
 };
 

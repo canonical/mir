@@ -382,6 +382,18 @@ private:
 };
 }
 
+auto mge::GLRenderingProvider::suitability_for_allocator(std::shared_ptr<GraphicBufferAllocator> const& target)
+    -> probe::Result
+{
+    // TODO: We *can* import from other allocators, maybe (anything with dma-buf is probably possible)
+    // For now, the simplest thing is to bind hard to own own allocator.
+    if (dynamic_cast<mge::BufferAllocator*>(target.get()))
+    {
+        return probe::best;
+    }
+    return probe::unsupported;
+}
+
 auto mge::GLRenderingProvider::suitability_for_display(
     std::shared_ptr<DisplayInterfaceProvider> const& target) -> probe::Result
 {

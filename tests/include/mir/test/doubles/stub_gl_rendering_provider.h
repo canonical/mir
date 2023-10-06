@@ -58,6 +58,12 @@ public:
         return std::make_unique<testing::NiceMock<MockOutputSurface>>();
     }
 
+    auto suitability_for_allocator(std::shared_ptr<graphics::GraphicBufferAllocator> const& /*target*/)
+        -> graphics::probe::Result override
+    {
+        return graphics::probe::supported;
+    }
+
     auto suitability_for_display(std::shared_ptr<graphics::DisplayInterfaceProvider> const& /*target*/)
         -> graphics::probe::Result override
     {

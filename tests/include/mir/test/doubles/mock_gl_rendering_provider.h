@@ -37,6 +37,11 @@ public:
         (override));
     MOCK_METHOD(
         graphics::probe::Result,
+        suitability_for_allocator,
+        (std::shared_ptr<graphics::GraphicBufferAllocator> const&),
+        (override));
+    MOCK_METHOD(
+        graphics::probe::Result,
         suitability_for_display,
         (std::shared_ptr<graphics::DisplayInterfaceProvider> const&),
         (override));

@@ -64,7 +64,7 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
             }
             return wrap_display_buffer_compositor_factory(
                 std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
-                    std::move(providers), the_gl_config(), the_renderer_factory(), the_compositor_report()));
+                    std::move(providers), the_gl_config(), the_renderer_factory(), the_buffer_allocator(), the_compositor_report()));
         });
 }
 

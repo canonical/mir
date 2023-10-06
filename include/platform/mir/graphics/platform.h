@@ -127,6 +127,12 @@ public:
     virtual auto suitability_for_display(std::shared_ptr<DisplayInterfaceProvider> const& target)
         -> probe::Result = 0;
 
+    /**
+     * Check how well this Renderer can support a particular BufferAllocator
+     */
+    virtual auto suitability_for_allocator(std::shared_ptr<GraphicBufferAllocator> const& target)
+        -> probe::Result = 0;
+
     virtual auto make_framebuffer_provider(std::shared_ptr<DisplayInterfaceProvider> target)
         -> std::unique_ptr<FramebufferProvider> = 0;
 };
