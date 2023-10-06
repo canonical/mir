@@ -170,11 +170,12 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
                     bool found_supported_device{false};
                     for (auto& device : supported_devices)
                     {
+                        // Add any devices that the platform claims are supported
                         if (device.support_level >= mg::PlatformPriority::supported)
                         {
                             found_supported_device = true;
+                            platform_modules.emplace_back(std::move(device), platform);
                         }
-                        platform_modules.emplace_back(std::move(device), platform);
                     }
 
                     if (!found_supported_device)
@@ -185,6 +186,13 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
                         auto const descriptor = describe_module();
 
                         mir::log_warning("Manually-specified display platform %s does not claim to support this system. Trying anyway...", descriptor->name);
+
+                        // We're here only if the platform doesn't claim to support *any* of the detected devices
+                        // Add *all* the found devices into our platform list, and hope.
+                        for (auto& device : supported_devices)
+                        {
+                            platform_modules.emplace_back(std::move(device), platform);
+                        }
                     }
                 }
             }
