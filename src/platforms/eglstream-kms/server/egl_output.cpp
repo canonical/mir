@@ -217,6 +217,8 @@ void mgek::EGLOutput::configure(size_t kms_mode_index)
     mgk::DRMModeCrtcUPtr crtc;
     mgk::DRMModePlaneUPtr plane;
 
+    refresh_connector(drm_fd, connector);
+
     std::tie(crtc, plane) = mgk::find_crtc_with_primary_plane(drm_fd, connector);
     auto const crtc_id = crtc->crtc_id;
 

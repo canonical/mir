@@ -602,6 +602,10 @@ auto make_stream_ctx(EGLDisplay dpy, EGLConfig cfg, EGLContext share_with) -> EG
         // on a different device to the display.
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
     }
+    if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, context) != EGL_TRUE)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to make EGL context current"));
+    }
 
     return context;
 }
@@ -636,6 +640,7 @@ public:
           surface{make_output_surface(dpy, config, output_stream, size)},
           size_{std::move(size)}
     {
+        eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     }
 
     void bind() override
@@ -745,15 +750,17 @@ auto mge::GLRenderingProvider::surface_for_output(
                 err.what());
         }
     }
-    auto cpu_provider = target->acquire_interface<CPUAddressableDisplayProvider>();
-
-    auto fb_context = ctx->make_share_context();
-    fb_context->make_current();
-    return std::make_unique<mgc::CPUCopyOutputSurface>(
-        dpy,
-        static_cast<EGLContext>(*ctx),
-        cpu_provider,
-        size);
+    if (auto cpu_provider = target->acquire_interface<CPUAddressableDisplayProvider>())
+    {
+        auto fb_context = ctx->make_share_context();
+        fb_context->make_current();
+        return std::make_unique<mgc::CPUCopyOutputSurface>(
+            dpy,
+            static_cast<EGLContext>(*ctx),
+            cpu_provider,
+            size);
+    }
+    BOOST_THROW_EXCEPTION((std::runtime_error{"DisplayInterfaceProvider does not support any viable output interface"}));
 }
 
 auto mge::GLRenderingProvider::suitability_for_display(

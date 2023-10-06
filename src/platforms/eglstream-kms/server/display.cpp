@@ -171,17 +171,6 @@ public:
             BOOST_THROW_EXCEPTION(mg::egl_error("Failed to attach EGLStream to output"));
         };
 
-        EGLint const surface_attribs[] = {
-            EGL_WIDTH, output_size.width.as_int(),
-            EGL_HEIGHT, output_size.height.as_int(),
-            EGL_NONE,
-        };
-        surface = eglCreateStreamProducerSurfaceKHR(dpy, config, output_stream, surface_attribs);
-        if (surface == EGL_NO_SURFACE)
-        {
-            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create StreamProducerSurface"));
-        }
-
         this->display_report->report_successful_setup_of_native_resources();
         this->display_report->report_successful_display_construction();
         this->display_report->report_egl_configuration(dpy, config);
@@ -230,7 +219,38 @@ public:
         };
         if (nv_stream(dpy).eglStreamConsumerAcquireAttribNV(dpy, output_stream, acquire_attribs) != EGL_TRUE)
         {
-            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to submit frame from EGLStream for display"));
+            auto error = eglGetError();
+            EGLAttrib stream_state{0};
+            eglQueryStreamAttribKHR(dpy, output_stream, EGL_STREAM_STATE_KHR, &stream_state);
+            std::string state;
+            switch (stream_state)
+            {
+            case EGL_STREAM_STATE_CREATED_KHR:
+                state = "EGL_STREAM_STATE_CREATED_KHR";
+                break;
+            case EGL_STREAM_STATE_CONNECTING_KHR:
+                state = "EGL_STREAM_STATE_CONNECTING_KHR";
+                break;
+            case EGL_STREAM_STATE_EMPTY_KHR:
+                state = "EGL_STREAM_STATE_EMPTY_KHR";
+                break;
+            case EGL_STREAM_STATE_NEW_FRAME_AVAILABLE_KHR:
+                state = "EGL_STREAM_STATE_NEW_FRAME_AVAILABLE_KHR";
+                break;
+            case EGL_STREAM_STATE_OLD_FRAME_AVAILABLE_KHR:
+                state = "EGL_STREAM_STATE_OLD_FRAME_AVAILABLE_KHR";
+                break;
+            case EGL_STREAM_STATE_DISCONNECTED_KHR:
+                state = "EGL_STREAM_STATE_DISCONNECTED_KHR";
+                break;
+            default:
+                state = "<ERROR ACQUIRING STATE>";
+            }
+            BOOST_THROW_EXCEPTION((
+                std::system_error{
+                    error,
+                    mg::egl_category(),
+                    std::string{"Failed to submit frame from EGLStream for display. (Stream in state: "} + state + ")"}));
         }
     }
 
@@ -296,7 +316,6 @@ private:
     mir::geometry::Size const output_size;
     glm::mat2 const transform;
     EGLStreamKHR output_stream;
-    EGLSurface surface;
     mir::Fd const drm_node;
     std::shared_ptr<mge::DRMEventHandler> const event_handler;
     std::future<void> pending_flip;

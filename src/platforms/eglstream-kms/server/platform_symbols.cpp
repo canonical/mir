@@ -35,6 +35,7 @@
 #include <boost/throw_exception.hpp>
 #include <xf86drm.h>
 #include <sstream>
+#include <variant>
 
 #include <fcntl.h>
 #include <sys/sysmacros.h>
@@ -54,22 +55,31 @@ auto create_rendering_platform(
 {
     mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
 
+    auto platform_data = std::any_cast<std::variant<EGLDisplay, EGLDeviceEXT>>(device.platform_data);
 
     EGLDisplay display{EGL_NO_DISPLAY};
-    display = eglGetPlatformDisplayEXT(
-        EGL_PLATFORM_DEVICE_EXT,
-        std::any_cast<EGLDeviceEXT>(device.platform_data),
-        nullptr);
 
-    if (display == EGL_NO_DISPLAY)
+    if (auto dpy = std::get_if<0>(&platform_data))
     {
-        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to create EGL Display")));
+        display = *dpy;
     }
-
-    EGLint major_ver{1}, minor_ver{4};
-    if (!eglInitialize(display, &major_ver, &minor_ver))
+    else if (auto device = std::get_if<1>(&platform_data))
     {
-        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to initialise EGL")));
+        display = eglGetPlatformDisplayEXT(
+            EGL_PLATFORM_DEVICE_EXT,
+            *device,
+            nullptr);
+
+        if (display == EGL_NO_DISPLAY)
+        {
+            BOOST_THROW_EXCEPTION((mg::egl_error("Failed to create EGL Display")));
+        }
+
+        EGLint major_ver{1}, minor_ver{4};
+        if (!eglInitialize(display, &major_ver, &minor_ver))
+        {
+            BOOST_THROW_EXCEPTION((mg::egl_error("Failed to initialise EGL")));
+        }
     }
 
     return mir::make_module_ptr<mge::RenderingPlatform>(display);
@@ -90,14 +100,15 @@ auto probe_rendering_platform(
 
     mg::PlatformPriority maximum_suitability = mg::PlatformPriority::unsupported;
     // First check if there are any displays we can possibly drive
+    std::vector<std::shared_ptr<mg::EGLStreamDisplayProvider>> eglstream_providers;
     for (auto const& display_provider : displays)
     {
-        if (display_provider->acquire_interface<mg::EGLStreamDisplayProvider>())
+        if (auto provider = display_provider->acquire_interface<mg::EGLStreamDisplayProvider>())
         {
             // We can optimally drive an EGLStream display
             mir::log_debug("EGLStream-capable display found");
             maximum_suitability = mg::PlatformPriority::best;
-            break;
+            eglstream_providers.push_back(provider);
         }
         if (display_provider->acquire_interface<mg::CPUAddressableDisplayProvider>())
         {
@@ -119,7 +130,9 @@ auto probe_rendering_platform(
     for (char const* extension : {
         "EGL_EXT_platform_base",
         "EGL_EXT_platform_device",
-        "EGL_EXT_device_base",})
+        "EGL_EXT_device_base",
+        "EGL_EXT_device_enumeration",
+        "EGL_EXT_device_query"})
     {
         if (!epoxy_has_egl_extension(EGL_NO_DISPLAY, extension))
         {
@@ -165,7 +178,7 @@ auto probe_rendering_platform(
             supported_devices.emplace_back(mg::SupportedDevice{
                 udev->char_device_from_devnum(mge::devnum_for_device(device)),
                 mg::PlatformPriority::unsupported,
-                device
+                nullptr
             });
         }
         catch (std::exception const& e)
@@ -174,27 +187,53 @@ auto probe_rendering_platform(
             continue;
         }
 
-        EGLDisplay display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, device, nullptr);
+        EGLDisplay display{EGL_NO_DISPLAY};
+        bool using_display_platform_dpy = false;
+        for (auto const& display_provider : eglstream_providers)
+        {
+            auto display_dpy = display_provider->get_egl_display();
+            EGLAttrib display_device;
+            if (eglQueryDisplayAttribEXT(display_dpy, EGL_DEVICE_EXT, &display_device) == EGL_TRUE)
+            {
+                if (reinterpret_cast<EGLDeviceEXT>(display_device) == device)
+                {
+                    mir::log_debug("Rendering platform using EGLDeviceEXT matching Display platform");
+                    display = display_dpy;
+                    using_display_platform_dpy = true;
+                }
+            }
+            else
+            {
+                mir::log_info("Failed to query EGLDeviceEXT from display platform");
+            }
+        }
 
         if (display == EGL_NO_DISPLAY)
         {
-            mir::log_debug("Failed to create EGLDisplay: %s", mg::egl_category().message(eglGetError()).c_str());
-            continue;
-        }
+            display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, device, nullptr);
 
-        auto egl_init = mir::raii::paired_calls(
-            [&display]()
+            if (display == EGL_NO_DISPLAY)
             {
-                EGLint major_ver{1}, minor_ver{4};
-                if (!eglInitialize(display, &major_ver, &minor_ver))
+                mir::log_debug("Failed to create EGLDisplay: %s", mg::egl_category().message(eglGetError()).c_str());
+                continue;
+            }
+        }
+        auto egl_init = mir::raii::paired_calls(
+            [&display, using_display_platform_dpy]()
+            {
+                if (!using_display_platform_dpy)
                 {
-                    mir::log_debug("Failed to initialise EGL: %s", mg::egl_category().message(eglGetError()).c_str());
-                    display = EGL_NO_DISPLAY;
+                    EGLint major_ver{1}, minor_ver{4};
+                    if (!eglInitialize(display, &major_ver, &minor_ver))
+                    {
+                        mir::log_debug("Failed to initialise EGL: %s", mg::egl_category().message(eglGetError()).c_str());
+                        display = EGL_NO_DISPLAY;
+                    }
                 }
             },
-            [&display]()
+            [&display, using_display_platform_dpy]()
             {
-                if (display != EGL_NO_DISPLAY)
+                if (display != EGL_NO_DISPLAY && ! using_display_platform_dpy)
                 {
                     eglTerminate(display);
                 }
@@ -222,6 +261,16 @@ auto probe_rendering_platform(
             {
                 // We've got EGL, and we've got the necessary EGL extensions. We're good.
                 supported_devices.back().support_level = maximum_suitability;
+                if (using_display_platform_dpy)
+                {
+                    supported_devices.back().platform_data = std::variant<EGLDisplay, EGLDeviceEXT>{
+                        std::in_place_index<0>, display};
+                }
+                else
+                {
+                    supported_devices.back().platform_data = std::variant<EGLDisplay, EGLDeviceEXT>{
+                        std::in_place_index<1>, device};
+                }
             }
         }
     }

@@ -31,14 +31,23 @@ class DisplayProvider : public mg::EGLStreamDisplayProvider
 public:
     DisplayProvider(EGLDisplay dpy, std::optional<EGLStreamKHR> stream);
 
+    auto get_egl_display() const -> EGLDisplay override;
+
     auto claim_stream() -> EGLStreamKHR override;
 private:
+    EGLDisplay dpy;
     std::optional<EGLStreamKHR> stream;
 };
   
-DisplayProvider::DisplayProvider(EGLDisplay /*dpy*/, std::optional<EGLStreamKHR> stream)
-    : stream{stream}
+DisplayProvider::DisplayProvider(EGLDisplay dpy, std::optional<EGLStreamKHR> stream)
+    : dpy{dpy},
+      stream{stream}
 {
+}
+
+auto DisplayProvider::get_egl_display() const -> EGLDisplay
+{
+    return dpy;
 }
 
 auto DisplayProvider::claim_stream() -> EGLStreamKHR
@@ -67,7 +76,7 @@ auto mg::eglstream::InterfaceProvider::maybe_create_interface(DisplayInterfaceBa
 {
     if (dynamic_cast<EGLStreamDisplayProvider::Tag const*>(&tag))
     {
-        return std::make_shared<DisplayProvider>(dpy, std::exchange(stream, std::nullopt));
+        return std::make_shared<DisplayProvider>(dpy, stream);
     }
     return nullptr;
 }

@@ -358,6 +358,8 @@ public:
     {
     };
 
+    virtual auto get_egl_display() const -> EGLDisplay = 0;
+
     virtual auto claim_stream() -> EGLStreamKHR = 0;
 };
 
