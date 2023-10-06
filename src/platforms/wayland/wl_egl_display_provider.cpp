@@ -117,9 +117,10 @@ mgw::WlDisplayProvider::EGLDisplayProvider::EGLDisplayProvider(
     geometry::Size size)
     : dpy{from.dpy},
       output{
-          std::make_optional<OutputContext>(
+          OutputContext {
               wl_egl_window_create(surface, size.width.as_int(), size.height.as_int()),
-              size)}
+              size
+      }}
 {
 }
 
