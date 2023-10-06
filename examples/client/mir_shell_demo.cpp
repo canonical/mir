@@ -179,16 +179,6 @@ private:
     window& operator=(window const&) = delete;
 };
 
-class pulsing_window : public window
-{
-public:
-    using window::window;
-
-private:
-    unsigned char current_intensity = 128;
-    void draw_new_content(buffer* b) override;
-};
-
 xdg_toplevel_listener const window::shell_toplevel_listener =
 {
     .configure = [](void* ctx, auto... args) { static_cast<window*>(ctx)->handle_xdg_toplevel_configure(args...); },
@@ -289,10 +279,43 @@ void window::handle_frame_callback(wl_callback* callback, uint32_t)
     fake_frame();
 }
 
-void pulsing_window::draw_new_content(buffer* b)
+//class pulsing_window : public window
+//{
+//public:
+//    using window::window;
+//
+//private:
+//    unsigned char current_intensity = 128;
+//    void draw_new_content(buffer* b) override;
+//};
+//
+//void pulsing_window::draw_new_content(buffer* b)
+//{
+//    memset(b->content_area, current_intensity, b->width * b->height * pixel_size);
+//    ++current_intensity;
+//}
+
+class grey_window : public window
 {
-    memset(b->content_area, current_intensity, b->width * b->height * pixel_size);
-    ++current_intensity;
+public:
+    using window::window;
+
+private:
+    unsigned char const intensity = 192;
+    unsigned char const alpha = 255;
+    void draw_new_content(buffer* b) override;
+};
+
+void grey_window::draw_new_content(window::buffer* b)
+{
+    auto const begin = static_cast<uint8_t*>(b->content_area);
+    auto const end = begin + b->width * b->height * pixel_size;
+
+    memset(begin, intensity, end - begin);
+    for (auto* p = begin; p != end; p += pixel_size)
+    {
+        p[3] = alpha;
+    }
 }
 
 volatile sig_atomic_t running = 0;
@@ -351,7 +374,7 @@ int main()
 {
     globals::init();
 
-    auto const main_window = std::make_unique<pulsing_window>(400, 400);
+    auto const main_window = std::make_unique<grey_window>(400, 400);
 
     struct sigaction sig_handler_new;
     sigfillset(&sig_handler_new.sa_mask);
