@@ -9,9 +9,11 @@ This document is intended to provide contributors to *Mir* an overview of *Mir*'
 - [The Mir Engine](#the-mir-engine)
 - [Platforms](#platforms)
 - [Supporting Libraries](#supporting-libraries)
-- [Diagrams](#diagrams)
 
 ## APIs for compositor authors
+```{mermaid} high_level_diagram.mmd
+```
+
 *Mir* provides compositor authors with a set of libraries that they can use to build Wayland based shells. These libraries are:
 - *miral*
 - *miroil*
@@ -27,6 +29,9 @@ The most commonly used library is **miral**. `miral` (the "*Mir* Abstraction Lay
 Compositor authors may want to define their own wayland protocol extensions in addition to the ones that the core *Mir* implementation defines. The `mirwayland` library satisfies this requirement. This library may be used in conjunction with either `miral` or `miroil`.
 
 ## The Mir engine
+```{mermaid} mirserver.mmd
+```
+
 The **mirserver** library is the core implementation of *Mir*. It serves as the engine for both `miral` and `miroil`. This library does the heavy-lifting for the compositor and, as a result, is the largest piece of *Mir*. This section will explain the primary concepts that drive the engine.
 
 ### Core Concepts
@@ -62,14 +67,3 @@ The GBM/KMS platform is most typically what will be used, as it is the native pl
 
 - **Core**: Fundamental data concepts, like file descriptors and rectangles. These data structures tend not to be *Mir*-specific.
 - **Common**: *Mir*-specific data concepts like *Mir* event building, logging, and timing utilities.
-
-## Diagrams
-### High-Level Diagram
-The following describes the largest chunks of *Mir* and how they relate to one another:
-```{mermaid} high_level_diagram.mmd
-```
-
-### Mirserver Closeup
-The following is a deeper dive into the specifics of `mirserver`:
-```{mermaid} mirserver.mmd
-```
