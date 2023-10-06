@@ -696,7 +696,7 @@ auto pick_stream_surface_config(EGLDisplay dpy, mg::GLConfig const& gl_config) -
         EGL_RED_SIZE, 8,
         EGL_GREEN_SIZE, 8,
         EGL_BLUE_SIZE, 8,
-        EGL_ALPHA_SIZE, 8,
+        EGL_ALPHA_SIZE, 0,
         EGL_DEPTH_SIZE, gl_config.depth_buffer_bits(),
         EGL_STENCIL_SIZE, gl_config.stencil_buffer_bits(),
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
