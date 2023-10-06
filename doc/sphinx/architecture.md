@@ -4,13 +4,23 @@ This document introduces the architecture of *Mir* at a high-level.
 ## Audience
 This document is intended to provide contributors to *Mir* an overview of *Mir*'s systems. It is *not* intended to guide compositor authors.
 
-Click [here](./architecture_diagram.rst) to see a diagram of *Mir*'s systems.
-
 ## Index
+- [Diagrams](#diagrams)
 - [APIs for compositor authors](#apis-for-compositor-authors)
 - [The Mir Engine](#the-mir-engine)
 - [Platforms](#platforms)
 - [Supporting Libraries](#supporting-libraries)
+
+## Diagrams
+### High-Level Diagram
+The following describes the largest chunks of *Mir* and how they relate to one another:
+```{mermaid} high_level_diagram.mmd
+```
+
+### Mirserver Closeup
+Let's take a deeper look into the different systems at play in `mirserver`.
+```{mermaid} mirserver.mmd
+```
 
 ## APIs for compositor authors
 *Mir* provides compositor authors with a set of libraries that they can use to build Wayland based shells. These libraries are:

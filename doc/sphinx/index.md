@@ -32,6 +32,5 @@ The server API is introduced here: [Introducing the MirAL API](introducing_the_m
 getting_and_using_mir
 getting_involved_in_mir
 architecture
-architecture_diagram
 api/library_root
 ```
