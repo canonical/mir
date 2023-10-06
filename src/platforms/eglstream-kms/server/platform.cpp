@@ -177,7 +177,9 @@ mge::RenderingPlatform::RenderingPlatform(EGLDisplay dpy)
     : dpy{dpy},
       ctx{std::make_unique<BasicEGLContext>(dpy)}
 {
-    setenv(mir_xwayland_option, "-eglstream", 1);
+    // XWayland eglstream has always been kinda flaky, now it's somehow worse.
+    // Disable it until we've had a chance to look at what's wrong.
+    // setenv(mir_xwayland_option, "-eglstream", 1);
 }
 
 mge::RenderingPlatform::~RenderingPlatform()
