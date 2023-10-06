@@ -20,6 +20,7 @@
 #include "egl_output.h"
 
 #include "kms-utils/drm_mode_resources.h"
+#include "mir/graphics/platform.h"
 #include "threaded_drm_event_handler.h"
 
 #include "mir/graphics/display_configuration.h"
@@ -29,8 +30,6 @@
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/transformation.h"
-#include "mir/renderer/gl/render_target.h"
-#include "mir/renderer/gl/context.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/event_handler_register.h"
@@ -46,7 +45,7 @@
 
 namespace mg = mir::graphics;
 namespace mge = mir::graphics::eglstream;
-namespace mgk = mir::graphics::kms;
+namespace geom = mir::geometry;
 
 #ifndef EGL_NV_output_drm_flip_event
 #define EGL_NV_output_drm_flip_event 1
@@ -125,7 +124,7 @@ class DisplayBuffer
 {
 public:
     DisplayBuffer(
-        std::shared_ptr<mg::DisplayInterfaceProvider> owner,
+        std::shared_ptr<mg::eglstream::InterfaceProvider> owner,
         mir::Fd drm_node,
         EGLDisplay dpy,
         EGLContext ctx,
@@ -193,44 +192,9 @@ public:
         pending_flip = satisfied_promise.get_future();
     }
 
-    /* gl::RenderTarget */
-    auto size() const -> mir::geometry::Size override
-    {
-        return output_size;
-    }
-
-    void make_current() override
-    {
-        if (eglMakeCurrent(dpy, surface, surface, ctx) != EGL_TRUE)
-        {
-            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to make context current"));
-        }
-    }
-
-    void release_current() override
-    {
-        if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE)
-        {
-            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to release context"));
-        }
-    }
-
-    void swap_buffers() override
-    {
-        if (eglSwapBuffers(dpy, surface) != EGL_TRUE)
-        {
-            BOOST_THROW_EXCEPTION(mg::egl_error("eglSwapBuffers failed"));
-        }
-    }
-
     mir::geometry::Rectangle view_area() const override
     {
         return view_area_;
-    }
-
-    bool overlay(std::vector<mg::DisplayElement> const&) override
-    {
-        return false;
     }
 
     glm::mat2 transformation() const override
@@ -270,18 +234,60 @@ public:
         }
     }
 
-    void bind() override
-    {
-    }
-
     std::chrono::milliseconds recommended_sleep() const override
     {
         return std::chrono::milliseconds{0};
     }
 
+    auto display_provider() const -> std::shared_ptr<mg::DisplayInterfaceProvider> override
+    {
+        return std::make_shared<mg::eglstream::InterfaceProvider>(*owner, output_stream);
+    }
+
+    void set_next_image(std::unique_ptr<mg::Framebuffer> content) override
+    {
+        std::vector<mg::DisplayElement> const single_buffer = {
+            mg::DisplayElement {
+                view_area(),
+                mir::geometry::RectangleF{
+                    {0, 0},
+                    {view_area().size.width.as_value(), view_area().size.height.as_value()}},
+                std::move(content)
+            }
+        };
+        if (!overlay(single_buffer))
+        {
+            // Oh, oh! We should be *guaranteed* to “overlay” a single Framebuffer; this is likely a programming error
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to post buffer to display"}));
+        }
+    }
+
+    bool overlay(std::vector<mg::DisplayElement> const& renderable_list) override
+    {
+        // TODO: implement more than the most basic case.
+        if (renderable_list.size() != 1)
+        {
+            return false;
+        }
+
+        if (renderable_list[0].screen_positon != view_area())
+        {
+            return false;
+        }
+
+        if (renderable_list[0].source_position.top_left != geom::PointF {0,0} ||
+            renderable_list[0].source_position.size.width.as_value() != view_area().size.width.as_int() ||
+            renderable_list[0].source_position.size.height.as_value() != view_area().size.height.as_int())
+        {
+            return false;
+        }
+
+        // TODO: Validate that the submitted "framebuffer" is *actually* our EGLStream
+        return true;
+    }
 private:
 
-    std::shared_ptr<mg::DisplayInterfaceProvider> const owner;
+    std::shared_ptr<mg::eglstream::InterfaceProvider> const owner;
     EGLDisplay dpy;
     EGLContext ctx;
     EGLOutputLayerEXT layer;
@@ -313,12 +319,14 @@ mge::KMSDisplayConfiguration create_display_configuration(
 }
 
 mge::Display::Display(
+    std::shared_ptr<InterfaceProvider> provider,
     mir::Fd drm_node,
     EGLDisplay display,
     std::shared_ptr<DisplayConfigurationPolicy> const& configuration_policy,
     GLConfig const& gl_conf,
     std::shared_ptr<DisplayReport> display_report)
-    : drm_node{drm_node},
+    : provider{std::move(provider)},
+      drm_node{drm_node},
       display{display},
       config{choose_config(display, gl_conf)},
       context{create_context(display, config)},
@@ -368,13 +376,14 @@ void mge::Display::configure(DisplayConfiguration const& conf)
                  const_cast<kms::EGLOutput&>(output).configure(output.current_mode_index);
                  active_sync_groups.emplace_back(
                      std::make_unique<::DisplayBuffer>(
-                         drm_node,
-                         display,
-                         context,
-                         config,
-                         event_handler,
-                         output,
-                         display_report));
+                        provider,
+                        drm_node,
+                        display,
+                        context,
+                        config,
+                        event_handler,
+                        output,
+                        display_report));
              }
          });
 }

@@ -19,15 +19,22 @@
 #include "platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
+#include "mir/graphics/platform.h"
 #include "utils.h"
+#include "eglstream_interface_provider.h"
 
+#include "one_shot_device_observer.h"
+
+#include "mir/console_services.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/renderer/gl/context.h"
 
+#include <sys/sysmacros.h>
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_file_name.hpp>
 
 namespace mg = mir::graphics;
+namespace mgc = mir::graphics::common;
 namespace mge = mir::graphics::eglstream;
 
 namespace
@@ -47,10 +54,10 @@ auto make_egl_context(EGLDisplay dpy) -> EGLContext
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_NONE
     };
-    
+
     EGLConfig egl_config;
     EGLint num_egl_configs{0};
-    
+
     if (eglChooseConfig(dpy, config_attr, &egl_config, 1, &num_egl_configs) == EGL_FALSE ||
         num_egl_configs != 1)
     {
@@ -192,4 +199,68 @@ auto mge::RenderingPlatform::maybe_create_interface(
         return std::make_shared<mge::GLRenderingProvider>(dpy, ctx->make_share_context());
     }
     return nullptr;
+}
+
+mge::DisplayPlatform::DisplayPlatform(
+    ConsoleServices& console,
+    EGLDeviceEXT device,
+    std::shared_ptr<mg::DisplayReport> display_report)
+    : display_report{std::move(display_report)}
+{
+    using namespace std::literals;
+
+    auto const devnum = devnum_for_device(device);
+    drm_device = console.acquire_device(
+        major(devnum), minor(devnum),
+        std::make_unique<mgc::OneShotDeviceObserver>(drm_node))
+            .get();
+
+    if (drm_node == mir::Fd::invalid)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to acquire DRM device node for device"}));
+    }
+
+    int const drm_node_attrib[] = {
+        EGL_DRM_MASTER_FD_EXT, static_cast<int>(drm_node), EGL_NONE
+    };
+    display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, device, drm_node_attrib);
+
+    if (display == EGL_NO_DISPLAY)
+    {
+        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to create EGLDisplay on EGLDeviceEXT")));
+    }
+
+    std::tuple<EGLint, EGLint> egl_version = std::make_tuple(1, 4);
+    if (eglInitialize(display, &std::get<0>(egl_version), &std::get<1>(egl_version)) != EGL_TRUE)
+    {
+        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to initialize EGL")));
+    }
+    if (egl_version < std::make_tuple(1, 4))
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{
+            "Incompatible EGL version"s +
+            "Wanted 1.4, got " +
+            std::to_string(std::get<0>(egl_version)) + "." + std::to_string(std::get<1>(egl_version))}));
+    }
+
+    provider = std::make_shared<InterfaceProvider>(display);
+}
+
+auto mge::DisplayPlatform::create_display(
+    std::shared_ptr<DisplayConfigurationPolicy> const& configuration_policy,
+    std::shared_ptr<GLConfig> const& gl_config)
+    -> UniqueModulePtr<mg::Display>
+{
+    return mir::make_module_ptr<mge::Display>(
+        provider,
+        drm_node,
+        display,
+        configuration_policy,
+        *gl_config,
+        display_report);
+}
+
+auto mge::DisplayPlatform::interface_for() -> std::shared_ptr<DisplayInterfaceProvider>
+{
+    return provider;
 }

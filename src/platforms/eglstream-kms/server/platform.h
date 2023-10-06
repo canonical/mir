@@ -18,7 +18,6 @@
 #define MIR_PLATFORMS_EGLSTREAM_KMS_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
-#include "mir/options/option.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
 #include "mir/fd.h"
@@ -39,6 +38,7 @@ namespace graphics
 {
 namespace eglstream
 {
+class InterfaceProvider;
 
 class RenderingPlatform : public graphics::RenderingPlatform
 {
@@ -56,8 +56,30 @@ private:
     EGLDisplay const dpy;
     std::unique_ptr<renderer::gl::Context> const ctx;
 };
-}
-}
-}
 
+class DisplayPlatform : public graphics::DisplayPlatform
+{
+public:
+    DisplayPlatform(
+        ConsoleServices& console,
+        EGLDeviceEXT device,
+        std::shared_ptr<DisplayReport> display_report);
+
+    auto create_display(
+        std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
+        std::shared_ptr<GLConfig> const& gl_config)
+        ->UniqueModulePtr<Display> override;
+
+private:
+    auto interface_for() -> std::shared_ptr<DisplayInterfaceProvider> override;
+
+    std::unique_ptr<mir::Device> drm_device;
+    EGLDisplay display;
+    std::shared_ptr<eglstream::InterfaceProvider> provider;
+    mir::Fd drm_node;
+    std::shared_ptr<DisplayReport> const display_report;
+};
+}
+}
+}
 #endif // MIR_PLATFORMS_EGLSTREAM_KMS_PLATFORM_H_
