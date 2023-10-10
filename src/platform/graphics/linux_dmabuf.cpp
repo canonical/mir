@@ -1260,8 +1260,9 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<Buffer> buffer)
             }
             auto importable_dmabuf = export_egl_image(*importing_provider->dmabuf_export_ext, importing_provider->dpy, importable_image, dmabuf_tex->size());
 
-            eglDestroyImage(importing_provider->dpy, src_image);
-            eglDestroyImage(importing_provider->dpy, importable_image);
+            auto base_extension = importing_provider->egl_extensions->base(importing_provider->dpy);
+            base_extension.eglDestroyImageKHR(importing_provider->dpy, src_image);
+            base_extension.eglDestroyImageKHR(importing_provider->dpy, importable_image);
 
             if (auto descriptor = descriptor_for_format_and_modifiers(
                         importable_dmabuf->format(),
