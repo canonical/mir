@@ -52,10 +52,9 @@ TEST_F(VirtualGraphicsPlatformTest, lone_config_has_one_output_size_when_provide
 
 TEST_F(VirtualGraphicsPlatformTest, multiple_output_sizes_are_set_correctly_when_multiple_are_provided)
 {
-    auto configs = mgv::Platform::parse_output_sizes({"1280x1024:800x600"});
-    EXPECT_THAT(configs, ElementsAre(
-        mgv::VirtualOutputConfig(std::vector<geom::Size>{geom::Size{1280, 1024}}),
-        mgv::VirtualOutputConfig(std::vector<geom::Size>{geom::Size{800, 600}})));
+    auto config = mgv::Platform::parse_output_sizes({"1280x1024:800x600"});
+    EXPECT_THAT(config, ElementsAre(
+        mgv::VirtualOutputConfig(std::vector<geom::Size>{geom::Size{1280, 1024}, geom::Size{800, 600}})));
 }
 
 TEST_F(VirtualGraphicsPlatformTest, can_acquire_interface_for_generic_egl_display_provider)
