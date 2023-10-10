@@ -175,7 +175,7 @@ void mgc::CPUCopyOutputSurface::make_current()
 
 void mgc::CPUCopyOutputSurface::release_current()
 {
-    impl->make_current();
+    impl->release_current();
 }
 
 auto mgc::CPUCopyOutputSurface::commit() -> std::unique_ptr<mg::Framebuffer>
