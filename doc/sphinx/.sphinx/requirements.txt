@@ -13,3 +13,4 @@ sphinxcontrib-jquery
 sphinx-notfound-page
 breathe
 exhale
+sphinxcontrib-mermaid

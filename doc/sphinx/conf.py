@@ -17,7 +17,6 @@ from custom_conf import *
 
 extensions = [
     'sphinx_design',
-    'sphinx_tabs.tabs',
     'sphinx_reredirects',
     'youtube-links',
     'related-links',
