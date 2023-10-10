@@ -26,6 +26,7 @@
 
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/platform.h"
+#include "mir/log.h"
 
 #include "cpu_copy_output_surface.h"
 
@@ -249,12 +250,18 @@ void mgc::CPUCopyOutputSurface::Impl::bind()
 
 void mgc::CPUCopyOutputSurface::Impl::make_current()
 {
-    eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx);
+    if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx) != EGL_TRUE)
+    {
+        mir::log_debug("Failed to make EGL context current");
+    }
 }
 
 void mgc::CPUCopyOutputSurface::Impl::release_current()
 {
-    eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE)
+    {
+        mir::log_debug("Failed to release current EGL context");
+    }
 }
 
 auto mgc::CPUCopyOutputSurface::Impl::commit() -> std::unique_ptr<mg::Framebuffer>
