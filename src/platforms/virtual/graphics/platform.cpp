@@ -24,6 +24,11 @@ namespace mgv = mir::graphics::virt;
 namespace geom = mir::geometry;
 using namespace std::literals;
 
+namespace
+{
+mgv::Platform* virtual_platform = nullptr;
+}
+
 class mgv::Platform::VirtualDisplayInterfaceProvider : public mg::DisplayInterfaceProvider
 {
 public:
@@ -87,6 +92,12 @@ mgv::Platform::Platform(
       provider{std::make_shared<VirtualDisplayInterfaceProvider>()},
       outputs{outputs}
 {
+    virtual_platform = this;
+}
+
+mgv::Platform::~Platform()
+{
+    virtual_platform = nullptr;
 }
 
 mir::UniqueModulePtr<mg::Display> mgv::Platform::create_display(
@@ -118,4 +129,9 @@ auto mgv::Platform::parse_output_sizes(std::vector<std::string> virtual_outputs)
         configs.push_back(VirtualOutputConfig(std::move(sizes)));
     }
     return configs;
+}
+
+bool mgv::Platform::has_instance()
+{
+    return virtual_platform != nullptr;
 }

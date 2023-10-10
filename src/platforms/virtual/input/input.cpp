@@ -18,6 +18,8 @@
 #include "mir/module_properties.h"
 #include "mir/assert_module_entry_point.h"
 #include "mir/libname.h"
+#include "mir/options/configuration.h"
+#include "../graphics/platform.h"
 
 namespace mo = mir::options;
 namespace mi = mir::input;
@@ -41,11 +43,16 @@ void add_input_platform_options(
 }
 
 mi::PlatformPriority probe_input_platform(
-    mo::Option const& /*options*/,
+    mo::Option const&,
     mir::ConsoleServices&)
 {
     mir::assert_entry_point_signature<mi::ProbePlatform>(&probe_input_platform);
-    return mi::PlatformPriority::supported;
+    if (mir::graphics::virt::Platform::has_instance())
+    {
+        return mi::PlatformPriority::best;
+    }
+
+    return mi::PlatformPriority::dummy;
 }
 
 namespace

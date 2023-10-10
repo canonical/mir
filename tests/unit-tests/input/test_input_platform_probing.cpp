@@ -154,7 +154,7 @@ TEST_F(InputPlatformProbe, stub_platform_not_picked_up_by_default)
             empty_loaded_module_list,
             *stub_prober_report);
 
-    EXPECT_THAT(platform, OfPtrType<mi::virt::VirtualInputPlatform>());
+    EXPECT_THAT(platform, OfPtrType<mi::evdev::Platform>());
 }
 
 #ifdef MIR_BUILD_PLATFORM_X11
@@ -173,7 +173,7 @@ TEST_F(InputPlatformProbe, x11_input_platform_not_used_when_vt_specified)
             empty_loaded_module_list,
             *stub_prober_report);
 
-    EXPECT_THAT(platform, OfPtrType<mi::virt::VirtualInputPlatform>());
+    EXPECT_THAT(platform, OfPtrType<mi::evdev::Platform>());
 }
 
 #endif
