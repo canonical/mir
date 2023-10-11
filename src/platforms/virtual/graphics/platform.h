@@ -56,8 +56,6 @@ public:
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) override;
 
-    static bool has_instance();
-
 protected:
     auto interface_for() -> std::shared_ptr<DisplayInterfaceProvider> override;
 private:
