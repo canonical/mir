@@ -35,7 +35,7 @@ mg::DisplayConfigurationOutput mgv::DisplayConfiguration::build_output(mgv::Virt
         mg::DisplayConfigurationOutputId{last_output_id},
         mg::DisplayConfigurationCardId{0},
         mg::DisplayConfigurationLogicalGroupId{0},
-        mg::DisplayConfigurationOutputType::unknown,
+        mg::DisplayConfigurationOutputType::virt,
         {MirPixelFormat ::mir_pixel_format_argb_8888},
         std::move(configuration_modes),
         0,
