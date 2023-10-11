@@ -58,7 +58,7 @@ mi::PlatformPriority probe_input_platform(
 namespace
 {
 mir::ModuleProperties const description = {
-    "mir:virt-input",
+    "mir:virtual-input",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
     MIR_VERSION_MICRO,

@@ -30,7 +30,7 @@ namespace mgv = mir::graphics::virt;
 namespace
 {
 mir::ModuleProperties const description = {
-    "mir:virt",
+    "mir:virtual",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
     MIR_VERSION_MICRO,
