@@ -32,7 +32,6 @@
 #include "mir/test/doubles/mock_input_device_registry.h"
 #include "src/platforms/evdev/platform.h"
 #include "src/platforms/x11/input/input_platform.h"
-#include "src/platforms/virtual/input/input_platform.h"
 #include "mir/test/fake_shared.h"
 
 namespace mt = mir::test;
@@ -52,7 +51,6 @@ struct StubEmergencyCleanupRegistry : mir::EmergencyCleanupRegistry
 };
 char const platform_input_lib[] = "platform-input-lib";
 char const platform_path[] = "platform-path";
-char const platform_display_libs[] = "platform-display-libs";
 
 struct InputPlatformProbe : ::testing::Test
 {
@@ -60,7 +58,6 @@ struct InputPlatformProbe : ::testing::Test
     {
         ON_CALL(mock_options, is_set(StrEq(platform_input_lib))).WillByDefault(Return(false));
         ON_CALL(mock_options, is_set(StrEq(platform_path))).WillByDefault(Return(true));
-        ON_CALL(mock_options, is_set(StrEq(platform_display_libs))).WillByDefault(Return(true));
         ON_CALL(mock_options, get(StrEq(platform_path),Matcher<char const*>(_)))
             .WillByDefault(Return(platform_path_value));
         ON_CALL(mock_options, get(StrEq(platform_path)))
@@ -75,12 +72,6 @@ struct InputPlatformProbe : ::testing::Test
                     {
                         return platform_input_lib_value_as_any;
                     }));
-        ON_CALL(mock_options, get(StrEq(platform_display_libs_value)))
-            .WillByDefault(Invoke(
-                [this](char const*) -> boost::any const&
-                {
-                    return platform_display_libs_value_as_any;
-                }));
 #ifdef MIR_BUILD_PLATFORM_X11
         ON_CALL(mock_x11, XGetXCBConnection(_))
             .WillByDefault(Return(reinterpret_cast<xcb_connection_t*>(1)));
@@ -110,8 +101,6 @@ struct InputPlatformProbe : ::testing::Test
     boost::any platform_path_value_as_any{platform_path_value};
     std::string platform_input_lib_value;
     boost::any platform_input_lib_value_as_any;
-    std::string platform_display_libs_value;
-    boost::any platform_display_libs_value_as_any;
     std::vector<std::shared_ptr<mir::SharedLibrary>> const empty_loaded_module_list{};
 };
 

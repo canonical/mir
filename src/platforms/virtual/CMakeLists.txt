@@ -1,5 +1,4 @@
 add_subdirectory(graphics/)
-add_subdirectory(input/)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
     ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
@@ -8,8 +7,6 @@ set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 add_library(mirplatformvirtual MODULE
   $<TARGET_OBJECTS:mirplatformgraphicsvirtualobjects>
   $<TARGET_OBJECTS:mirplatformgraphicsvirtualobjects-symbols>
-  $<TARGET_OBJECTS:mirplatforminputvirtualobjects>
-  $<TARGET_OBJECTS:mirplatforminputvirtualobjects-symbols>
 )
 
 

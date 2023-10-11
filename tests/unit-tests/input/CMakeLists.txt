@@ -25,9 +25,7 @@ list(APPEND UMOCK_UNIT_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_input_platform_probing.cpp
     $<TARGET_OBJECTS:mirplatforminputevdevobjects>
     $<TARGET_OBJECTS:mirevdevutilsobjects>
-    $<TARGET_OBJECTS:mirplatforminputvirtualobjects>
 )
-
 if (MIR_BUILD_PLATFORM_X11)
 list(APPEND UMOCK_UNIT_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_x11_platform.cpp

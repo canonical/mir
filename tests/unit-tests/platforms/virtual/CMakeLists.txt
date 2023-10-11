@@ -2,7 +2,6 @@ mir_add_wrapped_executable(mir_unit_tests_virtual NOINSTALL
   ${CMAKE_CURRENT_SOURCE_DIR}/test_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display.cpp
   $<TARGET_OBJECTS:mirplatformgraphicsvirtualobjects>
-  $<TARGET_OBJECTS:mirplatforminputvirtualobjects>
   $<TARGET_OBJECTS:mirnullreport>  # Sub-optimal. We really want to link a lib
 )
 
