@@ -1,4 +1,4 @@
-MIRPLATFORM_2.5 {
+MIR_PLATFORM_2.16 {
  global:
   extern "C++" {
     mir::graphics::AtomicFrame::increment*;
@@ -6,6 +6,18 @@ MIRPLATFORM_2.5 {
     mir::graphics::AtomicFrame::store*;
     mir::graphics::Buffer::Buffer*;
     mir::graphics::BufferBasic::BufferBasic*;
+    mir::graphics::DMABufEGLProvider::?DMABufEGLProvider*;
+    mir::graphics::DMABufEGLProvider::DMABufEGLProvider*;
+    mir::graphics::DMABufEGLProvider::as_texture*;
+    mir::graphics::DRMFormat::DRMFormat*;
+    mir::graphics::DRMFormat::alpha_equivalent*;
+    mir::graphics::DRMFormat::as_mir_format*;
+    mir::graphics::DRMFormat::components*;
+    mir::graphics::DRMFormat::from_mir_format*;
+    mir::graphics::DRMFormat::has_alpha*;
+    mir::graphics::DRMFormat::name*;
+    mir::graphics::DRMFormat::opaque_equivalent*;
+    mir::graphics::DRMFormat::operator?unsigned?int*; /* Is actually operator uint32_t(), but 🤷 */
     mir::graphics::DisplayConfiguration::operator*;
     mir::graphics::DisplayConfiguration::valid*;
     mir::graphics::DisplayConfigurationOutput::extents*;
@@ -51,7 +63,11 @@ MIRPLATFORM_2.5 {
     mir::graphics::UserDisplayConfigurationOutput::extents*;
     mir::graphics::alpha_channel_depth*;
     mir::graphics::blue_channel_depth*;
+    mir::graphics::common::EGLContextExecutor::?EGLContextExecutor*;
+    mir::graphics::common::EGLContextExecutor::EGLContextExecutor*;
+    mir::graphics::common::EGLContextExecutor::spawn*;
     mir::graphics::contains_alpha*;
+    mir::graphics::drm_modifier_to_string*;
     mir::graphics::egl_category*;
     mir::graphics::gl::Program::?Program*;
     mir::graphics::gl::ProgramFactory::?ProgramFactory*;
@@ -108,6 +124,7 @@ MIRPLATFORM_2.5 {
     mir::options::glog_log_dir*;
     mir::options::glog_minloglevel*;
     mir::options::glog_stderrthreshold*;
+    mir::options::idle_timeout_opt;
     mir::options::input_report_opt*;
     mir::options::log_opt_value*;
     mir::options::logind_console;
@@ -135,8 +152,10 @@ MIRPLATFORM_2.5 {
     mir::renderer::software::as_read_mappable_buffer*;
     mir::udev::Context::?Context*;
     mir::udev::Context::Context*;
+    mir::udev::Context::char_device_from_devnum*;
     mir::udev::Context::ctx*;
     mir::udev::Context::device_from_syspath*;
+    mir::udev::Device::clone*;
     mir::udev::Device::initialised*;
     mir::udev::Device::sysname*;
     mir::udev::Device::syspath*;
@@ -161,6 +180,7 @@ MIRPLATFORM_2.5 {
     typeinfo?for?mir::graphics::Buffer;
     typeinfo?for?mir::graphics::BufferBasic;
     typeinfo?for?mir::graphics::DisplayConfiguration;
+    typeinfo?for?mir::graphics::common::EGLContextExecutor;
     typeinfo?for?mir::graphics::gl::Program;
     typeinfo?for?mir::graphics::gl::ProgramFactory;
     typeinfo?for?mir::graphics::gl::Texture;
@@ -172,6 +192,7 @@ MIRPLATFORM_2.5 {
     vtable?for?mir::graphics::Buffer;
     vtable?for?mir::graphics::BufferBasic;
     vtable?for?mir::graphics::DisplayConfiguration;
+    vtable?for?mir::graphics::common::EGLContextExecutor;
     vtable?for?mir::graphics::gl::Program;
     vtable?for?mir::graphics::gl::ProgramFactory;
     vtable?for?mir::graphics::gl::Texture;
@@ -183,56 +204,3 @@ MIRPLATFORM_2.5 {
  local: *;
 };
 
-MIRPLATFORM_2.7 {
- global:
-  extern "C++" {
-    mir::options::idle_timeout_opt;
-  };
-} MIRPLATFORM_2.5;
-
-MIR_PLATFORM_2.8 {
- global:
-  extern "C++" {
-    mir::graphics::DRMFormat::DRMFormat*;
-    mir::graphics::DRMFormat::name*;
-    mir::graphics::DRMFormat::alpha_equivalent*;
-    mir::graphics::DRMFormat::opaque_equivalent*;
-    mir::graphics::DRMFormat::has_alpha*;
-    mir::graphics::DRMFormat::components*;
-    mir::graphics::DRMFormat::operator?unsigned?int*; /* Is actually operator uint32_t(), but 🤷 */
-
-    mir::graphics::drm_modifier_to_string*;
- 
-    mir::udev::Device::clone*;
-    mir::udev::Context::char_device_from_devnum*;
-
-    mir::graphics::common::EGLContextExecutor::EGLContextExecutor*;
-    mir::graphics::common::EGLContextExecutor::?EGLContextExecutor*;
-    mir::graphics::common::EGLContextExecutor::spawn*;
-    typeinfo?for?mir::graphics::common::EGLContextExecutor;
-    vtable?for?mir::graphics::common::EGLContextExecutor;
-   };
-} MIRPLATFORM_2.7;
-
-MIR_PLATFORM_2.11 {
- global:
-  extern "C++" {
-    mir::graphics::DRMFormat::as_mir_format*;
-  };
-} MIR_PLATFORM_2.8;
-
-MIR_PLATFORM_2.13 {
- global:
-  extern "C++" {
-   mir::graphics::DRMFormat::from_mir_format*;
-  };
-} MIR_PLATFORM_2.11;
-
-MIR_PLATFORM_2.16 {
- global:
-  extern "C++" {
-   mir::graphics::DMABufEGLProvider::DMABufEGLProvider*;
-   mir::graphics::DMABufEGLProvider::?DMABufEGLProvider*;
-   mir::graphics::DMABufEGLProvider::as_texture*;
-  };
-} MIR_PLATFORM_2.13;
