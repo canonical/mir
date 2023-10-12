@@ -31,13 +31,13 @@ class Display : public mir::graphics::Display
 {
 public:
     explicit Display(std::vector<VirtualOutputConfig> output_sizes);
-    void for_each_display_sync_group(const std::function<void(DisplaySyncGroup &)> &f) override;
+    void for_each_display_sync_group(std::function<void(DisplaySyncGroup &)> const& f) override;
     std::unique_ptr<mir::graphics::DisplayConfiguration> configuration() const override;
-    bool apply_if_configuration_preserves_display_buffers(const mir::graphics::DisplayConfiguration &conf) override;
-    void configure(const mir::graphics::DisplayConfiguration &conf) override;
+    bool apply_if_configuration_preserves_display_buffers(mir::graphics::DisplayConfiguration const& conf) override;
+    void configure(mir::graphics::DisplayConfiguration const& conf) override;
     void register_configuration_change_handler(
         EventHandlerRegister &handlers,
-       const DisplayConfigurationChangeHandler &conf_change_handler) override;
+        DisplayConfigurationChangeHandler const& conf_change_handler) override;
     void pause() override;
     void resume() override;
     std::shared_ptr<Cursor> create_hardware_cursor() override;

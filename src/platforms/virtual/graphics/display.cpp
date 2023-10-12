@@ -27,7 +27,7 @@ mgv::Display::Display(std::vector<VirtualOutputConfig> output_sizes)
 {
 }
 
-void mgv::Display::for_each_display_sync_group(const std::function<void(DisplaySyncGroup &)> &)
+void mgv::Display::for_each_display_sync_group(std::function<void(DisplaySyncGroup &)> const&)
 {
 }
 
@@ -41,8 +41,7 @@ std::unique_ptr<mg::DisplayConfiguration> mgv::Display::configuration() const
     return std::make_unique<mgv::DisplayConfiguration>(output_configurations);
 }
 
-bool mgv::Display::apply_if_configuration_preserves_display_buffers(
-    const mir::graphics::DisplayConfiguration &)
+bool mgv::Display::apply_if_configuration_preserves_display_buffers(mir::graphics::DisplayConfiguration const&)
 {
     return true;
 }
@@ -53,7 +52,7 @@ void mgv::Display::configure(mir::graphics::DisplayConfiguration const&)
 
 void mgv::Display::register_configuration_change_handler(
     mir::graphics::EventHandlerRegister &,
-    const mir::graphics::DisplayConfigurationChangeHandler &)
+    mir::graphics::DisplayConfigurationChangeHandler const&)
 {
 }
 
