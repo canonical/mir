@@ -18,7 +18,7 @@
 #include <gmock/gmock.h>
 
 #include "mir/graphics/platform.h"
-#include "src/platforms/virtual/graphics/platform.h"
+#include "src/platforms/virtual/platform.h"
 
 #include "mir/shared_library.h"
 #include "src/server/report/null/display_report.h"

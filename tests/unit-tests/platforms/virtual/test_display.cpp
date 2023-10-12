@@ -17,8 +17,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "src/platforms/virtual/graphics/display.h"
-#include "src/platforms/virtual/graphics/platform.h"
+#include "src/platforms/virtual/display.h"
+#include "src/platforms/virtual/platform.h"
 
 #include "mir/graphics/display_configuration.h"
 
