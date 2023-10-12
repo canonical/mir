@@ -59,7 +59,6 @@ void add_graphics_platform_options(boost::program_options::options_description& 
     config.add_options()
         (virtual_displays_option_name,
          boost::program_options::value<std::vector<std::string>>()
-            ->default_value(std::vector<std::string>{"1280x1024"}, "1280x1024")
             ->multitoken(),
          "[mir-on-virtual specific] Colon separated list of WIDTHxHEIGHT sizes for the \"output\" size."
          " Multiple outputs may be specified by providing the argument multiple times.");
@@ -68,15 +67,18 @@ void add_graphics_platform_options(boost::program_options::options_description& 
 auto probe_display_platform(
     std::shared_ptr<mir::ConsoleServices> const&,
     std::shared_ptr<mir::udev::Context> const&,
-    mo::ProgramOption const&) -> std::vector<mg::SupportedDevice>
+    mo::ProgramOption const& options) -> std::vector<mg::SupportedDevice>
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
     std::vector<mg::SupportedDevice> result;
-    result.push_back({
-        nullptr,
-        mg::PlatformPriority::supported,
-        nullptr
-    });
+    if (options.is_set(virtual_displays_option_name))
+    {
+        result.push_back({
+            nullptr,
+            mg::PlatformPriority::supported,
+            nullptr
+        });
+    }
     return result;
 }
 
