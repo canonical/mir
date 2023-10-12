@@ -58,7 +58,8 @@ jobs:
           glmark2-es2-wayland \
           lcov \
           mesa-utils \
-          ninja-build
+          ninja-build \
+          xwayland
 
         # deal with incompataibles preinstalled
         sudo apt-get remove --yes \
