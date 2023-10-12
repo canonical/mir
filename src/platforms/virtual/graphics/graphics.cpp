@@ -74,7 +74,7 @@ auto probe_display_platform(
     std::vector<mg::SupportedDevice> result;
     result.push_back({
         nullptr,
-        mg::PlatformPriority::dummy,
+        mg::PlatformPriority::supported,
         nullptr
     });
     return result;
