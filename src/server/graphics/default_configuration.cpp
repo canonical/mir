@@ -144,7 +144,7 @@ void hybrid_check(std::vector<std::pair<mg::SupportedDevice, std::shared_ptr<mir
         std::stable_sort(std::begin(platform_modules), std::end(platform_modules),
              [](auto const& l, auto const& r) { return l.first.support_level > r.first.support_level; });
 
-        platform_modules.resize(std::min(1ul, platform_modules.size()));
+        platform_modules.resize(std::min(1uz, platform_modules.size()));
     }
 }
 }
