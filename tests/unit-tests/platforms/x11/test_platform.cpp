@@ -81,7 +81,7 @@ TEST_F(X11GraphicsPlatformTest, failure_to_open_x11_display_results_in_an_error)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(mock_x11, XOpenDisplay(_))
+    EXPECT_CALL(mock_x11, XOpenDisplay(_)).Times(AtLeast(1))
         .WillRepeatedly(Return(nullptr));
 
     mir::SharedLibrary platform_lib{mtf::server_platform("server-x11")};
