@@ -53,7 +53,7 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
             providers.reserve(the_rendering_platforms().size());
             for (auto const& platform : the_rendering_platforms())
             {
-                if (auto gl_provider = mg::RenderingPlatform::acquire_interface<mg::GLRenderingProvider>(platform))
+                if (auto gl_provider = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(platform))
                 {
                     providers.push_back(gl_provider);            
                 }
@@ -115,7 +115,7 @@ auto mir::DefaultServerConfiguration::the_screen_shooter() -> std::shared_ptr<co
                 providers.reserve(the_rendering_platforms().size());
                 for (auto& platform : the_rendering_platforms())
                 {
-                    if (auto gl_provider = mg::RenderingPlatform::acquire_interface<mg::GLRenderingProvider>(platform))
+                    if (auto gl_provider = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(platform))
                     {
                         providers.push_back(gl_provider);
                     }

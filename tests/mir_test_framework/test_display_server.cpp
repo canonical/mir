@@ -110,7 +110,7 @@ void miral::TestDisplayServer::start_server()
                         {
                             auto first_rendering_platform = server.the_rendering_platforms().front();
                             auto gl_platform =
-                                mg::RenderingPlatform::acquire_interface<mg::GLRenderingProvider>(
+                                mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(
                                     std::move(first_rendering_platform));
                             if (gl_platform)
                             {

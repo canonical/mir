@@ -55,7 +55,7 @@ public:
     }
 
 protected:
-    auto maybe_create_interface(
+    auto maybe_create_provider(
         graphics::RenderingProvider::Tag const&) -> std::shared_ptr<graphics::RenderingProvider> override
     {
         return nullptr;

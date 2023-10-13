@@ -190,20 +190,20 @@ public:
      * Since this may result in a runtime probe the call may be costly, and the
      * result should be saved rather than re-acquiring an interface each time.
      *
-     * \tparam Interface
-     * \return  On success: an occupied std::shared_ptr<Interface>
-     *          On failure: std::shared_ptr<Interface>{nullptr}
+     * \tparam Provider
+     * \return  On success: an occupied std::shared_ptr<Provider>
+     *          On failure: std::shared_ptr<Provider>{nullptr}
      */
-    template<typename Interface>
-    static auto acquire_interface(std::shared_ptr<RenderingPlatform> platform) -> std::shared_ptr<Interface>
+    template<typename Provider>
+    static auto acquire_provider(std::shared_ptr<RenderingPlatform> platform) -> std::shared_ptr<Provider>
     {
         static_assert(
-            std::is_convertible_v<Interface*, RenderingProvider*>,
-            "Can only acquire a Renderer interface; Interface must implement RenderingProvider");
+            std::is_convertible_v<Provider*, RenderingProvider*>,
+            "Can only acquire a Renderer interface; Provider must implement RenderingProvider");
 
-        if (auto const base_interface = platform->maybe_create_interface(typename Interface::Tag{}))
+        if (auto const base_interface = platform->maybe_create_provider(typename Provider::Tag{}))
         {
-            if (auto const requested_interface = std::dynamic_pointer_cast<Interface>(base_interface))
+            if (auto const requested_interface = std::dynamic_pointer_cast<Provider>(base_interface))
             {
                 return requested_interface;
             }
@@ -216,7 +216,7 @@ public:
 
 protected:
     /**
-     * Acquire a specific hardware interface
+     * Acquire a specific rendering interface
      *
      * This should perform any runtime checks necessary to verify the requested interface is
      * expected to work and return a pointer to an implementation of that interface.
@@ -228,10 +228,11 @@ protected:
      * \param type_tag  [in]    An instance of the Tag type for the requested interface.
      *                          Implementations are expected to dynamic_cast<> this to
      *                          discover the specific interface being requested.
-     * \return      A pointer to an implementation of the RenderInterfaceBase-derived
-     *              interface that corresponds to the most-derived type of tag_type.
+     * \return  On success: A pointer to an implementation of the RenderingProvider-derived
+     *                      interface that corresponds to the most-derived type of tag_type
+     *          On failure: std::shared_ptr<RenderingProvider>{nullptr}
      */
-    virtual auto maybe_create_interface(
+    virtual auto maybe_create_provider(
         RenderingProvider::Tag const& type_tag) -> std::shared_ptr<RenderingProvider> = 0;
 };
 

@@ -61,8 +61,8 @@ public:
     }
 
 protected:
-    auto maybe_create_interface(
-        mg::RenderingProvider::Tag const&) -> std::shared_ptr<mg::RenderingProvider> override
+    auto maybe_create_provider(
+        mir::graphics::RenderingProvider::Tag const&) -> std::shared_ptr<mg::RenderingProvider> override
     {
         return nullptr;
     }

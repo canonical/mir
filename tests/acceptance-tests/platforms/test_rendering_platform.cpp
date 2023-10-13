@@ -134,7 +134,7 @@ TEST_P(RenderingPlatformTest, DISABLED_supports_gl_rendering)
             empty_options,
             emergency_cleanup);
 
-        auto const gl_interface = platform->acquire_interface<mg::GLRenderingProvider>(nullptr);
+        auto const gl_interface = platform->acquire_provider<mg::GLRenderingProvider>(nullptr);
         EXPECT_THAT(gl_interface, testing::NotNull());
     }
 }

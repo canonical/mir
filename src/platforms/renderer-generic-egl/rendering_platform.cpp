@@ -186,7 +186,7 @@ auto mge::RenderingPlatform::create_buffer_allocator(
     return make_module_ptr<mge::BufferAllocator>(dpy, static_cast<EGLContext>(*ctx), dmabuf_provider);
 }
 
-auto mge::RenderingPlatform::maybe_create_interface(RenderingProvider::Tag const& tag)
+auto mge::RenderingPlatform::maybe_create_provider(RenderingProvider::Tag const& tag)
     -> std::shared_ptr<RenderingProvider>
 {
     if (dynamic_cast<GLRenderingProvider::Tag const*>(&tag))

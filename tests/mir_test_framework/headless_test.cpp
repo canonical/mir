@@ -48,7 +48,7 @@ mtf::HeadlessTest::HeadlessTest()
         [this]() -> std::shared_ptr<mir::compositor::DisplayBufferCompositorFactory>
     {
         auto first_platform = server.the_rendering_platforms().front();
-        auto gl_platform = mg::RenderingPlatform::acquire_interface<mg::GLRenderingProvider>(std::move(first_platform));
+        auto gl_platform = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(std::move(first_platform));
         if (gl_platform)
         {
             return std::make_shared<mtf::HeadlessDisplayBufferCompositorFactory>(std::move(gl_platform), server.the_gl_config());

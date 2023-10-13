@@ -387,7 +387,7 @@ void basic_software_buffer_drawing(
         display,
         [platform, /*&renderers, &factory,*/ &min_height, &min_width](mg::DisplayBuffer& db)
         {
-            if (auto gl_interface = mg::RenderingPlatform::acquire_interface<mg::GLRenderingProvider>(platform))
+            if (auto gl_interface = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(platform))
             {
 //                auto output_surface = gl_interface->surface_for_output(db, );
 //                renderers.push_back(factory.create_renderer_for(std::move(output_surface), gl_interface));

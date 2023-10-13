@@ -43,7 +43,7 @@ public:
         graphics::Display const& output) -> UniqueModulePtr<graphics::GraphicBufferAllocator> override;
 
 protected:
-    auto maybe_create_interface(
+    auto maybe_create_provider(
         RenderingProvider::Tag const& type_tag) -> std::shared_ptr<RenderingProvider> override;
 
 private:

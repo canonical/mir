@@ -89,7 +89,7 @@ mir::UniqueModulePtr<mg::Display> mtf::StubGraphicPlatform::create_display(
     return mir::make_module_ptr<mtd::FakeDisplay>(display_rects);
 }
 
-auto mtf::StubGraphicPlatform::maybe_create_interface(
+auto mtf::StubGraphicPlatform::maybe_create_provider(
     mir::graphics::RenderingProvider::Tag const& tag)
     -> std::shared_ptr<mir::graphics::RenderingProvider>
 {

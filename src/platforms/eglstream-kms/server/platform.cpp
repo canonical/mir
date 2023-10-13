@@ -193,7 +193,7 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mge::RenderingPlatform::create_
     return mir::make_module_ptr<mge::BufferAllocator>(ctx->make_share_context());
 }
 
-auto mge::RenderingPlatform::maybe_create_interface(
+auto mge::RenderingPlatform::maybe_create_provider(
     RenderingProvider::Tag const& type_tag) -> std::shared_ptr<RenderingProvider>
 {
     if (dynamic_cast<graphics::GLRenderingProvider::Tag const*>(&type_tag))
