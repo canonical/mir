@@ -201,11 +201,11 @@ public:
             std::is_convertible_v<Provider*, RenderingProvider*>,
             "Can only acquire a Renderer interface; Provider must implement RenderingProvider");
 
-        if (auto const base_interface = platform->maybe_create_provider(typename Provider::Tag{}))
+        if (auto const provider = platform->maybe_create_provider(typename Provider::Tag{}))
         {
-            if (auto const requested_interface = std::dynamic_pointer_cast<Provider>(base_interface))
+            if (auto const requested = std::dynamic_pointer_cast<Provider>(provider))
             {
-                return requested_interface;
+                return requested;
             }
             BOOST_THROW_EXCEPTION((
                 std::logic_error{
