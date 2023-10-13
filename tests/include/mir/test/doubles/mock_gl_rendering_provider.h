@@ -24,7 +24,7 @@
 
 namespace mir::test::doubles
 {
-class MockGlRenderingPlatform : public graphics::GLRenderingProvider
+class MockGlRenderingProvider : public graphics::GLRenderingProvider
 {
 public:
     MOCK_METHOD(std::shared_ptr<graphics::gl::Texture>, as_texture, (std::shared_ptr<graphics::Buffer>), (override));

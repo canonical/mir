@@ -82,7 +82,7 @@ namespace probe
                                       */
 }
 
-class RendererInterfaceBase
+class RenderingProvider
 {
 public:
     class Tag
@@ -92,7 +92,7 @@ public:
         virtual ~Tag() = default;
     };
 
-    virtual ~RendererInterfaceBase() = default;
+    virtual ~RenderingProvider() = default;
 
     class FramebufferProvider
     {
@@ -143,10 +143,10 @@ class Texture;
 class OutputSurface;
 }
 
-class GLRenderingProvider : public RendererInterfaceBase
+class GLRenderingProvider : public RenderingProvider
 {
 public:
-    class Tag : public RendererInterfaceBase::Tag
+    class Tag : public RenderingProvider::Tag
     {
     };
 
@@ -198,8 +198,8 @@ public:
     static auto acquire_interface(std::shared_ptr<RenderingPlatform> platform) -> std::shared_ptr<Interface>
     {
         static_assert(
-            std::is_convertible_v<Interface*, RendererInterfaceBase*>,
-            "Can only acquire a Renderer interface; Interface must implement RendererInterfaceBase");
+            std::is_convertible_v<Interface*, RenderingProvider*>,
+            "Can only acquire a Renderer interface; Interface must implement RenderingProvider");
 
         if (auto const base_interface = platform->maybe_create_interface(typename Interface::Tag{}))
         {
@@ -232,7 +232,7 @@ protected:
      *              interface that corresponds to the most-derived type of tag_type.
      */
     virtual auto maybe_create_interface(
-        RendererInterfaceBase::Tag const& type_tag) -> std::shared_ptr<RendererInterfaceBase> = 0;
+        RenderingProvider::Tag const& type_tag) -> std::shared_ptr<RenderingProvider> = 0;
 };
 
 class DisplayInterfaceBase

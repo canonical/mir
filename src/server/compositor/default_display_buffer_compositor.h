@@ -54,7 +54,7 @@ public:
 private:
     graphics::DisplayBuffer& display_buffer;
     std::shared_ptr<renderer::Renderer> const renderer;
-    std::unique_ptr<graphics::RendererInterfaceBase::FramebufferProvider> const fb_adaptor;
+    std::unique_ptr<graphics::RenderingProvider::FramebufferProvider> const fb_adaptor;
     std::shared_ptr<compositor::CompositorReport> const report;
 };
 

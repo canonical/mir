@@ -96,7 +96,7 @@ struct DefaultDisplayBufferCompositor : public testing::Test
     testing::NiceMock<mtd::MockRenderer> mock_renderer;
     geom::Rectangle screen{{0, 0}, {1366, 768}};
     testing::NiceMock<mtd::MockDisplayBuffer> display_buffer;
-    mtd::StubGlRenderingPlatform gl_provider;
+    mtd::StubGlRenderingProvider gl_provider;
     std::shared_ptr<mtd::FakeRenderable> small;
     std::shared_ptr<mtd::FakeRenderable> big;
     std::shared_ptr<mtd::FakeRenderable> fullscreen;

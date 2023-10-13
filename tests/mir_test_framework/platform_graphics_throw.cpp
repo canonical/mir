@@ -62,7 +62,7 @@ public:
 
 protected:
     auto maybe_create_interface(
-        mg::RendererInterfaceBase::Tag const&) -> std::shared_ptr<mg::RendererInterfaceBase> override
+        mg::RenderingProvider::Tag const&) -> std::shared_ptr<mg::RenderingProvider> override
     {
         return nullptr;
     }

@@ -157,7 +157,7 @@ public:
     std::shared_ptr<testing::NiceMock<mtd::MockRenderable>> renderable;
     mg::RenderableList renderable_list;
     glm::mat4 trans;
-    std::shared_ptr<mtd::StubGlRenderingPlatform> const gl_platform{std::make_shared<mtd::StubGlRenderingPlatform>()};
+    std::shared_ptr<mtd::StubGlRenderingProvider> const gl_platform{std::make_shared<mtd::StubGlRenderingProvider>()};
 
     class StubProgram : public mg::gl::Program
     {

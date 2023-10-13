@@ -51,7 +51,7 @@ public:
 
 protected:
     auto maybe_create_interface(
-        RendererInterfaceBase::Tag const& type_tag) -> std::shared_ptr<RendererInterfaceBase> override;
+        RenderingProvider::Tag const& type_tag) -> std::shared_ptr<RenderingProvider> override;
 private:
     EGLDisplay const dpy;
     std::unique_ptr<renderer::gl::Context> const ctx;

@@ -37,8 +37,8 @@ public:
 
 protected:
     auto maybe_create_interface(
-        mir::graphics::RendererInterfaceBase::Tag const& tag)
-        -> std::shared_ptr<mir::graphics::RendererInterfaceBase> override;
+        mir::graphics::RenderingProvider::Tag const& tag)
+        -> std::shared_ptr<mir::graphics::RenderingProvider> override;
 
     auto interface_for()
         -> std::shared_ptr<mir::graphics::DisplayInterfaceProvider> override;
