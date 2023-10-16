@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_EGLSTREAM_INTERFACE_PROVIDER_H_
-#define MIR_GRAPHICS_EGLSTREAM_INTERFACE_PROVIDER_H_
+#ifndef MIR_GRAPHICS_EGLSTREAM_DISPLAY_TARGET_H_
+#define MIR_GRAPHICS_EGLSTREAM_DISPLAY_TARGET_H_
 
 #include "mir/graphics/platform.h"
 
@@ -23,15 +23,15 @@
 
 namespace mir::graphics::eglstream
 {
-class InterfaceProvider : public DisplayInterfaceProvider
+class EGLStreamDisplayTarget : public DisplayTarget
 {
 public:
-    InterfaceProvider(EGLDisplay dpy);
-    InterfaceProvider(InterfaceProvider const& from, EGLStreamKHR with_stream);
+    EGLStreamDisplayTarget(EGLDisplay dpy);
+    EGLStreamDisplayTarget(EGLStreamDisplayTarget const& from, EGLStreamKHR with_stream);
 
 protected:
-    auto maybe_create_interface(DisplayInterfaceBase::Tag const& tag)
-        -> std::shared_ptr<DisplayInterfaceBase> override;
+    auto maybe_create_interface(DisplayProvider::Tag const& tag)
+        -> std::shared_ptr<DisplayProvider> override;
 
 private:
     EGLDisplay dpy;
@@ -41,4 +41,4 @@ private:
 ;
 }
 
-#endif // MIR_GRAPHICS_EGLSTREAM_INTERFACE_PROVIDER_H_
+#endif // MIR_GRAPHICS_EGLSTREAM_DISPLAY_TARGET_H_

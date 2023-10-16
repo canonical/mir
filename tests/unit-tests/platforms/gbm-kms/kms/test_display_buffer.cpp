@@ -95,7 +95,7 @@ public:
                 },
                 bypass_framebuffer}
             }
-        , parent_platform{nullptr}
+        , target{nullptr}
     {
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
             .WillByDefault(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
@@ -173,13 +173,13 @@ protected:
     StubGLConfig gl_config;
     std::shared_ptr<mir::graphics::Framebuffer> const bypass_framebuffer;
     std::vector<mir::graphics::DisplayElement> const bypassable_list;
-    std::shared_ptr<mir::graphics::DisplayInterfaceProvider> const parent_platform;
+    std::shared_ptr<mir::graphics::DisplayTarget> const target;
 };
 
 TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
 {
     graphics::gbm::DisplayBuffer db(
-        parent_platform,
+        target,
         drm_fd,
         graphics::gbm::BypassOption::allowed,
         null_display_report(),
@@ -201,7 +201,7 @@ TEST_F(MesaDisplayBufferTest, frames_requiring_gl_are_not_throttled)
     };
 
     graphics::gbm::DisplayBuffer db(
-        parent_platform,
+        target,
         drm_fd,
         graphics::gbm::BypassOption::allowed,
         null_display_report(),
@@ -222,7 +222,7 @@ TEST_F(MesaDisplayBufferTest, frames_requiring_gl_are_not_throttled)
 TEST_F(MesaDisplayBufferTest, untransformed_with_bypassable_list_can_bypass)
 {
     graphics::gbm::DisplayBuffer db(
-        parent_platform,
+        target,
         drm_fd,
         graphics::gbm::BypassOption::allowed,
         null_display_report(),
@@ -247,7 +247,7 @@ TEST_F(MesaDisplayBufferTest, transformation_not_implemented_internally)
     glm::mat2 const rotate_left = transformation(mir_orientation_left);
 
     graphics::gbm::DisplayBuffer db(
-        parent_platform,
+        target,
         drm_fd,
         graphics::gbm::BypassOption::allowed,
         null_display_report(),

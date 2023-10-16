@@ -144,12 +144,12 @@ void log_drm_details(mir::Fd const& drm_fd)
 }
 
 mgg::Display::Display(
-    std::shared_ptr<DisplayInterfaceProvider> parent,
+    std::shared_ptr<DisplayTarget> target,
     mir::Fd drm_fd,
     mgg::BypassOption bypass_option,
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<DisplayReport> const& listener)
-    : owner{std::move(parent)},
+    : target{std::move(target)},
       drm_fd{std::move(drm_fd)},
       listener(listener),
       monitor(mir::udev::Context()),
@@ -422,7 +422,7 @@ void mgg::Display::configure_locked(
             else
             {
                 auto db = std::make_unique<DisplayBuffer>(
-                    owner,
+                    target,
                     drm_fd,
                     bypass_option,
                     listener,

@@ -100,7 +100,7 @@ public:
     static auto constexpr valid_input =
         "layouts:\n"
         "# keys here are layout labels (used for atomically switching between them)\n"
-        "# when enabling displays, surfaces should be matched in reverse recency order\n"
+        "# when enabling targets, surfaces should be matched in reverse recency order\n"
         "\n"
         "  default:                       # the first layout is the default\n"
         "\n"

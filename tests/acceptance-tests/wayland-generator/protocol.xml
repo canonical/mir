@@ -1148,7 +1148,7 @@
 	A popup surface is a transient surface with an added pointer
 	grab.
 
-	An existing implicit grab will be changed to owner-events mode,
+	An existing implicit grab will be changed to target-events mode,
 	and the popup grab will continue after the implicit grab ends
 	(i.e. releasing the mouse button does not cause the popup to
 	be unmapped).

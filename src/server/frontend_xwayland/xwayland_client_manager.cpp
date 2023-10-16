@@ -56,7 +56,7 @@ mf::XWaylandClientManager::XWaylandClientManager(std::shared_ptr<shell::Shell> c
 
 mf::XWaylandClientManager::~XWaylandClientManager()
 {
-    // drop_expired() should have been called for every owner before destroying
+    // drop_expired() should have been called for every target before destroying
     if (!sessions_by_pid.empty())
     {
         log_warning(

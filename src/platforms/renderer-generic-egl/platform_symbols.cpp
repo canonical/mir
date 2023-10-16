@@ -35,13 +35,13 @@ namespace mge = mg::egl::generic;
 
 auto create_rendering_platform(
     mg::SupportedDevice const&,
-    std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays,
+    std::vector<std::shared_ptr<mg::DisplayTarget>> const& targets,
     mo::Option const&,
     mir::EmergencyCleanupRegistry&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
 {
    mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
 
-    return mir::make_module_ptr<mge::RenderingPlatform>(displays);
+    return mir::make_module_ptr<mge::RenderingPlatform>(targets);
 }
 
 void add_graphics_platform_options(boost::program_options::options_description&)
@@ -50,7 +50,7 @@ void add_graphics_platform_options(boost::program_options::options_description&)
 }
 
 auto probe_rendering_platform(
-    std::span<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays,
+    std::span<std::shared_ptr<mg::DisplayTarget>> const& targets,
     mir::ConsoleServices&,
     std::shared_ptr<mir::udev::Context> const&,
     mo::ProgramOption const&) -> std::vector<mg::SupportedDevice>
@@ -59,9 +59,9 @@ auto probe_rendering_platform(
 
     mg::probe::Result maximum_suitability = mg::probe::unsupported;
     // First check if there are any displays we can possibly drive
-    for (auto const& display_provider : displays)
+    for (auto const& display_provider : targets)
     {
-        if (display_provider->acquire_interface<mg::GenericEGLDisplayProvider>())
+        if (display_provider->acquire_provider<mg::GenericEGLDisplayProvider>())
         {
             maximum_suitability = mg::probe::hosted;
             break;

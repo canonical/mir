@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "eglstream_interface_provider.h"
+#include "eglstream_display_target.h"
 #include "mir/graphics/platform.h"
 
 #include <EGL/egl.h>
@@ -26,10 +26,10 @@ namespace mg = mir::graphics;
 
 namespace
 {
-class DisplayProvider : public mg::EGLStreamDisplayProvider
+class DisplayProviderImpl : public mg::EGLStreamDisplayProvider
 {
 public:
-    DisplayProvider(EGLDisplay dpy, std::optional<EGLStreamKHR> stream);
+    DisplayProviderImpl(EGLDisplay dpy, std::optional<EGLStreamKHR> stream);
 
     auto get_egl_display() const -> EGLDisplay override;
 
@@ -39,18 +39,18 @@ private:
     std::optional<EGLStreamKHR> stream;
 };
   
-DisplayProvider::DisplayProvider(EGLDisplay dpy, std::optional<EGLStreamKHR> stream)
+DisplayProviderImpl::DisplayProviderImpl(EGLDisplay dpy, std::optional<EGLStreamKHR> stream)
     : dpy{dpy},
       stream{stream}
 {
 }
 
-auto DisplayProvider::get_egl_display() const -> EGLDisplay
+auto DisplayProviderImpl::get_egl_display() const -> EGLDisplay
 {
     return dpy;
 }
 
-auto DisplayProvider::claim_stream() -> EGLStreamKHR
+auto DisplayProviderImpl::claim_stream() -> EGLStreamKHR
 {
     if (stream)
     {
@@ -60,23 +60,23 @@ auto DisplayProvider::claim_stream() -> EGLStreamKHR
 }
 }
 
-mg::eglstream::InterfaceProvider::InterfaceProvider(EGLDisplay dpy)
+mg::eglstream::EGLStreamDisplayTarget::EGLStreamDisplayTarget(EGLDisplay dpy)
     : dpy{dpy}
 {
 }
 
-mg::eglstream::InterfaceProvider::InterfaceProvider(InterfaceProvider const& from, EGLStreamKHR with_stream)
+mg::eglstream::EGLStreamDisplayTarget::EGLStreamDisplayTarget(EGLStreamDisplayTarget const& from, EGLStreamKHR with_stream)
     : dpy{from.dpy},
       stream{with_stream}
 {
 }
 
-auto mg::eglstream::InterfaceProvider::maybe_create_interface(DisplayInterfaceBase::Tag const& tag)
-    -> std::shared_ptr<DisplayInterfaceBase>
+auto mg::eglstream::EGLStreamDisplayTarget::maybe_create_interface(DisplayProvider::Tag const& tag)
+    -> std::shared_ptr<DisplayProvider>
 {
     if (dynamic_cast<EGLStreamDisplayProvider::Tag const*>(&tag))
     {
-        return std::make_shared<DisplayProvider>(dpy, stream);
+        return std::make_shared<DisplayProviderImpl>(dpy, stream);
     }
     return nullptr;
 }

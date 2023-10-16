@@ -1255,7 +1255,7 @@
 
 	During a popup grab, the client owning the grab will receive pointer
 	and touch events for all their surfaces as normal (similar to an
-	"owner-events" grab in X11 parlance), while the top most grabbing popup
+	"target-events" grab in X11 parlance), while the top most grabbing popup
 	will always have keyboard focus.
       </description>
       <arg name="seat" type="object" interface="wl_seat"

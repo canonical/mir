@@ -104,7 +104,7 @@ TEST_P(ForUnmoveableTypes, doesnt_move)
 // Regular, floating regular, dialog, and satellite surfaces should be user-movable.
 // Popups, glosses, and tips should not be.
 // Freestyle surfaces may or may not be, as specified by the app.
-//                              Mir and Unity: Surfaces, input, and displays (v0.3)
+//                              Mir and Unity: Surfaces, input, and targets (v0.3)
 INSTANTIATE_TEST_SUITE_P(DragActiveWindow, ForMoveableTypes, ::testing::Values(
     mir_window_type_normal,
     mir_window_type_utility,

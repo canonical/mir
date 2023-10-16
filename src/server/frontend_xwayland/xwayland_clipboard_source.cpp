@@ -322,7 +322,7 @@ void mf::XWaylandClipboardSource::xfixes_selection_notify_event(xcb_xfixes_selec
     // No matter what, our old source (if any) is no longer valid
     auto const source_to_reset = std::move(clipboard_source);
 
-    // Only start the process if the new selection owner is a window not created by us
+    // Only start the process if the new selection target is a window not created by us
     if (current_clipbaord_owner != XCB_WINDOW_NONE && !connection.is_ours(current_clipbaord_owner))
     {
         if (verbose_xwayland_logging_enabled())

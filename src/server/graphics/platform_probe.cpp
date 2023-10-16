@@ -91,18 +91,18 @@ auto mir::graphics::probe_display_module(
 }
 
 auto mir::graphics::probe_rendering_module(
-    std::span<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays,
+    std::span<std::shared_ptr<mg::DisplayTarget>> const& targets,
     SharedLibrary const& module,
     options::ProgramOption const& options,
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<SupportedDevice>
 {
     return probe_module(
-        [&console, &options, &module, &displays]() -> std::vector<SupportedDevice>
+        [&console, &options, &module, &targets]() -> std::vector<SupportedDevice>
         {
             auto probe = module.load_function<mg::RenderProbe>(
                 "probe_rendering_platform",
                 MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
-            return probe(displays, *console, std::make_shared<mir::udev::Context>(), options);
+            return probe(targets, *console, std::make_shared<mir::udev::Context>(), options);
         },
         module,
         "rendering");
@@ -221,14 +221,14 @@ auto mir::graphics::display_modules_for_device(
 
 auto mir::graphics::rendering_modules_for_device(
     std::vector<std::shared_ptr<SharedLibrary>> const& modules,
-    std::span<std::shared_ptr<DisplayInterfaceProvider>> const& displays,
+    std::span<std::shared_ptr<DisplayTarget>> const& targets,
     options::ProgramOption const& options,
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>
 {
     return modules_for_device(
-        [&displays, &options, &console](SharedLibrary const& module) -> std::vector<SupportedDevice>
+        [&targets, &options, &console](SharedLibrary const& module) -> std::vector<SupportedDevice>
         {
-            return probe_rendering_module(displays, module, options, console);
+            return probe_rendering_module(targets, module, options, console);
         },
         modules);
 }

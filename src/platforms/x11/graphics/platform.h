@@ -73,13 +73,13 @@ public:
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) -> UniqueModulePtr<graphics::Display> override;
 
-    auto provider_for_window(xcb_window_t x_win) -> std::shared_ptr<DisplayInterfaceProvider>;
+    auto display_target_for_window(xcb_window_t x_win) -> std::shared_ptr<DisplayTarget>;
 protected:
-    auto interface_for() -> std::shared_ptr<DisplayInterfaceProvider> override;
+    auto target_for() -> std::shared_ptr<DisplayTarget> override;
 
 private:
-    class InterfaceProvider;
-    std::shared_ptr<InterfaceProvider> const egl_provider;
+    class X11DisplayTarget;
+    std::shared_ptr<X11DisplayTarget> const x11_display_target;
     std::shared_ptr<mir::X::X11Resources> const x11_resources;
     std::string const title;
     std::shared_ptr<DisplayReport> const report;

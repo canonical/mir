@@ -17,7 +17,7 @@
 #ifndef MIR_PLATFORMS_EGLSTREAM_KMS_DISPLAY_H_
 #define MIR_PLATFORMS_EGLSTREAM_KMS_DISPLAY_H_
 
-#include "eglstream_interface_provider.h"
+#include "eglstream_display_target.h"
 
 #include "mir/graphics/display.h"
 #include "kms_display_configuration.h"
@@ -42,7 +42,7 @@ class Display : public mir::graphics::Display
 {
 public:
     Display(
-        std::shared_ptr<InterfaceProvider> provider,
+        std::shared_ptr<EGLStreamDisplayTarget> provider,
         mir::Fd drm_node,
         EGLDisplay display,
         std::shared_ptr<DisplayConfigurationPolicy> const& configuration_policy,
@@ -67,7 +67,7 @@ public:
     std::shared_ptr<Cursor> create_hardware_cursor() override;
 
 private:
-    std::shared_ptr<InterfaceProvider> const provider;
+    std::shared_ptr<EGLStreamDisplayTarget> const provider;
     mir::Fd const drm_node;
     EGLDisplay display;
     EGLConfig config;

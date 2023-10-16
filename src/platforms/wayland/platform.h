@@ -29,7 +29,7 @@ namespace graphics
 {
 namespace wayland
 {
-class WlDisplayProvider;
+class WlDisplayTarget;
 
 class Platform : public graphics::DisplayPlatform
 {
@@ -42,13 +42,13 @@ public:
         std::shared_ptr<GLConfig> const& gl_config) override;
 
 protected:
-    auto interface_for() -> std::shared_ptr<DisplayInterfaceProvider> override;
+    auto target_for() -> std::shared_ptr<DisplayTarget> override;
 private:
 
     struct wl_display* const wl_display;
     std::shared_ptr<DisplayReport> const report;
 
-    std::shared_ptr<WlDisplayProvider> const provider;
+    std::shared_ptr<WlDisplayTarget> const target;
 };
 }
 }

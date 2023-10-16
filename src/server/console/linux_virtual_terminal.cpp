@@ -255,7 +255,7 @@ protected:
             if (fops->ioctl(device_fd, EVIOCREVOKE, nullptr))
             {
                 /*
-                 * This can be best-effort; we're not going to prevent the new VT owner from
+                 * This can be best-effort; we're not going to prevent the new VT target from
                  * using the device if this fails.
                  *
                  * It might result in this Mir server receiving unexpected input, however, so

@@ -45,14 +45,14 @@ namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
 
 mgg::DisplayBuffer::DisplayBuffer(
-    std::shared_ptr<DisplayInterfaceProvider> provider,
+    std::shared_ptr<DisplayTarget> target,
     mir::Fd drm_fd,
     mgg::BypassOption,
     std::shared_ptr<DisplayReport> const& listener,
     std::vector<std::shared_ptr<KMSOutput>> const& outputs,
     geom::Rectangle const& area,
     glm::mat2 const& transformation)
-    : provider{std::move(provider)},
+    : target_{std::move(target)},
       listener(listener),
       outputs(outputs),
       area(area),
@@ -298,9 +298,9 @@ void mgg::DisplayBuffer::schedule_set_crtc()
     needs_set_crtc = true;
 }
 
-auto mir::graphics::gbm::DisplayBuffer::display_provider() const -> std::shared_ptr<DisplayInterfaceProvider>
+auto mir::graphics::gbm::DisplayBuffer::target() const -> std::shared_ptr<DisplayTarget>
 {
-    return provider;
+    return target_;
 }
 
 auto mgg::DisplayBuffer::drm_fd() const -> mir::Fd

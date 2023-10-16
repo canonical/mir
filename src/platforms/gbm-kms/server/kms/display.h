@@ -35,7 +35,7 @@ namespace mir
 namespace graphics
 {
 
-class DisplayInterfaceProvider;
+class DisplayTarget;
 class DisplayReport;
 class DisplayBuffer;
 class DisplayConfigurationPolicy;
@@ -59,7 +59,7 @@ class Display : public graphics::Display
 {
 public:
     Display(
-        std::shared_ptr<DisplayInterfaceProvider> parent,
+        std::shared_ptr<DisplayTarget> target,
         mir::Fd drm_fd,
         BypassOption bypass_option,
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
@@ -86,7 +86,7 @@ public:
 private:
     void clear_connected_unused_outputs();
 
-    std::shared_ptr<DisplayInterfaceProvider> const owner;
+    std::shared_ptr<DisplayTarget> const target;
     mutable std::mutex configuration_mutex;
     mir::Fd const drm_fd;
     std::shared_ptr<DisplayReport> const listener;

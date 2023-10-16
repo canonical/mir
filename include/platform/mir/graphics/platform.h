@@ -62,7 +62,7 @@ class DisplayConfigurationPolicy;
 class GraphicBufferAllocator;
 class GLConfig;
 
-class DisplayInterfaceProvider;
+class DisplayTarget;
 
 namespace probe
 {
@@ -115,7 +115,7 @@ public:
          * Get a directly-displayable handle for a buffer, if cheaply possible
          *
          * Some buffer types can be passed as-is to the display hardware. If this
-         * buffer can be used in this way (on the DisplayInterfaceProvider associated
+         * buffer can be used in this way (on the DisplayTarget associated
          * with this FramebufferProvider), this method creates a handle that can be
          * passed to the overlay method of an associated DisplayBuffer.
          *
@@ -132,7 +132,7 @@ public:
     /**
      * Check how well this Renderer can support a particular display target 
      */ 
-    virtual auto suitability_for_display(std::shared_ptr<DisplayInterfaceProvider> const& target)
+    virtual auto suitability_for_display(std::shared_ptr<DisplayTarget> const& target)
         -> probe::Result = 0;
 
     /**
@@ -141,7 +141,7 @@ public:
     virtual auto suitability_for_allocator(std::shared_ptr<GraphicBufferAllocator> const& target)
         -> probe::Result = 0;
 
-    virtual auto make_framebuffer_provider(std::shared_ptr<DisplayInterfaceProvider> target)
+    virtual auto make_framebuffer_provider(std::shared_ptr<DisplayTarget> target)
         -> std::unique_ptr<FramebufferProvider> = 0;
 };
 
@@ -161,7 +161,7 @@ public:
     virtual auto as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture> = 0;
 
     virtual auto surface_for_output(
-        std::shared_ptr<DisplayInterfaceProvider> framebuffer_provider,
+        std::shared_ptr<DisplayTarget> target,
         geometry::Size size,
         GLConfig const& config) -> std::unique_ptr<gl::OutputSurface> = 0;
 };
@@ -244,7 +244,7 @@ protected:
         RenderingProvider::Tag const& type_tag) -> std::shared_ptr<RenderingProvider> = 0;
 };
 
-class DisplayInterfaceBase
+class DisplayProvider
 {
 public:
     class Tag
@@ -254,7 +254,7 @@ public:
         virtual ~Tag() = default;
     };
 
-    virtual ~DisplayInterfaceBase() = default;
+    virtual ~DisplayProvider() = default;
 };
 
 
@@ -271,10 +271,10 @@ public:
 };
 
 
-class CPUAddressableDisplayProvider : public DisplayInterfaceBase
+class CPUAddressableDisplayProvider : public DisplayProvider
 {
 public:
-    class Tag : public DisplayInterfaceBase::Tag
+    class Tag : public DisplayProvider::Tag
     {
     };
 
@@ -294,10 +294,10 @@ public:
         -> std::unique_ptr<MappableFB> = 0;
 };
 
-class GBMDisplayProvider : public DisplayInterfaceBase
+class GBMDisplayProvider : public DisplayProvider
 {
 public:
-    class Tag : public DisplayInterfaceBase::Tag
+    class Tag : public DisplayProvider::Tag
     {
     };
 
@@ -351,10 +351,10 @@ public:
 
 class DmaBufBuffer;
 
-class DmaBufDisplayProvider : public DisplayInterfaceBase
+class DmaBufDisplayProvider : public DisplayProvider
 {
 public:
-    class Tag : public DisplayInterfaceBase::Tag
+    class Tag : public DisplayProvider::Tag
     {
     };
 
@@ -366,10 +366,10 @@ public:
 typedef void* EGLStreamKHR;
 #endif
 
-class EGLStreamDisplayProvider : public DisplayInterfaceBase
+class EGLStreamDisplayProvider : public DisplayProvider
 {
 public:
-    class Tag : public DisplayInterfaceBase::Tag
+    class Tag : public DisplayProvider::Tag
     {
     };
 
@@ -378,10 +378,10 @@ public:
     virtual auto claim_stream() -> EGLStreamKHR = 0;
 };
 
-class GenericEGLDisplayProvider : public DisplayInterfaceBase
+class GenericEGLDisplayProvider : public DisplayProvider
 {
 public:
-    class Tag : public DisplayInterfaceBase::Tag
+    class Tag : public DisplayProvider::Tag
     {
     };
 
@@ -398,17 +398,17 @@ public:
     virtual auto alloc_framebuffer(GLConfig const& config, EGLContext share_context) -> std::unique_ptr<EGLFramebuffer> = 0;
 };
 
-class DisplayInterfaceProvider : public std::enable_shared_from_this<DisplayInterfaceProvider>
+class DisplayTarget : public std::enable_shared_from_this<DisplayTarget>
 {
 public:
-    DisplayInterfaceProvider() = default;
-    virtual ~DisplayInterfaceProvider() = default;
+    DisplayTarget() = default;
+    virtual ~DisplayTarget() = default;
 
-    DisplayInterfaceProvider(DisplayInterfaceProvider const&) = delete;
-    auto operator=(DisplayInterfaceProvider const&) -> DisplayInterfaceProvider& = delete;
+    DisplayTarget(DisplayTarget const&) = delete;
+    auto operator=(DisplayTarget const&) -> DisplayTarget& = delete;
 
     /**
-     * Attempt to acquire a platform-specific interface from this DisplayPlatform
+     * Attempt to acquire a platform-specific provider from this DisplayTarget
      *
      * Any given platform is not guaranteed to implement any specific interface,
      * and the set of supported interfaces may depend on the runtime environment.
@@ -416,20 +416,20 @@ public:
      * Since this may result in a runtime probe the call may be costly, and the
      * result should be saved rather than re-acquiring an interface each time.
      *
-     * \tparam Interface
-     * \return  On success: an occupied std::shared_ptr<Interface>
-     *          On failure: std::shared_ptr<Interface>{nullptr}
+     * \tparam Provider
+     * \return  On success: an occupied std::shared_ptr<Provider>
+     *          On failure: std::shared_ptr<Provider>{nullptr}
      */
-    template<typename Interface>
-    auto acquire_interface() -> std::shared_ptr<Interface>
+    template<typename Provider>
+    auto acquire_provider() -> std::shared_ptr<Provider>
     {
         static_assert(
-            std::is_convertible_v<Interface*, DisplayInterfaceBase*>,
-            "Can only acquire a Display interface; Interface must implement DisplayInterfaceBase");
+            std::is_convertible_v<Provider*, DisplayProvider*>,
+            "Can only acquire a DisplayProvider; Provider must implement DisplayProvider");
 
-        if (auto const base_interface = maybe_create_interface(typename Interface::Tag{}))
+        if (auto const base_interface = maybe_create_interface(typename Provider::Tag{}))
         {
-            if (auto const requested_interface = std::dynamic_pointer_cast<Interface>(base_interface))
+            if (auto const requested_interface = std::dynamic_pointer_cast<Provider>(base_interface))
             {
                 return requested_interface;
             }
@@ -453,11 +453,11 @@ protected:
      * \param type_tag  [in]    An instance of the Tag type for the requested interface.
      *                          Implementations are expected to dynamic_cast<> this to
      *                          discover the specific interface being requested.
-     * \return      A pointer to an implementation of the DisplayInterfaceBase-derived
+     * \return      A pointer to an implementation of the DisplayProvider-derived
      *              interface that corresponds to the most-derived type of tag_type.
      */
-    virtual auto maybe_create_interface(DisplayInterfaceBase::Tag const& type_tag)
-        -> std::shared_ptr<DisplayInterfaceBase> = 0;
+    virtual auto maybe_create_interface(DisplayProvider::Tag const& type_tag)
+        -> std::shared_ptr<DisplayProvider> = 0;
 };
 
 class DisplayPlatform : public std::enable_shared_from_this<DisplayPlatform>
@@ -477,12 +477,12 @@ public:
         std::shared_ptr<GLConfig> const& gl_config) = 0;
 
     static auto interface_for(std::shared_ptr<DisplayPlatform> platform)
-        -> std::shared_ptr<DisplayInterfaceProvider>
+        -> std::shared_ptr<DisplayTarget>
     {
-        return platform->interface_for();
+        return platform->target_for();
     }
 protected:
-    virtual auto interface_for() -> std::shared_ptr<DisplayInterfaceProvider> = 0;
+    virtual auto target_for() -> std::shared_ptr<DisplayTarget> = 0;
 };
 
 struct SupportedDevice
@@ -520,7 +520,7 @@ typedef mir::UniqueModulePtr<mir::graphics::DisplayPlatform>(*CreateDisplayPlatf
 
 typedef mir::UniqueModulePtr<mir::graphics::RenderingPlatform>(*CreateRenderPlatform)(
     mir::graphics::SupportedDevice const& device,
-    std::vector<std::shared_ptr<mir::graphics::DisplayInterfaceProvider>> const& displays,
+    std::vector<std::shared_ptr<mir::graphics::DisplayTarget>> const& targets,
     mir::options::Option const& options,
     mir::EmergencyCleanupRegistry& emergency_cleanup_registry);
 
@@ -533,7 +533,7 @@ typedef std::vector<mir::graphics::SupportedDevice>(*PlatformProbe)(
     mir::options::ProgramOption const& options);
 
 typedef std::vector<mir::graphics::SupportedDevice>(*RenderProbe)(
-    std::span<std::shared_ptr<mir::graphics::DisplayInterfaceProvider>> const&,
+    std::span<std::shared_ptr<mir::graphics::DisplayTarget>> const&,
     mir::ConsoleServices&,
     std::shared_ptr<mir::udev::Context> const&,
     mir::options::ProgramOption const&);
@@ -574,7 +574,7 @@ mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
 
 mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
     mir::graphics::SupportedDevice const& device,
-    std::vector<std::shared_ptr<mir::graphics::DisplayInterfaceProvider>> const& displays,
+    std::vector<std::shared_ptr<mir::graphics::DisplayTarget>> const& targets,
     mir::options::Option const& options,
     mir::EmergencyCleanupRegistry& emergency_cleanup_registry);
 
@@ -597,7 +597,7 @@ auto probe_display_platform(
     mir::options::ProgramOption const& options) -> std::vector<mir::graphics::SupportedDevice>;
 
 auto probe_rendering_platform(
-    std::span<std::shared_ptr<mir::graphics::DisplayInterfaceProvider>> const& display_providers,
+    std::span<std::shared_ptr<mir::graphics::DisplayTarget>> const& targets,
     mir::ConsoleServices& console,
     std::shared_ptr<mir::udev::Context> const& udev,
     mir::options::ProgramOption const& options) -> std::vector<mir::graphics::SupportedDevice>;

@@ -481,7 +481,7 @@ void mf::XWaylandClipboardProvider::paste_source_set(std::shared_ptr<ms::DataExc
 
     if (XWaylandClipboardSource::source_is_from(source.get(), *connection))
     {
-        // If the source is from our XWayland connection, clear current_source and don't touch the X11 selection owner
+        // If the source is from our XWayland connection, clear current_source and don't touch the X11 selection target
         current_source = nullptr;
     }
     else

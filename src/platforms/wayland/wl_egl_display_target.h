@@ -1,3 +1,21 @@
+/*
+ * Copyright © Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License version 2 or 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef MIR_PLATFORM_WAYLAND_DISPLAY_TARGET_H_
+#define MIR_PLATFORM_WAYLAND_DISPLAY_TARGET_H_
 
 #include "mir/graphics/platform.h"
 
@@ -6,20 +24,20 @@
 namespace mir::graphics::wayland
 {
 
-class WlDisplayProvider : public DisplayInterfaceProvider
+class WlDisplayTarget : public DisplayTarget
 {
 public:
-    WlDisplayProvider(EGLDisplay dpy);
+    WlDisplayTarget(EGLDisplay dpy);
 
-    WlDisplayProvider(
-        WlDisplayProvider const& from,
+    WlDisplayTarget(
+        WlDisplayTarget const& from,
         struct wl_surface* surface,
         geometry::Size size);
 
     auto get_egl_display() const -> EGLDisplay;
 
-    auto maybe_create_interface(DisplayInterfaceBase::Tag const& type_tag)
-        -> std::shared_ptr<DisplayInterfaceBase> override;
+    auto maybe_create_interface(DisplayProvider::Tag const& type_tag)
+        -> std::shared_ptr<DisplayProvider> override;
 
     class Framebuffer : public GenericEGLDisplayProvider::EGLFramebuffer
     {
@@ -53,3 +71,4 @@ private:
     std::shared_ptr<EGLDisplayProvider> const egl_provider;
 };
 }
+#endif // MIR_PLATFORM_WAYLAND_DISPLAY_TARGET_H_

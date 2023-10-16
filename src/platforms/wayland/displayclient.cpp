@@ -16,7 +16,7 @@
  */
 
 #include "displayclient.h"
-#include "wl_egl_display_provider.h"
+#include "wl_egl_display_target.h"
 #include "mir/graphics/platform.h"
 #include <mir/graphics/pixel_format_utils.h>
 
@@ -98,12 +98,12 @@ public:
     auto view_area() const -> geometry::Rectangle override;
     bool overlay(std::vector<DisplayElement> const& renderlist) override;
     auto transformation() const -> glm::mat2 override;
-    auto display_provider() const -> std::shared_ptr<DisplayInterfaceProvider> override;
+    auto target() const -> std::shared_ptr<DisplayTarget> override;
     void set_next_image(std::unique_ptr<Framebuffer> content) override;
 
 private:
-    std::unique_ptr<WlDisplayProvider::Framebuffer> next_frame;
-    std::shared_ptr<WlDisplayProvider> provider;
+    std::unique_ptr<WlDisplayTarget::Framebuffer> next_frame;
+    std::shared_ptr<WlDisplayTarget> target_;
 };
 
 mgw::DisplayClient::Output::Output(
@@ -307,7 +307,7 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
     if (!has_initialized)
     {
         has_initialized = true;
-        provider = std::make_shared<WlDisplayProvider>(*owner_->provider, surface, output_size);
+        target_ = std::make_shared<WlDisplayTarget>(*owner_->target, surface, output_size);
     }
     else if (size_is_changed)
     {
@@ -380,7 +380,7 @@ void mgw::DisplayClient::Output::post()
     // Avoid throttling compositing by blocking in eglSwapBuffers().
     // Instead we use the frame "done" notification.
     // TODO: We probably don't need to do this every frame!
-    eglSwapInterval(provider->get_egl_display(), 0);
+    eglSwapInterval(target_->get_egl_display(), 0);
 
     next_frame->swap_buffers();
 
@@ -407,9 +407,9 @@ auto mgw::DisplayClient::Output::transformation() const -> glm::mat2
     return glm::mat2{1};
 }
 
-auto mgw::DisplayClient::Output::display_provider() const -> std::shared_ptr<DisplayInterfaceProvider>
+auto mgw::DisplayClient::Output::target() const -> std::shared_ptr<DisplayTarget>
 {
-    return provider;
+    return target_;
 }
 
 namespace
@@ -430,7 +430,7 @@ auto unique_ptr_cast(std::unique_ptr<From> ptr) -> std::unique_ptr<To>
 
 void mgw::DisplayClient::Output::set_next_image(std::unique_ptr<Framebuffer> content)
 {
-    if (auto wl_content = unique_ptr_cast<WlDisplayProvider::Framebuffer>(std::move(content)))
+    if (auto wl_content = unique_ptr_cast<WlDisplayTarget::Framebuffer>(std::move(content)))
     {
         next_frame = std::move(wl_content);
     }
@@ -442,9 +442,9 @@ void mgw::DisplayClient::Output::set_next_image(std::unique_ptr<Framebuffer> con
 
 mgw::DisplayClient::DisplayClient(
     wl_display* display,
-    std::shared_ptr<WlDisplayProvider> provider) :
+    std::shared_ptr<WlDisplayTarget> target) :
     display{display},
-    provider{std::move(provider)},
+    target{std::move(target)},
     keyboard_context_{xkb_context_new(XKB_CONTEXT_NO_FLAGS)},
     registry{nullptr, [](auto){}}
 {

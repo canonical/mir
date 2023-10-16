@@ -42,7 +42,7 @@ public:
     MOCK_METHOD(bool, overlay, (std::vector<graphics::DisplayElement> const&), (override));
     MOCK_METHOD(void, set_next_image, (std::unique_ptr<graphics::Framebuffer>), (override));
     MOCK_METHOD(glm::mat2, transformation, (), (const override));
-    MOCK_METHOD(std::shared_ptr<graphics::DisplayInterfaceProvider>, display_provider, (), (const override));
+    MOCK_METHOD(std::shared_ptr<graphics::DisplayTarget>, target, (), (const override));
 };
 
 }

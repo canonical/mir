@@ -82,7 +82,7 @@ mgg::Platform::Platform(
       listener{listener},
       device_handle{std::move(std::get<0>(drm))},
       drm_fd{std::move(std::get<1>(drm))},
-      provider{std::make_shared<KMSDisplayInterfaceProvider>(drm_fd)},
+      target{std::make_shared<KMSDisplayTarget>(drm_fd)},
       bypass_option_{bypass_option}
 {
     if (drm_fd == mir::Fd::invalid)
@@ -95,7 +95,7 @@ namespace
 {
 auto gbm_device_for_udev_device(
     mir::udev::Device const& device,
-    std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays)
+    std::vector<std::shared_ptr<mg::DisplayTarget>> const& displays)
      -> std::variant<std::shared_ptr<mg::GBMDisplayProvider>, std::shared_ptr<gbm_device>>
 {
     /* First check to see whether our device exactly matches a display device.
@@ -103,7 +103,7 @@ auto gbm_device_for_udev_device(
      */
     for(auto const& display_device : displays)
     {
-        if (auto gbm_display = display_device->acquire_interface<mg::GBMDisplayProvider>())
+        if (auto gbm_display = display_device->acquire_provider<mg::GBMDisplayProvider>())
         {
             if (gbm_display->is_same_device(device))
             {
@@ -323,8 +323,8 @@ auto maybe_make_dmabuf_provider(
 
 mgg::RenderingPlatform::RenderingPlatform(
     mir::udev::Device const& device,
-    std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays)
-    : RenderingPlatform(gbm_device_for_udev_device(device, displays))
+    std::vector<std::shared_ptr<mg::DisplayTarget>> const& targets)
+    : RenderingPlatform(gbm_device_for_udev_device(device, targets))
 {
 }
 
@@ -364,18 +364,18 @@ auto mgg::RenderingPlatform::maybe_create_provider(
     return nullptr;
 }
 
-class mgg::Platform::KMSDisplayInterfaceProvider : public mg::DisplayInterfaceProvider
+class mgg::Platform::KMSDisplayTarget : public mg::DisplayTarget
 {
 public:
-    explicit KMSDisplayInterfaceProvider(mir::Fd drm_fd)
+    explicit KMSDisplayTarget(mir::Fd drm_fd)
         : drm_fd{std::move(drm_fd)},
           gbm_provider{maybe_make_gbm_provider(this->drm_fd)}
     {
     }
 
 protected:
-    auto maybe_create_interface(mg::DisplayInterfaceBase::Tag const& type_tag)
-        -> std::shared_ptr<mg::DisplayInterfaceBase>
+    auto maybe_create_interface(mg::DisplayProvider::Tag const& type_tag)
+        -> std::shared_ptr<mg::DisplayProvider>
     {
         if (dynamic_cast<mg::GBMDisplayProvider::Tag const*>(&type_tag))
         {
@@ -412,16 +412,16 @@ mir::UniqueModulePtr<mg::Display> mgg::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy, std::shared_ptr<GLConfig> const&)
 {
     return make_module_ptr<mgg::Display>(
-        provider,
+        target,
         drm_fd,
         bypass_option_,
         initial_conf_policy,
         listener);
 }
 
-auto mgg::Platform::interface_for() -> std::shared_ptr<DisplayInterfaceProvider>
+auto mgg::Platform::target_for() -> std::shared_ptr<DisplayTarget>
 {
-    return provider;
+    return target;
 }
 
 mgg::BypassOption mgg::Platform::bypass_option() const

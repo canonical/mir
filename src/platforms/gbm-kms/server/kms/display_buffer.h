@@ -49,7 +49,7 @@ class DisplayBuffer : public graphics::DisplayBuffer,
 {
 public:
     DisplayBuffer(
-        std::shared_ptr<DisplayInterfaceProvider> provider,
+        std::shared_ptr<DisplayTarget> target,
         mir::Fd drm_fd,
         BypassOption bypass_options,
         std::shared_ptr<DisplayReport> const& listener,
@@ -75,14 +75,14 @@ public:
     void schedule_set_crtc();
     void wait_for_page_flip();
 
-    auto display_provider() const -> std::shared_ptr<DisplayInterfaceProvider> override;
+    auto target() const -> std::shared_ptr<DisplayTarget> override;
 
     auto drm_fd() const -> mir::Fd;
 private:
     bool schedule_page_flip(FBHandle const& bufobj);
     void set_crtc(FBHandle const&);
 
-    std::shared_ptr<DisplayInterfaceProvider> const provider;
+    std::shared_ptr<DisplayTarget> const target_;
     bool holding_client_buffers{false};
     std::shared_ptr<FBHandle const> bypass_bufobj{nullptr};
     std::shared_ptr<DisplayReport> const listener;

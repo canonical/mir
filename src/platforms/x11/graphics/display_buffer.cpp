@@ -79,9 +79,9 @@ void mgx::DisplayBuffer::set_view_area(geom::Rectangle const& a)
     area = a;
 }
 
-auto mgx::DisplayBuffer::display_provider() const -> std::shared_ptr<DisplayInterfaceProvider>
+auto mgx::DisplayBuffer::target() const -> std::shared_ptr<DisplayTarget>
 {
-    return parent->provider_for_window(x_win);
+    return parent->display_target_for_window(x_win);
 }
 
 void mgx::DisplayBuffer::set_transformation(glm::mat2 const& t)

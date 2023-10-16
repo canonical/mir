@@ -77,13 +77,13 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
 
 auto create_rendering_platform(
     mg::SupportedDevice const& device,
-    std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays,
+    std::vector<std::shared_ptr<mg::DisplayTarget>> const& targets,
     mo::Option const&,
     mir::EmergencyCleanupRegistry&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
 {
     mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
 
-    return mir::make_module_ptr<mgg::RenderingPlatform>(*device.device, displays);
+    return mir::make_module_ptr<mgg::RenderingPlatform>(*device.device, targets);
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& config)
@@ -307,7 +307,7 @@ auto probe_display_platform(
 }
 
 auto probe_rendering_platform(
-    std::span<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays,
+    std::span<std::shared_ptr<mg::DisplayTarget>> const& targets,
     mir::ConsoleServices&,
     std::shared_ptr<mir::udev::Context> const& udev,
     mir::options::ProgramOption const& options) -> std::vector<mir::graphics::SupportedDevice>
@@ -316,16 +316,16 @@ auto probe_rendering_platform(
 
     mg::probe::Result maximum_suitability = mg::probe::unsupported;
     // First check if there are any displays we can possibly drive
-    for (auto const& display_provider : displays)
+    for (auto const& display_provider : targets)
     {
-        if (display_provider->acquire_interface<mg::GBMDisplayProvider>())
+        if (display_provider->acquire_provider<mg::GBMDisplayProvider>())
         {
             // We can optimally drive a GBM-backed display
             mir::log_debug("GBM-capable display found");
             maximum_suitability = mg::probe::best;
             break;
         }
-        if (display_provider->acquire_interface<mg::CPUAddressableDisplayProvider>())
+        if (display_provider->acquire_provider<mg::CPUAddressableDisplayProvider>())
         {
             /* We *can* support this output, but with slower buffer copies 
              * If another platform supports this device better, let it.

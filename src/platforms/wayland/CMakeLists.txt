@@ -10,7 +10,7 @@ add_library(mirplatformwayland-graphics STATIC
     displayclient.cpp           displayclient.h
     wayland_display.cpp         wayland_display.h
     cursor.cpp                  cursor.h
-    wl_egl_display_provider.cpp wl_egl_display_provider.h
+    wl_egl_display_target.cpp   wl_egl_display_target.h
 )
 
 target_include_directories(mirplatformwayland-graphics

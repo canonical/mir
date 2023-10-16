@@ -488,11 +488,11 @@ auto mgg::GLRenderingProvider::suitability_for_allocator(
 }
 
 auto mgg::GLRenderingProvider::suitability_for_display(
-    std::shared_ptr<DisplayInterfaceProvider> const& target) -> probe::Result
+    std::shared_ptr<DisplayTarget> const& target) -> probe::Result
 {
     if (bound_display)
     {
-        if (auto gbm_provider = target->acquire_interface<GBMDisplayProvider>())
+        if (auto gbm_provider = target->acquire_provider<GBMDisplayProvider>())
         {
             if (bound_display->gbm_device() == gbm_provider->gbm_device())
             {
@@ -504,7 +504,7 @@ auto mgg::GLRenderingProvider::suitability_for_display(
         }        
     }
 
-    if (target->acquire_interface<CPUAddressableDisplayProvider>())
+    if (target->acquire_provider<CPUAddressableDisplayProvider>())
     {
         // We *can* render to CPU buffers, but if anyone can do better, let them.
         return probe::supported;
@@ -514,14 +514,14 @@ auto mgg::GLRenderingProvider::suitability_for_display(
 }
 
 auto mgg::GLRenderingProvider::surface_for_output(
-    std::shared_ptr<DisplayInterfaceProvider> target,
+    std::shared_ptr<DisplayTarget> target,
     geom::Size size,
     GLConfig const& config)
     -> std::unique_ptr<gl::OutputSurface>
 {
     if (bound_display)
     {
-        if (auto gbm_provider = target->acquire_interface<GBMDisplayProvider>())
+        if (auto gbm_provider = target->acquire_provider<GBMDisplayProvider>())
         {
             if (bound_display->gbm_device() == gbm_provider->gbm_device())
             {
@@ -535,7 +535,7 @@ auto mgg::GLRenderingProvider::surface_for_output(
             }
         }        
     }
-    auto cpu_provider = target->acquire_interface<CPUAddressableDisplayProvider>();
+    auto cpu_provider = target->acquire_provider<CPUAddressableDisplayProvider>();
     
     return std::make_unique<mgc::CPUCopyOutputSurface>(
         dpy,
@@ -544,7 +544,7 @@ auto mgg::GLRenderingProvider::surface_for_output(
         size);
 }
 
-auto mgg::GLRenderingProvider::make_framebuffer_provider(std::shared_ptr<DisplayInterfaceProvider> /*target*/)
+auto mgg::GLRenderingProvider::make_framebuffer_provider(std::shared_ptr<DisplayTarget> /*target*/)
     -> std::unique_ptr<FramebufferProvider>
 {
     // TODO: Make this not a null implementation, so bypass/overlays can work again

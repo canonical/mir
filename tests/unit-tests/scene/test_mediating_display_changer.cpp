@@ -77,7 +77,7 @@ struct MockDisplay : public mtd::MockDisplay
 
 struct StubServerActionQueue : mir::ServerActionQueue
 {
-    void enqueue(void const* /*owner*/, mir::ServerAction const& action) override
+    void enqueue(void const* /*target*/, mir::ServerAction const& action) override
     {
         action();
     }
@@ -86,8 +86,8 @@ struct StubServerActionQueue : mir::ServerActionQueue
         action();
     }
 
-    void pause_processing_for(void const* /*owner*/) override {}
-    void resume_processing_for(void const* /*owner*/) override {}
+    void pause_processing_for(void const* /*target*/) override {}
+    void resume_processing_for(void const* /*target*/) override {}
 };
 
 struct MockServerActionQueue : mir::ServerActionQueue

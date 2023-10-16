@@ -100,14 +100,14 @@ auto mtf::StubGraphicPlatform::maybe_create_provider(
     return nullptr;
 }
 
-auto mtf::StubGraphicPlatform::interface_for()
-    -> std::shared_ptr<mg::DisplayInterfaceProvider>
+auto mtf::StubGraphicPlatform::target_for()
+    -> std::shared_ptr<mg::DisplayTarget>
 {
-    class NullInterfaceProvider : public mg::DisplayInterfaceProvider
+    class NullInterfaceProvider : public mg::DisplayTarget
     {
     protected:
-        auto maybe_create_interface(mg::DisplayInterfaceBase::Tag const&)
-            -> std::shared_ptr<mg::DisplayInterfaceBase>
+        auto maybe_create_interface(mg::DisplayProvider::Tag const&)
+            -> std::shared_ptr<mg::DisplayProvider>
         {
             return nullptr;
         }
@@ -162,7 +162,7 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
 
 mir::UniqueModulePtr<mg::RenderingPlatform> create_rendering_platform(
     mg::SupportedDevice const&,
-    std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const&,
+    std::vector<std::shared_ptr<mg::DisplayTarget>> const&,
     mo::Option const&,
     mir::EmergencyCleanupRegistry&)
 {

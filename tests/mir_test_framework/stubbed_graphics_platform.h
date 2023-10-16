@@ -40,8 +40,8 @@ protected:
         mir::graphics::RenderingProvider::Tag const& tag)
         -> std::shared_ptr<mir::graphics::RenderingProvider> override;
 
-    auto interface_for()
-        -> std::shared_ptr<mir::graphics::DisplayInterfaceProvider> override;
+    auto target_for()
+        -> std::shared_ptr<mir::graphics::DisplayTarget> override;
 private:
     std::vector<mir::geometry::Rectangle> const display_rects;
 };

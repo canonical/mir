@@ -35,7 +35,7 @@ namespace graphics::egl::generic
 class RenderingPlatform : public graphics::RenderingPlatform
 {
 public:
-    explicit RenderingPlatform(std::vector<std::shared_ptr<DisplayInterfaceProvider>> const& displays);
+    explicit RenderingPlatform(std::vector<std::shared_ptr<DisplayTarget>> const& targets);
 
     ~RenderingPlatform();
 

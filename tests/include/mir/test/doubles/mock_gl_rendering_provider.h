@@ -31,7 +31,7 @@ public:
     MOCK_METHOD(
         std::unique_ptr<graphics::gl::OutputSurface>,
         surface_for_output,
-        (std::shared_ptr<graphics::DisplayInterfaceProvider>, geometry::Size, graphics::GLConfig const&),
+        (std::shared_ptr<graphics::DisplayTarget>, geometry::Size, graphics::GLConfig const&),
         (override));
     MOCK_METHOD(
         graphics::probe::Result,
@@ -41,12 +41,12 @@ public:
     MOCK_METHOD(
         graphics::probe::Result,
         suitability_for_display,
-        (std::shared_ptr<graphics::DisplayInterfaceProvider> const&),
+        (std::shared_ptr<graphics::DisplayTarget> const&),
         (override));
     MOCK_METHOD(
         std::unique_ptr<FramebufferProvider>,
         make_framebuffer_provider,
-        (std::shared_ptr<graphics::DisplayInterfaceProvider>),
+        (std::shared_ptr<graphics::DisplayTarget>),
         (override));
 };
 }

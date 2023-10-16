@@ -38,7 +38,7 @@ namespace graphics
 {
 namespace eglstream
 {
-class InterfaceProvider;
+class EGLStreamDisplayTarget;
 
 class RenderingPlatform : public graphics::RenderingPlatform
 {
@@ -71,11 +71,11 @@ public:
         ->UniqueModulePtr<Display> override;
 
 private:
-    auto interface_for() -> std::shared_ptr<DisplayInterfaceProvider> override;
+    auto target_for() -> std::shared_ptr<DisplayTarget> override;
 
     std::unique_ptr<mir::Device> drm_device;
     EGLDisplay display;
-    std::shared_ptr<eglstream::InterfaceProvider> provider;
+    std::shared_ptr<eglstream::EGLStreamDisplayTarget> provider;
     mir::Fd drm_node;
     std::shared_ptr<DisplayReport> const display_report;
 };

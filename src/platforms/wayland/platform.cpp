@@ -16,7 +16,7 @@
 
 #include <epoxy/egl.h>
 
-#include "wl_egl_display_provider.h"
+#include "wl_egl_display_target.h"
 #include "platform.h"
 #include "display.h"
 #include "mir/graphics/egl_error.h"
@@ -71,7 +71,7 @@ auto make_initialised_egl_display(struct wl_display* wl_display) -> EGLDisplay
 mgw::Platform::Platform(struct wl_display* const wl_display, std::shared_ptr<mg::DisplayReport> const& report) :
     wl_display{wl_display},
     report{report},
-    provider{std::make_shared<WlDisplayProvider>(make_initialised_egl_display(wl_display))}
+    target{std::make_shared<WlDisplayTarget>(make_initialised_egl_display(wl_display))}
 {
 }
 
@@ -79,10 +79,10 @@ mir::UniqueModulePtr<mg::Display> mgw::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const&,
     std::shared_ptr<GLConfig> const& gl_config)
 {
-    return mir::make_module_ptr<mgw::Display>(wl_display, provider, gl_config, report);
+    return mir::make_module_ptr<mgw::Display>(wl_display, target, gl_config, report);
 }
 
-auto mgw::Platform::interface_for() -> std::shared_ptr<DisplayInterfaceProvider>
+auto mgw::Platform::target_for() -> std::shared_ptr<DisplayTarget>
 {
-    return provider;
+    return target;
 }

@@ -37,7 +37,7 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     std::shared_ptr<CompositorReport> const& report) :
     display_buffer(display_buffer),
     renderer(renderer),
-    fb_adaptor{gl_provider.make_framebuffer_provider(display_buffer.display_provider())},
+    fb_adaptor{gl_provider.make_framebuffer_provider(display_buffer.target())},
     report(report)
 {
 }

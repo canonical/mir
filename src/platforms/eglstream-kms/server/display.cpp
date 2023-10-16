@@ -124,7 +124,7 @@ class DisplayBuffer
 {
 public:
     DisplayBuffer(
-        std::shared_ptr<mg::eglstream::InterfaceProvider> owner,
+        std::shared_ptr<mg::eglstream::EGLStreamDisplayTarget> owner,
         mir::Fd drm_node,
         EGLDisplay dpy,
         EGLContext ctx,
@@ -259,9 +259,9 @@ public:
         return std::chrono::milliseconds{0};
     }
 
-    auto display_provider() const -> std::shared_ptr<mg::DisplayInterfaceProvider> override
+    auto target() const -> std::shared_ptr<mg::DisplayTarget> override
     {
-        return std::make_shared<mg::eglstream::InterfaceProvider>(*owner, output_stream);
+        return std::make_shared<mg::eglstream::EGLStreamDisplayTarget>(*owner, output_stream);
     }
 
     void set_next_image(std::unique_ptr<mg::Framebuffer> content) override
@@ -307,7 +307,7 @@ public:
     }
 private:
 
-    std::shared_ptr<mg::eglstream::InterfaceProvider> const owner;
+    std::shared_ptr<mg::eglstream::EGLStreamDisplayTarget> const owner;
     EGLDisplay dpy;
     EGLContext ctx;
     EGLOutputLayerEXT layer;
@@ -338,7 +338,7 @@ mge::KMSDisplayConfiguration create_display_configuration(
 }
 
 mge::Display::Display(
-    std::shared_ptr<InterfaceProvider> provider,
+    std::shared_ptr<EGLStreamDisplayTarget> provider,
     mir::Fd drm_node,
     EGLDisplay display,
     std::shared_ptr<DisplayConfigurationPolicy> const& configuration_policy,

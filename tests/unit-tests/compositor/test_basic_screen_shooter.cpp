@@ -79,10 +79,10 @@ struct BasicScreenShooter : Test
                 });
         ON_CALL(*gl_provider, surface_for_output(_, _, _))
             .WillByDefault(
-                [](std::shared_ptr<mg::DisplayInterfaceProvider> provider, auto size, auto const&)
+                [](std::shared_ptr<mg::DisplayTarget> provider, auto size, auto const&)
                     -> std::unique_ptr<mg::gl::OutputSurface>
                 {
-                    if (auto cpu_provider = provider->acquire_interface<mg::CPUAddressableDisplayProvider>())
+                    if (auto cpu_provider = provider->acquire_provider<mg::CPUAddressableDisplayProvider>())
                     {
                         auto surface = std::make_unique<testing::NiceMock<mtd::MockOutputSurface>>();
                         auto format = cpu_provider->supported_formats().front();

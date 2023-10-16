@@ -1,4 +1,4 @@
-#include "wl_egl_display_provider.h"
+#include "wl_egl_display_target.h"
 
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/gl_config.h"
@@ -12,7 +12,7 @@ namespace mg = mir::graphics;
 namespace mgw = mir::graphics::wayland;
 namespace geom = mir::geometry;
 
-class mgw::WlDisplayProvider::Framebuffer::EGLState
+class mgw::WlDisplayTarget::Framebuffer::EGLState
 {
 public:
     EGLState(EGLDisplay dpy, EGLContext ctx, EGLSurface surf)
@@ -34,23 +34,23 @@ public:
     EGLSurface const surf;
 };
 
-mgw::WlDisplayProvider::Framebuffer::Framebuffer(EGLDisplay dpy, EGLContext ctx, EGLSurface surf, geom::Size size)
+mgw::WlDisplayTarget::Framebuffer::Framebuffer(EGLDisplay dpy, EGLContext ctx, EGLSurface surf, geom::Size size)
     : Framebuffer(std::make_shared<EGLState>(dpy, ctx, surf), size)
 {
 }
 
-mgw::WlDisplayProvider::Framebuffer::Framebuffer(std::shared_ptr<EGLState const> state, geom::Size size)
+mgw::WlDisplayTarget::Framebuffer::Framebuffer(std::shared_ptr<EGLState const> state, geom::Size size)
     : state{std::move(state)},
       size_{size}
 {
 }
 
-auto mgw::WlDisplayProvider::Framebuffer::size() const -> geom::Size
+auto mgw::WlDisplayTarget::Framebuffer::size() const -> geom::Size
 {
     return size_;
 }
 
-void mgw::WlDisplayProvider::Framebuffer::make_current()
+void mgw::WlDisplayTarget::Framebuffer::make_current()
 {
     if (eglMakeCurrent(state->dpy, state->surf, state->surf, state->ctx) != EGL_TRUE)
     {
@@ -58,7 +58,7 @@ void mgw::WlDisplayProvider::Framebuffer::make_current()
     }
 }
 
-void mgw::WlDisplayProvider::Framebuffer::release_current()
+void mgw::WlDisplayTarget::Framebuffer::release_current()
 {
     if (eglMakeCurrent(state->dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE)
     {
@@ -66,7 +66,7 @@ void mgw::WlDisplayProvider::Framebuffer::release_current()
     }
 }
 
-void mgw::WlDisplayProvider::Framebuffer::swap_buffers()
+void mgw::WlDisplayTarget::Framebuffer::swap_buffers()
 {
     if (eglSwapBuffers(state->dpy, state->surf) != EGL_TRUE)
     {
@@ -74,12 +74,12 @@ void mgw::WlDisplayProvider::Framebuffer::swap_buffers()
     }
 }
 
-auto mgw::WlDisplayProvider::Framebuffer::clone_handle() -> std::unique_ptr<mg::GenericEGLDisplayProvider::EGLFramebuffer>
+auto mgw::WlDisplayTarget::Framebuffer::clone_handle() -> std::unique_ptr<mg::GenericEGLDisplayProvider::EGLFramebuffer>
 {
     return std::unique_ptr<mg::GenericEGLDisplayProvider::EGLFramebuffer>{new Framebuffer(state, size_)};
 }
 
-class mgw::WlDisplayProvider::EGLDisplayProvider : public mg::GenericEGLDisplayProvider
+class mgw::WlDisplayTarget::EGLDisplayProvider : public mg::GenericEGLDisplayProvider
 {
 public:
     EGLDisplayProvider(EGLDisplay dpy);
@@ -106,12 +106,12 @@ private:
     std::optional<OutputContext> const output;
 };
 
-mgw::WlDisplayProvider::EGLDisplayProvider::EGLDisplayProvider(EGLDisplay dpy)
+mgw::WlDisplayTarget::EGLDisplayProvider::EGLDisplayProvider(EGLDisplay dpy)
     : dpy{dpy}
 {
 }
 
-mgw::WlDisplayProvider::EGLDisplayProvider::EGLDisplayProvider(
+mgw::WlDisplayTarget::EGLDisplayProvider::EGLDisplayProvider(
     EGLDisplayProvider const& from,
     struct wl_surface* surface,
     geometry::Size size)
@@ -124,7 +124,7 @@ mgw::WlDisplayProvider::EGLDisplayProvider::EGLDisplayProvider(
 {
 }
 
-mgw::WlDisplayProvider::EGLDisplayProvider::~EGLDisplayProvider()
+mgw::WlDisplayTarget::EGLDisplayProvider::~EGLDisplayProvider()
 {
     if (output)
     {
@@ -132,7 +132,7 @@ mgw::WlDisplayProvider::EGLDisplayProvider::~EGLDisplayProvider()
     }
 }
 
-auto mgw::WlDisplayProvider::EGLDisplayProvider::alloc_framebuffer(
+auto mgw::WlDisplayTarget::EGLDisplayProvider::alloc_framebuffer(
     GLConfig const& config,
     EGLContext share_context) -> std::unique_ptr<EGLFramebuffer>
 {
@@ -186,31 +186,31 @@ auto mgw::WlDisplayProvider::EGLDisplayProvider::alloc_framebuffer(
         size);
 }
 
-auto mgw::WlDisplayProvider::EGLDisplayProvider::get_egl_display() -> EGLDisplay
+auto mgw::WlDisplayTarget::EGLDisplayProvider::get_egl_display() -> EGLDisplay
 {
     return dpy;
 }
 
-mgw::WlDisplayProvider::WlDisplayProvider(EGLDisplay dpy)
+mgw::WlDisplayTarget::WlDisplayTarget(EGLDisplay dpy)
   : egl_provider{std::make_shared<EGLDisplayProvider>(dpy)}
 {
 }
 
-mgw::WlDisplayProvider::WlDisplayProvider(
-    WlDisplayProvider const& from,
+mgw::WlDisplayTarget::WlDisplayTarget(
+    WlDisplayTarget const& from,
     struct wl_surface* surface,
     geometry::Size size)
     : egl_provider{std::make_shared<EGLDisplayProvider>(*from.egl_provider, surface, size)}
 {       
 }
 
-auto mgw::WlDisplayProvider::get_egl_display() const -> EGLDisplay
+auto mgw::WlDisplayTarget::get_egl_display() const -> EGLDisplay
 {
     return egl_provider->get_egl_display();
 }
 
-auto mgw::WlDisplayProvider::maybe_create_interface(DisplayInterfaceBase::Tag const& type_tag)
-    -> std::shared_ptr<DisplayInterfaceBase>
+auto mgw::WlDisplayTarget::maybe_create_interface(DisplayProvider::Tag const& type_tag)
+    -> std::shared_ptr<DisplayProvider>
 {
     if (dynamic_cast<GenericEGLDisplayProvider::Tag const*>(&type_tag))
     {

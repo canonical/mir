@@ -93,10 +93,10 @@ mgw::Display* the_display = nullptr;
 
 mgw::Display::Display(
     wl_display* const wl_display,
-    std::shared_ptr<WlDisplayProvider> provider,
+    std::shared_ptr<WlDisplayTarget> target,
     std::shared_ptr<GLConfig> const&,
     std::shared_ptr<DisplayReport> const& report) :
-    DisplayClient{wl_display, std::move(provider)},
+    DisplayClient{wl_display, std::move(target)},
     report{report},
     shutdown_signal{::eventfd(0, EFD_CLOEXEC)},
     flush_signal{::eventfd(0, EFD_SEMAPHORE)},

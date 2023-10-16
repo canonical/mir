@@ -49,7 +49,7 @@ namespace mge = mir::graphics::eglstream;
 
 auto create_rendering_platform(
     mg::SupportedDevice const& device,
-    std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& /*displays*/,
+    std::vector<std::shared_ptr<mg::DisplayTarget>> const& /*targets*/,
     mo::Option const&,
     mir::EmergencyCleanupRegistry&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
 {
@@ -91,7 +91,7 @@ void add_graphics_platform_options(boost::program_options::options_description& 
 }
 
 auto probe_rendering_platform(
-    std::span<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays,
+    std::span<std::shared_ptr<mg::DisplayTarget>> const& targets,
     mir::ConsoleServices& /*console*/,
     std::shared_ptr<mir::udev::Context> const& udev,
     mo::ProgramOption const& /*options*/) -> std::vector<mg::SupportedDevice>
@@ -99,18 +99,18 @@ auto probe_rendering_platform(
     mir::assert_entry_point_signature<mg::RenderProbe>(&probe_rendering_platform);
 
     mg::probe::Result maximum_suitability = mg::probe::unsupported;
-    // First check if there are any displays we can possibly drive
+    // First check if there are any targets we can possibly drive
     std::vector<std::shared_ptr<mg::EGLStreamDisplayProvider>> eglstream_providers;
-    for (auto const& display_provider : displays)
+    for (auto const& display_provider : targets)
     {
-        if (auto provider = display_provider->acquire_interface<mg::EGLStreamDisplayProvider>())
+        if (auto provider = display_provider->acquire_provider<mg::EGLStreamDisplayProvider>())
         {
             // We can optimally drive an EGLStream display
             mir::log_debug("EGLStream-capable display found");
             maximum_suitability = mg::probe::best;
             eglstream_providers.push_back(provider);
         }
-        if (display_provider->acquire_interface<mg::CPUAddressableDisplayProvider>())
+        if (display_provider->acquire_provider<mg::CPUAddressableDisplayProvider>())
         {
             /* We *can* support this output, but with slower buffer copies
              * If another platform supports this device better, let it.

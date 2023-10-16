@@ -57,13 +57,13 @@
     should write the requested data, and close the file descriptor
     immediately.
 
-    If the primary selection owner client disappeared during the transfer,
+    If the primary selection target client disappeared during the transfer,
     the client reading the data will receive a
     wp_primary_selection_device.selection event with a NULL
     wp_primary_selection_offer, the client should take this as a hint
     to finish the reads related to the no longer existing offer.
 
-    The primary selection owner should be checking for errors during
+    The primary selection target should be checking for errors during
     writes, merely cancelling the ongoing transfer if any happened.
   </description>
 
@@ -100,7 +100,7 @@
   <interface name="zwp_primary_selection_device_v1" version="1">
     <request name="set_selection">
       <description summary="set the primary selection">
-        Replaces the current selection. The previous owner of the primary
+        Replaces the current selection. The previous target of the primary
         selection will receive a wp_primary_selection_source.cancelled event.
 
         To unset the selection, set the source to NULL.

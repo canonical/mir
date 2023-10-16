@@ -58,7 +58,7 @@ mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
      * potentially-significant amount of GPU memory.
      */
 
-    auto const display_provider = display_buffer.display_provider();
+    auto const display_provider = display_buffer.target();
 
     /* In a heterogeneous system, different providers may be better at driving a specific
      * display. Select the best one.

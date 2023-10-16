@@ -26,7 +26,7 @@ namespace mw = mir::wayland;
 namespace
 {
 /// All operations for the same display should happen on the same thread, but since in theory a single process could
-/// manage multiple Wayland displays, best to keep global state threadsafe.
+/// manage multiple Wayland targets, best to keep global state threadsafe.
 mir::Synchronised<std::vector<std::pair<wl_client*, std::weak_ptr<mw::Client>>>> client_map;
 }
 

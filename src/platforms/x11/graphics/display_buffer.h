@@ -55,7 +55,7 @@ public:
 
     glm::mat2 transformation() const override;
 
-    auto display_provider() const -> std::shared_ptr<DisplayInterfaceProvider> override;
+    auto target() const -> std::shared_ptr<DisplayTarget> override;
 
     void set_view_area(geometry::Rectangle const& a);
     void set_transformation(glm::mat2 const& t);

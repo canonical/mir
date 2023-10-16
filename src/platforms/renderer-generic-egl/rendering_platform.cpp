@@ -34,11 +34,11 @@ namespace geom = mir::geometry;
 
 namespace
 {
-auto egl_display_from_platforms(std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays) -> EGLDisplay
+auto egl_display_from_platforms(std::vector<std::shared_ptr<mg::DisplayTarget>> const& targets) -> EGLDisplay
 {
-    for (auto const& display : displays)
+    for (auto const& target : targets)
     {
-        if (auto egl_provider = display->acquire_interface<mg::GenericEGLDisplayProvider>())
+        if (auto egl_provider = target->acquire_provider<mg::GenericEGLDisplayProvider>())
         {
             return egl_provider->get_egl_display();
         }
@@ -167,8 +167,8 @@ auto maybe_make_dmabuf_provider(
 }
 }
 
-mge::RenderingPlatform::RenderingPlatform(std::vector<std::shared_ptr<DisplayInterfaceProvider>> const& displays)
-    : dpy{egl_display_from_platforms(displays)},
+mge::RenderingPlatform::RenderingPlatform(std::vector<std::shared_ptr<DisplayTarget>> const& targets)
+    : dpy{egl_display_from_platforms(targets)},
       ctx{std::make_unique<SurfacelessEGLContext>(dpy)},
       dmabuf_provider{
           maybe_make_dmabuf_provider(

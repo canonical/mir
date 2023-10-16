@@ -112,7 +112,7 @@ mgx::Platform::Platform(std::shared_ptr<mir::X::X11Resources> const& x11_resourc
                         std::string title,
                         std::vector<X11OutputConfig> output_sizes,
                         std::shared_ptr<mg::DisplayReport> const& report)
-    : egl_provider{std::make_shared<InterfaceProvider>(x11_resources->xlib_dpy)},
+    : x11_display_target{std::make_shared<X11DisplayTarget>(x11_resources->xlib_dpy)},
       x11_resources{x11_resources},
       title{std::move(title)},
       report{report},
@@ -133,18 +133,18 @@ mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
         report);
 }
 
-class mgx::Platform::InterfaceProvider : public mg::DisplayInterfaceProvider
+class mgx::Platform::X11DisplayTarget : public mg::DisplayTarget
 {
 public:
-    InterfaceProvider(::Display* x_dpy)
+    X11DisplayTarget(::Display* x_dpy)
         : egl{std::make_shared<mgx::helpers::EGLHelper>(x_dpy)},
           connection{nullptr},
           win{std::nullopt}
     {
     }
 
-    InterfaceProvider(
-        InterfaceProvider const& from,
+    X11DisplayTarget(
+        X11DisplayTarget const& from,
         std::shared_ptr<mir::X::X11Resources> connection,
         xcb_window_t win)
         : egl{from.egl},
@@ -182,8 +182,8 @@ public:
         std::optional<xcb_window_t> const x_win;
     };
 
-    auto maybe_create_interface(mir::graphics::DisplayInterfaceBase::Tag const& type_tag)
-        -> std::shared_ptr<DisplayInterfaceBase>
+    auto maybe_create_interface(mir::graphics::DisplayProvider::Tag const& type_tag)
+        -> std::shared_ptr<DisplayProvider>
     {
         if (dynamic_cast<mg::GenericEGLDisplayProvider::Tag const*>(&type_tag))
         {
@@ -198,12 +198,12 @@ private:
     std::optional<xcb_window_t> const win;
 };
 
-auto mgx::Platform::interface_for() -> std::shared_ptr<DisplayInterfaceProvider>
+auto mgx::Platform::target_for() -> std::shared_ptr<DisplayTarget>
 {
-    return egl_provider;
+    return x11_display_target;
 }
 
-auto mgx::Platform::provider_for_window(xcb_window_t x_win) -> std::shared_ptr<DisplayInterfaceProvider>
+auto mgx::Platform::display_target_for_window(xcb_window_t x_win) -> std::shared_ptr<DisplayTarget>
 {
-    return std::make_shared<InterfaceProvider>(*egl_provider, x11_resources, x_win);
+    return std::make_shared<X11DisplayTarget>(*x11_display_target, x11_resources, x_win);
 }

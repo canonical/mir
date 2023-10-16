@@ -38,8 +38,8 @@ class NullDisplayPlatform : public graphics::DisplayPlatform
     }
 
 protected:
-    auto interface_for()
-        -> std::shared_ptr<graphics::DisplayInterfaceProvider> override
+    auto target_for()
+        -> std::shared_ptr<graphics::DisplayTarget> override
     {
         return nullptr;
     }

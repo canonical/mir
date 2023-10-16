@@ -100,16 +100,16 @@ private:
     std::shared_ptr<mrs::WriteMappableBuffer> next_buffer;
 };
 
-class InterfaceProvider : public mg::DisplayInterfaceProvider
+class Target : public mg::DisplayTarget
 {
 public:
-    InterfaceProvider(std::shared_ptr<mg::CPUAddressableDisplayProvider> provider)
+    Target(std::shared_ptr<mg::CPUAddressableDisplayProvider> provider)
         : provider {std::move(provider)}
     {
     }
 protected:
-    auto maybe_create_interface(mg::DisplayInterfaceBase::Tag const& type_tag)
-        -> std::shared_ptr<mg::DisplayInterfaceBase> override
+    auto maybe_create_interface(mg::DisplayProvider::Tag const& type_tag)
+        -> std::shared_ptr<mg::DisplayProvider> override
     {
         if (dynamic_cast<mg::CPUAddressableDisplayProvider::Tag const*>(&type_tag))
         {
@@ -187,7 +187,7 @@ auto mc::BasicScreenShooter::Self::renderer_for_buffer(std::shared_ptr<mrs::Writ
                 return 0;
             }
         };
-        auto interface_provider = std::make_shared<InterfaceProvider>(output);
+        auto interface_provider = std::make_shared<Target>(output);
         auto gl_surface = render_provider->surface_for_output(interface_provider, buffer_size, NoAuxConfig{});
         current_renderer = renderer_factory->create_renderer_for(std::move(gl_surface), render_provider);
         last_rendered_size = buffer_size;
@@ -200,7 +200,7 @@ auto mc::BasicScreenShooter::select_provider(
     -> std::shared_ptr<mg::GLRenderingProvider>
 {
     auto display_provider = std::make_shared<Self::OneShotBufferDisplayProvider>();
-    auto interface_provider = std::make_shared<InterfaceProvider>(display_provider);
+    auto interface_provider = std::make_shared<Target>(display_provider);
 
     for (auto const& render_provider : providers)
     {

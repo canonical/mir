@@ -36,7 +36,7 @@ auto probe_display_module(
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<SupportedDevice>;
 
 auto probe_rendering_module(
-    std::span<std::shared_ptr<DisplayInterfaceProvider>> const& displays,
+    std::span<std::shared_ptr<DisplayTarget>> const& targets,
     SharedLibrary const& module,
     options::ProgramOption const& options,
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<SupportedDevice>;
@@ -49,7 +49,7 @@ auto display_modules_for_device(
 
 auto rendering_modules_for_device(
     std::vector<std::shared_ptr<SharedLibrary>> const& modules,
-    std::span<std::shared_ptr<DisplayInterfaceProvider>> const& displays,
+    std::span<std::shared_ptr<DisplayTarget>> const& targets,
     options::ProgramOption const& options,
     std::shared_ptr<ConsoleServices> const& console)
     -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>;

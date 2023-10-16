@@ -102,12 +102,12 @@ public:
 
     auto suitability_for_allocator(std::shared_ptr<GraphicBufferAllocator> const& target) -> probe::Result override;
 
-    auto suitability_for_display(std::shared_ptr<DisplayInterfaceProvider> const& target) -> probe::Result override;
+    auto suitability_for_display(std::shared_ptr<DisplayTarget> const& target) -> probe::Result override;
 
-    auto make_framebuffer_provider(std::shared_ptr<DisplayInterfaceProvider> target) -> std::unique_ptr<FramebufferProvider> override;
+    auto make_framebuffer_provider(std::shared_ptr<DisplayTarget> target) -> std::unique_ptr<FramebufferProvider> override;
 
     auto surface_for_output(
-        std::shared_ptr<DisplayInterfaceProvider> provider,
+        std::shared_ptr<DisplayTarget> target,
         geometry::Size size,
         GLConfig const& gl_config) -> std::unique_ptr<gl::OutputSurface> override;
 private:
