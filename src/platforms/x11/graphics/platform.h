@@ -75,7 +75,7 @@ public:
 
     auto display_target_for_window(xcb_window_t x_win) -> std::shared_ptr<DisplayTarget>;
 protected:
-    auto target_for() -> std::shared_ptr<DisplayTarget> override;
+    auto target() -> std::shared_ptr<DisplayTarget> override;
 
 private:
     class X11DisplayTarget;

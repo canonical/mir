@@ -479,10 +479,10 @@ public:
     static auto target_for(std::shared_ptr<DisplayPlatform> platform)
         -> std::shared_ptr<DisplayTarget>
     {
-        return platform->target_for();
+        return platform->target();
     }
 protected:
-    virtual auto target_for() -> std::shared_ptr<DisplayTarget> = 0;
+    virtual auto target() -> std::shared_ptr<DisplayTarget> = 0;
 };
 
 struct SupportedDevice

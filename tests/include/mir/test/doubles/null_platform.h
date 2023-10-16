@@ -38,7 +38,7 @@ class NullDisplayPlatform : public graphics::DisplayPlatform
     }
 
 protected:
-    auto target_for()
+    auto target()
         -> std::shared_ptr<graphics::DisplayTarget> override
     {
         return nullptr;

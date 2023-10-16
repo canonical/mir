@@ -82,7 +82,7 @@ mgg::Platform::Platform(
       listener{listener},
       device_handle{std::move(std::get<0>(drm))},
       drm_fd{std::move(std::get<1>(drm))},
-      target{std::make_shared<KMSDisplayTarget>(drm_fd)},
+      target_{std::make_shared<KMSDisplayTarget>(drm_fd)},
       bypass_option_{bypass_option}
 {
     if (drm_fd == mir::Fd::invalid)
@@ -412,16 +412,16 @@ mir::UniqueModulePtr<mg::Display> mgg::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy, std::shared_ptr<GLConfig> const&)
 {
     return make_module_ptr<mgg::Display>(
-        target,
+        target_,
         drm_fd,
         bypass_option_,
         initial_conf_policy,
         listener);
 }
 
-auto mgg::Platform::target_for() -> std::shared_ptr<DisplayTarget>
+auto mgg::Platform::target() -> std::shared_ptr<DisplayTarget>
 {
-    return target;
+    return target_;
 }
 
 mgg::BypassOption mgg::Platform::bypass_option() const

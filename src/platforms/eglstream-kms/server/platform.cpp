@@ -245,7 +245,7 @@ mge::DisplayPlatform::DisplayPlatform(
             std::to_string(std::get<0>(egl_version)) + "." + std::to_string(std::get<1>(egl_version))}));
     }
 
-    provider = std::make_shared<EGLStreamDisplayTarget>(display);
+    target_ = std::make_shared<EGLStreamDisplayTarget>(display);
 }
 
 auto mge::DisplayPlatform::create_display(
@@ -254,7 +254,7 @@ auto mge::DisplayPlatform::create_display(
     -> UniqueModulePtr<mg::Display>
 {
     return mir::make_module_ptr<mge::Display>(
-        provider,
+        target_,
         drm_node,
         display,
         configuration_policy,
@@ -262,7 +262,7 @@ auto mge::DisplayPlatform::create_display(
         display_report);
 }
 
-auto mge::DisplayPlatform::target_for() -> std::shared_ptr<DisplayTarget>
+auto mge::DisplayPlatform::target() -> std::shared_ptr<DisplayTarget>
 {
-    return provider;
+    return target_;
 }

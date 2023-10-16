@@ -100,7 +100,7 @@ auto mtf::StubGraphicPlatform::maybe_create_provider(
     return nullptr;
 }
 
-auto mtf::StubGraphicPlatform::target_for()
+auto mtf::StubGraphicPlatform::target()
     -> std::shared_ptr<mg::DisplayTarget>
 {
     class NullInterfaceProvider : public mg::DisplayTarget

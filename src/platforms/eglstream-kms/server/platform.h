@@ -71,11 +71,11 @@ public:
         ->UniqueModulePtr<Display> override;
 
 private:
-    auto target_for() -> std::shared_ptr<DisplayTarget> override;
+    auto target() -> std::shared_ptr<DisplayTarget> override;
 
     std::unique_ptr<mir::Device> drm_device;
     EGLDisplay display;
-    std::shared_ptr<eglstream::EGLStreamDisplayTarget> provider;
+    std::shared_ptr<eglstream::EGLStreamDisplayTarget> target_;
     mir::Fd drm_node;
     std::shared_ptr<DisplayReport> const display_report;
 };

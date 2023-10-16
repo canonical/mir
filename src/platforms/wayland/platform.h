@@ -42,13 +42,13 @@ public:
         std::shared_ptr<GLConfig> const& gl_config) override;
 
 protected:
-    auto target_for() -> std::shared_ptr<DisplayTarget> override;
+    auto target() -> std::shared_ptr<DisplayTarget> override;
 private:
 
     struct wl_display* const wl_display;
     std::shared_ptr<DisplayReport> const report;
 
-    std::shared_ptr<WlDisplayTarget> const target;
+    std::shared_ptr<WlDisplayTarget> const target_;
 };
 }
 }

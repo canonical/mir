@@ -198,7 +198,7 @@ private:
     std::optional<xcb_window_t> const win;
 };
 
-auto mgx::Platform::target_for() -> std::shared_ptr<DisplayTarget>
+auto mgx::Platform::target() -> std::shared_ptr<DisplayTarget>
 {
     return x11_display_target;
 }

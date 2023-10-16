@@ -64,7 +64,7 @@ public:
     std::shared_ptr<DisplayReport> const listener;
 
 protected:
-    auto target_for() -> std::shared_ptr<DisplayTarget> override;
+    auto target() -> std::shared_ptr<DisplayTarget> override;
 
 public:
     BypassOption bypass_option() const;
@@ -79,7 +79,7 @@ private:
     mir::Fd const drm_fd;
 
     class KMSDisplayTarget;
-    std::shared_ptr<KMSDisplayTarget> const target;
+    std::shared_ptr<KMSDisplayTarget> const target_;
     
     BypassOption const bypass_option_;
 };

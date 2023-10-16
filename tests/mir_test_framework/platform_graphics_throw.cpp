@@ -67,7 +67,7 @@ protected:
         return nullptr;
     }
 
-    auto target_for() -> std::shared_ptr<mg::DisplayTarget> override
+    auto target() -> std::shared_ptr<mg::DisplayTarget> override
     {
         return mg::DisplayPlatform::target_for(stub_display_platform);
     }
