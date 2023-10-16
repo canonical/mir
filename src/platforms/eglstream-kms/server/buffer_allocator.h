@@ -96,6 +96,7 @@ class GLRenderingProvider : public graphics::GLRenderingProvider
 {
 public:
     GLRenderingProvider(EGLDisplay dpy, std::unique_ptr<renderer::gl::Context> ctx);
+    ~GLRenderingProvider();
 
     auto as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture> override;
 

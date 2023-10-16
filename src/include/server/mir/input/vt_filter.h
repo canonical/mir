@@ -32,6 +32,7 @@ class VTFilter : public EventFilter
 {
 public:
     VTFilter(std::unique_ptr<VTSwitcher> switcher);
+    ~VTFilter();
 
     bool handle(MirEvent const& event) override;
 

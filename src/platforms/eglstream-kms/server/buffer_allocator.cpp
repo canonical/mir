@@ -721,6 +721,8 @@ mge::GLRenderingProvider::GLRenderingProvider(EGLDisplay dpy, std::unique_ptr<mi
 {
 }
 
+mge::GLRenderingProvider::~GLRenderingProvider() = default;
+
 auto mir::graphics::eglstream::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer)
     -> std::shared_ptr<gl::Texture>
 {
