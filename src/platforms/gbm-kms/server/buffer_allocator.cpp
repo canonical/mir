@@ -272,6 +272,12 @@ public:
     {
     }
 
+    ~GBMOutputSurface()
+    {
+        eglDestroySurface(dpy, egl_surf);
+        eglDestroyContext(dpy, ctx);
+    }
+
     void bind() override
     {
         if (!gbm_surface_has_free_buffers(*surface))
