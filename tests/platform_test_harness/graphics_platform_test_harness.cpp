@@ -109,33 +109,33 @@ private:
 };
 char const* MinimalServerEnvironment::argv[] = {"graphics_platform_test_harness", nullptr};
 
-std::string describe_probe_result(mg::PlatformPriority priority)
+std::string describe_probe_result(mg::probe::Result priority)
 {
-    if (priority == mg::PlatformPriority::unsupported)
+    if (priority == mg::probe::unsupported)
     {
         return "UNSUPPORTED";
     }
-    else if (priority == mg::PlatformPriority::dummy)
+    else if (priority == mg::probe::dummy)
     {
         return "DUMMY";
     }
-    else if (priority < mg::PlatformPriority::supported)
+    else if (priority < mg::probe::supported)
     {
-        return std::string{"SUPPORTED - "} + std::to_string(mg::PlatformPriority::supported - priority);
+        return std::string{"SUPPORTED - "} + std::to_string(mg::probe::supported - priority);
     }
-    else if (priority == mg::PlatformPriority::supported)
+    else if (priority == mg::probe::supported)
     {
         return "SUPPORTED";
     }
-    else if (priority < mg::PlatformPriority::best)
+    else if (priority < mg::probe::best)
     {
-        return std::string{"SUPPORTED + "} + std::to_string(priority - mg::PlatformPriority::supported);
+        return std::string{"SUPPORTED + "} + std::to_string(priority - mg::probe::supported);
     }
-    else if (priority == mg::PlatformPriority::best)
+    else if (priority == mg::probe::best)
     {
         return "BEST";
     }
-    return std::string{"BEST + "} + std::to_string(priority - mg::PlatformPriority::best);
+    return std::string{"BEST + "} + std::to_string(priority - mg::probe::best);
 }
 
 auto test_probe(mir::SharedLibrary const& dso, MinimalServerEnvironment& config) -> std::vector<mg::SupportedDevice>
@@ -173,7 +173,7 @@ auto test_platform_construction(mir::SharedLibrary const& dso, std::vector<mg::S
 
         for (auto const& device : devices)
         {
-            if (device.support_level >= mg::PlatformPriority::supported)
+            if (device.support_level >= mg::probe::supported)
             {
                 auto display = create_display_platform(
                     device,

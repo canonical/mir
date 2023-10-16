@@ -53,7 +53,7 @@ public:
         mtd::NullEmergencyCleanup null_cleanup;
         mg::SupportedDevice device = {
             nullptr,
-            mg::PlatformPriority::unsupported,
+            mg::probe::unsupported,
             nullptr
         };
         stub_render_platform = create_stub_render_platform(device, {}, mo::ProgramOption{}, null_cleanup);
@@ -137,7 +137,7 @@ auto probe_display_platform(
     result.emplace_back(
         mg::SupportedDevice {
             nullptr,
-            mg::PlatformPriority::unsupported,
+            mg::probe::unsupported,
             nullptr
          });
     return result;
@@ -154,7 +154,7 @@ auto probe_rendering_platform(
     result.emplace_back(
         mg::SupportedDevice {
             nullptr,
-            mg::PlatformPriority::unsupported,
+            mg::probe::unsupported,
             nullptr
          });
     return result;

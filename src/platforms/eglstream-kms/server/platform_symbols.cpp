@@ -98,7 +98,7 @@ auto probe_rendering_platform(
 {
     mir::assert_entry_point_signature<mg::RenderProbe>(&probe_rendering_platform);
 
-    mg::PlatformPriority maximum_suitability = mg::PlatformPriority::unsupported;
+    mg::probe::Result maximum_suitability = mg::probe::unsupported;
     // First check if there are any displays we can possibly drive
     std::vector<std::shared_ptr<mg::EGLStreamDisplayProvider>> eglstream_providers;
     for (auto const& display_provider : displays)
@@ -107,7 +107,7 @@ auto probe_rendering_platform(
         {
             // We can optimally drive an EGLStream display
             mir::log_debug("EGLStream-capable display found");
-            maximum_suitability = mg::PlatformPriority::best;
+            maximum_suitability = mg::probe::best;
             eglstream_providers.push_back(provider);
         }
         if (display_provider->acquire_interface<mg::CPUAddressableDisplayProvider>())
@@ -115,11 +115,11 @@ auto probe_rendering_platform(
             /* We *can* support this output, but with slower buffer copies
              * If another platform supports this device better, let it.
              */
-            maximum_suitability = mg::PlatformPriority::supported;
+            maximum_suitability = mg::probe::supported;
         }
     }
 
-    if (maximum_suitability == mg::PlatformPriority::unsupported)
+    if (maximum_suitability == mg::probe::unsupported)
     {
         mir::log_debug("No outputs capable of accepting EGLStream input detected");
         mir::log_debug("Probing will be skipped");
@@ -177,7 +177,7 @@ auto probe_rendering_platform(
         {
             supported_devices.emplace_back(mg::SupportedDevice{
                 udev->char_device_from_devnum(mge::devnum_for_device(device)),
-                mg::PlatformPriority::unsupported,
+                mg::probe::unsupported,
                 nullptr
             });
         }
@@ -279,7 +279,7 @@ auto probe_rendering_platform(
         supported_devices.end(),
         [](auto const& device)
         {
-            return device.support_level > mg::PlatformPriority::unsupported;
+            return device.support_level > mg::probe::unsupported;
         }))
     {
         mir::log_debug(
@@ -384,7 +384,7 @@ auto probe_display_platform(
                     supported_devices.emplace_back(
                         mg::SupportedDevice{
                             udev->char_device_from_devnum(devnum),
-                            mg::PlatformPriority::unsupported,
+                            mg::probe::unsupported,
                             device
                         });
                 }
@@ -544,7 +544,7 @@ auto probe_display_platform(
 
                 if (epoxy_has_egl_extension(display, "EGL_EXT_output_base"))
                 {
-                    supported_devices.back().support_level = mg::PlatformPriority::best;
+                    supported_devices.back().support_level = mg::probe::best;
                 }
                 else
                 {

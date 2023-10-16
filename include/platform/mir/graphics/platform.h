@@ -66,6 +66,14 @@ class DisplayInterfaceProvider;
 
 namespace probe
 {
+    /**
+     * A measure of how well a platform supports a device
+     *
+     * \note This is compared as an integer; best + 1 is a valid Result that
+     *       will be used in preference to a module that reports best.
+     *       Platform modules distributed with Mir will never use a priority higher
+     *       than best.
+     */
     using Result = uint32_t;
     Result const unsupported = 0;    /**< Unable to function at all on this device */
     Result const dummy = 1;          /**< Used only for dummy or stub platforms.
@@ -477,31 +485,6 @@ protected:
     virtual auto interface_for() -> std::shared_ptr<DisplayInterfaceProvider> = 0;
 };
 
-/**
- * A measure of how well a platform supports a device
- *
- * \note This is compared as an integer; best + 1 is a valid PlatformPriority that
- *       will be used in preference to a module that reports best.
- *       Platform modules distributed with Mir will never use a priority higher
- *       than best.
- */
-enum PlatformPriority : uint32_t
-{
-    unsupported = 0,    /**< Unable to function at all on this device */
-    dummy = 1,          /**< Used only for dummy or stub platforms.
-                         */
-    supported = 128,    /**< Capable of providing a functioning Platform on this device,
-                         *    possibly with degraded performance or features.
-                         */
-    hosted = 192,       /**< Capable of providing a fully-featured Platform on this device,
-                         *   running nested under some other display server rather than with
-                         *   exclusive hardware access.
-                         */
-    best = 256          /**< Capable of providing a Platform with the best features and
-                         *   performance this device is capable of.
-                         */
-};
-
 struct SupportedDevice
 {
     /**
@@ -517,7 +500,7 @@ struct SupportedDevice
      *          particular hardware.
      */
     std::unique_ptr<udev::Device> device;
-    PlatformPriority support_level;     /**< How well the platform can support this device */
+    probe::Result support_level;     /**< How well the platform can support this device */
 
     /**
      * Platform-private data from probing

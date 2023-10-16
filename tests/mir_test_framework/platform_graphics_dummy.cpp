@@ -38,7 +38,7 @@ auto probe_display_platform(
     result.emplace_back(
         mg::SupportedDevice {
             nullptr,
-            mg::PlatformPriority::dummy,
+            mg::probe::dummy,
             nullptr
          });
     return result;
@@ -55,7 +55,7 @@ auto probe_rendering_platform(
     result.emplace_back(
         mg::SupportedDevice {
             nullptr,
-            mg::PlatformPriority::dummy,
+            mg::probe::dummy,
             nullptr
          });
     return result;

@@ -161,13 +161,13 @@ auto modules_for_device(
                             *existing_device = std::make_pair(std::move(device), module);
                         }
                     }
-                    else if (device.support_level > mg::PlatformPriority::unsupported)
+                    else if (device.support_level > mg::probe::unsupported)
                     {
                         // Not-seen-before device, which this platform supports in some fashion
                         best_modules_so_far.emplace_back(std::move(device), module);
                     }
                 }
-                else if (device.support_level > mg::PlatformPriority::unsupported)
+                else if (device.support_level > mg::probe::unsupported)
                 {
                     // Devices with null associated udev device are not combined with any others
                     best_modules_so_far.emplace_back(std::move(device), module);
@@ -192,7 +192,7 @@ auto modules_for_device(
             best_modules_so_far.end(),
             [](auto const& module)
             {
-                return module.first.support_level > mg::PlatformPriority::dummy;
+                return module.first.support_level > mg::probe::dummy;
             });
 
         // …then, if there are any platforms before the start of the dummy platforms…

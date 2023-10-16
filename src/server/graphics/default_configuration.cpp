@@ -184,7 +184,7 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
                     for (auto& device : supported_devices)
                     {
                         // Add any devices that the platform claims are supported
-                        if (device.support_level >= mg::PlatformPriority::supported)
+                        if (device.support_level >= mg::probe::supported)
                         {
                             found_supported_device = true;
                             platform_modules.emplace_back(std::move(device), platform);
@@ -320,7 +320,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                     bool found_supported_device{false};
                     for (auto& device : supported_devices)
                     {
-                        if (device.support_level >= mg::PlatformPriority::supported)
+                        if (device.support_level >= mg::probe::supported)
                         {
                             found_supported_device = true;
                         }

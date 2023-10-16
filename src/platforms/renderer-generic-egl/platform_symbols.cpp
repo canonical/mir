@@ -57,13 +57,13 @@ auto probe_rendering_platform(
 {
     mir::assert_entry_point_signature<mg::RenderProbe>(&probe_rendering_platform);
 
-    mg::PlatformPriority maximum_suitability = mg::PlatformPriority::unsupported;
+    mg::probe::Result maximum_suitability = mg::probe::unsupported;
     // First check if there are any displays we can possibly drive
     for (auto const& display_provider : displays)
     {
         if (display_provider->acquire_interface<mg::GenericEGLDisplayProvider>())
         {
-            maximum_suitability = mg::PlatformPriority::hosted;
+            maximum_suitability = mg::probe::hosted;
             break;
         }
         /* TODO: We *can* drive a CPUAddressableDisplayProvider, too, but without

@@ -188,7 +188,7 @@ auto probe_display_platform(
             supported_devices.emplace_back(
                 mg::SupportedDevice{
                     device.clone(),
-                    mg::PlatformPriority::unsupported,
+                    mg::probe::unsupported,
                     nullptr
                 });
 
@@ -228,7 +228,7 @@ auto probe_display_platform(
                 if ("llvmpipe"s == renderer_string)
                 {
                     mir::log_info("KMS device only has associated software renderer: %s, device unsuitable", renderer_string);
-                    supported_devices.back().support_level = mg::PlatformPriority::unsupported;
+                    supported_devices.back().support_level = mg::probe::unsupported;
                     continue;
                 }
 
@@ -246,7 +246,7 @@ auto probe_display_platform(
                     mir::log_warning(
                         "Failed to query BusID for device %s; cannot check if KMS is available",
                         device.devnode());
-                    supported_devices.back().support_level = mg::PlatformPriority::supported;
+                    supported_devices.back().support_level = mg::probe::supported;
                 }
                 else
                 {
@@ -260,7 +260,7 @@ auto probe_display_platform(
                             (kms_resources.num_encoders() > 0))
                         {
                             // It supports KMS *and* can drive at least one physical output! Top hole!
-                            supported_devices.back().support_level = mg::PlatformPriority::best;
+                            supported_devices.back().support_level = mg::probe::best;
                         }
                         else
                         {
@@ -280,7 +280,7 @@ auto probe_display_platform(
                         mir::log_warning(
                             "Failed to detect whether device %s supports KMS, continuing with lower confidence",
                             device.devnode());
-                        supported_devices.back().support_level = mg::PlatformPriority::supported;
+                        supported_devices.back().support_level = mg::probe::supported;
                         break;
 
                     default:
@@ -288,7 +288,7 @@ auto probe_display_platform(
                                          "but continuing anyway", strerror(err), err);
                         mir::log_warning("Please file a bug at "
                                          "https://github.com/MirServer/mir/issues containing this message");
-                        supported_devices.back().support_level = mg::PlatformPriority::supported;
+                        supported_devices.back().support_level = mg::probe::supported;
                     }
                 }
             }
@@ -314,7 +314,7 @@ auto probe_rendering_platform(
 {
     mir::assert_entry_point_signature<mg::RenderProbe>(&probe_rendering_platform);
 
-    mg::PlatformPriority maximum_suitability = mg::PlatformPriority::unsupported;
+    mg::probe::Result maximum_suitability = mg::probe::unsupported;
     // First check if there are any displays we can possibly drive
     for (auto const& display_provider : displays)
     {
@@ -322,7 +322,7 @@ auto probe_rendering_platform(
         {
             // We can optimally drive a GBM-backed display
             mir::log_debug("GBM-capable display found");
-            maximum_suitability = mg::PlatformPriority::best;
+            maximum_suitability = mg::probe::best;
             break;
         }
         if (display_provider->acquire_interface<mg::CPUAddressableDisplayProvider>())
@@ -330,11 +330,11 @@ auto probe_rendering_platform(
             /* We *can* support this output, but with slower buffer copies 
              * If another platform supports this device better, let it.
              */
-            maximum_suitability = mg::PlatformPriority::supported;
+            maximum_suitability = mg::probe::supported;
         }
     }
 
-    if (maximum_suitability == mg::PlatformPriority::unsupported)
+    if (maximum_suitability == mg::probe::unsupported)
     {
         mir::log_debug("No outputs capable of accepting GBM input detected");
         mir::log_debug("Probing will be skipped");
@@ -421,7 +421,7 @@ auto probe_rendering_platform(
             }
 
             // We know we've got a device that we *might* be able to use
-            supported_devices.emplace_back(mg::SupportedDevice{device.clone(), mg::PlatformPriority::unsupported, nullptr});
+            supported_devices.emplace_back(mg::SupportedDevice{device.clone(), mg::probe::unsupported, nullptr});
             if (tmp_fd != mir::Fd::invalid)
             {
                 mgg::helpers::GBMHelper gbm_device{tmp_fd};

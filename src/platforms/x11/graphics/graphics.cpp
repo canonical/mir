@@ -89,7 +89,7 @@ auto probe_graphics_platform() -> std::optional<mg::SupportedDevice>
     {
         return mg::SupportedDevice {
             nullptr,
-            mg::PlatformPriority::hosted,
+            mg::probe::hosted,
             std::move(resources)
         };
     }

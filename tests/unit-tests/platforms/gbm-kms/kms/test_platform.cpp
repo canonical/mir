@@ -167,7 +167,7 @@ TEST_F(MesaGraphicsPlatform, display_probe_returns_unsupported_when_no_drm_udev_
     auto probe = platform_lib.load_function<mg::PlatformProbe>(display_platform_probe_symbol);
     EXPECT_THAT(
         probe(stub_vt, udev, options),
-        Each(SupportLevelIs(mg::PlatformPriority::unsupported)));
+        Each(SupportLevelIs(mg::probe::unsupported)));
 }
 
 TEST_F(MesaGraphicsPlatform, display_probe_returns_best_when_master)
@@ -186,7 +186,7 @@ TEST_F(MesaGraphicsPlatform, display_probe_returns_best_when_master)
     auto probe = platform_lib.load_function<mg::PlatformProbe>(display_platform_probe_symbol);
     EXPECT_THAT(
         probe(stub_vt, udev, options),
-        Each(SupportLevelIs(mg::PlatformPriority::best)));
+        Each(SupportLevelIs(mg::probe::best)));
 }
 
 TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_modesetting_is_not_supported)
@@ -204,7 +204,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_modesetting_is_not_s
     auto probe = platform_lib.load_function<mg::PlatformProbe>(display_platform_probe_symbol);
     EXPECT_THAT(
         probe(stub_vt, udev, options),
-        Each(SupportLevelIs(mg::PlatformPriority::unsupported)));
+        Each(SupportLevelIs(mg::probe::unsupported)));
 }
 
 TEST_F(MesaGraphicsPlatform, probe_returns_supported_when_cannot_determine_kms_support)
@@ -222,7 +222,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_supported_when_cannot_determine_kms_s
     auto probe = platform_lib.load_function<mg::PlatformProbe>(display_platform_probe_symbol);
     EXPECT_THAT(
         probe(stub_vt, udev, options),
-        Each(SupportLevelIs(mg::PlatformPriority::supported)));
+        Each(SupportLevelIs(mg::probe::supported)));
 }
 
 TEST_F(MesaGraphicsPlatform, probe_returns_supported_when_unexpected_error_returned)
@@ -240,7 +240,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_supported_when_unexpected_error_retur
     auto probe = platform_lib.load_function<mg::PlatformProbe>(display_platform_probe_symbol);
     EXPECT_THAT(
         probe(stub_vt, udev, options),
-        Each(SupportLevelIs(mg::PlatformPriority::supported)));
+        Each(SupportLevelIs(mg::probe::supported)));
 }
 
 TEST_F(MesaGraphicsPlatform, probe_returns_supported_when_cannot_determine_busid)
@@ -258,7 +258,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_supported_when_cannot_determine_busid
     auto probe = platform_lib.load_function<mg::PlatformProbe>(display_platform_probe_symbol);
     EXPECT_THAT(
         probe(stub_vt, udev, options),
-        Each(SupportLevelIs(mg::PlatformPriority::supported)));
+        Each(SupportLevelIs(mg::probe::supported)));
 }
 
 TEST_F(MesaGraphicsPlatform, display_probe_returns_supported_when_KMS_probe_is_overridden)
@@ -277,7 +277,7 @@ TEST_F(MesaGraphicsPlatform, display_probe_returns_supported_when_KMS_probe_is_o
     auto probe = platform_lib.load_function<mg::PlatformProbe>(display_platform_probe_symbol);
     EXPECT_THAT(
         probe(stub_vt, udev, options),
-        Each(SupportLevelIs(mg::PlatformPriority::supported)));
+        Each(SupportLevelIs(mg::probe::supported)));
 }
 
 TEST_F(MesaGraphicsPlatform, display_probe_does_not_touch_quirked_device)
