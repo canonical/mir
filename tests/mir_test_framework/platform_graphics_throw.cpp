@@ -69,7 +69,7 @@ protected:
 
     auto target_for() -> std::shared_ptr<mg::DisplayTarget> override
     {
-        return mg::DisplayPlatform::interface_for(stub_display_platform);
+        return mg::DisplayPlatform::target_for(stub_display_platform);
     }
 
 public:

@@ -476,7 +476,7 @@ public:
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) = 0;
 
-    static auto interface_for(std::shared_ptr<DisplayPlatform> platform)
+    static auto target_for(std::shared_ptr<DisplayPlatform> platform)
         -> std::shared_ptr<DisplayTarget>
     {
         return platform->target_for();

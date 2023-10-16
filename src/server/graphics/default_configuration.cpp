@@ -300,7 +300,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
 
             for (auto& display : the_display_platforms())
             {
-                display_targets.push_back(mg::DisplayPlatform::interface_for(display));
+                display_targets.push_back(mg::DisplayPlatform::target_for(display));
             }
 
             if (the_options()->is_set(options::platform_rendering_libs))
