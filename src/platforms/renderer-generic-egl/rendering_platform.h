@@ -43,8 +43,8 @@ public:
         graphics::Display const& output) -> UniqueModulePtr<graphics::GraphicBufferAllocator> override;
 
 protected:
-    auto maybe_create_interface(
-        RendererInterfaceBase::Tag const& type_tag) -> std::shared_ptr<RendererInterfaceBase> override;
+    auto maybe_create_provider(
+        RenderingProvider::Tag const& type_tag) -> std::shared_ptr<RenderingProvider> override;
 
 private:
     EGLDisplay const dpy;

@@ -349,8 +349,8 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgg::RenderingPlatform::create_
         dmabuf_provider);
 }
 
-auto mgg::RenderingPlatform::maybe_create_interface(
-    RendererInterfaceBase::Tag const& type_tag) -> std::shared_ptr<RendererInterfaceBase>
+auto mgg::RenderingPlatform::maybe_create_provider(
+    RenderingProvider::Tag const& type_tag) -> std::shared_ptr<RenderingProvider>
 {
     if (dynamic_cast<GLRenderingProvider::Tag const*>(&type_tag))
     {

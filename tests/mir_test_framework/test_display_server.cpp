@@ -109,13 +109,13 @@ void miral::TestDisplayServer::start_server()
                         [&server]() -> std::shared_ptr<mir::compositor::DisplayBufferCompositorFactory>
                         {
                             auto first_rendering_platform = server.the_rendering_platforms().front();
-                            auto gl_platform =
-                                mg::RenderingPlatform::acquire_interface<mg::GLRenderingProvider>(
+                            auto gl_provider =
+                                mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(
                                     std::move(first_rendering_platform));
-                            if (gl_platform)
+                            if (gl_provider)
                             {
                                 return std::make_shared<mtf::HeadlessDisplayBufferCompositorFactory>(
-                                    std::move(gl_platform),
+                                    std::move(gl_provider),
                                     server.the_gl_config());
                             }
                             BOOST_THROW_EXCEPTION((std::runtime_error{"Platform does not support GL interface"}));

@@ -48,10 +48,9 @@ mtf::HeadlessTest::HeadlessTest()
         [this]() -> std::shared_ptr<mir::compositor::DisplayBufferCompositorFactory>
     {
         auto first_platform = server.the_rendering_platforms().front();
-        auto gl_platform = mg::RenderingPlatform::acquire_interface<mg::GLRenderingProvider>(std::move(first_platform));
-        if (gl_platform)
+        if (auto gl_provider = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(std::move(first_platform)))
         {
-            return std::make_shared<mtf::HeadlessDisplayBufferCompositorFactory>(std::move(gl_platform), server.the_gl_config());
+            return std::make_shared<mtf::HeadlessDisplayBufferCompositorFactory>(std::move(gl_provider), server.the_gl_config());
         }
         BOOST_THROW_EXCEPTION((std::runtime_error{"Test RenderingPlatform does not support GL interface"}));
     });

@@ -128,8 +128,8 @@ struct BasicScreenShooter : Test
             }
             return elements;
         }()};
-    mtd::StubGlRenderingPlatform default_gl_behaviour_provider;
-    std::shared_ptr<mtd::MockGlRenderingPlatform> gl_provider{std::make_shared<testing::NiceMock<mtd::MockGlRenderingPlatform>>()};
+    mtd::StubGlRenderingProvider default_gl_behaviour_provider;
+    std::shared_ptr<mtd::MockGlRenderingProvider> gl_provider{std::make_shared<testing::NiceMock<mtd::MockGlRenderingProvider>>()};
     std::vector<std::shared_ptr<mg::GLRenderingProvider>> gl_providers{gl_provider};
     std::shared_ptr<MockRendererFactory> renderer_factory{std::make_shared<testing::NiceMock<MockRendererFactory>>()};
     std::shared_ptr<mtd::AdvanceableClock> clock{std::make_shared<mtd::AdvanceableClock>()};

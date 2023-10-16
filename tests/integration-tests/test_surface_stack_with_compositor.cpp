@@ -185,7 +185,7 @@ struct SurfaceStackCompositor : public Test
     StubDisplayListener stub_display_listener;
 
     mc::DefaultDisplayBufferCompositorFactory dbc_factory{
-        std::vector<std::shared_ptr<mg::GLRenderingProvider>>{std::make_shared<mtd::StubGlRenderingPlatform>()},
+        std::vector<std::shared_ptr<mg::GLRenderingProvider>>{std::make_shared<mtd::StubGlRenderingProvider>()},
         std::make_shared<mtd::NullGLConfig>(),
         mt::fake_shared(renderer_factory),
         std::make_shared<mtd::StubBufferAllocator>(),

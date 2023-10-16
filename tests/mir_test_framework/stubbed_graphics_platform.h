@@ -36,9 +36,9 @@ public:
         std::shared_ptr<mir::graphics::GLConfig> const&) override;
 
 protected:
-    auto maybe_create_interface(
-        mir::graphics::RendererInterfaceBase::Tag const& tag)
-        -> std::shared_ptr<mir::graphics::RendererInterfaceBase> override;
+    auto maybe_create_provider(
+        mir::graphics::RenderingProvider::Tag const& tag)
+        -> std::shared_ptr<mir::graphics::RenderingProvider> override;
 
     auto interface_for()
         -> std::shared_ptr<mir::graphics::DisplayInterfaceProvider> override;
