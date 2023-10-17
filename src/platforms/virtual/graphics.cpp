@@ -75,7 +75,7 @@ auto probe_display_platform(
     {
         result.push_back({
             nullptr,
-            mg::PlatformPriority::supported,
+            mg::probe::supported,
             nullptr
         });
     }
