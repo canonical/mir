@@ -106,8 +106,8 @@ auto mtf::StubGraphicPlatform::interface_for()
     class NullInterfaceProvider : public mg::DisplayInterfaceProvider
     {
     protected:
-        auto maybe_create_interface(mg::DisplayInterfaceBase::Tag const&)
-            -> std::shared_ptr<mg::DisplayInterfaceBase>
+        auto maybe_create_interface(mg::DisplayProvider::Tag const&)
+            -> std::shared_ptr<mg::DisplayProvider>
         {
             return nullptr;
         }

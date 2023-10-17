@@ -182,8 +182,8 @@ public:
         std::optional<xcb_window_t> const x_win;
     };
 
-    auto maybe_create_interface(mir::graphics::DisplayInterfaceBase::Tag const& type_tag)
-        -> std::shared_ptr<DisplayInterfaceBase>
+    auto maybe_create_interface(mir::graphics::DisplayProvider::Tag const& type_tag)
+        -> std::shared_ptr<DisplayProvider>
     {
         if (dynamic_cast<mg::GenericEGLDisplayProvider::Tag const*>(&type_tag))
         {

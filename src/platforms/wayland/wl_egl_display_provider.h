@@ -18,8 +18,8 @@ public:
 
     auto get_egl_display() const -> EGLDisplay;
 
-    auto maybe_create_interface(DisplayInterfaceBase::Tag const& type_tag)
-        -> std::shared_ptr<DisplayInterfaceBase> override;
+    auto maybe_create_interface(DisplayProvider::Tag const& type_tag)
+        -> std::shared_ptr<DisplayProvider> override;
 
     class Framebuffer : public GenericEGLDisplayProvider::EGLFramebuffer
     {

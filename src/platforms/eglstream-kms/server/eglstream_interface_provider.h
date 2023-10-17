@@ -30,8 +30,8 @@ public:
     InterfaceProvider(InterfaceProvider const& from, EGLStreamKHR with_stream);
 
 protected:
-    auto maybe_create_interface(DisplayInterfaceBase::Tag const& tag)
-        -> std::shared_ptr<DisplayInterfaceBase> override;
+    auto maybe_create_interface(DisplayProvider::Tag const& tag)
+        -> std::shared_ptr<DisplayProvider> override;
 
 private:
     EGLDisplay dpy;

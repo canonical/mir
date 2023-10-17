@@ -374,8 +374,8 @@ public:
     }
 
 protected:
-    auto maybe_create_interface(mg::DisplayInterfaceBase::Tag const& type_tag)
-        -> std::shared_ptr<mg::DisplayInterfaceBase>
+    auto maybe_create_interface(mg::DisplayProvider::Tag const& type_tag)
+        -> std::shared_ptr<mg::DisplayProvider>
     {
         if (dynamic_cast<mg::GBMDisplayProvider::Tag const*>(&type_tag))
         {

@@ -108,8 +108,8 @@ public:
     {
     }
 protected:
-    auto maybe_create_interface(mg::DisplayInterfaceBase::Tag const& type_tag)
-        -> std::shared_ptr<mg::DisplayInterfaceBase> override
+    auto maybe_create_interface(mg::DisplayProvider::Tag const& type_tag)
+        -> std::shared_ptr<mg::DisplayProvider> override
     {
         if (dynamic_cast<mg::CPUAddressableDisplayProvider::Tag const*>(&type_tag))
         {

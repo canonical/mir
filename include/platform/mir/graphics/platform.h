@@ -244,7 +244,7 @@ protected:
         RenderingProvider::Tag const& type_tag) -> std::shared_ptr<RenderingProvider> = 0;
 };
 
-class DisplayInterfaceBase
+class DisplayProvider
 {
 public:
     class Tag
@@ -254,7 +254,7 @@ public:
         virtual ~Tag() = default;
     };
 
-    virtual ~DisplayInterfaceBase() = default;
+    virtual ~DisplayProvider() = default;
 };
 
 
@@ -271,10 +271,10 @@ public:
 };
 
 
-class CPUAddressableDisplayProvider : public DisplayInterfaceBase
+class CPUAddressableDisplayProvider : public DisplayProvider
 {
 public:
-    class Tag : public DisplayInterfaceBase::Tag
+    class Tag : public DisplayProvider::Tag
     {
     };
 
@@ -294,10 +294,10 @@ public:
         -> std::unique_ptr<MappableFB> = 0;
 };
 
-class GBMDisplayProvider : public DisplayInterfaceBase
+class GBMDisplayProvider : public DisplayProvider
 {
 public:
-    class Tag : public DisplayInterfaceBase::Tag
+    class Tag : public DisplayProvider::Tag
     {
     };
 
@@ -351,10 +351,10 @@ public:
 
 class DmaBufBuffer;
 
-class DmaBufDisplayProvider : public DisplayInterfaceBase
+class DmaBufDisplayProvider : public DisplayProvider
 {
 public:
-    class Tag : public DisplayInterfaceBase::Tag
+    class Tag : public DisplayProvider::Tag
     {
     };
 
@@ -366,10 +366,10 @@ public:
 typedef void* EGLStreamKHR;
 #endif
 
-class EGLStreamDisplayProvider : public DisplayInterfaceBase
+class EGLStreamDisplayProvider : public DisplayProvider
 {
 public:
-    class Tag : public DisplayInterfaceBase::Tag
+    class Tag : public DisplayProvider::Tag
     {
     };
 
@@ -378,10 +378,10 @@ public:
     virtual auto claim_stream() -> EGLStreamKHR = 0;
 };
 
-class GenericEGLDisplayProvider : public DisplayInterfaceBase
+class GenericEGLDisplayProvider : public DisplayProvider
 {
 public:
-    class Tag : public DisplayInterfaceBase::Tag
+    class Tag : public DisplayProvider::Tag
     {
     };
 
@@ -424,8 +424,8 @@ public:
     auto acquire_interface() -> std::shared_ptr<Interface>
     {
         static_assert(
-            std::is_convertible_v<Interface*, DisplayInterfaceBase*>,
-            "Can only acquire a Display interface; Interface must implement DisplayInterfaceBase");
+            std::is_convertible_v<Interface*, DisplayProvider*>,
+            "Can only acquire a Display interface; Interface must implement DisplayProvider");
 
         if (auto const base_interface = maybe_create_interface(typename Interface::Tag{}))
         {
@@ -453,11 +453,11 @@ protected:
      * \param type_tag  [in]    An instance of the Tag type for the requested interface.
      *                          Implementations are expected to dynamic_cast<> this to
      *                          discover the specific interface being requested.
-     * \return      A pointer to an implementation of the DisplayInterfaceBase-derived
+     * \return      A pointer to an implementation of the DisplayProvider-derived
      *              interface that corresponds to the most-derived type of tag_type.
      */
-    virtual auto maybe_create_interface(DisplayInterfaceBase::Tag const& type_tag)
-        -> std::shared_ptr<DisplayInterfaceBase> = 0;
+    virtual auto maybe_create_interface(DisplayProvider::Tag const& type_tag)
+        -> std::shared_ptr<DisplayProvider> = 0;
 };
 
 class DisplayPlatform : public std::enable_shared_from_this<DisplayPlatform>

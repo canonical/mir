@@ -209,8 +209,8 @@ auto mgw::WlDisplayProvider::get_egl_display() const -> EGLDisplay
     return egl_provider->get_egl_display();
 }
 
-auto mgw::WlDisplayProvider::maybe_create_interface(DisplayInterfaceBase::Tag const& type_tag)
-    -> std::shared_ptr<DisplayInterfaceBase>
+auto mgw::WlDisplayProvider::maybe_create_interface(DisplayProvider::Tag const& type_tag)
+    -> std::shared_ptr<DisplayProvider>
 {
     if (dynamic_cast<GenericEGLDisplayProvider::Tag const*>(&type_tag))
     {
