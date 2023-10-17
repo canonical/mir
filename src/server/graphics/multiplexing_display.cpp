@@ -33,6 +33,7 @@ mg::MultiplexingDisplay::MultiplexingDisplay(
 {
     auto conf = configuration();
     initial_configuration_policy.apply_to(*conf);
+    initial_configuration_policy.confirm(*conf);
     configure(*conf);
 }
 

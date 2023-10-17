@@ -29,21 +29,24 @@ namespace graphics
 class CloneDisplayConfigurationPolicy : public DisplayConfigurationPolicy
 {
 public:
-    void apply_to(DisplayConfiguration& conf);
+    void apply_to(DisplayConfiguration& conf) override;
+    void confirm(DisplayConfiguration const& conf) override;
 };
 
 /// Each screen placed to the right of the previous one
 class SideBySideDisplayConfigurationPolicy : public DisplayConfigurationPolicy
 {
 public:
-    void apply_to(graphics::DisplayConfiguration& conf);
+    void apply_to(graphics::DisplayConfiguration& conf) override;
+    void confirm(DisplayConfiguration const& conf) override;
 };
 
 /// Just use the first screen
 class SingleDisplayConfigurationPolicy : public DisplayConfigurationPolicy
 {
 public:
-    void apply_to(graphics::DisplayConfiguration& conf);
+    void apply_to(graphics::DisplayConfiguration& conf) override;
+    void confirm(DisplayConfiguration const& conf) override;
 };
 /** @} */
 }

@@ -45,6 +45,7 @@ public:
     void load_config(std::istream& config_file, std::string const& filename);
 
     void apply_to(mir::graphics::DisplayConfiguration& conf) override;
+    virtual void confirm(mir::graphics::DisplayConfiguration const& conf) override;
 
     void select_layout(std::string const& layout);
 
@@ -94,7 +95,7 @@ public:
 
     void config_path(std::string newpath);
 
-    void apply_to(mir::graphics::DisplayConfiguration& conf) override;
+    void confirm(mir::graphics::DisplayConfiguration const& conf) override;
 
     void check_for_layout_override();
 

@@ -328,6 +328,10 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
     mir::log_info(out.str());
 }
 
+void miral::YamlFileDisplayConfig::confirm(mir::graphics::DisplayConfiguration const&)
+{
+}
+
 void miral::YamlFileDisplayConfig::apply_default_configuration(mg::DisplayConfiguration& conf)
 {
     conf.for_each_output([config=Config{}](mg::UserDisplayConfigurationOutput& conf_output)
@@ -549,7 +553,7 @@ void miral::ReloadingYamlFileDisplayConfig::config_path(std::string newpath)
     check_for_layout_override();
 }
 
-void miral::ReloadingYamlFileDisplayConfig::apply_to(mir::graphics::DisplayConfiguration& conf)
+void miral::ReloadingYamlFileDisplayConfig::confirm(mir::graphics::DisplayConfiguration const& conf)
 {
     std::lock_guard lock{mutex};
     if (!config_path_)
@@ -584,8 +588,6 @@ void miral::ReloadingYamlFileDisplayConfig::apply_to(mir::graphics::DisplayConfi
                 filename.c_str());
         }
     }
-
-    YamlFileDisplayConfig::apply_to(conf);
 }
 
 auto miral::ReloadingYamlFileDisplayConfig::the_main_loop() const -> std::shared_ptr<mir::MainLoop>

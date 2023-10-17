@@ -30,6 +30,7 @@ public:
     virtual ~DisplayConfigurationPolicy() = default;
 
     virtual void apply_to(DisplayConfiguration& conf) = 0;
+    virtual void confirm(DisplayConfiguration const& conf) = 0;
 
 protected:
     DisplayConfigurationPolicy() = default;
