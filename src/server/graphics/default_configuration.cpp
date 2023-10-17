@@ -144,7 +144,13 @@ void hybrid_check(std::vector<std::pair<mg::SupportedDevice, std::shared_ptr<mir
         std::stable_sort(std::begin(platform_modules), std::end(platform_modules),
              [](auto const& l, auto const& r) { return l.first.support_level > r.first.support_level; });
 
-        platform_modules.resize(std::min(1uz, platform_modules.size()));
+        if (!platform_modules.empty())
+        {
+            auto const erase_begin = std::remove_if(platform_modules.begin(), platform_modules.end(),
+                [platform=platform_modules.front().second](auto const& pm) { return pm.second != platform; });
+
+            platform_modules.erase(erase_begin, platform_modules.end());
+        }
     }
 }
 }
