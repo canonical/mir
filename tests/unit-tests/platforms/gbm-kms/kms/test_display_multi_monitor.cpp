@@ -76,6 +76,10 @@ public:
                 }
             });
     }
+
+    void confirm(mg::DisplayConfiguration const&)
+    {
+    }
 };
 
 class SideBySideDisplayConfigurationPolicy : public mg::DisplayConfigurationPolicy
@@ -104,6 +108,10 @@ public:
                     conf_output.power_mode = mir_power_mode_off;
                 }
             });
+    }
+
+    void confirm(mg::DisplayConfiguration const&)
+    {
     }
 };
 

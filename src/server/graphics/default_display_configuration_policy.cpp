@@ -88,6 +88,10 @@ void mg::CloneDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
         });
 }
 
+void mg::CloneDisplayConfigurationPolicy::confirm(mir::graphics::DisplayConfiguration const&)
+{
+}
+
 void mg::SideBySideDisplayConfigurationPolicy::apply_to(graphics::DisplayConfiguration& conf)
 {
     int max_x = 0;
@@ -113,6 +117,9 @@ void mg::SideBySideDisplayConfigurationPolicy::apply_to(graphics::DisplayConfigu
             });
 }
 
+void mg::SideBySideDisplayConfigurationPolicy::confirm(mir::graphics::DisplayConfiguration const&)
+{
+}
 
 void mg::SingleDisplayConfigurationPolicy::apply_to(graphics::DisplayConfiguration& conf)
 {
@@ -136,4 +143,8 @@ void mg::SingleDisplayConfigurationPolicy::apply_to(graphics::DisplayConfigurati
                 conf_output.power_mode = mir_power_mode_off;
             }
             });
+}
+
+void mg::SingleDisplayConfigurationPolicy::confirm(mir::graphics::DisplayConfiguration const&)
+{
 }
