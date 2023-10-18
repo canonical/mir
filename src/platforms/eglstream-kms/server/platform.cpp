@@ -248,6 +248,14 @@ mge::DisplayPlatform::DisplayPlatform(
     provider = std::make_shared<InterfaceProvider>(display);
 }
 
+mge::DisplayPlatform::~DisplayPlatform()
+{
+    if (display != EGL_NO_DISPLAY)
+    {
+        eglTerminate(display);
+    }
+}
+
 auto mge::DisplayPlatform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& configuration_policy,
     std::shared_ptr<GLConfig> const& gl_config)
