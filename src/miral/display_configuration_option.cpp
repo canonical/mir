@@ -145,6 +145,7 @@ public:
     }
 
     void apply_to(mg::DisplayConfiguration& conf) override;
+    void confirm(mg::DisplayConfiguration const& conf) override;
 private:
     void apply_to(mg::UserDisplayConfigurationOutput& output);
     std::shared_ptr<mg::DisplayConfigurationPolicy> const base_policy;
@@ -156,6 +157,11 @@ void AutoscaleSetter::apply_to(mg::DisplayConfiguration& conf)
     base_policy->apply_to(conf);
     conf.for_each_output(
         [this](mg::UserDisplayConfigurationOutput& output) { if (output.connected) apply_to(output); });
+}
+
+void AutoscaleSetter::confirm(mg::DisplayConfiguration const& conf)
+{
+    base_policy->confirm(conf);
 }
 
 void AutoscaleSetter::apply_to(mg::UserDisplayConfigurationOutput& output)
