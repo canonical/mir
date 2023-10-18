@@ -55,8 +55,12 @@ jobs:
         sudo apt-add-repository --yes ppa:mir-team/dev
         sudo apt-get install --no-install-recommends \
           dmz-cursor-theme \
+          glmark2-es2 \
+          glmark2-es2-wayland \
           lcov \
-          ninja-build
+          mesa-utils \
+          ninja-build \
+          xwayland
 
         # deal with incompataibles preinstalled
         sudo apt-get remove --yes \
@@ -84,7 +88,7 @@ jobs:
       run: ccache --show-stats --zero-stats
 
     - name: Test
-      timeout-minutes: 5
+      timeout-minutes: 10
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
         XDG_RUNTIME_DIR: /tmp

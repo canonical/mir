@@ -18,12 +18,13 @@ install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir-smoke-test-runner
     DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
+find_program(EGLINFO_EXECUTABLE eglinfo)
 find_program(XVFB_RUN_EXECUTABLE xvfb-run)
 find_program(GLMARK2_EXECUTABLE glmark2-es2-wayland)
 
 CMAKE_DEPENDENT_OPTION(
   MIR_RUN_SMOKE_TESTS "Run mir-smoke-test-runner as part of testsuite" ON
-  "XVFB_RUN_EXECUTABLE" OFF
+  "EGLINFO_EXECUTABLE;XVFB_RUN_EXECUTABLE" OFF
 )
 
 CMAKE_DEPENDENT_OPTION(
