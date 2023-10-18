@@ -258,7 +258,7 @@ void miral::MirRunner::stop()
 
     if (auto const server = self->weak_server.lock())
     {
-        server->stop();
+        server->the_main_loop()->enqueue(this, [server] { server->stop(); });
     }
 }
 

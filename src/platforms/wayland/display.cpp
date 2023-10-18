@@ -329,7 +329,9 @@ void mir::graphics::wayland::Display::pointer_motion(wl_pointer* pointer, uint32
 {
     {
         std::lock_guard lock{sink_mutex};
-        pointer_pos = geom::PointF{wl_fixed_to_double(x), wl_fixed_to_double(y)} + geom::DisplacementF{pointer_displacement};
+        auto const descaled_x = pointer_scale * wl_fixed_to_double(x);
+        auto const descaled_y = pointer_scale * wl_fixed_to_double(y);
+        pointer_pos = geom::PointF{descaled_x, descaled_y} + pointer_displacement;
         pointer_time = std::chrono::milliseconds{time};
     }
 

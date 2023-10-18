@@ -29,10 +29,12 @@ jobs:
         fetch-depth: 0  # needed for version determination
 
     - name: Build and publish the snap
-      uses: canonical/actions/build-snap@multiarch
+      uses: canonical/actions/build-snap@release
       with:
         architecture: ${{ matrix.architecture }}
         snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
+        launchpad-credentials: ${{ secrets.LAUNCHPAD_CREDENTIALS }}
+        launchpad-accept-public-upload: true
         publish: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
         publish-channel: 22/edge/pr${{ github.event.number }}
 
@@ -68,6 +70,7 @@ jobs:
         - snap: Miriway/Miriway
           track: latest
           review-opts: --allow-classic
+          snapcraft-channel: edge
 
     steps:
     - name: Check out code
@@ -82,10 +85,13 @@ jobs:
         sed -i 's@- mir-libs.*$@\0/pr${{ github.event.number }}@' snap/snapcraft.yaml
 
     - name: Build and publish the snap
-      uses: canonical/actions/build-snap@multiarch
+      uses: canonical/actions/build-snap@release
       with:
         architecture: ${{ matrix.architecture }}
         review-opts: ${{ matrix.review-opts }}
         snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
+        launchpad-credentials: ${{ secrets.LAUNCHPAD_CREDENTIALS }}
+        launchpad-accept-public-upload: true
         publish: true
         publish-channel: ${{ matrix.track }}/edge/mir-pr${{ github.event.number }}
+        snapcraft-channel: ${{ matrix.snapcraft-channel || 'stable' }}

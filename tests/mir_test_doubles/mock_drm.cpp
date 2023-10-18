@@ -539,6 +539,24 @@ testing::Matcher<int> mtd::IsFdOfDevice(char const* device)
     return ::testing::MakeMatcher(new mtd::MockDRM::IsFdOfDeviceMatcher(device));
 }
 
+// The signature of drmModeCrtcSetGamma() changes from passing the gamma as `uint16_t*` to `uint16_t const*`
+// We need to provide a definition that matches
+namespace
+{
+template<typename Any>
+struct Decode_drmModeCrtcSetGamma_signature;
+
+template<typename Arg>
+struct Decode_drmModeCrtcSetGamma_signature<int(int fd, uint32_t crtc_id, uint32_t size, Arg red, Arg gree, Arg blue)>
+{
+    using gamma_t = Arg;
+};
+using gamma_t = Decode_drmModeCrtcSetGamma_signature<decltype(drmModeCrtcSetGamma)>::gamma_t;
+}
+
+// Ensure we get a compile error if the definition doesn't match the declaration (instead of providing an overload)
+extern "C"
+{
 int drmOpen(const char *name, const char *busid)
 {
     return global_mock->drmOpen(name, busid);
@@ -598,8 +616,7 @@ int drmModeCrtcGetGamma(int fd, uint32_t crtc_id, uint32_t size,
     return global_mock->drmModeCrtcGetGamma(fd, crtc_id, size, red, green, blue);
 }
 
-int drmModeCrtcSetGamma(int fd, uint32_t crtc_id, uint32_t size,
-                        uint16_t* red, uint16_t* green, uint16_t* blue)
+int drmModeCrtcSetGamma(int fd, uint32_t crtc_id, uint32_t size, gamma_t red, gamma_t green, gamma_t blue)
 {
     return global_mock->drmModeCrtcSetGamma(fd, crtc_id, size, red, green, blue);
 }
@@ -800,4 +817,5 @@ char* drmGetPrimaryDeviceNameFromFd(int fd)
 int drmCheckModesettingSupported(char const* busid)
 {
     return global_mock->drmCheckModesettingSupported(busid);
+}
 }

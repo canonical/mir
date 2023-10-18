@@ -290,7 +290,7 @@ auto mf::WindowWlSurfaceRole::pending_size() const -> geom::Size
 
 auto mf::WindowWlSurfaceRole::current_size() const -> geom::Size
 {
-    auto size = committed_size.value_or(geom::Size{640, 480});
+    auto size = geom::Size{640, 480};
     if ((!committed_width_set_explicitly || !committed_height_set_explicitly) && surface)
     {
         if (auto const buffer_size = surface.value().buffer_size())
@@ -357,11 +357,7 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
             spec().state = mir_window_state_hidden;
         }
 
-        if (!committed_size || size != committed_size.value())
-        {
-            spec().width = size.width;
-            spec().height = size.height;
-        }
+        apply_client_size(spec());
 
         if (state.surface_data_needs_refresh())
         {
@@ -386,7 +382,6 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
         create_scene_surface();
     }
 
-    committed_size = size;
     if (pending_explicit_width)
         committed_width_set_explicitly = true;
     if (pending_explicit_height)
@@ -457,9 +452,9 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
         return;
 
     auto& mods = spec();
-    auto const request_size = pending_size();
-    mods.width = request_size.width;
-    mods.height = request_size.height;
+
+    apply_client_size(mods);
+
     mods.streams = std::vector<shell::StreamSpecification>{};
     mods.input_shape = std::vector<geom::Rectangle>{};
     surface.value().populate_surface_data(mods.streams.value(), mods.input_shape.value(), {});
@@ -475,10 +470,7 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
     // The shell isn't guaranteed to respect the requested size
     // TODO: make initial updates atomic somehow
     auto const content_size = scene_surface->content_size();
-    if (content_size != request_size)
-    {
-        observer->content_resized_to(scene_surface.get(), content_size);
-    }
+    observer->content_resized_to(scene_surface.get(), content_size);
     auto const focus_state = scene_surface->focus_state();
     if (focus_state != mir_window_focus_state_unfocused)
     {
@@ -503,4 +495,27 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
 
     // Invalidates mods
     pending_changes.reset();
+}
+
+void mf::WindowWlSurfaceRole::apply_client_size(mir::shell::SurfaceSpecification& mods)
+{
+    if ((!committed_width_set_explicitly || !committed_height_set_explicitly) && surface)
+    {
+        if (auto const buffer_size = surface.value().buffer_size())
+        {
+            if (!committed_width_set_explicitly)
+            {
+                mods.width = buffer_size->width;
+            }
+            if (!committed_height_set_explicitly)
+            {
+                mods.height = buffer_size->height;
+            }
+        }
+    }
+
+    if (pending_explicit_width)
+        mods.width = pending_explicit_width.value();
+    if (pending_explicit_height)
+        mods.height = pending_explicit_height.value();
 }

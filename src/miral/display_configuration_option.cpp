@@ -25,6 +25,7 @@
 #include <algorithm>
 
 namespace mg = mir::graphics;
+using namespace mir::geometry;
 
 namespace
 {
@@ -45,6 +46,9 @@ char const* const display_alpha_on = "on";
 char const* const display_scale_opt = "display-scale";
 char const* const display_scale_descr = "Scale for all displays";
 char const* const display_scale_default = "1.0";
+
+char const* const display_autoscale_opt = "display-autoscale";
+char const* const display_autoscale_descr = "Target height in logical pixels for all displays";
 
 class PixelFormatSelector : public mg::DisplayConfigurationPolicy
 {
@@ -131,12 +135,47 @@ void ScaleSetter::confirm(mg::DisplayConfiguration const& conf)
     base_policy->confirm(conf);
 }
 
+class AutoscaleSetter : public mg::DisplayConfigurationPolicy
+{
+public:
+    AutoscaleSetter(std::shared_ptr<mg::DisplayConfigurationPolicy> const& base_policy, int target)
+        : base_policy{base_policy},
+          target{target}
+    {
+    }
+
+    void apply_to(mg::DisplayConfiguration& conf) override;
+private:
+    void apply_to(mg::UserDisplayConfigurationOutput& output);
+    std::shared_ptr<mg::DisplayConfigurationPolicy> const base_policy;
+    int target;
+};
+
+void AutoscaleSetter::apply_to(mg::DisplayConfiguration& conf)
+{
+    base_policy->apply_to(conf);
+    conf.for_each_output(
+        [this](mg::UserDisplayConfigurationOutput& output) { if (output.connected) apply_to(output); });
+}
+
+void AutoscaleSetter::apply_to(mg::UserDisplayConfigurationOutput& output)
+{
+    auto const output_height =
+        (output.orientation == mir_orientation_normal || output.orientation == mir_orientation_inverted) ?
+        output.modes[output.current_mode_index].size.height.as_int() :
+        output.modes[output.current_mode_index].size.height.as_int();
+
+    static auto const steps = 4.0;
+    output.scale = roundf((steps * output_height) / target) / steps;
+}
+
 void miral::display_configuration_options(mir::Server& server)
 {
     // Add choice of monitor configuration
     server.add_configuration_option(display_config_opt, display_config_descr,   sidebyside_opt_val);
     server.add_configuration_option(display_alpha_opt,  display_alpha_descr,    display_alpha_off);
     server.add_configuration_option(display_scale_opt,  display_scale_descr,    display_scale_default);
+    server.add_configuration_option(display_autoscale_opt,  display_autoscale_descr, mir::OptionType::integer);
 
     server.wrap_display_configuration_policy(
         [&](std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
@@ -146,6 +185,7 @@ void miral::display_configuration_options(mir::Server& server)
             auto display_layout = options->get<std::string>(display_config_opt);
             auto with_alpha = options->get<std::string>(display_alpha_opt) == display_alpha_on;
             auto const scale_str = options->get<std::string>(display_scale_opt);
+            auto const is_auto_scale = options->is_set(display_autoscale_opt);
 
             double scale{0};
             static double const scale_min = 0.01;
@@ -187,6 +227,23 @@ void miral::display_configuration_options(mir::Server& server)
             if (scale != 1.0)
             {
                 layout_selector = std::make_shared<ScaleSetter>(layout_selector, scale);
+            }
+
+            if (is_auto_scale)
+            {
+                if (scale != 1.0)
+                {
+                    mir::fatal_error("Display scale option can't be used with autoscale");
+                }
+
+                if (display_layout.compare(0, strlen(static_opt_val), static_opt_val) == 0)
+                {
+                    mir::fatal_error("Display autoscale option can't be used with static display configuration");
+                }
+
+                auto const auto_scale_target = options->get<int>(display_autoscale_opt);
+
+                layout_selector = std::make_shared<AutoscaleSetter>(layout_selector, auto_scale_target);
             }
 
             // Whatever the layout select a pixel format with requested alpha

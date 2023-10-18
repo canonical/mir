@@ -56,6 +56,7 @@ public:
 
     DisplayConfigurationOutput dcout;
     geom::Size output_size;
+    float host_scale{1.0f};
 
     wl_output* const output;
     DisplayClient* const owner_;
@@ -254,7 +255,7 @@ void mgw::DisplayClient::Output::mode(uint32_t flags, int32_t width, int32_t hei
 
 void mgw::DisplayClient::Output::scale(int32_t factor)
 {
-    dcout.scale = factor;
+    host_scale = factor;
 }
 
 void mgw::DisplayClient::Output::done()
@@ -275,7 +276,7 @@ void mgw::DisplayClient::Output::done()
         xdg_toplevel_add_listener(shell_toplevel, &shell_toplevel_listener, this);
 
         xdg_toplevel_set_fullscreen(shell_toplevel, output);
-        wl_surface_set_buffer_scale(surface, round(dcout.scale));
+        wl_surface_set_buffer_scale(surface, round(host_scale));
         wl_surface_commit(surface);
 
         // After the next roundtrip the surface should be configured
@@ -301,9 +302,9 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
     xdg_surface_ack_configure(shell_surface, serial);
     bool const size_is_changed = pending_toplevel_size && (
         !dcout.custom_logical_size || dcout.custom_logical_size.value() != pending_toplevel_size.value());
-    dcout.custom_logical_size = pending_toplevel_size.value();
+    dcout.custom_logical_size = host_scale*pending_toplevel_size.value();
     pending_toplevel_size.reset();
-    output_size = dcout.extents().size * dcout.scale;
+    output_size = dcout.extents().size;
     if (!has_initialized)
     {
         has_initialized = true;
@@ -567,12 +568,13 @@ void mgw::DisplayClient::remove_global(
 {
     DisplayClient* self = static_cast<decltype(self)>(data);
 
-    std::lock_guard lock{self->outputs_mutex};
+    std::unique_lock lock{self->outputs_mutex};
     auto const output = self->bound_outputs.find(id);
     if (output != self->bound_outputs.end())
     {
         self->outputs_to_be_deleted.push_back(std::move(output->second));
         self->bound_outputs.erase(output);
+        lock.unlock();
         self->on_display_config_changed();
     }
     // TODO: We should probably also delete any other globals we've bound to that disappear.
@@ -643,7 +645,9 @@ void mgw::DisplayClient::pointer_enter(
     {
         if (surface == out.second->surface)
         {
-            pointer_displacement = out.second->dcout.top_left - geometry::Point{};
+            // Pointer events are displaced and scaled according to the surface
+            pointer_displacement = geom::DisplacementF{out.second->dcout.top_left - geometry::Point{}};
+            pointer_scale = out.second->host_scale;
             break;
         }
     }

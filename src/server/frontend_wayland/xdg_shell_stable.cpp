@@ -320,7 +320,7 @@ mf::XdgPopupStable::XdgPopupStable(
       xdg_surface{xdg_surface}
 {
     positioner.ensure_complete();
-    positioner.type = mir_window_type_gloss;
+    positioner.type = mir_window_type_tip;
     if (parent_role)
     {
         if (auto scene_surface = parent_role.value()->scene_surface())

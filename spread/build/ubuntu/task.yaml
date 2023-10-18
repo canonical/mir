@@ -1,5 +1,5 @@
 environment:
-    DEB_BUILD_OPTIONS: "parallel=$( nproc ) noopt ${NOCHECK}"
+    DEB_BUILD_OPTIONS: "parallel=$( nproc ) noopt ${DEB_BUILD_EXTRA}"
     NO_PKG_MANGLE: 1
 
 systems: [ubuntu-*]
@@ -12,20 +12,19 @@ summary: Build Ubuntu packages
 execute: |
     cd $SPREAD_PATH
 
-    apt-get install --yes software-properties-common
+    NODBG=$( [[ "${DEB_BUILD_OPTIONS}" != *nostrip* ]] && echo true || echo false )
 
     # Add Mir dev PPA for any out-of-archive packages needed
     # (Currently: a newer version of WLCS)
-    add-apt-repository ppa:mir-team/dev
+    add-apt-repository ppa:mir-team/dev --component "main $( $NODBG || echo main/debug )"
 
     # to get dpkg-architecture and mk-build-deps
     apt-get install \
       --yes \
-      --no-install-recommends \
       ccache \
       devscripts \
       dpkg-dev \
-      equivs
+      $( $NODBG || echo wlcs-dbgsym )
 
     # set host and build environment up
     source <( dpkg-architecture --print-set --host-arch ${ARCH} )
@@ -59,18 +58,13 @@ execute: |
 
         apt-get update
         apt-get --yes install qemu-user-static binfmt-support
-
-        # Quirk for the eglexternalplatform-dev build dependency
-        sed -i 's/\(eglexternalplatform-dev\)/\1:all/' debian/control
     fi
 
     # Mark the "release" in the changelog
     debchange --release "CI release"
 
     # install dependencies
-    mk-build-deps \
-      --install \
-      --tool "apt-get --yes -o Debug::pkgProblemResolver=yes -o APT::Immediate-Configure=0"
+    apt-get build-dep --yes ./
 
     # use clang
     if [ "${CLANG}" -eq 1 ]; then
@@ -93,6 +87,6 @@ execute: |
     echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_CXX_COMPILER_LAUNCHER=ccache" >> debian/opts.mk
 
     # build and run tests
-    debian/rules build
+    UBSAN_OPTIONS=halt_on_error=1 debian/rules build
 
     ccache --show-stats --zero-stats > ${CCACHE_DIR}/ccache.stats

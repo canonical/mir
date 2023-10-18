@@ -42,15 +42,17 @@ from the corresponding files under `spread/build`.
 This creates an example shell (miral-shell) in the bin directory. This can be
 run directly:
 
-    bin/miral-shell
+    bin/miral-app
 
 With the default options this runs in a window on X (which is convenient for
 development).
 
 The miral-shell example is simple, don’t expect to see a sophisticated launcher
-by default. You can start mir apps from the command-line. For example:
+by default. Within this window you can start a terminal with Ctrl-Alt-Shift-T 
+(the "Shift" is needed to avoid Ubuntu's DE intercepting the input). From this
+terminal you can start apps. For example:
 
-    bin/miral-run qterminal
+    $ gedit
 
 To exit from miral-shell press Ctrl-Alt-BkSp.
 

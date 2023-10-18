@@ -216,7 +216,7 @@ auto wm_window_type_to_mir_window_type(
                  wm_type == connection->_NET_WM_WINDOW_TYPE_DND ||
                  wm_type == connection->_NET_WM_WINDOW_TYPE_DIALOG)
         {
-            return mir_window_type_gloss;
+            return mir_window_type_tip;
         }
         else if (mir::verbose_xwayland_logging_enabled())
         {
@@ -231,7 +231,7 @@ auto wm_window_type_to_mir_window_type(
     // be taken as _NET_WM_WINDOW_TYPE_NORMAL."
     if (is_transient_for && !override_redirect)
     {
-        return mir_window_type_gloss;
+        return mir_window_type_tip;
     }
     else
     {
@@ -1221,20 +1221,25 @@ void mf::XWaylandSurface::prep_surface_spec(ProofOfMutexLock const&, msh::Surfac
         }
     }
 
-#define SCALE_SIZE(type, prop) \
-    if (mods.prop) \
-    { \
-        mods.prop = std::max(geom::type{1}, mods.prop.value() * inv_scale); \
-    }
+    auto scale_size_clamped = [inv_scale](auto& optional_prop)
+        {
+            if (optional_prop)
+            {
+                using ValueType = typename std::remove_reference<decltype(optional_prop.value())>::type;
+                using UnderlyingType = typename ValueType::ValueType;
+                auto constexpr raw_max = std::numeric_limits<UnderlyingType>::max();
 
-    SCALE_SIZE(Width, width);
-    SCALE_SIZE(Height, height);
-    SCALE_SIZE(Width, min_width);
-    SCALE_SIZE(Height, min_height);
-    SCALE_SIZE(Width, max_width);
-    SCALE_SIZE(Height, max_height);
+                double const double_value = optional_prop.value().as_value() * inv_scale;
+                optional_prop = std::max(ValueType{1}, ValueType{std::min(double_value, double{raw_max})});
+            }
+        };
 
-#undef SCALE_SIZE
+    scale_size_clamped(mods.width);
+    scale_size_clamped(mods.height);
+    scale_size_clamped(mods.min_width);
+    scale_size_clamped(mods.min_height);
+    scale_size_clamped(mods.max_width);
+    scale_size_clamped(mods.max_height);
 
     // NOTE: exclusive rect not checked because it is not used by XWayland surfaces
     // NOTE: aux rect related properties not checks because they are only set in this method
