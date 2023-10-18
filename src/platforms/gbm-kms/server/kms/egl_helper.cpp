@@ -44,7 +44,7 @@ mgmh::EGLHelper::EGLHelper(
     EGLContext shared_context)
     : EGLHelper(gl_config)
 {
-    setup(gbm, surface, gbm_format, shared_context, false);
+    setup(gbm.device, surface, gbm_format, shared_context, false);
 }
 
 mgmh::EGLHelper::EGLHelper(EGLHelper&& from)
@@ -156,7 +156,7 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
 }
 
 void mgmh::EGLHelper::setup(
-    GBMHelper const& gbm,
+    gbm_device* const device,
     gbm_surface* surface_gbm,
     uint32_t gbm_format,
     EGLContext shared_context,
@@ -169,14 +169,14 @@ void mgmh::EGLHelper::setup(
         EGL_NONE
     };
 
-    egl_display = egl_display_for_gbm_device(gbm.device);
+    egl_display = egl_display_for_gbm_device(device);
     if (owns_egl)
     {
         initialise_egl(egl_display, 1, 4);
         should_terminate_egl = owns_egl;
     }
 
-    egl_config = egl_config_for_format(gbm_format);
+    egl_config = egl_config_for_format(static_cast<EGLint>(gbm_format));
 
     egl_surface = platform_base.eglCreatePlatformWindowSurface(
         egl_display,

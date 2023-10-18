@@ -21,12 +21,14 @@
 #include <optional>
 
 #include "mir/graphics/buffer.h"
+#include "mir/graphics/texture.h"
 #include "mir/fd.h"
 
 namespace mir
 {
 namespace graphics
 {
+class DRMFormat;
 /**
  * A logical buffer backed by one-or-more dmabuf buffers
  */
@@ -42,9 +44,9 @@ public:
     virtual ~DMABufBuffer() = default;
 
     /**
-     * The format of this logical buffer, as in <drm_fourcc.h>
+     * The format of this logical buffer
      */
-    virtual auto drm_fourcc() const -> uint32_t = 0;
+    virtual auto format() const -> DRMFormat = 0;
 
     /**
      * The DRM modifier of this logical buffer, if specified.
@@ -56,6 +58,8 @@ public:
     virtual auto modifier() const -> std::optional<uint64_t> = 0;
 
     virtual auto planes() const -> std::vector<PlaneDescriptor> const& = 0;
+
+    virtual auto layout() const -> gl::Texture::Layout = 0;
 
     virtual auto size() const -> geometry::Size = 0;
 };

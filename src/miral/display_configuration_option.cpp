@@ -55,6 +55,7 @@ class PixelFormatSelector : public mg::DisplayConfigurationPolicy
 public:
     PixelFormatSelector(std::shared_ptr<mg::DisplayConfigurationPolicy> const& base_policy, bool with_alpha);
     virtual void apply_to(mg::DisplayConfiguration& conf);
+    virtual void confirm(mg::DisplayConfiguration const& conf);
 private:
     std::shared_ptr<mg::DisplayConfigurationPolicy> const base_policy;
     bool const with_alpha;
@@ -98,6 +99,11 @@ void PixelFormatSelector::apply_to(mg::DisplayConfiguration& conf)
         });
 }
 
+void PixelFormatSelector::confirm(mg::DisplayConfiguration const& conf)
+{
+    base_policy->confirm(conf);
+}
+
 class ScaleSetter : public mg::DisplayConfigurationPolicy
 {
 public:
@@ -108,6 +114,7 @@ public:
     }
 
     void apply_to(mg::DisplayConfiguration& conf) override;
+    void confirm(mg::DisplayConfiguration const& conf) override;
 private:
     std::shared_ptr<mg::DisplayConfigurationPolicy> const base_policy;
     float const with_scale;
@@ -123,6 +130,11 @@ void ScaleSetter::apply_to(mg::DisplayConfiguration& conf)
         });
 }
 
+void ScaleSetter::confirm(mg::DisplayConfiguration const& conf)
+{
+    base_policy->confirm(conf);
+}
+
 class AutoscaleSetter : public mg::DisplayConfigurationPolicy
 {
 public:
@@ -133,6 +145,7 @@ public:
     }
 
     void apply_to(mg::DisplayConfiguration& conf) override;
+    void confirm(mg::DisplayConfiguration const& conf) override;
 private:
     void apply_to(mg::UserDisplayConfigurationOutput& output);
     std::shared_ptr<mg::DisplayConfigurationPolicy> const base_policy;
@@ -144,6 +157,11 @@ void AutoscaleSetter::apply_to(mg::DisplayConfiguration& conf)
     base_policy->apply_to(conf);
     conf.for_each_output(
         [this](mg::UserDisplayConfigurationOutput& output) { if (output.connected) apply_to(output); });
+}
+
+void AutoscaleSetter::confirm(mg::DisplayConfiguration const& conf)
+{
+    base_policy->confirm(conf);
 }
 
 void AutoscaleSetter::apply_to(mg::UserDisplayConfigurationOutput& output)

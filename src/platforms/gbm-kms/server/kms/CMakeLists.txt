@@ -37,12 +37,17 @@ add_library(
   egl_helper.cpp
   quirks.cpp
   quirks.h
+  kms_framebuffer.h
+  cpu_addressable_fb.cpp
+  cpu_addressable_fb.h
 )
 
 target_link_libraries(
   mirplatformgraphicsgbmkmsobjects
 
-  mirsharedgbmservercommon-static
+  PRIVATE
+    mirsharedgbmservercommon-static
+    ${GBM_LDFLAGS} ${GBM_LIBRARIES}
 )
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in

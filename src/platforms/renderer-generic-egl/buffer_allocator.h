@@ -19,6 +19,7 @@
 
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/linux_dmabuf.h"
+#include "mir/graphics/platform.h"
 
 #include <EGL/egl.h>
 #include <wayland-server-core.h>
@@ -47,12 +48,15 @@ class EGLContextExecutor;
 namespace egl::generic
 {
 
+class GLRenderingProvider;
+
 class BufferAllocator:
     public graphics::GraphicBufferAllocator
 {
 public:
-    explicit BufferAllocator(Display const& output);
-
+    BufferAllocator(EGLDisplay dpy, EGLContext share_with, std::shared_ptr<DMABufEGLProvider> dmabuf_provider);
+    ~BufferAllocator() override;
+    
     std::shared_ptr<Buffer> alloc_software_buffer(geometry::Size size, MirPixelFormat) override;
     std::vector<MirPixelFormat> supported_pixel_formats() override;
 
@@ -66,15 +70,45 @@ public:
         std::shared_ptr<renderer::software::RWMappableBuffer> data,
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release) -> std::shared_ptr<Buffer> override;
+
+    auto shared_egl_context() -> EGLContext;
 private:
-    std::shared_ptr<renderer::gl::Context> const ctx;
+    std::unique_ptr<renderer::gl::Context> const ctx;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     std::shared_ptr<Executor> wayland_executor;
     std::unique_ptr<LinuxDmaBufUnstable, std::function<void(LinuxDmaBufUnstable*)>> dmabuf_extension;
     std::shared_ptr<EGLExtensions> const egl_extensions;
+    std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
     bool egl_display_bound{false};
 };
 
+class GLRenderingProvider : public graphics::GLRenderingProvider
+{
+public:
+    GLRenderingProvider(
+         EGLDisplay dpy,
+         EGLContext ctx,
+         std::shared_ptr<DMABufEGLProvider> dmabuf_provider);
+
+    auto make_framebuffer_provider(std::shared_ptr<DisplayInterfaceProvider> target)
+        -> std::unique_ptr<FramebufferProvider> override;
+
+    auto as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture> override;
+
+    auto suitability_for_allocator(std::shared_ptr<GraphicBufferAllocator> const& target) -> probe::Result override;
+
+    auto suitability_for_display(std::shared_ptr<DisplayInterfaceProvider> const& target) -> probe::Result override;
+
+    auto surface_for_output(
+        std::shared_ptr<DisplayInterfaceProvider> framebuffer_provider,
+        geometry::Size size,
+        GLConfig const& config) -> std::unique_ptr<gl::OutputSurface> override;
+
+private:
+    EGLDisplay const dpy;
+    EGLContext const ctx;
+    std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
+};
 }
 }
 }

@@ -39,10 +39,10 @@ namespace
 {
 namespace
 {
-class DumbFb
+class CPUAddressableFb
 {
 public:
-    DumbFb(int drm_fd, uint32_t width, uint32_t height)
+    CPUAddressableFb(int drm_fd, uint32_t width, uint32_t height)
         : drm_fd{drm_fd}
     {
         struct drm_mode_create_dumb params = {};
@@ -53,7 +53,7 @@ public:
 
         if (ioctl(drm_fd, DRM_IOCTL_MODE_CREATE_DUMB, &params) != 0)
         {
-            BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to create dumb buffer"}));
+            BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to create KMS dumb buffer"}));
         }
 
         gem_handle = params.handle;
@@ -62,7 +62,7 @@ public:
         auto ret = drmModeAddFB(drm_fd, width, height, 24, 32, params.pitch, params.handle, &fb_id);
         if (ret)
         {
-            BOOST_THROW_EXCEPTION((std::system_error{-ret, std::system_category(), "Failed to attach dumb buffer to FB"}));
+            BOOST_THROW_EXCEPTION((std::system_error{-ret, std::system_category(), "Failed to attach KMS dumb buffer to FB"}));
         }
 
         struct drm_mode_map_dumb map_request = {};
@@ -72,7 +72,7 @@ public:
         ret = drmIoctl(drm_fd, DRM_IOCTL_MODE_MAP_DUMB, &map_request);
         if (ret)
         {
-            BOOST_THROW_EXCEPTION((std::system_error{-ret, std::system_category(), "Failed to map dumb buffer"}));
+            BOOST_THROW_EXCEPTION((std::system_error{-ret, std::system_category(), "Failed to map KMS dumb buffer"}));
         }
 
         auto map = mmap(0, params.size, PROT_READ | PROT_WRITE, MAP_SHARED, drm_fd, map_request.offset);
@@ -83,7 +83,7 @@ public:
 
         ::memset(map, 0, pitch_ * height);
     }
-    ~DumbFb() noexcept(false)
+    ~CPUAddressableFb() noexcept(false)
     {
         struct drm_mode_destroy_dumb params = { gem_handle };
 
@@ -91,7 +91,7 @@ public:
         {
             if (!std::uncaught_exceptions())
             {
-                BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to destroy dumb buffer"}));
+                BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to destroy KMS dumb buffer"}));
             }
         }
     }
@@ -217,6 +217,8 @@ void mgek::EGLOutput::configure(size_t kms_mode_index)
     mgk::DRMModeCrtcUPtr crtc;
     mgk::DRMModePlaneUPtr plane;
 
+    refresh_connector(drm_fd, connector);
+
     std::tie(crtc, plane) = mgk::find_crtc_with_primary_plane(drm_fd, connector);
     auto const crtc_id = crtc->crtc_id;
 
@@ -233,7 +235,7 @@ void mgek::EGLOutput::configure(size_t kms_mode_index)
             std::system_error(-ret, std::system_category(), "Failed to create DRM Mode property blob"));
     }
 
-    DumbFb dummy{drm_fd, width, height};
+    CPUAddressableFb dummy{drm_fd, width, height};
 
     mgk::ObjectProperties crtc_props{drm_fd, crtc_id, DRM_MODE_OBJECT_CRTC};
 

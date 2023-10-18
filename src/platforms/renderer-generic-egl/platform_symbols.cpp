@@ -35,13 +35,13 @@ namespace mge = mg::egl::generic;
 
 auto create_rendering_platform(
     mg::SupportedDevice const&,
-    std::vector<std::shared_ptr<mg::DisplayPlatform>> const&,
+    std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays,
     mo::Option const&,
     mir::EmergencyCleanupRegistry&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
 {
-    mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
+   mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
 
-    return mir::make_module_ptr<mge::RenderingPlatform>();
+    return mir::make_module_ptr<mge::RenderingPlatform>(displays);
 }
 
 void add_graphics_platform_options(boost::program_options::options_description&)
@@ -50,18 +50,34 @@ void add_graphics_platform_options(boost::program_options::options_description&)
 }
 
 auto probe_rendering_platform(
-    std::shared_ptr<mir::ConsoleServices> const&,
+    std::span<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays,
+    mir::ConsoleServices&,
     std::shared_ptr<mir::udev::Context> const&,
     mo::ProgramOption const&) -> std::vector<mg::SupportedDevice>
 {
-    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
+    mir::assert_entry_point_signature<mg::RenderProbe>(&probe_rendering_platform);
+
+    mg::probe::Result maximum_suitability = mg::probe::unsupported;
+    // First check if there are any displays we can possibly drive
+    for (auto const& display_provider : displays)
+    {
+        if (display_provider->acquire_interface<mg::GenericEGLDisplayProvider>())
+        {
+            maximum_suitability = mg::probe::hosted;
+            break;
+        }
+        /* TODO: We *can* drive a CPUAddressableDisplayProvider, too, but without
+         * an EGLDisplay from the GenericEGLDisplayProvider we'd need to check that
+         * the EGLDisplay we get from eglGetDisplay(EGL_DEFAULT_DISPLAY) is functional.
+         */
+    }
 
     std::vector<mg::SupportedDevice> supported_devices;
     supported_devices.push_back(
         mg::SupportedDevice {
             nullptr,                          // We aren't associated with any particular device
     
-            mg::PlatformPriority::supported,  // We should be fully-functional, but let any hardware-specific
+            maximum_suitability,              // We should be fully-functional, but let any hardware-specific
                                               // platform claim a higher priority, if it exists.
     
             nullptr                           // No platform-specific data

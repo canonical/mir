@@ -313,8 +313,17 @@ struct EGLExtensions
         PFNEGLQUERYDMABUFFORMATSEXTPROC const eglQueryDmaBufFormatsExt;
         PFNEGLQUERYDMABUFMODIFIERSEXTPROC const eglQueryDmaBufModifiersExt;
     };
-};
 
+    struct MESADmaBufExport
+    {
+        MESADmaBufExport(EGLDisplay dpy);
+
+        static auto extension_if_supported(EGLDisplay dpy) -> std::optional<MESADmaBufExport>;
+
+        PFNEGLEXPORTDMABUFIMAGEMESAPROC const eglExportDMABUFImageMESA;
+        PFNEGLEXPORTDMABUFIMAGEQUERYMESAPROC const eglExportDMABUFImageQueryMESA;
+    };
+};
 }
 }
 

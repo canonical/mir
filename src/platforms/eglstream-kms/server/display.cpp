@@ -20,6 +20,7 @@
 #include "egl_output.h"
 
 #include "kms-utils/drm_mode_resources.h"
+#include "mir/graphics/platform.h"
 #include "threaded_drm_event_handler.h"
 
 #include "mir/graphics/display_configuration.h"
@@ -29,8 +30,6 @@
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/transformation.h"
-#include "mir/renderer/gl/render_target.h"
-#include "mir/renderer/gl/context.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/event_handler_register.h"
@@ -46,7 +45,7 @@
 
 namespace mg = mir::graphics;
 namespace mge = mir::graphics::eglstream;
-namespace mgk = mir::graphics::kms;
+namespace geom = mir::geometry;
 
 #ifndef EGL_NV_output_drm_flip_event
 #define EGL_NV_output_drm_flip_event 1
@@ -121,12 +120,11 @@ EGLContext create_context(EGLDisplay display, EGLConfig config, EGLContext share
 
 class DisplayBuffer
     : public mg::DisplaySyncGroup,
-      public mg::DisplayBuffer,
-      public mg::NativeDisplayBuffer,
-      public mir::renderer::gl::RenderTarget
+      public mg::DisplayBuffer
 {
 public:
     DisplayBuffer(
+        std::shared_ptr<mg::eglstream::InterfaceProvider> owner,
         mir::Fd drm_node,
         EGLDisplay dpy,
         EGLContext ctx,
@@ -134,7 +132,8 @@ public:
         std::shared_ptr<mge::DRMEventHandler> event_handler,
         mge::kms::EGLOutput const& output,
         std::shared_ptr<mg::DisplayReport> display_report)
-        : dpy{dpy},
+        : owner{std::move(owner)},
+          dpy{dpy},
           ctx{create_context(dpy, config, ctx)},
           layer{output.output_layer()},
           crtc_id{output.crtc_id()},
@@ -172,17 +171,6 @@ public:
             BOOST_THROW_EXCEPTION(mg::egl_error("Failed to attach EGLStream to output"));
         };
 
-        EGLint const surface_attribs[] = {
-            EGL_WIDTH, output_size.width.as_int(),
-            EGL_HEIGHT, output_size.height.as_int(),
-            EGL_NONE,
-        };
-        surface = eglCreateStreamProducerSurfaceKHR(dpy, config, output_stream, surface_attribs);
-        if (surface == EGL_NO_SURFACE)
-        {
-            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create StreamProducerSurface"));
-        }
-
         this->display_report->report_successful_setup_of_native_resources();
         this->display_report->report_successful_display_construction();
         this->display_report->report_egl_configuration(dpy, config);
@@ -193,33 +181,18 @@ public:
         pending_flip = satisfied_promise.get_future();
     }
 
-    /* gl::RenderTarget */
-    auto size() const -> mir::geometry::Size override
+    ~DisplayBuffer()
     {
-        return output_size;
-    }
-
-    void make_current() override
-    {
-        if (eglMakeCurrent(dpy, surface, surface, ctx) != EGL_TRUE)
+        if (output_stream != EGL_NO_STREAM_KHR)
         {
-            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to make context current"));
+            eglDestroyStreamKHR(dpy, output_stream);
+            output_stream = nullptr;
         }
-    }
 
-    void release_current() override
-    {
-        if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE)
+        if (ctx != EGL_NO_CONTEXT)
         {
-            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to release context"));
-        }
-    }
-
-    void swap_buffers() override
-    {
-        if (eglSwapBuffers(dpy, surface) != EGL_TRUE)
-        {
-            BOOST_THROW_EXCEPTION(mg::egl_error("eglSwapBuffers failed"));
+            eglDestroyContext(dpy, ctx);
+            ctx = nullptr;
         }
     }
 
@@ -228,19 +201,9 @@ public:
         return view_area_;
     }
 
-    bool overlay(const mir::graphics::RenderableList& /*renderlist*/) override
-    {
-        return false;
-    }
-
     glm::mat2 transformation() const override
     {
         return transform;
-    }
-
-    mir::graphics::NativeDisplayBuffer* native_display_buffer() override
-    {
-        return this;
     }
 
     void for_each_display_buffer(const std::function<void(mir::graphics::DisplayBuffer&)>& f) override
@@ -271,12 +234,39 @@ public:
         };
         if (nv_stream(dpy).eglStreamConsumerAcquireAttribNV(dpy, output_stream, acquire_attribs) != EGL_TRUE)
         {
-            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to submit frame from EGLStream for display"));
+            auto error = eglGetError();
+            EGLAttrib stream_state{0};
+            eglQueryStreamAttribKHR(dpy, output_stream, EGL_STREAM_STATE_KHR, &stream_state);
+            std::string state;
+            switch (stream_state)
+            {
+            case EGL_STREAM_STATE_CREATED_KHR:
+                state = "EGL_STREAM_STATE_CREATED_KHR";
+                break;
+            case EGL_STREAM_STATE_CONNECTING_KHR:
+                state = "EGL_STREAM_STATE_CONNECTING_KHR";
+                break;
+            case EGL_STREAM_STATE_EMPTY_KHR:
+                state = "EGL_STREAM_STATE_EMPTY_KHR";
+                break;
+            case EGL_STREAM_STATE_NEW_FRAME_AVAILABLE_KHR:
+                state = "EGL_STREAM_STATE_NEW_FRAME_AVAILABLE_KHR";
+                break;
+            case EGL_STREAM_STATE_OLD_FRAME_AVAILABLE_KHR:
+                state = "EGL_STREAM_STATE_OLD_FRAME_AVAILABLE_KHR";
+                break;
+            case EGL_STREAM_STATE_DISCONNECTED_KHR:
+                state = "EGL_STREAM_STATE_DISCONNECTED_KHR";
+                break;
+            default:
+                state = "<ERROR ACQUIRING STATE>";
+            }
+            BOOST_THROW_EXCEPTION((
+                std::system_error{
+                    error,
+                    mg::egl_category(),
+                    std::string{"Failed to submit frame from EGLStream for display. (Stream in state: "} + state + ")"}));
         }
-    }
-
-    void bind() override
-    {
     }
 
     std::chrono::milliseconds recommended_sleep() const override
@@ -284,8 +274,55 @@ public:
         return std::chrono::milliseconds{0};
     }
 
+    auto display_provider() const -> std::shared_ptr<mg::DisplayInterfaceProvider> override
+    {
+        return std::make_shared<mg::eglstream::InterfaceProvider>(*owner, output_stream);
+    }
+
+    void set_next_image(std::unique_ptr<mg::Framebuffer> content) override
+    {
+        std::vector<mg::DisplayElement> const single_buffer = {
+            mg::DisplayElement {
+                view_area(),
+                mir::geometry::RectangleF{
+                    {0, 0},
+                    {view_area().size.width.as_value(), view_area().size.height.as_value()}},
+                std::move(content)
+            }
+        };
+        if (!overlay(single_buffer))
+        {
+            // Oh, oh! We should be *guaranteed* to “overlay” a single Framebuffer; this is likely a programming error
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to post buffer to display"}));
+        }
+    }
+
+    bool overlay(std::vector<mg::DisplayElement> const& renderable_list) override
+    {
+        // TODO: implement more than the most basic case.
+        if (renderable_list.size() != 1)
+        {
+            return false;
+        }
+
+        if (renderable_list[0].screen_positon != view_area())
+        {
+            return false;
+        }
+
+        if (renderable_list[0].source_position.top_left != geom::PointF {0,0} ||
+            renderable_list[0].source_position.size.width.as_value() != view_area().size.width.as_int() ||
+            renderable_list[0].source_position.size.height.as_value() != view_area().size.height.as_int())
+        {
+            return false;
+        }
+
+        // TODO: Validate that the submitted "framebuffer" is *actually* our EGLStream
+        return true;
+    }
 private:
 
+    std::shared_ptr<mg::eglstream::InterfaceProvider> const owner;
     EGLDisplay dpy;
     EGLContext ctx;
     EGLOutputLayerEXT layer;
@@ -294,7 +331,6 @@ private:
     mir::geometry::Size const output_size;
     glm::mat2 const transform;
     EGLStreamKHR output_stream;
-    EGLSurface surface;
     mir::Fd const drm_node;
     std::shared_ptr<mge::DRMEventHandler> const event_handler;
     std::future<void> pending_flip;
@@ -317,12 +353,14 @@ mge::KMSDisplayConfiguration create_display_configuration(
 }
 
 mge::Display::Display(
+    std::shared_ptr<InterfaceProvider> provider,
     mir::Fd drm_node,
     EGLDisplay display,
     std::shared_ptr<DisplayConfigurationPolicy> const& configuration_policy,
     GLConfig const& gl_conf,
     std::shared_ptr<DisplayReport> display_report)
-    : drm_node{drm_node},
+    : provider{std::move(provider)},
+      drm_node{drm_node},
       display{display},
       config{choose_config(display, gl_conf)},
       context{create_context(display, config)},
@@ -372,13 +410,14 @@ void mge::Display::configure(DisplayConfiguration const& conf)
                  const_cast<kms::EGLOutput&>(output).configure(output.current_mode_index);
                  active_sync_groups.emplace_back(
                      std::make_unique<::DisplayBuffer>(
-                         drm_node,
-                         display,
-                         context,
-                         config,
-                         event_handler,
-                         output,
-                         display_report));
+                        provider,
+                        drm_node,
+                        display,
+                        context,
+                        config,
+                        event_handler,
+                        output,
+                        display_report));
              }
          });
 }
@@ -430,78 +469,6 @@ std::shared_ptr<mg::Cursor> mge::Display::create_hardware_cursor()
 {
     // TODO: Find the cursor plane, and use it.
     return nullptr;
-}
-
-std::unique_ptr<mir::renderer::gl::Context> mge::Display::create_gl_context() const
-{
-    class GLContext : public renderer::gl::Context
-    {
-    public:
-        GLContext(EGLDisplay display, EGLContext shared_context)
-            : display{display},
-              context{make_context(display, shared_context)}
-        {
-        }
-
-        void make_current() const override
-        {
-            if (eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, context) != EGL_TRUE)
-            {
-                BOOST_THROW_EXCEPTION(mg::egl_error("Failed to make context current"));
-            }
-        }
-
-        void release_current() const override
-        {
-            if (eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE)
-            {
-                BOOST_THROW_EXCEPTION(mg::egl_error("Failed to release context"));
-            }
-        }
-
-    private:
-        static EGLContext make_context(EGLDisplay dpy, EGLContext shared_context)
-        {
-            eglBindAPI(EGL_OPENGL_ES_API);
-
-            static const EGLint context_attr[] = {
-                EGL_CONTEXT_CLIENT_VERSION, 2,
-                EGL_NONE
-            };
-
-            EGLint const config_attr[] = {
-                EGL_SURFACE_TYPE, EGL_STREAM_BIT_KHR,
-                EGL_RED_SIZE, 8,
-                EGL_GREEN_SIZE, 8,
-                EGL_BLUE_SIZE, 8,
-                EGL_ALPHA_SIZE, 0,
-                EGL_DEPTH_SIZE, 0,
-                EGL_STENCIL_SIZE, 0,
-                EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-                EGL_NONE
-            };
-
-            EGLint num_egl_configs;
-            EGLConfig egl_config;
-            if (eglChooseConfig(dpy, config_attr, &egl_config, 1, &num_egl_configs) != EGL_TRUE)
-            {
-                BOOST_THROW_EXCEPTION(mg::egl_error("Failed to chose EGL config"));
-            } else if (num_egl_configs != 1)
-            {
-                BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to find compatible EGL config"});
-            }
-
-            auto egl_context = eglCreateContext(dpy, egl_config, shared_context, context_attr);
-            if (egl_context == EGL_NO_CONTEXT)
-                BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
-
-            return egl_context;
-        }
-
-        EGLDisplay const display;
-        EGLContext const context;
-    };
-    return std::make_unique<GLContext>(display, context);
 }
 
 bool mge::Display::apply_if_configuration_preserves_display_buffers(

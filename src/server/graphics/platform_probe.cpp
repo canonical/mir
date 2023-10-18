@@ -16,6 +16,7 @@
 
 #include "mir/log.h"
 #include "mir/graphics/platform.h"
+#include "mir/shared_library.h"
 #include "platform_probe.h"
 
 #include <boost/throw_exception.hpp>
@@ -25,11 +26,9 @@ namespace mg = mir::graphics;
 namespace
 {
 auto probe_module(
-    mir::graphics::PlatformProbe const& probe,
-    mir::SharedLibrary& module,
-    char const* platform_type_name,
-    mir::options::ProgramOption const& options,
-    std::shared_ptr<mir::ConsoleServices> const& console) -> std::vector<mg::SupportedDevice>
+    std::function<std::vector<mg::SupportedDevice>()> const& probe,
+    mir::SharedLibrary const& module,
+    char const* platform_type_name) -> std::vector<mg::SupportedDevice>
 {
     auto describe = module.load_function<mir::graphics::DescribeModule>(
         "describe_graphics_module",
@@ -43,7 +42,7 @@ auto probe_module(
                   desc->minor_version,
                   desc->micro_version);
 
-    auto supported_devices = probe(console, std::make_shared<mir::udev::Context>(), options);
+    auto supported_devices = probe();
     if (supported_devices.empty())
     {
         mir::log_info("(Unsupported by system environment)");
@@ -75,33 +74,38 @@ auto probe_module(
 }
 
 auto mir::graphics::probe_display_module(
-    SharedLibrary& module,
+    SharedLibrary const& module,
     options::ProgramOption const& options,
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<SupportedDevice>
 {
     return probe_module(
-        module.load_function<mir::graphics::PlatformProbe>(
-            "probe_display_platform",
-            MIR_SERVER_GRAPHICS_PLATFORM_VERSION),
+        [&console, &options, &module]() -> std::vector<mg::SupportedDevice>
+        {
+            auto probe = module.load_function<mir::graphics::PlatformProbe>(
+                "probe_display_platform",
+                MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+            return probe(console, std::make_shared<mir::udev::Context>(), options);
+        },
         module,
-        "display",
-        options,
-        console);
+        "display");
 }
 
 auto mir::graphics::probe_rendering_module(
-    SharedLibrary& module,
+    std::span<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays,
+    SharedLibrary const& module,
     options::ProgramOption const& options,
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<SupportedDevice>
 {
     return probe_module(
-        module.load_function<mir::graphics::PlatformProbe>(
-            "probe_rendering_platform",
-            MIR_SERVER_GRAPHICS_PLATFORM_VERSION),
+        [&console, &options, &module, &displays]() -> std::vector<SupportedDevice>
+        {
+            auto probe = module.load_function<mg::RenderProbe>(
+                "probe_rendering_platform",
+                MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+            return probe(displays, *console, std::make_shared<mir::udev::Context>(), options);
+        },
         module,
-        "rendering",
-        options,
-        console);
+        "rendering");
 }
 
 namespace
@@ -128,27 +132,16 @@ enum class ModuleType
 };
 
 auto modules_for_device(
-    ModuleType type,
-    std::vector<std::shared_ptr<mir::SharedLibrary>> const& modules,
-    mir::options::ProgramOption const& options,
-    std::shared_ptr<mir::ConsoleServices> const& console)
--> std::vector<std::pair<mg::SupportedDevice, std::shared_ptr<mir::SharedLibrary>>>
+    std::function<std::vector<mg::SupportedDevice>(mir::SharedLibrary const&)> const& probe,
+    std::vector<std::shared_ptr<mir::SharedLibrary>> const& modules)
+    -> std::vector<std::pair<mg::SupportedDevice, std::shared_ptr<mir::SharedLibrary>>>
 {
     std::vector<std::pair<mg::SupportedDevice, std::shared_ptr<mir::SharedLibrary>>> best_modules_so_far;
     for (auto& module : modules)
     {
         try
         {
-            std::vector<mg::SupportedDevice> supported_devices;
-            switch (type)
-            {
-            case ModuleType::Rendering:
-                supported_devices = mg::probe_rendering_module(*module, options, console);
-                break;
-            case ModuleType::Display:
-                supported_devices = mg::probe_display_module(*module, options, console);
-                break;
-            }
+            auto supported_devices = probe(*module);
             for (auto& device : supported_devices)
             {
                 if (device.device)
@@ -168,13 +161,13 @@ auto modules_for_device(
                             *existing_device = std::make_pair(std::move(device), module);
                         }
                     }
-                    else if (device.support_level > mg::PlatformPriority::unsupported)
+                    else if (device.support_level > mg::probe::unsupported)
                     {
                         // Not-seen-before device, which this platform supports in some fashion
                         best_modules_so_far.emplace_back(std::move(device), module);
                     }
                 }
-                else if (device.support_level > mg::PlatformPriority::unsupported)
+                else if (device.support_level > mg::probe::unsupported)
                 {
                     // Devices with null associated udev device are not combined with any others
                     best_modules_so_far.emplace_back(std::move(device), module);
@@ -199,7 +192,7 @@ auto modules_for_device(
             best_modules_so_far.end(),
             [](auto const& module)
             {
-                return module.first.support_level > mg::PlatformPriority::dummy;
+                return module.first.support_level > mg::probe::dummy;
             });
 
         // …then, if there are any platforms before the start of the dummy platforms…
@@ -219,20 +212,23 @@ auto mir::graphics::display_modules_for_device(
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>
 {
     return modules_for_device(
-        ModuleType::Display,
-        modules,
-        options,
-        console);
+        [&options, &console](mir::SharedLibrary const& module) -> std::vector<mg::SupportedDevice>
+        {
+            return mg::probe_display_module(module, options, console);
+        },
+        modules);
 }
 
 auto mir::graphics::rendering_modules_for_device(
     std::vector<std::shared_ptr<SharedLibrary>> const& modules,
+    std::span<std::shared_ptr<DisplayInterfaceProvider>> const& displays,
     options::ProgramOption const& options,
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>
 {
     return modules_for_device(
-        ModuleType::Rendering,
-        modules,
-        options,
-        console);
+        [&displays, &options, &console](SharedLibrary const& module) -> std::vector<SupportedDevice>
+        {
+            return probe_rendering_module(displays, module, options, console);
+        },
+        modules);
 }

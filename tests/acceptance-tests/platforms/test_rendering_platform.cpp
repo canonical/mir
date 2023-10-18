@@ -21,8 +21,14 @@
 #include <boost/throw_exception.hpp>
 
 #include "mir/graphics/platform.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/options/program_option.h"
+#include "mir/emergency_cleanup_registry.h"
+#include "mir/udev/wrapper.h"
+#include "mir/test/doubles/null_console_services.h"
 
 namespace mg = mir::graphics;
+namespace mtd = mir::test::doubles;
 
 RenderingPlatformTest::RenderingPlatformTest()
 {
@@ -36,11 +42,11 @@ RenderingPlatformTest::~RenderingPlatformTest()
 
 TEST_P(RenderingPlatformTest, has_render_platform_entrypoints)
 {
-    auto const module = GetParam()->platform_module();
+    platform_module = GetParam()->platform_module();
 
     try
     {
-        module->load_function<mg::DescribeModule>(
+        platform_module->load_function<mg::DescribeModule>(
             "describe_graphics_module",
             MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
     }
@@ -53,7 +59,7 @@ TEST_P(RenderingPlatformTest, has_render_platform_entrypoints)
 
     try
     {
-        module->load_function<mg::CreateRenderPlatform>(
+        platform_module->load_function<mg::CreateRenderPlatform>(
             "create_rendering_platform",
             MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
     }
@@ -66,7 +72,7 @@ TEST_P(RenderingPlatformTest, has_render_platform_entrypoints)
 
     try
     {
-        module->load_function<mg::PlatformProbe>(
+        platform_module->load_function<mg::RenderProbe>(
             "probe_rendering_platform",
             MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
     }
@@ -78,3 +84,57 @@ TEST_P(RenderingPlatformTest, has_render_platform_entrypoints)
     }
 }
 
+namespace
+{
+class NullEmergencyCleanup : public mir::EmergencyCleanupRegistry
+{
+public:
+    void add(mir::EmergencyCleanupHandler const&) override
+    {
+    }
+
+    void add(mir::ModuleEmergencyCleanupHandler) override
+    {
+    }
+};
+}
+
+/*
+ * DISABLED, as this requires more thought
+ */
+TEST_P(RenderingPlatformTest, DISABLED_supports_gl_rendering)
+{
+    using namespace testing;
+    
+    platform_module = GetParam()->platform_module();
+
+    auto const platform_loader = platform_module->load_function<mg::CreateRenderPlatform>(
+        "create_rendering_platform",
+        MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+    auto const platform_probe = platform_module->load_function<mg::PlatformProbe>(
+        "probe_rendering_platform",
+        MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+
+    mir::options::ProgramOption empty_options{};
+    NullEmergencyCleanup emergency_cleanup{};
+    auto const console_services = std::make_shared<mir::test::doubles::NullConsoleServices>();
+
+    auto supported_devices = platform_probe(
+        console_services,
+        std::make_shared<mir::udev::Context>(),
+        empty_options);
+    
+    ASSERT_THAT(supported_devices, Not(IsEmpty()));
+    
+    for (auto const& device : supported_devices)
+    {
+        std::shared_ptr<mg::RenderingPlatform> const platform = platform_loader(
+            device,
+            {},            // Hopefully the platform can handle not pre-linking with a DisplayPlatform
+            empty_options,
+            emergency_cleanup);
+
+        auto const provider = platform->acquire_provider<mg::GLRenderingProvider>(nullptr);
+        EXPECT_THAT(provider, testing::NotNull());
+    }
+}

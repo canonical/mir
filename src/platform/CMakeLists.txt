@@ -71,6 +71,8 @@ target_link_libraries(mirplatform
   PRIVATE
     mircommon
     ${MIR_PLATFORM_REFERENCES}
+  PUBLIC
+    PkgConfig::EPOXY
 )
 
 set_target_properties(

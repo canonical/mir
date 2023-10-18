@@ -17,12 +17,17 @@
 #ifndef MIR_GRAPHICS_RENDERING_EGL_GENERIC_H_
 #define MIR_GRAPHICS_RENDERING_EGL_GENERIC_H_
 
+#include "mir/graphics/linux_dmabuf.h"
 #include "mir/graphics/platform.h"
+
+#include <EGL/egl.h>
 
 namespace mir
 {
-class EmergencyCleanupRegistry;
-class ConsoleServices;
+namespace renderer::gl
+{
+class Context;
+}
 
 namespace graphics::egl::generic
 {
@@ -30,10 +35,21 @@ namespace graphics::egl::generic
 class RenderingPlatform : public graphics::RenderingPlatform
 {
 public:
-    explicit RenderingPlatform();
+    explicit RenderingPlatform(std::vector<std::shared_ptr<DisplayInterfaceProvider>> const& displays);
+
+    ~RenderingPlatform();
 
     auto create_buffer_allocator(
         graphics::Display const& output) -> UniqueModulePtr<graphics::GraphicBufferAllocator> override;
+
+protected:
+    auto maybe_create_provider(
+        RenderingProvider::Tag const& type_tag) -> std::shared_ptr<RenderingProvider> override;
+
+private:
+    EGLDisplay const dpy;
+    std::unique_ptr<renderer::gl::Context> const ctx;
+    std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
 };
 
 }

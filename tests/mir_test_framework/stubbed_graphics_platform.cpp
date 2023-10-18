@@ -20,6 +20,7 @@
 
 #include "mir_toolkit/common.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_gl_rendering_provider.h"
 #include "mir/test/doubles/fake_display.h"
 #include "mir/assert_module_entry_point.h"
 
@@ -88,6 +89,32 @@ mir::UniqueModulePtr<mg::Display> mtf::StubGraphicPlatform::create_display(
     return mir::make_module_ptr<mtd::FakeDisplay>(display_rects);
 }
 
+auto mtf::StubGraphicPlatform::maybe_create_provider(
+    mir::graphics::RenderingProvider::Tag const& tag)
+    -> std::shared_ptr<mir::graphics::RenderingProvider>
+{
+    if (dynamic_cast<mg::GLRenderingProvider::Tag const*>(&tag))
+    {
+        return std::make_shared<mtd::StubGlRenderingProvider>();
+    }
+    return nullptr;
+}
+
+auto mtf::StubGraphicPlatform::interface_for()
+    -> std::shared_ptr<mg::DisplayInterfaceProvider>
+{
+    class NullInterfaceProvider : public mg::DisplayInterfaceProvider
+    {
+    protected:
+        auto maybe_create_interface(mg::DisplayProvider::Tag const&)
+            -> std::shared_ptr<mg::DisplayProvider>
+        {
+            return nullptr;
+        }
+    };
+    return std::make_shared<NullInterfaceProvider>();
+}
+
 namespace
 {
 std::unique_ptr<std::vector<geom::Rectangle>> chosen_display_rects;
@@ -135,7 +162,7 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
 
 mir::UniqueModulePtr<mg::RenderingPlatform> create_rendering_platform(
     mg::SupportedDevice const&,
-    std::vector<std::shared_ptr<mg::DisplayPlatform>> const&,
+    std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const&,
     mo::Option const&,
     mir::EmergencyCleanupRegistry&)
 {

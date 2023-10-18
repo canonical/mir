@@ -31,12 +31,13 @@ class ConsoleServices;
 namespace graphics
 {
 auto probe_display_module(
-    SharedLibrary& module,
+    SharedLibrary const& module,
     options::ProgramOption const& options,
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<SupportedDevice>;
 
 auto probe_rendering_module(
-    SharedLibrary& module,
+    std::span<std::shared_ptr<DisplayInterfaceProvider>> const& displays,
+    SharedLibrary const& module,
     options::ProgramOption const& options,
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<SupportedDevice>;
 
@@ -48,6 +49,7 @@ auto display_modules_for_device(
 
 auto rendering_modules_for_device(
     std::vector<std::shared_ptr<SharedLibrary>> const& modules,
+    std::span<std::shared_ptr<DisplayInterfaceProvider>> const& displays,
     options::ProgramOption const& options,
     std::shared_ptr<ConsoleServices> const& console)
     -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>;

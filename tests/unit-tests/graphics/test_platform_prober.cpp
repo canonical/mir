@@ -216,7 +216,7 @@ TEST_F(ServerPlatformProbeMockDRM, DoesNotLoadDummyPlatformWhenBetterPlatformExi
     EXPECT_THAT(selection_result, Not(IsEmpty()));
     for (auto& [device, module] : selection_result)
     {
-        EXPECT_THAT(device.support_level, Gt(mir::graphics::PlatformPriority::dummy));
+        EXPECT_THAT(device.support_level, Gt(mir::graphics::probe::dummy));
     }
 }
 #endif

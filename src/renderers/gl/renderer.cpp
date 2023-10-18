@@ -24,9 +24,11 @@
 #include "mir/log.h"
 #include "mir/report_exception.h"
 #include "mir/graphics/egl_error.h"
+#include "mir/graphics/platform.h"
 #include "mir/graphics/texture.h"
 #include "mir/graphics/program_factory.h"
 #include "mir/graphics/program.h"
+#include "mir/renderer/gl/gl_surface.h"
 
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
@@ -43,38 +45,6 @@ namespace mg = mir::graphics;
 namespace mgl = mir::gl;
 namespace mrg = mir::renderer::gl;
 namespace geom = mir::geometry;
-
-mrg::CurrentRenderTarget::CurrentRenderTarget(RenderTarget& render_target)
-    : render_target{&render_target}
-{
-    ensure_current();
-}
-
-mrg::CurrentRenderTarget::~CurrentRenderTarget()
-{
-    render_target->release_current();
-}
-
-auto mrg::CurrentRenderTarget::size() const -> geom::Size
-{
-    return render_target->size();
-}
-
-void mrg::CurrentRenderTarget::ensure_current()
-{
-    render_target->make_current();
-}
-
-void mrg::CurrentRenderTarget::bind()
-{
-    ensure_current();
-    render_target->bind();
-}
-
-void mrg::CurrentRenderTarget::swap_buffers()
-{
-    render_target->swap_buffers();
-}
 
 namespace
 {
@@ -302,11 +272,23 @@ mrg::Renderer::Program::Program(GLuint program_id)
     alpha_uniform = glGetUniformLocation(id, "alpha");
 }
 
-mrg::Renderer::Renderer(RenderTarget& render_target)
-    : render_target(render_target),
+namespace
+{
+auto make_output_current(std::unique_ptr<mg::gl::OutputSurface> output) -> std::unique_ptr<mg::gl::OutputSurface>
+{
+    output->make_current();
+    return output;
+}
+}
+
+mrg::Renderer::Renderer(
+    std::shared_ptr<graphics::GLRenderingProvider> gl_interface,
+    std::unique_ptr<graphics::gl::OutputSurface> output)
+    : output_surface{make_output_current(std::move(output))},
       clear_color{0.0f, 0.0f, 0.0f, 1.0f},
       program_factory{std::make_unique<ProgramFactory>()},
-      display_transform(1)
+      display_transform(1),
+      gl_interface{std::move(gl_interface)}
 {
     eglBindAPI(EGL_OPENGL_ES_API);
     EGLDisplay disp = eglGetCurrentDisplay();
@@ -360,7 +342,6 @@ mrg::Renderer::Renderer(RenderTarget& render_target)
 
 mrg::Renderer::~Renderer()
 {
-    render_target.ensure_current();
 }
 
 void mrg::Renderer::tessellate(std::vector<mgl::Primitive>& primitives,
@@ -370,9 +351,10 @@ void mrg::Renderer::tessellate(std::vector<mgl::Primitive>& primitives,
     primitives[0] = mgl::tessellate_renderable_into_rectangle(renderable, geom::Displacement{0,0});
 }
 
-void mrg::Renderer::render(mg::RenderableList const& renderables) const
+auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> std::unique_ptr<mg::Framebuffer>
 {
-    render_target.bind();
+    output_surface->make_current();
+    output_surface->bind();
 
     glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -384,10 +366,13 @@ void mrg::Renderer::render(mg::RenderableList const& renderables) const
         draw(*r);
     }
 
-    render_target.swap_buffers();
+    auto output = output_surface->commit();
 
+    // Report any GL errors after commit, to catch any *during* commit
     while (auto const gl_error = glGetError())
         mir::log_debug("GL error: %d", gl_error);
+
+    return output;
 }
 
 void mrg::Renderer::draw(mg::Renderable const& renderable) const
@@ -408,12 +393,7 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
         );
     }
 
-    auto const texture = std::dynamic_pointer_cast<mg::gl::Texture>(renderable.buffer());
-    if (!texture)
-    {
-        mir::log_error("Buffer does not support GL rendering!");
-        return;
-    }
+    auto const texture = gl_interface->as_texture(renderable.buffer());
 
     // All the programs are held by program_factory through its lifetime. Using pointers avoids
     // -Wdangling-reference.
@@ -464,7 +444,7 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
             1.0, 0.0, 0.0, 0.0,
             0.0, -1.0, 0.0, 0.0,
             0.0, 0.0, 1.0, 0.0,
-            -1.0, 1.0, 0.0, 1.0
+            0.0, 0.0, 0.0, 1.0
         };
     }
 
@@ -604,36 +584,53 @@ void mrg::Renderer::update_gl_viewport()
      * the logical viewport aspect ratio doesn't match the display aspect.
      * This keeps pixels square. Note "black"-bars are really glClearColor.
      */
-
-    auto const buf_size = render_target.size();
-    GLint const buf_width = buf_size.width.as_value(), buf_height = buf_size.height.as_value();
-    if (!buf_width || !buf_height)
-    {
-        return;
-    }
-
     auto transformed_viewport = display_transform *
                                 glm::vec4(viewport.size.width.as_int(),
                                           viewport.size.height.as_int(), 0, 1);
     auto viewport_width = fabs(transformed_viewport[0]);
     auto viewport_height = fabs(transformed_viewport[1]);
 
-    GLint reduced_width = buf_width, reduced_height = buf_height;
-    // if viewport_aspect_ratio >= buf_aspect_ratio
-    if (viewport_width * buf_height >= buf_width * viewport_height)
-        reduced_height = buf_width * viewport_height / viewport_width;
-    else
-        reduced_width = buf_height * viewport_width / viewport_height;
+    auto const output_size = output_surface->size();
+    auto const output_width = output_size.width.as_value();
+    auto const output_height = output_size.height.as_value();
 
-    GLint offset_x = (buf_width - reduced_width) / 2;
-    GLint offset_y = (buf_height - reduced_height) / 2;
+    if (viewport_width > 0.0f && viewport_height > 0.0f &&
+        output_width > 0 && output_height > 0)
+    {
+        GLint reduced_width = output_width, reduced_height = output_height;
+        // if viewport_aspect_ratio >= output_aspect_ratio
+        if (viewport_width * output_height >= output_width * viewport_height)
+            reduced_height = output_width * viewport_height / viewport_width;
+        else
+            reduced_width = output_height * viewport_width / viewport_height;
 
-    glViewport(offset_x, offset_y, reduced_width, reduced_height);
+        GLint offset_x = (output_width - reduced_width) / 2;
+        GLint offset_y = (output_height - reduced_height) / 2;
+
+        glViewport(offset_x, offset_y, reduced_width, reduced_height);
+    }
 }
 
 void mrg::Renderer::set_output_transform(glm::mat2 const& t)
 {
-    auto const new_display_transform = glm::mat4(t);
+    auto new_display_transform = glm::mat4(t);
+
+    switch (output_surface->layout())
+    {
+    case graphics::gl::OutputSurface::Layout::GL:
+        break;
+    case graphics::gl::OutputSurface::Layout::TopRowFirst:
+        // GL is going to render in its own coordinate system, but the OutputSurface
+        // wants the output to be the other way up. Get GL to render upside-down instead.
+        new_display_transform *= glm::mat4{
+            1.0, 0.0, 0.0, 0.0,
+            0.0, -1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0
+        };
+        break;
+    }
+
     if (new_display_transform != display_transform)
     {
         display_transform = new_display_transform;
@@ -643,4 +640,5 @@ void mrg::Renderer::set_output_transform(glm::mat2 const& t)
 
 void mrg::Renderer::suspend()
 {
+    output_surface->release_current();
 }

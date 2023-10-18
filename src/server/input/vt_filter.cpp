@@ -26,6 +26,8 @@ mir::input::VTFilter::VTFilter(std::unique_ptr<mir::VTSwitcher> switcher)
 {
 }
 
+mir::input::VTFilter::~VTFilter() = default;
+
 bool mir::input::VTFilter::handle(MirEvent const& event)
 {
     if (mir_event_get_type(&event) != mir_event_type_input)

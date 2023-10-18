@@ -15,6 +15,7 @@
  */
 
 #include "mir/graphics/drm_formats.h"
+#include "mir_toolkit/common.h"
 
 #include <cstdint>
 #include <drm_fourcc.h>
@@ -528,7 +529,49 @@ auto mg::DRMFormat::as_mir_format() const -> std::optional<MirPixelFormat>
     default:
         return std::nullopt;
     }
-}    
+}
+
+auto mg::DRMFormat::from_mir_format(MirPixelFormat format)
+    -> DRMFormat
+{
+    switch (format)
+    {
+    case mir_pixel_format_argb_8888:
+        return DRMFormat{DRM_FORMAT_ARGB8888};
+    case mir_pixel_format_xrgb_8888:
+        return DRMFormat{DRM_FORMAT_XRGB8888};
+    case mir_pixel_format_abgr_8888:
+        return DRMFormat{DRM_FORMAT_ABGR8888};
+    case mir_pixel_format_xbgr_8888:
+        return DRMFormat{DRM_FORMAT_XBGR8888};
+    case mir_pixel_format_bgr_888:
+        return DRMFormat{DRM_FORMAT_BGR888};
+    case mir_pixel_format_rgb_888:
+        return DRMFormat{DRM_FORMAT_RGB888};
+    case mir_pixel_format_rgb_565:
+        return DRMFormat{DRM_FORMAT_RGB565};
+    case mir_pixel_format_rgba_5551:
+        return DRMFormat{DRM_FORMAT_RGBA5551};
+    case mir_pixel_format_rgba_4444:
+        return DRMFormat{DRM_FORMAT_RGBA4444};
+    case mir_pixel_format_invalid:
+        /* We *could* do something with DRM_FORMAT_INVALID here, but
+         * let's not. Let's maintain that DRMFormat is always valid
+         */
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Attempt to look up DRM format info of invalid pixel format"}));
+    case mir_pixel_formats:
+        BOOST_THROW_EXCEPTION((std::logic_error{"Attempt to look up format info of sentinel pixel format"}));
+#ifndef __clang__
+    /* Clang accepts that the above cases are exhaustive, gcc does not
+     * Have a default clause here to pacify gcc, but omit it for clang
+     * so that we fail to build if the above is *not* exhaustive.
+     */
+    default:
+        BOOST_THROW_EXCEPTION((std::logic_error{"Exhaustive switch needs updating"}));
+#endif
+    }
+}
+
 
 auto mg::drm_modifier_to_string(uint64_t modifier) -> std::string
 {

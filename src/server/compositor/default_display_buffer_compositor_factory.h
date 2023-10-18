@@ -22,9 +22,20 @@
 
 namespace mir
 {
+namespace graphics
+{
+class RenderingPlatform;
+}
 namespace renderer
 {
 class RendererFactory;
+}
+
+namespace graphics
+{
+class GLRenderingProvider;
+class GLConfig;
+class GraphicBufferAllocator;
 }
 ///  Compositing. Combining renderables into a display image.
 namespace compositor
@@ -34,17 +45,24 @@ class DefaultDisplayBufferCompositorFactory : public DisplayBufferCompositorFact
 {
 public:
     DefaultDisplayBufferCompositorFactory(
+        std::vector<std::shared_ptr<graphics::GLRenderingProvider>> render_platforms,
+        std::shared_ptr<graphics::GLConfig> gl_config,
         std::shared_ptr<renderer::RendererFactory> const& renderer_factory,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<CompositorReport> const& report);
 
-    std::unique_ptr<DisplayBufferCompositor> create_compositor_for(graphics::DisplayBuffer& display_buffer);
+    std::unique_ptr<DisplayBufferCompositor> create_compositor_for(graphics::DisplayBuffer& display_buffer) override;
 
 private:
+    std::vector<std::shared_ptr<graphics::GLRenderingProvider>> const platforms;
+    std::shared_ptr<graphics::GLConfig> const gl_config;
     std::shared_ptr<renderer::RendererFactory> const renderer_factory;
+    std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<CompositorReport> const report;
 };
 
 }
 }
+
 
 #endif /* MIR_COMPOSITOR_DEFAULT_DISPLAY_BUFFER_COMPOSITOR_FACTORY_H_ */

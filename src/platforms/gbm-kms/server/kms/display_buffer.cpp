@@ -16,6 +16,8 @@
 
 #include "display_buffer.h"
 #include "kms_output.h"
+#include "cpu_addressable_fb.h"
+#include "mir/fd.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/transformation.h"
 #include "bypass.h"
@@ -39,399 +41,20 @@
 #include <chrono>
 #include <algorithm>
 
-namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
-namespace mgmh = mir::graphics::gbm::helpers;
-
-mgg::GBMOutputSurface::FrontBuffer::FrontBuffer()
-    : surf{nullptr},
-      bo{nullptr}
-{
-}
-
-mgg::GBMOutputSurface::FrontBuffer::FrontBuffer(gbm_surface* surface)
-    : surf{surface},
-      bo{gbm_surface_lock_front_buffer(surface)}
-{
-    if (!bo)
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to acquire front buffer of gbm_surface"));
-    }
-}
-
-mgg::GBMOutputSurface::FrontBuffer::~FrontBuffer()
-{
-    if (surf)
-    {
-        gbm_surface_release_buffer(surf, bo);
-    }
-}
-
-mgg::GBMOutputSurface::FrontBuffer::FrontBuffer(FrontBuffer&& from)
-    : surf{from.surf},
-      bo{from.bo}
-{
-    const_cast<gbm_surface*&>(from.surf) = nullptr;
-    const_cast<gbm_bo*&>(from.bo) = nullptr;
-}
-
-auto mgg::GBMOutputSurface::FrontBuffer::operator=(FrontBuffer&& from) -> FrontBuffer&
-{
-    if (surf)
-    {
-        gbm_surface_release_buffer(surf, bo);
-    }
-
-    const_cast<gbm_surface*&>(surf) = from.surf;
-    const_cast<gbm_bo*&>(bo) = from.bo;
-
-    const_cast<gbm_surface*&>(from.surf) = nullptr;
-    const_cast<gbm_bo*&>(from.bo) = nullptr;
-
-    return *this;
-}
-
-auto mgg::GBMOutputSurface::FrontBuffer::operator=(std::nullptr_t) -> FrontBuffer&
-{
-    return *this = FrontBuffer{};
-}
-
-mgg::GBMOutputSurface::FrontBuffer::operator gbm_bo*()
-{
-    return bo;
-}
-
-mgg::GBMOutputSurface::FrontBuffer::operator bool() const
-{
-    return (surf != nullptr) && (bo != nullptr);
-}
-
-namespace
-{
-void require_extensions(
-    std::initializer_list<char const*> extensions,
-    std::function<std::string()> const& extension_getter)
-{
-    std::stringstream missing_extensions;
-
-    std::string const ext_string = extension_getter();
-
-    for (auto extension : extensions)
-    {
-        if (ext_string.find(extension) == std::string::npos)
-        {
-            missing_extensions << "Missing " << extension << std::endl;
-        }
-    }
-
-    if (!missing_extensions.str().empty())
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error(
-            std::string("Missing required extensions:\n") + missing_extensions.str()));
-    }
-}
-
-void require_egl_extensions(EGLDisplay dpy, std::initializer_list<char const*> extensions)
-{
-    require_extensions(
-        extensions,
-        [dpy]() -> std::string
-        {
-            char const* maybe_exts = eglQueryString(dpy, EGL_EXTENSIONS);
-            if (maybe_exts)
-                return maybe_exts;
-            return {};
-        });
-}
-
-void require_gl_extensions(std::initializer_list<char const*> extensions)
-{
-    require_extensions(
-        extensions,
-        []() -> std::string
-        {
-            char const *maybe_exts =
-                reinterpret_cast<char const*>(glGetString(GL_EXTENSIONS));
-            if (maybe_exts)
-                return maybe_exts;
-            return {};
-        });
-}
-
-bool needs_bounce_buffer(mgg::KMSOutput const& destination, gbm_bo* source)
-{
-    return destination.buffer_requires_migration(source);
-}
-
-const GLchar* const vshader =
-    {
-        "attribute vec4 position;\n"
-        "attribute vec2 texcoord;\n"
-        "varying vec2 v_texcoord;\n"
-        "void main() {\n"
-        "   gl_Position = position;\n"
-        "   v_texcoord = texcoord;\n"
-        "}\n"
-    };
-
-const GLchar* const fshader =
-    {
-        "#ifdef GL_ES\n"
-        "precision mediump float;\n"
-        "#endif\n"
-        "uniform sampler2D tex;"
-        "varying vec2 v_texcoord;\n"
-        "void main() {\n"
-        "   gl_FragColor = texture2D(tex, v_texcoord);\n"
-        "}\n"
-    };
-
-class VBO
-{
-public:
-    VBO(void const* data, size_t size)
-    {
-        glGenBuffers(1, &buf_id);
-        glBindBuffer(GL_ARRAY_BUFFER, buf_id);
-        glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-    }
-
-    ~VBO()
-    {
-        glDeleteBuffers(1, &buf_id);
-    }
-
-    void bind()
-    {
-        glBindBuffer(GL_ARRAY_BUFFER, buf_id);
-    }
-
-private:
-    GLuint buf_id;
-};
-
-class NoAuxGlConfig : public mg::GLConfig
-{
-public:
-    int depth_buffer_bits() const override
-    {
-        return 0;
-    }
-    int stencil_buffer_bits() const override
-    {
-        return 0;
-    }
-};
-
-class EGLBufferCopier
-{
-public:
-    EGLBufferCopier(
-        mir::Fd const& drm_fd,
-        uint32_t width,
-        uint32_t height,
-        uint32_t format)
-        : eglCreateImageKHR{
-              reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(eglGetProcAddress("eglCreateImageKHR"))},
-          eglDestroyImageKHR{
-              reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(eglGetProcAddress("eglDestroyImageKHR"))},
-          glEGLImageTargetTexture2DOES{
-              reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(eglGetProcAddress("glEGLImageTargetTexture2DOES"))},
-          device{drm_fd},
-          width{width},
-          height{height},
-          surface{device.create_scanout_surface(width, height, format, false)},
-          egl{NoAuxGlConfig{}}
-    {
-        egl.setup(device, surface.get(), format, EGL_NO_CONTEXT, true);
-
-        require_gl_extensions({
-            "GL_OES_EGL_image"
-        });
-
-        require_egl_extensions(
-            eglGetCurrentDisplay(),
-            {
-                "EGL_KHR_image_base",
-                "EGL_EXT_image_dma_buf_import"
-        });
-
-        egl.make_current();
-
-        auto vertex = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertex, 1, &vshader, nullptr);
-        glCompileShader(vertex);
-
-        int compiled;
-        glGetShaderiv (vertex, GL_COMPILE_STATUS, &compiled);
-
-        if (!compiled) {
-            GLchar log[1024];
-
-            glGetShaderInfoLog (vertex, sizeof log - 1, NULL, log);
-            log[sizeof log - 1] = '\0';
-            glDeleteShader (vertex);
-
-            BOOST_THROW_EXCEPTION(
-                std::runtime_error(std::string{"Failed to compile vertex shader:\n"} + log));
-        }
-
-
-        auto fragment = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragment, 1, &fshader, nullptr);
-        glCompileShader(fragment);
-
-        glGetShaderiv (fragment, GL_COMPILE_STATUS, &compiled);
-        if (!compiled) {
-            GLchar log[1024];
-
-            glGetShaderInfoLog (fragment, sizeof log - 1, NULL, log);
-            log[sizeof log - 1] = '\0';
-            glDeleteShader (fragment);
-
-            BOOST_THROW_EXCEPTION(
-                std::runtime_error(std::string{"Failed to compile fragment shader:\n"} + log));
-        }
-
-        prog = glCreateProgram();
-        glAttachShader(prog, vertex);
-        glAttachShader(prog, fragment);
-        glLinkProgram(prog);
-        glGetProgramiv (prog, GL_LINK_STATUS, &compiled);
-        if (!compiled) {
-            GLchar log[1024];
-
-            glGetProgramInfoLog (prog, sizeof log - 1, NULL, log);
-            log[sizeof log - 1] = '\0';
-
-            BOOST_THROW_EXCEPTION(
-                std::runtime_error(std::string{"Failed to link shader prog:\n"} + log));
-        }
-
-        glUseProgram(prog);
-
-        attrpos = glGetAttribLocation(prog, "position");
-        attrtex = glGetAttribLocation(prog, "texcoord");
-        auto unitex = glGetUniformLocation(prog, "tex");
-
-        glGenTextures(1, &tex);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, tex);
-
-        glUniform1i(unitex, 0);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-        static GLfloat const dest_vert[4][2] =
-            { { -1.f, 1.f }, { 1.f, 1.f }, { 1.f, -1.f }, { -1.f, -1.f } };
-        vert_data = std::make_unique<VBO>(dest_vert, sizeof(dest_vert));
-
-        static GLfloat const tex_vert[4][2] =
-            {
-                { 0.f, 0.f }, { 1.f, 0.f }, { 1.f, 1.f }, { 0.f, 1.f },
-            };
-        tex_data = std::make_unique<VBO>(tex_vert, sizeof(tex_vert));
-    }
-
-    EGLBufferCopier(EGLBufferCopier const&) = delete;
-    EGLBufferCopier& operator==(EGLBufferCopier const&) = delete;
-
-    ~EGLBufferCopier()
-    {
-        egl.make_current();
-        vert_data = nullptr;
-        tex_data = nullptr;
-    }
-
-    mgg::GBMOutputSurface::FrontBuffer copy_front_buffer_from(mgg::GBMOutputSurface::FrontBuffer&& from)
-    {
-        egl.make_current();
-        mir::Fd const dma_buf{gbm_bo_get_fd(from)};
-
-        glUseProgram(prog);
-
-        EGLint const image_attrs[] = {
-            EGL_WIDTH, static_cast<EGLint>(width),
-            EGL_HEIGHT, static_cast<EGLint>(height),
-            EGL_LINUX_DRM_FOURCC_EXT, DRM_FORMAT_XRGB8888,
-            EGL_DMA_BUF_PLANE0_FD_EXT, static_cast<int>(dma_buf),
-            EGL_DMA_BUF_PLANE0_OFFSET_EXT, 0,
-            EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<EGLint>(gbm_bo_get_stride(from)),
-            EGL_NONE
-        };
-
-        auto image = eglCreateImageKHR(
-            eglGetCurrentDisplay(),
-            EGL_NO_CONTEXT,
-            EGL_LINUX_DMA_BUF_EXT,
-            nullptr,
-            image_attrs);
-
-        if (image == EGL_NO_IMAGE_KHR)
-        {
-            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGLImage from dma_buf"));
-        }
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, tex);
-        glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
-
-        vert_data->bind();
-        glVertexAttribPointer (attrpos, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-        tex_data->bind();
-        glVertexAttribPointer (attrtex, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-        glEnableVertexAttribArray(attrpos);
-        glEnableVertexAttribArray(attrtex);
-
-        GLubyte const idx[] = { 0, 1, 3, 2 };
-        glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_BYTE, idx);
-
-        egl.swap_buffers();
-
-        eglDestroyImageKHR(eglGetCurrentDisplay(), image);
-
-        egl.release_current();
-        return mgg::GBMOutputSurface::FrontBuffer(surface.get());
-    }
-
-    private:
-
-    PFNEGLCREATEIMAGEKHRPROC const eglCreateImageKHR;
-    PFNEGLDESTROYIMAGEKHRPROC const eglDestroyImageKHR;
-    PFNGLEGLIMAGETARGETTEXTURE2DOESPROC const glEGLImageTargetTexture2DOES;
-
-    mgmh::GBMHelper const device;
-    uint32_t const width;
-    uint32_t const height;
-    mgg::GBMSurfaceUPtr const surface;
-    mgmh::EGLHelper egl;
-    GLuint prog;
-    GLuint tex;
-    GLint attrtex;
-    GLint attrpos;
-    std::unique_ptr<VBO> vert_data;
-    std::unique_ptr<VBO> tex_data;
-};
-}
 
 mgg::DisplayBuffer::DisplayBuffer(
-    mgg::BypassOption option,
+    std::shared_ptr<DisplayInterfaceProvider> provider,
+    mir::Fd drm_fd,
+    mgg::BypassOption,
     std::shared_ptr<DisplayReport> const& listener,
     std::vector<std::shared_ptr<KMSOutput>> const& outputs,
-    GBMOutputSurface&& surface_gbm,
     geom::Rectangle const& area,
     glm::mat2 const& transformation)
-    : listener(listener),
-      bypass_option(option),
+    : provider{std::move(provider)},
+      listener(listener),
       outputs(outputs),
-      surface{std::move(surface_gbm)},
       area(area),
       transform{transformation},
       needs_set_crtc{false},
@@ -439,69 +62,39 @@ mgg::DisplayBuffer::DisplayBuffer(
 {
     listener->report_successful_setup_of_native_resources();
 
-    make_current();
-
-    listener->report_successful_egl_make_current_on_construction();
-
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    surface.swap_buffers();
-
-    listener->report_successful_egl_buffer_swap_on_construction();
-
-    auto temporary_front = surface.lock_front();
-    if (!temporary_front)
-        fatal_error("Failed to get frontbuffer");
-
-    if (needs_bounce_buffer(*outputs.front(), temporary_front))
+    // If any of the outputs have a CRTC mismatch, we will want to set all of them
+    // so that they're all showing the same buffer.
+    bool has_crtc_mismatch = false;
+    for (auto& output : outputs)
     {
-        mir::log_info("Hybrid GPU setup detected; DisplayBuffer using EGL buffer copies for migration");
-        get_front_buffer = std::bind(
-            std::mem_fn(&EGLBufferCopier::copy_front_buffer_from),
-            std::make_shared<EGLBufferCopier>(
-                mir::Fd{mir::IntOwnedFd{outputs.front()->drm_fd()}},
-                surface.size().width.as_int(),
-                surface.size().height.as_int(),
-                GBM_FORMAT_XRGB8888),
-            std::placeholders::_1);
-    }
-    else
-    {
-        mir::log_info("Detected single-GPU DisplayBuffer. Rendering will be sent directly to output");
-        get_front_buffer = [](auto&& fb) { return std::move(fb); };
+        has_crtc_mismatch = output->has_crtc_mismatch();
+        if (has_crtc_mismatch)
+            break;
     }
 
-    visible_composite_frame = get_front_buffer(std::move(temporary_front));
-
-    /*
-     * Check that our (possibly bounced) front buffer is usable on *all* the
-     * outputs we've been asked to output on.
-     */
-    for (auto const& output : outputs)
+    if (has_crtc_mismatch)
     {
-        if (output->buffer_requires_migration(visible_composite_frame))
-        {
-            BOOST_THROW_EXCEPTION(std::invalid_argument(
-                "Attempted to create a DisplayBuffer spanning multiple GPU memory domains"));
+        mir::log_info("Clearing screen due to differing encountered and target modes");
+        // TODO: Pull a supported format out of KMS rather than assuming XRGB8888
+        auto initial_fb = std::make_shared<mgg::CPUAddressableFB>(
+            std::move(drm_fd),
+            false,
+            DRMFormat{DRM_FORMAT_XRGB8888},
+            area.size);
+
+        auto mapping = initial_fb->map_writeable();
+        ::memset(mapping->data(), 24, mapping->len());
+
+        visible_fb = std::move(initial_fb);
+        for (auto &output: outputs) {
+            output->set_crtc(*visible_fb);
         }
+        listener->report_successful_drm_mode_set_crtc_on_construction();
     }
-
-    set_crtc(*outputs.front()->fb_for(visible_composite_frame));
-
-    release_current();
-
-    listener->report_successful_drm_mode_set_crtc_on_construction();
     listener->report_successful_display_construction();
-    surface.report_egl_configuration(
-        [&listener] (EGLDisplay disp, EGLConfig cfg)
-        {
-            listener->report_egl_configuration(disp, cfg);
-        });
 }
 
-mgg::DisplayBuffer::~DisplayBuffer()
-{
-}
+mgg::DisplayBuffer::~DisplayBuffer() = default;
 
 geom::Rectangle mgg::DisplayBuffer::view_area() const
 {
@@ -519,33 +112,31 @@ void mgg::DisplayBuffer::set_transformation(glm::mat2 const& t, geometry::Rectan
     area = a;
 }
 
-bool mgg::DisplayBuffer::overlay(RenderableList const& renderable_list)
+bool mgg::DisplayBuffer::overlay(std::vector<DisplayElement> const& renderable_list)
 {
-    glm::mat2 static const no_transformation(1);
-    if (transform == no_transformation &&
-       (bypass_option == mgg::BypassOption::allowed))
+    // TODO: implement more than the most basic case.
+    if (renderable_list.size() != 1)
     {
-        mgg::BypassMatch bypass_match(area);
-        auto bypass_it = std::find_if(renderable_list.rbegin(), renderable_list.rend(), bypass_match);
-        if (bypass_it != renderable_list.rend())
-        {
-            auto bypass_buffer = (*bypass_it)->buffer();
-            auto dmabuf_image = dynamic_cast<mg::DMABufBuffer*>(bypass_buffer->native_buffer_base());
-            if (dmabuf_image &&
-                bypass_buffer->size() == surface.size())
-            {
-                if (auto bufobj = outputs.front()->fb_for(*dmabuf_image))
-                {
-                    bypass_buf = bypass_buffer;
-                    bypass_bufobj = bufobj;
-                    return true;
-                }
-            }
-        }
+        return false;
     }
 
-    bypass_buf = nullptr;
-    bypass_bufobj = nullptr;
+    if (renderable_list[0].screen_positon != view_area())
+    {
+        return false;
+    }
+
+    if (renderable_list[0].source_position.top_left != geom::PointF {0,0} ||
+        renderable_list[0].source_position.size.width.as_value() != view_area().size.width.as_int() ||
+        renderable_list[0].source_position.size.height.as_value() != view_area().size.height.as_int())
+    {
+        return false;
+    }
+
+    if (auto fb = std::dynamic_pointer_cast<mgg::FBHandle>(renderable_list[0].buffer))
+    {
+        next_swap = std::move(fb);
+        return true;
+    }
     return false;
 }
 
@@ -553,13 +144,6 @@ void mgg::DisplayBuffer::for_each_display_buffer(
     std::function<void(graphics::DisplayBuffer&)> const& f)
 {
     f(*this);
-}
-
-void mgg::DisplayBuffer::swap_buffers()
-{
-    surface.swap_buffers();
-    bypass_buf = nullptr;
-    bypass_bufobj = nullptr;
 }
 
 void mgg::DisplayBuffer::set_crtc(FBHandle const& forced_frame)
@@ -590,20 +174,18 @@ void mgg::DisplayBuffer::post()
      */
     wait_for_page_flip();
 
-    std::shared_ptr<mgg::FBHandle const> bufobj;
-    if (bypass_buf)
+    if (!next_swap)
     {
-        bufobj = bypass_bufobj;
+        // Hey! No one has given us a next frame yet, so we don't have to change what's onscreen.
+        // Sweet! We can just bail.
+        return; 
     }
-    else
-    {
-        scheduled_composite_frame = get_front_buffer(surface.lock_front());
-        bufobj = outputs.front()->fb_for(scheduled_composite_frame);
-        if (!bufobj)
-            fatal_error("Failed to get front buffer object");
-    }
+    /*
+     * Otherwise, pull the next frame into the pending slot
+     */
+    scheduled_fb = std::move(next_swap);
+    next_swap = nullptr;
 
-    scheduled_fb = std::move(bufobj);
     /*
      * Try to schedule a page flip as first preference to avoid tearing.
      * [will complete in a background thread]
@@ -630,7 +212,7 @@ void mgg::DisplayBuffer::post()
     // Predicted worst case render time for the next frame...
     auto predicted_render_time = 50ms;
 
-    if (bypass_buf)
+    if (holding_client_buffers)
     {
         /*
          * For composited frames we defer wait_for_page_flip till just before
@@ -641,7 +223,6 @@ void mgg::DisplayBuffer::post()
          * Also, bypass does not need the deferred page flip because it has
          * no compositing/rendering step for which to save time for.
          */
-        scheduled_bypass_frame = bypass_buf;
         wait_for_page_flip();
 
         // It's very likely the next frame will be bypassed like this one so
@@ -666,10 +247,6 @@ void mgg::DisplayBuffer::post()
          *predicted_render_time = 9ms; // e.g. about the same as Weston
          */
     }
-
-    // Buffer lifetimes are managed exclusively by scheduled*/visible* now
-    bypass_buf = nullptr;
-    bypass_bufobj = nullptr;
 
     recommend_sleep = 0ms;
     if (outputs.size() == 1)
@@ -714,38 +291,6 @@ void mgg::DisplayBuffer::wait_for_page_flip()
 
         page_flips_pending = false;
     }
-
-    if (scheduled_bypass_frame || scheduled_composite_frame)
-    {
-        // Why are both of these grouped into a single statement?
-        // Because in either case both types of frame need releasing each time.
-
-        visible_bypass_frame = scheduled_bypass_frame;
-        scheduled_bypass_frame = nullptr;
-
-        visible_composite_frame = std::move(scheduled_composite_frame);
-        scheduled_composite_frame = nullptr;
-    }
-}
-
-auto mgg::DisplayBuffer::size() const -> geometry::Size
-{
-    return surface.size();
-}
-
-void mgg::DisplayBuffer::make_current()
-{
-    surface.make_current();
-}
-
-void mgg::DisplayBuffer::bind()
-{
-    surface.bind();
-}
-
-void mgg::DisplayBuffer::release_current()
-{
-    surface.release_current();
 }
 
 void mgg::DisplayBuffer::schedule_set_crtc()
@@ -753,70 +298,30 @@ void mgg::DisplayBuffer::schedule_set_crtc()
     needs_set_crtc = true;
 }
 
-mg::NativeDisplayBuffer* mgg::DisplayBuffer::native_display_buffer()
+auto mir::graphics::gbm::DisplayBuffer::display_provider() const -> std::shared_ptr<DisplayInterfaceProvider>
 {
-    return this;
+    return provider;
 }
 
-mgg::GBMOutputSurface::GBMOutputSurface(
-    int drm_fd,
-    GBMSurfaceUPtr&& surface,
-    uint32_t width,
-    uint32_t height,
-    helpers::EGLHelper&& egl)
-    : drm_fd{drm_fd},
-      width{width},
-      height{height},
-      egl{std::move(egl)},
-      surface{std::move(surface)}
+auto mgg::DisplayBuffer::drm_fd() const -> mir::Fd
 {
+    return mir::Fd{mir::IntOwnedFd{outputs.front()->drm_fd()}};
 }
 
-mgg::GBMOutputSurface::GBMOutputSurface(GBMOutputSurface&& from)
-    : drm_fd{from.drm_fd},
-      width{from.width},
-      height{from.height},
-      egl{std::move(from.egl)},
-      surface{std::move(from.surface)}
+void mir::graphics::gbm::DisplayBuffer::set_next_image(std::unique_ptr<Framebuffer> content)
 {
-}
-
-auto mgg::GBMOutputSurface::GBMOutputSurface::size() const -> geometry::Size
-{
-    return {width, height};
-}
-
-void mgg::GBMOutputSurface::make_current()
-{
-    if (!egl.make_current())
+    std::vector<DisplayElement> const single_buffer = {
+        DisplayElement {
+            view_area(),
+            geom::RectangleF{
+                {0, 0},
+                {view_area().size.width.as_value(), view_area().size.height.as_value()}},
+            std::move(content)
+        }
+    };
+    if (!overlay(single_buffer))
     {
-        fatal_error("Failed to make EGL surface current");
+        // Oh, oh! We should be *guaranteed* to “overlay” a single Framebuffer; this is likely a programming error
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to post buffer to display"}));
     }
-}
-
-void mgg::GBMOutputSurface::release_current()
-{
-    egl.release_current();
-}
-
-void mgg::GBMOutputSurface::swap_buffers()
-{
-    if (!egl.swap_buffers())
-        fatal_error("Failed to perform buffer swap");
-}
-
-void mgg::GBMOutputSurface::bind()
-{
-
-}
-
-auto mgg::GBMOutputSurface::lock_front() -> FrontBuffer
-{
-    return FrontBuffer{surface.get()};
-}
-
-void mgg::GBMOutputSurface::report_egl_configuration(
-    std::function<void(EGLDisplay, EGLConfig)> const& to)
-{
-    egl.report_egl_configuration(to);
 }

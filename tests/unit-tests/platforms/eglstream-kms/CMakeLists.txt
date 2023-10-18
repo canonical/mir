@@ -1,5 +1,4 @@
 add_subdirectory("server")
-add_subdirectory("client")
 
 mir_add_wrapped_executable(mir_unit_tests_eglstream-kms NOINSTALL
   ${EGLSTREAM_KMS_UNIT_TEST_SOURCES}

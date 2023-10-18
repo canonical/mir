@@ -15,9 +15,11 @@
  */
 
 #include "buffer_allocator.h"
+#include "mir/graphics/gl_config.h"
 #include "mir/graphics/linux_dmabuf.h"
 #include "mir/anonymous_shm_file.h"
 #include "mir/renderer/sw/pixel_source.h"
+#include "mir/graphics/platform.h"
 #include "shm_buffer.h"
 #include "mir/graphics/egl_context_executor.h"
 #include "mir/graphics/egl_extensions.h"
@@ -29,6 +31,11 @@
 #include "mir/renderer/gl/context_source.h"
 #include "mir/graphics/egl_wayland_allocator.h"
 #include "mir/executor.h"
+#include "mir/renderer/gl/gl_surface.h"
+#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/drm_formats.h"
+#include "mir/graphics/egl_error.h"
+#include "cpu_copy_output_surface.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -38,7 +45,10 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
+#include <drm_fourcc.h>
+
 #include <algorithm>
+#include <optional>
 #include <stdexcept>
 #include <system_error>
 #include <cassert>
@@ -57,43 +67,101 @@ namespace geom = mir::geometry;
 
 namespace
 {
-auto context_for_output(mg::Display const& output) -> std::unique_ptr<mir::renderer::gl::Context>
+auto make_share_only_context(EGLDisplay dpy, std::optional<EGLContext> share_with) -> EGLContext
 {
-    try
-    {
-        auto& context_source = dynamic_cast<mir::renderer::gl::ContextSource const&>(output);
+    eglBindAPI(EGL_OPENGL_ES_API);
 
-        /*
-         * We care about no part of this context's config; we will do no rendering with it.
-         * All we care is that we can allocate texture IDs and bind a texture, which is
-         * config independent.
-         *
-         * That's not *entirely* true; we also need it to be on the same device as we want
-         * to do the rendering on, and that GL must support all the extensions we care about,
-         * but since we don't yet support heterogeneous hybrid and implementing that will require
-         * broader interface changes it's a safe enough requirement for now.
-         */
-        return context_source.create_gl_context();
-    }
-    catch (std::bad_cast const& err)
+    static const EGLint context_attr[] = {
+        EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_NONE
+    };
+
+    EGLint const config_attr[] = {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_NONE
+    };
+
+    EGLConfig cfg;
+    EGLint num_configs;
+    
+    if (eglChooseConfig(dpy, config_attr, &cfg, 1, &num_configs) != EGL_TRUE || num_configs != 1)
     {
-        std::throw_with_nested(
-            boost::enable_error_info(
-                std::runtime_error{"Output platform cannot provide a GL context"})
-                << boost::throw_function(__PRETTY_FUNCTION__)
-                << boost::throw_line(__LINE__)
-                << boost::throw_file(__FILE__));
+        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to find any matching EGL config")));
     }
-}
+    
+    auto ctx = eglCreateContext(dpy, cfg, share_with.value_or(EGL_NO_CONTEXT), context_attr);
+    if (ctx == EGL_NO_CONTEXT)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
+    }
+    return ctx;
 }
 
-mge::BufferAllocator::BufferAllocator(mg::Display const& output)
-    : ctx{context_for_output(output)},
+class SurfacelessEGLContext : public mir::renderer::gl::Context
+{
+public:
+    explicit SurfacelessEGLContext(EGLDisplay dpy)
+        : dpy{dpy},
+          ctx{make_share_only_context(dpy, {})}
+    {
+    }
+    
+    SurfacelessEGLContext(EGLDisplay dpy, EGLContext share_with)
+        : dpy{dpy},
+          ctx{make_share_only_context(dpy, share_with)}
+    {
+    }
+
+    ~SurfacelessEGLContext() override
+    {
+        eglDestroyContext(dpy, ctx);
+    }
+    
+    void make_current() const override
+    {
+        if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx) != EGL_TRUE)
+        {
+            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to make context current"));
+        }
+    }
+    
+    void release_current() const override
+    {
+        if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE)
+        {
+            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to release current EGL context"));
+        }
+    }
+    
+    auto make_share_context() const -> std::unique_ptr<Context> override
+    {
+        return std::unique_ptr<Context>{new SurfacelessEGLContext{dpy, ctx}};
+    }
+    
+    explicit operator EGLContext() override
+    {
+        return ctx;
+    }
+private:    
+    EGLDisplay const dpy;
+    EGLContext const ctx;
+};
+}
+
+mge::BufferAllocator::BufferAllocator(
+    EGLDisplay dpy,
+    EGLContext share_with,
+    std::shared_ptr<DMABufEGLProvider> dmabuf_provider)
+    : ctx{std::make_unique<SurfacelessEGLContext>(dpy, share_with)},
       egl_delegate{
-          std::make_shared<mgc::EGLContextExecutor>(context_for_output(output))},
-      egl_extensions(std::make_shared<mg::EGLExtensions>())
+          std::make_shared<mgc::EGLContextExecutor>(ctx->make_share_context())},
+      egl_extensions(std::make_shared<mg::EGLExtensions>()),
+      dmabuf_provider{std::move(dmabuf_provider)}
 {
 }
+
+mge::BufferAllocator::~BufferAllocator() = default;
 
 std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_software_buffer(
     geom::Size size, MirPixelFormat format)
@@ -157,34 +225,34 @@ void mge::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
 
     try
     {
-        mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
-        dmabuf_extension =
-            std::unique_ptr<LinuxDmaBufUnstable, std::function<void(LinuxDmaBufUnstable*)>>(
-                new LinuxDmaBufUnstable{
-                    display,
-                    dpy,
-                    egl_extensions,
-                    modifier_ext,
-                },
-                [wayland_executor](LinuxDmaBufUnstable* global)
-                {
-                    // The global must be destroyed on the Wayland thread
-                    wayland_executor->spawn(
-                        [global]()
-                        {
-                            /* This is safe against double-frees, as the WaylandExecutor
-                             * guarantees that work scheduled will only run while the Wayland
-                             * event loop is running, and the main loop is stopped before
-                             * wl_display_destroy() frees any globals
-                             *
-                             * This will, however, leak the global if the main loop is destroyed
-                             * before the buffer allocator. Fixing that requires work in the
-                             * wrapper generator.
-                             */
-                            delete global;
-                        });
-                });
-        mir::log_info("Enabled linux-dmabuf import support");
+        if (dmabuf_provider)
+        {
+            dmabuf_extension =
+                std::unique_ptr<LinuxDmaBufUnstable, std::function<void(LinuxDmaBufUnstable * )>>(
+                    new LinuxDmaBufUnstable{
+                        display,
+                        dmabuf_provider
+                    },
+                    [wayland_executor](LinuxDmaBufUnstable* global)
+                    {
+                        // The global must be destroyed on the Wayland thread
+                        wayland_executor->spawn(
+                            [global]()
+                            {
+                                /* This is safe against double-frees, as the WaylandExecutor
+                                 * guarantees that work scheduled will only run while the Wayland
+                                 * event loop is running, and the main loop is stopped before
+                                 * wl_display_destroy() frees any globals
+                                 *
+                                 * This will, however, leak the global if the main loop is destroyed
+                                 * before the buffer allocator. Fixing that requires work in the
+                                 * wrapper generator.
+                                 */
+                                delete global;
+                            });
+                    });
+            mir::log_info("Enabled linux-dmabuf import support");
+        }
     }
     catch (std::runtime_error const& error)
     {
@@ -248,4 +316,150 @@ auto mge::BufferAllocator::buffer_from_shm(
         egl_delegate,
         std::move(on_consumed),
         std::move(on_release));
+}
+
+auto mge::BufferAllocator::shared_egl_context() -> EGLContext
+{
+    return static_cast<EGLContext>(*ctx);
+}
+
+auto mge::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture>
+{
+    if (dmabuf_provider)
+    {
+        if (auto tex = dmabuf_provider->as_texture(buffer))
+        {
+            return tex;
+        }
+    }
+    // TODO: Should this be abstracted, like dmabuf_provider above?
+    return std::dynamic_pointer_cast<gl::Texture>(buffer);
+}
+
+namespace
+{
+
+class EGLOutputSurface : public mg::gl::OutputSurface
+{
+public:
+    EGLOutputSurface(
+        std::unique_ptr<mg::GenericEGLDisplayProvider::EGLFramebuffer> fb)
+        : fb{std::move(fb)}
+    {
+    }
+
+    void bind() override
+    {
+    }
+
+    void make_current() override
+    {
+        fb->make_current();
+    }
+
+    void release_current() override
+    {
+        fb->release_current();
+    }
+
+    auto commit() -> std::unique_ptr<mg::Framebuffer> override
+    {
+        return fb->clone_handle();
+    }
+
+    auto size() const -> geom::Size override
+    {
+        return fb->size();
+    }
+
+    auto layout() const -> Layout override
+    {
+        return Layout::GL;
+    }
+
+private:
+    std::unique_ptr<mg::GenericEGLDisplayProvider::EGLFramebuffer> const fb;
+};
+}
+
+auto mge::GLRenderingProvider::suitability_for_allocator(std::shared_ptr<GraphicBufferAllocator> const& target)
+    -> probe::Result
+{
+    // TODO: We *can* import from other allocators, maybe (anything with dma-buf is probably possible)
+    // For now, the simplest thing is to bind hard to own own allocator.
+    if (dynamic_cast<mge::BufferAllocator*>(target.get()))
+    {
+        return probe::best;
+    }
+    return probe::unsupported;
+}
+
+auto mge::GLRenderingProvider::suitability_for_display(
+    std::shared_ptr<DisplayInterfaceProvider> const& target) -> probe::Result
+{
+    if (target->acquire_interface<GenericEGLDisplayProvider>())
+    {
+        /* We're effectively hosted on an underlying EGL platform.
+         *
+         * We'll work fine, but if there's a hardware-specific platform
+         * let it take over.
+         */
+        return probe::hosted;
+    }
+
+    if (target->acquire_interface<CPUAddressableDisplayProvider>())
+    {
+        /* We can *work* on a CPU-backed surface, but if anything's better
+         * we should use something else!
+         */
+        return probe::supported;
+    }
+
+    return probe::unsupported;
+}
+
+auto mge::GLRenderingProvider::surface_for_output(
+    std::shared_ptr<DisplayInterfaceProvider> framebuffer_provider,
+    geometry::Size size,
+    GLConfig const& config)
+    -> std::unique_ptr<gl::OutputSurface>
+{
+    if (auto egl_display = framebuffer_provider->acquire_interface<GenericEGLDisplayProvider>())
+    {
+        return std::make_unique<EGLOutputSurface>(egl_display->alloc_framebuffer(config, ctx));
+    }
+    auto cpu_provider = framebuffer_provider->acquire_interface<CPUAddressableDisplayProvider>();
+    
+    return std::make_unique<mgc::CPUCopyOutputSurface>(
+        dpy,
+        ctx,
+        std::move(cpu_provider),
+        size);
+}
+
+auto mge::GLRenderingProvider::make_framebuffer_provider(std::shared_ptr<DisplayInterfaceProvider> /*target*/)
+    -> std::unique_ptr<FramebufferProvider>
+{
+    // TODO: Work out under what circumstances the EGL renderer *can* provide overlayable framebuffers
+    class NullFramebufferProvider : public FramebufferProvider
+    {
+    public:
+        auto buffer_to_framebuffer(std::shared_ptr<Buffer>) -> std::unique_ptr<Framebuffer> override
+        {
+            // It is safe to return nullptr; this will be treated as “this buffer cannot be used as
+            // a framebuffer”.
+            return {};
+        }
+    };
+    return std::make_unique<NullFramebufferProvider>();
+}
+
+mge::GLRenderingProvider::GLRenderingProvider(
+    EGLDisplay dpy,
+    EGLContext ctx,
+    std::shared_ptr<mg::DMABufEGLProvider> dmabuf_provider)
+    : dpy{dpy},
+      ctx{ctx},
+      dmabuf_provider{std::move(dmabuf_provider)}
+{
 }

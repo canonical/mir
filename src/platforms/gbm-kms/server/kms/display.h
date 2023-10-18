@@ -24,6 +24,7 @@
 #include "display_helpers.h"
 #include "egl_helper.h"
 #include "platform_common.h"
+#include "mir/graphics/platform.h"
 
 #include <atomic>
 #include <mutex>
@@ -34,6 +35,7 @@ namespace mir
 namespace graphics
 {
 
+class DisplayInterfaceProvider;
 class DisplayReport;
 class DisplayBuffer;
 class DisplayConfigurationPolicy;
@@ -56,12 +58,12 @@ class Cursor;
 class Display : public graphics::Display
 {
 public:
-    Display(std::vector<std::shared_ptr<helpers::DRMHelper>> const& drm,
-            std::shared_ptr<helpers::GBMHelper> const& gbm,
-            BypassOption bypass_option,
-            std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
-            std::shared_ptr<GLConfig> const& gl_config,
-            std::shared_ptr<DisplayReport> const& listener);
+    Display(
+        std::shared_ptr<DisplayInterfaceProvider> parent,
+        mir::Fd drm_fd,
+        BypassOption bypass_option,
+        std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
+        std::shared_ptr<DisplayReport> const& listener);
     ~Display();
 
     geometry::Rectangle view_area() const;
@@ -81,19 +83,16 @@ public:
 
     std::shared_ptr<graphics::Cursor> create_hardware_cursor() override;
 
-    std::unique_ptr<renderer::gl::Context> create_gl_context() const override;
-
 private:
     void clear_connected_unused_outputs();
 
+    std::shared_ptr<DisplayInterfaceProvider> const owner;
     mutable std::mutex configuration_mutex;
-    std::vector<std::shared_ptr<helpers::DRMHelper>> const drm;
-    std::shared_ptr<helpers::GBMHelper> const gbm;
+    mir::Fd const drm_fd;
     std::shared_ptr<DisplayReport> const listener;
     mir::udev::Monitor monitor;
-    helpers::EGLHelper shared_egl;
-    std::vector<std::unique_ptr<DisplayBuffer>> display_buffers;
     std::shared_ptr<KMSOutputContainer> const output_container;
+    std::vector<std::unique_ptr<DisplayBuffer>> display_buffers;
     mutable RealKMSDisplayConfiguration current_display_configuration;
     mutable std::atomic<bool> dirty_configuration;
 
@@ -103,9 +102,42 @@ private:
 
     BypassOption bypass_option;
     std::weak_ptr<Cursor> cursor;
-    std::shared_ptr<GLConfig> const gl_config;
 };
 
+class CPUAddressableDisplayProvider : public graphics::CPUAddressableDisplayProvider
+{
+public:
+    explicit CPUAddressableDisplayProvider(mir::Fd drm_fd);
+
+    auto supported_formats() const
+        -> std::vector<DRMFormat> override;
+
+    auto alloc_fb(geometry::Size pixel_size, DRMFormat format)
+        -> std::unique_ptr<MappableFB> override;
+
+private:
+    mir::Fd const drm_fd;
+    bool const supports_modifiers;
+};
+
+class GBMDisplayProvider : public graphics::GBMDisplayProvider
+{
+public:
+    GBMDisplayProvider(mir::Fd drm_fd);
+    
+    auto is_same_device(mir::udev::Device const& render_device) const -> bool override;
+    
+    auto gbm_device() const -> std::shared_ptr<struct gbm_device> override;
+
+    auto supported_formats() const -> std::vector<DRMFormat> override;
+    
+    auto modifiers_for_format(DRMFormat format) const -> std::vector<uint64_t> override;
+    
+    auto make_surface(geometry::Size size, DRMFormat format, std::span<uint64_t> modifier) -> std::unique_ptr<GBMSurface> override;    
+private:
+    mir::Fd const fd;
+    std::shared_ptr<struct gbm_device> const gbm;
+};
 }
 }
 }

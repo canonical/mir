@@ -21,6 +21,7 @@
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_context_executor.h"
+#include "mir/graphics/platform.h"
 
 #include "wayland-eglstream-controller.h"
 
@@ -52,7 +53,7 @@ class BufferAllocator:
     public graphics::GraphicBufferAllocator
 {
 public:
-    BufferAllocator(graphics::Display const& output);
+    BufferAllocator(std::unique_ptr<renderer::gl::Context> ctx);
     ~BufferAllocator();
 
     std::shared_ptr<Buffer> alloc_software_buffer(geometry::Size size, MirPixelFormat format) override;
@@ -89,6 +90,29 @@ private:
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     std::unique_ptr<gl::Program> shader;
     static struct wl_eglstream_controller_interface const impl;
+};
+
+class GLRenderingProvider : public graphics::GLRenderingProvider
+{
+public:
+    GLRenderingProvider(EGLDisplay dpy, std::unique_ptr<renderer::gl::Context> ctx);
+    ~GLRenderingProvider();
+
+    auto as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture> override;
+
+    auto suitability_for_allocator(std::shared_ptr<GraphicBufferAllocator> const& target) -> probe::Result override;
+
+    auto suitability_for_display(std::shared_ptr<DisplayInterfaceProvider> const& target) -> probe::Result override;
+
+    auto make_framebuffer_provider(std::shared_ptr<DisplayInterfaceProvider> target) -> std::unique_ptr<FramebufferProvider> override;
+
+    auto surface_for_output(
+        std::shared_ptr<DisplayInterfaceProvider> provider,
+        geometry::Size size,
+        GLConfig const& gl_config) -> std::unique_ptr<gl::OutputSurface> override;
+private:
+    EGLDisplay dpy;
+    std::unique_ptr<renderer::gl::Context> const ctx;
 };
 
 }

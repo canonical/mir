@@ -55,6 +55,16 @@ public:
         eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     }
 
+    auto make_share_context() const -> std::unique_ptr<Context> override
+    {
+        return std::make_unique<DumbGLContext>(ctx);
+    }
+
+    explicit operator EGLContext() override
+    {
+        return ctx;
+    }
+
 private:
     EGLDisplay const dpy{reinterpret_cast<void*>(0xdeebbeed)};
     EGLContext const ctx;

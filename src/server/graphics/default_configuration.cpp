@@ -20,6 +20,7 @@
 #include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
+#include "multiplexing_display.h"
 #include "null_cursor.h"
 #include "software_cursor.h"
 #include "platform_probe.h"
@@ -133,6 +134,25 @@ auto select_platforms_from_list(std::string const& selection, std::vector<std::s
 
     return selected_modules;
 }
+
+void hybrid_check(std::vector<std::pair<mg::SupportedDevice, std::shared_ptr<mir::SharedLibrary>>>& platform_modules)
+{
+    static bool const experimental_hybrid_graphics = getenv("MIR_EXPERIMENTAL_HYBRID_GRAPHICS");
+
+    if (!experimental_hybrid_graphics)
+    {
+        std::stable_sort(std::begin(platform_modules), std::end(platform_modules),
+             [](auto const& l, auto const& r) { return l.first.support_level > r.first.support_level; });
+
+        if (!platform_modules.empty())
+        {
+            auto const erase_begin = std::remove_if(platform_modules.begin(), platform_modules.end(),
+                [platform=platform_modules.front().second](auto const& pm) { return pm.second != platform; });
+
+            platform_modules.erase(erase_begin, platform_modules.end());
+        }
+    }
+}
 }
 
 auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std::shared_ptr<graphics::DisplayPlatform>> const&
@@ -169,11 +189,12 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
                     bool found_supported_device{false};
                     for (auto& device : supported_devices)
                     {
-                        if (device.support_level >= mg::PlatformPriority::supported)
+                        // Add any devices that the platform claims are supported
+                        if (device.support_level >= mg::probe::supported)
                         {
                             found_supported_device = true;
+                            platform_modules.emplace_back(std::move(device), platform);
                         }
-                        platform_modules.emplace_back(std::move(device), platform);
                     }
 
                     if (!found_supported_device)
@@ -184,12 +205,21 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
                         auto const descriptor = describe_module();
 
                         mir::log_warning("Manually-specified display platform %s does not claim to support this system. Trying anyway...", descriptor->name);
+
+                        // We're here only if the platform doesn't claim to support *any* of the detected devices
+                        // Add *all* the found devices into our platform list, and hope.
+                        for (auto& device : supported_devices)
+                        {
+                            platform_modules.emplace_back(std::move(device), platform);
+                        }
                     }
                 }
             }
             else
             {
                 platform_modules = mir::graphics::display_modules_for_device(platforms, dynamic_cast<mir::options::ProgramOption&>(*the_options()), the_console_services());
+
+                hybrid_check(platform_modules);
             }
 
             for (auto const& [device, platform]: platform_modules)
@@ -201,13 +231,28 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
                 auto describe_module = platform->load_function<mg::DescribeModule>(
                     "describe_graphics_module",
                     MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
-
+                
                 auto description = describe_module();
-                mir::log_info("Selected display driver: %s (version %d.%d.%d)",
-                              description->name,
-                              description->major_version,
-                              description->minor_version,
-                              description->micro_version);
+                if (!device.device)
+                {
+                    mir::log_info(
+                        "Selected display driver: %s (version %d.%d.%d) for platform",
+                        description->name,
+                        description->major_version,
+                        description->minor_version,
+                        description->micro_version);
+                }
+                else
+                {
+                    mir::log_info(
+                        "Selected display driver: %s (version %d.%d.%d) for device (%s: %s)",
+                        description->name,
+                        description->major_version,
+                        description->minor_version,
+                        description->micro_version,
+                        device.device->driver(),
+                        device.device->devnode());
+                }
 
                 // TODO: Do we want to be able to continue on partial failure here?
                 display_platforms.push_back(
@@ -256,6 +301,14 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                 throw std::runtime_error(msg.c_str());
             }
 
+            std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> display_interfaces;
+            display_interfaces.reserve(the_display_platforms().size());
+
+            for (auto& display : the_display_platforms())
+            {
+                display_interfaces.push_back(mg::DisplayPlatform::interface_for(display));
+            }
+
             if (the_options()->is_set(options::platform_rendering_libs))
             {
                 auto const manually_selected_platforms =
@@ -265,6 +318,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                 {
                     auto supported_devices =
                         graphics::probe_rendering_module(
+                            display_interfaces,
                             *platform,
                             dynamic_cast<mir::options::ProgramOption&>(*the_options()),
                             the_console_services());
@@ -272,7 +326,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                     bool found_supported_device{false};
                     for (auto& device : supported_devices)
                     {
-                        if (device.support_level >= mg::PlatformPriority::supported)
+                        if (device.support_level >= mg::probe::supported)
                         {
                             found_supported_device = true;
                         }
@@ -292,7 +346,9 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
             }
             else
             {
-                platform_modules = mir::graphics::rendering_modules_for_device(platforms, dynamic_cast<mir::options::ProgramOption&>(*the_options()), the_console_services());
+                platform_modules = mir::graphics::rendering_modules_for_device(platforms, display_interfaces, dynamic_cast<mir::options::ProgramOption&>(*the_options()), the_console_services());
+
+                hybrid_check(platform_modules);
             }
 
             for (auto const& [device, platform]: platform_modules)
@@ -306,17 +362,32 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                     MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
 
                 auto description = describe_module();
-                mir::log_info("Selected rendering driver: %s (version %d.%d.%d)",
-                              description->name,
-                              description->major_version,
-                              description->minor_version,
-                              description->micro_version);
+                if (!device.device)
+                {
+                    mir::log_info(
+                        "Selected rendering driver: %s (version %d.%d.%d) for platform",
+                        description->name,
+                        description->major_version,
+                        description->minor_version,
+                        description->micro_version);
+                }
+                else
+                {
+                    mir::log_info(
+                        "Selected rendering driver: %s (version %d.%d.%d) for device (%s: %s)",
+                        description->name,
+                        description->major_version,
+                        description->minor_version,
+                        description->micro_version,
+                        device.device->driver(),
+                        device.device->devnode());
+                }
 
                 // TODO: Do we want to be able to continue on partial failure here?
                 rendering_platforms.push_back(
                     create_rendering_platform(
                         device,
-                        the_display_platforms(),
+                        display_interfaces,
                         *the_options(),
                         *the_emergency_cleanup()));
                 // Add this module to the list searched by the input stack later
@@ -352,7 +423,7 @@ mir::DefaultServerConfiguration::the_buffer_allocator()
         [&]() -> std::shared_ptr<graphics::GraphicBufferAllocator>
         {
             // TODO: More than one BufferAllocator
-            return the_rendering_platforms().front()->create_buffer_allocator(*the_display());
+            return the_rendering_platforms().back()->create_buffer_allocator(*the_display());
         });
 }
 
@@ -362,9 +433,18 @@ mir::DefaultServerConfiguration::the_display()
     return display(
         [this]() -> std::shared_ptr<mg::Display>
         {
-            return the_display_platforms().front()->create_display(
-                the_display_configuration_policy(),
-                the_gl_config());
+            std::vector<std::unique_ptr<mg::Display>> displays;
+            displays.reserve(the_display_platforms().size());
+            for (auto const& platform : the_display_platforms())
+            {
+                displays.push_back(
+                    platform->create_display(
+                        the_display_configuration_policy(),
+                        the_gl_config()));
+            }
+            return std::make_shared<mg::MultiplexingDisplay>(
+                std::move(displays),
+                *the_display_configuration_policy());
         });
 }
 

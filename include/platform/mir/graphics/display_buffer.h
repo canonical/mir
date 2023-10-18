@@ -29,17 +29,24 @@ namespace mir
 namespace graphics
 {
 
-class Buffer;
+class Framebuffer;
+class DisplayInterfaceProvider;
 
-class NativeDisplayBuffer
+struct DisplayElement
 {
-protected:
-    NativeDisplayBuffer() = default;
-    virtual ~NativeDisplayBuffer() = default;
-    NativeDisplayBuffer(NativeDisplayBuffer const&) = delete;
-    NativeDisplayBuffer operator=(NativeDisplayBuffer const&) = delete;
+    /// Position and size of this element on-screen
+    geometry::Rectangle screen_positon;
+    /** Position and size of region of the buffer to sample from
+     *
+     * This will typically be (0,0) ->(buffer width, buffer height)
+     * to use the whole buffer (with screen_position.size = (buffer width, buffer height)).
+     *
+     * Scaling can be specified by having screen_position.size != source_position.size,
+     * clipping can be specified by having source_position.size != buffer.size
+     */
+    geometry::RectangleF source_position;
+    std::shared_ptr<Framebuffer> buffer;
 };
-
 /**
  * Interface to an output framebuffer.
  */
@@ -64,7 +71,20 @@ public:
      *      caller should then render the list another way using a graphics
      *      library such as OpenGL.
     **/
-    virtual bool overlay(RenderableList const& renderlist) = 0;
+    virtual bool overlay(std::vector<DisplayElement> const& renderlist) = 0;
+
+    /**
+     * Set the content for the next submission of this display
+     *
+     * This is basically a specialisation of overlay(), above, with extra constraints
+     * and guarantees. Namely:
+     * * The Framebuffer must be exactly view_area().size big, and
+     * * The DisplayPlatform guarantees that this call will succeed with a framebuffer
+     *   allocated for this DisplayBuffer
+     *
+     * \param content
+     */
+    virtual void set_next_image(std::unique_ptr<Framebuffer> content) = 0;
 
     /**
      * Returns a transformation that the renderer must apply to all rendering.
@@ -75,14 +95,7 @@ public:
      */
     virtual glm::mat2 transformation() const = 0;
 
-    /** Returns a pointer to the native display buffer object backing this
-     *  display buffer.
-     *
-     *  The pointer to the native display buffer remains valid as long as the
-     *  display buffer object is valid.
-     */
-    virtual NativeDisplayBuffer* native_display_buffer() = 0;
-
+    virtual auto display_provider() const -> std::shared_ptr<DisplayInterfaceProvider> = 0;
 protected:
     DisplayBuffer() = default;
     DisplayBuffer(DisplayBuffer const& c) = delete;

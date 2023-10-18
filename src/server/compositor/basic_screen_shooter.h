@@ -18,6 +18,9 @@
 #define MIR_COMPOSITOR_BASIC_SCREEN_SHOOTER_H_
 
 #include "mir/compositor/screen_shooter.h"
+#include "mir/graphics/platform.h"
+#include "mir/renderer/renderer_factory.h"
+#include "mir/renderer/sw/pixel_source.h"
 #include "mir/time/clock.h"
 
 #include <mutex>
@@ -28,10 +31,7 @@ class Executor;
 namespace renderer
 {
 class Renderer;
-namespace gl
-{
-class BufferRenderTarget;
-}
+class RendererFactory;
 }
 namespace compositor
 {
@@ -44,8 +44,8 @@ public:
         std::shared_ptr<Scene> const& scene,
         std::shared_ptr<time::Clock> const& clock,
         Executor& executor,
-        std::unique_ptr<renderer::gl::BufferRenderTarget>&& render_target,
-        std::unique_ptr<renderer::Renderer>&& renderer);
+        std::span<std::shared_ptr<graphics::GLRenderingProvider>> const& providers,
+        std::shared_ptr<renderer::RendererFactory> render_factory);
 
     void capture(
         std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
@@ -55,24 +55,41 @@ public:
 private:
     struct Self
     {
+        class OneShotBufferDisplayProvider;
+
         Self(
             std::shared_ptr<Scene> const& scene,
             std::shared_ptr<time::Clock> const& clock,
-            std::unique_ptr<renderer::gl::BufferRenderTarget>&& render_target,
-            std::unique_ptr<renderer::Renderer>&& renderer);
+            std::shared_ptr<graphics::GLRenderingProvider> provider,
+            std::shared_ptr<renderer::RendererFactory> render_factory);
 
         auto render(
             std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
             geometry::Rectangle const& area) -> time::Timestamp;
 
+        auto renderer_for_buffer(std::shared_ptr<renderer::software::WriteMappableBuffer> buffer)
+            -> renderer::Renderer&;
+
         std::mutex mutex;
         std::shared_ptr<Scene> const scene;
-        std::unique_ptr<renderer::gl::BufferRenderTarget> const render_target;
-        std::unique_ptr<renderer::Renderer> const renderer;
         std::shared_ptr<time::Clock> const clock;
+        std::shared_ptr<graphics::GLRenderingProvider> const render_provider;
+        std::shared_ptr<renderer::RendererFactory> const renderer_factory;
+
+        /* The Renderer instantiation is tied to a particular output size, and
+         * and requires enough setup to make it worth keeping around as a consumer
+         * is likely to be taking screenshots of consistent size
+         */
+        std::unique_ptr<renderer::Renderer> current_renderer;
+        geometry::Size last_rendered_size;
+
+        std::shared_ptr<OneShotBufferDisplayProvider> const output;
     };
     std::shared_ptr<Self> const self;
     Executor& executor;
+
+    static auto select_provider(std::span<std::shared_ptr<graphics::GLRenderingProvider>> const& providers)
+        -> std::shared_ptr<graphics::GLRenderingProvider>;
 };
 }
 }

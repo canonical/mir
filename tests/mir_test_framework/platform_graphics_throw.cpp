@@ -53,12 +53,26 @@ public:
         mtd::NullEmergencyCleanup null_cleanup;
         mg::SupportedDevice device = {
             nullptr,
-            mg::PlatformPriority::unsupported,
+            mg::probe::unsupported,
             nullptr
         };
         stub_render_platform = create_stub_render_platform(device, {}, mo::ProgramOption{}, null_cleanup);
         stub_display_platform = create_stub_display_platform(device, nullptr, nullptr, nullptr, nullptr);
     }
+
+protected:
+    auto maybe_create_provider(
+        mir::graphics::RenderingProvider::Tag const&) -> std::shared_ptr<mg::RenderingProvider> override
+    {
+        return nullptr;
+    }
+
+    auto interface_for() -> std::shared_ptr<mg::DisplayInterfaceProvider> override
+    {
+        return mg::DisplayPlatform::interface_for(stub_display_platform);
+    }
+
+public:
 
     mir::UniqueModulePtr<mir::graphics::GraphicBufferAllocator>
     create_buffer_allocator(mg::Display const& output) override
@@ -108,7 +122,7 @@ private:
 
     std::unordered_map<ExceptionLocation, bool, std::hash<uint32_t>> const should_throw;
     mir::UniqueModulePtr<mg::RenderingPlatform> stub_render_platform;
-    mir::UniqueModulePtr<mg::DisplayPlatform> stub_display_platform;
+    std::shared_ptr<mg::DisplayPlatform> stub_display_platform;
 };
 
 }
@@ -123,23 +137,24 @@ auto probe_display_platform(
     result.emplace_back(
         mg::SupportedDevice {
             nullptr,
-            mg::PlatformPriority::unsupported,
+            mg::probe::unsupported,
             nullptr
          });
     return result;
 }
 
 auto probe_rendering_platform(
-    std::shared_ptr<mir::ConsoleServices> const&,
+    std::span<std::shared_ptr<mg::DisplayInterfaceProvider>> const&,
+    mir::ConsoleServices&,
     std::shared_ptr<mir::udev::Context> const&,
     mir::options::ProgramOption const&) -> std::vector<mir::graphics::SupportedDevice>
 {
-    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
+    mir::assert_entry_point_signature<mg::RenderProbe>(&probe_rendering_platform);
     std::vector<mg::SupportedDevice> result;
     result.emplace_back(
         mg::SupportedDevice {
             nullptr,
-            mg::PlatformPriority::unsupported,
+            mg::probe::unsupported,
             nullptr
          });
     return result;
@@ -166,7 +181,7 @@ void add_graphics_platform_options(boost::program_options::options_description&)
 
 mir::UniqueModulePtr<mg::RenderingPlatform> create_rendering_platform(
     mg::SupportedDevice const&,
-    std::vector<std::shared_ptr<mg::DisplayPlatform>> const&,
+    std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const&,
     mo::Option const&,
     mir::EmergencyCleanupRegistry&)
 {

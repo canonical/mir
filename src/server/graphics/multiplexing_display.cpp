@@ -33,6 +33,7 @@ mg::MultiplexingDisplay::MultiplexingDisplay(
 {
     auto conf = configuration();
     initial_configuration_policy.apply_to(*conf);
+    initial_configuration_policy.confirm(*conf);
     configure(*conf);
 }
 
@@ -315,10 +316,4 @@ void mg::MultiplexingDisplay::resume()
 auto mg::MultiplexingDisplay::create_hardware_cursor() -> std::shared_ptr<Cursor>
 {
     return {};
-}
-
-auto mg::MultiplexingDisplay::create_gl_context() const -> std::unique_ptr<renderer::gl::Context>
-{
-    // This will disappear in the New Platform API™; just return the first underlying Display's context for now.
-    return displays[0]->create_gl_context();
 }

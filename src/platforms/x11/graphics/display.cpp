@@ -46,46 +46,14 @@ auto get_pixel_size_mm(mx::XCBConnection* conn) -> geom::SizeF
         float(screen->width_in_millimeters) / screen->width_in_pixels,
         float(screen->height_in_millimeters) / screen->height_in_pixels};
 }
-
-class XGLContext : public mir::renderer::gl::Context
-{
-public:
-    XGLContext(::Display* const x_dpy,
-               std::shared_ptr<mg::GLConfig> const& gl_config,
-               EGLContext const shared_ctx)
-        : egl{*gl_config, x_dpy, shared_ctx}
-    {
-    }
-
-    ~XGLContext() = default;
-
-    void make_current() const override
-    {
-        egl.make_current();
-    }
-
-    void release_current() const override
-    {
-        egl.release_current();
-    }
-
-private:
-    mgx::helpers::EGLHelper const egl;
-};
 }
 
 mgx::X11Window::X11Window(mx::X11Resources* x11_resources,
                           std::string title,
-                          EGLDisplay egl_dpy,
-                          geom::Size const size,
-                          EGLConfig const egl_cfg)
+                          geom::Size const size)
     : x11_resources{x11_resources}
 {
     auto const conn = x11_resources->conn.get();
-
-    EGLint vid;
-    if (!eglGetConfigAttrib(egl_dpy, egl_cfg, EGL_NATIVE_VISUAL_ID, &vid))
-        BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get config attrib"));
 
     uint32_t const value_mask = XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK;
     uint32_t value_list[32];
@@ -134,15 +102,15 @@ mgx::X11Window::operator xcb_window_t() const
     return win;
 }
 
-mgx::Display::Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources,
-                      std::string const title,
-                      std::vector<X11OutputConfig> const& requested_sizes,
-                      std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
-                      std::shared_ptr<GLConfig> const& gl_config,
-                      std::shared_ptr<DisplayReport> const& report)
-    : shared_egl{*gl_config, x11_resources->xlib_dpy},
+mgx::Display::Display(
+    std::shared_ptr<Platform> parent,
+    std::shared_ptr<mir::X::X11Resources> const& x11_resources,
+    std::string const title,
+    std::vector<X11OutputConfig> const& requested_sizes,
+    std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
+    std::shared_ptr<DisplayReport> const& report)
+    : parent{std::move(parent)},
       x11_resources{x11_resources},
-      gl_config{gl_config},
       pixel_size_mm{get_pixel_size_mm(x11_resources->conn.get())},
       report{report}
 {
@@ -154,9 +122,7 @@ mgx::Display::Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources
         auto window = std::make_unique<X11Window>(
             x11_resources.get(),
             title,
-            shared_egl.display(),
-            actual_size,
-            shared_egl.config());
+            actual_size);
         auto pf = x11_resources->conn->default_pixel_format();
         auto configuration = DisplayConfiguration::build_output(
             pf,
@@ -168,14 +134,9 @@ mgx::Display::Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources
             requested_size.scale,
             mir_orientation_normal);
         auto display_buffer = std::make_unique<mgx::DisplayBuffer>(
-            x11_resources->xlib_dpy,
-            configuration->id,
+            this->parent,
             *window,
-            configuration->extents(),
-            actual_size,
-            shared_egl.context(),
-            report,
-            *gl_config);
+            configuration->extents());
         top_left.x += as_delta(configuration->extents().size.width);
         outputs.push_back(std::make_unique<OutputInfo>(
             this,
@@ -183,8 +144,6 @@ mgx::Display::Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources
              std::move(display_buffer),
              std::move(configuration)));
     }
-
-    shared_egl.make_current();
 
     auto const display_config = configuration();
     initial_conf_policy->apply_to(*display_config);
@@ -283,11 +242,6 @@ auto mgx::Display::create_hardware_cursor() -> std::shared_ptr<Cursor>
     return nullptr;
 }
 
-std::unique_ptr<mir::renderer::gl::Context> mgx::Display::create_gl_context() const
-{
-    return std::make_unique<XGLContext>(x11_resources->xlib_dpy, gl_config, shared_egl.context());
-}
-
 bool mgx::Display::apply_if_configuration_preserves_display_buffers(
     mg::DisplayConfiguration const& /*conf*/)
 {
@@ -320,7 +274,6 @@ void mgx::Display::OutputInfo::set_size(geometry::Size const& size)
         return;
     }
     config->modes[0].size = size;
-    display_buffer->set_size(size);
     display_buffer->set_view_area(config->extents());
     auto const handlers = owner->config_change_handlers;
 

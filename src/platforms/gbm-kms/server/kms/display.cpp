@@ -17,11 +17,14 @@
 #include "display.h"
 #include "cursor.h"
 #include "kms/egl_helper.h"
+#include "mir/graphics/platform.h"
 #include "platform.h"
 #include "display_buffer.h"
 #include "kms_display_configuration.h"
 #include "kms_output.h"
 #include "kms_page_flipper.h"
+#include "kms_framebuffer.h"
+#include "cpu_addressable_fb.h"
 #include "mir/console_services.h"
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/event_handler_register.h"
@@ -32,15 +35,24 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/graphics/drm_formats.h"
+#include "mir/graphics/egl_error.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/get_error_info.hpp>
-#include <boost/exception/errinfo_errno.hpp>
 
+#include <boost/exception/errinfo_errno.hpp>
+#include <gbm.h>
+#include <system_error>
+#include <xf86drm.h>
 #define MIR_LOG_COMPONENT "gbm-kms"
 #include "mir/log.h"
 #include "kms-utils/drm_mode_resources.h"
 #include "kms-utils/kms_connector.h"
+
+#include <drm_fourcc.h>
+#include <drm.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
 
 #include <stdexcept>
 #include <algorithm>
@@ -52,43 +64,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-
-class GBMGLContext : public mir::renderer::gl::Context
-{
-public:
-    GBMGLContext(mgg::helpers::GBMHelper const& gbm,
-                 mg::GLConfig const& gl_config,
-                 EGLContext shared_context)
-        : egl{gl_config}
-    {
-        egl.setup(gbm, shared_context);
-    }
-
-    void make_current() const override
-    {
-        egl.make_current();
-    }
-
-    void release_current() const override
-    {
-        egl.release_current();
-    }
-
-private:
-    mgg::helpers::EGLHelper egl;
-};
-
-std::vector<int> drm_fds_from_drm_helpers(
-    std::vector<std::shared_ptr<mgg::helpers::DRMHelper>> const& helpers)
-{
-    std::vector<int> fds;
-    for (auto const& helper: helpers)
-    {
-        fds.push_back(helper->fd);
-    }
-    return fds;
-}
-
 double calculate_vrefresh_hz(drmModeModeInfo const& mode)
 {
     if (mode.htotal == 0 || mode.vtotal == 0)
@@ -117,97 +92,79 @@ char const* describe_connection_status(drmModeConnector const& connection)
     }
 }
 
-void log_drm_details(std::vector<std::shared_ptr<mgg::helpers::DRMHelper>> const& drm)
+void log_drm_details(mir::Fd const& drm_fd)
 {
     mir::log_info("DRM device details:");
-    for (auto const& device : drm)
+    auto version = std::unique_ptr<drmVersion, decltype(&drmFreeVersion)>{
+        drmGetVersion(drm_fd),
+        &drmFreeVersion};
+
+    auto device_name = std::unique_ptr<char, decltype(&free)>{
+        drmGetDeviceNameFromFd(drm_fd),
+        &free
+    };
+
+    mir::log_info(
+        "%s: using driver %s [%s] (version: %i.%i.%i driver date: %s)",
+        device_name.get(),
+        version->name,
+        version->desc,
+        version->version_major,
+        version->version_minor,
+        version->version_patchlevel,
+        version->date);
+
+    try
     {
-        auto version = std::unique_ptr<drmVersion, decltype(&drmFreeVersion)>{
-            drmGetVersion(device->fd),
-            &drmFreeVersion};
-
-        auto device_name = std::unique_ptr<char, decltype(&free)>{
-            drmGetDeviceNameFromFd(device->fd),
-            &free
-        };
-
-        mir::log_info(
-            "%s: using driver %s [%s] (version: %i.%i.%i driver date: %s)",
-            device_name.get(),
-            version->name,
-            version->desc,
-            version->version_major,
-            version->version_minor,
-            version->version_patchlevel,
-            version->date);
-
-        try
-        {
-            mg::kms::DRMModeResources resources{device->fd};
-            for (auto const& connector : resources.connectors())
-            {
-                mir::log_info(
-                    "\tOutput: %s (%s)",
-                    mg::kms::connector_name(connector).c_str(),
-                    describe_connection_status(*connector));
-                for (auto i = 0; i < connector->count_modes; ++i)
-                {
-                    mir::log_info(
-                        "\t\tMode: %i×%i@%.2f",
-                        connector->modes[i].hdisplay,
-                        connector->modes[i].vdisplay,
-                        calculate_vrefresh_hz(connector->modes[i]));
-                }
-            }
-        }
-        catch (std::exception const& error)
+        mg::kms::DRMModeResources resources{drm_fd};
+        for (auto const& connector : resources.connectors())
         {
             mir::log_info(
-                "\tKMS not supported (%s)",
-                error.what());
+                "\tOutput: %s (%s)",
+                mg::kms::connector_name(connector).c_str(),
+                describe_connection_status(*connector));
+            for (auto i = 0; i < connector->count_modes; ++i)
+            {
+                mir::log_info(
+                    "\t\tMode: %i×%i@%.2f",
+                    connector->modes[i].hdisplay,
+                    connector->modes[i].vdisplay,
+                    calculate_vrefresh_hz(connector->modes[i]));
+            }
         }
+    }
+    catch (std::exception const& error)
+    {
+        mir::log_info(
+            "\tKMS not supported (%s)",
+            error.what());
     }
 }
 
 }
 
-mgg::Display::Display(std::vector<std::shared_ptr<helpers::DRMHelper>> const& drm,
-                      std::shared_ptr<helpers::GBMHelper> const& gbm,
-                      mgg::BypassOption bypass_option,
-                      std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
-                      std::shared_ptr<GLConfig> const& gl_config,
-                      std::shared_ptr<DisplayReport> const& listener)
-    : drm{drm},
-      gbm(gbm),
+mgg::Display::Display(
+    std::shared_ptr<DisplayInterfaceProvider> parent,
+    mir::Fd drm_fd,
+    mgg::BypassOption bypass_option,
+    std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
+    std::shared_ptr<DisplayReport> const& listener)
+    : owner{std::move(parent)},
+      drm_fd{std::move(drm_fd)},
       listener(listener),
       monitor(mir::udev::Context()),
-      shared_egl{*gl_config},
       output_container{
           std::make_shared<RealKMSOutputContainer>(
-              drm_fds_from_drm_helpers(drm),
-              [
-                  listener,
-                  flippers = std::unordered_map<int, std::shared_ptr<KMSPageFlipper>>{}
-              ](int drm_fd) mutable
-              {
-                  auto& flipper = flippers[drm_fd];
-                  if (!flipper)
-                  {
-                      flipper = std::make_shared<KMSPageFlipper>(drm_fd, listener);
-                  }
-                  return flipper;
-              })},
+            this->drm_fd,
+            std::make_shared<KMSPageFlipper>(this->drm_fd, listener))},
       current_display_configuration{output_container},
       dirty_configuration{false},
-      bypass_option(bypass_option),
-      gl_config{gl_config}
+      bypass_option(bypass_option)
 {
-    shared_egl.setup(*gbm);
-
     monitor.filter_by_subsystem_and_type("drm", "drm_minor");
     monitor.enable();
 
-    log_drm_details(drm);
+    log_drm_details(this->drm_fd);
 
     initial_conf_policy->apply_to(current_display_configuration);
 
@@ -368,11 +325,6 @@ void mgg::Display::clear_connected_unused_outputs()
     });
 }
 
-std::unique_ptr<mir::renderer::gl::Context> mgg::Display::create_gl_context() const
-{
-    return std::make_unique<GBMGLContext>(*gbm, *gl_config, shared_egl.context());
-}
-
 bool mgg::Display::apply_if_configuration_preserves_display_buffers(
     mg::DisplayConfiguration const& conf)
 {
@@ -390,101 +342,6 @@ bool mgg::Display::apply_if_configuration_preserves_display_buffers(
 
     if (auto c = cursor.lock()) c->resume();
     return result;
-}
-
-namespace
-{
-/*
- * Add output to the grouping, maintaining the invariant that each vector of outputs
- * is a single GPU memory domain.
- */
-void add_to_drm_device_group(
-    std::vector<std::vector<std::shared_ptr<mgg::KMSOutput>>>& grouping,
-    std::shared_ptr<mgg::KMSOutput>&& output)
-{
-    for (auto &group : grouping)
-    {
-        /*
-         * We could be smarter about this, but being on the same DRM device is guaranteed
-         * to be in the same GPU memory domain :).
-         */
-        if (group.front()->drm_fd() == output->drm_fd())
-        {
-            group.push_back(std::move(output));
-            break;
-        }
-    }
-    if (output)
-    {
-        grouping.push_back(std::vector<std::shared_ptr<mgg::KMSOutput>>{std::move(output)});
-    }
-}
-
-auto get_equivalent_other_alphaness_format(mg::DRMFormat const format) -> std::optional<mg::DRMFormat>
-{
-    if (format.has_alpha())
-    {
-        return format.opaque_equivalent();
-    }
-    else
-    {
-        return format.alpha_equivalent();
-    }
-}
-
-auto make_surface_with_egl_context(
-    geom::Size size,
-    mg::DRMFormat format,
-    mgg::helpers::GBMHelper const& gbm,
-    mg::GLConfig const& config,
-    EGLContext shared_context,    
-    bool cross_gpu)
-     -> std::tuple<mgg::GBMSurfaceUPtr, mgg::helpers::EGLHelper>
-{
-    auto surface = gbm.create_scanout_surface(size.width.as_uint32_t(), size.height.as_uint32_t(), format, cross_gpu);
-    auto raw_surface = surface.get();
-
-    try
-    {
-        return std::make_tuple(
-            std::move(surface),
-            mgg::helpers::EGLHelper{
-                config,
-                gbm,
-                raw_surface,
-                format,
-                shared_context
-        });
-    }
-    catch (mgg::helpers::EGLHelper::NoMatchingEGLConfig const&)
-    {
-        // If the format has an opaque/alpha equivalent, try that
-        auto equivalent_format = get_equivalent_other_alphaness_format(format);
-        if (!equivalent_format)
-        {
-            // No equivalent format to try, so bail
-            throw;
-        }
-
-        surface = gbm.create_scanout_surface(
-            size.width.as_uint32_t(),
-            size.height.as_uint32_t(),
-            *equivalent_format,
-            cross_gpu);
-        raw_surface = surface.get();
-        return std::make_tuple(
-            std::move(surface),
-
-            mgg::helpers::EGLHelper{
-                config,
-                gbm,
-                raw_surface,
-                *equivalent_format,
-                shared_context
-        });
-    }
-}
-
 }
 
 void mgg::Display::configure_locked(
@@ -529,8 +386,7 @@ void mgg::Display::configure_locked(
         [&](OverlappingOutputGroup const& group)
         {
             auto bounding_rect = group.bounding_rectangle();
-            // Each vector<KMSOutput> is a single GPU memory domain
-            std::vector<std::vector<std::shared_ptr<KMSOutput>>> kms_output_groups;
+            std::vector<std::shared_ptr<KMSOutput>> kms_outputs;
             glm::mat2 transformation;
             geom::Size current_mode_resolution;
 
@@ -546,7 +402,7 @@ void mgg::Display::configure_locked(
                     {
                         kms_output->set_power_mode(conf_output.power_mode);
                         kms_output->set_gamma(conf_output.gamma);
-                        add_to_drm_device_group(kms_output_groups, std::move(kms_output));
+                        kms_outputs.push_back(std::move(kms_output));
                     }
 
                     /*
@@ -565,43 +421,16 @@ void mgg::Display::configure_locked(
             }
             else
             {
-                uint32_t const width  = current_mode_resolution.width.as_uint32_t();
-                uint32_t const height = current_mode_resolution.height.as_uint32_t();
+                auto db = std::make_unique<DisplayBuffer>(
+                    owner,
+                    drm_fd,
+                    bypass_option,
+                    listener,
+                    kms_outputs,
+                    bounding_rect,
+                    transformation);
 
-                for (auto const& group : kms_output_groups)
-                {
-                    // TODO: Pull this out of the configuration
-                    // TODO: Actually query available formats!
-                    mg::DRMFormat format{GBM_FORMAT_XRGB8888};
-                    /*
-                     * In a hybrid setup a scanout surface needs to be allocated differently if it
-                     * needs to be able to be shared across GPUs. This likely reduces performance.
-                     *
-                     * As a first cut, assume every scanout buffer in a hybrid setup might need
-                     * to be shared.
-                     */
-                    auto [surface, egl] = make_surface_with_egl_context(
-                        current_mode_resolution,
-                        format,
-                        *gbm,
-                        *gl_config,
-                        shared_egl.context(),
-                        drm.size() != 1);
-                    auto db = std::make_unique<DisplayBuffer>(
-                        bypass_option,
-                        listener,
-                        group,
-                        GBMOutputSurface{
-                            group.front()->drm_fd(),
-                            std::move(surface),
-                            width, height,
-                            std::move(egl)
-                        },
-                        bounding_rect,
-                        transformation);
-
-                    display_buffers_new.push_back(std::move(db));
-                }
+                display_buffers_new.push_back(std::move(db));
             }
         });
 
@@ -614,4 +443,314 @@ void mgg::Display::configure_locked(
     if (!comp)
         /* Clear connected but unused outputs */
         clear_connected_unused_outputs();
+}
+
+namespace
+{
+auto drm_get_cap_checked(mir::Fd const& drm_fd, uint64_t cap) -> uint64_t
+{
+    uint64_t value;
+    if (drmGetCap(drm_fd, cap, &value))
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                errno,
+                std::system_category(),
+                "Failed to query DRM capabilities"}));
+    }
+    return value;
+}
+}
+
+mgg::CPUAddressableDisplayProvider::CPUAddressableDisplayProvider(mir::Fd drm_fd)
+    : drm_fd{std::move(drm_fd)},
+      supports_modifiers{drm_get_cap_checked(this->drm_fd, DRM_CAP_ADDFB2_MODIFIERS) == 1}
+{
+}
+
+auto mgg::CPUAddressableDisplayProvider::supported_formats() const
+    -> std::vector<mg::DRMFormat>
+{
+    // TODO: Pull out of DRM info
+    return {mg::DRMFormat{DRM_FORMAT_XRGB8888}, mg::DRMFormat{DRM_FORMAT_ARGB8888}};
+}
+
+auto mgg::CPUAddressableDisplayProvider::alloc_fb(
+    geom::Size size, DRMFormat format) -> std::unique_ptr<MappableFB>
+{
+    return std::make_unique<mgg::CPUAddressableFB>(drm_fd, supports_modifiers, format, size);
+}
+
+namespace
+{
+auto gbm_create_device_checked(mir::Fd fd) -> std::shared_ptr<struct gbm_device>
+{
+    errno = 0;
+    auto device = gbm_create_device(fd);
+    if (!device)
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                errno,
+                std::system_category(),
+                "Failed to create GBM device"}));
+    }
+    return {
+        device,
+        [fd](struct gbm_device* device)    // Capture shared ownership of fd to keep gdm_device functional
+        {
+            if (device)
+            {
+                gbm_device_destroy(device);
+            }
+        }
+    };    
+}
+}
+
+mgg::GBMDisplayProvider::GBMDisplayProvider(
+    mir::Fd drm_fd)
+    : fd{std::move(drm_fd)},
+      gbm{gbm_create_device_checked(fd)}
+{
+}
+
+auto mgg::GBMDisplayProvider::gbm_device() const -> std::shared_ptr<struct gbm_device>
+{
+    return gbm;
+}
+
+auto mgg::GBMDisplayProvider::is_same_device(mir::udev::Device const& render_device) const -> bool
+{
+#ifndef MIR_DRM_HAS_GET_DEVICE_FROM_DEVID
+    class CStrFree
+    {
+    public:
+        void operator()(char* str)
+        {
+            if (str)
+            {
+                free(str);
+            }
+        }
+    };
+    
+    std::unique_ptr<char[], CStrFree> primary_node{drmGetPrimaryDeviceNameFromFd(fd)};
+    std::unique_ptr<char[], CStrFree> render_node{drmGetRenderDeviceNameFromFd(fd)};
+    
+    mir::log_debug("Checking whether %s is the same device as (%s, %s)...", render_device.devnode(), primary_node.get(), render_node.get());
+    
+    if (primary_node)
+    {
+        if (strcmp(primary_node.get(), render_device.devnode()) == 0)
+        {
+            mir::log_debug("\t...yup.");
+            return true;
+        }
+    }
+    if (render_node)
+    {
+        if (strcmp(render_node.get(), render_device.devnode()) == 0)
+        {
+            mir::log_debug("\t...yup.");
+            return true;
+        }
+    }
+    
+    mir::log_debug("\t...nope.");
+    
+    return false;
+#else
+    drmDevicePtr us{nullptr}, them{nullptr};
+    
+    drmGetDeviceFromDevId(render_device.devno(), 0, &them);
+    drmGetDevice2(fd, 0, &us);
+
+    bool result = drmDevicesEqual(us, them);
+
+    drmDeviceFree(us);
+    drmDeviceFree(them);
+    
+    return result;
+#endif
+}
+
+auto mgg::GBMDisplayProvider::supported_formats() const -> std::vector<DRMFormat>
+{
+    // TODO: Pull out of KMS plane info
+    return { DRMFormat{DRM_FORMAT_XRGB8888}, DRMFormat{DRM_FORMAT_ARGB8888}};
+}
+
+auto mgg::GBMDisplayProvider::modifiers_for_format(DRMFormat /*format*/) const -> std::vector<uint64_t>
+{
+    // TODO: Pull out off KMS plane info
+    return {};
+}
+
+namespace
+{
+using LockedFrontBuffer = std::unique_ptr<gbm_bo, std::function<void(gbm_bo*)>>;
+
+class GBMBoFramebuffer : public mgg::FBHandle
+{
+public:
+    static auto framebuffer_for_frontbuffer(mir::Fd const& drm_fd, LockedFrontBuffer bo) -> std::unique_ptr<GBMBoFramebuffer>
+    {
+        if (auto cached_fb = static_cast<std::shared_ptr<uint32_t const>*>(gbm_bo_get_user_data(bo.get())))
+        {
+            return std::unique_ptr<GBMBoFramebuffer>{new GBMBoFramebuffer{std::move(bo), *cached_fb}};
+        }
+        
+        auto fb_id = new std::shared_ptr<uint32_t>{
+            new uint32_t{0},
+            [drm_fd](uint32_t* fb_id)
+            {
+                if (*fb_id)
+                {
+                    drmModeRmFB(drm_fd, *fb_id);
+                }
+                delete fb_id;
+            }};
+        uint32_t handles[4] = {gbm_bo_get_handle(bo.get()).u32, 0, 0, 0};
+        uint32_t strides[4] = {gbm_bo_get_stride(bo.get()), 0, 0, 0};
+        uint32_t offsets[4] = {gbm_bo_get_offset(bo.get(), 0), 0, 0, 0};
+
+        auto format = gbm_bo_get_format(bo.get());
+
+        auto const width = gbm_bo_get_width(bo.get());
+        auto const height = gbm_bo_get_height(bo.get());
+
+        /* Create a KMS FB object with the gbm_bo attached to it. */
+        auto ret = drmModeAddFB2(drm_fd, width, height, format,
+                                 handles, strides, offsets, fb_id->get(), 0);
+        if (ret)
+            return nullptr;
+
+        gbm_bo_set_user_data(bo.get(), fb_id, [](gbm_bo*, void* fb_ptr) { delete static_cast<std::shared_ptr<uint32_t const>*>(fb_ptr); });
+
+        return std::unique_ptr<GBMBoFramebuffer>{new GBMBoFramebuffer{std::move(bo), *fb_id}};
+    }
+    
+    operator uint32_t() const override
+    {
+        return *fb_id;
+    }
+
+    auto size() const -> geom::Size override
+    {
+        return 
+            geom::Size{
+                gbm_bo_get_width(bo.get()),
+                gbm_bo_get_height(bo.get())};
+    }
+private:
+    GBMBoFramebuffer(LockedFrontBuffer bo, std::shared_ptr<uint32_t const> fb)
+        : bo{std::move(bo)},
+          fb_id{std::move(fb)}
+    {
+    }
+    
+    LockedFrontBuffer const bo;
+    std::shared_ptr<uint32_t const> const fb_id;
+};
+
+namespace
+{
+auto create_gbm_surface(gbm_device* gbm, geom::Size size, mg::DRMFormat format, std::span<uint64_t> modifiers)
+    -> std::shared_ptr<gbm_surface>
+{
+    auto const surface =
+        [&]()
+        {
+            if (modifiers.empty())
+            {
+                // If we have no no modifiers don't use the with-modifiers creation path.
+                auto foo = GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT;
+                return gbm_surface_create(
+                    gbm,
+                    size.width.as_uint32_t(), size.height.as_uint32_t(),
+                    format,
+                    foo);
+            }
+            else
+            {
+                return gbm_surface_create_with_modifiers2(
+                    gbm,
+                    size.width.as_uint32_t(), size.height.as_uint32_t(),
+                    format,
+                    modifiers.data(),
+                    modifiers.size(),
+                    GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT);
+            }
+        }();
+
+    if (!surface)
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                errno,
+                std::system_category(),
+                "Failed to create GBM surface"}));
+
+    }
+    return std::shared_ptr<gbm_surface>{
+        surface,
+        [](auto surface) { gbm_surface_destroy(surface); }};
+}
+}
+
+class GBMSurfaceImpl : public mgg::GBMDisplayProvider::GBMSurface
+{
+public:
+    GBMSurfaceImpl(mir::Fd drm_fd, gbm_device* gbm, geom::Size size, mg::DRMFormat const format, std::span<uint64_t> modifiers)
+        : drm_fd{std::move(drm_fd)},
+          surface{create_gbm_surface(gbm, size, format, modifiers)}
+    {
+    }
+
+    GBMSurfaceImpl(GBMSurfaceImpl const&) = delete;
+    auto operator=(GBMSurfaceImpl const&) -> GBMSurfaceImpl const& = delete;
+    
+    operator gbm_surface*() const override
+    {
+        return surface.get();
+    }
+    
+    auto claim_framebuffer() -> std::unique_ptr<mg::Framebuffer> override
+    {
+        if (!gbm_surface_has_free_buffers(surface.get()))
+        {
+            BOOST_THROW_EXCEPTION((
+                std::system_error{
+                    EBUSY,
+                    std::system_category(),
+                    "Too many buffers consumed from GBM surface"}));
+        }
+        
+        LockedFrontBuffer bo{
+            gbm_surface_lock_front_buffer(surface.get()),
+            [shared_surface = surface](gbm_bo* bo) { gbm_surface_release_buffer(shared_surface.get(), bo); }};
+        
+        if (!bo)
+        {
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to acquire GBM front buffer"}));
+        }
+
+        auto fb = GBMBoFramebuffer::framebuffer_for_frontbuffer(drm_fd, std::move(bo));
+        if (!fb)
+        {
+            BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to make DRM FB"}));
+        }
+        return fb;
+    }
+private:
+    mir::Fd const drm_fd;
+    std::shared_ptr<gbm_surface> const surface;
+};
+}
+
+auto mgg::GBMDisplayProvider::make_surface(geom::Size size, DRMFormat format, std::span<uint64_t> modifiers)
+    -> std::unique_ptr<GBMSurface>
+{
+    return std::make_unique<GBMSurfaceImpl>(fd, gbm.get(), std::move(size), format, modifiers);
 }

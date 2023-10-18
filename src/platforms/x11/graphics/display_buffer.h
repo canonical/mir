@@ -20,6 +20,7 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display.h"
+#include "mir/graphics/platform.h"
 #include "mir/renderer/gl/render_target.h"
 #include "egl_helper.h"
 
@@ -31,38 +32,32 @@ namespace mir
 namespace graphics
 {
 
-class AtomicFrame;
 class GLConfig;
 class DisplayReport;
 
 namespace X
 {
+class Platform;
 
 class DisplayBuffer : public graphics::DisplayBuffer,
-                      public graphics::DisplaySyncGroup,
-                      public graphics::NativeDisplayBuffer,
-                      public renderer::gl::RenderTarget
+                      public graphics::DisplaySyncGroup
 {
 public:
     DisplayBuffer(
-            ::Display* const x_dpy,
-            DisplayConfigurationOutputId output_id,
+            std::shared_ptr<Platform> parent,
             xcb_window_t win,
-            geometry::Rectangle const& view_area,
-            geometry::Size const& window_size,
-            EGLContext const shared_context,
-            std::shared_ptr<DisplayReport> const& r,
-            GLConfig const& gl_config);
+            geometry::Rectangle const& view_area);
 
-    geometry::Rectangle view_area() const override;
-    auto size() const -> geometry::Size override;
-    void make_current() override;
-    void release_current() override;
-    void swap_buffers() override;
-    void bind() override;
-    bool overlay(RenderableList const& renderlist) override;
+    auto view_area() const -> geometry::Rectangle override;
+
+    auto overlay(std::vector<DisplayElement> const& renderlist) -> bool override;
+    void set_next_image(std::unique_ptr<Framebuffer> content) override;
+
+    glm::mat2 transformation() const override;
+
+    auto display_provider() const -> std::shared_ptr<DisplayInterfaceProvider> override;
+
     void set_view_area(geometry::Rectangle const& a);
-    void set_size(geometry::Size const& size);
     void set_transformation(glm::mat2 const& t);
 
     void for_each_display_buffer(
@@ -70,16 +65,13 @@ public:
     void post() override;
     std::chrono::milliseconds recommended_sleep() const override;
 
-    glm::mat2 transformation() const override;
-    NativeDisplayBuffer* native_display_buffer() override;
-
+    auto x11_window() const -> xcb_window_t;
 private:
-    std::shared_ptr<DisplayReport> const report;
+    std::shared_ptr<Platform> const parent;
+    std::shared_ptr<helpers::Framebuffer> next_frame;
     geometry::Rectangle area;
-    geometry::Size window_size;
     glm::mat2 transform;
-    helpers::EGLHelper const egl;
-    DisplayConfigurationOutputId const output_id;
+    xcb_window_t const x_win;
 };
 
 }

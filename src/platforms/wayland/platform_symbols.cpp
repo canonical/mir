@@ -64,7 +64,7 @@ auto probe_graphics_platform(
     {
         return mg::SupportedDevice {
             nullptr,
-            mg::PlatformPriority::hosted,
+            mg::probe::hosted,
             nullptr
         };
     }

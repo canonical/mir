@@ -39,6 +39,7 @@ struct MockKMSOutput : public graphics::gbm::KMSOutput
         return set_crtc_thunk(&fb);
     }
 
+    MOCK_METHOD0(has_crtc_mismatch, bool());
     MOCK_METHOD1(set_crtc_thunk, bool(graphics::gbm::FBHandle const*));
     MOCK_METHOD0(clear_crtc, void());
 

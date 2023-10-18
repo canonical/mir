@@ -19,10 +19,10 @@
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display.h"
-#include "mir/renderer/gl/render_target.h"
 #include "display_helpers.h"
 #include "egl_helper.h"
 #include "platform_common.h"
+#include "kms_framebuffer.h"
 
 #include <vector>
 #include <memory>
@@ -44,74 +44,25 @@ class FBHandle;
 class KMSOutput;
 class NativeBuffer;
 
-class GBMOutputSurface : public renderer::gl::RenderTarget
-{
-public:
-    class FrontBuffer
-    {
-    public:
-        FrontBuffer();
-        FrontBuffer(gbm_surface* surface);
-        FrontBuffer(FrontBuffer&& from);
-
-        ~FrontBuffer();
-
-        FrontBuffer& operator=(FrontBuffer&& from);
-        FrontBuffer& operator=(std::nullptr_t);
-
-        operator gbm_bo*();
-        operator bool() const;
-
-    private:
-        gbm_surface* const surf;
-        gbm_bo* const bo;
-    };
-
-    GBMOutputSurface(
-        int drm_fd,
-        GBMSurfaceUPtr&& surface,
-        uint32_t width,
-        uint32_t height,
-        helpers::EGLHelper&& egl);
-    GBMOutputSurface(GBMOutputSurface&& from);
-
-    // gl::RenderTarget
-    auto size() const -> geometry::Size override;
-    void make_current() override;
-    void release_current() override;
-    void swap_buffers() override;
-    void bind() override;
-
-    FrontBuffer lock_front();
-    void report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)> const& to);
-private:
-    int const drm_fd;
-    uint32_t width, height;
-    helpers::EGLHelper egl;
-    GBMSurfaceUPtr surface;
-};
-
 class DisplayBuffer : public graphics::DisplayBuffer,
-                      public graphics::DisplaySyncGroup,
-                      public graphics::NativeDisplayBuffer,
-                      public renderer::gl::RenderTarget
+                      public graphics::DisplaySyncGroup
 {
 public:
-    DisplayBuffer(BypassOption bypass_options,
-                  std::shared_ptr<DisplayReport> const& listener,
-                  std::vector<std::shared_ptr<KMSOutput>> const& outputs,
-                  GBMOutputSurface&& surface_gbm,
-                  geometry::Rectangle const& area,
-                  glm::mat2 const& transformation);
+    DisplayBuffer(
+        std::shared_ptr<DisplayInterfaceProvider> provider,
+        mir::Fd drm_fd,
+        BypassOption bypass_options,
+        std::shared_ptr<DisplayReport> const& listener,
+        std::vector<std::shared_ptr<KMSOutput>> const& outputs,
+        geometry::Rectangle const& area,
+        glm::mat2 const& transformation);
     ~DisplayBuffer();
 
     geometry::Rectangle view_area() const override;
-    auto size() const -> geometry::Size override;
-    void make_current() override;
-    void release_current() override;
-    void swap_buffers() override;
-    bool overlay(RenderableList const& renderlist) override;
-    void bind() override;
+
+    void set_next_image(std::unique_ptr<Framebuffer> content) override;
+
+    bool overlay(std::vector<DisplayElement> const& renderlist) override;
 
     void for_each_display_buffer(
         std::function<void(graphics::DisplayBuffer&)> const& f) override;
@@ -119,38 +70,31 @@ public:
     std::chrono::milliseconds recommended_sleep() const override;
 
     glm::mat2 transformation() const override;
-    NativeDisplayBuffer* native_display_buffer() override;
 
     void set_transformation(glm::mat2 const& t, geometry::Rectangle const& a);
     void schedule_set_crtc();
     void wait_for_page_flip();
 
+    auto display_provider() const -> std::shared_ptr<DisplayInterfaceProvider> override;
+
+    auto drm_fd() const -> mir::Fd;
 private:
     bool schedule_page_flip(FBHandle const& bufobj);
     void set_crtc(FBHandle const&);
 
-    std::shared_ptr<graphics::Buffer> visible_bypass_frame, scheduled_bypass_frame;
-    std::shared_ptr<Buffer> bypass_buf{nullptr};
+    std::shared_ptr<DisplayInterfaceProvider> const provider;
+    bool holding_client_buffers{false};
     std::shared_ptr<FBHandle const> bypass_bufobj{nullptr};
     std::shared_ptr<DisplayReport> const listener;
-    BypassOption bypass_option;
 
     std::vector<std::shared_ptr<KMSOutput>> outputs;
 
-    /*
-     * Destruction order is important here:
-     *  - The GBMFrontBuffers depend on *either*:
-     *  i)  The GBMOutputSurface, or
-     *  ii) The EGLBufferCopier hidden inside get_front_buffer
-     */
-    std::function<GBMOutputSurface::FrontBuffer(GBMOutputSurface::FrontBuffer&&)> get_front_buffer;
-    GBMOutputSurface surface;
-
-    GBMOutputSurface::FrontBuffer visible_composite_frame;
-    GBMOutputSurface::FrontBuffer scheduled_composite_frame;
-
-    std::shared_ptr<FBHandle const> scheduled_fb{nullptr};
-    std::shared_ptr<FBHandle const> visible_fb{nullptr};
+    // Framebuffer handling
+    // KMS does not take a reference to submitted framebuffers; if you destroy a framebuffer while
+    // it's in use, KMS treat that as submitting a null framebuffer and turn off the display.
+    std::shared_ptr<FBHandle const> next_swap{nullptr};    //< Next frame to submit to the hardware
+    std::shared_ptr<FBHandle const> scheduled_fb{nullptr}; //< Frame currently submitted to the hardware, not yet on-screen
+    std::shared_ptr<FBHandle const> visible_fb{nullptr};   //< Frame currently onscreen
 
     geometry::Rectangle area;
     glm::mat2 transform;

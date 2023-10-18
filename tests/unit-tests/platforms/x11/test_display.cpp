@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include "mir/graphics/platform.h"
 #include "src/platforms/x11/graphics/display.h"
 #include "src/platforms/x11/graphics/platform.h"
 #include "src/server/report/null/display_report.h"
@@ -100,11 +101,11 @@ public:
     std::shared_ptr<mgx::Display> create_display()
     {
         return std::make_shared<mgx::Display>(
+                   nullptr,
                    mt::fake_shared(x11_resources),
                    "Mir on X",
                    sizes,
                    mt::fake_shared(null_display_configuration_policy),
-                   mt::fake_shared(mock_gl_config),
                    std::make_shared<mir::report::null::DisplayReport>());
     }
 
@@ -112,32 +113,9 @@ public:
     mtd::NullDisplayConfigurationPolicy null_display_configuration_policy;
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockX11> mock_x11;
-    mtd::MockGLConfig mock_gl_config;
+    ::testing::NiceMock<mtd::MockGLConfig> mock_gl_config;
 };
 
-}
-
-TEST_F(X11DisplayTest, respects_gl_config)
-{
-    EGLint const depth_bits{24};
-    EGLint const stencil_bits{8};
-
-    EXPECT_CALL(mock_gl_config, depth_buffer_bits())
-        .Times(AtLeast(1))
-        .WillRepeatedly(Return(depth_bits));
-    EXPECT_CALL(mock_gl_config, stencil_buffer_bits())
-        .Times(AtLeast(1))
-        .WillRepeatedly(Return(stencil_bits));
-
-    EXPECT_CALL(mock_egl,
-                eglChooseConfig(
-                    _,
-                    AllOf(mtd::EGLConfigContainsAttrib(EGL_DEPTH_SIZE, depth_bits),
-                          mtd::EGLConfigContainsAttrib(EGL_STENCIL_SIZE, stencil_bits)),
-                    _,_,_))
-        .Times(AtLeast(1));
-
-    auto display = create_display();
 }
 
 TEST_F(X11DisplayTest, calculates_physical_size_of_display_based_on_default_screen)

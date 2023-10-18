@@ -24,7 +24,6 @@
 #include "mir/graphics/frame.h"
 #include "mir/graphics/dmabuf_buffer.h"
 #include "mir_toolkit/common.h"
-
 #include "kms-utils/drm_mode_resources.h"
 
 #include <gbm.h>
@@ -64,6 +63,12 @@ public:
     virtual int max_refresh_rate() const = 0;
 
     virtual bool set_crtc(FBHandle const& fb) = 0;
+
+    /**
+     * Check if the pending call to set_crtc is compatible with the current state of the CRTC.
+     * @returns true if a set_crtc is required, otherwise false
+     */
+    virtual bool has_crtc_mismatch() = 0;
     virtual void clear_crtc() = 0;
     virtual bool schedule_page_flip(FBHandle const& fb) = 0;
     virtual void wait_for_page_flip() = 0;
@@ -90,30 +95,6 @@ public:
      *                                  is touched.
      */
     virtual void update_from_hardware_state(DisplayConfigurationOutput& to_update) const = 0;
-
-    // TODO: Move these to a DRM-device level object
-    /**
-     * Get a DRM FB backed by the buffer referred to by a gbm_bo.
-     *
-     * \param   [in] bo The GBM bo containing the image
-     * \return  An opaque handle to a DRM FB, usable in other KMSOutput calls.
-     *
-     * \note    As suggested by the shared_ptr return value, returned FB handle may be
-     *          a reference to an existing FB rather than a new import.
-     */
-    virtual auto fb_for(gbm_bo* bo) const -> std::shared_ptr<FBHandle const> = 0;
-    virtual auto fb_for(DMABufBuffer const& buffer) const -> std::shared_ptr<FBHandle const> = 0;
-
-    /**
-     * Check whether buffer need to be migrated to GPU-private memory for display.
-     *
-     * \param [in] bo   GBM buffer to test
-     * \return  True if buffer must be migrated to display-private memory in order to be displayed.
-     *          If this method returns true the caller should probably copy it to a new buffer before
-     *          calling fb_for(buffer), as acquiring a FBHandle to the buffer will likely make it
-     *          unusable for rendering on the original GPU.
-     */
-    virtual bool buffer_requires_migration(gbm_bo* bo) const = 0;
 
     virtual int drm_fd() const = 0;
 protected:

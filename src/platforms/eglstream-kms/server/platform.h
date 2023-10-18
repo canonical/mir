@@ -18,7 +18,6 @@
 #define MIR_PLATFORMS_EGLSTREAM_KMS_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
-#include "mir/options/option.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
 #include "mir/fd.h"
@@ -39,15 +38,23 @@ namespace graphics
 {
 namespace eglstream
 {
+class InterfaceProvider;
 
 class RenderingPlatform : public graphics::RenderingPlatform
 {
 public:
-    RenderingPlatform();
+    RenderingPlatform(EGLDisplay dpy);
     ~RenderingPlatform() override;
 
     UniqueModulePtr<GraphicBufferAllocator>
         create_buffer_allocator(Display const& output) override;
+
+protected:
+    auto maybe_create_provider(
+        RenderingProvider::Tag const& type_tag) -> std::shared_ptr<RenderingProvider> override;
+private:
+    EGLDisplay const dpy;
+    std::unique_ptr<renderer::gl::Context> const ctx;
 };
 
 class DisplayPlatform : public graphics::DisplayPlatform
@@ -58,18 +65,23 @@ public:
         EGLDeviceEXT device,
         std::shared_ptr<DisplayReport> display_report);
 
-    UniqueModulePtr<Display> create_display(
-        std::shared_ptr<DisplayConfigurationPolicy> const& /*initial_conf_policy*/,
-        std::shared_ptr<GLConfig> const& /*gl_config*/) override;
+    ~DisplayPlatform();
+
+    auto create_display(
+        std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
+        std::shared_ptr<GLConfig> const& gl_config)
+        ->UniqueModulePtr<Display> override;
 
 private:
-    std::shared_ptr<DisplayReport> const display_report;
-    EGLDisplay display;
-    mir::Fd drm_node;
+    auto interface_for() -> std::shared_ptr<DisplayInterfaceProvider> override;
+
     std::unique_ptr<mir::Device> drm_device;
+    EGLDisplay display;
+    std::shared_ptr<eglstream::InterfaceProvider> provider;
+    mir::Fd drm_node;
+    std::shared_ptr<DisplayReport> const display_report;
 };
 }
 }
 }
-
 #endif // MIR_PLATFORMS_EGLSTREAM_KMS_PLATFORM_H_

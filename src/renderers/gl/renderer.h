@@ -22,7 +22,6 @@
 #include <mir/graphics/buffer_id.h>
 #include <mir/graphics/renderable.h>
 #include <mir/gl/primitive.h>
-#include "mir/renderer/gl/render_target.h"
 
 #include <GLES2/gl2.h>
 #include <unordered_map>
@@ -31,38 +30,23 @@
 
 namespace mir
 {
-namespace graphics { class DisplayBuffer; }
+namespace graphics { class DisplayBuffer; class GLRenderingProvider; }
+namespace graphics::gl { class OutputSurface; }
 namespace renderer
 {
 namespace gl
 {
 
-class CurrentRenderTarget
-{
-public:
-    CurrentRenderTarget(RenderTarget& render_target);
-    ~CurrentRenderTarget();
-
-    auto size() const -> geometry::Size;
-    void ensure_current();
-    void bind();
-    void swap_buffers();
-
-private:
-    renderer::gl::RenderTarget* const render_target;
-};
-
 class Renderer : public renderer::Renderer
 {
 public:
-    /// render_target is owned externally, and must be kept alive as long as this object.
-    Renderer(RenderTarget& render_target);
+    Renderer(std::shared_ptr<graphics::GLRenderingProvider> gl_interface, std::unique_ptr<graphics::gl::OutputSurface> output);
     virtual ~Renderer();
 
     // These are called with a valid GL context:
     void set_viewport(geometry::Rectangle const& rect) override;
     void set_output_transform(glm::mat2 const&) override;
-    void render(graphics::RenderableList const&) const override;
+    auto render(graphics::RenderableList const&) const -> std::unique_ptr<graphics::Framebuffer> override;
 
     // This is called _without_ a GL context:
     void suspend() override;
@@ -87,7 +71,7 @@ public:
         Program(GLuint program_id);
     };
 private:
-    mutable CurrentRenderTarget render_target;
+    std::unique_ptr<graphics::gl::OutputSurface> const output_surface;
 
 protected:
     /**
@@ -124,6 +108,7 @@ private:
     glm::mat4 screen_to_gl_coords;
     glm::mat4 display_transform;
     std::vector<mir::gl::Primitive> mutable primitives;
+    std::shared_ptr<graphics::GLRenderingProvider> const gl_interface;
 };
 
 }

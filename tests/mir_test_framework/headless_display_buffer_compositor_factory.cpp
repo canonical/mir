@@ -16,9 +16,10 @@
 
 #include "mir_test_framework/headless_display_buffer_compositor_factory.h"
 #include "mir_test_framework/passthrough_tracker.h"
-#include "mir/renderer/gl/render_target.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/texture.h"
+#include "mir/graphics/platform.h"
+#include "mir/renderer/gl/gl_surface.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/graphics/buffer.h"
@@ -26,18 +27,25 @@
 
 namespace mtf = mir_test_framework;
 namespace mg = mir::graphics;
-namespace mrg = mir::renderer::gl;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-mtf::HeadlessDisplayBufferCompositorFactory::HeadlessDisplayBufferCompositorFactory() :
-    tracker(nullptr)
+mtf::HeadlessDisplayBufferCompositorFactory::HeadlessDisplayBufferCompositorFactory(
+    std::shared_ptr<mg::GLRenderingProvider> render_platform,
+    std::shared_ptr<mg::GLConfig> gl_config)
+    : render_platform{std::move(render_platform)},
+      gl_config{std::move(gl_config)},
+      tracker(nullptr)
 {
 }
 
 mtf::HeadlessDisplayBufferCompositorFactory::HeadlessDisplayBufferCompositorFactory(
-    std::shared_ptr<PassthroughTracker> const& tracker) :
-    tracker(tracker)
+    std::shared_ptr<mg::GLRenderingProvider> render_platform,
+    std::shared_ptr<mg::GLConfig> gl_config,
+    std::shared_ptr<PassthroughTracker> const& tracker)
+    : render_platform{std::move(render_platform)},
+      gl_config{std::move(gl_config)},
+      tracker(tracker)
 {
 }
 
@@ -48,11 +56,13 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
     {
         HeadlessDBC(
             mg::DisplayBuffer& db,
+            std::unique_ptr<mg::gl::OutputSurface> output,
+            std::shared_ptr<mg::GLRenderingProvider> render_platform,
             std::shared_ptr<mtf::PassthroughTracker> const& tracker) :
-            db(db),
-            tracker(tracker),
-            render_target(dynamic_cast<mrg::RenderTarget*>(
-                db.native_display_buffer()))
+            db{db},
+            output{std::move(output)},
+            render_platform{std::move(render_platform)},
+            tracker(tracker)
         {
         }
 
@@ -86,34 +96,30 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
         void composite(mir::compositor::SceneElementSequence&& seq) override
         {
             auto renderlist = filter(seq, db.view_area());
-            if (db.overlay(renderlist))
-            {
-                if (tracker)
-                    tracker->note_passthrough();
-                return;
-            }
 
-            // Invoke GL renderer specific functions if the DisplayBuffer supports them
-            if (render_target)
-                render_target->make_current();
+            // TODO: Might need to attempt to overlay in order to test those codepaths?
+
+            output->bind();
 
             // We need to consume a buffer to unblock client tests
             for (auto const& renderable : renderlist)
             {
                 auto buf = renderable->buffer();
-                if (auto tex = dynamic_cast<mg::gl::Texture*>(buf->native_buffer_base()))
+                if (auto tex = render_platform->as_texture(buf))
                 {
                     // bind() is what drives the Wayland frame event.
                     tex->bind();
                 }
             }
 
-            if (render_target)
-                render_target->swap_buffers();
+            output->commit();
         }
         mg::DisplayBuffer& db;
+        std::unique_ptr<mg::gl::OutputSurface> const output;
+        std::shared_ptr<mg::GLRenderingProvider> const render_platform;
         std::shared_ptr<PassthroughTracker> const tracker;
-        mrg::RenderTarget* const render_target;
     };
-    return std::make_unique<HeadlessDBC>(db, tracker);
+    auto output_surface =
+        render_platform->surface_for_output(db.display_provider(), db.view_area().size, *gl_config);
+    return std::make_unique<HeadlessDBC>(db, std::move(output_surface), render_platform, tracker);
 }

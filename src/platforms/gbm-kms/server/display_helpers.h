@@ -79,8 +79,6 @@ public:
     GBMHelper(const GBMHelper&) = delete;
     GBMHelper& operator=(const GBMHelper&) = delete;
 
-    GBMSurfaceUPtr create_scanout_surface(uint32_t width, uint32_t height, uint32_t gbm_format, bool sharable) const;
-
     gbm_device* const device;
 };
 

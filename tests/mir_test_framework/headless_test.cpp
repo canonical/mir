@@ -27,6 +27,7 @@
 
 namespace geom = mir::geometry;
 namespace mtf = mir_test_framework;
+namespace mg = mir::graphics;
 
 namespace
 {
@@ -42,10 +43,18 @@ mtf::HeadlessTest::HeadlessTest()
     add_to_environment("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str());
     add_to_environment("MIR_SERVER_ENABLE_KEY_REPEAT", "false");
     add_to_environment("MIR_SERVER_CONSOLE_PROVIDER", "none");
-    server.override_the_display_buffer_compositor_factory([]
+
+    server.override_the_display_buffer_compositor_factory(
+        [this]() -> std::shared_ptr<mir::compositor::DisplayBufferCompositorFactory>
     {
-        return std::make_shared<mtf::HeadlessDisplayBufferCompositorFactory>();
+        auto first_platform = server.the_rendering_platforms().front();
+        if (auto gl_provider = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(std::move(first_platform)))
+        {
+            return std::make_shared<mtf::HeadlessDisplayBufferCompositorFactory>(std::move(gl_provider), server.the_gl_config());
+        }
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Test RenderingPlatform does not support GL interface"}));
     });
+
 
     server.add_init_callback(
         [server = &server]

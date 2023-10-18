@@ -38,23 +38,24 @@ auto probe_display_platform(
     result.emplace_back(
         mg::SupportedDevice {
             nullptr,
-            mg::PlatformPriority::dummy,
+            mg::probe::dummy,
             nullptr
          });
     return result;
 }
 
 auto probe_rendering_platform(
-    std::shared_ptr<mir::ConsoleServices> const&,
+    std::span<std::shared_ptr<mg::DisplayInterfaceProvider>> const&,
+    mir::ConsoleServices&,
     std::shared_ptr<mir::udev::Context> const&,
     mir::options::ProgramOption const&) -> std::vector<mir::graphics::SupportedDevice>
 {
-    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
+    mir::assert_entry_point_signature<mg::RenderProbe>(&probe_rendering_platform);
     std::vector<mg::SupportedDevice> result;
     result.emplace_back(
         mg::SupportedDevice {
             nullptr,
-            mg::PlatformPriority::dummy,
+            mg::probe::dummy,
             nullptr
          });
     return result;

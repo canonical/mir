@@ -4,6 +4,10 @@ add_library(
   mirsharedgbmservercommon-static STATIC
 
   display_helpers.cpp
+  buffer_allocator.cpp
+  buffer_allocator.h
+  surfaceless_egl_context.h
+  surfaceless_egl_context.cpp
 )
 
 target_include_directories(

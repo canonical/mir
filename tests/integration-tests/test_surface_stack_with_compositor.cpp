@@ -15,6 +15,7 @@
  */
 
 #include "mir/compositor/display_listener.h"
+#include "mir/graphics/platform.h"
 #include "mir/renderer/renderer_factory.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/surface_stack.h"
@@ -30,6 +31,11 @@
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/null_display_sync_group.h"
 #include "mir/test/doubles/mock_event_sink.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/mock_gl_buffer.h"
+#include "mir/test/doubles/mock_output_surface.h"
+#include "mir/test/doubles/stub_gl_rendering_provider.h"
+#include "mir/test/doubles/null_gl_config.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 
 #include <condition_variable>
@@ -54,8 +60,9 @@ namespace
 class StubRendererFactory : public mir::renderer::RendererFactory
 {
 public:
-    std::unique_ptr<mir::renderer::Renderer>
-        create_renderer_for(mir::renderer::gl::RenderTarget&) override
+    auto create_renderer_for(
+        std::unique_ptr<mg::gl::OutputSurface>,
+        std::shared_ptr<mg::GLRenderingProvider>) const -> std::unique_ptr<mir::renderer::Renderer> override
     {
         return std::unique_ptr<mtd::StubRenderer>(new mtd::StubRenderer);
     }
@@ -120,6 +127,27 @@ struct StubDisplayListener : mc::DisplayListener
     virtual void remove_display(geom::Rectangle const& /*area*/) override {}
 };
 
+class StubTexture : public testing::NiceMock<mtd::MockTextureBuffer>
+{
+public:
+    StubTexture()
+    {
+        ON_CALL(*this, shader(_))
+            .WillByDefault(
+                Invoke(
+                    [](auto& factory) -> mg::gl::Program&
+                    {
+                        static int yo;
+                        return factory.compile_fragment_shader(
+                            &yo,
+                            "extension fragment",
+                            "shader code");
+                    }));
+        ON_CALL(*this, layout)
+            .WillByDefault(Return(mg::gl::Texture::Layout::GL));
+    }
+};
+
 struct SurfaceStackCompositor : public Test
 {
     SurfaceStackCompositor() :
@@ -155,8 +183,12 @@ struct SurfaceStackCompositor : public Test
     CountingDisplaySyncGroup stub_secondary_db;
     StubDisplay stub_display{stub_primary_db, stub_secondary_db};
     StubDisplayListener stub_display_listener;
+
     mc::DefaultDisplayBufferCompositorFactory dbc_factory{
+        std::vector<std::shared_ptr<mg::GLRenderingProvider>>{std::make_shared<mtd::StubGlRenderingProvider>()},
+        std::make_shared<mtd::NullGLConfig>(),
         mt::fake_shared(renderer_factory),
+        std::make_shared<mtd::StubBufferAllocator>(),
         null_comp_report};
 };
 

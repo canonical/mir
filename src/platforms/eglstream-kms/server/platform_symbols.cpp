@@ -35,6 +35,7 @@
 #include <boost/throw_exception.hpp>
 #include <xf86drm.h>
 #include <sstream>
+#include <variant>
 
 #include <fcntl.h>
 #include <sys/sysmacros.h>
@@ -42,18 +43,124 @@
 #include <xf86drmMode.h>
 
 namespace mg = mir::graphics;
-namespace mgc = mir::graphics::common;
 namespace mo = mir::options;
+namespace mgc = mir::graphics::common;
 namespace mge = mir::graphics::eglstream;
 
-namespace
+auto create_rendering_platform(
+    mg::SupportedDevice const& device,
+    std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& /*displays*/,
+    mo::Option const&,
+    mir::EmergencyCleanupRegistry&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
 {
-EGLDeviceEXT find_device()
+    mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
+
+    auto platform_data = std::any_cast<std::variant<EGLDisplay, EGLDeviceEXT>>(device.platform_data);
+
+    EGLDisplay display{EGL_NO_DISPLAY};
+
+    if (auto dpy = std::get_if<0>(&platform_data))
+    {
+        display = *dpy;
+    }
+    else if (auto device = std::get_if<1>(&platform_data))
+    {
+        display = eglGetPlatformDisplayEXT(
+            EGL_PLATFORM_DEVICE_EXT,
+            *device,
+            nullptr);
+
+        if (display == EGL_NO_DISPLAY)
+        {
+            BOOST_THROW_EXCEPTION((mg::egl_error("Failed to create EGL Display")));
+        }
+
+        EGLint major_ver{1}, minor_ver{4};
+        if (!eglInitialize(display, &major_ver, &minor_ver))
+        {
+            BOOST_THROW_EXCEPTION((mg::egl_error("Failed to initialise EGL")));
+        }
+    }
+
+    return mir::make_module_ptr<mge::RenderingPlatform>(display);
+}
+
+void add_graphics_platform_options(boost::program_options::options_description& /*config*/)
 {
+    mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
+}
+
+auto probe_rendering_platform(
+    std::span<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays,
+    mir::ConsoleServices& /*console*/,
+    std::shared_ptr<mir::udev::Context> const& udev,
+    mo::ProgramOption const& /*options*/) -> std::vector<mg::SupportedDevice>
+{
+    mir::assert_entry_point_signature<mg::RenderProbe>(&probe_rendering_platform);
+
+    mg::probe::Result maximum_suitability = mg::probe::unsupported;
+    // First check if there are any displays we can possibly drive
+    std::vector<std::shared_ptr<mg::EGLStreamDisplayProvider>> eglstream_providers;
+    for (auto const& display_provider : displays)
+    {
+        if (auto provider = display_provider->acquire_interface<mg::EGLStreamDisplayProvider>())
+        {
+            // We can optimally drive an EGLStream display
+            mir::log_debug("EGLStream-capable display found");
+            maximum_suitability = mg::probe::best;
+            eglstream_providers.push_back(provider);
+        }
+        if (display_provider->acquire_interface<mg::CPUAddressableDisplayProvider>())
+        {
+            /* We *can* support this output, but with slower buffer copies
+             * If another platform supports this device better, let it.
+             */
+            maximum_suitability = mg::probe::supported;
+        }
+    }
+
+    if (maximum_suitability == mg::probe::unsupported)
+    {
+        mir::log_debug("No outputs capable of accepting EGLStream input detected");
+        mir::log_debug("Probing will be skipped");
+        return {};
+    }
+
+    std::vector<char const*> missing_extensions;
+    for (char const* extension : {
+        "EGL_EXT_platform_base",
+        "EGL_EXT_platform_device",
+        "EGL_EXT_device_base",
+        "EGL_EXT_device_enumeration",
+        "EGL_EXT_device_query"})
+    {
+        if (!epoxy_has_egl_extension(EGL_NO_DISPLAY, extension))
+        {
+            missing_extensions.push_back(extension);
+        }
+    }
+
+    if (!missing_extensions.empty())
+    {
+        std::stringstream message;
+        message << "Missing required extension" << (missing_extensions.size() > 1 ? "s:" : ":");
+        for (auto missing_extension : missing_extensions)
+        {
+            message << " " << missing_extension;
+        }
+
+        mir::log_debug("EGLStream platform is unsupported: %s",
+                       message.str().c_str());
+        return {};
+    }
+
     int device_count{0};
     if (eglQueryDevicesEXT(0, nullptr, &device_count) != EGL_TRUE)
     {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query device count with eglQueryDevicesEXT"));
+        mir::log_info("Platform claims to support EGL_EXT_device_base, but "
+                      "eglQueryDevicesEXT falied: %s",
+                      mg::egl_category().message(eglGetError()).c_str());
+        return {};
     }
 
     auto devices = std::make_unique<EGLDeviceEXT[]>(device_count);
@@ -62,27 +169,128 @@ EGLDeviceEXT find_device()
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to get device list with eglQueryDevicesEXT"));
     }
 
-    auto device = std::find_if(devices.get(), devices.get() + device_count,
-        [](EGLDeviceEXT device)
-        {
-            auto device_extensions = eglQueryDeviceStringEXT(device, EGL_EXTENSIONS);
-            if (device_extensions)
-            {
-                return strstr(device_extensions, "EGL_EXT_device_drm") != NULL;
-            }
-            return false;
-        });
-
-    if (device == (devices.get() + device_count))
+    std::vector<mg::SupportedDevice> supported_devices;
+    for (auto i = 0; i != device_count; ++i)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Couldn't find EGLDeviceEXT supporting EGL_EXT_device_drm?"));
+        auto const& device = devices[i];
+        try
+        {
+            supported_devices.emplace_back(mg::SupportedDevice{
+                udev->char_device_from_devnum(mge::devnum_for_device(device)),
+                mg::probe::unsupported,
+                nullptr
+            });
+        }
+        catch (std::exception const& e)
+        {
+            mir::log_debug("Failed to find kernel device for EGLDevice: %s", e.what());
+            continue;
+        }
+
+        EGLDisplay display{EGL_NO_DISPLAY};
+        bool using_display_platform_dpy = false;
+        for (auto const& display_provider : eglstream_providers)
+        {
+            auto display_dpy = display_provider->get_egl_display();
+            EGLAttrib display_device;
+            if (eglQueryDisplayAttribEXT(display_dpy, EGL_DEVICE_EXT, &display_device) == EGL_TRUE)
+            {
+                if (reinterpret_cast<EGLDeviceEXT>(display_device) == device)
+                {
+                    mir::log_debug("Rendering platform using EGLDeviceEXT matching Display platform");
+                    display = display_dpy;
+                    using_display_platform_dpy = true;
+                }
+            }
+            else
+            {
+                mir::log_info("Failed to query EGLDeviceEXT from display platform");
+            }
+        }
+
+        if (display == EGL_NO_DISPLAY)
+        {
+            display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, device, nullptr);
+
+            if (display == EGL_NO_DISPLAY)
+            {
+                mir::log_debug("Failed to create EGLDisplay: %s", mg::egl_category().message(eglGetError()).c_str());
+                continue;
+            }
+        }
+        auto egl_init = mir::raii::paired_calls(
+            [&display, using_display_platform_dpy]()
+            {
+                if (!using_display_platform_dpy)
+                {
+                    EGLint major_ver{1}, minor_ver{4};
+                    if (!eglInitialize(display, &major_ver, &minor_ver))
+                    {
+                        mir::log_debug("Failed to initialise EGL: %s", mg::egl_category().message(eglGetError()).c_str());
+                        display = EGL_NO_DISPLAY;
+                    }
+                }
+            },
+            [&display, using_display_platform_dpy]()
+            {
+                if (display != EGL_NO_DISPLAY && ! using_display_platform_dpy)
+                {
+                    eglTerminate(display);
+                }
+            });
+
+        if (display != EGL_NO_DISPLAY)
+        {
+            std::vector<char const*> missing_extensions;
+            for (char const* extension : {
+                "EGL_KHR_stream_consumer_gltexture",
+                "EGL_NV_stream_attrib"})
+            {
+                if (!epoxy_has_egl_extension(display, extension))
+                {
+                    missing_extensions.push_back(extension);
+                }
+            }
+
+            for (auto const missing_extension: missing_extensions)
+            {
+                mir::log_info("EGLDevice found but unsuitable. Missing extension %s", missing_extension);
+            }
+
+            if (missing_extensions.empty())
+            {
+                // We've got EGL, and we've got the necessary EGL extensions. We're good.
+                supported_devices.back().support_level = maximum_suitability;
+                if (using_display_platform_dpy)
+                {
+                    supported_devices.back().platform_data = std::variant<EGLDisplay, EGLDeviceEXT>{
+                        std::in_place_index<0>, display};
+                }
+                else
+                {
+                    supported_devices.back().platform_data = std::variant<EGLDisplay, EGLDeviceEXT>{
+                        std::in_place_index<1>, device};
+                }
+            }
+        }
     }
-    return *device;
-}
+    if (!std::any_of(
+        supported_devices.begin(),
+        supported_devices.end(),
+        [](auto const& device)
+        {
+            return device.support_level > mg::probe::unsupported;
+        }))
+    {
+        mir::log_debug(
+            "EGLDeviceEXTs found, but none are suitable for Mir");
+    }
+
+    return supported_devices;
 }
 
 mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
-    mg::SupportedDevice const&,
+    mg::SupportedDevice const& device,
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mir::ConsoleServices> const& console,
@@ -95,23 +303,10 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
         mg::initialise_egl_logger();
     }
 
-    return mir::make_module_ptr<mge::DisplayPlatform>(*console, find_device(), display_report);
-}
-
-auto create_rendering_platform(
-    mg::SupportedDevice const& /*device*/,
-    std::vector<std::shared_ptr<mg::DisplayPlatform>> const& /*displays*/,
-    mo::Option const&,
-    mir::EmergencyCleanupRegistry&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
-{
-    mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
-
-    return mir::make_module_ptr<mge::RenderingPlatform>();
-}
-
-void add_graphics_platform_options(boost::program_options::options_description& /*config*/)
-{
-    mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
+    return mir::make_module_ptr<mge::DisplayPlatform>(
+        *console,
+        std::any_cast<EGLDeviceEXT>(device.platform_data),
+        display_report);
 }
 
 auto probe_display_platform(
@@ -189,8 +384,8 @@ auto probe_display_platform(
                     supported_devices.emplace_back(
                         mg::SupportedDevice{
                             udev->char_device_from_devnum(devnum),
-                            mg::PlatformPriority::unsupported,
-                            nullptr
+                            mg::probe::unsupported,
+                            device
                         });
                 }
                 catch (std::exception const& e)
@@ -198,7 +393,6 @@ auto probe_display_platform(
                     mir::log_info("Failed to query DRM node for EGLDevice: %s", e.what());
                     continue;
                 }
-
                 if (drm_fd == mir::Fd::invalid)
                 {
                     mir::log_debug(
@@ -350,7 +544,7 @@ auto probe_display_platform(
 
                 if (epoxy_has_egl_extension(display, "EGL_EXT_output_base"))
                 {
-                    supported_devices.back().support_level = mg::PlatformPriority::best;
+                    supported_devices.back().support_level = mg::probe::best;
                 }
                 else
                 {
@@ -362,132 +556,6 @@ auto probe_display_platform(
         else
         {
             mir::log_debug("Found EGLDeviceEXT with no device extensions");
-        }
-    }
-    if (supported_devices.empty())
-    {
-        mir::log_debug(
-            "EGLDeviceEXTs found, but none are suitable for Mir");
-    }
-
-    return supported_devices;
-}
-
-auto probe_rendering_platform(
-    std::shared_ptr<mir::ConsoleServices> const& /*console*/,
-    std::shared_ptr<mir::udev::Context> const& udev,
-    mo::ProgramOption const& /*options*/) -> std::vector<mg::SupportedDevice>
-{
-    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
-
-    std::vector<char const*> missing_extensions;
-    for (char const* extension : {
-        "EGL_EXT_platform_base",
-        "EGL_EXT_platform_device",
-        "EGL_EXT_device_base",})
-    {
-        if (!epoxy_has_egl_extension(EGL_NO_DISPLAY, extension))
-        {
-            missing_extensions.push_back(extension);
-        }
-    }
-
-    if (!missing_extensions.empty())
-    {
-        std::stringstream message;
-        message << "Missing required extension" << (missing_extensions.size() > 1 ? "s:" : ":");
-        for (auto missing_extension : missing_extensions)
-        {
-            message << " " << missing_extension;
-        }
-
-        mir::log_debug("EGLStream platform is unsupported: %s",
-                       message.str().c_str());
-        return {};
-    }
-
-    int device_count{0};
-    if (eglQueryDevicesEXT(0, nullptr, &device_count) != EGL_TRUE)
-    {
-        mir::log_info("Platform claims to support EGL_EXT_device_base, but "
-                      "eglQueryDevicesEXT falied: %s",
-                      mg::egl_category().message(eglGetError()).c_str());
-        return {};
-    }
-
-    auto devices = std::make_unique<EGLDeviceEXT[]>(device_count);
-    if (eglQueryDevicesEXT(device_count, devices.get(), &device_count) != EGL_TRUE)
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to get device list with eglQueryDevicesEXT"));
-    }
-
-    std::vector<mg::SupportedDevice> supported_devices;
-    for (auto i = 0; i != device_count; ++i)
-    {
-        auto const& device = devices[i];
-        try
-        {
-            supported_devices.emplace_back(mg::SupportedDevice{
-                udev->char_device_from_devnum(mge::devnum_for_device(device)),
-                mg::PlatformPriority::unsupported,
-                nullptr
-            });
-        }
-        catch (std::exception const& e)
-        {
-            mir::log_debug("Failed to find kernel device for EGLDevice: %s", e.what());
-            continue;
-        }
-
-        EGLDisplay display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, device, nullptr);
-
-        if (display == EGL_NO_DISPLAY)
-        {
-            mir::log_debug("Failed to create EGLDisplay: %s", mg::egl_category().message(eglGetError()).c_str());
-            continue;
-        }
-
-        auto egl_init = mir::raii::paired_calls(
-            [&display]()
-            {
-                EGLint major_ver{1}, minor_ver{4};
-                if (!eglInitialize(display, &major_ver, &minor_ver))
-                {
-                    mir::log_debug("Failed to initialise EGL: %s", mg::egl_category().message(eglGetError()).c_str());
-                    display = EGL_NO_DISPLAY;
-                }
-            },
-            [&display]()
-            {
-                if (display != EGL_NO_DISPLAY)
-                {
-                    eglTerminate(display);
-                }
-            });
-
-        if (display != EGL_NO_DISPLAY)
-        {
-            std::vector<char const*> missing_extensions;
-            for (char const* extension : {
-                "EGL_KHR_stream_consumer_gltexture",
-                "EGL_NV_stream_attrib"})
-            {
-                if (!epoxy_has_egl_extension(display, extension))
-                {
-                    missing_extensions.push_back(extension);
-                }
-            }
-
-            for (auto const missing_extension: missing_extensions)
-            {
-                mir::log_info("EGLDevice found but unsuitable. Missing extension %s", missing_extension);
-            }
-
-            if (missing_extensions.empty())
-            {
-                // We've got EGL, and we've got the necessary EGL extensions. We're good.
-                supported_devices.back().support_level = mg::PlatformPriority::best;
-            }
         }
     }
     if (supported_devices.empty())

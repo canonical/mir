@@ -46,19 +46,22 @@ namespace graphics
 {
 namespace wayland
 {
+class WlDisplayProvider;
 
 class DisplayClient
     : public Executor
 {
 public:
-    DisplayClient(wl_display* display,
-    std::shared_ptr<GLConfig> const& gl_config);
+    DisplayClient(
+        wl_display* display,
+        std::shared_ptr<WlDisplayProvider> provider);
 
     virtual ~DisplayClient();
 
 protected:
 
     wl_display* const display;
+    std::shared_ptr<WlDisplayProvider> const provider;
 
     auto display_configuration() const -> std::unique_ptr<DisplayConfiguration>;
     void for_each_display_sync_group(const std::function<void(DisplaySyncGroup&)>& f);
@@ -171,10 +174,6 @@ protected:
     std::unordered_map<uint32_t, std::unique_ptr<Output>> bound_outputs;
     std::mutex mutable config_change_handlers_mutex;
     std::vector<DisplayConfigurationChangeHandler> config_change_handlers;
-
-    EGLDisplay egldisplay;
-    EGLConfig eglconfig;
-    EGLContext eglctx;
 };
 }
 }

@@ -15,6 +15,7 @@
  */
 
 #include "mir/test/doubles/mock_drm.h"
+#include "mir_test_framework/mmap_wrapper.h"
 #include "mir_test_framework/open_wrapper.h"
 #include "mir/geometry/size.h"
 #include <gtest/gtest.h>
@@ -241,6 +242,34 @@ mtd::MockDRM::MockDRM()
                 return this->open(path, flags);
             }
             return std::nullopt;
+        })},
+      mmap_interposer{mir_test_framework::add_mmap_handler(
+        [this](void* addr, size_t length, int prot, int flags, int fd, off_t offset) -> std::optional<void*>
+        {
+            // The dumb buffer API uses a call of mmap() on the DRM fd, so we want to handle that.
+            if (this->fd_to_drm.contains(fd))
+            {
+                return this->mmap(addr, length, prot, flags, fd, offset);
+            }
+            return std::nullopt;
+        })},
+      munmap_interposer{mir_test_framework::add_munmap_handler(
+        [this](void* addr, size_t length) -> std::optional<int>
+        {
+            auto maybe_mapping = mmapings.find(addr);
+            if (maybe_mapping != mmapings.end())
+            {
+                if (maybe_mapping->second != length)
+                {
+                    /* It's technically possible to unmap only *part* of the mapping
+                     * A more fancy mock would check whether addr + length overlaps
+                     * any existing mappings and punch holes, but 🤷‍♀️
+                     */
+                    BOOST_THROW_EXCEPTION((std::runtime_error{"munmap mock does not support partial unmappings"}));
+                }
+                return this->munmap(addr, length);
+            }
+            return std::nullopt;
         })}
 {
     using namespace testing;
@@ -358,6 +387,27 @@ mtd::MockDRM::MockDRM()
         .WillByDefault(Return(0));
     ON_CALL(*this, drmCheckModesettingSupported(IsNull()))
         .WillByDefault(Return(-EINVAL));
+
+    ON_CALL(*this, mmap(_, _, _, _, _, _))
+        .WillByDefault(
+            WithArg<1>(Invoke(
+                [this](auto size) -> void*
+                {
+                    auto allocation = std::make_unique<char[]>(size);
+                    void* const address = allocation.get();
+                    mmapings.insert(std::make_pair(std::move(allocation), size));
+                    return address;
+                })));
+
+    ON_CALL(*this, munmap(_, _))
+        .WillByDefault(
+            WithArg<0>(Invoke(
+                [this](void* addr) -> int
+                {
+                    auto iter = mmapings.find(addr);
+                    mmapings.erase(iter);
+                    return 0;
+                })));
 }
 
 mtd::MockDRM::~MockDRM() noexcept

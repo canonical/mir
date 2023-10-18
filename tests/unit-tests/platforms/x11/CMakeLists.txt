@@ -1,15 +1,13 @@
 mir_add_wrapped_executable(mir_unit_tests_x11 NOINSTALL
   ${CMAKE_CURRENT_SOURCE_DIR}/test_platform.cpp
-#  ${CMAKE_CURRENT_SOURCE_DIR}/test_graphics_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_display_generic.cpp
   $<TARGET_OBJECTS:mirplatformserverx11sharedresources>
   $<TARGET_OBJECTS:mirplatformgraphicsx11objects>
   $<TARGET_OBJECTS:mirnullreport>  # Sub-optimal. We really want to link a lib
 )
 
 set_property(
-  SOURCE test_platform.cpp test_graphics_platform.cpp test_display_generic.cpp
+  SOURCE test_platform.cpp
   PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
 
 add_dependencies(mir_unit_tests_x11 GMock)

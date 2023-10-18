@@ -77,6 +77,10 @@ struct DisplayConfigurationPolicyAdapter : mg::DisplayConfigurationPolicy
         self->apply_to(conf, *wrapped_policy, *custom_policy);
     }
 
+    void confirm(mg::DisplayConfiguration const&) override
+    {
+    }
+
     std::shared_ptr<PersistDisplayConfigPolicy> const self;
     std::shared_ptr<miroil::DisplayConfigurationPolicy> const wrapped_policy;
     std::shared_ptr<miroil::DisplayConfigurationPolicy> const custom_policy;

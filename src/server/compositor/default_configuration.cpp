@@ -16,27 +16,22 @@
 
 #include "mir/default_server_configuration.h"
 
+#include "mir/log.h"
 #include "mir/shell/shell.h"
 #include "buffer_stream_factory.h"
 #include "default_display_buffer_compositor_factory.h"
+#include "mir/executor.h"
 #include "multi_threaded_compositor.h"
 #include "gl/renderer_factory.h"
 #include "basic_screen_shooter.h"
 #include "null_screen_shooter.h"
 #include "mir/main_loop.h"
-#include "mir/graphics/display.h"
-#include "mir/executor.h"
-#include "mir/renderer/gl/basic_buffer_render_target.h"
-#include "mir/renderer/gl/context.h"
-#include "mir/renderer/renderer.h"
-#include "mir/log.h"
-
+#include "mir/graphics/platform.h"
 #include "mir/options/configuration.h"
 
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
-namespace mf = mir::frontend;
-namespace mrg = mir::renderer::gl;
+namespace mg = mir::graphics;
 
 std::shared_ptr<ms::BufferStreamFactory>
 mir::DefaultServerConfiguration::the_buffer_stream_factory()
@@ -54,8 +49,22 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
     return display_buffer_compositor_factory(
         [this]()
         {
-            return wrap_display_buffer_compositor_factory(std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
-                the_renderer_factory(), the_compositor_report()));
+            std::vector<std::shared_ptr<mg::GLRenderingProvider>> providers;
+            providers.reserve(the_rendering_platforms().size());
+            for (auto const& platform : the_rendering_platforms())
+            {
+                if (auto gl_provider = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(platform))
+                {
+                    providers.push_back(gl_provider);            
+                }
+            }
+            if (providers.empty())
+            {
+                BOOST_THROW_EXCEPTION((std::runtime_error{"Selected rendering platform does not support GL"}));
+            }
+            return wrap_display_buffer_compositor_factory(
+                std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
+                    std::move(providers), the_gl_config(), the_renderer_factory(), the_buffer_allocator(), the_compositor_report()));
         });
 }
 
@@ -102,14 +111,25 @@ auto mir::DefaultServerConfiguration::the_screen_shooter() -> std::shared_ptr<co
         {
             try
             {
-                auto render_target = std::make_unique<mrg::BasicBufferRenderTarget>(the_display()->create_gl_context());
-                auto renderer = the_renderer_factory()->create_renderer_for(*render_target);
+                std::vector<std::shared_ptr<mg::GLRenderingProvider>> providers;
+                providers.reserve(the_rendering_platforms().size());
+                for (auto& platform : the_rendering_platforms())
+                {
+                    if (auto gl_provider = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(platform))
+                    {
+                        providers.push_back(gl_provider);
+                    }
+                }
+                if (providers.empty())
+                {
+                    BOOST_THROW_EXCEPTION((std::runtime_error{"No platform provides GL rendering support"}));
+                }
                 return std::make_shared<compositor::BasicScreenShooter>(
                     the_scene(),
                     the_clock(),
                     thread_pool_executor,
-                    std::move(render_target),
-                    std::move(renderer));
+                    providers,
+                    the_renderer_factory());
             }
             catch (...)
             {

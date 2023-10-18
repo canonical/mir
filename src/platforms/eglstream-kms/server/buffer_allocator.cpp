@@ -15,9 +15,16 @@
  */
 
 #include <epoxy/egl.h>
+#include <epoxy/gl.h>
 
 #include "buffer_allocator.h"
+#include "cpu_copy_output_surface.h"
 #include "mir/anonymous_shm_file.h"
+#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/drm_formats.h"
+#include "mir/graphics/egl_resources.h"
+#include "mir/graphics/gl_config.h"
+#include "mir/graphics/platform.h"
 #include "shm_buffer.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/renderer/gl/context_source.h"
@@ -33,6 +40,8 @@
 #include "mir/renderer/gl/context.h"
 #include "mir/raii.h"
 #include "mir/wayland/protocol_error.h"
+#include "mir/wayland/wayland_base.h"
+#include "mir/renderer/gl/gl_surface.h"
 
 #define MIR_LOG_COMPONENT "platform-eglstream-kms"
 #include "mir/log.h"
@@ -40,6 +49,7 @@
 #include <wayland-server-core.h>
 
 #include <mutex>
+#include <drm_fourcc.h>
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -58,42 +68,10 @@ namespace geom = mir::geometry;
 #define EGL_WAYLAND_EGLSTREAM_WL              0x334B
 #endif /* EGL_WL_wayland_eglstream */
 
-namespace
-{
-std::unique_ptr<mir::renderer::gl::Context> context_for_output(mg::Display const& output)
-{
-    try
-    {
-        auto& context_source = dynamic_cast<mir::renderer::gl::ContextSource const&>(output);
-
-        /*
-         * We care about no part of this context's config; we will do no rendering with it.
-         * All we care is that we can allocate texture IDs and bind a texture, which is
-         * config independent.
-         *
-         * That's not *entirely* true; we also need it to be on the same device as we want
-         * to do the rendering on, and that GL must support all the extensions we care about,
-         * but since we don't yet support heterogeneous hybrid and implementing that will require
-         * broader interface changes it's a safe enough requirement for now.
-         */
-        return context_source.create_gl_context();
-    }
-    catch (std::bad_cast const& err)
-    {
-        std::throw_with_nested(
-            boost::enable_error_info(
-                std::runtime_error{"Output platform cannot provide a GL context"})
-                << boost::throw_function(__PRETTY_FUNCTION__)
-                << boost::throw_line(__LINE__)
-                << boost::throw_file(__FILE__));
-    }
-}
-}
-
-mge::BufferAllocator::BufferAllocator(mg::Display const& output)
-    : wayland_ctx{context_for_output(output)},
+mge::BufferAllocator::BufferAllocator(std::unique_ptr<renderer::gl::Context> ctx)
+    : wayland_ctx{ctx->make_share_context()},
       egl_delegate{
-          std::make_shared<mgc::EGLContextExecutor>(context_for_output(output))}
+          std::make_shared<mgc::EGLContextExecutor>(std::move(ctx))}
 {
 }
 
@@ -568,4 +546,264 @@ auto mge::BufferAllocator::buffer_from_shm(
         egl_delegate,
         std::move(on_consumed),
         std::move(on_release));
+}
+
+namespace
+{
+// libepoxy replaces the GL symbols with resolved-on-first-use function pointers
+template<void (**allocator)(GLsizei, GLuint*), void (** deleter)(GLsizei, GLuint const*)>
+class GLHandle
+{
+public:
+    GLHandle()
+    {
+        (**allocator)(1, &id);
+    }
+
+    ~GLHandle()
+    {
+        if (id)
+            (**deleter)(1, &id);
+    }
+
+    GLHandle(GLHandle const&) = delete;
+    GLHandle& operator=(GLHandle const&) = delete;
+
+    GLHandle(GLHandle&& from)
+        : id{from.id}
+    {
+        from.id = 0;
+    }
+
+    operator GLuint() const
+    {
+        return id;
+    }
+
+private:
+    GLuint id;
+};
+
+using TextureHandle = GLHandle<&glGenTextures, &glDeleteTextures>;
+
+auto make_stream_ctx(EGLDisplay dpy, EGLConfig cfg, EGLContext share_with) -> EGLContext
+{
+    eglBindAPI(EGL_OPENGL_ES_API);
+
+    EGLint const context_attr[] = {
+        EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_NONE
+    };
+
+    EGLContext context = eglCreateContext(dpy, cfg, share_with, context_attr);
+    if (context == EGL_NO_CONTEXT)
+    {
+        // One of the ways this will happen is if we try to create one of these
+        // on a different device to the display.
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
+    }
+    if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, context) != EGL_TRUE)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to make EGL context current"));
+    }
+
+    return context;
+}
+
+auto make_output_surface(EGLDisplay dpy, EGLConfig cfg, EGLStreamKHR output_stream, geom::Size size)
+    -> EGLSurface
+{
+    EGLint const surface_attribs[] = {
+        EGL_WIDTH, size.width.as_int(),
+        EGL_HEIGHT, size.height.as_int(),
+        EGL_NONE,
+    };
+    auto surface = eglCreateStreamProducerSurfaceKHR(dpy, cfg, output_stream, surface_attribs);
+    if (surface == EGL_NO_SURFACE)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create StreamProducerSurface"));
+    }
+    return surface;
+}
+
+class EGLStreamOutputSurface : public mg::gl::OutputSurface
+{
+public:
+    EGLStreamOutputSurface(
+        EGLDisplay dpy,
+        EGLConfig config,
+        EGLContext display_share_context,
+        EGLStreamKHR output_stream,
+        geom::Size size)
+        : dpy{dpy},
+          ctx{make_stream_ctx(dpy, config, display_share_context)},
+          surface{make_output_surface(dpy, config, output_stream, size)},
+          size_{std::move(size)}
+    {
+        eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    }
+
+    void bind() override
+    {
+    }
+
+    void make_current() override
+    {
+        if (eglMakeCurrent(dpy, surface, surface, ctx) != EGL_TRUE)
+        {
+            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to make context current"));
+        }
+    }
+
+    void release_current() override
+    {
+        if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE)
+        {
+            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to release EGL context"));
+        }
+    }
+
+    auto commit() -> std::unique_ptr<mg::Framebuffer> override
+    {
+        if (eglSwapBuffers(dpy, surface) != EGL_TRUE)
+        {
+            BOOST_THROW_EXCEPTION(mg::egl_error("eglSwapBuffers failed"));
+        }
+        return {};
+    }
+
+    auto size() const -> geom::Size override
+    {
+        return size_;
+    }
+
+    auto layout() const -> Layout override
+    {
+        return Layout::GL;
+    }
+
+private:
+    EGLDisplay const dpy;
+    EGLContext const ctx;
+    EGLSurface const surface;
+    geom::Size const size_;
+};
+
+auto pick_stream_surface_config(EGLDisplay dpy, mg::GLConfig const& gl_config) -> EGLConfig
+{
+    EGLint const config_attr[] = {
+        EGL_SURFACE_TYPE, EGL_STREAM_BIT_KHR,
+        EGL_RED_SIZE, 8,
+        EGL_GREEN_SIZE, 8,
+        EGL_BLUE_SIZE, 8,
+        EGL_ALPHA_SIZE, 0,
+        EGL_DEPTH_SIZE, gl_config.depth_buffer_bits(),
+        EGL_STENCIL_SIZE, gl_config.stencil_buffer_bits(),
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_NONE
+    };
+
+    EGLConfig egl_config;
+    EGLint num_egl_configs{0};
+
+    if (eglChooseConfig(dpy, config_attr, &egl_config, 1, &num_egl_configs) == EGL_FALSE ||
+        num_egl_configs != 1)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to choose ARGB EGL config"));
+    }
+    return egl_config;
+}
+}
+
+mge::GLRenderingProvider::GLRenderingProvider(EGLDisplay dpy, std::unique_ptr<mir::renderer::gl::Context> ctx)
+    : dpy{dpy},
+      ctx{std::move(ctx)}
+{
+}
+
+mge::GLRenderingProvider::~GLRenderingProvider() = default;
+
+auto mir::graphics::eglstream::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer)
+    -> std::shared_ptr<gl::Texture>
+{
+    return std::dynamic_pointer_cast<gl::Texture>(std::move(buffer));
+}
+
+auto mge::GLRenderingProvider::surface_for_output(
+    std::shared_ptr<mg::DisplayInterfaceProvider> target,
+    geom::Size size,
+    mg::GLConfig const& gl_config) -> std::unique_ptr<gl::OutputSurface>
+{
+    if (auto stream_platform = target->acquire_interface<EGLStreamDisplayProvider>())
+    {
+        try
+        {
+            return std::make_unique<EGLStreamOutputSurface>(
+                dpy,
+                pick_stream_surface_config(dpy, gl_config),
+                static_cast<EGLContext>(*ctx),
+                stream_platform->claim_stream(),
+                size);
+        }
+        catch (std::exception const& err)
+        {
+            mir::log_info(
+                "Failed to create EGLStream-backed output surface: %s",
+                err.what());
+        }
+    }
+    if (auto cpu_provider = target->acquire_interface<CPUAddressableDisplayProvider>())
+    {
+        auto fb_context = ctx->make_share_context();
+        fb_context->make_current();
+        return std::make_unique<mgc::CPUCopyOutputSurface>(
+            dpy,
+            static_cast<EGLContext>(*ctx),
+            cpu_provider,
+            size);
+    }
+    BOOST_THROW_EXCEPTION((std::runtime_error{"DisplayInterfaceProvider does not support any viable output interface"}));
+}
+
+auto mge::GLRenderingProvider::suitability_for_allocator(std::shared_ptr<GraphicBufferAllocator> const& target)
+    -> probe::Result
+{
+    // TODO: We *can* import from other allocators, maybe (anything with dma-buf is probably possible)
+    // For now, the simplest thing is to bind hard to own own allocator.
+    if (dynamic_cast<mge::BufferAllocator*>(target.get()))
+    {
+        return probe::best;
+    }
+    return probe::unsupported;
+}
+
+auto mge::GLRenderingProvider::suitability_for_display(
+    std::shared_ptr<mg::DisplayInterfaceProvider> const& target) -> probe::Result
+{
+    if (target->acquire_interface<EGLStreamDisplayProvider>())
+    {
+        return probe::best;
+    }
+    if (target->acquire_interface<CPUAddressableDisplayProvider>())
+    {
+        return probe::supported;
+    }
+    return probe::unsupported;
+}
+
+auto mge::GLRenderingProvider::make_framebuffer_provider(std::shared_ptr<mg::DisplayInterfaceProvider> /*target*/)
+    -> std::unique_ptr<FramebufferProvider>
+{
+    // TODO: *Can* we provide overlay support?
+    class NullFramebufferProvider : public FramebufferProvider
+    {
+    public:
+        auto buffer_to_framebuffer(std::shared_ptr<Buffer>) -> std::unique_ptr<Framebuffer> override
+        {
+            // It is safe to return nullptr; this will be treated as “this buffer cannot be used as
+            // a framebuffer”.
+            return {};
+        }
+    };
+    return std::make_unique<NullFramebufferProvider>();
 }

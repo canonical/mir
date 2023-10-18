@@ -15,6 +15,7 @@
  */
 
 #include "mir/fatal.h"
+#include "platform.h"
 #include "display_buffer.h"
 #include "display_configuration.h"
 #include "mir/graphics/display_report.h"
@@ -25,26 +26,14 @@ namespace mg=mir::graphics;
 namespace mgx=mg::X;
 namespace geom=mir::geometry;
 
-mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
-                                  DisplayConfigurationOutputId output_id,
+mgx::DisplayBuffer::DisplayBuffer(std::shared_ptr<Platform> parent,
                                   xcb_window_t win,
-                                  geometry::Rectangle const& view_area,
-                                  geometry::Size const& window_size,
-                                  EGLContext const shared_context,
-                                  std::shared_ptr<DisplayReport> const& r,
-                                  GLConfig const& gl_config)
-                                  : report{r},
+                                  geometry::Rectangle const& view_area)
+                                  : parent{std::move(parent)},
                                     area{view_area},
-                                    window_size{window_size},
                                     transform(1),
-                                    egl{gl_config, x_dpy, win, shared_context},
-                                    output_id{output_id}
+                                    x_win{win}
 {
-    egl.report_egl_configuration(
-        [&r] (EGLDisplay disp, EGLConfig cfg)
-        {
-            r->report_egl_configuration(disp, cfg);
-        });
 }
 
 geom::Rectangle mgx::DisplayBuffer::view_area() const
@@ -52,35 +41,32 @@ geom::Rectangle mgx::DisplayBuffer::view_area() const
     return area;
 }
 
-auto mgx::DisplayBuffer::size() const -> geom::Size
+auto mgx::DisplayBuffer::overlay(std::vector<DisplayElement> const& /*renderlist*/) -> bool
 {
-    return window_size;
-}
-
-void mgx::DisplayBuffer::make_current()
-{
-    if (!egl.make_current())
-        fatal_error("Failed to make EGL surface current");
-}
-
-void mgx::DisplayBuffer::release_current()
-{
-    egl.release_current();
-}
-
-bool mgx::DisplayBuffer::overlay(RenderableList const& /*renderlist*/)
-{
+    // We could, with a lot of effort, make something like overlay support work, but
+    // there's little point.
     return false;
 }
 
-void mgx::DisplayBuffer::swap_buffers()
+namespace
 {
-    if (!egl.swap_buffers())
-        fatal_error("Failed to perform buffer swap");
+template<typename To, typename From>
+auto unique_ptr_cast(std::unique_ptr<From> ptr) -> std::unique_ptr<To>
+{
+    From* unowned_src = ptr.release();
+    if (auto to_src = dynamic_cast<To*>(unowned_src))
+    {
+        return std::unique_ptr<To>{to_src};
+    }
+    delete unowned_src;
+    BOOST_THROW_EXCEPTION((
+        std::bad_cast()));
+}
 }
 
-void mgx::DisplayBuffer::bind()
+void mgx::DisplayBuffer::set_next_image(std::unique_ptr<Framebuffer> content)
 {
+    next_frame = unique_ptr_cast<helpers::Framebuffer>(std::move(content));
 }
 
 glm::mat2 mgx::DisplayBuffer::transformation() const
@@ -93,19 +79,14 @@ void mgx::DisplayBuffer::set_view_area(geom::Rectangle const& a)
     area = a;
 }
 
-void mgx::DisplayBuffer::set_size(geom::Size const& size)
+auto mgx::DisplayBuffer::display_provider() const -> std::shared_ptr<DisplayInterfaceProvider>
 {
-    window_size = size;
+    return parent->provider_for_window(x_win);
 }
 
 void mgx::DisplayBuffer::set_transformation(glm::mat2 const& t)
 {
     transform = t;
-}
-
-mg::NativeDisplayBuffer* mgx::DisplayBuffer::native_display_buffer()
-{
-    return this;
 }
 
 void mgx::DisplayBuffer::for_each_display_buffer(
@@ -116,9 +97,16 @@ void mgx::DisplayBuffer::for_each_display_buffer(
 
 void mgx::DisplayBuffer::post()
 {
+    next_frame->swap_buffers();
+    next_frame.reset();
 }
 
 std::chrono::milliseconds mgx::DisplayBuffer::recommended_sleep() const
 {
     return std::chrono::milliseconds::zero();
+}
+
+auto mgx::DisplayBuffer::x11_window() const -> xcb_window_t
+{
+    return x_win;
 }

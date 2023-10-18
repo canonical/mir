@@ -55,6 +55,7 @@ class MockDisplayConfigurationPolicy : public mg::DisplayConfigurationPolicy
 public:
     ~MockDisplayConfigurationPolicy() noexcept {}
     MOCK_METHOD(void, apply_to, (mg::DisplayConfiguration&));
+    MOCK_METHOD(void, confirm, (mg::DisplayConfiguration const&));
 };
 
 

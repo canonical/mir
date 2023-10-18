@@ -123,12 +123,6 @@ auto make_safe_mock_display() -> std::unique_ptr<mtd::MockDisplay>
             {
                 return std::make_unique<mtd::StubDisplayConfig>();
             });
-    ON_CALL(*display, create_gl_context())
-        .WillByDefault(
-            []()
-            {
-                return std::make_unique<mtd::NullGLContext>();
-            });
     return display;
 }
 }
@@ -683,6 +677,10 @@ TEST(MultiplexingDisplay, applies_initial_display_configuration)
                         output.top_left);
                     next_top_left += delta;
                 });
+        }
+
+        void confirm(mg::DisplayConfiguration const&) override
+        {
         }
 
         auto expected_location_for_display(mg::DisplayConfigurationOutput const& display) -> geom::Point

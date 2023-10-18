@@ -14,16 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include "mir/graphics/linux_dmabuf.h"
+#include "mir/fd.h"
 #include "mir/graphics/drm_formats.h"
+#include "egl_buffer_copy.h"
 
 #include "wayland_wrapper.h"
 #include "mir/wayland/protocol_error.h"
 #include "mir/wayland/client.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
-#include "mir/renderer/gl/context.h"
 #include "mir/graphics/texture.h"
 #include "mir/graphics/program_factory.h"
 #include "mir/graphics/buffer.h"
@@ -31,16 +31,18 @@
 #include "mir/graphics/dmabuf_buffer.h"
 #include "mir/graphics/egl_context_executor.h"
 
+#include <EGL/egl.h>
+#include <cstdint>
+#include <cstring>
+#include <stdexcept>
+
 #define MIR_LOG_COMPONENT "linux-dmabuf-import"
 #include "mir/log.h"
-
-
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
 
 #include <mutex>
 #include <vector>
 #include <optional>
+#include <utility>
 #include <drm_fourcc.h>
 #include <wayland-server.h>
 
@@ -227,18 +229,295 @@ BufferGLDescription const ExternalOES = {
     "}\n"
 };
 
+namespace
+{
+struct EGLPlaneAttribs
+{
+    EGLint fd;
+    EGLint offset;
+    EGLint pitch;
+    EGLint modifier_lo;
+    EGLint modifier_hi;
+};
+
+static constexpr std::array<EGLPlaneAttribs, 4> egl_attribs = {
+    EGLPlaneAttribs {
+        EGL_DMA_BUF_PLANE0_FD_EXT,
+        EGL_DMA_BUF_PLANE0_OFFSET_EXT,
+        EGL_DMA_BUF_PLANE0_PITCH_EXT,
+        EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT,
+        EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT
+    },
+    EGLPlaneAttribs {
+        EGL_DMA_BUF_PLANE1_FD_EXT,
+        EGL_DMA_BUF_PLANE1_OFFSET_EXT,
+        EGL_DMA_BUF_PLANE1_PITCH_EXT,
+        EGL_DMA_BUF_PLANE1_MODIFIER_LO_EXT,
+        EGL_DMA_BUF_PLANE1_MODIFIER_HI_EXT
+    },
+    EGLPlaneAttribs {
+        EGL_DMA_BUF_PLANE2_FD_EXT,
+        EGL_DMA_BUF_PLANE2_OFFSET_EXT,
+        EGL_DMA_BUF_PLANE2_PITCH_EXT,
+        EGL_DMA_BUF_PLANE2_MODIFIER_LO_EXT,
+        EGL_DMA_BUF_PLANE2_MODIFIER_HI_EXT
+    },
+    EGLPlaneAttribs {
+        EGL_DMA_BUF_PLANE3_FD_EXT,
+        EGL_DMA_BUF_PLANE3_OFFSET_EXT,
+        EGL_DMA_BUF_PLANE3_PITCH_EXT,
+        EGL_DMA_BUF_PLANE3_MODIFIER_LO_EXT,
+        EGL_DMA_BUF_PLANE3_MODIFIER_HI_EXT
+    }
+};
+
+class DMABuf : public mg::DMABufBuffer
+{
+public:
+    DMABuf(
+        mg::DRMFormat format,
+        std::optional<uint64_t> modifier,
+        std::vector<PlaneDescriptor> planes,
+        mg::gl::Texture::Layout layout,
+        geom::Size size)
+        : format_{format},
+          modifier_{std::move(modifier)},
+          planes_{std::move(planes)},
+          layout_{layout},
+          size_{size}
+    {
+    }
+
+    auto format() const -> mg::DRMFormat override
+    {
+        return format_;
+    }
+    auto modifier() const -> std::optional<uint64_t> override
+    {
+        return modifier_;
+    }
+    auto planes() const -> std::vector<PlaneDescriptor> const& override
+    {
+        return planes_;
+    }
+    auto layout() const -> mg::gl::Texture::Layout override
+    {
+        return layout_;
+    }
+    auto size() const -> geom::Size override
+    {
+        return size_;
+    }
+private:
+    mg::DRMFormat const format_;
+    std::optional<uint64_t> const modifier_;
+    std::vector<PlaneDescriptor> const planes_;
+    mg::gl::Texture::Layout const layout_;
+    geom::Size const size_;
+};
+
+auto export_egl_image(
+    mg::EGLExtensions::MESADmaBufExport const& ext,
+    EGLDisplay dpy,
+    EGLImage image,
+    geom::Size size) -> std::unique_ptr<mg::DMABufBuffer>
+{
+    constexpr int const max_planes = 4;
+
+    int fourcc;
+    int num_planes;
+    std::array<uint64_t, max_planes> modifiers;
+    if (ext.eglExportDMABUFImageQueryMESA(dpy, image, &fourcc, &num_planes, modifiers.data()) != EGL_TRUE)
+    {
+        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to query EGLImage for dma-buf export")));
+    }
+
+    /* There's only a single modifier for a logical buffer. For some reason the EGL interface
+     * decided to return one modifier per plane, but they are always the same.
+     *
+     * We handle DRM_FORMAT_MOD_INVALID as an empty modifier; fix that up here if we get it.
+     */
+    auto modifier =
+        [](uint64_t egl_modifier) -> std::optional<uint64_t>
+        {
+            if (egl_modifier == DRM_FORMAT_MOD_INVALID)
+            {
+                return std::nullopt;
+            }
+            return egl_modifier;
+        }(modifiers[0]);
+
+    std::array<int, max_planes> fds;
+    std::array<EGLint, max_planes> strides;
+    std::array<EGLint, max_planes> offsets;
+
+    if (ext.eglExportDMABUFImageMESA(dpy, image, fds.data(), strides.data(), offsets.data()) != EGL_TRUE)
+    {
+        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to export EGLImage to dma-buf(s)")));
+    }
+
+    std::vector<PlaneInfo> planes;
+    planes.reserve(num_planes);
+    for (int i = 0; i < num_planes; ++i)
+    {
+        mir::Fd fd;
+        // If multiple planes use the same buffer, the fds array will be filled with -1 for subsequent
+        // planes.
+        if (fds[i] == -1)
+        {
+            // Paranoia
+            if (i == 0)
+            {
+                BOOST_THROW_EXCEPTION((std::runtime_error{"Driver has a broken EGL_MESA_image_dma_buf_export extension"}));
+            }
+            fds[i] = fds[i - 1];
+            fd = mir::Fd{mir::IntOwnedFd{fds[i]}};
+        }
+        else
+        {
+            // We own these FDs now.
+            fd = mir::Fd{fds[i]};
+        }
+        planes.push_back(
+            PlaneInfo {
+                .dma_buf = std::move(fd),
+                .stride = static_cast<uint32_t>(strides[i]),
+                .offset = static_cast<uint32_t>(offsets[i])
+            });
+    }
+
+    return std::make_unique<DMABuf>(
+        mg::DRMFormat{static_cast<uint32_t>(fourcc)},
+        modifier,
+        std::move(planes),
+        mg::gl::Texture::Layout::TopRowFirst,
+        size);
+}
+
+/**
+ * Reimport dmabufs into EGL
+ *
+ * This is necessary to call each time the buffer is re-submitted by the client,
+ * to ensure any state is properly synchronised.
+ *
+ * \return  An EGLImageKHR handle to the imported
+ * \throws  A std::system_error containing the EGL error on failure.
+ */
+auto import_egl_image(
+    int32_t width,
+    int32_t height,
+    mg::DRMFormat format,
+    std::optional<uint64_t> modifier,
+    std::vector<PlaneInfo> const& planes,
+    EGLDisplay dpy,
+    mg::EGLExtensions const& egl_extensions) -> EGLImageKHR
+{
+    std::vector<EGLint> attributes;
+
+    attributes.push_back(EGL_WIDTH);
+    attributes.push_back(width);
+    attributes.push_back(EGL_HEIGHT);
+    attributes.push_back(height);
+    attributes.push_back(EGL_LINUX_DRM_FOURCC_EXT);
+    attributes.push_back(format);
+
+    for(auto i = 0u; i < planes.size(); ++i)
+    {
+        auto const& attrib_names = egl_attribs[i];
+        auto const& plane = planes[i];
+
+        attributes.push_back(attrib_names.fd);
+        attributes.push_back(static_cast<int>(plane.dma_buf));
+        attributes.push_back(attrib_names.offset);
+        attributes.push_back(plane.offset);
+        attributes.push_back(attrib_names.pitch);
+        attributes.push_back(plane.stride);
+        if (auto modifier_present = modifier)
+        {
+            attributes.push_back(attrib_names.modifier_lo);
+            attributes.push_back(modifier_present.value() & 0xFFFFFFFF);
+            attributes.push_back(attrib_names.modifier_hi);
+            attributes.push_back(modifier_present.value() >> 32);
+        }
+    }
+    attributes.push_back(EGL_NONE);
+    EGLImage image = egl_extensions.base(dpy).eglCreateImageKHR(
+        dpy,
+        EGL_NO_CONTEXT,
+        EGL_LINUX_DMA_BUF_EXT,
+        nullptr,
+        attributes.data());
+
+    if (image == EGL_NO_IMAGE_KHR)
+    {
+        auto const msg = planes.size() > 1 ?
+                         "Failed to import supplied dmabufs" :
+                         "Failed to import supplied dmabuf";
+        BOOST_THROW_EXCEPTION((mg::egl_error(msg)));
+    }
+
+    return image;
+}
+
+/**
+ * Get a description of how to use a specified format/modifier pair in GL
+ *
+ * \return  A pointer to a statically-allocated descriptor, or nullptr if
+ *          this format/modifier pair is invalid.
+ */
+BufferGLDescription const* descriptor_for_format_and_modifiers(
+    mg::DRMFormat format,
+    uint64_t modifier,
+    mg::DMABufEGLProvider const& provider)
+{
+    auto const& formats = provider.supported_formats();
+    for (auto i = 0u; i < formats.num_formats(); ++i)
+    {
+        auto const& [supported_format, modifiers, external_only] = formats[i];
+
+        for (auto j = 0u ; j < modifiers.size(); ++j)
+        {
+            auto const supported_modifier = modifiers[j];
+
+            if (static_cast<uint32_t>(supported_format) == format &&
+                modifier == supported_modifier)
+            {
+                if (external_only[j])
+                {
+                    return &ExternalOES;
+                }
+                return &Tex2D;
+            }
+        }
+    }
+
+    /* The specification of zwp_linux_buffer_params_v1.add says:
+     *
+     *        Warning: It should be an error if the format/modifier pair was not
+     *        advertised with the modifier event. This is not enforced yet because
+     *        some implementations always accept `DRM_FORMAT_MOD_INVALID`. Also
+     *        version 2 of this protocol does not have the modifier event.
+     *
+     * So don't enforce the error for this case
+     */
+    if (modifier == DRM_FORMAT_MOD_INVALID)
+    {
+        return &Tex2D;
+    }
+    return nullptr;
+}
+
+}
+
 /**
  * Holds on to all imported dmabuf buffers, and allows looking up by wl_buffer
  *
  * \note This is not threadsafe, and should only be accessed on the Wayland thread
  */
-class WlDmaBufBuffer : public mir::wayland::Buffer
+class WlDmaBufBuffer : public mir::wayland::Buffer, public mir::graphics::DMABufBuffer
 {
 public:
     WlDmaBufBuffer(
-        EGLDisplay dpy,
-        std::shared_ptr<mg::EGLExtensions> egl_extensions,
-        BufferGLDescription const& desc,
         wl_resource* wl_buffer,
         int32_t width,
         int32_t height,
@@ -247,39 +526,28 @@ public:
         uint64_t modifier,
         std::vector<PlaneInfo> plane_params)
             : Buffer(wl_buffer, Version<1>{}),
-              dpy{dpy},
-              egl_extensions{std::move(egl_extensions)},
-              desc{desc},
               width{width},
               height{height},
               format_{format},
               flags{flags},
               modifier_{modifier},
-              planes_{std::move(plane_params)},
-              image{EGL_NO_IMAGE_KHR}
+              planes_{std::move(plane_params)}
     {
-        reimport_egl_image();
     }
 
-    ~WlDmaBufBuffer()
-    {
-        if (image != EGL_NO_IMAGE_KHR)
-        {
-            egl_extensions->base(dpy).eglDestroyImageKHR(dpy, image);
-        }
-    }
+    ~WlDmaBufBuffer() = default;
 
     static auto maybe_dmabuf_from_wl_buffer(wl_resource* buffer) -> WlDmaBufBuffer*
     {
         return dynamic_cast<WlDmaBufBuffer*>(Buffer::from(buffer));
     }
 
-    auto size() -> geom::Size
+    auto size() const -> geom::Size override
     {
         return {width, height};
     }
 
-    auto layout() -> mg::gl::Texture::Layout
+    auto layout() const -> mg::gl::Texture::Layout override
     {
         if (flags & mw::LinuxBufferParamsV1::Flags::y_invert)
         {
@@ -291,135 +559,26 @@ public:
         }
     }
 
-    auto format() -> uint32_t
+    auto format() const -> mg::DRMFormat override
     {
         return format_;
     }
 
-    auto descriptor() const -> BufferGLDescription const&
-    {
-        return desc;
-    }
-    /**
-     * Reimport dmabufs into EGL
-     *
-     * This is necessary to call each time the buffer is re-submitted by the client,
-     * to ensure any state is properly synchronised.
-     *
-     * \return  An EGLImageKHR handle to the imported
-     * \throws  A std::system_error containing the EGL error on failure.
-     */
-    auto reimport_egl_image() -> EGLImageKHR
-    {
-        std::vector<EGLint> attributes;
-
-        attributes.push_back(EGL_WIDTH);
-        attributes.push_back(width);
-        attributes.push_back(EGL_HEIGHT);
-        attributes.push_back(height);
-        attributes.push_back(EGL_LINUX_DRM_FOURCC_EXT);
-        attributes.push_back(format());
-
-        for(auto i = 0u; i < planes_.size(); ++i)
-        {
-            auto const& attrib_names = egl_attribs[i];
-            auto const& plane = planes()[i];
-
-            attributes.push_back(attrib_names.fd);
-            attributes.push_back(static_cast<int>(plane.dma_buf));
-            attributes.push_back(attrib_names.offset);
-            attributes.push_back(plane.offset);
-            attributes.push_back(attrib_names.pitch);
-            attributes.push_back(plane.stride);
-            if (modifier() != DRM_FORMAT_MOD_INVALID)
-            {
-                attributes.push_back(attrib_names.modifier_lo);
-                attributes.push_back(modifier() & 0xFFFFFFFF);
-                attributes.push_back(attrib_names.modifier_hi);
-                attributes.push_back(modifier() >> 32);
-            }
-        }
-        attributes.push_back(EGL_NONE);
-        if (image != EGL_NO_IMAGE_KHR)
-        {
-            egl_extensions->base(dpy).eglDestroyImageKHR(dpy, image);
-        }
-        image = egl_extensions->base(dpy).eglCreateImageKHR(
-            dpy,
-            EGL_NO_CONTEXT,
-            EGL_LINUX_DMA_BUF_EXT,
-            nullptr,
-            attributes.data());
-
-        if (image == EGL_NO_IMAGE_KHR)
-        {
-            auto const msg = planes_.size() > 1 ?
-                "Failed to import supplied dmabufs" :
-                "Failed to import supplied dmabuf";
-            BOOST_THROW_EXCEPTION((mg::egl_error(msg)));
-        }
-
-        return image;
-    }
-
-    auto modifier() -> uint64_t
+    auto modifier() const -> std::optional<uint64_t> override
     {
         return modifier_;
     }
 
-    auto planes() -> std::vector<PlaneInfo> const&
+    auto planes() const -> std::vector<PlaneInfo> const& override
     {
         return planes_;
     }
 private:
-    EGLDisplay const dpy;
-    std::shared_ptr<mg::EGLExtensions> const egl_extensions;
-    BufferGLDescription const& desc;
     int32_t const width, height;
     mg::DRMFormat const format_;
     uint32_t const flags;
-    uint64_t const modifier_;
+    std::optional<uint64_t> const modifier_;
     std::vector<PlaneInfo> const planes_;
-    EGLImageKHR image;
-
-    struct EGLPlaneAttribs
-    {
-        EGLint fd;
-        EGLint offset;
-        EGLint pitch;
-        EGLint modifier_lo;
-        EGLint modifier_hi;
-    };
-    static constexpr std::array<EGLPlaneAttribs, 4> egl_attribs = {
-        EGLPlaneAttribs {
-            EGL_DMA_BUF_PLANE0_FD_EXT,
-            EGL_DMA_BUF_PLANE0_OFFSET_EXT,
-            EGL_DMA_BUF_PLANE0_PITCH_EXT,
-            EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT,
-            EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT
-        },
-        EGLPlaneAttribs {
-            EGL_DMA_BUF_PLANE1_FD_EXT,
-            EGL_DMA_BUF_PLANE1_OFFSET_EXT,
-            EGL_DMA_BUF_PLANE1_PITCH_EXT,
-            EGL_DMA_BUF_PLANE1_MODIFIER_LO_EXT,
-            EGL_DMA_BUF_PLANE1_MODIFIER_HI_EXT
-        },
-        EGLPlaneAttribs {
-            EGL_DMA_BUF_PLANE2_FD_EXT,
-            EGL_DMA_BUF_PLANE2_OFFSET_EXT,
-            EGL_DMA_BUF_PLANE2_PITCH_EXT,
-            EGL_DMA_BUF_PLANE2_MODIFIER_LO_EXT,
-            EGL_DMA_BUF_PLANE2_MODIFIER_HI_EXT
-        },
-        EGLPlaneAttribs {
-            EGL_DMA_BUF_PLANE3_FD_EXT,
-            EGL_DMA_BUF_PLANE3_OFFSET_EXT,
-            EGL_DMA_BUF_PLANE3_PITCH_EXT,
-            EGL_DMA_BUF_PLANE3_MODIFIER_LO_EXT,
-            EGL_DMA_BUF_PLANE3_MODIFIER_HI_EXT
-        }
-    };
 };
 
 class LinuxDmaBufParams : public mir::wayland::LinuxBufferParamsV1
@@ -427,14 +586,10 @@ class LinuxDmaBufParams : public mir::wayland::LinuxBufferParamsV1
 public:
     LinuxDmaBufParams(
         wl_resource* new_resource,
-        EGLDisplay dpy,
-        std::shared_ptr<mg::EGLExtensions> egl_extensions,
-        std::shared_ptr<mg::DmaBufFormatDescriptors const> formats)
+        std::shared_ptr<mg::DMABufEGLProvider> provider)
         : mir::wayland::LinuxBufferParamsV1(new_resource, Version<3>{}),
           consumed{false},
-          dpy{dpy},
-          egl_extensions{std::move(egl_extensions)},
-          formats{std::move(formats)}
+          provider{std::move(provider)}
     {
     }
 
@@ -445,9 +600,12 @@ private:
     std::array<PlaneInfo, 4> planes;
     std::optional<uint64_t> modifier;
     bool consumed;
-    EGLDisplay dpy;
-    std::shared_ptr<mg::EGLExtensions> egl_extensions;
-    std::shared_ptr<mg::DmaBufFormatDescriptors const> const formats;
+    /* We don't *really* need to create an mg::Buffer from here, but we *do* need to validate
+     * that the dma-buf(s) can be succesfully imported to an EGLImage.
+     *
+     * The only way to ensure that is to actually import them.
+     */
+    std::shared_ptr<mg::DMABufEGLProvider> const provider;
 
     void add(
         mir::Fd fd,
@@ -555,8 +713,9 @@ private:
         return planes.cbegin() + plane_count;
     }
 
-    void validate_params(int32_t width, int32_t height, uint32_t /*format*/, uint32_t /*flags*/)
+    void validate_params(int32_t width, int32_t height, uint32_t format, uint32_t /*flags*/)
     {
+        // TODO: Validate flags
         if (width < 1 || height < 1)
         {
             BOOST_THROW_EXCEPTION((
@@ -565,61 +724,20 @@ private:
                     Error::invalid_dimensions,
                     "Width %i or height %i invalid; both must be >= 1!",
                     width, height}));
-
-            // TODO: Validate format & flags
         }
-    }
-
-    BufferGLDescription const& descriptor_for_format_and_modifiers(mg::DRMFormat format)
-    {
-        /* The optional<uint64_t> modifier is guaranteed to be engaged here,
-         * as the add() call fills it if it is unset, and validate_and_count_planes()
-         * has already checked that add() has been called at least once.
-         */
-        auto const requested_modifier = modifier.value();
-        for (auto i = 0u; i < formats->num_formats(); ++i)
+        if (!descriptor_for_format_and_modifiers(mg::DRMFormat{format}, modifier.value(), *provider))
         {
-            auto const& [supported_format, modifiers, external_only] = (*formats)[i];
-
-            for (auto j = 0u ; j < modifiers.size(); ++j)
-            {
-                auto const supported_modifier = modifiers[j];
-
-                if (static_cast<uint32_t>(supported_format) == format &&
-                    requested_modifier == supported_modifier)
-                {
-                    if (external_only[j])
-                    {
-                        return ExternalOES;
-                    }
-                    return Tex2D;
-                }
-            }
+            BOOST_THROW_EXCEPTION((
+                mw::ProtocolError{
+                    resource,
+                    Error::invalid_format,
+                    "Client requested unsupported format/modifier combination %s/%s (%u/%u,%u)",
+                    mg::DRMFormat{format}.name(),
+                    mg::drm_modifier_to_string(*modifier).c_str(),
+                    static_cast<uint32_t>(format),
+                    static_cast<uint32_t>(*modifier >> 32),
+                    static_cast<uint32_t>(*modifier & 0xFFFFFFFF)}));
         }
-
-        // The specification of zwp_linux_buffer_params_v1.add says:
-        //
-        //        Warning: It should be an error if the format/modifier pair was not
-        //        advertised with the modifier event. This is not enforced yet because
-        //        some implementations always accept `DRM_FORMAT_MOD_INVALID`. Also
-        //        version 2 of this protocol does not have the modifier event.
-        //
-        // So don't enforce the error for this case
-        if (requested_modifier == DRM_FORMAT_MOD_INVALID)
-        {
-            return Tex2D;
-        }
-
-        BOOST_THROW_EXCEPTION((
-            mw::ProtocolError{
-                resource,
-                Error::invalid_format,
-                "Client requested unsupported format/modifier combination %s/%s (%u/%u,%u)",
-                format.name(),
-                mg::drm_modifier_to_string(requested_modifier).c_str(),
-                static_cast<uint32_t>(format),
-                static_cast<uint32_t>(requested_modifier >> 32),
-                static_cast<uint32_t>(requested_modifier & 0xFFFFFFFF)}));
     }
 
     void create(int32_t width, int32_t height, uint32_t format, uint32_t flags) override
@@ -638,10 +756,7 @@ private:
             auto const last_valid_plane = validate_and_count_planes();
 
             mg::DRMFormat const drm_format{format};
-            new WlDmaBufBuffer{
-                dpy,
-                egl_extensions,
-                descriptor_for_format_and_modifiers(drm_format),
+            auto dma_buf = new WlDmaBufBuffer{
                 buffer_resource,
                 width,
                 height,
@@ -649,6 +764,10 @@ private:
                 flags,
                 modifier.value(),
                 {planes.cbegin(), last_valid_plane}};
+
+            // We don't need to keep it around, but we do need to ensure that we *can* create a Buffer
+            // from this dma-buf
+            provider->validate_import(*dma_buf);
             send_created_event(buffer_resource);
         }
         catch (std::system_error const& err)
@@ -681,10 +800,7 @@ private:
             auto const last_valid_plane = validate_and_count_planes();
 
             mg::DRMFormat const drm_format{format};
-            new WlDmaBufBuffer{
-                dpy,
-                egl_extensions,
-                descriptor_for_format_and_modifiers(drm_format),
+            auto dma_buf = new WlDmaBufBuffer{
                 buffer_id,
                 width,
                 height,
@@ -692,6 +808,9 @@ private:
                 flags,
                 modifier.value(),
                 {planes.cbegin(), last_valid_plane}};
+            // We don't need to keep it around, but we do need to ensure that we *can* create a Buffer
+            // from this dma-buf
+            provider->validate_import(*dma_buf);
         }
         catch (std::system_error const& err)
         {
@@ -723,66 +842,39 @@ GLuint get_tex_id()
     return tex;
 }
 
-bool drm_format_has_alpha(uint32_t format)
-{
-    /* TODO: We should really have something like libweston/pixel-formats.h
-     * We've said this multiple times before, so 🤷
-     */
-
-    switch (format)
-    {
-        /* This is only an optimisation, so pick a bunch of formats and hope that
-         * covers it…
-         */
-        case DRM_FORMAT_XBGR2101010:
-        case DRM_FORMAT_BGRX1010102:
-        case DRM_FORMAT_XBGR8888:
-        case DRM_FORMAT_BGRX8888:
-        case DRM_FORMAT_XRGB2101010:
-        case DRM_FORMAT_RGBX1010102:
-        case DRM_FORMAT_RGBX8888:
-        case DRM_FORMAT_XRGB8888:
-            return false;
-        default:
-        // TODO: I *think* true is a safe default, as it'll just mean we're blending something without alpha?
-            return true;
-    }
-}
-
-class WaylandDmabufTexBuffer :
-    public mg::BufferBasic,
-    public mg::gl::Texture,
-    public mg::DMABufBuffer
+class DMABufTex : public mg::gl::Texture
 {
 public:
-    // Note: Must be called with a current EGL context
-    WaylandDmabufTexBuffer(
-        WlDmaBufBuffer& source,
-        mg::EGLExtensions const& extensions,
+    DMABufTex(
         EGLDisplay dpy,
-        std::shared_ptr<mgc::EGLContextExecutor> egl_delegate,
-        std::function<void()>&& on_consumed,
-        std::function<void()>&& on_release)
+        mg::EGLExtensions const& extensions,
+        mg::DMABufBuffer const& dma_buf,
+        BufferGLDescription const& descriptor,
+        std::shared_ptr<mgc::EGLContextExecutor> egl_delegate)
         : tex{get_tex_id()},
-          desc{source.descriptor()},
-          on_consumed{std::move(on_consumed)},
-          on_release{std::move(on_release)},
-          size_{source.size()},
-          layout_{source.layout()},
-          has_alpha{drm_format_has_alpha(source.format())},
-          planes_{source.planes()},
-          modifier_{source.modifier()},
-          fourcc{source.format()},
+          desc{descriptor},
+          layout_{dma_buf.layout()},
           egl_delegate{std::move(egl_delegate)}
     {
         eglBindAPI(EGL_OPENGL_ES_API);
 
-        auto const target = source.descriptor().target;
+        auto const target = descriptor.target;
+
+        EGLImage image = import_egl_image(
+            dma_buf.size().width.as_int(),
+            dma_buf.size().height.as_int(),
+            dma_buf.format(),
+            dma_buf.modifier(),
+            dma_buf.planes(),
+            dpy,
+            extensions);
 
         glBindTexture(target, tex);
-        extensions.base(dpy).glEGLImageTargetTexture2DOES(target, source.reimport_egl_image());
+        extensions.base(dpy).glEGLImageTargetTexture2DOES(target, image);
+
         // tex is now an EGLImage sibling, so we can free the EGLImage without
         // freeing the backing data.
+        extensions.base(dpy).eglDestroyImageKHR(dpy, image);
 
         glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -790,41 +882,16 @@ public:
         glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
 
-    ~WaylandDmabufTexBuffer() override
+    ~DMABufTex() override
     {
         egl_delegate->spawn(
             [tex = tex]()
             {
-              glDeleteTextures(1, &tex);
+                glDeleteTextures(1, &tex);
             });
-
-        on_release();
     }
 
-    mir::geometry::Size size() const override
-    {
-        return size_;
-    }
-
-    MirPixelFormat pixel_format() const override
-    {
-        // There's no way to implement this corectly…
-        if (has_alpha)
-        {
-            return mir_pixel_format_argb_8888;
-        }
-        else
-        {
-            return mir_pixel_format_xrgb_8888;
-        }
-    }
-
-    NativeBufferBase* native_buffer_base() override
-    {
-        return this;
-    }
-
-    mir::graphics::gl::Program const& shader(mir::graphics::gl::ProgramFactory& cache) const override
+    mg::gl::Program const& shader(mg::gl::ProgramFactory& cache) const override
     {
         /* We rely on the fact that `desc` is a reference to a statically-allocated namespaced
          * variable, and so taking the address will give us the address of the static instance,
@@ -844,19 +911,99 @@ public:
     void bind() override
     {
         glBindTexture(desc.target, tex);
-
-        std::lock_guard lock(consumed_mutex);
-        on_consumed();
-        on_consumed = [](){};
     }
 
     void add_syncpoint() override
     {
     }
+private:
+    GLuint const tex;
+    BufferGLDescription const& desc;
+    Layout const layout_;
+    std::shared_ptr<mgc::EGLContextExecutor> const egl_delegate;
+};
 
-    auto drm_fourcc() const -> uint32_t override
+class DmabufTexBuffer :
+    public mg::BufferBasic,
+    public mg::DMABufBuffer
+{
+public:
+    // Note: Must be called with a current EGL context
+    DmabufTexBuffer(
+        EGLDisplay dpy,
+        mg::EGLExtensions const& extensions,
+        mg::DMABufBuffer const& dma_buf,
+        BufferGLDescription const& descriptor,
+        std::shared_ptr<mg::DMABufEGLProvider> provider,
+        std::shared_ptr<mgc::EGLContextExecutor> egl_delegate,
+        std::function<void()>&& on_consumed,
+        std::function<void()>&& on_release)
+        : dpy{dpy},
+          tex{dpy, extensions, dma_buf, descriptor, std::move(egl_delegate)},
+          provider_{std::move(provider)},
+          on_consumed{std::move(on_consumed)},
+          on_release{std::move(on_release)},
+          size_{dma_buf.size()},
+          has_alpha{dma_buf.format().has_alpha()},
+          planes_{dma_buf.planes()},
+          modifier_{dma_buf.modifier()},
+          format_{dma_buf.format()}
     {
-        return fourcc;
+    }
+
+    ~DmabufTexBuffer() override
+    {
+        on_release();
+    }
+
+    auto on_same_egl_display(EGLDisplay dpy) -> bool
+    {
+        return this->dpy == dpy;
+    }
+
+    mir::geometry::Size size() const override
+    {
+        return size_;
+    }
+
+    MirPixelFormat pixel_format() const override
+    {
+        if (auto mir_format = format_.as_mir_format())
+        {
+            return mir_format.value();
+        }
+        // There's no way to implement this corectly…
+        if (has_alpha)
+        {
+            return mir_pixel_format_argb_8888;
+        }
+        else
+        {
+            return mir_pixel_format_xrgb_8888;
+        }
+    }
+
+    NativeBufferBase* native_buffer_base() override
+    {
+        return this;
+    }
+
+    auto as_texture() -> DMABufTex*
+    {
+        /* We only get asked for a texture when the Renderer is about to
+         * texture from this buffer; it's a good indication that the buffer
+         * has been consumed.
+         */
+        std::lock_guard lock{consumed_mutex};
+        on_consumed();
+        on_consumed = [](){};
+
+        return &tex;
+    }
+
+    auto format() const -> mg::DRMFormat override
+    {
+        return format_;
     }
 
     auto modifier() const -> std::optional<uint64_t> override
@@ -869,23 +1016,31 @@ public:
         return planes_;
     }
 
+    auto layout() const -> mg::gl::Texture::Layout override
+    {
+        return tex.layout();
+    }
+
+    auto provider() const -> std::shared_ptr<mg::DMABufEGLProvider>
+    {
+        return provider_;
+    }
 private:
-    GLuint const tex;
-    BufferGLDescription const& desc;
+    EGLDisplay const dpy;
+    DMABufTex tex;
+
+    std::shared_ptr<mg::DMABufEGLProvider> const provider_;
 
     std::mutex consumed_mutex;
     std::function<void()> on_consumed;
     std::function<void()> const on_release;
 
     geom::Size const size_;
-    Layout const layout_;
     bool const has_alpha;
 
     std::vector<mg::DMABufBuffer::PlaneDescriptor> const planes_;
     std::optional<uint64_t> const modifier_;
-    uint32_t const fourcc;
-
-    std::shared_ptr<mgc::EGLContextExecutor> const egl_delegate;
+    mg::DRMFormat const format_;
 };
 
 
@@ -896,17 +1051,14 @@ class mg::LinuxDmaBufUnstable::Instance : public mir::wayland::LinuxDmabufV1
 public:
     Instance(
         wl_resource* new_resource,
-        EGLDisplay dpy,
-        std::shared_ptr<EGLExtensions> egl_extensions,
-        std::shared_ptr<DmaBufFormatDescriptors const> formats)
+        std::shared_ptr<mg::DMABufEGLProvider> provider)
         : mir::wayland::LinuxDmabufV1(new_resource, Version<3>{}),
-          dpy{dpy},
-          egl_extensions{std::move(egl_extensions)},
-          formats{std::move(formats)}
+          provider{std::move(provider)}
     {
-        for (auto i = 0u; i < this->formats->num_formats(); ++i)
+        auto const& formats = this->provider->supported_formats();
+        for (auto i = 0u; i < formats.num_formats(); ++i)
         {
-            auto [format, modifiers, external_only] = (*(this->formats))[i];
+            auto [format, modifiers, external_only] = formats[i];
 
             send_format_event(format);
             for (auto j = 0u; j < modifiers.size(); ++j)
@@ -922,23 +1074,17 @@ public:
 private:
     void create_params(struct wl_resource* params_id) override
     {
-        new LinuxDmaBufParams{params_id, dpy, egl_extensions, formats};
+        new LinuxDmaBufParams{params_id, provider};
     }
 
-    EGLDisplay const dpy;
-    std::shared_ptr<EGLExtensions> const egl_extensions;
-    std::shared_ptr<DmaBufFormatDescriptors const> const formats;
+    std::shared_ptr<mg::DMABufEGLProvider> const provider;
 };
 
 mg::LinuxDmaBufUnstable::LinuxDmaBufUnstable(
     wl_display* display,
-    EGLDisplay dpy,
-    std::shared_ptr<EGLExtensions> egl_extensions,
-    EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext)
+    std::shared_ptr<mg::DMABufEGLProvider> provider)
     : mir::wayland::LinuxDmabufV1::Global(display, Version<3>{}),
-      dpy{dpy},
-      egl_extensions{std::move(egl_extensions)},
-      formats{std::make_shared<DmaBufFormatDescriptors>(dpy, dmabuf_ext)}
+      provider{std::move(provider)}
 {
 }
 
@@ -946,16 +1092,13 @@ auto mg::LinuxDmaBufUnstable::buffer_from_resource(
     wl_resource* buffer,
     std::function<void()>&& on_consumed,
     std::function<void()>&& on_release,
-    std::shared_ptr<mgc::EGLContextExecutor> egl_delegate)
+    std::shared_ptr<mgc::EGLContextExecutor> /*egl_delegate*/)
     -> std::shared_ptr<Buffer>
 {
     if (auto dmabuf = WlDmaBufBuffer::maybe_dmabuf_from_wl_buffer(buffer))
     {
-        return std::make_shared<WaylandDmabufTexBuffer>(
+        return provider->import_dma_buf(
             *dmabuf,
-            *egl_extensions,
-            dpy,
-            std::move(egl_delegate),
             std::move(on_consumed),
             std::move(on_release));
     }
@@ -964,5 +1107,187 @@ auto mg::LinuxDmaBufUnstable::buffer_from_resource(
 
 void mg::LinuxDmaBufUnstable::bind(wl_resource* new_resource)
 {
-    new LinuxDmaBufUnstable::Instance{new_resource, dpy, egl_extensions, formats};
+    new LinuxDmaBufUnstable::Instance{new_resource, provider};
+}
+
+mg::DMABufEGLProvider::DMABufEGLProvider(
+    EGLDisplay dpy,
+    std::shared_ptr<EGLExtensions> egl_extensions,
+    mg::EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext,
+    std::shared_ptr<mgc::EGLContextExecutor> egl_delegate,
+    EGLImageAllocator allocate_importable_image)
+    : dpy{dpy},
+      egl_extensions{std::move(egl_extensions)},
+      dmabuf_export_ext{mg::EGLExtensions::MESADmaBufExport::extension_if_supported(dpy)},
+      formats{std::make_unique<DmaBufFormatDescriptors>(dpy, dmabuf_ext)},
+      egl_delegate{std::move(egl_delegate)},
+      allocate_importable_image{std::move(allocate_importable_image)},
+      blitter{std::make_unique<mg::EGLBufferCopier>(this->egl_delegate)}
+{
+}
+
+mg::DMABufEGLProvider::~DMABufEGLProvider() = default;
+
+auto mg::DMABufEGLProvider::supported_formats() const -> mg::DmaBufFormatDescriptors const&
+{
+    return *formats;
+}
+
+auto mg::DMABufEGLProvider::import_dma_buf(
+    mg::DMABufBuffer const& dma_buf,
+    std::function<void()>&& on_consumed,
+    std::function<void()>&& on_release) -> std::shared_ptr<Buffer>
+{
+    // This will have been pre-validated at point the Wayland client created the buffer
+    auto descriptor = descriptor_for_format_and_modifiers(
+        dma_buf.format(),
+        dma_buf.modifier().value_or(DRM_FORMAT_MOD_INVALID),
+        *this);
+    return std::make_shared<DmabufTexBuffer>(
+        dpy,
+        *egl_extensions,
+        dma_buf,
+        *descriptor,
+        shared_from_this(),
+        egl_delegate,
+        std::move(on_consumed),
+        std::move(on_release));
+}
+
+void mg::DMABufEGLProvider::validate_import(DMABufBuffer const& dma_buf)
+{
+    auto image = import_egl_image(
+        dma_buf.size().width.as_int(), dma_buf.size().height.as_int(),
+        dma_buf.format(),
+        dma_buf.modifier(),
+        dma_buf.planes(),
+        dpy,
+        *egl_extensions);
+    if (image != EGL_NO_IMAGE_KHR)
+    {
+        // We can throw this image away immediately
+        egl_extensions->base(dpy).eglDestroyImageKHR(dpy, image);
+    }
+}
+
+auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<Buffer> buffer)
+    -> std::shared_ptr<gl::Texture>
+{
+    if (auto dmabuf_tex = std::dynamic_pointer_cast<DmabufTexBuffer>(buffer))
+    {
+        if (dmabuf_tex->on_same_egl_display(dpy))
+        {
+            auto tex = dmabuf_tex->as_texture();
+            return std::shared_ptr<gl::Texture>(std::move(dmabuf_tex), tex);
+        }
+        else if (auto descriptor = descriptor_for_format_and_modifiers(
+                    dmabuf_tex->format(),
+                    dmabuf_tex->modifier().value_or(DRM_FORMAT_MOD_INVALID),
+                    *this))
+        {
+            /* We're being naughty here and using the fact that `as_texture()` has a side-effect
+             * of invoking the buffer's `on_consumed()` callback.
+             */
+            dmabuf_tex->as_texture();
+            return std::make_shared<DMABufTex>(
+                dpy,
+                *egl_extensions,
+                *dmabuf_tex,
+                *descriptor,
+                egl_delegate);
+        }
+        else
+        {
+            /* Oh, no. We've got a dma-buf in a format that our rendering GPU can't handle.
+             *
+             * In this case we'll need to get the *importing* GPU to blit to a format
+             * we *can* handle.
+             */
+            auto importing_provider = dmabuf_tex->provider();
+
+            if (!importing_provider->dmabuf_export_ext)
+            {
+                mir::log_warning("EGL implementation does not handle cross-GPU buffer export");
+                return nullptr;
+            }
+
+            /* TODO: Be smarter about finding a shared pixel format; everything *should* do
+             * ARGB8888, but if the buffer is in a higher bitdepth this will lose colour information
+             */
+            auto const& supported_formats = *formats;
+            auto const& modifiers =
+                [&supported_formats]() -> std::vector<uint64_t> const&
+                {
+                    for (size_t i = 0; i < supported_formats.num_formats(); ++i)
+                    {
+                        if (supported_formats[i].format == DRM_FORMAT_ARGB8888)
+                        {
+                            return supported_formats[i].modifiers;
+                        }
+                    }
+                    BOOST_THROW_EXCEPTION((std::runtime_error{"Platform doesn't support ARGB8888?!"}));
+                }();
+
+            auto importable_buf = importing_provider->allocate_importable_image(
+                mg::DRMFormat{DRM_FORMAT_ARGB8888},
+                std::span<uint64_t const>{modifiers.data(), modifiers.size()},
+                dmabuf_tex->size());
+
+            if (!importable_buf)
+            {
+                mir::log_warning("Failed to allocate common-format buffer for cross-GPU buffer import");
+                return nullptr;
+            }
+
+            auto src_image = import_egl_image(
+                dmabuf_tex->size().width.as_int(), dmabuf_tex->size().height.as_int(),
+                dmabuf_tex->format(),
+                dmabuf_tex->modifier(),
+                dmabuf_tex->planes(),
+                importing_provider->dpy,
+                *importing_provider->egl_extensions);
+            auto importable_image = import_egl_image(
+                importable_buf->size().width.as_int(), importable_buf->size().height.as_int(),
+                importable_buf->format(),
+                importable_buf->modifier(),
+                importable_buf->planes(),
+                importing_provider->dpy,
+                *importing_provider->egl_extensions);
+            auto sync = importing_provider->blitter->blit(src_image, importable_image, dmabuf_tex->size());
+            if (sync)
+            {
+                BOOST_THROW_EXCEPTION((std::logic_error{"EGL_ANDROID_native_fence_sync support not implemented yet"}));
+            }
+            auto importable_dmabuf = export_egl_image(*importing_provider->dmabuf_export_ext, importing_provider->dpy, importable_image, dmabuf_tex->size());
+
+            auto base_extension = importing_provider->egl_extensions->base(importing_provider->dpy);
+            base_extension.eglDestroyImageKHR(importing_provider->dpy, src_image);
+            base_extension.eglDestroyImageKHR(importing_provider->dpy, importable_image);
+
+            if (auto descriptor = descriptor_for_format_and_modifiers(
+                        importable_dmabuf->format(),
+                        importable_dmabuf->modifier().value_or(DRM_FORMAT_MOD_INVALID),
+                        *this))
+            {
+                /* We're being naughty here and using the fact that `as_texture()` has a side-effect
+                 * of invoking the buffer's `on_consumed()` callback.
+                 */
+                dmabuf_tex->as_texture();
+                return std::make_shared<DMABufTex>(
+                    dpy,
+                    *egl_extensions,
+                    *importable_dmabuf,
+                    *descriptor,
+                    egl_delegate);
+            }
+
+            /* To get here we have to have failed to find the format/modifier descriptor for a
+             * buffer that we've explicitly allocated to be importable by us.
+             *
+             * This is a logic bug, so go noisily.
+             */
+            BOOST_THROW_EXCEPTION((std::logic_error{"Failed to find import parameterns for buffer we explicitly allocated for import"}));
+        }
+    }
+    return nullptr;
 }

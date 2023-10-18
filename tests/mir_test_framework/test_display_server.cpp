@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "src/server/compositor/default_display_buffer_compositor_factory.h"
 #include <miral/test_display_server.h>
 
 #include <miral/command_line_option.h>
@@ -29,6 +30,7 @@
 #include <mir/server.h>
 #include <mir/options/configuration.h>
 #include <mir/options/option.h>
+#include <mir/graphics/platform.h>
 
 #include <boost/throw_exception.hpp>
 
@@ -39,6 +41,7 @@ namespace msh = mir::shell;
 namespace ml = mir::logging;
 namespace mo = mir::options;
 namespace mtd = mir::test::doubles;
+namespace mg = mir::graphics;
 
 namespace
 {
@@ -101,10 +104,23 @@ void miral::TestDisplayServer::start_server()
                                 });
                         });
 
-                    server.override_the_display_buffer_compositor_factory([]
+
+                    server.override_the_display_buffer_compositor_factory(
+                        [&server]() -> std::shared_ptr<mir::compositor::DisplayBufferCompositorFactory>
                         {
-                            return std::make_shared<mtf::HeadlessDisplayBufferCompositorFactory>();
+                            auto first_rendering_platform = server.the_rendering_platforms().front();
+                            auto gl_provider =
+                                mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(
+                                    std::move(first_rendering_platform));
+                            if (gl_provider)
+                            {
+                                return std::make_shared<mtf::HeadlessDisplayBufferCompositorFactory>(
+                                    std::move(gl_provider),
+                                    server.the_gl_config());
+                            }
+                            BOOST_THROW_EXCEPTION((std::runtime_error{"Platform does not support GL interface"}));
                         });
+
 
                     server.override_the_logger([&]()
                         {

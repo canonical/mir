@@ -31,7 +31,7 @@ namespace mtf = mir_test_framework;
 namespace
 {
 using MmapInterposer = mtf::InterposerHandlers<void*, void *, size_t, int, int, int, off_t>;
-using MunmapInterposer = mtf::InterposerHandlers<int, void *, size_t>;
+using MunmapInterposer = mtf::InterposerHandlers<int, void*, size_t>;
 }
 
 mtf::MmapHandlerHandle mtf::add_mmap_handler(MmapHandler handler)
@@ -92,4 +92,3 @@ int munmap(void *addr, size_t length)
     }
     return (*real_munmap)(addr, length);
 }
-

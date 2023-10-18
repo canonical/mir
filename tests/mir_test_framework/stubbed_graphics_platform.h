@@ -35,6 +35,13 @@ public:
         std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<mir::graphics::GLConfig> const&) override;
 
+protected:
+    auto maybe_create_provider(
+        mir::graphics::RenderingProvider::Tag const& tag)
+        -> std::shared_ptr<mir::graphics::RenderingProvider> override;
+
+    auto interface_for()
+        -> std::shared_ptr<mir::graphics::DisplayInterfaceProvider> override;
 private:
     std::vector<mir::geometry::Rectangle> const display_rects;
 };

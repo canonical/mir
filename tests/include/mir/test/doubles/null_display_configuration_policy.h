@@ -29,6 +29,7 @@ class NullDisplayConfigurationPolicy : public graphics::DisplayConfigurationPoli
 {
 public:
     void apply_to(graphics::DisplayConfiguration&) override {}
+    void confirm(graphics::DisplayConfiguration const&) override {}
 };
 }
 }

@@ -21,9 +21,6 @@
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
 
-#include <memory>
-#include <functional>
-
 namespace mir
 {
 namespace graphics

@@ -23,7 +23,11 @@ namespace mir
 {
 namespace graphics
 {
-struct DisplayBuffer;
+class GLRenderingProvider;
+namespace gl
+{
+class OutputSurface;
+}
 }
 namespace renderer
 {
@@ -39,7 +43,9 @@ class RendererFactory
 public:
     virtual ~RendererFactory() = default;
 
-    virtual std::unique_ptr<Renderer> create_renderer_for(gl::RenderTarget& render_target) = 0;
+    virtual auto create_renderer_for(
+        std::unique_ptr<graphics::gl::OutputSurface> output_surface,
+        std::shared_ptr<graphics::GLRenderingProvider> gl_provider) const -> std::unique_ptr<Renderer> = 0;
 
 protected:
     RendererFactory() = default;

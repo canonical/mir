@@ -58,7 +58,7 @@ set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "${build_types}" FORCE)
 # Enable cmake-gui to display a drop down list for CMAKE_BUILD_TYPE
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "${build_types}")
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -233,6 +233,7 @@ if(NOT GLM_FOUND)
 endif()
 pkg_check_modules(DRM REQUIRED IMPORTED_TARGET libdrm)
 pkg_check_modules(EGL REQUIRED IMPORTED_TARGET egl)
+pkg_check_modules(EPOXY REQUIRED IMPORTED_TARGET epoxy)
 pkg_check_modules(GFlags REQUIRED IMPORTED_TARGET gflags)
 pkg_check_modules(GIO REQUIRED IMPORTED_TARGET gio-2.0 gio-unix-2.0)
 pkg_check_modules(GLESv2 REQUIRED IMPORTED_TARGET glesv2)
@@ -269,14 +270,6 @@ endif()
 
 if (MIR_BUILD_PLATFORM_GBM_KMS)
   pkg_check_modules(GBM REQUIRED IMPORTED_TARGET gbm>=11.0.0)
-endif()
-
-if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
-  pkg_check_modules(EPOXY REQUIRED IMPORTED_TARGET epoxy)
-endif()
-
-if (MIR_BUILD_PLATFORM_WAYLAND)
-  pkg_check_modules(EPOXY REQUIRED IMPORTED_TARGET epoxy)
 endif()
 
 set(MIR_TRACEPOINT_LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/mir/tools)

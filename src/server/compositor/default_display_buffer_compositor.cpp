@@ -16,11 +16,14 @@
 
 #include "default_display_buffer_compositor.h"
 
+#include "mir/compositor/compositor_report.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/buffer.h"
+#include "mir/graphics/platform.h"
+#include "mir/compositor/buffer_stream.h"
 #include "mir/renderer/renderer.h"
 #include "occlusion.h"
 
@@ -29,10 +32,12 @@ namespace mg = mir::graphics;
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplayBuffer& display_buffer,
+    graphics::GLRenderingProvider& gl_provider,
     std::shared_ptr<mir::renderer::Renderer> const& renderer,
-    std::shared_ptr<mc::CompositorReport> const& report) :
+    std::shared_ptr<CompositorReport> const& report) :
     display_buffer(display_buffer),
     renderer(renderer),
+    fb_adaptor{gl_provider.make_framebuffer_provider(display_buffer.display_provider())},
     report(report)
 {
 }
@@ -58,14 +63,48 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     /*
      * Note: Buffer lifetimes are ensured by the two objects holding
      *       references to them; scene_elements and renderable_list.
-     *       So no buffer is going to be released back to the client till
+     *       So no buffer is going to be releaswayland_executored back to the client till
      *       both of those containers get destroyed (end of the function).
      *       Actually, there's a third reference held by the texture cache
      *       in GLRenderer, but that gets released earlier in render().
      */
     scene_elements.clear();  // Those in use are still in renderable_list
 
-    if (display_buffer.overlay(renderable_list))
+    std::vector<mg::DisplayElement> framebuffers;
+    framebuffers.reserve(renderable_list.size());
+
+    for (auto const& renderable : renderable_list)
+    {
+        auto fb = fb_adaptor->buffer_to_framebuffer(renderable->buffer());
+        if (!fb)
+        {
+            break;
+        }
+        geometry::Rectangle clipped_dest;
+        if (renderable->clip_area())
+        {
+            clipped_dest = intersection_of(renderable->screen_position(), *renderable->clip_area());
+        }
+        else
+        {
+            clipped_dest = renderable->screen_position();
+        }
+        geometry::SizeF const source_size{
+            clipped_dest.size.width.as_value(),
+            clipped_dest.size.height.as_value()};
+        geometry::PointF const source_origin{
+            clipped_dest.top_left.x.as_value() - renderable->screen_position().top_left.x.as_value(),
+            clipped_dest.top_left.y.as_value() - renderable->screen_position().top_left.y.as_value()
+        };
+
+        framebuffers.emplace_back(mg::DisplayElement{
+            renderable->screen_position(),
+            geometry::RectangleF{source_origin, source_size},
+            std::move(fb)
+        });
+    }
+
+    if (framebuffers.size() == renderable_list.size() && display_buffer.overlay(framebuffers))
     {
         report->renderables_in_frame(this, renderable_list);
         renderer->suspend();
@@ -74,7 +113,8 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     {
         renderer->set_output_transform(display_buffer.transformation());
         renderer->set_viewport(view_area);
-        renderer->render(renderable_list);
+
+        display_buffer.set_next_image(renderer->render(renderable_list));
 
         report->renderables_in_frame(this, renderable_list);
         report->rendered_frame(this);

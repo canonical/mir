@@ -21,6 +21,10 @@
 
 namespace mir
 {
+namespace graphics
+{
+class GLRenderingProvider;
+}
 namespace renderer
 {
 namespace gl
@@ -29,7 +33,9 @@ namespace gl
 class RendererFactory : public renderer::RendererFactory
 {
 public:
-    std::unique_ptr<renderer::Renderer> create_renderer_for(RenderTarget& render_target) override;
+    auto create_renderer_for(
+        std::unique_ptr<graphics::gl::OutputSurface> output_surface,
+        std::shared_ptr<graphics::GLRenderingProvider> gl_provider) const -> std::unique_ptr<renderer::Renderer> override;
 };
 
 }

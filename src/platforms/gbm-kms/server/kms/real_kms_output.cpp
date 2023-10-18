@@ -15,6 +15,7 @@
  */
 
 #include "real_kms_output.h"
+#include "kms_framebuffer.h"
 #include "mir/graphics/display_configuration.h"
 #include "page_flipper.h"
 #include "kms-utils/kms_connector.h"
@@ -25,36 +26,30 @@
 #include <boost/throw_exception.hpp>
 #include <system_error>
 #include <xf86drm.h>
+#include <xf86drmMode.h>
 
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
 namespace mgk = mg::kms;
 namespace geom = mir::geometry;
 
-class mgg::FBHandle
+
+namespace
 {
-public:
-    FBHandle(int drm_fd, uint32_t fb_id)
-        : drm_fd{drm_fd},
-          fb_id{fb_id}
-    {
-    }
-
-    ~FBHandle()
-    {
-        // TODO: Some sort of logging on failure?
-        drmModeRmFB(drm_fd, fb_id);
-    }
-
-    auto get_drm_fb_id() const -> uint32_t
-    {
-        return fb_id;
-    }
-private:
-    int const drm_fd;
-    uint32_t const fb_id;
-};
-
+bool kms_modes_are_equal(drmModeModeInfo const& info1, drmModeModeInfo const& info2)
+{
+    return (info1.clock == info2.clock &&
+            info1.hdisplay == info2.hdisplay &&
+            info1.hsync_start == info2.hsync_start &&
+            info1.hsync_end == info2.hsync_end &&
+            info1.htotal == info2.htotal &&
+            info1.hskew == info2.hskew &&
+            info1.vdisplay == info2.vdisplay &&
+            info1.vsync_start == info2.vsync_start &&
+            info1.vsync_end == info2.vsync_end &&
+            info1.vtotal == info2.vtotal);
+}
+}
 
 mgg::RealKMSOutput::RealKMSOutput(
     int drm_fd,
@@ -162,17 +157,29 @@ bool mgg::RealKMSOutput::set_crtc(FBHandle const& fb)
     }
 
     auto ret = drmModeSetCrtc(drm_fd_, current_crtc->crtc_id,
-                              fb.get_drm_fb_id(), fb_offset.dx.as_int(), fb_offset.dy.as_int(),
+                              fb, fb_offset.dx.as_int(), fb_offset.dy.as_int(),
                               &connector->connector_id, 1,
                               &connector->modes[mode_index]);
     if (ret)
     {
+        mir::log_error("Failed to set CRTC: %s (%i)", strerror(-ret), -ret);
         current_crtc = nullptr;
         return false;
     }
 
     using_saved_crtc = false;
     return true;
+}
+
+bool mgg::RealKMSOutput::has_crtc_mismatch()
+{
+    if (!ensure_crtc())
+    {
+        mir::log_error("Output %s has no associated CRTC to get ", mgk::connector_name(connector).c_str());
+        return true;
+    }
+
+    return !kms_modes_are_equal(current_crtc->mode, connector->modes[mode_index]);
 }
 
 void mgg::RealKMSOutput::clear_crtc()
@@ -233,7 +240,7 @@ bool mgg::RealKMSOutput::schedule_page_flip(FBHandle const& fb)
     }
     return page_flipper->schedule_flip(
         current_crtc->crtc_id,
-        fb.get_drm_fb_id(),
+        fb,
         connector->connector_id);
 }
 
@@ -401,21 +408,6 @@ void mgg::RealKMSOutput::refresh_hardware_state()
 
 namespace
 {
-
-bool kms_modes_are_equal(drmModeModeInfo const& info1, drmModeModeInfo const& info2)
-{
-    return (info1.clock == info2.clock &&
-            info1.hdisplay == info2.hdisplay &&
-            info1.hsync_start == info2.hsync_start &&
-            info1.hsync_end == info2.hsync_end &&
-            info1.htotal == info2.htotal &&
-            info1.hskew == info2.hskew &&
-            info1.vdisplay == info2.vdisplay &&
-            info1.vsync_start == info2.vsync_start &&
-            info1.vsync_end == info2.vsync_end &&
-            info1.vtotal == info2.vtotal);
-}
-
 double calculate_vrefresh_hz(drmModeModeInfo const& mode)
 {
     if (mode.htotal == 0 || mode.vtotal == 0)
@@ -609,258 +601,6 @@ void mgg::RealKMSOutput::update_from_hardware_state(
     output.subpixel_arrangement = kms_subpixel_to_mir_subpixel(connector->subpixel);
     output.gamma = gamma;
     output.edid = edid;
-}
-
-namespace
-{
-void bo_user_data_destroy(gbm_bo* /*bo*/, void *data)
-{
-    auto bufobj = static_cast<std::shared_ptr<mgg::FBHandle const>*>(data);
-    delete bufobj;
-}
-}
-
-auto mgg::RealKMSOutput::FBRegistry::lookup_or_create(int const drm_fd, gbm_bo* bo)
-    -> std::shared_ptr<FBHandle const>
-{
-    if (!bo)
-        return nullptr;
-
-    /*
-     * Check if we have already set up this gbm_bo (the gbm-kms implementation is
-     * free to reuse gbm_bos). If so, return the associated FBHandle.
-     */
-    auto bufobj = static_cast<std::shared_ptr<FBHandle const>*>(gbm_bo_get_user_data(bo));
-    if (bufobj)
-    {
-        return *bufobj;
-    }
-
-    uint32_t fb_id{0};
-    uint32_t handles[4] = {gbm_bo_get_handle(bo).u32, 0, 0, 0};
-    uint32_t strides[4] = {gbm_bo_get_stride(bo), 0, 0, 0};
-    uint32_t offsets[4] = {0, 0, 0, 0};
-
-    auto format = gbm_bo_get_format(bo);
-    /*
-     * Mir might use the old GBM_BO_ enum formats, but KMS and the rest of
-     * the world need fourcc formats, so convert...
-     */
-    if (format == GBM_BO_FORMAT_XRGB8888)
-        format = GBM_FORMAT_XRGB8888;
-    else if (format == GBM_BO_FORMAT_ARGB8888)
-        format = GBM_FORMAT_ARGB8888;
-
-    auto const width = gbm_bo_get_width(bo);
-    auto const height = gbm_bo_get_height(bo);
-
-    /* Create a KMS FB object with the gbm_bo attached to it. */
-    auto ret = drmModeAddFB2(drm_fd, width, height, format,
-                             handles, strides, offsets, &fb_id, 0);
-    if (ret)
-        return nullptr;
-
-    /* Create a FBHandle and associate it with the gbm_bo */
-
-    bufobj = new std::shared_ptr<FBHandle const>(new FBHandle{drm_fd, fb_id});
-    gbm_bo_set_user_data(bo, bufobj, bo_user_data_destroy);
-
-    return *bufobj;
-}
-
-auto mgg::RealKMSOutput::fb_for(gbm_bo* bo) const -> std::shared_ptr<FBHandle const>
-{
-    return framebuffers.lookup_or_create(drm_fd(), bo);
-}
-
-struct mgg::RealKMSOutput::FBRegistry::DMABufFB
-{
-    std::array<Fd, 4> const fds;
-    std::array<uint32_t, 4> const bo_handles;
-    std::weak_ptr<FBHandle const> handle;
-
-    DMABufFB(
-        std::array<Fd, 4> fds,
-        std::array<uint32_t, 4> bo_handles,
-        std::weak_ptr<FBHandle const> handle)
-        : fds{std::move(fds)},
-          bo_handles{bo_handles},
-          handle{std::move(handle)}
-    {
-    }
-};
-
-auto mgg::RealKMSOutput::FBRegistry::lookup_or_create(
-    const int drm_fd,
-    const DMABufBuffer& image) -> std::shared_ptr<FBHandle const>
-{
-    // The DRM API expects a bunch of 4-element arrays, with unused elements set to 0
-    std::array<uint32_t, 4> handles = {0, 0, 0, 0};
-    std::array<uint32_t, 4> strides = {0, 0, 0, 0};
-    std::array<uint32_t, 4> offsets = {0, 0, 0, 0};
-    std::array<uint64_t, 4> modifiers = {0, 0, 0, 0};
-
-    std::array<Fd, 4> dma_bufs;
-
-    auto const& planes = image.planes();
-    for (auto i = 0u; i < planes.size() ; ++i)
-    {
-        strides[i] = planes[i].stride;
-        offsets[i] = planes[i].offset;
-        dma_bufs[i] = planes[i].dma_buf;
-    }
-
-    // If we've got this FB already imported, we can just return that…
-    auto const existing_fb = std::find_if(
-        dmabuf_fbs.begin(),
-        dmabuf_fbs.end(),
-        [&dma_bufs](auto const& candidate)
-        {
-            for (auto i = 0u; i < dma_bufs.size(); ++i)
-            {
-                /* We can do a numerical compare here because the DMAbufFB structs keep a
-                 * reference to their fds open, so any newly imported buffer will have
-                 * a different integer fd handle; they can't accidentally alias.
-                 *
-                 * And the Wayland protocol only imports the FDs once, and then the client
-                 * references the wl_buffer, so we can expect the FDs of a particular buffer
-                 * to be numerically stable.
-                 */
-                if (static_cast<int>(dma_bufs[i]) != static_cast<int>(candidate->fds[i]))
-                {
-                    return false;
-                }
-            }
-            return true;
-        });
-
-    uint32_t const* imported_handles;
-    if (existing_fb != dmabuf_fbs.end())
-    {
-        if (auto const handle = (*existing_fb)->handle.lock())
-        {
-            /* We have already imported the DMA-bufs *and* have a current FB for them.
-             * We can just return that.
-             */
-            return handle;
-        }
-        /* We've imported the DMA-bufs, but have already deleted the FB associated with
-         * them. Grab the previously-imported handles, then re-create a FB.
-         */
-        imported_handles = (*existing_fb)->bo_handles.data();
-    }
-    else
-    {
-        // Otherwise, we need to import the DMA-bufs
-        for (auto i = 0u; i < planes.size(); ++i)
-        {
-            if (auto const error = drmPrimeFDToHandle(drm_fd, dma_bufs[i], &handles[i]))
-            {
-                BOOST_THROW_EXCEPTION((
-                                          std::system_error{
-                                              error,
-                                              std::system_category(),
-                                              "Failed to acquire GEM handle for DMA-BUF"}));
-            }
-        }
-        imported_handles = handles.data();
-    }
-
-
-    // If there's a modifier set, propagate it to all components.
-    if (image.modifier().has_value())
-    {
-        for (auto i = 0u; i < planes.size(); ++i)
-        {
-            modifiers[i] = image.modifier().value();
-        }
-    }
-
-    uint32_t drm_fb_id;
-    auto const ret = drmModeAddFB2WithModifiers(
-        drm_fd,
-        image.size().width.as_uint32_t(),
-        image.size().height.as_uint32_t(),
-        image.drm_fourcc(),
-        imported_handles,
-        strides.data(),
-        offsets.data(),
-        image.modifier().has_value() ? modifiers.data() : nullptr,
-        &drm_fb_id,
-        image.modifier().has_value() ? DRM_MODE_FB_MODIFIERS : 0);
-
-    if (ret)
-    {
-        mir::log_debug(
-            "Failed to import dmabuf-based image as FB: %s",
-            std::system_category().message(ret).c_str());
-        return nullptr;
-    }
-
-    auto fb_handle = std::make_shared<FBHandle>(drm_fd, drm_fb_id);
-
-    if (existing_fb != dmabuf_fbs.end())
-    {
-        // We already have the buffer data; we just need to re-create a handle
-        (*existing_fb)->handle = fb_handle;
-    }
-    else
-    {
-        dmabuf_fbs.push_back(std::make_shared<DMABufFB>(std::move(dma_bufs), handles, fb_handle));
-    }
-
-    return fb_handle;
-}
-
-auto mgg::RealKMSOutput::fb_for(mg::DMABufBuffer const& image) const -> std::shared_ptr<FBHandle const>
-{
-    return framebuffers.lookup_or_create(drm_fd(), image);
-}
-
-bool mgg::RealKMSOutput::buffer_requires_migration(gbm_bo* bo) const
-{
-    /*
-     * It's possible that some devices will not require migration -
-     * Intel GPUs can obviously scanout from main memory, as can USB outputs such as
-     * DisplayLink.
-     *
-     * For a first go, just say that *every* device scans out of GPU-private memory.
-     *
-     * To complicate matters, Mali's gbm-kms implementation does *not* return the same
-     * integer fd from gbm_device_get_fd() as the drm fd that the device was created
-     * from, and GBM may choose to internally open the DRM render node associated
-     * with the DRM node passed to gbm_create_device.
-     */
-
-    errno = 0;
-    auto const gbm_device_node = std::unique_ptr<char, decltype(&free)>{
-        drmGetPrimaryDeviceNameFromFd(gbm_device_get_fd(gbm_bo_get_device(bo))),
-        &free
-    };
-    if (!gbm_device_node)
-    {
-        BOOST_THROW_EXCEPTION((
-            std::system_error{
-                errno,
-                std::system_category(),
-                "Failed to query DRM device backing GBM buffer"}));
-    }
-
-    auto const drm_device_node = std::unique_ptr<char, decltype(&free)>{
-        drmGetPrimaryDeviceNameFromFd(drm_fd_),
-        &free
-    };
-    if (!drm_device_node)
-    {
-        BOOST_THROW_EXCEPTION((
-            std::system_error{
-                errno,
-                std::system_category(),
-                "Failed to query DRM device node of display device"}));
-    }
-
-    // These *should* match if we're on the same device
-    return strcmp(gbm_device_node.get(), drm_device_node.get()) != 0;
 }
 
 int mgg::RealKMSOutput::drm_fd() const

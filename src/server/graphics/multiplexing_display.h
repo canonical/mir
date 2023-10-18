@@ -47,8 +47,6 @@ public:
     void resume() override;
 
     auto create_hardware_cursor() -> std::shared_ptr<Cursor> override;
-
-    auto create_gl_context() const -> std::unique_ptr<renderer::gl::Context> override;
 private:
     std::vector<std::unique_ptr<Display>> const displays;
 };

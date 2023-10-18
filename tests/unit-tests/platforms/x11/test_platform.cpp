@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include "mir/graphics/platform.h"
 #include "mir/options/program_option.h"
 #include "src/platforms/x11/graphics/platform.h"
 #include "src/platforms/x11/x11_resources.h"
@@ -80,15 +81,19 @@ TEST_F(X11GraphicsPlatformTest, failure_to_open_x11_display_results_in_an_error)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(mock_x11, XOpenDisplay(_))
+    EXPECT_CALL(mock_x11, XOpenDisplay(_)).Times(AtLeast(1))
         .WillRepeatedly(Return(nullptr));
+
+    mir::SharedLibrary platform_lib{mtf::server_platform("server-x11")};
+    auto create_platform = platform_lib.load_function<mg::CreateDisplayPlatform>("create_display_platform");
 
     EXPECT_THROW(
         {
-            std::make_shared<mg::X::Platform>(
+            create_platform(
+                mg::SupportedDevice{},
                 nullptr,
-                "Mir on X",
-                std::vector<mg::X::X11OutputConfig>{{{1280, 1024}}},
+                nullptr,
+                nullptr,
                 std::make_shared<mir::report::null::DisplayReport>());
         }, std::exception);
 }
