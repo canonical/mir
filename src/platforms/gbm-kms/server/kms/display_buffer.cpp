@@ -76,7 +76,7 @@ mgg::DisplayBuffer::DisplayBuffer(
     {
         mir::log_info("Clearing screen due to differing encountered and target modes");
         // TODO: Pull a supported format out of KMS rather than assuming XRGB8888
-        auto initial_fb = std::make_shared<mgg::CPUAddressableFB>(
+        auto initial_fb = std::make_shared<graphics::CPUAddressableFB>(
             std::move(drm_fd),
             false,
             DRMFormat{DRM_FORMAT_XRGB8888},
@@ -132,7 +132,12 @@ bool mgg::DisplayBuffer::overlay(std::vector<DisplayElement> const& renderable_l
         return false;
     }
 
-    if (auto fb = std::dynamic_pointer_cast<mgg::FBHandle>(renderable_list[0].buffer))
+    if (auto fb = std::dynamic_pointer_cast<graphics::FBHandle>(renderable_list[0].buffer))
+    {
+        next_swap = std::move(fb);
+        return true;
+    }
+    if (auto fb = std::dynamic_pointer_cast<graphics::FBHandle>(renderable_list[0].buffer))
     {
         next_swap = std::move(fb);
         return true;

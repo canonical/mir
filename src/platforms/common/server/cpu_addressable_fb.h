@@ -14,15 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_GBM_FB_H_
-#define MIR_GRAPHICS_GBM_FB_H_
+#ifndef MIR_GRAPHICS_CPU_ADDRESSABLE_FB_H_
+#define MIR_GRAPHICS_CPU_ADDRESSABLE_FB_H_
 
 #include "mir/fd.h"
 #include "mir/graphics/platform.h"
 
 #include "kms_framebuffer.h"
 
-namespace mir::graphics::gbm
+namespace mir::graphics
 {
 class CPUAddressableFB : public FBHandle, public CPUAddressableDisplayProvider::MappableFB
 {
@@ -65,4 +65,4 @@ private:
 
 }
 
-#endif //MIR_GRAPHICS_GBM_FB_H_
+#endif //MIR_GRAPHICS_CPU_ADDRESSABLE_FB_H_

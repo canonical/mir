@@ -40,7 +40,6 @@ namespace gbm
 {
 
 class Platform;
-class FBHandle;
 class KMSOutput;
 class NativeBuffer;
 

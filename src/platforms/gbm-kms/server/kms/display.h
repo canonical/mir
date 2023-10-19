@@ -104,22 +104,6 @@ private:
     std::weak_ptr<Cursor> cursor;
 };
 
-class CPUAddressableDisplayProvider : public graphics::CPUAddressableDisplayProvider
-{
-public:
-    explicit CPUAddressableDisplayProvider(mir::Fd drm_fd);
-
-    auto supported_formats() const
-        -> std::vector<DRMFormat> override;
-
-    auto alloc_fb(geometry::Size pixel_size, DRMFormat format)
-        -> std::unique_ptr<MappableFB> override;
-
-private:
-    mir::Fd const drm_fd;
-    bool const supports_modifiers;
-};
-
 class GBMDisplayProvider : public graphics::GBMDisplayProvider
 {
 public:

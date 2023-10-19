@@ -14,6 +14,11 @@ add_library(server_platform_common STATIC
   one_shot_device_observer.cpp
   cpu_copy_output_surface.cpp
   cpu_copy_output_surface.h
+  basic_cpu_addressable_display_provider.cpp
+  basic_cpu_addressable_display_provider.h
+  cpu_addressable_fb.cpp
+  cpu_addressable_fb.h
+  kms_framebuffer.h
 )
 
 target_include_directories(

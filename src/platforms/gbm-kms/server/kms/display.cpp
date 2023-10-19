@@ -23,12 +23,11 @@
 #include "kms_display_configuration.h"
 #include "kms_output.h"
 #include "kms_page_flipper.h"
-#include "kms_framebuffer.h"
-#include "cpu_addressable_fb.h"
 #include "mir/console_services.h"
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/event_handler_register.h"
 
+#include "kms_framebuffer.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/transformation.h"
@@ -447,42 +446,6 @@ void mgg::Display::configure_locked(
 
 namespace
 {
-auto drm_get_cap_checked(mir::Fd const& drm_fd, uint64_t cap) -> uint64_t
-{
-    uint64_t value;
-    if (drmGetCap(drm_fd, cap, &value))
-    {
-        BOOST_THROW_EXCEPTION((
-            std::system_error{
-                errno,
-                std::system_category(),
-                "Failed to query DRM capabilities"}));
-    }
-    return value;
-}
-}
-
-mgg::CPUAddressableDisplayProvider::CPUAddressableDisplayProvider(mir::Fd drm_fd)
-    : drm_fd{std::move(drm_fd)},
-      supports_modifiers{drm_get_cap_checked(this->drm_fd, DRM_CAP_ADDFB2_MODIFIERS) == 1}
-{
-}
-
-auto mgg::CPUAddressableDisplayProvider::supported_formats() const
-    -> std::vector<mg::DRMFormat>
-{
-    // TODO: Pull out of DRM info
-    return {mg::DRMFormat{DRM_FORMAT_XRGB8888}, mg::DRMFormat{DRM_FORMAT_ARGB8888}};
-}
-
-auto mgg::CPUAddressableDisplayProvider::alloc_fb(
-    geom::Size size, DRMFormat format) -> std::unique_ptr<MappableFB>
-{
-    return std::make_unique<mgg::CPUAddressableFB>(drm_fd, supports_modifiers, format, size);
-}
-
-namespace
-{
 auto gbm_create_device_checked(mir::Fd fd) -> std::shared_ptr<struct gbm_device>
 {
     errno = 0;
@@ -591,7 +554,7 @@ namespace
 {
 using LockedFrontBuffer = std::unique_ptr<gbm_bo, std::function<void(gbm_bo*)>>;
 
-class GBMBoFramebuffer : public mgg::FBHandle
+class GBMBoFramebuffer : public mg::FBHandle
 {
 public:
     static auto framebuffer_for_frontbuffer(mir::Fd const& drm_fd, LockedFrontBuffer bo) -> std::unique_ptr<GBMBoFramebuffer>

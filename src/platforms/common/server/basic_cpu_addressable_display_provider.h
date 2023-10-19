@@ -14,33 +14,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_EGLSTREAM_INTERFACE_PROVIDER_H_
-#define MIR_GRAPHICS_EGLSTREAM_INTERFACE_PROVIDER_H_
+#ifndef MIR_GRAPHICS_BASIC_CPU_ADDRESSABLE_DISPLAY_PROVIDER_H
+#define MIR_GRAPHICS_BASIC_CPU_ADDRESSABLE_DISPLAY_PROVIDER_H
 
 #include "mir/graphics/platform.h"
-#include "mir/fd.h"
+#include <mir/fd.h>
 
-#include <optional>
-
-namespace mir::graphics::eglstream
+namespace mir
 {
-class InterfaceProvider : public DisplayInterfaceProvider
+namespace graphics
+{
+class BasicCPUAddressableDisplayProvider : public CPUAddressableDisplayProvider
 {
 public:
-    InterfaceProvider(EGLDisplay dpy, mir::Fd drm_fd);
-    InterfaceProvider(InterfaceProvider const& from, EGLStreamKHR with_stream);
+    explicit BasicCPUAddressableDisplayProvider(mir::Fd drm_fd);
 
-protected:
-    auto maybe_create_interface(DisplayProvider::Tag const& tag)
-        -> std::shared_ptr<DisplayProvider> override;
+    auto supported_formats() const
+        -> std::vector<DRMFormat> override;
+
+    auto alloc_fb(geometry::Size pixel_size, DRMFormat format)
+        -> std::unique_ptr<MappableFB> override;
 
 private:
-    EGLDisplay dpy;
-    std::optional<EGLStreamKHR> stream;
-    mir::Fd drm_fd;
+    mir::Fd const drm_fd;
+    bool const supports_modifiers;
 };
-
-;
+}
 }
 
-#endif // MIR_GRAPHICS_EGLSTREAM_INTERFACE_PROVIDER_H_
+#endif //MIR_GRAPHICS_BASIC_CPU_ADDRESSABLE_DISPLAY_PROVIDER_H

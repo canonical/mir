@@ -23,8 +23,6 @@ namespace mir
 {
 namespace graphics
 {
-namespace gbm
-{
 class FBHandle : public Framebuffer
 {
 public:
@@ -33,7 +31,6 @@ public:
     virtual operator uint32_t() const = 0;
 };
 
-}
 }
 }
 

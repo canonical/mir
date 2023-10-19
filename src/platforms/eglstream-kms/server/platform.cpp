@@ -22,6 +22,7 @@
 #include "mir/graphics/platform.h"
 #include "utils.h"
 #include "eglstream_interface_provider.h"
+#include "basic_cpu_addressable_display_provider.h"
 
 #include "one_shot_device_observer.h"
 
@@ -245,7 +246,7 @@ mge::DisplayPlatform::DisplayPlatform(
             std::to_string(std::get<0>(egl_version)) + "." + std::to_string(std::get<1>(egl_version))}));
     }
 
-    provider = std::make_shared<InterfaceProvider>(display);
+    provider = std::make_shared<InterfaceProvider>(display, drm_node);
 }
 
 mge::DisplayPlatform::~DisplayPlatform()

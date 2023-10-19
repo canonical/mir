@@ -16,7 +16,6 @@
 
 #include "cpu_addressable_fb.h"
 
-#include "mir/geometry/forward.h"
 #include "mir/log.h"
 #include "mir_toolkit/common.h"
 
@@ -26,9 +25,8 @@
 #include <drm_fourcc.h>
 
 namespace mg = mir::graphics;
-namespace mgg = mg::gbm;
 
-class mgg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappableBuffer
+class mg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappableBuffer
 {
     template<typename T>
     class Mapping : public mir::renderer::software::Mapping<T>
@@ -53,7 +51,7 @@ class mgg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappable
             if (::munmap(const_cast<typename std::remove_const<T>::type *>(data_), len_) == -1)
             {
                 // It's unclear how this could happen, but tell *someone* about it if it does!
-                mir::log_error("Failed to unmap CPU buffer: %s (%i)", strerror(errno), errno);
+                mir::log(mir::logging::Severity::error, "Failed to unmap CPU buffer: %s (%i)", strerror(errno), errno);
             }
         }
 
@@ -102,7 +100,7 @@ public:
 
         if (auto const err = drmIoctl(drm_fd, DRM_IOCTL_MODE_DESTROY_DUMB, &params))
         {
-            mir::log_error("Failed destroy CPU-accessible buffer: %s (%i)", strerror(-err), -err);
+            mir::log(mir::logging::Severity::error, "Failed destroy CPU-accessible buffer: %s (%i)", strerror(-err), -err);
         }
     }
 
@@ -248,7 +246,7 @@ private:
     size_t const size_;
 };
 
-mgg::CPUAddressableFB::CPUAddressableFB(
+mg::CPUAddressableFB::CPUAddressableFB(
     mir::Fd const& drm_fd,
     bool supports_modifiers,
     DRMFormat format,
@@ -257,12 +255,12 @@ mgg::CPUAddressableFB::CPUAddressableFB(
 {
 }
 
-mgg::CPUAddressableFB::~CPUAddressableFB()
+mg::CPUAddressableFB::~CPUAddressableFB()
 {
     drmModeRmFB(drm_fd, fb_id);
 }
 
-mgg::CPUAddressableFB::CPUAddressableFB(
+mg::CPUAddressableFB::CPUAddressableFB(
     mir::Fd drm_fd,
     bool supports_modifiers,
     DRMFormat format,
@@ -273,32 +271,32 @@ mgg::CPUAddressableFB::CPUAddressableFB(
 {
 }
 
-auto mgg::CPUAddressableFB::map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>>
+auto mg::CPUAddressableFB::map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>>
 {
     return buffer->map_writeable();
 }
 
-auto mgg::CPUAddressableFB::format() const -> MirPixelFormat
+auto mg::CPUAddressableFB::format() const -> MirPixelFormat
 {
     return buffer->format();
 }
 
-auto mgg::CPUAddressableFB::stride() const -> geometry::Stride
+auto mg::CPUAddressableFB::stride() const -> geometry::Stride
 {
     return buffer->stride();
 }
 
-auto mgg::CPUAddressableFB::size() const -> geometry::Size
+auto mg::CPUAddressableFB::size() const -> geometry::Size
 {
     return buffer->size();
 }
 
-mgg::CPUAddressableFB::operator uint32_t() const
+mg::CPUAddressableFB::operator uint32_t() const
 {
     return fb_id;
 }
 
-auto mgg::CPUAddressableFB::fb_id_for_buffer(
+auto mg::CPUAddressableFB::fb_id_for_buffer(
     mir::Fd const &drm_fd,
     bool supports_modifiers,
     DRMFormat format,

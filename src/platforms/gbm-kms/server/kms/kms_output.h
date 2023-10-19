@@ -33,11 +33,10 @@ namespace mir
 namespace graphics
 {
 class DisplayConfigurationOutput;
+class FBHandle;
 
 namespace gbm
 {
-
-class FBHandle;
 
 class KMSOutput
 {

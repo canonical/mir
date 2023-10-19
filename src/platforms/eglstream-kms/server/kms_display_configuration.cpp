@@ -267,11 +267,11 @@ void mge::KMSDisplayConfiguration::update()
 }
 
 void mge::KMSDisplayConfiguration::for_each_output(
-    std::function<void(kms::EGLOutput const&)> const& f) const
+    std::function<void(std::shared_ptr<kms::EGLOutput> const&)> const& f) const
 {
     for (auto const& output : outputs)
     {
-        f(*output);
+        f(output);
     }
 }
 
