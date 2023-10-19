@@ -289,6 +289,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
     {
         std::stringstream error_report;
         std::vector<std::pair<mg::SupportedDevice, std::shared_ptr<mir::SharedLibrary>>> platform_modules;
+        std::map<std::string, std::shared_ptr<graphics::RenderingPlatform>> rendering_platform_map;
 
         try
         {
@@ -384,12 +385,12 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                 }
 
                 // TODO: Do we want to be able to continue on partial failure here?
-                rendering_platforms.push_back(
+                rendering_platform_map[description->name] =
                     create_rendering_platform(
                         device,
                         display_interfaces,
                         *the_options(),
-                        *the_emergency_cleanup()));
+                        *the_emergency_cleanup());
                 // Add this module to the list searched by the input stack later
                 // TODO: Come up with a more principled solution for combined input/rendering/output platforms
                 platform_libraries.push_back(platform);
@@ -401,6 +402,14 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
             error_report << "Exception while creating rendering platform" << std::endl;
             mir::report_exception(error_report);
         }
+
+        rendering_platforms.reserve(rendering_platform_map.size());
+
+        for (auto const& rp : rendering_platform_map)
+        {
+            rendering_platforms.push_back(rp.second);
+        }
+
         if (rendering_platforms.empty())
         {
             BOOST_THROW_EXCEPTION(std::runtime_error(error_report.str()));
