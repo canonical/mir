@@ -432,7 +432,7 @@ mir::DefaultServerConfiguration::the_buffer_allocator()
         [&]() -> std::shared_ptr<graphics::GraphicBufferAllocator>
         {
             // TODO: More than one BufferAllocator
-            return the_rendering_platforms().back()->create_buffer_allocator(*the_display());
+            return the_rendering_platforms().front()->create_buffer_allocator(*the_display());
         });
 }
 
