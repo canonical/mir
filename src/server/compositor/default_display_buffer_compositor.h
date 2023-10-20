@@ -49,14 +49,14 @@ public:
         std::shared_ptr<renderer::Renderer> const& renderer,
         std::shared_ptr<compositor::CompositorReport> const& report);
 
-    void composite(SceneElementSequence&& scene_sequence) override;
+    bool composite(SceneElementSequence&& scene_sequence) override;
 
 private:
     graphics::DisplayBuffer& display_buffer;
     std::shared_ptr<renderer::Renderer> const renderer;
     std::unique_ptr<graphics::RenderingProvider::FramebufferProvider> const fb_adaptor;
     std::shared_ptr<compositor::CompositorReport> const report;
-    bool has_rendered = false;
+    bool completed_first_render = false;
 };
 
 }

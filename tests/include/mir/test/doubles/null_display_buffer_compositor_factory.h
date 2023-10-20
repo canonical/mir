@@ -37,11 +37,12 @@ public:
     {
         struct NullDisplayBufferCompositor : compositor::DisplayBufferCompositor
         {
-            void composite(compositor::SceneElementSequence&&)
+            bool composite(compositor::SceneElementSequence&&) override
             {
                 // yield() is needed to ensure reasonable runtime under
                 // valgrind for some tests
                 std::this_thread::yield();
+                return true;
             }
         };
 

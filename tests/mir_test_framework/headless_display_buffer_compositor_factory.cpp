@@ -93,7 +93,7 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
             return renderables;
         }
 
-        void composite(mir::compositor::SceneElementSequence&& seq) override
+        bool composite(mir::compositor::SceneElementSequence&& seq) override
         {
             auto renderlist = filter(seq, db.view_area());
 
@@ -113,6 +113,7 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
             }
 
             output->commit();
+            return true;
         }
         mg::DisplayBuffer& db;
         std::unique_ptr<mg::gl::OutputSurface> const output;

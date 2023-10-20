@@ -141,12 +141,17 @@ public:
                     not_posted_yet = false;
                     lock.unlock();
 
+                    bool needs_post = false;
                     for (auto& tuple : compositors)
                     {
                         auto& compositor = std::get<1>(tuple);
-                        compositor->composite(scene->scene_elements_for(compositor.get()));
+                        if (compositor->composite(scene->scene_elements_for(compositor.get())))
+                            needs_post = true;
                     }
-                    group.post();
+
+                    // We can skip the post if none of the compositors ended up compositing
+                    if (needs_post)
+                        group.post();
 
                     /*
                      * "Predictive bypass" optimization: If the last frame was
@@ -261,6 +266,7 @@ private:
     std::promise<void> stopped;
     std::future<void> stopped_future;
     bool not_posted_yet = true;
+    bool has_done_first_render = false;
 };
 
 }
@@ -335,6 +341,7 @@ void mc::MultiThreadedCompositor::start()
     scene->add_observer(observer);
 
     /* Optional first render */
+    compose_on_start = false;
     if (compose_on_start)
         schedule_compositing(1);
 
