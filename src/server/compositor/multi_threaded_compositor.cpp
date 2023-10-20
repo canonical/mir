@@ -266,7 +266,6 @@ private:
     std::promise<void> stopped;
     std::future<void> stopped_future;
     bool not_posted_yet = true;
-    bool has_done_first_render = false;
 };
 
 }
