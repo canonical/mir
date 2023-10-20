@@ -137,11 +137,6 @@ bool mgg::DisplayBuffer::overlay(std::vector<DisplayElement> const& renderable_l
         next_swap = std::move(fb);
         return true;
     }
-    if (auto fb = std::dynamic_pointer_cast<graphics::FBHandle>(renderable_list[0].buffer))
-    {
-        next_swap = std::move(fb);
-        return true;
-    }
     return false;
 }
 
