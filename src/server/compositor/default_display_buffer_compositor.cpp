@@ -44,6 +44,10 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
 
 void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& scene_elements)
 {
+    if (scene_elements.size() == 0 && !has_rendered)
+        return;
+
+    has_rendered = true;
     report->began_frame(this);
 
     auto const& view_area = display_buffer.view_area();
