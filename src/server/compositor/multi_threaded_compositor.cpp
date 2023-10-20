@@ -341,7 +341,6 @@ void mc::MultiThreadedCompositor::start()
     scene->add_observer(observer);
 
     /* Optional first render */
-    compose_on_start = false;
     if (compose_on_start)
         schedule_compositing(1);
 
