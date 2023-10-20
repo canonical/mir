@@ -62,14 +62,15 @@ public:
 
 protected:
     auto maybe_create_provider(
-        mir::graphics::RenderingProvider::Tag const&) -> std::shared_ptr<mg::RenderingProvider> override
+        mg::RenderingProvider::Tag const&) -> std::shared_ptr<mg::RenderingProvider> override
     {
         return nullptr;
     }
 
-    auto interface_for() -> std::shared_ptr<mg::DisplayInterfaceProvider> override
+    auto maybe_create_provider(mg::DisplayProvider::Tag const&)
+        -> std::shared_ptr<mg::DisplayProvider> override
     {
-        return mg::DisplayPlatform::interface_for(stub_display_platform);
+        return nullptr;
     }
 
 public:
@@ -144,7 +145,7 @@ auto probe_display_platform(
 }
 
 auto probe_rendering_platform(
-    std::span<std::shared_ptr<mg::DisplayInterfaceProvider>> const&,
+    std::span<std::shared_ptr<mg::DisplayPlatform>> const&,
     mir::ConsoleServices&,
     std::shared_ptr<mir::udev::Context> const&,
     mir::options::ProgramOption const&) -> std::vector<mir::graphics::SupportedDevice>
@@ -181,7 +182,7 @@ void add_graphics_platform_options(boost::program_options::options_description&)
 
 mir::UniqueModulePtr<mg::RenderingPlatform> create_rendering_platform(
     mg::SupportedDevice const&,
-    std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const&,
+    std::vector<std::shared_ptr<mg::DisplayPlatform>> const&,
     mo::Option const&,
     mir::EmergencyCleanupRegistry&)
 {

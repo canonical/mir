@@ -17,6 +17,7 @@
 #ifndef MIR_GRAPHICS_DISPLAY_BUFFER_H_
 #define MIR_GRAPHICS_DISPLAY_BUFFER_H_
 
+#include "mir/graphics/platform.h"
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/renderable.h>
 #include <mir_toolkit/common.h>
@@ -98,8 +99,56 @@ public:
      */
     virtual glm::mat2 transformation() const = 0;
 
-    virtual auto display_provider() const -> std::shared_ptr<DisplayInterfaceProvider> = 0;
+    /**
+     * Attempt to acquire a platform-specific provider from this DisplayBuffer
+     *
+     * Any given platform is not guaranteed to implement any specific interface,
+     * and the set of supported interfaces may depend on the runtime environment.
+     *
+     * Since this may result in a runtime probe the call may be costly, and the
+     * result should be saved rather than re-acquiring an interface each time.
+     *
+     * \tparam Allocator
+     * \return  On success: a non-null pointer to an Allocator implementation.
+     *                      The lifetime of this Allocator implementation is bound
+     *                      to that of the parent DisplayBuffer.
+     *          On failure: nullptr
+     */
+    template<typename Allocator>
+    auto acquire_allocator() -> Allocator*
+    {
+        static_assert(
+            std::is_convertible_v<Allocator*, DisplayAllocator*>,
+            "Can only acquire a DisplayProvider; Provider must implement DisplayAllocator");
+
+        if (auto const base_interface = maybe_create_allocator(typename Allocator::Tag{}))
+        {
+            if (auto const requested_interface = dynamic_cast<Allocator*>(base_interface))
+            {
+                return requested_interface;
+            }
+            BOOST_THROW_EXCEPTION((std::logic_error{
+                "Implementation error! Platform returned object that does not support requested interface"}));
+        }
+        return nullptr;
+    }
+
 protected:
+    /**
+     * Acquire a specific hardware interface
+     *
+     * This should perform any runtime checks necessary to verify the requested interface is
+     * expected to work and return a pointer to an implementation of that interface.
+     *
+     * \param type_tag  [in]    An instance of the Tag type for the requested interface.
+     *                          Implementations are expected to dynamic_cast<> this to
+     *                          discover the specific interface being requested.
+     * \return      A pointer to an implementation of the DisplayAllocator-derived
+     *              interface that corresponds to the most-derived type of tag_type.
+     */
+    virtual auto maybe_create_allocator(DisplayAllocator::Tag const& type_tag)
+        -> DisplayAllocator* = 0;
+
     DisplayBuffer() = default;
     DisplayBuffer(DisplayBuffer const& c) = delete;
     DisplayBuffer& operator=(DisplayBuffer const& c) = delete;

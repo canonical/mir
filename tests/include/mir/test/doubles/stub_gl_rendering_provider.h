@@ -51,7 +51,7 @@ public:
     }
 
     auto surface_for_output(
-        std::shared_ptr<graphics::DisplayInterfaceProvider>,
+        graphics::DisplayBuffer&,
         geometry::Size,
         graphics::GLConfig const&) -> std::unique_ptr<graphics::gl::OutputSurface> override
     {
@@ -64,13 +64,13 @@ public:
         return graphics::probe::supported;
     }
 
-    auto suitability_for_display(std::shared_ptr<graphics::DisplayInterfaceProvider> const& /*target*/)
+    auto suitability_for_display(graphics::DisplayBuffer& /*target*/)
         -> graphics::probe::Result override
     {
         return graphics::probe::dummy; 
     }
 
-    auto make_framebuffer_provider(std::shared_ptr<graphics::DisplayInterfaceProvider> /*target*/)
+    auto make_framebuffer_provider(graphics::DisplayBuffer& /*target*/)
         -> std::unique_ptr<FramebufferProvider> override
     {
         class NullFramebufferProvider : public FramebufferProvider
