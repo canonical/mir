@@ -117,6 +117,11 @@ public:
         return geom::Rectangle{{0, 0}, size};
     }
 
+    auto pixel_size() const -> mir::geometry::Size override
+    {
+        return size;
+    }
+
     bool overlay(std::vector<mg::DisplayElement> const& /*renderlist*/) override
     {
         return false;
@@ -197,7 +202,7 @@ auto mc::BasicScreenShooter::Self::renderer_for_buffer(std::shared_ptr<mrs::Writ
         BOOST_THROW_EXCEPTION((std::runtime_error{"Attempt to capture to a zero-sized buffer"}));
     }
     output->set_next_buffer(std::move(buffer));
-    if (!offscreen_db || (buffer_size != offscreen_db->view_area().size))
+    if (!offscreen_db || (buffer_size != offscreen_db->pixel_size()))
     {
         // We need to build a new Renderer, at the new size
         class NoAuxConfig : public graphics::GLConfig

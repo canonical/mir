@@ -371,15 +371,15 @@ TEST_F(MesaDisplayMultiMonitorTest, flip_flips_all_connected_crtcs)
 
     auto platform = create_platform();
     auto display = create_display_cloned(platform);
-    auto provider = mg::DisplayPlatform::interface_for(std::move(platform))->acquire_interface<mg::CPUAddressableDisplayProvider>();
 
     /* First frame: Page flips are scheduled, but not waited for */
     display->for_each_display_sync_group(
-        [provider](mg::DisplaySyncGroup& group)
+        [](mg::DisplaySyncGroup& group)
         {
             group.for_each_display_buffer(
-                [provider](mg::DisplayBuffer& db)
+                [](mg::DisplayBuffer& db)
                 {
+                    auto provider = db.acquire_allocator<mg::CPUAddressableDisplayAllocator>();
                     auto fb = provider->alloc_fb(db.pixel_size(), mg::DRMFormat{DRM_FORMAT_ABGR8888});
                     db.set_next_image(std::move(fb));
                 });
@@ -389,11 +389,12 @@ TEST_F(MesaDisplayMultiMonitorTest, flip_flips_all_connected_crtcs)
     /* Second frame: Previous page flips finish (drmHandleEvent) and new ones
        are scheduled */
     display->for_each_display_sync_group(
-        [provider](mg::DisplaySyncGroup& group)
+        [](mg::DisplaySyncGroup& group)
         {
             group.for_each_display_buffer(
-                [provider](mg::DisplayBuffer& db)
+                [](mg::DisplayBuffer& db)
                 {
+                    auto provider = db.acquire_allocator<mg::CPUAddressableDisplayAllocator>();
                     auto fb = provider->alloc_fb(db.pixel_size(), mg::DRMFormat{DRM_FORMAT_ARGB8888});
                     db.set_next_image(std::move(fb));
                 });

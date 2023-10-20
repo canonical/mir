@@ -350,7 +350,7 @@ class EGLOutputSurface : public mg::gl::OutputSurface
 {
 public:
     EGLOutputSurface(
-        std::unique_ptr<mg::GenericEGLDisplayProvider::EGLFramebuffer> fb)
+        std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLFramebuffer> fb)
         : fb{std::move(fb)}
     {
     }
@@ -385,7 +385,7 @@ public:
     }
 
 private:
-    std::unique_ptr<mg::GenericEGLDisplayProvider::EGLFramebuffer> const fb;
+    std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLFramebuffer> const fb;
 };
 }
 
@@ -402,9 +402,9 @@ auto mge::GLRenderingProvider::suitability_for_allocator(std::shared_ptr<Graphic
 }
 
 auto mge::GLRenderingProvider::suitability_for_display(
-    std::shared_ptr<DisplayInterfaceProvider> const& target) -> probe::Result
+    DisplayBuffer& target) -> probe::Result
 {
-    if (target->acquire_interface<GenericEGLDisplayProvider>())
+    if (target.acquire_allocator<GenericEGLDisplayAllocator>())
     {
         /* We're effectively hosted on an underlying EGL platform.
          *
@@ -414,7 +414,7 @@ auto mge::GLRenderingProvider::suitability_for_display(
         return probe::hosted;
     }
 
-    if (target->acquire_interface<CPUAddressableDisplayProvider>())
+    if (target.acquire_allocator<CPUAddressableDisplayAllocator>())
     {
         /* We can *work* on a CPU-backed surface, but if anything's better
          * we should use something else!
@@ -426,25 +426,25 @@ auto mge::GLRenderingProvider::suitability_for_display(
 }
 
 auto mge::GLRenderingProvider::surface_for_output(
-    std::shared_ptr<DisplayInterfaceProvider> framebuffer_provider,
+    DisplayBuffer& target,
     geometry::Size size,
     GLConfig const& config)
     -> std::unique_ptr<gl::OutputSurface>
 {
-    if (auto egl_display = framebuffer_provider->acquire_interface<GenericEGLDisplayProvider>())
+    if (auto egl_display = target.acquire_allocator<GenericEGLDisplayAllocator>())
     {
         return std::make_unique<EGLOutputSurface>(egl_display->alloc_framebuffer(config, ctx));
     }
-    auto cpu_provider = framebuffer_provider->acquire_interface<CPUAddressableDisplayProvider>();
+    auto cpu_provider = target.acquire_allocator<CPUAddressableDisplayAllocator>();
 
     return std::make_unique<mgc::CPUCopyOutputSurface>(
         dpy,
         ctx,
-        std::move(cpu_provider),
+        *cpu_provider,
         size);
 }
 
-auto mge::GLRenderingProvider::make_framebuffer_provider(std::shared_ptr<DisplayInterfaceProvider> /*target*/)
+auto mge::GLRenderingProvider::make_framebuffer_provider(DisplayBuffer& /*target*/)
     -> std::unique_ptr<FramebufferProvider>
 {
     // TODO: Work out under what circumstances the EGL renderer *can* provide overlayable framebuffers

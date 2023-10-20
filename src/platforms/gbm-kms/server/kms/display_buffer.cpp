@@ -15,10 +15,13 @@
  */
 
 #include "display_buffer.h"
+#include "kms_cpu_addressable_display_provider.h"
 #include "kms_output.h"
 #include "cpu_addressable_fb.h"
+#include "gbm_display_allocator.h"
 #include "mir/fd.h"
 #include "mir/graphics/display_report.h"
+#include "mir/graphics/platform.h"
 #include "mir/graphics/transformation.h"
 #include "bypass.h"
 #include "mir/fatal.h"
@@ -41,18 +44,19 @@
 #include <chrono>
 #include <algorithm>
 
+namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
 
 mgg::DisplayBuffer::DisplayBuffer(
-    std::shared_ptr<DisplayInterfaceProvider> provider,
     mir::Fd drm_fd,
+    std::shared_ptr<struct gbm_device> gbm,
     mgg::BypassOption,
     std::shared_ptr<DisplayReport> const& listener,
     std::vector<std::shared_ptr<KMSOutput>> const& outputs,
     geom::Rectangle const& area,
     glm::mat2 const& transformation)
-    : provider{std::move(provider)},
+    : gbm{std::move(gbm)},
       listener(listener),
       outputs(outputs),
       area(area),
@@ -304,14 +308,14 @@ void mgg::DisplayBuffer::schedule_set_crtc()
     needs_set_crtc = true;
 }
 
-auto mir::graphics::gbm::DisplayBuffer::display_provider() const -> std::shared_ptr<DisplayInterfaceProvider>
-{
-    return provider;
-}
-
 auto mgg::DisplayBuffer::drm_fd() const -> mir::Fd
 {
     return mir::Fd{mir::IntOwnedFd{outputs.front()->drm_fd()}};
+}
+
+auto mgg::DisplayBuffer::gbm_device() const -> std::shared_ptr<struct gbm_device>
+{
+    return gbm;
 }
 
 void mir::graphics::gbm::DisplayBuffer::set_next_image(std::unique_ptr<Framebuffer> content)
@@ -330,4 +334,26 @@ void mir::graphics::gbm::DisplayBuffer::set_next_image(std::unique_ptr<Framebuff
         // Oh, oh! We should be *guaranteed* to “overlay” a single Framebuffer; this is likely a programming error
         BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to post buffer to display"}));
     }
+}
+
+auto mgg::DisplayBuffer::maybe_create_allocator(DisplayAllocator::Tag const& type_tag)
+    -> DisplayAllocator*
+{
+    if (dynamic_cast<mg::CPUAddressableDisplayAllocator::Tag const*>(&type_tag))
+    {
+        if (!kms_allocator)
+        {
+            kms_allocator = kms::CPUAddressableDisplayAllocator::create_if_supported(drm_fd());
+        }
+        return kms_allocator.get();
+    }
+    if (dynamic_cast<mg::GBMDisplayAllocator::Tag const*>(&type_tag))
+    {
+        if (!gbm_allocator)
+        {
+            gbm_allocator = std::make_unique<GBMDisplayAllocator>(drm_fd(), gbm);
+        }
+        return gbm_allocator.get();
+    }
+    return nullptr;
 }

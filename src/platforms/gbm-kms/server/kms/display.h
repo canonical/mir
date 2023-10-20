@@ -59,8 +59,8 @@ class Display : public graphics::Display
 {
 public:
     Display(
-        std::shared_ptr<DisplayInterfaceProvider> parent,
         mir::Fd drm_fd,
+        std::shared_ptr<struct gbm_device> gbm,
         BypassOption bypass_option,
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<DisplayReport> const& listener);
@@ -86,9 +86,9 @@ public:
 private:
     void clear_connected_unused_outputs();
 
-    std::shared_ptr<DisplayInterfaceProvider> const owner;
     mutable std::mutex configuration_mutex;
     mir::Fd const drm_fd;
+    std::shared_ptr<struct gbm_device> const gbm;
     std::shared_ptr<DisplayReport> const listener;
     mir::udev::Monitor monitor;
     std::shared_ptr<KMSOutputContainer> const output_container;
@@ -107,21 +107,19 @@ private:
 class GBMDisplayProvider : public graphics::GBMDisplayProvider
 {
 public:
-    GBMDisplayProvider(mir::Fd drm_fd);
-    
+    explicit GBMDisplayProvider(mir::Fd drm_fd);
+
     auto is_same_device(mir::udev::Device const& render_device) const -> bool override;
-    
+
+    auto on_this_device(graphics::DisplayBuffer& target) const -> bool override;
+
     auto gbm_device() const -> std::shared_ptr<struct gbm_device> override;
 
-    auto supported_formats() const -> std::vector<DRMFormat> override;
-    
-    auto modifiers_for_format(DRMFormat format) const -> std::vector<uint64_t> override;
-    
-    auto make_surface(geometry::Size size, DRMFormat format, std::span<uint64_t> modifier) -> std::unique_ptr<GBMSurface> override;    
 private:
     mir::Fd const fd;
     std::shared_ptr<struct gbm_device> const gbm;
 };
+
 }
 }
 }

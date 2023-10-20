@@ -47,11 +47,11 @@ auto create_default_display() -> EGLDisplay
     return eglGetDisplay(EGL_DEFAULT_DISPLAY);
 }
 
-auto egl_display_from_platforms(std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays) -> std::tuple<EGLDisplay, bool>
+auto egl_display_from_platforms(std::vector<std::shared_ptr<mg::DisplayPlatform>> const& displays) -> std::tuple<EGLDisplay, bool>
 {
     for (auto const& display : displays)
     {
-        if (auto egl_provider = display->acquire_interface<mg::GenericEGLDisplayProvider>())
+        if (auto egl_provider = display->acquire_provider<mg::GenericEGLDisplayProvider>())
         {
             return std::make_tuple(egl_provider->get_egl_display(), false);
         }
@@ -196,7 +196,7 @@ auto maybe_make_dmabuf_provider(
 }
 }
 
-mge::RenderingPlatform::RenderingPlatform(std::vector<std::shared_ptr<DisplayInterfaceProvider>> const& displays)
+mge::RenderingPlatform::RenderingPlatform(std::vector<std::shared_ptr<DisplayPlatform>> const& displays)
     : RenderingPlatform(egl_display_from_platforms(displays))
 {
 }

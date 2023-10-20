@@ -62,6 +62,20 @@ auto master_fd_for_device(mir::udev::Device const& device, mir::ConsoleServices&
     
     return std::make_tuple(std::move(device_handle), std::move(drm_fd));
 }
+
+auto maybe_make_gbm_provider(mir::Fd drm_fd) -> std::shared_ptr<mgg::GBMDisplayProvider>
+{
+    try
+    {
+        return std::make_shared<mgg::GBMDisplayProvider>(std::move(drm_fd));
+    }
+    catch (std::exception const& err)
+    {
+        mir::log_info("Failed to create GBM device for direct buffer submission");
+        mir::log_info("Output will use CPU buffer copies");
+        return {};
+    }
+}
 }
 
 mgg::Platform::Platform(
@@ -83,7 +97,7 @@ mgg::Platform::Platform(
       listener{listener},
       device_handle{std::move(std::get<0>(drm))},
       drm_fd{std::move(std::get<1>(drm))},
-      provider{std::make_shared<KMSDisplayInterfaceProvider>(drm_fd)},
+      gbm_display_provider{maybe_make_gbm_provider(drm_fd)},
       bypass_option_{bypass_option}
 {
     if (drm_fd == mir::Fd::invalid)
@@ -96,7 +110,7 @@ namespace
 {
 auto gbm_device_for_udev_device(
     mir::udev::Device const& device,
-    std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays)
+    std::vector<std::shared_ptr<mg::DisplayPlatform>> const& displays)
      -> std::variant<std::shared_ptr<mg::GBMDisplayProvider>, std::shared_ptr<gbm_device>>
 {
     /* First check to see whether our device exactly matches a display device.
@@ -104,7 +118,7 @@ auto gbm_device_for_udev_device(
      */
     for(auto const& display_device : displays)
     {
-        if (auto gbm_display = display_device->acquire_interface<mg::GBMDisplayProvider>())
+        if (auto gbm_display = display_device->acquire_provider<mg::GBMDisplayProvider>())
         {
             if (gbm_display->is_same_device(device))
             {
@@ -324,8 +338,8 @@ auto maybe_make_dmabuf_provider(
 
 mgg::RenderingPlatform::RenderingPlatform(
     mir::udev::Device const& device,
-    std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays)
-    : RenderingPlatform(gbm_device_for_udev_device(device, displays))
+    std::vector<std::shared_ptr<mg::DisplayPlatform>> const& platforms)
+    : RenderingPlatform(gbm_device_for_udev_device(device, platforms))
 {
 }
 
@@ -365,64 +379,45 @@ auto mgg::RenderingPlatform::maybe_create_provider(
     return nullptr;
 }
 
-class mgg::Platform::KMSDisplayInterfaceProvider : public mg::DisplayInterfaceProvider
+namespace
 {
-public:
-    explicit KMSDisplayInterfaceProvider(mir::Fd drm_fd)
-        : drm_fd{std::move(drm_fd)},
-          gbm_provider{maybe_make_gbm_provider(this->drm_fd)}
+auto gbm_device_from_provider(std::shared_ptr<mg::GBMDisplayProvider> const& provider)
+    -> std::shared_ptr<struct gbm_device>
+{
+    if (provider)
     {
+        return provider->gbm_device();
     }
-
-protected:
-    auto maybe_create_interface(mg::DisplayProvider::Tag const& type_tag)
-        -> std::shared_ptr<mg::DisplayProvider>
-    {
-        if (dynamic_cast<mg::GBMDisplayProvider::Tag const*>(&type_tag))
-        {
-            return gbm_provider;
-        }
-        if (dynamic_cast<mg::CPUAddressableDisplayProvider::Tag const*>(&type_tag))
-        {
-            return mg::kms::CPUAddressableDisplayProvider::create_if_supported(drm_fd);
-        }
-        return {};  
-    }
-private:
-    static auto maybe_make_gbm_provider(mir::Fd drm_fd) -> std::shared_ptr<mgg::GBMDisplayProvider>
-    {
-        try
-        {
-            return std::make_shared<mgg::GBMDisplayProvider>(std::move(drm_fd));
-        }
-        catch (std::exception const& err)
-        {
-            mir::log_info("Failed to create GBM device for direct buffer submission");
-            mir::log_info("Output will use CPU buffer copies");
-            return {};
-        }
-    }
-
-    mir::Fd const drm_fd;
-    // We rely on the GBM provider being stable over probe, so we construct one at startup
-    // and reuse it.
-    std::shared_ptr<mgg::GBMDisplayProvider> const gbm_provider;
-};
+    return nullptr;
+}
+}
 
 mir::UniqueModulePtr<mg::Display> mgg::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy, std::shared_ptr<GLConfig> const&)
 {
     return make_module_ptr<mgg::Display>(
-        provider,
         drm_fd,
+        gbm_device_from_provider(gbm_display_provider),
         bypass_option_,
         initial_conf_policy,
         listener);
 }
 
-auto mgg::Platform::interface_for() -> std::shared_ptr<DisplayInterfaceProvider>
+auto mgg::Platform::maybe_create_provider(DisplayProvider::Tag const& type_tag)
+    -> std::shared_ptr<DisplayProvider>
 {
-    return provider;
+    if (dynamic_cast<mg::GBMDisplayProvider::Tag const*>(&type_tag))
+    {
+        return gbm_display_provider;
+    }
+    if (dynamic_cast<mg::CPUAddressableDisplayProvider::Tag const*>(&type_tag))
+    {
+        /* There's no implementation behind it, but we want to know during probe time
+         * that the DisplayBuffers will support it.
+         */
+        return std::make_shared<CPUAddressableDisplayProvider>();
+    }
+    return {};
 }
 
 mgg::BypassOption mgg::Platform::bypass_option() const
