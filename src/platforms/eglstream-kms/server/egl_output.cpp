@@ -330,7 +330,24 @@ bool mgek::EGLOutput::queue_atomic_flip(FBHandle const& fb, void const* drm_even
     int ret = atomic_commit(fb, drm_event_userdata, flags);
     if (ret != 0)
     {
-        BOOST_THROW_EXCEPTION((std::system_error{-ret, std::system_category(), "Failed to commit Atomic KMS state"}));
+        if (ret == -EACCES || ret == -EPERM)
+        {
+            /* We don't have modesetting rights.
+             *
+             * This can happen during session switching if (eg) logind has already
+             * revoked device access before notifying us.
+             *
+             * Whatever we're switching to can handle the CRTCs; this should not be fatal.
+             */
+            mir::log_info("Couldn't clear output %s (drmModeSetCrtc: %s (%i))",
+                mgk::connector_name(connector).c_str(),
+                strerror(-ret),
+                -ret);
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION((std::system_error{-ret, std::system_category(), "Failed to commit Atomic KMS state"}));
+        }
     }
 
     return true;
