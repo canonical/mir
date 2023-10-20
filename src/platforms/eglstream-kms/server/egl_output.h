@@ -79,7 +79,7 @@ private:
     uint32_t mode_id;
 
     int dpms_enum_id;
-    uint32_t flags_for_next_flip;
+    uint32_t flags_for_next_flip = 0;
 };
 
 }
