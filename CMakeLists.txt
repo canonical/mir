@@ -144,51 +144,22 @@ if(cmake_build_type_lower MATCHES "coverage")
 endif()
 
 if(cmake_build_type_lower MATCHES "addresssanitizer")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
-  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=address")
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=address")
-  if (CMAKE_COMPILER_IS_GNUCXX)
-    # Work around GCC bug. It should automatically link to asan when
-    # -fsanitize=address is used, but doesn't.
-    #
-    # Linking everything with asan is harmless and simple, so do that.
-    link_libraries(asan) # Workaround for LP:1413474
-  endif()
+  add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+  add_link_options(-fsanitize=address)
 elseif(cmake_build_type_lower MATCHES "threadsanitizer")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread -fno-omit-frame-pointer")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=thread -fno-omit-frame-pointer")
-  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=thread")
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=thread")
-  if (CMAKE_COMPILER_IS_GNUCXX)
-    # Work around GCC bug. It should automatically link to tsan when
-    # -fsanitize=thread is used, but doesn't.
-    #
-    # Linking everything with tsan is harmless and simple, so do that.
-    link_libraries(tsan) # Workaround for LP:1413474
-  endif()
+  add_compile_options(-fsanitize=thread -fno-omit-frame-pointer)
+  add_link_options(-fsanitize=thread)
 elseif(cmake_build_type_lower MATCHES "ubsanitizer")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
-  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=undefined")
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=undefined")
+  add_compile_options(-fsanitize=undefined -fno-omit-frame-pointer)
+  add_link_options(-fsanitize=undefined)
   # "Symbol already defined" errors occur with pre-compiled headers
   SET(MIR_USE_PRECOMPILED_HEADERS OFF CACHE BOOL "Use precompiled headers" FORCE)
-  if (CMAKE_COMPILER_IS_GNUCXX)
-    # Work around GCC bug. It should automatically link to asan when
-    # -fsanitize=undefined is used, but doesn't.
-    #
-    # Linking everything with ubsan is harmless and simple, so do that.
-    link_libraries(ubsan) # Workaround for LP:1413474
-  endif()
   # We have inline classes as interfaces used by .so's and implemented elsewhere.
   # This results in multiple trivial implementations. So let's not warn about that.
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize=vptr")
+  add_compile_options(-fno-sanitize=vptr)
 else()
   # AddressSanitizer builds fail if we disallow undefined symbols
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
-  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--no-undefined")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
+  add_link_options(-Wl,--no-undefined)
 endif()
 
 enable_testing()

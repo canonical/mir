@@ -36,7 +36,7 @@ add_library(mirplatformgraphicscommon OBJECT
   egl_buffer_copy.cpp
 )
 
-mir_generate_protocol_wrapper(mirplatformgraphicscommon "zwp_" protocol/linux-dmabuf-unstable-v1.xml)
+mir_generate_protocol_wrapper(mirplatformgraphicscommon "zwp_" linux-dmabuf-unstable-v1.xml)
 
 if (DRM_VERSION VERSION_GREATER 2.4.107)
   target_compile_definitions(

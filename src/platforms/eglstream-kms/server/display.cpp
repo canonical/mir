@@ -181,6 +181,21 @@ public:
         pending_flip = satisfied_promise.get_future();
     }
 
+    ~DisplayBuffer()
+    {
+        if (output_stream != EGL_NO_STREAM_KHR)
+        {
+            eglDestroyStreamKHR(dpy, output_stream);
+            output_stream = nullptr;
+        }
+
+        if (ctx != EGL_NO_CONTEXT)
+        {
+            eglDestroyContext(dpy, ctx);
+            ctx = nullptr;
+        }
+    }
+
     mir::geometry::Rectangle view_area() const override
     {
         return view_area_;

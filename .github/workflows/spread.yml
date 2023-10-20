@@ -32,10 +32,8 @@ jobs:
         if ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}; then
           TASKS='"lxd:ubuntu-22.04:spread/build/ubuntu:asan"
                  "lxd:ubuntu-22.04:spread/build/ubuntu:tsan"
-                 "lxd:ubuntu-22.04:spread/build/ubuntu:ubsan"
                  "lxd:ubuntu-22.04:spread/build/ubuntu:asan_clang"
-                 "lxd:ubuntu-22.04:spread/build/ubuntu:tsan_clang"
-                 "lxd:ubuntu-22.04:spread/build/ubuntu:ubsan_clang"'
+                 "lxd:ubuntu-22.04:spread/build/ubuntu:tsan_clang"'
         fi
 
         TASKS+='"lxd:alpine-3.18:spread/build/alpine:amd64"
@@ -50,7 +48,9 @@ jobs:
                 "lxd:fedora-38:spread/build/fedora:amd64"
                 "lxd:fedora-rawhide:spread/build/fedora:amd64"
                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_devel"
-                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_proposed"'
+                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_proposed"
+                "lxd:ubuntu-22.04:spread/build/ubuntu:ubsan"
+                "lxd:ubuntu-22.04:spread/build/ubuntu:ubsan_clang"'
 
         echo ${TASKS:-} | jq -cs '{ "spread-task": .  }' | awk '{ print "matrix=" $0 }' >> $GITHUB_OUTPUT
 
@@ -112,7 +112,13 @@ jobs:
         echo "max_size = 800M" > ${CCACHE_DIR}/ccache.conf
 
     - name: Run Spread task
-      run: snap run spread-mir-ci.spread -v ${{ matrix.spread-task }}
+      run: snap run spread-mir-ci.spread -reuse -v ${{ matrix.spread-task }}
 
     - name: CCache stats
       run: cat ${CCACHE_DIR}/ccache.stats
+
+    - if: ${{ failure() && runner.debug }}
+      name: Setup upterm session
+      uses: lhotari/action-upterm@v1
+      with:
+        limit-access-to-actor: true

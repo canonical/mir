@@ -679,6 +679,10 @@ TEST(MultiplexingDisplay, applies_initial_display_configuration)
                 });
         }
 
+        void confirm(mg::DisplayConfiguration const&) override
+        {
+        }
+
         auto expected_location_for_display(mg::DisplayConfigurationOutput const& display) -> geom::Point
         {
             auto it = std::find_if(

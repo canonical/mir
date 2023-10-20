@@ -1,7 +1,7 @@
 include(FindPackageHandleStandardArgs)
 
-pkg_check_modules(GTEST QUIET "gtest >= 1.8.0")
-pkg_check_modules(GTEST_MAIN QUIET "gtest_main >= 1.8.0")
+pkg_check_modules(GTEST QUIET gtest>=1.8.0)
+pkg_check_modules(GTEST_MAIN QUIET gtest_main>=1.8.0)
 if (GTEST_FOUND AND GTEST_MAIN_FOUND)
     # If we can find package configuration for gtest use it!
     set(GTEST_LIBRARY ${GTEST_LIBRARIES})

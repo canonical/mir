@@ -153,7 +153,7 @@ void mircv::XKBMapper::update_modifier()
             xkb_modifiers_.depressed |= device_xkb_modifiers.depressed;
             xkb_modifiers_.latched |= device_xkb_modifiers.latched;
             xkb_modifiers_.locked |= device_xkb_modifiers.locked;
-            if (mapping_state.first == last_device_id)
+            if (last_device_id && mapping_state.first == last_device_id.value())
             {
                 xkb_modifiers_.effective_layout = device_xkb_modifiers.effective_layout;
             }

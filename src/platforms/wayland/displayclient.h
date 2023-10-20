@@ -162,8 +162,9 @@ protected:
     xkb_keymap* keyboard_map_ = nullptr;
     xkb_state* keyboard_state_ = nullptr;
     bool fake_pointer_frame = false;
-    geometry::Displacement pointer_displacement; // Position of current output
+    geometry::DisplacementF pointer_displacement; // Position of current output
     geometry::Displacement touch_displacement;   // Position of current output
+    float pointer_scale{1.0f};
 
     std::unique_ptr<wl_registry, decltype(&wl_registry_destroy)> registry;
 

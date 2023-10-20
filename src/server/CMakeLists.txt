@@ -26,7 +26,6 @@ add_subdirectory(graphics/)
 add_subdirectory(input/)
 add_subdirectory(report/)
 add_subdirectory(scene/)
-add_subdirectory(frontend/)
 add_subdirectory(frontend_wayland/)
 add_subdirectory(frontend_xwayland/)
 add_subdirectory(shell/)
@@ -86,7 +85,6 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirscene>
   $<TARGET_OBJECTS:mircompositor>
   $<TARGET_OBJECTS:mirgraphics>
-  $<TARGET_OBJECTS:mirfrontend>
   $<TARGET_OBJECTS:mirfrontend-wayland>
   $<TARGET_OBJECTS:mirfrontend-xwayland>
   $<TARGET_OBJECTS:mirshell>

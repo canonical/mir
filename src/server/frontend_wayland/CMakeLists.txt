@@ -57,6 +57,8 @@ set(
   std_layout_uptr.h
   shm.cpp                       shm.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/pointer_input_dispatcher.h
+  session_credentials.cpp
+  ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/buffer_stream.h
 )
 
 add_custom_command(
