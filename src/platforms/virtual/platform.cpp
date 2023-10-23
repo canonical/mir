@@ -19,6 +19,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/egl_error.h"
 #include "options_parsing_helpers.h"
+#include <drm_fourcc.h>
 
 namespace mg = mir::graphics;
 namespace mgv = mir::graphics::virt;
@@ -37,7 +38,7 @@ protected:
     auto maybe_create_interface(mg::DisplayProvider::Tag const& type_tag)
         -> std::shared_ptr<mg::DisplayProvider>
     {
-        class StubGenericEGLDisplayProvider : public GenericEGLDisplayProvider
+        class VirtualEGLDisplayProvider : public GenericEGLDisplayProvider
         {
         public:
             auto get_egl_display() -> EGLDisplay override
@@ -80,10 +81,63 @@ protected:
         private:
         };
 
+        class VirtualCPUAddressibleDisplayProvider: public CPUAddressableDisplayProvider
+        {
+        public:
+            class VirtualMappableFb: public MappableFB
+            {
+            public:
+                VirtualMappableFb(geom::Size const& size, DRMFormat format)
+                    : size_{size}, format_{format}
+                {
+                }
+
+                auto format() const -> MirPixelFormat override
+                {
+                    return format_.as_mir_format().value_or(mir_pixel_format_invalid);
+                }
+
+                auto stride() const -> geom::Stride override
+                {
+                    return geom::Stride{};
+                }
+
+                auto size() const -> geom::Size override
+                {
+                    return size_;
+                }
+
+                auto map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>> override
+                {
+                    return nullptr;
+                }
+
+            private:
+                geom::Size size_;
+                DRMFormat format_;
+            };
+
+            auto supported_formats() const -> std::vector<DRMFormat> override
+            {
+                return {mg::DRMFormat{DRM_FORMAT_XRGB8888}, mg::DRMFormat{DRM_FORMAT_ARGB8888}};
+            }
+
+            auto alloc_fb(geometry::Size pixel_size, DRMFormat format) -> std::unique_ptr<MappableFB> override
+            {
+                return std::make_unique<VirtualMappableFb>(pixel_size, format);
+            }
+        };
+
         if (dynamic_cast<mg::GenericEGLDisplayProvider::Tag const*>(&type_tag))
         {
-            return std::make_shared<StubGenericEGLDisplayProvider>();
+            return std::make_shared<VirtualEGLDisplayProvider>();
         }
+
+        if (dynamic_cast<mg::CPUAddressableDisplayProvider::Tag const*>(&type_tag))
+        {
+            return std::make_shared<VirtualCPUAddressibleDisplayProvider>();
+        }
+
         return nullptr;
     }
 };
