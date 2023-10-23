@@ -15,23 +15,80 @@
  */
 
 #include "threaded_drm_event_handler.h"
+#include "mir/log.h"
+#include "mir/logging/logger.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/enable_error_info.hpp>
 #include <boost/exception/info.hpp>
 
+#include <system_error>
 #include <xf86drm.h>
 #include <poll.h>
 #include <cstring>
+#include <fcntl.h>
 #include <algorithm>
 
 namespace mge = mir::graphics::eglstream;
 
+
+
+class mge::ThreadedDRMEventHandler::Pipe
+{
+public:
+    Pipe()
+        : Pipe(checked_pipe(O_CLOEXEC))
+    {
+    }
+
+    auto read_fd() const -> int
+    {
+        return read;
+    }
+
+    auto read_from() -> uint32_t
+    {
+        uint32_t buffer;
+        if (::read(read, &buffer, sizeof(buffer)) != sizeof(buffer))
+        {
+            BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to read from pipe"}));
+        }
+        return buffer;
+    }
+
+    void write_to(uint32_t data)
+    {
+        if (::write(write, &data, sizeof(data)) != sizeof(data))
+        {
+            BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to write to pipe"}));
+        }
+    }
+private:
+    static auto checked_pipe(int flags) -> std::array<int, 2>
+    {
+        std::array<int, 2> pipefds;
+        if (pipe2(pipefds.data(), flags))
+        {
+            BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to create pipe()"}));
+        }
+        return pipefds;
+    }
+
+    Pipe(std::array<int, 2> pipefds)
+        : read{mir::Fd{pipefds[0]}},
+          write{mir::Fd{pipefds[1]}}
+    {
+    }
+
+    mir::Fd const read;
+    mir::Fd const write;
+};
+
 mge::ThreadedDRMEventHandler::ThreadedDRMEventHandler(mir::Fd drm_fd)
     : drm_fd{std::move(drm_fd)},
+      cancel_pipe{std::make_unique<Pipe>()},
       dispatch_thread{[this]() { event_loop(); }}
 {
-
 }
 
 mge::ThreadedDRMEventHandler::~ThreadedDRMEventHandler()
@@ -97,6 +154,15 @@ std::future<void> mge::ThreadedDRMEventHandler::expect_flip_event(
     return pending_expectations.back()->completion.get_future();
 }
 
+void mge::ThreadedDRMEventHandler::cancel_flip_events(KMSCrtcId id)
+{
+    mir::log(
+        mir::logging::Severity::debug,
+        "ThreadedDRMEventHandler",
+        "Scheduling cancel of flip events for CRTC %i", id);
+    cancel_pipe->write_to(id);
+}
+
 void mge::ThreadedDRMEventHandler::event_loop() noexcept
 {
     drmEventContext ctx;
@@ -137,11 +203,16 @@ void mge::ThreadedDRMEventHandler::event_loop() noexcept
          */
         lock.unlock();
 
-        pollfd events;
-        events.fd = drm_fd;
-        events.events = POLLIN;
+        pollfd events[2];
+        // DRM events
+        events[0].fd = drm_fd;
+        events[0].events = POLLIN;
+        // Cancel events
+        events[1].fd = cancel_pipe->read_fd();
+        events[1].events = POLLIN;
+
         // TODO: Maybe have a non-infinite timeout here?
-        auto result = ::poll(&events, 1, -1);
+        auto result = ::poll(events, 2, -1);
 
         // We've got some events; reclaim the lock and process them.
         lock.lock();
@@ -166,9 +237,32 @@ void mge::ThreadedDRMEventHandler::event_loop() noexcept
                 }
             }
         }
-        else if (events.revents & POLLIN)
-        {
-            drmHandleEvent(drm_fd, &ctx);
+        else
+        {   // DRM event
+            if (events[0].revents & POLLIN)
+            {
+                drmHandleEvent(drm_fd, &ctx);
+            }  // Cancel event
+            if (events[1].revents & POLLIN)
+            {
+                auto crtc_id = cancel_pipe->read_from();
+                        mir::log(
+                            mir::logging::Severity::debug,
+                            "ThreadedDRMEventHandler",
+                            "Cancelling any page flip notification for CRTC %i", crtc_id);
+                for (auto& slot :pending_expectations)
+                {
+                    if (slot && slot->id == crtc_id)
+                    {
+                        mir::log(
+                            mir::logging::Severity::debug,
+                            "ThreadedDRMEventHandler",
+                            "Cancelling page flip notification for CRTC %i", crtc_id);
+                        slot->completion.set_value();
+                        slot = {};
+                    }
+                }
+            }
         }
     }
 }

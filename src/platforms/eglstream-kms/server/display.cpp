@@ -231,7 +231,11 @@ public:
 
             scheduled_fb = std::move(next_swap);
             next_swap = nullptr;
-            output->queue_atomic_flip(*scheduled_fb, event_handler->drm_event_data());
+            if (!output->queue_atomic_flip(*scheduled_fb, event_handler->drm_event_data()))
+            {
+                // If we failed to submit the flip then we're not going to get the event!
+                event_handler->cancel_flip_events(output->crtc_id());
+            }
             return;
         }
 

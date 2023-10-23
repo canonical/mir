@@ -313,6 +313,11 @@ int mgek::EGLOutput::atomic_commit(uint64_t fb, const void *drm_event_userdata, 
     drmModeAtomicAddProperty(request.get(), plane_id, plane_props->id_for("CRTC_ID"), _crtc_id);
     drmModeAtomicAddProperty(request.get(), plane_id, plane_props->id_for("FB_ID"), fb);
 
+    // TEST: Make modeset commits synchronous, to avoid EBUSY?
+    if (flags & DRM_MODE_ATOMIC_ALLOW_MODESET)
+    {
+        flags &= ~DRM_MODE_ATOMIC_NONBLOCK;
+    }
     auto ret = drmModeAtomicCommit(drm_fd, request.get(), flags, const_cast<void*>(drm_event_userdata));
     if (ret != 0)
     {
@@ -339,10 +344,11 @@ bool mgek::EGLOutput::queue_atomic_flip(FBHandle const& fb, void const* drm_even
              *
              * Whatever we're switching to can handle the CRTCs; this should not be fatal.
              */
-            mir::log_info("Couldn't clear output %s (drmModeSetCrtc: %s (%i))",
+            mir::log_info("Failed to submit page flip on %s (drmModeSetCrtc: %s (%i))",
                 mgk::connector_name(connector).c_str(),
                 strerror(-ret),
                 -ret);
+            return false;
         }
         else
         {

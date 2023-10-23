@@ -45,6 +45,7 @@ public:
         KMSCrtcId id,
         std::function<void(unsigned int, std::chrono::milliseconds)> on_flip) override;
 
+    void cancel_flip_events(KMSCrtcId id) override;
 private:
     void event_loop() noexcept;
 
@@ -57,6 +58,8 @@ private:
         void* data) noexcept;
 
     mir::Fd const drm_fd;
+    class Pipe;
+    std::unique_ptr<Pipe> const cancel_pipe;
 
     struct FlipEventData
     {

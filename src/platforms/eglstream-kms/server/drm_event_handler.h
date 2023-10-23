@@ -40,6 +40,16 @@ public:
     virtual std::future<void> expect_flip_event(
         KMSCrtcId id,
         std::function<void(unsigned int frame_number, std::chrono::milliseconds frame_time)> on_flip) = 0;
+
+    /**
+     * Cancel any pending flip events on this CRTC
+     *
+     * This is useful when we know that we're not going to get the flip event we requested,
+     * such as when a VT switch has occurred.
+     *
+     * This marks all pending flip futures as completed.
+     */
+    virtual void cancel_flip_events(KMSCrtcId id) = 0;
 };
 }
 }
