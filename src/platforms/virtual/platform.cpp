@@ -17,6 +17,7 @@
 #include "platform.h"
 #include "display.h"
 #include "mir/graphics/platform.h"
+#include "mir/graphics/egl_error.h"
 #include "options_parsing_helpers.h"
 
 namespace mg = mir::graphics;
@@ -41,10 +42,16 @@ protected:
         public:
             auto get_egl_display() -> EGLDisplay override
             {
-                auto egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+                auto const egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+                if (egl_display == EGL_NO_DISPLAY)
+                {
+                    BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to create EGL display"}));
+                }
                 EGLint major, minor;
                 if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE)
-                    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to initialize EGL display"));
+                {
+                    BOOST_THROW_EXCEPTION(egl_error("Failed to initialize EGL display"));
+                }
                 return egl_display;
             }
 
