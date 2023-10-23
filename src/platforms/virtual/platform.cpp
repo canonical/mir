@@ -109,7 +109,7 @@ protected:
 
                 auto map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>> override
                 {
-                    return nullptr;
+                    BOOST_THROW_EXCEPTION(std::logic_error("map_writeable is not implemented"));
                 }
 
             private:
@@ -130,7 +130,18 @@ protected:
 
         if (dynamic_cast<mg::GenericEGLDisplayProvider::Tag const*>(&type_tag))
         {
-            return std::make_shared<VirtualEGLDisplayProvider>();
+            auto egl_display_provider = std::make_shared<VirtualEGLDisplayProvider>();
+            try
+            {
+                // If we cannot get the egl display, we can ignore it in the hopes
+                // that we can use the CPUAddressableDisplayProvider later on instead.
+                egl_display_provider->get_egl_display();
+                return egl_display_provider;
+            }
+            catch (std::runtime_error const&)
+            {
+                return nullptr;
+            }
         }
 
         if (dynamic_cast<mg::CPUAddressableDisplayProvider::Tag const*>(&type_tag))
