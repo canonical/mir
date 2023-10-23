@@ -81,7 +81,7 @@ protected:
         private:
         };
 
-        class VirtualCPUAddressibleDisplayProvider: public CPUAddressableDisplayProvider
+        class VirtualCPUAddressableDisplayProvider: public CPUAddressableDisplayProvider
         {
         public:
             class VirtualMappableFb: public MappableFB
@@ -146,7 +146,7 @@ protected:
 
         if (dynamic_cast<mg::CPUAddressableDisplayProvider::Tag const*>(&type_tag))
         {
-            return std::make_shared<VirtualCPUAddressibleDisplayProvider>();
+            return std::make_shared<VirtualCPUAddressableDisplayProvider>();
         }
 
         return nullptr;

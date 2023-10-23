@@ -19,11 +19,13 @@
 
 #include "mir/graphics/platform.h"
 #include "src/platforms/virtual/platform.h"
+#include "mir/test/doubles/mock_egl.h"
 
 #include "mir/shared_library.h"
 #include "src/server/report/null/display_report.h"
 
 namespace mg = mir::graphics;
+namespace mtd = mir::test::doubles;
 namespace mgv = mir::graphics::virt;
 namespace geom = mir::geometry;
 using namespace testing;
@@ -41,6 +43,15 @@ public:
             std::make_shared<mir::report::null::DisplayReport>(),
             std::vector<mgv::VirtualOutputConfig>{config});
     }
+
+protected:
+    virtual void SetUp()
+    {
+        mock_egl.provide_egl_extensions();
+    }
+
+    testing::NiceMock<mtd::MockEGL> mock_egl;
+    EGLDisplay fake_display{reinterpret_cast<EGLDisplay>(0xabcd)};
 };
 
 TEST_F(VirtualGraphicsPlatformTest, lone_config_has_one_output_size_when_provided_one_output_size)
@@ -57,11 +68,51 @@ TEST_F(VirtualGraphicsPlatformTest, multiple_output_sizes_are_set_correctly_when
         mgv::VirtualOutputConfig(std::vector<geom::Size>{geom::Size{1280, 1024}, geom::Size{800, 600}})));
 }
 
-TEST_F(VirtualGraphicsPlatformTest, can_acquire_interface_for_generic_egl_display_provider)
+TEST_F(VirtualGraphicsPlatformTest, can_acquire_interface_for_cpu_addressable_display_provider)
 {
     auto platform = create_platform();
     auto interface = mg::DisplayPlatform::interface_for(platform);
+    EXPECT_TRUE(interface->acquire_interface<mg::CPUAddressableDisplayProvider>() != nullptr);
+}
+
+TEST_F(VirtualGraphicsPlatformTest, can_acquire_interface_for_generic_egl_display_provider)
+{
+    ON_CALL(mock_egl, eglGetDisplay(_))
+        .WillByDefault(Return(fake_display));
+    ON_CALL(mock_egl, eglInitialize(_,_,_))
+        .WillByDefault(DoAll(
+            SetArgPointee<1>(1),
+            SetArgPointee<2>(4),
+            Return(EGL_TRUE)));
+    auto platform = create_platform();
+    auto interface = mg::DisplayPlatform::interface_for(platform);
     EXPECT_TRUE(interface->acquire_interface<mg::GenericEGLDisplayProvider>() != nullptr);
+}
+
+TEST_F(VirtualGraphicsPlatformTest, cannot_acquire_interface_for_generic_egl_display_provider_when_egl_display_is_none)
+{
+    ON_CALL(mock_egl, eglGetDisplay(_))
+        .WillByDefault(Return(EGL_NO_DISPLAY));
+    ON_CALL(mock_egl, eglInitialize(_,_,_))
+        .WillByDefault(DoAll(
+            SetArgPointee<1>(1),
+            SetArgPointee<2>(4),
+            Return(EGL_TRUE)));
+    auto platform = create_platform();
+    auto interface = mg::DisplayPlatform::interface_for(platform);
+    EXPECT_THAT(interface->acquire_interface<mg::GenericEGLDisplayProvider>(), nullptr);
+}
+
+TEST_F(VirtualGraphicsPlatformTest, cannot_acquire_interface_for_generic_egl_display_provider_when_egl_initialize_returns_false)
+{
+    ON_CALL(mock_egl, eglGetDisplay(_))
+        .WillByDefault(Return(fake_display));
+    ON_CALL(mock_egl, eglInitialize(_,_,_))
+        .WillByDefault(DoAll(
+            Return(EGL_FALSE)));
+    auto platform = create_platform();
+    auto interface = mg::DisplayPlatform::interface_for(platform);
+    EXPECT_THAT(interface->acquire_interface<mg::GenericEGLDisplayProvider>(), nullptr);
 }
 
 TEST_F(VirtualGraphicsPlatformTest, output_size_parsing_throws_on_bad_input)
