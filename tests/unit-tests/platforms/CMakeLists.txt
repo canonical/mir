@@ -10,6 +10,8 @@ if (MIR_BUILD_PLATFORM_X11)
   add_subdirectory(x11)
 endif()
 
+add_subdirectory(virtual)
+
 set(UNIT_TEST_SOURCES
   ${UNIT_TEST_SOURCES}
 #  ${CMAKE_CURRENT_SOURCE_DIR}/test_rendering_platform.cpp

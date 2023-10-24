@@ -14,6 +14,8 @@ add_library(server_platform_common STATIC
   one_shot_device_observer.cpp
   cpu_copy_output_surface.cpp
   cpu_copy_output_surface.h
+  options_parsing_helpers.h
+  options_parsing_helpers.cpp
 )
 
 target_include_directories(
