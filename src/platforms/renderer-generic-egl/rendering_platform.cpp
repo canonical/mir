@@ -50,6 +50,10 @@ auto egl_display_from_platforms(std::vector<std::shared_ptr<mg::DisplayInterface
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to create any EGL display"}));
     }
+    else if (eglInitialize(dpy, nullptr, nullptr) == EGL_FALSE)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialise EGL"));
+    }
     return dpy;
 }
 
