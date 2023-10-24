@@ -156,10 +156,6 @@ std::future<void> mge::ThreadedDRMEventHandler::expect_flip_event(
 
 void mge::ThreadedDRMEventHandler::cancel_flip_events(KMSCrtcId id)
 {
-    mir::log(
-        mir::logging::Severity::debug,
-        "ThreadedDRMEventHandler",
-        "Scheduling cancel of flip events for CRTC %i", id);
     cancel_pipe->write_to(id);
 }
 
@@ -246,18 +242,10 @@ void mge::ThreadedDRMEventHandler::event_loop() noexcept
             if (events[1].revents & POLLIN)
             {
                 auto crtc_id = cancel_pipe->read_from();
-                        mir::log(
-                            mir::logging::Severity::debug,
-                            "ThreadedDRMEventHandler",
-                            "Cancelling any page flip notification for CRTC %i", crtc_id);
                 for (auto& slot :pending_expectations)
                 {
                     if (slot && slot->id == crtc_id)
                     {
-                        mir::log(
-                            mir::logging::Severity::debug,
-                            "ThreadedDRMEventHandler",
-                            "Cancelling page flip notification for CRTC %i", crtc_id);
                         slot->completion.set_value();
                         slot = {};
                     }
