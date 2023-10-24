@@ -43,9 +43,7 @@ public:
     {
         egl_make_current();
         functor(width_, height_);
-        std::cout << "HERE" << std::endl;
         swap_buffers();
-        std::cout << "THERE" << std::endl;
     }
 
 private:
