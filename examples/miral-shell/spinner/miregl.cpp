@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <set>
+#include <condition_variable>
 
 class MirEglApp : public WaylandApp
 {
@@ -35,7 +36,7 @@ public:
 
     EGLSurface create_eglsurface(wl_surface* surface, int width, int height);
     void make_current(EGLSurface eglsurface) const;
-    void swap_buffers(EGLSurface eglsurface) const;
+    void swap_buffers(EGLSurface eglsurface, wl_surface* wayland_surface) const;
     void destroy_surface(EGLSurface eglsurface) const;
     void get_surface_size(EGLSurface eglsurface, int* width, int* height) const;
 
@@ -99,7 +100,7 @@ void MirEglSurface::egl_make_current()
 
 void MirEglSurface::swap_buffers()
 {
-    mir_egl_app->swap_buffers(eglsurface);
+    mir_egl_app->swap_buffers(eglsurface, surface());
 }
 
 MirEglApp::MirEglApp(wl_display* display) :
@@ -192,8 +193,50 @@ void MirEglApp::make_current(EGLSurface eglsurface) const
         throw std::runtime_error("Can't eglMakeCurrent");
 }
 
-void MirEglApp::swap_buffers(EGLSurface eglsurface) const
+void MirEglApp::swap_buffers(EGLSurface eglsurface, wl_surface* wayland_surface) const
 {
+    // Taken primarily from src/platforms/wayland/displayclient.cpp
+    struct FrameSync
+    {
+        explicit FrameSync(wl_surface* surface):
+            surface{surface}
+        {
+            callback = wl_surface_frame(surface);
+            static struct wl_callback_listener const frame_listener =
+                {
+                    [](void* data, auto... args)
+                        { static_cast<FrameSync*>(data)->frame_done(args...); },
+                };
+            wl_callback_add_listener(callback, &frame_listener, this);
+        }
+
+
+        ~FrameSync()
+        {
+            std::unique_lock lock{mutex};
+            cv.wait_for(lock, std::chrono::milliseconds{100}, [this]{ return posted; });
+            wl_callback_destroy(callback);
+        }
+
+        void frame_done(wl_callback*, uint32_t)
+        {
+            {
+                std::lock_guard lock{mutex};
+                posted = true;
+            }
+            cv.notify_one();
+        }
+
+        wl_surface* const surface;
+
+        wl_callback* callback;
+        std::mutex mutex;
+        bool posted = false;
+        std::condition_variable cv;
+    };
+
+    FrameSync frame_sync{wayland_surface};
+    eglSwapInterval(egldisplay, 0);
     eglSwapBuffers(egldisplay, eglsurface);
 }
 

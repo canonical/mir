@@ -19,6 +19,8 @@ add_library(server_platform_common STATIC
   cpu_addressable_fb.cpp
   cpu_addressable_fb.h
   kms_framebuffer.h
+  options_parsing_helpers.h
+  options_parsing_helpers.cpp
 )
 
 target_include_directories(
