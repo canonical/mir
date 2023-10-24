@@ -14,7 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <chrono>
 #include <epoxy/egl.h>
+#include <thread>
 
 #include "display.h"
 #include "egl_output.h"
@@ -231,10 +233,64 @@ public:
 
             scheduled_fb = std::move(next_swap);
             next_swap = nullptr;
-            if (!output->queue_atomic_flip(*scheduled_fb, event_handler->drm_event_data()))
+
+            // Arbitrarily pick a 10s deadline for modesetting
+            auto deadline  = std::chrono::steady_clock::now() + std::chrono::seconds{10};
+            while (auto error = output->queue_atomic_flip(*scheduled_fb, event_handler->drm_event_data()))
             {
-                // If we failed to submit the flip then we're not going to get the event!
-                event_handler->cancel_flip_events(output->crtc_id());
+                if (error->value() == EPERM || error->value() == EACCES)
+                {
+                    /* We don't have modesetting permissions
+                     * This is presumably because we've just been VT-switched-away, and so
+                     * will pause soon.
+                     *
+                     * We'll assume that this is transitory, log in case it's an acutal issue, and continue.
+                     *
+                     * We've failed to submit the flip, though, so cancel the pending flip event
+                     */
+                    mir::log_info("Failed to submit page flip (%s (%i))",
+                        error->message().c_str(),
+                        error->value());
+                    event_handler->cancel_flip_events(output->crtc_id());
+                    return;
+                }
+                if (error->value() == EAGAIN)
+                {
+                    /* Sigh.
+                     * So, if we try and schedule a flip when something is already in progress, we'll
+                     * get EAGAIN.
+                     *
+                     * *Mostly* we shouldn't, because we're waiting for the page flip event before trying
+                     * to submit a new one, but it's possible for the KMS driver to cause this for opaque
+                     * (to us) reasons even if we're doing everything correctly.
+                     *
+                     * So, in this case, wait a bit(!) and try again.
+                     */
+                    if (std::chrono::steady_clock::now() > deadline)
+                    {
+                        BOOST_THROW_EXCEPTION((std::runtime_error{"Timeout waiting for modeset"}));
+                    }
+                    /* Sleep for 5ms; this would correspond to ~200Hz, which is fast enough that we
+                     * won't notice it, while being long enough to make it likely the previous work is
+                     * done
+                     */
+                    std::this_thread::sleep_for(std::chrono::milliseconds{5});
+                }
+                if (error->value() == EINVAL)
+                {
+                    /* This *should* be just for us doing the wrong thing, but it *also*
+                     * occurs when VT switching has disabled the damn output behind our back
+                     * so we can't do a non-ALLOW_MODESET commit (and we don't want to do that)
+                     * anyway.
+                     *
+                     * Assume this is a transient VT-switch failure :(
+                     */
+                    mir::log_info("Failed to submit page flip (%s (%i))",
+                        error->message().c_str(),
+                        error->value());
+                    event_handler->cancel_flip_events(output->crtc_id());
+                    return;
+                }
             }
             return;
         }
@@ -246,6 +302,12 @@ public:
         if (nv_stream(dpy).eglStreamConsumerAcquireAttribNV(dpy, output_stream, acquire_attribs) != EGL_TRUE)
         {
             auto error = eglGetError();
+            /* TODO: Handle error 0x3353 (EGL_RESOURCE_BUSY_EXT) here.
+             * That can be triggered by VT switch, but the naive approach direct KMS uses above doesn't work:
+             * We can't return to the compositor without *really* consuming the buffer because then
+             * eglSwapBuffers in EGLStreamOutputSurface::commit() blocks (because it can't push a new frame
+             * into the EGLStream).
+             */
             EGLAttrib stream_state{0};
             eglQueryStreamAttribKHR(dpy, output_stream, EGL_STREAM_STATE_KHR, &stream_state);
             std::string state;

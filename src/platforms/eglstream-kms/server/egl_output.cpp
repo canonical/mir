@@ -328,35 +328,15 @@ int mgek::EGLOutput::atomic_commit(uint64_t fb, const void *drm_event_userdata, 
     return 0;
 }
 
-bool mgek::EGLOutput::queue_atomic_flip(FBHandle const& fb, void const* drm_event_userdata)
+auto mgek::EGLOutput::queue_atomic_flip(FBHandle const& fb, void const* drm_event_userdata) -> std::optional<std::error_code>
 {
     uint32_t flags = flags_for_next_flip | DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_PAGE_FLIP_EVENT;
     flags_for_next_flip = 0;
-    int ret = atomic_commit(fb, drm_event_userdata, flags);
-    if (ret != 0)
+    if (auto err = atomic_commit(fb, drm_event_userdata, flags))
     {
-        if (ret == -EACCES || ret == -EPERM)
-        {
-            /* We don't have modesetting rights.
-             *
-             * This can happen during session switching if (eg) logind has already
-             * revoked device access before notifying us.
-             *
-             * Whatever we're switching to can handle the CRTCs; this should not be fatal.
-             */
-            mir::log_info("Failed to submit page flip on %s (drmModeSetCrtc: %s (%i))",
-                mgk::connector_name(connector).c_str(),
-                strerror(-ret),
-                -ret);
-            return false;
-        }
-        else
-        {
-            BOOST_THROW_EXCEPTION((std::system_error{-ret, std::system_category(), "Failed to commit Atomic KMS state"}));
-        }
+        return std::error_code{-err, std::system_category()};
     }
-
-    return true;
+    return std::nullopt;
 }
 
 void mgek::EGLOutput::clear_crtc()

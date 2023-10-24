@@ -49,7 +49,7 @@ public:
 
     EGLOutputLayerEXT output_layer() const;
     uint32_t crtc_id() const;
-    bool queue_atomic_flip(FBHandle const& fb, void const* drm_event_userdata);
+    auto queue_atomic_flip(FBHandle const& fb, void const* drm_event_userdata) -> std::optional<std::error_code>;
     void clear_crtc();
 
     void set_power_mode(MirPowerMode mode);
