@@ -43,10 +43,6 @@ mg::kms::CPUAddressableDisplayProvider::CPUAddressableDisplayProvider(mir::Fd dr
     : drm_fd{std::move(drm_fd)},
       supports_modifiers{drm_get_cap_checked(this->drm_fd, DRM_CAP_ADDFB2_MODIFIERS) == 1}
 {
-    if (!drm_get_cap_checked(this->drm_fd, DRM_CAP_DUMB_BUFFER))
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"DRM device doesn't support CPU buffers"}));
-    }
 }
 
 auto mg::kms::CPUAddressableDisplayProvider::supported_formats() const
@@ -60,4 +56,17 @@ auto mg::kms::CPUAddressableDisplayProvider::alloc_fb(
     geom::Size size, DRMFormat format) -> std::unique_ptr<MappableFB>
 {
     return std::make_unique<mg::CPUAddressableFB>(drm_fd, supports_modifiers, format, size);
+}
+
+auto mir::graphics::kms::CPUAddressableDisplayProvider::create_if_supported(mir::Fd const& drm_fd)
+-> std::shared_ptr<CPUAddressableDisplayProvider>
+{
+    if  (drm_get_cap_checked(drm_fd, DRM_CAP_DUMB_BUFFER))
+    {
+        return std::shared_ptr<CPUAddressableDisplayProvider>(new CPUAddressableDisplayProvider{drm_fd});
+    }
+    else
+    {
+        return {};
+    }
 }

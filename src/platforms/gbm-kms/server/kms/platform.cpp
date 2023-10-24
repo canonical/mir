@@ -384,7 +384,7 @@ protected:
         }
         if (dynamic_cast<mg::CPUAddressableDisplayProvider::Tag const*>(&type_tag))
         {
-            return std::make_shared<mg::kms::CPUAddressableDisplayProvider>(drm_fd);
+            return mg::kms::CPUAddressableDisplayProvider::create_if_supported(drm_fd);
         }
         return {};  
     }

@@ -83,7 +83,7 @@ auto mg::eglstream::InterfaceProvider::maybe_create_interface(DisplayProvider::T
     }
     if (dynamic_cast<mg::CPUAddressableDisplayProvider::Tag const*>(&tag))
     {
-        return std::make_shared<mg::kms::CPUAddressableDisplayProvider>(drm_fd);
+        return mg::kms::CPUAddressableDisplayProvider::create_if_supported(drm_fd);
     }
     return nullptr;
 }
