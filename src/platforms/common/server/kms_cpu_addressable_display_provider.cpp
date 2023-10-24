@@ -43,6 +43,10 @@ mg::kms::CPUAddressableDisplayProvider::CPUAddressableDisplayProvider(mir::Fd dr
     : drm_fd{std::move(drm_fd)},
       supports_modifiers{drm_get_cap_checked(this->drm_fd, DRM_CAP_ADDFB2_MODIFIERS) == 1}
 {
+    if (!drm_get_cap_checked(this->drm_fd, DRM_CAP_DUMB_BUFFER))
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"DRM device doesn't support CPU buffers"}));
+    }
 }
 
 auto mg::kms::CPUAddressableDisplayProvider::supported_formats() const
