@@ -97,15 +97,11 @@ auto select_platforms_from_list(std::string const& selection, std::vector<std::s
             auto const description = describe_module();
             found_module_names.emplace_back(description->name);
 
-            if (std::find(requested_modules.begin(), requested_modules.end(), description->name) != requested_modules.end())
+            if (auto const i = std::find(requested_modules.begin(), requested_modules.end(), description->name);
+                i != requested_modules.end())
             {
                 selected_modules.push_back(module);
-                requested_modules.erase(
-                    std::remove(
-                        requested_modules.begin(),
-                        requested_modules.end(),
-                        description->name),
-                    requested_modules.end());
+                requested_modules.erase(i);
             }
         }
         catch (std::exception const&)
