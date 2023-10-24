@@ -106,7 +106,6 @@ auto select_platforms_from_list(std::string const& selection, std::vector<std::s
                         requested_modules.end(),
                         description->name),
                     requested_modules.end());
-                break;
             }
         }
         catch (std::exception const&)
