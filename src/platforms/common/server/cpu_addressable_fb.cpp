@@ -51,7 +51,7 @@ class mg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappableB
             if (::munmap(const_cast<typename std::remove_const<T>::type *>(data_), len_) == -1)
             {
                 // It's unclear how this could happen, but tell *someone* about it if it does!
-                mir::log(mir::logging::Severity::error, "Failed to unmap CPU buffer: %s (%i)", strerror(errno), errno);
+                log_error("Failed to unmap CPU buffer: %s (%i)", strerror(errno), errno);
             }
         }
 
@@ -100,7 +100,7 @@ public:
 
         if (auto const err = drmIoctl(drm_fd, DRM_IOCTL_MODE_DESTROY_DUMB, &params))
         {
-            mir::log(mir::logging::Severity::error, "Failed destroy CPU-accessible buffer: %s (%i)", strerror(-err), -err);
+            log_error("Failed destroy CPU-accessible buffer: %s (%i)", strerror(-err), -err);
         }
     }
 

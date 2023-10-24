@@ -217,7 +217,7 @@ void mgek::EGLOutput::configure(size_t kms_mode_index)
     mgk::DRMModeCrtcUPtr crtc;
     mgk::DRMModePlaneUPtr plane;
     std::tie(crtc, plane) = mgk::find_crtc_with_primary_plane(drm_fd, connector);
-    _crtc_id = crtc->crtc_id;
+    crtc_id_ = crtc->crtc_id;
     plane_id = plane->plane_id;
     plane_props = std::make_unique<mgk::ObjectProperties>(drm_fd, plane_id, DRM_MODE_OBJECT_PLANE);
 
@@ -239,7 +239,7 @@ void mgek::EGLOutput::configure(size_t kms_mode_index)
     atomic_commit(dummy.id(), nullptr, DRM_MODE_ATOMIC_ALLOW_MODESET);
 
     EGLAttrib const crtc_filter[] = {
-        EGL_DRM_CRTC_EXT, static_cast<EGLAttrib>(_crtc_id),
+        EGL_DRM_CRTC_EXT, static_cast<EGLAttrib>(crtc_id_),
         EGL_NONE};
     int found_layers{0};
     if (eglGetOutputLayersEXT(display, crtc_filter, &layer, 1, &found_layers) != EGL_TRUE)
@@ -247,13 +247,13 @@ void mgek::EGLOutput::configure(size_t kms_mode_index)
         BOOST_THROW_EXCEPTION((
             mg::egl_error(
                 std::string{"Failed to find EGLOutputEXT corresponding to DRM CRTC "} +
-                std::to_string(_crtc_id))));
+                std::to_string(crtc_id_))));
     }
     if (found_layers != 1)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{
             std::string{"Failed to find EGLOutputEXT corresponding to DRM CRTC "} +
-            std::to_string(_crtc_id)});
+            std::to_string(crtc_id_)});
     }
 }
 
@@ -285,16 +285,16 @@ int mgek::EGLOutput::atomic_commit(uint64_t fb, const void *drm_event_userdata, 
 
     if (flags & DRM_MODE_ATOMIC_ALLOW_MODESET)
     {
-        mgk::ObjectProperties crtc_props{drm_fd, _crtc_id, DRM_MODE_OBJECT_CRTC};
+        mgk::ObjectProperties crtc_props{drm_fd, crtc_id_, DRM_MODE_OBJECT_CRTC};
 
         /* Activate the CRTC and set the mode */
-        drmModeAtomicAddProperty(request.get(), _crtc_id, crtc_props.id_for("MODE_ID"), mode_id);
-        drmModeAtomicAddProperty(request.get(), _crtc_id, crtc_props.id_for("ACTIVE"), 1);
+        drmModeAtomicAddProperty(request.get(), crtc_id_, crtc_props.id_for("MODE_ID"), mode_id);
+        drmModeAtomicAddProperty(request.get(), crtc_id_, crtc_props.id_for("ACTIVE"), 1);
 
         /* Set CRTC for the output */
         auto const connector_id = connector->connector_id;
         mgk::ObjectProperties connector_props{drm_fd, connector_id, DRM_MODE_OBJECT_CONNECTOR};
-        drmModeAtomicAddProperty(request.get(), connector_id, connector_props.id_for("CRTC_ID"), _crtc_id);
+        drmModeAtomicAddProperty(request.get(), connector_id, connector_props.id_for("CRTC_ID"), crtc_id_);
     }
 
     /* Source viewport. Coordinates are 16.16 fixed point format */
@@ -310,7 +310,7 @@ int mgek::EGLOutput::atomic_commit(uint64_t fb, const void *drm_event_userdata, 
     drmModeAtomicAddProperty(request.get(), plane_id, plane_props->id_for("CRTC_H"), height);
 
     /* Set a surface for the plane */
-    drmModeAtomicAddProperty(request.get(), plane_id, plane_props->id_for("CRTC_ID"), _crtc_id);
+    drmModeAtomicAddProperty(request.get(), plane_id, plane_props->id_for("CRTC_ID"), crtc_id_);
     drmModeAtomicAddProperty(request.get(), plane_id, plane_props->id_for("FB_ID"), fb);
 
     auto ret = drmModeAtomicCommit(drm_fd, request.get(), flags, const_cast<void*>(drm_event_userdata));

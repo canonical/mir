@@ -74,7 +74,7 @@ private:
 
     uint32_t plane_id;
     std::unique_ptr<graphics::kms::ObjectProperties> plane_props;
-    uint32_t _crtc_id;
+    uint32_t crtc_id_;
 
     uint32_t mode_id;
 
