@@ -80,10 +80,7 @@ TEST_F(VirtualGraphicsPlatformTest, can_acquire_interface_for_generic_egl_displa
     ON_CALL(mock_egl, eglGetDisplay(_))
         .WillByDefault(Return(fake_display));
     ON_CALL(mock_egl, eglInitialize(_,_,_))
-        .WillByDefault(DoAll(
-            SetArgPointee<1>(1),
-            SetArgPointee<2>(4),
-            Return(EGL_TRUE)));
+        .WillByDefault(Return(EGL_TRUE));
     auto platform = create_platform();
     auto interface = mg::DisplayPlatform::interface_for(platform);
     EXPECT_TRUE(interface->acquire_interface<mg::GenericEGLDisplayProvider>() != nullptr);
@@ -94,10 +91,7 @@ TEST_F(VirtualGraphicsPlatformTest, cannot_acquire_interface_for_generic_egl_dis
     ON_CALL(mock_egl, eglGetDisplay(_))
         .WillByDefault(Return(EGL_NO_DISPLAY));
     ON_CALL(mock_egl, eglInitialize(_,_,_))
-        .WillByDefault(DoAll(
-            SetArgPointee<1>(1),
-            SetArgPointee<2>(4),
-            Return(EGL_TRUE)));
+        .WillByDefault(Return(EGL_TRUE));
     auto platform = create_platform();
     auto interface = mg::DisplayPlatform::interface_for(platform);
     EXPECT_THAT(interface->acquire_interface<mg::GenericEGLDisplayProvider>(), nullptr);

@@ -18,6 +18,7 @@
 #include "display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/egl_error.h"
+#include "mir/log.h"
 #include "options_parsing_helpers.h"
 #include <drm_fourcc.h>
 
@@ -41,18 +42,11 @@ protected:
         class VirtualEGLDisplayProvider : public GenericEGLDisplayProvider
         {
         public:
+
+            explicit VirtualEGLDisplayProvider(EGLDisplay const egl_display) : egl_display{egl_display} {}
+
             auto get_egl_display() -> EGLDisplay override
             {
-                auto const egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-                if (egl_display == EGL_NO_DISPLAY)
-                {
-                    BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to create EGL display"}));
-                }
-                EGLint major, minor;
-                if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE)
-                {
-                    BOOST_THROW_EXCEPTION(egl_error("Failed to initialize EGL display"));
-                }
                 return egl_display;
             }
 
@@ -79,6 +73,7 @@ protected:
             }
 
         private:
+            EGLDisplay const egl_display;
         };
 
         class VirtualCPUAddressableDisplayProvider: public CPUAddressableDisplayProvider
@@ -130,17 +125,18 @@ protected:
 
         if (dynamic_cast<mg::GenericEGLDisplayProvider::Tag const*>(&type_tag))
         {
-            auto egl_display_provider = std::make_shared<VirtualEGLDisplayProvider>();
-            try
+            auto const egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+            if (egl_display == EGL_NO_DISPLAY)
             {
-                // If we cannot get the egl display, we can ignore it in the hopes
-                // that we can use the CPUAddressableDisplayProvider later on instead.
-                egl_display_provider->get_egl_display();
-                return egl_display_provider;
+                log_info("Failed to create EGL display");
             }
-            catch (std::runtime_error const&)
+            else if (eglInitialize(egl_display, nullptr, nullptr) == EGL_FALSE)
             {
-                return nullptr;
+                log_debug("Failed to initialise EGL: %s", mg::egl_category().message(eglGetError()).c_str());
+            }
+            else
+            {
+                return std::make_shared<VirtualEGLDisplayProvider>(egl_display);
             }
         }
 
