@@ -201,21 +201,20 @@ void MirEglApp::swap_buffers(EGLSurface eglsurface, wl_surface* wayland_surface)
         explicit FrameSync(wl_surface* surface):
             surface{surface}
         {
-        }
-
-        void init()
-        {
             callback = wl_surface_frame(surface);
             static struct wl_callback_listener const frame_listener =
                 {
                     [](void* data, auto... args)
-                    { static_cast<FrameSync*>(data)->frame_done(args...); },
+                        { static_cast<FrameSync*>(data)->frame_done(args...); },
                 };
             wl_callback_add_listener(callback, &frame_listener, this);
         }
 
+
         ~FrameSync()
         {
+            std::unique_lock lock{mutex};
+            cv.wait_for(lock, std::chrono::milliseconds{100}, [this]{ return posted; });
             wl_callback_destroy(callback);
         }
 
@@ -228,12 +227,6 @@ void MirEglApp::swap_buffers(EGLSurface eglsurface, wl_surface* wayland_surface)
             cv.notify_one();
         }
 
-        void wait_for_done()
-        {
-            std::unique_lock lock{mutex};
-            cv.wait_for(lock, std::chrono::milliseconds{100}, [this]{ return posted; });
-        }
-
         wl_surface* const surface;
 
         wl_callback* callback;
@@ -242,11 +235,9 @@ void MirEglApp::swap_buffers(EGLSurface eglsurface, wl_surface* wayland_surface)
         std::condition_variable cv;
     };
 
-    auto const frame_sync = std::make_shared<FrameSync>(wayland_surface);
-    frame_sync->init();
+    FrameSync frame_sync{wayland_surface};
     eglSwapInterval(egldisplay, 0);
     eglSwapBuffers(egldisplay, eglsurface);
-    frame_sync->wait_for_done();
 }
 
 void MirEglApp::destroy_surface(EGLSurface eglsurface) const

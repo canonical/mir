@@ -8,7 +8,7 @@ configure_file(
 )
 set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
-add_compile_definitions(MIR_LOG_COMPONENT="mir::virtual")
+add_compile_definitions(MIR_LOG_COMPONENT="mir:virtual")
 
 add_library(mirplatformgraphicsvirtualobjects OBJECT
     graphics.cpp

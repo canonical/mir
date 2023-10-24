@@ -23,7 +23,6 @@
 
 #include <memory>
 #include <vector>
-#include <iostream>
 
 class MirEglApp;
 class MirEglSurface;

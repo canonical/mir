@@ -36,7 +36,7 @@ mir::ModuleProperties const description = {
     MIR_VERSION_MICRO,
     mir::libname()
 };
-char const* virtual_displays_option_name{"virtual-output"};
+char const* const virtual_displays_option_name{"virtual-output"};
 }
 
 mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
