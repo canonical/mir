@@ -16,7 +16,7 @@
 
 #include "eglstream_interface_provider.h"
 #include "mir/graphics/platform.h"
-#include "basic_cpu_addressable_display_provider.h"
+#include "kms_cpu_addressable_display_provider.h"
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -83,7 +83,7 @@ auto mg::eglstream::InterfaceProvider::maybe_create_interface(DisplayProvider::T
     }
     if (dynamic_cast<mg::CPUAddressableDisplayProvider::Tag const*>(&tag))
     {
-        return std::make_shared<mg::BasicCPUAddressableDisplayProvider>(drm_fd);
+        return std::make_shared<mg::kms::CPUAddressableDisplayProvider>(drm_fd);
     }
     return nullptr;
 }

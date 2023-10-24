@@ -22,7 +22,6 @@
 #include "mir/graphics/platform.h"
 #include "utils.h"
 #include "eglstream_interface_provider.h"
-#include "basic_cpu_addressable_display_provider.h"
 
 #include "one_shot_device_observer.h"
 

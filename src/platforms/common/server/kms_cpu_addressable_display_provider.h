@@ -24,10 +24,12 @@ namespace mir
 {
 namespace graphics
 {
-class BasicCPUAddressableDisplayProvider : public CPUAddressableDisplayProvider
+namespace kms
+{
+class CPUAddressableDisplayProvider : public graphics::CPUAddressableDisplayProvider
 {
 public:
-    explicit BasicCPUAddressableDisplayProvider(mir::Fd drm_fd);
+    explicit CPUAddressableDisplayProvider(mir::Fd drm_fd);
 
     auto supported_formats() const
         -> std::vector<DRMFormat> override;
@@ -39,6 +41,7 @@ private:
     mir::Fd const drm_fd;
     bool const supports_modifiers;
 };
+}
 }
 }
 

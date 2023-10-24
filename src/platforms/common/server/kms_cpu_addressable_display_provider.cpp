@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "basic_cpu_addressable_display_provider.h"
+#include "kms_cpu_addressable_display_provider.h"
 #include "cpu_addressable_fb.h"
 #include <drm_fourcc.h>
 #include <xf86drm.h>
@@ -39,20 +39,20 @@ auto drm_get_cap_checked(mir::Fd const& drm_fd, uint64_t cap) -> uint64_t
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
-mg::BasicCPUAddressableDisplayProvider::BasicCPUAddressableDisplayProvider(mir::Fd drm_fd)
+mg::kms::CPUAddressableDisplayProvider::CPUAddressableDisplayProvider(mir::Fd drm_fd)
     : drm_fd{std::move(drm_fd)},
       supports_modifiers{drm_get_cap_checked(this->drm_fd, DRM_CAP_ADDFB2_MODIFIERS) == 1}
 {
 }
 
-auto mg::BasicCPUAddressableDisplayProvider::supported_formats() const
+auto mg::kms::CPUAddressableDisplayProvider::supported_formats() const
 -> std::vector<mg::DRMFormat>
 {
     // TODO: Pull out of DRM info
     return {mg::DRMFormat{DRM_FORMAT_XRGB8888}, mg::DRMFormat{DRM_FORMAT_ARGB8888}};
 }
 
-auto mg::BasicCPUAddressableDisplayProvider::alloc_fb(
+auto mg::kms::CPUAddressableDisplayProvider::alloc_fb(
     geom::Size size, DRMFormat format) -> std::unique_ptr<MappableFB>
 {
     return std::make_unique<mg::CPUAddressableFB>(drm_fd, supports_modifiers, format, size);
