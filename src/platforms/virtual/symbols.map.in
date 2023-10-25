@@ -1,0 +1,17 @@
+@MIR_SERVER_GRAPHICS_PLATFORM_VERSION@ {
+  global:
+    add_graphics_platform_options;
+    create_display_platform;
+    probe_display_platform;
+    describe_graphics_module;
+  local:
+    *;
+};
+
+@MIR_SERVER_INPUT_PLATFORM_VERSION@ {
+  global:
+   add_input_platform_options;
+   create_input_platform;
+   probe_input_platform;
+   describe_input_module;
+};
