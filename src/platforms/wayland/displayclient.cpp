@@ -56,6 +56,7 @@ public:
 
     DisplayConfigurationOutput dcout;
     geom::Size output_size;
+    int32_t pending_scale_factor{0};
     float host_scale{1.0f};
 
     wl_output* const output;
@@ -255,7 +256,7 @@ void mgw::DisplayClient::Output::mode(uint32_t flags, int32_t width, int32_t hei
 
 void mgw::DisplayClient::Output::scale(int32_t factor)
 {
-    host_scale = factor;
+    pending_scale_factor = factor;
 }
 
 void mgw::DisplayClient::Output::done()
@@ -276,7 +277,7 @@ void mgw::DisplayClient::Output::done()
         xdg_toplevel_add_listener(shell_toplevel, &shell_toplevel_listener, this);
 
         xdg_toplevel_set_fullscreen(shell_toplevel, output);
-        wl_surface_set_buffer_scale(surface, round(host_scale));
+        wl_surface_set_buffer_scale(surface, pending_scale_factor ? pending_scale_factor : round(host_scale));
         wl_surface_commit(surface);
 
         // After the next roundtrip the surface should be configured
@@ -292,30 +293,42 @@ void mgw::DisplayClient::Output::done()
 void mgw::DisplayClient::Output::toplevel_configure(int32_t width, int32_t height, wl_array* states)
 {
     (void)states;
-    pending_toplevel_size = geometry::Size{
-        width ? width : 1280,
-        height ? height : 1024};
+
+    if (width > 0 && height > 0)
+    {
+        pending_toplevel_size = geometry::Size{host_scale*width, host_scale*height};
+    }
 }
 
 void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
 {
     xdg_surface_ack_configure(shell_surface, serial);
-    bool const size_is_changed = pending_toplevel_size && (
-        !dcout.custom_logical_size || dcout.custom_logical_size.value() != pending_toplevel_size.value());
-    dcout.custom_logical_size = host_scale*pending_toplevel_size.value();
-    pending_toplevel_size.reset();
-    output_size = dcout.extents().size;
-    if (!has_initialized)
+
+    if (pending_scale_factor)
     {
-        has_initialized = true;
-        provider = std::make_shared<WlDisplayProvider>(*owner_->provider, surface, output_size);
+        host_scale = pending_scale_factor;
+        pending_scale_factor = 0;
     }
-    else if (size_is_changed)
+
+    if (pending_toplevel_size)
     {
-        /* TODO: We should, again, handle this by storing the pending size, raising a hardware-changed
-         * notification, and then letting the `configure()` system tear down everything and bring it back
-         * up at the new size.
-         */
+        bool const size_is_changed = !dcout.custom_logical_size ||
+            dcout.custom_logical_size.value() != pending_toplevel_size.value();
+        dcout.custom_logical_size = pending_toplevel_size.value();
+        pending_toplevel_size.reset();
+        output_size = dcout.extents().size;
+        if (!has_initialized)
+        {
+            has_initialized = true;
+            provider = std::make_shared<WlDisplayProvider>(*owner_->provider, surface, output_size);
+        }
+        else if (size_is_changed)
+        {
+            /* TODO: We should, again, handle this by storing the pending size, raising a hardware-changed
+             * notification, and then letting the `configure()` system tear down everything and bring it back
+             * up at the new size.
+             */
+        }
     }
 }
 
