@@ -165,13 +165,15 @@ struct SurfaceStackCompositor : public Test
             std::shared_ptr<mg::CursorImage>(),
             null_scene_report)},
         stub_buffer(std::make_shared<mtd::StubBuffer>()),
+        other_stream(std::make_shared<mc::Stream>(geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888 )),
+        other_streams({ { other_stream, {0,0}, {} } }),
         other_stub_surface{std::make_shared<ms::BasicSurface>(
             nullptr /* session */,
             mw::Weak<mf::WlSurface>{},
-            std::string("stub"),
-            geom::Rectangle{{0,0},{1,1}},
+            std::string("other_stub"),
+            geom::Rectangle{{10,0},{1,1}},
             mir_pointer_unconfined,
-            streams,
+            other_streams,
             std::shared_ptr<mg::CursorImage>(),
             null_scene_report)},
         other_stub_buffer(std::make_shared<mtd::StubBuffer>())
@@ -189,6 +191,8 @@ struct SurfaceStackCompositor : public Test
     std::list<ms::StreamInfo> const streams;
     std::shared_ptr<ms::BasicSurface> stub_surface;
     std::shared_ptr<mg::Buffer> stub_buffer;
+    std::shared_ptr<mc::Stream> other_stream;
+    std::list<ms::StreamInfo> const other_streams;
     std::shared_ptr<ms::BasicSurface> other_stub_surface;
     std::shared_ptr<mg::Buffer> other_stub_buffer;
     CountingDisplaySyncGroup stub_primary_db;
@@ -373,7 +377,7 @@ TEST_F(SurfaceStackCompositor, removing_a_surface_triggers_composition)
     streams.front().stream->submit_buffer(stub_buffer);
     stack.add_surface(stub_surface, mi::InputReceptionMode::normal);
 
-    streams.front().stream->submit_buffer(other_stub_buffer);
+    other_streams.front().stream->submit_buffer(other_stub_buffer);
     stack.add_surface(other_stub_surface, mi::InputReceptionMode::normal);
 
     mc::MultiThreadedCompositor mt_compositor(
