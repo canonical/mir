@@ -57,7 +57,7 @@ public:
     DisplayConfigurationOutput dcout;
     geom::Size output_size;
     int32_t pending_scale_factor{0};
-    float host_scale{1.0f};
+    int32_t host_scale{1};
 
     wl_output* const output;
     DisplayClient* const owner_;
@@ -277,7 +277,7 @@ void mgw::DisplayClient::Output::done()
         xdg_toplevel_add_listener(shell_toplevel, &shell_toplevel_listener, this);
 
         xdg_toplevel_set_fullscreen(shell_toplevel, output);
-        wl_surface_set_buffer_scale(surface, pending_scale_factor ? pending_scale_factor : round(host_scale));
+        wl_surface_set_buffer_scale(surface, pending_scale_factor ? pending_scale_factor : host_scale);
         wl_surface_commit(surface);
 
         // After the next roundtrip the surface should be configured

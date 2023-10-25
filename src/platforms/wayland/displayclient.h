@@ -164,7 +164,7 @@ protected:
     bool fake_pointer_frame = false;
     geometry::DisplacementF pointer_displacement; // Position of current output
     geometry::Displacement touch_displacement;   // Position of current output
-    float pointer_scale{1.0f};
+    int32_t pointer_scale{1};
 
     std::unique_ptr<wl_registry, decltype(&wl_registry_destroy)> registry;
 
