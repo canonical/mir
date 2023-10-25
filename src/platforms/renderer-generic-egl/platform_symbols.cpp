@@ -66,10 +66,21 @@ auto probe_rendering_platform(
             maximum_suitability = mg::probe::hosted;
             break;
         }
-        /* TODO: We *can* drive a CPUAddressableDisplayProvider, too, but without
-         * an EGLDisplay from the GenericEGLDisplayProvider we'd need to check that
-         * the EGLDisplay we get from eglGetDisplay(EGL_DEFAULT_DISPLAY) is functional.
-         */
+        if (display_provider->acquire_interface<mg::CPUAddressableDisplayProvider>())
+        {
+            // Check that EGL_DEFAULT_DISPLAY is something we can use...
+            auto dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+            EGLint major, minor;
+            if (eglInitialize(dpy, &major, &minor) == EGL_TRUE)
+            {
+                if (std::make_pair(major, minor) >= std::make_pair(1, 4))
+                {
+                    // OK, EGL will somehow provide us with a usable display
+                    maximum_suitability = mg::probe::supported;
+                }
+                eglTerminate(dpy);
+            }
+        }
     }
 
     std::vector<mg::SupportedDevice> supported_devices;

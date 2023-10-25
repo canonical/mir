@@ -34,13 +34,13 @@ namespace geom = mir::geometry;
 
 namespace
 {
-auto egl_display_from_platforms(std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays) -> EGLDisplay
+auto egl_display_from_platforms(std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays) -> std::tuple<EGLDisplay, bool>
 {
     for (auto const& display : displays)
     {
         if (auto egl_provider = display->acquire_interface<mg::GenericEGLDisplayProvider>())
         {
-            return egl_provider->get_egl_display();
+            return std::make_tuple(egl_provider->get_egl_display(), false);
         }
     }
     // No Displays provide an EGL display
@@ -50,7 +50,16 @@ auto egl_display_from_platforms(std::vector<std::shared_ptr<mg::DisplayInterface
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to create any EGL display"}));
     }
-    return dpy;
+    EGLint major, minor;
+    if (eglInitialize(dpy, &major, &minor) != EGL_TRUE)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialise EGL"));
+    }
+    if (std::make_pair(major, minor) < std::make_pair(1, 4))
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to get EGL version >= 1.4"}));
+    }
+    return std::make_tuple(dpy, true);
 }
 
 auto make_share_only_context(EGLDisplay dpy, std::optional<EGLContext> share_context) -> EGLContext
@@ -168,7 +177,13 @@ auto maybe_make_dmabuf_provider(
 }
 
 mge::RenderingPlatform::RenderingPlatform(std::vector<std::shared_ptr<DisplayInterfaceProvider>> const& displays)
-    : dpy{egl_display_from_platforms(displays)},
+    : RenderingPlatform(egl_display_from_platforms(displays))
+{
+}
+
+mge::RenderingPlatform::RenderingPlatform(std::tuple<EGLDisplay, bool> display)
+    : dpy{std::get<0>(display)},
+      owns_dpy{std::get<1>(display)},
       ctx{std::make_unique<SurfacelessEGLContext>(dpy)},
       dmabuf_provider{
           maybe_make_dmabuf_provider(
@@ -178,7 +193,13 @@ mge::RenderingPlatform::RenderingPlatform(std::vector<std::shared_ptr<DisplayInt
 {
 }
 
-mge::RenderingPlatform::~RenderingPlatform() = default;
+mge::RenderingPlatform::~RenderingPlatform()
+{
+    if (owns_dpy)
+    {
+        eglTerminate(dpy);
+    }
+}
 
 auto mge::RenderingPlatform::create_buffer_allocator(
     mg::Display const& /*output*/) -> mir::UniqueModulePtr<mg::GraphicBufferAllocator>
