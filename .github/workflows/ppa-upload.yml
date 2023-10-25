@@ -17,7 +17,7 @@ jobs:
         - "22.04"
         - "23.04"
         - "23.10"
-        - "24.04"
+        - "devel"
 
     runs-on: ubuntu-latest
 
