@@ -345,6 +345,9 @@ TEST_F(MesaDisplayMultiMonitorTest, flip_flips_all_connected_crtcs)
     EXPECT_CALL(mock_drm, drmModeAddFB2(mtd::IsFdOfDevice(drm_device),
                                         _, _, _, _, _, _, _, _))
         .WillRepeatedly(DoAll(SetArgPointee<7>(fb_id), Return(0)));
+    EXPECT_CALL(mock_drm, drmModeAddFB2WithModifiers(mtd::IsFdOfDevice(drm_device),
+                                                     _, _, _, _, _, _, _, _, _))
+        .WillRepeatedly(DoAll(SetArgPointee<8>(fb_id), Return(0)));
 
     /* All crtcs are flipped */
     for (int i = 0; i < num_connected_outputs; i++)
