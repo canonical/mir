@@ -22,7 +22,8 @@ environment:
     RELEASE: jammy
     RELEASE/ubuntu: jammy
     RELEASE/ubuntu_lunar: lunar
-    RELEASE/ubuntu_devel: mantic
+    RELEASE/ubuntu_mantic: mantic
+    RELEASE/ubuntu_devel: noble
     RELEASE/debian_sid: sid
     PROPOSED: false
     PROPOSED/ubuntu_proposed: true
