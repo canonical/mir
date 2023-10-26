@@ -18,6 +18,7 @@
 #define MIR_GRAPHICS_EGLSTREAM_INTERFACE_PROVIDER_H_
 
 #include "mir/graphics/platform.h"
+#include "mir/fd.h"
 
 #include <optional>
 
@@ -26,7 +27,7 @@ namespace mir::graphics::eglstream
 class InterfaceProvider : public DisplayInterfaceProvider
 {
 public:
-    InterfaceProvider(EGLDisplay dpy);
+    InterfaceProvider(EGLDisplay dpy, mir::Fd drm_fd);
     InterfaceProvider(InterfaceProvider const& from, EGLStreamKHR with_stream);
 
 protected:
@@ -36,6 +37,7 @@ protected:
 private:
     EGLDisplay dpy;
     std::optional<EGLStreamKHR> stream;
+    mir::Fd drm_fd;
 };
 
 ;

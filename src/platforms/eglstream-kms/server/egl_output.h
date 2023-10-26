@@ -18,6 +18,7 @@
 #define MIR_GRAPHICS_EGLSTREAM_KMS_OUTPUT_H_
 
 #include "kms-utils/drm_mode_resources.h"
+#include "kms_framebuffer.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/displacement.h"
@@ -48,12 +49,15 @@ public:
 
     EGLOutputLayerEXT output_layer() const;
     uint32_t crtc_id() const;
+    auto queue_atomic_flip(FBHandle const& fb, void const* drm_event_userdata) -> std::optional<std::error_code>;
     void clear_crtc();
 
     void set_power_mode(MirPowerMode mode);
+    void set_flags_for_next_flip(uint32_t flags);
 
 private:
     void restore_saved_crtc();
+    int atomic_commit(uint64_t fb, void const* drm_event_userdata, uint32_t flags);
 
     int const drm_fd;
 
@@ -63,11 +67,19 @@ private:
 
     graphics::kms::DRMModeConnectorUPtr connector;
 
+    mir::graphics::kms::DRMModeCrtcUPtr current_crtc;
     size_t mode_index;
     drmModeCrtc saved_crtc;
     bool using_saved_crtc;
 
+    uint32_t plane_id;
+    std::unique_ptr<graphics::kms::ObjectProperties> plane_props;
+    uint32_t crtc_id_;
+
+    uint32_t mode_id;
+
     int dpms_enum_id;
+    uint32_t flags_for_next_flip = 0;
 };
 
 }

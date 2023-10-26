@@ -37,9 +37,6 @@ add_library(
   egl_helper.cpp
   quirks.cpp
   quirks.h
-  kms_framebuffer.h
-  cpu_addressable_fb.cpp
-  cpu_addressable_fb.h
 )
 
 target_link_libraries(

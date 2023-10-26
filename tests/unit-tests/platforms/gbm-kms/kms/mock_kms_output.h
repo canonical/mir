@@ -34,20 +34,20 @@ struct MockKMSOutput : public graphics::gbm::KMSOutput
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(max_refresh_rate, int());
 
-    bool set_crtc(graphics::gbm::FBHandle const& fb) override
+    bool set_crtc(graphics::FBHandle const& fb) override
     {
         return set_crtc_thunk(&fb);
     }
 
     MOCK_METHOD0(has_crtc_mismatch, bool());
-    MOCK_METHOD1(set_crtc_thunk, bool(graphics::gbm::FBHandle const*));
+    MOCK_METHOD1(set_crtc_thunk, bool(graphics::FBHandle const*));
     MOCK_METHOD0(clear_crtc, void());
 
-    bool schedule_page_flip(graphics::gbm::FBHandle const& fb) override
+    bool schedule_page_flip(graphics::FBHandle const& fb) override
     {
         return schedule_page_flip_thunk(&fb);
     }
-    MOCK_METHOD1(schedule_page_flip_thunk, bool(graphics::gbm::FBHandle const*));
+    MOCK_METHOD1(schedule_page_flip_thunk, bool(graphics::FBHandle const*));
     MOCK_METHOD0(wait_for_page_flip, void());
 
     MOCK_CONST_METHOD0(last_frame, graphics::Frame());
@@ -63,8 +63,8 @@ struct MockKMSOutput : public graphics::gbm::KMSOutput
     MOCK_METHOD0(refresh_hardware_state, void());
     MOCK_CONST_METHOD1(update_from_hardware_state, void(graphics::DisplayConfigurationOutput&));
 
-    MOCK_CONST_METHOD1(fb_for, std::shared_ptr<graphics::gbm::FBHandle const>(gbm_bo*));
-    MOCK_CONST_METHOD1(fb_for, std::shared_ptr<graphics::gbm::FBHandle const>(graphics::DMABufBuffer const&));
+    MOCK_CONST_METHOD1(fb_for, std::shared_ptr<graphics::FBHandle const>(gbm_bo*));
+    MOCK_CONST_METHOD1(fb_for, std::shared_ptr<graphics::FBHandle const>(graphics::DMABufBuffer const&));
     MOCK_CONST_METHOD1(buffer_requires_migration, bool(gbm_bo*));
     MOCK_CONST_METHOD0(drm_fd, int());
 };

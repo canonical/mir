@@ -16,6 +16,7 @@
 
 #include "mir/log.h"
 
+#include <drm_mode.h>
 #include <epoxy/egl.h>
 
 #include "egl_output.h"
@@ -26,6 +27,7 @@
 #include <drm.h>
 #include <sys/ioctl.h>
 #include <boost/throw_exception.hpp>
+#include <system_error>
 #include <tuple>
 #include <sys/mman.h>
 
@@ -191,6 +193,8 @@ void mgek::EGLOutput::reset()
             drmModeFreeProperty(prop);
         }
     }
+
+    current_crtc = nullptr;
 }
 
 geom::Size mgek::EGLOutput::size() const
@@ -208,21 +212,15 @@ int mgek::EGLOutput::max_refresh_rate() const
 void mgek::EGLOutput::configure(size_t kms_mode_index)
 {
     mode_index = kms_mode_index;
-    auto const width = connector->modes[kms_mode_index].hdisplay;
-    auto const height = connector->modes[kms_mode_index].vdisplay;
-
-    std::unique_ptr<drmModeAtomicReq, void(*)(drmModeAtomicReqPtr)>
-        request{drmModeAtomicAlloc(), &drmModeAtomicFree};
+    refresh_connector(drm_fd, connector);
 
     mgk::DRMModeCrtcUPtr crtc;
     mgk::DRMModePlaneUPtr plane;
-
-    refresh_connector(drm_fd, connector);
-
     std::tie(crtc, plane) = mgk::find_crtc_with_primary_plane(drm_fd, connector);
-    auto const crtc_id = crtc->crtc_id;
+    crtc_id_ = crtc->crtc_id;
+    plane_id = plane->plane_id;
+    plane_props = std::make_unique<mgk::ObjectProperties>(drm_fd, plane_id, DRM_MODE_OBJECT_PLANE);
 
-    uint32_t mode_id{0};
     auto ret = drmModeCreatePropertyBlob(
         drm_fd,
         &connector->modes[kms_mode_index],
@@ -235,50 +233,13 @@ void mgek::EGLOutput::configure(size_t kms_mode_index)
             std::system_error(-ret, std::system_category(), "Failed to create DRM Mode property blob"));
     }
 
+    auto const width = connector->modes[mode_index].hdisplay;
+    auto const height = connector->modes[mode_index].vdisplay;
     CPUAddressableFb dummy{drm_fd, width, height};
-
-    mgk::ObjectProperties crtc_props{drm_fd, crtc_id, DRM_MODE_OBJECT_CRTC};
-
-    /* Activate the CRTC and set the mode */
-    drmModeAtomicAddProperty(request.get(), crtc_id, crtc_props.id_for("MODE_ID"), mode_id);
-    drmModeAtomicAddProperty(request.get(), crtc_id, crtc_props.id_for("ACTIVE"), 1);
-
-    /* Set CRTC for the output */
-    auto const connector_id = connector->connector_id;
-    mgk::ObjectProperties connector_props{drm_fd, connector_id, DRM_MODE_OBJECT_CONNECTOR};
-    drmModeAtomicAddProperty(request.get(), connector_id, connector_props.id_for("CRTC_ID"), crtc_id);
-
-    /* Set up the output plane... */
-    auto const plane_id = plane->plane_id;
-    mgk::ObjectProperties plane_props{drm_fd, plane_id, DRM_MODE_OBJECT_PLANE};
-
-    /* Source viewport. Coordinates are 16.16 fixed point format */
-    drmModeAtomicAddProperty(request.get(), plane_id, plane_props.id_for("SRC_X"), 0);
-    drmModeAtomicAddProperty(request.get(), plane_id, plane_props.id_for("SRC_Y"), 0);
-    drmModeAtomicAddProperty(request.get(), plane_id, plane_props.id_for("SRC_W"), width << 16);
-    drmModeAtomicAddProperty(request.get(), plane_id, plane_props.id_for("SRC_H"), height << 16);
-
-    /* Destination viewport. Coordinates are *not* 16.16 */
-    drmModeAtomicAddProperty(request.get(), plane_id, plane_props.id_for("CRTC_X"), 0);
-    drmModeAtomicAddProperty(request.get(), plane_id, plane_props.id_for("CRTC_Y"), 0);
-    drmModeAtomicAddProperty(request.get(), plane_id, plane_props.id_for("CRTC_W"), width);
-    drmModeAtomicAddProperty(request.get(), plane_id, plane_props.id_for("CRTC_H"), height);
-
-    /* Set a surface for the plane, and connect to the CRTC */
-    drmModeAtomicAddProperty(request.get(), plane_id, plane_props.id_for("FB_ID"), dummy.id());
-    drmModeAtomicAddProperty(request.get(), plane_id, plane_props.id_for("CRTC_ID"), crtc_id);
-
-    /* We don't monitor the DRM events (yet), so have no userdata */
-    ret = drmModeAtomicCommit(drm_fd, request.get(), DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
-
-    if (ret != 0)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::system_error(-ret, std::system_category(), "Failed to commit atomic KMS configuration change"));
-    }
+    atomic_commit(dummy.id(), nullptr, DRM_MODE_ATOMIC_ALLOW_MODESET);
 
     EGLAttrib const crtc_filter[] = {
-        EGL_DRM_CRTC_EXT, static_cast<EGLAttrib>(crtc_id),
+        EGL_DRM_CRTC_EXT, static_cast<EGLAttrib>(crtc_id_),
         EGL_NONE};
     int found_layers{0};
     if (eglGetOutputLayersEXT(display, crtc_filter, &layer, 1, &found_layers) != EGL_TRUE)
@@ -286,16 +247,14 @@ void mgek::EGLOutput::configure(size_t kms_mode_index)
         BOOST_THROW_EXCEPTION((
             mg::egl_error(
                 std::string{"Failed to find EGLOutputEXT corresponding to DRM CRTC "} +
-                std::to_string(crtc_id))));
+                std::to_string(crtc_id_))));
     }
     if (found_layers != 1)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{
             std::string{"Failed to find EGLOutputEXT corresponding to DRM CRTC "} +
-            std::to_string(crtc_id)});
+            std::to_string(crtc_id_)});
     }
-
-    using_saved_crtc = false;
 }
 
 EGLOutputLayerEXT mgek::EGLOutput::output_layer() const
@@ -314,6 +273,65 @@ uint32_t mgek::EGLOutput::crtc_id() const
         BOOST_THROW_EXCEPTION((std::runtime_error{"EGLOutputLayer is associated with invalid CRTC?!"}));
     }
     return static_cast<uint32_t>(crtc_id);
+}
+
+int mgek::EGLOutput::atomic_commit(uint64_t fb, const void *drm_event_userdata, uint32_t flags)
+{
+    auto const width = connector->modes[mode_index].hdisplay;
+    auto const height = connector->modes[mode_index].vdisplay;
+
+    std::unique_ptr<drmModeAtomicReq, void(*)(drmModeAtomicReqPtr)>
+        request{drmModeAtomicAlloc(), &drmModeAtomicFree};
+
+    if (flags & DRM_MODE_ATOMIC_ALLOW_MODESET)
+    {
+        mgk::ObjectProperties crtc_props{drm_fd, crtc_id_, DRM_MODE_OBJECT_CRTC};
+
+        /* Activate the CRTC and set the mode */
+        drmModeAtomicAddProperty(request.get(), crtc_id_, crtc_props.id_for("MODE_ID"), mode_id);
+        drmModeAtomicAddProperty(request.get(), crtc_id_, crtc_props.id_for("ACTIVE"), 1);
+
+        /* Set CRTC for the output */
+        auto const connector_id = connector->connector_id;
+        mgk::ObjectProperties connector_props{drm_fd, connector_id, DRM_MODE_OBJECT_CONNECTOR};
+        drmModeAtomicAddProperty(request.get(), connector_id, connector_props.id_for("CRTC_ID"), crtc_id_);
+    }
+
+    /* Source viewport. Coordinates are 16.16 fixed point format */
+    drmModeAtomicAddProperty(request.get(), plane_id, plane_props->id_for("SRC_X"), 0);
+    drmModeAtomicAddProperty(request.get(), plane_id, plane_props->id_for("SRC_Y"), 0);
+    drmModeAtomicAddProperty(request.get(), plane_id, plane_props->id_for("SRC_W"), width << 16);
+    drmModeAtomicAddProperty(request.get(), plane_id, plane_props->id_for("SRC_H"), height << 16);
+
+    /* Destination viewport. Coordinates are *not* 16.16 */
+    drmModeAtomicAddProperty(request.get(), plane_id, plane_props->id_for("CRTC_X"), 0);
+    drmModeAtomicAddProperty(request.get(), plane_id, plane_props->id_for("CRTC_Y"), 0);
+    drmModeAtomicAddProperty(request.get(), plane_id, plane_props->id_for("CRTC_W"), width);
+    drmModeAtomicAddProperty(request.get(), plane_id, plane_props->id_for("CRTC_H"), height);
+
+    /* Set a surface for the plane */
+    drmModeAtomicAddProperty(request.get(), plane_id, plane_props->id_for("CRTC_ID"), crtc_id_);
+    drmModeAtomicAddProperty(request.get(), plane_id, plane_props->id_for("FB_ID"), fb);
+
+    auto ret = drmModeAtomicCommit(drm_fd, request.get(), flags, const_cast<void*>(drm_event_userdata));
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    using_saved_crtc = false;
+    return 0;
+}
+
+auto mgek::EGLOutput::queue_atomic_flip(FBHandle const& fb, void const* drm_event_userdata) -> std::optional<std::error_code>
+{
+    uint32_t flags = flags_for_next_flip | DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_PAGE_FLIP_EVENT;
+    flags_for_next_flip = 0;
+    if (auto err = atomic_commit(fb, drm_event_userdata, flags))
+    {
+        return std::error_code{-err, std::system_category()};
+    }
+    return std::nullopt;
 }
 
 void mgek::EGLOutput::clear_crtc()
@@ -346,6 +364,8 @@ void mgek::EGLOutput::clear_crtc()
                 std::system_category(),
                 "Couldn't clear output "s + mgk::connector_name(connector)}));
     }
+
+    current_crtc = nullptr;
 }
 
 void mgek::EGLOutput::restore_saved_crtc()
@@ -381,4 +401,9 @@ void mgek::EGLOutput::set_power_mode(MirPowerMode mode)
     {
         BOOST_THROW_EXCEPTION((std::system_error{-ret, std::system_category(), "Failed to set output power mode"}));
     }
+}
+
+void mgek::EGLOutput::set_flags_for_next_flip(uint32_t flags)
+{
+    flags_for_next_flip = flags;
 }

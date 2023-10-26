@@ -45,7 +45,7 @@ public:
     size_t get_kms_mode_index(DisplayConfigurationOutputId id, size_t conf_mode_index) const;
     void update();
 
-    void for_each_output(std::function<void(kms::EGLOutput const&)> const& f) const;
+    void for_each_output(std::function<void(std::shared_ptr<kms::EGLOutput> const&)> const& f) const;
 
 private:
     void update_output(

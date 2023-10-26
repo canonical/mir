@@ -245,7 +245,7 @@ mge::DisplayPlatform::DisplayPlatform(
             std::to_string(std::get<0>(egl_version)) + "." + std::to_string(std::get<1>(egl_version))}));
     }
 
-    provider = std::make_shared<InterfaceProvider>(display);
+    provider = std::make_shared<InterfaceProvider>(display, drm_node);
 }
 
 mge::DisplayPlatform::~DisplayPlatform()

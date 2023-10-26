@@ -14,10 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <chrono>
 #include <epoxy/egl.h>
+#include <thread>
 
 #include "display.h"
 #include "egl_output.h"
+#include "kms_framebuffer.h"
 
 #include "kms-utils/drm_mode_resources.h"
 #include "mir/graphics/platform.h"
@@ -130,16 +133,12 @@ public:
         EGLContext ctx,
         EGLConfig config,
         std::shared_ptr<mge::DRMEventHandler> event_handler,
-        mge::kms::EGLOutput const& output,
+        std::shared_ptr<mge::kms::EGLOutput> output,
         std::shared_ptr<mg::DisplayReport> display_report)
         : owner{std::move(owner)},
           dpy{dpy},
           ctx{create_context(dpy, config, ctx)},
-          layer{output.output_layer()},
-          crtc_id{output.crtc_id()},
-          view_area_{output.extents()},
-          output_size{output.size()},
-          transform{output.transformation()},
+          output{output},
           drm_node{std::move(drm_node)},
           event_handler{std::move(event_handler)},
           display_report{std::move(display_report)}
@@ -156,17 +155,17 @@ public:
         }
 
         EGLAttrib swap_interval;
-        if (eglQueryOutputLayerAttribEXT(dpy, layer, EGL_SWAP_INTERVAL_EXT, &swap_interval) != EGL_TRUE)
+        if (eglQueryOutputLayerAttribEXT(dpy, output->output_layer(), EGL_SWAP_INTERVAL_EXT, &swap_interval) != EGL_TRUE)
         {
             BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query swap interval"));
         }
 
-        if (eglOutputLayerAttribEXT(dpy, layer, EGL_SWAP_INTERVAL_EXT, 1) != EGL_TRUE)
+        if (eglOutputLayerAttribEXT(dpy, output->output_layer(), EGL_SWAP_INTERVAL_EXT, 1) != EGL_TRUE)
         {
             BOOST_THROW_EXCEPTION(mg::egl_error("Failed to set swap interval"));
         }
 
-        if (eglStreamConsumerOutputEXT(dpy, output_stream, output.output_layer()) == EGL_FALSE)
+        if (eglStreamConsumerOutputEXT(dpy, output_stream, output->output_layer()) == EGL_FALSE)
         {
             BOOST_THROW_EXCEPTION(mg::egl_error("Failed to attach EGLStream to output"));
         };
@@ -198,12 +197,12 @@ public:
 
     mir::geometry::Rectangle view_area() const override
     {
-        return view_area_;
+        return output->extents();
     }
 
     glm::mat2 transformation() const override
     {
-        return transform;
+        return output->transformation();
     }
 
     void for_each_display_buffer(const std::function<void(mir::graphics::DisplayBuffer&)>& f) override
@@ -215,18 +214,86 @@ public:
     {
         // Wait for the last flip to finish, if it hasn't already.
         pending_flip.get();
-
         pending_flip = event_handler->expect_flip_event(
-            crtc_id,
+            output->crtc_id(),
             [this](unsigned frame_count, std::chrono::milliseconds frame_time)
             {
                 // TODO: Um, why does NVIDIA always call this with 0, 0ms?
                 display_report->report_vsync(
-                    crtc_id,
+                    output->crtc_id(),
                     mg::Frame {
                         frame_count,
                         mir::time::PosixTimestamp(CLOCK_MONOTONIC, frame_time)});
             });
+
+        if (next_swap) // This is the KMS route
+        {
+            visible_fb = std::move(scheduled_fb);
+            scheduled_fb = nullptr;
+
+            scheduled_fb = std::move(next_swap);
+            next_swap = nullptr;
+
+            // Arbitrarily pick a 10s deadline for modesetting
+            auto deadline  = std::chrono::steady_clock::now() + std::chrono::seconds{10};
+            while (auto error = output->queue_atomic_flip(*scheduled_fb, event_handler->drm_event_data()))
+            {
+                if (error->value() == EPERM || error->value() == EACCES)
+                {
+                    /* We don't have modesetting permissions
+                     * This is presumably because we've just been VT-switched-away, and so
+                     * will pause soon.
+                     *
+                     * We'll assume that this is transitory, log in case it's an acutal issue, and continue.
+                     *
+                     * We've failed to submit the flip, though, so cancel the pending flip event
+                     */
+                    mir::log_info("Failed to submit page flip (%s (%i))",
+                        error->message().c_str(),
+                        error->value());
+                    event_handler->cancel_flip_events(output->crtc_id());
+                    return;
+                }
+                if (error->value() == EAGAIN)
+                {
+                    /* Sigh.
+                     * So, if we try and schedule a flip when something is already in progress, we'll
+                     * get EAGAIN.
+                     *
+                     * *Mostly* we shouldn't, because we're waiting for the page flip event before trying
+                     * to submit a new one, but it's possible for the KMS driver to cause this for opaque
+                     * (to us) reasons even if we're doing everything correctly.
+                     *
+                     * So, in this case, wait a bit(!) and try again.
+                     */
+                    if (std::chrono::steady_clock::now() > deadline)
+                    {
+                        BOOST_THROW_EXCEPTION((std::runtime_error{"Timeout waiting for modeset"}));
+                    }
+                    /* Sleep for 5ms; this would correspond to ~200Hz, which is fast enough that we
+                     * won't notice it, while being long enough to make it likely the previous work is
+                     * done
+                     */
+                    std::this_thread::sleep_for(std::chrono::milliseconds{5});
+                }
+                if (error->value() == EINVAL)
+                {
+                    /* This *should* be just for us doing the wrong thing, but it *also*
+                     * occurs when VT switching has disabled the damn output behind our back
+                     * so we can't do a non-ALLOW_MODESET commit (and we don't want to do that)
+                     * anyway.
+                     *
+                     * Assume this is a transient VT-switch failure :(
+                     */
+                    mir::log_info("Failed to submit page flip (%s (%i))",
+                        error->message().c_str(),
+                        error->value());
+                    event_handler->cancel_flip_events(output->crtc_id());
+                    return;
+                }
+            }
+            return;
+        }
 
         EGLAttrib const acquire_attribs[] = {
             EGL_DRM_FLIP_EVENT_DATA_NV, reinterpret_cast<EGLAttrib>(event_handler->drm_event_data()),
@@ -235,6 +302,12 @@ public:
         if (nv_stream(dpy).eglStreamConsumerAcquireAttribNV(dpy, output_stream, acquire_attribs) != EGL_TRUE)
         {
             auto error = eglGetError();
+            /* TODO: Handle error 0x3353 (EGL_RESOURCE_BUSY_EXT) here.
+             * That can be triggered by VT switch, but the naive approach direct KMS uses above doesn't work:
+             * We can't return to the compositor without *really* consuming the buffer because then
+             * eglSwapBuffers in EGLStreamOutputSurface::commit() blocks (because it can't push a new frame
+             * into the EGLStream).
+             */
             EGLAttrib stream_state{0};
             eglQueryStreamAttribKHR(dpy, output_stream, EGL_STREAM_STATE_KHR, &stream_state);
             std::string state;
@@ -317,25 +390,36 @@ public:
             return false;
         }
 
+        if (auto fb = std::dynamic_pointer_cast<mg::FBHandle>(renderable_list[0].buffer))
+        {
+            next_swap = std::move(fb);
+            return true;
+        }
         // TODO: Validate that the submitted "framebuffer" is *actually* our EGLStream
         return true;
+    }
+
+    void resume()
+    {
+        output->set_flags_for_next_flip(DRM_MODE_ATOMIC_ALLOW_MODESET);
     }
 private:
 
     std::shared_ptr<mg::eglstream::InterfaceProvider> const owner;
     EGLDisplay dpy;
     EGLContext ctx;
-    EGLOutputLayerEXT layer;
-    uint32_t crtc_id;
-    mir::geometry::Rectangle const view_area_;
-    mir::geometry::Size const output_size;
-    glm::mat2 const transform;
+    std::shared_ptr<mge::kms::EGLOutput> output;
     EGLStreamKHR output_stream;
     mir::Fd const drm_node;
     std::shared_ptr<mge::DRMEventHandler> const event_handler;
     std::future<void> pending_flip;
     mg::EGLExtensions::LazyDisplayExtensions<mg::EGLExtensions::NVStreamAttribExtensions> nv_stream;
     std::shared_ptr<mg::DisplayReport> const display_report;
+
+    /// Used only for the KMS case
+    std::shared_ptr<mg::FBHandle const> next_swap{nullptr};
+    std::shared_ptr<mg::FBHandle const> scheduled_fb{nullptr};
+    std::shared_ptr<mg::FBHandle const> visible_fb{nullptr};
 };
 
 mge::KMSDisplayConfiguration create_display_configuration(
@@ -345,8 +429,7 @@ mge::KMSDisplayConfiguration create_display_configuration(
 {
     if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, context) == EGL_FALSE)
     {
-        BOOST_THROW_EXCEPTION((
-            mg::egl_error("Failed to make EGL context current for display construction")));
+        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to make EGL context current for display construction")));
     }
     return mge::KMSDisplayConfiguration{drm_node, dpy};
 }
@@ -403,11 +486,11 @@ void mge::Display::configure(DisplayConfiguration const& conf)
 {
     auto kms_conf = dynamic_cast<KMSDisplayConfiguration const&>(conf);
     active_sync_groups.clear();
-    kms_conf.for_each_output([this](kms::EGLOutput const& output)
+    kms_conf.for_each_output([this](std::shared_ptr<kms::EGLOutput> const& output)
          {
-             if (output.used)
+             if (output->used)
              {
-                 const_cast<kms::EGLOutput&>(output).configure(output.current_mode_index);
+                 output->configure(output->current_mode_index);
                  active_sync_groups.emplace_back(
                      std::make_unique<::DisplayBuffer>(
                         provider,
@@ -462,7 +545,10 @@ void mge::Display::pause()
 
 void mge::Display::resume()
 {
-
+    for (auto& group : active_sync_groups)
+    {
+        dynamic_cast<::DisplayBuffer*>(group.get())->resume();
+    }
 }
 
 std::shared_ptr<mg::Cursor> mge::Display::create_hardware_cursor()

@@ -30,6 +30,7 @@
 #include "one_shot_device_observer.h"
 #include "mir/graphics/linux_dmabuf.h"
 #include "mir/graphics/egl_context_executor.h"
+#include "kms_cpu_addressable_display_provider.h"
 #include "surfaceless_egl_context.h"
 #include <boost/throw_exception.hpp>
 #include <drm_fourcc.h>
@@ -383,7 +384,7 @@ protected:
         }
         if (dynamic_cast<mg::CPUAddressableDisplayProvider::Tag const*>(&type_tag))
         {
-            return std::make_shared<mgg::CPUAddressableDisplayProvider>(drm_fd);
+            return mg::kms::CPUAddressableDisplayProvider::create_if_supported(drm_fd);
         }
         return {};  
     }

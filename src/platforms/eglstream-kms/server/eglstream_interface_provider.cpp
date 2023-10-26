@@ -16,6 +16,7 @@
 
 #include "eglstream_interface_provider.h"
 #include "mir/graphics/platform.h"
+#include "kms_cpu_addressable_display_provider.h"
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -60,14 +61,16 @@ auto DisplayProviderImpl::claim_stream() -> EGLStreamKHR
 }
 }
 
-mg::eglstream::InterfaceProvider::InterfaceProvider(EGLDisplay dpy)
-    : dpy{dpy}
+mg::eglstream::InterfaceProvider::InterfaceProvider(EGLDisplay dpy, mir::Fd drm_fd)
+    : dpy{dpy},
+      drm_fd{drm_fd}
 {
 }
 
 mg::eglstream::InterfaceProvider::InterfaceProvider(InterfaceProvider const& from, EGLStreamKHR with_stream)
     : dpy{from.dpy},
-      stream{with_stream}
+      stream{with_stream},
+      drm_fd{from.drm_fd}
 {
 }
 
@@ -77,6 +80,10 @@ auto mg::eglstream::InterfaceProvider::maybe_create_interface(DisplayProvider::T
     if (dynamic_cast<EGLStreamDisplayProvider::Tag const*>(&tag))
     {
         return std::make_shared<DisplayProviderImpl>(dpy, stream);
+    }
+    if (dynamic_cast<mg::CPUAddressableDisplayProvider::Tag const*>(&tag))
+    {
+        return mg::kms::CPUAddressableDisplayProvider::create_if_supported(drm_fd);
     }
     return nullptr;
 }

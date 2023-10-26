@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "kms/kms_framebuffer.h"
+#include "kms_framebuffer.h"
 #include "src/platforms/gbm-kms/server/kms/real_kms_output.h"
 #include "src/platforms/gbm-kms/server/kms/page_flipper.h"
 #include "mir/fatal.h"
@@ -55,7 +55,7 @@ public:
     MOCK_METHOD1(wait_for_flip, mg::Frame(uint32_t));
 };
 
-class MockKMSFramebuffer : public mgg::FBHandle
+class MockKMSFramebuffer : public mg::FBHandle
 {
 public:
     MockKMSFramebuffer(uint32_t fb_id)
