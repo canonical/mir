@@ -56,7 +56,6 @@ public:
 
     DisplayConfigurationOutput dcout;
     geom::Size output_size;
-    int32_t pending_scale_factor{0};
     int32_t host_scale{1};
 
     wl_output* const output;
@@ -256,7 +255,7 @@ void mgw::DisplayClient::Output::mode(uint32_t flags, int32_t width, int32_t hei
 
 void mgw::DisplayClient::Output::scale(int32_t factor)
 {
-    pending_scale_factor = factor;
+    host_scale = factor;
 }
 
 void mgw::DisplayClient::Output::done()
@@ -277,16 +276,10 @@ void mgw::DisplayClient::Output::done()
         xdg_toplevel_add_listener(shell_toplevel, &shell_toplevel_listener, this);
 
         xdg_toplevel_set_fullscreen(shell_toplevel, output);
-        wl_surface_set_buffer_scale(surface, pending_scale_factor ? pending_scale_factor : host_scale);
+        wl_surface_set_buffer_scale(surface, host_scale);
         wl_surface_commit(surface);
 
         // After the next roundtrip the surface should be configured
-    }
-    else
-    {
-        /* TODO: We should handle this by raising a hardware-changed notification and reconfiguring in
-         * the subsequent `configure()` call.
-         */
     }
 }
 
@@ -303,12 +296,6 @@ void mgw::DisplayClient::Output::toplevel_configure(int32_t width, int32_t heigh
 void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
 {
     xdg_surface_ack_configure(shell_surface, serial);
-
-    if (pending_scale_factor)
-    {
-        host_scale = pending_scale_factor;
-        pending_scale_factor = 0;
-    }
 
     if (pending_toplevel_size)
     {
