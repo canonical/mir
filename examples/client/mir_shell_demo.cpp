@@ -157,6 +157,8 @@ private:
     buffer buffers[no_of_buffers];
     wl_surface* const surface;
     wl_pointer* const pointer;
+    wl_keyboard* const keyboard;
+
     xdg_surface* const xdgsurface;
     xdg_toplevel* const xdgtoplevel;
 
@@ -174,6 +176,19 @@ private:
     void handle_mouse_button(wl_pointer*, uint32_t serial, uint32_t time, uint32_t button, uint32_t state);
     void handle_mouse_axis(wl_pointer*, uint32_t time, uint32_t axis, wl_fixed_t value);
 
+    void handle_keyboard_keymap(wl_keyboard* keyboard, uint32_t format, int32_t fd, uint32_t size);
+    void handle_keyboard_enter(wl_keyboard* keyboard, uint32_t serial, wl_surface* surface, wl_array* keys);
+    void handle_keyboard_leave(wl_keyboard* keyboard, uint32_t serial, wl_surface* surface);
+    void handle_keyboard_key(wl_keyboard* keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state);
+    void handle_keyboard_modifiers(
+        wl_keyboard* keyboard,
+        uint32_t serial,
+        uint32_t mods_depressed,
+        uint32_t mods_latched,
+        uint32_t mods_locked,
+        uint32_t group);
+    void handle_keyboard_repeat_info(wl_keyboard* wl_keyboard, int32_t rate, int32_t delay);
+
     void update_free_buffers(wl_buffer* buffer);
     void prepare_buffer(buffer& b);
     auto find_free_buffer() -> buffer*;
@@ -184,7 +199,8 @@ private:
     static wl_buffer_listener const buffer_listener;
     static xdg_surface_listener const shell_surface_listener;
     static wl_pointer_listener const pointer_listener;
-
+    static struct wl_keyboard_listener keyboard_listener;
+    
     void fake_frame();
 
     window(window const&) = delete;
@@ -221,6 +237,16 @@ wl_pointer_listener const window::pointer_listener =
     .motion = [](void* ctx, auto... args) { static_cast<window*>(ctx)->handle_mouse_motion(args...); },
     .button = [](void* ctx, auto... args) { static_cast<window*>(ctx)->handle_mouse_button(args...); },
     .axis   = [](void* ctx, auto... args) { static_cast<window*>(ctx)->handle_mouse_axis(args...); },
+};
+
+wl_keyboard_listener window::keyboard_listener =
+{
+    [](void* self, auto... args) { static_cast<window*>(self)->handle_keyboard_keymap(args...); },
+    [](void* self, auto... args) { static_cast<window*>(self)->handle_keyboard_enter(args...); },
+    [](void* self, auto... args) { static_cast<window*>(self)->handle_keyboard_leave(args...); },
+    [](void* self, auto... args) { static_cast<window*>(self)->handle_keyboard_key(args...); },
+    [](void* self, auto... args) { static_cast<window*>(self)->handle_keyboard_modifiers(args...); },
+    [](void* self, auto... args) { static_cast<window*>(self)->handle_keyboard_repeat_info(args...); },
 };
 
 void window::update_free_buffers(wl_buffer* buffer)
@@ -427,6 +453,38 @@ void window::handle_mouse_axis(
 }
 
 
+void window::handle_keyboard_keymap(wl_keyboard*, uint32_t format, int32_t /*fd*/, uint32_t size)
+{
+    printf("Received keyboard_keymap: format %i, size %i\n", format, size);
+}
+
+void window::handle_keyboard_enter(wl_keyboard*, uint32_t, wl_surface*, wl_array*)
+{
+    printf("Received keyboard_enter:\n");
+}
+
+void window::handle_keyboard_leave(wl_keyboard*, uint32_t, wl_surface*)
+{
+    printf("Received keyboard_leave:\n");
+}
+
+void window::handle_keyboard_key(wl_keyboard*, uint32_t, uint32_t, uint32_t key, uint32_t state)
+{
+    printf("Received keyboard_key: key %i, state %i\n", key, state);
+}
+
+void window::handle_keyboard_modifiers(
+    wl_keyboard*, uint32_t, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked,
+    uint32_t group)
+{
+    printf("Received keyboard_modifiers: depressed %i, latched %i, locked %i, group %i\n", mods_depressed, mods_latched, mods_locked, group);
+}
+
+void window::handle_keyboard_repeat_info(wl_keyboard*, int32_t rate, int32_t delay)
+{
+    printf("Received keyboard_modifiers: rate %i, delay %i\n", rate, delay);
+}
+
 void window::fake_frame()
 {
     wl_callback* fake_frame = wl_display_sync(display);
@@ -436,6 +494,7 @@ void window::fake_frame()
 window::window(int32_t width, int32_t height) :
     surface{wl_compositor_create_surface(globals::compositor)},
     pointer{wl_seat_get_pointer(globals::seat)},
+    keyboard{wl_seat_get_keyboard(globals::seat)},
     xdgsurface{xdg_wm_base_get_xdg_surface(globals::wm_base, surface)},
     xdgtoplevel{xdg_surface_get_toplevel(xdgsurface)},
     width{width},
@@ -448,6 +507,7 @@ window::window(int32_t width, int32_t height) :
 
     xdg_surface_add_listener(xdgsurface, &shell_surface_listener, NULL);
     xdg_toplevel_add_listener(xdgtoplevel, &shell_toplevel_listener, this);
+    wl_keyboard_add_listener(keyboard, &keyboard_listener, this);
     wl_pointer_add_listener(pointer, &pointer_listener, NULL);
 
     fake_frame();
