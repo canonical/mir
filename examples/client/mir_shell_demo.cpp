@@ -141,7 +141,7 @@ class window
 {
 public:
     window(int32_t width, int32_t height);
-    virtual ~window() = default;
+    virtual ~window();
 
 protected:
     struct buffer
@@ -155,16 +155,27 @@ protected:
     
 private:
     buffer buffers[no_of_buffers];
-    wl_surface* surface;
+    wl_surface* const surface;
+    wl_pointer* const pointer;
+    xdg_surface* const xdgsurface;
+    xdg_toplevel* const xdgtoplevel;
+
     int width;
     int height;
     bool waiting_for_buffer = false;
     bool need_to_draw = true;
 
     void handle_frame_callback(wl_callback* callback, uint32_t);
+    void handle_xdg_toplevel_configure(xdg_toplevel*, int32_t width_, int32_t height_, wl_array*);
+
+    void handle_mouse_enter(wl_pointer*, uint32_t serial, wl_surface*, wl_fixed_t surface_x, wl_fixed_t surface_y);
+    void handle_mouse_leave(wl_pointer*, uint32_t serial, wl_surface*);
+    void handle_mouse_motion(wl_pointer*, uint32_t time, wl_fixed_t surface_x, wl_fixed_t surface_y);
+    void handle_mouse_button(wl_pointer*, uint32_t serial, uint32_t time, uint32_t button, uint32_t state);
+    void handle_mouse_axis(wl_pointer*, uint32_t time, uint32_t axis, wl_fixed_t value);
+
     void update_free_buffers(wl_buffer* buffer);
     void prepare_buffer(buffer& b);
-    void handle_xdg_toplevel_configure(xdg_toplevel*, int32_t width_, int32_t height_, wl_array*);
     auto find_free_buffer() -> buffer*;
     virtual void draw_new_content(buffer* b) = 0;
 
@@ -172,6 +183,7 @@ private:
     static wl_callback_listener const frame_listener;
     static wl_buffer_listener const buffer_listener;
     static xdg_surface_listener const shell_surface_listener;
+    static wl_pointer_listener const pointer_listener;
 
     void fake_frame();
 
@@ -200,6 +212,15 @@ wl_buffer_listener const window::buffer_listener =
 xdg_surface_listener const window::shell_surface_listener =
 {
     .configure= [](auto...){},
+};
+
+wl_pointer_listener const window::pointer_listener =
+{
+    .enter  = [](void* ctx, auto... args) { static_cast<window*>(ctx)->handle_mouse_enter(args...); },
+    .leave  = [](void* ctx, auto... args) { static_cast<window*>(ctx)->handle_mouse_leave(args...); },
+    .motion = [](void* ctx, auto... args) { static_cast<window*>(ctx)->handle_mouse_motion(args...); },
+    .button = [](void* ctx, auto... args) { static_cast<window*>(ctx)->handle_mouse_button(args...); },
+    .axis   = [](void* ctx, auto... args) { static_cast<window*>(ctx)->handle_mouse_axis(args...); },
 };
 
 void window::update_free_buffers(wl_buffer* buffer)
@@ -344,6 +365,68 @@ void window::handle_xdg_toplevel_configure(
     }
 }
 
+void window::handle_mouse_enter(
+    wl_pointer*,
+    uint32_t serial,
+    wl_surface*,
+    wl_fixed_t surface_x,
+    wl_fixed_t surface_y)
+{
+    (void)serial;
+    printf("Received handle_mouse_enter event: (%f, %f)\n",
+           wl_fixed_to_double(surface_x),
+           wl_fixed_to_double(surface_y));
+}
+
+void window::handle_mouse_leave(
+    wl_pointer*,
+    uint32_t serial,
+    wl_surface*)
+{
+    (void)serial;
+    printf("Received mouse_exit event\n");
+}
+
+void window::handle_mouse_motion(
+    wl_pointer*,
+    uint32_t time,
+    wl_fixed_t surface_x,
+    wl_fixed_t surface_y)
+{
+    printf("Received motion event: (%f, %f) @ %i\n",
+           wl_fixed_to_double(surface_x),
+           wl_fixed_to_double(surface_y),
+           time);
+}
+
+void window::handle_mouse_button(
+    wl_pointer*,
+    uint32_t serial,
+    uint32_t time,
+    uint32_t button,
+    uint32_t state)
+{
+    (void)serial;
+
+    printf("Received button event: Button %i, state %i @ %i\n",
+           button,
+           state,
+           time);
+}
+
+void window::handle_mouse_axis(
+    wl_pointer*,
+    uint32_t time,
+    uint32_t axis,
+    wl_fixed_t value)
+{
+    printf("Received axis event: axis %i, value %f @ %i\n",
+           axis,
+           wl_fixed_to_double(value),
+           time);
+}
+
+
 void window::fake_frame()
 {
     wl_callback* fake_frame = wl_display_sync(display);
@@ -352,6 +435,9 @@ void window::fake_frame()
 
 window::window(int32_t width, int32_t height) :
     surface{wl_compositor_create_surface(globals::compositor)},
+    pointer{wl_seat_get_pointer(globals::seat)},
+    xdgsurface{xdg_wm_base_get_xdg_surface(globals::wm_base, surface)},
+    xdgtoplevel{xdg_surface_get_toplevel(xdgsurface)},
     width{width},
     height{height}
 {
@@ -360,13 +446,24 @@ window::window(int32_t width, int32_t height) :
         prepare_buffer(b);
     }
 
-    auto const shell_surface = xdg_wm_base_get_xdg_surface(globals::wm_base, surface);
-    xdg_surface_add_listener(shell_surface, &shell_surface_listener, NULL);
-
-    auto const shell_toplevel = xdg_surface_get_toplevel(shell_surface);
-    xdg_toplevel_add_listener(shell_toplevel, &shell_toplevel_listener, this);
+    xdg_surface_add_listener(xdgsurface, &shell_surface_listener, NULL);
+    xdg_toplevel_add_listener(xdgtoplevel, &shell_toplevel_listener, this);
+    wl_pointer_add_listener(pointer, &pointer_listener, NULL);
 
     fake_frame();
+}
+
+window::~window()
+{
+    for (auto b : buffers)
+    {
+        wl_buffer_destroy(b.buffer);
+    }
+
+    xdg_toplevel_destroy(xdgtoplevel);
+    xdg_surface_destroy(xdgsurface);
+    wl_pointer_destroy(pointer);
+    wl_surface_destroy(surface);
 }
 }
 
