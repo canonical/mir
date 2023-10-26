@@ -129,25 +129,6 @@ auto select_platforms_from_list(std::string const& selection, std::vector<std::s
 
     return selected_modules;
 }
-
-void hybrid_check(std::vector<std::pair<mg::SupportedDevice, std::shared_ptr<mir::SharedLibrary>>>& platform_modules)
-{
-    static bool const experimental_hybrid_graphics = getenv("MIR_EXPERIMENTAL_HYBRID_GRAPHICS");
-
-    if (!experimental_hybrid_graphics)
-    {
-        std::stable_sort(std::begin(platform_modules), std::end(platform_modules),
-             [](auto const& l, auto const& r) { return l.first.support_level > r.first.support_level; });
-
-        if (!platform_modules.empty())
-        {
-            auto const erase_begin = std::remove_if(platform_modules.begin(), platform_modules.end(),
-                [platform=platform_modules.front().second](auto const& pm) { return pm.second != platform; });
-
-            platform_modules.erase(erase_begin, platform_modules.end());
-        }
-    }
-}
 }
 
 auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std::shared_ptr<graphics::DisplayPlatform>> const&
@@ -213,8 +194,6 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
             else
             {
                 platform_modules = mir::graphics::display_modules_for_device(platforms, dynamic_cast<mir::options::ProgramOption&>(*the_options()), the_console_services());
-
-                hybrid_check(platform_modules);
             }
 
             for (auto const& [device, platform]: platform_modules)
@@ -343,8 +322,6 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
             else
             {
                 platform_modules = mir::graphics::rendering_modules_for_device(platforms, display_interfaces, dynamic_cast<mir::options::ProgramOption&>(*the_options()), the_console_services());
-
-                hybrid_check(platform_modules);
             }
 
             for (auto const& [device, platform]: platform_modules)
