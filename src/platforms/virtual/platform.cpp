@@ -39,43 +39,6 @@ protected:
     auto maybe_create_interface(mg::DisplayProvider::Tag const& type_tag)
         -> std::shared_ptr<mg::DisplayProvider>
     {
-        class VirtualEGLDisplayProvider : public GenericEGLDisplayProvider
-        {
-        public:
-
-            explicit VirtualEGLDisplayProvider(EGLDisplay const egl_display) : egl_display{egl_display} {}
-
-            auto get_egl_display() -> EGLDisplay override
-            {
-                return egl_display;
-            }
-
-            class StubEGLFramebuffer : public EGLFramebuffer
-            {
-            public:
-                StubEGLFramebuffer() = default;
-                StubEGLFramebuffer(StubEGLFramebuffer const&) {}
-                void make_current() override {}
-                void release_current() override {};
-                auto clone_handle() -> std::unique_ptr<EGLFramebuffer>  override
-                {
-                    return std::make_unique<StubEGLFramebuffer>(*this);
-                }
-                auto size() const -> geom::Size override
-                {
-                    return geom::Size{};
-                }
-            };
-
-            auto alloc_framebuffer(GLConfig const&, EGLContext) -> std::unique_ptr<EGLFramebuffer> override
-            {
-                return std::make_unique<StubEGLFramebuffer>();
-            }
-
-        private:
-            EGLDisplay const egl_display;
-        };
-
         class VirtualCPUAddressableDisplayProvider: public CPUAddressableDisplayProvider
         {
         public:
@@ -122,23 +85,6 @@ protected:
                 return std::make_unique<VirtualMappableFb>(pixel_size, format);
             }
         };
-
-        if (dynamic_cast<mg::GenericEGLDisplayProvider::Tag const*>(&type_tag))
-        {
-            auto const egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-            if (egl_display == EGL_NO_DISPLAY)
-            {
-                log_info("Failed to create EGL display");
-            }
-            else if (eglInitialize(egl_display, nullptr, nullptr) == EGL_FALSE)
-            {
-                log_debug("Failed to initialise EGL: %s", mg::egl_category().message(eglGetError()).c_str());
-            }
-            else
-            {
-                return std::make_shared<VirtualEGLDisplayProvider>(egl_display);
-            }
-        }
 
         if (dynamic_cast<mg::CPUAddressableDisplayProvider::Tag const*>(&type_tag))
         {
