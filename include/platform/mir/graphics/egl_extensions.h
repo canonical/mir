@@ -214,6 +214,9 @@ namespace mir
 {
 namespace graphics
 {
+auto has_egl_client_extension(char const* name) -> bool;
+auto has_egl_extension(EGLDisplay dpy, char const* name) -> bool;
+
 struct EGLExtensions
 {
     template<typename Ext>

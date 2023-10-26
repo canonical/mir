@@ -15,11 +15,31 @@
  */
 
 #include "mir/graphics/egl_extensions.h"
+#include <EGL/egl.h>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <cstring>
 
 namespace mg=mir::graphics;
+
+auto mg::has_egl_client_extension(char const* name) -> bool
+{
+    return has_egl_extension(EGL_NO_DISPLAY, name);
+}
+
+auto mg::has_egl_extension(EGLDisplay dpy, char const* name) -> bool
+{
+    auto extensions = eglQueryString(dpy, EGL_EXTENSIONS);
+    auto found_substring = strstr(extensions, name);
+    if (found_substring)
+    {
+        // Check that we haven't found a prefix of our extension name
+        auto end_of_match = found_substring + strlen(name);
+        // It's a match if it terminates with the end of the extension string, or with a space
+        return *end_of_match == '\0' || *end_of_match == ' ';
+    }
+    return false;
+}
 
 namespace
 {
