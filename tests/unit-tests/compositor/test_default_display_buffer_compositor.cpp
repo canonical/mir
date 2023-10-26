@@ -103,54 +103,50 @@ struct DefaultDisplayBufferCompositor : public testing::Test
 };
 }
 
-TEST_F(DefaultDisplayBufferCompositor, render)
+TEST_F(DefaultDisplayBufferCompositor, composite_returns_false_when_scene_elements_are_empty_and_this_is_first_composite)
 {
     using namespace testing;
-    EXPECT_CALL(mock_renderer, render(IsEmpty()))
-        .Times(1);
-    EXPECT_CALL(display_buffer, view_area())
-        .Times(AtLeast(1));
 
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
         gl_provider,
         mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
-    compositor.composite(make_scene_elements({}));
+    EXPECT_FALSE(compositor.composite(make_scene_elements({})));
 }
 
-TEST_F(DefaultDisplayBufferCompositor, optimization_skips_composition)
+TEST_F(DefaultDisplayBufferCompositor, composite_returns_true_when_scene_elements_is_not_empty_and_this_is_first_composite)
 {
     using namespace testing;
-    auto report = std::make_shared<mtd::MockCompositorReport>();
 
-    Sequence seq;
-    EXPECT_CALL(*report, began_frame(_))
-        .InSequence(seq);
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
+        gl_provider,
+        mt::fake_shared(mock_renderer),
+        mr::null_compositor_report());
+    EXPECT_TRUE(compositor.composite(make_scene_elements({big})));
+}
+
+TEST_F(DefaultDisplayBufferCompositor, renderer_is_suspended_when_we_have_composited_twice_in_a_row_with_the_same_elements)
+{
+    using namespace testing;
+
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
+        gl_provider,
+        mt::fake_shared(mock_renderer),
+        mr::null_compositor_report());
+    compositor.composite(make_scene_elements({big}));
+    compositor.composite(make_scene_elements({}));
+
     EXPECT_CALL(display_buffer, overlay(_))
-        .InSequence(seq)
         .WillOnce(Return(true));
-    EXPECT_CALL(*report, renderables_in_frame(_,_))
-        .InSequence(seq);
     EXPECT_CALL(mock_renderer, suspend())
-        .InSequence(seq);
-    EXPECT_CALL(*report, rendered_frame(_))
-        .Times(0);
-    EXPECT_CALL(*report, finished_frame(_))
-        .InSequence(seq);
-
-    EXPECT_CALL(mock_renderer, render(_))
-        .Times(0);
-
-    mc::DefaultDisplayBufferCompositor compositor(
-        display_buffer,
-        gl_provider,
-        mt::fake_shared(mock_renderer),
-        report);
+        .Times(1);
     compositor.composite(make_scene_elements({}));
 }
 
-TEST_F(DefaultDisplayBufferCompositor, rendering_reports_everything)
+TEST_F(DefaultDisplayBufferCompositor, all_expected_reports_are_received_during_composite)
 {
     using namespace testing;
     auto report = std::make_shared<mtd::MockCompositorReport>();
@@ -158,9 +154,6 @@ TEST_F(DefaultDisplayBufferCompositor, rendering_reports_everything)
     Sequence seq;
     EXPECT_CALL(*report, began_frame(_))
         .InSequence(seq);
-    EXPECT_CALL(display_buffer, overlay(_))
-        .InSequence(seq)
-        .WillOnce(Return(false));
     EXPECT_CALL(*report, renderables_in_frame(_,_))
         .InSequence(seq);
     EXPECT_CALL(*report, rendered_frame(_))
@@ -168,31 +161,19 @@ TEST_F(DefaultDisplayBufferCompositor, rendering_reports_everything)
     EXPECT_CALL(*report, finished_frame(_))
         .InSequence(seq);
 
-    EXPECT_CALL(mock_renderer, render(_))
-        .Times(1);
-
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
         gl_provider,
         mt::fake_shared(mock_renderer),
         report);
-    compositor.composite(make_scene_elements({}));
+    compositor.composite(make_scene_elements({big}));
 }
 
-TEST_F(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
+TEST_F(DefaultDisplayBufferCompositor, elements_provided_to_composite_are_rendered_in_order)
 {
     using namespace testing;
-    Sequence render_seq;
-    EXPECT_CALL(mock_renderer, suspend())
-        .Times(0);
-    EXPECT_CALL(display_buffer, transformation())
-        .WillOnce(Return(no_transformation));
-    EXPECT_CALL(mock_renderer, set_output_transform(no_transformation))
-        .InSequence(render_seq);
-    EXPECT_CALL(mock_renderer, set_viewport(screen))
-        .InSequence(render_seq);
     EXPECT_CALL(mock_renderer, render(ContainerEq(mg::RenderableList{big, small})))
-        .InSequence(render_seq);
+        .Times(1);
 
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
@@ -206,7 +187,7 @@ TEST_F(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
     }));
 }
 
-TEST_F(DefaultDisplayBufferCompositor, rotates_viewport)
+TEST_F(DefaultDisplayBufferCompositor, viewport_is_rotated_when_display_buffer_view_area_is_rotated)
 {   // Regression test for LP: #1643488
     using namespace testing;
 
@@ -220,77 +201,44 @@ TEST_F(DefaultDisplayBufferCompositor, rotates_viewport)
     ON_CALL(display_buffer, view_area())
         .WillByDefault(Return(rotated_screen));
 
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
+        gl_provider,
+        mt::fake_shared(mock_renderer),
+        mr::null_compositor_report());
+
     Sequence render_seq;
-    EXPECT_CALL(mock_renderer, suspend())
-        .Times(0);
     EXPECT_CALL(display_buffer, transformation())
         .WillOnce(Return(rotate_left));
     EXPECT_CALL(mock_renderer, set_output_transform(rotate_left))
         .InSequence(render_seq);
     EXPECT_CALL(mock_renderer, set_viewport(rotated_screen))
         .InSequence(render_seq);
-    EXPECT_CALL(mock_renderer, render(ContainerEq(mg::RenderableList{big, small})))
-        .InSequence(render_seq);
 
-    mc::DefaultDisplayBufferCompositor compositor(
-        display_buffer,
-        gl_provider,
-        mt::fake_shared(mock_renderer),
-        mr::null_compositor_report());
-
-    compositor.composite(make_scene_elements({
-        big,
-        small
-    }));
+    compositor.composite(make_scene_elements({big}));
 }
 
-TEST_F(DefaultDisplayBufferCompositor, optimization_toggles_seamlessly)
+TEST_F(DefaultDisplayBufferCompositor, renderer_is_suspended_when_we_have_composited_many_times_in_a_row_with_the_same_elements)
 {
     using namespace testing;
-    ON_CALL(display_buffer, view_area())
-        .WillByDefault(Return(screen));
-    ON_CALL(display_buffer, transformation())
-        .WillByDefault(Return(no_transformation));
-
-    Sequence seq;
-    EXPECT_CALL(display_buffer, overlay(_))
-        .InSequence(seq)
-        .WillOnce(Return(false));
-
-    EXPECT_CALL(display_buffer, transformation())
-        .InSequence(seq);
-    EXPECT_CALL(mock_renderer, set_output_transform(no_transformation))
-        .InSequence(seq);
-    EXPECT_CALL(mock_renderer, set_viewport(screen))
-        .InSequence(seq);
-    EXPECT_CALL(mock_renderer, render(IsEmpty()))
-        .InSequence(seq);
-
-    EXPECT_CALL(display_buffer, overlay(_))
-        .InSequence(seq)
-        .WillOnce(Return(true));
-    //we should be testing that post_buffer is called, not just that
-    //we check the bits on the compositor buffer
-    EXPECT_CALL(display_buffer, overlay(_))
-        .InSequence(seq)
-        .WillOnce(Return(false));
-    EXPECT_CALL(display_buffer, transformation())
-        .InSequence(seq);
-    EXPECT_CALL(mock_renderer, set_output_transform(no_transformation))
-        .InSequence(seq);
-    EXPECT_CALL(mock_renderer, set_viewport(screen))
-        .InSequence(seq);
-    EXPECT_CALL(mock_renderer, render(IsEmpty()))
-        .InSequence(seq);
-
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
         gl_provider,
         mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
 
+    compositor.composite(make_scene_elements({big}));
     compositor.composite(make_scene_elements({}));
+
+    EXPECT_CALL(display_buffer, overlay(_))
+        .WillRepeatedly(Return(true));
+    EXPECT_CALL(mock_renderer, suspend())
+        .Times(1);
+
     compositor.composite(make_scene_elements({}));
+
+    EXPECT_CALL(mock_renderer, suspend())
+        .Times(1);
     compositor.composite(make_scene_elements({}));
 
     fullscreen->set_buffer({});  // Avoid GMock complaining about false leaks
@@ -299,12 +247,6 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_toggles_seamlessly)
 TEST_F(DefaultDisplayBufferCompositor, occluded_surfaces_are_not_rendered)
 {
     using namespace testing;
-    EXPECT_CALL(display_buffer, view_area())
-        .WillRepeatedly(Return(screen));
-    EXPECT_CALL(display_buffer, transformation())
-        .WillOnce(Return(no_transformation));
-    EXPECT_CALL(display_buffer, overlay(_))
-        .WillRepeatedly(Return(false));
 
     auto window0 = std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{99,99},{2,2}});
     auto window1 = std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{10,10},{20,20}});

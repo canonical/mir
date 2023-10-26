@@ -141,12 +141,17 @@ public:
                     not_posted_yet = false;
                     lock.unlock();
 
+                    bool needs_post = false;
                     for (auto& tuple : compositors)
                     {
                         auto& compositor = std::get<1>(tuple);
-                        compositor->composite(scene->scene_elements_for(compositor.get()));
+                        if (compositor->composite(scene->scene_elements_for(compositor.get())))
+                            needs_post = true;
                     }
-                    group.post();
+
+                    // We can skip the post if none of the compositors ended up compositing
+                    if (needs_post)
+                        group.post();
 
                     /*
                      * "Predictive bypass" optimization: If the last frame was

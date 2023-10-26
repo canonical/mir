@@ -42,8 +42,12 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
 {
 }
 
-void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& scene_elements)
+bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& scene_elements)
 {
+    if (scene_elements.size() == 0 && !completed_first_render)
+        return false;
+
+    completed_first_render = true;
     report->began_frame(this);
 
     auto const& view_area = display_buffer.view_area();
@@ -134,4 +138,5 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     }
 
     report->finished_frame(this);
+    return true;
 }

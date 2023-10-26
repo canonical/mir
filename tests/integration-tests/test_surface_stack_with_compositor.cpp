@@ -164,7 +164,19 @@ struct SurfaceStackCompositor : public Test
             streams,
             std::shared_ptr<mg::CursorImage>(),
             null_scene_report)},
-        stub_buffer(std::make_shared<mtd::StubBuffer>())
+        stub_buffer(std::make_shared<mtd::StubBuffer>()),
+        other_stream(std::make_shared<mc::Stream>(geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888 )),
+        other_streams({ { other_stream, {0,0}, {} } }),
+        other_stub_surface{std::make_shared<ms::BasicSurface>(
+            nullptr /* session */,
+            mw::Weak<mf::WlSurface>{},
+            std::string("other_stub"),
+            geom::Rectangle{{10,0},{1,1}},
+            mir_pointer_unconfined,
+            other_streams,
+            std::shared_ptr<mg::CursorImage>(),
+            null_scene_report)},
+        other_stub_buffer(std::make_shared<mtd::StubBuffer>())
     {
         ON_CALL(*mock_buffer_stream, lock_compositor_buffer(_))
             .WillByDefault(Return(mt::fake_shared(*stub_buffer)));
@@ -179,6 +191,10 @@ struct SurfaceStackCompositor : public Test
     std::list<ms::StreamInfo> const streams;
     std::shared_ptr<ms::BasicSurface> stub_surface;
     std::shared_ptr<mg::Buffer> stub_buffer;
+    std::shared_ptr<mc::Stream> other_stream;
+    std::list<ms::StreamInfo> const other_streams;
+    std::shared_ptr<ms::BasicSurface> other_stub_surface;
+    std::shared_ptr<mg::Buffer> other_stub_buffer;
     CountingDisplaySyncGroup stub_primary_db;
     CountingDisplaySyncGroup stub_secondary_db;
     StubDisplay stub_display{stub_primary_db, stub_secondary_db};
@@ -196,8 +212,11 @@ std::chrono::milliseconds const default_delay{-1};
 
 }
 
-TEST_F(SurfaceStackCompositor, composes_on_start_if_told_to_in_constructor)
+TEST_F(SurfaceStackCompositor, composes_on_start_if_told_to_in_constructor_when_stack_has_at_least_one_surface)
 {
+    streams.front().stream->submit_buffer(stub_buffer);
+    stack.add_surface(stub_surface, mi::InputReceptionMode::normal);
+
     mc::MultiThreadedCompositor mt_compositor(
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
@@ -208,6 +227,20 @@ TEST_F(SurfaceStackCompositor, composes_on_start_if_told_to_in_constructor)
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(1, timeout));
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(1, timeout));
+}
+
+TEST_F(SurfaceStackCompositor, does_not_compose_on_start_if_told_to_in_constructor_but_has_no_surfaces)
+{
+    mc::MultiThreadedCompositor mt_compositor(
+        mt::fake_shared(stub_display),
+        mt::fake_shared(stack),
+        mt::fake_shared(dbc_factory),
+        mt::fake_shared(stub_display_listener),
+        null_comp_report, default_delay, true);
+    mt_compositor.start();
+
+    EXPECT_TRUE(stub_primary_db.has_posted_at_least(0, timeout));
+    EXPECT_TRUE(stub_secondary_db.has_posted_at_least(0, timeout));
 }
 
 TEST_F(SurfaceStackCompositor, does_not_composes_on_start_if_told_not_to_in_constructor)
@@ -343,6 +376,9 @@ TEST_F(SurfaceStackCompositor, removing_a_surface_triggers_composition)
 {
     streams.front().stream->submit_buffer(stub_buffer);
     stack.add_surface(stub_surface, mi::InputReceptionMode::normal);
+
+    other_streams.front().stream->submit_buffer(other_stub_buffer);
+    stack.add_surface(other_stub_surface, mi::InputReceptionMode::normal);
 
     mc::MultiThreadedCompositor mt_compositor(
         mt::fake_shared(stub_display),

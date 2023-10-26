@@ -29,7 +29,8 @@ class DisplayBufferCompositor
 public:
     virtual ~DisplayBufferCompositor() = default;
 
-    virtual void composite(SceneElementSequence&& scene_sequence) = 0;
+    /// Returns true if any compositing happened, otherwise false.
+    virtual bool composite(SceneElementSequence&& scene_sequence) = 0;
 
 protected:
     DisplayBufferCompositor() = default;
