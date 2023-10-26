@@ -22,21 +22,26 @@
 
 namespace mg=mir::graphics;
 
-auto mg::has_egl_client_extension(char const* name) -> bool
+auto mg::has_egl_client_extension(char const* extension) -> bool
 {
-    return has_egl_extension(EGL_NO_DISPLAY, name);
+    return has_egl_extension(EGL_NO_DISPLAY, extension);
 }
 
-auto mg::has_egl_extension(EGLDisplay dpy, char const* name) -> bool
+auto mg::has_egl_extension(EGLDisplay dpy, char const* extension) -> bool
 {
-    auto extensions = eglQueryString(dpy, EGL_EXTENSIONS);
-    auto found_substring = strstr(extensions, name);
-    if (found_substring)
+    auto const extensions = eglQueryString(dpy, EGL_EXTENSIONS);
+    auto found_substring = strstr(extensions, extension);
+    while (found_substring)
     {
         // Check that we haven't found a prefix of our extension name
-        auto end_of_match = found_substring + strlen(name);
+        auto end_of_match = found_substring + strlen(extension);
         // It's a match if it terminates with the end of the extension string, or with a space
-        return *end_of_match == '\0' || *end_of_match == ' ';
+        if (*end_of_match == '\0' || *end_of_match == ' ')
+        {
+            return true;
+        }
+
+        found_substring = strstr(end_of_match, extension);
     }
     return false;
 }
