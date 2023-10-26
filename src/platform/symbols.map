@@ -51,6 +51,8 @@ MIR_PLATFORM_2.16 {
     mir::graphics::EventHandlerRegister::register_signal_handler*;
     mir::graphics::EventHandlerRegister::unregister_fd_handler*;
     mir::graphics::GammaCurves::GammaCurves*;
+    mir::graphics::has_egl_extension*;
+    mir::graphics::has_egl_client_extension*;
     mir::graphics::LinearGammaLUTs::LinearGammaLUTs*;
     mir::graphics::LinuxDmaBufUnstable::?LinuxDmaBufUnstable*;
     mir::graphics::LinuxDmaBufUnstable::LinuxDmaBufUnstable*;
