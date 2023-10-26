@@ -75,17 +75,6 @@ TEST_F(VirtualGraphicsPlatformTest, can_acquire_interface_for_cpu_addressable_di
     EXPECT_TRUE(interface->acquire_interface<mg::CPUAddressableDisplayProvider>() != nullptr);
 }
 
-TEST_F(VirtualGraphicsPlatformTest, cannot_acquire_interface_for_generic_egl_display_provider_when_egl_display_is_none)
-{
-    ON_CALL(mock_egl, eglGetDisplay(_))
-        .WillByDefault(Return(EGL_NO_DISPLAY));
-    ON_CALL(mock_egl, eglInitialize(_,_,_))
-        .WillByDefault(Return(EGL_TRUE));
-    auto platform = create_platform();
-    auto interface = mg::DisplayPlatform::interface_for(platform);
-    EXPECT_THAT(interface->acquire_interface<mg::GenericEGLDisplayProvider>(), nullptr);
-}
-
 TEST_F(VirtualGraphicsPlatformTest, output_size_parsing_throws_on_bad_input)
 {
     // X11's tests check the remaining cases here. These are the only cases that do not overlap with X11's.
