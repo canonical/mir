@@ -83,15 +83,19 @@ auto make_share_only_context(EGLDisplay dpy, std::optional<EGLContext> share_wit
     };
 
     EGLConfig cfg;
-    EGLint num_configs;
-
-    if (eglChooseConfig(dpy, config_attr, &cfg, 1, &num_configs) != EGL_TRUE)
+    if (!mg::has_egl_extension(dpy, "EGL_KHR_no_config_context"))
     {
-        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to find any matching EGL config")));
-    }
+        EGLint num_configs;
 
-    if (num_configs == 0)
+        if (eglChooseConfig(dpy, config_attr, &cfg, 1, &num_configs) != EGL_TRUE || num_configs != 1)
+        {
+            BOOST_THROW_EXCEPTION((mg::egl_error("Failed to find any matching EGL config")));
+        }
+    }
+    else
+    {
         cfg = EGL_NO_CONFIG_KHR;
+    }
 
     auto ctx = eglCreateContext(dpy, cfg, share_with.value_or(EGL_NO_CONTEXT), context_attr);
     if (ctx == EGL_NO_CONTEXT)

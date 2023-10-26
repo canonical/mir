@@ -34,6 +34,19 @@ namespace geom = mir::geometry;
 
 namespace
 {
+auto create_default_display() -> EGLDisplay
+{
+    if (mg::has_egl_client_extension("EGL_EXT_platform_base")
+        && mg::has_egl_client_extension("EGL_MESA_platform_surfaceless"))
+    {
+        // Explicitly create a Surfaceless display, when the extension is supported
+        mg::EGLExtensions ext;
+        return ext.platform_base->eglGetPlatformDisplay(EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, nullptr);
+    }
+    // Otherwise, hope that the EGL implementation can pull a functional EGLDisplay out of its hat
+    return eglGetDisplay(EGL_DEFAULT_DISPLAY);
+}
+
 auto egl_display_from_platforms(std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays) -> std::tuple<EGLDisplay, bool>
 {
     for (auto const& display : displays)
@@ -45,7 +58,7 @@ auto egl_display_from_platforms(std::vector<std::shared_ptr<mg::DisplayInterface
     }
     // No Displays provide an EGL display
     // We can still work, falling back to CPU-copy output, as long as we can get *any* EGL display
-    auto dpy = eglGetPlatformDisplay(EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, NULL);
+    auto dpy = create_default_display();
     if (dpy == EGL_NO_DISPLAY)
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to create any EGL display"}));
@@ -78,15 +91,19 @@ auto make_share_only_context(EGLDisplay dpy, std::optional<EGLContext> share_con
     };
 
     EGLConfig cfg;
-    EGLint num_configs;
-
-    if (eglChooseConfig(dpy, config_attr, &cfg, 1, &num_configs) != EGL_TRUE)
+    if (!mg::has_egl_extension(dpy, "EGL_KHR_no_config_context"))
     {
-        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to find any matching EGL config")));
-    }
+        EGLint num_configs;
 
-    if (num_configs == 0)
+        if (eglChooseConfig(dpy, config_attr, &cfg, 1, &num_configs) != EGL_TRUE || num_configs != 1)
+        {
+            BOOST_THROW_EXCEPTION((mg::egl_error("Failed to find any matching EGL config")));
+        }
+    }
+    else
+    {
         cfg = EGL_NO_CONFIG_KHR;
+    }
 
     auto ctx = eglCreateContext(dpy, cfg, share_context.value_or(EGL_NO_CONTEXT), context_attr);
     if (ctx == EGL_NO_CONTEXT)
