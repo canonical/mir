@@ -21,6 +21,8 @@
 #include <wayland-client.h>
 #include <wayland-client-core.h>
 
+#include <linux/input-event-codes.h>
+
 #include <memory>
 #include <signal.h>
 #include <string.h>
@@ -434,6 +436,9 @@ void window::handle_mouse_button(
 {
     (void)serial;
 
+    if (button == BTN_LEFT && state == WL_POINTER_BUTTON_STATE_PRESSED)
+        xdg_toplevel_move(xdgtoplevel, globals::seat, serial);
+
     printf("Received button event: Button %i, state %i @ %i\n",
            button,
            state,
@@ -505,10 +510,10 @@ window::window(int32_t width, int32_t height) :
         prepare_buffer(b);
     }
 
-    xdg_surface_add_listener(xdgsurface, &shell_surface_listener, NULL);
+    xdg_surface_add_listener(xdgsurface, &shell_surface_listener, this);
     xdg_toplevel_add_listener(xdgtoplevel, &shell_toplevel_listener, this);
     wl_keyboard_add_listener(keyboard, &keyboard_listener, this);
-    wl_pointer_add_listener(pointer, &pointer_listener, NULL);
+    wl_pointer_add_listener(pointer, &pointer_listener, this);
 
     fake_frame();
 }
