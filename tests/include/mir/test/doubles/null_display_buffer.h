@@ -30,6 +30,7 @@ class NullDisplayBuffer : public graphics::DisplayBuffer
 {
 public:
     geometry::Rectangle view_area() const override { return geometry::Rectangle(); }
+    auto pixel_size() const -> geometry::Size override { return geometry::Size(); }
     bool overlay(std::vector<mir::graphics::DisplayElement> const&) override { return false; }
     void set_next_image(std::unique_ptr<mir::graphics::Framebuffer>) override { }
     glm::mat2 transformation() const override { return glm::mat2(1); }

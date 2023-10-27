@@ -59,6 +59,8 @@ public:
 
     geometry::Rectangle view_area() const override;
 
+    auto pixel_size() const -> geometry::Size override;
+
     void set_next_image(std::unique_ptr<Framebuffer> content) override;
 
     bool overlay(std::vector<DisplayElement> const& renderlist) override;

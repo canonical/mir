@@ -200,6 +200,11 @@ public:
         return output->extents();
     }
 
+    auto pixel_size() const -> mir::geometry::Size override
+    {
+        return output->size();
+    }
+
     glm::mat2 transformation() const override
     {
         return output->transformation();

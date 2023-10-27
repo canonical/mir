@@ -16,6 +16,7 @@
  */
 
 #include "displayclient.h"
+#include "mir/fatal.h"
 #include "wl_egl_display_provider.h"
 #include "mir/graphics/platform.h"
 #include <mir/graphics/pixel_format_utils.h>
@@ -97,6 +98,7 @@ public:
 
     // DisplayBuffer implementation
     auto view_area() const -> geometry::Rectangle override;
+    auto pixel_size() const -> geometry::Size override;
     bool overlay(std::vector<DisplayElement> const& renderlist) override;
     auto transformation() const -> glm::mat2 override;
     auto display_provider() const -> std::shared_ptr<DisplayInterfaceProvider> override;
@@ -396,6 +398,19 @@ auto mgw::DisplayClient::Output::recommended_sleep() const -> std::chrono::milli
 auto mgw::DisplayClient::Output::view_area() const -> geometry::Rectangle
 {
     return dcout.extents();
+}
+
+auto mgw::DisplayClient::Output::pixel_size() const -> geometry::Size
+{
+    if (!has_initialized)
+    {
+        mir::fatal_error("Attempt to get Wayland output size before initialisation is complete");
+    }
+    /* output_size is the size we pass to WlDisplayProvider,
+     * which becomes the size of the wl_egl_window,
+     * which is the pixel size.
+     */
+    return output_size;
 }
 
 bool mgw::DisplayClient::Output::overlay(std::vector<DisplayElement> const&)
