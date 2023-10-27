@@ -39,7 +39,7 @@ For other questions and discussion about the Mir project:
 the [\#mirserver](https://web.libera.chat/?channels=#mir-server) IRC channel on Libera.Chat.
 
 For developer documentation, including installation and build instructions,
-see <https://mir-server.io/doc/index.html>.
+see <https://canonical-mir.readthedocs-hosted.com>.
 
 # Copyright
 Copyright © Canonical Ltd.
