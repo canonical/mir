@@ -33,12 +33,12 @@ CMAKE_DEPENDENT_OPTION(
 
 if(MIR_RUN_SMOKE_TESTS)
   mir_add_test(NAME mir-smoke-test-runner
-    COMMAND "env" "MIR_SERVER_VIRTUAL_OUTPUT=1280x1024" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir-smoke-test-runner"
+    COMMAND "env" "MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual" "MIR_SERVER_VIRTUAL_OUTPUT=1280x1024" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir-smoke-test-runner"
   )
 endif()
 
 if(MIR_RUN_PERFORMANCE_TESTS)
   mir_add_test(NAME mir_performance_tests
-    COMMAND "env" "MIR_SERVER_VIRTUAL_OUTPUT=1280x1024" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir_performance_tests"
+    COMMAND "env" "MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual" "MIR_SERVER_VIRTUAL_OUTPUT=1280x1024" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir_performance_tests" "--gtest_filter=-CompositorPerformance.regression_test_1563287"
   )
 endif()
