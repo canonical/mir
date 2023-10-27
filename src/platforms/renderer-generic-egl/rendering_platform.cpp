@@ -34,23 +34,45 @@ namespace geom = mir::geometry;
 
 namespace
 {
-auto egl_display_from_platforms(std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays) -> EGLDisplay
+auto create_default_display() -> EGLDisplay
+{
+    if (mg::has_egl_client_extension("EGL_EXT_platform_base")
+        && mg::has_egl_client_extension("EGL_MESA_platform_surfaceless"))
+    {
+        // Explicitly create a Surfaceless display, when the extension is supported
+        mg::EGLExtensions ext;
+        return ext.platform_base->eglGetPlatformDisplay(EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, nullptr);
+    }
+    // Otherwise, hope that the EGL implementation can pull a functional EGLDisplay out of its hat
+    return eglGetDisplay(EGL_DEFAULT_DISPLAY);
+}
+
+auto egl_display_from_platforms(std::vector<std::shared_ptr<mg::DisplayInterfaceProvider>> const& displays) -> std::tuple<EGLDisplay, bool>
 {
     for (auto const& display : displays)
     {
         if (auto egl_provider = display->acquire_interface<mg::GenericEGLDisplayProvider>())
         {
-            return egl_provider->get_egl_display();
+            return std::make_tuple(egl_provider->get_egl_display(), false);
         }
     }
     // No Displays provide an EGL display
     // We can still work, falling back to CPU-copy output, as long as we can get *any* EGL display
-    auto dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    auto dpy = create_default_display();
     if (dpy == EGL_NO_DISPLAY)
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to create any EGL display"}));
     }
-    return dpy;
+    EGLint major, minor;
+    if (eglInitialize(dpy, &major, &minor) != EGL_TRUE)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialise EGL"));
+    }
+    if (std::make_pair(major, minor) < std::make_pair(1, 4))
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to get EGL version >= 1.4"}));
+    }
+    return std::make_tuple(dpy, true);
 }
 
 auto make_share_only_context(EGLDisplay dpy, std::optional<EGLContext> share_context) -> EGLContext
@@ -69,11 +91,18 @@ auto make_share_only_context(EGLDisplay dpy, std::optional<EGLContext> share_con
     };
 
     EGLConfig cfg;
-    EGLint num_configs;
-
-    if (eglChooseConfig(dpy, config_attr, &cfg, 1, &num_configs) != EGL_TRUE || num_configs != 1)
+    if (!mg::has_egl_extension(dpy, "EGL_KHR_no_config_context"))
     {
-        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to find any matching EGL config")));
+        EGLint num_configs;
+
+        if (eglChooseConfig(dpy, config_attr, &cfg, 1, &num_configs) != EGL_TRUE || num_configs != 1)
+        {
+            BOOST_THROW_EXCEPTION((mg::egl_error("Failed to find any matching EGL config")));
+        }
+    }
+    else
+    {
+        cfg = EGL_NO_CONFIG_KHR;
     }
 
     auto ctx = eglCreateContext(dpy, cfg, share_context.value_or(EGL_NO_CONTEXT), context_attr);
@@ -168,7 +197,13 @@ auto maybe_make_dmabuf_provider(
 }
 
 mge::RenderingPlatform::RenderingPlatform(std::vector<std::shared_ptr<DisplayInterfaceProvider>> const& displays)
-    : dpy{egl_display_from_platforms(displays)},
+    : RenderingPlatform(egl_display_from_platforms(displays))
+{
+}
+
+mge::RenderingPlatform::RenderingPlatform(std::tuple<EGLDisplay, bool> display)
+    : dpy{std::get<0>(display)},
+      owns_dpy{std::get<1>(display)},
       ctx{std::make_unique<SurfacelessEGLContext>(dpy)},
       dmabuf_provider{
           maybe_make_dmabuf_provider(
@@ -178,7 +213,13 @@ mge::RenderingPlatform::RenderingPlatform(std::vector<std::shared_ptr<DisplayInt
 {
 }
 
-mge::RenderingPlatform::~RenderingPlatform() = default;
+mge::RenderingPlatform::~RenderingPlatform()
+{
+    if (owns_dpy)
+    {
+        eglTerminate(dpy);
+    }
+}
 
 auto mge::RenderingPlatform::create_buffer_allocator(
     mg::Display const& /*output*/) -> mir::UniqueModulePtr<mg::GraphicBufferAllocator>

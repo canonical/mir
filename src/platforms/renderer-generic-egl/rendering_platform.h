@@ -47,7 +47,10 @@ protected:
         RenderingProvider::Tag const& type_tag) -> std::shared_ptr<RenderingProvider> override;
 
 private:
+    explicit RenderingPlatform(std::tuple<EGLDisplay, bool> dpy);
+
     EGLDisplay const dpy;
+    bool const owns_dpy;
     std::unique_ptr<renderer::gl::Context> const ctx;
     std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
 };

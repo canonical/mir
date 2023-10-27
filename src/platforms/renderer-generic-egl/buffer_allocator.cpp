@@ -83,13 +83,20 @@ auto make_share_only_context(EGLDisplay dpy, std::optional<EGLContext> share_wit
     };
 
     EGLConfig cfg;
-    EGLint num_configs;
-    
-    if (eglChooseConfig(dpy, config_attr, &cfg, 1, &num_configs) != EGL_TRUE || num_configs != 1)
+    if (!mg::has_egl_extension(dpy, "EGL_KHR_no_config_context"))
     {
-        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to find any matching EGL config")));
+        EGLint num_configs;
+
+        if (eglChooseConfig(dpy, config_attr, &cfg, 1, &num_configs) != EGL_TRUE || num_configs != 1)
+        {
+            BOOST_THROW_EXCEPTION((mg::egl_error("Failed to find any matching EGL config")));
+        }
     }
-    
+    else
+    {
+        cfg = EGL_NO_CONFIG_KHR;
+    }
+
     auto ctx = eglCreateContext(dpy, cfg, share_with.value_or(EGL_NO_CONTEXT), context_attr);
     if (ctx == EGL_NO_CONTEXT)
     {
@@ -106,7 +113,7 @@ public:
           ctx{make_share_only_context(dpy, {})}
     {
     }
-    
+
     SurfacelessEGLContext(EGLDisplay dpy, EGLContext share_with)
         : dpy{dpy},
           ctx{make_share_only_context(dpy, share_with)}
@@ -117,7 +124,7 @@ public:
     {
         eglDestroyContext(dpy, ctx);
     }
-    
+
     void make_current() const override
     {
         if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx) != EGL_TRUE)
@@ -125,7 +132,7 @@ public:
             BOOST_THROW_EXCEPTION(mg::egl_error("Failed to make context current"));
         }
     }
-    
+
     void release_current() const override
     {
         if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE)
@@ -133,17 +140,17 @@ public:
             BOOST_THROW_EXCEPTION(mg::egl_error("Failed to release current EGL context"));
         }
     }
-    
+
     auto make_share_context() const -> std::unique_ptr<Context> override
     {
         return std::unique_ptr<Context>{new SurfacelessEGLContext{dpy, ctx}};
     }
-    
+
     explicit operator EGLContext() override
     {
         return ctx;
     }
-private:    
+private:
     EGLDisplay const dpy;
     EGLContext const ctx;
 };
@@ -429,7 +436,7 @@ auto mge::GLRenderingProvider::surface_for_output(
         return std::make_unique<EGLOutputSurface>(egl_display->alloc_framebuffer(config, ctx));
     }
     auto cpu_provider = framebuffer_provider->acquire_interface<CPUAddressableDisplayProvider>();
-    
+
     return std::make_unique<mgc::CPUCopyOutputSurface>(
         dpy,
         ctx,
