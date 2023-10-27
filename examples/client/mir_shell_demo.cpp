@@ -68,9 +68,9 @@ public:
     window(int32_t width, int32_t height);
     virtual ~window();
 
-protected:
-    wl_surface* const surface;
+    operator wl_surface*() const { return surface; }
 
+protected:
     struct buffer
     {
         wl_buffer* buffer;
@@ -94,6 +94,7 @@ protected:
     virtual void handle_mouse_button(wl_pointer*, uint32_t serial, uint32_t time, uint32_t button, uint32_t state);
 
 private:
+    wl_surface* const surface;
     buffer buffers[no_of_buffers];
     wl_pointer* const pointer;
     wl_keyboard* const keyboard;
@@ -130,7 +131,7 @@ private:
     static wl_callback_listener const frame_listener;
     static wl_buffer_listener const buffer_listener;
     static wl_pointer_listener const pointer_listener;
-    static struct wl_keyboard_listener keyboard_listener;
+    static wl_keyboard_listener const keyboard_listener;
     
     void fake_frame();
 
@@ -143,6 +144,9 @@ class toplevel : public window
 public:
     toplevel(int32_t width, int32_t height);
     ~toplevel();
+
+    operator xdg_surface*() const { return xdgsurface; }
+    operator xdg_toplevel*() const { return xdgtoplevel; }
 
 private:
     xdg_surface* const xdgsurface;
@@ -279,7 +283,7 @@ wl_pointer_listener const window::pointer_listener =
     .axis   = [](void* ctx, auto... args) { static_cast<window*>(ctx)->handle_mouse_axis(args...); },
 };
 
-wl_keyboard_listener window::keyboard_listener =
+wl_keyboard_listener const window::keyboard_listener =
 {
     [](void* self, auto... args) { static_cast<window*>(self)->handle_keyboard_keymap(args...); },
     [](void* self, auto... args) { static_cast<window*>(self)->handle_keyboard_enter(args...); },
@@ -497,7 +501,7 @@ window::~window()
 
 toplevel::toplevel(int32_t width, int32_t height) :
     window{width, height},
-    xdgsurface{xdg_wm_base_get_xdg_surface(globals::wm_base, surface)},
+    xdgsurface{xdg_wm_base_get_xdg_surface(globals::wm_base, *this)},
     xdgtoplevel{xdg_surface_get_toplevel(xdgsurface)}
 {
     xdg_surface_add_listener(xdgsurface, &shell_surface_listener, this);
@@ -566,6 +570,50 @@ void shutdown(int signum)
         printf("Signal %d received. Good night.\n", signum);
     }
 }
+
+class satellite : public grey_window
+{
+public:
+    satellite(int32_t width, int32_t height, xdg_positioner* positioner, xdg_toplevel* parent);
+    ~satellite();
+
+private:
+    zmir_mir_satellite_surface_v1* const mir_surface;
+
+    void handle_repositioned(zmir_mir_satellite_surface_v1* zmir_mir_satellite_surface_v1, uint32_t token);
+
+    static zmir_mir_satellite_surface_v1_listener const satellite_listener;
+};
+
+satellite::satellite(int32_t width, int32_t height, xdg_positioner* positioner, xdg_toplevel* parent) :
+    grey_window{width, height},
+    mir_surface{globals::mir_shell ? zmir_mir_shell_v1_get_satellite_surface(globals::mir_shell, *this, positioner) : nullptr}
+{
+    xdg_toplevel_set_parent(*this, parent);
+
+    if (mir_surface)
+    {
+        zmir_mir_satellite_surface_v1_add_listener(mir_surface, &satellite_listener, this);
+    }
+}
+
+satellite::~satellite()
+{
+    if (mir_surface)
+    {
+        zmir_mir_satellite_surface_v1_destroy(mir_surface);
+    }
+}
+
+void satellite::handle_repositioned(zmir_mir_satellite_surface_v1* /*zmir_mir_satellite_surface_v1*/, uint32_t /*token*/)
+{
+    trace("Received repositioned event");
+}
+
+zmir_mir_satellite_surface_v1_listener const satellite::satellite_listener=
+{
+    .repositioned =  [](void* ctx, auto... args) { static_cast<satellite*>(ctx)->handle_repositioned(args...); },
+};
 }
 
 int main()
@@ -573,6 +621,14 @@ int main()
     globals::init();
 
     auto const main_window = std::make_unique<grey_window>(400, 400);
+
+    auto const positioner = xdg_wm_base_create_positioner(globals::wm_base);
+
+    xdg_positioner_set_anchor(positioner, XDG_POSITIONER_ANCHOR_LEFT);
+    xdg_positioner_set_gravity(positioner, XDG_POSITIONER_GRAVITY_LEFT);
+    xdg_positioner_set_constraint_adjustment(positioner, XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_X);
+
+    auto const satellite_window = std::make_unique<satellite>(100, 400, positioner, *main_window);
 
     struct sigaction sig_handler_new;
     sigfillset(&sig_handler_new.sa_mask);
