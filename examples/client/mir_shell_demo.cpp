@@ -29,6 +29,22 @@
 
 namespace
 {
+bool const tracing = getenv("MIR_SHELL_DEMO_TRACE");
+
+[[gnu::format (printf, 1, 2)]]
+inline void trace(char const* fmt, ...)
+{
+    if (tracing)
+    {
+        va_list va;
+        va_start(va, fmt);
+        vprintf(fmt, va);
+        va_end(va);
+        putc('\n', stdout);
+        fflush(stdout);
+    }
+}
+
 int const pixel_size = 4;
 int const no_of_buffers = 4;
 
@@ -45,6 +61,110 @@ zmir_mir_shell_v1* mir_shell;
 
 void init();
 }
+
+class window
+{
+public:
+    window(int32_t width, int32_t height);
+    virtual ~window();
+
+protected:
+    wl_surface* const surface;
+
+    struct buffer
+    {
+        wl_buffer* buffer;
+        bool available;
+        int width;
+        int height;
+        void* content_area;
+    };
+
+    void resize(int32_t width_, int32_t height_)
+    {
+        if (width_ > 0) width = width_;
+        if (height_ > 0) height = height_;
+
+        if ((width_ > 0) || (height_ > 0))
+        {
+            need_to_draw = true;
+        }
+    }
+
+    virtual void handle_mouse_button(wl_pointer*, uint32_t serial, uint32_t time, uint32_t button, uint32_t state);
+
+private:
+    buffer buffers[no_of_buffers];
+    wl_pointer* const pointer;
+    wl_keyboard* const keyboard;
+    int width;
+    int height;
+    bool waiting_for_buffer = false;
+    bool need_to_draw = true;
+
+    void handle_frame_callback(wl_callback* callback, uint32_t);
+
+    void handle_mouse_enter(wl_pointer*, uint32_t serial, wl_surface*, wl_fixed_t surface_x, wl_fixed_t surface_y);
+    void handle_mouse_leave(wl_pointer*, uint32_t serial, wl_surface*);
+    void handle_mouse_motion(wl_pointer*, uint32_t time, wl_fixed_t surface_x, wl_fixed_t surface_y);
+    void handle_mouse_axis(wl_pointer*, uint32_t time, uint32_t axis, wl_fixed_t value);
+
+    void handle_keyboard_keymap(wl_keyboard* keyboard, uint32_t format, int32_t fd, uint32_t size);
+    void handle_keyboard_enter(wl_keyboard* keyboard, uint32_t serial, wl_surface* surface, wl_array* keys);
+    void handle_keyboard_leave(wl_keyboard* keyboard, uint32_t serial, wl_surface* surface);
+    void handle_keyboard_key(wl_keyboard* keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state);
+    void handle_keyboard_modifiers(
+        wl_keyboard* keyboard,
+        uint32_t serial,
+        uint32_t mods_depressed,
+        uint32_t mods_latched,
+        uint32_t mods_locked,
+        uint32_t group);
+    void handle_keyboard_repeat_info(wl_keyboard* wl_keyboard, int32_t rate, int32_t delay);
+
+    void update_free_buffers(wl_buffer* buffer);
+    void prepare_buffer(buffer& b);
+    auto find_free_buffer() -> buffer*;
+    virtual void draw_new_content(buffer* b) = 0;
+
+    static wl_callback_listener const frame_listener;
+    static wl_buffer_listener const buffer_listener;
+    static wl_pointer_listener const pointer_listener;
+    static struct wl_keyboard_listener keyboard_listener;
+    
+    void fake_frame();
+
+    window(window const&) = delete;
+    window& operator=(window const&) = delete;
+};
+
+class toplevel : public window
+{
+public:
+    toplevel(int32_t width, int32_t height);
+    ~toplevel();
+
+private:
+    xdg_surface* const xdgsurface;
+    xdg_toplevel* const xdgtoplevel;
+
+    void handle_mouse_button(wl_pointer*, uint32_t serial, uint32_t time, uint32_t button, uint32_t state) override;
+    void handle_xdg_toplevel_configure(xdg_toplevel*, int32_t width_, int32_t height_, wl_array*);
+
+    static xdg_toplevel_listener const shell_toplevel_listener;
+    static xdg_surface_listener const shell_surface_listener;
+};
+
+class grey_window : public toplevel
+{
+public:
+    using toplevel::toplevel;
+
+private:
+    unsigned char const intensity = 192;
+    unsigned char const alpha = 255;
+    void draw_new_content(buffer* b) override;
+};
 
 void handle_registry_global(
     wl_registry* registry,
@@ -84,19 +204,19 @@ void handle_registry_global(
     }
 }
 
-wl_registry_listener const registry_listener =
-{
-    .global = [](void*, auto... args) { handle_registry_global(args...); },
-    .global_remove = [](auto...) {},
-};
-
-xdg_wm_base_listener const shell_listener =
-{
-    .ping = [](void*, xdg_wm_base* shell, uint32_t serial) { xdg_wm_base_pong(shell, serial); }
-};
-
 void globals::init()
 {
+    static wl_registry_listener const registry_listener =
+        {
+            .global = [](void*, auto... args) { handle_registry_global(args...); },
+            .global_remove = [](auto...) {},
+        };
+
+    static xdg_wm_base_listener const shell_listener =
+        {
+            .ping = [](void*, xdg_wm_base* shell, uint32_t serial) { xdg_wm_base_pong(shell, serial); }
+        };
+
     auto const registry = wl_display_get_registry(display);
 
     wl_registry_add_listener(registry, &registry_listener, NULL);
@@ -139,84 +259,6 @@ void globals::init()
     xdg_wm_base_add_listener(globals::wm_base, &shell_listener, NULL);
 }
 
-class window
-{
-public:
-    window(int32_t width, int32_t height);
-    virtual ~window();
-
-protected:
-    struct buffer
-    {
-        wl_buffer* buffer;
-        bool available;
-        int width;
-        int height;
-        void* content_area;
-    };
-    
-private:
-    buffer buffers[no_of_buffers];
-    wl_surface* const surface;
-    wl_pointer* const pointer;
-    wl_keyboard* const keyboard;
-
-    xdg_surface* const xdgsurface;
-    xdg_toplevel* const xdgtoplevel;
-
-    int width;
-    int height;
-    bool waiting_for_buffer = false;
-    bool need_to_draw = true;
-
-    void handle_frame_callback(wl_callback* callback, uint32_t);
-    void handle_xdg_toplevel_configure(xdg_toplevel*, int32_t width_, int32_t height_, wl_array*);
-
-    void handle_mouse_enter(wl_pointer*, uint32_t serial, wl_surface*, wl_fixed_t surface_x, wl_fixed_t surface_y);
-    void handle_mouse_leave(wl_pointer*, uint32_t serial, wl_surface*);
-    void handle_mouse_motion(wl_pointer*, uint32_t time, wl_fixed_t surface_x, wl_fixed_t surface_y);
-    void handle_mouse_button(wl_pointer*, uint32_t serial, uint32_t time, uint32_t button, uint32_t state);
-    void handle_mouse_axis(wl_pointer*, uint32_t time, uint32_t axis, wl_fixed_t value);
-
-    void handle_keyboard_keymap(wl_keyboard* keyboard, uint32_t format, int32_t fd, uint32_t size);
-    void handle_keyboard_enter(wl_keyboard* keyboard, uint32_t serial, wl_surface* surface, wl_array* keys);
-    void handle_keyboard_leave(wl_keyboard* keyboard, uint32_t serial, wl_surface* surface);
-    void handle_keyboard_key(wl_keyboard* keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state);
-    void handle_keyboard_modifiers(
-        wl_keyboard* keyboard,
-        uint32_t serial,
-        uint32_t mods_depressed,
-        uint32_t mods_latched,
-        uint32_t mods_locked,
-        uint32_t group);
-    void handle_keyboard_repeat_info(wl_keyboard* wl_keyboard, int32_t rate, int32_t delay);
-
-    void update_free_buffers(wl_buffer* buffer);
-    void prepare_buffer(buffer& b);
-    auto find_free_buffer() -> buffer*;
-    virtual void draw_new_content(buffer* b) = 0;
-
-    static xdg_toplevel_listener const shell_toplevel_listener;
-    static wl_callback_listener const frame_listener;
-    static wl_buffer_listener const buffer_listener;
-    static xdg_surface_listener const shell_surface_listener;
-    static wl_pointer_listener const pointer_listener;
-    static struct wl_keyboard_listener keyboard_listener;
-    
-    void fake_frame();
-
-    window(window const&) = delete;
-    window& operator=(window const&) = delete;
-};
-
-xdg_toplevel_listener const window::shell_toplevel_listener =
-{
-    .configure = [](void* ctx, auto... args) { static_cast<window*>(ctx)->handle_xdg_toplevel_configure(args...); },
-    .close = [](auto...){},
-    .configure_bounds = [](auto...){},
-    .wm_capabilities = [](auto...){},
-};
-
 wl_callback_listener const window::frame_listener =
 {
     .done = [](void* ctx, auto... args) { static_cast<window*>(ctx)->handle_frame_callback(args...); },
@@ -227,10 +269,6 @@ wl_buffer_listener const window::buffer_listener =
     .release = [](void* ctx, auto... args) { static_cast<window*>(ctx)->update_free_buffers(args...); },
 };
 
-xdg_surface_listener const window::shell_surface_listener =
-{
-    .configure= [](auto...){},
-};
 
 wl_pointer_listener const window::pointer_listener =
 {
@@ -328,32 +366,183 @@ void window::handle_frame_callback(wl_callback* callback, uint32_t)
     fake_frame();
 }
 
-//class pulsing_window : public window
-//{
-//public:
-//    using window::window;
-//
-//private:
-//    unsigned char current_intensity = 128;
-//    void draw_new_content(buffer* b) override;
-//};
-//
-//void pulsing_window::draw_new_content(buffer* b)
-//{
-//    memset(b->content_area, current_intensity, b->width * b->height * pixel_size);
-//    ++current_intensity;
-//}
-
-class grey_window : public window
+void window::handle_mouse_enter(
+    wl_pointer*,
+    uint32_t serial,
+    wl_surface*,
+    wl_fixed_t surface_x,
+    wl_fixed_t surface_y)
 {
-public:
-    using window::window;
+    (void)serial;
+    trace("Received handle_mouse_enter event: (%f, %f)",
+          wl_fixed_to_double(surface_x),
+          wl_fixed_to_double(surface_y));
+}
 
-private:
-    unsigned char const intensity = 192;
-    unsigned char const alpha = 255;
-    void draw_new_content(buffer* b) override;
+void window::handle_mouse_leave(
+    wl_pointer*,
+    uint32_t serial,
+    wl_surface*)
+{
+    (void)serial;
+    trace("Received mouse_exit event\n");
+}
+
+void window::handle_mouse_motion(
+    wl_pointer*,
+    uint32_t time,
+    wl_fixed_t surface_x,
+    wl_fixed_t surface_y)
+{
+    trace("Received motion event: (%f, %f) @ %i",
+          wl_fixed_to_double(surface_x),
+          wl_fixed_to_double(surface_y),
+          time);
+}
+
+void window::handle_mouse_button(
+    wl_pointer*,
+    uint32_t serial,
+    uint32_t time,
+    uint32_t button,
+    uint32_t state)
+{
+    (void)serial;
+
+    trace("Received button event: Button %i, state %i @ %i",
+          button,
+          state,
+          time);
+}
+
+void window::handle_mouse_axis(
+    wl_pointer*,
+    uint32_t time,
+    uint32_t axis,
+    wl_fixed_t value)
+{
+    trace("Received axis event: axis %i, value %f @ %i",
+          axis,
+          wl_fixed_to_double(value),
+          time);
+}
+
+
+void window::handle_keyboard_keymap(wl_keyboard*, uint32_t format, int32_t /*fd*/, uint32_t size)
+{
+    trace("Received keyboard_keymap: format %i, size %i", format, size);
+}
+
+void window::handle_keyboard_enter(wl_keyboard*, uint32_t, wl_surface*, wl_array*)
+{
+    trace("Received keyboard_enter:\n");
+}
+
+void window::handle_keyboard_leave(wl_keyboard*, uint32_t, wl_surface*)
+{
+    trace("Received keyboard_leave:\n");
+}
+
+void window::handle_keyboard_key(wl_keyboard*, uint32_t, uint32_t, uint32_t key, uint32_t state)
+{
+    trace("Received keyboard_key: key %i, state %i", key, state);
+}
+
+void window::handle_keyboard_modifiers(
+    wl_keyboard*, uint32_t, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked,
+    uint32_t group)
+{
+    trace("Received keyboard_modifiers: depressed %i, latched %i, locked %i, group %i", mods_depressed, mods_latched, mods_locked, group);
+}
+
+void window::handle_keyboard_repeat_info(wl_keyboard*, int32_t rate, int32_t delay)
+{
+    trace("Received keyboard_modifiers: rate %i, delay %i", rate, delay);
+}
+
+void window::fake_frame()
+{
+    wl_callback* fake_frame = wl_display_sync(display);
+    wl_callback_add_listener(fake_frame, &frame_listener, this);
+}
+
+window::window(int32_t width, int32_t height) :
+    surface{wl_compositor_create_surface(globals::compositor)},
+    pointer{wl_seat_get_pointer(globals::seat)},
+    keyboard{wl_seat_get_keyboard(globals::seat)},
+    width{width},
+    height{height}
+{
+    for (buffer& b : buffers)
+    {
+        prepare_buffer(b);
+    }
+
+    wl_keyboard_add_listener(keyboard, &keyboard_listener, this);
+    wl_pointer_add_listener(pointer, &pointer_listener, this);
+
+    fake_frame();
+}
+
+window::~window()
+{
+    for (auto b : buffers)
+    {
+        wl_buffer_destroy(b.buffer);
+    }
+
+    wl_pointer_destroy(pointer);
+    wl_surface_destroy(surface);
+}
+
+toplevel::toplevel(int32_t width, int32_t height) :
+    window{width, height},
+    xdgsurface{xdg_wm_base_get_xdg_surface(globals::wm_base, surface)},
+    xdgtoplevel{xdg_surface_get_toplevel(xdgsurface)}
+{
+    xdg_surface_add_listener(xdgsurface, &shell_surface_listener, this);
+    xdg_toplevel_add_listener(xdgtoplevel, &shell_toplevel_listener, this);
+}
+
+toplevel::~toplevel()
+{
+    xdg_toplevel_destroy(xdgtoplevel);
+    xdg_surface_destroy(xdgsurface);
+}
+
+void toplevel::handle_xdg_toplevel_configure(
+    xdg_toplevel*,
+    int32_t width_,
+    int32_t height_,
+    wl_array*)
+{
+    trace("Received toplevel_configure: width %i, height %i", width_, height_);
+    resize(width_, height_);
+}
+
+xdg_toplevel_listener const toplevel::shell_toplevel_listener =
+{
+    .configure = [](void* ctx, auto... args) { static_cast<toplevel*>(ctx)->handle_xdg_toplevel_configure(args...); },
+    .close = [](auto...){},
+    .configure_bounds = [](auto...){},
+    .wm_capabilities = [](auto...){},
 };
+
+xdg_surface_listener const toplevel::shell_surface_listener =
+{
+    .configure= [](auto...){},
+};
+
+void toplevel::handle_mouse_button(wl_pointer* pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state)
+{
+    window::handle_mouse_button(pointer, serial, time, button, state);
+
+    if (button == BTN_LEFT && state == WL_POINTER_BUTTON_STATE_PRESSED)
+        xdg_toplevel_move(xdgtoplevel, globals::seat, serial);
+
+    if (button == BTN_RIGHT && state == WL_POINTER_BUTTON_STATE_PRESSED)
+        xdg_toplevel_resize(xdgtoplevel, globals::seat, serial, XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_RIGHT);
+}
 
 void grey_window::draw_new_content(window::buffer* b)
 {
@@ -376,159 +565,6 @@ void shutdown(int signum)
         running = 0;
         printf("Signal %d received. Good night.\n", signum);
     }
-}
-
-void window::handle_xdg_toplevel_configure(
-    xdg_toplevel*,
-    int32_t width_,
-    int32_t height_,
-    wl_array*)
-{
-    if (width_ > 0) width = width_;
-    if (height_ > 0) height = height_;
-
-    if ((width_ > 0) || (height_ > 0))
-    {
-        need_to_draw = true;
-    }
-}
-
-void window::handle_mouse_enter(
-    wl_pointer*,
-    uint32_t serial,
-    wl_surface*,
-    wl_fixed_t surface_x,
-    wl_fixed_t surface_y)
-{
-    (void)serial;
-    printf("Received handle_mouse_enter event: (%f, %f)\n",
-           wl_fixed_to_double(surface_x),
-           wl_fixed_to_double(surface_y));
-}
-
-void window::handle_mouse_leave(
-    wl_pointer*,
-    uint32_t serial,
-    wl_surface*)
-{
-    (void)serial;
-    printf("Received mouse_exit event\n");
-}
-
-void window::handle_mouse_motion(
-    wl_pointer*,
-    uint32_t time,
-    wl_fixed_t surface_x,
-    wl_fixed_t surface_y)
-{
-    printf("Received motion event: (%f, %f) @ %i\n",
-           wl_fixed_to_double(surface_x),
-           wl_fixed_to_double(surface_y),
-           time);
-}
-
-void window::handle_mouse_button(
-    wl_pointer*,
-    uint32_t serial,
-    uint32_t time,
-    uint32_t button,
-    uint32_t state)
-{
-    (void)serial;
-
-    if (button == BTN_LEFT && state == WL_POINTER_BUTTON_STATE_PRESSED)
-        xdg_toplevel_move(xdgtoplevel, globals::seat, serial);
-
-    printf("Received button event: Button %i, state %i @ %i\n",
-           button,
-           state,
-           time);
-}
-
-void window::handle_mouse_axis(
-    wl_pointer*,
-    uint32_t time,
-    uint32_t axis,
-    wl_fixed_t value)
-{
-    printf("Received axis event: axis %i, value %f @ %i\n",
-           axis,
-           wl_fixed_to_double(value),
-           time);
-}
-
-
-void window::handle_keyboard_keymap(wl_keyboard*, uint32_t format, int32_t /*fd*/, uint32_t size)
-{
-    printf("Received keyboard_keymap: format %i, size %i\n", format, size);
-}
-
-void window::handle_keyboard_enter(wl_keyboard*, uint32_t, wl_surface*, wl_array*)
-{
-    printf("Received keyboard_enter:\n");
-}
-
-void window::handle_keyboard_leave(wl_keyboard*, uint32_t, wl_surface*)
-{
-    printf("Received keyboard_leave:\n");
-}
-
-void window::handle_keyboard_key(wl_keyboard*, uint32_t, uint32_t, uint32_t key, uint32_t state)
-{
-    printf("Received keyboard_key: key %i, state %i\n", key, state);
-}
-
-void window::handle_keyboard_modifiers(
-    wl_keyboard*, uint32_t, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked,
-    uint32_t group)
-{
-    printf("Received keyboard_modifiers: depressed %i, latched %i, locked %i, group %i\n", mods_depressed, mods_latched, mods_locked, group);
-}
-
-void window::handle_keyboard_repeat_info(wl_keyboard*, int32_t rate, int32_t delay)
-{
-    printf("Received keyboard_modifiers: rate %i, delay %i\n", rate, delay);
-}
-
-void window::fake_frame()
-{
-    wl_callback* fake_frame = wl_display_sync(display);
-    wl_callback_add_listener(fake_frame, &frame_listener, this);
-}
-
-window::window(int32_t width, int32_t height) :
-    surface{wl_compositor_create_surface(globals::compositor)},
-    pointer{wl_seat_get_pointer(globals::seat)},
-    keyboard{wl_seat_get_keyboard(globals::seat)},
-    xdgsurface{xdg_wm_base_get_xdg_surface(globals::wm_base, surface)},
-    xdgtoplevel{xdg_surface_get_toplevel(xdgsurface)},
-    width{width},
-    height{height}
-{
-    for (buffer& b : buffers)
-    {
-        prepare_buffer(b);
-    }
-
-    xdg_surface_add_listener(xdgsurface, &shell_surface_listener, this);
-    xdg_toplevel_add_listener(xdgtoplevel, &shell_toplevel_listener, this);
-    wl_keyboard_add_listener(keyboard, &keyboard_listener, this);
-    wl_pointer_add_listener(pointer, &pointer_listener, this);
-
-    fake_frame();
-}
-
-window::~window()
-{
-    for (auto b : buffers)
-    {
-        wl_buffer_destroy(b.buffer);
-    }
-
-    xdg_toplevel_destroy(xdgtoplevel);
-    xdg_surface_destroy(xdgsurface);
-    wl_pointer_destroy(pointer);
-    wl_surface_destroy(surface);
 }
 }
 
