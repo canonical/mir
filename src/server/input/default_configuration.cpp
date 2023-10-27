@@ -244,37 +244,14 @@ mir::DefaultServerConfiguration::the_input_manager()
                 auto const device_registry = the_input_device_registry();
                 auto const input_report = the_input_report();
 
-                // Check whether any of the already-loaded platforms are input platforms;
-                // if they are (eg: X11 or wayland), use them
-                mir::UniqueModulePtr<mi::Platform> platform;
-                for (auto const& module : the_platform_libaries())
-                {
-                    platform = mi::input_platform_from_graphics_module(
-                        *module,
-                        *options,
-                        emergency_cleanup,
-                        device_registry,
-                        the_console_services(),
-                        input_report);
-
-                    if (platform)
-                    {
-                        break;
-                    }
-                }
-
-                // otherwise (usually) we probe for it
-                if (!platform)
-                {
-                    platform = probe_input_platforms(
-                        *options,
-                        emergency_cleanup,
-                        device_registry,
-                        the_console_services(),
-                        input_report,
-                        the_platform_libaries(),
-                        *the_shared_library_prober_report());
-                }
+                auto platform = probe_input_platforms(
+                    *options,
+                    emergency_cleanup,
+                    device_registry,
+                    the_console_services(),
+                    input_report,
+                    the_platform_libaries(),
+                    *the_shared_library_prober_report());
 
                 return std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer(), std::move(platform));
             }

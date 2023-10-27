@@ -49,6 +49,46 @@ mir::UniqueModulePtr<mi::Platform> create_input_platform(
 
     return result;
 }
+
+
+auto select_platforms_from_list(
+    std::string const& selection,
+    std::vector<std::shared_ptr<mir::SharedLibrary>> const& modules
+) -> std::shared_ptr<mir::SharedLibrary>
+{
+    std::vector<std::shared_ptr<mir::SharedLibrary>> selected_modules;
+    std::vector<std::string> found_module_names;
+
+    // Our platform modules are a comma-delimited list.
+    for (auto const& module : modules)
+    {
+        try
+        {
+            auto describe_module = module->load_function<mi::DescribeModule>(
+                "describe_input_module",
+                MIR_SERVER_INPUT_PLATFORM_VERSION);
+            auto const description = describe_module();
+            found_module_names.emplace_back(description->name);
+
+            if (description->name == selection)
+                return module;
+        }
+        catch (std::exception const&)
+        {
+            // Should we log anything here?
+        }
+    }
+
+    std::stringstream error_msg;
+    error_msg << "Failed to find all requested platform modules." << std::endl;
+    error_msg << "Detected modules are: " << std::endl;
+    for (auto const& module : found_module_names)
+    {
+        error_msg << "\t" << module << std::endl;
+    }
+    error_msg << "Failed to find: " << selection << std::endl;
+    BOOST_THROW_EXCEPTION((std::runtime_error{error_msg.str()}));
+}
 }
 
 mir::UniqueModulePtr<mi::Platform> mi::probe_input_platforms(
@@ -88,32 +128,49 @@ mir::UniqueModulePtr<mi::Platform> mi::probe_input_platforms(
             return Selection::persist;
         };
 
+    // First, check if any already-loaded graphics modules double as an input platform
+    mir::UniqueModulePtr<Platform> loaded_platform;
+    for (auto const& module : loaded_platforms)
+    {
+        loaded_platform = input_platform_from_graphics_module(
+            *module,
+            options,
+            emergency_cleanup,
+            device_registry,
+            console,
+            input_report);
+        if (loaded_platform)
+        {
+            // If this platform was manually specified AND it's already loaded, we can return it here
+            if (options.is_set(mo::platform_input_lib))
+            {
+                auto describe_module = module->load_function<mi::DescribeModule>(
+                    "describe_input_module",
+                    MIR_SERVER_INPUT_PLATFORM_VERSION);
+                auto const description = describe_module();
+                if (description->name == options.get<std::string>(mo::platform_input_lib))
+                {
+                    return loaded_platform;
+                }
+            }
+            break;
+        }
+    }
+
+    // Otherwise, try and load a manually specified platform, as that takes precedence over the loaded platform
     if (options.is_set(mo::platform_input_lib))
     {
+        auto platforms = mir::libraries_for_path(options.get<std::string>(mo::platform_path), prober_report);
         reject_platform_priority = PlatformPriority::unsupported;
-        module_selector(std::make_shared<mir::SharedLibrary>(options.get<std::string>(mo::platform_input_lib)));
+        module_selector(select_platforms_from_list(options.get<std::string>(mo::platform_input_lib), platforms));
     }
     else
     {
-        /* First check if any already-loaded graphics modules double as input platforms
-         * If so, pick the first.
-         *
-         * NOTE: This makes the (correct for now) assumption that input probing happens after graphics initialisation.
-         */
-        for (auto const& module : loaded_platforms)
-        {
-            auto input_platform = input_platform_from_graphics_module(
-                *module,
-                options,
-                emergency_cleanup,
-                device_registry,
-                console,
-                input_report);
-            if (input_platform)
-            {
-                return input_platform;
-            }
-        }
+        // We haven't specified a platform to load, so if the already-loaded platform exists, we can return that
+        if (loaded_platform)
+            return loaded_platform;
+
+        // If all else fails, let's look for the best platform
         select_libraries_for_path(options.get<std::string>(mo::platform_path), module_selector, prober_report);
     }
 
