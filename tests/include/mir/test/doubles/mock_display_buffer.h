@@ -39,6 +39,7 @@ public:
             .WillByDefault(Return(geometry::Rectangle{{0,0},{0,0}}));
     }
     MOCK_METHOD(geometry::Rectangle, view_area, (), (const override));
+    MOCK_METHOD(geometry::Size, pixel_size, (), (const override));
     MOCK_METHOD(bool, overlay, (std::vector<graphics::DisplayElement> const&), (override));
     MOCK_METHOD(void, set_next_image, (std::unique_ptr<graphics::Framebuffer>), (override));
     MOCK_METHOD(glm::mat2, transformation, (), (const override));

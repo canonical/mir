@@ -136,7 +136,8 @@ mgx::Display::Display(
         auto display_buffer = std::make_unique<mgx::DisplayBuffer>(
             this->parent,
             *window,
-            configuration->extents());
+            configuration->extents(),
+            actual_size);
         top_left.x += as_delta(configuration->extents().size.width);
         outputs.push_back(std::make_unique<OutputInfo>(
             this,

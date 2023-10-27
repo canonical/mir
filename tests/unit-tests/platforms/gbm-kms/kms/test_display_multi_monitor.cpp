@@ -380,7 +380,7 @@ TEST_F(MesaDisplayMultiMonitorTest, flip_flips_all_connected_crtcs)
             group.for_each_display_buffer(
                 [provider](mg::DisplayBuffer& db)
                 {
-                    auto fb = provider->alloc_fb(db.view_area().size, mg::DRMFormat{DRM_FORMAT_ABGR8888});
+                    auto fb = provider->alloc_fb(db.pixel_size(), mg::DRMFormat{DRM_FORMAT_ABGR8888});
                     db.set_next_image(std::move(fb));
                 });
            group.post();
@@ -394,7 +394,7 @@ TEST_F(MesaDisplayMultiMonitorTest, flip_flips_all_connected_crtcs)
             group.for_each_display_buffer(
                 [provider](mg::DisplayBuffer& db)
                 {
-                    auto fb = provider->alloc_fb(db.view_area().size, mg::DRMFormat{DRM_FORMAT_ARGB8888});
+                    auto fb = provider->alloc_fb(db.pixel_size(), mg::DRMFormat{DRM_FORMAT_ARGB8888});
                     db.set_next_image(std::move(fb));
                 });
            group.post();

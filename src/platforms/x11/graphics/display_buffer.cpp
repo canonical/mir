@@ -28,9 +28,11 @@ namespace geom=mir::geometry;
 
 mgx::DisplayBuffer::DisplayBuffer(std::shared_ptr<Platform> parent,
                                   xcb_window_t win,
-                                  geometry::Rectangle const& view_area)
+                                  geometry::Rectangle const& view_area,
+                                  geometry::Size pixel_size)
                                   : parent{std::move(parent)},
                                     area{view_area},
+                                    in_pixels{pixel_size},
                                     transform(1),
                                     x_win{win}
 {
@@ -39,6 +41,11 @@ mgx::DisplayBuffer::DisplayBuffer(std::shared_ptr<Platform> parent,
 geom::Rectangle mgx::DisplayBuffer::view_area() const
 {
     return area;
+}
+
+auto mgx::DisplayBuffer::pixel_size() const -> geom::Size
+{
+    return in_pixels;
 }
 
 auto mgx::DisplayBuffer::overlay(std::vector<DisplayElement> const& /*renderlist*/) -> bool

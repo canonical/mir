@@ -101,6 +101,12 @@ geom::Rectangle mgg::DisplayBuffer::view_area() const
     return area;
 }
 
+auto mgg::DisplayBuffer::pixel_size() const -> geom::Size
+{
+    // All the outputs (are meant to) have the same size; KMSOutput::size() gives the size in pixels
+    return outputs.front()->size();
+}
+
 glm::mat2 mgg::DisplayBuffer::transformation() const
 {
     return transform;

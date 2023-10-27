@@ -83,7 +83,7 @@ mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
     auto const chosen_allocator = best_provider.second;
     
     auto output_surface = chosen_allocator->surface_for_output(
-        display_provider, display_buffer.view_area().size, *gl_config);
+        display_provider, display_buffer.pixel_size(), *gl_config);
     auto renderer = renderer_factory->create_renderer_for(std::move(output_surface), chosen_allocator);
     renderer->set_viewport(display_buffer.view_area());
     return std::make_unique<DefaultDisplayBufferCompositor>(

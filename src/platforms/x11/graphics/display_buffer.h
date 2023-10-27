@@ -46,9 +46,11 @@ public:
     DisplayBuffer(
             std::shared_ptr<Platform> parent,
             xcb_window_t win,
-            geometry::Rectangle const& view_area);
+            geometry::Rectangle const& view_area,
+            geometry::Size pixel_size);
 
     auto view_area() const -> geometry::Rectangle override;
+    auto pixel_size() const -> geometry::Size override;
 
     auto overlay(std::vector<DisplayElement> const& renderlist) -> bool override;
     void set_next_image(std::unique_ptr<Framebuffer> content) override;
@@ -70,6 +72,7 @@ private:
     std::shared_ptr<Platform> const parent;
     std::shared_ptr<helpers::Framebuffer> next_frame;
     geometry::Rectangle area;
+    geometry::Size in_pixels;
     glm::mat2 transform;
     xcb_window_t const x_win;
 };
