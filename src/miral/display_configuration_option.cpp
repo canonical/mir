@@ -169,7 +169,7 @@ void AutoscaleSetter::apply_to(mg::UserDisplayConfigurationOutput& output)
     auto const output_height =
         (output.orientation == mir_orientation_normal || output.orientation == mir_orientation_inverted) ?
         output.modes[output.current_mode_index].size.height.as_int() :
-        output.modes[output.current_mode_index].size.height.as_int();
+        output.modes[output.current_mode_index].size.width.as_int();
 
     static auto const steps = 4.0;
     output.scale = roundf((steps * output_height) / target) / steps;
