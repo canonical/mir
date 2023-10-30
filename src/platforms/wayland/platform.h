@@ -42,7 +42,7 @@ public:
         std::shared_ptr<GLConfig> const& gl_config) override;
 
 protected:
-    auto interface_for() -> std::shared_ptr<DisplayInterfaceProvider> override;
+    auto maybe_create_provider(DisplayProvider::Tag const& type_tag) -> std::shared_ptr<DisplayProvider> override;
 private:
 
     struct wl_display* const wl_display;
