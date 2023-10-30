@@ -56,10 +56,8 @@ auto select_platforms_from_list(
     std::vector<std::shared_ptr<mir::SharedLibrary>> const& modules
 ) -> std::shared_ptr<mir::SharedLibrary>
 {
-    std::vector<std::shared_ptr<mir::SharedLibrary>> selected_modules;
     std::vector<std::string> found_module_names;
 
-    // Our platform modules are a comma-delimited list.
     for (auto const& module : modules)
     {
         try
@@ -80,7 +78,7 @@ auto select_platforms_from_list(
     }
 
     std::stringstream error_msg;
-    error_msg << "Failed to find all requested platform modules." << std::endl;
+    error_msg << "Failed to find the requested platform module." << std::endl;
     error_msg << "Detected modules are: " << std::endl;
     for (auto const& module : found_module_names)
     {
