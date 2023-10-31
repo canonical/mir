@@ -64,8 +64,8 @@ class Display : public graphics::Display
 {
 public:
     Display(
-        std::shared_ptr<Platform> parent,
         std::shared_ptr<mir::X::X11Resources> const& x11_resources,
+        std::shared_ptr<helpers::EGLHelper> egl,
         std::string const title,
         std::vector<X11OutputConfig> const& requested_size,
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
@@ -108,7 +108,7 @@ private:
         std::shared_ptr<DisplayConfigurationOutput> const config;
     };
 
-    std::shared_ptr<Platform> const parent;
+    std::shared_ptr<helpers::EGLHelper> const egl;
     std::shared_ptr<mir::X::X11Resources> const x11_resources;
     geometry::SizeF pixel_size_mm;
     std::shared_ptr<DisplayReport> const report;

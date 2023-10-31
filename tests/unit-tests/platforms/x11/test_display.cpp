@@ -101,8 +101,8 @@ public:
     std::shared_ptr<mgx::Display> create_display()
     {
         return std::make_shared<mgx::Display>(
-                   nullptr,
                    mt::fake_shared(x11_resources),
+                   nullptr,
                    "Mir on X",
                    sizes,
                    mt::fake_shared(null_display_configuration_policy),

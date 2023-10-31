@@ -35,6 +35,11 @@ namespace graphics
 {
 namespace X
 {
+namespace helpers
+{
+class EGLHelper;
+}
+
 struct X11OutputConfig
 {
     inline X11OutputConfig(geometry::Size const& size)
@@ -73,14 +78,12 @@ public:
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) -> UniqueModulePtr<graphics::Display> override;
 
-    auto provider_for_window(xcb_window_t x_win) -> std::shared_ptr<DisplayInterfaceProvider>;
 protected:
-    auto interface_for() -> std::shared_ptr<DisplayInterfaceProvider> override;
+    auto maybe_create_provider(DisplayProvider::Tag const& type_tag) -> std::shared_ptr<DisplayProvider> override;
 
 private:
-    class InterfaceProvider;
-    std::shared_ptr<InterfaceProvider> const egl_provider;
     std::shared_ptr<mir::X::X11Resources> const x11_resources;
+    std::shared_ptr<helpers::EGLHelper> const egl;
     std::string const title;
     std::shared_ptr<DisplayReport> const report;
     std::vector<X11OutputConfig> const output_sizes;

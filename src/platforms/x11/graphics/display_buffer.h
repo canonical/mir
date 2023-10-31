@@ -44,10 +44,13 @@ class DisplayBuffer : public graphics::DisplayBuffer,
 {
 public:
     DisplayBuffer(
-            std::shared_ptr<Platform> parent,
+            xcb_connection_t* connection,
             xcb_window_t win,
+            std::shared_ptr<helpers::EGLHelper> egl,
             geometry::Rectangle const& view_area,
             geometry::Size pixel_size);
+
+    ~DisplayBuffer();
 
     auto view_area() const -> geometry::Rectangle override;
     auto pixel_size() const -> geometry::Size override;
@@ -57,7 +60,10 @@ public:
 
     glm::mat2 transformation() const override;
 
-    auto display_provider() const -> std::shared_ptr<DisplayInterfaceProvider> override;
+protected:
+    auto maybe_create_allocator(DisplayAllocator::Tag const& type_tag) -> DisplayAllocator* override;
+
+public:
 
     void set_view_area(geometry::Rectangle const& a);
     void set_transformation(glm::mat2 const& t);
@@ -69,11 +75,15 @@ public:
 
     auto x11_window() const -> xcb_window_t;
 private:
-    std::shared_ptr<Platform> const parent;
+    class Allocator;
+    std::unique_ptr<Allocator> egl_allocator;
+
     std::shared_ptr<helpers::Framebuffer> next_frame;
     geometry::Rectangle area;
     geometry::Size in_pixels;
     glm::mat2 transform;
+    std::shared_ptr<helpers::EGLHelper> egl;
+    xcb_connection_t* const x11_connection;
     xcb_window_t const x_win;
 };
 
