@@ -114,7 +114,7 @@ geom::Rectangle const ServerConfiguration::display_bounds = {{0, 0}, {1600, 1600
 struct TestTouchspotVisualizations : mtf::DeferredInProcessServer
 {
     mt::Barrier test_complete_fence{2};
-    int env_setup = setenv("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str(), 1);
+    int env_setup = setenv("MIR_SERVER_PLATFORM_INPUT_LIB", "mir:stub-input", 1);
     ServerConfiguration server_configuration{test_complete_fence};
 
     std::unique_ptr<mtf::FakeInputDevice> fake_touch_screen{
