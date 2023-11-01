@@ -15,6 +15,7 @@
  */
 
 #include "make_shm_pool.h"
+#include "wayland_runner.h"
 #include "xdg-shell.h"
 #include "mir-shell.h"
 
@@ -24,7 +25,6 @@
 #include <linux/input-event-codes.h>
 
 #include <memory>
-#include <signal.h>
 #include <string.h>
 
 namespace
@@ -560,17 +560,6 @@ void grey_window::draw_new_content(window::buffer* b)
     }
 }
 
-volatile sig_atomic_t running = 0;
-
-void shutdown(int signum)
-{
-    if (running)
-    {
-        running = 0;
-        printf("Signal %d received. Good night.\n", signum);
-    }
-}
-
 class satellite : public grey_window
 {
 public:
@@ -630,19 +619,7 @@ int main()
 
     auto const satellite_window = std::make_unique<satellite>(100, 400, positioner, *main_window);
 
-    struct sigaction sig_handler_new;
-    sigfillset(&sig_handler_new.sa_mask);
-    sig_handler_new.sa_flags = 0;
-    sig_handler_new.sa_handler = shutdown;
-
-    sigaction(SIGINT, &sig_handler_new, NULL);
-    sigaction(SIGTERM, &sig_handler_new, NULL);
-    sigaction(SIGHUP, &sig_handler_new, NULL);
-
-    running = 1;
-
-    while (wl_display_dispatch(display) && running)
-        ;
+    mir::client::WaylandRunner::run(display);
 
     return 0;
 }

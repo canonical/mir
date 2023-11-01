@@ -20,7 +20,7 @@ add_custom_command(
         COMMAND "sh" "-c" "wayland-scanner private-code  ${MIR_SHELL_X} ${MIR_SHELL_C}"
 )
 
-add_library               (mir_demo_wayland_extensions STATIC
+add_library(mir_demo_wayland_extensions STATIC
         ${XDG_SHELL_C} ${XDG_SHELL_H}
         ${MIR_SHELL_C} ${MIR_SHELL_H}
         make_shm_pool.c make_shm_pool.h
@@ -39,6 +39,6 @@ mir_add_wrapped_executable(mir_demo_client_wayland_egl_spinner spinner.cpp)
 target_link_libraries     (mir_demo_client_wayland_egl_spinner miral-spinner)
 
 
-mir_add_wrapped_executable(mir_client_shell_demo mir_shell_demo.cpp)
+mir_add_wrapped_executable(mir_client_shell_demo mir_shell_demo.cpp wayland_runner.cpp wayland_runner.h)
 target_link_libraries     (mir_client_shell_demo mir_demo_wayland_extensions)
 target_include_directories(mir_client_shell_demo PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
