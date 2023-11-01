@@ -71,7 +71,9 @@ void mir::client::WaylandRunner::operator()(wl_display* display)
 
         if (poll(fds, indices, -1) == -1)
         {
+            fprintf(stderr, "Failed to poll\n");
             wl_display_cancel_read(display);
+            break;
         }
 
         if (fds[display_fd].revents & (POLLIN | POLLERR))

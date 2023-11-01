@@ -162,6 +162,7 @@ private:
 class grey_window : public toplevel
 {
 public:
+    grey_window(int32_t width, int32_t height, unsigned char intensity) : toplevel(width, height), intensity(intensity) {}
     using toplevel::toplevel;
 
 private:
@@ -575,7 +576,7 @@ private:
 };
 
 satellite::satellite(int32_t width, int32_t height, xdg_positioner* positioner, xdg_toplevel* parent) :
-    grey_window{width, height},
+    grey_window{width, height, 128},
     mir_surface{globals::mir_shell ? zmir_mir_shell_v1_get_satellite_surface(globals::mir_shell, *this, positioner) : nullptr}
 {
     xdg_toplevel_set_parent(*this, parent);
