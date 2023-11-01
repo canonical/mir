@@ -55,10 +55,7 @@ std::unique_ptr<mg::DisplayConfiguration> mgv::Display::configuration() const
 
 bool mgv::Display::apply_if_configuration_preserves_display_buffers(mir::graphics::DisplayConfiguration const& conf)
 {
-    auto const& new_conf = dynamic_cast<DisplayConfiguration const&>(conf);
-
-    std::lock_guard lock{mutex};
-    display_configuration = new_conf.clone();
+    configure(conf);
     return true;
 }
 
