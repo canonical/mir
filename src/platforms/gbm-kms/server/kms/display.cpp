@@ -467,7 +467,7 @@ auto gbm_create_device_checked(mir::Fd fd) -> std::shared_ptr<struct gbm_device>
                 gbm_device_destroy(device);
             }
         }
-    };    
+    };
 }
 }
 
@@ -506,12 +506,12 @@ auto mgg::GBMDisplayProvider::is_same_device(mir::udev::Device const& render_dev
             }
         }
     };
-    
+
     std::unique_ptr<char[], CStrFree> primary_node{drmGetPrimaryDeviceNameFromFd(fd)};
     std::unique_ptr<char[], CStrFree> render_node{drmGetRenderDeviceNameFromFd(fd)};
-    
+
     mir::log_debug("Checking whether %s is the same device as (%s, %s)...", render_device.devnode(), primary_node.get(), render_node.get());
-    
+
     if (primary_node)
     {
         if (strcmp(primary_node.get(), render_device.devnode()) == 0)
@@ -528,13 +528,13 @@ auto mgg::GBMDisplayProvider::is_same_device(mir::udev::Device const& render_dev
             return true;
         }
     }
-    
+
     mir::log_debug("\t...nope.");
-    
+
     return false;
 #else
     drmDevicePtr us{nullptr}, them{nullptr};
-    
+
     drmGetDeviceFromDevId(render_device.devno(), 0, &them);
     drmGetDevice2(fd, 0, &us);
 

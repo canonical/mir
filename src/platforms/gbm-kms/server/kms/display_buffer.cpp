@@ -188,7 +188,7 @@ void mgg::DisplayBuffer::post()
     {
         // Hey! No one has given us a next frame yet, so we don't have to change what's onscreen.
         // Sweet! We can just bail.
-        return; 
+        return;
     }
     /*
      * Otherwise, pull the next frame into the pending slot

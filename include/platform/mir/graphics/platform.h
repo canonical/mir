@@ -62,7 +62,6 @@ class DisplayConfigurationPolicy;
 class GraphicBufferAllocator;
 class GLConfig;
 
-
 namespace probe
 {
     /**

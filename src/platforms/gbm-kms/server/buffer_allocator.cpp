@@ -529,7 +529,7 @@ auto mgg::GLRenderingProvider::surface_for_output(
                     DRMFormat{DRM_FORMAT_XRGB8888},
                     size);
             }
-        }        
+        }
     }
     auto cpu_allocator = target.acquire_allocator<CPUAddressableDisplayAllocator>();
 
