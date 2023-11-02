@@ -26,6 +26,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/renderer/renderer_factory.h"
 #include "mir/renderer/sw/pixel_source.h"
+#include "mir/graphics/display_buffer.h"
 
 namespace mc = mir::compositor;
 namespace mr = mir::renderer;
@@ -33,12 +34,12 @@ namespace mg = mir::graphics;
 namespace mrs = mir::renderer::software;
 namespace geom = mir::geometry;
 
-class mc::BasicScreenShooter::Self::OneShotBufferDisplayProvider : public mg::CPUAddressableDisplayProvider
+class mc::BasicScreenShooter::Self::OneShotBufferDisplayProvider : public mg::CPUAddressableDisplayAllocator
 {
 public:
     OneShotBufferDisplayProvider() = default;
 
-    class FB : public mg::CPUAddressableDisplayProvider::MappableFB
+    class FB : public mg::CPUAddressableDisplayAllocator::MappableFB
     {
     public:
         FB(std::shared_ptr<mrs::WriteMappableBuffer> buffer)
@@ -100,25 +101,54 @@ private:
     std::shared_ptr<mrs::WriteMappableBuffer> next_buffer;
 };
 
-class InterfaceProvider : public mg::DisplayInterfaceProvider
+class OffscreenDisplayBuffer : public mg::DisplayBuffer
 {
 public:
-    InterfaceProvider(std::shared_ptr<mg::CPUAddressableDisplayProvider> provider)
-        : provider {std::move(provider)}
+    OffscreenDisplayBuffer(
+        std::shared_ptr<mg::CPUAddressableDisplayAllocator> provider,
+        geom::Size size)
+        : provider {std::move(provider)},
+          size{size}
     {
     }
-protected:
-    auto maybe_create_interface(mg::DisplayProvider::Tag const& type_tag)
-        -> std::shared_ptr<mg::DisplayProvider> override
+
+    auto view_area() const -> mir::geometry::Rectangle override
     {
-        if (dynamic_cast<mg::CPUAddressableDisplayProvider::Tag const*>(&type_tag))
+        return geom::Rectangle{{0, 0}, size};
+    }
+
+    auto pixel_size() const -> mir::geometry::Size override
+    {
+        return size;
+    }
+
+    bool overlay(std::vector<mg::DisplayElement> const& /*renderlist*/) override
+    {
+        return false;
+    }
+
+    void set_next_image(std::unique_ptr<mg::Framebuffer>) override
+    {
+    }
+
+    auto transformation() const -> glm::mat2 override
+    {
+        return glm::mat2{};
+    }
+
+protected:
+    auto maybe_create_allocator(mir::graphics::DisplayAllocator::Tag const& type_tag)
+        -> mg::DisplayAllocator* override
+    {
+        if (dynamic_cast<mg::CPUAddressableDisplayAllocator::Tag const*>(&type_tag))
         {
-            return provider;
+            return provider.get();
         }
         return nullptr;
     }
 private:
-    std::shared_ptr<mg::CPUAddressableDisplayProvider> const provider;
+    std::shared_ptr<mg::CPUAddressableDisplayAllocator> const provider;
+    geom::Size const size;
 };
 
 mc::BasicScreenShooter::Self::Self(
@@ -172,7 +202,7 @@ auto mc::BasicScreenShooter::Self::renderer_for_buffer(std::shared_ptr<mrs::Writ
         BOOST_THROW_EXCEPTION((std::runtime_error{"Attempt to capture to a zero-sized buffer"}));
     }
     output->set_next_buffer(std::move(buffer));
-    if (buffer_size != last_rendered_size)
+    if (!offscreen_db || (buffer_size != offscreen_db->pixel_size()))
     {
         // We need to build a new Renderer, at the new size
         class NoAuxConfig : public graphics::GLConfig
@@ -187,10 +217,9 @@ auto mc::BasicScreenShooter::Self::renderer_for_buffer(std::shared_ptr<mrs::Writ
                 return 0;
             }
         };
-        auto interface_provider = std::make_shared<InterfaceProvider>(output);
-        auto gl_surface = render_provider->surface_for_output(interface_provider, buffer_size, NoAuxConfig{});
+        offscreen_db = std::make_unique<OffscreenDisplayBuffer>(output, buffer_size);
+        auto gl_surface = render_provider->surface_for_output(*offscreen_db, buffer_size, NoAuxConfig{});
         current_renderer = renderer_factory->create_renderer_for(std::move(gl_surface), render_provider);
-        last_rendered_size = buffer_size;
     }
     return *current_renderer;
 }
@@ -200,7 +229,7 @@ auto mc::BasicScreenShooter::select_provider(
     -> std::shared_ptr<mg::GLRenderingProvider>
 {
     auto display_provider = std::make_shared<Self::OneShotBufferDisplayProvider>();
-    auto interface_provider = std::make_shared<InterfaceProvider>(display_provider);
+    OffscreenDisplayBuffer temp_db{display_provider, geom::Size{640, 480}};
 
     for (auto const& render_provider : providers)
     {
@@ -210,7 +239,7 @@ auto mc::BasicScreenShooter::select_provider(
          *
          * For now, just use the first that claims to work.
          */
-        if (render_provider->suitability_for_display(interface_provider) >= mg::probe::supported)
+        if (render_provider->suitability_for_display(temp_db) >= mg::probe::supported)
         {
             return render_provider;
         }

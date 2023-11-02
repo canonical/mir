@@ -88,9 +88,9 @@ void mgxh::Framebuffer::swap_buffers()
     }
 }
 
-auto mgxh::Framebuffer::clone_handle() -> std::unique_ptr<mg::GenericEGLDisplayProvider::EGLFramebuffer>
+auto mgxh::Framebuffer::clone_handle() -> std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLFramebuffer>
 {
-    return std::unique_ptr<mg::GenericEGLDisplayProvider::EGLFramebuffer>{new Framebuffer(state, size_)};
+    return std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLFramebuffer>{new Framebuffer(state, size_)};
 }
 
 mgxh::EGLHelper::EGLHelper(::Display* const x_dpy)

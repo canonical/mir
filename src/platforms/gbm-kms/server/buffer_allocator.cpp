@@ -262,7 +262,7 @@ public:
         EGLDisplay dpy,
         EGLContext share_context,
         mg::GLConfig const& config,
-        mg::GBMDisplayProvider& display,
+        mg::GBMDisplayAllocator& display,
         mg::DRMFormat format,
         mir::geometry::Size size)
         : GBMOutputSurface(
@@ -386,9 +386,9 @@ private:
         EGLContext share_context,
         mg::DRMFormat format,
         mg::GLConfig const& config,
-        mg::GBMDisplayProvider& display,
+        mg::GBMDisplayAllocator& allocator,
         mir::geometry::Size size)
-         -> std::tuple<std::unique_ptr<mg::GBMDisplayProvider::GBMSurface>, EGLContext, EGLSurface>
+         -> std::tuple<std::unique_ptr<mg::GBMDisplayAllocator::GBMSurface>, EGLContext, EGLSurface>
     {
         mg::EGLExtensions::PlatformBaseEXT egl_ext;
 
@@ -424,9 +424,9 @@ private:
                         format.name()}));
             }();
 
-        auto modifiers = display.modifiers_for_format(resolved_format);
+        auto modifiers = allocator.modifiers_for_format(resolved_format);
 
-        auto surf = display.make_surface(size, resolved_format, modifiers);
+        auto surf = allocator.make_surface(size, resolved_format, modifiers);
 
         auto egl_surf = egl_ext.eglCreatePlatformWindowSurface(
             dpy,
@@ -451,14 +451,13 @@ private:
             BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
         }
 
-
         return std::make_tuple(std::move(surf), egl_ctx, egl_surf);
     }
 
     GBMOutputSurface(
         geom::Size size,
         EGLDisplay dpy,
-        std::tuple<std::unique_ptr<mg::GBMDisplayProvider::GBMSurface>, EGLContext, EGLSurface> renderables)
+        std::tuple<std::unique_ptr<mg::GBMDisplayAllocator::GBMSurface>, EGLContext, EGLSurface> renderables)
         : size_{size},
           surface{std::move(std::get<0>(renderables))},
           egl_surf{std::get<2>(renderables)},
@@ -468,7 +467,7 @@ private:
     }
 
     geom::Size const size_;
-    std::unique_ptr<mg::GBMDisplayProvider::GBMSurface> const surface;
+    std::unique_ptr<mg::GBMDisplayAllocator::GBMSurface> const surface;
     EGLSurface const egl_surf;
     EGLDisplay const dpy;
     EGLContext const ctx;
@@ -488,23 +487,20 @@ auto mgg::GLRenderingProvider::suitability_for_allocator(
 }
 
 auto mgg::GLRenderingProvider::suitability_for_display(
-    std::shared_ptr<DisplayInterfaceProvider> const& target) -> probe::Result
+    DisplayBuffer& target) -> probe::Result
 {
     if (bound_display)
     {
-        if (auto gbm_provider = target->acquire_interface<GBMDisplayProvider>())
+        if (bound_display->on_this_device(target))
         {
-            if (bound_display->gbm_device() == gbm_provider->gbm_device())
-            {
-                /* We're rendering on the same device as display;
-                 * it doesn't get better than this!
-                 */
-                return probe::best;
-            }
-        }        
+            /* We're rendering on the same device as display;
+             * it doesn't get better than this!
+             */
+            return probe::best;
+        }
     }
 
-    if (target->acquire_interface<CPUAddressableDisplayProvider>())
+    if (target.acquire_allocator<CPUAddressableDisplayAllocator>())
     {
         // We *can* render to CPU buffers, but if anyone can do better, let them.
         return probe::supported;
@@ -514,37 +510,37 @@ auto mgg::GLRenderingProvider::suitability_for_display(
 }
 
 auto mgg::GLRenderingProvider::surface_for_output(
-    std::shared_ptr<DisplayInterfaceProvider> target,
+    DisplayBuffer& target,
     geom::Size size,
     GLConfig const& config)
     -> std::unique_ptr<gl::OutputSurface>
 {
     if (bound_display)
     {
-        if (auto gbm_provider = target->acquire_interface<GBMDisplayProvider>())
+        if (auto gbm_allocator = target.acquire_allocator<GBMDisplayAllocator>())
         {
-            if (bound_display->gbm_device() == gbm_provider->gbm_device())
+            if (bound_display->on_this_device(target))
             {
                 return std::make_unique<GBMOutputSurface>(
                     dpy,
                     ctx,
                     config,
-                    *bound_display,
+                    *gbm_allocator,
                     DRMFormat{DRM_FORMAT_XRGB8888},
                     size);
             }
-        }        
+        }
     }
-    auto cpu_provider = target->acquire_interface<CPUAddressableDisplayProvider>();
-    
+    auto cpu_allocator = target.acquire_allocator<CPUAddressableDisplayAllocator>();
+
     return std::make_unique<mgc::CPUCopyOutputSurface>(
         dpy,
         ctx,
-        std::move(cpu_provider),
+        *cpu_allocator,
         size);
 }
 
-auto mgg::GLRenderingProvider::make_framebuffer_provider(std::shared_ptr<DisplayInterfaceProvider> /*target*/)
+auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplayBuffer& /*target*/)
     -> std::unique_ptr<FramebufferProvider>
 {
     // TODO: Make this not a null implementation, so bypass/overlays can work again

@@ -38,7 +38,7 @@ namespace X
 
 namespace helpers
 {
-class Framebuffer : public GenericEGLDisplayProvider::EGLFramebuffer
+class Framebuffer : public GenericEGLDisplayAllocator::EGLFramebuffer
 {
 public:
     /**
@@ -54,7 +54,7 @@ public:
 
     void make_current() override;
     void release_current() override;
-    auto clone_handle() -> std::unique_ptr<GenericEGLDisplayProvider::EGLFramebuffer> override;
+    auto clone_handle() -> std::unique_ptr<GenericEGLDisplayAllocator::EGLFramebuffer> override;
 
     void swap_buffers();
 private:

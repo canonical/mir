@@ -21,7 +21,7 @@
 #include "display.h"
 #include "mir/graphics/platform.h"
 #include "utils.h"
-#include "eglstream_interface_provider.h"
+#include "kms_cpu_addressable_display_provider.h"
 
 #include "one_shot_device_observer.h"
 
@@ -244,8 +244,6 @@ mge::DisplayPlatform::DisplayPlatform(
             "Wanted 1.4, got " +
             std::to_string(std::get<0>(egl_version)) + "." + std::to_string(std::get<1>(egl_version))}));
     }
-
-    provider = std::make_shared<InterfaceProvider>(display, drm_node);
 }
 
 mge::DisplayPlatform::~DisplayPlatform()
@@ -262,7 +260,6 @@ auto mge::DisplayPlatform::create_display(
     -> UniqueModulePtr<mg::Display>
 {
     return mir::make_module_ptr<mge::Display>(
-        provider,
         drm_node,
         display,
         configuration_policy,
@@ -270,7 +267,36 @@ auto mge::DisplayPlatform::create_display(
         display_report);
 }
 
-auto mge::DisplayPlatform::interface_for() -> std::shared_ptr<DisplayInterfaceProvider>
+namespace
 {
-    return provider;
+class StreamProvider : public mg::EGLStreamDisplayProvider
+{
+public:
+    explicit StreamProvider(EGLDisplay dpy)
+        : dpy{dpy}
+    {
+    }
+
+    auto get_egl_display() const -> EGLDisplay override
+    {
+        return dpy;
+    }
+
+private:
+    EGLDisplay const dpy;
+};
+}
+
+auto mge::DisplayPlatform::maybe_create_provider(DisplayProvider::Tag const& type_tag)
+    -> std::shared_ptr<DisplayProvider>
+{
+    if (dynamic_cast<EGLStreamDisplayProvider::Tag const*>(&type_tag))
+    {
+        return std::make_shared<StreamProvider>(display);
+    }
+    if (dynamic_cast<mg::CPUAddressableDisplayProvider::Tag const*>(&type_tag))
+    {
+        return std::make_shared<mg::CPUAddressableDisplayProvider>();
+    }
+    return nullptr;
 }

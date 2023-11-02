@@ -21,6 +21,7 @@
 #include "mir/graphics/display.h"
 #include "display_helpers.h"
 #include "egl_helper.h"
+#include "mir/graphics/platform.h"
 #include "platform_common.h"
 #include "kms_framebuffer.h"
 
@@ -41,15 +42,14 @@ namespace gbm
 
 class Platform;
 class KMSOutput;
-class NativeBuffer;
 
 class DisplayBuffer : public graphics::DisplayBuffer,
                       public graphics::DisplaySyncGroup
 {
 public:
     DisplayBuffer(
-        std::shared_ptr<DisplayInterfaceProvider> provider,
         mir::Fd drm_fd,
+        std::shared_ptr<struct gbm_device> gbm,
         BypassOption bypass_options,
         std::shared_ptr<DisplayReport> const& listener,
         std::vector<std::shared_ptr<KMSOutput>> const& outputs,
@@ -76,19 +76,26 @@ public:
     void schedule_set_crtc();
     void wait_for_page_flip();
 
-    auto display_provider() const -> std::shared_ptr<DisplayInterfaceProvider> override;
-
     auto drm_fd() const -> mir::Fd;
+
+    auto gbm_device() const -> std::shared_ptr<struct gbm_device>;
+
+protected:
+    auto maybe_create_allocator(DisplayAllocator::Tag const& type_tag) -> DisplayAllocator* override;
+
 private:
     bool schedule_page_flip(FBHandle const& bufobj);
     void set_crtc(FBHandle const&);
 
-    std::shared_ptr<DisplayInterfaceProvider> const provider;
+    std::shared_ptr<struct gbm_device> const gbm;
     bool holding_client_buffers{false};
     std::shared_ptr<FBHandle const> bypass_bufobj{nullptr};
     std::shared_ptr<DisplayReport> const listener;
 
     std::vector<std::shared_ptr<KMSOutput>> outputs;
+
+    std::shared_ptr<CPUAddressableDisplayAllocator> kms_allocator;
+    std::unique_ptr<GBMDisplayAllocator> gbm_allocator;
 
     // Framebuffer handling
     // KMS does not take a reference to submitted framebuffers; if you destroy a framebuffer while

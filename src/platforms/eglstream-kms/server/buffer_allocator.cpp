@@ -730,11 +730,11 @@ auto mir::graphics::eglstream::GLRenderingProvider::as_texture(std::shared_ptr<B
 }
 
 auto mge::GLRenderingProvider::surface_for_output(
-    std::shared_ptr<mg::DisplayInterfaceProvider> target,
+    DisplayBuffer& target,
     geom::Size size,
     mg::GLConfig const& gl_config) -> std::unique_ptr<gl::OutputSurface>
 {
-    if (auto stream_platform = target->acquire_interface<EGLStreamDisplayProvider>())
+    if (auto stream_platform = target.acquire_allocator<EGLStreamDisplayAllocator>())
     {
         try
         {
@@ -752,14 +752,14 @@ auto mge::GLRenderingProvider::surface_for_output(
                 err.what());
         }
     }
-    if (auto cpu_provider = target->acquire_interface<CPUAddressableDisplayProvider>())
+    if (auto cpu_provider = target.acquire_allocator<CPUAddressableDisplayAllocator>())
     {
         auto fb_context = ctx->make_share_context();
         fb_context->make_current();
         return std::make_unique<mgc::CPUCopyOutputSurface>(
             dpy,
             static_cast<EGLContext>(*ctx),
-            cpu_provider,
+            *cpu_provider,
             size);
     }
     BOOST_THROW_EXCEPTION((std::runtime_error{"DisplayInterfaceProvider does not support any viable output interface"}));
@@ -777,21 +777,20 @@ auto mge::GLRenderingProvider::suitability_for_allocator(std::shared_ptr<Graphic
     return probe::unsupported;
 }
 
-auto mge::GLRenderingProvider::suitability_for_display(
-    std::shared_ptr<mg::DisplayInterfaceProvider> const& target) -> probe::Result
+auto mge::GLRenderingProvider::suitability_for_display(DisplayBuffer& target) -> probe::Result
 {
-    if (target->acquire_interface<EGLStreamDisplayProvider>())
+    if (target.acquire_allocator<EGLStreamDisplayAllocator>())
     {
         return probe::best;
     }
-    if (target->acquire_interface<CPUAddressableDisplayProvider>())
+    if (target.acquire_allocator<CPUAddressableDisplayAllocator>())
     {
         return probe::supported;
     }
     return probe::unsupported;
 }
 
-auto mge::GLRenderingProvider::make_framebuffer_provider(std::shared_ptr<mg::DisplayInterfaceProvider> /*target*/)
+auto mge::GLRenderingProvider::make_framebuffer_provider(DisplayBuffer& /*target*/)
     -> std::unique_ptr<FramebufferProvider>
 {
     // TODO: *Can* we provide overlay support?

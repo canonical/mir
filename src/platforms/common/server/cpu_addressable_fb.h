@@ -24,7 +24,7 @@
 
 namespace mir::graphics
 {
-class CPUAddressableFB : public FBHandle, public CPUAddressableDisplayProvider::MappableFB
+class CPUAddressableFB : public FBHandle, public CPUAddressableDisplayAllocator::MappableFB
 {
 public:
     CPUAddressableFB(

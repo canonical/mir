@@ -45,7 +45,7 @@ auto probe_display_platform(
 }
 
 auto probe_rendering_platform(
-    std::span<std::shared_ptr<mg::DisplayInterfaceProvider>> const&,
+    std::span<std::shared_ptr<mg::DisplayPlatform>> const&,
     mir::ConsoleServices&,
     std::shared_ptr<mir::udev::Context> const&,
     mir::options::ProgramOption const&) -> std::vector<mir::graphics::SupportedDevice>

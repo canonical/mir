@@ -8,6 +8,8 @@ add_library(
   buffer_allocator.h
   surfaceless_egl_context.h
   surfaceless_egl_context.cpp
+  gbm_display_allocator.h
+  gbm_display_allocator.cpp
 )
 
 target_include_directories(

@@ -71,8 +71,7 @@ TEST_F(VirtualGraphicsPlatformTest, multiple_output_sizes_are_set_correctly_when
 TEST_F(VirtualGraphicsPlatformTest, can_acquire_interface_for_cpu_addressable_display_provider)
 {
     auto platform = create_platform();
-    auto interface = mg::DisplayPlatform::interface_for(platform);
-    EXPECT_TRUE(interface->acquire_interface<mg::CPUAddressableDisplayProvider>() != nullptr);
+    EXPECT_TRUE(platform->acquire_provider<mg::CPUAddressableDisplayProvider>() != nullptr);
 }
 
 TEST_F(VirtualGraphicsPlatformTest, output_size_parsing_throws_on_bad_input)

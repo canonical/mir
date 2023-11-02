@@ -35,7 +35,7 @@ public:
     CPUCopyOutputSurface(
         EGLDisplay dpy,
         EGLContext share_ctx,
-        std::shared_ptr<CPUAddressableDisplayProvider> allocator,
+        CPUAddressableDisplayAllocator& allocator,
         geometry::Size size);
 
     ~CPUCopyOutputSurface() override;
@@ -55,7 +55,6 @@ public:
 private:
     class Impl;
     std::unique_ptr<Impl> const impl;
-    std::shared_ptr<CPUAddressableDisplayProvider> const allocator;
 };
 }
 }
