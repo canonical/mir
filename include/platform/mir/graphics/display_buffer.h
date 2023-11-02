@@ -119,7 +119,7 @@ public:
     {
         static_assert(
             std::is_convertible_v<Allocator*, DisplayAllocator*>,
-            "Can only acquire a DisplayProvider; Provider must implement DisplayAllocator");
+            "Can only acquire a DisplayAllocator; Provider must implement DisplayAllocator");
 
         if (auto const base_interface = maybe_create_allocator(typename Allocator::Tag{}))
         {
