@@ -128,6 +128,7 @@ Depends: libmirplatform27 (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libboost-program-options-dev,
          ${misc:Depends},
+         libgbm-dev,
 Breaks: libmirplatform (<< 0.6)
 Replaces: libmirplatform (<< 0.6)
 Description: Display server for Ubuntu - development headers
@@ -596,7 +597,8 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirwayland4 (= ${binary:Version}),
          libmircore-dev (= ${binary:Version}),
          ${misc:Depends},
-         libmirwayland-bin (= ${binary:Version})
+         libmirwayland-bin (= ${binary:Version}),
+         libwayland-dev,
 Description: Display server for Ubuntu - generated wrappers for Wayland
  protocol extensions.
  .
