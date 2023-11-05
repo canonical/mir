@@ -27,6 +27,7 @@
 #include "mir/renderer/renderer.h"
 #include "mir/main_loop.h"
 #include "mir/renderer/gl/gl_surface.h"
+#include "mir/udev/wrapper.h"
 
 #include "../../src/include/platform/mir/graphics/pixel_format_utils.h"
 #include "mir/default_server_configuration.h"

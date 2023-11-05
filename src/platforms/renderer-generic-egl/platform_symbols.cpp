@@ -22,6 +22,7 @@
 #include "mir/module_deleter.h"
 #include "mir/assert_module_entry_point.h"
 #include "mir/libname.h"
+#include "mir/udev/wrapper.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/gl_config.h"

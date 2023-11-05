@@ -17,6 +17,7 @@
 #include "mir/log.h"
 #include "mir/graphics/platform.h"
 #include "mir/shared_library.h"
+#include "mir/udev/wrapper.h"
 #include "platform_probe.h"
 
 #include <boost/throw_exception.hpp>
