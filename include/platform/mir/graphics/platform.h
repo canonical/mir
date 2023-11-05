@@ -25,7 +25,6 @@
 #include "mir/graphics/drm_formats.h"
 #include "mir/module_properties.h"
 #include "mir/module_deleter.h"
-#include "mir/udev/wrapper.h"
 #include "mir/renderer/sw/pixel_source.h"
 
 #include <EGL/egl.h>
@@ -47,6 +46,12 @@ class ProgramOption;
 namespace renderer::software
 {
 class WriteMappableBuffer;
+}
+
+namespace udev
+{
+class Context;
+class Device;
 }
 
 /// Graphics subsystem. Mediates interaction between core system and

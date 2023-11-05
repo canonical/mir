@@ -20,6 +20,7 @@
 #include "mir/assert_module_entry_point.h"
 #include "mir/libname.h"
 #include "mir/options/program_option.h"
+#include "mir/udev/wrapper.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdlib.h>
