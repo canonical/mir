@@ -82,7 +82,11 @@ mir::UniqueModulePtr<mg::Display> mgw::Platform::create_display(
     return mir::make_module_ptr<mgw::Display>(wl_display, provider, gl_config, report);
 }
 
-auto mgw::Platform::interface_for() -> std::shared_ptr<DisplayInterfaceProvider>
+auto mgw::Platform::maybe_create_provider(const DisplayProvider::Tag& type_tag) -> std::shared_ptr<DisplayProvider>
 {
-    return provider;
+    if (dynamic_cast<GenericEGLDisplayProvider const*>(&type_tag))
+    {
+        return provider;
+    }
+    return nullptr;
 }

@@ -14,33 +14,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_EGLSTREAM_INTERFACE_PROVIDER_H_
-#define MIR_GRAPHICS_EGLSTREAM_INTERFACE_PROVIDER_H_
-
 #include "mir/graphics/platform.h"
 #include "mir/fd.h"
 
-#include <optional>
-
-namespace mir::graphics::eglstream
+namespace mir::graphics::gbm
 {
-class InterfaceProvider : public DisplayInterfaceProvider
+class GBMDisplayAllocator : public graphics::GBMDisplayAllocator
 {
 public:
-    InterfaceProvider(EGLDisplay dpy, mir::Fd drm_fd);
-    InterfaceProvider(InterfaceProvider const& from, EGLStreamKHR with_stream);
+    GBMDisplayAllocator(mir::Fd drm_fd, std::shared_ptr<struct gbm_device> gbm);
 
-protected:
-    auto maybe_create_interface(DisplayProvider::Tag const& tag)
-        -> std::shared_ptr<DisplayProvider> override;
+    auto supported_formats() const -> std::vector<DRMFormat> override;
 
+    auto modifiers_for_format(DRMFormat format) const -> std::vector<uint64_t> override;
+
+    auto make_surface(geometry::Size size, DRMFormat format, std::span<uint64_t> modifier) -> std::unique_ptr<GBMSurface> override;
 private:
-    EGLDisplay dpy;
-    std::optional<EGLStreamKHR> stream;
-    mir::Fd drm_fd;
+    mir::Fd const fd;
+    std::shared_ptr<struct gbm_device> const gbm;
 };
-
-;
 }
-
-#endif // MIR_GRAPHICS_EGLSTREAM_INTERFACE_PROVIDER_H_

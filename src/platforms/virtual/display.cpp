@@ -19,11 +19,27 @@
 #include "display_configuration.h"
 #include <mir/log.h>
 
+#include <utility>
+
 namespace mg = mir::graphics;
 namespace mgv = mir::graphics::virt;
 
-mgv::Display::Display(std::vector<VirtualOutputConfig> output_sizes)
-    : outputs{output_sizes}
+namespace
+{
+auto build_configuration(std::vector<mgv::VirtualOutputConfig> const& output_sizes)
+-> std::unique_ptr<mgv::DisplayConfiguration>
+{
+    std::vector<mg::DisplayConfigurationOutput> output_configurations;
+    for (auto const& output: output_sizes)
+    {
+        output_configurations.push_back(mgv::DisplayConfiguration::build_output(output));
+    }
+    return std::make_unique<mgv::DisplayConfiguration>(output_configurations);
+}
+}
+
+mgv::Display::Display(std::vector<VirtualOutputConfig> const& output_sizes)
+    : display_configuration{build_configuration(output_sizes)}
 {
 }
 
@@ -33,21 +49,22 @@ void mgv::Display::for_each_display_sync_group(std::function<void(DisplaySyncGro
 
 std::unique_ptr<mg::DisplayConfiguration> mgv::Display::configuration() const
 {
-    std::vector<DisplayConfigurationOutput> output_configurations;
-    for (auto const& output : outputs)
-    {
-        output_configurations.push_back(mgv::DisplayConfiguration::build_output(output));
-    }
-    return std::make_unique<mgv::DisplayConfiguration>(output_configurations);
+    std::lock_guard lock{mutex};
+    return display_configuration->clone();
 }
 
-bool mgv::Display::apply_if_configuration_preserves_display_buffers(mir::graphics::DisplayConfiguration const&)
+bool mgv::Display::apply_if_configuration_preserves_display_buffers(mir::graphics::DisplayConfiguration const& conf)
 {
+    configure(conf);
     return true;
 }
 
-void mgv::Display::configure(mir::graphics::DisplayConfiguration const&)
+void mgv::Display::configure(mir::graphics::DisplayConfiguration const& conf)
 {
+    auto const& new_conf = dynamic_cast<DisplayConfiguration const&>(conf);
+
+    std::lock_guard lock{mutex};
+    display_configuration = new_conf.clone();
 }
 
 void mgv::Display::register_configuration_change_handler(

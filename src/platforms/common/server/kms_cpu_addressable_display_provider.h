@@ -26,12 +26,12 @@ namespace graphics
 {
 namespace kms
 {
-class CPUAddressableDisplayProvider : public graphics::CPUAddressableDisplayProvider
+class CPUAddressableDisplayAllocator : public graphics::CPUAddressableDisplayAllocator
 {
 public:
-    /// Create an CPUAddressableDisplayProvider if and only if supported by the device
+    /// Create an CPUAddressableDisplayAllocator if and only if supported by the device
     /// \return the provider, or an empty pointer
-    static auto create_if_supported(mir::Fd const& drm_fd) -> std::shared_ptr<CPUAddressableDisplayProvider>;
+    static auto create_if_supported(mir::Fd const& drm_fd) -> std::shared_ptr<CPUAddressableDisplayAllocator>;
 
     auto supported_formats() const
         -> std::vector<DRMFormat> override;
@@ -40,7 +40,7 @@ public:
         -> std::unique_ptr<MappableFB> override;
 
 private:
-    explicit CPUAddressableDisplayProvider(mir::Fd drm_fd);
+    explicit CPUAddressableDisplayAllocator(mir::Fd drm_fd);
 
     mir::Fd const drm_fd;
     bool const supports_modifiers;

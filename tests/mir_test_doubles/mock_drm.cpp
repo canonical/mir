@@ -408,6 +408,14 @@ mtd::MockDRM::MockDRM()
                     mmapings.erase(iter);
                     return 0;
                 })));
+
+    ON_CALL(*this, drmGetCap(_, DRM_CAP_DUMB_BUFFER, _))
+        .WillByDefault(
+            [](auto, auto, uint64_t* value)
+            {
+                *value = 1;
+                return 0;
+            });
 }
 
 mtd::MockDRM::~MockDRM() noexcept

@@ -21,6 +21,7 @@
 #include "display.h"
 #include "egl_output.h"
 #include "kms_framebuffer.h"
+#include "kms_cpu_addressable_display_provider.h"
 
 #include "kms-utils/drm_mode_resources.h"
 #include "mir/graphics/platform.h"
@@ -123,11 +124,11 @@ EGLContext create_context(EGLDisplay display, EGLConfig config, EGLContext share
 
 class DisplayBuffer
     : public mg::DisplaySyncGroup,
-      public mg::DisplayBuffer
+      public mg::DisplayBuffer,
+      public mg::EGLStreamDisplayAllocator
 {
 public:
     DisplayBuffer(
-        std::shared_ptr<mg::eglstream::InterfaceProvider> owner,
         mir::Fd drm_node,
         EGLDisplay dpy,
         EGLContext ctx,
@@ -135,8 +136,7 @@ public:
         std::shared_ptr<mge::DRMEventHandler> event_handler,
         std::shared_ptr<mge::kms::EGLOutput> output,
         std::shared_ptr<mg::DisplayReport> display_report)
-        : owner{std::move(owner)},
-          dpy{dpy},
+        : dpy{dpy},
           ctx{create_context(dpy, config, ctx)},
           output{output},
           drm_node{std::move(drm_node)},
@@ -352,9 +352,23 @@ public:
         return std::chrono::milliseconds{0};
     }
 
-    auto display_provider() const -> std::shared_ptr<mg::DisplayInterfaceProvider> override
+    auto claim_stream() -> EGLStreamKHR override
     {
-        return std::make_shared<mg::eglstream::InterfaceProvider>(*owner, output_stream);
+        return output_stream;
+    }
+
+    auto maybe_create_allocator(mg::DisplayAllocator::Tag const& type_tag) -> mg::DisplayAllocator* override
+    {
+        if (dynamic_cast<mg::EGLStreamDisplayAllocator::Tag const*>(&type_tag))
+        {
+            return this;
+        }
+        if (dynamic_cast<mg::CPUAddressableDisplayAllocator::Tag const*>(&type_tag))
+        {
+            kms_allocator = mg::kms::CPUAddressableDisplayAllocator::create_if_supported(drm_node);
+            return kms_allocator.get();
+        }
+        return nullptr;
     }
 
     void set_next_image(std::unique_ptr<mg::Framebuffer> content) override
@@ -410,7 +424,6 @@ public:
     }
 private:
 
-    std::shared_ptr<mg::eglstream::InterfaceProvider> const owner;
     EGLDisplay dpy;
     EGLContext ctx;
     std::shared_ptr<mge::kms::EGLOutput> output;
@@ -420,6 +433,7 @@ private:
     std::future<void> pending_flip;
     mg::EGLExtensions::LazyDisplayExtensions<mg::EGLExtensions::NVStreamAttribExtensions> nv_stream;
     std::shared_ptr<mg::DisplayReport> const display_report;
+    std::shared_ptr<mg::kms::CPUAddressableDisplayAllocator> kms_allocator;
 
     /// Used only for the KMS case
     std::shared_ptr<mg::FBHandle const> next_swap{nullptr};
@@ -441,14 +455,12 @@ mge::KMSDisplayConfiguration create_display_configuration(
 }
 
 mge::Display::Display(
-    std::shared_ptr<InterfaceProvider> provider,
     mir::Fd drm_node,
     EGLDisplay display,
     std::shared_ptr<DisplayConfigurationPolicy> const& configuration_policy,
     GLConfig const& gl_conf,
     std::shared_ptr<DisplayReport> display_report)
-    : provider{std::move(provider)},
-      drm_node{drm_node},
+    : drm_node{drm_node},
       display{display},
       config{choose_config(display, gl_conf)},
       context{create_context(display, config)},
@@ -498,7 +510,6 @@ void mge::Display::configure(DisplayConfiguration const& conf)
                  output->configure(output->current_mode_index);
                  active_sync_groups.emplace_back(
                      std::make_unique<::DisplayBuffer>(
-                        provider,
                         drm_node,
                         display,
                         context,

@@ -20,23 +20,50 @@
 #include "display_configuration.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/transformation.h"
+#include "../x11_resources.h"
 #include <cstring>
 
 namespace mg=mir::graphics;
 namespace mgx=mg::X;
 namespace geom=mir::geometry;
 
-mgx::DisplayBuffer::DisplayBuffer(std::shared_ptr<Platform> parent,
-                                  xcb_window_t win,
-                                  geometry::Rectangle const& view_area,
-                                  geometry::Size pixel_size)
-                                  : parent{std::move(parent)},
-                                    area{view_area},
-                                    in_pixels{pixel_size},
-                                    transform(1),
-                                    x_win{win}
+class mgx::DisplayBuffer::Allocator : public mg::GenericEGLDisplayAllocator
+{
+public:
+    Allocator(std::shared_ptr<helpers::EGLHelper> egl, xcb_connection_t* connection, xcb_window_t window)
+        : egl{std::move(egl)},
+          x11_connection{connection},
+          x11_win{window}
+    {
+    }
+
+    auto alloc_framebuffer(mg::GLConfig const& config, EGLContext share_context)
+    -> std::unique_ptr<EGLFramebuffer> override
+    {
+        return egl->framebuffer_for_window(config, x11_connection, x11_win, share_context);
+    }
+private:
+    std::shared_ptr<helpers::EGLHelper> const egl;
+    xcb_connection_t* const x11_connection;
+    xcb_window_t const x11_win;
+};
+
+mgx::DisplayBuffer::DisplayBuffer(
+    xcb_connection_t* connection,
+    xcb_window_t win,
+    std::shared_ptr<helpers::EGLHelper> egl,
+    geometry::Rectangle const& view_area,
+    geometry::Size pixel_size)
+    : area{view_area},
+      in_pixels{pixel_size},
+      transform(1),
+      egl{std::move(egl)},
+      x11_connection{connection},
+      x_win{win}
 {
 }
+
+mgx::DisplayBuffer::~DisplayBuffer() = default;
 
 geom::Rectangle mgx::DisplayBuffer::view_area() const
 {
@@ -86,11 +113,6 @@ void mgx::DisplayBuffer::set_view_area(geom::Rectangle const& a)
     area = a;
 }
 
-auto mgx::DisplayBuffer::display_provider() const -> std::shared_ptr<DisplayInterfaceProvider>
-{
-    return parent->provider_for_window(x_win);
-}
-
 void mgx::DisplayBuffer::set_transformation(glm::mat2 const& t)
 {
     transform = t;
@@ -116,4 +138,18 @@ std::chrono::milliseconds mgx::DisplayBuffer::recommended_sleep() const
 auto mgx::DisplayBuffer::x11_window() const -> xcb_window_t
 {
     return x_win;
+}
+
+auto mgx::DisplayBuffer::maybe_create_allocator(mg::DisplayAllocator::Tag const& type_tag)
+    -> DisplayAllocator*
+{
+    if (dynamic_cast<GenericEGLDisplayAllocator::Tag const*>(&type_tag))
+    {
+        if (!egl_allocator)
+        {
+            egl_allocator = std::make_unique<Allocator>(egl, x11_connection, x_win);
+        }
+        return egl_allocator.get();
+    }
+    return nullptr;
 }

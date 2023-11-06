@@ -38,8 +38,8 @@ class NullDisplayPlatform : public graphics::DisplayPlatform
     }
 
 protected:
-    auto interface_for()
-        -> std::shared_ptr<graphics::DisplayInterfaceProvider> override
+    auto maybe_create_provider(graphics::DisplayProvider::Tag const&)
+        -> std::shared_ptr<graphics::DisplayProvider> override
     {
         return nullptr;
     }

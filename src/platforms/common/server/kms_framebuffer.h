@@ -27,7 +27,7 @@ class FBHandle : public Framebuffer
 {
 public:
     virtual ~FBHandle() = default;
-    
+
     virtual operator uint32_t() const = 0;
 };
 

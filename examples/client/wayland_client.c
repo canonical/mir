@@ -27,6 +27,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <signal.h>
+#include <poll.h>
+#include <sys/eventfd.h>
 
 #include <wayland-client.h>
 #include <wayland-client-core.h>
@@ -218,11 +220,18 @@ find_free_buffer(draw_context* ctx)
     return NULL;
 }
 
-static void draw_new_stuff(void* data, struct wl_callback* callback, uint32_t time);
+static int draw_signal;
+static void trigger_draw(void* data, struct wl_callback* callback, uint32_t time)
+{
+    (void)data;
+    (void)callback;
+    (void)time;
+    eventfd_write(draw_signal, 1);
+}
 
 static const struct wl_callback_listener frame_listener =
 {
-    .done = &draw_new_stuff
+    .done = &trigger_draw
 };
 
 static void update_free_buffers(void* data, struct wl_buffer* buffer)
@@ -239,22 +248,15 @@ static void update_free_buffers(void* data, struct wl_buffer* buffer)
     if (ctx->waiting_for_buffer)
     {
         struct wl_callback* fake_frame = wl_display_sync(ctx->display);
-        wl_callback_add_listener(fake_frame, &frame_listener, ctx);
+        wl_callback_add_listener(fake_frame, &frame_listener, NULL);
     }
 
     ctx->waiting_for_buffer = false;
 }
 
-static void draw_new_stuff(
-    void* data,
-    struct wl_callback* callback,
-    uint32_t time)
+static void execute_draw(draw_context* ctx)
 {
-    (void)time;
     static unsigned char current_value = 128;
-    draw_context* ctx = data;
-
-    wl_callback_destroy(callback);
 
     buffer* ctx_buffer = find_free_buffer(ctx);
     if (!ctx_buffer)
@@ -267,7 +269,7 @@ static void draw_new_stuff(
     ++current_value;
 
     ctx->new_frame_signal = wl_surface_frame(ctx->surface);
-    wl_callback_add_listener(ctx->new_frame_signal, &frame_listener, ctx);
+    wl_callback_add_listener(ctx->new_frame_signal, &frame_listener, NULL);
     wl_surface_attach(ctx->surface, ctx_buffer->buffer, 0, 0);
     wl_surface_commit(ctx->surface);
 }
@@ -419,12 +421,16 @@ static struct wl_output_listener const output_listener = {
     .scale = &output_scale,
 };
 
-static volatile sig_atomic_t running = 0;
-static void shutdown(int signum)
+static int shutdown_signal;
+static void trigger_shutdown(int signum)
 {
-    if (running)
+    if (eventfd_write(shutdown_signal, 1) == -1)
     {
-        running = 0;
+        printf("Failed to execute a shutdown");
+        exit(-1);
+    }
+    else
+    {
         printf("Signal %d received. Good night.\n", signum);
     }
 }
@@ -482,6 +488,70 @@ static struct xdg_toplevel_listener const shell_toplevel_listener =
     handle_xdg_toplevel__capabilities,
 };
 
+void run(struct wl_display* display, draw_context* ctx)
+{
+    draw_signal = eventfd(0, EFD_SEMAPHORE);
+    shutdown_signal = eventfd(0, EFD_CLOEXEC);
+
+    enum FdIndices {
+        display_fd = 0,
+        draw,
+        shutdown,
+        indices
+    };
+
+    struct pollfd fds[indices] = {
+        {wl_display_get_fd(display), POLLIN, 0},
+        {draw_signal,                POLLIN, 0},
+        {shutdown_signal,            POLLIN, 0},
+    };
+
+    wl_display_roundtrip(display);
+    wl_display_roundtrip(display);
+    while (!(fds[shutdown].revents & (POLLIN | POLLERR)))
+    {
+        while (wl_display_prepare_read(display) != 0)
+        {
+            if (wl_display_dispatch_pending(display) == -1)
+            {
+                fprintf(stderr, "Failed to dispatch Wayland events\n");
+            }
+        }
+
+        if (poll(fds, indices, -1) == -1)
+        {
+            wl_display_cancel_read(display);
+        }
+
+        if (fds[display_fd].revents & (POLLIN | POLLERR))
+        {
+            if (wl_display_read_events(display))
+            {
+                fprintf(stderr, "Failed to read Wayland events\n");
+            }
+        }
+        else
+        {
+            wl_display_cancel_read(display);
+        }
+
+        bool redraw = false;
+
+        if (fds[draw].revents & (POLLIN | POLLERR))
+        {
+            eventfd_t foo;
+            eventfd_read(draw_signal, &foo);
+            redraw = true;
+        }
+
+        if (redraw)
+        {
+            execute_draw(ctx);
+            wl_display_flush(display);
+        }
+    }
+}
+
 int main(int argc, char** argv)
 {
     (void)argc;
@@ -518,23 +588,20 @@ int main(int argc, char** argv)
     xdg_toplevel_add_listener(shell_toplevel, &shell_toplevel_listener, ctx);
 
     struct wl_callback* first_frame = wl_display_sync(display);
-    wl_callback_add_listener(first_frame, &frame_listener, ctx);
+    wl_callback_add_listener(first_frame, &frame_listener, NULL);
 
     wl_output_add_listener(globals.output, &output_listener, NULL);
-
     struct sigaction sig_handler_new;
     sigfillset(&sig_handler_new.sa_mask);
     sig_handler_new.sa_flags = 0;
-    sig_handler_new.sa_handler = shutdown;
+    sig_handler_new.sa_handler = trigger_shutdown;
 
     sigaction(SIGINT, &sig_handler_new, NULL);
     sigaction(SIGTERM, &sig_handler_new, NULL);
     sigaction(SIGHUP, &sig_handler_new, NULL);
 
-    running = 1;
-
-    while (wl_display_dispatch(display) && running)
-        ;
+    run(display, ctx);
 
     return 0;
 }
+

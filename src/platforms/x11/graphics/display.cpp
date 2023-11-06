@@ -103,13 +103,13 @@ mgx::X11Window::operator xcb_window_t() const
 }
 
 mgx::Display::Display(
-    std::shared_ptr<Platform> parent,
     std::shared_ptr<mir::X::X11Resources> const& x11_resources,
+    std::shared_ptr<helpers::EGLHelper> egl,
     std::string const title,
     std::vector<X11OutputConfig> const& requested_sizes,
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<DisplayReport> const& report)
-    : parent{std::move(parent)},
+    : egl{std::move(egl)},
       x11_resources{x11_resources},
       pixel_size_mm{get_pixel_size_mm(x11_resources->conn.get())},
       report{report}
@@ -134,8 +134,9 @@ mgx::Display::Display(
             requested_size.scale,
             mir_orientation_normal);
         auto display_buffer = std::make_unique<mgx::DisplayBuffer>(
-            this->parent,
+            x11_resources->conn->connection(),
             *window,
+            this->egl,
             configuration->extents(),
             actual_size);
         top_left.x += as_delta(configuration->extents().size.width);

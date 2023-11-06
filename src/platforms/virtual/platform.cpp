@@ -28,78 +28,10 @@ namespace geom = mir::geometry;
 using namespace std::literals;
 
 
-class mgv::Platform::VirtualDisplayInterfaceProvider : public mg::DisplayInterfaceProvider
-{
-public:
-    explicit VirtualDisplayInterfaceProvider()
-    {
-    }
-
-protected:
-    auto maybe_create_interface(mg::DisplayProvider::Tag const& type_tag)
-        -> std::shared_ptr<mg::DisplayProvider>
-    {
-        class VirtualCPUAddressableDisplayProvider: public CPUAddressableDisplayProvider
-        {
-        public:
-            class VirtualMappableFb: public MappableFB
-            {
-            public:
-                VirtualMappableFb(geom::Size const& size, DRMFormat format)
-                    : size_{size}, format_{format}
-                {
-                }
-
-                auto format() const -> MirPixelFormat override
-                {
-                    return format_.as_mir_format().value_or(mir_pixel_format_invalid);
-                }
-
-                auto stride() const -> geom::Stride override
-                {
-                    return geom::Stride{};
-                }
-
-                auto size() const -> geom::Size override
-                {
-                    return size_;
-                }
-
-                auto map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>> override
-                {
-                    BOOST_THROW_EXCEPTION(std::logic_error("map_writeable is not implemented"));
-                }
-
-            private:
-                geom::Size size_;
-                DRMFormat format_;
-            };
-
-            auto supported_formats() const -> std::vector<DRMFormat> override
-            {
-                return {mg::DRMFormat{DRM_FORMAT_XRGB8888}, mg::DRMFormat{DRM_FORMAT_ARGB8888}};
-            }
-
-            auto alloc_fb(geometry::Size pixel_size, DRMFormat format) -> std::unique_ptr<MappableFB> override
-            {
-                return std::make_unique<VirtualMappableFb>(pixel_size, format);
-            }
-        };
-
-        if (dynamic_cast<mg::CPUAddressableDisplayProvider::Tag const*>(&type_tag))
-        {
-            return std::make_shared<VirtualCPUAddressableDisplayProvider>();
-        }
-
-        return nullptr;
-    }
-};
-
 mgv::Platform::Platform(
     std::shared_ptr<mg::DisplayReport> const& report,
     std::vector<VirtualOutputConfig> outputs)
     : report{report},
-      provider{std::make_shared<VirtualDisplayInterfaceProvider>()},
       outputs{outputs}
 {
 }
@@ -115,9 +47,13 @@ mir::UniqueModulePtr<mg::Display> mgv::Platform::create_display(
     return mir::make_module_ptr<mgv::Display>(outputs);
 }
 
-auto mgv::Platform::interface_for() -> std::shared_ptr<DisplayInterfaceProvider>
+auto mgv::Platform::maybe_create_provider(DisplayProvider::Tag const& type_tag) -> std::shared_ptr<DisplayProvider>
 {
-    return provider;
+    if (dynamic_cast<CPUAddressableDisplayProvider::Tag const*>(&type_tag))
+    {
+        return std::make_shared<mg::CPUAddressableDisplayProvider>();
+    }
+    return nullptr;
 }
 
 auto mgv::Platform::parse_output_sizes(std::vector<std::string> virtual_outputs) -> std::vector<mgv::VirtualOutputConfig>

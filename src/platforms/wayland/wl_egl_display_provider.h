@@ -21,10 +21,12 @@
 
 #include <wayland-client.h>
 
+struct wl_egl_window;
+
 namespace mir::graphics::wayland
 {
 
-class WlDisplayProvider : public DisplayInterfaceProvider
+class WlDisplayProvider : public GenericEGLDisplayProvider
 {
 public:
     WlDisplayProvider(EGLDisplay dpy);
@@ -34,12 +36,21 @@ public:
         struct wl_surface* surface,
         geometry::Size size);
 
-    auto get_egl_display() const -> EGLDisplay;
+    auto get_egl_display() -> EGLDisplay override;
+private:
+    EGLDisplay const dpy;
+};
 
-    auto maybe_create_interface(DisplayProvider::Tag const& type_tag)
-        -> std::shared_ptr<DisplayProvider> override;
+class WlDisplayAllocator : public GenericEGLDisplayAllocator
+{
+public:
+    WlDisplayAllocator(EGLDisplay dpy, struct wl_surface* surface, geometry::Size size);
+    ~WlDisplayAllocator();
 
-    class Framebuffer : public GenericEGLDisplayProvider::EGLFramebuffer
+    auto alloc_framebuffer(GLConfig const& config, EGLContext share_context)
+        -> std::unique_ptr<EGLFramebuffer> override;
+
+    class Framebuffer : public GenericEGLDisplayAllocator::EGLFramebuffer
     {
     public:
         /**
@@ -55,7 +66,7 @@ public:
 
         void make_current() override;
         void release_current() override;
-        auto clone_handle() -> std::unique_ptr<GenericEGLDisplayProvider::EGLFramebuffer> override;
+        auto clone_handle() -> std::unique_ptr<GenericEGLDisplayAllocator::EGLFramebuffer> override;
 
         void swap_buffers();
     private:
@@ -66,9 +77,9 @@ public:
         geometry::Size const size_;
     };
 private:
-    class EGLDisplayProvider;
-
-    std::shared_ptr<EGLDisplayProvider> const egl_provider;
+    EGLDisplay const dpy;
+    struct ::wl_egl_window* const wl_window;
+    geometry::Size const size;
 };
 }
 

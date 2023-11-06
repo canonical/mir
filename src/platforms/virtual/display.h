@@ -30,7 +30,7 @@ namespace virt
 class Display : public mir::graphics::Display
 {
 public:
-    explicit Display(std::vector<VirtualOutputConfig> output_sizes);
+    explicit Display(std::vector<VirtualOutputConfig> const& output_sizes);
     void for_each_display_sync_group(std::function<void(DisplaySyncGroup &)> const& f) override;
     std::unique_ptr<mir::graphics::DisplayConfiguration> configuration() const override;
     bool apply_if_configuration_preserves_display_buffers(mir::graphics::DisplayConfiguration const& conf) override;
@@ -43,7 +43,8 @@ public:
     std::shared_ptr<Cursor> create_hardware_cursor() override;
 
 private:
-    std::vector<VirtualOutputConfig> outputs;
+    std::mutex mutable mutex;
+    std::shared_ptr<DisplayConfiguration> display_configuration;
 };
 }
 }

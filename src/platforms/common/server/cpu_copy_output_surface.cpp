@@ -95,7 +95,7 @@ auto create_current_context(EGLDisplay dpy, EGLContext share_ctx)
     return ctx;
 }
 
-auto select_format_from(mg::CPUAddressableDisplayProvider const& provider) -> mg::DRMFormat
+auto select_format_from(mg::CPUAddressableDisplayAllocator const& provider) -> mg::DRMFormat
 {
     std::optional<mg::DRMFormat> best_format;
     for (auto const format : provider.supported_formats())
@@ -127,7 +127,7 @@ public:
     Impl(
         EGLDisplay dpy,
         EGLContext share_ctx,
-        std::shared_ptr<mg::CPUAddressableDisplayProvider> allocator,
+        mg::CPUAddressableDisplayAllocator& allocator,
         geom::Size size);
 
     void bind();
@@ -141,7 +141,7 @@ public:
     auto layout() const -> Layout;
 
 private:
-    std::shared_ptr<mg::CPUAddressableDisplayProvider> const allocator;
+    mg::CPUAddressableDisplayAllocator& allocator;
     EGLDisplay const dpy;
     EGLContext const ctx;
     geometry::Size const size_;
@@ -153,9 +153,9 @@ private:
 mgc::CPUCopyOutputSurface::CPUCopyOutputSurface(
         EGLDisplay dpy,
         EGLContext share_ctx,
-        std::shared_ptr<mg::CPUAddressableDisplayProvider> allocator,
+        mg::CPUAddressableDisplayAllocator& allocator,
         geom::Size size)
-        : impl{std::make_unique<Impl>(dpy, share_ctx, std::move(allocator), size)}
+        : impl{std::make_unique<Impl>(dpy, share_ctx, allocator, size)}
 {
 }
 
@@ -194,13 +194,13 @@ auto mgc::CPUCopyOutputSurface::layout() const -> Layout
 mgc::CPUCopyOutputSurface::Impl::Impl(
     EGLDisplay dpy,
     EGLContext share_ctx,
-    std::shared_ptr<mg::CPUAddressableDisplayProvider> allocator,
+    mg::CPUAddressableDisplayAllocator& allocator,
     geom::Size size)
-    : allocator{std::move(allocator)},
+    : allocator{allocator},
       dpy{dpy},
       ctx{create_current_context(dpy, share_ctx)},
       size_{size},
-      format{select_format_from(*this->allocator)}
+      format{select_format_from(allocator)}
 {
     glBindRenderbuffer(GL_RENDERBUFFER, colour_buffer);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8_OES, size_.width.as_int(), size_.height.as_int());
@@ -264,7 +264,7 @@ void mgc::CPUCopyOutputSurface::Impl::release_current()
 
 auto mgc::CPUCopyOutputSurface::Impl::commit() -> std::unique_ptr<mg::Framebuffer>
 {
-    auto fb = allocator->alloc_fb(size_, format);
+    auto fb = allocator.alloc_fb(size_, format);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     {
         /* TODO: We can usefully put this *into* DRMFormat */

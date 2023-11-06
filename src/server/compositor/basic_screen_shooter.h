@@ -77,11 +77,11 @@ private:
         std::shared_ptr<renderer::RendererFactory> const renderer_factory;
 
         /* The Renderer instantiation is tied to a particular output size, and
-         * and requires enough setup to make it worth keeping around as a consumer
+         * requires enough setup to make it worth keeping around as a consumer
          * is likely to be taking screenshots of consistent size
          */
         std::unique_ptr<renderer::Renderer> current_renderer;
-        geometry::Size last_rendered_size;
+        std::unique_ptr<graphics::DisplayBuffer> offscreen_db;
 
         std::shared_ptr<OneShotBufferDisplayProvider> const output;
     };

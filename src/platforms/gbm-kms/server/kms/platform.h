@@ -64,7 +64,8 @@ public:
     std::shared_ptr<DisplayReport> const listener;
 
 protected:
-    auto interface_for() -> std::shared_ptr<DisplayInterfaceProvider> override;
+    auto maybe_create_provider(DisplayProvider::Tag const& type_tag)
+        -> std::shared_ptr<DisplayProvider> override;
 
 public:
     BypassOption bypass_option() const;
@@ -78,9 +79,8 @@ private:
     std::unique_ptr<Device> const device_handle;
     mir::Fd const drm_fd;
 
-    class KMSDisplayInterfaceProvider;
-    std::shared_ptr<KMSDisplayInterfaceProvider> const provider;
-    
+    std::shared_ptr<GBMDisplayProvider> gbm_display_provider;
+
     BypassOption const bypass_option_;
 };
 
@@ -89,7 +89,7 @@ class RenderingPlatform : public graphics::RenderingPlatform
 public:
     RenderingPlatform(
         udev::Device const& device,
-        std::vector<std::shared_ptr<graphics::DisplayInterfaceProvider>> const& displays);
+        std::vector<std::shared_ptr<graphics::DisplayPlatform>> const& platforms);
 
     ~RenderingPlatform() override;
 

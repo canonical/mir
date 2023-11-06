@@ -101,12 +101,12 @@ public:
     auto pixel_size() const -> geometry::Size override;
     bool overlay(std::vector<DisplayElement> const& renderlist) override;
     auto transformation() const -> glm::mat2 override;
-    auto display_provider() const -> std::shared_ptr<DisplayInterfaceProvider> override;
+    auto maybe_create_allocator(DisplayAllocator::Tag const& type_tag) -> DisplayAllocator* override;
     void set_next_image(std::unique_ptr<Framebuffer> content) override;
 
 private:
-    std::unique_ptr<WlDisplayProvider::Framebuffer> next_frame;
-    std::shared_ptr<WlDisplayProvider> provider;
+    std::unique_ptr<WlDisplayAllocator::Framebuffer> next_frame;
+    std::shared_ptr<WlDisplayAllocator> provider;
 };
 
 mgw::DisplayClient::Output::Output(
@@ -309,7 +309,10 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
         if (!has_initialized)
         {
             has_initialized = true;
-            provider = std::make_shared<WlDisplayProvider>(*owner_->provider, surface, output_size);
+            provider = std::make_shared<WlDisplayAllocator>(
+                owner_->provider->get_egl_display(),
+                surface,
+                output_size);
         }
         else if (size_is_changed)
         {
@@ -380,13 +383,11 @@ void mgw::DisplayClient::Output::post()
                       frame_sync->init();
                   });
 
-    // Avoid throttling compositing by blocking in eglSwapBuffers().
-    // Instead we use the frame "done" notification.
-    // TODO: We probably don't need to do this every frame!
-    eglSwapInterval(provider->get_egl_display(), 0);
-
+    // The Framebuffer ensures that this swap_buffers call doesn't block...
     next_frame->swap_buffers();
 
+    // ...so we need external synchronisation to throttle rendering.
+    // Wait for the host compositor to tell us to render.
     frame_sync->wait_for_done();
 }
 
@@ -423,9 +424,20 @@ auto mgw::DisplayClient::Output::transformation() const -> glm::mat2
     return glm::mat2{1};
 }
 
-auto mgw::DisplayClient::Output::display_provider() const -> std::shared_ptr<DisplayInterfaceProvider>
+auto mgw::DisplayClient::Output::maybe_create_allocator(DisplayAllocator::Tag const& type_tag) -> DisplayAllocator*
 {
-    return provider;
+    if (dynamic_cast<GenericEGLDisplayAllocator::Tag const*>(&type_tag))
+    {
+        if (!provider)
+        {
+            provider = std::make_unique<WlDisplayAllocator>(
+                owner_->provider->get_egl_display(),
+                surface,
+                pixel_size());
+        }
+        return provider.get();
+    }
+    return nullptr;
 }
 
 namespace
@@ -446,7 +458,7 @@ auto unique_ptr_cast(std::unique_ptr<From> ptr) -> std::unique_ptr<To>
 
 void mgw::DisplayClient::Output::set_next_image(std::unique_ptr<Framebuffer> content)
 {
-    if (auto wl_content = unique_ptr_cast<WlDisplayProvider::Framebuffer>(std::move(content)))
+    if (auto wl_content = unique_ptr_cast<WlDisplayAllocator::Framebuffer>(std::move(content)))
     {
         next_frame = std::move(wl_content);
     }

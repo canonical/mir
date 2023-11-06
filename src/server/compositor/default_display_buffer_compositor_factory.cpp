@@ -58,15 +58,13 @@ mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
      * potentially-significant amount of GPU memory.
      */
 
-    auto const display_provider = display_buffer.display_provider();
-
     /* In a heterogeneous system, different providers may be better at driving a specific
      * display. Select the best one.
      */
     std::pair<mg::probe::Result, std::shared_ptr<mg::GLRenderingProvider>> best_provider = std::make_pair(mg::probe::unsupported, nullptr);
     for (auto const& provider : platforms)
     {
-        auto suitability = provider->suitability_for_display(display_provider);
+        auto suitability = provider->suitability_for_display(display_buffer);
         // We also need to make sure that the GLRenderingProvider can access client buffers...
         if (provider->suitability_for_allocator(buffer_allocator) > mg::probe::unsupported && suitability > best_provider.first)
         {
@@ -83,7 +81,7 @@ mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
     auto const chosen_allocator = best_provider.second;
     
     auto output_surface = chosen_allocator->surface_for_output(
-        display_provider, display_buffer.pixel_size(), *gl_config);
+        display_buffer, display_buffer.pixel_size(), *gl_config);
     auto renderer = renderer_factory->create_renderer_for(std::move(output_surface), chosen_allocator);
     renderer->set_viewport(display_buffer.view_area());
     return std::make_unique<DefaultDisplayBufferCompositor>(
