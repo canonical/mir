@@ -126,47 +126,54 @@ mir::UniqueModulePtr<mi::Platform> mi::probe_input_platforms(
             return Selection::persist;
         };
 
-    // First, check if any already-loaded graphics modules double as an input platform
-    mir::UniqueModulePtr<Platform> loaded_platform;
-    for (auto const& module : loaded_platforms)
-    {
-        loaded_platform = input_platform_from_graphics_module(
-            *module,
-            options,
-            emergency_cleanup,
-            device_registry,
-            console,
-            input_report);
-        if (loaded_platform)
-        {
-            // If this platform was manually specified AND it's already loaded, we can return it here
-            if (options.is_set(mo::platform_input_lib))
-            {
-                auto describe_module = module->load_function<mi::DescribeModule>(
-                    "describe_input_module",
-                    MIR_SERVER_INPUT_PLATFORM_VERSION);
-                auto const description = describe_module();
-                if (description->name == options.get<std::string>(mo::platform_input_lib))
-                {
-                    return loaded_platform;
-                }
-            }
-            break;
-        }
-    }
-
-    // Otherwise, try and load a manually specified platform, as that takes precedence over the loaded platform
+    // First, try and load the manually-specified platform.
     if (options.is_set(mo::platform_input_lib))
     {
+        auto selected_input_lib = options.get<std::string>(mo::platform_input_lib);
+
+        // Let's check if the specified one is already loaded and return that if it's the case
+        for (auto const& module : loaded_platforms)
+        {
+            auto potential_input_platform = input_platform_from_graphics_module(
+                *module,
+                options,
+                emergency_cleanup,
+                device_registry,
+                console,
+                input_report);
+
+            if (!potential_input_platform)
+                continue;
+
+            auto describe_module = module->load_function<mi::DescribeModule>(
+                "describe_input_module",
+                MIR_SERVER_INPUT_PLATFORM_VERSION);
+            if (describe_module()->name == selected_input_lib)
+                return potential_input_platform;
+        }
+
+        // Otherwise, let's find the one that the user specified
         auto platforms = mir::libraries_for_path(options.get<std::string>(mo::platform_path), prober_report);
         reject_platform_priority = PlatformPriority::unsupported;
-        module_selector(select_platforms_from_list(options.get<std::string>(mo::platform_input_lib), platforms));
+        module_selector(select_platforms_from_list(selected_input_lib, platforms));
     }
     else
     {
-        // We haven't specified a platform to load, so if the already-loaded platform exists, we can return that
-        if (loaded_platform)
-            return loaded_platform;
+        // Next, try to find any already-loaded graphics module that doubles as an input platform.
+        mir::UniqueModulePtr<Platform> loaded_platform;
+        for (auto const& module : loaded_platforms)
+        {
+            auto potential_input_platform = input_platform_from_graphics_module(
+                *module,
+                options,
+                emergency_cleanup,
+                device_registry,
+                console,
+                input_report);
+
+            if (potential_input_platform)
+                return potential_input_platform;
+        }
 
         // If all else fails, let's look for the best platform
         select_libraries_for_path(options.get<std::string>(mo::platform_path), module_selector, prober_report);
