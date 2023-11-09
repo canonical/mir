@@ -84,7 +84,7 @@ mir::UniqueModulePtr<mg::Display> mgw::Platform::create_display(
 
 auto mgw::Platform::maybe_create_provider(const DisplayProvider::Tag& type_tag) -> std::shared_ptr<DisplayProvider>
 {
-    if (dynamic_cast<GenericEGLDisplayProvider const*>(&type_tag))
+    if (dynamic_cast<GenericEGLDisplayProvider::Tag const*>(&type_tag))
     {
         return provider;
     }
