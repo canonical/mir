@@ -22,6 +22,7 @@
 #include <mir/assert_module_entry_point.h>
 #include <mir/libname.h>
 #include <mir/options/program_option.h>
+#include <mir/udev/wrapper.h>
 
 namespace mg = mir::graphics;
 namespace mo = mir::options;

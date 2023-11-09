@@ -37,6 +37,7 @@
 #include "mir/log.h"
 #include "mir/report_exception.h"
 #include "mir/main_loop.h"
+#include "mir/udev/wrapper.h"
 
 #include <boost/throw_exception.hpp>
 

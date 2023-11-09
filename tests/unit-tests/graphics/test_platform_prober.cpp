@@ -21,6 +21,7 @@
 #include "mir/graphics/platform.h"
 #include "src/server/graphics/platform_probe.h"
 #include "mir/options/program_option.h"
+#include "mir/udev/wrapper.h"
 
 #include "mir/raii.h"
 
