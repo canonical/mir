@@ -170,7 +170,7 @@ TEST_F(InputPlatformProbe, x11_input_platform_not_used_when_vt_specified)
 TEST_F(InputPlatformProbe, allows_forcing_stub_input_platform)
 {
     ON_CALL(mock_options, is_set(StrEq(platform_input_lib))).WillByDefault(Return(true));
-    platform_input_lib_value = mtf::server_input_platform("input-stub.so");
+    platform_input_lib_value = "mir:stub-input";
     platform_input_lib_value_as_any = platform_input_lib_value;
     auto platform =
         mi::probe_input_platforms(

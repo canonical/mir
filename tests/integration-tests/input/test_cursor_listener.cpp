@@ -57,7 +57,7 @@ struct MockCursorListener : public mi::CursorListener
 
 struct CursorListenerIntegrationTest : testing::Test, mtf::FakeInputServerConfiguration
 {
-    mtf::TemporaryEnvironmentValue input_lib{"MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str()};
+    mtf::TemporaryEnvironmentValue input_lib{"MIR_SERVER_PLATFORM_INPUT_LIB", "mir:stub-input"};
     mtf::TemporaryEnvironmentValue real_input{"MIR_SERVER_TESTS_USE_REAL_INPUT", "1"};
     mtf::TemporaryEnvironmentValue no_key_repeat{"MIR_SERVER_ENABLE_KEY_REPEAT", "0"};
 

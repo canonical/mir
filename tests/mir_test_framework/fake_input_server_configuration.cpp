@@ -30,7 +30,7 @@ std::vector<std::unique_ptr<mtf::TemporaryEnvironmentValue>> make_test_environme
     environment.emplace_back(
         std::make_unique<mtf::TemporaryEnvironmentValue>(
             "MIR_SERVER_PLATFORM_INPUT_LIB",
-            mtf::server_platform("input-stub.so").c_str()));
+            "mir:stub-input"));
 
     return environment;
 }
