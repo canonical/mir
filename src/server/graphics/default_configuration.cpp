@@ -41,7 +41,6 @@
 #include <boost/throw_exception.hpp>
 
 #include <sstream>
-#include <algorithm>
 
 namespace mg = mir::graphics;
 
