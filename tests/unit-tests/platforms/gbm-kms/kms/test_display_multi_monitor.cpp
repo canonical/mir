@@ -379,7 +379,7 @@ TEST_F(MesaDisplayMultiMonitorTest, flip_flips_all_connected_crtcs)
             group.for_each_display_buffer(
                 [](mg::DisplayBuffer& db)
                 {
-                    auto provider = db.acquire_allocator<mg::CPUAddressableDisplayAllocator>();
+                    auto provider = db.acquire_compatible_allocator<mg::CPUAddressableDisplayAllocator>();
                     auto fb = provider->alloc_fb(db.pixel_size(), mg::DRMFormat{DRM_FORMAT_ABGR8888});
                     db.set_next_image(std::move(fb));
                 });
@@ -394,7 +394,7 @@ TEST_F(MesaDisplayMultiMonitorTest, flip_flips_all_connected_crtcs)
             group.for_each_display_buffer(
                 [](mg::DisplayBuffer& db)
                 {
-                    auto provider = db.acquire_allocator<mg::CPUAddressableDisplayAllocator>();
+                    auto provider = db.acquire_compatible_allocator<mg::CPUAddressableDisplayAllocator>();
                     auto fb = provider->alloc_fb(db.pixel_size(), mg::DRMFormat{DRM_FORMAT_ARGB8888});
                     db.set_next_image(std::move(fb));
                 });

@@ -404,7 +404,7 @@ auto mge::GLRenderingProvider::suitability_for_allocator(std::shared_ptr<Graphic
 auto mge::GLRenderingProvider::suitability_for_display(
     DisplayBuffer& target) -> probe::Result
 {
-    if (target.acquire_allocator<GenericEGLDisplayAllocator>())
+    if (target.acquire_compatible_allocator<GenericEGLDisplayAllocator>())
     {
         /* We're effectively hosted on an underlying EGL platform.
          *
@@ -414,7 +414,7 @@ auto mge::GLRenderingProvider::suitability_for_display(
         return probe::hosted;
     }
 
-    if (target.acquire_allocator<CPUAddressableDisplayAllocator>())
+    if (target.acquire_compatible_allocator<CPUAddressableDisplayAllocator>())
     {
         /* We can *work* on a CPU-backed surface, but if anything's better
          * we should use something else!
@@ -431,11 +431,11 @@ auto mge::GLRenderingProvider::surface_for_output(
     GLConfig const& config)
     -> std::unique_ptr<gl::OutputSurface>
 {
-    if (auto egl_display = target.acquire_allocator<GenericEGLDisplayAllocator>())
+    if (auto egl_display = target.acquire_compatible_allocator<GenericEGLDisplayAllocator>())
     {
         return std::make_unique<EGLOutputSurface>(egl_display->alloc_framebuffer(config, ctx));
     }
-    auto cpu_provider = target.acquire_allocator<CPUAddressableDisplayAllocator>();
+    auto cpu_provider = target.acquire_compatible_allocator<CPUAddressableDisplayAllocator>();
 
     return std::make_unique<mgc::CPUCopyOutputSurface>(
         dpy,

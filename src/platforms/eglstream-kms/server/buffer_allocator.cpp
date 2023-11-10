@@ -734,7 +734,7 @@ auto mge::GLRenderingProvider::surface_for_output(
     geom::Size size,
     mg::GLConfig const& gl_config) -> std::unique_ptr<gl::OutputSurface>
 {
-    if (auto stream_platform = target.acquire_allocator<EGLStreamDisplayAllocator>())
+    if (auto stream_platform = target.acquire_compatible_allocator<EGLStreamDisplayAllocator>())
     {
         try
         {
@@ -752,7 +752,7 @@ auto mge::GLRenderingProvider::surface_for_output(
                 err.what());
         }
     }
-    if (auto cpu_provider = target.acquire_allocator<CPUAddressableDisplayAllocator>())
+    if (auto cpu_provider = target.acquire_compatible_allocator<CPUAddressableDisplayAllocator>())
     {
         auto fb_context = ctx->make_share_context();
         fb_context->make_current();
@@ -779,11 +779,11 @@ auto mge::GLRenderingProvider::suitability_for_allocator(std::shared_ptr<Graphic
 
 auto mge::GLRenderingProvider::suitability_for_display(DisplayBuffer& target) -> probe::Result
 {
-    if (target.acquire_allocator<EGLStreamDisplayAllocator>())
+    if (target.acquire_compatible_allocator<EGLStreamDisplayAllocator>())
     {
         return probe::best;
     }
-    if (target.acquire_allocator<CPUAddressableDisplayAllocator>())
+    if (target.acquire_compatible_allocator<CPUAddressableDisplayAllocator>())
     {
         return probe::supported;
     }

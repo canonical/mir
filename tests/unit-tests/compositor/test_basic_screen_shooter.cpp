@@ -83,7 +83,7 @@ struct BasicScreenShooter : Test
                 [](mg::DisplayBuffer& output, auto size, auto const&)
                     -> std::unique_ptr<mg::gl::OutputSurface>
                 {
-                    if (auto cpu_provider = output.acquire_allocator<mg::CPUAddressableDisplayAllocator>())
+                    if (auto cpu_provider = output.acquire_compatible_allocator<mg::CPUAddressableDisplayAllocator>())
                     {
                         auto surface = std::make_unique<testing::NiceMock<mtd::MockOutputSurface>>();
                         auto format = cpu_provider->supported_formats().front();

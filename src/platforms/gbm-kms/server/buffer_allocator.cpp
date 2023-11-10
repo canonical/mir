@@ -500,7 +500,7 @@ auto mgg::GLRenderingProvider::suitability_for_display(
         }
     }
 
-    if (target.acquire_allocator<CPUAddressableDisplayAllocator>())
+    if (target.acquire_compatible_allocator<CPUAddressableDisplayAllocator>())
     {
         // We *can* render to CPU buffers, but if anyone can do better, let them.
         return probe::supported;
@@ -517,7 +517,7 @@ auto mgg::GLRenderingProvider::surface_for_output(
 {
     if (bound_display)
     {
-        if (auto gbm_allocator = target.acquire_allocator<GBMDisplayAllocator>())
+        if (auto gbm_allocator = target.acquire_compatible_allocator<GBMDisplayAllocator>())
         {
             if (bound_display->on_this_device(target))
             {
@@ -531,7 +531,7 @@ auto mgg::GLRenderingProvider::surface_for_output(
             }
         }
     }
-    auto cpu_allocator = target.acquire_allocator<CPUAddressableDisplayAllocator>();
+    auto cpu_allocator = target.acquire_compatible_allocator<CPUAddressableDisplayAllocator>();
 
     return std::make_unique<mgc::CPUCopyOutputSurface>(
         dpy,

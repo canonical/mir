@@ -115,7 +115,7 @@ public:
      *          On failure: nullptr
      */
     template<typename Allocator>
-    auto acquire_allocator() -> Allocator*
+    auto acquire_compatible_allocator() -> Allocator*
     {
         static_assert(
             std::is_convertible_v<Allocator*, DisplayAllocator*>,
