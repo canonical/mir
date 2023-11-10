@@ -41,6 +41,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <sstream>
+#include <algorithm>
 
 namespace mg = mir::graphics;
 
@@ -375,6 +376,23 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
         {
             rendering_platforms.push_back(rp.second);
         }
+
+        // We sort egl-generic to the end of the list, as selecting it while we have a hardware rendering platform
+        // available to us causes us to break. See https://github.com/MirServer/mir/issues/3112
+        // TODO: Remove this code once a multi-rendering-platform paradigm is fully supported, and we
+        // don't just select the first platform and use that everywhere.
+        std::remove_if(rendering_platforms.begin(), rendering_platforms.end(), [&](std::shared_ptr<graphics::RenderingPlatform> platform)
+        {
+            for (auto const& rp : rendering_platform_map)
+            {
+                if (rp.second == platform)
+                {
+                    return strcmp(rp.first.c_str(), "mir:egl-generic") == 0;
+                }
+            }
+
+            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to resolve the name of the graphics platform."));
+        });
 
         if (rendering_platforms.empty())
         {
