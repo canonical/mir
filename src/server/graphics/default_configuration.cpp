@@ -372,9 +372,26 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
 
         rendering_platforms.reserve(rendering_platform_map.size());
 
+        // We want to make the egl-generic platform the last resort
+        // So don't push it into rendering_platforms until the rest are done
+        std::shared_ptr<graphics::RenderingPlatform> egl_generic;
+
         for (auto const& rp : rendering_platform_map)
         {
-            rendering_platforms.push_back(rp.second);
+            if (rp.first != "mir:egl-generic")
+            {
+                rendering_platforms.push_back(rp.second);
+            }
+            else
+            {
+                egl_generic = rp.second;
+            }
+        }
+
+        // If we skipped egl-generic, add it to the end
+        if (egl_generic)
+        {
+            rendering_platforms.push_back(egl_generic);
         }
 
         if (rendering_platforms.empty())
