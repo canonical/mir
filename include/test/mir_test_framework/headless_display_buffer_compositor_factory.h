@@ -38,7 +38,7 @@ struct HeadlessDisplayBufferCompositorFactory : mir::compositor::DisplayBufferCo
         std::shared_ptr<PassthroughTracker> const& tracker);
 
     std::unique_ptr<mir::compositor::DisplayBufferCompositor> create_compositor_for(
-        mir::graphics::DisplayBuffer& display_buffer) override;
+        mir::graphics::DisplaySink& display_sink) override;
 private:
     std::shared_ptr<mir::graphics::GLRenderingProvider> const render_platform;
     std::shared_ptr<mir::graphics::GLConfig> const gl_config;

@@ -85,17 +85,17 @@ struct DefaultDisplayBufferCompositor : public testing::Test
        fullscreen(std::make_shared<mtd::FakeRenderable>(screen))
     {
         using namespace testing;
-        ON_CALL(display_buffer, transformation())
+        ON_CALL(display_sink, transformation())
             .WillByDefault(Return(no_transformation));
-        ON_CALL(display_buffer, view_area())
+        ON_CALL(display_sink, view_area())
             .WillByDefault(Return(screen));
-        ON_CALL(display_buffer, overlay(_))
+        ON_CALL(display_sink, overlay(_))
             .WillByDefault(Return(false));
     }
 
     testing::NiceMock<mtd::MockRenderer> mock_renderer;
     geom::Rectangle screen{{0, 0}, {1366, 768}};
-    testing::NiceMock<mtd::MockDisplayBuffer> display_buffer;
+    testing::NiceMock<mtd::MockDisplaySink> display_sink;
     mtd::StubGlRenderingProvider gl_provider;
     std::shared_ptr<mtd::FakeRenderable> small;
     std::shared_ptr<mtd::FakeRenderable> big;
@@ -108,7 +108,7 @@ TEST_F(DefaultDisplayBufferCompositor, composite_returns_false_when_scene_elemen
     using namespace testing;
 
     mc::DefaultDisplayBufferCompositor compositor(
-        display_buffer,
+        display_sink,
         gl_provider,
         mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
@@ -120,7 +120,7 @@ TEST_F(DefaultDisplayBufferCompositor, composite_returns_true_when_scene_element
     using namespace testing;
 
     mc::DefaultDisplayBufferCompositor compositor(
-        display_buffer,
+        display_sink,
         gl_provider,
         mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
@@ -132,14 +132,14 @@ TEST_F(DefaultDisplayBufferCompositor, renderer_is_suspended_when_we_have_compos
     using namespace testing;
 
     mc::DefaultDisplayBufferCompositor compositor(
-        display_buffer,
+        display_sink,
         gl_provider,
         mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
     compositor.composite(make_scene_elements({big}));
     compositor.composite(make_scene_elements({}));
 
-    EXPECT_CALL(display_buffer, overlay(_))
+    EXPECT_CALL(display_sink, overlay(_))
         .WillOnce(Return(true));
     EXPECT_CALL(mock_renderer, suspend())
         .Times(1);
@@ -162,7 +162,7 @@ TEST_F(DefaultDisplayBufferCompositor, all_expected_reports_are_received_during_
         .InSequence(seq);
 
     mc::DefaultDisplayBufferCompositor compositor(
-        display_buffer,
+        display_sink,
         gl_provider,
         mt::fake_shared(mock_renderer),
         report);
@@ -176,7 +176,7 @@ TEST_F(DefaultDisplayBufferCompositor, elements_provided_to_composite_are_render
         .Times(1);
 
     mc::DefaultDisplayBufferCompositor compositor(
-        display_buffer,
+        display_sink,
         gl_provider,
         mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
@@ -187,7 +187,7 @@ TEST_F(DefaultDisplayBufferCompositor, elements_provided_to_composite_are_render
     }));
 }
 
-TEST_F(DefaultDisplayBufferCompositor, viewport_is_rotated_when_display_buffer_view_area_is_rotated)
+TEST_F(DefaultDisplayBufferCompositor, viewport_is_rotated_when_display_sink_view_area_is_rotated)
 {   // Regression test for LP: #1643488
     using namespace testing;
 
@@ -198,17 +198,17 @@ TEST_F(DefaultDisplayBufferCompositor, viewport_is_rotated_when_display_buffer_v
         screen.top_left,
         {screen.size.height.as_int(), screen.size.width.as_int()}};
 
-    ON_CALL(display_buffer, view_area())
+    ON_CALL(display_sink, view_area())
         .WillByDefault(Return(rotated_screen));
 
     mc::DefaultDisplayBufferCompositor compositor(
-        display_buffer,
+        display_sink,
         gl_provider,
         mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
 
     Sequence render_seq;
-    EXPECT_CALL(display_buffer, transformation())
+    EXPECT_CALL(display_sink, transformation())
         .WillOnce(Return(rotate_left));
     EXPECT_CALL(mock_renderer, set_output_transform(rotate_left))
         .InSequence(render_seq);
@@ -222,7 +222,7 @@ TEST_F(DefaultDisplayBufferCompositor, renderer_is_suspended_when_we_have_compos
 {
     using namespace testing;
     mc::DefaultDisplayBufferCompositor compositor(
-        display_buffer,
+        display_sink,
         gl_provider,
         mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
@@ -230,7 +230,7 @@ TEST_F(DefaultDisplayBufferCompositor, renderer_is_suspended_when_we_have_compos
     compositor.composite(make_scene_elements({big}));
     compositor.composite(make_scene_elements({}));
 
-    EXPECT_CALL(display_buffer, overlay(_))
+    EXPECT_CALL(display_sink, overlay(_))
         .WillRepeatedly(Return(true));
     EXPECT_CALL(mock_renderer, suspend())
         .Times(1);
@@ -258,7 +258,7 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surfaces_are_not_rendered)
     EXPECT_CALL(mock_renderer, render(ContainerEq(visible)));
 
     mc::DefaultDisplayBufferCompositor compositor(
-        display_buffer,
+        display_sink,
         gl_provider,
         mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
@@ -299,7 +299,7 @@ TEST_F(DefaultDisplayBufferCompositor, marks_rendered_scene_elements)
     EXPECT_CALL(*element1_rendered, rendered());
 
     mc::DefaultDisplayBufferCompositor compositor(
-        display_buffer,
+        display_sink,
         gl_provider,
         mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
@@ -323,7 +323,7 @@ TEST_F(DefaultDisplayBufferCompositor, marks_occluded_scene_elements)
     EXPECT_CALL(*element2_occluded, occluded());
 
     mc::DefaultDisplayBufferCompositor compositor(
-        display_buffer,
+        display_sink,
         gl_provider,
         mt::fake_shared(mock_renderer),
         mr::null_compositor_report());

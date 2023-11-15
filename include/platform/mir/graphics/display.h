@@ -29,7 +29,7 @@ namespace mir
 namespace graphics
 {
 
-class DisplayBuffer;
+class DisplaySink;
 class DisplayConfiguration;
 class Cursor;
 class EventHandlerRegister;
@@ -46,16 +46,16 @@ typedef std::function<void()> DisplayConfigurationChangeHandler;
  * Android).
  * Using a DisplaySyncGroup with multiple screens on a platform whose post()
  * blocks for vsync often results in stuttering, and so should be avoided.
- * Although using DisplaySyncGroup with a single DisplayBuffer remains safe
+ * Although using DisplaySyncGroup with a single DisplaySink remains safe
  * for any platform.
  */
 class DisplaySyncGroup
 {
 public:
     /**
-     *  Executes a functor that allows the DisplayBuffer contents to be updated
+     *  Executes a functor that allows the DisplaySink contents to be updated
     **/
-    virtual void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f) = 0;
+    virtual void for_each_display_sink(std::function<void(DisplaySink&)> const& f) = 0;
 
     /** Post the content of the DisplayBuffers associated with this DisplaySyncGroup.
      *  The content of all the DisplayBuffers in this DisplaySyncGroup are guaranteed to be onscreen
@@ -107,14 +107,14 @@ public:
     /**
      * Applying a display configuration only if it will not invalidate existing DisplayBuffers
      *
-     * The Display must guarantee that the references to the DisplayBuffer acquired via
-     * DisplaySyncGroup::for_each_display_buffer() remain valid until the Display is destroyed or
+     * The Display must guarantee that the references to the DisplaySink acquired via
+     * DisplaySyncGroup::for_each_display_sink() remain valid until the Display is destroyed or
      * Display::configure() is called.
      *
      * If this function returns \c true then the new display configuration has been applied.
      * If this function returns \c false then the new display configuration has not been applied.
      *
-     * In either case this function guarantees that existing DisplayBuffer references will remain
+     * In either case this function guarantees that existing DisplaySink references will remain
      * valid.
      *
      * \param conf [in] Configuration to possibly apply.

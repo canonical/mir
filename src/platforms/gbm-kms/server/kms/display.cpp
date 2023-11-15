@@ -182,7 +182,7 @@ void mgg::Display::for_each_display_sync_group(
 {
     std::lock_guard lg{configuration_mutex};
 
-    for (auto& db_ptr : display_buffers)
+    for (auto& db_ptr : display_sinks)
         f(*db_ptr);
 }
 
@@ -250,7 +250,7 @@ void mgg::Display::resume()
          * we need to reset the CRTCs. For active displays we schedule a CRTC reset
          * on the next swap. For connected but unused outputs we clear the CRTC.
          */
-        for (auto& db_ptr : display_buffers)
+        for (auto& db_ptr : display_sinks)
             db_ptr->schedule_set_crtc();
 
         clear_connected_unused_outputs();
@@ -352,19 +352,19 @@ void mgg::Display::configure_locked(
     bool const comp{
         (&kms_conf != &current_display_configuration) &&
         compatible(kms_conf, current_display_configuration)};
-    std::vector<std::unique_ptr<DisplayBuffer>> display_buffers_new;
+    std::vector<std::unique_ptr<DisplaySink>> display_buffers_new;
 
     if (!comp)
     {
         /*
          * Notice for a little while here we will have duplicate
          * DisplayBuffers attached to each output, and the display_buffers_new
-         * will take over the outputs before the old display_buffers are
+         * will take over the outputs before the old display_sinks are
          * destroyed. So to avoid page flipping confusion in-between, make
          * sure we wait for all pending page flips to finish before the
          * display_buffers_new are created and take control of the outputs.
          */
-        for (auto& db : display_buffers)
+        for (auto& db : display_sinks)
             db->wait_for_page_flip();
 
         /* Reset the state of all outputs */
@@ -415,12 +415,12 @@ void mgg::Display::configure_locked(
 
             if (comp)
             {
-                display_buffers[group_idx++]->set_transformation(transformation,
+                display_sinks[group_idx++]->set_transformation(transformation,
                                                                  bounding_rect);
             }
             else
             {
-                auto db = std::make_unique<DisplayBuffer>(
+                auto db = std::make_unique<DisplaySink>(
                     drm_fd,
                     gbm,
                     bypass_option,
@@ -434,7 +434,7 @@ void mgg::Display::configure_locked(
         });
 
     if (!comp)
-        display_buffers = std::move(display_buffers_new);
+        display_sinks = std::move(display_buffers_new);
 
     /* Store applied configuration */
     current_display_configuration = kms_conf;
@@ -478,11 +478,11 @@ mgg::GBMDisplayProvider::GBMDisplayProvider(
 {
 }
 
-auto mgg::GBMDisplayProvider::on_this_device(mg::DisplayBuffer& target) const -> bool
+auto mgg::GBMDisplayProvider::on_this_sink(mg::DisplaySink& sink) const -> bool
 {
-    if (auto gbm_display_buffer = dynamic_cast<mgg::DisplayBuffer*>(&target))
+    if (auto gbm_display_sink = dynamic_cast<mgg::DisplaySink*>(&sink))
     {
-        return gbm_display_buffer->gbm_device() == gbm;
+        return gbm_display_sink->gbm_device() == gbm;
     }
     return false;
 }

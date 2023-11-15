@@ -48,7 +48,7 @@ namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
 
-mgg::DisplayBuffer::DisplayBuffer(
+mgg::DisplaySink::DisplaySink(
     mir::Fd drm_fd,
     std::shared_ptr<struct gbm_device> gbm,
     mgg::BypassOption,
@@ -98,31 +98,31 @@ mgg::DisplayBuffer::DisplayBuffer(
     listener->report_successful_display_construction();
 }
 
-mgg::DisplayBuffer::~DisplayBuffer() = default;
+mgg::DisplaySink::~DisplaySink() = default;
 
-geom::Rectangle mgg::DisplayBuffer::view_area() const
+geom::Rectangle mgg::DisplaySink::view_area() const
 {
     return area;
 }
 
-auto mgg::DisplayBuffer::pixel_size() const -> geom::Size
+auto mgg::DisplaySink::pixel_size() const -> geom::Size
 {
     // All the outputs (are meant to) have the same size; KMSOutput::size() gives the size in pixels
     return outputs.front()->size();
 }
 
-glm::mat2 mgg::DisplayBuffer::transformation() const
+glm::mat2 mgg::DisplaySink::transformation() const
 {
     return transform;
 }
 
-void mgg::DisplayBuffer::set_transformation(glm::mat2 const& t, geometry::Rectangle const& a)
+void mgg::DisplaySink::set_transformation(glm::mat2 const& t, geometry::Rectangle const& a)
 {
     transform = t;
     area = a;
 }
 
-bool mgg::DisplayBuffer::overlay(std::vector<DisplayElement> const& renderable_list)
+bool mgg::DisplaySink::overlay(std::vector<DisplayElement> const& renderable_list)
 {
     // TODO: implement more than the most basic case.
     if (renderable_list.size() != 1)
@@ -150,13 +150,12 @@ bool mgg::DisplayBuffer::overlay(std::vector<DisplayElement> const& renderable_l
     return false;
 }
 
-void mgg::DisplayBuffer::for_each_display_buffer(
-    std::function<void(graphics::DisplayBuffer&)> const& f)
+void mgg::DisplaySink::for_each_display_sink(std::function<void(graphics::DisplaySink&)> const& f)
 {
     f(*this);
 }
 
-void mgg::DisplayBuffer::set_crtc(FBHandle const& forced_frame)
+void mgg::DisplaySink::set_crtc(FBHandle const& forced_frame)
 {
     for (auto& output : outputs)
     {
@@ -174,7 +173,7 @@ void mgg::DisplayBuffer::set_crtc(FBHandle const& forced_frame)
     }
 }
 
-void mgg::DisplayBuffer::post()
+void mgg::DisplaySink::post()
 {
     /*
      * We might not have waited for the previous frame to page flip yet.
@@ -268,12 +267,12 @@ void mgg::DisplayBuffer::post()
     }
 }
 
-std::chrono::milliseconds mgg::DisplayBuffer::recommended_sleep() const
+std::chrono::milliseconds mgg::DisplaySink::recommended_sleep() const
 {
     return recommend_sleep;
 }
 
-bool mgg::DisplayBuffer::schedule_page_flip(FBHandle const& bufobj)
+bool mgg::DisplaySink::schedule_page_flip(FBHandle const& bufobj)
 {
     /*
      * Schedule the current front buffer object for display. Note that
@@ -288,7 +287,7 @@ bool mgg::DisplayBuffer::schedule_page_flip(FBHandle const& bufobj)
     return page_flips_pending;
 }
 
-void mgg::DisplayBuffer::wait_for_page_flip()
+void mgg::DisplaySink::wait_for_page_flip()
 {
     if (page_flips_pending)
     {
@@ -303,22 +302,22 @@ void mgg::DisplayBuffer::wait_for_page_flip()
     }
 }
 
-void mgg::DisplayBuffer::schedule_set_crtc()
+void mgg::DisplaySink::schedule_set_crtc()
 {
     needs_set_crtc = true;
 }
 
-auto mgg::DisplayBuffer::drm_fd() const -> mir::Fd
+auto mgg::DisplaySink::drm_fd() const -> mir::Fd
 {
     return mir::Fd{mir::IntOwnedFd{outputs.front()->drm_fd()}};
 }
 
-auto mgg::DisplayBuffer::gbm_device() const -> std::shared_ptr<struct gbm_device>
+auto mgg::DisplaySink::gbm_device() const -> std::shared_ptr<struct gbm_device>
 {
     return gbm;
 }
 
-void mir::graphics::gbm::DisplayBuffer::set_next_image(std::unique_ptr<Framebuffer> content)
+void mir::graphics::gbm::DisplaySink::set_next_image(std::unique_ptr<Framebuffer> content)
 {
     std::vector<DisplayElement> const single_buffer = {
         DisplayElement {
@@ -336,7 +335,7 @@ void mir::graphics::gbm::DisplayBuffer::set_next_image(std::unique_ptr<Framebuff
     }
 }
 
-auto mgg::DisplayBuffer::maybe_create_allocator(DisplayAllocator::Tag const& type_tag)
+auto mgg::DisplaySink::maybe_create_allocator(DisplayAllocator::Tag const& type_tag)
     -> DisplayAllocator*
 {
     if (dynamic_cast<mg::CPUAddressableDisplayAllocator::Tag const*>(&type_tag))

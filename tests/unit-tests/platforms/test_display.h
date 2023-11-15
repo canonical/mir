@@ -48,7 +48,9 @@ TEST_F(DisplayTestGeneric, does_not_expose_display_buffer_for_output_with_power_
     int db_count{0};
 
     display->for_each_display_sync_group([&](mg::DisplaySyncGroup& group) {
-        group.for_each_display_buffer([&] (mg::DisplayBuffer&) { ++db_count; });
+        group.for_each_display_sink(
+            [&](mg::DisplaySink&)
+                { ++db_count; });
     });
     EXPECT_THAT(db_count, Eq(1));
 
@@ -63,7 +65,7 @@ TEST_F(DisplayTestGeneric, does_not_expose_display_buffer_for_output_with_power_
 
     db_count = 0;
     display->for_each_display_sync_group([&](mg::DisplaySyncGroup& group) {
-        group.for_each_display_buffer([&] (mg::DisplayBuffer&) { ++db_count; });
+        group.for_each_display_sink([&](mg::DisplaySink&) { ++db_count; });
     });
     EXPECT_THAT(db_count, Eq(0));
 }

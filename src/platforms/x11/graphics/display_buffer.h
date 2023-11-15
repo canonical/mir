@@ -39,18 +39,18 @@ namespace X
 {
 class Platform;
 
-class DisplayBuffer : public graphics::DisplayBuffer,
+class DisplaySink : public graphics::DisplaySink,
                       public graphics::DisplaySyncGroup
 {
 public:
-    DisplayBuffer(
+    DisplaySink(
             xcb_connection_t* connection,
             xcb_window_t win,
             std::shared_ptr<helpers::EGLHelper> egl,
             geometry::Rectangle const& view_area,
             geometry::Size pixel_size);
 
-    ~DisplayBuffer();
+    ~DisplaySink();
 
     auto view_area() const -> geometry::Rectangle override;
     auto pixel_size() const -> geometry::Size override;
@@ -68,8 +68,8 @@ public:
     void set_view_area(geometry::Rectangle const& a);
     void set_transformation(glm::mat2 const& t);
 
-    void for_each_display_buffer(
-        std::function<void(graphics::DisplayBuffer&)> const& f) override;
+    void for_each_display_sink(
+        std::function<void(graphics::DisplaySink&)> const& f) override;
     void post() override;
     std::chrono::milliseconds recommended_sleep() const override;
 

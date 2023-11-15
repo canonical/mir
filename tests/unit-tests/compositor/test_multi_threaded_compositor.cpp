@@ -66,7 +66,7 @@ public:
             f(db);
     }
 
-    void for_each_mock_buffer(std::function<void(mtd::MockDisplayBuffer&)> const& f)
+    void for_each_mock_buffer(std::function<void(mtd::MockDisplaySink&)> const& f)
     {
         for (auto& db : buffers)
             f(db.buffer);
@@ -75,7 +75,7 @@ public:
 private:
     struct StubDisplaySyncGroup : mg::DisplaySyncGroup
     {
-        void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
+        void for_each_display_sink(std::function<void(mg::DisplaySink&)> const& f) override
         {
             f(buffer);            
         }
@@ -84,7 +84,7 @@ private:
         {
             return std::chrono::milliseconds::zero();
         }
-        testing::NiceMock<mtd::MockDisplayBuffer> buffer; 
+        testing::NiceMock<mtd::MockDisplaySink> buffer;
     };
 
     std::vector<StubDisplaySyncGroup> buffers;
@@ -175,25 +175,25 @@ private:
 class RecordingDisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
 {
 public:
-    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer& display_buffer)
+    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplaySink& display_sink)
     {
         auto raw = new RecordingDisplayBufferCompositor{
-            [&display_buffer,this]()
+            [&display_sink,this]()
             {
-                mark_render_buffer(display_buffer);
+                mark_render_buffer(display_sink);
             }};
         return std::unique_ptr<RecordingDisplayBufferCompositor>(raw);
     }
 
-    void mark_render_buffer(mg::DisplayBuffer& display_buffer)
+    void mark_render_buffer(mg::DisplaySink& sink)
     {
         std::lock_guard lk{m};
 
-        if (records.find(&display_buffer) == records.end())
-            records[&display_buffer] = Record(0, std::unordered_set<std::thread::id>());
+        if (records.find(&sink) == records.end())
+            records[&sink] = Record(0, std::unordered_set<std::thread::id>());
 
-        ++records[&display_buffer].first;
-        records[&display_buffer].second.insert(std::this_thread::get_id());
+        ++records[&sink].first;
+        records[&sink].second.insert(std::this_thread::get_id());
     }
 
     bool enough_records_gathered(unsigned int nbuffers, unsigned int min_record_count = 1000)
@@ -265,7 +265,7 @@ public:
 private:
     std::mutex m;
     typedef std::pair<unsigned int, std::unordered_set<std::thread::id>> Record;
-    std::unordered_map<mg::DisplayBuffer*,Record> records;
+    std::unordered_map<mg::DisplaySink*,Record> records;
 };
 
 class SurfaceUpdatingDisplayBufferCompositor : public mc::DisplayBufferCompositor
@@ -297,7 +297,7 @@ public:
     {
     }
 
-    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer&)
+    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplaySink&)
     {
         auto raw = new SurfaceUpdatingDisplayBufferCompositor{[this]{fake_surface_update();}};
         return std::unique_ptr<SurfaceUpdatingDisplayBufferCompositor>(raw);
@@ -323,7 +323,7 @@ private:
 class ThreadNameDisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
 {
 public:
-    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer&)
+    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplaySink&)
     {
         auto raw = new RecordingDisplayBufferCompositor{
             [this]()
@@ -446,7 +446,7 @@ TEST(MultiThreadedCompositor, reports_in_the_right_places)
     EXPECT_CALL(*mock_report, started())
         .Times(1);
 
-    display->for_each_mock_buffer([](mtd::MockDisplayBuffer& mock_buf)
+    display->for_each_mock_buffer([](mtd::MockDisplaySink& mock_buf)
     {
         EXPECT_CALL(mock_buf, view_area()).Times(AtLeast(1))
             .WillRepeatedly(Return(geom::Rectangle()));

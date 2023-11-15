@@ -27,12 +27,12 @@ namespace test
 namespace doubles
 {
 
-class StubGLDisplayBuffer : public StubDisplayBuffer,
+class StubGLDisplayBuffer : public StubDisplaySink,
                             public renderer::gl::RenderTarget
 {
 public:
-    using StubDisplayBuffer::StubDisplayBuffer;
-    StubGLDisplayBuffer(StubGLDisplayBuffer const& s) : StubDisplayBuffer(s) {}
+    using StubDisplaySink::StubDisplaySink;
+    StubGLDisplayBuffer(StubGLDisplayBuffer const& s) : StubDisplaySink(s) {}
 
     auto size() const -> geometry::Size override { return {}; }
     void make_current() override {}

@@ -32,7 +32,7 @@ namespace doubles
 class NullDisplayBufferCompositorFactory : public compositor::DisplayBufferCompositorFactory
 {
 public:
-    auto create_compositor_for(graphics::DisplayBuffer&)
+    auto create_compositor_for(graphics::DisplaySink&)
         -> std::unique_ptr<compositor::DisplayBufferCompositor> override
     {
         struct NullDisplayBufferCompositor : compositor::DisplayBufferCompositor

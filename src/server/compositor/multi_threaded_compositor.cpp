@@ -81,14 +81,14 @@ public:
                 stopped.set_value();
             });
 
-        std::vector<std::tuple<mg::DisplayBuffer*, std::unique_ptr<mc::DisplayBufferCompositor>>> compositors;
-        group.for_each_display_buffer(
-        [this, &compositors](mg::DisplayBuffer& buffer)
+        std::vector<std::tuple<mg::DisplaySink*, std::unique_ptr<mc::DisplayBufferCompositor>>> compositors;
+        group.for_each_display_sink(
+        [this, &compositors](mg::DisplaySink& sink)
         {
             compositors.emplace_back(
-                std::make_tuple(&buffer, compositor_factory->create_compositor_for(buffer)));
+                std::make_tuple(&sink, compositor_factory->create_compositor_for(sink)));
 
-            auto const& r = buffer.view_area();
+            auto const& r = sink.view_area();
             auto const comp_id = std::get<1>(compositors.back()).get();
             report->added_display(r.size.width.as_int(), r.size.height.as_int(),
                                   r.top_left.x.as_int(), r.top_left.y.as_int(),
@@ -98,10 +98,10 @@ public:
         //Appease TSan, avoid destructor and this thread accessing the same shared_ptr instance
         auto const disp_listener = display_listener;
         auto display_registration = mir::raii::paired_calls(
-            [this, &disp_listener]{group.for_each_display_buffer([&disp_listener](mg::DisplayBuffer& buffer)
-                { disp_listener->add_display(buffer.view_area()); });},
-            [this, &disp_listener]{group.for_each_display_buffer([&disp_listener](mg::DisplayBuffer& buffer)
-                { disp_listener->remove_display(buffer.view_area()); });});
+            [this, &disp_listener]{ group.for_each_display_sink([&disp_listener](mg::DisplaySink& sink)
+                { disp_listener->add_display(sink.view_area()); });},
+            [this, &disp_listener]{group.for_each_display_sink([&disp_listener](mg::DisplaySink& sink)
+                { disp_listener->remove_display(sink.view_area()); });});
 
         auto compositor_registration = mir::raii::paired_calls(
             [this,&compositors]
@@ -213,8 +213,8 @@ public:
         std::unique_lock lock{run_mutex};
         bool took_damage = not_posted_yet;
 
-        group.for_each_display_buffer([&](mg::DisplayBuffer& buffer)
-            { if (damage.overlaps(buffer.view_area())) took_damage = true; });
+        group.for_each_display_sink([&](mg::DisplaySink& sink)
+            { if (damage.overlaps(sink.view_area())) took_damage = true; });
 
         if (took_damage && num_frames > frames_scheduled)
         {

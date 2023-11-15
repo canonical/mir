@@ -41,7 +41,7 @@ class DisplayConfigurationPolicy;
 namespace X
 {
 
-class DisplayBuffer;
+class DisplaySink;
 class X11OutputConfig;
 class Platform;
 
@@ -95,7 +95,7 @@ private:
         OutputInfo(
             Display* owner,
             std::unique_ptr<X11Window> window,
-            std::unique_ptr<DisplayBuffer> display_buffer,
+            std::unique_ptr<DisplaySink> sink,
             std::shared_ptr<DisplayConfigurationOutput> configuration);
         ~OutputInfo();
 
@@ -104,7 +104,7 @@ private:
 
         Display* const owner;
         std::unique_ptr<X11Window> const window;
-        std::unique_ptr<DisplayBuffer> const display_buffer;
+        std::unique_ptr<DisplaySink> const display_sink;
         std::shared_ptr<DisplayConfigurationOutput> const config;
     };
 

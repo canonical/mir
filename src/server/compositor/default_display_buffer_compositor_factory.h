@@ -51,7 +51,7 @@ public:
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<CompositorReport> const& report);
 
-    std::unique_ptr<DisplayBufferCompositor> create_compositor_for(graphics::DisplayBuffer& display_buffer) override;
+    std::unique_ptr<DisplayBufferCompositor> create_compositor_for(graphics::DisplaySink& display_sink) override;
 
 private:
     std::vector<std::shared_ptr<graphics::GLRenderingProvider>> const platforms;

@@ -376,12 +376,12 @@ TEST_F(MesaDisplayMultiMonitorTest, flip_flips_all_connected_crtcs)
     display->for_each_display_sync_group(
         [](mg::DisplaySyncGroup& group)
         {
-            group.for_each_display_buffer(
-                [](mg::DisplayBuffer& db)
+            group.for_each_display_sink(
+                [](mg::DisplaySink& sink)
                 {
-                    auto provider = db.acquire_compatible_allocator<mg::CPUAddressableDisplayAllocator>();
-                    auto fb = provider->alloc_fb(db.pixel_size(), mg::DRMFormat{DRM_FORMAT_ABGR8888});
-                    db.set_next_image(std::move(fb));
+                    auto provider = sink.acquire_compatible_allocator<mg::CPUAddressableDisplayAllocator>();
+                    auto fb = provider->alloc_fb(sink.pixel_size(), mg::DRMFormat{DRM_FORMAT_ABGR8888});
+                    sink.set_next_image(std::move(fb));
                 });
            group.post();
         });
@@ -391,12 +391,12 @@ TEST_F(MesaDisplayMultiMonitorTest, flip_flips_all_connected_crtcs)
     display->for_each_display_sync_group(
         [](mg::DisplaySyncGroup& group)
         {
-            group.for_each_display_buffer(
-                [](mg::DisplayBuffer& db)
+            group.for_each_display_sink(
+                [](mg::DisplaySink& sink)
                 {
-                    auto provider = db.acquire_compatible_allocator<mg::CPUAddressableDisplayAllocator>();
-                    auto fb = provider->alloc_fb(db.pixel_size(), mg::DRMFormat{DRM_FORMAT_ARGB8888});
-                    db.set_next_image(std::move(fb));
+                    auto provider = sink.acquire_compatible_allocator<mg::CPUAddressableDisplayAllocator>();
+                    auto fb = provider->alloc_fb(sink.pixel_size(), mg::DRMFormat{DRM_FORMAT_ARGB8888});
+                    sink.set_next_image(std::move(fb));
                 });
            group.post();
         });

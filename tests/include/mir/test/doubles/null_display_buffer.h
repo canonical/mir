@@ -26,7 +26,7 @@ namespace test
 namespace doubles
 {
 
-class NullDisplayBuffer : public graphics::DisplayBuffer
+class NullDisplaySink : public graphics::DisplaySink
 {
 public:
     geometry::Rectangle view_area() const override { return geometry::Rectangle(); }

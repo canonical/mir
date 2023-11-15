@@ -49,14 +49,14 @@ struct DisplayElement
     std::shared_ptr<Framebuffer> buffer;
 };
 /**
- * Interface to an output framebuffer.
+ * Interface to an output sink.
  */
-class DisplayBuffer
+class DisplaySink
 {
 public:
-    virtual ~DisplayBuffer() = default;
+    virtual ~DisplaySink() = default;
 
-    /** The area the DisplayBuffer occupies in the virtual screen space. */
+    /** The area the DisplaySink occupies in the virtual screen space. */
     virtual geometry::Rectangle view_area() const = 0;
 
     /** The size in pixels of the underlying display */
@@ -84,7 +84,7 @@ public:
      * and guarantees. Namely:
      * * The Framebuffer must be exactly view_area().size big, and
      * * The DisplayPlatform guarantees that this call will succeed with a framebuffer
-     *   allocated for this DisplayBuffer
+     *   allocated for this DisplaySink
      *
      * \param content
      */
@@ -100,7 +100,7 @@ public:
     virtual glm::mat2 transformation() const = 0;
 
     /**
-     * Attempt to acquire a platform-specific provider from this DisplayBuffer
+     * Attempt to acquire a platform-specific provider from this DisplaySink
      *
      * Any given platform is not guaranteed to implement any specific interface,
      * and the set of supported interfaces may depend on the runtime environment.
@@ -111,7 +111,7 @@ public:
      * \tparam Allocator
      * \return  On success: a non-null pointer to an Allocator implementation.
      *                      The lifetime of this Allocator implementation is bound
-     *                      to that of the parent DisplayBuffer.
+     *                      to that of the parent DisplaySink.
      *          On failure: nullptr
      */
     template<typename Allocator>
@@ -149,9 +149,9 @@ protected:
     virtual auto maybe_create_allocator(DisplayAllocator::Tag const& type_tag)
         -> DisplayAllocator* = 0;
 
-    DisplayBuffer() = default;
-    DisplayBuffer(DisplayBuffer const& c) = delete;
-    DisplayBuffer& operator=(DisplayBuffer const& c) = delete;
+    DisplaySink() = default;
+    DisplaySink(DisplaySink const& c) = delete;
+    DisplaySink& operator=(DisplaySink const& c) = delete;
 };
 
 }

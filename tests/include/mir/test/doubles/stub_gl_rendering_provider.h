@@ -50,27 +50,27 @@ public:
         return tex_buf;
     }
 
-    auto surface_for_output(
-        graphics::DisplayBuffer&,
+    auto surface_for_sink(
+        graphics::DisplaySink&,
         geometry::Size,
         graphics::GLConfig const&) -> std::unique_ptr<graphics::gl::OutputSurface> override
     {
         return std::make_unique<testing::NiceMock<MockOutputSurface>>();
     }
 
-    auto suitability_for_allocator(std::shared_ptr<graphics::GraphicBufferAllocator> const& /*target*/)
+    auto suitability_for_allocator(std::shared_ptr<graphics::GraphicBufferAllocator> const& /*sink*/)
         -> graphics::probe::Result override
     {
         return graphics::probe::supported;
     }
 
-    auto suitability_for_display(graphics::DisplayBuffer& /*target*/)
+    auto suitability_for_display(graphics::DisplaySink& /*sink*/)
         -> graphics::probe::Result override
     {
         return graphics::probe::dummy; 
     }
 
-    auto make_framebuffer_provider(graphics::DisplayBuffer& /*target*/)
+    auto make_framebuffer_provider(graphics::DisplaySink& /*sink*/)
         -> std::unique_ptr<FramebufferProvider> override
     {
         class NullFramebufferProvider : public FramebufferProvider

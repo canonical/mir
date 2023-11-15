@@ -30,8 +30,8 @@ public:
     MOCK_METHOD(std::shared_ptr<graphics::gl::Texture>, as_texture, (std::shared_ptr<graphics::Buffer>), (override));
     MOCK_METHOD(
         std::unique_ptr<graphics::gl::OutputSurface>,
-        surface_for_output,
-        (graphics::DisplayBuffer&, geometry::Size, graphics::GLConfig const&),
+        surface_for_sink,
+        (graphics::DisplaySink&, geometry::Size, graphics::GLConfig const&),
         (override));
     MOCK_METHOD(
         graphics::probe::Result,
@@ -41,12 +41,12 @@ public:
     MOCK_METHOD(
         graphics::probe::Result,
         suitability_for_display,
-        (graphics::DisplayBuffer&),
+        (graphics::DisplaySink&),
         (override));
     MOCK_METHOD(
         std::unique_ptr<FramebufferProvider>,
         make_framebuffer_provider,
-        (graphics::DisplayBuffer&),
+        (graphics::DisplaySink&),
         (override));
 };
 }

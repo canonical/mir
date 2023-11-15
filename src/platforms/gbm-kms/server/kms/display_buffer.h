@@ -43,11 +43,11 @@ namespace gbm
 class Platform;
 class KMSOutput;
 
-class DisplayBuffer : public graphics::DisplayBuffer,
+class DisplaySink : public graphics::DisplaySink,
                       public graphics::DisplaySyncGroup
 {
 public:
-    DisplayBuffer(
+    DisplaySink(
         mir::Fd drm_fd,
         std::shared_ptr<struct gbm_device> gbm,
         BypassOption bypass_options,
@@ -55,7 +55,7 @@ public:
         std::vector<std::shared_ptr<KMSOutput>> const& outputs,
         geometry::Rectangle const& area,
         glm::mat2 const& transformation);
-    ~DisplayBuffer();
+    ~DisplaySink();
 
     geometry::Rectangle view_area() const override;
 
@@ -65,8 +65,8 @@ public:
 
     bool overlay(std::vector<DisplayElement> const& renderlist) override;
 
-    void for_each_display_buffer(
-        std::function<void(graphics::DisplayBuffer&)> const& f) override;
+    void for_each_display_sink(
+        std::function<void(graphics::DisplaySink&)> const& f) override;
     void post() override;
     std::chrono::milliseconds recommended_sleep() const override;
 

@@ -90,17 +90,17 @@ public:
          EGLContext ctx,
          std::shared_ptr<DMABufEGLProvider> dmabuf_provider);
 
-    auto make_framebuffer_provider(DisplayBuffer& target)
+    auto make_framebuffer_provider(DisplaySink& sink)
         -> std::unique_ptr<FramebufferProvider> override;
 
     auto as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture> override;
 
     auto suitability_for_allocator(std::shared_ptr<GraphicBufferAllocator> const& target) -> probe::Result override;
 
-    auto suitability_for_display(DisplayBuffer& target) -> probe::Result override;
+    auto suitability_for_display(DisplaySink& sink) -> probe::Result override;
 
-    auto surface_for_output(
-        DisplayBuffer& target,
+    auto surface_for_sink(
+        DisplaySink& sink,
         geometry::Size size,
         GLConfig const& config) -> std::unique_ptr<gl::OutputSurface> override;
 

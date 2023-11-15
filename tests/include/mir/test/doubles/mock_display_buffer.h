@@ -29,10 +29,10 @@ namespace test
 namespace doubles
 {
 
-class MockDisplayBuffer : public graphics::DisplayBuffer
+class MockDisplaySink : public graphics::DisplaySink
 {
 public:
-    MockDisplayBuffer()
+    MockDisplaySink()
     {
         using namespace testing;
         ON_CALL(*this, view_area())

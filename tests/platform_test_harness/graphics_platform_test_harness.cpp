@@ -216,12 +216,12 @@ auto test_display_construction(mir::graphics::DisplayPlatform& platform, Minimal
     }
 }
 
-void for_each_display_buffer(mg::Display& display, std::function<void(mg::DisplayBuffer&)> functor)
+void for_each_display_buffer(mg::Display& display, std::function<void(mg::DisplaySink&)> functor)
 {
     display.for_each_display_sync_group(
         [db_functor = std::move(functor)](mg::DisplaySyncGroup& sync_group)
         {
-            sync_group.for_each_display_buffer(db_functor);
+            sync_group.for_each_display_sink(db_functor);
         });
 }
 
@@ -265,7 +265,7 @@ auto hex_to_gl(unsigned char colour) -> GLclampf
 
 void basic_display_swapping(mg::Display& display)
 {
-    for_each_display_buffer(
+    for_each_display_sink(
         display,
         [](mg::DisplayBuffer& db)
         {
@@ -386,14 +386,14 @@ void basic_software_buffer_drawing(
     int min_height{std::numeric_limits<int>::max()}, min_width{std::numeric_limits<int>::max()};
     for_each_display_buffer(
         display,
-        [platform, /*&renderers, &factory,*/ &min_height, &min_width](mg::DisplayBuffer& db)
+        [platform, /*&renderers, &factory,*/ &min_height, &min_width](mg::DisplaySink& sink)
         {
             if (auto gl_provider = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(platform))
             {
-//                auto output_surface = gl_provider->surface_for_output(db, );
+//                auto output_surface = gl_provider->surface_for_sink(sink, );
 //                renderers.push_back(factory.create_renderer_for(std::move(output_surface), gl_provider));
-                min_height = std::min(min_height, db.view_area().bottom().as_int());
-                min_width = std::min(min_width, db.view_area().right().as_int());
+                min_height = std::min(min_height, sink.view_area().bottom().as_int());
+                min_width = std::min(min_width, sink.view_area().right().as_int());
             }
             else
             {

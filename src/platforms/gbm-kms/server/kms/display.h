@@ -37,7 +37,6 @@ namespace graphics
 
 class DisplayInterfaceProvider;
 class DisplayReport;
-class DisplayBuffer;
 class DisplayConfigurationPolicy;
 class EventHandlerRegister;
 class GLConfig;
@@ -51,7 +50,7 @@ class DRMHelper;
 class GBMHelper;
 }
 
-class DisplayBuffer;
+class DisplaySink;
 class KMSOutput;
 class Cursor;
 
@@ -92,7 +91,7 @@ private:
     std::shared_ptr<DisplayReport> const listener;
     mir::udev::Monitor monitor;
     std::shared_ptr<KMSOutputContainer> const output_container;
-    std::vector<std::unique_ptr<DisplayBuffer>> display_buffers;
+    std::vector<std::unique_ptr<DisplaySink>> display_sinks;
     mutable RealKMSDisplayConfiguration current_display_configuration;
     mutable std::atomic<bool> dirty_configuration;
 
@@ -111,7 +110,7 @@ public:
 
     auto is_same_device(mir::udev::Device const& render_device) const -> bool override;
 
-    auto on_this_device(graphics::DisplayBuffer& target) const -> bool override;
+    auto on_this_sink(graphics::DisplaySink& sink) const -> bool override;
 
     auto gbm_device() const -> std::shared_ptr<struct gbm_device> override;
 

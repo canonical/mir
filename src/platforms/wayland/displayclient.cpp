@@ -41,7 +41,7 @@ namespace geom = mir::geometry;
 
 class mgw::DisplayClient::Output  :
     public DisplaySyncGroup,
-    public DisplayBuffer
+    public DisplaySink
 {
 public:
     Output(
@@ -92,11 +92,11 @@ public:
     void surface_configure(uint32_t serial);
 
     // DisplaySyncGroup implementation
-    void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f) override;
+    void for_each_display_sink(std::function<void(DisplaySink&)> const& f) override;
     void post() override;
     std::chrono::milliseconds recommended_sleep() const override;
 
-    // DisplayBuffer implementation
+    // DisplaySink implementation
     auto view_area() const -> geometry::Rectangle override;
     auto pixel_size() const -> geometry::Size override;
     bool overlay(std::vector<DisplayElement> const& renderlist) override;
@@ -324,7 +324,7 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
     }
 }
 
-void mgw::DisplayClient::Output::for_each_display_buffer(std::function<void(DisplayBuffer & )> const& f)
+void mgw::DisplayClient::Output::for_each_display_sink(std::function<void(DisplaySink&)> const& f)
 {
     f(*this);
 }

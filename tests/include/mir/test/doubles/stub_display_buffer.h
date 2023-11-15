@@ -27,11 +27,11 @@ namespace test
 namespace doubles
 {
 
-class StubDisplayBuffer : public NullDisplayBuffer
+class StubDisplaySink : public NullDisplaySink
 {
 public:
-    StubDisplayBuffer(geometry::Rectangle const& view_area_) : view_area_(view_area_) {}
-    StubDisplayBuffer(StubDisplayBuffer const& s) : view_area_(s.view_area_) {}
+    StubDisplaySink(geometry::Rectangle const& view_area_) : view_area_(view_area_) {}
+    StubDisplaySink(StubDisplaySink const& s) : view_area_(s.view_area_) {}
     geometry::Rectangle view_area() const override { return view_area_; }
 
 private:
