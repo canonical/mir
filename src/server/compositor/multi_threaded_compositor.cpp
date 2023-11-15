@@ -98,7 +98,7 @@ public:
         //Appease TSan, avoid destructor and this thread accessing the same shared_ptr instance
         auto const disp_listener = display_listener;
         auto display_registration = mir::raii::paired_calls(
-            [this, &disp_listener]{ group.for_each_display_sink([&disp_listener](mg::DisplaySink& sink)
+            [this, &disp_listener]{group.for_each_display_sink([&disp_listener](mg::DisplaySink& sink)
                 { disp_listener->add_display(sink.view_area()); });},
             [this, &disp_listener]{group.for_each_display_sink([&disp_listener](mg::DisplaySink& sink)
                 { disp_listener->remove_display(sink.view_area()); });});
