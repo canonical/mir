@@ -34,7 +34,7 @@
 #include "mir/graphics/egl_wayland_allocator.h"
 #include "mir/executor.h"
 #include "mir/renderer/gl/gl_surface.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 #include "kms/egl_helper.h"
 #include "mir/graphics/drm_formats.h"
 #include "display_helpers.h"

@@ -16,7 +16,7 @@
 
 #include "mir_test_framework/headless_display_buffer_compositor_factory.h"
 #include "mir_test_framework/passthrough_tracker.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 #include "mir/graphics/texture.h"
 #include "mir/graphics/platform.h"
 #include "mir/renderer/gl/gl_surface.h"

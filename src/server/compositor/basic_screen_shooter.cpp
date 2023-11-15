@@ -26,7 +26,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/renderer/renderer_factory.h"
 #include "mir/renderer/sw/pixel_source.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 
 namespace mc = mir::compositor;
 namespace mr = mir::renderer;

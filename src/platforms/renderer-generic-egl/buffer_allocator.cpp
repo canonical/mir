@@ -32,7 +32,7 @@
 #include "mir/graphics/egl_wayland_allocator.h"
 #include "mir/executor.h"
 #include "mir/renderer/gl/gl_surface.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 #include "mir/graphics/drm_formats.h"
 #include "mir/graphics/egl_error.h"
 #include "cpu_copy_output_surface.h"

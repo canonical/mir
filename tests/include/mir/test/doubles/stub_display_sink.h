@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_BUFFER_H_
 #define MIR_TEST_DOUBLES_STUB_DISPLAY_BUFFER_H_
 
-#include "mir/test/doubles/null_display_buffer.h"
+#include "mir/test/doubles/null_display_sink.h"
 #include "mir/geometry/rectangle.h"
 
 namespace mir

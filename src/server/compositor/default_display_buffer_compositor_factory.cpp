@@ -17,7 +17,7 @@
 #include "default_display_buffer_compositor_factory.h"
 #include "mir/renderer/renderer_factory.h"
 #include "mir/renderer/renderer.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 #include "mir/renderer/gl/render_target.h"
 #include "mir/graphics/platform.h"
 #include "mir/renderer/gl/gl_surface.h"

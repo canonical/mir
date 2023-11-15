@@ -19,7 +19,7 @@
 #include "kms/egl_helper.h"
 #include "mir/graphics/platform.h"
 #include "platform.h"
-#include "display_buffer.h"
+#include "display_sink.h"
 #include "kms_display_configuration.h"
 #include "kms_output.h"
 #include "kms_page_flipper.h"

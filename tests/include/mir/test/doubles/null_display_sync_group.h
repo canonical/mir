@@ -19,7 +19,7 @@
 
 #include "mir/graphics/display.h"
 #include "mir/geometry/size.h"
-#include "mir/test/doubles/stub_display_buffer.h"
+#include "mir/test/doubles/stub_display_sink.h"
 #include <thread>
 
 namespace mir

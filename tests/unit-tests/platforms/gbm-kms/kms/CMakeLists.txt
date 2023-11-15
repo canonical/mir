@@ -1,7 +1,7 @@
 mir_add_wrapped_executable(mir_unit_tests_gbm-kms NOINSTALL
   ${CMAKE_CURRENT_SOURCE_DIR}/test_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display_generic.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_display_buffer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_display_sink.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display_multi_monitor.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display_configuration.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_real_kms_output.cpp
@@ -18,7 +18,7 @@ mir_add_wrapped_executable(mir_unit_tests_gbm-kms NOINSTALL
 set_property(
   SOURCE test_platform.cpp test_graphics_platform.cpp test_buffer_allocator.cpp
          test_display.cpp test_display_generic.cpp test_display_multi_monitor.cpp test_display_configuration.cpp
-         test_display_buffer.cpp test_drm_helper.cpp
+        test_display_sink.cpp test_drm_helper.cpp
   PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
 
 add_dependencies(mir_unit_tests_gbm-kms GMock)

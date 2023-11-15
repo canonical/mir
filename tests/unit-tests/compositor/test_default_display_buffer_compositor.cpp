@@ -21,7 +21,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/test/doubles/mock_renderer.h"
 #include "mir/test/fake_shared.h"
-#include "mir/test/doubles/mock_display_buffer.h"
+#include "mir/test/doubles/mock_display_sink.h"
 #include "mir/test/doubles/fake_renderable.h"
 #include "mir/test/doubles/mock_compositor_report.h"
 #include "mir/test/doubles/stub_scene_element.h"

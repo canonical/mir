@@ -8,7 +8,7 @@ add_library(
   platform.cpp
   display.cpp
   display_configuration.cpp
-  display_buffer.cpp
+  display_sink.cpp
   egl_helper.cpp
 )
 

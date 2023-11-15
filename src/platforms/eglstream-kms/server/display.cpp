@@ -32,7 +32,7 @@
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/egl_error.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 #include "mir/graphics/transformation.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/display_report.h"

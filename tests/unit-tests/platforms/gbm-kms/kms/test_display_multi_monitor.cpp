@@ -15,7 +15,7 @@
  */
 
 #include "mir/graphics/display.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/drm_formats.h"
 #include "mir/graphics/platform.h"

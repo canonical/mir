@@ -24,7 +24,7 @@
 #include "display_configuration.h"
 #include "display.h"
 #include "platform.h"
-#include "display_buffer.h"
+#include "display_sink.h"
 
 #include <boost/throw_exception.hpp>
 #include <algorithm>

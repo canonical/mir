@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_X_DISPLAY_BUFFER_H_
-#define MIR_GRAPHICS_X_DISPLAY_BUFFER_H_
+#ifndef MIR_GRAPHICS_X_DISPLAY_SINK_H_
+#define MIR_GRAPHICS_X_DISPLAY_SINK_H_
 
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
@@ -91,4 +91,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_X_DISPLAY_BUFFER_H_ */
+#endif /* MIR_GRAPHICS_X_DISPLAY_SINK_H_ */

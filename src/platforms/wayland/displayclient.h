@@ -20,7 +20,7 @@
 
 #include <mir/geometry/rectangles.h>
 #include <mir/graphics/display.h>
-#include <mir/graphics/display_buffer.h>
+#include <mir/graphics/display_sink.h>
 #include <mir/graphics/display_configuration.h>
 #include <mir/renderer/gl/render_target.h>
 #include <mir/graphics/gl_config.h>

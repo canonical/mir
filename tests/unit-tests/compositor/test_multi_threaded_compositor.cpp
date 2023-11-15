@@ -26,8 +26,8 @@
 
 #include "mir/test/current_thread_name.h"
 #include "mir/test/doubles/null_display.h"
-#include "mir/test/doubles/null_display_buffer.h"
-#include "mir/test/doubles/mock_display_buffer.h"
+#include "mir/test/doubles/null_display_sink.h"
+#include "mir/test/doubles/mock_display_sink.h"
 #include "mir/test/doubles/mock_compositor_report.h"
 #include "mir/test/doubles/mock_scene.h"
 #include "mir/test/doubles/stub_scene.h"

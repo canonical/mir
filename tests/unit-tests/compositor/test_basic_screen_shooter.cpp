@@ -16,7 +16,7 @@
 
 #include "mir/executor.h"
 #include "mir/graphics/platform.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 #include "mir/renderer/gl/gl_surface.h"
 #include "mir/test/doubles/stub_gl_rendering_provider.h"
 #include "src/server/compositor/basic_screen_shooter.h"

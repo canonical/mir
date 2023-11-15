@@ -16,7 +16,7 @@
 
 #include "graphics_display_layout.h"
 #include "mir/graphics/display.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/rectangles.h"

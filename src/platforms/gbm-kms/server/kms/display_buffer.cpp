@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "display_buffer.h"
+#include "display_sink.h"
 #include "kms_cpu_addressable_display_provider.h"
 #include "kms_output.h"
 #include "cpu_addressable_fb.h"

@@ -20,7 +20,7 @@
 #include "buffer_allocator.h"
 #include "cpu_copy_output_surface.h"
 #include "mir/anonymous_shm_file.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 #include "mir/graphics/drm_formats.h"
 #include "mir/graphics/egl_resources.h"
 #include "mir/graphics/gl_config.h"

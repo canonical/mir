@@ -16,7 +16,7 @@
 
 #include "mir/fatal.h"
 #include "platform.h"
-#include "display_buffer.h"
+#include "display_sink.h"
 #include "display_configuration.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/transformation.h"
