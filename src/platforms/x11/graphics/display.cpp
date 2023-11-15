@@ -24,7 +24,7 @@
 #include "display_configuration.h"
 #include "display.h"
 #include "platform.h"
-#include "display_buffer.h"
+#include "display_sink.h"
 
 #include <boost/throw_exception.hpp>
 #include <algorithm>
@@ -133,7 +133,7 @@ mgx::Display::Display(
                 actual_size.height * pixel_size_mm.height.as_value()},
             requested_size.scale,
             mir_orientation_normal);
-        auto display_buffer = std::make_unique<mgx::DisplayBuffer>(
+        auto sink = std::make_unique<mgx::DisplaySink>(
             x11_resources->conn->connection(),
             *window,
             this->egl,
@@ -143,7 +143,7 @@ mgx::Display::Display(
         outputs.push_back(std::make_unique<OutputInfo>(
             this,
              std::move(window),
-             std::move(display_buffer),
+             std::move(sink),
              std::move(configuration)));
     }
 
@@ -163,7 +163,7 @@ void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
     std::lock_guard lock{mutex};
     for (auto const& output : outputs)
     {
-        f(*output->display_buffer);
+        f(*output->display_sink);
     }
 }
 
@@ -197,18 +197,18 @@ void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
             if (output->config->id == conf_output.id)
             {
                 *output->config = conf_output;
-                output->display_buffer->set_view_area(output->config->extents());
+                output->display_sink->set_view_area(output->config->extents());
                 switch (output->config->power_mode)
                 {
                 case mir_power_mode_on:
-                    output->display_buffer->set_transformation(output->config->transformation());
+                    output->display_sink->set_transformation(output->config->transformation());
                     break;
 
                 case mir_power_mode_standby:
                 case mir_power_mode_suspend:
                 case mir_power_mode_off:
                     // Simulate an off display by setting a zeroed-out transform
-                    output->display_buffer->set_transformation(glm::mat2{0});
+                    output->display_sink->set_transformation(glm::mat2{0});
                     break;
                 }
                 found_info = true;
@@ -253,11 +253,11 @@ bool mgx::Display::apply_if_configuration_preserves_display_buffers(
 mgx::Display::OutputInfo::OutputInfo(
     Display* owner,
     std::unique_ptr<X11Window> window,
-    std::unique_ptr<DisplayBuffer> display_buffer,
+    std::unique_ptr<DisplaySink> sink,
     std::shared_ptr<DisplayConfigurationOutput> configuration)
     : owner{owner},
       window{std::move(window)},
-      display_buffer{std::move(display_buffer)},
+      display_sink{std::move(sink)},
       config{std::move(configuration)}
 {
     owner->x11_resources->set_set_output_for_window(*this->window, this);
@@ -276,7 +276,7 @@ void mgx::Display::OutputInfo::set_size(geometry::Size const& size)
         return;
     }
     config->modes[0].size = size;
-    display_buffer->set_view_area(config->extents());
+    display_sink->set_view_area(config->extents());
     auto const handlers = owner->config_change_handlers;
 
     lock.unlock();

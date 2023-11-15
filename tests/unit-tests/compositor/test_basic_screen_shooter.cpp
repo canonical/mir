@@ -16,7 +16,7 @@
 
 #include "mir/executor.h"
 #include "mir/graphics/platform.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 #include "mir/renderer/gl/gl_surface.h"
 #include "mir/test/doubles/stub_gl_rendering_provider.h"
 #include "src/server/compositor/basic_screen_shooter.h"
@@ -78,12 +78,12 @@ struct BasicScreenShooter : Test
                 {
                     return default_gl_behaviour_provider.as_texture(std::move(buffer));
                 });
-        ON_CALL(*gl_provider, surface_for_output(_, _, _))
+        ON_CALL(*gl_provider, surface_for_sink(_, _, _))
             .WillByDefault(
-                [](mg::DisplayBuffer& output, auto size, auto const&)
+                [](mg::DisplaySink& sink, auto size, auto const&)
                     -> std::unique_ptr<mg::gl::OutputSurface>
                 {
-                    if (auto cpu_provider = output.acquire_allocator<mg::CPUAddressableDisplayAllocator>())
+                    if (auto cpu_provider = sink.acquire_compatible_allocator<mg::CPUAddressableDisplayAllocator>())
                     {
                         auto surface = std::make_unique<testing::NiceMock<mtd::MockOutputSurface>>();
                         auto format = cpu_provider->supported_formats().front();
@@ -209,10 +209,10 @@ TEST_F(BasicScreenShooter, throw_in_scene_elements_for_causes_graceful_failure)
 
 TEST_F(BasicScreenShooter, throw_in_surface_for_output_handled_gracefully)
 {
-    ON_CALL(*gl_provider, surface_for_output).WillByDefault(
+    ON_CALL(*gl_provider, surface_for_sink).WillByDefault(
         [](auto&, auto, auto&) -> std::unique_ptr<mg::gl::OutputSurface>
         {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Throw in surface_for_output"}));
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Throw in surface_for_sink"}));
         });
     shooter->capture(buffer, viewport_rect, [&](auto time)
         {

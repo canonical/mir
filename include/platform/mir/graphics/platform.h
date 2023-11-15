@@ -61,7 +61,7 @@ namespace graphics
 class Buffer;
 class Framebuffer;
 class Display;
-class DisplayBuffer;
+class DisplaySink;
 class DisplayReport;
 class DisplayConfigurationPolicy;
 class GraphicBufferAllocator;
@@ -120,7 +120,7 @@ public:
          * Some buffer types can be passed as-is to the display hardware. If this
          * buffer can be used in this way (on the DisplayInterfaceProvider associated
          * with this FramebufferProvider), this method creates a handle that can be
-         * passed to the overlay method of an associated DisplayBuffer.
+         * passed to the overlay method of an associated DisplaySink.
          *
          * \note    The returned Framebuffer may share ownership of the provided Buffer.
          *          It is not necessary for calling code to retain a reference to the Buffer.
@@ -133,9 +133,9 @@ public:
     };
 
     /**
-     * Check how well this Renderer can support a particular display target
+     * Check how well this Renderer can support a particular display sink
      */
-    virtual auto suitability_for_display(DisplayBuffer& target)
+    virtual auto suitability_for_display(DisplaySink& sink)
         -> probe::Result = 0;
 
     /**
@@ -144,7 +144,7 @@ public:
     virtual auto suitability_for_allocator(std::shared_ptr<GraphicBufferAllocator> const& target)
         -> probe::Result = 0;
 
-    virtual auto make_framebuffer_provider(DisplayBuffer& target)
+    virtual auto make_framebuffer_provider(DisplaySink& sink)
         -> std::unique_ptr<FramebufferProvider> = 0;
 };
 
@@ -163,8 +163,8 @@ public:
 
     virtual auto as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture> = 0;
 
-    virtual auto surface_for_output(
-        DisplayBuffer& target,
+    virtual auto surface_for_sink(
+        DisplaySink& sink,
         geometry::Size size,
         GLConfig const& config) -> std::unique_ptr<gl::OutputSurface> = 0;
 };
@@ -333,9 +333,9 @@ public:
     virtual auto is_same_device(mir::udev::Device const& render_device) const -> bool = 0;
 
     /**
-     * Check if this DisplayBuffer is driven by this DisplayProvider
+     * Check if this DisplaySink is driven by this DisplayProvider
      */
-    virtual auto on_this_device(DisplayBuffer& target) const -> bool = 0;
+    virtual auto on_this_sink(DisplaySink& sink) const -> bool = 0;
 
     /**
      * Get the GBM device for this display

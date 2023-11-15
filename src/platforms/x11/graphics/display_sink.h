@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_X_DISPLAY_BUFFER_H_
-#define MIR_GRAPHICS_X_DISPLAY_BUFFER_H_
+#ifndef MIR_GRAPHICS_X_DISPLAY_SINK_H_
+#define MIR_GRAPHICS_X_DISPLAY_SINK_H_
 
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
@@ -39,18 +39,18 @@ namespace X
 {
 class Platform;
 
-class DisplayBuffer : public graphics::DisplayBuffer,
+class DisplaySink : public graphics::DisplaySink,
                       public graphics::DisplaySyncGroup
 {
 public:
-    DisplayBuffer(
+    DisplaySink(
             xcb_connection_t* connection,
             xcb_window_t win,
             std::shared_ptr<helpers::EGLHelper> egl,
             geometry::Rectangle const& view_area,
             geometry::Size pixel_size);
 
-    ~DisplayBuffer();
+    ~DisplaySink();
 
     auto view_area() const -> geometry::Rectangle override;
     auto pixel_size() const -> geometry::Size override;
@@ -68,8 +68,8 @@ public:
     void set_view_area(geometry::Rectangle const& a);
     void set_transformation(glm::mat2 const& t);
 
-    void for_each_display_buffer(
-        std::function<void(graphics::DisplayBuffer&)> const& f) override;
+    void for_each_display_sink(
+        std::function<void(graphics::DisplaySink&)> const& f) override;
     void post() override;
     std::chrono::milliseconds recommended_sleep() const override;
 
@@ -91,4 +91,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_X_DISPLAY_BUFFER_H_ */
+#endif /* MIR_GRAPHICS_X_DISPLAY_SINK_H_ */

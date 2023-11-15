@@ -26,7 +26,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/renderer/renderer_factory.h"
 #include "mir/renderer/sw/pixel_source.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 
 namespace mc = mir::compositor;
 namespace mr = mir::renderer;
@@ -101,10 +101,10 @@ private:
     std::shared_ptr<mrs::WriteMappableBuffer> next_buffer;
 };
 
-class OffscreenDisplayBuffer : public mg::DisplayBuffer
+class OffscreenDisplaySink : public mg::DisplaySink
 {
 public:
-    OffscreenDisplayBuffer(
+    OffscreenDisplaySink(
         std::shared_ptr<mg::CPUAddressableDisplayAllocator> provider,
         geom::Size size)
         : provider {std::move(provider)},
@@ -202,7 +202,7 @@ auto mc::BasicScreenShooter::Self::renderer_for_buffer(std::shared_ptr<mrs::Writ
         BOOST_THROW_EXCEPTION((std::runtime_error{"Attempt to capture to a zero-sized buffer"}));
     }
     output->set_next_buffer(std::move(buffer));
-    if (!offscreen_db || (buffer_size != offscreen_db->pixel_size()))
+    if (!offscreen_sink || (buffer_size != offscreen_sink->pixel_size()))
     {
         // We need to build a new Renderer, at the new size
         class NoAuxConfig : public graphics::GLConfig
@@ -217,8 +217,8 @@ auto mc::BasicScreenShooter::Self::renderer_for_buffer(std::shared_ptr<mrs::Writ
                 return 0;
             }
         };
-        offscreen_db = std::make_unique<OffscreenDisplayBuffer>(output, buffer_size);
-        auto gl_surface = render_provider->surface_for_output(*offscreen_db, buffer_size, NoAuxConfig{});
+        offscreen_sink = std::make_unique<OffscreenDisplaySink>(output, buffer_size);
+        auto gl_surface = render_provider->surface_for_sink(*offscreen_sink, buffer_size, NoAuxConfig{});
         current_renderer = renderer_factory->create_renderer_for(std::move(gl_surface), render_provider);
     }
     return *current_renderer;
@@ -229,12 +229,12 @@ auto mc::BasicScreenShooter::select_provider(
     -> std::shared_ptr<mg::GLRenderingProvider>
 {
     auto display_provider = std::make_shared<Self::OneShotBufferDisplayProvider>();
-    OffscreenDisplayBuffer temp_db{display_provider, geom::Size{640, 480}};
+    OffscreenDisplaySink temp_db{display_provider, geom::Size{640, 480}};
 
     for (auto const& render_provider : providers)
     {
         /* TODO: There might be more sensible ways to select a provider
-         * (one in use by at least one DisplayBuffer, the only one in use, the lowest-powered one,...)
+         * (one in use by at least one DisplaySink, the only one in use, the lowest-powered one,...)
          * That will be a job for a policy object, later.
          *
          * For now, just use the first that claims to work.

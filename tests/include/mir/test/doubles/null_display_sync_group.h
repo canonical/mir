@@ -19,7 +19,7 @@
 
 #include "mir/graphics/display.h"
 #include "mir/geometry/size.h"
-#include "mir/test/doubles/stub_display_buffer.h"
+#include "mir/test/doubles/stub_display_sink.h"
 #include <thread>
 
 namespace mir
@@ -40,7 +40,7 @@ public:
     }
     StubDisplaySyncGroup(geometry::Size sz) : StubDisplaySyncGroup({{{0,0}, sz}}) {}
 
-    void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f) override
+    void for_each_display_sink(std::function<void(graphics::DisplaySink&)> const& f) override
     {
         for (auto& db : display_buffers)
             f(db);
@@ -59,12 +59,12 @@ public:
 
 private:
     std::vector<geometry::Rectangle> const output_rects;
-    std::vector<StubDisplayBuffer> display_buffers;
+    std::vector<StubDisplaySink> display_buffers;
 };
 
 struct NullDisplaySyncGroup : graphics::DisplaySyncGroup
 {
-    void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f) override
+    void for_each_display_sink(std::function<void(graphics::DisplaySink&)> const& f) override
     {
         f(db);
     }
@@ -79,7 +79,7 @@ struct NullDisplaySyncGroup : graphics::DisplaySyncGroup
         return std::chrono::milliseconds::zero();
     }
 
-    StubDisplayBuffer db{{{}, {1, 1}}};
+    StubDisplaySink db{{{}, {1, 1}}};
 };
 
 }

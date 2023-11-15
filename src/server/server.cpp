@@ -20,7 +20,7 @@
 #include "mir/fd.h"
 #include "mir/frontend/connector.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/input/event_filter.h"
 #include "mir/options/default_configuration.h"

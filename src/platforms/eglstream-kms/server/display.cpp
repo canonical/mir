@@ -32,7 +32,7 @@
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/egl_error.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 #include "mir/graphics/transformation.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/display_report.h"
@@ -122,13 +122,13 @@ EGLContext create_context(EGLDisplay display, EGLConfig config, EGLContext share
     return context;
 }
 
-class DisplayBuffer
+class DisplaySink
     : public mg::DisplaySyncGroup,
-      public mg::DisplayBuffer,
+      public mg::DisplaySink,
       public mg::EGLStreamDisplayAllocator
 {
 public:
-    DisplayBuffer(
+    DisplaySink(
         mir::Fd drm_node,
         EGLDisplay dpy,
         EGLContext ctx,
@@ -180,7 +180,7 @@ public:
         pending_flip = satisfied_promise.get_future();
     }
 
-    ~DisplayBuffer()
+    ~DisplaySink()
     {
         if (output_stream != EGL_NO_STREAM_KHR)
         {
@@ -210,7 +210,7 @@ public:
         return output->transformation();
     }
 
-    void for_each_display_buffer(const std::function<void(mir::graphics::DisplayBuffer&)>& f) override
+    void for_each_display_sink(const std::function<void(mir::graphics::DisplaySink&)>& f) override
     {
         f(*this);
     }
@@ -509,7 +509,7 @@ void mge::Display::configure(DisplayConfiguration const& conf)
              {
                  output->configure(output->current_mode_index);
                  active_sync_groups.emplace_back(
-                     std::make_unique<::DisplayBuffer>(
+                     std::make_unique<::DisplaySink>(
                         drm_node,
                         display,
                         context,
@@ -563,7 +563,7 @@ void mge::Display::resume()
 {
     for (auto& group : active_sync_groups)
     {
-        dynamic_cast<::DisplayBuffer*>(group.get())->resume();
+        dynamic_cast<::DisplaySink*>(group.get())->resume();
     }
 }
 

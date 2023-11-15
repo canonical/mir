@@ -23,7 +23,7 @@ namespace mir
 {
 namespace graphics
 {
-class DisplayBuffer;
+class DisplaySink;
 }
 namespace compositor
 {
@@ -35,7 +35,7 @@ class DisplayBufferCompositorFactory
 public:
     virtual ~DisplayBufferCompositorFactory() = default;
 
-    virtual std::unique_ptr<DisplayBufferCompositor> create_compositor_for(graphics::DisplayBuffer& display_buffer) = 0;
+    virtual std::unique_ptr<DisplayBufferCompositor> create_compositor_for(graphics::DisplaySink& display_sink) = 0;
 
 protected:
     DisplayBufferCompositorFactory() = default;

@@ -19,7 +19,7 @@
 #include "mir/compositor/buffer_stream.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 #include "mir/gl/tessellation_helpers.h"
 #include "mir/log.h"
 #include "mir/report_exception.h"

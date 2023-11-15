@@ -16,7 +16,7 @@
 
 #include "platform.h"
 #include "display.h"
-#include "display_buffer.h"
+#include "display_sink.h"
 #include "egl_helper.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/platform.h"

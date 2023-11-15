@@ -16,7 +16,7 @@
 
 #include "mir_test_framework/headless_display_buffer_compositor_factory.h"
 #include "mir_test_framework/passthrough_tracker.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 #include "mir/graphics/texture.h"
 #include "mir/graphics/platform.h"
 #include "mir/renderer/gl/gl_surface.h"
@@ -50,16 +50,16 @@ mtf::HeadlessDisplayBufferCompositorFactory::HeadlessDisplayBufferCompositorFact
 }
 
 std::unique_ptr<mir::compositor::DisplayBufferCompositor>
-mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBuffer& db)
+mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplaySink& display_sink)
 {
     struct HeadlessDBC : mir::compositor::DisplayBufferCompositor
     {
         HeadlessDBC(
-            mg::DisplayBuffer& db,
+            mg::DisplaySink& sink,
             std::unique_ptr<mg::gl::OutputSurface> output,
             std::shared_ptr<mg::GLRenderingProvider> render_platform,
             std::shared_ptr<mtf::PassthroughTracker> const& tracker) :
-            db{db},
+            display_sink{sink},
             output{std::move(output)},
             render_platform{std::move(render_platform)},
             tracker(tracker)
@@ -95,7 +95,7 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
 
         bool composite(mir::compositor::SceneElementSequence&& seq) override
         {
-            auto renderlist = filter(seq, db.view_area());
+            auto renderlist = filter(seq, display_sink.view_area());
 
             // TODO: Might need to attempt to overlay in order to test those codepaths?
 
@@ -115,12 +115,12 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
             output->commit();
             return true;
         }
-        mg::DisplayBuffer& db;
+        mg::DisplaySink& display_sink;
         std::unique_ptr<mg::gl::OutputSurface> const output;
         std::shared_ptr<mg::GLRenderingProvider> const render_platform;
         std::shared_ptr<PassthroughTracker> const tracker;
     };
     auto output_surface =
-        render_platform->surface_for_output(db, db.pixel_size(), *gl_config);
-    return std::make_unique<HeadlessDBC>(db, std::move(output_surface), render_platform, tracker);
+        render_platform->surface_for_sink(display_sink, display_sink.pixel_size(), *gl_config);
+    return std::make_unique<HeadlessDBC>(display_sink, std::move(output_surface), render_platform, tracker);
 }

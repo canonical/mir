@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_BUFFER_H_
 #define MIR_TEST_DOUBLES_MOCK_DISPLAY_BUFFER_H_
 
-#include <mir/graphics/display_buffer.h>
+#include <mir/graphics/display_sink.h>
 #include <mir/graphics/platform.h>
 
 #include <gmock/gmock.h>
@@ -29,10 +29,10 @@ namespace test
 namespace doubles
 {
 
-class MockDisplayBuffer : public graphics::DisplayBuffer
+class MockDisplaySink : public graphics::DisplaySink
 {
 public:
-    MockDisplayBuffer()
+    MockDisplaySink()
     {
         using namespace testing;
         ON_CALL(*this, view_area())

@@ -30,7 +30,7 @@
 
 namespace mir
 {
-namespace graphics { class DisplayBuffer; class GLRenderingProvider; }
+namespace graphics { class GLRenderingProvider; }
 namespace graphics::gl { class OutputSurface; }
 namespace renderer
 {

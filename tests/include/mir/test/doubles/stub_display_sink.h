@@ -14,11 +14,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_GL_DISPLAY_BUFFER_H_
-#define MIR_TEST_DOUBLES_STUB_GL_DISPLAY_BUFFER_H_
+#ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_BUFFER_H_
+#define MIR_TEST_DOUBLES_STUB_DISPLAY_BUFFER_H_
 
-#include "mir/test/doubles/stub_display_buffer.h"
-#include "mir/renderer/gl/render_target.h"
+#include "mir/test/doubles/null_display_sink.h"
+#include "mir/geometry/rectangle.h"
 
 namespace mir
 {
@@ -27,22 +27,19 @@ namespace test
 namespace doubles
 {
 
-class StubGLDisplayBuffer : public StubDisplayBuffer,
-                            public renderer::gl::RenderTarget
+class StubDisplaySink : public NullDisplaySink
 {
 public:
-    using StubDisplayBuffer::StubDisplayBuffer;
-    StubGLDisplayBuffer(StubGLDisplayBuffer const& s) : StubDisplayBuffer(s) {}
+    StubDisplaySink(geometry::Rectangle const& view_area_) : view_area_(view_area_) {}
+    StubDisplaySink(StubDisplaySink const& s) : view_area_(s.view_area_) {}
+    geometry::Rectangle view_area() const override { return view_area_; }
 
-    auto size() const -> geometry::Size override { return {}; }
-    void make_current() override {}
-    void release_current() override {}
-    void swap_buffers() override {}
-    void bind() override {}
+private:
+    geometry::Rectangle view_area_;
 };
 
 }
 }
 }
 
-#endif
+#endif /* MIR_TEST_DOUBLES_STUB_DISPLAY_BUFFER_H_ */

@@ -14,10 +14,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_BUFFER_H_
-#define MIR_TEST_DOUBLES_NULL_DISPLAY_BUFFER_H_
+#ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_SINK_H_
+#define MIR_TEST_DOUBLES_NULL_DISPLAY_SINK_H_
 
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 
 namespace mir
 {
@@ -26,7 +26,7 @@ namespace test
 namespace doubles
 {
 
-class NullDisplayBuffer : public graphics::DisplayBuffer
+class NullDisplaySink : public graphics::DisplaySink
 {
 public:
     geometry::Rectangle view_area() const override { return geometry::Rectangle(); }
@@ -45,4 +45,4 @@ protected:
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_NULL_DISPLAY_BUFFER_H_ */
+#endif /* MIR_TEST_DOUBLES_NULL_DISPLAY_SINK_H_ */

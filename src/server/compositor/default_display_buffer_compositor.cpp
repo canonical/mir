@@ -20,7 +20,7 @@
 #include "mir/compositor/scene.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/graphics/renderable.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/platform.h"
 #include "mir/compositor/buffer_stream.h"
@@ -31,13 +31,13 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
-    mg::DisplayBuffer& display_buffer,
+    mg::DisplaySink& display_sink,
     graphics::GLRenderingProvider& gl_provider,
     std::shared_ptr<mir::renderer::Renderer> const& renderer,
     std::shared_ptr<CompositorReport> const& report) :
-    display_buffer(display_buffer),
+    display_sink(display_sink),
     renderer(renderer),
-    fb_adaptor{gl_provider.make_framebuffer_provider(display_buffer)},
+    fb_adaptor{gl_provider.make_framebuffer_provider(display_sink)},
     report(report)
 {
 }
@@ -50,7 +50,7 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     completed_first_render = true;
     report->began_frame(this);
 
-    auto const& view_area = display_buffer.view_area();
+    auto const& view_area = display_sink.view_area();
     auto const& occlusions = mc::filter_occlusions_from(scene_elements, view_area);
 
     for (auto const& element : occlusions)
@@ -108,17 +108,17 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
         });
     }
 
-    if (framebuffers.size() == renderable_list.size() && display_buffer.overlay(framebuffers))
+    if (framebuffers.size() == renderable_list.size() && display_sink.overlay(framebuffers))
     {
         report->renderables_in_frame(this, renderable_list);
         renderer->suspend();
     }
     else
     {
-        renderer->set_output_transform(display_buffer.transformation());
+        renderer->set_output_transform(display_sink.transformation());
         renderer->set_viewport(view_area);
 
-        display_buffer.set_next_image(renderer->render(renderable_list));
+        display_sink.set_next_image(renderer->render(renderable_list));
 
         report->renderables_in_frame(this, renderable_list);
         report->rendered_frame(this);

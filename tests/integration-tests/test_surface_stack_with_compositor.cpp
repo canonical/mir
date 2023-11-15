@@ -27,7 +27,7 @@
 #include "mir/test/doubles/mock_buffer_stream.h"
 #include "mir/test/doubles/null_display.h"
 #include "mir/test/doubles/stub_renderer.h"
-#include "mir/test/doubles/stub_display_buffer.h"
+#include "mir/test/doubles/stub_display_sink.h"
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/null_display_sync_group.h"
 #include "mir/test/doubles/mock_event_sink.h"

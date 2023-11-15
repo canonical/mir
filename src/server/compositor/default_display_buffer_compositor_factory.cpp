@@ -17,7 +17,7 @@
 #include "default_display_buffer_compositor_factory.h"
 #include "mir/renderer/renderer_factory.h"
 #include "mir/renderer/renderer.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 #include "mir/renderer/gl/render_target.h"
 #include "mir/graphics/platform.h"
 #include "mir/renderer/gl/gl_surface.h"
@@ -46,7 +46,7 @@ mc::DefaultDisplayBufferCompositorFactory::DefaultDisplayBufferCompositorFactory
 
 std::unique_ptr<mc::DisplayBufferCompositor>
 mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
-    mg::DisplayBuffer& display_buffer)
+    mg::DisplaySink& display_sink)
 {
     /* TODO: There's scope for (GPU) memory optimisation here:
      * We unconditionally allocate a GL rendering surface for the renderer,
@@ -64,7 +64,7 @@ mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
     std::pair<mg::probe::Result, std::shared_ptr<mg::GLRenderingProvider>> best_provider = std::make_pair(mg::probe::unsupported, nullptr);
     for (auto const& provider : platforms)
     {
-        auto suitability = provider->suitability_for_display(display_buffer);
+        auto suitability = provider->suitability_for_display(display_sink);
         // We also need to make sure that the GLRenderingProvider can access client buffers...
         if (provider->suitability_for_allocator(buffer_allocator) > mg::probe::unsupported && suitability > best_provider.first)
         {
@@ -80,10 +80,10 @@ mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
 
     auto const chosen_allocator = best_provider.second;
     
-    auto output_surface = chosen_allocator->surface_for_output(
-        display_buffer, display_buffer.pixel_size(), *gl_config);
+    auto output_surface = chosen_allocator->surface_for_sink(
+        display_sink, display_sink.pixel_size(), *gl_config);
     auto renderer = renderer_factory->create_renderer_for(std::move(output_surface), chosen_allocator);
-    renderer->set_viewport(display_buffer.view_area());
+    renderer->set_viewport(display_sink.view_area());
     return std::make_unique<DefaultDisplayBufferCompositor>(
-        display_buffer, *chosen_allocator, std::move(renderer), report);
+        display_sink, *chosen_allocator, std::move(renderer), report);
 }

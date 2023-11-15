@@ -34,7 +34,7 @@
 #include "mir/graphics/egl_wayland_allocator.h"
 #include "mir/executor.h"
 #include "mir/renderer/gl/gl_surface.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_sink.h"
 #include "kms/egl_helper.h"
 #include "mir/graphics/drm_formats.h"
 #include "display_helpers.h"
@@ -487,11 +487,11 @@ auto mgg::GLRenderingProvider::suitability_for_allocator(
 }
 
 auto mgg::GLRenderingProvider::suitability_for_display(
-    DisplayBuffer& target) -> probe::Result
+    DisplaySink& sink) -> probe::Result
 {
     if (bound_display)
     {
-        if (bound_display->on_this_device(target))
+        if (bound_display->on_this_sink(sink))
         {
             /* We're rendering on the same device as display;
              * it doesn't get better than this!
@@ -500,7 +500,7 @@ auto mgg::GLRenderingProvider::suitability_for_display(
         }
     }
 
-    if (target.acquire_allocator<CPUAddressableDisplayAllocator>())
+    if (sink.acquire_compatible_allocator<CPUAddressableDisplayAllocator>())
     {
         // We *can* render to CPU buffers, but if anyone can do better, let them.
         return probe::supported;
@@ -509,17 +509,17 @@ auto mgg::GLRenderingProvider::suitability_for_display(
     return probe::unsupported;
 }
 
-auto mgg::GLRenderingProvider::surface_for_output(
-    DisplayBuffer& target,
-    geom::Size size,
+auto mgg::GLRenderingProvider::surface_for_sink(
+    DisplaySink& sink,
+    geometry::Size size,
     GLConfig const& config)
     -> std::unique_ptr<gl::OutputSurface>
 {
     if (bound_display)
     {
-        if (auto gbm_allocator = target.acquire_allocator<GBMDisplayAllocator>())
+        if (auto gbm_allocator = sink.acquire_compatible_allocator<GBMDisplayAllocator>())
         {
-            if (bound_display->on_this_device(target))
+            if (bound_display->on_this_sink(sink))
             {
                 return std::make_unique<GBMOutputSurface>(
                     dpy,
@@ -531,7 +531,7 @@ auto mgg::GLRenderingProvider::surface_for_output(
             }
         }
     }
-    auto cpu_allocator = target.acquire_allocator<CPUAddressableDisplayAllocator>();
+    auto cpu_allocator = sink.acquire_compatible_allocator<CPUAddressableDisplayAllocator>();
 
     return std::make_unique<mgc::CPUCopyOutputSurface>(
         dpy,
@@ -540,7 +540,7 @@ auto mgg::GLRenderingProvider::surface_for_output(
         size);
 }
 
-auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplayBuffer& /*target*/)
+auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)
     -> std::unique_ptr<FramebufferProvider>
 {
     // TODO: Make this not a null implementation, so bypass/overlays can work again

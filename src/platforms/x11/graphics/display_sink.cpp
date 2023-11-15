@@ -16,7 +16,7 @@
 
 #include "mir/fatal.h"
 #include "platform.h"
-#include "display_buffer.h"
+#include "display_sink.h"
 #include "display_configuration.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/transformation.h"
@@ -27,7 +27,7 @@ namespace mg=mir::graphics;
 namespace mgx=mg::X;
 namespace geom=mir::geometry;
 
-class mgx::DisplayBuffer::Allocator : public mg::GenericEGLDisplayAllocator
+class mgx::DisplaySink::Allocator : public mg::GenericEGLDisplayAllocator
 {
 public:
     Allocator(std::shared_ptr<helpers::EGLHelper> egl, xcb_connection_t* connection, xcb_window_t window)
@@ -48,7 +48,7 @@ private:
     xcb_window_t const x11_win;
 };
 
-mgx::DisplayBuffer::DisplayBuffer(
+mgx::DisplaySink::DisplaySink(
     xcb_connection_t* connection,
     xcb_window_t win,
     std::shared_ptr<helpers::EGLHelper> egl,
@@ -63,19 +63,19 @@ mgx::DisplayBuffer::DisplayBuffer(
 {
 }
 
-mgx::DisplayBuffer::~DisplayBuffer() = default;
+mgx::DisplaySink::~DisplaySink() = default;
 
-geom::Rectangle mgx::DisplayBuffer::view_area() const
+geom::Rectangle mgx::DisplaySink::view_area() const
 {
     return area;
 }
 
-auto mgx::DisplayBuffer::pixel_size() const -> geom::Size
+auto mgx::DisplaySink::pixel_size() const -> geom::Size
 {
     return in_pixels;
 }
 
-auto mgx::DisplayBuffer::overlay(std::vector<DisplayElement> const& /*renderlist*/) -> bool
+auto mgx::DisplaySink::overlay(std::vector<DisplayElement> const& /*renderlist*/) -> bool
 {
     // We could, with a lot of effort, make something like overlay support work, but
     // there's little point.
@@ -98,49 +98,48 @@ auto unique_ptr_cast(std::unique_ptr<From> ptr) -> std::unique_ptr<To>
 }
 }
 
-void mgx::DisplayBuffer::set_next_image(std::unique_ptr<Framebuffer> content)
+void mgx::DisplaySink::set_next_image(std::unique_ptr<Framebuffer> content)
 {
     next_frame = unique_ptr_cast<helpers::Framebuffer>(std::move(content));
 }
 
-glm::mat2 mgx::DisplayBuffer::transformation() const
+glm::mat2 mgx::DisplaySink::transformation() const
 {
     return transform;
 }
 
-void mgx::DisplayBuffer::set_view_area(geom::Rectangle const& a)
+void mgx::DisplaySink::set_view_area(geom::Rectangle const& a)
 {
     area = a;
 }
 
-void mgx::DisplayBuffer::set_transformation(glm::mat2 const& t)
+void mgx::DisplaySink::set_transformation(glm::mat2 const& t)
 {
     transform = t;
 }
 
-void mgx::DisplayBuffer::for_each_display_buffer(
-    std::function<void(graphics::DisplayBuffer&)> const& f)
+void mgx::DisplaySink::for_each_display_sink(std::function<void(graphics::DisplaySink & )> const& f)
 {
     f(*this);
 }
 
-void mgx::DisplayBuffer::post()
+void mgx::DisplaySink::post()
 {
     next_frame->swap_buffers();
     next_frame.reset();
 }
 
-std::chrono::milliseconds mgx::DisplayBuffer::recommended_sleep() const
+std::chrono::milliseconds mgx::DisplaySink::recommended_sleep() const
 {
     return std::chrono::milliseconds::zero();
 }
 
-auto mgx::DisplayBuffer::x11_window() const -> xcb_window_t
+auto mgx::DisplaySink::x11_window() const -> xcb_window_t
 {
     return x_win;
 }
 
-auto mgx::DisplayBuffer::maybe_create_allocator(mg::DisplayAllocator::Tag const& type_tag)
+auto mgx::DisplaySink::maybe_create_allocator(mg::DisplayAllocator::Tag const& type_tag)
     -> DisplayAllocator*
 {
     if (dynamic_cast<GenericEGLDisplayAllocator::Tag const*>(&type_tag))

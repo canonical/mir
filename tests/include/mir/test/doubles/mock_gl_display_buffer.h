@@ -17,7 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_GL_DISPLAY_BUFFER_H_
 #define MIR_TEST_DOUBLES_MOCK_GL_DISPLAY_BUFFER_H_
 
-#include "mock_display_buffer.h"
+#include "mock_display_sink.h"
 #include "mir/renderer/gl/render_target.h"
 
 namespace mir
