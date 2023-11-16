@@ -342,7 +342,7 @@ auto mgg::DisplaySink::maybe_create_allocator(DisplayAllocator::Tag const& type_
     {
         if (!kms_allocator)
         {
-            kms_allocator = kms::CPUAddressableDisplayAllocator::create_if_supported(drm_fd());
+            kms_allocator = kms::CPUAddressableDisplayAllocator::create_if_supported(drm_fd(), outputs.front()->size());
         }
         return kms_allocator.get();
     }
@@ -350,7 +350,7 @@ auto mgg::DisplaySink::maybe_create_allocator(DisplayAllocator::Tag const& type_
     {
         if (!gbm_allocator)
         {
-            gbm_allocator = std::make_unique<GBMDisplayAllocator>(drm_fd(), gbm);
+            gbm_allocator = std::make_unique<GBMDisplayAllocator>(drm_fd(), gbm, outputs.front()->size());
         }
         return gbm_allocator.get();
     }

@@ -31,7 +31,7 @@ public:
     MOCK_METHOD(
         std::unique_ptr<graphics::gl::OutputSurface>,
         surface_for_sink,
-        (graphics::DisplaySink&, geometry::Size, graphics::GLConfig const&),
+        (graphics::DisplaySink&, graphics::GLConfig const&),
         (override));
     MOCK_METHOD(
         graphics::probe::Result,

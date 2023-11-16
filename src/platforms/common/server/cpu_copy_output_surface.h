@@ -35,8 +35,7 @@ public:
     CPUCopyOutputSurface(
         EGLDisplay dpy,
         EGLContext share_ctx,
-        CPUAddressableDisplayAllocator& allocator,
-        geometry::Size size);
+        CPUAddressableDisplayAllocator& allocator);
 
     ~CPUCopyOutputSurface() override;
 

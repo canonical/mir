@@ -205,6 +205,11 @@ public:
         return output->size();
     }
 
+    auto output_size() const -> geom::Size override
+    {
+        return output->size();
+    }
+
     glm::mat2 transformation() const override
     {
         return output->transformation();
@@ -365,7 +370,7 @@ public:
         }
         if (dynamic_cast<mg::CPUAddressableDisplayAllocator::Tag const*>(&type_tag))
         {
-            kms_allocator = mg::kms::CPUAddressableDisplayAllocator::create_if_supported(drm_node);
+            kms_allocator = mg::kms::CPUAddressableDisplayAllocator::create_if_supported(drm_node, output->size());
             return kms_allocator.get();
         }
         return nullptr;

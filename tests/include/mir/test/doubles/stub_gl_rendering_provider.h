@@ -52,7 +52,6 @@ public:
 
     auto surface_for_sink(
         graphics::DisplaySink&,
-        geometry::Size,
         graphics::GLConfig const&) -> std::unique_ptr<graphics::gl::OutputSurface> override
     {
         return std::make_unique<testing::NiceMock<MockOutputSurface>>();

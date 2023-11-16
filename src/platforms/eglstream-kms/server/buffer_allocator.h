@@ -108,7 +108,6 @@ public:
 
     auto surface_for_sink(
         DisplaySink& sink,
-        geometry::Size size,
         GLConfig const& gl_config) -> std::unique_ptr<gl::OutputSurface> override;
 private:
     EGLDisplay dpy;

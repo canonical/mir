@@ -39,9 +39,10 @@ auto drm_get_cap_checked(mir::Fd const& drm_fd, uint64_t cap) -> uint64_t
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
-mg::kms::CPUAddressableDisplayAllocator::CPUAddressableDisplayAllocator(mir::Fd drm_fd)
+mg::kms::CPUAddressableDisplayAllocator::CPUAddressableDisplayAllocator(mir::Fd drm_fd, geom::Size size)
     : drm_fd{std::move(drm_fd)},
-      supports_modifiers{drm_get_cap_checked(this->drm_fd, DRM_CAP_ADDFB2_MODIFIERS) == 1}
+      supports_modifiers{drm_get_cap_checked(this->drm_fd, DRM_CAP_ADDFB2_MODIFIERS) == 1},
+      size{size}
 {
 }
 
@@ -52,18 +53,22 @@ auto mg::kms::CPUAddressableDisplayAllocator::supported_formats() const
     return {mg::DRMFormat{DRM_FORMAT_XRGB8888}, mg::DRMFormat{DRM_FORMAT_ARGB8888}};
 }
 
-auto mg::kms::CPUAddressableDisplayAllocator::alloc_fb(
-    geom::Size size, DRMFormat format) -> std::unique_ptr<MappableFB>
+auto mg::kms::CPUAddressableDisplayAllocator::alloc_fb(DRMFormat format) -> std::unique_ptr<MappableFB>
 {
     return std::make_unique<mg::CPUAddressableFB>(drm_fd, supports_modifiers, format, size);
 }
 
-auto mir::graphics::kms::CPUAddressableDisplayAllocator::create_if_supported(mir::Fd const& drm_fd)
+auto mg::kms::CPUAddressableDisplayAllocator::output_size() const -> geom::Size
+{
+    return size;
+}
+
+auto mir::graphics::kms::CPUAddressableDisplayAllocator::create_if_supported(mir::Fd const& drm_fd, geom::Size size)
 -> std::shared_ptr<CPUAddressableDisplayAllocator>
 {
     if  (drm_get_cap_checked(drm_fd, DRM_CAP_DUMB_BUFFER))
     {
-        return std::shared_ptr<CPUAddressableDisplayAllocator>(new CPUAddressableDisplayAllocator{drm_fd});
+        return std::shared_ptr<CPUAddressableDisplayAllocator>(new CPUAddressableDisplayAllocator{drm_fd, size});
     }
     else
     {

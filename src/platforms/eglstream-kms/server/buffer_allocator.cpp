@@ -731,7 +731,6 @@ auto mir::graphics::eglstream::GLRenderingProvider::as_texture(std::shared_ptr<B
 
 auto mge::GLRenderingProvider::surface_for_sink(
     DisplaySink& sink,
-    geom::Size size,
     mg::GLConfig const& gl_config) -> std::unique_ptr<gl::OutputSurface>
 {
     if (auto stream_platform = sink.acquire_compatible_allocator<EGLStreamDisplayAllocator>())
@@ -743,7 +742,7 @@ auto mge::GLRenderingProvider::surface_for_sink(
                 pick_stream_surface_config(dpy, gl_config),
                 static_cast<EGLContext>(*ctx),
                 stream_platform->claim_stream(),
-                size);
+                stream_platform->output_size());
         }
         catch (std::exception const& err)
         {
@@ -759,8 +758,7 @@ auto mge::GLRenderingProvider::surface_for_sink(
         return std::make_unique<mgc::CPUCopyOutputSurface>(
             dpy,
             static_cast<EGLContext>(*ctx),
-            *cpu_provider,
-            size);
+            *cpu_provider);
     }
     BOOST_THROW_EXCEPTION((std::runtime_error{"DisplayInterfaceProvider does not support any viable output interface"}));
 }
