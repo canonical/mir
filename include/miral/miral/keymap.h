@@ -36,7 +36,7 @@ public:
     /// Format is:
     /// \verbatim <language>[+<variant>[+<options>]] \endverbatim
     /// Options is a comma separated list.
-    /// e.g. "uk" or "us+dvorak"
+    /// e.g. "gb" or "us+dvorak"
     explicit Keymap(std::string const& keymap);
     ~Keymap();
     Keymap(Keymap const& that);
