@@ -65,7 +65,9 @@ std::shared_ptr<mf::Connector> mir::DefaultServerConfiguration::the_xwayland_con
     return xwayland_connector([this]() -> std::shared_ptr<mf::Connector> {
 
         auto options = the_options();
-        if (options->is_set(mo::x11_display_opt))
+        auto const x11_enabled = options->is_set(mo::x11_display_opt) && options->get<bool>(mo::x11_display_opt);
+
+        if (x11_enabled)
         {
             try
             {

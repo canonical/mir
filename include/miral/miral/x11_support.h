@@ -32,6 +32,7 @@ public:
     void operator()(mir::Server& server) const;
 
     X11Support();
+    explicit X11Support(bool x11_enabled);
     ~X11Support();
     X11Support(X11Support const&);
     auto operator=(X11Support const&) -> X11Support&;
