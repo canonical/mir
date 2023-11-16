@@ -90,7 +90,7 @@ public:
     void set_max_size(int32_t width, int32_t height);
     void set_min_size(int32_t width, int32_t height);
     void set_fullscreen(std::optional<wl_resource*> const& output);
-    void set_server_side_decorated(bool server_side_decorated);
+
     void set_type(MirWindowType type);
 
     void add_state_now(MirWindowState state);
