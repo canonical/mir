@@ -295,7 +295,7 @@ void mo::DefaultConfiguration::parse_arguments(
     {
         desc.add_options()
             ("help,h", "this help text");
-		desc.add_options()
+        desc.add_options()
             ("version,V", "display Mir version and exit");
 
         options.parse_arguments(desc, argc, argv);
@@ -305,17 +305,19 @@ void mo::DefaultConfiguration::parse_arguments(
         for (auto const& token : unparsed_arguments)
             tokens.push_back(token.c_str());
         if (!tokens.empty()) unparsed_arguments_handler(tokens.size(), tokens.data());
-        if (options.is_set("version"))
-		{
-			std::ostringstream mir_version;
-			mir_version << MIR_VERSION_MAJOR << "." << MIR_VERSION_MINOR << "." << MIR_VERSION_MICRO << std::endl;
-			BOOST_THROW_EXCEPTION(mir::ExitWithOutput(the_version_of_mir.str()));
-		}
-        if (options.is_set("help"))
-        {
-            std::ostringstream help_text;
-            help_text << desc;
-            BOOST_THROW_EXCEPTION(mir::ExitWithOutput(help_text.str()));
+        
+        // Handle one-off options such as `help` or `version`
+        std::map<const char *,std::function<std::ostringstream & (std::ostringstream &)>> oneoff_options {
+            {"version",[&](std::ostringstream & oneoff_output) -> std::ostringstream & {oneoff_output <<MIR_VERSION_MAJOR << "." << MIR_VERSION_MINOR << "." << MIR_VERSION_MICRO << std::endl; return oneoff_output;}},
+            {"help",[&](std::ostringstream & oneoff_output) -> std::ostringstream & {oneoff_output << desc; return oneoff_output;}}
+        };
+        for(auto oopt : oneoff_options) {
+            if(options.is_set(oopt.first))
+            {
+                std::ostringstream oneoff_output;
+                // Intentionally throw exception for non-error condition as per ExitWithOutput documentation.
+                BOOST_THROW_EXCEPTION(mir::ExitWithOutput(oopt.second(oneoff_output).str()));
+            }
         }
     }
     catch (po::error const& error)
