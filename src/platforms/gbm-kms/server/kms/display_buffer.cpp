@@ -105,12 +105,6 @@ geom::Rectangle mgg::DisplaySink::view_area() const
     return area;
 }
 
-auto mgg::DisplaySink::pixel_size() const -> geom::Size
-{
-    // All the outputs (are meant to) have the same size; KMSOutput::size() gives the size in pixels
-    return outputs.front()->size();
-}
-
 glm::mat2 mgg::DisplaySink::transformation() const
 {
     return transform;

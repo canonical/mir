@@ -47,13 +47,11 @@ public:
             xcb_connection_t* connection,
             xcb_window_t win,
             std::shared_ptr<helpers::EGLHelper> egl,
-            geometry::Rectangle const& view_area,
-            geometry::Size pixel_size);
+            geometry::Rectangle const& view_area);
 
     ~DisplaySink();
 
     auto view_area() const -> geometry::Rectangle override;
-    auto pixel_size() const -> geometry::Size override;
 
     auto overlay(std::vector<DisplayElement> const& renderlist) -> bool override;
     void set_next_image(std::unique_ptr<Framebuffer> content) override;

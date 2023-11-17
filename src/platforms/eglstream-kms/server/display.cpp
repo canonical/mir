@@ -200,11 +200,6 @@ public:
         return output->extents();
     }
 
-    auto pixel_size() const -> mir::geometry::Size override
-    {
-        return output->size();
-    }
-
     auto output_size() const -> geom::Size override
     {
         return output->size();

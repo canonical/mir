@@ -52,10 +52,8 @@ mgx::DisplaySink::DisplaySink(
     xcb_connection_t* connection,
     xcb_window_t win,
     std::shared_ptr<helpers::EGLHelper> egl,
-    geometry::Rectangle const& view_area,
-    geometry::Size pixel_size)
+    geometry::Rectangle const& view_area)
     : area{view_area},
-      in_pixels{pixel_size},
       transform(1),
       egl{std::move(egl)},
       x11_connection{connection},
@@ -68,11 +66,6 @@ mgx::DisplaySink::~DisplaySink() = default;
 geom::Rectangle mgx::DisplaySink::view_area() const
 {
     return area;
-}
-
-auto mgx::DisplaySink::pixel_size() const -> geom::Size
-{
-    return in_pixels;
 }
 
 auto mgx::DisplaySink::overlay(std::vector<DisplayElement> const& /*renderlist*/) -> bool
