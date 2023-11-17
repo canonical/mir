@@ -295,6 +295,8 @@ void mo::DefaultConfiguration::parse_arguments(
     {
         desc.add_options()
             ("help,h", "this help text");
+        desc.add_options()
+            ("version,V", "display Mir version and exit");
 
         options.parse_arguments(desc, argc, argv);
 
@@ -304,11 +306,19 @@ void mo::DefaultConfiguration::parse_arguments(
             tokens.push_back(token.c_str());
         if (!tokens.empty()) unparsed_arguments_handler(tokens.size(), tokens.data());
 
+        // See the ExitWithOutput documentation for information about its usage.
         if (options.is_set("help"))
         {
             std::ostringstream help_text;
             help_text << desc;
             BOOST_THROW_EXCEPTION(mir::ExitWithOutput(help_text.str()));
+        }
+
+        if (options.is_set("version"))
+        {
+            std::ostringstream mir_version;
+            mir_version << MIR_VERSION_MAJOR << "." << MIR_VERSION_MINOR << "." << MIR_VERSION_MICRO << std::endl;
+            BOOST_THROW_EXCEPTION(mir::ExitWithOutput(mir_version.str()));
         }
     }
     catch (po::error const& error)
