@@ -70,7 +70,10 @@ struct ExternalClient : miral::TestServer
     bool cannot_start_X_server()
     {
         // Starting an X server on LP builder, or Fedora CI, doesn't work
-        return strcmp(getenv("XDG_RUNTIME_DIR"), "/tmp") == 0 || access("/tmp/.X11-unix/", W_OK) == 0;
+        auto const lp_fake_runtime_dir = strcmp(getenv("XDG_RUNTIME_DIR"), "/tmp") == 0;
+        auto const cannot_access_x11_unix = access("/tmp/.X11-unix/", W_OK) != 0;
+
+        return lp_fake_runtime_dir || cannot_access_x11_unix;
     }
 };
 
@@ -182,7 +185,7 @@ TEST_F(ExternalClient, empty_override_does_nothing)
     add_to_environment("MIR_SERVER_ENABLE_X11", "");
     start_server();
 
-    EXPECT_THAT(client_env_x11_value("GDK_BACKEND"), StrEq("wayland"));
+    EXPECT_THAT(client_env_x11_value("GDK_BACKEND"), StrEq("wayland,x11"));
     EXPECT_THAT(client_env_x11_value("QT_QPA_PLATFORM"), StrEq("wayland"));
     EXPECT_THAT(client_env_x11_value("SDL_VIDEODRIVER"), StrEq("wayland"));
     EXPECT_THAT(client_env_x11_value("NO_AT_BRIDGE"), StrEq("1"));
@@ -199,7 +202,7 @@ TEST_F(ExternalClient, strange_override_does_nothing)
     add_to_environment("MIR_SERVER_ENABLE_X11", "");
     start_server();
 
-    EXPECT_THAT(client_env_x11_value("GDK_BACKEND"), StrEq("wayland"));
+    EXPECT_THAT(client_env_x11_value("GDK_BACKEND"), StrEq("wayland,x11"));
     EXPECT_THAT(client_env_x11_value("QT_QPA_PLATFORM"), StrEq("wayland"));
     EXPECT_THAT(client_env_x11_value("SDL_VIDEODRIVER"), StrEq("wayland"));
     EXPECT_THAT(client_env_x11_value("NO_AT_BRIDGE"), StrEq("1"));
@@ -216,7 +219,7 @@ TEST_F(ExternalClient, another_strange_override_does_nothing)
     add_to_environment("MIR_SERVER_ENABLE_X11", "");
     start_server();
 
-    EXPECT_THAT(client_env_x11_value("GDK_BACKEND"), StrEq("wayland"));
+    EXPECT_THAT(client_env_x11_value("GDK_BACKEND"), StrEq("wayland,x11"));
     EXPECT_THAT(client_env_x11_value("QT_QPA_PLATFORM"), StrEq("wayland"));
     EXPECT_THAT(client_env_x11_value("SDL_VIDEODRIVER"), StrEq("wayland"));
     EXPECT_THAT(client_env_x11_value("NO_AT_BRIDGE"), StrEq("1"));
