@@ -106,15 +106,14 @@ void mgg::RealKMSOutput::reset()
     // TODO: What if we can't locate the DPMS property?
     for (int i = 0; i < connector->count_props; i++)
     {
-        auto prop = drmModeGetProperty(drm_fd_, connector->props[i]);
+        std::unique_ptr<drmModePropertyRes, decltype(&drmModeFreeProperty)>
+            prop{drmModeGetProperty(drm_fd_, connector->props[i]), &drmModeFreeProperty};
         if (prop && (prop->flags & DRM_MODE_PROP_ENUM)) {
             if (!strcmp(prop->name, "DPMS"))
             {
                 dpms_enum_id = connector->props[i];
-                drmModeFreeProperty(prop);
                 break;
             }
-            drmModeFreeProperty(prop);
         }
     }
 
