@@ -35,7 +35,7 @@ public:
     void set_next_image(std::unique_ptr<mir::graphics::Framebuffer>) override { }
     glm::mat2 transformation() const override { return glm::mat2(1); }
 protected:
-    auto maybe_create_allocator(graphics::DisplayAllocator::Tag const&) -> graphics::DisplayAllocator*
+    auto maybe_create_allocator(graphics::DisplayAllocator::Tag const&) -> graphics::DisplayAllocator* override
     {
         return nullptr;
     }
