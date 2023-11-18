@@ -33,6 +33,7 @@ public:
     static std::shared_ptr<DisplayConfigurationOutput> build_output(
         MirPixelFormat pf,
         geometry::Size const pixels,
+        double const refresh,
         geometry::Point const top_left,
         geometry::Size const physical_size_mm,
         float const scale,

@@ -14,12 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 #define MIR_LOG_COMPONENT "x11-error"
 #include "mir/log.h"
 
 #include "x11_resources.h"
 
 #include <X11/Xlib-xcb.h>
+#include <xcb/randr.h>
 #include <boost/throw_exception.hpp>
 
 namespace mg=mir::graphics;
@@ -99,6 +101,17 @@ public:
         auto const atom = reply->atom;
         free(reply);
         return atom;
+    }
+
+    auto get_output_refresh_rates() -> uint16_t override
+    {
+        // I'm assuming we handle xcb errors somewhere with events.
+        auto ver_cookie = xcb_randr_query_version_unchecked(conn, 1, 2);
+        xcb_randr_query_version_reply(conn, ver_cookie,nullptr);
+        auto screen_cookie = xcb_randr_get_screen_info_unchecked(conn,screen_->root);
+        auto screen_reply = xcb_randr_get_screen_info_reply(conn, screen_cookie, nullptr);
+        mir::logging::log(mir::logging::Severity::debug, std::format("Detected {}Hz host output refresh rate.",screen_reply->rate) , "mir:x11");
+        return screen_reply->rate;
     }
 
     auto get_extension_data(xcb_extension_t *ext) const -> xcb_query_extension_reply_t const* override

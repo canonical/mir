@@ -33,6 +33,7 @@ target_link_libraries(
   PkgConfig::XCB
   PkgConfig::XCB_COMPOSITE
   PkgConfig::XCB_XFIXES
+  PkgConfig::XCB_RANDR
   PkgConfig::XCB_RENDER
   xkbcommon
   xcb-xkb
