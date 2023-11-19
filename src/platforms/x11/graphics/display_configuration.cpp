@@ -40,7 +40,6 @@ std::shared_ptr<mg::DisplayConfigurationOutput> mgx::DisplayConfiguration::build
             mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::unknown,
             {pf},
-            //TODO: query fps
             {mg::DisplayConfigurationMode{pixels, refresh}},
             0,
             physical_size_mm,

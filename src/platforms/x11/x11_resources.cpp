@@ -103,7 +103,7 @@ public:
         return atom;
     }
 
-    auto get_output_refresh_rates() -> uint16_t override
+    auto get_output_refresh_rate() const -> uint16_t override
     {
         // I'm assuming we handle xcb errors somewhere with events.
         auto ver_cookie = xcb_randr_query_version_unchecked(conn, 1, 2);

@@ -55,7 +55,7 @@ public:
     virtual auto screen() const -> xcb_screen_t* = 0;
     /// Synchronous for now, since that makes everything simpler
     virtual auto intern_atom(std::string const& name) const -> xcb_atom_t = 0;
-    virtual auto get_output_refresh_rates() -> uint16_t = 0;
+    virtual auto get_output_refresh_rate() const -> uint16_t = 0;
     virtual auto get_extension_data(xcb_extension_t *ext) const -> xcb_query_extension_reply_t const* = 0;
     virtual auto generate_id() const -> uint32_t = 0;
     virtual auto default_pixel_format() const -> MirPixelFormat = 0;

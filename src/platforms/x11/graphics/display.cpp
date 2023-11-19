@@ -124,7 +124,7 @@ mgx::Display::Display(
             title,
             actual_size);
         auto pf = x11_resources->conn->default_pixel_format();
-        auto refresh = x11_resources->conn->get_output_refresh_rates();
+        auto refresh = x11_resources->conn->get_output_refresh_rate();
         auto configuration = DisplayConfiguration::build_output(
             pf,
             actual_size,
