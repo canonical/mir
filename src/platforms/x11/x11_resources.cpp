@@ -110,7 +110,17 @@ public:
         xcb_randr_query_version_reply(conn, ver_cookie,nullptr);
         auto screen_cookie = xcb_randr_get_screen_info_unchecked(conn,screen_->root);
         auto screen_reply = xcb_randr_get_screen_info_reply(conn, screen_cookie, nullptr);
-        mir::logging::log(mir::logging::Severity::debug, std::format("Detected {}Hz host output refresh rate.",screen_reply->rate) , "mir:x11");
+        #ifdef __cpp_lib_format
+        auto log_msg = std::format("Detected {}Hz host output refresh rate.",screen_reply->rate);
+        #else
+        auto log_msg = [&]()
+        {
+          std::ostringstream x;
+          x << "Detected " << screen_reply->rate << "Hz host output refresh rate.";
+          return x.str();
+        }();
+        #endif
+        mir::logging::log(mir::logging::Severity::debug, log_msg, "mir:x11");
         return screen_reply->rate;
     }
 

@@ -28,8 +28,11 @@
 #include <unordered_map>
 #include <functional>
 #include <mutex>
+#if __has_include(<format>)
 #include <format>
-
+#else
+#include <sstream>
+#endif
 typedef struct _XDisplay Display;
 
 namespace mir
