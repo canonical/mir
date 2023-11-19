@@ -42,6 +42,7 @@ parts:
     - libumockdev-dev
     - libwayland-dev
     - libxcb-composite0-dev
+    - libxcb-randr0-dev
     - libx11-xcb-dev
     - libxcursor-dev
     - libxkbcommon-dev
@@ -84,6 +85,7 @@ parts:
     - libx11-6
     - libxau6
     - libxcb-composite0
+    - libxcb-randr0
     - libxcb-render0
     - libxcb-xfixes0
     - libxcb1
