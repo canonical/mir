@@ -46,7 +46,7 @@ Build-Depends: cmake,
                libxcb-composite0-dev,
                libxcb-xfixes0-dev,
 # iirc debian/changelog also needs to be updated for the package to get rebuilt/upgraded with xcb-randr support
-#               libxcb-randr0-dev,
+               libxcb-randr0-dev,
                libxcb-render0-dev,
                libxcb-composite0-dev,
                libx11-xcb-dev,
