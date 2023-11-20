@@ -24,10 +24,6 @@
 #include <xcb/randr.h>
 #include <boost/throw_exception.hpp>
 
-#include <stdexcept>
-#include <memory>
-#include <string>
-
 namespace mg=mir::graphics;
 namespace mx = mir::X;
 

@@ -20,7 +20,6 @@
 #include "mir/geometry/forward.h"
 #include "mir_toolkit/common.h"
 
-
 #include <xcb/xcb.h>
 #include <optional>
 #include <unordered_map>
