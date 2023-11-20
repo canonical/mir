@@ -26,6 +26,7 @@ int mgx::DisplayConfiguration::last_output_id{0};
 std::shared_ptr<mg::DisplayConfigurationOutput> mgx::DisplayConfiguration::build_output(
     MirPixelFormat pf,
     geom::Size const pixels,
+    double const refresh,
     geom::Point const top_left,
     geom::Size const physical_size_mm,
     const float scale,
@@ -39,8 +40,7 @@ std::shared_ptr<mg::DisplayConfigurationOutput> mgx::DisplayConfiguration::build
             mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::unknown,
             {pf},
-            //TODO: query fps
-            {mg::DisplayConfigurationMode{pixels, 60.0}},
+            {mg::DisplayConfigurationMode{pixels, refresh}},
             0,
             physical_size_mm,
             true,

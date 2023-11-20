@@ -42,6 +42,7 @@ public:
     MOCK_CONST_METHOD0(poll_for_event, xcb_generic_event_t*());
     MOCK_CONST_METHOD0(screen, xcb_screen_t*());
     MOCK_CONST_METHOD1(intern_atom, xcb_atom_t(std::string const& name));
+    MOCK_CONST_METHOD0(get_output_refresh_rate,double());
     MOCK_CONST_METHOD1(get_extension_data, xcb_query_extension_reply_t const*(xcb_extension_t *ext));
     MOCK_CONST_METHOD0(generate_id, uint32_t());
     MOCK_CONST_METHOD0(default_pixel_format, MirPixelFormat());

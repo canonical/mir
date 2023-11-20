@@ -138,6 +138,7 @@ target_link_libraries(mirserver
     PkgConfig::XCB
     PkgConfig::XCB_COMPOSITE
     PkgConfig::XCB_XFIXES
+    PkgConfig::XCB_RANDR
     PkgConfig::XCB_RENDER
     PkgConfig::X11_XCURSOR
     PkgConfig::LTTNG_UST
