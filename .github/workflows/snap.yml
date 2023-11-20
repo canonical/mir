@@ -9,7 +9,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  arches:
+    runs-on: ubuntu-latest
+    outputs:
+      arches: ${{ steps.get-arches.outputs.arches }}
+
+    steps:
+    - id: get-arches
+      name: Determine which architectures to build for
+      run: |
+        ARCHES=( amd64 )
+        if ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}; then
+          ARCHES+=( armhf arm64 )
+        fi
+        jq --compact-output --null-input '$ARGS.positional' --args -- "${ARCHES[@]}" | awk '{ print "arches=" $0 }' >> $GITHUB_OUTPUT
+
   mir-libs:
+    needs: [arches]
     runs-on: ubuntu-latest
 
     timeout-minutes: 360
@@ -17,10 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        architecture:
-        - amd64
-        - armhf
-        - arm64
+        architecture: ${{ fromJSON(needs.arches.outputs.arches) }}
 
     steps:
     - name: Check out code
@@ -42,7 +55,7 @@ jobs:
     # Only run if we have access to secrets.
     if: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
 
-    needs: [mir-libs]
+    needs: [arches, mir-libs]
 
     runs-on: ubuntu-latest
 
@@ -56,10 +69,7 @@ jobs:
         - MirServer/confined-shell-wip
         - MirServer/ubuntu-frame
         - Miriway/Miriway
-        architecture:
-        - amd64
-        - armhf
-        - arm64
+        architecture: ${{ fromJSON(needs.arches.outputs.arches) }}
         include:
         - snap: MirServer/mir-test-tools
           track: 22
