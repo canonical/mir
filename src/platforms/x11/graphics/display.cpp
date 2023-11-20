@@ -128,7 +128,7 @@ mgx::Display::Display(
         auto configuration = DisplayConfiguration::build_output(
             pf,
             actual_size,
-            static_cast<double>(refresh),
+            refresh,
             top_left,
             geom::Size{
                 actual_size.width * pixel_size_mm.width.as_value(),

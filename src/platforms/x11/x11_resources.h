@@ -20,19 +20,13 @@
 #include "mir/geometry/forward.h"
 #include "mir_toolkit/common.h"
 
-#include <stdexcept>
-#include <memory>
-#include <string>
+
 #include <xcb/xcb.h>
 #include <optional>
 #include <unordered_map>
 #include <functional>
 #include <mutex>
-#if __has_include(<format>)
-#include <format>
-#else
-#include <sstream>
-#endif
+
 typedef struct _XDisplay Display;
 
 namespace mir
@@ -58,7 +52,7 @@ public:
     virtual auto screen() const -> xcb_screen_t* = 0;
     /// Synchronous for now, since that makes everything simpler
     virtual auto intern_atom(std::string const& name) const -> xcb_atom_t = 0;
-    virtual auto get_output_refresh_rate() const -> uint16_t = 0;
+    virtual auto get_output_refresh_rate() const -> double = 0;
     virtual auto get_extension_data(xcb_extension_t *ext) const -> xcb_query_extension_reply_t const* = 0;
     virtual auto generate_id() const -> uint32_t = 0;
     virtual auto default_pixel_format() const -> MirPixelFormat = 0;

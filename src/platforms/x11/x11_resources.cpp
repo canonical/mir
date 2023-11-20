@@ -24,6 +24,10 @@
 #include <xcb/randr.h>
 #include <boost/throw_exception.hpp>
 
+#include <stdexcept>
+#include <memory>
+#include <string>
+
 namespace mg=mir::graphics;
 namespace mx = mir::X;
 
@@ -103,24 +107,15 @@ public:
         return atom;
     }
 
-    auto get_output_refresh_rate() const -> uint16_t override
+    auto get_output_refresh_rate() const -> double override
     {
         // I'm assuming we handle xcb errors somewhere with events.
         auto ver_cookie = xcb_randr_query_version_unchecked(conn, 1, 2);
         xcb_randr_query_version_reply(conn, ver_cookie,nullptr);
         auto screen_cookie = xcb_randr_get_screen_info_unchecked(conn,screen_->root);
         auto screen_reply = xcb_randr_get_screen_info_reply(conn, screen_cookie, nullptr);
-        #ifdef __cpp_lib_format
-        auto log_msg = std::format("Detected {}Hz host output refresh rate.",screen_reply->rate);
-        #else
-        auto log_msg = [&]()
-        {
-          std::ostringstream x;
-          x << "Detected " << screen_reply->rate << "Hz host output refresh rate.";
-          return x.str();
-        }();
-        #endif
-        mir::logging::log(mir::logging::Severity::debug, log_msg, "mir:x11");
+        auto refresh_rate = static_cast<double>(screen_reply->rate);
+        mir::log_debug("Detected %.2fHz host output refresh rate.", refresh_rate);
         return screen_reply->rate;
     }
 
