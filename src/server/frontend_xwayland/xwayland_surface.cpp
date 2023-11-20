@@ -211,10 +211,13 @@ auto wm_window_type_to_mir_window_type(
         else if (wm_type == connection->_NET_WM_WINDOW_TYPE_POPUP_MENU ||
                  wm_type == connection->_NET_WM_WINDOW_TYPE_DROPDOWN_MENU ||
                  wm_type == connection->_NET_WM_WINDOW_TYPE_COMBO ||
-                 wm_type == connection->_NET_WM_WINDOW_TYPE_TOOLTIP ||
-                 wm_type == connection->_NET_WM_WINDOW_TYPE_NOTIFICATION ||
-                 wm_type == connection->_NET_WM_WINDOW_TYPE_DND ||
                  wm_type == connection->_NET_WM_WINDOW_TYPE_DIALOG)
+        {
+            return mir_window_type_menu;
+        }
+        else if (wm_type == connection->_NET_WM_WINDOW_TYPE_TOOLTIP ||
+                 wm_type == connection->_NET_WM_WINDOW_TYPE_NOTIFICATION ||
+                 wm_type == connection->_NET_WM_WINDOW_TYPE_DND)
         {
             return mir_window_type_tip;
         }
@@ -231,7 +234,7 @@ auto wm_window_type_to_mir_window_type(
     // be taken as _NET_WM_WINDOW_TYPE_NORMAL."
     if (is_transient_for && !override_redirect)
     {
-        return mir_window_type_tip;
+        return mir_window_type_menu;
     }
     else
     {
