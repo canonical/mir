@@ -326,8 +326,8 @@ private:
     /// Updates the application zones of all display areas and moves attached windows as needed
     void update_application_zones_and_attached_windows();
 
-    /// Iterates each child window of the provided WindowInfo
-    void for_each_window_in_info(WindowInfo const& info, std::function<void(const Window&)> func);
+    /// Iterates each descendent window (including current) of the provided WindowInfo
+    void for_each_descendent_in(WindowInfo const& info, std::function<void(const Window&)> func);
     /// Gathers windows provided WindowInfo
     auto collect_windows(WindowInfo const& info) -> SurfaceSet;
 };
