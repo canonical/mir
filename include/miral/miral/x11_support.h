@@ -41,7 +41,7 @@ public:
      *
      * \return A reference to the modified miral::X11Support object with
      *         the updated default configuration.
-     * \remark Since MirAL 4.2
+     * \remark Since MirAL 4.1
      */
     auto default_to_enabled() -> X11Support&;
 
