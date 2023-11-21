@@ -485,7 +485,7 @@ global:
 MIRAL_4.2 {
 global:
   extern "C++" {
-    miral::X11Support::X11Support*;
+    miral::X11Support::default_to_enabled*;
   };
 
 } MIRAL_4.1;

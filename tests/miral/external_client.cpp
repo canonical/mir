@@ -40,8 +40,8 @@ struct ExternalClient : miral::TestServer
     }
 
     miral::ExternalClientLauncher external_client;
-    miral::X11Support x11_disabled_by_default;
-    miral::X11Support x11_enabled_by_default{true};
+    miral::X11Support x11_disabled_by_default{};
+    miral::X11Support x11_enabled_by_default{miral::X11Support{}.default_to_enabled()};
 
     std::string const output = tmpnam(nullptr);
 

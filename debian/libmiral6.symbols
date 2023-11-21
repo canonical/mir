@@ -424,4 +424,5 @@ libmiral.so.6 libmiral6 #MINVER#
  MIRAL_4.1@MIRAL_4.1 4.1.0
  (c++)"miral::WaylandExtensions::zwp_input_method_v1@MIRAL_4.1" 4.1.0
  (c++)"miral::WaylandExtensions::zwp_input_panel_v1@MIRAL_4.1" 4.1.0
- (c++)"miral::X11Support::X11Support(bool)@MIRAL_4.2" 4.1.0
+ MIRAL_4.2@MIRAL_4.2 4.2.0
+ (c++)"miral::X11Support::default_to_enabled()@MIRAL_4.2" 4.2.0

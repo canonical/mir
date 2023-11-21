@@ -26,14 +26,10 @@ namespace mo = mir::options;
 
 struct miral::X11Support::Self
 {
-    bool x11_enabled;
+    bool x11_enabled{false};
 };
 
-miral::X11Support::X11Support() : miral::X11Support{false}
-{
-}
-
-miral::X11Support::X11Support(bool x11_enabled) : self{std::make_shared<Self>(x11_enabled)}
+miral::X11Support::X11Support() : self{std::make_shared<Self>()}
 {
 }
 
@@ -99,3 +95,10 @@ void miral::X11Support::operator()(mir::Server& server) const
 miral::X11Support::~X11Support() = default;
 miral::X11Support::X11Support(X11Support const&) = default;
 auto miral::X11Support::operator=(X11Support const&) -> X11Support& = default;
+
+auto miral::X11Support::default_to_enabled() -> X11Support&
+{
+    self->x11_enabled = true;
+
+    return *this;
+}
