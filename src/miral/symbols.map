@@ -478,6 +478,7 @@ global:
   extern "C++" {
     miral::WaylandExtensions::zwp_input_method_v1*;
     miral::WaylandExtensions::zwp_input_panel_v1*;
+    miral::X11Support::default_to_enabled*;
   };
 
 } MIRAL_4.0;

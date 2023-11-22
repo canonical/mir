@@ -332,6 +332,7 @@ std::shared_ptr<mf::Connector>
                 enabled_wayland_extensions.end()};
 
             auto const enable_repeat = options->get<bool>(options::enable_key_repeat_opt);
+            auto const x11_enabled = options->is_set(mo::x11_display_opt) && options->get<bool>(mo::x11_display_opt);
 
             return std::make_shared<mf::WaylandConnector>(
                 the_shell(),
@@ -356,7 +357,7 @@ std::shared_ptr<mf::Connector>
                 arw_socket,
                 configure_wayland_extensions(
                     wayland_extensions,
-                    options->is_set(mo::x11_display_opt),
+                    x11_enabled,
                     wayland_extension_hooks),
                 wayland_extension_filter,
                 enable_repeat);

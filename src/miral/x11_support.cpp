@@ -26,6 +26,7 @@ namespace mo = mir::options;
 
 struct miral::X11Support::Self
 {
+    bool x11_enabled{false};
 };
 
 miral::X11Support::X11Support() : self{std::make_shared<Self>()}
@@ -38,8 +39,7 @@ void miral::X11Support::operator()(mir::Server& server) const
 
     server.add_configuration_option(
         mo::x11_display_opt,
-        "Enable X11 support", mir::OptionType::null);
-
+        "Enable X11 support [{1|true|on|yes, 0|false|off|no}].", self->x11_enabled);
 
     auto const x11_scale_default = []() -> char const* {
         if (auto const gdk_scale = getenv("GDK_SCALE"))
@@ -96,4 +96,9 @@ miral::X11Support::~X11Support() = default;
 miral::X11Support::X11Support(X11Support const&) = default;
 auto miral::X11Support::operator=(X11Support const&) -> X11Support& = default;
 
+auto miral::X11Support::default_to_enabled() -> X11Support&
+{
+    self->x11_enabled = true;
 
+    return *this;
+}

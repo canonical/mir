@@ -23,8 +23,10 @@ namespace mir { class Server; }
 
 namespace miral
 {
-/// Add a user configuration option for X11 support.
+/// Add user configuration options for X11 support.
 /// \remark Since MirAL 2.4
+/// \note From MirAL 4.1, the \c --enable-x11 option requires an argument
+///       (e.g., \c --enable-x11=true to enable X11 support).
 class X11Support
 {
 public:
@@ -35,6 +37,15 @@ public:
     ~X11Support();
     X11Support(X11Support const&);
     auto operator=(X11Support const&) -> X11Support&;
+
+    /**
+     * Set X11 support as enabled by default.
+     *
+     * \return A reference to the modified miral::X11Support object with
+     *         the updated default configuration.
+     * \remark Since MirAL 4.1
+     */
+    auto default_to_enabled() -> X11Support&;
 
 private:
     struct Self;

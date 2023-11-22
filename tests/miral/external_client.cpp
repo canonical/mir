@@ -40,7 +40,8 @@ struct ExternalClient : miral::TestServer
     }
 
     miral::ExternalClientLauncher external_client;
-    miral::X11Support x11;
+    miral::X11Support x11_disabled_by_default{};
+    miral::X11Support x11_enabled_by_default{miral::X11Support{}.default_to_enabled()};
 
     std::string const output = tmpnam(nullptr);
 
@@ -66,7 +67,7 @@ struct ExternalClient : miral::TestServer
         getline(in, result);
         return result;
     }
-    
+
     bool cannot_start_X_server()
     {
         // Starting an X server on LP builder, or Fedora CI, doesn't work
@@ -101,7 +102,7 @@ TEST_F(ExternalClient, default_app_env_x11_is_as_expected)
     if (cannot_start_X_server())
         return; // Starting an X server doesn't work - skip the test
 
-    add_server_init(x11);
+    add_server_init(x11_disabled_by_default);
     add_to_environment("MIR_SERVER_ENABLE_X11", "");
     start_server();
 
@@ -126,7 +127,7 @@ TEST_F(ExternalClient, override_app_env_x11_can_unset)
         return; // Starting an X server doesn't work - skip the test
 
     add_to_environment(app_x11_env, "-GDK_BACKEND");
-    add_server_init(x11);
+    add_server_init(x11_disabled_by_default);
     add_to_environment("MIR_SERVER_ENABLE_X11", "");
     start_server();
 
@@ -139,7 +140,7 @@ TEST_F(ExternalClient, override_app_env_x11_can_unset_and_set)
         return; // Starting an X server doesn't work - skip the test
 
     add_to_environment(app_x11_env, "-GDK_BACKEND:QT_QPA_PLATFORM=xcb");
-    add_server_init(x11);
+    add_server_init(x11_disabled_by_default);
     add_to_environment("MIR_SERVER_ENABLE_X11", "");
     start_server();
 
@@ -153,7 +154,7 @@ TEST_F(ExternalClient, override_app_env_x11_can_set_and_unset)
         return; // Starting an X server doesn't work - skip the test
 
     add_to_environment(app_x11_env, "QT_QPA_PLATFORM=xcb:-GDK_BACKEND");
-    add_server_init(x11);
+    add_server_init(x11_disabled_by_default);
     add_to_environment("MIR_SERVER_ENABLE_X11", "");
     start_server();
 
@@ -167,7 +168,7 @@ TEST_F(ExternalClient, stray_separators_are_ignored)
         return; // Starting an X server doesn't work - skip the test
 
     add_to_environment(app_x11_env, "::QT_QPA_PLATFORM=xcb::-GDK_BACKEND::");
-    add_server_init(x11);
+    add_server_init(x11_disabled_by_default);
     add_to_environment("MIR_SERVER_ENABLE_X11", "");
     start_server();
 
@@ -181,7 +182,7 @@ TEST_F(ExternalClient, empty_override_does_nothing)
         return; // Starting an X server doesn't work - skip the test
 
     add_to_environment(app_x11_env, "");
-    add_server_init(x11);
+    add_server_init(x11_disabled_by_default);
     add_to_environment("MIR_SERVER_ENABLE_X11", "");
     start_server();
 
@@ -198,7 +199,7 @@ TEST_F(ExternalClient, strange_override_does_nothing)
         return; // Starting an X server doesn't work - skip the test
 
     add_to_environment(app_x11_env, "=====");
-    add_server_init(x11);
+    add_server_init(x11_disabled_by_default);
     add_to_environment("MIR_SERVER_ENABLE_X11", "");
     start_server();
 
@@ -215,7 +216,7 @@ TEST_F(ExternalClient, another_strange_override_does_nothing)
         return; // Starting an X server doesn't work - skip the test
 
     add_to_environment(app_x11_env, ":::");
-    add_server_init(x11);
+    add_server_init(x11_disabled_by_default);
     add_to_environment("MIR_SERVER_ENABLE_X11", "");
     start_server();
 
@@ -243,4 +244,28 @@ TEST_F(ExternalClient, split_command)
         EXPECT_THAT(miral::ExternalClientLauncher::split_command(test.command), Eq(test.command_line))
             << "test.command=\"" + test.command + "\"";
     }
+}
+
+TEST_F(ExternalClient, x11_disabled_by_default_is_as_expected)
+{
+    if (cannot_start_X_server())
+        return; // Starting an X server doesn't work - skip the test
+
+    add_server_init(x11_disabled_by_default);
+    start_server();
+
+    auto result = external_client.launch_using_x11({"bash", "-c", "exit"});
+    EXPECT_THAT(result, Eq(-1));
+}
+
+TEST_F(ExternalClient, x11_enabled_by_default_is_as_expected)
+{
+    if (cannot_start_X_server())
+        return; // Starting an X server doesn't work - skip the test
+
+    add_server_init(x11_enabled_by_default);
+    start_server();
+
+    auto result = external_client.launch_using_x11({"bash", "-c", "exit"});
+    EXPECT_THAT(result, Ne(-1));
 }
