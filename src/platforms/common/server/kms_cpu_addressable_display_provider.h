@@ -31,19 +31,22 @@ class CPUAddressableDisplayAllocator : public graphics::CPUAddressableDisplayAll
 public:
     /// Create an CPUAddressableDisplayAllocator if and only if supported by the device
     /// \return the provider, or an empty pointer
-    static auto create_if_supported(mir::Fd const& drm_fd) -> std::shared_ptr<CPUAddressableDisplayAllocator>;
+    static auto create_if_supported(mir::Fd const& drm_fd, geometry::Size size)
+        -> std::shared_ptr<CPUAddressableDisplayAllocator>;
 
     auto supported_formats() const
         -> std::vector<DRMFormat> override;
 
-    auto alloc_fb(geometry::Size pixel_size, DRMFormat format)
+    auto alloc_fb(DRMFormat format)
         -> std::unique_ptr<MappableFB> override;
 
+    auto output_size() const -> geometry::Size override;
 private:
-    explicit CPUAddressableDisplayAllocator(mir::Fd drm_fd);
+    explicit CPUAddressableDisplayAllocator(mir::Fd drm_fd, geometry::Size size);
 
     mir::Fd const drm_fd;
     bool const supports_modifiers;
+    geometry::Size const size;
 };
 }
 }

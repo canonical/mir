@@ -59,9 +59,6 @@ public:
     /** The area the DisplaySink occupies in the virtual screen space. */
     virtual geometry::Rectangle view_area() const = 0;
 
-    /** The size in pixels of the underlying display */
-    virtual auto pixel_size() const -> geometry::Size = 0;
-
     /** This will render renderlist to the screen and post the result to the
      *  screen if there is a hardware optimization that can be done.
      *  \param [in] renderlist

@@ -165,7 +165,6 @@ public:
 
     virtual auto surface_for_sink(
         DisplaySink& sink,
-        geometry::Size size,
         GLConfig const& config) -> std::unique_ptr<gl::OutputSurface> = 0;
 };
 
@@ -308,13 +307,17 @@ public:
     public:
         MappableFB() = default;
         virtual ~MappableFB() override = default;
+
+        using renderer::software::WriteMappableBuffer::size;
     };
 
     virtual auto supported_formats() const
         -> std::vector<DRMFormat> = 0;
 
-    virtual auto alloc_fb(geometry::Size pixel_size, DRMFormat format)
+    virtual auto alloc_fb(DRMFormat format)
         -> std::unique_ptr<MappableFB> = 0;
+
+    virtual auto output_size() const -> geometry::Size = 0;
 };
 
 class GBMDisplayProvider : public DisplayProvider
@@ -382,7 +385,7 @@ public:
         virtual auto claim_framebuffer() -> std::unique_ptr<Framebuffer> = 0;
     };
 
-    virtual auto make_surface(geometry::Size size, DRMFormat format, std::span<uint64_t> modifiers) -> std::unique_ptr<GBMSurface> = 0;
+    virtual auto make_surface(DRMFormat format, std::span<uint64_t> modifiers) -> std::unique_ptr<GBMSurface> = 0;
 };
 
 class DmaBufBuffer;
@@ -420,6 +423,7 @@ public:
     };
 
     virtual auto claim_stream() -> EGLStreamKHR = 0;
+    virtual auto output_size() const -> geometry::Size = 0;
 };
 
 class GenericEGLDisplayProvider : public DisplayProvider

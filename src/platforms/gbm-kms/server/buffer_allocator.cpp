@@ -263,12 +263,10 @@ public:
         EGLContext share_context,
         mg::GLConfig const& config,
         mg::GBMDisplayAllocator& display,
-        mg::DRMFormat format,
-        mir::geometry::Size size)
+        mg::DRMFormat format)
         : GBMOutputSurface(
-              size,
               dpy,
-              create_renderable(dpy, share_context, format, config, display, size))
+              create_renderable(dpy, share_context, format, config, display))
     {
     }
 
@@ -313,7 +311,16 @@ public:
 
     auto size() const -> geom::Size override
     {
-        return size_;
+        EGLint width, height;
+        if (eglQuerySurface(dpy, egl_surf, EGL_WIDTH, &width) != EGL_TRUE)
+        {
+            BOOST_THROW_EXCEPTION((mg::egl_error("Failed to query surface width")));
+        }
+        if (eglQuerySurface(dpy, egl_surf, EGL_HEIGHT, &height) != EGL_TRUE)
+        {
+            BOOST_THROW_EXCEPTION((mg::egl_error("Failed to query surface height")));
+        }
+        return geom::Size{width, height};
     }
 
     auto layout() const -> Layout override
@@ -386,8 +393,7 @@ private:
         EGLContext share_context,
         mg::DRMFormat format,
         mg::GLConfig const& config,
-        mg::GBMDisplayAllocator& allocator,
-        mir::geometry::Size size)
+        mg::GBMDisplayAllocator& allocator)
          -> std::tuple<std::unique_ptr<mg::GBMDisplayAllocator::GBMSurface>, EGLContext, EGLSurface>
     {
         mg::EGLExtensions::PlatformBaseEXT egl_ext;
@@ -426,7 +432,7 @@ private:
 
         auto modifiers = allocator.modifiers_for_format(resolved_format);
 
-        auto surf = allocator.make_surface(size, resolved_format, modifiers);
+        auto surf = allocator.make_surface(resolved_format, modifiers);
 
         auto egl_surf = egl_ext.eglCreatePlatformWindowSurface(
             dpy,
@@ -455,18 +461,15 @@ private:
     }
 
     GBMOutputSurface(
-        geom::Size size,
         EGLDisplay dpy,
         std::tuple<std::unique_ptr<mg::GBMDisplayAllocator::GBMSurface>, EGLContext, EGLSurface> renderables)
-        : size_{size},
-          surface{std::move(std::get<0>(renderables))},
+        : surface{std::move(std::get<0>(renderables))},
           egl_surf{std::get<2>(renderables)},
           dpy{dpy},
           ctx{std::get<1>(renderables)}
     {
     }
 
-    geom::Size const size_;
     std::unique_ptr<mg::GBMDisplayAllocator::GBMSurface> const surface;
     EGLSurface const egl_surf;
     EGLDisplay const dpy;
@@ -511,7 +514,6 @@ auto mgg::GLRenderingProvider::suitability_for_display(
 
 auto mgg::GLRenderingProvider::surface_for_sink(
     DisplaySink& sink,
-    geometry::Size size,
     GLConfig const& config)
     -> std::unique_ptr<gl::OutputSurface>
 {
@@ -526,8 +528,7 @@ auto mgg::GLRenderingProvider::surface_for_sink(
                     ctx,
                     config,
                     *gbm_allocator,
-                    DRMFormat{DRM_FORMAT_XRGB8888},
-                    size);
+                    DRMFormat{DRM_FORMAT_XRGB8888});
             }
         }
     }
@@ -536,8 +537,7 @@ auto mgg::GLRenderingProvider::surface_for_sink(
     return std::make_unique<mgc::CPUCopyOutputSurface>(
         dpy,
         ctx,
-        *cpu_allocator,
-        size);
+        *cpu_allocator);
 }
 
 auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)

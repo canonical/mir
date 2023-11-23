@@ -81,8 +81,9 @@ private:
          * is likely to be taking screenshots of consistent size
          */
         std::unique_ptr<renderer::Renderer> current_renderer;
-        std::unique_ptr<graphics::DisplaySink> offscreen_sink;
+        geometry::Size last_rendered_size;
 
+        std::unique_ptr<graphics::DisplaySink> offscreen_sink;
         std::shared_ptr<OneShotBufferDisplayProvider> const output;
     };
     std::shared_ptr<Self> const self;

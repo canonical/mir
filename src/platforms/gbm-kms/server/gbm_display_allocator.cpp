@@ -25,9 +25,10 @@ namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
 
-mgg::GBMDisplayAllocator::GBMDisplayAllocator(mir::Fd drm_fd, std::shared_ptr<struct gbm_device> gbm)
+mgg::GBMDisplayAllocator::GBMDisplayAllocator(mir::Fd drm_fd, std::shared_ptr<struct gbm_device> gbm, geom::Size size)
     : fd{std::move(drm_fd)},
-      gbm{std::move(gbm)}
+      gbm{std::move(gbm)},
+      size{size}
 {
 }
 
@@ -205,9 +206,9 @@ private:
 };
 }
 
-auto mgg::GBMDisplayAllocator::make_surface(geom::Size size, DRMFormat format, std::span<uint64_t> modifiers)
+auto mgg::GBMDisplayAllocator::make_surface(DRMFormat format, std::span<uint64_t> modifiers)
     -> std::unique_ptr<GBMSurface>
 {
-    return std::make_unique<GBMSurfaceImpl>(fd, gbm.get(), std::move(size), format, modifiers);
+    return std::make_unique<GBMSurfaceImpl>(fd, gbm.get(), size, format, modifiers);
 }
 

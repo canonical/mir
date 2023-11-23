@@ -76,17 +76,22 @@ public:
         return {mg::DRMFormat::from_mir_format(next_buffer->format())};
     }
 
-    auto alloc_fb(geom::Size pixel_size, mg::DRMFormat format) -> std::unique_ptr<MappableFB> override
+    auto alloc_fb(mg::DRMFormat format) -> std::unique_ptr<MappableFB> override
     {
-        if (pixel_size != next_buffer->size())
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Mismatched buffer sizes?"}));
-        }
         if (format.as_mir_format().value_or(mir_pixel_format_invalid) != next_buffer->format())
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{"Mismatched pixel formats"}));
         }
         return std::make_unique<FB>(std::exchange(next_buffer, nullptr));
+    }
+
+    auto output_size() const -> geom::Size override
+    {
+        if (!next_buffer)
+        {
+            BOOST_THROW_EXCEPTION((std::logic_error{"Attempted to query buffer size before assigning a buffer"}));
+        }
+        return next_buffer->size();
     }
 
     void set_next_buffer(std::shared_ptr<mrs::WriteMappableBuffer> buffer)
@@ -115,11 +120,6 @@ public:
     auto view_area() const -> mir::geometry::Rectangle override
     {
         return geom::Rectangle{{0, 0}, size};
-    }
-
-    auto pixel_size() const -> mir::geometry::Size override
-    {
-        return size;
     }
 
     bool overlay(std::vector<mg::DisplayElement> const& /*renderlist*/) override
@@ -160,6 +160,7 @@ mc::BasicScreenShooter::Self::Self(
       clock{clock},
       render_provider{std::move(render_provider)},
       renderer_factory{std::move(renderer_factory)},
+      last_rendered_size{0, 0},
       output{std::make_shared<OneShotBufferDisplayProvider>()}
 {
 }
@@ -202,7 +203,7 @@ auto mc::BasicScreenShooter::Self::renderer_for_buffer(std::shared_ptr<mrs::Writ
         BOOST_THROW_EXCEPTION((std::runtime_error{"Attempt to capture to a zero-sized buffer"}));
     }
     output->set_next_buffer(std::move(buffer));
-    if (!offscreen_sink || (buffer_size != offscreen_sink->pixel_size()))
+    if (buffer_size != last_rendered_size)
     {
         // We need to build a new Renderer, at the new size
         class NoAuxConfig : public graphics::GLConfig
@@ -218,8 +219,9 @@ auto mc::BasicScreenShooter::Self::renderer_for_buffer(std::shared_ptr<mrs::Writ
             }
         };
         offscreen_sink = std::make_unique<OffscreenDisplaySink>(output, buffer_size);
-        auto gl_surface = render_provider->surface_for_sink(*offscreen_sink, buffer_size, NoAuxConfig{});
+        auto gl_surface = render_provider->surface_for_sink(*offscreen_sink, NoAuxConfig{});
         current_renderer = renderer_factory->create_renderer_for(std::move(gl_surface), render_provider);
+        last_rendered_size = buffer_size;
     }
     return *current_renderer;
 }

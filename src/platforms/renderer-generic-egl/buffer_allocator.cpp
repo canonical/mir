@@ -427,7 +427,6 @@ auto mge::GLRenderingProvider::suitability_for_display(
 
 auto mge::GLRenderingProvider::surface_for_sink(
     DisplaySink& sink,
-    geometry::Size size,
     GLConfig const& config)
     -> std::unique_ptr<gl::OutputSurface>
 {
@@ -440,8 +439,7 @@ auto mge::GLRenderingProvider::surface_for_sink(
     return std::make_unique<mgc::CPUCopyOutputSurface>(
         dpy,
         ctx,
-        *cpu_provider,
-        size);
+        *cpu_provider);
 }
 
 auto mge::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)

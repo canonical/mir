@@ -78,9 +78,9 @@ struct BasicScreenShooter : Test
                 {
                     return default_gl_behaviour_provider.as_texture(std::move(buffer));
                 });
-        ON_CALL(*gl_provider, surface_for_sink(_, _, _))
+        ON_CALL(*gl_provider, surface_for_sink(_, _))
             .WillByDefault(
-                [](mg::DisplaySink& sink, auto size, auto const&)
+                [](mg::DisplaySink& sink, auto const&)
                     -> std::unique_ptr<mg::gl::OutputSurface>
                 {
                     if (auto cpu_provider = sink.acquire_compatible_allocator<mg::CPUAddressableDisplayAllocator>())
@@ -89,9 +89,9 @@ struct BasicScreenShooter : Test
                         auto format = cpu_provider->supported_formats().front();
                         ON_CALL(*surface, commit())
                             .WillByDefault(
-                                [cpu_provider, size, format]()
+                                [cpu_provider, format]()
                                 {
-                                    return cpu_provider->alloc_fb(size, format);
+                                    return cpu_provider->alloc_fb(format);
                                 });
                         return surface;
                     }
@@ -210,7 +210,7 @@ TEST_F(BasicScreenShooter, throw_in_scene_elements_for_causes_graceful_failure)
 TEST_F(BasicScreenShooter, throw_in_surface_for_output_handled_gracefully)
 {
     ON_CALL(*gl_provider, surface_for_sink).WillByDefault(
-        [](auto&, auto, auto&) -> std::unique_ptr<mg::gl::OutputSurface>
+        [](auto&, auto&) -> std::unique_ptr<mg::gl::OutputSurface>
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{"Throw in surface_for_sink"}));
         });

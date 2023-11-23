@@ -121,6 +121,6 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplaySi
         std::shared_ptr<PassthroughTracker> const tracker;
     };
     auto output_surface =
-        render_platform->surface_for_sink(display_sink, display_sink.pixel_size(), *gl_config);
+        render_platform->surface_for_sink(display_sink, *gl_config);
     return std::make_unique<HeadlessDBC>(display_sink, std::move(output_surface), render_platform, tracker);
 }

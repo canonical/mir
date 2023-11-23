@@ -98,7 +98,6 @@ public:
 
     // DisplaySink implementation
     auto view_area() const -> geometry::Rectangle override;
-    auto pixel_size() const -> geometry::Size override;
     bool overlay(std::vector<DisplayElement> const& renderlist) override;
     auto transformation() const -> glm::mat2 override;
     auto maybe_create_allocator(DisplayAllocator::Tag const& type_tag) -> DisplayAllocator* override;
@@ -401,19 +400,6 @@ auto mgw::DisplayClient::Output::view_area() const -> geometry::Rectangle
     return dcout.extents();
 }
 
-auto mgw::DisplayClient::Output::pixel_size() const -> geometry::Size
-{
-    if (!has_initialized)
-    {
-        mir::fatal_error("Attempt to get Wayland output size before initialisation is complete");
-    }
-    /* output_size is the size we pass to WlDisplayProvider,
-     * which becomes the size of the wl_egl_window,
-     * which is the pixel size.
-     */
-    return output_size;
-}
-
 bool mgw::DisplayClient::Output::overlay(std::vector<DisplayElement> const&)
 {
     return false;
@@ -428,12 +414,9 @@ auto mgw::DisplayClient::Output::maybe_create_allocator(DisplayAllocator::Tag co
 {
     if (dynamic_cast<GenericEGLDisplayAllocator::Tag const*>(&type_tag))
     {
-        if (!provider)
+        if (!has_initialized)
         {
-            provider = std::make_unique<WlDisplayAllocator>(
-                owner_->provider->get_egl_display(),
-                surface,
-                pixel_size());
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Attempted to create allocator before Output is fully initialised"}));
         }
         return provider.get();
     }
