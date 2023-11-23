@@ -283,7 +283,7 @@ auto mgc::CPUCopyOutputSurface::Impl::commit() -> std::unique_ptr<mg::Framebuffe
          */
         glReadPixels(
             0, 0,
-            size().width.as_int(), size().height.as_int(),
+            fb->size().width.as_uint32_t(), fb->size().height.as_uint32_t(),
             pixel_layout, GL_UNSIGNED_BYTE, mapping->data());
     }
     return fb;
