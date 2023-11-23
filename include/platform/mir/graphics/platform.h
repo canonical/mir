@@ -307,6 +307,8 @@ public:
     public:
         MappableFB() = default;
         virtual ~MappableFB() override = default;
+
+        using renderer::software::WriteMappableBuffer::size;
     };
 
     virtual auto supported_formats() const
