@@ -264,6 +264,9 @@ void globals::init()
     xdg_wm_base_add_listener(globals::wm_base, &shell_listener, NULL);
 }
 
+// If building against newer Wayland protocol definitions we may miss trailing fields
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 wl_callback_listener const window::frame_listener =
 {
     .done = [](void* ctx, auto... args) { static_cast<window*>(ctx)->handle_frame_callback(args...); },
@@ -293,6 +296,7 @@ wl_keyboard_listener const window::keyboard_listener =
     [](void* self, auto... args) { static_cast<window*>(self)->handle_keyboard_modifiers(args...); },
     [](void* self, auto... args) { static_cast<window*>(self)->handle_keyboard_repeat_info(args...); },
 };
+#pragma GCC diagnostic pop
 
 void window::update_free_buffers(wl_buffer* buffer)
 {
