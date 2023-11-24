@@ -41,6 +41,8 @@ mir (2.16.0) UNRELEASED; urgency=medium
       . Ensure we send a configure when we resize. (Fixes: #2040)
       . Avoid spurious configure events. (Fixes: 3046)
       . [Xwayland] Fix broken rescaling. (Fixes: #2509)
+      . [Xwayland] improve handling of CLion subsidiary windows (Fixes: #3024,
+        #2326 and #3107)
       . Fix MirRunner::stop() threading. (Fixes: #3070)
       . Fix processing of `--platform-*-libs`. (Fixes: #3088)
       . [VT console provider] Input device not recognised after
