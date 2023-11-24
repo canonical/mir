@@ -43,6 +43,8 @@ mir (2.16.0) UNRELEASED; urgency=medium
       . [Xwayland] Fix broken rescaling. (Fixes: #2509)
       . Fix MirRunner::stop() threading. (Fixes: #3070)
       . Fix processing of `--platform-*-libs`. (Fixes: #3088)
+      . [VT console provider] Input device not recognised after
+        disconnect/reconnect cycle (Fixes: #3149)
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Wed, 22 Nov 2023 12:18:22 +0000
 
