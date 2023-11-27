@@ -535,6 +535,11 @@ mf::DesktopFileManager::DesktopFileManager(std::shared_ptr<MainLoop> const& main
     else
     {
         data_directories = {"/usr/local/share", "/usr/share"};
+        if (auto home = getenv("HOME"))
+            data_directories.push_back(std::string(home) + "/.local/share");
+
+        if (const char* xdg_data_home_dir = std::getenv("XDG_DATA_HOME"))
+            data_directories.push_back(xdg_data_home_dir);
     }
 
     for (auto directory : data_directories)
