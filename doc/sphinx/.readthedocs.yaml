@@ -31,6 +31,7 @@ build:
   - liblttng-ust-dev
   - libwayland-dev
   - libxcb-composite0-dev
+  - libxcb-randr0-dev
   - libxcursor-dev
   - libxkbcommon-dev
   - libxml++2.6-dev
