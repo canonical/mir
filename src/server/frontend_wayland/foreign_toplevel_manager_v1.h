@@ -24,6 +24,7 @@
 namespace mir
 {
 class Executor;
+class MainLoop;
 namespace shell
 {
 class Shell;
@@ -36,7 +37,8 @@ auto create_foreign_toplevel_manager_v1(
     wl_display* display,
     std::shared_ptr<shell::Shell> const& shell,
     std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<SurfaceStack> const& surface_stack)
+    std::shared_ptr<SurfaceStack> const& surface_stack,
+    std::shared_ptr<MainLoop> const& main_loop)
 -> std::shared_ptr<wayland::ForeignToplevelManagerV1::Global>;
 }
 }

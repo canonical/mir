@@ -24,13 +24,19 @@
 #include "mir/scene/null_observer.h"
 #include "mir/scene/null_surface_observer.h"
 #include "mir/scene/surface.h"
+#include "mir/scene/session.h"
 #include "mir/log.h"
 #include "mir/executor.h"
+#include "mir/main_loop.h"
 
 #include <algorithm>
 #include <mutex>
 #include <map>
 #include <boost/throw_exception.hpp>
+#include <fstream>
+#include <gio/gdesktopappinfo.h>
+#include <filesystem>
+#include <sys/inotify.h>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -46,6 +52,28 @@ class ForeignSurfaceObserver;
 class ForeignToplevelManagerV1;
 class ForeignToplevelHandleV1;
 
+class DesktopFileManager
+{
+public:
+    DesktopFileManager(std::shared_ptr<MainLoop> const& main_loop);
+    ~DesktopFileManager();
+
+    void refresh_app_cache();
+    std::string resolve_app_id(const scene::Surface*);
+private:
+    std::shared_ptr<MainLoop> const main_loop;
+    mir::Fd inotify_fd;
+    std::vector<int> config_path_wd_list;
+    GAppInfo* resolve_from_wayland_app_id(std::string& app_id);
+    GAppInfo* lookup_basename(std::string& name);
+    GAppInfo* resolve_if_snap(int pid);
+    GAppInfo* resolve_if_flatpack(int pid);
+    GAppInfo* resolve_if_executable_matches(int pid);
+    std::map<std::string, GAppInfo*> id_to_app;
+    std::map<std::string, std::string> wm_class_to_app_info_id;
+    GList* app_infos = NULL;
+};
+
 /// Informs a client about toplevels from itself and other clients
 /// The Wayland objects it creates for each toplevel can be used to aquire information and control that toplevel
 /// Useful for task bars and app switchers
@@ -57,11 +85,13 @@ public:
         wl_display* display,
         std::shared_ptr<shell::Shell> const& shell,
         std::shared_ptr<Executor> const& wayland_executor,
-        std::shared_ptr<SurfaceStack> const& surface_stack);
+        std::shared_ptr<SurfaceStack> const& surface_stack,
+        std::shared_ptr<MainLoop> const& main_loop);
 
     std::shared_ptr<shell::Shell> const shell;
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<SurfaceStack> const surface_stack;
+    std::shared_ptr<DesktopFileManager> const desktop_file_manager;
 
 private:
     void bind(wl_resource* new_resource) override;
@@ -136,6 +166,7 @@ public:
     ~ForeignToplevelManagerV1();
 
     std::shared_ptr<shell::Shell> const shell;
+    std::shared_ptr<DesktopFileManager> const desktop_file_manager;
 
 private:
     /// Wayland requests
@@ -188,10 +219,11 @@ auto mf::create_foreign_toplevel_manager_v1(
     wl_display* display,
     std::shared_ptr<shell::Shell> const& shell,
     std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<SurfaceStack> const& surface_stack)
+    std::shared_ptr<SurfaceStack> const& surface_stack,
+    std::shared_ptr<MainLoop> const& main_loop)
 -> std::shared_ptr<mw::ForeignToplevelManagerV1::Global>
 {
-    return std::make_shared<ForeignToplevelManagerV1Global>(display, shell, wayland_executor, surface_stack);
+    return std::make_shared<ForeignToplevelManagerV1Global>(display, shell, wayland_executor, surface_stack, main_loop);
 }
 
 // ForeignToplevelManagerV1Global
@@ -200,11 +232,13 @@ mf::ForeignToplevelManagerV1Global::ForeignToplevelManagerV1Global(
     wl_display* display,
     std::shared_ptr<shell::Shell> const& shell,
     std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<SurfaceStack> const& surface_stack)
+    std::shared_ptr<SurfaceStack> const& surface_stack,
+    std::shared_ptr<MainLoop> const& main_loop)
     : Global{display, Version<2>()},
       shell{shell},
       wayland_executor{wayland_executor},
-      surface_stack{surface_stack}
+      surface_stack{surface_stack},
+      desktop_file_manager{std::make_shared<DesktopFileManager>(main_loop)}
 {
 }
 
@@ -369,7 +403,7 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::
             handle = std::make_shared<mw::Weak<ForeignToplevelHandleV1>>();
 
             std::string name = surface->name();
-            std::string app_id = surface->application_id();
+            std::string app_id = manager.value().desktop_file_manager->resolve_app_id(surface.get());
             auto const focused = surface->focus_state();
             auto const state = surface->state_tracker();
 
@@ -383,8 +417,7 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::
 
             if (!name.empty())
                 handle->value().send_title_event(name);
-            if (!app_id.empty())
-                handle->value().send_app_id_event(app_id);
+            handle->value().send_app_id_event(app_id);
             handle->value().send_state(focused, state);
             handle->value().send_done_event();
         }
@@ -458,17 +491,268 @@ void mf::ForeignSurfaceObserver::renamed(ms::Surface const*, std::string const& 
 }
 
 void mf::ForeignSurfaceObserver::application_id_set_to(
-    scene::Surface const*,
+    scene::Surface const* surface,
     std::string const& application_id)
 {
     std::lock_guard lock{mutex};
 
     std::string id = application_id;
-    with_toplevel_handle(lock, [id](ForeignToplevelHandleV1& handle)
+    with_toplevel_handle(lock, [&](ForeignToplevelHandleV1& handle)
         {
-            handle.send_app_id_event(id);
+            auto app_id = manager.value().desktop_file_manager->resolve_app_id(surface);
+            handle.send_app_id_event(app_id);
             handle.send_done_event();
         });
+}
+
+// DesktopFileManager
+mf::DesktopFileManager::DesktopFileManager(std::shared_ptr<MainLoop> const& main_loop)
+    : main_loop{main_loop},
+      inotify_fd{inotify_init()}
+{
+    refresh_app_cache();
+
+    if (inotify_fd < 0)
+    {
+        mir::log_error("Unable to initialize inotify. Automatic desktop app refresh will NOT happen.");
+        return;
+    }
+
+    // Set up a watch on the data directories
+    std::vector<std::string> data_directories;
+    if (const char* xdg_data_dirs = std::getenv("XDG_DATA_DIRS"))
+    {
+        std::string directory;
+        for (size_t i = 0; i < strlen(xdg_data_dirs); i++) {
+            if (xdg_data_dirs[i] == ':') {
+                data_directories.push_back(directory);
+                directory = "";
+                continue;
+            }
+            directory += xdg_data_dirs[i];
+        }
+    }
+    else
+    {
+        data_directories = {"/usr/local/share", "/usr/share"};
+    }
+
+    for (auto directory : data_directories)
+    {
+        auto application_directory = directory + "/applications";
+        int config_path_wd = inotify_add_watch(
+            inotify_fd,
+            application_directory.c_str(),
+            IN_CREATE | IN_DELETE | IN_CLOSE_WRITE | IN_MOVED_TO | IN_MOVED_FROM);
+
+        if (config_path_wd < 0)
+        {
+            mir::log_error("Unable to watch directory %s", application_directory.c_str());
+            continue;
+        }
+
+        config_path_wd_list.push_back(config_path_wd);
+    }
+
+    main_loop->register_fd_handler({inotify_fd}, this, [this](int)
+    {
+        union
+        {
+            inotify_event event;
+            char buffer[sizeof(inotify_event) + NAME_MAX + 1];
+        } inotify_buffer;
+        if (read(inotify_fd, &inotify_buffer, sizeof(inotify_buffer)) < static_cast<ssize_t>(sizeof(inotify_event)))
+            return;
+
+        refresh_app_cache();
+    });
+}
+
+mf::DesktopFileManager::~DesktopFileManager()
+{
+    if (app_infos)
+    {
+        g_list_free_full (app_infos, g_object_unref);
+        app_infos = NULL;
+    }
+}
+
+void mf::DesktopFileManager::refresh_app_cache()
+{
+    if (app_infos)
+    {
+        g_list_free_full (app_infos, g_object_unref);
+        app_infos = NULL;
+    }
+    app_infos = g_app_info_get_all();
+    id_to_app.clear();
+    wm_class_to_app_info_id.clear();
+
+    GList* info;
+    for (info = app_infos; info != NULL; info = info->next)
+    {
+        GAppInfo *app_info = static_cast<GAppInfo*>(info->data);
+        const char* app_id = g_app_info_get_id(app_info);
+        id_to_app[app_id] = app_info;
+
+        const char* wm_class = g_desktop_app_info_get_startup_wm_class(G_DESKTOP_APP_INFO(app_info));
+        if (wm_class == NULL)
+            continue;
+
+        wm_class_to_app_info_id.insert(std::pair<std::string, std::string>(wm_class, app_id));
+    }
+}
+
+std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface)
+{
+    // In this method, we're attempting to resolve a Surface back to it's GAppInfo so that
+    // we can report a best-effort app_id to the user.
+    // Unfortunately, the connection between a window and a desktop is ill-defined.
+    // Hence, we jump through a series of hoops in the hope that we'll find what we're looking for.
+    // For more info on the checks happening here, see:
+    // https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/src/shell-window-tracker.c?ref_type=heads#L387
+    auto app_id = surface->application_id();
+
+    // First, let's see if this is just a WM_CLASS
+    auto wm_class_pos = wm_class_to_app_info_id.find(app_id);
+    if (wm_class_pos != wm_class_to_app_info_id.end())
+    {
+        auto id = wm_class_pos->second;
+        return g_app_info_get_id(id_to_app[id]);
+    }
+
+    // Second, let's see if we can map it straight to a desktop file
+    auto desktop_file = app_id + ".desktop";
+    auto found = lookup_basename(desktop_file);
+    if (found)
+        return g_app_info_get_id(found);
+
+    // Third, lowercase it and try again
+    auto lowercase_desktop_file = desktop_file;
+    for(char &ch : lowercase_desktop_file)
+        ch = std::tolower(ch);
+
+    found = lookup_basename(desktop_file);
+    if (found)
+        return g_app_info_get_id(found);
+
+    // Fourth, get the exec command from our pid and see if we can match it to a GAppInfo's Exec
+    auto session = surface->session().lock();
+    auto pid = session->process_id();
+    found = resolve_if_executable_matches(pid);
+    if (found)
+        return g_app_info_get_id(found);
+
+    // Fifth, check if the window belongs to snap
+    found = resolve_if_snap(pid);
+    if (found)
+        return g_app_info_get_id(found);
+
+    // Sixth, check if the window belongs to flatpak
+    found = resolve_if_flatpack(pid);
+    if (found)
+        return g_app_info_get_id(found);
+
+    // NOTE: Here is the list of things that we aren't doing, as we don't have a good way of doing it:
+    // 1. Resolving from the list of internally running apps using the PID
+    // 2. Resolving via a startup notification
+    // 3. Resolving from a GApplicationID, which GTK sends over DBUS
+    return app_id;
+}
+
+GAppInfo* mf::DesktopFileManager::lookup_basename(std::string& name)
+{
+    // Check if it's in the list of names
+    auto app_pos = id_to_app.find(name);
+    if (app_pos != id_to_app.end())
+    {
+        return app_pos->second;
+    }
+
+    // Otherwise, check if any of the special prefixes can find the app.
+    std::vector<const char*> vendor_prefixes{
+        "gnome-",
+        "fedora-",
+        "mozilla-",
+        "debian-" };
+    for (auto prefix : vendor_prefixes)
+    {
+        auto prefixed = prefix + name;
+        app_pos = id_to_app.find(prefixed);
+        if (app_pos != id_to_app.end())
+        {
+            return app_pos->second;
+        }
+    }
+
+    return NULL;
+}
+
+GAppInfo* mf::DesktopFileManager::resolve_if_snap(int pid)
+{
+    // We are reading the security profile here, which comes to us in the form:
+    //      snap.name-space.binary-name (current).
+    std::string attr_file = "/proc/" + std::to_string(pid) + "/attr/current";
+    if (!std::filesystem::exists(attr_file))
+        return NULL;
+
+    std::string contents;
+    std::getline(std::ifstream(attr_file), contents, '\0');
+
+    const char* SNAP_SECURITY_LABEL_PREFIX = "snap.";
+    if (!contents.starts_with(SNAP_SECURITY_LABEL_PREFIX))
+        return NULL;
+
+    // Get the contents after snap. and before the security annotation (denoted by a space)
+    auto const contents_start_index = strlen (SNAP_SECURITY_LABEL_PREFIX);
+    auto contents_end_index = contents.find_first_of(' ', contents_start_index);
+    if (contents_end_index == std::string::npos)
+        contents_end_index = contents.size();
+    std::string sandboxed_app_id = contents.substr(contents_start_index, contents_end_index - contents_start_index);
+    for (auto& c : sandboxed_app_id)
+        if (c == '.')
+            c = '_';
+
+    // Now we will have something like firefox_firefox, for example.
+    // This should match something in the app ID map.
+    return id_to_app[sandboxed_app_id + ".desktop"];
+}
+
+GAppInfo* mf::DesktopFileManager::resolve_if_flatpack(int pid)
+{
+    g_autoptr(GKeyFile) key_file = g_key_file_new ();
+    g_autofree char * info_filename = g_strdup_printf ("/proc/%u/root/.flatpak-info", pid);
+
+    if (!g_key_file_load_from_file (key_file, info_filename, G_KEY_FILE_NONE, NULL))
+        return NULL;
+
+    char* sandboxed_app_id = g_key_file_get_string (key_file, "Application", "name", NULL);
+    if (!sandboxed_app_id)
+        return NULL;
+
+    std::string desktop_file_id = std::string(sandboxed_app_id) + ".desktop";
+    auto found = id_to_app.find(desktop_file_id);
+    auto app_info = found != id_to_app.end() ? found->second : NULL;
+    g_free(sandboxed_app_id);
+    return app_info;
+}
+
+GAppInfo* mf::DesktopFileManager::resolve_if_executable_matches(int pid)
+{
+    std::string proc_file = "/proc/" + std::to_string(pid) + "/cmdline";
+    std::string cmdline_call;
+    std::getline(std::ifstream(proc_file), cmdline_call, '\0');
+    for (auto info = app_infos; info != NULL; info = info->next)
+    {
+        GAppInfo *app_info = static_cast<GAppInfo*>(info->data);
+        std::string exec = g_app_info_get_executable(app_info);
+        if (exec.starts_with(cmdline_call))
+        {
+            return app_info;
+        }
+    }
+
+    return NULL;
 }
 
 // ForeignToplevelManagerV1
@@ -478,6 +762,7 @@ mf::ForeignToplevelManagerV1::ForeignToplevelManagerV1(
     ForeignToplevelManagerV1Global& global)
     : mw::ForeignToplevelManagerV1{new_resource, Version<2>()},
       shell{global.shell},
+      desktop_file_manager{global.desktop_file_manager},
       surface_stack{global.surface_stack},
       observer{std::make_shared<ForeignSceneObserver>(global.wayland_executor, this)}
 {

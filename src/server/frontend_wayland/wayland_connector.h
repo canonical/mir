@@ -105,6 +105,7 @@ public:
         std::shared_ptr<input::CompositeEventFilter> composite_event_filter;
         std::shared_ptr<graphics::GraphicBufferAllocator> graphic_buffer_allocator;
         std::shared_ptr<compositor::ScreenShooter> screen_shooter;
+        std::shared_ptr<MainLoop> main_loop;
     };
 
     WaylandExtensions() = default;

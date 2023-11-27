@@ -316,7 +316,8 @@ mf::WaylandConnector::WaylandConnector(
         input_device_registry,
         composite_event_filter,
         allocator,
-        screen_shooter});
+        screen_shooter,
+        main_loop});
 
     shm_global = std::make_unique<WlShm>(display.get(), executor);
 
