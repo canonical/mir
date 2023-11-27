@@ -19,6 +19,7 @@
 #include "mir/default_server_configuration.h"
 #include "mir/abnormal_exit.h"
 
+#include "mir/graphics/display.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/shell/abstract_shell.h"
 #include "mir/options/configuration.h"
@@ -72,16 +73,27 @@ auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_pt
             return std::make_shared<msd::BasicManager>(
                 [buffer_allocator = the_buffer_allocator(),
                  executor = the_main_loop(),
-                 cursor_images = the_cursor_images()](
+                 cursor_images = the_cursor_images(),
+                 display = the_display()](
                     std::shared_ptr<shell::Shell> const& shell,
                     std::shared_ptr<scene::Surface> const& surface) -> std::unique_ptr<msd::Decoration>
                 {
+                    // Use the maximum scale to ensure sharp-looking decorations on all outputs
+                    auto max_output_scale{0.0f};
+                    auto const display_config{display->configuration()};
+                    display_config->for_each_output(
+                        [&](graphics::DisplayConfigurationOutput const& output_config)
+                        {
+                            max_output_scale = std::max(max_output_scale, output_config.scale);
+                        });
+
                     return std::make_unique<msd::BasicDecoration>(
                         shell,
                         buffer_allocator,
                         executor,
                         cursor_images,
-                        surface);
+                        surface,
+                        max_output_scale);
                 });
         });
 }
@@ -149,4 +161,3 @@ mir::DefaultServerConfiguration::the_shell_display_layout()
             return std::make_shared<msh::GraphicsDisplayLayout>(the_display());
         });
 }
-

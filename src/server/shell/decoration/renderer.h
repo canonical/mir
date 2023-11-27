@@ -47,7 +47,8 @@ class Renderer
 public:
     Renderer(
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
-        std::shared_ptr<StaticGeometry const> const& static_geometry);
+        std::shared_ptr<StaticGeometry const> const& static_geometry,
+        float scale);
 
     void update_state(WindowState const& window_state, InputState const& input_state);
     auto render_titlebar() -> std::optional<std::shared_ptr<graphics::Buffer>>;
@@ -115,6 +116,7 @@ private:
     geometry::Size right_border_size;
     geometry::Size bottom_border_size;
     size_t solid_color_pixels_length{0};
+    size_t scaled_solid_color_pixels_length{0};
     std::unique_ptr<Pixel[]> solid_color_pixels; // can be nullptr
 
     geometry::Size titlebar_size{};
@@ -126,6 +128,8 @@ private:
     std::vector<ButtonInfo> buttons;
 
     std::shared_ptr<Text> const text;
+
+    float scale{1.0f};
 
     void update_solid_color_pixels();
     auto make_buffer(

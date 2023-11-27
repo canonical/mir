@@ -72,7 +72,8 @@ public:
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<Executor> const& executor,
         std::shared_ptr<input::CursorImages> const& cursor_images,
-        std::shared_ptr<scene::Surface> const& window_surface);
+        std::shared_ptr<scene::Surface> const& window_surface,
+        float scale);
     ~BasicDecoration();
 
     void window_state_updated();

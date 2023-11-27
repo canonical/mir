@@ -158,7 +158,8 @@ msd::BasicDecoration::BasicDecoration(
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<Executor> const& executor,
     std::shared_ptr<input::CursorImages> const& cursor_images,
-    std::shared_ptr<ms::Surface> const& window_surface)
+    std::shared_ptr<ms::Surface> const& window_surface,
+    float scale)
     : threadsafe_self{std::make_shared<ThreadsafeAccess<BasicDecoration>>(executor)},
       static_geometry{std::make_shared<StaticGeometry>(default_geometry)},
       shell{shell},
@@ -166,7 +167,7 @@ msd::BasicDecoration::BasicDecoration(
       cursor_images{cursor_images},
       session{window_surface->session().lock()},
       buffer_streams{std::make_unique<BufferStreams>(session)},
-      renderer{std::make_unique<Renderer>(buffer_allocator, static_geometry)},
+      renderer{std::make_unique<Renderer>(buffer_allocator, static_geometry, scale)},
       window_surface{window_surface},
       decoration_surface{create_surface()},
       window_state{new_window_state()},
