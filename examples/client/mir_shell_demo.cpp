@@ -171,6 +171,17 @@ private:
     void draw_new_content(buffer* b) override;
 };
 
+
+class normal_window : public grey_window
+{
+public:
+    normal_window(int32_t width, int32_t height);
+    ~normal_window();
+
+private:
+    zmir_mir_normal_surface_v1* const mir_normal_surface;
+};
+
 void handle_registry_global(
     wl_registry* registry,
     uint32_t id,
@@ -565,6 +576,20 @@ void grey_window::draw_new_content(window::buffer* b)
     }
 }
 
+normal_window::normal_window(int32_t width, int32_t height) :
+    grey_window(width, height),
+    mir_normal_surface{globals::mir_shell? zmir_mir_shell_v1_get_normal_surface(globals::mir_shell, *this) : nullptr}
+{
+}
+
+normal_window::~normal_window()
+{
+    if (mir_normal_surface)
+    {
+        zmir_mir_normal_surface_v1_destroy(mir_normal_surface);
+    }
+}
+
 class satellite : public grey_window
 {
 public:
@@ -614,12 +639,12 @@ int main()
 {
     globals::init();
 
-    auto const main_window = std::make_unique<grey_window>(400, 400);
+    auto const main_window = std::make_unique<normal_window>(400, 400);
 
     auto const positioner = xdg_wm_base_create_positioner(globals::wm_base);
 
     xdg_positioner_set_anchor(positioner, XDG_POSITIONER_ANCHOR_LEFT);
-    xdg_positioner_set_gravity(positioner, XDG_POSITIONER_GRAVITY_LEFT);
+    xdg_positioner_set_gravity(positioner, XDG_POSITIONER_GRAVITY_RIGHT);
     xdg_positioner_set_constraint_adjustment(positioner, XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_X);
 
     auto const satellite_window = std::make_unique<satellite>(100, 400, positioner, *main_window);
