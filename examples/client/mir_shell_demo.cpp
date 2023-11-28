@@ -30,6 +30,7 @@
 namespace
 {
 bool const tracing = getenv("MIR_SHELL_DEMO_TRACE");
+bool const no_satellite = getenv("MIR_SHELL_DEMO_NO_SATELLITE");
 
 [[gnu::format (printf, 1, 2)]]
 inline void trace(char const* fmt, ...)
@@ -93,7 +94,13 @@ protected:
 
     virtual void handle_mouse_button(wl_pointer*, uint32_t serial, uint32_t time, uint32_t button, uint32_t state);
 
+    bool has_mouse_focus() { return mouse_focus == this; }
+    bool has_keyboard_focus() { return keyboard_focus == this; }
+
 private:
+    static window* mouse_focus;
+    static window* keyboard_focus;
+
     wl_surface* const surface;
     buffer buffers[no_of_buffers];
     wl_pointer* const pointer;
@@ -138,6 +145,9 @@ private:
     window(window const&) = delete;
     window& operator=(window const&) = delete;
 };
+
+window* window::mouse_focus = nullptr;
+window* window::keyboard_focus = nullptr;
 
 class toplevel : public window
 {
@@ -388,10 +398,13 @@ void window::handle_frame_callback(wl_callback* callback, uint32_t)
 void window::handle_mouse_enter(
     wl_pointer*,
     uint32_t serial,
-    wl_surface*,
+    wl_surface* surface,
     wl_fixed_t surface_x,
     wl_fixed_t surface_y)
 {
+    if (*this == surface)
+        mouse_focus = this;
+
     (void)serial;
     trace("Received handle_mouse_enter event: (%f, %f)",
           wl_fixed_to_double(surface_x),
@@ -401,8 +414,11 @@ void window::handle_mouse_enter(
 void window::handle_mouse_leave(
     wl_pointer*,
     uint32_t serial,
-    wl_surface*)
+    wl_surface* surface)
 {
+    if (*this == surface)
+        mouse_focus = nullptr;
+
     (void)serial;
     trace("Received mouse_exit event\n");
 }
@@ -452,13 +468,19 @@ void window::handle_keyboard_keymap(wl_keyboard*, uint32_t format, int32_t /*fd*
     trace("Received keyboard_keymap: format %i, size %i", format, size);
 }
 
-void window::handle_keyboard_enter(wl_keyboard*, uint32_t, wl_surface*, wl_array*)
+void window::handle_keyboard_enter(wl_keyboard*, uint32_t, wl_surface* surface, wl_array*)
 {
+    if (*this == surface)
+        keyboard_focus = this;
+
     trace("Received keyboard_enter:\n");
 }
 
-void window::handle_keyboard_leave(wl_keyboard*, uint32_t, wl_surface*)
+void window::handle_keyboard_leave(wl_keyboard*, uint32_t, wl_surface* surface)
 {
+    if (*this == surface)
+        keyboard_focus = nullptr;
+
     trace("Received keyboard_leave:\n");
 }
 
@@ -556,6 +578,9 @@ void toplevel::handle_mouse_button(wl_pointer* pointer, uint32_t serial, uint32_
 {
     window::handle_mouse_button(pointer, serial, time, button, state);
 
+    if (!has_mouse_focus())
+        return;
+
     if (button == BTN_LEFT && state == WL_POINTER_BUTTON_STATE_PRESSED)
         xdg_toplevel_move(xdgtoplevel, globals::seat, serial);
 
@@ -579,6 +604,7 @@ normal_window::normal_window(int32_t width, int32_t height) :
     grey_window(width, height, 192),
     mir_normal_surface{globals::mir_shell? zmir_mir_shell_v1_get_normal_surface(globals::mir_shell, *this) : nullptr}
 {
+    xdg_toplevel_set_title(*this, "normal");
 }
 
 normal_window::~normal_window()
@@ -608,6 +634,7 @@ satellite::satellite(int32_t width, int32_t height, xdg_positioner* positioner, 
     mir_surface{globals::mir_shell ? zmir_mir_shell_v1_get_satellite_surface(globals::mir_shell, *this, positioner) : nullptr}
 {
     xdg_toplevel_set_parent(*this, parent);
+    xdg_toplevel_set_title(*this, "satellite");
 
     if (mir_surface)
     {
@@ -639,16 +666,19 @@ int main()
     globals::init();
 
     auto const main_window = std::make_unique<normal_window>(400, 400);
-    wl_display_roundtrip(display);
 
-    auto const positioner = xdg_wm_base_create_positioner(globals::wm_base);
-    xdg_positioner_set_anchor_rect(positioner, 0, 0, 400, 400);
-    xdg_positioner_set_anchor(positioner, XDG_POSITIONER_ANCHOR_LEFT);
-    xdg_positioner_set_gravity(positioner, XDG_POSITIONER_GRAVITY_RIGHT);
-    xdg_positioner_set_constraint_adjustment(positioner, XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_X);
+    if (!no_satellite)
+    {
+        wl_display_roundtrip(display);
 
-    auto const satellite_window = std::make_unique<satellite>(100, 400, positioner, *main_window);
+        auto const positioner = xdg_wm_base_create_positioner(globals::wm_base);
+        xdg_positioner_set_anchor_rect(positioner, 0, 0, 400, 400);
+        xdg_positioner_set_anchor(positioner, XDG_POSITIONER_ANCHOR_LEFT);
+        xdg_positioner_set_gravity(positioner, XDG_POSITIONER_GRAVITY_RIGHT);
+        xdg_positioner_set_constraint_adjustment(positioner, XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_X);
 
+        static auto const satellite_window = std::make_unique<satellite>(100, 400, positioner, *main_window);
+    }
     mir::client::WaylandRunner::run(display);
 
     return 0;
