@@ -61,7 +61,7 @@ void mir::client::WaylandRunner::operator()(wl_display* display)
             {
             case -1:
                 fprintf(stderr, "Failed to dispatch Wayland events\n");
-                break;
+                abort();
             case 0:
                 break;
             default:
@@ -81,6 +81,7 @@ void mir::client::WaylandRunner::operator()(wl_display* display)
             if (wl_display_read_events(display))
             {
                 fprintf(stderr, "Failed to read Wayland events\n");
+                abort();
             }
         }
         else
