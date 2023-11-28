@@ -329,6 +329,11 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
         return;
     }
 
+    if (state.window_archetype)
+    {
+        spec().type = *state.window_archetype;
+    }
+
     surface.value().commit(state);
     handle_commit();
 

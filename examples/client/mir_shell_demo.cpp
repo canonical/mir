@@ -163,10 +163,9 @@ class grey_window : public toplevel
 {
 public:
     grey_window(int32_t width, int32_t height, unsigned char intensity) : toplevel(width, height), intensity(intensity) {}
-    using toplevel::toplevel;
 
 private:
-    unsigned char const intensity = 192;
+    unsigned char const intensity;
     unsigned char const alpha = 255;
     void draw_new_content(buffer* b) override;
 };
@@ -577,7 +576,7 @@ void grey_window::draw_new_content(window::buffer* b)
 }
 
 normal_window::normal_window(int32_t width, int32_t height) :
-    grey_window(width, height),
+    grey_window(width, height, 192),
     mir_normal_surface{globals::mir_shell? zmir_mir_shell_v1_get_normal_surface(globals::mir_shell, *this) : nullptr}
 {
 }
@@ -640,9 +639,10 @@ int main()
     globals::init();
 
     auto const main_window = std::make_unique<normal_window>(400, 400);
+    wl_display_roundtrip(display);
 
     auto const positioner = xdg_wm_base_create_positioner(globals::wm_base);
-
+    xdg_positioner_set_anchor_rect(positioner, 0, 0, 400, 400);
     xdg_positioner_set_anchor(positioner, XDG_POSITIONER_ANCHOR_LEFT);
     xdg_positioner_set_gravity(positioner, XDG_POSITIONER_GRAVITY_RIGHT);
     xdg_positioner_set_constraint_adjustment(positioner, XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_X);

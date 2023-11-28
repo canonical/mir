@@ -76,6 +76,7 @@ struct WlSurfaceState
     // null Weak: the current buffer, if any, should be cleared
     std::optional<wayland::Weak<ResourceLifetimeTracker>> buffer;
 
+    std::optional<MirWindowType> window_archetype;
     std::optional<int> scale;
     std::optional<geometry::Displacement> offset;
     std::optional<std::optional<std::vector<geometry::Rectangle>>> input_shape;
@@ -125,6 +126,7 @@ public:
     /// one exists
     void on_scene_surface_created(SceneSurfaceCreatedCallback&& callback);
 
+    void window_archetype(MirWindowType archetype);
     void set_role(WlSurfaceRole* role_);
     void clear_role();
     void set_pending_offset(std::optional<geometry::Displacement> const& offset);

@@ -69,19 +69,10 @@ struct Instance : mw::MirShellV1
 template<typename MirSurface, MirWindowType type>
 struct Surface : MirSurface
 {
-    Surface(std::shared_ptr<Shell> const& shell, struct wl_resource* resource, mf::WlSurface* wl_surface) :
+    Surface(std::shared_ptr<Shell> const& /*shell*/, struct wl_resource* resource, mf::WlSurface* wl_surface) :
         MirSurface{resource, version}
     {
-        if (auto const ms = wl_surface->scene_surface())
-        {
-            SurfaceSpecification spec;
-            spec.type = type;
-
-            shell->modify_surface(
-                ms.value()->session().lock(),
-                ms.value(),
-                spec);
-        }
+        wl_surface->window_archetype(type);
     }
 };
 }
@@ -120,18 +111,21 @@ void Instance::get_satellite_surface(wl_resource* id, wl_resource* surface, wl_r
             shell{shell},
             wl_surface{wl_surface}
         {
+            wl_surface->window_archetype(mir_window_type_satellite);
+
             auto pspec = dynamic_cast<SurfaceSpecification*>(mw::XdgPositioner::from(positioner));
+            auto update_type = [shell, pspec](std::shared_ptr<mir::scene::Surface> surface)
+                {
+                    auto spec = pspec ? *pspec : SurfaceSpecification{};
+                    spec.type = mir_window_type_satellite;
 
-            if (auto const ms = wl_surface->scene_surface())
-            {
-                auto spec = pspec ? *pspec : SurfaceSpecification{};
-                spec.type = mir_window_type_satellite;
+                    shell->modify_surface(
+                        surface->session().lock(),
+                        surface,
+                        spec);
+                };
 
-                shell->modify_surface(
-                    ms.value()->session().lock(),
-                    ms.value(),
-                    spec);
-            }
+            wl_surface->on_scene_surface_created(update_type);
         }
 
         void reposition(struct wl_resource* positioner, uint32_t /*token*/) override
