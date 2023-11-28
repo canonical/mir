@@ -93,7 +93,7 @@ auto mf::create_mir_shell_v1(struct wl_display* display, std::shared_ptr<Shell> 
 
 void Global::bind(wl_resource* new_zmir_mir_shell_v1)
 {
-    new Instance{new_zmir_mir_shell_v1, nullptr};
+    new Instance{new_zmir_mir_shell_v1, shell};
 }
 
 void Instance::get_normal_surface(struct wl_resource* id, struct wl_resource* surface)
