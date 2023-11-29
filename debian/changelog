@@ -1,3 +1,55 @@
+mir (2.16.0) UNRELEASED; urgency=medium
+
+  [ Alan Griffiths ]
+  * New upstream release 2.16.0
+
+    - ABI summary:
+      . miral ABI unchanged at 6
+      . mircommon ABI unchanged at 9
+      . mircookie ABI unchanged at 2
+      . mircore ABI unchanged at 2
+      . miroil ABI unchanged at 3
+      . mirplatform ABI bumped to 27
+      . mirserver ABI bumped to 59
+      . mirwayland ABI unchanged at 3
+      . mirplatformgraphics ABI bumped to 21
+      . mirinputplatform ABI unchanged at 8
+    - Enhancements:
+      . [Wayland] Implementation of input-method-v1 for maliit-keyboard
+        support. (Fixes: #2777)
+      . [mir:wayland] Fix size and scale: Less broken display on scaled hosts.
+        (Fixes: #3036)
+      . [mir:x11] Detect host refresh rate/max fps for Mir-on-X client
+      . [graphics platforms] Decouple display and rendering platforms, enable
+        multiple display platforms
+      . [graphics platforms] Add virtual output display platform
+      . [graphics platforms] Fixing the platform-input-lib parameter so that it
+        behaves how you would expect it to. (Fixes #3073)
+      . [seamless boot] Disable the initial set of the CRTC when modes match (A
+        prerequisite for flicker-free startup)
+      . [seamless boot] Support for not compositing until at least one
+        renderable has been sent to the compositor
+      . Add display-autoscale option to miral::display_configuration_options()
+      . Add --mir-version command line option. (Fixes: #3058)
+      . Decoupling writing the display configuration from processing it
+      . Rework the demo client to use xdg-shell
+      . Refactored the demo client to support the virtual platform
+    - Bugs fixed:
+      . Ensure the signatures of our drm intercept functions are correct.
+        (Fixes: #3019)
+      . Fix locking in mgw::DisplayClient(). (Fixes: #2011)
+      . Ensure we send a configure when we resize. (Fixes: #2040)
+      . Avoid spurious configure events. (Fixes: 3046)
+      . [Xwayland] Fix broken rescaling. (Fixes: #2509)
+      . [Xwayland] improve handling of CLion subsidiary windows (Fixes: #3024,
+        #2326 and #3107)
+      . Fix MirRunner::stop() threading. (Fixes: #3070)
+      . Fix processing of `--platform-*-libs`. (Fixes: #3088)
+      . [VT console provider] Input device not recognised after
+        disconnect/reconnect cycle (Fixes: #3149)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Wed, 22 Nov 2023 12:18:22 +0000
+
 mir (2.15.0) UNRELEASED; urgency=medium
 
   [ Michał Sawicz ]
