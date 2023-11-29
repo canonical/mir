@@ -67,7 +67,7 @@ private:
     GAppInfo* resolve_from_wayland_app_id(std::string& app_id);
     GAppInfo* lookup_basename(std::string& name);
     GAppInfo* resolve_if_snap(int pid);
-    GAppInfo* resolve_if_flatpack(int pid);
+    GAppInfo* resolve_if_flatpak(int pid);
     GAppInfo* resolve_if_executable_matches(int pid);
     std::map<std::string, GAppInfo*> id_to_app;
     std::map<std::string, std::string> wm_class_to_app_info_id;
@@ -654,7 +654,7 @@ std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface
         return g_app_info_get_id(found);
 
     // Sixth, check if the window belongs to flatpak
-    found = resolve_if_flatpack(pid);
+    found = resolve_if_flatpak(pid);
     if (found)
         return g_app_info_get_id(found);
 
@@ -723,7 +723,7 @@ GAppInfo* mf::DesktopFileManager::resolve_if_snap(int pid)
     return id_to_app[sandboxed_app_id + ".desktop"];
 }
 
-GAppInfo* mf::DesktopFileManager::resolve_if_flatpack(int pid)
+GAppInfo* mf::DesktopFileManager::resolve_if_flatpak(int pid)
 {
     g_autoptr(GKeyFile) key_file = g_key_file_new ();
     g_autofree char * info_filename = g_strdup_printf ("/proc/%u/root/.flatpak-info", pid);
