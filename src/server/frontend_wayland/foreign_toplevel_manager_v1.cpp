@@ -750,7 +750,21 @@ GAppInfo* mf::DesktopFileManager::resolve_if_executable_matches(int pid)
     for (auto info = app_infos; info != NULL; info = info->next)
     {
         GAppInfo *app_info = static_cast<GAppInfo*>(info->data);
-        std::string exec = g_app_info_get_executable(app_info);
+        const char* exec_c_str = g_app_info_get_executable(app_info);
+
+        // Note: This can be null possibly. The only instance I've seen of this
+        // is XWayland on Ubuntu 23, but I am sure others exist
+        if (exec_c_str == NULL)
+        {
+            const char* name = g_app_info_get_name(app_info);
+            if (name == NULL)
+                mir::log_warning("Cannot find app info for unknown application");
+            else
+                mir::log_warning("Cannot find app info for app with name:" + std::string(name));
+            continue;
+        }
+
+        std::string exec(exec_c_str);
         if (exec.starts_with(cmdline_call))
         {
             return app_info;
