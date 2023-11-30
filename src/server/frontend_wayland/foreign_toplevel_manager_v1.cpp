@@ -581,6 +581,10 @@ void mf::GDesktopFileCache::refresh_app_cache()
     for (info = app_infos; info != NULL; info = info->next)
     {
         GAppInfo *app_info = static_cast<GAppInfo*>(info->data);
+        const bool no_display = g_desktop_app_info_get_nodisplay(G_DESKTOP_APP_INFO(app_info));
+        if (no_display)
+            continue;
+
         const char* id = g_app_info_get_id(app_info);
         const char* wm_class = g_desktop_app_info_get_startup_wm_class(G_DESKTOP_APP_INFO(app_info));
         const char* exec = g_app_info_get_executable(app_info);
