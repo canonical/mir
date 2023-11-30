@@ -47,9 +47,9 @@ class DesktopFileCache
 public:
     DesktopFileCache() = default;
     virtual ~DesktopFileCache() = default;
-    virtual std::shared_ptr<DesktopFile> lookup_by_app_id(std::string const&) = 0;
-    virtual std::shared_ptr<DesktopFile> lookup_by_wm_class(std::string const&) = 0;
-    virtual std::vector<std::shared_ptr<DesktopFile>> const& get_desktop_files() = 0;
+    virtual std::shared_ptr<DesktopFile> lookup_by_app_id(std::string const&) const = 0;
+    virtual std::shared_ptr<DesktopFile> lookup_by_wm_class(std::string const&) const = 0;
+    virtual std::vector<std::shared_ptr<DesktopFile>> const& get_desktop_files() const = 0;
 };
 
 class DesktopFileManager

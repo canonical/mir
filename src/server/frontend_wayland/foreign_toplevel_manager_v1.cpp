@@ -58,9 +58,9 @@ class GDesktopFileCache : public DesktopFileCache
 public:
     GDesktopFileCache(std::shared_ptr<MainLoop> const& main_loop);
     ~GDesktopFileCache() override = default;
-    std::shared_ptr<DesktopFile> lookup_by_app_id(std::string const&) override;
-    std::shared_ptr<DesktopFile> lookup_by_wm_class(std::string const&) override;
-    std::vector<std::shared_ptr<DesktopFile>> const& get_desktop_files() override;
+    std::shared_ptr<DesktopFile> lookup_by_app_id(std::string const&) const override;
+    std::shared_ptr<DesktopFile> lookup_by_wm_class(std::string const&) const override;
+    std::vector<std::shared_ptr<DesktopFile>> const& get_desktop_files() const override;
     void refresh_app_cache();
 
 private:
@@ -615,7 +615,7 @@ void mf::GDesktopFileCache::refresh_app_cache()
     g_list_free_full(app_infos, g_object_unref);
 }
 
-std::shared_ptr<mf::DesktopFile> mf::GDesktopFileCache::lookup_by_app_id(std::string const& name)
+std::shared_ptr<mf::DesktopFile> mf::GDesktopFileCache::lookup_by_app_id(std::string const& name) const
 {
     auto app_pos = id_to_app.find(name);
     if (app_pos != id_to_app.end())
@@ -626,7 +626,7 @@ std::shared_ptr<mf::DesktopFile> mf::GDesktopFileCache::lookup_by_app_id(std::st
     return nullptr;
 }
 
-std::shared_ptr<mf::DesktopFile> mf::GDesktopFileCache::lookup_by_wm_class(std::string const& name)
+std::shared_ptr<mf::DesktopFile> mf::GDesktopFileCache::lookup_by_wm_class(std::string const& name) const
 {
     auto wm_class_pos = wm_class_to_app_info_id.find(name);
     if (wm_class_pos != wm_class_to_app_info_id.end())
@@ -638,7 +638,7 @@ std::shared_ptr<mf::DesktopFile> mf::GDesktopFileCache::lookup_by_wm_class(std::
     return nullptr;
 }
 
-const std::vector<std::shared_ptr<mf::DesktopFile>> &mf::GDesktopFileCache::get_desktop_files()
+const std::vector<std::shared_ptr<mf::DesktopFile>> &mf::GDesktopFileCache::get_desktop_files() const
 {
     return files;
 }
