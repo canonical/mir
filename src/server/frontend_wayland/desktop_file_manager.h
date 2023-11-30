@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_DESKTOP_FILE_MANAGER_H
-#define MIR_DESKTOP_FILE_MANAGER_H
+#ifndef MIR_FRONTEND_DESKTOP_FILE_MANAGER_H
+#define MIR_FRONTEND_DESKTOP_FILE_MANAGER_H
 
 #include "mir/fd.h"
 #include <vector>
