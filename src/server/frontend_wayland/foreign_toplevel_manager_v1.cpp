@@ -764,8 +764,7 @@ GAppInfo* mf::DesktopFileManager::resolve_if_executable_matches(int pid)
             continue;
         }
 
-        std::string exec(exec_c_str);
-        if (exec.starts_with(cmdline_call))
+        if (cmdline_call == exec_c_str)
         {
             return app_info;
         }
