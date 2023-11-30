@@ -25,9 +25,9 @@
 namespace mf = mir::frontend;
 
 mf::DesktopFile::DesktopFile(const char* id, const char* wm_class, const char* exec)
-    : id{id},
-      wm_class{wm_class},
-      exec{exec}
+    : id{id ? id : ""},
+      wm_class{wm_class ? wm_class : ""},
+      exec{exec ? exec : ""}
 {}
 
 mf::DesktopFileManager::DesktopFileManager(std::shared_ptr<DesktopFileCache> cache)
@@ -61,7 +61,7 @@ std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface
     for(char &ch : lowercase_desktop_file)
         ch = std::tolower(ch);
 
-    found = lookup_basename(desktop_file);
+    found = lookup_basename(lowercase_desktop_file);
     if (found)
         return found->id;
 

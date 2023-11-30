@@ -601,11 +601,7 @@ void mf::GDesktopFileCache::refresh_app_cache()
             continue;
         }
 
-        std::shared_ptr<DesktopFile> file = std::make_shared<DesktopFile>(
-            id ? id : "",
-            wm_class ? wm_class : "",
-            exec ? exec : ""
-        );
+        std::shared_ptr<DesktopFile> file = std::make_shared<DesktopFile>(id, wm_class, exec);
         files.push_back(file);
         const char* app_id = g_app_info_get_id(app_info);
         id_to_app[app_id] = file;
