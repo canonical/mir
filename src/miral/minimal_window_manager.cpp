@@ -436,10 +436,9 @@ bool miral::MinimalWindowManager::Impl::handle_pointer_event(MirPointerEvent con
             shift_keys == gesture_shift_keys &&
             mir_pointer_event_button_state(event, pointer_gesture_button))
         {
-            if (gesture_window &&
-                tools.select_active_window(gesture_window) == gesture_window)
+            if (gesture_window)
             {
-                tools.drag_active_window(new_cursor - old_cursor);
+                tools.drag_window(gesture_window, new_cursor - old_cursor);
                 consumes_event = true;
             }
             else
@@ -510,8 +509,7 @@ bool miral::MinimalWindowManager::Impl::handle_touch_event(MirTouchEvent const* 
     case Gesture::touch_resizing:
         if (is_drag && gesture_shift_keys == shift_keys)
         {
-            if (gesture_window &&
-                tools.select_active_window(gesture_window) == gesture_window)
+            if (gesture_window)
             {
                 apply_resize_by(new_touch - old_touch);
                 consumes_event = true;
@@ -530,10 +528,9 @@ bool miral::MinimalWindowManager::Impl::handle_touch_event(MirTouchEvent const* 
     case Gesture::touch_moving:
         if (is_drag && gesture_shift_keys == shift_keys)
         {
-            if (gesture_window &&
-                tools.select_active_window(gesture_window) == gesture_window)
+            if (gesture_window)
             {
-                tools.drag_active_window(new_touch - old_touch);
+                tools.drag_window(gesture_window, new_touch - old_touch);
                 consumes_event = true;
             }
             else
@@ -565,8 +562,7 @@ bool miral::MinimalWindowManager::Impl::handle_touch_event(MirTouchEvent const* 
 
 void miral::MinimalWindowManager::Impl::apply_resize_by(Displacement movement)
 {
-    if (gesture_window &&
-        tools.select_active_window(gesture_window) == gesture_window)
+    if (gesture_window)
     {
         auto const top_left = resize_top_left;
         Rectangle const old_pos{top_left, resize_size};
