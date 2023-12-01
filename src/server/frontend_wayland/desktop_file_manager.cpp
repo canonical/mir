@@ -124,12 +124,12 @@ std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_snap(int pid
     std::string contents;
     std::getline(std::ifstream(attr_file), contents, '\0');
 
-    const char* SNAP_SECURITY_LABEL_PREFIX = "snap.";
-    if (!contents.starts_with(SNAP_SECURITY_LABEL_PREFIX))
+    char const* const snap_security_label_prefix = "snap.";
+    if (!contents.starts_with(snap_security_label_prefix))
         return nullptr;
 
     // Get the contents after snap. and before the security annotation (denoted by a space)
-    auto const contents_start_index = strlen (SNAP_SECURITY_LABEL_PREFIX);
+    auto const contents_start_index = strlen (snap_security_label_prefix);
     auto contents_end_index = contents.find_first_of(' ', contents_start_index);
     if (contents_end_index == std::string::npos)
         contents_end_index = contents.size();
