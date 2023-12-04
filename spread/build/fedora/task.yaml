@@ -19,7 +19,6 @@ execute: |
         mesa-libGLES-devel \
         glm-devel \
         glog-devel \
-        gflags-devel \
         systemd-devel \
         glib2-devel \
         wayland-devel \

@@ -17,7 +17,6 @@
 #include "glog_logger.h"
 
 #include <glog/logging.h>
-#include <gflags/gflags.h>
 
 #include <mutex>
 
@@ -27,7 +26,6 @@ namespace
 {
 std::once_flag init_flag;
 std::once_flag shutdown_flag;
-std::once_flag shutdown_flag_gflags;
 
 struct google_glog_guard_t
 {
@@ -41,14 +39,6 @@ struct google_glog_guard_t
         std::call_once(shutdown_flag, google::ShutdownGoogleLogging);
     }
 };
-
-struct google_gflag_guard_t
-{
-    ~google_gflag_guard_t()
-    {
-        std::call_once(shutdown_flag_gflags, google::ShutDownCommandLineFlags);
-    }
-} google_gflag_guard;
 }
 
 

@@ -63,7 +63,6 @@ parts:
     - libevdev2
     - libfreetype6
     - libgbm1
-    - libgflags2.2
     - libgles2
     - libglibmm-2.4-1v5
     - libglvnd0
