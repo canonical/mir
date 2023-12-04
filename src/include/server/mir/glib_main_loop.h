@@ -103,11 +103,11 @@ public:
     template<
         typename Callable,
         typename =
-        std::enable_if_t<!std::is_same<std::result_of_t<Callable()>, void>::value>
+        std::enable_if_t<!std::is_same<std::invoke_result_t<Callable>, void>::value>
     >
-    std::future<std::result_of_t<Callable()>> run_with_context_as_thread_default(Callable code)
+    std::future<std::invoke_result_t<Callable>> run_with_context_as_thread_default(Callable code)
     {
-        using Result = std::result_of_t<Callable()>;
+        using Result = std::invoke_result_t<Callable>;
 
         auto promise = std::make_shared<std::promise<Result>>();
         auto future = promise->get_future();
@@ -131,7 +131,7 @@ public:
     template<
         typename Callable,
         typename =
-            std::enable_if_t<std::is_same<std::result_of_t<Callable()>, void>::value>
+            std::enable_if_t<std::is_same<std::invoke_result_t<Callable>, void>::value>
         >
     std::future<void> run_with_context_as_thread_default(Callable code)
     {
