@@ -28,6 +28,5 @@ target_link_libraries(mir_demo_server
   example-shell-lib
   exampleserverconfig
   PkgConfig::GLog
-  PkgConfig::GFlags
   Boost::system
 )
