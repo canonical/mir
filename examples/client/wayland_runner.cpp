@@ -108,8 +108,23 @@ mir::client::WaylandRunner::WaylandRunner()
     sigaction(SIGHUP, &sig_handler_new, NULL);
 }
 
+mir::client::WaylandRunner mir::client::WaylandRunner::instance;
+
 void mir::client::WaylandRunner::run(wl_display* display)
 {
-    static WaylandRunner the_instance;
-    the_instance(display);
+    instance(display);
+}
+
+void mir::client::WaylandRunner::quit_()
+{
+    if (eventfd_write(shutdown_signal, 1) == -1)
+    {
+        printf("Failed to execute a shutdown");
+        exit(-1);
+    }
+}
+
+void mir::client::WaylandRunner::quit()
+{
+    instance.quit_();
 }

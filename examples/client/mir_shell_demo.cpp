@@ -22,8 +22,9 @@
 #include <wayland-client.h>
 #include <wayland-client-core.h>
 
-#include <linux/input-event-codes.h>
+#include <X11/X.h>
 #include <getopt.h>
+#include <linux/input-event-codes.h>
 
 #include <memory>
 #include <string.h>
@@ -188,6 +189,14 @@ protected:
     }
 
     virtual void handle_mouse_button(wl_pointer*, uint32_t serial, uint32_t time, uint32_t button, uint32_t state);
+    virtual void handle_keyboard_key(wl_keyboard* keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state);
+    virtual void handle_keyboard_modifiers(
+        wl_keyboard* keyboard,
+        uint32_t serial,
+        uint32_t mods_depressed,
+        uint32_t mods_latched,
+        uint32_t mods_locked,
+        uint32_t group);
 
     bool has_mouse_focus() { return mouse_focus == this; }
     bool has_keyboard_focus() { return keyboard_focus == this; }
@@ -215,14 +224,6 @@ private:
     void handle_keyboard_keymap(wl_keyboard* keyboard, uint32_t format, int32_t fd, uint32_t size);
     void handle_keyboard_enter(wl_keyboard* keyboard, uint32_t serial, wl_surface* surface, wl_array* keys);
     void handle_keyboard_leave(wl_keyboard* keyboard, uint32_t serial, wl_surface* surface);
-    void handle_keyboard_key(wl_keyboard* keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state);
-    void handle_keyboard_modifiers(
-        wl_keyboard* keyboard,
-        uint32_t serial,
-        uint32_t mods_depressed,
-        uint32_t mods_latched,
-        uint32_t mods_locked,
-        uint32_t group);
     void handle_keyboard_repeat_info(wl_keyboard* wl_keyboard, int32_t rate, int32_t delay);
 
     void update_free_buffers(wl_buffer* buffer);
@@ -282,8 +283,18 @@ public:
     normal_window(int32_t width, int32_t height);
     ~normal_window();
 
+protected:
+    void
+    handle_keyboard_key(wl_keyboard* keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state) override;
+
+    void handle_keyboard_modifiers(
+        wl_keyboard* keyboard, uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked,
+        uint32_t group) override;
+
 private:
     zmir_mir_normal_surface_v1* const mir_normal_surface;
+
+    uint32_t modifiers = 0;
 };
 
 void handle_registry_global(
@@ -708,6 +719,25 @@ normal_window::~normal_window()
     {
         zmir_mir_normal_surface_v1_destroy(mir_normal_surface);
     }
+}
+
+void normal_window::handle_keyboard_key(wl_keyboard* keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state)
+{
+    grey_window::handle_keyboard_key(keyboard, serial, time, key, state);
+
+    if (modifiers == ControlMask && key == KEY_Q)
+    {
+        mir::client::WaylandRunner::quit();
+    }
+}
+
+void normal_window::handle_keyboard_modifiers(
+    wl_keyboard* keyboard, uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked,
+    uint32_t group)
+{
+    grey_window::handle_keyboard_modifiers(keyboard, serial, mods_depressed, mods_latched, mods_locked, group);
+
+    modifiers = mods_depressed;
 }
 
 class satellite : public grey_window

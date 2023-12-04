@@ -28,7 +28,10 @@ class WaylandRunner
 {
 public:
     static void run(wl_display* display);
+    static void quit();
 private:
+    static WaylandRunner instance;
+    void quit_();
     void operator()(wl_display* display);
     WaylandRunner();
 };
