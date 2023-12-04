@@ -71,6 +71,8 @@ public:
 
     operator wl_surface*() const { return surface; }
 
+    auto size() const { return std::tuple(width, height); }
+
 protected:
     struct buffer
     {
@@ -672,9 +674,12 @@ int main()
         wl_display_roundtrip(display);
 
         auto const positioner = xdg_wm_base_create_positioner(globals::wm_base);
-        xdg_positioner_set_anchor_rect(positioner, 0, 0, 400, 400);
+        auto const [anchor_width, anchor_height] = main_window->size();
+
+        xdg_positioner_set_anchor_rect(positioner, 0, 0, anchor_width, anchor_height);
         xdg_positioner_set_anchor(positioner, XDG_POSITIONER_ANCHOR_LEFT);
-        xdg_positioner_set_gravity(positioner, XDG_POSITIONER_GRAVITY_RIGHT);
+        xdg_positioner_set_gravity(positioner, XDG_POSITIONER_ANCHOR_LEFT);
+        xdg_positioner_set_offset(positioner, 0, 50);
         xdg_positioner_set_constraint_adjustment(positioner, XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_X);
 
         static auto const satellite_window = std::make_unique<satellite>(100, 400, positioner, *main_window);
