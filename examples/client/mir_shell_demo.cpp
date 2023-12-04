@@ -784,6 +784,20 @@ zmir_mir_satellite_surface_v1_listener const satellite::satellite_listener=
 {
     .repositioned =  [](void* ctx, auto... args) { static_cast<satellite*>(ctx)->handle_repositioned(args...); },
 };
+
+auto make_satellite(normal_window* main_window) -> std::unique_ptr<satellite>
+{
+    auto const positioner = xdg_wm_base_create_positioner(globals::wm_base);
+    auto const [anchor_width, anchor_height] = main_window->size();
+
+    xdg_positioner_set_anchor_rect(positioner, 0, 0, anchor_width, anchor_height);
+    xdg_positioner_set_anchor(positioner, satellite_anchor);
+    xdg_positioner_set_gravity(positioner, satellite_anchor);
+    xdg_positioner_set_offset(positioner, satellite_offset_horizontal, satellite_offset_vertical);
+    xdg_positioner_set_constraint_adjustment(positioner, XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_X);
+
+    return std::make_unique<satellite>(100, 400, positioner, *main_window);
+}
 }
 
 int main(int argc, char* argv[])
@@ -792,24 +806,17 @@ int main(int argc, char* argv[])
 
     globals::init();
 
-    auto const main_window = std::make_unique<normal_window>(main_width, main_height);
-
-    if (satellite_enabled)
     {
+        auto const main_window = std::make_unique<normal_window>(main_width, main_height);
+
         wl_display_roundtrip(display);
 
-        auto const positioner = xdg_wm_base_create_positioner(globals::wm_base);
-        auto const [anchor_width, anchor_height] = main_window->size();
+        auto const toolbox = satellite_enabled ? make_satellite(main_window.get()) : std::unique_ptr<satellite>{};
 
-        xdg_positioner_set_anchor_rect(positioner, 0, 0, anchor_width, anchor_height);
-        xdg_positioner_set_anchor(positioner, satellite_anchor);
-        xdg_positioner_set_gravity(positioner, satellite_anchor);
-        xdg_positioner_set_offset(positioner, satellite_offset_horizontal, satellite_offset_vertical);
-        xdg_positioner_set_constraint_adjustment(positioner, XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_X);
-
-        static auto const satellite_window = std::make_unique<satellite>(100, 400, positioner, *main_window);
+        mir::client::WaylandRunner::run(display);
     }
-    mir::client::WaylandRunner::run(display);
+
+    wl_display_roundtrip(display);
 
     return 0;
 }
