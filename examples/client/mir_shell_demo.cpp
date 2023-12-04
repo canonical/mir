@@ -23,14 +23,92 @@
 #include <wayland-client-core.h>
 
 #include <linux/input-event-codes.h>
+#include <getopt.h>
 
 #include <memory>
 #include <string.h>
 
+using namespace std::literals;
+
 namespace
 {
 bool const tracing = getenv("MIR_SHELL_DEMO_TRACE");
-bool const no_satellite = getenv("MIR_SHELL_DEMO_NO_SATELLITE");
+
+bool satellite_enabled = false;
+xdg_positioner_anchor satellite_anchor = XDG_POSITIONER_ANCHOR_LEFT;
+int32_t satellite_offset_vertical = 50;
+int32_t satellite_offset_horizontal = 0;
+
+void parse_options(int argc, char* argv[])
+{
+    auto const option_satellite = "satellite";
+    auto const option_satellite_anchor = "satellite-anchor";
+    auto const option_satellite_offset_vertical = "satellite-offset-vertical";
+    auto const option_satellite_offset_horizontal = "satellite-offset-horizontal";
+
+    struct option const long_options[] = {
+        {option_satellite,        no_argument,       0, 0 },
+        {option_satellite_anchor, required_argument, 0, 0 },
+        {option_satellite_offset_vertical, required_argument, 0, 0 },
+        {option_satellite_offset_horizontal, required_argument, 0, 0 },
+        {0,                 0,                       0, 0 }
+    };
+
+    int option_index = 0;
+
+    while_has_no_init_statement:
+    if (auto c = getopt_long(argc, argv, "", long_options, &option_index); c != -1)
+    {
+
+        switch (c)
+        {
+        case 0:
+            if (option_satellite == long_options[option_index].name)
+            {
+                satellite_enabled = true;
+            }
+            else if (option_satellite_anchor == long_options[option_index].name)
+            {
+                if ("right"s == optarg)
+                {
+                    satellite_enabled = true;
+                    satellite_anchor = XDG_POSITIONER_ANCHOR_RIGHT;
+                }
+            }
+            else if (option_satellite_anchor == long_options[option_index].name)
+            {
+                if ("right"s == optarg)
+                {
+                    satellite_enabled = true;
+                    satellite_anchor = XDG_POSITIONER_ANCHOR_RIGHT;
+                }
+            }
+            else if (option_satellite_offset_vertical == long_options[option_index].name)
+            {
+                satellite_enabled = true;
+                satellite_offset_vertical = atoi(optarg);
+            }
+            else if (option_satellite_offset_horizontal == long_options[option_index].name)
+            {
+                satellite_enabled = true;
+                satellite_offset_horizontal = atoi(optarg);
+            }
+            else
+            {
+                printf("option %s", long_options[option_index].name);
+                if (optarg)
+                    printf(" with arg %s", optarg);
+                printf("\n");
+            }
+            break;
+
+        case '?':
+            exit(EXIT_FAILURE);
+        }
+
+        goto while_has_no_init_statement;
+    }
+}
 
 [[gnu::format (printf, 1, 2)]]
 inline void trace(char const* fmt, ...)
@@ -663,13 +741,15 @@ zmir_mir_satellite_surface_v1_listener const satellite::satellite_listener=
 };
 }
 
-int main()
+int main(int argc, char* argv[])
 {
+    parse_options(argc, argv);
+
     globals::init();
 
     auto const main_window = std::make_unique<normal_window>(400, 400);
 
-    if (!no_satellite)
+    if (satellite_enabled)
     {
         wl_display_roundtrip(display);
 
@@ -677,9 +757,9 @@ int main()
         auto const [anchor_width, anchor_height] = main_window->size();
 
         xdg_positioner_set_anchor_rect(positioner, 0, 0, anchor_width, anchor_height);
-        xdg_positioner_set_anchor(positioner, XDG_POSITIONER_ANCHOR_LEFT);
-        xdg_positioner_set_gravity(positioner, XDG_POSITIONER_ANCHOR_LEFT);
-        xdg_positioner_set_offset(positioner, 0, 50);
+        xdg_positioner_set_anchor(positioner, satellite_anchor);
+        xdg_positioner_set_gravity(positioner, satellite_anchor);
+        xdg_positioner_set_offset(positioner, satellite_offset_horizontal, satellite_offset_vertical);
         xdg_positioner_set_constraint_adjustment(positioner, XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_X);
 
         static auto const satellite_window = std::make_unique<satellite>(100, 400, positioner, *main_window);
