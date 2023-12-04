@@ -34,6 +34,9 @@ namespace
 {
 bool const tracing = getenv("MIR_SHELL_DEMO_TRACE");
 
+int32_t main_width = 400;
+int32_t main_height = 400;
+
 bool satellite_enabled = false;
 xdg_positioner_anchor satellite_anchor = XDG_POSITIONER_ANCHOR_LEFT;
 int32_t satellite_offset_vertical = 50;
@@ -41,12 +44,16 @@ int32_t satellite_offset_horizontal = 0;
 
 void parse_options(int argc, char* argv[])
 {
+    auto const option_main_width = "width";
+    auto const option_main_height = "height";
     auto const option_satellite = "satellite";
     auto const option_satellite_anchor = "satellite-anchor";
     auto const option_satellite_offset_vertical = "satellite-offset-vertical";
     auto const option_satellite_offset_horizontal = "satellite-offset-horizontal";
 
     struct option const long_options[] = {
+        {option_main_width,       required_argument, 0, 0 },
+        {option_main_height,      required_argument, 0, 0 },
         {option_satellite,        no_argument,       0, 0 },
         {option_satellite_anchor, required_argument, 0, 0 },
         {option_satellite_offset_vertical, required_argument, 0, 0 },
@@ -92,6 +99,14 @@ void parse_options(int argc, char* argv[])
             {
                 satellite_enabled = true;
                 satellite_offset_horizontal = atoi(optarg);
+            }
+            else if (option_main_width == long_options[option_index].name)
+            {
+                main_width = atoi(optarg);
+            }
+            else if (option_main_height == long_options[option_index].name)
+            {
+                main_height = atoi(optarg);
             }
             else
             {
@@ -747,7 +762,7 @@ int main(int argc, char* argv[])
 
     globals::init();
 
-    auto const main_window = std::make_unique<normal_window>(400, 400);
+    auto const main_window = std::make_unique<normal_window>(main_width, main_height);
 
     if (satellite_enabled)
     {
