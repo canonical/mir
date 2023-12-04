@@ -32,6 +32,7 @@
 #include "boost/throw_exception.hpp"
 
 #include <algorithm>
+#include <sstream>
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
@@ -191,6 +192,48 @@ auto wm_window_type_to_mir_window_type(
     bool is_transient_for,
     bool override_redirect) -> MirWindowType
 {
+    if (mir::verbose_xwayland_logging_enabled())
+    {
+        std::stringstream message;
+
+        for (auto const& wm_type : wm_types)
+        {
+            if (wm_type == connection->_NET_WM_WINDOW_TYPE_NORMAL)
+                message << "\n\t_NET_WM_WINDOW_TYPE_NORMAL";
+            else if (wm_type == connection->_NET_WM_WINDOW_TYPE_SPLASH)
+                message << "\n\t_NET_WM_WINDOW_TYPE_SPLASH";
+            else if (wm_type == connection->_NET_WM_WINDOW_TYPE_DESKTOP)
+                message << "\n\t_NET_WM_WINDOW_TYPE_DESKTOP";
+            else if (wm_type == connection->_NET_WM_WINDOW_TYPE_TOOLBAR)
+                message << "\n\t_NET_WM_WINDOW_TYPE_TOOLBAR";
+            else if (wm_type == connection->_NET_WM_WINDOW_TYPE_MENU)
+                message << "\n\t_NET_WM_WINDOW_TYPE_MENU";
+            else if (wm_type == connection->_NET_WM_WINDOW_TYPE_UTILITY)
+                message << "\n\t_NET_WM_WINDOW_TYPE_UTILITY";
+            else if (wm_type == connection->_NET_WM_WINDOW_TYPE_POPUP_MENU)
+                message << "\n\t_NET_WM_WINDOW_TYPE_POPUP_MENU";
+            else if (wm_type == connection->_NET_WM_WINDOW_TYPE_DROPDOWN_MENU)
+                message << "\n\t_NET_WM_WINDOW_TYPE_DROPDOWN_MENU";
+            else if (wm_type == connection->_NET_WM_WINDOW_TYPE_COMBO)
+                message << "\n\t_NET_WM_WINDOW_TYPE_COMBO";
+            else if (wm_type == connection->_NET_WM_WINDOW_TYPE_TOOLTIP)
+                message << "\n\t_NET_WM_WINDOW_TYPE_TOOLTIP";
+            else if (wm_type == connection->_NET_WM_WINDOW_TYPE_NOTIFICATION)
+                message << "\n\t_NET_WM_WINDOW_TYPE_NOTIFICATION";
+            else if (wm_type == connection->_NET_WM_WINDOW_TYPE_DND)
+                message << "\n\t_NET_WM_WINDOW_TYPE_DND";
+            else if (wm_type == connection->_NET_WM_WINDOW_TYPE_DIALOG)
+                message << "\n\t_NET_WM_WINDOW_TYPE_DIALOG";
+        }
+
+        if (is_transient_for)
+            message << "\n\tis_transient_for";
+        if (override_redirect)
+            message << "\n\toverride_redirect";
+
+        mir::log_debug("%s%s\n~~~~~~~~~~~~~~", __PRETTY_FUNCTION__ , message.str().c_str());
+    }
+
     // See https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html#idm46515148839648
     for (auto const& wm_type : wm_types)
     {
