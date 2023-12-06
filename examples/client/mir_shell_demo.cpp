@@ -187,12 +187,14 @@ protected:
 
     void resize(int32_t width_, int32_t height_)
     {
+        if (width == width_ && height == height_) return;
+
         if (width_ > 0) width = width_;
         if (height_ > 0) height = height_;
 
         if ((width_ > 0) || (height_ > 0))
         {
-            need_to_draw = true;
+            redraw();
         }
     }
 
@@ -208,6 +210,7 @@ protected:
 
     bool has_mouse_focus() { return mouse_focus == this; }
     bool has_keyboard_focus() { return keyboard_focus == this; }
+    void redraw();
 
 private:
     static window* mouse_focus;
@@ -219,7 +222,6 @@ private:
     wl_keyboard* const keyboard;
     int width;
     int height;
-    bool waiting_for_buffer = false;
     bool need_to_draw = true;
 
     void handle_frame_callback(wl_callback* callback, uint32_t);
@@ -243,8 +245,6 @@ private:
     static wl_buffer_listener const buffer_listener;
     static wl_pointer_listener const pointer_listener;
     static wl_keyboard_listener const keyboard_listener;
-    
-    void fake_frame();
 
     window(window const&) = delete;
     window& operator=(window const&) = delete;
@@ -269,6 +269,9 @@ private:
     void handle_mouse_button(wl_pointer*, uint32_t serial, uint32_t time, uint32_t button, uint32_t state) override;
     void handle_xdg_toplevel_configure(xdg_toplevel*, int32_t width_, int32_t height_, wl_array*);
 
+    virtual void show_activated() = 0;
+    virtual void show_unactivated() = 0;
+
     static xdg_toplevel_listener const shell_toplevel_listener;
     static xdg_surface_listener const shell_surface_listener;
 };
@@ -276,12 +279,22 @@ private:
 class grey_window : public toplevel
 {
 public:
-    grey_window(int32_t width, int32_t height, unsigned char intensity) : toplevel(width, height), intensity(intensity) {}
+    grey_window(int32_t width, int32_t height, unsigned char intensity) :
+        toplevel(width, height), intensity(intensity) {}
+
+    grey_window(int32_t width, int32_t height, unsigned char intensity, int title_height) :
+        toplevel(width, height), intensity(intensity), title_height{title_height} {}
 
 private:
     unsigned char const intensity;
     unsigned char const alpha = 255;
+    int title_height = 20;
+
+    unsigned char intensity_offset = 0;
+
     void draw_new_content(buffer* b) override;
+    virtual void show_activated() override;
+    virtual void show_unactivated() override;
 };
 
 
@@ -441,12 +454,6 @@ void window::update_free_buffers(wl_buffer* buffer)
             buffers[i].available = true;
         }
     }
-
-    if (waiting_for_buffer)
-    {
-        waiting_for_buffer = false;
-        fake_frame();
-    }
 }
 
 void window::prepare_buffer(buffer& b)
@@ -488,25 +495,8 @@ void window::handle_frame_callback(wl_callback* callback, uint32_t)
 
     if (need_to_draw)
     {
-        if (auto const b = find_free_buffer())
-        {
-            draw_new_content(b);
-
-            auto const new_frame_signal = wl_surface_frame(surface);
-            wl_callback_add_listener(new_frame_signal, &frame_listener, this);
-            wl_surface_attach(surface, b->buffer, 0, 0);
-            wl_surface_commit(surface);
-            need_to_draw = false;
-
-            return;
-        }
-        else
-        {
-            waiting_for_buffer = true;
-        }
+        redraw();
     }
-
-    fake_frame();
 }
 
 void window::handle_mouse_enter(
@@ -615,12 +605,6 @@ void window::handle_keyboard_repeat_info(wl_keyboard*, int32_t rate, int32_t del
     trace("Received keyboard_modifiers: rate %i, delay %i", rate, delay);
 }
 
-void window::fake_frame()
-{
-    wl_callback* fake_frame = wl_display_sync(display);
-    wl_callback_add_listener(fake_frame, &frame_listener, this);
-}
-
 window::window(int32_t width, int32_t height) :
     surface{wl_compositor_create_surface(globals::compositor)},
     pointer{wl_seat_get_pointer(globals::seat)},
@@ -636,7 +620,7 @@ window::window(int32_t width, int32_t height) :
     wl_keyboard_add_listener(keyboard, &keyboard_listener, this);
     wl_pointer_add_listener(pointer, &pointer_listener, this);
 
-    fake_frame();
+    redraw();
 }
 
 window::~window()
@@ -648,6 +632,24 @@ window::~window()
 
     wl_pointer_destroy(pointer);
     wl_surface_destroy(surface);
+}
+
+void window::redraw()
+{
+    if (auto const b = find_free_buffer())
+    {
+        draw_new_content(b);
+
+        auto const new_frame_signal = wl_surface_frame(surface);
+        wl_callback_add_listener(new_frame_signal, &frame_listener, this);
+        wl_surface_attach(surface, b->buffer, 0, 0);
+        wl_surface_commit(surface);
+        need_to_draw = false;
+    }
+    else
+    {
+        need_to_draw = true;
+    }
 }
 
 toplevel::toplevel(int32_t width, int32_t height) :
@@ -669,9 +671,23 @@ void toplevel::handle_xdg_toplevel_configure(
     xdg_toplevel*,
     int32_t width_,
     int32_t height_,
-    wl_array*)
+    wl_array* array)
 {
     trace("Received toplevel_configure: width %i, height %i", width_, height_);
+
+    bool is_activated = false;
+    xdg_toplevel_state* state;
+    for (state = static_cast<decltype(state)>((array)->data); (const char*)state < ((const char*)(array)->data + (array)->size); state++)
+    {
+        if (*state == XDG_TOPLEVEL_STATE_ACTIVATED)
+            is_activated = true;
+    }
+
+    if (is_activated)
+        show_activated();
+    else
+        show_unactivated();
+
     resize(width_, height_);
 }
 
@@ -705,12 +721,32 @@ void toplevel::handle_mouse_button(wl_pointer* pointer, uint32_t serial, uint32_
 void grey_window::draw_new_content(window::buffer* b)
 {
     auto const begin = static_cast<uint8_t*>(b->content_area);
-    auto const end = begin + b->width * b->height * pixel_size;
+    auto const end_bar = begin + b->width * std::min(title_height, b->height) * pixel_size;
+    auto const end_all = begin + b->width * b->height * pixel_size;
 
-    memset(begin, intensity, end - begin);
-    for (auto* p = begin; p != end; p += pixel_size)
+    memset(begin, std::max(intensity-intensity_offset, 0), end_bar - begin);
+    memset(end_bar, intensity, end_all - end_bar);
+    for (auto* p = begin; p != end_all; p += pixel_size)
     {
         p[3] = alpha;
+    }
+}
+
+void grey_window::show_activated()
+{
+    if (intensity_offset != 32)
+    {
+        intensity_offset = 32;
+        redraw();
+    }
+}
+
+void grey_window::show_unactivated()
+{
+    if (intensity_offset != 16)
+    {
+        intensity_offset = 16;
+        redraw();
     }
 }
 
@@ -763,7 +799,7 @@ private:
 };
 
 satellite::satellite(int32_t width, int32_t height, xdg_positioner* positioner, xdg_toplevel* parent) :
-    grey_window{width, height, 128},
+    grey_window{width, height, 128, 10},
     mir_surface{globals::mir_shell ? zmir_mir_shell_v1_get_satellite_surface(globals::mir_shell, *this, positioner) : nullptr}
 {
     xdg_toplevel_set_parent(*this, parent);
