@@ -43,6 +43,8 @@ xdg_positioner_anchor satellite_anchor = XDG_POSITIONER_ANCHOR_LEFT;
 int32_t satellite_offset_vertical = 50;
 int32_t satellite_offset_horizontal = 0;
 
+bool dialog_enabled = false;
+
 void parse_options(int argc, char* argv[])
 {
     auto const option_main_width = "width";
@@ -51,15 +53,17 @@ void parse_options(int argc, char* argv[])
     auto const option_satellite_anchor = "satellite-anchor";
     auto const option_satellite_offset_vertical = "satellite-offset-vertical";
     auto const option_satellite_offset_horizontal = "satellite-offset-horizontal";
+    auto const option_dialog = "dialog";
 
     struct option const long_options[] = {
-        {option_main_width,       required_argument, 0, 0 },
-        {option_main_height,      required_argument, 0, 0 },
-        {option_satellite,        no_argument,       0, 0 },
-        {option_satellite_anchor, required_argument, 0, 0 },
-        {option_satellite_offset_vertical, required_argument, 0, 0 },
-        {option_satellite_offset_horizontal, required_argument, 0, 0 },
-        {0,                 0,                       0, 0 }
+        {option_main_width,         required_argument, 0, 0 },
+        {option_main_height,        required_argument, 0, 0 },
+        {option_satellite,          no_argument,       0, 0 },
+        {option_satellite_anchor,   required_argument, 0, 0 },
+        {option_satellite_offset_vertical,  required_argument, 0, 0 },
+        {option_satellite_offset_horizontal,required_argument, 0, 0 },
+        {option_dialog,             no_argument,       0, 0 },
+        {0,                         0,                 0, 0 }
     };
 
     int option_index = 0;
@@ -108,6 +112,10 @@ void parse_options(int argc, char* argv[])
             else if (option_main_height == long_options[option_index].name)
             {
                 main_height = atoi(optarg);
+            }
+            else if (option_dialog == long_options[option_index].name)
+            {
+                dialog_enabled = true;
             }
             else
             {
@@ -798,6 +806,37 @@ auto make_satellite(normal_window* main_window) -> std::unique_ptr<satellite>
 
     return std::make_unique<satellite>(100, 400, positioner, *main_window);
 }
+
+class dialog : public grey_window
+{
+public:
+    dialog(int32_t width, int32_t height, xdg_toplevel* parent);
+    ~dialog();
+
+private:
+    zmir_mir_dialog_surface_v1* const mir_surface;
+};
+
+dialog::dialog(int32_t width, int32_t height, xdg_toplevel* parent) :
+    grey_window{width, height, 160},
+    mir_surface{globals::mir_shell ? zmir_mir_shell_v1_get_dialog_surface(globals::mir_shell, *this) : nullptr}
+{
+    xdg_toplevel_set_parent(*this, parent);
+    xdg_toplevel_set_title(*this, "dialog");
+}
+
+dialog::~dialog()
+{
+    if (mir_surface)
+    {
+        zmir_mir_dialog_surface_v1_destroy(mir_surface);
+    }
+}
+
+auto make_dialog(normal_window* main_window) -> std::unique_ptr<dialog>
+{
+    return std::make_unique<dialog>(200, 200, *main_window);
+}
 }
 
 int main(int argc, char* argv[])
@@ -811,6 +850,9 @@ int main(int argc, char* argv[])
         wl_display_roundtrip(display);
 
         auto const toolbox = satellite_enabled ? make_satellite(main_window.get()) : std::unique_ptr<satellite>{};
+        wl_display_roundtrip(display);
+
+        auto const about = dialog_enabled ? make_dialog(main_window.get()) : std::unique_ptr<dialog>{};
         wl_display_roundtrip(display);
 
         mir::client::wayland_runner::run(display);
