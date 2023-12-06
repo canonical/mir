@@ -23,22 +23,29 @@
 
 namespace
 {
-int shutdown_signal;
-void trigger_shutdown(int signum)
+
+// We use a namespace object constructor to install our signal handler once
+struct State
 {
-    if (eventfd_write(shutdown_signal, 1) == -1)
-    {
-        printf("Failed to execute a shutdown");
-        exit(-1);
-    }
-    else
-    {
-        printf("Signal %d received. Good night.\n", signum);
-    }
+    State();
+
+    void run(wl_display* display);
+    void quit();
+
+    static int shutdown_fd;
+};
+
+State state;
+int State::shutdown_fd = 0;
+
+extern "C" void signal_shutdown(int signum)
+{
+    printf("Signal %d received. Good night.\n", signum);
+    state.quit();
 }
 }
 
-void mir::client::WaylandRunner::operator()(wl_display* display)
+void State::run(wl_display* display)
 {
     enum FdIndices {
         display_fd = 0,
@@ -48,11 +55,9 @@ void mir::client::WaylandRunner::operator()(wl_display* display)
 
     struct pollfd fds[indices] = {
         {wl_display_get_fd(display), POLLIN, 0},
-        {shutdown_signal,            POLLIN, 0},
+        {shutdown_fd,                POLLIN, 0},
     };
 
-    wl_display_roundtrip(display);
-    wl_display_roundtrip(display);
     while (!(fds[shutdown].revents & (POLLIN | POLLERR)))
     {
         while (wl_display_prepare_read(display) != 0)
@@ -91,40 +96,35 @@ void mir::client::WaylandRunner::operator()(wl_display* display)
     }
 }
 
-mir::client::WaylandRunner::WaylandRunner()
+State::State()
 {
-    if (shutdown_signal)
-        abort();
-
-    shutdown_signal = eventfd(0, EFD_CLOEXEC);
+    shutdown_fd = eventfd(0, EFD_CLOEXEC);
 
     struct sigaction sig_handler_new;
     sigfillset(&sig_handler_new.sa_mask);
     sig_handler_new.sa_flags = 0;
-    sig_handler_new.sa_handler = trigger_shutdown;
+    sig_handler_new.sa_handler = signal_shutdown;
 
     sigaction(SIGINT, &sig_handler_new, NULL);
     sigaction(SIGTERM, &sig_handler_new, NULL);
     sigaction(SIGHUP, &sig_handler_new, NULL);
 }
 
-mir::client::WaylandRunner mir::client::WaylandRunner::instance;
-
-void mir::client::WaylandRunner::run(wl_display* display)
+void State::quit()
 {
-    instance(display);
-}
-
-void mir::client::WaylandRunner::quit_()
-{
-    if (eventfd_write(shutdown_signal, 1) == -1)
+    if (eventfd_write(shutdown_fd, 1) == -1)
     {
         printf("Failed to execute a shutdown");
         exit(-1);
     }
 }
 
-void mir::client::WaylandRunner::quit()
+void mir::client::wayland_runner::run(wl_display* display)
 {
-    instance.quit_();
+    state.run(display);
+}
+
+void mir::client::wayland_runner::quit()
+{
+    state.quit();
 }

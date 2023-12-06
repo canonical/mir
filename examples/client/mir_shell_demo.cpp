@@ -727,7 +727,7 @@ void normal_window::handle_keyboard_key(wl_keyboard* keyboard, uint32_t serial, 
 
     if (modifiers == ControlMask && key == KEY_Q)
     {
-        mir::client::WaylandRunner::quit();
+        mir::client::wayland_runner::quit();
     }
 }
 
@@ -808,12 +808,12 @@ int main(int argc, char* argv[])
 
     {
         auto const main_window = std::make_unique<normal_window>(main_width, main_height);
-
         wl_display_roundtrip(display);
 
         auto const toolbox = satellite_enabled ? make_satellite(main_window.get()) : std::unique_ptr<satellite>{};
+        wl_display_roundtrip(display);
 
-        mir::client::WaylandRunner::run(display);
+        mir::client::wayland_runner::run(display);
     }
 
     wl_display_roundtrip(display);

@@ -23,17 +23,10 @@ namespace mir
 {
 namespace client
 {
-
-class WaylandRunner
+namespace wayland_runner
 {
-public:
-    static void run(wl_display* display);
-    static void quit();
-private:
-    static WaylandRunner instance;
-    void quit_();
-    void operator()(wl_display* display);
-    WaylandRunner();
+void run(wl_display* display);
+void quit();
 };
 
 } // mir
