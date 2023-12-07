@@ -114,7 +114,7 @@ wl_shm* shm;
 wl_seat* seat;
 wl_output* output;
 xdg_wm_base* wm_base;
-zmir_mir_shell_v1* mir_shell;
+mir_shell_v1* mir_shell;
 
 void init();
 }
@@ -273,7 +273,7 @@ protected:
         uint32_t group) override;
 
 private:
-    zmir_mir_normal_surface_v1* const mir_normal_surface;
+    mir_normal_surface_v1* const mir_normal_surface;
     std::list<std::unique_ptr<satellite>> toolboxs;
 
     uint32_t modifiers = 0;
@@ -286,11 +286,11 @@ public:
     ~satellite();
 
 private:
-    zmir_mir_satellite_surface_v1* const mir_surface;
+    mir_satellite_surface_v1* const mir_surface;
 
-    void handle_repositioned(zmir_mir_satellite_surface_v1* zmir_mir_satellite_surface_v1, uint32_t token);
+    void handle_repositioned(mir_satellite_surface_v1* mir_satellite_surface_v1, uint32_t token);
 
-    static zmir_mir_satellite_surface_v1_listener const satellite_listener;
+    static mir_satellite_surface_v1_listener const satellite_listener;
 };
 
 class dialog : public grey_window
@@ -301,7 +301,7 @@ public:
 
 private:
     normal_window* parent;
-    zmir_mir_dialog_surface_v1* const mir_surface;
+    mir_dialog_surface_v1* const mir_surface;
 
     void handle_keyboard_key(wl_keyboard* keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state)
         override;
@@ -338,10 +338,10 @@ void handle_registry_global(
         globals::wm_base = static_cast<xdg_wm_base*>(wl_registry_bind(
             registry, id, &xdg_wm_base_interface, std::min(version, 1u)));
     }
-    else if (strcmp(interface, zmir_mir_shell_v1_interface.name) == 0)
+    else if (strcmp(interface, mir_shell_v1_interface.name) == 0)
     {
-        globals::mir_shell = static_cast<zmir_mir_shell_v1*>(wl_registry_bind(
-            registry, id, &zmir_mir_shell_v1_interface, std::min(version, 1u)));
+        globals::mir_shell = static_cast<mir_shell_v1*>(wl_registry_bind(
+            registry, id, &mir_shell_v1_interface, std::min(version, 1u)));
     }
 }
 
@@ -741,7 +741,7 @@ void grey_window::show_unactivated()
 
 normal_window::normal_window(int32_t width, int32_t height) :
     grey_window(width, height, 192),
-    mir_normal_surface{globals::mir_shell? zmir_mir_shell_v1_get_normal_surface(globals::mir_shell, *this) : nullptr}
+    mir_normal_surface{globals::mir_shell? mir_shell_v1_get_normal_surface(globals::mir_shell, *this) : nullptr}
 {
     xdg_toplevel_set_title(*this, "normal");
 }
@@ -750,7 +750,7 @@ normal_window::~normal_window()
 {
     if (mir_normal_surface)
     {
-        zmir_mir_normal_surface_v1_destroy(mir_normal_surface);
+        mir_normal_surface_v1_destroy(mir_normal_surface);
     }
 }
 
@@ -784,14 +784,14 @@ void normal_window::handle_keyboard_modifiers(
 
 satellite::satellite(int32_t width, int32_t height, xdg_positioner* positioner, xdg_toplevel* parent) :
     grey_window{width, height, 128, 10},
-    mir_surface{globals::mir_shell ? zmir_mir_shell_v1_get_satellite_surface(globals::mir_shell, *this, positioner) : nullptr}
+    mir_surface{globals::mir_shell ? mir_shell_v1_get_satellite_surface(globals::mir_shell, *this, positioner) : nullptr}
 {
     xdg_toplevel_set_parent(*this, parent);
     xdg_toplevel_set_title(*this, "satellite");
 
     if (mir_surface)
     {
-        zmir_mir_satellite_surface_v1_add_listener(mir_surface, &satellite_listener, this);
+        mir_satellite_surface_v1_add_listener(mir_surface, &satellite_listener, this);
     }
 }
 
@@ -799,16 +799,16 @@ satellite::~satellite()
 {
     if (mir_surface)
     {
-        zmir_mir_satellite_surface_v1_destroy(mir_surface);
+        mir_satellite_surface_v1_destroy(mir_surface);
     }
 }
 
-void satellite::handle_repositioned(zmir_mir_satellite_surface_v1* /*zmir_mir_satellite_surface_v1*/, uint32_t /*token*/)
+void satellite::handle_repositioned(mir_satellite_surface_v1* /*mir_satellite_surface_v1*/, uint32_t /*token*/)
 {
     trace("Received repositioned event");
 }
 
-zmir_mir_satellite_surface_v1_listener const satellite::satellite_listener=
+mir_satellite_surface_v1_listener const satellite::satellite_listener=
 {
     .repositioned =  [](void* ctx, auto... args) { static_cast<satellite*>(ctx)->handle_repositioned(args...); },
 };
@@ -856,7 +856,7 @@ auto make_satellite(normal_window* main_window) -> std::unique_ptr<satellite>
 dialog::dialog(int32_t width, int32_t height, normal_window* parent) :
     grey_window{width, height, 160},
     parent{parent},
-    mir_surface{globals::mir_shell ? zmir_mir_shell_v1_get_dialog_surface(globals::mir_shell, *this) : nullptr}
+    mir_surface{globals::mir_shell ? mir_shell_v1_get_dialog_surface(globals::mir_shell, *this) : nullptr}
 {
     xdg_toplevel_set_parent(*this, *parent);
     xdg_toplevel_set_title(*this, "dialog");
@@ -866,7 +866,7 @@ dialog::~dialog()
 {
     if (mir_surface)
     {
-        zmir_mir_dialog_surface_v1_destroy(mir_surface);
+        mir_dialog_surface_v1_destroy(mir_surface);
     }
 }
 
@@ -881,7 +881,7 @@ void dialog::handle_keyboard_key(wl_keyboard* keyboard, uint32_t serial, uint32_
             // TODO: this leaks this dialog object, we should destroy that when Wayland has done with it
             if (mir_surface)
             {
-                zmir_mir_dialog_surface_v1_destroy(mir_surface);
+                mir_dialog_surface_v1_destroy(mir_surface);
             }
             xdg_toplevel_destroy(*this);
             xdg_surface_destroy(*this);

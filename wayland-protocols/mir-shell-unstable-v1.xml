@@ -25,7 +25,7 @@
     THIS SOFTWARE.
   </copyright>
 
-  <interface name="zmir_mir_shell_v1" version="1">
+  <interface name="mir_shell_v1" version="1">
     <description summary="create surface archetypes that are recognised by the desktop">
       Clients can use this interface to assign an archetype to wl_surfaces.
     </description>
@@ -38,7 +38,7 @@
 
         A normal surface exists in the "bottom" layer (c.f. wlr_layer_shell_unstable_v1)
       </description>
-      <arg name="id" type="new_id" interface="zmir_mir_normal_surface_v1"/>
+      <arg name="id" type="new_id" interface="mir_normal_surface_v1"/>
       <arg name="surface" type="object" interface="wl_surface"/>
     </request>
 
@@ -50,7 +50,7 @@
 
         A utility surface is "always on top" and will not be docked.
       </description>
-      <arg name="id" type="new_id" interface="zmir_mir_utility_surface_v1"/>
+      <arg name="id" type="new_id" interface="mir_utility_surface_v1"/>
       <arg name="surface" type="object" interface="wl_surface"/>
     </request>
 
@@ -62,7 +62,7 @@
 
         TODO Text describing dialog behaviour
       </description>
-      <arg name="id" type="new_id" interface="zmir_mir_dialog_surface_v1"/>
+      <arg name="id" type="new_id" interface="mir_dialog_surface_v1"/>
       <arg name="surface" type="object" interface="wl_surface"/>
     </request>
 
@@ -74,7 +74,7 @@
 
         TODO Text describing satellite behaviour
       </description>
-      <arg name="id" type="new_id" interface="zmir_mir_satellite_surface_v1"/>
+      <arg name="id" type="new_id" interface="mir_satellite_surface_v1"/>
       <arg name="surface" type="object" interface="wl_surface"/>
       <arg name="positioner" type="object" interface="xdg_positioner"/>
     </request>
@@ -87,7 +87,7 @@
 
         TODO Text describing freestyle behaviour
       </description>
-      <arg name="id" type="new_id" interface="zmir_mir_freestyle_surface_v1"/>
+      <arg name="id" type="new_id" interface="mir_freestyle_surface_v1"/>
       <arg name="surface" type="object" interface="wl_surface"/>
       <arg name="positioner" type="object" interface="xdg_positioner" allow-null="true"/>
       <!-- TODO optional attributes describing freestyle behaviour -->
@@ -106,7 +106,7 @@
     </request>
   </interface>
 
-  <interface name="zmir_mir_normal_surface_v1" version="1">
+  <interface name="mir_normal_surface_v1" version="1">
     <description summary="Mir metadata interface">
       An interface that may be implemented by a wl_surface, for surfaces that
       are designed to be rendered in a desktop-like environment.
@@ -119,7 +119,7 @@
     </request>
   </interface>
 
-  <interface name="zmir_mir_utility_surface_v1" version="1">
+  <interface name="mir_utility_surface_v1" version="1">
     <description summary="Mir metadata interface">
       An interface that may be implemented by a wl_surface, for surfaces that
       are designed to be rendered in a desktop-like environment.
@@ -132,7 +132,7 @@
     </request>
   </interface>
 
-  <interface name="zmir_mir_dialog_surface_v1" version="1">
+  <interface name="mir_dialog_surface_v1" version="1">
     <description summary="Mir metadata interface">
       An interface that may be implemented by a wl_surface, for surfaces that
       are designed to be rendered in a desktop-like environment.
@@ -145,7 +145,7 @@
     </request>
   </interface>
 
-  <interface name="zmir_mir_satellite_surface_v1" version="1">
+  <interface name="mir_satellite_surface_v1" version="1">
     <description summary="Mir metadata interface">
       An interface that may be implemented by a wl_surface, for surfaces that
       are designed to be rendered in a desktop-like environment.
@@ -155,8 +155,8 @@
       <description summary="recalculate the satellite's location">
         Reposition an already-mapped satellite. The satellite will be placed given the
         details in the passed xdg_positioner object, and a
-        xdg_satellite.repositioned followed by xdg_satellite.configure and
-        xdg_surface.configure will be emitted in response. Any parameters set
+        mir_satellite_surface_v1.repositioned followed by mir_satellite_surface_v1.configure and
+        wl_surface.configure will be emitted in response. Any parameters set
         by the previous positioner will be discarded.
 
         The passed token will be sent in the corresponding
@@ -184,20 +184,20 @@
     <event name="repositioned">
       <description summary="signal the completion of a repositioned request">
         The repositioned event is sent as part of a satellite configuration
-        sequence, together with xdg_satellite.configure and lastly
-        xdg_surface.configure to notify the completion of a reposition request.
+        sequence, together with mir_satellite_surface_v1.configure and lastly
+        wl_surface.configure to notify the completion of a reposition request.
 
         The repositioned event is to notify about the completion of a
-        xdg_satellite.reposition request. The token argument is the token passed
+        mir_satellite_surface_v1.reposition request. The token argument is the token passed
         in the xdg_satellite.reposition request.
 
-        Immediately after this event is emitted, xdg_satellite.configure and
-        xdg_surface.configure will be sent with the updated size and position,
+        Immediately after this event is emitted, mir_satellite_surface_v1.configure and
+        wl_surface.configure will be sent with the updated size and position,
         as well as a new configure serial.
 
         The client should optionally update the content of the satellite, but must
         acknowledge the new satellite configuration for the new position to take
-        effect. See xdg_surface.ack_configure for details.
+        effect. See mir_satellite_surface_v1.ack_configure for details.
       </description>
       <arg name="token" type="uint" summary="reposition request token"/>
     </event>
@@ -209,7 +209,7 @@
     </request>
   </interface>
 
-  <interface name="zmir_mir_freestyle_surface_v1" version="1">
+  <interface name="mir_freestyle_surface_v1" version="1">
     <description summary="Mir metadata interface">
       An interface that may be implemented by a wl_surface, for surfaces that
       are designed to be rendered in a desktop-like environment.
@@ -219,8 +219,8 @@
       <description summary="recalculate the freestyle's location">
         Reposition an already-mapped freestyle. The freestyle will be placed given the
         details in the passed xdg_positioner object, and a
-        xdg_freestyle.repositioned followed by xdg_freestyle.configure and
-        xdg_surface.configure will be emitted in response. Any parameters set
+        mir_freestyle_surface_v1.repositioned followed by mir_freestyle_surface_v1.configure and
+        wl_surface.configure will be emitted in response. Any parameters set
         by the previous positioner will be discarded.
 
         The passed token will be sent in the corresponding
@@ -248,15 +248,15 @@
     <event name="repositioned">
       <description summary="signal the completion of a repositioned request">
         The repositioned event is sent as part of a freestyle configuration
-        sequence, together with xdg_freestyle.configure and lastly
-        xdg_surface.configure to notify the completion of a reposition request.
+        sequence, together with mir_freestyle_surface_v1.configure and lastly
+        wl_surface.configure to notify the completion of a reposition request.
 
         The repositioned event is to notify about the completion of a
         xdg_freestyle.reposition request. The token argument is the token passed
         in the xdg_freestyle.reposition request.
 
         Immediately after this event is emitted, xdg_freestyle.configure and
-        xdg_surface.configure will be sent with the updated size and position,
+        wl_surface.configure will be sent with the updated size and position,
         as well as a new configure serial.
 
         The client should optionally update the content of the freestyle, but must
