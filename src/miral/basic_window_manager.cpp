@@ -2850,7 +2850,8 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
 
         /// The first pass will modify the application zone as it goes
         /// The second pass will use the final application zone
-        std::vector<WindowInfo*> first_pass;
+        std::vector<WindowInfo*> full_width_attached_windows;
+        std::vector<WindowInfo*> other_attached_windows;
         std::vector<WindowInfo*> second_pass;
 
         for (auto const& window : area->attached_windows)
@@ -2864,7 +2865,15 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
                 case mir_window_state_attached:
                     if (info.exclusive_rect().is_set())
                     {
-                        first_pass.push_back(&info);
+                        // We are sorting east-to-west connected edges to the back of the list so that they
+                        // force everyone else out of the way when they're placed. By "east-to-west", we are
+                        // referring to "top" and "bottom" panels, as opposed to "left" and "right" panels.
+                        MirPlacementGravity  edges = info.attached_edges();
+                        bool isFullWidth = (edges & mir_placement_gravity_east) && (edges & mir_placement_gravity_west);
+                        if (isFullWidth)
+                            full_width_attached_windows.push_back(&info);
+                        else
+                            other_attached_windows.push_back(&info);
                         break;
                     }
                     // fallthrough
@@ -2881,7 +2890,19 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
             }
         }
 
-        for (auto info_ptr : first_pass)
+        for (auto info_ptr : full_width_attached_windows)
+        {
+            place_attached_to_zone(*info_ptr, zone_rect);
+
+            auto& info = *info_ptr;
+            Rectangle exclusive_rect{
+                info.exclusive_rect().value().top_left + as_displacement(info.window().top_left()),
+                info.exclusive_rect().value().size};
+
+            zone_rect = apply_exclusive_rect_to_application_zone(zone_rect, exclusive_rect, info.attached_edges());
+        }
+
+        for (auto info_ptr : other_attached_windows)
         {
             place_attached_to_zone(*info_ptr, zone_rect);
 
