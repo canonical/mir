@@ -19,6 +19,8 @@
 
 #include <wayland-client.h>
 
+#include <functional>
+
 namespace mir
 {
 namespace client

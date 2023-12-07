@@ -21,6 +21,11 @@
 #include <stdio.h>
 #include <sys/eventfd.h>
 
+#include <boost/throw_exception.hpp>
+
+#include <list>
+#include <mutex>
+
 namespace
 {
 
