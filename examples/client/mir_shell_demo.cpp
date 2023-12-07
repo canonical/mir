@@ -48,18 +48,10 @@ void parse_options(int argc, char* argv[])
 {
     auto const option_main_width = "width";
     auto const option_main_height = "height";
-    auto const option_satellite = "satellite";
-    auto const option_satellite_anchor = "satellite-anchor";
-    auto const option_satellite_offset_vertical = "satellite-offset-vertical";
-    auto const option_satellite_offset_horizontal = "satellite-offset-horizontal";
 
     struct option const long_options[] = {
         {option_main_width,         required_argument, 0, 0 },
         {option_main_height,        required_argument, 0, 0 },
-        {option_satellite,          no_argument,       0, 0 },
-        {option_satellite_anchor,   required_argument, 0, 0 },
-        {option_satellite_offset_vertical,  required_argument, 0, 0 },
-        {option_satellite_offset_horizontal,required_argument, 0, 0 },
         {0,                         0,                 0, 0 }
     };
 
@@ -72,37 +64,7 @@ void parse_options(int argc, char* argv[])
         switch (c)
         {
         case 0:
-            if (option_satellite == long_options[option_index].name)
-            {
-                satellite_enabled = true;
-            }
-            else if (option_satellite_anchor == long_options[option_index].name)
-            {
-                if ("right"s == optarg)
-                {
-                    satellite_enabled = true;
-                    satellite_anchor = XDG_POSITIONER_ANCHOR_RIGHT;
-                }
-            }
-            else if (option_satellite_anchor == long_options[option_index].name)
-            {
-                if ("right"s == optarg)
-                {
-                    satellite_enabled = true;
-                    satellite_anchor = XDG_POSITIONER_ANCHOR_RIGHT;
-                }
-            }
-            else if (option_satellite_offset_vertical == long_options[option_index].name)
-            {
-                satellite_enabled = true;
-                satellite_offset_vertical = atoi(optarg);
-            }
-            else if (option_satellite_offset_horizontal == long_options[option_index].name)
-            {
-                satellite_enabled = true;
-                satellite_offset_horizontal = atoi(optarg);
-            }
-            else if (option_main_width == long_options[option_index].name)
+            if (option_main_width == long_options[option_index].name)
             {
                 main_width = atoi(optarg);
             }
