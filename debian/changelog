@@ -1,3 +1,30 @@
+mir (2.13.1) UNRELEASED; urgency=medium
+
+  [ Alan Griffiths ]
+  * New upstream release 2.13.1
+
+    - ABI summary:
+      . miral ABI unchanged at 5
+      . mircommon ABI unchanged at 9
+      . mircookie ABI unchanged at 2
+      . mircore ABI unchanged at 2
+      . miroil ABI unchanged at 3
+      . mirplatform ABI unchanged at 24
+      . mirserver ABI unchanged at 58
+      . mirwayland ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 20
+      . mirinputplatform ABI unchanged at 8
+    - Bugs fixed:
+      . Unable to close miral-shell using keybind via VNC due to
+        DecorationProvider (Fixes #3070)
+      . [input] keyboard meta key state gets out of step (Fixes: #2837)
+      . [platforms] Handle libinput device rejections better #2927
+      . [platforms] Assume evdev platform is supported (Fixes: #2837)
+      . [platforms] Fix naming of outputs on Nvidia cards (Fixes: #2968)
+      . server/ShmBacking: Fix leak in `install_sigbus_handler` #2895
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Thu, 06 Nov 2023 17:000:57 +0200
+
 mir (2.13.0) UNRELEASED; urgency=medium
 
   [ Alan Griffiths ]

@@ -187,7 +187,6 @@ public:
                 &device_watchers = device_watchers
             ]() mutable
             {
-                auto raw_fd = static_cast<int>(fd);
                 device_fds.store_fd(devnode.c_str(), std::move(fd));
 
                 auto pending_iter = pending_devices.find(devnum);
@@ -199,8 +198,10 @@ public:
 
                 if (!libinput_path_add_device(lib.get(), devnode.c_str()))
                 {
-                    // Oops, libinput didn't want this after all.
-                    device_fds.remove_fd(raw_fd);
+                    /* Oops, libinput didn't want this after all.
+                     * libinput will have closed the FD as a part of failing to add
+                     * the device, so we only need to release our Device handle.
+                     */
                     device_watchers.erase(devnum);
                 }
             });
