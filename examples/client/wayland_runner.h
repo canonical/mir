@@ -28,6 +28,7 @@ namespace client
 namespace wayland_runner
 {
 void run(wl_display* display);
+void spawn(std::function<void()>&& function);
 void quit();
 };
 

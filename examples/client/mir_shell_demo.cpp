@@ -216,6 +216,7 @@ private:
     int width;
     int height;
     bool need_to_draw = true;
+    bool hidden = false;
 
     void handle_frame_callback(wl_callback* callback, uint32_t);
 
@@ -313,7 +314,6 @@ protected:
 private:
     zmir_mir_normal_surface_v1* const mir_normal_surface;
     std::list<std::unique_ptr<satellite>> toolboxs;
-    std::unique_ptr<dialog> about;
 
     uint32_t modifiers = 0;
 };
@@ -335,11 +335,15 @@ private:
 class dialog : public grey_window
 {
 public:
-    dialog(int32_t width, int32_t height, xdg_toplevel* parent);
+    dialog(int32_t width, int32_t height, normal_window* parent);
     ~dialog();
 
 private:
+    normal_window* parent;
     zmir_mir_dialog_surface_v1* const mir_surface;
+
+    void handle_keyboard_key(wl_keyboard* keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state)
+        override;
 };
 
 void handle_registry_global(
@@ -803,7 +807,7 @@ void normal_window::handle_keyboard_key(wl_keyboard* keyboard, uint32_t serial, 
         toolboxs.push_back(make_satellite(this));
         break;
     case KEY_D:
-        if (!about) about = make_dialog(this);
+        make_dialog(this).release();
         break;
     }
 }
@@ -857,16 +861,43 @@ auto make_satellite(normal_window* main_window) -> std::unique_ptr<satellite>
     xdg_positioner_set_anchor(positioner, satellite_anchor);
     xdg_positioner_set_gravity(positioner, satellite_anchor);
     xdg_positioner_set_offset(positioner, satellite_offset_horizontal, satellite_offset_vertical);
-    xdg_positioner_set_constraint_adjustment(positioner, XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_X);
 
-    return std::make_unique<satellite>(100, 400, positioner, *main_window);
+    uint32_t constraint_adjustment = XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_X;
+    switch (satellite_anchor)
+    {
+    case XDG_POSITIONER_ANCHOR_LEFT:
+        satellite_anchor = XDG_POSITIONER_ANCHOR_RIGHT;
+        break;
+    case XDG_POSITIONER_ANCHOR_RIGHT:
+        satellite_anchor = XDG_POSITIONER_ANCHOR_BOTTOM;
+        constraint_adjustment = XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_Y;
+        break;
+    case XDG_POSITIONER_ANCHOR_BOTTOM:
+        satellite_anchor = XDG_POSITIONER_ANCHOR_BOTTOM_LEFT;
+        constraint_adjustment = XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_Y;
+        break;
+    case XDG_POSITIONER_ANCHOR_BOTTOM_LEFT:
+        satellite_anchor = XDG_POSITIONER_ANCHOR_BOTTOM_RIGHT;
+        constraint_adjustment = XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_Y | XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_X;
+        break;
+    case XDG_POSITIONER_ANCHOR_BOTTOM_RIGHT:
+        constraint_adjustment = XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_Y | XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_X;
+        [[fallthrough]];
+    default:
+        satellite_anchor = XDG_POSITIONER_ANCHOR_LEFT;
+        break;
+    }
+    xdg_positioner_set_constraint_adjustment(positioner, constraint_adjustment);
+
+    return std::make_unique<satellite>(100, 200, positioner, *main_window);
 }
 
-dialog::dialog(int32_t width, int32_t height, xdg_toplevel* parent) :
+dialog::dialog(int32_t width, int32_t height, normal_window* parent) :
     grey_window{width, height, 160},
+    parent{parent},
     mir_surface{globals::mir_shell ? zmir_mir_shell_v1_get_dialog_surface(globals::mir_shell, *this) : nullptr}
 {
-    xdg_toplevel_set_parent(*this, parent);
+    xdg_toplevel_set_parent(*this, *parent);
     xdg_toplevel_set_title(*this, "dialog");
 }
 
@@ -878,9 +909,29 @@ dialog::~dialog()
     }
 }
 
+void dialog::handle_keyboard_key(wl_keyboard* keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state)
+{
+    grey_window::handle_keyboard_key(keyboard, serial, time, key, state);
+
+    if (has_keyboard_focus() && state == WL_KEYBOARD_KEY_STATE_RELEASED)
+        switch (key)
+        {
+        case KEY_ESC:
+            // TODO: this leaks this dialog object, we should destroy that when Wayland has done with it
+            if (mir_surface)
+            {
+                zmir_mir_dialog_surface_v1_destroy(mir_surface);
+            }
+            xdg_toplevel_destroy(*this);
+            xdg_surface_destroy(*this);
+            wl_surface_destroy(*this);
+            break;
+        }
+}
+
 auto make_dialog(normal_window* main_window) -> std::unique_ptr<dialog>
 {
-    return std::make_unique<dialog>(200, 200, *main_window);
+    return std::make_unique<dialog>(200, 200, main_window);
 }
 }
 
