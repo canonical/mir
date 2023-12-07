@@ -25,6 +25,7 @@
 
 #include <list>
 #include <mutex>
+#include <system_error>
 
 namespace
 {
