@@ -39,7 +39,6 @@ bool const tracing = getenv("MIR_SHELL_DEMO_TRACE");
 int32_t main_width = 400;
 int32_t main_height = 400;
 
-bool satellite_enabled = false;
 xdg_positioner_anchor satellite_anchor = XDG_POSITIONER_ANCHOR_LEFT;
 int32_t satellite_offset_vertical = 50;
 int32_t satellite_offset_horizontal = 0;
@@ -906,8 +905,6 @@ int main(int argc, char* argv[])
     {
         auto const main_window = std::make_unique<normal_window>(main_width, main_height);
         wl_display_roundtrip(display);
-
-        auto const toolbox = satellite_enabled ? make_satellite(main_window.get()) : std::unique_ptr<satellite>{};
         wl_display_roundtrip(display);
 
         mir::client::wayland_runner::run(display);
