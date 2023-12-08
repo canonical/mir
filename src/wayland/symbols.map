@@ -646,7 +646,7 @@ global:
   };
 } MIRWAYLAND_2.14;
 
-MIRWAYLAND_2.16 {
+MIRWAYLAND_2.17 {
 global:
   extern "C++" {
     mir::wayland::MirShellV1::*;
@@ -686,5 +686,11 @@ global:
     virtual?thunk?to?mir::wayland::MirFreestyleSurfaceV1::*;
     typeinfo?for?mir::wayland::MirFreestyleSurfaceV1;
     vtable?for?mir::wayland::MirFreestyleSurfaceV1;
+
+    mir::wayland::MirPositionerV1::*;
+    non-virtual?thunk?to?mir::wayland::MirPositionerV1::*;
+    virtual?thunk?to?mir::wayland::MirPositionerV1::*;
+    typeinfo?for?mir::wayland::MirPositionerV1;
+    vtable?for?mir::wayland::MirPositionerV1;
   };
 } MIRWAYLAND_2.15;

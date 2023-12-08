@@ -39,7 +39,7 @@ bool const tracing = getenv("MIR_SHELL_DEMO_TRACE");
 int32_t main_width = 400;
 int32_t main_height = 400;
 
-xdg_positioner_anchor satellite_anchor = XDG_POSITIONER_ANCHOR_LEFT;
+mir_positioner_v1_anchor satellite_anchor = MIR_POSITIONER_V1_ANCHOR_LEFT;
 int32_t satellite_offset_vertical = 50;
 int32_t satellite_offset_horizontal = 0;
 
@@ -282,7 +282,7 @@ private:
 class satellite : public grey_window
 {
 public:
-    satellite(int32_t width, int32_t height, xdg_positioner* positioner, xdg_toplevel* parent);
+    satellite(int32_t width, int32_t height, mir_positioner_v1* positioner, xdg_toplevel* parent);
     ~satellite();
 
 private:
@@ -782,7 +782,7 @@ void normal_window::handle_keyboard_modifiers(
     modifiers = mods_depressed;
 }
 
-satellite::satellite(int32_t width, int32_t height, xdg_positioner* positioner, xdg_toplevel* parent) :
+satellite::satellite(int32_t width, int32_t height, mir_positioner_v1* positioner, xdg_toplevel* parent) :
     grey_window{width, height, 128, 10},
     mir_surface{globals::mir_shell ? mir_shell_v1_get_satellite_surface(globals::mir_shell, *this, positioner) : nullptr}
 {
@@ -815,40 +815,40 @@ mir_satellite_surface_v1_listener const satellite::satellite_listener=
 
 auto make_satellite(normal_window* main_window) -> std::unique_ptr<satellite>
 {
-    auto const positioner = xdg_wm_base_create_positioner(globals::wm_base);
+    auto const positioner = mir_shell_v1_create_positioner(globals::mir_shell);
     auto const [anchor_width, anchor_height] = main_window->size();
 
-    xdg_positioner_set_anchor_rect(positioner, 0, 0, anchor_width, anchor_height);
-    xdg_positioner_set_anchor(positioner, satellite_anchor);
-    xdg_positioner_set_gravity(positioner, satellite_anchor);
-    xdg_positioner_set_offset(positioner, satellite_offset_horizontal, satellite_offset_vertical);
+    mir_positioner_v1_set_anchor_rect(positioner, 0, 0, anchor_width, anchor_height);
+    mir_positioner_v1_set_anchor(positioner, satellite_anchor);
+    mir_positioner_v1_set_gravity(positioner, satellite_anchor);
+    mir_positioner_v1_set_offset(positioner, satellite_offset_horizontal, satellite_offset_vertical);
 
-    uint32_t constraint_adjustment = XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_X;
+    uint32_t constraint_adjustment = MIR_POSITIONER_V1_CONSTRAINT_ADJUSTMENT_SLIDE_X;
     switch (satellite_anchor)
     {
-    case XDG_POSITIONER_ANCHOR_LEFT:
-        satellite_anchor = XDG_POSITIONER_ANCHOR_RIGHT;
+    case MIR_POSITIONER_V1_ANCHOR_LEFT:
+        satellite_anchor = MIR_POSITIONER_V1_ANCHOR_RIGHT;
         break;
-    case XDG_POSITIONER_ANCHOR_RIGHT:
-        satellite_anchor = XDG_POSITIONER_ANCHOR_BOTTOM;
-        constraint_adjustment = XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_Y;
+    case MIR_POSITIONER_V1_ANCHOR_RIGHT:
+        satellite_anchor = MIR_POSITIONER_V1_ANCHOR_BOTTOM;
+        constraint_adjustment = MIR_POSITIONER_V1_CONSTRAINT_ADJUSTMENT_SLIDE_Y;
         break;
-    case XDG_POSITIONER_ANCHOR_BOTTOM:
-        satellite_anchor = XDG_POSITIONER_ANCHOR_BOTTOM_LEFT;
-        constraint_adjustment = XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_Y;
+    case MIR_POSITIONER_V1_ANCHOR_BOTTOM:
+        satellite_anchor = MIR_POSITIONER_V1_ANCHOR_BOTTOM_LEFT;
+        constraint_adjustment = MIR_POSITIONER_V1_CONSTRAINT_ADJUSTMENT_SLIDE_Y;
         break;
-    case XDG_POSITIONER_ANCHOR_BOTTOM_LEFT:
-        satellite_anchor = XDG_POSITIONER_ANCHOR_BOTTOM_RIGHT;
-        constraint_adjustment = XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_Y | XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_X;
+    case MIR_POSITIONER_V1_ANCHOR_BOTTOM_LEFT:
+        satellite_anchor = MIR_POSITIONER_V1_ANCHOR_BOTTOM_RIGHT;
+        constraint_adjustment = MIR_POSITIONER_V1_CONSTRAINT_ADJUSTMENT_SLIDE_Y | MIR_POSITIONER_V1_CONSTRAINT_ADJUSTMENT_SLIDE_X;
         break;
-    case XDG_POSITIONER_ANCHOR_BOTTOM_RIGHT:
-        constraint_adjustment = XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_Y | XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_X;
+    case MIR_POSITIONER_V1_ANCHOR_BOTTOM_RIGHT:
+        constraint_adjustment = MIR_POSITIONER_V1_CONSTRAINT_ADJUSTMENT_SLIDE_Y | MIR_POSITIONER_V1_CONSTRAINT_ADJUSTMENT_SLIDE_X;
         [[fallthrough]];
     default:
-        satellite_anchor = XDG_POSITIONER_ANCHOR_LEFT;
+        satellite_anchor = MIR_POSITIONER_V1_ANCHOR_LEFT;
         break;
     }
-    xdg_positioner_set_constraint_adjustment(positioner, constraint_adjustment);
+    mir_positioner_v1_set_constraint_adjustment(positioner, constraint_adjustment);
 
     return std::make_unique<satellite>(100, 200, positioner, *main_window);
 }

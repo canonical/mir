@@ -16,18 +16,19 @@
 
 #include "mir_shell.h"
 
-#include "xdg_shell_stable.h"
-
-#include "wl_surface.h"
+#include "mir/geometry/forward.h"
 #include "mir/scene/surface.h"
-#include "mir/shell/surface_specification.h"
 #include "mir/shell/shell.h"
+#include "mir/shell/surface_specification.h"
+#include "mir/wayland/protocol_error.h"
+#include "wl_surface.h"
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 
 using mir::shell::Shell;
 using mir::shell::SurfaceSpecification;
+using namespace mir::geometry;
 
 namespace
 {
@@ -63,6 +64,8 @@ struct Instance : mw::MirShellV1
         struct wl_resource* id, struct wl_resource* surface,
         std::optional<struct wl_resource*> const& positioner) override;
 
+    void create_positioner(struct wl_resource* id) override;
+
     std::shared_ptr<Shell> const shell;
 };
 
@@ -74,6 +77,20 @@ struct Surface : MirSurface
     {
         wl_surface->window_archetype(type);
     }
+};
+
+class MirPositioner : public mw::MirPositionerV1, public SurfaceSpecification
+{
+public:
+    MirPositioner(wl_resource* new_resource);
+
+private:
+    void set_size(int32_t width, int32_t height) override;
+    void set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t height) override;
+    void set_anchor(uint32_t anchor) override;
+    void set_gravity(uint32_t gravity) override;
+    void set_constraint_adjustment(uint32_t constraint_adjustment) override;
+    void set_offset(int32_t x, int32_t y) override;
 };
 }
 
@@ -113,7 +130,7 @@ void Instance::get_satellite_surface(wl_resource* id, wl_resource* surface, wl_r
         {
             wl_surface->window_archetype(mir_window_type_satellite);
 
-            auto pspec = dynamic_cast<SurfaceSpecification*>(mw::XdgPositioner::from(positioner));
+            auto pspec = dynamic_cast<SurfaceSpecification*>(mw::MirPositionerV1::from(positioner));
             auto update_type = [shell, pspec](std::shared_ptr<mir::scene::Surface> surface)
                 {
                     auto spec = pspec ? *pspec : SurfaceSpecification{};
@@ -130,7 +147,7 @@ void Instance::get_satellite_surface(wl_resource* id, wl_resource* surface, wl_r
 
         void reposition(struct wl_resource* positioner, uint32_t /*token*/) override
         {
-            auto pspec = dynamic_cast<mf::XdgPositionerStable*>(mw::XdgPositioner::from(positioner));
+            auto pspec = dynamic_cast<MirPositioner*>(mw::MirPositionerV1::from(positioner));
 
             if (auto const ms = wl_surface->scene_surface())
             {
@@ -161,7 +178,7 @@ void Instance::get_freestyle_surface(
             shell{shell},
             wl_surface{wl_surface}
         {
-            auto pspec = dynamic_cast<SurfaceSpecification*>(mw::XdgPositioner::from(positioner));
+            auto pspec = dynamic_cast<SurfaceSpecification*>(mw::MirPositionerV1::from(positioner));
 
             if (auto const ms = wl_surface->scene_surface())
             {
@@ -177,7 +194,7 @@ void Instance::get_freestyle_surface(
 
         void reposition(struct wl_resource* positioner, uint32_t /*token*/) override
         {
-            auto pspec = dynamic_cast<mf::XdgPositionerStable*>(mw::XdgPositioner::from(positioner));
+            auto pspec = dynamic_cast<MirPositioner*>(mw::MirPositionerV1::from(positioner));
 
             if (auto const ms = wl_surface->scene_surface())
             {
@@ -196,4 +213,176 @@ void Instance::get_freestyle_surface(
     };
 
     new Surface{shell, id, mf::WlSurface::from(surface), positioner.value_or(nullptr)};
+}
+
+void Instance::create_positioner(struct wl_resource* id)
+{
+    new MirPositioner(id);
+}
+
+MirPositioner::MirPositioner(wl_resource* new_resource)
+    : mw::MirPositionerV1(new_resource, Version<1>())
+{
+    // specifying gravity is not required by the xdg shell protocol, but is by Mir window managers
+    surface_placement_gravity = mir_placement_gravity_center;
+    aux_rect_placement_gravity = mir_placement_gravity_center;
+    placement_hints = static_cast<MirPlacementHints>(0);
+}
+
+void MirPositioner::set_size(int32_t width, int32_t height)
+{
+    if (width <= 0 || height <= 0)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            mw::MirPositionerV1::Error::invalid_input,
+            "Invalid popup positioner size: %dx%d", width, height));
+    }
+    this->width = Width{width};
+    this->height = Height{height};
+}
+
+void MirPositioner::set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t height)
+{
+    if (width < 0 || height < 0)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            mw::MirPositionerV1::Error::invalid_input,
+            "Invalid popup anchor rect size: %dx%d", width, height));
+    }
+    aux_rect = Rectangle{{x, y}, {width, height}};
+}
+
+void MirPositioner::set_anchor(uint32_t anchor)
+{
+    MirPlacementGravity placement = mir_placement_gravity_center;
+
+    switch (anchor)
+    {
+    case Anchor::top:
+        placement = mir_placement_gravity_north;
+        break;
+
+    case Anchor::bottom:
+        placement = mir_placement_gravity_south;
+        break;
+
+    case Anchor::left:
+        placement = mir_placement_gravity_west;
+        break;
+
+    case Anchor::right:
+        placement = mir_placement_gravity_east;
+        break;
+
+    case Anchor::top_left:
+        placement = mir_placement_gravity_northwest;
+        break;
+
+    case Anchor::bottom_left:
+        placement = mir_placement_gravity_southwest;
+        break;
+
+    case Anchor::top_right:
+        placement = mir_placement_gravity_northeast;
+        break;
+
+    case Anchor::bottom_right:
+        placement = mir_placement_gravity_southeast;
+        break;
+
+    default:
+        placement = mir_placement_gravity_center;
+    }
+
+    aux_rect_placement_gravity = placement;
+}
+
+void MirPositioner::set_gravity(uint32_t gravity)
+{
+    MirPlacementGravity placement = mir_placement_gravity_center;
+
+    switch (gravity)
+    {
+    case Gravity::top:
+        placement = mir_placement_gravity_south;
+        break;
+
+    case Gravity::bottom:
+        placement = mir_placement_gravity_north;
+        break;
+
+    case Gravity::left:
+        placement = mir_placement_gravity_east;
+        break;
+
+    case Gravity::right:
+        placement = mir_placement_gravity_west;
+        break;
+
+    case Gravity::top_left:
+        placement = mir_placement_gravity_southeast;
+        break;
+
+    case Gravity::bottom_left:
+        placement = mir_placement_gravity_northeast;
+        break;
+
+    case Gravity::top_right:
+        placement = mir_placement_gravity_southwest;
+        break;
+
+    case Gravity::bottom_right:
+        placement = mir_placement_gravity_northwest;
+        break;
+
+    case Gravity::none:
+        placement = mir_placement_gravity_center;
+        break;
+
+    default:
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            mw::MirPositionerV1::Error::invalid_input,
+            "Invalid gravity value %d", gravity));
+    }
+
+    surface_placement_gravity = placement;
+}
+
+void MirPositioner::set_constraint_adjustment(uint32_t constraint_adjustment)
+{
+    uint32_t new_placement_hints{0};
+    if (constraint_adjustment & ConstraintAdjustment::slide_x)
+    {
+        new_placement_hints |= mir_placement_hints_slide_x;
+    }
+    if (constraint_adjustment & ConstraintAdjustment::slide_y)
+    {
+        new_placement_hints |= mir_placement_hints_slide_y;
+    }
+    if (constraint_adjustment & ConstraintAdjustment::flip_x)
+    {
+        new_placement_hints |= mir_placement_hints_flip_x;
+    }
+    if (constraint_adjustment & ConstraintAdjustment::flip_x)
+    {
+        new_placement_hints |= mir_placement_hints_flip_y;
+    }
+    if (constraint_adjustment & ConstraintAdjustment::resize_x)
+    {
+        new_placement_hints |= mir_placement_hints_resize_x;
+    }
+    if (constraint_adjustment & ConstraintAdjustment::resize_y)
+    {
+        new_placement_hints |= mir_placement_hints_resize_y;
+    }
+    placement_hints = static_cast<MirPlacementHints>(new_placement_hints);
+}
+
+void MirPositioner::set_offset(int32_t x, int32_t y)
+{
+    aux_rect_placement_offset_x = x;
+    aux_rect_placement_offset_y = y;
 }

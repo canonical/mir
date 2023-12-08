@@ -76,7 +76,7 @@
       </description>
       <arg name="id" type="new_id" interface="mir_satellite_surface_v1"/>
       <arg name="surface" type="object" interface="wl_surface"/>
-      <arg name="positioner" type="object" interface="xdg_positioner"/>
+      <arg name="positioner" type="object" interface="mir_positioner_v1"/>
     </request>
 
     <request name="get_freestyle_surface">
@@ -89,8 +89,17 @@
       </description>
       <arg name="id" type="new_id" interface="mir_freestyle_surface_v1"/>
       <arg name="surface" type="object" interface="wl_surface"/>
-      <arg name="positioner" type="object" interface="xdg_positioner" allow-null="true"/>
+      <arg name="positioner" type="object" interface="mir_positioner_v1" allow-null="true"/>
       <!-- TODO optional attributes describing freestyle behaviour -->
+    </request>
+
+    <request name="create_positioner">
+      <description summary="create a positioner object">
+        Create a positioner object. A positioner object is used to position
+        surfaces relative to some parent surface. See the interface description
+        and xdg_surface.get_popup for details.
+      </description>
+      <arg name="id" type="new_id" interface="mir_positioner_v1"/>
     </request>
 
     <enum name="error">
@@ -154,7 +163,7 @@
     <request name="reposition">
       <description summary="recalculate the satellite's location">
         Reposition an already-mapped satellite. The satellite will be placed given the
-        details in the passed xdg_positioner object, and a
+        details in the passed mir_positioner object, and a
         mir_satellite_surface_v1.repositioned followed by mir_satellite_surface_v1.configure and
         wl_surface.configure will be emitted in response. Any parameters set
         by the previous positioner will be discarded.
@@ -169,15 +178,15 @@
         but the last one.
 
         If the satellite is repositioned in response to a configure event for its
-        parent, the client should send an xdg_positioner.set_parent_configure
-        and possibly an xdg_positioner.set_parent_size request to allow the
+        parent, the client should send an mir_positioner.set_parent_configure
+        and possibly an mir_positioner.set_parent_size request to allow the
         compositor to properly constrain the satellite.
 
         If the satellite is repositioned together with a parent that is being
         resized, but not in response to a configure event, the client should
-        send an xdg_positioner.set_parent_size request.
+        send an mir_positioner.set_parent_size request.
       </description>
-      <arg name="positioner" type="object" interface="xdg_positioner"/>
+      <arg name="positioner" type="object" interface="mir_positioner_v1"/>
       <arg name="token" type="uint" summary="reposition request token"/>
     </request>
 
@@ -218,7 +227,7 @@
     <request name="reposition">
       <description summary="recalculate the freestyle's location">
         Reposition an already-mapped freestyle. The freestyle will be placed given the
-        details in the passed xdg_positioner object, and a
+        details in the passed mir_positioner object, and a
         mir_freestyle_surface_v1.repositioned followed by mir_freestyle_surface_v1.configure and
         wl_surface.configure will be emitted in response. Any parameters set
         by the previous positioner will be discarded.
@@ -233,15 +242,15 @@
         but the last one.
 
         If the freestyle is repositioned in response to a configure event for its
-        parent, the client should send an xdg_positioner.set_parent_configure
-        and possibly an xdg_positioner.set_parent_size request to allow the
+        parent, the client should send an mir_positioner.set_parent_configure
+        and possibly an mir_positioner.set_parent_size request to allow the
         compositor to properly constrain the freestyle.
 
         If the freestyle is repositioned together with a parent that is being
         resized, but not in response to a configure event, the client should
-        send an xdg_positioner.set_parent_size request.
+        send an mir_positioner.set_parent_size request.
       </description>
-      <arg name="positioner" type="object" interface="xdg_positioner"/>
+      <arg name="positioner" type="object" interface="mir_positioner_v1"/>
       <arg name="token" type="uint" summary="reposition request token"/>
     </request>
 
@@ -255,13 +264,13 @@
         xdg_freestyle.reposition request. The token argument is the token passed
         in the xdg_freestyle.reposition request.
 
-        Immediately after this event is emitted, xdg_freestyle.configure and
+        Immediately after this event is emitted, mir_freestyle_surface_v1.configure and
         wl_surface.configure will be sent with the updated size and position,
         as well as a new configure serial.
 
         The client should optionally update the content of the freestyle, but must
         acknowledge the new freestyle configuration for the new position to take
-        effect. See xdg_surface.ack_configure for details.
+        effect. See wl_surface.ack_configure for details.
       </description>
       <arg name="token" type="uint" summary="reposition request token"/>
     </event>
@@ -272,6 +281,251 @@
       <description summary="destroy the freestyle_surface">
         This request destroys the mir surface.
       </description>
+    </request>
+  </interface>
+
+  <interface name="mir_positioner_v1" version="1">
+    <description summary="child surface positioner">
+      The mir_positioner provides a collection of rules for the placement of a
+      child surface relative to a parent surface. Rules can be defined to ensure
+      the child surface remains within the visible area's borders, and to
+      specify how the child surface changes its position, such as sliding along
+      an axis, or flipping around a rectangle. These positioner-created rules are
+      constrained by the requirement that a child surface must intersect with or
+      be at least partially adjacent to its parent surface.
+
+      See the various requests for details about possible rules.
+
+      At the time of the request, the compositor makes a copy of the rules
+      specified by the mir_positioner. Thus, after the request is complete the
+      mir_positioner object can be destroyed or reused; further changes to the
+      object will have no effect on previous usages.
+
+      For an mir_positioner object to be considered complete, it must have a
+      non-zero size set by set_size, and a non-zero anchor rectangle set by
+      set_anchor_rect. Passing an incomplete mir_positioner object when
+      positioning a surface raises an invalid_positioner error.
+    </description>
+
+    <enum name="error">
+      <entry name="invalid_input" value="0" summary="invalid input provided"/>
+    </enum>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the mir_positioner object">
+        Notify the compositor that the mir_positioner will no longer be used.
+      </description>
+    </request>
+
+    <request name="set_size">
+      <description summary="set the size of the to-be positioned rectangle">
+        Set the size of the surface that is to be positioned with the positioner
+        object. The size is in surface-local coordinates and corresponds to the
+        window geometry. See xdg_surface.set_window_geometry.
+
+        If a zero or negative size is set the invalid_input error is raised.
+      </description>
+      <arg name="width" type="int" summary="width of positioned rectangle"/>
+      <arg name="height" type="int" summary="height of positioned rectangle"/>
+    </request>
+
+    <request name="set_anchor_rect">
+      <description summary="set the anchor rectangle within the parent surface">
+        Specify the anchor rectangle within the parent surface that the child
+        surface will be placed relative to. The rectangle is relative to the
+        window geometry as defined by xdg_surface.set_window_geometry of the
+        parent surface.
+
+        When the mir_positioner object is used to position a child surface, the
+        anchor rectangle may not extend outside the window geometry of the
+        positioned child's parent surface.
+
+        If a negative size is set the invalid_input error is raised.
+      </description>
+      <arg name="x" type="int" summary="x position of anchor rectangle"/>
+      <arg name="y" type="int" summary="y position of anchor rectangle"/>
+      <arg name="width" type="int" summary="width of anchor rectangle"/>
+      <arg name="height" type="int" summary="height of anchor rectangle"/>
+    </request>
+
+    <enum name="anchor">
+      <entry name="none" value="0"/>
+      <entry name="top" value="1"/>
+      <entry name="bottom" value="2"/>
+      <entry name="left" value="3"/>
+      <entry name="right" value="4"/>
+      <entry name="top_left" value="5"/>
+      <entry name="bottom_left" value="6"/>
+      <entry name="top_right" value="7"/>
+      <entry name="bottom_right" value="8"/>
+    </enum>
+
+    <request name="set_anchor">
+      <description summary="set anchor rectangle anchor">
+        Defines the anchor point for the anchor rectangle. The specified anchor
+        is used derive an anchor point that the child surface will be
+        positioned relative to. If a corner anchor is set (e.g. 'top_left' or
+        'bottom_right'), the anchor point will be at the specified corner;
+        otherwise, the derived anchor point will be centered on the specified
+        edge, or in the center of the anchor rectangle if no edge is specified.
+      </description>
+      <arg name="anchor" type="uint" enum="anchor"
+           summary="anchor"/>
+    </request>
+
+    <enum name="gravity">
+      <entry name="none" value="0"/>
+      <entry name="top" value="1"/>
+      <entry name="bottom" value="2"/>
+      <entry name="left" value="3"/>
+      <entry name="right" value="4"/>
+      <entry name="top_left" value="5"/>
+      <entry name="bottom_left" value="6"/>
+      <entry name="top_right" value="7"/>
+      <entry name="bottom_right" value="8"/>
+    </enum>
+
+    <request name="set_gravity">
+      <description summary="set child surface gravity">
+        Defines in what direction a surface should be positioned, relative to
+        the anchor point of the parent surface. If a corner gravity is
+        specified (e.g. 'bottom_right' or 'top_left'), then the child surface
+        will be placed towards the specified gravity; otherwise, the child
+        surface will be centered over the anchor point on any axis that had no
+        gravity specified. If the gravity is not in the ‘gravity’ enum, an
+        invalid_input error is raised.
+      </description>
+      <arg name="gravity" type="uint" enum="gravity"
+           summary="gravity direction"/>
+    </request>
+
+    <enum name="constraint_adjustment" bitfield="true">
+      <description summary="constraint adjustments">
+        The constraint adjustment value define ways the compositor will adjust
+        the position of the surface, if the unadjusted position would result
+        in the surface being partly constrained.
+
+        Whether a surface is considered 'constrained' is left to the compositor
+        to determine. For example, the surface may be partly outside the
+        compositor's defined 'work area', thus necessitating the child surface's
+        position be adjusted until it is entirely inside the work area.
+
+        The adjustments can be combined, according to a defined precedence: 1)
+        Flip, 2) Slide, 3) Resize.
+      </description>
+      <entry name="none" value="0">
+        <description summary="don't move the child surface when constrained">
+          Don't alter the surface position even if it is constrained on some
+          axis, for example partially outside the edge of an output.
+        </description>
+      </entry>
+      <entry name="slide_x" value="1">
+        <description summary="move along the x axis until unconstrained">
+          Slide the surface along the x axis until it is no longer constrained.
+
+          First try to slide towards the direction of the gravity on the x axis
+          until either the edge in the opposite direction of the gravity is
+          unconstrained or the edge in the direction of the gravity is
+          constrained.
+
+          Then try to slide towards the opposite direction of the gravity on the
+          x axis until either the edge in the direction of the gravity is
+          unconstrained or the edge in the opposite direction of the gravity is
+          constrained.
+        </description>
+      </entry>
+      <entry name="slide_y" value="2">
+        <description summary="move along the y axis until unconstrained">
+          Slide the surface along the y axis until it is no longer constrained.
+
+          First try to slide towards the direction of the gravity on the y axis
+          until either the edge in the opposite direction of the gravity is
+          unconstrained or the edge in the direction of the gravity is
+          constrained.
+
+          Then try to slide towards the opposite direction of the gravity on the
+          y axis until either the edge in the direction of the gravity is
+          unconstrained or the edge in the opposite direction of the gravity is
+          constrained.
+        </description>
+      </entry>
+      <entry name="flip_x" value="4">
+        <description summary="invert the anchor and gravity on the x axis">
+          Invert the anchor and gravity on the x axis if the surface is
+          constrained on the x axis. For example, if the left edge of the
+          surface is constrained, the gravity is 'left' and the anchor is
+          'left', change the gravity to 'right' and the anchor to 'right'.
+
+          If the adjusted position also ends up being constrained, the resulting
+          position of the flip_x adjustment will be the one before the
+          adjustment.
+        </description>
+      </entry>
+      <entry name="flip_y" value="8">
+        <description summary="invert the anchor and gravity on the y axis">
+          Invert the anchor and gravity on the y axis if the surface is
+          constrained on the y axis. For example, if the bottom edge of the
+          surface is constrained, the gravity is 'bottom' and the anchor is
+          'bottom', change the gravity to 'top' and the anchor to 'top'.
+
+          The adjusted position is calculated given the original anchor
+          rectangle and offset, but with the new flipped anchor and gravity
+          values.
+
+          If the adjusted position also ends up being constrained, the resulting
+          position of the flip_y adjustment will be the one before the
+          adjustment.
+        </description>
+      </entry>
+      <entry name="resize_x" value="16">
+        <description summary="horizontally resize the surface">
+          Resize the surface horizontally so that it is completely
+          unconstrained.
+        </description>
+      </entry>
+      <entry name="resize_y" value="32">
+        <description summary="vertically resize the surface">
+          Resize the surface vertically so that it is completely unconstrained.
+        </description>
+      </entry>
+    </enum>
+
+    <request name="set_constraint_adjustment">
+      <description summary="set the adjustment to be done when constrained">
+        Specify how the window should be positioned if the originally intended
+        position caused the surface to be constrained, meaning at least
+        partially outside positioning boundaries set by the compositor. The
+        adjustment is set by constructing a bitmask describing the adjustment to
+        be made when the surface is constrained on that axis.
+
+        If no bit for one axis is set, the compositor will assume that the child
+        surface should not change its position on that axis when constrained.
+
+        If more than one bit for one axis is set, the order of how adjustments
+        are applied is specified in the corresponding adjustment descriptions.
+
+        The default adjustment is none.
+      </description>
+      <arg name="constraint_adjustment" type="uint"
+           summary="bit mask of constraint adjustments"/>
+    </request>
+
+    <request name="set_offset">
+      <description summary="set surface position offset">
+        Specify the surface position offset relative to the position of the
+        anchor on the anchor rectangle and the anchor on the surface. For
+        example if the anchor of the anchor rectangle is at (x, y), the surface
+        has the gravity bottom|right, and the offset is (ox, oy), the calculated
+        surface position will be (x + ox, y + oy). The offset position of the
+        surface is the one used for constraint testing. See
+        set_constraint_adjustment.
+
+        An example use case is placing a popup menu on top of a user interface
+        element, while aligning the user interface element of the parent surface
+        with some user interface element placed somewhere in the popup surface.
+      </description>
+      <arg name="x" type="int" summary="surface position x offset"/>
+      <arg name="y" type="int" summary="surface position y offset"/>
     </request>
   </interface>
 </protocol>
