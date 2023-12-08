@@ -70,6 +70,33 @@ struct Surface : MirSurface
     }
 };
 
+template<typename MirSurface, MirWindowType type>
+struct SurfaceWithPosition : MirSurface
+{
+    SurfaceWithPosition(wl_resource* resource, mf::WlSurface* wl_surface, wl_resource* positioner) :
+        MirSurface{resource, version},
+        wl_surface{wl_surface}
+    {
+        position(positioner);
+    }
+
+    void reposition(struct wl_resource* positioner, uint32_t /*token*/) override
+    {
+        position(positioner);
+    }
+
+    void position(wl_resource* positioner) const
+    {
+        auto pspec = dynamic_cast<SurfaceSpecification*>(mw::MirPositionerV1::from(positioner));
+        auto spec = pspec ? *pspec : SurfaceSpecification{};
+
+        spec.type = type;
+        wl_surface->update_surface_spec(spec);
+    }
+
+    mf::WlSurface* const wl_surface;
+};
+
 class MirPositioner : public mw::MirPositionerV1, public SurfaceSpecification
 {
 public:
@@ -112,55 +139,15 @@ void Instance::get_dialog_surface(struct wl_resource* id, struct wl_resource* su
 
 void Instance::get_satellite_surface(wl_resource* id, wl_resource* surface, wl_resource* positioner)
 {
-    struct Surface : mw::MirSatelliteSurfaceV1
-    {
-        Surface(wl_resource* resource, mf::WlSurface* wl_surface, struct wl_resource* positioner) :
-            mw::MirSatelliteSurfaceV1{resource, version},
-            wl_surface{wl_surface}
-        {
-            reposition(positioner, 0);
-        }
-
-        void reposition(struct wl_resource* positioner, uint32_t /*token*/) override
-        {
-            auto pspec = dynamic_cast<SurfaceSpecification*>(mw::MirPositionerV1::from(positioner));
-            auto spec = pspec ? *pspec : SurfaceSpecification{};
-
-            spec.type = mir_window_type_satellite;
-            wl_surface->update_surface_spec(spec);
-        }
-
-        mf::WlSurface* const wl_surface;
-    };
-
-    new Surface{id, mf::WlSurface::from(surface), positioner};
+    new SurfaceWithPosition<mw::MirSatelliteSurfaceV1, mir_window_type_satellite>
+        {id, mf::WlSurface::from(surface), positioner};
 }
 
 void Instance::get_freestyle_surface(
     wl_resource* id, wl_resource* surface, std::optional<struct wl_resource*> const& positioner)
 {
-    struct Surface : mw::MirFreestyleSurfaceV1
-    {
-        Surface(struct wl_resource* resource, mf::WlSurface* wl_surface, struct wl_resource* positioner) :
-            mw::MirFreestyleSurfaceV1{resource, version},
-            wl_surface{wl_surface}
-        {
-            reposition(positioner, 0);
-        }
-
-        void reposition(struct wl_resource* positioner, uint32_t /*token*/) override
-        {
-            auto pspec = dynamic_cast<SurfaceSpecification*>(mw::MirPositionerV1::from(positioner));
-            auto spec = pspec ? *pspec : SurfaceSpecification{};
-
-            spec.type = mir_window_type_freestyle;
-            wl_surface->update_surface_spec(spec);
-        }
-
-        mf::WlSurface* const wl_surface;
-    };
-
-    new Surface{id, mf::WlSurface::from(surface), positioner.value_or(nullptr)};
+    new SurfaceWithPosition<mw::MirFreestyleSurfaceV1, mir_window_type_freestyle>
+        {id, mf::WlSurface::from(surface), positioner.value_or(nullptr)};
 }
 
 void Instance::create_positioner(struct wl_resource* id)
