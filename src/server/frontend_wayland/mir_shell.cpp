@@ -75,7 +75,9 @@ struct Surface : MirSurface
     Surface(std::shared_ptr<Shell> const& /*shell*/, struct wl_resource* resource, mf::WlSurface* wl_surface) :
         MirSurface{resource, version}
     {
-        wl_surface->window_archetype(type);
+        SurfaceSpecification spec;
+        spec.type = type;
+        wl_surface->update_surface_spec(spec);
     }
 };
 
@@ -128,21 +130,11 @@ void Instance::get_satellite_surface(wl_resource* id, wl_resource* surface, wl_r
             shell{shell},
             wl_surface{wl_surface}
         {
-            wl_surface->window_archetype(mir_window_type_satellite);
-
             auto pspec = dynamic_cast<SurfaceSpecification*>(mw::MirPositionerV1::from(positioner));
-            auto update_type = [shell, pspec](std::shared_ptr<mir::scene::Surface> surface)
-                {
-                    auto spec = pspec ? *pspec : SurfaceSpecification{};
-                    spec.type = mir_window_type_satellite;
+            auto spec = pspec ? *pspec : SurfaceSpecification{};
 
-                    shell->modify_surface(
-                        surface->session().lock(),
-                        surface,
-                        spec);
-                };
-
-            wl_surface->on_scene_surface_created(update_type);
+            spec.type = mir_window_type_satellite;
+            wl_surface->update_surface_spec(spec);
         }
 
         void reposition(struct wl_resource* positioner, uint32_t /*token*/) override

@@ -469,9 +469,9 @@ auto mf::WlSurface::confine_pointer_state() const -> MirPointerConfinementState
     return mir_pointer_unconfined;
 }
 
-void mir::frontend::WlSurface::window_archetype(MirWindowType archetype)
+void mir::frontend::WlSurface::update_surface_spec(shell::SurfaceSpecification const& spec)
 {
-    pending.window_archetype = archetype;
+    pending.surface_spec = spec;
 }
 
 mf::NullWlSurfaceRole::NullWlSurfaceRole(WlSurface* surface) :
