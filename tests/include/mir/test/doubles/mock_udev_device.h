@@ -32,11 +32,11 @@ namespace doubles
 class MockUdevDevice : public mir::udev::Device
 {
 public:
-    MOCK_CONST_METHOD0(subsystem, char const*(void));
-    MOCK_CONST_METHOD0(devtype, char const*(void));
-    MOCK_CONST_METHOD0(devpath, char const*(void));
-    MOCK_CONST_METHOD0(devnode, char const*(void));
-    MOCK_CONST_METHOD1(property, char const*(char const*));
+    MOCK_METHOD(char const*, subsystem, (), (const override));
+    MOCK_METHOD(char const*, devtype, (), (const override));
+    MOCK_METHOD(char const*, devpath, (), (const override));
+    MOCK_METHOD(char const*, devnode, (), (const override));
+    MOCK_METHOD(char const*, property, (char const*), (const override));
 };
 
 }
