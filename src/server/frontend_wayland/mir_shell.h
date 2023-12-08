@@ -25,12 +25,9 @@ struct wl_display;
 
 namespace mir
 {
-namespace shell { class Shell; }
-
 namespace frontend
 {
-auto create_mir_shell_v1(struct wl_display* display, std::shared_ptr<mir::shell::Shell> shell) ->
-    std::shared_ptr<wayland::MirShellV1::Global>;
+auto create_mir_shell_v1(struct wl_display* display) -> std::shared_ptr<wayland::MirShellV1::Global>;
 }
 }
 
