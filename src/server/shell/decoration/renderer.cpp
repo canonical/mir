@@ -446,8 +446,7 @@ auto msd::Renderer::Text::Impl::utf8_to_utf32(std::string const& text) -> std::u
 
 msd::Renderer::Renderer(
     std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
-    std::shared_ptr<StaticGeometry const> const& static_geometry,
-    float scale)
+    std::shared_ptr<StaticGeometry const> const& static_geometry)
     : buffer_allocator{buffer_allocator},
       focused_theme{
           default_focused_background,
@@ -474,13 +473,25 @@ msd::Renderer::Renderer(
               render_minimize_icon}},
       },
       static_geometry{static_geometry},
-      text{Text::instance()},
-      scale{scale}
+      text{Text::instance()}
 {
 }
 
 void msd::Renderer::update_state(WindowState const& window_state, InputState const& input_state)
 {
+    if (auto const new_scale{window_state.scale()}; new_scale != scale)
+    {
+        scale = new_scale;
+
+        needs_solid_color_redraw = true;
+        solid_color_pixels.reset(); // force a reallocation next time it's needed
+
+        needs_titlebar_redraw = true;
+        titlebar_pixels.reset(); // force a reallocation next time it's needed
+
+        needs_titlebar_buttons_redraw = true;
+    }
+
     left_border_size = window_state.left_border_rect().size;
     right_border_size = window_state.right_border_rect().size;
     bottom_border_size = window_state.bottom_border_rect().size;
@@ -490,11 +501,12 @@ void msd::Renderer::update_state(WindowState const& window_state, InputState con
     length = std::max(length, area(right_border_size));
     length = std::max(length, area(bottom_border_size));
 
-    if (length != solid_color_pixels_length)
+    if (auto const scaled_length{static_cast<size_t>(length * scale * scale)};
+        length != solid_color_pixels_length ||
+        scaled_length != scaled_solid_color_pixels_length)
     {
         solid_color_pixels_length = length;
-        auto const squared_scale{scale * scale};
-        scaled_solid_color_pixels_length = length * squared_scale;
+        scaled_solid_color_pixels_length = scaled_length;
         solid_color_pixels.reset(); // force a reallocation next time it's needed
     }
 

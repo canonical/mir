@@ -72,8 +72,7 @@ public:
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<Executor> const& executor,
         std::shared_ptr<input::CursorImages> const& cursor_images,
-        std::shared_ptr<scene::Surface> const& window_surface,
-        float scale);
+        std::shared_ptr<scene::Surface> const& window_surface);
     ~BasicDecoration();
 
     void window_state_updated();
@@ -85,6 +84,8 @@ public:
     void request_minimize();
     void request_close();
     void set_cursor(std::string const& cursor_image_name);
+
+    void set_scale(float scale) override;
 
 protected:
     /// Creates an up-to-date WindowState object
@@ -108,6 +109,8 @@ protected:
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<input::CursorImages> const cursor_images;
     std::shared_ptr<scene::Session> const session;
+
+    float scale_{1.0f};
 
     class BufferStreams;
     std::unique_ptr<BufferStreams> buffer_streams;

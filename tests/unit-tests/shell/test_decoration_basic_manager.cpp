@@ -17,6 +17,7 @@
 #include "src/server/shell/decoration/basic_manager.h"
 #include "src/server/shell/decoration/decoration.h"
 
+#include "mir/test/doubles/stub_observer_registrar.h"
 #include "mir/test/doubles/stub_shell.h"
 
 #include <gmock/gmock.h>
@@ -33,6 +34,7 @@ using namespace testing;
 class StubDecoration
     : public msd::Decoration
 {
+    void set_scale(float /*scale*/) override {};
 };
 
 struct DecorationBasicManager
@@ -53,7 +55,12 @@ struct DecorationBasicManager
 
     MOCK_METHOD1(decoration_destroyed, void(msd::Decoration*));
 
-    msd::BasicManager manager{[this](
+    std::shared_ptr<mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>
+        registrar{std::make_shared<mtd::StubObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>()};
+
+    msd::BasicManager manager{
+        *registrar,
+        [this](
             std::shared_ptr<msh::Shell> const&,
             std::shared_ptr<ms::Surface> const&) -> std::unique_ptr<msd::Decoration>
         {
@@ -75,6 +82,8 @@ public:
     {
         mock->decoration_destroyed(this);
     }
+
+    MOCK_METHOD1(set_scale, void(float));
 
     DecorationBasicManager* const mock;
 };

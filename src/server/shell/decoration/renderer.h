@@ -47,8 +47,7 @@ class Renderer
 public:
     Renderer(
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
-        std::shared_ptr<StaticGeometry const> const& static_geometry,
-        float scale);
+        std::shared_ptr<StaticGeometry const> const& static_geometry);
 
     void update_state(WindowState const& window_state, InputState const& input_state);
     auto render_titlebar() -> std::optional<std::shared_ptr<graphics::Buffer>>;

@@ -185,8 +185,7 @@ struct DecorationBasicDecoration
             mt::fake_shared(buffer_allocator),
             mt::fake_shared(executor),
             mt::fake_shared(cursor_images),
-            mt::fake_shared(window_surface),
-            1.0f);
+            mt::fake_shared(window_surface));
         executor.execute();
     }
 

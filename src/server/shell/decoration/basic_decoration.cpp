@@ -158,8 +158,7 @@ msd::BasicDecoration::BasicDecoration(
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<Executor> const& executor,
     std::shared_ptr<input::CursorImages> const& cursor_images,
-    std::shared_ptr<ms::Surface> const& window_surface,
-    float scale)
+    std::shared_ptr<ms::Surface> const& window_surface)
     : threadsafe_self{std::make_shared<ThreadsafeAccess<BasicDecoration>>(executor)},
       static_geometry{std::make_shared<StaticGeometry>(default_geometry)},
       shell{shell},
@@ -167,7 +166,7 @@ msd::BasicDecoration::BasicDecoration(
       cursor_images{cursor_images},
       session{window_surface->session().lock()},
       buffer_streams{std::make_unique<BufferStreams>(session)},
-      renderer{std::make_unique<Renderer>(buffer_allocator, static_geometry, scale)},
+      renderer{std::make_unique<Renderer>(buffer_allocator, static_geometry)},
       window_surface{window_surface},
       decoration_surface{create_surface()},
       window_state{new_window_state()},
@@ -267,9 +266,15 @@ void msd::BasicDecoration::set_cursor(std::string const& cursor_image_name)
     shell->modify_surface(session, decoration_surface, spec);
 }
 
+void msd::BasicDecoration::set_scale(float scale)
+{
+    scale_ = scale;
+    window_state_updated();
+}
+
 auto msd::BasicDecoration::new_window_state() const -> std::unique_ptr<WindowState>
 {
-    return std::make_unique<WindowState>(static_geometry, window_surface);
+    return std::make_unique<WindowState>(static_geometry, window_surface, scale_);
 }
 
 auto msd::BasicDecoration::create_surface() const -> std::shared_ptr<scene::Surface>
@@ -370,7 +375,8 @@ void msd::BasicDecoration::update(
             &WindowState::titlebar_rect,
             &WindowState::left_border_rect,
             &WindowState::right_border_rect,
-            &WindowState::bottom_border_rect}) ||
+            &WindowState::bottom_border_rect,
+            &WindowState::scale}) ||
         input_updated({
             &InputState::buttons}))
     {
@@ -384,7 +390,8 @@ void msd::BasicDecoration::update(
     if (window_updated({
             &WindowState::focused_state,
             &WindowState::side_border_width,
-            &WindowState::side_border_height}))
+            &WindowState::side_border_height,
+            &WindowState::scale}))
     {
         new_buffers.emplace_back(
             buffer_streams->left_border,
@@ -397,7 +404,8 @@ void msd::BasicDecoration::update(
     if (window_updated({
             &WindowState::focused_state,
             &WindowState::bottom_border_width,
-            &WindowState::bottom_border_height}))
+            &WindowState::bottom_border_height,
+            &WindowState::scale}))
     {
         new_buffers.emplace_back(
             buffer_streams->bottom_border,
@@ -407,7 +415,8 @@ void msd::BasicDecoration::update(
     if (window_updated({
             &WindowState::focused_state,
             &WindowState::window_name,
-            &WindowState::titlebar_rect}) ||
+            &WindowState::titlebar_rect,
+            &WindowState::scale}) ||
         input_updated({
             &InputState::buttons}))
     {
