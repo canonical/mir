@@ -346,7 +346,6 @@ MIR_COMMON_2.8 {
     mir::SharedLibraryProberReport::operator*;
     mir::SignalBlocker::?SignalBlocker*;
     mir::SignalBlocker::SignalBlocker*;
-    mir::default_server_socket;
     mir::detail::RefCountedLibrary::?RefCountedLibrary*;
     mir::detail::RefCountedLibrary::RefCountedLibrary*;
     mir::detail::RefCountedLibrary::operator*;

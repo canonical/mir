@@ -15,8 +15,6 @@ WORK_AROUND_MUSL_RTLD_NEXT_BUG {
 @MIR_SERVER_GRAPHICS_PLATFORM_VERSION@ {
   global:
     add_graphics_platform_options;
-    create_host_platform;
-    create_guest_platform;
     create_display_platform;
     create_rendering_platform;
     probe_display_platform;
