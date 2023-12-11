@@ -300,7 +300,6 @@ public:
     ~dialog();
 
 private:
-    normal_window* parent;
     mir_dialog_surface_v1* const mir_surface;
 
     void handle_keyboard_key(wl_keyboard* keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state)
@@ -855,7 +854,6 @@ auto make_satellite(normal_window* main_window) -> std::unique_ptr<satellite>
 
 dialog::dialog(int32_t width, int32_t height, normal_window* parent) :
     grey_window{width, height, 160},
-    parent{parent},
     mir_surface{globals::mir_shell ? mir_shell_v1_get_dialog_surface(globals::mir_shell, *this) : nullptr}
 {
     xdg_toplevel_set_parent(*this, *parent);
