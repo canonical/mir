@@ -85,6 +85,8 @@ struct MockSurface : public scene::BasicSurface
     MOCK_METHOD(void, set_streams, (std::list<scene::StreamInfo> const&));
 
     MOCK_METHOD(void, set_focus_state, (MirWindowFocusState));
+    MOCK_METHOD(std::string, application_id, (), (const));
+    MOCK_METHOD(std::weak_ptr<scene::Session>, session, (), (const));
 
     std::shared_ptr<MockBufferStream> const stream;
 };
