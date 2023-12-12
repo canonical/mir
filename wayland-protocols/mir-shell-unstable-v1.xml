@@ -1,0 +1,533 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="mir_shell_unstable_v1">
+  <copyright>
+    Copyright © 2023 Canonical Limited
+
+    Permission to use, copy, modify, distribute, and sell this
+    software and its documentation for any purpose is hereby granted
+    without fee, provided that the above copyright notice appear in
+    all copies and that both that copyright notice and this permission
+    notice appear in supporting documentation, and that the name of
+    the copyright holders not be used in advertising or publicity
+    pertaining to distribution of the software without specific,
+    written prior permission.  The copyright holders make no
+    representations about the suitability of this software for any
+    purpose.  It is provided "as is" without express or implied
+    warranty.
+
+    THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
+    SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS, IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY
+    SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
+    AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+    ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+    THIS SOFTWARE.
+  </copyright>
+
+  <interface name="mir_shell_v1" version="1">
+    <description summary="create surface archetypes that are recognised by the desktop">
+      Clients can use this interface to assign an archetype to wl_surfaces.
+
+      An archetype is like a `wl_surface` role: a surface may have at most one
+      archetype, but unlike a `wl_surface` role a client may assign a new archetype
+      to a surface which already has one. This will remove the old archetype and
+      apply the new one atomically.
+
+      The archetype of a `wl_surface` influences the window-management policies
+      applied to it.
+
+      All archetype state is double-buffered; changing a surface archetype or
+      updates to any archetype state are not applied until the `wl_surface` is
+      `commit`ted.
+
+      Typically, archetype state will be used to augments `xdg_toplevel` state. If a
+      client intends to use an archetype, it SHOULD assign the surface an initial
+      archetype during the initial commit without a buffer attached (see `xdg_surface`).
+
+      Any events sent to an archetype object are latched to and extend the
+      `xdg_surface.configure` event. Any such events should be treated as a part of
+      an atomic set of configuration changes (including any `xdg_toplevel` events)
+      with the `xdg_surface.configure` event committing the accumulated state and
+      requiring a `xdg_surface.ack_configure` call, as normal.
+
+      Changing archetype follows a similar sequence to the initial `xdg_surface`
+      commit. First, a new archetype must be committed. This must be the only state
+      committed in the `wl_surface.commit` request. The compositor will respond with
+      any changes to the surface state prompted by the change of archetype followed
+      by an `xdg_surface.configure` event. The client must ack the configure event
+      (as normal) and the subsequent `wl_surface.commit` will cause the new
+      archetype to be fully applied.
+
+      There are some `wl_surface` roles that conflict with the archetypes described
+      here. Attempting to set both an archetypes and such roles on a surface is a
+      protocol error. In particular, `wl_subsurface`, `wl_cursor` or `xdg_popup` may
+      not be combined with an archetype.
+    </description>
+
+    <request name="get_regular_surface">
+      <description summary="assign the mir_regular_surface_v1 archetype">
+        Create a mir_regular_surface_v1 archetype for the given surface. This assigns
+        the archetype of regular_surface to the wl_surface, or raises a protocol error
+        if another archetype is already assigned and the transition is disallowed.
+
+        The previous archetype's role object becomes inert; the client should destroy
+        the previous archetype role object. Any further calls to the previous archetype
+        role object are a protocol error.
+      </description>
+      <arg name="id" type="new_id" interface="mir_regular_surface_v1"/>
+      <arg name="surface" type="object" interface="wl_surface"/>
+    </request>
+
+    <request name="get_floating_regular_surface">
+      <description summary="assign the mir_floating_regular_surface_v1 archetype">
+        Create a mir_floating_regular_surface_v1 archetype for the given surface. This assigns
+        the archetype of floating_regular to the wl_surface, or raises a protocol error
+        if another archetype is already assigned and the transition is disallowed.
+
+        The previous archetype's role object becomes inert; the client should destroy
+        the previous archetype role object. Any further calls to the previous archetype
+        role object are a protocol error.
+
+        A floating regular surface is "always on top" of other application windows and will
+        not be docked.
+      </description>
+      <arg name="id" type="new_id" interface="mir_floating_regular_surface_v1"/>
+      <arg name="surface" type="object" interface="wl_surface"/>
+    </request>
+
+    <request name="get_dialog_surface">
+      <description summary="assign the mir_dialog_surface_v1 archetype">
+        Create a mir_dialog_surface_v1 archetype for the given surface. This assigns
+        the archetype of dialog_surface to the wl_surface, or raises a protocol error
+        if another archetype is already assigned and the transition is disallowed.
+
+        The previous archetype's role object becomes inert; the client should destroy
+        the previous archetype role object. Any further calls to the previous archetype
+        role object are a protocol error.
+
+        A dialog is usually used to communicate information that must be explicitly
+        acknowledged or responded to (for example, to report an error), or to get
+        specific information about something requested in a parent window (for example,
+        a Print dialog) or from a shell function (for example, to confirm shutdown).
+
+        A dialog should have a parent whenever relevant. It may, however, be parentless.
+
+        If a dialog has a parent, it is modal to the parent and any satellites the parent has.
+        This means:
+        (1) A user should be able to move, resize, or hide an open dialog’s parent, but not
+        close it or interact with its contents; and move, resize, or close the parent’s
+        satellites if any, but not interact with their contents.
+        (2) Whenever the parent is minimized or otherwise hidden, the dialog should be minimized
+        or hidden too.
+        (3) Any attempt to give input focus to the parent should focus the dialog instead.
+        Therefore, the dialog and all of its ancestors should be presented as a single entity
+        in any window switcher.
+
+        Partly because of that last behavior, a window should only ever have one dialog child at
+        a time. If an app tries to open a second dialog child, The compositor should close the
+        previous one first.
+      </description>
+      <arg name="id" type="new_id" interface="mir_dialog_surface_v1"/>
+      <arg name="surface" type="object" interface="wl_surface"/>
+    </request>
+
+    <request name="get_satellite_surface">
+      <description summary="assign the mir_satellite_surface_v1 archetype">
+        Create a mir_satellite_surface_v1 archetype for the given surface. This assigns
+        the archetype of satellite_surface to the wl_surface, or raises a protocol error
+        if another archetype is already assigned and the transition is disallowed.
+
+        The previous archetype's role object becomes inert; the client should destroy
+        the previous archetype role object. Any further calls to the previous archetype
+        role object are a protocol error.
+
+        A satellite is an accessory to a regular, floating regular, or dialog window. It
+        always has a parent window, and typically it provides easy access to functions in
+        its parent: for example, a toolbox, formatting palette, or Find/Change window.
+
+        To reduce clutter when a satellite’s parent is not being used, a satellite should be
+        present on screen only when any of its parents is active (for example, when a dialog
+        or another satellite of its parent has input focus). Otherwise, subject to a delay to
+        allow reparenting, it should not be present — not merely invisible or minimized, and
+        not closed, but not present until its parent becomes active again (or an active window
+        becomes its parent).
+
+        To avoid flicker from briefly-appearing dialogs, whenever a satellite’s parent has a
+        child dialog, the satellite should remain present. But like the parent window itself,
+        it should not receive input as long as the dialog is open.
+      </description>
+      <arg name="id" type="new_id" interface="mir_satellite_surface_v1"/>
+      <arg name="surface" type="object" interface="wl_surface"/>
+      <arg name="positioner" type="object" interface="mir_positioner_v1"/>
+    </request>
+
+    <request name="create_positioner">
+      <description summary="create a positioner object">
+        Create a positioner object. A positioner object is used to position
+        surfaces relative to some parent surface. See the interface description
+        and xdg_surface.get_popup for details.
+      </description>
+      <arg name="id" type="new_id" interface="mir_positioner_v1"/>
+    </request>
+
+    <enum name="error">
+      <entry name="archetype" value="0" summary="wl_surface has another archetype that prevents this assignment"/>
+    </enum>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the mir_shell object">
+        This request indicates that the client will not use the mir_shell
+        object any more. Objects that have been created through this instance
+        are not affected.
+      </description>
+    </request>
+  </interface>
+
+  <interface name="mir_regular_surface_v1" version="1">
+    <description summary="Mir metadata interface">
+      An interface that may be implemented by a wl_surface, for surfaces that
+      are designed to be rendered in a desktop-like environment.
+    </description>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the regular surface archetype">
+        This request destroys the mir surface archetype and disassociates it from the surface.
+      </description>
+    </request>
+  </interface>
+
+  <interface name="mir_floating_regular_surface_v1" version="1">
+    <description summary="Mir metadata interface">
+      An interface that may be implemented by a wl_surface, for surfaces that
+      are designed to be rendered in a desktop-like environment.
+    </description>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the floating_regular surface archetype">
+        This request destroys the mir surface archetype and disassociates it from the surface.
+      </description>
+    </request>
+  </interface>
+
+  <interface name="mir_dialog_surface_v1" version="1">
+    <description summary="Mir metadata interface">
+      An interface that may be implemented by a wl_surface, for surfaces that
+      are designed to be rendered in a desktop-like environment.
+    </description>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the dialog_surface archetype">
+        This request destroys the mir surface archetype and disassociates it from the surface.
+      </description>
+    </request>
+  </interface>
+
+  <interface name="mir_satellite_surface_v1" version="1">
+    <description summary="Mir metadata interface">
+      An interface that may be implemented by a wl_surface, for surfaces that
+      are designed to be rendered in a desktop-like environment.
+    </description>
+
+    <request name="reposition">
+      <description summary="recalculate the satellite's location">
+        Reposition an already-mapped satellite. The satellite will be placed given the
+        details in the passed mir_positioner object, and a
+        mir_satellite_surface_v1.repositioned followed by wl_surface.configure will be
+        emitted in response. Any parameters set by the previous positioner will be discarded.
+
+        The passed token will be sent in the corresponding
+        xdg_satellite.repositioned event. The new satellite position will not take
+        effect until the corresponding configure event is acknowledged by the
+        client. See xdg_satellite.repositioned for details. The token itself is
+        opaque, and has no other special meaning.
+
+        If multiple reposition requests are sent, the compositor may skip all
+        but the last one.
+
+        If the satellite is repositioned in response to a configure event for its
+        parent, the client should send an mir_positioner.set_parent_configure
+        and possibly an mir_positioner.set_parent_size request to allow the
+        compositor to properly constrain the satellite.
+
+        If the satellite is repositioned together with a parent that is being
+        resized, but not in response to a configure event, the client should
+        send an mir_positioner.set_parent_size request.
+      </description>
+      <arg name="positioner" type="object" interface="mir_positioner_v1"/>
+      <arg name="token" type="uint" summary="reposition request token"/>
+    </request>
+
+    <event name="repositioned">
+      <description summary="signal the completion of a repositioned request">
+        The repositioned event is sent as part of a satellite configuration
+        sequence, together with mir_satellite_surface_v1.configure and lastly
+        wl_surface.configure to notify the completion of a reposition request.
+
+        The repositioned event is to notify about the completion of a
+        mir_satellite_surface_v1.reposition request. The token argument is the token passed
+        in the xdg_satellite.reposition request.
+
+        Immediately after this event is emitted, mir_satellite_surface_v1.configure and
+        wl_surface.configure will be sent with the updated size and position,
+        as well as a new configure serial.
+
+        The client should optionally update the content of the satellite, but must
+        acknowledge the new satellite configuration for the new position to take
+        effect. See mir_satellite_surface_v1.ack_configure for details.
+      </description>
+      <arg name="token" type="uint" summary="reposition request token"/>
+    </event>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the satellite_surface archetype">
+        This request destroys the mir surface archetype and disassociates it from the surface.
+      </description>
+    </request>
+  </interface>
+
+  <interface name="mir_positioner_v1" version="1">
+    <description summary="child surface positioner">
+      The mir_positioner provides a collection of rules for the placement of a
+      child surface relative to a parent surface. Rules can be defined to ensure
+      the child surface remains within the visible area's borders, and to
+      specify how the child surface changes its position, such as sliding along
+      an axis, or flipping around a rectangle. These positioner-created rules are
+      constrained by the requirement that a child surface must intersect with or
+      be at least partially adjacent to its parent surface.
+
+      See the various requests for details about possible rules.
+
+      At the time of the request, the compositor makes a copy of the rules
+      specified by the mir_positioner. Thus, after the request is complete the
+      mir_positioner object can be destroyed or reused; further changes to the
+      object will have no effect on previous usages.
+
+      For an mir_positioner object to be considered complete, it must have a
+      non-zero size set by set_size, and a non-zero anchor rectangle set by
+      set_anchor_rect. Passing an incomplete mir_positioner object when
+      positioning a surface raises an invalid_positioner error.
+    </description>
+
+    <enum name="error">
+      <entry name="invalid_input" value="0" summary="invalid input provided"/>
+    </enum>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the mir_positioner object">
+        Notify the compositor that the mir_positioner will no longer be used.
+      </description>
+    </request>
+
+    <request name="set_size">
+      <description summary="set the size of the to-be positioned rectangle">
+        Set the size of the surface that is to be positioned with the positioner
+        object. The size is in surface-local coordinates and corresponds to the
+        window geometry. See xdg_surface.set_window_geometry.
+
+        If a zero or negative size is set the invalid_input error is raised.
+      </description>
+      <arg name="width" type="int" summary="width of positioned rectangle"/>
+      <arg name="height" type="int" summary="height of positioned rectangle"/>
+    </request>
+
+    <request name="set_anchor_rect">
+      <description summary="set the anchor rectangle within the parent surface">
+        Specify the anchor rectangle within the parent surface that the child
+        surface will be placed relative to. The rectangle is relative to the
+        window geometry as defined by xdg_surface.set_window_geometry of the
+        parent surface.
+
+        When the mir_positioner object is used to position a child surface, the
+        anchor rectangle may not extend outside the window geometry of the
+        positioned child's parent surface.
+
+        If a negative size is set the invalid_input error is raised.
+      </description>
+      <arg name="x" type="int" summary="x position of anchor rectangle"/>
+      <arg name="y" type="int" summary="y position of anchor rectangle"/>
+      <arg name="width" type="int" summary="width of anchor rectangle"/>
+      <arg name="height" type="int" summary="height of anchor rectangle"/>
+    </request>
+
+    <enum name="anchor">
+      <entry name="none" value="0"/>
+      <entry name="top" value="1"/>
+      <entry name="bottom" value="2"/>
+      <entry name="left" value="3"/>
+      <entry name="right" value="4"/>
+      <entry name="top_left" value="5"/>
+      <entry name="bottom_left" value="6"/>
+      <entry name="top_right" value="7"/>
+      <entry name="bottom_right" value="8"/>
+    </enum>
+
+    <request name="set_anchor">
+      <description summary="set anchor rectangle anchor">
+        Defines the anchor point for the anchor rectangle. The specified anchor
+        is used derive an anchor point that the child surface will be
+        positioned relative to. If a corner anchor is set (e.g. 'top_left' or
+        'bottom_right'), the anchor point will be at the specified corner;
+        otherwise, the derived anchor point will be centered on the specified
+        edge, or in the center of the anchor rectangle if no edge is specified.
+      </description>
+      <arg name="anchor" type="uint" enum="anchor"
+           summary="anchor"/>
+    </request>
+
+    <enum name="gravity">
+      <entry name="none" value="0"/>
+      <entry name="top" value="1"/>
+      <entry name="bottom" value="2"/>
+      <entry name="left" value="3"/>
+      <entry name="right" value="4"/>
+      <entry name="top_left" value="5"/>
+      <entry name="bottom_left" value="6"/>
+      <entry name="top_right" value="7"/>
+      <entry name="bottom_right" value="8"/>
+    </enum>
+
+    <request name="set_gravity">
+      <description summary="set child surface gravity">
+        Defines in what direction a surface should be positioned, relative to
+        the anchor point of the parent surface. If a corner gravity is
+        specified (e.g. 'bottom_right' or 'top_left'), then the child surface
+        will be placed towards the specified gravity; otherwise, the child
+        surface will be centered over the anchor point on any axis that had no
+        gravity specified. If the gravity is not in the ‘gravity’ enum, an
+        invalid_input error is raised.
+      </description>
+      <arg name="gravity" type="uint" enum="gravity"
+           summary="gravity direction"/>
+    </request>
+
+    <enum name="constraint_adjustment" bitfield="true">
+      <description summary="constraint adjustments">
+        The constraint adjustment value define ways the compositor will adjust
+        the position of the surface, if the unadjusted position would result
+        in the surface being partly constrained.
+
+        Whether a surface is considered 'constrained' is left to the compositor
+        to determine. For example, the surface may be partly outside the
+        compositor's defined 'work area', thus necessitating the child surface's
+        position be adjusted until it is entirely inside the work area.
+
+        The adjustments can be combined, according to a defined precedence: 1)
+        Flip, 2) Slide, 3) Resize.
+      </description>
+      <entry name="none" value="0">
+        <description summary="don't move the child surface when constrained">
+          Don't alter the surface position even if it is constrained on some
+          axis, for example partially outside the edge of an output.
+        </description>
+      </entry>
+      <entry name="slide_x" value="1">
+        <description summary="move along the x axis until unconstrained">
+          Slide the surface along the x axis until it is no longer constrained.
+
+          First try to slide towards the direction of the gravity on the x axis
+          until either the edge in the opposite direction of the gravity is
+          unconstrained or the edge in the direction of the gravity is
+          constrained.
+
+          Then try to slide towards the opposite direction of the gravity on the
+          x axis until either the edge in the direction of the gravity is
+          unconstrained or the edge in the opposite direction of the gravity is
+          constrained.
+        </description>
+      </entry>
+      <entry name="slide_y" value="2">
+        <description summary="move along the y axis until unconstrained">
+          Slide the surface along the y axis until it is no longer constrained.
+
+          First try to slide towards the direction of the gravity on the y axis
+          until either the edge in the opposite direction of the gravity is
+          unconstrained or the edge in the direction of the gravity is
+          constrained.
+
+          Then try to slide towards the opposite direction of the gravity on the
+          y axis until either the edge in the direction of the gravity is
+          unconstrained or the edge in the opposite direction of the gravity is
+          constrained.
+        </description>
+      </entry>
+      <entry name="flip_x" value="4">
+        <description summary="invert the anchor and gravity on the x axis">
+          Invert the anchor and gravity on the x axis if the surface is
+          constrained on the x axis. For example, if the left edge of the
+          surface is constrained, the gravity is 'left' and the anchor is
+          'left', change the gravity to 'right' and the anchor to 'right'.
+
+          The adjusted position is calculated given the original anchor
+          rectangle and offset, but with the new flipped anchor and gravity
+          values.
+
+          If the adjusted position also ends up being constrained, the resulting
+          position of the flip_x adjustment will be the one before the
+          adjustment.
+        </description>
+      </entry>
+      <entry name="flip_y" value="8">
+        <description summary="invert the anchor and gravity on the y axis">
+          Invert the anchor and gravity on the y axis if the surface is
+          constrained on the y axis. For example, if the bottom edge of the
+          surface is constrained, the gravity is 'bottom' and the anchor is
+          'bottom', change the gravity to 'top' and the anchor to 'top'.
+
+          The adjusted position is calculated given the original anchor
+          rectangle and offset, but with the new flipped anchor and gravity
+          values.
+
+          If the adjusted position also ends up being constrained, the resulting
+          position of the flip_y adjustment will be the one before the
+          adjustment.
+        </description>
+      </entry>
+      <entry name="resize_x" value="16">
+        <description summary="horizontally resize the surface">
+          Resize the surface horizontally so that it is completely
+          unconstrained.
+        </description>
+      </entry>
+      <entry name="resize_y" value="32">
+        <description summary="vertically resize the surface">
+          Resize the surface vertically so that it is completely unconstrained.
+        </description>
+      </entry>
+    </enum>
+
+    <request name="set_constraint_adjustment">
+      <description summary="set the adjustment to be done when constrained">
+        Specify how the window should be positioned if the originally intended
+        position caused the surface to be constrained, meaning at least
+        partially outside positioning boundaries set by the compositor. The
+        adjustment is set by constructing a bitmask describing the adjustment to
+        be made when the surface is constrained on that axis.
+
+        If no bit for one axis is set, the compositor will assume that the child
+        surface should not change its position on that axis when constrained.
+
+        If more than one bit for one axis is set, the order of how adjustments
+        are applied is specified in the corresponding adjustment descriptions.
+
+        The default adjustment is none.
+      </description>
+      <arg name="constraint_adjustment" type="uint"
+           summary="bit mask of constraint adjustments"/>
+    </request>
+
+    <request name="set_offset">
+      <description summary="set surface position offset">
+        Specify the surface position offset relative to the position of the
+        anchor on the anchor rectangle and the anchor on the surface. For
+        example if the anchor of the anchor rectangle is at (x, y), the surface
+        has the gravity bottom_right, and the offset is (ox, oy), the calculated
+        surface position will be (x + ox, y + oy). The offset position of the
+        surface is the one used for constraint testing. See
+        set_constraint_adjustment.
+      </description>
+      <arg name="x" type="int" summary="surface position x offset"/>
+      <arg name="y" type="int" summary="surface position y offset"/>
+    </request>
+  </interface>
+</protocol>

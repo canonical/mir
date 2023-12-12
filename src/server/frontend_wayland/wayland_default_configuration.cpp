@@ -15,35 +15,36 @@
  */
 
 #include "mir/default_server_configuration.h"
+
 #include "mir/frontend/wayland.h"
-
-#include "wayland_connector.h"
-#include "wl_shell.h"
-#include "xdg_shell_v6.h"
-#include "xdg_shell_stable.h"
-#include "layer_shell_v1.h"
-#include "xwayland_wm_shell.h"
-#include "wl_seat.h"
-#include "xdg_output_v1.h"
-#include "foreign_toplevel_manager_v1.h"
-#include "pointer_constraints_unstable_v1.h"
-#include "relative_pointer_unstable_v1.h"
-#include "virtual_keyboard_v1.h"
-#include "virtual_pointer_v1.h"
-#include "text_input_v3.h"
-#include "text_input_v2.h"
-#include "text_input_v1.h"
-#include "input_method_v1.h"
-#include "input_method_v2.h"
-#include "idle_inhibit_v1.h"
-#include "wlr_screencopy_v1.h"
-#include "primary_selection_v1.h"
-#include "session_lock_v1.h"
-
 #include "mir/graphics/platform.h"
+#include "mir/log.h"
 #include "mir/options/default_configuration.h"
 #include "mir/scene/session.h"
-#include "mir/log.h"
+
+#include "foreign_toplevel_manager_v1.h"
+#include "idle_inhibit_v1.h"
+#include "input_method_v1.h"
+#include "input_method_v2.h"
+#include "layer_shell_v1.h"
+#include "mir_shell.h"
+#include "pointer_constraints_unstable_v1.h"
+#include "primary_selection_v1.h"
+#include "relative_pointer_unstable_v1.h"
+#include "session_lock_v1.h"
+#include "text_input_v1.h"
+#include "text_input_v2.h"
+#include "text_input_v3.h"
+#include "virtual_keyboard_v1.h"
+#include "virtual_pointer_v1.h"
+#include "wayland_connector.h"
+#include "wl_seat.h"
+#include "wl_shell.h"
+#include "wlr_screencopy_v1.h"
+#include "xdg_output_v1.h"
+#include "xdg_shell_stable.h"
+#include "xdg_shell_v6.h"
+#include "xwayland_wm_shell.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -208,6 +209,10 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 *ctx.seat,
                 ctx.output_manager);
         }),
+    make_extension_builder<mw::MirShellV1>([](auto const& ctx)
+        {
+            return mf::create_mir_shell_v1(ctx.display);
+        }),
 };
 
 ExtensionBuilder const xwayland_builder {
@@ -306,7 +311,8 @@ auto mf::get_standard_extensions() -> std::vector<std::string>
         mw::XdgOutputManagerV1::interface_name,
         mw::TextInputManagerV1::interface_name,
         mw::TextInputManagerV2::interface_name,
-        mw::TextInputManagerV3::interface_name};
+        mw::TextInputManagerV3::interface_name,
+        mw::MirShellV1::interface_name};
 }
 
 auto mf::get_supported_extensions() -> std::vector<std::string>

@@ -606,5 +606,49 @@ global:
     virtual?thunk?to?mir::wayland::InputPanelSurfaceV1::*;
     typeinfo?for?mir::wayland::InputPanelSurfaceV1;
     vtable?for?mir::wayland::InputPanelSurfaceV1;
+
+    mir::wayland::MirShellV1::*;
+    non-virtual?thunk?to?mir::wayland::MirShellV1::*;
+    virtual?thunk?to?mir::wayland::MirShellV1::*;
+    typeinfo?for?mir::wayland::MirShellV1;
+    vtable?for?mir::wayland::MirShellV1;
+    typeinfo?for?mir::wayland::MirShellV1::Global;
+    vtable?for?mir::wayland::MirShellV1::Global;
+
+    mir::wayland::MirRegularSurfaceV1::*;
+    non-virtual?thunk?to?mir::wayland::MirRegularSurfaceV1::*;
+    virtual?thunk?to?mir::wayland::MirRegularSurfaceV1::*;
+    typeinfo?for?mir::wayland::MirRegularSurfaceV1;
+    vtable?for?mir::wayland::MirRegularSurfaceV1;
+
+    mir::wayland::MirFloatingRegularSurfaceV1::*;
+    non-virtual?thunk?to?mir::wayland::MirFloatingRegularSurfaceV1::*;
+    virtual?thunk?to?mir::wayland::MirFloatingRegularSurfaceV1::*;
+    typeinfo?for?mir::wayland::MirFloatingRegularSurfaceV1;
+    vtable?for?mir::wayland::MirFloatingRegularSurfaceV1;
+
+    mir::wayland::MirDialogSurfaceV1::*;
+    non-virtual?thunk?to?mir::wayland::MirDialogSurfaceV1::*;
+    virtual?thunk?to?mir::wayland::MirDialogSurfaceV1::*;
+    typeinfo?for?mir::wayland::MirDialogSurfaceV1;
+    vtable?for?mir::wayland::MirDialogSurfaceV1;
+
+    mir::wayland::MirSatelliteSurfaceV1::*;
+    non-virtual?thunk?to?mir::wayland::MirSatelliteSurfaceV1::*;
+    virtual?thunk?to?mir::wayland::MirSatelliteSurfaceV1::*;
+    typeinfo?for?mir::wayland::MirSatelliteSurfaceV1;
+    vtable?for?mir::wayland::MirSatelliteSurfaceV1;
+
+    mir::wayland::MirFreestyleSurfaceV1::*;
+    non-virtual?thunk?to?mir::wayland::MirFreestyleSurfaceV1::*;
+    virtual?thunk?to?mir::wayland::MirFreestyleSurfaceV1::*;
+    typeinfo?for?mir::wayland::MirFreestyleSurfaceV1;
+    vtable?for?mir::wayland::MirFreestyleSurfaceV1;
+
+    mir::wayland::MirPositionerV1::*;
+    non-virtual?thunk?to?mir::wayland::MirPositionerV1::*;
+    virtual?thunk?to?mir::wayland::MirPositionerV1::*;
+    typeinfo?for?mir::wayland::MirPositionerV1;
+    vtable?for?mir::wayland::MirPositionerV1;
   };
 };
