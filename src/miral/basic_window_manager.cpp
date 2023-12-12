@@ -2869,9 +2869,6 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
                 case mir_window_state_attached:
                     if (info.exclusive_rect().is_set())
                     {
-                        // We are sorting east-to-west connected edges to the back of the list so that they
-                        // force everyone else out of the way when they're placed. By "east-to-west", we are
-                        // referring to "top" and "bottom" panels, as opposed to "left" and "right" panels.
                         MirPlacementGravity  edges = info.attached_edges();
                         bool is_full_width = (edges & mir_placement_gravity_east) && (edges & mir_placement_gravity_west);
                         if (is_full_width)
