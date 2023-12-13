@@ -552,9 +552,9 @@ void mf::GDesktopFileCache::refresh_app_cache()
         g_list_free_full(app_infos, g_object_unref);
     };
     std::unique_ptr<GList, decltype(free_app_infos)> app_infos(g_app_info_get_all(), free_app_infos);
-    std::vector<std::shared_ptr<DesktopFile>> new_files;
     std::map<std::string, std::shared_ptr<DesktopFile>> new_id_to_app;
-    std::map<std::string, std::string> new_wm_class_to_app_info_id;
+    std::map<std::string, std::shared_ptr<DesktopFile>> new_wm_class_to_app_info;
+    std::map<std::string, std::shared_ptr<DesktopFile>> new_exec_to_app;
 
     GList* info;
     for (info = app_infos.get(); info != NULL; info = info->next)
@@ -580,27 +580,27 @@ void mf::GDesktopFileCache::refresh_app_cache()
         }
 
         std::shared_ptr<DesktopFile> file = std::make_shared<DesktopFile>(id, wm_class, exec);
-        new_files.push_back(file);
         const char* app_id = g_app_info_get_id(app_info);
         new_id_to_app[app_id] = file;
+        new_exec_to_app[exec] = file;
 
         if (wm_class == NULL)
             continue;
 
-        new_wm_class_to_app_info_id.insert(std::pair<std::string, std::string>(wm_class, app_id));
+        new_wm_class_to_app_info[wm_class] = file;
     }
 
-    std::lock_guard guard(update_mutex);
-    files = std::move(new_files);
-    id_to_app = std::move(new_id_to_app);
-    wm_class_to_app_info_id = std::move(new_wm_class_to_app_info_id);
+    auto state = cache_state.lock();
+    state->id_to_app = std::move(new_id_to_app);
+    state->wm_class_to_app_info_id = std::move(new_wm_class_to_app_info);
+    state->exec_to_app = std::move(new_exec_to_app);
 }
 
 std::shared_ptr<mf::DesktopFile> mf::GDesktopFileCache::lookup_by_app_id(std::string const& name) const
 {
-    std::lock_guard guard(update_mutex);
-    auto app_pos = id_to_app.find(name);
-    if (app_pos != id_to_app.end())
+    auto state = cache_state.lock();
+    auto app_pos = state->id_to_app.find(name);
+    if (app_pos != state->id_to_app.end())
     {
         return app_pos->second;
     }
@@ -610,20 +610,26 @@ std::shared_ptr<mf::DesktopFile> mf::GDesktopFileCache::lookup_by_app_id(std::st
 
 std::shared_ptr<mf::DesktopFile> mf::GDesktopFileCache::lookup_by_wm_class(std::string const& name) const
 {
-    std::lock_guard guard(update_mutex);
-    auto wm_class_pos = wm_class_to_app_info_id.find(name);
-    if (wm_class_pos != wm_class_to_app_info_id.end())
+    auto state = cache_state.lock();
+    auto wm_class_pos = state->wm_class_to_app_info_id.find(name);
+    if (wm_class_pos != state->wm_class_to_app_info_id.end())
     {
-        auto app_id = wm_class_pos->second;
-        return lookup_by_app_id(app_id);
+        return wm_class_pos->second;
     }
 
     return nullptr;
 }
 
-const std::vector<std::shared_ptr<mf::DesktopFile>> &mf::GDesktopFileCache::get_desktop_files() const
+std::shared_ptr<mf::DesktopFile> mf::GDesktopFileCache::lookup_by_exec_string(std::string const& exec) const
 {
-    return files;
+    auto state = cache_state.lock();
+    auto exec_pos = state->exec_to_app.find(exec);
+    if (exec_pos != state->exec_to_app.end())
+    {
+        return exec_pos->second;
+    }
+
+    return nullptr;
 }
 
 // ForeignToplevelManagerV1

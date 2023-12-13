@@ -58,9 +58,12 @@ public:
         return nullptr;
     }
 
-    std::vector<std::shared_ptr<mf::DesktopFile>> const& get_desktop_files() const override
+    std::shared_ptr<mf::DesktopFile> lookup_by_exec_string(std::string const& exec) const override
     {
-        return files;
+        for (auto file : files)
+            if (file->exec == exec)
+                return file;
+        return nullptr;
     }
 
     std::vector<std::shared_ptr<mf::DesktopFile>> files;

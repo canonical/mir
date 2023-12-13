@@ -19,6 +19,7 @@
 
 #include "wlr-foreign-toplevel-management-unstable-v1_wrapper.h"
 #include "desktop_file_manager.h"
+#include "mir/synchronised.h"
 
 #include <memory>
 #include <mutex>
@@ -50,17 +51,21 @@ public:
     ~GDesktopFileCache() override = default;
     std::shared_ptr<DesktopFile> lookup_by_app_id(std::string const&) const override;
     std::shared_ptr<DesktopFile> lookup_by_wm_class(std::string const&) const override;
-    std::vector<std::shared_ptr<DesktopFile>> const& get_desktop_files() const override;
+    std::shared_ptr<DesktopFile> lookup_by_exec_string(std::string const&) const override;
     void refresh_app_cache();
 
 private:
-    mutable std::recursive_mutex update_mutex;
     std::shared_ptr<MainLoop> const main_loop;
     mir::Fd inotify_fd;
     std::vector<int> config_path_wd_list;
-    std::vector<std::shared_ptr<DesktopFile>> files;
-    std::map<std::string, std::shared_ptr<DesktopFile>> id_to_app;
-    std::map<std::string, std::string> wm_class_to_app_info_id;
+
+    struct GDesktopFileCacheData {
+        std::map<std::string, std::shared_ptr<DesktopFile>> id_to_app;
+        std::map<std::string, std::shared_ptr<DesktopFile>> wm_class_to_app_info_id;
+        std::map<std::string, std::shared_ptr<DesktopFile>> exec_to_app;
+    };
+
+    mir::Synchronised<GDesktopFileCacheData> cache_state;
 };
 
 }

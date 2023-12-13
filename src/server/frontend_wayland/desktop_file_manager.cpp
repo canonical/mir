@@ -182,9 +182,5 @@ std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_executable_m
     std::string cmdline_call;
     std::getline(std::ifstream(proc_file), cmdline_call, '\0');
 
-    for (auto file : cache->get_desktop_files())
-        if (file->exec == cmdline_call)
-            return file;
-
-    return nullptr;
+    return cache->lookup_by_exec_string(cmdline_call);
 }
