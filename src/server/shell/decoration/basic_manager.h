@@ -33,7 +33,6 @@ class Executor;
 namespace graphics
 {
 class GraphicBufferAllocator;
-class DisplayConfiguration;
 }
 namespace shell
 {
@@ -43,22 +42,9 @@ namespace decoration
 class Decoration;
 class DisplayConfigurationListener;
 
-class OutputListener
-{
-public:
-    virtual void advise_output_update(mir::graphics::DisplayConfiguration const& config) = 0;
-
-protected:
-    OutputListener() = default;
-    virtual ~OutputListener() = default;
-    OutputListener(OutputListener const&) = delete;
-    OutputListener operator=(OutputListener const&) = delete;
-};
-
 /// Facilitates decorating windows with Mir's built-in server size decorations
 class BasicManager :
-    public Manager,
-    private OutputListener
+    public Manager
 {
 public:
     using DecorationBuilder = std::function<std::unique_ptr<Decoration>(
@@ -82,10 +68,9 @@ private:
 
     std::mutex mutex;
     std::unordered_map<scene::Surface*, std::unique_ptr<Decoration>> decorations;
-
     float scale{1.0f};
 
-    void advise_output_update(graphics::DisplayConfiguration const& config) override;
+    void set_scale(float new_scale);
 };
 }
 }

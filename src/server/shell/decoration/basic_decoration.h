@@ -110,7 +110,7 @@ protected:
     std::shared_ptr<input::CursorImages> const cursor_images;
     std::shared_ptr<scene::Session> const session;
 
-    float scale_{1.0f};
+    float scale{1.0f};
 
     class BufferStreams;
     std::unique_ptr<BufferStreams> buffer_streams;

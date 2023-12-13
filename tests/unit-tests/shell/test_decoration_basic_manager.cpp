@@ -34,7 +34,7 @@ using namespace testing;
 class StubDecoration
     : public msd::Decoration
 {
-    void set_scale(float /*scale*/) override {};
+    void set_scale(float /*new_scale*/) override {};
 };
 
 struct DecorationBasicManager
@@ -92,7 +92,8 @@ TEST_F(DecorationBasicManager, calls_build_decoration)
 {
     auto const surface = std::make_shared<mtd::StubSurface>();
     EXPECT_CALL(*this, build_decoration())
-        .Times(1);
+        .Times(1)
+        .WillOnce(Invoke([](){ return new StubDecoration; }));
     manager.decorate(surface);
 }
 
@@ -108,7 +109,8 @@ TEST_F(DecorationBasicManager, decorating_a_surface_is_idempotent)
 {
     auto const surface = std::make_shared<mtd::StubSurface>();
     EXPECT_CALL(*this, build_decoration())
-        .Times(1);
+        .Times(1)
+        .WillOnce(Invoke([](){ return new StubDecoration; }));
     manager.decorate(surface);
     manager.decorate(surface);
     manager.decorate(surface);

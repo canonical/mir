@@ -266,15 +266,15 @@ void msd::BasicDecoration::set_cursor(std::string const& cursor_image_name)
     shell->modify_surface(session, decoration_surface, spec);
 }
 
-void msd::BasicDecoration::set_scale(float scale)
+void msd::BasicDecoration::set_scale(float new_scale)
 {
-    scale_ = scale;
+    scale = new_scale;
     window_state_updated();
 }
 
 auto msd::BasicDecoration::new_window_state() const -> std::unique_ptr<WindowState>
 {
-    return std::make_unique<WindowState>(static_geometry, window_surface, scale_);
+    return std::make_unique<WindowState>(static_geometry, window_surface, scale);
 }
 
 auto msd::BasicDecoration::create_surface() const -> std::shared_ptr<scene::Surface>
