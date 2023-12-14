@@ -16,11 +16,8 @@
 
 #define MIR_LOG_COMPONENT "test_g_desktop_file_cache"
 
-#include "mir/log.h"
 #include "src/server/frontend_wayland/foreign_toplevel_manager_v1.h"
-#include "mir/time/steady_clock.h"
-#include "src/include/server/mir/glib_main_loop.h"
-#include "mir/test/doubles/mock_main_loop.h"
+#include "mir/test/doubles/stub_main_loop.h"
 #include <fstream>
 
 #include <gmock/gmock.h>
@@ -28,6 +25,7 @@
 #include <filesystem>
 
 namespace mf = mir::frontend;
+namespace mtd = mir::test::doubles;
 
 using namespace testing;
 using ::testing::IsNull;
@@ -40,8 +38,7 @@ static std::string applications_dir;
 
 struct GDesktopFileCache : Test
 {
-    std::shared_ptr<mir::MainLoop> main_loop;
-    std::thread main_loop_thread;
+    std::shared_ptr<mir::MainLoop> main_loop = std::make_shared<mtd::StubMainLoop>();
 
     static void SetUpTestSuite()
     {
@@ -54,21 +51,8 @@ struct GDesktopFileCache : Test
         mkdir(applications_dir.c_str(), S_IRWXU);
     }
 
-    void SetUp() override
-    {
-        main_loop = std::make_shared<mir::GLibMainLoop>(std::make_shared<mir::time::SteadyClock>());
-
-        main_loop_thread = std::thread([&]() {
-            main_loop->run();
-        });
-    }
-
     void TearDown() override
     {
-        main_loop->stop();
-        main_loop_thread.join();
-        main_loop= nullptr;
-
         // Remove all files from the temporary directory
         for (const auto& entry : std::filesystem::directory_iterator(applications_dir))
             std::filesystem::remove_all(entry.path());
