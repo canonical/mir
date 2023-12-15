@@ -83,8 +83,12 @@ public:
                     output.current_format = mutable_output.current_format;
                     output.power_mode = mutable_output.power_mode;
                     output.orientation = mutable_output.orientation;
+                    output.scale = mutable_output.scale;
+                    output.form_factor = mutable_output.form_factor;
+                    // MirSubpixelArrangement is mistakenly non-const?
                     output.gamma = mutable_output.gamma;
                     output.custom_logical_size = mutable_output.custom_logical_size;
+                    output.custom_attribute = std::move(mutable_output.custom_attribute);
                 });
         }
     }
