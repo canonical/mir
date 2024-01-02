@@ -19,7 +19,6 @@
 
 #include <vector>
 #include <memory>
-#include <tuple>
 #include "mir/shared_library.h"
 #include "mir/options/program_option.h"
 #include "mir/graphics/platform.h"
@@ -30,6 +29,18 @@ class ConsoleServices;
 
 namespace graphics
 {
+enum class TypePreference
+{
+    prefer_nested,
+    prefer_hardware
+};
+
+auto modules_for_device(
+    std::function<std::vector<SupportedDevice>(mir::SharedLibrary const&)> const& probe,
+    std::vector<std::shared_ptr<SharedLibrary>> const& modules,
+    TypePreference nested_selection)
+    -> std::vector<std::pair<SupportedDevice, std::shared_ptr<mir::SharedLibrary>>>;
+
 auto probe_display_module(
     SharedLibrary const& module,
     options::ProgramOption const& options,

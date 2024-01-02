@@ -126,18 +126,18 @@ bool is_same_device(
     return *a == *b;
 }
 
-enum class ModuleType
-{
-    Rendering,
-    Display
-};
+}
 
-auto modules_for_device(
+auto mg::modules_for_device(
     std::function<std::vector<mg::SupportedDevice>(mir::SharedLibrary const&)> const& probe,
-    std::vector<std::shared_ptr<mir::SharedLibrary>> const& modules)
+    std::vector<std::shared_ptr<mir::SharedLibrary>> const& modules,
+    mg::TypePreference nested_selection)
     -> std::vector<std::pair<mg::SupportedDevice, std::shared_ptr<mir::SharedLibrary>>>
 {
+    // We may have multiple hardware platforms, and need to load all of them
     std::vector<std::pair<mg::SupportedDevice, std::shared_ptr<mir::SharedLibrary>>> best_modules_so_far;
+    // We will only ever want to load at most one nested platform
+    std::optional<std::pair<mg::SupportedDevice, std::shared_ptr<mir::SharedLibrary>>> best_nested;
     for (auto& module : modules)
     {
         try
@@ -168,10 +168,24 @@ auto modules_for_device(
                         best_modules_so_far.emplace_back(std::move(device), module);
                     }
                 }
-                else if (device.support_level > mg::probe::unsupported)
+                else
                 {
-                    // Devices with null associated udev device are not combined with any others
-                    best_modules_so_far.emplace_back(std::move(device), module);
+                    /* Platforms with no associated `mir::udev::Device` are *nested* platforms
+                     * We want at most one of these
+                     */
+
+                    // This could be more elegant with std::optional<>::transform(), but not C++23 for me!
+                    auto const current_best_support = [&best_nested]() {
+                        if (best_nested)
+                        {
+                            return best_nested->first.support_level;
+                        }
+                        return mg::probe::unsupported;
+                    }();
+                    if (device.support_level > current_best_support)
+                    {
+                        best_nested = std::make_pair(std::move(device), module);
+                    }
                 }
             }
         }
@@ -179,11 +193,7 @@ auto modules_for_device(
         {
         }
     }
-    if (best_modules_so_far.empty())
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find any platforms for current system"}));
-    }
-    else
+    if (!best_modules_so_far.empty())
     {
         // If there are any non-dummy platforms in our support list, remove all the dummy platforms.
 
@@ -203,8 +213,38 @@ auto modules_for_device(
             best_modules_so_far.erase(first_dummy_platform, best_modules_so_far.end());
         }
     }
-    return best_modules_so_far;
-}
+
+    if (best_modules_so_far.empty())
+    {
+        if (!best_nested)
+        {
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find any platforms for current system"}));        
+        }
+        // Our *only* option is the nested platform; return that.
+        decltype(best_modules_so_far) nested_vec;
+        nested_vec.push_back(std::move(best_nested.value()));
+        return nested_vec;
+    }
+
+    switch(nested_selection)
+    {
+    case TypePreference::prefer_nested:
+        if (best_nested && best_nested->first.support_level >= mg::probe::supported)
+        {
+            decltype(best_modules_so_far) nested_vec;
+            nested_vec.push_back(std::move(best_nested.value()));
+            return nested_vec;
+        }
+        return best_modules_so_far;
+    case TypePreference::prefer_hardware:
+        if (!best_modules_so_far.empty())
+        {
+            return best_modules_so_far;
+        }
+        decltype(best_modules_so_far) nested_vec;
+        nested_vec.push_back(std::move(best_nested.value()));
+        return nested_vec;
+    }
 }
 
 auto mir::graphics::display_modules_for_device(
@@ -217,7 +257,8 @@ auto mir::graphics::display_modules_for_device(
         {
             return mg::probe_display_module(module, options, console);
         },
-        modules);
+        modules,
+        TypePreference::prefer_nested);
 }
 
 auto mir::graphics::rendering_modules_for_device(
@@ -231,5 +272,6 @@ auto mir::graphics::rendering_modules_for_device(
         {
             return probe_rendering_module(platforms, module, options, console);
         },
-        modules);
+        modules,
+        TypePreference::prefer_hardware);
 }

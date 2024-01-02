@@ -19,6 +19,8 @@
 #include <boost/throw_exception.hpp>
 
 #include "mir/graphics/platform.h"
+#include "mir/shared_library.h"
+#include "mir/test/doubles/mock_udev_device.h"
 #include "src/server/graphics/platform_probe.h"
 #include "mir/options/program_option.h"
 #include "mir/udev/wrapper.h"
@@ -40,6 +42,7 @@
 
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
+namespace mg = mir::graphics;
 
 namespace
 {
@@ -280,4 +283,213 @@ TEST(ServerPlatformProbe, IgnoresNonPlatformModules)
         options,
         std::make_shared<StubConsoleServices>());
     EXPECT_THAT(selected_modules, Not(IsEmpty()));
+}
+
+class ProbePolicy : public testing::Test
+{
+public:
+    using PlatformHandle = mir::SharedLibrary* const;
+
+    auto add_platform() -> PlatformHandle
+    {
+        /* SharedLibrary ends up calling dlopen; dlopen(nullptr) is valid, and returns a handle to
+         * the current binary. We don't care about that, we won't be dlsymming anything, we just want
+         * a valid SharedLibrary.
+         */
+        auto dummy_lib = std::make_shared<mir::SharedLibrary>(nullptr);
+        dummy_libraries.push_back(dummy_lib);
+        devices[dummy_lib.get()] = std::make_shared<std::vector<mg::SupportedDevice>>();
+        return dummy_lib.get();
+    }
+
+    auto make_dummy_udev_device() -> std::unique_ptr<mtd::MockUdevDevice>
+    {
+        auto device = std::make_unique<testing::NiceMock<mtd::MockUdevDevice>>();
+        // Give each device a unique devpath; it's address is as good a choice as any.
+        auto devpath = std::to_string(reinterpret_cast<uintptr_t>(device.get()));
+
+        ON_CALL(*device, devpath()).WillByDefault(
+            // lambda so that it can own the devpath string
+            [devpath = std::move(devpath)]()
+            {
+                return devpath.c_str();
+            });
+        return device;
+    }
+
+    void add_probeable_device(PlatformHandle platform, std::unique_ptr<mir::udev::Device> device, mg::probe::Result priority)
+    {
+        auto& device_list = devices[platform];
+        device_list->push_back(mg::SupportedDevice {
+            .device = std::move(device),
+            .support_level = priority,
+            .platform_data = nullptr
+        });
+    }
+
+    auto make_probing_function()
+        -> std::pair<
+               std::function<std::vector<mg::SupportedDevice>(mir::SharedLibrary const&)>,
+               std::vector<std::shared_ptr<mir::SharedLibrary>>>
+    {
+        return std::make_pair(
+            [devices = std::move(devices)](mir::SharedLibrary const& lib) mutable -> std::vector<mg::SupportedDevice>
+            {
+                auto module_devices = std::move(devices.at(&lib));
+                devices.erase(&lib);
+                return std::move(*module_devices);
+            },
+            std::move(dummy_libraries));
+    }
+private:
+    std::vector<std::shared_ptr<mir::SharedLibrary>> dummy_libraries;
+    std::map<mir::SharedLibrary const* const, std::shared_ptr<std::vector<mg::SupportedDevice>>> devices;
+};
+
+TEST_F(ProbePolicy, when_a_nested_display_platform_and_some_hardware_can_be_driven_nested_is_selected)
+{
+    using namespace testing;
+
+    auto hardware_platform = add_platform();
+    auto nested_platform = add_platform();
+
+    // A nested platform is one that returns a single SupportedDevice, with .device == nullptr
+    add_probeable_device(nested_platform, nullptr, mg::probe::hosted);
+
+    // A hardware platform is one that returns one or more SupportedDevices, each with .device != nullptr
+    add_probeable_device(hardware_platform, make_dummy_udev_device(), mg::probe::best);
+    add_probeable_device(hardware_platform, make_dummy_udev_device(), mg::probe::unsupported);
+
+    auto [probe_fn, dummy_libraries] = make_probing_function();
+
+    auto probe_result = mg::modules_for_device(probe_fn, dummy_libraries, mg::TypePreference::prefer_nested);
+
+    EXPECT_THAT(probe_result, Not(IsEmpty()));
+    EXPECT_THAT(probe_result.size(), Eq(1));
+    EXPECT_THAT(probe_result[0].first.device, IsNull());
+}
+
+TEST_F(ProbePolicy, when_a_nested_display_platform_and_all_hardware_can_work_a_nested_platform_is_chosen)
+{
+    using namespace testing;
+
+    auto hardware_platform = add_platform();
+    auto nested_platform = add_platform();
+
+    // A nested platform is one that returns a single SupportedDevice, with .device == nullptr
+    add_probeable_device(nested_platform, nullptr, mg::probe::hosted);
+
+    // A hardware platform is one that returns one or more SupportedDevices, each with .device != nullptr
+    add_probeable_device(hardware_platform, make_dummy_udev_device(), mg::probe::best);
+    add_probeable_device(hardware_platform, make_dummy_udev_device(), mg::probe::best);
+
+    auto [probe_fn, dummy_libraries] = make_probing_function();
+
+    auto probe_result = mg::modules_for_device(probe_fn, dummy_libraries, mg::TypePreference::prefer_nested);
+
+    EXPECT_THAT(probe_result, Not(IsEmpty()));
+    EXPECT_THAT(probe_result.size(), Eq(1));
+    EXPECT_THAT(probe_result[0].first.device, IsNull());
+}
+
+TEST_F(ProbePolicy, when_many_nested_display_platform_and_all_hardware_can_work_the_best_nested_platform_is_chosen)
+{
+    using namespace testing;
+
+    auto hardware_platform = add_platform();
+    auto bad_nested_platform = add_platform();
+    auto best_nested_platform = add_platform();
+
+    // A nested platform is one that returns a single SupportedDevice, with .device == nullptr
+    add_probeable_device(best_nested_platform, nullptr, mg::probe::hosted);
+    add_probeable_device(bad_nested_platform, nullptr, mg::probe::supported);
+
+    // A hardware platform is one that returns one or more SupportedDevices, each with .device != nullptr
+    add_probeable_device(hardware_platform, make_dummy_udev_device(), mg::probe::best);
+    add_probeable_device(hardware_platform, make_dummy_udev_device(), mg::probe::best);
+
+    auto [probe_fn, dummy_libraries] = make_probing_function();
+
+    auto probe_result = mg::modules_for_device(probe_fn, dummy_libraries, mg::TypePreference::prefer_nested);
+
+    EXPECT_THAT(probe_result, Not(IsEmpty()));
+    EXPECT_THAT(probe_result.size(), Eq(1));
+    EXPECT_THAT(probe_result[0].first.device, IsNull());
+    EXPECT_THAT(probe_result[0].second.get(), Eq(best_nested_platform));
+}
+
+TEST_F(ProbePolicy, when_a_nested_display_platform_claims_supportedand_all_hardware_can_work_the_nested_platform_is_chosen)
+{
+    using namespace testing;
+
+    auto hardware_platform = add_platform();
+    auto nested_platform = add_platform();
+
+    // A nested platform is one that returns a single SupportedDevice, with .device == nullptr
+    add_probeable_device(nested_platform, nullptr, mg::probe::supported);
+
+    // A hardware platform is one that returns one or more SupportedDevices, each with .device != nullptr
+    add_probeable_device(hardware_platform, make_dummy_udev_device(), mg::probe::best);
+    add_probeable_device(hardware_platform, make_dummy_udev_device(), mg::probe::best);
+
+    auto [probe_fn, dummy_libraries] = make_probing_function();
+
+    auto probe_result = mg::modules_for_device(probe_fn, dummy_libraries, mg::TypePreference::prefer_nested);
+
+    EXPECT_THAT(probe_result, Not(IsEmpty()));
+    EXPECT_THAT(probe_result.size(), Eq(1));
+    EXPECT_THAT(probe_result[0].first.device, IsNull());
+}
+
+TEST_F(ProbePolicy, when_no_nested_display_platform_is_available_all_supported_hardware_devices_are_chosen)
+{
+    using namespace testing;
+
+    auto hardware_platform = add_platform();
+
+    add_probeable_device(hardware_platform, make_dummy_udev_device(), mg::probe::best);
+    add_probeable_device(hardware_platform, make_dummy_udev_device(), mg::probe::best);
+
+    auto [probe_fn, dummy_libraries] = make_probing_function();
+
+    auto probe_result = mg::modules_for_device(probe_fn, dummy_libraries, mg::TypePreference::prefer_nested);
+
+    ASSERT_THAT(probe_result.size(), Eq(2));
+    EXPECT_FALSE(*probe_result[0].first.device == *probe_result[1].first.device);
+}
+
+TEST_F(ProbePolicy, when_hardware_rendering_platform_is_available_nested_platforms_are_not_loaded)
+{
+    using namespace testing;
+
+    auto hardware_platform = add_platform();
+    auto nested_platform = add_platform();
+
+    add_probeable_device(hardware_platform, make_dummy_udev_device(), mg::probe::best);
+    add_probeable_device(nested_platform, nullptr, mg::probe::hosted);
+
+    auto [probe_fn, dummy_libraries] = make_probing_function();
+
+    auto probe_result = mg::modules_for_device(probe_fn, dummy_libraries, mg::TypePreference::prefer_hardware);
+
+    ASSERT_THAT(probe_result, Not(IsEmpty()));
+    EXPECT_THAT(probe_result[0].first.device, Not(IsNull()));
+}
+
+TEST_F(ProbePolicy, when_hardware_rendering_platform_is_not_available_nested_platform_is_loaded)
+{
+    using namespace testing;
+
+    auto hardware_platform = add_platform();
+    auto nested_platform = add_platform();
+
+    add_probeable_device(hardware_platform, make_dummy_udev_device(), mg::probe::unsupported);
+    add_probeable_device(nested_platform, nullptr, mg::probe::hosted);
+
+    auto [probe_fn, dummy_libraries] = make_probing_function();
+
+    auto probe_result = mg::modules_for_device(probe_fn, dummy_libraries, mg::TypePreference::prefer_hardware);
+
+    ASSERT_THAT(probe_result, Not(IsEmpty()));
+    EXPECT_THAT(probe_result[0].first.device, IsNull());
 }
