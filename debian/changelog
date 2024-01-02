@@ -1,3 +1,10 @@
+mir (2.16.1) UNRELEASED; urgency=medium
+
+  * Bugfix release:
+    -  Changing scale factor at runtime leads to misrendering (#3165)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Tue, 02 Jan 2024 11:53:02 +0100
+
 mir (2.16.0) UNRELEASED; urgency=medium
 
   [ Alan Griffiths ]
