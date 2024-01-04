@@ -53,11 +53,11 @@ namespace
 {
 // These functions were not accepted into libinput, but we would want to use them if they were.
 // By introducing a potential overload ambiguity we will be notified that happens.
-double libinput_event_touch_get_touch_major(libinput_event_touch*, uint32_t, uint32_t)
+double libinput_event_touch_get_major_transformed(libinput_event_touch*, uint32_t, uint32_t)
 {
     return 8;
 }
-double libinput_event_touch_get_touch_minor(libinput_event_touch*, uint32_t, uint32_t)
+double libinput_event_touch_get_touch_minor_transformed(libinput_event_touch*, uint32_t, uint32_t)
 {
     return 6;
 }
@@ -406,8 +406,8 @@ void mie::LibInputDevice::update_contact_data(ContactData & data, MirTouchAction
     data.action = action;
     data.x = libinput_event_touch_get_x_transformed(touch, width);
     data.y = libinput_event_touch_get_y_transformed(touch, height);
-    data.major = libinput_event_touch_get_touch_major(touch, width, height);
-    data.minor = libinput_event_touch_get_touch_minor(touch, width, height);
+    data.major = libinput_event_touch_get_major_transformed(touch, width, height);
+    data.minor = libinput_event_touch_get_touch_minor_transformed(touch, width, height);
     data.pressure = libinput_event_touch_get_pressure(touch);
 
     info.transform_to_scene(data.x, data.y);
