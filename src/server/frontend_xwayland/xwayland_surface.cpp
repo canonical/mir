@@ -475,8 +475,6 @@ void mf::XWaylandSurface::map()
         });
 
     // If we had more properties to read we would queue them all up before completing the first one
-    cookie();
-
     uint32_t const workspace = 1;
     connection->set_property<XCBType::CARDINAL32>(
         window,

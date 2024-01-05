@@ -99,16 +99,6 @@ void MirInputEvent::set_event_time(std::chrono::nanoseconds const& event_time)
     event_time_ = event_time;
 }
 
-std::vector<uint8_t> MirInputEvent::cookie() const
-{
-    return cookie_;
-}
-
-void MirInputEvent::set_cookie(std::vector<uint8_t> const& cookie)
-{
-    cookie_ = cookie;
-}
-
 MirInputEventModifiers MirInputEvent::modifiers() const
 {
     return modifiers_;

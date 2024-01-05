@@ -16,7 +16,6 @@ packages="\
     libmircommon:MIRCOMMON_ABI \
     libmirplatform:MIRPLATFORM_ABI \
     libmirserver:MIRSERVER_ABI \
-    libmircookie:MIRCOOKIE_ABI \
     mir-platform-graphics-x:MIR_SERVER_GRAPHICS_PLATFORM_ABI \
     mir-platform-graphics-gbm-kms:MIR_SERVER_GRAPHICS_PLATFORM_ABI \
     mir-platform-graphics-eglstream-kms:MIR_SERVER_GRAPHICS_PLATFORM_ABI \

@@ -4,9 +4,6 @@ MIR_COMMON_2.8 {
   mir_busy_cursor_name;
   mir_caret_cursor_name;
   mir_closed_hand_cursor_name;
-  mir_cookie_buffer_size;
-  mir_cookie_release;
-  mir_cookie_to_buffer;
   mir_crosshair_cursor_name;
   mir_default_cursor_name;
   mir_diagonal_resize_bottom_to_top_cursor_name;
@@ -28,7 +25,6 @@ MIR_COMMON_2.8 {
   mir_input_device_state_event_pointer_axis;
   mir_input_device_state_event_pointer_buttons;
   mir_input_device_state_event_time;
-  mir_input_event_get_cookie;
   mir_input_event_get_device_id;
   mir_input_event_get_event;
   mir_input_event_get_event_time;
@@ -37,7 +33,6 @@ MIR_COMMON_2.8 {
   mir_input_event_get_touch_event;
   mir_input_event_get_type;
   mir_input_event_get_wayland_timestamp;
-  mir_input_event_has_cookie;
   mir_keyboard_event_action;
   mir_keyboard_event_input_event;
   mir_keyboard_event_keysym;
@@ -168,13 +163,11 @@ MIR_COMMON_2.8 {
     MirInputDeviceStateEvent::set_window_id*;
     MirInputDeviceStateEvent::when*;
     MirInputDeviceStateEvent::window_id*;
-    MirInputEvent::cookie*;
     MirInputEvent::device_id*;
     MirInputEvent::event_time*;
     MirInputEvent::input_type*;
     MirInputEvent::modifiers*;
     MirInputEvent::operator*;
-    MirInputEvent::set_cookie*;
     MirInputEvent::set_device_id*;
     MirInputEvent::set_event_time*;
     MirInputEvent::set_modifiers*;
@@ -193,7 +186,6 @@ MIR_COMMON_2.8 {
     MirKeyboardEvent::modifiers*;
     MirKeyboardEvent::scan_code*;
     MirKeyboardEvent::set_action*;
-    MirKeyboardEvent::set_cookie*;
     MirKeyboardEvent::set_device_id*;
     MirKeyboardEvent::set_event_time*;
     MirKeyboardEvent::set_keysym*;

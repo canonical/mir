@@ -17,9 +17,7 @@
 #define MIR_LOG_COMPONENT "input-event-access"
 
 
-#include "mir/cookie/blob.h"
-
-#include "mir/event_type_to_string.h"
+#include "mir_toolkit/events/event_type_to_string.h"
 #include "mir/events/event_private.h"
 #include "mir/log.h"
 #include "mir/require.h"
@@ -333,46 +331,3 @@ bool mir_pointer_event_axis_stop(MirPointerEvent const* pev, MirPointerAxis axis
        abort();
    }
 })
-
-bool mir_input_event_has_cookie(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    switch (ev->input_type())
-    {
-        case mir_input_event_type_key:
-            return true;
-        case mir_input_event_type_pointer:
-        {
-            auto const pev = mir_input_event_get_pointer_event(ev);
-            auto const pev_action = mir_pointer_event_action(pev);
-            return (pev_action == mir_pointer_action_button_up ||
-                    pev_action == mir_pointer_action_button_down);
-        }
-        case mir_input_event_type_touch:
-        {
-            auto const tev = mir_input_event_get_touch_event(ev);
-            auto const point_count = mir_touch_event_point_count(tev);
-            for (size_t i = 0; i < point_count; i++)
-            {
-                auto const tev_action = mir_touch_event_action(tev, i);
-                if (tev_action == mir_touch_action_up ||
-                    tev_action == mir_touch_action_down)
-                {
-                    return true;
-                }
-            }
-            break;
-        }
-        case mir_input_event_type_keyboard_resync:
-            return false;
-        case mir_input_event_types:
-            abort();
-            break;
-    }
-
-    return false;
-})
-
-MirCookie const* mir_input_event_get_cookie(MirInputEvent const*)
-{
-    return nullptr;
-}

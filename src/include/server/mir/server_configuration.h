@@ -24,6 +24,10 @@ struct wl_display;
 
 namespace mir
 {
+namespace cookie
+{
+class Authority;
+}
 namespace compositor
 {
 class Compositor;

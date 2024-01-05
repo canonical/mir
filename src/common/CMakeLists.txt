@@ -68,12 +68,6 @@ target_include_directories(mircommon
     ${PROJECT_SOURCE_DIR}/include/common
 )
 
-set_source_files_properties(event.cpp PROPERTIES COMPILE_FLAGS
-  "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/cookie")
-
-set_source_files_properties(input/input_event.cpp PROPERTIES COMPILE_FLAGS
-  "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/cookie")
-
 target_link_libraries(mircommon
   PUBLIC
     mircore

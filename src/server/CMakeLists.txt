@@ -13,7 +13,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/src/include/server
-  ${PROJECT_SOURCE_DIR}/src/include/cookie
   ${PROJECT_SOURCE_DIR}/src/include/wayland
 )
 add_compile_definitions(MIR_SERVER_INPUT_PLATFORM_VERSION="${MIR_SERVER_INPUT_PLATFORM_VERSION}")
@@ -68,7 +67,6 @@ target_link_libraries(mirserverobjects
   PUBLIC
     mirplatform
     mircommon
-    mircookie
     mircore
   PRIVATE
     PkgConfig::GLIB
@@ -123,7 +121,6 @@ target_link_libraries(mirserver
 
     mirplatform
     mircommon
-    mircookie
     mirwayland
 
     server_platform_common

@@ -206,7 +206,6 @@ struct AbstractShell : Test
     }
 
     std::chrono::nanoseconds const event_timestamp = std::chrono::nanoseconds(0);
-    std::vector<uint8_t> const cookie{};
     mg::BufferProperties properties { geom::Size{1,1}, mir_pixel_format_abgr_8888, mg::BufferUsage::software};
 };
 }
@@ -410,7 +409,7 @@ TEST_F(AbstractShell, key_input_events_are_handled_by_window_manager)
     xkb_keysym_t const keysym{0};
     int const scan_code{0};
     MirInputEventModifiers const modifiers{mir_input_event_modifier_none};
-
+    std::vector<uint8_t> cookie;
     auto const event = mir::events::make_key_event(
         mir_input_event_type_key,
         event_timestamp,
@@ -431,7 +430,7 @@ TEST_F(AbstractShell, key_input_events_are_handled_by_window_manager)
 TEST_F(AbstractShell, touch_input_events_are_handled_by_window_manager)
 {
     MirInputEventModifiers const modifiers{mir_input_event_modifier_none};
-
+    std::vector<uint8_t> cookie;
     auto const event = mir::events::make_touch_event(
         mir_input_event_type_touch,
         event_timestamp,
@@ -457,7 +456,7 @@ TEST_F(AbstractShell, pointer_input_events_are_handled_by_window_manager)
     float const vscroll_value{0.0};
     float const relative_x_value{0.0};
     float const relative_y_value{0.0};
-
+    std::vector<uint8_t> cookie;
     auto const event = mir::events::make_pointer_event(
         mir_input_event_type_pointer,
         event_timestamp,

@@ -421,6 +421,7 @@ protected:
     CachedPtr<shell::ShellReport> shell_report;
     CachedPtr<shell::decoration::Manager> decoration_manager;
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
+    CachedPtr<cookie::Authority> cookie_authority;
     CachedPtr<input::KeyMapper> key_mapper;
     std::shared_ptr<ConsoleServices> console_services;
 

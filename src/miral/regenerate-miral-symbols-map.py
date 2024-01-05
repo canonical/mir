@@ -411,7 +411,6 @@ global:
     miral::toolkit::mir_input_event_get_pointer_event*;
     miral::toolkit::mir_input_event_get_touch_event*;
     miral::toolkit::mir_input_event_get_type*;
-    miral::toolkit::mir_input_event_has_cookie*;
     miral::toolkit::mir_keyboard_event_action*;
     miral::toolkit::mir_keyboard_event_input_event*;
     miral::toolkit::mir_keyboard_event_key_text*;

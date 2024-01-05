@@ -467,34 +467,6 @@ Description: Display server for Ubuntu - x driver metapackage
  This package depends on a full set of graphics and input drivers for X
  systems.
 
-Package: libmircookie2
-Section: libs
-Architecture: any
-Multi-Arch: same
-Pre-Depends: ${misc:Pre-Depends}
-Depends: ${misc:Depends},
-         ${shlibs:Depends},
-Description: Produce and verify spoof-resistant timestamps - runtime library
- libmircookie provides a simple mechanism for a group of cooperating processes
- to hand out and verify difficult-to-forge timestamps to untrusted 3rd parties.
- .
- This package contains the runtime library for generating and verifying the
- attestable timestamps.
-
-Package: libmircookie-dev
-Section: libdevel
-Architecture: any
-Multi-Arch: same
-Pre-Depends: ${misc:Pre-Depends}
-Depends: libmircookie2 (= ${binary:Version}),
-         ${misc:Depends},
-Description: Produce and verify spoof-resistant timestamps - development headers
- libmircookie provides a simple mechanism for a group of cooperating processes
- to hand out and verify difficult-to-forge timestamps to untrusted 3rd parties.
- .
- This package contains the development headers for building programs that
- generate or verify the attestable timestamps.
-
 Package: libmirrenderer-dev
 Section: libdevel
 Architecture: linux-any

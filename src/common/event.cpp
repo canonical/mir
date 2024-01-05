@@ -18,7 +18,7 @@
 
 #include "handle_event_exception.h"
 
-#include "mir/event_type_to_string.h"
+#include "mir_toolkit/events/event_type_to_string.h"
 #include "mir/log.h"
 
 #include "mir_toolkit/events/event.h"

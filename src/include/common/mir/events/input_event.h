@@ -32,9 +32,6 @@ struct MirInputEvent : MirEvent
     std::chrono::nanoseconds event_time() const;
     void set_event_time(std::chrono::nanoseconds const& event_time);
 
-    std::vector<uint8_t> cookie() const;
-    void set_cookie(std::vector<uint8_t> const& cookie);
-
     MirInputEventModifiers modifiers() const;
     void set_modifiers(MirInputEventModifiers mods);
 
