@@ -30,7 +30,6 @@ list(APPEND MIR_COMMON_SOURCES
   edid.cpp
   event.cpp
   event_printer.cpp
-  mir_cookie.cpp
   mir_cursor_api.cpp
   thread_pool_executor.cpp
   linearising_executor.cpp
@@ -77,7 +76,6 @@ set_source_files_properties(input/input_event.cpp PROPERTIES COMPILE_FLAGS
 
 target_link_libraries(mircommon
   PUBLIC
-    mircookie
     mircore
     ${MIR_COMMON_REFERENCES}
     PkgConfig::XKBCOMMON

@@ -23,10 +23,6 @@
 
 namespace mir
 {
-namespace cookie
-{
-class Authority;
-}
 namespace time
 {
 class Clock;
@@ -40,8 +36,7 @@ class DefaultEventBuilder : public EventBuilder
 public:
     explicit DefaultEventBuilder(
         MirInputDeviceId device_id,
-        std::shared_ptr<time::Clock> const& clock,
-        std::shared_ptr<cookie::Authority> const& cookie_authority);
+        std::shared_ptr<time::Clock> const& clock);
 
     EventUPtr key_event(
         std::optional<Timestamp> source_timestamp,
@@ -115,7 +110,6 @@ private:
 
     MirInputDeviceId const device_id;
     std::shared_ptr<time::Clock> const clock;
-    std::shared_ptr<cookie::Authority> const cookie_authority;
 };
 }
 }

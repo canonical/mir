@@ -18,7 +18,6 @@
 #include "mir/time/clock.h"
 #include "mir/input/seat.h"
 #include "mir/events/event_builders.h"
-#include "mir/cookie/authority.h"
 
 #include <algorithm>
 
@@ -27,11 +26,9 @@ namespace mi = mir::input;
 
 mi::DefaultEventBuilder::DefaultEventBuilder(
     MirInputDeviceId device_id,
-    std::shared_ptr<time::Clock> const& clock,
-    std::shared_ptr<mir::cookie::Authority> const& cookie_authority)
+    std::shared_ptr<time::Clock> const& clock)
     : device_id(device_id),
-      clock(clock),
-      cookie_authority(cookie_authority)
+      clock(clock)
 {
 }
 
@@ -42,9 +39,9 @@ mir::EventUPtr mi::DefaultEventBuilder::key_event(
     int scan_code)
 {
     auto const timestamp = calibrate_timestamp(source_timestamp);
-    auto const cookie = cookie_authority->make_cookie(timestamp.count());
+    std::vector<uint8_t> vec_cookie{};
     return me::make_key_event(
-        device_id, timestamp, cookie->serialize(), action, keysym, scan_code, mir_input_event_modifier_none);
+        device_id, timestamp, vec_cookie, action, keysym, scan_code, mir_input_event_modifier_none);
 }
 
 mir::EventUPtr mi::DefaultEventBuilder::pointer_event(
@@ -58,11 +55,6 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_event(
     const float y_axis_value = 0;
     std::vector<uint8_t> vec_cookie{};
     auto const timestamp = calibrate_timestamp(source_timestamp);
-    if (action == mir_pointer_action_button_up || action == mir_pointer_action_button_down)
-    {
-        auto const cookie = cookie_authority->make_cookie(timestamp.count());
-        vec_cookie = cookie->serialize();
-    }
     return me::make_pointer_event(
         device_id, timestamp, vec_cookie, mir_input_event_modifier_none, action, buttons_pressed, x_axis_value,
         y_axis_value,
@@ -79,11 +71,6 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_event(
 {
     std::vector<uint8_t> vec_cookie{};
     auto const timestamp = calibrate_timestamp(source_timestamp);
-    if (action == mir_pointer_action_button_up || action == mir_pointer_action_button_down)
-    {
-        auto const cookie = cookie_authority->make_cookie(timestamp.count());
-        vec_cookie = cookie->serialize();
-    }
     return me::make_pointer_event(
         device_id, timestamp, vec_cookie, mir_input_event_modifier_none, action, buttons_pressed, x_axis, y_axis,
         hscroll_value, vscroll_value, relative_x_value, relative_y_value);
@@ -100,11 +87,6 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_axis_event(
 {
     std::vector<uint8_t> vec_cookie{};
     auto const timestamp = calibrate_timestamp(source_timestamp);
-    if (action == mir_pointer_action_button_up || action == mir_pointer_action_button_down)
-    {
-        auto const cookie = cookie_authority->make_cookie(timestamp.count());
-        vec_cookie = cookie->serialize();
-    }
     return me::make_pointer_axis_event(
         axis_source, device_id, timestamp, vec_cookie, mir_input_event_modifier_none, action, buttons_pressed, x_axis,
         y_axis, hscroll_value, vscroll_value, relative_x_value, relative_y_value);
@@ -122,11 +104,6 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_axis_with_stop_event(
 {
     std::vector<uint8_t> vec_cookie{};
     auto const timestamp = calibrate_timestamp(source_timestamp);
-    if (action == mir_pointer_action_button_up || action == mir_pointer_action_button_down)
-    {
-        auto const cookie = cookie_authority->make_cookie(timestamp.count());
-        vec_cookie = cookie->serialize();
-    }
     return me::make_pointer_axis_with_stop_event(
         axis_source, device_id, timestamp, vec_cookie, mir_input_event_modifier_none, action, buttons_pressed, x_axis,
         y_axis, hscroll_value, vscroll_value, hscroll_stop, vscroll_stop, relative_x_value, relative_y_value);
@@ -139,11 +116,6 @@ mir::EventUPtr mir::input::DefaultEventBuilder::pointer_axis_discrete_scroll_eve
 {
     std::vector<uint8_t> vec_cookie{};
     auto const timestamp = calibrate_timestamp(source_timestamp);
-    if (action == mir_pointer_action_button_up || action == mir_pointer_action_button_down)
-    {
-        auto const cookie = cookie_authority->make_cookie(timestamp.count());
-        vec_cookie = cookie->serialize();
-    }
     return me::make_pointer_axis_discrete_scroll_event(
         axis_source, device_id, timestamp, vec_cookie, mir_input_event_modifier_none, action, buttons_pressed,
         hscroll_value, vscroll_value, hscroll_discrete, vscroll_discrete);
@@ -161,11 +133,6 @@ mir::EventUPtr mir::input::DefaultEventBuilder::pointer_event(
 {
     std::vector<uint8_t> vec_cookie{};
     auto const timestamp = calibrate_timestamp(source_timestamp);
-    if (action == mir_pointer_action_button_up || action == mir_pointer_action_button_down)
-    {
-        auto const cookie = cookie_authority->make_cookie(timestamp.count());
-        vec_cookie = cookie->serialize();
-    }
     return me::make_pointer_event(
         device_id,
         timestamp,
@@ -195,15 +162,6 @@ mir::EventUPtr mi::DefaultEventBuilder::touch_event(
 {
     std::vector<uint8_t> vec_cookie{};
     auto const timestamp = calibrate_timestamp(source_timestamp);
-    for (auto const& contact : contacts)
-    {
-        if (contact.action == mir_touch_action_up || contact.action == mir_touch_action_down)
-        {
-            auto const cookie = cookie_authority->make_cookie(timestamp.count());
-            vec_cookie = cookie->serialize();
-            break;
-        }
-    }
     return me::make_touch_event(device_id, timestamp, vec_cookie, mir_input_event_modifier_none, contacts);
 }
 

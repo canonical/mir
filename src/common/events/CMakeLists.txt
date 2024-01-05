@@ -40,8 +40,3 @@ target_link_libraries(mirevents
   PUBLIC
     mircore
 )
-
-target_include_directories(mirevents
-  PRIVATE
-    ${PROJECT_SOURCE_DIR}/src/include/cookie
-)

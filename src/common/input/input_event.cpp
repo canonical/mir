@@ -19,14 +19,11 @@
 
 #include "mir/cookie/blob.h"
 
-#include "mir/cookie/cookie.h"
 #include "mir/event_type_to_string.h"
 #include "mir/events/event_private.h"
 #include "mir/log.h"
 #include "mir/require.h"
-#include "mir_toolkit/mir_cookie.h"
 
-#include "../mir_cookie.h"
 #include "../handle_event_exception.h"
 
 #include <string.h>
@@ -375,38 +372,7 @@ bool mir_input_event_has_cookie(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPT
     return false;
 })
 
-size_t mir_cookie_buffer_size(MirCookie const* cookie) MIR_HANDLE_EVENT_EXCEPTION(
+MirCookie const* mir_input_event_get_cookie(MirInputEvent const*)
 {
-    return cookie->size();
-})
-
-MirCookie const* mir_input_event_get_cookie(MirInputEvent const* iev) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    if (iev->type() == mir_event_type_input)
-    {
-        return new MirCookie(iev->cookie());
-    }
-    else
-    {
-        mir::log_critical("expected a key or motion events, type was: " + mir::event_type_to_string(iev->type()));
-        abort();
-    }
-})
-
-void mir_cookie_to_buffer(MirCookie const* cookie, void* buffer, size_t size) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    return cookie->copy_to(buffer, size);
-})
-
-MirCookie const* mir_cookie_from_buffer(void const* buffer, size_t size) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    if (size != mir::cookie::default_blob_size)
-        return NULL;
-
-    return new MirCookie(buffer, size);
-})
-
-void mir_cookie_release(MirCookie const* cookie)
-{
-    delete cookie;
+    return nullptr;
 }

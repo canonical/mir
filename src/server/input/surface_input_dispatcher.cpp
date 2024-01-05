@@ -23,7 +23,6 @@
 #include "mir/scene/null_surface_observer.h"
 #include "mir/events/event_helpers.h"
 #include "mir/events/pointer_event.h"
-#include "mir_toolkit/mir_cookie.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -115,15 +114,7 @@ void deliver_without_relative_motion(std::shared_ptr<mi::Surface> const& surface
     auto const* input_ev = mir_event_get_input_event(ev);
     auto const* pev = mir_input_event_get_pointer_event(input_ev);
     std::vector<uint8_t> cookie_data;
-    if (mir_input_event_has_cookie(input_ev))
-    {
-        auto cookie = mir_input_event_get_cookie(input_ev);
-        cookie_data.resize(mir_cookie_buffer_size(cookie));
-        mir_cookie_to_buffer(cookie, cookie_data.data(), mir_cookie_buffer_size(cookie));
-        mir_cookie_release(cookie);
-    }
     auto const& bounds = surface->input_bounds();
-
     auto to_deliver = mev::make_pointer_event(
         mir_input_event_get_device_id(input_ev),
         std::chrono::nanoseconds{mir_input_event_get_event_time(input_ev)},

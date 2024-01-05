@@ -393,7 +393,6 @@ libmiral.so.6 libmiral6 #MINVER#
  (c++)"miral::toolkit::mir_input_event_get_pointer_event(MirInputEvent const*)@MIRAL_4.0" 4.0.0
  (c++)"miral::toolkit::mir_input_event_get_touch_event(MirInputEvent const*)@MIRAL_4.0" 4.0.0
  (c++)"miral::toolkit::mir_input_event_get_type(MirInputEvent const*)@MIRAL_4.0" 4.0.0
- (c++)"miral::toolkit::mir_input_event_has_cookie(MirInputEvent const*)@MIRAL_4.0" 4.0.0
  (c++)"miral::toolkit::mir_keyboard_event_action(MirKeyboardEvent const*)@MIRAL_4.0" 4.0.0
  (c++)"miral::toolkit::mir_keyboard_event_input_event(MirKeyboardEvent const*)@MIRAL_4.0" 4.0.0
  (c++)"miral::toolkit::mir_keyboard_event_key_text(MirKeyboardEvent const*)@MIRAL_4.0" 4.0.0

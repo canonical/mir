@@ -30,7 +30,6 @@
 #include "mir/main_loop.h"
 #include "mir/report_exception.h"
 #include "mir/run_mir.h"
-#include "mir/cookie/authority.h"
 
 // TODO these are used to frig a stub renderer when running headless
 #include "mir/renderer/renderer.h"
@@ -100,7 +99,6 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(session_listener)\
     MACRO(shell)\
     MACRO(application_not_responding_detector)\
-    MACRO(cookie_authority)\
     MACRO(persistent_surface_store)
 
 #define FOREACH_ACCESSOR(MACRO)\

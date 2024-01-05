@@ -16,7 +16,6 @@
 
 #include "miroil/event_builder.h"
 #include "mir_toolkit/events/input/input_event.h"
-#include "mir_toolkit/mir_cookie.h"
 #include "mir/events/event_builders.h"
 
 namespace miroil {
@@ -96,15 +95,6 @@ void EventBuilder::EventInfo::store(const MirInputEvent *iev, ulong qtTimestamp)
 {
     this->timestamp = qtTimestamp;
     device_id = mir_input_event_get_device_id(iev);
-    if (mir_input_event_has_cookie(iev))
-    {
-        auto cookie_ptr = mir_input_event_get_cookie(iev);
-        cookie.resize(mir_cookie_buffer_size(cookie_ptr));
-        mir_cookie_to_buffer(cookie_ptr, cookie.data(), cookie.size());
-        mir_cookie_release(cookie_ptr);
-    } else {
-        cookie.resize(0);
-    }
     if (mir_input_event_type_pointer == mir_input_event_get_type(iev))
     {
         auto pev = mir_input_event_get_pointer_event(iev);

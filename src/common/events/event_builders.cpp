@@ -146,7 +146,7 @@ mir::EventUPtr mev::make_window_placement_event(frontend::SurfaceId const& surfa
 mir::EventUPtr mev::make_key_event(
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& cookie,
+    std::vector<uint8_t> const&,
     MirKeyboardAction action,
     xkb_keysym_t keysym,
     int scan_code,
@@ -156,7 +156,6 @@ mir::EventUPtr mev::make_key_event(
 
     e->set_device_id(device_id);
     e->set_event_time(timestamp);
-    e->set_cookie(cookie);
     e->set_action(action);
     e->set_keysym(keysym);
     e->set_scan_code(scan_code);
@@ -199,14 +198,13 @@ void mev::set_button_state(MirEvent& event, MirPointerButtons button_state)
 mir::EventUPtr mev::make_touch_event(
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& cookie,
+    std::vector<uint8_t> const&,
     MirInputEventModifiers modifiers)
 {
     auto e = new_event<MirTouchEvent>();
 
     e->set_device_id(device_id);
     e->set_event_time(timestamp);
-    e->set_cookie(cookie);
     e->set_modifiers(modifiers);
 
     return make_uptr_event(e);

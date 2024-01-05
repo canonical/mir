@@ -38,10 +38,6 @@ class ObserverMultiplexer;
 
 class ConsoleServices;
 
-namespace cookie
-{
-class Authority;
-}
 namespace dispatch
 {
 class MultiplexingDispatchable;
@@ -179,7 +175,6 @@ public:
     auto the_rendering_platforms() -> std::vector<std::shared_ptr<graphics::RenderingPlatform>> const& override;
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<EmergencyCleanup>       the_emergency_cleanup() override;
-    std::shared_ptr<cookie::Authority>      the_cookie_authority() override;
     std::shared_ptr<scene::Clipboard>       the_main_clipboard() override;
     std::shared_ptr<scene::Clipboard>       the_primary_selection_clipboard() override;
     std::shared_ptr<scene::TextInputHub>    the_text_input_hub() override;
@@ -426,7 +421,6 @@ protected:
     CachedPtr<shell::ShellReport> shell_report;
     CachedPtr<shell::decoration::Manager> decoration_manager;
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
-    CachedPtr<cookie::Authority> cookie_authority;
     CachedPtr<input::KeyMapper> key_mapper;
     std::shared_ptr<ConsoleServices> console_services;
 

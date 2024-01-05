@@ -158,7 +158,7 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
                 std::make_shared<mi::KeyboardResyncDispatcher>(idle_poking_dispatcher);
 
             return std::make_shared<mi::KeyRepeatDispatcher>(
-                keyboard_resync_dispatcher, the_main_loop(), the_cookie_authority(),
+                keyboard_resync_dispatcher, the_main_loop(),
                 enable_repeat, key_repeat_timeout, key_repeat_delay, false);
         });
 }
@@ -312,7 +312,6 @@ std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_
                the_seat(),
                the_input_reading_multiplexer(),
                the_clock(),
-               the_cookie_authority(),
                the_key_mapper(),
                the_server_status_listener());
 

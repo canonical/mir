@@ -20,7 +20,6 @@
 #include "mir/glib_main_loop.h"
 #include "mir/default_server_status_listener.h"
 #include "mir/emergency_cleanup.h"
-#include "mir/cookie/authority.h"
 #include "mir/frontend/wayland.h"
 
 #include "mir/logging/dumb_console_logger.h"
@@ -178,18 +177,6 @@ std::shared_ptr<mir::EmergencyCleanup> mir::DefaultServerConfiguration::the_emer
         []()
         {
             return std::make_shared<DefaultEmergencyCleanup>();
-        });
-}
-
-std::shared_ptr<mir::cookie::Authority> mir::DefaultServerConfiguration::the_cookie_authority()
-{
-    return cookie_authority(
-        []()
-        {
-            static_assert(secret_size >= mir::cookie::Authority::minimum_secret_size,
-                          "Secret size is smaller then the minimum secret size");
-
-            return mir::cookie::Authority::create();
         });
 }
 

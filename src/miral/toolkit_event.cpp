@@ -57,11 +57,6 @@ MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev
     return ::mir_input_event_get_pointer_event(event);
 }
 
-bool mir_input_event_has_cookie(MirInputEvent const* ev)
-{
-    return ::mir_input_event_has_cookie(ev);
-}
-
 MirEvent const* mir_input_event_get_event(MirInputEvent const* event)
 {
     return ::mir_input_event_get_event(event);

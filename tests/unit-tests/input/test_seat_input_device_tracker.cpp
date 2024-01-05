@@ -27,7 +27,6 @@
 #include "mir/test/fake_shared.h"
 
 #include "mir/geometry/rectangles.h"
-#include "mir/cookie/authority.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -55,21 +54,17 @@ struct SeatInputDeviceTracker : ::testing::Test
     MirInputDeviceId some_device{8712};
     MirInputDeviceId another_device{1246};
     MirInputDeviceId third_device{86};
-    std::shared_ptr<mir::cookie::Authority> cookie_factory = mir::cookie::Authority::create();
     mtd::AdvanceableClock clock;
 
     mi::DefaultEventBuilder some_device_builder{
         some_device,
-        mt::fake_shared(clock),
-        cookie_factory};
+        mt::fake_shared(clock)};
     mi::DefaultEventBuilder another_device_builder{
         another_device,
-        mt::fake_shared(clock),
-        cookie_factory};
+        mt::fake_shared(clock)};
     mi::DefaultEventBuilder third_device_builder{
         third_device,
-        mt::fake_shared(clock),
-        cookie_factory};
+        mt::fake_shared(clock)};
     mi::receiver::XKBMapper mapper;
     mi::SeatInputDeviceTracker tracker{
         mt::fake_shared(mock_dispatcher), mt::fake_shared(mock_visualizer), mt::fake_shared(mock_cursor_listener),

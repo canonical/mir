@@ -6,9 +6,6 @@ set(MIRAL_VERSION_MINOR 1)
 set(MIRAL_VERSION_PATCH 0)
 set(MIRAL_VERSION ${MIRAL_VERSION_MAJOR}.${MIRAL_VERSION_MINOR}.${MIRAL_VERSION_PATCH})
 
-# Add the cookie implementation before exposing any APIs
-add_subdirectory(cookie/)
-
 # Add the core and platform implementations before exposing any private APIs
 add_subdirectory(core)
 add_subdirectory(platforms/)
