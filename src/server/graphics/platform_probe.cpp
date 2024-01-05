@@ -214,9 +214,16 @@ auto mg::modules_for_device(
         }
     }
 
-    if (best_modules_so_far.empty() && !best_nested)
+    if (best_modules_so_far.empty())
     {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find any platforms for current system"}));
+        if (!best_nested)
+        {
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find any platforms for current system"}));        
+        }
+        // Our *only* option is the nested platform; return that.
+        decltype(best_modules_so_far) nested_vec;
+        nested_vec.push_back(std::move(best_nested.value()));
+        return nested_vec;
     }
 
     switch(nested_selection)
