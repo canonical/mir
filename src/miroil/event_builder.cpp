@@ -37,32 +37,30 @@ void EventBuilder::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchActio
 
 // Key event
 mir::EventUPtr EventBuilder::make_key_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& cookie, MirKeyboardAction action, xkb_keysym_t keysym,
-    int scan_code, MirInputEventModifiers modifiers)
+    MirKeyboardAction action, xkb_keysym_t keysym, int scan_code, MirInputEventModifiers modifiers)
 {
     return mir::events::make_key_event(device_id, timestamp,
-                                   cookie, action, keysym,
+                                   action, keysym,
                                    scan_code, modifiers);
 }
 
 // Touch event
 mir::EventUPtr EventBuilder::make_touch_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& mac, MirInputEventModifiers modifiers)
+    MirInputEventModifiers modifiers)
 {
-    return mir::events::make_touch_event(device_id, timestamp,
-                                   mac, modifiers);
+    return mir::events::make_touch_event(device_id, timestamp, modifiers);
 }
 
 // Pointer event
 mir::EventUPtr EventBuilder::make_pointer_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& mac, MirInputEventModifiers modifiers, MirPointerAction action,
+    MirInputEventModifiers modifiers, MirPointerAction action,
     MirPointerButtons buttons_pressed,
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value,
     float relative_x_value, float relative_y_value)
 {
     return mir::events::make_pointer_event(device_id, timestamp,
-                                   mac, modifiers, action,
+                                   modifiers, action,
                                    buttons_pressed,
                                    x_axis_value, y_axis_value,
                                    hscroll_value, vscroll_value,

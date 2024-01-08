@@ -48,8 +48,7 @@ protected:
     MirInputEvent(MirInputEventType input_type,
                   MirInputDeviceId dev,
                   std::chrono::nanoseconds et,
-                  MirInputEventModifiers mods,
-                  std::vector<uint8_t> const& cookie);
+                  MirInputEventModifiers mods);
 
     MirInputEvent(MirInputEventType input_type);
     MirInputEvent(MirInputEvent const& event) = default;
@@ -60,7 +59,6 @@ private:
     int window_id_ = 0;
     MirInputDeviceId device_id_ = 0;
     std::chrono::nanoseconds event_time_ = {};
-    std::vector<uint8_t> cookie_;
     MirInputEventModifiers modifiers_ = 0;
 };
 

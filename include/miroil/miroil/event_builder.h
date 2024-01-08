@@ -53,7 +53,6 @@ public:
         
         ulong timestamp;
         MirInputDeviceId device_id;
-        std::vector<uint8_t> cookie;
         float relative_x{0};
         float relative_y{0};
     };
@@ -69,16 +68,15 @@ public:
     
     // Key event
     mir::EventUPtr make_key_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-        std::vector<uint8_t> const& cookie, MirKeyboardAction action, xkb_keysym_t keysym,
-        int scan_code, MirInputEventModifiers modifiers);
+        MirKeyboardAction action, xkb_keysym_t keysym, int scan_code, MirInputEventModifiers modifiers);
 
     // Touch event
     mir::EventUPtr make_touch_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-        std::vector<uint8_t> const& mac, MirInputEventModifiers modifiers);
+        MirInputEventModifiers modifiers);
 
     // Pointer event
     mir::EventUPtr make_pointer_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-        std::vector<uint8_t> const& mac, MirInputEventModifiers modifiers, MirPointerAction action,
+        MirInputEventModifiers modifiers, MirPointerAction action,
         MirPointerButtons buttons_pressed,
         float x_axis_value, float y_axis_value,
         float hscroll_value, float vscroll_value,

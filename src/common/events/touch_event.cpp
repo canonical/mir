@@ -27,10 +27,9 @@ MirTouchEvent::MirTouchEvent() : MirInputEvent(mir_input_event_type_touch)
 
 MirTouchEvent::MirTouchEvent(MirInputDeviceId id,
                              std::chrono::nanoseconds timestamp,
-                             std::vector<uint8_t> const& cookie,
                              MirInputEventModifiers modifiers,
                              std::vector<mir::events::TouchContact> const& contacts)
-    : MirInputEvent(mir_input_event_type_touch, id, timestamp, modifiers, cookie),
+    : MirInputEvent(mir_input_event_type_touch, id, timestamp, modifiers),
       contacts{contacts}
 {
 }

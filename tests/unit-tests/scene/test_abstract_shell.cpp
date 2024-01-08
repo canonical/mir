@@ -409,11 +409,9 @@ TEST_F(AbstractShell, key_input_events_are_handled_by_window_manager)
     xkb_keysym_t const keysym{0};
     int const scan_code{0};
     MirInputEventModifiers const modifiers{mir_input_event_modifier_none};
-    std::vector<uint8_t> cookie;
     auto const event = mir::events::make_key_event(
         mir_input_event_type_key,
         event_timestamp,
-        cookie,
         action,
         keysym,
         scan_code,
@@ -430,11 +428,9 @@ TEST_F(AbstractShell, key_input_events_are_handled_by_window_manager)
 TEST_F(AbstractShell, touch_input_events_are_handled_by_window_manager)
 {
     MirInputEventModifiers const modifiers{mir_input_event_modifier_none};
-    std::vector<uint8_t> cookie;
     auto const event = mir::events::make_touch_event(
         mir_input_event_type_touch,
         event_timestamp,
-        cookie,
         modifiers);
 
     EXPECT_CALL(*wm, handle_touch_event(_))
@@ -456,11 +452,9 @@ TEST_F(AbstractShell, pointer_input_events_are_handled_by_window_manager)
     float const vscroll_value{0.0};
     float const relative_x_value{0.0};
     float const relative_y_value{0.0};
-    std::vector<uint8_t> cookie;
     auto const event = mir::events::make_pointer_event(
         mir_input_event_type_pointer,
         event_timestamp,
-        cookie,
         modifiers,
         action,
         buttons_pressed,

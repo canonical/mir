@@ -185,11 +185,9 @@ void mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
              modifiers = mir_keyboard_event_modifiers(kev)]()
              {
                  auto const now = std::chrono::steady_clock::now().time_since_epoch();
-                 std::vector<uint8_t> cookie_vec;
                  auto new_event = mev::make_key_event(
                      id,
                      now,
-                     cookie_vec,
                      mir_keyboard_action_repeat,
                      keysym,
                      scan_code,

@@ -39,9 +39,8 @@ mir::EventUPtr mi::DefaultEventBuilder::key_event(
     int scan_code)
 {
     auto const timestamp = calibrate_timestamp(source_timestamp);
-    std::vector<uint8_t> vec_cookie{};
     return me::make_key_event(
-        device_id, timestamp, vec_cookie, action, keysym, scan_code, mir_input_event_modifier_none);
+        device_id, timestamp, action, keysym, scan_code, mir_input_event_modifier_none);
 }
 
 mir::EventUPtr mi::DefaultEventBuilder::pointer_event(
@@ -53,10 +52,9 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_event(
 {
     const float x_axis_value = 0;
     const float y_axis_value = 0;
-    std::vector<uint8_t> vec_cookie{};
     auto const timestamp = calibrate_timestamp(source_timestamp);
     return me::make_pointer_event(
-        device_id, timestamp, vec_cookie, mir_input_event_modifier_none, action, buttons_pressed, x_axis_value,
+        device_id, timestamp, mir_input_event_modifier_none, action, buttons_pressed, x_axis_value,
         y_axis_value,
         hscroll_value, vscroll_value, relative_x_value, relative_y_value);
 }
@@ -69,10 +67,9 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_event(
     float hscroll_value, float vscroll_value,
     float relative_x_value, float relative_y_value)
 {
-    std::vector<uint8_t> vec_cookie{};
     auto const timestamp = calibrate_timestamp(source_timestamp);
     return me::make_pointer_event(
-        device_id, timestamp, vec_cookie, mir_input_event_modifier_none, action, buttons_pressed, x_axis, y_axis,
+        device_id, timestamp, mir_input_event_modifier_none, action, buttons_pressed, x_axis, y_axis,
         hscroll_value, vscroll_value, relative_x_value, relative_y_value);
 }
 
@@ -85,10 +82,9 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_axis_event(
     float hscroll_value, float vscroll_value,
     float relative_x_value, float relative_y_value)
 {
-    std::vector<uint8_t> vec_cookie{};
     auto const timestamp = calibrate_timestamp(source_timestamp);
     return me::make_pointer_axis_event(
-        axis_source, device_id, timestamp, vec_cookie, mir_input_event_modifier_none, action, buttons_pressed, x_axis,
+        axis_source, device_id, timestamp, mir_input_event_modifier_none, action, buttons_pressed, x_axis,
         y_axis, hscroll_value, vscroll_value, relative_x_value, relative_y_value);
 }
 
@@ -102,10 +98,9 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_axis_with_stop_event(
     bool hscroll_stop, bool vscroll_stop,
     float relative_x_value, float relative_y_value)
 {
-    std::vector<uint8_t> vec_cookie{};
     auto const timestamp = calibrate_timestamp(source_timestamp);
     return me::make_pointer_axis_with_stop_event(
-        axis_source, device_id, timestamp, vec_cookie, mir_input_event_modifier_none, action, buttons_pressed, x_axis,
+        axis_source, device_id, timestamp, mir_input_event_modifier_none, action, buttons_pressed, x_axis,
         y_axis, hscroll_value, vscroll_value, hscroll_stop, vscroll_stop, relative_x_value, relative_y_value);
 }
 
@@ -114,10 +109,9 @@ mir::EventUPtr mir::input::DefaultEventBuilder::pointer_axis_discrete_scroll_eve
     MirPointerButtons buttons_pressed, float hscroll_value, float vscroll_value, float hscroll_discrete,
     float vscroll_discrete)
 {
-    std::vector<uint8_t> vec_cookie{};
     auto const timestamp = calibrate_timestamp(source_timestamp);
     return me::make_pointer_axis_discrete_scroll_event(
-        axis_source, device_id, timestamp, vec_cookie, mir_input_event_modifier_none, action, buttons_pressed,
+        axis_source, device_id, timestamp, mir_input_event_modifier_none, action, buttons_pressed,
         hscroll_value, vscroll_value, hscroll_discrete, vscroll_discrete);
 }
 
@@ -131,12 +125,10 @@ mir::EventUPtr mir::input::DefaultEventBuilder::pointer_event(
     events::ScrollAxisV1H h_scroll,
     events::ScrollAxisV1V v_scroll)
 {
-    std::vector<uint8_t> vec_cookie{};
     auto const timestamp = calibrate_timestamp(source_timestamp);
     return me::make_pointer_event(
         device_id,
         timestamp,
-        vec_cookie,
         mir_input_event_modifier_none,
         action,
         buttons,
@@ -160,9 +152,8 @@ mir::EventUPtr mi::DefaultEventBuilder::touch_event(
     std::optional<Timestamp> source_timestamp,
     std::vector<events::TouchContactV2> const& contacts)
 {
-    std::vector<uint8_t> vec_cookie{};
     auto const timestamp = calibrate_timestamp(source_timestamp);
-    return me::make_touch_event(device_id, timestamp, vec_cookie, mir_input_event_modifier_none, contacts);
+    return me::make_touch_event(device_id, timestamp, mir_input_event_modifier_none, contacts);
 }
 
 auto mi::DefaultEventBuilder::calibrate_timestamp(std::optional<Timestamp> timestamp) -> Timestamp

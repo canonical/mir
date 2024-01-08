@@ -29,7 +29,6 @@ struct MirPointerEvent : MirInputEvent
     MirPointerEvent();
     MirPointerEvent(MirInputDeviceId dev,
                     std::chrono::nanoseconds et,
-                    std::vector<uint8_t> const& cookie,
                     MirInputEventModifiers mods,
                     MirPointerAction action,
                     MirPointerButtons buttons,

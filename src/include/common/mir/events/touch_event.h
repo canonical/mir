@@ -27,7 +27,6 @@ struct MirTouchEvent : MirInputEvent
     MirTouchEvent();
     MirTouchEvent(MirInputDeviceId id,
                   std::chrono::nanoseconds timestamp,
-                  std::vector<uint8_t> const& cookie,
                   MirInputEventModifiers modifiers,
                   std::vector<mir::events::TouchContact> const& contacts);
     auto clone() const -> MirTouchEvent* override;

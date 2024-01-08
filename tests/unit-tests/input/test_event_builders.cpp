@@ -31,7 +31,6 @@ struct InputEventBuilder : public Test
 {
     MirInputDeviceId const device_id = 7;
     std::chrono::nanoseconds const timestamp = std::chrono::nanoseconds(39);
-    std::vector<uint8_t> const cookie{};
     MirInputEventModifiers const modifiers = mir_input_event_modifier_meta;
 };
 }
@@ -44,7 +43,7 @@ TEST_F(InputEventBuilder, makes_valid_key_event)
 
    auto ev = mev::make_key_event(
        device_id, timestamp,
-       cookie, action, keysym, scan_code, modifiers);
+       action, keysym, scan_code, modifiers);
    auto e = ev.get();
 
    EXPECT_EQ(mir_event_type_input, mir_event_get_type(e));
@@ -72,7 +71,7 @@ TEST_F(InputEventBuilder, makes_valid_touch_event)
 
    auto ev = mev::make_touch_event(
        device_id, timestamp,
-       cookie, modifiers);
+       modifiers);
    for (unsigned i = 0; i < touch_count; i++)
    {
        mev::add_touch(*ev, touch_ids[i], actions[i], tooltypes[i], x_axis_values[i], y_axis_values[i],
@@ -109,7 +108,7 @@ TEST_F(InputEventBuilder, makes_valid_pointer_event)
     auto const relative_x_value = 0.0;
     auto const relative_y_value = 0.0;
     auto ev = mev::make_pointer_event(
-        device_id, timestamp, cookie, modifiers,
+        device_id, timestamp, modifiers,
         action, depressed_buttons, x_axis_value, y_axis_value,
         hscroll_value, vscroll_value, relative_x_value, relative_y_value);
     auto e = ev.get();
@@ -138,7 +137,7 @@ TEST_F(InputEventBuilder, maps_single_touch_down_to_motion_down)
 {
     MirTouchAction action =  mir_touch_action_down;
 
-    auto ev = mev::make_touch_event(device_id, timestamp, cookie, modifiers);
+    auto ev = mev::make_touch_event(device_id, timestamp, modifiers);
     mev::add_touch(*ev, 0, action, mir_touch_tooltype_finger, 0, 0, 0, 0, 0, 0);
     auto e = ev.get();
 
@@ -154,7 +153,7 @@ TEST_F(InputEventBuilder, maps_single_touch_up_to_motion_up)
 {
     MirTouchAction action =  mir_touch_action_up;
 
-    auto ev = mev::make_touch_event(device_id, timestamp, cookie, modifiers);
+    auto ev = mev::make_touch_event(device_id, timestamp, modifiers);
     mev::add_touch(*ev, 0, action, mir_touch_tooltype_finger, 0, 0, 0, 0, 0, 0);
     auto e = ev.get();
 
@@ -173,7 +172,7 @@ TEST_F(InputEventBuilder, map_to_hover_if_no_button_pressed)
     auto const relative_y_value = 0.0;
     MirPointerAction action = mir_pointer_action_motion;
     auto ev = mev::make_pointer_event(
-        device_id, timestamp, cookie, modifiers,
+        device_id, timestamp, modifiers,
         action, 0, x_axis_value, y_axis_value,
         hscroll_value, vscroll_value, relative_x_value, relative_y_value);
     auto e = ev.get();
