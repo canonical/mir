@@ -1,4 +1,4 @@
-MIRAL_4.0 {
+MIRAL_4.2 {
 # WaylandExtensions::Context ctor and dtor symbols are inline
 # but can be exported by unoptimized builds.
 # This makes the "regenerate" script hide them:
@@ -467,18 +467,11 @@ global:
     vtable?for?miral::WindowSpecification::AspectRatio;
     vtable?for?miral::X11Support;
     vtable?for?miral::Zone;
-  };
-
-  local: *;
-};
-
-MIRAL_4.1 {
-global:
-  extern "C++" {
     miral::WaylandExtensions::zwp_input_method_v1*;
     miral::WaylandExtensions::zwp_input_panel_v1*;
     miral::X11Support::default_to_enabled*;
   };
 
-} MIRAL_4.0;
+  local: *;
+};
 

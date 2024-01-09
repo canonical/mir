@@ -1,4 +1,4 @@
-MIR_COMMON_2.8 {
+MIR_COMMON_2.15 {
   global:
   mir_arrow_cursor_name;
   mir_busy_cursor_name;
@@ -488,12 +488,6 @@ MIR_COMMON_2.8 {
     typeinfo?for?mir::ThreadPoolExecutor;
     vtable?for?mir::ThreadPoolExecutor;
     mir::thread_pool_executor;
-  };
-  local: *;
-};
-
-MIR_COMMON_2.9 {
-  extern "C++" {
     mir::logging::format_message*;
     mir::logging::FileLogger::log*;
     mir::logging::MultiLogger::log*;
@@ -513,32 +507,18 @@ MIR_COMMON_2.9 {
     MirPointerEvent::v_scroll*;
     MirPointerEvent::set_v_scroll*;
     MirPointerEvent::axis_source*;
-  };
-} MIR_COMMON_2.8;
-
-MIR_COMMON_2.10 {
-  extern "C++" {
     typeinfo?for?MirPointerEvent;
     typeinfo?for?MirTouchEvent;
     typeinfo?for?MirKeyboardEvent;
     MirTouchEvent::set_position*;
     MirTouchEvent::position*;
-  };
-} MIR_COMMON_2.9;
-
-MIR_COMMON_2.11 {
-  extern "C++" {
     MirKeyboardEvent::xkb_modifiers*;
     MirKeyboardEvent::set_xkb_modifiers*;
-  };
-} MIR_COMMON_2.10;
-
-MIR_COMMON_2.14 {
-  extern "C++" {
     MirTouchEvent::set_local_position*;
     MirTouchEvent::local_position*;
     MirPointerEvent::set_local_position*;
     MirPointerEvent::local_position*;
     mir::events::map_positions*;
   };
-} MIR_COMMON_2.11;
+  local: *;
+};

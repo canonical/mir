@@ -81,7 +81,7 @@ def _report(publish, symbol):
     else:
         print('NOPUBLISH: {}'.format(symbol))
 
-OLD_STANZAS = '''MIRAL_4.0 {
+OLD_STANZAS = '''MIRAL_4.1 {
 # WaylandExtensions::Context ctor and dtor symbols are inline
 # but can be exported by unoptimized builds.
 # This makes the "regenerate" script hide them:
@@ -555,11 +555,11 @@ global:
   local: *;
 };
 
-MIRAL_4.1 {
+MIRAL_4.2 {
 global:'''
 
 END_NEW_STANZA = '''
-} MIRAL_4.0;
+} MIRAL_4.1;
 '''
 
 def _print_report():
