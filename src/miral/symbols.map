@@ -1,4 +1,4 @@
-MIRAL_4.2 {
+MIRAL_5.0 {
 # WaylandExtensions::Context ctor and dtor symbols are inline
 # but can be exported by unoptimized builds.
 # This makes the "regenerate" script hide them:

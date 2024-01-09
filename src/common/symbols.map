@@ -1,4 +1,4 @@
-MIR_COMMON_2.15 {
+MIR_COMMON_2.17 {
   global:
   mir_arrow_cursor_name;
   mir_busy_cursor_name;
