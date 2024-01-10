@@ -512,7 +512,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmiral7 (= ${libmiral6:Version}),
+Depends: libmiral7 (= ${libmiral7:Version}),
 # ${source:Version} is technically incorrect, but Launchpad doesn't do BinNMUs
 # so it's harmless.
          libmircommon-dev (= ${source:Version}),

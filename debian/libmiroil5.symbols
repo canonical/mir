@@ -1,4 +1,4 @@
-libmiroil.so.3 libmiroil3 #MINVER#
+libmiroil.so.5 libmiroil5 #MINVER#
  MIROIL_2.0@MIROIL_2.0 2.11.0
  (c++)"miroil::Compositor::~Compositor()@MIROIL_2.0" 2.11.0
  (c++)"miroil::DisplayConfigurationControllerWrapper::DisplayConfigurationControllerWrapper(std::shared_ptr<mir::shell::DisplayConfigurationController> const&)@MIROIL_2.0" 2.11.0
