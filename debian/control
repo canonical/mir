@@ -524,7 +524,7 @@ Description: Developer files for the Mir ABI-stable abstraction layer
  Contains header files required for development using the MirAL abstraction
  layer.
 
-Package: libmiroil4
+Package: libmiroil5
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -541,7 +541,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmiroil4 (= ${binary:Version}),
+Depends: libmiroil5 (= ${binary:Version}),
          ${misc:Depends},
 Description: Developer files for the Mir Lomiri compatibility library
  MirOil provides the Lomiri compatibility API.
@@ -549,7 +549,7 @@ Description: Developer files for the Mir Lomiri compatibility library
  Contains header files required for development using the Lomiri compatibility
  library.
 
-Package: libmirwayland4
+Package: libmirwayland5
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -567,7 +567,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirwayland4 (= ${binary:Version}),
+Depends: libmirwayland5 (= ${binary:Version}),
          libmircore-dev (= ${binary:Version}),
          ${misc:Depends},
          libmirwayland-bin (= ${binary:Version}),
