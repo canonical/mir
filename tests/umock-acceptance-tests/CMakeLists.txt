@@ -3,11 +3,13 @@ include(CMakeDependentOption)
 include_directories(
   ${CMAKE_SOURCE_DIR}
   ${CMAKE_SOURCE_DIR}/tests/include/
+  ${PROJECT_SOURCE_DIR}/src/include/common
 )
 
 mir_add_wrapped_executable(mir_umock_acceptance_tests NOINSTALL
 
   test_libinput.cpp
+  test_platform_probing.cpp
   $<TARGET_OBJECTS:mir-umock-test-framework>
   )
 
