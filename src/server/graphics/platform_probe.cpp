@@ -16,7 +16,10 @@
 
 #include "mir/log.h"
 #include "mir/graphics/platform.h"
+#include "mir/options/configuration.h"
 #include "mir/shared_library.h"
+#include "mir/shared_library_prober.h"
+#include "mir/shared_library_prober_report.h"
 #include "mir/udev/wrapper.h"
 #include "platform_probe.h"
 
@@ -274,4 +277,141 @@ auto mir::graphics::rendering_modules_for_device(
         },
         modules,
         TypePreference::prefer_hardware);
+}
+
+namespace
+{
+auto split_on(std::string const& tokens, char delimiter) -> std::vector<std::string>
+{
+    std::string token;
+    std::istringstream token_stream{tokens};
+
+    std::vector<std::string> result;
+    while (std::getline(token_stream, token, delimiter))
+    {
+        result.push_back(token);
+    }
+
+    return result;
+}
+
+auto select_platforms_from_list(std::string const& selection, std::vector<std::shared_ptr<mir::SharedLibrary>> const& modules)
+    -> std::vector<std::shared_ptr<mir::SharedLibrary>>
+{
+    std::vector<std::shared_ptr<mir::SharedLibrary>> selected_modules;
+    std::vector<std::string> found_module_names;
+
+    // Our platform modules are a comma-delimited list.
+    auto requested_modules = split_on(selection, ',');
+
+    for (auto const& module : modules)
+    {
+        try
+        {
+            auto describe_module = module->load_function<mg::DescribeModule>(
+                "describe_graphics_module",
+                MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+            auto const description = describe_module();
+            found_module_names.emplace_back(description->name);
+
+            if (auto const i = std::find(requested_modules.begin(), requested_modules.end(), description->name);
+                i != requested_modules.end())
+            {
+                selected_modules.push_back(module);
+                requested_modules.erase(i);
+            }
+        }
+        catch (std::exception const&)
+        {
+            // Should we log anything here?
+        }
+    }
+
+    if (!requested_modules.empty())
+    {
+        std::stringstream error_msg;
+        error_msg << "Failed to find all requested platform modules." << std::endl;
+        error_msg << "Detected modules are: " << std::endl;
+        for (auto const& module : found_module_names)
+        {
+            error_msg << "\t" << module << std::endl;
+        }
+        error_msg << "Failed to find:" << std::endl;
+        for (auto const& module : requested_modules)
+        {
+            error_msg << "\t" << module << std::endl;
+        }
+        BOOST_THROW_EXCEPTION((std::runtime_error{error_msg.str()}));
+    }
+
+    return selected_modules;
+}
+}
+
+auto mg::select_display_modules(
+    options::Option const& options,
+    std::shared_ptr<ConsoleServices> const& console,
+    SharedLibraryProberReport& lib_loader_report)
+    -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>
+{    
+    std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>> platform_modules;
+
+    auto const& path = options.get<std::string>(options::platform_path);
+    auto platforms = mir::libraries_for_path(path, lib_loader_report);
+
+    if (platforms.empty())
+    {
+        auto msg = "Failed to find any platform plugins in: " + path;
+        BOOST_THROW_EXCEPTION((std::runtime_error{msg.c_str()}));
+    }
+
+    if (options.is_set(options::platform_display_libs))
+    {
+        
+        auto const manually_selected_platforms =
+            select_platforms_from_list(options.get<std::string>(options::platform_display_libs), platforms);
+
+        for (auto const& platform : manually_selected_platforms)
+        {
+            auto supported_devices =
+                graphics::probe_display_module(
+                    *platform,
+                    dynamic_cast<mir::options::ProgramOption const&>(options),
+                    console);
+
+            bool found_supported_device{false};
+            for (auto& device : supported_devices)
+            {
+                // Add any devices that the platform claims are supported
+                if (device.support_level >= mg::probe::supported)
+                {
+                    found_supported_device = true;
+                    platform_modules.emplace_back(std::move(device), platform);
+                }
+            }
+
+            if (!found_supported_device)
+            {
+                auto const describe_module = platform->load_function<mg::DescribeModule>(
+                    "describe_graphics_module",
+                    MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+                auto const descriptor = describe_module();
+
+                mir::log_warning("Manually-specified display platform %s does not claim to support this system. Trying anyway...", descriptor->name);
+
+                // We're here only if the platform doesn't claim to support *any* of the detected devices
+                // Add *all* the found devices into our platform list, and hope.
+                for (auto& device : supported_devices)
+                {
+                    platform_modules.emplace_back(std::move(device), platform);
+                }
+            }
+        }
+    }
+    else
+    {
+        platform_modules = display_modules_for_device(platforms, dynamic_cast<mir::options::ProgramOption const&>(options), console);
+    }
+
+    return platform_modules;
 }

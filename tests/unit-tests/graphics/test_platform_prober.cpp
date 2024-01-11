@@ -14,14 +14,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <boost/program_options/options_description.hpp>
+#include <boost/type_traits/has_right_shift.hpp>
 #include <gtest/gtest.h>
 #include <fcntl.h>
 #include <boost/throw_exception.hpp>
 
+#include "mir/console_services.h"
 #include "mir/graphics/platform.h"
 #include "mir/shared_library.h"
+#include "mir/shared_library_prober_report.h"
 #include "mir/test/doubles/mock_udev_device.h"
+#include "mir/test/doubles/stub_console_services.h"
+#include "mir_test_framework/temporary_environment_value.h"
 #include "src/server/graphics/platform_probe.h"
+#include "src/include/common/mir/logging/null_shared_library_prober_report.h"
 #include "mir/options/program_option.h"
 #include "mir/udev/wrapper.h"
 
@@ -283,6 +290,134 @@ TEST(ServerPlatformProbe, IgnoresNonPlatformModules)
         options,
         std::make_shared<StubConsoleServices>());
     EXPECT_THAT(selected_modules, Not(IsEmpty()));
+}
+
+class TestOptions : public mir::options::Option
+{
+public:
+    template<typename T>
+    void add_option(char const* name, T value)
+    {
+        values[name] = value;
+    }
+    
+    auto is_set(char const* name) const -> bool override
+    {
+        return values.contains(name);
+    }
+
+    auto get(char const* name, bool default_) const -> bool override
+    {
+        return get_typed(name, default_);
+    }
+
+    auto get(char const* name, char const* default_) const -> std::string override
+    {
+        return get_typed(name, default_);
+    }
+
+    auto get(char const* name, int default_) const -> int override
+    {
+        return get_typed(name, default_);
+    }
+
+    auto get(char const* name) const -> boost::any const& override
+    {
+        static boost::any default_;
+        return get_typed<boost::any const&>(name, default_);
+    }
+private:
+    template<typename T>
+    auto get_typed(char const* name, T default_) const -> T
+    {
+        auto value = values.find(name);
+        if (value == values.end())
+        {
+            return default_;
+        }
+        return boost::any_cast<T>(value->second);
+    }
+    std::unordered_map<std::string, boost::any> values;
+};
+
+class FullProbeStack : public testing::Test
+{
+public:
+    FullProbeStack()
+        : console{std::make_shared<mtd::StubConsoleServices>()},
+          report{std::make_shared<mir::logging::NullSharedLibraryProberReport>()}
+    {
+    }
+    
+    auto add_gbm_kms_device() -> bool
+    {
+        using namespace std::string_literals;
+#ifndef MIR_BUILD_PLATFORM_GBM_KMS
+        return false;
+#else
+       udev_env.add_device("drm", ("dri/card" + std::to_string(drm_device_count)).c_str(), nullptr, {}, {});
+       drm_device_count++;
+       return true;
+#endif
+    }
+
+    void enable_host_x11()
+    {
+        temporary_env.emplace_back("DISPLAY", ":0");
+    }
+
+    void disable_host_x11()
+    {
+        temporary_env.emplace_back("DISPLAY", nullptr);
+    }
+
+    void enable_host_wayland()
+    {
+        options.add_option("wayland-host", "WAYLAND-0");
+    }
+
+    auto the_options() -> mir::options::Option const&
+    {
+        return options;
+    }
+
+    auto the_console_services() -> std::shared_ptr<mir::ConsoleServices>
+    {
+        return console;
+    }
+
+    auto the_library_prober_report() -> std::shared_ptr<mir::SharedLibraryProberReport>
+    {
+        return report;
+    }
+private:
+    std::shared_ptr<mir::ConsoleServices> const console;
+    TestOptions options;
+    std::shared_ptr<mir::SharedLibraryProberReport> const report;
+    
+    std::vector<mtf::TemporaryEnvironmentValue> temporary_env;
+    mtf::UdevEnvironment udev_env;
+#ifdef MIR_BUILD_PLATFORM_GBM_KMS
+    int drm_device_count{0};
+    mtd::MockDRM drm;
+    mtd::MockGBM gbm;
+#endif
+};
+
+TEST_F(FullProbeStack, select_display_modules_loads_all_available_hardware_when_no_nested)
+{
+    using namespace testing;
+    int expected_hardware_count{0};
+    for (auto i = 0; i < 2; ++i)
+    {
+        if (add_gbm_kms_device())
+        {
+            expected_hardware_count++;
+        }
+    }
+
+    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+    EXPECT_THAT(devices.size(), Eq(expected_hardware_count));    
 }
 
 class ProbePolicy : public testing::Test
