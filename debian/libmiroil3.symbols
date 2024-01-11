@@ -18,12 +18,12 @@ libmiroil.so.3 libmiroil3 #MINVER#
 
 # std::chrono::duration<>s are 64 bits on both 64bit and 32bit archs,
 # meaning they appear as long/long long respectively.
- (c++|arch-bits=64)"miroil::EventBuilder::make_key_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, std::vector<unsigned char, std::allocator<unsigned char> > const&, MirKeyboardAction, unsigned int, int, unsigned int)@MIROIL_3.0" 2.17.0
- (c++|arch-bits=32)"miroil::EventBuilder::make_key_event(long long, std::chrono::duration<long long, std::ratio<1ll, 1000000000ll> >, std::vector<unsigned char, std::allocator<unsigned char> > const&, MirKeyboardAction, unsigned int, int, unsigned int)@MIROIL_3.0" 2.17.0
- (c++|arch-bits=64)"miroil::EventBuilder::make_pointer_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, std::vector<unsigned char, std::allocator<unsigned char> > const&, unsigned int, MirPointerAction, unsigned int, float, float, float, float, float, float)@MIROIL_3.0" 2.17.0
- (c++|arch-bits=32)"miroil::EventBuilder::make_pointer_event(long long, std::chrono::duration<long long, std::ratio<1ll, 1000000000ll> >, std::vector<unsigned char, std::allocator<unsigned char> > const&, unsigned int, MirPointerAction, unsigned int, float, float, float, float, float, float)@MIROIL_3.0" 2.17.0
- (c++|arch-bits=64)"miroil::EventBuilder::make_touch_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, std::vector<unsigned char, std::allocator<unsigned char> > const&, unsigned int)@MIROIL_3.0" 2.17.0
- (c++|arch-bits=32)"miroil::EventBuilder::make_touch_event(long long, std::chrono::duration<long long, std::ratio<1ll, 1000000000ll> >, std::vector<unsigned char, std::allocator<unsigned char> > const&, unsigned int)@MIROIL_3.0" 2.17.0
+ (c++|arch-bits=64)"miroil::EventBuilder::make_key_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, MirKeyboardAction, unsigned int, int, unsigned int)@MIROIL_3.0" 2.17.0
+ (c++|arch-bits=32)"miroil::EventBuilder::make_key_event(long long, std::chrono::duration<long long, std::ratio<1ll, 1000000000ll> >, MirKeyboardAction, unsigned int, int, unsigned int)@MIROIL_3.0" 2.17.0
+ (c++|arch-bits=64)"miroil::EventBuilder::make_pointer_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, unsigned int, MirPointerAction, unsigned int, float, float, float, float, float, float)@MIROIL_3.0" 2.17.0
+ (c++|arch-bits=32)"miroil::EventBuilder::make_pointer_event(long long, std::chrono::duration<long long, std::ratio<1ll, 1000000000ll> >, unsigned int, MirPointerAction, unsigned int, float, float, float, float, float, float)@MIROIL_3.0" 2.17.0
+ (c++|arch-bits=64)"miroil::EventBuilder::make_touch_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, unsigned int)@MIROIL_3.0" 2.17.0
+ (c++|arch-bits=32)"miroil::EventBuilder::make_touch_event(long long, std::chrono::duration<long long, std::ratio<1ll, 1000000000ll> >, unsigned int)@MIROIL_3.0" 2.17.0
 
  (c++)"miroil::EventBuilder::store(MirInputEvent const*, unsigned long)@MIROIL_3.0" 2.17.0
  (c++)"miroil::EventBuilder::~EventBuilder()@MIROIL_3.0" 2.17.0
