@@ -22,6 +22,7 @@
 #include "mir/shared_library.h"
 #include "mir/options/program_option.h"
 #include "mir/graphics/platform.h"
+#include "mir/shared_library_prober_report.h"
 
 namespace mir
 {
@@ -63,6 +64,12 @@ auto rendering_modules_for_device(
     std::span<std::shared_ptr<DisplayPlatform>> const& platforms,
     options::ProgramOption const& options,
     std::shared_ptr<ConsoleServices> const& console)
+    -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>;
+
+auto select_display_modules(
+    options::Option const& options,
+    std::shared_ptr<ConsoleServices> const& console,
+    SharedLibraryProberReport& lib_loader_report)
     -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>;
 }
 }

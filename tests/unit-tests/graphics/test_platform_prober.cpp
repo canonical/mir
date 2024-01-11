@@ -14,14 +14,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <boost/program_options/options_description.hpp>
+#include <boost/type_traits/has_right_shift.hpp>
 #include <gtest/gtest.h>
 #include <fcntl.h>
 #include <boost/throw_exception.hpp>
 
+#include "mir/console_services.h"
 #include "mir/graphics/platform.h"
 #include "mir/shared_library.h"
+#include "mir/shared_library_prober_report.h"
 #include "mir/test/doubles/mock_udev_device.h"
+#include "mir/test/doubles/stub_console_services.h"
+#include "mir_test_framework/temporary_environment_value.h"
 #include "src/server/graphics/platform_probe.h"
+#include "src/include/common/mir/logging/null_shared_library_prober_report.h"
 #include "mir/options/program_option.h"
 #include "mir/udev/wrapper.h"
 
