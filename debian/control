@@ -524,7 +524,7 @@ Description: Developer files for the Mir ABI-stable abstraction layer
  Contains header files required for development using the MirAL abstraction
  layer.
 
-Package: libmiroil3
+Package: libmiroil5
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -541,7 +541,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmiroil3 (= ${binary:Version}),
+Depends: libmiroil5 (= ${binary:Version}),
          ${misc:Depends},
 Description: Developer files for the Mir Lomiri compatibility library
  MirOil provides the Lomiri compatibility API.
