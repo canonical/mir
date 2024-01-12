@@ -15,16 +15,9 @@ libmiroil.so.5 libmiroil5 #MINVER#
  (c++)"miroil::EventBuilder::EventInfo::store(MirInputEvent const*, unsigned long)@MIROIL_5.0" 2.17.0
  (c++)"miroil::EventBuilder::add_touch(MirEvent&, int, MirTouchAction, MirTouchTooltype, float, float, float, float, float, float)@MIROIL_5.0" 2.17.0
  (c++)"miroil::EventBuilder::find_info(unsigned long)@MIROIL_5.0" 2.17.0
-
-# std::chrono::duration<>s are 64 bits on both 64bit and 32bit archs,
-# meaning they appear as long/long long respectively.
- (c++|arch-bits=64)"miroil::EventBuilder::make_key_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, MirKeyboardAction, unsigned int, int, unsigned int)@MIROIL_5.0" 2.17.0
- (c++|arch-bits=32)"miroil::EventBuilder::make_key_event(long long, std::chrono::duration<long long, std::ratio<1ll, 1000000000ll> >, MirKeyboardAction, unsigned int, int, unsigned int)@MIROIL_5.0" 2.17.0
- (c++|arch-bits=64)"miroil::EventBuilder::make_pointer_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, unsigned int, MirPointerAction, unsigned int, float, float, float, float, float, float)@MIROIL_5.0" 2.17.0
- (c++|arch-bits=32)"miroil::EventBuilder::make_pointer_event(long long, std::chrono::duration<long long, std::ratio<1ll, 1000000000ll> >, unsigned int, MirPointerAction, unsigned int, float, float, float, float, float, float)@MIROIL_5.0" 2.17.0
- (c++|arch-bits=64)"miroil::EventBuilder::make_touch_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, unsigned int)@MIROIL_5.0" 2.17.0
- (c++|arch-bits=32)"miroil::EventBuilder::make_touch_event(long long, std::chrono::duration<long long, std::ratio<1ll, 1000000000ll> >, unsigned int)@MIROIL_5.0" 2.17.0
-
+ (c++)"miroil::EventBuilder::make_key_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, MirKeyboardAction, unsigned int, int, unsigned int)@MIROIL_5.0" 2.17.0
+ (c++)"miroil::EventBuilder::make_pointer_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, unsigned int, MirPointerAction, unsigned int, float, float, float, float, float, float)@MIROIL_5.0" 2.17.0
+ (c++)"miroil::EventBuilder::make_touch_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, unsigned int)@MIROIL_5.0" 2.17.0
  (c++)"miroil::EventBuilder::store(MirInputEvent const*, unsigned long)@MIROIL_5.0" 2.17.0
  (c++)"miroil::EventBuilder::~EventBuilder()@MIROIL_5.0" 2.17.0
  (c++)"miroil::GLBuffer::GLBuffer(std::shared_ptr<mir::graphics::Buffer> const&)@MIROIL_5.0" 2.17.0
@@ -53,11 +46,7 @@ libmiroil.so.5 libmiroil5 #MINVER#
  (c++)"miroil::MirPromptSession::MirPromptSession(MirPromptSession*)@MIROIL_5.0" 2.17.0
  (c++)"miroil::MirPromptSession::MirPromptSession(miroil::MirPromptSession const&)@MIROIL_5.0" 2.17.0
  (c++)"miroil::MirPromptSession::MirPromptSession(miroil::MirPromptSession&&)@MIROIL_5.0" 2.17.0
-
-# The callback takes a size_t, which appears as long on 64bit archs and int on 32bits.
- (c++|arch-bits=64)"miroil::MirPromptSession::new_fds_for_prompt_providers(unsigned int, void (*)(MirPromptSession*, unsigned long, int const*, void*), void*)@MIROIL_5.0" 2.17.0
- (c++|arch-bits=32)"miroil::MirPromptSession::new_fds_for_prompt_providers(unsigned int, void (*)(MirPromptSession*, unsigned int, int const*, void*), void*)@MIROIL_5.0" 2.17.0
-
+ (c++)"miroil::MirPromptSession::new_fds_for_prompt_providers(unsigned int, void (*)(MirPromptSession*, unsigned long, int const*, void*), void*)@MIROIL_5.0" 2.17.0
  (c++)"miroil::MirPromptSession::operator=(miroil::MirPromptSession const&)@MIROIL_5.0" 2.17.0
  (c++)"miroil::MirPromptSession::operator=(miroil::MirPromptSession&&)@MIROIL_5.0" 2.17.0
  (c++)"miroil::MirPromptSession::operator==(miroil::MirPromptSession const&)@MIROIL_5.0" 2.17.0
@@ -102,11 +91,7 @@ libmiroil.so.5 libmiroil5 #MINVER#
  (c++)"miroil::Surface::query(MirWindowAttrib) const@MIROIL_5.0" 2.17.0
  (c++)"miroil::Surface::remove_observer(std::shared_ptr<miroil::SurfaceObserver> const&)@MIROIL_5.0" 2.17.0
  (c++)"miroil::Surface::set_confine_pointer_state(MirPointerConfinementState)@MIROIL_5.0" 2.17.0
-
-# Again, first parameter is a 64bit integer
- (c++|arch-bits=64)"miroil::Surface::set_keymap(long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIROIL_5.0" 2.17.0
- (c++|arch-bits=32)"miroil::Surface::set_keymap(long long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIROIL_5.0" 2.17.0
-
+ (c++)"miroil::Surface::set_keymap(long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIROIL_5.0" 2.17.0
  (c++)"miroil::Surface::set_orientation(MirOrientation)@MIROIL_5.0" 2.17.0
  (c++)"miroil::Surface::top_left() const@MIROIL_5.0" 2.17.0
  (c++)"miroil::Surface::visible() const@MIROIL_5.0" 2.17.0
