@@ -29,8 +29,6 @@
 #include <boost/throw_exception.hpp>
 
 #include <algorithm>
-#include <random>
-#include <unordered_set>
 
 using namespace mir;
 using namespace mir::geometry;
@@ -2021,87 +2019,33 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
 
         if (parameters.state() == mir_window_state_restored)
         {
-            Displacement const cascading_offset{48, 48};
-            Displacement const position_tolerance{12, 12};
+            auto const offset{48};
+            std::array const positions {
+                parameters.top_left().value(),
+                parameters.top_left().value() + Displacement( offset,  offset),
+                parameters.top_left().value() + Displacement(-offset,  offset),
+                parameters.top_left().value() + Displacement( offset, -offset),
+                parameters.top_left().value() + Displacement(-offset, -offset)};
 
-            auto unique_window_positions{[&]()
+            for (auto const& position : positions)
             {
-                struct PointHash
+                auto const window{window_at(position)};
+                auto const window_type{info_for(window).type()};
+                auto const window_state{info_for(window).state()};
+
+                if (!window ||
+                    window_state != mir_window_state_restored ||
+                    (window_type != mir_window_type_normal &&
+                     window_type != mir_window_type_decoration &&
+                     window_type != mir_window_type_freestyle) ||
+                     window.top_left() != position)
                 {
-                    std::size_t operator() (Point const& point) const
-                    {
-                        std::size_t seed{};
-                        boost::hash_combine(seed, point.x.as_value());
-                        boost::hash_combine(seed, point.y.as_value());
-                        return seed;
-                    }
-                };
-                std::unordered_set<Point, PointHash> unique_positions;
-                for_each_application([&](ApplicationInfo& info)
-                {
-                    for (auto const& window : info.windows())
-                    {
-                        unique_positions.insert(window.top_left());
-                    }
-                });
-                return unique_positions;
-            }()};
-
-            auto const find_near_window_position{[&](Point const& point, Displacement const& tolerance)
-            {
-                return std::find_if(
-                    unique_window_positions.begin(),
-                    unique_window_positions.end(),
-                    [&](auto const& it)
-                    {
-                        return std::abs(it.x.as_value() - point.x.as_value()) <= tolerance.dx.as_value() &&
-                               std::abs(it.y.as_value() - point.y.as_value()) <= tolerance.dy.as_value();
-                    });
-            }};
-
-            auto new_position{parameters.top_left().value()};
-
-            auto near_window_position{find_near_window_position(new_position, position_tolerance)};
-            while (near_window_position != unique_window_positions.end())
-            {
-                unique_window_positions.erase(near_window_position);
-                new_position += cascading_offset;
-                near_window_position = find_near_window_position(new_position, position_tolerance);
-            }
-
-            if (!display_area.contains(new_position + as_displacement(parameters.size().value())))
-            {
-                Rectangle const placement_region{
-                    display_area.top_left,
-                    as_size(display_area.bottom_right() -
-                        as_displacement(parameters.size().value()) -
-                        as_displacement(display_area.top_left) + Displacement{1, 1})};
-                if (placement_region.size.width.as_value() > 0 && placement_region.size.height.as_value() > 0)
-                {
-                    std::random_device rd;
-                    std::default_random_engine gen(rd());
-                    std::uniform_int_distribution<int> dist_x(0, placement_region.size.width.as_value() - 1);
-                    std::uniform_int_distribution<int> dist_y(0, placement_region.size.height.as_value() - 1);
-                    new_position = placement_region.top_left + as_displacement(Point{dist_x(gen), dist_y(gen)});
+                    parameters.top_left().value() = position;
+                    break;
                 }
-                else
-                {
-                    if(placement_region.size.width.as_value() <= 0)
-                    {
-                        new_position = Point{display_area.left(), new_position.y};
-                        parameters.size().value().width = display_area.size.width;
-                    }
-                    if(placement_region.size.height.as_value() <= 0)
-                    {
-                        new_position = Point{new_position.x, display_area.top()};
-                        parameters.size().value().height = display_area.size.height;
-                    }
-                }
-
             }
-
-            parameters.top_left() = new_position;
         }
+
     }
 
     return parameters;
