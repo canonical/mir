@@ -2029,23 +2029,19 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
 
             for (auto const& position : positions)
             {
-                auto const window{window_at(position)};
-                auto const window_type{info_for(window).type()};
-                auto const window_state{info_for(window).state()};
-
-                if (!window ||
-                    window_state != mir_window_state_restored ||
-                    (window_type != mir_window_type_normal &&
-                     window_type != mir_window_type_decoration &&
-                     window_type != mir_window_type_freestyle) ||
-                     window.top_left() != position)
+                if (auto const window{window_at(position)};
+                    !window ||
+                    info_for(window).state() != mir_window_state_restored ||
+                    (info_for(window).type() != mir_window_type_normal &&
+                     info_for(window).type() != mir_window_type_decoration &&
+                     info_for(window).type() != mir_window_type_freestyle) ||
+                    window.top_left() != position)
                 {
                     parameters.top_left().value() = position;
                     break;
                 }
             }
         }
-
     }
 
     return parameters;
