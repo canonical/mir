@@ -622,12 +622,12 @@ void mrg::Renderer::set_output_transform(glm::mat2 const& t)
     case graphics::gl::OutputSurface::Layout::TopRowFirst:
         // GL is going to render in its own coordinate system, but the OutputSurface
         // wants the output to be the other way up. Get GL to render upside-down instead.
-        new_display_transform *= glm::mat4{
+        new_display_transform = glm::mat4{
             1.0, 0.0, 0.0, 0.0,
             0.0, -1.0, 0.0, 0.0,
             0.0, 0.0, 1.0, 0.0,
             0.0, 0.0, 0.0, 1.0
-        };
+        } * new_display_transform;
         break;
     }
 
