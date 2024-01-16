@@ -894,10 +894,10 @@ TEST_F(LibInputDeviceOnTouchScreen, process_event_spurious_frame_when_down)
 TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_down_events)
 {
     MirTouchId slot = 0;
-    float major = 6;
-    float minor = 5;
+    float major = 8;
+    float minor = 6;
     float orientation = 0;
-    float pressure = 0.6f;
+    float pressure = 0.8f;
     float x = 100;
     float y = 7;
 
@@ -919,9 +919,9 @@ TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_down_events)
 TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_move_events)
 {
     MirTouchId slot = 0;
-    float major = 6;
-    float minor = 5;
-    float pressure = 0.6f;
+    float major = 8;
+    float minor = 6;
+    float pressure = 0.8f;
     float orientation = 0;
     float x = 100;
     float y = 7;
@@ -944,9 +944,9 @@ TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_move_events)
 TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_up_events_without_querying_properties)
 {
     MirTouchId slot = 3;
-    float major = 6;
-    float minor = 5;
-    float pressure = 0.6f;
+    float major = 8;
+    float minor = 6;
+    float pressure = 0.8f;
     float x = 30;
     float y = 20;
     float orientation = 0;

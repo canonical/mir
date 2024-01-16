@@ -76,9 +76,6 @@ private:
     bool is_output_active() const;
     OutputInfo get_output_info() const;
 
-    struct ContactExtension;
-    std::unique_ptr<ContactExtension> contact_extension;
-
     std::shared_ptr<InputReport> report;
     std::vector<LibInputDevicePtr> devices;
 
