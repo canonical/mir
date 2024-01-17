@@ -23,13 +23,11 @@
 MirInputEvent::MirInputEvent(MirInputEventType input_type,
                              MirInputDeviceId dev,
                              std::chrono::nanoseconds et,
-                             MirInputEventModifiers mods,
-                             std::vector<uint8_t> const& cookie) :
+                             MirInputEventModifiers mods) :
     MirEvent{mir_event_type_input},
     input_type_{input_type},
     device_id_{dev},
     event_time_{et},
-    cookie_{cookie},
     modifiers_{mods}
 {
 }
@@ -97,16 +95,6 @@ std::chrono::nanoseconds MirInputEvent::event_time() const
 void MirInputEvent::set_event_time(std::chrono::nanoseconds const& event_time)
 {
     event_time_ = event_time;
-}
-
-std::vector<uint8_t> MirInputEvent::cookie() const
-{
-    return cookie_;
-}
-
-void MirInputEvent::set_cookie(std::vector<uint8_t> const& cookie)
-{
-    cookie_ = cookie;
 }
 
 MirInputEventModifiers MirInputEvent::modifiers() const

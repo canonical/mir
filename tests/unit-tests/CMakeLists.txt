@@ -20,7 +20,6 @@ include_directories(
   ${CMAKE_SOURCE_DIR}
 
   ${PROJECT_SOURCE_DIR}/include/renderers/sw
-  ${PROJECT_SOURCE_DIR}/src/include/cookie
   ${PROJECT_SOURCE_DIR}/src/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/client
@@ -61,8 +60,7 @@ set(
   test_shared_library_prober.cpp
   test_lockable_callback.cpp
   test_module_deleter.cpp
-  test_mir_cookie.cpp
-  test_posix_rw_mutex.cpp
+    test_posix_rw_mutex.cpp
   test_posix_timestamp.cpp
   test_observer_multiplexer.cpp
   test_edid.cpp

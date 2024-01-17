@@ -32,7 +32,6 @@
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/fake_shared.h"
 #include "mir/udev/wrapper.h"
-#include "mir/cookie/authority.h"
 #include "mir_test_framework/libinput_environment.h"
 
 #include <gmock/gmock.h>
@@ -74,13 +73,11 @@ using Matrix = mi::OutputInfo::Matrix;
 
 struct MockEventBuilder : mi::EventBuilder
 {
-    std::shared_ptr<mir::cookie::Authority> const cookie_authority = mir::cookie::Authority::create();
     mtd::MockInputSeat seat;
     mtd::AdvanceableClock clock;
     mi::DefaultEventBuilder builder{
         MirInputDeviceId{3},
-        mt::fake_shared(clock),
-        cookie_authority};
+        mt::fake_shared(clock)};
     MockEventBuilder()
     {
         ON_CALL(*this, key_event(_,_,_,_)).WillByDefault(

@@ -27,7 +27,6 @@
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/server_action_queue.h"
-#include "mir/cookie/authority.h"
 #define MIR_LOG_COMPONENT "Input"
 #include "mir/log.h"
 
@@ -183,14 +182,12 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<mi::Seat> const& seat,
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
     std::shared_ptr<time::Clock> const& clock,
-    std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
     std::shared_ptr<mi::KeyMapper> const& key_mapper,
     std::shared_ptr<mir::ServerStatusListener> const& server_status_listener)
     : seat{seat},
       input_dispatchable{input_multiplexer},
       device_queue(std::make_shared<dispatch::ActionQueue>()),
       clock(clock),
-      cookie_authority(cookie_authority),
       key_mapper(key_mapper),
       server_status_listener(server_status_listener),
       device_id_generator{0}
@@ -222,7 +219,6 @@ auto mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
             handle->id(),
             queue,
             clock,
-            cookie_authority,
             handle));
 
         auto const& dev = devices.back();
@@ -280,12 +276,10 @@ mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(
     MirInputDeviceId device_id,
     std::shared_ptr<dispatch::ActionQueue> const& queue,
     std::shared_ptr<time::Clock> const& clock,
-    std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
     std::shared_ptr<mi::DefaultDevice> const& handle)
     : handle(handle),
       device_id(device_id),
       clock(clock),
-      cookie_authority(cookie_authority),
       device(dev),
       queue(queue)
 {
@@ -325,7 +319,7 @@ void mi::DefaultInputDeviceHub::RegisteredDevice::start(std::shared_ptr<Seat> co
     multiplexer->add_watch(queue);
 
     this->seat = seat;
-    builder = std::make_unique<DefaultEventBuilder>(device_id, clock, cookie_authority);
+    builder = std::make_unique<DefaultEventBuilder>(device_id, clock);
     device->start(this, builder.get());
 }
 

@@ -1,4 +1,4 @@
-MIR_SERVER_2.15 {
+MIR_SERVER_2.17 {
  global:
   extern "C++" {
     VTT?for?mir::DefaultServerConfiguration;
@@ -23,7 +23,6 @@ MIR_SERVER_2.15 {
     mir::DefaultServerConfiguration::the_connector*;
     mir::DefaultServerConfiguration::the_connector_report*;
     mir::DefaultServerConfiguration::the_console_services*;
-    mir::DefaultServerConfiguration::the_cookie_authority*;
     mir::DefaultServerConfiguration::the_coordinate_translator*;
     mir::DefaultServerConfiguration::the_cursor*;
     mir::DefaultServerConfiguration::the_cursor_images*;
@@ -127,7 +126,6 @@ MIR_SERVER_2.15 {
     mir::Server::open_wayland_client_socket*;
     mir::Server::override_the_application_not_responding_detector*;
     mir::Server::override_the_compositor*;
-    mir::Server::override_the_cookie_authority*;
     mir::Server::override_the_coordinate_translator*;
     mir::Server::override_the_cursor_images*;
     mir::Server::override_the_display_buffer_compositor_factory*;

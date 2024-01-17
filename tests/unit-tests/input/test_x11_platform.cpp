@@ -32,7 +32,6 @@
 #include "mir/test/doubles/mock_x11_resources.h"
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/fake_shared.h"
-#include "mir/cookie/authority.h"
 #include "mir/test/event_matchers.h"
 
 namespace md = mir::dispatch;
@@ -56,8 +55,7 @@ struct X11PlatformTest : ::testing::Test
     mtd::AdvanceableClock clock;
     mir::input::DefaultEventBuilder builder{
         0,
-        mt::fake_shared(clock),
-        mir::cookie::Authority::create()};
+        mt::fake_shared(clock)};
 
     mir::input::X::XInputPlatform x11_platform{
         mt::fake_shared(mock_registry),

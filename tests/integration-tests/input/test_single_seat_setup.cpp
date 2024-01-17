@@ -35,7 +35,6 @@
 #include "mir/test/doubles/stub_display_configuration.h"
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/cookie/authority.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/display_configuration_observer.h"
 #include "mir/scene/session_container.h"
@@ -114,7 +113,6 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
 {
     mtd::TriggeredMainLoop observer_loop;
     NiceMock<mtd::MockInputDispatcher> mock_dispatcher;
-    std::shared_ptr<mir::cookie::Authority> cookie_authority = mir::cookie::Authority::create();
     NiceMock<mtd::MockCursorListener> mock_cursor_listener;
     NiceMock<mtd::MockTouchVisualizer> mock_visualizer;
     NiceMock<mtd::MockSeatObserver> mock_seat_observer;
@@ -134,7 +132,6 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
         mt::fake_shared(seat),
         mt::fake_shared(multiplexer),
         mt::fake_shared(clock),
-        cookie_authority,
         mt::fake_shared(key_mapper),
         mt::fake_shared(mock_status_listener)};
     NiceMock<mtd::MockInputDeviceObserver> mock_observer;

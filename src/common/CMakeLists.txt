@@ -30,7 +30,6 @@ list(APPEND MIR_COMMON_SOURCES
   edid.cpp
   event.cpp
   event_printer.cpp
-  mir_cookie.cpp
   mir_cursor_api.cpp
   thread_pool_executor.cpp
   linearising_executor.cpp
@@ -43,7 +42,7 @@ set(
   PARENT_SCOPE)
 
 # TODO we need a place to manage ABI and related versioning but use this as placeholder
-set(MIRCOMMON_ABI 9)
+set(MIRCOMMON_ABI 10)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 add_library(mircommon SHARED
@@ -69,15 +68,8 @@ target_include_directories(mircommon
     ${PROJECT_SOURCE_DIR}/include/common
 )
 
-set_source_files_properties(event.cpp PROPERTIES COMPILE_FLAGS
-  "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/cookie")
-
-set_source_files_properties(input/input_event.cpp PROPERTIES COMPILE_FLAGS
-  "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/cookie")
-
 target_link_libraries(mircommon
   PUBLIC
-    mircookie
     mircore
     ${MIR_COMMON_REFERENCES}
     PkgConfig::XKBCOMMON

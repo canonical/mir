@@ -39,7 +39,7 @@ class Context:
         assert i == arg_len, 'i does not match arg_len'
         self.library_so_path = self.library_dir_path + '/lib' + self.library_name + '.so.' + str(self.abi_version)
         self.deb_package_name = 'lib' + self.library_name + str(self.abi_version)
-        self.deb_symbols_path = 'debian/' + self.deb_package_name + '.symbols.amd64'
+        self.deb_symbols_path = 'debian/' + self.deb_package_name + '.symbols'
         self.output_symbols_path = get_output_symbols_path()
 
     def validate(self):

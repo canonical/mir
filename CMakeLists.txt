@@ -25,8 +25,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 2)
-set(MIR_VERSION_MINOR 16)
-set(MIR_VERSION_PATCH 1)
+set(MIR_VERSION_MINOR 17)
+set(MIR_VERSION_PATCH 0)
 
 add_compile_definitions(MIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
 add_compile_definitions(MIR_VERSION_MINOR=${MIR_VERSION_MINOR})
@@ -315,7 +315,6 @@ add_custom_target(ptest
 add_custom_target(release-checks)
 
 mir_check_no_unreleased_symbols(mircommon release-checks)
-mir_check_no_unreleased_symbols(mircookie release-checks)
 mir_check_no_unreleased_symbols(mirplatform release-checks)
 mir_check_no_unreleased_symbols(mirserver release-checks)
 

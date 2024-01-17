@@ -1,4 +1,4 @@
-MIRWAYLAND_2.5 {
+MIRWAYLAND_2.17 {
 global:
   extern "C++" {
     mir::wayland::Buffer::*;
@@ -456,13 +456,7 @@ global:
     typeinfo?for?mir::wayland::InputMethodKeyboardGrabV2;
     vtable?for?mir::wayland::InputMethodKeyboardGrabV2;
     virtual?thunk?to?mir::wayland::InputMethodKeyboardGrabV2::?InputMethodKeyboardGrabV2*;
-  };
-  local: *;
-};
 
-MIRWAYLAND_2.8 {
-global:
-  extern "C++" {
     mir::wayland::WlrScreencopyManagerV1::*;
     non-virtual?thunk?to?mir::wayland::WlrScreencopyManagerV1::*;
     typeinfo?for?mir::wayland::WlrScreencopyManagerV1;
@@ -492,12 +486,6 @@ global:
     virtual?thunk?to?mir::wayland::IdleInhibitorV1::?IdleInhibitorV1*;
 
     mir::wayland::tried_to_send_unsupported_event*;
-  };
-} MIRWAYLAND_2.5;
-
-MIRWAYLAND_2.9 {
-global:
-  extern "C++" {
     mir::wayland::TextInputManagerV1::*;
     non-virtual?thunk?to?mir::wayland::TextInputManagerV1::*;
     typeinfo?for?mir::wayland::TextInputManagerV1;
@@ -527,22 +515,12 @@ global:
     typeinfo?for?mir::wayland::VirtualPointerV1;
     vtable?for?mir::wayland::VirtualPointerV1;
     virtual?thunk?to?mir::wayland::VirtualPointerV1::?VirtualPointerV1*;
-  };
-} MIRWAYLAND_2.8;
 
-MIRWAYLAND_2.10 {
-global:
-  extern "C++" {
     mir::wayland::Client::from*;
     mir::wayland::Client::register_client*;
     mir::wayland::Client::unregister_client*;
     virtual?thunk?to?mir::wayland::Resource::?Resource*;
-  };
-} MIRWAYLAND_2.9;
 
-MIRWAYLAND_2.11 {
-global:
-  extern "C++" {
     mir::wayland::PrimarySelectionDeviceManagerV1::*;
     non-virtual?thunk?to?mir::wayland::PrimarySelectionDeviceManagerV1::*;
     typeinfo?for?mir::wayland::PrimarySelectionDeviceManagerV1;
@@ -568,12 +546,7 @@ global:
     typeinfo?for?mir::wayland::PrimarySelectionSourceV1;
     vtable?for?mir::wayland::PrimarySelectionSourceV1;
     virtual?thunk?to?mir::wayland::PrimarySelectionSourceV1::?PrimarySelectionSourceV1*;
-  };
-} MIRWAYLAND_2.10;
 
-MIRWAYLAND_2.12 {
-global:
-  extern "C++" {
     mir::wayland::Shm::*;
     non-virtual?thunk?to?mir::wayland::Shm::*;
     typeinfo?for?mir::wayland::Shm;
@@ -585,12 +558,7 @@ global:
     typeinfo?for?mir::wayland::ShmPool;
     vtable?for?mir::wayland::ShmPool;
     virtual?thunk?to?mir::wayland::ShmPool::?ShmPool*;
-  };
-} MIRWAYLAND_2.11;
 
-MIRWAYLAND_2.14 {
-global:
-  extern "C++" {
     mir::wayland::SessionLockManagerV1::*;
     non-virtual?thunk?to?mir::wayland::SessionLockManagerV1::*;
     typeinfo?for?mir::wayland::SessionLockManagerV1;
@@ -610,12 +578,7 @@ global:
     typeinfo?for?mir::wayland::SessionLockSurfaceV1;
     vtable?for?mir::wayland::SessionLockSurfaceV1;
     virtual?thunk?to?mir::wayland::SessionLockSurfaceV1::?SessionLockSurfaceV1*;
-  };
-} MIRWAYLAND_2.12;
 
-MIRWAYLAND_2.15 {
-global:
-  extern "C++" {
     mir::wayland::InputMethodV1::*;
     non-virtual?thunk?to?mir::wayland::InputMethodV1::*;
     virtual?thunk?to?mir::wayland::InputMethodV1::*;
@@ -644,4 +607,4 @@ global:
     typeinfo?for?mir::wayland::InputPanelSurfaceV1;
     vtable?for?mir::wayland::InputPanelSurfaceV1;
   };
-} MIRWAYLAND_2.14;
+};

@@ -40,10 +40,6 @@ namespace mir
 {
 class ServerActionQueue;
 class ServerStatusListener;
-namespace cookie
-{
-class Authority;
-}
 namespace time
 {
 class Clock;
@@ -89,7 +85,6 @@ public:
         std::shared_ptr<Seat> const& seat,
         std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
         std::shared_ptr<time::Clock> const& clock,
-        std::shared_ptr<cookie::Authority> const& cookie_authority,
         std::shared_ptr<KeyMapper> const& key_mapper,
         std::shared_ptr<ServerStatusListener> const& server_status_listener);
 
@@ -121,7 +116,6 @@ private:
     std::shared_ptr<dispatch::MultiplexingDispatchable> const input_dispatchable;
     std::shared_ptr<dispatch::ActionQueue> const device_queue;
     std::shared_ptr<time::Clock> const clock;
-    std::shared_ptr<cookie::Authority> const cookie_authority;
     std::shared_ptr<KeyMapper> const key_mapper;
     std::shared_ptr<ServerStatusListener> const server_status_listener;
     ThreadSafeList<std::shared_ptr<InputDeviceObserver>> observers;
@@ -135,7 +129,6 @@ private:
             MirInputDeviceId dev_id,
             std::shared_ptr<dispatch::ActionQueue> const& multiplexer,
             std::shared_ptr<time::Clock> const& clock,
-            std::shared_ptr<cookie::Authority> const& cookie_authority,
             std::shared_ptr<DefaultDevice> const& handle);
         void handle_input(std::shared_ptr<MirEvent> const& event) override;
         geometry::Rectangle bounding_rectangle() const override;
@@ -153,7 +146,6 @@ private:
         MirInputDeviceId device_id;
         std::unique_ptr<DefaultEventBuilder> builder;
         std::shared_ptr<time::Clock> const clock;
-        std::shared_ptr<cookie::Authority> cookie_authority;
         std::shared_ptr<InputDevice> const device;
         std::shared_ptr<dispatch::ActionQueue> queue;
     };

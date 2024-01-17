@@ -15,7 +15,6 @@
  */
 
 #include "src/server/input/default_event_builder.h"
-#include "mir/cookie/authority.h"
 
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/fake_shared.h"
@@ -39,8 +38,7 @@ struct DefaultEventBuilder : public Test
     mtd::AdvanceableClock clock{{}};
     mir::input::DefaultEventBuilder builder{
         0,
-        mt::fake_shared(clock),
-        mir::cookie::Authority::create()};
+        mt::fake_shared(clock)};
 
     auto event_timestamp(std::optional<std::chrono::nanoseconds> timestamp) -> std::chrono::nanoseconds
     {

@@ -67,7 +67,6 @@ EventUPtr make_window_placement_event(frontend::SurfaceId const& surface_id, geo
 EventUPtr make_key_event(
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& cookie,
     MirKeyboardAction action,
     xkb_keysym_t keysym,
     int scan_code,
@@ -82,7 +81,6 @@ void set_button_state(MirEvent& event, MirPointerButtons button_state);
 EventUPtr make_touch_event(
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& mac,
     MirInputEventModifiers modifiers);
 
 void add_touch(
@@ -101,7 +99,6 @@ void add_touch(
 EventUPtr make_pointer_event(
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& cookie,
     MirInputEventModifiers mods,
     MirPointerAction action,
     MirPointerButtons buttons,
@@ -115,7 +112,6 @@ EventUPtr make_pointer_event(
 EventUPtr make_pointer_event(
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& mac,
     MirInputEventModifiers modifiers,
     MirPointerAction action,
     MirPointerButtons buttons_pressed,
@@ -131,7 +127,6 @@ EventUPtr make_pointer_axis_event(
     MirPointerAxisSource axis_source,
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& mac,
     MirInputEventModifiers modifiers,
     MirPointerAction action,
     MirPointerButtons buttons_pressed,
@@ -147,7 +142,6 @@ EventUPtr make_pointer_axis_with_stop_event(
     MirPointerAxisSource axis_source,
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& mac,
     MirInputEventModifiers modifiers,
     MirPointerAction action,
     MirPointerButtons buttons_pressed,
@@ -165,7 +159,6 @@ EventUPtr make_pointer_axis_discrete_scroll_event(
     MirPointerAxisSource axis_source,
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& mac,
     MirInputEventModifiers modifiers,
     MirPointerAction action,
     MirPointerButtons buttons_pressed,
@@ -186,14 +179,12 @@ EventUPtr make_input_configure_event(
 EventUPtr make_touch_event(
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& mac,
     MirInputEventModifiers modifiers,
     std::vector<TouchContactV1> const& contacts);
 
 EventUPtr make_touch_event(
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& mac,
     MirInputEventModifiers modifiers,
     std::vector<TouchContact> const& contacts);
 

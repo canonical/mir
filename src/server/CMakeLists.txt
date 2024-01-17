@@ -13,7 +13,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/src/include/server
-  ${PROJECT_SOURCE_DIR}/src/include/cookie
   ${PROJECT_SOURCE_DIR}/src/include/wayland
 )
 add_compile_definitions(MIR_SERVER_INPUT_PLATFORM_VERSION="${MIR_SERVER_INPUT_PLATFORM_VERSION}")
@@ -68,7 +67,6 @@ target_link_libraries(mirserverobjects
   PUBLIC
     mirplatform
     mircommon
-    mircookie
     mircore
   PRIVATE
     PkgConfig::GLIB
@@ -123,7 +121,6 @@ target_link_libraries(mirserver
 
     mirplatform
     mircommon
-    mircookie
     mirwayland
 
     server_platform_common
@@ -158,7 +155,7 @@ install(DIRECTORY
   ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mirserver"
 )
 
-set(MIRSERVER_ABI 59) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 60) # Be sure to increment MIR_VERSION_MINOR at the same time
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(
