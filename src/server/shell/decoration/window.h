@@ -70,7 +70,8 @@ class WindowState
 public:
     WindowState(
         std::shared_ptr<StaticGeometry const> const& static_geometry,
-        std::shared_ptr<scene::Surface> const& window_surface);
+        std::shared_ptr<scene::Surface> const& window_surface,
+        float scale);
 
     auto window_size() const -> geometry::Size;
     auto border_type() const -> BorderType;
@@ -94,6 +95,8 @@ public:
     /// Returns the rectangle of the nth button
     auto button_rect(unsigned n) const -> geometry::Rectangle;
 
+    auto scale() const -> float;
+
 private:
     WindowState(WindowState const&) = delete;
     WindowState& operator=(WindowState const&) = delete;
@@ -103,6 +106,7 @@ private:
     BorderType const border_type_;
     MirWindowFocusState const focus_state_;
     std::string window_name_;
+    float scale_;
 };
 
 /// Observes the decorated window and calls on_update when its state changes

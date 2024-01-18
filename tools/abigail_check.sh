@@ -7,7 +7,6 @@ declare -A abi_var_for=(\
     ["mircommon"]="MIRCOMMON_ABI" \
     ["mirplatform"]="MIRPLATFORM_ABI" \
     ["mirserver"]="MIRSERVER_ABI" \
-    ["mircookie"]="MIRCOOKIE_ABI" \
     ["mirplatformgraphicsgbmkms"]="MIR_SERVER_GRAPHICS_PLATFORM_ABI" \
     ["mirplatforminputevdev"]="MIR_SERVER_INPUT_PLATFORM_ABI" )
 

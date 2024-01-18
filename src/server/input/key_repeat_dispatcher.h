@@ -28,10 +28,6 @@
 
 namespace mir
 {
-namespace cookie
-{
-class Authority;
-}
 namespace time
 {
 class AlarmFactory;
@@ -45,7 +41,6 @@ class KeyRepeatDispatcher : public InputDispatcher
 public:
     KeyRepeatDispatcher(std::shared_ptr<InputDispatcher> const& next_dispatcher,
                         std::shared_ptr<time::AlarmFactory> const& factory,
-                        std::shared_ptr<cookie::Authority> const& cookie_authority,
                         bool repeat_enabled,
                         std::chrono::milliseconds repeat_timeout, /* timeout before sending first repeat */
                         std::chrono::milliseconds repeat_delay, /* delay between repeated keys */
@@ -65,7 +60,6 @@ private:
 
     std::shared_ptr<InputDispatcher> const next_dispatcher;
     std::shared_ptr<time::AlarmFactory> const alarm_factory;
-    std::shared_ptr<cookie::Authority> const cookie_authority;
     bool const repeat_enabled;
     std::chrono::milliseconds const repeat_timeout;
     std::chrono::milliseconds const repeat_delay;

@@ -25,7 +25,6 @@ build:
   - libglib2.0-dev
   - libgles2-mesa-dev
   - libglm-dev
-  - libgflags-dev
   - libgoogle-glog-dev
   - libinput-dev
   - liblttng-ust-dev

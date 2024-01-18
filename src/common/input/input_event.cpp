@@ -17,16 +17,11 @@
 #define MIR_LOG_COMPONENT "input-event-access"
 
 
-#include "mir/cookie/blob.h"
-
-#include "mir/cookie/cookie.h"
-#include "mir/event_type_to_string.h"
+#include "mir/events/event_type_to_string.h"
 #include "mir/events/event_private.h"
 #include "mir/log.h"
 #include "mir/require.h"
-#include "mir_toolkit/mir_cookie.h"
 
-#include "../mir_cookie.h"
 #include "../handle_event_exception.h"
 
 #include <string.h>
@@ -336,77 +331,3 @@ bool mir_pointer_event_axis_stop(MirPointerEvent const* pev, MirPointerAxis axis
        abort();
    }
 })
-
-bool mir_input_event_has_cookie(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    switch (ev->input_type())
-    {
-        case mir_input_event_type_key:
-            return true;
-        case mir_input_event_type_pointer:
-        {
-            auto const pev = mir_input_event_get_pointer_event(ev);
-            auto const pev_action = mir_pointer_event_action(pev);
-            return (pev_action == mir_pointer_action_button_up ||
-                    pev_action == mir_pointer_action_button_down);
-        }
-        case mir_input_event_type_touch:
-        {
-            auto const tev = mir_input_event_get_touch_event(ev);
-            auto const point_count = mir_touch_event_point_count(tev);
-            for (size_t i = 0; i < point_count; i++)
-            {
-                auto const tev_action = mir_touch_event_action(tev, i);
-                if (tev_action == mir_touch_action_up ||
-                    tev_action == mir_touch_action_down)
-                {
-                    return true;
-                }
-            }
-            break;
-        }
-        case mir_input_event_type_keyboard_resync:
-            return false;
-        case mir_input_event_types:
-            abort();
-            break;
-    }
-
-    return false;
-})
-
-size_t mir_cookie_buffer_size(MirCookie const* cookie) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    return cookie->size();
-})
-
-MirCookie const* mir_input_event_get_cookie(MirInputEvent const* iev) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    if (iev->type() == mir_event_type_input)
-    {
-        return new MirCookie(iev->cookie());
-    }
-    else
-    {
-        mir::log_critical("expected a key or motion events, type was: " + mir::event_type_to_string(iev->type()));
-        abort();
-    }
-})
-
-void mir_cookie_to_buffer(MirCookie const* cookie, void* buffer, size_t size) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    return cookie->copy_to(buffer, size);
-})
-
-MirCookie const* mir_cookie_from_buffer(void const* buffer, size_t size) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    if (size != mir::cookie::default_blob_size)
-        return NULL;
-
-    return new MirCookie(buffer, size);
-})
-
-void mir_cookie_release(MirCookie const* cookie)
-{
-    delete cookie;
-}

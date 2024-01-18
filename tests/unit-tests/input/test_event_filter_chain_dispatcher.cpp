@@ -40,7 +40,7 @@ struct EventFilterChainDispatcher : public ::testing::Test
 {
     mir::EventUPtr const event = mir::events::make_key_event(
         MirInputDeviceId(),
-        std::chrono::nanoseconds(0), std::vector<uint8_t>{}, MirKeyboardAction(),
+        std::chrono::nanoseconds(0), MirKeyboardAction(),
         xkb_keysym_t(), 0, MirInputEventModifiers());
 };
 }

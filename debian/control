@@ -64,7 +64,7 @@ Vcs-Git: https://github.com/MirServer/mir
 
 #TODO: Packaging infrastructure for better dependency generation,
 #      ala pkg-xorg's xviddriver:Provides and ABI detection.
-Package: libmirserver59
+Package: libmirserver60
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -77,7 +77,7 @@ Description: Display server for Ubuntu - server library
  .
  Contains the shared library needed by server applications for Mir.
 
-Package: libmirplatform27
+Package: libmirplatform28
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -108,7 +108,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmircommon9 (= ${binary:Version}),
+Depends: libmircommon10 (= ${binary:Version}),
          libmircore-dev (= ${binary:Version}),
          libxkbcommon-dev,
          ${misc:Depends},
@@ -125,7 +125,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirplatform27 (= ${binary:Version}),
+Depends: libmirplatform28 (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libboost-program-options-dev,
          ${misc:Depends},
@@ -143,7 +143,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver59 (= ${binary:Version}),
+Depends: libmirserver60 (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libglm-dev,
@@ -234,7 +234,7 @@ Description: Display server for Ubuntu - shared library
  .
  Contains the shared libraries required for the Mir server and client.
 
-Package: libmircommon9
+Package: libmircommon10
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -248,7 +248,7 @@ Description: Display server for Ubuntu - shared library
  Contains the shared libraries required for the Mir server and client.
 
 # Longer-term these drivers should move out-of-tree
-Package: mir-platform-graphics-x21
+Package: mir-platform-graphics-x22
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -262,7 +262,7 @@ Description: Display server for Ubuntu - platform library for X11
  Contains the shared libraries required for the Mir server to interact with
  the X11 platform.
 
-Package: mir-platform-graphics-gbm-kms21
+Package: mir-platform-graphics-gbm-kms22
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -276,7 +276,7 @@ Description: Display server for Ubuntu - platform library for GBM KMS
  Contains the shared libraries required for the Mir server to interact with
  the hardware platform using the Mesa drivers.
 
-Package: mir-platform-graphics-eglstream-kms21
+Package: mir-platform-graphics-eglstream-kms22
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -291,7 +291,7 @@ Description: Display server for Ubuntu - platform library for NVIDIA
  the hardware platform using the EGLStream EGL extensions, such as the
  NVIDIA binary driver.
 
-Package: mir-platform-graphics-wayland21
+Package: mir-platform-graphics-wayland22
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -305,7 +305,7 @@ Description: Display server for Ubuntu - platform library for Wayland
  Contains the shared libraries required for the Mir server to interact with
  a "host" Wayland display server.
 
-Package: mir-platform-rendering-egl-generic21
+Package: mir-platform-rendering-egl-generic22
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -319,7 +319,7 @@ Description: Display server for Ubuntu - generic EGL rendering platform
  Contains the shared libraries required for the Mir server to provide accelerated
  client rendering via standard EGL interfaces.
 
-Package: mir-platform-graphics-virtual21
+Package: mir-platform-graphics-virtual22
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -349,7 +349,7 @@ Description: Display server for Ubuntu - Nvidia driver metapackage
  .
  This package depends on a full set of graphics and input drivers for Nvidia systems.
 
-Package: mir-platform-input-evdev8
+Package: mir-platform-input-evdev9
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -387,8 +387,8 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-gbm-kms21,
-         mir-platform-input-evdev8,
+         mir-platform-graphics-gbm-kms22,
+         mir-platform-input-evdev9,
          mir-platform-rendering-egl-generic,
 Description: Display server for Ubuntu - gbm-kms driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
@@ -403,8 +403,8 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-eglstream-kms21,
-         mir-platform-input-evdev8,
+         mir-platform-graphics-eglstream-kms22,
+         mir-platform-input-evdev9,
 Description: Display server for Ubuntu - eglstream-kms driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -418,7 +418,7 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-wayland21,
+         mir-platform-graphics-wayland22,
          mir-platform-rendering-egl-generic,
 Description: Display server for Ubuntu - wayland driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
@@ -432,7 +432,7 @@ Section: libs
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: mir-platform-rendering-egl-generic21
+Depends: mir-platform-rendering-egl-generic22
 Description: Display server for Ubuntu - EGL rendering provider metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -445,7 +445,7 @@ Section: libs
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: mir-platform-graphics-virtual21
+Depends: mir-platform-graphics-virtual22
 Description: Display server for Ubuntu - virtual display provider metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -458,7 +458,7 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-x21,
+         mir-platform-graphics-x22,
          mir-platform-rendering-egl-generic,
 Description: Display server for Ubuntu - x driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
@@ -466,34 +466,6 @@ Description: Display server for Ubuntu - x driver metapackage
  .
  This package depends on a full set of graphics and input drivers for X
  systems.
-
-Package: libmircookie2
-Section: libs
-Architecture: any
-Multi-Arch: same
-Pre-Depends: ${misc:Pre-Depends}
-Depends: ${misc:Depends},
-         ${shlibs:Depends},
-Description: Produce and verify spoof-resistant timestamps - runtime library
- libmircookie provides a simple mechanism for a group of cooperating processes
- to hand out and verify difficult-to-forge timestamps to untrusted 3rd parties.
- .
- This package contains the runtime library for generating and verifying the
- attestable timestamps.
-
-Package: libmircookie-dev
-Section: libdevel
-Architecture: any
-Multi-Arch: same
-Pre-Depends: ${misc:Pre-Depends}
-Depends: libmircookie2 (= ${binary:Version}),
-         ${misc:Depends},
-Description: Produce and verify spoof-resistant timestamps - development headers
- libmircookie provides a simple mechanism for a group of cooperating processes
- to hand out and verify difficult-to-forge timestamps to untrusted 3rd parties.
- .
- This package contains the development headers for building programs that
- generate or verify the attestable timestamps.
 
 Package: libmirrenderer-dev
 Section: libdevel
@@ -522,7 +494,7 @@ Description: Display server for Ubuntu - GL Renderer development files
  Contains header files that define the interfaces through which platforms and
  renderers access the functionality needed to render with GL.
 
-Package: libmiral6
+Package: libmiral7
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -540,7 +512,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmiral6 (= ${libmiral6:Version}),
+Depends: libmiral7 (= ${libmiral7:Version}),
 # ${source:Version} is technically incorrect, but Launchpad doesn't do BinNMUs
 # so it's harmless.
          libmircommon-dev (= ${source:Version}),
@@ -552,7 +524,7 @@ Description: Developer files for the Mir ABI-stable abstraction layer
  Contains header files required for development using the MirAL abstraction
  layer.
 
-Package: libmiroil4
+Package: libmiroil5
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -569,7 +541,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmiroil4 (= ${binary:Version}),
+Depends: libmiroil5 (= ${binary:Version}),
          ${misc:Depends},
 Description: Developer files for the Mir Lomiri compatibility library
  MirOil provides the Lomiri compatibility API.
@@ -577,7 +549,7 @@ Description: Developer files for the Mir Lomiri compatibility library
  Contains header files required for development using the Lomiri compatibility
  library.
 
-Package: libmirwayland4
+Package: libmirwayland5
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -595,7 +567,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirwayland4 (= ${binary:Version}),
+Depends: libmirwayland5 (= ${binary:Version}),
          libmircore-dev (= ${binary:Version}),
          ${misc:Depends},
          libmirwayland-bin (= ${binary:Version}),

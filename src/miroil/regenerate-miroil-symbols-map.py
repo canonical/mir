@@ -81,7 +81,7 @@ def _report(publish, symbol):
     else:
         print('NOPUBLISH: {}'.format(symbol))
 
-OLD_STANZAS = '''MIROIL_2.0 {
+OLD_STANZAS = '''MIROIL_5.0 {
 global:'''
 
 END_NEW_STANZA = '''

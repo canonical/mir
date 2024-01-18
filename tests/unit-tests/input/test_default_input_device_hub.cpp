@@ -31,7 +31,6 @@
 #include "mir/events/event_builders.h"
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_touchpad_config.h"
-#include "mir/cookie/authority.h"
 #include "mir/input/device.h"
 #include "mir/input/input_device.h"
 
@@ -67,7 +66,6 @@ MATCHER_P(WithName, name,
 
 struct InputDeviceHubTest : ::testing::Test
 {
-    std::shared_ptr<mir::cookie::Authority> cookie_authority = mir::cookie::Authority::create();
     mir::dispatch::MultiplexingDispatchable multiplexer;
     NiceMock<mtd::MockInputSeat> mock_seat;
     NiceMock<mtd::MockKeyMapper> mock_key_mapper;
@@ -77,7 +75,6 @@ struct InputDeviceHubTest : ::testing::Test
         mt::fake_shared(mock_seat),
         mt::fake_shared(multiplexer),
         mt::fake_shared(clock),
-        cookie_authority,
         mt::fake_shared(mock_key_mapper),
         mt::fake_shared(mock_server_status_listener)};
     NiceMock<mtd::MockInputDeviceObserver> mock_observer;

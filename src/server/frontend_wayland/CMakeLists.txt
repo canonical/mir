@@ -3,6 +3,7 @@ include_directories(../frontend_xwayland ${CMAKE_CURRENT_BINARY_DIR})
 # One day, maybe, we can add include dependences to an OBJECT library. Until then...
 get_property(mirwayland_includes TARGET mirwayland PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
 include_directories(${mirwayland_includes})
+pkg_check_modules(GIOUnix REQUIRED IMPORTED_TARGET gio-unix-2.0)
 
 set(
   WAYLAND_SOURCES
@@ -37,6 +38,7 @@ set(
   resource_lifetime_tracker.cpp resource_lifetime_tracker.h
   wl_region.cpp                 wl_region.h
   foreign_toplevel_manager_v1.cpp foreign_toplevel_manager_v1.h
+  desktop_file_manager.cpp      desktop_file_manager.h
   frame_executor.cpp            frame_executor.h
   virtual_keyboard_v1.cpp       virtual_keyboard_v1.h
   virtual_pointer_v1.cpp        virtual_pointer_v1.h
@@ -105,4 +107,7 @@ target_link_libraries(mirfrontend-wayland
     mirplatform
     mircommon
     mircore
+  PRIVATE
+    PkgConfig::GIOUnix
 )
+

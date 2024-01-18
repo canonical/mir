@@ -151,13 +151,13 @@ struct FakeKeyboard
     mir::EventUPtr press(int scan_code = 7)
     {
         return mev::make_key_event(
-            id, std::chrono::nanoseconds(0), std::vector<uint8_t>{},
+            id, std::chrono::nanoseconds(0),
             mir_keyboard_action_down, 0, scan_code, mir_input_event_modifier_alt);
     }
     mir::EventUPtr release(int scan_code = 7)
     {
         return mev::make_key_event(
-            id, std::chrono::nanoseconds(0), std::vector<uint8_t>{},
+            id, std::chrono::nanoseconds(0),
             mir_keyboard_action_up, 0, scan_code, mir_input_event_modifier_alt);
     }
     MirInputDeviceId const id;
@@ -174,7 +174,7 @@ struct FakePointer
     mir::EventUPtr move_to(geom::Point const& location)
     {
         return mev::make_pointer_event(
-            id, std::chrono::nanoseconds(0), std::vector<uint8_t>{},
+            id, std::chrono::nanoseconds(0),
             0, mir_pointer_action_motion, buttons,
             location.x.as_int(), location.y.as_int(),
             0, 0, 0, 0);
@@ -184,7 +184,7 @@ struct FakePointer
         buttons &= ~button;
 
         return mev::make_pointer_event(
-            id, std::chrono::nanoseconds(0), std::vector<uint8_t>{},
+            id, std::chrono::nanoseconds(0),
             0, mir_pointer_action_button_up, buttons,
             location.x.as_int(), location.y.as_int(),
             0, 0, 0, 0);
@@ -194,7 +194,7 @@ struct FakePointer
         buttons |= button;
         
         return mev::make_pointer_event(
-            id, std::chrono::nanoseconds(0), std::vector<uint8_t>{},
+            id, std::chrono::nanoseconds(0),
             0, mir_pointer_action_button_down, buttons,
             location.x.as_int(), location.y.as_int(),
             0, 0, 0, 0);
@@ -213,7 +213,7 @@ struct FakeToucher
     
     mir::EventUPtr move_to(geom::Point const& point)
     {
-        auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), std::vector<uint8_t>{}, 0);
+        auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), 0);
         mev::add_touch(*ev, 0, mir_touch_action_change,
                        mir_touch_tooltype_finger, point.x.as_int(), point.y.as_int(),
                        touched ? 1.0 : 0.0,
@@ -226,7 +226,7 @@ struct FakeToucher
     {
         touched = true;
         
-        auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), std::vector<uint8_t>{}, 0);
+        auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), 0);
         mev::add_touch(*ev, 0, mir_touch_action_down,
                        mir_touch_tooltype_finger, point.x.as_int(), point.y.as_int(),
                        1.0, 1.0, 1.0, 1.0);
@@ -236,7 +236,7 @@ struct FakeToucher
     {
         touched = true;
 
-        auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), std::vector<uint8_t>{}, 0);
+        auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), 0);
         mev::add_touch(*ev, 0, mir_touch_action_down,
                        mir_touch_tooltype_finger, point1.x.as_int(), point1.y.as_int(),
                        1.0, 1.0, 1.0, 1.0);
@@ -249,7 +249,7 @@ struct FakeToucher
     {
         touched = false;
         
-        auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), std::vector<uint8_t>{}, 0);
+        auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), 0);
         mev::add_touch(*ev, 0, mir_touch_action_up,
                        mir_touch_tooltype_finger, point.x.as_int(), point.y.as_int(),
                        0.0, 0.0, 0.0, 0.0);
@@ -259,7 +259,7 @@ struct FakeToucher
     {
         touched = false;
 
-        auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), std::vector<uint8_t>{}, 0);
+        auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), 0);
         mev::add_touch(*ev, 0, mir_touch_action_up,
                        mir_touch_tooltype_finger, point1.x.as_int(), point1.y.as_int(),
                        1.0, 1.0, 1.0, 1.0);

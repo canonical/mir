@@ -41,11 +41,6 @@ namespace frontend
 {
 class SessionAuthorizer;
 }
-namespace cookie
-{
-using Secret = std::vector<uint8_t>;
-class Authority;
-}
 namespace shell
 {
 class DisplayLayout;
@@ -257,11 +252,6 @@ public:
 
     /// Sets an override functor for creating the gl config.
     void override_the_gl_config(Builder<graphics::GLConfig> const& gl_config_builder);
-
-    /// Sets an override functor for creating the cookie authority.
-    /// A secret can be saved and any process this secret is shared
-    /// with can verify Mir-generated cookies, or produce their own.
-    void override_the_cookie_authority(Builder<cookie::Authority> const& cookie_authority_builder);
 
     /// Sets an override functor for creating the input dispatcher.
     void override_the_input_dispatcher(Builder<input::InputDispatcher> const& input_dispatcher_builder);

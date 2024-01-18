@@ -26,6 +26,8 @@
 #include "frame_executor.h"
 #include "output_manager.h"
 #include "wayland_executor.h"
+#include "desktop_file_manager.h"
+#include "foreign_toplevel_manager_v1.h"
 
 #include "mir/main_loop.h"
 #include "mir/thread_name.h"
@@ -294,6 +296,9 @@ mf::WaylandConnector::WaylandConnector(
         executor,
         display_config_registrar);
 
+    desktop_file_manager = std::make_shared<mf::DesktopFileManager>(
+        std::make_shared<mf::GDesktopFileCache>(main_loop));
+
     data_device_manager_global = std::make_unique<WlDataDeviceManager>(
         display.get(),
         executor,
@@ -316,7 +321,9 @@ mf::WaylandConnector::WaylandConnector(
         input_device_registry,
         composite_event_filter,
         allocator,
-        screen_shooter});
+        screen_shooter,
+        main_loop,
+        desktop_file_manager});
 
     shm_global = std::make_unique<WlShm>(display.get(), executor);
 

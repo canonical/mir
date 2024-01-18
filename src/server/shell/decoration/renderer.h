@@ -115,6 +115,7 @@ private:
     geometry::Size right_border_size;
     geometry::Size bottom_border_size;
     size_t solid_color_pixels_length{0};
+    size_t scaled_solid_color_pixels_length{0};
     std::unique_ptr<Pixel[]> solid_color_pixels; // can be nullptr
 
     geometry::Size titlebar_size{};
@@ -126,6 +127,8 @@ private:
     std::vector<ButtonInfo> buttons;
 
     std::shared_ptr<Text> const text;
+
+    float scale{1.0f};
 
     void update_solid_color_pixels();
     auto make_buffer(

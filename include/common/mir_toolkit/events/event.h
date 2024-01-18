@@ -37,8 +37,6 @@ typedef struct MirWindowOutputEvent MirWindowOutputEvent;
 typedef struct MirInputDeviceStateEvent MirInputDeviceStateEvent;
 typedef struct MirWindowPlacementEvent MirWindowPlacementEvent;
 
-typedef struct MirCookie MirCookie;
-
 typedef struct MirEvent MirEvent;
 
 #ifdef __cplusplus
@@ -56,7 +54,6 @@ typedef struct MirEvent MirEvent;
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 /**
  * Retrieves the type of a MirEvent. Now preferred over direct access to ev->type.
  * In particular ev->type will never be mir_event_type_input and mir_event_get_type
