@@ -43,6 +43,7 @@
 #include <vector>
 #include <optional>
 #include <utility>
+#include <algorithm>
 #include <drm_fourcc.h>
 #include <wayland-server.h>
 
