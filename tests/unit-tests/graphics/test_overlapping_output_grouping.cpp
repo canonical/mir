@@ -22,6 +22,7 @@
 #include <gtest/gtest.h>
 
 #include <vector>
+#include <algorithm>
 
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;

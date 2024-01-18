@@ -17,6 +17,7 @@
 #include "rendering_tracker.h"
 #include "mir/scene/surface.h"
 
+#include <algorithm>
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 
