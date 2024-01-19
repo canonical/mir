@@ -570,7 +570,7 @@ int main(int argc, char** argv)
     struct wl_pointer* pointer = wl_seat_get_pointer(globals.seat);
     wl_pointer_add_listener(pointer, &pointer_listener, NULL);
 
-    draw_context* ctx = calloc(sizeof *ctx, 1);
+    draw_context* ctx = calloc(1, sizeof *ctx);
     ctx->display = display;
     ctx->surface = wl_compositor_create_surface(globals.compositor);
     ctx->width = 400;
