@@ -66,13 +66,13 @@ class GLBulkHandle
 public:
     GLBulkHandle()
     {
-        (**allocator)(1, &id);
+        allocator(1, &id);
     }
 
     ~GLBulkHandle()
     {
         if (id)
-            (**deleter)(1, &id);
+            deleter(1, &id);
     }
 
     GLBulkHandle(GLBulkHandle const&) = delete;
@@ -102,14 +102,14 @@ class GLTypedHandle
 {
 public:
     GLTypedHandle(GLenum type)
-        : id{(**allocator)(type)}
+        : id{allocator(type)}
     {
     }
 
     ~GLTypedHandle()
     {
         if (id)
-            (**deleter)(id);
+            deleter(id);
     }
 
     GLTypedHandle(GLTypedHandle const&) = delete;
@@ -139,14 +139,14 @@ class GLHandle
 {
 public:
     GLHandle()
-        : id{(**allocator)()}
+        : id{allocator()}
     {
     }
 
     ~GLHandle()
     {
         if (id)
-            (**deleter)(id);
+            deleter(id);
     }
 
     GLHandle(GLHandle const&) = delete;

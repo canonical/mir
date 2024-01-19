@@ -207,7 +207,7 @@ void mf::XCBConnection::verify_not_in_error_state() const
 
 auto mf::XCBConnection::query_name(xcb_atom_t atom) const -> std::string
 {
-    std::lock_guard{atom_name_cache_mutex};
+    std::lock_guard lock{atom_name_cache_mutex};
     auto const iter = atom_name_cache.find(atom);
 
     if (iter == atom_name_cache.end())
