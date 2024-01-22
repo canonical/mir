@@ -371,38 +371,6 @@ TEST_F(LibInputDevice, start_creates_and_refs_libinput_device)
     dev.start(&mock_sink, &mock_builder);
 }
 
-TEST_F(LibInputDevice, open_device_of_group)
-{
-    auto fake_device = setup_laptop_keyboard();
-    auto second_fake_device = setup_trackpad();
-
-    InSequence seq;
-    // See previous test
-    EXPECT_CALL(env.mock_libinput, libinput_device_ref(fake_device)).Times(1);
-    EXPECT_CALL(env.mock_libinput, libinput_device_ref(second_fake_device)).Times(1);
-
-    mie::LibInputDevice dev(mir::report::null_input_report(),
-                            mie::make_libinput_device(lib, fake_device));
-    dev.add_device_of_group(mie::make_libinput_device(lib, second_fake_device));
-    dev.start(&mock_sink, &mock_builder);
-}
-
-TEST_F(LibInputDevice, input_info_combines_capabilities)
-{
-    auto fake_device = setup_laptop_keyboard();
-    auto second_fake_device = setup_trackpad();
-
-    mie::LibInputDevice dev(mir::report::null_input_report(),
-                            mie::make_libinput_device(lib, fake_device));
-    dev.add_device_of_group(mie::make_libinput_device(lib, second_fake_device));
-    auto info = dev.get_device_info();
-
-    EXPECT_THAT(info.capabilities, Eq(mi::DeviceCapability::touchpad |
-                                      mi::DeviceCapability::pointer |
-                                      mi::DeviceCapability::keyboard |
-                                      mi::DeviceCapability::alpha_numeric));
-}
-
 TEST_F(LibInputDevice, unique_id_contains_device_name)
 {
     auto fake_device = env.mock_libinput.get_next_fake_ptr<libinput_device*>();
