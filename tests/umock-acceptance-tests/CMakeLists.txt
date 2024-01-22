@@ -9,7 +9,6 @@ include_directories(
 mir_add_wrapped_executable(mir_umock_acceptance_tests NOINSTALL
 
   test_libinput.cpp
-  test_platform_probing.cpp
   $<TARGET_OBJECTS:mir-umock-test-framework>
   )
 

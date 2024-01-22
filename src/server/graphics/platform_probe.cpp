@@ -23,9 +23,11 @@
 #include "mir/udev/wrapper.h"
 #include "platform_probe.h"
 
+#include <algorithm>
 #include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
+namespace mo = mir::options;
 
 namespace
 {
@@ -365,6 +367,27 @@ auto mg::select_display_modules(
         BOOST_THROW_EXCEPTION((std::runtime_error{msg.c_str()}));
     }
 
+    /* Treat the Virtual platform specially:
+     *
+     * It does not participate in the regular platform selection (it does not count as either a
+     * hardware nor a nested platform).
+     *
+     * Instead, the normal probing for platforms should be done, and then the virtual platform loaded
+     * if and only if the user has passed a Virtual platform option.
+     */
+    auto virtual_platform_pos = std::find_if(
+        platforms.begin(),
+        platforms.end(),
+        [](auto const& module)
+        {
+            auto describe = module->template load_function<mir::graphics::DescribeModule>(
+                "describe_graphics_module",
+                MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+            return strcmp("mir:virtual", describe()->name) == 0;
+        });
+    auto virtual_platform = std::move(*virtual_platform_pos);
+    platforms.erase(virtual_platform_pos);
+
     if (options.is_set(options::platform_display_libs))
     {
         
@@ -413,5 +436,10 @@ auto mg::select_display_modules(
         platform_modules = display_modules_for_device(platforms, dynamic_cast<mir::options::ProgramOption const&>(options), console);
     }
 
+    auto virtual_probe = probe_display_module(*virtual_platform, dynamic_cast<mo::ProgramOption const&>(options), console);
+    if (virtual_probe.size() && virtual_probe.front().support_level >= mg::probe::supported)
+    {
+        platform_modules.emplace_back(std::move(virtual_probe.front()), std::move(virtual_platform));
+    }
     return platform_modules;
 }

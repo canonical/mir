@@ -22,6 +22,8 @@
 #include "mir_test_framework/temporary_environment_value.h"
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
+#include "src/server/graphics/platform_probe.h"
+#include "mir/udev/wrapper.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -29,13 +31,14 @@
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 namespace mo = mir::options;
+namespace mg = mir::graphics;
+
 
 class FullProbeStack : public testing::Test
 {
 public:
     FullProbeStack()
         : console{std::make_shared<mtd::StubConsoleServices>()},
-          options{1, &"Platform Probing Acceptance Test"},
           report{std::make_shared<mir::logging::NullSharedLibraryProberReport>()}
     {
     }
@@ -64,12 +67,19 @@ public:
 
     void enable_host_wayland()
     {
-        temporary_env.emplace_back("wayland-host", "WAYLAND-0");
+        temporary_env.emplace_back("MIR_SERVER_WAYLAND_HOST", "WAYLAND-0");
     }
 
     auto the_options() -> mir::options::Option const&
     {
-        return options;
+        char const* argv0 = "Platform Probing Acceptance Test";
+
+        /* We remake options each time the_options() is called as option parsing
+         * happens at options->the_options() time and we want to make sure we capture
+         * *all* the settings that have been set.
+         */
+        options = std::make_shared<mo::DefaultConfiguration>(1, &argv0);
+        return *(options->the_options());
     }
 
     auto the_console_services() -> std::shared_ptr<mir::ConsoleServices>
@@ -83,7 +93,11 @@ public:
     }
 private:
     std::shared_ptr<mir::ConsoleServices> const console;
-    mir::options::DefaultConfiguration options;
+    /* This is a std::shared_ptr becaues mo::Configuration has a protected destructor; a std::unique_ptr<mo::Configuration>
+     * would call mo::Configuration::~Configiration and fail, whereas std::make_shared<mo::DefaultConfiguration> will capture
+     * mo::DefaultConfiguration::~DefaultConfiguration and compile.
+     */
+    std::shared_ptr<mo::Configuration> options;
     std::shared_ptr<mir::SharedLibraryProberReport> const report;
     
     std::vector<mtf::TemporaryEnvironmentValue> temporary_env;

@@ -17,14 +17,19 @@
 #include <boost/program_options/options_description.hpp>
 #include <boost/type_traits/has_right_shift.hpp>
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <fcntl.h>
 #include <boost/throw_exception.hpp>
+#include <string>
 
 #include "mir/console_services.h"
 #include "mir/graphics/platform.h"
+#include "mir/options/configuration.h"
+#include "mir/options/default_configuration.h"
 #include "mir/shared_library.h"
 #include "mir/shared_library_prober_report.h"
 #include "mir/test/doubles/mock_udev_device.h"
+#include "mir/test/doubles/mock_x11.h"
 #include "mir/test/doubles/stub_console_services.h"
 #include "mir_test_framework/temporary_environment_value.h"
 #include "src/server/graphics/platform_probe.h"
@@ -50,6 +55,7 @@
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 namespace mg = mir::graphics;
+namespace mo = mir::options;
 
 namespace
 {
@@ -499,4 +505,203 @@ TEST_F(ProbePolicy, when_hardware_rendering_platform_is_not_available_nested_pla
 
     ASSERT_THAT(probe_result, Not(IsEmpty()));
     EXPECT_THAT(probe_result[0].first.device, IsNull());
+}
+
+class FullProbeStack : public testing::Test
+{
+public:
+    FullProbeStack()
+        : console{std::make_shared<mtd::StubConsoleServices>()},
+          report{std::make_shared<mir::logging::NullSharedLibraryProberReport>()}
+    {
+        using namespace testing;
+
+        ON_CALL(egl, eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS))
+            .WillByDefault([this](auto, auto) { return egl_client_extensions.c_str(); });
+    }
+
+    auto add_kms_device() -> std::unique_ptr<mir::udev::Device>
+    {
+        using namespace std::string_literals;
+        using namespace testing;
+#ifndef MIR_BUILD_PLATFORM_GBM_KMS
+        return nullptr;
+#else
+
+        auto syspath = udev_env.add_device(
+            "drm",
+            ("/devices/pci0000:00/0000:00:0" + std::to_string(drm_device_count) + ".0/drm/card" + std::to_string(drm_device_count)).c_str(),
+            nullptr,
+            {
+                "dev", ("226:" + std::to_string(drm_device_count)).c_str()
+            },
+            {
+                "DEVNAME", ("/dev/dri/card" + std::to_string(drm_device_count)).c_str(),
+                "DEVTYPE", "drm_minor",
+                "MAJOR", "226",
+                "MINOR", std::to_string(drm_device_count).c_str()
+            });
+
+        drm_device_count++;
+        return mir::udev::Context{}.device_from_syspath(syspath);
+    }
+
+
+    void enable_gbm_on_kms_device(mir::udev::Device const& device)
+    {
+        using namespace testing;
+
+        std::string const drm_node = device.devnode();
+
+        auto const fake_gbm_device = reinterpret_cast<gbm_device*>(std::hash<std::string>{}(drm_node));
+        auto const fake_egl_display = reinterpret_cast<EGLDisplay>(std::hash<std::string>{}(drm_node));
+
+        add_egl_client_extensions("EGL_KHR_platform_gbm EGL_MESA_platform_gbm EGL_EXT_platform_base");
+
+        ON_CALL(gbm, gbm_create_device(mtd::IsFdOfDevice(drm_node.c_str())))
+            .WillByDefault(Return(fake_gbm_device));
+
+        // Actually, we shouldn't need any of this EGL setup bit, but the gbm-kms probe is conservative.
+        ON_CALL(egl, eglGetDisplay(fake_gbm_device))
+            .WillByDefault(Return(fake_egl_display));
+        ON_CALL(egl, eglInitialize(fake_egl_display, _, _))
+            .WillByDefault(
+                DoAll(
+                    SetArgPointee<1>(1),
+                    SetArgPointee<2>(4),
+                    Return(EGL_TRUE)));
+        ON_CALL(gl, glGetString(GL_RENDERER))
+            .WillByDefault(Return(reinterpret_cast<GLubyte const*>("Not A Software Renderer, Honest!")));
+#endif
+    }
+
+    void enable_host_x11()
+    {
+        temporary_env.emplace_back("DISPLAY", ":0");
+    }
+
+    void disable_host_x11()
+    {
+        using namespace testing;
+        ON_CALL(x11, XOpenDisplay(_)).WillByDefault(Return(nullptr));
+    }
+
+    void add_virtual_option()
+    {
+        temporary_env.emplace_back("MIR_SERVER_VIRTUAL_OUTPUT", "1280x1024");
+    }
+
+    void enable_host_wayland()
+    {
+        temporary_env.emplace_back("MIR_SERVER_WAYLAND_HOST", "WAYLAND-0");
+     }
+
+    auto the_options() -> mir::options::Option const&
+    {
+        char const* argv0 = "Platform Probing Acceptance Test";
+
+        /* We remake options each time the_options() is called as option parsing
+         * happens at options->the_options() time and we want to make sure we capture
+         * *all* the settings that have been set.
+         */
+        options = std::make_shared<mo::DefaultConfiguration>(1, &argv0);
+        return *(options->the_options());
+    }
+
+    auto the_console_services() -> std::shared_ptr<mir::ConsoleServices>
+    {
+        return console;
+    }
+
+    auto the_library_prober_report() -> std::shared_ptr<mir::SharedLibraryProberReport>
+    {
+        return report;
+    }
+private:
+    void add_egl_client_extensions(std::string const& extensions)
+    {
+        egl_client_extensions += extensions + " ";
+    }
+    std::string egl_client_extensions;
+
+    std::shared_ptr<mir::ConsoleServices> const console;
+    /* This is a std::shared_ptr becaues mo::Configuration has a protected destructor; a std::unique_ptr<mo::Configuration>
+     * would call mo::Configuration::~Configiration and fail, whereas std::make_shared<mo::DefaultConfiguration> will capture
+     * mo::DefaultConfiguration::~DefaultConfiguration and compile.
+     */
+    std::shared_ptr<mo::Configuration> options;
+    std::shared_ptr<mir::SharedLibraryProberReport> const report;
+
+    std::vector<mtf::TemporaryEnvironmentValue> temporary_env;
+    mtf::UdevEnvironment udev_env;
+
+    // We unconditionally need an X11 mock as the platform unconditionally calls libX11 functions to probe
+    testing::NiceMock<mtd::MockX11> x11;
+    testing::NiceMock<mtd::MockEGL> egl;
+    testing::NiceMock<mtd::MockGL> gl;
+#ifdef MIR_BUILD_PLATFORM_GBM_KMS
+    int drm_device_count{0};
+    testing::NiceMock<mtd::MockDRM> drm;
+    testing::NiceMock<mtd::MockGBM> gbm;
+#endif
+};
+
+TEST_F(FullProbeStack, select_display_modules_loads_all_available_hardware_when_no_nested)
+{
+    using namespace testing;
+
+    disable_host_x11();
+
+    int expected_hardware_count{0};
+    for (auto i = 0; i < 2; ++i)
+    {
+        if (auto device = add_kms_device())
+        {
+            expected_hardware_count++;
+            enable_gbm_on_kms_device(*device);
+        }
+    }
+
+    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+    EXPECT_THAT(devices.size(), Eq(expected_hardware_count));
+}
+
+MATCHER_P(ModuleNameMatches, matcher, "")
+{
+    using namespace testing;
+
+    auto describe = arg->template load_function<mir::graphics::DescribeModule>(
+        "describe_graphics_module");
+
+    return ExplainMatchResult(matcher, describe()->name, result_listener);
+}
+
+MATCHER(IsHardwarePlatform, "")
+{
+    return arg.device != nullptr;
+}
+
+TEST_F(FullProbeStack, select_display_modules_loads_virtual_platform_as_well_as_hardware_when_option_is_used)
+{
+    using namespace testing;
+
+    disable_host_x11();
+
+    if (auto device = add_kms_device())
+    {
+        enable_gbm_on_kms_device(*device);
+    }
+    else
+    {
+        GTEST_SKIP() << "gbm-kms platform not built; cannot test hardware platform probing";
+    }
+
+    add_virtual_option();
+
+    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+
+    // We expect the Virtual platform to load
+    EXPECT_THAT(devices, Contains(Pair(_, ModuleNameMatches(StrEq("mir:virtual")))));
+    // And we also expect a hardware platform to load
+    EXPECT_THAT(devices, Contains(Pair(IsHardwarePlatform(), _)));
 }
