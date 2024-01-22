@@ -64,16 +64,17 @@ mi::DefaultDevice::DefaultDevice(MirInputDevice const& config,
                                  std::function<void(Device*)> const& callback)
     : DefaultDevice(config.id(), actions, device, key_mapper, callback)
 {
-#define ATTEMPT(x) try{ x; }catch(...){}
-    ATTEMPT(if (config.has_touchpad_config())
-                set_touchpad_configuration(config.touchpad_config()));
-    ATTEMPT(if (config.has_keyboard_config())
-                set_keyboard_configuration(config.keyboard_config()));
-    ATTEMPT(if (config.has_pointer_config())
-                set_pointer_configuration(config.pointer_config()));
-    ATTEMPT(if (config.has_touchscreen_config())
-                set_touchscreen_configuration(config.touchscreen_config()));
-#undef ATTEMPT
+    if (config.has_touchpad_config())
+        set_touchpad_configuration(config.touchpad_config());
+
+    if (config.has_keyboard_config())
+        set_keyboard_configuration(config.keyboard_config());
+
+    if (config.has_pointer_config())
+        set_pointer_configuration(config.pointer_config());
+
+    if (config.has_touchscreen_config())
+        set_touchscreen_configuration(config.touchscreen_config());
 }
 
 mi::DeviceCapabilities mi::DefaultDevice::capabilities() const
