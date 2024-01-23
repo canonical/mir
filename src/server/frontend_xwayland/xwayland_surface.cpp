@@ -984,10 +984,9 @@ void mf::XWaylandSurface::scene_surface_close_requested()
         if (verbose_xwayland_logging_enabled())
         {
             log_debug(
-                "Killing %s because it does not support WM_DELETE_WINDOW",
+                "Not closing %s (because it does not support WM_DELETE_WINDOW)",
                 connection->window_debug_string(window).c_str());
         }
-        xcb_kill_client(*connection, window);
     }
     connection->flush();
 }
