@@ -377,23 +377,38 @@ auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> std::
 
 void mrg::Renderer::draw(mg::Renderable const& renderable) const
 {
+    auto const texture = gl_interface->as_texture(renderable.buffer());
     auto const clip_area = renderable.clip_area();
     if (clip_area)
     {
         glEnable(GL_SCISSOR_TEST);
-        glScissor(
-            clip_area.value().top_left.x.as_int() -
-                viewport.top_left.x.as_int(),
+
+        // NOTE: We are handling the following two cases here:
+        // 1. The layout of the output surface matches that of the texture.
+        //    The clip_area provided has the origin in the top-left corner of the screen, while OpenGL
+        //    has the origin in the bottom-left corner of the screen. Hence, when the layout of the
+        //    output surface matches that of the texture, we need to invert the provided clip_area.
+        // 2. The layout of the output surface DOES NOT match that of the texture.
+        //    Note that the call to glViewport in update_gl_viewport will modify the behavior of glScissor.
+        //    Hence, if the layouts do NOT match, then we do NOT need to invert the clip area. This
+        //    is because we WANT the inverted layout which clip_area provides to us by default.
+        auto const invert_clip_area = (output_surface->layout() == graphics::gl::OutputSurface::Layout::TopRowFirst) ==
+            (texture->layout() == mg::gl::Texture::Layout::TopRowFirst);
+        auto const scissor_y = invert_clip_area ?
             viewport.top_left.y.as_int() +
                 viewport.size.height.as_int() -
                 clip_area.value().top_left.y.as_int() -
-                clip_area.value().size.height.as_int(),
-            clip_area.value().size.width.as_int(), 
+                clip_area.value().size.height.as_int() :
+            clip_area.value().top_left.y.as_int();
+
+        glScissor(
+            clip_area.value().top_left.x.as_int() -
+            viewport.top_left.x.as_int(),
+            scissor_y,
+            clip_area.value().size.width.as_int(),
             clip_area.value().size.height.as_int()
         );
     }
-
-    auto const texture = gl_interface->as_texture(renderable.buffer());
 
     // All the programs are held by program_factory through its lifetime. Using pointers avoids
     // -Wdangling-reference.
