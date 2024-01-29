@@ -22,7 +22,6 @@ environment:
     DISTRO/debian_sid: debian
     RELEASE: jammy
     RELEASE/ubuntu: jammy
-    RELEASE/ubuntu_lunar: lunar
     RELEASE/ubuntu_mantic: mantic
     RELEASE/ubuntu_devel: noble
     RELEASE/debian_sid: sid
