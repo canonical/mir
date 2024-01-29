@@ -16,6 +16,8 @@ add_library(
   platform_probe.h
   multiplexing_display.h
   multiplexing_display.cpp
+  multiplexing_hw_cursor.h
+  multiplexing_hw_cursor.cpp
 )
 
 target_link_libraries(mirgraphics
