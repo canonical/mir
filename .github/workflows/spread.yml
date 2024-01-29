@@ -85,7 +85,7 @@ jobs:
         echo "LXD_DIR=/var/snap/lxd/common/lxd" >> $GITHUB_ENV
 
     - name: Check out code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -100,7 +100,7 @@ jobs:
         echo "merge-base=$( git merge-base origin/main ${{ github.sha }} )" >> $GITHUB_OUTPUT
 
     - name: CCache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         key: ccache-${{ matrix.spread-task }}-${{ steps.setup-ccache.outputs.merge-base }}
         # if exact match isn't found, use the most recent entry for the task
