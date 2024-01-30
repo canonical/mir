@@ -108,14 +108,8 @@ auto get_axis_source(libinput_event_pointer* pointer) -> MirPointerAxisSource
 }
 
 mie::LibInputDevice::LibInputDevice(std::shared_ptr<mi::InputReport> const& report, LibInputDevicePtr dev)
-    : report{report}, pointer_pos{0, 0}, button_state{0}
+    : report{report}, device_{std::move(dev)}, pointer_pos{0, 0}, button_state{0}
 {
-    add_device_of_group(std::move(dev));
-}
-
-void mie::LibInputDevice::add_device_of_group(LibInputDevicePtr dev)
-{
-    devices.emplace_back(std::move(dev));
     update_device_info();
 }
 
@@ -445,21 +439,18 @@ void mie::LibInputDevice::update_device_info()
         Mapping{"ID_INPUT_KEYBOARD", mi::DeviceCapability::alpha_numeric},
     };
 
-    for (auto const& dev : devices)
+    auto const u_dev = mir::raii::deleter_for(libinput_device_get_udev_device(dev), &udev_device_unref);
+    for (auto const& mapping : mappings)
     {
-        auto const u_dev = mir::raii::deleter_for(libinput_device_get_udev_device(dev.get()), &udev_device_unref);
-        for (auto const& mapping : mappings)
-        {
-            int detected = 0;
-            auto value = udev_device_get_property_value(u_dev.get(), mapping.first);
-            if (!value)
-                continue;
+        int detected = 0;
+        auto value = udev_device_get_property_value(u_dev.get(), mapping.first);
+        if (!value)
+            continue;
 
-            std::stringstream property_value(value);
-            property_value >> detected;
-            if (!property_value.fail() && detected)
-                caps |= mapping.second;
-        }
+        std::stringstream property_value(value);
+        property_value >> detected;
+        if (!property_value.fail() && detected)
+            caps |= mapping.second;
     }
 
     if (contains(caps, mi::DeviceCapability::touchscreen) &&
@@ -482,7 +473,7 @@ libinput_device_group* mie::LibInputDevice::group()
 
 libinput_device* mie::LibInputDevice::device() const
 {
-    return devices.front().get();
+    return device_.get();
 }
 
 mi::OutputInfo mie::LibInputDevice::get_output_info() const

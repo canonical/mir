@@ -420,8 +420,7 @@ void mie::Platform::device_added(libinput_device* dev)
     auto device_it = find_device(device_ptr.get());
     if (end(devices) != device_it)
     {
-        (*device_it)->add_device_of_group(std::move(device_ptr));
-        log_debug("Device %s is part of an already opened device group", libinput_device_get_sysname(dev));
+        log_debug("Device %s is an already opened device", libinput_device_get_sysname(dev));
         return;
     }
 
