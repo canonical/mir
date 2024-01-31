@@ -21,34 +21,299 @@
 
 using namespace miral;
 
-ApplicationSelector::ApplicationSelector(miral::WindowManagerTools const& in_tools) :
-    tools{in_tools}
-{}
+namespace miral
+{
+
+template <typename T>
+class WindowCyclingBehavior
+{
+public:
+    WindowCyclingBehavior(
+        std::function<bool(T const&, T const&)> comparison_func,
+        std::function<bool(T const&)> can_select,
+        std::function<void(T const&, T const&, T const&)> on_raised,
+        std::function<void(T const&)> on_cancelled,
+        std::function<void(T&)> reset
+    ) : comparison_func{comparison_func},
+        can_select{can_select},
+        on_raised{on_raised},
+        on_cancelled{on_cancelled},
+        reset{reset}
+    {
+    }
+
+    WindowCyclingBehavior(
+        std::function<bool(T const&, T const&)> comparison_func,
+        std::function<bool(T const&)> can_select,
+        std::function<void(T const& previously_selected, T const& newly_selected, T const& originally_selected)> on_raised,
+        std::function<void(T const&)> on_cancelled,
+        std::function<void(T&)> reset,
+        std::vector<T> focus_list,
+        T originally_selected,
+        T selected,
+        bool is_active
+    ) : comparison_func{comparison_func},
+        can_select{can_select},
+        on_raised{on_raised},
+        on_cancelled{on_cancelled},
+        reset{reset},
+        focus_list{focus_list},
+        originally_selected{originally_selected},
+        selected{selected},
+        is_active{is_active}
+    {
+    }
+
+    WindowCyclingBehavior(WindowCyclingBehavior const&) = delete;
+    auto operator=(WindowCyclingBehavior const&) -> WindowCyclingBehavior& = delete;
+
+    void add(T const& t)
+    {
+        focus_list.push_back(t);
+    }
+
+    void remove(T const& t)
+    {
+        auto it = find(t);
+        if (it == focus_list.end())
+        {
+            mir::log_warning("WindowCyclingBehavior::remove could not find item to remove");
+            return;
+        }
+
+        // If we delete the selected application, we will try to select the next available one.
+        if (comparison_func(*it, selected))
+        {
+            auto original_it = it;
+            do {
+                it++;
+                if (it == focus_list.end())
+                    it = focus_list.begin();
+
+                if (it == original_it)
+                {
+                    break;
+                }
+            } while (!can_select(*it));
+
+            if (it != original_it)
+                selected = *it;
+        }
+
+        focus_list.erase(it);
+    }
+
+    void focus(T const& t)
+    {
+        auto it = find(t);
+        if (it == focus_list.end())
+        {
+            mir::log_error("WindowCyclingBehavior::focus: attempting to focus an item that is not in the focus list");
+            return;
+        }
+
+        if (!is_active)
+        {
+            // If we are not active, we move the newly focused item to the front of the list.
+            if (it != focus_list.end())
+                std::rotate(focus_list.begin(), it, it + 1);
+        }
+
+        selected = t;
+    }
+
+    void unfocus(T const& t)
+    {
+        if (comparison_func(t, selected))
+        {
+            reset(selected);
+        }
+    }
+
+    auto next() -> T
+    {
+        return advance(false);
+    }
+
+    auto prev() -> T
+    {
+        return advance(true);
+    }
+
+    auto complete() -> T
+    {
+        if (!is_active)
+        {
+            mir::log_warning("WindowCyclingBehavior::complete: Cannot complete while not active");
+            return T();
+        }
+
+        // Place the newly selected item at the front of the list.
+        auto it = find(selected);
+        if (it != focus_list.end())
+        {
+            std::rotate(focus_list.begin(), it, it + 1);
+        }
+
+        reset(originally_selected);
+        is_active = false;
+        return *it;
+    }
+
+    auto cancel() -> T
+    {
+        if (!is_active)
+        {
+            mir::log_warning("WindowCyclingBehavior::complete: Cannot cancel while not active");
+            return T();
+        }
+
+        on_cancelled(originally_selected);
+        reset(originally_selected);
+        is_active = false;
+        return originally_selected;
+    }
+
+    auto get_focused() -> T
+    {
+        return selected;
+    }
+
+    auto get_originally_focused() -> T
+    {
+        return originally_selected;
+    }
+
+    bool get_is_active()
+    {
+        return is_active;
+    }
+
+    std::vector<T> const& get_focus_list() { return focus_list; }
+
+private:
+    auto find(T const& application) -> std::vector<T>::iterator
+    {
+        return std::find_if(focus_list.begin(), focus_list.end(), [&](T const& existing_application)
+        {
+            return comparison_func(application, existing_application);
+        });
+    }
+
+    auto advance(bool reverse) -> T
+    {
+        if (focus_list.empty())
+            return T();
+
+        if (!is_active)
+        {
+            is_active = true;
+            originally_selected = focus_list.front();
+            selected = originally_selected;
+        }
+
+        // Attempt to focus the next element after the selected element.
+        auto it = find(selected);
+        auto start_it = it;
+
+        do {
+            if (reverse)
+            {
+                if (it == focus_list.begin())
+                {
+                    it = focus_list.end() - 1;
+                }
+                else
+                {
+                    it--;
+                }
+            }
+            else
+            {
+                it++;
+                if (it == focus_list.end())
+                {
+                    it = focus_list.begin();
+                }
+            }
+
+            // We made it all the way through the list but failed to find anything.
+            if (it == start_it)
+                break;
+        } while (!can_select(*it));
+
+        on_raised(*start_it, *it, originally_selected);
+        return *it;
+    }
+
+    std::function<bool(T const&, T const&)> comparison_func;
+    std::function<bool(T const&)> can_select;
+    std::function<void(T const&, T const&, T const&)> on_raised;
+    std::function<void(T const&)> on_cancelled;
+    std::function<void(T&)> reset;
+
+    std::vector<T> focus_list;
+    /// The application that was selected when next was first called
+    T originally_selected;
+
+    /// The application that is currently selected.
+    T selected;
+
+    bool is_active = false;
+};
+
+}
+
+ApplicationSelector::ApplicationSelector(miral::WindowManagerTools const& _tools) :
+    tools{_tools},
+    window_cycler{std::make_unique<WindowCyclingBehavior<WeakApplication>>(
+        get_comparison_func(),
+        get_can_select_func(tools),
+        get_on_raised_func(tools),
+        get_on_cancelled_func(tools),
+        get_reset_func()
+    )}
+{
+}
 
 ApplicationSelector::~ApplicationSelector() = default;
 
 ApplicationSelector::ApplicationSelector(miral::ApplicationSelector const& other) :
-    tools{other.tools},
-    focus_list{other.focus_list},
-    originally_selected{other.originally_selected},
-    selected{other.selected},
-    active_window{other.active_window}
+    tools{other.tools}
 {
+    window_cycler = std::make_unique<WindowCyclingBehavior<WeakApplication>>(
+        get_comparison_func(),
+        get_can_select_func(tools),
+        get_on_raised_func(tools),
+        get_on_cancelled_func(tools),
+        get_reset_func(),
+        other.window_cycler->get_focus_list(),
+        other.window_cycler->get_originally_focused(),
+        other.window_cycler->get_focused(),
+        other.window_cycler->get_is_active()
+    );
 }
 
 auto ApplicationSelector::operator=(ApplicationSelector const& other) -> ApplicationSelector&
 {
     tools = other.tools;
-    focus_list = other.focus_list;
-    originally_selected = other.originally_selected;
-    selected = other.selected;
-    active_window = other.active_window;
+    window_cycler = std::make_unique<WindowCyclingBehavior<WeakApplication>>(
+        get_comparison_func(),
+        get_can_select_func(tools),
+        get_on_raised_func(tools),
+        get_on_cancelled_func(tools),
+        get_reset_func(),
+        other.window_cycler->get_focus_list(),
+        other.window_cycler->get_originally_focused(),
+        other.window_cycler->get_focused(),
+        other.window_cycler->get_is_active()
+    );
     return *this;
 }
 
 void ApplicationSelector::advise_new_app(Application const& application)
 {
-    focus_list.push_back(application);
+    window_cycler->add(application);
 }
 
 void ApplicationSelector::advise_focus_gained(WindowInfo const& window_info)
@@ -56,28 +321,18 @@ void ApplicationSelector::advise_focus_gained(WindowInfo const& window_info)
     auto window = window_info.window();
     if (!window)
     {
+        mir::log_error("ApplicationSelector::advise_focus_gained: Could not find the window");
         return;
     }
 
     auto application = window.application();
     if (!application)
     {
+        mir::log_error("ApplicationSelector::advise_focus_gained: Could not find the application");
         return;
     }
 
-    auto it = find(application);
-    if (!is_active())
-    {
-        // If we are not active, we move the newly focused item to the front of the list.
-        if (it != focus_list.end())
-        {
-            std::rotate(focus_list.begin(), it, it + 1);
-        }
-    }
-
-    // Update the current selection
-    selected = application;
-    active_window = window;
+    window_cycler->focus(application);
 }
 
 void ApplicationSelector::advise_focus_lost(miral::WindowInfo const& window_info)
@@ -85,179 +340,120 @@ void ApplicationSelector::advise_focus_lost(miral::WindowInfo const& window_info
     auto window = window_info.window();
     if (!window)
     {
+        mir::log_error("ApplicationSelector::advise_focus_lost: Could not find the window");
         return;
     }
 
     auto application = window.application();
     if (!application)
     {
+        mir::log_error("ApplicationSelector::advise_focus_lost: Could not find the application");
         return;
     }
 
-    if (selected.lock() == application)
-    {
-        selected.reset();
-    }
+    window_cycler->unfocus(application);
 }
 
 void ApplicationSelector::advise_delete_app(Application const& application)
 {
-    auto it = find(application);
-    if (it == focus_list.end())
-    {
-        mir::log_warning("ApplicationSelector::advise_delete_app could not delete the app.");
-        return;
-    }
-
-    // If we delete the selected application, we will try to select the next available one.
-    if (application == selected.lock())
-    {
-        std::optional<Window> next_window = std::nullopt;
-        auto original_it = it;
-        do {
-            it++;
-            if (it == focus_list.end())
-                it = focus_list.begin();
-
-            if (it == original_it)
-            {
-                break;
-            }
-        } while ((next_window = tools.window_to_select_application(it->lock())) == std::nullopt);
-
-        if (next_window != std::nullopt)
-            active_window = next_window.value();
-
-        if (it != original_it)
-            selected = *it;
-    }
-
-    focus_list.erase(it);
+    window_cycler->remove(application);
 }
 
 auto ApplicationSelector::next() -> Application
 {
-    return advance(false);
+    return window_cycler->next().lock();
 }
 
 auto ApplicationSelector::prev() -> Application
 {
-    return advance(true);
+    return window_cycler->prev().lock();
 }
 
 auto ApplicationSelector::complete() -> Application
 {
-    if (!is_active())
-    {
-        return nullptr;
-    }
-
-    // Place the newly selected item at the front of the list.
-    auto it = find(selected);
-    if (it != focus_list.end())
-    {
-        std::rotate(focus_list.begin(), it, it + 1);
-    }
-
-    originally_selected.reset();
-    return selected.lock();
+    return window_cycler->complete().lock();
 }
 
 void ApplicationSelector::cancel()
 {
-    std::optional<Window> window_to_select;
-    if ((window_to_select = tools.window_to_select_application(originally_selected.lock())) != std::nullopt)
-    {
-        tools.select_active_window(window_to_select.value());
-    }
-    else
-    {
-        mir::log_warning("ApplicationSelector::cancel: Failed to select the root.");
-    }
-
-    originally_selected.reset();
+    window_cycler->cancel();
 }
 
 auto ApplicationSelector::is_active() -> bool
 {
-    return !originally_selected.expired();
+    return window_cycler->get_is_active();
 }
 
 auto ApplicationSelector::get_focused() -> Application
 {
-    return selected.lock();
+    return window_cycler->get_focused().lock();
 }
 
-auto ApplicationSelector::advance(bool reverse) -> Application
+auto ApplicationSelector::get_comparison_func() -> std::function<bool(ApplicationSelector::WeakApplication const&, ApplicationSelector::WeakApplication const&)>
 {
-    if (focus_list.empty())
+    return [](ApplicationSelector::WeakApplication const& first, ApplicationSelector::WeakApplication const& second)
     {
-        return nullptr;
-    }
+        return !first.owner_before(second) && !second.owner_before(first);;
+    };
+}
 
-    if (!is_active())
+auto ApplicationSelector::get_can_select_func(WindowManagerTools& tools) -> std::function<bool(ApplicationSelector::WeakApplication const&)>
+{
+    return [&](ApplicationSelector::WeakApplication const& session)
     {
-        originally_selected = focus_list.front();
-        selected = originally_selected;
-    }
+        return tools.window_to_select_application(session.lock()) != std::nullopt;
+    };
+}
 
-    // Attempt to focus the next application after the selected application.
-    auto it = find(selected);
-    auto start_it = it;
+auto ApplicationSelector::get_on_raised_func(WindowManagerTools& tools)
+    -> std::function<void(ApplicationSelector::WeakApplication const&, ApplicationSelector::WeakApplication const&, ApplicationSelector::WeakApplication const&)>
+{
+    return [&](ApplicationSelector::WeakApplication const& previously_selected,
+               ApplicationSelector::WeakApplication const& newly_selected,
+               ApplicationSelector::WeakApplication const& originally_selected)
+    {
+        auto previous_session = previously_selected.lock();
+        auto new_session = newly_selected.lock();
+        auto original_session = originally_selected.lock();
 
-    std::optional<Window> next_window = std::nullopt;
-    do {
-        if (reverse)
+        auto previous_window = tools.active_window();
+        auto new_window = tools.window_to_select_application(new_session);
+        if (previous_session == new_session || new_window == std::nullopt)
+            return;
+
+        if (new_session == original_session)
         {
-            if (it == focus_list.begin())
-            {
-                it = focus_list.end() - 1;
-            }
-            else
-            {
-                it--;
-            }
+            // Edge case: if we have gone full circle around the list back to the original app
+            // then we will wind up in a situation where the original app - now in the second z-order
+            // position - will be swapped with the final app, putting the final app in the second position.
+            for (auto const& window: tools.info_for(new_session).windows())
+                tools.send_tree_to_back(window);
         }
         else
         {
-            it++;
-            if (it == focus_list.end())
-            {
-                it = focus_list.begin();
-            }
+            tools.swap_tree_order(new_window.value(), previous_window);
         }
 
-        // We made it all the way through the list but failed to find anything.
-        if (it == start_it)
-            break;
-    } while ((next_window = tools.window_to_select_application(it->lock())) == std::nullopt);
-
-    if (it == start_it || next_window == std::nullopt)
-    {
-        // next_window will be a garbage window in this case, so let's not select it
-        return start_it->lock();
-    }
-
-    // Swap the tree order first and then select the new window
-    if (it->lock() == originally_selected.lock())
-    {
-        // Edge case: if we have gone full circle around the list back to the original app
-        // then we will wind up in a situation where the original app - now in the second z-order
-        // position - will be swapped with the final app, putting the final app in the second position.
-        for (auto window: tools.info_for(selected).windows())
-            tools.send_tree_to_back(window);
-    }
-    else
-        tools.swap_tree_order(next_window.value(), active_window);
-
-    tools.select_active_window(next_window.value());
-    return it->lock();
+        tools.select_active_window(new_window.value());
+    };
 }
 
-auto ApplicationSelector::find(WeakApplication application) -> std::vector<WeakApplication>::iterator
+auto ApplicationSelector::get_on_cancelled_func(WindowManagerTools& tools) -> std::function<void(ApplicationSelector::WeakApplication const&)>
 {
-    return std::find_if(focus_list.begin(), focus_list.end(), [&](WeakApplication const& existing_application)
+    return [&](ApplicationSelector::WeakApplication const& session)
     {
-        return !existing_application.owner_before(application) && !application.owner_before(existing_application);
-    });
+        auto window_to_select = tools.window_to_select_application(session.lock());
+        if (window_to_select != std::nullopt)
+        {
+            tools.select_active_window(window_to_select.value());
+        }
+    };
+}
+
+auto ApplicationSelector::get_reset_func() -> std::function<void(ApplicationSelector::WeakApplication&)>
+{
+    return [](ApplicationSelector::WeakApplication& session)
+    {
+        session.reset();
+    };
 }

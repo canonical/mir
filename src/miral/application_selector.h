@@ -23,6 +23,9 @@
 namespace miral
 {
 
+template <typename T>
+class WindowCyclingBehavior;
+
 /// Intended to be used in conjunction with a WindowManagementPolicy. Simply
 /// hook up the "advise" methods to be called at the appropriate times, and
 /// the ApplicationSelector will keep track of the rest.
@@ -78,21 +81,16 @@ public:
 
 private:
     using WeakApplication = std::weak_ptr<mir::scene::Session>;
-    auto advance(bool reverse) -> Application;
-    auto find(WeakApplication) -> std::vector<WeakApplication>::iterator;
 
     WindowManagerTools tools;
+    std::unique_ptr<WindowCyclingBehavior<WeakApplication>> window_cycler;
 
-    /// Represents the current order of focus by application. Most recently focused
-    /// applications are at the beginning, while least recently focused are at the end.
-    std::vector<WeakApplication> focus_list;
-
-    /// The application that was selected when next was first called
-    WeakApplication originally_selected;
-
-    /// The application that is currently selected.
-    WeakApplication selected;
-    Window active_window;
+    static auto get_comparison_func()-> std::function<bool(ApplicationSelector::WeakApplication const&, ApplicationSelector::WeakApplication const&)>;
+    static auto get_can_select_func(WindowManagerTools& tools) -> std::function<bool(ApplicationSelector::WeakApplication const&)>;
+    static auto get_on_raised_func(WindowManagerTools& tools)
+        -> std::function<void(ApplicationSelector::WeakApplication const&, ApplicationSelector::WeakApplication const&, ApplicationSelector::WeakApplication const&)>;
+    static auto get_on_cancelled_func(WindowManagerTools& tools) -> std::function<void(ApplicationSelector::WeakApplication const&)>;
+    static auto get_reset_func() -> std::function<void(ApplicationSelector::WeakApplication&)>;
 };
 
 }
