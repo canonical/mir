@@ -257,6 +257,11 @@ public:
     };
 
     virtual ~DisplayProvider() = default;
+
+    /**
+     * Describe the platform+device this is on for debugging purposes
+     */
+    virtual auto describe_platform() const -> std::string = 0;
 };
 
 
@@ -271,6 +276,11 @@ public:
     };
 
     virtual ~DisplayAllocator() = default;
+
+    /**
+     * Describe the platform+device this is on for debugging purposes
+     */
+    virtual auto describe_platform() const -> std::string = 0;
 };
 
 class Framebuffer
@@ -288,9 +298,21 @@ public:
 class CPUAddressableDisplayProvider : public DisplayProvider
 {
 public:
+    explicit CPUAddressableDisplayProvider(std::string_view platform_description)
+        : platform_name{platform_description}
+    {
+    }
+    
     class Tag : public DisplayProvider::Tag
     {
     };
+
+    auto describe_platform() const -> std::string override
+    {
+        return platform_name;
+    }
+private:
+    std::string const platform_name;
 };
 
 class CPUAddressableDisplayAllocator : public DisplayAllocator

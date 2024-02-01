@@ -682,6 +682,11 @@ public:
         return Layout::GL;
     }
 
+    auto describe_platform_selection() const -> std::string override
+    {
+        return "FIXME: Implement";
+    }
+
 private:
     EGLDisplay const dpy;
     EGLContext const ctx;

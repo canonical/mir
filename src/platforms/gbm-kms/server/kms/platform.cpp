@@ -31,10 +31,12 @@
 #include "mir/graphics/linux_dmabuf.h"
 #include "mir/graphics/egl_context_executor.h"
 #include "kms_cpu_addressable_display_provider.h"
+#include "owning_c_str.h"
 #include "surfaceless_egl_context.h"
 #include <boost/throw_exception.hpp>
 #include <drm_fourcc.h>
 #include <gbm.h>
+#include <xf86drm.h>
 
 #define MIR_LOG_COMPONENT "platform-graphics-gbm-kms"
 #include "mir/log.h"
@@ -122,11 +124,16 @@ auto gbm_device_for_udev_device(
         {
             if (gbm_display->is_same_device(device))
             {
+                mir::log_info(
+                    "Matched renderer %s to display %s",
+                    device.devnode(),
+                    gbm_display->describe_platform().c_str());
                 return gbm_display;
             }
         }
     }
 
+    mir::log_info("Render device %s does not match any output", device.devnode());
     // We don't match any display HW, create our own GBM device
     if (auto node = device.devnode())
     {
@@ -339,17 +346,20 @@ auto maybe_make_dmabuf_provider(
 mgg::RenderingPlatform::RenderingPlatform(
     mir::udev::Device const& device,
     std::vector<std::shared_ptr<mg::DisplayPlatform>> const& platforms)
-    : RenderingPlatform(gbm_device_for_udev_device(device, platforms))
+    : RenderingPlatform(gbm_device_for_udev_device(device, platforms), device.devnode())
 {
 }
 
 mgg::RenderingPlatform::RenderingPlatform(
-    std::variant<std::shared_ptr<mg::GBMDisplayProvider>, std::shared_ptr<gbm_device>> hw)
+    std::variant<std::shared_ptr<mg::GBMDisplayProvider>,
+    std::shared_ptr<gbm_device>> hw,
+    std::string devnode)
     : device{std::visit(gbm_device_from_hw{}, hw)},
       bound_display{std::visit(display_provider_or_nothing{}, hw)},
       share_ctx{std::make_unique<SurfacelessEGLContext>(initialise_egl(dpy_for_gbm_device(device.get()), 1, 4))},
       egl_delegate{std::make_shared<mg::common::EGLContextExecutor>(share_ctx->make_share_context())},
-      dmabuf_provider{maybe_make_dmabuf_provider(device, share_ctx->egl_display(), std::make_shared<mg::EGLExtensions>(), egl_delegate)}
+      dmabuf_provider{maybe_make_dmabuf_provider(device, share_ctx->egl_display(), std::make_shared<mg::EGLExtensions>(), egl_delegate)},
+      devnode{std::move(devnode)}
 {
 }
 
@@ -374,7 +384,8 @@ auto mgg::RenderingPlatform::maybe_create_provider(
             egl_delegate,
             dmabuf_provider,
             share_ctx->egl_display(),
-            static_cast<EGLContext>(*share_ctx));
+            static_cast<EGLContext>(*share_ctx),
+            devnode);
     }
     return nullptr;
 }
@@ -415,7 +426,9 @@ auto mgg::Platform::maybe_create_provider(DisplayProvider::Tag const& type_tag)
         /* There's no implementation behind it, but we want to know during probe time
          * that the DisplayBuffers will support it.
          */
-        return std::make_shared<CPUAddressableDisplayProvider>();
+        CStr device_node{drmGetDeviceNameFromFd2(drm_fd)};
+
+        return std::make_shared<CPUAddressableDisplayProvider>(std::string{"gbm-kms dumb buffers on "} + device_node.get());
     }
     return {};
 }

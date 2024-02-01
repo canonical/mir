@@ -32,6 +32,7 @@ public:
     MOCK_METHOD(std::unique_ptr<graphics::Framebuffer>, commit, (), (override));
     MOCK_METHOD(mir::geometry::Size, size, (), (const override));
     MOCK_METHOD(Layout, layout, (), (const override));
+    MOCK_METHOD(std::string, describe_platform_selection, (), (const override));
 };
 }
 

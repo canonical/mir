@@ -51,6 +51,8 @@ public:
 
     auto layout() const -> Layout override;
 
+    auto describe_platform_selection() const -> std::string override;
+
 private:
     class Impl;
     std::unique_ptr<Impl> const impl;

@@ -153,6 +153,11 @@ auto mgw::WlDisplayAllocator::alloc_framebuffer(
         size);
 }
 
+auto mgw::WlDisplayAllocator::describe_platform() const -> std::string
+{
+    return "EGL on Wayland";
+}
+
 mgw::WlDisplayProvider::WlDisplayProvider(EGLDisplay dpy)
   : dpy{dpy}
 {
@@ -161,4 +166,9 @@ mgw::WlDisplayProvider::WlDisplayProvider(EGLDisplay dpy)
 auto mgw::WlDisplayProvider::get_egl_display() -> EGLDisplay
 {
     return dpy;
+}
+
+auto mgw::WlDisplayProvider::describe_platform() const -> std::string
+{
+    return "EGL on Wayland";
 }

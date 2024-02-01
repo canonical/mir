@@ -90,6 +90,11 @@ public:
     {
         return dpy;
     }
+
+    auto describe_platform() const -> std::string override
+    {
+        return "EGL on X11";
+    }
 private:
     EGLDisplay const dpy;
 };

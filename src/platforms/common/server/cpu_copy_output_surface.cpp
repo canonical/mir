@@ -21,10 +21,12 @@
 #include <EGL/eglext.h>
 
 #include <drm_fourcc.h>
+#include <string>
 
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/platform.h"
 #include "mir/log.h"
+#include "shm_buffer.h"
 
 #include "cpu_copy_output_surface.h"
 
@@ -139,6 +141,7 @@ public:
     auto size() const -> geom::Size;
     auto layout() const -> Layout;
 
+    auto describe_platform_selection() const -> std::string;
 private:
     mg::CPUAddressableDisplayAllocator& allocator;
     EGLDisplay const dpy;
@@ -186,6 +189,11 @@ auto mgc::CPUCopyOutputSurface::size() const -> geom::Size
 auto mgc::CPUCopyOutputSurface::layout() const -> Layout
 {
     return impl->layout();
+}
+
+auto mgc::CPUCopyOutputSurface::describe_platform_selection() const -> std::string
+{
+    return impl->describe_platform_selection();
 }
 
 mgc::CPUCopyOutputSurface::Impl::Impl(
@@ -297,4 +305,9 @@ auto mgc::CPUCopyOutputSurface::Impl::size() const -> geom::Size
 auto mgc::CPUCopyOutputSurface::Impl::layout() const -> Layout
 {
     return Layout::TopRowFirst;
+}
+
+auto mgc::CPUCopyOutputSurface::Impl::describe_platform_selection() const -> std::string
+{
+    return "CPU copy to " + allocator.describe_platform();
 }

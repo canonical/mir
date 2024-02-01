@@ -16,6 +16,7 @@
 
 #include "kms_cpu_addressable_display_provider.h"
 #include "cpu_addressable_fb.h"
+#include "owning_c_str.h"
 #include <drm_fourcc.h>
 #include <xf86drm.h>
 
@@ -61,6 +62,12 @@ auto mg::kms::CPUAddressableDisplayAllocator::alloc_fb(DRMFormat format) -> std:
 auto mg::kms::CPUAddressableDisplayAllocator::output_size() const -> geom::Size
 {
     return size;
+}
+
+auto mg::kms::CPUAddressableDisplayAllocator::describe_platform() const -> std::string
+{
+    CStr drm_node{drmGetDeviceNameFromFd2(drm_fd)};
+    return std::string{"KMS dumb buffer on "} + drm_node.get();
 }
 
 auto mir::graphics::kms::CPUAddressableDisplayAllocator::create_if_supported(mir::Fd const& drm_fd, geom::Size size)

@@ -17,6 +17,7 @@
 #include <chrono>
 #include <epoxy/egl.h>
 #include <thread>
+#include <xf86drm.h>
 
 #include "display.h"
 #include "egl_output.h"
@@ -26,6 +27,7 @@
 #include "kms-utils/drm_mode_resources.h"
 #include "mir/graphics/platform.h"
 #include "threaded_drm_event_handler.h"
+#include "owning_c_str.h"
 
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_policy.h"
@@ -360,6 +362,12 @@ public:
     auto describe_output() const -> std::string override
     {
         return "FIXME: actually implement";
+    }
+
+    auto describe_platform() const -> std::string override
+    {
+        mir::CStr devnode{drmGetDeviceNameFromFd2(drm_node)};
+        return std::string{"EGLStream on "} + devnode.get();
     }
 
     auto maybe_create_allocator(mg::DisplayAllocator::Tag const& type_tag) -> mg::DisplayAllocator* override

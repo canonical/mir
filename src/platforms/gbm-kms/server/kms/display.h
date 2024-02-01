@@ -114,6 +114,7 @@ public:
 
     auto gbm_device() const -> std::shared_ptr<struct gbm_device> override;
 
+    auto describe_platform() const -> std::string override;
 private:
     mir::Fd const fd;
     std::shared_ptr<struct gbm_device> const gbm;

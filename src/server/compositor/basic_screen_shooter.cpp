@@ -102,6 +102,11 @@ public:
         }
         next_buffer = std::move(buffer);
     }
+
+    auto describe_platform() const -> std::string override
+    {
+        return "screencast virtual allocator";
+    }
 private:
     std::shared_ptr<mrs::WriteMappableBuffer> next_buffer;
 };
