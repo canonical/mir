@@ -59,6 +59,7 @@ struct MockKMSOutput : public graphics::gbm::KMSOutput
 
     MOCK_METHOD1(set_power_mode, void(MirPowerMode));
     MOCK_METHOD1(set_gamma, void(mir::graphics::GammaCurves const&));
+    MOCK_CONST_METHOD0(name, std::string());
 
     MOCK_METHOD0(refresh_hardware_state, void());
     MOCK_CONST_METHOD1(update_from_hardware_state, void(graphics::DisplayConfigurationOutput&));

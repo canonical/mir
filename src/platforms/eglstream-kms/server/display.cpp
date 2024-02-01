@@ -357,6 +357,11 @@ public:
         return output_stream;
     }
 
+    auto describe_output() const -> std::string override
+    {
+        return "FIXME: actually implement";
+    }
+
     auto maybe_create_allocator(mg::DisplayAllocator::Tag const& type_tag) -> mg::DisplayAllocator* override
     {
         if (dynamic_cast<mg::EGLStreamDisplayAllocator::Tag const*>(&type_tag))

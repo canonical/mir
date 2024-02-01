@@ -58,6 +58,7 @@ public:
 
     glm::mat2 transformation() const override;
 
+    auto describe_output() const -> std::string override;
 protected:
     auto maybe_create_allocator(DisplayAllocator::Tag const& type_tag) -> DisplayAllocator* override;
 

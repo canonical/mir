@@ -44,6 +44,7 @@ public:
     MOCK_METHOD(void, set_next_image, (std::unique_ptr<graphics::Framebuffer>), (override));
     MOCK_METHOD(glm::mat2, transformation, (), (const override));
     MOCK_METHOD(graphics::DisplayAllocator*, maybe_create_allocator, (graphics::DisplayAllocator::Tag const&), (override));
+    MOCK_METHOD(std::string, describe_output, (), (const override));
 };
 
 }

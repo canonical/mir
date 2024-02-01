@@ -51,6 +51,8 @@ public:
         GL = BottomRowFirst     //< GL texture layout is in decreasing-y order.
     };
     virtual auto layout() const -> Layout = 0;
+
+    virtual auto describe_platform_selection() const -> std::string = 0;
 };
 }
 }

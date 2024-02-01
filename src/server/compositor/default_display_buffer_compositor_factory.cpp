@@ -15,6 +15,7 @@
  */
 
 #include "default_display_buffer_compositor_factory.h"
+#include "mir/logging/logger.h"
 #include "mir/renderer/renderer_factory.h"
 #include "mir/renderer/renderer.h"
 #include "mir/graphics/display_sink.h"
@@ -22,6 +23,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/renderer/gl/gl_surface.h"
 #include "mir/graphics/gl_config.h"
+#include "mir/log.h"
 
 #include "default_display_buffer_compositor.h"
 
@@ -82,6 +84,14 @@ mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
     
     auto output_surface = chosen_allocator->surface_for_sink(
         display_sink, *gl_config);
+
+    mir::log(
+        logging::Severity::informational,
+        "Platform selection",
+        "Output %s: Selected renderer: %s",
+        display_sink.describe_output().c_str(),
+        output_surface->describe_platform_selection().c_str());
+
     auto renderer = renderer_factory->create_renderer_for(std::move(output_surface), chosen_allocator);
     renderer->set_viewport(display_sink.view_area());
     return std::make_unique<DefaultDisplayBufferCompositor>(

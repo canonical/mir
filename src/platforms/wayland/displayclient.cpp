@@ -101,6 +101,7 @@ public:
     bool overlay(std::vector<DisplayElement> const& renderlist) override;
     auto transformation() const -> glm::mat2 override;
     auto maybe_create_allocator(DisplayAllocator::Tag const& type_tag) -> DisplayAllocator* override;
+    auto describe_output() const -> std::string override;
     void set_next_image(std::unique_ptr<Framebuffer> content) override;
 
 private:
@@ -421,6 +422,11 @@ auto mgw::DisplayClient::Output::maybe_create_allocator(DisplayAllocator::Tag co
         return provider.get();
     }
     return nullptr;
+}
+
+auto mgw::DisplayClient::Output::describe_output() const -> std::string
+{
+    return "FIXME: Actually implement";
 }
 
 namespace

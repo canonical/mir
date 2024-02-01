@@ -136,6 +136,11 @@ public:
         return glm::mat2{};
     }
 
+    auto describe_output() const -> std::string override
+    {
+        return "screenshot virtual output";
+    }
+
 protected:
     auto maybe_create_allocator(mir::graphics::DisplayAllocator::Tag const& type_tag)
         -> mg::DisplayAllocator* override

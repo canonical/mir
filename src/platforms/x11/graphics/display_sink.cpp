@@ -101,6 +101,11 @@ glm::mat2 mgx::DisplaySink::transformation() const
     return transform;
 }
 
+auto mgx::DisplaySink::describe_output() const -> std::string
+{
+    return "FIXME: Actually implement";
+}
+
 void mgx::DisplaySink::set_view_area(geom::Rectangle const& a)
 {
     area = a;
