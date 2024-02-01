@@ -44,7 +44,7 @@ mc::DefaultDisplayBufferCompositorFactory::DefaultDisplayBufferCompositorFactory
         buffer_allocator{buffer_allocator},
         report{report}
 {
-    mir::log(logging::Severity::debug, "platform selection", "Hello! We have %lu platforms to choose from!", platforms.size());
+    mir::log(logging::Severity::debug, "platform selection", "Hello! We have %zu platforms to choose from!", platforms.size());
 }
 
 std::unique_ptr<mc::DisplayBufferCompositor>
