@@ -41,7 +41,6 @@
 
 #include <boost/throw_exception.hpp>
 
-#include <ranges>
 #include <sstream>
 
 namespace mg = mir::graphics;
@@ -379,16 +378,17 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
             // So don't push it into rendering_platforms until the rest are done
             auto const [egl_generic_begin, egl_generic_end] = rendering_platform_map.equal_range("mir:egl-generic");
 
-            decltype(std::ranges::subrange(rendering_platform_map.begin(), egl_generic_begin)) const ranges[] =
-                {
-                    std::ranges::subrange(rendering_platform_map.begin(), egl_generic_begin),
-                    std::ranges::subrange(egl_generic_end, rendering_platform_map.end()),
-                    std::ranges::subrange(egl_generic_begin, egl_generic_end)
-                };
-
-            for (auto const& rp: std::ranges::join_view(ranges))
+            for (auto rp = rendering_platform_map.begin(); rp != egl_generic_begin; ++rp)
             {
-                rendering_platforms.push_back(rp.second);
+                rendering_platforms.push_back(rp->second);
+            }
+            for (auto rp = egl_generic_end; rp != rendering_platform_map.end(); ++rp)
+            {
+                rendering_platforms.push_back(rp->second);
+            }
+            for (auto rp = egl_generic_begin; rp != egl_generic_end; ++rp)
+            {
+                rendering_platforms.push_back(rp->second);
             }
         }
 
