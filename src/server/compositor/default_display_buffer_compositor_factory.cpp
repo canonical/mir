@@ -44,6 +44,7 @@ mc::DefaultDisplayBufferCompositorFactory::DefaultDisplayBufferCompositorFactory
         buffer_allocator{buffer_allocator},
         report{report}
 {
+    mir::log(logging::Severity::debug, "platform selection", "Hello! We have %lu platforms to choose from!", platforms.size());
 }
 
 std::unique_ptr<mc::DisplayBufferCompositor>
@@ -63,15 +64,29 @@ mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
     /* In a heterogeneous system, different providers may be better at driving a specific
      * display. Select the best one.
      */
+    mir::log(
+        logging::Severity::informational,
+        "platform selection",
+        "Selecting render provider for %s",
+        display_sink.describe_output().c_str());
     std::pair<mg::probe::Result, std::shared_ptr<mg::GLRenderingProvider>> best_provider = std::make_pair(mg::probe::unsupported, nullptr);
     for (auto const& provider : platforms)
     {
         auto suitability = provider->suitability_for_display(display_sink);
         // We also need to make sure that the GLRenderingProvider can access client buffers...
+        mir::log(
+            logging::Severity::debug,
+            "platform selection",
+            "Provider (%p) has priority %i", static_cast<void*>(provider.get()), suitability);
         if (provider->suitability_for_allocator(buffer_allocator) > mg::probe::unsupported && suitability > best_provider.first)
         {
             best_provider = std::make_pair(suitability, provider);
+            mir::log(
+                logging::Severity::debug,
+                "platform selection",
+                "Provider is also appropriate for buffer_allocator");
         }
+        
     }
     if (best_provider.first == mg::probe::unsupported)
     {
