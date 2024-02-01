@@ -23,9 +23,6 @@
 namespace miral
 {
 
-template <typename T>
-class WindowCyclingBehavior;
-
 /// Intended to be used in conjunction with a WindowManagementPolicy. Simply
 /// hook up the "advise" methods to be called at the appropriate times, and
 /// the ApplicationSelector will keep track of the rest.
@@ -41,8 +38,8 @@ class ApplicationSelector
 public:
     explicit ApplicationSelector(WindowManagerTools const&);
     ~ApplicationSelector();
-    ApplicationSelector(ApplicationSelector const&);
-    auto operator=(ApplicationSelector const&) -> ApplicationSelector&;
+    ApplicationSelector(ApplicationSelector const&) = delete;
+    auto operator=(ApplicationSelector const&) -> ApplicationSelector& = delete;
 
     /// Called when a new application has been added to the list.
     void advise_new_app(Application const&);
@@ -79,18 +76,9 @@ public:
     /// \returns The focused application
     auto get_focused() -> Application;
 
-private:
-    using WeakApplication = std::weak_ptr<mir::scene::Session>;
-
-    WindowManagerTools tools;
-    std::unique_ptr<WindowCyclingBehavior<WeakApplication>> window_cycler;
-
-    static auto get_comparison_func()-> std::function<bool(ApplicationSelector::WeakApplication const&, ApplicationSelector::WeakApplication const&)>;
-    static auto get_can_select_func(WindowManagerTools& tools) -> std::function<bool(ApplicationSelector::WeakApplication const&)>;
-    static auto get_on_raised_func(WindowManagerTools& tools)
-        -> std::function<void(ApplicationSelector::WeakApplication const&, ApplicationSelector::WeakApplication const&, ApplicationSelector::WeakApplication const&)>;
-    static auto get_on_cancelled_func(WindowManagerTools& tools) -> std::function<void(ApplicationSelector::WeakApplication const&)>;
-    static auto get_reset_func() -> std::function<void(ApplicationSelector::WeakApplication&)>;
+  private:
+    struct Impl;
+    std::unique_ptr<Impl> self;
 };
 
 }
