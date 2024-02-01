@@ -496,20 +496,8 @@ auto mgg::GBMDisplayProvider::gbm_device() const -> std::shared_ptr<struct gbm_d
 auto mgg::GBMDisplayProvider::is_same_device(mir::udev::Device const& render_device) const -> bool
 {
 #ifndef MIR_DRM_HAS_GET_DEVICE_FROM_DEVID
-    class CStrFree
-    {
-    public:
-        void operator()(char* str)
-        {
-            if (str)
-            {
-                free(str);
-            }
-        }
-    };
-
-    std::unique_ptr<char[], CStrFree> primary_node{drmGetPrimaryDeviceNameFromFd(fd)};
-    std::unique_ptr<char[], CStrFree> render_node{drmGetRenderDeviceNameFromFd(fd)};
+    CStr primary_node{drmGetPrimaryDeviceNameFromFd(fd)};
+    CStr render_node{drmGetRenderDeviceNameFromFd(fd)};
 
     if (primary_node)
     {

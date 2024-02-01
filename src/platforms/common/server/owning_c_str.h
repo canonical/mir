@@ -14,25 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef MIR_OWNING_C_STR_
+#define MIR_OWNING_C_STR_
 #include <cstdlib>
 #include <memory>
-
-namespace
-{
-class CStringFree
-{
-public:
-    void operator()(char* str)
-    {
-        if(str)
-        {
-            free(str);
-        }
-    }
-};
-}
-
 namespace mir
 {
-using CStr = std::unique_ptr<char[], CStringFree>;
+using CStr = std::unique_ptr<char[], decltype([](char const* p) { ::free(const_cast<char *>(p)); })>;
 }
+#endif
