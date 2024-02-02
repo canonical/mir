@@ -264,7 +264,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
     {
         std::stringstream error_report;
         std::vector<std::pair<mg::SupportedDevice, std::shared_ptr<mir::SharedLibrary>>> platform_modules;
-        std::map<std::string, std::shared_ptr<graphics::RenderingPlatform>> rendering_platform_map;
+        std::multimap<std::string, std::shared_ptr<graphics::RenderingPlatform>> rendering_platform_map;
 
         try
         {
@@ -352,12 +352,13 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                 }
 
                 // TODO: Do we want to be able to continue on partial failure here?
-                rendering_platform_map[description->name] =
+                rendering_platform_map.emplace(
+                    description->name,
                     create_rendering_platform(
                         device,
                         display_targets,
                         *the_options(),
-                        *the_emergency_cleanup());
+                        *the_emergency_cleanup()));
                 // Add this module to the list searched by the input stack later
                 // TODO: Come up with a more principled solution for combined input/rendering/output platforms
                 platform_libraries.push_back(platform);
@@ -372,26 +373,23 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
 
         rendering_platforms.reserve(rendering_platform_map.size());
 
-        // We want to make the egl-generic platform the last resort
-        // So don't push it into rendering_platforms until the rest are done
-        std::shared_ptr<graphics::RenderingPlatform> egl_generic;
-
-        for (auto const& rp : rendering_platform_map)
         {
-            if (rp.first != "mir:egl-generic")
-            {
-                rendering_platforms.push_back(rp.second);
-            }
-            else
-            {
-                egl_generic = rp.second;
-            }
-        }
+            // We want to make the egl-generic platform the last resort
+            // So don't push it into rendering_platforms until the rest are done
+            auto const [egl_generic_begin, egl_generic_end] = rendering_platform_map.equal_range("mir:egl-generic");
 
-        // If we skipped egl-generic, add it to the end
-        if (egl_generic)
-        {
-            rendering_platforms.push_back(egl_generic);
+            for (auto rp = rendering_platform_map.begin(); rp != egl_generic_begin; ++rp)
+            {
+                rendering_platforms.push_back(rp->second);
+            }
+            for (auto rp = egl_generic_end; rp != rendering_platform_map.end(); ++rp)
+            {
+                rendering_platforms.push_back(rp->second);
+            }
+            for (auto rp = egl_generic_begin; rp != egl_generic_end; ++rp)
+            {
+                rendering_platforms.push_back(rp->second);
+            }
         }
 
         if (rendering_platforms.empty())
