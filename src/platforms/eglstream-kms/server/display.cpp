@@ -16,6 +16,7 @@
 
 #include <chrono>
 #include <epoxy/egl.h>
+#include <string>
 #include <thread>
 #include <xf86drm.h>
 
@@ -361,7 +362,7 @@ public:
 
     auto describe_output() const -> std::string override
     {
-        return "FIXME: actually implement";
+        return describe_platform() + " to " + output->name;
     }
 
     auto describe_platform() const -> std::string override

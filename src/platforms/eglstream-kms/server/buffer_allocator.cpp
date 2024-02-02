@@ -684,7 +684,7 @@ public:
 
     auto describe_platform_selection() const -> std::string override
     {
-        return "FIXME: Implement";
+        return "EGLStream output";
     }
 
 private:

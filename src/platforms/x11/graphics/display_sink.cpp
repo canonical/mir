@@ -108,7 +108,7 @@ glm::mat2 mgx::DisplaySink::transformation() const
 
 auto mgx::DisplaySink::describe_output() const -> std::string
 {
-    return "FIXME: Actually implement";
+    return "X11";
 }
 
 void mgx::DisplaySink::set_view_area(geom::Rectangle const& a)

@@ -426,7 +426,7 @@ auto mgw::DisplayClient::Output::maybe_create_allocator(DisplayAllocator::Tag co
 
 auto mgw::DisplayClient::Output::describe_output() const -> std::string
 {
-    return "FIXME: Actually implement";
+    return "Wayland";
 }
 
 namespace
