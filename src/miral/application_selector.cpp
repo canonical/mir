@@ -27,22 +27,22 @@ struct WeakApplicationSelector
 {
     using value_t = std::weak_ptr<mir::scene::Session>;
 
-    WeakApplicationSelector(WindowManagerTools tools)
+    explicit WeakApplicationSelector(WindowManagerTools const& tools)
         : tools{tools}
     {}
 
-    auto equals(value_t const &first, value_t const &second) -> bool
+    static auto equals(value_t const& first, value_t const& second) -> bool
     {
         return !first.owner_before(second) && !second.owner_before(first);;
     }
 
-    auto selectable(value_t const &session) -> bool
+    auto selectable(value_t const& session) const -> bool
     {
         return tools.window_to_select_application(session.lock()) != std::nullopt;
     }
 
     void
-    on_selected(value_t const &previously_selected, value_t const &newly_selected, value_t const &originally_selected)
+    on_selected(value_t const& previously_selected, value_t const& newly_selected, value_t const& originally_selected)
     {
         auto previous_session = previously_selected.lock();
         auto new_session = newly_selected.lock();
@@ -58,7 +58,7 @@ struct WeakApplicationSelector
             // Edge case: if we have gone full circle around the list back to the original app
             // then we will wind up in a situation where the original app - now in the second z-order
             // position - will be swapped with the final app, putting the final app in the second position.
-            for (auto const &window: tools.info_for(new_session).windows())
+            for (auto const& window: tools.info_for(new_session).windows())
                 tools.send_tree_to_back(window);
         } else
         {
@@ -68,7 +68,7 @@ struct WeakApplicationSelector
         tools.select_active_window(new_window.value());
     }
 
-    void on_cancelled(value_t const &session)
+    void on_cancelled(value_t const& session)
     {
         auto window_to_select = tools.window_to_select_application(session.lock());
         if (window_to_select != std::nullopt)
@@ -77,7 +77,7 @@ struct WeakApplicationSelector
         }
     }
 
-    void reset(value_t &session)
+    static void reset(value_t& session)
     {
         session.reset();
     }
@@ -90,21 +90,18 @@ class TabOrderSelector : public SelectorBase
 {
 public:
     using T = typename SelectorBase::value_t;
-
-    template<typename ... Args>
-    TabOrderSelector(Args &&... args): SelectorBase(std::forward<Args>(args) ...)
-    {}
+    using SelectorBase::SelectorBase;
 
     TabOrderSelector(TabOrderSelector const &) = delete;
 
     auto operator=(TabOrderSelector const &) -> TabOrderSelector & = delete;
 
-    void add(T const &t)
+    void add(T const& t)
     {
         focus_list.push_back(t);
     }
 
-    void remove(T const &t)
+    void remove(T const& t)
     {
         auto it = find(t);
         if (it == focus_list.end())
@@ -136,7 +133,7 @@ public:
         focus_list.erase(it);
     }
 
-    void focus(T const &t)
+    void focus(T const& t)
     {
         auto it = find(t);
         if (it == focus_list.end())
@@ -155,7 +152,7 @@ public:
         selected = t;
     }
 
-    void unfocus(T const &t)
+    void unfocus(T const& t)
     {
         if (SelectorBase::equals(t, selected))
         {
@@ -218,7 +215,7 @@ public:
     }
 
 private:
-    auto find(T const &application) -> std::vector<T>::iterator
+    auto find(T const& application) -> std::vector<T>::iterator
     {
         return std::find_if(focus_list.begin(), focus_list.end(), [&](T const &existing_application)
         {
@@ -282,16 +279,9 @@ private:
 };
 }
 
-struct ApplicationSelector::Impl
+struct ApplicationSelector::Impl : TabOrderSelector<WeakApplicationSelector>
 {
-    Impl(miral::WindowManagerTools const& _tools)
-        : tab_order_selector(_tools)
-    {
-    }
-
-    ~Impl() = default;
-
-    TabOrderSelector<WeakApplicationSelector> tab_order_selector;
+    using TabOrderSelector<WeakApplicationSelector>::TabOrderSelector;
 };
 
 ApplicationSelector::ApplicationSelector(miral::WindowManagerTools const& _tools) :
@@ -303,7 +293,7 @@ ApplicationSelector::~ApplicationSelector() = default;
 
 void ApplicationSelector::advise_new_app(Application const& application)
 {
-    self->tab_order_selector.add(application);
+    self->add(application);
 }
 
 void ApplicationSelector::advise_focus_gained(WindowInfo const& window_info)
@@ -322,7 +312,7 @@ void ApplicationSelector::advise_focus_gained(WindowInfo const& window_info)
         return;
     }
 
-    self->tab_order_selector.focus(application);
+    self->focus(application);
 }
 
 void ApplicationSelector::advise_focus_lost(miral::WindowInfo const& window_info)
@@ -341,40 +331,40 @@ void ApplicationSelector::advise_focus_lost(miral::WindowInfo const& window_info
         return;
     }
 
-    self->tab_order_selector.unfocus(application);
+    self->unfocus(application);
 }
 
 void ApplicationSelector::advise_delete_app(Application const& application)
 {
-    self->tab_order_selector.remove(application);
+    self->remove(application);
 }
 
 auto ApplicationSelector::next() -> Application
 {
-    return self->tab_order_selector.next().lock();
+    return self->next().lock();
 }
 
 auto ApplicationSelector::prev() -> Application
 {
-    return self->tab_order_selector.prev().lock();
+    return self->prev().lock();
 }
 
 auto ApplicationSelector::complete() -> Application
 {
-    return self->tab_order_selector.complete().lock();
+    return self->complete().lock();
 }
 
 void ApplicationSelector::cancel()
 {
-    self->tab_order_selector.cancel();
+    self->cancel();
 }
 
 auto ApplicationSelector::is_active() -> bool
 {
-    return self->tab_order_selector.get_is_active();
+    return self->get_is_active();
 }
 
 auto ApplicationSelector::get_focused() -> Application
 {
-    return self->tab_order_selector.get_focused().lock();
+    return self->get_focused().lock();
 }

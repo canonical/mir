@@ -78,7 +78,7 @@ public:
 
   private:
     struct Impl;
-    std::unique_ptr<Impl> self;
+    std::unique_ptr<Impl> const self;
 };
 
 }
