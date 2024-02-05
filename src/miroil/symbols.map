@@ -1,4 +1,4 @@
-MIROIL_5.0 {
+MIROIL_6.0 {
 global:
   extern "C++" {
     miroil::Compositor::?Compositor*;
