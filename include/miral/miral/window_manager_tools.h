@@ -161,6 +161,9 @@ public:
     /// \remark Since MirAL 3.10
     auto window_to_select_application(const Application) const -> std::optional<Window>;
 
+    /// Check if the provided window can be selected
+    auto can_select_window(Window const&) const -> bool;
+
     /// Find the topmost window at the cursor
     auto window_at(mir::geometry::Point cursor) const -> Window;
 

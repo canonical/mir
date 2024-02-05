@@ -82,6 +82,10 @@ public:
 
     void advise_delete_app(miral::ApplicationInfo const& app_info) override;
 
+    void advise_new_window(WindowInfo const& app_info) override;
+
+    void advise_delete_window(WindowInfo const& app_info) override;
+
 protected:
     WindowManagerTools tools;
 

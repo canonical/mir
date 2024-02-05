@@ -470,3 +470,14 @@ global:
   };
 local: *;
 };
+
+MIRAL_5.1 {
+global:
+  extern "C++" {
+    miral::MinimalWindowManager::advise_new_window*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::advise_new_window*;
+    miral::MinimalWindowManager::advise_delete_window*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::advise_delete_window*;
+    miral::WindowManagerTools::can_select_window*;
+  };
+} MIRAL_5.0;

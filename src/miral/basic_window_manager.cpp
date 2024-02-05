@@ -898,22 +898,7 @@ auto miral::BasicWindowManager::window_to_select_application(const Application a
         if (window.application() != application)
              return true;
 
-        // Check if the previous window has to remain focused
-        auto const prev_windows_focus_mode = prev_window ? info_for(prev_window).focus_mode() : mir_focus_mode_focusable;
-        if (prev_windows_focus_mode == mir_focus_mode_grabbing)
-        {
-            return true;
-        }
-
-        // Check if the new window selection has selection disabled
-        auto& desired_window_selection = info_for(window);
-        if (desired_window_selection.focus_mode() == mir_focus_mode_disabled)
-        {
-            return true;
-        }
-
-        // Check if we can activate it at all.
-        if (desired_window_selection.can_be_active() && desired_window_selection.state() != mir_window_state_hidden)
+        if (can_select_window(window))
         {
             result = window;
             return false;
@@ -923,6 +908,25 @@ auto miral::BasicWindowManager::window_to_select_application(const Application a
     });
 
     return result;
+}
+
+auto miral::BasicWindowManager::can_select_window(miral::Window const& window) const -> bool
+{
+    auto const current_window = active_window();
+    auto const current_windows_focus_mode = current_window ? info_for(current_window).focus_mode() : mir_focus_mode_focusable;
+    if (current_windows_focus_mode == mir_focus_mode_grabbing)
+        return false;
+
+    // Check if the new window selection has selection disabled
+    auto& desired_window_selection = info_for(window);
+    if (desired_window_selection.focus_mode() == mir_focus_mode_disabled)
+        return false;
+
+    // Check if we can activate it at all.
+    if (desired_window_selection.can_be_active() && desired_window_selection.state() != mir_window_state_hidden)
+        return true;
+
+    return false;
 }
 
 auto miral::BasicWindowManager::window_at(geometry::Point cursor) const
