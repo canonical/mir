@@ -93,11 +93,9 @@ void ApplicationSelector::advise_delete_window(WindowInfo const& window_info)
         return;
     }
 
-    // If we delete the selected application, we will try to select the next available one.
+    // If we delete the selected window, we will try to select the next available one
     if (*it == selected)
     {
-        auto application = it->application();
-        std::optional<Window> next_window = std::nullopt;
         auto original_it = it;
         do {
             it++;
@@ -105,16 +103,13 @@ void ApplicationSelector::advise_delete_window(WindowInfo const& window_info)
                 it = focus_list.begin();
 
             if (it == original_it)
-            {
                 break;
-            }
-        } while ((next_window = tools.window_to_select_application(application)) == std::nullopt);
-
-        if (next_window != std::nullopt)
-            selected = next_window.value();
+        } while (!tools.can_select_window(*it));
 
         if (it != original_it)
             selected = *it;
+        else
+            selected = Window();
     }
 
     focus_list.erase(it);

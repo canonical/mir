@@ -82,6 +82,8 @@ global:
     miral::MinimalWindowManager::handle_touch_event*;
     miral::MinimalWindowManager::handle_window_ready*;
     miral::MinimalWindowManager::place_new_window*;
+    miral::MinimalWindowManager::advise_new_window*;
+    miral::MinimalWindowManager::advise_delete_window*;
     miral::MirRunner::?MirRunner*;
     miral::MirRunner::MirRunner*;
     miral::MirRunner::add_start_callback*;
@@ -263,6 +265,7 @@ global:
     miral::WindowManagerTools::swap_tree_order*;
     miral::WindowManagerTools::window_at*;
     miral::WindowManagerTools::window_to_select_application*;
+    miral::WindowManagerTools::can_select_window*;
     miral::WindowSpecification::?WindowSpecification*;
     miral::WindowSpecification::WindowSpecification*;
     miral::WindowSpecification::application_id*;
@@ -371,6 +374,8 @@ global:
     non-virtual?thunk?to?miral::MinimalWindowManager::handle_touch_event*;
     non-virtual?thunk?to?miral::MinimalWindowManager::handle_window_ready*;
     non-virtual?thunk?to?miral::MinimalWindowManager::place_new_window*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::advise_new_window*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::advise_delete_window*;
     non-virtual?thunk?to?miral::WaylandExtensions::Context::?Context*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::?WindowManagementPolicy*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_adding_to_workspace*;
@@ -470,14 +475,3 @@ global:
   };
 local: *;
 };
-
-MIRAL_5.1 {
-global:
-  extern "C++" {
-    miral::MinimalWindowManager::advise_new_window*;
-    non-virtual?thunk?to?miral::MinimalWindowManager::advise_new_window*;
-    miral::MinimalWindowManager::advise_delete_window*;
-    non-virtual?thunk?to?miral::MinimalWindowManager::advise_delete_window*;
-    miral::WindowManagerTools::can_select_window*;
-  };
-} MIRAL_5.0;

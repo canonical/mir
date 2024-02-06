@@ -162,6 +162,7 @@ public:
     auto window_to_select_application(const Application) const -> std::optional<Window>;
 
     /// Check if the provided window can be selected
+    /// \remark Since MirAL 5.0
     auto can_select_window(Window const&) const -> bool;
 
     /// Find the topmost window at the cursor
