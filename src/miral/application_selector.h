@@ -86,12 +86,12 @@ private:
     std::vector<Window> focus_list;
 
     /// The application that was selected when next was first called
-    Window originally_selected;
+    std::vector<Window>::iterator originally_selected_it;
 
     /// The application that is currently selected.
     Window selected;
 
-    bool is_moving = false;
+    bool _is_active = false;
 };
 
 }
