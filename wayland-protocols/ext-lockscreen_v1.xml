@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="ext-lockscreen_v1">
+  <copyright>    
+    Copyright © Canonical Ltd.
+
+    This program is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License version 2 or 3,
+    as published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  </copyright>
+  <description summary="compositor authoritative screen-locking mechanism">
+    This protocol allows for a priveleged Wayland client to display arbitrary graphics
+    on the screen when the compositor informs the client that the session has been
+    locked.
+
+    The compositor may choose to restrict this protocol to a special client
+    launched by the compositor itself or expose it to all privileged clients.
+    This is up to the compositor policy.
+
+    The compositor is responsible for deciding when the session should be locked and unlocked.
+    If the client dies while the session is locked, the client may simply resubmit
+    a buffer for display at a later time. During this time, the compositor itself
+    may have been unlocked via some other mechanism (e.g. loginctl). Exactly how and
+    when the compositor locks and unlocks is the policy of the compositor.
+
+    A typical use case is for the compositor to lock or unlock when it receives a
+    signal from Logind to do so.
+
+    The key words "must", "must not", "required", "shall", "shall not",
+    "should", "should not", "recommended",  "may", and "optional" in this
+    document are to be interpreted as described in IETF RFC 2119.
+  </description>
+
+  <interface name="ext_lockscreen_manager_v1" version="1">
+    <description summary="used to create lockscreen surfaces">
+      
+    </description>
+    <request name="associate">
+      This request creates a lockscreen surface and asks the compositor to show this
+      surface on the provided output when the session is next locked. If the session is
+      already locked, the compositor will display this surface right away.
+
+      Surfaces may display different content on different outputs.
+      
+      This surface will be shown immediately after the session is locked. It is expected
+      that the compositor does not render intermediary content if a lockscreen surface
+      is provided for an output. If a surface is NOT provided for an output, then it is up to the
+      policy of the compositor to render what it wants.
+
+      The client is expected to destroy lockscreen surfaces as outputs are removed.
+      The client is expected to associate lockscreen surfaces as outputs are added.
+
+      Associating more than one surface for an output is a duplicate_surface error.
+      Associating a surface with a null buffer is a null_buffer error.
+      
+      <arg name="id" type="new_id" interface="ext_lockscreen_surface_v1"/>
+      <arg name="surface" type="object" interface="wl_surface"/>
+      <arg name="output" type="object" interface="wl_output"/>
+    </request>
+
+    <enum name="error">
+      <entry name="duplicate_surface" value="0"
+             summary="attempted to associate more than once surface as the lockscreen surface for an output"/>
+      <entry name="null_buffer" value="1"
+        summary="surface committed with a null buffer"/>
+    </enum>
+  </interface>
+
+  <interface name="ext_lockscreen_surface_v1" version="1">
+    <request name="destroy" type="destructor">
+      This informs the compositor that the lockscreen surface object will no longer be
+      used.
+
+      If the session is locked when this happens, the compositor will display a default
+      render of its choosing until the session is unlocked.
+    </request>
+    
+    <event name="locked">
+      This event is sent when the compositor decides to lock the session.
+      At this time, the compositor will show the surface.
+    </event>
+    <event name="unlocked">
+      This event is sent when the compositor decides to unlock the session.
+      At this time, the compositor will hide the surface.
+    </event>
+    <event name="configure">
+      This event is sent when the lockscreen surface is first created and anytime that the
+      dimensions of the output changes after that. The client may use the width and height
+      to update their buffer to fit the output dimensions.
+
+      The width and height are in surface-local coordinates. The client is allowed to ignore
+      the dimensions.
+      <arg name="width" type="uint"/>
+      <arg name="height" type="uint"/>
+    </event>
+  </interface>
+</protocol>
