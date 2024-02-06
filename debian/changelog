@@ -1,11 +1,15 @@
-mir (2.16.2) UNRELEASED; urgency=medium
+mir (2.16.3) UNRELEASED; urgency=medium
 
   * Bugfix release:
-    - Display with orientation: left/right flipped on arm64 (#3185)
+    - Do not kill X11 apps whose pop-ups don't support WM_DELETE_WINDOW
+    - When the layout of the texture disagrees with the layout of the output
+      surface, then the clip area needs to be modified. (Fixes: #3201)
+    - [graphics platforms] Allow for multiple RenderingPlatforms of each type
+      (Fixes: #3205)
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Wed, 17 Jan 2024 09:40:21 +0000
 
-mir (2.16.1) UNRELEASED; urgency=medium
+mir (2.16.2) UNRELEASED; urgency=medium
 
   * Bugfix release:
     - Display with orientation: left/right flipped on arm64 (#3185)
