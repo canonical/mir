@@ -18,9 +18,14 @@
 #define MIR_SHELL_DECORATION_BASIC_MANAGER_H_
 
 #include "manager.h"
+
+#include <mir/observer_registrar.h>
+
 #include <functional>
 #include <unordered_map>
 #include <mutex>
+
+namespace mir::graphics { class DisplayConfigurationObserver; }
 
 namespace mir
 {
@@ -35,17 +40,20 @@ class Shell;
 namespace decoration
 {
 class Decoration;
+class DisplayConfigurationListener;
 
 /// Facilitates decorating windows with Mir's built-in server size decorations
-class BasicManager
-    : public Manager
+class BasicManager :
+    public Manager
 {
 public:
     using DecorationBuilder = std::function<std::unique_ptr<Decoration>(
         std::shared_ptr<shell::Shell> const& shell,
         std::shared_ptr<scene::Surface> const& surface)>;
 
-    BasicManager(DecorationBuilder&& decoration_builder);
+    BasicManager(
+        mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>& display_configuration_observers,
+        DecorationBuilder&& decoration_builder);
     ~BasicManager();
 
     void init(std::weak_ptr<shell::Shell> const& shell) override;
@@ -55,10 +63,14 @@ public:
 
 private:
     DecorationBuilder const decoration_builder;
+    std::shared_ptr<DisplayConfigurationListener> const display_config_monitor;
     std::weak_ptr<shell::Shell> shell;
 
     std::mutex mutex;
     std::unordered_map<scene::Surface*, std::unique_ptr<Decoration>> decorations;
+    float scale{1.0f};
+
+    void set_scale(float new_scale);
 };
 }
 }

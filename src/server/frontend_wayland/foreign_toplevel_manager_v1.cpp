@@ -17,6 +17,7 @@
 #include "foreign_toplevel_manager_v1.h"
 
 #include "wayland_utils.h"
+#include "desktop_file_manager.h"
 #include "mir/wayland/weak.h"
 #include "mir/frontend/surface_stack.h"
 #include "mir/shell/shell.h"
@@ -24,13 +25,19 @@
 #include "mir/scene/null_observer.h"
 #include "mir/scene/null_surface_observer.h"
 #include "mir/scene/surface.h"
+#include "mir/scene/session.h"
 #include "mir/log.h"
 #include "mir/executor.h"
+#include "mir/main_loop.h"
 
 #include <algorithm>
 #include <mutex>
 #include <map>
 #include <boost/throw_exception.hpp>
+#include <fstream>
+#include <gio/gdesktopappinfo.h>
+#include <filesystem>
+#include <sys/inotify.h>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -57,11 +64,13 @@ public:
         wl_display* display,
         std::shared_ptr<shell::Shell> const& shell,
         std::shared_ptr<Executor> const& wayland_executor,
-        std::shared_ptr<SurfaceStack> const& surface_stack);
+        std::shared_ptr<SurfaceStack> const& surface_stack,
+        std::shared_ptr<DesktopFileManager> const& desktop_file_manager);
 
     std::shared_ptr<shell::Shell> const shell;
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<SurfaceStack> const surface_stack;
+    std::shared_ptr<DesktopFileManager> const desktop_file_manager;
 
 private:
     void bind(wl_resource* new_resource) override;
@@ -71,7 +80,10 @@ class ForeignSceneObserver
     : public ms::NullObserver
 {
 public:
-    ForeignSceneObserver(std::shared_ptr<Executor> const& wayland_executor, ForeignToplevelManagerV1* manager);
+    ForeignSceneObserver(
+        std::shared_ptr<Executor> const& wayland_executor,
+        ForeignToplevelManagerV1* manager,
+        std::shared_ptr<DesktopFileManager> const& desktop_file_manager);
     ~ForeignSceneObserver();
 
 private:
@@ -93,6 +105,8 @@ private:
         std::weak_ptr<scene::Surface>,
         std::shared_ptr<ForeignSurfaceObserver>,
         std::owner_less<std::weak_ptr<scene::Surface>>> surface_observers;
+
+    std::shared_ptr<DesktopFileManager> const desktop_file_manager;
 };
 
 /// Bound by a client in order to get notified of toplevels from other clients via ForeignToplevelHandleV1
@@ -102,7 +116,8 @@ class ForeignSurfaceObserver
 public:
     ForeignSurfaceObserver(
         wayland::Weak<ForeignToplevelManagerV1> manager,
-        std::shared_ptr<scene::Surface> const& surface);
+        std::shared_ptr<scene::Surface> const& surface,
+        std::shared_ptr<DesktopFileManager> const& desktop_file_manager);
     ~ForeignSurfaceObserver();
 
     void cease_and_desist(); ///< Must NOT be called under lock
@@ -126,6 +141,8 @@ private:
     /// If nullptr, the surface is not supposed to have a handle (such as when it does not have a toplevel type)
     /// If it points to an empty Weak, the handle is being created or was destroyed by the client
     std::shared_ptr<wayland::Weak<ForeignToplevelHandleV1>> handle;
+
+    std::shared_ptr<DesktopFileManager> const desktop_file_manager;
 };
 
 class ForeignToplevelManagerV1
@@ -188,10 +205,11 @@ auto mf::create_foreign_toplevel_manager_v1(
     wl_display* display,
     std::shared_ptr<shell::Shell> const& shell,
     std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<SurfaceStack> const& surface_stack)
+    std::shared_ptr<SurfaceStack> const& surface_stack,
+    std::shared_ptr<DesktopFileManager> const& desktop_file_manager)
 -> std::shared_ptr<mw::ForeignToplevelManagerV1::Global>
 {
-    return std::make_shared<ForeignToplevelManagerV1Global>(display, shell, wayland_executor, surface_stack);
+    return std::make_shared<ForeignToplevelManagerV1Global>(display, shell, wayland_executor, surface_stack, desktop_file_manager);
 }
 
 // ForeignToplevelManagerV1Global
@@ -200,11 +218,13 @@ mf::ForeignToplevelManagerV1Global::ForeignToplevelManagerV1Global(
     wl_display* display,
     std::shared_ptr<shell::Shell> const& shell,
     std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<SurfaceStack> const& surface_stack)
+    std::shared_ptr<SurfaceStack> const& surface_stack,
+    std::shared_ptr<DesktopFileManager> const& desktop_file_manager)
     : Global{display, Version<2>()},
       shell{shell},
       wayland_executor{wayland_executor},
-      surface_stack{surface_stack}
+      surface_stack{surface_stack},
+      desktop_file_manager{desktop_file_manager}
 {
 }
 
@@ -217,9 +237,11 @@ void mf::ForeignToplevelManagerV1Global::bind(wl_resource* new_resource)
 
 mf::ForeignSceneObserver::ForeignSceneObserver(
     std::shared_ptr<Executor> const& wayland_executor,
-    ForeignToplevelManagerV1* manager)
+    ForeignToplevelManagerV1* manager,
+    std::shared_ptr<DesktopFileManager> const& desktop_file_manager)
     : wayland_executor{wayland_executor},
-      manager{manager}
+      manager{manager},
+      desktop_file_manager{desktop_file_manager}
 {
 }
 
@@ -263,7 +285,7 @@ void mf::ForeignSceneObserver::end_observation()
 void mf::ForeignSceneObserver::create_surface_observer(std::shared_ptr<scene::Surface> const& surface)
 {
     std::lock_guard lock{mutex};
-    auto observer = std::make_shared<ForeignSurfaceObserver>(manager, surface);
+    auto observer = std::make_shared<ForeignSurfaceObserver>(manager, surface, desktop_file_manager);
     surface->register_interest(observer, *wayland_executor);
     auto insert_result = surface_observers.insert(std::make_pair(surface, observer));
     if (!insert_result.second)
@@ -293,9 +315,11 @@ void mf::ForeignSceneObserver::clear_surface_observers()
 
 mf::ForeignSurfaceObserver::ForeignSurfaceObserver(
     mw::Weak<ForeignToplevelManagerV1> manager,
-    std::shared_ptr<scene::Surface> const& surface)
+    std::shared_ptr<scene::Surface> const& surface,
+    std::shared_ptr<DesktopFileManager> const& desktop_file_manager)
     : manager{manager},
-      weak_surface{surface}
+      weak_surface{surface},
+      desktop_file_manager{desktop_file_manager}
 {
     std::lock_guard lock{mutex};
     create_or_close_toplevel_handle_as_needed(lock);
@@ -366,16 +390,16 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::
     {
         if (should_have_handle)
         {
-            handle = std::make_shared<mw::Weak<ForeignToplevelHandleV1>>();
-
-            std::string name = surface->name();
-            std::string app_id = surface->application_id();
-            auto const focused = surface->focus_state();
-            auto const state = surface->state_tracker();
-
             // If the manager has been destroyed we can't create a toplevel handle
             if (!manager)
                 return;
+
+            handle = std::make_shared<mw::Weak<ForeignToplevelHandleV1>>();
+
+            std::string name = surface->name();
+            std::string app_id = desktop_file_manager->resolve_app_id(surface.get());
+            auto const focused = surface->focus_state();
+            auto const state = surface->state_tracker();
 
             // Remember Wayland objects manage their own lifetime
             auto const handle_ptr = new ForeignToplevelHandleV1{manager.value(), surface};
@@ -458,17 +482,154 @@ void mf::ForeignSurfaceObserver::renamed(ms::Surface const*, std::string const& 
 }
 
 void mf::ForeignSurfaceObserver::application_id_set_to(
-    scene::Surface const*,
+    scene::Surface const* surface,
     std::string const& application_id)
 {
     std::lock_guard lock{mutex};
 
     std::string id = application_id;
-    with_toplevel_handle(lock, [id](ForeignToplevelHandleV1& handle)
+    with_toplevel_handle(lock, [&](ForeignToplevelHandleV1& handle)
         {
-            handle.send_app_id_event(id);
-            handle.send_done_event();
+            auto app_id = desktop_file_manager->resolve_app_id(surface);
+            if (!app_id.empty())
+            {
+                handle.send_app_id_event(app_id);
+                handle.send_done_event();
+            }
         });
+}
+
+// GDesktopFileCache
+mf::GDesktopFileCache::GDesktopFileCache(const std::shared_ptr<MainLoop> &main_loop)
+    : main_loop{main_loop},
+      inotify_fd{inotify_init()}
+{
+    refresh_app_cache();
+
+    if (inotify_fd < 0)
+    {
+        mir::log_error("Unable to initialize inotify. Automatic desktop app refresh will NOT happen.");
+        return;
+    }
+
+    // Set up a watch on the data directories
+    auto data_directories = g_get_system_data_dirs();
+    for (int i = 0; data_directories[i] != NULL; i++)
+    {
+        auto application_directory = std::string(data_directories[i]) + "/applications";
+        int config_path_wd = inotify_add_watch(
+            inotify_fd,
+            application_directory.c_str(),
+            IN_CREATE | IN_DELETE | IN_CLOSE_WRITE | IN_MOVED_TO | IN_MOVED_FROM);
+
+        if (config_path_wd < 0)
+        {
+            mir::log_error("Unable to watch directory %s", application_directory.c_str());
+            continue;
+        }
+
+        config_path_wd_list.push_back(config_path_wd);
+    }
+
+    main_loop->register_fd_handler({inotify_fd}, this, [this](int)
+    {
+        union
+        {
+            inotify_event event;
+            char buffer[sizeof(inotify_event) + NAME_MAX + 1];
+        } inotify_buffer;
+        if (read(inotify_fd, &inotify_buffer, sizeof(inotify_buffer)) < static_cast<ssize_t>(sizeof(inotify_event)))
+            return;
+
+        refresh_app_cache();
+    });
+}
+
+void mf::GDesktopFileCache::refresh_app_cache()
+{
+    auto free_app_infos = [](GList* app_infos)
+    {
+        g_list_free_full(app_infos, g_object_unref);
+    };
+    std::unique_ptr<GList, decltype(free_app_infos)> app_infos(g_app_info_get_all(), free_app_infos);
+    std::map<std::string, std::shared_ptr<DesktopFile>> new_id_to_app;
+    std::map<std::string, std::shared_ptr<DesktopFile>> new_wm_class_to_app_info;
+    std::map<std::string, std::shared_ptr<DesktopFile>> new_exec_to_app;
+
+    GList* info;
+    for (info = app_infos.get(); info != NULL; info = info->next)
+    {
+        GAppInfo *app_info = static_cast<GAppInfo*>(info->data);
+        if (!g_app_info_should_show(app_info))
+            continue;
+
+        const char* id = g_app_info_get_id(app_info);
+        const char* wm_class = g_desktop_app_info_get_startup_wm_class(G_DESKTOP_APP_INFO(app_info));
+        const char* exec = g_app_info_get_executable(app_info);
+
+        // Note: This can be null possibly. The only instance I've seen of this
+        // is XWayland on Ubuntu 23, but I am sure others exist
+        if (exec == NULL)
+        {
+            const char* name = g_app_info_get_name(app_info);
+            if (name == NULL)
+                mir::log_warning("Cannot find app info for unknown application");
+            else
+                mir::log_warning("Cannot find app info for app with name:" + std::string(name));
+            continue;
+        }
+
+        std::shared_ptr<DesktopFile> file = std::make_shared<DesktopFile>(id, wm_class, exec);
+        const char* app_id = g_app_info_get_id(app_info);
+        new_id_to_app[app_id] = file;
+        new_exec_to_app[exec] = file;
+
+        if (wm_class == NULL)
+            continue;
+
+        new_wm_class_to_app_info[wm_class] = file;
+    }
+
+    auto state = cache_state.lock();
+    state->id_to_app = std::move(new_id_to_app);
+    state->wm_class_to_app_info_id = std::move(new_wm_class_to_app_info);
+    state->exec_to_app = std::move(new_exec_to_app);
+}
+
+std::shared_ptr<mf::DesktopFile> mf::GDesktopFileCache::lookup_by_app_id(std::string const& name) const
+{
+    auto state = cache_state.lock();
+    auto app_pos = state->id_to_app.find(name);
+    if (app_pos != state->id_to_app.end())
+    {
+        return app_pos->second;
+    }
+
+    return nullptr;
+}
+
+std::shared_ptr<mf::DesktopFile> mf::GDesktopFileCache::lookup_by_wm_class(std::string const& name) const
+{
+    auto state = cache_state.lock();
+    auto wm_class_pos = state->wm_class_to_app_info_id.find(name);
+    if (wm_class_pos != state->wm_class_to_app_info_id.end())
+    {
+        return wm_class_pos->second;
+    }
+
+    return nullptr;
+}
+
+std::shared_ptr<mf::DesktopFile> mf::GDesktopFileCache::lookup_by_exec_string(std::string const& exec) const
+{
+    auto state = cache_state.lock();
+    auto exec_pos = state->exec_to_app.find(exec);
+    if (exec_pos != state->exec_to_app.end())
+    {
+        return exec_pos->second;
+    }
+
+    return nullptr;
 }
 
 // ForeignToplevelManagerV1
@@ -479,7 +640,7 @@ mf::ForeignToplevelManagerV1::ForeignToplevelManagerV1(
     : mw::ForeignToplevelManagerV1{new_resource, Version<2>()},
       shell{global.shell},
       surface_stack{global.surface_stack},
-      observer{std::make_shared<ForeignSceneObserver>(global.wayland_executor, this)}
+      observer{std::make_shared<ForeignSceneObserver>(global.wayland_executor, this, global.desktop_file_manager)}
 {
     surface_stack->add_observer(observer);
 }

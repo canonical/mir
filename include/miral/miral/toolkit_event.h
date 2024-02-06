@@ -110,24 +110,6 @@ MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* event)
 MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* event);
 
 /**
- * Query if an input event contains a cookie
- *
- * \param [in] ev The input event
- * \return        True if the input event contains a cookie
- */
-bool mir_input_event_has_cookie(MirInputEvent const* ev);
-
-///**
-// * Returns the cookie associated with an input event.
-// *
-// * \pre The input event must have a MirCookie
-// * \param [in] ev An input event
-// * \return        The cookie associated with the given input event
-// *                The cookie must be released by calling mir_cookie_release
-// */
-//MirCookie const* mir_input_event_get_cookie(MirInputEvent const* ev);
-
-/**
  * Retrieve the MirEvent associated with a given input event.
  *
  * \param[in] event The input event

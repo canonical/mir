@@ -266,7 +266,6 @@ auto pointer_event(
     auto ev = mev::make_pointer_event(
         (MirInputDeviceId)1,
         timestamp + 1s,
-        std::vector<uint8_t>{},
         mir_input_event_modifier_none,
         action,
         buttons_pressed,
@@ -289,7 +288,6 @@ auto touch_event(
     auto ev = mev::make_touch_event(
         (MirInputDeviceId)1,
         timestamp + 1s,
-        std::vector<uint8_t>{},
         mir_input_event_modifier_none);
     mev::add_touch(
         *ev,

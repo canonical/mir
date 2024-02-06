@@ -146,7 +146,6 @@ mir::EventUPtr mev::make_window_placement_event(frontend::SurfaceId const& surfa
 mir::EventUPtr mev::make_key_event(
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& cookie,
     MirKeyboardAction action,
     xkb_keysym_t keysym,
     int scan_code,
@@ -156,7 +155,6 @@ mir::EventUPtr mev::make_key_event(
 
     e->set_device_id(device_id);
     e->set_event_time(timestamp);
-    e->set_cookie(cookie);
     e->set_action(action);
     e->set_keysym(keysym);
     e->set_scan_code(scan_code);
@@ -199,14 +197,12 @@ void mev::set_button_state(MirEvent& event, MirPointerButtons button_state)
 mir::EventUPtr mev::make_touch_event(
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& cookie,
     MirInputEventModifiers modifiers)
 {
     auto e = new_event<MirTouchEvent>();
 
     e->set_device_id(device_id);
     e->set_event_time(timestamp);
-    e->set_cookie(cookie);
     e->set_modifiers(modifiers);
 
     return make_uptr_event(e);
@@ -242,7 +238,6 @@ void mev::add_touch(
 mir::EventUPtr mev::make_pointer_event(
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& cookie,
     MirInputEventModifiers mods,
     MirPointerAction action,
     MirPointerButtons buttons,
@@ -255,7 +250,6 @@ mir::EventUPtr mev::make_pointer_event(
     return make_uptr_event(new MirPointerEvent(
         device_id,
         timestamp,
-        cookie,
         mods,
         action,
         buttons,
@@ -269,7 +263,6 @@ mir::EventUPtr mev::make_pointer_event(
 mir::EventUPtr mev::make_pointer_event(
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& cookie,
     MirInputEventModifiers modifiers,
     MirPointerAction action,
     MirPointerButtons buttons_pressed,
@@ -281,7 +274,7 @@ mir::EventUPtr mev::make_pointer_event(
     float relative_y_value)
 {
     return make_pointer_event(
-        device_id, timestamp, cookie, modifiers, action, buttons_pressed,
+        device_id, timestamp, modifiers, action, buttons_pressed,
         geom::PointF{x_axis_value, y_axis_value},
         geom::DisplacementF{relative_x_value, relative_y_value},
         mir_pointer_axis_source_none,
@@ -293,7 +286,6 @@ mir::EventUPtr mir::events::make_pointer_axis_event(
     MirPointerAxisSource axis_source,
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& cookie,
     MirInputEventModifiers modifiers,
     MirPointerAction action,
     MirPointerButtons buttons_pressed,
@@ -305,7 +297,7 @@ mir::EventUPtr mir::events::make_pointer_axis_event(
     float relative_y_value)
 {
     return make_pointer_event(
-        device_id, timestamp, cookie, modifiers, action, buttons_pressed,
+        device_id, timestamp, modifiers, action, buttons_pressed,
         geom::PointF{x_axis_value, y_axis_value},
         geom::DisplacementF{relative_x_value, relative_y_value},
         axis_source,
@@ -317,7 +309,6 @@ mir::EventUPtr mir::events::make_pointer_axis_with_stop_event(
     MirPointerAxisSource axis_source,
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& cookie,
     MirInputEventModifiers modifiers,
     MirPointerAction action,
     MirPointerButtons buttons_pressed,
@@ -331,7 +322,7 @@ mir::EventUPtr mir::events::make_pointer_axis_with_stop_event(
     float relative_y_value)
 {
     return make_pointer_event(
-        device_id, timestamp, cookie, modifiers, action, buttons_pressed,
+        device_id, timestamp, modifiers, action, buttons_pressed,
         geom::PointF{x_axis_value, y_axis_value},
         geom::DisplacementF{relative_x_value, relative_y_value},
         axis_source,
@@ -343,7 +334,6 @@ mir::EventUPtr mir::events::make_pointer_axis_discrete_scroll_event(
     MirPointerAxisSource axis_source,
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& mac,
     MirInputEventModifiers modifiers,
     MirPointerAction action,
     MirPointerButtons buttons_pressed,
@@ -353,7 +343,7 @@ mir::EventUPtr mir::events::make_pointer_axis_discrete_scroll_event(
     float vscroll_discrete)
 {
     return make_pointer_event(
-        device_id, timestamp, mac, modifiers, action, buttons_pressed,
+        device_id, timestamp, modifiers, action, buttons_pressed,
         std::nullopt,
         geom::DisplacementF{},
         axis_source,
@@ -436,12 +426,11 @@ void mev::scale_positions(MirEvent& event, float scale)
 mir::EventUPtr mev::make_touch_event(
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& cookie,
     MirInputEventModifiers modifiers,
     std::vector<mev::TouchContactV1> const& contacts)
 {
     std::vector<mev::TouchContact> contacts_new{begin(contacts), end(contacts)};
-    auto e = new_event<MirTouchEvent>(device_id, timestamp, cookie, modifiers, contacts_new);
+    auto e = new_event<MirTouchEvent>(device_id, timestamp, modifiers, contacts_new);
     return make_uptr_event(e);
 }
 
@@ -450,11 +439,10 @@ mir::EventUPtr mev::make_touch_event(
 mir::EventUPtr mev::make_touch_event(
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& cookie,
     MirInputEventModifiers modifiers,
     std::vector<mev::TouchContactV2> const& contacts)
 {
-    auto e = new_event<MirTouchEvent>(device_id, timestamp, cookie, modifiers, contacts);
+    auto e = new_event<MirTouchEvent>(device_id, timestamp, modifiers, contacts);
     return make_uptr_event(e);
 }
 

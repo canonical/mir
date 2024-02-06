@@ -30,6 +30,8 @@ public:
     Decoration() = default;
     virtual ~Decoration() = default;
 
+    virtual void set_scale(float new_scale) = 0;
+
 private:
     Decoration(Decoration const&) = delete;
     Decoration& operator=(Decoration const&) = delete;

@@ -17,6 +17,9 @@
 #include "basic_manager.h"
 #include "decoration.h"
 
+#include <mir/graphics/display_configuration.h>
+#include <mir/graphics/null_display_configuration_observer.h>
+
 #include <boost/throw_exception.hpp>
 #include <vector>
 
@@ -25,9 +28,47 @@ namespace mg = mir::graphics;
 namespace msh = mir::shell;
 namespace msd = mir::shell::decoration;
 
-msd::BasicManager::BasicManager(DecorationBuilder&& decoration_builder)
-    : decoration_builder{decoration_builder}
+class msd::DisplayConfigurationListener :  public mg::NullDisplayConfigurationObserver
 {
+public:
+    using Callback = std::function<void(mg::DisplayConfiguration const&)>;
+
+    explicit DisplayConfigurationListener(Callback callback) : callback{std::move(callback)} {}
+
+private:
+    void initial_configuration(std::shared_ptr<mg::DisplayConfiguration const> const& config) override
+    {
+        callback(*config);
+    }
+    void configuration_applied(std::shared_ptr<mg::DisplayConfiguration const> const& config) override
+    {
+        callback(*config);
+    }
+
+    Callback const callback;
+};
+
+msd::BasicManager::BasicManager(
+    ObserverRegistrar<mg::DisplayConfigurationObserver>& display_configuration_observers,
+    DecorationBuilder&& decoration_builder) :
+    decoration_builder{std::move(decoration_builder)},
+    display_config_monitor{std::make_shared<DisplayConfigurationListener>(
+        [&](mg::DisplayConfiguration const& config)
+        {
+            // Use the maximum scale to ensure sharp-looking decorations on all outputs
+            auto max_output_scale{0.0f};
+            config.for_each_output(
+                [&](mg::DisplayConfigurationOutput const& output)
+                {
+                    if (!output.used || !output.connected) return;
+                    if (!output.valid() || (output.current_mode_index >= output.modes.size())) return;
+
+                    max_output_scale = std::max(max_output_scale, output.scale);
+                });
+            set_scale(max_output_scale);
+        })}
+{
+    display_configuration_observers.register_interest(display_config_monitor);
 }
 
 msd::BasicManager::~BasicManager()
@@ -53,6 +94,7 @@ void msd::BasicManager::decorate(std::shared_ptr<ms::Surface> const& surface)
         lock.unlock();
         auto decoration = decoration_builder(locked_shell, surface);
         lock.lock();
+        decoration->set_scale(scale);
         decorations[surface.get()] = std::move(decoration);
     }
 }
@@ -84,4 +126,17 @@ void msd::BasicManager::undecorate_all()
     }
     // Destroy the decorations outside the lock
     to_destroy.clear();
+}
+
+void msd::BasicManager::set_scale(float new_scale)
+{
+    std::lock_guard lock{mutex};
+    if (new_scale != scale)
+    {
+        scale = new_scale;
+        for (auto& it : decorations)
+        {
+            it.second->set_scale(scale);
+        }
+    }
 }

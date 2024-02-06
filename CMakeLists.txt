@@ -234,7 +234,6 @@ endif()
 pkg_check_modules(DRM REQUIRED IMPORTED_TARGET libdrm)
 pkg_check_modules(EGL REQUIRED IMPORTED_TARGET egl)
 pkg_check_modules(EPOXY REQUIRED IMPORTED_TARGET epoxy)
-pkg_check_modules(GFlags REQUIRED IMPORTED_TARGET gflags)
 pkg_check_modules(GIO REQUIRED IMPORTED_TARGET gio-2.0 gio-unix-2.0)
 pkg_check_modules(GLESv2 REQUIRED IMPORTED_TARGET glesv2)
 pkg_check_modules(GLIB REQUIRED IMPORTED_TARGET glib-2.0)
@@ -316,7 +315,6 @@ add_custom_target(ptest
 add_custom_target(release-checks)
 
 mir_check_no_unreleased_symbols(mircommon release-checks)
-mir_check_no_unreleased_symbols(mircookie release-checks)
 mir_check_no_unreleased_symbols(mirplatform release-checks)
 mir_check_no_unreleased_symbols(mirserver release-checks)
 

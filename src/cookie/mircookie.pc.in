@@ -1,9 +1,0 @@
-prefix=@CMAKE_INSTALL_PREFIX@
-libdir=@PKGCONFIG_LIBDIR@
-includedir=@PKGCONFIG_INCLUDEDIR@/mircookie
-
-Name: mircookie
-Description: Mir client library
-Version: @MIR_VERSION@
-Libs: -L${libdir} -lmircookie
-Cflags: -I${includedir}

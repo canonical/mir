@@ -29,7 +29,6 @@ MirPointerEvent::MirPointerEvent() :
 
 MirPointerEvent::MirPointerEvent(MirInputDeviceId dev,
                     std::chrono::nanoseconds et,
-                    std::vector<uint8_t> const& cookie,
                     MirInputEventModifiers mods,
                     MirPointerAction action,
                     MirPointerButtons buttons,
@@ -38,7 +37,7 @@ MirPointerEvent::MirPointerEvent(MirInputDeviceId dev,
                     MirPointerAxisSource axis_source,
                     mev::ScrollAxisH h_scroll,
                     mev::ScrollAxisV v_scroll)
-    : MirInputEvent(mir_input_event_type_pointer, dev, et, mods, cookie),
+    : MirInputEvent(mir_input_event_type_pointer, dev, et, mods),
       position_{position},
       motion_{motion},
       axis_source_{axis_source},

@@ -479,6 +479,19 @@ msd::Renderer::Renderer(
 
 void msd::Renderer::update_state(WindowState const& window_state, InputState const& input_state)
 {
+    if (auto const new_scale{window_state.scale()}; new_scale != scale)
+    {
+        scale = new_scale;
+
+        needs_solid_color_redraw = true;
+        solid_color_pixels.reset(); // force a reallocation next time it's needed
+
+        needs_titlebar_redraw = true;
+        titlebar_pixels.reset(); // force a reallocation next time it's needed
+
+        needs_titlebar_buttons_redraw = true;
+    }
+
     left_border_size = window_state.left_border_rect().size;
     right_border_size = window_state.right_border_rect().size;
     bottom_border_size = window_state.bottom_border_rect().size;
@@ -488,9 +501,12 @@ void msd::Renderer::update_state(WindowState const& window_state, InputState con
     length = std::max(length, area(right_border_size));
     length = std::max(length, area(bottom_border_size));
 
-    if (length != solid_color_pixels_length)
+    if (auto const scaled_length{static_cast<size_t>(length * scale * scale)};
+        length != solid_color_pixels_length ||
+        scaled_length != scaled_solid_color_pixels_length)
     {
         solid_color_pixels_length = length;
+        scaled_solid_color_pixels_length = scaled_length;
         solid_color_pixels.reset(); // force a reallocation next time it's needed
     }
 
@@ -540,31 +556,35 @@ void msd::Renderer::update_state(WindowState const& window_state, InputState con
 
 auto msd::Renderer::render_titlebar() -> std::optional<std::shared_ptr<mg::Buffer>>
 {
-    if (!area(titlebar_size))
+    auto const scaled_titlebar_size{titlebar_size * scale};
+
+    if (!area(scaled_titlebar_size))
         return std::nullopt;
 
     if (!titlebar_pixels)
     {
-        titlebar_pixels = alloc_pixels(titlebar_size);
+        titlebar_pixels = alloc_pixels(scaled_titlebar_size);
         needs_titlebar_redraw = true;
     }
 
     if (needs_titlebar_redraw)
     {
-        for (geom::Y y{0}; y < as_y(titlebar_size.height); y += geom::DeltaY{1})
+        for (geom::Y y{0}; y < as_y(scaled_titlebar_size.height); y += geom::DeltaY{1})
         {
             render_row(
-                titlebar_pixels.get(), titlebar_size,
-                {0, y}, titlebar_size.width,
+                titlebar_pixels.get(), scaled_titlebar_size,
+                {0, y}, scaled_titlebar_size.width,
                 current_theme->background_color);
         }
 
         text->render(
             titlebar_pixels.get(),
-            titlebar_size,
+            scaled_titlebar_size,
             name,
-            static_geometry->title_font_top_left,
-            static_geometry->title_font_height,
+            geom::Point{
+                static_geometry->title_font_top_left.x.as_value() * scale,
+                static_geometry->title_font_top_left.y.as_value() * scale},
+            static_geometry->title_font_height * scale,
             current_theme->text_color);
     }
 
@@ -572,30 +592,35 @@ auto msd::Renderer::render_titlebar() -> std::optional<std::shared_ptr<mg::Buffe
     {
         for (auto const& button : buttons)
         {
+            geom::Rectangle scaled_button_rect{
+                geom::Point{
+                    button.rect.left().as_value() * scale,
+                    button.rect.top().as_value() * scale},
+                button.rect.size * scale};
             auto const icon = button_icons.find(button.function);
             if (icon != button_icons.end())
             {
                 Pixel button_color = icon->second.normal_color;
                 if (button.state == ButtonState::Hovered)
                     button_color = icon->second.active_color;
-                for (geom::Y y{button.rect.top()}; y < button.rect.bottom(); y += geom::DeltaY{1})
+                for (geom::Y y{scaled_button_rect.top()}; y < scaled_button_rect.bottom(); y += geom::DeltaY{1})
                 {
                     render_row(
                         titlebar_pixels.get(),
-                        titlebar_size,
-                        {button.rect.left(), y},
-                        button.rect.size.width,
+                        scaled_titlebar_size,
+                        {scaled_button_rect.left(), y},
+                        scaled_button_rect.size.width,
                         button_color);
                 }
                 geom::Rectangle const icon_rect = {
-                button.rect.top_left + static_geometry->icon_padding, {
-                    button.rect.size.width - static_geometry->icon_padding.dx * 2,
-                    button.rect.size.height - static_geometry->icon_padding.dy * 2}};
+                scaled_button_rect.top_left + static_geometry->icon_padding * scale, {
+                    scaled_button_rect.size.width - static_geometry->icon_padding.dx * scale * 2,
+                    scaled_button_rect.size.height - static_geometry->icon_padding.dy * scale * 2}};
                 icon->second.render_icon(
                     titlebar_pixels.get(),
-                    titlebar_size,
+                    scaled_titlebar_size,
                     icon_rect,
-                    static_geometry->icon_line_width,
+                    static_geometry->icon_line_width * scale,
                     icon->second.icon_color);
             }
             else
@@ -608,46 +633,49 @@ auto msd::Renderer::render_titlebar() -> std::optional<std::shared_ptr<mg::Buffe
     needs_titlebar_redraw = false;
     needs_titlebar_buttons_redraw = false;
 
-    return make_buffer(titlebar_pixels.get(), titlebar_size);
+    return make_buffer(titlebar_pixels.get(), scaled_titlebar_size);
 }
 
 auto msd::Renderer::render_left_border() -> std::optional<std::shared_ptr<mg::Buffer>>
 {
-    if (!area(left_border_size))
+    auto const scaled_left_border_size{left_border_size * scale};
+    if (!area(scaled_left_border_size))
         return std::nullopt;
     update_solid_color_pixels();
-    return make_buffer(solid_color_pixels.get(), left_border_size);
+    return make_buffer(solid_color_pixels.get(), scaled_left_border_size);
 }
 
 auto msd::Renderer::render_right_border() -> std::optional<std::shared_ptr<mg::Buffer>>
 {
-    if (!area(right_border_size))
+    auto const scaled_right_border_size{right_border_size * scale};
+    if (!area(scaled_right_border_size))
         return std::nullopt;
     update_solid_color_pixels();
-    return make_buffer(solid_color_pixels.get(), right_border_size);
+    return make_buffer(solid_color_pixels.get(), scaled_right_border_size);
 }
 
 auto msd::Renderer::render_bottom_border() -> std::optional<std::shared_ptr<mg::Buffer>>
 {
-    if (!area(bottom_border_size))
+    auto const scaled_bottom_border_size{bottom_border_size * scale};
+    if (!area(scaled_bottom_border_size))
         return std::nullopt;
     update_solid_color_pixels();
-    return make_buffer(solid_color_pixels.get(), bottom_border_size);
+    return make_buffer(solid_color_pixels.get(), scaled_bottom_border_size);
 }
 
 void msd::Renderer::update_solid_color_pixels()
 {
     if (!solid_color_pixels)
     {
-        solid_color_pixels = alloc_pixels(geom::Size{solid_color_pixels_length, 1});
+        solid_color_pixels = alloc_pixels(geom::Size{scaled_solid_color_pixels_length, 1});
         needs_solid_color_redraw = true;
     }
 
     if (needs_solid_color_redraw)
     {
         render_row(
-            solid_color_pixels.get(), geom::Size{solid_color_pixels_length, 1},
-            geom::Point{}, geom::Width{solid_color_pixels_length},
+            solid_color_pixels.get(), geom::Size{scaled_solid_color_pixels_length, 1},
+            geom::Point{}, geom::Width{scaled_solid_color_pixels_length},
             current_theme->background_color);
     }
 

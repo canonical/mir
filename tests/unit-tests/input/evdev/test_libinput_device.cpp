@@ -32,7 +32,6 @@
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/fake_shared.h"
 #include "mir/udev/wrapper.h"
-#include "mir/cookie/authority.h"
 #include "mir_test_framework/libinput_environment.h"
 
 #include <gmock/gmock.h>
@@ -74,13 +73,11 @@ using Matrix = mi::OutputInfo::Matrix;
 
 struct MockEventBuilder : mi::EventBuilder
 {
-    std::shared_ptr<mir::cookie::Authority> const cookie_authority = mir::cookie::Authority::create();
     mtd::MockInputSeat seat;
     mtd::AdvanceableClock clock;
     mi::DefaultEventBuilder builder{
         MirInputDeviceId{3},
-        mt::fake_shared(clock),
-        cookie_authority};
+        mt::fake_shared(clock)};
     MockEventBuilder()
     {
         ON_CALL(*this, key_event(_,_,_,_)).WillByDefault(
@@ -372,38 +369,6 @@ TEST_F(LibInputDevice, start_creates_and_refs_libinput_device)
     mie::LibInputDevice dev(mir::report::null_input_report(),
                             mie::make_libinput_device(lib, fake_device));
     dev.start(&mock_sink, &mock_builder);
-}
-
-TEST_F(LibInputDevice, open_device_of_group)
-{
-    auto fake_device = setup_laptop_keyboard();
-    auto second_fake_device = setup_trackpad();
-
-    InSequence seq;
-    // See previous test
-    EXPECT_CALL(env.mock_libinput, libinput_device_ref(fake_device)).Times(1);
-    EXPECT_CALL(env.mock_libinput, libinput_device_ref(second_fake_device)).Times(1);
-
-    mie::LibInputDevice dev(mir::report::null_input_report(),
-                            mie::make_libinput_device(lib, fake_device));
-    dev.add_device_of_group(mie::make_libinput_device(lib, second_fake_device));
-    dev.start(&mock_sink, &mock_builder);
-}
-
-TEST_F(LibInputDevice, input_info_combines_capabilities)
-{
-    auto fake_device = setup_laptop_keyboard();
-    auto second_fake_device = setup_trackpad();
-
-    mie::LibInputDevice dev(mir::report::null_input_report(),
-                            mie::make_libinput_device(lib, fake_device));
-    dev.add_device_of_group(mie::make_libinput_device(lib, second_fake_device));
-    auto info = dev.get_device_info();
-
-    EXPECT_THAT(info.capabilities, Eq(mi::DeviceCapability::touchpad |
-                                      mi::DeviceCapability::pointer |
-                                      mi::DeviceCapability::keyboard |
-                                      mi::DeviceCapability::alpha_numeric));
 }
 
 TEST_F(LibInputDevice, unique_id_contains_device_name)
@@ -897,10 +862,10 @@ TEST_F(LibInputDeviceOnTouchScreen, process_event_spurious_frame_when_down)
 TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_down_events)
 {
     MirTouchId slot = 0;
-    float major = 6;
-    float minor = 5;
+    float major = 8;
+    float minor = 6;
     float orientation = 0;
-    float pressure = 0.6f;
+    float pressure = 0.8f;
     float x = 100;
     float y = 7;
 
@@ -922,9 +887,9 @@ TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_down_events)
 TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_move_events)
 {
     MirTouchId slot = 0;
-    float major = 6;
-    float minor = 5;
-    float pressure = 0.6f;
+    float major = 8;
+    float minor = 6;
+    float pressure = 0.8f;
     float orientation = 0;
     float x = 100;
     float y = 7;
@@ -947,9 +912,9 @@ TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_move_events)
 TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_up_events_without_querying_properties)
 {
     MirTouchId slot = 3;
-    float major = 6;
-    float minor = 5;
-    float pressure = 0.6f;
+    float major = 8;
+    float minor = 6;
+    float pressure = 0.8f;
     float x = 30;
     float y = 20;
     float orientation = 0;

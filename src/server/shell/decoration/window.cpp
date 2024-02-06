@@ -76,12 +76,14 @@ auto border_type_for(std::shared_ptr<ms::Surface> const& surface) -> msd::Border
 
 msd::WindowState::WindowState(
     std::shared_ptr<StaticGeometry const> const& static_geometry,
-    std::shared_ptr<scene::Surface> const& surface)
+    std::shared_ptr<scene::Surface> const& surface,
+    float scale)
     : static_geometry{static_geometry},
       window_size_{surface->window_size()},
       border_type_{border_type_for(surface)},
       focus_state_{surface->focus_state()},
-      window_name_{surface->name()}
+      window_name_{surface->name()},
+      scale_{scale}
 {
 }
 
@@ -224,6 +226,11 @@ auto msd::WindowState::button_rect(unsigned n) const -> geom::Rectangle
     return geom::Rectangle{
         {x, titlebar.top()},
         {static_geometry->button_width, titlebar.size.height}};
+}
+
+auto msd::WindowState::scale() const -> float
+{
+    return scale_;
 }
 
 class msd::WindowSurfaceObserverManager::Observer

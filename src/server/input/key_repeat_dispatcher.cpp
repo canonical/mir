@@ -21,7 +21,6 @@
 #include "mir/time/alarm_factory.h"
 #include "mir/time/alarm.h"
 #include "mir/events/event_builders.h"
-#include "mir/cookie/authority.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -88,14 +87,12 @@ auto is_meta_key(MirKeyboardEvent const* event) -> bool
 mi::KeyRepeatDispatcher::KeyRepeatDispatcher(
     std::shared_ptr<mi::InputDispatcher> const& next_dispatcher,
     std::shared_ptr<mir::time::AlarmFactory> const& factory,
-    std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
     bool repeat_enabled,
     std::chrono::milliseconds repeat_timeout,
     std::chrono::milliseconds repeat_delay,
     bool disable_repeat_on_touchscreen)
     : next_dispatcher(next_dispatcher),
       alarm_factory(factory),
-      cookie_authority(cookie_authority),
       repeat_enabled(repeat_enabled),
       repeat_timeout(repeat_timeout),
       repeat_delay(repeat_delay),
@@ -183,17 +180,14 @@ void mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
         }
 
         auto clone_event = [scan_code, id,
-             cookie_authority=cookie_authority,
              next_dispatcher=next_dispatcher,
              keysym = mir_keyboard_event_keysym(kev),
              modifiers = mir_keyboard_event_modifiers(kev)]()
              {
                  auto const now = std::chrono::steady_clock::now().time_since_epoch();
-                 auto const cookie = cookie_authority->make_cookie(now.count());
                  auto new_event = mev::make_key_event(
                      id,
                      now,
-                     cookie->serialize(),
                      mir_keyboard_action_repeat,
                      keysym,
                      scan_code,

@@ -2016,6 +2016,42 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
 
         if (parameters.top_left().value().y < display_area.top_left.y)
             parameters.top_left() = Point{parameters.top_left().value().x, display_area.top_left.y};
+
+        if (parameters.state() == mir_window_state_restored)
+        {
+            auto const offset{48};
+            std::array const positions {
+                parameters.top_left().value(),
+                parameters.top_left().value() + Displacement( offset,  offset),
+                parameters.top_left().value() + Displacement(-offset,  offset),
+                parameters.top_left().value() + Displacement( offset, -offset),
+                parameters.top_left().value() + Displacement(-offset, -offset)};
+
+            for (auto const& position : positions)
+            {
+                auto const window{window_at(position)};
+
+                static auto const ignored_state_or_type = [](WindowInfo const& info)
+                    {
+                        switch (info.type())
+                        {
+                        case mir_window_type_normal:
+                        case mir_window_type_decoration:
+                        case mir_window_type_freestyle:
+                            return info.state() != mir_window_state_restored;
+
+                        default:
+                            return true;
+                        }
+                    };
+
+                if (!window || ignored_state_or_type(info_for(window)) || window.top_left() != position)
+                {
+                    parameters.top_left().value() = position;
+                    break;
+                }
+            }
+        }
     }
 
     return parameters;
@@ -2848,10 +2884,15 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
     {
         Rectangle zone_rect = area->area;
 
-        /// The first pass will modify the application zone as it goes
-        /// The second pass will use the final application zone
-        std::vector<WindowInfo*> first_pass;
-        std::vector<WindowInfo*> second_pass;
+        // The placement algorithm operates on windows spanning the width of the screen first,
+        // followed by any other "attached" window (e.g. a window attached to the side of the screen
+        // vertically), and finally maximized windows. This ensures that windows attached to the
+        // top and bottom of the screen (in the "full_width_attached_windows" list) push windows
+        // attached to the sides of the screen or elsewhere (in the "other_attached_windows") out
+        // of the way. Maximized windows are then guaranteed to be on top, as they appear last.
+        std::vector<WindowInfo*> full_width_attached_windows;
+        std::vector<WindowInfo*> other_attached_windows;
+        std::vector<WindowInfo*> maximized_windows;
 
         for (auto const& window : area->attached_windows)
         {
@@ -2864,14 +2905,19 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
                 case mir_window_state_attached:
                     if (info.exclusive_rect().is_set())
                     {
-                        first_pass.push_back(&info);
+                        MirPlacementGravity  edges = info.attached_edges();
+                        bool is_full_width = (edges & mir_placement_gravity_east) && (edges & mir_placement_gravity_west);
+                        if (is_full_width)
+                            full_width_attached_windows.push_back(&info);
+                        else
+                            other_attached_windows.push_back(&info);
                         break;
                     }
                     // fallthrough
                 case mir_window_state_maximized:
                 case mir_window_state_horizmaximized:
                 case mir_window_state_vertmaximized:
-                    second_pass.push_back(&info);
+                    maximized_windows.push_back(&info);
                     break;
 
                 default:
@@ -2881,7 +2927,7 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
             }
         }
 
-        for (auto info_ptr : first_pass)
+        for (auto info_ptr : full_width_attached_windows)
         {
             place_attached_to_zone(*info_ptr, zone_rect);
 
@@ -2893,7 +2939,19 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
             zone_rect = apply_exclusive_rect_to_application_zone(zone_rect, exclusive_rect, info.attached_edges());
         }
 
-        for (auto info_ptr : second_pass)
+        for (auto info_ptr : other_attached_windows)
+        {
+            place_attached_to_zone(*info_ptr, zone_rect);
+
+            auto& info = *info_ptr;
+            Rectangle exclusive_rect{
+                info.exclusive_rect().value().top_left + as_displacement(info.window().top_left()),
+                info.exclusive_rect().value().size};
+
+            zone_rect = apply_exclusive_rect_to_application_zone(zone_rect, exclusive_rect, info.attached_edges());
+        }
+
+        for (auto info_ptr : maximized_windows)
         {
             place_attached_to_zone(*info_ptr, zone_rect);
         }

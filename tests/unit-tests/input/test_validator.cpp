@@ -64,7 +64,7 @@ mir::EventUPtr make_touch(MirTouchId id, MirTouchAction action)
 {
     auto ev = mev::make_touch_event(
         MirInputDeviceId(0), std::chrono::nanoseconds(0),
-        std::vector<uint8_t>{}, mir_input_event_modifier_none);
+        mir_input_event_modifier_none);
     add_another_touch(ev, id, action);
     return ev;
 }

@@ -61,7 +61,7 @@ public:
     void process_event(libinput_event* event);
     ::libinput_device* device() const;
     ::libinput_device_group* group();
-    void add_device_of_group(LibInputDevicePtr ptr);
+
 private:
     EventUPtr convert_event(libinput_event_keyboard* keyboard);
     EventUPtr convert_button_event(libinput_event_pointer* pointer);
@@ -76,11 +76,8 @@ private:
     bool is_output_active() const;
     OutputInfo get_output_info() const;
 
-    struct ContactExtension;
-    std::unique_ptr<ContactExtension> contact_extension;
-
-    std::shared_ptr<InputReport> report;
-    std::vector<LibInputDevicePtr> devices;
+    std::shared_ptr<InputReport> const report;
+    LibInputDevicePtr const device_;
 
     InputSink* sink{nullptr};
     EventBuilder* builder{nullptr};
