@@ -25,8 +25,8 @@
     This is up to the compositor policy.
 
     The compositor is responsible for deciding when the session should be locked and unlocked.
-    If the client dies while the session is locked, the client may simply resubmit
-    a buffer for display at a later time. During this time, the compositor itself
+    If the client dies while the session is locked, the client may simply reregister and
+    submit buffers for display at a later time. During this time, the compositor itself
     may have been unlocked via some other mechanism (e.g. loginctl). Exactly how and
     when the compositor locks and unlocks is the policy of the compositor.
 
@@ -40,65 +40,100 @@
 
   <interface name="ext_lockscreen_manager_v1" version="1">
     <description summary="used to create lockscreen surfaces">
-      
+      This interface is responsible for registering clients who wish to be treated as the
+      lockscreen. Only one client may be treated as the lockscreen at a time.
     </description>
-    <request name="associate">
-      This request creates a lockscreen surface and asks the compositor to show this
-      surface on the provided output when the session is next locked. If the session is
-      already locked, the compositor will display this surface right away.
 
-      Surfaces may display different content on different outputs.
+    <request name="register">
+      This request creates a new lockscreen client. While the session is locked,
+      the compositor will (1) obfuscate the screen according to its own policy,
+      and (2) only render lockscreen surfaces created by the registered client. If the client
+      has already submitted lockscreen surfaces before locking happens, those surfaces
+      will be shown immediately alongside the obfuscation surface.
+
+      The compositor's internal screen obfuscation must render at the lowest possible
+      Z-index in order to provide the client with the remainder of the screen on
+      which to render.
+
+      If the client dies while the compositor is locked, the compositor will continue
+      to render an obfuscated screen according to the policy of the compositor. In the
+      meantime, a new lockscreen client may register itself and begin rendering the
+      lockscreen.
+
+      Registering more than one client is a duplicate_registration error.
       
-      This surface will be shown immediately after the session is locked. It is expected
-      that the compositor does not render intermediary content if a lockscreen surface
-      is provided for an output. If a surface is NOT provided for an output, then it is up to the
-      policy of the compositor to render what it wants.
-
-      The client is expected to destroy lockscreen surfaces as outputs are removed.
-      The client is expected to associate lockscreen surfaces as outputs are added.
-
-      Associating more than one surface for an output is a duplicate_surface error.
-      Associating a surface with a null buffer is a null_buffer error.
-      
-      <arg name="id" type="new_id" interface="ext_lockscreen_surface_v1"/>
-      <arg name="surface" type="object" interface="wl_surface"/>
-      <arg name="output" type="object" interface="wl_output"/>
+      <arg name="id" type="new_id" interface="ext_lockscreen_client_v1"/>
     </request>
 
     <enum name="error">
-      <entry name="duplicate_surface" value="0"
-             summary="attempted to associate more than once surface as the lockscreen surface for an output"/>
-      <entry name="null_buffer" value="1"
-        summary="surface committed with a null buffer"/>
+      <entry name="duplicate_registration" value="0"
+             summary="attempted to register more than once lockscreen client"/>
     </enum>
   </interface>
 
-  <interface name="ext_lockscreen_surface_v1" version="1">
-    <request name="destroy" type="destructor">
-      This informs the compositor that the lockscreen surface object will no longer be
-      used.
+  <interface name="ext_lockscreen_client_v1" version="1">
+    <description>
+      The lockscreen client is responsible for creating lockscreen surfaces that will
+      be shown when the screen is locked.
 
-      If the session is locked when this happens, the compositor will display a default
-      render of its choosing until the session is unlocked.
+      The client may create a surface at any time, but the compositor must NOT display
+      the surface unless the session is locked.
+
+      When the session is locked, the compositor will display all surfaces that were
+      spawned by the lockscreen client, including new surfaces as they are submitted.
+
+      When the session is unlocked, the compositor will hide all surfaces that were
+      spawned by the lockscreen client.
+    </description>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the lock surface object">
+        This informs the compositor that the lockscreen client will no longer be used.
+        After this, another lockscreen client may request to register as the lockscreen
+        client.
+
+        All surfaces associated with this client will also be destroyed at this time.
+      </description>
     </request>
-    
+
+    <request name="create_surface">
+      This request creates a new surface that will be shown when the session is locked.
+      The client may call this method at any time, but the surface will only be shown
+      on the screen if and when the session is locked.
+
+      It is recommended that this request is only called after ack_locked is sent to
+      the compositor, as creating multiple unused surfaces that are not shown on
+      the screen may have a high memory footprint. However, this decision is left to
+      the client.
+      
+      <arg name="id" type="new_id" interface="ext_lockscreen_surface_v1"/>
+      <arg name="surface" type="object" interface="wl_surface"/>
+    </request>
+
     <event name="locked">
-      This event is sent when the compositor decides to lock the session.
-      At this time, the compositor will show the surface.
+      This event is sent when the compositor decides to lock the session. Before sending
+      this event, the compositor will obfuscate the contents of the screen according to
+      the policy of the compositor. The compositor will also show the surfaces that this
+      client had submitted before the session was locked.
     </event>
     <event name="unlocked">
-      This event is sent when the compositor decides to unlock the session.
-      At this time, the compositor will hide the surface.
-    </event>
-    <event name="configure">
-      This event is sent when the lockscreen surface is first created and anytime that the
-      dimensions of the output changes after that. The client may use the width and height
-      to update their buffer to fit the output dimensions.
-
-      The width and height are in surface-local coordinates. The client is allowed to ignore
-      the dimensions.
-      <arg name="width" type="uint"/>
-      <arg name="height" type="uint"/>
+      This event is sent when the compositor decides to unlock the session. Upon sending
+      this event, the compositor will remove its internal screen obfuscation mechanism
+      and hide the buffers created by this client.
+      
+      Afterward, the compositor will render the pre-lock contents again. 
     </event>
   </interface>
+
+  <interface name="ext_lockscreen_surface_v1" version="1">
+    <description>
+      This interface describes a surface that will be shown when the session is locked.
+      This surface CANNOT be shown by the compositor at any other time.
+    </description>
+
+    <request name="destroy" type="destructor">
+      This informs the compositor that the lockscreen surface wil no longer be used.
+    </request>
+  </interface>
+
 </protocol>
