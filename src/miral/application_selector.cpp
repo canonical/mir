@@ -140,7 +140,7 @@ auto ApplicationSelector::complete() -> Window
     }
 
     originally_selected_it = focus_list.end();
-    _is_active = false;
+    is_active_ = false;
     return selected;
 }
 
@@ -154,12 +154,12 @@ void ApplicationSelector::cancel()
 
     tools.select_active_window(*originally_selected_it);
     originally_selected_it = focus_list.end();
-    _is_active = false;
+    is_active_ = false;
 }
 
 auto ApplicationSelector::is_active() const -> bool
 {
-    return _is_active;
+    return is_active_;
 }
 
 auto ApplicationSelector::get_focused() -> Window
@@ -178,7 +178,7 @@ auto ApplicationSelector::advance(bool reverse, bool within_app) -> Window
     {
         originally_selected_it = focus_list.begin();
         selected = focus_list.front();
-        _is_active = true;
+        is_active_ = true;
     }
 
     // Attempt to focus the next application after the selected application.
@@ -251,7 +251,7 @@ auto ApplicationSelector::advance(bool reverse, bool within_app) -> Window
         tools.swap_tree_order(next_window.value(), selected);
 
     tools.select_active_window(next_window.value());
-    return *it;
+    return next_window.value();
 }
 
 auto ApplicationSelector::find(Window window) -> std::vector<Window>::iterator

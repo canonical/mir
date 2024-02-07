@@ -91,7 +91,7 @@ private:
     /// The application that is currently selected.
     Window selected;
 
-    bool _is_active = false;
+    bool is_active_ = false;
 };
 
 }
