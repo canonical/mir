@@ -37,13 +37,9 @@
 #include "mir/options/program_option.h"
 #include "mir/udev/wrapper.h"
 
-#include "mir/raii.h"
-
 #include "mir/test/doubles/mock_egl.h"
 #if defined(MIR_BUILD_PLATFORM_GBM_KMS)
 #include "mir/test/doubles/mock_drm.h"
-#endif
-#ifdef MIR_BUILD_PLATFORM_GBM_KMS
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir/test/doubles/mock_gl.h"
 #endif
@@ -544,8 +540,8 @@ public:
 
         drm_device_count++;
         return mir::udev::Context{}.device_from_syspath(syspath);
+#endif
     }
-
 
     void enable_gbm_on_kms_device(mir::udev::Device const& device)
     {
@@ -572,7 +568,6 @@ public:
                     Return(EGL_TRUE)));
         ON_CALL(gl, glGetString(GL_RENDERER))
             .WillByDefault(Return(reinterpret_cast<GLubyte const*>("Not A Software Renderer, Honest!")));
-#endif
     }
 
     void enable_host_x11()
@@ -592,10 +587,9 @@ public:
                 });
     }
 
-    void disable_host_x11()
+    void set_display_libs_option(char const* value)
     {
-        using namespace testing;
-        ON_CALL(x11, XOpenDisplay(_)).WillByDefault(Return(nullptr));
+        temporary_env.emplace_back(std::make_unique<mtf::TemporaryEnvironmentValue>("MIR_SERVER_PLATFORM_DISPLAY_LIBS", value));
     }
 
     void add_virtual_option()
@@ -652,17 +646,17 @@ private:
     testing::NiceMock<mtd::MockEGL> egl;
     testing::NiceMock<mtd::MockGL> gl;
 #ifdef MIR_BUILD_PLATFORM_GBM_KMS
+    testing::NiceMock<mtd::MockGBM> gbm;
+#endif
+#if defined(MIR_BUILD_PLATFORM_GBM_KMS)
     int drm_device_count{0};
     testing::NiceMock<mtd::MockDRM> drm;
-    testing::NiceMock<mtd::MockGBM> gbm;
 #endif
 };
 
 TEST_F(FullProbeStack, select_display_modules_loads_all_available_hardware_when_no_nested)
 {
     using namespace testing;
-
-    disable_host_x11();
 
     int expected_hardware_count{0};
     for (auto i = 0; i < 2; ++i)
@@ -693,11 +687,33 @@ MATCHER(IsHardwarePlatform, "")
     return arg.device != nullptr;
 }
 
+MATCHER_P(IsPlatformForDevice, udev_device, "")
+{
+    return *arg.device == *udev_device;
+}
+
+namespace mir::graphics
+{
+void PrintTo(std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>> const& device, std::ostream* os)
+{
+    auto describe = device.second->load_function<mir::graphics::DescribeModule>(
+        "describe_graphics_module");
+    *os << "Module: " << describe()->name << " supports: ";
+    if (device.first.device)
+    {
+        *os << device.first.device->devpath();
+    }
+    else
+    {
+        *os << "(system)";
+    }
+    *os << " at priority: " << device.first.support_level;
+}
+}
+
 TEST_F(FullProbeStack, select_display_modules_loads_virtual_platform_as_well_as_hardware_when_option_is_used)
 {
     using namespace testing;
-
-    disable_host_x11();
 
     if (auto device = add_kms_device())
     {
@@ -716,4 +732,133 @@ TEST_F(FullProbeStack, select_display_modules_loads_virtual_platform_as_well_as_
     EXPECT_THAT(devices, Contains(Pair(_, ModuleNameMatches(StrEq("mir:virtual")))));
     // And we also expect a hardware platform to load
     EXPECT_THAT(devices, Contains(Pair(IsHardwarePlatform(), _)));
+}
+
+TEST_F(FullProbeStack, select_display_loads_gbm_platform_for_each_kms_device)
+{
+    using namespace testing;
+
+    std::vector<std::unique_ptr<mir::udev::Device>> udev_devices;
+    for (int i = 0; i < 2; ++i)
+    {
+        if (auto device = add_kms_device())
+        {
+            enable_gbm_on_kms_device(*device);
+            udev_devices.push_back(std::move(device));
+        }
+    }
+    if (udev_devices.empty())
+    {
+        GTEST_SKIP() << "gbm-kms platform not built";
+    }
+
+    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+
+    for(auto const& device: udev_devices)
+    {
+        EXPECT_THAT(devices, Contains(Pair(IsPlatformForDevice(device.get()), _)));
+    }
+}
+
+TEST_F(FullProbeStack, select_display_modules_loads_x11_platform_even_when_gbm_is_available)
+{
+    using namespace testing;
+
+    enable_host_x11();
+
+    if (auto device = add_kms_device())
+    {
+        enable_gbm_on_kms_device(*device);
+    }
+    else
+    {
+        GTEST_SKIP() << "gbm-kms platform not built; cannot test hardware platform probing";
+    }
+
+    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+
+    // We expect the X11 platform to load
+    EXPECT_THAT(devices, Contains(Pair(_, ModuleNameMatches(StrEq("mir:x11")))));
+}
+
+TEST_F(FullProbeStack, when_all_of_gbm_and_x11_and_virtual_are_available_select_display_modules_loads_x11_and_virtual)
+{
+    using namespace testing;
+
+    enable_host_x11();
+    add_virtual_option();
+
+    if (auto device = add_kms_device())
+    {
+        enable_gbm_on_kms_device(*device);
+    }
+    else
+    {
+        GTEST_SKIP() << "gbm-kms platform not built; cannot test hardware platform probing";
+    }
+
+    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+
+    // We expect the X11 platform to load
+    EXPECT_THAT(devices, Contains(Pair(_, ModuleNameMatches(StrEq("mir:x11")))));
+    // We also expect the Virtual platform to load
+    EXPECT_THAT(devices, Contains(Pair(_, ModuleNameMatches(StrEq("mir:virtual")))));
+}
+
+TEST_F(FullProbeStack, select_display_modules_loads_wayland_platform_even_when_gbm_is_available)
+{
+    using namespace testing;
+
+    enable_host_wayland();
+
+    if (auto device = add_kms_device())
+    {
+        enable_gbm_on_kms_device(*device);
+    }
+    else
+    {
+        GTEST_SKIP() << "gbm-kms platform not built; cannot test hardware platform probing";
+    }
+
+    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+
+    // We expect the Wayland platform to load
+    EXPECT_THAT(devices, Contains(Pair(_, ModuleNameMatches(StrEq("mir:wayland")))));
+}
+
+TEST_F(FullProbeStack, when_all_of_gbm_and_wayland_and_virtual_are_available_select_display_modules_loads_wayland_and_virtual)
+{
+    using namespace testing;
+
+    add_virtual_option();
+    enable_host_wayland();
+
+    if (auto device = add_kms_device())
+    {
+        enable_gbm_on_kms_device(*device);
+    }
+    else
+    {
+        GTEST_SKIP() << "gbm-kms platform not built; cannot test hardware platform probing";
+    }
+
+    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+
+    // We expect the Wayland platform to load
+    EXPECT_THAT(devices, Contains(Pair(_, ModuleNameMatches(StrEq("mir:wayland")))));
+    // We also expect the Virtual platform to load
+    EXPECT_THAT(devices, Contains(Pair(_, ModuleNameMatches(StrEq("mir:virtual")))));
+}
+
+TEST_F(FullProbeStack, when_both_wayland_and_x11_are_supported_x11_is_chosen)
+{
+    using namespace testing;
+
+    enable_host_wayland();
+    enable_host_x11();
+
+    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+
+    EXPECT_THAT(devices, Not(Contains(Pair(_, ModuleNameMatches(StrEq("mir:wayland"))))));
+    EXPECT_THAT(devices, Contains(Pair(_, ModuleNameMatches(StrEq("mir:x11")))));
 }

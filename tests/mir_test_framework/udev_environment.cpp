@@ -168,7 +168,7 @@ void mtf::UdevEnvironment::add_standard_device(std::string const& name)
         BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Failed to create mock udev device: ") +
                                                  err->message));
     }
-    
+
     auto ioctls_filename = recordings_path + "/" + name + ".ioctl";
     struct stat sb;
     if (stat(ioctls_filename.c_str(), &sb) == 0)

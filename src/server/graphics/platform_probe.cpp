@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <boost/throw_exception.hpp>
+#include <dlfcn.h>
 
 namespace mg = mir::graphics;
 namespace mo = mir::options;
@@ -223,7 +224,7 @@ auto mg::modules_for_device(
     {
         if (!best_nested)
         {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find any platforms for current system"}));        
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find any platforms for current system"}));
         }
         // Our *only* option is the nested platform; return that.
         decltype(best_modules_so_far) nested_vec;
@@ -348,6 +349,18 @@ auto select_platforms_from_list(std::string const& selection, std::vector<std::s
 
     return selected_modules;
 }
+
+auto dso_filename_alphabetically_before(mir::SharedLibrary const& a, mir::SharedLibrary const& b) -> bool
+{
+    Dl_info info_a, info_b;
+
+    auto describe_a = a.load_function<mir::graphics::DescribeModule>("describe_graphics_module", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+    auto describe_b = b.load_function<mir::graphics::DescribeModule>("describe_graphics_module", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+
+    dladdr(reinterpret_cast<void const*>(describe_a), &info_a);
+    dladdr(reinterpret_cast<void const*>(describe_b), &info_b);
+    return strcmp(info_a.dli_fname, info_b.dli_fname) < 0;
+}
 }
 
 auto mg::select_display_modules(
@@ -355,7 +368,7 @@ auto mg::select_display_modules(
     std::shared_ptr<ConsoleServices> const& console,
     SharedLibraryProberReport& lib_loader_report)
     -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>
-{    
+{
     std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>> platform_modules;
 
     auto const& path = options.get<std::string>(options::platform_path);
@@ -366,6 +379,55 @@ auto mg::select_display_modules(
         auto msg = "Failed to find any platform plugins in: " + path;
         BOOST_THROW_EXCEPTION((std::runtime_error{msg.c_str()}));
     }
+
+    /* Remove any non-graphics modules from the list.
+     * This lets us assume, from here on in, that everything in platforms is
+     * a graphics module (and hence contains a `describe_graphics_module` symbol, etc)
+     */
+    platforms.erase(
+        std::remove_if(
+            platforms.begin(),
+            platforms.end(),
+            [](auto const& module)
+            {
+                try
+                {
+                    module->template load_function<mir::graphics::DescribeModule>(
+                        "describe_graphics_module",
+                        MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+                    return false;
+                }
+                catch (std::runtime_error const&)
+                {
+                    return true;
+                }
+            }),
+        platforms.end());
+
+    /* Sort the platform modules by DSO filename.
+     *
+     * (One part of) The selection algorithm stores the first platform that
+     * claims to support a given device, and then replaces that platform if
+     * a better one comes along. The upshot of this is that if two platforms
+     * claim the same level of support, we'll pick the first one seen.
+     *
+     * The order of the platforms we have here is just whatever order the filesystem
+     * returned when we enumerated the directory; that's not guaranteed to be any
+     * particular order (and can be filesystem specific).
+     *
+     * To make platform selection deterministic, first sort the platforms by
+     * the only thing that is guaranteed to be unique: their filenames.
+     *
+     * Since we want to prefer the X11 platform over the nested Wayland platform when
+     * both are available, we sort in *reverse* alphabetical order, so “x11” comes before
+     * “wayland”
+     */
+    std::sort(
+        platforms.begin(), platforms.end(),
+        [](auto const& lhs, auto const& rhs)
+        {
+            return !dso_filename_alphabetically_before(*lhs, *rhs);
+        });
 
     /* Treat the Virtual platform specially:
      *
@@ -390,7 +452,7 @@ auto mg::select_display_modules(
 
     if (options.is_set(options::platform_display_libs))
     {
-        
+
         auto const manually_selected_platforms =
             select_platforms_from_list(options.get<std::string>(options::platform_display_libs), platforms);
 
