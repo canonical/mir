@@ -953,3 +953,48 @@ TEST_F(FullProbeStack, instantiates_all_manually_selected_platforms_and_virtual_
             ));
     }
 }
+
+TEST_F(FullProbeStack, selects_only_gbm_when_manually_specified_even_if_x11_and_wayland_are_supported)
+{
+    using namespace testing;
+
+    enable_host_wayland();
+    enable_host_x11();
+
+    std::unique_ptr<mir::udev::Device> first_device, second_device;
+    if ((first_device = add_kms_device()))
+    {
+        enable_gbm_on_kms_device(*first_device);
+    }
+    else
+    {
+        GTEST_SKIP() << "gbm-kms platform not built";
+    }
+    second_device = add_kms_device();
+    enable_gbm_on_kms_device(*second_device);
+
+    set_display_libs_option("mir:gbm-kms");
+
+    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+
+    EXPECT_THAT(
+        devices,
+        UnorderedElementsAre(
+            Pair(IsPlatformForDevice(first_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms"))),
+            Pair(IsPlatformForDevice(second_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms")))
+        ));
+}
+
+TEST_F(FullProbeStack, doesnt_instantiate_other_platforms_when_manually_selected_platform_doesnt_support_anything)
+{
+    using namespace testing;
+
+    enable_host_wayland();
+    enable_host_x11();
+
+    set_display_libs_option("mir:gbm-kms");
+
+    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+
+    EXPECT_THAT(devices, IsEmpty());
+}
