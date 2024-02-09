@@ -577,7 +577,19 @@ public:
 
     void enable_host_x11()
     {
-        temporary_env.emplace_back("DISPLAY", ":0");
+        using namespace testing;
+
+        temporary_env.emplace_back(std::make_unique<mtf::TemporaryEnvironmentValue>("DISPLAY", ":0"));
+        ON_CALL(x11, XGetXCBConnection(_))
+            .WillByDefault(Return(reinterpret_cast<xcb_connection_t*>(this)));
+        ON_CALL(x11, xcb_intern_atom_reply(_, _, _))
+            .WillByDefault(
+                [](auto, auto, auto)
+                {
+                    auto reply = static_cast<xcb_intern_atom_reply_t*>(malloc(sizeof(xcb_intern_atom_reply_t)));
+                    reply->atom = 0;
+                    return reply;
+                });
     }
 
     void disable_host_x11()
@@ -588,12 +600,12 @@ public:
 
     void add_virtual_option()
     {
-        temporary_env.emplace_back("MIR_SERVER_VIRTUAL_OUTPUT", "1280x1024");
+        temporary_env.emplace_back(std::make_unique<mtf::TemporaryEnvironmentValue>("MIR_SERVER_VIRTUAL_OUTPUT", "1280x1024"));
     }
 
     void enable_host_wayland()
     {
-        temporary_env.emplace_back("MIR_SERVER_WAYLAND_HOST", "WAYLAND-0");
+        temporary_env.push_back(std::make_unique<mtf::TemporaryEnvironmentValue>("MIR_SERVER_WAYLAND_HOST", "WAYLAND-0"));
      }
 
     auto the_options() -> mir::options::Option const&
@@ -632,7 +644,7 @@ private:
     std::shared_ptr<mo::Configuration> options;
     std::shared_ptr<mir::SharedLibraryProberReport> const report;
 
-    std::vector<mtf::TemporaryEnvironmentValue> temporary_env;
+    std::vector<std::unique_ptr<mtf::TemporaryEnvironmentValue>> temporary_env;
     mtf::UdevEnvironment udev_env;
 
     // We unconditionally need an X11 mock as the platform unconditionally calls libX11 functions to probe
