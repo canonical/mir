@@ -862,3 +862,94 @@ TEST_F(FullProbeStack, when_both_wayland_and_x11_are_supported_x11_is_chosen)
     EXPECT_THAT(devices, Not(Contains(Pair(_, ModuleNameMatches(StrEq("mir:wayland"))))));
     EXPECT_THAT(devices, Contains(Pair(_, ModuleNameMatches(StrEq("mir:x11")))));
 }
+
+TEST_F(FullProbeStack, instantiates_all_manually_selected_platforms)
+{
+    using namespace testing;
+
+    enable_host_wayland();
+    enable_host_x11();
+
+    bool expect_kms_device{false};
+    if (auto device = add_kms_device())
+    {
+        enable_gbm_on_kms_device(*device);
+        expect_kms_device = true;
+    }
+
+    if (expect_kms_device)
+    {
+        set_display_libs_option("mir:gbm-kms,mir:x11,mir:wayland");
+    }
+    else
+    {
+        set_display_libs_option("mir:x11,mir:wayland");
+    }
+
+    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+
+    if (expect_kms_device)
+    {
+        EXPECT_THAT(devices,
+            UnorderedElementsAre(
+                Pair(_, ModuleNameMatches(StrEq("mir:wayland"))),
+                Pair(_, ModuleNameMatches(StrEq("mir:x11"))),
+                Pair(_, ModuleNameMatches(StrEq("mir:gbm-kms")))
+            ));
+    }
+    else
+    {
+        EXPECT_THAT(devices,
+            UnorderedElementsAre(
+                Pair(_, ModuleNameMatches(StrEq("mir:wayland"))),
+                Pair(_, ModuleNameMatches(StrEq("mir:x11")))
+            ));
+    }
+}
+
+TEST_F(FullProbeStack, instantiates_all_manually_selected_platforms_and_virtual_if_option_specified)
+{
+    using namespace testing;
+
+    enable_host_wayland();
+    enable_host_x11();
+    add_virtual_option();
+
+    bool expect_kms_device{false};
+    if (auto device = add_kms_device())
+    {
+        enable_gbm_on_kms_device(*device);
+        expect_kms_device = true;
+    }
+
+    if (expect_kms_device)
+    {
+        set_display_libs_option("mir:gbm-kms,mir:x11,mir:wayland");
+    }
+    else
+    {
+        set_display_libs_option("mir:x11,mir:wayland");
+    }
+
+    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+
+    if (expect_kms_device)
+    {
+        EXPECT_THAT(devices,
+            UnorderedElementsAre(
+                Pair(_, ModuleNameMatches(StrEq("mir:wayland"))),
+                Pair(_, ModuleNameMatches(StrEq("mir:x11"))),
+                Pair(_, ModuleNameMatches(StrEq("mir:virtual"))),
+                Pair(_, ModuleNameMatches(StrEq("mir:gbm-kms")))
+            ));
+    }
+    else
+    {
+        EXPECT_THAT(devices,
+            UnorderedElementsAre(
+                Pair(_, ModuleNameMatches(StrEq("mir:wayland"))),
+                Pair(_, ModuleNameMatches(StrEq("mir:virtual"))),
+                Pair(_, ModuleNameMatches(StrEq("mir:x11")))
+            ));
+    }
+}
