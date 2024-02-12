@@ -1,0 +1,12 @@
+settings:
+  jira_project_key: MIRENG
+  status_mapping:
+    opened: Triaged
+    closed: Done
+  components:
+  - Mir
+  labels:
+  - triaged
+  label_mapping:
+    enhancement: Story
+
