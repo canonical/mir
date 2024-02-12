@@ -11,7 +11,7 @@ sphinx-design
 sphinx-notfound-page
 sphinx-reredirects
 sphinx-tabs
-sphinx==7.1.2
+sphinx==7.2.6
 sphinxcontrib-jquery
 sphinxcontrib-mermaid
 sphinxext-opengraph
