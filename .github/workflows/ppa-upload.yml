@@ -46,7 +46,7 @@ jobs:
           python3-launchpadlib
 
     - name: Set up Launchpad credentials
-      uses: DamianReeves/write-file-action@v1.0
+      uses: DamianReeves/write-file-action@v1.3
       with:
         path: ${{ github.workspace }}/../lp_credentials
         contents: ${{ secrets.LAUNCHPAD_CREDENTIALS }}
