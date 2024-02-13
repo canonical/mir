@@ -297,7 +297,7 @@ TEST(ServerPlatformProbe, IgnoresNonPlatformModules)
 class ProbePolicy : public testing::Test
 {
 public:
-    using PlatformHandle = mir::SharedLibrary* const;
+    using PlatformHandle = mir::SharedLibrary*;
 
     auto add_platform() -> PlatformHandle
     {
@@ -326,7 +326,7 @@ public:
         return device;
     }
 
-    void add_probeable_device(PlatformHandle platform, std::unique_ptr<mir::udev::Device> device, mg::probe::Result priority)
+    void add_probeable_device(PlatformHandle const platform, std::unique_ptr<mir::udev::Device> device, mg::probe::Result priority)
     {
         auto& device_list = devices[platform];
         device_list->push_back(mg::SupportedDevice {
