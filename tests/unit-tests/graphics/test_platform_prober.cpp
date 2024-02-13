@@ -36,6 +36,7 @@
 #include "src/include/common/mir/logging/null_shared_library_prober_report.h"
 #include "mir/options/program_option.h"
 #include "mir/udev/wrapper.h"
+#include "mir/test/doubles/null_logger.h"
 
 #include "mir/test/doubles/mock_egl.h"
 #if defined(MIR_BUILD_PLATFORM_GBM_KMS)
@@ -610,7 +611,11 @@ public:
          * happens at options->the_options() time and we want to make sure we capture
          * *all* the settings that have been set.
          */
-        options = std::make_shared<mo::DefaultConfiguration>(1, &argv0);
+        auto opts = std::make_shared<mo::DefaultConfiguration>(1, &argv0);
+        opts->add_options()
+            ((mtd::logging_opt), boost::program_options::value<std::string>()->default_value(""), mtd::logging_descr);
+
+        options = std::move(opts);
         return *(options->the_options());
     }
 
