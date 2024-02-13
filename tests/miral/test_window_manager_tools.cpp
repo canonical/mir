@@ -149,6 +149,43 @@ struct StubSurface : mir::test::doubles::StubSurface
     MirFocusMode focus_mode_;
 };
 
+struct StubStubSession : mir::test::doubles::StubSession
+{
+    auto create_surface(
+        std::shared_ptr<mir::scene::Session> const& /*session*/,
+        mir::wayland::Weak<mir::frontend::WlSurface> const& /*wayland_surface*/,
+        mir::shell::SurfaceSpecification const& params,
+        std::shared_ptr<mir::scene::SurfaceObserver> const& /*observer*/,
+        mir::Executor*) -> std::shared_ptr<mir::scene::Surface> override
+    {
+        auto id = mir::frontend::SurfaceId{next_surface_id.fetch_add(1)};
+        auto surface = std::make_shared<StubSurface>(
+            params.name.is_set() ? params.name.value() : "",
+            params.type.is_set() ?
+                params.type.value()
+                : mir_window_type_normal,
+            params.top_left.is_set() ?
+                params.top_left.value()
+                : mir::geometry::Point{},
+            mir::geometry::Size{
+                params.width.is_set() ? params.width.value() : mir::geometry::Width{100},
+                params.height.is_set() ? params.height.value() : mir::geometry::Height{100},
+            },
+            params.depth_layer.is_set() ?
+                params.depth_layer.value()
+                : mir_depth_layer_application,
+            params.focus_mode.is_set() ?
+                params.focus_mode.value()
+                : mir_focus_mode_focusable);
+        surfaces[id] = surface;
+        return surface;
+    }
+
+private:
+    std::atomic<int> next_surface_id;
+    std::map<mir::frontend::SurfaceId, std::shared_ptr<mir::scene::Surface>> surfaces;
+};
+
 struct MockWindowManagerPolicy : miral::CanonicalWindowManagerPolicy
 {
     using miral::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy;
@@ -333,14 +370,7 @@ void mt::TestWindowManagerTools::notify_configuration_applied(
 }
 
 auto mt::TestWindowManagerTools::create_and_select_window(
-    mir::shell::SurfaceSpecification& creation_parameters) -> miral::Window
-{
-    return create_and_select_window_for_session(creation_parameters, std::make_shared<StubStubSession>());
-}
-
-auto mt::TestWindowManagerTools::create_and_select_window_for_session(
-    mir::shell::SurfaceSpecification& creation_parameters,
-    std::shared_ptr<scene::Session> session_to_add) -> miral::Window
+    mir::shell::SurfaceSpecification creation_parameters) -> miral::Window
 {
     miral::Window result;
 
@@ -350,6 +380,7 @@ auto mt::TestWindowManagerTools::create_and_select_window_for_session(
                 [&result](miral::WindowInfo const& window_info)
                 { result = window_info.window(); }));
 
+    auto session_to_add = std::make_shared<StubStubSession>();
     basic_window_manager.add_session(session_to_add);
     basic_window_manager.add_surface(session_to_add, creation_parameters, &create_surface);
     basic_window_manager.select_active_window(result);
@@ -358,34 +389,4 @@ auto mt::TestWindowManagerTools::create_and_select_window_for_session(
     testing::Mock::VerifyAndClearExpectations(window_manager_policy);
 
     return result;
-}
-
-auto mt::StubStubSession::create_surface(
-    std::shared_ptr<mir::scene::Session> const& /*session*/,
-    mir::wayland::Weak<mir::frontend::WlSurface> const& /*wayland_surface*/,
-    mir::shell::SurfaceSpecification const& params,
-    std::shared_ptr<mir::scene::SurfaceObserver> const& /*observer*/,
-    mir::Executor*) -> std::shared_ptr<mir::scene::Surface>
-{
-    auto id = mir::frontend::SurfaceId{next_surface_id.fetch_add(1)};
-    auto surface = std::make_shared<StubSurface>(
-        params.name.is_set() ? params.name.value() : "",
-        params.type.is_set() ?
-        params.type.value()
-                             : mir_window_type_normal,
-        params.top_left.is_set() ?
-        params.top_left.value()
-                                 : mir::geometry::Point{},
-        mir::geometry::Size{
-            params.width.is_set() ? params.width.value() : mir::geometry::Width{100},
-            params.height.is_set() ? params.height.value() : mir::geometry::Height{100},
-        },
-        params.depth_layer.is_set() ?
-        params.depth_layer.value()
-                                    : mir_depth_layer_application,
-        params.focus_mode.is_set() ?
-        params.focus_mode.value()
-                                   : mir_focus_mode_focusable);
-    surfaces[id] = surface;
-    return surface;
 }

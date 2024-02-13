@@ -173,7 +173,6 @@ public:
     void focus_prev_within_application() override;
 
     auto window_to_select_application(const Application) const -> std::optional<Window> override;
-    auto can_select_window(Window const&) const -> bool override;
 
     auto window_at(mir::geometry::Point cursor) const -> Window override;
 
