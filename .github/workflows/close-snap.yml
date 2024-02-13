@@ -12,7 +12,7 @@ jobs:
 
     steps:
     - name: Install Snapcraft
-      uses: samuelmeuli/action-snapcraft@v1
+      uses: samuelmeuli/action-snapcraft@v2
 
     # Could use canonical/actions/close-snap, but that would be quite verbose
     - name: Close obsolete channels
