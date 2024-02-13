@@ -21,6 +21,11 @@
 #include "mir/shared_library_prober.h"
 #include "mir/shared_library_prober_report.h"
 #include "mir/udev/wrapper.h"
+
+#ifndef __clang__
+#include "mir/fatal.h"
+#endif
+
 #include "platform_probe.h"
 
 #include <algorithm>
@@ -234,6 +239,23 @@ auto mg::modules_for_device(
 
     switch(nested_selection)
     {
+#ifndef __clang__
+    /* We handle both enum variants below.
+     * GCC does not use this particular UB to provide a better diagnostic,
+     * so we need to provide a default case.
+     *
+     * As normal, leave it guarded by !Clang, so our clang builds will
+     * error out at compile-time if we add a new enum variant.
+     */
+    default:
+        mir::fatal_error("Impossible TypePreference");
+        // We can't get here, either, but sadly we can't mark mir::fatal_error as [[noreturn]]
+        // to get the compiler to enforce that 🤦‍♀️
+        std::terminate();
+    /* We need the default case to be *above* the following cases, or GCC will warn
+     * that we're jumping over the initialiser of nested_vec below
+     */
+#endif
     case TypePreference::prefer_nested:
         if (best_nested && best_nested->first.support_level >= mg::probe::supported)
         {
