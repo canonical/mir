@@ -84,6 +84,7 @@ class WlShm;
 class WlSubcompositor;
 class WlSurface;
 class DesktopFileManager;
+class SessionLocker;
 
 class WaylandExtensions
 {
@@ -108,6 +109,7 @@ public:
         std::shared_ptr<compositor::ScreenShooter> screen_shooter;
         std::shared_ptr<MainLoop> main_loop;
         std::shared_ptr<DesktopFileManager> desktop_file_manager;
+        std::shared_ptr<SessionLocker> session_locker;
     };
 
     WaylandExtensions() = default;
@@ -158,7 +160,8 @@ public:
         bool arw_socket,
         std::unique_ptr<WaylandExtensions> extensions,
         WaylandProtocolExtensionFilter const& extension_filter,
-        bool enable_key_repeat);
+        bool enable_key_repeat,
+        std::shared_ptr<SessionLocker> const& session_locker);
 
     ~WaylandConnector() override;
 
@@ -208,6 +211,7 @@ private:
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<shell::Shell> const shell;
     std::unique_ptr<WaylandExtensions> const extensions;
+    std::shared_ptr<mir::frontend::SessionLocker> session_locker_;
     std::thread dispatch_thread;
     wl_event_source* pause_source;
     std::string wayland_display;

@@ -239,14 +239,16 @@ mf::WaylandConnector::WaylandConnector(
     bool arw_socket,
     std::unique_ptr<WaylandExtensions> extensions_,
     WaylandProtocolExtensionFilter const& extension_filter,
-    bool enable_key_repeat)
+    bool enable_key_repeat,
+    std::shared_ptr<SessionLocker> const& session_locker)
     : extension_filter{extension_filter},
       display{wl_display_create(), &cleanup_display},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
       executor{std::make_shared<WaylandExecutor>(wl_display_get_event_loop(display.get()))},
       allocator{allocator_for_display(allocator, display.get(), executor)},
       shell{shell},
-      extensions{std::move(extensions_)}
+      extensions{std::move(extensions_)},
+      session_locker_{session_locker}
 {
     if (pause_signal == mir::Fd::invalid)
     {
@@ -323,7 +325,8 @@ mf::WaylandConnector::WaylandConnector(
         allocator,
         screen_shooter,
         main_loop,
-        desktop_file_manager});
+        desktop_file_manager,
+        session_locker_});
 
     shm_global = std::make_unique<WlShm>(display.get(), executor);
 

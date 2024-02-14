@@ -49,6 +49,9 @@ public:
     std::future<std::unique_ptr<Device>> acquire_device(
         int major, int minor,
         std::unique_ptr<Device::Observer>) override;
+    void register_lock_handler(
+        std::function<void()> const& lock,
+        std::function<void()> const& unlock) override;
 };
 }  // namespace mir
 

@@ -111,3 +111,9 @@ std::unique_ptr<mir::VTSwitcher> mir::test::doubles::StubConsoleServices::create
     BOOST_THROW_EXCEPTION((
         std::runtime_error{"StubConsoleServices does not support VT switching"}));
 }
+
+
+void mir::test::doubles::StubConsoleServices::register_lock_handler(
+    std::function<void()> const&, std::function<void()> const&)
+{
+}

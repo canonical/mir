@@ -21,6 +21,7 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/test_surface_state_tracker.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_basic_text_input_hub.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_basic_idle_hub.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_session_locker.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

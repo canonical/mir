@@ -37,6 +37,7 @@
 #include "basic_clipboard.h"
 #include "basic_text_input_hub.h"
 #include "basic_idle_hub.h"
+#include "session_locker.h"
 #include "mir/options/default_configuration.h"
 #include "mir/frontend/display_changer.h"
 
@@ -262,4 +263,15 @@ std::shared_ptr<msh::DisplayConfigurationController>
 mir::DefaultServerConfiguration::the_display_configuration_controller()
 {
     return the_mediating_display_changer();
+}
+
+std::shared_ptr<mf::SessionLocker>
+mir::DefaultServerConfiguration::the_session_locker()
+{
+    return session_locker(
+        [this]()
+        {
+            return std::make_shared<ms::SessionLocker>(
+                the_frontend_surface_stack());
+        });
 }

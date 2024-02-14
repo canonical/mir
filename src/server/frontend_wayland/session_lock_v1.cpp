@@ -24,7 +24,7 @@
 #include "mir/fatal.h"
 #include "mir/wayland/client.h"
 #include "mir/wayland/protocol_error.h"
-#include "mir/frontend/surface_stack.h"
+#include "mir/frontend/session_locker.h"
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
@@ -35,8 +35,6 @@ namespace mir
 {
 namespace frontend
 {
-struct ScreenLockHandle;
-
 class SessionLockManagerV1::Instance : wayland::SessionLockManagerV1
 {
 public:
@@ -62,7 +60,6 @@ private:
     void get_lock_surface(wl_resource* id, wl_resource* surface, wl_resource* output) override;
 
     mf::SessionLockManagerV1& manager;
-    std::unique_ptr<frontend::ScreenLockHandle> const lock_handle;
 };
 
 class SessionLockSurfaceV1 : wayland::SessionLockSurfaceV1, public WindowWlSurfaceRole
@@ -101,13 +98,13 @@ mf::SessionLockManagerV1::SessionLockManagerV1(
     struct wl_display* display,
     Executor& wayland_executor,
     std::shared_ptr<msh::Shell> shell,
-    std::shared_ptr<mf::SurfaceStack> surface_stack,
+    std::shared_ptr<mf::SessionLocker> session_locker,
     WlSeat& seat,
     OutputManager* output_manager)
     : Global(display, Version<1>()),
       wayland_executor{wayland_executor},
       shell{std::move(shell)},
-      surface_stack{std::move(surface_stack)},
+      session_locker{std::move(session_locker)},
       seat{seat},
       output_manager{output_manager}
 {
@@ -129,9 +126,9 @@ void mf::SessionLockManagerV1::Instance::lock(wl_resource* lock)
 
 mf::SessionLockV1::SessionLockV1(wl_resource* new_resource, mf::SessionLockManagerV1& manager)
     : mw::SessionLockV1(new_resource, Version<1>()),
-      manager{manager},
-      lock_handle{manager.surface_stack->lock_screen()}
+      manager{manager}
 {
+    manager.session_locker->request_lock();
     send_locked_event();
 }
 
@@ -143,7 +140,7 @@ mf::SessionLockV1::~SessionLockV1()
     }
     else
     {
-        lock_handle->allow_to_be_dropped();
+        manager.session_locker->request_unlock();
     }
 }
 

@@ -32,6 +32,7 @@ ADD_LIBRARY(
   basic_text_input_hub.cpp
   basic_idle_hub.cpp
   ${CMAKE_SOURCE_DIR}/src/include/server/mir/scene/surface_observer.h
+  session_locker.cpp
 )
 
 target_link_libraries(mirscene

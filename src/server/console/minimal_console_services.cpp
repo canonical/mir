@@ -150,3 +150,10 @@ std::future<std::unique_ptr<mir::Device>> mir::MinimalConsoleServices::acquire_d
 
     return device_promise.get_future();
 }
+
+void mir::MinimalConsoleServices::register_lock_handler(
+    std::function<void()> const&,
+    std::function<void()> const&)
+{
+    // do nothing since we do not lock or unlock
+}

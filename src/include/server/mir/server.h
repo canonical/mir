@@ -40,6 +40,7 @@ namespace options { class Option; }
 namespace frontend
 {
 class SessionAuthorizer;
+class SessionLocker;
 }
 namespace shell
 {
@@ -416,6 +417,8 @@ public:
     auto the_seat_observer_registrar() const ->
         std::shared_ptr<ObserverRegistrar<input::SeatObserver>>;
 
+    auto the_session_locker() const ->
+        std::shared_ptr<frontend::SessionLocker>;
 
 /** @} */
 

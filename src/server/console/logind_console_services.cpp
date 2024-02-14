@@ -251,6 +251,8 @@ mir::LogindConsoleServices::LogindConsoleServices(std::shared_ptr<mir::GLibMainL
             session_path.c_str())},
       switch_away{[](){ return true; }},
       switch_to{[](){ return true; }},
+      lock{[]() {}},
+      unlock{[]() {}},
       active{strncmp("active", logind_session_get_state(session_proxy.get()), strlen("active")) == 0}
 {
     GErrorPtr error;
@@ -299,6 +301,17 @@ mir::LogindConsoleServices::LogindConsoleServices(std::shared_ptr<mir::GLibMainL
         this,
         nullptr);
 #endif
+
+    g_signal_connect(
+        G_OBJECT(session_proxy.get()),
+        "lock",
+        G_CALLBACK(&LogindConsoleServices::on_lock),
+        this);
+    g_signal_connect(
+        G_OBJECT(session_proxy.get()),
+        "unlock",
+        G_CALLBACK(&LogindConsoleServices::on_unlock),
+        this);
 }
 
 void mir::LogindConsoleServices::register_switch_handlers(
@@ -615,6 +628,14 @@ std::future<std::unique_ptr<mir::Device>> mir::LogindConsoleServices::acquire_de
     return future;
 }
 
+void mir::LogindConsoleServices::register_lock_handler(
+    std::function<void()> const& lock_,
+    std::function<void()> const& unlock_)
+{
+    lock = lock_;
+    unlock = unlock_;
+}
+
 void mir::LogindConsoleServices::on_state_change(
     GObject* session_proxy,
     GParamSpec*,
@@ -815,6 +836,22 @@ GDBusMessage* mir::LogindConsoleServices::resume_device_dbus_filter(
     return nullptr;
 }
 #endif
+
+void mir::LogindConsoleServices::on_lock(
+    GObject*,
+    gpointer ctx) noexcept
+{
+    auto me = static_cast<LogindConsoleServices*>(ctx);
+    me->lock();
+}
+
+void mir::LogindConsoleServices::on_unlock(
+    GObject*,
+    gpointer ctx) noexcept
+{
+    auto me = static_cast<LogindConsoleServices*>(ctx);
+    me->unlock();
+}
 
 namespace
 {
