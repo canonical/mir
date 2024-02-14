@@ -14,7 +14,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/wayland
-  ${CMAKE_CURRENT_BINARY_DIR}
 )
 add_compile_definitions(MIR_SERVER_INPUT_PLATFORM_VERSION="${MIR_SERVER_INPUT_PLATFORM_VERSION}")
 
@@ -63,6 +62,7 @@ add_library(mirserverobjects OBJECT
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/glib_main_loop.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/glib_main_loop_sources.h
 )
+
 target_link_libraries(mirserverobjects
   PUBLIC
     mirplatform

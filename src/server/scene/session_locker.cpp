@@ -34,11 +34,7 @@ void ms::SessionLocker::add_observer(std::shared_ptr<mf::SessionLockObserver> co
 
 void ms::SessionLocker::remove_observer(std::weak_ptr<mf::SessionLockObserver> const& observer)
 {
-    auto it = std::find_if(observers.begin(), observers.end(), [&observer](auto const& existing)
-    {
-        return existing == observer.lock();
-    });
-    observers.erase(it);
+    observers.erase(std::remove(observers.begin(), observers.end(), observer.lock()));
 }
 
 void ms::SessionLocker::request_lock()

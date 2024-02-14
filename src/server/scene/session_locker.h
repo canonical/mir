@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_SCENE_LOGIND_SESSION_HANDLER_H
-#define MIR_SCENE_LOGIND_SESSION_HANDLER_H
+#ifndef MIR_SCENE_SESSION_HANDLER_H
+#define MIR_SCENE_SESSION_HANDLER_H
 
 #include "mir/frontend/session_locker.h"
 #include "mir/console_services.h"
@@ -48,7 +48,6 @@ public:
     void request_unlock() override;
 
 private:
-    std::shared_ptr<mir::ConsoleServices> console_services;
     std::shared_ptr<mf::SurfaceStack> surface_stack;
     std::unique_ptr<mf::ScreenLockHandle> screen_lock_handle;
     std::vector<std::shared_ptr<mf::SessionLockObserver>> observers;
@@ -57,5 +56,4 @@ private:
 }
 }
 
-
-#endif //MIR_SCENE_LOGIND_SESSION_HANDLER_H
+#endif //MIR_SCENE_SESSION_HANDLER_H
