@@ -18,6 +18,7 @@
 #define MIR_APPLICATION_SELECTOR_H
 
 #include <miral/window_manager_tools.h>
+#include <miral/application.h>
 
 namespace miral
 {
@@ -40,8 +41,8 @@ public:
     ApplicationSelector(ApplicationSelector const&);
     auto operator=(ApplicationSelector const&) -> ApplicationSelector&;
 
-    /// Called when a window is created
-    void advise_new_window(WindowInfo const&);
+    /// Called when a new application has been added to the list.
+    void advise_new_app(Application const&);
 
     /// Called when focus is given to a window.
     void advise_focus_gained(WindowInfo const&);
@@ -49,49 +50,49 @@ public:
     /// Called when focus is lost on a window.
     void advise_focus_lost(WindowInfo const&);
 
-    /// Called when a window is deleted
-    void advise_delete_window(WindowInfo const&);
+    /// Called when an application is deleted.
+    void advise_delete_app(Application const&);
 
     /// Raises the next selectable application in the list for focus selection.
-    /// \returns The raised window
-    auto next(bool within_app) -> Window;
+    /// \returns The raised application, or nullptr in the case of a failure
+    auto next() -> Application;
 
     /// Raises the previous selectable application in the list for focus selection.
-    /// \returns The raised window
-    auto prev(bool within_app) -> Window;
+    /// \returns The raised application or nullptr in the case of a failure
+    auto prev() -> Application ;
 
     /// Focuses the currently selected Application.
-    /// \returns The raised window
-    auto complete() -> Window;
+    /// \returns The newly selected application, or nullptr in the case of a failure
+    auto complete() -> Application;
 
     /// Cancel the selector if it has been triggered. This will refocus the original application.
     void cancel();
 
     /// Retrieve whether or not the selector is in progress.
     /// \return true if it is running, otherwise false
-    auto is_active() const -> bool;
+    auto is_active() -> bool;
 
     /// Retrieve the focused application.
     /// \returns The focused application
-    auto get_focused() -> Window;
+    auto get_focused() -> Application;
 
 private:
-    auto advance(bool reverse, bool within_app) -> Window;
-    auto find(Window) -> std::vector<Window>::iterator;
+    using WeakApplication = std::weak_ptr<mir::scene::Session>;
+    auto advance(bool reverse) -> Application;
+    auto find(WeakApplication) -> std::vector<WeakApplication>::iterator;
 
     WindowManagerTools tools;
 
     /// Represents the current order of focus by application. Most recently focused
     /// applications are at the beginning, while least recently focused are at the end.
-    std::vector<Window> focus_list;
+    std::vector<WeakApplication> focus_list;
 
     /// The application that was selected when next was first called
-    std::vector<Window>::iterator originally_selected_it;
+    WeakApplication originally_selected;
 
     /// The application that is currently selected.
-    Window selected;
-
-    bool is_active_ = false;
+    WeakApplication selected;
+    Window active_window;
 };
 
 }

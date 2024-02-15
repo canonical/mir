@@ -71,8 +71,6 @@ private:
 
     virtual auto window_to_select_application(const Application) const -> std::optional<Window> override;
 
-    virtual auto can_select_window(Window const& window) const -> bool  override;
-
     virtual void raise_tree(Window const& root) override;
 
     virtual void swap_tree_order(Window const& first, Window const& second) override;
