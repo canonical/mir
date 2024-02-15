@@ -64,12 +64,6 @@ public:
         }
         return promise.get_future();
     }
-    MOCK_METHOD(
-        void,
-        register_lock_handler,
-        (std::function<void()> const&,
-            std::function<void()> const&),
-        (override));
 };
 
 }

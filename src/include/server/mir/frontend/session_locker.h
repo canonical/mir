@@ -39,6 +39,8 @@ class SessionLocker
 {
 public:
     SessionLocker() = default;
+    SessionLocker (const SessionLocker&) = delete;
+    SessionLocker& operator= (const SessionLocker&) = delete;
     virtual ~SessionLocker() = default;
     virtual void add_observer(std::shared_ptr<SessionLockObserver> const&) = 0;
     virtual void remove_observer(std::weak_ptr<SessionLockObserver> const&) = 0;

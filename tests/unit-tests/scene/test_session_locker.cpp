@@ -40,16 +40,13 @@ class SessionLocker : public Test
 {
 public:
     std::shared_ptr<mtd::MockFrontendSurfaceStack> surface_stack;
-    std::shared_ptr<mtd::MockConsoleServices> console_services;
     std::shared_ptr<ms::SessionLocker> locker;
 
     void SetUp() override
     {
         surface_stack = std::make_shared<mtd::MockFrontendSurfaceStack>();
-        console_services = std::make_shared<mtd::MockConsoleServices>();
 
-        EXPECT_CALL(*console_services, register_lock_handler(_, _)).Times(1);
-        locker = std::make_shared<ms::SessionLocker>(console_services, surface_stack);
+        locker = std::make_shared<ms::SessionLocker>(surface_stack);
 
         ON_CALL(*surface_stack, lock_screen())
             .WillByDefault(Return(ByMove(std::make_unique<StubScreenLockHandle>())));

@@ -40,7 +40,7 @@ namespace scene
 class SessionLocker : public mf::SessionLocker
 {
 public:
-    explicit SessionLocker(std::shared_ptr<mir::ConsoleServices> const&, std::shared_ptr<mf::SurfaceStack> const&);
+    explicit SessionLocker(std::shared_ptr<mf::SurfaceStack> const&);
 
     void add_observer(std::shared_ptr<mf::SessionLockObserver> const&) override;
     void remove_observer(std::weak_ptr<mf::SessionLockObserver> const&) override;

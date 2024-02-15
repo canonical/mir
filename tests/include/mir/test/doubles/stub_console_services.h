@@ -46,10 +46,6 @@ public:
         int major, int minor,
         std::unique_ptr<mir::Device::Observer> observer) override;
 
-    void register_lock_handler(
-        std::function<void()> const&,
-        std::function<void()> const&) override;
-
 private:
     char const* devnode_for_devnum(int major, int minor);
 

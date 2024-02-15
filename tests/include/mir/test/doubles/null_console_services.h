@@ -55,12 +55,6 @@ public:
         observer->activated(mir::Fd{});
         return null_promise.get_future();
     }
-
-    void register_lock_handler(
-        std::function<void()> const&,
-        std::function<void()> const&) override
-    {
-    }
 };
 
 }

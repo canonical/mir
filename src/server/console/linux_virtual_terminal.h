@@ -92,9 +92,6 @@ public:
     std::future<std::unique_ptr<mir::Device>> acquire_device(
         int major, int minor,
         std::unique_ptr<mir::Device::Observer> observer) override;
-    void register_lock_handler(
-        std::function<void()> const& lock,
-        std::function<void()> const& unlock) override;
 
     class Device;
     class DeviceList;

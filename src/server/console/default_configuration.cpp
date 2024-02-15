@@ -106,7 +106,8 @@ std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_conso
                     try
                     {
                         auto const vt_services = std::make_shared<mir::LogindConsoleServices>(
-                            std::dynamic_pointer_cast<mir::GLibMainLoop>(the_main_loop()));
+                            std::dynamic_pointer_cast<mir::GLibMainLoop>(the_main_loop()),
+                            the_session_locker());
                         mir::log_debug("Using logind for session management");
                         return vt_services;
                     }

@@ -23,13 +23,9 @@
 namespace ms = mir::scene;
 
 ms::SessionLocker::SessionLocker(
-    std::shared_ptr<mir::ConsoleServices> const& console_services,
     std::shared_ptr<mf::SurfaceStack> const& surface_stack)
     : surface_stack{surface_stack}
 {
-    console_services->register_lock_handler(
-        [&] { request_lock(); },
-        [&] { request_unlock(); });
 }
 
 void ms::SessionLocker::add_observer(std::shared_ptr<mf::SessionLockObserver> const& observer)

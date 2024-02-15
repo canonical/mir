@@ -28,10 +28,17 @@ namespace mir
 {
 class GLibMainLoop;
 
+namespace frontend
+{
+class SessionLocker;
+}
+
 class LogindConsoleServices : public ConsoleServices
 {
 public:
-    LogindConsoleServices(std::shared_ptr<GLibMainLoop> const& ml);
+    LogindConsoleServices(
+        std::shared_ptr<GLibMainLoop> const& ml,
+        std::shared_ptr<frontend::SessionLocker> const& session_locker);
     ~LogindConsoleServices();
 
     void register_switch_handlers(
@@ -46,10 +53,6 @@ public:
     std::future<std::unique_ptr<mir::Device>> acquire_device(
         int major, int minor,
         std::unique_ptr<Device::Observer> observer) override;
-
-    void register_lock_handler(
-        std::function<void()> const& lock,
-        std::function<void()> const& unlock) override;
 
     class Device;
 private:
@@ -84,14 +87,13 @@ private:
         gpointer ctx) noexcept;
 
     std::shared_ptr<GLibMainLoop> const ml;
+    std::shared_ptr<frontend::SessionLocker> session_locker;
     std::unique_ptr<GDBusConnection, decltype(&g_object_unref)> const connection;
     std::unique_ptr<LogindSeat, decltype(&g_object_unref)> const seat_proxy;
     std::string const session_path;
     std::unique_ptr<LogindSession, decltype(&g_object_unref)> const session_proxy;
     std::function<bool()> switch_away;
     std::function<bool()> switch_to;
-    std::function<void()> lock;
-    std::function<void()> unlock;
     bool active;
     std::unordered_map<dev_t, Device const* const> acquired_devices;
 };

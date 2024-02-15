@@ -34,6 +34,7 @@
 #include "mir/test/auto_unblock_thread.h"
 #include "mir/test/doubles/simple_device_observer.h"
 #include "mir/test/doubles/null_device_observer.h"
+#include "mir/test/doubles/stub_session_locker.h"
 
 #include "src/server/console/logind_console_services.h"
 
@@ -182,7 +183,8 @@ public:
           ml{std::make_shared<mir::GLibMainLoop>(std::make_shared<mir::time::SteadyClock>())},
           ml_thread{
               [this]() { ml->stop(); ml_thread_stopped = true; },
-              [this]() { ml->run(); }}
+              [this]() { ml->run(); }},
+          session_locker{std::make_shared<mtd::StubSessionLocker>()}
     {
         if (!bus_connection)
         {
@@ -995,6 +997,11 @@ public:
     {
         return ml;
     }
+
+    std::shared_ptr<mir::frontend::SessionLocker> the_session_locker()
+    {
+        return session_locker;
+    }
 private:
     DBusDaemon const system_bus;
     DBusDaemon const session_bus;
@@ -1009,6 +1016,7 @@ private:
 
     std::shared_ptr<mir::GLibMainLoop> const ml;
     mt::AutoUnblockThread ml_thread;
+    std::shared_ptr<mir::frontend::SessionLocker> session_locker;
     bool ml_thread_stopped = false;
 };
 
@@ -1020,7 +1028,7 @@ TEST_F(LogindConsoleServices, happy_path_succeeds)
     ensure_mock_logind();
     add_any_active_session();
 
-    mir::LogindConsoleServices test{the_main_loop()};
+    mir::LogindConsoleServices test{the_main_loop(), the_session_locker()};
     stop_mainloop();
 }
 
@@ -1037,7 +1045,7 @@ TEST_F(LogindConsoleServices, construction_fails_if_cannot_claim_control)
         "raise dbus.exceptions.DBusException('Device or resource busy (36)', name='System.Error.EBUSY')");
 
     EXPECT_THROW(
-        mir::LogindConsoleServices test{the_main_loop()};,
+        mir::LogindConsoleServices test(the_main_loop(), the_session_locker()),
         std::runtime_error);
     stop_mainloop();
 }
@@ -1045,7 +1053,7 @@ TEST_F(LogindConsoleServices, construction_fails_if_cannot_claim_control)
 TEST_F(LogindConsoleServices, construction_fails_if_no_logind)
 {
     EXPECT_THROW(
-        mir::LogindConsoleServices test{the_main_loop()},
+        mir::LogindConsoleServices test(the_main_loop(), the_session_locker()),
         std::runtime_error);
     stop_mainloop();
 }
@@ -1057,7 +1065,7 @@ TEST_F(LogindConsoleServices, construction_fails_if_no_active_session)
     add_seat("seat0");
 
     EXPECT_THROW(
-        mir::LogindConsoleServices test{the_main_loop()};,
+        mir::LogindConsoleServices test(the_main_loop(), the_session_locker()),
         std::runtime_error);
     stop_mainloop();
 }
@@ -1077,7 +1085,7 @@ TEST_F(LogindConsoleServices, selects_active_session)
     // DBusMock will set the active session to the last-created one
     add_any_active_session();
 
-    mir::LogindConsoleServices test{the_main_loop()};
+    mir::LogindConsoleServices test{the_main_loop(), the_session_locker()};
     stop_mainloop();
 }
 
@@ -1099,7 +1107,7 @@ TEST_F(LogindConsoleServices, take_device_happy_path_resolves_to_fd)
             fake_device_node.fd());
     }
 
-    mir::LogindConsoleServices services{the_main_loop()};
+    mir::LogindConsoleServices services{the_main_loop(), the_session_locker()};
 
     mir::Fd resolved_fd;
     auto device = services.acquire_device(
@@ -1136,7 +1144,7 @@ TEST_F(LogindConsoleServices, take_device_calls_suspended_callback_when_initiall
         session_path.c_str(),
         "ret = (os.open('/dev/zero', os.O_RDONLY), True)");
 
-    mir::LogindConsoleServices services{the_main_loop()};
+    mir::LogindConsoleServices services{the_main_loop(), the_session_locker()};
 
     bool suspend_called{false};
     auto device = services.acquire_device(
@@ -1164,7 +1172,7 @@ TEST_F(LogindConsoleServices, take_device_resolves_to_exception_on_error)
         session_path.c_str(),
         "raise dbus.exceptions.DBusException('No such file or directory (2)', name='System.Error.ENOENT')");
 
-    mir::LogindConsoleServices services{the_main_loop()};
+    mir::LogindConsoleServices services{the_main_loop(), the_session_locker()};
 
     auto device = services.acquire_device(
         22, 33,
@@ -1192,7 +1200,7 @@ TEST_F(LogindConsoleServices, device_activated_callback_called_on_activate)
         "ret = (os.open('/dev/zero', os.O_RDONLY), True)");
     add_release_device_to_session(session_path.c_str());
 
-    mir::LogindConsoleServices services{the_main_loop()};
+    mir::LogindConsoleServices services{the_main_loop(), the_session_locker()};
 
     DeviceState state;
 
@@ -1246,7 +1254,7 @@ TEST_F(LogindConsoleServices, device_suspended_callback_called_on_suspend)
     add_release_device_to_session(session_path.c_str());
     add_pause_device_complete_to_session(session_path.c_str());
 
-    mir::LogindConsoleServices services{the_main_loop()};
+    mir::LogindConsoleServices services{the_main_loop(), the_session_locker()};
 
     DeviceState state;
     auto suspended = std::make_shared<mt::Signal>();
@@ -1286,7 +1294,7 @@ TEST_F(LogindConsoleServices, acks_device_suspend_signal)
     add_pause_device_complete_to_session(session_path.c_str());
     add_release_device_to_session(session_path.c_str());
 
-    mir::LogindConsoleServices services{the_main_loop()};
+    mir::LogindConsoleServices services{the_main_loop(), the_session_locker()};
 
     auto device = services.acquire_device(
         22, 33,
@@ -1325,7 +1333,7 @@ TEST_F(LogindConsoleServices, handles_ack_device_suspend_failure)
         "raise dbus.exceptions.DBusException('Device or resource busy (36)', name='System.Error.EBUSY')");
     add_release_device_to_session(session_path.c_str());
 
-    mir::LogindConsoleServices services{the_main_loop()};
+    mir::LogindConsoleServices services{the_main_loop(), the_session_locker()};
 
     auto device = services.acquire_device(
         22, 33,
@@ -1357,7 +1365,7 @@ TEST_F(LogindConsoleServices, device_removed_callback_called_on_remove)
         session_path.c_str(),
         "ret = (os.open('/dev/zero', os.O_RDONLY), False)");
 
-    mir::LogindConsoleServices services{the_main_loop()};
+    mir::LogindConsoleServices services{the_main_loop(), the_session_locker()};
 
     DeviceState state;
 
@@ -1393,7 +1401,7 @@ TEST_F(LogindConsoleServices, calls_pause_handler_on_pause)
     auto session_path = add_any_active_session();
 
     testing::NiceMock<mtd::MockEventHandlerRegister> registrar;
-    mir::LogindConsoleServices services{the_main_loop()};
+    mir::LogindConsoleServices services{the_main_loop(), the_session_locker()};
 
     auto paused = std::make_shared<mt::Signal>();
     services.register_switch_handlers(
@@ -1421,7 +1429,7 @@ TEST_F(LogindConsoleServices, calls_resume_handler_on_resume)
     auto session_path = add_any_active_session();
 
     testing::NiceMock<mtd::MockEventHandlerRegister> registrar;
-    mir::LogindConsoleServices services{the_main_loop()};
+    mir::LogindConsoleServices services{the_main_loop(), the_session_locker()};
 
     auto paused = std::make_shared<mt::Signal>();
     auto resumed = std::make_shared<mt::Signal>();
@@ -1455,7 +1463,7 @@ TEST_F(LogindConsoleServices, calls_pause_handler_on_closing_state)
     auto session_path = add_any_active_session();
 
     testing::NiceMock<mtd::MockEventHandlerRegister> registrar;
-    mir::LogindConsoleServices services{the_main_loop()};
+    mir::LogindConsoleServices services{the_main_loop(), the_session_locker()};
 
     auto paused = std::make_shared<mt::Signal>();
     services.register_switch_handlers(
@@ -1483,7 +1491,7 @@ TEST_F(LogindConsoleServices, spurious_online_state_transitions_are_ignored)
     auto session_path = add_any_active_session();
 
     testing::NiceMock<mtd::MockEventHandlerRegister> registrar;
-    mir::LogindConsoleServices services{the_main_loop()};
+    mir::LogindConsoleServices services{the_main_loop(), the_session_locker()};
 
     auto paused = std::make_shared<mt::Signal>();
     services.register_switch_handlers(
@@ -1521,7 +1529,7 @@ TEST_F(LogindConsoleServices, online_to_closing_state_transition_is_ignored)
     auto session_path = add_any_active_session();
 
     mtd::MockEventHandlerRegister registrar;
-    mir::LogindConsoleServices services{the_main_loop()};
+    mir::LogindConsoleServices services{the_main_loop(), the_session_locker()};
 
     auto paused = std::make_shared<mt::Signal>();
     services.register_switch_handlers(
@@ -1560,7 +1568,7 @@ TEST_F(LogindConsoleServices, construction_does_not_require_running_mainloop)
     auto not_running_main_loop =
         std::make_shared<mir::GLibMainLoop>(std::make_shared<mir::time::SteadyClock>());
 
-    mir::LogindConsoleServices services{not_running_main_loop};
+    mir::LogindConsoleServices services{not_running_main_loop, the_session_locker()};
     stop_mainloop();
 }
 
@@ -1573,7 +1581,7 @@ TEST_F(LogindConsoleServices, runs_callbacks_on_provided_main_loop)
         std::make_shared<mir::GLibMainLoop>(std::make_shared<mir::time::SteadyClock>());
 
     // Construct services before the main loop starts…
-    mir::LogindConsoleServices services{main_loop};
+    mir::LogindConsoleServices services{main_loop, the_session_locker()};
 
     std::thread::id main_loop_id;
     mt::AutoUnblockThread main_loop_thread{
@@ -1631,7 +1639,7 @@ TEST_F(LogindConsoleServices, can_acquire_device_without_running_main_loop)
     auto not_running_main_loop =
         std::make_shared<mir::GLibMainLoop>(std::make_shared<mir::time::SteadyClock>());
 
-    mir::LogindConsoleServices services{not_running_main_loop};
+    mir::LogindConsoleServices services{not_running_main_loop, the_session_locker()};
 
 
     bool device_acquired{false};
@@ -1651,7 +1659,7 @@ TEST_F(LogindConsoleServices, creates_vt_switcher_when_vt_switching_possible)
     ensure_mock_logind();
     add_any_active_session();
 
-    mir::LogindConsoleServices console{the_main_loop()};
+    mir::LogindConsoleServices console{the_main_loop(), the_session_locker()};
 
     EXPECT_THAT(console.create_vt_switcher(), NotNull());
 
@@ -1676,7 +1684,7 @@ TEST_F(LogindConsoleServices, vt_switcher_calls_error_handler_on_error)
         "/org/freedesktop/login1/seat/seat0",
         "raise dbus.exceptions.DBusException('No such file or directory (2)', name='System.Error.ENOENT')");
 
-    mir::LogindConsoleServices console{the_main_loop()};
+    mir::LogindConsoleServices console{the_main_loop(), the_session_locker()};
     auto switcher = console.create_vt_switcher();
 
     auto error_received = std::make_shared<mt::Signal>();
@@ -1710,7 +1718,7 @@ TEST_F(LogindConsoleServices, vt_switcher_calls_switch_to_with_correct_argument)
         "/org/freedesktop/login1/seat/seat0",
         "");
 
-    mir::LogindConsoleServices console{the_main_loop()};
+    mir::LogindConsoleServices console{the_main_loop(), the_session_locker()};
     auto switcher = console.create_vt_switcher();
 
     auto switch_to_future = expect_call(
@@ -1748,7 +1756,7 @@ TEST_F(LogindConsoleServices, destroying_device_handle_releases_logind_device)
     add_release_device_to_session(
         session_path.c_str());
 
-    mir::LogindConsoleServices services{the_main_loop()};
+    mir::LogindConsoleServices services{the_main_loop(), the_session_locker()};
 
     int const device_major{42};
     int const device_minor{88};

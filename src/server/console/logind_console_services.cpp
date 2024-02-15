@@ -30,6 +30,7 @@
 #include "mir/fd.h"
 #include "mir/main_loop.h"
 #include "mir/glib_main_loop.h"
+#include "mir/frontend/session_locker.h"
 
 #define MIR_LOG_COMPONTENT "logind"
 #include "mir/log.h"
@@ -238,8 +239,11 @@ connect_to_system_bus(mir::GLibMainLoop& ml)
 }
 }
 
-mir::LogindConsoleServices::LogindConsoleServices(std::shared_ptr<mir::GLibMainLoop> const& ml)
+mir::LogindConsoleServices::LogindConsoleServices(
+    std::shared_ptr<mir::GLibMainLoop> const& ml,
+    std::shared_ptr<frontend::SessionLocker> const& session_locker)
     : ml{ml},
+      session_locker{session_locker},
       connection{connect_to_system_bus(*ml)},
       seat_proxy{
         simple_seat_proxy_on_system_bus(*ml, connection.get(), "/org/freedesktop/login1/seat/seat0")},
@@ -251,8 +255,6 @@ mir::LogindConsoleServices::LogindConsoleServices(std::shared_ptr<mir::GLibMainL
             session_path.c_str())},
       switch_away{[](){ return true; }},
       switch_to{[](){ return true; }},
-      lock{[]() {}},
-      unlock{[]() {}},
       active{strncmp("active", logind_session_get_state(session_proxy.get()), strlen("active")) == 0}
 {
     GErrorPtr error;
@@ -628,14 +630,6 @@ std::future<std::unique_ptr<mir::Device>> mir::LogindConsoleServices::acquire_de
     return future;
 }
 
-void mir::LogindConsoleServices::register_lock_handler(
-    std::function<void()> const& lock_,
-    std::function<void()> const& unlock_)
-{
-    lock = lock_;
-    unlock = unlock_;
-}
-
 void mir::LogindConsoleServices::on_state_change(
     GObject* session_proxy,
     GParamSpec*,
@@ -842,7 +836,7 @@ void mir::LogindConsoleServices::on_lock(
     gpointer ctx) noexcept
 {
     auto me = static_cast<LogindConsoleServices*>(ctx);
-    me->lock();
+    me->session_locker->request_lock();
 }
 
 void mir::LogindConsoleServices::on_unlock(
@@ -850,7 +844,7 @@ void mir::LogindConsoleServices::on_unlock(
     gpointer ctx) noexcept
 {
     auto me = static_cast<LogindConsoleServices*>(ctx);
-    me->unlock();
+    me->session_locker->request_unlock();
 }
 
 namespace

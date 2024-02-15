@@ -152,10 +152,6 @@ public:
         int major, int minor,
         std::unique_ptr<Device::Observer> observer) = 0;
 
-    virtual void register_lock_handler(
-        std::function<void()> const& lock,
-        std::function<void()> const& unlock) = 0;
-
 protected:
     ConsoleServices() = default;
     ConsoleServices(ConsoleServices const&) = delete;

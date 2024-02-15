@@ -153,11 +153,6 @@ public:
         promise.set_value(nullptr);
         return promise.get_future();
     }
-
-    void register_lock_handler(
-        std::function<void()> const&, std::function<void()> const&) override
-    {
-    }
 };
 
 class ServerPlatformProbeMockDRM : public ::testing::Test

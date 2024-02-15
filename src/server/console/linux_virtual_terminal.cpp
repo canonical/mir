@@ -690,13 +690,6 @@ std::future<std::unique_ptr<mir::Device>> mir::LinuxVirtualTerminal::acquire_dev
     return device_promise.get_future();
 }
 
-void
-mir::LinuxVirtualTerminal::register_lock_handler(
-    std::function<void()> const&,
-    std::function<void()> const&)
-{
-}
-
 std::unique_ptr<mir::VTSwitcher> mir::LinuxVirtualTerminal::create_vt_switcher()
 {
     mir::Fd control_fd{fcntl(vt_fd.fd(), F_DUPFD_CLOEXEC, 0)};
