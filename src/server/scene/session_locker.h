@@ -51,6 +51,8 @@ private:
     std::shared_ptr<mf::SurfaceStack> surface_stack;
     std::unique_ptr<mf::ScreenLockHandle> screen_lock_handle;
     std::vector<std::shared_ptr<mf::SessionLockObserver>> observers;
+
+    int lock_count = 0;
 };
 
 }

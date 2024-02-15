@@ -14,6 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define MIR_LOG_COMPONENT "session-lock-v1"
+
 #include "session_lock_v1.h"
 
 #include "wl_surface.h"
@@ -25,6 +27,7 @@
 #include "mir/wayland/client.h"
 #include "mir/wayland/protocol_error.h"
 #include "mir/frontend/session_locker.h"
+#include "mir/log.h"
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
@@ -46,7 +49,6 @@ public:
 
 private:
     void lock(wl_resource* lock) override;
-
     mf::SessionLockManagerV1& manager;
 };
 
@@ -110,6 +112,30 @@ mf::SessionLockManagerV1::SessionLockManagerV1(
 {
 }
 
+bool mf::SessionLockManagerV1::try_lock(SessionLockV1* lock)
+{
+    if (active_lock == nullptr)
+    {
+        active_lock = lock;
+        session_locker->request_lock();
+        return true;
+    }
+
+    return false;
+}
+
+bool mf::SessionLockManagerV1::try_unlock(SessionLockV1* lock)
+{
+    if (active_lock == lock)
+    {
+        active_lock = nullptr;
+        session_locker->request_unlock();
+        return true;
+    }
+
+    return false;
+}
+
 void mf::SessionLockManagerV1::bind(wl_resource* new_resource)
 {
     new Instance{new_resource, *this};
@@ -124,12 +150,14 @@ void mf::SessionLockManagerV1::Instance::lock(wl_resource* lock)
 
 // SessionLockV1
 
-mf::SessionLockV1::SessionLockV1(wl_resource* new_resource, mf::SessionLockManagerV1& manager)
+mf::SessionLockV1::SessionLockV1(wl_resource* new_resource, SessionLockManagerV1& manager)
     : mw::SessionLockV1(new_resource, Version<1>()),
       manager{manager}
 {
-    manager.session_locker->request_lock();
-    send_locked_event();
+    if (manager.try_lock(this))
+        send_locked_event();
+    else
+        send_finished_event();
 }
 
 mf::SessionLockV1::~SessionLockV1()
@@ -140,7 +168,8 @@ mf::SessionLockV1::~SessionLockV1()
     }
     else
     {
-        manager.session_locker->request_unlock();
+        if (manager.try_unlock(this))
+            mir::log_warning("Duplicate SessionLockV1 will not cause unlock");
     }
 }
 
@@ -154,6 +183,7 @@ void mf::SessionLockV1::get_lock_surface(wl_resource* id, wl_resource* surface_r
             std::to_string(wl_resource_get_id(output)) +
             " does not map to a valid Mir output ID"));
     }
+
     new SessionLockSurfaceV1{id, manager, WlSurface::from(surface_resource), output_id.value()};
 }
 

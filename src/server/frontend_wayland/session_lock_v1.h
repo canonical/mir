@@ -31,6 +31,7 @@ namespace frontend
 class WlSeat;
 class OutputManager;
 class SessionLocker;
+class SessionLockV1;
 
 class SessionLockManagerV1 : public wayland::SessionLockManagerV1::Global
 {
@@ -49,9 +50,13 @@ public:
     WlSeat& seat;
     OutputManager* const output_manager;
 
+    bool try_lock(SessionLockV1* lock);
+    bool try_unlock(SessionLockV1* lock);
 private:
     class Instance;
     void bind(wl_resource* new_resource);
+
+    SessionLockV1* active_lock = nullptr;
 };
 
 }

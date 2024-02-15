@@ -17,6 +17,7 @@
 #include "session_locker.h"
 #include "mir/frontend/surface_stack.h"
 #include "mir/console_services.h"
+#include "mir/fatal.h"
 
 #include <algorithm>
 
@@ -42,19 +43,30 @@ void ms::SessionLocker::request_lock()
 {
     if (!surface_stack->screen_is_locked())
     {
+        if (lock_count != 0)
+            mir::fatal_error("Lock count should be zero");
+
+        lock_count++;
         screen_lock_handle = surface_stack->lock_screen();
         for (auto const& observer : observers)
             observer->on_lock();
     }
+    else
+        lock_count++;
 }
 
 void ms::SessionLocker::request_unlock()
 {
     if (surface_stack->screen_is_locked())
     {
-        screen_lock_handle->allow_to_be_dropped();
-        screen_lock_handle = nullptr;
-        for (auto const& observer : observers)
-            observer->on_unlock();
+        lock_count--;
+
+        if (lock_count == 0)
+        {
+            screen_lock_handle->allow_to_be_dropped();
+            screen_lock_handle = nullptr;
+            for (auto const& observer : observers)
+                observer->on_unlock();
+        }
     }
 }
