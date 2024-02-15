@@ -29,7 +29,6 @@
 #include "mir/input/input_dispatcher.h"
 #include "mir/log.h"
 #include "mir/unwind_helpers.h"
-#include "mir/frontend/session_locker.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 
@@ -85,8 +84,7 @@ struct mir::DisplayServer::Private
           display_changer{config.the_display_changer()},
           idle_handler{config.the_idle_handler()},
           stop_callback{config.the_stop_callback()},
-          console_services{config.the_console_services()},
-          session_locker{config.the_session_locker()}
+          console_services{config.the_console_services()}
     {
         display->register_configuration_change_handler(
             *main_loop,
@@ -96,10 +94,6 @@ struct mir::DisplayServer::Private
             *main_loop,
             [this] { return pause(); },
             [this] { return resume(); });
-
-        console_services->register_lock_handler(
-            [this] (){ lock(); },
-            [this] (){ unlock(); });
     }
 
     bool pause()
@@ -191,16 +185,6 @@ struct mir::DisplayServer::Private
         return true;
     }
 
-    void lock()
-    {
-        session_locker->request_lock();
-    }
-
-    void unlock()
-    {
-        session_locker->request_unlock();
-    }
-
     void configure_display()
     {
         std::shared_ptr<graphics::DisplayConfiguration> conf =
@@ -223,7 +207,6 @@ struct mir::DisplayServer::Private
     std::shared_ptr<msh::IdleHandler> const idle_handler;
     std::function<void()> const stop_callback;
     std::shared_ptr<mir::ConsoleServices> const console_services;
-    std::shared_ptr<mf::SessionLocker> const session_locker;
 };
 
 mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
