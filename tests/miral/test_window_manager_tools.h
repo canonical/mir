@@ -18,6 +18,7 @@
 #define MIRAL_TEST_WINDOW_MANAGER_TOOLS_H
 
 #include "basic_window_manager.h"
+#include <mir/test/doubles/stub_session.h>
 
 #include <miral/canonical_window_manager.h>
 #include <miral/window.h>
@@ -93,13 +94,31 @@ public:
         std::shared_ptr<graphics::DisplayConfiguration const> display_config);
 
     /// Creates a new session, adds a surface to the session, and then sets the resulting window as
-    /// the active window.z
+    /// the active window.
     /// \param creation_parameters
     /// \returns The active window
-    auto create_and_select_window(mir::shell::SurfaceSpecification creation_parameters) -> miral::Window;
+    auto create_and_select_window(mir::shell::SurfaceSpecification& creation_parameters) -> miral::Window;
+
+    /// Creates a new session, adds the provided surface to the session, and then sets the resulting window as
+    /// the active window.
+    auto create_and_select_window_for_session(mir::shell::SurfaceSpecification&, std::shared_ptr<scene::Session>) -> miral::Window;
 };
 
+struct StubStubSession : mir::test::doubles::StubSession
+{
+    auto create_surface(
+        std::shared_ptr<mir::scene::Session> const & /*session*/,
+        mir::wayland::Weak<mir::frontend::WlSurface> const & /*wayland_surface*/,
+        mir::shell::SurfaceSpecification const &params,
+        std::shared_ptr<mir::scene::SurfaceObserver> const & /*observer*/,
+        mir::Executor *) -> std::shared_ptr<mir::scene::Surface> override;
+
+private:
+    std::atomic<int> next_surface_id;
+    std::map<mir::frontend::SurfaceId, std::shared_ptr<mir::scene::Surface>> surfaces;
+};
 }
+
 }
 
 #endif //MIRAL_TEST_WINDOW_MANAGER_TOOLS_H

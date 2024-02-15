@@ -164,11 +164,11 @@ bool miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const* 
             return true;
 
         case KEY_TAB:
-            self->application_selector.next();
+            self->application_selector.next(false);
             return true;
 
         case KEY_GRAVE:
-            tools.focus_next_within_application();
+            self->application_selector.next(true);
             return true;
 
         default:;
@@ -181,11 +181,11 @@ bool miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const* 
         switch (mir_keyboard_event_scan_code(event))
         {
         case KEY_TAB:
-            self->application_selector.prev();
+            self->application_selector.prev(false);
             return true;
 
         case KEY_GRAVE:
-            tools.focus_prev_within_application();
+            self->application_selector.prev(true);
             return true;
 
         default:;
@@ -275,9 +275,9 @@ auto miral::MinimalWindowManager::confirm_inherited_move(WindowInfo const& windo
     return {window_info.window().top_left()+movement, window_info.window().size()};
 }
 
-void miral::MinimalWindowManager::advise_new_app(miral::ApplicationInfo& app_info)
+void miral::MinimalWindowManager::advise_new_window(miral::WindowInfo const& window_info)
 {
-    self->application_selector.advise_new_app(app_info.application());
+    self->application_selector.advise_new_window(window_info);
 }
 
 void miral::MinimalWindowManager::advise_focus_gained(WindowInfo const& window_info)
@@ -286,14 +286,17 @@ void miral::MinimalWindowManager::advise_focus_gained(WindowInfo const& window_i
     self->application_selector.advise_focus_gained(window_info);
 }
 
+void miral::MinimalWindowManager::advise_new_app(miral::ApplicationInfo&){}
+void miral::MinimalWindowManager::advise_delete_app(miral::ApplicationInfo const&){}
+
 void  miral::MinimalWindowManager::advise_focus_lost(const miral::WindowInfo &window_info)
 {
     self->application_selector.advise_focus_lost(window_info);
 }
 
-void miral::MinimalWindowManager::advise_delete_app(miral::ApplicationInfo const &app_info)
+void miral::MinimalWindowManager::advise_delete_window(miral::WindowInfo const& window_info)
 {
-    self->application_selector.advise_delete_app(app_info.application());
+    self->application_selector.advise_delete_window(window_info);
 }
 
 bool miral::MinimalWindowManager::Impl::prepare_for_gesture(

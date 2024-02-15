@@ -585,6 +585,15 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
+auto miral::WindowManagementTrace::can_select_window(miral::Window const& window) const -> bool
+try {
+    log_input();
+    mir::log_info("%s app=%s", __func__, dump_of(window).c_str());
+    trace_count++;
+    return wrapped.can_select_window(window);
+}
+MIRAL_TRACE_EXCEPTION
+
 void miral::WindowManagementTrace::raise_tree(miral::Window const& root)
 try {
     log_input();
