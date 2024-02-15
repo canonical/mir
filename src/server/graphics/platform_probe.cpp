@@ -469,12 +469,10 @@ auto mg::select_display_modules(
                 MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
             return strcmp("mir:virtual", describe()->name) == 0;
         });
-    auto virtual_platform = std::move(*virtual_platform_pos);
-    platforms.erase(virtual_platform_pos);
+    auto virtual_platform = *virtual_platform_pos;
 
     if (options.is_set(options::platform_display_libs))
     {
-
         auto const manually_selected_platforms =
             select_platforms_from_list(options.get<std::string>(options::platform_display_libs), platforms);
 
@@ -493,7 +491,14 @@ auto mg::select_display_modules(
                 if (device.support_level >= mg::probe::supported)
                 {
                     found_supported_device = true;
-                    platform_modules.emplace_back(std::move(device), platform);
+                    /* We want to check that, if the virtual platform is manually specified, that
+                     * it's actually going to be used and warn otherwise, but we're going to
+                     * explicitly probe it later regardless, so we don't want to add it twice.
+                     */
+                    if (platform != virtual_platform)
+                    {
+                        platform_modules.emplace_back(std::move(device), platform);
+                    }
                 }
             }
 
@@ -517,6 +522,9 @@ auto mg::select_display_modules(
     }
     else
     {
+        // We don't need to probe the virtual platform; that is done separately below.
+        platforms.erase(virtual_platform_pos);
+
         platform_modules = display_modules_for_device(platforms, dynamic_cast<mir::options::ProgramOption const&>(options), console);
     }
 

@@ -1003,3 +1003,33 @@ TEST_F(FullProbeStack, doesnt_instantiate_other_platforms_when_manually_selected
 
     EXPECT_THAT(devices, IsEmpty());
 }
+
+TEST_F(FullProbeStack, manually_selecting_only_virtual_platform_with_no_virtual_option_loads_no_platforms)
+{
+    using namespace testing;
+
+    enable_host_wayland();
+    enable_host_x11();
+
+    set_display_libs_option("mir:virtual");
+
+    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+
+    EXPECT_THAT(devices, IsEmpty());
+}
+
+TEST_F(FullProbeStack, manually_selecting_only_virtual_platform_with_required_option_option_loads_virtual_platform)
+{
+    using namespace testing;
+
+    enable_host_wayland();
+    enable_host_x11();
+    add_virtual_option();
+
+    set_display_libs_option("mir:virtual");
+
+    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+
+    ASSERT_THAT(devices.size(), Eq(1));
+    EXPECT_THAT(devices.front(), Pair(_, ModuleNameMatches(StrEq("mir:virtual"))));
+}
