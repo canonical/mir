@@ -517,7 +517,7 @@ public:
             .WillByDefault([this](auto, auto) { return egl_client_extensions.c_str(); });
     }
 
-    auto add_kms_device() -> std::unique_ptr<mir::udev::Device>
+    auto add_kms_device(std::string const& driver_name = "i915") -> std::unique_ptr<mir::udev::Device>
     {
         using namespace std::string_literals;
         using namespace testing;
@@ -525,10 +525,21 @@ public:
         return nullptr;
 #else
 
+        auto parent = udev_env.add_device(
+            "pci",
+            ("/devices/pci0000:00/0000:00:0" + std::to_string(drm_device_count) + ".0").c_str(),
+            nullptr,
+            {
+            },
+            {
+                "DRIVER", driver_name.c_str()
+            });
+        udev_env.set_attribute_link(parent, "driver", ("../" + driver_name).c_str());
+
         auto syspath = udev_env.add_device(
             "drm",
-            ("/devices/pci0000:00/0000:00:0" + std::to_string(drm_device_count) + ".0/drm/card" + std::to_string(drm_device_count)).c_str(),
-            nullptr,
+            ("/drm/card" + std::to_string(drm_device_count)).c_str(),
+            parent.c_str(),
             {
                 "dev", ("226:" + std::to_string(drm_device_count)).c_str()
             },
@@ -1032,4 +1043,57 @@ TEST_F(FullProbeStack, manually_selecting_only_virtual_platform_with_required_op
 
     ASSERT_THAT(devices.size(), Eq(1));
     EXPECT_THAT(devices.front(), Pair(_, ModuleNameMatches(StrEq("mir:virtual"))));
+}
+
+TEST_F(FullProbeStack, gbm_kms_is_not_selected_for_nvidia_driver_by_default)
+{
+    using namespace testing;
+
+    auto nvidia_device = add_kms_device("nvidia");
+    auto nouveau_device = add_kms_device("nouveau");
+    auto amd_device = add_kms_device("amdgpu");
+
+    if (!nvidia_device || !nouveau_device || !amd_device)
+    {
+        GTEST_SKIP() << "gbm-kms platform not built";
+    }
+
+    enable_gbm_on_kms_device(*nvidia_device);
+    enable_gbm_on_kms_device(*nouveau_device);
+    enable_gbm_on_kms_device(*amd_device);
+
+    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+
+    EXPECT_THAT(devices, UnorderedElementsAre(
+        Pair(IsPlatformForDevice(nouveau_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms"))),
+        Pair(IsPlatformForDevice(amd_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms")))
+        ));
+}
+
+TEST_F(FullProbeStack, gbm_kms_is_selected_for_nvidia_driver_when_quirk_is_allowed)
+{
+    using namespace testing;
+
+    auto nvidia_device = add_kms_device("nvidia");
+    auto nouveau_device = add_kms_device("nouveau");
+    auto amd_device = add_kms_device("amdgpu");
+
+    if (!nvidia_device || !nouveau_device || !amd_device)
+    {
+        GTEST_SKIP() << "gbm-kms platform not built";
+    }
+
+    enable_gbm_on_kms_device(*nvidia_device);
+    enable_gbm_on_kms_device(*nouveau_device);
+    enable_gbm_on_kms_device(*amd_device);
+
+    mtf::TemporaryEnvironmentValue skip_nvidia_quirk{"MIR_SERVER_DRIVER_QUIRKS", "allow:driver:nvidia"};
+
+    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+
+    EXPECT_THAT(devices, UnorderedElementsAre(
+        Pair(IsPlatformForDevice(nvidia_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms"))),
+        Pair(IsPlatformForDevice(nouveau_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms"))),
+        Pair(IsPlatformForDevice(amd_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms")))
+        ));
 }
