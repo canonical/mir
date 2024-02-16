@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define MIR_LOG_COMPONENT "session-lock-v1"
 
 #include "session_lock_v1.h"
 

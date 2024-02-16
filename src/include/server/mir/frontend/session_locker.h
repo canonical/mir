@@ -30,6 +30,8 @@ class SessionLockObserver
 public:
     SessionLockObserver() = default;
     virtual ~SessionLockObserver() = default;
+    SessionLockObserver (const SessionLockObserver&) = delete;
+    SessionLockObserver& operator= (const SessionLockObserver&) = delete;
     virtual void on_lock() = 0;
     virtual void on_unlock() = 0;
 };

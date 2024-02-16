@@ -40,8 +40,8 @@ public:
     }
 
 
-    Callback on_lock_;
-    Callback on_unlock_;
+    Callback const on_lock_;
+    Callback const on_unlock_;
 };
 
 miral::SessionLockListener::SessionLockListener(Callback const& on_lock, Callback const& on_unlock)
