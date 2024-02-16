@@ -137,14 +137,22 @@ void mf::WlSubsurface::set_position(int32_t x, int32_t y)
 
 void mf::WlSubsurface::place_above(struct wl_resource* sibling)
 {
-    (void)sibling;
-    log_warning("TODO: wl_subsurface.place_above not implemented");
+    if (parent)
+    {
+        auto const sibling_surface = WlSurface::from(sibling);
+        parent.value().reorder_subsurface(this, sibling_surface, true);
+    }
+    surface->pending_invalidate_surface_data();
 }
 
 void mf::WlSubsurface::place_below(struct wl_resource* sibling)
 {
-    (void)sibling;
-    log_warning("TODO: wl_subsurface.place_below not implemented");
+    if (parent)
+    {
+        auto const sibling_surface = WlSurface::from(sibling);
+        parent.value().reorder_subsurface(this, sibling_surface, false);
+    }
+    surface->pending_invalidate_surface_data();
 }
 
 void mf::WlSubsurface::set_sync()

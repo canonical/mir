@@ -67,6 +67,8 @@ public:
 
     auto subsurface_at(geometry::Point point) -> std::optional<WlSurface*>;
 
+    WlSurface* const surface;
+
 private:
     void set_position(int32_t x, int32_t y) override;
     void place_above(struct wl_resource* sibling) override;
@@ -78,7 +80,6 @@ private:
     virtual void commit(WlSurfaceState const& state) override;
     void surface_destroyed() override;
 
-    WlSurface* const surface;
     /// This class is responsible for removing itself from the parent's children list when needed
     wayland::Weak<WlSurface> const parent;
     bool synchronized_;

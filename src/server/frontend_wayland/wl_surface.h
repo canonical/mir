@@ -130,6 +130,8 @@ public:
     void set_pending_offset(std::optional<geometry::Displacement> const& offset);
     void add_subsurface(WlSubsurface* child);
     void remove_subsurface(WlSubsurface* child);
+    /// Place a subsurface directly above or below the sibling surface
+    void reorder_subsurface(WlSubsurface* child, WlSurface* sibling, bool above);
     void refresh_surface_data_now();
     void pending_invalidate_surface_data() { pending.invalidate_surface_data(); }
     void populate_surface_data(std::vector<shell::StreamSpecification>& buffer_streams,
@@ -150,7 +152,8 @@ private:
 
     NullWlSurfaceRole null_role;
     WlSurfaceRole* role;
-    std::vector<WlSubsurface*> children; // ordering is from bottom to top
+    /// Ordering is from bottom to top. A null value represents the parent (this surface)
+    std::vector<WlSubsurface*> children;
 
     WlSurfaceState pending;
     geometry::Displacement offset_;
