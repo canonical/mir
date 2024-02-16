@@ -18,15 +18,14 @@
 #define MIR_SCENE_SESSION_HANDLER_H
 
 #include "mir/frontend/session_locker.h"
-#include "mir/console_services.h"
 #include <memory>
-#include <vector>
 
 namespace mf = mir::frontend;
 
 namespace mir
 {
 class ConsoleServices;
+class MainLoop;
 
 namespace frontend
 {
@@ -40,19 +39,17 @@ namespace scene
 class SessionLocker : public mf::SessionLocker
 {
 public:
-    explicit SessionLocker(std::shared_ptr<mf::SurfaceStack> const&);
+    explicit SessionLocker(
+        std::shared_ptr<Executor> const&,
+        std::shared_ptr<mf::SurfaceStack> const&);
 
-    void add_observer(std::shared_ptr<mf::SessionLockObserver> const&) override;
-    void remove_observer(std::weak_ptr<mf::SessionLockObserver> const&) override;
-    void request_lock() override;
-    void request_unlock() override;
+    void on_lock() override;
+    void on_unlock() override;
 
 private:
+    std::shared_ptr<Executor> executor;
     std::shared_ptr<mf::SurfaceStack> surface_stack;
     std::unique_ptr<mf::ScreenLockHandle> screen_lock_handle;
-    std::vector<std::shared_ptr<mf::SessionLockObserver>> observers;
-
-    int lock_count = 0;
 };
 
 }

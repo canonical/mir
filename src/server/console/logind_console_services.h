@@ -31,6 +31,7 @@ class GLibMainLoop;
 namespace frontend
 {
 class SessionLocker;
+class SessionLockObserver;
 }
 
 class LogindConsoleServices : public ConsoleServices
@@ -96,6 +97,7 @@ private:
     std::function<bool()> switch_to;
     bool active;
     std::unordered_map<dev_t, Device const* const> acquired_devices;
+    std::shared_ptr<frontend::SessionLockObserver> session_lock_observer;
 };
 }
 

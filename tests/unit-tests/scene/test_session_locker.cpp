@@ -16,12 +16,17 @@
 
 #include "src/server/scene/session_locker.h"
 #include "mir/test/doubles/mock_frontend_surface_stack.h"
-#include "mir/test/doubles/mock_console_services.h"
+#include "mir/time/steady_clock.h"
+#include "mir/glib_main_loop.h"
+#include "mir/test/auto_unblock_thread.h"
+#include "mir/executor.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
+namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 using namespace ::testing;
 
@@ -33,7 +38,16 @@ struct MockSessionLockObserver : public mf::SessionLockObserver
 
 struct StubScreenLockHandle : public mf::ScreenLockHandle
 {
-    void allow_to_be_dropped() {}
+    void allow_to_be_dropped() override {}
+};
+
+class StubExecutor : public mir::Executor
+{
+public:
+    void spawn(std::function<void()>&& work) override
+    {
+        work();
+    }
 };
 
 class SessionLocker : public Test
@@ -42,22 +56,24 @@ public:
     std::shared_ptr<mtd::MockFrontendSurfaceStack> surface_stack;
     std::shared_ptr<ms::SessionLocker> locker;
 
-    void SetUp() override
+    SessionLocker()
+        : surface_stack{std::make_shared<mtd::MockFrontendSurfaceStack>()}
     {
-        surface_stack = std::make_shared<mtd::MockFrontendSurfaceStack>();
-
-        locker = std::make_shared<ms::SessionLocker>(surface_stack);
-
         ON_CALL(*surface_stack, lock_screen())
             .WillByDefault(Return(ByMove(std::make_unique<StubScreenLockHandle>())));
     }
+
+    void SetUp() override
+    {
+        locker = std::make_shared<ms::SessionLocker>(std::make_shared<StubExecutor>(), surface_stack);
+    }
 };
 
-TEST_F(SessionLocker, calling_request_lock_results_in_surface_lock)
+TEST_F(SessionLocker, calling_on_lock_results_in_surface_lock)
 {
     EXPECT_CALL(*surface_stack, screen_is_locked()).Times(1);
     EXPECT_CALL(*surface_stack, lock_screen()).Times(1);
-    locker->request_lock();
+    locker->on_lock();
 }
 
 TEST_F(SessionLocker, observer_is_notified_on_lock)
@@ -66,8 +82,8 @@ TEST_F(SessionLocker, observer_is_notified_on_lock)
     EXPECT_CALL(*surface_stack, lock_screen()).Times(1);
     auto observer = std::make_shared<MockSessionLockObserver>();
     EXPECT_CALL(*observer, on_lock()).Times(1);
-    locker->add_observer(observer);
-    locker->request_lock();
+    locker->register_interest(observer);
+    locker->on_lock();
 }
 
 TEST_F(SessionLocker, observer_is_notified_on_unlock)
@@ -76,9 +92,9 @@ TEST_F(SessionLocker, observer_is_notified_on_unlock)
     EXPECT_CALL(*surface_stack, lock_screen()).Times(1);
     EXPECT_CALL(*surface_stack, screen_is_locked()).Times(2);
     EXPECT_CALL(*observer, on_unlock()).Times(1);
-    locker->request_lock();
-    locker->add_observer(observer);
+    locker->on_lock();
+    locker->register_interest(observer);
     ON_CALL(*surface_stack, screen_is_locked())
         .WillByDefault(Return(true));
-    locker->request_unlock();
+    locker->on_unlock();
 }

@@ -44,8 +44,10 @@ public:
         : raw_error{nullptr}
     {
     }
-    GErrorPtr(GErrorPtr const&) = delete;
-    GErrorPtr& operator=(GErrorPtr const&) = delete;
+
+    GErrorPtr(GErrorPtr const &) = delete;
+
+    GErrorPtr &operator=(GErrorPtr const &) = delete;
 
     ~GErrorPtr()
     {
@@ -53,12 +55,12 @@ public:
             g_error_free(raw_error);
     }
 
-    GError** operator&()
+    GError **operator&()
     {
         return &raw_error;
     }
 
-    GError* operator->()
+    GError *operator->()
     {
         return raw_error;
     }
@@ -69,7 +71,7 @@ public:
     }
 
 private:
-    GError* raw_error;
+    GError *raw_error;
 };
 
 #define MIR_MAKE_EXCEPTION_PTR(x)\
@@ -79,9 +81,9 @@ private:
     ::boost::throw_line((int)__LINE__))
 
 std::unique_ptr<LogindSession, decltype(&g_object_unref)> simple_proxy_on_system_bus(
-    mir::GLibMainLoop& ml,
-    GDBusConnection* connection,
-    char const* object_path)
+    mir::GLibMainLoop &ml,
+    GDBusConnection *connection,
+    char const *object_path)
 {
     // GDBus proxies will use the thread-default main context at creation time.
     return ml.run_with_context_as_thread_default(
@@ -105,9 +107,9 @@ std::unique_ptr<LogindSession, decltype(&g_object_unref)> simple_proxy_on_system
 
                 auto error_msg = error ? error->message : "unknown error";
                 BOOST_THROW_EXCEPTION((
-                    std::runtime_error{
-                        "Failed to connect to DBus interface at "s +
-                        object_path + ": " + error_msg}));
+                                          std::runtime_error{
+                                              "Failed to connect to DBus interface at "s +
+                                              object_path + ": " + error_msg}));
             }
 
             if (error)
@@ -120,9 +122,9 @@ std::unique_ptr<LogindSession, decltype(&g_object_unref)> simple_proxy_on_system
 }
 
 std::unique_ptr<LogindSeat, decltype(&g_object_unref)> simple_seat_proxy_on_system_bus(
-    mir::GLibMainLoop& ml,
-    GDBusConnection* connection,
-    char const* object_path)
+    mir::GLibMainLoop &ml,
+    GDBusConnection *connection,
+    char const *object_path)
 {
     using namespace std::literals::string_literals;
 
@@ -146,9 +148,9 @@ std::unique_ptr<LogindSeat, decltype(&g_object_unref)> simple_seat_proxy_on_syst
                 using namespace std::literals::string_literals;
                 auto error_msg = error ? error->message : "unknown error";
                 BOOST_THROW_EXCEPTION((
-                    std::runtime_error{
-                        "Failed to connect to DBus interface at "s +
-                        object_path + ": " + error_msg}));
+                                          std::runtime_error{
+                                              "Failed to connect to DBus interface at "s +
+                                              object_path + ": " + error_msg}));
             }
 
             if (error)
@@ -160,7 +162,7 @@ std::unique_ptr<LogindSeat, decltype(&g_object_unref)> simple_seat_proxy_on_syst
         }).get();
 }
 
-std::string object_path_for_current_session(LogindSeat* seat_proxy)
+std::string object_path_for_current_session(LogindSeat *seat_proxy)
 {
     auto const session_property = logind_seat_get_active_session(seat_proxy);
 
@@ -190,7 +192,7 @@ std::string object_path_for_current_session(LogindSeat* seat_proxy)
 }
 
 std::unique_ptr<GDBusConnection, decltype(&g_object_unref)>
-connect_to_system_bus(mir::GLibMainLoop& ml)
+connect_to_system_bus(mir::GLibMainLoop &ml)
 {
     using namespace std::literals::string_literals;
     GErrorPtr error;
@@ -206,8 +208,8 @@ connect_to_system_bus(mir::GLibMainLoop& ml)
     {
         auto error_msg = error ? error->message : "unknown error";
         BOOST_THROW_EXCEPTION((
-            std::runtime_error{
-                "Failed to find address of DBus system bus: "s + error_msg}));
+                                  std::runtime_error{
+                                      "Failed to find address of DBus system bus: "s + error_msg}));
     }
 
     return ml.run_with_context_as_thread_default(
@@ -230,13 +232,38 @@ connect_to_system_bus(mir::GLibMainLoop& ml)
             {
                 auto error_msg = error ? error->message : "unknown error";
                 BOOST_THROW_EXCEPTION((
-                    std::runtime_error{
-                        "Failed to connect to DBus system bus: "s + error_msg}));
+                                          std::runtime_error{
+                                              "Failed to connect to DBus system bus: "s + error_msg}));
             }
 
             return bus;
         }).get();
 }
+
+class LogindSessionLockObserver : public mir::frontend::SessionLockObserver
+{
+public:
+    LogindSessionLockObserver(
+        std::function<void()> const& on_lock,
+        std::function<void()> const& on_unlock)
+        : on_lock_{on_lock},
+          on_unlock_{on_unlock}
+    {
+    }
+    void on_lock() override
+    {
+        on_lock_();
+    }
+
+    void on_unlock() override
+    {
+        on_unlock_();
+    }
+
+private:
+    std::function<void()> on_lock_;
+    std::function<void()> on_unlock_;
+};
 }
 
 mir::LogindConsoleServices::LogindConsoleServices(
@@ -255,7 +282,14 @@ mir::LogindConsoleServices::LogindConsoleServices(
             session_path.c_str())},
       switch_away{[](){ return true; }},
       switch_to{[](){ return true; }},
-      active{strncmp("active", logind_session_get_state(session_proxy.get()), strlen("active")) == 0}
+      active{strncmp("active", logind_session_get_state(session_proxy.get()), strlen("active")) == 0},
+      session_lock_observer{std::make_unique<LogindSessionLockObserver>(
+          [this] () {
+              logind_session_set_locked_hint(session_proxy.get(), true);
+          },
+          [this] () {
+              logind_session_set_locked_hint(session_proxy.get(), false);
+          })}
 {
     GErrorPtr error;
 
@@ -314,6 +348,8 @@ mir::LogindConsoleServices::LogindConsoleServices(
         "unlock",
         G_CALLBACK(&LogindConsoleServices::on_unlock),
         this);
+
+    session_locker->register_interest(session_lock_observer);
 }
 
 void mir::LogindConsoleServices::register_switch_handlers(
@@ -836,7 +872,7 @@ void mir::LogindConsoleServices::on_lock(
     gpointer ctx) noexcept
 {
     auto me = static_cast<LogindConsoleServices*>(ctx);
-    me->session_locker->request_lock();
+    me->session_locker->on_lock();
 }
 
 void mir::LogindConsoleServices::on_unlock(
@@ -844,7 +880,7 @@ void mir::LogindConsoleServices::on_unlock(
     gpointer ctx) noexcept
 {
     auto me = static_cast<LogindConsoleServices*>(ctx);
-    me->session_locker->request_unlock();
+    me->session_locker->on_unlock();
 }
 
 namespace

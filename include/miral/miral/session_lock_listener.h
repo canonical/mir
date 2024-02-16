@@ -30,8 +30,8 @@ class SessionLockListener
 public:
     using Callback = std::function<void()>;
 
-    explicit SessionLockListener(Callback const& on_lock, Callback const& on_unlock);
-    ~SessionLockListener();
+    SessionLockListener(Callback const& on_lock, Callback const& on_unlock);
+    ~SessionLockListener() = default;
 
     void operator()(mir::Server& server) const;
 

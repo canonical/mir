@@ -272,6 +272,7 @@ mir::DefaultServerConfiguration::the_session_locker()
         [this]()
         {
             return std::make_shared<ms::SessionLocker>(
+                the_main_loop(),
                 the_frontend_surface_stack());
         });
 }

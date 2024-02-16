@@ -59,9 +59,22 @@ public:
     ~SessionLockV1();
 
 private:
+    class SessionLockV1Observer : public mir::frontend::SessionLockObserver
+    {
+    public:
+        explicit SessionLockV1Observer (mf::SessionLockV1& lock);
+        void on_lock() override;
+        void on_unlock() override;
+
+    private:
+        SessionLockV1& lock;
+    };
+
     void get_lock_surface(wl_resource* id, wl_resource* surface, wl_resource* output) override;
 
     mf::SessionLockManagerV1& manager;
+    std::shared_ptr<SessionLockV1Observer> observer;
+
 };
 
 class SessionLockSurfaceV1 : wayland::SessionLockSurfaceV1, public WindowWlSurfaceRole
@@ -117,7 +130,18 @@ bool mf::SessionLockManagerV1::try_lock(SessionLockV1* lock)
     if (active_lock == nullptr)
     {
         active_lock = lock;
-        session_locker->request_lock();
+        session_locker->on_lock();
+        return true;
+    }
+
+    return false;
+}
+
+bool mf::SessionLockManagerV1::try_relinquish_locking_privilege(mir::frontend::SessionLockV1 *lock)
+{
+    if (active_lock == lock)
+    {
+        active_lock = nullptr;
         return true;
     }
 
@@ -126,10 +150,9 @@ bool mf::SessionLockManagerV1::try_lock(SessionLockV1* lock)
 
 bool mf::SessionLockManagerV1::try_unlock(SessionLockV1* lock)
 {
-    if (active_lock == lock)
+    if (try_relinquish_locking_privilege(lock))
     {
-        active_lock = nullptr;
-        session_locker->request_unlock();
+        session_locker->on_unlock();
         return true;
     }
 
@@ -152,10 +175,14 @@ void mf::SessionLockManagerV1::Instance::lock(wl_resource* lock)
 
 mf::SessionLockV1::SessionLockV1(wl_resource* new_resource, SessionLockManagerV1& manager)
     : mw::SessionLockV1(new_resource, Version<1>()),
-      manager{manager}
+      manager{manager},
+      observer{std::make_shared<SessionLockV1Observer>(*this)}
 {
     if (manager.try_lock(this))
+    {
         send_locked_event();
+        manager.session_locker->register_interest(observer, manager.wayland_executor);
+    }
     else
         send_finished_event();
 }
@@ -164,11 +191,13 @@ mf::SessionLockV1::~SessionLockV1()
 {
     if (client->is_being_destroyed())
     {
-        fatal_error("Screen locker died while screen was locked");
+        mir::log_warning("Screen locker died while screen was locked."
+                         "The compositor may be stuck in a locked state forever.");
+        manager.try_relinquish_locking_privilege(this);
     }
     else
     {
-        if (manager.try_unlock(this))
+        if (!manager.try_unlock(this))
             mir::log_warning("Duplicate SessionLockV1 will not cause unlock");
     }
 }
@@ -185,6 +214,18 @@ void mf::SessionLockV1::get_lock_surface(wl_resource* id, wl_resource* surface_r
     }
 
     new SessionLockSurfaceV1{id, manager, WlSurface::from(surface_resource), output_id.value()};
+}
+
+mf::SessionLockV1::SessionLockV1Observer::SessionLockV1Observer(mf::SessionLockV1& lock)
+    : lock{lock}
+{
+}
+
+void mf::SessionLockV1::SessionLockV1Observer::on_lock() {}
+
+void mf::SessionLockV1::SessionLockV1Observer::on_unlock()
+{
+    lock.send_finished_event();
 }
 
 // SessionLockSurfaceV1

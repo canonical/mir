@@ -51,6 +51,7 @@ public:
     OutputManager* const output_manager;
 
     bool try_lock(SessionLockV1* lock);
+    bool try_relinquish_locking_privilege(SessionLockV1* lock);
     bool try_unlock(SessionLockV1* lock);
 private:
     class Instance;

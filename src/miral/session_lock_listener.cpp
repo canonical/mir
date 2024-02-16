@@ -40,7 +40,6 @@ public:
     }
 
 
-    std::shared_ptr<mir::frontend::SessionLocker> session_locker;
     Callback on_lock_;
     Callback on_unlock_;
 };
@@ -50,20 +49,10 @@ miral::SessionLockListener::SessionLockListener(Callback const& on_lock, Callbac
 {
 }
 
-miral::SessionLockListener::~SessionLockListener()
-{
-    if (self->session_locker != nullptr)
-    {
-        self->session_locker->remove_observer(self);
-        self->session_locker = nullptr;
-    }
-}
-
 void miral::SessionLockListener::operator()(mir::Server& server) const
 {
     server.add_init_callback([&]()
     {
-        self->session_locker = server.the_session_locker();
-        self->session_locker->add_observer(self);
+        server.the_session_locker()->register_interest(self);
     });
 }

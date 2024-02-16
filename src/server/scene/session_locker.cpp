@@ -16,57 +16,36 @@
 
 #include "session_locker.h"
 #include "mir/frontend/surface_stack.h"
-#include "mir/console_services.h"
-#include "mir/fatal.h"
-
-#include <algorithm>
+#include "mir/executor.h"
 
 namespace ms = mir::scene;
+namespace mf = mir::frontend;
 
 ms::SessionLocker::SessionLocker(
+    std::shared_ptr<Executor> const& executor,
     std::shared_ptr<mf::SurfaceStack> const& surface_stack)
-    : surface_stack{surface_stack}
+    : mf::SessionLocker(*executor),
+      executor{executor},
+      surface_stack{surface_stack}
 {
 }
 
-void ms::SessionLocker::add_observer(std::shared_ptr<mf::SessionLockObserver> const& observer)
-{
-    observers.push_back(observer);
-}
-
-void ms::SessionLocker::remove_observer(std::weak_ptr<mf::SessionLockObserver> const& observer)
-{
-    observers.erase(std::remove(observers.begin(), observers.end(), observer.lock()));
-}
-
-void ms::SessionLocker::request_lock()
+void ms::SessionLocker::on_lock()
 {
     if (!surface_stack->screen_is_locked())
     {
-        if (lock_count != 0)
-            mir::fatal_error("Lock count should be zero");
-
-        lock_count++;
         screen_lock_handle = surface_stack->lock_screen();
-        for (auto const& observer : observers)
-            observer->on_lock();
+
+        for_each_observer(&SessionLockObserver::on_lock);
     }
-    else
-        lock_count++;
 }
 
-void ms::SessionLocker::request_unlock()
+void ms::SessionLocker::on_unlock()
 {
     if (surface_stack->screen_is_locked())
     {
-        lock_count--;
-
-        if (lock_count == 0)
-        {
-            screen_lock_handle->allow_to_be_dropped();
-            screen_lock_handle = nullptr;
-            for (auto const& observer : observers)
-                observer->on_unlock();
-        }
+        screen_lock_handle->allow_to_be_dropped();
+        screen_lock_handle = nullptr;
+        for_each_observer(&SessionLockObserver::on_unlock);
     }
 }
