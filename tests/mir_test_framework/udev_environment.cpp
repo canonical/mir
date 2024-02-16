@@ -143,6 +143,11 @@ void mtf::UdevEnvironment::add_from_string(std::string_view device_description)
     }
 }
 
+void mtf::UdevEnvironment::set_attribute_link(std::string const& devname, std::string const& name, std::string const& value)
+{
+    umockdev_testbed_set_attribute_link(testbed, devname.c_str(), name.c_str(), value.c_str());
+}
+
 void mtf::UdevEnvironment::add_standard_device(std::string const& name)
 {
     auto const existing_devices =

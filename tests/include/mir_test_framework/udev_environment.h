@@ -48,6 +48,15 @@ public:
     void add_from_string(std::string_view device_description);
 
     /**
+     * Set a link attribute on a device; this is primarily important for setting "driver" links.
+     *
+     * @param devpath Fully-qualified syspath of device (for example, as returned from add_device)
+     * @param name    Name of the link attribute to set
+     * @param value   Value to set the attribute to. Appropriate fs symlinks will be created
+     */
+    void set_attribute_link(std::string const& devpath, std::string const& name, std::string const& value);
+
+    /**
      * Add a device from the set of standard device traces
      *
      * Looks for a <tt>name</tt>.umockdev file, and adds a UMockDev device
