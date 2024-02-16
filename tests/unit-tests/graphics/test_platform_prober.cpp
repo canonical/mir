@@ -364,7 +364,7 @@ TEST_F(ProbePolicy, when_a_nested_display_platform_and_some_hardware_can_be_driv
     auto nested_platform = add_platform();
 
     // A nested platform is one that returns a single SupportedDevice, with .device == nullptr
-    add_probeable_device(nested_platform, nullptr, mg::probe::hosted);
+    add_probeable_device(nested_platform, nullptr, mg::probe::nested);
 
     // A hardware platform is one that returns one or more SupportedDevices, each with .device != nullptr
     add_probeable_device(hardware_platform, make_dummy_udev_device(), mg::probe::best);
@@ -387,7 +387,7 @@ TEST_F(ProbePolicy, when_a_nested_display_platform_and_all_hardware_can_work_a_n
     auto nested_platform = add_platform();
 
     // A nested platform is one that returns a single SupportedDevice, with .device == nullptr
-    add_probeable_device(nested_platform, nullptr, mg::probe::hosted);
+    add_probeable_device(nested_platform, nullptr, mg::probe::nested);
 
     // A hardware platform is one that returns one or more SupportedDevices, each with .device != nullptr
     add_probeable_device(hardware_platform, make_dummy_udev_device(), mg::probe::best);
@@ -411,7 +411,7 @@ TEST_F(ProbePolicy, when_many_nested_display_platform_and_all_hardware_can_work_
     auto best_nested_platform = add_platform();
 
     // A nested platform is one that returns a single SupportedDevice, with .device == nullptr
-    add_probeable_device(best_nested_platform, nullptr, mg::probe::hosted);
+    add_probeable_device(best_nested_platform, nullptr, mg::probe::nested);
     add_probeable_device(bad_nested_platform, nullptr, mg::probe::supported);
 
     // A hardware platform is one that returns one or more SupportedDevices, each with .device != nullptr
@@ -476,7 +476,7 @@ TEST_F(ProbePolicy, when_hardware_rendering_platform_is_available_nested_platfor
     auto nested_platform = add_platform();
 
     add_probeable_device(hardware_platform, make_dummy_udev_device(), mg::probe::best);
-    add_probeable_device(nested_platform, nullptr, mg::probe::hosted);
+    add_probeable_device(nested_platform, nullptr, mg::probe::nested);
 
     auto [probe_fn, dummy_libraries] = make_probing_function();
 
@@ -494,7 +494,7 @@ TEST_F(ProbePolicy, when_hardware_rendering_platform_is_not_available_nested_pla
     auto nested_platform = add_platform();
 
     add_probeable_device(hardware_platform, make_dummy_udev_device(), mg::probe::unsupported);
-    add_probeable_device(nested_platform, nullptr, mg::probe::hosted);
+    add_probeable_device(nested_platform, nullptr, mg::probe::nested);
 
     auto [probe_fn, dummy_libraries] = make_probing_function();
 

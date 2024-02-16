@@ -65,7 +65,7 @@ auto probe_graphics_platform(
     {
         return mg::SupportedDevice {
             nullptr,
-            mg::probe::hosted,
+            mg::probe::nested,
             nullptr
         };
     }
