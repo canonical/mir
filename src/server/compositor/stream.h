@@ -19,6 +19,7 @@
 
 #include "mir/compositor/buffer_stream.h"
 #include "mir/geometry/size.h"
+#include "mir/synchronised.h"
 #include "multi_monitor_arbiter.h"
 
 #include <atomic>
@@ -49,15 +50,19 @@ public:
     void set_scale(float scale) override;
 
 private:
-    std::mutex mutable mutex;
     std::shared_ptr<MultiMonitorArbiter> const arbiter;
-    geometry::Size latest_buffer_size;
-    float scale_{1.0f};
-    MirPixelFormat pf;
+    struct State
+    {
+        geometry::Size latest_buffer_size;
+        float scale_{1.0f};
+        MirPixelFormat pf;
+    };
+    Synchronised<State> latest_state;
+
     std::atomic<bool> first_frame_posted;
 
-    std::mutex callback_mutex;
-    std::function<void(geometry::Size const&)> frame_callback;
+
+    Synchronised<std::function<void(geometry::Size const&)>> frame_callback;
 };
 }
 }
