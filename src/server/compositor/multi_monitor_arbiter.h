@@ -42,7 +42,6 @@ public:
     std::shared_ptr<graphics::Buffer> compositor_acquire(compositor::CompositorID id) override;
     std::shared_ptr<graphics::Buffer> snapshot_acquire() override;
     bool buffer_ready_for(compositor::CompositorID id);
-    void advance_schedule();
 
 private:
     void add_current_buffer_user(compositor::CompositorID id);

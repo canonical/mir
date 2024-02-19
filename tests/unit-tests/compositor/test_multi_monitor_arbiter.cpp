@@ -553,53 +553,6 @@ TEST_F(MultiMonitorArbiter, will_ensure_smooth_monitor_production)
     EXPECT_THAT(b5, IsSameBufferAs(buffers[2]));
 }
 
-TEST_F(MultiMonitorArbiter, can_advance_buffer_manually)
-{
-    int comp_id1{0};
-    int comp_id2{0};
-    schedule.set_schedule({buffers[0], buffers[1], buffers[2]});
-
-    arbiter.advance_schedule();
-    arbiter.advance_schedule();
-
-    auto b1 = arbiter.compositor_acquire(&comp_id1);
-    auto b2 = arbiter.compositor_acquire(&comp_id2);
-    EXPECT_THAT(b1, IsSameBufferAs(buffers[1]));
-    EXPECT_THAT(b2, IsSameBufferAs(buffers[1]));
-
-    auto b3 = arbiter.compositor_acquire(&comp_id1);
-    EXPECT_THAT(b3, IsSameBufferAs(buffers[2]));
-}
-
-TEST_F(MultiMonitorArbiter, checks_if_buffer_is_valid_after_clean_onscreen_buffer)
-{
-    int comp_id1{0};
-
-    schedule.set_schedule({buffers[0], buffers[1], buffers[2], buffers[3]});
-
-    arbiter.advance_schedule();
-    arbiter.advance_schedule();
-    arbiter.advance_schedule();
-    arbiter.advance_schedule();
-
-    auto b1 = arbiter.compositor_acquire(&comp_id1);
-
-    EXPECT_THAT(b1->id(), Eq(buffers[3]->id()));
-    EXPECT_THAT(b1->size(), Eq(buffers[3]->size()));
-}
-
-TEST_F(MultiMonitorArbiter, releases_buffer_on_destruction)
-{
-    auto buffer_released = std::make_shared<bool>(false);
-    schedule.set_schedule({wrap_with_destruction_notifier(buffers[0], buffer_released)});
-
-    {
-        mc::MultiMonitorArbiter arbiter{mt::fake_shared(schedule)};
-        arbiter.advance_schedule();
-    }
-    EXPECT_TRUE(*buffer_released);
-}
-
 TEST_F(MultiMonitorArbiter, aquires_buffer_after_schedule_runs_out_and_is_refilled)
 {
     schedule.set_schedule({buffers[0]});

@@ -97,16 +97,6 @@ bool mc::MultiMonitorArbiter::buffer_ready_for(mc::CompositorID id)
         return false;
 }
 
-void mc::MultiMonitorArbiter::advance_schedule()
-{
-    std::lock_guard lk(mutex);
-    if (schedule->num_scheduled() > 0)
-    {
-        current_buffer = schedule->next_buffer();
-        clear_current_users();
-    } 
-}
-
 void mc::MultiMonitorArbiter::add_current_buffer_user(mc::CompositorID id)
 {
     // First try and find an empty slot in our vector…
