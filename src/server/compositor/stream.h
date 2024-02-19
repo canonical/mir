@@ -30,7 +30,6 @@ namespace mir
 {
 namespace compositor
 {
-class Schedule;
 class Stream : public BufferStream
 {
 public:
@@ -51,7 +50,6 @@ public:
 
 private:
     std::mutex mutable mutex;
-    std::shared_ptr<Schedule> const schedule;
     std::shared_ptr<MultiMonitorArbiter> const arbiter;
     geometry::Size latest_buffer_size;
     float scale_{1.0f};

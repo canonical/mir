@@ -35,23 +35,23 @@ class Schedule;
 class MultiMonitorArbiter : public BufferAcquisition 
 {
 public:
-    MultiMonitorArbiter(
-        std::shared_ptr<Schedule> const& schedule);
+    MultiMonitorArbiter();
     ~MultiMonitorArbiter();
 
     std::shared_ptr<graphics::Buffer> compositor_acquire(compositor::CompositorID id) override;
     std::shared_ptr<graphics::Buffer> snapshot_acquire() override;
     bool buffer_ready_for(compositor::CompositorID id);
 
+    void submit_buffer(std::shared_ptr<graphics::Buffer> buffer);
+
 private:
     void add_current_buffer_user(compositor::CompositorID id);
     bool is_user_of_current_buffer(compositor::CompositorID id);
     void clear_current_users();
 
-    std::shared_ptr<Schedule> const schedule;
-
     std::mutex mutable mutex;
     std::shared_ptr<graphics::Buffer> current_buffer;
+    std::shared_ptr<graphics::Buffer> next_buffer;
     std::vector<std::optional<compositor::CompositorID>> current_buffer_users;
 };
 

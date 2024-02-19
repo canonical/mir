@@ -15,7 +15,6 @@
  */
 
 #include "stream.h"
-#include "dropping_schedule.h"
 #include "mir/graphics/buffer.h"
 #include <boost/throw_exception.hpp>
 #include <math.h>
@@ -29,8 +28,7 @@ namespace geom = mir::geometry;
 
 mc::Stream::Stream(
     geom::Size size, MirPixelFormat pf) :
-    schedule{std::make_shared<DroppingSchedule>()},
-    arbiter(std::make_shared<mc::MultiMonitorArbiter>(schedule)),
+    arbiter(std::make_shared<mc::MultiMonitorArbiter>()),
     latest_buffer_size(size),
     pf(pf),
     first_frame_posted(false),
@@ -49,7 +47,7 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
         std::lock_guard lk(mutex);
         pf = buffer->pixel_format();
         latest_buffer_size = buffer->size();
-        schedule->schedule(buffer);
+        arbiter->submit_buffer(buffer);
         first_frame_posted = true;
     }
     {
