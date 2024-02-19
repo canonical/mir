@@ -320,6 +320,7 @@ auto split_on(std::string const& tokens, char delimiter) -> std::vector<std::str
     return result;
 }
 
+// Precondition: `modules` contains only graphics platform modules (ie: DSOs with a `describe_graphics_module` symbol)
 auto select_platforms_from_list(std::string const& selection, std::vector<std::shared_ptr<mir::SharedLibrary>> const& modules)
     -> std::vector<std::shared_ptr<mir::SharedLibrary>>
 {
@@ -331,24 +332,17 @@ auto select_platforms_from_list(std::string const& selection, std::vector<std::s
 
     for (auto const& module : modules)
     {
-        try
-        {
-            auto describe_module = module->load_function<mg::DescribeModule>(
-                "describe_graphics_module",
-                MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
-            auto const description = describe_module();
-            found_module_names.emplace_back(description->name);
+        auto describe_module = module->load_function<mg::DescribeModule>(
+            "describe_graphics_module",
+            MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+        auto const description = describe_module();
+        found_module_names.emplace_back(description->name);
 
-            if (auto const i = std::find(requested_modules.begin(), requested_modules.end(), description->name);
-                i != requested_modules.end())
-            {
-                selected_modules.push_back(module);
-                requested_modules.erase(i);
-            }
-        }
-        catch (std::exception const&)
+        if (auto const i = std::find(requested_modules.begin(), requested_modules.end(), description->name);
+            i != requested_modules.end())
         {
-            // Should we log anything here?
+            selected_modules.push_back(module);
+            requested_modules.erase(i);
         }
     }
 
