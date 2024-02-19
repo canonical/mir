@@ -40,7 +40,7 @@ typedef enum MirWindowAttrib
     /* Do not specify values...code relies on 0...N ordering. */
     mir_window_attrib_type,
     mir_window_attrib_state,
-    mir_window_attrib_focus,
+    mir_window_attrib_focus = mir_window_attrib_state+2,
     mir_window_attrib_dpi,
     mir_window_attrib_visibility,
     mir_window_attrib_preferred_orientation,
