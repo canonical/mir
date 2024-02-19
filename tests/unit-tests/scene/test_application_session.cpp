@@ -555,27 +555,6 @@ TEST_F(ApplicationSession, buffer_stream_constructed_with_requested_parameters)
     EXPECT_FALSE(session->has_buffer_stream(buffer_stream));
 }
 
-TEST_F(ApplicationSession, buffer_stream_constructed_with_swapinterval_1)
-{
-    using namespace ::testing;
-    
-    geom::Size const buffer_size{geom::Width{1}, geom::Height{1}};
-
-    mtd::MockBufferStream stream;
-    MockBufferStreamFactory factory;
-
-    mg::BufferProperties properties(buffer_size, mir_pixel_format_argb_8888, mg::BufferUsage::software);
-
-    EXPECT_CALL(stream, allow_framedropping(true))
-        .Times(0); 
-    EXPECT_CALL(factory, create_buffer_stream(properties)).Times(1)
-        .WillOnce(Return(mt::fake_shared(stream)));
-
-    auto session = make_application_session_with_buffer_stream_factory(mt::fake_shared(factory));
-    auto id = session->create_buffer_stream(properties);
-    session->destroy_buffer_stream(id);
-}
-
 MATCHER_P(HasSingleStream, value, "")
 {
     using namespace testing;

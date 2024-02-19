@@ -278,20 +278,6 @@ TEST_F(MultiMonitorArbiter, multimonitor_compositor_buffer_syncs_to_fastest_with
     EXPECT_THAT(cbuffer8, IsSameBufferAs(buffers[4]));
 }
 
-TEST_F(MultiMonitorArbiter, can_set_a_new_schedule)
-{
-    FixedSchedule another_schedule;
-    schedule.set_schedule({buffers[3],buffers[4]});
-    another_schedule.set_schedule({buffers[0],buffers[1]});
-
-    auto cbuffer1 = arbiter.compositor_acquire(this);
-    arbiter.set_schedule(mt::fake_shared(another_schedule));
-    auto cbuffer2 = arbiter.compositor_acquire(this);
-
-    EXPECT_THAT(cbuffer1, IsSameBufferAs(buffers[3]));
-    EXPECT_THAT(cbuffer2, IsSameBufferAs(buffers[0]));
-}
-
 TEST_F(MultiMonitorArbiter, basic_snapshot_equals_compositor_buffer)
 {
     schedule.set_schedule({buffers[3],buffers[4]});

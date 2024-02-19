@@ -19,7 +19,6 @@
 #define MIR_COMPOSITOR_MULTI_MONITOR_ARBITER_H_
 
 #include "mir/compositor/compositor_id.h"
-#include "mir/graphics/buffer_id.h"
 #include "buffer_acquisition.h"
 #include <memory>
 #include <mutex>
@@ -42,7 +41,6 @@ public:
 
     std::shared_ptr<graphics::Buffer> compositor_acquire(compositor::CompositorID id) override;
     std::shared_ptr<graphics::Buffer> snapshot_acquire() override;
-    void set_schedule(std::shared_ptr<Schedule> const& schedule);
     bool buffer_ready_for(compositor::CompositorID id);
     void advance_schedule();
 
@@ -51,10 +49,11 @@ private:
     bool is_user_of_current_buffer(compositor::CompositorID id);
     void clear_current_users();
 
+    std::shared_ptr<Schedule> const schedule;
+
     std::mutex mutable mutex;
     std::shared_ptr<graphics::Buffer> current_buffer;
     std::vector<std::optional<compositor::CompositorID>> current_buffer_users;
-    std::shared_ptr<Schedule> schedule;
 };
 
 }

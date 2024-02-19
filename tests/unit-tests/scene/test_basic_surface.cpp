@@ -1321,24 +1321,6 @@ TEST_F(BasicSurfaceTest, registers_frame_callbacks_on_set_streams)
     surface.set_streams(streams);
 }
 
-TEST_F(BasicSurfaceTest, showing_brings_all_streams_up_to_date)
-{
-    using namespace testing;
-    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, {0,0}, {} },
-        { buffer_stream, {0,0}, {} }
-    };
-    surface.set_streams(streams);
-
-    EXPECT_CALL(*buffer_stream, drop_old_buffers()).Times(Exactly(1));
-    EXPECT_CALL(*mock_buffer_stream, drop_old_buffers()).Times(Exactly(1));
-
-    surface.configure(mir_window_attrib_visibility, mir_window_visibility_occluded);
-    surface.configure(mir_window_attrib_visibility, mir_window_visibility_exposed);
-    surface.configure(mir_window_attrib_visibility, mir_window_visibility_exposed);
-}
-
 //TODO: per-stream alpha and swapinterval seems useful
 TEST_F(BasicSurfaceTest, changing_alpha_effects_all_streams)
 {

@@ -43,9 +43,7 @@ public:
     /// Logical size of the stream (may be different than buffer sizes if scaled)
     virtual auto stream_size() -> geometry::Size = 0;
     virtual auto buffers_ready_for_compositor(void const* user_id) const -> int = 0;
-    virtual void drop_old_buffers() = 0;
     virtual auto has_submitted_buffer() const -> bool = 0;
-    virtual auto framedropping() const -> bool = 0;
 };
 
 }

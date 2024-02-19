@@ -625,12 +625,6 @@ MirWindowVisibility ms::BasicSurface::set_visibility(MirWindowVisibility new_vis
     {
         state->visibility = new_visibility;
 
-        if (new_visibility == mir_window_visibility_exposed)
-        {
-            for (auto& info : state->layers)
-                info.stream->drop_old_buffers();
-        }
-
         state.drop();
 
         observers->attrib_changed(this, mir_window_attrib_visibility, new_visibility);

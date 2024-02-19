@@ -83,12 +83,6 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::snapshot_acquire()
     return current_buffer;
 }
 
-void mc::MultiMonitorArbiter::set_schedule(std::shared_ptr<Schedule> const& new_schedule)
-{
-    std::lock_guard lk(mutex);
-    schedule = new_schedule;
-}
-
 bool mc::MultiMonitorArbiter::buffer_ready_for(mc::CompositorID id)
 {
     std::lock_guard lk(mutex);

@@ -15,7 +15,6 @@
  */
 
 #include "stream.h"
-#include "queueing_schedule.h"
 #include "dropping_schedule.h"
 #include "mir/graphics/buffer.h"
 #include <boost/throw_exception.hpp>
@@ -28,15 +27,9 @@ namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
-enum class mc::Stream::ScheduleMode {
-    Queueing,
-    Dropping
-};
-
 mc::Stream::Stream(
     geom::Size size, MirPixelFormat pf) :
-    schedule_mode(ScheduleMode::Queueing),
-    schedule(std::make_shared<mc::QueueingSchedule>()),
+    schedule{std::make_shared<DroppingSchedule>()},
     arbiter(std::make_shared<mc::MultiMonitorArbiter>(schedule)),
     latest_buffer_size(size),
     pf(pf),
@@ -97,60 +90,12 @@ geom::Size mc::Stream::stream_size()
         roundf(latest_buffer_size.height.as_int() / scale_)};
 }
 
-void mc::Stream::allow_framedropping(bool dropping)
-{
-    std::lock_guard lk(mutex);
-    if (dropping && schedule_mode == ScheduleMode::Queueing)
-    {
-        transition_schedule(std::make_shared<mc::DroppingSchedule>(), lk);
-        schedule_mode = ScheduleMode::Dropping;
-    }
-    else if (!dropping && schedule_mode == ScheduleMode::Dropping)
-    {
-        transition_schedule(std::make_shared<mc::QueueingSchedule>(), lk);
-        schedule_mode = ScheduleMode::Queueing;
-    }
-}
-
-bool mc::Stream::framedropping() const
-{
-    return schedule_mode == ScheduleMode::Dropping;
-}
-
-void mc::Stream::transition_schedule(
-    std::shared_ptr<mc::Schedule>&& new_schedule, std::lock_guard<std::mutex> const&)
-{
-    std::vector<std::shared_ptr<mg::Buffer>> transferred_buffers;
-    while(schedule->num_scheduled())
-        transferred_buffers.emplace_back(schedule->next_buffer());
-    for(auto& buffer : transferred_buffers)
-        new_schedule->schedule(buffer);
-    schedule = new_schedule;
-    arbiter->set_schedule(schedule);
-}
-
 int mc::Stream::buffers_ready_for_compositor(void const* id) const
 {
     std::lock_guard lk(mutex);
     if (arbiter->buffer_ready_for(id))
         return 1;
     return 0;
-}
-
-void mc::Stream::drop_old_buffers()
-{
-    std::lock_guard lk(mutex);
-    std::vector<std::shared_ptr<mg::Buffer>> transferred_buffers;
-    while(schedule->num_scheduled())
-        transferred_buffers.emplace_back(schedule->next_buffer());
-
-    if (!transferred_buffers.empty())
-    {
-        schedule->schedule(transferred_buffers.back());
-        transferred_buffers.pop_back();
-    }
-
-    arbiter->advance_schedule();
 }
 
 bool mc::Stream::has_submitted_buffer() const

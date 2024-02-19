@@ -24,7 +24,6 @@
 #include <atomic>
 #include <mutex>
 #include <memory>
-#include <set>
 #include <atomic>
 
 namespace mir
@@ -46,20 +45,13 @@ public:
     std::shared_ptr<graphics::Buffer>
         lock_compositor_buffer(void const* user_id) override;
     geometry::Size stream_size() override;
-    void allow_framedropping(bool) override;
-    bool framedropping() const override;
     int buffers_ready_for_compositor(void const* user_id) const override;
-    void drop_old_buffers() override;
     bool has_submitted_buffer() const override;
     void set_scale(float scale) override;
 
 private:
-    enum class ScheduleMode;
-    void transition_schedule(std::shared_ptr<Schedule>&& new_schedule, std::lock_guard<std::mutex> const&);
-
     std::mutex mutable mutex;
-    ScheduleMode schedule_mode;
-    std::shared_ptr<Schedule> schedule;
+    std::shared_ptr<Schedule> const schedule;
     std::shared_ptr<MultiMonitorArbiter> const arbiter;
     geometry::Size latest_buffer_size;
     float scale_{1.0f};
