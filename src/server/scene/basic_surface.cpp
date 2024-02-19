@@ -440,28 +440,6 @@ MirWindowState ms::BasicSurface::set_state(MirWindowState s)
     return s;
 }
 
-int ms::BasicSurface::set_swap_interval(int interval)
-{
-    if (interval < 0)
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid swapinterval"));
-    }
-
-    auto state = synchronised_state.lock();
-    if (state->swap_interval != interval)
-    {
-        state->swap_interval = interval;
-        bool allow_dropping = (interval == 0);
-        for (auto& info : state->layers)
-            info.stream->allow_framedropping(allow_dropping);
-
-        state.drop();
-        observers->attrib_changed(this, mir_window_attrib_swapinterval, interval);
-    }
-
-    return interval;
-}
-
 MirOrientationMode ms::BasicSurface::set_preferred_orientation(MirOrientationMode new_orientation_mode)
 {
     if ((new_orientation_mode & mir_orientation_mode_any) == 0)
@@ -495,9 +473,6 @@ int ms::BasicSurface::configure(MirWindowAttrib attrib, int value)
     case mir_window_attrib_focus:
         set_focus_state(static_cast<MirWindowFocusState>(result));
         break;
-    case mir_window_attrib_swapinterval:
-        result = set_swap_interval(result);
-        break;
     case mir_window_attrib_dpi:
         result = set_dpi(result);
         break;
@@ -521,7 +496,6 @@ int ms::BasicSurface::query(MirWindowAttrib attrib) const
     {
         case mir_window_attrib_type: return state->type;
         case mir_window_attrib_state: return state->state.active_state();
-        case mir_window_attrib_swapinterval: return state->swap_interval;
         case mir_window_attrib_focus: return state->focus;
         case mir_window_attrib_dpi: return state->dpi;
         case mir_window_attrib_visibility: return state->visibility;

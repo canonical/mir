@@ -138,7 +138,6 @@ std::ostream& mir::operator<<(std::ostream& out, MirWindowAttrib attribute)
     PRINT(mir_window_attrib,focus);
     PRINT(mir_window_attrib,state);
     PRINT(mir_window_attrib,visibility);
-    PRINT(mir_window_attrib,swapinterval);
     PRINT(mir_window_attrib,preferred_orientation);
     default:
         return out << static_cast<int>(attribute) << "<INVALID>";
@@ -297,9 +296,6 @@ std::ostream& mir::operator<<(std::ostream& out, MirWindowEvent const& event)
         break;
     case mir_window_attrib_state:
         out << static_cast<MirWindowState>(value);
-        break;
-    case mir_window_attrib_swapinterval:
-        out << value;
         break;
     case mir_window_attrib_focus:
         out << static_cast<MirWindowFocusState>(value);
