@@ -50,7 +50,6 @@ struct MockBufferStream : public compositor::BufferStream
             .WillByDefault(testing::Invoke([&](auto const& callback){ frame_posted_callback = callback; }));
     }
     std::shared_ptr<StubBuffer> buffer { std::make_shared<StubBuffer>() };
-
     MOCK_METHOD(std::shared_ptr<graphics::Buffer>, lock_compositor_buffer, (void const*), (override));
     MOCK_METHOD(void, set_frame_posted_callback, (std::function<void(geometry::Size const&)> const&), (override));
 
@@ -60,7 +59,6 @@ struct MockBufferStream : public compositor::BufferStream
     MOCK_METHOD(MirPixelFormat, pixel_format, (), (const override));
     MOCK_METHOD(bool, has_submitted_buffer, (), (const override));
     MOCK_METHOD(void, set_scale, (float), (override));
-
 };
 }
 }
