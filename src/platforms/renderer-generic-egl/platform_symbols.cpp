@@ -65,7 +65,7 @@ auto probe_rendering_platform(
     {
         if (display_provider->acquire_provider<mg::GenericEGLDisplayProvider>())
         {
-            maximum_suitability = mg::probe::hosted;
+            maximum_suitability = mg::probe::nested;
             break;
         }
         if (display_provider->acquire_provider<mg::CPUAddressableDisplayProvider>())
