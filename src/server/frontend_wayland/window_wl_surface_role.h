@@ -24,6 +24,7 @@
 #include "mir/geometry/displacement.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/display_configuration.h"
 
 #include <mir_toolkit/common.h>
 
@@ -96,6 +97,7 @@ public:
     void add_state_now(MirWindowState state);
     void remove_state_now(MirWindowState state);
     void create_scene_surface();
+    void track_overlapping_outputs();
 
     /// Gets called after the surface has committed (so current_size() may return the committed buffer size) but before
     /// the Mir window is modified (so if a pending size is set or a spec is applied those changes will take effect)
@@ -156,6 +158,8 @@ private:
     /// @}
 
     std::unique_ptr<shell::SurfaceSpecification> pending_changes;
+
+    std::vector<mir::graphics::DisplayConfigurationOutput> tracked_outputs;
 
     shell::SurfaceSpecification& spec();
 

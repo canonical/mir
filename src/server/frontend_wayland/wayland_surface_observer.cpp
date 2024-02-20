@@ -60,11 +60,13 @@ void mf::WaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAtt
         break;
 
     case mir_window_attrib_state:
+    case mir_window_attrib_visibility:
         run_on_wayland_thread_unless_window_destroyed(
             [value](Impl* impl, WindowWlSurfaceRole* window)
             {
                 impl->current_state = static_cast<MirWindowState>(value);
                 window->handle_state_change(impl->current_state);
+                window->track_overlapping_outputs();
             });
         break;
 
@@ -81,6 +83,20 @@ void mf::WaylandSurfaceObserver::content_resized_to(ms::Surface const*, geom::Si
             {
                 impl->requested_size = content_size;
                 window->handle_resize(std::nullopt, content_size);
+                window->track_overlapping_outputs();
+            }
+        });
+}
+
+void mf::WaylandSurfaceObserver::moved_to(ms::Surface const*, geom::Point const& top_left)
+{
+    run_on_wayland_thread_unless_window_destroyed(
+        [top_left](Impl* impl, WindowWlSurfaceRole* window)
+        {
+            if (!impl->window_top_left || impl->window_top_left.value() != top_left)
+            {
+                impl->window_top_left = top_left;
+                window->track_overlapping_outputs();
             }
         });
 }
@@ -101,6 +117,7 @@ void mf::WaylandSurfaceObserver::placed_relative(ms::Surface const*, geometry::R
         {
             impl->requested_size = placement.size;
             window->handle_resize(placement.top_left, placement.size);
+            window->track_overlapping_outputs();
         });
 }
 
