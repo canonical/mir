@@ -255,7 +255,6 @@ public:
             update();
             break;
 
-        case mir_window_attrib_swapinterval:
         case mir_window_attrib_dpi:
         case mir_window_attrib_preferred_orientation:
         case mir_window_attribs:

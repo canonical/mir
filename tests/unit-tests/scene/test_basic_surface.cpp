@@ -823,14 +823,6 @@ AttributeTestParameters const surface_state_test_parameters{
     mir_window_state_unknown - 1
 };
 
-AttributeTestParameters const surface_swapinterval_test_parameters{
-    mir_window_attrib_swapinterval,
-    1,
-    0,
-    -1,
-    -1
-};
-
 AttributeTestParameters const surface_dpi_test_parameters{
     mir_window_attrib_dpi,
     0,
@@ -922,9 +914,6 @@ INSTANTIATE_TEST_SUITE_P(SurfaceVisibilityAttributeTest, BasicSurfaceAttributeTe
 
 INSTANTIATE_TEST_SUITE_P(SurfaceStateAttributeTest, BasicSurfaceAttributeTest,
    ::testing::Values(surface_state_test_parameters));
-
-INSTANTIATE_TEST_SUITE_P(SurfaceSwapintervalAttributeTest, BasicSurfaceAttributeTest,
-   ::testing::Values(surface_swapinterval_test_parameters));
 
 INSTANTIATE_TEST_SUITE_P(SurfaceDPIAttributeTest, BasicSurfaceAttributeTest,
    ::testing::Values(surface_dpi_test_parameters));
@@ -1332,24 +1321,6 @@ TEST_F(BasicSurfaceTest, registers_frame_callbacks_on_set_streams)
     surface.set_streams(streams);
 }
 
-TEST_F(BasicSurfaceTest, showing_brings_all_streams_up_to_date)
-{
-    using namespace testing;
-    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, {0,0}, {} },
-        { buffer_stream, {0,0}, {} }
-    };
-    surface.set_streams(streams);
-
-    EXPECT_CALL(*buffer_stream, drop_old_buffers()).Times(Exactly(1));
-    EXPECT_CALL(*mock_buffer_stream, drop_old_buffers()).Times(Exactly(1));
-
-    surface.configure(mir_window_attrib_visibility, mir_window_visibility_occluded);
-    surface.configure(mir_window_attrib_visibility, mir_window_visibility_exposed);
-    surface.configure(mir_window_attrib_visibility, mir_window_visibility_exposed);
-}
-
 //TODO: per-stream alpha and swapinterval seems useful
 TEST_F(BasicSurfaceTest, changing_alpha_effects_all_streams)
 {
@@ -1397,23 +1368,6 @@ TEST_F(BasicSurfaceTest, setting_streams_with_size_changes_sizes)
     ASSERT_THAT(renderables.size(), Eq(2));
     EXPECT_THAT(renderables[0], IsRenderableOfSize(size0));
     EXPECT_THAT(renderables[1], IsRenderableOfSize(size1));
-}
-
-TEST_F(BasicSurfaceTest, changing_inverval_effects_all_streams)
-{
-    using namespace testing;
-    
-    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, {0,0}, {} },
-        { buffer_stream, {0,0}, {} }
-    };
-
-    EXPECT_CALL(*mock_buffer_stream, allow_framedropping(true));
-    EXPECT_CALL(*buffer_stream, allow_framedropping(true));
-
-    surface.set_streams(streams);
-    surface.configure(mir_window_attrib_swapinterval, 0);
 }
 
 TEST_F(BasicSurfaceTest, visibility_matches_produced_list)

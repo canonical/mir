@@ -178,7 +178,6 @@ private:
     MirWindowState set_state(MirWindowState s);
     int set_dpi(int);
     MirWindowVisibility set_visibility(MirWindowVisibility v);
-    int set_swap_interval(int);
     MirOrientationMode set_preferred_orientation(MirOrientationMode mode);
     void clear_frame_posted_callbacks(State& state);
     void update_frame_posted_callbacks(State& state);
