@@ -85,7 +85,7 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::snapshot_acquire()
 void mc::MultiMonitorArbiter::submit_buffer(std::shared_ptr<mg::Buffer> buffer)
 {
     std::lock_guard lk{mutex};
-    next_buffer = buffer;
+    next_buffer.swap(buffer);
 }
 
 bool mc::MultiMonitorArbiter::buffer_ready_for(mc::CompositorID id)
