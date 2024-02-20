@@ -17,10 +17,12 @@
 #ifndef MIR_FRONTEND_SESSION_LOCKER_H
 #define MIR_FRONTEND_SESSION_LOCKER_H
 
-#include "mir/observer_multiplexer.h"
+#include <memory>
 
 namespace mir
 {
+class Executor;
+
 namespace frontend
 {
 
@@ -37,13 +39,17 @@ public:
 };
 
 /// Responsible for triggering session locks and notifying observers
-class SessionLocker : public ObserverMultiplexer<SessionLockObserver>
+class SessionLocker
 {
-protected:
-    explicit SessionLocker(Executor& default_executor)
-        : ObserverMultiplexer{default_executor}
-    {
-    }
+public:
+    virtual ~SessionLocker() = default;
+    virtual void lock() = 0;
+    virtual void unlock() = 0;
+    virtual void register_interest(std::weak_ptr<SessionLockObserver> const& observer) = 0;
+    virtual void register_interest(
+        std::weak_ptr<SessionLockObserver> const& observer,
+        Executor& executor) = 0;
+    virtual void unregister_interest(SessionLockObserver const& observer) = 0;
 };
 
 }

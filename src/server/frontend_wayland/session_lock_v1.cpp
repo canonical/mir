@@ -129,7 +129,7 @@ bool mf::SessionLockManagerV1::try_lock(SessionLockV1* lock)
     if (active_lock == nullptr)
     {
         active_lock = lock;
-        session_locker->on_lock();
+        session_locker->lock();
         return true;
     }
 
@@ -151,7 +151,7 @@ bool mf::SessionLockManagerV1::try_unlock(SessionLockV1* lock)
 {
     if (try_relinquish_locking_privilege(lock))
     {
-        session_locker->on_unlock();
+        session_locker->unlock();
         return true;
     }
 

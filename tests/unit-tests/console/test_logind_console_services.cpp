@@ -184,7 +184,7 @@ public:
           ml_thread{
               [this]() { ml->stop(); ml_thread_stopped = true; },
               [this]() { ml->run(); }},
-          session_locker{std::make_shared<mtd::StubSessionLocker>(*ml)}
+          session_locker{std::make_shared<mtd::StubSessionLocker>()}
     {
         if (!bus_connection)
         {

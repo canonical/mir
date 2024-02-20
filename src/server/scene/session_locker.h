@@ -18,12 +18,14 @@
 #define MIR_SCENE_SESSION_HANDLER_H
 
 #include "mir/frontend/session_locker.h"
+#include "mir/observer_multiplexer.h"
 #include <memory>
 
 namespace mf = mir::frontend;
 
 namespace mir
 {
+class Executor;
 class ConsoleServices;
 class MainLoop;
 
@@ -36,6 +38,14 @@ class ScreenLockHandle;
 namespace scene
 {
 
+class SessionLockerObserverMultiplexer : public ObserverMultiplexer<mf::SessionLockObserver>
+{
+public:
+    explicit SessionLockerObserverMultiplexer(std::shared_ptr<Executor> const& executor);
+    void on_lock() override;
+    void on_unlock() override;
+};
+
 class SessionLocker : public mf::SessionLocker
 {
 public:
@@ -43,13 +53,20 @@ public:
         std::shared_ptr<Executor> const&,
         std::shared_ptr<mf::SurfaceStack> const&);
 
-    void on_lock() override;
-    void on_unlock() override;
+    void lock() override;
+    void unlock() override;
+
+    void register_interest(std::weak_ptr<mf::SessionLockObserver> const& observer) override;
+    void register_interest(
+        std::weak_ptr<mf::SessionLockObserver> const& observer,
+        Executor& executor) override;
+    void unregister_interest(mf::SessionLockObserver const& observer) override;
 
 private:
     std::shared_ptr<Executor> executor;
     std::shared_ptr<mf::SurfaceStack> surface_stack;
     std::unique_ptr<mf::ScreenLockHandle> screen_lock_handle;
+    SessionLockerObserverMultiplexer multiplexer;
 };
 
 }

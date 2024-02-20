@@ -73,7 +73,7 @@ TEST_F(SessionLocker, calling_on_lock_results_in_surface_lock)
 {
     EXPECT_CALL(*surface_stack, screen_is_locked()).Times(1);
     EXPECT_CALL(*surface_stack, lock_screen()).Times(1);
-    locker->on_lock();
+    locker->lock();
 }
 
 TEST_F(SessionLocker, observer_is_notified_on_lock)
@@ -83,7 +83,7 @@ TEST_F(SessionLocker, observer_is_notified_on_lock)
     auto observer = std::make_shared<MockSessionLockObserver>();
     EXPECT_CALL(*observer, on_lock()).Times(1);
     locker->register_interest(observer);
-    locker->on_lock();
+    locker->lock();
 }
 
 TEST_F(SessionLocker, observer_is_notified_on_unlock)
@@ -92,9 +92,9 @@ TEST_F(SessionLocker, observer_is_notified_on_unlock)
     EXPECT_CALL(*surface_stack, lock_screen()).Times(1);
     EXPECT_CALL(*surface_stack, screen_is_locked()).Times(2);
     EXPECT_CALL(*observer, on_unlock()).Times(1);
-    locker->on_lock();
+    locker->lock();
     locker->register_interest(observer);
     ON_CALL(*surface_stack, screen_is_locked())
         .WillByDefault(Return(true));
-    locker->on_unlock();
+    locker->unlock();
 }

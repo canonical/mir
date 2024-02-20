@@ -870,7 +870,7 @@ void mir::LogindConsoleServices::on_lock(
     gpointer ctx) noexcept
 {
     auto me = static_cast<LogindConsoleServices*>(ctx);
-    me->session_locker->on_lock();
+    me->session_locker->lock();
 }
 
 void mir::LogindConsoleServices::on_unlock(
@@ -878,7 +878,7 @@ void mir::LogindConsoleServices::on_unlock(
     gpointer ctx) noexcept
 {
     auto me = static_cast<LogindConsoleServices*>(ctx);
-    me->session_locker->on_unlock();
+    me->session_locker->unlock();
 }
 
 namespace

@@ -31,10 +31,13 @@ namespace mf = mir::frontend;
 class StubSessionLocker : public mf::SessionLocker
 {
 public:
-    explicit StubSessionLocker(Executor& default_executor)
-        : mf::SessionLocker(default_executor) {}
-    void on_lock() override {}
-    void on_unlock() override {}
+    void lock() override {}
+    void unlock() override {}
+    void register_interest(std::weak_ptr<mf::SessionLockObserver> const&) override {}
+    void register_interest(
+        std::weak_ptr<mf::SessionLockObserver> const&,
+        Executor&) override {}
+    void unregister_interest(mf::SessionLockObserver const&) override {}
 };
 
 }
