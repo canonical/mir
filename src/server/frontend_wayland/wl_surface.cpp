@@ -96,8 +96,6 @@ mf::WlSurface::WlSurface(
         null_role{this},
         role{&null_role}
 {
-    // wl_surface is specified to act in mailbox mode
-    stream->allow_framedropping(true);
 }
 
 mf::WlSurface::~WlSurface()

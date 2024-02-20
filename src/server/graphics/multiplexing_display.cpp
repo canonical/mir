@@ -15,11 +15,14 @@
  */
 
 #include "multiplexing_display.h"
+#include "multiplexing_hw_cursor.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/output_type_names.h"
+#include "mir/log.h"
 
 #include <boost/throw_exception.hpp>
+#include <exception>
 #include <stdexcept>
 #include <sstream>
 #include <functional>
@@ -319,5 +322,21 @@ void mg::MultiplexingDisplay::resume()
 
 auto mg::MultiplexingDisplay::create_hardware_cursor() -> std::shared_ptr<Cursor>
 {
-    return {};
+    std::vector<Display*> platform_displays;
+    for (auto& display : displays)
+    {
+        platform_displays.push_back(display.get());
+    }
+    try
+    {
+        return std::make_shared<MultiplexingCursor>(platform_displays);
+    }
+    catch (std::exception const&)
+    {
+        mir::log(
+            mir::logging::Severity::informational,
+            "display",
+            "Failed to create hardware cursor");
+        return nullptr;
+    }
 }

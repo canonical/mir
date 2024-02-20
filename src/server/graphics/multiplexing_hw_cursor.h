@@ -14,29 +14,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_COMPOSITOR_DROPPING_SCHEDULE_H_
-#define MIR_COMPOSITOR_DROPPING_SCHEDULE_H_
-#include "schedule.h"
-#include <memory>
-#include <mutex>
+#include <vector>
+#include <span>
 
-namespace mir
+#include "mir/graphics/cursor.h"
+
+namespace mir::graphics
 {
-namespace graphics { class Buffer; }
-namespace compositor
-{
-class DroppingSchedule : public Schedule
+class Display;
+
+class MultiplexingCursor : public Cursor
 {
 public:
-    DroppingSchedule();
-    void schedule(std::shared_ptr<graphics::Buffer> const& buffer) override;
-    unsigned int num_scheduled() override;
-    std::shared_ptr<graphics::Buffer> next_buffer() override;
+    explicit MultiplexingCursor(std::span<Display*> platform_displays);
+
+    void show(CursorImage const& image) override;
+    void hide() override;
+    void move_to(geometry::Point position) override;
 
 private:
-    std::mutex mutable mutex;
-    std::shared_ptr<graphics::Buffer> the_only_buffer;
+    std::vector<std::shared_ptr<Cursor>> const platform_cursors;
 };
 }
-}
-#endif /* MIR_COMPOSITOR_DROPPING_SCHEDULE_H_ */

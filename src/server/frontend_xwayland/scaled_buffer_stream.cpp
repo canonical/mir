@@ -15,7 +15,6 @@
  */
 
 #include "scaled_buffer_stream.h"
-#include "mir/log.h"
 
 namespace mf = mir::frontend;
 
@@ -46,11 +45,6 @@ MirPixelFormat mf::ScaledBufferStream::pixel_format() const
     return inner->pixel_format();
 }
 
-void mf::ScaledBufferStream::allow_framedropping(bool allow)
-{
-    inner->allow_framedropping(allow);
-}
-
 void mf::ScaledBufferStream::set_scale(float scale)
 {
     // Pass on the given scale to the inner stream, this is unrelated from the scale we apply.
@@ -73,19 +67,8 @@ auto mf::ScaledBufferStream::buffers_ready_for_compositor(void const* user_id) c
     return inner->buffers_ready_for_compositor(user_id);
 }
 
-void mf::ScaledBufferStream::drop_old_buffers()
-{
-    inner->drop_old_buffers();
-}
-
 auto mf::ScaledBufferStream::has_submitted_buffer() const -> bool
 {
     return inner->has_submitted_buffer();
 }
-
-auto mf::ScaledBufferStream::framedropping() const -> bool
-{
-    return inner->framedropping();
-}
-
 

@@ -149,7 +149,6 @@ auto msd::BasicDecoration::BufferStreams::create_buffer_stream() -> std::shared_
         geom::Size{1, 1},
         buffer_format,
         mg::BufferUsage::software});
-    stream->allow_framedropping(true);
     return stream;
 }
 

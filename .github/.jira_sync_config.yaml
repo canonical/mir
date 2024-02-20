@@ -1,0 +1,13 @@
+settings:
+  jira_project_key: MIRENG
+  # Only act on issues labeled "triaged"
+  labels:
+  - triaged
+  status_mapping:
+    opened: Triaged
+    closed: Done
+  components:
+  - Mir
+  label_mapping:
+    enhancement: Story
+
