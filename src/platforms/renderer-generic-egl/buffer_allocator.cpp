@@ -406,12 +406,12 @@ auto mge::GLRenderingProvider::suitability_for_display(
 {
     if (sink.acquire_compatible_allocator<GenericEGLDisplayAllocator>())
     {
-        /* We're effectively hosted on an underlying EGL platform.
+        /* We're effectively nested on an underlying EGL platform.
          *
          * We'll work fine, but if there's a hardware-specific platform
          * let it take over.
          */
-        return probe::hosted;
+        return probe::nested;
     }
 
     if (sink.acquire_compatible_allocator<CPUAddressableDisplayAllocator>())
