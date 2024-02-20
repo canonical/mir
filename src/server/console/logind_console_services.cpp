@@ -30,7 +30,6 @@
 #include "mir/fd.h"
 #include "mir/main_loop.h"
 #include "mir/glib_main_loop.h"
-#include "mir/frontend/session_locker.h"
 
 #define MIR_LOG_COMPONTENT "logind"
 #include "mir/log.h"
@@ -237,31 +236,6 @@ connect_to_system_bus(mir::GLibMainLoop& ml)
             return bus;
         }).get();
 }
-
-class LogindSessionLockObserver : public mir::frontend::SessionLockObserver
-{
-public:
-    LogindSessionLockObserver(
-        std::function<void()> const& on_lock,
-        std::function<void()> const& on_unlock)
-        : on_lock_{on_lock},
-          on_unlock_{on_unlock}
-    {
-    }
-    void on_lock() override
-    {
-        on_lock_();
-    }
-
-    void on_unlock() override
-    {
-        on_unlock_();
-    }
-
-private:
-    std::function<void()> on_lock_;
-    std::function<void()> on_unlock_;
-};
 }
 
 mir::LogindConsoleServices::LogindConsoleServices(
@@ -280,14 +254,7 @@ mir::LogindConsoleServices::LogindConsoleServices(
             session_path.c_str())},
       switch_away{[](){ return true; }},
       switch_to{[](){ return true; }},
-      active{strncmp("active", logind_session_get_state(session_proxy.get()), strlen("active")) == 0},
-      session_lock_observer{std::make_unique<LogindSessionLockObserver>(
-          [this] () {
-              logind_session_set_locked_hint(session_proxy.get(), true);
-          },
-          [this] () {
-              logind_session_set_locked_hint(session_proxy.get(), false);
-          })}
+      active{strncmp("active", logind_session_get_state(session_proxy.get()), strlen("active")) == 0}
 {
     GErrorPtr error;
 
@@ -339,15 +306,13 @@ mir::LogindConsoleServices::LogindConsoleServices(
     g_signal_connect(
         G_OBJECT(session_proxy.get()),
         "lock",
-        G_CALLBACK(&LogindConsoleServices::on_lock),
+        G_CALLBACK(&LogindConsoleServices::request_lock),
         this);
     g_signal_connect(
         G_OBJECT(session_proxy.get()),
         "unlock",
-        G_CALLBACK(&LogindConsoleServices::on_unlock),
+        G_CALLBACK(&LogindConsoleServices::request_unlock),
         this);
-
-    session_locker->register_interest(session_lock_observer);
 }
 
 void mir::LogindConsoleServices::register_switch_handlers(
@@ -865,7 +830,7 @@ GDBusMessage* mir::LogindConsoleServices::resume_device_dbus_filter(
 }
 #endif
 
-void mir::LogindConsoleServices::on_lock(
+void mir::LogindConsoleServices::request_lock(
     GObject*,
     gpointer ctx) noexcept
 {
@@ -873,7 +838,7 @@ void mir::LogindConsoleServices::on_lock(
     me->session_locker->lock();
 }
 
-void mir::LogindConsoleServices::on_unlock(
+void mir::LogindConsoleServices::request_unlock(
     GObject*,
     gpointer ctx) noexcept
 {
@@ -955,4 +920,14 @@ std::unique_ptr<mir::VTSwitcher> mir::LogindConsoleServices::create_vt_switcher(
 mir::LogindConsoleServices::~LogindConsoleServices()
 {
     restore();
+}
+
+void mir::LogindConsoleServices::on_lock()
+{
+    logind_session_set_locked_hint(session_proxy.get(), true);
+}
+
+void mir::LogindConsoleServices::on_unlock()
+{
+    logind_session_set_locked_hint(session_proxy.get(), false);
 }

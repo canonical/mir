@@ -42,7 +42,11 @@ public:
 class SessionLocker
 {
 public:
+    SessionLocker() = default;
     virtual ~SessionLocker() = default;
+    SessionLocker (SessionLocker const&) = delete;
+    SessionLocker& operator= (SessionLocker const&) = delete;
+
     virtual void lock() = 0;
     virtual void unlock() = 0;
     virtual void register_interest(std::weak_ptr<SessionLockObserver> const& observer) = 0;

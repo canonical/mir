@@ -19,6 +19,7 @@
 #include <future>
 #include <unordered_map>
 #include "mir/console_services.h"
+#include "mir/frontend/session_locker.h"
 
 #include "glib.h"
 #include "logind-seat.h"
@@ -28,13 +29,7 @@ namespace mir
 {
 class GLibMainLoop;
 
-namespace frontend
-{
-class SessionLocker;
-class SessionLockObserver;
-}
-
-class LogindConsoleServices : public ConsoleServices
+class LogindConsoleServices : public ConsoleServices, public frontend::SessionLockObserver
 {
 public:
     LogindConsoleServices(
@@ -54,6 +49,9 @@ public:
     std::future<std::unique_ptr<mir::Device>> acquire_device(
         int major, int minor,
         std::unique_ptr<Device::Observer> observer) override;
+
+    void on_lock() override;
+    void on_unlock() override;
 
     class Device;
 private:
@@ -79,11 +77,11 @@ private:
         gpointer ctx) noexcept;
 #endif
 
-    static void on_lock(
+    static void request_lock(
         GObject*,
         gpointer ctx) noexcept;
 
-    static void on_unlock(
+    static void request_unlock(
         GObject*,
         gpointer ctx) noexcept;
 
@@ -97,7 +95,6 @@ private:
     std::function<bool()> switch_to;
     bool active;
     std::unordered_map<dev_t, Device const* const> acquired_devices;
-    std::shared_ptr<frontend::SessionLockObserver> session_lock_observer;
 };
 }
 
