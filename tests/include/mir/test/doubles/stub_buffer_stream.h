@@ -47,16 +47,8 @@ public:
         return geometry::Size();
     }
 
-    void allow_framedropping(bool) override
-    {
-    }
-    bool framedropping() const override
-    {
-        return false;
-    }
     int buffers_ready_for_compositor(void const*) const override { return nready; }
 
-    void drop_old_buffers() override {}
     void submit_buffer(std::shared_ptr<graphics::Buffer> const& b) override
     {
         if (b) ++nready;

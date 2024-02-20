@@ -39,7 +39,6 @@ public:
     void set_frame_posted_callback(std::function<void(geometry::Size const&)> const& callback);
     void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec);
     MirPixelFormat pixel_format() const;
-    void allow_framedropping(bool allow);
     void set_scale(float scale);
     /// @}
 
@@ -48,9 +47,7 @@ public:
     auto lock_compositor_buffer(void const* user_id) -> std::shared_ptr<graphics::Buffer>;
     auto stream_size() -> geometry::Size;
     auto buffers_ready_for_compositor(void const* user_id) const -> int;
-    void drop_old_buffers();
     auto has_submitted_buffer() const -> bool;
-    auto framedropping() const -> bool;
     /// @}
 
 private:

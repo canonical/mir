@@ -455,7 +455,6 @@ int miral::BasicWindowManager::set_surface_attribute(
         // But, as the legacy API exists, we treat it as a query
         return surface->query(mir_window_attrib_focus);
 
-    case mir_window_attrib_swapinterval:
     case mir_window_attrib_dpi:
     default:
         return surface->configure(attrib, value);
