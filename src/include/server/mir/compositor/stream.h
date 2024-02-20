@@ -22,7 +22,6 @@
 #include "mir/synchronised.h"
 
 #include <atomic>
-#include <mutex>
 #include <memory>
 #include <atomic>
 
