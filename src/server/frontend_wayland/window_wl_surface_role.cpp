@@ -31,8 +31,9 @@
 #include "mir/events/input_event.h"
 #include "mir/log.h"
 
-#include <algorithm>
 #include <boost/throw_exception.hpp>
+
+#include <algorithm>
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
