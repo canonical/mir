@@ -499,7 +499,6 @@ void mf::WindowWlSurfaceRole::track_overlapping_outputs()
                                 return tracked_output.config == current_config;
                             })};
 
-
                         auto const output_rect{current_config.extents()};
                         if (output_rect.overlaps({scene_surface->top_left(), scene_surface->window_size()}))
                         {
