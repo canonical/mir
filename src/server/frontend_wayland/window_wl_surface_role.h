@@ -159,7 +159,12 @@ private:
 
     std::unique_ptr<shell::SurfaceSpecification> pending_changes;
 
-    std::vector<mir::graphics::DisplayConfigurationOutput> tracked_outputs;
+    struct TrackedOutput
+    {
+        mir::graphics::DisplayConfigurationOutput config;
+        bool bound{true};
+    };
+    std::vector<TrackedOutput> tracked_outputs;
 
     shell::SurfaceSpecification& spec();
 

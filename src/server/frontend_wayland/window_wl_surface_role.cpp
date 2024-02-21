@@ -479,11 +479,10 @@ void mf::WindowWlSurfaceRole::track_overlapping_outputs()
     auto scene_surface{weak_scene_surface.lock()};
     if (!scene_surface || !surface)
     {
-        tracked_outputs.clear();
         return;
     }
 
-    std::ranges::for_each(tracked_outputs, [](auto& config) { config.used = false; });
+    std::ranges::for_each(tracked_outputs, [](auto& tracked_output) { tracked_output.bound = false; });
 
     output_manager->current_config().for_each_output([&](mg::DisplayConfigurationOutput const& conf)
         {
@@ -491,49 +490,48 @@ void mf::WindowWlSurfaceRole::track_overlapping_outputs()
             {
                 output.value()->for_each_output_bound_by(
                     client,
-                    [&](const auto& output)
+                    [&](OutputInstance* output)
                     {
-                        auto const current_config{output->global.value().current_config()};
-                        if (current_config.valid())
-                        {
-                            auto const tracked_it{std::ranges::find_if(tracked_outputs, [&](auto const& config)
-                                {
-                                    return config.id == current_config.id &&
-                                        config.card_id == current_config.card_id &&
-                                        config.extents() == current_config.extents();
-                                })};
+                        auto const& current_config{output->global.value().current_config()};
+                        auto const tracked_it{std::ranges::find_if(tracked_outputs,
+                            [&](auto const& tracked_output)
+                            {
+                                return tracked_output.config == current_config;
+                            })};
 
-                            auto const output_rect{current_config.extents()};
-                            if (output_rect.overlaps({scene_surface->top_left(), scene_surface->window_size()}))
+
+                        auto const output_rect{current_config.extents()};
+                        if (output_rect.overlaps({scene_surface->top_left(), scene_surface->window_size()}))
+                        {
+                            if (tracked_it == tracked_outputs.end())
                             {
-                                if (tracked_it == tracked_outputs.end())
-                                {
-                                    surface.value().send_enter_event(output->resource);
-                                    // mir::log_info("wl_surface@%s.enter(wl_output@%d) (output %d)",
-                                    //     (surface ? std::to_string(wl_resource_get_id(surface.value().resource)) : "?").c_str(),
-                                    //     wl_resource_get_id(output->resource),
-                                    //     output->global.value().current_config().id.as_value());
-                                    tracked_outputs.push_back(current_config);
-                                }
-                                else
-                                {
-                                    tracked_it->used = true;
-                                }
-                            }
-                            else if (tracked_it != tracked_outputs.end())
-                            {
-                                surface.value().send_leave_event(output->resource);
-                                // mir::log_info("wl_surface@%s.leave(wl_output@%d) (output %d)",
+                                surface.value().send_enter_event(output->resource);
+                                // mir::log_info("wl_surface@%s.enter(wl_output@%d) (output %d)",
                                 //     (surface ? std::to_string(wl_resource_get_id(surface.value().resource)) : "?").c_str(),
                                 //     wl_resource_get_id(output->resource),
                                 //     output->global.value().current_config().id.as_value());
+                                tracked_outputs.emplace_back(current_config);
                             }
+                            else
+                            {
+                                tracked_it->bound = true;
+                            }
+                        }
+                        else if (tracked_it != tracked_outputs.end())
+                        {
+                            surface.value().send_leave_event(output->resource);
+                            // mir::log_info("wl_surface@%s.leave(wl_output@%d) (output %d)",
+                            //     (surface ? std::to_string(wl_resource_get_id(surface.value().resource)) : "?").c_str(),
+                            //     wl_resource_get_id(output->resource),
+                            //     output->global.value().current_config().id.as_value());
+                            tracked_outputs.erase(tracked_it);
                         }
                     });
             }
         });
 
-    std::erase_if(tracked_outputs, [](auto const& config) { return !config.used; });
+    // Untrack any remaining outputs not bound by the client
+    std::erase_if(tracked_outputs, [](auto const& tracked_output) { return !tracked_output.bound; });
 }
 
 void mf::WindowWlSurfaceRole::apply_client_size(mir::shell::SurfaceSpecification& mods)
