@@ -506,10 +506,6 @@ void mf::WindowWlSurfaceRole::track_overlapping_outputs()
                             if (tracked_it == tracked_outputs.end())
                             {
                                 surface.value().send_enter_event(output->resource);
-                                // mir::log_info("wl_surface@%s.enter(wl_output@%d) (output %d)",
-                                //     (surface ? std::to_string(wl_resource_get_id(surface.value().resource)) : "?").c_str(),
-                                //     wl_resource_get_id(output->resource),
-                                //     output->global.value().current_config().id.as_value());
                                 tracked_outputs.emplace_back(current_config);
                             }
                             else
@@ -520,10 +516,6 @@ void mf::WindowWlSurfaceRole::track_overlapping_outputs()
                         else if (tracked_it != tracked_outputs.end())
                         {
                             surface.value().send_leave_event(output->resource);
-                            // mir::log_info("wl_surface@%s.leave(wl_output@%d) (output %d)",
-                            //     (surface ? std::to_string(wl_resource_get_id(surface.value().resource)) : "?").c_str(),
-                            //     wl_resource_get_id(output->resource),
-                            //     output->global.value().current_config().id.as_value());
                             tracked_outputs.erase(tracked_it);
                         }
                     });
