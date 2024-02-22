@@ -35,11 +35,6 @@ void mf::ScaledBufferStream::set_frame_posted_callback(std::function<void(geomet
     inner->set_frame_posted_callback(callback);
 }
 
-void mf::ScaledBufferStream::with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec)
-{
-    inner->with_most_recent_buffer_do(exec);
-}
-
 MirPixelFormat mf::ScaledBufferStream::pixel_format() const
 {
     return inner->pixel_format();
