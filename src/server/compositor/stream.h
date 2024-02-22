@@ -38,7 +38,6 @@ public:
     ~Stream();
 
     void submit_buffer(std::shared_ptr<graphics::Buffer> const& buffer) override;
-    void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec) override;
     MirPixelFormat pixel_format() const override;
     void set_frame_posted_callback(
         std::function<void(geometry::Size const&)> const& callback) override;
