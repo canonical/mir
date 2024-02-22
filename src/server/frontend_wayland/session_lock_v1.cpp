@@ -26,6 +26,7 @@
 #include "mir/wayland/client.h"
 #include "mir/wayland/protocol_error.h"
 #include "mir/frontend/session_locker.h"
+#include "mir/frontend/surface_stack.h"
 #include "mir/log.h"
 
 namespace mf = mir::frontend;
@@ -55,7 +56,7 @@ class SessionLockV1 : wayland::SessionLockV1
 {
 public:
     SessionLockV1(wl_resource* new_resource, mf::SessionLockManagerV1& manager);
-    ~SessionLockV1();
+    ~SessionLockV1() = default;
 
 private:
     class SessionLockV1Observer : public mir::frontend::SessionLockObserver
@@ -70,6 +71,8 @@ private:
     };
 
     void get_lock_surface(wl_resource* id, wl_resource* surface, wl_resource* output) override;
+    void destroy() override;
+    void unlock_and_destroy() override;
 
     mf::SessionLockManagerV1& manager;
     std::shared_ptr<SessionLockV1Observer> observer;
@@ -114,13 +117,15 @@ mf::SessionLockManagerV1::SessionLockManagerV1(
     std::shared_ptr<msh::Shell> shell,
     std::shared_ptr<mf::SessionLocker> session_locker,
     WlSeat& seat,
-    OutputManager* output_manager)
+    OutputManager* output_manager,
+    std::shared_ptr<SurfaceStack> surface_stack)
     : Global(display, Version<1>()),
       wayland_executor{wayland_executor},
       shell{std::move(shell)},
       session_locker{std::move(session_locker)},
       seat{seat},
-      output_manager{output_manager}
+      output_manager{output_manager},
+      surface_stack{surface_stack}
 {
 }
 
@@ -186,21 +191,6 @@ mf::SessionLockV1::SessionLockV1(wl_resource* new_resource, SessionLockManagerV1
         send_finished_event();
 }
 
-mf::SessionLockV1::~SessionLockV1()
-{
-    if (client->is_being_destroyed())
-    {
-        mir::log_warning("Screen locker died while screen was locked."
-                         "The compositor may be stuck in a locked state forever.");
-        manager.try_relinquish_locking_privilege(this);
-    }
-    else
-    {
-        if (!manager.try_unlock(this))
-            mir::log_warning("Duplicate SessionLockV1 will not cause unlock");
-    }
-}
-
 void mf::SessionLockV1::get_lock_surface(wl_resource* id, wl_resource* surface_resource, wl_resource* output)
 {
     auto const output_id = OutputManager::output_id_for(output);
@@ -213,6 +203,41 @@ void mf::SessionLockV1::get_lock_surface(wl_resource* id, wl_resource* surface_r
     }
 
     new SessionLockSurfaceV1{id, manager, WlSurface::from(surface_resource), output_id.value()};
+}
+
+void mf::SessionLockV1::destroy()
+{
+    // Note that this is a deviation from the spec. The spec reads:
+    // "It is a protocol error to make this request if the locked event was sent,
+    // the unlock_and_destroy request must be used instead."
+    //
+    // In our case, it is ONLY a protocol error if the session is still locked,
+    // as the session may have been unlocked via logind independent of the
+    // wayland protocol.
+
+    if (manager.surface_stack->screen_is_locked())
+    {
+        mir::log_error("SessionLockV1 destroy failed");
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::invalid_destroy,
+            "Destroy requested but session is still locked"));
+    }
+    else
+        manager.try_relinquish_locking_privilege(this);
+
+}
+
+void mf::SessionLockV1::unlock_and_destroy()
+{
+    if (!manager.try_unlock(this))
+    {
+        mir::log_error("SessionLockV1 unlock_and_destroy failed");
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::invalid_unlock,
+            "Unlock requested but locked event was never sent"));
+    }
 }
 
 mf::SessionLockV1::SessionLockV1Observer::SessionLockV1Observer(mf::SessionLockV1& lock)

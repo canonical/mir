@@ -206,7 +206,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 ctx.shell,
                 ctx.session_locker,
                 *ctx.seat,
-                ctx.output_manager);
+                ctx.output_manager,
+                ctx.surface_stack);
         }),
 };
 

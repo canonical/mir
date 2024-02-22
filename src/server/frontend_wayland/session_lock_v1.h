@@ -29,6 +29,7 @@ class Shell;
 namespace frontend
 {
 class WlSeat;
+class SurfaceStack;
 class OutputManager;
 class SessionLocker;
 class SessionLockV1;
@@ -42,13 +43,15 @@ public:
         std::shared_ptr<shell::Shell> shell,
         std::shared_ptr<frontend::SessionLocker> session_locker,
         WlSeat& seat,
-        OutputManager* output_manager);
+        OutputManager* output_manager,
+        std::shared_ptr<SurfaceStack> surface_stack);
 
     Executor& wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
     std::shared_ptr<frontend::SessionLocker> const session_locker;
     WlSeat& seat;
     OutputManager* const output_manager;
+    std::shared_ptr<SurfaceStack> surface_stack;
 
     bool try_lock(SessionLockV1* lock);
     bool try_relinquish_locking_privilege(SessionLockV1* lock);
