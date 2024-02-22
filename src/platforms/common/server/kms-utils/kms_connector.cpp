@@ -19,6 +19,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <algorithm>
+#include <list>
 #include <stdexcept>
 
 namespace mgk = mir::graphics::kms;
@@ -98,7 +99,6 @@ std::string mgk::connector_name(mgk::DRMModeConnectorUPtr const& connector)
     name += std::to_string(connector->connector_type_id);
     return name;
 }
-
 namespace
 {
 std::tuple<mgk::DRMModeCrtcUPtr, int> find_crtc_and_index_for_connector(
@@ -109,6 +109,19 @@ std::tuple<mgk::DRMModeCrtcUPtr, int> find_crtc_and_index_for_connector(
 
     auto const encoders = connector_available_encoders(resources, connector.get());
 
+    // This workaround feels like overkill, but I've not fould a better place to implement a fix...
+    //
+    // We don't "seize" crtcs when we find them which means they remain "available". So there is
+    // an opportunity for the client logic to request several crtcs before using the first makes it
+    // "unavailable" and get the same crtc for multiple requests.
+    //
+    // By ensuring we don't return the same crtc until we've exhausted all alternatives we prevent
+    // the client logic using it twice.
+    //
+    // Using "thread_local" as each group of outputs is accessed on its own thread.
+    thread_local std::list<u_int32_t> recent_crtc_ids;
+    std::list<std::tuple<mgk::DRMModeCrtcUPtr, int>> skipped_crtcs;
+
     for (auto& crtc : resources.crtcs())
     {
         if (!crtc_is_used(resources, crtc->crtc_id))
@@ -117,11 +130,32 @@ std::tuple<mgk::DRMModeCrtcUPtr, int> find_crtc_and_index_for_connector(
             {
                 if (encoder_supports_crtc_index(enc.get(), crtc_index))
                 {
+                    if (std::find(recent_crtc_ids.begin(), recent_crtc_ids.end(), crtc->crtc_id) != recent_crtc_ids.end())
+                    {
+                        skipped_crtcs.emplace_back(std::move(crtc), crtc_index);
+                        continue;
+                    }
+
+                    recent_crtc_ids.push_back(crtc->crtc_id);
                     return std::tuple<mgk::DRMModeCrtcUPtr, int>{std::move(crtc), crtc_index};
                 }
             }
         }
         crtc_index++;
+    }
+
+    // We couldn't find a crtc we haven't used, so return the least recently returned one
+    for (auto pcrtc_id = recent_crtc_ids.begin(); pcrtc_id != recent_crtc_ids.end(); ++pcrtc_id)
+    {
+        for (auto& skipped_crtc : skipped_crtcs)
+        {
+            if (*pcrtc_id == get<0>(skipped_crtc)->crtc_id)
+            {
+                recent_crtc_ids.erase(pcrtc_id);
+                recent_crtc_ids.push_back(get<0>(skipped_crtc)->crtc_id);
+                return std::move(skipped_crtc);
+            }
+        }
     }
 
     BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to find CRTC"});
