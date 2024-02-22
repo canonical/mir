@@ -59,7 +59,7 @@ void ms::SessionLocker::unlock()
     if (surface_stack->screen_is_locked())
     {
         screen_lock_handle->allow_to_be_dropped();
-        screen_lock_handle = nullptr;
+        screen_lock_handle.reset();
         multiplexer.on_unlock();
     }
 }

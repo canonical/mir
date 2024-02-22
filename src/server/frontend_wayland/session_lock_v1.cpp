@@ -238,6 +238,8 @@ void mf::SessionLockV1::unlock_and_destroy()
             Error::invalid_unlock,
             "Unlock requested but locked event was never sent"));
     }
+    else
+        manager.try_relinquish_locking_privilege(this);
 }
 
 mf::SessionLockV1::SessionLockV1Observer::SessionLockV1Observer(mf::SessionLockV1& lock)
