@@ -19,6 +19,7 @@
 
 #include "mir/compositor/buffer_stream.h"
 #include "mir/geometry/size.h"
+#include "mir/geometry/rectangle.h"
 #include "mir/synchronised.h"
 
 #include <atomic>
@@ -37,7 +38,10 @@ public:
     Stream(geometry::Size sz, MirPixelFormat format);
     ~Stream();
 
-    void submit_buffer(std::shared_ptr<graphics::Buffer> const& buffer) override;
+    void submit_buffer(
+        std::shared_ptr<graphics::Buffer> const& buffer,
+        geometry::Size dest_size,
+        geometry::generic::Rectangle<double> src_bounds) override;
     MirPixelFormat pixel_format() const override;
     void set_frame_posted_callback(
         std::function<void(geometry::Size const&)> const& callback) override;

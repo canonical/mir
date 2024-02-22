@@ -18,6 +18,7 @@
 #define MIR_COMPOSITOR_BUFFER_STREAM_H_
 
 #include "mir/geometry/size.h"
+#include "mir/geometry/rectangle.h"
 #include "mir/frontend/buffer_stream.h"
 #include "mir_toolkit/common.h"
 #include "mir/graphics/buffer_id.h"

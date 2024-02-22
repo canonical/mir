@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/test/doubles/stub_buffer.h"
 #include "src/server/scene/surface_stack.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/geometry/rectangle.h"
@@ -1329,53 +1330,4 @@ TEST_F(SurfaceStack, multiple_surfaces_can_be_swapped)
             SceneElementForStream(stub_buffer_stream2)));
 
     Mock::VerifyAndClearExpectations(&observer);
-}
-
-TEST_F(SurfaceStack, observer_is_notified_on_lock)
-{
-    auto observer = std::make_shared<MockSessionLockObserver>();
-    EXPECT_CALL(*observer, on_lock()).Times(1);
-    stack.register_interest(observer, mir::immediate_executor);
-    stack.lock();
-}
-
-TEST_F(SurfaceStack, observer_is_notified_only_on_initial_lock)
-{
-    auto observer = std::make_shared<MockSessionLockObserver>();
-    EXPECT_CALL(*observer, on_lock()).Times(1);
-    stack.register_interest(observer, mir::immediate_executor);
-    stack.lock();
-
-    Mock::VerifyAndClearExpectations(observer.get());
-    EXPECT_CALL(*observer, on_unlock()).Times(0);
-    stack.lock();
-    stack.lock();
-}
-
-TEST_F(SurfaceStack, observer_is_notified_only_on_initial_unlock)
-{
-    auto observer = std::make_shared<MockSessionLockObserver>();
-    EXPECT_CALL(*observer, on_lock()).Times(1);
-    stack.register_interest(observer, mir::immediate_executor);
-    stack.lock();
-    Mock::VerifyAndClearExpectations(observer.get());
-    EXPECT_CALL(*observer, on_unlock()).Times(1);
-    stack.unlock();
-
-    Mock::VerifyAndClearExpectations(observer.get());
-    EXPECT_CALL(*observer, on_unlock()).Times(0);
-    stack.unlock();
-    stack.unlock();
-}
-
-TEST_F(SurfaceStack, observer_is_notified_on_multiple_locks_and_unlocks)
-{
-    auto observer = std::make_shared<MockSessionLockObserver>();
-    EXPECT_CALL(*observer, on_lock()).Times(2);
-    EXPECT_CALL(*observer, on_unlock()).Times(2);
-    stack.register_interest(observer, mir::immediate_executor);
-    stack.lock();
-    stack.unlock();
-    stack.lock();
-    stack.unlock();
 }

@@ -35,7 +35,10 @@ public:
 
     /// Overrides from frontend::BufferStream
     /// @{
-    void submit_buffer(std::shared_ptr<graphics::Buffer> const& buffer);
+    void submit_buffer(
+        std::shared_ptr<graphics::Buffer> const& buffer,
+        geometry::Size dst_size,
+        geometry::RectangleD src_bounds);
     void set_frame_posted_callback(std::function<void(geometry::Size const&)> const& callback);
     MirPixelFormat pixel_format() const;
     void set_scale(float scale);

@@ -16,6 +16,7 @@
 
 #include "wl_surface.h"
 
+#include "mir/geometry/forward.h"
 #include "wayland_utils.h"
 #include "wl_surface_role.h"
 #include "wl_subcompositor.h"
@@ -392,7 +393,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                     mir_buffer->id().as_value());
             }
 
-            stream->submit_buffer(mir_buffer);
+            stream->submit_buffer(mir_buffer, mir_buffer->size(), {{0, 0}, geom::SizeD{mir_buffer->size()}});
             auto const new_buffer_size = stream->stream_size();
 
             if (std::make_optional(new_buffer_size) != buffer_size_)

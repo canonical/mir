@@ -55,7 +55,11 @@ struct MockBufferStream : public compositor::BufferStream
 
     MOCK_METHOD(geometry::Size, stream_size, (), (override));
 
-    MOCK_METHOD(void, submit_buffer, (std::shared_ptr<graphics::Buffer> const&), (override));
+    MOCK_METHOD(
+        void,
+        submit_buffer,
+        (std::shared_ptr<graphics::Buffer> const&, geometry::Size, geometry::RectangleD),
+        (override));
     MOCK_METHOD(MirPixelFormat, pixel_format, (), (const override));
     MOCK_METHOD(bool, has_submitted_buffer, (), (const override));
     MOCK_METHOD(void, set_scale, (float), (override));

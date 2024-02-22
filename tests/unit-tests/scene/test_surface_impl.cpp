@@ -72,7 +72,6 @@ struct Surface : testing::Test
         using namespace testing;
 
         ON_CALL(*buffer_stream, stream_size()).WillByDefault(Return(geom::Size()));
-
         surface = std::make_shared<ms::BasicSurface>(
             nullptr /* session */,
             mw::Weak<mf::WlSurface>{},

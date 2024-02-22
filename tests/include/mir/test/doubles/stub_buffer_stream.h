@@ -47,7 +47,10 @@ public:
         return geometry::Size();
     }
 
-    void submit_buffer(std::shared_ptr<graphics::Buffer> const& b) override
+    void submit_buffer(
+        std::shared_ptr<graphics::Buffer> const& b,
+        geometry::Size /*dst_size*/,
+        geometry::RectangleD /*src_bounds*/) override
     {
         if (b) ++nready;
     }

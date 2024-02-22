@@ -15,6 +15,7 @@
  */
 
 #include "basic_decoration.h"
+#include "mir/graphics/buffer.h"
 #include "window.h"
 #include "input.h"
 #include "renderer.h"
@@ -427,6 +428,9 @@ void msd::BasicDecoration::update(
     for (auto const& pair : new_buffers)
     {
         if (pair.second)
-            pair.first->submit_buffer(pair.second.value());
+            pair.first->submit_buffer(
+                pair.second.value(),
+                pair.second.value()->size(),
+                {{0, 0}, geom::SizeD{pair.second.value()->size()}});
     }
 }

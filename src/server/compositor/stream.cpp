@@ -16,6 +16,7 @@
 
 #include "mir/compositor/stream.h"
 #include "multi_monitor_arbiter.h"
+#include "mir/geometry/rectangle.h"
 #include "mir/graphics/buffer.h"
 #include <boost/throw_exception.hpp>
 #include <math.h>
@@ -42,7 +43,10 @@ mc::Stream::Stream(
 
 mc::Stream::~Stream() = default;
 
-void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
+void mc::Stream::submit_buffer(
+    std::shared_ptr<mg::Buffer> const& buffer,
+    geom::Size /*dst_size*/,
+    geom::RectangleD /*src_bounds*/)
 {
     if (!buffer)
         BOOST_THROW_EXCEPTION(std::invalid_argument("cannot submit null buffer"));

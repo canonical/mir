@@ -15,8 +15,11 @@
  */
 
 #include "scaled_buffer_stream.h"
+#include "mir/geometry/forward.h"
+#include "mir/geometry/rectangle.h"
 
 namespace mf = mir::frontend;
+namespace geom = mir::geometry;
 
 mf::ScaledBufferStream::ScaledBufferStream(std::shared_ptr<compositor::BufferStream>&& inner, float scale)
     : inner{std::move(inner)},
@@ -24,9 +27,12 @@ mf::ScaledBufferStream::ScaledBufferStream(std::shared_ptr<compositor::BufferStr
 {
 }
 
-void mf::ScaledBufferStream::submit_buffer(std::shared_ptr<graphics::Buffer> const& buffer)
+void mf::ScaledBufferStream::submit_buffer(
+    std::shared_ptr<graphics::Buffer> const& buffer,
+    geom::Size dest_size,
+    geom::RectangleD src_bounds)
 {
-    inner->submit_buffer(buffer);
+    inner->submit_buffer(buffer, dest_size, src_bounds);
 }
 
 void mf::ScaledBufferStream::set_frame_posted_callback(std::function<void(geometry::Size const&)> const& callback)

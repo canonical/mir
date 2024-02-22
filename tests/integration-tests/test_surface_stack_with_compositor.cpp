@@ -220,7 +220,7 @@ std::chrono::milliseconds const default_delay{-1};
 
 TEST_F(SurfaceStackCompositor, composes_on_start_if_told_to_in_constructor_when_stack_has_at_least_one_surface)
 {
-    streams.front().stream->submit_buffer(stub_buffer);
+    streams.front().stream->submit_buffer(stub_buffer, stub_buffer->size(), {{0, 0}, geom::SizeD{stub_buffer->size()}});
     stack.add_surface(stub_surface, mi::InputReceptionMode::normal);
 
     mc::MultiThreadedCompositor mt_compositor(
@@ -274,7 +274,7 @@ TEST_F(SurfaceStackCompositor, swapping_a_surface_that_has_been_added_triggers_a
     mt_compositor.start();
 
     stack.add_surface(stub_surface, mi::InputReceptionMode::normal);
-    stream->submit_buffer(stub_buffer);
+    stream->submit_buffer(stub_buffer, stub_buffer->size(), {{0, 0}, geom::SizeD{stub_buffer->size()}});
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(1, timeout));
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(1, timeout));
@@ -291,7 +291,7 @@ TEST_F(SurfaceStackCompositor, an_empty_scene_retriggers)
     mt_compositor.start();
 
     stack.add_surface(stub_surface, mi::InputReceptionMode::normal);
-    streams.front().stream->submit_buffer(stub_buffer);
+    streams.front().stream->submit_buffer(stub_buffer, stub_buffer->size(), {{0, 0}, geom::SizeD{stub_buffer->size()}});;
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(1, timeout));
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(1, timeout));
@@ -304,7 +304,7 @@ TEST_F(SurfaceStackCompositor, an_empty_scene_retriggers)
 
 TEST_F(SurfaceStackCompositor, moving_a_surface_triggers_composition)
 {
-    streams.front().stream->submit_buffer(stub_buffer);
+    streams.front().stream->submit_buffer(stub_buffer, stub_buffer->size(), {{0, 0}, geom::SizeD{stub_buffer->size()}});
     stack.add_surface(stub_surface, mi::InputReceptionMode::normal);
 
     mc::MultiThreadedCompositor mt_compositor(
@@ -323,10 +323,10 @@ TEST_F(SurfaceStackCompositor, moving_a_surface_triggers_composition)
 
 TEST_F(SurfaceStackCompositor, removing_a_surface_triggers_composition)
 {
-    streams.front().stream->submit_buffer(stub_buffer);
+    streams.front().stream->submit_buffer(stub_buffer, stub_buffer->size(), {{0, 0}, geom::SizeD{stub_buffer->size()}});
     stack.add_surface(stub_surface, mi::InputReceptionMode::normal);
 
-    other_streams.front().stream->submit_buffer(other_stub_buffer);
+    other_streams.front().stream->submit_buffer(stub_buffer, stub_buffer->size(), {{0, 0}, geom::SizeD{stub_buffer->size()}});
     stack.add_surface(other_stub_surface, mi::InputReceptionMode::normal);
 
     mc::MultiThreadedCompositor mt_compositor(
@@ -346,7 +346,7 @@ TEST_F(SurfaceStackCompositor, removing_a_surface_triggers_composition)
 TEST_F(SurfaceStackCompositor, buffer_updates_trigger_composition)
 {
     stack.add_surface(stub_surface, mi::InputReceptionMode::normal);
-    streams.front().stream->submit_buffer(stub_buffer);
+    streams.front().stream->submit_buffer(stub_buffer, stub_buffer->size(), {{0, 0}, geom::SizeD{stub_buffer->size()}});
 
     mc::MultiThreadedCompositor mt_compositor(
         mt::fake_shared(stub_display),
@@ -356,7 +356,7 @@ TEST_F(SurfaceStackCompositor, buffer_updates_trigger_composition)
         null_comp_report, default_delay, false);
 
     mt_compositor.start();
-    streams.front().stream->submit_buffer(stub_buffer);
+    streams.front().stream->submit_buffer(stub_buffer, stub_buffer->size(), {{0, 0}, geom::SizeD{stub_buffer->size()}});
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(1, timeout));
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(1, timeout));
