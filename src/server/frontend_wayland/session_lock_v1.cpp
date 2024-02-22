@@ -249,6 +249,11 @@ void mf::SessionLockV1::SessionLockV1Observer::on_lock() {}
 
 void mf::SessionLockV1::SessionLockV1Observer::on_unlock()
 {
+    // Swaylock does not respond to the finished event with a destroy(),
+    // so we relinquish locking privileges here instead of in destroy().
+    // I have made this bug to address the issue:
+    // https://github.com/swaywm/swaylock/issues/346
+    lock.manager.try_relinquish_locking_privilege(&lock);
     lock.send_finished_event();
 }
 
