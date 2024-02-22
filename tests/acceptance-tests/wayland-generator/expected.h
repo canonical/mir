@@ -116,6 +116,7 @@ public:
 
 private:
     virtual void create_buffer(struct wl_resource* id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format) = 0;
+    virtual void destroy() {}
     virtual void resize(int32_t size) = 0;
 };
 
@@ -249,6 +250,7 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
+    virtual void destroy() {}
 };
 
 class DataOffer : public Resource
@@ -291,6 +293,7 @@ public:
 private:
     virtual void accept(uint32_t serial, std::optional<std::string> const& mime_type) = 0;
     virtual void receive(std::string const& mime_type, mir::Fd fd) = 0;
+    virtual void destroy() {}
     virtual void finish() = 0;
     virtual void set_actions(uint32_t dnd_actions, uint32_t preferred_action) = 0;
 };
@@ -340,6 +343,7 @@ public:
 
 private:
     virtual void offer(std::string const& mime_type) = 0;
+    virtual void destroy() {}
     virtual void set_actions(uint32_t dnd_actions) = 0;
 };
 
@@ -382,6 +386,7 @@ public:
 private:
     virtual void start_drag(std::optional<struct wl_resource*> const& source, struct wl_resource* origin, std::optional<struct wl_resource*> const& icon, uint32_t serial) = 0;
     virtual void set_selection(std::optional<struct wl_resource*> const& source, uint32_t serial) = 0;
+    virtual void release() {}
 };
 
 class DataDeviceManager : public Resource
@@ -558,6 +563,7 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
+    virtual void destroy() {}
     virtual void attach(std::optional<struct wl_resource*> const& buffer, int32_t x, int32_t y) = 0;
     virtual void damage(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
     virtual void frame(struct wl_resource* callback) = 0;
@@ -622,6 +628,7 @@ private:
     virtual void get_pointer(struct wl_resource* id) = 0;
     virtual void get_keyboard(struct wl_resource* id) = 0;
     virtual void get_touch(struct wl_resource* id) = 0;
+    virtual void release() {}
 };
 
 class Pointer : public Resource
@@ -700,6 +707,7 @@ public:
 
 private:
     virtual void set_cursor(uint32_t serial, std::optional<struct wl_resource*> const& surface, int32_t hotspot_x, int32_t hotspot_y) = 0;
+    virtual void release() {}
 };
 
 class Keyboard : public Resource
@@ -748,6 +756,7 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
+    virtual void release() {}
 };
 
 class Touch : public Resource
@@ -788,6 +797,7 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
+    virtual void release() {}
 };
 
 class Output : public Resource
@@ -870,6 +880,7 @@ public:
     };
 
 private:
+    virtual void release() {}
 };
 
 class Region : public Resource
@@ -887,6 +898,7 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
+    virtual void destroy() {}
     virtual void add(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
     virtual void subtract(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
 };
@@ -923,6 +935,7 @@ public:
     };
 
 private:
+    virtual void destroy() {}
     virtual void get_subsurface(struct wl_resource* id, struct wl_resource* surface, struct wl_resource* parent) = 0;
 };
 
@@ -946,6 +959,7 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
+    virtual void destroy() {}
     virtual void set_position(int32_t x, int32_t y) = 0;
     virtual void place_above(struct wl_resource* sibling) = 0;
     virtual void place_below(struct wl_resource* sibling) = 0;
