@@ -485,40 +485,37 @@ void mf::WindowWlSurfaceRole::track_overlapping_outputs()
 
     std::ranges::for_each(tracked_outputs, [](auto& tracked_output) { tracked_output.bound = false; });
 
-    output_manager->current_config().for_each_output([&](mg::DisplayConfigurationOutput const& conf)
+    output_manager->for_each_output_bound_by(
+        client,
+        [&](OutputInstance* output)
         {
-            if (auto const output{output_manager->output_for(conf.id)}; output)
+            auto const& current_config{output->global.value().current_config()};
+            if (current_config.valid())
             {
-                output.value()->for_each_output_bound_by(
-                    client,
-                    [&](OutputInstance* output)
+                auto const tracked_it{std::ranges::find_if(tracked_outputs,
+                    [&](auto const& tracked_output)
                     {
-                        auto const& current_config{output->global.value().current_config()};
-                        auto const tracked_it{std::ranges::find_if(tracked_outputs,
-                            [&](auto const& tracked_output)
-                            {
-                                return tracked_output.config == current_config;
-                            })};
+                        return tracked_output.config == current_config;
+                    })};
 
-                        auto const output_rect{current_config.extents()};
-                        if (output_rect.overlaps({scene_surface->top_left(), scene_surface->window_size()}))
-                        {
-                            if (tracked_it == tracked_outputs.end())
-                            {
-                                surface.value().send_enter_event(output->resource);
-                                tracked_outputs.emplace_back(current_config);
-                            }
-                            else
-                            {
-                                tracked_it->bound = true;
-                            }
-                        }
-                        else if (tracked_it != tracked_outputs.end())
-                        {
-                            surface.value().send_leave_event(output->resource);
-                            tracked_outputs.erase(tracked_it);
-                        }
-                    });
+                auto const output_rect{current_config.extents()};
+                if (output_rect.overlaps({scene_surface->top_left(), scene_surface->window_size()}))
+                {
+                    if (tracked_it == tracked_outputs.end())
+                    {
+                        surface.value().send_enter_event(output->resource);
+                        tracked_outputs.emplace_back(current_config);
+                    }
+                    else
+                    {
+                        tracked_it->bound = true;
+                    }
+                }
+                else if (tracked_it != tracked_outputs.end())
+                {
+                    surface.value().send_leave_event(output->resource);
+                    tracked_outputs.erase(tracked_it);
+                }
             }
         });
 

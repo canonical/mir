@@ -307,6 +307,16 @@ auto mf::OutputManager::output_for(graphics::DisplayConfigurationOutputId id) ->
         return std::nullopt;
 }
 
+void mf::OutputManager::for_each_output_bound_by(
+    wayland::Client* client,
+    std::function<void(OutputInstance*)> const& functor)
+{
+    for (auto const& [_, global] : outputs)
+    {
+        global->for_each_output_bound_by(client, functor);
+    }
+}
+
 void mf::OutputManager::handle_configuration_change(std::shared_ptr<mg::DisplayConfiguration const> const& config)
 {
     display_config = config;

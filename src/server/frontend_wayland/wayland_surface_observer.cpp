@@ -60,7 +60,6 @@ void mf::WaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAtt
         break;
 
     case mir_window_attrib_state:
-    case mir_window_attrib_visibility:
         run_on_wayland_thread_unless_window_destroyed(
             [value](Impl* impl, WindowWlSurfaceRole* window)
             {
@@ -69,6 +68,13 @@ void mf::WaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAtt
                 window->track_overlapping_outputs();
             });
         break;
+
+    case mir_window_attrib_visibility:
+        run_on_wayland_thread_unless_window_destroyed(
+            [](Impl* /*impl*/, WindowWlSurfaceRole* window)
+            {
+                window->track_overlapping_outputs();
+            });
 
     default:;
     }
