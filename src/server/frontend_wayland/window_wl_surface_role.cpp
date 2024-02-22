@@ -504,7 +504,7 @@ void mf::WindowWlSurfaceRole::track_overlapping_outputs()
                     if (tracked_it == tracked_outputs.end())
                     {
                         surface.value().send_enter_event(output->resource);
-                        tracked_outputs.emplace_back(current_config);
+                        tracked_outputs.push_back({current_config});
                     }
                     else
                     {
