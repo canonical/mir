@@ -26,7 +26,7 @@ Emitter Request::virtual_mir_prototype() const
 {
     if (is_destroy())
     {
-        return nullptr;
+        return {"virtual void ", name, "(", mir_args(), ") {}"};
     }
     else
     {
@@ -43,7 +43,11 @@ Emitter Request::thunk_impl() const
             "try",
             Block{
                 (is_destroy() ?
-                    Emitter{"wl_resource_destroy(resource);"}
+                     Lines{
+                         {"auto me = static_cast<", class_name, "*>(wl_resource_get_user_data(resource));"},
+                         {"me->", name, "(", mir_call_args(), ");"},
+                         {"wl_resource_destroy(resource);"}
+                     }
                 :
                     Lines{
                         {"auto me = static_cast<", class_name, "*>(wl_resource_get_user_data(resource));"},
