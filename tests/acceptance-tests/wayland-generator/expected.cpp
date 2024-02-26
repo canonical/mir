@@ -305,6 +305,8 @@ struct mw::ShmPool::Thunks
     {
         try
         {
+            auto me = static_cast<ShmPool*>(wl_resource_get_user_data(resource));
+            me->destroy();
             wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
@@ -602,6 +604,8 @@ struct mw::Buffer::Thunks
     {
         try
         {
+            auto me = static_cast<Buffer*>(wl_resource_get_user_data(resource));
+            me->destroy();
             wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
@@ -719,6 +723,8 @@ struct mw::DataOffer::Thunks
     {
         try
         {
+            auto me = static_cast<DataOffer*>(wl_resource_get_user_data(resource));
+            me->destroy();
             wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
@@ -916,6 +922,8 @@ struct mw::DataSource::Thunks
     {
         try
         {
+            auto me = static_cast<DataSource*>(wl_resource_get_user_data(resource));
+            me->destroy();
             wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
@@ -1163,6 +1171,8 @@ struct mw::DataDevice::Thunks
     {
         try
         {
+            auto me = static_cast<DataDevice*>(wl_resource_get_user_data(resource));
+            me->release();
             wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
@@ -1936,6 +1946,8 @@ struct mw::Surface::Thunks
     {
         try
         {
+            auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
+            me->destroy();
             wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
@@ -2313,6 +2325,8 @@ struct mw::Seat::Thunks
     {
         try
         {
+            auto me = static_cast<Seat*>(wl_resource_get_user_data(resource));
+            me->release();
             wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
@@ -2502,6 +2516,8 @@ struct mw::Pointer::Thunks
     {
         try
         {
+            auto me = static_cast<Pointer*>(wl_resource_get_user_data(resource));
+            me->release();
             wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
@@ -2769,6 +2785,8 @@ struct mw::Keyboard::Thunks
     {
         try
         {
+            auto me = static_cast<Keyboard*>(wl_resource_get_user_data(resource));
+            me->release();
             wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
@@ -2913,6 +2931,8 @@ struct mw::Touch::Thunks
     {
         try
         {
+            auto me = static_cast<Touch*>(wl_resource_get_user_data(resource));
+            me->release();
             wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
@@ -3085,6 +3105,8 @@ struct mw::Output::Thunks
     {
         try
         {
+            auto me = static_cast<Output*>(wl_resource_get_user_data(resource));
+            me->release();
             wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
@@ -3345,6 +3367,8 @@ struct mw::Region::Thunks
     {
         try
         {
+            auto me = static_cast<Region*>(wl_resource_get_user_data(resource));
+            me->destroy();
             wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
@@ -3451,6 +3475,8 @@ struct mw::Subcompositor::Thunks
     {
         try
         {
+            auto me = static_cast<Subcompositor*>(wl_resource_get_user_data(resource));
+            me->destroy();
             wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
@@ -3592,6 +3618,8 @@ struct mw::Subsurface::Thunks
     {
         try
         {
+            auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
+            me->destroy();
             wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
