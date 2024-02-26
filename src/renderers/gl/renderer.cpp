@@ -379,32 +379,30 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
 {
     auto const texture = gl_interface->as_texture(renderable.buffer());
     auto const clip_area = renderable.clip_area();
+    glm::mat4 transform = renderable.transformation();
+    if (texture->layout() == mg::gl::Texture::Layout::TopRowFirst)
+    {
+        // GL textures have (0,0) at bottom-left rather than top-left
+        // We have to invert this texture to get it the way up GL expects.
+        transform *= glm::mat4{
+            1.0, 0.0, 0.0, 0.0,
+            0.0, -1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0
+        };
+    }
+
     if (clip_area)
     {
         glEnable(GL_SCISSOR_TEST);
 
-        // NOTE: We are handling the following two cases here:
-        // 1. The layout of the output surface matches that of the texture.
-        //    The clip_area provided has the origin in the top-left corner of the screen, while OpenGL
-        //    has the origin in the bottom-left corner of the screen. Hence, when the layout of the
-        //    output surface matches that of the texture, we need to invert the provided clip_area.
-        // 2. The layout of the output surface DOES NOT match that of the texture.
-        //    Note that the call to glViewport in update_gl_viewport will modify the behavior of glScissor.
-        //    Hence, if the layouts do NOT match, then we do NOT need to invert the clip area. This
-        //    is because we WANT the inverted layout which clip_area provides to us by default.
-        auto const invert_clip_area = (output_surface->layout() == graphics::gl::OutputSurface::Layout::TopRowFirst) ==
-            (texture->layout() == mg::gl::Texture::Layout::TopRowFirst);
-        auto const scissor_y = invert_clip_area ?
-            viewport.top_left.y.as_int() +
-                viewport.size.height.as_int() -
-                clip_area.value().top_left.y.as_int() -
-                clip_area.value().size.height.as_int() :
-            clip_area.value().top_left.y.as_int();
+        glm::vec4 transformed_clip_area =
+            transform * glm::vec4(clip_area.value().top_left.x.as_int(), clip_area.value().top_left.y.as_int(), 0, 0);
 
         glScissor(
-            clip_area.value().top_left.x.as_int() -
+            (int)transformed_clip_area.x -
             viewport.top_left.x.as_int(),
-            scissor_y,
+            (int)transformed_clip_area.y,
             clip_area.value().size.width.as_int(),
             clip_area.value().size.height.as_int()
         );
@@ -449,19 +447,6 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
     GLfloat centrey = rect.top_left.y.as_int() +
                       rect.size.height.as_int() / 2.0f;
     glUniform2f(prog->centre_uniform, centrex, centrey);
-
-    glm::mat4 transform = renderable.transformation();
-    if (texture->layout() == mg::gl::Texture::Layout::TopRowFirst)
-    {
-        // GL textures have (0,0) at bottom-left rather than top-left
-        // We have to invert this texture to get it the way up GL expects.
-        transform *= glm::mat4{
-            1.0, 0.0, 0.0, 0.0,
-            0.0, -1.0, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0,
-            0.0, 0.0, 0.0, 1.0
-        };
-    }
 
     glUniformMatrix4fv(prog->transform_uniform, 1, GL_FALSE,
                        glm::value_ptr(transform));
