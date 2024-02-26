@@ -296,5 +296,5 @@ auto mgc::CPUCopyOutputSurface::Impl::size() const -> geom::Size
 
 auto mgc::CPUCopyOutputSurface::Impl::layout() const -> Layout
 {
-    return Layout::GL;
+    return Layout::TopRowFirst;
 }
