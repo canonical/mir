@@ -240,9 +240,9 @@ connect_to_system_bus(mir::GLibMainLoop& ml)
 
 mir::LogindConsoleServices::LogindConsoleServices(
     std::shared_ptr<mir::GLibMainLoop> const& ml,
-    std::shared_ptr<frontend::SessionLocker> const& session_locker)
+    std::shared_ptr<scene::SessionLock> const& session_lock)
     : ml{ml},
-      session_locker{session_locker},
+      session_lock{session_lock},
       connection{connect_to_system_bus(*ml)},
       seat_proxy{
         simple_seat_proxy_on_system_bus(*ml, connection.get(), "/org/freedesktop/login1/seat/seat0")},
@@ -835,7 +835,7 @@ void mir::LogindConsoleServices::request_lock(
     gpointer ctx) noexcept
 {
     auto me = static_cast<LogindConsoleServices*>(ctx);
-    me->session_locker->lock();
+    me->session_lock->lock();
 }
 
 void mir::LogindConsoleServices::request_unlock(
@@ -843,7 +843,7 @@ void mir::LogindConsoleServices::request_unlock(
     gpointer ctx) noexcept
 {
     auto me = static_cast<LogindConsoleServices*>(ctx);
-    me->session_locker->unlock();
+    me->session_lock->unlock();
 }
 
 namespace

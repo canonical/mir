@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_SESSION_LOCKER_H
-#define MIR_TEST_DOUBLES_STUB_SESSION_LOCKER_H
+#ifndef MIR_TEST_DOUBLES_STUB_session_lock_H
+#define MIR_TEST_DOUBLES_STUB_session_lock_H
 
-#include "mir/frontend/session_locker.h"
+#include "mir/scene/session_lock.h"
 
 namespace mir
 {
@@ -26,22 +26,22 @@ namespace test
 namespace doubles
 {
 
-namespace mf = mir::frontend;
+namespace ms = mir::scene;
 
-class StubSessionLocker : public mf::SessionLocker
+class StubSessionLock : public ms::SessionLock
 {
 public:
     void lock() override {}
     void unlock() override {}
-    void register_interest(std::weak_ptr<mf::SessionLockObserver> const&) override {}
+    void register_interest(std::weak_ptr<ms::SessionLockObserver> const&) override {}
     void register_interest(
-        std::weak_ptr<mf::SessionLockObserver> const&,
+        std::weak_ptr<ms::SessionLockObserver> const&,
         Executor&) override {}
-    void unregister_interest(mf::SessionLockObserver const&) override {}
+    void unregister_interest(ms::SessionLockObserver const&) override {}
 };
 
 }
 }
 }
 
-#endif //MIR_TEST_DOUBLES_STUB_SESSION_LOCKER_H
+#endif //MIR_TEST_DOUBLES_STUB_session_lock_H

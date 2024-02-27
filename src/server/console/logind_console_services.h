@@ -19,7 +19,7 @@
 #include <future>
 #include <unordered_map>
 #include "mir/console_services.h"
-#include "mir/frontend/session_locker.h"
+#include "mir/scene/session_lock.h"
 
 #include "glib.h"
 #include "logind-seat.h"
@@ -29,12 +29,12 @@ namespace mir
 {
 class GLibMainLoop;
 
-class LogindConsoleServices : public ConsoleServices, public frontend::SessionLockObserver
+class LogindConsoleServices : public ConsoleServices, public scene::SessionLockObserver
 {
 public:
     LogindConsoleServices(
         std::shared_ptr<GLibMainLoop> const& ml,
-        std::shared_ptr<frontend::SessionLocker> const& session_locker);
+        std::shared_ptr<scene::SessionLock> const& session_lock);
     ~LogindConsoleServices();
 
     void register_switch_handlers(
@@ -86,7 +86,7 @@ private:
         gpointer ctx) noexcept;
 
     std::shared_ptr<GLibMainLoop> const ml;
-    std::shared_ptr<frontend::SessionLocker> session_locker;
+    std::shared_ptr<scene::SessionLock> session_lock;
     std::unique_ptr<GDBusConnection, decltype(&g_object_unref)> const connection;
     std::unique_ptr<LogindSeat, decltype(&g_object_unref)> const seat_proxy;
     std::string const session_path;

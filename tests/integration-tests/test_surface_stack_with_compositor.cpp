@@ -37,6 +37,7 @@
 #include "mir/test/doubles/stub_gl_rendering_provider.h"
 #include "mir/test/doubles/null_gl_config.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_main_loop.h"
 
 #include <condition_variable>
 #include <mutex>
@@ -182,7 +183,7 @@ struct SurfaceStackCompositor : public Test
             .WillByDefault(Return(mt::fake_shared(*stub_buffer)));
     }
     std::shared_ptr<ms::SceneReport> null_scene_report{mr::null_scene_report()};
-    ms::SurfaceStack stack{null_scene_report};
+    ms::SurfaceStack stack{null_scene_report, std::make_shared<mtd::StubMainLoop>()};
     std::shared_ptr<mc::CompositorReport> null_comp_report{mr::null_compositor_report()};
     StubRendererFactory renderer_factory;
     std::chrono::system_clock::time_point timeout;

@@ -116,22 +116,29 @@ struct StubSurface : public ms::BasicSurface
     mir::Executor& executor;
 };
 
+struct MockSessionLockObserver : public ms::SessionLockObserver
+{
+    MOCK_METHOD((void), on_lock, (), (override));
+    MOCK_METHOD((void), on_unlock, (), (override));
+};
+
 struct SurfaceStack : public ::testing::Test
 {
     void SetUp() override
     {
         using namespace testing;
 
-        stub_surface1 = std::make_shared<StubSurface>(stub_buffer_stream1, executor);
-        stub_surface2 = std::make_shared<StubSurface>(stub_buffer_stream2, executor);
-        stub_surface3 = std::make_shared<StubSurface>(stub_buffer_stream3, executor);
-        invisible_stub_surface = std::make_shared<StubSurface>(std::make_shared<mtd::StubBufferStream>(), executor);
+        executor = std::make_shared<mtd::ExplicitExecutor>();
+        stub_surface1 = std::make_shared<StubSurface>(stub_buffer_stream1, *executor);
+        stub_surface2 = std::make_shared<StubSurface>(stub_buffer_stream2, *executor);
+        stub_surface3 = std::make_shared<StubSurface>(stub_buffer_stream3, *executor);
+        invisible_stub_surface = std::make_shared<StubSurface>(std::make_shared<mtd::StubBufferStream>(), *executor);
         invisible_stub_surface->hide();
     }
 
     void TearDown() override
     {
-        executor.execute();
+        executor->execute();
     }
 
     std::shared_ptr<mc::BufferStream> stub_buffer_stream1 = std::make_shared<mtd::StubBufferStream>();
@@ -145,10 +152,10 @@ struct SurfaceStack : public ::testing::Test
 
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
     // The surface stack must be a shared pointer so shared_from_this() works
-    std::shared_ptr<ms::SurfaceStack> shared_stack = std::make_shared<ms::SurfaceStack>(report);
+    std::shared_ptr<ms::SurfaceStack> shared_stack = std::make_shared<ms::SurfaceStack>(report, executor);
     ms::SurfaceStack& stack = *shared_stack;
     void const* compositor_id{&stack};
-    mtd::ExplicitExecutor executor;
+    std::shared_ptr<mtd::ExplicitExecutor> executor;
 };
 
 }
@@ -237,7 +244,7 @@ TEST_F(SurfaceStack, scene_snapshot_omits_invisible_surfaces)
 TEST_F(SurfaceStack, scene_counts_pending_accurately)
 {
     using namespace testing;
-    ms::SurfaceStack stack{report};
+    ms::SurfaceStack stack{report, executor};
     stack.register_compositor(this);
 
     auto stream = std::make_shared<mc::Stream>(geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888);
@@ -274,7 +281,7 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_occluded_surfaces)
 {  // Regression test for LP: #1418081
     using namespace testing;
 
-    ms::SurfaceStack stack{report};
+    ms::SurfaceStack stack{report, executor};
     stack.register_compositor(this);
     auto stream = std::make_shared<mtd::StubBufferStream>();
     auto surface = std::make_shared<ms::BasicSurface>(
@@ -304,7 +311,7 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_partially_exposed_su
     using namespace testing;
 
     // Partially exposed means occluded in one compositor but not another
-    ms::SurfaceStack stack{report};
+    ms::SurfaceStack stack{report, executor};
     auto const comp1 = reinterpret_cast<mc::CompositorID>(0);
     auto const comp2 = reinterpret_cast<mc::CompositorID>(1);
 
@@ -725,7 +732,7 @@ TEST_F(SurfaceStack, occludes_not_rendered_surface)
     stack.register_compositor(compositor_id);
     stack.register_compositor(compositor_id2);
 
-    auto const mock_surface = std::make_shared<MockConfigureSurface>(executor);
+    auto const mock_surface = std::make_shared<MockConfigureSurface>(*executor);
     mock_surface->show();
 
     stack.add_surface(mock_surface, mi::InputReceptionMode::normal);
@@ -750,7 +757,7 @@ TEST_F(SurfaceStack, exposes_rendered_surface)
     stack.register_compositor(compositor_id);
     stack.register_compositor(compositor_id2);
 
-    auto const mock_surface = std::make_shared<MockConfigureSurface>(executor);
+    auto const mock_surface = std::make_shared<MockConfigureSurface>(*executor);
     stack.add_surface(mock_surface, mi::InputReceptionMode::normal);
 
     auto const elements = stack.scene_elements_for(compositor_id);
@@ -775,7 +782,7 @@ TEST_F(SurfaceStack, occludes_surface_when_unregistering_all_compositors_that_re
     stack.register_compositor(compositor_id2);
     stack.register_compositor(compositor_id3);
 
-    auto const mock_surface = std::make_shared<MockConfigureSurface>(executor);
+    auto const mock_surface = std::make_shared<MockConfigureSurface>(*executor);
     stack.add_surface(mock_surface, mi::InputReceptionMode::normal);
 
     auto const elements = stack.scene_elements_for(compositor_id);
@@ -791,7 +798,7 @@ TEST_F(SurfaceStack, occludes_surface_when_unregistering_all_compositors_that_re
     elements.back()->occluded();
     elements2.back()->rendered();
     elements3.back()->rendered();
-    executor.execute();
+    executor->execute();
 
     Mock::VerifyAndClearExpectations(mock_surface.get());
 
@@ -1157,7 +1164,7 @@ TEST_F(SurfaceStack, changing_depth_layer_causes_reorder)
 
     stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
     stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
-    executor.execute();
+    executor->execute();
 
     EXPECT_THAT(
         stack.scene_elements_for(compositor_id),
@@ -1172,7 +1179,7 @@ TEST_F(SurfaceStack, changing_depth_layer_causes_reorder)
         .Times(1);
 
     stub_surface1->set_depth_layer(mir_depth_layer_above);
-    executor.execute();
+    executor->execute();
 
     EXPECT_THAT(
         stack.scene_elements_for(compositor_id),
@@ -1282,12 +1289,12 @@ TEST_F(SurfaceStack, all_depth_layers_are_handled)
     stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
     stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
 
-    executor.execute();
+    executor->execute();
 
     for (auto i = 1u; i < depth_layers_in_order.size(); i++)
     {
         stub_surface1->set_depth_layer(depth_layers_in_order[i]);
-        executor.execute();
+        executor->execute();
         stack.raise(stub_surface2);
 
         EXPECT_THAT(
@@ -1298,7 +1305,7 @@ TEST_F(SurfaceStack, all_depth_layers_are_handled)
             << depth_layer_names[i] << " not kept on top of " << depth_layer_names[i - 1];
 
         stub_surface2->set_depth_layer(depth_layers_in_order[i]);
-        executor.execute();
+        executor->execute();
 
         EXPECT_THAT(
             stack.scene_elements_for(compositor_id),
@@ -1316,51 +1323,24 @@ TEST_F(SurfaceStack, screen_can_be_locked)
     EXPECT_THAT(stack.screen_is_locked(), Eq(false));
     EXPECT_CALL(observer, scene_changed());
 
-    auto handle = stack.lock_screen();
+    stack.lock();
     EXPECT_THAT(stack.screen_is_locked(), Eq(true));
     Mock::VerifyAndClearExpectations(&observer);
-    handle->allow_to_be_dropped();
+    stack.unlock();
 }
 
 TEST_F(SurfaceStack, screen_can_be_unlocked)
 {
-    auto handle = stack.lock_screen();
+    stack.lock();
     EXPECT_THAT(stack.screen_is_locked(), Eq(true));
 
     NiceMock<MockSceneObserver> observer;
     stack.add_observer(mt::fake_shared(observer));
     EXPECT_CALL(observer, scene_changed());
 
-    handle->allow_to_be_dropped();
-    handle.reset();
+    stack.unlock();
     EXPECT_THAT(stack.screen_is_locked(), Eq(false));
     Mock::VerifyAndClearExpectations(&observer);
-}
-
-TEST_F(SurfaceStack, screen_is_not_unlocked_until_all_handles_are_dropped)
-{
-    NiceMock<MockSceneObserver> observer;
-    stack.add_observer(mt::fake_shared(observer));
-    EXPECT_CALL(observer, scene_changed());
-
-    auto handle1 = stack.lock_screen();
-    Mock::VerifyAndClearExpectations(&observer);
-    EXPECT_CALL(observer, scene_changed()).Times(0);
-
-    auto handle2 = stack.lock_screen();
-    auto handle3 = stack.lock_screen();
-    EXPECT_THAT(stack.screen_is_locked(), Eq(true));
-    handle2->allow_to_be_dropped();
-    handle2.reset();
-    EXPECT_THAT(stack.screen_is_locked(), Eq(true));
-    handle1->allow_to_be_dropped();
-    handle1.reset();
-    EXPECT_THAT(stack.screen_is_locked(), Eq(true));
-    EXPECT_CALL(observer, scene_changed());
-
-    handle3->allow_to_be_dropped();
-    handle3.reset();
-    EXPECT_THAT(stack.screen_is_locked(), Eq(false));
 }
 
 TEST_F(SurfaceStack, when_screen_is_locked_surface_ignores_surface)
@@ -1370,9 +1350,9 @@ TEST_F(SurfaceStack, when_screen_is_locked_surface_ignores_surface)
     stub_surface1->resize({200, 200});
     EXPECT_THAT(stack.surface_at(cursor_position), Eq(stub_surface1));
 
-    auto handle = stack.lock_screen();
+    stack.lock();
     EXPECT_THAT(stack.surface_at(cursor_position).get(), IsNull());
-    handle->allow_to_be_dropped();
+    stack.unlock();
 }
 
 TEST_F(SurfaceStack, surfaces_that_are_sent_to_back_appear_at_the_front_of_the_list)
@@ -1458,4 +1438,21 @@ TEST_F(SurfaceStack, multiple_surfaces_can_be_swapped)
             SceneElementForStream(stub_buffer_stream2)));
 
     Mock::VerifyAndClearExpectations(&observer);
+}
+
+TEST_F(SurfaceStack, observer_is_notified_on_lock)
+{
+    auto observer = std::make_shared<MockSessionLockObserver>();
+    EXPECT_CALL(*observer, on_lock()).Times(1);
+    stack.register_interest(observer);
+    stack.lock();
+}
+
+TEST_F(SurfaceStack, observer_is_notified_on_unlock)
+{
+    auto observer = std::make_shared<MockSessionLockObserver>();
+    EXPECT_CALL(*observer, on_unlock()).Times(1);
+    stack.lock();
+    stack.register_interest(observer);
+    stack.unlock();
 }

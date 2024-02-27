@@ -45,7 +45,7 @@ MIR_SERVER_2.17 {
     mir::DefaultServerConfiguration::the_host_connection*;
     mir::DefaultServerConfiguration::the_host_lifecycle_event_listener*;
     mir::DefaultServerConfiguration::the_idle_handler*;
-    mir::DefaultServerConfiguration::the_session_locker*;
+    mir::DefaultServerConfiguration::the_session_lock*;
     mir::DefaultServerConfiguration::the_idle_hub*;
     mir::DefaultServerConfiguration::the_input_device_hub*;
     mir::DefaultServerConfiguration::the_input_device_registry*;
@@ -172,7 +172,7 @@ MIR_SERVER_2.17 {
     mir::Server::the_logger*;
     mir::Server::the_main_loop*;
     mir::Server::the_persistent_surface_store*;
-    mir::Server::the_session_locker*;
+    mir::Server::the_session_lock*;
     mir::Server::the_prompt_session_listener*;
     mir::Server::the_prompt_session_manager*;
     mir::Server::the_rendering_platforms*;

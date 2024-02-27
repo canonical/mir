@@ -26,12 +26,15 @@ namespace shell
 {
 class Shell;
 }
+namespace scene
+{
+class SessionLock;
+}
 namespace frontend
 {
 class WlSeat;
 class SurfaceStack;
 class OutputManager;
-class SessionLocker;
 class SessionLockV1;
 
 class SessionLockManagerV1 : public wayland::SessionLockManagerV1::Global
@@ -41,14 +44,14 @@ public:
         wl_display* display,
         Executor& wayland_executor,
         std::shared_ptr<shell::Shell> shell,
-        std::shared_ptr<frontend::SessionLocker> session_locker,
+        std::shared_ptr<scene::SessionLock> session_lock,
         WlSeat& seat,
         OutputManager* output_manager,
         std::shared_ptr<SurfaceStack> surface_stack);
 
     Executor& wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
-    std::shared_ptr<frontend::SessionLocker> const session_locker;
+    std::shared_ptr<scene::SessionLock> const session_lock;
     WlSeat& seat;
     OutputManager* const output_manager;
     std::shared_ptr<SurfaceStack> surface_stack;
@@ -56,6 +59,7 @@ public:
     bool try_lock(SessionLockV1* lock);
     bool try_relinquish_locking_privilege(SessionLockV1* lock);
     bool try_unlock(SessionLockV1* lock);
+    bool is_active_lock(SessionLockV1* lock);
 private:
     class Instance;
     void bind(wl_resource* new_resource);

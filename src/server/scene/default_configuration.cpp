@@ -37,7 +37,6 @@
 #include "basic_clipboard.h"
 #include "basic_text_input_hub.h"
 #include "basic_idle_hub.h"
-#include "session_locker.h"
 #include "mir/options/default_configuration.h"
 #include "mir/frontend/display_changer.h"
 
@@ -52,13 +51,13 @@ std::shared_ptr<mc::Scene>
 mir::DefaultServerConfiguration::the_scene()
 {
     return scene_surface_stack([this]()
-                         { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
+                         { return std::make_shared<ms::SurfaceStack>(the_scene_report(), the_main_loop()); });
 }
 
 std::shared_ptr<mi::Scene> mir::DefaultServerConfiguration::the_input_scene()
 {
     return scene_surface_stack([this]()
-                             { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
+                             { return std::make_shared<ms::SurfaceStack>(the_scene_report(), the_main_loop()); });
 }
 
 auto mir::DefaultServerConfiguration::the_surface_factory()
@@ -80,7 +79,7 @@ mir::DefaultServerConfiguration::the_surface_stack()
         -> std::shared_ptr<msh::SurfaceStack>
              {
                  auto const wrapped = scene_surface_stack([this]()
-                     { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
+                     { return std::make_shared<ms::SurfaceStack>(the_scene_report(), the_main_loop()); });
 
                  return wrap_surface_stack(wrapped);
              });
@@ -91,7 +90,7 @@ mir::DefaultServerConfiguration::the_frontend_surface_stack()
 {
     return scene_surface_stack([this]()
         {
-            return std::make_shared<ms::SurfaceStack>(the_scene_report());
+            return std::make_shared<ms::SurfaceStack>(the_scene_report(), the_main_loop());
         });
 }
 
@@ -265,14 +264,9 @@ mir::DefaultServerConfiguration::the_display_configuration_controller()
     return the_mediating_display_changer();
 }
 
-std::shared_ptr<mf::SessionLocker>
-mir::DefaultServerConfiguration::the_session_locker()
+std::shared_ptr<ms::SessionLock>
+mir::DefaultServerConfiguration::the_session_lock()
 {
-    return session_locker(
-        [this]()
-        {
-            return std::make_shared<ms::SessionLocker>(
-                the_main_loop(),
-                the_frontend_surface_stack());
-        });
+    return scene_surface_stack([this]()
+        { return std::make_shared<ms::SurfaceStack>(the_scene_report(), the_main_loop()); });
 }

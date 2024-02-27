@@ -17,10 +17,10 @@
 #include "miral/session_lock_listener.h"
 
 #include <mir/server.h>
-#include <mir/frontend/session_locker.h>
+#include <mir/scene/session_lock.h>
 
 
-class miral::SessionLockListener::Impl : public mir::frontend::SessionLockObserver
+class miral::SessionLockListener::Impl : public mir::scene::SessionLockObserver
 {
 public:
     Impl(Callback const& on_lock, Callback const& on_unlock)
@@ -53,6 +53,6 @@ void miral::SessionLockListener::operator()(mir::Server& server) const
 {
     server.add_init_callback([&]()
     {
-        server.the_session_locker()->register_interest(self);
+        server.the_session_lock()->register_interest(self);
     });
 }

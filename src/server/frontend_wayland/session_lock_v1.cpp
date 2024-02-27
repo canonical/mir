@@ -25,7 +25,7 @@
 #include "mir/fatal.h"
 #include "mir/wayland/client.h"
 #include "mir/wayland/protocol_error.h"
-#include "mir/frontend/session_locker.h"
+#include "mir/scene/session_lock.h"
 #include "mir/frontend/surface_stack.h"
 #include "mir/log.h"
 
@@ -33,6 +33,7 @@ namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mw = mir::wayland;
+namespace ms = mir::scene;
 
 namespace mir
 {
@@ -56,10 +57,10 @@ class SessionLockV1 : wayland::SessionLockV1
 {
 public:
     SessionLockV1(wl_resource* new_resource, mf::SessionLockManagerV1& manager);
-    ~SessionLockV1() = default;
+    ~SessionLockV1();
 
 private:
-    class SessionLockV1Observer : public mir::frontend::SessionLockObserver
+    class SessionLockV1Observer : public mir::scene::SessionLockObserver
     {
     public:
         explicit SessionLockV1Observer (mf::SessionLockV1& lock);
@@ -115,14 +116,14 @@ mf::SessionLockManagerV1::SessionLockManagerV1(
     struct wl_display* display,
     Executor& wayland_executor,
     std::shared_ptr<msh::Shell> shell,
-    std::shared_ptr<mf::SessionLocker> session_locker,
+    std::shared_ptr<ms::SessionLock> session_lock,
     WlSeat& seat,
     OutputManager* output_manager,
     std::shared_ptr<SurfaceStack> surface_stack)
     : Global(display, Version<1>()),
       wayland_executor{wayland_executor},
       shell{std::move(shell)},
-      session_locker{std::move(session_locker)},
+      session_lock{std::move(session_lock)},
       seat{seat},
       output_manager{output_manager},
       surface_stack{surface_stack}
@@ -134,7 +135,7 @@ bool mf::SessionLockManagerV1::try_lock(SessionLockV1* lock)
     if (active_lock == nullptr)
     {
         active_lock = lock;
-        session_locker->lock();
+        session_lock->lock();
         return true;
     }
 
@@ -156,11 +157,16 @@ bool mf::SessionLockManagerV1::try_unlock(SessionLockV1* lock)
 {
     if (try_relinquish_locking_privilege(lock))
     {
-        session_locker->unlock();
+        session_lock->unlock();
         return true;
     }
 
     return false;
+}
+
+bool mf::SessionLockManagerV1::is_active_lock(SessionLockV1* lock)
+{
+    return lock == active_lock;
 }
 
 void mf::SessionLockManagerV1::bind(wl_resource* new_resource)
@@ -185,10 +191,15 @@ mf::SessionLockV1::SessionLockV1(wl_resource* new_resource, SessionLockManagerV1
     if (manager.try_lock(this))
     {
         send_locked_event();
-        manager.session_locker->register_interest(observer, manager.wayland_executor);
+        manager.session_lock->register_interest(observer, manager.wayland_executor);
     }
     else
         send_finished_event();
+}
+
+mf::SessionLockV1::~SessionLockV1()
+{
+    manager.try_relinquish_locking_privilege(this);
 }
 
 void mf::SessionLockV1::get_lock_surface(wl_resource* id, wl_resource* surface_resource, wl_resource* output)
@@ -207,15 +218,11 @@ void mf::SessionLockV1::get_lock_surface(wl_resource* id, wl_resource* surface_r
 
 void mf::SessionLockV1::destroy()
 {
-    // Note that this is a deviation from the spec. The spec reads:
-    // "It is a protocol error to make this request if the locked event was sent,
-    // the unlock_and_destroy request must be used instead."
-    //
-    // In our case, it is ONLY a protocol error if the session is still locked,
-    // as the session may have been unlocked via logind independent of the
-    // wayland protocol.
-
-    if (manager.surface_stack->screen_is_locked())
+    if (manager.is_active_lock(this))
+    {
+        manager.try_relinquish_locking_privilege(this);
+    }
+    else
     {
         mir::log_error("SessionLockV1 destroy failed");
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
@@ -223,8 +230,6 @@ void mf::SessionLockV1::destroy()
             Error::invalid_destroy,
             "Destroy requested but session is still locked"));
     }
-    else
-        manager.try_relinquish_locking_privilege(this);
 
 }
 
@@ -251,11 +256,6 @@ void mf::SessionLockV1::SessionLockV1Observer::on_lock() {}
 
 void mf::SessionLockV1::SessionLockV1Observer::on_unlock()
 {
-    // Swaylock does not respond to the finished event with a destroy(),
-    // so we relinquish locking privileges here instead of in destroy().
-    // I have made this bug to address the issue:
-    // https://github.com/swaywm/swaylock/issues/346
-    lock.manager.try_relinquish_locking_privilege(&lock);
     lock.send_finished_event();
 }
 

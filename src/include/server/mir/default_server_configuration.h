@@ -181,7 +181,7 @@ public:
     std::shared_ptr<scene::IdleHub>         the_idle_hub() override;
     std::shared_ptr<shell::IdleHandler>     the_idle_handler() override;
     std::function<void()>                   the_stop_callback() override;
-    std::shared_ptr<frontend::SessionLocker> the_session_locker() override;
+    std::shared_ptr<scene::SessionLock>     the_session_lock() override;
     void add_wayland_extension(
         std::string const& name,
         std::function<std::shared_ptr<void>(
@@ -425,7 +425,7 @@ protected:
     CachedPtr<cookie::Authority> cookie_authority;
     CachedPtr<input::KeyMapper> key_mapper;
     std::shared_ptr<ConsoleServices> console_services;
-    CachedPtr<frontend::SessionLocker> session_locker;
+    CachedPtr<scene::SessionLock> session_lock;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;

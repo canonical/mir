@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_FRONTEND_SESSION_LOCKER_H
-#define MIR_FRONTEND_SESSION_LOCKER_H
+#ifndef MIR_FRONTEND_SESSION_LOCK_H
+#define MIR_FRONTEND_SESSION_LOCK_H
 
 #include <memory>
 
@@ -23,7 +23,7 @@ namespace mir
 {
 class Executor;
 
-namespace frontend
+namespace scene
 {
 
 /// Used to observe session locks and unlocks
@@ -38,14 +38,13 @@ public:
     virtual void on_unlock() = 0;
 };
 
-/// Responsible for triggering session locks and notifying observers
-class SessionLocker
+class SessionLock
 {
 public:
-    SessionLocker() = default;
-    virtual ~SessionLocker() = default;
-    SessionLocker (SessionLocker const&) = delete;
-    SessionLocker& operator= (SessionLocker const&) = delete;
+    SessionLock() = default;
+    virtual ~SessionLock() = default;
+    SessionLock (SessionLock const&) = delete;
+    SessionLock& operator= (SessionLock const&) = delete;
 
     virtual void lock() = 0;
     virtual void unlock() = 0;
@@ -59,4 +58,4 @@ public:
 }
 }
 
-#endif //MIR_FRONTEND_SESSION_LOCKER_H
+#endif //MIR_FRONTEND_SESSION_LOCK_H

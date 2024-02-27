@@ -204,7 +204,7 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 ctx.display,
                 *ctx.wayland_executor,
                 ctx.shell,
-                ctx.session_locker,
+                ctx.session_lock,
                 *ctx.seat,
                 ctx.output_manager,
                 ctx.surface_stack);
@@ -363,7 +363,7 @@ std::shared_ptr<mf::Connector>
                     wayland_extension_hooks),
                 wayland_extension_filter,
                 enable_repeat,
-                the_session_locker());
+                the_session_lock());
         });
 }
 
