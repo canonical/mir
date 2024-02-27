@@ -30,9 +30,7 @@ jobs:
         set -euo pipefail
 
         if ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}; then
-          TASKS='"lxd:ubuntu-22.04:spread/build/ubuntu:asan"
-                 "lxd:ubuntu-22.04:spread/build/ubuntu:tsan"
-                 "lxd:ubuntu-22.04:spread/build/ubuntu:asan_clang"
+          TASKS='"lxd:ubuntu-22.04:spread/build/ubuntu:tsan"
                  "lxd:ubuntu-22.04:spread/build/ubuntu:tsan_clang"'
         fi
 
@@ -50,6 +48,8 @@ jobs:
                 "lxd:fedora-rawhide:spread/build/fedora:amd64"
                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_devel"
                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_proposed"
+                "lxd:ubuntu-22.04:spread/build/ubuntu:asan"
+                "lxd:ubuntu-22.04:spread/build/ubuntu:asan_clang"
                 "lxd:ubuntu-22.04:spread/build/ubuntu:ubsan"
                 "lxd:ubuntu-22.04:spread/build/ubuntu:ubsan_clang"'
 
