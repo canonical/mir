@@ -141,9 +141,6 @@ private:
     void insert_surface_at_top_of_depth_layer(std::shared_ptr<Surface> const& surface);
     auto surface_can_be_shown(std::shared_ptr<Surface> const& surface) const -> bool;
 
-    struct SharedScreenLock;
-    struct BasicScreenLockHandle;
-
     RecursiveReadWriteMutex mutable guard;
 
     std::shared_ptr<SceneReport> const report;

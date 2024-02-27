@@ -602,25 +602,6 @@ auto ms::SurfaceStack::stacking_order_of(SurfaceSet const& surfaces) const -> Su
     return result;
 }
 
-struct ms::SurfaceStack::SharedScreenLock
-{
-    SharedScreenLock(std::weak_ptr<ms::SurfaceStack> surface_stack) : surface_stack{std::move(surface_stack)}
-    {
-    }
-
-    ~SharedScreenLock()
-    {
-        if (auto const shared = surface_stack.lock())
-        {
-            // shared->screen_is_locked() should already be false
-            shared->emit_scene_changed();
-        }
-    }
-
-private:
-    std::weak_ptr<ms::SurfaceStack> surface_stack;
-};
-
 auto ms::SurfaceStack::screen_is_locked() const -> bool
 {
     RecursiveReadLock lk(guard);
@@ -648,6 +629,7 @@ void ms::SurfaceStack::unlock()
             RecursiveReadLock lk(guard);
             is_locked = false;
         }
+        emit_scene_changed();
         multiplexer.on_unlock();
     }
 }
