@@ -130,12 +130,11 @@ private:
 
 ms::SurfaceStack::SurfaceStack(
     std::shared_ptr<SceneReport> const& report,
-    std::shared_ptr<Executor> const& executor) :
+    Executor& executor) :
     report{report},
-    executor{executor},
     scene_changed{false},
     surface_observer{std::make_shared<SurfaceDepthLayerObserver>(this)},
-    multiplexer(*executor)
+    multiplexer(executor)
 {
 }
 
