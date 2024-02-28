@@ -32,9 +32,6 @@ class GLibMainLoop;
 class LogindConsoleServices : public ConsoleServices, public scene::SessionLockObserver
 {
 public:
-    LogindConsoleServices(
-        std::shared_ptr<GLibMainLoop> const& ml,
-        std::shared_ptr<scene::SessionLock> const& session_lock);
     static std::shared_ptr<LogindConsoleServices> create(
         std::shared_ptr<GLibMainLoop> const& ml,
         std::shared_ptr<scene::SessionLock> session_lock);
@@ -58,6 +55,9 @@ public:
 
     class Device;
 private:
+    LogindConsoleServices(
+        std::shared_ptr<GLibMainLoop> const& ml,
+        std::shared_ptr<scene::SessionLock> const& session_lock);
     static void on_state_change(GObject* session_proxy, GParamSpec*, gpointer ctx) noexcept;
     static void on_pause_device(
         LogindSession*,

@@ -242,8 +242,8 @@ std::shared_ptr<mir::LogindConsoleServices> mir::LogindConsoleServices::create(
     std::shared_ptr<GLibMainLoop> const& main_loop,
     std::shared_ptr<scene::SessionLock> session_lock_instance)
 {
-    auto cs = std::make_shared<mir::LogindConsoleServices>(
-        main_loop, session_lock_instance);
+    std::shared_ptr<mir::LogindConsoleServices>cs(new LogindConsoleServices(
+        main_loop, session_lock_instance));
     session_lock_instance->register_interest(cs);
     return cs;
 }
