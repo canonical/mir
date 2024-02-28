@@ -51,13 +51,13 @@ std::shared_ptr<mc::Scene>
 mir::DefaultServerConfiguration::the_scene()
 {
     return scene_surface_stack([this]()
-                         { return std::make_shared<ms::SurfaceStack>(the_scene_report(), *the_main_loop()); });
+                         { return std::make_shared<ms::SurfaceStack>(the_scene_report(), the_main_loop()); });
 }
 
 std::shared_ptr<mi::Scene> mir::DefaultServerConfiguration::the_input_scene()
 {
     return scene_surface_stack([this]()
-                             { return std::make_shared<ms::SurfaceStack>(the_scene_report(), *the_main_loop()); });
+                             { return std::make_shared<ms::SurfaceStack>(the_scene_report(), the_main_loop()); });
 }
 
 auto mir::DefaultServerConfiguration::the_surface_factory()
@@ -79,7 +79,7 @@ mir::DefaultServerConfiguration::the_surface_stack()
         -> std::shared_ptr<msh::SurfaceStack>
              {
                  auto const wrapped = scene_surface_stack([this]()
-                     { return std::make_shared<ms::SurfaceStack>(the_scene_report(), *the_main_loop()); });
+                     { return std::make_shared<ms::SurfaceStack>(the_scene_report(), the_main_loop()); });
 
                  return wrap_surface_stack(wrapped);
              });
@@ -90,7 +90,7 @@ mir::DefaultServerConfiguration::the_frontend_surface_stack()
 {
     return scene_surface_stack([this]()
         {
-            return std::make_shared<ms::SurfaceStack>(the_scene_report(), *the_main_loop());
+            return std::make_shared<ms::SurfaceStack>(the_scene_report(), the_main_loop());
         });
 }
 
@@ -268,5 +268,5 @@ std::shared_ptr<ms::SessionLock>
 mir::DefaultServerConfiguration::the_session_lock()
 {
     return scene_surface_stack([this]()
-        { return std::make_shared<ms::SurfaceStack>(the_scene_report(), *the_main_loop()); });
+        { return std::make_shared<ms::SurfaceStack>(the_scene_report(), the_main_loop()); });
 }

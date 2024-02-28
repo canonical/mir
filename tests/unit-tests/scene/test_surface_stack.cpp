@@ -122,6 +122,15 @@ struct MockSessionLockObserver : public ms::SessionLockObserver
     MOCK_METHOD((void), on_unlock, (), (override));
 };
 
+class ImmediateExecutor : public mir::Executor
+{
+public:
+    void spawn(std::function<void()>&& work) override
+    {
+        work();
+    }
+};
+
 struct SurfaceStack : public ::testing::Test
 {
     void SetUp() override
@@ -151,7 +160,7 @@ struct SurfaceStack : public ::testing::Test
 
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
     // The surface stack must be a shared pointer so shared_from_this() works
-    std::shared_ptr<ms::SurfaceStack> shared_stack = std::make_shared<ms::SurfaceStack>(report, executor);
+    std::shared_ptr<ms::SurfaceStack> shared_stack = std::make_shared<ms::SurfaceStack>(report, std::make_shared<ImmediateExecutor>());
     ms::SurfaceStack& stack = *shared_stack;
     void const* compositor_id{&stack};
     mtd::ExplicitExecutor executor;
@@ -243,7 +252,7 @@ TEST_F(SurfaceStack, scene_snapshot_omits_invisible_surfaces)
 TEST_F(SurfaceStack, scene_counts_pending_accurately)
 {
     using namespace testing;
-    ms::SurfaceStack stack{report, executor};
+    ms::SurfaceStack stack{report, std::make_shared<ImmediateExecutor>()};
     stack.register_compositor(this);
 
     auto stream = std::make_shared<mc::Stream>(geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888);
@@ -280,7 +289,7 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_occluded_surfaces)
 {  // Regression test for LP: #1418081
     using namespace testing;
 
-    ms::SurfaceStack stack{report, executor};
+    ms::SurfaceStack stack{report, std::make_shared<ImmediateExecutor>()};
     stack.register_compositor(this);
     auto stream = std::make_shared<mtd::StubBufferStream>();
     auto surface = std::make_shared<ms::BasicSurface>(
@@ -310,7 +319,7 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_partially_exposed_su
     using namespace testing;
 
     // Partially exposed means occluded in one compositor but not another
-    ms::SurfaceStack stack{report, executor};
+    ms::SurfaceStack stack{report, std::make_shared<ImmediateExecutor>()};
     auto const comp1 = reinterpret_cast<mc::CompositorID>(0);
     auto const comp2 = reinterpret_cast<mc::CompositorID>(1);
 
@@ -1445,7 +1454,6 @@ TEST_F(SurfaceStack, observer_is_notified_on_lock)
     EXPECT_CALL(*observer, on_lock()).Times(1);
     stack.register_interest(observer);
     stack.lock();
-    executor.execute();
 }
 
 TEST_F(SurfaceStack, observer_is_notified_on_unlock)
@@ -1456,5 +1464,4 @@ TEST_F(SurfaceStack, observer_is_notified_on_unlock)
     stack.register_interest(observer);
     stack.lock();
     stack.unlock();
-    executor.execute();
 }

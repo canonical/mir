@@ -86,7 +86,7 @@ class SurfaceStack :
 public:
     SurfaceStack(
         std::shared_ptr<SceneReport> const& report,
-        Executor& executor);
+        std::shared_ptr<Executor> const& executor);
     virtual ~SurfaceStack() noexcept(true);
 
     // From Scene
@@ -144,6 +144,7 @@ private:
     RecursiveReadWriteMutex mutable guard;
 
     std::shared_ptr<SceneReport> const report;
+    std::shared_ptr<Executor> executor;
 
     /**
      * All surfaces managed by this class
