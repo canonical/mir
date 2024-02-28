@@ -107,7 +107,7 @@ std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_conso
                     try
                     {
                         auto session_lock_instance = the_session_lock();
-                        auto const vt_services = std::make_shared<mir::LogindConsoleServices>(
+                        auto const vt_services = mir::LogindConsoleServices::create(
                             std::dynamic_pointer_cast<mir::GLibMainLoop>(the_main_loop()),
                             session_lock_instance);
                         session_lock_instance->register_interest(vt_services);

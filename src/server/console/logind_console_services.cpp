@@ -238,6 +238,16 @@ connect_to_system_bus(mir::GLibMainLoop& ml)
 }
 }
 
+std::shared_ptr<mir::LogindConsoleServices> mir::LogindConsoleServices::create(
+    std::shared_ptr<GLibMainLoop> const& main_loop,
+    std::shared_ptr<scene::SessionLock> session_lock_instance)
+{
+    auto cs = std::make_shared<mir::LogindConsoleServices>(
+        main_loop, session_lock_instance);
+    session_lock_instance->register_interest(cs);
+    return cs;
+}
+
 mir::LogindConsoleServices::LogindConsoleServices(
     std::shared_ptr<mir::GLibMainLoop> const& ml,
     std::shared_ptr<scene::SessionLock> const& session_lock)

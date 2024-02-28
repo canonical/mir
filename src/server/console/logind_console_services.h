@@ -35,6 +35,9 @@ public:
     LogindConsoleServices(
         std::shared_ptr<GLibMainLoop> const& ml,
         std::shared_ptr<scene::SessionLock> const& session_lock);
+    static std::shared_ptr<LogindConsoleServices> create(
+        std::shared_ptr<GLibMainLoop> const& ml,
+        std::shared_ptr<scene::SessionLock> session_lock);
     ~LogindConsoleServices();
 
     void register_switch_handlers(
