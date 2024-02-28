@@ -22,6 +22,7 @@
 
 #include "mir/input/input_reception_mode.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/display_configuration.h"
 
 #include <glm/glm.hpp>
 #include <string>
@@ -61,6 +62,8 @@ public:
     virtual void input_consumed(Surface const* surf, std::shared_ptr<MirEvent const> const& event) = 0;
     virtual void application_id_set_to(Surface const* surf, std::string const& application_id) = 0;
     virtual void depth_layer_set_to(Surface const* surf, MirDepthLayer depth_layer) = 0;
+    virtual void entered_output(Surface const* surf, graphics::DisplayConfigurationOutputId id) = 0;
+    virtual void left_output(Surface const* surf, graphics::DisplayConfigurationOutputId id) = 0;
 
 protected:
     SurfaceObserver() = default;

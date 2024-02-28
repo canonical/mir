@@ -52,10 +52,11 @@ public:
     ///@{
     void attrib_changed(scene::Surface const*, MirWindowAttrib attrib, int value) override;
     void content_resized_to(scene::Surface const*, geometry::Size const& content_size) override;
-    void moved_to(scene::Surface const*, geometry::Point const& top_left) override;
     void client_surface_close_requested(scene::Surface const*) override;
     void placed_relative(scene::Surface const*, geometry::Rectangle const& placement) override;
     void input_consumed(scene::Surface const*, std::shared_ptr<MirEvent const> const& event) override;
+    void entered_output(scene::Surface const*, graphics::DisplayConfigurationOutputId id) override;
+    void left_output(scene::Surface const*, graphics::DisplayConfigurationOutputId id) override;
     ///@}
 
     /// Should only be called from the Wayland thread
@@ -92,7 +93,6 @@ private:
 
         geometry::Size window_size{};
         std::optional<geometry::Size> requested_size{};
-        std::optional<geometry::Point> window_top_left{};
         MirWindowState current_state{mir_window_state_unknown};
     };
 

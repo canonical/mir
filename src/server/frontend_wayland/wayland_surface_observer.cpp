@@ -65,16 +65,8 @@ void mf::WaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAtt
             {
                 impl->current_state = static_cast<MirWindowState>(value);
                 window->handle_state_change(impl->current_state);
-                window->track_overlapping_outputs();
             });
         break;
-
-    case mir_window_attrib_visibility:
-        run_on_wayland_thread_unless_window_destroyed(
-            [](Impl* /*impl*/, WindowWlSurfaceRole* window)
-            {
-                window->track_overlapping_outputs();
-            });
 
     default:;
     }
@@ -89,20 +81,6 @@ void mf::WaylandSurfaceObserver::content_resized_to(ms::Surface const*, geom::Si
             {
                 impl->requested_size = content_size;
                 window->handle_resize(std::nullopt, content_size);
-                window->track_overlapping_outputs();
-            }
-        });
-}
-
-void mf::WaylandSurfaceObserver::moved_to(ms::Surface const*, geom::Point const& top_left)
-{
-    run_on_wayland_thread_unless_window_destroyed(
-        [top_left](Impl* impl, WindowWlSurfaceRole* window)
-        {
-            if (!impl->window_top_left || impl->window_top_left.value() != top_left)
-            {
-                impl->window_top_left = top_left;
-                window->track_overlapping_outputs();
             }
         });
 }
@@ -123,7 +101,6 @@ void mf::WaylandSurfaceObserver::placed_relative(ms::Surface const*, geometry::R
         {
             impl->requested_size = placement.size;
             window->handle_resize(placement.top_left, placement.size);
-            window->track_overlapping_outputs();
         });
 }
 
@@ -137,6 +114,24 @@ void mf::WaylandSurfaceObserver::input_consumed(ms::Surface const*, std::shared_
                 impl->input_dispatcher->handle_event(std::dynamic_pointer_cast<MirInputEvent const>(event));
             });
     }
+}
+
+void mf::WaylandSurfaceObserver::entered_output(ms::Surface const*, graphics::DisplayConfigurationOutputId id)
+{
+    run_on_wayland_thread_unless_window_destroyed(
+        [id](Impl* /*impl*/, WindowWlSurfaceRole* window)
+        {
+            window->handle_enter_output(id);
+        });
+}
+
+void mf::WaylandSurfaceObserver::left_output(ms::Surface const*, graphics::DisplayConfigurationOutputId id)
+{
+    run_on_wayland_thread_unless_window_destroyed(
+        [id](Impl* /*impl*/, WindowWlSurfaceRole* window)
+        {
+            window->handle_leave_output(id);
+        });
 }
 
 void mf::WaylandSurfaceObserver::run_on_wayland_thread_unless_window_destroyed(

@@ -17,6 +17,7 @@
 #include <mir/geometry/size.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/cursor_image.h>
+#include <mir/graphics/display_configuration.h>
 #include <glm/glm.hpp>
 #include <mir_toolkit/mir_input_device_types.h>
 #include <vector>
@@ -27,17 +28,17 @@ namespace mir { namespace scene { class Surface; } }
 struct MirEvent;
 struct MirInputEvent;
 
-namespace miroil 
+namespace miroil
 {
-    
+
 class SurfaceObserver
 {
 public:
     SurfaceObserver() = default;
     SurfaceObserver(SurfaceObserver const&) = delete;
-    SurfaceObserver& operator=(SurfaceObserver const&) = delete;    
+    SurfaceObserver& operator=(SurfaceObserver const&) = delete;
     virtual ~SurfaceObserver() = default;
-    
+
     virtual void attrib_changed(mir::scene::Surface const* surf, MirWindowAttrib attrib, int value) = 0;
     virtual void window_resized_to(mir::scene::Surface const* surf, mir::geometry::Size const& window_size) = 0;
     virtual void content_resized_to(mir::scene::Surface const* surf, mir::geometry::Size const& content_size) = 0;
@@ -58,6 +59,8 @@ public:
     virtual void start_drag_and_drop(mir::scene::Surface const* surf, std::vector<uint8_t> const& handle) = 0;
     virtual void depth_layer_set_to(mir::scene::Surface const* surf, MirDepthLayer depth_layer) = 0;
     virtual void application_id_set_to(mir::scene::Surface const* surf, std::string const& application_id) = 0;
+    virtual void entered_output(mir::scene::Surface const* surf, mir::graphics::DisplayConfigurationOutputId id) = 0;
+    virtual void left_output(mir::scene::Surface const* surf, mir::graphics::DisplayConfigurationOutputId id) = 0;
 };
 
 }

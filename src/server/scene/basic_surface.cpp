@@ -138,6 +138,16 @@ public:
     {
         for_each_observer(&SurfaceObserver::application_id_set_to, surf, application_id);
     }
+
+    void entered_output(Surface const* surf, graphics::DisplayConfigurationOutputId id) override
+    {
+        for_each_observer(&SurfaceObserver::entered_output, surf, id);
+    }
+
+    void left_output(Surface const* surf, graphics::DisplayConfigurationOutputId id) override
+    {
+        for_each_observer(&SurfaceObserver::left_output, surf, id);
+    }
 };
 
 namespace
@@ -321,7 +331,7 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
     if (!visible(*state))
         return false;
 
-    if (state->clip_area) 
+    if (state->clip_area)
     {
         if (!state->clip_area.value().contains(point))
             return false;
@@ -746,7 +756,7 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
 {
     auto state = synchronised_state.lock();
     mg::RenderableList list;
-    
+
     if (state->clip_area)
     {
         if (!state->surface_rect.overlaps(state->clip_area.value()))

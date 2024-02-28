@@ -475,52 +475,38 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
     pending_changes.reset();
 }
 
-void mf::WindowWlSurfaceRole::track_overlapping_outputs()
+void mf::WindowWlSurfaceRole::handle_enter_output(graphics::DisplayConfigurationOutputId id)
 {
-    auto scene_surface{weak_scene_surface.lock()};
-    if (!scene_surface || !surface)
+    if (surface)
     {
-        return;
-    }
-
-    std::ranges::for_each(tracked_outputs, [](auto& tracked_output) { tracked_output.bound = false; });
-
-    output_manager->for_each_output_bound_by(
-        client,
-        [&](OutputInstance* output)
-        {
-            auto const& current_config{output->global.value().current_config()};
-            if (current_config.valid())
+        output_manager->for_each_output_bound_by(
+            client,
+            [&](OutputInstance* output)
             {
-                auto const tracked_it{std::ranges::find_if(tracked_outputs,
-                    [&](auto const& tracked_output)
-                    {
-                        return tracked_output.config == current_config;
-                    })};
-
-                auto const output_rect{current_config.extents()};
-                if (output_rect.overlaps({scene_surface->top_left(), scene_surface->window_size()}))
+                auto const& config{output->global.value().current_config()};
+                if (config.valid() && config.id == id)
                 {
-                    if (tracked_it == tracked_outputs.end())
-                    {
-                        surface.value().send_enter_event(output->resource);
-                        tracked_outputs.push_back({current_config});
-                    }
-                    else
-                    {
-                        tracked_it->bound = true;
-                    }
+                    surface.value().send_enter_event(output->resource);
                 }
-                else if (tracked_it != tracked_outputs.end())
+            });
+    }
+}
+
+void mf::WindowWlSurfaceRole::handle_leave_output(graphics::DisplayConfigurationOutputId id)
+{
+    if (surface)
+    {
+        output_manager->for_each_output_bound_by(
+            client,
+            [&](OutputInstance* output)
+            {
+                auto const& config{output->global.value().current_config()};
+                if (config.valid() && config.id == id)
                 {
                     surface.value().send_leave_event(output->resource);
-                    tracked_outputs.erase(tracked_it);
                 }
-            }
-        });
-
-    // Untrack any remaining outputs not bound by the client
-    std::erase_if(tracked_outputs, [](auto const& tracked_output) { return !tracked_output.bound; });
+            });
+    }
 }
 
 void mf::WindowWlSurfaceRole::apply_client_size(mir::shell::SurfaceSpecification& mods)
