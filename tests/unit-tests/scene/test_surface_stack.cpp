@@ -1456,12 +1456,36 @@ TEST_F(SurfaceStack, observer_is_notified_on_lock)
     stack.lock();
 }
 
-TEST_F(SurfaceStack, observer_is_notified_on_unlock)
+TEST_F(SurfaceStack, observer_is_notified_only_on_initial_lock)
+{
+    auto observer = std::make_shared<MockSessionLockObserver>();
+    EXPECT_CALL(*observer, on_lock()).Times(1);
+    stack.register_interest(observer);
+    stack.lock();
+    stack.lock();
+    stack.lock();
+}
+
+TEST_F(SurfaceStack, observer_is_notified_only_on_initial_unlock)
 {
     auto observer = std::make_shared<MockSessionLockObserver>();
     EXPECT_CALL(*observer, on_lock()).Times(1);
     EXPECT_CALL(*observer, on_unlock()).Times(1);
     stack.register_interest(observer);
+    stack.lock();
+    stack.unlock();
+    stack.unlock();
+    stack.unlock();
+}
+
+TEST_F(SurfaceStack, observer_is_notified_on_multiple_locks_and_unlocks)
+{
+    auto observer = std::make_shared<MockSessionLockObserver>();
+    EXPECT_CALL(*observer, on_lock()).Times(2);
+    EXPECT_CALL(*observer, on_unlock()).Times(2);
+    stack.register_interest(observer);
+    stack.lock();
+    stack.unlock();
     stack.lock();
     stack.unlock();
 }
