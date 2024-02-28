@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include "session_lock_v1.h"
 
 #include "wl_surface.h"
@@ -76,8 +75,7 @@ private:
     void unlock_and_destroy() override;
 
     mf::SessionLockManagerV1& manager;
-    std::shared_ptr<SessionLockV1Observer> observer;
-
+    std::shared_ptr<SessionLockV1Observer> const observer;
 };
 
 class SessionLockSurfaceV1 : wayland::SessionLockSurfaceV1, public WindowWlSurfaceRole
@@ -194,7 +192,9 @@ mf::SessionLockV1::SessionLockV1(wl_resource* new_resource, SessionLockManagerV1
         manager.session_lock->register_interest(observer, manager.wayland_executor);
     }
     else
+    {
         send_finished_event();
+    }
 }
 
 mf::SessionLockV1::~SessionLockV1()
@@ -224,13 +224,11 @@ void mf::SessionLockV1::destroy()
     }
     else
     {
-        mir::log_error("SessionLockV1 destroy failed");
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
             resource,
             Error::invalid_destroy,
             "Destroy requested but session is still locked"));
     }
-
 }
 
 void mf::SessionLockV1::unlock_and_destroy()
@@ -244,7 +242,9 @@ void mf::SessionLockV1::unlock_and_destroy()
             "Unlock requested but locked event was never sent"));
     }
     else
+    {
         manager.try_relinquish_locking_privilege(this);
+    }
 }
 
 mf::SessionLockV1::SessionLockV1Observer::SessionLockV1Observer(mf::SessionLockV1& lock)

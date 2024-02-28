@@ -130,11 +130,10 @@ private:
 
 ms::SurfaceStack::SurfaceStack(
     std::shared_ptr<SceneReport> const& report,
-    std::shared_ptr<Executor> const& executor) :
+    Executor& executor) :
     report{report},
     scene_changed{false},
     surface_observer{std::make_shared<SurfaceDepthLayerObserver>(this)},
-    executor{executor},
     multiplexer(executor)
 {
 }
@@ -604,18 +603,14 @@ auto ms::SurfaceStack::stacking_order_of(SurfaceSet const& surfaces) const -> Su
 
 auto ms::SurfaceStack::screen_is_locked() const -> bool
 {
-    RecursiveReadLock lk(guard);
     return is_locked;
 }
 
 void ms::SurfaceStack::lock()
 {
-    if (!screen_is_locked())
+    bool expected = false;
+    if (is_locked.compare_exchange_weak(expected, true))
     {
-        {
-            RecursiveReadLock lk(guard);
-            is_locked = true;
-        }
         emit_scene_changed();
         multiplexer.on_lock();
     }
@@ -623,12 +618,9 @@ void ms::SurfaceStack::lock()
 
 void ms::SurfaceStack::unlock()
 {
-    if (screen_is_locked())
+    bool expected = true;
+    if (is_locked.compare_exchange_weak(expected, false))
     {
-        {
-            RecursiveReadLock lk(guard);
-            is_locked = false;
-        }
         emit_scene_changed();
         multiplexer.on_unlock();
     }
@@ -687,8 +679,8 @@ void ms::Observers::end_observation()
         { observer->end_observation(); });
 }
 
-ms::SessionLockObserverMultiplexer::SessionLockObserverMultiplexer(const std::shared_ptr<Executor> &executor)
-    : ObserverMultiplexer<SessionLockObserver>(*executor)
+ms::SessionLockObserverMultiplexer::SessionLockObserverMultiplexer(Executor& executor)
+    : ObserverMultiplexer<SessionLockObserver>(executor)
 {
 }
 

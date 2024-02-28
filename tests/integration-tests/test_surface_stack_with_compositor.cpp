@@ -183,7 +183,8 @@ struct SurfaceStackCompositor : public Test
             .WillByDefault(Return(mt::fake_shared(*stub_buffer)));
     }
     std::shared_ptr<ms::SceneReport> null_scene_report{mr::null_scene_report()};
-    ms::SurfaceStack stack{null_scene_report, std::make_shared<mtd::StubMainLoop>()};
+    mtd::StubMainLoop main_loop;
+    ms::SurfaceStack stack{null_scene_report, main_loop};
     std::shared_ptr<mc::CompositorReport> null_comp_report{mr::null_compositor_report()};
     StubRendererFactory renderer_factory;
     std::chrono::system_clock::time_point timeout;

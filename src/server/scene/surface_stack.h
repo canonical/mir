@@ -70,7 +70,7 @@ public:
 class SessionLockObserverMultiplexer : public ObserverMultiplexer<SessionLockObserver>
 {
 public:
-    explicit SessionLockObserverMultiplexer(std::shared_ptr<Executor> const& executor);
+    explicit SessionLockObserverMultiplexer(Executor& executor);
     void on_lock() override;
     void on_unlock() override;
 };
@@ -86,7 +86,7 @@ class SurfaceStack :
 public:
     SurfaceStack(
         std::shared_ptr<SceneReport> const& report,
-        std::shared_ptr<Executor> const& executor);
+        Executor& executor);
     virtual ~SurfaceStack() noexcept(true);
 
     // From Scene
@@ -163,7 +163,6 @@ private:
     std::atomic<bool> is_locked = false;
     std::atomic<bool> scene_changed;
     std::shared_ptr<SurfaceObserver> surface_observer;
-    std::shared_ptr<Executor> executor;
     SessionLockObserverMultiplexer multiplexer;
 };
 
