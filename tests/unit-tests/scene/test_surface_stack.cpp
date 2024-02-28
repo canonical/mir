@@ -1462,6 +1462,9 @@ TEST_F(SurfaceStack, observer_is_notified_only_on_initial_lock)
     EXPECT_CALL(*observer, on_lock()).Times(1);
     stack.register_interest(observer);
     stack.lock();
+
+    Mock::VerifyAndClearExpectations(observer.get());
+    EXPECT_CALL(*observer, on_unlock()).Times(0);
     stack.lock();
     stack.lock();
 }
@@ -1470,10 +1473,14 @@ TEST_F(SurfaceStack, observer_is_notified_only_on_initial_unlock)
 {
     auto observer = std::make_shared<MockSessionLockObserver>();
     EXPECT_CALL(*observer, on_lock()).Times(1);
-    EXPECT_CALL(*observer, on_unlock()).Times(1);
     stack.register_interest(observer);
     stack.lock();
+    Mock::VerifyAndClearExpectations(observer.get());
+    EXPECT_CALL(*observer, on_unlock()).Times(1);
     stack.unlock();
+
+    Mock::VerifyAndClearExpectations(observer.get());
+    EXPECT_CALL(*observer, on_unlock()).Times(0);
     stack.unlock();
     stack.unlock();
 }

@@ -235,7 +235,6 @@ void mf::SessionLockV1::unlock_and_destroy()
 {
     if (!manager.try_unlock(this))
     {
-        mir::log_error("SessionLockV1 unlock_and_destroy failed");
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
             resource,
             Error::invalid_unlock,
