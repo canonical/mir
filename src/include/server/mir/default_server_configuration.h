@@ -425,7 +425,6 @@ protected:
     CachedPtr<cookie::Authority> cookie_authority;
     CachedPtr<input::KeyMapper> key_mapper;
     std::shared_ptr<ConsoleServices> console_services;
-    CachedPtr<scene::SessionLock> session_lock;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;

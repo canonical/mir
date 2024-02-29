@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_session_lock_H
-#define MIR_TEST_DOUBLES_STUB_session_lock_H
+#ifndef MIR_TEST_DOUBLES_STUB_SESSION_LOCK_H
+#define MIR_TEST_DOUBLES_STUB_SESSION_LOCK_H
 
 #include "mir/scene/session_lock.h"
 
@@ -44,4 +44,4 @@ public:
 }
 }
 
-#endif //MIR_TEST_DOUBLES_STUB_session_lock_H
+#endif //MIR_TEST_DOUBLES_STUB_SESSION_LOCK_H
