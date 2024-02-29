@@ -769,7 +769,6 @@ MIR_SERVER_2.17 {
     typeinfo?for?mir::shell::Shell;
     typeinfo?for?mir::shell::ShellReport;
     typeinfo?for?mir::shell::ShellWrapper;
-    typeinfo?for?mir::shell::StreamCursor;
     typeinfo?for?mir::shell::StreamSpecification;
     typeinfo?for?mir::shell::SurfaceAspectRatio;
     typeinfo?for?mir::shell::SurfaceInfo;
@@ -887,7 +886,6 @@ MIR_SERVER_2.17 {
     vtable?for?mir::shell::Shell;
     vtable?for?mir::shell::ShellReport;
     vtable?for?mir::shell::ShellWrapper;
-    vtable?for?mir::shell::StreamCursor;
     vtable?for?mir::shell::StreamSpecification;
     vtable?for?mir::shell::SurfaceAspectRatio;
     vtable?for?mir::shell::SurfaceInfo;
