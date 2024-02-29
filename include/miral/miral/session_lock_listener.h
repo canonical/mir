@@ -24,7 +24,7 @@ namespace mir { class Server; }
 
 namespace miral
 {
-/// Add callbacks to
+/// Add callbacks notifying when the session has been locked and unlocked
 class SessionLockListener
 {
 public:
