@@ -19,7 +19,6 @@
 
 #include "mir/scene/session.h"
 
-#include "mir/graphics/display_configuration.h"
 #include "mir/observer_registrar.h"
 
 #include <atomic>
@@ -31,7 +30,6 @@ namespace mir
 {
 namespace graphics
 {
-class Display;
 class GraphicBufferAllocator;
 }
 namespace shell { class SurfaceStack; }
@@ -54,8 +52,7 @@ public:
         std::string const& session_name,
         std::shared_ptr<SessionListener> const& session_listener,
         std::shared_ptr<frontend::EventSink> const& sink,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-        std::shared_ptr<graphics::Display const> const& display);
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     ~ApplicationSession();
 
@@ -100,8 +97,6 @@ protected:
     ApplicationSession& operator=(ApplicationSession const&) = delete;
 
 private:
-    class SurfaceObserver;
-
     std::shared_ptr<shell::SurfaceStack> const surface_stack;
     std::shared_ptr<SurfaceFactory> const surface_factory;
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
@@ -111,8 +106,6 @@ private:
     std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<frontend::EventSink> const event_sink;
     std::shared_ptr<graphics::GraphicBufferAllocator> const gralloc;
-    std::shared_ptr<graphics::Display const> const display;
-    std::shared_ptr<SurfaceObserver> surface_observer;
 
     std::vector<std::shared_ptr<Surface>> surfaces;
     std::set<std::shared_ptr<compositor::BufferStream>> streams;
@@ -121,22 +114,6 @@ private:
         std::weak_ptr<compositor::BufferStream>,
         std::owner_less<std::weak_ptr<Surface>>> default_content_map;
     std::mutex mutable surfaces_and_streams_mutex;
-
-    struct TrackedOutput
-    {
-        mir::graphics::DisplayConfigurationOutputId id;
-        bool used{true};
-    };
-
-    struct OutputTracker
-    {
-        std::weak_ptr<mir::scene::SurfaceObserver> observer;
-        std::vector<TrackedOutput> outputs;
-    };
-
-    std::map<Surface const*, OutputTracker> output_trackers_map;
-
-    void track_overlapping_outputs(Surface const* surf);
 };
 
 }

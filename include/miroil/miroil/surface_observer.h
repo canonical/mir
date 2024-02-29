@@ -59,8 +59,6 @@ public:
     virtual void start_drag_and_drop(mir::scene::Surface const* surf, std::vector<uint8_t> const& handle) = 0;
     virtual void depth_layer_set_to(mir::scene::Surface const* surf, MirDepthLayer depth_layer) = 0;
     virtual void application_id_set_to(mir::scene::Surface const* surf, std::string const& application_id) = 0;
-    virtual void entered_output(mir::scene::Surface const* surf, mir::graphics::DisplayConfigurationOutputId id) = 0;
-    virtual void left_output(mir::scene::Surface const* surf, mir::graphics::DisplayConfigurationOutputId id) = 0;
 };
 
 }

@@ -479,16 +479,19 @@ void mf::WindowWlSurfaceRole::handle_enter_output(graphics::DisplayConfiguration
 {
     if (surface)
     {
-        output_manager->for_each_output_bound_by(
-            client,
-            [&](OutputInstance* output)
+        if (auto* output_global{output_manager->output_for(id).value_or(nullptr)})
+        {
+            auto const& output_config{output_global->current_config()};
+            if (output_config.valid() && output_config.id == id)
             {
-                auto const& config{output->global.value().current_config()};
-                if (config.valid() && config.id == id)
-                {
-                    surface.value().send_enter_event(output->resource);
-                }
-            });
+                output_global->for_each_output_bound_by(
+                    client,
+                    [&](OutputInstance* output_instance)
+                    {
+                        surface.value().send_enter_event(output_instance->resource);
+                    });
+            }
+        }
     }
 }
 
@@ -496,16 +499,20 @@ void mf::WindowWlSurfaceRole::handle_leave_output(graphics::DisplayConfiguration
 {
     if (surface)
     {
-        output_manager->for_each_output_bound_by(
-            client,
-            [&](OutputInstance* output)
+        // TODO: avoid code duplication
+        if (auto* output_global{output_manager->output_for(id).value_or(nullptr)})
+        {
+            auto const& output_config{output_global->current_config()};
+            if (output_config.valid() && output_config.id == id)
             {
-                auto const& config{output->global.value().current_config()};
-                if (config.valid() && config.id == id)
-                {
-                    surface.value().send_leave_event(output->resource);
-                }
-            });
+                output_global->for_each_output_bound_by(
+                    client,
+                    [&](OutputInstance* output_instance)
+                    {
+                        surface.value().send_leave_event(output_instance->resource);
+                    });
+            }
+        }
     }
 }
 

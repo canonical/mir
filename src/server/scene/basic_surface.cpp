@@ -19,6 +19,7 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/cursor_image.h"
+#include "mir/graphics/null_display_configuration_observer.h"
 #include "mir/graphics/pixel_format_utils.h"
 #include "mir/geometry/displacement.h"
 #include "mir/renderer/sw/pixel_source.h"
@@ -26,6 +27,7 @@
 #include "mir/scene/surface_observer.h"
 
 #include "mir/scene/scene_report.h"
+#include "mir_toolkit/common.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -40,6 +42,25 @@ namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 namespace geom = mir::geometry;
 namespace mrs = mir::renderer::software;
+
+class ms::BasicSurface::DisplayConfigurationListener :  public mg::NullDisplayConfigurationObserver
+{
+public:
+    explicit DisplayConfigurationListener(BasicSurface* surface) : surface{surface} {}
+
+private:
+    void initial_configuration(std::shared_ptr<mg::DisplayConfiguration const> const& config) override
+    {
+        surface->display_config = config;
+    }
+    void configuration_applied(std::shared_ptr<mg::DisplayConfiguration const> const& config) override
+    {
+        surface->display_config = config;
+    }
+
+    BasicSurface* surface;
+};
+
 
 class ms::BasicSurface::Multiplexer : public ObserverMultiplexer<SurfaceObserver>
 {
@@ -173,7 +194,8 @@ ms::BasicSurface::BasicSurface(
     MirPointerConfinementState confinement_state,
     std::list<StreamInfo> const& layers,
     std::shared_ptr<mg::CursorImage> const& cursor_image,
-    std::shared_ptr<SceneReport> const& report) :
+    std::shared_ptr<SceneReport> const& report,
+    std::shared_ptr<ObserverRegistrar<mg::DisplayConfigurationObserver>> const& display_config_registrar) :
     synchronised_state{
         State {
             .surface_name = name,
@@ -192,11 +214,14 @@ ms::BasicSurface::BasicSurface(
     surface_buffer_stream(default_stream(layers)),
     report(report),
     parent_(parent),
-    wayland_surface_{wayland_surface}
+    wayland_surface_{wayland_surface},
+    display_config_registrar{display_config_registrar},
+    display_config_monitor{std::make_shared<DisplayConfigurationListener>(this)}
 {
     auto state = synchronised_state.lock();
     update_frame_posted_callbacks(*state);
     report->surface_created(this, state->surface_name);
+    display_config_registrar->register_interest(display_config_monitor, immediate_executor);
 }
 
 ms::BasicSurface::BasicSurface(
@@ -207,7 +232,8 @@ ms::BasicSurface::BasicSurface(
     MirPointerConfinementState state,
     std::list<StreamInfo> const& layers,
     std::shared_ptr<mg::CursorImage> const& cursor_image,
-    std::shared_ptr<SceneReport> const& report) :
+    std::shared_ptr<SceneReport> const& report,
+    std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar) :
     BasicSurface(
         session,
         wayland_surface,
@@ -217,7 +243,8 @@ ms::BasicSurface::BasicSurface(
         state,
         layers,
         cursor_image,
-        report)
+        report,
+        display_config_registrar)
 {
 }
 
@@ -252,12 +279,14 @@ void ms::BasicSurface::move_to(geometry::Point const& top_left)
 {
     synchronised_state.lock()->surface_rect.top_left = top_left;
     observers->moved_to(this, top_left);
+    track_overlapping_outputs();
 }
 
 void ms::BasicSurface::set_hidden(bool hide)
 {
     synchronised_state.lock()->hidden = hide;
     observers->hidden_set_to(this, hide);
+    track_overlapping_outputs();
 }
 
 mir::geometry::Size ms::BasicSurface::window_size() const
@@ -309,6 +338,7 @@ void ms::BasicSurface::resize(geom::Size const& desired_size)
 
         observers->window_resized_to(this, new_size);
         observers->content_resized_to(this, content_size_);
+        track_overlapping_outputs();
     }
 }
 
@@ -445,6 +475,7 @@ MirWindowState ms::BasicSurface::set_state(MirWindowState s)
         state.drop();
 
         observers->attrib_changed(this, mir_window_attrib_state, s);
+        track_overlapping_outputs();
     }
 
     return s;
@@ -464,6 +495,7 @@ MirOrientationMode ms::BasicSurface::set_preferred_orientation(MirOrientationMod
 
         state.drop();
         observers->attrib_changed(this, mir_window_attrib_preferred_orientation, new_orientation_mode);
+        track_overlapping_outputs();
     }
 
     return new_orientation_mode;
@@ -638,6 +670,7 @@ MirWindowVisibility ms::BasicSurface::set_visibility(MirWindowVisibility new_vis
         state.drop();
 
         observers->attrib_changed(this, mir_window_attrib_visibility, new_visibility);
+        track_overlapping_outputs();
     }
 
     return new_visibility;
@@ -750,6 +783,7 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
         surface_top_left = state->surface_rect.top_left;
     }
     observers->moved_to(this, surface_top_left);
+    track_overlapping_outputs();
 }
 
 mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) const
@@ -955,4 +989,56 @@ auto mir::scene::BasicSurface::content_size(State const& state) const -> geometr
 auto mir::scene::BasicSurface::content_top_left(State const& state) const -> geometry::Point
 {
     return state.surface_rect.top_left + geom::Displacement{state.margins.left, state.margins.top};
+}
+
+void mir::scene::BasicSurface::track_overlapping_outputs()
+{
+    std::ranges::for_each(tracked_outputs, [](auto& tracked_output) { tracked_output.used = false; });
+
+    display_config->for_each_output(
+        [&](graphics::DisplayConfigurationOutput const& config)
+        {
+            if (config.valid())
+            {
+                auto const visible_in_output{[&](graphics::DisplayConfigurationOutput const& config)
+                    {
+                        auto const state{synchronised_state.lock()};
+                        return visible(*state) &&
+                            state->visibility != mir_window_visibility_occluded &&
+                            state->state.active_state() != mir_window_state_hidden &&
+                            state->state.active_state() != mir_window_state_minimized &&
+                            config.extents().overlaps(state->surface_rect);
+                    }};
+
+                if (visible_in_output(config))
+                {
+                    auto const tracked_it{std::ranges::find_if(tracked_outputs,
+                        [&](auto const& tracked_output)
+                        {
+                            return tracked_output.id == config.id;
+                        })};
+                    if (tracked_it == tracked_outputs.end())
+                    {
+                        observers->entered_output(this, config.id);
+                        tracked_outputs.push_back({config.id});
+                    }
+                    else
+                    {
+                        tracked_it->used = true;
+                    }
+                }
+            }
+        });
+
+    // Untrack remaining unused outputs
+    std::erase_if(tracked_outputs,
+        [&](auto const& output)
+        {
+            if (!output.used)
+            {
+                observers->left_output(this, output.id);
+                return true;
+            }
+            return false;
+        });
 }

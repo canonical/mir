@@ -21,13 +21,11 @@
 #include "mir/scene/session_listener.h"
 #include "mir/scene/surface_factory.h"
 #include "mir/scene/buffer_stream_factory.h"
-#include "mir/scene/null_surface_observer.h"
 #include "mir/shell/surface_stack.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/events/event_builders.h"
 #include "mir/frontend/event_sink.h"
-#include "mir/graphics/display.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/scene/surface_observer.h"
 
@@ -46,41 +44,6 @@ namespace mg = mir::graphics;
 namespace mev = mir::events;
 namespace mc = mir::compositor;
 
-class ms::ApplicationSession::SurfaceObserver : public NullSurfaceObserver
-{
-public:
-    explicit SurfaceObserver(ApplicationSession* session) : session{session} {}
-
-    /// Overrides from scene::SurfaceObserver
-    ///@{
-    void attrib_changed(Surface const* surf, MirWindowAttrib attrib, int /*value*/) override
-    {
-        switch (attrib)
-        {
-        case mir_window_attrib_state:
-        case mir_window_attrib_visibility:
-            session->track_overlapping_outputs(surf);
-            break;
-        default:;
-        }
-    }
-    void content_resized_to(Surface const* surf, geometry::Size const& /*content_size*/) override
-    {
-        session->track_overlapping_outputs(surf);
-    }
-    void moved_to(Surface const* surf, geometry::Point const& /*top_left*/) override
-    {
-        session->track_overlapping_outputs(surf);
-    }
-    void placed_relative(Surface const* surf, geometry::Rectangle const& /*placement*/) override
-    {
-        session->track_overlapping_outputs(surf);
-    }
-    ///@}
-private:
-    ApplicationSession* session;
-};
-
 ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<msh::SurfaceStack> const& surface_stack,
     std::shared_ptr<SurfaceFactory> const& surface_factory,
@@ -90,8 +53,7 @@ ms::ApplicationSession::ApplicationSession(
     std::string const& session_name,
     std::shared_ptr<SessionListener> const& session_listener,
     std::shared_ptr<mf::EventSink> const& sink,
-    std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc,
-    std::shared_ptr<graphics::Display const> const& display) :
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc) :
     surface_stack(surface_stack),
     surface_factory(surface_factory),
     buffer_stream_factory(buffer_stream_factory),
@@ -100,9 +62,7 @@ ms::ApplicationSession::ApplicationSession(
     session_name(session_name),
     session_listener(session_listener),
     event_sink(sink),
-    gralloc(gralloc),
-    display(display),
-    surface_observer{std::make_shared<SurfaceObserver>(this)}
+    gralloc(gralloc)
 {
     assert(surface_stack);
 }
@@ -165,13 +125,10 @@ auto ms::ApplicationSession::create_surface(
         default_content_map[surface] = buffer_stream;
     }
 
-    surface->register_interest(surface_observer);
     if (observer)
     {
-        output_trackers_map[surface.get()] = OutputTracker{.observer = observer, .outputs = {}};
         observer->moved_to(surface.get(), surface->top_left());
     }
-    track_overlapping_outputs(surface.get());
 
     session_listener->surface_created(*this, surface);
 
@@ -377,57 +334,4 @@ auto ms::ApplicationSession::has_buffer_stream(
 void ms::ApplicationSession::send_error(mir::ClientVisibleError const& error)
 {
     event_sink->handle_error(error);
-}
-
-void ms::ApplicationSession::track_overlapping_outputs(Surface const* surf)
-{
-    auto const output_tracker_it{output_trackers_map.find(surf)};
-    if (output_tracker_it == output_trackers_map.end())
-        return;
-
-    auto& output_tracker{(*output_tracker_it).second};
-    auto const observer{output_tracker.observer.lock()};
-    if (!observer)
-        return;
-
-    std::ranges::for_each(output_tracker.outputs, [](auto& tracked_output) { tracked_output.used = false; });
-
-    display->configuration()->for_each_output(
-        [&](graphics::DisplayConfigurationOutput const& config)
-        {
-            if (config.valid())
-            {
-                auto const tracked_it{std::ranges::find_if(output_tracker.outputs,
-                    [&](auto const& tracked_output)
-                    {
-                        return tracked_output.id == config.id;
-                    })};
-
-                auto const output_rect{config.extents()};
-                if (output_rect.overlaps({surf->top_left(), surf->window_size()}))
-                {
-                    if (tracked_it == output_tracker.outputs.end())
-                    {
-                        observer->entered_output(surf, config.id);
-                        output_tracker.outputs.push_back({config.id});
-                    }
-                    else
-                    {
-                        tracked_it->used = true;
-                    }
-                }
-            }
-        });
-
-    // Untrack remaining unused outputs
-    std::erase_if(output_tracker.outputs,
-        [&](auto const& output)
-        {
-            if (!output.used)
-            {
-                observer->left_output(surf, output.id);
-                return true;
-            }
-            return false;
-        });
 }

@@ -104,7 +104,6 @@ public:
 
     auto output_for(graphics::DisplayConfigurationOutputId id) -> std::optional<OutputGlobal*>;
     auto current_config() -> graphics::DisplayConfiguration const& { return *display_config; }
-    void for_each_output_bound_by(wayland::Client* client, std::function<void(OutputInstance*)> const& functor);
 
 private:
     void handle_configuration_change(std::shared_ptr<graphics::DisplayConfiguration const> const& config);

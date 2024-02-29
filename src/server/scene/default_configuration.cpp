@@ -68,7 +68,8 @@ auto mir::DefaultServerConfiguration::the_surface_factory()
         {
             return std::make_shared<ms::SurfaceAllocator>(
                 the_default_cursor_image(),
-                the_scene_report());
+                the_scene_report(),
+                the_display_configuration_observer_registrar());
         });
 }
 

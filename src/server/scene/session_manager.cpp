@@ -141,8 +141,7 @@ std::shared_ptr<ms::Session> ms::SessionManager::open_session(
         name,
         observers,
         sender,
-        allocator,
-        display);
+        allocator);
 
     app_container->insert_session(new_session);
 

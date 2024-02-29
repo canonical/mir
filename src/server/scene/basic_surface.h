@@ -17,6 +17,7 @@
 #ifndef MIR_SCENE_BASIC_SURFACE_H_
 #define MIR_SCENE_BASIC_SURFACE_H_
 
+#include "mir/graphics/display_configuration.h"
 #include "mir/scene/surface.h"
 #include "mir/proof_of_mutex_lock.h"
 #include "mir/wayland/weak.h"
@@ -41,6 +42,8 @@ namespace frontend { class EventSink; }
 namespace graphics
 {
 class Buffer;
+class DisplayConfiguration;
+class DisplayConfigurationObserver;
 }
 namespace input
 {
@@ -62,7 +65,8 @@ public:
         MirPointerConfinementState state,
         std::list<scene::StreamInfo> const& streams,
         std::shared_ptr<graphics::CursorImage> const& cursor_image,
-        std::shared_ptr<SceneReport> const& report);
+        std::shared_ptr<SceneReport> const& report,
+        std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar);
 
     BasicSurface(
         std::shared_ptr<Session> const& session,
@@ -73,7 +77,8 @@ public:
         MirPointerConfinementState state,
         std::list<scene::StreamInfo> const& streams,
         std::shared_ptr<graphics::CursorImage> const& cursor_image,
-        std::shared_ptr<SceneReport> const& report);
+        std::shared_ptr<SceneReport> const& report,
+        std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar);
 
     ~BasicSurface() noexcept;
 
@@ -171,6 +176,7 @@ public:
 
 private:
     struct State;
+    class DisplayConfigurationListener;
     class Multiplexer;
 
     bool visible(State const& state) const;
@@ -183,6 +189,7 @@ private:
     void update_frame_posted_callbacks(State& state);
     auto content_size(State const& state) const -> geometry::Size;
     auto content_top_left(State const& state) const -> geometry::Point;
+    void track_overlapping_outputs();
 
     struct State
     {
@@ -228,6 +235,16 @@ private:
     std::shared_ptr<SceneReport> const report;
     std::weak_ptr<Surface> const parent_;
     wayland::Weak<frontend::WlSurface> const wayland_surface_;
+    std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> display_config_registrar;
+    std::shared_ptr<DisplayConfigurationListener> const display_config_monitor;
+    std::shared_ptr<graphics::DisplayConfiguration const> display_config;
+
+    struct TrackedOutput
+    {
+        mir::graphics::DisplayConfigurationOutputId id;
+        bool used{true};
+    };
+    std::vector<TrackedOutput> tracked_outputs;
 };
 
 }

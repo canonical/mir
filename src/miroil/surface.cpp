@@ -162,14 +162,12 @@ void miroil::SurfaceObserverImpl::window_resized_to(mir::scene::Surface const* s
     listener->window_resized_to(surf, window_size);
 }
 
-void miroil::SurfaceObserverImpl::entered_output(mir::scene::Surface const* surf, mir::graphics::DisplayConfigurationOutputId id)
+void miroil::SurfaceObserverImpl::entered_output(mir::scene::Surface const* /*surf*/, mir::graphics::DisplayConfigurationOutputId /*id*/)
 {
-    listener->entered_output(surf, id);
 }
 
-void miroil::SurfaceObserverImpl::left_output(mir::scene::Surface const* surf, mir::graphics::DisplayConfigurationOutputId id)
+void miroil::SurfaceObserverImpl::left_output(mir::scene::Surface const* /*surf*/, mir::graphics::DisplayConfigurationOutputId /*id*/)
 {
-    listener->left_output(surf, id);
 }
 
 miroil::Surface::Surface(std::shared_ptr<mir::scene::Surface> wrapped) :
