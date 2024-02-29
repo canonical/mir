@@ -1581,7 +1581,7 @@ TEST_F(LogindConsoleServices, runs_callbacks_on_provided_main_loop)
         std::make_shared<mir::GLibMainLoop>(std::make_shared<mir::time::SteadyClock>());
 
     // Construct services before the main loop starts…
-    auto services = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
+    auto services = mir::LogindConsoleServices::create(main_loop, the_session_lock());
 
     std::thread::id main_loop_id;
     mt::AutoUnblockThread main_loop_thread{
