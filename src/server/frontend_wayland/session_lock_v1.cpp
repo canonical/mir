@@ -75,6 +75,12 @@ private:
     void unlock_and_destroy() override;
 
     mf::SessionLockManagerV1& manager;
+    /* Lifetime annotation:
+     * This is safe even though `SessionLockV1Observer` keeps a reference to `this`
+     * because the `shared_ptr` is only only shared with the `ObserverRegistrar<>`
+     * (which uses a `weak_ptr` internally) and observations are delegated to the
+     * `WaylandExecutor` so all interactions are single-threaded
+     */
     std::shared_ptr<SessionLockV1Observer> const observer;
 };
 
