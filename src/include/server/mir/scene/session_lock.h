@@ -17,6 +17,7 @@
 #ifndef MIR_FRONTEND_SESSION_LOCK_H
 #define MIR_FRONTEND_SESSION_LOCK_H
 
+#include "mir/observer_registrar.h"
 #include <memory>
 
 namespace mir
@@ -38,7 +39,7 @@ public:
     virtual void on_unlock() = 0;
 };
 
-class SessionLock
+class SessionLock : public ObserverRegistrar<SessionLockObserver>
 {
 public:
     SessionLock() = default;
@@ -48,11 +49,6 @@ public:
 
     virtual void lock() = 0;
     virtual void unlock() = 0;
-    virtual void register_interest(std::weak_ptr<SessionLockObserver> const& observer) = 0;
-    virtual void register_interest(
-        std::weak_ptr<SessionLockObserver> const& observer,
-        Executor& executor) = 0;
-    virtual void unregister_interest(SessionLockObserver const& observer) = 0;
 };
 
 }

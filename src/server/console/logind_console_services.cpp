@@ -239,20 +239,20 @@ connect_to_system_bus(mir::GLibMainLoop& ml)
 }
 
 std::shared_ptr<mir::LogindConsoleServices> mir::LogindConsoleServices::create(
-    std::shared_ptr<GLibMainLoop> const& main_loop,
+    std::shared_ptr<GLibMainLoop> main_loop,
     std::shared_ptr<scene::SessionLock> session_lock_instance)
 {
     std::shared_ptr<mir::LogindConsoleServices>cs(new LogindConsoleServices(
-        main_loop, session_lock_instance));
+        std::move(main_loop), std::move(session_lock_instance)));
     session_lock_instance->register_interest(cs);
     return cs;
 }
 
 mir::LogindConsoleServices::LogindConsoleServices(
-    std::shared_ptr<mir::GLibMainLoop> const& ml,
-    std::shared_ptr<scene::SessionLock> const& session_lock)
-    : ml{ml},
-      session_lock{session_lock},
+    std::shared_ptr<mir::GLibMainLoop> ml,
+    std::shared_ptr<scene::SessionLock> session_lock)
+    : ml{std::move(ml)},
+      session_lock{std::move(session_lock)},
       connection{connect_to_system_bus(*ml)},
       seat_proxy{
         simple_seat_proxy_on_system_bus(*ml, connection.get(), "/org/freedesktop/login1/seat/seat0")},

@@ -152,7 +152,7 @@ struct SurfaceStack : public ::testing::Test
 
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
     // The surface stack must be a shared pointer so shared_from_this() works
-    std::shared_ptr<ms::SurfaceStack> shared_stack = std::make_shared<ms::SurfaceStack>(report, mir::immediate_executor);
+    std::shared_ptr<ms::SurfaceStack> shared_stack = std::make_shared<ms::SurfaceStack>(report);
     ms::SurfaceStack& stack = *shared_stack;
     void const* compositor_id{&stack};
     mtd::ExplicitExecutor executor;
@@ -244,7 +244,7 @@ TEST_F(SurfaceStack, scene_snapshot_omits_invisible_surfaces)
 TEST_F(SurfaceStack, scene_counts_pending_accurately)
 {
     using namespace testing;
-    ms::SurfaceStack stack{report, mir::immediate_executor};
+    ms::SurfaceStack stack{report};
     stack.register_compositor(this);
 
     auto stream = std::make_shared<mc::Stream>(geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888);
@@ -281,7 +281,7 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_occluded_surfaces)
 {  // Regression test for LP: #1418081
     using namespace testing;
 
-    ms::SurfaceStack stack{report, mir::immediate_executor};
+    ms::SurfaceStack stack{report};
     stack.register_compositor(this);
     auto stream = std::make_shared<mtd::StubBufferStream>();
     auto surface = std::make_shared<ms::BasicSurface>(
@@ -311,7 +311,7 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_partially_exposed_su
     using namespace testing;
 
     // Partially exposed means occluded in one compositor but not another
-    ms::SurfaceStack stack{report, mir::immediate_executor};
+    ms::SurfaceStack stack{report};
     auto const comp1 = reinterpret_cast<mc::CompositorID>(0);
     auto const comp2 = reinterpret_cast<mc::CompositorID>(1);
 
@@ -1444,7 +1444,7 @@ TEST_F(SurfaceStack, observer_is_notified_on_lock)
 {
     auto observer = std::make_shared<MockSessionLockObserver>();
     EXPECT_CALL(*observer, on_lock()).Times(1);
-    stack.register_interest(observer);
+    stack.register_interest(observer, mir::immediate_executor);
     stack.lock();
 }
 
@@ -1452,7 +1452,7 @@ TEST_F(SurfaceStack, observer_is_notified_only_on_initial_lock)
 {
     auto observer = std::make_shared<MockSessionLockObserver>();
     EXPECT_CALL(*observer, on_lock()).Times(1);
-    stack.register_interest(observer);
+    stack.register_interest(observer, mir::immediate_executor);
     stack.lock();
 
     Mock::VerifyAndClearExpectations(observer.get());
@@ -1465,7 +1465,7 @@ TEST_F(SurfaceStack, observer_is_notified_only_on_initial_unlock)
 {
     auto observer = std::make_shared<MockSessionLockObserver>();
     EXPECT_CALL(*observer, on_lock()).Times(1);
-    stack.register_interest(observer);
+    stack.register_interest(observer, mir::immediate_executor);
     stack.lock();
     Mock::VerifyAndClearExpectations(observer.get());
     EXPECT_CALL(*observer, on_unlock()).Times(1);
@@ -1482,7 +1482,7 @@ TEST_F(SurfaceStack, observer_is_notified_on_multiple_locks_and_unlocks)
     auto observer = std::make_shared<MockSessionLockObserver>();
     EXPECT_CALL(*observer, on_lock()).Times(2);
     EXPECT_CALL(*observer, on_unlock()).Times(2);
-    stack.register_interest(observer);
+    stack.register_interest(observer, mir::immediate_executor);
     stack.lock();
     stack.unlock();
     stack.lock();

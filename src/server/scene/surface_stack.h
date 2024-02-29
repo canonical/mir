@@ -84,9 +84,7 @@ class SurfaceStack :
     public SessionLock
 {
 public:
-    SurfaceStack(
-        std::shared_ptr<SceneReport> const& report,
-        Executor& executor);
+    SurfaceStack(std::shared_ptr<SceneReport> const& report);
     virtual ~SurfaceStack() noexcept(true);
 
     // From Scene
