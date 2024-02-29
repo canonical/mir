@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_FRONTEND_SESSION_LOCK_H
-#define MIR_FRONTEND_SESSION_LOCK_H
+#ifndef MIR_SCENE_SESSION_LOCK_H
+#define MIR_SCENE_SESSION_LOCK_H
 
 #include "mir/observer_registrar.h"
 #include <memory>
@@ -54,4 +54,4 @@ public:
 }
 }
 
-#endif //MIR_FRONTEND_SESSION_LOCK_H
+#endif //MIR_SCENE_SESSION_LOCK_H
