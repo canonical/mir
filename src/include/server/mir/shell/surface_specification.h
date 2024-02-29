@@ -52,13 +52,6 @@ struct StreamSpecification
 };
 auto operator==(StreamSpecification const& lhs, StreamSpecification const& rhs) -> bool;
 
-struct StreamCursor
-{
-    std::weak_ptr<frontend::BufferStream> stream;
-    geometry::Displacement hotspot;
-};
-auto operator==(StreamCursor const& lhs, StreamCursor const& rhs) -> bool;
-
 /// Specification of surface properties requested by client
 struct SurfaceSpecification
 {
