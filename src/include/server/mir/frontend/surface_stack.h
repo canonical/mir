@@ -32,19 +32,6 @@ using SurfaceList = std::vector<std::weak_ptr<scene::Surface>>;
 }
 namespace frontend
 {
-struct ScreenLockHandle
-{
-    ScreenLockHandle(ScreenLockHandle const&) = delete;
-    ScreenLockHandle& operator=(ScreenLockHandle const&) = delete;
-    virtual ~ScreenLockHandle() = default;
-
-    /// This allows this handle to be dropped without generating a fatal error. Note that the screen is not actually
-    /// unlocked until all ScreenLockHandles have actually been dropped.
-    virtual void allow_to_be_dropped() = 0;
-
-protected:
-    ScreenLockHandle() = default;
-};
 
 class SurfaceStack
 {
@@ -59,9 +46,6 @@ public:
     /// If a surface is not known to the surface stack it will not be in the returned list
     virtual auto stacking_order_of(scene::SurfaceSet const& surfaces) const -> scene::SurfaceList = 0;
 
-    /// Locks the screen or returns a handle to the existing screen lock if the screen is already locked. The screen is
-    /// unlocked when the last copy of ScreenLockHandle is dropped.
-    virtual auto lock_screen() -> std::unique_ptr<ScreenLockHandle> = 0;
     /// Returns if the screen is currently locked
     virtual auto screen_is_locked() const -> bool = 0;
 

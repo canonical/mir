@@ -263,3 +263,10 @@ mir::DefaultServerConfiguration::the_display_configuration_controller()
 {
     return the_mediating_display_changer();
 }
+
+std::shared_ptr<ms::SessionLock>
+mir::DefaultServerConfiguration::the_session_lock()
+{
+    return scene_surface_stack([this]()
+        { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
+}

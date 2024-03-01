@@ -37,6 +37,7 @@
 #include "mir/test/doubles/stub_gl_rendering_provider.h"
 #include "mir/test/doubles/null_gl_config.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_main_loop.h"
 
 #include <condition_variable>
 #include <mutex>

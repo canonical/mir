@@ -27,6 +27,7 @@
 #include "mir/test/doubles/stub_renderable.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
 #include "mir/test/doubles/explicit_executor.h"
+#include "mir/executor.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -114,6 +115,12 @@ struct StubSurface : public ms::BasicSurface
     }
 
     mir::Executor& executor;
+};
+
+struct MockSessionLockObserver : public ms::SessionLockObserver
+{
+    MOCK_METHOD((void), on_lock, (), (override));
+    MOCK_METHOD((void), on_unlock, (), (override));
 };
 
 struct SurfaceStack : public ::testing::Test
@@ -1316,51 +1323,24 @@ TEST_F(SurfaceStack, screen_can_be_locked)
     EXPECT_THAT(stack.screen_is_locked(), Eq(false));
     EXPECT_CALL(observer, scene_changed());
 
-    auto handle = stack.lock_screen();
+    stack.lock();
     EXPECT_THAT(stack.screen_is_locked(), Eq(true));
     Mock::VerifyAndClearExpectations(&observer);
-    handle->allow_to_be_dropped();
+    stack.unlock();
 }
 
 TEST_F(SurfaceStack, screen_can_be_unlocked)
 {
-    auto handle = stack.lock_screen();
+    stack.lock();
     EXPECT_THAT(stack.screen_is_locked(), Eq(true));
 
     NiceMock<MockSceneObserver> observer;
     stack.add_observer(mt::fake_shared(observer));
     EXPECT_CALL(observer, scene_changed());
 
-    handle->allow_to_be_dropped();
-    handle.reset();
+    stack.unlock();
     EXPECT_THAT(stack.screen_is_locked(), Eq(false));
     Mock::VerifyAndClearExpectations(&observer);
-}
-
-TEST_F(SurfaceStack, screen_is_not_unlocked_until_all_handles_are_dropped)
-{
-    NiceMock<MockSceneObserver> observer;
-    stack.add_observer(mt::fake_shared(observer));
-    EXPECT_CALL(observer, scene_changed());
-
-    auto handle1 = stack.lock_screen();
-    Mock::VerifyAndClearExpectations(&observer);
-    EXPECT_CALL(observer, scene_changed()).Times(0);
-
-    auto handle2 = stack.lock_screen();
-    auto handle3 = stack.lock_screen();
-    EXPECT_THAT(stack.screen_is_locked(), Eq(true));
-    handle2->allow_to_be_dropped();
-    handle2.reset();
-    EXPECT_THAT(stack.screen_is_locked(), Eq(true));
-    handle1->allow_to_be_dropped();
-    handle1.reset();
-    EXPECT_THAT(stack.screen_is_locked(), Eq(true));
-    EXPECT_CALL(observer, scene_changed());
-
-    handle3->allow_to_be_dropped();
-    handle3.reset();
-    EXPECT_THAT(stack.screen_is_locked(), Eq(false));
 }
 
 TEST_F(SurfaceStack, when_screen_is_locked_surface_ignores_surface)
@@ -1370,9 +1350,9 @@ TEST_F(SurfaceStack, when_screen_is_locked_surface_ignores_surface)
     stub_surface1->resize({200, 200});
     EXPECT_THAT(stack.surface_at(cursor_position), Eq(stub_surface1));
 
-    auto handle = stack.lock_screen();
+    stack.lock();
     EXPECT_THAT(stack.surface_at(cursor_position).get(), IsNull());
-    handle->allow_to_be_dropped();
+    stack.unlock();
 }
 
 TEST_F(SurfaceStack, surfaces_that_are_sent_to_back_appear_at_the_front_of_the_list)
@@ -1458,4 +1438,53 @@ TEST_F(SurfaceStack, multiple_surfaces_can_be_swapped)
             SceneElementForStream(stub_buffer_stream2)));
 
     Mock::VerifyAndClearExpectations(&observer);
+}
+
+TEST_F(SurfaceStack, observer_is_notified_on_lock)
+{
+    auto observer = std::make_shared<MockSessionLockObserver>();
+    EXPECT_CALL(*observer, on_lock()).Times(1);
+    stack.register_interest(observer, mir::immediate_executor);
+    stack.lock();
+}
+
+TEST_F(SurfaceStack, observer_is_notified_only_on_initial_lock)
+{
+    auto observer = std::make_shared<MockSessionLockObserver>();
+    EXPECT_CALL(*observer, on_lock()).Times(1);
+    stack.register_interest(observer, mir::immediate_executor);
+    stack.lock();
+
+    Mock::VerifyAndClearExpectations(observer.get());
+    EXPECT_CALL(*observer, on_unlock()).Times(0);
+    stack.lock();
+    stack.lock();
+}
+
+TEST_F(SurfaceStack, observer_is_notified_only_on_initial_unlock)
+{
+    auto observer = std::make_shared<MockSessionLockObserver>();
+    EXPECT_CALL(*observer, on_lock()).Times(1);
+    stack.register_interest(observer, mir::immediate_executor);
+    stack.lock();
+    Mock::VerifyAndClearExpectations(observer.get());
+    EXPECT_CALL(*observer, on_unlock()).Times(1);
+    stack.unlock();
+
+    Mock::VerifyAndClearExpectations(observer.get());
+    EXPECT_CALL(*observer, on_unlock()).Times(0);
+    stack.unlock();
+    stack.unlock();
+}
+
+TEST_F(SurfaceStack, observer_is_notified_on_multiple_locks_and_unlocks)
+{
+    auto observer = std::make_shared<MockSessionLockObserver>();
+    EXPECT_CALL(*observer, on_lock()).Times(2);
+    EXPECT_CALL(*observer, on_unlock()).Times(2);
+    stack.register_interest(observer, mir::immediate_executor);
+    stack.lock();
+    stack.unlock();
+    stack.lock();
+    stack.unlock();
 }

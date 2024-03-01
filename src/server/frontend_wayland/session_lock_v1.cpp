@@ -24,19 +24,20 @@
 #include "mir/fatal.h"
 #include "mir/wayland/client.h"
 #include "mir/wayland/protocol_error.h"
+#include "mir/scene/session_lock.h"
 #include "mir/frontend/surface_stack.h"
+#include "mir/log.h"
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mw = mir::wayland;
+namespace ms = mir::scene;
 
 namespace mir
 {
 namespace frontend
 {
-struct ScreenLockHandle;
-
 class SessionLockManagerV1::Instance : wayland::SessionLockManagerV1
 {
 public:
@@ -48,7 +49,6 @@ public:
 
 private:
     void lock(wl_resource* lock) override;
-
     mf::SessionLockManagerV1& manager;
 };
 
@@ -59,10 +59,29 @@ public:
     ~SessionLockV1();
 
 private:
+    class SessionLockV1Observer : public mir::scene::SessionLockObserver
+    {
+    public:
+        explicit SessionLockV1Observer (mf::SessionLockV1& lock);
+        void on_lock() override;
+        void on_unlock() override;
+
+    private:
+        SessionLockV1& lock;
+    };
+
     void get_lock_surface(wl_resource* id, wl_resource* surface, wl_resource* output) override;
+    void destroy() override;
+    void unlock_and_destroy() override;
 
     mf::SessionLockManagerV1& manager;
-    std::unique_ptr<frontend::ScreenLockHandle> const lock_handle;
+    /* Lifetime annotation:
+     * This is safe even though `SessionLockV1Observer` keeps a reference to `this`
+     * because the `shared_ptr` is only only shared with the `ObserverRegistrar<>`
+     * (which uses a `weak_ptr` internally) and observations are delegated to the
+     * `WaylandExecutor` so all interactions are single-threaded
+     */
+    std::shared_ptr<SessionLockV1Observer> const observer;
 };
 
 class SessionLockSurfaceV1 : wayland::SessionLockSurfaceV1, public WindowWlSurfaceRole
@@ -101,16 +120,57 @@ mf::SessionLockManagerV1::SessionLockManagerV1(
     struct wl_display* display,
     Executor& wayland_executor,
     std::shared_ptr<msh::Shell> shell,
-    std::shared_ptr<mf::SurfaceStack> surface_stack,
+    std::shared_ptr<ms::SessionLock> session_lock,
     WlSeat& seat,
-    OutputManager* output_manager)
+    OutputManager* output_manager,
+    std::shared_ptr<SurfaceStack> surface_stack)
     : Global(display, Version<1>()),
       wayland_executor{wayland_executor},
       shell{std::move(shell)},
-      surface_stack{std::move(surface_stack)},
+      session_lock{std::move(session_lock)},
       seat{seat},
-      output_manager{output_manager}
+      output_manager{output_manager},
+      surface_stack{surface_stack}
 {
+}
+
+bool mf::SessionLockManagerV1::try_lock(SessionLockV1* lock)
+{
+    if (active_lock == nullptr)
+    {
+        active_lock = lock;
+        session_lock->lock();
+        return true;
+    }
+
+    return false;
+}
+
+bool mf::SessionLockManagerV1::try_relinquish_locking_privilege(mir::frontend::SessionLockV1 *lock)
+{
+    if (active_lock == lock)
+    {
+        active_lock = nullptr;
+        return true;
+    }
+
+    return false;
+}
+
+bool mf::SessionLockManagerV1::try_unlock(SessionLockV1* lock)
+{
+    if (try_relinquish_locking_privilege(lock))
+    {
+        session_lock->unlock();
+        return true;
+    }
+
+    return false;
+}
+
+bool mf::SessionLockManagerV1::is_active_lock(SessionLockV1* lock)
+{
+    return lock == active_lock;
 }
 
 void mf::SessionLockManagerV1::bind(wl_resource* new_resource)
@@ -127,24 +187,25 @@ void mf::SessionLockManagerV1::Instance::lock(wl_resource* lock)
 
 // SessionLockV1
 
-mf::SessionLockV1::SessionLockV1(wl_resource* new_resource, mf::SessionLockManagerV1& manager)
+mf::SessionLockV1::SessionLockV1(wl_resource* new_resource, SessionLockManagerV1& manager)
     : mw::SessionLockV1(new_resource, Version<1>()),
       manager{manager},
-      lock_handle{manager.surface_stack->lock_screen()}
+      observer{std::make_shared<SessionLockV1Observer>(*this)}
 {
-    send_locked_event();
+    if (manager.try_lock(this))
+    {
+        send_locked_event();
+        manager.session_lock->register_interest(observer, manager.wayland_executor);
+    }
+    else
+    {
+        send_finished_event();
+    }
 }
 
 mf::SessionLockV1::~SessionLockV1()
 {
-    if (client->is_being_destroyed())
-    {
-        fatal_error("Screen locker died while screen was locked");
-    }
-    else
-    {
-        lock_handle->allow_to_be_dropped();
-    }
+    manager.try_relinquish_locking_privilege(this);
 }
 
 void mf::SessionLockV1::get_lock_surface(wl_resource* id, wl_resource* surface_resource, wl_resource* output)
@@ -157,7 +218,50 @@ void mf::SessionLockV1::get_lock_surface(wl_resource* id, wl_resource* surface_r
             std::to_string(wl_resource_get_id(output)) +
             " does not map to a valid Mir output ID"));
     }
+
     new SessionLockSurfaceV1{id, manager, WlSurface::from(surface_resource), output_id.value()};
+}
+
+void mf::SessionLockV1::destroy()
+{
+    if (manager.is_active_lock(this))
+    {
+        manager.try_relinquish_locking_privilege(this);
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::invalid_destroy,
+            "Destroy requested but session is still locked"));
+    }
+}
+
+void mf::SessionLockV1::unlock_and_destroy()
+{
+    if (!manager.try_unlock(this))
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::invalid_unlock,
+            "Unlock requested but locked event was never sent"));
+    }
+    else
+    {
+        manager.try_relinquish_locking_privilege(this);
+    }
+}
+
+mf::SessionLockV1::SessionLockV1Observer::SessionLockV1Observer(mf::SessionLockV1& lock)
+    : lock{lock}
+{
+}
+
+void mf::SessionLockV1::SessionLockV1Observer::on_lock() {}
+
+void mf::SessionLockV1::SessionLockV1Observer::on_unlock()
+{
+    lock.send_finished_event();
 }
 
 // SessionLockSurfaceV1

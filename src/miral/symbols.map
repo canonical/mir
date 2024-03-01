@@ -121,6 +121,9 @@ global:
     miral::PrependEventFilter::PrependEventFilter*;
     miral::PrependEventFilter::operator*;
     miral::PrintTo*;
+    miral::SessionLockListener::?SessionLockListener*;
+    miral::SessionLockListener::SessionLockListener*;
+    miral::SessionLockListener::operator*;
     miral::SetCommandLineHandler::?SetCommandLineHandler*;
     miral::SetCommandLineHandler::SetCommandLineHandler*;
     miral::SetCommandLineHandler::operator*;
@@ -417,6 +420,7 @@ global:
     typeinfo?for?miral::Output;
     typeinfo?for?miral::Output::PhysicalSizeMM;
     typeinfo?for?miral::PrependEventFilter;
+    typeinfo?for?miral::SessionLockListener;
     typeinfo?for?miral::SetCommandLineHandler;
     typeinfo?for?miral::SetTerminator;
     typeinfo?for?miral::SetWindowManagementPolicy;
@@ -454,6 +458,7 @@ global:
     vtable?for?miral::Output;
     vtable?for?miral::Output::PhysicalSizeMM;
     vtable?for?miral::PrependEventFilter;
+    vtable?for?miral::SessionLockListener;
     vtable?for?miral::SetCommandLineHandler;
     vtable?for?miral::SetTerminator;
     vtable?for?miral::SetWindowManagementPolicy;

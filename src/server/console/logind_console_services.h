@@ -19,6 +19,7 @@
 #include <future>
 #include <unordered_map>
 #include "mir/console_services.h"
+#include "mir/scene/session_lock.h"
 
 #include "glib.h"
 #include "logind-seat.h"
@@ -28,10 +29,12 @@ namespace mir
 {
 class GLibMainLoop;
 
-class LogindConsoleServices : public ConsoleServices
+class LogindConsoleServices : public ConsoleServices, public scene::SessionLockObserver
 {
 public:
-    LogindConsoleServices(std::shared_ptr<GLibMainLoop> const& ml);
+    static std::shared_ptr<LogindConsoleServices> create(
+        std::shared_ptr<GLibMainLoop> ml,
+        std::shared_ptr<scene::SessionLock> session_lock);
     ~LogindConsoleServices();
 
     void register_switch_handlers(
@@ -47,8 +50,14 @@ public:
         int major, int minor,
         std::unique_ptr<Device::Observer> observer) override;
 
+    void on_lock() override;
+    void on_unlock() override;
+
     class Device;
 private:
+    LogindConsoleServices(
+        std::shared_ptr<GLibMainLoop> ml,
+        std::shared_ptr<scene::SessionLock> session_lock);
     static void on_state_change(GObject* session_proxy, GParamSpec*, gpointer ctx) noexcept;
     static void on_pause_device(
         LogindSession*,
@@ -71,7 +80,16 @@ private:
         gpointer ctx) noexcept;
 #endif
 
+    static void request_lock(
+        GObject*,
+        gpointer ctx) noexcept;
+
+    static void request_unlock(
+        GObject*,
+        gpointer ctx) noexcept;
+
     std::shared_ptr<GLibMainLoop> const ml;
+    std::shared_ptr<scene::SessionLock> session_lock;
     std::unique_ptr<GDBusConnection, decltype(&g_object_unref)> const connection;
     std::unique_ptr<LogindSeat, decltype(&g_object_unref)> const seat_proxy;
     std::string const session_path;

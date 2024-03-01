@@ -34,6 +34,7 @@
 #include "mir/test/auto_unblock_thread.h"
 #include "mir/test/doubles/simple_device_observer.h"
 #include "mir/test/doubles/null_device_observer.h"
+#include "mir/test/doubles/stub_session_lock.h"
 
 #include "src/server/console/logind_console_services.h"
 
@@ -182,7 +183,8 @@ public:
           ml{std::make_shared<mir::GLibMainLoop>(std::make_shared<mir::time::SteadyClock>())},
           ml_thread{
               [this]() { ml->stop(); ml_thread_stopped = true; },
-              [this]() { ml->run(); }}
+              [this]() { ml->run(); }},
+          session_lock{std::make_shared<mtd::StubSessionLock>()}
     {
         if (!bus_connection)
         {
@@ -995,6 +997,11 @@ public:
     {
         return ml;
     }
+
+    std::shared_ptr<mir::scene::SessionLock> the_session_lock()
+    {
+        return session_lock;
+    }
 private:
     DBusDaemon const system_bus;
     DBusDaemon const session_bus;
@@ -1009,6 +1016,7 @@ private:
 
     std::shared_ptr<mir::GLibMainLoop> const ml;
     mt::AutoUnblockThread ml_thread;
+    std::shared_ptr<mir::scene::SessionLock> session_lock;
     bool ml_thread_stopped = false;
 };
 
@@ -1020,7 +1028,7 @@ TEST_F(LogindConsoleServices, happy_path_succeeds)
     ensure_mock_logind();
     add_any_active_session();
 
-    mir::LogindConsoleServices test{the_main_loop()};
+    auto test = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
     stop_mainloop();
 }
 
@@ -1037,7 +1045,7 @@ TEST_F(LogindConsoleServices, construction_fails_if_cannot_claim_control)
         "raise dbus.exceptions.DBusException('Device or resource busy (36)', name='System.Error.EBUSY')");
 
     EXPECT_THROW(
-        mir::LogindConsoleServices test{the_main_loop()};,
+        mir::LogindConsoleServices::create(the_main_loop(), the_session_lock()),
         std::runtime_error);
     stop_mainloop();
 }
@@ -1045,7 +1053,7 @@ TEST_F(LogindConsoleServices, construction_fails_if_cannot_claim_control)
 TEST_F(LogindConsoleServices, construction_fails_if_no_logind)
 {
     EXPECT_THROW(
-        mir::LogindConsoleServices test{the_main_loop()},
+        mir::LogindConsoleServices::create(the_main_loop(), the_session_lock()),
         std::runtime_error);
     stop_mainloop();
 }
@@ -1057,7 +1065,7 @@ TEST_F(LogindConsoleServices, construction_fails_if_no_active_session)
     add_seat("seat0");
 
     EXPECT_THROW(
-        mir::LogindConsoleServices test{the_main_loop()};,
+        mir::LogindConsoleServices::create(the_main_loop(), the_session_lock()),
         std::runtime_error);
     stop_mainloop();
 }
@@ -1077,7 +1085,7 @@ TEST_F(LogindConsoleServices, selects_active_session)
     // DBusMock will set the active session to the last-created one
     add_any_active_session();
 
-    mir::LogindConsoleServices test{the_main_loop()};
+    auto services = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
     stop_mainloop();
 }
 
@@ -1099,10 +1107,10 @@ TEST_F(LogindConsoleServices, take_device_happy_path_resolves_to_fd)
             fake_device_node.fd());
     }
 
-    mir::LogindConsoleServices services{the_main_loop()};
+    auto services = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
 
     mir::Fd resolved_fd;
-    auto device = services.acquire_device(
+    auto device = services->acquire_device(
         22, 33,
         std::make_unique<mtd::SimpleDeviceObserver>(
             [&resolved_fd](mir::Fd&& fd)
@@ -1136,10 +1144,10 @@ TEST_F(LogindConsoleServices, take_device_calls_suspended_callback_when_initiall
         session_path.c_str(),
         "ret = (os.open('/dev/zero', os.O_RDONLY), True)");
 
-    mir::LogindConsoleServices services{the_main_loop()};
+    auto services = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
 
     bool suspend_called{false};
-    auto device = services.acquire_device(
+    auto device = services->acquire_device(
         22, 33,
         std::make_unique<mtd::SimpleDeviceObserver>(
             [](mir::Fd&&)
@@ -1164,9 +1172,9 @@ TEST_F(LogindConsoleServices, take_device_resolves_to_exception_on_error)
         session_path.c_str(),
         "raise dbus.exceptions.DBusException('No such file or directory (2)', name='System.Error.ENOENT')");
 
-    mir::LogindConsoleServices services{the_main_loop()};
+    auto services = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
 
-    auto device = services.acquire_device(
+    auto device = services->acquire_device(
         22, 33,
         std::make_unique<mtd::SimpleDeviceObserver>(
             [](auto){},
@@ -1192,13 +1200,13 @@ TEST_F(LogindConsoleServices, device_activated_callback_called_on_activate)
         "ret = (os.open('/dev/zero', os.O_RDONLY), True)");
     add_release_device_to_session(session_path.c_str());
 
-    mir::LogindConsoleServices services{the_main_loop()};
+    auto services = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
 
     DeviceState state;
 
     auto active = std::make_shared<mt::Signal>();
     mir::Fd received_fd;
-    auto device = services.acquire_device(
+    auto device = services->acquire_device(
         22, 33,
         std::make_unique<mtd::SimpleDeviceObserver>(
             [active, &received_fd](mir::Fd&& device_fd)
@@ -1246,12 +1254,12 @@ TEST_F(LogindConsoleServices, device_suspended_callback_called_on_suspend)
     add_release_device_to_session(session_path.c_str());
     add_pause_device_complete_to_session(session_path.c_str());
 
-    mir::LogindConsoleServices services{the_main_loop()};
+    auto services = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
 
     DeviceState state;
     auto suspended = std::make_shared<mt::Signal>();
 
-    auto device = services.acquire_device(
+    auto device = services->acquire_device(
         22, 33,
         std::make_unique<mtd::SimpleDeviceObserver>(
             [&state](mir::Fd&&)
@@ -1286,9 +1294,9 @@ TEST_F(LogindConsoleServices, acks_device_suspend_signal)
     add_pause_device_complete_to_session(session_path.c_str());
     add_release_device_to_session(session_path.c_str());
 
-    mir::LogindConsoleServices services{the_main_loop()};
+    auto services = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
 
-    auto device = services.acquire_device(
+    auto device = services->acquire_device(
         22, 33,
         std::make_unique<mtd::NullDeviceObserver>());
 
@@ -1325,9 +1333,9 @@ TEST_F(LogindConsoleServices, handles_ack_device_suspend_failure)
         "raise dbus.exceptions.DBusException('Device or resource busy (36)', name='System.Error.EBUSY')");
     add_release_device_to_session(session_path.c_str());
 
-    mir::LogindConsoleServices services{the_main_loop()};
+    auto services = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
 
-    auto device = services.acquire_device(
+    auto device = services->acquire_device(
         22, 33,
         std::make_unique<mtd::NullDeviceObserver>());
 
@@ -1357,12 +1365,12 @@ TEST_F(LogindConsoleServices, device_removed_callback_called_on_remove)
         session_path.c_str(),
         "ret = (os.open('/dev/zero', os.O_RDONLY), False)");
 
-    mir::LogindConsoleServices services{the_main_loop()};
+    auto services = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
 
     DeviceState state;
 
     auto gone_received = std::make_shared<mt::Signal>();
-    auto device = services.acquire_device(
+    auto device = services->acquire_device(
         22, 33,
         std::make_unique<mtd::SimpleDeviceObserver>(
             [&state](mir::Fd&&)
@@ -1393,10 +1401,10 @@ TEST_F(LogindConsoleServices, calls_pause_handler_on_pause)
     auto session_path = add_any_active_session();
 
     testing::NiceMock<mtd::MockEventHandlerRegister> registrar;
-    mir::LogindConsoleServices services{the_main_loop()};
+    auto services = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
 
     auto paused = std::make_shared<mt::Signal>();
-    services.register_switch_handlers(
+    services->register_switch_handlers(
         registrar,
         [paused]()
         {
@@ -1421,11 +1429,11 @@ TEST_F(LogindConsoleServices, calls_resume_handler_on_resume)
     auto session_path = add_any_active_session();
 
     testing::NiceMock<mtd::MockEventHandlerRegister> registrar;
-    mir::LogindConsoleServices services{the_main_loop()};
+    auto services = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
 
     auto paused = std::make_shared<mt::Signal>();
     auto resumed = std::make_shared<mt::Signal>();
-    services.register_switch_handlers(
+    services->register_switch_handlers(
         registrar,
         [paused]()
         {
@@ -1455,10 +1463,10 @@ TEST_F(LogindConsoleServices, calls_pause_handler_on_closing_state)
     auto session_path = add_any_active_session();
 
     testing::NiceMock<mtd::MockEventHandlerRegister> registrar;
-    mir::LogindConsoleServices services{the_main_loop()};
+    auto services = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
 
     auto paused = std::make_shared<mt::Signal>();
-    services.register_switch_handlers(
+    services->register_switch_handlers(
         registrar,
         [paused]()
         {
@@ -1483,10 +1491,10 @@ TEST_F(LogindConsoleServices, spurious_online_state_transitions_are_ignored)
     auto session_path = add_any_active_session();
 
     testing::NiceMock<mtd::MockEventHandlerRegister> registrar;
-    mir::LogindConsoleServices services{the_main_loop()};
+    auto services = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
 
     auto paused = std::make_shared<mt::Signal>();
-    services.register_switch_handlers(
+    services->register_switch_handlers(
         registrar,
         [paused]()
         {
@@ -1521,10 +1529,10 @@ TEST_F(LogindConsoleServices, online_to_closing_state_transition_is_ignored)
     auto session_path = add_any_active_session();
 
     mtd::MockEventHandlerRegister registrar;
-    mir::LogindConsoleServices services{the_main_loop()};
+    auto services = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
 
     auto paused = std::make_shared<mt::Signal>();
-    services.register_switch_handlers(
+    services->register_switch_handlers(
         registrar,
         [paused]()
         {
@@ -1560,7 +1568,7 @@ TEST_F(LogindConsoleServices, construction_does_not_require_running_mainloop)
     auto not_running_main_loop =
         std::make_shared<mir::GLibMainLoop>(std::make_shared<mir::time::SteadyClock>());
 
-    mir::LogindConsoleServices services{not_running_main_loop};
+    auto services = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
     stop_mainloop();
 }
 
@@ -1573,7 +1581,7 @@ TEST_F(LogindConsoleServices, runs_callbacks_on_provided_main_loop)
         std::make_shared<mir::GLibMainLoop>(std::make_shared<mir::time::SteadyClock>());
 
     // Construct services before the main loop starts…
-    mir::LogindConsoleServices services{main_loop};
+    auto services = mir::LogindConsoleServices::create(main_loop, the_session_lock());
 
     std::thread::id main_loop_id;
     mt::AutoUnblockThread main_loop_thread{
@@ -1591,7 +1599,7 @@ TEST_F(LogindConsoleServices, runs_callbacks_on_provided_main_loop)
     mtd::MockEventHandlerRegister registrar;
     auto paused = std::make_shared<mt::Signal>();
     auto resumed = std::make_shared<mt::Signal>();
-    services.register_switch_handlers(
+    services->register_switch_handlers(
         registrar,
         [main_loop_id, paused]()
         {
@@ -1631,11 +1639,11 @@ TEST_F(LogindConsoleServices, can_acquire_device_without_running_main_loop)
     auto not_running_main_loop =
         std::make_shared<mir::GLibMainLoop>(std::make_shared<mir::time::SteadyClock>());
 
-    mir::LogindConsoleServices services{not_running_main_loop};
+    auto services = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
 
 
     bool device_acquired{false};
-    services.acquire_device(
+    services->acquire_device(
         42, 22,
         std::make_unique<mtd::SimpleDeviceObserver>(
             [&device_acquired](auto) { device_acquired = true; },
@@ -1651,9 +1659,9 @@ TEST_F(LogindConsoleServices, creates_vt_switcher_when_vt_switching_possible)
     ensure_mock_logind();
     add_any_active_session();
 
-    mir::LogindConsoleServices console{the_main_loop()};
+    auto console = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
 
-    EXPECT_THAT(console.create_vt_switcher(), NotNull());
+    EXPECT_THAT(console->create_vt_switcher(), NotNull());
 
     stop_mainloop();
 }
@@ -1676,8 +1684,8 @@ TEST_F(LogindConsoleServices, vt_switcher_calls_error_handler_on_error)
         "/org/freedesktop/login1/seat/seat0",
         "raise dbus.exceptions.DBusException('No such file or directory (2)', name='System.Error.ENOENT')");
 
-    mir::LogindConsoleServices console{the_main_loop()};
-    auto switcher = console.create_vt_switcher();
+    auto console = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
+    auto switcher = console->create_vt_switcher();
 
     auto error_received = std::make_shared<mt::Signal>();
 
@@ -1710,8 +1718,8 @@ TEST_F(LogindConsoleServices, vt_switcher_calls_switch_to_with_correct_argument)
         "/org/freedesktop/login1/seat/seat0",
         "");
 
-    mir::LogindConsoleServices console{the_main_loop()};
-    auto switcher = console.create_vt_switcher();
+    auto console = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
+    auto switcher = console->create_vt_switcher();
 
     auto switch_to_future = expect_call(
         "/org/freedesktop/login1/seat/seat0",
@@ -1748,13 +1756,13 @@ TEST_F(LogindConsoleServices, destroying_device_handle_releases_logind_device)
     add_release_device_to_session(
         session_path.c_str());
 
-    mir::LogindConsoleServices services{the_main_loop()};
+    auto services = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
 
     int const device_major{42};
     int const device_minor{88};
 
     bool device_acquired{false};
-    auto device = services.acquire_device(
+    auto device = services->acquire_device(
         device_major, device_minor,
         std::make_unique<mtd::SimpleDeviceObserver>(
             [&device_acquired](auto) { device_acquired = true; },
