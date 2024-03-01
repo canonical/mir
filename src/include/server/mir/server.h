@@ -61,6 +61,7 @@ class SessionListener;
 class SessionCoordinator;
 class SurfaceFactory;
 class Session;
+class SessionLock;
 }
 namespace input
 {
@@ -416,6 +417,8 @@ public:
     auto the_seat_observer_registrar() const ->
         std::shared_ptr<ObserverRegistrar<input::SeatObserver>>;
 
+    auto the_session_lock() const ->
+        std::shared_ptr<scene::SessionLock>;
 
 /** @} */
 

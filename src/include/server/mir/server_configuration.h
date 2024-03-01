@@ -64,6 +64,7 @@ class Session;
 class Clipboard;
 class TextInputHub;
 class IdleHub;
+class SessionLock;
 }
 
 class MainLoop;
@@ -104,6 +105,7 @@ public:
         std::function<std::shared_ptr<void>(
             wl_display*,
             std::function<void(std::function<void()>&& work)> const&)> builder) = 0;
+    virtual std::shared_ptr<scene::SessionLock> the_session_lock() = 0;
 
     using WaylandProtocolExtensionFilter = std::function<bool(std::shared_ptr<scene::Session> const&, char const*)>;
     virtual void set_wayland_extension_filter(WaylandProtocolExtensionFilter const& extension_filter) = 0;

@@ -33,13 +33,6 @@ auto msh::operator==(StreamSpecification const& lhs, StreamSpecification const& 
         lhs.size == rhs.size;
 }
 
-auto msh::operator==(StreamCursor const& lhs, StreamCursor const& rhs) -> bool
-{
-    return
-        lhs.stream.lock() == rhs.stream.lock() &&
-        lhs.hotspot == rhs.hotspot;
-}
-
 bool msh::SurfaceSpecification::is_empty() const
 {
     // You know, compile-time reflection would be pretty

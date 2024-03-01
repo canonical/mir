@@ -34,7 +34,6 @@ struct MockFrontendSurfaceStack : public frontend::SurfaceStack
     MOCK_METHOD((void), add_observer, (std::shared_ptr<scene::Observer> const& observer), (override));
     MOCK_METHOD((void), remove_observer, (std::weak_ptr<scene::Observer> const& observer), (override));
     MOCK_METHOD((scene::SurfaceList), stacking_order_of, (scene::SurfaceSet const& surfaces), (const));
-    MOCK_METHOD((std::unique_ptr<frontend::ScreenLockHandle>), lock_screen, (), (override));
     MOCK_METHOD((bool), screen_is_locked, (), (const, override));
 };
 
