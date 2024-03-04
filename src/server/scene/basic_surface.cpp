@@ -27,7 +27,6 @@
 #include "mir/scene/surface_observer.h"
 
 #include "mir/scene/scene_report.h"
-#include "mir_toolkit/common.h"
 
 #include <boost/throw_exception.hpp>
 

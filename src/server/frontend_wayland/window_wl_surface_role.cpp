@@ -33,10 +33,7 @@
 
 #include <boost/throw_exception.hpp>
 
-#include <algorithm>
-
 namespace mf = mir::frontend;
-namespace mg = mir::graphics;
 namespace mw = mir::wayland;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -475,7 +472,7 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
     pending_changes.reset();
 }
 
-void mf::WindowWlSurfaceRole::handle_enter_output(graphics::DisplayConfigurationOutputId id)
+void mf::WindowWlSurfaceRole::handle_enter_output(graphics::DisplayConfigurationOutputId id) const
 {
     if (surface)
     {
@@ -495,7 +492,7 @@ void mf::WindowWlSurfaceRole::handle_enter_output(graphics::DisplayConfiguration
     }
 }
 
-void mf::WindowWlSurfaceRole::handle_leave_output(graphics::DisplayConfigurationOutputId id)
+void mf::WindowWlSurfaceRole::handle_leave_output(graphics::DisplayConfigurationOutputId id) const
 {
     if (surface)
     {

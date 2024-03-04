@@ -126,9 +126,7 @@ auto ms::ApplicationSession::create_surface(
     }
 
     if (observer)
-    {
         observer->moved_to(surface.get(), surface->top_left());
-    }
 
     session_listener->surface_created(*this, surface);
 
@@ -322,7 +320,7 @@ void ms::ApplicationSession::configure_streams(
         if (auto const s = std::dynamic_pointer_cast<mc::BufferStream>(stream.stream.lock()))
             list.emplace_back(ms::StreamInfo{s, stream.displacement, stream.size});
     }
-    surface.set_streams(list);
+    surface.set_streams(list); 
 }
 
 auto ms::ApplicationSession::has_buffer_stream(

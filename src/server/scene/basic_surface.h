@@ -43,7 +43,6 @@ namespace frontend { class EventSink; }
 namespace graphics
 {
 class Buffer;
-class DisplayConfiguration;
 class DisplayConfigurationObserver;
 }
 namespace input
