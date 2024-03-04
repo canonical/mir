@@ -27,6 +27,10 @@ namespace mf = mir::frontend;
 namespace
 {
 const char* DESKTOP_FILE_POSTFIX = ".desktop";
+
+const std::map<std::string, std::string> app_id_to_desktop_file_quirks = {
+    {"gnome-terminal-server", "org.gnome.Terminal.desktop"} // https://gitlab.gnome.org/GNOME/gnome-terminal/-/issues/8033
+};
 }
 
 mf::DesktopFile::DesktopFile(const char* id, const char* wm_class, const char* exec)
@@ -54,6 +58,9 @@ std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface
     auto app = cache->lookup_by_wm_class(app_id);
     if (app)
         return app->id;
+
+    if (app_id_to_desktop_file_quirks.contains(app_id))
+        return app_id_to_desktop_file_quirks.at(app_id);
 
     // Second, let's see if we can map it straight to a desktop file
     auto desktop_file = app_id + DESKTOP_FILE_POSTFIX;
