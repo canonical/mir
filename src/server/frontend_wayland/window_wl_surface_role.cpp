@@ -479,7 +479,7 @@ void mf::WindowWlSurfaceRole::handle_enter_output(graphics::DisplayConfiguration
         if (auto* output_global{output_manager->output_for(id).value_or(nullptr)})
         {
             auto const& output_config{output_global->current_config()};
-            if (output_config.valid() && output_config.id == id)
+            if (output_config.id == id)
             {
                 output_global->for_each_output_bound_by(
                     client,
@@ -499,7 +499,7 @@ void mf::WindowWlSurfaceRole::handle_leave_output(graphics::DisplayConfiguration
         if (auto* output_global{output_manager->output_for(id).value_or(nullptr)})
         {
             auto const& output_config{output_global->current_config()};
-            if (output_config.valid() && output_config.id == id)
+            if (output_config.id == id)
             {
                 output_global->for_each_output_bound_by(
                     client,

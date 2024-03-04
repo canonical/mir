@@ -55,6 +55,7 @@ private:
     void configuration_applied(std::shared_ptr<mg::DisplayConfiguration const> const& config) override
     {
         surface->display_config = config;
+        surface->track_outputs();
     }
 
     BasicSurface* surface;
@@ -159,12 +160,12 @@ public:
         for_each_observer(&SurfaceObserver::application_id_set_to, surf, application_id);
     }
 
-    void entered_output(Surface const* surf, graphics::DisplayConfigurationOutputId id) override
+    void entered_output(Surface const* surf, graphics::DisplayConfigurationOutputId const& id) override
     {
         for_each_observer(&SurfaceObserver::entered_output, surf, id);
     }
 
-    void left_output(Surface const* surf, graphics::DisplayConfigurationOutputId id) override
+    void left_output(Surface const* surf, graphics::DisplayConfigurationOutputId const& id) override
     {
         for_each_observer(&SurfaceObserver::left_output, surf, id);
     }
@@ -217,10 +218,10 @@ ms::BasicSurface::BasicSurface(
     display_config_registrar{display_config_registrar},
     display_config_monitor{std::make_shared<DisplayConfigurationListener>(this)}
 {
+    display_config_registrar->register_interest(display_config_monitor, immediate_executor);
     auto state = synchronised_state.lock();
     update_frame_posted_callbacks(*state);
     report->surface_created(this, state->surface_name);
-    display_config_registrar->register_interest(display_config_monitor, immediate_executor);
 }
 
 ms::BasicSurface::BasicSurface(
@@ -1000,15 +1001,11 @@ void mir::scene::BasicSurface::track_outputs()
         {
             if (output.valid() && output.extents().overlaps(state->surface_rect))
             {
-                if (auto const id_it{tracked_outputs.find(output.id)}; id_it != tracked_outputs.end())
+                if (!tracked_outputs.contains(output.id))
                 {
-                    tracked.insert(*id_it);
-                }
-                else
-                {
-                    tracked.insert(output.id);
                     observers->entered_output(this, output.id);
                 }
+                tracked.insert(output.id);
             }
         });
 

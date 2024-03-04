@@ -74,6 +74,8 @@ public:
     MOCK_METHOD2(cursor_image_set_to, void(ms::Surface const*, std::weak_ptr<mir::graphics::CursorImage> const& image));
     MOCK_METHOD1(cursor_image_removed, void(ms::Surface const*));
     MOCK_METHOD2(application_id_set_to, void(ms::Surface const*, std::string const&));
+    MOCK_METHOD2(entered_output, void(ms::Surface const*, mg::DisplayConfigurationOutputId const& id));
+    MOCK_METHOD2(left_output, void(ms::Surface const*, mg::DisplayConfigurationOutputId const& id));
 };
 
 struct BasicSurfaceTest : public testing::Test
@@ -104,7 +106,7 @@ struct BasicSurfaceTest : public testing::Test
         streams,
         std::shared_ptr<mg::CursorImage>(),
         report,
-        display_config_registrar};
+         display_config_registrar};
 
     std::shared_ptr<ms::SurfaceChangeNotification> observer =
         std::make_shared<ms::SurfaceChangeNotification>(
@@ -1140,6 +1142,69 @@ TEST_F(BasicSurfaceTest, does_not_notify_if_application_id_is_unchanged)
     surface.set_application_id("");
     surface.set_application_id(id);
     surface.set_application_id(id);
+}
+
+TEST_F(BasicSurfaceTest, notifies_of_entered_output_upon_creation)
+{
+    using namespace testing;
+
+    mir::graphics::DisplayConfigurationOutputId const id1{1};
+    mir::graphics::DisplayConfigurationOutputId const id2{2};
+
+    EXPECT_CALL(*mock_surface_observer, entered_output(_, id1))
+        .Times(1);
+    EXPECT_CALL(*mock_surface_observer, entered_output(_, id2))
+        .Times(0);
+
+    surface.register_interest(mock_surface_observer, executor);
+    surface.show();
+}
+
+TEST_F(BasicSurfaceTest, notifies_of_entered_output_on_move)
+{
+    using namespace testing;
+
+    mir::graphics::DisplayConfigurationOutputId const id1{1};
+    mir::graphics::DisplayConfigurationOutputId const id2{2};
+
+    EXPECT_CALL(*mock_surface_observer, entered_output(_, id1))
+        .Times(1);
+    EXPECT_CALL(*mock_surface_observer, entered_output(_, id2))
+        .Times(1);
+
+    surface.register_interest(mock_surface_observer, executor);
+    surface.show();
+    surface.move_to({110, 0});
+}
+
+TEST_F(BasicSurfaceTest, notifies_of_left_output_on_move)
+{
+    using namespace testing;
+
+    mir::graphics::DisplayConfigurationOutputId const id{1};
+
+    EXPECT_CALL(*mock_surface_observer, left_output(_, id))
+        .Times(1);
+
+    surface.register_interest(mock_surface_observer, executor);
+    surface.show();
+    surface.move_to({110, 0});
+}
+
+TEST_F(BasicSurfaceTest, notifies_of_left_output_when_output_is_disconnected)
+{
+    using namespace testing;
+
+    mir::graphics::DisplayConfigurationOutputId const id{2};
+
+    EXPECT_CALL(*mock_surface_observer, left_output(_, id))
+        .Times(1);
+
+    surface.register_interest(mock_surface_observer, executor);
+    surface.show();
+    surface.resize({50, 50});
+    surface.move_to({75, 0});
+    display_config_registrar->disconnect_output(1);
 }
 
 TEST_F(BasicSurfaceTest, notifies_of_client_close_request)

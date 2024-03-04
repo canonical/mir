@@ -265,7 +265,7 @@ TEST_F(SingleSeatInputDeviceHubSetup, tracks_pointer_position)
 TEST_F(SingleSeatInputDeviceHubSetup, confines_pointer_movement)
 {
     geom::Point confined_pos{10, 18};
-    display_config.update_output(geom::Size{confined_pos.x.as_int() + 1, confined_pos.y.as_int() + 1});
+    display_config.update_output(0, geom::Size{confined_pos.x.as_int() + 1, confined_pos.y.as_int() + 1});
 
     EXPECT_CALL(mock_cursor_listener, cursor_moved_to(confined_pos.x.as_int(), confined_pos.y.as_int())).Times(2);
 

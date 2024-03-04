@@ -116,7 +116,7 @@ void mf::WaylandSurfaceObserver::input_consumed(ms::Surface const*, std::shared_
     }
 }
 
-void mf::WaylandSurfaceObserver::entered_output(ms::Surface const*, graphics::DisplayConfigurationOutputId id)
+void mf::WaylandSurfaceObserver::entered_output(ms::Surface const*, graphics::DisplayConfigurationOutputId const& id)
 {
     run_on_wayland_thread_unless_window_destroyed(
         [id](Impl* /*impl*/, WindowWlSurfaceRole* window)
@@ -125,7 +125,7 @@ void mf::WaylandSurfaceObserver::entered_output(ms::Surface const*, graphics::Di
         });
 }
 
-void mf::WaylandSurfaceObserver::left_output(ms::Surface const*, graphics::DisplayConfigurationOutputId id)
+void mf::WaylandSurfaceObserver::left_output(ms::Surface const*, graphics::DisplayConfigurationOutputId const& id)
 {
     run_on_wayland_thread_unless_window_destroyed(
         [id](Impl* /*impl*/, WindowWlSurfaceRole* window)
