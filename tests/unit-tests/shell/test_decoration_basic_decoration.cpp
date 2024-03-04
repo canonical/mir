@@ -22,6 +22,7 @@
 #include "src/server/report/null_report_factory.h"
 
 #include "mir/test/fake_shared.h"
+#include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
 #include "mir/test/doubles/stub_shell.h"
 #include "mir/test/doubles/mock_scene_session.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
@@ -85,7 +86,8 @@ struct MockSurface
               mir_pointer_unconfined,
               { { std::make_shared<testing::NiceMock<mtd::MockBufferStream>>(), {0, 0}, {} } },
               {},
-              mir::report::null_scene_report()},
+              mir::report::null_scene_report(),
+              std::make_shared<mtd::FakeDisplayConfigurationObserverRegistrar>()},
           executor{executor}
     {
     }

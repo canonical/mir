@@ -499,7 +499,6 @@ void mf::WindowWlSurfaceRole::handle_leave_output(graphics::DisplayConfiguration
 {
     if (surface)
     {
-        // TODO: avoid code duplication
         if (auto* output_global{output_manager->output_for(id).value_or(nullptr)})
         {
             auto const& output_config{output_global->current_config()};

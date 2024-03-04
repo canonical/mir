@@ -70,6 +70,12 @@ inline constexpr bool operator < (IntWrapper<Tag,ValueType> const& lhs, IntWrapp
 {
     return lhs.as_value() < rhs.as_value();
 }
+
+template<typename Tag, typename ValueType>
+inline constexpr bool operator > (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
+{
+    return lhs.as_value() > rhs.as_value();
+}
 }
 
 #include <functional>

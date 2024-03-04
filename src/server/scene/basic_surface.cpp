@@ -279,14 +279,14 @@ void ms::BasicSurface::move_to(geometry::Point const& top_left)
 {
     synchronised_state.lock()->surface_rect.top_left = top_left;
     observers->moved_to(this, top_left);
-    track_overlapping_outputs();
+    track_outputs();
 }
 
 void ms::BasicSurface::set_hidden(bool hide)
 {
     synchronised_state.lock()->hidden = hide;
     observers->hidden_set_to(this, hide);
-    track_overlapping_outputs();
+    track_outputs();
 }
 
 mir::geometry::Size ms::BasicSurface::window_size() const
@@ -338,7 +338,7 @@ void ms::BasicSurface::resize(geom::Size const& desired_size)
 
         observers->window_resized_to(this, new_size);
         observers->content_resized_to(this, content_size_);
-        track_overlapping_outputs();
+        track_outputs();
     }
 }
 
@@ -475,7 +475,7 @@ MirWindowState ms::BasicSurface::set_state(MirWindowState s)
         state.drop();
 
         observers->attrib_changed(this, mir_window_attrib_state, s);
-        track_overlapping_outputs();
+        track_outputs();
     }
 
     return s;
@@ -495,7 +495,7 @@ MirOrientationMode ms::BasicSurface::set_preferred_orientation(MirOrientationMod
 
         state.drop();
         observers->attrib_changed(this, mir_window_attrib_preferred_orientation, new_orientation_mode);
-        track_overlapping_outputs();
+        track_outputs();
     }
 
     return new_orientation_mode;
@@ -670,7 +670,7 @@ MirWindowVisibility ms::BasicSurface::set_visibility(MirWindowVisibility new_vis
         state.drop();
 
         observers->attrib_changed(this, mir_window_attrib_visibility, new_visibility);
-        track_overlapping_outputs();
+        track_outputs();
     }
 
     return new_visibility;
@@ -783,7 +783,7 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
         surface_top_left = state->surface_rect.top_left;
     }
     observers->moved_to(this, surface_top_left);
-    track_overlapping_outputs();
+    track_outputs();
 }
 
 mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) const
@@ -991,54 +991,33 @@ auto mir::scene::BasicSurface::content_top_left(State const& state) const -> geo
     return state.surface_rect.top_left + geom::Displacement{state.margins.left, state.margins.top};
 }
 
-void mir::scene::BasicSurface::track_overlapping_outputs()
+void mir::scene::BasicSurface::track_outputs()
 {
-    std::ranges::for_each(tracked_outputs, [](auto& tracked_output) { tracked_output.used = false; });
+    auto const state{synchronised_state.lock()};
+    std::set<mg::DisplayConfigurationOutputId> tracked;
 
     display_config->for_each_output(
-        [&](graphics::DisplayConfigurationOutput const& config)
+        [&](mg::DisplayConfigurationOutput const& output)
         {
-            if (config.valid())
+            if (output.valid() && output.extents().overlaps(state->surface_rect))
             {
-                auto const visible_in_output{[&](graphics::DisplayConfigurationOutput const& config)
-                    {
-                        auto const state{synchronised_state.lock()};
-                        return visible(*state) &&
-                            state->visibility != mir_window_visibility_occluded &&
-                            state->state.active_state() != mir_window_state_hidden &&
-                            state->state.active_state() != mir_window_state_minimized &&
-                            config.extents().overlaps(state->surface_rect);
-                    }};
-
-                if (visible_in_output(config))
+                if (auto const id_it{tracked_outputs.find(output.id)}; id_it != tracked_outputs.end())
                 {
-                    auto const tracked_it{std::ranges::find_if(tracked_outputs,
-                        [&](auto const& tracked_output)
-                        {
-                            return tracked_output.id == config.id;
-                        })};
-                    if (tracked_it == tracked_outputs.end())
-                    {
-                        observers->entered_output(this, config.id);
-                        tracked_outputs.push_back({config.id});
-                    }
-                    else
-                    {
-                        tracked_it->used = true;
-                    }
+                    tracked.insert(*id_it);
+                }
+                else
+                {
+                    tracked.insert(output.id);
+                    observers->entered_output(this, output.id);
                 }
             }
         });
 
-    // Untrack remaining unused outputs
-    std::erase_if(tracked_outputs,
-        [&](auto const& output)
-        {
-            if (!output.used)
-            {
-                observers->left_output(this, output.id);
-                return true;
-            }
-            return false;
-        });
+    // TODO: Once std::views::filter is properly supported across compilers, replace the
+    // creation of `untracked` with iteration over a filtered view of `tracked_outputs`
+    std::vector<mg::DisplayConfigurationOutputId> untracked;
+    std::ranges::set_difference(tracked_outputs, tracked, std::back_inserter(untracked));
+    std::ranges::for_each(untracked, [&](auto const& id) { observers->left_output(this, id); });
+
+    tracked_outputs = std::move(tracked);
 }

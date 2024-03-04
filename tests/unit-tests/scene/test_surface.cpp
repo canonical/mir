@@ -20,6 +20,7 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir/scene/surface_event_source.h"
 
+#include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
 #include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
 #include "mir/test/doubles/mock_input_surface.h"
@@ -56,7 +57,8 @@ struct SurfaceCreation : public ::testing::Test
             mir_pointer_unconfined,
             streams,
             nullptr /* cursor_image */,
-            report)
+            report,
+            std::make_shared<mtd::FakeDisplayConfigurationObserverRegistrar>())
     {
     }
 

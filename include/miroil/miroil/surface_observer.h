@@ -28,9 +28,9 @@ namespace mir { namespace scene { class Surface; } }
 struct MirEvent;
 struct MirInputEvent;
 
-namespace miroil
+namespace miroil 
 {
-
+    
 class SurfaceObserver
 {
 public:
@@ -38,7 +38,7 @@ public:
     SurfaceObserver(SurfaceObserver const&) = delete;
     SurfaceObserver& operator=(SurfaceObserver const&) = delete;
     virtual ~SurfaceObserver() = default;
-
+    
     virtual void attrib_changed(mir::scene::Surface const* surf, MirWindowAttrib attrib, int value) = 0;
     virtual void window_resized_to(mir::scene::Surface const* surf, mir::geometry::Size const& window_size) = 0;
     virtual void content_resized_to(mir::scene::Surface const* surf, mir::geometry::Size const& content_size) = 0;

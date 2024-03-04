@@ -23,6 +23,7 @@
 #include "src/server/scene/basic_surface.h"
 #include "src/server/compositor/stream.h"
 #include "mir/test/fake_shared.h"
+#include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
 #include "mir/test/doubles/stub_buffer_stream.h"
 #include "mir/test/doubles/stub_renderable.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
@@ -99,7 +100,8 @@ struct StubSurface : public ms::BasicSurface
             mir_pointer_unconfined,
             std::list<ms::StreamInfo> { { stream, {}, {} } },
             {},
-            mr::null_scene_report()),
+            mr::null_scene_report(),
+            std::make_shared<mtd::FakeDisplayConfigurationObserverRegistrar>()),
         executor{executor}
     {
     }
@@ -156,6 +158,8 @@ struct SurfaceStack : public ::testing::Test
     ms::SurfaceStack& stack = *shared_stack;
     void const* compositor_id{&stack};
     mtd::ExplicitExecutor executor;
+    std::shared_ptr<mtd::FakeDisplayConfigurationObserverRegistrar> const display_config_registrar =
+        std::make_shared<mtd::FakeDisplayConfigurationObserverRegistrar>();
 };
 
 }
@@ -257,7 +261,8 @@ TEST_F(SurfaceStack, scene_counts_pending_accurately)
         mir_pointer_unconfined,
         std::list<ms::StreamInfo> { { stream, {}, {} } },
         std::shared_ptr<mg::CursorImage>(),
-        report);
+        report,
+        display_config_registrar);
     stack.add_surface(surface, mi::InputReceptionMode::normal);
     surface->configure(mir_window_attrib_visibility,
                        mir_window_visibility_exposed);
@@ -292,7 +297,8 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_occluded_surfaces)
         mir_pointer_unconfined,
         std::list<ms::StreamInfo> { { stream, {}, {} } },
         std::shared_ptr<mg::CursorImage>(),
-        report);
+        report,
+        display_config_registrar);
 
     stack.add_surface(surface, mi::InputReceptionMode::normal);
     auto elements = stack.scene_elements_for(this);
@@ -326,7 +332,8 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_partially_exposed_su
         mir_pointer_unconfined,
         std::list<ms::StreamInfo> { { stream, {}, {} } },
         std::shared_ptr<mg::CursorImage>(),
-        report);
+        report,
+        display_config_registrar);
 
     stack.add_surface(surface, mi::InputReceptionMode::normal);
     post_a_frame(*stream);
@@ -439,7 +446,8 @@ TEST_F(SurfaceStack, generate_elementelements)
             mir_pointer_unconfined,
             std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
             std::shared_ptr<mg::CursorImage>(),
-            report);
+            report,
+            display_config_registrar);
 
         surfaces.emplace_back(surface);
         stack.add_surface(surface, mi::InputReceptionMode::normal);
@@ -637,7 +645,8 @@ TEST_F(SurfaceStack, scene_elements_hold_snapshot_of_positioning_info)
             mir_pointer_unconfined,
             std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
             std::shared_ptr<mg::CursorImage>(),
-            report);
+            report,
+            display_config_registrar);
 
         surfaces.emplace_back(surface);
         stack.add_surface(surface, mi::InputReceptionMode::normal);
@@ -670,7 +679,8 @@ TEST_F(SurfaceStack, generates_scene_elements_that_delay_buffer_acquisition)
         mir_pointer_unconfined,
         std::list<ms::StreamInfo> { { mock_stream, {}, {} } },
         std::shared_ptr<mg::CursorImage>(),
-        report);
+        report,
+        display_config_registrar);
         stack.add_surface(surface, mi::InputReceptionMode::normal);
 
     auto const elements = stack.scene_elements_for(compositor_id);
@@ -700,7 +710,8 @@ TEST_F(SurfaceStack, generates_scene_elements_that_allow_only_one_buffer_acquisi
         mir_pointer_unconfined,
         std::list<ms::StreamInfo> { { mock_stream, {}, {} } },
         std::shared_ptr<mg::CursorImage>(),
-        report);
+        report,
+        display_config_registrar);
         stack.add_surface(surface, mi::InputReceptionMode::normal);
 
     auto const elements = stack.scene_elements_for(compositor_id);

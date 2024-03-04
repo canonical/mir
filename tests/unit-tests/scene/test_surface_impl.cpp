@@ -21,6 +21,7 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir/scene/output_properties_cache.h"
 
+#include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
 #include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/doubles/explicit_executor.h"
@@ -74,7 +75,7 @@ struct Surface : testing::Test
         ON_CALL(*buffer_stream, get_stream_pixel_format()).WillByDefault(Return(mir_pixel_format_abgr_8888));
         ON_CALL(*buffer_stream, acquire_client_buffer(_))
             .WillByDefault(InvokeArgument<0>(nullptr));
-        
+
         surface = std::make_shared<ms::BasicSurface>(
             nullptr /* session */,
             mw::Weak<mf::WlSurface>{},
@@ -83,12 +84,15 @@ struct Surface : testing::Test
             mir_pointer_unconfined,
             std::list<ms::StreamInfo> { { buffer_stream, {}, {} } },
             nullptr,
-            report);
+            report,
+            display_config_registrar);
     }
 
     mf::SurfaceId stub_id;
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
     std::shared_ptr<ms::BasicSurface> surface;
+    std::shared_ptr<mtd::FakeDisplayConfigurationObserverRegistrar> const display_config_registrar =
+        std::make_shared<mtd::FakeDisplayConfigurationObserverRegistrar>();
 };
 }
 
@@ -288,7 +292,8 @@ TEST_F(Surface, preferred_orientation_mode_defaults_to_any)
         mir_pointer_unconfined,
         std::list<ms::StreamInfo> { { buffer_stream, {}, {} } },
         std::shared_ptr<mg::CursorImage>(),
-        report);
+        report,
+        display_config_registrar);
 
     EXPECT_EQ(mir_orientation_mode_any, surf.query(mir_window_attrib_preferred_orientation));
 }

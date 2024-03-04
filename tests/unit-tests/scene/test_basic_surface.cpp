@@ -25,12 +25,12 @@
 #include "mir/scene/null_surface_observer.h"
 #include "mir/events/event_builders.h"
 
+#include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
 #include "mir/test/doubles/stub_cursor_image.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/stub_session.h"
 #include "mir/test/doubles/explicit_executor.h"
-#include "mir/test/fake_shared.h"
 #include "mir/test/geometry_matchers.h"
 
 #include "src/server/report/null_report_factory.h"
@@ -92,6 +92,8 @@ struct BasicSurfaceTest : public testing::Test
     std::shared_ptr<testing::NiceMock<MockSurfaceObserver>> mock_surface_observer =
         std::make_shared<testing::NiceMock<MockSurfaceObserver>>();
     mtd::ExplicitExecutor executor;
+    std::shared_ptr<mtd::FakeDisplayConfigurationObserverRegistrar> display_config_registrar =
+        std::make_shared<mtd::FakeDisplayConfigurationObserverRegistrar>();
 
     ms::BasicSurface surface{
         nullptr /* session */,
@@ -101,7 +103,8 @@ struct BasicSurfaceTest : public testing::Test
         mir_pointer_unconfined,
         streams,
         std::shared_ptr<mg::CursorImage>(),
-        report};
+        report,
+        display_config_registrar};
 
     std::shared_ptr<ms::SurfaceChangeNotification> observer =
         std::make_shared<ms::SurfaceChangeNotification>(
@@ -147,7 +150,8 @@ TEST_F(BasicSurfaceTest, can_be_created_with_session)
         mir_pointer_unconfined,
         streams,
         std::shared_ptr<mg::CursorImage>(),
-        report};
+        report,
+        display_config_registrar};
 
     EXPECT_THAT(surface.session().lock(), Eq(session));
 }
@@ -169,7 +173,8 @@ TEST_F(BasicSurfaceTest, buffer_stream_ids_always_unique)
                 std::list<ms::StreamInfo> {
                     { std::make_shared<testing::NiceMock<mtd::MockBufferStream>>(), {}, {} } },
                 std::shared_ptr<mg::CursorImage>(),
-                report);
+                report,
+                display_config_registrar);
         for (auto& renderable : surface->generate_renderables(this))
             ids.insert(renderable->id());
     }
@@ -193,7 +198,8 @@ TEST_F(BasicSurfaceTest, id_never_invalid)
                 mir_pointer_unconfined,
                 streams,
                 std::shared_ptr<mg::CursorImage>(),
-                report);
+                report,
+                display_config_registrar);
 
         for (auto& renderable : surface->generate_renderables(this))
             EXPECT_THAT(renderable->id(), testing::Ne(nullptr));
@@ -455,7 +461,8 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
         mir_pointer_unconfined,
         streams,
         std::shared_ptr<mg::CursorImage>(),
-        report};
+        report,
+        display_config_registrar};
 
     //not visible by default
     EXPECT_FALSE(surface.visible());
@@ -495,7 +502,8 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
         mir_pointer_unconfined,
         streams,
         std::shared_ptr<mg::CursorImage>(),
-        report};
+        report,
+        display_config_registrar};
 
     surface.register_interest(observer, executor);
 
@@ -532,7 +540,8 @@ TEST_F(BasicSurfaceTest, default_invisible_surface_doesnt_get_input)
         mir_pointer_unconfined,
         streams,
         std::shared_ptr<mg::CursorImage>(),
-        report};
+        report,
+        display_config_registrar};
 
     EXPECT_CALL(*mock_buffer_stream, has_submitted_buffer())
         .WillOnce(testing::Return(false))
@@ -552,7 +561,8 @@ TEST_F(BasicSurfaceTest, surface_doesnt_get_input_outside_clip_area)
         mir_pointer_unconfined,
         streams,
         std::shared_ptr<mg::CursorImage>(),
-        report};
+        report,
+        display_config_registrar};
 
     surface.set_clip_area(std::optional<geom::Rectangle>({{0,0}, {50,50}}));
 
@@ -777,7 +787,8 @@ TEST_F(BasicSurfaceTest, stores_parent)
         mir_pointer_unconfined,
         streams,
         std::shared_ptr<mg::CursorImage>(),
-        report};
+        report,
+        display_config_registrar};
 
     EXPECT_EQ(child.parent(), parent);
 }
@@ -846,7 +857,7 @@ TEST_P(BasicSurfaceAttributeTest, default_value)
     auto const& params = GetParam();
     auto const& attribute = params.attribute;
     auto const& default_value = params.default_value;
-    
+
     EXPECT_EQ(default_value, surface.query(attribute));
 }
 
@@ -893,11 +904,11 @@ TEST_P(BasicSurfaceAttributeTest, does_not_notify_if_attrib_is_unchanged)
 TEST_P(BasicSurfaceAttributeTest, throws_on_invalid_value)
 {
     using namespace testing;
-    
+
     auto const& params = GetParam();
     auto const& attribute = params.attribute;
     auto const& invalid_value = params.infimum_invalid_value;
-    
+
     EXPECT_THROW({
             surface.configure(attribute, invalid_value);
         }, std::logic_error);
@@ -1205,7 +1216,7 @@ TEST_F(BasicSurfaceTest, moving_surface_repositions_all_associated_streams)
 
     std::list<ms::StreamInfo> streams = {
         { mock_buffer_stream, {0,0}, {} },
-        { buffer_stream, d, {} } 
+        { buffer_stream, d, {} }
     };
 
     surface.set_streams(streams);
@@ -1299,7 +1310,8 @@ TEST_F(BasicSurfaceTest, registers_frame_callbacks_on_construction)
         mir_pointer_unconfined,
         streams,
         std::shared_ptr<mg::CursorImage>(),
-        report};
+        report,
+        display_config_registrar};
 }
 
 TEST_F(BasicSurfaceTest, registers_frame_callbacks_on_set_streams)
@@ -1326,7 +1338,7 @@ TEST_F(BasicSurfaceTest, changing_alpha_effects_all_streams)
 {
     using namespace testing;
     auto alpha = 0.3;
-    
+
     auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     std::list<ms::StreamInfo> streams = {
         { mock_buffer_stream, {0,0}, {} },
@@ -1349,10 +1361,10 @@ TEST_F(BasicSurfaceTest, changing_alpha_effects_all_streams)
 TEST_F(BasicSurfaceTest, setting_streams_with_size_changes_sizes)
 {
     using namespace testing;
-   
+
     geom::Size size0 {100, 25 };
     geom::Size size1 { 32, 44 };
-    geom::Size bad_size { 12, 11 }; 
+    geom::Size bad_size { 12, 11 };
     auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     ON_CALL(*mock_buffer_stream, stream_size())
         .WillByDefault(Return(bad_size));
@@ -1541,7 +1553,8 @@ TEST_F(BasicSurfaceTest, buffer_can_be_submitted_to_original_stream_after_surfac
         mir_pointer_unconfined,
         local_stream_list,
         std::shared_ptr<mg::CursorImage>(),
-        report);
+        report,
+        display_config_registrar);
 
     surface.reset();
     callback({10, 10});
@@ -1567,7 +1580,8 @@ TEST_F(BasicSurfaceTest, buffer_can_be_submitted_to_set_stream_after_surface_des
         mir_pointer_unconfined,
         streams, // use the default list from the class initially
         std::shared_ptr<mg::CursorImage>(),
-        report);
+        report,
+        display_config_registrar);
 
     surface->set_streams(local_stream_list);
 

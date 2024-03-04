@@ -31,6 +31,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <set>
 
 namespace mir
 {
@@ -189,7 +190,7 @@ private:
     void update_frame_posted_callbacks(State& state);
     auto content_size(State const& state) const -> geometry::Size;
     auto content_top_left(State const& state) const -> geometry::Point;
-    void track_overlapping_outputs();
+    void track_outputs();
 
     struct State
     {
@@ -238,13 +239,7 @@ private:
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> display_config_registrar;
     std::shared_ptr<DisplayConfigurationListener> const display_config_monitor;
     std::shared_ptr<graphics::DisplayConfiguration const> display_config;
-
-    struct TrackedOutput
-    {
-        mir::graphics::DisplayConfigurationOutputId id;
-        bool used{true};
-    };
-    std::vector<TrackedOutput> tracked_outputs;
+    std::set<graphics::DisplayConfigurationOutputId> tracked_outputs;
 };
 
 }

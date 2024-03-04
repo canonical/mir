@@ -24,6 +24,7 @@
 #include "src/server/compositor/multi_threaded_compositor.h"
 #include "src/server/compositor/stream.h"
 #include "mir/test/fake_shared.h"
+#include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
 #include "mir/test/doubles/null_display.h"
 #include "mir/test/doubles/stub_renderer.h"
@@ -86,7 +87,7 @@ struct CountingDisplaySyncGroup : public mtd::StubDisplaySyncGroup
         std::unique_lock lk(mutex);
         return count_cv.wait_until(lk, timeout,
         [this, &count](){
-            return post_count_ >= count;  
+            return post_count_ >= count;
         });
     }
 
@@ -111,7 +112,7 @@ struct StubDisplay : public mtd::NullDisplay
       : primary(primary),
         secondary(secondary)
     {
-    } 
+    }
     void for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& fn) override
     {
         fn(primary);
@@ -156,6 +157,7 @@ struct SurfaceStackCompositor : public Test
         stream(std::make_shared<mc::Stream>(geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888 )),
         mock_buffer_stream(std::make_shared<NiceMock<mtd::MockBufferStream>>()),
         streams({ { stream, {0,0}, {} } }),
+        display_config_registrar{std::make_shared<mtd::FakeDisplayConfigurationObserverRegistrar>()},
         stub_surface{std::make_shared<ms::BasicSurface>(
             nullptr /* session */,
             mw::Weak<mf::WlSurface>{},
@@ -164,7 +166,8 @@ struct SurfaceStackCompositor : public Test
             mir_pointer_unconfined,
             streams,
             std::shared_ptr<mg::CursorImage>(),
-            null_scene_report)},
+            null_scene_report,
+            display_config_registrar)},
         stub_buffer(std::make_shared<mtd::StubBuffer>()),
         other_stream(std::make_shared<mc::Stream>(geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888 )),
         other_streams({ { other_stream, {0,0}, {} } }),
@@ -176,7 +179,8 @@ struct SurfaceStackCompositor : public Test
             mir_pointer_unconfined,
             other_streams,
             std::shared_ptr<mg::CursorImage>(),
-            null_scene_report)},
+            null_scene_report,
+            display_config_registrar)},
         other_stub_buffer(std::make_shared<mtd::StubBuffer>())
     {
         ON_CALL(*mock_buffer_stream, lock_compositor_buffer(_))
@@ -190,6 +194,7 @@ struct SurfaceStackCompositor : public Test
     std::shared_ptr<mc::Stream> stream;
     std::shared_ptr<mtd::MockBufferStream> mock_buffer_stream;
     std::list<ms::StreamInfo> const streams;
+    std::shared_ptr<mtd::FakeDisplayConfigurationObserverRegistrar> display_config_registrar;
     std::shared_ptr<ms::BasicSurface> stub_surface;
     std::shared_ptr<mg::Buffer> stub_buffer;
     std::shared_ptr<mc::Stream> other_stream;
@@ -349,7 +354,7 @@ TEST_F(SurfaceStackCompositor, an_empty_scene_retriggers)
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(1, timeout));
 
     stack.remove_surface(stub_surface);
-    
+
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(2, timeout));
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(2, timeout));
 }
