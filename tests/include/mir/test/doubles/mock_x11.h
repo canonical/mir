@@ -21,7 +21,6 @@
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include <xcb/xproto.h>
 
 struct xcb_connection_t;
 
@@ -98,12 +97,6 @@ public:
     MOCK_METHOD2(XFixesShowCursor, void(Display *dpy, Window win));
     MOCK_METHOD1(XGetXCBConnection, xcb_connection_t*(Display *dpy));
     MOCK_METHOD2(XSetEventQueueOwner, void(Display*, int));
-
-    MOCK_METHOD(int, xcb_connection_has_error, (xcb_connection_t*), ());
-    MOCK_METHOD(xcb_screen_iterator_t, xcb_setup_roots_iterator, (xcb_setup_t const*), ());
-    MOCK_METHOD(xcb_setup_t const*, xcb_get_setup, (xcb_connection_t*), ());
-    MOCK_METHOD(xcb_intern_atom_cookie_t, xcb_intern_atom, (xcb_connection_t*, uint8_t, uint16_t, char const*), ());
-    MOCK_METHOD(xcb_intern_atom_reply_t*, xcb_intern_atom_reply, (xcb_connection_t*, xcb_intern_atom_cookie_t, xcb_generic_error_t**), ());
 
     FakeX11Resources fake_x11;
 };

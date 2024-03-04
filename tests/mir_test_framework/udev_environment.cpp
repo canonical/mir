@@ -133,21 +133,6 @@ void mtf::UdevEnvironment::emit_device_changed(std::string const& device_path)
     umockdev_testbed_uevent(testbed, device_path.c_str(), "change");
 }
 
-void mtf::UdevEnvironment::add_from_string(std::string_view device_description)
-{
-    using namespace std::string_literals;
-    GError* err = nullptr;
-    if (!umockdev_testbed_add_from_string(testbed, device_description.data(), &err))
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to create mock device from description:"s + err->message}));
-    }
-}
-
-void mtf::UdevEnvironment::set_attribute_link(std::string const& devname, std::string const& name, std::string const& value)
-{
-    umockdev_testbed_set_attribute_link(testbed, devname.c_str(), name.c_str(), value.c_str());
-}
-
 void mtf::UdevEnvironment::add_standard_device(std::string const& name)
 {
     auto const existing_devices =
@@ -173,7 +158,7 @@ void mtf::UdevEnvironment::add_standard_device(std::string const& name)
         BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Failed to create mock udev device: ") +
                                                  err->message));
     }
-
+    
     auto ioctls_filename = recordings_path + "/" + name + ".ioctl";
     struct stat sb;
     if (stat(ioctls_filename.c_str(), &sb) == 0)

@@ -84,7 +84,7 @@ namespace probe
     Result const supported = 128;    /**< Capable of providing a functionality on this device;
                                       *   possibly with degraded performance or features.
                                       */
-    Result const nested = 192;       /**< Capable of providing fully-featured functionality on this device;
+    Result const hosted = 192;       /**< Capable of providing fully-featured functionality on this device;
                                       *   running nested under some other display server rather than with
                                       *   exclusive hardware access.
                                       */

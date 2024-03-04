@@ -7,6 +7,11 @@ MIR_STUB_PLATFORM_SYMBOLS {
     add_fake_input_device*;
 };
 
+WORK_AROUND_MUSL_RTLD_NEXT_BUG {
+  global:
+    open;
+};
+
 @MIR_SERVER_GRAPHICS_PLATFORM_VERSION@ {
   global:
     add_graphics_platform_options;

@@ -32,19 +32,11 @@ namespace doubles
 class MockUdevDevice : public mir::udev::Device
 {
 public:
-    MOCK_METHOD(char const*, subsystem, (), (const override));
-    MOCK_METHOD(char const*, devtype, (), (const override));
-    MOCK_METHOD(char const*, devpath, (), (const override));
-    MOCK_METHOD(char const*, devnode, (), (const override));
-    MOCK_METHOD(char const*, property, (char const*), (const override));
-    MOCK_METHOD(dev_t, devnum, (), (const override));
-    MOCK_METHOD(char const*, sysname, (), (const override));
-    MOCK_METHOD(bool, initialised, (), (const override));
-    MOCK_METHOD(char const*, syspath, (), (const override));
-    MOCK_METHOD(std::shared_ptr<udev_device>, as_raw, (), (const override));
-    MOCK_METHOD(char const*, driver, (), (const override));
-    MOCK_METHOD(std::unique_ptr<mir::udev::Device>, parent, (), (const override));
-    MOCK_METHOD(std::unique_ptr<mir::udev::Device>, clone, (), (const override));
+    MOCK_CONST_METHOD0(subsystem, char const*(void));
+    MOCK_CONST_METHOD0(devtype, char const*(void));
+    MOCK_CONST_METHOD0(devpath, char const*(void));
+    MOCK_CONST_METHOD0(devnode, char const*(void));
+    MOCK_CONST_METHOD1(property, char const*(char const*));
 };
 
 }

@@ -19,7 +19,6 @@
 
 #include <cstring>
 #include <X11/Xlib-xcb.h>
-#include <xcb/xcb.h>
 
 namespace mtd=mir::test::doubles;
 
@@ -300,36 +299,4 @@ extern "C" xcb_connection_t* XGetXCBConnection(Display* dpy)
 extern "C" void XSetEventQueueOwner(Display *dpy, enum XEventQueueOwner owner)
 {
     return global_mock->XSetEventQueueOwner(dpy, owner);
-}
-
-extern "C" int xcb_connection_has_error(xcb_connection_t* conn)
-{
-    return global_mock->xcb_connection_has_error(conn);
-}
-
-extern "C" xcb_setup_t const* xcb_get_setup(xcb_connection_t* conn)
-{
-    return global_mock->xcb_get_setup(conn);
-}
-
-extern "C" xcb_screen_iterator_t xcb_setup_roots_iterator(xcb_setup_t const* setup)
-{
-    return global_mock->xcb_setup_roots_iterator(setup);
-}
-
-extern "C" xcb_intern_atom_cookie_t xcb_intern_atom(
-    xcb_connection_t* conn,
-    uint8_t only_if_exists,
-    uint16_t name_len,
-    char const* name)
-{
-    return global_mock->xcb_intern_atom(conn, only_if_exists, name_len, name);
-}
-
-extern "C" xcb_intern_atom_reply_t* xcb_intern_atom_reply(
-    xcb_connection_t* conn,
-    xcb_intern_atom_cookie_t atom,
-    xcb_generic_error_t** error)
-{
-    return global_mock->xcb_intern_atom_reply(conn, atom, error);
 }
