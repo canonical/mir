@@ -111,6 +111,14 @@ TEST_F(DesktopFileManager, can_find_app_when_app_id_matches)
     EXPECT_THAT(app_id, Eq(new_file->id));
 }
 
+TEST_F(DesktopFileManager, can_find_gnome_terminal_server)
+{
+    ON_CALL(surface, application_id())
+        .WillByDefault(testing::Invoke([]() { return "gnome-terminal-server"; }));
+    auto app_id = file_manager->resolve_app_id(&surface);
+    EXPECT_THAT(app_id, "org.gnome.Terminal.desktop");
+}
+
 TEST_F(DesktopFileManager, can_find_app_when_wm_class_matches)
 {
     auto new_file = std::make_shared<mf::DesktopFile>(nullptr, APPLICATION_ID, nullptr);
