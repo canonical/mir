@@ -67,21 +67,12 @@ struct Displacement
         return x * x + y * y;
     }
 
+    friend bool operator== (Displacement const& lhs, Displacement const& rhs) = default;
+    friend bool operator!= (Displacement const& lhs, Displacement const& rhs) = default;
+
     DeltaX<T> dx;
     DeltaY<T> dy;
 };
-
-template<typename T>
-inline constexpr bool operator==(Displacement<T> const& lhs, Displacement<T> const& rhs)
-{
-    return lhs.dx == rhs.dx && lhs.dy == rhs.dy;
-}
-
-template<typename T>
-inline constexpr bool operator!=(Displacement<T> const& lhs, Displacement<T> const& rhs)
-{
-    return lhs.dx != rhs.dx || lhs.dy != rhs.dy;
-}
 
 template<typename T>
 std::ostream& operator<<(std::ostream& out, Displacement<T> const& value)

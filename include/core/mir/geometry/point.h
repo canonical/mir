@@ -51,21 +51,12 @@ struct Point
     template<typename XType, typename YType>
     constexpr Point(XType&& x, YType&& y) : x(x), y(y) {}
 
+    friend bool operator== (Point const& lhs, Point const& rhs) = default;
+    friend bool operator!= (Point const& lhs, Point const& rhs) = default;
+
     X<T> x;
     Y<T> y;
 };
-
-template<typename T>
-inline constexpr bool operator == (Point<T> const& lhs, Point<T> const& rhs)
-{
-    return lhs.x == rhs.x && lhs.y == rhs.y;
-}
-
-template<typename T>
-inline constexpr bool operator != (Point<T> const& lhs, Point<T> const& rhs)
-{
-    return lhs.x != rhs.x || lhs.y != rhs.y;
-}
 
 template<typename T>
 inline constexpr Point<T> operator+(Point<T> lhs, DeltaX<T> rhs) { return{lhs.x + rhs, lhs.y}; }

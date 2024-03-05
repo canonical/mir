@@ -51,21 +51,12 @@ struct Size
     template<typename WidthType, typename HeightType>
     constexpr Size(WidthType&& width, HeightType&& height) noexcept : width(width), height(height) {}
 
+    friend bool operator== (Size const& lhs, Size const& rhs) = default;
+    friend bool operator!= (Size const& lhs, Size const& rhs) = default;
+
     Width<T> width;
     Height<T> height;
 };
-
-template<typename T>
-inline constexpr bool operator == (Size<T> const& lhs, Size<T> const& rhs)
-{
-    return lhs.width == rhs.width && lhs.height == rhs.height;
-}
-
-template<typename T>
-inline constexpr bool operator != (Size<T> const& lhs, Size<T> const& rhs)
-{
-    return lhs.width != rhs.width || lhs.height != rhs.height;
-}
 
 template<typename T>
 std::ostream& operator<<(std::ostream& out, Size<T> const& value)
