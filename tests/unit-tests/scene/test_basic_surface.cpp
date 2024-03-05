@@ -74,8 +74,8 @@ public:
     MOCK_METHOD2(cursor_image_set_to, void(ms::Surface const*, std::weak_ptr<mir::graphics::CursorImage> const& image));
     MOCK_METHOD1(cursor_image_removed, void(ms::Surface const*));
     MOCK_METHOD2(application_id_set_to, void(ms::Surface const*, std::string const&));
-    MOCK_METHOD2(entered_output, void(ms::Surface const*, mg::DisplayConfigurationOutputId const& id));
-    MOCK_METHOD2(left_output, void(ms::Surface const*, mg::DisplayConfigurationOutputId const& id));
+    MOCK_METHOD(void, entered_output, (ms::Surface const*, mg::DisplayConfigurationOutputId const& id), (override));
+    MOCK_METHOD(void, left_output, (ms::Surface const*, mg::DisplayConfigurationOutputId const& id), (override));
 };
 
 struct BasicSurfaceTest : public testing::Test
@@ -106,7 +106,7 @@ struct BasicSurfaceTest : public testing::Test
         streams,
         std::shared_ptr<mg::CursorImage>(),
         report,
-         display_config_registrar};
+        display_config_registrar};
 
     std::shared_ptr<ms::SurfaceChangeNotification> observer =
         std::make_shared<ms::SurfaceChangeNotification>(
