@@ -360,6 +360,12 @@ void mgg::RealKMSOutput::set_power_mode(MirPowerMode mode)
 
 void mgg::RealKMSOutput::set_gamma(mg::GammaCurves const& gamma)
 {
+    if (!gamma.red.size())
+    {
+        mir::log_warning("Ignoring attempt to set zero length gamma");
+        return;
+    }
+
     if (!ensure_crtc())
     {
         mir::log_warning("Output %s has no associated CRTC to set gamma on",

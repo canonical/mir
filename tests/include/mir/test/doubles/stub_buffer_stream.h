@@ -53,10 +53,6 @@ public:
     {
         if (b) ++nready;
     }
-    void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& fn) override
-    {
-        fn(*stub_compositor_buffer);
-    }
     MirPixelFormat pixel_format() const override { return mir_pixel_format_abgr_8888; }
     void set_frame_posted_callback(std::function<void(geometry::Size const&)> const&) override {}
     bool has_submitted_buffer() const override { return true; }

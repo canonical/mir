@@ -181,6 +181,7 @@ public:
     std::shared_ptr<scene::IdleHub>         the_idle_hub() override;
     std::shared_ptr<shell::IdleHandler>     the_idle_handler() override;
     std::function<void()>                   the_stop_callback() override;
+    std::shared_ptr<scene::SessionLock>     the_session_lock() override;
     void add_wayland_extension(
         std::string const& name,
         std::function<std::shared_ptr<void>(

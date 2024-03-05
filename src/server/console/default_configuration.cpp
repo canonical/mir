@@ -20,6 +20,7 @@
 #include "mir/emergency_cleanup.h"
 #include "mir/glib_main_loop.h"
 #include "mir/abnormal_exit.h"
+#include "mir/scene/session_lock.h"
 
 #include "minimal_console_services.h"
 #include "linux_virtual_terminal.h"
@@ -105,8 +106,9 @@ std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_conso
                 {
                     try
                     {
-                        auto const vt_services = std::make_shared<mir::LogindConsoleServices>(
-                            std::dynamic_pointer_cast<mir::GLibMainLoop>(the_main_loop()));
+                        auto const vt_services = mir::LogindConsoleServices::create(
+                            std::dynamic_pointer_cast<mir::GLibMainLoop>(the_main_loop()),
+                            the_session_lock());
                         mir::log_debug("Using logind for session management");
                         return vt_services;
                     }

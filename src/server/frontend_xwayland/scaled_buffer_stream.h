@@ -37,7 +37,6 @@ public:
     /// @{
     void submit_buffer(std::shared_ptr<graphics::Buffer> const& buffer);
     void set_frame_posted_callback(std::function<void(geometry::Size const&)> const& callback);
-    void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec);
     MirPixelFormat pixel_format() const;
     void set_scale(float scale);
     /// @}

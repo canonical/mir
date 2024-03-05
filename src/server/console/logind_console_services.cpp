@@ -238,8 +238,21 @@ connect_to_system_bus(mir::GLibMainLoop& ml)
 }
 }
 
-mir::LogindConsoleServices::LogindConsoleServices(std::shared_ptr<mir::GLibMainLoop> const& ml)
-    : ml{ml},
+std::shared_ptr<mir::LogindConsoleServices> mir::LogindConsoleServices::create(
+    std::shared_ptr<GLibMainLoop> main_loop,
+    std::shared_ptr<scene::SessionLock> session_lock_instance)
+{
+    std::shared_ptr<mir::LogindConsoleServices>cs(new LogindConsoleServices(
+        std::move(main_loop), session_lock_instance));
+    session_lock_instance->register_interest(cs);
+    return cs;
+}
+
+mir::LogindConsoleServices::LogindConsoleServices(
+    std::shared_ptr<mir::GLibMainLoop> main_loop,
+    std::shared_ptr<scene::SessionLock> lock)
+    : ml{std::move(main_loop)},
+      session_lock{std::move(lock)},
       connection{connect_to_system_bus(*ml)},
       seat_proxy{
         simple_seat_proxy_on_system_bus(*ml, connection.get(), "/org/freedesktop/login1/seat/seat0")},
@@ -299,6 +312,17 @@ mir::LogindConsoleServices::LogindConsoleServices(std::shared_ptr<mir::GLibMainL
         this,
         nullptr);
 #endif
+
+    g_signal_connect(
+        G_OBJECT(session_proxy.get()),
+        "lock",
+        G_CALLBACK(&LogindConsoleServices::request_lock),
+        this);
+    g_signal_connect(
+        G_OBJECT(session_proxy.get()),
+        "unlock",
+        G_CALLBACK(&LogindConsoleServices::request_unlock),
+        this);
 }
 
 void mir::LogindConsoleServices::register_switch_handlers(
@@ -816,6 +840,22 @@ GDBusMessage* mir::LogindConsoleServices::resume_device_dbus_filter(
 }
 #endif
 
+void mir::LogindConsoleServices::request_lock(
+    GObject*,
+    gpointer ctx) noexcept
+{
+    auto me = static_cast<LogindConsoleServices*>(ctx);
+    me->session_lock->lock();
+}
+
+void mir::LogindConsoleServices::request_unlock(
+    GObject*,
+    gpointer ctx) noexcept
+{
+    auto me = static_cast<LogindConsoleServices*>(ctx);
+    me->session_lock->unlock();
+}
+
 namespace
 {
 class LogindVTSwitcher : public mir::VTSwitcher
@@ -890,4 +930,14 @@ std::unique_ptr<mir::VTSwitcher> mir::LogindConsoleServices::create_vt_switcher(
 mir::LogindConsoleServices::~LogindConsoleServices()
 {
     restore();
+}
+
+void mir::LogindConsoleServices::on_lock()
+{
+    logind_session_set_locked_hint(session_proxy.get(), true);
+}
+
+void mir::LogindConsoleServices::on_unlock()
+{
+    logind_session_set_locked_hint(session_proxy.get(), false);
 }

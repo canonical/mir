@@ -59,11 +59,6 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
     }
 }
 
-void mc::Stream::with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const& fn)
-{
-    fn(*arbiter->snapshot_acquire());
-}
-
 MirPixelFormat mc::Stream::pixel_format() const
 {
     return latest_state.lock()->pf;
