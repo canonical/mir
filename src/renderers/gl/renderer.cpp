@@ -379,30 +379,21 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
 {
     auto const texture = gl_interface->as_texture(renderable.buffer());
     auto const clip_area = renderable.clip_area();
-    glm::mat4 transform = renderable.transformation();
-    if (texture->layout() == mg::gl::Texture::Layout::TopRowFirst)
-    {
-        // GL textures have (0,0) at bottom-left rather than top-left
-        // We have to invert this texture to get it the way up GL expects.
-        transform *= glm::mat4{
-            1.0, 0.0, 0.0, 0.0,
-            0.0, -1.0, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0,
-            0.0, 0.0, 0.0, 1.0
-        };
-    }
-
     if (clip_area)
     {
         glEnable(GL_SCISSOR_TEST);
-
-        glm::vec4 transformed_clip_area =
-            transform * glm::vec4(clip_area.value().top_left.x.as_int(), clip_area.value().top_left.y.as_int(), 0, 0);
+        auto clip_x = clip_area.value().top_left.x.as_int();
+        // The Y-coordinate is always relative to the top, so we make it relative to the bottom.
+        auto clip_y = viewport.top_left.y.as_int() +
+          viewport.size.height.as_int() -
+          clip_area.value().top_left.y.as_int() -
+          clip_area.value().size.height.as_int();
+        glm::vec4 clip_pos(clip_x, clip_y, 0, 1);
+        clip_pos = display_transform * clip_pos;
 
         glScissor(
-            (int)transformed_clip_area.x -
-            viewport.top_left.x.as_int(),
-            (int)transformed_clip_area.y,
+            (int)clip_pos.x - viewport.top_left.x.as_int(),
+            (int)clip_pos.y,
             clip_area.value().size.width.as_int(),
             clip_area.value().size.height.as_int()
         );
@@ -447,6 +438,19 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
     GLfloat centrey = rect.top_left.y.as_int() +
                       rect.size.height.as_int() / 2.0f;
     glUniform2f(prog->centre_uniform, centrex, centrey);
+
+    glm::mat4 transform = renderable.transformation();
+    if (texture->layout() == mg::gl::Texture::Layout::TopRowFirst)
+    {
+        // GL textures have (0,0) at bottom-left rather than top-left
+        // We have to invert this texture to get it the way up GL expects.
+        transform *= glm::mat4{
+            1.0, 0.0, 0.0, 0.0,
+            0.0, -1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0
+        };
+    }
 
     glUniformMatrix4fv(prog->transform_uniform, 1, GL_FALSE,
                        glm::value_ptr(transform));
