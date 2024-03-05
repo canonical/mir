@@ -1191,6 +1191,38 @@ TEST_F(BasicSurfaceTest, notifies_of_left_output_on_move)
     surface.move_to({110, 0});
 }
 
+TEST_F(BasicSurfaceTest, notifies_of_entered_output_when_resizing)
+{
+    using namespace testing;
+
+    mir::graphics::DisplayConfigurationOutputId const id1{1};
+    mir::graphics::DisplayConfigurationOutputId const id2{2};
+
+    EXPECT_CALL(*mock_surface_observer, entered_output(_, id1))
+        .Times(1);
+    EXPECT_CALL(*mock_surface_observer, entered_output(_, id2))
+        .Times(1);
+
+    surface.register_interest(mock_surface_observer, executor);
+    surface.show();
+    surface.resize({150, 50});
+}
+
+TEST_F(BasicSurfaceTest, notifies_of_left_output_when_resizing)
+{
+    using namespace testing;
+
+    mir::graphics::DisplayConfigurationOutputId const id{2};
+
+    EXPECT_CALL(*mock_surface_observer, left_output(_, id))
+        .Times(1);
+
+    surface.register_interest(mock_surface_observer, executor);
+    surface.show();
+    surface.resize({150, 50});
+    surface.resize({50, 50});
+}
+
 TEST_F(BasicSurfaceTest, notifies_of_left_output_when_output_is_disconnected)
 {
     using namespace testing;

@@ -30,14 +30,12 @@ namespace test
 {
 namespace doubles
 {
-struct FakeDisplayConfigurationObserverRegistrar : ObserverRegistrar<graphics::DisplayConfigurationObserver>
+
+class FakeDisplayConfigurationObserverRegistrar : public ObserverRegistrar<graphics::DisplayConfigurationObserver>
 {
+public:
     using Observer = graphics::DisplayConfigurationObserver;
-    StubDisplayConfig output{
-        {
-            geometry::Rectangle{{0, 0}, {100, 100}},
-            geometry::Rectangle{{100, 0}, {100, 100}}
-        }};
+
     void register_interest(std::weak_ptr<Observer> const& obs) override
     {
         register_interest(obs, immediate_executor);
@@ -54,19 +52,30 @@ struct FakeDisplayConfigurationObserverRegistrar : ObserverRegistrar<graphics::D
     {
         observer.reset();
     }
-    void update_output(std::size_t output_index, geometry::Size const& output_size)
+    void resize_output(std::size_t output_index, geometry::Size const& output_size)
     {
         output.outputs.at(output_index).modes[0].size = output_size;
-        auto o = observer.lock();
-        o->configuration_applied(fake_shared(output));
+        apply_config();
     }
     void disconnect_output(std::size_t output_index)
     {
-        auto& config{output.outputs.at(output_index)};
-        config.connected = false;
+        output.outputs.at(output_index).connected = false;
+        apply_config();
+    }
+
+private:
+    void apply_config()
+    {
         auto o = observer.lock();
         o->configuration_applied(fake_shared(output));
     }
+
+    StubDisplayConfig output{
+        {
+            geometry::Rectangle{{0, 0}, {100, 100}},
+            geometry::Rectangle{{100, 0}, {100, 100}}
+        }};
+
     std::weak_ptr<Observer> observer;
 };
 

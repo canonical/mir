@@ -61,7 +61,6 @@ private:
     BasicSurface* surface;
 };
 
-
 class ms::BasicSurface::Multiplexer : public ObserverMultiplexer<SurfaceObserver>
 {
 public:
@@ -218,10 +217,10 @@ ms::BasicSurface::BasicSurface(
     display_config_registrar{display_config_registrar},
     display_config_monitor{std::make_shared<DisplayConfigurationListener>(this)}
 {
-    display_config_registrar->register_interest(display_config_monitor, immediate_executor);
     auto state = synchronised_state.lock();
     update_frame_posted_callbacks(*state);
     report->surface_created(this, state->surface_name);
+    display_config_registrar->register_interest(display_config_monitor, immediate_executor);
 }
 
 ms::BasicSurface::BasicSurface(
@@ -475,7 +474,6 @@ MirWindowState ms::BasicSurface::set_state(MirWindowState s)
         state.drop();
 
         observers->attrib_changed(this, mir_window_attrib_state, s);
-        track_outputs();
     }
 
     return s;
@@ -495,7 +493,6 @@ MirOrientationMode ms::BasicSurface::set_preferred_orientation(MirOrientationMod
 
         state.drop();
         observers->attrib_changed(this, mir_window_attrib_preferred_orientation, new_orientation_mode);
-        track_outputs();
     }
 
     return new_orientation_mode;
@@ -670,7 +667,6 @@ MirWindowVisibility ms::BasicSurface::set_visibility(MirWindowVisibility new_vis
         state.drop();
 
         observers->attrib_changed(this, mir_window_attrib_visibility, new_visibility);
-        track_outputs();
     }
 
     return new_visibility;
@@ -783,7 +779,6 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
         surface_top_left = state->surface_rect.top_left;
     }
     observers->moved_to(this, surface_top_left);
-    track_outputs();
 }
 
 mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) const
