@@ -103,6 +103,9 @@ struct Rectangle
     Y<T> top() const    { return top_left.y; }
     Y<T> bottom() const { return bottom_right().y; }
 
+    friend bool operator== (Rectangle const& lhs, Rectangle const& rhs) = default;
+    friend bool operator!= (Rectangle const& lhs, Rectangle const& rhs) = default;
+
     Point<T> top_left;
     Size<T> size;
 };
@@ -121,18 +124,6 @@ Rectangle<T> intersection_of(Rectangle<T> const& a, Rectangle<T> const& b)
                 (min_bottom - max_top).as_value()}};
     else
         return {};
-}
-
-template<typename T>
-inline constexpr bool operator == (Rectangle<T> const& lhs, Rectangle<T> const& rhs)
-{
-    return lhs.top_left == rhs.top_left && lhs.size == rhs.size;
-}
-
-template<typename T>
-inline constexpr bool operator != (Rectangle<T> const& lhs, Rectangle<T> const& rhs)
-{
-    return lhs.top_left != rhs.top_left || lhs.size != rhs.size;
 }
 
 template<typename T>

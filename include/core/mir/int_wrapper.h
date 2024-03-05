@@ -29,7 +29,7 @@ public:
 
     explicit constexpr IntWrapper(ValueType value) : value(value) {}
     ValueType constexpr as_value() const { return value; }
-
+    friend auto operator <=> (IntWrapper const& lhs, IntWrapper const& rhs) = default;
 private:
     ValueType value;
 };
@@ -39,36 +39,6 @@ std::ostream& operator<<(std::ostream& out, IntWrapper<Tag,ValueType> const& val
 {
     out << value.as_value();
     return out;
-}
-
-template<typename Tag, typename ValueType>
-inline constexpr bool operator == (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
-{
-    return lhs.as_value() == rhs.as_value();
-}
-
-template<typename Tag, typename ValueType>
-inline constexpr bool operator != (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
-{
-    return lhs.as_value() != rhs.as_value();
-}
-
-template<typename Tag, typename ValueType>
-inline constexpr bool operator <= (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
-{
-    return lhs.as_value() <= rhs.as_value();
-}
-
-template<typename Tag, typename ValueType>
-inline constexpr bool operator >= (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
-{
-    return lhs.as_value() >= rhs.as_value();
-}
-
-template<typename Tag, typename ValueType>
-inline constexpr bool operator < (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
-{
-    return lhs.as_value() < rhs.as_value();
 }
 }
 

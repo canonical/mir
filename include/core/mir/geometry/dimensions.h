@@ -80,35 +80,7 @@ struct Value
     {
     }
 
-    inline constexpr auto operator == (Value<T, Tag> const& rhs) const -> bool
-    {
-        return value == rhs.as_value();
-    }
-
-    inline constexpr auto operator != (Value<T, Tag> const& rhs) const -> bool
-    {
-        return value != rhs.as_value();
-    }
-
-    inline constexpr auto operator <= (Value<T, Tag> const& rhs) const -> bool
-    {
-        return value <= rhs.as_value();
-    }
-
-    inline constexpr auto operator >= (Value<T, Tag> const& rhs) const -> bool
-    {
-        return value >= rhs.as_value();
-    }
-
-    inline constexpr auto operator < (Value<T, Tag> const& rhs) const -> bool
-    {
-        return value < rhs.as_value();
-    }
-
-    inline constexpr auto operator > (Value<T, Tag> const& rhs) const -> bool
-    {
-        return value > rhs.as_value();
-    }
+    friend auto operator <=> (Value const& lhs, Value const& rhs) = default;
 
 protected:
     T value;
