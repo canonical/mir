@@ -28,7 +28,7 @@ namespace
 {
 const char* DESKTOP_FILE_POSTFIX = ".desktop";
 
-const std::map<std::string, std::string> app_id_to_desktop_file_quirks = {
+std::pair<std::string, std::string> const app_id_to_desktop_file_quirks[] = {
     {"gnome-terminal-server", "org.gnome.Terminal.desktop"} // https://gitlab.gnome.org/GNOME/gnome-terminal/-/issues/8033
 };
 }
@@ -59,8 +59,8 @@ std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface
     if (app)
         return app->id;
 
-    if (app_id_to_desktop_file_quirks.contains(app_id))
-        return app_id_to_desktop_file_quirks.at(app_id);
+    for (auto const& q: app_id_to_desktop_file_quirks)
+        if (q.first == app_id) return q.second;
 
     // Second, let's see if we can map it straight to a desktop file
     auto desktop_file = app_id + DESKTOP_FILE_POSTFIX;
