@@ -32,16 +32,16 @@ struct MockSessionListener : public scene::SessionListener
 {
     virtual ~MockSessionListener() noexcept(true) {}
 
-    MOCK_METHOD1(starting, void(std::shared_ptr<scene::Session> const&));
-    MOCK_METHOD1(stopping, void(std::shared_ptr<scene::Session> const&));
-    MOCK_METHOD1(focused, void(std::shared_ptr<scene::Session> const&));
-    MOCK_METHOD0(unfocused, void());
+    MOCK_METHOD(void, starting, (std::shared_ptr<scene::Session> const&), (override));
+    MOCK_METHOD(void, stopping, (std::shared_ptr<scene::Session> const&), (override));
+    MOCK_METHOD(void, focused, (std::shared_ptr<scene::Session> const&), (override));
+    MOCK_METHOD(void, unfocused, (), (override));
 
-    MOCK_METHOD2(surface_created, void(scene::Session&, std::shared_ptr<scene::Surface> const&));
-    MOCK_METHOD2(destroying_surface, void(scene::Session&, std::shared_ptr<scene::Surface> const&));
+    MOCK_METHOD(void, surface_created, (scene::Session&, std::shared_ptr<scene::Surface> const&), (override));
+    MOCK_METHOD(void, destroying_surface, (scene::Session&, std::shared_ptr<scene::Surface> const&), (override));
 
-    MOCK_METHOD2(buffer_stream_created, void(scene::Session&, std::shared_ptr<frontend::BufferStream> const&));
-    MOCK_METHOD2(buffer_stream_destroyed, void(scene::Session&, std::shared_ptr<frontend::BufferStream> const&));
+    MOCK_METHOD(void, buffer_stream_created, (scene::Session&, std::shared_ptr<frontend::BufferStream> const&), (override));
+    MOCK_METHOD(void, buffer_stream_destroyed, (scene::Session&, std::shared_ptr<frontend::BufferStream> const&), (override));
 };
 
 }

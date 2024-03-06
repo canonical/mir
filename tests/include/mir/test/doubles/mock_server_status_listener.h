@@ -31,11 +31,11 @@ namespace doubles
 class MockServerStatusListener : public mir::ServerStatusListener
 {
 public:
-    MOCK_METHOD0(paused, void());
-    MOCK_METHOD0(resumed, void());
-    MOCK_METHOD0(started, void());
-    MOCK_METHOD0(ready_for_user_input, void());
-    MOCK_METHOD0(stop_receiving_input, void());
+    MOCK_METHOD(void, paused, (), (override));
+    MOCK_METHOD(void, resumed, (), (override));
+    MOCK_METHOD(void, started, (), (override));
+    MOCK_METHOD(void, ready_for_user_input, (), (override));
+    MOCK_METHOD(void, stop_receiving_input, (), (override));
 };
 
 }

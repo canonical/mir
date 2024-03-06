@@ -29,7 +29,7 @@ namespace doubles
 {
 struct MockEventFilter : public mir::input::EventFilter
 {
-    MOCK_METHOD1(handle, bool(const MirEvent&));
+    MOCK_METHOD(bool, handle, (const MirEvent&), (override));
 };
 }
 }

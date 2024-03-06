@@ -56,10 +56,10 @@ struct MockDevice : input::Device
     MOCK_CONST_METHOD0(touchpad_configuration, optional_value<MirTouchpadConfig>());
     MOCK_CONST_METHOD0(keyboard_configuration, optional_value<MirKeyboardConfig>());
     MOCK_CONST_METHOD0(touchscreen_configuration, optional_value<MirTouchscreenConfig>());
-    MOCK_METHOD1(apply_pointer_configuration, void(MirPointerConfig const&));
-    MOCK_METHOD1(apply_touchpad_configuration, void(MirTouchpadConfig const&));
-    MOCK_METHOD1(apply_keyboard_configuration, void(MirKeyboardConfig const&));
-    MOCK_METHOD1(apply_touchscreen_configuration, void(MirTouchscreenConfig const&));
+    MOCK_METHOD(void, apply_pointer_configuration, (MirPointerConfig const&), (override));
+    MOCK_METHOD(void, apply_touchpad_configuration, (MirTouchpadConfig const&), (override));
+    MOCK_METHOD(void, apply_keyboard_configuration, (MirKeyboardConfig const&), (override));
+    MOCK_METHOD(void, apply_touchscreen_configuration, (MirTouchscreenConfig const&), (override));
 };
 }
 }

@@ -30,9 +30,9 @@ namespace doubles
 
 struct MockTouchVisualizer : public input::TouchVisualizer
 {
-    MOCK_METHOD1(visualize_touches, void(std::vector<input::TouchVisualizer::Spot> const&));
-    MOCK_METHOD0(enable, void());
-    MOCK_METHOD0(disable, void());
+    MOCK_METHOD(void, visualize_touches, (std::vector<input::TouchVisualizer::Spot> const&), (override));
+    MOCK_METHOD(void, enable, (), (override));
+    MOCK_METHOD(void, disable, (), (override));
 };
 
 }

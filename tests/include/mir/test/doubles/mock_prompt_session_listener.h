@@ -32,13 +32,13 @@ struct MockPromptSessionListener : public scene::PromptSessionListener
 {
     virtual ~MockPromptSessionListener() noexcept(true) {}
 
-    MOCK_METHOD1(starting, void(std::shared_ptr<scene::PromptSession> const&));
-    MOCK_METHOD1(stopping, void(std::shared_ptr<scene::PromptSession> const&));
-    MOCK_METHOD1(suspending, void(std::shared_ptr<scene::PromptSession> const&));
-    MOCK_METHOD1(resuming, void(std::shared_ptr<scene::PromptSession> const&));
+    MOCK_METHOD(void, starting, (std::shared_ptr<scene::PromptSession> const&), (override));
+    MOCK_METHOD(void, stopping, (std::shared_ptr<scene::PromptSession> const&), (override));
+    MOCK_METHOD(void, suspending, (std::shared_ptr<scene::PromptSession> const&), (override));
+    MOCK_METHOD(void, resuming, (std::shared_ptr<scene::PromptSession> const&), (override));
 
-    MOCK_METHOD2(prompt_provider_added, void(scene::PromptSession const&, std::shared_ptr<scene::Session> const&));
-    MOCK_METHOD2(prompt_provider_removed, void(scene::PromptSession const&, std::shared_ptr<scene::Session> const&));
+    MOCK_METHOD(void, prompt_provider_added, (scene::PromptSession const&, std::shared_ptr<scene::Session> const&), (override));
+    MOCK_METHOD(void, prompt_provider_removed, (scene::PromptSession const&, std::shared_ptr<scene::Session> const&), (override));
 };
 
 }

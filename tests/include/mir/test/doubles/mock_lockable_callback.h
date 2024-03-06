@@ -32,9 +32,9 @@ class MockLockableCallback : public LockableCallback
 public:
     ~MockLockableCallback() noexcept {}
 
-    MOCK_METHOD0(functor, void());
-    MOCK_METHOD0(lock, void());
-    MOCK_METHOD0(unlock, void());
+    MOCK_METHOD(void, functor, ());
+    MOCK_METHOD(void, lock, (), (override));
+    MOCK_METHOD(void, unlock, (), (override));
 
     void operator()() override { functor(); }
 };

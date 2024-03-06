@@ -31,8 +31,8 @@ namespace doubles
 class MockCompositor : public compositor::Compositor
 {
 public:
-    MOCK_METHOD0(start, void());
-    MOCK_METHOD0(stop, void());
+    MOCK_METHOD(void, start, ());
+    MOCK_METHOD(void, stop, ());
 };
 
 }
