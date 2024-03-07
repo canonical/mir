@@ -54,6 +54,9 @@ public:
     void register_interest(
         std::weak_ptr<Observer> const& observer,
         Executor& executor) override;
+    void register_early_observer(
+        std::weak_ptr<Observer> const& observer,
+        Executor& executor) override;
     void unregister_interest(Observer const& observer) override;
 
     /// Returns true if there are no observers
@@ -245,6 +248,7 @@ private:
     };
 
     PosixRWMutex observer_mutex;
+    std::vector<std::shared_ptr<WeakObserver>> early_observers;
     std::vector<std::shared_ptr<WeakObserver>> observers;
 };
 
@@ -265,27 +269,35 @@ void ObserverMultiplexer<Observer>::register_interest(
 }
 
 template<class Observer>
+void ObserverMultiplexer<Observer>::register_early_observer(
+    std::weak_ptr<Observer> const& observer,
+    Executor& executor)
+{
+    std::lock_guard lock{observer_mutex};
+
+    early_observers.emplace_back(std::make_shared<WeakObserver>(observer, executor));
+}
+
+template<class Observer>
 void ObserverMultiplexer<Observer>::unregister_interest(Observer const& observer)
 {
     std::lock_guard lock{observer_mutex};
-    observers.erase(
-        std::remove_if(
-            observers.begin(),
-            observers.end(),
-            [&observer](auto& candidate)
-            {
-                // This will wait for any (other) thread to finish with the candidate observer, then reset it
-                // (preventing future notifications from being sent) if it is the same as the unregistered observer.
-                return candidate->maybe_reset(&observer);
-            }),
-        observers.end());
+    auto remove_observer{
+        [&observer](auto& candidate)
+        {
+            // This will wait for any (other) thread to finish with the candidate observer, then reset it
+            // (preventing future notifications from being sent) if it is the same as the unregistered observer.
+            return candidate->maybe_reset(&observer);
+        }};
+    std::erase_if(early_observers, remove_observer);
+    std::erase_if(observers, remove_observer);
 }
 
 template<class Observer>
 auto ObserverMultiplexer<Observer>::empty() -> bool
 {
     std::lock_guard lock{observer_mutex};
-    return observers.empty();
+    return early_observers.empty() && observers.empty();
 }
 
 template<class Observer>
@@ -295,10 +307,20 @@ void ObserverMultiplexer<Observer>::for_each_observer(MemberFn f, Args&&... args
     static_assert(
         std::is_member_function_pointer<MemberFn>::value,
         "f must be of type (Observer::*)(Args...), a pointer to an Observer member function.");
+    decltype(observers) local_early_observers;
     decltype(observers) local_observers;
     {
         std::lock_guard lock{observer_mutex};
+        local_early_observers = early_observers;
         local_observers = observers;
+    }
+    for (auto& weak_observer: local_early_observers)
+    {
+        weak_observer->spawn(
+            [f, weak_observer = std::move(weak_observer), args...]() mutable
+            {
+                weak_observer->invoke(f, std::forward<Args>(args)...);
+            });
     }
     for (auto& weak_observer: local_observers)
     {
@@ -317,10 +339,20 @@ void ObserverMultiplexer<Observer>::for_single_observer(Observer const& target_o
     static_assert(
         std::is_member_function_pointer<MemberFn>::value,
         "f must be of type (Observer::*)(Args...), a pointer to an Observer member function.");
+    decltype(observers) local_early_observers;
     decltype(observers) local_observers;
     {
         std::lock_guard lock{observer_mutex};
+        local_early_observers = early_observers;
         local_observers = observers;
+    }
+    for (auto& weak_observer: local_early_observers)
+    {
+        weak_observer->spawn_if_eq(target_observer,
+            [f, weak_observer = std::move(weak_observer), args...]() mutable
+            {
+                weak_observer->invoke(f, std::forward<Args>(args)...);
+            });
     }
     for (auto& weak_observer: local_observers)
     {

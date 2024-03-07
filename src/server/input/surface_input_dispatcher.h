@@ -67,6 +67,9 @@ public:
     void register_interest(
         std::weak_ptr<KeyboardObserver> const& observer,
         Executor& executor) override;
+    void register_early_observer(
+        std::weak_ptr<KeyboardObserver> const& observer,
+        Executor& executor) override;
     void unregister_interest(KeyboardObserver const& observer) override;
 
     void disable_dispatch_to_gesture_owner(std::function<void()> on_end_gesture) override;
@@ -96,7 +99,7 @@ private:
     };
     std::unordered_map<MirInputDeviceId, TouchInputState> touch_state_by_id;
     TouchInputState& ensure_touch_state(MirInputDeviceId id);
-    
+
     struct KeyboardEventMultiplexer : ObserverMultiplexer<KeyboardObserver>
     {
         KeyboardEventMultiplexer()

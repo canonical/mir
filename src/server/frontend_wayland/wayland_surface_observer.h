@@ -55,8 +55,14 @@ public:
     void client_surface_close_requested(scene::Surface const*) override;
     void placed_relative(scene::Surface const*, geometry::Rectangle const& placement) override;
     void input_consumed(scene::Surface const*, std::shared_ptr<MirEvent const> const& event) override;
-    void entered_output(scene::Surface const*, graphics::DisplayConfigurationOutputId const& id) override;
-    void left_output(scene::Surface const*, graphics::DisplayConfigurationOutputId const& id) override;
+    void entered_output(
+        scene::Surface const*,
+        graphics::DisplayConfigurationOutputId const& id,
+        std::function<bool(graphics::DisplayConfigurationOutputId const&)> const& hook) override;
+    void left_output(
+        scene::Surface const*,
+        graphics::DisplayConfigurationOutputId const& id,
+        std::function<bool(graphics::DisplayConfigurationOutputId const&)> const& hook) override;
     ///@}
 
     /// Should only be called from the Wayland thread

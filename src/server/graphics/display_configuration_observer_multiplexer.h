@@ -38,6 +38,10 @@ public:
 
     void register_interest(std::weak_ptr<DisplayConfigurationObserver> const& observer, Executor& executor) override;
 
+    void register_early_observer(
+        std::weak_ptr<DisplayConfigurationObserver> const& observer,
+        Executor& executor) override;
+
     void initial_configuration(std::shared_ptr<DisplayConfiguration const> const& config) override;
 
     void configuration_applied(std::shared_ptr<DisplayConfiguration const> const& config) override;

@@ -247,7 +247,7 @@ void ms::SurfaceStack::remove_input_visualization(
         }
         overlays.erase(p);
     }
-    
+
     emit_scene_changed();
 }
 
@@ -575,9 +575,9 @@ void ms::SurfaceStack::remove_observer(std::weak_ptr<ms::Observer> const& observ
     auto o = observer.lock();
     if (!o)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid observer (destroyed)"));
-    
+
     o->end_observation();
-    
+
     observers.remove(o);
 }
 
@@ -634,6 +634,13 @@ void ms::SurfaceStack::register_interest(
     mir::Executor& other_executor)
 {
     multiplexer.register_interest(observer, other_executor);
+}
+
+void ms::SurfaceStack::register_early_observer(
+    std::weak_ptr<SessionLockObserver> const& observer,
+    mir::Executor& other_executor)
+{
+    multiplexer.register_early_observer(observer, other_executor);
 }
 
 void ms::SurfaceStack::unregister_interest(SessionLockObserver const& observer)

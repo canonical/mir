@@ -400,7 +400,7 @@ void for_pressed_buttons(MirPointerEvent const* pev, std::function<void(MirPoint
     for (auto button : buttons)
         if (mir_pointer_event_button_state(pev, button)) exec(button);
 }
-    
+
 bool is_gesture_terminator(MirPointerEvent const* pev)
 {
     bool any_pressed = false;
@@ -571,7 +571,7 @@ bool mi::SurfaceInputDispatcher::dispatch_touch(MirInputDeviceId id, MirEvent co
 
         return true;
     }
-        
+
     return false;
 }
 
@@ -579,7 +579,7 @@ bool mi::SurfaceInputDispatcher::dispatch(std::shared_ptr<MirEvent const> const&
 {
     if (mir_event_get_type(event.get()) != mir_event_type_input)
         BOOST_THROW_EXCEPTION(std::logic_error("InputDispatcher got an unexpected event type"));
-    
+
     auto iev = mir_event_get_input_event(event.get());
     auto id = mir_input_event_get_device_id(iev);
     switch (mir_input_event_get_type(iev))
@@ -642,6 +642,13 @@ void mir::input::SurfaceInputDispatcher::register_interest(
     Executor& executor)
 {
     keyboard_multiplexer.register_interest(observer, executor);
+}
+
+void mir::input::SurfaceInputDispatcher::register_early_observer(
+    std::weak_ptr<KeyboardObserver> const& observer,
+    Executor& executor)
+{
+    keyboard_multiplexer.register_early_observer(observer, executor);
 }
 
 void mir::input::SurfaceInputDispatcher::unregister_interest(KeyboardObserver const& observer)

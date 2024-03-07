@@ -98,8 +98,12 @@ public:
     void remove_state_now(MirWindowState state);
     void create_scene_surface();
 
-    void handle_enter_output(graphics::DisplayConfigurationOutputId id) const;
-    void handle_leave_output(graphics::DisplayConfigurationOutputId id) const;
+    void handle_enter_output(
+        graphics::DisplayConfigurationOutputId id,
+        std::function<bool(graphics::DisplayConfigurationOutputId const&)> const& hook) const;
+    void handle_leave_output(
+        graphics::DisplayConfigurationOutputId id,
+        std::function<bool(graphics::DisplayConfigurationOutputId const&)> const& hook) const;
 
     /// Gets called after the surface has committed (so current_size() may return the committed buffer size) but before
     /// the Mir window is modified (so if a pending size is set or a spec is applied those changes will take effect)

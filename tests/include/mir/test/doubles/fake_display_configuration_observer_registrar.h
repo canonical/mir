@@ -48,6 +48,12 @@ public:
         auto o = observer.lock();
         o->initial_configuration(fake_shared(output));
     }
+    void register_early_observer(
+        std::weak_ptr<Observer> const& obs,
+        Executor&) override
+    {
+        register_interest(obs);
+    }
     void unregister_interest(Observer const&) override
     {
         observer.reset();

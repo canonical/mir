@@ -472,7 +472,9 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
     pending_changes.reset();
 }
 
-void mf::WindowWlSurfaceRole::handle_enter_output(graphics::DisplayConfigurationOutputId id) const
+void mf::WindowWlSurfaceRole::handle_enter_output(
+    graphics::DisplayConfigurationOutputId id,
+    std::function<bool(graphics::DisplayConfigurationOutputId const&)> const& hook) const
 {
     if (surface)
     {
@@ -485,14 +487,19 @@ void mf::WindowWlSurfaceRole::handle_enter_output(graphics::DisplayConfiguration
                     client,
                     [&](OutputInstance* output_instance)
                     {
-                        surface.value().send_enter_event(output_instance->resource);
+                        if (hook(id))
+                        {
+                            surface.value().send_enter_event(output_instance->resource);
+                        }
                     });
             }
         }
     }
 }
 
-void mf::WindowWlSurfaceRole::handle_leave_output(graphics::DisplayConfigurationOutputId id) const
+void mf::WindowWlSurfaceRole::handle_leave_output(
+    graphics::DisplayConfigurationOutputId id,
+    std::function<bool(graphics::DisplayConfigurationOutputId const&)> const& hook) const
 {
     if (surface)
     {
@@ -505,7 +512,10 @@ void mf::WindowWlSurfaceRole::handle_leave_output(graphics::DisplayConfiguration
                     client,
                     [&](OutputInstance* output_instance)
                     {
-                        surface.value().send_leave_event(output_instance->resource);
+                        if (hook(id))
+                        {
+                            surface.value().send_leave_event(output_instance->resource);
+                        }
                     });
             }
         }

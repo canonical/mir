@@ -187,6 +187,13 @@ struct FakeDisplayConfigurationObserverRegistrar : mir::ObserverRegistrar<mir::g
         register_interest(o);
     }
 
+    void register_early_observer(
+        std::weak_ptr<mir::graphics::DisplayConfigurationObserver> const& o,
+        mir::Executor&) override
+    {
+        register_interest(o);
+    }
+
     void unregister_interest(mir::graphics::DisplayConfigurationObserver const& o) override
     {
         ASSERT_THAT(observer.lock().get(), testing::Eq(&o));

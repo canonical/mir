@@ -79,6 +79,13 @@ public:
         multiplexer.register_interest(observer, executor);
         send_initial_state(observer);
     }
+    void register_early_observer(
+        std::weak_ptr<TextInputStateObserver> const& observer,
+        Executor& executor) override
+    {
+        multiplexer.register_early_observer(observer, executor);
+        send_initial_state(observer);
+    }
     void unregister_interest(TextInputStateObserver const& observer) override
     {
         multiplexer.unregister_interest(observer);

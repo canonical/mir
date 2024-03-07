@@ -78,6 +78,10 @@ public:
     {
         multiplexer.register_interest(observer, executor);
     }
+    void register_early_observer(std::weak_ptr<ClipboardObserver> const& observer, Executor& executor) override
+    {
+        multiplexer.register_early_observer(observer, executor);
+    }
     void unregister_interest(ClipboardObserver const& observer) override
     {
         multiplexer.unregister_interest(observer);

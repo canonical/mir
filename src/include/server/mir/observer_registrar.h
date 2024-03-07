@@ -64,6 +64,28 @@ public:
         Executor& executor) = 0;
 
     /**
+     * Add an observer that will be notified before the observers not
+     * registered as early observers.
+     *
+     * This is threadsafe and can be called in any context.
+     *
+     * The ObserverRegistrar does not take any ownership of \p observer, and will
+     * automatically remove it when \p observer expires.
+     *
+     * All calls to \p observer methods are performed in the context of
+     * \p executor. The \p executor may defer execution of \p work run it
+     * immediately.
+     *
+     * \param [in] observer The observer to register
+     * \param [in] executor Execution environment for calls to \p observer methods.
+     *                          The caller is responsible for ensuring \p executor outlives
+     *                          \p observer.
+     */
+    virtual void register_early_observer(
+        std::weak_ptr<Observer> const& observer,
+        Executor& executor) = 0;
+
+    /**
      * Remove an observer from the set notified of all observations.
      *
      * This is threadsafe and can be called in any context.
