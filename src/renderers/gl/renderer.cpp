@@ -382,29 +382,18 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
     if (clip_area)
     {
         glEnable(GL_SCISSOR_TEST);
-
-        // NOTE: We are handling the following two cases here:
-        // 1. The layout of the output surface matches that of the texture.
-        //    The clip_area provided has the origin in the top-left corner of the screen, while OpenGL
-        //    has the origin in the bottom-left corner of the screen. Hence, when the layout of the
-        //    output surface matches that of the texture, we need to invert the provided clip_area.
-        // 2. The layout of the output surface DOES NOT match that of the texture.
-        //    Note that the call to glViewport in update_gl_viewport will modify the behavior of glScissor.
-        //    Hence, if the layouts do NOT match, then we do NOT need to invert the clip area. This
-        //    is because we WANT the inverted layout which clip_area provides to us by default.
-        auto const invert_clip_area = (output_surface->layout() == graphics::gl::OutputSurface::Layout::TopRowFirst) ==
-            (texture->layout() == mg::gl::Texture::Layout::TopRowFirst);
-        auto const scissor_y = invert_clip_area ?
-            viewport.top_left.y.as_int() +
-                viewport.size.height.as_int() -
-                clip_area.value().top_left.y.as_int() -
-                clip_area.value().size.height.as_int() :
-            clip_area.value().top_left.y.as_int();
+        auto clip_x = clip_area.value().top_left.x.as_int();
+        // The Y-coordinate is always relative to the top, so we make it relative to the bottom.
+        auto clip_y = viewport.top_left.y.as_int() +
+          viewport.size.height.as_int() -
+          clip_area.value().top_left.y.as_int() -
+          clip_area.value().size.height.as_int();
+        glm::vec4 clip_pos(clip_x, clip_y, 0, 1);
+        clip_pos = display_transform * clip_pos;
 
         glScissor(
-            clip_area.value().top_left.x.as_int() -
-            viewport.top_left.x.as_int(),
-            scissor_y,
+            (int)clip_pos.x - viewport.top_left.x.as_int(),
+            (int)clip_pos.y,
             clip_area.value().size.width.as_int(),
             clip_area.value().size.height.as_int()
         );
