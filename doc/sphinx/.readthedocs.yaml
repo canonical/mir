@@ -38,6 +38,7 @@ build:
   - xsltproc
   jobs:
     post_checkout:
+    - ( cd doc/sphinx; python3 .sphinx/build_requirements.py )
     - git fetch --unshallow
     post_install:
     - cmake -DMIR_ENABLE_TESTS=NO -DMIR_PLATFORM=x11 .

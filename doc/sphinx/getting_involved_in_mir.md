@@ -3,7 +3,7 @@
 ## Getting involved
 
 The Mir project website is <https://mir-server.io/>,
-the code is [hosted on GitHub](https://github.com/MirServer)
+the code is [hosted on GitHub](https://github.com/canonical)
 
 For announcements and other discussions on Mir see:
 [Mir on community.ubuntu](https://community.ubuntu.com/c/mir)
@@ -16,7 +16,7 @@ the [\#mir-server](https://web.libera.chat/?channels=#mir-server) IRC channel on
 
 You can get the source with:
 
-    git clone https://github.com/MirServer/mir.git
+    git clone https://github.com/canonical/mir.git
     cd mir
 
 You may need to install git for the system you are working on.
@@ -62,7 +62,7 @@ You can install the Mir examples, headers and libraries you've built with:
 
 ## Contributing to Mir
 
-Please file bug reports at: [https://github.com/MirServer/mir/issues](https://github.com/MirServer/mir/issues).
+Please file bug reports at: [https://github.com/canonical/mir/issues](https://github.com/canonical/mir/issues).
 
 The Mir Discourse category can be found at: [https://discourse.ubuntu.com/c/mir/15](https://discourse.ubuntu.com/c/mir/15).
 
@@ -71,7 +71,7 @@ The Mir coding guidelines are <a href=../_static/cppguide/>here</a>.
 ```
 
 ## Working on code
- - Hacking guidelines can be found here: [Mir Hacking Guides](https://github.com/MirServer/mir/blob/main/HACKING.md)
+ - Hacking guidelines can be found here: [Mir Hacking Guides](https://github.com/canonical/mir/blob/main/HACKING.md)
  - You can configure *Mir* to provide runtime information helpful for debugging
    by enabling component reports: [Component Reports](component_reports.md)
  - A guide on versioning Mir DSOs: [DSO Versioning Guide](dso_versioning_guide.md)

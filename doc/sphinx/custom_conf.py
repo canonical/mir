@@ -1,5 +1,7 @@
 import datetime
 import os
+import re
+from pathlib import Path
 import subprocess
 
 # Custom configuration for the Sphinx documentation builder.
@@ -11,6 +13,10 @@ import subprocess
 #
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
+#
+# If you're not familiar with Sphinx and don't want to use advanced
+# features, it is sufficient to update the settings in the "Project
+# information" section.
 
 ############################################################
 ### Project information
@@ -20,35 +26,62 @@ import subprocess
 project = 'Mir'
 author = 'Canonical Group Ltd.'
 
-# Uncomment if your product uses release numbers
+# The title you want to display for the documentation in the sidebar.
+# You might want to include a version number here.
+# To not display any title, set this option to an empty string.
 try:
-    release = subprocess.check_output(["git", "describe", "--always"], encoding="utf-8")
+    release = subprocess.check_output(["git", "describe", "--always"], encoding="utf-8").strip()
 except (FileNotFoundError, subprocess.CalledProcessError):
-    release = "v@MIR_VERSION_MAJOR@.@MIR_VERSION_MINOR@.@MIR_VERSION_MICRO@"
+    with open(Path(__file__).parents[2] / "CMakeLists.txt", encoding="utf-8") as cmake:
+        matches = re.findall(r"set\(MIR_VERSION_(MAJOR|MINOR|PATCH) (\d+)\)", cmake.read())
+    release = "v{MAJOR}.{MINOR}.{PATCH}".format(**dict(matches))
+html_title = f'{project} {release} documentation'
 
-# The default value uses the current year as the copyright year
+# The default value uses the current year as the copyright year.
+#
+# For static works, it is common to provide the year of first publication.
+# Another option is to give the first year and the current year
+# for documentation that is often changed, e.g. 2022–2023 (note the en-dash).
+#
+# A way to check a GitHub repo's creation date is to obtain a classic GitHub
+# token with 'repo' permissions here: https://github.com/settings/tokens
+# Next, use 'curl' and 'jq' to extract the date from the GitHub API's output:
+#
+# curl -H 'Authorization: token <TOKEN>' \
+#   -H 'Accept: application/vnd.github.v3.raw' \
+#   https://api.github.com/repos/canonical/<REPO> | jq '.created_at'
+
 copyright = '%s, %s' % (datetime.date.today().year, author)
 
-## Open Graph configuration - defines what is displayed in the website preview
-# The URL of the documentation output
+## Open Graph configuration - defines what is displayed as a link preview
+## when linking to the documentation from another website (see https://ogp.me/)
+# The URL where the documentation will be hosted (leave empty if you
+# don't know yet)
+# NOTE: If no ogp_* variable is defined (e.g. if you remove this section) the
+# sphinxext.opengraph extension will be disabled.
 ogp_site_url = 'https://canonical-mir.readthedocs-hosted.com/'
 # The documentation website name (usually the same as the product name)
 ogp_site_name = project
-# An image or logo that is used in the preview
+# The URL of an image or logo that is used in the preview
 ogp_image = 'https://assets.ubuntu.com/v1/253da317-image-document-ubuntudocs.svg'
 
-# Update with the favicon for your product (default is the circle of friends)
+# Update with the local path to the favicon for your product
+# (default is the circle of friends)
 html_favicon = '.sphinx/_static/favicon.png'
 
 # (Some settings must be part of the html_context dictionary, while others
 #  are on root level. Don't move the settings.)
 html_context = {
 
-    # Change to the link to your product website (without "https://")
+    # Change to the link to the website of your product (without "https://")
+    # For example: "ubuntu.com/lxd" or "microcloud.is"
+    # If there is no product website, edit the header template to remove the
+    # link (see the readme for instructions).
     'product_page': 'mir-server.io',
 
-    # Add your product tag to ".sphinx/_static" and change the path
-    # here (start with "_static"), default is the circle of friends
+    # Add your product tag (the orange part of your logo, will be used in the
+    # header) to ".sphinx/_static" and change the path here (start with "_static")
+    # (default is the circle of friends)
     'product_tag': '_static/tag.png',
 
     # Change to the discourse instance you want to be able to link to
@@ -56,11 +89,14 @@ html_context = {
     # (use an empty value if you don't want to link)
     'discourse': 'https://discourse.ubuntu.com/c/mir/15',
 
-    # Change to the GitHub info for your project
-    'github_url': 'https://github.com/MirServer/mir',
+    # Change to the Mattermost channel you want to link to
+    # (use an empty value if you don't want to link)
+    'mattermost': '',
+
+    # Change to the GitHub URL for your project
+    'github_url': 'https://github.com/canonical/mir',
 
     # Change to the branch for this version of the documentation
-    #
     # https://docs.readthedocs.io/en/stable/reference/environment-variables.html#envvar-READTHEDOCS_GIT_IDENTIFIER
     'github_version': os.environ.get('READTHEDOCS_GIT_IDENTIFIER', os.environ.get('GITHUB_REF', 'main')),
 
@@ -70,7 +106,11 @@ html_context = {
 
     # Change to an empty value if your GitHub repo doesn't have issues enabled.
     # This will disable the feedback button and the issue link in the footer.
-    'github_issues': 'enabled'
+    'github_issues': 'enabled',
+
+    # Controls the existence of Previous / Next buttons at the bottom of pages
+    # Valid options: none, prev, next, both
+    'sequential_nav': "none"
 }
 
 # If your project is on documentation.ubuntu.com, specify the project
@@ -83,7 +123,10 @@ slug = ""
 
 # Set up redirects (https://documatt.gitlab.io/sphinx-reredirects/usage.html)
 # For example: 'explanation/old-name.html': '../how-to/prettify.html',
-
+# You can also configure redirects in the Read the Docs project dashboard
+# (see https://docs.readthedocs.io/en/stable/guides/redirects.html).
+# NOTE: If this variable is not defined, set to None, or the dictionary is empty,
+# the sphinx_reredirects extension will be disabled.
 redirects = {}
 
 ############################################################
@@ -91,10 +134,13 @@ redirects = {}
 ############################################################
 
 # Links to ignore when checking links
-
 linkcheck_ignore = [
     'http://127.0.0.1:8000'
     ]
+
+# Pages on which to ignore anchors
+# (This list will be appended to linkcheck_anchors_ignore_for_url)
+custom_linkcheck_anchors_ignore_for_url = []
 
 ############################################################
 ### Additions to default configuration
@@ -102,9 +148,21 @@ linkcheck_ignore = [
 
 ## The following settings are appended to the default configuration.
 ## Use them to extend the default functionality.
+# NOTE: Remove this variable to disable the MyST parser extensions.
+custom_myst_extensions = []
 
-# Add extensions
+# Add custom Sphinx extensions as needed.
+# This array contains recommended extensions that should be used.
+# NOTE: The following extensions are handled automatically and do
+# not need to be added here: myst_parser, sphinx_copybutton, sphinx_design,
+# sphinx_reredirects, sphinxcontrib.jquery, sphinxext.opengraph
 custom_extensions = [
+    'sphinx_tabs.tabs',
+    'canonical.youtube-links',
+    'canonical.related-links',
+    'canonical.custom-rst-roles',
+    'canonical.terminal-output',
+    'notfound.extension',
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
     'sphinx.ext.mathjax',
@@ -115,10 +173,26 @@ custom_extensions = [
     'exhale',
     'sphinx.ext.graphviz',
     'sphinxcontrib.mermaid'
-]
+    ]
+
+# Add custom required Python modules that must be added to the
+# .sphinx/requirements.txt file.
+# NOTE: The following modules are handled automatically and do not need to be
+# added here: canonical-sphinx-extensions, furo, linkify-it-py, myst-parser,
+# pyspelling, sphinx, sphinx-autobuild, sphinx-copybutton, sphinx-design,
+# sphinx-notfound-page, sphinx-reredirects, sphinx-tabs, sphinxcontrib-jquery,
+# sphinxext-opengraph
+custom_required_modules = [
+    'breathe',
+    'exhale',
+    'pillow',
+    'sphinxcontrib-mermaid',
+    ]
 
 # Add files or directories that should be excluded from processing.
-custom_excludes = []
+custom_excludes = [
+    'doc-cheat-sheet*',
+    ]
 
 # Add CSS files (located in .sphinx/_static/)
 custom_html_css_files = []
@@ -136,6 +210,10 @@ custom_html_js_files = []
 # By default, the documentation includes a feedback button at the top.
 # You can disable it by setting the following configuration to True.
 disable_feedback_button = False
+
+# Add tags that you want to use for conditional inclusion of text
+# (https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#tags)
+custom_tags = []
 
 ############################################################
 ### Additional configuration

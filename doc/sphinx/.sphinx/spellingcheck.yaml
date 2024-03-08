@@ -6,6 +6,7 @@ matrix:
   dictionary:
     wordlists:
     - .wordlist.txt
+    - .custom_wordlist.txt
     output: .sphinx/.wordlist.dic
   sources:
   - _build/**/*.html
@@ -22,6 +23,7 @@ matrix:
       - link
       - title
       - div.relatedlinks
+      - strong.command
       - div.visually-hidden
       - img
       - a.p-navigation__link
