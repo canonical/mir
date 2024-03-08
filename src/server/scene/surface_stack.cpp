@@ -607,7 +607,7 @@ auto ms::SurfaceStack::screen_is_locked() const -> bool
 void ms::SurfaceStack::lock()
 {
     bool temp = false;
-    if (is_locked.compare_exchange_weak(temp, true))
+    if (is_locked.compare_exchange_strong(temp, true))
     {
         emit_scene_changed();
         multiplexer.on_lock();
@@ -617,7 +617,7 @@ void ms::SurfaceStack::lock()
 void ms::SurfaceStack::unlock()
 {
     bool temp = true;
-    if (is_locked.compare_exchange_weak(temp, false))
+    if (is_locked.compare_exchange_strong(temp, false))
     {
         emit_scene_changed();
         multiplexer.on_unlock();
