@@ -845,7 +845,7 @@ void mir::LogindConsoleServices::request_lock(
     GObject*,
     gpointer ctx) noexcept
 {
-    mir::log_info("Received Lock() signal for this session from logind");
+    mir::log_debug("Received Lock() signal for this session from logind");
     auto me = static_cast<LogindConsoleServices*>(ctx);
     me->session_lock->lock();
 }
@@ -854,7 +854,7 @@ void mir::LogindConsoleServices::request_unlock(
     GObject*,
     gpointer ctx) noexcept
 {
-    mir::log_info("Received Unlock() signal for this session from logind");
+    mir::log_debug("Received Unlock() signal for this session from logind");
     auto me = static_cast<LogindConsoleServices*>(ctx);
     me->session_lock->unlock();
 }
@@ -937,12 +937,12 @@ mir::LogindConsoleServices::~LogindConsoleServices()
 
 void mir::LogindConsoleServices::on_lock()
 {
-    mir::log_info("Setting the locked hint for the session to true");
+    mir::log_info("Notifying logind of session lock");
     logind_session_set_locked_hint(session_proxy.get(), true);
 }
 
 void mir::LogindConsoleServices::on_unlock()
 {
-    mir::log_info("Setting the locked hint for the session to false");
+    mir::log_info("Notifying logind of session unlock");
     logind_session_set_locked_hint(session_proxy.get(), false);
 }

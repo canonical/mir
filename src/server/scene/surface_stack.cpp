@@ -616,7 +616,7 @@ void ms::SurfaceStack::lock()
     }
     else
     {
-        mir::log_info("SurfaceStack received lock() but could not compare_exchange_weak");
+        mir::log_debug("Session received duplicate lock request");
     }
 }
 
@@ -631,7 +631,7 @@ void ms::SurfaceStack::unlock()
     }
     else
     {
-        mir::log_info("SurfaceStack received unlock() but could not compare_exchange_weak");
+        mir::log_debug("Session received duplicate unlock request");
     }
 }
 
