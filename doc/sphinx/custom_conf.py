@@ -94,7 +94,7 @@ html_context = {
     'mattermost': '',
 
     # Change to the GitHub URL for your project
-    'github_url': 'https://github.com/MirServer/mir',
+    'github_url': 'https://github.com/canonical/mir',
 
     # Change to the branch for this version of the documentation
     # https://docs.readthedocs.io/en/stable/reference/environment-variables.html#envvar-READTHEDOCS_GIT_IDENTIFIER
