@@ -62,10 +62,14 @@ public:
     virtual void input_consumed(Surface const* surf, std::shared_ptr<MirEvent const> const& event) = 0;
     virtual void application_id_set_to(Surface const* surf, std::string const& application_id) = 0;
     virtual void depth_layer_set_to(Surface const* surf, MirDepthLayer depth_layer) = 0;
+    /// The listener should call the hook to confirm that the output hasn't
+    /// been tracked yet, before sending the 'wl_surface.enter' event.
     virtual void entered_output(
         Surface const* surf,
         graphics::DisplayConfigurationOutputId const& id,
         std::function<bool(graphics::DisplayConfigurationOutputId const&)> const& hook) = 0;
+    /// The listener should call the hook to confirm that the output is
+    /// being tracked, before sending the 'wl_surface.leave' event.
     virtual void left_output(
         Surface const* surf,
         graphics::DisplayConfigurationOutputId const& id,
