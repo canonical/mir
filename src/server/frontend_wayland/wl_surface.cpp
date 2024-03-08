@@ -467,6 +467,11 @@ auto mf::WlSurface::confine_pointer_state() const -> MirPointerConfinementState
     return mir_pointer_unconfined;
 }
 
+void mir::frontend::WlSurface::update_surface_spec(shell::SurfaceSpecification const& spec)
+{
+    pending.surface_spec.update_from(spec);
+}
+
 mf::NullWlSurfaceRole::NullWlSurfaceRole(WlSurface* surface) :
     surface{surface}
 {

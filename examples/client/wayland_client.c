@@ -33,6 +33,7 @@
 #include <wayland-client.h>
 #include <wayland-client-core.h>
 #include "xdg-shell.h"
+#include "make_shm_pool.h"
 
 static int const pixel_size = 4;
 #define NO_OF_BUFFERS 4
@@ -122,47 +123,6 @@ static struct wl_registry_listener const registry_listener = {
     .global = new_global,
     .global_remove = global_remove
 };
-
-static struct wl_shm_pool*
-make_shm_pool(struct wl_shm* shm, int size, void **data)
-{
-    static char* shm_dir = NULL;
-    if (!shm_dir) shm_dir = getenv("XDG_RUNTIME_DIR");
-
-    int fd = open(shm_dir, O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU);
-
-    // Workaround for filesystems that don't support O_TMPFILE
-    if (fd < 0) {
-        char template_filename[] = "/dev/shm/mir-buffer-XXXXXX";
-        fd = mkostemp(template_filename, O_CLOEXEC);
-        if (fd != -1)
-        {
-            if (unlink(template_filename) < 0)
-            {
-                close(fd);
-                fd = -1;
-            }
-        }
-    }
-
-    if (fd < 0) {
-        return NULL;
-    }
-
-    posix_fallocate(fd, 0, size);
-
-    *data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (*data == MAP_FAILED) {
-        close(fd);
-        return NULL;
-    }
-
-    struct wl_shm_pool *pool = wl_shm_create_pool(shm, fd, size);
-
-    close(fd);
-
-    return pool;
-}
 
 static struct wl_buffer_listener const buffer_listener;
 

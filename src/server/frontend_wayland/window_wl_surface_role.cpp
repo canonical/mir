@@ -329,6 +329,8 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
         return;
     }
 
+    spec().update_from(state.surface_spec);
+
     surface.value().commit(state);
     handle_commit();
 

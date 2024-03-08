@@ -35,6 +35,7 @@ mir_generate_protocol_wrapper(mirwayland "zwp_" primary-selection-unstable-v1.xm
 mir_generate_protocol_wrapper(mirwayland "z" wlr-screencopy-unstable-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "zwlr_" wlr-virtual-pointer-unstable-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "ext_" ext-session-lock-v1.xml)
+mir_generate_protocol_wrapper(mirwayland "zmir_" mir-shell-unstable-v1.xml)
 
 target_link_libraries(mirwayland
   PUBLIC
