@@ -248,6 +248,8 @@ private:
     };
 
     PosixRWMutex observer_mutex;
+    /// This is a two-partitioning of early observers and other observers.
+    /// Early observers are always partitioned before other observers.
     std::vector<std::shared_ptr<WeakObserver>> observers;
 };
 
