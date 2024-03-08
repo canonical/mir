@@ -1006,6 +1006,8 @@ void mir::scene::BasicSurface::track_outputs()
 {
     auto on_enter{[&](mg::DisplayConfigurationOutputId const& id) -> bool
         {
+            std::lock_guard lock{tracked_outputs_mutex};
+
             if (!tracked_outputs.contains(id))
             {
                 tracked_outputs.insert(id);
@@ -1015,6 +1017,8 @@ void mir::scene::BasicSurface::track_outputs()
         }};
     auto on_leave{[&](mg::DisplayConfigurationOutputId const& id) -> bool
         {
+            std::lock_guard lock{tracked_outputs_mutex};
+
             if (tracked_outputs.contains(id))
             {
                 tracked_outputs.erase(id);
@@ -1030,12 +1034,9 @@ void mir::scene::BasicSurface::track_outputs()
         {
             if (output.valid() && output.used && output.extents().overlaps(state->surface_rect))
             {
-                if (!tracked_outputs.contains(output.id))
-                {
-                    observers->entered_output(this, output.id, on_enter);
-                }
+                observers->entered_output(this, output.id, on_enter);
             }
-            else if (tracked_outputs.contains(output.id))
+            else
             {
                 observers->left_output(this, output.id, on_leave);
             }
