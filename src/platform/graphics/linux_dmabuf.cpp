@@ -101,7 +101,18 @@ public:
                     nullptr,
                     &num_modifiers) != EGL_TRUE)
             {
-                BOOST_THROW_EXCEPTION((mg::egl_error("Failed to query number of modifiers")));
+                mir::log_warning("eglQueryDmaBufModifiers failed for format %s: %s",
+                    mg::drm_format_to_string(static_cast<uint32_t>(format)),
+                    mg::egl_category().message(eglGetError()).c_str());
+
+                // Remove that format and its modifiers from our list
+                formats.erase(formats.begin() + i);
+                modifiers_for_format.erase(modifiers_for_format.begin() + i);
+                external_only_for_format.erase(external_only_for_format.begin() + i);
+                // formats[i] is now the format *after* the one we've just removed, so go back one
+                // and continue the loop.
+                --i;
+                continue;
             }
             modifiers.resize(num_modifiers);
             external_only.resize(num_modifiers);
@@ -138,6 +149,13 @@ public:
                 modifiers.push_back(DRM_FORMAT_MOD_INVALID);
                 external_only.push_back(false);
             }
+        }
+        if (this->num_formats() == 0)
+        {
+            /* We can get here if the EGL implementation *claimed* to support some formats,
+             * but querying the supported modifiers failed for *all* formats.
+             */
+            BOOST_THROW_EXCEPTION((std::runtime_error{"EGL claimed support for DMA-Buf import modifiers, but all queries failed"}));
         }
     }
 
