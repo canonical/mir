@@ -113,69 +113,64 @@ public:
     typedef void (*generic_function_pointer_t)(void);
     typedef void* AnyNativeType;
 
-    MOCK_METHOD1(eglGetDisplay, EGLDisplay(AnyNativeType));
-    MOCK_METHOD3(eglInitialize, EGLBoolean(EGLDisplay,EGLint*,EGLint*));
-    MOCK_METHOD1(eglTerminate, EGLBoolean(EGLDisplay));
-    MOCK_METHOD2(eglQueryString,const char*(EGLDisplay, EGLint));
-    MOCK_METHOD1(eglBindApi, EGLBoolean(EGLenum));
-    MOCK_METHOD1(eglGetProcAddress,generic_function_pointer_t(const char*));
+    MOCK_METHOD(EGLDisplay, eglGetDisplay, (AnyNativeType));
+    MOCK_METHOD(EGLBoolean, eglInitialize, (EGLDisplay,EGLint*,EGLint*));
+    MOCK_METHOD(EGLBoolean, eglTerminate, (EGLDisplay));
+    MOCK_METHOD(const char*, eglQueryString,(EGLDisplay, EGLint));
+    MOCK_METHOD(EGLBoolean, eglBindApi, (EGLenum));
+    MOCK_METHOD(generic_function_pointer_t, eglGetProcAddress, (const char*));
 
-    MOCK_METHOD3(eglGetPlatformDisplayEXT, EGLDisplay(EGLenum, AnyNativeType, EGLint const*));
+    MOCK_METHOD(EGLDisplay, eglGetPlatformDisplayEXT, (EGLenum, AnyNativeType, EGLint const*));
 
     // Config management
-    MOCK_METHOD4(eglGetConfigs, EGLBoolean(EGLDisplay,EGLConfig*,EGLint,EGLint*));
-    MOCK_METHOD5(eglChooseConfig, EGLBoolean(EGLDisplay, const EGLint*,EGLConfig*,EGLint,EGLint*));
-    MOCK_METHOD4(eglGetConfigAttrib, EGLBoolean(EGLDisplay,EGLConfig,EGLint,EGLint*));
+    MOCK_METHOD(EGLBoolean, eglGetConfigs, (EGLDisplay,EGLConfig*,EGLint,EGLint*));
+    MOCK_METHOD(EGLBoolean, eglChooseConfig, (EGLDisplay, const EGLint*,EGLConfig*,EGLint,EGLint*));
+    MOCK_METHOD(EGLBoolean, eglGetConfigAttrib, (EGLDisplay,EGLConfig,EGLint,EGLint*));
 
     // Surface management
-    MOCK_METHOD4(eglCreatePlatformWindowSurfaceEXT, EGLSurface(EGLDisplay,EGLConfig,AnyNativeType, EGLint const*));
-    MOCK_METHOD4(eglCreateWindowSurface, EGLSurface(EGLDisplay,EGLConfig,AnyNativeType,const EGLint*));
-    MOCK_METHOD4(eglCreatePixmapSurface, EGLSurface(EGLDisplay,EGLConfig,AnyNativeType,const EGLint*));
-    MOCK_METHOD3(eglCreatePbufferSurface, EGLSurface(EGLDisplay,EGLConfig,const EGLint*));
-    MOCK_METHOD2(eglDestroySurface, EGLBoolean(EGLDisplay,EGLSurface));
-    MOCK_METHOD4(eglQuerySurface, EGLBoolean(EGLDisplay,EGLSurface,EGLint,EGLint*));
+    MOCK_METHOD(EGLSurface, eglCreatePlatformWindowSurfaceEXT, (EGLDisplay,EGLConfig,AnyNativeType, EGLint const*));
+    MOCK_METHOD(EGLSurface, eglCreateWindowSurface, (EGLDisplay,EGLConfig,AnyNativeType,const EGLint*));
+    MOCK_METHOD(EGLSurface, eglCreatePixmapSurface, (EGLDisplay,EGLConfig,AnyNativeType,const EGLint*));
+    MOCK_METHOD(EGLSurface, eglCreatePbufferSurface, (EGLDisplay,EGLConfig,const EGLint*));
+    MOCK_METHOD(EGLBoolean, eglDestroySurface, (EGLDisplay,EGLSurface));
+    MOCK_METHOD(EGLBoolean, eglQuerySurface, (EGLDisplay,EGLSurface,EGLint,EGLint*));
 
     // EGL 1.1 render-to-texture APIs
-    MOCK_METHOD4(eglSurfaceAttrib, EGLBoolean(EGLDisplay,EGLSurface,EGLint,EGLint));
-    MOCK_METHOD3(eglBindTexImage, EGLBoolean(EGLDisplay,EGLSurface,EGLint));
-    MOCK_METHOD3(eglReleaseTexImage, EGLBoolean(EGLDisplay,EGLSurface,EGLint));
+    MOCK_METHOD(EGLBoolean, eglSurfaceAttrib, (EGLDisplay,EGLSurface,EGLint,EGLint));
+    MOCK_METHOD(EGLBoolean, eglBindTexImage, (EGLDisplay,EGLSurface,EGLint));
+    MOCK_METHOD(EGLBoolean, eglReleaseTexImage, (EGLDisplay,EGLSurface,EGLint));
 
     // EGL 1.1 swap control API
-    MOCK_METHOD2(eglSwapInterval, EGLBoolean(EGLDisplay,EGLint));
+    MOCK_METHOD(EGLBoolean, eglSwapInterval, (EGLDisplay,EGLint));
 
-    MOCK_METHOD4(eglCreateContext, EGLContext(EGLDisplay,EGLConfig,EGLContext,const EGLint*));
-    MOCK_METHOD2(eglDestroyContext, EGLBoolean(EGLDisplay,EGLContext));
-    MOCK_METHOD4(eglMakeCurrent, EGLBoolean(EGLDisplay,EGLSurface,EGLSurface,EGLContext));
-    MOCK_METHOD0(eglGetCurrentContext,EGLContext());
-    MOCK_METHOD1(eglGetCurrentSurface,EGLSurface(EGLint));
-    MOCK_METHOD0(eglGetCurrentDisplay, EGLDisplay());
-    MOCK_METHOD4(eglQueryContext, EGLBoolean(EGLDisplay,EGLContext,EGLint,EGLint*));
+    MOCK_METHOD(EGLContext, eglCreateContext, (EGLDisplay,EGLConfig,EGLContext,const EGLint*));
+    MOCK_METHOD(EGLBoolean, eglDestroyContext, (EGLDisplay,EGLContext));
+    MOCK_METHOD(EGLBoolean, eglMakeCurrent, (EGLDisplay,EGLSurface,EGLSurface,EGLContext));
+    MOCK_METHOD(EGLContext, eglGetCurrentContext,());
+    MOCK_METHOD(EGLSurface, eglGetCurrentSurface, (EGLint));
+    MOCK_METHOD(EGLDisplay, eglGetCurrentDisplay, ());
+    MOCK_METHOD(EGLBoolean, eglQueryContext, (EGLDisplay,EGLContext,EGLint,EGLint*));
 
-    MOCK_METHOD0(eglWaitGL, EGLBoolean());
-    MOCK_METHOD1(eglWaitNative, EGLBoolean(EGLint));
-    MOCK_METHOD2(eglSwapBuffers, EGLBoolean(EGLDisplay,EGLSurface));
-    MOCK_METHOD3(eglCopyBuffers, EGLBoolean(EGLDisplay,EGLSurface,AnyNativeType));
+    MOCK_METHOD(EGLBoolean, eglWaitGL, ());
+    MOCK_METHOD(EGLBoolean, eglWaitNative, (EGLint));
+    MOCK_METHOD(EGLBoolean, eglSwapBuffers, (EGLDisplay,EGLSurface));
+    MOCK_METHOD(EGLBoolean, eglCopyBuffers, (EGLDisplay,EGLSurface,AnyNativeType));
 
-    MOCK_METHOD0(eglGetError, EGLint (void));
+    MOCK_METHOD(EGLint, eglGetError, ());
 
-    MOCK_METHOD5(eglCreateImageKHR, EGLImageKHR(EGLDisplay, EGLContext, EGLenum, EGLClientBuffer, const EGLint*));
-    MOCK_METHOD2(eglDestroyImageKHR,EGLBoolean(EGLDisplay, EGLImageKHR));
-    MOCK_METHOD2(glEGLImageTargetTexture2DOES, void(GLenum, GLeglImageOES));
+    MOCK_METHOD(EGLImageKHR, eglCreateImageKHR, (EGLDisplay, EGLContext, EGLenum, EGLClientBuffer, const EGLint*));
+    MOCK_METHOD(EGLBoolean, eglDestroyImageKHR,(EGLDisplay, EGLImageKHR));
+    MOCK_METHOD(void, glEGLImageTargetTexture2DOES, (GLenum, GLeglImageOES));
 
-    MOCK_METHOD3(eglCreateSyncKHR, EGLSyncKHR(EGLDisplay, EGLenum, EGLint const*));
-    MOCK_METHOD2(eglDestroySyncKHR, EGLBoolean(EGLDisplay, EGLSyncKHR));
-    MOCK_METHOD4(eglClientWaitSyncKHR, EGLint(EGLDisplay, EGLSyncKHR, EGLint, EGLTimeKHR));
+    MOCK_METHOD(EGLSyncKHR, eglCreateSyncKHR, (EGLDisplay, EGLenum, EGLint const*));
+    MOCK_METHOD(EGLBoolean, eglDestroySyncKHR, (EGLDisplay, EGLSyncKHR));
+    MOCK_METHOD(EGLint, eglClientWaitSyncKHR, (EGLDisplay, EGLSyncKHR, EGLint, EGLTimeKHR));
 
-    MOCK_METHOD5(eglGetSyncValuesCHROMIUM, EGLBoolean(EGLDisplay, EGLSurface,
-                                                      int64_t*, int64_t*,
-                                                      int64_t*));
+    MOCK_METHOD(EGLBoolean, eglGetSyncValuesCHROMIUM, (EGLDisplay, EGLSurface, int64_t*, int64_t*, int64_t*));
 
-    MOCK_METHOD2(eglBindWaylandDisplayWL,
-        EGLBoolean(EGLDisplay, struct wl_display*));
-    MOCK_METHOD2(eglUnbindWaylandDisplayWL,
-        EGLBoolean(EGLDisplay, struct wl_display*));
-    MOCK_METHOD4(eglQueryWaylandBufferWL,
-        EGLBoolean(EGLDisplay, struct wl_resource*, EGLint, EGLint*));
+    MOCK_METHOD(EGLBoolean, eglBindWaylandDisplayWL, (EGLDisplay, struct wl_display*));
+    MOCK_METHOD(EGLBoolean, eglUnbindWaylandDisplayWL, (EGLDisplay, struct wl_display*));
+    MOCK_METHOD(EGLBoolean, eglQueryWaylandBufferWL, (EGLDisplay, struct wl_resource*, EGLint, EGLint*));
 
     EGLDisplay const fake_egl_display;
     EGLConfig const* const fake_configs;

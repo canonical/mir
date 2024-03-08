@@ -31,24 +31,18 @@ namespace doubles
 class MockEventHandlerRegister : public graphics::EventHandlerRegister
 {
 public:
-    MOCK_METHOD2(register_signal_handler,
-                 void(std::initializer_list<int>,
-                 std::function<void(int)> const&));
-    MOCK_METHOD2(register_signal_handler_module_ptr,
-                 void(std::initializer_list<int>,
-                 std::function<void(int)> const&));
-    MOCK_METHOD3(register_fd_handler,
-                 void(std::initializer_list<int>,
-                 void const*, std::function<void(int)> const&));
-    MOCK_METHOD3(register_fd_handler_module_ptr,
-                 void(std::initializer_list<int>,
-                 void const*, std::function<void(int)> const&));
-    MOCK_METHOD1(unregister_fd_handler,
-                 void(void const*));
+    MOCK_METHOD(void, register_signal_handler,
+                (std::initializer_list<int>, std::function<void(int)> const&), (override));
+    MOCK_METHOD(void, register_signal_handler_module_ptr, (std::initializer_list<int>, std::function<void(int)> const&));
+    MOCK_METHOD(void, register_fd_handler,
+                (std::initializer_list<int>, void const*, std::function<void(int)> const&), (override));
+    MOCK_METHOD(void, register_fd_handler_module_ptr,
+                (std::initializer_list<int>, void const*, std::function<void(int)> const&));
+    MOCK_METHOD(void, unregister_fd_handler, (void const*), (override));
 
     void register_signal_handler(
         std::initializer_list<int> sigs,
-        mir::UniqueModulePtr<std::function<void(int)>> handler)
+        mir::UniqueModulePtr<std::function<void(int)>> handler) override
     {
         register_signal_handler_module_ptr(sigs, *handler);
     }
@@ -56,7 +50,7 @@ public:
     void register_fd_handler(
          std::initializer_list<int> fds,
          void const* owner,
-         mir::UniqueModulePtr<std::function<void(int)>> handler)
+         mir::UniqueModulePtr<std::function<void(int)>> handler) override
     {
         register_fd_handler_module_ptr(fds, owner, *handler);
     }

@@ -31,16 +31,16 @@ namespace doubles
 class MockDisplayReport : public graphics::DisplayReport
 {
 public:
-    MOCK_METHOD0(report_successful_setup_of_native_resources, void());
-    MOCK_METHOD0(report_successful_egl_make_current_on_construction, void());
-    MOCK_METHOD0(report_successful_egl_buffer_swap_on_construction, void());
-    MOCK_METHOD0(report_successful_drm_mode_set_crtc_on_construction, void());
-    MOCK_METHOD0(report_successful_display_construction, void());
-    MOCK_METHOD1(report_drm_master_failure, void(int));
-    MOCK_METHOD0(report_vt_switch_away_failure, void());
-    MOCK_METHOD0(report_vt_switch_back_failure, void());
-    MOCK_METHOD2(report_egl_configuration, void(EGLDisplay,EGLConfig));
-    MOCK_METHOD2(report_vsync, void(unsigned int, graphics::Frame const&));
+    MOCK_METHOD(void, report_successful_setup_of_native_resources, (), (override));
+    MOCK_METHOD(void, report_successful_egl_make_current_on_construction, (), (override));
+    MOCK_METHOD(void, report_successful_egl_buffer_swap_on_construction, (), (override));
+    MOCK_METHOD(void, report_successful_drm_mode_set_crtc_on_construction, (), (override));
+    MOCK_METHOD(void, report_successful_display_construction, (), (override));
+    MOCK_METHOD(void, report_drm_master_failure, (int), (override));
+    MOCK_METHOD(void, report_vt_switch_away_failure, (), (override));
+    MOCK_METHOD(void, report_vt_switch_back_failure, (), (override));
+    MOCK_METHOD(void, report_egl_configuration, (EGLDisplay,EGLConfig), (override));
+    MOCK_METHOD(void, report_vsync, (unsigned int, graphics::Frame const&), (override));
 };
 
 }

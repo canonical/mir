@@ -38,7 +38,7 @@ struct Runner : miral::TestServer
     {
     }
 
-    MOCK_METHOD0(callback, void());
+    MOCK_METHOD(void, callback, ());
 
     int const signum{SIGUSR1};
     mt::Pipe pipe;

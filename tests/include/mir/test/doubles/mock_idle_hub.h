@@ -30,14 +30,14 @@ namespace doubles
 
 struct MockIdleHub : mir::scene::IdleHub
 {
-    MOCK_METHOD0(poke, void());
-    MOCK_METHOD2(register_interest, void(std::weak_ptr<mir::scene::IdleStateObserver> const&, time::Duration));
-    MOCK_METHOD3(register_interest, void(
+    MOCK_METHOD(void, poke, (), (override));
+    MOCK_METHOD(void, register_interest, (std::weak_ptr<mir::scene::IdleStateObserver> const&, time::Duration), (override));
+    MOCK_METHOD(void, register_interest, (
         std::weak_ptr<mir::scene::IdleStateObserver> const&,
         mir::NonBlockingExecutor&,
-        time::Duration));
-    MOCK_METHOD1(unregister_interest, void(mir::scene::IdleStateObserver const&));
-    MOCK_METHOD(std::shared_ptr<IdleHub::WakeLock>, inhibit_idle, ());
+        time::Duration), (override));
+    MOCK_METHOD(void, unregister_interest, (mir::scene::IdleStateObserver const&), (override));
+    MOCK_METHOD(std::shared_ptr<IdleHub::WakeLock>, inhibit_idle, (), (override));
 };
 
 }
