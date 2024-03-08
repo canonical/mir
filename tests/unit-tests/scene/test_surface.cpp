@@ -71,9 +71,6 @@ struct SurfaceCreation : public ::testing::Test
         {
             notification_count++;
         };
-
-        ON_CALL(*mock_buffer_stream, acquire_client_buffer(_))
-            .WillByDefault(InvokeArgument<0>(&stub_buffer));
     }
 
     void TearDown() override

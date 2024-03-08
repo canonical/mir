@@ -88,80 +88,80 @@ public:
     MockDRM();
     ~MockDRM() noexcept;
 
-    MOCK_METHOD2(open, int(char const* path, int flags));
-    MOCK_METHOD2(drmOpen, int(const char *name, const char *busid));
-    MOCK_METHOD3(drmIoctl, int(int fd, unsigned long request, void *arg));
+    MOCK_METHOD(int, open, (char const* path, int flags));
+    MOCK_METHOD(int, drmOpen, (const char *name, const char *busid));
+    MOCK_METHOD(int, drmIoctl, (int fd, unsigned long request, void *arg));
 
-    MOCK_METHOD1(drmModeGetResources, drmModeResPtr(int fd));
-    MOCK_METHOD2(drmModeGetConnector, drmModeConnectorPtr(int fd, uint32_t connectorId));
-    MOCK_METHOD2(drmModeGetEncoder, drmModeEncoderPtr(int fd, uint32_t encoder_id));
-    MOCK_METHOD1(drmModeGetPlaneResources, drmModePlaneResPtr(int fd));
-    MOCK_METHOD2(drmModeGetPlane, drmModePlanePtr(int fd, uint32_t plane_id));
-    MOCK_METHOD3(drmModeObjectGetProperties, drmModeObjectPropertiesPtr(int fd, uint32_t id, uint32_t type));
-    MOCK_METHOD2(drmModeGetCrtc, drmModeCrtcPtr(int fd, uint32_t crtcId));
-    MOCK_METHOD8(drmModeSetCrtc, int(int fd, uint32_t crtcId, uint32_t bufferId,
+    MOCK_METHOD(drmModeResPtr, drmModeGetResources, (int fd));
+    MOCK_METHOD(drmModeConnectorPtr, drmModeGetConnector, (int fd, uint32_t connectorId));
+    MOCK_METHOD(drmModeEncoderPtr, drmModeGetEncoder, (int fd, uint32_t encoder_id));
+    MOCK_METHOD(drmModePlaneResPtr, drmModeGetPlaneResources, (int fd));
+    MOCK_METHOD(drmModePlanePtr, drmModeGetPlane, (int fd, uint32_t plane_id));
+    MOCK_METHOD(drmModeObjectPropertiesPtr, drmModeObjectGetProperties, (int fd, uint32_t id, uint32_t type));
+    MOCK_METHOD(drmModeCrtcPtr, drmModeGetCrtc, (int fd, uint32_t crtcId));
+    MOCK_METHOD(int, drmModeSetCrtc, (int fd, uint32_t crtcId, uint32_t bufferId,
                                      uint32_t x, uint32_t y, uint32_t *connectors,
                                      int count, drmModeModeInfoPtr mode));
 
-    MOCK_METHOD1(drmModeFreeResources, void(drmModeResPtr ptr));
-    MOCK_METHOD1(drmModeFreeConnector, void(drmModeConnectorPtr ptr));
-    MOCK_METHOD1(drmModeFreeEncoder, void(drmModeEncoderPtr ptr));
-    MOCK_METHOD1(drmModeFreeCrtc, void(drmModeCrtcPtr ptr));
-    MOCK_METHOD1(drmModeFreePlaneResources, void(drmModePlaneResPtr ptr));
-    MOCK_METHOD1(drmModeFreePlane, void(drmModePlanePtr ptr));
-    MOCK_METHOD1(drmModeFreeObjectProperties, void(drmModeObjectPropertiesPtr));
+    MOCK_METHOD(void, drmModeFreeResources, (drmModeResPtr ptr));
+    MOCK_METHOD(void, drmModeFreeConnector, (drmModeConnectorPtr ptr));
+    MOCK_METHOD(void, drmModeFreeEncoder, (drmModeEncoderPtr ptr));
+    MOCK_METHOD(void, drmModeFreeCrtc, (drmModeCrtcPtr ptr));
+    MOCK_METHOD(void, drmModeFreePlaneResources, (drmModePlaneResPtr ptr));
+    MOCK_METHOD(void, drmModeFreePlane, (drmModePlanePtr ptr));
+    MOCK_METHOD(void, drmModeFreeObjectProperties, (drmModeObjectPropertiesPtr));
 
-    MOCK_METHOD8(drmModeAddFB, int(int fd, uint32_t width, uint32_t height,
+    MOCK_METHOD(int, drmModeAddFB, (int fd, uint32_t width, uint32_t height,
                                    uint8_t depth, uint8_t bpp, uint32_t pitch,
                                    uint32_t bo_handle, uint32_t *buf_id));
-    MOCK_METHOD9(drmModeAddFB2, int(int fd, uint32_t width, uint32_t height,
+    MOCK_METHOD(int, drmModeAddFB2, (int fd, uint32_t width, uint32_t height,
                                     uint32_t pixel_format, uint32_t const bo_handles[4],
                                     uint32_t const pitches[4], uint32_t const offsets[4],
                                     uint32_t *buf_id, uint32_t flags));
-    MOCK_METHOD10(drmModeAddFB2WithModifiers, int(int fd, uint32_t width, uint32_t height,
+    MOCK_METHOD(int, drmModeAddFB2WithModifiers, (int fd, uint32_t width, uint32_t height,
         uint32_t fourcc, uint32_t const handles[4], uint32_t const pitches[4],
         uint32_t const offsets[4], uint64_t const modifiers[4], uint32_t *buf_id, uint32_t flags));
-    MOCK_METHOD2(drmModeRmFB, int(int fd, uint32_t bufferId));
+    MOCK_METHOD(int, drmModeRmFB, (int fd, uint32_t bufferId));
 
-    MOCK_METHOD5(drmModePageFlip, int(int fd, uint32_t crtc_id, uint32_t fb_id,
-                                                  uint32_t flags, void *user_data));
-    MOCK_METHOD2(drmHandleEvent, int(int fd, drmEventContextPtr evctx));
+    MOCK_METHOD(int, drmModePageFlip,
+                (int fd, uint32_t crtc_id, uint32_t fb_id, uint32_t flags, void *user_data));
+    MOCK_METHOD(int, drmHandleEvent, (int fd, drmEventContextPtr evctx));
 
-    MOCK_METHOD3(drmGetCap, int(int fd, uint64_t capability, uint64_t *value));
-    MOCK_METHOD3(drmSetClientCap, int(int fd, uint64_t capability, uint64_t value));
-    MOCK_METHOD2(drmModeGetProperty, drmModePropertyPtr(int fd, uint32_t propertyId));
-    MOCK_METHOD1(drmModeFreeProperty, void(drmModePropertyPtr));
-    MOCK_METHOD4(drmModeConnectorSetProperty, int(int fd, uint32_t connector_id, uint32_t property_id, uint64_t value));
+    MOCK_METHOD(int, drmGetCap, (int fd, uint64_t capability, uint64_t *value));
+    MOCK_METHOD(int, drmSetClientCap, (int fd, uint64_t capability, uint64_t value));
+    MOCK_METHOD(drmModePropertyPtr, drmModeGetProperty, (int fd, uint32_t propertyId));
+    MOCK_METHOD(void, drmModeFreeProperty, (drmModePropertyPtr));
+    MOCK_METHOD(int, drmModeConnectorSetProperty, (int fd, uint32_t connector_id, uint32_t property_id, uint64_t value));
 
-    MOCK_METHOD2(drmGetMagic, int(int fd, drm_magic_t *magic));
-    MOCK_METHOD2(drmAuthMagic, int(int fd, drm_magic_t magic));
+    MOCK_METHOD(int, drmGetMagic, (int fd, drm_magic_t *magic));
+    MOCK_METHOD(int, drmAuthMagic, (int fd, drm_magic_t magic));
 
-    MOCK_METHOD4(drmPrimeHandleToFD, int(int fd, uint32_t handle, uint32_t flags, int *prime_fd));
-    MOCK_METHOD3(drmPrimeFDToHandle, int(int fd, int prime_fd, uint32_t *handle));
+    MOCK_METHOD(int, drmPrimeHandleToFD, (int fd, uint32_t handle, uint32_t flags, int *prime_fd));
+    MOCK_METHOD(int, drmPrimeFDToHandle, (int fd, int prime_fd, uint32_t *handle));
 
-    MOCK_METHOD1(drmIsMaster,int(int fd));
+    MOCK_METHOD(int, drmIsMaster, (int fd));
 
-    MOCK_METHOD1(drmSetMaster, int(int fd));
-    MOCK_METHOD1(drmDropMaster, int(int fd));
+    MOCK_METHOD(int, drmSetMaster, (int fd));
+    MOCK_METHOD(int, drmDropMaster, (int fd));
 
-    MOCK_METHOD5(drmModeSetCursor, int (int fd, uint32_t crtcId, uint32_t bo_handle, uint32_t width, uint32_t height));
-    MOCK_METHOD4(drmModeMoveCursor,int (int fd, uint32_t crtcId, int x, int y));
+    MOCK_METHOD(int, drmModeSetCursor, (int fd, uint32_t crtcId, uint32_t bo_handle, uint32_t width, uint32_t height));
+    MOCK_METHOD(int, drmModeMoveCursor, (int fd, uint32_t crtcId, int x, int y));
 
-    MOCK_METHOD2(drmSetInterfaceVersion, int (int fd, drmSetVersion* sv));
-    MOCK_METHOD1(drmGetBusid, char* (int fd));
-    MOCK_METHOD1(drmFreeBusid, void (const char*));
-    MOCK_METHOD1(drmGetDeviceNameFromFd, char*(int fd));
-    MOCK_METHOD1(drmGetPrimaryDeviceNameFromFd, char*(int fd));
+    MOCK_METHOD(int, drmSetInterfaceVersion, (int fd, drmSetVersion* sv));
+    MOCK_METHOD(char*, drmGetBusid, (int fd));
+    MOCK_METHOD(void, drmFreeBusid, (const char*));
+    MOCK_METHOD(char*, drmGetDeviceNameFromFd, (int fd));
+    MOCK_METHOD(char*, drmGetPrimaryDeviceNameFromFd, (int fd));
 
-    MOCK_METHOD6(drmModeCrtcGetGamma, int(int fd, uint32_t crtc_id, uint32_t size,
+    MOCK_METHOD(int, drmModeCrtcGetGamma, (int fd, uint32_t crtc_id, uint32_t size,
                                           uint16_t* red, uint16_t* green, uint16_t* blue));
-    MOCK_METHOD6(drmModeCrtcSetGamma, int(int fd, uint32_t crtc_id, uint32_t size,
+    MOCK_METHOD(int, drmModeCrtcSetGamma, (int fd, uint32_t crtc_id, uint32_t size,
                                           uint16_t const* red, uint16_t const* green, uint16_t const* blue));
 
-    MOCK_METHOD1(drmGetVersion, drmVersionPtr(int));
-    MOCK_METHOD1(drmFreeVersion, void(drmVersionPtr));
+    MOCK_METHOD(drmVersionPtr, drmGetVersion, (int));
+    MOCK_METHOD(void, drmFreeVersion, (drmVersionPtr));
 
-    MOCK_METHOD1(drmCheckModesettingSupported, int(char const*));
+    MOCK_METHOD(int, drmCheckModesettingSupported, (char const*));
 
     MOCK_METHOD(void*, mmap, (void* addr, size_t length, int prot, int flags, int fd, off_t offset));
     MOCK_METHOD(int, munmap, (void* addr, size_t length));

@@ -40,7 +40,7 @@ std::string create_temp_dir()
 
 struct ServerConfigurationOptions : mir_test_framework::HeadlessTest
 {
-    MOCK_METHOD1(command_line_handler, void(std::vector<std::string> const&));
+    MOCK_METHOD(void, command_line_handler, (std::vector<std::string> const&));
 
     void SetUp() override
     {

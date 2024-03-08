@@ -32,15 +32,14 @@ namespace doubles
 class MockSeatObserver : public input::SeatObserver
 {
 public:
-    MOCK_METHOD1(seat_add_device, void(uint64_t /*id*/));
-    MOCK_METHOD1(seat_remove_device, void(uint64_t /*id*/));
-    MOCK_METHOD1(seat_dispatch_event, void(std::shared_ptr<MirEvent const> const& /*event*/));
-    MOCK_METHOD2(seat_get_rectangle_for, void(uint64_t /*id*/, geometry::Rectangle const& /*out_rect*/));
-    MOCK_METHOD2(seat_set_key_state, void(uint64_t /*id*/, std::vector<uint32_t> const& /*scan_codes*/));
-    MOCK_METHOD2(seat_set_pointer_state, void(uint64_t /*id*/, unsigned /*buttons*/));
-    MOCK_METHOD2(seat_set_cursor_position, void(float /*cursor_x*/, float /*cursor_y*/));
-    MOCK_METHOD1(seat_set_confinement_region_called, void(geometry::Rectangles const& /*regions*/));
-    MOCK_METHOD0(seat_reset_confinement_regions, void());
+    MOCK_METHOD(void, seat_add_device, (uint64_t /*id*/), (override));
+    MOCK_METHOD(void, seat_remove_device, (uint64_t /*id*/), (override));
+    MOCK_METHOD(void, seat_dispatch_event, (std::shared_ptr<MirEvent const> const& /*event*/), (override));
+    MOCK_METHOD(void, seat_set_key_state, (uint64_t /*id*/, std::vector<uint32_t> const& /*scan_codes*/), (override));
+    MOCK_METHOD(void, seat_set_pointer_state, (uint64_t /*id*/, unsigned /*buttons*/), (override));
+    MOCK_METHOD(void, seat_set_cursor_position, (float /*cursor_x*/, float /*cursor_y*/), (override));
+    MOCK_METHOD(void, seat_set_confinement_region_called, (geometry::Rectangles const& /*regions*/), (override));
+    MOCK_METHOD(void, seat_reset_confinement_regions, (), (override));
 };
 
 }

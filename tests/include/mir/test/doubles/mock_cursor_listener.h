@@ -30,7 +30,7 @@ namespace doubles
 
 struct MockCursorListener : public input::CursorListener
 {
-    MOCK_METHOD2(cursor_moved_to, void(float, float));
+    MOCK_METHOD(void, cursor_moved_to, (float, float), (override));
     ~MockCursorListener() noexcept {}
     void pointer_usable() {}
     void pointer_unusable() {}

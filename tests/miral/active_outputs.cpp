@@ -41,12 +41,12 @@ namespace
 {
 struct MockActiveOutputsListener : ActiveOutputsListener
 {
-    MOCK_METHOD0(advise_output_begin, void());
-    MOCK_METHOD0(advise_output_end, void());
+    MOCK_METHOD(void, advise_output_begin, (), (override));
+    MOCK_METHOD(void, advise_output_end, (), (override));
 
-    MOCK_METHOD1(advise_output_create, void(Output const&));
-    MOCK_METHOD2(advise_output_update, void(Output const&, Output const&));
-    MOCK_METHOD1(advise_output_delete, void(Output const&));
+    MOCK_METHOD(void, advise_output_create, (Output const&), (override));
+    MOCK_METHOD(void, advise_output_update, (Output const&, Output const&), (override));
+    MOCK_METHOD(void, advise_output_delete, (Output const&), (override));
 };
 
 std::vector<Rectangle> const output_rects{

@@ -226,9 +226,11 @@ void mgg::Display::register_configuration_change_handler(
         make_module_ptr<std::function<void(int)>>(
             [conf_change_handler, this](int)
             {
+                mir::log_debug("Handling UDEV events");
                 monitor.process_events([conf_change_handler, this]
-                                       (mir::udev::Monitor::EventType, mir::udev::Device const&)
+                                       (mir::udev::Monitor::EventType type, mir::udev::Device const& device)
                                        {
+                                            mir::log_debug("Processing UDEV event for %s: %i", device.syspath(), type);
                                             dirty_configuration = true;
                                             conf_change_handler();
                                        });

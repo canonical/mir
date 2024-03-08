@@ -72,9 +72,6 @@ struct Surface : testing::Test
         using namespace testing;
 
         ON_CALL(*buffer_stream, stream_size()).WillByDefault(Return(geom::Size()));
-        ON_CALL(*buffer_stream, get_stream_pixel_format()).WillByDefault(Return(mir_pixel_format_abgr_8888));
-        ON_CALL(*buffer_stream, acquire_client_buffer(_))
-            .WillByDefault(InvokeArgument<0>(nullptr));
 
         surface = std::make_shared<ms::BasicSurface>(
             nullptr /* session */,
