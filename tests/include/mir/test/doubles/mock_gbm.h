@@ -49,36 +49,32 @@ public:
     MockGBM();
     ~MockGBM();
 
-    MOCK_METHOD1(gbm_create_device, struct gbm_device*(int fd));
-    MOCK_METHOD1(gbm_device_destroy, void(struct gbm_device *gbm));
-    MOCK_METHOD1(gbm_device_get_fd, int(struct gbm_device *gbm));
-    MOCK_METHOD3(gbm_device_is_format_supported, int(struct gbm_device *gbm,
-                                                     uint32_t format,
-                                                     uint32_t usage));
+    MOCK_METHOD(struct gbm_device*, gbm_create_device, (int fd));
+    MOCK_METHOD(void, gbm_device_destroy, (struct gbm_device *gbm));
+    MOCK_METHOD(int, gbm_device_get_fd, (struct gbm_device *gbm));
+    MOCK_METHOD(int, gbm_device_is_format_supported, (struct gbm_device *gbm, uint32_t format, uint32_t usage));
 
-    MOCK_METHOD5(gbm_surface_create, struct gbm_surface*(struct gbm_device *gbm,
-                                                         uint32_t width, uint32_t height,
-                                                         uint32_t format, uint32_t flags));
-    MOCK_METHOD1(gbm_surface_destroy, void(struct gbm_surface *surface));
-    MOCK_METHOD1(gbm_surface_lock_front_buffer, struct gbm_bo*(struct gbm_surface *surface));
-    MOCK_METHOD2(gbm_surface_release_buffer, void(struct gbm_surface *surface, struct gbm_bo *bo));
+    MOCK_METHOD(struct gbm_surface*, gbm_surface_create,
+        (struct gbm_device *gbm, uint32_t width, uint32_t height, uint32_t format, uint32_t flags));
+    MOCK_METHOD(void, gbm_surface_destroy, (struct gbm_surface *surface));
+    MOCK_METHOD(struct gbm_bo*, gbm_surface_lock_front_buffer, (struct gbm_surface *surface));
+    MOCK_METHOD(void, gbm_surface_release_buffer, (struct gbm_surface *surface, struct gbm_bo *bo));
 
-    MOCK_METHOD5(gbm_bo_create, struct gbm_bo*(struct gbm_device *gbm,
-                                               uint32_t width, uint32_t height,
-                                               uint32_t format, uint32_t flags));
-    MOCK_METHOD1(gbm_bo_get_device, struct gbm_device*(struct gbm_bo *bo));
-    MOCK_METHOD1(gbm_bo_get_width, uint32_t(struct gbm_bo *bo));
-    MOCK_METHOD1(gbm_bo_get_height, uint32_t(struct gbm_bo *bo));
-    MOCK_METHOD1(gbm_bo_get_stride, uint32_t(struct gbm_bo *bo));
-    MOCK_METHOD1(gbm_bo_get_format, uint32_t(struct gbm_bo *bo));
-    MOCK_METHOD1(gbm_bo_get_handle, union gbm_bo_handle(struct gbm_bo *bo));
-    MOCK_METHOD3(gbm_bo_set_user_data, void(struct gbm_bo *bo, void *data,
-                                            void (*destroy_user_data)(struct gbm_bo *, void *)));
-    MOCK_METHOD1(gbm_bo_get_user_data, void*(struct gbm_bo *bo));
-    MOCK_METHOD3(gbm_bo_write, bool(struct gbm_bo *bo, const void *buf, size_t count));
-    MOCK_METHOD1(gbm_bo_destroy, void(struct gbm_bo *bo));
-    MOCK_METHOD4(gbm_bo_import, struct gbm_bo*(struct gbm_device*, uint32_t, void*, uint32_t));
-    MOCK_METHOD1(gbm_bo_get_fd, int(gbm_bo*));
+    MOCK_METHOD(struct gbm_bo*, gbm_bo_create,
+        (struct gbm_device *gbm, uint32_t width, uint32_t height, uint32_t format, uint32_t flags));
+    MOCK_METHOD(struct gbm_device*, gbm_bo_get_device, (struct gbm_bo *bo));
+    MOCK_METHOD(uint32_t, gbm_bo_get_width, (struct gbm_bo *bo));
+    MOCK_METHOD(uint32_t, gbm_bo_get_height, (struct gbm_bo *bo));
+    MOCK_METHOD(uint32_t, gbm_bo_get_stride, (struct gbm_bo *bo));
+    MOCK_METHOD(uint32_t, gbm_bo_get_format, (struct gbm_bo *bo));
+    MOCK_METHOD(union gbm_bo_handle, gbm_bo_get_handle, (struct gbm_bo *bo));
+    MOCK_METHOD(void, gbm_bo_set_user_data,
+                (struct gbm_bo *bo, void *data, void (*destroy_user_data)(struct gbm_bo *, void *)));
+    MOCK_METHOD(void*, gbm_bo_get_user_data, (struct gbm_bo *bo));
+    MOCK_METHOD(bool, gbm_bo_write, (struct gbm_bo *bo, const void *buf, size_t count));
+    MOCK_METHOD(void, gbm_bo_destroy, (struct gbm_bo *bo));
+    MOCK_METHOD(struct gbm_bo*, gbm_bo_import, (struct gbm_device*, uint32_t, void*, uint32_t));
+    MOCK_METHOD(int, gbm_bo_get_fd, (gbm_bo*));
 
     FakeGBMResources fake_gbm;
 

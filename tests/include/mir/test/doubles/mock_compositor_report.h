@@ -30,20 +30,15 @@ namespace doubles
 class MockCompositorReport : public compositor::CompositorReport
 {
 public:
-    MOCK_METHOD5(added_display,
-                 void(int,int,int,int,
-                      compositor::CompositorReport::SubCompositorId));
-    MOCK_METHOD1(began_frame,
-                 void(compositor::CompositorReport::SubCompositorId));
-    MOCK_METHOD2(renderables_in_frame,
-                 void(compositor::CompositorReport::SubCompositorId, graphics::RenderableList const&));
-    MOCK_METHOD1(rendered_frame,
-                 void(compositor::CompositorReport::SubCompositorId));
-    MOCK_METHOD1(finished_frame,
-                 void(compositor::CompositorReport::SubCompositorId));
-    MOCK_METHOD0(started, void());
-    MOCK_METHOD0(stopped, void());
-    MOCK_METHOD0(scheduled, void());
+    MOCK_METHOD(void, added_display, (int,int,int,int, compositor::CompositorReport::SubCompositorId), (override));
+    MOCK_METHOD(void, began_frame, (compositor::CompositorReport::SubCompositorId), (override));
+    MOCK_METHOD(void, renderables_in_frame,
+                 (compositor::CompositorReport::SubCompositorId, graphics::RenderableList const&), (override));
+    MOCK_METHOD(void, rendered_frame, (compositor::CompositorReport::SubCompositorId), (override));
+    MOCK_METHOD(void, finished_frame, (compositor::CompositorReport::SubCompositorId), (override));
+    MOCK_METHOD(void, started, (), (override));
+    MOCK_METHOD(void, stopped, (), (override));
+    MOCK_METHOD(void, scheduled, (), (override));
 };
 
 } // namespace doubles

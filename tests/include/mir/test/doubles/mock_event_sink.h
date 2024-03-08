@@ -39,16 +39,16 @@ struct MockEventSink : public frontend::EventSink
         handle_event(*event);
     }
 
-    MOCK_METHOD1(handle_event, void(MirEvent const&));
-    MOCK_METHOD1(handle_lifecycle_event, void(MirLifecycleState));
-    MOCK_METHOD1(handle_display_config_change, void(graphics::DisplayConfiguration const&));
-    MOCK_METHOD1(handle_error, void(ClientVisibleError const&));
-    MOCK_METHOD1(send_ping, void(int32_t));
-    MOCK_METHOD2(send_buffer, void(frontend::BufferStreamId, graphics::Buffer&));
-    MOCK_METHOD1(add_buffer, void(graphics::Buffer&));
-    MOCK_METHOD1(update_buffer, void(graphics::Buffer&));
-    MOCK_METHOD3(error_buffer, void(geometry::Size, MirPixelFormat, std::string const&));
-    MOCK_METHOD1(handle_input_config_change, void(MirInputConfig const&));
+    MOCK_METHOD(void, handle_event, (MirEvent const&));
+    MOCK_METHOD(void, handle_lifecycle_event, (MirLifecycleState), (override));
+    MOCK_METHOD(void, handle_display_config_change, (graphics::DisplayConfiguration const&), (override));
+    MOCK_METHOD(void, handle_error, (ClientVisibleError const&), (override));
+    MOCK_METHOD(void, send_ping, (int32_t), (override));
+    MOCK_METHOD(void, send_buffer, (frontend::BufferStreamId, graphics::Buffer&), (override));
+    MOCK_METHOD(void, add_buffer, (graphics::Buffer&), (override));
+    MOCK_METHOD(void, update_buffer, (graphics::Buffer&), (override));
+    MOCK_METHOD(void, error_buffer, (geometry::Size, MirPixelFormat, std::string const&), (override));
+    MOCK_METHOD(void, handle_input_config_change, (MirInputConfig const&), (override));
 };
 }
 }

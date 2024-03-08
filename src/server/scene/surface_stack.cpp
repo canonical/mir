@@ -608,7 +608,7 @@ auto ms::SurfaceStack::screen_is_locked() const -> bool
 void ms::SurfaceStack::lock()
 {
     bool temp = false;
-    if (is_locked.compare_exchange_weak(temp, true))
+    if (is_locked.compare_exchange_strong(temp, true))
     {
         mir::log_info("Session is now locked and listeners are being notified");
         emit_scene_changed();
@@ -623,7 +623,7 @@ void ms::SurfaceStack::lock()
 void ms::SurfaceStack::unlock()
 {
     bool temp = true;
-    if (is_locked.compare_exchange_weak(temp, false))
+    if (is_locked.compare_exchange_strong(temp, false))
     {
         mir::log_info("Session is now unlocked and listeners are being notified");
         emit_scene_changed();

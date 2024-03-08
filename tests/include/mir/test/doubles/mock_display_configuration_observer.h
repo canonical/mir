@@ -31,37 +31,32 @@ namespace doubles
 class MockDisplayConfigurationObserver : public graphics::DisplayConfigurationObserver
 {
 public:
-    MOCK_METHOD1(initial_configuration, void(std::shared_ptr<graphics::DisplayConfiguration const> const& config));
+    MOCK_METHOD(void, initial_configuration,
+                (std::shared_ptr<graphics::DisplayConfiguration const> const& config), (override));
 
-    MOCK_METHOD1(configuration_applied, void(std::shared_ptr<graphics::DisplayConfiguration const> const& config));
+    MOCK_METHOD(void, configuration_applied,
+                (std::shared_ptr<graphics::DisplayConfiguration const> const& config), (override));
 
-    MOCK_METHOD1(
-        base_configuration_updated,
-        void(std::shared_ptr<graphics::DisplayConfiguration const> const& base_config));
+    MOCK_METHOD(void, base_configuration_updated,
+        (std::shared_ptr<graphics::DisplayConfiguration const> const& base_config), (override));
 
-    MOCK_METHOD2(
-        session_configuration_applied,
-        void(
-            std::shared_ptr<scene::Session> const& session,
-            std::shared_ptr<graphics::DisplayConfiguration> const& config));
+    MOCK_METHOD(void, session_configuration_applied,
+        (std::shared_ptr<scene::Session> const& session, std::shared_ptr<graphics::DisplayConfiguration> const& config),
+        (override));
 
-    MOCK_METHOD1(session_configuration_removed, void(std::shared_ptr<scene::Session> const& session));
+    MOCK_METHOD(void, session_configuration_removed, (std::shared_ptr<scene::Session> const& session), (override));
 
-    MOCK_METHOD2(
-        configuration_failed,
-        void(std::shared_ptr<graphics::DisplayConfiguration const> const& attempted, std::exception const& error));
+    MOCK_METHOD(void, configuration_failed,
+        (std::shared_ptr<graphics::DisplayConfiguration const> const& attempted, std::exception const& error),
+        (override));
 
-    MOCK_METHOD2(
-        catastrophic_configuration_error,
-        void(
-            std::shared_ptr<graphics::DisplayConfiguration const> const& failed_fallback,
-            std::exception const& error));
+    MOCK_METHOD(void, catastrophic_configuration_error,
+        (std::shared_ptr<graphics::DisplayConfiguration const> const& failed_fallback, std::exception const& error),
+        (override));
 
-    MOCK_METHOD2(
-        configuration_updated_for_session,
-        void(
-            std::shared_ptr<scene::Session> const&,
-            std::shared_ptr<graphics::DisplayConfiguration const> const&));
+    MOCK_METHOD(void, configuration_updated_for_session,
+        (std::shared_ptr<scene::Session> const&, std::shared_ptr<graphics::DisplayConfiguration const> const&),
+        (override));
 };
 
 }

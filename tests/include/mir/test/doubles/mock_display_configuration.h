@@ -34,9 +34,7 @@ struct MockDisplayConfiguration : public graphics::DisplayConfiguration
         for_each_output,
         void(std::function<void(graphics::DisplayConfigurationOutput const&)>));
 
-    MOCK_METHOD1(
-        for_each_output,
-        void(std::function<void(graphics::UserDisplayConfigurationOutput&)>));
+    MOCK_METHOD(void, for_each_output, (std::function<void(graphics::UserDisplayConfigurationOutput&)>), (override));
 
     MOCK_CONST_METHOD0(valid, bool());
 
