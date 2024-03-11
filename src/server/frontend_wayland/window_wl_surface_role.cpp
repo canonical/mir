@@ -33,6 +33,8 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <algorithm>
+
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 namespace ms = mir::scene;
