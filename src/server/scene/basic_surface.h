@@ -239,8 +239,6 @@ private:
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> display_config_registrar;
     std::shared_ptr<DisplayConfigurationEarlyListener> const display_config_monitor;
     std::shared_ptr<graphics::DisplayConfiguration const> display_config;
-
-    std::mutex tracked_outputs_mutex;
     std::set<graphics::DisplayConfigurationOutputId> tracked_outputs;
 };
 

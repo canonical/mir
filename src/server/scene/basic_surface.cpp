@@ -159,20 +159,14 @@ public:
         for_each_observer(&SurfaceObserver::application_id_set_to, surf, application_id);
     }
 
-    void entered_output(
-        Surface const* surf,
-        graphics::DisplayConfigurationOutputId const& id,
-        std::function<bool(mir::graphics::DisplayConfigurationOutputId const&)> const& hook) override
+    void entered_output(Surface const* surf, graphics::DisplayConfigurationOutputId const& id) override
     {
-        for_each_observer(&SurfaceObserver::entered_output, surf, id, hook);
+        for_each_observer(&SurfaceObserver::entered_output, surf, id);
     }
 
-    void left_output(
-        Surface const* surf,
-        graphics::DisplayConfigurationOutputId const& id,
-        std::function<bool(graphics::DisplayConfigurationOutputId const&)> const& hook) override
+    void left_output(Surface const* surf, graphics::DisplayConfigurationOutputId const& id) override
     {
-        for_each_observer(&SurfaceObserver::left_output, surf, id, hook);
+        for_each_observer(&SurfaceObserver::left_output, surf, id);
     }
 };
 
@@ -222,13 +216,11 @@ ms::BasicSurface::BasicSurface(
     wayland_surface_{wayland_surface},
     display_config_registrar{display_config_registrar},
     display_config_monitor{std::make_shared<DisplayConfigurationEarlyListener>(this)}
-    // display_config_late_monitor{std::make_shared<DisplayConfigurationLateListener>(this)}
 {
     auto state = synchronised_state.lock();
     update_frame_posted_callbacks(*state);
     report->surface_created(this, state->surface_name);
     display_config_registrar->register_early_observer(display_config_monitor, immediate_executor);
-    // display_config_registrar->register_interest_as_late_listener(display_config_late_monitor, immediate_executor);
 }
 
 ms::BasicSurface::BasicSurface(
@@ -260,6 +252,7 @@ ms::BasicSurface::~BasicSurface() noexcept
     auto state = synchronised_state.lock();
     clear_frame_posted_callbacks(*state);
     report->surface_deleted(this, state->surface_name);
+    display_config_registrar->unregister_interest(*display_config_monitor);
 }
 
 void ms::BasicSurface::register_interest(std::weak_ptr<SurfaceObserver> const& observer)
@@ -683,6 +676,8 @@ MirWindowVisibility ms::BasicSurface::set_visibility(MirWindowVisibility new_vis
         state.drop();
 
         observers->attrib_changed(this, mir_window_attrib_visibility, new_visibility);
+
+        track_outputs();
     }
 
     return new_visibility;
@@ -1004,41 +999,27 @@ auto mir::scene::BasicSurface::content_top_left(State const& state) const -> geo
 
 void mir::scene::BasicSurface::track_outputs()
 {
-    auto on_enter{[&](mg::DisplayConfigurationOutputId const& id) -> bool
-        {
-            std::lock_guard lock{tracked_outputs_mutex};
-
-            if (!tracked_outputs.contains(id))
-            {
-                tracked_outputs.insert(id);
-                return true;
-            }
-            return false;
-        }};
-    auto on_leave{[&](mg::DisplayConfigurationOutputId const& id) -> bool
-        {
-            std::lock_guard lock{tracked_outputs_mutex};
-
-            if (tracked_outputs.contains(id))
-            {
-                tracked_outputs.erase(id);
-                return true;
-            }
-            return false;
-        }};
-
     auto const state{synchronised_state.lock()};
+    std::set<mg::DisplayConfigurationOutputId> tracked;
 
     display_config->for_each_output(
         [&](mg::DisplayConfigurationOutput const& output)
         {
             if (output.valid() && output.used && output.extents().overlaps(state->surface_rect))
             {
-                observers->entered_output(this, output.id, on_enter);
-            }
-            else
-            {
-                observers->left_output(this, output.id, on_leave);
+                if (!tracked_outputs.contains(output.id))
+                {
+                    observers->entered_output(this, output.id);
+                }
+                tracked.insert(output.id);
             }
         });
+
+    // TODO: Once std::views::filter is properly supported across compilers, replace the
+    // creation of `untracked` with iteration over a filtered view of `tracked_outputs`
+    std::vector<mg::DisplayConfigurationOutputId> untracked;
+    std::ranges::set_difference(tracked_outputs, tracked, std::back_inserter(untracked));
+    std::ranges::for_each(untracked, [&](auto const& id) { observers->left_output(this, id); });
+
+    tracked_outputs = std::move(tracked);
 }

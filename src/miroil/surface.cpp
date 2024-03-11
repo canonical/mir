@@ -58,12 +58,8 @@ public:
                              glm::mat4 const &t) override;
   void window_resized_to(mir::scene::Surface const *surf,
                          mir::geometry::Size const &window_size) override;
-  void entered_output(mir::scene::Surface const* surf,
-                      mir::graphics::DisplayConfigurationOutputId const& id,
-                      std::function<bool(mir::graphics::DisplayConfigurationOutputId const&)> const& hook) override;
-  void left_output(mir::scene::Surface const* surf,
-                   mir::graphics::DisplayConfigurationOutputId const& id,
-                   std::function<bool(mir::graphics::DisplayConfigurationOutputId const&)> const& hook) override;
+  void entered_output(mir::scene::Surface const* surf, mir::graphics::DisplayConfigurationOutputId const& id) override;
+  void left_output(mir::scene::Surface const* surf, mir::graphics::DisplayConfigurationOutputId const& id) override;
 
 private:
   std::shared_ptr<miroil::SurfaceObserver> listener;
@@ -166,15 +162,13 @@ void miroil::SurfaceObserverImpl::window_resized_to(mir::scene::Surface const* s
 
 void miroil::SurfaceObserverImpl::entered_output(
     mir::scene::Surface const* /*surf*/,
-    mir::graphics::DisplayConfigurationOutputId const& /*id*/,
-    std::function<bool(mir::graphics::DisplayConfigurationOutputId const&)> const& /*hook*/)
+    mir::graphics::DisplayConfigurationOutputId const& /*id*/)
 {
 }
 
 void miroil::SurfaceObserverImpl::left_output(
     mir::scene::Surface const* /*surf*/,
-    mir::graphics::DisplayConfigurationOutputId const& /*id*/,
-    std::function<bool(mir::graphics::DisplayConfigurationOutputId const&)> const& /*hook*/)
+    mir::graphics::DisplayConfigurationOutputId const& /*id*/)
 {
 }
 

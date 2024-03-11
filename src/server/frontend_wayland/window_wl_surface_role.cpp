@@ -79,10 +79,23 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
 {
     spec().type = mir_window_type_freestyle;
     surface->set_role(this);
+    output_manager->add_listener(this);
 }
 
 mf::WindowWlSurfaceRole::~WindowWlSurfaceRole()
 {
+    output_manager->current_config().for_each_output(
+        [&](graphics::DisplayConfigurationOutput const& config)
+        {
+            if (auto* global{output_manager->output_for(config.id).value_or(nullptr)})
+            {
+                mir::log_info("\033[1;36mRemoved listener (output %d)\033[0m", config.id.as_value());
+                global->remove_listener(this);
+            }
+
+        }
+    );
+    output_manager->remove_listener(this);
     mark_destroyed();
     if (surface)
     {
@@ -429,6 +442,34 @@ auto mf::WindowWlSurfaceRole::input_event_for(uint32_t serial) -> std::shared_pt
     }
 }
 
+void mf::WindowWlSurfaceRole::output_global_created(OutputGlobal *global)
+{
+    global->add_listener(this);
+}
+
+auto mf::WindowWlSurfaceRole::output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool
+{
+    if (surface)
+    {
+        if (auto id_it{std::ranges::find(pending_enter, config.id)}; id_it != pending_enter.end())
+        {
+            if (auto* global{output_manager->output_for(config.id).value_or(nullptr)})
+            {
+                global->for_each_output_bound_by(
+                    client,
+                    [&](OutputInstance* instance)
+                    {
+                        surface.value().send_enter_event(instance->resource);
+                        pending_enter.erase(id_it);
+                    });
+            }
+        }
+    }
+
+    return true;
+}
+
+
 mir::shell::SurfaceSpecification& mf::WindowWlSurfaceRole::spec()
 {
     if (!pending_changes)
@@ -472,9 +513,7 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
     pending_changes.reset();
 }
 
-void mf::WindowWlSurfaceRole::handle_enter_output(
-    graphics::DisplayConfigurationOutputId id,
-    std::function<bool(graphics::DisplayConfigurationOutputId const&)> const& hook) const
+void mf::WindowWlSurfaceRole::handle_enter_output(graphics::DisplayConfigurationOutputId id)
 {
     if (surface)
     {
@@ -487,19 +526,18 @@ void mf::WindowWlSurfaceRole::handle_enter_output(
                     client,
                     [&](OutputInstance* output_instance)
                     {
-                        if (hook(id))
-                        {
-                            surface.value().send_enter_event(output_instance->resource);
-                        }
+                        surface.value().send_enter_event(output_instance->resource);
                     });
             }
+        }
+        else
+        {
+            pending_enter.push_back(id);
         }
     }
 }
 
-void mf::WindowWlSurfaceRole::handle_leave_output(
-    graphics::DisplayConfigurationOutputId id,
-    std::function<bool(graphics::DisplayConfigurationOutputId const&)> const& hook) const
+void mf::WindowWlSurfaceRole::handle_leave_output(graphics::DisplayConfigurationOutputId id) const
 {
     if (surface)
     {
@@ -512,10 +550,7 @@ void mf::WindowWlSurfaceRole::handle_leave_output(
                     client,
                     [&](OutputInstance* output_instance)
                     {
-                        if (hook(id))
-                        {
-                            surface.value().send_leave_event(output_instance->resource);
-                        }
+                        surface.value().send_leave_event(output_instance->resource);
                     });
             }
         }

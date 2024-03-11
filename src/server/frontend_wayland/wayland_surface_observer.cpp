@@ -116,27 +116,21 @@ void mf::WaylandSurfaceObserver::input_consumed(ms::Surface const*, std::shared_
     }
 }
 
-void mf::WaylandSurfaceObserver::entered_output(
-    ms::Surface const*,
-    graphics::DisplayConfigurationOutputId const& id,
-    std::function<bool(graphics::DisplayConfigurationOutputId const&)> const& hook)
+void mf::WaylandSurfaceObserver::entered_output(ms::Surface const*, graphics::DisplayConfigurationOutputId const& id)
 {
     run_on_wayland_thread_unless_window_destroyed(
-        [id, hook](Impl* /*impl*/, WindowWlSurfaceRole* window)
+        [id](Impl*, WindowWlSurfaceRole* window)
         {
-            window->handle_enter_output(id, hook);
+            window->handle_enter_output(id);
         });
 }
 
-void mf::WaylandSurfaceObserver::left_output(
-    ms::Surface const*,
-    graphics::DisplayConfigurationOutputId const& id,
-    std::function<bool(graphics::DisplayConfigurationOutputId const&)> const& hook)
+void mf::WaylandSurfaceObserver::left_output(ms::Surface const*, graphics::DisplayConfigurationOutputId const& id)
 {
     run_on_wayland_thread_unless_window_destroyed(
-        [id, hook](Impl* /*impl*/, WindowWlSurfaceRole* window)
+        [id](Impl*, WindowWlSurfaceRole* window)
         {
-            window->handle_leave_output(id, hook);
+            window->handle_leave_output(id);
         });
 }
 

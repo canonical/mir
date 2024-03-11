@@ -47,14 +47,8 @@ public:
     void input_consumed(Surface const* surf, std::shared_ptr<MirEvent const> const& event) override;
     void depth_layer_set_to(Surface const* surf, MirDepthLayer depth_layer) override;
     void application_id_set_to(Surface const* surf, std::string const& application_id) override;
-    void entered_output(
-        Surface const* surf,
-        graphics::DisplayConfigurationOutputId const& id,
-        std::function<bool(graphics::DisplayConfigurationOutputId const&)> const& hook) override;
-    void left_output(
-        Surface const* surf,
-        graphics::DisplayConfigurationOutputId const& id,
-        std::function<bool(graphics::DisplayConfigurationOutputId const&)> const& hook) override;
+    void entered_output(Surface const* surf, graphics::DisplayConfigurationOutputId const& id) override;
+    void left_output(Surface const* surf, graphics::DisplayConfigurationOutputId const& id) override;
 
 protected:
     NullSurfaceObserver(NullSurfaceObserver const&) = delete;

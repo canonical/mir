@@ -226,6 +226,10 @@ void mf::OutputGlobal::bind(wl_resource* resource)
     instances[instance->client].push_back(instance);
     instance->output_config_changed(output_config);
     instance->send_done();
+    for (auto const& listener : listeners)
+    {
+        listener->output_config_changed(output_config);
+    }
 }
 
 void mf::OutputGlobal::instance_destroyed(OutputInstance* instance)
@@ -305,6 +309,16 @@ auto mf::OutputManager::output_for(graphics::DisplayConfigurationOutputId id) ->
         return result->second.get();
     else
         return std::nullopt;
+}
+
+void mf::OutputManager::add_listener(OutputManagerListener* listener)
+{
+    listeners.push_back(listener);
+}
+
+void mf::OutputManager::remove_listener(OutputManagerListener* listener)
+{
+    std::erase_if(listeners, [&](auto candidate) { return candidate == listener; });
 }
 
 void mf::OutputManager::handle_configuration_change(std::shared_ptr<mg::DisplayConfiguration const> const& config)
