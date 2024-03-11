@@ -173,7 +173,7 @@ private:
 
     void apply_client_size(mir::shell::SurfaceSpecification& mods);
 
-    std::vector<graphics::DisplayConfigurationOutputId> pending_enter;
+    std::vector<graphics::DisplayConfigurationOutputId> pending_enter_events;
 };
 
 }

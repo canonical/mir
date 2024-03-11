@@ -453,7 +453,7 @@ auto mf::WindowWlSurfaceRole::output_config_changed(graphics::DisplayConfigurati
 {
     if (surface)
     {
-        if (auto id_it{std::ranges::find(pending_enter, config.id)}; id_it != pending_enter.end())
+        if (auto id_it{std::ranges::find(pending_enter_events, config.id)}; id_it != pending_enter_events.end())
         {
             if (auto* global{output_manager->output_for(config.id).value_or(nullptr)})
             {
@@ -462,7 +462,7 @@ auto mf::WindowWlSurfaceRole::output_config_changed(graphics::DisplayConfigurati
                     [&](OutputInstance* instance)
                     {
                         surface.value().send_enter_event(instance->resource);
-                        pending_enter.erase(id_it);
+                        pending_enter_events.erase(id_it);
                     });
             }
         }
@@ -470,7 +470,6 @@ auto mf::WindowWlSurfaceRole::output_config_changed(graphics::DisplayConfigurati
 
     return true;
 }
-
 
 mir::shell::SurfaceSpecification& mf::WindowWlSurfaceRole::spec()
 {
@@ -519,22 +518,22 @@ void mf::WindowWlSurfaceRole::handle_enter_output(graphics::DisplayConfiguration
 {
     if (surface)
     {
-        if (auto* output_global{output_manager->output_for(id).value_or(nullptr)})
+        if (auto* global{output_manager->output_for(id).value_or(nullptr)})
         {
-            auto const& output_config{output_global->current_config()};
-            if (output_config.id == id)
+            auto const& config{global->current_config()};
+            if (config.id == id)
             {
-                output_global->for_each_output_bound_by(
+                global->for_each_output_bound_by(
                     client,
-                    [&](OutputInstance* output_instance)
+                    [&](OutputInstance* instance)
                     {
-                        surface.value().send_enter_event(output_instance->resource);
+                        surface.value().send_enter_event(instance->resource);
                     });
             }
         }
         else
         {
-            pending_enter.push_back(id);
+            pending_enter_events.push_back(id);
         }
     }
 }
@@ -543,16 +542,16 @@ void mf::WindowWlSurfaceRole::handle_leave_output(graphics::DisplayConfiguration
 {
     if (surface)
     {
-        if (auto* output_global{output_manager->output_for(id).value_or(nullptr)})
+        if (auto* global{output_manager->output_for(id).value_or(nullptr)})
         {
-            auto const& output_config{output_global->current_config()};
-            if (output_config.id == id)
+            auto const& config{global->current_config()};
+            if (config.id == id)
             {
-                output_global->for_each_output_bound_by(
+                global->for_each_output_bound_by(
                     client,
-                    [&](OutputInstance* output_instance)
+                    [&](OutputInstance* instance)
                     {
-                        surface.value().send_leave_event(output_instance->resource);
+                        surface.value().send_leave_event(instance->resource);
                     });
             }
         }

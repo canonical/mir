@@ -343,7 +343,6 @@ void ms::BasicSurface::resize(geom::Size const& desired_size)
 
         observers->window_resized_to(this, new_size);
         observers->content_resized_to(this, content_size_);
-
         track_outputs();
     }
 }
@@ -532,8 +531,6 @@ int ms::BasicSurface::configure(MirWindowAttrib attrib, int value)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface attribute."));
     }
 
-    track_outputs();
-
     return result;
 }
 
@@ -676,7 +673,6 @@ MirWindowVisibility ms::BasicSurface::set_visibility(MirWindowVisibility new_vis
         state.drop();
 
         observers->attrib_changed(this, mir_window_attrib_visibility, new_visibility);
-
         track_outputs();
     }
 

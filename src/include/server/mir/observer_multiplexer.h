@@ -283,13 +283,17 @@ template<class Observer>
 void ObserverMultiplexer<Observer>::unregister_interest(Observer const& observer)
 {
     std::lock_guard lock{observer_mutex};
-    std::erase_if(observers,
-        [&observer](auto& candidate)
-        {
-            // This will wait for any (other) thread to finish with the candidate observer, then reset it
-            // (preventing future notifications from being sent) if it is the same as the unregistered observer.
-            return candidate->maybe_reset(&observer);
-        });
+    observers.erase(
+        std::remove_if(
+            observers.begin(),
+            observers.end(),
+            [&observer](auto& candidate)
+            {
+                // This will wait for any (other) thread to finish with the candidate observer, then reset it
+                // (preventing future notifications from being sent) if it is the same as the unregistered observer.
+                return candidate->maybe_reset(&observer);
+            }),
+        observers.end());
 }
 
 template<class Observer>
