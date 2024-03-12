@@ -91,6 +91,11 @@ install(
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mircommon"
 )
 
+install(
+    DIRECTORY ${CMAKE_SOURCE_DIR}/include/common/mir_toolkit
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mircommon"
+)
+
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mircommon.pc.in
     ${CMAKE_CURRENT_BINARY_DIR}/mircommon.pc
     @ONLY
