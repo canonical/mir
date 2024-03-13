@@ -91,7 +91,6 @@ mf::WindowWlSurfaceRole::~WindowWlSurfaceRole()
         {
             if (auto* global{output_manager->output_for(config.id).value_or(nullptr)})
             {
-                mir::log_info("\033[1;36mRemoved listener (output %d)\033[0m", config.id.as_value());
                 global->remove_listener(this);
             }
 
@@ -516,6 +515,7 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
 
 void mf::WindowWlSurfaceRole::handle_enter_output(graphics::DisplayConfigurationOutputId id)
 {
+    bool event_sent{};
     if (surface)
     {
         if (auto* global{output_manager->output_for(id).value_or(nullptr)})
@@ -528,13 +528,14 @@ void mf::WindowWlSurfaceRole::handle_enter_output(graphics::DisplayConfiguration
                     [&](OutputInstance* instance)
                     {
                         surface.value().send_enter_event(instance->resource);
+                        event_sent = true;
                     });
             }
         }
-        else
-        {
-            pending_enter_events.push_back(id);
-        }
+    }
+    if (!event_sent)
+    {
+        pending_enter_events.push_back(id);
     }
 }
 

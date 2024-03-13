@@ -284,14 +284,13 @@ void ms::BasicSurface::move_to(geometry::Point const& top_left)
 {
     synchronised_state.lock()->surface_rect.top_left = top_left;
     observers->moved_to(this, top_left);
-    track_outputs();
+    linearised_track_outputs();
 }
 
 void ms::BasicSurface::set_hidden(bool hide)
 {
     synchronised_state.lock()->hidden = hide;
     observers->hidden_set_to(this, hide);
-    track_outputs();
 }
 
 mir::geometry::Size ms::BasicSurface::window_size() const
@@ -343,7 +342,7 @@ void ms::BasicSurface::resize(geom::Size const& desired_size)
 
         observers->window_resized_to(this, new_size);
         observers->content_resized_to(this, content_size_);
-        track_outputs();
+        linearised_track_outputs();
     }
 }
 
@@ -673,7 +672,6 @@ MirWindowVisibility ms::BasicSurface::set_visibility(MirWindowVisibility new_vis
         state.drop();
 
         observers->attrib_changed(this, mir_window_attrib_visibility, new_visibility);
-        track_outputs();
     }
 
     return new_visibility;
@@ -1018,4 +1016,9 @@ void mir::scene::BasicSurface::track_outputs()
     std::ranges::for_each(untracked, [&](auto const& id) { observers->left_output(this, id); });
 
     tracked_outputs = std::move(tracked);
+}
+
+void mir::scene::BasicSurface::linearised_track_outputs()
+{
+    linearising_executor.spawn([this]{ track_outputs(); });
 }

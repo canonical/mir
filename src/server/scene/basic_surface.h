@@ -191,6 +191,7 @@ private:
     auto content_size(State const& state) const -> geometry::Size;
     auto content_top_left(State const& state) const -> geometry::Point;
     void track_outputs();
+    void linearised_track_outputs();
 
     struct State
     {
