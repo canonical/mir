@@ -185,7 +185,7 @@ std::string object_path_for_current_session(LogindSeat* seat_proxy)
         BOOST_THROW_EXCEPTION((std::runtime_error{"Seat has no active session"}));
     }
 
-    mir::log_info("Discovered object path for current session = %s", object_path);
+    mir::log_debug("Discovered object path for current session = %s", object_path);
     return {object_path};
 }
 
@@ -937,12 +937,12 @@ mir::LogindConsoleServices::~LogindConsoleServices()
 
 void mir::LogindConsoleServices::on_lock()
 {
-    mir::log_info("Notifying logind of session lock");
+    mir::log_debug("Notifying logind of session lock");
     logind_session_set_locked_hint(session_proxy.get(), true);
 }
 
 void mir::LogindConsoleServices::on_unlock()
 {
-    mir::log_info("Notifying logind of session unlock");
+    mir::log_debug("Notifying logind of session unlock");
     logind_session_set_locked_hint(session_proxy.get(), false);
 }
