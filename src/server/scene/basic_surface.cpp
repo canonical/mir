@@ -1021,4 +1021,5 @@ void mir::scene::BasicSurface::track_outputs()
 void mir::scene::BasicSurface::linearised_track_outputs()
 {
     linearising_executor.spawn([this]{ track_outputs(); });
+    std::this_thread::sleep_for(std::chrono::milliseconds{1});
 }
