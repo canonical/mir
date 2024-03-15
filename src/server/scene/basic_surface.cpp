@@ -30,8 +30,10 @@
 
 #include <boost/throw_exception.hpp>
 
-#include <stdexcept>
 #include <algorithm>
+#include <cstring>
+#include <latch>
+#include <stdexcept>
 
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
@@ -1020,5 +1022,26 @@ void mir::scene::BasicSurface::track_outputs()
 
 void mir::scene::BasicSurface::linearised_track_outputs()
 {
-    linearising_executor.spawn([this]{ track_outputs(); });
+    thread_local bool const on_wayland_thread = []()
+        {
+            static size_t const max_thread_name_size = 16;
+            char thread_name[max_thread_name_size];
+            pthread_getname_np(pthread_self(), thread_name, sizeof thread_name);
+            return strcmp("Mir/Wayland", thread_name) == 0;
+        }();
+
+    if (on_wayland_thread)
+    {
+        std::latch latch{1};
+        linearising_executor.spawn([this, &latch]
+            {
+                track_outputs();
+                latch.count_down();
+            });
+        latch.wait();
+    }
+    else
+    {
+        track_outputs();
+    }
 }
