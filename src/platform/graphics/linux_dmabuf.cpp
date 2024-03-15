@@ -87,7 +87,7 @@ public:
             resize(returned_formats);
         }
 
-        for (auto i = 0u; i < formats.size(); ++i)
+        for (auto i = 0u; i < formats.size();)
         {
             auto [format, modifiers, external_only] = (*this)[i];
 
@@ -109,9 +109,8 @@ public:
                 formats.erase(formats.begin() + i);
                 modifiers_for_format.erase(modifiers_for_format.begin() + i);
                 external_only_for_format.erase(external_only_for_format.begin() + i);
-                // formats[i] is now the format *after* the one we've just removed, so go back one
-                // and continue the loop.
-                --i;
+                // formats[i] is now the format *after* the one we've just removed,
+                // so we can can continue iterating through the formats from here.
                 continue;
             }
             modifiers.resize(num_modifiers);
@@ -149,6 +148,9 @@ public:
                 modifiers.push_back(DRM_FORMAT_MOD_INVALID);
                 external_only.push_back(false);
             }
+
+            // We've processed this format; move on to the next one
+            ++i;
         }
         if (this->num_formats() == 0)
         {
