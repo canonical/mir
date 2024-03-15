@@ -15,7 +15,6 @@
  */
 
 #include "mir/events/window_event.h"
-#include "mir_blob.h"
 
 MirWindowEvent::MirWindowEvent() : MirEvent{mir_event_type_window}
 {

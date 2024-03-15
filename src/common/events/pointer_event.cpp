@@ -15,7 +15,6 @@
  */
 
 #include "mir/events/pointer_event.h"
-#include "mir_blob.h"
 
 #include <boost/throw_exception.hpp>
 
