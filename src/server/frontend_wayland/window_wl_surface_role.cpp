@@ -93,7 +93,6 @@ mf::WindowWlSurfaceRole::~WindowWlSurfaceRole()
             {
                 global->remove_listener(this);
             }
-
         }
     );
     output_manager->remove_listener(this);

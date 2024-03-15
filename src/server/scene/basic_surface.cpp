@@ -1032,6 +1032,10 @@ void mir::scene::BasicSurface::linearised_track_outputs()
 
     if (on_wayland_thread)
     {
+        // Since work in the Wayland thread is executed eagerly, the enter/leave
+        // notifications may race with the output tracking code in other threads.
+        // To prevent this, we wait for the work to be executed in a linearising
+        // executor.
         std::latch latch{1};
         linearising_executor.spawn([this, &latch]
             {

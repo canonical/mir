@@ -340,7 +340,13 @@ void mf::OutputManager::handle_configuration_change(std::shared_ptr<mg::DisplayC
             }
             else if (output_config.used)
             {
-                outputs[output_config.id] = std::make_unique<OutputGlobal>(display, output_config);
+                auto output_global{std::make_unique<OutputGlobal>(display, output_config)};
+                auto* output_global_pointer{output_global.get()};
+                outputs[output_config.id] = std::move(output_global);
+                for (auto& listener : listeners)
+                {
+                    listener->output_global_created(output_global_pointer);
+                }
             }
         });
 }
