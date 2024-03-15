@@ -52,6 +52,7 @@ miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& s
     depth_layer(spec.depth_layer),
     attached_edges(spec.attached_edges),
     exclusive_rect(spec.exclusive_rect),
+    ignore_exclusion_zones(spec.ignore_exclusion_zones),
     application_id(spec.application_id),
     server_side_decorated(spec.server_side_decorated),
     focus_mode(spec.focus_mode),
@@ -264,6 +265,12 @@ auto miral::WindowSpecification::exclusive_rect() const
     return self->exclusive_rect;
 }
 
+auto miral::WindowSpecification::ignore_exclusion_zones() const
+    -> mir::optional_value<bool> const&
+{
+    return self->ignore_exclusion_zones;
+}
+
 auto miral::WindowSpecification::userdata() const -> mir::optional_value<std::shared_ptr<void>> const&
 {
     return self->userdata;
@@ -408,6 +415,12 @@ auto miral::WindowSpecification::exclusive_rect()
     -> mir::optional_value<mir::optional_value<mir::geometry::Rectangle>>&
 {
     return self->exclusive_rect;
+}
+
+auto miral::WindowSpecification::ignore_exclusion_zones()
+    -> mir::optional_value<bool>&
+{
+    return self->ignore_exclusion_zones;
 }
 
 auto miral::WindowSpecification::application_id() const -> mir::optional_value<std::string> const&

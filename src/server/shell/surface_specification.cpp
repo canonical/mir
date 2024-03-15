@@ -146,6 +146,8 @@ void msh::SurfaceSpecification::update_from(SurfaceSpecification const& that)
         attached_edges = that.attached_edges;
     if (that.exclusive_rect.is_set())
         exclusive_rect = that.exclusive_rect;
+    if (that.ignore_exclusion_zones.is_set())
+        ignore_exclusion_zones = that.ignore_exclusion_zones;
     if (that.application_id.is_set())
         application_id = that.application_id;
     if (that.server_side_decorated.is_set())
@@ -200,6 +202,7 @@ bool msh::operator==(
         lhs.depth_layer == rhs.depth_layer &&
         lhs.attached_edges == rhs.attached_edges &&
         lhs.exclusive_rect == rhs.exclusive_rect &&
+        lhs.ignore_exclusion_zones == rhs.ignore_exclusion_zones &&
         lhs.application_id == rhs.application_id &&
         lhs.server_side_decorated == rhs.server_side_decorated &&
         lhs.focus_mode == rhs.focus_mode &&

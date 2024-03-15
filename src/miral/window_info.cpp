@@ -439,6 +439,11 @@ auto miral::WindowInfo::exclusive_rect() const -> mir::optional_value<mir::geome
     return self->exclusive_rect;
 }
 
+auto miral::WindowInfo::ignore_exclusion_zones() const -> bool
+{
+    return self->ignore_exclusion_zones;
+}
+
 auto miral::WindowInfo::clip_area() const -> mir::optional_value<mir::geometry::Rectangle>
 {
     std::shared_ptr<mir::scene::Surface> const surface = self->window;

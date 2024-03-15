@@ -103,6 +103,7 @@ struct SurfaceSpecification
 
     optional_value<MirPlacementGravity> attached_edges;
     optional_value<optional_value<geometry::Rectangle>> exclusive_rect;
+    optional_value<bool> ignore_exclusion_zones;
     optional_value<std::string> application_id;
 
     /// If to enable server-side decorations for this surface

@@ -183,6 +183,7 @@ global:
     miral::WindowInfo::constrain_resize*;
     miral::WindowInfo::depth_layer*;
     miral::WindowInfo::exclusive_rect*;
+    miral::WindowInfo::ignore_exclusion_zones*;
     miral::WindowInfo::focus_mode*;
     miral::WindowInfo::has_output_id*;
     miral::WindowInfo::height_inc*;
@@ -279,6 +280,7 @@ global:
     miral::WindowSpecification::confine_pointer*;
     miral::WindowSpecification::depth_layer*;
     miral::WindowSpecification::exclusive_rect*;
+    miral::WindowSpecification::ignore_exclusion_zones*;
     miral::WindowSpecification::focus_mode*;
     miral::WindowSpecification::height_inc*;
     miral::WindowSpecification::input_mode*;

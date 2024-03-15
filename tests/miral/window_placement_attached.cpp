@@ -808,6 +808,38 @@ TEST_P(WindowPlacementAttached, attaching_to_any_output_in_logical_group_attache
     EXPECT_THAT(window.size(), Eq(placement.size));
 }
 
+TEST_P(WindowPlacementAttached, windows_that_ignore_exclusion_zones_are_not_placed_relative_to_windows_that_define_exclusive_rects)
+{
+    AttachedEdges edges = GetParam();
+    Size window_size{120, 80};
+    Rectangle exclusive_rect{{0, 0}, window_size};
+
+    {
+        mir::shell::SurfaceSpecification params;
+        params.state = mir_window_state_attached;
+        params.attached_edges = edges;
+        params.set_size(window_size);
+        params.exclusive_rect = exclusive_rect;
+        create_window(params);
+    }
+
+    Window attached;
+    {
+        mir::shell::SurfaceSpecification params;
+        params.state = mir_window_state_attached;
+        params.attached_edges = (MirPlacementGravity)(
+            mir_placement_gravity_north |
+            mir_placement_gravity_south |
+            mir_placement_gravity_east |
+            mir_placement_gravity_west);
+        params.ignore_exclusion_zones = true;
+        attached = create_window(params);
+    }
+
+    EXPECT_THAT(attached.top_left(), Eq(display_area.top_left));
+    EXPECT_THAT(attached.size(), Eq(display_area.size));
+}
+
 INSTANTIATE_TEST_SUITE_P(WindowPlacementAttached, WindowPlacementAttached, ::testing::Values(
     mir_placement_gravity_center,
     mir_placement_gravity_west,
