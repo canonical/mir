@@ -21,6 +21,7 @@
 #include "gtest/gtest.h"
 
 #include <mutex>
+#include <thread>
 
 namespace mir
 {
@@ -52,6 +53,7 @@ public:
 
     void execute()
     {
+        std::this_thread::sleep_for(std::chrono::milliseconds{10});
         decltype(work_items) drained_items;
         do
         {

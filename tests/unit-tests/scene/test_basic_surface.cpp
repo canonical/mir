@@ -1174,6 +1174,7 @@ TEST_F(BasicSurfaceTest, notifies_of_entered_output_on_move)
 
     surface.register_interest(mock_surface_observer, executor);
     surface.move_to({0, 0});
+    executor.execute();
     surface.move_to({110, 0});
 }
 
@@ -1188,6 +1189,7 @@ TEST_F(BasicSurfaceTest, notifies_of_left_output_on_move)
 
     surface.register_interest(mock_surface_observer, executor);
     surface.move_to({0, 0});
+    executor.execute();
     surface.move_to({110, 0});
 }
 
@@ -1205,6 +1207,7 @@ TEST_F(BasicSurfaceTest, notifies_of_entered_output_when_resizing)
 
     surface.register_interest(mock_surface_observer, executor);
     surface.move_to({0, 0});
+    executor.execute();
     surface.resize({150, 50});
 }
 
@@ -1219,7 +1222,9 @@ TEST_F(BasicSurfaceTest, notifies_of_left_output_when_resizing)
 
     surface.register_interest(mock_surface_observer, executor);
     surface.move_to({0, 0});
+    executor.execute();
     surface.resize({150, 50});
+    executor.execute();
     surface.resize({50, 50});
 }
 
@@ -1234,8 +1239,11 @@ TEST_F(BasicSurfaceTest, notifies_of_left_output_when_output_is_disconnected)
 
     surface.register_interest(mock_surface_observer, executor);
     surface.move_to({0, 0});
+    executor.execute();
     surface.resize({50, 50});
+    executor.execute();
     surface.move_to({75, 0});
+    executor.execute();
     display_config_registrar->disconnect_output(1);
 }
 
