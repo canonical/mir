@@ -4,5 +4,5 @@ includedir=@PKGCONFIG_INCLUDEDIR@
 Name: mirserver-internal
 Description: Mir server internal headers
 Version: @MIR_VERSION@
-Requires.private: mircommon
-Cflags: -I${includedir}/mirserver-internal -I${includedir}/mircommon
+Requires: mirserver mircommon mirplatform mircore
+Cflags: -I${includedir}/mirserver-internal

@@ -163,6 +163,7 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirserver60 (= ${binary:Version}),
       libmirplatform-dev (= ${binary:Version}),
       libmircommon-dev (= ${binary:Version}),
+      libmircore-dev (= ${binary:Version}),
       libmirserver-dev (= ${binary:Version}),
       libglm-dev,
       uuid-dev,
