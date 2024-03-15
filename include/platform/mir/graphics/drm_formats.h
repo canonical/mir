@@ -58,6 +58,7 @@ private:
 };
 
 auto drm_modifier_to_string(uint64_t modifier) -> std::string;
+auto drm_format_to_string(uint32_t format) -> char const*;
 }
 
 #endif //MIR_PLATFORM_GRAPHICS_DRM_FORMATS_H_
