@@ -1,0 +1,11 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+libdir=@PKGCONFIG_LIBDIR@
+includedir=@PKGCONFIG_INCLUDEDIR@/mirserver-internal
+
+Name: mirserver-internal
+Description: Mir server internal headers
+Version: @MIR_VERSION@
+Requires.private: mircommon
+Requires: mirplatform uuid mircore
+Libs: -L${libdir} -lmirserver
+Cflags: -I${includedir}
