@@ -19,12 +19,8 @@
 
 #include "src/server/scene/basic_surface.h"
 #include "src/server/report/null_report_factory.h"
-
-#include "mir/scene/null_surface_observer.h"
-
 #include "mock_buffer_stream.h"
 #include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
-#include "mir/test/doubles/explicit_executor.h"
 
 #include <gmock/gmock.h>
 
@@ -49,8 +45,6 @@ struct MockSurface : public scene::BasicSurface
             mir::report::null_scene_report(),
             std::make_shared<FakeDisplayConfigurationObserverRegistrar>())
     {
-        register_interest(observer, executor);
-
         ON_CALL(*this, primary_buffer_stream())
             .WillByDefault(testing::Invoke([this]
                 { return scene::BasicSurface::primary_buffer_stream(); }));
@@ -68,10 +62,7 @@ struct MockSurface : public scene::BasicSurface
                }));
     }
 
-    ~MockSurface() noexcept
-    {
-        executor.execute();
-    }
+    ~MockSurface() noexcept {}
 
     MOCK_METHOD(MirWindowType, type, (), (const));
     MOCK_METHOD(void, hide, ());
@@ -89,7 +80,6 @@ struct MockSurface : public scene::BasicSurface
     MOCK_METHOD(std::shared_ptr<scene::Surface>, parent, (), (const));
     MOCK_METHOD(int, configure, (MirWindowAttrib, int));
     MOCK_METHOD(void, register_interest, (std::weak_ptr<scene::SurfaceObserver> const&));
-    MOCK_METHOD(void, register_interest, (std::weak_ptr<scene::SurfaceObserver> const&, Executor&));
     MOCK_METHOD(void, unregister_interest, (scene::SurfaceObserver const&));
     MOCK_METHOD(void, consume, (std::shared_ptr<MirEvent const> const& event));
 
@@ -101,9 +91,6 @@ struct MockSurface : public scene::BasicSurface
     MOCK_METHOD(std::weak_ptr<scene::Session>, session, (), (const));
 
     std::shared_ptr<MockBufferStream> const stream;
-    std::shared_ptr<scene::NullSurfaceObserver> const observer =
-        std::make_shared<mir::scene::NullSurfaceObserver>();
-    test::doubles::ExplicitExecutor executor;
 };
 
 }

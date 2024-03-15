@@ -67,7 +67,7 @@ struct Surface : testing::Test
 {
     std::shared_ptr<StubBufferStream> const buffer_stream = std::make_shared<StubBufferStream>();
 
-    void SetUp() override
+    void SetUp()
     {
         using namespace testing;
 
@@ -83,12 +83,6 @@ struct Surface : testing::Test
             nullptr,
             report,
             display_config_registrar);
-        surface->register_interest(observer, executor);
-    }
-
-    void TearDown() override
-    {
-        executor.execute();
     }
 
     mf::SurfaceId stub_id;
@@ -96,9 +90,6 @@ struct Surface : testing::Test
     std::shared_ptr<ms::BasicSurface> surface;
     std::shared_ptr<mtd::FakeDisplayConfigurationObserverRegistrar> const display_config_registrar =
         std::make_shared<mtd::FakeDisplayConfigurationObserverRegistrar>();
-    std::shared_ptr<ms::NullSurfaceObserver> const observer =
-        std::make_shared<ms::NullSurfaceObserver>();
-    mtd::ExplicitExecutor executor;
 };
 }
 

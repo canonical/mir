@@ -170,10 +170,6 @@ struct AbstractShell : Test
         mt::fake_shared(seat),
         mt::fake_shared(decoration_manager)};
 
-    std::shared_ptr<ms::NullSurfaceObserver> const observer =
-        std::make_shared<ms::NullSurfaceObserver>();
-    mtd::ExplicitExecutor executor;
-
     void SetUp() override
     {
         ON_CALL(session_manager, set_focus_to(_)).
@@ -205,17 +201,12 @@ struct AbstractShell : Test
             session,
             {},
             mt::make_surface_spec(session->create_buffer_stream(properties)),
-            observer,
-            &executor);
+            nullptr,
+            nullptr);
     }
 
     std::chrono::nanoseconds const event_timestamp = std::chrono::nanoseconds(0);
     mg::BufferProperties properties { geom::Size{1,1}, mir_pixel_format_abgr_8888, mg::BufferUsage::software};
-
-    void TearDown() override
-    {
-        executor.execute();
-    }
 };
 }
 
@@ -920,7 +911,7 @@ TEST_F(AbstractShell, makes_parent_active_when_switching_to_child)
     focus_controller.set_focus_to(surface_parent->session().lock(), surface_parent);
     /* window         | expected focus state
      * -----------------------------------------------
-     * surface_parent | mir_window_focus_state_focused
+     * surface_parent | mir_window_focus_state_focused 
      * surface_child  | <don't care>
     */
 
