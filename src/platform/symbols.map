@@ -70,6 +70,7 @@ MIR_PLATFORM_2.16 {
     mir::graphics::common::EGLContextExecutor::spawn*;
     mir::graphics::contains_alpha*;
     mir::graphics::drm_modifier_to_string*;
+    mir::graphics::drm_format_to_string*;
     mir::graphics::egl_category*;
     mir::graphics::gl::Program::?Program*;
     mir::graphics::gl::ProgramFactory::?ProgramFactory*;
