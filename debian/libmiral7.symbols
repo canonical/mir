@@ -210,6 +210,7 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::WindowInfo::focus_mode() const@MIRAL_5.0" 5.0.0
  (c++)"miral::WindowInfo::has_output_id() const@MIRAL_5.0" 5.0.0
  (c++)"miral::WindowInfo::height_inc() const@MIRAL_5.0" 5.0.0
+ (c++)"miral::WindowInfo::ignore_exclusion_zones() const@MIRAL_5.0" 5.0.0
  (c++)"miral::WindowInfo::is_visible() const@MIRAL_5.0" 5.0.0
  (c++)"miral::WindowInfo::max_aspect() const@MIRAL_5.0" 5.0.0
  (c++)"miral::WindowInfo::max_height() const@MIRAL_5.0" 5.0.0
@@ -318,6 +319,8 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::WindowSpecification::focus_mode()@MIRAL_5.0" 5.0.0
  (c++)"miral::WindowSpecification::height_inc() const@MIRAL_5.0" 5.0.0
  (c++)"miral::WindowSpecification::height_inc()@MIRAL_5.0" 5.0.0
+ (c++)"miral::WindowSpecification::ignore_exclusion_zones() const@MIRAL_5.0" 5.0.0
+ (c++)"miral::WindowSpecification::ignore_exclusion_zones()@MIRAL_5.0" 5.0.0
  (c++)"miral::WindowSpecification::input_mode() const@MIRAL_5.0" 5.0.0
  (c++)"miral::WindowSpecification::input_mode()@MIRAL_5.0" 5.0.0
  (c++)"miral::WindowSpecification::input_shape() const@MIRAL_5.0" 5.0.0

@@ -196,7 +196,7 @@ private:
         wl_resource_destroy(resource);
     }
 
-    DoubleBuffered<uint32_t> exclusive_zone{0};
+    DoubleBuffered<int32_t> exclusive_zone{0};
     DoubleBuffered<Anchors> anchors;
     DoubleBuffered<Margin> margin;
     bool width_set_by_client{false}; ///< If the client gave a width on the last .set_size() request
@@ -434,6 +434,13 @@ auto mf::LayerSurfaceV1::inform_window_role_of_pending_placement()
     spec.exclusive_rect = exclusive_rect ?
         mir::optional_value<geom::Rectangle>(exclusive_rect.value()) :
         mir::optional_value<geom::Rectangle>();
+
+    // Per the spec: https://wayland.app/protocols/wlr-layer-shell-unstable-v1#zwlr_layer_surface_v1:request:set_exclusive_zone
+    // If the zone is -1, it indicates that the surface will not be moved to respect the exclusion zones of other
+    // surfaces.
+    auto zone = exclusive_zone.pending();
+    if (zone == -1)
+        spec.ignore_exclusion_zones = true;
 
     apply_spec(spec);
 }

@@ -2883,16 +2883,16 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
         }
     }
 
-    for (auto& area : display_areas)
+    for (auto const& area : display_areas)
     {
         Rectangle zone_rect = area->area;
 
-        // The placement algorithm operates on windows spanning the width of the screen first,
-        // followed by any other "attached" window (e.g. a window attached to the side of the screen
-        // vertically), and finally maximized windows. This ensures that windows attached to the
-        // top and bottom of the screen (in the "full_width_attached_windows" list) push windows
-        // attached to the sides of the screen or elsewhere (in the "other_attached_windows") out
-        // of the way. Maximized windows are then guaranteed to be on top, as they appear last.
+        // The placement order is as follows:
+        //  1. First, attached windows that ignore exclusion zones
+        //  2. Next, windows spanning the screen horizontally
+        //  3. Then, windows spanning the screen vertically
+        //  4. Finally, other maximized windows since they respect all exclusion zones
+        std::vector<WindowInfo*> attached_windows_that_ignore_exclusion_zones;
         std::vector<WindowInfo*> full_width_attached_windows;
         std::vector<WindowInfo*> other_attached_windows;
         std::vector<WindowInfo*> maximized_windows;
@@ -2906,7 +2906,12 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
                 switch (info.state())
                 {
                 case mir_window_state_attached:
-                    if (info.exclusive_rect().is_set())
+                    if (info.ignore_exclusion_zones())
+                    {
+                        attached_windows_that_ignore_exclusion_zones.push_back(&info);
+                        break;
+                    }
+                    else if (info.exclusive_rect().is_set())
                     {
                         MirPlacementGravity  edges = info.attached_edges();
                         bool is_full_width = (edges & mir_placement_gravity_east) && (edges & mir_placement_gravity_west);
@@ -2928,6 +2933,11 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
                     break;
                 }
             }
+        }
+
+        for (auto info_ptr : attached_windows_that_ignore_exclusion_zones)
+        {
+            place_attached_to_zone(*info_ptr, zone_rect);
         }
 
         for (auto info_ptr : full_width_attached_windows)

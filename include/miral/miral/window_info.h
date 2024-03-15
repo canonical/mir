@@ -116,6 +116,10 @@ struct WindowInfo
     /// (only meaningful when the window is attached to an edge)
     auto exclusive_rect() const -> mir::optional_value<mir::geometry::Rectangle>;
 
+    /// Mir will ignore the exclusive_rects of other windows when this is set to true.
+    /// (only meaningful when the window is attached to an edge)
+    auto ignore_exclusion_zones() const -> bool;
+
     /// Mir will not render anything outside this rectangle
     auto clip_area() const -> mir::optional_value<mir::geometry::Rectangle>;
     void clip_area(mir::optional_value<mir::geometry::Rectangle> const& area);

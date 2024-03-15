@@ -87,7 +87,8 @@ miral::WindowInfo::Self::Self(Window window, WindowSpecification const& params) 
     max_aspect(optional_value_or_default(params.max_aspect(), default_max_aspect_ratio)),
     shell_chrome(optional_value_or_default(params.shell_chrome(), mir_shell_chrome_normal)),
     depth_layer(optional_value_or_default(params.depth_layer(), mir_depth_layer_application)),
-    attached_edges(optional_value_or_default(params.attached_edges(), mir_placement_gravity_center))
+    attached_edges(optional_value_or_default(params.attached_edges(), mir_placement_gravity_center)),
+    ignore_exclusion_zones{optional_value_or_default(params.ignore_exclusion_zones(), false)}
 {
     if (params.output_id().is_set())
         output_id = params.output_id().value();

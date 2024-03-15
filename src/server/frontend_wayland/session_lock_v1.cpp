@@ -282,11 +282,12 @@ mf::SessionLockSurfaceV1::SessionLockSurfaceV1(
 {
     shell::SurfaceSpecification spec;
     spec.state = mir_window_state_attached;
-    spec.depth_layer = mir_depth_layer_background;
+    spec.depth_layer = mir_depth_layer_overlay;
     spec.focus_mode = mir_focus_mode_grabbing;
     spec.output_id = output_id;
     spec.attached_edges = MirPlacementGravity(mir_placement_gravity_northwest | mir_placement_gravity_southeast);
     spec.visible_on_lock_screen = true;
+    spec.ignore_exclusion_zones = true;
     apply_spec(spec);
     auto const serial = Resource::client->next_serial(nullptr);
     send_configure_event(serial, 100, 100);

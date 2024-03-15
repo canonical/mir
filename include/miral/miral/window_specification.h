@@ -147,6 +147,13 @@ public:
     auto exclusive_rect() -> mir::optional_value<mir::optional_value<mir::geometry::Rectangle>>&;
     ///@}
 
+    /// Decides whether or not this window should ignore the exclusion zones set by other windows.
+    /// Only meaningful for windows attached to an edge
+    ///@{
+    auto ignore_exclusion_zones() const -> mir::optional_value<bool> const&;
+    auto ignore_exclusion_zones() -> mir::optional_value<bool>&;
+    ///@}
+
     /// The D-bus service name and basename of the app's .desktop file
     /// See http://standards.freedesktop.org/desktop-entry-spec/
     ///@{

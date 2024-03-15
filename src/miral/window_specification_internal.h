@@ -69,6 +69,7 @@ struct WindowSpecification::Self
     mir::optional_value<MirDepthLayer> depth_layer;
     mir::optional_value<MirPlacementGravity> attached_edges;
     mir::optional_value<mir::optional_value<mir::geometry::Rectangle>> exclusive_rect;
+    mir::optional_value<bool> ignore_exclusion_zones;
     mir::optional_value<std::string> application_id;
     mir::optional_value<bool> server_side_decorated;
     mir::optional_value<MirFocusMode> focus_mode;
