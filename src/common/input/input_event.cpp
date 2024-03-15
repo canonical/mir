@@ -20,7 +20,6 @@
 #include "mir/events/event_type_to_string.h"
 #include "mir/events/event_private.h"
 #include "mir/log.h"
-#include "mir/require.h"
 
 #include "../handle_event_exception.h"
 

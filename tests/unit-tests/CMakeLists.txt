@@ -51,7 +51,6 @@ set(
   test_glib_main_loop.cpp
   shared_library_test.cpp
   test_raii.cpp
-  test_variable_length_array.cpp
   test_default_emergency_cleanup.cpp
   test_thread_safe_list.cpp
   test_fatal.cpp
