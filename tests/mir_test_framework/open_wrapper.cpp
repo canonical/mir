@@ -14,12 +14,45 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* As suggested by umockdev, _FILE_OFFSET_BITS breaks our open() interposing,
- * as it results in a (platform dependent!) subset of {__open64, __open64_2,
- * __open, __open_2} being defined (not just declared) in the header, causing
- * the build to fail with duplicate definitions.
+
+/* Because we're trying to interpose libc functions we get exposed to the
+ * implementation details of glibc.
+ *
+ * Due to the 64-bit time_t transition, our previous workaround of
+ * #undef _FILE_OFFSET_BITS (and thus getting the base entrypoints)
+ * no longer works; _FILE_OFFSET_BITS must be 64 if _TIME_BITS == 64,
+ * and it's hard to verify that none of the subsequent headers *don't*
+ * embed a time_t somewhere.
+ *
+ * These runes are taken from the Ubuntu umockdev patch solving the same
+ * problem there.
  */
-#undef _FILE_OFFSET_BITS
+#include <features.h>
+#ifdef __GLIBC__  /* This is messing with glibc internals, and is not
+                   * expected to work (or be needed) anywhere else.
+                   * (Hello, musl!)
+                   */
+/* Remove gcc asm aliasing so that our interposed symbols work as expected */
+#include <sys/cdefs.h>
+
+#include <stddef.h>
+extern "C"
+{
+extern int __REDIRECT_NTH (__ttyname_r_alias, (int __fd, char *__buf,
+                                               size_t __buflen), ttyname_r);
+}
+#ifdef __REDIRECT
+#undef __REDIRECT
+#endif
+#define __REDIRECT(name, proto, alias) name proto
+#ifdef __REDIRECT_NTH
+#undef __REDIRECT_NTH
+#endif
+#define __REDIRECT_NTH(name, proto, alias) name proto __THROW
+#endif // __GLIBC__
+/*
+ * End glibc hackery (although there is a second block below)
+ */
 
 #include "mir_test_framework/open_wrapper.h"
 #include "mir_test_framework/interposer_helper.h"
@@ -31,6 +64,24 @@
 #include <cstdarg>
 #include <fcntl.h>
 #include <boost/throw_exception.hpp>
+
+/* Second block of glibc hackery
+ *
+ * Fixup for making a mess with __REDIRECT above
+ */
+#ifdef __GLIBC__
+#ifdef __USE_TIME_BITS64
+#define clock_gettime __clock_gettime64
+extern "C"
+{
+extern int clock_gettime(clockid_t clockid, struct timespec *tp);
+}
+#endif
+#endif // __GLIBC__
+/*
+ * End glibc hackery
+ */
+
 
 namespace mtf = mir_test_framework;
 
