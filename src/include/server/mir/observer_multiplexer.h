@@ -54,6 +54,9 @@ public:
     void register_interest(
         std::weak_ptr<Observer> const& observer,
         Executor& executor) override;
+    void register_early_observer(
+        std::weak_ptr<Observer> const& observer,
+        Executor& executor) override;
     void unregister_interest(Observer const& observer) override;
 
     /// Returns true if there are no observers
@@ -245,6 +248,8 @@ private:
     };
 
     PosixRWMutex observer_mutex;
+    /// This is a two-partitioning of early observers and other observers.
+    /// Early observers are always partitioned before other observers.
     std::vector<std::shared_ptr<WeakObserver>> observers;
 };
 
@@ -262,6 +267,16 @@ void ObserverMultiplexer<Observer>::register_interest(
     std::lock_guard lock{observer_mutex};
 
     observers.emplace_back(std::make_shared<WeakObserver>(observer, executor));
+}
+
+template<class Observer>
+void ObserverMultiplexer<Observer>::register_early_observer(
+    std::weak_ptr<Observer> const& observer,
+    Executor& executor)
+{
+    std::lock_guard lock{observer_mutex};
+
+    observers.insert(observers.begin(), std::make_shared<WeakObserver>(observer, executor));
 }
 
 template<class Observer>

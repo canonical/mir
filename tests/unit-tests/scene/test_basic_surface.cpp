@@ -25,12 +25,12 @@
 #include "mir/scene/null_surface_observer.h"
 #include "mir/events/event_builders.h"
 
+#include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
 #include "mir/test/doubles/stub_cursor_image.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/stub_session.h"
 #include "mir/test/doubles/explicit_executor.h"
-#include "mir/test/fake_shared.h"
 #include "mir/test/geometry_matchers.h"
 
 #include "src/server/report/null_report_factory.h"
@@ -64,16 +64,18 @@ public:
 class MockSurfaceObserver : public ms::NullSurfaceObserver
 {
 public:
-    MOCK_METHOD3(attrib_changed, void(ms::Surface const*, MirWindowAttrib, int));
-    MOCK_METHOD2(window_resized_to, void(ms::Surface const*, geom::Size const&));
-    MOCK_METHOD2(content_resized_to, void(ms::Surface const*, geom::Size const&));
-    MOCK_METHOD3(frame_posted, void(ms::Surface const*, int, geom::Rectangle const&));
-    MOCK_METHOD2(hidden_set_to, void(ms::Surface const*, bool));
-    MOCK_METHOD2(renamed, void(ms::Surface const*, std::string const&));
-    MOCK_METHOD1(client_surface_close_requested, void(ms::Surface const*));
-    MOCK_METHOD2(cursor_image_set_to, void(ms::Surface const*, std::weak_ptr<mir::graphics::CursorImage> const& image));
-    MOCK_METHOD1(cursor_image_removed, void(ms::Surface const*));
-    MOCK_METHOD2(application_id_set_to, void(ms::Surface const*, std::string const&));
+    MOCK_METHOD(void, attrib_changed, (ms::Surface const*, MirWindowAttrib, int), (override));
+    MOCK_METHOD(void, window_resized_to, (ms::Surface const*, geom::Size const&), (override));
+    MOCK_METHOD(void, content_resized_to, (ms::Surface const*, geom::Size const&), (override));
+    MOCK_METHOD(void, frame_posted, (ms::Surface const*, int, geom::Rectangle const&), (override));
+    MOCK_METHOD(void, hidden_set_to, (ms::Surface const*, bool), (override));
+    MOCK_METHOD(void, renamed, (ms::Surface const*, std::string const&), (override));
+    MOCK_METHOD(void, client_surface_close_requested, (ms::Surface const*), (override));
+    MOCK_METHOD(void, cursor_image_set_to, (ms::Surface const*, std::weak_ptr<mir::graphics::CursorImage> const&), (override));
+    MOCK_METHOD(void, cursor_image_removed, (ms::Surface const*), (override));
+    MOCK_METHOD(void, application_id_set_to, (ms::Surface const*, std::string const&), (override));
+    MOCK_METHOD(void, entered_output, (ms::Surface const*, mg::DisplayConfigurationOutputId const&), (override));
+    MOCK_METHOD(void, left_output, (ms::Surface const*, mg::DisplayConfigurationOutputId const&), (override));
 };
 
 struct BasicSurfaceTest : public testing::Test
@@ -92,6 +94,8 @@ struct BasicSurfaceTest : public testing::Test
     std::shared_ptr<testing::NiceMock<MockSurfaceObserver>> mock_surface_observer =
         std::make_shared<testing::NiceMock<MockSurfaceObserver>>();
     mtd::ExplicitExecutor executor;
+    std::shared_ptr<mtd::FakeDisplayConfigurationObserverRegistrar> display_config_registrar =
+        std::make_shared<mtd::FakeDisplayConfigurationObserverRegistrar>();
 
     ms::BasicSurface surface{
         nullptr /* session */,
@@ -101,7 +105,8 @@ struct BasicSurfaceTest : public testing::Test
         mir_pointer_unconfined,
         streams,
         std::shared_ptr<mg::CursorImage>(),
-        report};
+        report,
+        display_config_registrar};
 
     std::shared_ptr<ms::SurfaceChangeNotification> observer =
         std::make_shared<ms::SurfaceChangeNotification>(
@@ -147,7 +152,8 @@ TEST_F(BasicSurfaceTest, can_be_created_with_session)
         mir_pointer_unconfined,
         streams,
         std::shared_ptr<mg::CursorImage>(),
-        report};
+        report,
+        display_config_registrar};
 
     EXPECT_THAT(surface.session().lock(), Eq(session));
 }
@@ -169,7 +175,8 @@ TEST_F(BasicSurfaceTest, buffer_stream_ids_always_unique)
                 std::list<ms::StreamInfo> {
                     { std::make_shared<testing::NiceMock<mtd::MockBufferStream>>(), {}, {} } },
                 std::shared_ptr<mg::CursorImage>(),
-                report);
+                report,
+                display_config_registrar);
         for (auto& renderable : surface->generate_renderables(this))
             ids.insert(renderable->id());
     }
@@ -193,7 +200,8 @@ TEST_F(BasicSurfaceTest, id_never_invalid)
                 mir_pointer_unconfined,
                 streams,
                 std::shared_ptr<mg::CursorImage>(),
-                report);
+                report,
+                display_config_registrar);
 
         for (auto& renderable : surface->generate_renderables(this))
             EXPECT_THAT(renderable->id(), testing::Ne(nullptr));
@@ -455,7 +463,8 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
         mir_pointer_unconfined,
         streams,
         std::shared_ptr<mg::CursorImage>(),
-        report};
+        report,
+        display_config_registrar};
 
     //not visible by default
     EXPECT_FALSE(surface.visible());
@@ -495,7 +504,8 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
         mir_pointer_unconfined,
         streams,
         std::shared_ptr<mg::CursorImage>(),
-        report};
+        report,
+        display_config_registrar};
 
     surface.register_interest(observer, executor);
 
@@ -532,7 +542,8 @@ TEST_F(BasicSurfaceTest, default_invisible_surface_doesnt_get_input)
         mir_pointer_unconfined,
         streams,
         std::shared_ptr<mg::CursorImage>(),
-        report};
+        report,
+        display_config_registrar};
 
     EXPECT_CALL(*mock_buffer_stream, has_submitted_buffer())
         .WillOnce(testing::Return(false))
@@ -552,7 +563,8 @@ TEST_F(BasicSurfaceTest, surface_doesnt_get_input_outside_clip_area)
         mir_pointer_unconfined,
         streams,
         std::shared_ptr<mg::CursorImage>(),
-        report};
+        report,
+        display_config_registrar};
 
     surface.set_clip_area(std::optional<geom::Rectangle>({{0,0}, {50,50}}));
 
@@ -777,7 +789,8 @@ TEST_F(BasicSurfaceTest, stores_parent)
         mir_pointer_unconfined,
         streams,
         std::shared_ptr<mg::CursorImage>(),
-        report};
+        report,
+        display_config_registrar};
 
     EXPECT_EQ(child.parent(), parent);
 }
@@ -846,7 +859,7 @@ TEST_P(BasicSurfaceAttributeTest, default_value)
     auto const& params = GetParam();
     auto const& attribute = params.attribute;
     auto const& default_value = params.default_value;
-    
+
     EXPECT_EQ(default_value, surface.query(attribute));
 }
 
@@ -893,11 +906,11 @@ TEST_P(BasicSurfaceAttributeTest, does_not_notify_if_attrib_is_unchanged)
 TEST_P(BasicSurfaceAttributeTest, throws_on_invalid_value)
 {
     using namespace testing;
-    
+
     auto const& params = GetParam();
     auto const& attribute = params.attribute;
     auto const& invalid_value = params.infimum_invalid_value;
-    
+
     EXPECT_THROW({
             surface.configure(attribute, invalid_value);
         }, std::logic_error);
@@ -1131,6 +1144,101 @@ TEST_F(BasicSurfaceTest, does_not_notify_if_application_id_is_unchanged)
     surface.set_application_id(id);
 }
 
+TEST_F(BasicSurfaceTest, notifies_of_entered_output_upon_creation)
+{
+    using namespace testing;
+
+    mir::graphics::DisplayConfigurationOutputId const id1{1};
+    mir::graphics::DisplayConfigurationOutputId const id2{2};
+
+    EXPECT_CALL(*mock_surface_observer, entered_output(_, id1))
+        .Times(1);
+    EXPECT_CALL(*mock_surface_observer, entered_output(_, id2))
+        .Times(0);
+
+    surface.register_interest(mock_surface_observer, executor);
+    surface.move_to({0, 0});
+}
+
+TEST_F(BasicSurfaceTest, notifies_of_entered_output_on_move)
+{
+    using namespace testing;
+
+    mir::graphics::DisplayConfigurationOutputId const id1{1};
+    mir::graphics::DisplayConfigurationOutputId const id2{2};
+
+    EXPECT_CALL(*mock_surface_observer, entered_output(_, id1))
+        .Times(1);
+    EXPECT_CALL(*mock_surface_observer, entered_output(_, id2))
+        .Times(1);
+
+    surface.register_interest(mock_surface_observer, executor);
+    surface.move_to({0, 0});
+    surface.move_to({110, 0});
+}
+
+TEST_F(BasicSurfaceTest, notifies_of_left_output_on_move)
+{
+    using namespace testing;
+
+    mir::graphics::DisplayConfigurationOutputId const id{1};
+
+    EXPECT_CALL(*mock_surface_observer, left_output(_, id))
+        .Times(1);
+
+    surface.register_interest(mock_surface_observer, executor);
+    surface.move_to({0, 0});
+    surface.move_to({110, 0});
+}
+
+TEST_F(BasicSurfaceTest, notifies_of_entered_output_when_resizing)
+{
+    using namespace testing;
+
+    mir::graphics::DisplayConfigurationOutputId const id1{1};
+    mir::graphics::DisplayConfigurationOutputId const id2{2};
+
+    EXPECT_CALL(*mock_surface_observer, entered_output(_, id1))
+        .Times(1);
+    EXPECT_CALL(*mock_surface_observer, entered_output(_, id2))
+        .Times(1);
+
+    surface.register_interest(mock_surface_observer, executor);
+    surface.move_to({0, 0});
+    surface.resize({150, 50});
+}
+
+TEST_F(BasicSurfaceTest, notifies_of_left_output_when_resizing)
+{
+    using namespace testing;
+
+    mir::graphics::DisplayConfigurationOutputId const id{2};
+
+    EXPECT_CALL(*mock_surface_observer, left_output(_, id))
+        .Times(1);
+
+    surface.register_interest(mock_surface_observer, executor);
+    surface.move_to({0, 0});
+    surface.resize({150, 50});
+    surface.resize({50, 50});
+}
+
+TEST_F(BasicSurfaceTest, notifies_of_left_output_when_output_is_disconnected)
+{
+    using namespace testing;
+
+    mir::graphics::DisplayConfigurationOutputId const id{2};
+
+    EXPECT_CALL(*mock_surface_observer, left_output(_, id))
+        .Times(1);
+
+    surface.register_interest(mock_surface_observer, executor);
+    surface.move_to({0, 0});
+    surface.resize({50, 50});
+    surface.move_to({75, 0});
+    display_config_registrar->disconnect_output(1);
+}
+
 TEST_F(BasicSurfaceTest, notifies_of_client_close_request)
 {
     using namespace testing;
@@ -1205,7 +1313,7 @@ TEST_F(BasicSurfaceTest, moving_surface_repositions_all_associated_streams)
 
     std::list<ms::StreamInfo> streams = {
         { mock_buffer_stream, {0,0}, {} },
-        { buffer_stream, d, {} } 
+        { buffer_stream, d, {} }
     };
 
     surface.set_streams(streams);
@@ -1299,7 +1407,8 @@ TEST_F(BasicSurfaceTest, registers_frame_callbacks_on_construction)
         mir_pointer_unconfined,
         streams,
         std::shared_ptr<mg::CursorImage>(),
-        report};
+        report,
+        display_config_registrar};
 }
 
 TEST_F(BasicSurfaceTest, registers_frame_callbacks_on_set_streams)
@@ -1326,7 +1435,7 @@ TEST_F(BasicSurfaceTest, changing_alpha_effects_all_streams)
 {
     using namespace testing;
     auto alpha = 0.3;
-    
+
     auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     std::list<ms::StreamInfo> streams = {
         { mock_buffer_stream, {0,0}, {} },
@@ -1349,10 +1458,10 @@ TEST_F(BasicSurfaceTest, changing_alpha_effects_all_streams)
 TEST_F(BasicSurfaceTest, setting_streams_with_size_changes_sizes)
 {
     using namespace testing;
-   
+
     geom::Size size0 {100, 25 };
     geom::Size size1 { 32, 44 };
-    geom::Size bad_size { 12, 11 }; 
+    geom::Size bad_size { 12, 11 };
     auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     ON_CALL(*mock_buffer_stream, stream_size())
         .WillByDefault(Return(bad_size));
@@ -1541,7 +1650,8 @@ TEST_F(BasicSurfaceTest, buffer_can_be_submitted_to_original_stream_after_surfac
         mir_pointer_unconfined,
         local_stream_list,
         std::shared_ptr<mg::CursorImage>(),
-        report);
+        report,
+        display_config_registrar);
 
     surface.reset();
     callback({10, 10});
@@ -1567,7 +1677,8 @@ TEST_F(BasicSurfaceTest, buffer_can_be_submitted_to_set_stream_after_surface_des
         mir_pointer_unconfined,
         streams, // use the default list from the class initially
         std::shared_ptr<mg::CursorImage>(),
-        report);
+        report,
+        display_config_registrar);
 
     surface->set_streams(local_stream_list);
 

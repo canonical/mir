@@ -31,19 +31,10 @@ class StubObserverRegistrar
     : public ObserverRegistrar<Observer>
 {
 public:
-    void register_interest(std::weak_ptr<Observer> const&) override
-    {
-    }
-
-    void register_interest(
-        std::weak_ptr<Observer> const&,
-        mir::Executor&) override
-    {
-    }
-
-    void unregister_interest(Observer const&) override
-    {
-    }
+    void register_interest(std::weak_ptr<Observer> const&) override {}
+    void register_interest(std::weak_ptr<Observer> const&, mir::Executor&) override {}
+    void register_early_observer(std::weak_ptr<Observer> const&, mir::Executor&) override {}
+    void unregister_interest(Observer const&) override {}
 };
 
 }

@@ -33,6 +33,8 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <algorithm>
+
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 namespace ms = mir::scene;
@@ -79,10 +81,21 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
 {
     spec().type = mir_window_type_freestyle;
     surface->set_role(this);
+    output_manager->add_listener(this);
 }
 
 mf::WindowWlSurfaceRole::~WindowWlSurfaceRole()
 {
+    output_manager->current_config().for_each_output(
+        [&](graphics::DisplayConfigurationOutput const& config)
+        {
+            if (auto* global{output_manager->output_for(config.id).value_or(nullptr)})
+            {
+                global->remove_listener(this);
+            }
+        }
+    );
+    output_manager->remove_listener(this);
     mark_destroyed();
     if (surface)
     {
@@ -431,6 +444,33 @@ auto mf::WindowWlSurfaceRole::input_event_for(uint32_t serial) -> std::shared_pt
     }
 }
 
+void mf::WindowWlSurfaceRole::output_global_created(OutputGlobal *global)
+{
+    global->add_listener(this);
+}
+
+auto mf::WindowWlSurfaceRole::output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool
+{
+    if (surface)
+    {
+        if (auto id_it{std::ranges::find(pending_enter_events, config.id)}; id_it != pending_enter_events.end())
+        {
+            if (auto* global{output_manager->output_for(config.id).value_or(nullptr)})
+            {
+                global->for_each_output_bound_by(
+                    client,
+                    [&](OutputInstance* instance)
+                    {
+                        surface.value().send_enter_event(instance->resource);
+                        pending_enter_events.erase(id_it);
+                    });
+            }
+        }
+    }
+
+    return true;
+}
+
 mir::shell::SurfaceSpecification& mf::WindowWlSurfaceRole::spec()
 {
     if (!pending_changes)
@@ -470,24 +510,54 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
         observer->attrib_changed(scene_surface.get(), mir_window_attrib_focus, focus_state);
     }
 
-    // Send wl_surface.enter events for every output
-    // TODO: send enter/leave when the surface actually enters and leaves outputs
-    output_manager->current_config().for_each_output([&](graphics::DisplayConfigurationOutput const& conf)
-        {
-            auto const output = output_manager->output_for(conf.id);
-            if (output)
-            {
-                output.value()->for_each_output_bound_by(
-                    client,
-                    [&](OutputInstance* output)
-                    {
-                        surface.value().send_enter_event(output->resource);
-                    });
-            }
-        });
-
     // Invalidates mods
     pending_changes.reset();
+}
+
+void mf::WindowWlSurfaceRole::handle_enter_output(graphics::DisplayConfigurationOutputId id)
+{
+    bool event_sent{};
+    if (surface)
+    {
+        if (auto* global{output_manager->output_for(id).value_or(nullptr)})
+        {
+            auto const& config{global->current_config()};
+            if (config.id == id)
+            {
+                global->for_each_output_bound_by(
+                    client,
+                    [&](OutputInstance* instance)
+                    {
+                        surface.value().send_enter_event(instance->resource);
+                        event_sent = true;
+                    });
+            }
+        }
+    }
+    if (!event_sent)
+    {
+        pending_enter_events.push_back(id);
+    }
+}
+
+void mf::WindowWlSurfaceRole::handle_leave_output(graphics::DisplayConfigurationOutputId id) const
+{
+    if (surface)
+    {
+        if (auto* global{output_manager->output_for(id).value_or(nullptr)})
+        {
+            auto const& config{global->current_config()};
+            if (config.id == id)
+            {
+                global->for_each_output_bound_by(
+                    client,
+                    [&](OutputInstance* instance)
+                    {
+                        surface.value().send_leave_event(instance->resource);
+                    });
+            }
+        }
+    }
 }
 
 void mf::WindowWlSurfaceRole::apply_client_size(mir::shell::SurfaceSpecification& mods)

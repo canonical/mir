@@ -17,6 +17,7 @@
 #ifndef MIR_SCENE_SURFACE_ALLOCATOR_H_
 #define MIR_SCENE_SURFACE_ALLOCATOR_H_
 
+#include "mir/observer_registrar.h"
 #include "mir/scene/surface_factory.h"
 
 namespace mir
@@ -24,6 +25,7 @@ namespace mir
 namespace graphics
 {
 class CursorImage;
+class DisplayConfigurationObserver;
 }
 namespace compositor { class BufferStream; }
 namespace scene
@@ -35,7 +37,8 @@ class SurfaceAllocator : public SurfaceFactory
 public:
     SurfaceAllocator(
          std::shared_ptr<graphics::CursorImage> const& default_cursor_image,
-         std::shared_ptr<SceneReport> const& report);
+         std::shared_ptr<SceneReport> const& report,
+         std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar);
 
     std::shared_ptr<Surface> create_surface(
         std::shared_ptr<Session> const& session,
@@ -46,6 +49,7 @@ public:
 private:
     std::shared_ptr<graphics::CursorImage> const default_cursor_image;
     std::shared_ptr<SceneReport> const report;
+    std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> display_config_registrar;
 };
 
 }

@@ -29,9 +29,11 @@ namespace mi=mir::input;
 
 ms::SurfaceAllocator::SurfaceAllocator(
     std::shared_ptr<mg::CursorImage> const& default_cursor_image,
-    std::shared_ptr<SceneReport> const& report) :
+    std::shared_ptr<SceneReport> const& report,
+    std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar) :
     default_cursor_image(default_cursor_image),
-    report(report)
+    report(report),
+    display_config_registrar{display_config_registrar}
 {
 }
 
@@ -57,7 +59,8 @@ std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
         confine,
         streams,
         default_cursor_image,
-        report);
+        report,
+        display_config_registrar);
 
     return surface;
 }

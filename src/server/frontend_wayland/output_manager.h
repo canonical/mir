@@ -90,6 +90,17 @@ private:
     std::unordered_map<wayland::Client*, std::vector<OutputInstance*>> instances;
 };
 
+class OutputManagerListener
+{
+public:
+    virtual void output_global_created(OutputGlobal* global) = 0;
+
+    OutputManagerListener() = default;
+    virtual ~OutputManagerListener() = default;
+    OutputManagerListener(OutputManagerListener const&) = delete;
+    OutputManagerListener& operator=(OutputManagerListener const&) = delete;
+};
+
 class OutputManager
 {
 public:
@@ -105,6 +116,9 @@ public:
     auto output_for(graphics::DisplayConfigurationOutputId id) -> std::optional<OutputGlobal*>;
     auto current_config() -> graphics::DisplayConfiguration const& { return *display_config; }
 
+    void add_listener(OutputManagerListener* listener);
+    void remove_listener(OutputManagerListener* listener);
+
 private:
     void handle_configuration_change(std::shared_ptr<graphics::DisplayConfiguration const> const& config);
 
@@ -115,6 +129,7 @@ private:
     std::shared_ptr<DisplayConfigObserver> const display_config_observer;
     std::unordered_map<graphics::DisplayConfigurationOutputId, std::unique_ptr<OutputGlobal>> outputs;
     std::shared_ptr<graphics::DisplayConfiguration const> display_config;
+    std::vector<OutputManagerListener*> listeners;
 };
 }
 }

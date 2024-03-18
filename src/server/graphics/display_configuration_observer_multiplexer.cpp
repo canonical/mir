@@ -39,6 +39,19 @@ void mg::DisplayConfigurationObserverMultiplexer::register_interest(
     }
 }
 
+void mg::DisplayConfigurationObserverMultiplexer::register_early_observer(
+    std::weak_ptr<DisplayConfigurationObserver> const& observer,
+    Executor& executor)
+{
+    std::lock_guard lock{mutex};
+    ObserverMultiplexer::register_early_observer(observer, executor);
+    auto const shared = observer.lock();
+    if (shared && current_config)
+    {
+        for_single_observer(*shared, &mg::DisplayConfigurationObserver::initial_configuration, current_config);
+    }
+}
+
 void mg::DisplayConfigurationObserverMultiplexer::initial_configuration(
     std::shared_ptr<mg::DisplayConfiguration const> const& config)
 {

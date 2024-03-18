@@ -17,6 +17,7 @@
 #ifndef MIR_FRONTEND_WINDOW_WL_SURFACE_ROLE_H
 #define MIR_FRONTEND_WINDOW_WL_SURFACE_ROLE_H
 
+#include "output_manager.h"
 #include "wl_surface_role.h"
 
 #include "mir/wayland/weak.h"
@@ -24,6 +25,7 @@
 #include "mir/geometry/displacement.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/display_configuration.h"
 
 #include <mir_toolkit/common.h>
 
@@ -54,13 +56,14 @@ class Client;
 namespace frontend
 {
 class WaylandSurfaceObserver;
-class OutputManager;
 class WlSurface;
 class WlSeat;
 
 class WindowWlSurfaceRole
     : public WlSurfaceRole,
-      public virtual wayland::LifetimeTracker
+      public virtual wayland::LifetimeTracker,
+      public OutputManagerListener,
+      public OutputConfigListener
 {
 public:
     WindowWlSurfaceRole(
@@ -97,6 +100,9 @@ public:
     void remove_state_now(MirWindowState state);
     void create_scene_surface();
 
+    void handle_enter_output(graphics::DisplayConfigurationOutputId id);
+    void handle_leave_output(graphics::DisplayConfigurationOutputId id) const;
+
     /// Gets called after the surface has committed (so current_size() may return the committed buffer size) but before
     /// the Mir window is modified (so if a pending size is set or a spec is applied those changes will take effect)
     virtual void handle_commit() = 0;
@@ -125,6 +131,9 @@ protected:
     void surface_destroyed() override;
 
     auto input_event_for(uint32_t serial) -> std::shared_ptr<MirInputEvent const>;
+
+    void output_global_created(OutputGlobal* global) override;
+    auto output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool override;
 
 private:
     wayland::Weak<WlSurface> const surface;
@@ -163,6 +172,8 @@ private:
     virtual void destroy_role() const = 0;
 
     void apply_client_size(mir::shell::SurfaceSpecification& mods);
+
+    std::vector<graphics::DisplayConfigurationOutputId> pending_enter_events;
 };
 
 }

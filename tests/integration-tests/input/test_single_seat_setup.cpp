@@ -19,6 +19,7 @@
 #include "src/server/input/config_changer.h"
 #include "src/server/scene/broadcasting_session_event_sink.h"
 
+#include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
 #include "mir/test/doubles/mock_input_device.h"
 #include "mir/test/doubles/mock_input_device_observer.h"
 #include "mir/test/doubles/mock_input_dispatcher.h"
@@ -81,34 +82,6 @@ MATCHER_P(DeviceMatches, device_info, "")
         arg.unique_id() == device_info.unique_id;
 }
 
-struct FakeDisplayConfigurationObserverRegistrar : mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>
-{
-    using Observer = mir::graphics::DisplayConfigurationObserver;
-    mtd::StubDisplayConfig output{{geom::Rectangle{{0, 0}, {100, 100}}}};
-    void register_interest(std::weak_ptr<Observer> const& obs) override
-    {
-        observer = obs;
-        auto o = observer.lock();
-        o->initial_configuration(mt::fake_shared(output));
-    }
-    void register_interest(
-        std::weak_ptr<Observer> const& obs,
-        mir::Executor&) override
-    {
-        observer = obs;
-    }
-    void unregister_interest(Observer const&) override
-    {
-        observer.reset();
-    }
-    void update_output(geom::Size const& output_size)
-    {
-        output.outputs[0].modes[0].size = output_size;
-        auto o = observer.lock();
-        o->configuration_applied(mt::fake_shared(output));
-    }
-    std::weak_ptr<Observer> observer;
-};
 struct SingleSeatInputDeviceHubSetup : ::testing::Test
 {
     mtd::TriggeredMainLoop observer_loop;
@@ -123,7 +96,7 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     mtd::MockInputManager mock_input_manager;
     ms::SessionContainer session_container;
     ms::BroadcastingSessionEventSink session_event_sink;
-    FakeDisplayConfigurationObserverRegistrar display_config;
+    mtd::FakeDisplayConfigurationObserverRegistrar display_config;
     mi::BasicSeat seat{mt::fake_shared(mock_dispatcher),      mt::fake_shared(mock_visualizer),
                        mt::fake_shared(mock_cursor_listener), mt::fake_shared(display_config),
                        mt::fake_shared(key_mapper),           mt::fake_shared(clock),
@@ -292,7 +265,7 @@ TEST_F(SingleSeatInputDeviceHubSetup, tracks_pointer_position)
 TEST_F(SingleSeatInputDeviceHubSetup, confines_pointer_movement)
 {
     geom::Point confined_pos{10, 18};
-    display_config.update_output(geom::Size{confined_pos.x.as_int() + 1, confined_pos.y.as_int() + 1});
+    display_config.resize_output(0, geom::Size{confined_pos.x.as_int() + 1, confined_pos.y.as_int() + 1});
 
     EXPECT_CALL(mock_cursor_listener, cursor_moved_to(confined_pos.x.as_int(), confined_pos.y.as_int())).Times(2);
 

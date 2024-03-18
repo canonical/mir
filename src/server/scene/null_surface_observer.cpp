@@ -37,3 +37,5 @@ void ms::NullSurfaceObserver::placed_relative(Surface const*, geometry::Rectangl
 void ms::NullSurfaceObserver::input_consumed(Surface const*, std::shared_ptr<MirEvent const> const&) {}
 void ms::NullSurfaceObserver::depth_layer_set_to(Surface const*, MirDepthLayer) {}
 void ms::NullSurfaceObserver::application_id_set_to(Surface const*, std::string const&) {}
+void ms::NullSurfaceObserver::entered_output(Surface const*, graphics::DisplayConfigurationOutputId const&) {};
+void ms::NullSurfaceObserver::left_output(Surface const*, graphics::DisplayConfigurationOutputId const&) {};

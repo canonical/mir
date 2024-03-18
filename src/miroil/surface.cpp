@@ -58,6 +58,8 @@ public:
                              glm::mat4 const &t) override;
   void window_resized_to(mir::scene::Surface const *surf,
                          mir::geometry::Size const &window_size) override;
+  void entered_output(mir::scene::Surface const* surf, mir::graphics::DisplayConfigurationOutputId const& id) override;
+  void left_output(mir::scene::Surface const* surf, mir::graphics::DisplayConfigurationOutputId const& id) override;
 
 private:
   std::shared_ptr<miroil::SurfaceObserver> listener;
@@ -158,9 +160,21 @@ void miroil::SurfaceObserverImpl::window_resized_to(mir::scene::Surface const* s
     listener->window_resized_to(surf, window_size);
 }
 
+void miroil::SurfaceObserverImpl::entered_output(
+    mir::scene::Surface const* /*surf*/,
+    mir::graphics::DisplayConfigurationOutputId const& /*id*/)
+{
+}
+
+void miroil::SurfaceObserverImpl::left_output(
+    mir::scene::Surface const* /*surf*/,
+    mir::graphics::DisplayConfigurationOutputId const& /*id*/)
+{
+}
+
 miroil::Surface::Surface(std::shared_ptr<mir::scene::Surface> wrapped) :
      wrapped(wrapped)
-{    
+{
 }
 
 void miroil::Surface::add_observer(std::shared_ptr<SurfaceObserver> const& observer)
@@ -168,7 +182,7 @@ void miroil::Surface::add_observer(std::shared_ptr<SurfaceObserver> const& obser
     auto it = observers.find(observer);
     if (it == observers.end()) {
         std::shared_ptr<SurfaceObserverImpl> impl = std::make_shared<SurfaceObserverImpl>(observer);
-        
+
         wrapped->register_interest(impl, mir::immediate_executor);
         observers.insert({observer, impl});
     }
@@ -183,9 +197,9 @@ bool miroil::Surface::is_confined_to_window()
 void miroil::Surface::remove_observer(std::shared_ptr<miroil::SurfaceObserver> const& observer)
 {
     auto it = observers.find(observer);
-    if (it != observers.end()) {        
+    if (it != observers.end()) {
         wrapped->unregister_interest(*it->second);
-        observers.erase(it);        
+        observers.erase(it);
     }
 }
 

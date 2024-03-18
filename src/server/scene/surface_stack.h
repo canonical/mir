@@ -128,6 +128,9 @@ public:
     void register_interest(
         std::weak_ptr<SessionLockObserver> const& observer,
         Executor& executor) override;
+    void register_early_observer(
+        std::weak_ptr<SessionLockObserver> const& observer,
+        Executor& executor) override;
     void unregister_interest(SessionLockObserver const& observer) override;
 
 
@@ -153,7 +156,7 @@ private:
     std::vector<std::vector<std::shared_ptr<Surface>>> surface_layers;
     std::map<Surface*,std::shared_ptr<RenderingTracker>> rendering_trackers;
     std::set<compositor::CompositorID> registered_compositors;
-    
+
     std::vector<std::shared_ptr<graphics::Renderable>> overlays;
 
     Observers observers;

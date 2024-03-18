@@ -67,6 +67,7 @@ struct StubSurface : scene::Surface
     std::shared_ptr<Surface> parent() const override { return nullptr; }
     void register_interest(std::weak_ptr<scene::SurfaceObserver> const&) override {}
     void register_interest(std::weak_ptr<scene::SurfaceObserver> const&, Executor&) override {}
+    void register_early_observer(std::weak_ptr<scene::SurfaceObserver> const&, Executor&) override {}
     void unregister_interest(scene::SurfaceObserver const&) override {}
     void rename(std::string const&) override {}
     void set_confine_pointer_state(MirPointerConfinementState) override {}

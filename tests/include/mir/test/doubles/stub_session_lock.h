@@ -34,9 +34,8 @@ public:
     void lock() override {}
     void unlock() override {}
     void register_interest(std::weak_ptr<ms::SessionLockObserver> const&) override {}
-    void register_interest(
-        std::weak_ptr<ms::SessionLockObserver> const&,
-        Executor&) override {}
+    void register_interest(std::weak_ptr<ms::SessionLockObserver> const&, Executor&) override {}
+    void register_early_observer(std::weak_ptr<ms::SessionLockObserver> const&, Executor&) override {}
     void unregister_interest(ms::SessionLockObserver const&) override {}
 };
 
