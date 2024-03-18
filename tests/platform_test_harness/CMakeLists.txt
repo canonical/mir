@@ -8,6 +8,7 @@ target_include_directories(
   mir_platform_graphics_test_harness
     PRIVATE
       ${PROJECT_SOURCE_DIR}/src/include/server
+      ${PROJECT_SOURCE_DIR}/include/platform
 )
 
 target_compile_definitions(

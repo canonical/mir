@@ -6,7 +6,7 @@ target_include_directories(
   mirudev
 
   PUBLIC
-    ${PROJECT_SOURCE_DIR}/src/include/platform
+    ${PROJECT_SOURCE_DIR}/include/platform
 )
 
 target_link_libraries(
