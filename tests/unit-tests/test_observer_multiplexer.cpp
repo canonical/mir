@@ -1025,3 +1025,25 @@ TEST(ObserverMultiplexer, sending_to_single_observer_does_nothing_if_executor_de
     executor.drain_work();
     multiplexer.single_observer_observation(*observer_one, "one!");
 }
+
+TEST(ObserverMultiplexer, early_observers_are_triggered_first)
+{
+    using namespace testing;
+    TestObserverMultiplexer multiplexer{mir::immediate_executor};
+
+    auto early_observer_one = std::make_shared<NiceMock<MockObserver>>();
+    auto early_observer_two = std::make_shared<NiceMock<MockObserver>>();
+    auto observer_one = std::make_shared<NiceMock<MockObserver>>();
+    auto observer_two = std::make_shared<NiceMock<MockObserver>>();
+
+    Expectation early_one = EXPECT_CALL(*early_observer_one, observation_made(_));
+    Expectation early_two = EXPECT_CALL(*early_observer_two, observation_made(_));
+    EXPECT_CALL(*observer_one, observation_made(_)).After(early_one, early_two);
+    EXPECT_CALL(*observer_two, observation_made(_)).After(early_one, early_two);
+
+    multiplexer.register_interest(observer_one);
+    multiplexer.register_early_observer(early_observer_one, mir::immediate_executor);
+    multiplexer.register_interest(observer_two);
+    multiplexer.register_early_observer(early_observer_two, mir::immediate_executor);
+    multiplexer.observation_made("Hello!");
+}
