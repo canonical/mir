@@ -394,6 +394,11 @@ void miral::YamlFileDisplayConfig::serialize_output_configuration(
                 << "\n        group: " << conf_output.logical_group_id.as_value()
                 << "\t# Outputs with the same non-zero value are treated as a single display";
         }
+
+        for (auto const& [key, value] : conf_output.custom_attribute)
+        {
+            out << "\n        " << key << ": " << value.value_or("(nullopt)");
+        }
     }
     else
     {
