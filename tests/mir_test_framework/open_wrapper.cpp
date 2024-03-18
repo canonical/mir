@@ -27,6 +27,11 @@
  * These runes are taken from the Ubuntu umockdev patch solving the same
  * problem there.
  */
+#include <features.h>
+#ifdef __GLIBC__  /* This is messing with glibc internals, and is not
+                   * expected to work (or be needed) anywhere else.
+                   * (Hello, musl!)
+                   */
 /* Remove gcc asm aliasing so that our interposed symbols work as expected */
 #include <sys/cdefs.h>
 
@@ -44,6 +49,7 @@ extern int __REDIRECT_NTH (__ttyname_r_alias, (int __fd, char *__buf,
 #undef __REDIRECT_NTH
 #endif
 #define __REDIRECT_NTH(name, proto, alias) name proto __THROW
+#endif // __GLIBC__
 /*
  * End glibc hackery (although there is a second block below)
  */
@@ -63,6 +69,7 @@ extern int __REDIRECT_NTH (__ttyname_r_alias, (int __fd, char *__buf,
  *
  * Fixup for making a mess with __REDIRECT above
  */
+#ifdef __GLIBC__
 #ifdef __USE_TIME_BITS64
 #define clock_gettime __clock_gettime64
 extern "C"
@@ -70,6 +77,7 @@ extern "C"
 extern int clock_gettime(clockid_t clockid, struct timespec *tp);
 }
 #endif
+#endif // __GLIBC__
 /*
  * End glibc hackery
  */
