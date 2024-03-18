@@ -138,11 +138,13 @@ bool mf::SessionLockManagerV1::try_lock(SessionLockV1* lock)
 {
     if (active_lock == nullptr)
     {
+        mir::log_debug("SessionLockManagerV1 has successfully processed a lock");
         active_lock = lock;
         session_lock->lock();
         return true;
     }
 
+    mir::log_debug("SessionLockManagerV1 has failed to process a lock");
     return false;
 }
 
@@ -161,10 +163,12 @@ bool mf::SessionLockManagerV1::try_unlock(SessionLockV1* lock)
 {
     if (try_relinquish_locking_privilege(lock))
     {
+        mir::log_debug("SessionLockManagerV1 has successfully processed an unlock");
         session_lock->unlock();
         return true;
     }
 
+    mir::log_debug("SessionLockManagerV1 has failed to process an unlock");
     return false;
 }
 
@@ -194,17 +198,20 @@ mf::SessionLockV1::SessionLockV1(wl_resource* new_resource, SessionLockManagerV1
 {
     if (manager.try_lock(this))
     {
+        mir::log_debug("SessionLockV1 successfully acquired the lock");
         send_locked_event();
         manager.session_lock->register_interest(observer, manager.wayland_executor);
     }
     else
     {
+        mir::log_debug("SessionLockV1 failed to acquire the lock");
         send_finished_event();
     }
 }
 
 mf::SessionLockV1::~SessionLockV1()
 {
+    mir::log_debug("SessionLockV1 is dying");
     manager.try_relinquish_locking_privilege(this);
 }
 
@@ -227,6 +234,7 @@ void mf::SessionLockV1::destroy()
     if (manager.is_active_lock(this))
     {
         manager.try_relinquish_locking_privilege(this);
+        mir::log_debug("SessionLockV1 successfully destroyed itself");
     }
     else
     {
@@ -249,6 +257,7 @@ void mf::SessionLockV1::unlock_and_destroy()
     else
     {
         manager.try_relinquish_locking_privilege(this);
+        mir::log_debug("SessionLockV1 successfully unlocked_and_destroyed itself");
     }
 }
 

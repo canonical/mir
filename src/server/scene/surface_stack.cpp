@@ -23,6 +23,7 @@
 #include "mir/graphics/renderable.h"
 #include "mir/depth_layer.h"
 #include "mir/executor.h"
+#include "mir/log.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -609,8 +610,13 @@ void ms::SurfaceStack::lock()
     bool temp = false;
     if (is_locked.compare_exchange_strong(temp, true))
     {
+        mir::log_info("Session is now locked and listeners are being notified");
         emit_scene_changed();
         multiplexer.on_lock();
+    }
+    else
+    {
+        mir::log_debug("Session received duplicate lock request");
     }
 }
 
@@ -619,8 +625,13 @@ void ms::SurfaceStack::unlock()
     bool temp = true;
     if (is_locked.compare_exchange_strong(temp, false))
     {
+        mir::log_info("Session is now unlocked and listeners are being notified");
         emit_scene_changed();
         multiplexer.on_unlock();
+    }
+    else
+    {
+        mir::log_debug("Session received duplicate unlock request");
     }
 }
 

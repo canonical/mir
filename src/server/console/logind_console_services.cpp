@@ -185,6 +185,7 @@ std::string object_path_for_current_session(LogindSeat* seat_proxy)
         BOOST_THROW_EXCEPTION((std::runtime_error{"Seat has no active session"}));
     }
 
+    mir::log_debug("Discovered object path for current session = %s", object_path);
     return {object_path};
 }
 
@@ -700,7 +701,7 @@ void mir::LogindConsoleServices::on_pause_device(
         using namespace std::literals::string_literals;
         if ("pause"s == suspend_type)
         {
-            mir::log_debug("Received logind pause event for device %i:%i", major, minor);
+            mir::log_info("Received logind pause event for device %i:%i", major, minor);
             it->second->emit_suspended();
             logind_session_call_pause_device_complete(
                 me->session_proxy.get(),
@@ -711,7 +712,7 @@ void mir::LogindConsoleServices::on_pause_device(
         }
         else if ("force"s == suspend_type)
         {
-            mir::log_debug("Received logind force-pause event for device %i:%i", major, minor);
+            mir::log_info("Received logind force-pause event for device %i:%i", major, minor);
             it->second->emit_suspended();
         }
         else if ("gone"s == suspend_type)
@@ -844,6 +845,7 @@ void mir::LogindConsoleServices::request_lock(
     GObject*,
     gpointer ctx) noexcept
 {
+    mir::log_info("Received Lock() signal for this session from logind");
     auto me = static_cast<LogindConsoleServices*>(ctx);
     me->session_lock->lock();
 }
@@ -852,6 +854,7 @@ void mir::LogindConsoleServices::request_unlock(
     GObject*,
     gpointer ctx) noexcept
 {
+    mir::log_info("Received Unlock() signal for this session from logind");
     auto me = static_cast<LogindConsoleServices*>(ctx);
     me->session_lock->unlock();
 }
@@ -934,10 +937,12 @@ mir::LogindConsoleServices::~LogindConsoleServices()
 
 void mir::LogindConsoleServices::on_lock()
 {
+    mir::log_info("Notifying logind of session lock");
     logind_session_set_locked_hint(session_proxy.get(), true);
 }
 
 void mir::LogindConsoleServices::on_unlock()
 {
+    mir::log_info("Notifying logind of session unlock");
     logind_session_set_locked_hint(session_proxy.get(), false);
 }
