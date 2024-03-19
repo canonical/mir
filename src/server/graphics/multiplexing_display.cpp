@@ -91,7 +91,7 @@ public:
                     // MirSubpixelArrangement is mistakenly non-const?
                     output.gamma = mutable_output.gamma;
                     output.custom_logical_size = mutable_output.custom_logical_size;
-                    output.custom_attribute = std::move(mutable_output.custom_attribute);
+                    output.custom_attribute = mutable_output.custom_attribute;
                 });
         }
     }
