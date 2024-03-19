@@ -350,8 +350,10 @@ class EGLOutputSurface : public mg::gl::OutputSurface
 {
 public:
     EGLOutputSurface(
-        std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLFramebuffer> fb)
-        : fb{std::move(fb)}
+        std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLFramebuffer> fb,
+        std::string platform_description)
+        : fb{std::move(fb)},
+          platform_description{std::move(platform_description)}
     {
     }
 
@@ -384,8 +386,13 @@ public:
         return Layout::GL;
     }
 
+    auto describe_platform_selection() const -> std::string override
+    {
+        return std::string{"EGL surface on "} + platform_description;
+    }
 private:
     std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLFramebuffer> const fb;
+    std::string const platform_description;
 };
 }
 
@@ -432,7 +439,7 @@ auto mge::GLRenderingProvider::surface_for_sink(
 {
     if (auto egl_display = sink.acquire_compatible_allocator<GenericEGLDisplayAllocator>())
     {
-        return std::make_unique<EGLOutputSurface>(egl_display->alloc_framebuffer(config, ctx));
+        return std::make_unique<EGLOutputSurface>(egl_display->alloc_framebuffer(config, ctx), egl_display->describe_platform());
     }
     auto cpu_provider = sink.acquire_compatible_allocator<CPUAddressableDisplayAllocator>();
 

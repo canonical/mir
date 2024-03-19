@@ -130,6 +130,13 @@ public:
         return nullptr;
     }
 
+    /**
+     * Describe the output for debugging purposes
+     *
+     * This should include enough information to identify both the platform in use and the device being driven
+     * by that platform.
+     */
+    virtual auto describe_output() const -> std::string = 0;
 protected:
     /**
      * Acquire a specific hardware interface

@@ -43,6 +43,7 @@
 #include <stdexcept>
 #include <chrono>
 #include <algorithm>
+#include <xf86drm.h>
 
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
@@ -309,6 +310,13 @@ auto mgg::DisplaySink::drm_fd() const -> mir::Fd
 auto mgg::DisplaySink::gbm_device() const -> std::shared_ptr<struct gbm_device>
 {
     return gbm;
+}
+
+auto mgg::DisplaySink::describe_output() const -> std::string
+{
+    std::unique_ptr<char[], void(*)(char*)> drm_node{drmGetDeviceNameFromFd2(drm_fd()), [](char* to_free) { free(to_free); }};
+
+    return std::string{"gbm-kms ("} + drm_node.get() + ") - KMS connector id: " + std::to_string(outputs.front()->id());
 }
 
 void mir::graphics::gbm::DisplaySink::set_next_image(std::unique_ptr<Framebuffer> content)

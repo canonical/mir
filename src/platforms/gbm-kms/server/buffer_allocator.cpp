@@ -263,10 +263,12 @@ public:
         EGLContext share_context,
         mg::GLConfig const& config,
         mg::GBMDisplayAllocator& display,
-        mg::DRMFormat format)
+        mg::DRMFormat format,
+        std::string device_name)
         : GBMOutputSurface(
               dpy,
-              create_renderable(dpy, share_context, format, config, display))
+              create_renderable(dpy, share_context, format, config, display),
+              std::move(device_name))
     {
     }
 
@@ -326,6 +328,11 @@ public:
     auto layout() const -> Layout override
     {
         return Layout::GL;
+    }
+
+    auto describe_platform_selection() const -> std::string override
+    {
+        return "GBM surface on " + device_name;
     }
 
 private:
@@ -462,11 +469,13 @@ private:
 
     GBMOutputSurface(
         EGLDisplay dpy,
-        std::tuple<std::unique_ptr<mg::GBMDisplayAllocator::GBMSurface>, EGLContext, EGLSurface> renderables)
+        std::tuple<std::unique_ptr<mg::GBMDisplayAllocator::GBMSurface>, EGLContext, EGLSurface> renderables,
+        std::string device_name)
         : surface{std::move(std::get<0>(renderables))},
           egl_surf{std::get<2>(renderables)},
           dpy{dpy},
-          ctx{std::get<1>(renderables)}
+          ctx{std::get<1>(renderables)},
+          device_name{std::move(device_name)}
     {
     }
 
@@ -474,6 +483,7 @@ private:
     EGLSurface const egl_surf;
     EGLDisplay const dpy;
     EGLContext const ctx;
+    std::string const device_name;
 };
 }
 
@@ -517,19 +527,23 @@ auto mgg::GLRenderingProvider::surface_for_sink(
     GLConfig const& config)
     -> std::unique_ptr<gl::OutputSurface>
 {
+    mir::log_debug("Connecting renderer on %s to output %s", devnode.c_str(), sink.describe_output().c_str());
     if (bound_display)
     {
         if (auto gbm_allocator = sink.acquire_compatible_allocator<GBMDisplayAllocator>())
         {
             if (bound_display->on_this_sink(sink))
             {
+                mir::log_debug("Display %s is on same device as this RenderProvider", bound_display->describe_platform().c_str());
                 return std::make_unique<GBMOutputSurface>(
                     dpy,
                     ctx,
                     config,
                     *gbm_allocator,
-                    DRMFormat{DRM_FORMAT_XRGB8888});
+                    DRMFormat{DRM_FORMAT_XRGB8888},
+                    devnode);
             }
+            mir::log_info("Display %s is not on same display as this RenderProvider, falling back to CPU copies", bound_display->describe_platform().c_str());
         }
     }
     auto cpu_allocator = sink.acquire_compatible_allocator<CPUAddressableDisplayAllocator>();
@@ -562,11 +576,13 @@ mgg::GLRenderingProvider::GLRenderingProvider(
     std::shared_ptr<mgc::EGLContextExecutor> egl_delegate,
     std::shared_ptr<mg::DMABufEGLProvider> dmabuf_provider,
     EGLDisplay dpy,
-    EGLContext ctx)
+    EGLContext ctx,
+    std::string devnode)
     : bound_display{std::move(associated_display)},
       dpy{dpy},
       ctx{ctx},
       dmabuf_provider{std::move(dmabuf_provider)},
-      egl_delegate{std::move(egl_delegate)}
+      egl_delegate{std::move(egl_delegate)},
+      devnode{std::move(devnode)}
 {
 }

@@ -51,7 +51,7 @@ auto mgv::Platform::maybe_create_provider(DisplayProvider::Tag const& type_tag) 
 {
     if (dynamic_cast<CPUAddressableDisplayProvider::Tag const*>(&type_tag))
     {
-        return std::make_shared<mg::CPUAddressableDisplayProvider>();
+        return std::make_shared<mg::CPUAddressableDisplayProvider>("virtual");
     }
     return nullptr;
 }

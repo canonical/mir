@@ -29,6 +29,8 @@ public:
     auto modifiers_for_format(DRMFormat format) const -> std::vector<uint64_t> override;
 
     auto make_surface(DRMFormat format, std::span<uint64_t> modifier) -> std::unique_ptr<GBMSurface> override;
+
+    auto describe_platform() const -> std::string override;
 private:
     mir::Fd const fd;
     std::shared_ptr<struct gbm_device> const gbm;

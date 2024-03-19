@@ -42,6 +42,11 @@ public:
     {
         return egl->framebuffer_for_window(config, x11_connection, x11_win, share_context);
     }
+
+    auto describe_platform() const -> std::string override
+    {
+        return "EGL on X11";
+    }
 private:
     std::shared_ptr<helpers::EGLHelper> const egl;
     xcb_connection_t* const x11_connection;
@@ -99,6 +104,11 @@ void mgx::DisplaySink::set_next_image(std::unique_ptr<Framebuffer> content)
 glm::mat2 mgx::DisplaySink::transformation() const
 {
     return transform;
+}
+
+auto mgx::DisplaySink::describe_output() const -> std::string
+{
+    return "X11";
 }
 
 void mgx::DisplaySink::set_view_area(geom::Rectangle const& a)
