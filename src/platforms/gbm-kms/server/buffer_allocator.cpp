@@ -19,14 +19,12 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/linux_dmabuf.h"
 #include "mir/graphics/dmabuf_buffer.h"
-#include "mir/anonymous_shm_file.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/graphics/platform.h"
 #include "shm_buffer.h"
 #include "mir/graphics/egl_context_executor.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
-#include "mir/graphics/buffer_properties.h"
 #include "mir/raii.h"
 #include "mir/graphics/display.h"
 #include "mir/renderer/gl/context.h"
@@ -37,7 +35,6 @@
 #include "mir/graphics/display_sink.h"
 #include "kms/egl_helper.h"
 #include "mir/graphics/drm_formats.h"
-#include "display_helpers.h"
 #include "mir/graphics/egl_error.h"
 #include "cpu_copy_output_surface.h"
 #include "surfaceless_egl_context.h"
@@ -50,7 +47,6 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
-#include <algorithm>
 #include <optional>
 #include <stdexcept>
 #include <system_error>
@@ -61,7 +57,6 @@
 
 #define MIR_LOG_COMPONENT "gbm-kms-buffer-allocator"
 #include <mir/log.h>
-#include <mutex>
 
 namespace mg  = mir::graphics;
 namespace mgg = mg::gbm;
