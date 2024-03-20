@@ -408,7 +408,10 @@ void miral::YamlFileDisplayConfig::serialize_output_configuration(
 
         for (auto const& [key, value] : conf_output.custom_attribute)
         {
-            out << "\n        " << key << ": " << value.value_or("(nullopt)");
+            if (value)
+            {
+                out << "\n        " << key << ": " << value.value();
+            }
         }
     }
     else
