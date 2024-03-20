@@ -172,7 +172,8 @@ Description: Display server for Ubuntu - internal development headers
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
- Contains header files required to build Mir servers.
+ This package contains internal headers with no stability guarantee, for servers
+ that wish to use functionality for which no public API exists yet.
 
 Package: mirtest-dev
 Section: libdevel
