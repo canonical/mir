@@ -32,7 +32,7 @@ class DisplayReport : public graphics::DisplayReport
 {
 public:
     DisplayReport() = default;
-    virtual ~DisplayReport() noexcept(true) = default;
+    virtual ~DisplayReport() = default;
 
     virtual void report_successful_setup_of_native_resources() override;
     virtual void report_successful_egl_make_current_on_construction() override;
