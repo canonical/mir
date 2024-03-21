@@ -79,6 +79,8 @@ mgg::BufferAllocator::BufferAllocator(
 {
 }
 
+mgg::BufferAllocator::~BufferAllocator() = default;
+
 std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_software_buffer(
     geom::Size size, MirPixelFormat format)
 {

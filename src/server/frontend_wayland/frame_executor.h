@@ -37,6 +37,7 @@ class FrameExecutor : public Executor
 {
 public:
     explicit FrameExecutor(time::AlarmFactory& alarm_factory);
+    ~FrameExecutor() override;
 
     // This can be called from any thread. Given callback is run on the main loop thread. The wayland executor is NOT
     // automatically used.

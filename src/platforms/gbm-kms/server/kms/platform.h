@@ -54,6 +54,8 @@ public:
         EmergencyCleanupRegistry& emergency_cleanup_registry,
         BypassOption bypass_option);
 
+    ~Platform() override;
+
     /* From Platform */
     UniqueModulePtr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
