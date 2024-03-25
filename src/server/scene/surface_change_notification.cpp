@@ -19,8 +19,6 @@
 #include "mir/scene/surface.h"
 
 namespace ms = mir::scene;
-namespace mg = mir::graphics;
-namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 ms::SurfaceChangeNotification::SurfaceChangeNotification(
