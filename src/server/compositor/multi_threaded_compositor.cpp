@@ -293,9 +293,9 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
     {
         schedule_compositing(1);
     },
-    [this](int num, geometry::Rectangle const& damage)
+    [this](geometry::Rectangle const& damage)
     {
-        schedule_compositing(num, damage);
+        schedule_compositing(1, damage);
     });
 }
 

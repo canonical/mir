@@ -30,11 +30,11 @@ namespace
 {
 struct MockSceneCallback
 {
-    MOCK_METHOD0(invoke, void());
+    MOCK_METHOD(void, invoke, (), ());
 };
 struct MockBufferCallback
 {
-    MOCK_METHOD2(invoke, void(int, mir::geometry::Rectangle const&));
+    MOCK_METHOD(void, invoke, (mir::geometry::Rectangle const&), ());
 };
 
 struct SceneChangeNotificationTest : public testing::Test
@@ -46,9 +46,9 @@ struct SceneChangeNotificationTest : public testing::Test
     }
     testing::NiceMock<MockSceneCallback> scene_callback;
     testing::NiceMock<MockBufferCallback> buffer_callback;
-    std::function<void(int, mir::geometry::Rectangle const&)> buffer_change_callback{[this](int arg, mir::geometry::Rectangle const& damage)
+    std::function<void(mir::geometry::Rectangle const&)> buffer_change_callback{[this](mir::geometry::Rectangle const& damage)
         {
-            buffer_callback.invoke(arg, damage);
+            buffer_callback.invoke(damage);
         }};
     std::function<void()> scene_change_callback{[this](){scene_callback.invoke();}};
     std::shared_ptr<testing::NiceMock<mtd::MockSurface>> surface;
@@ -90,9 +90,8 @@ TEST_F(SceneChangeNotificationTest, observes_surface_changes)
     EXPECT_CALL(*surface, register_interest(_)).Times(1)
         .WillOnce(SaveArg<0>(&surface_observer));
    
-    int buffer_num{1};
     EXPECT_CALL(scene_callback, invoke()).Times(1);
-    EXPECT_CALL(buffer_callback, invoke(buffer_num, _)).Times(1);
+    EXPECT_CALL(buffer_callback, invoke(_)).Times(1);
 
     ms::SceneChangeNotification observer(scene_change_callback, buffer_change_callback);
     observer.surface_added(surface);

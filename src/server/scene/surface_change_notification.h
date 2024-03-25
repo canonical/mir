@@ -32,7 +32,7 @@ public:
     SurfaceChangeNotification(
         scene::Surface* surface,
         std::function<void()> const& notify_scene_change,
-        std::function<void(int, geometry::Rectangle const&)> const& notify_buffer_change);
+        std::function<void(geometry::Rectangle const&)> const& notify_buffer_change);
 
     void content_resized_to(Surface const* surf, geometry::Size const&) override;
     void moved_to(Surface const* surf, geometry::Point const& new_top_left) override;
@@ -45,7 +45,7 @@ public:
 
 private:
     std::function<void()> const notify_scene_change;
-    std::function<void(int, geometry::Rectangle const&)> const notify_buffer_change;
+    std::function<void(geometry::Rectangle const&)> const notify_buffer_change;
 
     std::mutex mutex;
     geometry::Point top_left;

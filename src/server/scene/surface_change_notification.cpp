@@ -26,7 +26,7 @@ namespace geom = mir::geometry;
 ms::SurfaceChangeNotification::SurfaceChangeNotification(
     ms::Surface* surface,
     std::function<void()> const& notify_scene_change,
-    std::function<void(int, geom::Rectangle const&)> const& notify_buffer_change) :
+    std::function<void(geom::Rectangle const&)> const& notify_buffer_change) :
     notify_scene_change(notify_scene_change),
     notify_buffer_change(notify_buffer_change)
 {
@@ -59,7 +59,7 @@ void ms::SurfaceChangeNotification::frame_posted(
     std::unique_lock lock{mutex};
     geom::Rectangle global_damage{top_left + as_displacement(damage.top_left), damage.size};
     lock.unlock();
-    notify_buffer_change(1, global_damage);
+    notify_buffer_change(global_damage);
 }
 
 void ms::SurfaceChangeNotification::alpha_set_to(Surface const*, float)

@@ -112,7 +112,7 @@ struct BasicSurfaceTest : public testing::Test
         std::make_shared<ms::SurfaceChangeNotification>(
             &surface,
             mock_change_cb,
-            [this](int, geom::Rectangle const&){mock_change_cb();});
+            [this](geom::Rectangle const&){mock_change_cb();});
 
     BasicSurfaceTest()
     {
