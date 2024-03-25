@@ -67,7 +67,7 @@ public:
     MOCK_METHOD(void, attrib_changed, (ms::Surface const*, MirWindowAttrib, int), (override));
     MOCK_METHOD(void, window_resized_to, (ms::Surface const*, geom::Size const&), (override));
     MOCK_METHOD(void, content_resized_to, (ms::Surface const*, geom::Size const&), (override));
-    MOCK_METHOD(void, frame_posted, (ms::Surface const*, int, geom::Rectangle const&), (override));
+    MOCK_METHOD(void, frame_posted, (ms::Surface const*, geom::Rectangle const&), (override));
     MOCK_METHOD(void, hidden_set_to, (ms::Surface const*, bool), (override));
     MOCK_METHOD(void, renamed, (ms::Surface const*, std::string const&), (override));
     MOCK_METHOD(void, client_surface_close_requested, (ms::Surface const*), (override));
@@ -1019,7 +1019,7 @@ TEST_F(BasicSurfaceTest, when_frame_is_posted_an_observer_is_notified_of_frame_w
     ON_CALL(*buffer_stream, stream_size())
         .WillByDefault(Return(rect.size));
 
-    EXPECT_CALL(*mock_surface_observer, frame_posted(_, _, mt::RectSizeEq(rect.size)));
+    EXPECT_CALL(*mock_surface_observer, frame_posted(_, mt::RectSizeEq(rect.size)));
     buffer_stream->frame_posted_callback(rect.size);
 }
 
@@ -1036,7 +1036,7 @@ TEST_F(BasicSurfaceTest, when_stream_size_differs_from_buffer_size_an_observer_i
     surface.register_interest(mock_surface_observer, executor);
     surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
 
-    EXPECT_CALL(*mock_surface_observer, frame_posted(_, _, mt::RectSizeEq(stream_size)));
+    EXPECT_CALL(*mock_surface_observer, frame_posted(_, mt::RectSizeEq(stream_size)));
     buffer_stream->frame_posted_callback(stream_size * 2);
 }
 
@@ -1054,7 +1054,7 @@ TEST_F(BasicSurfaceTest, when_stream_info_has_explicit_size_an_observer_is_notif
     surface.register_interest(mock_surface_observer, executor);
     surface.set_streams({ms::StreamInfo{buffer_stream, {}, stream_info_size}});
 
-    EXPECT_CALL(*mock_surface_observer, frame_posted(_, _, mt::RectSizeEq(stream_info_size)));
+    EXPECT_CALL(*mock_surface_observer, frame_posted(_, mt::RectSizeEq(stream_info_size)));
     buffer_stream->frame_posted_callback(stream_size);
 }
 
@@ -1066,7 +1066,7 @@ TEST_F(BasicSurfaceTest, when_frame_is_posted_an_observer_is_notified_of_frame_a
     surface.register_interest(mock_surface_observer, executor);
     surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
 
-    EXPECT_CALL(*mock_surface_observer, frame_posted(_, _, mt::RectTopLeftEq(geom::Point{})));
+    EXPECT_CALL(*mock_surface_observer, frame_posted(_, mt::RectTopLeftEq(geom::Point{})));
     buffer_stream->frame_posted_callback(rect.size);
 }
 
@@ -1081,7 +1081,7 @@ TEST_F(BasicSurfaceTest, when_stream_info_has_offset_an_observer_is_notified_of_
     surface.register_interest(mock_surface_observer, executor);
     surface.set_streams({ms::StreamInfo{buffer_stream, stream_info_offset, {}}});
 
-    EXPECT_CALL(*mock_surface_observer, frame_posted(_, _, mt::RectTopLeftEq(geom::Point{} + stream_info_offset)));
+    EXPECT_CALL(*mock_surface_observer, frame_posted(_, mt::RectTopLeftEq(geom::Point{} + stream_info_offset)));
     buffer_stream->frame_posted_callback(rect.size);
 }
 
@@ -1097,7 +1097,7 @@ TEST_F(BasicSurfaceTest, when_surface_has_margins_an_observer_is_notified_of_fra
     surface.register_interest(mock_surface_observer, executor);
     surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
 
-    EXPECT_CALL(*mock_surface_observer, frame_posted(_, _, mt::RectTopLeftEq(geom::Point{} + margin_top + margin_left)));
+    EXPECT_CALL(*mock_surface_observer, frame_posted(_, mt::RectTopLeftEq(geom::Point{} + margin_top + margin_left)));
     surface.set_window_margins(margin_top, margin_left, margin_bottom, margin_right);
     buffer_stream->frame_posted_callback({20, 30});
 }

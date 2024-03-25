@@ -54,13 +54,12 @@ void ms::SurfaceChangeNotification::hidden_set_to(Surface const*, bool)
 
 void ms::SurfaceChangeNotification::frame_posted(
     Surface const*,
-    int frames_available,
     geometry::Rectangle const& damage)
 {
     std::unique_lock lock{mutex};
     geom::Rectangle global_damage{top_left + as_displacement(damage.top_left), damage.size};
     lock.unlock();
-    notify_buffer_change(frames_available, global_damage);
+    notify_buffer_change(1, global_damage);
 }
 
 void ms::SurfaceChangeNotification::alpha_set_to(Surface const*, float)

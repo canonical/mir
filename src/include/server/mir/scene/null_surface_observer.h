@@ -34,7 +34,7 @@ public:
     void content_resized_to(Surface const* surf, geometry::Size const& content_size) override;
     void moved_to(Surface const* surf, geometry::Point const& top_left) override;
     void hidden_set_to(Surface const* surf, bool hide) override;
-    void frame_posted(Surface const* surf, int frames_available, geometry::Rectangle const& damage) override;
+    void frame_posted(Surface const* surf, geometry::Rectangle const& damage) override;
     void alpha_set_to(Surface const* surf, float alpha) override;
     void orientation_set_to(Surface const* surf, MirOrientation orientation) override;
     void transformation_set_to(Surface const* surf, glm::mat4 const& t) override;

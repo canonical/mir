@@ -39,8 +39,7 @@ public:
                            std::weak_ptr<mir::graphics::CursorImage> const& image) override;
   void depth_layer_set_to(mir::scene::Surface const *surf,
                           MirDepthLayer depth_layer) override;
-  void frame_posted(mir::scene::Surface const *surf, int frames_available,
-                    mir::geometry::Rectangle const& area) override;
+  void frame_posted(mir::scene::Surface const *surf, mir::geometry::Rectangle const& area) override;
   void hidden_set_to(mir::scene::Surface const *surf, bool hide) override;
   void input_consumed(mir::scene::Surface const *surf,
                       std::shared_ptr<MirEvent const> const& event) override;
@@ -115,9 +114,9 @@ void miroil::SurfaceObserverImpl::depth_layer_set_to(mir::scene::Surface const* 
     listener->depth_layer_set_to(surf, depth_layer);
 }
 
-void miroil::SurfaceObserverImpl::frame_posted(mir::scene::Surface const* surf, int frames_available, mir::geometry::Rectangle const& area)
+void miroil::SurfaceObserverImpl::frame_posted(mir::scene::Surface const* surf, mir::geometry::Rectangle const& area)
 {
-    listener->frame_posted(surf, frames_available, area.size);
+    listener->frame_posted(surf, 1, area.size);
 }
 
 void miroil::SurfaceObserverImpl::hidden_set_to(mir::scene::Surface const* surf, bool hide)

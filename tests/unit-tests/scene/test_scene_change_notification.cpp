@@ -17,7 +17,6 @@
 #include "mir/scene/scene_change_notification.h"
 #include "mir/scene/surface_observer.h"
 
-#include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_surface.h"
 
 #include <gtest/gtest.h>
@@ -91,13 +90,13 @@ TEST_F(SceneChangeNotificationTest, observes_surface_changes)
     EXPECT_CALL(*surface, register_interest(_)).Times(1)
         .WillOnce(SaveArg<0>(&surface_observer));
    
-    int buffer_num{3}; 
+    int buffer_num{1};
     EXPECT_CALL(scene_callback, invoke()).Times(1);
     EXPECT_CALL(buffer_callback, invoke(buffer_num, _)).Times(1);
 
     ms::SceneChangeNotification observer(scene_change_callback, buffer_change_callback);
     observer.surface_added(surface);
-    surface_observer.lock()->frame_posted(surface.get(), buffer_num, {});
+    surface_observer.lock()->frame_posted(surface.get(), {});
 }
 
 TEST_F(SceneChangeNotificationTest, redraws_on_rename)

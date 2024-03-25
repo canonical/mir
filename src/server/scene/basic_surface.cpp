@@ -96,9 +96,9 @@ public:
         for_each_observer(&SurfaceObserver::hidden_set_to, surf, hide);
     }
 
-    void frame_posted(Surface const* surf, int frames_available, geometry::Rectangle const& damage) override
+    void frame_posted(Surface const* surf, geometry::Rectangle const& damage) override
     {
-        for_each_observer(&SurfaceObserver::frame_posted, surf, frames_available, damage);
+        for_each_observer(&SurfaceObserver::frame_posted, surf, damage);
     }
 
     void alpha_set_to(Surface const* surf, float alpha) override
@@ -975,7 +975,7 @@ void mir::scene::BasicSurface::update_frame_posted_callbacks(State& state)
                 auto const logical_size = explicit_size ? explicit_size.value() : stream->stream_size();
                 if (auto const o = observers.lock())
                 {
-                    o->frame_posted(this, 1, geom::Rectangle{position, logical_size});
+                    o->frame_posted(this, geom::Rectangle{position, logical_size});
                 }
             });
     }
