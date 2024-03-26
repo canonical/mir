@@ -307,15 +307,26 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                 apply_to_output(conf_output, config[conf_output.name]);
             });
     }
-    else if (i != std::end(layout_strategies))
-    {
-        mir::log_debug("Display config using layout strategy: '%s'", layout.c_str());
-    }
     else
     {
-        mir::log_warning("Display config does not contain layout '%s'", layout.c_str());
-        mir::log_debug("Display config using layout strategy: 'default'");
-        apply_default_configuration(conf);
+        conf.for_each_output([this](mg::UserDisplayConfigurationOutput& conf_output)
+            {
+                for (auto const& key : custom_output_attributes)
+                {
+                    conf_output.custom_attribute[key] = std::nullopt;
+                }
+            });
+
+        if (i != std::end(layout_strategies))
+        {
+            mir::log_debug("Display config using layout strategy: '%s'", layout.c_str());
+        }
+        else
+        {
+            mir::log_warning("Display config does not contain layout '%s'", layout.c_str());
+            mir::log_debug("Display config using layout strategy: 'default'");
+            apply_default_configuration(conf);
+        }
     }
 
     std::ostringstream out;
@@ -393,6 +404,14 @@ void miral::YamlFileDisplayConfig::serialize_output_configuration(
                    "\n        scale: " << conf_output.scale
                 << "\n        group: " << conf_output.logical_group_id.as_value()
                 << "\t# Outputs with the same non-zero value are treated as a single display";
+        }
+
+        for (auto const& [key, value] : conf_output.custom_attribute)
+        {
+            if (value)
+            {
+                out << "\n        " << key << ": " << value.value();
+            }
         }
     }
     else
