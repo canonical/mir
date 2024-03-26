@@ -36,7 +36,7 @@ class InputReport : public input::InputReport
 {
 public:
     InputReport(std::shared_ptr<mir::logging::Logger> const& logger);
-    virtual ~InputReport() noexcept(true) = default;
+    virtual ~InputReport() = default;
 
     void received_event_from_kernel(int64_t when, int type, int code, int value) override;
 

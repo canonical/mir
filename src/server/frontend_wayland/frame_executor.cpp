@@ -43,6 +43,8 @@ mf::FrameExecutor::FrameExecutor(time::AlarmFactory& alarm_factory)
 {
 }
 
+mf::FrameExecutor::~FrameExecutor() = default;
+
 void mf::FrameExecutor::spawn(std::function<void()>&& work)
 {
     std::unique_lock lock{callbacks->mutex};
