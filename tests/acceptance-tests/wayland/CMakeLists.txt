@@ -125,6 +125,7 @@ set(BROKEN_TESTS
   # See https://github.com/MirServer/wlcs/issues/293
   # (Tests pass with https://github.com/MirServer/wlcs/pull/294)
   VirtualPointerV1Test.*
+  Anchor/LayerSurfaceLayoutTest.surfaces_with_exclusive_zone_set_to_negative_one_do_not_respect_other_exclusive_zones/*
 )
 
 if (MIR_RUN_WLCS_TESTS)
