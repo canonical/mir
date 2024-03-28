@@ -25,6 +25,8 @@ from pathlib import Path
 from typing import Literal, TypedDict
 import clang.cindex
 
+_logger = logging.getLogger(__name__)
+
 LibraryName = Literal[
     "miral", "common", "core", "miroil", "platform",
     "renderer", "renderers", "server", "test", "wayland"]
@@ -49,9 +51,72 @@ library_to_header_map: dict[LibraryName, HeaderDirectories] = {
     }
 }
 
+def is_operator_overload(spelling: str):
+    operators = [
+        "+",
+        "-",
+        "*",
+        "/",
+        "%",
+        "^",
+        "&",
+        "|",
+        "~",
+        "!",
+        "=",
+        "<",
+        ">",
+        "+=",
+        "-=",
+        '*=',
+        "/=",
+        "%=",
+        "^=",
+        "&=",
+        "|=",
+        "<<",
+        ">>",
+        ">>=",
+        "<<=",
+        "==",
+        "!=",
+        "<=",
+        ">=", 
+        "<=>",
+        "&&",
+        "||",
+        "++",
+        "--",
+        ",",
+        "->*",
+        "->",
+        "()",
+        "[]"
+    ]
+    for op in operators:
+        if spelling == f"operator{op}":
+            return True
+        
+    return False
 
-def traverse(node: clang.cindex.Cursor, filename: str) -> list[str]:
-    result: list[str] = []
+
+def create_symbol_name(node: clang.cindex.Cursor) -> str:
+    if node.kind == clang.cindex.CursorKind.DESTRUCTOR:
+        return f"?{node.spelling[1:]}*"
+
+    if ((node.kind == clang.cindex.CursorKind.FUNCTION_DECL 
+        or node.kind == clang.cindex.CursorKind.CXX_METHOD)
+        and is_operator_overload(node.spelling)):
+        return "operator*"
+
+    return f"{node.spelling}*"
+
+
+def traverse(node: clang.cindex.Cursor, filename: str) -> set[str]:
+    result: set[str] = set()
+    if (node.access_specifier == clang.cindex.AccessSpecifier.PRIVATE
+        or node.access_specifier == clang.cindex.AccessSpecifier.PROTECTED):
+        pass
     if (node.kind == clang.cindex.CursorKind.FUNCTION_DECL 
           or node.kind == clang.cindex.CursorKind.CXX_METHOD
           or node.kind == clang.cindex.CursorKind.VAR_DECL
@@ -60,47 +125,62 @@ def traverse(node: clang.cindex.Cursor, filename: str) -> list[str]:
           or node.kind == clang.cindex.CursorKind.DESTRUCTOR):
         if (node.location.file.name == filename):
             parent = node.lexical_parent
-            namespace_str = node.displayname
+            namespace_str = create_symbol_name(node)
             while parent is not None:
                 if parent.kind == clang.cindex.CursorKind.TRANSLATION_UNIT:
                     break
+
+                # TODO: Hack! Why is 'std' in the namespace...?
+                if parent.kind == clang.cindex.CursorKind.NAMESPACE and parent.displayname == "std":
+                    break
+
                 namespace_str = f"{parent.displayname}::{namespace_str}"
                 parent = parent.lexical_parent
 
-            result.append(namespace_str)
-            logging.debug(f"{filename}: {namespace_str}")
+            result.add(namespace_str)
 
     if (node.kind == clang.cindex.CursorKind.TRANSLATION_UNIT
         or node.kind == clang.cindex.CursorKind.CLASS_DECL
         or node.kind == clang.cindex.CursorKind.STRUCT_DECL
         or node.kind == clang.cindex.CursorKind.NAMESPACE):
         for child in node.get_children():
-            result = result + traverse(child, filename)
+            result |= traverse(child, filename)
+
+    return result
+
+def process_directory(directory: str) -> list[str]:
+    result: list[str] = []
+    script_path = os.path.dirname(os.path.realpath(__file__))
+    path = Path(script_path).parent.joinpath(directory)
+    _logger.debug(f"Processing external directory: {path}")
+    files = glob.glob(path.absolute().as_posix() + '/**/*.h', recursive=True)
+    for file in files:
+        idx = clang.cindex.Index.create()
+        tu = idx.parse(
+            file, 
+            args=['-std=c++20', '-x', 'c++-header'],  
+            options=0)
+        root = tu.cursor
+        file_result = list(traverse(root, file))
+        result = result + file_result
+
+        if _logger.getEffectiveLevel() == logging.DEBUG:
+            for value in file_result:
+                _logger.debug(f"{file}: {value}")
 
     return result
 
 def main():
     logging.basicConfig(level=logging.DEBUG)
-    logging.debug("Symbols map generation is beginning")
+    _logger.debug("Symbols map generation is beginning")
 
     for library in library_to_header_map:
-        logging.debug(f"Generating symbols for {library}")
+        _logger.debug(f"Generating symbols for {library}")
         directories: HeaderDirectories = library_to_header_map[library]
 
         for external_directory in directories["external"]:
-            script_path = os.path.dirname(os.path.realpath(__file__))
-            path = Path(script_path).parent.joinpath(external_directory)
-            logging.debug(f"Processing external directory: {path}")
-            files = glob.glob(path.absolute().as_posix() + '/**/*.h', recursive=True)
-            for file in files:
-                idx = clang.cindex.Index.create()
-                tu = idx.parse(
-                    file, 
-                    args=['-std=c++20', '-x', 'c++-header'],  
-                    options=0)
-                root = tu.cursor        
-                traverse(root, file)
-                return
+            process_directory(external_directory)
+            return
 
     
 
