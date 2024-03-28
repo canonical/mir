@@ -1,14 +1,15 @@
 mir (2.16.4) UNRELEASED; urgency=medium
 
   * Bugfix release:
+    - Ignoring zero length gamma curves for KMS outputs (Fixes: #3238)
     - Add hardware cursor support (Fixes: #3198)
-    - Better support for automated platform selection. This means that hybrid
-      graphics situations (especially with Nvidia) will work much better out
-      of the box.
     - Screenshots now respect clipping areas and rotated outputs (Fixes: #3236)
       (Fixes: #3259)
-    - Fixed the propagation of custom attributes on outputs
+    - Fixed custom attributes propagation on outputs
       (Fixes: https://github.com/canonical/ubuntu-frame/issues/172)
+    - Handle the Ubuntu 64-bit time_t apocalypse (Fixes: #3285)
+    - Fix for eglQueryDmaBufModifiersEXT spuriously returns EGL_BAD_PARAMETER for a few formats on Nvidia
+      (Fixes: #3278)
 
  -- Matthew Kosarek <matt.kosarek@canonical.com>  Wed, 27 Mar 2024 14:34:35 -0500
 
