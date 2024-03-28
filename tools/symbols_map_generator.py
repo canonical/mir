@@ -20,7 +20,7 @@
 
 import logging
 import glob
-import subprocess
+import os
 from pathlib import Path
 from typing import Literal, TypedDict
 import clang.cindex
@@ -45,81 +45,62 @@ library_to_header_map: dict[LibraryName, HeaderDirectories] = {
         "internal": [
             "src/include/miral"
         ],
-        "output_file": "src/miral/symbols1.map",
-        "dependencies": [
-            "include/miral/",
-            "include/core/",
-            "include/common/"
-        ]
+        "output_file": "src/miral/symbols1.map"
     }
 }
 
-def to_definition(namespace_stack: list[str], value: str):
-    if (len(namespace_stack) == 0):
-        return value
-    return "::".join(namespace_stack) + "::" + value
 
-def traverse(node: clang.cindex.Cursor, namespace_stack: list[str]):
-    next_namespace_stack = namespace_stack.copy()
-    if node.kind == clang.cindex.CursorKind.CLASS_DECL:
-        next_namespace_stack.append(node.displayname)
-    elif node.kind == clang.cindex.CursorKind.STRUCT_DECL:
-        next_namespace_stack.append(node.displayname)
-    elif node.kind == clang.cindex.CursorKind.NAMESPACE:
-        next_namespace_stack.append(node.displayname)
-    elif (node.kind == clang.cindex.CursorKind.FUNCTION_DECL 
-          or node.kind == clang.cindex.CursorKind.CXX_METHOD):
-        print(node.lexical_parent.displayname)
-        print(to_definition(namespace_stack, node.displayname))
+def traverse(node: clang.cindex.Cursor, filename: str) -> list[str]:
+    result: list[str] = []
+    if (node.kind == clang.cindex.CursorKind.FUNCTION_DECL 
+          or node.kind == clang.cindex.CursorKind.CXX_METHOD
+          or node.kind == clang.cindex.CursorKind.VAR_DECL
+          or node.kind == clang.cindex.CursorKind.TYPE_ALIAS_DECL
+          or node.kind == clang.cindex.CursorKind.CONSTRUCTOR
+          or node.kind == clang.cindex.CursorKind.DESTRUCTOR):
+        if (node.location.file.name == filename):
+            parent = node.lexical_parent
+            namespace_str = node.displayname
+            while parent is not None:
+                if parent.kind == clang.cindex.CursorKind.TRANSLATION_UNIT:
+                    break
+                namespace_str = f"{parent.displayname}::{namespace_str}"
+                parent = parent.lexical_parent
 
-    for child in node.get_children():
-        traverse(child, next_namespace_stack)
+            result.append(namespace_str)
+            logging.debug(f"{filename}: {namespace_str}")
+
+    if (node.kind == clang.cindex.CursorKind.TRANSLATION_UNIT
+        or node.kind == clang.cindex.CursorKind.CLASS_DECL
+        or node.kind == clang.cindex.CursorKind.STRUCT_DECL
+        or node.kind == clang.cindex.CursorKind.NAMESPACE):
+        for child in node.get_children():
+            result = result + traverse(child, filename)
+
+    return result
 
 def main():
+    logging.basicConfig(level=logging.DEBUG)
     logging.debug("Symbols map generation is beginning")
-    s = '''
-    #include "x.h" 
-    namespace mir{}
-    struct X{ void get() {} };
-    int fac(int n) {
-        return (n>1) ? n*fac(n-1) : 1;
-    }
-    '''
 
-    # idx = clang.cindex.Index.create()
-    # tu = idx.parse('tmp.cpp', args=['-std=c++20'],  
-    #                 unsaved_files=[('tmp.cpp', s)],  options=0)
-    # root = tu.cursor        
-    # traverse(root, [])
     for library in library_to_header_map:
+        logging.debug(f"Generating symbols for {library}")
         directories: HeaderDirectories = library_to_header_map[library]
-        include_flags: list[str] = []
-        for include in directories["dependencies"]:
-            include_path = Path.cwd().parent.joinpath(include).absolute().as_posix()
-            include_flags.append("-I")
-            include_flags.append(include_path)
 
         for external_directory in directories["external"]:
-            path = Path.cwd().parent.joinpath(external_directory)
+            script_path = os.path.dirname(os.path.realpath(__file__))
+            path = Path(script_path).parent.joinpath(external_directory)
+            logging.debug(f"Processing external directory: {path}")
             files = glob.glob(path.absolute().as_posix() + '/**/*.h', recursive=True)
             for file in files:
-                s = open(file).read()
                 idx = clang.cindex.Index.create()
-                tu = idx.parse('tmp.cpp', args=['-std=c++20'],  
-                                unsaved_files=[('tmp.cpp', s)],  options=0)
+                tu = idx.parse(
+                    file, 
+                    args=['-std=c++20', '-x', 'c++-header'],  
+                    options=0)
                 root = tu.cursor        
-                traverse(root, [])
+                traverse(root, file)
                 return
-                # cmd = [
-                #     "clang++-19",
-                #     "-extract-api",
-                #     "-x",
-                #     "c++-header",
-                #     file,
-                #     "-std=c++2b"
-                # ] + include_flags
-                # print(cmd)
-                # subprocess.run(cmd) 
 
     
 
