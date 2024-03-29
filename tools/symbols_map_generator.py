@@ -106,6 +106,10 @@ def is_operator_overload(spelling: str):
 
 
 def create_symbol_name(node: clang.cindex.Cursor) -> str:
+    if(node.kind == clang.cindex.CursorKind.CLASS_DECL
+        or node.kind == clang.cindex.CursorKind.STRUCT_DECL):
+        return node.displayname
+    
     if node.kind == clang.cindex.CursorKind.DESTRUCTOR:
         return f"?{node.spelling[1:]}*"
 
@@ -118,45 +122,53 @@ def create_symbol_name(node: clang.cindex.Cursor) -> str:
 
 
 def traverse(node: clang.cindex.Cursor, filename: str, result: set[str]) -> set[str]:
-    if (node.access_specifier == clang.cindex.AccessSpecifier.PRIVATE
-        or node.access_specifier == clang.cindex.AccessSpecifier.PROTECTED):
-        pass
-    if (node.kind == clang.cindex.CursorKind.FUNCTION_DECL 
+    # Ignore private and protected variables
+    if (node.access_specifier == clang.cindex.AccessSpecifier.PRIVATE):
+        return result
+
+    # Check if we need to output a symbol
+    if ((node.kind == clang.cindex.CursorKind.FUNCTION_DECL 
           or node.kind == clang.cindex.CursorKind.CXX_METHOD
           or node.kind == clang.cindex.CursorKind.VAR_DECL
-          or node.kind == clang.cindex.CursorKind.TYPE_ALIAS_DECL
           or node.kind == clang.cindex.CursorKind.CONSTRUCTOR
-          or node.kind == clang.cindex.CursorKind.DESTRUCTOR):
-        if (node.location.file.name == filename
-            and not node.is_pure_virtual_method()):
-            parent = node.lexical_parent
-            namespace_str = create_symbol_name(node)
-            while parent is not None:
-                if parent.kind == clang.cindex.CursorKind.TRANSLATION_UNIT:
-                    break
+          or node.kind == clang.cindex.CursorKind.DESTRUCTOR
+          or node.kind == clang.cindex.CursorKind.CLASS_DECL
+          or node.kind == clang.cindex.CursorKind.STRUCT_DECL)
+          and node.location.file.name == filename
+          and not node.is_pure_virtual_method()):
+        parent = node.lexical_parent
+        namespace_str = create_symbol_name(node)
 
-                # TODO: Hack! Why is 'std' in the namespace...?
-                if parent.kind == clang.cindex.CursorKind.NAMESPACE and parent.displayname == "std":
-                    break
+        # Walk up the tree to build the namespace
+        while parent is not None:
+            if parent.kind == clang.cindex.CursorKind.TRANSLATION_UNIT:
+                break
 
-                namespace_str = f"{parent.displayname}::{namespace_str}"
-                parent = parent.lexical_parent
+            namespace_str = f"{parent.displayname}::{namespace_str}"
+            parent = parent.lexical_parent
 
-            result.add(namespace_str)
+        # Classes and structs have a specific outpu
+        if (node.kind == clang.cindex.CursorKind.CLASS_DECL
+            or node.kind == clang.cindex.CursorKind.STRUCT_DECL):
+            result.add(f"vtable?for?{namespace_str};")
+            result.add(f"typeinfo?for?{namespace_str};")
+        else:
+            result.add(f"{namespace_str};")
             
             # Check if we're marked virtual
             if ((node.kind == clang.cindex.CursorKind.CXX_METHOD
-                 or node.kind == clang.cindex.CursorKind.DESTRUCTOR
-                 or node.kind == clang.cindex.CursorKind.CONSTRUCTOR)
+                or node.kind == clang.cindex.CursorKind.DESTRUCTOR
+                or node.kind == clang.cindex.CursorKind.CONSTRUCTOR)
                 and node.is_virtual_method()):
-                result.add(f"non-virtual?thunk?to?{namespace_str}")
+                result.add(f"non-virtual?thunk?to?{namespace_str};")
             else:
                 # Check if we're marked override
                 for  child in node.get_children():
                     if child.kind == clang.cindex.CursorKind.CXX_OVERRIDE_ATTR:
-                        result.add(f"non-virtual?thunk?to?{namespace_str}")
+                        result.add(f"non-virtual?thunk?to?{namespace_str};")
                         break
 
+    # Traverse down the tree if we can
     if (node.kind == clang.cindex.CursorKind.TRANSLATION_UNIT
         or node.kind == clang.cindex.CursorKind.CLASS_DECL
         or node.kind == clang.cindex.CursorKind.STRUCT_DECL
@@ -176,7 +188,7 @@ def process_directory(directory: str) -> list[str]:
         idx = clang.cindex.Index.create()
         tu = idx.parse(
             file, 
-            args=['-std=c++20', '-x', 'c++-header'],  
+            args=['-std=c++20', '-x', 'c++-header', '-nostdlibinc'],  
             options=0)
         root = tu.cursor
         list(traverse(root, file, current_set))
