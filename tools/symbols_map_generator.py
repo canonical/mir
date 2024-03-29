@@ -14,42 +14,47 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# TODO:
-#  1. Iterate the directories
-#  2. For each directory, iterate each file
-
 import logging
 import glob
 import os
+import argparse
 from pathlib import Path
-from typing import Literal, TypedDict
+from typing import Literal, TypedDict, get_args
 import clang.cindex
 
 _logger = logging.getLogger(__name__)
 
 LibraryName = Literal[
-    "miral", "common", "core", "miroil", "platform",
-    "renderer", "renderers", "server", "test", "wayland"]
+    "miral", "mir_common", "mir_core", "miroil", "mir_platform",
+    "mir_renderer", "mir_renderers", "mir_server", "mir_test", "mir_wayland"]
 
-class HeaderDirectories(TypedDict):
-    external: list[str]
-    internal: list[str]
-    output_file: str
-    dependencies: list[str]
+
+class LibraryInfo(TypedDict):
+    external_headers: list[str]
+    internal_headers: list[str]
+    external_output_file: str
+    internal_output_file: str
 
 
 # Directory paths are relative to the root of the Mir project
-library_to_header_map: dict[LibraryName, HeaderDirectories] = {
+library_to_data_map: dict[LibraryName, LibraryInfo] = {
     "miral": {
-        "external": [
+        "external_headers": [
             "include/miral"
         ],
-        "internal": [
-            "src/include/miral"
+        "internal_headers": [
+            "src/miral"
         ],
-        "output_file": "src/miral/symbols1.map"
+        "external_output_file": "src/miral/symbols_external.map",
+        "internal_output_file": "src/miral/symbols_internal.map"
     }
 }
+
+def get_absolute_path_form_project_path(project_path: str) -> str:
+    script_path = os.path.dirname(os.path.realpath(__file__))
+    path = Path(script_path).parent.joinpath(project_path)
+    return path.absolute().as_posix()
+
 
 def is_operator_overload(spelling: str):
     operators = [
@@ -112,8 +117,7 @@ def create_symbol_name(node: clang.cindex.Cursor) -> str:
     return f"{node.spelling}*"
 
 
-def traverse(node: clang.cindex.Cursor, filename: str) -> set[str]:
-    result: set[str] = set()
+def traverse(node: clang.cindex.Cursor, filename: str, result: set[str]) -> set[str]:
     if (node.access_specifier == clang.cindex.AccessSpecifier.PRIVATE
         or node.access_specifier == clang.cindex.AccessSpecifier.PROTECTED):
         pass
@@ -123,7 +127,8 @@ def traverse(node: clang.cindex.Cursor, filename: str) -> set[str]:
           or node.kind == clang.cindex.CursorKind.TYPE_ALIAS_DECL
           or node.kind == clang.cindex.CursorKind.CONSTRUCTOR
           or node.kind == clang.cindex.CursorKind.DESTRUCTOR):
-        if (node.location.file.name == filename):
+        if (node.location.file.name == filename
+            and not node.is_pure_virtual_method()):
             parent = node.lexical_parent
             namespace_str = create_symbol_name(node)
             while parent is not None:
@@ -138,22 +143,35 @@ def traverse(node: clang.cindex.Cursor, filename: str) -> set[str]:
                 parent = parent.lexical_parent
 
             result.add(namespace_str)
+            
+            # Check if we're marked virtual
+            if ((node.kind == clang.cindex.CursorKind.CXX_METHOD
+                 or node.kind == clang.cindex.CursorKind.DESTRUCTOR
+                 or node.kind == clang.cindex.CursorKind.CONSTRUCTOR)
+                and node.is_virtual_method()):
+                result.add(f"non-virtual?thunk?to?{namespace_str}")
+            else:
+                # Check if we're marked override
+                for  child in node.get_children():
+                    if child.kind == clang.cindex.CursorKind.CXX_OVERRIDE_ATTR:
+                        result.add(f"non-virtual?thunk?to?{namespace_str}")
+                        break
 
     if (node.kind == clang.cindex.CursorKind.TRANSLATION_UNIT
         or node.kind == clang.cindex.CursorKind.CLASS_DECL
         or node.kind == clang.cindex.CursorKind.STRUCT_DECL
         or node.kind == clang.cindex.CursorKind.NAMESPACE):
         for child in node.get_children():
-            result |= traverse(child, filename)
+            traverse(child, filename, result)
 
     return result
 
 def process_directory(directory: str) -> list[str]:
-    result: list[str] = []
-    script_path = os.path.dirname(os.path.realpath(__file__))
-    path = Path(script_path).parent.joinpath(directory)
-    _logger.debug(f"Processing external directory: {path}")
-    files = glob.glob(path.absolute().as_posix() + '/**/*.h', recursive=True)
+    current_set = set()
+
+    files_dir = get_absolute_path_form_project_path(directory)
+    _logger.debug(f"Processing external directory: {files_dir}")
+    files = glob.glob(files_dir + '/**/*.h', recursive=True)
     for file in files:
         idx = clang.cindex.Index.create()
         tu = idx.parse(
@@ -161,26 +179,68 @@ def process_directory(directory: str) -> list[str]:
             args=['-std=c++20', '-x', 'c++-header'],  
             options=0)
         root = tu.cursor
-        file_result = list(traverse(root, file))
-        result = result + file_result
+        list(traverse(root, file, current_set))
 
-        if _logger.getEffectiveLevel() == logging.DEBUG:
-            for value in file_result:
-                _logger.debug(f"{file}: {value}")
+    result = list(current_set)
+    result.sort()
+    return result 
 
-    return result
+
+def output_symbols_to_file(symbols: list[str], library: str, version: str, output_file: str):
+    joint_symbols = "\n    ".join(symbols)
+    output_str = f'''
+{library.upper()}_{version} {"{"}
+global:
+  extern "C++" {"{"}
+    {joint_symbols}
+  {'};'}
+local: *;
+{'}'};'''
+    
+    output_path = get_absolute_path_form_project_path(output_file)
+    with open(output_path, "w") as f:
+        f.write(output_str)
+        return
+
 
 def main():
-    logging.basicConfig(level=logging.DEBUG)
+    parser = argparse.ArgumentParser(description='This tool generates symbols.map files for the Mir project.')
+    parser.add_argument('--library', metavar='-l', type=str,
+                    help='library to generate symbols for',
+                    required=True,
+                    choices=list(get_args(LibraryName)))
+    parser.add_argument('--symbol-version', metavar='-s', type=str,
+                    help='version to generate symbols for (e.g. 5.0)',
+                    required=True)
+    
+    args = parser.parse_args()
+
+    logging.basicConfig(level=logging.INFO)
     _logger.debug("Symbols map generation is beginning")
 
-    for library in library_to_header_map:
-        _logger.debug(f"Generating symbols for {library}")
-        directories: HeaderDirectories = library_to_header_map[library]
+    library = args.library
+    directories: LibraryInfo = library_to_data_map[library]
+    _logger.debug(f"Generating symbols for {library}")
 
-        for external_directory in directories["external"]:
-            process_directory(external_directory)
-            return
+    # First, we process the external symbols
+    external_symbols = []
+    for directory in directories["external_headers"]:
+        external_symbols += process_directory(directory)
+    output_symbols_to_file(
+        external_symbols,
+        library,
+        args.symbol_version,
+        directories["external_output_file"])
+    
+    # Then, we process the internal symbols
+    internal_symbols = []
+    for directory in directories["internal_headers"]:
+        internal_symbols += process_directory(directory)
+    output_symbols_to_file(
+        internal_symbols,
+        library,
+        args.symbol_version,
+        directories["internal_output_file"])
 
     
 
