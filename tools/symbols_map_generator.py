@@ -121,19 +121,24 @@ def create_symbol_name(node: clang.cindex.Cursor) -> str:
     return f"{node.spelling}*"
 
 
+def should_generate_as_class_or_struct(node: clang.cindex.Cursor):
+    return ((node.kind == clang.cindex.CursorKind.CLASS_DECL
+          or node.kind == clang.cindex.CursorKind.STRUCT_DECL)
+          and node.is_definition())
+
+
 def traverse(node: clang.cindex.Cursor, filename: str, result: set[str]) -> set[str]:
     # Ignore private and protected variables
     if (node.access_specifier == clang.cindex.AccessSpecifier.PRIVATE):
         return result
-
+    
     # Check if we need to output a symbol
     if ((node.kind == clang.cindex.CursorKind.FUNCTION_DECL 
           or node.kind == clang.cindex.CursorKind.CXX_METHOD
           or node.kind == clang.cindex.CursorKind.VAR_DECL
           or node.kind == clang.cindex.CursorKind.CONSTRUCTOR
           or node.kind == clang.cindex.CursorKind.DESTRUCTOR
-          or node.kind == clang.cindex.CursorKind.CLASS_DECL
-          or node.kind == clang.cindex.CursorKind.STRUCT_DECL)
+          or should_generate_as_class_or_struct(node))
           and node.location.file.name == filename
           and not node.is_pure_virtual_method()):
         parent = node.lexical_parent
