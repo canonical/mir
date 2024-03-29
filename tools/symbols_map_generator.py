@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright © Canonical Ltd.
 #
@@ -50,6 +50,7 @@ library_to_data_map: dict[LibraryName, LibraryInfo] = {
     }
 }
 
+
 def get_absolute_path_form_project_path(project_path: str) -> str:
     script_path = os.path.dirname(os.path.realpath(__file__))
     path = Path(script_path).parent.joinpath(project_path)
@@ -98,6 +99,10 @@ def is_operator_overload(spelling: str):
         "()",
         "[]"
     ]
+
+    if spelling.startswith("operator "):
+        return True
+
     for op in operators:
         if spelling == f"operator{op}":
             return True
@@ -127,7 +132,7 @@ def should_generate_as_class_or_struct(node: clang.cindex.Cursor):
           and node.is_definition())
 
 
-def traverse(node: clang.cindex.Cursor, filename: str, result: set[str]) -> set[str]:
+def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> set[str]:
     # Ignore private and protected variables
     if (node.access_specifier == clang.cindex.AccessSpecifier.PRIVATE):
         return result
@@ -138,6 +143,8 @@ def traverse(node: clang.cindex.Cursor, filename: str, result: set[str]) -> set[
           or node.kind == clang.cindex.CursorKind.VAR_DECL
           or node.kind == clang.cindex.CursorKind.CONSTRUCTOR
           or node.kind == clang.cindex.CursorKind.DESTRUCTOR
+          or node.kind == clang.cindex.CursorKind.ENUM_DECL
+          or node.kind == clang.cindex.CursorKind.FIELD_DECL
           or should_generate_as_class_or_struct(node))
           and node.location.file.name == filename
           and not node.is_pure_virtual_method()):
@@ -179,9 +186,10 @@ def traverse(node: clang.cindex.Cursor, filename: str, result: set[str]) -> set[
         or node.kind == clang.cindex.CursorKind.STRUCT_DECL
         or node.kind == clang.cindex.CursorKind.NAMESPACE):
         for child in node.get_children():
-            traverse(child, filename, result)
+            traverse_ast(child, filename, result)
 
     return result
+
 
 def process_directory(directory: str) -> list[str]:
     current_set = set()
@@ -196,7 +204,7 @@ def process_directory(directory: str) -> list[str]:
             args=['-std=c++20', '-x', 'c++-header', '-nostdlibinc'],  
             options=0)
         root = tu.cursor
-        list(traverse(root, file, current_set))
+        list(traverse_ast(root, file, current_set))
 
     result = list(current_set)
     result.sort()
@@ -220,7 +228,9 @@ local: *;
 
 
 def main():
-    parser = argparse.ArgumentParser(description='This tool generates symbols.map files for the Mir project.')
+    parser = argparse.ArgumentParser(description="This tool generates symbols.map files for the Mir project. "
+                                        "It uses https://pypi.org/project/libclang/ to process "
+                                        "the AST of the project's header files.")
     parser.add_argument('--library', metavar='-l', type=str,
                     help='library to generate symbols for',
                     required=True,
@@ -235,7 +245,12 @@ def main():
     _logger.debug("Symbols map generation is beginning")
 
     library = args.library
-    directories: LibraryInfo = library_to_data_map[library]
+    try:
+        directories: LibraryInfo = library_to_data_map[library]
+    except KeyError:
+        _logger.error(f"The provided library has yet to be implmented: {library}")
+        exit(1)
+
     _logger.debug(f"Generating symbols for {library}")
 
     # First, we process the external symbols
@@ -257,6 +272,7 @@ def main():
         library,
         args.symbol_version,
         directories["internal_output_file"])
+    exit(0)
 
     
 

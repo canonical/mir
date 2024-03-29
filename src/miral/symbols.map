@@ -32,6 +32,7 @@ global:
     miral::CanonicalWindowManagerPolicy::handle_raise_window*;
     miral::CanonicalWindowManagerPolicy::handle_window_ready*;
     miral::CanonicalWindowManagerPolicy::place_new_window*;
+    miral::CanonicalWindowManagerPolicy::tools*;
     miral::ConfigurationOption::?ConfigurationOption*;
     miral::ConfigurationOption::ConfigurationOption*;
     miral::ConfigurationOption::operator*;
@@ -84,6 +85,7 @@ global:
     miral::MinimalWindowManager::handle_touch_event*;
     miral::MinimalWindowManager::handle_window_ready*;
     miral::MinimalWindowManager::place_new_window*;
+    miral::MinimalWindowManager::tools*;
     miral::MirRunner::?MirRunner*;
     miral::MirRunner::MirRunner*;
     miral::MirRunner::add_start_callback*;
@@ -99,6 +101,9 @@ global:
     miral::MirRunner::x11_display*;
     miral::Output::?Output*;
     miral::Output::Output*;
+    miral::Output::PhysicalSizeMM::height*;
+    miral::Output::PhysicalSizeMM::width*;
+    miral::Output::Type*;
     miral::Output::attribute*;
     miral::Output::attributes_map*;
     miral::Output::connected*;
@@ -137,6 +142,8 @@ global:
     miral::StartupInternalClient::StartupInternalClient*;
     miral::StartupInternalClient::operator*;
     miral::WaylandExtensions::?WaylandExtensions*;
+    miral::WaylandExtensions::Builder::Context*;
+    miral::WaylandExtensions::Builder::name*;
     miral::WaylandExtensions::Context::?Context*;
     miral::WaylandExtensions::Context::Context*;
     miral::WaylandExtensions::Context::operator*;
@@ -235,8 +242,11 @@ global:
     miral::WindowManagementPolicy::confirm_inherited_move*;
     miral::WindowManagementPolicy::confirm_placement_on_display*;
     miral::WindowManagementPolicy::operator*;
+    miral::WindowManagerOption::build*;
+    miral::WindowManagerOption::name*;
     miral::WindowManagerOptions::WindowManagerOptions*;
     miral::WindowManagerOptions::operator*;
+    miral::WindowManagerOptions::policies*;
     miral::WindowManagerTools::?WindowManagerTools*;
     miral::WindowManagerTools::WindowManagerTools*;
     miral::WindowManagerTools::active_application_zone*;
@@ -273,6 +283,9 @@ global:
     miral::WindowManagerTools::window_at*;
     miral::WindowManagerTools::window_to_select_application*;
     miral::WindowSpecification::?WindowSpecification*;
+    miral::WindowSpecification::AspectRatio::height*;
+    miral::WindowSpecification::AspectRatio::width*;
+    miral::WindowSpecification::InputReceptionMode*;
     miral::WindowSpecification::WindowSpecification*;
     miral::WindowSpecification::application_id*;
     miral::WindowSpecification::attached_edges*;
