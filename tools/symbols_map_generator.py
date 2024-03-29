@@ -205,8 +205,7 @@ def process_directory(directory: str) -> list[str]:
 
 def output_symbols_to_file(symbols: list[str], library: str, version: str, output_file: str):
     joint_symbols = "\n    ".join(symbols)
-    output_str = f'''
-{library.upper()}_{version} {"{"}
+    output_str = f'''{library.upper()}_{version} {"{"}
 global:
   extern "C++" {"{"}
     {joint_symbols}

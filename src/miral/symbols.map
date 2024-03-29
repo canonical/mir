@@ -1,4 +1,3 @@
-
 MIRAL_5.0 {
 global:
   extern "C++" {
