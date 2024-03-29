@@ -112,14 +112,16 @@ def is_operator_overload(spelling: str):
 
 def create_symbol_name(node: clang.cindex.Cursor) -> str:
     if(node.kind == clang.cindex.CursorKind.CLASS_DECL
-        or node.kind == clang.cindex.CursorKind.STRUCT_DECL):
+        or node.kind == clang.cindex.CursorKind.STRUCT_DECL
+        or node.kind == clang.cindex.CursorKind.FIELD_DECL):
         return node.displayname
     
     if node.kind == clang.cindex.CursorKind.DESTRUCTOR:
         return f"?{node.spelling[1:]}*"
-
+    
     if ((node.kind == clang.cindex.CursorKind.FUNCTION_DECL 
-        or node.kind == clang.cindex.CursorKind.CXX_METHOD)
+        or node.kind == clang.cindex.CursorKind.CXX_METHOD
+        or node.kind == clang.cindex.CursorKind.CONVERSION_FUNCTION)
         and is_operator_overload(node.spelling)):
         return "operator*"
 
@@ -145,6 +147,7 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
           or node.kind == clang.cindex.CursorKind.DESTRUCTOR
           or node.kind == clang.cindex.CursorKind.ENUM_DECL
           or node.kind == clang.cindex.CursorKind.FIELD_DECL
+          or node.kind == clang.cindex.CursorKind.CONVERSION_FUNCTION
           or should_generate_as_class_or_struct(node))
           and node.location.file.name == filename
           and not node.is_pure_virtual_method()):
@@ -170,7 +173,8 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
             # Check if we're marked virtual
             if ((node.kind == clang.cindex.CursorKind.CXX_METHOD
                 or node.kind == clang.cindex.CursorKind.DESTRUCTOR
-                or node.kind == clang.cindex.CursorKind.CONSTRUCTOR)
+                or node.kind == clang.cindex.CursorKind.CONSTRUCTOR
+                or node.kind == clang.cindex.CursorKind.CONVERSION_FUNCTION)
                 and node.is_virtual_method()):
                 result.add(f"non-virtual?thunk?to?{namespace_str};")
             else:
