@@ -50,7 +50,7 @@ library_to_data_map: dict[LibraryName, LibraryInfo] = {
             "include/server/mir",
             "src/include/server/mir"
         ],
-        "external_output_file": "src/server/symbols1.map",
+        "external_output_file": "src/server/symbols.map",
         "search_headers": [
             "src/include/server"
         ]
