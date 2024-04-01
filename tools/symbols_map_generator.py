@@ -58,10 +58,8 @@ library_to_data_map: dict[LibraryName, LibraryInfo] = {
 }
 
 
-def get_absolute_path_form_project_path(project_path: str) -> str:
-    script_path = os.path.dirname(os.path.realpath(__file__))
-    path = Path(script_path).parent.joinpath(project_path)
-    return path.absolute().as_posix()
+def get_absolute_path_from_project_path(project_path: str) -> Path:
+    return Path(__file__).parent.parent / project_path
 
 
 def is_operator_overload(spelling: str):
@@ -248,21 +246,21 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
 def process_directory(directory: str, search_dirs: Optional[list[str]]) -> list[str]:
     current_set = set()
 
-    files_dir = get_absolute_path_form_project_path(directory)
+    files_dir = get_absolute_path_from_project_path(directory)
     _logger.debug(f"Processing external directory: {files_dir}")
-    files = glob.glob(files_dir + '/**/*.h', recursive=True)
+    files = files_dir.rglob('*.h')
     search_variables = []
     for dir in search_dirs:
-        search_variables.append(f"-I{get_absolute_path_form_project_path(dir)}")
+        search_variables.append(f"-I{get_absolute_path_from_project_path(dir).as_posix()}")
     args = ['-std=c++20', '-x', 'c++-header', '-nostdlibinc'] + search_variables
     for file in files:
         idx = clang.cindex.Index.create()
         tu = idx.parse(
-            file, 
+            file.as_posix(), 
             args=args,  
             options=0)
         root = tu.cursor
-        list(traverse_ast(root, file, current_set))
+        list(traverse_ast(root, file.as_posix(), current_set))
 
     result = list(current_set)
     result.sort()
@@ -279,8 +277,8 @@ global:
 local: *;
 {'}'};'''
     
-    output_path = get_absolute_path_form_project_path(output_file)
-    with open(output_path, "w") as f:
+    output_path = get_absolute_path_from_project_path(output_file)
+    with open(output_path.as_posix(), "w") as f:
         f.write(output_str)
         return
 
@@ -311,7 +309,10 @@ def main():
 
     _logger.debug(f"Generating symbols for {library}")
 
-    search_dirs = library_data["search_headers"]
+    if "search_headers" in library_data:
+        search_dirs = library_data["search_headers"]
+    else:
+        search_dirs = []
     # First, we process the external symbols
     external_symbols = []
     for header_dir in library_data["external_headers"]:
