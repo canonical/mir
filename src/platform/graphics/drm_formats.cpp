@@ -30,7 +30,9 @@
 
 namespace mg = mir::graphics;
 
-auto mg::drm_format_to_string(uint32_t format) -> char const*
+namespace
+{
+constexpr auto drm_format_to_string(uint32_t format) -> char const*
 {
 #define STRINGIFY(val) \
     case val:          \
@@ -63,6 +65,7 @@ auto mg::drm_format_to_string(uint32_t format) -> char const*
 #undef STRINGIFY_BIGENDIAN
 }
 
+}
 struct mg::DRMFormat::FormatInfo
 {
     uint32_t format;
@@ -453,7 +456,7 @@ constexpr auto info_for_format(uint32_t fourcc_format) -> mg::DRMFormat::FormatI
     }
     BOOST_THROW_EXCEPTION((
         std::runtime_error{
-            std::string{"Unsupported DRM format: "} + mg::drm_format_to_string(fourcc_format)}));
+            std::string{"Unsupported DRM format: "} + drm_format_to_string(fourcc_format)}));
 }
 
 }
