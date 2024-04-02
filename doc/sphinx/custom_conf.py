@@ -87,7 +87,7 @@ html_context = {
     # Change to the discourse instance you want to be able to link to
     # using the :discourse: metadata at the top of a file
     # (use an empty value if you don't want to link)
-    'discourse': 'https://discourse.ubuntu.com/c/mir/15',
+    'discourse': 'https://discourse.ubuntu.com/',
 
     # Change to the Mattermost channel you want to link to
     # (use an empty value if you don't want to link)
