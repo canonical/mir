@@ -261,6 +261,7 @@ bool miral::WindowInfo::needs_titlebar(MirWindowType type)
     case mir_window_type_gloss:
     case mir_window_type_tip:
     case mir_window_type_decoration:
+    case mir_window_type_satellite:
         // No decorations for these surface types
         return false;
     default:
