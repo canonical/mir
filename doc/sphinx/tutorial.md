@@ -1,3 +1,7 @@
+---
+discourse: 4911,5164,5603,6756,8037
+---
+
 # Tutorial
 
 Mir is a library for building things, not an end-user product, but it does come
