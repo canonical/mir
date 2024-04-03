@@ -37,6 +37,7 @@ class InputDeviceConfig : public mir::input::InputDeviceObserver
 {
 public:
     InputDeviceConfig(bool disable_while_typing,
+                      bool tap_to_click,
                       MirPointerAcceleration mouse_profile,
                       double mouse_cursor_acceleration_bias,
                       double mouse_scroll_speed_scale,
@@ -57,6 +58,7 @@ private:
     double const touchpad_scroll_speed_scale;
     MirTouchpadClickModes const click_mode;
     MirTouchpadScrollModes const scroll_mode;
+    bool const tap_to_click;
 };
 
 }

@@ -32,6 +32,7 @@ namespace mi = mir::input;
 namespace
 {
 char const* const disable_while_typing_opt = "disable-while-typing";
+char const* const tap_to_click_opt = "tap-to-click";
 char const* const mouse_acceleration_opt = "mouse-acceleration";
 char const* const acceleration_none = "none";
 char const* const acceleration_adaptive = "adaptive";
@@ -55,6 +56,10 @@ void me::add_input_device_configuration_options_to(mir::Server& server)
     // Add choice of monitor configuration
     server.add_configuration_option(disable_while_typing_opt,
                                     "Disable touchpad while typing on keyboard configuration [true, false]",
+                                    false);
+    server.add_configuration_option(tap_to_click_opt,
+                                    "Enable or disable tap-to-click on this device, with a default mapping of"
+                                    " 1, 2, 3 finger tap mapping to left, right, middle click, respectively [true, false]",
                                     false);
     server.add_configuration_option(mouse_acceleration_opt,
                                     "Select acceleration profile for mice and trackballs [none, adaptive]",
@@ -120,6 +125,7 @@ void me::add_input_device_configuration_options_to(mir::Server& server)
             auto const options = server.get_options();
             auto const input_config = std::make_shared<me::InputDeviceConfig>(
                 options->get<bool>(disable_while_typing_opt),
+                options->get<bool>(tap_to_click_opt),
                 to_profile(options->get<std::string>(mouse_acceleration_opt)),
                 clamp_to_range(options->get<double>(mouse_cursor_acceleration_bias_opt)),
                 options->get<double>(mouse_scroll_speed_scale_opt),
@@ -133,6 +139,7 @@ void me::add_input_device_configuration_options_to(mir::Server& server)
 }
 
 me::InputDeviceConfig::InputDeviceConfig(bool disable_while_typing,
+                                         bool tap_to_click,
                                          MirPointerAcceleration mouse_profile,
                                          double mouse_cursor_acceleration_bias,
                                          double mouse_scroll_speed_scale,
@@ -140,11 +147,12 @@ me::InputDeviceConfig::InputDeviceConfig(bool disable_while_typing,
                                          double touchpad_scroll_speed_scale,
                                          MirTouchpadClickModes click_mode,
                                          MirTouchpadClickModes scroll_mode)
-    : disable_while_typing(disable_while_typing), mouse_profile{mouse_profile},
-      mouse_cursor_acceleration_bias(mouse_cursor_acceleration_bias),
-      mouse_scroll_speed_scale(mouse_scroll_speed_scale),
-      touchpad_cursor_acceleration_bias(touchpad_cursor_acceleration_bias),
-      touchpad_scroll_speed_scale(touchpad_scroll_speed_scale), click_mode(click_mode), scroll_mode(scroll_mode)
+    : disable_while_typing{disable_while_typing}, mouse_profile{mouse_profile},
+      mouse_cursor_acceleration_bias{mouse_cursor_acceleration_bias},
+      mouse_scroll_speed_scale{mouse_scroll_speed_scale},
+      touchpad_cursor_acceleration_bias{touchpad_cursor_acceleration_bias},
+      touchpad_scroll_speed_scale{touchpad_scroll_speed_scale}, click_mode{click_mode}, scroll_mode{scroll_mode},
+      tap_to_click{tap_to_click}
 {
 }
 
@@ -167,6 +175,7 @@ void me::InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& devi
             touch_config.disable_while_typing(disable_while_typing);
             touch_config.click_mode(click_mode);
             touch_config.scroll_mode(scroll_mode);
+            touch_config.tap_to_click(tap_to_click);
             device->apply_touchpad_configuration(touch_config);
         }
     }
