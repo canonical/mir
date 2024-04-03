@@ -15,8 +15,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import glob
-import os
 import argparse
 from pathlib import Path
 from typing import Literal, TypedDict, get_args, Optional
@@ -30,28 +28,26 @@ LibraryName = Literal[
 
 
 class LibraryInfo(TypedDict):
-    external_headers: list[str]
-    internal_headers: Optional[list[str]]
-    external_output_file: str
-    internal_output_file: Optional[str]
-    search_headers: Optional[list[str]]
+    headers_dir: list[str]
+    map_file: str
+    include_headers: Optional[list[str]]
 
 
 # Directory paths are relative to the root of the Mir project
 library_to_data_map: dict[LibraryName, LibraryInfo] = {
     "miral": {
-        "external_headers": [
+        "headers_dir": [
             "include/miral"
         ],
-        "external_output_file": "src/miral/symbols.map",
+        "map_file": "src/miral/symbols.map",
     },
     "mir_server": {
-        "external_headers": [
+        "headers_dir": [
             "include/server/mir",
             "src/include/server/mir"
         ],
-        "external_output_file": "src/server/symbols.map",
-        "search_headers": [
+        "map_file": "src/server/symbols.map",
+        "include_headers": [
             "src/include/server"
         ]
     }
@@ -62,59 +58,6 @@ def get_absolute_path_from_project_path(project_path: str) -> Path:
     return Path(__file__).parent.parent / project_path
 
 
-def is_operator_overload(spelling: str):
-    operators = [
-        "+",
-        "-",
-        "*",
-        "/",
-        "%",
-        "^",
-        "&",
-        "|",
-        "~",
-        "!",
-        "=",
-        "<",
-        ">",
-        "+=",
-        "-=",
-        '*=',
-        "/=",
-        "%=",
-        "^=",
-        "&=",
-        "|=",
-        "<<",
-        ">>",
-        ">>=",
-        "<<=",
-        "==",
-        "!=",
-        "<=",
-        ">=", 
-        "<=>",
-        "&&",
-        "||",
-        "++",
-        "--",
-        ",",
-        "->*",
-        "->",
-        "()",
-        "[]"
-    ]
-
-    if spelling.startswith("operator "):
-        return True
-
-    for op in operators:
-        if spelling == f"operator{op}":
-            return True
-        
-    return False
-
-
 def create_symbol_name(node: clang.cindex.Cursor) -> str:
     if(node.kind == clang.cindex.CursorKind.CLASS_DECL
         or node.kind == clang.cindex.CursorKind.STRUCT_DECL
@@ -122,15 +65,9 @@ def create_symbol_name(node: clang.cindex.Cursor) -> str:
         return node.displayname
     
     if node.kind == clang.cindex.CursorKind.DESTRUCTOR:
-        return f"?{node.spelling[1:]}*"
-    
-    if ((node.kind == clang.cindex.CursorKind.FUNCTION_DECL 
-        or node.kind == clang.cindex.CursorKind.CXX_METHOD
-        or node.kind == clang.cindex.CursorKind.CONVERSION_FUNCTION)
-        and is_operator_overload(node.spelling)):
-        return "operator*"
+        return node.displayname
 
-    return f"{node.spelling}*"
+    return f"{node.displayname}"
 
 
 def should_generate_as_class_or_struct(node: clang.cindex.Cursor):
@@ -151,7 +88,6 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
           or node.kind == clang.cindex.CursorKind.CONSTRUCTOR
           or node.kind == clang.cindex.CursorKind.DESTRUCTOR
           or node.kind == clang.cindex.CursorKind.ENUM_DECL
-          or node.kind == clang.cindex.CursorKind.FIELD_DECL
           or node.kind == clang.cindex.CursorKind.CONVERSION_FUNCTION
           or should_generate_as_class_or_struct(node))
           and node.location.file.name == filename
@@ -243,8 +179,8 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
     return result
 
 
-def process_directory(directory: str, search_dirs: Optional[list[str]]) -> list[str]:
-    current_set = set()
+def process_directory(directory: str, search_dirs: Optional[list[str]]) -> set[str]:
+    result = set()
 
     files_dir = get_absolute_path_from_project_path(directory)
     _logger.debug(f"Processing external directory: {files_dir}")
@@ -260,40 +196,35 @@ def process_directory(directory: str, search_dirs: Optional[list[str]]) -> list[
             args=args,  
             options=0)
         root = tu.cursor
-        list(traverse_ast(root, file.as_posix(), current_set))
+        list(traverse_ast(root, file.as_posix(), result))
 
-    result = list(current_set)
-    result.sort()
     return result 
-
-
-def output_symbols_to_file(symbols: list[str], library: str, version: str, output_file: str):
-    joint_symbols = "\n    ".join(symbols)
-    output_str = f'''{library.upper()}_{version} {"{"}
-global:
-  extern "C++" {"{"}
-    {joint_symbols}
-  {'};'}
-local: *;
-{'}'};'''
     
-    output_path = get_absolute_path_from_project_path(output_file)
-    with open(output_path.as_posix(), "w") as f:
-        f.write(output_str)
-        return
+
+def read_symbols_from_file(file: Path) -> set[str]:
+    # WARNING: This is a very naive way to parse these files. We are assuming
+    #  that any line starting with 4 spaces is a symbol.
+    symbols: set[str] = set()
+    with open(file.as_posix()) as f:
+        for line in f.readlines():
+            if line.startswith("    "):
+                line = line.strip()
+                assert line.endswith(';')
+                symbols.add(line)
+    return symbols
 
 
 def main():
-    parser = argparse.ArgumentParser(description="This tool generates symbols.map files for the Mir project. "
-                                        "It uses https://pypi.org/project/libclang/ to process "
+    parser = argparse.ArgumentParser(description="This tool parses the header files of a library in the Mir project "
+                                        "and outputs a list of new and removed symbols to stdout. "
+                                        "With this list, a developer may update the corresponding symbols.map appropriately. "
+                                        "The tool uses https://pypi.org/project/libclang/ to process "
                                         "the AST of the project's header files.")
-    parser.add_argument('--library', metavar='-l', type=str,
-                    help='library to generate symbols for',
+    choices = list(get_args(LibraryName))
+    parser.add_argument('--library', type=str,
+                    help=f'library to generate symbols for ({", ".join(choices)})',
                     required=True,
-                    choices=list(get_args(LibraryName)))
-    parser.add_argument('--symbol-version', metavar='-s', type=str,
-                    help='version to generate symbols for (e.g. 5.0)',
-                    required=True)
+                    choices=list(choices))
     
     args = parser.parse_args()
 
@@ -309,32 +240,36 @@ def main():
 
     _logger.debug(f"Generating symbols for {library}")
 
-    if "search_headers" in library_data:
-        search_dirs = library_data["search_headers"]
+    if "include_headers" in library_data:
+        search_dirs = library_data["include_headers"]
     else:
         search_dirs = []
-    # First, we process the external symbols
-    external_symbols = []
-    for header_dir in library_data["external_headers"]:
-        external_symbols += process_directory(header_dir, search_dirs)
-    output_symbols_to_file(
-        external_symbols,
-        library,
-        args.symbol_version,
-        library_data["external_output_file"])
+
+    # Create a set that includes all of the available headers
+    new_symbols: set[str] = set()
+    for header_dir in library_data["headers_dir"]:
+        new_symbols = new_symbols.union(process_directory(header_dir, search_dirs))
     
-    # Then, we process the internal symbols
-    internal_symbols = []
-    if "internal_headers" in library_data:
-        for header_dir in library_data["internal_headers"]:
-            internal_symbols += process_directory(header_dir, search_dirs)
-        
-        if "internal_output_file" in library_data:
-            output_symbols_to_file(
-                internal_symbols,
-                library,
-                args.symbol_version,
-                library_data["internal_output_file"])
+    previous_symbols = read_symbols_from_file(
+        get_absolute_path_from_project_path(library_data["map_file"]))
+    
+    # New symbols
+    new_symbol_diff = list(new_symbols - previous_symbols)
+    new_symbol_diff.sort()
+
+    print("")
+    print("\033[1mNew Symbols 🟢🟢🟢\033[0m")
+    for s in new_symbol_diff:
+        print(f"\033[92m    {s}\033[0m")
+
+    # Deleted symbols
+    deleted_symbols = list(previous_symbols - new_symbols)
+    deleted_symbols.sort()
+    print("")
+    print("\033[1mDeleted Symbols 🔻🔻🔻\033[0m")
+    for s in deleted_symbols:
+        print(f"\033[91m    {s}\033[0m")
+
     exit(0)
 
     
