@@ -1,35 +1,28 @@
-This document explains how to use checkbox-mir to validate the graphical environment (drivers, userspace, snap setup) on your device.
-
-**Contents**
-- [The graphics-coreXX interface](#heading--graphics-core-interface)
-- [Checkbox](#heading--checkbox)
-- [checkbox-mir](#heading--checkbox-mir)
-  - [`checkbox-mir.checkbox-cli`](#heading--checkbox-mir--checkbox-cli)
-  - [The graphics-core test plan](#heading--checkbox-mir--graphics-core-test-plan)
-  - [The Mir test plan](#heading--checkbox-mir--mir-test-plan)
-  - [The Snap test plan](#heading--checkbox-mir--snap-test-plan)
-  - [Launchers](#heading--checkbox-mir--launchers)
-  - [Running remotely](#heading--checkbox-mir--running-remotely)
-
+---
+discourse: 37131
 ---
 
-<a href="#heading--graphics-core-interface"><h2 id="heading--graphics-core-interface">The graphics-coreXX interface</h2></a>
+# Using checkbox-mir to validate your snap graphical environment
+
+This document explains how to use checkbox-mir to validate the graphical environment (drivers, userspace, snap setup) on your device.
+
+## The graphics-coreXX interface
 
 To support graphics on Linux on a given piece of hardware, usually a kernel and userspace driver is required. When using snaps, the kernel driver is managed by the operating system, but the userspace driver needs to be available to your application.
 
-The recommended approach for this is using a content snap, through the `graphics-coreXX` interface. The current iteration is `graphics-core22`, see here for more information on that setup: [The graphics-core22 interface](/t/34663).
+The recommended approach for this is using a content snap, through the `graphics-coreXX` interface. The current iteration is `graphics-core22`, see here for more information on that setup: [The graphics-core22 interface](https://mir-server.io/docs/the-graphics-core22-snap-interface).
 
-<a href="#heading--checkbox"><h2 id="heading--checkbox">Checkbox</h2></a>
+## Checkbox
 
 Checkbox is a test automation software we're using extensively at Canonical. We chose it as a framework for providing these tests so that it's easy to run without specific knowledge.
 
 You can find out more about Checkbox on its GitHub page: [Checkbox](https://github.com/canonical/checkbox/).
 
-<a href="#heading--checkbox-mir"><h2 id="heading--checkbox-mir">checkbox-mir</h2></a>
+## checkbox-mir
 
 [checkbox-mir](https://snapcraft.io/checkbox-mir) is a suite of tests maintained by the Mir team that range from validating the DRM setup through to performance testing of Mir servers. It's provided as a snap package, so on most Linux distributions it's enough to:
 
-```plain
+```text
 $ sudo snap install checkbox-mir --devmode
 checkbox-mir 0+git.7970755 from Canonical Certification Team (ce-certification-qa) installed
 ```
@@ -37,7 +30,7 @@ checkbox-mir 0+git.7970755 from Canonical Certification Team (ce-certification-q
 The `--devmode` flag is required for Checkbox to be able to perform the testing.
 
 You can find out more about it provides through the `snap info` command:
-```plain
+```text
 $ snap info checkbox-mir
 name:      checkbox-mir
 summary:   Checkbox tests for the Mir project
@@ -66,7 +59,7 @@ channels:
 installed:          0+git.7970755            (49) 17MB devmode
 ```
 
-<a href="#heading--checkbox-mir--prerequisites"><h3 id="heading--checkbox-mir--prerequisites">Prerequisites</h3></a>
+### Prerequisites
 
 Depending on the test being ran, there are different requirements for it to start, and the test framework will try and determine if it's possible to run the test, rather than fail it.
 
@@ -76,11 +69,11 @@ Here's a list of the different requirements:
 3. a `graphics-coreXX` provider snap installed (by default that's [mesa-core20](https://snapcraft.io/mesa-core20) or [mesa-core22](https://snapcraft.io/mesa-core22), depending on which track of the above you install), and the above snaps, and `checkbox-mir` itself connected to it,
 4. to run as a non-privileged user and confirm Mir interactions with the display manager, a local user session needs to be active,
 
-<a href="#heading--checkbox-mir--checkbox-cli"><h3 id="heading--checkbox-mir--checkbox-cli">`checkbox-mir.checkbox-cli`</h3></a>
+### `checkbox-mir.checkbox-cli`
 
 `checkbox-mir.checkbox-cli` is the interactive entry point, in which you can manually select the test plan and tests to run, as well as control some aspects of the run:
 
-```plain
+```text
  Select test plan
 ┌───────────────────────────────────────────────────────────────────────┐
 │                                                                       │
@@ -100,7 +93,7 @@ Here's a list of the different requirements:
 
 See [Checkbox documentation](https://checkbox.readthedocs.io/en/latest/) for more information on the framework itself and how to interact with it.
 
-<a href="#heading--checkbox-mir--graphics-core-test-plan"><h3 id="heading--checkbox-mir--graphics-core-test-plan">The graphics-core test plan</h3></a>
+### The graphics-core test plan
 
 The graphics-coreXX test plan attempts to verify the graphics-coreXX enablement by running a handful of utilities verifying a number of aspects of graphics support:
 - DRM
@@ -110,7 +103,7 @@ The graphics-coreXX test plan attempts to verify the graphics-coreXX enablement 
 - VDPAU
 - Vulkan
 
-```plain
+```text
  Choose tests to run on your system:
 ┌───────────────────────────────────────────────────────────────────────┐
 │[X] - Uncategorised                                                    │
@@ -133,11 +126,11 @@ The graphics-coreXX test plan attempts to verify the graphics-coreXX enablement 
 
 The log results from each of these tests should provide insight into the status of the aspect in question. It's out of scope for this document to discuss the results beyond their success / failure state.
 
-<a href="#heading--checkbox-mir--mir-test-plan"><h3 id="heading--checkbox-mir--mir-test-plan">The Mir test plan</h3></a>
+### The Mir test plan
 
 This test plan runs the smoke and performance tests as found in the [mir-test-tools](https://snapcraft.io/mir-test-tools) snap. This is what we use to verify updated snaps continue to work across a number of hardware and scenarios.
 
-```plain
+```text
  Choose tests to run on your system:
 ┌───────────────────────────────────────────────────────────────────────┐
 │[X] - Uncategorised                                                    │
@@ -162,7 +155,7 @@ This test plan runs the smoke and performance tests as found in the [mir-test-to
 
 After selecting the tests, there's another step that we use to skip tests we know fail on a given piece of hardware:
 
-```plain
+```text
 System Manifest:
 ┌───────────────────────────────────────────────────────────────────────┐
 │ Does this machine have this piece of hardware?                        │
@@ -178,11 +171,11 @@ System Manifest:
  Press (T) to start Testing                               Shortcuts: y/n
 ```
 
-<a href="#heading--checkbox-mir--snap-test-plan"><h3 id="heading--checkbox-mir--snap-test-plan">The Snap test plan</h3></a>
+### The Snap test plan
 
 This test plan is primarily intended for the Mir team, allowing us to test updates to the snaps we maintain:
 
-```plain
+```text
  Choose tests to run on your system:
 ┌───────────────────────────────────────────────────────────────────────┐
 │[X] - Uncategorised                                                    │
@@ -203,7 +196,7 @@ This test plan is primarily intended for the Mir team, allowing us to test updat
  Press (T) to start Testing                                     (H) Help
 ```
 
-<a href="#heading--checkbox-mir--launchers"><h3 id="heading--checkbox-mir--launchers">Launchers</h3></a>
+### Launchers
 
 We provide a couple of launchers for automated runs:
 - `checkbox-mir.graphics`: runs the graphics-core test plan
@@ -213,7 +206,7 @@ If you want to integrate checkbox-mir into your CI, these are likely what you wa
 
 `checkbox-mir.snaps` preselects the Snap test plan, but lets you choose which snaps to test.
 
-<a href="#heading--checkbox-mir--running-remotely"><h3 id="heading--checkbox-mir--running-remotely">Running remotely</h3></a>
+### Running remotely
 
 The recommended way to run Checkbox tests is over the network - and using Checkbox itself, rather than a SSH connection (see [Checkbox Remote](https://checkbox.readthedocs.io/en/latest/explanation/remote.html) for more information).
 
