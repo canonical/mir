@@ -8,8 +8,6 @@ mir (2.16.4) UNRELEASED; urgency=medium
     - Fixed custom attributes propagation on outputs
       (Fixes: https://github.com/canonical/ubuntu-frame/issues/172)
     - Handle the Ubuntu 64-bit time_t apocalypse (Fixes: #3285)
-    - Fix for eglQueryDmaBufModifiersEXT spuriously returns EGL_BAD_PARAMETER for a few formats on Nvidia
-      (Fixes: #3278)
 
  -- Matthew Kosarek <matt.kosarek@canonical.com>  Wed, 27 Mar 2024 14:34:35 -0500
 
