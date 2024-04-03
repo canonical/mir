@@ -1,3 +1,9 @@
+---
+discourse: 30112
+---
+
+# Developing a Wayland Compositor using Mir
+
 ## Overview
 
 The Mir project provides libraries for creating Wayland compositors. The design is intended to make it easy build something simple and easy to customize the compositor in a number of ways.
@@ -39,7 +45,7 @@ The approach to building your own compositor with Mir is to start with the basic
 
 The simplest Wayland compositor can be written in just a few lines:
 
-```c++
+```cpp
 #include <miral/runner.h>
 #include <miral/minimal_window_manager.h>
 #include <miral/set_window_management_policy.h>
@@ -81,7 +87,7 @@ To compile your program you'll need your normal C++ toolchain and the MirAL [Mir
 sudo apt install libmiral-dev mir-graphics-drivers-desktop
 ```
 If, like the Mir project itself, you're using G++ and CMake, then here's a `CMakeLists.txt` for the "Hello World" example shown above. (If you're using another toolchain, you hopefully know how to do the equivalent with that.)
-```plain
+```text
 cmake_minimum_required(VERSION 3.23)
 project(hello_world)
 
@@ -111,7 +117,7 @@ We specify the `WAYLAND_DISPLAY` environment variable for two reasons: because t
 WAYLAND_DISPLAY=wayland-99 gedit
 ```
 
-![image|690x572](upload://wLmLF0vkJa2ofmmh7pCTjH1AV7Y.png) 
+![image|690x572](compositor.png)
 
 Of course, this is a very minimalistic example and most compositors will be running as part of an ecosystem that launches appications without typing in these incantations.
 
@@ -121,7 +127,7 @@ Compositors can be built for various purposes, but the best example to explain t
 
 Because Miriway attempts to do more than the "Hello World" example it passes a longer list to `run_with()` but the the structure is the same. The various objects passed need to be defined in a scope (such as the body of `main()` as used here) that ensures they live for the duration of the call:
 
-```c++
+```cpp
 int main(int argc, char const* argv[])
 {
     MirRunner runner{argc, argv};

@@ -1,3 +1,9 @@
+---
+discourse: 8484
+---
+
+# OK, so what is this Wayland thing anyway?
+
 **Or: things are complicated. Let's see if one more explanation will incrementally reduce the Internet's Wrongness™**
 
 We've recently (ok, recently-ish) released [Mir 1.0](https://github.com/MirServer/mir/releases/tag/v1.0.0) with usable Wayland support. Yay!

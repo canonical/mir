@@ -1,3 +1,9 @@
+---
+discourse: 11993
+---
+
+# Developing Wayland extension protocols for Mir servers
+
 With the [Mir 1.3 release](https://discourse.ubuntu.com/t/mir-1-3-0-release/11638/2) we  smoothed the way for shells adding Wayland extension protocols in Mir based shells.
 
 ## The worked example
@@ -18,7 +24,7 @@ The `libmirwayland-dev` provides the tooling needed to implement the protocol in
 
 While working on this I proposed adding some ["primary selection" tests](https://github.com/MirServer/wlcs/pull/106) to wlcs and they are included in the 1.1 release of wlcs. Here's an example of what the tests look like:
 
-```c++
+```cpp
 TEST_F(PrimarySelection, source_sees_request)
 {
     MockPrimarySelectionSourceListener  source_listener{source_app.source};
@@ -72,7 +78,7 @@ All these generated and and-written files are combined into a static library tha
 
 To run wlcs tests requires a "test fixture" that allows the test executable to load and control the compositor. Mir makes it very easy to implement a fixture: here is the entire "fixture" code for egmde:
 
-```c++
+```cpp
 #include "primary_selection.h"
 #include "gtk_primary_selection.h"
 
@@ -135,7 +141,7 @@ extern WlcsServerIntegration const wlcs_server_integration {
 
 With all this in place, we just need to run our updated wlcs with the egmde test fixture:
 
-```plain
+```text
 $ `pkg-config --variable test_runner wlcs` cmake-build-debug/egmde-wlcs.so --gtest_filter=Prim*
 Note: Google Test filter = Prim*
 [==========] Running 5 tests from 1 test case.

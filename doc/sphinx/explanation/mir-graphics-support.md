@@ -1,16 +1,10 @@
+---
+discourse: 13185
+---
+
+# Mir graphics support
+
 This document describes the requirements for running Mir.
-
-**Contents:**
-
-- [Summary of current Mir graphics platforms](#heading--summary-mir-graphics-platforms)
-- [Choosing hardware and drivers](#heading--choosing-hardware-and-drivers)
-- [Some hardware examples](#heading--some-hardware-examples)
-  - [RPi 3](#heading--some-hardware-examples--rpi-3)
-  - [i.MX6](#heading--some-hardware-examples--i-mx6)
-  - [i.MX8](#heading--some-hardware-examples--i-mx8)
-- [Driver requirements](#heading--driver-requirements)
-  - [gbm-kms](#heading--driver-requirements--gbm-kms)
-  - [eglstream-kms](#heading--driver-requirements--eglstream-kms)
 
 ---
 
@@ -20,7 +14,7 @@ There are Mir platforms supplied with Mir and the potential to develop more. The
 
 The most widely used and tested platform is “mesa-kms” which works with the Mesa collection of open-source graphics drivers. That’s used on Intel-graphics based desktops and a variety of SBCs and other devices.
 
-<a href="#heading--summary-mir-graphics-platforms"><h2 id="heading--summary-mir-graphics-platforms">Summary list of current Mir graphics platforms</h2></a>
+## Summary list of current Mir graphics platforms
 
 Platform|Status|Description
 --|--|--
@@ -33,7 +27,7 @@ dispmanx|Released|Works with Broadcom proprietary DispmanX API.
 
 Each of these platforms depends on having the corresponding kernel and userspace drivers installed on the system. On startup Mir will “probe” the system for support of the above and select the best supported platform.
 
-<a href="#heading--choosing-hardware-and-drivers"><h2 id="heading--choosing-hardware-and-drivers">Choosing hardware and drivers</h2></a>
+## Choosing hardware and drivers
 
 When configuring a system for use with Mir it is not only necessary to check the hardware and drivers for compatibility with Mir, but also with the application software.
 
@@ -43,9 +37,9 @@ There’s a further complication in that Mir expects applications to use Wayland
 
 Also, there are applications that do not support Wayland directly. These can be supported with Xwayland - a program that translates from X11 to Wayland for the application. But that leads to further limitations as the GL acceleration support through Xwayland depends upon the graphics drivers. It works with Intel on Mesa, but beyond that it is patchy.
 
-<a href="#heading--some-hardware-examples"><h2 id="heading--some-hardware-examples">Some hardware examples</h2></a>
+## Some hardware examples
 
-<a href="#heading--some-hardware-examples--rpi-3"><h3 id="heading--some-hardware-examples--rpi-3">RPi 3</h3></a>
+### RPi 3
 
 GPU: VideoCore IV
 
@@ -57,7 +51,7 @@ Supports GL.|Requires out-of-tree patches to https://github.com/raspberrypi/user
 Does not support OMX.<br/>May support some video encode/decode via mmal interface. This is apparently slower than OMX.|Potentially higher performance (particularly OMX for video decode)
 As a mesa/gbm-based platform, would expect 3D to work in XWayland.<br/>Mmal may work in XWayland.|As a non-mesa/gbm platform would likely not have 3D (or video decode) in XWayland.
 
-<a href="#heading--some-hardware-examples--i-mx6"><h3 id="heading--some-hardware-examples--i-mx6">i.MX6</h3></a>
+### i.MX6
 GPU: Vivante GC something ([varies by model](https://en.wikipedia.org/wiki/I.MX#i.MX_6_series))
 
 Mesa open-source graphics stack|Proprietary driver
@@ -68,7 +62,7 @@ Supports 3D (mesa GL) + video decoding (CODA v4l2)|Supports 3D + video decoding
 Performance may be an issue (for example, https://github.com/Igalia/meta-webkit/issues/13)|Performance may be better; supported by downstream projects (again, cf: https://github.com/Igalia/meta-webkit/wiki/i.MX6)
 Notably - the open source stack should provide 3D acceleration (and potentially video acceleration) in XWayland.|Support for 3D in XWayland is unknown; would likely require significant out-of-tree patches.
 
-<a href="#heading--some-hardware-examples--i-mx8"><h3 id="heading--some-hardware-examples--i-mx8">i.MX8</h3></a>
+### i.MX8
 GPU: Vivante GC7000
 Mesa open-source graphics stack|Proprietary driver
 --|--
@@ -76,16 +70,16 @@ Etnaviv - Full open-source stack, using standard KMS/dma-buf/gbm interfaces. Rev
 Same comments as etnaviv on i.MX6 apply, but the GPU is newer and the driver support is likewise newer; there may be more missing features/bugs than i.MX6 support.|same comments as i.MX6. <br/>_It’s likely that a Mir vivante platform would work on both i.MX6 and i.MX8; likewise, there is apparently Weston support (again, in the form of out-of-tree patches)_
 Looks like there might not be open-source video decode support (cf: https://community.nxp.com/thread/489829#comment-1160206). Unknown whether we could interface the IMX bits with the etnaviv DRM bits.|Proprietary video decode solution.
 
-<a href="#heading--driver-requirements"><h2 id="heading--driver-requirements">Driver requirements</h2></a>
+## Driver requirements
 
 Different Mir platforms require different features of the underlying driver stack. The features needed to enable a given Mir platform are:
 
-<a href="#heading--driver-requirements--gbm-kms"><h3 id="heading--driver-requirements--gbm-kms">gbm-kms</h3></a>
+### gbm-kms
 
 The gbm-kms platform requires a DRM device node with KMS support, a `libgbm` implementation for buffer allocation, and an EGL implementation supporting at least [EGL_KHR_platform_gbm](https://www.khronos.org/registry/EGL/extensions/KHR/EGL_KHR_platform_gbm.txt) (or the equivalent [EGL_MESA_platform_gbm](https://www.khronos.org/registry/EGL/extensions/MESA/EGL_MESA_platform_gbm.txt) extension) and [EGL_WL_bind_wayland_display](https://www.khronos.org/registry/EGL/extensions/WL/EGL_WL_bind_wayland_display.txt).
 
 Optionally, the EGL implementation can support [EGL_EXT_image_dma_buf_import](https://www.khronos.org/registry/EGL/extensions/EXT/EGL_EXT_image_dma_buf_import.txt), [EGL_EXT_image_dma_buf_import_modifiers](https://www.khronos.org/registry/EGL/extensions/EXT/EGL_EXT_image_dma_buf_import_modifiers.txt), and use the [zwp_linux_dmabuf_unstable_v1](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/master/unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml) Wayland protocol for client buffer transfer. Support for this was added in Mir 2.3. Composite-bypass support depends on this implementation. Some future performance improvements, such as overlay plane usage, are likely to require this support from the driver stack.
 
-<a href="#heading--driver-requirements--eglstream-kms"><h3 id="heading--driver-requirements--eglstream-kms">eglstream-kms</h3></a>
+### eglstream-kms
 
 The eglstream-kms platform requires a DRM device node with Atomic KMS support and an EGL implementation supporting [EGL_EXT_platform_base](https://www.khronos.org/registry/EGL/extensions/EXT/EGL_EXT_platform_base.txt), [EGL_EXT_platform_device](https://www.khronos.org/registry/EGL/extensions/EXT/EGL_EXT_platform_device.txt), [EGL_EXT_device_base](https://www.khronos.org/registry/EGL/extensions/EXT/EGL_EXT_device_base.txt), [EGL_EXT_device_drm](https://www.khronos.org/registry/EGL/extensions/EXT/EGL_EXT_device_drm.txt), and [EGL_EXT_output_base](https://www.khronos.org/registry/EGL/extensions/EXT/EGL_EXT_output_base.txt).

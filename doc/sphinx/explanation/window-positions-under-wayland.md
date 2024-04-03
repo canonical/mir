@@ -1,3 +1,9 @@
+---
+discourse: 29925
+---
+
+# Window positions under Wayland
+
 ## Preamble
 
 Design is all about balance, and the design of graphical user interfaces has a lot of interests to be balanced. In the context of Wayland, the principle interested parties are the designer of the compositor/window manager/shell [server] and the designer of the application toolkit/application [client]. Wayland is the "language" these two parties use to communicate.
@@ -25,23 +31,23 @@ Obviously, that approach leads to frustration on the part of designers of client
 Although a lot of freedom is indeed being lost, when looking at applications in the real world they only use a small fraction of that and for some specific cases. That's not surprising, as they are supporting some visual "idioms" that users recognise because they are shared across applications.
 
 1. Regular or "top level" windows
-![regular_540p|690x388](upload://oqc5Ddy3qofTvULMUT1dWXHeXAk.gif) 
+![regular_540p|690x388](regular_540p.gif)
 These are handled by `xdg-shell`'s `xdg_toplevel`.
 
 2. Dialog windows
-![dialog_540p|690x388](upload://iBRX5XVOvcG3DuDtN0WtMJerBbY.gif) 
+![dialog_540p|690x388](dialog_540p.gif)
 These are handled by `xdg-shell`'s `xdg_toplevel` with the "parent" set.
 
 3. Menu and Popup windows
-![popup_540p|690x388](upload://pT0aDMC6AReRPl4BOk5TxzWlG8K.gif) 
+![popup_540p|690x388](popup_540p.gif)
 These are handled by `xdg-shell`'s `xdg_popup` with a "grab"
 
 4. Tooltip and hover windows
-![tip_540p|690x388](upload://o0ZI6RzZuX4Z8uFhJhlrC7pSUSp.gif) 
+![tip_540p|690x388](tip_540p.gif)
 These are handled by `xdg-shell`'s `xdg_popup`.
 
 5. Satellite and toolbox windows
-![sattelite_540p|690x388](upload://tr9i7nr0hqpDZyiTkfml3QmPS3i.gif) 
+![sattelite_540p|690x388](satellite_540p.gif)
 These are not currently handled by a Wayland extension, but could be added in a way consistent with the support for other window types.
 
 ## Conclusion
