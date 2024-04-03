@@ -255,3 +255,6 @@ breathe_order_parameters_first = True
 # Mermaid
 mermaid_version = "10.5.0"
 mermaid_d3_zoom = True
+
+# MyST
+myst_heading_anchors = 3
