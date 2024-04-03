@@ -45,18 +45,18 @@ public:
                       MirTouchpadClickModes click_mode,
                       MirTouchpadScrollModes scroll_mode);
     void device_added(std::shared_ptr<input::Device> const& device) override;
-    void device_changed(std::shared_ptr<input::Device> const&) override {};
-    void device_removed(std::shared_ptr<input::Device> const&) override {};
+    void device_changed(std::shared_ptr<input::Device> const&) override {}
+    void device_removed(std::shared_ptr<input::Device> const&) override {}
     void changes_complete() override {}
 private:
-    bool disable_while_typing;
-    MirPointerAcceleration mouse_profile;
-    double mouse_cursor_acceleration_bias;
-    double mouse_scroll_speed_scale;
-    double touchpad_cursor_acceleration_bias;
-    double touchpad_scroll_speed_scale;
-    MirTouchpadClickModes click_mode;
-    MirTouchpadScrollModes scroll_mode;
+    bool const disable_while_typing;
+    MirPointerAcceleration const mouse_profile;
+    double const mouse_cursor_acceleration_bias;
+    double const mouse_scroll_speed_scale;
+    double const touchpad_cursor_acceleration_bias;
+    double const touchpad_scroll_speed_scale;
+    MirTouchpadClickModes const click_mode;
+    MirTouchpadScrollModes const scroll_mode;
 };
 
 }

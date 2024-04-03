@@ -152,8 +152,7 @@ void me::InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& devi
 {
     if (contains(device->capabilities(), mi::DeviceCapability::touchpad))
     {
-	auto optional_pointer_config = device->pointer_configuration();
-        if (optional_pointer_config.is_set())
+	    if (auto const optional_pointer_config = device->pointer_configuration(); optional_pointer_config.is_set())
         {
             MirPointerConfig pointer_config( optional_pointer_config.value() );
             pointer_config.cursor_acceleration_bias(touchpad_cursor_acceleration_bias);
@@ -162,8 +161,7 @@ void me::InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& devi
             device->apply_pointer_configuration(pointer_config);
         }
 
-	auto optional_touchpad_config = device->touchpad_configuration();
-        if (optional_touchpad_config.is_set())
+	    if (auto const optional_touchpad_config = device->touchpad_configuration(); optional_touchpad_config.is_set())
         {
             MirTouchpadConfig touch_config( optional_touchpad_config.value() );
             touch_config.disable_while_typing(disable_while_typing);
@@ -174,8 +172,7 @@ void me::InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& devi
     }
     else if (contains(device->capabilities(), mi::DeviceCapability::pointer))
     {
-	auto optional_pointer_config = device->pointer_configuration();
-        if (optional_pointer_config.is_set())
+	    if (auto optional_pointer_config = device->pointer_configuration(); optional_pointer_config.is_set())
         {
             MirPointerConfig pointer_config( optional_pointer_config.value() );
             pointer_config.acceleration(mouse_profile);
