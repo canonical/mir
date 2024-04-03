@@ -58,6 +58,7 @@ add_library(miral SHARED
     custom_renderer.cpp                 ${miral_include}/miral/custom_renderer.h
     display_configuration.cpp           ${miral_include}/miral/display_configuration.h
     external_client.cpp                 ${miral_include}/miral/external_client.h
+    input_device_config.cpp             ${miral_include}/miral/input_device_config.h
     keymap.cpp                          ${miral_include}/miral/keymap.h
     minimal_window_manager.cpp          ${miral_include}/miral/minimal_window_manager.h
     runner.cpp                          ${miral_include}/miral/runner.h

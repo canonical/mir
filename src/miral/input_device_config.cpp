@@ -14,25 +14,52 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "server_example_input_device_config.h"
+#include "miral/input_device_config.h"
 
+#include "mir/input/device.h"
 #include "mir/input/device_capability.h"
+#include "mir/input/input_device_hub.h"
+#include "mir/input/input_device_observer.h"
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_touchpad_config.h"
-#include "mir/input/input_device_hub.h"
-#include "mir/input/device.h"
 #include "mir/options/option.h"
 #include "mir/server.h"
+#include "mir_toolkit/mir_input_device_types.h"
 
-namespace me = mir::examples;
 namespace mi = mir::input;
 
-///\example server_example_input_device_config.cpp
-/// Demonstrate input device configuration
 namespace
 {
-char const* const disable_while_typing_opt = "disable-while-typing";
-char const* const tap_to_click_opt = "tap-to-click";
+class InputDeviceConfig : public mir::input::InputDeviceObserver
+{
+public:
+    InputDeviceConfig(bool disable_while_typing,
+                      bool tap_to_click,
+                      MirPointerAcceleration mouse_profile,
+                      double mouse_cursor_acceleration_bias,
+                      double mouse_scroll_speed_scale,
+                      double touchpad_cursor_acceleration_bias,
+                      double touchpad_scroll_speed_scale,
+                      MirTouchpadClickModes click_mode,
+                      MirTouchpadScrollModes scroll_mode);
+    void device_added(std::shared_ptr<mi::Device> const& device) override;
+    void device_changed(std::shared_ptr<mi::Device> const&) override {}
+    void device_removed(std::shared_ptr<mi::Device> const&) override {}
+    void changes_complete() override {}
+private:
+    bool const disable_while_typing;
+    MirPointerAcceleration const mouse_profile;
+    double const mouse_cursor_acceleration_bias;
+    double const mouse_scroll_speed_scale;
+    double const touchpad_cursor_acceleration_bias;
+    double const touchpad_scroll_speed_scale;
+    MirTouchpadClickModes const click_mode;
+    MirTouchpadScrollModes const scroll_mode;
+    bool const tap_to_click;
+};
+
+char const* const disable_while_typing_opt = "touchpad-disable-while-typing";
+char const* const tap_to_click_opt = "touchpad-tap-to-click";
 char const* const mouse_acceleration_opt = "mouse-acceleration";
 char const* const acceleration_none = "none";
 char const* const acceleration_adaptive = "adaptive";
@@ -51,7 +78,7 @@ char const* const touchpad_click_mode_area = "area";
 char const* const touchpad_click_mode_finger_count = "finger-count";
 }
 
-void me::add_input_device_configuration_options_to(mir::Server& server)
+void miral::add_input_device_configuration(::mir::Server& server)
 {
     // Add choice of monitor configuration
     server.add_configuration_option(disable_while_typing_opt,
@@ -123,7 +150,7 @@ void me::add_input_device_configuration_options_to(mir::Server& server)
     server.add_init_callback([&]()
         {
             auto const options = server.get_options();
-            auto const input_config = std::make_shared<me::InputDeviceConfig>(
+            auto const input_config = std::make_shared<InputDeviceConfig>(
                 options->get<bool>(disable_while_typing_opt),
                 options->get<bool>(tap_to_click_opt),
                 to_profile(options->get<std::string>(mouse_acceleration_opt)),
@@ -138,7 +165,7 @@ void me::add_input_device_configuration_options_to(mir::Server& server)
         });
 }
 
-me::InputDeviceConfig::InputDeviceConfig(bool disable_while_typing,
+InputDeviceConfig::InputDeviceConfig(bool disable_while_typing,
                                          bool tap_to_click,
                                          MirPointerAcceleration mouse_profile,
                                          double mouse_cursor_acceleration_bias,
@@ -156,7 +183,7 @@ me::InputDeviceConfig::InputDeviceConfig(bool disable_while_typing,
 {
 }
 
-void me::InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& device)
+void InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& device)
 {
     if (contains(device->capabilities(), mi::DeviceCapability::touchpad))
     {

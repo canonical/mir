@@ -1,5 +1,4 @@
 add_library(exampleserverconfig STATIC
-  server_example_input_device_config.cpp
   server_example_input_event_filter.cpp
   server_example_input_filter.cpp
 )
