@@ -47,10 +47,9 @@ struct WindowInfo
 
     bool is_visible() const;
 
-    /// \remark Since MirAL 5.0
-    /// \deprecated Use Surface::content_size()/Surface::window_size() instead
+    /// \deprecated Obsolete: Window::size() includes decorations
     /// @{
-    [[deprecated("use Surface::content_size()/Surface::window_size() instead")]]
+    [[deprecated("Obsolete: Window::size() includes decorations")]]
     static bool needs_titlebar(MirWindowType type);
     /// @}
 
