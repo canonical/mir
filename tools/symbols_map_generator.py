@@ -72,30 +72,22 @@ def should_generate_as_class_or_struct(node: clang.cindex.Cursor):
           and node.is_definition())
 
 
-def create_node_symbol_name(node: clang.cindex.Cursor):
-    if (node.kind == clang.cindex.CursorKind.VAR_DECL
-        or node.kind == clang.cindex.CursorKind.CONSTRUCTOR
-        or node.kind == clang.cindex.CursorKind.DESTRUCTOR
-        or node.kind == clang.cindex.CursorKind.ENUM_DECL
-        or node.kind == clang.cindex.CursorKind.CLASS_DECL
-        or node.kind == clang.cindex.CursorKind.STRUCT_DECL):
-        return node.displayname
-    
-    assert (node.kind == clang.cindex.CursorKind.FUNCTION_DECL 
-          or node.kind == clang.cindex.CursorKind.CXX_METHOD
-          or node.kind == clang.cindex.CursorKind.CONVERSION_FUNCTION)
+def is_operator(node: clang.cindex.Cursor) -> bool:
+    if node.spelling.startswith("operator"):
+        remainder = node.spelling[len("operator"):]
+        if any(not c.isalnum() for c in remainder):
+            return True
+        
+    return False
 
-    symbol_name = node.displayname
-    if node.kind == clang.cindex.CursorKind.CONVERSION_FUNCTION:
-        # This little snippet is mightily unfortunate. The regular
-        # spelling/displayname lacks the template information that
-        # we might require here. That can be gathered from the result_type.
-        symbol_name = f"operator {node.result_type.spelling}()"
 
-    if node.is_const_method():
-        symbol_name = f"{symbol_name} const"
-
-    return symbol_name
+def create_node_symbol_name(node: clang.cindex.Cursor) -> str:
+    if is_operator(node):
+        return "operator"
+    elif node.kind == clang.cindex.CursorKind.DESTRUCTOR:
+        return f"?{node.spelling[1:]}"
+    else:
+        return node.spelling
 
 
 def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> set[str]:
@@ -135,7 +127,9 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
             result.add(f"vtable?for?{namespace_str};")
             result.add(f"typeinfo?for?{namespace_str};")
         else:
-            result.add(f"\"{namespace_str}\";")
+            def add_internal(s: str):
+                result.add(f"{s}*;")
+            add_internal(namespace_str)
             
             # Check if we're marked virtual
             is_virtual = False
@@ -144,13 +138,13 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
                 or node.kind == clang.cindex.CursorKind.CONSTRUCTOR
                 or node.kind == clang.cindex.CursorKind.CONVERSION_FUNCTION)
                 and node.is_virtual_method()):
-                result.add(f"\"non-virtual?thunk?to?{namespace_str}\";")
+                add_internal(f"non-virtual?thunk?to?{namespace_str}")
                 is_virtual = True
             else:
                 # Check if we're marked override
                 for  child in node.get_children():
                     if child.kind == clang.cindex.CursorKind.CXX_OVERRIDE_ATTR:
-                        result.add(f"\"non-virtual?thunk?to?{namespace_str}\";")
+                        add_internal(f"non-virtual?thunk?to?{namespace_str}")
                         is_virtual = True
                         break
 
@@ -180,7 +174,7 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
                         # Search the immediate base classes for the function name
                         for other_child in class_or_struct_node.get_children():
                             if (other_child.displayname == node.displayname):
-                                result.add(f"\"virtual?thunk?to?{namespace_str}\";")
+                                add_internal(f"virtual?thunk?to?{namespace_str}")
                                 return True
 
                     # Looks like it wasn't in any of our direct ancestors, so let's 
@@ -214,7 +208,7 @@ def process_directory(directory: str, search_dirs: Optional[list[str]]) -> set[s
     search_variables = []
     for dir in search_dirs:
         search_variables.append(f"-I{get_absolute_path_from_project_path(dir).as_posix()}")
-    args = ['-std=c++23', '-x', 'c++-header'] + search_variables
+    args = ['-fsyntax-only', '-std=c++23', '-x', 'c++-header'] + search_variables
     for file in files:
         idx = clang.cindex.Index.create()
         tu = idx.parse(
@@ -278,7 +272,7 @@ def main():
     
     previous_symbols = read_symbols_from_file(
         get_absolute_path_from_project_path(library_data["map_file"]))
-    
+
     # New symbols
     new_symbol_diff = list(new_symbols - previous_symbols)
     new_symbol_diff.sort()
