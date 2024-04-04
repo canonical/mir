@@ -47,7 +47,12 @@ struct WindowInfo
 
     bool is_visible() const;
 
+    /// \remark Since MirAL 5.0
+    /// \deprecated Use Surface::content_size()/Surface::window_size() instead
+    /// @{
+    [[deprecated("use Surface::content_size()/Surface::window_size() instead")]]
     static bool needs_titlebar(MirWindowType type);
+    /// @}
 
     void constrain_resize(mir::geometry::Point& requested_pos, mir::geometry::Size& requested_size) const;
 
