@@ -684,6 +684,30 @@ TEST(MultiThreadedCompositor, when_no_initial_composite_is_needed_there_is_none)
     compositor.stop();
 }
 
+TEST(MultiThreadedCompositor, initial_composite_is_requested_we_composite_exactly_once_on_start)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    unsigned int const nbuffers = 3;
+
+    auto display = std::make_shared<mtd::StubDisplay>(nbuffers);
+    auto scene = std::make_shared<StubScene>();
+    auto db_compositor_factory = std::make_shared<RecordingDisplayBufferCompositorFactory>();
+    mc::MultiThreadedCompositor compositor{display, scene, db_compositor_factory, null_display_listener, null_report, default_delay, true};
+
+    // Verify we're actually starting at zero frames
+    ASSERT_TRUE(db_compositor_factory->check_record_count_for_each_buffer(nbuffers, 0, 0));
+
+    compositor.start();
+    std::this_thread::sleep_for(100ms);
+
+    // Verify we've composited exactly once
+    EXPECT_TRUE(db_compositor_factory->check_record_count_for_each_buffer(nbuffers, 1, 1));
+
+    compositor.stop();
+}
+
 TEST(MultiThreadedCompositor, when_no_initial_composite_is_needed_we_still_composite_on_restart)
 {
     using namespace testing;
