@@ -121,7 +121,7 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
             namespace_str = f"{parent.spelling}::{namespace_str}"
             parent = parent.semantic_parent
 
-        # Classes and structs have a specific outpu
+        # Classes and structs have a specific output
         if (node.kind == clang.cindex.CursorKind.CLASS_DECL
             or node.kind == clang.cindex.CursorKind.STRUCT_DECL):
             result.add(f"vtable?for?{namespace_str};")
