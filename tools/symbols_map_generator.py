@@ -40,6 +40,14 @@ library_to_data_map: dict[LibraryName, LibraryInfo] = {
             "include/miral"
         ],
         "map_file": "src/miral/symbols.map",
+        "include_headers": [
+            "include/common",
+            "include/core",
+            "include/miral",
+            "include/renderer",
+            "include/server",
+            "include/wayland"
+        ]
     },
     "mir_server": {
         "headers_dir": [
@@ -58,22 +66,36 @@ def get_absolute_path_from_project_path(project_path: str) -> Path:
     return Path(__file__).parent.parent / project_path
 
 
-def create_symbol_name(node: clang.cindex.Cursor) -> str:
-    if(node.kind == clang.cindex.CursorKind.CLASS_DECL
-        or node.kind == clang.cindex.CursorKind.STRUCT_DECL
-        or node.kind == clang.cindex.CursorKind.FIELD_DECL):
-        return node.displayname
-    
-    if node.kind == clang.cindex.CursorKind.DESTRUCTOR:
-        return node.displayname
-
-    return f"{node.displayname}"
-
-
 def should_generate_as_class_or_struct(node: clang.cindex.Cursor):
     return ((node.kind == clang.cindex.CursorKind.CLASS_DECL
           or node.kind == clang.cindex.CursorKind.STRUCT_DECL)
           and node.is_definition())
+
+
+def create_node_symbol_name(node: clang.cindex.Cursor):
+    if (node.kind == clang.cindex.CursorKind.VAR_DECL
+        or node.kind == clang.cindex.CursorKind.CONSTRUCTOR
+        or node.kind == clang.cindex.CursorKind.DESTRUCTOR
+        or node.kind == clang.cindex.CursorKind.ENUM_DECL
+        or node.kind == clang.cindex.CursorKind.CLASS_DECL
+        or node.kind == clang.cindex.CursorKind.STRUCT_DECL):
+        return node.displayname
+    
+    assert (node.kind == clang.cindex.CursorKind.FUNCTION_DECL 
+          or node.kind == clang.cindex.CursorKind.CXX_METHOD
+          or node.kind == clang.cindex.CursorKind.CONVERSION_FUNCTION)
+
+    symbol_name = node.displayname
+    if node.kind == clang.cindex.CursorKind.CONVERSION_FUNCTION:
+        # This little snippet is mightily unfortunate. The regular
+        # spelling/displayname lacks the template information that
+        # we might require here. That can be gathered from the result_type.
+        symbol_name = f"operator {node.result_type.spelling}()"
+
+    if node.is_const_method():
+        symbol_name = f"{symbol_name} const"
+
+    return symbol_name
 
 
 def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> set[str]:
@@ -93,11 +115,15 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
           and node.location.file.name == filename
           and not node.is_pure_virtual_method()):
         parent = node.semantic_parent
-        namespace_str = create_symbol_name(node)
+        namespace_str = create_node_symbol_name(node)
 
         # Walk up the tree to build the namespace
         while parent is not None:
             if parent.kind == clang.cindex.CursorKind.TRANSLATION_UNIT:
+                break
+
+            # TODO: FIX ME
+            if parent.spelling == "std":
                 break
 
             namespace_str = f"{parent.spelling}::{namespace_str}"
@@ -109,7 +135,7 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
             result.add(f"vtable?for?{namespace_str};")
             result.add(f"typeinfo?for?{namespace_str};")
         else:
-            result.add(f"{namespace_str};")
+            result.add(f"\"{namespace_str}\";")
             
             # Check if we're marked virtual
             is_virtual = False
@@ -118,13 +144,13 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
                 or node.kind == clang.cindex.CursorKind.CONSTRUCTOR
                 or node.kind == clang.cindex.CursorKind.CONVERSION_FUNCTION)
                 and node.is_virtual_method()):
-                result.add(f"non-virtual?thunk?to?{namespace_str};")
+                result.add(f"\"non-virtual?thunk?to?{namespace_str}\";")
                 is_virtual = True
             else:
                 # Check if we're marked override
                 for  child in node.get_children():
                     if child.kind == clang.cindex.CursorKind.CXX_OVERRIDE_ATTR:
-                        result.add(f"non-virtual?thunk?to?{namespace_str};")
+                        result.add(f"\"non-virtual?thunk?to?{namespace_str}\";")
                         is_virtual = True
                         break
 
@@ -154,7 +180,7 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
                         # Search the immediate base classes for the function name
                         for other_child in class_or_struct_node.get_children():
                             if (other_child.displayname == node.displayname):
-                                result.add(f"virtual?thunk?to?{namespace_str};")
+                                result.add(f"\"virtual?thunk?to?{namespace_str}\";")
                                 return True
 
                     # Looks like it wasn't in any of our direct ancestors, so let's 
@@ -188,7 +214,7 @@ def process_directory(directory: str, search_dirs: Optional[list[str]]) -> set[s
     search_variables = []
     for dir in search_dirs:
         search_variables.append(f"-I{get_absolute_path_from_project_path(dir).as_posix()}")
-    args = ['-std=c++20', '-x', 'c++-header', '-nostdlibinc'] + search_variables
+    args = ['-std=c++23', '-x', 'c++-header'] + search_variables
     for file in files:
         idx = clang.cindex.Index.create()
         tu = idx.parse(
