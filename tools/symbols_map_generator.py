@@ -110,13 +110,19 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
         namespace_str = create_node_symbol_name(node)
 
         # Walk up the tree to build the namespace
+        has_encountered_namespace = False
         while parent is not None:
             if parent.kind == clang.cindex.CursorKind.TRANSLATION_UNIT:
                 break
 
-            # TODO: FIX ME
-            if parent.spelling == "std":
-                break
+            if parent.kind == clang.cindex.CursorKind.NAMESPACE:
+                if has_encountered_namespace and parent.spelling == "std":
+                    # TODO: I am unsure why, but the 'std' namespace isn't closed
+                    #  by the time we encounter other symbols. We can ignore std
+                    #  in this case
+                    break
+                else:
+                    has_encountered_namespace = True
 
             namespace_str = f"{parent.spelling}::{namespace_str}"
             parent = parent.semantic_parent
@@ -218,20 +224,29 @@ def process_directory(directory: str, search_dirs: Optional[list[str]]) -> set[s
         root = tu.cursor
         list(traverse_ast(root, file.as_posix(), result))
 
-    return result 
-    
+    return result
 
-def read_symbols_from_file(file: Path) -> set[str]:
-    # WARNING: This is a very naive way to parse these files. We are assuming
-    #  that any line starting with 4 spaces is a symbol.
-    symbols: set[str] = set()
+
+def read_symbols_from_file(file: Path, library_name: str) -> list[tuple[str, set[str]]]:
+    """
+    Returns a list of tuples that match the version to the list of symbols in that version.
+    This list is assumed to be ordered.
+    """
+    # WARNING: This is a very naive way to parse these files
+    library_name = library_name.upper() + "_"
+    retval: list[tuple[str, set[str]]] = []
     with open(file.as_posix()) as f:
         for line in f.readlines():
-            if line.startswith("    "):
+            if line.startswith(library_name):
+                # This denotes that a new version
+                version_str = line[len(library_name):].split()[0]
+                retval.append((version_str, set()))
+            elif line.startswith("    "):
+                assert len(retval) > 0
                 line = line.strip()
                 assert line.endswith(';')
-                symbols.add(line)
-    return symbols
+                retval[-1][1].add(line)
+    return retval
 
 
 def main():
@@ -245,20 +260,32 @@ def main():
                     help=f'library to generate symbols for ({", ".join(choices)})',
                     required=True,
                     choices=list(choices))
+    parser.add_argument('--version', type=str,
+                    help='Current version of the library',
+                    required=True)
+    parser.add_argument('--diff', action='store_true',
+                    help='If true a diff should be output to the console')
+    parser.add_argument('--output_symbols', action='store_true',
+                        help='If true, the symbols.map file will be updated with the new new symbols')
     
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO)
-    _logger.debug("Symbols map generation is beginning")
-
+    logging.basicConfig(level=logging.DEBUG)
     library = args.library
+    version = args.version
+
+    # Remove the patch version since we're not interested in it
+    split_version = version.split('.')
+    if len(split_version) == 3:
+        version = f"{split_version[0]}.{split_version[1]}"
+
+    _logger.info(f"Symbols map generation is beginning for library={library} with version={version}")
+
     try:
         library_data: LibraryInfo = library_to_data_map[library]
     except KeyError:
         _logger.error(f"The provided library has yet to be implmented: {library}")
         exit(1)
-
-    _logger.debug(f"Generating symbols for {library}")
 
     if "include_headers" in library_data:
         search_dirs = library_data["include_headers"]
@@ -266,29 +293,74 @@ def main():
         search_dirs = []
 
     # Create a set that includes all of the available headers
-    new_symbols: set[str] = set()
+    parsed_symbols: set[str] = set()
     for header_dir in library_data["headers_dir"]:
-        new_symbols = new_symbols.union(process_directory(header_dir, search_dirs))
+        parsed_symbols = parsed_symbols.union(process_directory(header_dir, search_dirs))
     
-    previous_symbols = read_symbols_from_file(
-        get_absolute_path_from_project_path(library_data["map_file"]))
+    previous_symbols: list[tuple[str, set[str]]] = read_symbols_from_file(
+        get_absolute_path_from_project_path(library_data["map_file"]), library)
 
     # New symbols
-    new_symbol_diff = list(new_symbols - previous_symbols)
-    new_symbol_diff.sort()
+    added_symbols = parsed_symbols
+    for symbol_tuple in previous_symbols:
+        added_symbols = added_symbols - symbol_tuple[1]
+    added_symbols = list(added_symbols)
+    added_symbols.sort()
 
-    print("")
-    print("\033[1mNew Symbols 🟢🟢🟢\033[0m")
-    for s in new_symbol_diff:
-        print(f"\033[92m    {s}\033[0m")
+    if args.diff:
+        print("")
+        print("\033[1mNew Symbols 🟢🟢🟢\033[0m")
+        for s in added_symbols:
+            print(f"\033[92m    {s}\033[0m")
 
-    # Deleted symbols
-    deleted_symbols = list(previous_symbols - new_symbols)
-    deleted_symbols.sort()
-    print("")
-    print("\033[1mDeleted Symbols 🔻🔻🔻\033[0m")
-    for s in deleted_symbols:
-        print(f"\033[91m    {s}\033[0m")
+        # Deleted symbols
+        deleted_symbols = set()
+        for symbol_tuple in previous_symbols:
+            deleted_symbols = deleted_symbols.union(symbol_tuple[1])
+        deleted_symbols = deleted_symbols - parsed_symbols
+        deleted_symbols = list(deleted_symbols)
+        deleted_symbols.sort()
+
+        print("")
+        print("\033[1mDeleted Symbols 🔻🔻🔻\033[0m")
+        for s in deleted_symbols:
+            print(f"\033[91m    {s}\033[0m")
+
+    if args.output_symbols:
+        _logger.info(f"Outputting the symbols file to: {get_absolute_path_from_project_path(library_data['map_file'])}")
+        # Add the new symbols to the latest stanza. If the latest version in the map file is
+        # NOT the latest symbols version, then we create a new one
+        if previous_symbols[-1][0] != version:
+            previous_symbols.append((version, set()))
+            _logger.info(f"Generating new stanza for version: {version}")
+
+        previous_symbols[-1] = (previous_symbols[-1][0], previous_symbols[-1][1].union(added_symbols))
+        with open(get_absolute_path_from_project_path(library_data["map_file"]), 'w+') as f:
+            for i in range(0, len(previous_symbols)):
+                stanza = previous_symbols[i]
+                version_str = f"{library.upper()}_{stanza[0]}"
+                symbols = list(stanza[1])
+                symbols.sort()
+
+                if i == 0:
+                    closing_line = "};"
+                else:
+                    prev_version_str = f"{library.upper()}_{previous_symbols[i - 1][0]}"
+                    closing_line = "} " + prev_version_str + ";"
+
+                joint_str = "\n    ".join(symbols)
+                output_str = f'''{version_str} {"{"}
+global:
+  extern "C++" {"{"}
+    {joint_str}
+  {'};'}
+local: *;
+{closing_line}
+
+'''
+
+                f.write(output_str)
+            
 
     exit(0)
 

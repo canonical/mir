@@ -83,12 +83,6 @@ configure_file(
     @ONLY
 )
 
-if(TARGET doc)
-    add_custom_target(regenerate-miroil-symbols-map
-            ${CMAKE_CURRENT_SOURCE_DIR}/regenerate-miroil-symbols-map.py ${CMAKE_BINARY_DIR}/doc/xml/*.xml > ${symbol_map}
-            DEPENDS doc)
-endif()
-
 install(TARGETS     miroil                           LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 install(DIRECTORY   ${CMAKE_SOURCE_DIR}/include/miroil       DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 install(FILES       ${CMAKE_CURRENT_BINARY_DIR}/miroil.pc    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
