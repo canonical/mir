@@ -29,6 +29,7 @@
 #include "mir/thread_name.h"
 #include "mir/executor.h"
 
+#include <atomic>
 #include <thread>
 #include <chrono>
 #include <future>
@@ -211,7 +212,7 @@ private:
     mg::DisplaySyncGroup& group;
     std::shared_ptr<mc::Scene> const scene;
     std::binary_semaphore wakeup;
-    bool running;
+    std::atomic<bool> running;
     std::chrono::milliseconds force_sleep{-1};
     std::shared_ptr<DisplayListener> const display_listener;
     std::shared_ptr<CompositorReport> const report;
