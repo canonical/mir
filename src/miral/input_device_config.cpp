@@ -25,6 +25,7 @@
 #include "mir/options/option.h"
 #include "mir/server.h"
 #include "mir_toolkit/mir_input_device_types.h"
+#include "mir/log.h"
 
 namespace mi = mir::input;
 
@@ -187,6 +188,7 @@ void InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& device)
 {
     if (contains(device->capabilities(), mi::DeviceCapability::touchpad))
     {
+        mir::log_debug("Configuring touchpad: '%s'", device->name().c_str());
 	    if (auto const optional_pointer_config = device->pointer_configuration(); optional_pointer_config.is_set())
         {
             MirPointerConfig pointer_config( optional_pointer_config.value() );
@@ -208,7 +210,8 @@ void InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& device)
     }
     else if (contains(device->capabilities(), mi::DeviceCapability::pointer))
     {
-	    if (auto optional_pointer_config = device->pointer_configuration(); optional_pointer_config.is_set())
+        mir::log_debug("Configuring pointer: '%s'", device->name().c_str());
+        if (auto optional_pointer_config = device->pointer_configuration(); optional_pointer_config.is_set())
         {
             MirPointerConfig pointer_config( optional_pointer_config.value() );
             pointer_config.acceleration(mouse_profile);
