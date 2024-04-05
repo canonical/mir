@@ -491,13 +491,6 @@ void FloatingWindowManagerPolicy::advise_adding_to_workspace(
     }
 }
 
-auto FloatingWindowManagerPolicy::confirm_placement_on_display(
-    miral::WindowInfo const& /*window_info*/, MirWindowState /*new_state*/, Rectangle const& new_placement)
-    -> Rectangle
-{
-    return new_placement;
-}
-
 void FloatingWindowManagerPolicy::switch_workspace_to(
     std::shared_ptr<Workspace> const& workspace,
     Window const& window)
