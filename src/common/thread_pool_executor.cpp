@@ -24,62 +24,6 @@
 #include <list>
 #include <future>
 
-#include <version>
-
-#ifdef __cpp_lib_semaphore
-#include <semaphore>
-#else
-// Hello, there! This version of libstdc++ doesn't support the C++20 feature std::binary_semaphore
-// We shall, instead, open-code the simplest possible implementation of what we use here.
-namespace std
-{
-class binary_semaphore
-{
-public:
-    binary_semaphore(int initial)
-        : raised{initial == 1}
-    {
-    }
-
-    void release()
-    {
-        {
-            std::lock_guard lock{mutex};
-            raised = true;
-        }
-        cv.notify_all();
-    }
-
-    void acquire()
-    {
-        std::unique_lock lock{mutex};
-        if (raised)
-        {
-            raised = false;
-            return;
-        }
-        cv.wait(lock, [this]() { return raised; });
-        raised = false;
-    }
-
-    bool try_acquire()
-    {
-        std::lock_guard lock{mutex};
-        if (raised)
-        {
-            raised = false;
-            return true;
-        }
-        return false;
-    }
-private:
-    std::mutex mutex;
-    std::condition_variable cv;
-    bool raised;
-};
-}
-#endif
-
 namespace
 {
 constexpr int const min_threadpool_threads = 4;
