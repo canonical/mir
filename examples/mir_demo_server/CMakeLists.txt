@@ -24,6 +24,9 @@ mir_add_wrapped_executable(mir_demo_server
     server_example_test_client.cpp
 )
 
+## Needed for google-glog v0.7.0
+set_source_files_properties(glog_logger.cpp PROPERTIES COMPILE_DEFINITIONS GLOG_USE_GLOG_EXPORT)
+
 target_link_libraries(mir_demo_server
   example-shell-lib
   exampleserverconfig
