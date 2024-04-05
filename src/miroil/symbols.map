@@ -15,6 +15,7 @@ global:
     miroil::DisplayListenerWrapper::DisplayListenerWrapper*;
     miroil::DisplayListenerWrapper::add_display*;
     miroil::DisplayListenerWrapper::remove_display*;
+    miroil::Edid::Descriptor::Type*;
     miroil::Edid::Descriptor::string_value*;
     miroil::Edid::parse_data*;
     miroil::EventBuilder::?EventBuilder*;
@@ -105,17 +106,17 @@ global:
     non-virtual?thunk?to?miroil::SurfaceObserver::?SurfaceObserver*;
     typeinfo?for?miroil::Compositor;
     typeinfo?for?miroil::DisplayConfigurationControllerWrapper;
-    typeinfo?for?miroil::DisplayConfigurationOptions;
     typeinfo?for?miroil::DisplayConfigurationOptions::DisplayMode;
+    typeinfo?for?miroil::DisplayConfigurationOptions;
     typeinfo?for?miroil::DisplayConfigurationPolicy;
     typeinfo?for?miroil::DisplayConfigurationStorage;
     typeinfo?for?miroil::DisplayId;
     typeinfo?for?miroil::DisplayListenerWrapper;
-    typeinfo?for?miroil::Edid;
     typeinfo?for?miroil::Edid::Descriptor;
     typeinfo?for?miroil::Edid::PhysicalSizeMM;
-    typeinfo?for?miroil::EventBuilder;
+    typeinfo?for?miroil::Edid;
     typeinfo?for?miroil::EventBuilder::EventInfo;
+    typeinfo?for?miroil::EventBuilder;
     typeinfo?for?miroil::GLBuffer;
     typeinfo?for?miroil::InputDevice;
     typeinfo?for?miroil::InputDeviceObserver;
@@ -130,17 +131,17 @@ global:
     typeinfo?for?miroil::SurfaceObserver;
     vtable?for?miroil::Compositor;
     vtable?for?miroil::DisplayConfigurationControllerWrapper;
-    vtable?for?miroil::DisplayConfigurationOptions;
     vtable?for?miroil::DisplayConfigurationOptions::DisplayMode;
+    vtable?for?miroil::DisplayConfigurationOptions;
     vtable?for?miroil::DisplayConfigurationPolicy;
     vtable?for?miroil::DisplayConfigurationStorage;
     vtable?for?miroil::DisplayId;
     vtable?for?miroil::DisplayListenerWrapper;
-    vtable?for?miroil::Edid;
     vtable?for?miroil::Edid::Descriptor;
     vtable?for?miroil::Edid::PhysicalSizeMM;
-    vtable?for?miroil::EventBuilder;
+    vtable?for?miroil::Edid;
     vtable?for?miroil::EventBuilder::EventInfo;
+    vtable?for?miroil::EventBuilder;
     vtable?for?miroil::GLBuffer;
     vtable?for?miroil::InputDevice;
     vtable?for?miroil::InputDeviceObserver;
@@ -154,6 +155,6 @@ global:
     vtable?for?miroil::Surface;
     vtable?for?miroil::SurfaceObserver;
   };
-
 local: *;
 };
+

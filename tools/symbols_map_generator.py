@@ -37,7 +37,7 @@ class LibraryInfo(TypedDict):
 library_to_data_map: dict[LibraryName, LibraryInfo] = {
     "miral": {
         "headers_dir": [
-            "include/miral"
+            "include/miroil"
         ],
         "map_file": "src/miral/symbols.map",
         "include_headers": [
@@ -49,14 +49,20 @@ library_to_data_map: dict[LibraryName, LibraryInfo] = {
             "include/wayland"
         ]
     },
-    "mir_server": {
+    "miroil": {
         "headers_dir": [
-            "include/server/mir",
-            "src/include/server/mir"
+            "include/miroil"
         ],
-        "map_file": "src/server/symbols.map",
+        "map_file": "src/miroil/symbols.map",
         "include_headers": [
-            "src/include/server"
+            "include/platform",
+            "include/gl",
+            "include/renderers/gl"
+            "include/server",
+            "include/core",
+            "include/client",
+            "include/miral",
+            "src/include/server",
         ]
     }
 }

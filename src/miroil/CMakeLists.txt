@@ -83,6 +83,11 @@ configure_file(
     @ONLY
 )
 
+add_custom_target(regenerate-miroil-debian-symbols ${MIR_CHECK_MIRAL_SYMBOLS_DEFAULT}
+    COMMAND python3 ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator.py --library miroil --version ${MIROIL_VERSION} --output_symbols
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    VERBATIM)
+
 install(TARGETS     miroil                           LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 install(DIRECTORY   ${CMAKE_SOURCE_DIR}/include/miroil       DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 install(FILES       ${CMAKE_CURRENT_BINARY_DIR}/miroil.pc    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
