@@ -27,6 +27,6 @@ mir_add_wrapped_executable(mir_demo_server
 target_link_libraries(mir_demo_server
   example-shell-lib
   exampleserverconfig
-  PkgConfig::GLog
+  glog::glog
   Boost::system
 )

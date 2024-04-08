@@ -31,7 +31,7 @@ struct google_glog_guard_t
 {
     google_glog_guard_t(const char* argv0)
     {
-        std::call_once(init_flag, google::InitGoogleLogging, argv0);
+        std::call_once(init_flag, [argv0]() { google::InitGoogleLogging(argv0); });
     }
 
     ~google_glog_guard_t()
