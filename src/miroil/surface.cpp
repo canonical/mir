@@ -207,11 +207,6 @@ auto miroil::Surface::get_wrapped() const -> mir::scene::Surface*
     return wrapped.get();
 }
 
-int miroil::Surface::buffers_ready_for_compositor(void const* compositor_id) const
-{
-    return wrapped->buffers_ready_for_compositor(compositor_id);
-}
-
 mir::graphics::RenderableList miroil::Surface::generate_renderables(miroil::CompositorID id) const
 {
     return wrapped->generate_renderables(id);

@@ -57,11 +57,6 @@ auto mf::ScaledBufferStream::stream_size() -> geometry::Size
     return inner->stream_size() * inv_scale;
 }
 
-auto mf::ScaledBufferStream::buffers_ready_for_compositor(void const* user_id) const -> int
-{
-    return inner->buffers_ready_for_compositor(user_id);
-}
-
 auto mf::ScaledBufferStream::has_submitted_buffer() const -> bool
 {
     return inner->has_submitted_buffer();

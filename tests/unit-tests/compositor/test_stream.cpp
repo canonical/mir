@@ -50,16 +50,6 @@ struct Stream : Test
 };
 }
 
-TEST_F(Stream, indicates_buffers_ready_when_dropping)
-{
-    for(auto& buffer : buffers)
-        stream.submit_buffer(buffer);
-
-    EXPECT_THAT(stream.buffers_ready_for_compositor(this), Eq(1));
-    stream.lock_compositor_buffer(this);
-    EXPECT_THAT(stream.buffers_ready_for_compositor(this), Eq(0));
-}
-
 TEST_F(Stream, tracks_has_buffer)
 {
     EXPECT_FALSE(stream.has_submitted_buffer());
@@ -82,7 +72,6 @@ TEST_F(Stream, frame_callback_is_called_without_scheduling_lock)
     stream.set_frame_posted_callback(
         [this](auto)
         {
-            EXPECT_THAT(stream.buffers_ready_for_compositor(this), Eq(1));
             EXPECT_TRUE(stream.has_submitted_buffer());
         });
     stream.submit_buffer(buffers[0]);

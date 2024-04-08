@@ -1511,35 +1511,6 @@ TEST_F(BasicSurfaceTest, visibility_matches_produced_list)
     EXPECT_THAT(renderables.size(), Eq(2));
 }
 
-TEST_F(BasicSurfaceTest, buffers_ready_correctly_reported)
-{
-    using namespace testing;
-    auto buffer_stream0 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    auto buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    EXPECT_CALL(*mock_buffer_stream, buffers_ready_for_compositor(_))
-        .WillOnce(Return(0))
-        .WillOnce(Return(0))
-        .WillOnce(Return(2));
-    EXPECT_CALL(*buffer_stream0, buffers_ready_for_compositor(_))
-        .WillOnce(Return(1))
-        .WillOnce(Return(0))
-        .WillOnce(Return(1));
-    EXPECT_CALL(*buffer_stream1, buffers_ready_for_compositor(_))
-        .WillOnce(Return(3))
-        .WillOnce(Return(0))
-        .WillOnce(Return(1));
-
-    std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, {0,0}, {} },
-        { buffer_stream0, {0,0}, {} },
-        { buffer_stream1, {0,0}, {} },
-    };
-    surface.set_streams(streams);
-    EXPECT_THAT(surface.buffers_ready_for_compositor(this), Eq(3));
-    EXPECT_THAT(surface.buffers_ready_for_compositor(this), Eq(0));
-    EXPECT_THAT(surface.buffers_ready_for_compositor(this), Eq(2));
-}
-
 TEST_F(BasicSurfaceTest, buffer_streams_produce_correctly_sized_renderables)
 {
     using namespace testing;

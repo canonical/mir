@@ -44,7 +44,6 @@ public:
     void add_observer(std::shared_ptr<miroil::SurfaceObserver> const& observer);    
     void remove_observer(std::shared_ptr<miroil::SurfaceObserver> const& observer);
     
-    int  buffers_ready_for_compositor(void const* compositor_id) const;
     mir::graphics::RenderableList generate_renderables(miroil::CompositorID id) const; 
 
     
