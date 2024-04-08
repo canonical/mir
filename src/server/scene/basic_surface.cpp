@@ -748,15 +748,6 @@ private:
 };
 }
 
-int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
-{
-    auto state = synchronised_state.lock();
-    auto max_buf = 0;
-    for (auto const& info : state->layers)
-        max_buf = std::max(max_buf, info.stream->buffers_ready_for_compositor(id));
-    return max_buf;
-}
-
 void ms::BasicSurface::consume(std::shared_ptr<MirEvent const> const& event)
 {
     observers->input_consumed(this, event);

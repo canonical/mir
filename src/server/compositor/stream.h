@@ -44,7 +44,6 @@ public:
     std::shared_ptr<graphics::Buffer>
         lock_compositor_buffer(void const* user_id) override;
     geometry::Size stream_size() override;
-    int buffers_ready_for_compositor(void const* user_id) const override;
     bool has_submitted_buffer() const override;
     void set_scale(float scale) override;
 
