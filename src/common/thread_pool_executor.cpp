@@ -23,6 +23,7 @@
 #include <atomic>
 #include <list>
 #include <future>
+#include <semaphore>
 
 namespace
 {
