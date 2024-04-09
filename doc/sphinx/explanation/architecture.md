@@ -4,12 +4,6 @@ This document introduces the architecture of *Mir* at a high-level.
 ## Audience
 This document is intended to provide contributors to *Mir* an overview of *Mir*'s systems. It is *not* intended to guide compositor authors.
 
-## Index
-- [APIs for compositor authors](#apis-for-compositor-authors)
-- [The Mir Engine](#the-mir-engine)
-- [Platforms](#platforms)
-- [Supporting Libraries](#supporting-libraries)
-
 ## APIs for compositor authors
 ```{mermaid} high_level_diagram.mmd
 ```
