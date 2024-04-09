@@ -62,27 +62,6 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(composit
     return current_buffer;
 }
 
-std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::snapshot_acquire()
-{
-    std::lock_guard lk(mutex);
-
-    if (!current_buffer)
-    {
-        if (next_buffer)
-        {
-            current_buffer = std::move(next_buffer);
-            next_buffer = nullptr;
-            clear_current_users();
-        }
-        else
-        {
-            BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give to snapshotter"));
-        }
-    }
-
-    return current_buffer;
-}
-
 void mc::MultiMonitorArbiter::submit_buffer(std::shared_ptr<mg::Buffer> buffer)
 {
     std::lock_guard lk{mutex};

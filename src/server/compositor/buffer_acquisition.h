@@ -49,18 +49,6 @@ public:
     virtual std::shared_ptr<graphics::Buffer>
         compositor_acquire(void const* user_id) = 0;
 
-    /**
-     * Acquire the most recently displayed buffer.
-     *
-     * In contrast with compositor_acquire() this does not consume a client
-     * buffer.
-     *
-     * Like compositor_acquire(), you should release your reference to the
-     * returned buffer as soon as possible.
-     *
-     * \return A shared reference to the most recent visible client buffer.
-     */
-    virtual std::shared_ptr<graphics::Buffer> snapshot_acquire() = 0;
     virtual ~BufferAcquisition() = default;
 
 protected:

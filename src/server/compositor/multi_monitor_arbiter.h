@@ -39,7 +39,6 @@ public:
     ~MultiMonitorArbiter();
 
     std::shared_ptr<graphics::Buffer> compositor_acquire(compositor::CompositorID id) override;
-    std::shared_ptr<graphics::Buffer> snapshot_acquire() override;
     bool buffer_ready_for(compositor::CompositorID id);
 
     void submit_buffer(std::shared_ptr<graphics::Buffer> buffer);
