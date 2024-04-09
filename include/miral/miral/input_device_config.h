@@ -24,7 +24,7 @@ class Server;
 
 namespace miral
 {
-void add_input_device_configuration(::mir::Server& server);
+void add_input_device_configuration(::mir::Server& opt_val);
 }
 
 #endif
