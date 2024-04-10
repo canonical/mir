@@ -400,14 +400,7 @@ bool configuration_changes_require_recompositing(
     {
         MirOrientation orientation;
         float scale;
-#ifdef __cpp_impl_three_way_comparison
         bool operator<=>(O_S const&) const = default;
-#else
-        bool operator!=(O_S const& that) const
-        {
-            return std::tie(orientation, scale) != std::tie(that.orientation, that.scale);
-        }
-#endif
     };
 
     std::unordered_map<mg::DisplayConfigurationOutputId, O_S> configs;
