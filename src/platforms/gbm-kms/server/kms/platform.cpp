@@ -106,6 +106,8 @@ mgg::Platform::Platform(
     }
 }
 
+mgg::Platform::~Platform() = default;
+
 namespace
 {
 auto gbm_device_for_udev_device(

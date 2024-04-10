@@ -1,4 +1,8 @@
-# Getting and Using Mir
+---
+discourse: 4911,5164,5603,6756,8037
+---
+
+# Tutorial
 
 Mir is a library for building things, not an end-user product, but it does come
 with some demos to illustrate the possibilities.
@@ -10,7 +14,7 @@ also been built and tested on Debian but, at the time or writing, is not in the
 archive.
 
 For Linux distributions that don't currently package Mir you need to build it
-yourself. (See [Getting Involved in Mir](getting_involved_in_mir.md)).
+yourself. (See [Getting Involved in Mir](how-to/getting_involved_in_mir)).
 
 ## Getting Mir on Ubuntu
 

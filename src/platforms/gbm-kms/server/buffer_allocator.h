@@ -59,6 +59,7 @@ public:
         std::unique_ptr<SurfacelessEGLContext> ctx,
         std::shared_ptr<common::EGLContextExecutor> egl_delegate,
         std::shared_ptr<DMABufEGLProvider> dmabuf_provider);
+    ~BufferAllocator() override;
 
     std::shared_ptr<Buffer> alloc_software_buffer(geometry::Size size, MirPixelFormat) override;
     std::vector<MirPixelFormat> supported_pixel_formats() override;

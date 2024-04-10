@@ -47,7 +47,11 @@ struct WindowInfo
 
     bool is_visible() const;
 
+    /// \deprecated Obsolete: Window::size() includes decorations
+    /// @{
+    [[deprecated("Obsolete: Window::size() includes decorations")]]
     static bool needs_titlebar(MirWindowType type);
+    /// @}
 
     void constrain_resize(mir::geometry::Point& requested_pos, mir::geometry::Size& requested_size) const;
 
