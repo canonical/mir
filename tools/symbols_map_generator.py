@@ -356,11 +356,11 @@ def main():
 
                 joint_str = "\n    ".join(symbols)
                 output_str = f'''{version_str} {"{"}
-global:
-  extern "C++" {"{"}
-    {joint_str}
-  {'};'}
-local: *;
+  global:
+    extern "C++" {"{"}
+      {joint_str}
+    {'};'}
+  local: *;
 {closing_line}
 
 '''
