@@ -215,7 +215,7 @@ def process_directory(directory: str, search_dirs: Optional[list[str]]) -> set[s
     result = set()
 
     files_dir = get_absolute_path_from_project_path(directory)
-    _logger.debug(f"Processing external directory: {files_dir}")
+    _logger.debug(f"Processing directory: {files_dir}")
     files = files_dir.rglob('*.h')
     search_variables = []
     for dir in search_dirs:
@@ -257,7 +257,7 @@ def read_symbols_from_file(file: Path, library_name: str) -> list[tuple[str, set
 
 def main():
     parser = argparse.ArgumentParser(description="This tool parses the header files of a library in the Mir project "
-                                        "and outputs a list of new and removed symbols to stdout. "
+                                        "and outputs a list of new and removed symbols either to stdout or a symbols.map file. "
                                         "With this list, a developer may update the corresponding symbols.map appropriately. "
                                         "The tool uses https://pypi.org/project/libclang/ to process "
                                         "the AST of the project's header files.")
