@@ -84,7 +84,7 @@ configure_file(
 )
 
 add_custom_target(regenerate-miroil-debian-symbols ${MIR_CHECK_MIRAL_SYMBOLS_DEFAULT}
-    COMMAND python3 ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator.py --library miroil --version ${MIROIL_VERSION} --output_symbols
+    COMMAND ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator/run.sh --library miroil --version ${MIROIL_VERSION} --output_symbols
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
     VERBATIM)
 

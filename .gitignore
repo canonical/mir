@@ -11,3 +11,4 @@ build
 benchmarks/build
 
 tools/bot-data.tar.xz
+tools/symbols_map_generator/venv
