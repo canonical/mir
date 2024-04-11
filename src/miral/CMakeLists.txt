@@ -137,7 +137,7 @@ if (CMAKE_COMPILER_IS_GNUCXX   AND  # clang generates slightly different symbols
 endif()
 
 add_custom_target(regenerate-miral-debian-symbols ${MIR_CHECK_MIRAL_SYMBOLS_DEFAULT}
-    COMMAND python3 ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator.py --library miral --version ${MIRAL_VERSION} --output_symbols
+    COMMAND ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator/run.sh --library miral --version ${MIRAL_VERSION} --output_symbols
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
     VERBATIM)
 

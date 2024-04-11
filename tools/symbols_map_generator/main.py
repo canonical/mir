@@ -24,7 +24,7 @@ _logger = logging.getLogger(__name__)
 
 LibraryName = Literal[
     "miral", "mir_common", "mir_core", "miroil", "mir_platform",
-    "mir_renderer", "mir_renderers", "mir_server", "mir_test", "mir_wayland"]
+    "mir_renderer", "mir_renderers", "mir_server_internal", "mir_test", "mir_wayland"]
 
 
 class LibraryInfo(TypedDict):
@@ -69,7 +69,7 @@ library_to_data_map: dict[LibraryName, LibraryInfo] = {
 
 
 def get_absolute_path_from_project_path(project_path: str) -> Path:
-    return Path(__file__).parent.parent / project_path
+    return Path(__file__).parent.parent.parent / project_path
 
 
 def should_generate_as_class_or_struct(node: clang.cindex.Cursor):
@@ -362,7 +362,6 @@ global:
   {'};'}
 local: *;
 {closing_line}
-
 '''
 
                 f.write(output_str)
