@@ -348,11 +348,17 @@ def main():
                 symbols = list(stanza[1])
                 symbols.sort()
 
+                # Only the final stanza should contain the local symbols
+                if i == len(previous_symbols) - 1:
+                    closing_line = "local: *;\n"
+                else:
+                    closing_line = ""
+
                 if i == 0:
-                    closing_line = "};"
+                    closing_line += "};"
                 else:
                     prev_version_str = f"{library.upper()}_{previous_symbols[i - 1][0]}"
-                    closing_line = "} " + prev_version_str + ";"
+                    closing_line += "} " + prev_version_str + ";"
 
                 joint_str = "\n    ".join(symbols)
                 output_str = f'''{version_str} {"{"}
@@ -360,7 +366,6 @@ global:
   extern "C++" {"{"}
     {joint_str}
   {'};'}
-local: *;
 {closing_line}
 '''
 
