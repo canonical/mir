@@ -361,17 +361,37 @@ void msd::Renderer::Text::Impl::set_char_size(geom::Height height)
             "Setting char size failed with error " + std::to_string(error)));
 }
 
+namespace
+{
+auto freetype_error_to_string(FT_Error error) -> char const*
+{
+    auto reason = FT_Error_String(error);
+    /* The reason is only available if freetype has been built with a specific feature enabled */
+    if (!reason)
+    {
+        return "<unknown error>";
+    }
+    return reason;
+}
+}
+
 void msd::Renderer::Text::Impl::rasterize_glyph(char32_t glyph)
 {
     auto const glyph_index = FT_Get_Char_Index(face, glyph);
 
     if (auto const error = FT_Load_Glyph(face, glyph_index, 0))
+    {
         BOOST_THROW_EXCEPTION(std::runtime_error(
-            "Failed to load glyph " + std::to_string(glyph_index)));
+            "Failed to load glyph " + std::to_string(glyph_index) +
+            " (" + freetype_error_to_string(error) + ")"));
+    }
 
     if (auto const error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL))
+    {
         BOOST_THROW_EXCEPTION(std::runtime_error(
-            "Failed to render glyph " + std::to_string(glyph_index)));
+            "Failed to render glyph " + std::to_string(glyph_index) +
+            " (" + freetype_error_to_string(error) + ")"));
+    }
 }
 
 void msd::Renderer::Text::Impl::render_glyph(
