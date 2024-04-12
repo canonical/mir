@@ -38,6 +38,9 @@
 #include <boost/throw_exception.hpp>
 
 #include <libinput.h>
+
+#include <version>
+#include <format>
 #include <string>
 
 namespace mi = mir::input;
@@ -53,13 +56,37 @@ std::string describe(libinput_device* dev)
     auto const udev_dev = mir::raii::deleter_for(libinput_device_get_udev_device(dev), &udev_device_unref);
     std::string desc(udev_device_get_devnode(udev_dev.get()));
 
-    char const * const model = udev_device_get_property_value(udev_dev.get(), "ID_MODEL");
-    if (model)
-        desc += ": " + std::string(model);
+#ifdef ARG_DEBUGGING
+    for (auto entry = udev_device_get_properties_list_entry(udev_dev.get()); entry; entry = udev_list_entry_get_next(entry))
+    {
+        mir::log_debug("{arg} property '%s=%s'", udev_list_entry_get_name(entry), udev_list_entry_get_value(entry));
+    }
+    for (auto entry = udev_device_get_tags_list_entry(udev_dev.get()); entry; entry = udev_list_entry_get_next(entry))
+    {
+        mir::log_debug("{arg} tag '%s=%s'", udev_list_entry_get_name(entry), udev_list_entry_get_value(entry));
+    }
+    for (auto entry = udev_device_get_sysattr_list_entry(udev_dev.get()); entry; entry = udev_list_entry_get_next(entry))
+    {
+        mir::log_debug("{arg} sysattr '%s=%s'", udev_list_entry_get_name(entry), udev_list_entry_get_value(entry));
+    }
+#endif
 
-    // Yes, we could use std::replace but this will compile smaller and faster
-    for (auto &c : desc)
-        if (c == '_') c = ' ';
+    auto const vendor = libinput_device_get_id_vendor(dev);
+    auto const product = libinput_device_get_id_product(dev);
+    desc += std::format(" [{:0>4x}:{:0>4x}]", vendor, product);
+
+    if (auto const name = libinput_device_get_name(dev))
+    {
+        desc += ": " + std::string(name);
+    }
+
+    for (auto const key : {/*"ID_MODEL", "ID_VENDOR_ID", "ID_MODEL_ID",*/ "ID_PATH"})
+    {
+        if (char const *const value = udev_device_get_property_value(udev_dev.get(), key))
+        {
+            desc += ": " + std::string(key) + "=" + value;
+        }
+    }
 
     return desc;
 }
