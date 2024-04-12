@@ -33,7 +33,6 @@
 #include <thread>
 #include <chrono>
 #include <future>
-#include <semaphore>
 #include <boost/throw_exception.hpp>
 
 using namespace std::literals::chrono_literals;
@@ -60,7 +59,7 @@ public:
         compositor_factory{db_compositor_factory},
         group(group),
         scene(scene),
-        wakeup{0},
+        needs_wakeup{false},
         running{true},
         force_sleep{fixed_composite_delay},
         display_listener{display_listener},
@@ -121,7 +120,9 @@ public:
             while (running)
             {
                 /* Wait until compositing has been scheduled or we are stopped */
-                wakeup.acquire();
+                needs_wakeup.wait(false);
+                // We've been awoken; reset the trigger
+                needs_wakeup = false;
 
                 /*
                  * Check if we are running before compositing, since we may have
@@ -166,8 +167,8 @@ public:
 
     void schedule_compositing()
     {
-        wakeup.try_acquire();
-        wakeup.release();
+        needs_wakeup = true;
+        needs_wakeup.notify_one();
     }
 
     void schedule_compositing(geometry::Rectangle const& damage)
@@ -178,16 +179,16 @@ public:
 
         if (took_damage)
         {
-            wakeup.try_acquire();
-            wakeup.release();
+            needs_wakeup = true;
+            needs_wakeup.notify_one();
         }
     }
 
     void stop()
     {
         running = false;
-        wakeup.try_acquire();
-        wakeup.release();
+        needs_wakeup = true;
+        needs_wakeup.notify_one();
     }
 
     void wait_until_started()
@@ -211,7 +212,7 @@ private:
     std::shared_ptr<mc::DisplayBufferCompositorFactory> const compositor_factory;
     mg::DisplaySyncGroup& group;
     std::shared_ptr<mc::Scene> const scene;
-    std::binary_semaphore wakeup;
+    std::atomic<bool> needs_wakeup;
     std::atomic<bool> running;
     std::chrono::milliseconds force_sleep{-1};
     std::shared_ptr<DisplayListener> const display_listener;
