@@ -21,6 +21,7 @@ from typing import Literal, TypedDict, get_args, Optional
 from collections import OrderedDict
 import bisect
 import clang.cindex
+import os
 
 _logger = logging.getLogger(__name__)
 
@@ -256,6 +257,10 @@ def read_symbols_from_file(file: Path, library_name: str) -> list[Symbol]:
     library_name = library_name.upper() + "_"
     retval: list[Symbol] = []
     version_str = None
+
+    if not os.path.exists(file.as_posix()):
+        return []
+
     with open(file.as_posix()) as f:
         for line in f.readlines():
             if line.startswith(library_name):
