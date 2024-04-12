@@ -213,7 +213,10 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str], cur
     is_containing_node = (node.kind == clang.cindex.CursorKind.CLASS_DECL
         or node.kind == clang.cindex.CursorKind.STRUCT_DECL
         or node.kind == clang.cindex.CursorKind.NAMESPACE)
-    if ((is_file and node.spelling == filename) or (is_containing_node and node.location.file.name == filename)):
+    if is_file or is_containing_node:
+        if clang.cindex.conf.lib.clang_Location_isInSystemHeader(node.location):
+            return result
+        
         if node.kind != clang.cindex.CursorKind.TRANSLATION_UNIT:
             if not current_namespace:
                 current_namespace = node.spelling
@@ -235,7 +238,7 @@ def process_directory(directory: str, search_dirs: Optional[list[str]]) -> set[s
     search_variables = []
     for dir in search_dirs:
         search_variables.append(f"-I{get_absolute_path_from_project_path(dir).as_posix()}")
-    args = ['-fsyntax-only', '-std=c++23', '-x', 'c++-header'] + search_variables
+    args = ['-fsyntax-only', '-std=c++17', '-x', 'c++-header'] + search_variables
     for file in files:
         idx = clang.cindex.Index.create()
         tu = idx.parse(
