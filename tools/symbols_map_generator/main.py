@@ -18,6 +18,8 @@ import logging
 import argparse
 from pathlib import Path
 from typing import Literal, TypedDict, get_args, Optional
+from collections import OrderedDict
+import bisect
 import clang.cindex
 
 _logger = logging.getLogger(__name__)
@@ -27,17 +29,34 @@ LibraryName = Literal[
     "mir_renderer", "mir_renderers", "mir_server_internal", "mir_test", "mir_wayland"]
 
 
+class HeaderDirectory(TypedDict):
+    path: str
+    is_internal: bool
+
+
 class LibraryInfo(TypedDict):
-    headers_dir: list[str]
+    header_directories: list[HeaderDirectory]
     map_file: str
     include_headers: Optional[list[str]]
+
+
+class Symbol:
+    name: str
+    version: str
+    
+    def __init__(self, name: str, version: str):
+        self.name = name
+        self.version = version
+
+    def is_internal(self) -> bool:
+        return self.version.startswith("INTERNAL_")
 
 
 # Directory paths are relative to the root of the Mir project
 library_to_data_map: dict[LibraryName, LibraryInfo] = {
     "miral": {
-        "headers_dir": [
-            "include/miral"
+        "header_directories": [
+            {"path": "include/miral", "is_internal": False}
         ],
         "map_file": "src/miral/symbols.map",
         "include_headers": [
@@ -50,8 +69,8 @@ library_to_data_map: dict[LibraryName, LibraryInfo] = {
         ]
     },
     "miroil": {
-        "headers_dir": [
-            "include/miroil"
+        "header_directories": [
+            {"path": "include/miroil", "is_internal": False}
         ],
         "map_file": "src/miroil/symbols.map",
         "include_headers": [
@@ -63,6 +82,12 @@ library_to_data_map: dict[LibraryName, LibraryInfo] = {
             "include/client",
             "include/miral",
             "src/include/server",
+        ]
+    },
+    "mir_common": {
+        "header_directories": [
+            {"path": "include/common", "is_internal": False},
+            {"path": "src/include/common", "is_internal": True}
         ]
     }
 }
@@ -233,26 +258,61 @@ def process_directory(directory: str, search_dirs: Optional[list[str]]) -> set[s
     return result
 
 
-def read_symbols_from_file(file: Path, library_name: str) -> list[tuple[str, set[str]]]:
+def read_symbols_from_file(file: Path, library_name: str) -> list[Symbol]:
     """
-    Returns a list of tuples that match the version to the list of symbols in that version.
-    This list is assumed to be ordered.
+    Returns a list of symbols for each stanza in the symbols.map file.
+    The returned list is ordered by version.
     """
     # WARNING: This is a very naive way to parse these files
     library_name = library_name.upper() + "_"
-    retval: list[tuple[str, set[str]]] = []
+    retval: list[Symbol] = []
+    version_str = None
     with open(file.as_posix()) as f:
         for line in f.readlines():
             if line.startswith(library_name):
                 # This denotes that a new version
                 version_str = line[len(library_name):].split()[0]
-                retval.append((version_str, set()))
             elif line.startswith("    "):
-                assert len(retval) > 0
                 line = line.strip()
                 assert line.endswith(';')
-                retval[-1][1].add(line)
+                retval.append(Symbol(line, version_str))
     return retval
+
+
+def get_added_symbols(previous_symbols: list[Symbol], new_symbols: set[str], is_internal: bool) -> list[str]:
+    added_symbols: set[str] = new_symbols.copy()
+    for symbol in previous_symbols:
+        if (symbol.name in added_symbols) or (is_internal != symbol.is_internal and symbol.name in added_symbols):
+            added_symbols.remove(symbol.name)
+    added_symbols = list(added_symbols)
+    added_symbols.sort()
+    return added_symbols
+
+
+def print_symbols_diff(previous_symbols: list[Symbol], new_symbols: set[str], is_internal: bool):
+    """
+    Prints the diff between the previous symbols and the new symbols.
+    """
+    added_symbols = get_added_symbols(previous_symbols, new_symbols, is_internal)
+    
+    print("")
+    print("\033[1mNew Symbols 🟢🟢🟢\033[0m")
+    for s in added_symbols:
+        print(f"\033[92m    {s}\033[0m")
+
+    # Deleted symbols
+    deleted_symbols = set()
+    for symbol in previous_symbols:
+        if is_internal == symbol.is_internal and not symbol.name in new_symbols:
+            deleted_symbols.add(symbol.name)
+    deleted_symbols = deleted_symbols - new_symbols
+    deleted_symbols = list(deleted_symbols)
+    deleted_symbols.sort()
+
+    print("")
+    print("\033[1mDeleted Symbols 🔻🔻🔻\033[0m")
+    for s in deleted_symbols:
+        print(f"\033[91m    {s}\033[0m")
 
 
 def main():
@@ -298,70 +358,83 @@ def main():
     else:
         search_dirs = []
 
-    # Create a set that includes all of the available headers
-    parsed_symbols: set[str] = set()
-    for header_dir in library_data["headers_dir"]:
-        parsed_symbols = parsed_symbols.union(process_directory(header_dir, search_dirs))
+    # Create a set that includes all of the available symbols
+    external_symbols: set[str] = set()
+    internal_symbols: set[str] = set()
+    for directory in library_data["header_directories"]:
+        path = directory["path"]
+        symbols = process_directory(path, search_dirs)
+        if directory["is_internal"]:
+            internal_symbols = internal_symbols.union(symbols)
+        else:
+            external_symbols = external_symbols.union(symbols)
     
-    previous_symbols: list[tuple[str, set[str]]] = read_symbols_from_file(
+    previous_symbols = read_symbols_from_file(
         get_absolute_path_from_project_path(library_data["map_file"]), library)
 
-    # New symbols
-    added_symbols = parsed_symbols
-    for symbol_tuple in previous_symbols:
-        added_symbols = added_symbols - symbol_tuple[1]
-    added_symbols = list(added_symbols)
-    added_symbols.sort()
-
     if args.diff:
+        print_symbols_diff(previous_symbols, external_symbols, False)
+        print_symbols_diff(previous_symbols, internal_symbols, True)
         print("")
-        print("\033[1mNew Symbols 🟢🟢🟢\033[0m")
-        for s in added_symbols:
-            print(f"\033[92m    {s}\033[0m")
-
-        # Deleted symbols
-        deleted_symbols = set()
-        for symbol_tuple in previous_symbols:
-            deleted_symbols = deleted_symbols.union(symbol_tuple[1])
-        deleted_symbols = deleted_symbols - parsed_symbols
-        deleted_symbols = list(deleted_symbols)
-        deleted_symbols.sort()
-
-        print("")
-        print("\033[1mDeleted Symbols 🔻🔻🔻\033[0m")
-        for s in deleted_symbols:
-            print(f"\033[91m    {s}\033[0m")
 
     if args.output_symbols:
         _logger.info(f"Outputting the symbols file to: {get_absolute_path_from_project_path(library_data['map_file'])}")
-        # Add the new symbols to the latest stanza. If the latest version in the map file is
-        # NOT the latest symbols version, then we create a new one
-        if previous_symbols[-1][0] != version:
-            previous_symbols.append((version, set()))
-            _logger.info(f"Generating new stanza for version: {version}")
 
-        previous_symbols[-1] = (previous_symbols[-1][0], previous_symbols[-1][1].union(added_symbols))
+        # We now have a list of new external and internal symbols. Our goal now is to add them to the correct stanzas
+        new_external_symbols = get_added_symbols(previous_symbols, external_symbols, False)
+        new_internal_symbols = get_added_symbols(previous_symbols, internal_symbols, True)
+
+        next_version = f"{library.upper()}_{version}"
+        next_internal_version = f"{library.upper()}_INTERNAL_{version}"
+        data_to_output: OrderedDict[str, list[str]] = OrderedDict()
+
+        # Remake the stanzas for the previous symbols
+        for symbol in previous_symbols:
+            version = f"{library.upper()}_{symbol.version}"
+            if not version in data_to_output:
+                data_to_output[version] = []
+            bisect.insort(data_to_output[version], symbol.name)
+
+        # Add the external symbols
+        for symbol in new_external_symbols:
+            if not next_version in data_to_output:
+                data_to_output[next_version] = []
+            bisect.insort(data_to_output[next_version], symbol)
+
+        # Add the internal symbols
+        for symbol in new_internal_symbols:
+            if not next_internal_version in data_to_output:
+                data_to_output[next_internal_version] = []
+            bisect.insort(data_to_output[next_internal_version], symbol)
+
+        # Finally, output them to the file
         with open(get_absolute_path_from_project_path(library_data["map_file"]), 'w+') as f:
-            for i in range(0, len(previous_symbols)):
-                stanza = previous_symbols[i]
-                version_str = f"{library.upper()}_{stanza[0]}"
-                symbols = list(stanza[1])
-                symbols.sort()
-
-                # Only the final stanza should contain the local symbols
-                if i == len(previous_symbols) - 1:
+            prev_internal_version_str = None
+            prev_external_version_str = None
+            for i, (version, symbols) in enumerate(data_to_output.items()):
+                # Only the first stanza should contain the local symbols
+                if i == 0:
                     closing_line = "local: *;\n"
                 else:
                     closing_line = ""
 
-                if i == 0:
-                    closing_line += "};"
+                # Add the correct previous version. This will depend on 
+                is_internal = "_INCLUDE_" in version
+                if is_internal:
+                    if prev_internal_version_str is not None:
+                        closing_line += "} " + prev_internal_version_str + ";"
+                    else:
+                        closing_line += "};"
+                    prev_internal_version_str = version
                 else:
-                    prev_version_str = f"{library.upper()}_{previous_symbols[i - 1][0]}"
-                    closing_line += "} " + prev_version_str + ";"
+                    if prev_external_version_str is not None:
+                        closing_line += "} " + prev_external_version_str + ";"
+                    else:
+                        closing_line += "};"
+                    prev_external_version_str = version
 
                 joint_str = "\n    ".join(symbols)
-                output_str = f'''{version_str} {"{"}
+                output_str = f'''{version} {"{"}
 global:
   extern "C++" {"{"}
     {joint_str}
