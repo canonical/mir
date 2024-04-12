@@ -15,6 +15,7 @@
  */
 
 #include "miroil/set_compositor.h"
+#include "mir/graphics/platform.h"
 #include "miroil/compositor.h"
 #include <stdexcept>
 
@@ -76,7 +77,15 @@ void SetCompositor::operator()(mir::Server& server)
         {
             if (auto const comp = compositor_impl.lock())
             {
-                init_function(server.the_display(), comp->get_wrapped(), server.the_shell());
+                std::vector<std::shared_ptr<mir::graphics::GLRenderingProvider>> rendering_providers;
+                std::transform(
+                    server.the_rendering_platforms().begin(), server.the_rendering_platforms().end(),
+                    std::back_inserter(rendering_providers),
+                    [](std::shared_ptr<mir::graphics::RenderingPlatform> const& platform)
+                    {
+                        return platform->acquire_provider<mir::graphics::GLRenderingProvider>(platform);
+                    });
+                init_function(server.the_display(), std::move(rendering_providers), comp->get_wrapped(), server.the_shell());
             }
             else
             {
