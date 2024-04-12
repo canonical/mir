@@ -123,10 +123,6 @@ MIR_PLATFORM_2.17 {
     mir::options::enable_input_opt*;
     mir::options::enable_key_repeat_opt*;
     mir::options::fatal_except_opt*;
-    mir::options::glog*;
-    mir::options::glog_log_dir*;
-    mir::options::glog_minloglevel*;
-    mir::options::glog_stderrthreshold*;
     mir::options::idle_timeout_opt;
     mir::options::input_report_opt*;
     mir::options::log_opt_value*;

@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "server_example_log_options.h"
 #include "server_example_input_event_filter.h"
 #include "server_example_input_filter.h"
 #include "server_example_test_client.h"
@@ -134,7 +133,6 @@ try
     auto const server_exit_status = runner.run_with({
         // example options for display layout, logging and timeout
         miral::display_configuration_options,
-        me::add_glog_options_to,
         miral::X11Support{},
         wayland_extensions,
         miral::set_window_management_policy<miral::MinimalWindowManager>(),
