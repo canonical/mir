@@ -27,7 +27,7 @@ namespace geom = mir::geometry;
 
 ms::SceneChangeNotification::SceneChangeNotification(
     std::function<void()> const& scene_notify_change,
-    std::function<void(int frames, geom::Rectangle const& damage)> const& damage_notify_change) :
+    std::function<void(geom::Rectangle const& damage)> const& damage_notify_change) :
     scene_notify_change(scene_notify_change),
     damage_notify_change(damage_notify_change)
 {

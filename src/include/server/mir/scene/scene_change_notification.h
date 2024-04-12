@@ -38,7 +38,7 @@ class SceneChangeNotification : public Observer
 public:
     SceneChangeNotification(
         std::function<void()> const& scene_notify_change,
-        std::function<void(int frames, mir::geometry::Rectangle const& damage)> const& damage_notify_change);
+        std::function<void(mir::geometry::Rectangle const& damage)> const& damage_notify_change);
 
     ~SceneChangeNotification();
 
@@ -53,7 +53,7 @@ public:
 
 private:
     std::function<void()> const scene_notify_change;
-    std::function<void(int frames, mir::geometry::Rectangle const& damage)> const damage_notify_change;
+    std::function<void(mir::geometry::Rectangle const& damage)> const damage_notify_change;
 
     std::mutex surface_observers_guard;
     std::map<Surface*, std::shared_ptr<SurfaceObserver>> surface_observers;

@@ -58,7 +58,7 @@ struct UpdateCursorOnSurfaceChanges : ms::NullSurfaceObserver
     {
         cursor_controller->update_cursor_image();
     }
-    void frame_posted(ms::Surface const*, int, geom::Rectangle const&) override
+    void frame_posted(ms::Surface const*, geom::Rectangle const&) override
     {
         // The first frame posted will trigger a cursor update, since it
         // changes the visibility status of the surface, and can thus affect

@@ -257,7 +257,7 @@ void mf::WlrScreencopyV1DamageTracker::create_change_notifier()
         };
     change_notifier = std::make_shared<ms::SceneChangeNotification>(
         [callback](){ callback(std::nullopt); },
-        [callback=std::move(callback)](int, geom::Rectangle const& damage){ callback(damage); });
+        callback);
     surface_stack.add_observer(change_notifier);
 }
 

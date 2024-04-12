@@ -106,7 +106,7 @@ struct DamageTrackerV1 : Test
     {
         auto const locked = surface_observer.lock();
         ASSERT_THAT(locked, NotNull());
-        locked->frame_posted(&surface, 1, damage);
+        locked->frame_posted(&surface, damage);
     }
 };
 }

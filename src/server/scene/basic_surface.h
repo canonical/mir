@@ -118,7 +118,6 @@ public:
     bool visible() const override;
 
     graphics::RenderableList generate_renderables(compositor::CompositorID id) const override;
-    int buffers_ready_for_compositor(void const* compositor_id) const override;
 
     MirWindowType type() const override;
     MirWindowState state() const override;
