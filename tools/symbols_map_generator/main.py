@@ -43,10 +43,12 @@ class LibraryInfo(TypedDict):
 class Symbol:
     name: str
     version: str
+    is_c_symbol: bool
     
-    def __init__(self, name: str, version: str):
+    def __init__(self, name: str, version: str, is_c_symbol: bool):
         self.name = name
         self.version = version
+        self.is_c_symbol = is_c_symbol
 
     def is_internal(self) -> bool:
         return self.version.startswith("INTERNAL_")
@@ -83,12 +85,6 @@ library_to_data_map: dict[LibraryName, LibraryInfo] = {
             "include/miral",
             "src/include/server",
         ]
-    },
-    "mir_common": {
-        "header_directories": [
-            {"path": "include/common", "is_internal": False},
-            {"path": "src/include/common", "is_internal": True}
-        ]
     }
 }
 
@@ -121,7 +117,7 @@ def create_node_symbol_name(node: clang.cindex.Cursor) -> str:
         return node.spelling
 
 
-def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> set[str]:
+def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str], current_namespace: str = "") -> set[str]:
     # Ignore private and protected variables
     if (node.access_specifier == clang.cindex.AccessSpecifier.PRIVATE):
         return result
@@ -136,27 +132,13 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
           or node.kind == clang.cindex.CursorKind.CONVERSION_FUNCTION
           or should_generate_as_class_or_struct(node))
           and node.location.file.name == filename
-          and not node.is_pure_virtual_method()):
-        parent = node.semantic_parent
-        namespace_str = create_node_symbol_name(node)
-
-        # Walk up the tree to build the namespace
-        has_encountered_namespace = False
-        while parent is not None:
-            if parent.kind == clang.cindex.CursorKind.TRANSLATION_UNIT:
-                break
-
-            if parent.kind == clang.cindex.CursorKind.NAMESPACE:
-                if has_encountered_namespace and parent.spelling == "std":
-                    # TODO: I am unsure why, but the 'std' namespace isn't closed
-                    #  by the time we encounter other symbols. We can ignore std
-                    #  in this case
-                    break
-                else:
-                    has_encountered_namespace = True
-
-            namespace_str = f"{parent.spelling}::{namespace_str}"
-            parent = parent.semantic_parent
+          and not node.is_pure_virtual_method()
+          and not node.is_anonymous()):
+        
+        if current_namespace:
+            namespace_str = f"{current_namespace}::{create_node_symbol_name(node)}"
+        else:
+            namespace_str = create_node_symbol_name(node)
 
         # Classes and structs have a specific output
         if (node.kind == clang.cindex.CursorKind.CLASS_DECL
@@ -226,12 +208,19 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
                             
 
     # Traverse down the tree if we can
-    if (node.kind == clang.cindex.CursorKind.TRANSLATION_UNIT
-        or node.kind == clang.cindex.CursorKind.CLASS_DECL
+    is_file = node.kind == clang.cindex.CursorKind.TRANSLATION_UNIT
+    is_containing_node = (node.kind == clang.cindex.CursorKind.CLASS_DECL
         or node.kind == clang.cindex.CursorKind.STRUCT_DECL
-        or node.kind == clang.cindex.CursorKind.NAMESPACE):
+        or node.kind == clang.cindex.CursorKind.NAMESPACE)
+    if ((is_file and node.spelling == filename) or (is_containing_node and node.location.file.name == filename)):
+        if node.kind != clang.cindex.CursorKind.TRANSLATION_UNIT:
+            if not current_namespace:
+                current_namespace = node.spelling
+            else:
+                current_namespace = f"{current_namespace}::{node.spelling}"
+
         for child in node.get_children():
-            traverse_ast(child, filename, result)
+            traverse_ast(child, filename, result, current_namespace)
 
     return result
 
@@ -275,7 +264,15 @@ def read_symbols_from_file(file: Path, library_name: str) -> list[Symbol]:
             elif line.startswith("    "):
                 line = line.strip()
                 assert line.endswith(';')
-                retval.append(Symbol(line, version_str))
+                retval.append(Symbol(line, version_str, False))
+            elif line.startswith("  "):
+                line = line.strip()
+                if line.startswith("global:") or line.startswith("local:") or line == 'extern "C++" {' or line.startswith("}"):
+                    continue
+                
+                # This is a c-symbol
+                assert line.endswith(';')
+                retval.append(Symbol(line, version_str, True))
     return retval
 
 
@@ -386,32 +383,44 @@ def main():
 
         next_version = f"{library.upper()}_{version}"
         next_internal_version = f"{library.upper()}_INTERNAL_{version}"
-        data_to_output: OrderedDict[str, list[str]] = OrderedDict()
+        data_to_output: OrderedDict[str, dict[str, list[str]]] = OrderedDict()
 
         # Remake the stanzas for the previous symbols
         for symbol in previous_symbols:
             version = f"{library.upper()}_{symbol.version}"
             if not version in data_to_output:
-                data_to_output[version] = []
-            bisect.insort(data_to_output[version], symbol.name)
+                data_to_output[version] = {
+                    "c": [],
+                    "c++": []
+                }
+            if symbol.is_c_symbol:
+                bisect.insort(data_to_output[version]["c"], symbol.name)
+            else:
+                bisect.insort(data_to_output[version]["c++"], symbol.name)
 
         # Add the external symbols
         for symbol in new_external_symbols:
             if not next_version in data_to_output:
-                data_to_output[next_version] = []
-            bisect.insort(data_to_output[next_version], symbol)
+                data_to_output[next_version] = {
+                    "c": [],
+                    "c++": []
+                }
+            bisect.insort(data_to_output[next_version]["c++"], symbol)
 
         # Add the internal symbols
         for symbol in new_internal_symbols:
             if not next_internal_version in data_to_output:
-                data_to_output[next_internal_version] = []
-            bisect.insort(data_to_output[next_internal_version], symbol)
+                data_to_output[next_internal_version] = {
+                    "c": [],
+                    "c++": []
+                }
+            bisect.insort(data_to_output[next_internal_version]["c++"], symbol)
 
         # Finally, output them to the file
         with open(get_absolute_path_from_project_path(library_data["map_file"]), 'w+') as f:
             prev_internal_version_str = None
             prev_external_version_str = None
-            for i, (version, symbols) in enumerate(data_to_output.items()):
+            for i, (version, symbols_dict) in enumerate(data_to_output.items()):
                 # Only the first stanza should contain the local symbols
                 if i == 0:
                     closing_line = "local: *;\n"
@@ -419,7 +428,7 @@ def main():
                     closing_line = ""
 
                 # Add the correct previous version. This will depend on 
-                is_internal = "_INCLUDE_" in version
+                is_internal = "_INTERNAL_" in version
                 if is_internal:
                     if prev_internal_version_str is not None:
                         closing_line += "} " + prev_internal_version_str + ";"
@@ -433,13 +442,18 @@ def main():
                         closing_line += "};"
                     prev_external_version_str = version
 
-                joint_str = "\n    ".join(symbols)
+                if not symbols_dict["c"]:
+                    c_symbols_str = ""
+                else:
+                    c_symbols_str = "\n  " + "\n  ".join(symbols_dict["c"]) + "\n"
+                cpp_symbols_str = "\n    ".join(symbols_dict["c++"])
                 output_str = f'''{version} {"{"}
-global:
+global:{c_symbols_str}
   extern "C++" {"{"}
-    {joint_str}
+    {cpp_symbols_str}
   {'};'}
 {closing_line}
+
 '''
 
                 f.write(output_str)
