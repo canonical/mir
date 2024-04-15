@@ -45,7 +45,6 @@ public:
     /// @{
     auto lock_compositor_buffer(void const* user_id) -> std::shared_ptr<graphics::Buffer>;
     auto stream_size() -> geometry::Size;
-    auto buffers_ready_for_compositor(void const* user_id) const -> int;
     auto has_submitted_buffer() const -> bool;
     /// @}
 

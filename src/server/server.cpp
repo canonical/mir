@@ -741,5 +741,19 @@ void mir::Server::add_configuration_option(
             self->set_add_configuration_options(option_adder);
         }
         break;
+
+        case OptionType::real:
+        {
+            auto const option_adder = [=](options::DefaultConfiguration& config)
+            {
+                existing(config);
+
+                config.add_options()
+                        (option.c_str(), po::value<double>(), description.c_str());
+            };
+
+            self->set_add_configuration_options(option_adder);
+        }
+        break;
     }
 }

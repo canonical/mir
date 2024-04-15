@@ -49,7 +49,6 @@ struct StubSurface : scene::Surface
     void set_transformation(glm::mat4 const&) override {}
     bool visible() const override { return false; }
     graphics::RenderableList generate_renderables(compositor::CompositorID) const override { return {}; }
-    int buffers_ready_for_compositor(void const*) const override { return 0; }
     MirWindowType type() const override { return mir_window_type_normal; }
     auto state_tracker() const -> scene::SurfaceStateTracker override
     {

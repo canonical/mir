@@ -33,7 +33,6 @@ parts:
     - libfreetype6-dev
     - libgbm-dev
     - libglm-dev
-    - libgoogle-glog-dev
     - libgtest-dev
     - libinput-dev
     - liblttng-ust-dev
@@ -66,7 +65,6 @@ parts:
     - libgles2
     - libglibmm-2.4-1v5
     - libglvnd0
-    - libgoogle-glog0v5
     - libgudev-1.0-0
     - libicu70
     - libinput10

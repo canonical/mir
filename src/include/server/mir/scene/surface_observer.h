@@ -49,7 +49,7 @@ public:
     virtual void moved_to(Surface const* surf, geometry::Point const& top_left) = 0;
     virtual void hidden_set_to(Surface const* surf, bool hide) = 0;
     /// damage is given in surface-local logical coordinates
-    virtual void frame_posted(Surface const* surf, int frames_available, geometry::Rectangle const& damage) = 0;
+    virtual void frame_posted(Surface const* surf, geometry::Rectangle const& damage) = 0;
     virtual void alpha_set_to(Surface const* surf, float alpha) = 0;
     virtual void orientation_set_to(Surface const* surf, MirOrientation orientation) = 0;
     virtual void transformation_set_to(Surface const* surf, glm::mat4 const& t) = 0;

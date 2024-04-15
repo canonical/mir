@@ -82,7 +82,6 @@ libmiroil.so.5 libmiroil5 #MINVER#
  (c++)"miroil::SetCompositor::operator()(mir::Server&)@MIROIL_5.0" 2.17.0
  (c++)"miroil::Surface::Surface(std::shared_ptr<mir::scene::Surface>)@MIROIL_5.0" 2.17.0
  (c++)"miroil::Surface::add_observer(std::shared_ptr<miroil::SurfaceObserver> const&)@MIROIL_5.0" 2.17.0
- (c++)"miroil::Surface::buffers_ready_for_compositor(void const*) const@MIROIL_5.0" 2.17.0
  (c++)"miroil::Surface::configure(MirWindowAttrib, int)@MIROIL_5.0" 2.17.0
  (c++)"miroil::Surface::generate_renderables(void const*) const@MIROIL_5.0" 2.17.0
  (c++)"miroil::Surface::get_wrapped() const@MIROIL_5.0" 2.17.0

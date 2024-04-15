@@ -83,10 +83,22 @@ configure_file(
     @ONLY
 )
 
-add_custom_target(regenerate-miroil-debian-symbols ${MIR_CHECK_MIRAL_SYMBOLS_DEFAULT}
-    COMMAND ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator/run.sh --library miroil --version ${MIROIL_VERSION} --output_symbols
-    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    VERBATIM)
+if(TARGET doc)
+    add_custom_target(regenerate-miroil-symbols-map
+            ${CMAKE_CURRENT_SOURCE_DIR}/regenerate-miroil-symbols-map.py ${CMAKE_BINARY_DIR}/doc/xml/*.xml > ${symbol_map}
+            DEPENDS doc)
+endif()
+
+add_custom_target(
+        generate-miroil-symbols-map
+        COMMAND ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator/run.sh
+        --library-name miroil
+        --version ${MIROIL_VERSION}
+        --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
+        --external-headers-directory="${PROJECT_SOURCE_DIR}/include/miroil"
+        --include_dirs "$<JOIN:$<TARGET_PROPERTY:miroil,INCLUDE_DIRECTORIES>,:>"
+        --output_symbols
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 install(TARGETS     miroil                           LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 install(DIRECTORY   ${CMAKE_SOURCE_DIR}/include/miroil       DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")

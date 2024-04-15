@@ -40,8 +40,6 @@ struct MockBufferStream : public compositor::BufferStream
 
     MockBufferStream()
     {
-        ON_CALL(*this, buffers_ready_for_compositor(::testing::_))
-            .WillByDefault(testing::Invoke(this, &MockBufferStream::buffers_ready));
         ON_CALL(*this, has_submitted_buffer())
             .WillByDefault(testing::Return(true));
         ON_CALL(*this, pixel_format())
@@ -57,7 +55,6 @@ struct MockBufferStream : public compositor::BufferStream
     MOCK_METHOD(void, set_frame_posted_callback, (std::function<void(geometry::Size const&)> const&), (override));
 
     MOCK_METHOD(geometry::Size, stream_size, (), (override));
-    MOCK_METHOD(int, buffers_ready_for_compositor, (void const*), (const override));
 
     MOCK_METHOD(void, submit_buffer, (std::shared_ptr<graphics::Buffer> const&), (override));
     MOCK_METHOD(MirPixelFormat, pixel_format, (), (const override));

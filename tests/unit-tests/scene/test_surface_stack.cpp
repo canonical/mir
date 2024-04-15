@@ -53,11 +53,6 @@ namespace mw = mir::wayland;
 namespace
 {
 
-void post_a_frame(mc::BufferStream& s)
-{
-    s.submit_buffer(std::make_shared<mtd::StubBuffer>());
-}
-
 MATCHER_P(SurfaceWithInputReceptionMode, mode, "")
 {
     return arg->reception_mode() == mode;
@@ -243,120 +238,6 @@ TEST_F(SurfaceStack, scene_snapshot_omits_invisible_surfaces)
         ElementsAre(
             SceneElementForStream(stub_buffer_stream1),
             SceneElementForStream(stub_buffer_stream2)));
-}
-
-TEST_F(SurfaceStack, scene_counts_pending_accurately)
-{
-    using namespace testing;
-    ms::SurfaceStack stack{report};
-    stack.register_compositor(this);
-
-    auto stream = std::make_shared<mc::Stream>(geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888);
-
-    auto surface = std::make_shared<ms::BasicSurface>(
-        nullptr /* session */,
-        mw::Weak<mf::WlSurface>{},
-        std::string("stub"),
-        geom::Rectangle{{},{}},
-        mir_pointer_unconfined,
-        std::list<ms::StreamInfo> { { stream, {}, {} } },
-        std::shared_ptr<mg::CursorImage>(),
-        report,
-        display_config_registrar);
-    stack.add_surface(surface, mi::InputReceptionMode::normal);
-    surface->configure(mir_window_attrib_visibility,
-                       mir_window_visibility_exposed);
-
-    EXPECT_EQ(0, stack.frames_pending(this));
-
-    unsigned int num_posts = 3;
-
-    for (auto i = 0u; i != num_posts; i++)
-        post_a_frame(*stream);
-
-    for (auto expect = 0u; expect != num_posts; expect++)
-    {
-        ASSERT_EQ(expect >= num_posts ? 0 : 1, stack.frames_pending(this));
-        for (auto& element : stack.scene_elements_for(compositor_id))
-            element->renderable()->buffer();
-    }
-}
-
-TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_occluded_surfaces)
-{  // Regression test for LP: #1418081
-    using namespace testing;
-
-    ms::SurfaceStack stack{report};
-    stack.register_compositor(this);
-    auto stream = std::make_shared<mtd::StubBufferStream>();
-    auto surface = std::make_shared<ms::BasicSurface>(
-        nullptr /* session */,
-        mw::Weak<mf::WlSurface>{},
-        std::string("stub"),
-        geom::Rectangle{{},{}},
-        mir_pointer_unconfined,
-        std::list<ms::StreamInfo> { { stream, {}, {} } },
-        std::shared_ptr<mg::CursorImage>(),
-        report,
-        display_config_registrar);
-
-    stack.add_surface(surface, mi::InputReceptionMode::normal);
-    auto elements = stack.scene_elements_for(this);
-    for (auto const& elem : elements)
-        elem->occluded();
-
-    EXPECT_EQ(0, stack.frames_pending(this));
-    post_a_frame(*stream);
-    post_a_frame(*stream);
-    post_a_frame(*stream);
-    EXPECT_EQ(0, stack.frames_pending(this));
-}
-
-TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_partially_exposed_surfaces)
-{  // Regression test for LP: #1499039
-    using namespace testing;
-
-    // Partially exposed means occluded in one compositor but not another
-    ms::SurfaceStack stack{report};
-    auto const comp1 = reinterpret_cast<mc::CompositorID>(0);
-    auto const comp2 = reinterpret_cast<mc::CompositorID>(1);
-
-    stack.register_compositor(comp1);
-    stack.register_compositor(comp2);
-    auto stream = std::make_shared<mtd::StubBufferStream>();
-    auto surface = std::make_shared<ms::BasicSurface>(
-        nullptr /* session */,
-        mw::Weak<mf::WlSurface>{},
-        std::string("stub"),
-        geom::Rectangle{{},{}},
-        mir_pointer_unconfined,
-        std::list<ms::StreamInfo> { { stream, {}, {} } },
-        std::shared_ptr<mg::CursorImage>(),
-        report,
-        display_config_registrar);
-
-    stack.add_surface(surface, mi::InputReceptionMode::normal);
-    post_a_frame(*stream);
-    post_a_frame(*stream);
-    post_a_frame(*stream);
-
-    EXPECT_EQ(3, stack.frames_pending(comp1));
-    EXPECT_EQ(3, stack.frames_pending(comp2));
-
-    auto elements = stack.scene_elements_for(comp1);
-    for (auto const& elem : elements)
-    {
-        elem->rendered();
-    }
-
-    elements = stack.scene_elements_for(comp2);
-    for (auto const& elem : elements)
-    {
-        elem->occluded();
-    }
-
-    EXPECT_EQ(3, stack.frames_pending(comp1));
-    EXPECT_EQ(0, stack.frames_pending(comp2));
 }
 
 TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)

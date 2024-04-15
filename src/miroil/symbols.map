@@ -80,7 +80,6 @@ global:
     miroil::Surface::?Surface*;
     miroil::Surface::Surface*;
     miroil::Surface::add_observer*;
-    miroil::Surface::buffers_ready_for_compositor*;
     miroil::Surface::configure*;
     miroil::Surface::generate_renderables*;
     miroil::Surface::get_wrapped*;
@@ -157,3 +156,4 @@ global:
   };
 local: *;
 };
+
