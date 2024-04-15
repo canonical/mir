@@ -19,7 +19,6 @@
 #define MIR_COMPOSITOR_MULTI_MONITOR_ARBITER_H_
 
 #include "mir/compositor/compositor_id.h"
-#include "buffer_acquisition.h"
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -32,13 +31,13 @@ namespace compositor
 {
 class Schedule;
 
-class MultiMonitorArbiter : public BufferAcquisition 
+class MultiMonitorArbiter
 {
 public:
     MultiMonitorArbiter();
     ~MultiMonitorArbiter();
 
-    std::shared_ptr<graphics::Buffer> compositor_acquire(compositor::CompositorID id) override;
+    std::shared_ptr<graphics::Buffer> compositor_acquire(compositor::CompositorID id);
     bool buffer_ready_for(compositor::CompositorID id);
 
     void submit_buffer(std::shared_ptr<graphics::Buffer> buffer);
