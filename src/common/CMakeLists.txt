@@ -34,6 +34,8 @@ list(APPEND MIR_COMMON_SOURCES
   thread_pool_executor.cpp
   linearising_executor.cpp
   immediate_executor.cpp
+  ${PROJECT_SOURCE_DIR}/include/common/mir/signal.h
+  signal.cpp
 )
 
 set(
