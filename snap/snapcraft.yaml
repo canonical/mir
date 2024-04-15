@@ -1,5 +1,5 @@
 name: mir-libs
-base: core22
+base: core24
 summary: The fast, open and secure display server for any device - build environment
 description: |
   Mir is a display server running on linux systems, with a focus on efficiency,

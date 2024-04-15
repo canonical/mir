@@ -49,7 +49,7 @@ jobs:
         launchpad-credentials: ${{ secrets.LAUNCHPAD_CREDENTIALS }}
         launchpad-accept-public-upload: true
         publish: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
-        publish-channel: 22/edge/pr${{ github.event.number }}
+        publish-channel: 24/edge/pr${{ github.event.number }}
 
   snap:
     # Only run if we have access to secrets.
@@ -72,15 +72,14 @@ jobs:
         architecture: ${{ fromJSON(needs.arches.outputs.arches) }}
         include:
         - snap: MirServer/mir-test-tools
-          track: 22
+          track: 24
         - snap: MirServer/confined-shell-wip
           track: latest
         - snap: MirServer/ubuntu-frame
-          track: 22
+          track: 24
         - snap: Miriway/Miriway
           track: latest
           review-opts: --allow-classic
-          snapcraft-channel: edge
 
     steps:
     - name: Check out code
@@ -104,4 +103,3 @@ jobs:
         launchpad-accept-public-upload: true
         publish: true
         publish-channel: ${{ matrix.track }}/edge/mir-pr${{ github.event.number }}
-        snapcraft-channel: ${{ matrix.snapcraft-channel || 'stable' }}
