@@ -71,6 +71,20 @@ std::string describe(libinput_device* dev)
     }
 #endif
 
+#ifdef ARG_DEBUGGING
+    for (auto entry = udev_device_get_properties_list_entry(udev_dev.get()); entry; entry = udev_list_entry_get_next(entry))
+    {
+        mir::log_debug("{arg} property '%s=%s'", udev_list_entry_get_name(entry), udev_list_entry_get_value(entry));
+    }
+    for (auto entry = udev_device_get_tags_list_entry(udev_dev.get()); entry; entry = udev_list_entry_get_next(entry))
+    {
+        mir::log_debug("{arg} tag '%s=%s'", udev_list_entry_get_name(entry), udev_list_entry_get_value(entry));
+    }
+    for (auto entry = udev_device_get_sysattr_list_entry(udev_dev.get()); entry; entry = udev_list_entry_get_next(entry))
+    {
+        mir::log_debug("{arg} sysattr '%s=%s'", udev_list_entry_get_name(entry), udev_list_entry_get_value(entry));
+    }
+#endif
     auto const vendor = libinput_device_get_id_vendor(dev);
     auto const product = libinput_device_get_id_product(dev);
     desc += std::format(" [{:0>4x}:{:0>4x}]", vendor, product);
@@ -80,6 +94,7 @@ std::string describe(libinput_device* dev)
         desc += ": " + std::string(name);
     }
 
+#ifdef ARG_DEBUGGING
     for (auto const key : {/*"ID_MODEL", "ID_VENDOR_ID", "ID_MODEL_ID",*/ "ID_PATH"})
     {
         if (char const *const value = udev_device_get_property_value(udev_dev.get(), key))
@@ -87,6 +102,7 @@ std::string describe(libinput_device* dev)
             desc += ": " + std::string(key) + "=" + value;
         }
     }
+#endif
 
     return desc;
 }
