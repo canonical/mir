@@ -43,6 +43,7 @@ jobs:
 
     - name: Build and publish the snap
       uses: canonical/actions/build-snap@release
+      continue-on-error: true
       with:
         architecture: ${{ matrix.architecture }}
         snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
