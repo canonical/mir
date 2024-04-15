@@ -297,7 +297,7 @@ def main():
                     dest="external_headers")
     parser.add_argument('--internal-headers-directory', type=str,
                     help=f'Absolute path to the directory containing this libraries internal headers',
-                    dest="external_headers")
+                    dest="internal_headers")
     parser.add_argument('--version', type=str,
                     help='Current version of the library',
                     required=True)
