@@ -17,17 +17,13 @@
 import logging
 import argparse
 from pathlib import Path
-from typing import Literal, TypedDict, get_args, Optional
+from typing import TypedDict, Optional
 from collections import OrderedDict
 import bisect
 import clang.cindex
 import os
 
 _logger = logging.getLogger(__name__)
-
-LibraryName = Literal[
-    "miral", "mir_common", "mir_core", "miroil", "mir_platform",
-    "mir_renderer", "mir_renderers", "mir_server_internal", "mir_test", "mir_wayland"]
 
 
 class HeaderDirectory(TypedDict):
@@ -38,7 +34,6 @@ class HeaderDirectory(TypedDict):
 class LibraryInfo(TypedDict):
     header_directories: list[HeaderDirectory]
     map_file: str
-    include_headers: Optional[list[str]]
 
 
 class Symbol:
@@ -54,44 +49,6 @@ class Symbol:
     def is_internal(self) -> bool:
         return self.version.startswith("INTERNAL_")
 
-
-# Directory paths are relative to the root of the Mir project
-library_to_data_map: dict[LibraryName, LibraryInfo] = {
-    "miral": {
-        "header_directories": [
-            {"path": "include/miral", "is_internal": False}
-        ],
-        "map_file": "src/miral/symbols.map",
-        "include_headers": [
-            "include/common",
-            "include/core",
-            "include/miral",
-            "include/renderer",
-            "include/server",
-            "include/wayland"
-        ]
-    },
-    "miroil": {
-        "header_directories": [
-            {"path": "include/miroil", "is_internal": False}
-        ],
-        "map_file": "src/miroil/symbols.map",
-        "include_headers": [
-            "include/platform",
-            "include/gl",
-            "include/renderers/gl"
-            "include/server",
-            "include/core",
-            "include/client",
-            "include/miral",
-            "src/include/server",
-        ]
-    }
-}
-
-
-def get_absolute_path_from_project_path(project_path: str) -> Path:
-    return Path(__file__).parent.parent.parent / project_path
 
 
 def should_generate_as_class_or_struct(node: clang.cindex.Cursor):
@@ -118,7 +75,7 @@ def create_node_symbol_name(node: clang.cindex.Cursor) -> str:
         return node.spelling
 
 
-def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str], current_namespace: str = "") -> set[str]:
+def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str], current_namespace: str = "") -> set[str]:    
     # Ignore private and protected variables
     if (node.access_specifier == clang.cindex.AccessSpecifier.PRIVATE):
         return result
@@ -213,7 +170,7 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str], cur
     is_containing_node = (node.kind == clang.cindex.CursorKind.CLASS_DECL
         or node.kind == clang.cindex.CursorKind.STRUCT_DECL
         or node.kind == clang.cindex.CursorKind.NAMESPACE)
-    if is_file or is_containing_node:
+    if is_file or is_containing_node:        
         if clang.cindex.conf.lib.clang_Location_isInSystemHeader(node.location):
             return result
         
@@ -232,12 +189,13 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str], cur
 def process_directory(directory: str, search_dirs: Optional[list[str]]) -> set[str]:
     result = set()
 
-    files_dir = get_absolute_path_from_project_path(directory)
-    _logger.debug(f"Processing directory: {files_dir}")
-    files = files_dir.rglob('*.h')
+    directory_as_path = Path(directory)
+    files = directory_as_path.rglob('*.h')
     search_variables = []
+
     for dir in search_dirs:
-        search_variables.append(f"-I{get_absolute_path_from_project_path(dir).as_posix()}")
+        search_variables.append(f"-I{dir}")
+
     args = ['-fsyntax-only', '-std=c++17', '-x', 'c++-header'] + search_variables
     for file in files:
         idx = clang.cindex.Index.create()
@@ -251,7 +209,7 @@ def process_directory(directory: str, search_dirs: Optional[list[str]]) -> set[s
     return result
 
 
-def read_symbols_from_file(file: Path, library_name: str) -> list[Symbol]:
+def read_symbols_from_file(file: str, library_name: str) -> list[Symbol]:
     """
     Returns a list of symbols for each stanza in the symbols.map file.
     The returned list is ordered by version.
@@ -261,10 +219,10 @@ def read_symbols_from_file(file: Path, library_name: str) -> list[Symbol]:
     retval: list[Symbol] = []
     version_str = None
 
-    if not os.path.exists(file.as_posix()):
+    if not os.path.exists(file):
         return []
 
-    with open(file.as_posix()) as f:
+    with open(file) as f:
         for line in f.readlines():
             if line.startswith(library_name):
                 # This denotes that a new version
@@ -326,11 +284,20 @@ def main():
                                         "With this list, a developer may update the corresponding symbols.map appropriately. "
                                         "The tool uses https://pypi.org/project/libclang/ to process "
                                         "the AST of the project's header files.")
-    choices = list(get_args(LibraryName))
-    parser.add_argument('--library', type=str,
-                    help=f'library to generate symbols for ({", ".join(choices)})',
-                    required=True,
-                    choices=list(choices))
+    parser.add_argument('--library-name', type=str,
+                    help='Name of library to generate symbols',
+                    dest="library_name",
+                    required=True)
+    parser.add_argument('--symbols-map-path', type=str,
+                    help='Absolute path to the symbols map file that corresponds with this library',
+                    dest="symbols_map_path",
+                    required=True)
+    parser.add_argument('--external-headers-directory', type=str,
+                    help=f'Absolute path to the directory containing this libraries external headers',
+                    dest="external_headers")
+    parser.add_argument('--internal-headers-directory', type=str,
+                    help=f'Absolute path to the directory containing this libraries internal headers',
+                    dest="external_headers")
     parser.add_argument('--version', type=str,
                     help='Current version of the library',
                     required=True)
@@ -338,11 +305,13 @@ def main():
                     help='If true a diff should be output to the console')
     parser.add_argument('--output_symbols', action='store_true',
                         help='If true, the symbols.map file will be updated with the new new symbols')
+    parser.add_argument('--include_dirs', type=str, help="Colon separated list of directories to search for this library", required=True)
     
     args = parser.parse_args()
+    include_dirs = args.include_dirs.split(":")
 
     logging.basicConfig(level=logging.DEBUG)
-    library = args.library
+    library = args.library_name
     version = args.version
 
     # Remove the patch version since we're not interested in it
@@ -352,30 +321,24 @@ def main():
 
     _logger.info(f"Symbols map generation is beginning for library={library} with version={version}")
 
-    try:
-        library_data: LibraryInfo = library_to_data_map[library]
-    except KeyError:
-        _logger.error(f"The provided library has yet to be implmented: {library}")
-        exit(1)
-
-    if "include_headers" in library_data:
-        search_dirs = library_data["include_headers"]
-    else:
-        search_dirs = []
-
     # Create a set that includes all of the available symbols
     external_symbols: set[str] = set()
+    if "external_headers" in args:
+        _logger.info(f"Processing external headers directory: {args.external_headers}")
+        external_symbols: set[str] = process_directory(
+            args.external_headers,
+            include_dirs
+        )
+
     internal_symbols: set[str] = set()
-    for directory in library_data["header_directories"]:
-        path = directory["path"]
-        symbols = process_directory(path, search_dirs)
-        if directory["is_internal"]:
-            internal_symbols = internal_symbols.union(symbols)
-        else:
-            external_symbols = external_symbols.union(symbols)
+    if "internal_headers" in args:
+        _logger.info(f"Processing internal headers directory: {args.internal_headers}")
+        external_symbols: set[str] = process_directory(
+            args.internal_headers,
+            include_dirs
+        )
     
-    previous_symbols = read_symbols_from_file(
-        get_absolute_path_from_project_path(library_data["map_file"]), library)
+    previous_symbols = read_symbols_from_file(args.symbols_map_path, library)
 
     if args.diff:
         print_symbols_diff(previous_symbols, external_symbols, False)
@@ -383,7 +346,7 @@ def main():
         print("")
 
     if args.output_symbols:
-        _logger.info(f"Outputting the symbols file to: {get_absolute_path_from_project_path(library_data['map_file'])}")
+        _logger.info(f"Outputting the symbols file to: {args.symbols_map_path}")
 
         # We now have a list of new external and internal symbols. Our goal now is to add them to the correct stanzas
         new_external_symbols = get_added_symbols(previous_symbols, external_symbols, False)
@@ -425,7 +388,7 @@ def main():
             bisect.insort(data_to_output[next_internal_version]["c++"], symbol)
 
         # Finally, output them to the file
-        with open(get_absolute_path_from_project_path(library_data["map_file"]), 'w+') as f:
+        with open(args.symbols_map_path, 'w+') as f:
             prev_internal_version_str = None
             prev_external_version_str = None
             for i, (version, symbols_dict) in enumerate(data_to_output.items()):

@@ -142,10 +142,16 @@ add_custom_target(regenerate-miral-debian-symbols ${MIR_CHECK_MIRAL_SYMBOLS_DEFA
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
     VERBATIM)
 
-add_custom_target(generate-miral-symbols-map ${MIR_CHECK_MIRAL_SYMBOLS_DEFAULT}
-    COMMAND ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator/run.sh --library miral --version ${MIRAL_VERSION} --output_symbols
-    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    VERBATIM)
+add_custom_target(
+        generate-miral-symbols-map
+        COMMAND ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator/run.sh
+            --library-name miral
+            --version ${MIRAL_VERSION}
+            --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
+            --external-headers-directory="${PROJECT_SOURCE_DIR}/include/miral"
+            --include_dirs "$<JOIN:$<TARGET_PROPERTY:miral,INCLUDE_DIRECTORIES>,:>"
+            --output_symbols
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/miral.pc.in
