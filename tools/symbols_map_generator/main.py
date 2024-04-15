@@ -191,17 +191,17 @@ def process_directory(directory: str, search_dirs: Optional[list[str]]) -> set[s
 
     directory_as_path = Path(directory)
     files = directory_as_path.rglob('*.h')
-    search_variables = []
 
+    args = ['-std=c++23', '-x', 'c++-header']
     for dir in search_dirs:
-        search_variables.append(f"-I{dir}")
+        args.append(f"-I{dir}")
 
-    args = ['-fsyntax-only', '-std=c++17', '-x', 'c++-header'] + search_variables
     for file in files:
+        file_args = args.copy()
         idx = clang.cindex.Index.create()
         tu = idx.parse(
             file.as_posix(), 
-            args=args,  
+            args=file_args,  
             options=0)
         root = tu.cursor
         list(traverse_ast(root, file.as_posix(), result))
@@ -279,38 +279,59 @@ def print_symbols_diff(previous_symbols: list[Symbol], new_symbols: set[str], is
 
 
 def main():
-    parser = argparse.ArgumentParser(description="This tool parses the header files of a library in the Mir project "
-                                        "and outputs a list of new and removed symbols either to stdout or a symbols.map file. "
-                                        "With this list, a developer may update the corresponding symbols.map appropriately. "
+    parser = argparse.ArgumentParser(description="This tool parses the header files of a provided in the Mir project "
+                                        "and process a list of new internal and external symbols. "
+                                        "To view this list, the user may provide the --diff option. To modify the corresponding "
+                                        "symbols.map files automatically, the user may specify the --output_symbols option. "
                                         "The tool uses https://pypi.org/project/libclang/ to process "
-                                        "the AST of the project's header files.")
+                                        "the AST of the project's header files.\n\nIf the content of the outputted map "
+                                        "file appears incorrect, trying using a later version of clang (e.g. clang 19). You can do this "
+                                        "by specifying 'MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH' along with 'MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH'. "
+                                        "Note that you most likely must set both of these values so that libLLVM-XY.so can be resolved alongside clang. "
+                                        "As an example, I used this script (https://github.com/opencollab/llvm-jenkins.debian.net/blob/master/llvm.sh) "
+                                        "to install clang 19 (sudo ./llvm.sh 19), and I set the following:"
+                                        "\n\n    export MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-19/lib/libclang.so.1"
+                                        "\n    export MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-19/lib"
+                                        , formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('--library-name', type=str,
-                    help='Name of library to generate symbols',
+                    help='name of library',
                     dest="library_name",
                     required=True)
     parser.add_argument('--symbols-map-path', type=str,
-                    help='Absolute path to the symbols map file that corresponds with this library',
+                    help='absolute path to a symbols map',
                     dest="symbols_map_path",
                     required=True)
     parser.add_argument('--external-headers-directory', type=str,
-                    help=f'Absolute path to the directory containing this libraries external headers',
+                    help=f'absolute path to the directory containing the public-facing headers of this library',
                     dest="external_headers")
     parser.add_argument('--internal-headers-directory', type=str,
-                    help=f'Absolute path to the directory containing this libraries internal headers',
+                    help=f'absolute path to the directory containing private headers of this library',
                     dest="internal_headers")
     parser.add_argument('--version', type=str,
-                    help='Current version of the library',
+                    help='current version of the library',
                     required=True)
     parser.add_argument('--diff', action='store_true',
-                    help='If true a diff should be output to the console')
+                    help='if true a diff should be output to the console')
     parser.add_argument('--output_symbols', action='store_true',
-                        help='If true, the symbols.map file will be updated with the new new symbols')
-    parser.add_argument('--include_dirs', type=str, help="Colon separated list of directories to search for this library", required=True)
+                        help='if true, the symbols.map file will be updated with the new new symbols')
+    parser.add_argument('--include_dirs', type=str, help="colon separated list of directories to search for symbols", required=True)
     
     args = parser.parse_args()
+    logging.basicConfig(level=logging.DEBUG)
+    
+    # Point libclang to a file on the system
+    if 'MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH' in os.environ:
+        file_path = os.environ['MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH']
+        _logger.info(f"MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH is {file_path}")
+        clang.cindex.Config.set_library_file(file_path)
+    
+    if 'MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH' in os.environ:
+        library_path = os.environ['MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH']
+        _logger.info(f"MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH is {library_path}")
+        clang.cindex.Config.set_library_path(library_path)
+    
     include_dirs = args.include_dirs.split(":")
 
-    logging.basicConfig(level=logging.DEBUG)
     library = args.library_name
     version = args.version
 
@@ -323,7 +344,7 @@ def main():
 
     # Create a set that includes all of the available symbols
     external_symbols: set[str] = set()
-    if "external_headers" in args:
+    if args.external_headers:
         _logger.info(f"Processing external headers directory: {args.external_headers}")
         external_symbols: set[str] = process_directory(
             args.external_headers,
@@ -331,9 +352,9 @@ def main():
         )
 
     internal_symbols: set[str] = set()
-    if "internal_headers" in args:
+    if args.internal_headers:
         _logger.info(f"Processing internal headers directory: {args.internal_headers}")
-        external_symbols: set[str] = process_directory(
+        internal_symbols: set[str] = process_directory(
             args.internal_headers,
             include_dirs
         )
