@@ -86,7 +86,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         repository: ${{ matrix.snap }}
-        ref: mir-libs-build
+        ref: mir-libs-build-core24
         fetch-depth: 0  # needed for version determination
 
     - name: Tweak the stage snap
