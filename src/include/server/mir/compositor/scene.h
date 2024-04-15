@@ -52,16 +52,6 @@ public:
      */
     virtual SceneElementSequence scene_elements_for(CompositorID id) = 0;
 
-    /**
-     * Return the number of additional frames that you need to render to get
-     * fully up to date with the latest data in the scene. For a generic
-     * "scene change" this will be just 1. For surfaces that have multiple
-     * frames queued up however, it could be greater than 1. When the result
-     * reaches zero, you know you have consumed all the latest data from the
-     * scene.
-     */
-    virtual int frames_pending(CompositorID id) const = 0;
-
     virtual void register_compositor(CompositorID id) = 0;
     virtual void unregister_compositor(CompositorID id) = 0;
 

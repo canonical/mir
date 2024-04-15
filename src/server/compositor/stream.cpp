@@ -83,13 +83,6 @@ geom::Size mc::Stream::stream_size()
         roundf(state->latest_buffer_size.height.as_int() / state->scale_)};
 }
 
-int mc::Stream::buffers_ready_for_compositor(void const* id) const
-{
-    if (arbiter->buffer_ready_for(id))
-        return 1;
-    return 0;
-}
-
 bool mc::Stream::has_submitted_buffer() const
 {
     // Don't need to lock mutex because first_frame_posted is atomic

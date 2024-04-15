@@ -64,7 +64,6 @@ public:
     virtual geometry::Size window_size() const = 0;
 
     virtual graphics::RenderableList generate_renderables(compositor::CompositorID id) const = 0; 
-    virtual int buffers_ready_for_compositor(void const* compositor_id) const = 0;
 
     virtual MirWindowType type() const = 0;
     virtual MirWindowState state() const = 0;

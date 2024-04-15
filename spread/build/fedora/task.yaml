@@ -18,7 +18,6 @@ execute: |
         mesa-libEGL-devel \
         mesa-libGLES-devel \
         glm-devel \
-        glog-devel \
         systemd-devel \
         glib2-devel \
         wayland-devel \

@@ -20,10 +20,8 @@
 #include "mir/compositor/compositor.h"
 #include "mir/geometry/forward.h"
 
-#include <mutex>
 #include <memory>
 #include <vector>
-#include <future>
 #include <chrono>
 #include <atomic>
 
@@ -87,8 +85,8 @@ private:
     std::chrono::milliseconds fixed_composite_delay;
     bool compose_on_start;
 
-    void schedule_compositing(int number_composites);
-    void schedule_compositing(int number_composites, geometry::Rectangle const& damage) const;
+    void schedule_compositing();
+    void schedule_compositing(geometry::Rectangle const& damage) const;
 
     std::shared_ptr<mir::scene::Observer> observer;
 };

@@ -23,17 +23,16 @@
 #include "mir/compositor/scene.h"
 #include "mir/compositor/compositor_report.h"
 #include "mir/scene/scene_change_notification.h"
-#include "mir/scene/surface_observer.h"
-#include "mir/scene/surface.h"
 #include "mir/terminate_with_current_exception.h"
 #include "mir/raii.h"
 #include "mir/unwind_helpers.h"
 #include "mir/thread_name.h"
 #include "mir/executor.h"
 
+#include <atomic>
 #include <thread>
 #include <chrono>
-#include <condition_variable>
+#include <future>
 #include <boost/throw_exception.hpp>
 
 using namespace std::literals::chrono_literals;
@@ -60,8 +59,8 @@ public:
         compositor_factory{db_compositor_factory},
         group(group),
         scene(scene),
+        needs_wakeup{false},
         running{true},
-        frames_scheduled{0},
         force_sleep{fixed_composite_delay},
         display_listener{display_listener},
         report{report},
@@ -118,11 +117,12 @@ public:
 
         try
         {
-            std::unique_lock lock{run_mutex};
             while (running)
             {
                 /* Wait until compositing has been scheduled or we are stopped */
-                run_cv.wait(lock, [&]{ return (frames_scheduled > 0) || !running; });
+                needs_wakeup.wait(false);
+                // We've been awoken; reset the trigger
+                needs_wakeup = false;
 
                 /*
                  * Check if we are running before compositing, since we may have
@@ -130,17 +130,6 @@ public:
                  */
                 if (running)
                 {
-                    /*
-                     * Each surface could have a number of frames ready in its buffer
-                     * queue. And we need to ensure that we render all of them so that
-                     * none linger in the queue indefinitely (seen as input lag).
-                     * frames_scheduled indicates the number of frames that are scheduled
-                     * to ensure all surfaces' queues are fully drained.
-                     */
-                    frames_scheduled--;
-                    not_posted_yet = false;
-                    lock.unlock();
-
                     bool needs_post = false;
                     for (auto& tuple : compositors)
                     {
@@ -163,26 +152,6 @@ public:
                     auto delay = force_sleep >= std::chrono::milliseconds::zero() ?
                                  force_sleep : group.recommended_sleep();
                     std::this_thread::sleep_for(delay);
-
-                    lock.lock();
-
-                    /*
-                     * Note the compositor may have chosen to ignore any number
-                     * of renderables and not consumed buffers from them. So it's
-                     * important to re-count number of frames pending, separately
-                     * to the initial scene_elements_for()...
-                     */
-                    int pending = 0;
-                    for (auto& compositor : compositors)
-                    {
-                        auto const comp_id = std::get<1>(compositor).get();
-                        int pend = scene->frames_pending(comp_id);
-                        if (pend > pending)
-                            pending = pend;
-                    }
-
-                    if (pending > frames_scheduled)
-                        frames_scheduled = pending;
                 }
             }
         }
@@ -196,41 +165,30 @@ public:
         started.set_exception(std::current_exception());
     }
 
-    void schedule_compositing(int num_frames)
+    void schedule_compositing()
     {
-        std::unique_lock lock{run_mutex};
-
-        if (num_frames > frames_scheduled)
-        {
-            frames_scheduled = num_frames;
-            lock.unlock();
-            run_cv.notify_one();
-        }
+        needs_wakeup = true;
+        needs_wakeup.notify_one();
     }
 
-    void schedule_compositing(int num_frames, geometry::Rectangle const& damage)
+    void schedule_compositing(geometry::Rectangle const& damage)
     {
-        std::unique_lock lock{run_mutex};
-        bool took_damage = not_posted_yet;
-
+        bool took_damage = false;
         group.for_each_display_sink([&](mg::DisplaySink& sink)
             { if (damage.overlaps(sink.view_area())) took_damage = true; });
 
-        if (took_damage && num_frames > frames_scheduled)
+        if (took_damage)
         {
-            frames_scheduled = num_frames;
-            lock.unlock();
-            run_cv.notify_one();
+            needs_wakeup = true;
+            needs_wakeup.notify_one();
         }
     }
 
     void stop()
     {
-        {
-            std::lock_guard lock{run_mutex};
-            running = false;
-        }
-        run_cv.notify_one();
+        running = false;
+        needs_wakeup = true;
+        needs_wakeup.notify_one();
     }
 
     void wait_until_started()
@@ -254,18 +212,15 @@ private:
     std::shared_ptr<mc::DisplayBufferCompositorFactory> const compositor_factory;
     mg::DisplaySyncGroup& group;
     std::shared_ptr<mc::Scene> const scene;
-    bool running;
-    int frames_scheduled;
+    std::atomic<bool> needs_wakeup;
+    std::atomic<bool> running;
     std::chrono::milliseconds force_sleep{-1};
-    std::mutex run_mutex;
-    std::condition_variable run_cv;
     std::shared_ptr<DisplayListener> const display_listener;
     std::shared_ptr<CompositorReport> const report;
     std::promise<void> started;
     std::future<void> started_future;
     std::promise<void> stopped;
     std::future<void> stopped_future;
-    bool not_posted_yet = true;
 };
 
 }
@@ -291,11 +246,11 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
     observer = std::make_shared<ms::SceneChangeNotification>(
     [this]()
     {
-        schedule_compositing(1);
+        schedule_compositing();
     },
-    [this](int num, geometry::Rectangle const& damage)
+    [this](geometry::Rectangle const& damage)
     {
-        schedule_compositing(num, damage);
+        schedule_compositing(damage);
     });
 }
 
@@ -304,18 +259,18 @@ mc::MultiThreadedCompositor::~MultiThreadedCompositor()
     stop();
 }
 
-void mc::MultiThreadedCompositor::schedule_compositing(int num)
+void mc::MultiThreadedCompositor::schedule_compositing()
 {
     report->scheduled();
     for (auto& f : thread_functors)
-        f->schedule_compositing(num);
+        f->schedule_compositing();
 }
 
-void mc::MultiThreadedCompositor::schedule_compositing(int num, geometry::Rectangle const& damage) const
+void mc::MultiThreadedCompositor::schedule_compositing(geometry::Rectangle const& damage) const
 {
     report->scheduled();
     for (auto& f : thread_functors)
-        f->schedule_compositing(num, damage);
+        f->schedule_compositing(damage);
 }
 
 void mc::MultiThreadedCompositor::start()
@@ -341,7 +296,7 @@ void mc::MultiThreadedCompositor::start()
 
     /* Optional first render */
     if (compose_on_start)
-        schedule_compositing(1);
+        schedule_compositing();
 
     state = CompositorState::started;
 }

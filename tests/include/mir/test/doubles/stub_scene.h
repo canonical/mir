@@ -34,10 +34,6 @@ public:
     {
         return {};
     }
-    int frames_pending(compositor::CompositorID) const override
-    {
-        return 0;
-    }
     void register_compositor(compositor::CompositorID) override
     {
     }

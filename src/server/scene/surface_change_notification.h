@@ -32,12 +32,12 @@ public:
     SurfaceChangeNotification(
         scene::Surface* surface,
         std::function<void()> const& notify_scene_change,
-        std::function<void(int, geometry::Rectangle const&)> const& notify_buffer_change);
+        std::function<void(geometry::Rectangle const&)> const& notify_buffer_change);
 
     void content_resized_to(Surface const* surf, geometry::Size const&) override;
     void moved_to(Surface const* surf, geometry::Point const& new_top_left) override;
     void hidden_set_to(Surface const* surf, bool) override;
-    void frame_posted(Surface const* surf, int frames_available, geometry::Rectangle const& damage) override;
+    void frame_posted(Surface const* surf, geometry::Rectangle const& damage) override;
     void alpha_set_to(Surface const* surf, float) override;
     void transformation_set_to(Surface const* surf, glm::mat4 const&) override;
     void reception_mode_set_to(Surface const* surf, input::InputReceptionMode mode) override;
@@ -45,7 +45,7 @@ public:
 
 private:
     std::function<void()> const notify_scene_change;
-    std::function<void(int, geometry::Rectangle const&)> const notify_buffer_change;
+    std::function<void(geometry::Rectangle const&)> const notify_buffer_change;
 
     std::mutex mutex;
     geometry::Point top_left;
