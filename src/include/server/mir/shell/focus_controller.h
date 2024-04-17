@@ -32,12 +32,33 @@ namespace shell
 {
 using SurfaceSet = std::set<std::weak_ptr<scene::Surface>, std::owner_less<std::weak_ptr<scene::Surface>>>;
 
+class FocusIterator
+{
+public:
+    virtual ~FocusIterator() = default;
+
+    /// Focuses the next session in the focus order
+    virtual void next_session() = 0;
+
+    /// Focuses the previous session in the focus order
+    virtual void prev_session() = 0;
+
+    /// Confirms the current focus order
+    virtual void confirm() = 0;
+};
+
 class FocusController
 {
 public:
     virtual ~FocusController() = default;
 
+    /// Returns a FocusIterator that can be used to walk the focus order
+    /// and confirm a focused surface when one is done focusing.
+    virtual std::unique_ptr<FocusIterator> get_focus_iterator() = 0;
+
+    /// Immediately focuses the next session in the focus order.
     virtual void focus_next_session() = 0;
+    /// Immediately focuses the previous session in the focus order.
     virtual void focus_prev_session() = 0;
 
     virtual auto focused_session() const -> std::shared_ptr<scene::Session> = 0;

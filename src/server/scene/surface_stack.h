@@ -101,6 +101,7 @@ public:
     void raise(SurfaceSet const& surfaces) override;
     void swap_z_order(SurfaceSet const& first, SurfaceSet const& second) override;
     void send_to_back(SurfaceSet const& surfaces) override;
+    std::unique_ptr<shell::FocusIterator> get_focus_iterator() override;
 
     void add_surface(
         std::shared_ptr<Surface> const& surface,
@@ -131,7 +132,7 @@ public:
         Executor& executor) override;
     void unregister_interest(SessionLockObserver const& observer) override;
 
-
+    using SurfaceLayers = std::array<std::vector<std::shared_ptr<Surface>>, mir_depth_layer_overlay + 1>;
 private:
     SurfaceStack(const SurfaceStack&) = delete;
     SurfaceStack& operator=(const SurfaceStack&) = delete;
@@ -148,10 +149,9 @@ private:
      * All surfaces managed by this class
      *
      * Each depth layer is mapped to an index of the outer vector by mir_depth_layer_to_index()
-     * The outer vector starts out empty, and is expanded as needed to contain the highest layer encountered
      * The inner vectors contain the list of surfaces on each layer (bottom to top)
      */
-    std::vector<std::vector<std::shared_ptr<Surface>>> surface_layers;
+    SurfaceLayers surface_layers;
     std::map<Surface*,std::shared_ptr<RenderingTracker>> rendering_trackers;
     std::set<compositor::CompositorID> registered_compositors;
 

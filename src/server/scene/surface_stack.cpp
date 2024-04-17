@@ -24,6 +24,7 @@
 #include "mir/depth_layer.h"
 #include "mir/executor.h"
 #include "mir/log.h"
+#include "mir/shell/focus_controller.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -34,6 +35,7 @@
 #include <stdexcept>
 
 namespace ms = mir::scene;
+namespace msh = mir::shell;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
@@ -127,6 +129,41 @@ private:
     ms::SurfaceStack* stack;
 };
 
+class SurfaceStackIterator : public msh::FocusIterator
+{
+public:
+    explicit SurfaceStackIterator(
+        ms::SurfaceStack& surface_stack,
+        ms::SurfaceStack::SurfaceLayers& surface_layers)
+        : surface_stack{surface_stack},
+          surface_layers{surface_layers}
+    {
+    }
+
+    void next_session() override
+    {
+
+    }
+
+    void prev_session() override
+    {
+
+    }
+
+    void confirm() override
+    {
+
+    }
+
+private:
+    void advance(bool reverse, bool within_app)
+    {
+        
+    }
+
+    ms::SurfaceStack& surface_stack;
+    ms::SurfaceStack::SurfaceLayers& surface_layers;
+};
 }
 
 ms::SurfaceStack::SurfaceStack(std::shared_ptr<SceneReport> const& report) :
@@ -260,11 +297,11 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
 
         for (auto& layer : surface_layers)
         {
-            auto const surface = std::find(layer.begin(), layer.end(), keep_alive);
+            auto const surface_it = std::find(layer.begin(), layer.end(), keep_alive);
 
-            if (surface != layer.end())
+            if (surface_it != layer.end())
             {
-                layer.erase(surface);
+                layer.erase(surface_it);
                 rendering_trackers.erase(keep_alive.get());
                 keep_alive->unregister_interest(*surface_observer);
                 found_surface = true;
@@ -307,7 +344,7 @@ auto ms::SurfaceStack::surface_at(geometry::Point cursor) const
             // TODO decorations (it should) as these may be outside the area
             // TODO known to the client.  But it works for now.
             if (surface_can_be_shown(surface) && surface->input_area_contains(cursor))
-                    return surface;
+                return surface;
         }
     }
 
@@ -499,6 +536,11 @@ void ms::SurfaceStack::send_to_back(const mir::scene::SurfaceSet &ss)
     }
 }
 
+std::unique_ptr<msh::FocusIterator> get_focus_iterator()
+{
+    return nullptr;
+}
+
 void ms::SurfaceStack::create_rendering_tracker_for(std::shared_ptr<Surface> const& surface)
 {
     auto const tracker = std::make_shared<RenderingTracker>(surface);
@@ -519,8 +561,6 @@ void ms::SurfaceStack::update_rendering_tracker_compositors()
 void ms::SurfaceStack::insert_surface_at_top_of_depth_layer(std::shared_ptr<Surface> const& surface)
 {
     unsigned int depth_index = mir_depth_layer_get_index(surface->depth_layer());
-    if (surface_layers.size() <= depth_index)
-        surface_layers.resize(depth_index + 1);
     surface_layers[depth_index].push_back(surface);
 }
 

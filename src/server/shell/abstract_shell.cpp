@@ -379,6 +379,11 @@ void msh::AbstractShell::request_resize(
     window_manager->handle_request_resize(session, surface, event, edge);
 }
 
+std::unique_ptr<msh::FocusIterator> msh::AbstractShell::get_focus_iterator()
+{
+    return surface_stack->get_focus_iterator();
+}
+
 void msh::AbstractShell::focus_next_session()
 {
     std::unique_lock lock(focus_mutex);

@@ -124,6 +124,7 @@ public:
  *   2. the implementation of these functions is Shell behaviour
  * Simply providing them as part of AbstractShell is probably adequate.
  *  @{ */
+    std::unique_ptr<FocusIterator> get_focus_iterator() override;
     void focus_next_session() override;
     void focus_prev_session() override;
 

@@ -51,7 +51,9 @@ public:
 
     virtual void close_session(std::shared_ptr<Session> const& session)  = 0;
 
+    [[deprecated("Prefer using the Surface order defined in the SurfaceStack of the Session order")]]
     virtual auto successor_of(std::shared_ptr<Session> const&) const -> std::shared_ptr<Session> = 0;
+    [[deprecated("Prefer using the Surface order defined in the SurfaceStack of the Session order")]]
     virtual auto predecessor_of(std::shared_ptr<Session> const&) const -> std::shared_ptr<Session> = 0;
 
     virtual void add_listener(std::shared_ptr<SessionListener> const&) = 0;

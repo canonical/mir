@@ -36,6 +36,7 @@ using SurfaceSet = std::set<std::weak_ptr<scene::Surface>, std::owner_less<std::
 
 namespace shell
 {
+class FocusIterator;
 class SurfaceStack
 {
 public:
@@ -54,6 +55,8 @@ public:
     virtual void swap_z_order(scene::SurfaceSet const& first, scene::SurfaceSet const& second) = 0;
 
     virtual void send_to_back(scene::SurfaceSet const& surfaces) = 0;
+
+    virtual std::unique_ptr<FocusIterator> get_focus_iterator() = 0;
 
 protected:
     SurfaceStack() = default;

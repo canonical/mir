@@ -409,7 +409,7 @@ typedef enum MirDepthLayer
     mir_depth_layer_application,        /**< For normal application windows */
     mir_depth_layer_always_on_top,      /**< For always-on-top application windows */
     mir_depth_layer_above,              /**< For panels or notifications that want to be above normal windows */
-    mir_depth_layer_overlay,            /**< For overlays such as lock screens (heighest layer) */
+    mir_depth_layer_overlay,            /**< For overlays such as lock screens (highest layer) */
 } MirDepthLayer;
 
 /**
