@@ -67,6 +67,10 @@ namespace input
 {
 class SeatObserver;
 }
+namespace renderer
+{
+class RendererFactory;
+}
 
 class Fd;
 class MainLoop;
@@ -294,6 +298,9 @@ public:
     /// Sets an override functor for creating the persistent_surface_store
     void override_the_persistent_surface_store(Builder<shell::PersistentSurfaceStore> const& persistent_surface_store);
 
+    /// Sets an override functor for the renderer_factory
+    void override_the_renderer_factory(Builder<renderer::RendererFactory> const& r);
+
     /// Each of the wrap functions takes a wrapper functor of the same form
     template<typename T> using Wrapper = std::function<std::shared_ptr<T>(std::shared_ptr<T> const&)>;
 
@@ -420,6 +427,9 @@ public:
 
     auto the_session_lock() const ->
         std::shared_ptr<scene::SessionLock>;
+
+    auto the_renderer_factory() const ->
+        std::shared_ptr<renderer::RendererFactory>;
 
 /** @} */
 
