@@ -149,8 +149,8 @@ add_custom_target(
             --version ${MIRAL_VERSION}
             --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
             --external-headers-directory="${PROJECT_SOURCE_DIR}/include/miral"
-            --include_dirs "$<JOIN:$<TARGET_PROPERTY:miral,INCLUDE_DIRECTORIES>,:>"
-            --output_symbols
+            --include-dirs "$<JOIN:$<TARGET_PROPERTY:miral,INCLUDE_DIRECTORIES>,:>"
+            --output-symbols
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 configure_file(

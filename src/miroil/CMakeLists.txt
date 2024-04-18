@@ -96,8 +96,8 @@ add_custom_target(
         --version ${MIROIL_VERSION}
         --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
         --external-headers-directory="${PROJECT_SOURCE_DIR}/include/miroil"
-        --include_dirs "$<JOIN:$<TARGET_PROPERTY:miroil,INCLUDE_DIRECTORIES>,:>"
-        --output_symbols
+        --include-dirs "$<JOIN:$<TARGET_PROPERTY:miroil,INCLUDE_DIRECTORIES>,:>"
+        --output-symbols
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 install(TARGETS     miroil                           LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")

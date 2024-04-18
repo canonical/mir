@@ -86,7 +86,6 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str], cur
           or node.kind == clang.cindex.CursorKind.VAR_DECL
           or node.kind == clang.cindex.CursorKind.CONSTRUCTOR
           or node.kind == clang.cindex.CursorKind.DESTRUCTOR
-          or node.kind == clang.cindex.CursorKind.ENUM_DECL
           or node.kind == clang.cindex.CursorKind.CONVERSION_FUNCTION
           or should_generate_as_class_or_struct(node))
           and node.location.file.name == filename
@@ -312,9 +311,11 @@ def main():
                     required=True)
     parser.add_argument('--diff', action='store_true',
                     help='if true a diff should be output to the console')
-    parser.add_argument('--output_symbols', action='store_true',
-                        help='if true, the symbols.map file will be updated with the new new symbols')
-    parser.add_argument('--include_dirs', type=str, help="colon separated list of directories to search for symbols", required=True)
+    parser.add_argument('--output-symbols', action='store_true',
+                        help='if true, the symbols.map file will be updated with the new new symbols',
+                        dest='output_symbols')
+    parser.add_argument('--include-dirs', type=str, help="colon separated list of directories to search for symbols",
+                        required=True, dest='include_dirs')
     
     args = parser.parse_args()
     logging.basicConfig(level=logging.DEBUG)
