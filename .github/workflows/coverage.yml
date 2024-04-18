@@ -82,9 +82,10 @@ jobs:
         ${{ github.workspace }}
 
     - name: Install LLVM and Clang for symbols check
-      uses: KyleMayes/install-llvm-action@v2
-      with:
-        version: "19.0"
+      run: |
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh 19
 
     - name: Set environment variables for symbols check
       run: |
