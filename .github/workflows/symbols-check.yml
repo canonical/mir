@@ -1,0 +1,48 @@
+name: Symbols Check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number && format('pr{0}', github.event.number) || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  Run:
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 10
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          # So we can determine the merge base
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get build-dep ./
+
+      - name: Configure
+        run: >
+          cmake -B build ${{ github.workspace }}
+
+      - name: Install clang
+        run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 19
+          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-19/lib/libclang.so.1" >> $GITHUB_ENV
+          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-19/lib" >> $GITHUB_ENV
+
+      - name: Check miral symbols
+        run: |
+          cmake --build build --target check-miral-symbols-map
+
+      - name: Check miroil symbols
+        run: |
+          cmake --build build --target check-miroil-symbols-map
