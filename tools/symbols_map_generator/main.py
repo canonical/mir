@@ -164,6 +164,8 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str], cur
                     return False
                     
                 search_class_hierarchy_for_virtual_thunk(node.semantic_parent)
+    elif node.location.file is not None:
+        _logger.debug(f"NOT emitting node {node.spelling} in file {node.location.file.name}")
                             
 
     # Traverse down the tree if we can
@@ -173,6 +175,7 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str], cur
         or node.kind == clang.cindex.CursorKind.NAMESPACE)
     if is_file or is_containing_node:        
         if clang.cindex.conf.lib.clang_Location_isInSystemHeader(node.location):
+            _logger.debug(f"Node is in a system header={node.location.file.name}")
             return result
         
         if node.kind != clang.cindex.CursorKind.TRANSLATION_UNIT:
@@ -183,6 +186,8 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str], cur
 
         for child in node.get_children():
             traverse_ast(child, filename, result, current_namespace)
+    else:
+        _logger.debug(f"Nothing to process for node={node.spelling} in file={node.location.file.name}")
 
     return result
 
@@ -335,6 +340,7 @@ def main():
         clang.cindex.Config.set_library_path(library_path)
     
     include_dirs = args.include_dirs.split(":")
+    _logger.debug(f"Parsing with include directories: {include_dirs}")
 
     library = args.library_name
     version = args.version
