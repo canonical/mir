@@ -97,6 +97,8 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str], cur
         else:
             namespace_str = create_node_symbol_name(node)
 
+        _logger.debug(f"Emitting node {namespace_str} in file {node.location.file.name}")
+
         # Classes and structs have a specific output
         if (node.kind == clang.cindex.CursorKind.CLASS_DECL
             or node.kind == clang.cindex.CursorKind.STRUCT_DECL):
@@ -196,6 +198,7 @@ def process_directory(directory: str, search_dirs: Optional[list[str]]) -> set[s
         args.append(f"-I{dir}")
 
     for file in files:
+        _logger.debug(f"Processing header file: {file.as_posix()}")
         file_args = args.copy()
         idx = clang.cindex.Index.create()
         tu = idx.parse(
