@@ -259,7 +259,7 @@ def get_added_symbols(previous_symbols: list[Symbol], new_symbols: set[str], is_
     return added_symbols
 
 
-def print_symbols_diff(previous_symbols: list[Symbol], new_symbols: set[str], is_internal: bool):
+def report_symbols_diff(previous_symbols: list[Symbol], new_symbols: set[str], is_internal: bool):
     """
     Prints the diff between the previous symbols and the new symbols.
     """
@@ -283,6 +283,8 @@ def print_symbols_diff(previous_symbols: list[Symbol], new_symbols: set[str], is
     print("  \033[1mDeleted Symbols 🔻🔻🔻\033[0m")
     for s in deleted_symbols:
         print(f"\033[91m    {s}\033[0m")
+
+    return len(deleted_symbols) > 0 or len(added_symbols) > 0
 
 
 def main():
@@ -383,13 +385,14 @@ def main():
     
     previous_symbols = read_symbols_from_file(args.symbols_map_path, library)
 
+    has_changed_symbols = False
     if args.diff:
         print("External Symbols Diff:")
-        print_symbols_diff(previous_symbols, external_symbols, False)
+        has_changed_symbols = report_symbols_diff(previous_symbols, external_symbols, False)
 
         print("")
         print("Internal Symbols Diff:")
-        print_symbols_diff(previous_symbols, internal_symbols, True)
+        has_changed_symbols = has_changed_symbols or report_symbols_diff(previous_symbols, internal_symbols, True)
         print("")
 
     if args.output_symbols:
@@ -476,8 +479,10 @@ global:{c_symbols_str}
 
                 f.write(output_str)
             
-
-    exit(0)
+    if has_changed_symbols:
+        exit(1)
+    else:
+        exit(0)
 
     
 
