@@ -64,8 +64,6 @@ public:
     /// The type of the output.
     auto type() const -> Type;
 
-    auto get_x() const -> int;
-
     /// The physical size of the output.
     auto physical_size_mm() const -> PhysicalSizeMM;
 
