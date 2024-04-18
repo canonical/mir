@@ -266,7 +266,7 @@ def print_symbols_diff(previous_symbols: list[Symbol], new_symbols: set[str], is
     added_symbols = get_added_symbols(previous_symbols, new_symbols, is_internal)
     
     print("")
-    print("\033[1mNew Symbols 🟢🟢🟢\033[0m")
+    print("  \033[1mNew Symbols 🟢🟢🟢\033[0m")
     for s in added_symbols:
         print(f"\033[92m    {s}\033[0m")
 
@@ -280,7 +280,7 @@ def print_symbols_diff(previous_symbols: list[Symbol], new_symbols: set[str], is
     deleted_symbols.sort()
 
     print("")
-    print("\033[1mDeleted Symbols 🔻🔻🔻\033[0m")
+    print("  \033[1mDeleted Symbols 🔻🔻🔻\033[0m")
     for s in deleted_symbols:
         print(f"\033[91m    {s}\033[0m")
 
@@ -384,7 +384,11 @@ def main():
     previous_symbols = read_symbols_from_file(args.symbols_map_path, library)
 
     if args.diff:
+        print("External Symbols Diff:")
         print_symbols_diff(previous_symbols, external_symbols, False)
+
+        print("")
+        print("Internal Symbols Diff:")
         print_symbols_diff(previous_symbols, internal_symbols, True)
         print("")
 
