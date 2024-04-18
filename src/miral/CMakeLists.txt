@@ -153,6 +153,17 @@ add_custom_target(
             --output-symbols
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
+add_custom_target(
+        check-miral-symbols-map
+        COMMAND ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator/run.sh
+        --library-name miral
+        --version ${MIRAL_VERSION}
+        --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
+        --external-headers-directory="${PROJECT_SOURCE_DIR}/include/miral"
+        --include-dirs "$<JOIN:$<TARGET_PROPERTY:miral,INCLUDE_DIRECTORIES>,:>"
+        --diff
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/miral.pc.in
     ${CMAKE_CURRENT_BINARY_DIR}/miral.pc

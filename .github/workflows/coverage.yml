@@ -81,6 +81,19 @@ jobs:
         -B build
         ${{ github.workspace }}
 
+    - name: Install LLVM and Clang for symbols check
+      uses: KyleMayes/install-llvm-action@v2
+      with:
+        version: "19.0"
+
+    - name: Set environment variables for symbols check
+      run: |
+        echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-19/lib/libclang.so.1" >> $GITHUB_ENV
+        echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-19/lib" >> $GITHUB_ENV
+
+    - name: Check miral symbols map
+      run: cmake --build build --target check-miral-symbols-map
+
     - name: Build
       run: cmake --build build
 

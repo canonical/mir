@@ -327,6 +327,12 @@ def main():
     
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO)
+
+    if args.output_symbols:
+        _logger.info("symbols_map_generator is running in 'output symbols' mode")
+
+    if args.diff:
+        _logger.info("symbols_map_generator is running in 'diff' mode")
     
     # Point libclang to a file on the system
     if 'MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH' in os.environ:
