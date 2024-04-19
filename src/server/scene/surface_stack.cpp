@@ -155,12 +155,21 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
 
     scene_changed = false;
     mc::SceneElementSequence elements;
+    bool encountered_fullscreen = false;
     for (auto const& layer : surface_layers)
     {
         for (auto const& surface : layer)
         {
             if (surface_can_be_shown(surface) && surface->visible())
             {
+                if (!encountered_fullscreen)
+                {
+                    encountered_fullscreen = surface->state() == mir_window_state_fullscreen
+                        && surface->depth_layer() > mir_depth_layer_background
+                        && (surface->focus_state() == mir_window_focus_state_focused
+                            || surface->focus_state() == mir_window_focus_state_active);
+                }
+
                 for (auto& renderable : surface->generate_renderables(id))
                 {
                     elements.emplace_back(
@@ -172,6 +181,9 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
                 }
             }
         }
+
+        if (encountered_fullscreen)
+            break;
     }
     for (auto const& renderable : overlays)
     {
