@@ -63,7 +63,7 @@ public:
     /**
      * Wait for the signal to be raised
      *
-     * This synchronises-wtih a previous call to `raise()`, and
+     * This synchronises-with a previous call to `raise()`, and
      * then resets the signal.
      */
     void wait();
