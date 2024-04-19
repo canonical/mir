@@ -299,7 +299,7 @@ public:
     void override_the_persistent_surface_store(Builder<shell::PersistentSurfaceStore> const& persistent_surface_store);
 
     /// Sets an override functor for the renderer_factory
-    void override_the_renderer_factory(Builder<renderer::RendererFactory> const& r);
+    void override_the_renderer_factory(Builder<renderer::RendererFactory> const& renderer_factory_builder);
 
     /// Each of the wrap functions takes a wrapper functor of the same form
     template<typename T> using Wrapper = std::function<std::shared_ptr<T>(std::shared_ptr<T> const&)>;
