@@ -479,10 +479,8 @@ global:{c_symbols_str}
 
                 f.write(output_str)
             
-    if has_changed_symbols:
+    if args.diff and has_changed_symbols:
         exit(1)
-    else:
-        exit(0)
 
     
 
