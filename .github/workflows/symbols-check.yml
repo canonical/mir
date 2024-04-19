@@ -28,6 +28,7 @@ jobs:
           sudo apt install libclang1-19
           echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-19/lib/libclang-19.so.1" >> $GITHUB_ENV
           echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-19/lib" >> $GITHUB_ENV
+          sudo apt-get build-dep ./
 
       - name: Configure
         run: >
