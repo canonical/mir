@@ -19,30 +19,23 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
-        with:
-          # So we can determine the merge base
-          fetch-depth: 0
 
       - name: Install dependencies
         run: |
           sudo apt-get build-dep ./
-
-      - name: Configure
-        run: >
-          cmake -B build ${{ github.workspace }}
-
-      - name: Install clang
-        run: |
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
           sudo add-apt-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy main"
           sudo apt install libclang1-19
           echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-19/lib/libclang-19.so.1" >> $GITHUB_ENV
           echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-19/lib" >> $GITHUB_ENV
 
-      - name: Check miral symbols
-        run: |
-          cmake --build build --target check-miral-symbols-map
+      - name: Configure
+        run: >
+          cmake -B build ${{ github.workspace }}
 
-      - name: Check miroil symbols
+      - name: Check symbols
         run: |
-          cmake --build build --target check-miroil-symbols-map
+          RET=0
+          cmake --build build --target check-miral-symbols-map || RET=$?
+          cmake --build build --target check-miroil-symbols-map || RET=$?
+          exit $RET
