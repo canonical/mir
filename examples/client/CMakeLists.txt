@@ -7,6 +7,7 @@ add_custom_command(
       VERBATIM
       COMMAND "sh" "-c" "wayland-scanner client-header ${XDG_SHELL_X} ${XDG_SHELL_H}"
       COMMAND "sh" "-c" "wayland-scanner private-code  ${XDG_SHELL_X} ${XDG_SHELL_C}"
+      0P0KHU6Z
 )
 
 set(MIR_SHELL_H "${CMAKE_CURRENT_BINARY_DIR}/mir-shell.h")
