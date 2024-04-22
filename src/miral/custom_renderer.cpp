@@ -43,8 +43,11 @@ private:
 };
 }
 
-miral::CustomRenderer::CustomRenderer(CreateRenderer const& renderer)
-    : factory(std::make_shared<RendererFactory>(renderer))
+miral::CustomRenderer::CustomRenderer(
+    CreateRenderer const& renderer,
+    std::shared_ptr<mir::graphics::GLConfig> const& config)
+    : factory(std::make_shared<RendererFactory>(renderer)),
+      config{config}
 {
 }
 
@@ -52,4 +55,7 @@ void miral::CustomRenderer::operator()(mir::Server &server) const
 {
     std::function<std::shared_ptr<mir::renderer::RendererFactory>()> builder = [&]() { return factory; };
     server.override_the_renderer_factory(builder);
+
+    if (config)
+        server.override_the_gl_config([&]() { return config; });
 }

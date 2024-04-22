@@ -26,6 +26,7 @@ class Server;
 namespace graphics
 {
 class GLRenderingProvider;
+class GLConfig;
 namespace gl
 {
 class OutputSurface;
@@ -51,10 +52,11 @@ typedef std::function<std::unique_ptr<mir::renderer::Renderer>
 class CustomRenderer
 {
 public:
-    explicit CustomRenderer(CreateRenderer const& renderer);
+    explicit CustomRenderer(CreateRenderer const& renderer, std::shared_ptr<mir::graphics::GLConfig> const&);
     void operator()(mir::Server& server) const;
 private:
     std::shared_ptr<mir::renderer::RendererFactory> factory;
+    std::shared_ptr<mir::graphics::GLConfig> config;
 };
 }
 
