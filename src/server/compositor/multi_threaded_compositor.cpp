@@ -28,6 +28,7 @@
 #include "mir/unwind_helpers.h"
 #include "mir/thread_name.h"
 #include "mir/executor.h"
+#include "mir/signal.h"
 
 #include <atomic>
 #include <thread>
@@ -59,7 +60,6 @@ public:
         compositor_factory{db_compositor_factory},
         group(group),
         scene(scene),
-        needs_wakeup{false},
         running{true},
         force_sleep{fixed_composite_delay},
         display_listener{display_listener},
@@ -120,9 +120,7 @@ public:
             while (running)
             {
                 /* Wait until compositing has been scheduled or we are stopped */
-                needs_wakeup.wait(false);
-                // We've been awoken; reset the trigger
-                needs_wakeup = false;
+                wakeup.wait();
 
                 /*
                  * Check if we are running before compositing, since we may have
@@ -167,8 +165,7 @@ public:
 
     void schedule_compositing()
     {
-        needs_wakeup = true;
-        needs_wakeup.notify_one();
+        wakeup.raise();
     }
 
     void schedule_compositing(geometry::Rectangle const& damage)
@@ -179,16 +176,14 @@ public:
 
         if (took_damage)
         {
-            needs_wakeup = true;
-            needs_wakeup.notify_one();
+            wakeup.raise();
         }
     }
 
     void stop()
     {
         running = false;
-        needs_wakeup = true;
-        needs_wakeup.notify_one();
+        wakeup.raise();
     }
 
     void wait_until_started()
@@ -212,7 +207,7 @@ private:
     std::shared_ptr<mc::DisplayBufferCompositorFactory> const compositor_factory;
     mg::DisplaySyncGroup& group;
     std::shared_ptr<mc::Scene> const scene;
-    std::atomic<bool> needs_wakeup;
+    mir::Signal wakeup;
     std::atomic<bool> running;
     std::chrono::milliseconds force_sleep{-1};
     std::shared_ptr<DisplayListener> const display_listener;
