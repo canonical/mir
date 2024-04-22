@@ -88,6 +88,10 @@ public:
     {
         return false;
     }
+    std::shared_ptr<void> userdata() const override
+    {
+        return nullptr;
+    }
 private:
     std::shared_ptr<graphics::Buffer> make_stub_buffer(geometry::Rectangle const& rect)
     {

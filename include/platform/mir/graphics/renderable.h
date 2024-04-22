@@ -69,6 +69,9 @@ public:
     virtual glm::mat4 transformation() const = 0;
 
     virtual bool shaped() const = 0;  // meaning the pixel format has alpha
+
+    /// Optional userdata.
+    virtual std::shared_ptr<void> userdata() const = 0;
 protected:
     Renderable() = default;
     Renderable(Renderable const&) = delete;

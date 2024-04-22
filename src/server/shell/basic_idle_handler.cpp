@@ -85,6 +85,11 @@ public:
         return false;
     }
 
+    auto userdata() const -> std::shared_ptr<void> override
+    {
+        return nullptr;
+    }
+
 private:
     std::shared_ptr<mg::Buffer> const buffer_;
 };

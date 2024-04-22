@@ -367,6 +367,8 @@ auto miral::WindowInfo::userdata() const -> std::shared_ptr<void>
 void miral::WindowInfo::userdata(std::shared_ptr<void> userdata)
 {
     self->userdata = userdata;
+    std::shared_ptr<mir::scene::Surface> const surface = self->window;
+    surface->set_userdata(userdata);
 }
 
 auto miral::WindowInfo::width_inc() const -> mir::geometry::DeltaX

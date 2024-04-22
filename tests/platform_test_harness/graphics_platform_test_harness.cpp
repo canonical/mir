@@ -450,6 +450,11 @@ void basic_software_buffer_drawing(
         {
             this->top_left = top_left;
         }
+
+        std::shared_ptr<void> userdata() const override
+        {
+            return nullptr;
+        }
     private:
         std::shared_ptr<mg::Buffer> const buffer_;
         mir::geometry::Point top_left;

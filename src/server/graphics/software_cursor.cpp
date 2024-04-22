@@ -106,6 +106,11 @@ public:
         position = new_position;
     }
 
+    std::shared_ptr<void> userdata() const override
+    {
+        return nullptr;
+    }
+
 private:
     std::shared_ptr<mg::Buffer> const buffer_;
     mutable std::mutex position_mutex;

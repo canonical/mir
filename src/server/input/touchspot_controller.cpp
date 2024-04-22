@@ -90,6 +90,10 @@ public:
         position = pos - geom::Displacement{0.5*touchspot_image.width, 0.5*touchspot_image.height};
     }
 
+    std::shared_ptr<void> userdata() const override
+    {
+        return nullptr;
+    }
     
 private:
     std::shared_ptr<mg::Buffer> const buffer_;

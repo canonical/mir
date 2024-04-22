@@ -90,6 +90,8 @@ struct StubSurface : scene::Surface
         geometry::DeltaX) override {}
     auto focus_mode() const -> MirFocusMode override { return mir_focus_mode_focusable; }
     void set_focus_mode(MirFocusMode) override {}
+    void set_userdata(std::shared_ptr<void> const&) override {}
+    std::shared_ptr<void> userdata() const override { return nullptr; }
 };
 }
 }

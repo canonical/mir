@@ -155,6 +155,9 @@ public:
     virtual auto focus_mode() const -> MirFocusMode = 0;
     virtual void set_focus_mode(MirFocusMode focus_mode) = 0;
     ///@}
+
+    virtual void set_userdata(std::shared_ptr<void> const&) = 0;
+    virtual std::shared_ptr<void> userdata() const = 0;
 };
 }
 }

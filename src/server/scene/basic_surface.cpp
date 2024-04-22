@@ -697,14 +697,16 @@ public:
         std::optional<geom::Rectangle> const& clip_area,
         glm::mat4 const& transform,
         float alpha,
-        mg::Renderable::ID id)
+        mg::Renderable::ID id,
+        std::shared_ptr<void> const& userdata)
     : underlying_buffer_stream{stream},
       compositor_id{compositor_id},
       alpha_{alpha},
       screen_position_(position),
       clip_area_(clip_area),
       transformation_(transform),
-      id_(id)
+      id_(id),
+      userdata_(userdata)
     {
     }
 
@@ -736,6 +738,9 @@ public:
 
     mg::Renderable::ID id() const override
     { return id_; }
+
+    std::shared_ptr<void> userdata() const override
+    { return userdata_; }
 private:
     std::shared_ptr<mc::BufferStream> const underlying_buffer_stream;
     std::shared_ptr<mg::Buffer> mutable compositor_buffer;
@@ -745,6 +750,7 @@ private:
     std::optional<geom::Rectangle> const clip_area_;
     glm::mat4 const transformation_;
     mg::Renderable::ID const id_;
+    std::shared_ptr<void> userdata_;
 };
 }
 
@@ -806,7 +812,7 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
                 info.stream, id,
                 geom::Rectangle{content_top_left_ + info.displacement, std::move(size)},
                 state->clip_area,
-                state->transformation_matrix, state->surface_alpha, info.stream.get()));
+                state->transformation_matrix, state->surface_alpha, info.stream.get(), userdata_));
         }
     }
     return list;
@@ -952,6 +958,16 @@ void mir::scene::BasicSurface::clear_frame_posted_callbacks(State& state)
     {
         layer.stream->set_frame_posted_callback([](auto){});
     }
+}
+
+std::shared_ptr<void> mir::scene::BasicSurface::userdata() const
+{
+    return userdata_;
+}
+
+void mir::scene::BasicSurface::set_userdata(std::shared_ptr<void> const& userdata)
+{
+    userdata_ = userdata;
 }
 
 void mir::scene::BasicSurface::update_frame_posted_callbacks(State& state)

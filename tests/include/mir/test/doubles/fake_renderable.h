@@ -98,6 +98,11 @@ public:
         return std::optional<geometry::Rectangle>();
     }
 
+    std::shared_ptr<void> userdata() const override
+    {
+        return nullptr;
+    }
+
 private:
     std::shared_ptr<graphics::Buffer> buf;
     mir::geometry::Rectangle rect;

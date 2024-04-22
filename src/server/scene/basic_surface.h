@@ -174,6 +174,9 @@ public:
     auto focus_mode() const -> MirFocusMode override;
     void set_focus_mode(MirFocusMode focus_mode) override;
 
+    void set_userdata(std::shared_ptr<void> const&) override;
+    std::shared_ptr<void> userdata() const override;
+
 private:
     struct State;
     class DisplayConfigurationEarlyListener;
@@ -240,6 +243,7 @@ private:
     std::shared_ptr<DisplayConfigurationEarlyListener> const display_config_monitor;
     std::shared_ptr<graphics::DisplayConfiguration const> display_config;
     std::set<graphics::DisplayConfigurationOutputId> tracked_outputs;
+    std::shared_ptr<void> userdata_;
 };
 
 }
