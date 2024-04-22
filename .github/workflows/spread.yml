@@ -76,7 +76,7 @@ jobs:
 
     - name: Set up Spread
       run: |
-        sudo snap install spread-mir-ci
+        sudo snap install spread-mir-ci --channel edge/pr6
         sudo snap connect spread-mir-ci:lxd lxd:lxd
         lxc profile set default security.privileged=true security.nesting=true
         sudo apt-get update
