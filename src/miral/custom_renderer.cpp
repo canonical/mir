@@ -43,7 +43,6 @@ private:
 };
 }
 
-
 struct miral::CustomRenderer::Self
 {
     Self(Builder const& renderer, std::shared_ptr<mir::graphics::GLConfig> const& config)
@@ -55,11 +54,6 @@ struct miral::CustomRenderer::Self
     std::shared_ptr<mir::renderer::RendererFactory> factory;
     std::shared_ptr<mir::graphics::GLConfig> config;
 };
-
-miral::CustomRenderer::CustomRenderer(miral::CustomRenderer::Builder&& renderer)
-    : self{std::make_shared<Self>(renderer, nullptr)}
-{
-}
 
 miral::CustomRenderer::CustomRenderer(
     Builder&& renderer, std::shared_ptr<mir::graphics::GLConfig> const& config)
