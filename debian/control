@@ -154,6 +154,26 @@ Description: Display server for Ubuntu - development headers
  .
  Contains header files required to build Mir servers.
 
+Package: libmirserver-internal-dev
+Section: libdevel
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: libmirserver60 (= ${binary:Version}),
+      libmirplatform-dev (= ${binary:Version}),
+      libmircommon-dev (= ${binary:Version}),
+      libmircore-dev (= ${binary:Version}),
+      libmirserver-dev (= ${binary:Version}),
+      libglm-dev,
+      uuid-dev,
+      ${misc:Depends},
+Description: Display server for Ubuntu - internal development headers
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ This package contains internal headers with no stability guarantee, for servers
+ that wish to use functionality for which no public API exists yet.
+
 Package: mirtest-dev
 Section: libdevel
 Architecture: linux-any
