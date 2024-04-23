@@ -26,7 +26,6 @@ class Server;
 namespace graphics
 {
 class GLRenderingProvider;
-class GLConfig;
 namespace gl
 {
 class OutputSurface;
