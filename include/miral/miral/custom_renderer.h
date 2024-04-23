@@ -49,7 +49,7 @@ public:
         std::unique_ptr<mir::graphics::gl::OutputSurface>, std::shared_ptr<mir::graphics::GLRenderingProvider>)
     >;
 
-    CustomRenderer(Builder&& renderer, std::shared_ptr<mir::graphics::GLConfig> const&);
+    explicit CustomRenderer(Builder&& renderer);
     void operator()(mir::Server& server) const;
 private:
     struct Self;

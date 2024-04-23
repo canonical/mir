@@ -25,7 +25,7 @@ namespace
 class RendererFactory : public mir::renderer::RendererFactory
 {
 public:
-    explicit RendererFactory(miral::CustomRenderer::Builder const& renderer)
+    explicit RendererFactory(miral::CustomRenderer::Builder&& renderer)
         : renderer{renderer}
     {
     }
@@ -39,25 +39,22 @@ public:
     }
 
 private:
-    miral::CustomRenderer::Builder const& renderer;
+    miral::CustomRenderer::Builder const renderer;
 };
 }
 
 struct miral::CustomRenderer::Self
 {
-    Self(Builder const& renderer, std::shared_ptr<mir::graphics::GLConfig> const& config)
-    : factory(std::make_shared<RendererFactory>(renderer)),
-      config{config}
+    explicit Self(Builder&& renderer)
+        : factory(std::make_shared<RendererFactory>(std::move(renderer)))
     {
     }
 
     std::shared_ptr<mir::renderer::RendererFactory> factory;
-    std::shared_ptr<mir::graphics::GLConfig> config;
 };
 
-miral::CustomRenderer::CustomRenderer(
-    Builder&& renderer, std::shared_ptr<mir::graphics::GLConfig> const& config)
-    : self{std::make_shared<Self>(renderer, config)}
+miral::CustomRenderer::CustomRenderer(Builder&& renderer)
+    : self{std::make_shared<Self>(std::move(renderer))}
 {
 }
 
@@ -65,7 +62,4 @@ void miral::CustomRenderer::operator()(mir::Server &server) const
 {
     std::function<std::shared_ptr<mir::renderer::RendererFactory>()> builder = [&]() { return self->factory; };
     server.override_the_renderer_factory(builder);
-
-    if (self->config)
-        server.override_the_gl_config([&]() { return self->config; });
 }
