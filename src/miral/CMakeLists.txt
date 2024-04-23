@@ -142,6 +142,27 @@ add_custom_target(regenerate-miral-debian-symbols ${MIR_CHECK_MIRAL_SYMBOLS_DEFA
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
     VERBATIM)
 
+add_custom_target(
+        generate-miral-symbols-map
+        COMMAND ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator/main.py
+            --library-name miral
+            --version ${MIRAL_VERSION}
+            --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
+            --external-headers-directory="${PROJECT_SOURCE_DIR}/include/miral"
+            --include-dirs "$<JOIN:$<TARGET_PROPERTY:miral,INCLUDE_DIRECTORIES>,:>"
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
+add_custom_target(
+        check-miral-symbols-map
+        COMMAND ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator/main.py
+        --library-name miral
+        --version ${MIRAL_VERSION}
+        --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
+        --external-headers-directory="${PROJECT_SOURCE_DIR}/include/miral"
+        --include-dirs "$<JOIN:$<TARGET_PROPERTY:miral,INCLUDE_DIRECTORIES>,:>"
+        --diff
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/miral.pc.in
     ${CMAKE_CURRENT_BINARY_DIR}/miral.pc
@@ -152,12 +173,6 @@ configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in
     ${miral_include}/miral/version.h
 )
-
-if(TARGET doc)
-    add_custom_target(regenerate-miral-symbols-map
-            ${CMAKE_CURRENT_SOURCE_DIR}/regenerate-miral-symbols-map.py ${CMAKE_BINARY_DIR}/doc/sphinx/xml/*.xml > ${symbol_map}
-            DEPENDS doc)
-endif()
 
 install(TARGETS     miral                           LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 install(DIRECTORY   ${CMAKE_SOURCE_DIR}/include/miral       DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
