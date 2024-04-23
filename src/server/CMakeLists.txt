@@ -186,14 +186,24 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mirserver-internal.pc
 
 add_custom_target(
     generate-mirserver-symbols-map
-    COMMAND ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator/run.sh
+    COMMAND ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator/main.py
         --library-name mir_server
         --version ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}
         --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
         --internal-headers-directory="${PROJECT_SOURCE_DIR}/src/include/server"
-        --include_dirs "$<JOIN:$<TARGET_PROPERTY:mirserver,INCLUDE_DIRECTORIES>,:>"
-        --output_symbols
+        --include-dirs="$<JOIN:$<TARGET_PROPERTY:mirserver,INCLUDE_DIRECTORIES>,:>"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
+add_custom_target(
+  check-mirserver-symbols-map
+  COMMAND ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator/main.py
+      --library-name mir_server
+      --version ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}
+      --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
+      --internal-headers-directory="${PROJECT_SOURCE_DIR}/src/include/server"
+      --include-dirs "$<JOIN:$<TARGET_PROPERTY:mirserver,INCLUDE_DIRECTORIES>,:>"
+      --diff
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 add_custom_target(regenerate-mirserver-internal-debian-symbols
     COMMAND ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator/run.sh --library mir_server_internal --version ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR} --output_symbols

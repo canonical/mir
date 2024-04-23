@@ -109,10 +109,23 @@ def is_function_inline(node: clang.cindex.CursorKind):
     # There is no explicit way to check if a function is inlined
     # but seeing that if it is a FUNCTION_DECL and it has
     # a definition is good enough.
-    return node.is_definition()    
+    return node.is_definition()
 
 
-def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str], current_namespace: str = "") -> set[str]:    
+def get_namespace_str(node: clang.cindex.Cursor) -> list[str]:
+    if node.kind == clang.cindex.CursorKind.TRANSLATION_UNIT:
+        return []
+    
+    spelling = node.spelling
+    if is_operator(node):
+        spelling = "operator"
+    elif node.kind == clang.cindex.CursorKind.DESTRUCTOR:
+        spelling = f"?{node.spelling[1:]}"
+    
+    return get_namespace_str(node.semantic_parent) + [spelling]
+
+
+def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> set[str]:    
     # Ignore private and protected variables
     if (node.access_specifier == clang.cindex.AccessSpecifier.PRIVATE):
         return result
@@ -129,11 +142,7 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str], cur
           and not node.is_pure_virtual_method()
           and not node.is_anonymous()):
         
-        if current_namespace:
-            namespace_str = f"{current_namespace}::{create_node_symbol_name(node)}"
-        else:
-            namespace_str = create_node_symbol_name(node)
-
+        namespace_str = "::".join(get_namespace_str(node))
         _logger.debug(f"Emitting node {namespace_str} in file {node.location.file.name}")
 
         # Classes and structs have a specific output
@@ -215,15 +224,9 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str], cur
         if clang.cindex.conf.lib.clang_Location_isInSystemHeader(node.location):
             _logger.debug(f"Node is in a system header={node.location.file.name}")
             return result
-        
-        if node.kind != clang.cindex.CursorKind.TRANSLATION_UNIT:
-            if not current_namespace:
-                current_namespace = node.spelling
-            else:
-                current_namespace = f"{current_namespace}::{node.spelling}"
 
         for child in node.get_children():
-            traverse_ast(child, filename, result, current_namespace)
+            traverse_ast(child, filename, result)
     else:
         _logger.debug(f"Nothing to process for node={node.spelling} in file={node.location.file.name}")
 

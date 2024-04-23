@@ -39,4 +39,5 @@ jobs:
           RET=0
           cmake --build build --target check-miral-symbols-map || RET=$?
           cmake --build build --target check-miroil-symbols-map || RET=$?
+          cmake --build build --target check-mirserver-symbols-map || RET=$?
           exit $RET
