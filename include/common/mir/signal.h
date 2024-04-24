@@ -68,7 +68,7 @@ public:
      */
     void wait();
 private:
-    std::atomic<bool> flag;
+    std::atomic<bool> raised;
 };
 }
 

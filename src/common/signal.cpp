@@ -17,18 +17,18 @@
 #include "mir/signal.h"
 
 mir::Signal::Signal()
-  : flag{false}
+  : raised{false}
 {
 }
 
 void mir::Signal::raise()
 {
-    flag = true;
-    flag.notify_all();
+    raised = true;
+    raised.notify_all();
 }
 
 void mir::Signal::wait()
 {
-    flag.wait(false);
-    flag = false;
+    raised.wait(false);
+    raised = false;
 }
