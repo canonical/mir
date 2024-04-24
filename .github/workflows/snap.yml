@@ -80,7 +80,6 @@ jobs:
         - snap: Miriway/Miriway
           track: latest
           review-opts: --allow-classic
-          snapcraft-channel: edge
 
     steps:
     - name: Check out code
