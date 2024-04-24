@@ -2,9 +2,10 @@ MIR_SERVER_INTERNAL_2.17 {
 global:
   extern "C++" {
     VTT?for?mir::DefaultServerConfiguration;
-    VTT?for?mir::scene::ApplicationNotRespondingDetectorWrapper;
+    VTT?for?mir::DefaultServerStatusListener;
+    VTT?for?mir::shell::AbstractShell;
+    VTT?for?mir::shell::Shell;
     VTT?for?mir::shell::ShellWrapper;
-    VTT?for?mir::shell::SystemCompositorWindowManager;
     mir::BasicCallback::BasicCallback*;
     mir::BasicCallback::lock*;
     mir::BasicCallback::operator*;

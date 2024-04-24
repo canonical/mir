@@ -104,6 +104,29 @@ def has_vtable(node: clang.cindex.Cursor):
     return False
 
 
+def derived_virtual_base_class(node: clang.cindex.Cursor):
+    # This method assumes that the node is a class/struct
+
+    result = False
+    for child in node.get_children():
+        if child.kind != clang.cindex.CursorKind.CXX_BASE_SPECIFIER:
+            continue
+
+        if clang.cindex.conf.lib.clang_isVirtualBase(child):
+            result = True
+        else:
+            class_or_struct_node = clang.cindex.conf.lib.clang_getCursorDefinition(child)
+            if class_or_struct_node is None:
+                continue
+
+            result = derived_virtual_base_class(class_or_struct_node)
+        
+        if result:
+            break
+
+    return result
+
+
 def is_function_inline(node: clang.cindex.CursorKind):
     # This method assumes that the node is a FUNCTION_DECL.
     # There is no explicit way to check if a function is inlined
@@ -125,7 +148,7 @@ def get_namespace_str(node: clang.cindex.Cursor) -> list[str]:
     return get_namespace_str(node.semantic_parent) + [spelling]
 
 
-def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> set[str]:    
+def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> set[str]:   
     # Ignore private and protected variables
     if (node.access_specifier == clang.cindex.AccessSpecifier.PRIVATE):
         return result
@@ -150,6 +173,8 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
             or node.kind == clang.cindex.CursorKind.STRUCT_DECL):
             if has_vtable(node):
                 result.add(f"vtable?for?{namespace_str};")
+            if derived_virtual_base_class(node):
+                result.add(f"VTT?for?{namespace_str};")
             result.add(f"typeinfo?for?{namespace_str};")
         else:
             def add_internal(s: str):
