@@ -449,7 +449,6 @@ global:
     typeinfo?for?miral::Zone;
     vtable?for?miral::ApplicationAuthorizer;
     vtable?for?miral::CanonicalWindowManagerPolicy;
-    vtable?for?miral::CustomRenderer;
     vtable?for?miral::FdHandle;
     vtable?for?miral::MinimalWindowManager;
     vtable?for?miral::WaylandExtensions::Context;
