@@ -48,6 +48,8 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::CursorTheme::CursorTheme(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_5.0" 5.0.0
  (c++)"miral::CursorTheme::operator()(mir::Server&) const@MIRAL_5.0" 5.0.0
  (c++)"miral::CursorTheme::~CursorTheme()@MIRAL_5.0" 5.0.0
+ (c++)"miral::CustomRenderer::CustomRenderer(std::function<std::unique_ptr<mir::renderer::Renderer, std::default_delete<mir::renderer::Renderer> > (std::unique_ptr<mir::graphics::gl::OutputSurface, std::default_delete<mir::graphics::gl::OutputSurface> >, std::shared_ptr<mir::graphics::GLRenderingProvider>)>&&)@MIRAL_5.0" 5.0.0
+ (c++)"miral::CustomRenderer::operator()(mir::Server&) const@MIRAL_5.0" 5.0.0
  (c++)"miral::DisplayConfiguration::DisplayConfiguration(miral::DisplayConfiguration const&)@MIRAL_5.0" 5.0.0
  (c++)"miral::DisplayConfiguration::DisplayConfiguration(miral::MirRunner const&)@MIRAL_5.0" 5.0.0
  (c++)"miral::DisplayConfiguration::add_output_attribute(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_5.0" 5.0.0

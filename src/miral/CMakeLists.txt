@@ -1,5 +1,6 @@
 include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/server
+  ${PROJECT_SOURCE_DIR}/include/renderer
 )
 
 set(MIRAL_ABI 7)
@@ -54,6 +55,7 @@ add_library(miral SHARED
     configuration_option.cpp            ${miral_include}/miral/configuration_option.h
                                         ${miral_include}/miral/command_line_option.h
     cursor_theme.cpp                    ${miral_include}/miral/cursor_theme.h
+    custom_renderer.cpp                 ${miral_include}/miral/custom_renderer.h
     display_configuration.cpp           ${miral_include}/miral/display_configuration.h
     external_client.cpp                 ${miral_include}/miral/external_client.h
     keymap.cpp                          ${miral_include}/miral/keymap.h

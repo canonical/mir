@@ -38,6 +38,9 @@ global:
     miral::CursorTheme::?CursorTheme*;
     miral::CursorTheme::CursorTheme*;
     miral::CursorTheme::operator*;
+    miral::CustomRenderer::?CustomRenderer*;
+    miral::CustomRenderer::CustomRenderer*;
+    miral::CustomRenderer::operator*;
     miral::DisplayConfiguration::?DisplayConfiguration*;
     miral::DisplayConfiguration::DisplayConfiguration*;
     miral::DisplayConfiguration::add_output_attribute*;
@@ -414,6 +417,7 @@ global:
     typeinfo?for?miral::CanonicalWindowManagerPolicy;
     typeinfo?for?miral::ConfigurationOption;
     typeinfo?for?miral::CursorTheme;
+    typeinfo?for?miral::CustomRenderer;
     typeinfo?for?miral::DisplayConfiguration;
     typeinfo?for?miral::ExternalClientLauncher;
     typeinfo?for?miral::FdHandle;
