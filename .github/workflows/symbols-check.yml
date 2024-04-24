@@ -22,6 +22,8 @@ jobs:
 
       - name: Install dependencies
         run: |
+          # work around https://github.com/actions/runner-images/issues/8846
+          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
           sudo add-apt-repository --update "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy main"
           sudo apt install libclang1-19
