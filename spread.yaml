@@ -9,7 +9,6 @@ backends:
             - alpine-3.19
             - alpine-edge
             - ubuntu-22.04
-            - fedora-38
             - fedora-39
             - fedora-40
             - fedora-rawhide:
