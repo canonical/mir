@@ -63,18 +63,18 @@ parts:
     - libfreetype6
     - libgbm1
     - libgles2
-    - libglibmm-2.4-1
+    - libglibmm-2.4-1t64
     - libglvnd0
     - libgudev-1.0-0
     - libicu74
     - libinput10
-    - liblttng-ust1
-    - libmtdev1
+    - liblttng-ust1t64
+    - libmtdev1t64
     - libnuma1
     - libnvidia-egl-wayland1
-    - libpng16-16
+    - libpng16-16t64
     - libsigc++-2.0-0v5
-    - liburcu8
+    - liburcu8t64
     - libwacom9
     - libwayland-client0
     - libwayland-egl1
