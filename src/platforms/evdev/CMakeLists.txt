@@ -1,7 +1,6 @@
 include_directories(
   ${LIBINPUT_CFLAGS} 
   ${PROJECT_SOURCE_DIR}/src/include/platform # udev Context
-  ${PROJECT_SOURCE_DIR}/src/include/common # raii.h
   )
 
 add_library(mirevdevutilsobjects OBJECT
