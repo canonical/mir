@@ -42,7 +42,7 @@ miral::CustomRenderer::CustomRenderer(Builder&& renderer)
 {
 }
 
-void miral::CustomRenderer::operator()(mir::Server &server) const
+void miral::CustomRenderer::operator()(mir::Server& server) const
 {
     std::function<std::shared_ptr<mir::renderer::RendererFactory>()> builder = [self=self] { return self; };
     server.override_the_renderer_factory(builder);
