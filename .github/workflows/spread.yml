@@ -45,8 +45,8 @@ jobs:
                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_arm64"
                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_armhf"
                 "lxd:ubuntu-22.04:spread/build/ubuntu:clang"
-                "lxd:fedora-38:spread/build/fedora:amd64"
                 "lxd:fedora-39:spread/build/fedora:amd64"
+                "lxd:fedora-40:spread/build/fedora:amd64"
                 "lxd:fedora-rawhide:spread/build/fedora:amd64"
                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_devel"
                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_proposed"
@@ -79,6 +79,8 @@ jobs:
         sudo snap install spread-mir-ci
         sudo snap connect spread-mir-ci:lxd lxd:lxd
         lxc profile set default security.privileged=true security.nesting=true
+        # work around https://github.com/actions/runner-images/issues/8846
+        sudo rm /etc/apt/sources.list.d/microsoft-prod.list
         sudo apt-get update
         sudo apt-get install --yes binfmt-support qemu-user-static
         echo "LXD_DIR=/var/snap/lxd/common/lxd" >> $GITHUB_ENV

@@ -20,16 +20,12 @@
 #include <mir/renderer/renderer.h>
 #include <mir/renderer/gl/gl_surface.h>
 
-namespace
+struct miral::CustomRenderer::Self : public mir::renderer::RendererFactory
 {
-class RendererFactory : public mir::renderer::RendererFactory
-{
-public:
-    explicit RendererFactory(miral::CustomRenderer::Builder&& renderer)
-        : renderer{renderer}
+    explicit Self(Builder&& renderer)
+        : renderer(std::move(renderer))
     {
     }
-
     [[nodiscard]] auto create_renderer_for(
         std::unique_ptr<mir::graphics::gl::OutputSurface> output_surface,
         std::shared_ptr<mir::graphics::GLRenderingProvider> gl_provider) const
@@ -37,20 +33,8 @@ public:
     {
         return renderer(std::move(output_surface), std::move(gl_provider));
     }
-
 private:
     miral::CustomRenderer::Builder const renderer;
-};
-}
-
-struct miral::CustomRenderer::Self
-{
-    explicit Self(Builder&& renderer)
-        : factory(std::make_shared<RendererFactory>(std::move(renderer)))
-    {
-    }
-
-    std::shared_ptr<mir::renderer::RendererFactory> factory;
 };
 
 miral::CustomRenderer::CustomRenderer(Builder&& renderer)
@@ -60,6 +44,6 @@ miral::CustomRenderer::CustomRenderer(Builder&& renderer)
 
 void miral::CustomRenderer::operator()(mir::Server &server) const
 {
-    std::function<std::shared_ptr<mir::renderer::RendererFactory>()> builder = [&]() { return self->factory; };
+    std::function<std::shared_ptr<mir::renderer::RendererFactory>()> builder = [&]() { return self; };
     server.override_the_renderer_factory(builder);
 }
