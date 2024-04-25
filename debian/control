@@ -63,7 +63,7 @@ Vcs-Git: https://github.com/MirServer/mir
 
 #TODO: Packaging infrastructure for better dependency generation,
 #      ala pkg-xorg's xviddriver:Provides and ABI detection.
-Package: libmirserver60
+Package: libmirserver61
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -142,7 +142,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver60 (= ${binary:Version}),
+Depends: libmirserver61 (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libglm-dev,
@@ -153,6 +153,26 @@ Description: Display server for Ubuntu - development headers
  robust operation and a well-defined driver model.
  .
  Contains header files required to build Mir servers.
+
+Package: libmirserver-internal-dev
+Section: libdevel
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: libmirserver61 (= ${binary:Version}),
+      libmirplatform-dev (= ${binary:Version}),
+      libmircommon-dev (= ${binary:Version}),
+      libmircore-dev (= ${binary:Version}),
+      libmirserver-dev (= ${binary:Version}),
+      libglm-dev,
+      uuid-dev,
+      ${misc:Depends},
+Description: Display server for Ubuntu - internal development headers
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ This package contains internal headers with no stability guarantee, for servers
+ that wish to use functionality for which no public API exists yet.
 
 Package: mirtest-dev
 Section: libdevel
