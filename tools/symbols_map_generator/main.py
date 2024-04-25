@@ -104,7 +104,7 @@ def has_vtable(node: clang.cindex.Cursor):
     return False
 
 
-def derived_virtual_base_class(node: clang.cindex.Cursor):
+def has_virtual_base_class(node: clang.cindex.Cursor):
     # This method assumes that the node is a class/struct
 
     result = False
@@ -119,7 +119,7 @@ def derived_virtual_base_class(node: clang.cindex.Cursor):
             if class_or_struct_node is None:
                 continue
 
-            result = derived_virtual_base_class(class_or_struct_node)
+            result = has_virtual_base_class(class_or_struct_node)
         
         if result:
             break
@@ -173,7 +173,7 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
             or node.kind == clang.cindex.CursorKind.STRUCT_DECL):
             if has_vtable(node):
                 result.add(f"vtable?for?{namespace_str};")
-            if derived_virtual_base_class(node):
+            if has_virtual_base_class(node):
                 result.add(f"VTT?for?{namespace_str};")
             result.add(f"typeinfo?for?{namespace_str};")
         else:
