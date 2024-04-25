@@ -1,0 +1,10 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+libdir=@PKGCONFIG_LIBDIR@
+includedir=@PKGCONFIG_INCLUDEDIR@/mirtest-internal
+
+Name: mirtest-internal
+Description: Mir test assist internal library
+Version: @MIR_VERSION@
+Requires: mirtest mirserver mirserver-internal
+Libs: -L${libdir} -lmir-test-assist -lmir-test-assist-internal -ldl -lboost_filesystem -lboost_system
+Cflags: -I${includedir}
