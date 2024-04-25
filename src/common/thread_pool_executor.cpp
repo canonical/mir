@@ -15,6 +15,7 @@
  */
 
 #include "mir/executor.h"
+#include "mir/signal.h"
 
 #include "mir/thread_name.h"
 
@@ -23,7 +24,6 @@
 #include <atomic>
 #include <list>
 #include <future>
-#include <semaphore>
 
 namespace
 {
@@ -38,8 +38,7 @@ class Worker
 {
 public:
     Worker()
-        : work{[](){}},
-          work_available{0}
+        : work{[](){}}
     {
         std::promise<std::atomic<bool>*> shutdown_channel;
         auto resolved_shutdown_location = shutdown_channel.get_future();
@@ -82,7 +81,7 @@ public:
     {
         // Precondition: this Worker is idle (work_available is unraised, work = [](){})
         work = std::move(to_do);
-        work_available.release();
+        work_available.raise();
     }
 
     /**
@@ -104,14 +103,8 @@ private:
          */
         *shutdown = true;
         /* We need to release the workloop thread by raising the signal.
-         * However, it's UB to raise the semaphore if it's already raised.
-         * So, first, consume any pending signal…
          */
-        work_available.try_acquire();
-        /* work_available is now guaranteed not-signalled, so it's OK to
-         * unconditionally raise the signal and so release the workloop thread.
-         */
-        work_available.release();
+        work_available.raise();
     }
 
     static void work_loop(Worker* me, std::promise<std::atomic<bool>*>&& shutdown_channel)
@@ -123,7 +116,7 @@ private:
 
         while (!shutdown)
         {
-            me->work_available.acquire();
+            me->work_available.wait();
             auto work = std::move(me->work);
             me->work = [](){};
             work();
@@ -139,7 +132,7 @@ private:
      * after setting *shutdown to true it is no longer safe to access.
      */
     std::atomic<bool>* shutdown;
-    std::binary_semaphore work_available;
+    mir::Signal work_available;
     std::thread thread;
 };
 
