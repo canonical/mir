@@ -2,10 +2,6 @@ if (MIR_BUILD_PLATFORM_GBM_KMS OR MIR_BUILD_PLATFORM_GBM_X11 OR MIR_BUILD_PLATFO
   add_subdirectory(kms-utils/)
 endif()
 
-include_directories(
-  ${server_common_include_dirs}
-)
-
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="server_platform_common")
 
 add_library(server_platform_common STATIC

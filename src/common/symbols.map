@@ -336,6 +336,10 @@ MIR_COMMON_2.17 {
     mir::SharedLibraryProberReport::?SharedLibraryProberReport*;
     mir::SharedLibraryProberReport::SharedLibraryProberReport*;
     mir::SharedLibraryProberReport::operator*;
+    mir::Signal::Signal*;
+    mir::Signal::?Signal*;
+    mir::Signal::raise*;
+    mir::Signal::wait*;
     mir::SignalBlocker::?SignalBlocker*;
     mir::SignalBlocker::SignalBlocker*;
     mir::detail::RefCountedLibrary::?RefCountedLibrary*;
