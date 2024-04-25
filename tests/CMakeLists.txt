@@ -132,6 +132,11 @@ add_library(mir-test-assist STATIC
   $<TARGET_OBJECTS:mir-public-test-framework>
 )
 
+add_library(mir-test-assist-internal STATIC
+  $<TARGET_OBJECTS:mir-protected-test-framework>
+  $<TARGET_OBJECTS:mir-protected-test-doubles>
+)
+
 target_link_libraries(mir-test-assist
 PUBLIC
   miral
@@ -145,9 +150,26 @@ PRIVATE
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
+target_link_libraries(mir-test-assist-internal
+PUBLIC
+  mirserver
+
+  Boost::system
+  ${GTEST_BOTH_LIBRARIES}
+PRIVATE
+  ${GMOCK_MAIN_LIBRARY}
+  ${GMOCK_LIBRARIES}
+)
+
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mirtest.pc.in
   ${CMAKE_CURRENT_BINARY_DIR}/mirtest.pc
+  @ONLY
+)
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/mirtest-internal.pc.in
+  ${CMAKE_CURRENT_BINARY_DIR}/mirtest-internal.pc
   @ONLY
 )
 
@@ -163,7 +185,16 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/test/mir_test_framework
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/test/miral
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mirtest"
 )
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/tests/include/mir
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mirtest-internal"
+)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/tests/include/mir_test_framework
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mirtest-internal"
+)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mirtest.pc
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mirtest-internal.pc
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
 
