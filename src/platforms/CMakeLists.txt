@@ -31,14 +31,8 @@ set(MIR_SERVER_PLATFORM_PATH
 set(server_common_include_dirs
   ${PROJECT_SOURCE_DIR}/include/renderers/gl
   ${PROJECT_SOURCE_DIR}/include/renderers/sw
-)
-
-# TODO platform implementations shouldn't depend on private APIs
-set(server_common_include_dirs
-  ${server_common_include_dirs}
+  ${PROJECT_SOURCE_DIR}/include/common
   ${CMAKE_CURRENT_SOURCE_DIR}/common/server
-  ${PROJECT_SOURCE_DIR}/src/include/platform
-  ${PROJECT_SOURCE_DIR}/src/include/common
 )
 
 set(server_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/common/server/symbols.map)
