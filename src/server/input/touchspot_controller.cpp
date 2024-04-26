@@ -83,7 +83,13 @@ public:
         return true;
     }
 
-// TouchspotRenderable    
+    auto surface_if_any() const
+        -> std::optional<mir::scene::Surface const*> override
+    {
+        return std::nullopt;
+    }
+
+    // TouchspotRenderable
     void move_center_to(geom::Point pos)
     {
         std::lock_guard lg(guard);

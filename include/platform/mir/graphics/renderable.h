@@ -25,6 +25,9 @@
 
 namespace mir
 {
+
+namespace scene { class Surface; }
+
 namespace graphics
 {
 
@@ -69,6 +72,9 @@ public:
     virtual glm::mat4 transformation() const = 0;
 
     virtual bool shaped() const = 0;  // meaning the pixel format has alpha
+
+    virtual auto surface_if_any() const
+        -> std::optional<mir::scene::Surface const*> = 0;
 protected:
     Renderable() = default;
     Renderable(Renderable const&) = delete;
