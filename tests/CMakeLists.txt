@@ -176,6 +176,9 @@ configure_file(
 install(TARGETS mir-test-assist
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
+install(TARGETS mir-test-assist-internal
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/test/mir
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/mirtest"
 )
