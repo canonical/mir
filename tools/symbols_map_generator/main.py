@@ -205,7 +205,8 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
                 def search_class_hierarchy_for_virtual_thunk(derived: clang.cindex.Cursor):
                     assert (derived.kind == clang.cindex.CursorKind.CLASS_DECL
                             or derived.kind == clang.cindex.CursorKind.STRUCT_DECL
-                            or derived.kind == clang.cindex.CursorKind.CLASS_TEMPLATE)
+                            or derived.kind == clang.cindex.CursorKind.CLASS_TEMPLATE
+                            or derived.kind == clang.cindex.CursorKind.TYPEDEF_DECL)
                     
                     # Find the base classes for the derived class
                     base_classes: list[clang.cindex.Cursor] = []

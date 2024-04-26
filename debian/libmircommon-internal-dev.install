@@ -1,0 +1,3 @@
+usr/include/mircommon-internal
+usr/lib/*/libmircommon.so
+usr/lib/*/pkgconfig/mircommon-internal.pc
