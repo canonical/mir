@@ -85,21 +85,6 @@ typedef enum MirTouchpadScrollMode
 } MirTouchpadScrollMode;
 typedef unsigned int MirTouchpadScrollModes;
 
-enum MirInputDeviceCapability
-{
-    mir_input_device_capability_none        = 0,
-    mir_input_device_capability_pointer     = 1<<1,
-    mir_input_device_capability_keyboard    = 1<<2,
-    mir_input_device_capability_touchpad    = 1<<3,
-    mir_input_device_capability_touchscreen = 1<<4,
-    mir_input_device_capability_gamepad     = 1<<5,
-    mir_input_device_capability_joystick    = 1<<6,
-    mir_input_device_capability_switch      = 1<<7,
-    mir_input_device_capability_multitouch  = 1<<8,  //! capable to detect multiple contacts
-    mir_input_device_capability_alpha_numeric = 1<<9 //! offers enough keys for text entry
-};
-typedef unsigned int MirInputDeviceCapabilities;
-
 /**
  * Mapping modes for touchscreen devices. The mode defines how coordinates
  * from the touchscreen frequently referred to as device coordinates are

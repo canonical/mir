@@ -18,7 +18,7 @@
 #define MIR_EXAMPLES_INPUT_DEVICE_CONFIG_H_
 
 #include "mir/input/input_device_observer.h"
-#include "mir_toolkit/mir_input_device.h"
+#include "mir_toolkit/mir_input_device_types.h"
 
 namespace mir
 {
