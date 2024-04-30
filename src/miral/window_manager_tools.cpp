@@ -16,7 +16,7 @@
 
 #include "miral/window_manager_tools.h"
 #include "miral/zone.h"
-#include "window_manager_tools_implementation.h"
+#include "miral/window_manager_tools_implementation.h"
 
 miral::WindowManagerTools::WindowManagerTools(WindowManagerToolsImplementation* tools) :
     tools{tools}

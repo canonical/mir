@@ -274,6 +274,9 @@ global:
     miral::WindowManagerTools::swap_tree_order*;
     miral::WindowManagerTools::window_at*;
     miral::WindowManagerTools::window_to_select_application*;
+    miral::WindowManagerToolsImplementation::?WindowManagerToolsImplementation*;
+    miral::WindowManagerToolsImplementation::WindowManagerToolsImplementation*;
+    miral::WindowManagerToolsImplementation::operator*;
     miral::WindowSpecification::?WindowSpecification*;
     miral::WindowSpecification::WindowSpecification*;
     miral::WindowSpecification::application_id*;
@@ -408,6 +411,7 @@ global:
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_removing_from_workspace*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_resize*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_state_change*;
+    non-virtual?thunk?to?miral::WindowManagerToolsImplementation::?WindowManagerToolsImplementation*;
     typeinfo?for?miral::AddInitCallback;
     typeinfo?for?miral::AppendEventFilter;
     typeinfo?for?miral::ApplicationAuthorizer;
@@ -443,6 +447,7 @@ global:
     typeinfo?for?miral::WindowManagerOption;
     typeinfo?for?miral::WindowManagerOptions;
     typeinfo?for?miral::WindowManagerTools;
+    typeinfo?for?miral::WindowManagerToolsImplementation;
     typeinfo?for?miral::WindowSpecification::AspectRatio;
     typeinfo?for?miral::WindowSpecification;
     typeinfo?for?miral::X11Support;
@@ -453,6 +458,7 @@ global:
     vtable?for?miral::MinimalWindowManager;
     vtable?for?miral::WaylandExtensions::Context;
     vtable?for?miral::WindowManagementPolicy;
+    vtable?for?miral::WindowManagerToolsImplementation;
   };
 local: *;
 };

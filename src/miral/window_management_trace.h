@@ -17,7 +17,7 @@
 #ifndef MIRAL_WINDOW_MANAGEMENT_TRACE_H
 #define MIRAL_WINDOW_MANAGEMENT_TRACE_H
 
-#include "window_manager_tools_implementation.h"
+#include "miral/window_manager_tools_implementation.h"
 
 #include "miral/window_manager_tools.h"
 #include "miral/window_management_options.h"

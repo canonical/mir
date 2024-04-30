@@ -17,7 +17,7 @@
 #ifndef MIR_ABSTRACTION_BASIC_WINDOW_MANAGER_H_
 #define MIR_ABSTRACTION_BASIC_WINDOW_MANAGER_H_
 
-#include "window_manager_tools_implementation.h"
+#include "miral/window_manager_tools_implementation.h"
 
 #include "miral/window_management_policy.h"
 #include "miral/window_info.h"
