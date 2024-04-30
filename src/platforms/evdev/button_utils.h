@@ -18,7 +18,6 @@
 #define MIR_INPUT_EVDEV_BUTTON_UTILS_H_
 
 #include "mir_toolkit/event.h"
-#include "mir_toolkit/mir_input_device.h"
 
 namespace mir
 {
