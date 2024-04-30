@@ -71,7 +71,7 @@ char const* const disable_while_typing_opt = "touchpad-disable-while-typing";
 char const* const tap_to_click_opt = "touchpad-tap-to-click";
 char const* const mouse_acceleration_opt = "mouse-acceleration";
 char const* const acceleration_none = "none";
-//char const* const acceleration_adaptive = "adaptive";
+char const* const acceleration_adaptive = "adaptive";
 char const* const mouse_cursor_acceleration_bias_opt = "mouse-cursor-acceleration-bias";
 char const* const mouse_scroll_speed_scale_opt = "mouse-scroll-speed-scale";
 char const* const touchpad_cursor_acceleration_bias_opt = "touchpad-cursor-acceleration-bias";
@@ -121,63 +121,77 @@ void miral::add_input_device_configuration(::mir::Server& server)
                                     "Select click mode for touchpads: [{area, finger-count}]",
                                     mir::OptionType::integer);
 
-    auto clamp_to_range = [](std::optional<double> opt_val)
+    auto clamp_to_range = [](std::optional<double> opt_val)-> std::optional<double>
     {
-        if (!opt_val) return std::optional<double>{};
-        auto val = *opt_val;
-        if (val < -1.0)
-            val = -1.0;
-        else if (val > 1.0)
-            val = 1.0;
-        return std::make_optional(val);
+        if (opt_val)
+        {
+            auto val = *opt_val;
+            if (val < -1.0)
+                val = -1.0;
+            else if (val > 1.0)
+                val = 1.0;
+            return std::make_optional(val);
+        }
+        else
+        {
+            return std::nullopt;
+        }
     };
 
-    // TODO the configuration api allows a combination of values. We might want to expose that in the command line api too.
+    // TODO options are not exclusive
     auto convert_to_scroll_mode = [](std::optional<std::string> const& opt_val)
     -> std::optional<MirTouchpadScrollMode>
     {
-        if (!opt_val) return std::nullopt;
-        auto const val = *opt_val;
-        if (val == touchpad_scroll_mode_edge)
-            return mir_touchpad_scroll_mode_edge_scroll;
-        if (val == touchpad_scroll_mode_two_finger)
-            return mir_touchpad_scroll_mode_two_finger_scroll;
-        return mir_touchpad_scroll_mode_none;
+        if (opt_val)
+        {
+            if (*opt_val == touchpad_scroll_mode_edge)
+                return mir_touchpad_scroll_mode_edge_scroll;
+            if (*opt_val == touchpad_scroll_mode_two_finger)
+                return mir_touchpad_scroll_mode_two_finger_scroll;
+        }
+        return std::nullopt;
     };
 
-    auto to_profile = [](std::optional<std::string> const& val)-> std::optional<MirPointerAcceleration>
+    auto to_acceleration_profile = [](std::optional<std::string> const& opt_val)-> std::optional<MirPointerAcceleration>
     {
-        if (!val) return std::nullopt;
-        if (*val == acceleration_none)
-            return mir_pointer_acceleration_none;
-        return mir_pointer_acceleration_adaptive;
+        if (opt_val)
+        {
+            if (*opt_val == acceleration_none)
+                return mir_pointer_acceleration_none;
+            if (*opt_val == acceleration_adaptive)
+                return mir_pointer_acceleration_adaptive;
+        }
+        return std::nullopt;
     };
 
+    // TODO options are not exclusive
     auto convert_to_click_mode = [](std::optional<std::string> const& opt_val)
     -> std::optional<MirTouchpadClickMode>
     {
-        if (!opt_val) return std::nullopt;
-        auto val = *opt_val;
-        if (val == touchpad_click_mode_finger_count)
-            return mir_touchpad_click_mode_finger_count;
-        if (val == touchpad_click_mode_area)
-            return mir_touchpad_click_mode_area_to_click;
-        return mir_touchpad_click_mode_none;
+        if (opt_val)
+        {
+            auto val = *opt_val;
+            if (val == touchpad_click_mode_finger_count)
+                return mir_touchpad_click_mode_finger_count;
+            if (val == touchpad_click_mode_area)
+                return mir_touchpad_click_mode_area_to_click;
+        }
+        return std::nullopt;
     };
 
     server.add_init_callback([&]()
         {
             auto const options = server.get_options();
             auto const input_config = std::make_shared<InputDeviceConfig>(
-                get_optional<bool>(options, disable_while_typing_opt),
-                get_optional<bool>(options, tap_to_click_opt),
-                to_profile(get_optional<std::string>(options, mouse_acceleration_opt)),
-                clamp_to_range(get_optional<double>(options, mouse_cursor_acceleration_bias_opt)),
-                get_optional<double>(options, mouse_scroll_speed_scale_opt),
-                clamp_to_range(get_optional<double>(options, touchpad_cursor_acceleration_bias_opt)),
-                get_optional<double>(options, touchpad_scroll_speed_scale_opt),
-                convert_to_click_mode(get_optional<std::string>(options, touchpad_click_mode_opt)),
-                convert_to_scroll_mode(get_optional<std::string>(options, touchpad_scroll_mode_opt))
+                    get_optional<bool>(options, disable_while_typing_opt),
+                    get_optional<bool>(options, tap_to_click_opt),
+                    to_acceleration_profile(get_optional<std::string>(options, mouse_acceleration_opt)),
+                    clamp_to_range(get_optional<double>(options, mouse_cursor_acceleration_bias_opt)),
+                    get_optional<double>(options, mouse_scroll_speed_scale_opt),
+                    clamp_to_range(get_optional<double>(options, touchpad_cursor_acceleration_bias_opt)),
+                    get_optional<double>(options, touchpad_scroll_speed_scale_opt),
+                    convert_to_click_mode(get_optional<std::string>(options, touchpad_click_mode_opt)),
+                    convert_to_scroll_mode(get_optional<std::string>(options, touchpad_scroll_mode_opt))
                 );
             server.the_input_device_hub()->add_observer(input_config);
         });
