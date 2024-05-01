@@ -124,8 +124,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmircommon10 (= ${binary:Version}),
-         libmircommon-dev (= ${binary:Version}),
+Depends: libmircommon-dev (= ${binary:Version}),
          libxkbcommon-dev,
          ${misc:Depends},
 Description: Display server for Ubuntu - development headers
