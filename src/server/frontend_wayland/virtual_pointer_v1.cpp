@@ -202,7 +202,12 @@ mf::VirtualPointerV1::VirtualPointerV1(
 
 mf::VirtualPointerV1::~VirtualPointerV1()
 {
-    ctx->device_registry->remove_device(pointer_device);
+    // Destruction must happen on the linearising_executor to prevent races with create_and_dispatch_event
+    mir::linearising_executor.spawn(
+        [pointer_device=pointer_device, device_registry=ctx->device_registry]()
+    {
+        device_registry->remove_device(pointer_device);
+    });
 }
 
 void mf::VirtualPointerV1::motion(uint32_t time, double dx, double dy)
