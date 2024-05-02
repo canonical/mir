@@ -37,7 +37,6 @@ namespace scene
 {
 class SessionListener;
 class Surface;
-class BufferStreamFactory;
 class SurfaceFactory;
 
 class ApplicationSession : public Session
@@ -46,7 +45,6 @@ public:
     ApplicationSession(
         std::shared_ptr<shell::SurfaceStack> const& surface_stack,
         std::shared_ptr<SurfaceFactory> const& surface_factory,
-        std::shared_ptr<BufferStreamFactory> const& buffer_stream_factory,
         pid_t pid,
         Fd socket_fd,
         std::string const& session_name,
@@ -99,7 +97,6 @@ protected:
 private:
     std::shared_ptr<shell::SurfaceStack> const surface_stack;
     std::shared_ptr<SurfaceFactory> const surface_factory;
-    std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
     pid_t const pid;
     Fd socket_fd_;
     std::string const session_name;

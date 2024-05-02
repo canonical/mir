@@ -15,9 +15,7 @@
  */
 
 #include "surface_allocator.h"
-#include "mir/scene/buffer_stream_factory.h"
 #include "mir/shell/surface_specification.h"
-#include "mir/compositor/buffer_stream.h"
 #include "basic_surface.h"
 
 namespace geom=mir::geometry;

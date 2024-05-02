@@ -28,7 +28,6 @@
 #include "mir/test/doubles/mock_session_listener.h"
 #include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/doubles/stub_surface_factory.h"
-#include "mir/test/doubles/stub_buffer_stream_factory.h"
 #include "mir/test/doubles/stub_buffer_stream.h"
 #include "mir/test/doubles/null_event_sink.h"
 #include "mir/test/doubles/mock_event_sink.h"
@@ -60,15 +59,6 @@ static std::shared_ptr<mtd::MockSurface> make_mock_surface()
     ON_CALL(*surface, size()).WillByDefault(Return(geom::Size { 100, 100 }));
     return surface;
 }
-
-struct MockBufferStreamFactory : public ms::BufferStreamFactory
-{
-    MOCK_METHOD2(create_buffer_stream, std::shared_ptr<mc::BufferStream>(
-        int, mg::BufferProperties const&));
-    MOCK_METHOD1(create_buffer_stream, std::shared_ptr<mc::BufferStream>(
-        mg::BufferProperties const&));
-};
-
 
 MATCHER_P(EqPromptSessionEventState, state, "") {
   return arg.type() == mir_event_type_prompt_session_state_change && arg.to_prompt_session()->new_state() == state;
@@ -122,7 +112,6 @@ struct ApplicationSession : public testing::Test
         return std::make_shared<ms::ApplicationSession>(
            stub_surface_stack,
            stub_surface_factory,
-           stub_buffer_stream_factory,
            pid,
            mir::Fd{mir::Fd::invalid},
            name,
@@ -132,13 +121,11 @@ struct ApplicationSession : public testing::Test
     }
     
     std::shared_ptr<ms::ApplicationSession> make_application_session(
-        std::shared_ptr<ms::BufferStreamFactory> const& bstream_factory,
         std::shared_ptr<ms::SurfaceFactory> const& surface_factory)
     {
         return std::make_shared<ms::ApplicationSession>(
            stub_surface_stack,
            surface_factory,
-           bstream_factory,
            pid,
            mir::Fd{mir::Fd::invalid},
            name,
@@ -154,7 +141,6 @@ struct ApplicationSession : public testing::Test
         return std::make_shared<ms::ApplicationSession>(
            surface_stack,
            surface_factory,
-           stub_buffer_stream_factory,
            pid,
            mir::Fd{mir::Fd::invalid},
            name,
@@ -168,7 +154,6 @@ struct ApplicationSession : public testing::Test
         return std::make_shared<ms::ApplicationSession>(
            surface_stack,
            stub_surface_factory,
-           stub_buffer_stream_factory,
            pid,
            mir::Fd{mir::Fd::invalid},
            name,
@@ -183,7 +168,6 @@ struct ApplicationSession : public testing::Test
         return std::make_shared<ms::ApplicationSession>(
            stub_surface_stack,
            stub_surface_factory,
-           stub_buffer_stream_factory,
            pid,
            mir::Fd{mir::Fd::invalid},
            name,
@@ -193,27 +177,10 @@ struct ApplicationSession : public testing::Test
     }
 
 
-    std::shared_ptr<ms::ApplicationSession> make_application_session_with_buffer_stream_factory(
-        std::shared_ptr<ms::BufferStreamFactory> const& buffer_stream_factory)
-    {
-        return std::make_shared<ms::ApplicationSession>(
-           stub_surface_stack,
-           stub_surface_factory,
-           buffer_stream_factory,
-           pid,
-           mir::Fd{mir::Fd::invalid},
-           name,
-           stub_session_listener,
-           event_sink,
-           allocator);
-    }
-
     std::shared_ptr<mtd::NullEventSink> const event_sink;
     std::shared_ptr<ms::NullSurfaceObserver> const surface_observer;
     std::shared_ptr<ms::NullSessionListener> const stub_session_listener;
     std::shared_ptr<StubSurfaceStack> const stub_surface_stack;
-    std::shared_ptr<mtd::StubBufferStreamFactory> const stub_buffer_stream_factory =
-        std::make_shared<mtd::StubBufferStreamFactory>();
     std::shared_ptr<mtd::StubSurfaceFactory> const stub_surface_factory{std::make_shared<mtd::StubSurfaceFactory>()};
     std::shared_ptr<mtd::StubBufferStream> const stub_buffer_stream{std::make_shared<mtd::StubBufferStream>()};
     std::shared_ptr<mtd::StubBufferAllocator> const allocator{
@@ -454,7 +421,6 @@ TEST_F(ApplicationSession, process_id)
     ms::ApplicationSession app_session(
         stub_surface_stack,
         stub_surface_factory,
-        stub_buffer_stream_factory,
         session_pid,
         mir::Fd{mir::Fd::invalid},
         name,
@@ -482,79 +448,6 @@ MATCHER(StreamEq, "")
         (std::get<0>(arg).displacement == std::get<1>(arg).displacement);
 }
 
-TEST_F(ApplicationSession, sets_and_looks_up_surface_streams)
-{
-    using namespace testing;
-    NiceMock<MockBufferStreamFactory> mock_bufferstream_factory;
-    NiceMock<MockSurfaceFactory> mock_surface_factory;
-
-    auto mock_surface = make_mock_surface();
-    EXPECT_CALL(mock_surface_factory, create_surface(_, _, _, _))
-        .WillOnce(Return(mock_surface));
-    
-    std::array<std::shared_ptr<mc::BufferStream>,3> streams {{
-        std::make_shared<mtd::StubBufferStream>(),
-        std::make_shared<mtd::StubBufferStream>(),
-        std::make_shared<mtd::StubBufferStream>()
-    }};
-    EXPECT_CALL(mock_bufferstream_factory, create_buffer_stream(_))
-        .WillOnce(Return(streams[0]))
-        .WillOnce(Return(streams[1]))
-        .WillOnce(Return(streams[2]));
-
-    auto stream_properties = mg::BufferProperties{{8,8}, mir_pixel_format_argb_8888, mg::BufferUsage::hardware};
-    auto session = make_application_session(
-        mt::fake_shared(mock_bufferstream_factory),
-        mt::fake_shared(mock_surface_factory));
-
-    auto stream0 = session->create_buffer_stream(stream_properties);
-    auto stream1 = session->create_buffer_stream(stream_properties);
-    auto stream2 = session->create_buffer_stream(stream_properties);
-
-    ASSERT_THAT(stream0, Eq(streams[0])) << "session->create_buffer_stream() did not create correct stream";
-    ASSERT_THAT(stream1, Eq(streams[1])) << "session->create_buffer_stream() did not create correct stream";
-    ASSERT_THAT(stream2, Eq(streams[2])) << "session->create_buffer_stream() did not create correct stream";
-
-    std::list<ms::StreamInfo> info {
-        {streams[2], geom::Displacement{0,3}, {}},
-        {streams[0], geom::Displacement{-1,1}, {}},
-        {streams[1], geom::Displacement{0,2}, {}}
-    };
-
-    session->create_surface(nullptr, {}, mt::make_surface_spec(stream0), surface_observer, nullptr);
-
-    EXPECT_CALL(*mock_surface, set_streams(Pointwise(StreamEq(), info)));
-    session->configure_streams(*mock_surface, {
-        {stream2, geom::Displacement{0,3}, {}},
-        {stream0, geom::Displacement{-1,1}, {}},
-        {stream1, geom::Displacement{0,2}, {}}
-    });
-}
-
-TEST_F(ApplicationSession, buffer_stream_constructed_with_requested_parameters)
-{
-    using namespace ::testing;
-    
-    geom::Size const buffer_size{geom::Width{1}, geom::Height{1}};
-
-    mtd::StubBufferStream stream;
-    MockBufferStreamFactory factory;
-
-    mg::BufferProperties properties(buffer_size, mir_pixel_format_argb_8888, mg::BufferUsage::software);
-    
-    EXPECT_CALL(factory, create_buffer_stream(properties)).Times(1)
-        .WillOnce(Return(mt::fake_shared(stream)));
-
-    auto session = make_application_session_with_buffer_stream_factory(mt::fake_shared(factory));
-    auto buffer_stream = session->create_buffer_stream(properties);
-
-    EXPECT_TRUE(session->has_buffer_stream(buffer_stream));
-
-    session->destroy_buffer_stream(buffer_stream);
-
-    EXPECT_FALSE(session->has_buffer_stream(buffer_stream));
-}
-
 MATCHER_P(HasSingleStream, value, "")
 {
     using namespace testing;
@@ -568,7 +461,6 @@ TEST_F(ApplicationSession, surface_uses_prexisting_buffer_stream_if_set)
 {
     using namespace testing;
 
-    mtd::StubBufferStreamFactory bufferstream_factory;
     NiceMock<MockSurfaceFactory> mock_surface_factory;
 
     geom::Size const buffer_size{geom::Width{1}, geom::Height{1}};
@@ -576,7 +468,6 @@ TEST_F(ApplicationSession, surface_uses_prexisting_buffer_stream_if_set)
     mg::BufferProperties properties(buffer_size, mir_pixel_format_argb_8888, mg::BufferUsage::software);
 
     auto session = make_application_session(
-        mt::fake_shared(bufferstream_factory),
         mt::fake_shared(mock_surface_factory));
 
     auto stream = session->create_buffer_stream(properties);
@@ -599,7 +490,6 @@ struct ApplicationSessionSender : public ApplicationSession
         app_session(
             stub_surface_stack,
             stub_surface_factory,
-            stub_buffer_stream_factory,
             pid,
             mir::Fd{mir::Fd::invalid},
             name,
@@ -725,7 +615,6 @@ struct ApplicationSessionSurfaceOutput : public ApplicationSession
         app_session(
             stub_surface_stack,
             stub_surface_factory,
-            stub_buffer_stream_factory,
             pid,
             mir::Fd{mir::Fd::invalid},
             name,

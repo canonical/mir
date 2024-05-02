@@ -36,7 +36,6 @@
 #include "mir/test/doubles/null_event_sink.h"
 #include "mir/test/doubles/null_prompt_session_manager.h"
 #include "mir/test/doubles/stub_input_targeter.h"
-#include "mir/test/doubles/stub_buffer_stream_factory.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/null_application_not_responding_detector.h"
 #include "mir/test/doubles/stub_display.h"
@@ -103,7 +102,6 @@ struct MockSessionManager : ms::SessionManager
         : ms::SessionManager{
               surface_stack,
               surface_factory,
-              std::make_shared<mtd::StubBufferStreamFactory>(),
               app_container,
               session_event_sink,
               std::make_shared<ms::NullSessionListener>(),

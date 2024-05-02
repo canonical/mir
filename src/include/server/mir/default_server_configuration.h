@@ -44,7 +44,6 @@ class MultiplexingDispatchable;
 }
 namespace compositor
 {
-class BufferStreamFactory;
 class Scene;
 class DisplayBufferCompositorFactory;
 class Compositor;
@@ -292,7 +291,6 @@ public:
     /** @name scene configuration - dependencies
      * dependencies of scene on the rest of the Mir
      *  @{ */
-    virtual std::shared_ptr<scene::BufferStreamFactory> the_buffer_stream_factory();
     virtual std::shared_ptr<scene::SceneReport>      the_scene_report();
     /** @} */
 
@@ -386,7 +384,6 @@ protected:
 
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<renderer::RendererFactory> renderer_factory;
-    CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<scene::SurfaceStack> scene_surface_stack;
     CachedPtr<shell::SurfaceStack> surface_stack;
     CachedPtr<scene::SceneReport> scene_report;
