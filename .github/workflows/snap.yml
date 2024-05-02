@@ -45,7 +45,7 @@ jobs:
     - name: Tweak the snapcraft.yaml
       run: |
         if [ "${{ matrix.base }}" == "24" ]; then
-          mv snap/core24~snapcraft.yaml snap/snapcraft.yaml
+          mv snap/local/core24~snapcraft.yaml snap/snapcraft.yaml
         fi
 
     - name: Build and publish the snap
