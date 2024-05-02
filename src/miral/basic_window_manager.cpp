@@ -25,6 +25,11 @@
 #include <mir/shell/display_layout.h>
 #include <mir/shell/persistent_surface_store.h>
 #include <mir/shell/surface_specification.h>
+#include <mir/input/virtual_input_device.h>
+#include <mir/input/event_builder.h>
+#include <mir/input/input_sink.h>
+#include <mir/input/input_device_registry.h>
+#include <mir/server_action_queue.h>
 
 #include <boost/throw_exception.hpp>
 
@@ -94,20 +99,27 @@ miral::BasicWindowManager::BasicWindowManager(
     std::shared_ptr<shell::DisplayLayout> const& display_layout,
     std::shared_ptr<mir::shell::PersistentSurfaceStore> const& persistent_surface_store,
     mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>& display_configuration_observers,
+    std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry,
+    std::shared_ptr<mir::ServerActionQueue> const& action_queue,
     WindowManagementPolicyBuilder const& build) :
     focus_controller(focus_controller),
     display_layout(display_layout),
     persistent_surface_store{persistent_surface_store},
     policy(build(WindowManagerTools{this})),
-    display_config_monitor{std::make_shared<DisplayConfigurationListeners>()}
+    display_config_monitor{std::make_shared<DisplayConfigurationListeners>()},
+    pointer_device{std::make_shared<mir::input::VirtualInputDevice>("basic-window-manager", mir::input::DeviceCapability::pointer)},
+    input_device_registry{input_device_registry},
+    action_queue{action_queue}
 {
     display_config_monitor->add_listener(this);
     display_configuration_observers.register_interest(display_config_monitor);
+    input_device_registry->add_device(pointer_device);
 }
 
 miral::BasicWindowManager::~BasicWindowManager()
 {
     display_config_monitor->delete_listener(this);
+    input_device_registry->remove_device(pointer_device);
 }
 void miral::BasicWindowManager::add_session(std::shared_ptr<scene::Session> const& session)
 {
@@ -2980,4 +2992,29 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
         }
         area->zone_policy_knows_about = area->application_zone;
     }
+}
+
+void miral::BasicWindowManager::move_cursor_to(mir::geometry::PointF point)
+{
+    action_queue->enqueue(this, [
+        device=pointer_device,
+        point=point,
+        position=mir::geometry::PointF (cursor.x.as_int(), cursor.y.as_int())]()
+    {
+        device->if_started_then([&](input::InputSink* sink, input::EventBuilder* builder)
+        {
+            auto const delta = point - position;
+            std::chrono::nanoseconds now = std::chrono::system_clock::now().time_since_epoch();
+            auto event = builder->pointer_event(
+                now,
+                mir_pointer_action_motion,
+                0,
+                std::make_optional(point),
+                delta,
+                mir_pointer_axis_source_none,
+                events::ScrollAxisH(),
+                events::ScrollAxisV());
+            sink->handle_input(std::move(event));
+        });
+    });
 }

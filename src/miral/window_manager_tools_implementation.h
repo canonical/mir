@@ -89,6 +89,7 @@ public:
     virtual void for_each_window_in_workspace(
         std::shared_ptr<Workspace> const& workspace,
         std::function<void(Window const& window)> const& callback) = 0;
+    virtual void move_cursor_to(mir::geometry::PointF point) = 0;
 
 /** @} */
 

@@ -30,6 +30,8 @@
 #include <mir/test/doubles/stub_session.h>
 #include <mir/test/doubles/stub_surface.h>
 #include <mir/test/fake_shared.h>
+#include <mir/test/doubles/stub_input_device_registry.h>
+#include <mir/test/doubles/stub_main_loop.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -251,7 +253,8 @@ struct mt::TestWindowManagerTools::Self
     StubDisplayLayout display_layout;
     StubPersistentSurfaceStore persistent_surface_store;
     FakeDisplayConfigurationObserverRegistrar display_configuration_observer;
-
+    mt::doubles::StubInputDeviceRegistry input_device_registry;
+    mt::doubles::StubMainLoop main_loop;
 };
 
 mt::TestWindowManagerTools::TestWindowManagerTools()
@@ -264,6 +267,8 @@ mt::TestWindowManagerTools::TestWindowManagerTools()
         mir::test::fake_shared(self->display_layout),
         mir::test::fake_shared(self->persistent_surface_store),
         self->display_configuration_observer,
+        mir::test::fake_shared(self->input_device_registry),
+        mir::test::fake_shared(self->main_loop),
         [this](miral::WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy>
             {
                 auto policy = std::make_unique<testing::NiceMock<MockWindowManagerPolicy>>(tools);

@@ -143,3 +143,6 @@ void miral::WindowManagerTools::for_each_window_in_workspace(
     std::shared_ptr<miral::Workspace> const& workspace,
     std::function<void(miral::Window const&)> const& callback)
 { tools->for_each_window_in_workspace(workspace, callback); }
+
+void miral::WindowManagerTools::move_cursor_to(mir::geometry::PointF point)
+{ tools->move_cursor_to(point); }
