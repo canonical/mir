@@ -21,6 +21,7 @@
 #include "mir/events/keyboard_event.h"
 #include "mir/input/seat.h"
 #include "mir/fatal.h"
+#include "mir/log.h"
 
 #include <cstring> // memcpy
 #include <unordered_set>
@@ -61,6 +62,7 @@ void mf::KeyboardHelper::handle_event(std::shared_ptr<MirEvent const> const& eve
     switch (mir_input_event_get_type(mir_event_get_input_event(event.get())))
     {
     case mir_input_event_type_keyboard_resync:
+        mir::log_debug("mir_input_event_type_keyboard_resync is causing modifiers to be refreshed");
         refresh_modifiers();
         break;
 
@@ -148,6 +150,20 @@ void mf::KeyboardHelper::set_keymap(std::shared_ptr<mi::Keymap> const& new_keyma
 
 void mf::KeyboardHelper::set_modifiers(MirXkbModifiers const& new_modifiers)
 {
+    mir::log_debug(
+    "Modifiers are being set from: depressed=0x%08x, latched=0x%08x, locked=0x%08x, effective_layout=0x%08x",
+        modifiers.depressed,
+        modifiers.latched,
+        modifiers.locked,
+        modifiers.effective_layout);
+
+    mir::log_debug(
+        "Modifiers are being set to: depressed=0x%08x, latched=0x%08x, locked=0x%08x, effective_layout=0x%08x",
+        new_modifiers.depressed,
+        new_modifiers.latched,
+        new_modifiers.locked,
+        new_modifiers.effective_layout);
+
     if (new_modifiers != modifiers)
     {
         modifiers = new_modifiers;
