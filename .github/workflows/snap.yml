@@ -47,6 +47,8 @@ jobs:
         if [ "${{ matrix.base }}" == "24" ]; then
           mv snap/local/core24~snapcraft.yaml snap/snapcraft.yaml
         fi
+        git config --global --add safe.directory $(pwd)
+        sed -i 's@version: testing@version: '$(git describe)'@' snap/snapcraft.yaml
 
     - name: Build and publish the snap
       uses: canonical/actions/build-snap@release

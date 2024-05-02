@@ -8,7 +8,8 @@ description: |
   This snap contains the build environment necessary to build Mir display servers.
 
 confinement: strict
-adopt-info: mir
+version: testing
+grade: devel
 
 parts:
   mir:
@@ -96,9 +97,3 @@ parts:
     - libxml2
     - libxrender1
     - libyaml-cpp0.7
-    override-pull: |
-      craftctl default
-      # work around https://github.com/diddlesnaps/snapcraft-multiarch-action/issues/22
-      git config --global --add safe.directory ${CRAFT_PART_SRC}
-      craftctl set version=$( git describe | awk -F- '{ gsub(/^v/, "", $1); printf $1; if ($2) { printf "+dev" $2 "-" $3 } }' )
-      craftctl set grade=$( [[ $( git describe ) =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && echo stable || echo devel )
