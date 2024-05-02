@@ -85,6 +85,12 @@ public:
         return false;
     }
 
+    auto surface_if_any() const
+        -> std::optional<mir::scene::Surface const*> override
+    {
+        return std::nullopt;
+    }
+
 private:
     std::shared_ptr<mg::Buffer> const buffer_;
 };

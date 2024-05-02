@@ -697,14 +697,16 @@ public:
         std::optional<geom::Rectangle> const& clip_area,
         glm::mat4 const& transform,
         float alpha,
-        mg::Renderable::ID id)
+        mg::Renderable::ID id,
+        ms::Surface const* surface)
     : underlying_buffer_stream{stream},
       compositor_id{compositor_id},
       alpha_{alpha},
       screen_position_(position),
       clip_area_(clip_area),
       transformation_(transform),
-      id_(id)
+      id_(id),
+      surface{surface}
     {
     }
 
@@ -736,6 +738,11 @@ public:
 
     mg::Renderable::ID id() const override
     { return id_; }
+
+    auto surface_if_any() const -> std::optional<mir::scene::Surface const*> override
+    {
+        return surface;
+    }
 private:
     std::shared_ptr<mc::BufferStream> const underlying_buffer_stream;
     std::shared_ptr<mg::Buffer> mutable compositor_buffer;
@@ -745,6 +752,7 @@ private:
     std::optional<geom::Rectangle> const clip_area_;
     glm::mat4 const transformation_;
     mg::Renderable::ID const id_;
+    ms::Surface const* surface;
 };
 }
 
@@ -806,7 +814,7 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
                 info.stream, id,
                 geom::Rectangle{content_top_left_ + info.displacement, std::move(size)},
                 state->clip_area,
-                state->transformation_matrix, state->surface_alpha, info.stream.get()));
+                state->transformation_matrix, state->surface_alpha, info.stream.get(), this));
         }
     }
     return list;

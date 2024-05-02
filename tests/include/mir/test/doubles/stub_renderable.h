@@ -88,6 +88,12 @@ public:
     {
         return false;
     }
+
+    auto surface_if_any() const
+        -> std::optional<mir::scene::Surface const*> override
+    {
+        return std::nullopt;
+    }
 private:
     std::shared_ptr<graphics::Buffer> make_stub_buffer(geometry::Rectangle const& rect)
     {

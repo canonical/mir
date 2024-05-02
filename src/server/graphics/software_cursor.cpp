@@ -100,6 +100,12 @@ public:
         return true;
     }
 
+    auto surface_if_any() const
+        -> std::optional<mir::scene::Surface const*> override
+    {
+        return std::nullopt;
+    }
+
     void move_to(geom::Point new_position)
     {
         std::lock_guard lock{position_mutex};

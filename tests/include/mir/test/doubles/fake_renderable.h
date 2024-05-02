@@ -98,6 +98,12 @@ public:
         return std::optional<geometry::Rectangle>();
     }
 
+    auto surface_if_any() const
+        -> std::optional<mir::scene::Surface const*> override
+    {
+        return std::nullopt;
+    }
+
 private:
     std::shared_ptr<graphics::Buffer> buf;
     mir::geometry::Rectangle rect;
