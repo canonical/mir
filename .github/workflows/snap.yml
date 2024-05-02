@@ -19,9 +19,10 @@ jobs:
       name: Determine which architectures to build for
       run: |
         ARCHES=( amd64 )
-        if ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}; then
-          ARCHES+=( armhf arm64 )
-        fi
+        # remote-build is flaky: Don't risk it
+        # if ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}; then
+        #   ARCHES+=( armhf arm64 )
+        # fi
         jq --compact-output --null-input '$ARGS.positional' --args -- "${ARCHES[@]}" | awk '{ print "arches=" $0 }' >> $GITHUB_OUTPUT
 
   mir-libs:
