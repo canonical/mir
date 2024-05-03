@@ -256,6 +256,15 @@ global:
     mir::compositor::SceneElement::operator*;
     mir::compositor::ScreenShooter::?ScreenShooter*;
     mir::compositor::ScreenShooter::ScreenShooter*;
+    mir::compositor::Stream::?Stream*;
+    mir::compositor::Stream::Stream*;
+    mir::compositor::Stream::has_submitted_buffer*;
+    mir::compositor::Stream::lock_compositor_buffer*;
+    mir::compositor::Stream::pixel_format*;
+    mir::compositor::Stream::set_frame_posted_callback*;
+    mir::compositor::Stream::set_scale*;
+    mir::compositor::Stream::stream_size*;
+    mir::compositor::Stream::submit_buffer*;
     mir::detail::FdSources::?FdSources*;
     mir::detail::FdSources::FdSources*;
     mir::detail::FdSources::add*;
@@ -783,6 +792,14 @@ global:
     non-virtual?thunk?to?mir::compositor::Scene::?Scene*;
     non-virtual?thunk?to?mir::compositor::SceneElement::?SceneElement*;
     non-virtual?thunk?to?mir::compositor::ScreenShooter::?ScreenShooter*;
+    non-virtual?thunk?to?mir::compositor::Stream::?Stream*;
+    non-virtual?thunk?to?mir::compositor::Stream::has_submitted_buffer*;
+    non-virtual?thunk?to?mir::compositor::Stream::lock_compositor_buffer*;
+    non-virtual?thunk?to?mir::compositor::Stream::pixel_format*;
+    non-virtual?thunk?to?mir::compositor::Stream::set_frame_posted_callback*;
+    non-virtual?thunk?to?mir::compositor::Stream::set_scale*;
+    non-virtual?thunk?to?mir::compositor::Stream::stream_size*;
+    non-virtual?thunk?to?mir::compositor::Stream::submit_buffer*;
     non-virtual?thunk?to?mir::frontend::BufferSink::?BufferSink*;
     non-virtual?thunk?to?mir::frontend::BufferStream::?BufferStream*;
     non-virtual?thunk?to?mir::frontend::Connector::?Connector*;
@@ -1031,6 +1048,7 @@ global:
     typeinfo?for?mir::compositor::Scene;
     typeinfo?for?mir::compositor::SceneElement;
     typeinfo?for?mir::compositor::ScreenShooter;
+    typeinfo?for?mir::compositor::Stream;
     typeinfo?for?mir::detail::FdSources;
     typeinfo?for?mir::detail::GMainContextHandle;
     typeinfo?for?mir::detail::GSourceHandle;
@@ -1230,6 +1248,7 @@ global:
     vtable?for?mir::compositor::Scene;
     vtable?for?mir::compositor::SceneElement;
     vtable?for?mir::compositor::ScreenShooter;
+    vtable?for?mir::compositor::Stream;
     vtable?for?mir::frontend::BufferSink;
     vtable?for?mir::frontend::BufferStream;
     vtable?for?mir::frontend::Connector;
