@@ -19,9 +19,10 @@ jobs:
       name: Determine which architectures to build for
       run: |
         ARCHES=( amd64 )
-        if ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}; then
-          ARCHES+=( armhf arm64 )
-        fi
+        # remote-build is flaky: Don't risk it
+        # if ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}; then
+        #   ARCHES+=( armhf arm64 )
+        # fi
         jq --compact-output --null-input '$ARGS.positional' --args -- "${ARCHES[@]}" | awk '{ print "arches=" $0 }' >> $GITHUB_OUTPUT
 
   mir-libs:
@@ -34,12 +35,21 @@ jobs:
       fail-fast: false
       matrix:
         architecture: ${{ fromJSON(needs.arches.outputs.arches) }}
+        base: ["22", "24"]
 
     steps:
     - name: Check out code
       uses: actions/checkout@v4
       with:
         fetch-depth: 0  # needed for version determination
+
+    - name: Tweak the snapcraft.yaml
+      run: |
+        if [ "${{ matrix.base }}" == "24" ]; then
+          mv snap/local/core24~snapcraft.yaml snap/snapcraft.yaml
+        fi
+        git config --global --add safe.directory $(pwd)
+        sed -i 's@version: testing@version: '$(git describe)'@' snap/snapcraft.yaml
 
     - name: Build and publish the snap
       uses: canonical/actions/build-snap@release
@@ -49,7 +59,7 @@ jobs:
         launchpad-credentials: ${{ secrets.LAUNCHPAD_CREDENTIALS }}
         launchpad-accept-public-upload: true
         publish: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
-        publish-channel: 22/edge/pr${{ github.event.number }}
+        publish-channel: ${{ matrix.base }}/edge/pr${{ github.event.number }}
 
   snap:
     # Only run if we have access to secrets.
