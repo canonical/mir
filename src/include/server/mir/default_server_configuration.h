@@ -81,7 +81,6 @@ namespace scene
 {
 class SurfaceFactory;
 class BroadcastingSessionEventSink;
-class BufferStreamFactory;
 class MediatingDisplayChanger;
 class SessionContainer;
 class SessionEventSink;

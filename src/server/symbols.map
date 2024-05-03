@@ -401,9 +401,6 @@ global:
     mir::scene::ApplicationNotRespondingDetectorWrapper::register_session*;
     mir::scene::ApplicationNotRespondingDetectorWrapper::unregister_observer*;
     mir::scene::ApplicationNotRespondingDetectorWrapper::unregister_session*;
-    mir::scene::BufferStreamFactory::?BufferStreamFactory*;
-    mir::scene::BufferStreamFactory::BufferStreamFactory*;
-    mir::scene::BufferStreamFactory::operator*;
     mir::scene::ClipboardObserver::?ClipboardObserver*;
     mir::scene::ClipboardObserver::ClipboardObserver*;
     mir::scene::DataExchangeSource::?DataExchangeSource*;
@@ -851,7 +848,6 @@ global:
     non-virtual?thunk?to?mir::scene::ApplicationNotRespondingDetectorWrapper::register_session*;
     non-virtual?thunk?to?mir::scene::ApplicationNotRespondingDetectorWrapper::unregister_observer*;
     non-virtual?thunk?to?mir::scene::ApplicationNotRespondingDetectorWrapper::unregister_session*;
-    non-virtual?thunk?to?mir::scene::BufferStreamFactory::?BufferStreamFactory*;
     non-virtual?thunk?to?mir::scene::ClipboardObserver::?ClipboardObserver*;
     non-virtual?thunk?to?mir::scene::DataExchangeSource::?DataExchangeSource*;
     non-virtual?thunk?to?mir::scene::IdleHub::?IdleHub*;
@@ -1093,7 +1089,6 @@ global:
     typeinfo?for?mir::scene::ApplicationNotRespondingDetector::Observer;
     typeinfo?for?mir::scene::ApplicationNotRespondingDetector;
     typeinfo?for?mir::scene::ApplicationNotRespondingDetectorWrapper;
-    typeinfo?for?mir::scene::BufferStreamFactory;
     typeinfo?for?mir::scene::Clipboard;
     typeinfo?for?mir::scene::ClipboardObserver;
     typeinfo?for?mir::scene::DataExchangeSource;
@@ -1286,7 +1281,6 @@ global:
     vtable?for?mir::scene::ApplicationNotRespondingDetector::Observer;
     vtable?for?mir::scene::ApplicationNotRespondingDetector;
     vtable?for?mir::scene::ApplicationNotRespondingDetectorWrapper;
-    vtable?for?mir::scene::BufferStreamFactory;
     vtable?for?mir::scene::Clipboard;
     vtable?for?mir::scene::ClipboardObserver;
     vtable?for?mir::scene::DataExchangeSource;

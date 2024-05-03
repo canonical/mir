@@ -54,7 +54,6 @@ class SurfaceStack;
 namespace scene
 {
 class ApplicationNotRespondingDetector;
-class BufferStreamFactory;
 class PromptSessionListener;
 class PromptSessionManager;
 class SessionListener;
@@ -394,9 +393,6 @@ public:
 
     /// \return the display layout.
     auto the_shell_display_layout() const -> std::shared_ptr<shell::DisplayLayout>;
-
-    /// \return the buffer stream factory
-    auto the_buffer_stream_factory() const -> std::shared_ptr<scene::BufferStreamFactory>;
 
     /// \return the surface factory
     auto the_surface_factory() const -> std::shared_ptr<scene::SurfaceFactory>;
