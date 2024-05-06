@@ -22,7 +22,8 @@ execute: |
         debootstrap \
         debhelper \
         dh-python \
-        lsb-invalid-mta \
+        fakeroot \
+        nullmailer \
         qemu-user-static \
         sbuild \
         schroot \
