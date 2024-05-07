@@ -20,9 +20,9 @@ jobs:
       run: |
         ARCHES=( amd64 )
         # remote-build is flaky: Don't risk it
-        # if ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}; then
-        #   ARCHES+=( armhf arm64 )
-        # fi
+        if ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}; then
+          ARCHES+=( armhf arm64 )
+        fi
         jq --compact-output --null-input '$ARGS.positional' --args -- "${ARCHES[@]}" | awk '{ print "arches=" $0 }' >> $GITHUB_OUTPUT
 
   mir-libs:
@@ -53,6 +53,9 @@ jobs:
 
     - name: Build and publish the snap
       uses: canonical/actions/build-snap@release
+      env:
+        # the new remote-build is flaky: Don't risk it
+        SNAPCRAFT_REMOTE_BUILD_STRATEGY: force-fallback
       with:
         architecture: ${{ matrix.architecture }}
         snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
