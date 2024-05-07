@@ -52,7 +52,7 @@ mir (2.17.0) UNRELEASED; urgency=medium
       . [Wayland] Fix incorrect screenshots on rotated displays (Fixes: #3259)
       . [misc] Fix propagation of custom attributes on outputs. (Fixes: https://github.com/canonical/ubuntu-frame/issues/172)
       . [window management] Fix positioning of satellite windows. (PR: #3313)
-      . Major simplification of surface buffering. (PR: #3316)
+      . [rendering] Major simplification of surface buffering. (PR: #3316)
       . [Wayland] Fix race in virtual-pointer-v1 destruction (Fixes: #3300)
       . [graphics platforms] Fix hang on Nvidia platform when a display configuration is detected. (Fixes: #3375)
 
