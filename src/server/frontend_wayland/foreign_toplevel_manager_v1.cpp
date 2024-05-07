@@ -357,7 +357,6 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::
         switch(surface->state())
         {
         case mir_window_state_attached:
-        case mir_window_state_hidden:
             should_have_handle = false;
             break;
 
