@@ -547,8 +547,10 @@ void mge::Display::register_configuration_change_handler(
                 monitor->process_events(
                     [conf_change_handler, this](mir::udev::Monitor::EventType, mir::udev::Device const&)
                     {
-                        std::lock_guard lock{configuration_mutex};
-                        display_configuration.update();
+                        {
+                            std::lock_guard lock{configuration_mutex};
+                            display_configuration.update();
+                        }
                         conf_change_handler();
                     });
             }));
