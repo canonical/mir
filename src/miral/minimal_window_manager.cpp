@@ -198,7 +198,8 @@ bool miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const* 
         {
             case KEY_LEFTALT:
                 self->application_selector.complete();
-                default:;
+                [[fallthrough]];
+            default:;
         }
     }
 
