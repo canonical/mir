@@ -22,7 +22,8 @@ execute: |
         debootstrap \
         debhelper \
         dh-python \
-        lsb-invalid-mta \
+        fakeroot \
+        nullmailer \
         qemu-user-static \
         sbuild \
         schroot \
@@ -67,8 +68,6 @@ execute: |
     if [ "${DEB_BUILD_ARCH}" != "${DEB_HOST_ARCH}" ]; then
       MKSBUILD_OPTS+=("--arch=${DEB_BUILD_ARCH}" "--target=${DEB_HOST_ARCH}")
 
-      # Quirk for the eglexternalplatform-dev build dependency
-      sed -i '/:all,$/n; s/\(eglexternalplatform-dev\)/\1:all/' debian/control
       SCHROOT_NAME="${SCHROOT_NAME}-${DEB_HOST_ARCH}"
 
       if [[ ${DEB_HOST_ARCH} == armhf ]]; then

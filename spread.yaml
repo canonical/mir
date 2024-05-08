@@ -8,7 +8,7 @@ backends:
             - alpine-3.18
             - alpine-3.19
             - alpine-edge
-            - ubuntu-22.04
+            - ubuntu-24.04
             - fedora-39
             - fedora-40
             - fedora-rawhide:
@@ -20,10 +20,10 @@ environment:
     ARCH/ubuntu_armhf: armhf
     DISTRO: ubuntu
     DISTRO/debian_sid: debian
-    RELEASE: jammy
-    RELEASE/ubuntu: jammy
+    RELEASE: noble
+    RELEASE/ubuntu: noble
     RELEASE/ubuntu_mantic: mantic
-    RELEASE/ubuntu_devel: noble
+    RELEASE/ubuntu_devel: oracular
     RELEASE/debian_sid: sid
     PROPOSED: false
     PROPOSED/ubuntu_proposed: true
