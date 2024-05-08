@@ -65,6 +65,7 @@ parts:
     - libfreetype6
     - libgbm1
     - libgles2
+    - libglib2.0-0t64
     - libglibmm-2.4-1t64
     - libglvnd0
     - libgudev-1.0-0
