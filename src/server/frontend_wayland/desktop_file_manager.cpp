@@ -186,8 +186,15 @@ std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_executable_m
     if (!std::filesystem::exists(proc_file))
         return nullptr;
 
+    // First, read the executable name.
     std::string cmdline_call;
     std::getline(std::ifstream(proc_file), cmdline_call, '\0');
 
+    auto file = cache->lookup_by_exec_string(cmdline_call);
+    if (file)
+        return file;
+
+    // Then, try removing the path to just the exe name
+    cmdline_call = std::filesystem::path(cmdline_call).filename();
     return cache->lookup_by_exec_string(cmdline_call);
 }
