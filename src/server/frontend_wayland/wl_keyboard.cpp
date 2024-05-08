@@ -83,8 +83,6 @@ void mf::WlKeyboard::focus_on(WlSurface* surface)
         auto const serial = client->next_serial(nullptr);
         send_enter_event(serial, surface->raw_resource(), &key_state);
         wl_array_release(&key_state);
-        mir::log_debug("Surface (id=%u) has been focused and is refreshing its modifiers",
-            wl_resource_get_id(surface->raw_resource()));
         helper->refresh_modifiers();
     }
 
@@ -112,13 +110,6 @@ void mf::WlKeyboard::send_key(std::shared_ptr<MirKeyboardEvent const> const& eve
 
 void mf::WlKeyboard::send_modifiers(MirXkbModifiers const& modifiers)
 {
-    mir::log_debug(
-        "Sending modifiers event: depressed=0x%08x, latched=0x%08x, locked=0x%08x, effective_layout=0x%08x",
-       modifiers.depressed,
-       modifiers.latched,
-       modifiers.locked,
-       modifiers.effective_layout);
-
     auto const serial = client->next_serial(nullptr);
     send_modifiers_event(
         serial,
