@@ -93,28 +93,26 @@ void ApplicationSelector::advise_delete_window(WindowInfo const& window_info)
         return;
     }
 
-    // If we delete the selected window, we will try to select the next available one
-    auto original_it = it;
-    if (*it == selected)
+    if (window_info.window() == selected)
     {
-        do {
-            it++;
-            if (it == focus_list.end())
-                it = focus_list.begin();
+        // If we delete the selected window, let's select the next window according
+        // to our last traversal scheme.
+        auto next_selected = next(is_last_traversal_within_app);
 
-            if (it == original_it)
-                break;
-        } while (!tools.can_select_window(*it));
+        // If we select the same window again, let's try and select with the other
+        // traversal scheme
+        if (next_selected == window_info.window())
+            next_selected = next(!is_last_traversal_within_app);
 
-        if (it != original_it)
-            selected = *it;
-        else
+        // We can complete here, since this is the window that we decided to select
+        complete();
+
+        // If it still doesn't work, then we have nothing else to select
+        if (next_selected == window_info.window())
             selected = Window();
     }
-    else
-        selected = Window();
 
-    focus_list.erase(original_it);
+    focus_list.erase(it);
 }
 
 auto ApplicationSelector::next(bool within_app) -> Window
@@ -169,6 +167,7 @@ auto ApplicationSelector::get_focused() -> Window
 
 auto ApplicationSelector::advance(bool reverse, bool within_app) -> Window
 {
+    is_last_traversal_within_app = within_app;
     if (focus_list.empty())
     {
         return {};

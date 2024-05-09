@@ -231,7 +231,6 @@ void miral::BasicWindowManager::remove_surface(
 
 void miral::BasicWindowManager::remove_window(Application const& application, miral::WindowInfo const& info)
 {
-    bool const is_active_window{active_window() == info.window()};
     auto const workspaces_containing_window = workspaces_containing(info.window());
 
     {
@@ -247,6 +246,11 @@ void miral::BasicWindowManager::remove_window(Application const& application, mi
 
     policy->advise_delete_window(info);
 
+    // Warning: order is important here. The compositor may decide to
+    // select a different window in advise_delete_window in response
+    // to the selected window closing. Hence, is_active_window will
+    // only be true if they haven't elected to select a new window.
+    bool const is_active_window{active_window() == info.window()};
     info_for(application).remove_window(info.window());
     mru_active_windows.erase(info.window());
     fullscreen_surfaces.erase(info.window());

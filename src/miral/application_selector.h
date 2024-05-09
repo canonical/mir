@@ -92,6 +92,8 @@ private:
     Window selected;
 
     bool is_active_ = false;
+
+    bool is_last_traversal_within_app = false;
 };
 
 }

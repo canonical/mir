@@ -151,7 +151,7 @@ TEST_F(ApplicationSelectorTest, deleting_selected_window_makes_the_next_window_s
     application_selector.advise_focus_gained(window_manager_tools.info_for(windows[1]));
     application_selector.advise_delete_window(window_manager_tools.info_for(windows[1]));
     auto window = application_selector.get_focused();
-    EXPECT_EQ(window, windows[0]);
+    EXPECT_EQ(window, windows[1]);
 }
 
 TEST_F(ApplicationSelectorTest, moving_forward_once_within_an_app_when_there_isnt_another_window_results_in_the_currently_selected_window_remaining_the_same)
