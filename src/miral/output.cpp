@@ -124,7 +124,7 @@ auto miral::Output::attribute(std::string const& key) const -> std::optional<std
 
 auto miral::Output::attributes_map() const -> std::map<std::string const, std::optional<std::string>>
 {
-    return self->custom_attribute;
+    return {self->custom_attribute.begin(), self->custom_attribute.end()};
 }
 
 bool miral::operator==(Output::PhysicalSizeMM const& lhs, Output::PhysicalSizeMM const& rhs)

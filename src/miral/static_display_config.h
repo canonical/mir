@@ -69,7 +69,7 @@ private:
         mir::optional_value<float>  scale;
         mir::optional_value<MirOrientation>  orientation;
         mir::optional_value<int> group_id;
-        std::map<std::string const, std::optional<std::string>> custom_attribute;
+        std::map<std::string, std::optional<std::string>> custom_attribute;
     };
 
     using Port2Config = std::map<std::string, Config>;

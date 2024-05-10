@@ -148,7 +148,7 @@ struct DisplayConfigurationOutput
     std::string name = "OUT-" + std::to_string(id.as_value());
 
     /// Custom attributes (typically set via the .display configuration file
-    std::map<std::string const, std::optional<std::string>> custom_attribute = {};
+    std::map<std::string, std::optional<std::string>> custom_attribute = {};
 
     /** The logical rectangle occupied by the output, based on its position,
         current mode and orientation (rotation) */
@@ -196,7 +196,7 @@ struct UserDisplayConfigurationOutput
     mir::optional_value<geometry::Size>& custom_logical_size;
     std::string const& name;
     /// Custom attributes (typically set by the .display configuration file
-    std::map<std::string const, std::optional<std::string>>& custom_attribute;
+    std::map<std::string, std::optional<std::string>>& custom_attribute;
 
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& main);
     geometry::Rectangle extents() const;
