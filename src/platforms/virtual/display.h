@@ -19,6 +19,7 @@
 
 #include "platform.h"
 #include <mir/graphics/display.h>
+#include <mutex>
 
 namespace mir
 {

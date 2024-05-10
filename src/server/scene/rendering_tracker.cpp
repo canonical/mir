@@ -18,6 +18,7 @@
 #include "mir/scene/surface.h"
 
 #include <algorithm>
+#include <iterator>
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 

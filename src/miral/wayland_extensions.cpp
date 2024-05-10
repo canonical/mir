@@ -30,6 +30,7 @@
 #include <set>
 #include <map>
 #include <vector>
+#include <iterator>
 
 namespace mo = mir::options;
 
