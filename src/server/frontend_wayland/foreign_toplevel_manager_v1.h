@@ -61,6 +61,7 @@ private:
 
     struct GDesktopFileCacheData {
         std::map<std::string, std::shared_ptr<DesktopFile>> id_to_app;
+        std::map<std::string, std::shared_ptr<DesktopFile>> hidden_id_to_app;
         std::map<std::string, std::shared_ptr<DesktopFile>> wm_class_to_app_info_id;
         std::map<std::string, std::shared_ptr<DesktopFile>> exec_to_app;
     };
