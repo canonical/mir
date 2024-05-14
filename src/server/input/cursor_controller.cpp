@@ -24,6 +24,7 @@
 #include "mir/scene/null_surface_observer.h"
 #include "mir/scene/surface.h"
 
+#include <exception>
 #include <mutex>
 #include <map>
 

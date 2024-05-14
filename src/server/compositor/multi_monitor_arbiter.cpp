@@ -18,6 +18,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/frontend/event_sink.h"
 #include <boost/throw_exception.hpp>
+#include <algorithm>
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;

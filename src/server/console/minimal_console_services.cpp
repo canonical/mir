@@ -100,7 +100,7 @@ std::future<std::unique_ptr<mir::Device>> mir::MinimalConsoleServices::acquire_d
     auto const devnode = [](auto const& fd) {
         using namespace boost::iostreams;
         char line_buffer[1024];
-        stream<file_descriptor_source> uevent{fd, file_descriptor_flags::never_close_handle};
+        stream<file_descriptor_source> uevent{static_cast<int>(fd), file_descriptor_flags::never_close_handle};
 
         while (uevent.getline(line_buffer, sizeof(line_buffer)))
         {
