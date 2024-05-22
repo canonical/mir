@@ -16,6 +16,7 @@
 
 #include "miral/input_device_config.h"
 
+#include "mir/abnormal_exit.h"
 #include "mir/input/device.h"
 #include "mir/input/device_capability.h"
 #include "mir/input/input_device_hub.h"
@@ -27,6 +28,7 @@
 #include "mir_toolkit/mir_input_device_types.h"
 #include "mir/log.h"
 
+#include <format>
 #include <optional>
 
 namespace mi = mir::input;
@@ -138,18 +140,29 @@ void miral::add_input_device_configuration(::mir::Server& server)
         }
     };
 
-    // TODO options are not exclusive
+    // TODO options should not be exclusive
     auto convert_to_scroll_mode = [](std::optional<std::string> const& opt_val)
     -> std::optional<MirTouchpadScrollMode>
     {
         if (opt_val)
         {
             if (*opt_val == touchpad_scroll_mode_edge)
+            {
                 return mir_touchpad_scroll_mode_edge_scroll;
-            if (*opt_val == touchpad_scroll_mode_two_finger)
+            }
+            else if (*opt_val == touchpad_scroll_mode_two_finger)
+            {
                 return mir_touchpad_scroll_mode_two_finger_scroll;
+            }
+            else
+            {
+                throw mir::AbnormalExit{std::format("Unrecognised option for {}: {}", touchpad_scroll_mode_opt, *opt_val)};
+            }
         }
-        return std::nullopt;
+        else
+        {
+            return std::nullopt;
+        }
     };
 
     auto to_acceleration_profile = [](std::optional<std::string> const& opt_val)-> std::optional<MirPointerAcceleration>
@@ -157,11 +170,22 @@ void miral::add_input_device_configuration(::mir::Server& server)
         if (opt_val)
         {
             if (*opt_val == acceleration_none)
+            {
                 return mir_pointer_acceleration_none;
-            if (*opt_val == acceleration_adaptive)
+            }
+            else if (*opt_val == acceleration_adaptive)
+            {
                 return mir_pointer_acceleration_adaptive;
+            }
+            else
+            {
+                throw mir::AbnormalExit{std::format("Unrecognised option for {}: {}", mouse_acceleration_opt, *opt_val)};
+            }
         }
-        return std::nullopt;
+        else
+        {
+            return std::nullopt;
+        }
     };
 
     // TODO options are not exclusive
@@ -172,11 +196,22 @@ void miral::add_input_device_configuration(::mir::Server& server)
         {
             auto val = *opt_val;
             if (val == touchpad_click_mode_finger_count)
+            {
                 return mir_touchpad_click_mode_finger_count;
+            }
             if (val == touchpad_click_mode_area)
+            {
                 return mir_touchpad_click_mode_area_to_click;
+            }
+            else
+            {
+                throw mir::AbnormalExit{std::format("Unrecognised option for {}: {}", touchpad_click_mode_opt, *opt_val)};
+            }
         }
-        return std::nullopt;
+        else
+        {
+            return std::nullopt;
+        }
     };
 
     server.add_init_callback([&]()
