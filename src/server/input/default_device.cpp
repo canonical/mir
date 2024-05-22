@@ -167,10 +167,6 @@ void mi::DefaultDevice::apply_touchpad_configuration(MirTouchpadConfig const& co
             BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot apply a touchpad configuration"));
     }
 
-    if (conf.scroll_mode() & mir_touchpad_scroll_mode_button_down_scroll &&
-        conf.button_down_scroll_button() == mi::no_scroll_button)
-        BOOST_THROW_EXCEPTION(std::invalid_argument("No scroll button configured"));
-
     set_touchpad_configuration(conf);
     device_changed_callback(this);
 }

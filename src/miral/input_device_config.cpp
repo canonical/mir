@@ -81,7 +81,9 @@ char const* const touchpad_scroll_speed_scale_opt = "touchpad-scroll-speed-scale
 char const* const touchpad_scroll_mode_opt = "touchpad-scroll-mode";
 
 char const* const touchpad_scroll_mode_two_finger = "two-finger";
+char const* const touchpad_scroll_mode_button_down_scroll = "button-down";
 char const* const touchpad_scroll_mode_edge = "edge";
+char const* const touchpad_scroll_mode_none = "none";
 
 char const* const touchpad_click_mode_opt= "touchpad-click-mode";
 
@@ -116,7 +118,10 @@ void miral::add_input_device_configuration(::mir::Server& server)
                                     mir::OptionType::real);
 
     server.add_configuration_option(touchpad_scroll_mode_opt,
-                                    "Select scroll mode for touchpads: [{two-finger, edge}]",
+                                    std::format("Select scroll mode for touchpads: [{}, {}, {}]",
+                                                touchpad_scroll_mode_edge,
+                                                touchpad_scroll_mode_two_finger,
+                                                touchpad_scroll_mode_button_down_scroll),
                                     mir::OptionType::string);
 
     server.add_configuration_option(touchpad_click_mode_opt,
@@ -140,19 +145,26 @@ void miral::add_input_device_configuration(::mir::Server& server)
         }
     };
 
-    // TODO options should not be exclusive
     auto convert_to_scroll_mode = [](std::optional<std::string> const& opt_val)
     -> std::optional<MirTouchpadScrollMode>
     {
         if (opt_val)
         {
-            if (*opt_val == touchpad_scroll_mode_edge)
+            if (*opt_val == touchpad_scroll_mode_none)
+            {
+                return mir_touchpad_scroll_mode_none;
+            }
+            else if (*opt_val == touchpad_scroll_mode_edge)
             {
                 return mir_touchpad_scroll_mode_edge_scroll;
             }
             else if (*opt_val == touchpad_scroll_mode_two_finger)
             {
                 return mir_touchpad_scroll_mode_two_finger_scroll;
+            }
+            else if (*opt_val == touchpad_scroll_mode_button_down_scroll)
+            {
+                return mir_touchpad_scroll_mode_button_down_scroll;
             }
             else
             {
