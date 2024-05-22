@@ -122,7 +122,7 @@ For each empty box in the matrix above, ensure that the following applications c
     ```sh
     miral-app --console-provider=logind
     ```
-    - You can switch to vt4, sign in
+    - You can switch to vt4 and sign in
     
     ```sh
     miral-app --console-provider=minimal 
