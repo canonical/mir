@@ -22,6 +22,7 @@
 #include "mir/graphics/platform.h"
 #include "utils.h"
 #include "kms_cpu_addressable_display_provider.h"
+#include "owning_c_str.h"
 
 #include "one_shot_device_observer.h"
 
@@ -32,6 +33,7 @@
 #include <sys/sysmacros.h>
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_file_name.hpp>
+#include <xf86drm.h>
 
 namespace mg = mir::graphics;
 namespace mgc = mir::graphics::common;
@@ -272,8 +274,9 @@ namespace
 class StreamProvider : public mg::EGLStreamDisplayProvider
 {
 public:
-    explicit StreamProvider(EGLDisplay dpy)
-        : dpy{dpy}
+    StreamProvider(EGLDisplay dpy, std::string_view devnode)
+        : dpy{dpy},
+          devnode{devnode}
     {
     }
 
@@ -282,21 +285,27 @@ public:
         return dpy;
     }
 
+    auto describe_platform() const -> std::string override
+    {
+        return std::string{"EGLStream on "} + devnode;
+    }
 private:
     EGLDisplay const dpy;
+    std::string const devnode;
 };
 }
 
 auto mge::DisplayPlatform::maybe_create_provider(DisplayProvider::Tag const& type_tag)
     -> std::shared_ptr<DisplayProvider>
 {
+    CStr devnode{drmGetDeviceNameFromFd2(drm_node)};
     if (dynamic_cast<EGLStreamDisplayProvider::Tag const*>(&type_tag))
     {
-        return std::make_shared<StreamProvider>(display);
+        return std::make_shared<StreamProvider>(display, devnode.get());
     }
     if (dynamic_cast<mg::CPUAddressableDisplayProvider::Tag const*>(&type_tag))
     {
-        return std::make_shared<mg::CPUAddressableDisplayProvider>();
+        return std::make_shared<mg::CPUAddressableDisplayProvider>(std::string{"eglstream-kms: KMS dumb buffers on "} + devnode.get());
     }
     return nullptr;
 }

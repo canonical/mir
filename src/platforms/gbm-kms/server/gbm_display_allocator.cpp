@@ -16,8 +16,10 @@
 
 #include "gbm_display_allocator.h"
 #include "kms_framebuffer.h"
+#include "owning_c_str.h"
 
 #include <drm_fourcc.h>
+#include <xf86drm.h>
 #include <xf86drmMode.h>
 #include <gbm.h>
 
@@ -212,3 +214,8 @@ auto mgg::GBMDisplayAllocator::make_surface(DRMFormat format, std::span<uint64_t
     return std::make_unique<GBMSurfaceImpl>(fd, gbm.get(), size, format, modifiers);
 }
 
+auto mgg::GBMDisplayAllocator::describe_platform() const -> std::string
+{
+    CStr devnode{drmGetDeviceNameFromFd2(fd)};
+    return std::string{"GBM on "} + devnode.get();
+}

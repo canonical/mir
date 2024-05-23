@@ -35,6 +35,7 @@
 #include "mir/renderer/gl/context.h"
 #include "mir/graphics/drm_formats.h"
 #include "mir/graphics/egl_error.h"
+#include "owning_c_str.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/get_error_info.hpp>
@@ -497,28 +498,13 @@ auto mgg::GBMDisplayProvider::gbm_device() const -> std::shared_ptr<struct gbm_d
 auto mgg::GBMDisplayProvider::is_same_device(mir::udev::Device const& render_device) const -> bool
 {
 #ifndef MIR_DRM_HAS_GET_DEVICE_FROM_DEVID
-    class CStrFree
-    {
-    public:
-        void operator()(char* str)
-        {
-            if (str)
-            {
-                free(str);
-            }
-        }
-    };
-
-    std::unique_ptr<char[], CStrFree> primary_node{drmGetPrimaryDeviceNameFromFd(fd)};
-    std::unique_ptr<char[], CStrFree> render_node{drmGetRenderDeviceNameFromFd(fd)};
-
-    mir::log_debug("Checking whether %s is the same device as (%s, %s)...", render_device.devnode(), primary_node.get(), render_node.get());
+    CStr primary_node{drmGetPrimaryDeviceNameFromFd(fd)};
+    CStr render_node{drmGetRenderDeviceNameFromFd(fd)};
 
     if (primary_node)
     {
         if (strcmp(primary_node.get(), render_device.devnode()) == 0)
         {
-            mir::log_debug("\t...yup.");
             return true;
         }
     }
@@ -526,13 +512,9 @@ auto mgg::GBMDisplayProvider::is_same_device(mir::udev::Device const& render_dev
     {
         if (strcmp(render_node.get(), render_device.devnode()) == 0)
         {
-            mir::log_debug("\t...yup.");
             return true;
         }
     }
-
-    mir::log_debug("\t...nope.");
-
     return false;
 #else
     drmDevicePtr us{nullptr}, them{nullptr};
@@ -547,4 +529,11 @@ auto mgg::GBMDisplayProvider::is_same_device(mir::udev::Device const& render_dev
 
     return result;
 #endif
+}
+
+auto mgg::GBMDisplayProvider::describe_platform() const -> std::string
+{
+    CStr name{drmGetDeviceNameFromFd(fd)};
+
+    return std::string{"GBM on "} + name.get();
 }

@@ -37,6 +37,8 @@ public:
         geometry::Size size);
 
     auto get_egl_display() -> EGLDisplay override;
+
+    auto describe_platform() const -> std::string override;
 private:
     EGLDisplay const dpy;
 };
@@ -49,6 +51,8 @@ public:
 
     auto alloc_framebuffer(GLConfig const& config, EGLContext share_context)
         -> std::unique_ptr<EGLFramebuffer> override;
+
+    auto describe_platform() const -> std::string override;
 
     class Framebuffer : public GenericEGLDisplayAllocator::EGLFramebuffer
     {

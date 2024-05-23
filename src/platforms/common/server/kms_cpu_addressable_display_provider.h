@@ -41,6 +41,8 @@ public:
         -> std::unique_ptr<MappableFB> override;
 
     auto output_size() const -> geometry::Size override;
+
+    auto describe_platform() const -> std::string override;
 private:
     explicit CPUAddressableDisplayAllocator(mir::Fd drm_fd, geometry::Size size);
 

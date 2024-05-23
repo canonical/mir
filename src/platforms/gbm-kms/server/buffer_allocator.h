@@ -94,7 +94,8 @@ public:
         std::shared_ptr<common::EGLContextExecutor> egl_delegate,
         std::shared_ptr<DMABufEGLProvider> dmabuf_provider,
         EGLDisplay dpy,
-        EGLContext ctx);
+        EGLContext ctx,
+        std::string devnode);
 
     auto make_framebuffer_provider(DisplaySink& sink)
         -> std::unique_ptr<FramebufferProvider> override;
@@ -115,6 +116,7 @@ private:
     EGLContext const ctx;
     std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
+    std::string const devnode;
 };
 }
 }

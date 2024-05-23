@@ -102,6 +102,11 @@ public:
         }
         next_buffer = std::move(buffer);
     }
+
+    auto describe_platform() const -> std::string override
+    {
+        return "screencast virtual allocator";
+    }
 private:
     std::shared_ptr<mrs::WriteMappableBuffer> next_buffer;
 };
@@ -134,6 +139,11 @@ public:
     auto transformation() const -> glm::mat2 override
     {
         return glm::mat2{};
+    }
+
+    auto describe_output() const -> std::string override
+    {
+        return "screenshot virtual output";
     }
 
 protected:
