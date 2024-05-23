@@ -51,6 +51,7 @@
 #include <GLES2/gl2ext.h>
 
 #include <algorithm>
+#include <gbm.h>
 #include <optional>
 #include <stdexcept>
 #include <system_error>
@@ -308,6 +309,7 @@ public:
         {
             BOOST_THROW_EXCEPTION(mg::egl_error("eglSwapBuffers failed"));
         }
+        mir::log_debug("eglSwapBuffers called on surface %p (has_free_buffers: %s)", static_cast<void*>(static_cast<gbm_surface*>(*surface)), gbm_surface_has_free_buffers(*surface) ? "true" : "false");
         return surface->claim_framebuffer();
     }
 

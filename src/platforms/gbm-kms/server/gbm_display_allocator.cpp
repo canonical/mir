@@ -21,6 +21,9 @@
 #include <xf86drmMode.h>
 #include <gbm.h>
 
+#define MIR_LOG_COMPONENT "gbm-allocator"
+#include "mir/log.h"
+
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
@@ -186,12 +189,19 @@ public:
 
         LockedFrontBuffer bo{
             gbm_surface_lock_front_buffer(surface.get()),
-            [shared_surface = surface](gbm_bo* bo) { gbm_surface_release_buffer(shared_surface.get(), bo); }};
+            [shared_surface = surface](gbm_bo* bo) 
+            { 
+                gbm_surface_release_buffer(shared_surface.get(), bo);
+                mir::log_debug("Released front BO %p on surface %p", static_cast<void*>(bo), static_cast<void*>(shared_surface.get()));
+            }
+        };
 
         if (!bo)
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to acquire GBM front buffer"}));
         }
+
+        mir::log_debug("Acquired front BO %p on surface %p", static_cast<void*>(bo.get()), static_cast<void*>(surface.get()));
 
         auto fb = GBMBoFramebuffer::framebuffer_for_frontbuffer(drm_fd, std::move(bo));
         if (!fb)
