@@ -5,63 +5,69 @@ do not fail to consider how your additions may be automated in the future, as
 this is the end goal of our release testing.
 
 Note that all of these tests must be run _after_ a release branch is created
-in the Mir repository, such that the right repositories are updated beforehand.
+in the Mir repository, such that the repository is updated beforehand.
 
 ## Setup
+We will run the test plan on the `miral-app` test compositor.
+
 1. Install mir from the release candidate PPA
-    ```
+    ```sh
     sudo add-apt-repository --update ppa:mir-team/rc
     sudo apt install mir-demos mir-platform-graphics-virtual mir-graphics-drivers-desktop mir-test-tools
     ```
-2. Install the `mir-test-tools` from the `22/beta` _or_ `24/beta` track (depending
-   on which you are trying to test):
-    ```
-    sudo snap refresh
-    sudo snap install mir-test-tools --channel=24/beta
-    # ... or ...
-    sudo snap install mir-test-tools --channel=22/beta
-    ```
-3. Install `miriway` from the latest `beta` track:
-    ```
-    sudo snap refresh
-    sudo snap install miriway --classic --chanel=latest/beta
-    ```
+2. Confirm that you can run `miral-app`
 
 ## Tests
-Manual tests must be performed across a combination of different display
-platforms and different Ubuntu releases. It is important also that we test both
-the `snap` and the `non-snap` version for each platform.
+Each test must be performed across a combination of different display
+platforms and different Ubuntu releases. The following matrix provides
+the environments in which we need to test:
 
-|                                | core24 snap | 24.04 LTS | 24.10 |
-|--------------------------------|-------------|----------|------------|
-| gbm-kms                        |             |          |            |
-| eglstream-kms                  |             |          |            |
-| eglstream-kms + gbm-kms hybrid |             |          |            |
-| x11                        |             |          |            |
-| wayland                    |             |          |            |
-| virtual                        |             |          |            |
+|                                | 24.04    | 24.10      |
+|--------------------------------|----------|------------|
+| gbm-kms                        |          |            |
+| eglstream-kms                  |          |            |
+| eglstream-kms + gbm-kms hybrid |          |            |
+| x11                            |          |            |
+| wayland                        |          |            |
+| virtual                        |          |            |
 
 ### Platform Selection
-For the following tests, we must test that the compositor can start with the correct
-display platform chosen. **Note that this section should NOT be run for each platform
-by nature**. The remaining test sections _**should**_ be run for each platform
-in the matrix.
+The first set of tests confirms that platforms are selected appropriately.
 
-1. Test that platforms are selected appropriately
-   - When you are not on an Nvidia platform, verify that `gbm-kms` is selected
-     for each output when the compositor is _not_ running in a hosted environment.
-   - When you have an Nvidia card _and_ you are using Nvidia drivers, then
-     the `eglstream-kms` platform should be selected for that particular output.
-   - When you are hosted by an X compositor, the `x11` platform will be chosen
+> Note that this section should NOT be run for each platform
+> by nature. The remaining test sections _**should**_ be run for each platform
+> in the matrix.
 
-2. Platforms can be forced to run on a particular display platform if the environment supports it.
-   Platforms are specified with `--platform-display-libs=mir:<platform_name>`
-   - To specify `egl-stream-kms`, you must have an Nvidia card with proprietary drivers
-   - You can force an Nvidia card to use `gbm-kms`
-   - To specify `x11`, you must be on a hosted platform
-   - To specify `wayland`, you must be on a hosted wayland platform
+To verify the platform in each instance, do:
 
-3. Check that the virtual platform can run and you can connect to it via a VNC:
+```
+miral-app | grep "Selected display driver:"
+```
+
+The tests are as follows:
+
+1. When NOT on an Nvidia platform and NOT in a hosted environment,
+   then `mir:gbm-kms` is selected
+2. When you have an Nvidia card connected to an output _and_ the system
+   is using Nvidia's proprietary drivers, then `mir:eglstream-kms`
+   is selected
+3. When you are running the compositor hosted in a session that supports X11,
+   then `mir:x11` is selected
+4. When you have an Nvidia card connected to an output _and_ the system
+   is using Nvidia's proprietary drivers, you may force Mir to use the
+   `mir:gbm-kms` platform using:
+   ```
+   miral-app --platform-display-libs=mir:gbm-kms
+   ```
+   Verify that `mir:gbm-kms` is selected.
+5. When you are running the compositor hosted in a session that supports wayland
+   _and_ you force Mir to use the `mir:wayland` platform using:
+   ```
+   miral-app --platform-display-libs=mir:wayland --wayland-host=$WAYLAND_DISPLAY
+   ```
+   then `mir:wayland` is selected.
+
+6. Check that the virtual platform can run and you can connect to it via a VNC:
    ```sh
    WAYLAND_DISPLAY=wayland-1 miral-app --platform-display-lib=mir:virtual \
        --virtual-output=1280x1024 \
@@ -87,9 +93,6 @@ For each empty box in the matrix above, ensure that the following applications c
     kate
    
     # Then...
-    qtwayland5
-   
-    # Finally..
     qterminal
     ```
 2. Test that `weston-terminal` can be started and can receive input:
@@ -108,36 +111,39 @@ For each empty box in the matrix above, ensure that the following applications c
    gnome-terminal
    ```
 
-### Mir Configuration Options
+### Mir Console Providers
 
-1. Run any Mir compositor with different console providers and ensure that the compositor can start:
-    ```sh
-    miral-app --console-provider=vt --vt=4
-    ```
-    - This requires running with root privileges 
-    - You need to ensure that `XDG_RUNTIME_DIR` is set in the environment. If using `sudo`, 
-      it might strip this out; running something like `sudo env XDG_RUNTIME_DIR=/run/user/1000 miral-shell ...`
-      will ensure this is set. 
-    
-    ```sh
-    miral-app --console-provider=logind
-    ```
-    - You can switch to vt4 and sign in
-    
-    ```sh
-    miral-app --console-provider=minimal 
-    ```
-    - This is used when all others fail
-    - This does not provide VT switching capabilities (Ctrl-Alt-F1, etc) 
-    - This is _only_ used for the `gbm-x11`, `gbm-wayland`, and `virtual` platforms 
+Run with different console providers and ensure that the compositor can start:
 
-2. Run `miral-app` with different window managers and confirm that the window management
-   styles work as expected:
-    ```sh
-    miral-app --window-manager=floating # traditional floating window manager
-    miral-app --window-manager=tiling # a tiling window manager
-    miral-app --kiosk # a typical kiosk
-    ```
+```sh
+miral-app --console-provider=vt --vt=4
+```
+- This requires running with root privileges 
+- You need to ensure that `XDG_RUNTIME_DIR` is set in the environment. If using `sudo`, 
+    it might strip this out; running something like `sudo env XDG_RUNTIME_DIR=/run/user/1000 miral-shell ...`
+    will ensure this is set. 
+
+```sh
+miral-app --console-provider=logind
+```
+- You can switch to vt4 and sign in
+
+```sh
+miral-app --console-provider=minimal 
+```
+- This is used when all others fail
+- This does not provide VT switching capabilities (Ctrl-Alt-F1, etc) 
+- This is _only_ used for the `gbm-x11`, `gbm-wayland`, and `virtual` platforms 
+
+## Window Manager Examples
+Run with different window managers and confirm that the window management
+styles work as expected:
+
+```sh
+miral-app --window-manager=floating # traditional floating window manager
+miral-app --window-manager=tiling # a tiling window manager
+miral-app -kiosk # a typical kiosk
+```
 
 ### Run Compositors that are Built for Testing
 1. Run the `mir-test-smoke-runner` and confirm that the final output is:
