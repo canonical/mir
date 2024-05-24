@@ -112,7 +112,7 @@ For each empty box in the matrix above, ensure that the following applications c
    ```
 
 
-5. Test that `X11` apps can be started and can receive input when `XWayland` is supported:
+5. Test that `X11` apps can be started and can receive input:
     ```sh
     sudo apt install x11-apps
     
@@ -126,30 +126,7 @@ For each empty box in the matrix above, ensure that the following applications c
     xcalc
     ```
 
-6. (X11) Test that `mattermost` can be opened and resized. This was first encountered in
-   [#2509](https://github.com/canonical/mir/issues/2509). To test:
-   
-   1. Run `miral-app` with a floating window manager
-   2. `sudo snap install mattermost-desktop`
-   3. `mattermost-desktop`
-   4. Resize mattermost
-   5. Confirm that the window is resized correctly
-
-7. (X11) You will need a CLion account for this one. Test that `clion` menus can be interacted
-   with. This was first encountered in [#2326](https://github.com/canonical/mir/issues/2326),
-   [#3107](https://github.com/canonical/mir/issues/3107),
-   [#3024](https://github.com/canonical/mir/issues/3024). 
-   
-   1. Run `miral-app` with a floating window manager
-   2. `sudo snap install clion`
-   3. `clion`
-   4. Open up a clion project
-   5. Open up clion's menus on top and click various items in them.
-      Confirm that clicking different options works properly.
-   6. Open up clion's settings menu and confirm that you can drag it to reposition it
-   7. Open up the `git` indicator in the bottom right corner and confirm that you can
-      interact with the popup
-
+### Mir Console Providers
 Run with different console providers and ensure that the compositor can start:
 
 ```sh
@@ -172,7 +149,7 @@ miral-app --console-provider=minimal
 - This does not provide VT switching capabilities (Ctrl-Alt-F1, etc) 
 - This is _only_ used for the `gbm-x11`, `gbm-wayland`, and `virtual` platforms 
 
-## Window Manager Examples
+### Window Manager Examples
 Run with different window managers and confirm that the window management
 styles work as expected:
 
@@ -216,74 +193,28 @@ miral-app -kiosk # a typical kiosk
     echo All tests passed
    ```
 
-## Display Configuration
-- Validate that changing the scale of an output via the display configuration
-  works properly. This was first encounted in [#3165](https://github.com/canonical/mir/issues/3165).
-  To test:
-    1. Use `gbm-kms` as the display platform and start a Mir compositor with the `--display-config static=$FILENAME` flag
-    2. Open up `$FILENAME` and change the scale of an output. Save the file.
-    3. Confirm that the scene on that output is _not_ misrendered
-
-- Validate that different orientations in the display config result in the
-  correct rotation being applied to the final image. This issue was first
-  encountered in [this issue](https://github.com/canonical/mir/issues/3185). To test:
-    1. Start a Mir compositor with the `--display-config static=$FILENAME` flag
-    2. Set orientation of your outputs in `$FILENAME` [normal, left, right, inverted]
-    3. Confirm that the output has the correctly rotated content
-
-- Validate that custom attrbutes attributes can be provided in the display configuration. This
-  was first encountered in [#172](https://github.com/canonical/ubuntu-frame/issues/172). To
-  test:
-  1. Start a Mir compositor with the `--display-config static=$FILENAME` flag
-  2. In the configuration, have a custom attribute, e.g. `snap-name` in the following example:
-     ```yaml
-     # ...
-      HDMI-A-4:
-        state: enabled
-        mode: 2560x1440@60.0
-        position: [2560, 0]
-        orientation: normal
-        scale: 1
-        group: 0
-        snap-name: mir-kiosk-neverputt
-     ```
-  3. Check the logs of your compositor. On `ubuntu-frame` you can do:
-     ```sh
-     snap logs ubuntu-frame -n 50
-     ```
-  4. Validate that you see your custom attribute when the display is logged
-
-## Window Management
+### Window Management
 - Confirm that clip areas work for windows. This issue was first encountered in
   [#3201](https://github.com/canonical/mir/issues/3201). To test:
     1. Create a test compositor that clips a window to only contain its rectangle
-    2. Move that window all over the screen and confirm that it remains unclipped
+    2. Move that window all over the screen and confirm that it remains properly clipped
 
-## Misc
+### Misc
 - Confirm that the system is restored properly after a wake. This issue was first
   encountered in [#3238](https://github.com/canonical/mir/issues/3238). To test:
     1. Sleep your session
     2. Wake your session up
     3. Confirm that the compositor is still running and that the contents on the
        screen(s) match what should be there
+    
+    This would be automated by https://github.com/canonical/mir-ci/issues/126.
 
 - Confirm that cursor speeds are consistent. This issue was first encountered in
   [#3205](https://github.com/canonical/mir/issues/3205). To test:
     1. Move the cursor through many different surfaces, including Wayland and X11
        windows
 
-- Confirm that you can exit `miral-app` over VNC. This issue was first encountered in
-  [#3070](https://github.com/canonical/mir/issues/3070). To test:
-    1. Run:
-        ```
-        miral-app --add-wayland-extensions=zwlr_screencopy_manager_v1:zwlr_virtual_pointer_manager_v1:zwp_virtual_keyboard_manager_v1 --startup-apps=ubuntu-frame-vnc
-        ```
-    2. Run:
-        ```sh
-        gvncviewer localhost
-        ```
-    3. Enter `Ctrl + Alt + Backspace`
-    4. Confirm that the compositor quit
+    This would be automated by https://github.com/canonical/mir-ci/issues/127.
 
 - Confirm that the keyboard works after you have disconnected and reconnected it. This
   issue was first encountere in [#3149](https://github.com/canonical/mir/issues/3149).
