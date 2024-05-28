@@ -53,21 +53,14 @@ The tests are as follows:
    is selected
 3. When you are running the compositor hosted in a session that supports X11,
    then `mir:x11` is selected
-4. When you have an Nvidia card connected to an output _and_ the system
-   is using Nvidia's proprietary drivers, you may force Mir to use the
-   `mir:gbm-kms` platform using:
-   ```
-   miral-app --platform-display-libs=mir:gbm-kms
-   ```
-   Verify that `mir:gbm-kms` is selected.
-5. When you are running the compositor hosted in a session that supports wayland
+4. When you are running the compositor hosted in a session that supports wayland
    _and_ you force Mir to use the `mir:wayland` platform using:
    ```
-   miral-app --platform-display-libs=mir:wayland --wayland-host=$WAYLAND_DISPLAY
+   miral-app --wayland-host=$WAYLAND_DISPLAY
    ```
    then `mir:wayland` is selected.
 
-6. Check that the virtual platform can run and you can connect to it via a VNC:
+5. Check that the virtual platform can run and you can connect to it via a VNC:
    ```sh
    WAYLAND_DISPLAY=wayland-1 miral-app --platform-display-lib=mir:virtual \
        --virtual-output=1280x1024 \
