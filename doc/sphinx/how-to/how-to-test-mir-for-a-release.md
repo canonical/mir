@@ -202,22 +202,27 @@ miral-app -kiosk # a typical kiosk
 ### Misc
 - Confirm that the system is restored properly after a wake. This issue was first
   encountered in [#3238](https://github.com/canonical/mir/issues/3238). To test:
-    1. Sleep your session
-    2. Wake your session up
-    3. Confirm that the compositor is still running and that the contents on the
+    1. Have a setup with two monitors
+    2. Configure the display so that it is set to clone:
+       ```
+       miral-app --display-config=clone
+       ```
+    2. Sleep your session
+    3. Wake your session up
+    4. Confirm that the compositor is still running and that the contents on the
        screen(s) match what should be there
     
     This would be automated by https://github.com/canonical/mir-ci/issues/126.
 
 - Confirm that cursor speeds are consistent. This issue was first encountered in
   [#3205](https://github.com/canonical/mir/issues/3205). To test:
-    1. Move the cursor through many different surfaces, including Wayland and X11
-       windows
+    1. Move the cursor around the screen
+    2. Confirm that the cursor does not experience significant slow down
 
     This would be automated by https://github.com/canonical/mir-ci/issues/127.
 
 - Confirm that the keyboard works after you have disconnected and reconnected it. This
-  issue was first encountere in [#3149](https://github.com/canonical/mir/issues/3149).
+  issue was first encountered in [#3149](https://github.com/canonical/mir/issues/3149).
   Please try this with multiple different `--console-provider=<PROVIDER>` arguments.
   To test:
     1. Have a keyboard that is plugged in
