@@ -19,8 +19,8 @@ We will run the test plan on the `miral-app` test compositor.
 
 ## Tests
 Each test must be performed across a combination of different display
-platforms and different Ubuntu releases. The following matrix provides
-the environments in which we need to test:
+platforms and Ubuntu releases. The following matrix provides the environments
+in which we need to test:
 
 |                                | 24.04    | 24.10      |
 |--------------------------------|----------|------------|
@@ -31,20 +31,16 @@ the environments in which we need to test:
 | wayland                        |          |            |
 | virtual                        |          |            |
 
-### Platform Selection
-The first set of tests confirms that platforms are selected appropriately.
 
-> Note that this section should NOT be run for each platform
-> by nature. The remaining test sections _**should**_ be run for each platform
-> in the matrix.
+To check which display platform we've selected, we can run `miral-app`
+and grep for the platform string as follows:
 
-To verify the platform in each instance, do:
-
-```
+```sh
 miral-app | grep "Selected display driver:"
 ```
 
-The tests are as follows:
+Given the types of outputs that you have configured in your environment,
+you should encounter one of the following scenarios for each output:
 
 1. When NOT on an Nvidia platform and NOT in a hosted environment,
    then `mir:gbm-kms` is selected
@@ -74,6 +70,11 @@ The tests are as follows:
    ```sh
    gvncviewer localhost
    ```
+
+### Run Compositors that are Built for Testing
+1. Run the `mir-test-smoke-runner` and confirm that the final output is:
+   `Smoke testing complete with returncode 0`.
+
 
 ### Applications
 For each empty box in the matrix above, ensure that the following applications can start
@@ -146,36 +147,7 @@ miral-app --window-manager=tiling # a tiling window manager
 miral-app -kiosk # a typical kiosk
 ```
 
-### Run Compositors that are Built for Testing
-1. Run the `mir-test-smoke-runner` and confirm that the final output is:
-   `Smoke testing complete with returncode 0`.
-2. Run the tests found in `mir-test-tools` and confirm the contents on the screen. A useful script for doing this is:
-   ```bash
-    #! /bin/bash
-
-    set -e
-   
-    if [ -x "$(command -v fgconsole)" ]
-    then
-        trap "sudo chvt $(sudo fgconsole)" EXIT
-    fi
-   
-    if [ -v DISPLAY ]
-    then
-        snap run mir-test-tools.gtk3-test
-        snap run mir-test-tools.qt-test
-        snap run mir-test-tools.sdl2-test
-        snap run mir-test-tools.smoke-test
-        snap run mir-test-tools.performance-test
-        snap run mir-test-tools.mir-flutter-app
-    fi
-   
-    sudo snap run mir-test-tools.gtk3-test
-    sudo snap run mir-test-tools.qt-test
-    sudo snap run mir-test-tools.sdl2-test
-    sudo snap run mir-test-tools.smoke-test
-    sudo snap run mir-test-tools.performance-test
-    sudo snap run mir-test-tools.mir-flutter-app
-   
-    echo All tests passed
-   ```
+## Testing Downstream Snaps (e.g. Ubuntu Frame and Miriway)
+1. Run your downstream snap
+2. Run the tests found in `mir-test-tools` and confirm the contents on the screen.
+   A useful script for doing can be found in `mir-test-tools.selftest`.
