@@ -49,7 +49,7 @@ if (DRM_VERSION VERSION_GREATER 2.4.107)
       PkgConfig::DRM)
 endif()
 
-find_path(DRM_FOURCC_INCLUDE_DIR NAMES "drm_fourcc.h" PATH_SUFFIXES "libdrm" "" HINTS ${DRM_INCLUDE_DIRS})
+find_path(DRM_FOURCC_INCLUDE_DIR NAMES "drm_fourcc.h" PATH_SUFFIXES "libdrm" "" HINTS ${DRM_INCLUDE_DIRS} REQUIRED NO_DEFAULT_PATHS)
 
 add_custom_command(
   OUTPUT
