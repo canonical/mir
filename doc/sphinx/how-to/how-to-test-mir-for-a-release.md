@@ -105,7 +105,15 @@ For each empty box in the matrix above, ensure that the following applications c
     sudo apt install glmark2-wayland
     glmark2-wayland
     ```
-4. Test that `gnome-terminal` can be started and can receive input:
+4. (If using gbm-kms on a system with multiple GPUs) Test hybrid support with `glmark2-wayland`
+    ```sh
+    sudo apt install glmark2-wayland
+    glmark2-wayland
+    DRI_PRIME=0 glmark2-wayland
+    DRI_PRIME=1 glmark2-wayland
+    ```
+    (If more than 2 GPUs, may do `DRI_PRIME=2 glmark2-wayland`, etc)
+5. Test that `gnome-terminal` can be started and can receive input:
    ```sh
    sudo apt install gnome-terminal
    gnome-terminal
