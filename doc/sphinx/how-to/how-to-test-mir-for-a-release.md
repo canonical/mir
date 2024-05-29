@@ -17,7 +17,7 @@ We will run the test plan on the `miral-app` test compositor.
     ```
 2. Confirm that you can run `miral-app`
 
-## Tests
+## Testing each graphics platform
 Each test must be performed across a combination of different display
 platforms and Ubuntu releases. The following matrix provides the environments
 in which we need to test:
@@ -51,15 +51,14 @@ you should encounter one of the following scenarios for each output:
    then `mir:x11` is selected
 4. When you are running the compositor hosted in a session that supports wayland
    _and_ you force Mir to use the `mir:wayland` platform using:
-   ```
-   miral-app --wayland-host=$WAYLAND_DISPLAY
-   ```
+    ```
+    miral-app --wayland-host=$WAYLAND_DISPLAY
+    ```
    then `mir:wayland` is selected.
 
 5. Check that the virtual platform can run and you can connect to it via a VNC:
    ```sh
-   WAYLAND_DISPLAY=wayland-1 miral-app --platform-display-lib=mir:virtual \
-       --virtual-output=1280x1024 \
+   MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual MIR_SERVER_VIRTUAL_OUTPUT=1280x1024 WAYLAND_DISPLAY=wayland-1 miral-app \
        --add-wayland-extension=zwp_virtual_keyboard_manager_v1:zwlr_virtual_pointer_manager_v1:zwlr_screencopy_manager_v1
    ```
    After, in a separate VT, connect to the VNC:
@@ -71,12 +70,28 @@ you should encounter one of the following scenarios for each output:
    gvncviewer localhost
    ```
 
-### Run Compositors that are Built for Testing
-1. Run the `mir-test-smoke-runner` and confirm that the final output is:
-   `Smoke testing complete with returncode 0`.
+## The smoke tests
+These verify our demo clients work with `mir_demo_server` and should be run for
+each platform on each of the ubuntu series (see previous section).
+
+1. Decide which platform that you want to run the smoke tests on (e.g. gbm-kms,
+   virtual, X11, etc.)
+2. Run `mir-smoke-test-runner` like so:
+    ```sh
+    MIR_SERVER_PLATFORM_DISPLAY_LIBS=<YOUR_PLATFORM> mir-smoke-test-runner
+    ```
+
+    For example, if I wanted to run the tests on the virtual platform, I would run:
+
+    ```sh
+    MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual MIR_SERVER_VIRTUAL_OUTPUT=1280x1024 mir-smoke-test-runner
+    ```
+
+    (Note that you do **not** have to connect via VNC for the smoke tests to run with the virtual platform.)
+3. Confirm that the final output of the test is: `Smoke testing complete with returncode 0`.
 
 
-### Applications
+## Applications
 For each empty box in the matrix above, ensure that the following applications can start
 
 1. Test that the following QT Wayland applications can be started and can receive input:
@@ -113,7 +128,7 @@ For each empty box in the matrix above, ensure that the following applications c
    gnome-terminal
    ```
 
-### Mir Console Providers
+## Mir Console Providers
 
 Run with different console providers and ensure that the compositor can start:
 
@@ -150,4 +165,8 @@ miral-app -kiosk # a typical kiosk
 ## Testing Downstream Snaps (e.g. Ubuntu Frame and Miriway)
 1. Run your downstream snap
 2. Run the tests found in `mir-test-tools` and confirm the contents on the screen.
-   A useful script for doing can be found in `mir-test-tools.selftest`.
+   A useful script for running all of the tests at once is in the snap:
+
+   ```sh
+   /snap/mir-test-tools/current/bin/selftest
+   ```
