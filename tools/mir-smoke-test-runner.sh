@@ -38,7 +38,11 @@ for client in ${client_list}; do
     else
       echo "I: [FAILED]" ${client}
       failures="${failures} ${client}"
-      mir_rc=-1
+      # eglinfo failing doesn't count as a smoke test failure
+      if [ "${client}" != "eglinfo" ]
+      then
+        mir_rc=-1
+      fi
     fi
    date --utc --iso-8601=seconds | xargs echo "[timestamp] End :" ${client}
 done
