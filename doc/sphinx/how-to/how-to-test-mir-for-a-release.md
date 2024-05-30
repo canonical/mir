@@ -17,10 +17,10 @@ We will run the test plan on the `miral-app` test compositor.
     ```
 2. Confirm that you can run `miral-app`
 
-## Tests
+## Testing each graphics platform
 Each test must be performed across a combination of different display
-platforms and different Ubuntu releases. The following matrix provides
-the environments in which we need to test:
+platforms and Ubuntu releases. The following matrix provides the environments
+in which we need to test:
 
 |                                | 24.04    | 24.10      |
 |--------------------------------|----------|------------|
@@ -31,20 +31,16 @@ the environments in which we need to test:
 | wayland                        |          |            |
 | virtual                        |          |            |
 
-### Platform Selection
-The first set of tests confirms that platforms are selected appropriately.
 
-> Note that this section should NOT be run for each platform
-> by nature. The remaining test sections _**should**_ be run for each platform
-> in the matrix.
+To check which display platform we've selected, we can run `miral-app`
+and grep for the platform string as follows:
 
-To verify the platform in each instance, do:
-
-```
+```sh
 miral-app | grep "Selected display driver:"
 ```
 
-The tests are as follows:
+Given the types of outputs that you have configured in your environment,
+you should encounter one of the following scenarios for each output:
 
 1. When NOT on an Nvidia platform and NOT in a hosted environment,
    then `mir:gbm-kms` is selected
@@ -53,24 +49,16 @@ The tests are as follows:
    is selected
 3. When you are running the compositor hosted in a session that supports X11,
    then `mir:x11` is selected
-4. When you have an Nvidia card connected to an output _and_ the system
-   is using Nvidia's proprietary drivers, you may force Mir to use the
-   `mir:gbm-kms` platform using:
-   ```
-   miral-app --platform-display-libs=mir:gbm-kms
-   ```
-   Verify that `mir:gbm-kms` is selected.
-5. When you are running the compositor hosted in a session that supports wayland
+4. When you are running the compositor hosted in a session that supports wayland
    _and_ you force Mir to use the `mir:wayland` platform using:
-   ```
-   miral-app --platform-display-libs=mir:wayland --wayland-host=$WAYLAND_DISPLAY
-   ```
+    ```
+    miral-app --wayland-host=$WAYLAND_DISPLAY
+    ```
    then `mir:wayland` is selected.
 
-6. Check that the virtual platform can run and you can connect to it via a VNC:
+5. Check that the virtual platform can run and you can connect to it via a VNC:
    ```sh
-   WAYLAND_DISPLAY=wayland-1 miral-app --platform-display-lib=mir:virtual \
-       --virtual-output=1280x1024 \
+   MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual MIR_SERVER_VIRTUAL_OUTPUT=1280x1024 WAYLAND_DISPLAY=wayland-1 miral-app \
        --add-wayland-extension=zwp_virtual_keyboard_manager_v1:zwlr_virtual_pointer_manager_v1:zwlr_screencopy_manager_v1
    ```
    After, in a separate VT, connect to the VNC:
@@ -82,7 +70,28 @@ The tests are as follows:
    gvncviewer localhost
    ```
 
-### Applications
+## The smoke tests
+These verify our demo clients work with `mir_demo_server` and should be run for
+each platform on each of the ubuntu series (see previous section).
+
+1. Decide which platform that you want to run the smoke tests on (e.g. gbm-kms,
+   virtual, X11, etc.)
+2. Run `mir-smoke-test-runner` like so:
+    ```sh
+    MIR_SERVER_PLATFORM_DISPLAY_LIBS=<YOUR_PLATFORM> mir-smoke-test-runner
+    ```
+
+    For example, if I wanted to run the tests on the virtual platform, I would run:
+
+    ```sh
+    MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual MIR_SERVER_VIRTUAL_OUTPUT=1280x1024 mir-smoke-test-runner
+    ```
+
+    (Note that you do **not** have to connect via VNC for the smoke tests to run with the virtual platform.)
+3. Confirm that the final output of the test is: `Smoke testing complete with returncode 0`.
+
+
+## Applications
 For each empty box in the matrix above, ensure that the following applications can start
 
 1. Test that the following QT Wayland applications can be started and can receive input:
@@ -105,12 +114,19 @@ For each empty box in the matrix above, ensure that the following applications c
     sudo apt install glmark2-wayland
     glmark2-wayland
     ```
-4. Test that `gnome-terminal` can be started and can receive input:
+4. (If using gbm-kms on a system with multiple GPUs) Test hybrid support with `glmark2-wayland`
+    ```sh
+    sudo apt install glmark2-wayland
+    glmark2-wayland
+    DRI_PRIME=0 glmark2-wayland
+    DRI_PRIME=1 glmark2-wayland
+    ```
+    (If more than 2 GPUs, may do `DRI_PRIME=2 glmark2-wayland`, etc)
+5. Test that `gnome-terminal` can be started and can receive input:
    ```sh
    sudo apt install gnome-terminal
    gnome-terminal
    ```
-
 
 5. Test that `X11` apps can be started and can receive input:
     ```sh
@@ -126,28 +142,40 @@ For each empty box in the matrix above, ensure that the following applications c
     xcalc
     ```
 
-### Mir Console Providers
-Run with different console providers and ensure that the compositor can start:
+## Mir Console Providers
+For each Ubuntu release ensure that the compositor can start with each of the console providers:
 
-```sh
-miral-app --console-provider=vt --vt=4
-```
-- This requires running with root privileges 
-- You need to ensure that `XDG_RUNTIME_DIR` is set in the environment. If using `sudo`, 
-    it might strip this out; running something like `sudo env XDG_RUNTIME_DIR=/run/user/1000 miral-shell ...`
-    will ensure this is set. 
+|         | 24.04    | 24.10      |
+|---------|----------|------------|
+| vt      |          |            |
+| logind  |          |            |
+| minimal |          |            |
 
-```sh
-miral-app --console-provider=logind
-```
-- You can switch to vt4 and sign in
 
-```sh
-miral-app --console-provider=minimal 
-```
-- This is used when all others fail
-- This does not provide VT switching capabilities (Ctrl-Alt-F1, etc) 
-- This is _only_ used for the `gbm-x11`, `gbm-wayland`, and `virtual` platforms 
+The following describes how to select each console provider:
+
+1. **vt**:
+    ```sh
+    miral-app --console-provider=vt --vt=4
+    ```
+    - This requires running with root privileges 
+    - You need to ensure that `XDG_RUNTIME_DIR` is set in the environment. If using `sudo`, 
+        it might strip this out; running something like `sudo env XDG_RUNTIME_DIR=/run/user/1000 miral-shell ...`
+        will ensure this is set. 
+
+2. **logind**:
+    ```sh
+    miral-app --console-provider=logind
+    ```
+    - You can switch to vt4 and sign in
+
+3. **minimal**:
+    ```sh
+    miral-app --console-provider=minimal 
+    ```
+    - This is used when all others fail
+    - This does not provide VT switching capabilities (Ctrl-Alt-F1, etc) 
+    - This is _only_ used for the `gbm-x11`, `gbm-wayland`, and `virtual` platforms 
 
 ### Window Manager Examples
 Run with different window managers and confirm that the window management
@@ -159,74 +187,9 @@ miral-app --window-manager=tiling # a tiling window manager
 miral-app -kiosk # a typical kiosk
 ```
 
-### Run Compositors that are Built for Testing
-1. Run the `mir-test-smoke-runner` and confirm that the final output is:
-   `Smoke testing complete with returncode 0`.
-2. Run the tests found in `mir-test-tools` and confirm the contents on the screen. A useful script for doing this is:
-   ```bash
-    #! /bin/bash
+## Testing Downstream Snaps (e.g. Ubuntu Frame and Miriway)
+For each of our downstream snaps, check that you have installed a build with the Mir version under test (typically from the `beta` channel). Then run the tests for that snap.
 
-    set -e
-   
-    if [ -x "$(command -v fgconsole)" ]
-    then
-        trap "sudo chvt $(sudo fgconsole)" EXIT
-    fi
-   
-    if [ -v DISPLAY ]
-    then
-        snap run mir-test-tools.gtk3-test
-        snap run mir-test-tools.qt-test
-        snap run mir-test-tools.sdl2-test
-        snap run mir-test-tools.smoke-test
-        snap run mir-test-tools.performance-test
-        snap run mir-test-tools.mir-flutter-app
-    fi
-   
-    sudo snap run mir-test-tools.gtk3-test
-    sudo snap run mir-test-tools.qt-test
-    sudo snap run mir-test-tools.sdl2-test
-    sudo snap run mir-test-tools.smoke-test
-    sudo snap run mir-test-tools.performance-test
-    sudo snap run mir-test-tools.mir-flutter-app
-   
-    echo All tests passed
-   ```
-
-### Window Management
-- Confirm that clip areas work for windows. This issue was first encountered in
-  [#3201](https://github.com/canonical/mir/issues/3201). To test:
-    1. Create a test compositor that clips a window to only contain its rectangle
-    2. Move that window all over the screen and confirm that it remains properly clipped
-
-### Misc
-- Confirm that the system is restored properly after a wake. This issue was first
-  encountered in [#3238](https://github.com/canonical/mir/issues/3238). To test:
-    1. Have a setup with two monitors
-    2. Configure the display so that it is set to clone:
-       ```
-       miral-app --display-config=clone
-       ```
-    2. Sleep your session
-    3. Wake your session up
-    4. Confirm that the compositor is still running and that the contents on the
-       screen(s) match what should be there
-    
-    This would be automated by https://github.com/canonical/mir-ci/issues/126.
-
-- Confirm that cursor speeds are consistent. This issue was first encountered in
-  [#3205](https://github.com/canonical/mir/issues/3205). To test:
-    1. Move the cursor around the screen
-    2. Confirm that the cursor does not experience significant slow down
-
-    This would be automated by https://github.com/canonical/mir-ci/issues/127.
-
-- Confirm that the keyboard works after you have disconnected and reconnected it. This
-  issue was first encountered in [#3149](https://github.com/canonical/mir/issues/3149).
-  Please try this with multiple different `--console-provider=<PROVIDER>` arguments.
-  To test:
-    1. Have a keyboard that is plugged in
-    2. Run `miral-shell` with a `--console-provider=<PROVIDER>`
-    3. Unplug the keyboard
-    4. Plug in the keyboard
-    5. The keyboard should be usable
+E.g. for `mir-test-tools`:
+```sh
+   /snap/mir-test-tools/current/bin/selftest
