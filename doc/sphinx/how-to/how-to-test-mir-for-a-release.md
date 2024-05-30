@@ -130,27 +130,39 @@ For each empty box in the matrix above, ensure that the following applications c
 
 ## Mir Console Providers
 
-Run with different console providers and ensure that the compositor can start:
+For each Ubuntu release ensure that the compositor can start with each of the console providers:
 
-```sh
-miral-app --console-provider=vt --vt=4
-```
-- This requires running with root privileges 
-- You need to ensure that `XDG_RUNTIME_DIR` is set in the environment. If using `sudo`, 
-    it might strip this out; running something like `sudo env XDG_RUNTIME_DIR=/run/user/1000 miral-shell ...`
-    will ensure this is set. 
+|         | 24.04    | 24.10      |
+|---------|----------|------------|
+| vt      |          |            |
+| logind  |          |            |
+| minimal |          |            |
 
-```sh
-miral-app --console-provider=logind
-```
-- You can switch to vt4 and sign in
 
-```sh
-miral-app --console-provider=minimal 
-```
-- This is used when all others fail
-- This does not provide VT switching capabilities (Ctrl-Alt-F1, etc) 
-- This is _only_ used for the `gbm-x11`, `gbm-wayland`, and `virtual` platforms 
+The following describes how to select each console provider:
+
+1. **vt**:
+    ```sh
+    miral-app --console-provider=vt --vt=4
+    ```
+    - This requires running with root privileges 
+    - You need to ensure that `XDG_RUNTIME_DIR` is set in the environment. If using `sudo`, 
+        it might strip this out; running something like `sudo env XDG_RUNTIME_DIR=/run/user/1000 miral-shell ...`
+        will ensure this is set. 
+
+2. **logind**:
+    ```sh
+    miral-app --console-provider=logind
+    ```
+    - You can switch to vt4 and sign in
+
+3. **minimal**:
+    ```sh
+    miral-app --console-provider=minimal 
+    ```
+    - This is used when all others fail
+    - This does not provide VT switching capabilities (Ctrl-Alt-F1, etc) 
+    - This is _only_ used for the `gbm-x11`, `gbm-wayland`, and `virtual` platforms 
 
 ## Window Manager Examples
 Run with different window managers and confirm that the window management
