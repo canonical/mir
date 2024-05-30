@@ -177,7 +177,7 @@ The following describes how to select each console provider:
     - This does not provide VT switching capabilities (Ctrl-Alt-F1, etc) 
     - This is _only_ used for the `gbm-x11`, `gbm-wayland`, and `virtual` platforms 
 
-### Window Manager Examples
+## Window Manager Examples
 Run with different window managers and confirm that the window management
 styles work as expected:
 
