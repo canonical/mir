@@ -163,10 +163,8 @@ miral-app -kiosk # a typical kiosk
 ```
 
 ## Testing Downstream Snaps (e.g. Ubuntu Frame and Miriway)
-1. Run your downstream snap
-2. Run the tests found in `mir-test-tools` and confirm the contents on the screen.
-   A useful script for running all of the tests at once is in the snap:
+For each of our downstream snaps, check that you have installed a build with the Mir version under test (typically from the `beta` channel). Then run the tests for that snap.
 
-   ```sh
+E.g. for `mir-test-tools`:
+```sh
    /snap/mir-test-tools/current/bin/selftest
-   ```
