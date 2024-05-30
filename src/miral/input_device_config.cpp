@@ -51,8 +51,8 @@ public:
                       std::optional<double> mouse_scroll_speed_scale,
                       std::optional<double> touchpad_cursor_acceleration_bias,
                       std::optional<double> touchpad_scroll_speed_scale,
-                      std::optional<MirTouchpadClickModes> click_mode,
-                      std::optional<MirTouchpadScrollModes> scroll_mode);
+                      std::optional<MirTouchpadClickMode> click_mode,
+                      std::optional<MirTouchpadScrollMode> scroll_mode);
     void device_added(std::shared_ptr<mi::Device> const& device) override;
     void device_changed(std::shared_ptr<mi::Device> const&) override {}
     void device_removed(std::shared_ptr<mi::Device> const&) override {}
@@ -64,8 +64,8 @@ private:
     std::optional<double> const mouse_scroll_speed_scale;
     std::optional<double> const touchpad_cursor_acceleration_bias;
     std::optional<double> const touchpad_scroll_speed_scale;
-    std::optional<MirTouchpadClickModes> const click_mode;
-    std::optional<MirTouchpadScrollModes> const scroll_mode;
+    std::optional<MirTouchpadClickMode> const click_mode;
+    std::optional<MirTouchpadScrollMode> const scroll_mode;
     std::optional<bool> const tap_to_click;
 };
 
@@ -87,6 +87,7 @@ char const* const touchpad_scroll_mode_none = "none";
 
 char const* const touchpad_click_mode_opt= "touchpad-click-mode";
 
+char const* const touchpad_click_mode_none = "none";
 char const* const touchpad_click_mode_area = "area";
 char const* const touchpad_click_mode_finger_count = "finger-count";
 }
@@ -200,18 +201,21 @@ void miral::add_input_device_configuration(::mir::Server& server)
         }
     };
 
-    // TODO options are not exclusive
     auto convert_to_click_mode = [](std::optional<std::string> const& opt_val)
     -> std::optional<MirTouchpadClickMode>
     {
         if (opt_val)
         {
             auto val = *opt_val;
-            if (val == touchpad_click_mode_finger_count)
+            if (val == touchpad_click_mode_none)
+            {
+                return mir_touchpad_click_mode_none;
+            }
+            else if (val == touchpad_click_mode_finger_count)
             {
                 return mir_touchpad_click_mode_finger_count;
             }
-            if (val == touchpad_click_mode_area)
+            else if (val == touchpad_click_mode_area)
             {
                 return mir_touchpad_click_mode_area_to_click;
             }
@@ -251,8 +255,8 @@ InputDeviceConfig::InputDeviceConfig(std::optional<bool> disable_while_typing,
                                      std::optional<double> mouse_scroll_speed_scale,
                                      std::optional<double> touchpad_cursor_acceleration_bias,
                                      std::optional<double> touchpad_scroll_speed_scale,
-                                     std::optional<MirTouchpadClickModes> click_mode,
-                                     std::optional<MirTouchpadClickModes> scroll_mode)
+                                     std::optional<MirTouchpadClickMode> click_mode,
+                                     std::optional<MirTouchpadScrollMode> scroll_mode)
     : disable_while_typing{disable_while_typing}, mouse_profile{mouse_profile},
       mouse_cursor_acceleration_bias{mouse_cursor_acceleration_bias},
       mouse_scroll_speed_scale{mouse_scroll_speed_scale},

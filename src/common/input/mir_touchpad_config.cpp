@@ -20,8 +20,8 @@
 struct MirTouchpadConfig::Implementation
 {
     Implementation() = default;
-    Implementation(MirTouchpadClickModes click_mode,
-                   MirTouchpadScrollModes scroll_mode,
+    Implementation(MirTouchpadClickMode click_mode,
+                   MirTouchpadScrollMode scroll_mode,
                    int button_down_scroll_button,
                    bool tap_to_click,
                    bool middle_mouse_button_emulation,
@@ -36,8 +36,8 @@ struct MirTouchpadConfig::Implementation
           disable_while_typing{disable_while_typing}
     {
     }
-    MirTouchpadClickModes click_mode{mir_touchpad_click_mode_finger_count};
-    MirTouchpadScrollModes scroll_mode{mir_touchpad_scroll_mode_two_finger_scroll};
+    MirTouchpadClickMode click_mode{mir_touchpad_click_mode_finger_count};
+    MirTouchpadScrollMode scroll_mode{mir_touchpad_scroll_mode_two_finger_scroll};
     int button_down_scroll_button{0};
     bool tap_to_click{true};
     bool middle_mouse_button_emulation{true};
@@ -68,13 +68,14 @@ MirTouchpadConfig& MirTouchpadConfig::operator=(MirTouchpadConfig const& other)
 
 MirTouchpadConfig::~MirTouchpadConfig() = default;
 
-MirTouchpadConfig::MirTouchpadConfig(MirTouchpadClickModes click_mode,
-                                                 MirTouchpadScrollModes scroll_mode,
-                                                 int button_down_scroll_button,
-                                                 bool tap_to_click,
-                                                 bool disable_while_typing,
-                                                 bool disable_with_mouse,
-                                                 bool middle_mouse_button_emulation)
+MirTouchpadConfig::MirTouchpadConfig(
+    MirTouchpadClickMode click_mode,
+    MirTouchpadScrollMode scroll_mode,
+    int button_down_scroll_button,
+    bool tap_to_click,
+    bool disable_while_typing,
+    bool disable_with_mouse,
+    bool middle_mouse_button_emulation)
     : impl{std::make_unique<Implementation>(
             click_mode,
             scroll_mode,
@@ -87,24 +88,24 @@ MirTouchpadConfig::MirTouchpadConfig(MirTouchpadClickModes click_mode,
 {
 }
 
-MirTouchpadClickModes MirTouchpadConfig::click_mode() const
+MirTouchpadClickMode MirTouchpadConfig::click_mode() const
 {
     return impl->click_mode;
 }
 
-void MirTouchpadConfig::click_mode(MirTouchpadClickModes modes)
+void MirTouchpadConfig::click_mode(MirTouchpadClickMode modes)
 {
     impl->click_mode = modes;
 }
 
-MirTouchpadScrollModes MirTouchpadConfig::scroll_mode() const
+MirTouchpadScrollMode MirTouchpadConfig::scroll_mode() const
 {
     return impl->scroll_mode;
 }
 
-void MirTouchpadConfig::scroll_mode(MirTouchpadScrollModes modes)
+void MirTouchpadConfig::scroll_mode(MirTouchpadScrollMode mode)
 {
-    impl->scroll_mode = modes;
+    impl->scroll_mode = mode;
 }
 
 int MirTouchpadConfig::button_down_scroll_button() const

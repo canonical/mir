@@ -554,15 +554,21 @@ mir::optional_value<mi::TouchpadSettings> mie::LibInputDevice::get_touchpad_sett
         return {};
 
     auto dev = device();
-    auto click_modes = libinput_device_config_click_get_method(dev);
 
     TouchpadSettings settings;
 
-    settings.click_mode = mir_touchpad_click_mode_none;
-    if (click_modes & LIBINPUT_CONFIG_CLICK_METHOD_BUTTON_AREAS)
-        settings.click_mode |= mir_touchpad_click_mode_area_to_click;
-    if (click_modes & LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER)
-        settings.click_mode |= mir_touchpad_click_mode_finger_count;
+    switch (libinput_device_config_click_get_method(dev))
+    {
+    case LIBINPUT_CONFIG_CLICK_METHOD_NONE:
+        settings.click_mode = mir_touchpad_click_mode_none;
+        break;
+    case LIBINPUT_CONFIG_CLICK_METHOD_BUTTON_AREAS:
+        settings.click_mode = mir_touchpad_click_mode_area_to_click;
+        break;
+    case LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER:
+        settings.click_mode = mir_touchpad_click_mode_finger_count;
+        break;
+    }
 
     switch (libinput_device_config_scroll_get_method(dev))
     {
@@ -592,7 +598,7 @@ mir::optional_value<mi::TouchpadSettings> mie::LibInputDevice::get_touchpad_sett
 
 namespace
 {
-void apply_scroll_mode(libinput_device* dev, MirTouchpadScrollModes scroll_mode)
+void apply_scroll_mode(libinput_device* dev, MirTouchpadScrollMode scroll_mode)
 {
     auto set_method = [dev](libinput_config_scroll_method method)
     {
@@ -623,6 +629,34 @@ void apply_scroll_mode(libinput_device* dev, MirTouchpadScrollModes scroll_mode)
         break;
     }
 }
+
+void apply_click_mode(libinput_device* dev, MirTouchpadClickMode click_mode)
+{
+    auto set_method = [dev](libinput_config_click_method method)
+    {
+        if (LIBINPUT_CONFIG_STATUS_SUCCESS != libinput_device_config_click_set_method(dev, method))
+        {
+            auto const default_method = libinput_device_config_click_get_default_method(dev);
+            mir::log_info("On device '%s': Failed to set click method to %d, using default (%d)", libinput_device_get_name(dev), method, default_method);
+            libinput_device_config_click_set_method(dev, default_method);
+        }
+    };
+    switch (click_mode)
+    {
+    case mir_touchpad_click_mode_none:
+        set_method(LIBINPUT_CONFIG_CLICK_METHOD_NONE);
+        break;
+
+    case mir_touchpad_click_mode_area_to_click:
+    {
+        set_method(LIBINPUT_CONFIG_CLICK_METHOD_BUTTON_AREAS);
+        break;
+    }
+    case mir_touchpad_click_mode_finger_count:
+        set_method(LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER);
+        break;
+    }
+}
 }
 
 void mie::LibInputDevice::apply_settings(mi::TouchpadSettings const& settings)
@@ -635,13 +669,7 @@ void mie::LibInputDevice::apply_settings(mi::TouchpadSettings const& settings)
         libinput_device_config_scroll_set_button(dev, scroll_button);
     }
 
-    uint32_t click_method = LIBINPUT_CONFIG_CLICK_METHOD_NONE;
-    if (settings.click_mode & mir_touchpad_click_mode_area_to_click)
-        click_method |= LIBINPUT_CONFIG_CLICK_METHOD_BUTTON_AREAS;
-    if (settings.click_mode & mir_touchpad_click_mode_finger_count)
-        click_method |= LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER;
-
-    libinput_device_config_click_set_method(dev, static_cast<libinput_config_click_method>(click_method));
+    apply_click_mode(dev, settings.click_mode);
 
     libinput_device_config_tap_set_enabled(
         dev, settings.tap_to_click ? LIBINPUT_CONFIG_TAP_ENABLED : LIBINPUT_CONFIG_TAP_DISABLED);
