@@ -138,8 +138,8 @@ me::InputDeviceConfig::InputDeviceConfig(bool disable_while_typing,
                                          double mouse_scroll_speed_scale,
                                          double touchpad_cursor_acceleration_bias,
                                          double touchpad_scroll_speed_scale,
-                                         MirTouchpadClickModes click_mode,
-                                         MirTouchpadClickModes scroll_mode)
+                                         MirTouchpadClickMode click_mode,
+                                         MirTouchpadScrollMode scroll_mode)
     : disable_while_typing(disable_while_typing), mouse_profile{mouse_profile},
       mouse_cursor_acceleration_bias(mouse_cursor_acceleration_bias),
       mouse_scroll_speed_scale(mouse_scroll_speed_scale),

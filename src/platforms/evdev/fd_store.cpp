@@ -16,7 +16,6 @@
 
 #include "fd_store.h"
 
-#define MIR_LOG_COMPONENT "evdev-input"
 #include "mir/log.h"
 
 #include <algorithm>

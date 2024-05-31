@@ -3,6 +3,8 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/platform # udev Context
   )
 
+add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="evdev-input")
+
 add_library(mirevdevutilsobjects OBJECT
     button_utils.cpp
 )
