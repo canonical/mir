@@ -64,12 +64,6 @@ jobs:
           ninja-build \
           xwayland
 
-        # deal with incompataibles preinstalled
-        sudo apt-get remove --yes \
-          libunwind-14-dev \
-          libunwind-dev \
-          libunwind-14
-
         sudo --preserve-env apt-get build-dep ./
 
     - name: Configure
