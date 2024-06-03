@@ -17,6 +17,8 @@ jobs:
 
     env:
       CCACHE_DIR: "/tmp/ccache"
+      NEEDRESTART_SUSPEND: yes
+      DEBIAN_FRONTEND: noninteractive
 
     timeout-minutes: 60
     steps:
@@ -52,8 +54,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-        sudo apt-add-repository --yes ppa:mir-team/dev
-        sudo apt-get install --no-install-recommends \
+        sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
+        sudo --preserve-env apt-get install --no-install-recommends \
           dmz-cursor-theme \
           glmark2-es2 \
           glmark2-es2-wayland \
@@ -68,7 +70,7 @@ jobs:
           libunwind-dev \
           libunwind-14
 
-        sudo apt-get build-dep ./
+        sudo --preserve-env apt-get build-dep ./
 
     - name: Configure
       run: >
