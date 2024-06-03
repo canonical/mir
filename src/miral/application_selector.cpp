@@ -159,7 +159,7 @@ auto ApplicationSelector::complete() -> Window
 
     originally_selected_it = focus_list.end();
     is_active_ = false;
-    restore_state = mir_window_state_unknown;
+    restore_state.reset();
     return selected;
 }
 
