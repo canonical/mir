@@ -32,6 +32,14 @@ namespace shell
 {
 using SurfaceSet = std::set<std::weak_ptr<scene::Surface>, std::owner_less<std::weak_ptr<scene::Surface>>>;
 
+class FocusObserver
+{
+public:
+    virtual ~FocusObserver() = default;
+    virtual void on_focus_gained(std::shared_ptr<scene::Surface> const&) = 0;
+    virtual void on_lost_focus(std::shared_ptr<scene::Surface> const&) = 0;
+};
+
 class FocusController
 {
 public:

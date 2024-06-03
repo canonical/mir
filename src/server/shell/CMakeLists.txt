@@ -4,6 +4,7 @@ set(
   SHELL_SOURCES
 
   abstract_shell.cpp
+  basic_focus_controller.cpp
   graphics_display_layout.cpp
   graphics_display_layout.h
   default_configuration.cpp
