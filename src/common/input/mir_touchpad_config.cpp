@@ -93,9 +93,9 @@ MirTouchpadClickMode MirTouchpadConfig::click_mode() const
     return impl->click_mode;
 }
 
-void MirTouchpadConfig::click_mode(MirTouchpadClickMode modes)
+void MirTouchpadConfig::click_mode(MirTouchpadClickMode mode)
 {
-    impl->click_mode = modes;
+    impl->click_mode = mode;
 }
 
 MirTouchpadScrollMode MirTouchpadConfig::scroll_mode() const

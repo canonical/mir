@@ -42,7 +42,7 @@ struct MirTouchpadConfig
      * The click mode defines when the touchpad generates software emulated button events.
      */
     MirTouchpadClickMode click_mode() const;
-    void click_mode(MirTouchpadClickMode modes) ;
+    void click_mode(MirTouchpadClickMode mode) ;
     /*!
      * The scroll mode defines when the touchpad generates scroll events instead of pointer motion events.
      */
