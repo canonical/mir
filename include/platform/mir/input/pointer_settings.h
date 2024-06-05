@@ -50,15 +50,10 @@ struct PointerSettings
      * Scale vertical scrolling linearly
      */
     double vertical_scroll_scale{1.0};
+
+    bool operator==(PointerSettings const& rhs) const = default;
+    bool operator!=(PointerSettings const& rhs) const = default;
 };
-
-inline bool operator==(PointerSettings const& lhs, PointerSettings const& rhs)
-{
-    return lhs.handedness == rhs.handedness && lhs.cursor_acceleration_bias == rhs.cursor_acceleration_bias &&
-           lhs.acceleration == rhs.acceleration && lhs.horizontal_scroll_scale == rhs.horizontal_scroll_scale &&
-           lhs.vertical_scroll_scale == rhs.vertical_scroll_scale;
-}
-
 }
 }
 

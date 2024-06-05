@@ -29,7 +29,6 @@
 #include "mir/geometry/displacement.h"
 #include "mir/dispatch/dispatchable.h"
 #include "mir/fd.h"
-#define MIR_LOG_COMPONENT "evdev"
 #include "mir/log.h"
 #include "mir/raii.h"
 
@@ -554,24 +553,37 @@ mir::optional_value<mi::TouchpadSettings> mie::LibInputDevice::get_touchpad_sett
         return {};
 
     auto dev = device();
-    auto click_modes = libinput_device_config_click_get_method(dev);
-    auto scroll_modes = libinput_device_config_scroll_get_method(dev);
 
     TouchpadSettings settings;
 
-    settings.click_mode = mir_touchpad_click_mode_none;
-    if (click_modes & LIBINPUT_CONFIG_CLICK_METHOD_BUTTON_AREAS)
-        settings.click_mode |= mir_touchpad_click_mode_area_to_click;
-    if (click_modes & LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER)
-        settings.click_mode |= mir_touchpad_click_mode_finger_count;
+    switch (libinput_device_config_click_get_method(dev))
+    {
+    case LIBINPUT_CONFIG_CLICK_METHOD_NONE:
+        settings.click_mode = mir_touchpad_click_mode_none;
+        break;
+    case LIBINPUT_CONFIG_CLICK_METHOD_BUTTON_AREAS:
+        settings.click_mode = mir_touchpad_click_mode_area_to_click;
+        break;
+    case LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER:
+        settings.click_mode = mir_touchpad_click_mode_finger_count;
+        break;
+    }
 
-    settings.scroll_mode = mir_touchpad_scroll_mode_none;
-    if (scroll_modes & LIBINPUT_CONFIG_SCROLL_2FG)
-        settings.scroll_mode |= mir_touchpad_scroll_mode_two_finger_scroll;
-    if (scroll_modes & LIBINPUT_CONFIG_SCROLL_EDGE)
-        settings.scroll_mode |= mir_touchpad_scroll_mode_edge_scroll;
-    if (scroll_modes & LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN)
-        settings.scroll_mode |= mir_touchpad_scroll_mode_button_down_scroll;
+    switch (libinput_device_config_scroll_get_method(dev))
+    {
+    case LIBINPUT_CONFIG_SCROLL_NO_SCROLL:
+        settings.scroll_mode = mir_touchpad_scroll_mode_none;
+        break;
+    case LIBINPUT_CONFIG_SCROLL_2FG:
+        settings.scroll_mode = mir_touchpad_scroll_mode_two_finger_scroll;
+        break;
+    case LIBINPUT_CONFIG_SCROLL_EDGE:
+        settings.scroll_mode = mir_touchpad_scroll_mode_edge_scroll;
+        break;
+    case LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN:
+        settings.scroll_mode = mir_touchpad_scroll_mode_button_down_scroll;
+        break;
+    }
 
     settings.tap_to_click = libinput_device_config_tap_get_enabled(dev) == LIBINPUT_CONFIG_TAP_ENABLED;
     settings.disable_while_typing = libinput_device_config_dwt_get_enabled(dev) == LIBINPUT_CONFIG_DWT_ENABLED;
@@ -583,29 +595,80 @@ mir::optional_value<mi::TouchpadSettings> mie::LibInputDevice::get_touchpad_sett
     return settings;
 }
 
+namespace
+{
+void apply_scroll_mode(libinput_device* dev, MirTouchpadScrollMode scroll_mode)
+{
+    auto set_method = [dev](libinput_config_scroll_method method)
+    {
+        if (LIBINPUT_CONFIG_STATUS_SUCCESS != libinput_device_config_scroll_set_method(dev, method))
+        {
+            auto const default_method = libinput_device_config_scroll_get_default_method(dev);
+            mir::log_info("On device '%s': Failed to set scroll method to %d, using default (%d)", libinput_device_get_name(dev), method, default_method);
+            libinput_device_config_scroll_set_method(dev, default_method);
+        }
+    };
+    switch (scroll_mode)
+    {
+    case mir_touchpad_scroll_mode_none:
+        set_method(LIBINPUT_CONFIG_SCROLL_NO_SCROLL);
+        break;
+
+    case mir_touchpad_scroll_mode_button_down_scroll:
+    {
+        set_method(LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN);
+        break;
+    }
+    case mir_touchpad_scroll_mode_edge_scroll:
+        set_method(LIBINPUT_CONFIG_SCROLL_EDGE);
+        break;
+
+    case mir_touchpad_scroll_mode_two_finger_scroll:
+        set_method(LIBINPUT_CONFIG_SCROLL_2FG);
+        break;
+    }
+}
+
+void apply_click_mode(libinput_device* dev, MirTouchpadClickMode click_mode)
+{
+    auto set_method = [dev](libinput_config_click_method method)
+    {
+        if (LIBINPUT_CONFIG_STATUS_SUCCESS != libinput_device_config_click_set_method(dev, method))
+        {
+            auto const default_method = libinput_device_config_click_get_default_method(dev);
+            mir::log_info("On device '%s': Failed to set click method to %d, using default (%d)", libinput_device_get_name(dev), method, default_method);
+            libinput_device_config_click_set_method(dev, default_method);
+        }
+    };
+    switch (click_mode)
+    {
+    case mir_touchpad_click_mode_none:
+        set_method(LIBINPUT_CONFIG_CLICK_METHOD_NONE);
+        break;
+
+    case mir_touchpad_click_mode_area_to_click:
+    {
+        set_method(LIBINPUT_CONFIG_CLICK_METHOD_BUTTON_AREAS);
+        break;
+    }
+    case mir_touchpad_click_mode_finger_count:
+        set_method(LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER);
+        break;
+    }
+}
+}
+
 void mie::LibInputDevice::apply_settings(mi::TouchpadSettings const& settings)
 {
     auto dev = device();
 
-    uint32_t click_method = LIBINPUT_CONFIG_CLICK_METHOD_NONE;
-    if (settings.click_mode & mir_touchpad_click_mode_area_to_click)
-        click_method |= LIBINPUT_CONFIG_CLICK_METHOD_BUTTON_AREAS;
-    if (settings.click_mode & mir_touchpad_click_mode_finger_count)
-        click_method |= LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER;
-
-    uint32_t scroll_method = LIBINPUT_CONFIG_CLICK_METHOD_NONE;
-    if (settings.scroll_mode & mir_touchpad_scroll_mode_button_down_scroll)
+    apply_scroll_mode(dev, settings.scroll_mode);
+    if (const auto scroll_button = settings.button_down_scroll_button; scroll_button != no_scroll_button)
     {
-        scroll_method |= LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN;
-        libinput_device_config_scroll_set_button(dev, settings.button_down_scroll_button);
+        libinput_device_config_scroll_set_button(dev, scroll_button);
     }
-    if (settings.scroll_mode & mir_touchpad_scroll_mode_edge_scroll)
-        scroll_method |= LIBINPUT_CONFIG_SCROLL_EDGE;
-    if (settings.scroll_mode & mir_touchpad_scroll_mode_two_finger_scroll)
-        scroll_method |= LIBINPUT_CONFIG_SCROLL_2FG;
 
-    libinput_device_config_click_set_method(dev, static_cast<libinput_config_click_method>(click_method));
-    libinput_device_config_scroll_set_method(dev, static_cast<libinput_config_scroll_method>(scroll_method));
+    apply_click_mode(dev, settings.click_mode);
 
     libinput_device_config_tap_set_enabled(
         dev, settings.tap_to_click ? LIBINPUT_CONFIG_TAP_ENABLED : LIBINPUT_CONFIG_TAP_DISABLED);
