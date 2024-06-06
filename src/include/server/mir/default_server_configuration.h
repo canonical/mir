@@ -22,7 +22,6 @@
 
 #include <memory>
 #include <string>
-#include <mutex>
 
 namespace mir
 {
