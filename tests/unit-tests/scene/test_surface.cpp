@@ -68,7 +68,7 @@ struct SurfaceCreation : public ::testing::Test
     }
 
     std::shared_ptr<testing::NiceMock<mtd::MockBufferStream>> mock_buffer_stream = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
-    std::list<ms::StreamInfo> streams{ { mock_buffer_stream, {}, {} } };
+    std::list<ms::StreamInfo> streams{ { mock_buffer_stream, {}} };
 
     std::string surface_name = "test_surfaceA";
     MirPixelFormat pf = mir_pixel_format_abgr_8888;

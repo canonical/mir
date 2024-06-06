@@ -19,8 +19,10 @@
 #define MIR_COMPOSITOR_MULTI_MONITOR_ARBITER_H_
 
 #include "mir/compositor/compositor_id.h"
+#include "mir/compositor/buffer_stream.h"
+#include "mir/geometry/forward.h"
+#include "mir/synchronised.h"
 #include <memory>
-#include <mutex>
 #include <vector>
 #include <optional>
 
@@ -31,26 +33,33 @@ namespace compositor
 {
 class Schedule;
 
-class MultiMonitorArbiter
+class MultiMonitorArbiter : public std::enable_shared_from_this<MultiMonitorArbiter>
 {
 public:
     MultiMonitorArbiter();
     ~MultiMonitorArbiter();
 
-    std::shared_ptr<graphics::Buffer> compositor_acquire(compositor::CompositorID id);
+    auto compositor_acquire(compositor::CompositorID id) -> std::shared_ptr<BufferStream::Submission>;
     bool buffer_ready_for(compositor::CompositorID id);
 
-    void submit_buffer(std::shared_ptr<graphics::Buffer> buffer);
+    void submit_buffer(
+        std::shared_ptr<graphics::Buffer> buffer,
+        geometry::Size output_size,
+        geometry::RectangleD source_sample);
 
+    struct Submission;
 private:
-    void add_current_buffer_user(compositor::CompositorID id);
-    bool is_user_of_current_buffer(compositor::CompositorID id);
-    void clear_current_users();
+    struct State
+    {
+        std::vector<std::optional<compositor::CompositorID>> current_buffer_users;
+        std::shared_ptr<Submission> current_submission;
+        std::shared_ptr<Submission> next_submission;
+    };
+    Synchronised<State> state;
 
-    std::mutex mutable mutex;
-    std::shared_ptr<graphics::Buffer> current_buffer;
-    std::shared_ptr<graphics::Buffer> next_buffer;
-    std::vector<std::optional<compositor::CompositorID>> current_buffer_users;
+    static void add_current_buffer_user(State& state, compositor::CompositorID id);
+    static bool is_user_of_current_buffer(State& state, compositor::CompositorID id);
+    static void clear_current_users(State& state);
 };
 
 }

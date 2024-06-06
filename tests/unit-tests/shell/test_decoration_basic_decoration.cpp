@@ -84,7 +84,7 @@ struct MockSurface
               {},
               {{},{}},
               mir_pointer_unconfined,
-              { { std::make_shared<testing::NiceMock<mtd::MockBufferStream>>(), {0, 0}, {} } },
+              { { std::make_shared<testing::NiceMock<mtd::MockBufferStream>>(), {0, 0}} },
               {},
               mir::report::null_scene_report(),
               std::make_shared<mtd::FakeDisplayConfigurationObserverRegistrar>()},

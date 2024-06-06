@@ -100,7 +100,7 @@ auto ms::ApplicationSession::create_surface(
     std::list<StreamInfo> streams;
     for (auto& stream : params.streams.value())
     {
-        streams.push_back({std::dynamic_pointer_cast<mc::BufferStream>(stream.stream.lock()), stream.displacement, stream.size});
+        streams.push_back({std::dynamic_pointer_cast<mc::BufferStream>(stream.stream.lock()), stream.displacement});
     }
 
     auto surface = surface_factory->create_surface(session, wayland_surface, streams, params);
@@ -287,10 +287,10 @@ void ms::ApplicationSession::resume_prompt_session()
     start_prompt_session();
 }
 
-auto ms::ApplicationSession::create_buffer_stream(mg::BufferProperties const& props)
+auto ms::ApplicationSession::create_buffer_stream(mg::BufferProperties const& /*props*/)
     -> std::shared_ptr<compositor::BufferStream>
 {
-    auto stream = std::make_shared<mc::Stream>(props.size, props.format);
+    auto stream = std::make_shared<mc::Stream>();
     session_listener->buffer_stream_created(*this, stream);
 
     std::unique_lock lock(surfaces_and_streams_mutex);
@@ -316,7 +316,7 @@ void ms::ApplicationSession::configure_streams(
     for (auto& stream : streams)
     {
         if (auto const s = std::dynamic_pointer_cast<mc::BufferStream>(stream.stream.lock()))
-            list.emplace_back(ms::StreamInfo{s, stream.displacement, stream.size});
+            list.emplace_back(ms::StreamInfo{s, stream.displacement});
     }
     surface.set_streams(list); 
 }

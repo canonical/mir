@@ -24,6 +24,6 @@ namespace msh = mir::shell;
 auto mt::make_surface_spec(std::shared_ptr<mc::BufferStream> const& stream) -> msh::SurfaceSpecification
 {
     msh::SurfaceSpecification result;
-    result.streams = {msh::StreamSpecification{stream, {}, {}}};
+    result.streams = {msh::StreamSpecification{stream, {}}};
     return result;
 }

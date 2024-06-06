@@ -15,7 +15,6 @@
  */
 
 #include "mir/test/doubles/stub_buffer.h"
-#include "mir/test/fake_shared.h"
 #include "mir/compositor/stream.h"
 
 #include <gmock/gmock.h>
@@ -44,9 +43,7 @@ struct Stream : Test
 
     geom::Size initial_size{44,2};
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
-    MirPixelFormat construction_format{mir_pixel_format_rgb_565};
-    mc::Stream stream{
-        initial_size, construction_format};
+    mc::Stream stream{};
 };
 }
 
@@ -99,44 +96,4 @@ TEST_F(Stream, throws_on_nullptr_submissions)
                 {{0, 0}, geom::SizeD{buffers[0]->size()}} );
     }, std::invalid_argument);
     EXPECT_FALSE(stream.has_submitted_buffer());
-}
-
-//it doesnt quite make sense that the stream has a size, esp given that there could be different-sized buffers
-//in the stream, and the surface has the onscreen size info
-TEST_F(Stream, reports_size)
-{
-    geom::Size new_size{333,139};
-    auto new_size_buffer = std::make_shared<mtd::StubBuffer>(new_size);
-    EXPECT_THAT(stream.stream_size(), Eq(initial_size));
-    stream.submit_buffer(
-            new_size_buffer,
-            new_size_buffer->size(),
-            {{0, 0}, geom::SizeD{new_size_buffer->size()}} );
-    EXPECT_THAT(stream.stream_size(), Eq(new_size));
-}
-
-//Likewise, no reason buffers couldn't all be a different pixel format
-TEST_F(Stream, reports_format)
-{
-    EXPECT_THAT(stream.pixel_format(), Eq(construction_format));
-}
-
-TEST_F(Stream, stream_size_scaled)
-{
-    stream.submit_buffer(
-            buffers[0],
-            buffers[0]->size(),
-            {{0, 0}, geom::SizeD{buffers[0]->size()}} );
-    stream.set_scale(2.0f);
-    ASSERT_THAT(stream.stream_size(), Eq(initial_size / 2));
-}
-
-TEST_F(Stream, stream_remembers_scale_when_buffer_added)
-{
-    stream.set_scale(2.0f);
-    stream.submit_buffer(
-            buffers[0],
-            buffers[0]->size(),
-            {{0, 0}, geom::SizeD{buffers[0]->size()}} );
-    ASSERT_THAT(stream.stream_size(), Eq(initial_size / 2));
 }

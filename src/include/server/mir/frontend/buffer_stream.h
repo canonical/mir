@@ -45,10 +45,6 @@ public:
 
     virtual void set_frame_posted_callback(
         std::function<void(geometry::Size const&)> const& callback) = 0;
-
-    virtual MirPixelFormat pixel_format() const = 0;
-
-    virtual void set_scale(float scale) = 0;
 protected:
     BufferStream() = default;
     BufferStream(BufferStream const&) = delete;

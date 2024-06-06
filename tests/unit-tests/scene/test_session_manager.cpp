@@ -70,7 +70,7 @@ struct SessionManagerSetup : public testing::Test
         std::string("stub"),
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,
-        std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
+        std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}} },
         std::shared_ptr<mg::CursorImage>(),
         mir::report::null_scene_report(),
         std::make_shared<mtd::FakeDisplayConfigurationObserverRegistrar>());

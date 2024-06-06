@@ -23,7 +23,7 @@ namespace geom = mir::geometry;
 
 mf::ScaledBufferStream::ScaledBufferStream(std::shared_ptr<compositor::BufferStream>&& inner, float scale)
     : inner{std::move(inner)},
-      inv_scale{1.0f / scale}
+      scale{scale}
 {
 }
 
@@ -32,7 +32,7 @@ void mf::ScaledBufferStream::submit_buffer(
     geom::Size dest_size,
     geom::RectangleD src_bounds)
 {
-    inner->submit_buffer(buffer, dest_size, src_bounds);
+    inner->submit_buffer(buffer, dest_size * scale, src_bounds);
 }
 
 void mf::ScaledBufferStream::set_frame_posted_callback(std::function<void(geometry::Size const&)> const& callback)
@@ -41,26 +41,9 @@ void mf::ScaledBufferStream::set_frame_posted_callback(std::function<void(geomet
     inner->set_frame_posted_callback(callback);
 }
 
-MirPixelFormat mf::ScaledBufferStream::pixel_format() const
+auto mf::ScaledBufferStream::next_submission_for_compositor(void const* user_id) -> std::shared_ptr<Submission>
 {
-    return inner->pixel_format();
-}
-
-void mf::ScaledBufferStream::set_scale(float scale)
-{
-    // Pass on the given scale to the inner stream, this is unrelated from the scale we apply.
-    inner->set_scale(scale);
-}
-
-auto mf::ScaledBufferStream::lock_compositor_buffer(void const* user_id) -> std::shared_ptr<graphics::Buffer>
-{
-    return inner->lock_compositor_buffer(user_id);
-}
-
-auto mf::ScaledBufferStream::stream_size() -> geometry::Size
-{
-    // This is it. This is what the whole class is for.
-    return inner->stream_size() * inv_scale;
+    return inner->next_submission_for_compositor(user_id);
 }
 
 auto mf::ScaledBufferStream::has_submitted_buffer() const -> bool

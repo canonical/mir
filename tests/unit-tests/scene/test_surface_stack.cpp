@@ -93,7 +93,7 @@ struct StubSurface : public ms::BasicSurface
             "stub",
             {{-1, -1}, {2, 2}},
             mir_pointer_unconfined,
-            std::list<ms::StreamInfo> { { stream, {}, {} } },
+            std::list<ms::StreamInfo> { { stream, {}} },
             {},
             mr::null_scene_report(),
             std::make_shared<mtd::FakeDisplayConfigurationObserverRegistrar>()),
@@ -197,15 +197,15 @@ TEST_F(SurfaceStack, stacking_order_with_multiple_buffer_streams)
     auto stub_stream1 = std::make_shared<mtd::StubBufferStream>();
     auto stub_stream2 = std::make_shared<mtd::StubBufferStream>();
     std::list<ms::StreamInfo> streams = {
-        { stub_buffer_stream1, {0,0}, {} },
-        { stub_stream0, {2,2}, {} },
-        { stub_stream1, {2,3}, {} },
+        { stub_buffer_stream1, {0,0}},
+        { stub_stream0, {2,2}},
+        { stub_stream1, {2,3}},
     };
     stub_surface1->set_streams(streams);
 
     streams = {
-        { stub_stream2, {2,4}, {} },
-        { stub_buffer_stream3, {0,0}, {} }
+        { stub_stream2, {2,4}},
+        { stub_buffer_stream3, {0,0}}
     };
     stub_surface3->set_streams(streams);
 
@@ -325,7 +325,7 @@ TEST_F(SurfaceStack, generate_elementelements)
             std::string("stub"),
             geom::Rectangle{geom::Point{3 * i, 4 * i},geom::Size{1 * i, 2 * i}},
             mir_pointer_unconfined,
-            std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
+            std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}} },
             std::shared_ptr<mg::CursorImage>(),
             report,
             display_config_registrar);
@@ -524,7 +524,7 @@ TEST_F(SurfaceStack, scene_elements_hold_snapshot_of_positioning_info)
             std::string("stub"),
             geom::Rectangle{geom::Point{3 * i, 4 * i},geom::Size{1 * i, 2 * i}},
             mir_pointer_unconfined,
-            std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
+            std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}} },
             std::shared_ptr<mg::CursorImage>(),
             report,
             display_config_registrar);
@@ -549,8 +549,6 @@ TEST_F(SurfaceStack, generates_scene_elements_that_delay_buffer_acquisition)
     using namespace testing;
 
     auto mock_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    EXPECT_CALL(*mock_stream, lock_compositor_buffer(_))
-        .Times(0);
 
     auto const surface = std::make_shared<ms::BasicSurface>(
         nullptr /* session */,
@@ -558,7 +556,7 @@ TEST_F(SurfaceStack, generates_scene_elements_that_delay_buffer_acquisition)
         std::string("stub"),
         geom::Rectangle{geom::Point{3, 4},geom::Size{1, 2}},
         mir_pointer_unconfined,
-        std::list<ms::StreamInfo> { { mock_stream, {}, {} } },
+        std::list<ms::StreamInfo> { { mock_stream, {}} },
         std::shared_ptr<mg::CursorImage>(),
         report,
         display_config_registrar);
@@ -567,9 +565,6 @@ TEST_F(SurfaceStack, generates_scene_elements_that_delay_buffer_acquisition)
     auto const elements = stack.scene_elements_for(compositor_id);
 
     Mock::VerifyAndClearExpectations(mock_stream.get());
-    EXPECT_CALL(*mock_stream, lock_compositor_buffer(compositor_id))
-        .Times(1)
-        .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
     ASSERT_THAT(elements.size(), Eq(1u));
     elements.front()->renderable()->buffer();
 }
@@ -579,9 +574,6 @@ TEST_F(SurfaceStack, generates_scene_elements_that_allow_only_one_buffer_acquisi
     using namespace testing;
 
     auto mock_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    EXPECT_CALL(*mock_stream, lock_compositor_buffer(_))
-        .Times(1)
-        .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
 
     auto const surface = std::make_shared<ms::BasicSurface>(
         nullptr /* session */,
@@ -589,7 +581,7 @@ TEST_F(SurfaceStack, generates_scene_elements_that_allow_only_one_buffer_acquisi
         std::string("stub"),
         geom::Rectangle{geom::Point{3, 4},geom::Size{1, 2}},
         mir_pointer_unconfined,
-        std::list<ms::StreamInfo> { { mock_stream, {}, {} } },
+        std::list<ms::StreamInfo> { { mock_stream, {}} },
         std::shared_ptr<mg::CursorImage>(),
         report,
         display_config_registrar);

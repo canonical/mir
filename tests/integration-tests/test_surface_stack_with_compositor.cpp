@@ -154,9 +154,9 @@ struct SurfaceStackCompositor : public Test
 {
     SurfaceStackCompositor() :
         timeout{std::chrono::system_clock::now() + std::chrono::seconds(5)},
-        stream(std::make_shared<mc::Stream>(geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888 )),
+        stream(std::make_shared<mc::Stream>()),
         mock_buffer_stream(std::make_shared<NiceMock<mtd::MockBufferStream>>()),
-        streams({ { stream, {0,0}, {} } }),
+        streams({ { stream, {0,0}} }),
         display_config_registrar{std::make_shared<mtd::FakeDisplayConfigurationObserverRegistrar>()},
         stub_surface{std::make_shared<ms::BasicSurface>(
             nullptr /* session */,
@@ -169,8 +169,8 @@ struct SurfaceStackCompositor : public Test
             null_scene_report,
             display_config_registrar)},
         stub_buffer(std::make_shared<mtd::StubBuffer>(geom::Size{100, 100})),
-        other_stream(std::make_shared<mc::Stream>(geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888 )),
-        other_streams({ { other_stream, {0,0}, {} } }),
+        other_stream(std::make_shared<mc::Stream>()),
+        other_streams({ { other_stream, {0,0}} }),
         other_stub_surface{std::make_shared<ms::BasicSurface>(
             nullptr /* session */,
             mw::Weak<mf::WlSurface>{},
@@ -183,8 +183,6 @@ struct SurfaceStackCompositor : public Test
             display_config_registrar)},
         other_stub_buffer(std::make_shared<mtd::StubBuffer>())
     {
-        ON_CALL(*mock_buffer_stream, lock_compositor_buffer(_))
-            .WillByDefault(Return(mt::fake_shared(*stub_buffer)));
     }
     std::shared_ptr<ms::SceneReport> null_scene_report{mr::null_scene_report()};
     ms::SurfaceStack stack{null_scene_report};
