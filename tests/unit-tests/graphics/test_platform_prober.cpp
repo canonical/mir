@@ -20,6 +20,7 @@
 #include <gmock/gmock.h>
 #include <fcntl.h>
 #include <boost/throw_exception.hpp>
+#include <ranges>
 #include <string>
 
 #include "mir/console_services.h"
@@ -28,8 +29,11 @@
 #include "mir/options/default_configuration.h"
 #include "mir/shared_library.h"
 #include "mir/shared_library_prober_report.h"
+#include "mir/test/doubles/fake_display.h"
+#include "mir/test/doubles/mock_gl_rendering_provider.h"
 #include "mir/test/doubles/mock_udev_device.h"
 #include "mir/test/doubles/mock_x11.h"
+#include "mir/test/doubles/null_platform.h"
 #include "mir/test/doubles/stub_console_services.h"
 #include "mir_test_framework/temporary_environment_value.h"
 #include "src/server/graphics/platform_probe.h"
@@ -53,6 +57,7 @@ namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 namespace mg = mir::graphics;
 namespace mo = mir::options;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -1096,4 +1101,175 @@ TEST_F(FullProbeStack, gbm_kms_is_selected_for_nvidia_driver_when_quirk_is_allow
         Pair(IsPlatformForDevice(nouveau_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms"))),
         Pair(IsPlatformForDevice(amd_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms")))
         ));
+}
+
+namespace
+{
+class MockRenderingPlatform : public mtd::NullRenderingPlatform
+{
+public:
+    MockRenderingPlatform()
+        : gl_provider{std::make_shared<testing::NiceMock<mtd::MockGlRenderingProvider>>()}
+    {
+    }
+
+    auto maybe_create_provider(mg::RenderingProvider::Tag const& tag)
+        -> std::shared_ptr<mg::RenderingProvider> override
+    {
+        if (dynamic_cast<mg::GLRenderingProvider::Tag const*>(&tag))
+        {
+            return gl_provider;
+        }
+        return nullptr;
+    }
+
+    std::shared_ptr<mtd::MockGlRenderingProvider> const gl_provider;
+};
+
+auto enumerate_display_sinks(mg::Display& display) -> std::vector<mg::DisplaySink const*>
+{
+    std::vector<mg::DisplaySink const*> sinks;
+    display.for_each_display_sync_group(
+        [&sinks](auto& group)
+        {
+            group.for_each_display_sink(
+                [&sinks](auto const& sink)
+                {
+                    sinks.push_back(&sink);
+                });
+        });
+
+    return sinks;
+}
+
+void assign_suitabilities(
+    mg::RenderingPlatform& platform,
+    std::span<mg::DisplaySink const*> sinks,
+    std::initializer_list<mg::probe::Result> suitabilities)
+{
+    using namespace testing;
+
+    ASSERT_THAT(sinks.size(), Eq(suitabilities.size()));
+
+    auto const gl_provider = dynamic_cast<MockRenderingPlatform&>(platform).gl_provider;
+
+    for (auto [sink, suitability] : std::views::zip(sinks, suitabilities))
+    {
+        ON_CALL(
+            *gl_provider,
+            suitability_for_display(Address(sink)))
+            .WillByDefault(Return(suitability));
+    }
+}
+}
+
+TEST(BufferAllocatorSelection, selects_renderer_that_supports_most_outputs)
+{
+    using namespace testing;
+    mtd::FakeDisplay display{
+        {
+            geom::Rectangle{{0, 0}, {1024, 768}},
+            geom::Rectangle{{1024,0}, {1280, 1024}},
+            geom::Rectangle{{0, 0}, {1024, 768}}
+        }};
+
+    std::vector<std::shared_ptr<mg::RenderingPlatform>> rendering_platforms;
+    for (auto i = 0 ; i < 3 ; ++i)
+    {
+        rendering_platforms.push_back(std::make_shared<MockRenderingPlatform>());
+    }
+
+    auto sinks = enumerate_display_sinks(display);
+    ASSERT_THAT(sinks.size(), Eq(3));
+
+    assign_suitabilities(
+        *rendering_platforms[0],
+        sinks,
+        {mg::probe::unsupported, mg::probe::best, mg::probe::supported});
+    assign_suitabilities(
+        *rendering_platforms[1],
+        sinks,
+        {mg::probe::supported, mg::probe::supported, mg::probe::supported});
+    assign_suitabilities(
+        *rendering_platforms[2],
+        sinks,
+        {mg::probe::unsupported, mg::probe::best, mg::probe::unsupported});
+
+    auto best_provider = mg::select_buffer_allocating_renderer(display, rendering_platforms);
+
+    EXPECT_THAT(best_provider, Eq(rendering_platforms[1]));
+}
+
+TEST(BufferAllocatorSelection, when_two_renderers_support_the_same_number_of_outputs_selects_one_with_most_best)
+{
+    using namespace testing;
+    mtd::FakeDisplay display{
+        {
+            geom::Rectangle{{0, 0}, {1024, 768}},
+            geom::Rectangle{{1024,0}, {1280, 1024}},
+            geom::Rectangle{{0, 0}, {1024, 768}}
+        }};
+
+    std::vector<std::shared_ptr<mg::RenderingPlatform>> rendering_platforms;
+    for (auto i = 0 ; i < 3 ; ++i)
+    {
+        rendering_platforms.push_back(std::make_shared<MockRenderingPlatform>());
+    }
+
+    auto sinks = enumerate_display_sinks(display);
+    ASSERT_THAT(sinks.size(), Eq(3));
+
+    assign_suitabilities(
+        *rendering_platforms[0],
+        sinks,
+        {mg::probe::unsupported, mg::probe::best, mg::probe::supported});
+    assign_suitabilities(
+        *rendering_platforms[1],
+        sinks,
+        {mg::probe::supported, mg::probe::unsupported, mg::probe::supported});
+    assign_suitabilities(
+        *rendering_platforms[2],
+        sinks,
+        {mg::probe::best, mg::probe::best, mg::probe::unsupported});
+
+    auto best_provider = mg::select_buffer_allocating_renderer(display, rendering_platforms);
+
+    EXPECT_THAT(best_provider, Eq(rendering_platforms[2]));
+}
+
+TEST(BufferAllocatorSelection, when_two_renderers_are_equally_good_the_first_one_is_chosen)
+{
+    using namespace testing;
+    mtd::FakeDisplay display{
+        {
+            geom::Rectangle{{0, 0}, {1024, 768}},
+            geom::Rectangle{{1024,0}, {1280, 1024}},
+            geom::Rectangle{{0, 0}, {1024, 768}}
+        }};
+
+    std::vector<std::shared_ptr<mg::RenderingPlatform>> rendering_platforms;
+    for (auto i = 0 ; i < 3 ; ++i)
+    {
+        rendering_platforms.push_back(std::make_shared<MockRenderingPlatform>());
+    }
+
+    auto sinks = enumerate_display_sinks(display);
+    ASSERT_THAT(sinks.size(), Eq(3));
+
+    assign_suitabilities(
+        *rendering_platforms[0],
+        sinks,
+        {mg::probe::unsupported, mg::probe::best, mg::probe::best});
+    assign_suitabilities(
+        *rendering_platforms[1],
+        sinks,
+        {mg::probe::supported, mg::probe::supported, mg::probe::supported});
+    assign_suitabilities(
+        *rendering_platforms[2],
+        sinks,
+        {mg::probe::supported, mg::probe::supported, mg::probe::supported});
+
+    auto best_provider = mg::select_buffer_allocating_renderer(display, rendering_platforms);
+
+    EXPECT_THAT(best_provider, Eq(rendering_platforms[1]));
 }

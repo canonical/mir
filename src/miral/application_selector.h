@@ -78,6 +78,7 @@ public:
 private:
     auto advance(bool reverse, bool within_app) -> Window;
     auto find(Window) -> std::vector<Window>::iterator;
+    void select(Window const&);
 
     WindowManagerTools tools;
 
@@ -90,6 +91,7 @@ private:
 
     /// The application that is currently selected.
     Window selected;
+    std::optional<MirWindowState> restore_state;
 
     bool is_active_ = false;
 

@@ -17,4 +17,5 @@ getting_involved_in_mir
 how-to-use-checkbox-mir
 how-to-calibrate-a-touchscreen-device
 how-to-enable-graphics-core22-on-a-device
+how-to-test-mir-for-a-release
 ```

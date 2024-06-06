@@ -105,7 +105,7 @@ TEST_F(GDesktopFileCache, when_desktop_file_lacks_exec_then_it_cannot_be_found)
     ASSERT_THAT(file, IsNull());
 }
 
-TEST_F(GDesktopFileCache, when_desktop_file_is_set_to_nodisplay_then_it_cannot_be_found)
+TEST_F(GDesktopFileCache, when_desktop_file_is_set_to_nodisplay_then_it_can_still_be_found)
 {
     const char* sh_desktop_contents = "[Desktop Entry]\n"
         "Name=Sh\n"
@@ -116,7 +116,7 @@ TEST_F(GDesktopFileCache, when_desktop_file_is_set_to_nodisplay_then_it_cannot_b
     mf::GDesktopFileCache cache(main_loop);
 
     auto file = cache.lookup_by_app_id("mir.test.info.desktop");
-    ASSERT_THAT(file, IsNull());
+    ASSERT_THAT(file, NotNull());
 }
 
 TEST_F(GDesktopFileCache, when_a_desktop_has_invald_exec_then_it_cannot_be_found)

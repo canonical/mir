@@ -50,6 +50,25 @@ void ApplicationSelector::advise_new_window(WindowInfo const& window_info)
     focus_list.push_back(window_info.window());
 }
 
+void ApplicationSelector::select(miral::Window const& window)
+{
+    if (selected)
+    {
+        // Restore the previously selected window to its previous state when another is selected
+        auto const& info = tools.info_for(selected);
+        if (restore_state && restore_state != info.state())
+        {
+            WindowSpecification spec;
+            spec.state() = restore_state.value();
+            tools.modify_window(selected, spec);
+            restore_state.reset();
+        }
+    }
+
+    // Update the current selection
+    selected = window;
+}
+
 void ApplicationSelector::advise_focus_gained(WindowInfo const& window_info)
 {
     auto window = window_info.window();
@@ -68,8 +87,7 @@ void ApplicationSelector::advise_focus_gained(WindowInfo const& window_info)
             mir::fatal_error("advise_focus_gained: window was not found in the list");
     }
 
-    // Update the current selection
-    selected = window;
+    select(window);
 }
 
 void ApplicationSelector::advise_focus_lost(miral::WindowInfo const& window_info)
@@ -81,7 +99,7 @@ void ApplicationSelector::advise_focus_lost(miral::WindowInfo const& window_info
         return;
     }
 
-    selected = Window();
+    select(Window());
 }
 
 void ApplicationSelector::advise_delete_window(WindowInfo const& window_info)
@@ -139,6 +157,7 @@ auto ApplicationSelector::complete() -> Window
 
     originally_selected_it = focus_list.end();
     is_active_ = false;
+    restore_state.reset();
     return selected;
 }
 
@@ -249,7 +268,9 @@ auto ApplicationSelector::advance(bool reverse, bool within_app) -> Window
     else
         tools.swap_tree_order(next_window.value(), selected);
 
+    auto next_state_to_preserve =  tools.info_for(next_window.value()).state();
     tools.select_active_window(next_window.value());
+    restore_state = next_state_to_preserve;
     return next_window.value();
 }
 

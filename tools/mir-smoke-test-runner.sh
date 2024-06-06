@@ -10,7 +10,8 @@ options="--test-timeout=${timeout}"
 
 root="$( dirname "${BASH_SOURCE[0]}" )"
 
-client_list=`find ${root} -name mir_demo_client_* | grep -v bin$ | sed s?${root}/??`
+# Start with eglinfo for the system
+client_list="eglinfo `find ${root} -name mir_demo_client_* | grep -v bin$`"
 echo "I: client_list=" ${client_list}
 
 ### Run Tests ###
@@ -27,24 +28,21 @@ if [ -O "${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY:-wayland-0}" ] && [ -z "$DISPLAY" 
   export MIR_SERVER_WAYLAND_HOST="${WAYLAND_DISPLAY:-wayland-0}"
 fi
 
-# Start with eglinfo for the system
-echo Running eglinfo client
-date --utc --iso-8601=seconds | xargs echo "[timestamp] Start :" ${client}
-echo WAYLAND_DISPLAY=${wayland_display} ${root}/mir_demo_server ${options} --test-client eglinfo
-WAYLAND_DISPLAY=${wayland_display} ${root}/mir_demo_server ${options} --test-client eglinfo
-date --utc --iso-8601=seconds | xargs echo "[timestamp] End :" ${client}
-
 for client in ${client_list}; do
     echo running client ${client}
     date --utc --iso-8601=seconds | xargs echo "[timestamp] Start :" ${client}
-    echo WAYLAND_DISPLAY=${wayland_display} ${root}/mir_demo_server ${options} --test-client ${root}/${client}
-    if   WAYLAND_DISPLAY=${wayland_display} ${root}/mir_demo_server ${options} --test-client ${root}/${client}
+    echo WAYLAND_DISPLAY=${wayland_display} ${root}/mir_demo_server ${options} --test-client ${client}
+    if   WAYLAND_DISPLAY=${wayland_display} ${root}/mir_demo_server ${options} --test-client ${client}
     then
-      echo "I: [PASSED]" ${root}/${client}
+      echo "I: [PASSED]" ${client}
     else
-      echo "I: [FAILED]" ${root}/${client}
+      echo "I: [FAILED]" ${client}
       failures="${failures} ${client}"
-      mir_rc=-1
+      # eglinfo failing doesn't count as a smoke test failure
+      if [ "${client}" != "eglinfo" ]
+      then
+        mir_rc=-1
+      fi
     fi
    date --utc --iso-8601=seconds | xargs echo "[timestamp] End :" ${client}
 done
