@@ -39,7 +39,6 @@
 #include "mir/main_loop.h"
 #include "mir/udev/wrapper.h"
 
-#include <algorithm>
 #include <boost/throw_exception.hpp>
 
 #include <sstream>
