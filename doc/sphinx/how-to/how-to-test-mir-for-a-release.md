@@ -128,8 +128,21 @@ For each empty box in the matrix above, ensure that the following applications c
    gnome-terminal
    ```
 
-## Mir Console Providers
+5. Test that `X11` apps can be started and can receive input:
+    ```sh
+    sudo apt install x11-apps
+    
+    # first,
+    xeyes
 
+    # then
+    xedit
+
+    # finally
+    xcalc
+    ```
+
+## Mir Console Providers
 For each Ubuntu release ensure that the compositor can start with each of the console providers:
 
 |         | 24.04    | 24.10      |
