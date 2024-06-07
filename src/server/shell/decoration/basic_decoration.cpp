@@ -422,12 +422,13 @@ void msd::BasicDecoration::update(
             renderer->render_titlebar());
     }
 
+    float inv_scale = 1.0f / window_state->scale();
     for (auto const& pair : new_buffers)
     {
         if (pair.second)
             pair.first->submit_buffer(
                 pair.second.value(),
-                pair.second.value()->size(),
+                pair.second.value()->size() * inv_scale,
                 {{0, 0}, geom::SizeD{pair.second.value()->size()}});
     }
 }
