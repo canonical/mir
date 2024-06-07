@@ -17,7 +17,6 @@ global:
     mir::DefaultServerConfiguration::set_wayland_extension_filter*;
     mir::DefaultServerConfiguration::the_application_not_responding_detector*;
     mir::DefaultServerConfiguration::the_buffer_allocator*;
-    mir::DefaultServerConfiguration::the_buffer_stream_factory*;
     mir::DefaultServerConfiguration::the_clock*;
     mir::DefaultServerConfiguration::the_composite_event_filter*;
     mir::DefaultServerConfiguration::the_compositor*;
@@ -185,7 +184,6 @@ global:
     mir::Server::stop*;
     mir::Server::supported_pixel_formats*;
     mir::Server::the_application_not_responding_detector*;
-    mir::Server::the_buffer_stream_factory*;
     mir::Server::the_composite_event_filter*;
     mir::Server::the_compositor*;
     mir::Server::the_compositor_report*;
@@ -258,6 +256,15 @@ global:
     mir::compositor::SceneElement::operator*;
     mir::compositor::ScreenShooter::?ScreenShooter*;
     mir::compositor::ScreenShooter::ScreenShooter*;
+    mir::compositor::Stream::?Stream*;
+    mir::compositor::Stream::Stream*;
+    mir::compositor::Stream::has_submitted_buffer*;
+    mir::compositor::Stream::lock_compositor_buffer*;
+    mir::compositor::Stream::pixel_format*;
+    mir::compositor::Stream::set_frame_posted_callback*;
+    mir::compositor::Stream::set_scale*;
+    mir::compositor::Stream::stream_size*;
+    mir::compositor::Stream::submit_buffer*;
     mir::detail::FdSources::?FdSources*;
     mir::detail::FdSources::FdSources*;
     mir::detail::FdSources::add*;
@@ -394,9 +401,6 @@ global:
     mir::scene::ApplicationNotRespondingDetectorWrapper::register_session*;
     mir::scene::ApplicationNotRespondingDetectorWrapper::unregister_observer*;
     mir::scene::ApplicationNotRespondingDetectorWrapper::unregister_session*;
-    mir::scene::BufferStreamFactory::?BufferStreamFactory*;
-    mir::scene::BufferStreamFactory::BufferStreamFactory*;
-    mir::scene::BufferStreamFactory::operator*;
     mir::scene::ClipboardObserver::?ClipboardObserver*;
     mir::scene::ClipboardObserver::ClipboardObserver*;
     mir::scene::DataExchangeSource::?DataExchangeSource*;
@@ -667,7 +671,6 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_wayland_extension_filter*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_application_not_responding_detector*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_buffer_allocator*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_buffer_stream_factory*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_clock*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_composite_event_filter*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_compositor*;
@@ -786,6 +789,14 @@ global:
     non-virtual?thunk?to?mir::compositor::Scene::?Scene*;
     non-virtual?thunk?to?mir::compositor::SceneElement::?SceneElement*;
     non-virtual?thunk?to?mir::compositor::ScreenShooter::?ScreenShooter*;
+    non-virtual?thunk?to?mir::compositor::Stream::?Stream*;
+    non-virtual?thunk?to?mir::compositor::Stream::has_submitted_buffer*;
+    non-virtual?thunk?to?mir::compositor::Stream::lock_compositor_buffer*;
+    non-virtual?thunk?to?mir::compositor::Stream::pixel_format*;
+    non-virtual?thunk?to?mir::compositor::Stream::set_frame_posted_callback*;
+    non-virtual?thunk?to?mir::compositor::Stream::set_scale*;
+    non-virtual?thunk?to?mir::compositor::Stream::stream_size*;
+    non-virtual?thunk?to?mir::compositor::Stream::submit_buffer*;
     non-virtual?thunk?to?mir::frontend::BufferSink::?BufferSink*;
     non-virtual?thunk?to?mir::frontend::BufferStream::?BufferStream*;
     non-virtual?thunk?to?mir::frontend::Connector::?Connector*;
@@ -837,7 +848,6 @@ global:
     non-virtual?thunk?to?mir::scene::ApplicationNotRespondingDetectorWrapper::register_session*;
     non-virtual?thunk?to?mir::scene::ApplicationNotRespondingDetectorWrapper::unregister_observer*;
     non-virtual?thunk?to?mir::scene::ApplicationNotRespondingDetectorWrapper::unregister_session*;
-    non-virtual?thunk?to?mir::scene::BufferStreamFactory::?BufferStreamFactory*;
     non-virtual?thunk?to?mir::scene::ClipboardObserver::?ClipboardObserver*;
     non-virtual?thunk?to?mir::scene::DataExchangeSource::?DataExchangeSource*;
     non-virtual?thunk?to?mir::scene::IdleHub::?IdleHub*;
@@ -1034,6 +1044,7 @@ global:
     typeinfo?for?mir::compositor::Scene;
     typeinfo?for?mir::compositor::SceneElement;
     typeinfo?for?mir::compositor::ScreenShooter;
+    typeinfo?for?mir::compositor::Stream;
     typeinfo?for?mir::detail::FdSources;
     typeinfo?for?mir::detail::GMainContextHandle;
     typeinfo?for?mir::detail::GSourceHandle;
@@ -1078,7 +1089,6 @@ global:
     typeinfo?for?mir::scene::ApplicationNotRespondingDetector::Observer;
     typeinfo?for?mir::scene::ApplicationNotRespondingDetector;
     typeinfo?for?mir::scene::ApplicationNotRespondingDetectorWrapper;
-    typeinfo?for?mir::scene::BufferStreamFactory;
     typeinfo?for?mir::scene::Clipboard;
     typeinfo?for?mir::scene::ClipboardObserver;
     typeinfo?for?mir::scene::DataExchangeSource;
@@ -1233,6 +1243,7 @@ global:
     vtable?for?mir::compositor::Scene;
     vtable?for?mir::compositor::SceneElement;
     vtable?for?mir::compositor::ScreenShooter;
+    vtable?for?mir::compositor::Stream;
     vtable?for?mir::frontend::BufferSink;
     vtable?for?mir::frontend::BufferStream;
     vtable?for?mir::frontend::Connector;
@@ -1270,7 +1281,6 @@ global:
     vtable?for?mir::scene::ApplicationNotRespondingDetector::Observer;
     vtable?for?mir::scene::ApplicationNotRespondingDetector;
     vtable?for?mir::scene::ApplicationNotRespondingDetectorWrapper;
-    vtable?for?mir::scene::BufferStreamFactory;
     vtable?for?mir::scene::Clipboard;
     vtable?for?mir::scene::ClipboardObserver;
     vtable?for?mir::scene::DataExchangeSource;

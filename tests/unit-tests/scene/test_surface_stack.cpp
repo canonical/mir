@@ -21,7 +21,6 @@
 #include "mir/compositor/scene_element.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/basic_surface.h"
-#include "src/server/compositor/stream.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
 #include "mir/test/doubles/stub_buffer_stream.h"

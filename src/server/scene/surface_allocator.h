@@ -27,7 +27,6 @@ namespace graphics
 class CursorImage;
 class DisplayConfigurationObserver;
 }
-namespace compositor { class BufferStream; }
 namespace scene
 {
 class SceneReport;

@@ -18,7 +18,6 @@
 
 #include "mir/log.h"
 #include "mir/shell/shell.h"
-#include "buffer_stream_factory.h"
 #include "default_display_buffer_compositor_factory.h"
 #include "mir/executor.h"
 #include "multi_threaded_compositor.h"
@@ -32,16 +31,6 @@
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
-
-std::shared_ptr<ms::BufferStreamFactory>
-mir::DefaultServerConfiguration::the_buffer_stream_factory()
-{
-    return buffer_stream_factory(
-        []()
-        {
-            return std::make_shared<mc::BufferStreamFactory>();
-        });
-}
 
 std::shared_ptr<mc::DisplayBufferCompositorFactory>
 mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
