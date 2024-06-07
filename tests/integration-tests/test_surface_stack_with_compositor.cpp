@@ -18,7 +18,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/renderer/renderer_factory.h"
 #include "src/server/report/null_report_factory.h"
-#include "src/server/scene/surface_stack.h"
+#include "mir/scene/surface_stack.h"
 #include "src/server/scene/basic_surface.h"
 #include "src/server/compositor/default_display_buffer_compositor_factory.h"
 #include "src/server/compositor/multi_threaded_compositor.h"

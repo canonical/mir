@@ -19,6 +19,7 @@ set(
   test_surface_stack_with_compositor.cpp
   test_display_server_main_loop_events.cpp
   test_server_client_types.cpp
+  test_minimal_window_manager.cpp
 )
 
 add_subdirectory(compositor/)
@@ -55,10 +56,13 @@ target_link_libraries(
   mir-test-doubles-static
 
   mircommon
+  miral
+  miral-internal
 
   ${MIR_PLATFORM_REFERENCES}
   ${MIR_SERVER_REFERENCES}
   Boost::system
+
   # GBM platform dependencies
   PkgConfig::DRM
   # Shared platform dependencies

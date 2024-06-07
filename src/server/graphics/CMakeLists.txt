@@ -11,7 +11,7 @@ add_library(
   software_cursor.cpp
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/graphics/display_configuration_observer.h
   display_configuration_observer_multiplexer.cpp
-  display_configuration_observer_multiplexer.h
+  ${PROJECT_SOURCE_DIR}/src/include/server/mir/graphics/display_configuration_observer_multiplexer.h
   platform_probe.cpp
   platform_probe.h
   multiplexing_display.h

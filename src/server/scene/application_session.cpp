@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "application_session.h"
+#include "mir/scene/application_session.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/session_container.h"

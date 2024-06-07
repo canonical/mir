@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "display_configuration_observer_multiplexer.h"
+#include "mir/graphics/display_configuration_observer_multiplexer.h"
 
 namespace mg = mir::graphics;
 namespace ms = mir::scene;

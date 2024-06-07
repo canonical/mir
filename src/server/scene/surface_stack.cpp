@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "surface_stack.h"
+#include "mir/scene/surface_stack.h"
 #include "rendering_tracker.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/null_surface_observer.h"

@@ -23,7 +23,7 @@
 #include "mir/shell/abstract_shell.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
-#include "default_persistent_surface_store.h"
+#include "mir/shell/default_persistent_surface_store.h"
 #include "graphics_display_layout.h"
 #include "decoration/basic_manager.h"
 #include "decoration/basic_decoration.h"

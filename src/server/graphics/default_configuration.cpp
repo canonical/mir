@@ -28,7 +28,7 @@
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/cursor.h"
-#include "display_configuration_observer_multiplexer.h"
+#include "mir/graphics/display_configuration_observer_multiplexer.h"
 
 #include "mir/shared_library.h"
 #include "mir/shared_library_prober.h"
