@@ -17,6 +17,7 @@
 #include "miral/runner.h"
 #include "system_compositor_window_manager.h"
 #include "fd_manager.h"
+#include "input_device_config.h"
 #include "join_client_threads.h"
 #include "launch_app.h"
 
@@ -148,6 +149,7 @@ try
             );
         });
 
+        add_input_device_configuration_options_to(*server);
         for (auto& option : options)
             option(*server);
 
