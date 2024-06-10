@@ -6,7 +6,7 @@ provides a stable, well tested and performant platform with touch,
 mouse and tablet input, multi-display capability and secure 
 client-server communications.
 
-Mir deals with the bringup and configuration of a broad array of
+Mir deals with the bringup and configuration of a broad array ofs
 graphics and input hardware, abstracts hardware differences away
 from shell authors (transparently dealing with hardware quirks) and
 integrates with system components such as greeters.
