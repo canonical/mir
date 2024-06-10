@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "shell_report.h"
+#include "mir/report/null/shell_report.h"
 
 namespace mrn = mir::report::null;
 

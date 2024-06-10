@@ -32,11 +32,11 @@
 #include <mir/input/xkb_mapper.h>
 #include <mir/input/input_sink.h>
 #include <mir/wayland/weak.h>
+#include <mir/report/null/shell_report.h>
 #include "mir/test/doubles/stub_input_targeter.h"
 #include "mir/test/doubles/stub_session.h"
 #include "mir/test/doubles/null_prompt_session_manager.h"
 #include "mir/test/doubles/stub_scene_report.h"
-#include "mir/test/doubles/stub_shell_report.h"
 #include "mir/test/doubles/stub_decoration_manager.h"
 #include "mir/test/doubles/stub_display_layout.h"
 #include "mir/test/doubles/stub_input_seat.h"
@@ -416,7 +416,7 @@ struct mir_test_framework::WindowManagementTestHarness::Self : public ms::Surfac
               surface_stack,
               std::make_shared<HarnessSessionCoordinator>(surface_stack, fake_display_configuration_observer_registrar),
               std::make_shared<mtd::NullPromptSessionManager>(),
-              std::make_shared<mtd::StubShellReport>(),
+              std::make_shared<mir::report::null::ShellReport>(),
               [&](msh::FocusController* focus_controller)
               {
                   return std::make_shared<miral::BasicWindowManager>(

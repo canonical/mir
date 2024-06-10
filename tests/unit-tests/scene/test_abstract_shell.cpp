@@ -24,7 +24,7 @@
 #include "mir/graphics/display_configuration_observer.h"
 #include "mir/wayland/weak.h"
 
-#include "src/server/report/null/shell_report.h"
+#include "mir/report/null/shell_report.h"
 #include "src/include/server/mir/scene/session_event_sink.h"
 #include "src/server/scene/session_manager.h"
 #include "src/server/shell/decoration/null_manager.h"

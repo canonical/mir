@@ -20,7 +20,7 @@
 #include "display_report.h"
 #include "input_report.h"
 #include "seat_report.h"
-#include "shell_report.h"
+#include "mir/report/null/shell_report.h"
 #include "scene_report.h"
 #include "mir/logging/null_shared_library_prober_report.h"
 
