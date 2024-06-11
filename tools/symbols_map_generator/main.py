@@ -147,8 +147,23 @@ def get_namespace_str(node: clang.cindex.Cursor) -> list[str]:
     
     return get_namespace_str(node.semantic_parent) + [spelling]
 
+def symbol_passes_quirk_check(library_name: str, symbol: str):
+    """
+    Checks if the provided 
+    """
 
-def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> set[str]:   
+    # WaylandExtensions::Context ctor and dtor symbols are inline
+    # but can be exported by unoptimized builds.
+    # This makes the "regenerate" script hide them:
+    if library_name == "miral":
+        return (symbol != "miral::SessionLockListener::?SessionLockListener*;"
+            and symbol != "miral::WaylandExtensions::Context::?Context*;"
+            and symbol != "miral::WaylandExtensions::Context::Context*;"
+            and symbol != "vtable?for?miral::WaylandExtensions::Context;")
+
+    return True
+
+def traverse_ast(library_name: str, node: clang.cindex.Cursor, filename: str, result: set[str]) -> set[str]:   
     # Ignore private and protected variables
     if (node.access_specifier == clang.cindex.AccessSpecifier.PRIVATE):
         return result
@@ -168,17 +183,21 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
         namespace_str = "::".join(get_namespace_str(node))
         _logger.debug(f"Emitting node {namespace_str} in file {node.location.file.name}")
 
+        def add_symbol_str(s: str):
+            if symbol_passes_quirk_check(library_name, s):
+                result.add(s)
+
         # Classes and structs have a specific output
         if (node.kind == clang.cindex.CursorKind.CLASS_DECL
             or node.kind == clang.cindex.CursorKind.STRUCT_DECL):
             if has_vtable(node):
-                result.add(f"vtable?for?{namespace_str};")
+                add_symbol_str(f"vtable?for?{namespace_str};")
             if has_virtual_base_class(node):
-                result.add(f"VTT?for?{namespace_str};")
-            result.add(f"typeinfo?for?{namespace_str};")
+                add_symbol_str(f"VTT?for?{namespace_str};")
+            add_symbol_str(f"typeinfo?for?{namespace_str};")
         else:
             def add_internal(s: str):
-                result.add(f"{s}*;")
+                add_symbol_str(f"{s}*;")
             add_internal(namespace_str)
             
             # Check if we're marked virtual
@@ -252,14 +271,14 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
             return result
 
         for child in node.get_children():
-            traverse_ast(child, filename, result)
+            traverse_ast(library_name, child, filename, result)
     else:
         _logger.debug(f"Nothing to process for node={node.spelling} in file={node.location.file.name}")
 
     return result
 
 
-def process_directory(directory: Path, search_dirs: Optional[list[str]]) -> set[str]:
+def process_directory(library_name: str, directory: Path, search_dirs: Optional[list[str]]) -> set[str]:
     result = set()
 
     files = directory.rglob('*.h')
@@ -277,7 +296,7 @@ def process_directory(directory: Path, search_dirs: Optional[list[str]]) -> set[
             args=file_args,  
             options=0)
         root = tu.cursor
-        list(traverse_ast(root, file.as_posix(), result))
+        list(traverse_ast(library_name, root, file.as_posix(), result))
 
     return result
 
@@ -429,6 +448,7 @@ def main():
     if args.external_headers:
         _logger.info(f"Processing external headers directory: {args.external_headers}")
         external_symbols: set[str] = process_directory(
+            library,
             args.external_headers,
             include_dirs
         )
@@ -437,6 +457,7 @@ def main():
     if args.internal_headers:
         _logger.info(f"Processing internal headers directory: {args.internal_headers}")
         internal_symbols: set[str] = process_directory(
+            library,
             args.internal_headers,
             include_dirs
         )
