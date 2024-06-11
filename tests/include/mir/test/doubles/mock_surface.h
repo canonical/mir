@@ -40,7 +40,7 @@ struct MockSurface : public scene::BasicSurface
             {},
             {{},{}},
             mir_pointer_unconfined,
-            { { std::make_shared<testing::NiceMock<MockBufferStream>>(), {0, 0}, {} } },
+            { { std::make_shared<testing::NiceMock<MockBufferStream>>(), {0, 0}} },
             {},
             mir::report::null_scene_report(),
             std::make_shared<FakeDisplayConfigurationObserverRegistrar>())

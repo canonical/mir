@@ -44,10 +44,6 @@ struct MockEventSink : public frontend::EventSink
     MOCK_METHOD(void, handle_display_config_change, (graphics::DisplayConfiguration const&), (override));
     MOCK_METHOD(void, handle_error, (ClientVisibleError const&), (override));
     MOCK_METHOD(void, send_ping, (int32_t), (override));
-    MOCK_METHOD(void, send_buffer, (frontend::BufferStreamId, graphics::Buffer&), (override));
-    MOCK_METHOD(void, add_buffer, (graphics::Buffer&), (override));
-    MOCK_METHOD(void, update_buffer, (graphics::Buffer&), (override));
-    MOCK_METHOD(void, error_buffer, (geometry::Size, MirPixelFormat, std::string const&), (override));
     MOCK_METHOD(void, handle_input_config_change, (MirInputConfig const&), (override));
 };
 }

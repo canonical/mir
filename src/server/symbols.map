@@ -234,6 +234,8 @@ global:
     mir::check_for_termination_exception*;
     mir::clear_termination_exception*;
     mir::compositor::BufferStream::?BufferStream*;
+    mir::compositor::BufferStream::Submission::?Submission*;
+    mir::compositor::BufferStream::Submission::Submission*;
     mir::compositor::Compositor::?Compositor*;
     mir::compositor::Compositor::Compositor*;
     mir::compositor::Compositor::operator*;
@@ -1035,6 +1037,7 @@ global:
     typeinfo?for?mir::ServerConfiguration;
     typeinfo?for?mir::ServerStatusListener;
     typeinfo?for?mir::WaylandExtensionHook;
+    typeinfo?for?mir::compositor::BufferStream::Submission;
     typeinfo?for?mir::compositor::BufferStream;
     typeinfo?for?mir::compositor::Compositor;
     typeinfo?for?mir::compositor::CompositorReport;

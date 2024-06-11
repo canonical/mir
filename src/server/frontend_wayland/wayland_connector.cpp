@@ -34,7 +34,6 @@
 #include "mir/log.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/wayland.h"
-#include "mir/frontend/buffer_stream_id.h"
 
 #include <sys/eventfd.h>
 #include <sys/stat.h>

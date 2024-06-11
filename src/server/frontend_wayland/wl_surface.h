@@ -17,6 +17,7 @@
 #ifndef MIR_FRONTEND_WL_SURFACE_H
 #define MIR_FRONTEND_WL_SURFACE_H
 
+#include "mir/geometry/forward.h"
 #include "wayland_wrapper.h"
 #include "mir/wayland/weak.h"
 
@@ -157,6 +158,7 @@ private:
 
     WlSurfaceState pending;
     geometry::Displacement offset_;
+    float inv_scale{1.0f};
     std::optional<geometry::Size> buffer_size_;
     std::vector<wayland::Weak<WlSurfaceState::Callback>> frame_callbacks;
     std::optional<std::vector<mir::geometry::Rectangle>> input_shape;

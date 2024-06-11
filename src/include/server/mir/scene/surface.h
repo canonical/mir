@@ -38,7 +38,6 @@ struct StreamInfo
 {
     std::shared_ptr<compositor::BufferStream> stream;
     geometry::Displacement displacement;
-    optional_value<geometry::Size> size;
 };
 
 class SurfaceObserver;

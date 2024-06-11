@@ -62,27 +62,13 @@ struct SurfaceCreation : public ::testing::Test
     {
     }
 
-    void SetUp() override
-    {
-        using namespace testing;
-
-        notification_count = 0;
-        change_notification = [this]()
-        {
-            notification_count++;
-        };
-    }
-
     void TearDown() override
     {
         executor.execute();
     }
 
     std::shared_ptr<testing::NiceMock<mtd::MockBufferStream>> mock_buffer_stream = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
-    std::list<ms::StreamInfo> streams{ { mock_buffer_stream, {}, {} } };
-    std::function<void()> change_notification;
-    int notification_count = 0;
-    mtd::StubBuffer stub_buffer;
+    std::list<ms::StreamInfo> streams{ { mock_buffer_stream, {}} };
 
     std::string surface_name = "test_surfaceA";
     MirPixelFormat pf = mir_pixel_format_abgr_8888;

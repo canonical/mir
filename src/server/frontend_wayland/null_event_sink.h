@@ -36,17 +36,9 @@ public:
 
     void send_ping(int32_t serial) override;
 
-    void send_buffer(frontend::BufferStreamId id, graphics::Buffer& buffer) override;
-
     void handle_input_config_change(MirInputConfig const&) override;
 
     void handle_error(ClientVisibleError const&) override;
-
-    void add_buffer(graphics::Buffer&) override;
-
-    void error_buffer(geometry::Size, MirPixelFormat, std::string const&) override;
-
-    void update_buffer(graphics::Buffer&) override;
 };
 }
 }

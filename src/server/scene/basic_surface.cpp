@@ -20,7 +20,6 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/cursor_image.h"
 #include "mir/graphics/null_display_configuration_observer.h"
-#include "mir/graphics/pixel_format_utils.h"
 #include "mir/geometry/displacement.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/observer_multiplexer.h"
@@ -691,21 +690,19 @@ class SurfaceSnapshot : public mg::Renderable
 {
 public:
     SurfaceSnapshot(
-        std::shared_ptr<mc::BufferStream> const& stream,
-        void const* compositor_id,
-        geom::Rectangle const& position,
+        std::shared_ptr<mc::BufferStream::Submission> buffer,
+        geom::Point top_left,
         std::optional<geom::Rectangle> const& clip_area,
         glm::mat4 const& transform,
         float alpha,
         mg::Renderable::ID id,
         ms::Surface const* surface)
-    : underlying_buffer_stream{stream},
-      compositor_id{compositor_id},
+    : entry{std::move(buffer)},
       alpha_{alpha},
-      screen_position_(position),
-      clip_area_(clip_area),
-      transformation_(transform),
-      id_(id),
+      screen_position_{top_left, entry->size()},
+      clip_area_{clip_area},
+      transformation_{transform},
+      id_{id},
       surface{surface}
     {
     }
@@ -716,9 +713,7 @@ public:
 
     std::shared_ptr<mg::Buffer> buffer() const override
     {
-        if (!compositor_buffer)
-            compositor_buffer = underlying_buffer_stream->lock_compositor_buffer(compositor_id);
-        return compositor_buffer;
+        return entry->claim_buffer();
     }
 
     geom::Rectangle screen_position() const override
@@ -734,7 +729,7 @@ public:
     { return transformation_; }
 
     bool shaped() const override
-    { return mg::contains_alpha(underlying_buffer_stream->pixel_format()); }
+    { return entry->pixel_format().has_alpha(); }
 
     mg::Renderable::ID id() const override
     { return id_; }
@@ -744,9 +739,7 @@ public:
         return surface;
     }
 private:
-    std::shared_ptr<mc::BufferStream> const underlying_buffer_stream;
-    std::shared_ptr<mg::Buffer> mutable compositor_buffer;
-    void const*const compositor_id;
+    std::shared_ptr<mc::BufferStream::Submission> const entry;
     float const alpha_;
     geom::Rectangle const screen_position_;
     std::optional<geom::Rectangle> const clip_area_;
@@ -804,17 +797,14 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
     {
         if (info.stream->has_submitted_buffer())
         {
-            geom::Size size;
-            if (info.size.is_set())
-                size = info.size.value();
-            else
-                size = info.stream->stream_size();
-
             list.emplace_back(std::make_shared<SurfaceSnapshot>(
-                info.stream, id,
-                geom::Rectangle{content_top_left_ + info.displacement, std::move(size)},
+                info.stream->next_submission_for_compositor(id),
+                content_top_left_ + info.displacement,
                 state->clip_area,
-                state->transformation_matrix, state->surface_alpha, info.stream.get(), this));
+                state->transformation_matrix,
+                state->surface_alpha,
+                info.stream.get(),
+                this));
         }
     }
     return list;
@@ -966,15 +956,14 @@ void mir::scene::BasicSurface::update_frame_posted_callbacks(State& state)
 {
     for (auto& layer : state.layers)
     {
-        auto const position = geom::Point{} + state.margins.left + state.margins.top + layer.displacement;
+        auto const surface_local_position = geom::Point{} + state.margins.left + state.margins.top + layer.displacement;
         layer.stream->set_frame_posted_callback(
-            [this, observers=std::weak_ptr{observers}, position, explicit_size=layer.size, stream=layer.stream.get()]
-                (auto const&)
+            [this, observers=std::weak_ptr{observers}, surface_local_position]
+                (auto const& size)
             {
-                auto const logical_size = explicit_size ? explicit_size.value() : stream->stream_size();
                 if (auto const o = observers.lock())
                 {
-                    o->frame_posted(this, geom::Rectangle{position, logical_size});
+                    o->frame_posted(this, geom::Rectangle{surface_local_position, size});
                 }
             });
     }

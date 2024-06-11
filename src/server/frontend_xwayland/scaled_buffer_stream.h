@@ -35,22 +35,22 @@ public:
 
     /// Overrides from frontend::BufferStream
     /// @{
-    void submit_buffer(std::shared_ptr<graphics::Buffer> const& buffer);
+    void submit_buffer(
+        std::shared_ptr<graphics::Buffer> const& buffer,
+        geometry::Size dst_size,
+        geometry::RectangleD src_bounds);
     void set_frame_posted_callback(std::function<void(geometry::Size const&)> const& callback);
-    MirPixelFormat pixel_format() const;
-    void set_scale(float scale);
     /// @}
 
     /// Overrides from compositor::BufferStream
     /// @{
-    auto lock_compositor_buffer(void const* user_id) -> std::shared_ptr<graphics::Buffer>;
-    auto stream_size() -> geometry::Size;
+    auto next_submission_for_compositor(void const* user_id) -> std::shared_ptr<Submission>;
     auto has_submitted_buffer() const -> bool;
     /// @}
 
 private:
     std::shared_ptr<compositor::BufferStream> const inner;
-    float const inv_scale;
+    float const scale;
 };
 }
 }
