@@ -17,6 +17,8 @@
 #ifndef MIR_TEST_DOUBLES_NULL_BUFFER_STREAM_H_
 #define MIR_TEST_DOUBLES_NULL_BUFFER_STREAM_H_
 
+#include "mir/geometry/forward.h"
+#include "mir_toolkit/common.h"
 #include <mir/compositor/buffer_stream.h>
 #include <mir/test/doubles/stub_buffer.h>
 
@@ -35,26 +37,52 @@ public:
         stub_compositor_buffer = std::make_shared<StubBuffer>();
     }
 
-
-    std::shared_ptr<graphics::Buffer> lock_compositor_buffer(void const*) override
+    auto next_submission_for_compositor(void const*) -> std::shared_ptr<Submission> override
     {
+        class DummySubmission : public Submission
+        {
+        public:
+            DummySubmission(std::shared_ptr<graphics::Buffer> buf)
+                : buf{std::move(buf)}
+            {
+            }
+
+            auto claim_buffer() -> std::shared_ptr<graphics::Buffer> override
+            {
+                return buf;
+            }
+
+            auto size() const -> geometry::Size override
+            {
+                return buf->size();
+            }
+
+            auto source_rect() const -> geometry::RectangleD override
+            {
+                return {{0, 0}, geometry::SizeD{buf->size()}};
+            }
+
+            auto pixel_format() const -> graphics::DRMFormat override
+            {
+                return graphics::DRMFormat::from_mir_format(mir_pixel_format_xbgr_8888);
+            }
+        private:
+            std::shared_ptr<graphics::Buffer> const buf;
+        };
+
         --nready;
-        return stub_compositor_buffer;
+        return std::make_shared<DummySubmission>(stub_compositor_buffer);
     }
 
-    geometry::Size stream_size() override
-    {
-        return geometry::Size();
-    }
-
-    void submit_buffer(std::shared_ptr<graphics::Buffer> const& b) override
+    void submit_buffer(
+        std::shared_ptr<graphics::Buffer> const& b,
+        geometry::Size /*dst_size*/,
+        geometry::RectangleD /*src_bounds*/) override
     {
         if (b) ++nready;
     }
-    MirPixelFormat pixel_format() const override { return mir_pixel_format_abgr_8888; }
     void set_frame_posted_callback(std::function<void(geometry::Size const&)> const&) override {}
     bool has_submitted_buffer() const override { return true; }
-    void set_scale(float) override {}
 
     std::shared_ptr<graphics::Buffer> stub_compositor_buffer;
     int nready = 0;

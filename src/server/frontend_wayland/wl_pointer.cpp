@@ -596,8 +596,11 @@ void WlSurfaceCursor::apply_latest_buffer()
     {
         if (stream->has_submitted_buffer())
         {
+            /* TODO: We are obviously discarding any scaling information from the surface here;
+             * we should take it into account when rendering the cursor
+             */
             auto const cursor_image = std::make_shared<BufferCursorImage>(
-                stream->lock_compositor_buffer(this),
+                stream->next_submission_for_compositor(this)->claim_buffer(),
                 hotspot);
             surface->set_cursor_image(cursor_image);
         }

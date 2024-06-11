@@ -29,8 +29,7 @@ auto msh::operator==(StreamSpecification const& lhs, StreamSpecification const& 
 {
     return
         lhs.stream.lock() == rhs.stream.lock() &&
-        lhs.displacement == rhs.displacement &&
-        lhs.size == rhs.size;
+        lhs.displacement == rhs.displacement;
 }
 
 bool msh::SurfaceSpecification::is_empty() const

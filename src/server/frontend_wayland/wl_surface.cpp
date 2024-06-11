@@ -16,6 +16,7 @@
 
 #include "wl_surface.h"
 
+#include "mir/geometry/forward.h"
 #include "wayland_utils.h"
 #include "wl_surface_role.h"
 #include "wl_subcompositor.h"
@@ -209,7 +210,7 @@ void mf::WlSurface::populate_surface_data(std::vector<shell::StreamSpecification
 {
     geometry::Displacement offset = parent_offset + offset_;
 
-    buffer_streams.push_back(msh::StreamSpecification{stream, offset, {}});
+    buffer_streams.push_back(msh::StreamSpecification{stream, offset});
     geom::Rectangle surface_rect = {geom::Point{} + offset, buffer_size_.value_or(geom::Size{})};
     if (input_shape)
     {
@@ -330,7 +331,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         input_shape = state.input_shape.value();
 
     if (state.scale)
-        stream->set_scale(state.scale.value());
+        inv_scale = 1.0f / state.scale.value();
 
     auto const executor_send_frame_callbacks = [executor = wayland_executor, weak_self = mw::make_weak(this)]()
         {
@@ -392,8 +393,8 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                     mir_buffer->id().as_value());
             }
 
-            stream->submit_buffer(mir_buffer);
-            auto const new_buffer_size = stream->stream_size();
+            stream->submit_buffer(mir_buffer, mir_buffer->size() * inv_scale, {{0, 0}, geom::SizeD{mir_buffer->size()}});
+            auto const new_buffer_size = mir_buffer->size() * inv_scale;
 
             if (std::make_optional(new_buffer_size) != buffer_size_)
             {

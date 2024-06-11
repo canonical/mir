@@ -16,6 +16,7 @@
 
 #include "mir/compositor/stream.h"
 #include "multi_monitor_arbiter.h"
+#include "mir/geometry/rectangle.h"
 #include "mir/graphics/buffer.h"
 #include <boost/throw_exception.hpp>
 #include <math.h>
@@ -26,15 +27,8 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
-mc::Stream::Stream(
-    geom::Size size, MirPixelFormat pf) :
+mc::Stream::Stream() :
     arbiter(std::make_shared<mc::MultiMonitorArbiter>()),
-    latest_state{
-        State {
-            .latest_buffer_size = size,
-            .scale_ = 1.0f,
-            .pf = pf
-    }},
     first_frame_posted(false),
     frame_callback{[](auto){}}
 {
@@ -42,26 +36,19 @@ mc::Stream::Stream(
 
 mc::Stream::~Stream() = default;
 
-void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
+void mc::Stream::submit_buffer(
+    std::shared_ptr<mg::Buffer> const& buffer,
+    geom::Size dst_size,
+    geom::RectangleD src_bounds)
 {
     if (!buffer)
         BOOST_THROW_EXCEPTION(std::invalid_argument("cannot submit null buffer"));
 
-    {
-        auto state = latest_state.lock();
-        state->pf = buffer->pixel_format();
-        state->latest_buffer_size = buffer->size();
-        arbiter->submit_buffer(buffer);
-        first_frame_posted = true;
-    }
+    arbiter->submit_buffer(buffer, dst_size, src_bounds);
+    first_frame_posted = true;
     {
         (*frame_callback.lock())(buffer->size());
     }
-}
-
-MirPixelFormat mc::Stream::pixel_format() const
-{
-    return latest_state.lock()->pf;
 }
 
 void mc::Stream::set_frame_posted_callback(
@@ -70,26 +57,13 @@ void mc::Stream::set_frame_posted_callback(
     *frame_callback.lock() = callback;
 }
 
-std::shared_ptr<mg::Buffer> mc::Stream::lock_compositor_buffer(void const* id)
+auto mc::Stream::next_submission_for_compositor(void const* id) -> std::shared_ptr<Submission>
 {
     return arbiter->compositor_acquire(id);
-}
-
-geom::Size mc::Stream::stream_size()
-{
-    auto state = latest_state.lock();
-    return geom::Size{
-        roundf(state->latest_buffer_size.width.as_int() / state->scale_),
-        roundf(state->latest_buffer_size.height.as_int() / state->scale_)};
 }
 
 bool mc::Stream::has_submitted_buffer() const
 {
     // Don't need to lock mutex because first_frame_posted is atomic
     return first_frame_posted;
-}
-
-void mc::Stream::set_scale(float scale)
-{
-    latest_state.lock()->scale_ = scale;
 }

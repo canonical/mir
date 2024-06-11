@@ -84,7 +84,7 @@ struct MockSurface
               {},
               {{},{}},
               mir_pointer_unconfined,
-              { { std::make_shared<testing::NiceMock<mtd::MockBufferStream>>(), {0, 0}, {} } },
+              { { std::make_shared<testing::NiceMock<mtd::MockBufferStream>>(), {0, 0}} },
               {},
               mir::report::null_scene_report(),
               std::make_shared<mtd::FakeDisplayConfigurationObserverRegistrar>()},
@@ -329,7 +329,7 @@ TEST_F(DecorationBasicDecoration, decoration_surface_removed_from_session_on_des
 
 TEST_F(DecorationBasicDecoration, redrawn_on_rename)
 {
-    EXPECT_CALL(buffer_stream, submit_buffer(_))
+    EXPECT_CALL(buffer_stream, submit_buffer(_, _, _))
         .Times(AtLeast(1));
     window_surface.rename("new name");
     executor.execute();
@@ -341,7 +341,7 @@ TEST_F(DecorationBasicDecoration, redrawn_on_focus_state_change)
     window_surface.configure(mir_window_attrib_focus, mir_window_focus_state_focused);
     executor.execute();
     Mock::VerifyAndClearExpectations(&buffer_stream);
-    EXPECT_CALL(buffer_stream, submit_buffer(_))
+    EXPECT_CALL(buffer_stream, submit_buffer(_, _, _))
         .Times(AtLeast(1));
     window_surface.configure(mir_window_attrib_focus, mir_window_focus_state_unfocused);
     executor.execute();

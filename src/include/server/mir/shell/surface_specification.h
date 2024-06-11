@@ -48,7 +48,6 @@ struct StreamSpecification
 {
     std::weak_ptr<frontend::BufferStream> stream;
     geometry::Displacement displacement;
-    optional_value<geometry::Size> size;
 };
 auto operator==(StreamSpecification const& lhs, StreamSpecification const& rhs) -> bool;
 

@@ -15,6 +15,7 @@
  */
 
 
+#include "mir/graphics/drm_formats.h"
 #include "src/server/scene/basic_surface.h"
 #include "src/server/scene/surface_change_notification.h"
 
@@ -37,6 +38,7 @@
 
 #include <algorithm>
 #include <future>
+#include <drm_fourcc.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -90,7 +92,7 @@ struct BasicSurfaceTest : public testing::Test
         std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
     void const* compositor_id{nullptr};
-    std::list<ms::StreamInfo> streams { { mock_buffer_stream, {}, {} } };
+    std::list<ms::StreamInfo> streams { { mock_buffer_stream, {} } };
     std::shared_ptr<testing::NiceMock<MockSurfaceObserver>> mock_surface_observer =
         std::make_shared<testing::NiceMock<MockSurfaceObserver>>();
     mtd::ExplicitExecutor executor;
@@ -113,13 +115,6 @@ struct BasicSurfaceTest : public testing::Test
             &surface,
             mock_change_cb,
             [this](geom::Rectangle const&){mock_change_cb();});
-
-    BasicSurfaceTest()
-    {
-        // use an opaque pixel format by default
-        ON_CALL(*mock_buffer_stream, pixel_format())
-            .WillByDefault(testing::Return(mir_pixel_format_xrgb_8888));
-    }
 
     void TearDown() override
     {
@@ -173,7 +168,7 @@ TEST_F(BasicSurfaceTest, buffer_stream_ids_always_unique)
                 rect,
                 mir_pointer_unconfined,
                 std::list<ms::StreamInfo> {
-                    { std::make_shared<testing::NiceMock<mtd::MockBufferStream>>(), {}, {} } },
+                    { std::make_shared<testing::NiceMock<mtd::MockBufferStream>>(), {} } },
                 std::shared_ptr<mg::CursorImage>(),
                 report,
                 display_config_registrar);
@@ -1015,47 +1010,10 @@ TEST_F(BasicSurfaceTest, when_frame_is_posted_an_observer_is_notified_of_frame_w
 
     surface.resize({100, 150}); // should not affect frame_posted notification
     surface.register_interest(mock_surface_observer, executor);
-    surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
-    ON_CALL(*buffer_stream, stream_size())
-        .WillByDefault(Return(rect.size));
+    surface.set_streams({ms::StreamInfo{buffer_stream, {}}});
 
     EXPECT_CALL(*mock_surface_observer, frame_posted(_, mt::RectSizeEq(rect.size)));
     buffer_stream->frame_posted_callback(rect.size);
-}
-
-TEST_F(BasicSurfaceTest, when_stream_size_differs_from_buffer_size_an_observer_is_notified_of_frame_with_stream_size)
-{
-    using namespace testing;
-    geom::Size const stream_size{rect.size * 1.5};
-
-    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    std::function<void(geom::Size const&)> frame_posted_callback;
-    ON_CALL(*buffer_stream, stream_size())
-        .WillByDefault(Return(stream_size));
-
-    surface.register_interest(mock_surface_observer, executor);
-    surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
-
-    EXPECT_CALL(*mock_surface_observer, frame_posted(_, mt::RectSizeEq(stream_size)));
-    buffer_stream->frame_posted_callback(stream_size * 2);
-}
-
-TEST_F(BasicSurfaceTest, when_stream_info_has_explicit_size_an_observer_is_notified_of_frame_with_stream_info_size)
-{
-    using namespace testing;
-    geom::Size const stream_info_size{rect.size * 1.5};
-    geom::Size const stream_size{stream_info_size * 2};
-
-    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    std::function<void(geom::Size const&)> frame_posted_callback;
-    ON_CALL(*buffer_stream, stream_size())
-        .WillByDefault(Return(stream_size));
-
-    surface.register_interest(mock_surface_observer, executor);
-    surface.set_streams({ms::StreamInfo{buffer_stream, {}, stream_info_size}});
-
-    EXPECT_CALL(*mock_surface_observer, frame_posted(_, mt::RectSizeEq(stream_info_size)));
-    buffer_stream->frame_posted_callback(stream_size);
 }
 
 TEST_F(BasicSurfaceTest, when_frame_is_posted_an_observer_is_notified_of_frame_at_origin)
@@ -1064,7 +1022,7 @@ TEST_F(BasicSurfaceTest, when_frame_is_posted_an_observer_is_notified_of_frame_a
 
     auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     surface.register_interest(mock_surface_observer, executor);
-    surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
+    surface.set_streams({ms::StreamInfo{buffer_stream, {}}});
 
     EXPECT_CALL(*mock_surface_observer, frame_posted(_, mt::RectTopLeftEq(geom::Point{})));
     buffer_stream->frame_posted_callback(rect.size);
@@ -1079,7 +1037,7 @@ TEST_F(BasicSurfaceTest, when_stream_info_has_offset_an_observer_is_notified_of_
     std::function<void(geom::Size const&)> frame_posted_callback;
 
     surface.register_interest(mock_surface_observer, executor);
-    surface.set_streams({ms::StreamInfo{buffer_stream, stream_info_offset, {}}});
+    surface.set_streams({ms::StreamInfo{buffer_stream, stream_info_offset}});
 
     EXPECT_CALL(*mock_surface_observer, frame_posted(_, mt::RectTopLeftEq(geom::Point{} + stream_info_offset)));
     buffer_stream->frame_posted_callback(rect.size);
@@ -1095,7 +1053,7 @@ TEST_F(BasicSurfaceTest, when_surface_has_margins_an_observer_is_notified_of_fra
     std::function<void(geom::Size const&)> frame_posted_callback;
 
     surface.register_interest(mock_surface_observer, executor);
-    surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
+    surface.set_streams({ms::StreamInfo{buffer_stream, {}}});
 
     EXPECT_CALL(*mock_surface_observer, frame_posted(_, mt::RectTopLeftEq(geom::Point{} + margin_top + margin_left)));
     surface.set_window_margins(margin_top, margin_left, margin_bottom, margin_right);
@@ -1288,10 +1246,10 @@ TEST_F(BasicSurfaceTest, adds_buffer_streams)
     auto buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
 
     std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, {0,0}, {}},
-        { buffer_stream0, d0, {} },
-        { buffer_stream1, d1, {} },
-        { buffer_stream2, d2, {} }
+        { mock_buffer_stream, {0,0}},
+        { buffer_stream0, d0},
+        { buffer_stream1, d1},
+        { buffer_stream2, d2}
     };
     surface.set_streams(streams);
 
@@ -1312,8 +1270,8 @@ TEST_F(BasicSurfaceTest, moving_surface_repositions_all_associated_streams)
     auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
 
     std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, {0,0}, {} },
-        { buffer_stream, d, {} }
+        { mock_buffer_stream, {0,0}},
+        { buffer_stream, d}
     };
 
     surface.set_streams(streams);
@@ -1345,8 +1303,8 @@ TEST_F(BasicSurfaceTest, can_set_streams_not_containing_originally_created_with_
     auto buffer_stream0 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     auto buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     std::list<ms::StreamInfo> streams = {
-        { buffer_stream0, {0,0}, {} },
-        { buffer_stream1, {0,0}, {} }
+        { buffer_stream0, {0,0}},
+        { buffer_stream1, {0,0}}
     };
     surface.set_streams(streams);
     auto renderables = surface.generate_renderables(this);
@@ -1364,10 +1322,10 @@ TEST_F(BasicSurfaceTest, does_not_render_if_outside_of_clip_area)
     auto buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
 
     std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, {0,0}, {}},
-        { buffer_stream0, d0, {} },
-        { buffer_stream1, d1, {} },
-        { buffer_stream2, d2, {} }
+        { mock_buffer_stream, {0,0}},
+        { buffer_stream0, d0},
+        { buffer_stream1, d1},
+        { buffer_stream2, d2}
     };
     surface.set_streams(streams);
     surface.set_clip_area(std::optional<geom::Rectangle>({{200,0},{100,100}}));
@@ -1389,8 +1347,8 @@ TEST_F(BasicSurfaceTest, registers_frame_callbacks_on_construction)
     auto buffer_stream0 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     auto buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     std::list<ms::StreamInfo> streams = {
-        { buffer_stream0, {0,0}, {} },
-        { buffer_stream1, {0,0}, {} }
+        { buffer_stream0, {0,0}},
+        { buffer_stream1, {0,0}}
     };
 
     EXPECT_CALL(*buffer_stream0, set_frame_posted_callback(_))
@@ -1418,8 +1376,8 @@ TEST_F(BasicSurfaceTest, registers_frame_callbacks_on_set_streams)
     auto buffer_stream0 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     auto buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     std::list<ms::StreamInfo> streams = {
-        { buffer_stream0, {0,0}, {} },
-        { buffer_stream1, {0,0}, {} }
+        { buffer_stream0, {0,0}},
+        { buffer_stream1, {0,0}}
     };
 
     EXPECT_CALL(*buffer_stream0, set_frame_posted_callback(_))
@@ -1438,8 +1396,8 @@ TEST_F(BasicSurfaceTest, changing_alpha_effects_all_streams)
 
     auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, {0,0}, {} },
-        { buffer_stream, {0,0}, {} }
+        { mock_buffer_stream, {0,0}},
+        { buffer_stream, {0,0}}
     };
 
     surface.set_streams(streams);
@@ -1455,30 +1413,6 @@ TEST_F(BasicSurfaceTest, changing_alpha_effects_all_streams)
     EXPECT_THAT(renderables[1], IsRenderableOfAlpha(alpha));
 }
 
-TEST_F(BasicSurfaceTest, setting_streams_with_size_changes_sizes)
-{
-    using namespace testing;
-
-    geom::Size size0 {100, 25 };
-    geom::Size size1 { 32, 44 };
-    geom::Size bad_size { 12, 11 };
-    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    ON_CALL(*mock_buffer_stream, stream_size())
-        .WillByDefault(Return(bad_size));
-    ON_CALL(*buffer_stream, stream_size())
-        .WillByDefault(Return(bad_size));
-    std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, {0,0}, size0 },
-        { buffer_stream, {0,0}, size1 }
-    };
-
-    surface.set_streams(streams);
-    auto renderables = surface.generate_renderables(this);
-    ASSERT_THAT(renderables.size(), Eq(2));
-    EXPECT_THAT(renderables[0], IsRenderableOfSize(size0));
-    EXPECT_THAT(renderables[1], IsRenderableOfSize(size1));
-}
-
 TEST_F(BasicSurfaceTest, visibility_matches_produced_list)
 {
     using namespace testing;
@@ -1491,8 +1425,8 @@ TEST_F(BasicSurfaceTest, visibility_matches_produced_list)
     ON_CALL(*mock_buffer_stream1, has_submitted_buffer())
         .WillByDefault(Invoke([&stream2_visible] { return stream2_visible; }));
     std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, {0,0}, {} },
-        { mock_buffer_stream1, displacement, {} },
+        { mock_buffer_stream, {0,0}},
+        { mock_buffer_stream1, displacement},
     };
     surface.set_streams(streams);
 
@@ -1519,14 +1453,15 @@ TEST_F(BasicSurfaceTest, buffer_streams_produce_correctly_sized_renderables)
     geom::Displacement d1{19,99};
     geom::Size size0 {100, 101};
     geom::Size size1 {102, 103};
-    ON_CALL(*mock_buffer_stream, stream_size())
+
+    ON_CALL(*mock_buffer_stream->submission, size)
         .WillByDefault(Return(size0));
-    ON_CALL(*buffer_stream, stream_size())
+    ON_CALL(*buffer_stream->submission, size)
         .WillByDefault(Return(size1));
 
     std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, d0, {} },
-        { buffer_stream, d1, {} },
+        { mock_buffer_stream, d0},
+        { buffer_stream, d1},
     };
     surface.set_streams(streams);
 
@@ -1542,12 +1477,15 @@ TEST_F(BasicSurfaceTest, renderables_of_transparent_buffer_streams_are_shaped)
     auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     geom::Displacement d0{0,0};
     geom::Displacement d1{19,99};
-    ON_CALL(*buffer_stream, pixel_format())
-        .WillByDefault(Return(mir_pixel_format_argb_8888));
+
+    ON_CALL(*mock_buffer_stream->submission, pixel_format)
+        .WillByDefault(Return(mg::DRMFormat{DRM_FORMAT_XRGB8888}));
+    ON_CALL(*buffer_stream->submission, pixel_format)
+        .WillByDefault(Return(mg::DRMFormat{DRM_FORMAT_ARGB8888}));
 
     std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, d0, {} },
-        { buffer_stream, d1, {} },
+        { mock_buffer_stream, d0},
+        { buffer_stream, d1},
     };
     surface.set_streams(streams);
 
@@ -1606,7 +1544,7 @@ TEST_F(BasicSurfaceTest, buffer_can_be_submitted_to_original_stream_after_surfac
     using namespace testing;
 
     auto local_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    std::list<ms::StreamInfo> local_stream_list = { { local_stream, {}, {} } };
+    std::list<ms::StreamInfo> local_stream_list = { { local_stream, {}} };
     std::function<void(geom::Size const&)> callback = [](auto){};
 
     EXPECT_CALL(*local_stream, set_frame_posted_callback(_))
@@ -1633,7 +1571,7 @@ TEST_F(BasicSurfaceTest, buffer_can_be_submitted_to_set_stream_after_surface_des
     using namespace testing;
 
     auto local_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    std::list<ms::StreamInfo> local_stream_list = { { local_stream, {}, {} } };
+    std::list<ms::StreamInfo> local_stream_list = { { local_stream, {}} };
     std::function<void(geom::Size const&)> callback = [](auto){};
 
     EXPECT_CALL(*local_stream, set_frame_posted_callback(_))

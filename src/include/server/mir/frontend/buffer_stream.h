@@ -18,7 +18,6 @@
 #define MIR_FRONTEND_BUFFER_STREAM_H_
 
 #include <mir_toolkit/common.h>
-#include "mir/graphics/buffer_id.h"
 #include "mir/geometry/size.h"
 #include <functional>
 #include <memory>
@@ -39,14 +38,13 @@ class BufferStream
 public:
     virtual ~BufferStream() = default;
 
-    virtual void submit_buffer(std::shared_ptr<graphics::Buffer> const& buffer) = 0;
+    virtual void submit_buffer(
+        std::shared_ptr<graphics::Buffer> const& buffer,
+        geometry::Size dest_size,
+        geometry::RectangleD src_bounds) = 0;
 
     virtual void set_frame_posted_callback(
         std::function<void(geometry::Size const&)> const& callback) = 0;
-
-    virtual MirPixelFormat pixel_format() const = 0;
-
-    virtual void set_scale(float scale) = 0;
 protected:
     BufferStream() = default;
     BufferStream(BufferStream const&) = delete;
