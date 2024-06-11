@@ -24,7 +24,6 @@
 #include "mir/geometry/displacement.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/display_configuration.h"
-#include "mir/frontend/buffer_stream_id.h"
 
 #include <string>
 #include <memory>
