@@ -18,7 +18,6 @@
 #define MIR_FRONTEND_EVENT_SINK_H_
 
 #include "mir_toolkit/event.h"
-#include "mir/frontend/buffer_sink.h"
 #include "mir/events/event_builders.h"
 
 #include <vector>
@@ -34,7 +33,7 @@ class Buffer;
 }
 namespace frontend
 {
-class EventSink : public BufferSink
+class EventSink
 {
 public:
     virtual ~EventSink() = default;

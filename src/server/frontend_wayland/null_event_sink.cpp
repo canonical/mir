@@ -18,10 +18,6 @@
 
 namespace mf = mir::frontend;
 
-void mf::NullEventSink::send_buffer(frontend::BufferStreamId, graphics::Buffer&)
-{
-}
-
 void mf::NullEventSink::handle_event(EventUPtr&& event)
 {
     switch(mir_event_get_type(event.get()))
@@ -49,17 +45,5 @@ void mf::NullEventSink::handle_input_config_change(MirInputConfig const&)
 }
 
 void mf::NullEventSink::handle_error(mir::ClientVisibleError const&)
-{
-}
-
-void mf::NullEventSink::add_buffer(mir::graphics::Buffer&)
-{
-}
-
-void mf::NullEventSink::error_buffer(mir::geometry::Size, MirPixelFormat, std::string const&)
-{
-}
-
-void mf::NullEventSink::update_buffer(mir::graphics::Buffer&)
 {
 }
