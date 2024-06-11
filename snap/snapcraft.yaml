@@ -1,5 +1,5 @@
 name: mir-libs
-base: core22
+base: core24
 summary: The fast, open and secure display server for any device - build environment
 description: |
   Mir is a display server running on linux systems, with a focus on efficiency,
@@ -31,7 +31,7 @@ parts:
     - libdrm-dev
     - libegl1-mesa-dev
     - libepoxy-dev
-    - libfreetype6-dev
+    - libfreetype-dev
     - libgbm-dev
     - libglm-dev
     - libgtest-dev
@@ -53,10 +53,10 @@ parts:
     - python3-pil
     - systemtap-sdt-dev
     stage-packages:
-    - libboost-filesystem1.74.0
-    - libboost-iostreams1.74.0
-    - libboost-program-options1.74.0
-    - libcapnp-0.8.0
+    - libboost-filesystem1.83.0
+    - libboost-iostreams1.83.0
+    - libboost-program-options1.83.0
+    - libcapnp-1.0.1
     - libdrm2
     - libegl1
     - libepoxy0
@@ -64,18 +64,19 @@ parts:
     - libfreetype6
     - libgbm1
     - libgles2
-    - libglibmm-2.4-1v5
+    - libglib2.0-0t64
+    - libglibmm-2.4-1t64
     - libglvnd0
     - libgudev-1.0-0
-    - libicu70
+    - libicu74
     - libinput10
-    - liblttng-ust1
-    - libmtdev1
+    - liblttng-ust1t64
+    - libmtdev1t64
     - libnuma1
     - libnvidia-egl-wayland1
-    - libpng16-16
+    - libpng16-16t64
     - libsigc++-2.0-0v5
-    - liburcu8
+    - liburcu8t64
     - libwacom9
     - libwayland-client0
     - libwayland-egl1
@@ -96,4 +97,4 @@ parts:
     - libxml++2.6-2v5
     - libxml2
     - libxrender1
-    - libyaml-cpp0.7
+    - libyaml-cpp0.8

@@ -358,8 +358,12 @@ mir::DefaultServerConfiguration::the_buffer_allocator()
     return buffer_allocator(
         [&]() -> std::shared_ptr<graphics::GraphicBufferAllocator>
         {
+            auto rendering_platforms = the_rendering_platforms();
+            auto best_provider = graphics::select_buffer_allocating_renderer(
+                *the_display(),
+                rendering_platforms);
             // TODO: More than one BufferAllocator
-            return the_rendering_platforms().front()->create_buffer_allocator(*the_display());
+            return best_provider->create_buffer_allocator(*the_display());
         });
 }
 

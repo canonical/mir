@@ -16,7 +16,7 @@
 
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/fake_shared.h"
-#include "src/server/compositor/stream.h"
+#include "mir/compositor/stream.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

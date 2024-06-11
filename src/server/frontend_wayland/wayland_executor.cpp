@@ -198,7 +198,7 @@ private:
              * If work_queue *is* unique that means that ~WaylandExecutor has already
              * unregistered the event source, so we should not try to do so again.
              */
-            if (!me->work_queue.unique())
+            if (me->work_queue.use_count() != 1)
             {
                 wl_event_source_remove(me->source);
             }

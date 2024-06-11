@@ -77,7 +77,7 @@ FUNCTION(ENABLE_COVERAGE_REPORT)
             # set up coverage target
 
             ADD_CUSTOM_COMMAND(OUTPUT ${COVERAGE_RAW_FILE}
-                               COMMAND ${LCOV_EXECUTABLE} -c -d ${CMAKE_BINARY_DIR} -o ${COVERAGE_RAW_FILE}
+                               COMMAND ${LCOV_EXECUTABLE} -c -d ${CMAKE_BINARY_DIR} -o ${COVERAGE_RAW_FILE} --ignore-errors mismatch
                                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
                                COMMENT "Collecting coverage data"
                                DEPENDS ${ARG_TARGETS} ${ARG_TESTS}

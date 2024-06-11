@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/graphics/display.h"
 #include "mir/log.h"
 #include "mir/graphics/platform.h"
 #include "mir/options/configuration.h"
@@ -534,4 +535,80 @@ auto mg::select_display_modules(
         }
     }
     return platform_modules;
+}
+
+auto mg::select_buffer_allocating_renderer(
+    Display& display,
+    std::span<std::shared_ptr<RenderingPlatform>> rendering_platforms) -> std::shared_ptr<RenderingPlatform>
+{
+    /* Theory:
+     * We iterate over each DisplaySink and each RenderingPlatform, and
+     * collate:
+     * *) If the RenderingPlatform is *best* at driving that sink, and
+     * *) If the RenderingPlatform is *unable* to drive that sink
+     *
+     * We then filter to just the RenderingPlatform(s) that are able to
+     * drive the most DisplaySink.
+     *
+     * Of that list, we pick the RenderingPlatform that has the highest
+     * number of “best” suitabilities.
+     */
+    struct PlatformData
+    {
+        std::shared_ptr<mg::RenderingPlatform> platform;
+        std::shared_ptr<mg::GLRenderingProvider> provider;
+        int best_count;
+        int unsupported_count;
+    };
+
+    std::vector<PlatformData> providers;
+    providers.reserve(rendering_platforms.size());
+
+    for (auto const& platform : rendering_platforms)
+    {
+        providers.push_back({
+                platform,
+                platform->acquire_provider<mg::GLRenderingProvider>(platform),
+                0,
+                0
+        });
+    }
+
+    display.for_each_display_sync_group(
+        [&](auto& sync_group)
+        {
+            sync_group.for_each_display_sink(
+                [&](auto& sink)
+                {
+                    for (auto &[platform, provider, best_count, unsupported_count] : providers)
+                    {
+                        auto suitability = provider->suitability_for_display(sink);
+                        if (suitability >= mg::probe::best)
+                        {
+                            best_count++;
+                        }
+                        else if (suitability == mg::probe::unsupported)
+                        {
+                            unsupported_count++;
+                        }
+                    }
+                });
+        });
+
+    // providers.size() is guaranteed to be ≥ 1, as we're guaranteed to have at least one rendering platform
+
+    auto const least_unsupported_count = std::min_element(
+        providers.begin(), providers.end(),
+        [](auto const& a, auto const& b) { return a.unsupported_count < b.unsupported_count; })->unsupported_count;
+
+    auto const last_good_provider = std::remove_if(
+        providers.begin(), providers.end(),
+        [least_unsupported_count](auto const& provider) { return provider.unsupported_count > least_unsupported_count; });
+
+    // Now, find the best platform out of the ones that support the most Sinks
+    auto const best_provider = std::max_element(
+        providers.begin(), last_good_provider,
+        [](auto const& a, auto const&b) { return a.best_count < b.best_count; });
+
+    return best_provider->platform;
 }

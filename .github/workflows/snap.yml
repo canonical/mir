@@ -19,10 +19,9 @@ jobs:
       name: Determine which architectures to build for
       run: |
         ARCHES=( amd64 )
-        # remote-build is flaky: Don't risk it
-        # if ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}; then
-        #   ARCHES+=( armhf arm64 )
-        # fi
+        if ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}; then
+          ARCHES+=( armhf arm64 )
+        fi
         jq --compact-output --null-input '$ARGS.positional' --args -- "${ARCHES[@]}" | awk '{ print "arches=" $0 }' >> $GITHUB_OUTPUT
 
   mir-libs:
@@ -35,7 +34,6 @@ jobs:
       fail-fast: false
       matrix:
         architecture: ${{ fromJSON(needs.arches.outputs.arches) }}
-        base: ["22", "24"]
 
     steps:
     - name: Check out code
@@ -45,9 +43,6 @@ jobs:
 
     - name: Tweak the snapcraft.yaml
       run: |
-        if [ "${{ matrix.base }}" == "24" ]; then
-          mv snap/local/core24~snapcraft.yaml snap/snapcraft.yaml
-        fi
         git config --global --add safe.directory $(pwd)
         sed -i 's@version: testing@version: '$(git describe)'@' snap/snapcraft.yaml
 
@@ -59,7 +54,7 @@ jobs:
         launchpad-credentials: ${{ secrets.LAUNCHPAD_CREDENTIALS }}
         launchpad-accept-public-upload: true
         publish: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
-        publish-channel: ${{ matrix.base }}/edge/pr${{ github.event.number }}
+        publish-channel: 24/edge/pr${{ github.event.number }}
 
   snap:
     # Only run if we have access to secrets.
@@ -75,18 +70,18 @@ jobs:
       fail-fast: false
       matrix:
         snap:
-        - MirServer/mir-test-tools
-        - MirServer/confined-shell-wip
-        - MirServer/ubuntu-frame
+        - canonical/mir-test-tools
+        - canonical/confined-shell-wip
+        - canonical/ubuntu-frame
         - Miriway/Miriway
         architecture: ${{ fromJSON(needs.arches.outputs.arches) }}
         include:
-        - snap: MirServer/mir-test-tools
-          track: 22
-        - snap: MirServer/confined-shell-wip
+        - snap: canonical/mir-test-tools
+          track: 24
+        - snap: canonical/confined-shell-wip
           track: latest
-        - snap: MirServer/ubuntu-frame
-          track: 22
+        - snap: canonical/ubuntu-frame
+          track: 24
         - snap: Miriway/Miriway
           track: latest
           review-opts: --allow-classic

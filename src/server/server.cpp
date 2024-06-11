@@ -103,7 +103,6 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(renderer_factory)
 
 #define FOREACH_ACCESSOR(MACRO)\
-    MACRO(the_buffer_stream_factory)\
     MACRO(the_compositor)\
     MACRO(the_compositor_report)\
     MACRO(the_cursor_listener)\

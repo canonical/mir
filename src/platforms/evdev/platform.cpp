@@ -31,13 +31,15 @@
 #include "mir/fd.h"
 #include "mir/raii.h"
 
-#define MIR_LOG_COMPONENT "evdev-input"
 #include "mir/log.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <libinput.h>
+
+#include <version>
+#include <format>
 #include <string>
 
 namespace mi = mir::input;
@@ -53,13 +55,14 @@ std::string describe(libinput_device* dev)
     auto const udev_dev = mir::raii::deleter_for(libinput_device_get_udev_device(dev), &udev_device_unref);
     std::string desc(udev_device_get_devnode(udev_dev.get()));
 
-    char const * const model = udev_device_get_property_value(udev_dev.get(), "ID_MODEL");
-    if (model)
-        desc += ": " + std::string(model);
+    auto const vendor = libinput_device_get_id_vendor(dev);
+    auto const product = libinput_device_get_id_product(dev);
+    desc += std::format(" [{:0>4x}:{:0>4x}]", vendor, product);
 
-    // Yes, we could use std::replace but this will compile smaller and faster
-    for (auto &c : desc)
-        if (c == '_') c = ' ';
+    if (auto const name = libinput_device_get_name(dev))
+    {
+        desc += ": " + std::string(name);
+    }
 
     return desc;
 }

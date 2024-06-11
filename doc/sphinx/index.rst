@@ -50,7 +50,7 @@ Mir is a member of the Ubuntu family. It’s an open source project that warmly 
 * `Get support`_
 * `Join our online chat`_
 * `Contribute`_
-* `Thinking about using Example Product for your next project? Get in touch! <Canonical website_>`_
+* `Thinking about using Mir for your next project? Get in touch! <Canonical website_>`_
 
 
 .. toctree::

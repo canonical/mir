@@ -22,6 +22,7 @@
 #include "mir/logging/logger.h"  // for Severity
 #include <string>
 #include <cstdarg>
+#include <exception>
 
 namespace mir
 {

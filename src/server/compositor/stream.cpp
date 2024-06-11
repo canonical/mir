@@ -14,7 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "stream.h"
+#include "mir/compositor/stream.h"
+#include "multi_monitor_arbiter.h"
 #include "mir/graphics/buffer.h"
 #include <boost/throw_exception.hpp>
 #include <math.h>
@@ -22,7 +23,6 @@
 #include <cmath>
 
 namespace mc = mir::compositor;
-namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 

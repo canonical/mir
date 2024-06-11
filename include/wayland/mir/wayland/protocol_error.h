@@ -19,6 +19,7 @@
 
 #include <stdexcept>
 #include <cstdint>
+#include <string>
 
 struct wl_resource;
 struct wl_client;

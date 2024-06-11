@@ -20,10 +20,9 @@
 #include "mir/scene/session_container.h"
 #include "mir/scene/session_listener.h"
 #include "mir/scene/surface_factory.h"
-#include "mir/scene/buffer_stream_factory.h"
 #include "mir/shell/surface_stack.h"
 #include "mir/shell/surface_specification.h"
-#include "mir/compositor/buffer_stream.h"
+#include "mir/compositor/stream.h"
 #include "mir/events/event_builders.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
@@ -43,11 +42,11 @@ namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mev = mir::events;
 namespace mc = mir::compositor;
+namespace geom = mir::geometry;
 
 ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<msh::SurfaceStack> const& surface_stack,
     std::shared_ptr<SurfaceFactory> const& surface_factory,
-    std::shared_ptr<ms::BufferStreamFactory> const& buffer_stream_factory,
     pid_t pid,
     Fd socket_fd,
     std::string const& session_name,
@@ -56,7 +55,6 @@ ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc) :
     surface_stack(surface_stack),
     surface_factory(surface_factory),
-    buffer_stream_factory(buffer_stream_factory),
     pid(pid),
     socket_fd_(socket_fd),
     session_name(session_name),
@@ -292,7 +290,7 @@ void ms::ApplicationSession::resume_prompt_session()
 auto ms::ApplicationSession::create_buffer_stream(mg::BufferProperties const& props)
     -> std::shared_ptr<compositor::BufferStream>
 {
-    auto stream = buffer_stream_factory->create_buffer_stream(props);
+    auto stream = std::make_shared<mc::Stream>(props.size, props.format);
     session_listener->buffer_stream_created(*this, stream);
 
     std::unique_lock lock(surfaces_and_streams_mutex);

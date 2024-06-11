@@ -30,8 +30,8 @@ struct MirTouchpadConfig
     MirTouchpadConfig(MirTouchpadConfig const& other);
     MirTouchpadConfig& operator=(MirTouchpadConfig const& other);
     ~MirTouchpadConfig();
-    MirTouchpadConfig(MirTouchpadClickModes click_mode,
-                          MirTouchpadScrollModes scroll_mode,
+    MirTouchpadConfig(MirTouchpadClickMode click_mode,
+                          MirTouchpadScrollMode scroll_mode,
                           int button_down_scroll_button,
                           bool tap_to_click,
                           bool disable_while_typing,
@@ -41,13 +41,13 @@ struct MirTouchpadConfig
     /*!
      * The click mode defines when the touchpad generates software emulated button events.
      */
-    MirTouchpadClickModes click_mode() const;
-    void click_mode(MirTouchpadClickModes) ;
+    MirTouchpadClickMode click_mode() const;
+    void click_mode(MirTouchpadClickMode mode) ;
     /*!
      * The scroll mode defines when the touchpad generates scroll events instead of pointer motion events.
      */
-    MirTouchpadScrollModes scroll_mode() const;
-    void scroll_mode(MirTouchpadScrollModes);
+    MirTouchpadScrollMode scroll_mode() const;
+    void scroll_mode(MirTouchpadScrollMode mode);
 
     /*!
      * Configures the button used for the on-button-down scroll mode

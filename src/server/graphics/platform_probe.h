@@ -30,6 +30,8 @@ class ConsoleServices;
 
 namespace graphics
 {
+class RenderingPlatform;
+
 enum class TypePreference
 {
     prefer_nested,
@@ -71,6 +73,11 @@ auto select_display_modules(
     std::shared_ptr<ConsoleServices> const& console,
     SharedLibraryProberReport& lib_loader_report)
     -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>;
+
+auto select_buffer_allocating_renderer(
+    Display& display,
+    std::span<std::shared_ptr<RenderingPlatform>> rendering_platforms)
+    -> std::shared_ptr<RenderingPlatform>;
 }
 }
 
