@@ -262,6 +262,7 @@ global:
     mir::compositor::Stream::Stream*;
     mir::compositor::Stream::has_submitted_buffer*;
     mir::compositor::Stream::lock_compositor_buffer*;
+    mir::compositor::Stream::next_submission_for_compositor*;
     mir::compositor::Stream::pixel_format*;
     mir::compositor::Stream::set_frame_posted_callback*;
     mir::compositor::Stream::set_scale*;
@@ -783,6 +784,7 @@ global:
     non-virtual?thunk?to?mir::ServerConfiguration::?ServerConfiguration*;
     non-virtual?thunk?to?mir::ServerStatusListener::?ServerStatusListener*;
     non-virtual?thunk?to?mir::compositor::BufferStream::?BufferStream*;
+    non-virtual?thunk?to?mir::compositor::BufferStream::Submission::?Submission*;
     non-virtual?thunk?to?mir::compositor::Compositor::?Compositor*;
     non-virtual?thunk?to?mir::compositor::CompositorReport::?CompositorReport*;
     non-virtual?thunk?to?mir::compositor::DisplayBufferCompositor::?DisplayBufferCompositor*;
@@ -794,6 +796,7 @@ global:
     non-virtual?thunk?to?mir::compositor::Stream::?Stream*;
     non-virtual?thunk?to?mir::compositor::Stream::has_submitted_buffer*;
     non-virtual?thunk?to?mir::compositor::Stream::lock_compositor_buffer*;
+    non-virtual?thunk?to?mir::compositor::Stream::next_submission_for_compositor*;
     non-virtual?thunk?to?mir::compositor::Stream::pixel_format*;
     non-virtual?thunk?to?mir::compositor::Stream::set_frame_posted_callback*;
     non-virtual?thunk?to?mir::compositor::Stream::set_scale*;
@@ -1237,6 +1240,7 @@ global:
     vtable?for?mir::ServerActionQueue;
     vtable?for?mir::ServerConfiguration;
     vtable?for?mir::ServerStatusListener;
+    vtable?for?mir::compositor::BufferStream::Submission;
     vtable?for?mir::compositor::BufferStream;
     vtable?for?mir::compositor::Compositor;
     vtable?for?mir::compositor::CompositorReport;
