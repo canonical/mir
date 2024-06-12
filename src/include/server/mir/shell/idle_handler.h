@@ -18,6 +18,7 @@
 #define MIR_SHELL_IDLE_HANDLER_H_
 
 #include "mir/time/types.h"
+#include "mir/observer_registrar.h"
 
 #include <optional>
 
@@ -26,7 +27,22 @@ namespace mir
 namespace shell
 {
 
-class IdleHandler
+/// Provides a listener to the visual idle states as controlled by the IdleHandler
+class IdleHandlerObserver
+{
+public:
+    IdleHandlerObserver() = default;
+    virtual ~IdleHandlerObserver() = default;
+    virtual void dim() = 0;
+    virtual void off() = 0;
+    virtual void wake() = 0;
+
+private:
+    IdleHandlerObserver(IdleHandlerObserver const&) = delete;
+    IdleHandlerObserver& operator=(IdleHandlerObserver const&) = delete;
+};
+
+class IdleHandler : public ObserverRegistrar<IdleHandlerObserver>
 {
 public:
     IdleHandler() = default;

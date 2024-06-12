@@ -19,6 +19,8 @@
 
 #include "mir/shell/idle_handler.h"
 #include "mir/proof_of_mutex_lock.h"
+#include "mir/executor.h"
+#include "mir/observer_multiplexer.h"
 
 #include <memory>
 #include <vector>
@@ -42,6 +44,30 @@ namespace shell
 {
 class DisplayConfigurationController;
 
+class BasicIdleHandlerObserverMultiplexer: public ObserverMultiplexer<IdleHandlerObserver>
+{
+public:
+    BasicIdleHandlerObserverMultiplexer()
+        : ObserverMultiplexer{immediate_executor}
+    {
+    }
+
+    void dim() override
+    {
+        for_each_observer(&IdleHandlerObserver::dim);
+    }
+
+    void off() override
+    {
+        for_each_observer(&IdleHandlerObserver::off);
+    }
+
+    void wake() override
+    {
+        for_each_observer(&IdleHandlerObserver::wake);
+    }
+};
+
 class BasicIdleHandler : public IdleHandler
 {
 public:
@@ -55,6 +81,18 @@ public:
 
     void set_display_off_timeout(std::optional<time::Duration> timeout) override;
 
+    void register_interest(std::weak_ptr<IdleHandlerObserver> const&) override;
+
+    void register_interest(
+        std::weak_ptr<IdleHandlerObserver> const&,
+        Executor&) override;
+
+    void register_early_observer(
+        std::weak_ptr<IdleHandlerObserver> const&,
+        Executor&) override;
+
+    void unregister_interest(IdleHandlerObserver const&) override;
+
 private:
     void clear_observers(ProofOfMutexLock const&);
 
@@ -66,6 +104,7 @@ private:
     std::mutex mutex;
     std::optional<time::Duration> current_off_timeout;
     std::vector<std::shared_ptr<scene::IdleStateObserver>> observers;
+    BasicIdleHandlerObserverMultiplexer multiplexer;
 };
 
 }
