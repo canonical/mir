@@ -522,7 +522,6 @@ miral::Window mir_test_framework::WindowManagementTestHarness::create_window(
     spec.streams.value().push_back(msh::StreamSpecification{
         stream,
         mir::geometry::Displacement{},
-        {}
     });
     auto surface = self->shell->create_surface(
         session,

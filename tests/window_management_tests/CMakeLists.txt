@@ -12,43 +12,34 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/renderers/sw
 )
 
-set(
-  INTEGRATION_TESTS_SRCS
-  test_custom_input_dispatcher.cpp
-  test_touchspot_visualization.cpp
-  test_surface_stack_with_compositor.cpp
-  test_display_server_main_loop_events.cpp
-  test_server_client_types.cpp
+set(WINDOW_MANAGEMENT_TESTS_SRCS
+  test_minimal_window_manager.cpp
 )
 
-add_subdirectory(compositor/)
-add_subdirectory(process/)
-add_subdirectory(input/)
-
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-mir_add_wrapped_executable(mir_integration_tests NOINSTALL
-  ${INTEGRATION_TESTS_SRCS}
+mir_add_wrapped_executable(mir_window_management_tests NOINSTALL
+  ${WINDOW_MANAGEMENT_TESTS_SRCS}
   ${MIR_SERVER_OBJECTS}
   ${MIR_PLATFORM_OBJECTS}
 )
 
 if (MIR_USE_PRECOMPILED_HEADERS)
   target_precompile_headers(
-    mir_integration_tests
+    mir_window_management_tests
     PRIVATE
-      <gmock/gmock.h>
-      <gtest/gtest.h>
-      <vector>
-      <string>
-      <exception>
-      <memory>
+    <gmock/gmock.h>
+    <gtest/gtest.h>
+    <vector>
+    <string>
+    <exception>
+    <memory>
   )
 endif()
 
-add_dependencies(mir_integration_tests GMock)
+add_dependencies(mir_window_management_tests GMock)
 
 target_link_libraries(
-  mir_integration_tests
+  mir_window_management_tests
 
   mir-test-static
   mir-test-framework-static
@@ -70,21 +61,14 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
-if (MIR_TEST_PLATFORM STREQUAL "gbm-kms")
-target_link_libraries(mir_integration_tests
-  mirsharedgbmservercommon-static
-  PkgConfig::GBM
-  PkgConfig::DRM
-)
-endif()
 
 CMAKE_DEPENDENT_OPTION(
-  MIR_RUN_INTEGRATION_TESTS
-  "Run integration tests as part of default testing"
+  MIR_RUN_WINDOW_MANAGEMENT_TESTS
+  "Run window management tests as part of default testing"
   ON
-  "MIR_BUILD_INTEGRATION_TESTS"
+  "MIR_BUILD_WINDOW_MANAGEMENT_TESTS"
   OFF)
 
-if (MIR_RUN_INTEGRATION_TESTS)
-  mir_discover_tests_with_fd_leak_detection(mir_integration_tests)
-endif (MIR_RUN_INTEGRATION_TESTS)
+if (MIR_RUN_WINDOW_MANAGEMENT_TESTS)
+  mir_discover_tests_with_fd_leak_detection(mir_window_management_tests)
+endif (MIR_RUN_WINDOW_MANAGEMENT_TESTS)
