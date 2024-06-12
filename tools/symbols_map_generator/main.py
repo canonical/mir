@@ -25,6 +25,12 @@ import os
 
 _logger = logging.getLogger(__name__)
 
+HIDDEN_SYMBOLS = {
+    "miral::SessionLockListener::?SessionLockListener*;",
+    "miral::WaylandExtensions::Context::?Context*;",
+    "miral::WaylandExtensions::Context::Context*;",
+    "vtable?for?miral::WaylandExtensions::Context;",
+}
 
 class HeaderDirectory(TypedDict):
     path: str
@@ -168,17 +174,21 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
         namespace_str = "::".join(get_namespace_str(node))
         _logger.debug(f"Emitting node {namespace_str} in file {node.location.file.name}")
 
+        def add_symbol_str(s: str):
+            if not s in HIDDEN_SYMBOLS:
+                result.add(s)
+
         # Classes and structs have a specific output
         if (node.kind == clang.cindex.CursorKind.CLASS_DECL
             or node.kind == clang.cindex.CursorKind.STRUCT_DECL):
             if has_vtable(node):
-                result.add(f"vtable?for?{namespace_str};")
+                add_symbol_str(f"vtable?for?{namespace_str};")
             if has_virtual_base_class(node):
-                result.add(f"VTT?for?{namespace_str};")
-            result.add(f"typeinfo?for?{namespace_str};")
+                add_symbol_str(f"VTT?for?{namespace_str};")
+            add_symbol_str(f"typeinfo?for?{namespace_str};")
         else:
             def add_internal(s: str):
-                result.add(f"{s}*;")
+                add_symbol_str(f"{s}*;")
             add_internal(namespace_str)
             
             # Check if we're marked virtual
