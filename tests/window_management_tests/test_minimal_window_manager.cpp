@@ -42,24 +42,9 @@ MATCHER_P(LockedEq, value, "")
     return arg.lock() == value;
 }
 
-class CreateappVerifier : public mir_test_framework::WindowManagementVerifier
-{
-public:
-    MOCK_METHOD1(advise_new_app, void(miral::ApplicationInfo&));
-    MOCK_METHOD1(advise_new_window, void(miral::WindowInfo const&));
-    MOCK_METHOD1(advise_delete_window, void(miral::WindowInfo const&));
-};
-
 class MinimalWindowManagerTest : public mir_test_framework::WindowManagementTestHarness
 {
 public:
-    std::shared_ptr<mir_test_framework::WindowManagementVerifier> get_verifier() override
-    {
-        if (!verifier)
-            verifier = std::make_shared<CreateappVerifier>();
-        return verifier;
-    }
-
     mir_test_framework::WindowManagementPolicyBuilder get_builder() override
     {
         return [&](miral::WindowManagerTools const& tools)
@@ -75,41 +60,20 @@ public:
             mir::geometry::Rectangle{{800, 0}, {800, 600}}
         };
     }
-
-    std::shared_ptr<CreateappVerifier> verifier;
 };
-
-TEST_F(MinimalWindowManagerTest, advise_new_app_is_called_when_a_app_is_opened)
-{
-    EXPECT_CALL(*verifier, advise_new_app(_));
-    auto const app = open_application("test");
-}
-
-TEST_F(MinimalWindowManagerTest, advise_new_window_is_called_when_a_window_is_created)
-{
-    EXPECT_CALL(*verifier, advise_new_app(_));
-    auto const app = open_application("test");
-    EXPECT_CALL(*verifier, advise_new_window(_));
-    create_window(app, geom::Width{100}, geom::Height{100});
-}
 
 TEST_F(MinimalWindowManagerTest, new_window_has_focus)
 {
-    EXPECT_CALL(*verifier, advise_new_app(_));
     auto const app = open_application("test");
-    EXPECT_CALL(*verifier, advise_new_window(_));
     auto window = create_window(app, geom::Width{100}, geom::Height{100});
-    EXPECT_EQ(get_shell()->focused_surface(), window.operator std::shared_ptr<ms::Surface>());
+    EXPECT_EQ(focused_surface(), window.operator std::shared_ptr<ms::Surface>());
 }
 
 TEST_F(MinimalWindowManagerTest, alt_f4_closes_active_window)
 {
-    EXPECT_CALL(*verifier, advise_new_app(_));
     auto const app = open_application("test");
-    EXPECT_CALL(*verifier, advise_new_window(_));
     auto window = create_window(app, geom::Width{100}, geom::Height{100});
 
-    EXPECT_CALL(*verifier, advise_delete_window(_));
     // Process an alt + f4 input
     std::chrono::nanoseconds const event_timestamp = std::chrono::system_clock::now().time_since_epoch();
     MirKeyboardAction const action{mir_keyboard_action_down};
@@ -129,19 +93,12 @@ TEST_F(MinimalWindowManagerTest, alt_f4_closes_active_window)
 TEST_F(MinimalWindowManagerTest, alt_tab_input_event_triggers_window_focus_cycling)
 {
     // Create two apps, each with a single window
-    EXPECT_CALL(*verifier, advise_new_app(_));
     auto const app1 = open_application("test");
-
-    EXPECT_CALL(*verifier, advise_new_window(_));
     auto window1 = create_window(app1, geom::Width{100}, geom::Height{100});
-
-    EXPECT_CALL(*verifier, advise_new_app(_));
     auto const app2 = open_application("test-1");
-
-    EXPECT_CALL(*verifier, advise_new_window(_));
     auto window2 = create_window(app2, geom::Width{100}, geom::Height{100});
 
-    EXPECT_EQ(get_shell()->focused_surface(), window2.operator std::shared_ptr<ms::Surface>());
+    EXPECT_EQ(focused_surface(), window2.operator std::shared_ptr<ms::Surface>());
 
     // Process an alt + tab input
     std::chrono::nanoseconds const event_timestamp = std::chrono::system_clock::now().time_since_epoch();
@@ -161,29 +118,21 @@ TEST_F(MinimalWindowManagerTest, alt_tab_input_event_triggers_window_focus_cycli
     // Assert that the focused window is window1
     auto surface1 = window1.operator std::shared_ptr<ms::Surface>();
     auto surface2 = window2.operator std::shared_ptr<ms::Surface>();
-    EXPECT_EQ(get_shell()->focused_surface(), surface1);
-    auto stacking_order = get_surface_stack()->stacking_order_of({surface1, surface2});
+    EXPECT_EQ(focused_surface(), surface1);
     EXPECT_THAT(
-        get_surface_stack()->stacking_order_of({surface1, surface2}),
+        stacking_order_of({surface1, surface2}),
         ElementsAre(LockedEq(surface2), LockedEq(surface1)));
 }
 
 TEST_F(MinimalWindowManagerTest, can_select_window_with_pointer)
 {
     // Create two apps, each with a single window
-    EXPECT_CALL(*verifier, advise_new_app(_));
     auto const app1 = open_application("test");
-
-    EXPECT_CALL(*verifier, advise_new_window(_));
     auto window1 = create_window(app1, geom::Width{100}, geom::Height{100});
-
-    EXPECT_CALL(*verifier, advise_new_app(_));
     auto const app2 = open_application("test-1");
-
-    EXPECT_CALL(*verifier, advise_new_window(_));
     auto window2 = create_window(app2, geom::Width{50}, geom::Height{50});
 
-    EXPECT_EQ(get_shell()->focused_surface(), window2.operator std::shared_ptr<ms::Surface>());
+    EXPECT_EQ(focused_surface(), window2.operator std::shared_ptr<ms::Surface>());
 
     auto const select_event = mir::events::make_pointer_event(
         0,
@@ -200,25 +149,18 @@ TEST_F(MinimalWindowManagerTest, can_select_window_with_pointer)
         {});
     publish_event(*select_event);
 
-    EXPECT_EQ(get_shell()->focused_surface(), window1.operator std::shared_ptr<ms::Surface>());
+    EXPECT_EQ(focused_surface(), window1.operator std::shared_ptr<ms::Surface>());
 }
 
 TEST_F(MinimalWindowManagerTest, can_select_window_with_touch)
 {
     // Create two apps, each with a single window
-    EXPECT_CALL(*verifier, advise_new_app(_));
     auto const app1 = open_application("test");
-
-    EXPECT_CALL(*verifier, advise_new_window(_));
     auto window1 = create_window(app1, geom::Width{100}, geom::Height{100});
-
-    EXPECT_CALL(*verifier, advise_new_app(_));
     auto const app2 = open_application("test-1");
-
-    EXPECT_CALL(*verifier, advise_new_window(_));
     auto window2 = create_window(app2, geom::Width{50}, geom::Height{50});
 
-    EXPECT_EQ(get_shell()->focused_surface(), window2.operator std::shared_ptr<ms::Surface>());
+    EXPECT_EQ(focused_surface(), window2.operator std::shared_ptr<ms::Surface>());
 
     auto const select_event = mir::events::make_touch_event(
         0,
@@ -234,14 +176,12 @@ TEST_F(MinimalWindowManagerTest, can_select_window_with_touch)
         1.f, 0.f, 0.f, 0.f);
     publish_event(*select_event);
 
-    EXPECT_EQ(get_shell()->focused_surface(), window1.operator std::shared_ptr<ms::Surface>());
+    EXPECT_EQ(focused_surface(), window1.operator std::shared_ptr<ms::Surface>());
 }
 
 TEST_F(MinimalWindowManagerTest, can_move_window_with_pointer)
 {
-    EXPECT_CALL(*verifier, advise_new_app(_));
     auto const app = open_application("test");
-    EXPECT_CALL(*verifier, advise_new_window(_));
     auto window = create_window(app, geom::Width{100}, geom::Height{100});
 
     // Start pointer movement
@@ -281,9 +221,7 @@ TEST_F(MinimalWindowManagerTest, can_move_window_with_pointer)
 
 TEST_F(MinimalWindowManagerTest, can_resize_south_east_with_pointer)
 {
-    EXPECT_CALL(*verifier, advise_new_app(_));
     auto const app = open_application("test");
-    EXPECT_CALL(*verifier, advise_new_window(_));
     auto window = create_window(app, geom::Width{100}, geom::Height{100});
 
     // Move pointer to edge of surface to simulate starting a resize from the right edge
@@ -327,9 +265,7 @@ TEST_F(MinimalWindowManagerTest, can_resize_south_east_with_pointer)
 
 TEST_F(MinimalWindowManagerTest, can_resize_south_east_with_touch)
 {
-    EXPECT_CALL(*verifier, advise_new_app(_));
     auto const app = open_application("test");
-    EXPECT_CALL(*verifier, advise_new_window(_));
     auto window = create_window(app, geom::Width{100}, geom::Height{100});
 
     // Initiate the resize

@@ -203,206 +203,6 @@ private:
     std::shared_ptr<msh::SurfaceStack> surface_stack;
 };
 
-class VerifiableWindowManagementPolicy : public miral::WindowManagementPolicy
-{
-public:
-    VerifiableWindowManagementPolicy(
-        miral::WindowManagerTools const& wrapped,
-        miral::WindowManagementPolicyBuilder const& builder,
-        std::shared_ptr<mir_test_framework::WindowManagementVerifier> const& verifier)
-        : policy{builder(wrapped)},
-          verifier{verifier}
-    {
-    }
-
-    void advise_begin() override
-    {
-        policy->advise_begin();
-    }
-
-    void advise_end() override
-    {
-        policy->advise_end();
-    }
-
-    auto place_new_window(
-        miral::ApplicationInfo const& app_info,
-        miral::WindowSpecification const& requested_specification) -> miral::WindowSpecification override
-    {
-        return policy->place_new_window(app_info, requested_specification);
-    }
-
-    void handle_window_ready(miral::WindowInfo& window_info) override
-    {
-        policy->handle_window_ready(window_info);
-    }
-
-    void handle_modify_window(miral::WindowInfo& window_info, miral::WindowSpecification const& modifications) override
-    {
-        policy->handle_modify_window(window_info, modifications);
-    }
-
-    void handle_raise_window(miral::WindowInfo& window_info) override
-    {
-        policy->handle_raise_window(window_info);
-    }
-
-    void handle_request_move(miral::WindowInfo& window_info, MirInputEvent const* input_event) override
-    {
-        policy->handle_request_move(window_info, input_event);
-    }
-
-    void handle_request_resize(miral::WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge) override
-    {
-        policy->handle_request_resize(window_info, input_event, edge);
-    }
-
-    auto confirm_inherited_move(
-        miral::WindowInfo const& window_info,
-        mir::geometry::Displacement movement) -> mir::geometry::Rectangle override
-    {
-        return policy->confirm_inherited_move(window_info, movement);
-    }
-
-    auto confirm_placement_on_display(
-        miral::WindowInfo const& window_info, MirWindowState new_state,
-        mir::geometry::Rectangle const& new_placement) -> mir::geometry::Rectangle override
-    {
-        return policy->confirm_placement_on_display(window_info, new_state, new_placement);
-    }
-
-    bool handle_keyboard_event(MirKeyboardEvent const* event) override
-    {
-        return policy->handle_keyboard_event(event);
-    }
-
-    bool handle_touch_event(MirTouchEvent const* event) override
-    {
-        return policy->handle_touch_event(event);
-    }
-
-    bool handle_pointer_event(MirPointerEvent const* event) override
-    {
-        return policy->handle_pointer_event(event);
-    }
-
-    void advise_new_app(miral::ApplicationInfo& application) override
-    {
-        policy->advise_new_app(application);
-        verifier->advise_new_app(application);
-    }
-
-    void advise_delete_app(miral::ApplicationInfo const& application) override
-    {
-        policy->advise_delete_app(application);
-        verifier->advise_delete_app(application);
-    }
-
-    void advise_new_window(miral::WindowInfo const& window_info) override
-    {
-        policy->advise_new_window(window_info);
-        verifier->advise_new_window(window_info);
-    }
-
-    void advise_focus_lost(miral::WindowInfo const& window_info) override
-    {
-        policy->advise_focus_lost(window_info);
-        verifier->advise_focus_lost(window_info);
-    }
-
-    void advise_focus_gained(miral::WindowInfo const& window_info) override
-    {
-        policy->advise_focus_gained(window_info);
-        verifier->advise_focus_gained(window_info);
-    }
-
-    void advise_state_change(miral::WindowInfo const& window_info, MirWindowState state) override
-    {
-        policy->advise_state_change(window_info, state);
-        verifier->advise_state_change(window_info, state);
-    }
-
-    void advise_move_to(miral::WindowInfo const& window_info, mir::geometry::Point top_left) override
-    {
-        policy->advise_move_to(window_info, top_left);
-        verifier->advise_move_to(window_info, top_left);
-    }
-
-    void advise_resize(miral::WindowInfo const& window_info, mir::geometry::Size const& new_size) override
-    {
-        policy->advise_resize(window_info, new_size);
-        verifier->advise_resize(window_info, new_size);
-    }
-
-    void advise_delete_window(miral::WindowInfo const& window_info) override
-    {
-        policy->advise_delete_window(window_info);
-        verifier->advise_delete_window(window_info);
-    }
-
-    void advise_raise(std::vector<miral::Window> const& windows) override
-    {
-        policy->advise_raise(windows);
-        verifier->advise_raise(windows);
-    }
-
-    void advise_adding_to_workspace(
-        std::shared_ptr<miral::Workspace> const& workspace,
-        std::vector<miral::Window> const& windows) override
-    {
-        policy->advise_adding_to_workspace(workspace, windows);
-        verifier->advise_adding_to_workspace(workspace, windows);
-    }
-
-    void advise_removing_from_workspace(
-        std::shared_ptr<miral::Workspace> const& workspace,
-        std::vector<miral::Window> const& windows) override
-    {
-        policy->advise_removing_from_workspace(workspace, windows);
-        verifier->advise_removing_from_workspace(workspace, windows);
-    }
-
-    void advise_output_create(miral::Output const& output) override
-    {
-        policy->advise_output_create(output);
-        verifier->advise_output_create(output);
-    }
-
-    void advise_output_update(miral::Output const& updated, miral::Output const& original) override
-    {
-        policy->advise_output_update(updated, original);
-        verifier->advise_output_update(updated, original);
-    }
-
-    void advise_output_delete(miral::Output const& output) override
-    {
-        policy->advise_output_delete(output);
-        verifier->advise_output_delete(output);
-    }
-
-    void advise_application_zone_create(miral::Zone const& application_zone) override
-    {
-        policy->advise_application_zone_create(application_zone);
-        verifier->advise_application_zone_create(application_zone);
-    }
-
-    void advise_application_zone_update(miral::Zone const& updated, miral::Zone const& original) override
-    {
-        policy->advise_application_zone_update(updated, original);
-        verifier->advise_application_zone_update(updated, original);
-    }
-
-    void advise_application_zone_delete(miral::Zone const& application_zone) override
-    {
-        policy->advise_application_zone_delete(application_zone);
-        verifier->advise_application_zone_delete(application_zone);
-    }
-
-private:
-    std::unique_ptr<miral::WindowManagementPolicy> const policy;
-    std::shared_ptr<mir_test_framework::WindowManagementVerifier> const verifier;
-};
-
 }
 
 struct mir_test_framework::WindowManagementTestHarness::Self : public ms::SurfaceObserver
@@ -426,10 +226,7 @@ struct mir_test_framework::WindowManagementTestHarness::Self : public ms::Surfac
                       *fake_display_configuration_observer_registrar,
                       [&](miral::WindowManagerTools const& tools)
                       {
-                          return std::make_unique<VerifiableWindowManagementPolicy>(
-                              tools,
-                              harness->get_builder(),
-                              harness->get_verifier());
+                          return harness->get_builder()(tools);
                       }
                   );
               },
@@ -557,12 +354,13 @@ void mir_test_framework::WindowManagementTestHarness::request_resize(
     self->work_queue.run();
 }
 
-std::shared_ptr<mir::shell::AbstractShell> const& mir_test_framework::WindowManagementTestHarness::get_shell() const
+std::shared_ptr<mir::scene::Surface> mir_test_framework::WindowManagementTestHarness::focused_surface()
 {
-    return self->shell;
+    return self->shell->focused_surface();
 }
 
-std::shared_ptr<mir::scene::SurfaceStack> const& mir_test_framework::WindowManagementTestHarness::get_surface_stack() const
+mir::scene::SurfaceList mir_test_framework::WindowManagementTestHarness::stacking_order_of(
+    mir::scene::SurfaceSet const& surfaces) const
 {
-    return self->surface_stack;
+    return self->surface_stack->stacking_order_of(surfaces);
 }
