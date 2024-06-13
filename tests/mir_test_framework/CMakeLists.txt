@@ -55,8 +55,7 @@ target_link_libraries(mir-public-test-framework
     mirplatform
     mircommon
     mircore
-    miral
-    miral-internal
+    miral-external
   PRIVATE
     PkgConfig::UMOCKDEV
 )

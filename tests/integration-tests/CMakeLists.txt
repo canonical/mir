@@ -55,13 +55,10 @@ target_link_libraries(
   mir-test-doubles-static
 
   mircommon
-  miral
-  miral-internal
 
   ${MIR_PLATFORM_REFERENCES}
   ${MIR_SERVER_REFERENCES}
   Boost::system
-
   # GBM platform dependencies
   PkgConfig::DRM
   # Shared platform dependencies
