@@ -123,25 +123,3 @@ void mrl::InputReport::received_event_from_kernel(int64_t when, int type, int co
 
     logger->log(ml::Severity::informational, ss.str(), component());
 }
-
-void mrl::InputReport::opened_input_device(char const* device_name, char const* input_platform)
-{
-    std::stringstream ss;
-
-    ss << "Input device opened "
-       << " name=" << device_name
-       << " platform=" << input_platform;
-
-    logger->log(ml::Severity::informational, ss.str(), component());
-}
-
-void mrl::InputReport::failed_to_open_input_device(char const* device_name, char const* input_platform)
-{
-    std::stringstream ss;
-
-    ss << "Failure opening input device "
-       << " name=" << device_name
-       << " platform=" << input_platform;
-
-    logger->log(ml::Severity::informational, ss.str(), component());
-}

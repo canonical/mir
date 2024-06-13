@@ -40,8 +40,6 @@ public:
 
     void received_event_from_kernel(int64_t when, int type, int code, int value) override;
 
-    void opened_input_device(char const* device_name, char const* input_platform) override;
-    void failed_to_open_input_device(char const* device_name, char const* input_platform) override;
 private:
     char const* component();
     std::shared_ptr<mir::logging::Logger> const logger;

@@ -32,9 +32,6 @@ public:
 
     virtual void received_event_from_kernel(int64_t when, int type, int code, int value) = 0;
 
-    virtual void opened_input_device(char const* device_name, char const* input_platform) = 0;
-    virtual void failed_to_open_input_device(char const* device_name, char const* input_platform) = 0;
-
 protected:
     InputReport() = default;
     InputReport(InputReport const&) = delete;

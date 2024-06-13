@@ -21,11 +21,3 @@ namespace mrn = mir::report::null;
 void mrn::InputReport::received_event_from_kernel(int64_t /* when */, int /* type */, int /* code */, int /* value */)
 {
 }
-
-void mrn::InputReport::opened_input_device(char const* /* name */, char const* /* platform */)
-{
-}
-
-void mrn::InputReport::failed_to_open_input_device(char const* /* name */, char const* /* platform */)
-{
-}
