@@ -22,14 +22,6 @@ void mrn::InputReport::received_event_from_kernel(int64_t /* when */, int /* typ
 {
 }
 
-void mrn::InputReport::published_key_event(int /* dest_fd */, uint32_t /* seq_id */, int64_t /* event_time */)
-{
-}
-
-void mrn::InputReport::published_motion_event(int /* dest_fd */, uint32_t /* seq_id */, int64_t /* event_time */)
-{
-}
-
 void mrn::InputReport::opened_input_device(char const* /* name */, char const* /* platform */)
 {
 }

@@ -36,9 +36,6 @@ public:
 
     void received_event_from_kernel(int64_t when, int type, int code, int value) override;
 
-    void published_key_event(int dest_fd, uint32_t seq_id, int64_t event_time) override;
-    void published_motion_event(int dest_fd, uint32_t seq_id, int64_t event_time) override;
-
     void opened_input_device(char const* device_name, char const* input_platform) override;
     void failed_to_open_input_device(char const* device_name, char const* input_platform) override;
 private:

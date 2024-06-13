@@ -124,30 +124,6 @@ void mrl::InputReport::received_event_from_kernel(int64_t when, int type, int co
     logger->log(ml::Severity::informational, ss.str(), component());
 }
 
-void mrl::InputReport::published_key_event(int dest_fd, uint32_t seq_id, int64_t event_time)
-{
-    std::stringstream ss;
-
-    ss << "Published key event"
-       << " seq_id=" << seq_id
-       << " time=" << ml::input_timestamp(std::chrono::nanoseconds(event_time))
-       << " dest_fd=" << dest_fd;
-
-    logger->log(ml::Severity::informational, ss.str(), component());
-}
-
-void mrl::InputReport::published_motion_event(int dest_fd, uint32_t seq_id, int64_t event_time)
-{
-    std::stringstream ss;
-
-    ss << "Published motion event"
-       << " seq_id=" << seq_id
-       << " time=" << ml::input_timestamp(std::chrono::nanoseconds(event_time))
-       << " dest_fd=" << dest_fd;
-
-    logger->log(ml::Severity::informational, ss.str(), component());
-}
-
 void mrl::InputReport::opened_input_device(char const* device_name, char const* input_platform)
 {
     std::stringstream ss;
