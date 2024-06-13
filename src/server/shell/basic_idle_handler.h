@@ -44,30 +44,6 @@ namespace shell
 {
 class DisplayConfigurationController;
 
-class BasicIdleHandlerObserverMultiplexer: public ObserverMultiplexer<IdleHandlerObserver>
-{
-public:
-    BasicIdleHandlerObserverMultiplexer()
-        : ObserverMultiplexer{immediate_executor}
-    {
-    }
-
-    void dim() override
-    {
-        for_each_observer(&IdleHandlerObserver::dim);
-    }
-
-    void off() override
-    {
-        for_each_observer(&IdleHandlerObserver::off);
-    }
-
-    void wake() override
-    {
-        for_each_observer(&IdleHandlerObserver::wake);
-    }
-};
-
 class BasicIdleHandler : public IdleHandler
 {
 public:
@@ -104,6 +80,30 @@ private:
     std::mutex mutex;
     std::optional<time::Duration> current_off_timeout;
     std::vector<std::shared_ptr<scene::IdleStateObserver>> observers;
+
+    class BasicIdleHandlerObserverMultiplexer: public ObserverMultiplexer<IdleHandlerObserver>
+    {
+    public:
+        BasicIdleHandlerObserverMultiplexer()
+            : ObserverMultiplexer{immediate_executor}
+        {
+        }
+
+        void dim() override
+        {
+            for_each_observer(&IdleHandlerObserver::dim);
+        }
+
+        void off() override
+        {
+            for_each_observer(&IdleHandlerObserver::off);
+        }
+
+        void wake() override
+        {
+            for_each_observer(&IdleHandlerObserver::wake);
+        }
+    };
     BasicIdleHandlerObserverMultiplexer multiplexer;
 };
 

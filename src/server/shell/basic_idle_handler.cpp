@@ -100,7 +100,7 @@ struct Dimmer : ms::IdleStateObserver
     Dimmer(
         std::shared_ptr<mi::Scene> const& input_scene,
         std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
-        msh::BasicIdleHandlerObserverMultiplexer& multiplexer)
+        msh::IdleHandlerObserver& multiplexer)
         : input_scene{input_scene},
           allocator{allocator},
           multiplexer{multiplexer}
@@ -132,7 +132,7 @@ private:
     std::shared_ptr<mi::Scene> const input_scene;
     std::shared_ptr<mg::GraphicBufferAllocator> const allocator;
     std::shared_ptr<mg::Renderable> renderable;
-    msh::BasicIdleHandlerObserverMultiplexer& multiplexer;
+    msh::IdleHandlerObserver& multiplexer;
 };
 
 struct PowerModeSetter : ms::IdleStateObserver
@@ -140,7 +140,7 @@ struct PowerModeSetter : ms::IdleStateObserver
     PowerModeSetter(
         std::shared_ptr<msh::DisplayConfigurationController> const& controller,
         MirPowerMode power_mode,
-        msh::BasicIdleHandlerObserverMultiplexer& multiplexer)
+        msh::IdleHandlerObserver& multiplexer)
         : controller{controller},
           power_mode{power_mode},
           multiplexer{multiplexer}
@@ -161,7 +161,7 @@ struct PowerModeSetter : ms::IdleStateObserver
 private:
     std::shared_ptr<msh::DisplayConfigurationController> const controller;
     MirPowerMode const power_mode;
-    msh::BasicIdleHandlerObserverMultiplexer& multiplexer;
+    msh::IdleHandlerObserver& multiplexer;
 };
 }
 
