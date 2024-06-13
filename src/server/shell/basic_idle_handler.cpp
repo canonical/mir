@@ -100,10 +100,10 @@ struct Dimmer : ms::IdleStateObserver
     Dimmer(
         std::shared_ptr<mi::Scene> const& input_scene,
         std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
-        msh::IdleHandlerObserver& multiplexer)
+        msh::IdleHandlerObserver& observer)
         : input_scene{input_scene},
           allocator{allocator},
-          multiplexer{multiplexer}
+          observer{observer}
     {
     }
 
@@ -113,7 +113,7 @@ struct Dimmer : ms::IdleStateObserver
         {
             input_scene->remove_input_visualization(renderable);
             renderable.reset();
-            multiplexer.wake();
+            observer.wake();
         }
 
     }
@@ -124,7 +124,7 @@ struct Dimmer : ms::IdleStateObserver
         {
             renderable = std::make_shared<DimmingRenderable>(*allocator);
             input_scene->add_input_visualization(renderable);
-            multiplexer.dim();
+            observer.dim();
         }
     }
 
@@ -132,7 +132,7 @@ private:
     std::shared_ptr<mi::Scene> const input_scene;
     std::shared_ptr<mg::GraphicBufferAllocator> const allocator;
     std::shared_ptr<mg::Renderable> renderable;
-    msh::IdleHandlerObserver& multiplexer;
+    msh::IdleHandlerObserver& observer;
 };
 
 struct PowerModeSetter : ms::IdleStateObserver
@@ -140,10 +140,10 @@ struct PowerModeSetter : ms::IdleStateObserver
     PowerModeSetter(
         std::shared_ptr<msh::DisplayConfigurationController> const& controller,
         MirPowerMode power_mode,
-        msh::IdleHandlerObserver& multiplexer)
+        msh::IdleHandlerObserver& observer)
         : controller{controller},
           power_mode{power_mode},
-          multiplexer{multiplexer}
+          observer{observer}
     {
     }
 
@@ -155,13 +155,13 @@ struct PowerModeSetter : ms::IdleStateObserver
     void idle() override
     {
         controller->set_power_mode(power_mode);
-        multiplexer.off();
+        observer.off();
     }
 
 private:
     std::shared_ptr<msh::DisplayConfigurationController> const controller;
     MirPowerMode const power_mode;
-    msh::IdleHandlerObserver& multiplexer;
+    msh::IdleHandlerObserver& observer;
 };
 }
 
