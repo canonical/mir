@@ -452,3 +452,16 @@ global:
   };
 local: *;
 };
+
+MIRAL_5.1 {
+global:
+  extern "C++" {
+    miral::IdleListener::?IdleListener*;
+    miral::IdleListener::IdleListener*;
+    miral::IdleListener::on_dim*;
+    miral::IdleListener::on_off*;
+    miral::IdleListener::on_wake*;
+    miral::IdleListener::operator*;
+    typeinfo?for?miral::IdleListener;
+  };
+} MIRAL_5.0;

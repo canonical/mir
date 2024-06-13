@@ -46,6 +46,7 @@ namespace shell
 class DisplayLayout;
 class DisplayConfigurationController;
 class FocusController;
+class IdleHandler;
 class InputTargeter;
 class PersistentSurfaceStore;
 class Shell;
@@ -426,6 +427,9 @@ public:
 
     auto the_renderer_factory() const ->
         std::shared_ptr<renderer::RendererFactory>;
+
+    auto the_idle_handler() const ->
+        std::shared_ptr<shell::IdleHandler>;
 
 /** @} */
 

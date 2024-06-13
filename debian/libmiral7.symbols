@@ -433,3 +433,9 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"vtable for miral::CanonicalWindowManagerPolicy@MIRAL_5.0" 5.0.0
  (c++)"vtable for miral::MinimalWindowManager@MIRAL_5.0" 5.0.0
  (c++)"vtable for miral::WindowManagementPolicy@MIRAL_5.0" 5.0.0
+ MIRAL_5.1@MIRAL_5.1 5.1.0
+ (c++)"miral::IdleListener::IdleListener()@MIRAL_5.1" 5.1.0
+ (c++)"miral::IdleListener::on_dim(std::function<void ()> const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::IdleListener::on_off(std::function<void ()> const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::IdleListener::on_wake(std::function<void ()> const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::IdleListener::operator()(mir::Server&) const@MIRAL_5.1" 5.1.0

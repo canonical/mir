@@ -1339,3 +1339,14 @@ global:
 local: *;
 };
 
+MIR_SERVER_INTERNAL_2.18 {
+global:
+  extern "C++" {
+    mir::Server::the_idle_handler*;
+    mir::shell::IdleHandlerObserver::?IdleHandlerObserver*;
+    mir::shell::IdleHandlerObserver::IdleHandlerObserver*;
+    non-virtual?thunk?to?mir::shell::IdleHandlerObserver::?IdleHandlerObserver*;
+    typeinfo?for?mir::shell::IdleHandlerObserver;
+    vtable?for?mir::shell::IdleHandlerObserver;
+  };
+} MIR_SERVER_INTERNAL_2.17;
