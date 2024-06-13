@@ -12,15 +12,9 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/renderers/sw
 )
 
-set(WINDOW_MANAGEMENT_TESTS_SRCS
-  test_minimal_window_manager.cpp
-)
-
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 mir_add_wrapped_executable(mir_window_management_tests NOINSTALL
-  ${WINDOW_MANAGEMENT_TESTS_SRCS}
-  ${MIR_SERVER_OBJECTS}
-  ${MIR_PLATFORM_OBJECTS}
+  test_minimal_window_manager.cpp
 )
 
 if (MIR_USE_PRECOMPILED_HEADERS)
@@ -46,11 +40,8 @@ target_link_libraries(
   mir-test-doubles-static
 
   mircommon
-  miral
-  miral-internal
+  miral-external
 
-  ${MIR_PLATFORM_REFERENCES}
-  ${MIR_SERVER_REFERENCES}
   Boost::system
 
   # GBM platform dependencies
