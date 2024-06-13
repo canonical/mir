@@ -65,7 +65,7 @@ public:
         work_queue.push(f);
     }
 
-    bool next()
+    auto next() -> bool
     {
         if (work_queue.empty())
             return false;
@@ -293,8 +293,8 @@ void mir_test_framework::WindowManagementTestHarness::SetUp()
     self = std::make_shared<Self>(this);
 }
 
-miral::Application mir_test_framework::WindowManagementTestHarness::open_application(
-    std::string const& name)
+auto mir_test_framework::WindowManagementTestHarness::open_application(
+    std::string const& name) -> miral::Application
 {
     return self->shell->open_session(
         __LINE__,
@@ -303,10 +303,10 @@ miral::Application mir_test_framework::WindowManagementTestHarness::open_applica
         std::shared_ptr<mir::frontend::EventSink>());;
 }
 
-miral::Window mir_test_framework::WindowManagementTestHarness::create_window(
+auto mir_test_framework::WindowManagementTestHarness::create_window(
     miral::Application const& session,
     mir::geometry::Width const& width,
-    mir::geometry::Height const& height)
+    mir::geometry::Height const& height) -> miral::Window
 {
     auto stream = std::make_shared<mir::test::doubles::StubBufferStream>();
     self->streams.push_back(stream);
@@ -354,13 +354,13 @@ void mir_test_framework::WindowManagementTestHarness::request_resize(
     self->work_queue.run();
 }
 
-std::shared_ptr<mir::scene::Surface> mir_test_framework::WindowManagementTestHarness::focused_surface()
+auto mir_test_framework::WindowManagementTestHarness::focused_surface() -> std::shared_ptr<mir::scene::Surface>
 {
     return self->shell->focused_surface();
 }
 
-mir::scene::SurfaceList mir_test_framework::WindowManagementTestHarness::stacking_order_of(
-    mir::scene::SurfaceSet const& surfaces) const
+auto mir_test_framework::WindowManagementTestHarness::stacking_order_of(
+    mir::scene::SurfaceSet const& surfaces) const -> mir::scene::SurfaceList
 {
     return self->surface_stack->stacking_order_of(surfaces);
 }

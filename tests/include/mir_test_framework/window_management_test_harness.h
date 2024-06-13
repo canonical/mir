@@ -55,19 +55,19 @@ class WindowManagementTestHarness : public testing::Test
 public:
     void SetUp() override;
 
-    miral::Application open_application(std::string const& name);
-    miral::Window create_window(
+    auto open_application(std::string const& name) -> miral::Application;
+    auto create_window(
         miral::Application const&,
         mir::geometry::Width const&,
-        mir::geometry::Height const&);
+        mir::geometry::Height const&) -> miral::Window;
     void publish_event(MirEvent const& event);
     void request_resize(miral::Window const&, MirInputEvent const*, MirResizeEdge);
 
-    std::shared_ptr<mir::scene::Surface> focused_surface();
-    [[nodiscard]] mir::scene::SurfaceList stacking_order_of(mir::scene::SurfaceSet const& surfaces) const;
+    auto focused_surface() -> std::shared_ptr<mir::scene::Surface>;
+    [[nodiscard]] auto stacking_order_of(mir::scene::SurfaceSet const& surfaces) const -> mir::scene::SurfaceList;
 
-    virtual WindowManagementPolicyBuilder get_builder() = 0;
-    virtual std::vector<mir::geometry::Rectangle> get_output_rectangles() = 0;
+    virtual auto get_builder() -> WindowManagementPolicyBuilder = 0;
+    virtual auto get_output_rectangles() -> std::vector<mir::geometry::Rectangle> = 0;
 
     struct Self;
     std::shared_ptr<Self> self;
