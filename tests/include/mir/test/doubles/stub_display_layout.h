@@ -30,7 +30,7 @@ class StubDisplayLayout : public mir::shell::DisplayLayout
 public:
     void clip_to_output(mir::geometry::Rectangle&) override {}
     void size_to_output(mir::geometry::Rectangle&) override {}
-    bool place_in_output(mir::graphics::DisplayConfigurationOutputId, mir::geometry::Rectangle&) override
+    auto place_in_output(mir::graphics::DisplayConfigurationOutputId, mir::geometry::Rectangle&) -> bool override
     {
         return false;
     }

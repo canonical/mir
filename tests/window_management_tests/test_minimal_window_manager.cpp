@@ -45,7 +45,7 @@ MATCHER_P(LockedEq, value, "")
 class MinimalWindowManagerTest : public mir_test_framework::WindowManagementTestHarness
 {
 public:
-    mir_test_framework::WindowManagementPolicyBuilder get_builder() override
+    auto get_builder() -> mir_test_framework::WindowManagementPolicyBuilder override
     {
         return [&](miral::WindowManagerTools const& tools)
         {
@@ -53,7 +53,7 @@ public:
         };
     }
 
-    std::vector<mir::geometry::Rectangle> get_output_rectangles() override
+    auto get_output_rectangles() -> std::vector<mir::geometry::Rectangle> override
     {
         return {
             mir::geometry::Rectangle{{0, 0}, {800, 600}},

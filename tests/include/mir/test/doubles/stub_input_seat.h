@@ -33,7 +33,7 @@ public:
     void remove_device(mir::input::Device const&) override {}
     void dispatch_event(std::shared_ptr<MirEvent> const&) override {}
 
-    mir::EventUPtr create_device_state() override
+    auto create_device_state() -> mir::EventUPtr override
     {
         std::vector<mir::events::InputDeviceState> devices;
         MirPointerButtons buttons = 0;
@@ -58,12 +58,12 @@ public:
     void set_confinement_regions(mir::geometry::Rectangles const&) override {}
     void reset_confinement_regions() override {}
 
-    mir::geometry::Rectangle bounding_rectangle() const override
+    auto bounding_rectangle() const -> mir::geometry::Rectangle override
     {
         return {};
     }
 
-    mir::input::OutputInfo output_info(uint32_t) const override
+    auto output_info(uint32_t) const -> mir::input::OutputInfo override
     {
         return {};
     }
