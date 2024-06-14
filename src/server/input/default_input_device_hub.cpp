@@ -21,6 +21,7 @@
 #include "mir/input/input_device_observer.h"
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_touchscreen_config.h"
 #include "mir/input/mir_keyboard_config.h"
 #include "mir/geometry/point.h"
 #include "mir/server_status_listener.h"
@@ -195,6 +196,185 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     input_dispatchable->add_watch(device_queue);
 }
 
+namespace
+{
+auto format(mi::DeviceCapabilities c)
+{
+    using namespace std::string_literals;
+    using mi::DeviceCapability;
+
+    auto result = "{"s;
+
+    if (contains(c, DeviceCapability::pointer))
+        result += "pointer|";
+    if (contains(c, DeviceCapability::keyboard))
+        result += "keyboard|";
+    if (contains(c, DeviceCapability::touchpad))
+        result += "touchpad|";
+    if (contains(c, DeviceCapability::touchscreen))
+        result += "touchscreen|";
+    if (contains(c, DeviceCapability::gamepad))
+        result += "gamepad|";
+    if (contains(c, DeviceCapability::joystick))
+        result += "joystick|";
+    if (contains(c, DeviceCapability::switch_))
+        result += "switch|";
+    if (contains(c, DeviceCapability::multitouch))
+        result += "multitouch|";
+    if (contains(c, DeviceCapability::alpha_numeric))
+        result += "alpha_numeric|";
+
+    if (result.length() == 1)
+    {
+        result += "}";
+    }
+    else
+    {
+        result.back() = '}';
+    }
+
+    return result;
+}
+
+auto format(MirPointerConfig c)
+{
+    using namespace std::string_literals;
+
+    auto result = "{"s;
+
+    switch (c.handedness())
+    {
+    case mir_pointer_handedness_right:
+        result += "handedness=right,";
+        break;
+
+    case mir_pointer_handedness_left:
+        result += "handedness=left,";
+        break;
+    }
+
+    switch (c.acceleration())
+    {
+    case mir_pointer_acceleration_adaptive:
+        result += "acceleration=adaptive,";
+        break;
+
+    case mir_pointer_acceleration_none:
+        result += "acceleration=none,";
+        break;
+    }
+
+    result += std::format("acceleration={:.2f},", c.cursor_acceleration_bias());
+    result += std::format("hscale={:.2f},", c.horizontal_scroll_scale());
+    result += std::format("vscale={:.2f},", c.vertical_scroll_scale());
+
+    result.back() = '}';
+    return result;
+}
+
+auto format(MirTouchpadConfig c)
+{
+    using namespace std::string_literals;
+
+    auto result = "{"s;
+
+    switch (c.click_mode())
+    {
+    case mir_touchpad_click_mode_none:
+        result += "click_mode=none,";
+        break;
+    case mir_touchpad_click_mode_area_to_click:
+        result += "click_mode=area_to_click,";
+        break;
+    case mir_touchpad_click_mode_finger_count:
+        result += "click_mode=finger_count,";
+        break;
+    }
+
+    switch (c.scroll_mode())
+    {
+    case mir_touchpad_scroll_mode_none:
+        result += "scroll_mode=none,";
+        break;
+
+    case mir_touchpad_scroll_mode_two_finger_scroll:
+        result += "scroll_mode=two_finger,";
+        break;
+
+    case mir_touchpad_scroll_mode_edge_scroll:
+        result += "scroll_mode=edge,";
+        break;
+
+    case mir_touchpad_scroll_mode_button_down_scroll:
+        result += "scroll_mode=button_down,";
+        result += std::format("scroll_button={},", c.button_down_scroll_button());
+        break;
+    }
+
+    if (c.tap_to_click())
+    {
+        result += "tap_to_click,";
+    }
+
+    if (c.middle_mouse_button_emulation())
+    {
+        result += "middle_mouse_button_emulation,";
+    }
+
+
+    if (c.disable_with_mouse())
+    {
+        result += "disable_with_mouse,";
+    }
+
+    if (c.disable_while_typing())
+    {
+        result += "disable_while_typing,";
+    }
+
+    result.back() = '}';
+    return result;
+}
+
+auto format(MirTouchscreenConfig c)
+{
+    using namespace std::string_literals;
+
+    switch (c.mapping_mode())
+    {
+    case mir_touchscreen_mapping_mode_to_output:
+        return "{mapping_mode=to_output}"s;
+
+    case mir_touchscreen_mapping_mode_to_display_wall:
+        return "{mapping_mode=to_display_wall}"s;
+
+    default:
+        return "{}"s;
+    }
+}
+
+void log_configuration(std::shared_ptr<mi::DefaultDevice> const handle)
+{
+    auto result = std::format("Device configuration: {}, capabilities={}",
+                         handle->name(), format(handle->capabilities()));
+
+    if (auto const pointer_config = handle->pointer_configuration())
+    {
+        result += ", " + format(pointer_config.value());
+    }
+
+    if (auto const touchpad_config = handle->touchpad_configuration())
+    {
+        result += ", " + format(touchpad_config.value());
+    }
+
+    if (auto const touchscreen_config = handle->touchscreen_configuration())
+    {
+        result += ", " + format(touchscreen_config.value());
+    }
+}
+}
+
 auto mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& device) -> std::weak_ptr<Device>
 {
     if (!device)
@@ -226,6 +406,9 @@ auto mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
 
         seat->add_device(*handle);
         dev->start(seat, input_dispatchable);
+
+        log_configuration(handle);
+
         return handle;
     }
     else
