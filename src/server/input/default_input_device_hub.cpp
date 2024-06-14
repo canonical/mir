@@ -355,7 +355,7 @@ auto format(MirTouchscreenConfig c)
 
 void log_configuration(std::shared_ptr<mi::DefaultDevice> const handle)
 {
-    auto result = std::format("Device configuration: {}, capabilities={}",
+    auto result = std::format("{}, capabilities={}",
                          handle->name(), format(handle->capabilities()));
 
     if (auto const pointer_config = handle->pointer_configuration())
@@ -372,6 +372,8 @@ void log_configuration(std::shared_ptr<mi::DefaultDevice> const handle)
     {
         result += ", " + format(touchscreen_config.value());
     }
+
+    mir::log_info("Device configuration: %s", result.c_str());
 }
 }
 
