@@ -7,8 +7,6 @@
 #include "xdg_output_v1.h"
 #include "xdg_shell_stable.h"
 
-#include <optional>
-
 namespace mir
 {
 namespace frontend
@@ -38,13 +36,14 @@ public:
 
     void set_mode(uint32_t mode) override;
     void unset_mode() override;
-    void configure();
 
 private:
-    void update_mode(std::optional<uint32_t> new_mode);
+    void update_mode(uint32_t new_mode);
 
-    mir::frontend::XdgToplevelStable *toplevel;
-    std::optional<uint32_t> mode;
+    static const uint32_t default_mode = Mode::client_side;
+
+    mir::frontend::XdgToplevelStable* toplevel;
+    uint32_t mode;
 };
 } // namespace frontend
 } // namespace mir
@@ -88,30 +87,25 @@ mir::frontend::XdgToplevelDecorationV1::XdgToplevelDecorationV1(wl_resource *id,
 {
 }
 
-void mir::frontend::XdgToplevelDecorationV1::update_mode(std::optional<uint32_t> new_mode)
+void mir::frontend::XdgToplevelDecorationV1::update_mode(uint32_t new_mode)
 {
-    this->mode = new_mode;
+    log_info("Updating mode to: %s", new_mode == Mode::client_side ? "client-side" : "server-side");
+
     auto spec = shell::SurfaceSpecification{};
 
-    if (this->mode)
+    mode = new_mode;
+    switch (mode)
     {
-        switch (*this->mode)
-        {
-        case Mode::client_side:
-            spec.server_side_decorated = false;
-            break;
-        case Mode::server_side:
-            spec.server_side_decorated = true;
-            break;
-        }
-    }
-    else
-    {
-        // Client side by default
+    case Mode::client_side:
         spec.server_side_decorated = false;
+        break;
+    case Mode::server_side:
+        spec.server_side_decorated = true;
+        break;
     }
 
     this->toplevel->apply_spec(spec);
+    send_configure_event(mode);
 }
 
 void mir::frontend::XdgToplevelDecorationV1::set_mode(uint32_t mode)
@@ -123,16 +117,5 @@ void mir::frontend::XdgToplevelDecorationV1::set_mode(uint32_t mode)
 void mir::frontend::XdgToplevelDecorationV1::unset_mode()
 {
     log_info(__PRETTY_FUNCTION__);
-    update_mode(Mode::server_side);
-}
-
-void mir::frontend::XdgToplevelDecorationV1::configure()
-{
-    log_info(__PRETTY_FUNCTION__);
-    if (!mode)
-    {
-        send_configure_event(Mode::client_side);
-    }
-
-    send_configure_event(*mode);
+    update_mode(default_mode);
 }
