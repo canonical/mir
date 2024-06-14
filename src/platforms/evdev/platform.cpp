@@ -435,8 +435,7 @@ void mie::Platform::device_added(libinput_device* dev)
     }
     catch(...)
     {
-        mir::log_error("Failure opening device %s", libinput_device_get_sysname(dev));
-        log_info("FAILED to opened device: %s", describe(dev).c_str());
+        log_error("Failure opening device %s", describe(dev).c_str());
     }
 }
 
