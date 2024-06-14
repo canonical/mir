@@ -48,8 +48,7 @@ using WindowManagementPolicyBuilder =
     std::function<std::unique_ptr<miral::WindowManagementPolicy>(miral::WindowManagerTools const& tools)>;
 
 /// A harness for window management testing. To use, extend this class and provide the
-/// necessary virtual methods. You may use WindowManagementVerifier to assert that
-/// calls to "advise*" are called correctly in response to input into the system.
+/// necessary virtual methods.
 class WindowManagementTestHarness : public testing::Test
 {
 public:
