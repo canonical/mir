@@ -20,8 +20,6 @@
 #include "xdg-shell_wrapper.h"
 #include "window_wl_surface_role.h"
 
-namespace mw = mir::wayland;
-
 namespace mir
 {
 namespace scene
@@ -103,7 +101,7 @@ private:
     auto popup_rect() const -> std::optional<geometry::Rectangle>;
 };
 
-class XdgToplevelStable : mw::XdgToplevel, public WindowWlSurfaceRole
+class XdgToplevelStable : mir::wayland::XdgToplevel, public WindowWlSurfaceRole
 {
 public:
     XdgToplevelStable(
@@ -137,7 +135,7 @@ private:
     void send_toplevel_configure();
     void destroy_role() const override;
 
-    mw::Weak<XdgSurfaceStable> const xdg_surface;
+    mir::wayland::Weak<XdgSurfaceStable> const xdg_surface;
 };
 }
 }
