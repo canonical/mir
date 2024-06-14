@@ -360,17 +360,17 @@ void log_configuration(std::shared_ptr<mi::DefaultDevice> const handle)
 
     if (auto const pointer_config = handle->pointer_configuration())
     {
-        result += ", " + format(pointer_config.value());
+        result += ", pointer_config=" + format(pointer_config.value());
     }
 
     if (auto const touchpad_config = handle->touchpad_configuration())
     {
-        result += ", " + format(touchpad_config.value());
+        result += ", touchpad_config=" + format(touchpad_config.value());
     }
 
     if (auto const touchscreen_config = handle->touchscreen_configuration())
     {
-        result += ", " + format(touchscreen_config.value());
+        result += ", touchscreen_config=" + format(touchscreen_config.value());
     }
 
     mir::log_info("Device configuration: %s", result.c_str());
