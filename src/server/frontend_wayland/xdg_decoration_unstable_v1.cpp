@@ -16,7 +16,6 @@
 
 #include "xdg_decoration_unstable_v1.h"
 
-#include "mir/log.h"
 #include "mir/shell/surface_specification.h"
 
 #include "xdg-decoration-unstable-v1_wrapper.h"
@@ -67,7 +66,6 @@ private:
 auto mir::frontend::create_xdg_decoration_unstable_v1(wl_display* display)
     -> std::shared_ptr<mir::wayland::XdgDecorationManagerV1::Global>
 {
-    log_info("Creating XdgDecorationManagerV1::Global");
     return std::make_shared<XdgDecorationManagerV1::Global>(display);
 }
 
@@ -78,7 +76,6 @@ mir::frontend::XdgDecorationManagerV1::Global::Global(wl_display* display)
 
 void mir::frontend::XdgDecorationManagerV1::Global::bind(wl_resource* new_zxdg_decoration_manager_v1)
 {
-    log_info(__PRETTY_FUNCTION__);
     new XdgDecorationManagerV1{new_zxdg_decoration_manager_v1};
 }
 
@@ -89,7 +86,6 @@ mir::frontend::XdgDecorationManagerV1::XdgDecorationManagerV1(wl_resource* resou
 
 void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource* id, wl_resource* toplevel)
 {
-    log_info(__PRETTY_FUNCTION__);
     auto* tl = mir::frontend::XdgToplevelStable::from(toplevel);
     if (tl)
     {
@@ -105,8 +101,6 @@ mir::frontend::XdgToplevelDecorationV1::XdgToplevelDecorationV1(wl_resource* id,
 
 void mir::frontend::XdgToplevelDecorationV1::update_mode(uint32_t new_mode)
 {
-    log_info("Updating mode to: %s", new_mode == Mode::client_side ? "client-side" : "server-side");
-
     auto spec = shell::SurfaceSpecification{};
 
     mode = new_mode;
@@ -126,12 +120,10 @@ void mir::frontend::XdgToplevelDecorationV1::update_mode(uint32_t new_mode)
 
 void mir::frontend::XdgToplevelDecorationV1::set_mode(uint32_t mode)
 {
-    log_info(__PRETTY_FUNCTION__);
     update_mode(mode);
 }
 
 void mir::frontend::XdgToplevelDecorationV1::unset_mode()
 {
-    log_info(__PRETTY_FUNCTION__);
     update_mode(default_mode);
 }
