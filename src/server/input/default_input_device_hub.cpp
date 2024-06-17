@@ -218,6 +218,7 @@ struct std::formatter<mi::DeviceCapabilities>
 
         if (contains(c, DeviceCapability::pointer))
         {
+            write_delim();
             out = std::format_to(out, "pointer");
         }
 
