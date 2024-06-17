@@ -196,186 +196,262 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     input_dispatchable->add_watch(device_queue);
 }
 
-namespace
+template <>
+struct std::formatter<mi::DeviceCapabilities>
 {
-auto format(mi::DeviceCapabilities c)
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();
+    }
+
+    constexpr auto format(mi::DeviceCapabilities const& c, std::format_context& ctx) const
+    {
+        using mi::DeviceCapability;
+
+        auto out = std::format_to(ctx.out(), "{{");
+
+        auto write_delim = [&out, caps_written = false] () mutable
+        {
+            if (caps_written) out = std::format_to(out, "|");
+            caps_written = true;
+        };
+
+        if (contains(c, DeviceCapability::pointer))
+        {
+            out = std::format_to(out, "pointer");
+        }
+
+        if (contains(c, DeviceCapability::keyboard))
+        {
+            write_delim();
+            out = std::format_to(out, "keyboard");
+        }
+
+        if (contains(c, DeviceCapability::touchpad))
+        {
+            write_delim();
+            out = std::format_to(out, "touchpad");
+        }
+
+        if (contains(c, DeviceCapability::touchscreen))
+        {
+            write_delim();
+            out = std::format_to(out, "touchscreen");
+        }
+
+        if (contains(c, DeviceCapability::gamepad))
+        {
+            write_delim();
+            out = std::format_to(out, "gamepad");
+        }
+
+        if (contains(c, DeviceCapability::joystick))
+        {
+            write_delim();
+            out = std::format_to(out, "joystick");
+        }
+
+        if (contains(c, DeviceCapability::switch_))
+        {
+            write_delim();
+            out = std::format_to(out, "switch");
+        }
+
+        if (contains(c, DeviceCapability::multitouch))
+        {
+            write_delim();
+            out = std::format_to(out, "multitouch");
+        }
+
+        if (contains(c, DeviceCapability::alpha_numeric))
+        {
+            write_delim();
+            out = std::format_to(out, "alpha_numeric");
+        }
+
+        return std::format_to(out, "}}");
+    }
+};
+
+template <>
+struct std::formatter<MirPointerConfig>
 {
-    using namespace std::string_literals;
-    using mi::DeviceCapability;
-
-    auto result = "{"s;
-
-    if (contains(c, DeviceCapability::pointer))
-        result += "pointer|";
-    if (contains(c, DeviceCapability::keyboard))
-        result += "keyboard|";
-    if (contains(c, DeviceCapability::touchpad))
-        result += "touchpad|";
-    if (contains(c, DeviceCapability::touchscreen))
-        result += "touchscreen|";
-    if (contains(c, DeviceCapability::gamepad))
-        result += "gamepad|";
-    if (contains(c, DeviceCapability::joystick))
-        result += "joystick|";
-    if (contains(c, DeviceCapability::switch_))
-        result += "switch|";
-    if (contains(c, DeviceCapability::multitouch))
-        result += "multitouch|";
-    if (contains(c, DeviceCapability::alpha_numeric))
-        result += "alpha_numeric|";
-
-    if (result.length() == 1)
+    constexpr auto parse(std::format_parse_context& ctx)
     {
-        result += "}";
-    }
-    else
-    {
-        result.back() = '}';
+        return ctx.begin();
     }
 
-    return result;
-}
+    constexpr auto format(MirPointerConfig const& c, std::format_context& ctx) const
+    {
+        auto out = std::format_to(ctx.out(), "{{");
 
-auto format(MirPointerConfig c)
+        switch (c.handedness())
+        {
+        case mir_pointer_handedness_right:
+            out = std::format_to(out, "handedness=right,");
+            break;
+
+        case mir_pointer_handedness_left:
+            out = std::format_to(out, "handedness=left,");
+            break;
+        }
+
+        switch (c.acceleration())
+        {
+        case mir_pointer_acceleration_adaptive:
+            out = std::format_to(out, "acceleration=adaptive,");
+            break;
+
+        case mir_pointer_acceleration_none:
+            out = std::format_to(out, "acceleration=none,");
+            break;
+        }
+
+        out = std::format_to(out, "acceleration={:.2f},", c.cursor_acceleration_bias());
+        out = std::format_to(out, "hscale={:.2f},", c.horizontal_scroll_scale());
+        return std::format_to(out, "vscale={:.2f}}}", c.vertical_scroll_scale());
+    }
+};
+
+template <>
+struct std::formatter<MirTouchpadConfig>
 {
-    using namespace std::string_literals;
-
-    auto result = "{"s;
-
-    switch (c.handedness())
+    constexpr auto parse(std::format_parse_context& ctx)
     {
-    case mir_pointer_handedness_right:
-        result += "handedness=right,";
-        break;
-
-    case mir_pointer_handedness_left:
-        result += "handedness=left,";
-        break;
+        return ctx.begin();
     }
 
-    switch (c.acceleration())
+    constexpr auto format(MirTouchpadConfig const& c, std::format_context& ctx) const
     {
-    case mir_pointer_acceleration_adaptive:
-        result += "acceleration=adaptive,";
-        break;
+        auto out = std::format_to(ctx.out(), "{{");
 
-    case mir_pointer_acceleration_none:
-        result += "acceleration=none,";
-        break;
+        auto write_delim = [&out, caps_written = false] () mutable
+        {
+            if (caps_written) out = std::format_to(out, "|");
+            caps_written = true;
+        };
+
+        switch (c.click_mode())
+        {
+        case mir_touchpad_click_mode_none:
+            write_delim();
+            out = std::format_to(out, "click_mode=none");
+            break;
+        case mir_touchpad_click_mode_area_to_click:
+            write_delim();
+            out = std::format_to(out, "click_mode=area_to_click");
+            break;
+        case mir_touchpad_click_mode_finger_count:
+            write_delim();
+            out = std::format_to(out, "click_mode=finger_count");
+            break;
+        }
+
+        switch (c.scroll_mode())
+        {
+        case mir_touchpad_scroll_mode_none:
+            write_delim();
+            out = std::format_to(out, "scroll_mode=none");
+            break;
+
+        case mir_touchpad_scroll_mode_two_finger_scroll:
+            write_delim();
+            out = std::format_to(out, "scroll_mode=two_finger");
+            break;
+
+        case mir_touchpad_scroll_mode_edge_scroll:
+            write_delim();
+            out = std::format_to(out, "scroll_mode=edge");
+            break;
+
+        case mir_touchpad_scroll_mode_button_down_scroll:
+            write_delim();
+            out = std::format_to(out, "scroll_mode=button_down,scroll_button={},", c.button_down_scroll_button());
+            break;
+        }
+
+        if (c.tap_to_click())
+        {
+            write_delim();
+            out = std::format_to(out, "tap_to_click");
+        }
+
+        if (c.middle_mouse_button_emulation())
+        {
+            write_delim();
+            out = std::format_to(out, "middle_mouse_button_emulation");
+        }
+
+
+        if (c.disable_with_mouse())
+        {
+            write_delim();
+            out = std::format_to(out, "disable_with_mouse");
+        }
+
+        if (c.disable_while_typing())
+        {
+            write_delim();
+            out = std::format_to(out, "disable_while_typing");
+        }
+
+        return std::format_to(out, "}}");
     }
+};
 
-    result += std::format("acceleration={:.2f},", c.cursor_acceleration_bias());
-    result += std::format("hscale={:.2f},", c.horizontal_scroll_scale());
-    result += std::format("vscale={:.2f},", c.vertical_scroll_scale());
-
-    result.back() = '}';
-    return result;
-}
-
-auto format(MirTouchpadConfig c)
+template <>
+struct std::formatter<MirTouchscreenConfig>
 {
-    using namespace std::string_literals;
-
-    auto result = "{"s;
-
-    switch (c.click_mode())
+    constexpr auto parse(std::format_parse_context& ctx)
     {
-    case mir_touchpad_click_mode_none:
-        result += "click_mode=none,";
-        break;
-    case mir_touchpad_click_mode_area_to_click:
-        result += "click_mode=area_to_click,";
-        break;
-    case mir_touchpad_click_mode_finger_count:
-        result += "click_mode=finger_count,";
-        break;
+        return ctx.begin();
     }
 
-    switch (c.scroll_mode())
+    constexpr auto format(MirTouchscreenConfig const& c, std::format_context& ctx) const
     {
-    case mir_touchpad_scroll_mode_none:
-        result += "scroll_mode=none,";
-        break;
+        switch (c.mapping_mode())
+        {
+        case mir_touchscreen_mapping_mode_to_output:
+            return std::format_to(ctx.out(), "{{mapping_mode=to_output}}");
 
-    case mir_touchpad_scroll_mode_two_finger_scroll:
-        result += "scroll_mode=two_finger,";
-        break;
+        case mir_touchscreen_mapping_mode_to_display_wall:
+            return std::format_to(ctx.out(), "{{mapping_mode=to_display_wall}}");
 
-    case mir_touchpad_scroll_mode_edge_scroll:
-        result += "scroll_mode=edge,";
-        break;
-
-    case mir_touchpad_scroll_mode_button_down_scroll:
-        result += "scroll_mode=button_down,";
-        result += std::format("scroll_button={},", c.button_down_scroll_button());
-        break;
+        default:
+            return ctx.out();
+        }
     }
+};
 
-    if (c.tap_to_click())
-    {
-        result += "tap_to_click,";
-    }
-
-    if (c.middle_mouse_button_emulation())
-    {
-        result += "middle_mouse_button_emulation,";
-    }
-
-
-    if (c.disable_with_mouse())
-    {
-        result += "disable_with_mouse,";
-    }
-
-    if (c.disable_while_typing())
-    {
-        result += "disable_while_typing,";
-    }
-
-    result.back() = '}';
-    return result;
-}
-
-auto format(MirTouchscreenConfig c)
+template <>
+struct std::formatter<std::shared_ptr<mi::DefaultDevice>>
 {
-    using namespace std::string_literals;
-
-    switch (c.mapping_mode())
+    constexpr auto parse(std::format_parse_context& ctx)
     {
-    case mir_touchscreen_mapping_mode_to_output:
-        return "{mapping_mode=to_output}"s;
-
-    case mir_touchscreen_mapping_mode_to_display_wall:
-        return "{mapping_mode=to_display_wall}"s;
-
-    default:
-        return "{}"s;
-    }
-}
-
-void log_configuration(std::shared_ptr<mi::DefaultDevice> const handle)
-{
-    auto result = std::format("{}, capabilities={}",
-                         handle->name(), format(handle->capabilities()));
-
-    if (auto const pointer_config = handle->pointer_configuration())
-    {
-        result += ", pointer_config=" + format(pointer_config.value());
+        return ctx.begin();
     }
 
-    if (auto const touchpad_config = handle->touchpad_configuration())
+    auto format(std::shared_ptr<mi::DefaultDevice> const& handle, std::format_context& ctx) const
     {
-        result += ", touchpad_config=" + format(touchpad_config.value());
-    }
+        auto out = std::format_to(ctx.out(), "{}, capabilities={}", handle->name(), handle->capabilities());
 
-    if (auto const touchscreen_config = handle->touchscreen_configuration())
-    {
-        result += ", touchscreen_config=" + format(touchscreen_config.value());
-    }
+        if (auto const pointer_config = handle->pointer_configuration())
+        {
+            out = std::format_to(out, ", pointer_config={}", pointer_config.value());
+        }
 
-    mir::log_info("Device configuration: %s", result.c_str());
-}
-}
+        if (auto const touchpad_config = handle->touchpad_configuration())
+        {
+            out = std::format_to(out, ", touchpad_config=", touchpad_config.value());
+        }
+
+        if (auto const touchscreen_config = handle->touchscreen_configuration())
+        {
+            out = std::format_to(out, ", touchscreen_config={}", touchscreen_config.value());
+        }
+        return out;
+    }
+};
 
 auto mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& device) -> std::weak_ptr<Device>
 {
@@ -409,7 +485,7 @@ auto mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
         seat->add_device(*handle);
         dev->start(seat, input_dispatchable);
 
-        log_configuration(handle);
+        mir::log_info(std::format("Device configuration: {}", handle));
 
         return handle;
     }
