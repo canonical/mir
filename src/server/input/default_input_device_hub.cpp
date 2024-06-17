@@ -28,7 +28,7 @@
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/server_action_queue.h"
-#define MIR_LOG_COMPONENT "Input"
+#define MIR_LOG_COMPONENT "input-hub"
 #include "mir/log.h"
 
 #include "boost/throw_exception.hpp"
