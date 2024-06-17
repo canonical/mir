@@ -99,9 +99,11 @@ struct Dimmer : ms::IdleStateObserver
 {
     Dimmer(
         std::shared_ptr<mi::Scene> const& input_scene,
-        std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
+        std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
+        msh::IdleHandlerObserver& observer)
         : input_scene{input_scene},
-          allocator{allocator}
+          allocator{allocator},
+          observer{observer}
     {
     }
 
@@ -111,6 +113,7 @@ struct Dimmer : ms::IdleStateObserver
         {
             input_scene->remove_input_visualization(renderable);
             renderable.reset();
+            observer.wake();
         }
 
     }
@@ -121,6 +124,7 @@ struct Dimmer : ms::IdleStateObserver
         {
             renderable = std::make_shared<DimmingRenderable>(*allocator);
             input_scene->add_input_visualization(renderable);
+            observer.dim();
         }
     }
 
@@ -128,13 +132,18 @@ private:
     std::shared_ptr<mi::Scene> const input_scene;
     std::shared_ptr<mg::GraphicBufferAllocator> const allocator;
     std::shared_ptr<mg::Renderable> renderable;
+    msh::IdleHandlerObserver& observer;
 };
 
 struct PowerModeSetter : ms::IdleStateObserver
 {
-    PowerModeSetter(std::shared_ptr<msh::DisplayConfigurationController> const& controller, MirPowerMode power_mode)
+    PowerModeSetter(
+        std::shared_ptr<msh::DisplayConfigurationController> const& controller,
+        MirPowerMode power_mode,
+        msh::IdleHandlerObserver& observer)
         : controller{controller},
-          power_mode{power_mode}
+          power_mode{power_mode},
+          observer{observer}
     {
     }
 
@@ -146,11 +155,13 @@ struct PowerModeSetter : ms::IdleStateObserver
     void idle() override
     {
         controller->set_power_mode(power_mode);
+        observer.off();
     }
 
 private:
     std::shared_ptr<msh::DisplayConfigurationController> const controller;
     MirPowerMode const power_mode;
+    msh::IdleHandlerObserver& observer;
 };
 }
 
@@ -191,11 +202,12 @@ void msh::BasicIdleHandler::set_display_off_timeout(std::optional<time::Duration
         if (off_timeout >= dim_time_before_off * 2)
         {
             auto const dim_timeout = off_timeout - dim_time_before_off;
-            auto const dimmer = std::make_shared<Dimmer>(input_scene, allocator);
+            auto const dimmer = std::make_shared<Dimmer>(input_scene, allocator, multiplexer);
             observers.push_back(dimmer);
             idle_hub->register_interest(dimmer, dim_timeout);
         }
-        auto const power_setter = std::make_shared<PowerModeSetter>(display_config_controller, mir_power_mode_off);
+        auto const power_setter = std::make_shared<PowerModeSetter>(
+            display_config_controller, mir_power_mode_off, multiplexer);
         observers.push_back(power_setter);
         idle_hub->register_interest(power_setter, off_timeout);
     }
@@ -210,4 +222,28 @@ void msh::BasicIdleHandler::clear_observers(ProofOfMutexLock const&)
         idle_hub->unregister_interest(*observer);
     }
     observers.clear();
+}
+
+void msh::BasicIdleHandler::register_interest(std::weak_ptr<IdleHandlerObserver> const& observer)
+{
+    multiplexer.register_interest(observer);
+}
+
+void msh::BasicIdleHandler::register_interest(
+    std::weak_ptr<IdleHandlerObserver> const& observer,
+    Executor& executor)
+{
+    multiplexer.register_interest(observer, executor);
+}
+
+void msh::BasicIdleHandler::register_early_observer(
+    std::weak_ptr<IdleHandlerObserver> const& observer,
+    Executor& executor)
+{
+    multiplexer.register_interest(observer, executor);
+}
+
+void msh::BasicIdleHandler::unregister_interest(IdleHandlerObserver const& observer)
+{
+    multiplexer.unregister_interest(observer);
 }

@@ -1342,6 +1342,7 @@ local: *;
 MIR_SERVER_INTERNAL_2.18 {
 global:
   extern "C++" {
+    mir::Server::the_idle_handler*;
     mir::graphics::DisplayConfigurationObserverMultiplexer::DisplayConfigurationObserverMultiplexer*;
     mir::graphics::DisplayConfigurationObserverMultiplexer::base_configuration_updated*;
     mir::graphics::DisplayConfigurationObserverMultiplexer::catastrophic_configuration_error*;
@@ -1415,6 +1416,8 @@ global:
     mir::shell::DefaultPersistentSurfaceStore::DefaultPersistentSurfaceStore*;
     mir::shell::DefaultPersistentSurfaceStore::id_for_surface*;
     mir::shell::DefaultPersistentSurfaceStore::surface_for_id*;
+    mir::shell::IdleHandlerObserver::?IdleHandlerObserver*;
+    mir::shell::IdleHandlerObserver::IdleHandlerObserver*;
     mir::shell::decoration::Manager::?Manager*;
     mir::shell::decoration::Manager::Manager*;
     non-virtual?thunk?to?mir::graphics::DisplayConfigurationObserverMultiplexer::base_configuration_updated*;
@@ -1482,6 +1485,7 @@ global:
     non-virtual?thunk?to?mir::shell::DefaultPersistentSurfaceStore::?DefaultPersistentSurfaceStore*;
     non-virtual?thunk?to?mir::shell::DefaultPersistentSurfaceStore::id_for_surface*;
     non-virtual?thunk?to?mir::shell::DefaultPersistentSurfaceStore::surface_for_id*;
+    non-virtual?thunk?to?mir::shell::IdleHandlerObserver::?IdleHandlerObserver*;
     non-virtual?thunk?to?mir::shell::decoration::Manager::?Manager*;
     typeinfo?for?mir::graphics::DisplayConfigurationObserverMultiplexer;
     typeinfo?for?mir::report::null::ShellReport;
@@ -1491,6 +1495,7 @@ global:
     typeinfo?for?mir::scene::SurfaceAllocator;
     typeinfo?for?mir::scene::SurfaceStack;
     typeinfo?for?mir::shell::DefaultPersistentSurfaceStore;
+    typeinfo?for?mir::shell::IdleHandlerObserver;
     typeinfo?for?mir::shell::decoration::Manager;
     vtable?for?mir::graphics::DisplayConfigurationObserverMultiplexer;
     vtable?for?mir::report::null::ShellReport;
@@ -1500,6 +1505,7 @@ global:
     vtable?for?mir::scene::SurfaceAllocator;
     vtable?for?mir::scene::SurfaceStack;
     vtable?for?mir::shell::DefaultPersistentSurfaceStore;
+    vtable?for?mir::shell::IdleHandlerObserver;
     vtable?for?mir::shell::decoration::Manager;
   };
 } MIR_SERVER_INTERNAL_2.17;
