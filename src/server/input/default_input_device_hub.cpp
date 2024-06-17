@@ -443,7 +443,7 @@ struct std::formatter<std::shared_ptr<mi::DefaultDevice>>
 
         if (auto const touchpad_config = handle->touchpad_configuration())
         {
-            out = std::format_to(out, ", touchpad_config=", touchpad_config.value());
+            out = std::format_to(out, ", touchpad_config={}", touchpad_config.value());
         }
 
         if (auto const touchscreen_config = handle->touchscreen_configuration())
