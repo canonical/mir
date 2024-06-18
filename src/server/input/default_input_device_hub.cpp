@@ -486,7 +486,8 @@ auto mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
         seat->add_device(*handle);
         dev->start(seat, input_dispatchable);
 
-        mir::log_info(std::format("Device configuration: {}", handle));
+        // Configuration changes are processed on the queue, don't log until they complete
+        queue->enqueue([handle]{ mir::log_info(std::format("Device configuration: {}", handle)); });
 
         return handle;
     }
