@@ -308,7 +308,7 @@ struct std::formatter<MirPointerConfig>
             break;
         }
 
-        out = std::format_to(out, "acceleration={:.2f},", c.cursor_acceleration_bias());
+        out = std::format_to(out, "acceleration_bias={:.2f},", c.cursor_acceleration_bias());
         out = std::format_to(out, "hscale={:.2f},", c.horizontal_scroll_scale());
         return std::format_to(out, "vscale={:.2f}}}", c.vertical_scroll_scale());
     }
