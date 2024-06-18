@@ -21,25 +21,13 @@
 #include <gmock/gmock.h>
 #include <miral/window_management_policy.h>
 #include <miral/application.h>
-#include <mir/scene/surface_stack.h>
 #include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
+#include "mir_test_framework/headless_in_process_server.h"
 
-namespace mir
+namespace mir::scene
 {
-namespace scene
-{
-class SurfaceStack;
 class Surface;
 class Session;
-}
-namespace shell
-{
-class AbstractShell;
-}
-namespace compositor
-{
-class BufferStream;
-}
 }
 
 namespace mir_test_framework
@@ -49,10 +37,11 @@ using WindowManagementPolicyBuilder =
 
 /// A harness for window management testing. To use, extend this class and provide the
 /// necessary virtual methods.
-class WindowManagementTestHarness : public testing::Test
+class WindowManagementTestHarness : public mir_test_framework::HeadlessInProcessServer
 {
 public:
     void SetUp() override;
+    void TearDown() override;
 
     auto open_application(std::string const& name) -> miral::Application;
     auto create_window(
@@ -63,8 +52,6 @@ public:
     void request_resize(miral::Window const&, MirInputEvent const*, MirResizeEdge);
 
     auto focused_surface() -> std::shared_ptr<mir::scene::Surface>;
-    [[nodiscard]] auto stacking_order_of(mir::scene::SurfaceSet const& surfaces) const -> mir::scene::SurfaceList;
-
     virtual auto get_builder() -> WindowManagementPolicyBuilder = 0;
     virtual auto get_output_rectangles() -> std::vector<mir::geometry::Rectangle> = 0;
 

@@ -17,7 +17,6 @@
 #include <miral/minimal_window_manager.h>
 #include <mir/scene/session.h>
 #include <mir/wayland/weak.h>
-#include <mir/scene/surface_stack.h>
 #include <mir/scene/surface.h>
 #include <mir/executor.h>
 #include <mir/events/event_builders.h>
@@ -117,11 +116,7 @@ TEST_F(MinimalWindowManagerTest, alt_tab_input_event_triggers_window_focus_cycli
 
     // Assert that the focused window is window1
     auto surface1 = window1.operator std::shared_ptr<ms::Surface>();
-    auto surface2 = window2.operator std::shared_ptr<ms::Surface>();
     EXPECT_EQ(focused_surface(), surface1);
-    EXPECT_THAT(
-        stacking_order_of({surface1, surface2}),
-        ElementsAre(LockedEq(surface2), LockedEq(surface1)));
 }
 
 TEST_F(MinimalWindowManagerTest, can_select_window_with_pointer)

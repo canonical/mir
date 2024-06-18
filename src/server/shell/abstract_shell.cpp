@@ -28,7 +28,7 @@
 #include "mir/scene/surface.h"
 #include "mir/input/seat.h"
 #include "mir/wayland/weak.h"
-#include "mir/shell/decoration/manager.h"
+#include "decoration/manager.h"
 
 #include <algorithm>
 #include <iterator>

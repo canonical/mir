@@ -36,18 +36,6 @@ class FakeDisplayConfigurationObserverRegistrar : public ObserverRegistrar<graph
 public:
     using Observer = graphics::DisplayConfigurationObserver;
 
-    FakeDisplayConfigurationObserverRegistrar()
-        : output{{
-             geometry::Rectangle{{0, 0}, {100, 100}},
-             geometry::Rectangle{{100, 0}, {100, 100}}
-         }}
-    {}
-
-    explicit FakeDisplayConfigurationObserverRegistrar(std::vector<geometry::Rectangle> const& rectangles)
-        : output{rectangles}
-    {
-    }
-
     void register_interest(std::weak_ptr<Observer> const& obs) override
     {
         register_interest(obs, immediate_executor);
@@ -88,7 +76,12 @@ private:
         o->configuration_applied(fake_shared(output));
     }
 
-    StubDisplayConfig output;
+    StubDisplayConfig output{
+        {
+            geometry::Rectangle{{0, 0}, {100, 100}},
+            geometry::Rectangle{{100, 0}, {100, 100}}
+        }};
+
     std::weak_ptr<Observer> observer;
 };
 

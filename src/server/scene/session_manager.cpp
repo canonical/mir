@@ -15,7 +15,7 @@
  */
 
 #include "session_manager.h"
-#include "mir/scene/application_session.h"
+#include "application_session.h"
 #include "mir/scene/session_container.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/session.h"

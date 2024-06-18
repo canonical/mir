@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/shell/default_persistent_surface_store.h"
+#include "default_persistent_surface_store.h"
 
 #include <unordered_map>
 #include <boost/throw_exception.hpp>

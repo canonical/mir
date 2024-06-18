@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/scene/surface_allocator.h"
+#include "surface_allocator.h"
 #include "mir/shell/surface_specification.h"
 #include "basic_surface.h"
 
@@ -59,5 +59,6 @@ std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
         default_cursor_image,
         report,
         display_config_registrar);
+
     return surface;
 }

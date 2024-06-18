@@ -17,7 +17,7 @@
 #include "mir/shell/persistent_surface_store.h"
 
 #include "mir/scene/surface_observer.h"
-#include "mir/shell/default_persistent_surface_store.h"
+#include "src/server/shell/default_persistent_surface_store.h"
 #include "mir/test/doubles/mock_surface.h"
 
 #include <gmock/gmock.h>

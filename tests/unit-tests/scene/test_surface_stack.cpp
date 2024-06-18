@@ -14,7 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/scene/surface_stack.h"
+#include "mir/test/doubles/stub_buffer.h"
+#include "src/server/scene/surface_stack.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/scene/observer.h"

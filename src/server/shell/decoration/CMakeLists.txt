@@ -1,7 +1,7 @@
 set(
   DECORATION_SOURCES
 
-  ${PROJECT_SOURCE_DIR}/src/include/server/mir/shell/decoration/manager.h
+  manager.h
   null_manager.h
   basic_manager.h       basic_manager.cpp
   threadsafe_access.h
