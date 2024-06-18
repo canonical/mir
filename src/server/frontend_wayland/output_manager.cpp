@@ -226,10 +226,6 @@ void mf::OutputGlobal::bind(wl_resource* resource)
     instances[instance->client].push_back(instance);
     instance->output_config_changed(output_config);
     instance->send_done();
-    for (auto const& listener : listeners)
-    {
-        listener->output_config_changed(output_config);
-    }
 }
 
 void mf::OutputGlobal::instance_destroyed(OutputInstance* instance)
