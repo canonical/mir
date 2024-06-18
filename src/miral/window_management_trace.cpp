@@ -943,7 +943,7 @@ void miral::WindowManagementTrace::move_cursor_to(mir::geometry::PointF point)
 try {
     std::stringstream out;
     out << point;
-    mir::log_info("%s cursor=%s", __func__, out.str().c_str());
+    mir::log_info("%s point=%s", __func__, out.str().c_str());
     wrapped.move_cursor_to(point);
 }
 MIRAL_TRACE_EXCEPTION

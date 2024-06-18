@@ -261,7 +261,6 @@ global:
     miral::WindowManagerTools::info_for_window_id*;
     miral::WindowManagerTools::invoke_under_lock*;
     miral::WindowManagerTools::modify_window*;
-    miral::WindowManagerTools::move_cursor_to*;
     miral::WindowManagerTools::move_workspace_content_to_workspace*;
     miral::WindowManagerTools::operator*;
     miral::WindowManagerTools::place_and_size_for_state*;
@@ -464,5 +463,6 @@ global:
     miral::IdleListener::on_wake*;
     miral::IdleListener::operator*;
     typeinfo?for?miral::IdleListener;
+    miral::WindowManagerTools::move_cursor_to*;
   };
 } MIRAL_5.0;

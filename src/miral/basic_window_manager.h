@@ -43,7 +43,6 @@
 
 namespace mir
 {
-class ServerActionQueue;
 namespace shell { class DisplayLayout; class PersistentSurfaceStore; }
 namespace graphics { class DisplayConfigurationObserver; }
 namespace input { class VirtualInputDevice; class InputDeviceRegistry; }
@@ -70,7 +69,6 @@ public:
         std::shared_ptr<mir::shell::PersistentSurfaceStore> const& persistent_surface_store,
         mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>& display_configuration_observers,
         std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry,
-        std::shared_ptr<mir::ServerActionQueue> const& action_queue,
         WindowManagementPolicyBuilder const& build);
     ~BasicWindowManager();
 
@@ -280,7 +278,6 @@ private:
     std::shared_ptr<DisplayConfigurationListeners> const display_config_monitor;
     std::shared_ptr<mir::input::VirtualInputDevice> const pointer_device;
     std::shared_ptr<mir::input::InputDeviceRegistry> input_device_registry;
-    std::shared_ptr<mir::ServerActionQueue> action_queue;
 
     struct Locker;
 

@@ -74,7 +74,6 @@ class RendererFactory;
 
 class Fd;
 class MainLoop;
-class ServerActionQueue;
 class ServerStatusListener;
 
 enum class OptionType
@@ -374,9 +373,6 @@ public:
 
     /// \return the main loop.
     auto the_main_loop() const -> std::shared_ptr<MainLoop>;
-
-    /// \return the server action queue
-    auto the_server_action_queue() const -> std::shared_ptr<ServerActionQueue>;
 
     /// \return the prompt session listener.
     auto the_prompt_session_listener() const -> std::shared_ptr<scene::PromptSessionListener>;

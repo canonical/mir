@@ -20,6 +20,7 @@
 #include "miral/window_manager_tools.h"
 
 #include <mir/log.h>
+#include <mir/executor.h>
 #include <mir/scene/session.h>
 #include <mir/scene/surface.h>
 #include <mir/shell/display_layout.h>
@@ -29,7 +30,6 @@
 #include <mir/input/event_builder.h>
 #include <mir/input/input_sink.h>
 #include <mir/input/input_device_registry.h>
-#include <mir/server_action_queue.h>
 
 #include <boost/throw_exception.hpp>
 
@@ -100,7 +100,6 @@ miral::BasicWindowManager::BasicWindowManager(
     std::shared_ptr<mir::shell::PersistentSurfaceStore> const& persistent_surface_store,
     mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>& display_configuration_observers,
     std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry,
-    std::shared_ptr<mir::ServerActionQueue> const& action_queue,
     WindowManagementPolicyBuilder const& build) :
     focus_controller(focus_controller),
     display_layout(display_layout),
@@ -108,8 +107,7 @@ miral::BasicWindowManager::BasicWindowManager(
     policy(build(WindowManagerTools{this})),
     display_config_monitor{std::make_shared<DisplayConfigurationListeners>()},
     pointer_device{std::make_shared<mir::input::VirtualInputDevice>("basic-window-manager", mir::input::DeviceCapability::pointer)},
-    input_device_registry{input_device_registry},
-    action_queue{action_queue}
+    input_device_registry{input_device_registry}
 {
     display_config_monitor->add_listener(this);
     display_configuration_observers.register_interest(display_config_monitor);
@@ -2996,7 +2994,7 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
 
 void miral::BasicWindowManager::move_cursor_to(mir::geometry::PointF point)
 {
-    action_queue->enqueue(this, [
+    linearising_executor.spawn([
         device=pointer_device,
         point=point,
         position=mir::geometry::PointF (cursor.x.as_int(), cursor.y.as_int())]()

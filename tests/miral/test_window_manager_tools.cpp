@@ -268,7 +268,6 @@ mt::TestWindowManagerTools::TestWindowManagerTools()
         mir::test::fake_shared(self->persistent_surface_store),
         self->display_configuration_observer,
         mir::test::fake_shared(self->input_device_registry),
-        mir::test::fake_shared(self->main_loop),
         [this](miral::WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy>
             {
                 auto policy = std::make_unique<testing::NiceMock<MockWindowManagerPolicy>>(tools);
