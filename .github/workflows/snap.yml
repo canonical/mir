@@ -41,6 +41,11 @@ jobs:
       with:
         fetch-depth: 0  # needed for version determination
 
+    - name: Tweak the snapcraft.yaml
+      run: |
+        git config --global --add safe.directory $(pwd)
+        sed -i 's@version: testing@version: '$(git describe)'@' snap/snapcraft.yaml
+
     - name: Build and publish the snap
       uses: canonical/actions/build-snap@release
       with:
@@ -49,7 +54,7 @@ jobs:
         launchpad-credentials: ${{ secrets.LAUNCHPAD_CREDENTIALS }}
         launchpad-accept-public-upload: true
         publish: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
-        publish-channel: 22/edge/pr${{ github.event.number }}
+        publish-channel: 24/edge/pr${{ github.event.number }}
 
   snap:
     # Only run if we have access to secrets.
@@ -65,18 +70,18 @@ jobs:
       fail-fast: false
       matrix:
         snap:
-        - MirServer/mir-test-tools
-        - MirServer/confined-shell-wip
-        - MirServer/ubuntu-frame
+        - canonical/mir-test-tools
+        - canonical/confined-shell-wip
+        - canonical/ubuntu-frame
         - Miriway/Miriway
         architecture: ${{ fromJSON(needs.arches.outputs.arches) }}
         include:
-        - snap: MirServer/mir-test-tools
-          track: 22
-        - snap: MirServer/confined-shell-wip
+        - snap: canonical/mir-test-tools
+          track: 24
+        - snap: canonical/confined-shell-wip
           track: latest
-        - snap: MirServer/ubuntu-frame
-          track: 22
+        - snap: canonical/ubuntu-frame
+          track: 24
         - snap: Miriway/Miriway
           track: latest
           review-opts: --allow-classic

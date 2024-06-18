@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/test/doubles/stub_buffer.h"
 #include "src/server/scene/surface_stack.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/geometry/rectangle.h"
@@ -21,7 +22,6 @@
 #include "mir/compositor/scene_element.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/basic_surface.h"
-#include "src/server/compositor/stream.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
 #include "mir/test/doubles/stub_buffer_stream.h"
@@ -93,7 +93,7 @@ struct StubSurface : public ms::BasicSurface
             "stub",
             {{-1, -1}, {2, 2}},
             mir_pointer_unconfined,
-            std::list<ms::StreamInfo> { { stream, {}, {} } },
+            std::list<ms::StreamInfo> { { stream, {}} },
             {},
             mr::null_scene_report(),
             std::make_shared<mtd::FakeDisplayConfigurationObserverRegistrar>()),
@@ -197,15 +197,15 @@ TEST_F(SurfaceStack, stacking_order_with_multiple_buffer_streams)
     auto stub_stream1 = std::make_shared<mtd::StubBufferStream>();
     auto stub_stream2 = std::make_shared<mtd::StubBufferStream>();
     std::list<ms::StreamInfo> streams = {
-        { stub_buffer_stream1, {0,0}, {} },
-        { stub_stream0, {2,2}, {} },
-        { stub_stream1, {2,3}, {} },
+        { stub_buffer_stream1, {0,0}},
+        { stub_stream0, {2,2}},
+        { stub_stream1, {2,3}},
     };
     stub_surface1->set_streams(streams);
 
     streams = {
-        { stub_stream2, {2,4}, {} },
-        { stub_buffer_stream3, {0,0}, {} }
+        { stub_stream2, {2,4}},
+        { stub_buffer_stream3, {0,0}}
     };
     stub_surface3->set_streams(streams);
 
@@ -325,7 +325,7 @@ TEST_F(SurfaceStack, generate_elementelements)
             std::string("stub"),
             geom::Rectangle{geom::Point{3 * i, 4 * i},geom::Size{1 * i, 2 * i}},
             mir_pointer_unconfined,
-            std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
+            std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}} },
             std::shared_ptr<mg::CursorImage>(),
             report,
             display_config_registrar);
@@ -524,7 +524,7 @@ TEST_F(SurfaceStack, scene_elements_hold_snapshot_of_positioning_info)
             std::string("stub"),
             geom::Rectangle{geom::Point{3 * i, 4 * i},geom::Size{1 * i, 2 * i}},
             mir_pointer_unconfined,
-            std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
+            std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}} },
             std::shared_ptr<mg::CursorImage>(),
             report,
             display_config_registrar);
@@ -549,8 +549,6 @@ TEST_F(SurfaceStack, generates_scene_elements_that_delay_buffer_acquisition)
     using namespace testing;
 
     auto mock_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    EXPECT_CALL(*mock_stream, lock_compositor_buffer(_))
-        .Times(0);
 
     auto const surface = std::make_shared<ms::BasicSurface>(
         nullptr /* session */,
@@ -558,7 +556,7 @@ TEST_F(SurfaceStack, generates_scene_elements_that_delay_buffer_acquisition)
         std::string("stub"),
         geom::Rectangle{geom::Point{3, 4},geom::Size{1, 2}},
         mir_pointer_unconfined,
-        std::list<ms::StreamInfo> { { mock_stream, {}, {} } },
+        std::list<ms::StreamInfo> { { mock_stream, {}} },
         std::shared_ptr<mg::CursorImage>(),
         report,
         display_config_registrar);
@@ -567,9 +565,6 @@ TEST_F(SurfaceStack, generates_scene_elements_that_delay_buffer_acquisition)
     auto const elements = stack.scene_elements_for(compositor_id);
 
     Mock::VerifyAndClearExpectations(mock_stream.get());
-    EXPECT_CALL(*mock_stream, lock_compositor_buffer(compositor_id))
-        .Times(1)
-        .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
     ASSERT_THAT(elements.size(), Eq(1u));
     elements.front()->renderable()->buffer();
 }
@@ -579,9 +574,6 @@ TEST_F(SurfaceStack, generates_scene_elements_that_allow_only_one_buffer_acquisi
     using namespace testing;
 
     auto mock_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    EXPECT_CALL(*mock_stream, lock_compositor_buffer(_))
-        .Times(1)
-        .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
 
     auto const surface = std::make_shared<ms::BasicSurface>(
         nullptr /* session */,
@@ -589,7 +581,7 @@ TEST_F(SurfaceStack, generates_scene_elements_that_allow_only_one_buffer_acquisi
         std::string("stub"),
         geom::Rectangle{geom::Point{3, 4},geom::Size{1, 2}},
         mir_pointer_unconfined,
-        std::list<ms::StreamInfo> { { mock_stream, {}, {} } },
+        std::list<ms::StreamInfo> { { mock_stream, {}} },
         std::shared_ptr<mg::CursorImage>(),
         report,
         display_config_registrar);
@@ -1330,53 +1322,4 @@ TEST_F(SurfaceStack, multiple_surfaces_can_be_swapped)
             SceneElementForStream(stub_buffer_stream2)));
 
     Mock::VerifyAndClearExpectations(&observer);
-}
-
-TEST_F(SurfaceStack, observer_is_notified_on_lock)
-{
-    auto observer = std::make_shared<MockSessionLockObserver>();
-    EXPECT_CALL(*observer, on_lock()).Times(1);
-    stack.register_interest(observer, mir::immediate_executor);
-    stack.lock();
-}
-
-TEST_F(SurfaceStack, observer_is_notified_only_on_initial_lock)
-{
-    auto observer = std::make_shared<MockSessionLockObserver>();
-    EXPECT_CALL(*observer, on_lock()).Times(1);
-    stack.register_interest(observer, mir::immediate_executor);
-    stack.lock();
-
-    Mock::VerifyAndClearExpectations(observer.get());
-    EXPECT_CALL(*observer, on_unlock()).Times(0);
-    stack.lock();
-    stack.lock();
-}
-
-TEST_F(SurfaceStack, observer_is_notified_only_on_initial_unlock)
-{
-    auto observer = std::make_shared<MockSessionLockObserver>();
-    EXPECT_CALL(*observer, on_lock()).Times(1);
-    stack.register_interest(observer, mir::immediate_executor);
-    stack.lock();
-    Mock::VerifyAndClearExpectations(observer.get());
-    EXPECT_CALL(*observer, on_unlock()).Times(1);
-    stack.unlock();
-
-    Mock::VerifyAndClearExpectations(observer.get());
-    EXPECT_CALL(*observer, on_unlock()).Times(0);
-    stack.unlock();
-    stack.unlock();
-}
-
-TEST_F(SurfaceStack, observer_is_notified_on_multiple_locks_and_unlocks)
-{
-    auto observer = std::make_shared<MockSessionLockObserver>();
-    EXPECT_CALL(*observer, on_lock()).Times(2);
-    EXPECT_CALL(*observer, on_unlock()).Times(2);
-    stack.register_interest(observer, mir::immediate_executor);
-    stack.lock();
-    stack.unlock();
-    stack.lock();
-    stack.unlock();
 }

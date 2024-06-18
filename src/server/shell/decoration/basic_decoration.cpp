@@ -15,6 +15,7 @@
  */
 
 #include "basic_decoration.h"
+#include "mir/graphics/buffer.h"
 #include "window.h"
 #include "input.h"
 #include "renderer.h"
@@ -25,16 +26,13 @@
 #include "mir/shell/surface_specification.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/session.h"
-#include "mir/scene/null_surface_observer.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/input/cursor_images.h"
 #include "mir/wayland/weak.h"
-#include "mir/log.h"
 
 #include <boost/throw_exception.hpp>
 #include <functional>
-#include <mutex>
 #include <optional>
 
 namespace ms = mir::scene;
@@ -295,7 +293,7 @@ auto msd::BasicDecoration::create_surface() const -> std::shared_ptr<scene::Surf
             buffer_format,
             mg::BufferUsage::software}),
         {},
-        {}}};
+        }};
     return shell->create_surface(session, {}, params, nullptr, nullptr);
 }
 
@@ -344,7 +342,7 @@ void msd::BasicDecoration::update(
         auto const emplace = [&](std::shared_ptr<mc::BufferStream> stream, geom::Rectangle rect)
             {
                 if (rect.size.width > geom::Width{} && rect.size.height > geom::Height{})
-                    spec.streams.value().emplace_back(StreamSpecification{stream, as_displacement(rect.top_left), rect.size});
+                    spec.streams.value().emplace_back(StreamSpecification{stream, as_displacement(rect.top_left)});
             };
 
         switch (window_state->border_type())
@@ -424,9 +422,13 @@ void msd::BasicDecoration::update(
             renderer->render_titlebar());
     }
 
+    float inv_scale = 1.0f / window_state->scale();
     for (auto const& pair : new_buffers)
     {
         if (pair.second)
-            pair.first->submit_buffer(pair.second.value());
+            pair.first->submit_buffer(
+                pair.second.value(),
+                pair.second.value()->size() * inv_scale,
+                {{0, 0}, geom::SizeD{pair.second.value()->size()}});
     }
 }

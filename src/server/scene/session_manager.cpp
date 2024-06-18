@@ -83,7 +83,6 @@ struct ms::SessionManager::SessionObservers : mir::ObserverMultiplexer<ms::Sessi
 ms::SessionManager::SessionManager(
     std::shared_ptr<shell::SurfaceStack> const& surface_stack,
     std::shared_ptr<SurfaceFactory> const& surface_factory,
-    std::shared_ptr<BufferStreamFactory> const& buffer_stream_factory,
     std::shared_ptr<SessionContainer> const& container,
     std::shared_ptr<SessionEventSink> const& session_event_sink,
     std::shared_ptr<SessionListener> const& session_listener,
@@ -94,7 +93,6 @@ ms::SessionManager::SessionManager(
     observers(std::make_shared<SessionObservers>()),
     surface_stack(surface_stack),
     surface_factory(surface_factory),
-    buffer_stream_factory(buffer_stream_factory),
     app_container(container),
     session_event_sink(session_event_sink),
     session_listener(session_listener),
@@ -135,7 +133,6 @@ std::shared_ptr<ms::Session> ms::SessionManager::open_session(
     std::shared_ptr<Session> new_session = std::make_shared<ApplicationSession>(
         surface_stack,
         surface_factory,
-        buffer_stream_factory,
         client_pid,
         socket_fd,
         name,

@@ -46,6 +46,7 @@ namespace shell
 class DisplayLayout;
 class DisplayConfigurationController;
 class FocusController;
+class IdleHandler;
 class InputTargeter;
 class PersistentSurfaceStore;
 class Shell;
@@ -54,7 +55,6 @@ class SurfaceStack;
 namespace scene
 {
 class ApplicationNotRespondingDetector;
-class BufferStreamFactory;
 class PromptSessionListener;
 class PromptSessionManager;
 class SessionListener;
@@ -399,9 +399,6 @@ public:
     /// \return the display layout.
     auto the_shell_display_layout() const -> std::shared_ptr<shell::DisplayLayout>;
 
-    /// \return the buffer stream factory
-    auto the_buffer_stream_factory() const -> std::shared_ptr<scene::BufferStreamFactory>;
-
     /// \return the surface factory
     auto the_surface_factory() const -> std::shared_ptr<scene::SurfaceFactory>;
 
@@ -437,6 +434,9 @@ public:
 
     auto the_input_device_registry() const ->
         std::shared_ptr<input::InputDeviceRegistry>;
+
+    auto the_idle_handler() const ->
+        std::shared_ptr<shell::IdleHandler>;
 
 /** @} */
 

@@ -1206,89 +1206,8 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<Buffer> buffer)
                     dmabuf_tex->modifier().value_or(DRM_FORMAT_MOD_INVALID),
                     *this))
         {
-            /* We're being naughty here and using the fact that `as_texture()` has a side-effect
-             * of invoking the buffer's `on_consumed()` callback.
-             */
-            dmabuf_tex->as_texture();
-            return std::make_shared<DMABufTex>(
-                dpy,
-                *egl_extensions,
-                *dmabuf_tex,
-                *descriptor,
-                egl_delegate);
-        }
-        else
-        {
-            /* Oh, no. We've got a dma-buf in a format that our rendering GPU can't handle.
-             *
-             * In this case we'll need to get the *importing* GPU to blit to a format
-             * we *can* handle.
-             */
-            auto importing_provider = dmabuf_tex->provider();
-
-            if (!importing_provider->dmabuf_export_ext)
-            {
-                mir::log_warning("EGL implementation does not handle cross-GPU buffer export");
-                return nullptr;
-            }
-
-            /* TODO: Be smarter about finding a shared pixel format; everything *should* do
-             * ARGB8888, but if the buffer is in a higher bitdepth this will lose colour information
-             */
-            auto const& supported_formats = *formats;
-            auto const& modifiers =
-                [&supported_formats]() -> std::vector<uint64_t> const&
-                {
-                    for (size_t i = 0; i < supported_formats.num_formats(); ++i)
-                    {
-                        if (supported_formats[i].format == DRM_FORMAT_ARGB8888)
-                        {
-                            return supported_formats[i].modifiers;
-                        }
-                    }
-                    BOOST_THROW_EXCEPTION((std::runtime_error{"Platform doesn't support ARGB8888?!"}));
-                }();
-
-            auto importable_buf = importing_provider->allocate_importable_image(
-                mg::DRMFormat{DRM_FORMAT_ARGB8888},
-                std::span<uint64_t const>{modifiers.data(), modifiers.size()},
-                dmabuf_tex->size());
-
-            if (!importable_buf)
-            {
-                mir::log_warning("Failed to allocate common-format buffer for cross-GPU buffer import");
-                return nullptr;
-            }
-
-            auto src_image = import_egl_image(
-                dmabuf_tex->size().width.as_int(), dmabuf_tex->size().height.as_int(),
-                dmabuf_tex->format(),
-                dmabuf_tex->modifier(),
-                dmabuf_tex->planes(),
-                importing_provider->dpy,
-                *importing_provider->egl_extensions);
-            auto importable_image = import_egl_image(
-                importable_buf->size().width.as_int(), importable_buf->size().height.as_int(),
-                importable_buf->format(),
-                importable_buf->modifier(),
-                importable_buf->planes(),
-                importing_provider->dpy,
-                *importing_provider->egl_extensions);
-            auto sync = importing_provider->blitter->blit(src_image, importable_image, dmabuf_tex->size());
-            if (sync)
-            {
-                BOOST_THROW_EXCEPTION((std::logic_error{"EGL_ANDROID_native_fence_sync support not implemented yet"}));
-            }
-            auto importable_dmabuf = export_egl_image(*importing_provider->dmabuf_export_ext, importing_provider->dpy, importable_image, dmabuf_tex->size());
-
-            auto base_extension = importing_provider->egl_extensions->base(importing_provider->dpy);
-            base_extension.eglDestroyImageKHR(importing_provider->dpy, src_image);
-            base_extension.eglDestroyImageKHR(importing_provider->dpy, importable_image);
-
-            if (auto descriptor = descriptor_for_format_and_modifiers(
-                        importable_dmabuf->format(),
-                        importable_dmabuf->modifier().value_or(DRM_FORMAT_MOD_INVALID),
-                        *this))
+            // Cross-GPU import requires explicit modifiers; MOD_INVALID will not work
+            if (dmabuf_tex->modifier().value_or(DRM_FORMAT_MOD_INVALID) != DRM_FORMAT_MOD_INVALID)
             {
                 /* We're being naughty here and using the fact that `as_texture()` has a side-effect
                  * of invoking the buffer's `on_consumed()` callback.
@@ -1297,18 +1216,100 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<Buffer> buffer)
                 return std::make_shared<DMABufTex>(
                     dpy,
                     *egl_extensions,
-                    *importable_dmabuf,
+                    *dmabuf_tex,
                     *descriptor,
                     egl_delegate);
             }
-
-            /* To get here we have to have failed to find the format/modifier descriptor for a
-             * buffer that we've explicitly allocated to be importable by us.
-             *
-             * This is a logic bug, so go noisily.
-             */
-            BOOST_THROW_EXCEPTION((std::logic_error{"Failed to find import parameterns for buffer we explicitly allocated for import"}));
         }
+        /* Oh, no. We've got a dma-buf in a format that our rendering GPU can't handle.
+         *
+         * In this case we'll need to get the *importing* GPU to blit to a format
+         * we *can* handle.
+         */
+        auto importing_provider = dmabuf_tex->provider();
+
+        if (!importing_provider->dmabuf_export_ext)
+        {
+            mir::log_warning("EGL implementation does not handle cross-GPU buffer export");
+            return nullptr;
+        }
+
+        /* TODO: Be smarter about finding a shared pixel format; everything *should* do
+         * ARGB8888, but if the buffer is in a higher bitdepth this will lose colour information
+         */
+        auto const& supported_formats = *formats;
+        auto const& modifiers =
+            [&supported_formats]() -> std::vector<uint64_t> const&
+            {
+                for (size_t i = 0; i < supported_formats.num_formats(); ++i)
+                {
+                    if (supported_formats[i].format == DRM_FORMAT_ARGB8888)
+                    {
+                        return supported_formats[i].modifiers;
+                    }
+                }
+                BOOST_THROW_EXCEPTION((std::runtime_error{"Platform doesn't support ARGB8888?!"}));
+            }();
+
+        auto importable_buf = importing_provider->allocate_importable_image(
+            mg::DRMFormat{DRM_FORMAT_ARGB8888},
+            std::span<uint64_t const>{modifiers.data(), modifiers.size()},
+            dmabuf_tex->size());
+
+        if (!importable_buf)
+        {
+            mir::log_warning("Failed to allocate common-format buffer for cross-GPU buffer import");
+            return nullptr;
+        }
+
+        auto src_image = import_egl_image(
+            dmabuf_tex->size().width.as_int(), dmabuf_tex->size().height.as_int(),
+            dmabuf_tex->format(),
+            dmabuf_tex->modifier(),
+            dmabuf_tex->planes(),
+            importing_provider->dpy,
+            *importing_provider->egl_extensions);
+        auto importable_image = import_egl_image(
+            importable_buf->size().width.as_int(), importable_buf->size().height.as_int(),
+            importable_buf->format(),
+            importable_buf->modifier(),
+            importable_buf->planes(),
+            importing_provider->dpy,
+            *importing_provider->egl_extensions);
+        auto sync = importing_provider->blitter->blit(src_image, importable_image, dmabuf_tex->size());
+        if (sync)
+        {
+            BOOST_THROW_EXCEPTION((std::logic_error{"EGL_ANDROID_native_fence_sync support not implemented yet"}));
+        }
+        auto importable_dmabuf = export_egl_image(*importing_provider->dmabuf_export_ext, importing_provider->dpy, importable_image, dmabuf_tex->size());
+
+        auto base_extension = importing_provider->egl_extensions->base(importing_provider->dpy);
+        base_extension.eglDestroyImageKHR(importing_provider->dpy, src_image);
+        base_extension.eglDestroyImageKHR(importing_provider->dpy, importable_image);
+
+        if (auto descriptor = descriptor_for_format_and_modifiers(
+                    importable_dmabuf->format(),
+                    importable_dmabuf->modifier().value_or(DRM_FORMAT_MOD_INVALID),
+                    *this))
+        {
+            /* We're being naughty here and using the fact that `as_texture()` has a side-effect
+             * of invoking the buffer's `on_consumed()` callback.
+             */
+            dmabuf_tex->as_texture();
+            return std::make_shared<DMABufTex>(
+                dpy,
+                *egl_extensions,
+                *importable_dmabuf,
+                *descriptor,
+                egl_delegate);
+        }
+
+        /* To get here we have to have failed to find the format/modifier descriptor for a
+         * buffer that we've explicitly allocated to be importable by us.
+         *
+         * This is a logic bug, so go noisily.
+         */
+        BOOST_THROW_EXCEPTION((std::logic_error{"Failed to find import parameterns for buffer we explicitly allocated for import"}));
     }
     return nullptr;
 }

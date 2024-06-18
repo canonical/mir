@@ -23,6 +23,7 @@
 #include "mir/frontend/session_authorizer.h"
 #include "mir/frontend/session_credentials.h"
 
+#include <unistd.h>
 #include <sys/stat.h>
 
 namespace mf = mir::frontend;

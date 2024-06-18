@@ -29,7 +29,6 @@
 #include "mir/test/doubles/mock_surface_stack.h"
 #include "mir/test/doubles/mock_session_listener.h"
 #include "mir/test/doubles/stub_buffer_stream.h"
-#include "mir/test/doubles/stub_buffer_stream_factory.h"
 #include "mir/test/doubles/null_session_event_sink.h"
 #include "mir/test/doubles/null_event_sink.h"
 #include "mir/test/doubles/stub_surface_factory.h"
@@ -71,14 +70,13 @@ struct SessionManagerSetup : public testing::Test
         std::string("stub"),
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,
-        std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
+        std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}} },
         std::shared_ptr<mg::CursorImage>(),
         mir::report::null_scene_report(),
         std::make_shared<mtd::FakeDisplayConfigurationObserverRegistrar>());
     testing::NiceMock<mtd::MockSurfaceStack> surface_stack;
     ms::SessionContainer container;
     ms::NullSessionListener session_listener;
-    mtd::StubBufferStreamFactory buffer_stream_factory;
     mtd::StubSurfaceFactory stub_surface_factory;
     mtd::StubDisplay display{2};
     mtd::NullEventSink event_sink;
@@ -87,7 +85,6 @@ struct SessionManagerSetup : public testing::Test
 
     ms::SessionManager session_manager{mt::fake_shared(surface_stack),
         mt::fake_shared(stub_surface_factory),
-        mt::fake_shared(buffer_stream_factory),
         mt::fake_shared(container),
         std::make_shared<mtd::NullSessionEventSink>(),
         mt::fake_shared(session_listener),
@@ -114,7 +111,6 @@ struct SessionManagerSessionListenerSetup : public testing::Test
     ms::SessionManager session_manager{
         mt::fake_shared(surface_stack),
         mt::fake_shared(stub_surface_factory),
-        std::make_shared<mtd::StubBufferStreamFactory>(),
         mt::fake_shared(container),
         std::make_shared<mtd::NullSessionEventSink>(),
         mt::fake_shared(session_listener),
@@ -195,7 +191,6 @@ struct SessionManagerSessionEventsSetup : public testing::Test
     ms::SessionManager session_manager{
         mt::fake_shared(surface_stack),
         mt::fake_shared(stub_surface_factory),
-        std::make_shared<mtd::StubBufferStreamFactory>(),
         mt::fake_shared(container),
         mt::fake_shared(session_event_sink),
         mt::fake_shared(session_listener),

@@ -29,7 +29,6 @@
 #include "mir/events/touch_contact.h"
 
 #include <memory>
-#include <functional>
 #include <chrono>
 #include <vector>
 #include <optional>

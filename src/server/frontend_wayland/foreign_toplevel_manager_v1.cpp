@@ -357,7 +357,6 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::
         switch(surface->state())
         {
         case mir_window_state_attached:
-        case mir_window_state_hidden:
             should_have_handle = false;
             break;
 
@@ -553,6 +552,7 @@ void mf::GDesktopFileCache::refresh_app_cache()
     };
     std::unique_ptr<GList, decltype(free_app_infos)> app_infos(g_app_info_get_all(), free_app_infos);
     std::map<std::string, std::shared_ptr<DesktopFile>> new_id_to_app;
+    std::map<std::string, std::shared_ptr<DesktopFile>> new_hidden_id_to_app;
     std::map<std::string, std::shared_ptr<DesktopFile>> new_wm_class_to_app_info;
     std::map<std::string, std::shared_ptr<DesktopFile>> new_exec_to_app;
 
@@ -560,8 +560,6 @@ void mf::GDesktopFileCache::refresh_app_cache()
     for (info = app_infos.get(); info != NULL; info = info->next)
     {
         GAppInfo *app_info = static_cast<GAppInfo*>(info->data);
-        if (!g_app_info_should_show(app_info))
-            continue;
 
         const char* id = g_app_info_get_id(app_info);
         const char* wm_class = g_desktop_app_info_get_startup_wm_class(G_DESKTOP_APP_INFO(app_info));
@@ -581,8 +579,15 @@ void mf::GDesktopFileCache::refresh_app_cache()
 
         std::shared_ptr<DesktopFile> file = std::make_shared<DesktopFile>(id, wm_class, exec);
         const char* app_id = g_app_info_get_id(app_info);
-        new_id_to_app[app_id] = file;
-        new_exec_to_app[exec] = file;
+        if (g_app_info_should_show(app_info))
+        {
+            new_id_to_app[app_id] = file;
+            new_exec_to_app[exec] = file;
+        }
+        else
+        {
+            new_hidden_id_to_app[app_id] = file;
+        }
 
         if (wm_class == NULL)
             continue;
@@ -592,6 +597,7 @@ void mf::GDesktopFileCache::refresh_app_cache()
 
     auto state = cache_state.lock();
     state->id_to_app = std::move(new_id_to_app);
+    state->hidden_id_to_app = std::move(new_hidden_id_to_app);
     state->wm_class_to_app_info_id = std::move(new_wm_class_to_app_info);
     state->exec_to_app = std::move(new_exec_to_app);
 }
@@ -601,6 +607,15 @@ std::shared_ptr<mf::DesktopFile> mf::GDesktopFileCache::lookup_by_app_id(std::st
     auto state = cache_state.lock();
     auto app_pos = state->id_to_app.find(name);
     if (app_pos != state->id_to_app.end())
+    {
+        return app_pos->second;
+    }
+
+    // If that fails, check if the file is a hidden desktop file.
+    // This can happen in rare circumstances where a snap may report itself
+    // in /proc/<PID>/attr/current with a hidden desktop file name.
+    app_pos = state->hidden_id_to_app.find(name);
+    if (app_pos != state->hidden_id_to_app.end())
     {
         return app_pos->second;
     }

@@ -80,10 +80,6 @@ void mf::XWaylandSurfaceRole::populate_surface_data_scaled(
                 stream.stream = scaled;
                 keep_alive_until_spec_is_used.push_back(std::move(scaled));
             }
-            if (stream.size)
-            {
-                stream.size = stream.size.value() * inv_scale;
-            }
             stream.displacement = stream.displacement * inv_scale;
         }
 

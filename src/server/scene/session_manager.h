@@ -44,7 +44,6 @@ class SessionEventSink;
 class SessionListener;
 class SurfaceStack;
 class PromptSessionManager;
-class BufferStreamFactory;
 class SurfaceFactory;
 class ApplicationNotRespondingDetector;
 
@@ -54,7 +53,6 @@ public:
     SessionManager(
         std::shared_ptr<shell::SurfaceStack> const& surface_stack,
         std::shared_ptr<SurfaceFactory> const& surface_factory,
-        std::shared_ptr<BufferStreamFactory> const& buffer_stream_factory,
         std::shared_ptr<SessionContainer> const& app_container,
         std::shared_ptr<SessionEventSink> const& session_event_sink,
         std::shared_ptr<SessionListener> const& session_listener,
@@ -91,7 +89,6 @@ private:
     std::shared_ptr<SessionObservers> const observers;
     std::shared_ptr<shell::SurfaceStack> const surface_stack;
     std::shared_ptr<SurfaceFactory> const surface_factory;
-    std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
     std::shared_ptr<SessionContainer> const app_container;
     std::shared_ptr<SessionEventSink> const session_event_sink;
     std::shared_ptr<SessionListener> const session_listener;

@@ -143,7 +143,6 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::PrintTo(miral::Window const&, std::basic_ostream<char, std::char_traits<char> >*)@MIRAL_5.0" 5.0.0
  (c++)"miral::SessionLockListener::SessionLockListener(std::function<void ()> const&, std::function<void ()> const&)@MIRAL_5.0" 5.0.0
  (c++)"miral::SessionLockListener::operator()(mir::Server&) const@MIRAL_5.0" 5.0.0
- (c++)"miral::SessionLockListener::~SessionLockListener()@MIRAL_5.0" 5.0.0
  (c++)"miral::SetCommandLineHandler::SetCommandLineHandler(std::function<void (int, char const* const*)> const&)@MIRAL_5.0" 5.0.0
  (c++)"miral::SetCommandLineHandler::operator()(mir::Server&) const@MIRAL_5.0" 5.0.0
  (c++)"miral::SetCommandLineHandler::~SetCommandLineHandler()@MIRAL_5.0" 5.0.0
@@ -156,8 +155,6 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::StartupInternalClient::StartupInternalClient(std::function<void (wl_display*)>, std::function<void (std::weak_ptr<mir::scene::Session>)>)@MIRAL_5.0" 5.0.0
  (c++)"miral::StartupInternalClient::operator()(mir::Server&)@MIRAL_5.0" 5.0.0
  (c++)"miral::StartupInternalClient::~StartupInternalClient()@MIRAL_5.0" 5.0.0
- (c++)"miral::WaylandExtensions::Context::Context()@MIRAL_5.0" 5.0.0
- (c++)"miral::WaylandExtensions::Context::~Context()@MIRAL_5.0" 5.0.0
  (c++)"miral::WaylandExtensions::EnableInfo::app() const@MIRAL_5.0" 5.0.0
  (c++)"miral::WaylandExtensions::EnableInfo::name() const@MIRAL_5.0" 5.0.0
  (c++)"miral::WaylandExtensions::EnableInfo::user_preference() const@MIRAL_5.0" 5.0.0
@@ -393,7 +390,6 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::equivalent_display_area(miral::Output const&, miral::Output const&)@MIRAL_5.0" 5.0.0
  (c++)"miral::kill(std::shared_ptr<mir::scene::Session> const&, int)@MIRAL_5.0" 5.0.0
  (c++)"miral::name_of[abi:cxx11](std::shared_ptr<mir::scene::Session> const&)@MIRAL_5.0" 5.0.0
- (c++)"miral::operator!=(miral::Window const&, std::shared_ptr<mir::scene::Surface> const&)@MIRAL_5.0" 5.0.0
  (c++)"miral::operator<(miral::Window const&, miral::Window const&)@MIRAL_5.0" 5.0.0
  (c++)"miral::operator==(miral::Output::PhysicalSizeMM const&, miral::Output::PhysicalSizeMM const&)@MIRAL_5.0" 5.0.0
  (c++)"miral::operator==(miral::Window const&, miral::Window const&)@MIRAL_5.0" 5.0.0
@@ -436,5 +432,10 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"typeinfo for miral::WindowManagementPolicy@MIRAL_5.0" 5.0.0
  (c++)"vtable for miral::CanonicalWindowManagerPolicy@MIRAL_5.0" 5.0.0
  (c++)"vtable for miral::MinimalWindowManager@MIRAL_5.0" 5.0.0
- (c++)"vtable for miral::WaylandExtensions::Context@MIRAL_5.0" 5.0.0
  (c++)"vtable for miral::WindowManagementPolicy@MIRAL_5.0" 5.0.0
+ MIRAL_5.1@MIRAL_5.1 5.1.0
+ (c++)"miral::IdleListener::IdleListener()@MIRAL_5.1" 5.1.0
+ (c++)"miral::IdleListener::on_dim(std::function<void ()> const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::IdleListener::on_off(std::function<void ()> const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::IdleListener::on_wake(std::function<void ()> const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::IdleListener::operator()(mir::Server&) const@MIRAL_5.1" 5.1.0

@@ -35,6 +35,7 @@
 #include <boost/throw_exception.hpp>
 #include <drm_fourcc.h>
 #include <gbm.h>
+#include <system_error>
 
 #define MIR_LOG_COMPONENT "platform-graphics-gbm-kms"
 #include "mir/log.h"
@@ -255,20 +256,61 @@ private:
     mir::geometry::Size size_;
 };
 
+auto gbm_bo_with_modifiers_or_linear(
+    gbm_device* gbm,
+    mg::DRMFormat format,
+    std::span<uint64_t const> modifiers,
+    mir::geometry::Size size) -> std::unique_ptr<struct gbm_bo, decltype(&gbm_bo_destroy)>
+{
+    errno = 0;
+    auto gbm_bo = gbm_bo_create_with_modifiers2(
+        gbm,
+        size.width.as_uint32_t(), size.height.as_uint32_t(),
+        format,
+        modifiers.data(), modifiers.size(),
+        GBM_BO_USE_RENDERING);
+    if (!gbm_bo && errno != ENOSYS)
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                errno,
+                std::system_category(),
+                "Failed to allocate GBM bo"}));
+    }
+    else if (!gbm_bo)
+    {
+        // We get ENOSYS if the GBM implementation can't handle modifiers
+        if (std::find(modifiers.begin(), modifiers.end(), DRM_FORMAT_MOD_LINEAR) == modifiers.end())
+        {
+            // Shouldn't happen, but if LINEAR isn't one of the requested modifiers we can't allocate something compatible
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to allocate GBM bo: non-linear modifier requested, but implementation does not support modifiers"}));
+        }
+
+        gbm_bo = gbm_bo_create(
+            gbm,
+            size.width.as_uint32_t(), size.height.as_uint32_t(),
+            format,
+            GBM_BO_USE_RENDERING | GBM_BO_USE_LINEAR);
+        if (!gbm_bo)
+        {
+            BOOST_THROW_EXCEPTION((
+                std::system_error{
+                    errno,
+                    std::system_category(),
+                    "Failed to allocate GBM bo without modifiers"}));
+        }
+    }
+
+    return {gbm_bo, &gbm_bo_destroy};
+}
+
 auto alloc_dma_buf(
     gbm_device* gbm,
     mg::DRMFormat format,
     std::span<uint64_t const> modifiers,
     mir::geometry::Size size) -> std::shared_ptr<mg::DMABufBuffer>
 {
-    auto gbm_bo = std::unique_ptr<struct gbm_bo, decltype(&gbm_bo_destroy)>{
-        gbm_bo_create_with_modifiers2(
-            gbm,
-            size.width.as_uint32_t(), size.height.as_uint32_t(),
-            format,
-            modifiers.data(), modifiers.size(),
-            GBM_BO_USE_RENDERING),
-        &gbm_bo_destroy};
+    auto gbm_bo = gbm_bo_with_modifiers_or_linear(gbm, format, modifiers, size);
 
     auto plane_count = gbm_bo_get_plane_count(gbm_bo.get());
     std::vector<mg::DMABufBuffer::PlaneDescriptor> planes;

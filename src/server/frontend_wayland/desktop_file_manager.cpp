@@ -31,6 +31,15 @@ const char* DESKTOP_FILE_POSTFIX = ".desktop";
 std::pair<std::string, std::string> const app_id_to_desktop_file_quirks[] = {
     {"gnome-terminal-server", "org.gnome.Terminal.desktop"} // https://gitlab.gnome.org/GNOME/gnome-terminal/-/issues/8033
 };
+
+inline void rtrim(std::string &s) {
+    s.erase(std::find_if(
+        s.rbegin(),
+        s.rend(),
+        [](unsigned char ch) {
+            return !std::isspace(ch);
+        }).base(), s.end());
+}
 }
 
 mf::DesktopFile::DesktopFile(const char* id, const char* wm_class, const char* exec)
@@ -53,6 +62,7 @@ std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface
     // For more info on the checks happening here, see:
     // https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/src/shell-window-tracker.c?ref_type=heads#L387
     auto app_id = surface->application_id();
+    rtrim(app_id); // Sometimes, the app id has a space at the end
 
     // First, let's see if this is just a WM_CLASS
     auto app = cache->lookup_by_wm_class(app_id);
@@ -186,8 +196,15 @@ std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_executable_m
     if (!std::filesystem::exists(proc_file))
         return nullptr;
 
+    // First, read the executable name.
     std::string cmdline_call;
     std::getline(std::ifstream(proc_file), cmdline_call, '\0');
 
+    auto file = cache->lookup_by_exec_string(cmdline_call);
+    if (file)
+        return file;
+
+    // Then, try removing the path to just the exe name
+    cmdline_call = std::filesystem::path(cmdline_call).filename();
     return cache->lookup_by_exec_string(cmdline_call);
 }

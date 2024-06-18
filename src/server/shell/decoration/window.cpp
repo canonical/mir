@@ -23,7 +23,6 @@
 
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
-namespace msh = mir::shell;
 namespace msd = mir::shell::decoration;
 
 namespace

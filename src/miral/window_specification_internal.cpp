@@ -66,13 +66,6 @@ void copy_if_set(
     if (source.is_set()) dest = mir::shell::SurfaceAspectRatio{source.value().width, source.value().height};
 }
 
-template<typename Source>
-void copy_if_set(
-    mir::optional_value<mir::frontend::BufferStreamId>& dest,
-    mir::optional_value<Source> const& source)
-{
-    if (source.is_set()) dest = mir::frontend::BufferStreamId{source.value().as_value()};
-}
 }
 
 auto miral::make_surface_spec(WindowSpecification const& window_spec) -> mir::shell::SurfaceSpecification

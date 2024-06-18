@@ -17,7 +17,6 @@
 #include "server_example_input_event_filter.h"
 #include "server_example_input_filter.h"
 #include "server_example_test_client.h"
-#include "server_example_input_device_config.h"
 
 #include <miral/cursor_theme.h>
 #include <miral/display_configuration_option.h>
@@ -136,7 +135,6 @@ try
         miral::X11Support{},
         wayland_extensions,
         miral::set_window_management_policy<miral::MinimalWindowManager>(),
-        me::add_input_device_configuration_options_to,
         add_timeout_option_to,
         miral::CursorTheme{"default:DMZ-White"},
         input_filters,

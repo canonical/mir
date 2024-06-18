@@ -124,7 +124,6 @@ global:
     miral::PrependEventFilter::PrependEventFilter*;
     miral::PrependEventFilter::operator*;
     miral::PrintTo*;
-    miral::SessionLockListener::?SessionLockListener*;
     miral::SessionLockListener::SessionLockListener*;
     miral::SessionLockListener::operator*;
     miral::SetCommandLineHandler::?SetCommandLineHandler*;
@@ -140,8 +139,6 @@ global:
     miral::StartupInternalClient::StartupInternalClient*;
     miral::StartupInternalClient::operator*;
     miral::WaylandExtensions::?WaylandExtensions*;
-    miral::WaylandExtensions::Context::?Context*;
-    miral::WaylandExtensions::Context::Context*;
     miral::WaylandExtensions::Context::operator*;
     miral::WaylandExtensions::EnableInfo::app*;
     miral::WaylandExtensions::EnableInfo::name*;
@@ -452,9 +449,20 @@ global:
     vtable?for?miral::CanonicalWindowManagerPolicy;
     vtable?for?miral::FdHandle;
     vtable?for?miral::MinimalWindowManager;
-    vtable?for?miral::WaylandExtensions::Context;
     vtable?for?miral::WindowManagementPolicy;
   };
 local: *;
 };
 
+MIRAL_5.1 {
+global:
+  extern "C++" {
+    miral::IdleListener::?IdleListener*;
+    miral::IdleListener::IdleListener*;
+    miral::IdleListener::on_dim*;
+    miral::IdleListener::on_off*;
+    miral::IdleListener::on_wake*;
+    miral::IdleListener::operator*;
+    typeinfo?for?miral::IdleListener;
+  };
+} MIRAL_5.0;

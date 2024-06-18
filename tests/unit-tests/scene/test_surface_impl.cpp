@@ -71,15 +71,13 @@ struct Surface : testing::Test
     {
         using namespace testing;
 
-        ON_CALL(*buffer_stream, stream_size()).WillByDefault(Return(geom::Size()));
-
         surface = std::make_shared<ms::BasicSurface>(
             nullptr /* session */,
             mw::Weak<mf::WlSurface>{},
             std::string("stub"),
             geom::Rectangle{{},{}},
             mir_pointer_unconfined,
-            std::list<ms::StreamInfo> { { buffer_stream, {}, {} } },
+            std::list<ms::StreamInfo> { { buffer_stream, {}} },
             nullptr,
             report,
             display_config_registrar);
@@ -287,7 +285,7 @@ TEST_F(Surface, preferred_orientation_mode_defaults_to_any)
         std::string("stub"),
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,
-        std::list<ms::StreamInfo> { { buffer_stream, {}, {} } },
+        std::list<ms::StreamInfo> { { buffer_stream, {}} },
         std::shared_ptr<mg::CursorImage>(),
         report,
         display_config_registrar);
