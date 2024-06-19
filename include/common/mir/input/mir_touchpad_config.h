@@ -68,7 +68,8 @@ struct MirTouchpadConfig
     void middle_mouse_button_emulation(bool);
 
     /*!
-     * When disable-with-mouse is enabled the touchpad will stop to emit user input events when another pointing device is plugged in.
+     * When disable-with-external-mouse is enabled the touchpad will stop to emit user input events when another
+     * pointing device is plugged in.
      */
     bool disable_with_mouse() const;
     void disable_with_mouse(bool);

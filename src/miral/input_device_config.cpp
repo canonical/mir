@@ -42,8 +42,8 @@ auto get_optional(std::shared_ptr<mir::options::Option> options, char const* nam
 };
 
 char const* const disable_while_typing_opt = "touchpad-disable-while-typing";
-char const* const tap_to_click_opt = "touchpad-tap-to-click";
-char const* const mouse_acceleration_opt = "mouse-acceleration";
+char const* const touchpad_tap_to_click_opt = "touchpad-tap-to-click";
+char const* const mouse_cursor_acceleration_opt = "mouse-cursor-acceleration";
 char const* const acceleration_none = "none";
 char const* const acceleration_adaptive = "adaptive";
 char const* const mouse_cursor_acceleration_bias_opt = "mouse-cursor-acceleration-bias";
@@ -63,6 +63,7 @@ char const* const touchpad_click_mode_opt= "touchpad-click-mode";
 char const* const touchpad_click_mode_none = "none";
 char const* const touchpad_click_mode_area = "area";
 char const* const touchpad_click_mode_finger_count = "finger-count";
+char const* const touchpad_middle_mouse_button_emulation_opt= "touchpad-middle-mouse-button-emulation";
 
 class InputDeviceConfig : public mi::InputDeviceObserver
 {
@@ -76,7 +77,8 @@ public:
                       std::optional<double> touchpad_cursor_acceleration_bias,
                       std::optional<double> touchpad_scroll_speed_scale,
                       std::optional<MirTouchpadClickMode> click_mode,
-                      std::optional<MirTouchpadScrollMode> scroll_mode);
+                      std::optional<MirTouchpadScrollMode> scroll_mode,
+                      std::optional<bool> middle_mouse_button_emulation);
     void device_added(std::shared_ptr<mi::Device> const& device) override;
     void device_changed(std::shared_ptr<mi::Device> const&) override {}
     void device_removed(std::shared_ptr<mi::Device> const&) override {}
@@ -92,13 +94,14 @@ private:
     std::optional<MirTouchpadClickMode> const click_mode;
     std::optional<MirTouchpadScrollMode> const scroll_mode;
     std::optional<bool> const tap_to_click;
+    std::optional<bool> const middle_mouse_button_emulation;
 };
 
 }
 
 void miral::add_input_device_configuration_options_to(mir::Server& server)
 {
-    server.add_configuration_option(mouse_acceleration_opt,
+    server.add_configuration_option(mouse_cursor_acceleration_opt,
                                     "Select acceleration profile for mice and trackballs [none, adaptive]",
                                     mir::OptionType::string);
     server.add_configuration_option(mouse_cursor_acceleration_bias_opt,
@@ -110,7 +113,7 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
     server.add_configuration_option(disable_while_typing_opt,
                                     "Disable touchpad while typing on keyboard configuration [true, false]",
                                     mir::OptionType::boolean);
-    server.add_configuration_option(tap_to_click_opt,
+    server.add_configuration_option(touchpad_tap_to_click_opt,
                                     "Enable or disable tap-to-click on this device, with a default mapping of"
                                     " 1, 2, 3 finger tap mapping to left, right, middle click, respectively [true, false]",
                                     mir::OptionType::boolean);
@@ -134,6 +137,10 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
     server.add_configuration_option(touchpad_click_mode_opt,
                                     "Select click mode for touchpads: [{area, finger-count}]",
                                     mir::OptionType::integer);
+
+    server.add_configuration_option(touchpad_middle_mouse_button_emulation_opt,
+                                    "Converts a simultaneous left and right button click into a middle button",
+                                    mir::OptionType::boolean);
 
     auto clamp_to_range = [](std::optional<double> opt_val)-> std::optional<double>
     {
@@ -198,7 +205,7 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
             }
             else
             {
-                throw mir::AbnormalExit{std::format("Unrecognised option for {}: {}", mouse_acceleration_opt, *opt_val)};
+                throw mir::AbnormalExit{std::format("Unrecognised option for cursor-acceleration: {}", *opt_val)};
             }
         }
         else
@@ -241,15 +248,16 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
             auto const options = server.get_options();
             auto const input_config = std::make_shared<InputDeviceConfig>(
                     get_optional<bool>(options, disable_while_typing_opt),
-                    get_optional<bool>(options, tap_to_click_opt),
-                    to_acceleration_profile(get_optional<std::string>(options, mouse_acceleration_opt)),
+                    get_optional<bool>(options, touchpad_tap_to_click_opt),
+                    to_acceleration_profile(get_optional<std::string>(options, mouse_cursor_acceleration_opt)),
                     clamp_to_range(get_optional<double>(options, mouse_cursor_acceleration_bias_opt)),
                     get_optional<double>(options, mouse_scroll_speed_scale_opt),
                     to_acceleration_profile(get_optional<std::string>(options, touchpad_cursor_acceleration_opt)),
                     clamp_to_range(get_optional<double>(options, touchpad_cursor_acceleration_bias_opt)),
                     get_optional<double>(options, touchpad_scroll_speed_scale_opt),
                     convert_to_click_mode(get_optional<std::string>(options, touchpad_click_mode_opt)),
-                    convert_to_scroll_mode(get_optional<std::string>(options, touchpad_scroll_mode_opt))
+                    convert_to_scroll_mode(get_optional<std::string>(options, touchpad_scroll_mode_opt)),
+                    get_optional<bool>(options, touchpad_middle_mouse_button_emulation_opt)
                 );
             server.the_input_device_hub()->add_observer(input_config);
         });
@@ -264,14 +272,15 @@ InputDeviceConfig::InputDeviceConfig(std::optional<bool> disable_while_typing,
                                      std::optional<double> touchpad_cursor_acceleration_bias,
                                      std::optional<double> touchpad_scroll_speed_scale,
                                      std::optional<MirTouchpadClickMode> click_mode,
-                                     std::optional<MirTouchpadScrollMode> scroll_mode)
+                                     std::optional<MirTouchpadScrollMode> scroll_mode,
+                                     std::optional<bool> middle_mouse_button_emulation)
     : disable_while_typing{disable_while_typing}, mouse_cursor_acceleration{mouse_cursor_acceleration},
       mouse_cursor_acceleration_bias{mouse_cursor_acceleration_bias},
       mouse_scroll_speed_scale{mouse_scroll_speed_scale},
       touchpad_cursor_acceleration{touchpad_cursor_acceleration},
       touchpad_cursor_acceleration_bias{touchpad_cursor_acceleration_bias},
       touchpad_scroll_speed_scale{touchpad_scroll_speed_scale}, click_mode{click_mode}, scroll_mode{scroll_mode},
-      tap_to_click{tap_to_click}
+      tap_to_click{tap_to_click}, middle_mouse_button_emulation{middle_mouse_button_emulation}
 {
 }
 
@@ -297,6 +306,7 @@ void InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& device)
             if (click_mode) touch_config.click_mode(*click_mode);
             if (scroll_mode) touch_config.scroll_mode(*scroll_mode);
             if (tap_to_click) touch_config.tap_to_click(*tap_to_click);
+            if (middle_mouse_button_emulation) touch_config.middle_mouse_button_emulation(*middle_mouse_button_emulation);
             device->apply_touchpad_configuration(touch_config);
         }
     }

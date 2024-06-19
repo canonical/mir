@@ -32,7 +32,7 @@ struct MirTouchpadConfig::Implementation
           button_down_scroll_button{button_down_scroll_button},
           tap_to_click{tap_to_click},
           middle_mouse_button_emulation{middle_mouse_button_emulation},
-          disable_with_mouse{disable_with_mouse},
+          disable_with_external_mouse{disable_with_mouse},
           disable_while_typing{disable_while_typing}
     {
     }
@@ -41,7 +41,7 @@ struct MirTouchpadConfig::Implementation
     int button_down_scroll_button{0};
     bool tap_to_click{true};
     bool middle_mouse_button_emulation{true};
-    bool disable_with_mouse{false};
+    bool disable_with_external_mouse{false};
     bool disable_while_typing{false};
 };
 
@@ -140,12 +140,12 @@ void MirTouchpadConfig::middle_mouse_button_emulation(bool enabled)
 
 bool MirTouchpadConfig::disable_with_mouse() const
 {
-    return impl->disable_with_mouse;
+    return impl->disable_with_external_mouse;
 }
 
 void MirTouchpadConfig::disable_with_mouse(bool enabled)
 {
-    impl->disable_with_mouse = enabled;
+    impl->disable_with_external_mouse = enabled;
 }
 
 bool MirTouchpadConfig::disable_while_typing() const
@@ -166,7 +166,7 @@ bool MirTouchpadConfig::operator==(MirTouchpadConfig const& rhs) const
         impl->button_down_scroll_button == rhs.impl->button_down_scroll_button &&
         impl->tap_to_click == rhs.impl->tap_to_click &&
         impl->middle_mouse_button_emulation == rhs.impl->middle_mouse_button_emulation &&
-        impl->disable_with_mouse == rhs.impl->disable_with_mouse &&
+        impl->disable_with_external_mouse == rhs.impl->disable_with_external_mouse &&
         impl->disable_while_typing == rhs.impl->disable_while_typing;
 }
 
@@ -177,11 +177,11 @@ bool MirTouchpadConfig::operator!=(MirTouchpadConfig const& rhs) const
 
 std::ostream& operator<<(std::ostream& out, MirTouchpadConfig const& conf)
 {
-    return out << "click_mode:" << conf.click_mode()
-        << " scroll_mode:" << conf.scroll_mode()
-        << " btn_down:" << conf.button_down_scroll_button()
-        << " tap_to_click:" << conf.tap_to_click()
-        << " middle_btn_emulation:" << conf.middle_mouse_button_emulation()
-        << " disable_with_mouse:" << conf.disable_with_mouse()
-        << " disable_while_typing:" << conf.disable_while_typing();
+    return out << "click-mode:" << conf.click_mode()
+        << " scroll-mode:" << conf.scroll_mode()
+        << " button-down:" << conf.button_down_scroll_button()
+        << " tap-to-click:" << conf.tap_to_click()
+        << " middle-button-emulation:" << conf.middle_mouse_button_emulation()
+        << " disable-with-external-mouse:" << conf.disable_with_mouse()
+        << " disable-while-typing:" << conf.disable_while_typing();
 }
