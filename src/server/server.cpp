@@ -115,7 +115,7 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(the_rendering_platforms)  \
     MACRO(the_input_targeter)  \
     MACRO(the_logger)\
-    MACRO(the_main_loop)       \
+    MACRO(the_main_loop)\
     MACRO(the_prompt_session_listener)\
     MACRO(the_session_authorizer)\
     MACRO(the_session_coordinator)\
