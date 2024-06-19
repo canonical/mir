@@ -144,6 +144,17 @@ void mi::ExternalInputDeviceHub::Internal::device_removed(std::shared_ptr<Device
     devices_removed.push_back(device);
 }
 
+template <>
+struct std::formatter<std::shared_ptr<mi::DefaultDevice>>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();
+    }
+
+    auto format(std::shared_ptr<mi::DefaultDevice> const& handle, std::format_context& ctx) const;
+};
+
 void mi::ExternalInputDeviceHub::Internal::changes_complete()
 {
     std::lock_guard lock{mutex};
@@ -175,7 +186,11 @@ void mi::ExternalInputDeviceHub::Internal::changes_complete()
                 if (end_it != handles.end())
                     handles.erase(end_it, end(handles));
                 for (auto const& dev : added)
+                {
+                    if (auto handle = std::dynamic_pointer_cast<DefaultDevice>(dev))
+                        log_info(std::format("Device configuration: {}", handle));
                     handles.push_back(dev);
+                }
             });
 }
 
@@ -424,35 +439,26 @@ struct std::formatter<MirTouchscreenConfig>
     }
 };
 
-template <>
-struct std::formatter<std::shared_ptr<mi::DefaultDevice>>
+auto std::formatter<std::shared_ptr<mi::DefaultDevice>>::format(std::shared_ptr<mi::DefaultDevice> const& handle, std::format_context& ctx) const
 {
-    constexpr auto parse(std::format_parse_context& ctx)
+    auto out = std::format_to(ctx.out(), "{}, capabilities={}", handle->name(), handle->capabilities());
+
+    if (auto const pointer_config = handle->pointer_configuration())
     {
-        return ctx.begin();
+        out = std::format_to(out, ", pointer_config={}", pointer_config.value());
     }
 
-    auto format(std::shared_ptr<mi::DefaultDevice> const& handle, std::format_context& ctx) const
+    if (auto const touchpad_config = handle->touchpad_configuration())
     {
-        auto out = std::format_to(ctx.out(), "{}, capabilities={}", handle->name(), handle->capabilities());
-
-        if (auto const pointer_config = handle->pointer_configuration())
-        {
-            out = std::format_to(out, ", pointer_config={}", pointer_config.value());
-        }
-
-        if (auto const touchpad_config = handle->touchpad_configuration())
-        {
-            out = std::format_to(out, ", touchpad_config={}", touchpad_config.value());
-        }
-
-        if (auto const touchscreen_config = handle->touchscreen_configuration())
-        {
-            out = std::format_to(out, ", touchscreen_config={}", touchscreen_config.value());
-        }
-        return out;
+        out = std::format_to(out, ", touchpad_config={}", touchpad_config.value());
     }
-};
+
+    if (auto const touchscreen_config = handle->touchscreen_configuration())
+    {
+        out = std::format_to(out, ", touchscreen_config={}", touchscreen_config.value());
+    }
+    return out;
+}
 
 auto mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& device) -> std::weak_ptr<Device>
 {
@@ -485,9 +491,6 @@ auto mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
 
         seat->add_device(*handle);
         dev->start(seat, input_dispatchable);
-
-        // Configuration changes are processed on the queue, don't log until they complete
-        queue->enqueue([handle]{ mir::log_info(std::format("Device configuration: {}", handle)); });
 
         return handle;
     }
