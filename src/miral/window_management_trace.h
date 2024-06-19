@@ -132,6 +132,8 @@ private:
         MirWindowState new_state,
         Rectangle const& new_placement) -> Rectangle override;
 
+    void move_cursor_to(mir::geometry::PointF point) override;
+
 public:
     virtual void advise_begin() override;
 

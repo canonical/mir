@@ -34,7 +34,7 @@ class ObserverRegistrar;
 
 namespace compositor { class Compositor; class DisplayBufferCompositorFactory; class CompositorReport; }
 namespace graphics { class Cursor; class DisplayPlatform; class RenderingPlatform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationObserver; }
-namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class CursorImages; class TouchVisualizer; class InputDeviceHub;}
+namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class CursorImages; class TouchVisualizer; class InputDeviceHub; class InputDeviceRegistry;}
 namespace logging { class Logger; }
 namespace options { class Option; }
 namespace frontend
@@ -427,6 +427,9 @@ public:
 
     auto the_renderer_factory() const ->
         std::shared_ptr<renderer::RendererFactory>;
+
+    auto the_input_device_registry() const ->
+        std::shared_ptr<input::InputDeviceRegistry>;
 
     auto the_idle_handler() const ->
         std::shared_ptr<shell::IdleHandler>;

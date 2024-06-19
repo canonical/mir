@@ -59,6 +59,7 @@ void miral::WindowManagerOptions::operator()(mir::Server& server) const
 
             auto const display_layout = server.the_shell_display_layout();
             auto const persistent_surface_store = server.the_persistent_surface_store();
+            auto const input_device_registry = server.the_input_device_registry();
 
             for (auto const& option : policies)
             {
@@ -76,6 +77,7 @@ void miral::WindowManagerOptions::operator()(mir::Server& server) const
                             display_layout,
                             persistent_surface_store,
                             *server.the_display_configuration_observer_registrar(),
+                            input_device_registry,
                             trace_builder);
                     }
 
@@ -84,6 +86,7 @@ void miral::WindowManagerOptions::operator()(mir::Server& server) const
                          display_layout,
                          persistent_surface_store,
                          *server.the_display_configuration_observer_registrar(),
+                         input_device_registry,
                          option.build);
                 }
             }

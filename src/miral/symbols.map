@@ -463,5 +463,6 @@ global:
     miral::IdleListener::on_wake*;
     miral::IdleListener::operator*;
     typeinfo?for?miral::IdleListener;
+    miral::WindowManagerTools::move_cursor_to*;
   };
 } MIRAL_5.0;

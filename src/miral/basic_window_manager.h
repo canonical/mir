@@ -45,6 +45,7 @@ namespace mir
 {
 namespace shell { class DisplayLayout; class PersistentSurfaceStore; }
 namespace graphics { class DisplayConfigurationObserver; }
+namespace input { class VirtualInputDevice; class InputDeviceRegistry; }
 }
 
 namespace miral
@@ -67,6 +68,7 @@ public:
         std::shared_ptr<mir::shell::DisplayLayout> const& display_layout,
         std::shared_ptr<mir::shell::PersistentSurfaceStore> const& persistent_surface_store,
         mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>& display_configuration_observers,
+        std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry,
         WindowManagementPolicyBuilder const& build);
     ~BasicWindowManager();
 
@@ -192,6 +194,8 @@ public:
 
     void invoke_under_lock(std::function<void()> const& callback) override;
 
+    void move_cursor_to(mir::geometry::PointF point) override;
+
 private:
     /// An area for windows to be placed in
     struct DisplayArea
@@ -272,6 +276,8 @@ private:
     wwbimap_t workspaces_to_windows;
 
     std::shared_ptr<DisplayConfigurationListeners> const display_config_monitor;
+    std::shared_ptr<mir::input::VirtualInputDevice> const pointer_device;
+    std::shared_ptr<mir::input::InputDeviceRegistry> input_device_registry;
 
     struct Locker;
 

@@ -133,6 +133,7 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(the_seat_observer_registrar)\
     MACRO(the_session_lock)\
     MACRO(the_renderer_factory)\
+    MACRO(the_input_device_registry)\
     MACRO(the_idle_handler)
 
 #define MIR_SERVER_BUILDER(name)\
