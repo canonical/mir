@@ -305,20 +305,14 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
         dcout.custom_logical_size = pending_toplevel_size.value();
         pending_toplevel_size.reset();
         output_size = dcout.extents().size;
-        if (!has_initialized)
+        if (!has_initialized || size_is_changed)
         {
             has_initialized = true;
             provider = std::make_shared<WlDisplayAllocator>(
                 owner_->provider->get_egl_display(),
                 surface,
                 output_size);
-        }
-        else if (size_is_changed)
-        {
-            /* TODO: We should, again, handle this by storing the pending size, raising a hardware-changed
-             * notification, and then letting the `configure()` system tear down everything and bring it back
-             * up at the new size.
-             */
+            owner_->on_display_config_changed();
         }
     }
 }
