@@ -31,7 +31,8 @@ execute: |
         py3-pillow \
         umockdev-dev \
         wayland-dev \
-        yaml-cpp-dev
+        yaml-cpp-dev \
+        libapparmor-dev
 
     BUILD_DIR=$PWD/../build
     cmake \

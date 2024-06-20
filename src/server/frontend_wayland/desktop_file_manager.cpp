@@ -22,6 +22,10 @@
 #include <fstream>
 #include <filesystem>
 
+#ifdef MIR_USE_APPARMOR
+#include <sys/apparmor.h>
+#endif
+
 namespace mf = mir::frontend;
 
 namespace
@@ -89,9 +93,10 @@ std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface
 
     auto session = surface->session().lock();
     auto pid = session->process_id();
+    auto socket_fd = session->socket_fd();
 
     // Fourth, check if the window belongs to snap
-    found = resolve_if_snap(pid);
+    found = resolve_if_snap(pid, socket_fd);
     if (found)
         return found->id;
 
@@ -157,8 +162,31 @@ std::string mf::DesktopFileManager::parse_snap_security_profile_to_desktop_id(st
     return sandboxed_app_id + DESKTOP_FILE_POSTFIX;
 }
 
-std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_snap(int pid)
+std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_snap(int pid, mir::Fd const& socket_fd)
 {
+#ifdef MIR_USE_APPARMOR
+    // First, try to resolve the AppArmor profile
+    char* label_cstr;
+    char* mode_cstr;
+
+    if (aa_getpeercon(socket_fd, &label_cstr, &mode_cstr) >= 0)
+    {
+        std::string const label{label_cstr};
+        free(label_cstr);
+        // mode_cstr should NOT be freed, as it's from the same buffer as label_cstr
+        
+        auto sandboxed_app_id = parse_snap_security_profile_to_desktop_id(label);
+        if (!sandboxed_app_id.empty())
+        {
+            if (auto file = cache->lookup_by_app_id(sandboxed_app_id))
+                return file;
+        }
+    }
+#else
+    (void)socket_fd;
+#endif
+
+    // If that fails, try to read /proc/<PID>/attr/current
     std::string attr_file = "/proc/" + std::to_string(pid) + "/attr/current";
     if (!std::filesystem::exists(attr_file))
         return nullptr;

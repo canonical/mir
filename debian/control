@@ -55,7 +55,8 @@ Build-Depends: cmake,
                libnvidia-egl-wayland-dev,
                eglexternalplatform-dev,
                systemtap-sdt-dev,
-               wlcs
+               wlcs,
+               libapparmor-dev
 Standards-Version: 4.6.1
 Homepage: https://mir-server.io/
 Vcs-Browser: https://github.com/MirServer/mir/

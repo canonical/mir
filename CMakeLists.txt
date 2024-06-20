@@ -206,6 +206,17 @@ CMAKE_DEPENDENT_OPTION(
   MIR_SIGBUS_HANDLER_ENVIRONMENT_BROKEN "Expect WLCS BadBuffer tests to fail" OFF
   "MIR_RUN_WLCS_TESTS" OFF
 )
+
+pkg_check_modules(APPARMOR IMPORTED_TARGET libapparmor)
+
+CMAKE_DEPENDENT_OPTION(
+  MIR_USE_APPARMOR "Whether or not Mir should build with support for AppArmor" ON
+  "APPARMOR_FOUND" OFF
+)
+if (MIR_USE_APPARMOR)
+  add_compile_definitions(MIR_USE_APPARMOR)
+endif()
+
 SET(MIR_EXCLUDE_TESTS "" CACHE STRING "Semicolon-separated list of tests to exclude (wildcards accepted)")
 
 

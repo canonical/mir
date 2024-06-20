@@ -52,6 +52,7 @@ parts:
     - nettle-dev
     - python3-pil
     - systemtap-sdt-dev
+    - libapparmor-dev
     stage-packages:
     - libboost-filesystem1.83.0
     - libboost-iostreams1.83.0
@@ -98,3 +99,4 @@ parts:
     - libxml2
     - libxrender1
     - libyaml-cpp0.8
+    - libapparmor1
