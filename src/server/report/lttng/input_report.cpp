@@ -26,23 +26,3 @@ void mir::report::lttng::InputReport::received_event_from_kernel(int64_t when, i
 {
     mir_tracepoint(mir_server_input, received_event_from_kernel, when, type, code, value);
 }
-
-void mir::report::lttng::InputReport::published_key_event(int dest_fd, uint32_t seq_id, int64_t event_time)
-{
-    mir_tracepoint(mir_server_input, published_key_event, dest_fd, seq_id, event_time);
-}
-
-void mir::report::lttng::InputReport::published_motion_event(int dest_fd, uint32_t seq_id, int64_t event_time)
-{
-    mir_tracepoint(mir_server_input, published_motion_event, dest_fd, seq_id, event_time);
-}
-
-void mir::report::lttng::InputReport::opened_input_device(char const* name, char const* platform)
-{
-    mir_tracepoint(mir_server_input, opened_input_device, name, platform);
-}
-
-void mir::report::lttng::InputReport::failed_to_open_input_device(char const* name, char const* platform)
-{
-    mir_tracepoint(mir_server_input, failed_to_open_input_device, name, platform);
-}

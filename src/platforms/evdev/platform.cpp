@@ -61,7 +61,7 @@ std::string describe(libinput_device* dev)
 
     if (auto const name = libinput_device_get_name(dev))
     {
-        desc += ": " + std::string(name);
+        desc += " " + std::string(name);
     }
 
     return desc;
@@ -418,8 +418,6 @@ void mie::Platform::device_added(libinput_device* dev)
 {
     auto device_ptr = make_libinput_device(lib, dev);
 
-    log_info("Added %s", describe(dev).c_str());
-
     auto device_it = find_device(device_ptr.get());
     if (end(devices) != device_it)
     {
@@ -433,11 +431,11 @@ void mie::Platform::device_added(libinput_device* dev)
 
         input_device_registry->add_device(devices.back());
 
-        report->opened_input_device(libinput_device_get_sysname(dev), "evdev-input");
-    } catch(...)
+        log_info("Opened device: %s", describe(dev).c_str());
+    }
+    catch(...)
     {
-        mir::log_error("Failure opening device %s", libinput_device_get_sysname(dev));
-        report->failed_to_open_input_device(libinput_device_get_sysname(dev), "evdev-input");
+        log_error("Failure opening device %s", describe(dev).c_str());
     }
 }
 
@@ -461,7 +459,7 @@ void mie::Platform::device_removed(libinput_device* dev)
         udev_device_unref(udev_device);
     }
 
-    log_info("Removed %s", describe(dev).c_str());
+    log_info("Removed device: %s", describe(dev).c_str());
 }
 
 auto mie::Platform::find_device(libinput_device* dev) -> decltype(devices)::iterator

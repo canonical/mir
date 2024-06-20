@@ -48,6 +48,7 @@ char const* const acceleration_none = "none";
 char const* const acceleration_adaptive = "adaptive";
 char const* const mouse_cursor_acceleration_bias_opt = "mouse-cursor-acceleration-bias";
 char const* const mouse_scroll_speed_scale_opt = "mouse-scroll-speed-scale";
+char const* const touchpad_cursor_acceleration_opt = "touchpad-cursor-acceleration";
 char const* const touchpad_cursor_acceleration_bias_opt = "touchpad-cursor-acceleration-bias";
 char const* const touchpad_scroll_speed_scale_opt = "touchpad-scroll-speed-scale";
 char const* const touchpad_scroll_mode_opt = "touchpad-scroll-mode";
@@ -68,9 +69,10 @@ class InputDeviceConfig : public mi::InputDeviceObserver
 public:
     InputDeviceConfig(std::optional<bool> disable_while_typing,
                       std::optional<bool> tap_to_click,
-                      std::optional<MirPointerAcceleration> mouse_profile,
+                      std::optional<MirPointerAcceleration> mouse_cursor_acceleration,
                       std::optional<double> mouse_cursor_acceleration_bias,
                       std::optional<double> mouse_scroll_speed_scale,
+                      std::optional<MirPointerAcceleration> touchpad_cursor_acceleration,
                       std::optional<double> touchpad_cursor_acceleration_bias,
                       std::optional<double> touchpad_scroll_speed_scale,
                       std::optional<MirTouchpadClickMode> click_mode,
@@ -81,9 +83,10 @@ public:
     void changes_complete() override {}
 private:
     std::optional<bool> const disable_while_typing;
-    std::optional<MirPointerAcceleration> const mouse_profile;
+    std::optional<MirPointerAcceleration> const mouse_cursor_acceleration;
     std::optional<double> const mouse_cursor_acceleration_bias;
     std::optional<double> const mouse_scroll_speed_scale;
+    std::optional<MirPointerAcceleration> const touchpad_cursor_acceleration;
     std::optional<double> const touchpad_cursor_acceleration_bias;
     std::optional<double> const touchpad_scroll_speed_scale;
     std::optional<MirTouchpadClickMode> const click_mode;
@@ -111,6 +114,9 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
                                     "Enable or disable tap-to-click on this device, with a default mapping of"
                                     " 1, 2, 3 finger tap mapping to left, right, middle click, respectively [true, false]",
                                     mir::OptionType::boolean);
+    server.add_configuration_option(touchpad_cursor_acceleration_opt,
+                                    "Select acceleration profile for touchpads [none, adaptive]",
+                                    mir::OptionType::string);
     server.add_configuration_option(touchpad_cursor_acceleration_bias_opt,
                                     "Constant factor (+1) to velocity or bias to the acceleration curve within the range [-1.0, 1.0] for touchpads",
                                     mir::OptionType::real);
@@ -239,6 +245,7 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
                     to_acceleration_profile(get_optional<std::string>(options, mouse_acceleration_opt)),
                     clamp_to_range(get_optional<double>(options, mouse_cursor_acceleration_bias_opt)),
                     get_optional<double>(options, mouse_scroll_speed_scale_opt),
+                    to_acceleration_profile(get_optional<std::string>(options, touchpad_cursor_acceleration_opt)),
                     clamp_to_range(get_optional<double>(options, touchpad_cursor_acceleration_bias_opt)),
                     get_optional<double>(options, touchpad_scroll_speed_scale_opt),
                     convert_to_click_mode(get_optional<std::string>(options, touchpad_click_mode_opt)),
@@ -250,16 +257,18 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
 
 InputDeviceConfig::InputDeviceConfig(std::optional<bool> disable_while_typing,
                                      std::optional<bool> tap_to_click,
-                                     std::optional<MirPointerAcceleration> mouse_profile,
+                                     std::optional<MirPointerAcceleration> mouse_cursor_acceleration,
                                      std::optional<double> mouse_cursor_acceleration_bias,
                                      std::optional<double> mouse_scroll_speed_scale,
+                                     std::optional<MirPointerAcceleration> touchpad_cursor_acceleration,
                                      std::optional<double> touchpad_cursor_acceleration_bias,
                                      std::optional<double> touchpad_scroll_speed_scale,
                                      std::optional<MirTouchpadClickMode> click_mode,
                                      std::optional<MirTouchpadScrollMode> scroll_mode)
-    : disable_while_typing{disable_while_typing}, mouse_profile{mouse_profile},
+    : disable_while_typing{disable_while_typing}, mouse_cursor_acceleration{mouse_cursor_acceleration},
       mouse_cursor_acceleration_bias{mouse_cursor_acceleration_bias},
       mouse_scroll_speed_scale{mouse_scroll_speed_scale},
+      touchpad_cursor_acceleration{touchpad_cursor_acceleration},
       touchpad_cursor_acceleration_bias{touchpad_cursor_acceleration_bias},
       touchpad_scroll_speed_scale{touchpad_scroll_speed_scale}, click_mode{click_mode}, scroll_mode{scroll_mode},
       tap_to_click{tap_to_click}
@@ -274,6 +283,7 @@ void InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& device)
 	    if (auto const optional_pointer_config = device->pointer_configuration(); optional_pointer_config.is_set())
         {
             MirPointerConfig pointer_config( optional_pointer_config.value() );
+            if (touchpad_cursor_acceleration) pointer_config.acceleration(*touchpad_cursor_acceleration);
             if (touchpad_cursor_acceleration_bias) pointer_config.cursor_acceleration_bias(*touchpad_cursor_acceleration_bias);
             if (touchpad_scroll_speed_scale) pointer_config.vertical_scroll_scale(*touchpad_scroll_speed_scale);
             if (touchpad_scroll_speed_scale) pointer_config.horizontal_scroll_scale(*touchpad_scroll_speed_scale);
@@ -296,7 +306,7 @@ void InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& device)
         if (auto optional_pointer_config = device->pointer_configuration(); optional_pointer_config.is_set())
         {
             MirPointerConfig pointer_config( optional_pointer_config.value() );
-            if (mouse_profile) pointer_config.acceleration(*mouse_profile);
+            if (mouse_cursor_acceleration) pointer_config.acceleration(*mouse_cursor_acceleration);
             if (mouse_cursor_acceleration_bias) pointer_config.cursor_acceleration_bias(*mouse_cursor_acceleration_bias);
             if (mouse_scroll_speed_scale) pointer_config.vertical_scroll_scale(*mouse_scroll_speed_scale);
             if (mouse_scroll_speed_scale) pointer_config.horizontal_scroll_scale(*mouse_scroll_speed_scale);
