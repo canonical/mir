@@ -31,11 +31,6 @@ class WlDisplayProvider : public GenericEGLDisplayProvider
 public:
     WlDisplayProvider(EGLDisplay dpy);
 
-    WlDisplayProvider(
-        WlDisplayProvider const& from,
-        struct wl_surface* surface,
-        geometry::Size size);
-
     auto get_egl_display() -> EGLDisplay override;
 private:
     EGLDisplay const dpy;
