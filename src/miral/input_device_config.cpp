@@ -54,7 +54,8 @@ char const* const mouse_vscroll_speed_opt = "mouse-scroll-vspeed";
 char const* const mouse_hscroll_speed_opt = "mouse-scroll-hspeed";
 char const* const touchpad_cursor_acceleration_opt = "touchpad-cursor-acceleration";
 char const* const touchpad_cursor_acceleration_bias_opt = "touchpad-cursor-acceleration-bias";
-char const* const touchpad_scroll_speed_opt = "touchpad-scroll-speed";
+char const* const touchpad_vscroll_speed_opt = "touchpad-vscroll-speed";
+char const* const touchpad_hscroll_speed_opt = "touchpad-hscroll-speed";
 char const* const touchpad_scroll_mode_opt = "touchpad-scroll-mode";
 
 char const* const touchpad_scroll_mode_two_finger = "two-finger";
@@ -86,7 +87,8 @@ private:
     std::optional<double> const mouse_hscroll_speed;
     std::optional<MirPointerAcceleration> const touchpad_cursor_acceleration;
     std::optional<double> const touchpad_cursor_acceleration_bias;
-    std::optional<double> const touchpad_scroll_speed;
+    std::optional<double> const touchpad_vscroll_speed;
+    std::optional<double> const touchpad_hscroll_speed;
     std::optional<MirTouchpadClickMode> const click_mode;
     std::optional<MirTouchpadScrollMode> const scroll_mode;
     std::optional<bool> const tap_to_click;
@@ -247,8 +249,11 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
     server.add_configuration_option(touchpad_cursor_acceleration_bias_opt,
                                     "Constant factor (+1) to velocity or bias to the acceleration curve within the range [-1.0, 1.0] for touchpads",
                                     mir::OptionType::real);
-    server.add_configuration_option(touchpad_scroll_speed_opt,
-                                    "Scales touchpad scroll events, use negative values for natural scrolling",
+    server.add_configuration_option(touchpad_vscroll_speed_opt,
+                                    "Scales touchpad vertical scroll, use negative values for natural scrolling",
+                                    mir::OptionType::real);
+    server.add_configuration_option(touchpad_hscroll_speed_opt,
+                                    "Scales touchpad horizontal scroll, use negative values for natural scrolling",
                                     mir::OptionType::real);
 
     server.add_configuration_option(touchpad_scroll_mode_opt,
@@ -285,7 +290,8 @@ InputDeviceConfig::InputDeviceConfig(std::shared_ptr<mir::options::Option> const
     mouse_hscroll_speed{get_optional<double>(options, mouse_hscroll_speed_opt)},
     touchpad_cursor_acceleration{to_acceleration_profile(get_optional<std::string>(options, touchpad_cursor_acceleration_opt))},
     touchpad_cursor_acceleration_bias{clamp_to_range(get_optional<double>(options, touchpad_cursor_acceleration_bias_opt))},
-    touchpad_scroll_speed{get_optional<double>(options, touchpad_scroll_speed_opt)},
+    touchpad_vscroll_speed{get_optional<double>(options, touchpad_vscroll_speed_opt)},
+    touchpad_hscroll_speed{get_optional<double>(options, touchpad_hscroll_speed_opt)},
     click_mode{convert_to_click_mode(get_optional<std::string>(options, touchpad_click_mode_opt))},
     scroll_mode{convert_to_scroll_mode(get_optional<std::string>(options, touchpad_scroll_mode_opt))},
     tap_to_click{get_optional<bool>(options, touchpad_tap_to_click_opt)},
@@ -303,8 +309,8 @@ void InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& device)
             MirPointerConfig pointer_config( optional_pointer_config.value() );
             if (touchpad_cursor_acceleration) pointer_config.acceleration(*touchpad_cursor_acceleration);
             if (touchpad_cursor_acceleration_bias) pointer_config.cursor_acceleration_bias(*touchpad_cursor_acceleration_bias);
-            if (touchpad_scroll_speed) pointer_config.vertical_scroll_scale(*touchpad_scroll_speed);
-            if (touchpad_scroll_speed) pointer_config.horizontal_scroll_scale(*touchpad_scroll_speed);
+            if (touchpad_vscroll_speed) pointer_config.vertical_scroll_scale(*touchpad_vscroll_speed);
+            if (touchpad_hscroll_speed) pointer_config.horizontal_scroll_scale(*touchpad_hscroll_speed);
             device->apply_pointer_configuration(pointer_config);
         }
 
