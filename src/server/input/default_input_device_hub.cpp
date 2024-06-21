@@ -324,8 +324,8 @@ struct std::formatter<MirPointerConfig>
         }
 
         out = std::format_to(out, "cursor-acceleration-bias={:.2f},", c.cursor_acceleration_bias());
-        out = std::format_to(out, "scroll-hscale={:.2f},", c.horizontal_scroll_scale());
-        return std::format_to(out, "scroll-vscale={:.2f}}}", c.vertical_scroll_scale());
+        out = std::format_to(out, "scroll-hspeed={:.2f},", c.horizontal_scroll_scale());
+        return std::format_to(out, "scroll-vspeed={:.2f}}}", c.vertical_scroll_scale());
     }
 };
 
@@ -359,7 +359,7 @@ struct std::formatter<MirTouchpadConfig>
             break;
         case mir_touchpad_click_mode_finger_count:
             write_delim();
-            out = std::format_to(out, "click-mode=finger-count");
+            out = std::format_to(out, "click-mode=clickfinger");
             break;
         }
 
