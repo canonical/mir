@@ -5,19 +5,10 @@ pipeline.
 
 ## Overview
 
-There are a number of components to this story:
-- Mir builds
-- unit, integration, acceptance and performance tests
-  - including our [WayLand Conformance Suite - WLCS](https://github.com/canonical/wlcs)
-- sanitizer runs
-- ABI checks
-- coverage measurement
-- `.deb` package builds
-- downstream Snap builds
-- end-to-end testing across different hardware
-  - test procedures maintained within [mir-ci](https://github.com/canonical/mir-ci)
-    and [checkbox-mir](https://github.com/canonical/checkbox-mir)
-  - automations defined in a private repository, as it includes infrastructure credentials
+There are a number of components to this story, and a diagram might make for a good overview:
+
+```{mermaid} continuous-integration.mmd
+```
 
 These are run at different stages in the pipeline, balancing the time it takes to run and the
 breadth of testing. We'll discuss those in more detail below.
