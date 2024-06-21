@@ -37,7 +37,7 @@ struct TouchpadSettings
     int button_down_scroll_button{no_scroll_button};
     bool tap_to_click{true};
     bool disable_while_typing{false};
-    bool disable_with_external_mouse{false};
+    bool disable_with_mouse{false};
     bool middle_mouse_button_emulation{true};
 };
 }

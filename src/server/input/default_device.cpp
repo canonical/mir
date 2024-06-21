@@ -119,7 +119,7 @@ mir::optional_value<MirTouchpadConfig> mi::DefaultDevice::touchpad_configuration
     auto const& settings = touchpad.value();
 
     return MirTouchpadConfig(settings.click_mode, settings.scroll_mode, settings.button_down_scroll_button,
-                             settings.tap_to_click, settings.disable_while_typing, settings.disable_with_external_mouse,
+                             settings.tap_to_click, settings.disable_while_typing, settings.disable_with_mouse,
                              settings.middle_mouse_button_emulation);
 }
 
@@ -177,7 +177,7 @@ void mi::DefaultDevice::set_touchpad_configuration(MirTouchpadConfig const& conf
     settings.click_mode= conf.click_mode();
     settings.scroll_mode = conf.scroll_mode();
     settings.button_down_scroll_button = conf.button_down_scroll_button();
-    settings.disable_with_external_mouse = conf.disable_with_mouse();
+    settings.disable_with_mouse = conf.disable_with_external_mouse();
     settings.disable_while_typing = conf.disable_while_typing();
     settings.tap_to_click = conf.tap_to_click();
     settings.middle_mouse_button_emulation = conf.middle_mouse_button_emulation();

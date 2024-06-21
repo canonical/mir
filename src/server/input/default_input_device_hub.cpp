@@ -399,7 +399,7 @@ struct std::formatter<MirTouchpadConfig>
         }
 
 
-        if (c.disable_with_mouse())
+        if (c.disable_with_external_mouse())
         {
             write_delim();
             out = std::format_to(out, "disable-with-external-mouse");

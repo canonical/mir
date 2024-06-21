@@ -42,6 +42,7 @@ auto get_optional(std::shared_ptr<mir::options::Option> options, char const* nam
 };
 
 char const* const disable_while_typing_opt = "touchpad-disable-while-typing";
+char const* const disable_with_external_mouse_opt = "touchpad-disable-with-external-mouse";
 char const* const touchpad_tap_to_click_opt = "touchpad-tap-to-click";
 char const* const mouse_handedness_opt = "mouse-handedness";
 char const* const right = "right";
@@ -80,6 +81,7 @@ public:
     void changes_complete() override {}
 private:
     std::optional<bool> const disable_while_typing;
+    std::optional<bool> const disable_with_external_mouse;
     std::optional<MirPointerHandedness> const mouse_handedness;
     std::optional<MirPointerAcceleration> const mouse_cursor_acceleration;
     std::optional<double> const mouse_cursor_acceleration_bias;
@@ -239,6 +241,9 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
     server.add_configuration_option(disable_while_typing_opt,
                                     "Disable touchpad while typing on keyboard configuration [true, false]",
                                     mir::OptionType::boolean);
+    server.add_configuration_option(disable_with_external_mouse_opt,
+                                    "Disable touchpad if an external pointer device is plugged in [true, false]",
+                                    mir::OptionType::boolean);
     server.add_configuration_option(touchpad_tap_to_click_opt,
                                     "Enable or disable tap-to-click on this device, with"
                                     " 1, 2, 3 finger tap mapping to left, right, middle click, respectively [true, false]",
@@ -283,6 +288,7 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
 
 InputDeviceConfig::InputDeviceConfig(std::shared_ptr<mir::options::Option> const& options) :
     disable_while_typing{get_optional<bool>(options, disable_while_typing_opt)},
+    disable_with_external_mouse{get_optional<bool>(options, disable_with_external_mouse_opt)},
     mouse_handedness{to_handedness(get_optional<std::string>(options, mouse_handedness_opt))},
     mouse_cursor_acceleration{to_acceleration_profile(get_optional<std::string>(options, mouse_cursor_acceleration_opt))},
     mouse_cursor_acceleration_bias{clamp_to_range(get_optional<double>(options, mouse_cursor_acceleration_bias_opt))},
@@ -318,10 +324,12 @@ void InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& device)
         {
             MirTouchpadConfig touch_config( optional_touchpad_config.value() );
             if (disable_while_typing) touch_config.disable_while_typing(*disable_while_typing);
-            if (click_mode) touch_config.click_mode(*click_mode);
+            if (disable_with_external_mouse) touch_config.disable_while_typing(*disable_with_external_mouse);
+	        if (click_mode) touch_config.click_mode(*click_mode);
             if (scroll_mode) touch_config.scroll_mode(*scroll_mode);
             if (tap_to_click) touch_config.tap_to_click(*tap_to_click);
             if (middle_mouse_button_emulation) touch_config.middle_mouse_button_emulation(*middle_mouse_button_emulation);
+
             device->apply_touchpad_configuration(touch_config);
         }
     }

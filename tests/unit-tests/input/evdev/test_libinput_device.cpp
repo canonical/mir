@@ -1125,7 +1125,7 @@ TEST_F(LibInputDeviceOnTouchpad, reads_touchpad_settings_from_libinput)
     EXPECT_THAT(settings.scroll_mode, Eq(mir_touchpad_scroll_mode_edge_scroll));
     EXPECT_THAT(settings.tap_to_click, Eq(true));
     EXPECT_THAT(settings.disable_while_typing, Eq(false));
-    EXPECT_THAT(settings.disable_with_external_mouse, Eq(true));
+    EXPECT_THAT(settings.disable_with_mouse, Eq(true));
     EXPECT_THAT(settings.middle_mouse_button_emulation, Eq(false));
 }
 
@@ -1140,7 +1140,7 @@ TEST_F(LibInputDeviceOnTouchpad, applies_touchpad_settings)
     settings.button_down_scroll_button = KEY_A;
     settings.tap_to_click = true;
     settings.disable_while_typing = false;
-    settings.disable_with_external_mouse = true;
+    settings.disable_with_mouse = true;
     settings.middle_mouse_button_emulation = true;
 
     EXPECT_CALL(env.mock_libinput,

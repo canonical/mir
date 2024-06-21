@@ -587,7 +587,7 @@ mir::optional_value<mi::TouchpadSettings> mie::LibInputDevice::get_touchpad_sett
 
     settings.tap_to_click = libinput_device_config_tap_get_enabled(dev) == LIBINPUT_CONFIG_TAP_ENABLED;
     settings.disable_while_typing = libinput_device_config_dwt_get_enabled(dev) == LIBINPUT_CONFIG_DWT_ENABLED;
-    settings.disable_with_external_mouse =
+    settings.disable_with_mouse =
         libinput_device_config_send_events_get_mode(dev) == LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE;
     settings.middle_mouse_button_emulation =
         libinput_device_config_middle_emulation_get_enabled(dev) == LIBINPUT_CONFIG_MIDDLE_EMULATION_ENABLED;
@@ -676,7 +676,7 @@ void mie::LibInputDevice::apply_settings(mi::TouchpadSettings const& settings)
     libinput_device_config_dwt_set_enabled(
         dev, settings.disable_while_typing ? LIBINPUT_CONFIG_DWT_ENABLED : LIBINPUT_CONFIG_DWT_DISABLED);
 
-    libinput_device_config_send_events_set_mode(dev, settings.disable_with_external_mouse ?
+    libinput_device_config_send_events_set_mode(dev, settings.disable_with_mouse ?
                                                          LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE :
                                                          LIBINPUT_CONFIG_SEND_EVENTS_ENABLED);
 
