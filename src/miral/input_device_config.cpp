@@ -43,6 +43,9 @@ auto get_optional(std::shared_ptr<mir::options::Option> options, char const* nam
 
 char const* const disable_while_typing_opt = "touchpad-disable-while-typing";
 char const* const touchpad_tap_to_click_opt = "touchpad-tap-to-click";
+char const* const mouse_handedness_opt = "mouse-handedness";
+char const* const right = "right";
+char const* const left = "right";
 char const* const mouse_cursor_acceleration_opt = "mouse-cursor-acceleration";
 char const* const acceleration_none = "none";
 char const* const acceleration_adaptive = "adaptive";
@@ -70,6 +73,7 @@ class InputDeviceConfig : public mi::InputDeviceObserver
 public:
     InputDeviceConfig(std::optional<bool> disable_while_typing,
                       std::optional<bool> tap_to_click,
+                      std::optional<MirPointerHandedness> mouse_handedness,
                       std::optional<MirPointerAcceleration> mouse_cursor_acceleration,
                       std::optional<double> mouse_cursor_acceleration_bias,
                       std::optional<double> mouse_scroll_speed,
@@ -85,6 +89,7 @@ public:
     void changes_complete() override {}
 private:
     std::optional<bool> const disable_while_typing;
+    std::optional<MirPointerHandedness> const mouse_handedness;
     std::optional<MirPointerAcceleration> const mouse_cursor_acceleration;
     std::optional<double> const mouse_cursor_acceleration_bias;
     std::optional<double> const mouse_scroll_speed;
@@ -101,6 +106,8 @@ private:
 
 void miral::add_input_device_configuration_options_to(mir::Server& server)
 {
+    server.add_configuration_option(mouse_handedness_opt, std::format("Select mouse laterality: [{}, {}]", right, left),
+    mir::OptionType::string);
     server.add_configuration_option(mouse_cursor_acceleration_opt,
                                     "Select acceleration profile for mice and trackballs [none, adaptive]",
                                     mir::OptionType::string);
@@ -246,12 +253,36 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
         }
     };
 
+    auto to_handedness = [](std::optional<std::string> const& opt_val)-> std::optional<MirPointerHandedness>
+    {
+        if (opt_val)
+        {
+            if (*opt_val == right)
+            {
+                return mir_pointer_handedness_right;
+            }
+            else if (*opt_val == left)
+            {
+                return mir_pointer_handedness_left;
+            }
+            else
+            {
+                throw mir::AbnormalExit{std::format("Unrecognised option for handedness: {}", *opt_val)};
+            }
+        }
+        else
+        {
+            return std::nullopt;
+        }
+    };
+
     server.add_init_callback([&]()
         {
             auto const options = server.get_options();
             auto const input_config = std::make_shared<InputDeviceConfig>(
                     get_optional<bool>(options, disable_while_typing_opt),
                     get_optional<bool>(options, touchpad_tap_to_click_opt),
+                    to_handedness(get_optional<std::string>(options, mouse_handedness_opt)),
                     to_acceleration_profile(get_optional<std::string>(options, mouse_cursor_acceleration_opt)),
                     clamp_to_range(get_optional<double>(options, mouse_cursor_acceleration_bias_opt)),
                     get_optional<double>(options, mouse_scroll_speed_opt),
@@ -268,6 +299,7 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
 
 InputDeviceConfig::InputDeviceConfig(std::optional<bool> disable_while_typing,
                                      std::optional<bool> tap_to_click,
+                                     std::optional<MirPointerHandedness> mouse_handedness,
                                      std::optional<MirPointerAcceleration> mouse_cursor_acceleration,
                                      std::optional<double> mouse_cursor_acceleration_bias,
                                      std::optional<double> mouse_scroll_speed,
@@ -277,7 +309,8 @@ InputDeviceConfig::InputDeviceConfig(std::optional<bool> disable_while_typing,
                                      std::optional<MirTouchpadClickMode> click_mode,
                                      std::optional<MirTouchpadScrollMode> scroll_mode,
                                      std::optional<bool> middle_mouse_button_emulation)
-    : disable_while_typing{disable_while_typing}, mouse_cursor_acceleration{mouse_cursor_acceleration},
+    : disable_while_typing{disable_while_typing}, mouse_handedness{mouse_handedness},
+      mouse_cursor_acceleration{mouse_cursor_acceleration},
       mouse_cursor_acceleration_bias{mouse_cursor_acceleration_bias},
       mouse_scroll_speed{mouse_scroll_speed},
       touchpad_cursor_acceleration{touchpad_cursor_acceleration},
@@ -319,6 +352,7 @@ void InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& device)
         if (auto optional_pointer_config = device->pointer_configuration(); optional_pointer_config.is_set())
         {
             MirPointerConfig pointer_config( optional_pointer_config.value() );
+            if (mouse_handedness) pointer_config.handedness(*mouse_handedness);
             if (mouse_cursor_acceleration) pointer_config.acceleration(*mouse_cursor_acceleration);
             if (mouse_cursor_acceleration_bias) pointer_config.cursor_acceleration_bias(*mouse_cursor_acceleration_bias);
             if (mouse_scroll_speed) pointer_config.vertical_scroll_scale(*mouse_scroll_speed);
