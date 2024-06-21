@@ -12,7 +12,7 @@ There are a number of components to this story:
 - sanitizer runs
 - ABI checks
 - coverage measurement
-- deb package builds
+- `.deb` package builds
 - downstream Snap builds
 - end-to-end testing across different hardware
   - test procedures maintained within [mir-ci](https://github.com/canonical/mir-ci)
@@ -73,3 +73,57 @@ holds a handful of performance-related tests, collecting some metrics about how 
 performs end-to-end - and verifying that it works in the first place.
 
 We also run these on a number of hardware platforms in our testing lab for every build of `main`.
+
+## Sanitizer runs
+
+In addition to the above, for every push to `main` we build and run the tests using the following
+sanitizers:
+
+- **Undefined Behaviour**
+  This is now enforced, and no undefined behaviour is reported by ubsan.
+- **Address Sanitizer**
+  As we have some fixing to do here, we run those builds - but don't enforce the problems reported.
+- **Thread Sanitizer**
+  Unfortunately due to
+  [incompatibility between GLib and TSan](https://github.com/google/sanitizers/issues/490), we
+  don't currently run the thread sanitizer, as that produces too many false positives.
+
+## ABI checks
+
+For each pull request we
+[check that the exported symbols are as expected](https://github.com/canonical/mir/actions/workflows/symbols-check.yml)
+- and fail if the ABI changed in any way. It doesn't necessarily mean an ABI break - but new symbols
+need to be tracked.
+
+## Coverage measurement
+
+We [track test coverage](https://github.com/canonical/mir/actions/workflows/coverage.yml) for each pull
+request and `main` builds, and the results are visible on
+[Codecov.io](https://app.codecov.io/gh/canonical/mir).
+
+## `.deb` package builds
+
+Pushes to `main`, `release/` branches as well as annotated tags are followed by `.deb` package
+builds in mir-team's Launchpad's Personal Package Archives (PPAs):
+- [`~mir-team/dev`](https://launchpad.net/~mir-team/+archive/ubuntu/dev) for the latest development
+  builds
+- [`~mir-team/rc`](https://launchpad.net/~mir-team/+archive/ubuntu/rc) for release candidate and
+  release builds
+
+At release, those get copied to the
+[`~mir-team/release`](https://launchpad.net/~mir-team/+archive/ubuntu/release), general availability
+PPA.
+
+## Downstream snap builds
+
+We [build a subset](https://github.com/canonical/mir/actions/workflows/snap.yml) of the downstream
+snaps on pull requests - these are then available in `edge/mir-pr<number>`
+[Snap channels](https://snapcraft.io/docs/channels) for testing, e.g.:
+
+```shell
+snap install miriway --channel edge/mir-pr1234
+```
+
+When `.deb` packages build in the PPAs above, all the affected downstream snaps get rebuilt through
+the [`~mir-team` snap recipes on Launchpad](https://launchpad.net/~mir-team/+snaps) and made
+available in the `edge` or `beta` channels, as appropriate.
