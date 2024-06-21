@@ -22,7 +22,7 @@ There are a number of components to this story:
 These are run at different stages in the pipeline, balancing the time it takes to run and the
 breadth of testing. We'll discuss those in more detail below.
 
-### Mir builds
+## Mir builds
 
 We use [Spread](https://github.com/snapcore/spread) (or rather, our
 [lightly patched version](https://snapcraft.io/spread-mir-ci)) to build Mir across a number of
@@ -45,17 +45,31 @@ and releases published on [the GitHub release pages](https://github.com/canonica
 All those builds [run on GitHub](https://github.com/canonical/mir/actions/workflows/spread.yml),
 triggered by pull requests and pushes to `main` or `release/` branches.
 
+As part of the build, the following sets of tests are run:
+
 ### Unit tests
 
 Defined in [`tests/unit-tests`](https://github.com/canonical/mir/tree/main/tests/unit-tests),
-these assert the functionality of individual components in isolation, as is usual practice. They
-are run for every build above.
+these assert the functionality of individual components in isolation, as is usual practice.
 
 ### Acceptance tests
 
 [`tests/acceptance-tests`](https://github.com/canonical/mir/tree/main/tests/acceptance-tests)
-similarly are run for every build above, and run more high-level tests, ensuring we maintain the
-contracts with external components as well as our own loadable modules' interfaces.
+run more high-level tests, ensuring we maintain the contracts with external components as well as
+our own loadable modules' interfaces.
 
 One major part of this is [WLCS](https://github.com/canonical/wlcs) - asserting the behaviour
 of Mir's Wayland frontend is to specification of the protocol.
+
+### Integration tests
+
+In [`tests/integration-tests`](https://github.com/canonical/mir/tree/main/tests/integration-tests)
+lie other high level tests, ensuring we correctly integrate with some system components.
+
+### Performance and smoke tests
+
+Lastly, [`tests/performance-tests`](https://github.com/canonical/mir/tree/main/tests/performance-tests)
+holds a handful of performance-related tests, collecting some metrics about how the system
+performs end-to-end - and verifying that it works in the first place.
+
+We also run these on a number of hardware platforms in our testing lab for every build of `main`.
