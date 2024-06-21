@@ -50,7 +50,8 @@ char const* const mouse_cursor_acceleration_opt = "mouse-cursor-acceleration";
 char const* const acceleration_none = "none";
 char const* const acceleration_adaptive = "adaptive";
 char const* const mouse_cursor_acceleration_bias_opt = "mouse-cursor-acceleration-bias";
-char const* const mouse_scroll_speed_opt = "mouse-scroll-speed";
+char const* const mouse_vscroll_speed_opt = "mouse-scroll-vspeed";
+char const* const mouse_hscroll_speed_opt = "mouse-scroll-hspeed";
 char const* const touchpad_cursor_acceleration_opt = "touchpad-cursor-acceleration";
 char const* const touchpad_cursor_acceleration_bias_opt = "touchpad-cursor-acceleration-bias";
 char const* const touchpad_scroll_speed_opt = "touchpad-scroll-speed";
@@ -71,18 +72,7 @@ char const* const touchpad_middle_mouse_button_emulation_opt= "touchpad-middle-m
 class InputDeviceConfig : public mi::InputDeviceObserver
 {
 public:
-    InputDeviceConfig(std::optional<bool> disable_while_typing,
-                      std::optional<bool> tap_to_click,
-                      std::optional<MirPointerHandedness> mouse_handedness,
-                      std::optional<MirPointerAcceleration> mouse_cursor_acceleration,
-                      std::optional<double> mouse_cursor_acceleration_bias,
-                      std::optional<double> mouse_scroll_speed,
-                      std::optional<MirPointerAcceleration> touchpad_cursor_acceleration,
-                      std::optional<double> touchpad_cursor_acceleration_bias,
-                      std::optional<double> touchpad_scroll_speed,
-                      std::optional<MirTouchpadClickMode> click_mode,
-                      std::optional<MirTouchpadScrollMode> scroll_mode,
-                      std::optional<bool> middle_mouse_button_emulation);
+    explicit InputDeviceConfig(std::shared_ptr<mir::options::Option> const& options);
     void device_added(std::shared_ptr<mi::Device> const& device) override;
     void device_changed(std::shared_ptr<mi::Device> const&) override {}
     void device_removed(std::shared_ptr<mi::Device> const&) override {}
@@ -92,7 +82,8 @@ private:
     std::optional<MirPointerHandedness> const mouse_handedness;
     std::optional<MirPointerAcceleration> const mouse_cursor_acceleration;
     std::optional<double> const mouse_cursor_acceleration_bias;
-    std::optional<double> const mouse_scroll_speed;
+    std::optional<double> const mouse_vscroll_speed;
+    std::optional<double> const mouse_hscroll_speed;
     std::optional<MirPointerAcceleration> const touchpad_cursor_acceleration;
     std::optional<double> const touchpad_cursor_acceleration_bias;
     std::optional<double> const touchpad_scroll_speed;
@@ -102,6 +93,129 @@ private:
     std::optional<bool> const middle_mouse_button_emulation;
 };
 
+auto clamp_to_range(std::optional<double> opt_val)-> std::optional<double>
+{
+    if (opt_val)
+    {
+        auto val = *opt_val;
+        if (val < -1.0)
+            val = -1.0;
+        else if (val > 1.0)
+            val = 1.0;
+        return std::make_optional(val);
+    }
+    else
+    {
+        return std::nullopt;
+    }
+}
+
+auto convert_to_scroll_mode(std::optional<std::string> const& opt_val)
+-> std::optional<MirTouchpadScrollMode>
+{
+    if (opt_val)
+    {
+        if (*opt_val == touchpad_scroll_mode_none)
+        {
+            return mir_touchpad_scroll_mode_none;
+        }
+        else if (*opt_val == touchpad_scroll_mode_edge)
+        {
+            return mir_touchpad_scroll_mode_edge_scroll;
+        }
+        else if (*opt_val == touchpad_scroll_mode_two_finger)
+        {
+            return mir_touchpad_scroll_mode_two_finger_scroll;
+        }
+        else if (*opt_val == touchpad_scroll_mode_button_down_scroll)
+        {
+            return mir_touchpad_scroll_mode_button_down_scroll;
+        }
+        else
+        {
+            throw mir::AbnormalExit{std::format("Unrecognised option for {}: {}", touchpad_scroll_mode_opt, *opt_val)};
+        }
+    }
+    else
+    {
+        return std::nullopt;
+    }
+}
+
+auto to_acceleration_profile(std::optional<std::string> const& opt_val)-> std::optional<MirPointerAcceleration>
+{
+    if (opt_val)
+    {
+        if (*opt_val == acceleration_none)
+        {
+            return mir_pointer_acceleration_none;
+        }
+        else if (*opt_val == acceleration_adaptive)
+        {
+            return mir_pointer_acceleration_adaptive;
+        }
+        else
+        {
+            throw mir::AbnormalExit{std::format("Unrecognised option for cursor-acceleration: {}", *opt_val)};
+        }
+    }
+    else
+    {
+        return std::nullopt;
+    }
+}
+
+auto convert_to_click_mode(std::optional<std::string> const& opt_val)
+-> std::optional<MirTouchpadClickMode>
+{
+    if (opt_val)
+    {
+        auto val = *opt_val;
+        if (val == touchpad_click_mode_none)
+        {
+            return mir_touchpad_click_mode_none;
+        }
+        else if (val == touchpad_click_mode_clickfinger)
+        {
+            return mir_touchpad_click_mode_finger_count;
+        }
+        else if (val == touchpad_click_mode_area)
+        {
+            return mir_touchpad_click_mode_area_to_click;
+        }
+        else
+        {
+            throw mir::AbnormalExit{std::format("Unrecognised option for {}: {}", touchpad_click_mode_opt, *opt_val)};
+        }
+    }
+    else
+    {
+        return std::nullopt;
+    }
+}
+
+auto to_handedness(std::optional<std::string> const& opt_val)-> std::optional<MirPointerHandedness>
+{
+    if (opt_val)
+    {
+        if (*opt_val == right)
+        {
+            return mir_pointer_handedness_right;
+        }
+        else if (*opt_val == left)
+        {
+            return mir_pointer_handedness_left;
+        }
+        else
+        {
+            throw mir::AbnormalExit{std::format("Unrecognised option for handedness: {}", *opt_val)};
+        }
+    }
+    else
+    {
+        return std::nullopt;
+    }
+}
 }
 
 void miral::add_input_device_configuration_options_to(mir::Server& server)
@@ -114,8 +228,11 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
     server.add_configuration_option(mouse_cursor_acceleration_bias_opt,
                                     "Constant factor (+1) to velocity or bias to the acceleration curve within the range [-1.0, 1.0] for mice",
                                     mir::OptionType::real);
-    server.add_configuration_option(mouse_scroll_speed_opt,
-                                    "Scales mice scroll events, use negative values for natural scrolling",
+    server.add_configuration_option(mouse_vscroll_speed_opt,
+                                    "Scales mouse vertical scroll, use negative values for natural scrolling",
+                                    mir::OptionType::real);
+    server.add_configuration_option(mouse_hscroll_speed_opt,
+                                    "Scales mouse horizontal scroll, use negative values for natural scrolling",
                                     mir::OptionType::real);
     server.add_configuration_option(disable_while_typing_opt,
                                     "Disable touchpad while typing on keyboard configuration [true, false]",
@@ -152,171 +269,27 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
                                     "Converts a simultaneous left and right button click into a middle button",
                                     mir::OptionType::boolean);
 
-    auto clamp_to_range = [](std::optional<double> opt_val)-> std::optional<double>
-    {
-        if (opt_val)
-        {
-            auto val = *opt_val;
-            if (val < -1.0)
-                val = -1.0;
-            else if (val > 1.0)
-                val = 1.0;
-            return std::make_optional(val);
-        }
-        else
-        {
-            return std::nullopt;
-        }
-    };
-
-    auto convert_to_scroll_mode = [](std::optional<std::string> const& opt_val)
-    -> std::optional<MirTouchpadScrollMode>
-    {
-        if (opt_val)
-        {
-            if (*opt_val == touchpad_scroll_mode_none)
-            {
-                return mir_touchpad_scroll_mode_none;
-            }
-            else if (*opt_val == touchpad_scroll_mode_edge)
-            {
-                return mir_touchpad_scroll_mode_edge_scroll;
-            }
-            else if (*opt_val == touchpad_scroll_mode_two_finger)
-            {
-                return mir_touchpad_scroll_mode_two_finger_scroll;
-            }
-            else if (*opt_val == touchpad_scroll_mode_button_down_scroll)
-            {
-                return mir_touchpad_scroll_mode_button_down_scroll;
-            }
-            else
-            {
-                throw mir::AbnormalExit{std::format("Unrecognised option for {}: {}", touchpad_scroll_mode_opt, *opt_val)};
-            }
-        }
-        else
-        {
-            return std::nullopt;
-        }
-    };
-
-    auto to_acceleration_profile = [](std::optional<std::string> const& opt_val)-> std::optional<MirPointerAcceleration>
-    {
-        if (opt_val)
-        {
-            if (*opt_val == acceleration_none)
-            {
-                return mir_pointer_acceleration_none;
-            }
-            else if (*opt_val == acceleration_adaptive)
-            {
-                return mir_pointer_acceleration_adaptive;
-            }
-            else
-            {
-                throw mir::AbnormalExit{std::format("Unrecognised option for cursor-acceleration: {}", *opt_val)};
-            }
-        }
-        else
-        {
-            return std::nullopt;
-        }
-    };
-
-    auto convert_to_click_mode = [](std::optional<std::string> const& opt_val)
-    -> std::optional<MirTouchpadClickMode>
-    {
-        if (opt_val)
-        {
-            auto val = *opt_val;
-            if (val == touchpad_click_mode_none)
-            {
-                return mir_touchpad_click_mode_none;
-            }
-            else if (val == touchpad_click_mode_clickfinger)
-            {
-                return mir_touchpad_click_mode_finger_count;
-            }
-            else if (val == touchpad_click_mode_area)
-            {
-                return mir_touchpad_click_mode_area_to_click;
-            }
-            else
-            {
-                throw mir::AbnormalExit{std::format("Unrecognised option for {}: {}", touchpad_click_mode_opt, *opt_val)};
-            }
-        }
-        else
-        {
-            return std::nullopt;
-        }
-    };
-
-    auto to_handedness = [](std::optional<std::string> const& opt_val)-> std::optional<MirPointerHandedness>
-    {
-        if (opt_val)
-        {
-            if (*opt_val == right)
-            {
-                return mir_pointer_handedness_right;
-            }
-            else if (*opt_val == left)
-            {
-                return mir_pointer_handedness_left;
-            }
-            else
-            {
-                throw mir::AbnormalExit{std::format("Unrecognised option for handedness: {}", *opt_val)};
-            }
-        }
-        else
-        {
-            return std::nullopt;
-        }
-    };
-
     server.add_init_callback([&]()
         {
-            auto const options = server.get_options();
-            auto const input_config = std::make_shared<InputDeviceConfig>(
-                    get_optional<bool>(options, disable_while_typing_opt),
-                    get_optional<bool>(options, touchpad_tap_to_click_opt),
-                    to_handedness(get_optional<std::string>(options, mouse_handedness_opt)),
-                    to_acceleration_profile(get_optional<std::string>(options, mouse_cursor_acceleration_opt)),
-                    clamp_to_range(get_optional<double>(options, mouse_cursor_acceleration_bias_opt)),
-                    get_optional<double>(options, mouse_scroll_speed_opt),
-                    to_acceleration_profile(get_optional<std::string>(options, touchpad_cursor_acceleration_opt)),
-                    clamp_to_range(get_optional<double>(options, touchpad_cursor_acceleration_bias_opt)),
-                    get_optional<double>(options, touchpad_scroll_speed_opt),
-                    convert_to_click_mode(get_optional<std::string>(options, touchpad_click_mode_opt)),
-                    convert_to_scroll_mode(get_optional<std::string>(options, touchpad_scroll_mode_opt)),
-                    get_optional<bool>(options, touchpad_middle_mouse_button_emulation_opt)
-                );
+            auto const input_config = std::make_shared<InputDeviceConfig>(server.get_options());
             server.the_input_device_hub()->add_observer(input_config);
         });
 }
 
-InputDeviceConfig::InputDeviceConfig(std::optional<bool> disable_while_typing,
-                                     std::optional<bool> tap_to_click,
-                                     std::optional<MirPointerHandedness> mouse_handedness,
-                                     std::optional<MirPointerAcceleration> mouse_cursor_acceleration,
-                                     std::optional<double> mouse_cursor_acceleration_bias,
-                                     std::optional<double> mouse_scroll_speed,
-                                     std::optional<MirPointerAcceleration> touchpad_cursor_acceleration,
-                                     std::optional<double> touchpad_cursor_acceleration_bias,
-                                     std::optional<double> touchpad_scroll_speed,
-                                     std::optional<MirTouchpadClickMode> click_mode,
-                                     std::optional<MirTouchpadScrollMode> scroll_mode,
-                                     std::optional<bool> middle_mouse_button_emulation)
-    : disable_while_typing{disable_while_typing}, mouse_handedness{mouse_handedness},
-      mouse_cursor_acceleration{mouse_cursor_acceleration},
-      mouse_cursor_acceleration_bias{mouse_cursor_acceleration_bias},
-      mouse_scroll_speed{mouse_scroll_speed},
-      touchpad_cursor_acceleration{touchpad_cursor_acceleration},
-      touchpad_cursor_acceleration_bias{touchpad_cursor_acceleration_bias},
-      touchpad_scroll_speed{touchpad_scroll_speed}, click_mode{click_mode}, scroll_mode{scroll_mode},
-      tap_to_click{tap_to_click}, middle_mouse_button_emulation{middle_mouse_button_emulation}
+InputDeviceConfig::InputDeviceConfig(std::shared_ptr<mir::options::Option> const& options) :
+    disable_while_typing{get_optional<bool>(options, disable_while_typing_opt)},
+    mouse_handedness{to_handedness(get_optional<std::string>(options, mouse_handedness_opt))},
+    mouse_cursor_acceleration{to_acceleration_profile(get_optional<std::string>(options, mouse_cursor_acceleration_opt))},
+    mouse_cursor_acceleration_bias{clamp_to_range(get_optional<double>(options, mouse_cursor_acceleration_bias_opt))},
+    mouse_vscroll_speed{get_optional<double>(options, mouse_vscroll_speed_opt)},
+    mouse_hscroll_speed{get_optional<double>(options, mouse_hscroll_speed_opt)},
+    touchpad_cursor_acceleration{to_acceleration_profile(get_optional<std::string>(options, touchpad_cursor_acceleration_opt))},
+    touchpad_cursor_acceleration_bias{clamp_to_range(get_optional<double>(options, touchpad_cursor_acceleration_bias_opt))},
+    touchpad_scroll_speed{get_optional<double>(options, touchpad_scroll_speed_opt)},
+    click_mode{convert_to_click_mode(get_optional<std::string>(options, touchpad_click_mode_opt))},
+    scroll_mode{convert_to_scroll_mode(get_optional<std::string>(options, touchpad_scroll_mode_opt))},
+    tap_to_click{get_optional<bool>(options, touchpad_tap_to_click_opt)},
+    middle_mouse_button_emulation{get_optional<bool>(options, touchpad_middle_mouse_button_emulation_opt)}
 {
 }
 
@@ -355,8 +328,8 @@ void InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& device)
             if (mouse_handedness) pointer_config.handedness(*mouse_handedness);
             if (mouse_cursor_acceleration) pointer_config.acceleration(*mouse_cursor_acceleration);
             if (mouse_cursor_acceleration_bias) pointer_config.cursor_acceleration_bias(*mouse_cursor_acceleration_bias);
-            if (mouse_scroll_speed) pointer_config.vertical_scroll_scale(*mouse_scroll_speed);
-            if (mouse_scroll_speed) pointer_config.horizontal_scroll_scale(*mouse_scroll_speed);
+            if (mouse_vscroll_speed) pointer_config.vertical_scroll_scale(*mouse_vscroll_speed);
+            if (mouse_hscroll_speed) pointer_config.horizontal_scroll_scale(*mouse_hscroll_speed);
             device->apply_pointer_configuration(pointer_config);
         }
     }
