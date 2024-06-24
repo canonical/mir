@@ -59,7 +59,7 @@ public:
 private:
     void update_mode(uint32_t new_mode);
 
-    static const uint32_t default_mode = Mode::client_side;
+    static uint32_t const default_mode = Mode::client_side;
 
     mir::frontend::XdgToplevelStable* toplevel;
     uint32_t mode;
@@ -73,8 +73,8 @@ auto mir::frontend::create_xdg_decoration_unstable_v1(wl_display* display)
     return std::make_shared<XdgDecorationManagerV1::Global>(display);
 }
 
-mir::frontend::XdgDecorationManagerV1::Global::Global(wl_display* display)
-    : wayland::XdgDecorationManagerV1::Global::Global{display, Version<1>{}}
+mir::frontend::XdgDecorationManagerV1::Global::Global(wl_display* display) :
+    wayland::XdgDecorationManagerV1::Global::Global{display, Version<1>{}}
 {
 }
 
@@ -83,8 +83,8 @@ void mir::frontend::XdgDecorationManagerV1::Global::bind(wl_resource* new_zxdg_d
     new XdgDecorationManagerV1{new_zxdg_decoration_manager_v1};
 }
 
-mir::frontend::XdgDecorationManagerV1::XdgDecorationManagerV1(wl_resource* resource)
-    : mir::wayland::XdgDecorationManagerV1{resource, Version<1>{}}
+mir::frontend::XdgDecorationManagerV1::XdgDecorationManagerV1(wl_resource* resource) :
+    mir::wayland::XdgDecorationManagerV1{resource, Version<1>{}}
 {
 }
 
@@ -94,8 +94,8 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
 
     if (toplevels_with_decorations.contains(toplevel))
     {
-        BOOST_THROW_EXCEPTION(mir::wayland::ProtocolError(resource, Error::already_constructed,
-                                                          "Decoration already constructed for this toplevel"));
+        BOOST_THROW_EXCEPTION(mir::wayland::ProtocolError(
+            resource, Error::already_constructed, "Decoration already constructed for this toplevel"));
     }
 
     auto* tl = mir::frontend::XdgToplevelStable::from(toplevel);
@@ -110,9 +110,10 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
     toplevels_with_decorations.insert(toplevel);
 }
 
-mir::frontend::XdgToplevelDecorationV1::XdgToplevelDecorationV1(wl_resource* id,
-                                                                mir::frontend::XdgToplevelStable* toplevel)
-    : wayland::XdgToplevelDecorationV1{id, Version<1>{}}, toplevel{toplevel}
+mir::frontend::XdgToplevelDecorationV1::XdgToplevelDecorationV1(
+    wl_resource* id, mir::frontend::XdgToplevelStable* toplevel) :
+    wayland::XdgToplevelDecorationV1{id, Version<1>{}},
+    toplevel{toplevel}
 {
 }
 
@@ -135,12 +136,6 @@ void mir::frontend::XdgToplevelDecorationV1::update_mode(uint32_t new_mode)
     send_configure_event(mode);
 }
 
-void mir::frontend::XdgToplevelDecorationV1::set_mode(uint32_t mode)
-{
-    update_mode(mode);
-}
+void mir::frontend::XdgToplevelDecorationV1::set_mode(uint32_t mode) { update_mode(mode); }
 
-void mir::frontend::XdgToplevelDecorationV1::unset_mode()
-{
-    update_mode(default_mode);
-}
+void mir::frontend::XdgToplevelDecorationV1::unset_mode() { update_mode(default_mode); }
