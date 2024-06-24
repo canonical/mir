@@ -17,10 +17,13 @@
 #include "xdg_decoration_unstable_v1.h"
 
 #include "mir/shell/surface_specification.h"
+#include "mir/wayland/protocol_error.h"
 
 #include "xdg-decoration-unstable-v1_wrapper.h"
 #include "xdg_output_v1.h"
 #include "xdg_shell_stable.h"
+
+#include <unordered_set>
 
 namespace mir
 {
@@ -42,6 +45,7 @@ public:
 
 private:
     void get_toplevel_decoration(wl_resource* id, wl_resource* toplevel) override;
+    std::unordered_set<wl_resource*> toplevels_with_decorations;
 };
 
 class XdgToplevelDecorationV1 : public wayland::XdgToplevelDecorationV1
@@ -86,11 +90,24 @@ mir::frontend::XdgDecorationManagerV1::XdgDecorationManagerV1(wl_resource* resou
 
 void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource* id, wl_resource* toplevel)
 {
-    auto* tl = mir::frontend::XdgToplevelStable::from(toplevel);
-    if (tl)
+    using Error = mir::frontend::XdgToplevelDecorationV1::Error;
+
+    if (toplevels_with_decorations.contains(toplevel))
     {
-        new XdgToplevelDecorationV1{id, tl};
+        BOOST_THROW_EXCEPTION(mir::wayland::ProtocolError(resource, Error::already_constructed,
+                                                          "Decoration already constructed for this toplevel"));
     }
+
+    auto* tl = mir::frontend::XdgToplevelStable::from(toplevel);
+    if (!tl)
+    {
+        BOOST_THROW_EXCEPTION(
+            mir::wayland::ProtocolError(resource, Error::orphaned, "Toplevel destroyed before attached decoration"));
+    }
+
+
+    new XdgToplevelDecorationV1{id, tl};
+    toplevels_with_decorations.insert(toplevel);
 }
 
 mir::frontend::XdgToplevelDecorationV1::XdgToplevelDecorationV1(wl_resource* id,
