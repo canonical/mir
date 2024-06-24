@@ -101,8 +101,7 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
     auto* tl = mir::frontend::XdgToplevelStable::from(toplevel);
     if (!tl)
     {
-        BOOST_THROW_EXCEPTION(
-            mir::wayland::ProtocolError(resource, Error::orphaned, "Toplevel destroyed before attached decoration"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid toplevel pointer"));
     }
 
 
