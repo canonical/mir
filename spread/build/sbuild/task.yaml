@@ -64,6 +64,14 @@ execute: |
       )
     fi
 
+    if [[ "${SPREAD_VARIANT}" == *"debian"* ]]; then
+      MKSBUILD_OPTS+=(
+        --debootstrap-include=g++-14,ccache
+      )
+      echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_C_COMPILER=gcc-14" >> debian/opts.mk
+      echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_CXX_COMPILER=g++-14" >> debian/opts.mk
+    fi
+
     # Cross building
     if [ "${DEB_BUILD_ARCH}" != "${DEB_HOST_ARCH}" ]; then
       MKSBUILD_OPTS+=("--arch=${DEB_BUILD_ARCH}" "--target=${DEB_HOST_ARCH}")
