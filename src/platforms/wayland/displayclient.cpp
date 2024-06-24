@@ -66,10 +66,6 @@ public:
     xdg_surface* shell_surface{nullptr};
     xdg_toplevel* shell_toplevel{nullptr};
 
-    EGLContext eglctx{EGL_NO_CONTEXT};
-    wl_egl_window* egl_window{nullptr};
-    EGLSurface eglsurface{EGL_NO_SURFACE};
-
     std::optional<geometry::Size> pending_toplevel_size;
     bool has_initialized{false};
 
@@ -159,11 +155,6 @@ mgw::DisplayClient::Output::~Output()
     }
 
     wl_surface_destroy(surface);
-
-    if (egl_window != nullptr)
-    {
-        wl_egl_window_destroy(egl_window);
-    }
 }
 
 void mgw::DisplayClient::Output::geometry(
