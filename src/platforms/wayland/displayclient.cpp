@@ -100,6 +100,7 @@ public:
     void set_next_image(std::unique_ptr<Framebuffer> content) override;
 
 private:
+    std::mutex mutex;
     std::unique_ptr<WlDisplayAllocator::Framebuffer> next_frame;
     std::shared_ptr<WlDisplayAllocator> provider;
 };
@@ -299,10 +300,15 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
         if (!has_initialized || size_is_changed)
         {
             has_initialized = true;
-            provider = std::make_shared<WlDisplayAllocator>(
-                owner_->provider->get_egl_display(),
-                surface,
-                output_size);
+            {
+                std::lock_guard lock{mutex};
+                next_frame.reset();
+                provider.reset();
+                provider = std::make_shared<WlDisplayAllocator>(
+                    owner_->provider->get_egl_display(),
+                    surface,
+                    output_size);
+            }
             owner_->on_display_config_changed();
         }
     }
@@ -368,8 +374,10 @@ void mgw::DisplayClient::Output::post()
                   });
 
     // The Framebuffer ensures that this swap_buffers call doesn't block...
-    next_frame->swap_buffers();
-
+    {
+        std::lock_guard lock{mutex};
+        next_frame->swap_buffers();
+    }
     // ...so we need external synchronisation to throttle rendering.
     // Wait for the host compositor to tell us to render.
     frame_sync->wait_for_done();
@@ -403,6 +411,8 @@ auto mgw::DisplayClient::Output::maybe_create_allocator(DisplayAllocator::Tag co
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{"Attempted to create allocator before Output is fully initialised"}));
         }
+
+        std::lock_guard lock{mutex};
         return provider.get();
     }
     return nullptr;
@@ -428,6 +438,7 @@ void mgw::DisplayClient::Output::set_next_image(std::unique_ptr<Framebuffer> con
 {
     if (auto wl_content = unique_ptr_cast<WlDisplayAllocator::Framebuffer>(std::move(content)))
     {
+        std::lock_guard lock{mutex};
         next_frame = std::move(wl_content);
     }
     else
