@@ -138,10 +138,16 @@ auto mgw::WlDisplayAllocator::alloc_framebuffer(
 
     auto egl_context = eglCreateContext(dpy, egl_config, share_context, context_attr);
     if (egl_context == EGL_NO_CONTEXT)
+    {
         BOOST_THROW_EXCEPTION(egl_error("Failed to create EGL context"));
+    }
 
-    auto surf = eglCreatePlatformWindowSurface(dpy, egl_config, wl_window, nullptr);
-    if (surf == EGL_NO_SURFACE)
+    if (surface == EGL_NO_SURFACE)
+    {
+        surface = eglCreatePlatformWindowSurface(dpy, egl_config, wl_window, nullptr);
+    }
+
+    if (surface == EGL_NO_SURFACE)
     {
         BOOST_THROW_EXCEPTION(egl_error("Failed to create EGL surface"));
     }
@@ -149,7 +155,7 @@ auto mgw::WlDisplayAllocator::alloc_framebuffer(
     return std::make_unique<Framebuffer>(
         dpy,
         egl_context,
-        surf,
+        surface,
         size);
 }
 

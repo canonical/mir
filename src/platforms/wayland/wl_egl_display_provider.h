@@ -20,6 +20,7 @@
 #include "mir/graphics/platform.h"
 
 #include <wayland-client.h>
+#include <atomic>
 
 struct wl_egl_window;
 
@@ -73,6 +74,7 @@ public:
     };
 private:
     EGLDisplay const dpy;
+    std::atomic<EGLSurface> surface{EGL_NO_SURFACE};
     struct ::wl_egl_window* const wl_window;
     geometry::Size const size;
 };
