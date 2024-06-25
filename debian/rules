@@ -60,13 +60,9 @@ ifeq ($(filter Ubuntu,$(DEB_VENDOR)),)
 	COMMON_CONFIGURE_OPTIONS += -DMIR_RUN_WLCS_TESTS=OFF
 endif
 
-# Disable miral tests on Launchpad riscv64 (MirServer/mir#2375)
+# Disable miral tests on Launchpad riscv64 (canonical/mir#3443)
 ifeq ($(USER) $(DEB_HOST_ARCH),buildd riscv64)
   COMMON_CONFIGURE_OPTIONS += -DMIR_RUN_MIRAL_TESTS=OFF
-  # Disable unit tests on Launchpad riscv64 jammy kinetic
-  ifneq ($(filter jammy kinetic lunar,$(DEB_DISTRIBUTION)),)
-    COMMON_CONFIGURE_OPTIONS += -DMIR_RUN_UNIT_TESTS=OFF
-  endif
 endif
 
 # Disable pre-compiled headers on GCC-12 & 13
