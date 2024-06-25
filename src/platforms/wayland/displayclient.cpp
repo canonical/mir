@@ -302,8 +302,6 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
             has_initialized = true;
             {
                 std::lock_guard lock{mutex};
-                next_frame.reset();
-                provider.reset();
                 provider = std::make_shared<WlDisplayAllocator>(
                     owner_->provider->get_egl_display(),
                     surface,

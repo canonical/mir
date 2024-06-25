@@ -12,13 +12,47 @@ namespace mg = mir::graphics;
 namespace mgw = mir::graphics::wayland;
 namespace geom = mir::geometry;
 
+class mgw::WlDisplayAllocator::SurfaceState
+{
+public:
+    SurfaceState(EGLDisplay dpy, struct ::wl_egl_window* wl_window) :
+        dpy{dpy}, wl_window{wl_window} {}
+
+    ~SurfaceState()
+    {
+        if (egl_surface != EGL_NO_SURFACE) eglDestroySurface(dpy, egl_surface);
+        wl_egl_window_destroy(wl_window);
+    }
+
+    auto surface(EGLConfig egl_config) -> EGLSurface
+    {
+        if (egl_surface == EGL_NO_SURFACE)
+        {
+            egl_surface = eglCreatePlatformWindowSurface(dpy, egl_config, wl_window, nullptr);
+        }
+
+        if (egl_surface == EGL_NO_SURFACE)
+        {
+            BOOST_THROW_EXCEPTION(egl_error("Failed to create EGL surface"));
+        }
+
+        return egl_surface;
+    }
+
+private:
+    EGLDisplay const dpy;
+    struct ::wl_egl_window* const wl_window;
+    std::atomic<EGLSurface> egl_surface{EGL_NO_SURFACE};
+};
+
 class mgw::WlDisplayAllocator::Framebuffer::EGLState
 {
 public:
-    EGLState(EGLDisplay dpy, EGLContext ctx, EGLSurface surf)
+    EGLState(EGLDisplay dpy, EGLContext ctx, EGLSurface surf, std::shared_ptr<SurfaceState> ss)
         : dpy{dpy},
           ctx{ctx},
-          surf{surf}
+          surf{surf},
+          ss{std::move(ss)}
     {
         auto current_ctx = eglGetCurrentContext();
         auto current_draw_surf = eglGetCurrentSurface(EGL_DRAW);
@@ -31,15 +65,19 @@ public:
 
         // Paranoia: Restore the previous EGL context state, just in case
         eglMakeCurrent(dpy, current_draw_surf, current_read_surf, current_ctx);
-
-        printf("{arg} == %d ==>> [%p] EGLState+\n", gettid(), (void*)this); fflush(stdout);
     }
 
     ~EGLState()
     {
+        auto current_ctx = eglGetCurrentContext();
+        auto current_draw_surf = eglGetCurrentSurface(EGL_DRAW);
+        auto current_read_surf = eglGetCurrentSurface(EGL_READ);
+
         eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         eglDestroyContext(dpy, ctx);
-        eglDestroySurface(dpy, surf);
+
+        // Paranoia: Restore the previous EGL context state, just in case
+        eglMakeCurrent(dpy, current_draw_surf, current_read_surf, current_ctx);
     }
 
     void make_current() const
@@ -62,7 +100,6 @@ public:
     {
         if (eglSwapBuffers(dpy, surf) != EGL_TRUE)
         {
-            printf("{arg} == %d ==>> [%p] EGLState::swap_buffers() !!!\n", gettid(), (void*)this); fflush(stdout);
             BOOST_THROW_EXCEPTION((mg::egl_error("eglSwapBuffers failed")));
         }
     }
@@ -70,10 +107,17 @@ public:
     EGLDisplay const dpy;
     EGLContext const ctx;
     EGLSurface const surf;
+    std::shared_ptr<SurfaceState> const ss;
 };
 
-mgw::WlDisplayAllocator::Framebuffer::Framebuffer(EGLDisplay dpy, EGLContext ctx, EGLSurface surf, geom::Size size)
-    : state{std::make_shared<EGLState>(dpy, ctx, surf)}, size_{size}
+mgw::WlDisplayAllocator::Framebuffer::Framebuffer(
+    EGLDisplay dpy, EGLContext ctx, EGLSurface surf, std::shared_ptr<SurfaceState> ss, mir::geometry::Size size) :
+    Framebuffer{std::make_shared<EGLState>(dpy, ctx, surf, ss), size}
+{
+}
+
+mgw::WlDisplayAllocator::Framebuffer::Framebuffer(std::shared_ptr<EGLState const> state, geom::Size size)
+    : state{std::move(state)}, size_{size}
 {
 }
 
@@ -81,7 +125,6 @@ mgw::WlDisplayAllocator::Framebuffer::Framebuffer(Framebuffer const& that)
     : state{that.state},
       size_{that.size_}
 {
-    printf("{arg} == %d ==>> [%p] Framebuffer=\n", gettid(), (void*)this); fflush(stdout);
 }
 
 auto mgw::WlDisplayAllocator::Framebuffer::size() const -> geom::Size
@@ -114,14 +157,13 @@ mgw::WlDisplayAllocator::WlDisplayAllocator(
     struct wl_surface* surface,
     geometry::Size size)
     : dpy{dpy},
-      wl_window{wl_egl_window_create(surface, size.width.as_int(), size.height.as_int())},
+      surface_state{std::make_shared<SurfaceState>(dpy, wl_egl_window_create(surface, size.width.as_int(), size.height.as_int()))},
       size{size}
 {
 }
 
 mgw::WlDisplayAllocator::~WlDisplayAllocator()
 {
-    wl_egl_window_destroy(wl_window);
 }
 
 auto mgw::WlDisplayAllocator::alloc_framebuffer(
@@ -161,21 +203,9 @@ auto mgw::WlDisplayAllocator::alloc_framebuffer(
         BOOST_THROW_EXCEPTION(egl_error("Failed to create EGL context"));
     }
 
-    if (surface == EGL_NO_SURFACE)
-    {
-        surface = eglCreatePlatformWindowSurface(dpy, egl_config, wl_window, nullptr);
-    }
+    auto surface = surface_state->surface(egl_config);
 
-    if (surface == EGL_NO_SURFACE)
-    {
-        BOOST_THROW_EXCEPTION(egl_error("Failed to create EGL surface"));
-    }
-
-    return std::make_unique<Framebuffer>(
-        dpy,
-        egl_context,
-        surface,
-        size);
+    return std::make_unique<Framebuffer>(dpy, egl_context, surface, surface_state, size);
 }
 
 mgw::WlDisplayProvider::WlDisplayProvider(EGLDisplay dpy)
