@@ -145,6 +145,7 @@ private:
     EGLContext const ctx;
     DRMFormat const format;
     RenderbufferHandle const colour_buffer;
+    RenderbufferHandle const depth_stencil_render_buffer;
     FramebufferHandle const fbo;
 };
 
@@ -200,8 +201,13 @@ mgc::CPUCopyOutputSurface::Impl::Impl(
     glBindRenderbuffer(GL_RENDERBUFFER, colour_buffer);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8_OES, size().width.as_int(), size().height.as_int());
 
+    glBindRenderbuffer(GL_RENDERBUFFER, depth_stencil_render_buffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8_OES, size().width.as_int(), size().height.as_int());
+
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colour_buffer);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_render_buffer);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_render_buffer);
 
     auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE)
