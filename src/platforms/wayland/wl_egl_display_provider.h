@@ -67,7 +67,8 @@ public:
         void swap_buffers();
     private:
         class EGLState;
-        Framebuffer(std::shared_ptr<EGLState const> surf, geometry::Size size);
+        Framebuffer(std::shared_ptr<EGLState const> state, geometry::Size size);
+        Framebuffer(Framebuffer const& that);
 
         std::shared_ptr<EGLState const> const state;
         geometry::Size const size_;

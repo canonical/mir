@@ -20,6 +20,19 @@ public:
           ctx{ctx},
           surf{surf}
     {
+        auto current_ctx = eglGetCurrentContext();
+        auto current_draw_surf = eglGetCurrentSurface(EGL_DRAW);
+        auto current_read_surf = eglGetCurrentSurface(EGL_READ);
+
+        make_current();
+        // Don't block in eglSwapBuffers; we rely on external synchronisation to throttle rendering
+        eglSwapInterval(dpy, 0);
+        release_current();
+
+        // Paranoia: Restore the previous EGL context state, just in case
+        eglMakeCurrent(dpy, current_draw_surf, current_read_surf, current_ctx);
+
+        printf("{arg} == %d ==>> [%p] EGLState+\n", gettid(), (void*)this); fflush(stdout);
     }
 
     ~EGLState()
@@ -28,32 +41,47 @@ public:
         eglDestroyContext(dpy, ctx);
         eglDestroySurface(dpy, surf);
     }
-    
+
+    void make_current() const
+    {
+        if (eglMakeCurrent(dpy, surf, surf, ctx) != EGL_TRUE)
+        {
+            BOOST_THROW_EXCEPTION((mg::egl_error("eglMakeCurrent failed")));
+        }
+    }
+
+    void release_current() const
+    {
+        if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE)
+        {
+            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to release EGL context"));
+        }
+    }
+
+    void swap_buffers() const
+    {
+        if (eglSwapBuffers(dpy, surf) != EGL_TRUE)
+        {
+            printf("{arg} == %d ==>> [%p] EGLState::swap_buffers() !!!\n", gettid(), (void*)this); fflush(stdout);
+            BOOST_THROW_EXCEPTION((mg::egl_error("eglSwapBuffers failed")));
+        }
+    }
+
     EGLDisplay const dpy;
     EGLContext const ctx;
     EGLSurface const surf;
 };
 
 mgw::WlDisplayAllocator::Framebuffer::Framebuffer(EGLDisplay dpy, EGLContext ctx, EGLSurface surf, geom::Size size)
-    : Framebuffer(std::make_shared<EGLState>(dpy, ctx, surf), size)
+    : state{std::make_shared<EGLState>(dpy, ctx, surf)}, size_{size}
 {
-    auto current_ctx = eglGetCurrentContext();
-    auto current_draw_surf = eglGetCurrentSurface(EGL_DRAW);
-    auto current_read_surf = eglGetCurrentSurface(EGL_READ);
-
-    make_current();
-    // Don't block in eglSwapBuffers; we rely on external synchronisation to throttle rendering
-    eglSwapInterval(dpy, 0);
-    release_current();
-
-    // Paranoia: Restore the previous EGL context state, just in case
-    eglMakeCurrent(dpy, current_draw_surf, current_read_surf, current_ctx);
 }
 
-mgw::WlDisplayAllocator::Framebuffer::Framebuffer(std::shared_ptr<EGLState const> state, geom::Size size)
-    : state{std::move(state)},
-      size_{size}
+mgw::WlDisplayAllocator::Framebuffer::Framebuffer(Framebuffer const& that)
+    : state{that.state},
+      size_{that.size_}
 {
+    printf("{arg} == %d ==>> [%p] Framebuffer=\n", gettid(), (void*)this); fflush(stdout);
 }
 
 auto mgw::WlDisplayAllocator::Framebuffer::size() const -> geom::Size
@@ -63,31 +91,22 @@ auto mgw::WlDisplayAllocator::Framebuffer::size() const -> geom::Size
 
 void mgw::WlDisplayAllocator::Framebuffer::make_current()
 {
-    if (eglMakeCurrent(state->dpy, state->surf, state->surf, state->ctx) != EGL_TRUE)
-    {
-        BOOST_THROW_EXCEPTION((mg::egl_error("eglMakeCurrent failed")));
-    }
+    state->make_current();
 }
 
 void mgw::WlDisplayAllocator::Framebuffer::release_current()
 {
-    if (eglMakeCurrent(state->dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE)
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to release EGL context"));
-    }
+    state->release_current();
 }
 
 void mgw::WlDisplayAllocator::Framebuffer::swap_buffers()
 {
-    if (eglSwapBuffers(state->dpy, state->surf) != EGL_TRUE)
-    {
-        BOOST_THROW_EXCEPTION((mg::egl_error("eglSwapBuffers failed")));
-    }
+    state->swap_buffers();
 }
 
 auto mgw::WlDisplayAllocator::Framebuffer::clone_handle() -> std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLFramebuffer>
 {
-    return std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLFramebuffer>{new Framebuffer(state, size_)};
+    return std::unique_ptr<mg::GenericEGLDisplayAllocator::EGLFramebuffer>{new Framebuffer(*this)};
 }
 
 mgw::WlDisplayAllocator::WlDisplayAllocator(
