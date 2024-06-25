@@ -16,11 +16,7 @@ export CCACHE_BASEDIR = $(shell pwd)
 export MIR_SERVER_LOGGING = on
 override_dh_auto_test:
 ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
-  ifeq ($(DEB_HOST_ARCH_ENDIAN),little)
 	XDG_RUNTIME_DIR=/tmp GTEST_OUTPUT=xml:./ dh_auto_build -- ARGS="-V" ptest
-  else
-	echo "Testsuite disabled on $(DEB_HOST_ARCH) due to lack of big-endian support."
-  endif
 else
   # Run tests across Launchpad RISC-V builds (LP#1891686)
   ifeq ($(USER) $(DEB_HOST_ARCH),buildd riscv64)
