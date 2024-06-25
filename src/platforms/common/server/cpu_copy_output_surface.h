@@ -26,7 +26,6 @@
 
 namespace mir::graphics
 {
-
 namespace common
 {
 class CPUCopyOutputSurface : public gl::OutputSurface
@@ -35,7 +34,8 @@ public:
     CPUCopyOutputSurface(
         EGLDisplay dpy,
         EGLContext share_ctx,
-        CPUAddressableDisplayAllocator& allocator);
+        CPUAddressableDisplayAllocator& allocator,
+        GLConfig const& config);
 
     ~CPUCopyOutputSurface() override;
 

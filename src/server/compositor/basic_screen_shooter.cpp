@@ -155,13 +155,15 @@ mc::BasicScreenShooter::Self::Self(
     std::shared_ptr<Scene> const& scene,
     std::shared_ptr<time::Clock> const& clock,
     std::shared_ptr<mg::GLRenderingProvider> render_provider,
-    std::shared_ptr<mr::RendererFactory> renderer_factory)
+    std::shared_ptr<mr::RendererFactory> renderer_factory,
+    std::shared_ptr<mir::graphics::GLConfig> const& config)
     : scene{scene},
       clock{clock},
       render_provider{std::move(render_provider)},
       renderer_factory{std::move(renderer_factory)},
       last_rendered_size{0, 0},
-      output{std::make_shared<OneShotBufferDisplayProvider>()}
+      output{std::make_shared<OneShotBufferDisplayProvider>()},
+      config{config}
 {
 }
 
@@ -206,20 +208,8 @@ auto mc::BasicScreenShooter::Self::renderer_for_buffer(std::shared_ptr<mrs::Writ
     if (buffer_size != last_rendered_size)
     {
         // We need to build a new Renderer, at the new size
-        class NoAuxConfig : public graphics::GLConfig
-        {
-        public:
-            auto depth_buffer_bits() const -> int override
-            {
-                return 0;
-            }
-            auto stencil_buffer_bits() const -> int override
-            {
-                return 0;
-            }
-        };
         offscreen_sink = std::make_unique<OffscreenDisplaySink>(output, buffer_size);
-        auto gl_surface = render_provider->surface_for_sink(*offscreen_sink, NoAuxConfig{});
+        auto gl_surface = render_provider->surface_for_sink(*offscreen_sink, *config);
         current_renderer = renderer_factory->create_renderer_for(std::move(gl_surface), render_provider);
         last_rendered_size = buffer_size;
     }
@@ -254,8 +244,9 @@ mc::BasicScreenShooter::BasicScreenShooter(
     std::shared_ptr<time::Clock> const& clock,
     Executor& executor,
     std::span<std::shared_ptr<mg::GLRenderingProvider>> const& providers,
-    std::shared_ptr<mr::RendererFactory> render_factory)
-    : self{std::make_shared<Self>(scene, clock, select_provider(providers), std::move(render_factory))},
+    std::shared_ptr<mr::RendererFactory> render_factory,
+    std::shared_ptr<mir::graphics::GLConfig> const& config)
+    : self{std::make_shared<Self>(scene, clock, select_provider(providers), std::move(render_factory), config)},
       executor{executor}
 {
 }

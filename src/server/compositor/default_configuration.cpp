@@ -113,12 +113,14 @@ auto mir::DefaultServerConfiguration::the_screen_shooter() -> std::shared_ptr<co
                 {
                     BOOST_THROW_EXCEPTION((std::runtime_error{"No platform provides GL rendering support"}));
                 }
+
                 return std::make_shared<compositor::BasicScreenShooter>(
                     the_scene(),
                     the_clock(),
                     thread_pool_executor,
                     providers,
-                    the_renderer_factory());
+                    the_renderer_factory(),
+                    the_gl_config());
             }
             catch (...)
             {
