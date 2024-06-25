@@ -32,19 +32,9 @@ COMMON_CONFIGURE_OPTIONS = \
   -DMIR_LINK_TIME_OPTIMIZATION=ON\
 
 ifeq ($(filter ppc64el,$(DEB_HOST_ARCH)),ppc64el)
-	# Disable spurious error on GCC-12
-	ifneq ($(shell gcc --version | grep '12.[[:digit:]]\+.[[:digit:]]\+$$'),)
-		COMMON_CONFIGURE_OPTIONS += -DMIR_COMPILER_QUIRKS="libinput_environment.cpp:restrict"
-	endif
 	# Disable spurious error on GCC-13
 	ifneq ($(shell gcc --version | grep '13.[[:digit:]]\+.[[:digit:]]\+$$'),)
 		COMMON_CONFIGURE_OPTIONS += -DMIR_COMPILER_QUIRKS="test_touchspot_controller.cpp:array-bounds"
-	endif
-endif
-ifeq ($(filter riscv64,$(DEB_HOST_ARCH)),riscv64)
-	# Disable spurious error on GCC-12
-	ifneq ($(shell gcc --version | grep '12.[[:digit:]]\+.[[:digit:]]\+$$'),)
-		COMMON_CONFIGURE_OPTIONS += -DMIR_COMPILER_QUIRKS="test_linearising_executor.cpp:use-after-free"
 	endif
 endif
 
@@ -65,8 +55,8 @@ ifeq ($(USER) $(DEB_HOST_ARCH),buildd riscv64)
   COMMON_CONFIGURE_OPTIONS += -DMIR_RUN_MIRAL_TESTS=OFF
 endif
 
-# Disable pre-compiled headers on GCC-12 & 13
-ifneq ($(shell gcc --version | grep '1[23].[[:digit:]]\+.[[:digit:]]\+$$'),)
+# Disable pre-compiled headers on GCC-13
+ifneq ($(shell gcc --version | grep '13.[[:digit:]]\+.[[:digit:]]\+$$'),)
   COMMON_CONFIGURE_OPTIONS += -DMIR_USE_PRECOMPILED_HEADERS=OFF
 endif
 
