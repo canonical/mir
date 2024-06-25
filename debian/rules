@@ -44,6 +44,13 @@ ifeq ($(filter noopt,$(DEB_BUILD_OPTIONS)),noopt)
 	DEB_BUILD_MAINT_OPTIONS += optimize=-lto
 endif
 
+# Disable LTO on binutils 2.42.50.20240618
+# https://bugs.launchpad.net/ubuntu/+source/binutils/+bug/2070302
+ifneq ($(shell ld --version | grep '2.42.50.20240618$$'),)
+	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=OFF
+	DEB_BUILD_MAINT_OPTIONS += optimize=-lto
+endif
+
 # We can't guarantee non-Ubuntu builds will build against WLCS packages we
 # control, so disable it on non-Ubuntu builds
 ifeq ($(filter Ubuntu,$(DEB_VENDOR)),)
