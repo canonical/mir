@@ -39,6 +39,7 @@ class Executor;
 namespace graphics
 {
 class GraphicBufferAllocator;
+class Buffer;
 }
 namespace scene
 {
@@ -57,6 +58,7 @@ namespace frontend
 class WlSurface;
 class WlSubsurface;
 class ResourceLifetimeTracker;
+class Viewport;
 
 struct WlSurfaceState
 {
@@ -83,6 +85,7 @@ struct WlSurfaceState
     std::optional<geometry::Displacement> offset;
     std::optional<std::optional<std::vector<geometry::Rectangle>>> input_shape;
     std::vector<wayland::Weak<Callback>> frame_callbacks;
+    wayland::Weak<Viewport> viewport;
 
 private:
     // only set to true if invalidate_surface_data() is called
@@ -142,6 +145,13 @@ public:
     void commit(WlSurfaceState const& state);
     auto confine_pointer_state() const -> MirPointerConfinementState;
 
+    /**
+     * Associate a viewport (buffer scale & crop metadata) with this surface
+     *
+     * \throws A std::logic_error if the surface already has a viewport associated
+     */
+    void associate_viewport(wayland::Weak<Viewport> viewport);
+
     std::shared_ptr<scene::Session> const session;
     std::shared_ptr<compositor::BufferStream> const stream;
 
@@ -155,6 +165,15 @@ private:
     NullWlSurfaceRole null_role;
     WlSurfaceRole* role;
     std::vector<WlSubsurface*> children; // ordering is from bottom to top
+    /* We might need to resubmit the current buffer, but with different metadata
+     * For example: if a client commits a wl_surface.buffer_scale() without attaching
+     * a new buffer, we need to generate a new frame with the same content, but at the
+     * new scale.
+     *
+     * To simplify other interfaces, keep a reference to the current content so we can
+     * hide this, here, in the frontend.
+     */
+    std::shared_ptr<graphics::Buffer> current_buffer;
 
     WlSurfaceState pending;
     geometry::Displacement offset_;
@@ -163,6 +182,7 @@ private:
     std::vector<wayland::Weak<WlSurfaceState::Callback>> frame_callbacks;
     std::optional<std::vector<mir::geometry::Rectangle>> input_shape;
     std::vector<SceneSurfaceCreatedCallback> scene_surface_created_callbacks;
+    wayland::Weak<Viewport> viewport;
 
     void send_frame_callbacks();
 

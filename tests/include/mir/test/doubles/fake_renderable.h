@@ -92,6 +92,11 @@ public:
     {
         return rect;
     }
+
+    geometry::RectangleD src_bounds() const override
+    {
+        return {{0, 0}, geometry::SizeD{buf->size()}};
+    }
     
     std::optional<geometry::Rectangle> clip_area() const override
     {

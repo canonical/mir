@@ -63,6 +63,11 @@ public:
         return {position, buffer_->size()};
     }
 
+    geom::RectangleD src_bounds() const override
+    {
+        return {{0, 0}, geom::SizeD{buffer_->size()}};
+    }
+
     std::optional<geometry::Rectangle> clip_area() const override
     {
         return std::optional<geometry::Rectangle>();

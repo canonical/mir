@@ -18,6 +18,7 @@
 #define MIR_GL_TESSELLATION_HELPERS_H_
 #include "mir/gl/primitive.h"
 #include "mir/geometry/displacement.h"
+#include "mir/geometry/rectangle.h"
 
 namespace mir
 {
