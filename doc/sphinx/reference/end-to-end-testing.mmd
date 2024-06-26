@@ -1,0 +1,24 @@
+flowchart TD
+    Store(Store)-->|new revision| Jenkins
+    Jenkins(Jenkins)-->|submits job| Testflinger
+
+    Testflinger(<a href="https://github.com/canonical/testflinger">Testflinger</a>)
+    Testflinger-->|installs and executes| checkbox-mir
+    Testflinger-->|installs| mtt
+    Testflinger-->|installs| snap
+
+    subgraph Device Under Test
+    checkbox-mir[[<a href="https://snapcraft.io/checkbox-mir/">checkbox-mir</a>]]
+
+    checkbox-mir-->|runs| mtt[[<a href="https://snapcraft.io/mir-test-tools/">mir-test-tools</a>
+    smoke
+    performance
+    ]]
+    checkbox-mir-->|runs| mir-ci[<a href="https://github.com/canonical/mir-ci">mir-ci</a>
+    functional
+    ]
+    mir-ci-->|installs| deps[[Dependencies]]
+    mir-ci-->|tests| snap[[Snap Under Test]]
+    end
+
+    checkbox-mir-->|reports to| TO(<a href="https://github.com/canonical/test_observer">test-observer</a>)

@@ -118,3 +118,40 @@ snap install miriway --channel edge/mir-pr1234
 When `.deb` packages build in the PPAs above, all the affected downstream snaps get rebuilt through
 the [`~mir-team` snap recipes on Launchpad](https://launchpad.net/~mir-team/+snaps) and made
 available in the `edge` or `beta` channels, as appropriate.
+
+## End-to-end testing
+
+When the snaps get published to the store, we have Jenkins dispatch test runs on a selection of
+hardware, ranging from Raspberry Pis through single-GPU systems all the way up to high performance
+multi-GPU (usually hybrid) ones. We maintain a matrix of test coverage
+[in this spreadsheet](https://docs.google.com/spreadsheets/d/1kUbTSt4zWVpTtgZNJvvxCdugsRUv6C5PK9Xw5dxppCc/edit#gid=893560997).
+
+These tests ultimately verify the full story end-to-end, installing the snaps on a range of
+Ubuntu versions (Core and classic alike) and verify behaviours and visuals through a number of
+scenarios.
+
+It's a somewhat complex web of things happening, so again a diagram might help
+
+```{mermaid} end-to-end-testing.mmd
+```
+
+[checkbox-mir](https://github.com/canonical/checkbox-mir/) is the test orchestrator, collecting
+the different tests (smoke, performance and functional) and packaging them in a way that can be
+consumed by our lab setup. It's using our own [mir-ci](https://github.com/canonical/mir-ci) tests
+along with the [mir-test-tools](https://github.com/canonical/mir-test-tools) snap.
+
+You can find more information about Checkbox itself
+[in its documentation](https://github.com/canonical/checkbox) - it's a system used by our
+certification team, running thousands of tests on hundreds of systems every day.
+
+The Jenkins job definitions go into a private repository, as they contains credentials.
+[jenkins-job-builder](https://pypi.org/project/jenkins-job-builder/) is used to maintain the jobs,
+and at runtime, [testflinger](https://github.com/canonical/testflinger) dispatches them to the
+device under test, while [test-observer](https://github.com/canonical/test_observer) collects the
+results.
+
+## Summary
+
+As shown above, Mir is being tested quite extensively on a large number of environments. We're
+extending the coverage every day, as well. There's a lot of moving pieces involved, but it does
+help us greatly in ensuring the quality level we hold ourselves to.
