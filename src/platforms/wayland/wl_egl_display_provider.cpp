@@ -12,6 +12,27 @@ namespace mg = mir::graphics;
 namespace mgw = mir::graphics::wayland;
 namespace geom = mir::geometry;
 
+namespace
+{
+// Utility to restore EGL state on scope exit
+class CacheEglState
+{
+public:
+    CacheEglState() = default;
+
+    ~CacheEglState()
+    {
+        eglMakeCurrent(dpy, draw_surf, read_surf, ctx);
+    }
+private:
+    CacheEglState(CacheEglState const&) = delete;
+    EGLDisplay const dpy = eglGetCurrentDisplay();
+    EGLContext const ctx = eglGetCurrentContext();
+    EGLSurface const draw_surf = eglGetCurrentSurface(EGL_DRAW);
+    EGLSurface const read_surf = eglGetCurrentSurface(EGL_READ);
+};
+}
+
 class mgw::WlDisplayAllocator::SurfaceState
 {
 public:
@@ -57,30 +78,20 @@ public:
           surf{surf},
           ss{std::move(ss)}
     {
-        auto current_ctx = eglGetCurrentContext();
-        auto current_draw_surf = eglGetCurrentSurface(EGL_DRAW);
-        auto current_read_surf = eglGetCurrentSurface(EGL_READ);
+        CacheEglState stash;
 
         make_current();
         // Don't block in eglSwapBuffers; we rely on external synchronisation to throttle rendering
         eglSwapInterval(dpy, 0);
         release_current();
-
-        // Paranoia: Restore the previous EGL context state, just in case
-        eglMakeCurrent(dpy, current_draw_surf, current_read_surf, current_ctx);
     }
 
     ~EGLState()
     {
-        auto current_ctx = eglGetCurrentContext();
-        auto current_draw_surf = eglGetCurrentSurface(EGL_DRAW);
-        auto current_read_surf = eglGetCurrentSurface(EGL_READ);
+        CacheEglState stash;
 
         eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         eglDestroyContext(dpy, ctx);
-
-        // Paranoia: Restore the previous EGL context state, just in case
-        eglMakeCurrent(dpy, current_draw_surf, current_read_surf, current_ctx);
     }
 
     void make_current() const
