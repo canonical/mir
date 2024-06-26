@@ -23,6 +23,7 @@
 #include "xdg_output_v1.h"
 #include "xdg_shell_stable.h"
 
+#include <memory>
 #include <unordered_set>
 
 namespace mir
@@ -45,7 +46,7 @@ public:
 
 private:
     void get_toplevel_decoration(wl_resource* id, wl_resource* toplevel) override;
-    std::unordered_set<wl_resource*> toplevels_with_decorations;
+	std::shared_ptr<std::unordered_set<wl_resource*>> toplevels_with_decorations;
 };
 
 class XdgToplevelDecorationV1 : public wayland::XdgToplevelDecorationV1
@@ -84,7 +85,8 @@ void mir::frontend::XdgDecorationManagerV1::Global::bind(wl_resource* new_zxdg_d
 }
 
 mir::frontend::XdgDecorationManagerV1::XdgDecorationManagerV1(wl_resource* resource) :
-    mir::wayland::XdgDecorationManagerV1{resource, Version<1>{}}
+    mir::wayland::XdgDecorationManagerV1{resource, Version<1>{}},
+	toplevels_with_decorations(std::make_shared<std::unordered_set<wl_resource*>>())
 {
 }
 
@@ -92,7 +94,7 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
 {
     using Error = mir::frontend::XdgToplevelDecorationV1::Error;
 
-    if (toplevels_with_decorations.contains(toplevel))
+    if (toplevels_with_decorations->contains(toplevel))
     {
         BOOST_THROW_EXCEPTION(mir::wayland::ProtocolError(
             resource, Error::already_constructed, "Decoration already constructed for this toplevel"));
@@ -104,9 +106,22 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid toplevel pointer"));
     }
 
+    auto decoration = new XdgToplevelDecorationV1{id, tl};
+    toplevels_with_decorations->insert(toplevel);
 
-    new XdgToplevelDecorationV1{id, tl};
-    toplevels_with_decorations.insert(toplevel);
+    decoration->add_destroy_listener([toplevels_with_decorations = this->toplevels_with_decorations, toplevel]()
+                                     { toplevels_with_decorations->erase(toplevel); });
+
+    tl->add_destroy_listener(
+        [toplevels_with_decorations = this->toplevels_with_decorations, toplevel]()
+        {
+            if (toplevels_with_decorations->contains(toplevel))
+            {
+                toplevels_with_decorations->erase(toplevel);
+                BOOST_THROW_EXCEPTION(mir::wayland::ProtocolError(
+                    toplevel, Error::orphaned, "Toplevel destroyed before its attached decoration"));
+            }
+        });
 }
 
 mir::frontend::XdgToplevelDecorationV1::XdgToplevelDecorationV1(
