@@ -26,6 +26,7 @@ public:
 
     auto surface(EGLConfig egl_config) -> EGLSurface
     {
+        std::lock_guard lock{mutex};
         if (egl_surface == EGL_NO_SURFACE)
         {
             egl_surface = eglCreatePlatformWindowSurface(dpy, egl_config, wl_window, nullptr);
@@ -42,7 +43,9 @@ public:
 private:
     EGLDisplay const dpy;
     struct ::wl_egl_window* const wl_window;
-    std::atomic<EGLSurface> egl_surface{EGL_NO_SURFACE};
+
+    std::mutex mutex;
+    EGLSurface egl_surface{EGL_NO_SURFACE};
 };
 
 class mgw::WlDisplayAllocator::Framebuffer::EGLState

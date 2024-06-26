@@ -20,7 +20,6 @@
 #include "mir/graphics/platform.h"
 
 #include <wayland-client.h>
-#include <atomic>
 
 struct wl_egl_window;
 
@@ -76,7 +75,7 @@ public:
     };
 private:
     EGLDisplay const dpy;
-    std::shared_ptr<SurfaceState> surface_state;
+    std::shared_ptr<SurfaceState> const surface_state;
     geometry::Size const size;
 };
 }
