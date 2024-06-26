@@ -51,6 +51,13 @@ public:
     virtual std::shared_ptr<Buffer> buffer() const = 0;
 
     virtual geometry::Rectangle screen_position() const = 0;
+    /**
+     * The region of \ref buffer that should be sampled from.
+     *
+     * This is in buffer coordinates, so {{0, 0}, {buffer->size().width, buffer->size().height} means
+     * “use the whole buffer”.
+     */
+    virtual geometry::RectangleD src_bounds() const = 0;
     virtual std::optional<geometry::Rectangle> clip_area() const = 0;
 
     // These are from the old CompositingCriteria. There is a little bit
