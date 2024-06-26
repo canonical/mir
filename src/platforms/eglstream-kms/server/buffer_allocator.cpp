@@ -54,7 +54,6 @@
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 
-#include <system_error>
 #include <cassert>
 
 

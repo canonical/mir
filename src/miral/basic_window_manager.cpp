@@ -1121,20 +1121,20 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
 
         if (!window_info.can_morph_to(new_type))
         {
-            throw std::runtime_error("Unsupported window type change");
+            BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported window type change"));
         }
 
         if (window_info_tmp.must_not_have_parent())
         {
             if (modifications.parent().is_set())
-                throw std::runtime_error("Target window type does not support parent");
+                BOOST_THROW_EXCEPTION(std::runtime_error("Target window type does not support parent"));
 
             window_info_tmp.parent({});
         }
         else if (window_info_tmp.must_have_parent())
         {
             if (!window_info_tmp.parent())
-                throw std::runtime_error("Target window type requires parent");
+                BOOST_THROW_EXCEPTION(std::runtime_error("Target window type requires parent"));
         }
     }
 

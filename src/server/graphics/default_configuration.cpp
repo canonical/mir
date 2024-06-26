@@ -219,7 +219,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
             if (platforms.empty())
             {
                 auto msg = "Failed to find any platform plugins in: " + path;
-                throw std::runtime_error(msg.c_str());
+                BOOST_THROW_EXCEPTION(std::runtime_error(msg.c_str()));
             }
 
             auto display_targets = the_display_platforms();

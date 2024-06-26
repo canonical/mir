@@ -146,7 +146,7 @@ mgg::Cursor::Cursor(
 
     hide();
     if (last_set_failed)
-        throw std::runtime_error("Initial KMS cursor set failed");
+        BOOST_THROW_EXCEPTION(std::runtime_error("Initial KMS cursor set failed"));
 }
 
 mgg::Cursor::~Cursor() noexcept
