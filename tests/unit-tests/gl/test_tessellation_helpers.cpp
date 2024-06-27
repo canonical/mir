@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/test/doubles/mock_buffer.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <mir/gl/tessellation_helpers.h>
 #include <mir/test/doubles/mock_renderable.h>
@@ -24,6 +25,7 @@ namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mgl = mir::gl;
+namespace mg = mir::graphics;
 
 struct BoundingBox
 {
@@ -60,6 +62,10 @@ public:
     {
         ON_CALL(renderable, screen_position())
             .WillByDefault(Return(rect));
+        ON_CALL(renderable, src_bounds())
+            .WillByDefault(Return(geom::RectangleD{{0, 0}, {geom::SizeD{rect.size}}}));
+        ON_CALL(renderable, buffer())
+            .WillByDefault(Return(buffer_));
     }
 
     static auto bounding_box(mgl::Primitive const& primitive) -> BoundingBox
@@ -95,6 +101,7 @@ public:
 
     geom::Rectangle const rect{{4, 6}, {10, 20}};
     NiceMock<mtd::MockRenderable> const renderable;
+    std::shared_ptr<mg::Buffer> const buffer_ = std::make_shared<NiceMock<mtd::MockBuffer>>(rect.size, geom::Stride{}, mir_pixel_format_argb_8888);
 };
 
 TEST_F(Tessellation, has_4_vertices)
