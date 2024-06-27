@@ -53,6 +53,7 @@ public:
     void apply_settings(TouchpadSettings const& settings) override;
     virtual optional_value<TouchscreenSettings> get_touchscreen_settings() const override;
     virtual void apply_settings(TouchscreenSettings const&) override;
+    void set_leds(KeyboardLeds) override;
 
     bool started() const;
     void key_press(EventTime event_time, xkb_keysym_t keysym, int scan_code);

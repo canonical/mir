@@ -18,7 +18,6 @@
 
 #include "mir/events/event_private.h"
 #include "mir/events/window_placement_event.h"
-#include "mir/input/xkb_mapper.h"
 
 #include <boost/throw_exception.hpp>
 

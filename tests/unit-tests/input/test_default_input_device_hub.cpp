@@ -21,6 +21,7 @@
 #include "mir/test/doubles/mock_input_seat.h"
 #include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/doubles/mock_key_mapper.h"
+#include "mir/test/doubles/mock_led_observer_registrar.h"
 #include "mir/test/doubles/mock_server_status_listener.h"
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/fake_shared.h"
@@ -69,6 +70,7 @@ struct InputDeviceHubTest : ::testing::Test
     mir::dispatch::MultiplexingDispatchable multiplexer;
     NiceMock<mtd::MockInputSeat> mock_seat;
     NiceMock<mtd::MockKeyMapper> mock_key_mapper;
+    NiceMock<mtd::MockLedObserverRegistrar> mock_led_observer_registrar;
     NiceMock<mtd::MockServerStatusListener> mock_server_status_listener;
     mtd::AdvanceableClock clock;
     mi::DefaultInputDeviceHub hub{
@@ -76,7 +78,8 @@ struct InputDeviceHubTest : ::testing::Test
         mt::fake_shared(multiplexer),
         mt::fake_shared(clock),
         mt::fake_shared(mock_key_mapper),
-        mt::fake_shared(mock_server_status_listener)};
+        mt::fake_shared(mock_server_status_listener),
+        mt::fake_shared(mock_led_observer_registrar)};
     NiceMock<mtd::MockInputDeviceObserver> mock_observer;
     NiceMock<mtd::MockInputDevice> device{"device","dev-1", mi::DeviceCapability::unknown};
     NiceMock<mtd::MockInputDevice> another_device{"another_device","dev-2", mi::DeviceCapability::keyboard};

@@ -57,6 +57,7 @@ public:
     void apply_settings(TouchpadSettings const&) override;
     optional_value<TouchscreenSettings> get_touchscreen_settings() const override;
     void apply_settings(TouchscreenSettings const&) override;
+    void set_leds(KeyboardLeds) override;
 
     void process_event(libinput_event* event);
     ::libinput_device* device() const;

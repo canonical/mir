@@ -130,6 +130,10 @@ void mix::XInputDevice::apply_settings(TouchscreenSettings const&)
 {
 }
 
+void mix::XInputDevice::set_leds(mir::input::KeyboardLeds)
+{
+}
+
 bool mix::XInputDevice::started() const
 {
     return sink && builder;

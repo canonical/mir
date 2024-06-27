@@ -17,6 +17,7 @@
 #ifndef MIR_INPUT_INPUT_DEVICE_H_
 #define MIR_INPUT_INPUT_DEVICE_H_
 
+#include "mir/input/keyboard_leds.h"
 #include "mir/module_deleter.h"
 #include "mir/optional_value.h"
 
@@ -66,6 +67,8 @@ public:
 
     virtual optional_value<TouchscreenSettings> get_touchscreen_settings() const = 0;
     virtual void apply_settings(TouchscreenSettings const&) = 0;
+
+    virtual void set_leds(KeyboardLeds leds) = 0;
 protected:
     InputDevice(InputDevice const&) = delete;
     InputDevice& operator=(InputDevice const&) = delete;

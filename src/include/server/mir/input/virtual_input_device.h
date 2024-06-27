@@ -35,6 +35,7 @@ class VirtualInputDevice : public InputDevice
 public:
     VirtualInputDevice(std::string const& name, DeviceCapabilities capabilities);
     void if_started_then(std::function<void(InputSink*, EventBuilder*)> const& fn);
+    void set_leds(KeyboardLeds leds) override;
 
 private:
     void start(InputSink* sink, EventBuilder* builder) override;

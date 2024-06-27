@@ -98,6 +98,7 @@ struct StubDevice : public mi::Device
     void apply_keyboard_configuration(MirKeyboardConfig const&) {}
     mir::optional_value<MirTouchscreenConfig> touchscreen_configuration() const {return {};}
     void apply_touchscreen_configuration(MirTouchscreenConfig const&) {}
+    void set_leds(mi::KeyboardLeds) {}
 };
 
 struct KeyRepeatDispatcher : public testing::Test

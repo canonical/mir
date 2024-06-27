@@ -120,7 +120,13 @@ class TouchVisualizer;
 class CursorImages;
 class Seat;
 class KeyMapper;
+class LedObserverRegistrar;
+namespace receiver
+{
+class XKBMapperRegistrar;
 }
+}
+
 
 namespace logging
 {
@@ -314,6 +320,7 @@ public:
     virtual std::shared_ptr<input::TouchVisualizer> the_touch_visualizer();
     virtual std::shared_ptr<input::Seat> the_seat();
     virtual std::shared_ptr<input::KeyMapper> the_key_mapper();
+    virtual std::shared_ptr<input::LedObserverRegistrar> the_led_observer_registrar();
 
     // new input reading related parts:
     virtual std::shared_ptr<dispatch::MultiplexingDispatchable> the_input_reading_multiplexer();
@@ -418,7 +425,7 @@ protected:
     CachedPtr<shell::decoration::Manager> decoration_manager;
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
     CachedPtr<cookie::Authority> cookie_authority;
-    CachedPtr<input::KeyMapper> key_mapper;
+    CachedPtr<input::receiver::XKBMapperRegistrar> xkb_mapper_registrar;
     std::shared_ptr<ConsoleServices> console_services;
 
 private:

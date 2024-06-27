@@ -69,6 +69,8 @@ protected:
 
     void enqueue(std::function<EventUPtr(EventBuilder* builder)> const& event);
 
+    void set_leds(KeyboardLeds leds) override;
+
 private:
     bool started() const;
 

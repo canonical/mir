@@ -42,6 +42,7 @@ namespace input
 class KeyMapper;
 class InputDevice;
 class DefaultInputDeviceHub;
+class LedObserverRegistrar;
 
 class DefaultDevice : public Device
 {
@@ -49,16 +50,19 @@ public:
     DefaultDevice(MirInputDeviceId id,
                   std::shared_ptr<dispatch::ActionQueue> const& actions,
                   InputDevice& device,
-                  std::shared_ptr<KeyMapper> const& key_mapper);
+                  std::shared_ptr<KeyMapper> const& key_mapper,
+                  std::shared_ptr<LedObserverRegistrar> const& led_observer_registrar);
     DefaultDevice(MirInputDeviceId id,
                   std::shared_ptr<dispatch::ActionQueue> const& actions,
                   InputDevice& device,
                   std::shared_ptr<KeyMapper> const& key_mapper,
+                  std::shared_ptr<LedObserverRegistrar> const& led_observer_registrar,
                   std::function<void(Device*)> const& change_callback);
     DefaultDevice(MirInputDevice const& config,
                   std::shared_ptr<dispatch::ActionQueue> const& actions,
                   InputDevice& device,
                   std::shared_ptr<KeyMapper> const& key_mapper,
+                  std::shared_ptr<LedObserverRegistrar> const& led_observer_registrar,
                   std::function<void(Device*)> const& change_callback);
     MirInputDeviceId id() const override;
     DeviceCapabilities capabilities() const override;
@@ -73,6 +77,7 @@ public:
     void apply_keyboard_configuration(MirKeyboardConfig const&) override;
     optional_value<MirTouchscreenConfig> touchscreen_configuration() const override;
     void apply_touchscreen_configuration(MirTouchscreenConfig const&) override;
+    void set_leds(KeyboardLeds leds) override;
 
     MirInputDevice config() const;
     void disable_queue();
@@ -92,6 +97,7 @@ private:
     std::shared_ptr<dispatch::ActionQueue> actions;
     std::shared_ptr<KeyMapper> const key_mapper;
     std::function<void(Device*)> device_changed_callback;
+    std::shared_ptr<LedObserverRegistrar> const led_observer_registrar;
     std::mutex mutable config_mutex;
 };
 

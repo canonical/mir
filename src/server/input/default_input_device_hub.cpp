@@ -23,6 +23,7 @@
 #include "mir/input/mir_touchpad_config.h"
 #include "mir/input/mir_touchscreen_config.h"
 #include "mir/input/mir_keyboard_config.h"
+#include "mir/input/key_mapper.h"
 #include "mir/geometry/point.h"
 #include "mir/server_status_listener.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
@@ -199,13 +200,15 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
     std::shared_ptr<time::Clock> const& clock,
     std::shared_ptr<mi::KeyMapper> const& key_mapper,
-    std::shared_ptr<mir::ServerStatusListener> const& server_status_listener)
+    std::shared_ptr<mir::ServerStatusListener> const& server_status_listener,
+    std::shared_ptr<LedObserverRegistrar> const& led_observer_registrar)
     : seat{seat},
       input_dispatchable{input_multiplexer},
       device_queue(std::make_shared<dispatch::ActionQueue>()),
       clock(clock),
       key_mapper(key_mapper),
       server_status_listener(server_status_listener),
+      led_observer_registrar(led_observer_registrar),
       device_id_generator{0}
 {
     input_dispatchable->add_watch(device_queue);
@@ -820,6 +823,7 @@ std::shared_ptr<mi::DefaultDevice> mi::DefaultInputDeviceHub::restore_or_create_
             queue,
             device,
             key_mapper,
+            led_observer_registrar,
             [this](Device *d){device_changed(d);});
     else
         return std::make_shared<DefaultDevice>(
@@ -827,5 +831,6 @@ std::shared_ptr<mi::DefaultDevice> mi::DefaultInputDeviceHub::restore_or_create_
             queue,
             device,
             key_mapper,
+            led_observer_registrar,
             [this](Device *d){device_changed(d);});
 }

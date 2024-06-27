@@ -45,6 +45,7 @@ struct MockInputDevice : input::InputDevice
     MOCK_METHOD1(apply_settings, void(input::TouchpadSettings const&));
     MOCK_CONST_METHOD0(get_touchscreen_settings, mir::optional_value<input::TouchscreenSettings>());
     MOCK_METHOD1(apply_settings, void(input::TouchscreenSettings const&));
+    MOCK_METHOD1(set_leds, void(input::KeyboardLeds));
 };
 }
 }

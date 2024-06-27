@@ -41,7 +41,7 @@
 #include "mir/scene/session_container.h"
 
 #include "mir/input/device.h"
-#include "mir/input/xkb_mapper.h"
+#include "mir/input/xkb_mapper_registrar.h"
 #include "mir/input/device_capability.h"
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_touchpad_config.h"
@@ -90,7 +90,7 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     NiceMock<mtd::MockTouchVisualizer> mock_visualizer;
     NiceMock<mtd::MockSeatObserver> mock_seat_observer;
     NiceMock<mtd::MockServerStatusListener> mock_status_listener;
-    mi::receiver::XKBMapper key_mapper;
+    mi::receiver::XKBMapperRegistrar key_mapper{mir::immediate_executor};
     mir::dispatch::MultiplexingDispatchable multiplexer;
     mtd::AdvanceableClock clock;
     mtd::MockInputManager mock_input_manager;
@@ -106,7 +106,8 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
         mt::fake_shared(multiplexer),
         mt::fake_shared(clock),
         mt::fake_shared(key_mapper),
-        mt::fake_shared(mock_status_listener)};
+        mt::fake_shared(mock_status_listener),
+        mt::fake_shared(key_mapper)};
     NiceMock<mtd::MockInputDeviceObserver> mock_observer;
     mi::ConfigChanger changer{
         mt::fake_shared(mock_input_manager),

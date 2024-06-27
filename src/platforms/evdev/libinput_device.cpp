@@ -694,3 +694,16 @@ void mie::LibInputDevice::apply_settings(mi::TouchscreenSettings const& settings
 {
     touchscreen = settings;
 }
+
+void mie::LibInputDevice::set_leds(mir::input::KeyboardLeds leds)
+{
+    int led = 0;
+    if (contains(leds, mir::input::KeyboardLed::caps_lock))
+        led |= LIBINPUT_LED_CAPS_LOCK;
+    if (contains(leds, mir::input::KeyboardLed::num_lock))
+        led |= LIBINPUT_LED_NUM_LOCK;
+    if (contains(leds, mir::input::KeyboardLed::scroll_lock))
+        led |= LIBINPUT_LED_SCROLL_LOCK;
+
+    libinput_device_led_update(device_.get(), static_cast<libinput_led>(led));
+}

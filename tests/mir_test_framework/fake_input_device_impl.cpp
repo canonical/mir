@@ -129,6 +129,8 @@ void mtf::FakeInputDeviceImpl::InputDevice::set_apply_settings_callback(std::fun
     this->callback = callback;
 }
 
+void mtf::FakeInputDeviceImpl::InputDevice::set_leds(mir::input::KeyboardLeds) {}
+
 mtf::FakeInputDeviceImpl::InputDevice::InputDevice(mi::InputDeviceInfo const& info,
                                                    std::shared_ptr<mir::dispatch::Dispatchable> const& dispatchable)
     : info(info), queue{dispatchable}, buttons{0}, callback([](mir::input::InputDevice const&){})

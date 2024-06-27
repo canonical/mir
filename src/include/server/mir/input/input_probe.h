@@ -37,6 +37,7 @@ namespace input
 class InputReport;
 class Platform;
 class InputDeviceRegistry;
+class LedObserverRegistrar;
 
 mir::UniqueModulePtr<Platform> probe_input_platforms(
     options::Option const& options,
