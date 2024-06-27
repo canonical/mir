@@ -60,12 +60,6 @@ set_property(
     SOURCE udev_environment.cpp
     PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
 
-if ("libinput_environment.cpp:restrict" IN_LIST MIR_COMPILER_QUIRKS)
-  set_property(
-    SOURCE libinput_environment.cpp
-    PROPERTY COMPILE_OPTIONS -Wno-error=restrict)
-endif()
-
 # Umockdev uses glib, which uses the deprecated "register" storage qualifier
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 

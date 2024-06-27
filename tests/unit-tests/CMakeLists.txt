@@ -135,12 +135,6 @@ set_property(
   SOURCE graphics/test_platform_prober.cpp
   PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
 
-if ("test_linearising_executor.cpp:use-after-free" IN_LIST MIR_COMPILER_QUIRKS)
-  set_property(
-    SOURCE test_linearising_executor.cpp
-    PROPERTY COMPILE_OPTIONS -Wno-error=use-after-free  # riscv64 spuriously warns here
-  )
-endif()
 if ("test_touchspot_controller.cpp:array-bounds" IN_LIST MIR_COMPILER_QUIRKS)
   set_property(
     SOURCE input/test_touchspot_controller.cpp
