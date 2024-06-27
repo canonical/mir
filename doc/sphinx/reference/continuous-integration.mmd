@@ -7,10 +7,10 @@ flowchart TD
     PR --> Snaps(<a href="#downstream-snap-builds">Downstream snaps</a>)
     PR --> ABI(<a href="#abi-checks">ABI checks</a>)
     PR --> Coverage(<a href="#coverage-measurement">Coverage</a>)
-    Push{{Push}} --> Builds
-    Push --> Coverage
-    Push --> Sanitizers(<a href="#sanitizer-runs">Sanitizers</a>)
-    Push --> PPA(<a href="#deb-package-builds"><tt>.deb</tt> packages</a>)
+    Merge{{Merge}} --> Builds
+    Merge --> Coverage
+    Merge --> Sanitizers(<a href="#sanitizer-runs">Sanitizers</a>)
+    Merge --> PPA(<a href="#deb-package-builds"><tt>.deb</tt> packages</a>)
     PPA --> Snaps
     Snaps --> EndToEnd(<a href="#end-to-end-testing">End-to-end testing</a>)
 

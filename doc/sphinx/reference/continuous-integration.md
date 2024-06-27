@@ -15,26 +15,28 @@ breadth of testing. We'll discuss those in more detail below.
 
 ## Mir builds
 
-We use [Spread](https://github.com/snapcore/spread) (or rather, our
+When a pull request is opened, updated or merged into `main`, we validate that the contribution
+is correct by building the code and running our test suite. To facilitate this, we use
+[Spread](https://github.com/snapcore/spread) (or rather, our
 [lightly patched version](https://snapcraft.io/spread-mir-ci)) to build Mir across a number of
-environments. These are defined in
-[`spread.yaml`](https://github.com/canonical/mir/blob/main/spread.yaml), with the actual build
-tasks maintained under [`spread/build`](https://github.com/canonical/mir/tree/main/spread/build).
+environments. [`spread.yaml`](https://github.com/canonical/mir/blob/main/spread.yaml) holds
+environment definitions, while the actual build tasks are maintained under
+[`spread/build`](https://github.com/canonical/mir/tree/main/spread/build).
 
 Our focus of development is the most recent Ubuntu LTS, and we maintain builds for any more recent,
 supported Ubuntu releases. We also build for stable releases of other Linux distributions that
 we have community interest on.
 
-Additionally, there are builds using alternative toolchains (Clang) and development versions of
-Ubuntu and those other distributions.
+We also run builds using alternative toolchains (Clang) and development versions of Ubuntu and
+those other distributions.
 
 We also maintain Mir branches for all previous Ubuntu LTS releases under support. These will only
 receive security updates and the occasional bug fix. These will always be
 [`release/` branches on GitHub](https://github.com/canonical/mir/branches/all?query=release%2F),
 and releases published on [the GitHub release pages](https://github.com/canonical/mir/releases).
 
-All those builds [run on GitHub](https://github.com/canonical/mir/actions/workflows/spread.yml),
-triggered by pull requests and pushes to `main` or `release/` branches.
+Opening a pull request, or merging into the `main` or `release/` branches, triggers a
+[build on GitHub](https://github.com/canonical/mir/actions/workflows/spread.yml).
 
 As part of the build, the following sets of tests are run:
 
@@ -67,11 +69,12 @@ We also run these on a number of hardware platforms in our testing lab for every
 
 ## Sanitizer runs
 
-In addition to the above, for every push to `main` we build and run the tests using the following
+In addition to the above, for every merge to `main` we build and run the tests using the following
 sanitizers:
 
 - **Undefined Behaviour**
-  This is now enforced, and no undefined behaviour is reported by ubsan.
+  Building with UndefinedBehaviourSanitizer enabled reports no undefined behaviour, it would be a
+  CI failure otherwise.
 - **Address Sanitizer**
   As we have some fixing to do here, we run those builds - but don't enforce the problems reported.
 - **Thread Sanitizer**
@@ -94,7 +97,7 @@ request and `main` builds, and the results are visible on
 
 ## `.deb` package builds
 
-Pushes to `main`, `release/` branches as well as annotated tags are followed by `.deb` package
+Merges to `main`, `release/` branches as well as annotated tags are followed by `.deb` package
 builds in mir-team's Launchpad's Personal Package Archives (PPAs):
 - [`~mir-team/dev`](https://launchpad.net/~mir-team/+archive/ubuntu/dev) for the latest development
   builds
@@ -144,7 +147,7 @@ You can find more information about Checkbox itself
 [in its documentation](https://github.com/canonical/checkbox) - it's a system used by our
 certification team, running thousands of tests on hundreds of systems every day.
 
-The Jenkins job definitions go into a private repository, as they contains credentials.
+The Jenkins job definitions go into a private repository, as they contain credentials.
 [jenkins-job-builder](https://pypi.org/project/jenkins-job-builder/) is used to maintain the jobs,
 and at runtime, [testflinger](https://github.com/canonical/testflinger) dispatches them to the
 device under test, while [test-observer](https://github.com/canonical/test_observer) collects the
