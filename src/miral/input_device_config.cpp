@@ -41,6 +41,14 @@ auto get_optional(std::shared_ptr<mir::options::Option> options, char const* nam
     return options->is_set(name) ? std::make_optional<Type>(options->get<Type>(name)) : std::nullopt;
 };
 
+template<typename Type>
+auto get_optional(std::shared_ptr<mir::options::Option> options, char const* name, char const* alt_name)
+{
+    return options->is_set(name) ?
+        std::make_optional<Type>(options->get<Type>(name)) :
+        get_optional<Type>(options, alt_name);
+};
+
 char const* const disable_while_typing_opt = "touchpad-disable-while-typing";
 char const* const disable_with_external_mouse_opt = "touchpad-disable-with-external-mouse";
 char const* const touchpad_tap_to_click_opt = "touchpad-tap-to-click";
@@ -51,12 +59,14 @@ char const* const mouse_cursor_acceleration_opt = "mouse-cursor-acceleration";
 char const* const acceleration_none = "none";
 char const* const acceleration_adaptive = "adaptive";
 char const* const mouse_cursor_acceleration_bias_opt = "mouse-cursor-acceleration-bias";
-char const* const mouse_vscroll_speed_opt = "mouse-scroll-vspeed";
-char const* const mouse_hscroll_speed_opt = "mouse-scroll-hspeed";
+char const* const mouse_scroll_speed_opt = "mouse-scroll-speed";
+char const* const mouse_hscroll_speed_override_opt = "mouse-horizontal-scroll-speed-override";
+char const* const mouse_vscroll_speed_override_opt = "mouse-vertical-scroll-speed-override";
 char const* const touchpad_cursor_acceleration_opt = "touchpad-cursor-acceleration";
 char const* const touchpad_cursor_acceleration_bias_opt = "touchpad-cursor-acceleration-bias";
-char const* const touchpad_vscroll_speed_opt = "touchpad-vscroll-speed";
-char const* const touchpad_hscroll_speed_opt = "touchpad-hscroll-speed";
+char const* const touchpad_scroll_speed_opt = "touchpad-scroll-speed";
+char const* const touchpad_hscroll_speed_override_opt = "touchpad-horizontal-scroll-speed-override";
+char const* const touchpad_vscroll_speed_override_opt = "touchpad-vertical-scroll-speed-override";
 char const* const touchpad_scroll_mode_opt = "touchpad-scroll-mode";
 
 char const* const touchpad_scroll_mode_two_finger = "two-finger";
@@ -232,11 +242,14 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
     server.add_configuration_option(mouse_cursor_acceleration_bias_opt,
                                     "Constant factor (+1) to velocity or bias to the acceleration curve within the range [-1.0, 1.0] for mice",
                                     mir::OptionType::real);
-    server.add_configuration_option(mouse_vscroll_speed_opt,
-                                    "Scales mouse vertical scroll, use negative values for natural scrolling",
+    server.add_configuration_option(mouse_scroll_speed_opt,
+                                    "Scales mouse scroll, use negative values for natural scrolling",
                                     mir::OptionType::real);
-    server.add_configuration_option(mouse_hscroll_speed_opt,
+    server.add_configuration_option(mouse_hscroll_speed_override_opt,
                                     "Scales mouse horizontal scroll, use negative values for natural scrolling",
+                                    mir::OptionType::real);
+    server.add_configuration_option(mouse_vscroll_speed_override_opt,
+                                    "Scales mouse vertical scroll, use negative values for natural scrolling",
                                     mir::OptionType::real);
     server.add_configuration_option(disable_while_typing_opt,
                                     "Disable touchpad while typing on keyboard configuration [true, false]",
@@ -254,11 +267,14 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
     server.add_configuration_option(touchpad_cursor_acceleration_bias_opt,
                                     "Constant factor (+1) to velocity or bias to the acceleration curve within the range [-1.0, 1.0] for touchpads",
                                     mir::OptionType::real);
-    server.add_configuration_option(touchpad_vscroll_speed_opt,
-                                    "Scales touchpad vertical scroll, use negative values for natural scrolling",
+    server.add_configuration_option(touchpad_scroll_speed_opt,
+                                    "Scales touchpad scroll, use negative values for natural scrolling",
                                     mir::OptionType::real);
-    server.add_configuration_option(touchpad_hscroll_speed_opt,
+    server.add_configuration_option(touchpad_hscroll_speed_override_opt,
                                     "Scales touchpad horizontal scroll, use negative values for natural scrolling",
+                                    mir::OptionType::real);
+    server.add_configuration_option(touchpad_vscroll_speed_override_opt,
+                                    "Scales touchpad vertical scroll, use negative values for natural scrolling",
                                     mir::OptionType::real);
 
     server.add_configuration_option(touchpad_scroll_mode_opt,
@@ -292,12 +308,12 @@ InputDeviceConfig::InputDeviceConfig(std::shared_ptr<mir::options::Option> const
     mouse_handedness{to_handedness(get_optional<std::string>(options, mouse_handedness_opt))},
     mouse_cursor_acceleration{to_acceleration_profile(get_optional<std::string>(options, mouse_cursor_acceleration_opt))},
     mouse_cursor_acceleration_bias{clamp_to_range(get_optional<double>(options, mouse_cursor_acceleration_bias_opt))},
-    mouse_vscroll_speed{get_optional<double>(options, mouse_vscroll_speed_opt)},
-    mouse_hscroll_speed{get_optional<double>(options, mouse_hscroll_speed_opt)},
+    mouse_vscroll_speed{get_optional<double>(options, mouse_vscroll_speed_override_opt, mouse_scroll_speed_opt)},
+    mouse_hscroll_speed{get_optional<double>(options, mouse_hscroll_speed_override_opt, mouse_scroll_speed_opt)},
     touchpad_cursor_acceleration{to_acceleration_profile(get_optional<std::string>(options, touchpad_cursor_acceleration_opt))},
     touchpad_cursor_acceleration_bias{clamp_to_range(get_optional<double>(options, touchpad_cursor_acceleration_bias_opt))},
-    touchpad_vscroll_speed{get_optional<double>(options, touchpad_vscroll_speed_opt)},
-    touchpad_hscroll_speed{get_optional<double>(options, touchpad_hscroll_speed_opt)},
+    touchpad_vscroll_speed{get_optional<double>(options, touchpad_vscroll_speed_override_opt, touchpad_scroll_speed_opt)},
+    touchpad_hscroll_speed{get_optional<double>(options, touchpad_hscroll_speed_override_opt, touchpad_scroll_speed_opt)},
     click_mode{convert_to_click_mode(get_optional<std::string>(options, touchpad_click_mode_opt))},
     scroll_mode{convert_to_scroll_mode(get_optional<std::string>(options, touchpad_scroll_mode_opt))},
     tap_to_click{get_optional<bool>(options, touchpad_tap_to_click_opt)},
