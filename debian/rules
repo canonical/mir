@@ -46,7 +46,7 @@ endif
 
 # Disable LTO on binutils 2.42.50.20240618
 # https://bugs.launchpad.net/ubuntu/+source/binutils/+bug/2070302
-ifneq ($(shell ld --version | grep '2.42.50.20240618$$'),)
+ifneq ($(shell ld --version | grep '2.42.50.20240625$$'),)
 	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=OFF
 	DEB_BUILD_MAINT_OPTIONS += optimize=-lto
 endif
