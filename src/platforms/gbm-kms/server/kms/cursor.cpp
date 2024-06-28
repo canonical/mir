@@ -347,12 +347,13 @@ void mgg::Cursor::place_cursor_at_locked(
         return;
 
     bool set_on_all_outputs = true;
+    auto const cursor_rect = geometry::Rectangle(position - hotspot, size);
 
     for_each_used_output([&](KMSOutput& output, DisplayConfigurationOutput const& conf)
     {
         auto const output_rect = conf.extents();
 
-        if (output_rect.contains(position))
+        if (output_rect.overlaps(cursor_rect))
         {
             auto const orientation = conf.orientation;
             auto const relative_to_extants = position - output_rect.top_left;
