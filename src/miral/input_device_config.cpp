@@ -107,21 +107,10 @@ private:
     std::optional<bool> const middle_mouse_button_emulation;
 };
 
-auto clamp_to_range(std::optional<double> opt_val)-> std::optional<double>
+template<double lo, double hi>
+auto clamp(std::optional<double> opt_val)-> std::optional<double>
 {
-    if (opt_val)
-    {
-        auto val = *opt_val;
-        if (val < -1.0)
-            val = -1.0;
-        else if (val > 1.0)
-            val = 1.0;
-        return std::make_optional(val);
-    }
-    else
-    {
-        return std::nullopt;
-    }
+    return opt_val.transform([](auto val) { return std::clamp(val, lo, hi); });
 }
 
 auto convert_to_scroll_mode(std::optional<std::string> const& opt_val)
@@ -307,11 +296,11 @@ InputDeviceConfig::InputDeviceConfig(std::shared_ptr<mir::options::Option> const
     disable_with_external_mouse{get_optional<bool>(options, disable_with_external_mouse_opt)},
     mouse_handedness{to_handedness(get_optional<std::string>(options, mouse_handedness_opt))},
     mouse_cursor_acceleration{to_acceleration_profile(get_optional<std::string>(options, mouse_cursor_acceleration_opt))},
-    mouse_cursor_acceleration_bias{clamp_to_range(get_optional<double>(options, mouse_cursor_acceleration_bias_opt))},
+    mouse_cursor_acceleration_bias{clamp<-1.0, 1.0>(get_optional<double>(options, mouse_cursor_acceleration_bias_opt))},
     mouse_vscroll_speed{get_optional<double>(options, mouse_vscroll_speed_override_opt, mouse_scroll_speed_opt)},
     mouse_hscroll_speed{get_optional<double>(options, mouse_hscroll_speed_override_opt, mouse_scroll_speed_opt)},
     touchpad_cursor_acceleration{to_acceleration_profile(get_optional<std::string>(options, touchpad_cursor_acceleration_opt))},
-    touchpad_cursor_acceleration_bias{clamp_to_range(get_optional<double>(options, touchpad_cursor_acceleration_bias_opt))},
+    touchpad_cursor_acceleration_bias{clamp<-1.0, 1.0>(get_optional<double>(options, touchpad_cursor_acceleration_bias_opt))},
     touchpad_vscroll_speed{get_optional<double>(options, touchpad_vscroll_speed_override_opt, touchpad_scroll_speed_opt)},
     touchpad_hscroll_speed{get_optional<double>(options, touchpad_hscroll_speed_override_opt, touchpad_scroll_speed_opt)},
     click_mode{convert_to_click_mode(get_optional<std::string>(options, touchpad_click_mode_opt))},
