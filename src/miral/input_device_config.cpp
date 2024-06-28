@@ -243,13 +243,13 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
                                     "Constant factor (+1) to velocity or bias to the acceleration curve within the range [-1.0, 1.0] for mice",
                                     mir::OptionType::real);
     server.add_configuration_option(mouse_scroll_speed_opt,
-                                    "Scales mouse scroll, use negative values for natural scrolling",
+                                    "Scales mouse scroll. Use negative values for natural scrolling",
                                     mir::OptionType::real);
     server.add_configuration_option(mouse_hscroll_speed_override_opt,
-                                    "Scales mouse horizontal scroll, use negative values for natural scrolling",
+                                    "Scales mouse horizontal scroll. Use negative values for natural scrolling",
                                     mir::OptionType::real);
     server.add_configuration_option(mouse_vscroll_speed_override_opt,
-                                    "Scales mouse vertical scroll, use negative values for natural scrolling",
+                                    "Scales mouse vertical scroll. Use negative values for natural scrolling",
                                     mir::OptionType::real);
     server.add_configuration_option(disable_while_typing_opt,
                                     "Disable touchpad while typing on keyboard configuration [true, false]",
@@ -268,13 +268,13 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
                                     "Constant factor (+1) to velocity or bias to the acceleration curve within the range [-1.0, 1.0] for touchpads",
                                     mir::OptionType::real);
     server.add_configuration_option(touchpad_scroll_speed_opt,
-                                    "Scales touchpad scroll, use negative values for natural scrolling",
+                                    "Scales touchpad scroll. Use negative values for natural scrolling",
                                     mir::OptionType::real);
     server.add_configuration_option(touchpad_hscroll_speed_override_opt,
-                                    "Scales touchpad horizontal scroll, use negative values for natural scrolling",
+                                    "Scales touchpad horizontal scroll. Use negative values for natural scrolling",
                                     mir::OptionType::real);
     server.add_configuration_option(touchpad_vscroll_speed_override_opt,
-                                    "Scales touchpad vertical scroll, use negative values for natural scrolling",
+                                    "Scales touchpad vertical scroll. Use negative values for natural scrolling",
                                     mir::OptionType::real);
 
     server.add_configuration_option(touchpad_scroll_mode_opt,
