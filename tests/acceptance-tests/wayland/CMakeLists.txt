@@ -113,6 +113,10 @@ set(EXPECTED_FAILURES
 
   # Not yet implemented, see https://github.com/MirServer/mir/issues/2861
   XdgPopupTest.when_parent_surface_is_moved_a_reactive_popup_is_moved
+
+  # Should throw an exception, but we log instead because of
+  # https://github.com/canonical/mir/issues/3452
+  XdgDecorationV1Test.destroy_toplevel_before_decoration
 )
 
 if (MIR_SIGBUS_HANDLER_ENVIRONMENT_BROKEN)
