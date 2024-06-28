@@ -17,7 +17,9 @@
 #include "xdg_decoration_unstable_v1.h"
 
 #include "mir/shell/surface_specification.h"
+#include "mir/wayland/client.h"
 #include "mir/wayland/protocol_error.h"
+#include "mir/log.h"
 
 #include "xdg-decoration-unstable-v1_wrapper.h"
 #include "xdg_output_v1.h"
@@ -113,13 +115,14 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
                                      { toplevels_with_decorations->erase(toplevel); });
 
     tl->add_destroy_listener(
-        [toplevels_with_decorations = this->toplevels_with_decorations, toplevel]()
+        [toplevels_with_decorations = this->toplevels_with_decorations, client = this->client, toplevel]()
         {
-            if (toplevels_with_decorations->contains(toplevel))
+            if (!client->is_being_destroyed() && toplevels_with_decorations->erase(toplevel) > 0)
             {
-                toplevels_with_decorations->erase(toplevel);
-                BOOST_THROW_EXCEPTION(mir::wayland::ProtocolError(
-                    toplevel, Error::orphaned, "Toplevel destroyed before its attached decoration"));
+                mir::log_warning("Toplevel destroyed before attached decoration!");
+                // https://github.com/canonical/mir/issues/3452
+                /* BOOST_THROW_EXCEPTION(mir::wayland::ProtocolError( */
+                /*     resource, Error::orphaned, "Toplevel destroyed before its attached decoration")); */
             }
         });
 }
