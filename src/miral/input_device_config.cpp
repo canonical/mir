@@ -229,7 +229,7 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
                                     "Select acceleration profile for mice and trackballs [none, adaptive]",
                                     mir::OptionType::string);
     server.add_configuration_option(mouse_cursor_acceleration_bias_opt,
-                                    "Constant factor (+1) to velocity or bias to the acceleration curve within the range [-1.0, 1.0] for mice",
+                                    "Set the pointer acceleration speed of mice within a range of [-1.0, 1.0]",
                                     mir::OptionType::real);
     server.add_configuration_option(mouse_scroll_speed_opt,
                                     "Scales mouse scroll. Use negative values for natural scrolling",
@@ -254,7 +254,7 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
                                     "Select acceleration profile for touchpads [none, adaptive]",
                                     mir::OptionType::string);
     server.add_configuration_option(touchpad_cursor_acceleration_bias_opt,
-                                    "Constant factor (+1) to velocity or bias to the acceleration curve within the range [-1.0, 1.0] for touchpads",
+                                    "Set the pointer acceleration speed of touchpads within a range of [-1.0, 1.0]",
                                     mir::OptionType::real);
     server.add_configuration_option(touchpad_scroll_speed_opt,
                                     "Scales touchpad scroll. Use negative values for natural scrolling",
