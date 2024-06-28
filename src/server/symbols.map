@@ -97,6 +97,7 @@ global:
     mir::DefaultServerConfiguration::the_wayland_connector*;
     mir::DefaultServerConfiguration::the_window_manager_builder*;
     mir::DefaultServerConfiguration::the_xwayland_connector*;
+    mir::DefaultServerConfiguration::the_misc_options*;
     mir::DefaultServerConfiguration::wrap_application_not_responding_detector*;
     mir::DefaultServerConfiguration::wrap_cursor*;
     mir::DefaultServerConfiguration::wrap_cursor_listener*;
@@ -213,6 +214,7 @@ global:
     mir::Server::the_surface_factory*;
     mir::Server::the_surface_stack*;
     mir::Server::the_touch_visualizer*;
+    mir::Server::the_misc_options*;
     mir::Server::wayland_display*;
     mir::Server::wrap_application_not_responding_detector*;
     mir::Server::wrap_cursor*;

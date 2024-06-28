@@ -308,6 +308,8 @@ global:
     miral::WindowSpecification::visible_on_lock_screen*;
     miral::WindowSpecification::width_inc*;
     miral::WindowSpecification::window_placement_gravity*;
+    miral::XdgDecorations::always*;
+    miral::XdgDecorations::prefer*;
     miral::X11Support::?X11Support*;
     miral::X11Support::X11Support*;
     miral::X11Support::default_to_enabled*;
@@ -443,6 +445,7 @@ global:
     typeinfo?for?miral::WindowSpecification::AspectRatio;
     typeinfo?for?miral::WindowSpecification;
     typeinfo?for?miral::X11Support;
+    typeinfo?for?miral::XdgDecorations;
     typeinfo?for?miral::Zone;
     vtable?for?miral::ApplicationAuthorizer;
     vtable?for?miral::CanonicalWindowManagerPolicy;

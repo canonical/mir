@@ -31,6 +31,7 @@ namespace mir
 {
 template<class Observer>
 class ObserverRegistrar;
+class MiscOptions;
 
 namespace compositor { class Compositor; class DisplayBufferCompositorFactory; class CompositorReport; }
 namespace graphics { class Cursor; class DisplayPlatform; class RenderingPlatform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationObserver; }
@@ -426,6 +427,8 @@ public:
 
     auto the_renderer_factory() const ->
         std::shared_ptr<renderer::RendererFactory>;
+
+    auto the_misc_options() const -> std::shared_ptr<MiscOptions>;
 
 /** @} */
 

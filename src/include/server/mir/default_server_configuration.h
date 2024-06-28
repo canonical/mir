@@ -28,6 +28,7 @@ namespace mir
 class ServerActionQueue;
 class SharedLibrary;
 class SharedLibraryProberReport;
+class MiscOptions;
 
 template<class Observer>
 class ObserverRegistrar;
@@ -334,6 +335,8 @@ public:
 
     auto default_reports() -> std::shared_ptr<void>;
 
+    virtual std::shared_ptr<MiscOptions> the_misc_options() override;
+
 protected:
     std::shared_ptr<options::Option> the_options() const;
     std::shared_ptr<input::DefaultInputDeviceHub>  the_default_input_device_hub();
@@ -420,6 +423,7 @@ protected:
     CachedPtr<cookie::Authority> cookie_authority;
     CachedPtr<input::KeyMapper> key_mapper;
     std::shared_ptr<ConsoleServices> console_services;
+    std::shared_ptr<MiscOptions> misc_options;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;

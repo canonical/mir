@@ -19,6 +19,7 @@
 #include "wallpaper_config.h"
 #include "spinner/splash.h"
 
+#include <memory>
 #include <miral/display_configuration_option.h>
 #include <miral/external_client.h>
 #include <miral/runner.h>
@@ -31,6 +32,7 @@
 #include <miral/toolkit_event.h>
 #include <miral/x11_support.h>
 #include <miral/wayland_extensions.h>
+#include <miral/xdg_decorations.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -107,12 +109,15 @@ int main(int argc, char const* argv[])
       }
     };
 
+    // TODO: Make this more ergonomic
+    const auto decorations = XdgDecorations::always_ssd();
 
     return runner.run_with(
         {
             CursorTheme{"default:DMZ-White"},
             WaylandExtensions{},
             X11Support{},
+            [&](mir::Server& server) { (*decorations)(server); },
             window_managers,
             display_configuration_options,
             external_client_launcher,

@@ -16,6 +16,7 @@
 
 #include "wayland_connector.h"
 
+#include "mir/xdg_decorations_interface.h"
 #include "wl_client.h"
 #include "wl_data_device_manager.h"
 #include "wayland_utils.h"
@@ -239,7 +240,8 @@ mf::WaylandConnector::WaylandConnector(
     std::unique_ptr<WaylandExtensions> extensions_,
     WaylandProtocolExtensionFilter const& extension_filter,
     bool enable_key_repeat,
-    std::shared_ptr<scene::SessionLock> const& session_lock)
+    std::shared_ptr<scene::SessionLock> const& session_lock,
+    std::shared_ptr<MiscOptions> misc_options)
     : extension_filter{extension_filter},
       display{wl_display_create(), &cleanup_display},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
@@ -325,7 +327,8 @@ mf::WaylandConnector::WaylandConnector(
         screen_shooter,
         main_loop,
         desktop_file_manager,
-        session_lock_});
+        session_lock_,
+        misc_options});
 
     shm_global = std::make_unique<WlShm>(display.get(), executor);
 

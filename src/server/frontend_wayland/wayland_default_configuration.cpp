@@ -19,6 +19,7 @@
 #include "mir/frontend/wayland.h"
 #include "mir/graphics/platform.h"
 #include "mir/log.h"
+#include "mir/misc_options.h"
 #include "mir/options/default_configuration.h"
 #include "mir/scene/session.h"
 
@@ -217,9 +218,9 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
             return mf::create_mir_shell_v1(ctx.display);
         }),
     make_extension_builder<mw::XdgDecorationManagerV1>([](auto const& ctx)
-	{
-	    return mf::create_xdg_decoration_unstable_v1(ctx.display);
-	})
+        {
+            return mf::create_xdg_decoration_unstable_v1(ctx.display, ctx.misc_options->xdg_decorations);
+        })
 };
 
 ExtensionBuilder const xwayland_builder {
@@ -375,7 +376,8 @@ std::shared_ptr<mf::Connector>
                     wayland_extension_hooks),
                 wayland_extension_filter,
                 enable_repeat,
-                the_session_lock());
+                the_session_lock(),
+                the_misc_options());
         });
 }
 

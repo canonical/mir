@@ -146,6 +146,7 @@ MIR_PLATFORM_2.17 {
     mir::options::wayland_extensions_opt;
     mir::options::x11_display_opt;
     mir::options::x11_scale_opt;
+    mir::options::xdg_decorations_opt;
     mir::renderer::software::alloc_buffer_with_content*;
     mir::renderer::software::as_read_mappable_buffer*;
     mir::udev::Context::?Context*;

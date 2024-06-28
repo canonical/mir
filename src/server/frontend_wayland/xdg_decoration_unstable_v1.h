@@ -21,9 +21,14 @@
 
 namespace mir
 {
+class XdgDecorationsInterface;
+
 namespace frontend
 {
-auto create_xdg_decoration_unstable_v1(wl_display* display) -> std::shared_ptr<wayland::XdgDecorationManagerV1::Global>;
+
+auto create_xdg_decoration_unstable_v1(
+    wl_display* display, std::shared_ptr<mir::XdgDecorationsInterface> xdg_decorations)
+    -> std::shared_ptr<wayland::XdgDecorationManagerV1::Global>;
 }
 } // namespace mir
 

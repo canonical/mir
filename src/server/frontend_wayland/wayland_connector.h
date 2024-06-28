@@ -36,6 +36,7 @@ class Executor;
 class MainLoop;
 template<typename>
 class ObserverRegistrar;
+class MiscOptions;
 
 namespace compositor
 {
@@ -110,6 +111,7 @@ public:
         std::shared_ptr<MainLoop> main_loop;
         std::shared_ptr<DesktopFileManager> desktop_file_manager;
         std::shared_ptr<scene::SessionLock> session_lock;
+        std::shared_ptr<MiscOptions> misc_options;
     };
 
     WaylandExtensions() = default;
@@ -161,7 +163,8 @@ public:
         std::unique_ptr<WaylandExtensions> extensions,
         WaylandProtocolExtensionFilter const& extension_filter,
         bool enable_key_repeat,
-        std::shared_ptr<scene::SessionLock> const& session_lock);
+        std::shared_ptr<scene::SessionLock> const& session_lock,
+        std::shared_ptr<MiscOptions> misc_options);
 
     ~WaylandConnector() override;
 

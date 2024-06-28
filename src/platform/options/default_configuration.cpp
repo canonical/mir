@@ -44,6 +44,7 @@ char const* const mo::wayland_extensions_opt      = "wayland-extensions";
 char const* const mo::add_wayland_extensions_opt  = "add-wayland-extensions";
 char const* const mo::drop_wayland_extensions_opt = "drop-wayland-extensions";
 char const* const mo::idle_timeout_opt            = "idle-timeout";
+char const* const mo::xdg_decorations_opt         = "xdg-decorations";
 
 char const* const mo::off_opt_value = "off";
 char const* const mo::log_opt_value = "log";

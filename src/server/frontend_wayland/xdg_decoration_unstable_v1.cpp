@@ -19,6 +19,7 @@
 #include "mir/shell/surface_specification.h"
 #include "mir/wayland/client.h"
 #include "mir/wayland/protocol_error.h"
+#include "mir/xdg_decorations_interface.h"
 #include "mir/log.h"
 
 #include "xdg-decoration-unstable-v1_wrapper.h"
@@ -30,31 +31,39 @@
 
 namespace mir
 {
+
+using ServerMode = mir::XdgDecorationsInterface::Mode;
+
 namespace frontend
 {
 class XdgDecorationManagerV1 : public wayland::XdgDecorationManagerV1
 {
 public:
-    XdgDecorationManagerV1(wl_resource* resource);
+    XdgDecorationManagerV1(wl_resource* resource, std::shared_ptr<mir::XdgDecorationsInterface> xdg_decorations);
 
     class Global : public wayland::XdgDecorationManagerV1::Global
     {
     public:
-        Global(wl_display* display);
+        Global(wl_display* display, std::shared_ptr<mir::XdgDecorationsInterface> xdg_decorations);
 
     private:
         void bind(wl_resource* new_zxdg_decoration_manager_v1) override;
+        std::shared_ptr<mir::XdgDecorationsInterface> xdg_decorations;
     };
 
 private:
     void get_toplevel_decoration(wl_resource* id, wl_resource* toplevel) override;
-	std::shared_ptr<std::unordered_set<wl_resource*>> toplevels_with_decorations;
+    std::shared_ptr<std::unordered_set<wl_resource*>> toplevels_with_decorations;
+    std::shared_ptr<mir::XdgDecorationsInterface> xdg_decorations;
 };
 
 class XdgToplevelDecorationV1 : public wayland::XdgToplevelDecorationV1
 {
 public:
-    XdgToplevelDecorationV1(wl_resource* id, mir::frontend::XdgToplevelStable* toplevel);
+    XdgToplevelDecorationV1(
+        wl_resource* id,
+        mir::frontend::XdgToplevelStable* toplevel,
+        std::shared_ptr<mir::XdgDecorationsInterface> xdg_decorations);
 
     void set_mode(uint32_t mode) override;
     void unset_mode() override;
@@ -62,33 +71,37 @@ public:
 private:
     void update_mode(uint32_t new_mode);
 
-    static uint32_t const default_mode = Mode::client_side;
-
     mir::frontend::XdgToplevelStable* toplevel;
+    std::shared_ptr<mir::XdgDecorationsInterface> xdg_decorations;
     uint32_t mode;
 };
 } // namespace frontend
 } // namespace mir
 
-auto mir::frontend::create_xdg_decoration_unstable_v1(wl_display* display)
+auto mir::frontend::create_xdg_decoration_unstable_v1(
+    wl_display* display, std::shared_ptr<mir::XdgDecorationsInterface> xdg_decorations)
     -> std::shared_ptr<mir::wayland::XdgDecorationManagerV1::Global>
 {
-    return std::make_shared<XdgDecorationManagerV1::Global>(display);
+    return std::make_shared<XdgDecorationManagerV1::Global>(display, xdg_decorations);
 }
 
-mir::frontend::XdgDecorationManagerV1::Global::Global(wl_display* display) :
-    wayland::XdgDecorationManagerV1::Global::Global{display, Version<1>{}}
+mir::frontend::XdgDecorationManagerV1::Global::Global(
+    wl_display* display, std::shared_ptr<mir::XdgDecorationsInterface> xdg_decorations) :
+    wayland::XdgDecorationManagerV1::Global::Global{display, Version<1>{}},
+    xdg_decorations{xdg_decorations}
 {
 }
 
 void mir::frontend::XdgDecorationManagerV1::Global::bind(wl_resource* new_zxdg_decoration_manager_v1)
 {
-    new XdgDecorationManagerV1{new_zxdg_decoration_manager_v1};
+    new XdgDecorationManagerV1{new_zxdg_decoration_manager_v1, xdg_decorations};
 }
 
-mir::frontend::XdgDecorationManagerV1::XdgDecorationManagerV1(wl_resource* resource) :
+mir::frontend::XdgDecorationManagerV1::XdgDecorationManagerV1(
+    wl_resource* resource, std::shared_ptr<mir::XdgDecorationsInterface> xdg_decorations) :
     mir::wayland::XdgDecorationManagerV1{resource, Version<1>{}},
-	toplevels_with_decorations(std::make_shared<std::unordered_set<wl_resource*>>())
+    toplevels_with_decorations(std::make_shared<std::unordered_set<wl_resource*>>()),
+    xdg_decorations{xdg_decorations}
 {
 }
 
@@ -108,7 +121,7 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid toplevel pointer"));
     }
 
-    auto decoration = new XdgToplevelDecorationV1{id, tl};
+    auto decoration = new XdgToplevelDecorationV1{id, tl, xdg_decorations};
     toplevels_with_decorations->insert(toplevel);
 
     decoration->add_destroy_listener([toplevels_with_decorations = this->toplevels_with_decorations, toplevel]()
@@ -128,17 +141,33 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
 }
 
 mir::frontend::XdgToplevelDecorationV1::XdgToplevelDecorationV1(
-    wl_resource* id, mir::frontend::XdgToplevelStable* toplevel) :
+    wl_resource* id,
+    mir::frontend::XdgToplevelStable* toplevel,
+    std::shared_ptr<mir::XdgDecorationsInterface> xdg_decorations) :
     wayland::XdgToplevelDecorationV1{id, Version<1>{}},
-    toplevel{toplevel}
+    toplevel{toplevel},
+    xdg_decorations{xdg_decorations}
 {
 }
 
 void mir::frontend::XdgToplevelDecorationV1::update_mode(uint32_t new_mode)
 {
+    switch (xdg_decorations->mode())
+    {
+    case ServerMode::always_ssd:
+        mode = Mode::server_side;
+        break;
+    case ServerMode::always_csd:
+        mode = Mode::client_side;
+        break;
+    case ServerMode::prefer_ssd:
+    case ServerMode::prefer_csd:
+        mode = new_mode;
+        break;
+    }
+
     auto spec = shell::SurfaceSpecification{};
 
-    mode = new_mode;
     switch (mode)
     {
     case Mode::client_side:
@@ -155,4 +184,20 @@ void mir::frontend::XdgToplevelDecorationV1::update_mode(uint32_t new_mode)
 
 void mir::frontend::XdgToplevelDecorationV1::set_mode(uint32_t mode) { update_mode(mode); }
 
-void mir::frontend::XdgToplevelDecorationV1::unset_mode() { update_mode(default_mode); }
+void mir::frontend::XdgToplevelDecorationV1::unset_mode()
+{
+    uint32_t new_mode = Mode::client_side; // To silence the warning
+    switch (xdg_decorations->mode())
+    {
+    case ServerMode::prefer_ssd:
+    case ServerMode::always_ssd:
+        new_mode = Mode::server_side;
+        break;
+    case ServerMode::always_csd:
+    case ServerMode::prefer_csd:
+        new_mode = Mode::client_side;
+        break;
+    }
+
+    update_mode(new_mode);
+}

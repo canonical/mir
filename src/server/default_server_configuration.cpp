@@ -38,6 +38,8 @@
 #include "default_emergency_cleanup.h"
 #include "mir/graphics/platform.h"
 #include "mir/console_services.h"
+#include "mir/misc_options.h"
+#include <memory>
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -197,4 +199,15 @@ auto mir::DefaultServerConfiguration::the_logger()
         {
             return std::make_shared<ml::DumbConsoleLogger>();
         });
+}
+
+std::shared_ptr<mir::MiscOptions>
+mir::DefaultServerConfiguration::the_misc_options()
+{
+    if(!misc_options)
+    {
+        misc_options = std::make_shared<MiscOptions>();
+    }
+
+    return misc_options;
 }

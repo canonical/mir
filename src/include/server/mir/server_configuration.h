@@ -72,6 +72,7 @@ class ServerStatusListener;
 class DisplayChanger;
 class EmergencyCleanup;
 class ConsoleServices;
+class MiscOptions;
 
 class ServerConfiguration
 {
@@ -110,6 +111,7 @@ public:
     using WaylandProtocolExtensionFilter = std::function<bool(std::shared_ptr<scene::Session> const&, char const*)>;
     virtual void set_wayland_extension_filter(WaylandProtocolExtensionFilter const& extension_filter) = 0;
     virtual void set_enabled_wayland_extensions(std::vector<std::string> const& extensions) = 0;
+    virtual std::shared_ptr<MiscOptions> the_misc_options() = 0;
 
 protected:
     ServerConfiguration() = default;
