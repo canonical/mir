@@ -548,11 +548,11 @@ TEST_F(MesaCursorTest, move_to_moves_cursor_to_right_output)
 
     cursor.show(stub_image);
 
-    EXPECT_CALL(*output_container.outputs[0], move_cursor(geom::Point{10,10}));
+    EXPECT_CALL(*output_container.outputs[0], move_cursor(geom::Point{10,-4}));
     EXPECT_CALL(*output_container.outputs[1], move_cursor(_))
         .Times(0);
 
-    cursor.move_to({10, 10});
+    cursor.move_to({10, -4});
 
     output_container.verify_and_clear_expectations();
 
@@ -576,7 +576,7 @@ TEST_F(MesaCursorTest, move_to_moves_cursor_to_right_output)
     EXPECT_CALL(*output_container.outputs[1], move_cursor(_))
         .Times(0);
 
-    cursor.move_to({-1, -1});
+    cursor.move_to({-64, -64});
 
     output_container.verify_and_clear_expectations();
 }
