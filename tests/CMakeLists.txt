@@ -77,6 +77,7 @@ include_directories(
 
 option(MIR_BUILD_ACCEPTANCE_TESTS "Build acceptance tests" ON)
 option(MIR_BUILD_INTEGRATION_TESTS "Build integration tests" ON)
+option(MIR_BUILD_WINDOW_MANAGEMENT_TESTS "Build window management tests" ON)
 option(MIR_BUILD_PERFORMANCE_TESTS "Build performance tests" ON)
 option(MIR_BUILD_MIRAL_TESTS "Build miral tests" ON)
 option(MIR_BUILD_UNIT_TESTS "Build unit tests" ON)
@@ -108,6 +109,10 @@ include_directories(
 if (MIR_BUILD_INTEGRATION_TESTS)
   add_subdirectory(integration-tests/)
 endif (MIR_BUILD_INTEGRATION_TESTS)
+
+if (MIR_BUILD_WINDOW_MANAGEMENT_TESTS)
+  add_subdirectory(window_management_tests/)
+endif(MIR_BUILD_WINDOW_MANAGEMENT_TESTS)
 
 if (MIR_BUILD_UNIT_TESTS)
   add_subdirectory(unit-tests/)
