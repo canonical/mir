@@ -239,7 +239,8 @@ mf::WaylandConnector::WaylandConnector(
     std::unique_ptr<WaylandExtensions> extensions_,
     WaylandProtocolExtensionFilter const& extension_filter,
     bool enable_key_repeat,
-    std::shared_ptr<scene::SessionLock> const& session_lock)
+    std::shared_ptr<scene::SessionLock> const& session_lock,
+    std::shared_ptr<mir::DecorationStrategy> const& decoration_strategy)
     : extension_filter{extension_filter},
       display{wl_display_create(), &cleanup_display},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
@@ -325,7 +326,8 @@ mf::WaylandConnector::WaylandConnector(
         screen_shooter,
         main_loop,
         desktop_file_manager,
-        session_lock_});
+        session_lock_,
+        decoration_strategy});
 
     shm_global = std::make_unique<WlShm>(display.get(), executor);
 

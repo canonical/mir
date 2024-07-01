@@ -10,10 +10,12 @@ global:
     mir::BasicCallback::lock*;
     mir::BasicCallback::operator*;
     mir::BasicCallback::unlock*;
+    mir::DecorationStrategy::?DecorationStrategy*;
     mir::DefaultServerConfiguration::DefaultServerConfiguration*;
     mir::DefaultServerConfiguration::add_wayland_extension*;
     mir::DefaultServerConfiguration::default_reports*;
     mir::DefaultServerConfiguration::set_enabled_wayland_extensions*;
+    mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     mir::DefaultServerConfiguration::set_wayland_extension_filter*;
     mir::DefaultServerConfiguration::the_application_not_responding_detector*;
     mir::DefaultServerConfiguration::the_buffer_allocator*;
@@ -26,6 +28,7 @@ global:
     mir::DefaultServerConfiguration::the_cursor_images*;
     mir::DefaultServerConfiguration::the_cursor_listener*;
     mir::DefaultServerConfiguration::the_decoration_manager*;
+    mir::DefaultServerConfiguration::the_decoration_strategy*;
     mir::DefaultServerConfiguration::the_default_cursor_image*;
     mir::DefaultServerConfiguration::the_default_input_device_hub*;
     mir::DefaultServerConfiguration::the_display*;
@@ -179,6 +182,7 @@ global:
     mir::Server::set_enabled_wayland_extensions*;
     mir::Server::set_exception_handler*;
     mir::Server::set_terminator*;
+    mir::Server::set_the_decoration_strategy*;
     mir::Server::set_wayland_extension_filter*;
     mir::Server::stop*;
     mir::Server::supported_pixel_formats*;
@@ -188,6 +192,7 @@ global:
     mir::Server::the_compositor_report*;
     mir::Server::the_cursor*;
     mir::Server::the_cursor_listener*;
+    mir::Server::the_decoration_strategy*;
     mir::Server::the_display*;
     mir::Server::the_display_configuration_controller*;
     mir::Server::the_display_configuration_observer_registrar*;
@@ -669,8 +674,10 @@ global:
     non-virtual?thunk?to?mir::BasicCallback::lock*;
     non-virtual?thunk?to?mir::BasicCallback::operator*;
     non-virtual?thunk?to?mir::BasicCallback::unlock*;
+    non-virtual?thunk?to?mir::DecorationStrategy::?DecorationStrategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::add_wayland_extension*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_enabled_wayland_extensions*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_wayland_extension_filter*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_application_not_responding_detector*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_buffer_allocator*;
@@ -683,6 +690,7 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_cursor_images*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_cursor_listener*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_decoration_manager*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_decoration_strategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_default_cursor_image*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_display*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_display_buffer_compositor_factory*;
@@ -1026,6 +1034,7 @@ global:
     non-virtual?thunk?to?mir::time::AlarmFactory::?AlarmFactory*;
     std::hash::operator*;
     typeinfo?for?mir::BasicCallback;
+    typeinfo?for?mir::DecorationStrategy;
     typeinfo?for?mir::DefaultServerConfiguration;
     typeinfo?for?mir::DefaultServerStatusListener;
     typeinfo?for?mir::DisplayChanger;
@@ -1160,10 +1169,12 @@ global:
     typeinfo?for?std::hash;
     virtual?thunk?to?mir::DefaultServerConfiguration::add_wayland_extension*;
     virtual?thunk?to?mir::DefaultServerConfiguration::set_enabled_wayland_extensions*;
+    virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     virtual?thunk?to?mir::DefaultServerConfiguration::set_wayland_extension_filter*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_application_not_responding_detector*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_compositor*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_console_services*;
+    virtual?thunk?to?mir::DefaultServerConfiguration::the_decoration_strategy*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_display*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_display_changer*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_display_platforms*;
@@ -1229,6 +1240,7 @@ global:
     virtual?thunk?to?mir::shell::ShellWrapper::surface_at*;
     virtual?thunk?to?mir::shell::ShellWrapper::swap_z_order*;
     vtable?for?mir::BasicCallback;
+    vtable?for?mir::DecorationStrategy;
     vtable?for?mir::DefaultServerConfiguration;
     vtable?for?mir::DefaultServerStatusListener;
     vtable?for?mir::DisplayChanger;
