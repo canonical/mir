@@ -39,25 +39,25 @@ class ToplevelsWithDecorations
 {
 public:
     ToplevelsWithDecorations() :
-        toplevels_with_decorations{std::make_shared<std::unordered_set<wl_resource*>>()}
+        toplevels_with_decorations{std::unordered_set<wl_resource*>()}
     {
     }
 
     /// \return true if no duplicates existed before insertion, false otherwise.
     bool registerToplevel(wl_resource* toplevel)
     {
-        auto [_, inserted] = toplevels_with_decorations->insert(toplevel);
+        auto [_, inserted] = toplevels_with_decorations.insert(toplevel);
         return inserted;
     }
 
     /// \return true if only one element was erased, false otherwise.
     bool unregisterToplevel(wl_resource* toplevel)
     {
-        return toplevels_with_decorations->erase(toplevel) == 1;
+        return toplevels_with_decorations.erase(toplevel) == 1;
     }
 
 private:
-    std::shared_ptr<std::unordered_set<wl_resource*>> toplevels_with_decorations;
+    std::unordered_set<wl_resource*> toplevels_with_decorations;
 };
 
 class XdgDecorationManagerV1 : public wayland::XdgDecorationManagerV1
@@ -78,7 +78,7 @@ public:
 private:
     void get_toplevel_decoration(wl_resource* id, wl_resource* toplevel) override;
 
-    ToplevelsWithDecorations toplevels_with_decorations;
+    std::shared_ptr<ToplevelsWithDecorations> const toplevels_with_decorations;
     std::shared_ptr<DecorationStrategy> const decoration_strategy;
 };
 
@@ -123,7 +123,7 @@ void mir::frontend::XdgDecorationManagerV1::Global::bind(wl_resource* new_zxdg_d
 mir::frontend::XdgDecorationManagerV1::XdgDecorationManagerV1(
     wl_resource* resource, std::shared_ptr<DecorationStrategy> strategy) :
     mir::wayland::XdgDecorationManagerV1{resource, Version<1>{}},
-    toplevels_with_decorations{},
+    toplevels_with_decorations{std::make_shared<ToplevelsWithDecorations>()},
     decoration_strategy{std::move(strategy)}
 {
 }
@@ -139,22 +139,22 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
     }
 
     auto decoration = new XdgToplevelDecorationV1{id, tl, decoration_strategy};
-    if (!toplevels_with_decorations.registerToplevel(toplevel))
+    if (!toplevels_with_decorations->registerToplevel(toplevel))
     {
         BOOST_THROW_EXCEPTION(mir::wayland::ProtocolError(
             resource, Error::already_constructed, "Decoration already constructed for this toplevel"));
     }
 
     decoration->add_destroy_listener(
-        [&toplevels_with_decorations = this->toplevels_with_decorations, toplevel]()
+        [toplevels_with_decorations = this->toplevels_with_decorations, toplevel]()
         {
-            toplevels_with_decorations.unregisterToplevel(toplevel);
+            toplevels_with_decorations->unregisterToplevel(toplevel);
         });
 
     tl->add_destroy_listener(
-        [&toplevels_with_decorations = this->toplevels_with_decorations, client = this->client, toplevel]()
+        [toplevels_with_decorations = this->toplevels_with_decorations, client = this->client, toplevel]()
         {
-            if (!client->is_being_destroyed() && !toplevels_with_decorations.unregisterToplevel(toplevel))
+            if (!client->is_being_destroyed() && !toplevels_with_decorations->unregisterToplevel(toplevel))
             {
                 mir::log_warning("Toplevel destroyed before attached decoration!");
                 // https://github.com/canonical/mir/issues/3452
