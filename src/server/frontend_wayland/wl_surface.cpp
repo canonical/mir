@@ -337,7 +337,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         input_shape = state.input_shape.value();
 
     if (state.scale)
-        inv_scale = 1.0f / state.scale.value();
+        scale = state.scale.value();
 
     if (state.viewport)
     {
@@ -425,12 +425,12 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
 
         if (viewport)
         {
-            std::tie(src_sample, logical_size) = viewport.value().resolve_viewport(1.0f / inv_scale, current_buffer->size());
+            std::tie(src_sample, logical_size) = viewport.value().resolve_viewport(scale, current_buffer->size());
         }
         else
         {
             src_sample = geom::RectangleD{{0, 0}, geom::SizeD{current_buffer->size()}};
-            logical_size = current_buffer->size() * inv_scale;
+            logical_size = current_buffer->size() / scale;
         }
 
         stream->submit_buffer(current_buffer, logical_size, src_sample);
