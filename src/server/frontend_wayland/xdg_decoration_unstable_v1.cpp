@@ -180,8 +180,7 @@ mir::frontend::XdgToplevelDecorationV1::XdgToplevelDecorationV1(
 {
 }
 
-auto mir::frontend::XdgToplevelDecorationV1::to_mode(DecorationStrategy::DecorationsType type)
-    -> uint32_t
+auto mir::frontend::XdgToplevelDecorationV1::to_mode(DecorationStrategy::DecorationsType type) -> uint32_t
 {
     switch (type)
     {
@@ -194,8 +193,7 @@ auto mir::frontend::XdgToplevelDecorationV1::to_mode(DecorationStrategy::Decorat
     std::unreachable();
 }
 
-auto mir::frontend::XdgToplevelDecorationV1::to_decorations_type(uint32_t mode)
-    -> DecorationStrategy::DecorationsType
+auto mir::frontend::XdgToplevelDecorationV1::to_decorations_type(uint32_t mode) -> DecorationStrategy::DecorationsType
 {
     switch (mode)
     {
