@@ -1,0 +1,30 @@
+---
+BasedOnStyle: GNU
+AccessModifierOffset: -4
+AlignAfterOpenBracket: AlwaysBreak
+AlignConsecutiveAssignments:
+  PadOperators: false
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: true
+BinPackArguments: false
+BinPackParameters: false
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Allman
+BreakBeforeTernaryOperators: false
+BreakConstructorInitializers: AfterColon
+BreakInheritanceList: AfterColon
+ColumnLimit: 120
+Cpp11BracedListStyle: true
+IndentCaseBlocks: true
+IndentWidth: 4
+KeepEmptyLinesAtTheStartOfBlocks: false
+PackConstructorInitializers: Never
+PenaltyReturnTypeOnItsOwnLine: 1000000
+PointerAlignment: Left
+QualifierAlignment: Right
+SpaceBeforeParens: ControlStatements
+Standard: Latest
+TabWidth: 4
+AllowShortLambdasOnASingleLine: None
+AllowShortFunctionsOnASingleLine: None
