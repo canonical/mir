@@ -45,7 +45,8 @@ public:
         std::shared_ptr<time::Clock> const& clock,
         Executor& executor,
         std::span<std::shared_ptr<graphics::GLRenderingProvider>> const& providers,
-        std::shared_ptr<renderer::RendererFactory> render_factory);
+        std::shared_ptr<renderer::RendererFactory> render_factory,
+        std::shared_ptr<mir::graphics::GLConfig> const& config);
 
     void capture(
         std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
@@ -61,7 +62,8 @@ private:
             std::shared_ptr<Scene> const& scene,
             std::shared_ptr<time::Clock> const& clock,
             std::shared_ptr<graphics::GLRenderingProvider> provider,
-            std::shared_ptr<renderer::RendererFactory> render_factory);
+            std::shared_ptr<renderer::RendererFactory> render_factory,
+            std::shared_ptr<mir::graphics::GLConfig> const& config);
 
         auto render(
             std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
@@ -85,6 +87,7 @@ private:
 
         std::unique_ptr<graphics::DisplaySink> offscreen_sink;
         std::shared_ptr<OneShotBufferDisplayProvider> const output;
+        std::shared_ptr<mir::graphics::GLConfig> config;
     };
     std::shared_ptr<Self> const self;
     Executor& executor;

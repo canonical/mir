@@ -439,7 +439,8 @@ auto mge::GLRenderingProvider::surface_for_sink(
     return std::make_unique<mgc::CPUCopyOutputSurface>(
         dpy,
         ctx,
-        *cpu_provider);
+        *cpu_provider,
+        config);
 }
 
 auto mge::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)
