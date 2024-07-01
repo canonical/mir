@@ -42,7 +42,6 @@ namespace input
 class KeyMapper;
 class InputDevice;
 class DefaultInputDeviceHub;
-class LedObserverRegistrar;
 
 class DefaultDevice : public Device
 {
@@ -50,19 +49,16 @@ public:
     DefaultDevice(MirInputDeviceId id,
                   std::shared_ptr<dispatch::ActionQueue> const& actions,
                   InputDevice& device,
-                  std::shared_ptr<KeyMapper> const& key_mapper,
-                  std::shared_ptr<LedObserverRegistrar> const& led_observer_registrar);
+                  std::shared_ptr<KeyMapper> const& key_mapper);
     DefaultDevice(MirInputDeviceId id,
                   std::shared_ptr<dispatch::ActionQueue> const& actions,
                   InputDevice& device,
                   std::shared_ptr<KeyMapper> const& key_mapper,
-                  std::shared_ptr<LedObserverRegistrar> const& led_observer_registrar,
                   std::function<void(Device*)> const& change_callback);
     DefaultDevice(MirInputDevice const& config,
                   std::shared_ptr<dispatch::ActionQueue> const& actions,
                   InputDevice& device,
                   std::shared_ptr<KeyMapper> const& key_mapper,
-                  std::shared_ptr<LedObserverRegistrar> const& led_observer_registrar,
                   std::function<void(Device*)> const& change_callback);
     MirInputDeviceId id() const override;
     DeviceCapabilities capabilities() const override;
@@ -96,7 +92,6 @@ private:
     std::shared_ptr<dispatch::ActionQueue> actions;
     std::shared_ptr<KeyMapper> const key_mapper;
     std::function<void(Device*)> device_changed_callback;
-    std::shared_ptr<LedObserverRegistrar> const led_observer_registrar;
     std::mutex mutable config_mutex;
 };
 

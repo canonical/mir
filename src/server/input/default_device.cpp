@@ -33,7 +33,6 @@ mi::DefaultDevice::DefaultDevice(MirInputDeviceId id,
                                  std::shared_ptr<dispatch::ActionQueue> const& actions,
                                  InputDevice& device,
                                  std::shared_ptr<KeyMapper> const& key_mapper,
-                                 std::shared_ptr<LedObserverRegistrar> const& led_observer_registrar,
                                  std::function<void(Device*)> const& callback)
     : device_id{id},
       device{device},
@@ -43,8 +42,7 @@ mi::DefaultDevice::DefaultDevice(MirInputDeviceId id,
       touchscreen{device.get_touchscreen_settings()},
       actions{actions},
       key_mapper{key_mapper},
-      device_changed_callback{callback},
-      led_observer_registrar{led_observer_registrar}
+      device_changed_callback{callback}
 {
     if (contains(info.capabilities, mi::DeviceCapability::keyboard))
     {
@@ -54,9 +52,8 @@ mi::DefaultDevice::DefaultDevice(MirInputDeviceId id,
 }
 
 mi::DefaultDevice::DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::ActionQueue> const& actions,
-                                 InputDevice& device, std::shared_ptr<KeyMapper> const& key_mapper,
-                                 std::shared_ptr<LedObserverRegistrar> const& led_observer_registrar)
-    : DefaultDevice(id, actions, device, key_mapper, led_observer_registrar, [](Device*){})
+                                 InputDevice& device, std::shared_ptr<KeyMapper> const& key_mapper)
+    : DefaultDevice(id, actions, device, key_mapper, [](Device*){})
 {
 }
 
@@ -64,9 +61,8 @@ mi::DefaultDevice::DefaultDevice(MirInputDevice const& config,
                                  std::shared_ptr<dispatch::ActionQueue> const& actions,
                                  InputDevice& device,
                                  std::shared_ptr<KeyMapper> const& key_mapper,
-                                 std::shared_ptr<LedObserverRegistrar> const& led_observer_registrar,
                                  std::function<void(Device*)> const& callback)
-    : DefaultDevice(config.id(), actions, device, key_mapper, led_observer_registrar, callback)
+    : DefaultDevice(config.id(), actions, device, key_mapper, callback)
 {
     if (config.has_touchpad_config())
         set_touchpad_configuration(config.touchpad_config());
@@ -181,7 +177,7 @@ void mi::DefaultDevice::set_touchpad_configuration(MirTouchpadConfig const& conf
     settings.click_mode= conf.click_mode();
     settings.scroll_mode = conf.scroll_mode();
     settings.button_down_scroll_button = conf.button_down_scroll_button();
-    settings.disable_with_mouse = conf.disable_with_mouse();
+    settings.disable_with_mouse = conf.disable_with_external_mouse();
     settings.disable_while_typing = conf.disable_while_typing();
     settings.tap_to_click = conf.tap_to_click();
     settings.middle_mouse_button_emulation = conf.middle_mouse_button_emulation();

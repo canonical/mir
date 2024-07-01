@@ -18,7 +18,6 @@
 #define MIR_INPUT_DEVICE_H_
 
 #include "mir/input/device_capability.h"
-#include "mir/input/keyboard_leds.h"
 #include "mir_toolkit/event.h"
 #include "mir/optional_value.h"
 

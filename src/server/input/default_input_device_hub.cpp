@@ -23,7 +23,6 @@
 #include "mir/input/mir_touchpad_config.h"
 #include "mir/input/mir_touchscreen_config.h"
 #include "mir/input/mir_keyboard_config.h"
-#include "mir/input/key_mapper.h"
 #include "mir/geometry/point.h"
 #include "mir/server_status_listener.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
@@ -200,15 +199,13 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
     std::shared_ptr<time::Clock> const& clock,
     std::shared_ptr<mi::KeyMapper> const& key_mapper,
-    std::shared_ptr<mir::ServerStatusListener> const& server_status_listener,
-    std::shared_ptr<LedObserverRegistrar> const& led_observer_registrar)
+    std::shared_ptr<mir::ServerStatusListener> const& server_status_listener)
     : seat{seat},
       input_dispatchable{input_multiplexer},
       device_queue(std::make_shared<dispatch::ActionQueue>()),
       clock(clock),
       key_mapper(key_mapper),
       server_status_listener(server_status_listener),
-      led_observer_registrar(led_observer_registrar),
       device_id_generator{0}
 {
     input_dispatchable->add_watch(device_queue);
@@ -318,17 +315,17 @@ struct std::formatter<MirPointerConfig>
         switch (c.acceleration())
         {
         case mir_pointer_acceleration_adaptive:
-            out = std::format_to(out, "acceleration=adaptive,");
+            out = std::format_to(out, "cursor-acceleration=adaptive,");
             break;
 
         case mir_pointer_acceleration_none:
-            out = std::format_to(out, "acceleration=none,");
+            out = std::format_to(out, "cursor-acceleration=none,");
             break;
         }
 
-        out = std::format_to(out, "acceleration_bias={:.2f},", c.cursor_acceleration_bias());
-        out = std::format_to(out, "hscale={:.2f},", c.horizontal_scroll_scale());
-        return std::format_to(out, "vscale={:.2f}}}", c.vertical_scroll_scale());
+        out = std::format_to(out, "cursor-acceleration-bias={:.2f},", c.cursor_acceleration_bias());
+        out = std::format_to(out, "scroll-hspeed={:.2f},", c.horizontal_scroll_scale());
+        return std::format_to(out, "scroll-vspeed={:.2f}}}", c.vertical_scroll_scale());
     }
 };
 
@@ -354,15 +351,15 @@ struct std::formatter<MirTouchpadConfig>
         {
         case mir_touchpad_click_mode_none:
             write_delim();
-            out = std::format_to(out, "click_mode=none");
+            out = std::format_to(out, "click-mode=none");
             break;
         case mir_touchpad_click_mode_area_to_click:
             write_delim();
-            out = std::format_to(out, "click_mode=area_to_click");
+            out = std::format_to(out, "click-mode=area");
             break;
         case mir_touchpad_click_mode_finger_count:
             write_delim();
-            out = std::format_to(out, "click_mode=finger_count");
+            out = std::format_to(out, "click-mode=clickfinger");
             break;
         }
 
@@ -370,48 +367,48 @@ struct std::formatter<MirTouchpadConfig>
         {
         case mir_touchpad_scroll_mode_none:
             write_delim();
-            out = std::format_to(out, "scroll_mode=none");
+            out = std::format_to(out, "scroll-mode=none");
             break;
 
         case mir_touchpad_scroll_mode_two_finger_scroll:
             write_delim();
-            out = std::format_to(out, "scroll_mode=two_finger");
+            out = std::format_to(out, "scroll-mode=two-finger");
             break;
 
         case mir_touchpad_scroll_mode_edge_scroll:
             write_delim();
-            out = std::format_to(out, "scroll_mode=edge");
+            out = std::format_to(out, "scroll-mode=edge");
             break;
 
         case mir_touchpad_scroll_mode_button_down_scroll:
             write_delim();
-            out = std::format_to(out, "scroll_mode=button_down,scroll_button={},", c.button_down_scroll_button());
+            out = std::format_to(out, "scroll-mode=button-down,touchpad-scroll-button={},", c.button_down_scroll_button());
             break;
         }
 
         if (c.tap_to_click())
         {
             write_delim();
-            out = std::format_to(out, "tap_to_click");
+            out = std::format_to(out, "tap-to-click");
         }
 
         if (c.middle_mouse_button_emulation())
         {
             write_delim();
-            out = std::format_to(out, "middle_mouse_button_emulation");
+            out = std::format_to(out, "middle-mouse-button-emulation");
         }
 
 
-        if (c.disable_with_mouse())
+        if (c.disable_with_external_mouse())
         {
             write_delim();
-            out = std::format_to(out, "disable_with_mouse");
+            out = std::format_to(out, "disable-with-external-mouse");
         }
 
         if (c.disable_while_typing())
         {
             write_delim();
-            out = std::format_to(out, "disable_while_typing");
+            out = std::format_to(out, "disable-while-typing");
         }
 
         return std::format_to(out, "}}");
@@ -431,10 +428,10 @@ struct std::formatter<MirTouchscreenConfig>
         switch (c.mapping_mode())
         {
         case mir_touchscreen_mapping_mode_to_output:
-            return std::format_to(ctx.out(), "{{mapping_mode=to_output}}");
+            return std::format_to(ctx.out(), "{{mapping-mode=to-output}}");
 
         case mir_touchscreen_mapping_mode_to_display_wall:
-            return std::format_to(ctx.out(), "{{mapping_mode=to_display_wall}}");
+            return std::format_to(ctx.out(), "{{mapping-mode=to-display-wall}}");
 
         default:
             return ctx.out();
@@ -823,7 +820,6 @@ std::shared_ptr<mi::DefaultDevice> mi::DefaultInputDeviceHub::restore_or_create_
             queue,
             device,
             key_mapper,
-            led_observer_registrar,
             [this](Device *d){device_changed(d);});
     else
         return std::make_shared<DefaultDevice>(
@@ -831,6 +827,5 @@ std::shared_ptr<mi::DefaultDevice> mi::DefaultInputDeviceHub::restore_or_create_
             queue,
             device,
             key_mapper,
-            led_observer_registrar,
             [this](Device *d){device_changed(d);});
 }

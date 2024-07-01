@@ -57,9 +57,7 @@ class InputDeviceObserver;
 class DefaultDevice;
 class Seat;
 class KeyMapper;
-class LedObserver;
 class DefaultInputDeviceHub;
-class LedObserverRegistrar;
 
 struct ExternalInputDeviceHub : InputDeviceHub
 {
@@ -88,8 +86,7 @@ public:
         std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
         std::shared_ptr<time::Clock> const& clock,
         std::shared_ptr<KeyMapper> const& key_mapper,
-        std::shared_ptr<ServerStatusListener> const& server_status_listener,
-        std::shared_ptr<LedObserverRegistrar> const& led_observer_registrar);
+        std::shared_ptr<ServerStatusListener> const& server_status_listener);
 
     // InputDeviceRegistry - calls from mi::Platform
     auto add_device(std::shared_ptr<InputDevice> const& device) -> std::weak_ptr<Device> override;
@@ -120,9 +117,7 @@ private:
     std::shared_ptr<dispatch::ActionQueue> const device_queue;
     std::shared_ptr<time::Clock> const clock;
     std::shared_ptr<KeyMapper> const key_mapper;
-    std::shared_ptr<LedObserver> const key_mapper_observer;
     std::shared_ptr<ServerStatusListener> const server_status_listener;
-    std::shared_ptr<LedObserverRegistrar> const led_observer_registrar;
     ThreadSafeList<std::shared_ptr<InputDeviceObserver>> observers;
 
     /// Does not guarantee it's own threadsafety, non-const methods should not be called from multiple threads at once
