@@ -49,10 +49,13 @@ public:
         return inserted;
     }
 
-    /// \return true if only one element was erased, false otherwise.
+    /// \return true if the toplevel didn't exist in the set, false otherwise.
+    /// The return value is used in the destroy callback of the toplevel to
+    /// check if the toplevel is destroyed before the decoration (orphaned
+    /// decoration).
     bool unregister_toplevel(wl_resource* toplevel)
     {
-        return toplevels_with_decorations.erase(toplevel) == 1;
+        return toplevels_with_decorations.erase(toplevel) == 0;
     }
 
 private:
@@ -153,7 +156,8 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
     tl->add_destroy_listener(
         [toplevels_with_decorations = this->toplevels_with_decorations, client = this->client, toplevel]()
         {
-            if (!client->is_being_destroyed() && !toplevels_with_decorations->unregister_toplevel(toplevel))
+            const auto orphaned_decoration = !toplevels_with_decorations->unregister_toplevel(toplevel);
+            if (!client->is_being_destroyed() && orphaned_decoration)
             {
                 mir::log_warning("Toplevel destroyed before attached decoration!");
                 // https://github.com/canonical/mir/issues/3452
