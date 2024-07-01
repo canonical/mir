@@ -88,9 +88,10 @@ public:
 
     ~EGLState()
     {
-        CacheEglState stash;
-
-        eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        if (ctx == eglGetCurrentContext())
+        {
+            eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        }
         eglDestroyContext(dpy, ctx);
     }
 
