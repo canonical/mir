@@ -35,7 +35,7 @@ struct MirTouchpadConfig
                           int button_down_scroll_button,
                           bool tap_to_click,
                           bool disable_while_typing,
-                          bool disable_with_mouse,
+                          bool disable_with_external_mouse,
                           bool middle_mouse_button_emulation);
 
     /*!
@@ -68,10 +68,13 @@ struct MirTouchpadConfig
     void middle_mouse_button_emulation(bool);
 
     /*!
-     * When disable-with-mouse is enabled the touchpad will stop to emit user input events when another pointing device is plugged in.
+     * When disable-with-external-mouse is enabled the touchpad will stop to emit user input events when another
+     * pointing device is plugged in.
      */
-    bool disable_with_mouse() const;
-    void disable_with_mouse(bool);
+    bool disable_with_external_mouse() const;
+    void disable_with_external_mouse(bool enabled);
+    [[deprecated("Use disable_with_external_mouse() instead (since Mir 2.18)")]] bool disable_with_mouse() const;
+    [[deprecated("Use disable_with_external_mouse() instead (since Mir 2.18)")]] void disable_with_mouse(bool);
 
     /*!
      * When disable-with-mouse is enabled the touchpad will stop to emit user input events when the user starts to use a keyboard and a short period after.

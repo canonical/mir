@@ -690,3 +690,8 @@ global:
   };
 };
 
+MIR_COMMON_2.18 {
+  global: extern "C++" {
+    MirTouchpadConfig::disable_with_external_mouse*;
+  };
+} MIR_COMMON_2.17;
