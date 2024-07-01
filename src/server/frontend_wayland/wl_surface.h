@@ -177,7 +177,7 @@ private:
 
     WlSurfaceState pending;
     geometry::Displacement offset_;
-    float inv_scale{1.0f};
+    int32_t scale{1};
     std::optional<geometry::Size> buffer_size_;
     std::vector<wayland::Weak<WlSurfaceState::Callback>> frame_callbacks;
     std::optional<std::vector<mir::geometry::Rectangle>> input_shape;
