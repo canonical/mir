@@ -384,7 +384,7 @@ Description: Display server for Ubuntu - Nvidia driver metapackage
  .
  This package depends on a full set of graphics and input drivers for Nvidia systems.
 
-Package: mir-platform-input-evdev11
+Package: mir-platform-input-evdev10
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -423,7 +423,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          mir-platform-graphics-gbm-kms22,
-         mir-platform-input-evdev11,
+         mir-platform-input-evdev10,
          mir-platform-rendering-egl-generic,
 Description: Display server for Ubuntu - gbm-kms driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
@@ -439,7 +439,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          mir-platform-graphics-eglstream-kms22,
-         mir-platform-input-evdev11,
+         mir-platform-input-evdev10,
 Description: Display server for Ubuntu - eglstream-kms driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
