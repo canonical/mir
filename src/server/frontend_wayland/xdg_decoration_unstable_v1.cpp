@@ -35,10 +35,9 @@ namespace frontend
 class ToplevelsWithDecorations
 {
 public:
-    ToplevelsWithDecorations() :
-        toplevels_with_decorations{std::unordered_set<wl_resource*>()}
-    {
-    }
+    ToplevelsWithDecorations() = default;
+    ToplevelsWithDecorations(ToplevelsWithDecorations const&) = delete;
+    ToplevelsWithDecorations& operator=(ToplevelsWithDecorations const&) = delete;
 
     /// \return true if no duplicates existed before insertion, false otherwise.
     bool register_toplevel(wl_resource* toplevel)
