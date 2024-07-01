@@ -29,10 +29,8 @@ namespace doubles
 {
 struct MockLedObserverRegistrar : input::LedObserverRegistrar
 {
-    MOCK_METHOD1(register_interest, void(std::weak_ptr<input::LedObserver> const&));
-    MOCK_METHOD2(register_interest, void(std::weak_ptr<input::LedObserver> const&, Executor&));
-    MOCK_METHOD2(register_early_observer, void(std::weak_ptr<input::LedObserver> const&, Executor&));
-    MOCK_METHOD1(unregister_interest, void(input::LedObserver const&));
+    MOCK_METHOD2(register_interest, void(std::weak_ptr<input::LedObserver> const&, MirInputDeviceId));
+    MOCK_METHOD2(unregister_interest, void(input::LedObserver const&, MirInputDeviceId));
 };
 
 }
