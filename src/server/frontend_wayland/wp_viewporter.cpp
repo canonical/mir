@@ -24,6 +24,7 @@
 #include <utility>
 
 namespace mf = mir::frontend;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -79,6 +80,92 @@ mf::Viewport::~Viewport()
 auto mf::Viewport::dirty() -> bool
 {
     return std::exchange(dirty_, false);
+}
+
+namespace
+{
+auto as_int_if_exact(double d) -> std::optional<int>
+{
+    if (std::trunc(d) == d && d < std::numeric_limits<int>::max())
+    {
+        return static_cast<int>(d);
+    }
+    return {};
+}
+
+auto as_int_size_if_exact(geom::SizeD size) -> std::optional<geom::Size>
+{
+    auto width = as_int_if_exact(size.width.as_value());
+    auto height = as_int_if_exact(size.height.as_value());
+
+    if (width && height)
+    {
+        return geom::Size{*width, *height};
+    }
+    return {};
+}
+}
+
+auto mf::Viewport::resolve_viewport(int32_t scale, geom::Size buffer_size) const
+    -> std::pair<geom::RectangleD, geom::Size>
+{
+    auto const src_bounds = 
+        [&]()
+        {
+            auto const entire_buffer = geom::RectangleD{{0, 0}, geom::SizeD{buffer_size}};
+            if (source)
+            {
+                auto raw_source = source.value();
+                /* Viewport coordinates are in buffer coordinates *after* applying transformation and scale.
+                 * That means this rectangle needs to be scaled. (And have buffer transform applied, when we support that)
+                 */
+                geom::RectangleD source_in_buffer_coords{
+                    {raw_source.left().as_value() * scale, raw_source.top().as_value() * scale},
+                    raw_source.size * scale
+                };
+                if (!entire_buffer.contains(source_in_buffer_coords))
+                {
+                    throw wayland::ProtocolError{
+                        resource,
+                        wayland::Viewport::Error::out_of_buffer,
+                        "Source viewport (%f, %f), (%f × %f) is not entirely within buffer (%i × %i)",
+                        source_in_buffer_coords.left().as_value(),
+                        source_in_buffer_coords.top().as_value(),
+                        source_in_buffer_coords.size.width.as_value(),
+                        source_in_buffer_coords.size.height.as_value(),
+                        buffer_size.width.as_uint32_t(),
+                        buffer_size.height.as_uint32_t()
+                    };
+                }
+                return source_in_buffer_coords;
+            }
+            else
+            {
+                return entire_buffer;
+            }
+        }();
+
+    auto const logical_size =
+        [&]()
+        {
+            if (destination)
+            {
+                return destination.value();
+            }
+            if (as_int_size_if_exact(src_bounds.size))
+            {
+                return as_int_size_if_exact(src_bounds.size).value() / scale;
+            }
+            else
+            {
+                throw wayland::ProtocolError{
+                    resource,
+                    wayland::Viewport::Error::bad_size,
+                    "No wp_viewport destination set, and source size (%f × %f) is not integral", src_bounds.size.width.as_value(), src_bounds.size.height.as_value()};
+            }
+        }();
+
+    return std::make_pair(src_bounds, logical_size);
 }
 
 void mf::Viewport::set_source(double x, double y, double width, double height)

@@ -323,30 +323,6 @@ void mf::WlSurface::set_input_region(std::optional<wl_resource*> const& region)
     }
 }
 
-namespace
-{
-auto as_int_if_exact(double d) -> std::optional<int>
-{
-    if (std::trunc(d) == d && d < std::numeric_limits<int>::max())
-    {
-        return static_cast<int>(d);
-    }
-    return {};
-}
-
-auto as_int_size_if_exact(geom::SizeD size) -> std::optional<geom::Size>
-{
-    auto width = as_int_if_exact(size.width.as_value());
-    auto height = as_int_if_exact(size.height.as_value());
-
-    if (width && height)
-    {
-        return geom::Size{*width, *height};
-    }
-    return {};
-}
-}
-
 void mf::WlSurface::commit(WlSurfaceState const& state)
 {
     // We're going to lose the value of state, so copy the frame_callbacks first. We have to maintain a list of
@@ -444,60 +420,18 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
 
     if (needs_buffer_submission)
     {
-        auto const src_sample =
-            [&]() -> geom::RectangleD
-            {
-                auto const entire_buffer = geom::RectangleD{{0, 0}, geom::SizeD{current_buffer->size()}};
-                if (viewport && viewport.value().source)
-                {
-                    auto raw_source = viewport.value().source.value();
-                    /* Viewport coordinates are in buffer coordinates *after* applying transformation and scale.
-                     * That means this rectangle needs to be scaled. (And have buffer transform applied, when we support that)
-                     */
-                    geom::RectangleD source_in_buffer_coords{
-                        {raw_source.left().as_value() / inv_scale, raw_source.top().as_value() / inv_scale},
-                        raw_source.size / inv_scale
-                    };
-                    if (!entire_buffer.contains(source_in_buffer_coords))
-                    {
-                        throw wayland::ProtocolError{
-                            viewport.value().resource,
-                            wayland::Viewport::Error::out_of_buffer,
-                            "Source viewport (%f, %f), (%f × %f) is not entirely within buffer (%i × %i)",
-                            source_in_buffer_coords.left().as_value(),
-                            source_in_buffer_coords.top().as_value(),
-                            source_in_buffer_coords.size.width.as_value(),
-                            source_in_buffer_coords.size.height.as_value(),
-                            current_buffer->size().width.as_uint32_t(),
-                            current_buffer->size().height.as_uint32_t()
-                        };
-                    }
-                    return source_in_buffer_coords;
-                }
-                return entire_buffer;
-            }();
-        auto const logical_size =
-            [&]()
-            {
-                if (viewport)
-                {
-                    if (viewport.value().destination)
-                    {
-                        return viewport.value().destination.value();
-                    }
-                }
-                if (as_int_size_if_exact(src_sample.size))
-                {
-                    return as_int_size_if_exact(src_sample.size).value() * inv_scale;
-                }
-                else
-                {
-                    throw wayland::ProtocolError{
-                        viewport.value().resource,
-                        wayland::Viewport::Error::bad_size,
-                        "No wp_viewport destination set, and source size (%f × %f) is not integral", src_sample.size.width.as_value(), src_sample.size.height.as_value()};
-                }
-            }();
+        geom::Size logical_size;
+        geom::RectangleD src_sample;
+
+        if (viewport)
+        {
+            std::tie(src_sample, logical_size) = viewport.value().resolve_viewport(1.0f / inv_scale, current_buffer->size());
+        }
+        else
+        {
+            src_sample = geom::RectangleD{{0, 0}, geom::SizeD{current_buffer->size()}};
+            logical_size = current_buffer->size() * inv_scale;
+        }
 
         stream->submit_buffer(current_buffer, logical_size, src_sample);
 

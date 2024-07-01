@@ -39,26 +39,39 @@ private:
     void bind(wl_resource* new_wp_viewporter) override;
 };
 
+/**
+ * Manages the wp_viewport state
+ *
+ * Threadsafety: This is a Wayland object, and should only be accessed from the Wayland thread
+ */
 class Viewport : public wayland::Viewport
 {
 public:
     Viewport(wl_resource* new_viewport, WlSurface* surface);
     ~Viewport() override;
 
-    // Threadsafety: This is a Wayland object, these should only be referenced on the Wayland mainloop
-    std::optional<geometry::RectangleD> source;
-    std::optional<geometry::Size> destination;
-
     /**
      * Have the source or destination values changed since the last call to dirty()?
      */
     auto dirty() -> bool;
+
+    /**
+     * Combine the viewport parameters with submitted buffer and scale to produce final parameters
+     *
+     * \returns The source viewport into the buffer, in buffer coordinates, and
+     *          The logical (post-scaling) size of this wl_surface
+     * \throws A wayland::ProtocolError if any of the wp_viewporter preconditions are not met.
+     */
+    auto resolve_viewport(int32_t scale, geometry::Size buffer_size) const
+        -> std::pair<geometry::RectangleD, geometry::Size>;
 private:
     void set_source(double x, double y, double width, double height) override;
     void set_destination(int32_t width, int32_t height) override;
 
     bool dirty_;
     wayland::Weak<wayland::Surface> surface;
+    std::optional<geometry::RectangleD> source;
+    std::optional<geometry::Size> destination;
 };
 }
 
