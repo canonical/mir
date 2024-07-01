@@ -195,7 +195,10 @@ void mircv::XKBMapperRegistrar::map_event(MirEvent& ev)
                 last_device_id = device_id;
                 auto compose_state = get_compose_state(device_id);
                 if (mapping_state->update_and_map(ev, compose_state))
+                {
                     update_modifier();
+                    mapping_state->notify_leds_changed();
+                }
             }
 
             auto& key_event = *ev.to_input()->to_keyboard();
@@ -395,7 +398,7 @@ auto mircv::XKBMapperRegistrar::XkbMappingState::xkb_modifiers() const -> MirXkb
         xkb_state_serialize_layout(state.get(), XKB_STATE_LAYOUT_EFFECTIVE)};
 }
 
-mi::KeyboardLeds mircv::XKBMapperRegistrar::XkbMappingState::get_leds() const
+void mircv::XKBMapperRegistrar::XkbMappingState::notify_leds_changed()
 {
     KeyboardLeds leds;
     if (xkb_state_led_index_is_active(state.get(), caps_led))
@@ -404,7 +407,8 @@ mi::KeyboardLeds mircv::XKBMapperRegistrar::XkbMappingState::get_leds() const
         leds |= KeyboardLed::num_lock;
     if (xkb_state_led_index_is_active(state.get(), scroll_led))
         leds |= KeyboardLed::scroll_lock;
-    return leds;
+
+    registrar.leds_set(leds);
 }
 
 mircv::XKBMapperRegistrar::XkbMappingState::XKBMappingStateRegistrar& mircv::XKBMapperRegistrar::XkbMappingState::get_registrar()

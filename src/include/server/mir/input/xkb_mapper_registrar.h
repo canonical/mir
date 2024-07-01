@@ -102,8 +102,8 @@ private:
 
         bool update_and_map(MirEvent& event, ComposeState* compose_state);
         MirInputEventModifiers modifiers() const;
-        auto xkb_modifiers() const -> MirXkbModifiers;
-        KeyboardLeds get_leds() const;
+        auto xkb_modifiers() const -> MirXkbModifiers;        
+        void notify_leds_changed();
         XKBMappingStateRegistrar& get_registrar();
     private:
         /// Returns a pair containing the keysym for the given scancode and if any XKB modifiers have been changed
