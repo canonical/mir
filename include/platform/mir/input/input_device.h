@@ -67,8 +67,6 @@ public:
 
     virtual optional_value<TouchscreenSettings> get_touchscreen_settings() const = 0;
     virtual void apply_settings(TouchscreenSettings const&) = 0;
-
-    virtual void set_leds(KeyboardLeds leds) = 0;
 protected:
     InputDevice(InputDevice const&) = delete;
     InputDevice& operator=(InputDevice const&) = delete;

@@ -48,8 +48,6 @@ void mi::VirtualInputDevice::if_started_then(std::function<void(InputSink*, Even
     }
 }
 
-void mi::VirtualInputDevice::set_leds(mir::input::KeyboardLeds) { }
-
 void mi::VirtualInputDevice::start(InputSink* sink, EventBuilder* builder)
 {
     *state.lock() = State{sink, builder};

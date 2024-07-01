@@ -48,7 +48,6 @@ struct MockInputDevice : public mi::InputDevice
     MOCK_METHOD1(apply_settings, void(mi::TouchpadSettings const&));
     MOCK_CONST_METHOD0(get_touchscreen_settings, mir::optional_value<mi::TouchscreenSettings>());
     MOCK_METHOD1(apply_settings, void(mi::TouchscreenSettings const&));
-    MOCK_METHOD1(set_leds, void(mi::KeyboardLeds));
 };
 
 struct DefaultDevice : Test

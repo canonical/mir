@@ -263,14 +263,6 @@ void mi::DefaultDevice::set_touchscreen_configuration(MirTouchscreenConfig const
     }
 }
 
-void mi::DefaultDevice::set_leds(mir::input::KeyboardLeds leds)
-{
-    actions->enqueue([leds = leds, dev=&device]
-    {
-        dev->set_leds(leds);
-    });
-}
-
 MirInputDevice mi::DefaultDevice::config() const
 {
     auto stored_dev = MirInputDevice(

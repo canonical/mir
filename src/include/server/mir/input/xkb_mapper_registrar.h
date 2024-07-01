@@ -17,7 +17,7 @@
 #ifndef MIR_INPUT_RECEIVER_XKB_MAPPER_H_
 #define MIR_INPUT_RECEIVER_XKB_MAPPER_H_
 
-#include "led_observer_registrar.h"
+#include "mir/input/led_observer_registrar.h"
 #include "mir/input/key_mapper.h"
 #include "mir/input/keymap.h"
 #include "mir/input/keyboard_leds.h"
@@ -61,14 +61,8 @@ public:
     MirInputEventModifiers modifiers() const override;
     MirInputEventModifiers device_modifiers(MirInputDeviceId di) const override;
     auto xkb_modifiers() const -> MirXkbModifiers override;
-    void register_interest(std::weak_ptr<LedObserver> const& observer) override;
-    void register_interest(
-        std::weak_ptr<LedObserver> const& observer,
-        Executor& executor) override;
-    void register_early_observer(
-        std::weak_ptr<LedObserver> const& observer,
-        Executor& executor) override;
-    void unregister_interest(LedObserver const& observer) override;
+    void register_interest(std::weak_ptr<LedObserver> const& observer, MirInputDeviceId id) override;
+    void unregister_interest(LedObserver const& observer, MirInputDeviceId id) override;
 
 protected:
     XKBMapperRegistrar(XKBMapperRegistrar const&) = delete;
@@ -93,13 +87,24 @@ private:
 
     struct XkbMappingState
     {
-        explicit XkbMappingState(std::shared_ptr<Keymap> keymap, std::shared_ptr<xkb_keymap> compiled_keymap);
+        class XKBMappingStateRegistrar : public ObserverMultiplexer<LedObserver>
+        {
+        public:
+            explicit XKBMappingStateRegistrar(Executor&);
+            void leds_set(KeyboardLeds leds) override;
+        };
+
+        explicit XkbMappingState(
+            std::shared_ptr<Keymap> keymap,
+            std::shared_ptr<xkb_keymap> compiled_keymap,
+            Executor& executor);
         void set_key_state(std::vector<uint32_t> const& key_state);
 
         bool update_and_map(MirEvent& event, ComposeState* compose_state);
         MirInputEventModifiers modifiers() const;
         auto xkb_modifiers() const -> MirXkbModifiers;
         KeyboardLeds get_leds() const;
+        XKBMappingStateRegistrar& get_registrar();
     private:
         /// Returns a pair containing the keysym for the given scancode and if any XKB modifiers have been changed
         auto update_state(
@@ -117,19 +122,13 @@ private:
         xkb_led_index_t num_led;
         xkb_led_index_t caps_led;
         xkb_led_index_t scroll_led;
+        XKBMappingStateRegistrar registrar;
     };
 
-    class XKBMapperMultiplexer : public ObserverMultiplexer<LedObserver>
-    {
-    public:
-        explicit XKBMapperMultiplexer(Executor&);
-        void leds_set(MirInputDeviceId id, KeyboardLeds leds) override;
-    };
-
-    XKBMapperMultiplexer registrar;
     XkbMappingState* get_keymapping_state(MirInputDeviceId id);
     ComposeState* get_compose_state(MirInputDeviceId id);
 
+    Executor& executor;
     XKBContextPtr context;
     std::shared_ptr<Keymap> default_keymap;
     std::shared_ptr<xkb_keymap> default_compiled_keymap;

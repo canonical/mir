@@ -25,6 +25,7 @@
 #include "mir/input/pointer_settings.h"
 #include "mir/input/touchpad_settings.h"
 #include "mir/input/input_device_info.h"
+#include "mir/input/led_observer_registrar.h"
 #include "mir/events/event_builders.h"
 #include "mir/geometry/displacement.h"
 #include "mir/dispatch/dispatchable.h"
@@ -104,15 +105,44 @@ auto get_axis_source(libinput_event_pointer* pointer) -> MirPointerAxisSource
     default:                                        return mir_pointer_axis_source_none;
     }
 }
+
+class LibInputDeviceLedObserver : public mir::input::LedObserver
+{
+public:
+    explicit LibInputDeviceLedObserver(mie::LibInputDevice const* device) : device{device} {}
+
+    void leds_set(mir::input::KeyboardLeds leds) override
+    {
+        int led = 0;
+        if (contains(leds, mir::input::KeyboardLed::caps_lock))
+            led |= LIBINPUT_LED_CAPS_LOCK;
+        if (contains(leds, mir::input::KeyboardLed::num_lock))
+            led |= LIBINPUT_LED_NUM_LOCK;
+        if (contains(leds, mir::input::KeyboardLed::scroll_lock))
+            led |= LIBINPUT_LED_SCROLL_LOCK;
+
+        libinput_device_led_update(device->device(), static_cast<libinput_led>(led));
+    }
+
+private:
+    mie::LibInputDevice const* device;
+};
 }
 
-mie::LibInputDevice::LibInputDevice(std::shared_ptr<mi::InputReport> const& report, LibInputDevicePtr dev)
-    : report{report}, device_{std::move(dev)}, pointer_pos{0, 0}, button_state{0}
+mie::LibInputDevice::LibInputDevice(
+    std::shared_ptr<mi::InputReport> const& report,
+    std::shared_ptr<LedObserverRegistrar> const& led_observer_registrar,
+    LibInputDevicePtr dev)
+    : report{report}, led_observer_registrar{led_observer_registrar},
+      device_{std::move(dev)}, pointer_pos{0, 0}, button_state{0}
 {
     update_device_info();
 }
 
-mie::LibInputDevice::~LibInputDevice() = default;
+mie::LibInputDevice::~LibInputDevice()
+{
+    try_stop_observing_leds();
+}
 
 void mie::LibInputDevice::start(InputSink* sink, EventBuilder* builder)
 {
@@ -695,15 +725,20 @@ void mie::LibInputDevice::apply_settings(mi::TouchscreenSettings const& settings
     touchscreen = settings;
 }
 
-void mie::LibInputDevice::set_leds(mir::input::KeyboardLeds leds)
+void mie::LibInputDevice::associate_to_id(MirInputDeviceId id)
 {
-    int led = 0;
-    if (contains(leds, mir::input::KeyboardLed::caps_lock))
-        led |= LIBINPUT_LED_CAPS_LOCK;
-    if (contains(leds, mir::input::KeyboardLed::num_lock))
-        led |= LIBINPUT_LED_NUM_LOCK;
-    if (contains(leds, mir::input::KeyboardLed::scroll_lock))
-        led |= LIBINPUT_LED_SCROLL_LOCK;
+    try_stop_observing_leds();
+    led_observer = std::make_shared<LibInputDeviceLedObserver>(this);
+    led_observer_registrar->register_interest(led_observer, id);
+    device_id = id;
+}
 
-    libinput_device_led_update(device_.get(), static_cast<libinput_led>(led));
+void mie::LibInputDevice::try_stop_observing_leds()
+{
+    if (led_observer && device_id)
+    {
+        led_observer_registrar->unregister_interest(*led_observer, device_id.value());
+        led_observer = nullptr;
+        device_id = std::nullopt;
+    }
 }

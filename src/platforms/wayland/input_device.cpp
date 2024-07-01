@@ -141,10 +141,6 @@ void  miw::GenericInputDevice::enqueue(std::function<EventUPtr(EventBuilder* bui
           });
 }
 
-void miw::GenericInputDevice::set_leds(mir::input::KeyboardLeds)
-{
-}
-
 miw::KeyboardInputDevice::KeyboardInputDevice(std::shared_ptr<dispatch::ActionQueue> const& action_queue) :
     GenericInputDevice{InputDeviceInfo{"keyboard-device", "key-dev-1", DeviceCapability::keyboard}, action_queue}
 {

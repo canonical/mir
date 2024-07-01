@@ -55,8 +55,6 @@ public:
 
     virtual optional_value<MirTouchscreenConfig> touchscreen_configuration() const = 0;
     virtual void apply_touchscreen_configuration(MirTouchscreenConfig const&) = 0;
-
-    virtual void set_leds(KeyboardLeds leds) = 0;
 private:
     Device(Device const&) = delete;
     Device& operator=(Device const&) = delete;

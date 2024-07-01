@@ -88,8 +88,6 @@ private:
         mir::optional_value<mir::input::TouchscreenSettings> get_touchscreen_settings() const override;
         void apply_settings(mir::input::TouchscreenSettings const& settings) override;
         void set_apply_settings_callback(std::function<void(mir::input::InputDevice const&)> const& callback);
-
-        void set_leds(mir::input::KeyboardLeds leds) override;
     private:
         MirPointerAction update_buttons(mir::input::synthesis::EventAction action, MirPointerButton button);
         void update_position(int rel_x, int rel_y);

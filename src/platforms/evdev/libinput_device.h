@@ -24,6 +24,7 @@
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
 #include "mir/input/touchscreen_settings.h"
+#include "mir/input/led_observer_registrar.h"
 #include "mir/geometry/point.h"
 
 #include <vector>
@@ -41,12 +42,17 @@ namespace input
 {
 class OutputInfo;
 class InputReport;
+class LedObserverRegistrar;
+class LedObserver;
 namespace evdev
 {
 class LibInputDevice : public input::InputDevice
 {
 public:
-    LibInputDevice(std::shared_ptr<InputReport> const& report, LibInputDevicePtr dev);
+    LibInputDevice(
+        std::shared_ptr<InputReport> const& report,
+        std::shared_ptr<LedObserverRegistrar> const& led_observer_registrar,
+        LibInputDevicePtr dev);
     ~LibInputDevice();
     void start(InputSink* sink, EventBuilder* builder) override;
     void stop() override;
@@ -57,7 +63,7 @@ public:
     void apply_settings(TouchpadSettings const&) override;
     optional_value<TouchscreenSettings> get_touchscreen_settings() const override;
     void apply_settings(TouchscreenSettings const&) override;
-    void set_leds(KeyboardLeds) override;
+    void associate_to_id(MirInputDeviceId id);
 
     void process_event(libinput_event* event);
     ::libinput_device* device() const;
@@ -78,6 +84,8 @@ private:
     OutputInfo get_output_info() const;
 
     std::shared_ptr<InputReport> const report;
+    std::shared_ptr<LedObserverRegistrar> led_observer_registrar;
+    std::shared_ptr<LedObserver> led_observer;
     LibInputDevicePtr const device_;
 
     InputSink* sink{nullptr};
@@ -100,8 +108,10 @@ private:
         bool down_notified = false;
     };
     std::map<MirTouchId,ContactData> last_seen_properties;
+    std::optional<MirInputDeviceId> device_id;
 
     void update_contact_data(ContactData &data, MirTouchAction action, libinput_event_touch* touch);
+    void try_stop_observing_leds();
 };
 }
 }

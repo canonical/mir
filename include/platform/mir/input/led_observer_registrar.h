@@ -17,9 +17,9 @@
 #ifndef MIR_INPUT_LED_OBSERVER_REGISTER_H
 #define MIR_INPUT_LED_OBSERVER_REGISTER_H
 
-#include "mir/observer_registrar.h"
 #include "mir/input/keyboard_leds.h"
 #include "mir_toolkit/mir_input_device_types.h"
+#include <memory>
 
 namespace mir
 {
@@ -29,13 +29,21 @@ class LedObserver
 {
 public:
     virtual ~LedObserver() = default;
-    virtual void leds_set(MirInputDeviceId id, KeyboardLeds leds) = 0;
+    virtual void leds_set(KeyboardLeds leds) = 0;
 };
 
-class LedObserverRegistrar : public ObserverRegistrar<LedObserver>
+class LedObserverRegistrar
 {
 public:
+    LedObserverRegistrar() = default;
     virtual ~LedObserverRegistrar() = default;
+
+    virtual void register_interest(std::weak_ptr<LedObserver> const& observer, MirInputDeviceId id) = 0;
+    virtual void unregister_interest(LedObserver const& observer, MirInputDeviceId id) = 0;
+
+protected:
+    LedObserverRegistrar(LedObserverRegistrar const&) = delete;
+    LedObserverRegistrar& operator=(LedObserverRegistrar const&) = delete;
 };
 }
 }

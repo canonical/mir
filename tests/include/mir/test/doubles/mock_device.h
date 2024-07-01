@@ -60,7 +60,6 @@ struct MockDevice : input::Device
     MOCK_METHOD(void, apply_touchpad_configuration, (MirTouchpadConfig const&), (override));
     MOCK_METHOD(void, apply_keyboard_configuration, (MirKeyboardConfig const&), (override));
     MOCK_METHOD(void, apply_touchscreen_configuration, (MirTouchscreenConfig const&), (override));
-    MOCK_METHOD(void, set_leds, (input::KeyboardLeds leds), (override));
 };
 }
 }

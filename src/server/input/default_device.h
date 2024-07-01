@@ -77,7 +77,6 @@ public:
     void apply_keyboard_configuration(MirKeyboardConfig const&) override;
     optional_value<MirTouchscreenConfig> touchscreen_configuration() const override;
     void apply_touchscreen_configuration(MirTouchscreenConfig const&) override;
-    void set_leds(KeyboardLeds leds) override;
 
     MirInputDevice config() const;
     void disable_queue();

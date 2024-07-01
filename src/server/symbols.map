@@ -1351,7 +1351,6 @@ global:
     mir::input::KeyMapper::operator*;
     mir::input::LedObserver::?LedObserver*;
     mir::input::LedObserverRegistrar::?LedObserverRegistrar*;
-    mir::input::VirtualInputDevice::set_leds*;
     mir::input::make_unique_context*;
     mir::input::receiver::XKBMapper::XKBMapper*;
     mir::input::receiver::XKBMapper::clear_all_keymaps*;
@@ -1388,7 +1387,6 @@ global:
     non-virtual?thunk?to?mir::input::KeyMapper::?KeyMapper*;
     non-virtual?thunk?to?mir::input::LedObserver::?LedObserver*;
     non-virtual?thunk?to?mir::input::LedObserverRegistrar::?LedObserverRegistrar*;
-    non-virtual?thunk?to?mir::input::VirtualInputDevice::set_leds*;
     non-virtual?thunk?to?mir::input::receiver::XKBMapper::clear_all_keymaps*;
     non-virtual?thunk?to?mir::input::receiver::XKBMapper::clear_keymap_for_device*;
     non-virtual?thunk?to?mir::input::receiver::XKBMapper::device_modifiers*;
