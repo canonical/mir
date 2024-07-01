@@ -41,14 +41,14 @@ public:
     }
 
     /// \return true if no duplicates existed before insertion, false otherwise.
-    bool registerToplevel(wl_resource* toplevel)
+    bool register_toplevel(wl_resource* toplevel)
     {
         auto [_, inserted] = toplevels_with_decorations.insert(toplevel);
         return inserted;
     }
 
     /// \return true if only one element was erased, false otherwise.
-    bool unregisterToplevel(wl_resource* toplevel)
+    bool unregister_toplevel(wl_resource* toplevel)
     {
         return toplevels_with_decorations.erase(toplevel) == 1;
     }
@@ -128,7 +128,7 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
     }
 
     auto decoration = new XdgToplevelDecorationV1{id, tl};
-    if (!toplevels_with_decorations->registerToplevel(toplevel))
+    if (!toplevels_with_decorations->register_toplevel(toplevel))
     {
         BOOST_THROW_EXCEPTION(mir::wayland::ProtocolError(
             resource, Error::already_constructed, "Decoration already constructed for this toplevel"));
@@ -137,13 +137,13 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
     decoration->add_destroy_listener(
         [toplevels_with_decorations = this->toplevels_with_decorations, toplevel]()
         {
-            toplevels_with_decorations->unregisterToplevel(toplevel);
+            toplevels_with_decorations->unregister_toplevel(toplevel);
         });
 
     tl->add_destroy_listener(
         [toplevels_with_decorations = this->toplevels_with_decorations, client = this->client, toplevel]()
         {
-            if (!client->is_being_destroyed() && !toplevels_with_decorations->unregisterToplevel(toplevel))
+            if (!client->is_being_destroyed() && !toplevels_with_decorations->unregister_toplevel(toplevel))
             {
                 mir::log_warning("Toplevel destroyed before attached decoration!");
                 // https://github.com/canonical/mir/issues/3452
