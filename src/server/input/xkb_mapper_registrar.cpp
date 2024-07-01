@@ -125,12 +125,12 @@ mi::XKBContextPtr mi::make_unique_context()
     return {context, &xkb_context_unref};
 }
 
-mircv::XKBMapperRegistrar::XkbMappingState::XKBMappingStateRegistrar::XKBMappingStateRegistrar(mir::Executor& executor)
+mircv::XKBMapperRegistrar::XkbMappingState::XkbMappingStateLedRegistrar::XkbMappingStateLedRegistrar(mir::Executor& executor)
     : ObserverMultiplexer<LedObserver>(executor)
 {
 }
 
-void mircv::XKBMapperRegistrar::XkbMappingState::XKBMappingStateRegistrar::leds_set(mir::input::KeyboardLeds leds)
+void mircv::XKBMapperRegistrar::XkbMappingState::XkbMappingStateLedRegistrar::leds_set(mir::input::KeyboardLeds leds)
 {
     for_each_observer(&LedObserver::leds_set, leds);
 }
@@ -411,7 +411,7 @@ void mircv::XKBMapperRegistrar::XkbMappingState::notify_leds_changed()
     registrar.leds_set(leds);
 }
 
-mircv::XKBMapperRegistrar::XkbMappingState::XKBMappingStateRegistrar& mircv::XKBMapperRegistrar::XkbMappingState::get_registrar()
+mircv::XKBMapperRegistrar::XkbMappingState::XkbMappingStateLedRegistrar& mircv::XKBMapperRegistrar::XkbMappingState::get_registrar()
 {
     return registrar;
 }

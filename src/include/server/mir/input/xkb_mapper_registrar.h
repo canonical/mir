@@ -87,10 +87,10 @@ private:
 
     struct XkbMappingState
     {
-        class XKBMappingStateRegistrar : public ObserverMultiplexer<LedObserver>
+        class XkbMappingStateLedRegistrar : public ObserverMultiplexer<LedObserver>
         {
         public:
-            explicit XKBMappingStateRegistrar(Executor&);
+            explicit XkbMappingStateLedRegistrar(Executor&);
             void leds_set(KeyboardLeds leds) override;
         };
 
@@ -104,7 +104,7 @@ private:
         MirInputEventModifiers modifiers() const;
         auto xkb_modifiers() const -> MirXkbModifiers;        
         void notify_leds_changed();
-        XKBMappingStateRegistrar& get_registrar();
+        XkbMappingStateLedRegistrar& get_registrar();
     private:
         /// Returns a pair containing the keysym for the given scancode and if any XKB modifiers have been changed
         auto update_state(
@@ -122,7 +122,7 @@ private:
         xkb_led_index_t num_led;
         xkb_led_index_t caps_led;
         xkb_led_index_t scroll_led;
-        XKBMappingStateRegistrar registrar;
+        XkbMappingStateLedRegistrar registrar;
     };
 
     XkbMappingState* get_keymapping_state(MirInputDeviceId id);
