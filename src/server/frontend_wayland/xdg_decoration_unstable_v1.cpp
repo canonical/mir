@@ -47,7 +47,7 @@ public:
         return inserted;
     }
 
-    /// \return true if only one element was erase, false otherwise.
+    /// \return true if only one element was erased, false otherwise.
     bool unregisterToplevel(wl_resource* toplevel)
     {
         return toplevels_with_decorations->erase(toplevel) == 1;
