@@ -21,7 +21,6 @@
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_touchscreen_config.h"
 #include "mir/test/doubles/mock_key_mapper.h"
-#include "mir/test/doubles/mock_led_observer_registrar.h"
 #include "mir/test/doubles/stub_keymap.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/test/fake_shared.h"
@@ -57,7 +56,6 @@ struct DefaultDevice : Test
     NiceMock<MockInputDevice> keyboard;
     NiceMock<MockInputDevice> touchscreen;
     NiceMock<mtd::MockKeyMapper> key_mapper;
-    NiceMock<mtd::MockLedObserverRegistrar> led_observer_registrar;
     std::shared_ptr<md::ActionQueue> queue{std::make_shared<md::ActionQueue>()};
     std::function<void(mi::Device*)> const change_callback{[](mi::Device*){}};
 
@@ -100,7 +98,7 @@ struct DefaultDevice : Test
 
 TEST_F(DefaultDevice, refuses_touchpad_config_on_mice)
 {
-    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, mouse, mt::fake_shared(key_mapper), mt::fake_shared(led_observer_registrar));
+    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, mouse, mt::fake_shared(key_mapper));
     MirTouchpadConfig touch_conf;
 
     EXPECT_THROW({dev.apply_touchpad_configuration(touch_conf);}, std::invalid_argument);
@@ -108,7 +106,7 @@ TEST_F(DefaultDevice, refuses_touchpad_config_on_mice)
 
 TEST_F(DefaultDevice, refuses_touchpad_and_pointer_settings_on_keyboards)
 {
-    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, keyboard, mt::fake_shared(key_mapper), mt::fake_shared(led_observer_registrar));
+    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, keyboard, mt::fake_shared(key_mapper));
     MirTouchpadConfig touch_conf;
     MirPointerConfig pointer_conf;
 
@@ -119,7 +117,7 @@ TEST_F(DefaultDevice, refuses_touchpad_and_pointer_settings_on_keyboards)
 
 TEST_F(DefaultDevice, accepts_pointer_config_on_mice)
 {
-    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, mouse, mt::fake_shared(key_mapper), mt::fake_shared(led_observer_registrar));
+    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, mouse, mt::fake_shared(key_mapper));
     MirPointerConfig pointer_conf;
 
     EXPECT_CALL(mouse, apply_settings(Matcher<mi::PointerSettings const&>(_)));
@@ -130,7 +128,7 @@ TEST_F(DefaultDevice, accepts_pointer_config_on_mice)
 
 TEST_F(DefaultDevice, accepts_touchpad_and_pointer_config_on_touchpads)
 {
-    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, touchpad, mt::fake_shared(key_mapper), mt::fake_shared(led_observer_registrar));
+    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, touchpad, mt::fake_shared(key_mapper));
     MirTouchpadConfig touch_conf;
     MirPointerConfig pointer_conf;
 
@@ -145,7 +143,7 @@ TEST_F(DefaultDevice, accepts_touchpad_and_pointer_config_on_touchpads)
 
 TEST_F(DefaultDevice, forwards_touchscreen_config_on_touchscreen)
 {
-    mi::DefaultDevice dev(MirInputDeviceId{23}, queue, touchscreen, mt::fake_shared(key_mapper), mt::fake_shared(led_observer_registrar));
+    mi::DefaultDevice dev(MirInputDeviceId{23}, queue, touchscreen, mt::fake_shared(key_mapper));
     MirTouchscreenConfig touchscreen_conf;
 
     EXPECT_CALL(touchscreen, apply_settings(Matcher<mi::TouchscreenSettings const&>(_)));
@@ -156,7 +154,7 @@ TEST_F(DefaultDevice, forwards_touchscreen_config_on_touchscreen)
 
 TEST_F(DefaultDevice, ensures_cursor_accleration_bias_is_in_range)
 {
-    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, touchpad, mt::fake_shared(key_mapper), mt::fake_shared(led_observer_registrar));
+    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, touchpad, mt::fake_shared(key_mapper));
 
     MirPointerConfig pointer_conf;
     pointer_conf.cursor_acceleration_bias(3.0);
@@ -175,7 +173,7 @@ TEST_F(DefaultDevice, touchpad_device_can_be_constructed_from_input_config)
     MirInputDevice conf(MirInputDeviceId{17}, mi::DeviceCapability::touchpad|mi::DeviceCapability::pointer, "touchpad", "toouchpad-event7");
     conf.set_touchpad_config(tpd_conf);
     conf.set_pointer_config(ptr_conf);
-    mi::DefaultDevice dev(conf, queue, touchpad, mt::fake_shared(key_mapper), mt::fake_shared(led_observer_registrar), change_callback);
+    mi::DefaultDevice dev(conf, queue, touchpad, mt::fake_shared(key_mapper), change_callback);
 
     EXPECT_EQ(tpd_conf, dev.touchpad_configuration().value());
     EXPECT_EQ(ptr_conf, dev.pointer_configuration().value());
@@ -186,7 +184,7 @@ TEST_F(DefaultDevice, pointer_device_can_be_constructed_from_input_config)
     MirPointerConfig const ptr_config{mir_pointer_handedness_left, mir_pointer_acceleration_none, 0, 1.0, 1.0};
     MirInputDevice conf(MirInputDeviceId{11}, mi::DeviceCapability::pointer, "pointer", "pointer-event7");
     conf.set_pointer_config(ptr_config);
-    mi::DefaultDevice dev(conf, queue, mouse, mt::fake_shared(key_mapper), mt::fake_shared(led_observer_registrar), change_callback);
+    mi::DefaultDevice dev(conf, queue, mouse, mt::fake_shared(key_mapper), change_callback);
 
     EXPECT_EQ(ptr_config, dev.pointer_configuration().value());
 }
@@ -197,7 +195,7 @@ TEST_F(DefaultDevice, keyboard_device_can_be_constructed_from_input_config)
     MirKeyboardConfig const kbd_config{std::move(keymap)};
     MirInputDevice conf(MirInputDeviceId{3}, mi::DeviceCapability::keyboard, "keyboard", "keyboard-event3c");
     conf.set_keyboard_config(kbd_config);
-    mi::DefaultDevice dev(conf, queue, keyboard, mt::fake_shared(key_mapper), mt::fake_shared(led_observer_registrar), change_callback);
+    mi::DefaultDevice dev(conf, queue, keyboard, mt::fake_shared(key_mapper), change_callback);
 
     EXPECT_EQ(kbd_config, dev.keyboard_configuration().value());
 }
@@ -208,7 +206,7 @@ TEST_F(DefaultDevice, touchscreen_device_can_be_constructed_from_input_config)
     MirInputDevice conf(MirInputDeviceId{5}, mi::DeviceCapability::touchscreen, "ts", "ts-event7");
     conf.set_touchscreen_config(ts_config);
 
-    mi::DefaultDevice dev(conf, queue, touchscreen, mt::fake_shared(key_mapper), mt::fake_shared(led_observer_registrar), change_callback);
+    mi::DefaultDevice dev(conf, queue, touchscreen, mt::fake_shared(key_mapper), change_callback);
 
     EXPECT_EQ(ts_config, dev.touchscreen_configuration().value());
 }
@@ -216,7 +214,7 @@ TEST_F(DefaultDevice, touchscreen_device_can_be_constructed_from_input_config)
 TEST_F(DefaultDevice, device_config_can_be_queried_from_touchpad)
 {
     MirInputDeviceId const device_id{17};
-    mi::DefaultDevice dev(device_id, queue, touchpad, mt::fake_shared(key_mapper), mt::fake_shared(led_observer_registrar), change_callback);
+    mi::DefaultDevice dev(device_id, queue, touchpad, mt::fake_shared(key_mapper), change_callback);
 
     auto dev_info = touchpad.get_device_info();
     MirInputDevice conf(device_id, dev_info.capabilities, dev_info.name, dev_info.unique_id);
@@ -247,7 +245,7 @@ TEST_F(DefaultDevice, device_config_can_be_queried_from_touchpad)
 TEST_F(DefaultDevice, device_config_can_be_queried_from_pointer_device)
 {
     MirInputDeviceId const device_id{11};
-    mi::DefaultDevice dev(device_id, queue, mouse, mt::fake_shared(key_mapper), mt::fake_shared(led_observer_registrar), change_callback);
+    mi::DefaultDevice dev(device_id, queue, mouse, mt::fake_shared(key_mapper), change_callback);
 
     auto dev_info = mouse.get_device_info();
     MirInputDevice conf(device_id, dev_info.capabilities, dev_info.name, dev_info.unique_id);
@@ -267,7 +265,7 @@ TEST_F(DefaultDevice, device_config_can_be_queried_from_pointer_device)
 TEST_F(DefaultDevice, device_config_can_be_queried_from_keyboard_device)
 {
     MirInputDeviceId const device_id{3};
-    mi::DefaultDevice dev(device_id, queue, keyboard, mt::fake_shared(key_mapper), mt::fake_shared(led_observer_registrar), change_callback);
+    mi::DefaultDevice dev(device_id, queue, keyboard, mt::fake_shared(key_mapper), change_callback);
 
     auto dev_info = keyboard.get_device_info();
     MirInputDevice conf(device_id, dev_info.capabilities, dev_info.name, dev_info.unique_id);
@@ -283,7 +281,7 @@ TEST_F(DefaultDevice, device_config_can_be_queried_from_keyboard_device)
 TEST_F(DefaultDevice, device_config_can_be_queried_from_touchscreen)
 {
     MirInputDeviceId const device_id{5};
-    mi::DefaultDevice dev(device_id, queue, touchscreen, mt::fake_shared(key_mapper), mt::fake_shared(led_observer_registrar), change_callback);
+    mi::DefaultDevice dev(device_id, queue, touchscreen, mt::fake_shared(key_mapper), change_callback);
 
     auto dev_info = touchscreen.get_device_info();
     MirInputDevice conf(device_id, dev_info.capabilities, dev_info.name, dev_info.unique_id);
@@ -297,7 +295,7 @@ TEST_F(DefaultDevice, device_config_can_be_queried_from_touchscreen)
 
 TEST_F(DefaultDevice, disable_queue_ends_config_processing)
 {
-    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, touchpad, mt::fake_shared(key_mapper), mt::fake_shared(led_observer_registrar));
+    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, touchpad, mt::fake_shared(key_mapper));
 
     dev.disable_queue();
     MirPointerConfig pointer_conf;
@@ -310,7 +308,7 @@ TEST_F(DefaultDevice, disable_queue_ends_config_processing)
 TEST_F(DefaultDevice, disable_queue_removes_reference_to_queue)
 {
     std::weak_ptr<md::ActionQueue> ref = queue;
-    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, touchpad, mt::fake_shared(key_mapper), mt::fake_shared(led_observer_registrar));
+    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, touchpad, mt::fake_shared(key_mapper));
     queue.reset();
 
     EXPECT_THAT(ref.lock(), Ne(nullptr));
@@ -324,5 +322,5 @@ TEST_F(DefaultDevice, keyboard_device_can_be_constructed_from_input_config_with_
     MirKeyboardConfig const kbd_config{std::move(keymap)};
     MirInputDevice conf(MirInputDeviceId{3}, mi::DeviceCapability::keyboard, "keyboard", "keyboard-event3c");
     conf.set_keyboard_config(kbd_config);
-    EXPECT_NO_THROW(mi::DefaultDevice dev(conf, queue, keyboard, mt::fake_shared(key_mapper), mt::fake_shared(led_observer_registrar), change_callback));
+    EXPECT_NO_THROW(mi::DefaultDevice dev(conf, queue, keyboard, mt::fake_shared(key_mapper), change_callback));
 }

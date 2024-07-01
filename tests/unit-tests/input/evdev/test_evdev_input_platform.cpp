@@ -25,6 +25,7 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_libinput.h"
 #include "mir/test/doubles/stub_console_services.h"
+#include "mir/test/doubles/mock_led_observer_registrar.h"
 #include "mir/test/fd_utils.h"
 
 #include <gtest/gtest.h>
@@ -128,11 +129,13 @@ struct EvdevInputPlatform : public ::testing::TestWithParam<std::string>
     auto create_input_platform()
     {
         auto ctx = std::make_unique<mu::Context>();
+        ::testing::NiceMock<mtd::MockLedObserverRegistrar> led_observer_registrar;
         return std::make_unique<mie::Platform>(
             mt::fake_shared(mock_registry),
             mr::null_input_report(),
             std::move(ctx),
-            std::make_shared<mtd::StubConsoleServices>());
+            std::make_shared<mtd::StubConsoleServices>(),
+            mt::fake_shared(led_observer_registrar));
     }
 
     void remove_all_devices()
