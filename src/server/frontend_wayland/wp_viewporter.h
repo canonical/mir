@@ -33,7 +33,7 @@ class WlSurface;
 class WpViewporter : public wayland::Viewporter::Global
 {
 public:
-    WpViewporter(wl_display* display);
+    explicit WpViewporter(wl_display* display);
 
 private:
     void bind(wl_resource* new_wp_viewporter) override;

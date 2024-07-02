@@ -31,7 +31,7 @@ namespace
 class ViewporterInstance : public mir::wayland::Viewporter
 {
 public:
-    ViewporterInstance(wl_resource* resource)
+    explicit ViewporterInstance(wl_resource* resource)
         : Viewporter(resource, Version<1>{})
     {
     }
