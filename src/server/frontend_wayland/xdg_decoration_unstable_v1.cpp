@@ -70,7 +70,7 @@ public:
         Global(wl_display* display, std::shared_ptr<DecorationStrategy> strategy);
 
     private:
-        std::shared_ptr<DecorationStrategy> decoration_strategy;
+        std::shared_ptr<DecorationStrategy> const decoration_strategy;
         void bind(wl_resource* new_zxdg_decoration_manager_v1) override;
     };
 
@@ -78,7 +78,7 @@ private:
     void get_toplevel_decoration(wl_resource* id, wl_resource* toplevel) override;
 
     ToplevelsWithDecorations toplevels_with_decorations;
-    std::shared_ptr<DecorationStrategy> decoration_strategy;
+    std::shared_ptr<DecorationStrategy> const decoration_strategy;
 };
 
 class XdgToplevelDecorationV1 : public wayland::XdgToplevelDecorationV1
@@ -96,7 +96,7 @@ private:
     void update_mode(uint32_t new_mode);
 
     mir::frontend::XdgToplevelStable* toplevel;
-    std::shared_ptr<DecorationStrategy> decoration_strategy;
+    std::shared_ptr<DecorationStrategy> const decoration_strategy;
 };
 } // namespace frontend
 } // namespace mir
@@ -104,26 +104,26 @@ private:
 auto mir::frontend::create_xdg_decoration_unstable_v1(wl_display* display, std::shared_ptr<DecorationStrategy> strategy)
     -> std::shared_ptr<mir::wayland::XdgDecorationManagerV1::Global>
 {
-    return std::make_shared<XdgDecorationManagerV1::Global>(display, strategy);
+    return std::make_shared<XdgDecorationManagerV1::Global>(display, std::move(strategy));
 }
 
 mir::frontend::XdgDecorationManagerV1::Global::Global(
     wl_display* display, std::shared_ptr<DecorationStrategy> strategy) :
     wayland::XdgDecorationManagerV1::Global::Global{display, Version<1>{}},
-    decoration_strategy{strategy}
+    decoration_strategy{std::move(strategy)}
 {
 }
 
 void mir::frontend::XdgDecorationManagerV1::Global::bind(wl_resource* new_zxdg_decoration_manager_v1)
 {
-    new XdgDecorationManagerV1{new_zxdg_decoration_manager_v1, decoration_strategy};
+    new XdgDecorationManagerV1{new_zxdg_decoration_manager_v1, std::move(decoration_strategy)};
 }
 
 mir::frontend::XdgDecorationManagerV1::XdgDecorationManagerV1(
     wl_resource* resource, std::shared_ptr<DecorationStrategy> strategy) :
     mir::wayland::XdgDecorationManagerV1{resource, Version<1>{}},
     toplevels_with_decorations{},
-    decoration_strategy{strategy}
+    decoration_strategy{std::move(strategy)}
 {
 }
 
@@ -137,7 +137,7 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid toplevel pointer"));
     }
 
-    auto decoration = new XdgToplevelDecorationV1{id, tl, decoration_strategy};
+    auto decoration = new XdgToplevelDecorationV1{id, tl, std::move(decoration_strategy)};
     if (!toplevels_with_decorations.registerToplevel(toplevel))
     {
         BOOST_THROW_EXCEPTION(mir::wayland::ProtocolError(
@@ -167,7 +167,7 @@ mir::frontend::XdgToplevelDecorationV1::XdgToplevelDecorationV1(
     wl_resource* id, mir::frontend::XdgToplevelStable* toplevel, std::shared_ptr<DecorationStrategy> strategy) :
     wayland::XdgToplevelDecorationV1{id, Version<1>{}},
     toplevel{toplevel},
-    decoration_strategy{strategy}
+    decoration_strategy{std::move(strategy)}
 {
 }
 
