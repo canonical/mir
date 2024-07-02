@@ -46,13 +46,10 @@ public:
         return inserted;
     }
 
-    /// \return true if the toplevel didn't exist in the set, false otherwise.
-    /// The return value is used in the destroy callback of the toplevel to
-    /// check if the toplevel is destroyed before the decoration (orphaned
-    /// decoration).
+    /// \return true if the toplevel was still registered, false otherwise.
     bool unregister_toplevel(wl_resource* toplevel)
     {
-        return toplevels_with_decorations.erase(toplevel) == 0;
+        return toplevels_with_decorations.erase(toplevel) > 0;
     }
 
 private:
@@ -145,7 +142,15 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
     tl->add_destroy_listener(
         [toplevels_with_decorations = this->toplevels_with_decorations, client = this->client, toplevel]()
         {
-            const auto orphaned_decoration = !toplevels_with_decorations->unregister_toplevel(toplevel);
+            // Under normal conditions, decorations should be destroyed before
+            // toplevels. Causing `unregister_toplevel` to return false.
+            //
+            // If the attached decoration is not destroyed before its toplevel,
+            // then its a protocol error. This can happen in two cases: A
+            // protocol violation caused by the client, or another error
+            // triggering wayland cleanup code which destroys wayland objects
+            // with no guaranteed order.
+            const auto orphaned_decoration = toplevels_with_decorations->unregister_toplevel(toplevel);
             if (!client->is_being_destroyed() && orphaned_decoration)
             {
                 mir::log_warning("Toplevel destroyed before attached decoration!");
