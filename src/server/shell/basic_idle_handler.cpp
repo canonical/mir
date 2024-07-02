@@ -65,6 +65,11 @@ public:
         return {{-coverage_size / 2, -coverage_size / 2}, {coverage_size, coverage_size}};
     }
 
+    auto src_bounds() const -> geom::RectangleD override
+    {
+        return {{0, 0}, geom::SizeD{buffer_->size()}};
+    }
+
     auto clip_area() const -> std::optional<geom::Rectangle> override
     {
         return {};

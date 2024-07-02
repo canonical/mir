@@ -48,6 +48,7 @@ struct MockRenderable : public graphics::Renderable
     MOCK_CONST_METHOD0(id, ID());
     MOCK_CONST_METHOD0(buffer, std::shared_ptr<graphics::Buffer>());
     MOCK_CONST_METHOD0(screen_position, geometry::Rectangle());
+    MOCK_CONST_METHOD0(src_bounds, geometry::RectangleD());
     MOCK_CONST_METHOD0(clip_area, std::optional<geometry::Rectangle>());
     MOCK_CONST_METHOD0(alpha, float());
     MOCK_CONST_METHOD0(transformation, glm::mat4());

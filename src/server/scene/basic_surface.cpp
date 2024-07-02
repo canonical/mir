@@ -719,6 +719,9 @@ public:
     geom::Rectangle screen_position() const override
     { return screen_position_; }
 
+    geom::RectangleD src_bounds() const override
+    { return entry->source_rect(); }
+
     std::optional<geom::Rectangle> clip_area() const override
     { return clip_area_; }
 
