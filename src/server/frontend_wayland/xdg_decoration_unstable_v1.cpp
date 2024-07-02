@@ -91,8 +91,8 @@ public:
     void unset_mode() override;
 
 private:
-    auto decorations_type_to_protocol_mode(DecorationStrategy::DecorationsType) -> uint32_t;
-    auto protocol_mode_to_decorations_type(uint32_t) -> DecorationStrategy::DecorationsType;
+    static auto to_mode(DecorationStrategy::DecorationsType) -> uint32_t;
+    static auto to_decorations_type(uint32_t) -> DecorationStrategy::DecorationsType;
     void update_mode(uint32_t new_mode);
 
     mir::frontend::XdgToplevelStable* toplevel;
