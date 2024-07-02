@@ -171,7 +171,7 @@ mir::frontend::XdgToplevelDecorationV1::XdgToplevelDecorationV1(
 {
 }
 
-auto mir::frontend::XdgToplevelDecorationV1::decorations_type_to_protocol_mode(DecorationStrategy::DecorationsType type)
+auto mir::frontend::XdgToplevelDecorationV1::to_mode(DecorationStrategy::DecorationsType type)
     -> uint32_t
 {
     switch (type)
@@ -186,7 +186,7 @@ auto mir::frontend::XdgToplevelDecorationV1::decorations_type_to_protocol_mode(D
     }
 }
 
-auto mir::frontend::XdgToplevelDecorationV1::protocol_mode_to_decorations_type(uint32_t mode)
+auto mir::frontend::XdgToplevelDecorationV1::to_decorations_type(uint32_t mode)
     -> DecorationStrategy::DecorationsType
 {
     switch (mode)
@@ -205,7 +205,7 @@ void mir::frontend::XdgToplevelDecorationV1::update_mode(uint32_t new_mode)
 {
     auto spec = shell::SurfaceSpecification{};
 
-    auto const new_type = decoration_strategy->request_style(protocol_mode_to_decorations_type(new_mode));
+    auto const new_type = decoration_strategy->request_style(to_decorations_type(new_mode));
 
     switch (new_type)
     {
@@ -219,7 +219,7 @@ void mir::frontend::XdgToplevelDecorationV1::update_mode(uint32_t new_mode)
 
     this->toplevel->apply_spec(spec);
 
-    auto const strategy_new_mode = decorations_type_to_protocol_mode(new_type);
+    auto const strategy_new_mode = to_mode(new_type);
     send_configure_event(strategy_new_mode);
 }
 
@@ -230,6 +230,6 @@ void mir::frontend::XdgToplevelDecorationV1::set_mode(uint32_t mode)
 
 void mir::frontend::XdgToplevelDecorationV1::unset_mode()
 {
-    auto const protocol_mode = decorations_type_to_protocol_mode(decoration_strategy->default_style());
+    auto const protocol_mode = to_mode(decoration_strategy->default_style());
     update_mode(protocol_mode);
 }
