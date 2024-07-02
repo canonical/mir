@@ -759,3 +759,9 @@ void mir::Server::add_configuration_option(
         break;
     }
 }
+
+
+void mir::Server::set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy)
+{
+    self->server_config->set_the_decoration_strategy(strategy);
+}

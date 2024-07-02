@@ -11,6 +11,8 @@ global:
     mir::BasicCallback::operator*;
     mir::BasicCallback::unlock*;
     mir::DecorationStrategy::?DecorationStrategy*;
+    mir::DecorationStrategy::DecorationStrategy*;
+    mir::DecorationStrategy::operator*;
     mir::DefaultServerConfiguration::DefaultServerConfiguration*;
     mir::DefaultServerConfiguration::add_wayland_extension*;
     mir::DefaultServerConfiguration::default_reports*;
