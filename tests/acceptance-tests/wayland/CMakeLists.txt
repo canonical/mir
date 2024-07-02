@@ -116,7 +116,7 @@ set(EXPECTED_FAILURES
 
   # Should report an `orphaned` protocol error/violation , but we log instead
   # because of https://github.com/canonical/mir/issues/3452
-  XdgDecorationV1Test.destroy_toplevel_before_decoration
+  XdgDecorationV1Test.destroying_toplevel_before_decoration_throws_orphaned
 )
 
 if (MIR_SIGBUS_HANDLER_ENVIRONMENT_BROKEN)
