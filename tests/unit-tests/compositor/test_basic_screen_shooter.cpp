@@ -32,6 +32,7 @@
 #include "mir/test/doubles/stub_scene_element.h"
 #include "mir/test/doubles/stub_renderable.h"
 #include "mir/test/doubles/stub_gl_config.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
 
 #include <gtest/gtest.h>
 
@@ -98,6 +99,8 @@ struct BasicScreenShooter : Test
                     }
                     BOOST_THROW_EXCEPTION((std::runtime_error{"CPU output support not available?!"}));
                 });
+        ON_CALL(*gl_provider, suitability_for_allocator(_))
+            .WillByDefault(Return(mg::probe::supported));
         ON_CALL(*gl_provider, suitability_for_display(_))
             .WillByDefault(Return(mg::probe::supported));
 
@@ -107,6 +110,7 @@ struct BasicScreenShooter : Test
             executor,
             gl_providers,
             renderer_factory,
+            buffer_allocator,
             std::make_shared<mtd::StubGLConfig>());
     }
 
@@ -135,6 +139,7 @@ struct BasicScreenShooter : Test
     std::shared_ptr<mtd::MockGlRenderingProvider> gl_provider{std::make_shared<testing::NiceMock<mtd::MockGlRenderingProvider>>()};
     std::vector<std::shared_ptr<mg::GLRenderingProvider>> gl_providers{gl_provider};
     std::shared_ptr<MockRendererFactory> renderer_factory{std::make_shared<testing::NiceMock<MockRendererFactory>>()};
+    std::shared_ptr<mtd::StubBufferAllocator> buffer_allocator;
     std::shared_ptr<mtd::AdvanceableClock> clock{std::make_shared<mtd::AdvanceableClock>()};
     mtd::ExplicitExecutor executor;
     std::unique_ptr<mc::BasicScreenShooter> shooter;
@@ -249,6 +254,7 @@ TEST_F(BasicScreenShooter, ensures_renderer_is_current_on_only_one_thread)
         mir::thread_pool_executor,
         gl_providers,
         renderer_factory,
+        buffer_allocator,
         std::make_shared<mtd::StubGLConfig>());
 
     ON_CALL(*next_renderer, render(_))

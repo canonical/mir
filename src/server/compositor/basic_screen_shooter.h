@@ -46,6 +46,7 @@ public:
         Executor& executor,
         std::span<std::shared_ptr<graphics::GLRenderingProvider>> const& providers,
         std::shared_ptr<renderer::RendererFactory> render_factory,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<mir::graphics::GLConfig> const& config);
 
     void capture(
@@ -92,7 +93,9 @@ private:
     std::shared_ptr<Self> const self;
     Executor& executor;
 
-    static auto select_provider(std::span<std::shared_ptr<graphics::GLRenderingProvider>> const& providers)
+    static auto select_provider(
+        std::span<std::shared_ptr<graphics::GLRenderingProvider>> const& providers,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator)
         -> std::shared_ptr<graphics::GLRenderingProvider>;
 };
 }
