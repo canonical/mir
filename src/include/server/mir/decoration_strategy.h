@@ -25,7 +25,11 @@ public:
         ssd
     };
 
+    DecorationStrategy() = default;
+    DecorationStrategy(DecorationStrategy const&) = delete;
+    DecorationStrategy& operator=(DecorationStrategy const&) = delete;
     virtual ~DecorationStrategy() = default;
+
     virtual auto default_style() const -> DecorationsType = 0;
     virtual auto request_style(DecorationsType type) const -> DecorationsType = 0;
 };
