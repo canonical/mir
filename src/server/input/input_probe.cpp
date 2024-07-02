@@ -36,12 +36,13 @@ mir::UniqueModulePtr<mi::Platform> create_input_platform(
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& cleanup_registry,
     std::shared_ptr<mi::InputDeviceRegistry> const& registry,
     std::shared_ptr<mir::ConsoleServices> const& console,
-    std::shared_ptr<mi::InputReport> const& report)
+    std::shared_ptr<mi::InputReport> const& report,
+    std::shared_ptr<mi::LedObserverRegistrar> const& led_observer_registrar)
 {
     auto desc = lib.load_function<mi::DescribeModule>("describe_input_module", MIR_SERVER_INPUT_PLATFORM_VERSION)();
     auto create = lib.load_function<mi::CreatePlatform>("create_input_platform", MIR_SERVER_INPUT_PLATFORM_VERSION);
 
-    auto result = create(options, cleanup_registry, registry, console, report);
+    auto result = create(options, cleanup_registry, registry, console, report, led_observer_registrar);
 
     mir::log_info(
         "Selected input driver: %s (version: %d.%d.%d)",
@@ -96,7 +97,8 @@ mir::UniqueModulePtr<mi::Platform> mi::probe_input_platforms(
     std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mi::InputReport> const& input_report,
     std::vector<std::shared_ptr<SharedLibrary>> const& loaded_platforms,
-    mir::SharedLibraryProberReport& prober_report)
+    mir::SharedLibraryProberReport& prober_report,
+    std::shared_ptr<mi::LedObserverRegistrar> const& led_observer_registrar)
 {
     auto reject_platform_priority = mi::PlatformPriority::dummy;
 
@@ -140,7 +142,8 @@ mir::UniqueModulePtr<mi::Platform> mi::probe_input_platforms(
                 emergency_cleanup,
                 device_registry,
                 console,
-                input_report);
+                input_report,
+                led_observer_registrar);
 
             if (!potential_input_platform)
                 continue;
@@ -169,7 +172,8 @@ mir::UniqueModulePtr<mi::Platform> mi::probe_input_platforms(
                 emergency_cleanup,
                 device_registry,
                 console,
-                input_report);
+                input_report,
+                led_observer_registrar);
 
             if (potential_input_platform)
                 return potential_input_platform;
@@ -182,7 +186,7 @@ mir::UniqueModulePtr<mi::Platform> mi::probe_input_platforms(
     if (!platform_module)
         BOOST_THROW_EXCEPTION(std::runtime_error{"No appropriate input platform module found"});
 
-    return create_input_platform(*platform_module, options, emergency_cleanup, device_registry, console, input_report);
+    return create_input_platform(*platform_module, options, emergency_cleanup, device_registry, console, input_report, led_observer_registrar);
 }
 
 auto mi::input_platform_from_graphics_module(
@@ -191,11 +195,12 @@ auto mi::input_platform_from_graphics_module(
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup,
     std::shared_ptr<InputDeviceRegistry> const& device_registry,
     std::shared_ptr<ConsoleServices> const& console,
-    std::shared_ptr<InputReport> const& input_report) -> mir::UniqueModulePtr<Platform>
+    std::shared_ptr<InputReport> const& input_report,
+    std::shared_ptr<mi::LedObserverRegistrar> const& led_observer_registrar) -> mir::UniqueModulePtr<Platform>
 {
     try
     {
-        return create_input_platform(graphics_platform, options, emergency_cleanup, device_registry, console, input_report);
+        return create_input_platform(graphics_platform, options, emergency_cleanup, device_registry, console, input_report, led_observer_registrar);
     }
     catch (std::runtime_error const&)
     {

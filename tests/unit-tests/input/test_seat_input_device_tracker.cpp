@@ -17,7 +17,7 @@
 #include "src/server/input/seat_input_device_tracker.h"
 #include "src/server/input/default_event_builder.h"
 
-#include "mir/input/xkb_mapper.h"
+#include "mir/input/xkb_mapper_registrar.h"
 #include "mir/test/doubles/mock_input_dispatcher.h"
 #include "mir/test/doubles/mock_cursor_listener.h"
 #include "mir/test/doubles/mock_touch_visualizer.h"
@@ -65,7 +65,7 @@ struct SeatInputDeviceTracker : ::testing::Test
     mi::DefaultEventBuilder third_device_builder{
         third_device,
         mt::fake_shared(clock)};
-    mi::receiver::XKBMapper mapper;
+    mi::receiver::XKBMapperRegistrar mapper{mir::immediate_executor};
     mi::SeatInputDeviceTracker tracker{
         mt::fake_shared(mock_dispatcher), mt::fake_shared(mock_visualizer), mt::fake_shared(mock_cursor_listener),
         mt::fake_shared(mapper),          mt::fake_shared(clock),           mt::fake_shared(mock_seat_report)};

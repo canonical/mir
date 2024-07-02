@@ -30,6 +30,7 @@
 #include "mir/test/doubles/mock_libinput.h"
 #include "mir/test/doubles/mock_option.h"
 #include "mir/test/doubles/mock_input_device_registry.h"
+#include "mir/test/doubles/mock_led_observer_registrar.h"
 #include "src/platforms/evdev/platform.h"
 #include "src/platforms/x11/input/input_platform.h"
 #include "mir/test/fake_shared.h"
@@ -96,6 +97,7 @@ struct InputPlatformProbe : ::testing::Test
     NiceMock<mtd::MockOption> mock_options;
     mtd::MockInputDeviceRegistry mock_registry;
     StubEmergencyCleanupRegistry stub_emergency;
+    NiceMock<mtd::MockLedObserverRegistrar> led_observer_registrar;
     std::shared_ptr<mir::SharedLibraryProberReport> stub_prober_report{mr::null_shared_library_prober_report()};
     std::string platform_path_value{mtf::server_platform_path()};
     boost::any platform_path_value_as_any{platform_path_value};
@@ -141,7 +143,8 @@ TEST_F(InputPlatformProbe, stub_platform_not_picked_up_by_default)
             nullptr,
             mr::null_input_report(),
             empty_loaded_module_list,
-            *stub_prober_report);
+            *stub_prober_report,
+            mt::fake_shared(led_observer_registrar));
 
     EXPECT_THAT(platform, OfPtrType<mi::evdev::Platform>());
 }
@@ -160,7 +163,8 @@ TEST_F(InputPlatformProbe, x11_input_platform_not_used_when_vt_specified)
             nullptr,
             mr::null_input_report(),
             empty_loaded_module_list,
-            *stub_prober_report);
+            *stub_prober_report,
+            mt::fake_shared(led_observer_registrar));
 
     EXPECT_THAT(platform, OfPtrType<mi::evdev::Platform>());
 }
@@ -180,6 +184,7 @@ TEST_F(InputPlatformProbe, allows_forcing_stub_input_platform)
             nullptr,
             mr::null_input_report(),
             empty_loaded_module_list,
-            *stub_prober_report);
+            *stub_prober_report,
+            mt::fake_shared(led_observer_registrar));
     EXPECT_THAT(platform, OfPtrType<mtf::StubInputPlatform>());
 }

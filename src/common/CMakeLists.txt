@@ -62,6 +62,7 @@ add_library(mircommon SHARED
   ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_touchpad_config.h
   ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_touchscreen_config.h
   ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_keyboard_config.h
+  ${PROJECT_SOURCE_DIR}/include/common/mir/input/keyboard_leds.h
   ${MIR_COMMON_SOURCES}
 )
 

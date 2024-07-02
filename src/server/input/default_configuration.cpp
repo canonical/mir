@@ -36,8 +36,9 @@
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_probe.h"
 #include "mir/input/platform.h"
-#include "mir/input/xkb_mapper.h"
+#include "mir/input/xkb_mapper_registrar.h"
 #include "mir/input/vt_filter.h"
+#include "mir/input/device.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
@@ -251,7 +252,8 @@ mir::DefaultServerConfiguration::the_input_manager()
                     the_console_services(),
                     input_report,
                     the_platform_libaries(),
-                    *the_shared_library_prober_report());
+                    *the_shared_library_prober_report(),
+                    the_led_observer_registrar());
 
                 return std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer(), std::move(platform));
             }
@@ -325,11 +327,20 @@ std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_
 
 std::shared_ptr<mi::KeyMapper> mir::DefaultServerConfiguration::the_key_mapper()
 {
-    return key_mapper(
-       []()
+    return xkb_mapper_registrar(
+       [default_executor=the_main_loop()]()
        {
-           return std::make_shared<mi::receiver::XKBMapper>();
+           return std::make_shared<mi::receiver::XKBMapperRegistrar>(*default_executor);
        });
+}
+
+std::shared_ptr<mi::LedObserverRegistrar> mir::DefaultServerConfiguration::the_led_observer_registrar()
+{
+    return xkb_mapper_registrar(
+        [default_executor=the_main_loop()]()
+        {
+            return std::make_shared<mi::receiver::XKBMapperRegistrar>(*default_executor);
+        });
 }
 
 std::shared_ptr<mi::SeatObserver> mir::DefaultServerConfiguration::the_seat_observer()

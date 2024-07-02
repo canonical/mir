@@ -44,14 +44,16 @@ mir::UniqueModulePtr<mi::Platform> create_input_platform(
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<mir::ConsoleServices> const& console,
-    std::shared_ptr<mi::InputReport> const& report)
+    std::shared_ptr<mi::InputReport> const& report,
+    std::shared_ptr<mi::LedObserverRegistrar> const& led_observer_registrar)
 {
     mir::assert_entry_point_signature<mi::CreatePlatform>(&create_input_platform);
     return mir::make_module_ptr<mie::Platform>(
         input_device_registry,
         report,
         std::make_unique<mu::Context>(),
-        console);
+        console,
+        led_observer_registrar);
 }
 
 void add_input_platform_options(

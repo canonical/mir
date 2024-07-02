@@ -654,6 +654,11 @@ libinput_config_dwt_state libinput_device_config_dwt_get_default_enabled(libinpu
     return global_libinput->libinput_device_config_dwt_get_default_enabled(device);
 }
 
+void libinput_device_led_update(libinput_device *device, libinput_led leds)
+{
+    global_libinput->libinput_device_led_update(device, leds);
+}
+
 libinput_event* mtd::MockLibInput::setup_touch_event(libinput_device* dev, libinput_event_type type, uint64_t event_time, int slot,
                                                      float x, float y, float major, float minor, float pressure, float orientation)
 {
