@@ -101,6 +101,42 @@ private:
     auto popup_rect() const -> std::optional<geometry::Rectangle>;
 };
 
+class XdgToplevelStable : mir::wayland::XdgToplevel, public WindowWlSurfaceRole
+{
+public:
+    XdgToplevelStable(
+        wl_resource* new_resource,
+        XdgSurfaceStable* xdg_surface,
+        WlSurface* surface);
+
+    void set_parent(std::optional<struct wl_resource*> const& parent) override;
+    void set_title(std::string const& title) override;
+    void set_app_id(std::string const& app_id) override;
+    void show_window_menu(struct wl_resource* seat, uint32_t serial, int32_t x, int32_t y) override;
+    void move(struct wl_resource* seat, uint32_t serial) override;
+    void resize(struct wl_resource* seat, uint32_t serial, uint32_t edges) override;
+    void set_max_size(int32_t width, int32_t height) override;
+    void set_min_size(int32_t width, int32_t height) override;
+    void set_maximized() override;
+    void unset_maximized() override;
+    void set_fullscreen(std::optional<struct wl_resource*> const& output) override;
+    void unset_fullscreen() override;
+    void set_minimized() override;
+
+    void handle_commit() override {};
+    void handle_state_change(MirWindowState /*new_state*/) override;
+    void handle_active_change(bool /*is_now_active*/) override;
+    void handle_resize(std::optional<geometry::Point> const& new_top_left, geometry::Size const& new_size) override;
+    void handle_close_request() override;
+
+    static XdgToplevelStable* from(wl_resource* surface);
+
+private:
+    void send_toplevel_configure();
+    void destroy_role() const override;
+
+    mir::wayland::Weak<XdgSurfaceStable> const xdg_surface;
+};
 }
 }
 

@@ -41,6 +41,8 @@
 #include "wl_seat.h"
 #include "wl_shell.h"
 #include "wlr_screencopy_v1.h"
+#include "xdg-decoration-unstable-v1_wrapper.h"
+#include "xdg_decoration_unstable_v1.h"
 #include "xdg_output_v1.h"
 #include "xdg_shell_stable.h"
 #include "xdg_shell_v6.h"
@@ -214,6 +216,10 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
         {
             return mf::create_mir_shell_v1(ctx.display);
         }),
+    make_extension_builder<mw::XdgDecorationManagerV1>([](auto const& ctx)
+	{
+	    return mf::create_xdg_decoration_unstable_v1(ctx.display);
+	})
 };
 
 ExtensionBuilder const xwayland_builder {
