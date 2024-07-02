@@ -93,7 +93,7 @@ public:
 
 private:
     static auto to_mode(DecorationStrategy::DecorationsType) -> uint32_t;
-    static auto to_decorations_type(uint32_t) -> DecorationStrategy::DecorationsType;
+    auto to_decorations_type(uint32_t) -> DecorationStrategy::DecorationsType;
     void update_mode(uint32_t new_mode);
 
     mir::frontend::XdgToplevelStable* toplevel;
@@ -196,7 +196,11 @@ auto mir::frontend::XdgToplevelDecorationV1::to_decorations_type(uint32_t mode)
     case Mode::server_side:
         return DecorationStrategy::DecorationsType::ssd;
     default:
-        mir::log_warning("%s: Got invalid protocol mode (%d), defaulting to client side", __FUNCTION__, mode);
+        pid_t pid;
+        wl_client_get_credentials(client->raw_client(), &pid, nullptr, nullptr); // null pointers are allowed
+
+        mir::log_warning("Client PID: %d, got invalid protocol mode (%d), defaulting to client side.", pid, mode);
+
         return DecorationStrategy::DecorationsType::csd;
     }
 }
