@@ -138,7 +138,7 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid toplevel pointer"));
     }
 
-    auto decoration = new XdgToplevelDecorationV1{id, tl, std::move(decoration_strategy)};
+    auto decoration = new XdgToplevelDecorationV1{id, tl, decoration_strategy};
     if (!toplevels_with_decorations.registerToplevel(toplevel))
     {
         BOOST_THROW_EXCEPTION(mir::wayland::ProtocolError(
