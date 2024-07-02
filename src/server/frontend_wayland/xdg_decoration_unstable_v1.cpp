@@ -29,6 +29,7 @@
 #include <cstdint>
 #include <memory>
 #include <unordered_set>
+#include <utility>
 
 namespace mir
 {
@@ -180,10 +181,9 @@ auto mir::frontend::XdgToplevelDecorationV1::to_mode(DecorationStrategy::Decorat
         return Mode::server_side;
     case DecorationStrategy::DecorationsType::csd:
         return Mode::client_side;
-    default:
-        mir::log_warning("%s: Got invalid protocol decorations type, defaulting to client side", __FUNCTION__);
-        return Mode::client_side;
     }
+
+    std::unreachable();
 }
 
 auto mir::frontend::XdgToplevelDecorationV1::to_decorations_type(uint32_t mode)
