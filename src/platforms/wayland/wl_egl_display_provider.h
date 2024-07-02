@@ -31,11 +31,6 @@ class WlDisplayProvider : public GenericEGLDisplayProvider
 public:
     WlDisplayProvider(EGLDisplay dpy);
 
-    WlDisplayProvider(
-        WlDisplayProvider const& from,
-        struct wl_surface* surface,
-        geometry::Size size);
-
     auto get_egl_display() -> EGLDisplay override;
 private:
     EGLDisplay const dpy;
@@ -50,6 +45,7 @@ public:
     auto alloc_framebuffer(GLConfig const& config, EGLContext share_context)
         -> std::unique_ptr<EGLFramebuffer> override;
 
+    struct SurfaceState;
     class Framebuffer : public GenericEGLDisplayAllocator::EGLFramebuffer
     {
     public:
@@ -60,7 +56,7 @@ public:
          *          final handle generated from this Framebuffer is released,
          *          the EGL resources \param ctx and \param surff will be freed.
          */
-        Framebuffer(EGLDisplay dpy, EGLContext ctx, EGLSurface surf, geometry::Size size);
+        Framebuffer(EGLDisplay dpy, EGLContext ctx, EGLSurface surf, std::shared_ptr<SurfaceState> ss, geometry::Size size);
 
         auto size() const -> geometry::Size override;
 
@@ -71,14 +67,15 @@ public:
         void swap_buffers();
     private:
         class EGLState;
-        Framebuffer(std::shared_ptr<EGLState const> surf, geometry::Size size);
+        Framebuffer(std::shared_ptr<EGLState const> state, geometry::Size size);
+        Framebuffer(Framebuffer const& that);
 
         std::shared_ptr<EGLState const> const state;
         geometry::Size const size_;
     };
 private:
     EGLDisplay const dpy;
-    struct ::wl_egl_window* const wl_window;
+    std::shared_ptr<SurfaceState> const surface_state;
     geometry::Size const size;
 };
 }
