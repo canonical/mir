@@ -218,7 +218,7 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
         }),
     make_extension_builder<mw::XdgDecorationManagerV1>([](auto const& ctx)
 	{
-	    return mf::create_xdg_decoration_unstable_v1(ctx.display);
+	    return mf::create_xdg_decoration_unstable_v1(ctx.display, ctx.decoration_strategy);
 	})
 };
 
@@ -375,7 +375,8 @@ std::shared_ptr<mf::Connector>
                     wayland_extension_hooks),
                 wayland_extension_filter,
                 enable_repeat,
-                the_session_lock());
+                the_session_lock(),
+                the_decoration_strategy());
         });
 }
 

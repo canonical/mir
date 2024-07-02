@@ -1,5 +1,5 @@
 MIR_CORE_2.9 {
- global:
+global:
   extern "C++" {
     mir::AnonymousShmFile::?AnonymousShmFile*;
     mir::AnonymousShmFile::AnonymousShmFile*;
@@ -29,3 +29,4 @@ MIR_CORE_2.9 {
   };
 local: *;
 };
+

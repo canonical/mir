@@ -74,6 +74,7 @@ class RendererFactory;
 class Fd;
 class MainLoop;
 class ServerStatusListener;
+class DecorationStrategy;
 
 enum class OptionType
 {
@@ -469,6 +470,8 @@ public:
     void set_enabled_wayland_extensions(std::vector<std::string> const& extensions);
 /** @} */
 
+    auto the_decoration_strategy() const -> std::shared_ptr<DecorationStrategy>;
+    void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy);
 private:
     struct ServerConfiguration;
     struct Self;
