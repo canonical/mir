@@ -14,7 +14,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "mir/gl/tessellation_helpers.h"
-#include "mir/geometry/forward.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
 
