@@ -202,7 +202,8 @@ auto mir::DefaultServerConfiguration::the_logger()
 
 auto mir::DefaultServerConfiguration::the_decoration_strategy() -> std::shared_ptr<mir::DecorationStrategy>
 {
-    if(!decoration_strategy) {
+    if (!decoration_strategy)
+    {
         class DefaultDecorationStrategy: public mir::DecorationStrategy
         {
             DecorationsType default_style() const override { return DecorationsType::csd; }
