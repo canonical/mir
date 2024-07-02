@@ -120,6 +120,7 @@ auto mir::DefaultServerConfiguration::the_screen_shooter() -> std::shared_ptr<co
                     thread_pool_executor,
                     providers,
                     the_renderer_factory(),
+                    the_buffer_allocator(),
                     the_gl_config());
             }
             catch (...)
