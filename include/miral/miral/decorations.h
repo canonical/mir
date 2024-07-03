@@ -24,6 +24,9 @@ namespace mir { class Server; }
 
 namespace miral
 {
+/// Configures the window decoration strategy.
+/// \note The strategy can only be applied to clients that are able to negotiate the decoration style with the server.
+/// \remark Since MirAL 5.1
 class Decorations
 {
 public:
