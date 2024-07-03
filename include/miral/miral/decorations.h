@@ -20,7 +20,7 @@
 
 #include <memory>
 
-namespace mir { class Server; class DecorationStrategy; }
+namespace mir { class Server; }
 
 namespace miral
 {
