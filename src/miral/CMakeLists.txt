@@ -85,6 +85,7 @@ add_library(miral-external OBJECT
     ${miral_include}/miral/lambda_as_function.h
     x11_support.cpp                     ${miral_include}/miral/x11_support.h
     zone.cpp                            ${miral_include}/miral/zone.h
+    decorations.cpp                     ${miral_include}/miral/decorations.h
 )
 
 add_library(miral SHARED

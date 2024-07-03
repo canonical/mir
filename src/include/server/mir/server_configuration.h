@@ -72,6 +72,7 @@ class ServerStatusListener;
 class DisplayChanger;
 class EmergencyCleanup;
 class ConsoleServices;
+class DecorationStrategy;
 
 class ServerConfiguration
 {
@@ -111,6 +112,8 @@ public:
     virtual void set_wayland_extension_filter(WaylandProtocolExtensionFilter const& extension_filter) = 0;
     virtual void set_enabled_wayland_extensions(std::vector<std::string> const& extensions) = 0;
 
+    virtual auto the_decoration_strategy() -> std::shared_ptr<DecorationStrategy> = 0;
+    virtual void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy) = 0;
 protected:
     ServerConfiguration() = default;
     virtual ~ServerConfiguration() = default;

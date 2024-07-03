@@ -36,6 +36,7 @@ template<class Observer>
 class ObserverMultiplexer;
 
 class ConsoleServices;
+class DecorationStrategy;
 
 namespace dispatch
 {
@@ -334,6 +335,9 @@ public:
 
     auto default_reports() -> std::shared_ptr<void>;
 
+    auto the_decoration_strategy() -> std::shared_ptr<DecorationStrategy> override;
+    void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy) override;
+
 protected:
     std::shared_ptr<options::Option> the_options() const;
     std::shared_ptr<input::DefaultInputDeviceHub>  the_default_input_device_hub();
@@ -420,6 +424,7 @@ protected:
     CachedPtr<cookie::Authority> cookie_authority;
     CachedPtr<input::KeyMapper> key_mapper;
     std::shared_ptr<ConsoleServices> console_services;
+    std::shared_ptr<DecorationStrategy> decoration_strategy;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;

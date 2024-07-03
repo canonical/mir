@@ -133,6 +133,7 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(the_seat_observer_registrar)\
     MACRO(the_session_lock)\
     MACRO(the_renderer_factory)\
+    MACRO(the_decoration_strategy)\
     MACRO(the_input_device_registry)\
     MACRO(the_idle_handler)
 
@@ -759,4 +760,10 @@ void mir::Server::add_configuration_option(
         }
         break;
     }
+}
+
+
+void mir::Server::set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy)
+{
+    self->server_config->set_the_decoration_strategy(strategy);
 }

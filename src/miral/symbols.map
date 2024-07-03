@@ -456,13 +456,20 @@ local: *;
 MIRAL_5.1 {
 global:
   extern "C++" {
+    miral::Decorations::Decorations*;
+    miral::Decorations::always_csd*;
+    miral::Decorations::always_ssd*;
+    miral::Decorations::operator*;
+    miral::Decorations::prefer_csd*;
+    miral::Decorations::prefer_ssd*;
     miral::IdleListener::?IdleListener*;
     miral::IdleListener::IdleListener*;
     miral::IdleListener::on_dim*;
     miral::IdleListener::on_off*;
     miral::IdleListener::on_wake*;
     miral::IdleListener::operator*;
-    typeinfo?for?miral::IdleListener;
     miral::WindowManagerTools::move_cursor_to*;
+    typeinfo?for?miral::IdleListener;
+    typeinfo?for?miral::Decorations;
   };
 } MIRAL_5.0;

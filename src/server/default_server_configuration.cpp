@@ -38,6 +38,7 @@
 #include "default_emergency_cleanup.h"
 #include "mir/graphics/platform.h"
 #include "mir/console_services.h"
+#include "mir/decoration_strategy.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -197,4 +198,25 @@ auto mir::DefaultServerConfiguration::the_logger()
         {
             return std::make_shared<ml::DumbConsoleLogger>();
         });
+}
+
+auto mir::DefaultServerConfiguration::the_decoration_strategy() -> std::shared_ptr<mir::DecorationStrategy>
+{
+    if (!decoration_strategy)
+    {
+        class DefaultDecorationStrategy: public mir::DecorationStrategy
+        {
+            DecorationsType default_style() const override { return DecorationsType::csd; }
+            DecorationsType request_style(DecorationsType type) const override { return type; }
+        };
+
+        decoration_strategy = std::make_shared<DefaultDecorationStrategy>();
+    }
+
+    return decoration_strategy;
+}
+
+void mir::DefaultServerConfiguration::set_the_decoration_strategy(std::shared_ptr<mir::DecorationStrategy> strategy)
+{
+    decoration_strategy = strategy;
 }
