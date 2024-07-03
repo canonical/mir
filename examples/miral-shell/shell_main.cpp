@@ -27,12 +27,37 @@
 #include <miral/internal_client.h>
 #include <miral/command_line_option.h>
 #include <miral/cursor_theme.h>
+#include <miral/decorations.h>
 #include <miral/keymap.h>
 #include <miral/toolkit_event.h>
 #include <miral/x11_support.h>
 #include <miral/wayland_extensions.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
+
+#include <cstring>
+
+namespace
+{
+struct ConfigureDecorations
+{
+    miral::Decorations const decorations{[]
+        {
+            if (auto const strategy = getenv("MIRAL_SHELL_DECORATIONS"))
+            {
+                if (strcmp(strategy, "always-ssd") == 0) return miral::Decorations::always_ssd();
+                if (strcmp(strategy, "prefer-ssd") == 0) return miral::Decorations::prefer_ssd();
+                if (strcmp(strategy, "always-csd") == 0) return miral::Decorations::always_csd();
+            }
+            return miral::Decorations::prefer_csd();
+        }()};
+
+    void operator()(mir::Server& s) const
+    {
+        decorations(s);
+    }
+};
+}
 
 int main(int argc, char const* argv[])
 {
@@ -113,6 +138,7 @@ int main(int argc, char const* argv[])
             CursorTheme{"default:DMZ-White"},
             WaylandExtensions{},
             X11Support{},
+            ConfigureDecorations{},
             window_managers,
             display_configuration_options,
             external_client_launcher,
