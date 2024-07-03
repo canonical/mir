@@ -89,17 +89,15 @@ And that's it! Now we are ready to update our symbols automatically.
    to an existing class)
 2. If not already bumped in this release cycle, bump `MIRAL_VERSION_MINOR`
    in `src/CMakeLists.txt`
-3. If not already bumped in this release cycle, bump `MIRAL_ABI` in 
-   `src/miral/CMakeLists.txt`
-4. From the root of the project, run:
+3. From the root of the project, run:
    ```sh
    cmake --build build --target generate-miral-symbols-map
    ```
-5. Check that your new symbols is in the `symbols.map` file:
+4. Check that your new symbols is in the `symbols.map` file:
    ```sh
    git diff src/miral/symbols.map
    ```
-6. Regenerate the debian symbols:
+5. Regenerate the debian symbols:
    ```sh
    cmake --build build --target regenerate-miral-debian-symbols
    ```
@@ -132,13 +130,11 @@ And that's it! Now we are ready to update our symbols automatically.
    to an existing class)
 2. If not already bumped in this release cycle, bump `MIROIL_VERSION_MINOR`
    in `src/miroil/CMakeLists.txt`
-3. If not already bumped in this release cycle, bump `MIROIL_ABI` in 
-   `src/miroil/CMakeLists.txt`
-4. From the root of the project, run:
+3. From the root of the project, run:
    ```sh
    cmake --build build --target generate-miroil-symbols-map
    ```
-5. Check that your new symbols is in the `symbols.map` file:
+4. Check that your new symbols is in the `symbols.map` file:
    ```sh
    git diff src/miroil/symbols.map
    ```
@@ -146,7 +142,7 @@ And that's it! Now we are ready to update our symbols automatically.
 ### Scenario 2: Removing or changing a symbol
 1. Make a destructive change to the interface (e.g. remove a parameter from
    a method).
-2. If not already bumped in this release cycle, bump `MIROIL_ABI``
+2. If not already bumped in this release cycle, bump `MIROIL_ABI`
    in `src/miroil/CMakeLists.txt`. Set `MIROIL_VERSION_MINOR` and `MIROIL_VERSION_PATCH`
    to `0`
 3. From the root of the project, run:
