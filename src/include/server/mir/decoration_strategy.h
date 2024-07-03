@@ -14,13 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <cstdint>
 namespace mir
 {
 class DecorationStrategy
 {
 public:
-    enum class DecorationsType : uint32_t
+    enum class DecorationsType
     {
         csd,
         ssd
