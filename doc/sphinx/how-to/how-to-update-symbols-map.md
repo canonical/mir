@@ -93,15 +93,15 @@ And that's it! Now we are ready to update our symbols automatically.
    in `src/CMakeLists.txt`
 3. From the root of the project, run:
    ```sh
-   cmake --build build --target generate-miral-symbols-map
+   cmake --build <BUILD_DIRECTORY> --target generate-miral-symbols-map
    ```
 4. Check that your new symbols is in the `symbols.map` file:
    ```sh
    git diff src/miral/symbols.map
    ```
-5. Regenerate the debian symbols:
+5. Regenerate Debian symbols:
    ```sh
-   cmake --build build --target regenerate-miral-debian-symbols
+   cmake --build <BUILD_DIRECTORY> --target regenerate-miral-debian-symbols
    ```
 
 ### Scenario 2: Removing or changing a symbol
@@ -114,7 +114,7 @@ And that's it! Now we are ready to update our symbols automatically.
    `src/miral/CMakeLists.txt`
 4. From the root of the project, run:
    ```sh
-   cmake --build build --target generate-miral-symbols-map
+   cmake --build <BUILD_DIRECTORY> --target generate-miral-symbols-map
    ```
 5. Check that your symbols are reflected properly in the `symbols.map` file:
    ```sh
@@ -122,7 +122,7 @@ And that's it! Now we are ready to update our symbols automatically.
    ```
 6. Regenerate the debian symbols:
    ```sh
-   cmake --build build --target regenerate-miral-debian-symbols
+   cmake --build <BUILD_DIRECTORY> --target regenerate-miral-debian-symbols
    ```
 
 If `MIRAL_ABI` needed to be updated, you should also run:
@@ -140,7 +140,7 @@ If `MIRAL_ABI` needed to be updated, you should also run:
    in `src/miroil/CMakeLists.txt`
 3. From the root of the project, run:
    ```sh
-   cmake --build build --target generate-miroil-symbols-map
+   cmake --build <BUILD_DIRECTORY> --target generate-miroil-symbols-map
    ```
 4. Check that your new symbols is in the `symbols.map` file:
    ```sh
@@ -155,7 +155,7 @@ If `MIRAL_ABI` needed to be updated, you should also run:
    to `0`
 3. From the root of the project, run:
    ```sh
-   cmake --build build --target generate-miroil-symbols-map
+   cmake --build <BUILD_DIRECTORY> --target generate-miroil-symbols-map
    ```
 4. Check that your symbols are reflected properly in the `symbols.map` file:
    ```sh
@@ -163,7 +163,7 @@ If `MIRAL_ABI` needed to be updated, you should also run:
    ```
 5. Regenerate the debian symbols:
    ```sh
-   cmake --build build --target regenerate-miroil-debian-symbols
+   cmake --build <BUILD_DIRECTORY> --target regenerate-miroil-debian-symbols
    ```
 
 If `MIROIL_ABI` needed to be updated, you should also run:
@@ -182,7 +182,7 @@ If `MIROIL_ABI` needed to be updated, you should also run:
    `src/server/CMakeLists.txt`
 4. From the root of the project, run:
    ```sh
-   cmake --build build --target generate-mirserver-symbols-map
+   cmake --build <BUILD_DIRECTORY> --target generate-mirserver-symbols-map
    ```
 5. Check that your new symbols is in the `symbols.map` file:
    ```sh
@@ -205,7 +205,7 @@ If `MIRSERVER_ABI` needed to be updated, you should also run:
    `src/server/CMakeLists.txt`
 4. From the root of the project, run:
    ```sh
-   cmake --build build --target generate-mirserver-symbols-map
+   cmake --build <BUILD_DIRECTORY> --target generate-mirserver-symbols-map
    ```
 5. Check that your symbols are reflected properly in the `symbols.map` file:
    ```sh
