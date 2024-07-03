@@ -434,6 +434,12 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"vtable for miral::MinimalWindowManager@MIRAL_5.0" 5.0.0
  (c++)"vtable for miral::WindowManagementPolicy@MIRAL_5.0" 5.0.0
  MIRAL_5.1@MIRAL_5.1 5.1.0
+ (c++)"miral::Decorations::Decorations(std::shared_ptr<miral::Decorations::Self>)@MIRAL_5.1" 5.1.0
+ (c++)"miral::Decorations::always_csd()@MIRAL_5.1" 5.1.0
+ (c++)"miral::Decorations::always_ssd()@MIRAL_5.1" 5.1.0
+ (c++)"miral::Decorations::operator()(mir::Server&) const@MIRAL_5.1" 5.1.0
+ (c++)"miral::Decorations::prefer_csd()@MIRAL_5.1" 5.1.0
+ (c++)"miral::Decorations::prefer_ssd()@MIRAL_5.1" 5.1.0
  (c++)"miral::IdleListener::IdleListener()@MIRAL_5.1" 5.1.0
  (c++)"miral::IdleListener::on_dim(std::function<void ()> const&)@MIRAL_5.1" 5.1.0
  (c++)"miral::IdleListener::on_off(std::function<void ()> const&)@MIRAL_5.1" 5.1.0
