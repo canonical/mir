@@ -24,7 +24,7 @@ is (mostly) automated so that we have to think very little about it.
 Two different circumstances will prompt a developer to update
 these files:
 
-1. **A new symbols is added to a library**
+1. **A new symbol is added to a library**
 
     This means that we have extended the existing interface.
     The new symbols can simply be put in a new stanza with a "bumped"
@@ -43,16 +43,18 @@ these files:
     to create a single new stanza at a brand new version in the `symbols.map`
     file. This new stanza will contain all of the symbols in that library.
 
-Sometimes we break a symbols but don't even realize it until someone
-points it out in a pull request. Nowadays, the symbols check is automated
-by CI. You can find results of this check
+If you forget to update the `symbols.map` file, Github CI will complain and
+prevent the merge until the issue is addressed. You can find results of this action
 [here](https://github.com/canonical/mir/actions/workflows/symbols-check.yml).
-This check is run on each pull request. It will inform you whether or not
-a `symbols.map` file needs to be updated due to your change.
+Each time a pull request is open or updated on Github, this action will be
+run. If you check the log of this action, you will see which symbols have been
+changed so that you can address the issue.
 
-**Warning**: This check is not sophisticated to know if you change the
-definition of a symbol (e.g. you changed the parameters of a method). This
-check will still have to be done with your ever-wary eyes!
+**Warning**: Please be aware that this action is not sophisticated enough to
+know if you changed the definition of a symbol. If you add or remove a symbol,
+the action will inform you. However, if you modify a symbol (e.g. by changing
+the parameters that a method takes), you will *not* be informed that the symbol
+has changes. Such changes will need to be moved to a new stanza manually.
 
 ## Setup
 Before we can update the symbols of Mir's libraries, we'll want to set
