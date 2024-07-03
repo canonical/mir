@@ -42,6 +42,10 @@ class LibraryInfo(TypedDict):
     map_file: str
 
 
+def get_major_version_from_str(version: str) -> int:
+    return int(version.split('.')[0])
+
+
 class Symbol:
     name: str
     version: str
@@ -471,22 +475,31 @@ def main():
         new_external_symbols = get_added_symbols(previous_symbols, external_symbols, False)
         new_internal_symbols = get_added_symbols(previous_symbols, internal_symbols, True)
 
+        next_major = get_major_version_from_str(version)
         next_version = f"{library.upper()}_{version}"
         next_internal_version = f"{library.upper()}_INTERNAL_{version}"
         data_to_output: OrderedDict[str, dict[str, list[str]]] = OrderedDict()
 
         # Remake the stanzas for the previous symbols
         for symbol in previous_symbols:
-            version = f"{library.upper()}_{symbol.version}"
-            if not version in data_to_output:
-                data_to_output[version] = {
+            major = get_major_version_from_str(symbol.version)
+
+            # If we are going up by a major version, then we should add
+            # all existing symbols to the new stanza
+            if major == next_major:
+                symbol_version = f"{library.upper()}_{symbol.version}"
+            else:
+                symbol_version = f"{library.upper()}_{version}"
+            
+            if not symbol_version in data_to_output:
+                data_to_output[symbol_version] = {
                     "c": [],
                     "c++": []
                 }
             if symbol.is_c_symbol:
-                bisect.insort(data_to_output[version]["c"], symbol.name)
+                bisect.insort(data_to_output[symbol_version]["c"], symbol.name)
             else:
-                bisect.insort(data_to_output[version]["c++"], symbol.name)
+                bisect.insort(data_to_output[symbol_version]["c++"], symbol.name)
 
         # Add the external symbols
         for symbol in new_external_symbols:
