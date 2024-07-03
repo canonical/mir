@@ -18,11 +18,9 @@
 #define MIRAL_DECORATIONS_H
 
 
-#include "mir/decoration_strategy.h"
-
 #include <memory>
 
-namespace mir { class Server; }
+namespace mir { class Server; class DecorationStrategy; }
 
 namespace miral
 {
@@ -52,7 +50,7 @@ public:
 private:
     struct Self;
 
-    Decorations(std::shared_ptr<mir::DecorationStrategy> strategy);
+    Decorations(std::shared_ptr<Self> strategy);
 
     std::shared_ptr<Self> self;
 };

@@ -17,13 +17,14 @@
 #include "miral/decorations.h"
 
 #include <memory>
+
 #include <mir/default_server_configuration.h>
 #include <mir/server.h>
+#include <mir/decoration_strategy.h>
 
 
-struct miral::Decorations::Self
+struct miral::Decorations::Self : mir::DecorationStrategy
 {
-    std::shared_ptr<mir::DecorationStrategy> strategy;
 };
 
 void miral::Decorations::operator()(mir::Server& server) const
@@ -31,18 +32,18 @@ void miral::Decorations::operator()(mir::Server& server) const
     server.add_pre_init_callback(
         [this, &server]()
         {
-            server.set_the_decoration_strategy(self->strategy);
+            server.set_the_decoration_strategy(self);
         });
 }
 
-miral::Decorations::Decorations(std::shared_ptr<mir::DecorationStrategy> strategy) :
-    self{std::make_shared<Self>(std::move(strategy))}
+miral::Decorations::Decorations(std::shared_ptr<Self> strategy) :
+    self{std::move(strategy)}
 {
 }
 
 auto miral::Decorations::always_ssd() -> Decorations
 {
-    struct AlwaysServerSide : public mir::DecorationStrategy
+    struct AlwaysServerSide : Self
     {
         DecorationsType default_style() const override { return DecorationsType::ssd; }
         DecorationsType request_style(DecorationsType) const override { return DecorationsType::ssd; }
@@ -53,7 +54,7 @@ auto miral::Decorations::always_ssd() -> Decorations
 
 auto miral::Decorations::always_csd() -> Decorations
 {
-    struct AlwaysClientSide : public mir::DecorationStrategy
+    struct AlwaysClientSide : Self
     {
         DecorationsType default_style() const override { return DecorationsType::csd; }
         DecorationsType request_style(DecorationsType) const override { return DecorationsType::csd; }
@@ -64,7 +65,7 @@ auto miral::Decorations::always_csd() -> Decorations
 
 auto miral::Decorations::prefer_ssd() -> Decorations
 {
-    struct PreferServerSide : public mir::DecorationStrategy
+    struct PreferServerSide : Self
     {
         DecorationsType default_style() const override { return DecorationsType::ssd; }
         DecorationsType request_style(DecorationsType type) const override { return type; }
@@ -75,7 +76,7 @@ auto miral::Decorations::prefer_ssd() -> Decorations
 
 auto miral::Decorations::prefer_csd() -> Decorations
 {
-    struct PreferClientSide : public mir::DecorationStrategy
+    struct PreferClientSide : Self
     {
         DecorationsType default_style() const override { return DecorationsType::csd; }
         DecorationsType request_style(DecorationsType type) const override { return type; }
