@@ -24,6 +24,7 @@
 
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/platform.h"
+#include "mir/graphics/gl_config.h"
 #include "mir/log.h"
 
 #include "cpu_copy_output_surface.h"
@@ -127,7 +128,8 @@ public:
     Impl(
         EGLDisplay dpy,
         EGLContext share_ctx,
-        mg::CPUAddressableDisplayAllocator& allocator);
+        mg::CPUAddressableDisplayAllocator& allocator,
+        GLConfig const& config);
 
     void bind();
 
@@ -145,14 +147,16 @@ private:
     EGLContext const ctx;
     DRMFormat const format;
     RenderbufferHandle const colour_buffer;
+    std::shared_ptr<RenderbufferHandle> depth_stencil_buffer;
     FramebufferHandle const fbo;
 };
 
 mgc::CPUCopyOutputSurface::CPUCopyOutputSurface(
         EGLDisplay dpy,
         EGLContext share_ctx,
-        mg::CPUAddressableDisplayAllocator& allocator)
-        : impl{std::make_unique<Impl>(dpy, share_ctx, allocator)}
+        mg::CPUAddressableDisplayAllocator& allocator,
+        GLConfig const& config)
+        : impl{std::make_unique<Impl>(dpy, share_ctx, allocator, config)}
 {
 }
 
@@ -191,7 +195,8 @@ auto mgc::CPUCopyOutputSurface::layout() const -> Layout
 mgc::CPUCopyOutputSurface::Impl::Impl(
     EGLDisplay dpy,
     EGLContext share_ctx,
-    mg::CPUAddressableDisplayAllocator& allocator)
+    mg::CPUAddressableDisplayAllocator& allocator,
+    GLConfig const& config)
     : allocator{allocator},
       dpy{dpy},
       ctx{create_current_context(dpy, share_ctx)},
@@ -200,8 +205,20 @@ mgc::CPUCopyOutputSurface::Impl::Impl(
     glBindRenderbuffer(GL_RENDERBUFFER, colour_buffer);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8_OES, size().width.as_int(), size().height.as_int());
 
+    if (config.depth_buffer_bits() || config.stencil_buffer_bits())
+    {
+        depth_stencil_buffer = std::make_shared<RenderbufferHandle>();
+        glBindRenderbuffer(GL_RENDERBUFFER, depth_stencil_buffer->operator GLuint());
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8_OES, size().width.as_int(), size().height.as_int());
+    }
+
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colour_buffer);
+    if (depth_stencil_buffer)
+    {
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_buffer->operator GLuint());
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_buffer->operator GLuint());
+    }
 
     auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE)

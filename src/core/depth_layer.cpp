@@ -17,7 +17,7 @@
 #include "mir/depth_layer.h"
 
 #ifndef __clang__
-#include <stdexcept>
+#include "mir/fatal.h"
 #endif
 
 auto mir::mir_depth_layer_get_index(MirDepthLayer depth_layer) -> unsigned int
@@ -34,6 +34,6 @@ auto mir::mir_depth_layer_get_index(MirDepthLayer depth_layer) -> unsigned int
     // GCC and Clang both ensure the switch is exhaustive.
     // GCC, however, gets a "control reaches end of non-void function" warning without this
 #ifndef __clang__
-    throw std::logic_error("Invalid MirDepthLayer in mir::mir_depth_layer_get_index()");
+    fatal_error_abort("Invalid MirDepthLayer in mir::mir_depth_layer_get_index()");
 #endif
 }

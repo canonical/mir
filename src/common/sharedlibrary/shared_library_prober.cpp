@@ -18,6 +18,7 @@
 #include "mir/shared_library.h"
 
 #include <boost/filesystem.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <system_error>
 #include <cstring>
@@ -31,8 +32,8 @@ std::error_code boost_to_std_error(boost::system::error_code const& ec)
     {
         if (ec.category() != boost::system::system_category())
         {
-            throw std::logic_error{"Boost error from unexpected category: " +
-                                   ec.message()};
+            BOOST_THROW_EXCEPTION(std::logic_error{"Boost error from unexpected category: " +
+                                   ec.message()});
         }
         return std::error_code{ec.value(), std::system_category()};
     }

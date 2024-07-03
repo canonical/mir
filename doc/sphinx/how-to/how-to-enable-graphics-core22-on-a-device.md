@@ -28,7 +28,7 @@ Next, install the [graphics-test-tools](https://snapcraft.io/graphics-test-tools
 sudo snap install graphics-test-tools --channel 22/stable
 ```
 
-This snap will provide you with `graphics-test-tools.drm_info`. Run it and you
+This snap will provide you with `graphics-test-tools.drm-info`. Run it and you
 should see something like the following:
 ```
 Node: /dev/dri/card1
@@ -85,7 +85,7 @@ Finally, If you have a display connected, then one of your `Connector`s should r
 the  display can use.
 
 #### Troubleshooting
-If `drm_info` does *not* produce results similar to those above, then this
+If `drm-info` does *not* produce results similar to those above, then this
 indicates that your kernel **is NOT yet ready** to support the GPU. This
 means that kernel enablement is required before Ubuntu Frame can be enabled.
 

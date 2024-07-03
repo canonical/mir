@@ -256,6 +256,13 @@ public:
      */
     void invoke_under_lock(std::function<void()> const& callback);
 
+    /**
+     * Move the cursor to the provided point. If the point is outside of the range of the outputs,
+     * the point is clamped.
+     * @param point
+     */
+    void move_cursor_to(mir::geometry::PointF point);
+
 private:
     WindowManagerToolsImplementation* tools;
 };

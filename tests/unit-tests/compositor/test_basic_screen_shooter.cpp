@@ -31,6 +31,7 @@
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/stub_scene_element.h"
 #include "mir/test/doubles/stub_renderable.h"
+#include "mir/test/doubles/stub_gl_config.h"
 
 #include <gtest/gtest.h>
 
@@ -105,7 +106,8 @@ struct BasicScreenShooter : Test
             clock,
             executor,
             gl_providers,
-            renderer_factory);
+            renderer_factory,
+            std::make_shared<mtd::StubGLConfig>());
     }
 
     std::unique_ptr<mtd::MockRenderer> next_renderer{std::make_unique<testing::NiceMock<mtd::MockRenderer>>()};
@@ -246,7 +248,8 @@ TEST_F(BasicScreenShooter, ensures_renderer_is_current_on_only_one_thread)
         clock,
         mir::thread_pool_executor,
         gl_providers,
-        renderer_factory);
+        renderer_factory,
+        std::make_shared<mtd::StubGLConfig>());
 
     ON_CALL(*next_renderer, render(_))
         .WillByDefault(

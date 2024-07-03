@@ -5,6 +5,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/include/renderers/sw
+  ${PROJECT_SOURCE_DIR}/include/miral
   ${CMAKE_SOURCE_DIR}
 )
 
@@ -45,6 +46,7 @@ add_library(mir-public-test-framework OBJECT
   test_display_server.cpp  ${PROJECT_SOURCE_DIR}/include/test/miral/test_display_server.h
   ${PROJECT_SOURCE_DIR}/tests/include/mir_test_framework/mmap_wrapper.h
   mmap_wrapper.cpp
+  window_management_test_harness.cpp ${PROJECT_SOURCE_DIR}/tests/include/mir_test_framework/window_management_test_harness.h
 )
 
 target_link_libraries(mir-public-test-framework
@@ -59,12 +61,6 @@ target_link_libraries(mir-public-test-framework
 set_property(
     SOURCE udev_environment.cpp
     PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
-
-if ("libinput_environment.cpp:restrict" IN_LIST MIR_COMPILER_QUIRKS)
-  set_property(
-    SOURCE libinput_environment.cpp
-    PROPERTY COMPILE_OPTIONS -Wno-error=restrict)
-endif()
 
 # Umockdev uses glib, which uses the deprecated "register" storage qualifier
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")

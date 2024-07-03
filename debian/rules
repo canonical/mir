@@ -16,11 +16,7 @@ export CCACHE_BASEDIR = $(shell pwd)
 export MIR_SERVER_LOGGING = on
 override_dh_auto_test:
 ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
-  ifeq ($(DEB_HOST_ARCH_ENDIAN),little)
 	XDG_RUNTIME_DIR=/tmp GTEST_OUTPUT=xml:./ dh_auto_build -- ARGS="-V" ptest
-  else
-	echo "Testsuite disabled on $(DEB_HOST_ARCH) due to lack of big-endian support."
-  endif
 else
   # Run tests across Launchpad RISC-V builds (LP#1891686)
   ifeq ($(USER) $(DEB_HOST_ARCH),buildd riscv64)
@@ -36,24 +32,21 @@ COMMON_CONFIGURE_OPTIONS = \
   -DMIR_LINK_TIME_OPTIMIZATION=ON\
 
 ifeq ($(filter ppc64el,$(DEB_HOST_ARCH)),ppc64el)
-	# Disable spurious error on GCC-12
-	ifneq ($(shell gcc --version | grep '12.[[:digit:]]\+.[[:digit:]]\+$$'),)
-		COMMON_CONFIGURE_OPTIONS += -DMIR_COMPILER_QUIRKS="libinput_environment.cpp:restrict"
-	endif
 	# Disable spurious error on GCC-13
 	ifneq ($(shell gcc --version | grep '13.[[:digit:]]\+.[[:digit:]]\+$$'),)
 		COMMON_CONFIGURE_OPTIONS += -DMIR_COMPILER_QUIRKS="test_touchspot_controller.cpp:array-bounds"
 	endif
 endif
-ifeq ($(filter riscv64,$(DEB_HOST_ARCH)),riscv64)
-	# Disable spurious error on GCC-12
-	ifneq ($(shell gcc --version | grep '12.[[:digit:]]\+.[[:digit:]]\+$$'),)
-		COMMON_CONFIGURE_OPTIONS += -DMIR_COMPILER_QUIRKS="test_linearising_executor.cpp:use-after-free"
-	endif
-endif
 
 # Disable LTO if optimizations are off
 ifeq ($(filter noopt,$(DEB_BUILD_OPTIONS)),noopt)
+	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=OFF
+	DEB_BUILD_MAINT_OPTIONS += optimize=-lto
+endif
+
+# Disable LTO on binutils 2.42.50.20240618
+# https://bugs.launchpad.net/ubuntu/+source/binutils/+bug/2070302
+ifneq ($(shell ld --version | grep '2.42.50.20240625$$'),)
 	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=OFF
 	DEB_BUILD_MAINT_OPTIONS += optimize=-lto
 endif
@@ -64,17 +57,13 @@ ifeq ($(filter Ubuntu,$(DEB_VENDOR)),)
 	COMMON_CONFIGURE_OPTIONS += -DMIR_RUN_WLCS_TESTS=OFF
 endif
 
-# Disable miral tests on Launchpad riscv64 (MirServer/mir#2375)
+# Disable miral tests on Launchpad riscv64 (canonical/mir#3443)
 ifeq ($(USER) $(DEB_HOST_ARCH),buildd riscv64)
   COMMON_CONFIGURE_OPTIONS += -DMIR_RUN_MIRAL_TESTS=OFF
-  # Disable unit tests on Launchpad riscv64 jammy kinetic
-  ifneq ($(filter jammy kinetic lunar,$(DEB_DISTRIBUTION)),)
-    COMMON_CONFIGURE_OPTIONS += -DMIR_RUN_UNIT_TESTS=OFF
-  endif
 endif
 
-# Disable pre-compiled headers on GCC-12 & 13
-ifneq ($(shell gcc --version | grep '1[23].[[:digit:]]\+.[[:digit:]]\+$$'),)
+# Disable pre-compiled headers on GCC-13
+ifneq ($(shell gcc --version | grep '13.[[:digit:]]\+.[[:digit:]]\+$$'),)
   COMMON_CONFIGURE_OPTIONS += -DMIR_USE_PRECOMPILED_HEADERS=OFF
 endif
 

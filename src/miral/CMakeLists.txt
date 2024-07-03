@@ -47,21 +47,23 @@ if (HAS_W_STRINGOP_TRUNCATION)
     )
 endif()
 
-add_library(miral SHARED
+add_library(miral-external OBJECT
+    add_init_callback.cpp               ${miral_include}/miral/add_init_callback.h
+    application.cpp                     ${miral_include}/miral/application.h
     add_init_callback.cpp               ${miral_include}/miral/add_init_callback.h
     application.cpp                     ${miral_include}/miral/application.h
     application_authorizer.cpp          ${miral_include}/miral/application_authorizer.h
     application_info.cpp                ${miral_include}/miral/application_info.h
     canonical_window_manager.cpp        ${miral_include}/miral/canonical_window_manager.h
     configuration_option.cpp            ${miral_include}/miral/configuration_option.h
-                                        ${miral_include}/miral/command_line_option.h
+    ${miral_include}/miral/command_line_option.h
     cursor_theme.cpp                    ${miral_include}/miral/cursor_theme.h
     custom_renderer.cpp                 ${miral_include}/miral/custom_renderer.h
     display_configuration.cpp           ${miral_include}/miral/display_configuration.h
     external_client.cpp                 ${miral_include}/miral/external_client.h
+    idle_listener.cpp                   ${miral_include}/miral/idle_listener.h
     keymap.cpp                          ${miral_include}/miral/keymap.h
     minimal_window_manager.cpp          ${miral_include}/miral/minimal_window_manager.h
-    runner.cpp                          ${miral_include}/miral/runner.h
     display_configuration_option.cpp    ${miral_include}/miral/display_configuration_option.h
     output.cpp                          ${miral_include}/miral/output.h
     append_event_filter.cpp             ${miral_include}/miral/append_event_filter.h
@@ -72,6 +74,7 @@ add_library(miral SHARED
     window_specification.cpp            ${miral_include}/miral/window_specification.h
     internal_client.cpp                 ${miral_include}/miral/internal_client.h
     prepend_event_filter.cpp            ${miral_include}/miral/prepend_event_filter.h
+    runner.cpp                          ${miral_include}/miral/runner.h
     session_lock_listener.cpp           ${miral_include}/miral/session_lock_listener.h
     set_command_line_handler.cpp        ${miral_include}/miral/set_command_line_handler.h
     set_terminator.cpp                  ${miral_include}/miral/set_terminator.h
@@ -79,10 +82,14 @@ add_library(miral SHARED
     toolkit_event.cpp                   ${miral_include}/miral/toolkit_event.h
     window_management_policy.cpp        ${miral_include}/miral/window_management_policy.h
     window_manager_tools.cpp            ${miral_include}/miral/window_manager_tools.h
-                                        ${miral_include}/miral/lambda_as_function.h
+    ${miral_include}/miral/lambda_as_function.h
     x11_support.cpp                     ${miral_include}/miral/x11_support.h
     zone.cpp                            ${miral_include}/miral/zone.h
     decorations.cpp                     ${miral_include}/miral/decorations.h
+)
+
+add_library(miral SHARED
+    ${miral_include}/miral/runner.h # Syntactically, we need something here
 )
 
 #include <mir/udev/wrapper.h>
@@ -112,16 +119,27 @@ target_link_libraries(miral-internal
         PkgConfig::GIO
 )
 
+target_include_directories(miral-external
+    PUBLIC  "${miral_include}"
+)
+
 target_include_directories(miral
     PUBLIC  "${miral_include}"
 )
 
-target_link_libraries(miral
+target_link_libraries(miral-external
     PUBLIC
         mircommon
     PRIVATE
         miral-internal
         mirserver
+)
+
+target_link_libraries(miral
+    PUBLIC
+        miral-external
+    PRIVATE
+        miral-internal
 )
 
 set_target_properties(miral

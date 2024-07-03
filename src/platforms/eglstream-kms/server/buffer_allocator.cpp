@@ -54,7 +54,6 @@
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 
-#include <system_error>
 #include <cassert>
 
 
@@ -758,7 +757,8 @@ auto mge::GLRenderingProvider::surface_for_sink(
         return std::make_unique<mgc::CPUCopyOutputSurface>(
             dpy,
             static_cast<EGLContext>(*ctx),
-            *cpu_provider);
+            *cpu_provider,
+            gl_config);
     }
     BOOST_THROW_EXCEPTION((std::runtime_error{"DisplayInterfaceProvider does not support any viable output interface"}));
 }

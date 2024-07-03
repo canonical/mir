@@ -49,7 +49,6 @@
 
 #include <optional>
 #include <stdexcept>
-#include <system_error>
 #include <cassert>
 #include <fcntl.h>
 #include <xf86drm.h>
@@ -534,7 +533,8 @@ auto mgg::GLRenderingProvider::surface_for_sink(
     return std::make_unique<mgc::CPUCopyOutputSurface>(
         dpy,
         ctx,
-        *cpu_allocator);
+        *cpu_allocator,
+        config);
 }
 
 auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)

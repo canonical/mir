@@ -203,10 +203,10 @@ auto probe_display_platform(
 
                 if (auto error = -drmSetInterfaceVersion(tmp_fd, &sv))
                 {
-                    throw std::system_error{
+                    BOOST_THROW_EXCEPTION((std::system_error{
                         error,
                         std::system_category(),
-                        std::string{"Failed to set DRM interface version on device "} + device.devnode()};
+                        std::string{"Failed to set DRM interface version on device "} + device.devnode()}));
                 }
 
                 // For now, we *also* require our DisplayPlatform to support creating a HW EGL context                

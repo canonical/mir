@@ -25,7 +25,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 2)
-set(MIR_VERSION_MINOR 17)
+set(MIR_VERSION_MINOR 18)
 set(MIR_VERSION_PATCH 0)
 
 add_compile_definitions(MIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
@@ -206,6 +206,17 @@ CMAKE_DEPENDENT_OPTION(
   MIR_SIGBUS_HANDLER_ENVIRONMENT_BROKEN "Expect WLCS BadBuffer tests to fail" OFF
   "MIR_RUN_WLCS_TESTS" OFF
 )
+
+pkg_check_modules(APPARMOR IMPORTED_TARGET libapparmor)
+
+CMAKE_DEPENDENT_OPTION(
+  MIR_USE_APPARMOR "Whether or not Mir should build with support for AppArmor" ON
+  "APPARMOR_FOUND" OFF
+)
+if (MIR_USE_APPARMOR)
+  add_compile_definitions(MIR_USE_APPARMOR)
+endif()
+
 SET(MIR_EXCLUDE_TESTS "" CACHE STRING "Semicolon-separated list of tests to exclude (wildcards accepted)")
 
 

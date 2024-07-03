@@ -20,11 +20,16 @@
 #include "miral/window_manager_tools.h"
 
 #include <mir/log.h>
+#include <mir/executor.h>
 #include <mir/scene/session.h>
 #include <mir/scene/surface.h>
 #include <mir/shell/display_layout.h>
 #include <mir/shell/persistent_surface_store.h>
 #include <mir/shell/surface_specification.h>
+#include <mir/input/virtual_input_device.h>
+#include <mir/input/event_builder.h>
+#include <mir/input/input_sink.h>
+#include <mir/input/input_device_registry.h>
 
 #include <boost/throw_exception.hpp>
 
@@ -94,20 +99,25 @@ miral::BasicWindowManager::BasicWindowManager(
     std::shared_ptr<shell::DisplayLayout> const& display_layout,
     std::shared_ptr<mir::shell::PersistentSurfaceStore> const& persistent_surface_store,
     mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>& display_configuration_observers,
+    std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry,
     WindowManagementPolicyBuilder const& build) :
     focus_controller(focus_controller),
     display_layout(display_layout),
     persistent_surface_store{persistent_surface_store},
     policy(build(WindowManagerTools{this})),
-    display_config_monitor{std::make_shared<DisplayConfigurationListeners>()}
+    display_config_monitor{std::make_shared<DisplayConfigurationListeners>()},
+    pointer_device{std::make_shared<mir::input::VirtualInputDevice>("basic-window-manager", mir::input::DeviceCapability::pointer)},
+    input_device_registry{input_device_registry}
 {
     display_config_monitor->add_listener(this);
     display_configuration_observers.register_interest(display_config_monitor);
+    input_device_registry->add_device(pointer_device);
 }
 
 miral::BasicWindowManager::~BasicWindowManager()
 {
     display_config_monitor->delete_listener(this);
+    input_device_registry->remove_device(pointer_device);
 }
 void miral::BasicWindowManager::add_session(std::shared_ptr<scene::Session> const& session)
 {
@@ -1111,20 +1121,20 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
 
         if (!window_info.can_morph_to(new_type))
         {
-            throw std::runtime_error("Unsupported window type change");
+            BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported window type change"));
         }
 
         if (window_info_tmp.must_not_have_parent())
         {
             if (modifications.parent().is_set())
-                throw std::runtime_error("Target window type does not support parent");
+                BOOST_THROW_EXCEPTION(std::runtime_error("Target window type does not support parent"));
 
             window_info_tmp.parent({});
         }
         else if (window_info_tmp.must_have_parent())
         {
             if (!window_info_tmp.parent())
-                throw std::runtime_error("Target window type requires parent");
+                BOOST_THROW_EXCEPTION(std::runtime_error("Target window type requires parent"));
         }
     }
 
@@ -2980,4 +2990,29 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
         }
         area->zone_policy_knows_about = area->application_zone;
     }
+}
+
+void miral::BasicWindowManager::move_cursor_to(mir::geometry::PointF point)
+{
+    linearising_executor.spawn([
+        device=pointer_device,
+        point=point,
+        position=mir::geometry::PointF (cursor.x.as_int(), cursor.y.as_int())]()
+    {
+        device->if_started_then([&](input::InputSink* sink, input::EventBuilder* builder)
+        {
+            auto const delta = point - position;
+            std::chrono::nanoseconds now = std::chrono::system_clock::now().time_since_epoch();
+            auto event = builder->pointer_event(
+                now,
+                mir_pointer_action_motion,
+                0,
+                std::make_optional(point),
+                delta,
+                mir_pointer_axis_source_none,
+                events::ScrollAxisH(),
+                events::ScrollAxisV());
+            sink->handle_input(std::move(event));
+        });
+    });
 }

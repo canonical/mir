@@ -938,3 +938,12 @@ try {
     return policy->advise_application_zone_delete(application_zone);
 }
 MIRAL_TRACE_EXCEPTION
+
+void miral::WindowManagementTrace::move_cursor_to(mir::geometry::PointF point)
+try {
+    std::stringstream out;
+    out << point;
+    mir::log_info("%s point=%s", __func__, out.str().c_str());
+    wrapped.move_cursor_to(point);
+}
+MIRAL_TRACE_EXCEPTION

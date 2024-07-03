@@ -41,12 +41,6 @@ global:
     miral::CustomRenderer::?CustomRenderer*;
     miral::CustomRenderer::CustomRenderer*;
     miral::CustomRenderer::operator*;
-    miral::Decorations::Decorations*;
-    miral::Decorations::always_csd*;
-    miral::Decorations::always_ssd*;
-    miral::Decorations::operator*;
-    miral::Decorations::prefer_csd*;
-    miral::Decorations::prefer_ssd*;
     miral::DisplayConfiguration::?DisplayConfiguration*;
     miral::DisplayConfiguration::DisplayConfiguration*;
     miral::DisplayConfiguration::add_output_attribute*;
@@ -318,13 +312,6 @@ global:
     miral::X11Support::X11Support*;
     miral::X11Support::default_to_enabled*;
     miral::X11Support::operator*;
-    miral::XdgDecorations::?XdgDecorations*;
-    miral::XdgDecorations::XdgDecorations*;
-    miral::XdgDecorations::always_csd*;
-    miral::XdgDecorations::always_ssd*;
-    miral::XdgDecorations::operator*;
-    miral::XdgDecorations::prefer_csd*;
-    miral::XdgDecorations::prefer_ssd*;
     miral::Zone::?Zone*;
     miral::Zone::Zone*;
     miral::Zone::extents*;
@@ -428,7 +415,6 @@ global:
     typeinfo?for?miral::ConfigurationOption;
     typeinfo?for?miral::CursorTheme;
     typeinfo?for?miral::CustomRenderer;
-    typeinfo?for?miral::Decorations;
     typeinfo?for?miral::DisplayConfiguration;
     typeinfo?for?miral::ExternalClientLauncher;
     typeinfo?for?miral::FdHandle;
@@ -457,7 +443,6 @@ global:
     typeinfo?for?miral::WindowSpecification::AspectRatio;
     typeinfo?for?miral::WindowSpecification;
     typeinfo?for?miral::X11Support;
-    typeinfo?for?miral::XdgDecorations;
     typeinfo?for?miral::Zone;
     vtable?for?miral::ApplicationAuthorizer;
     vtable?for?miral::CanonicalWindowManagerPolicy;
@@ -468,3 +453,23 @@ global:
 local: *;
 };
 
+MIRAL_5.1 {
+global:
+  extern "C++" {
+    miral::Decorations::Decorations*;
+    miral::Decorations::always_csd*;
+    miral::Decorations::always_ssd*;
+    miral::Decorations::operator*;
+    miral::Decorations::prefer_csd*;
+    miral::Decorations::prefer_ssd*;
+    miral::IdleListener::?IdleListener*;
+    miral::IdleListener::IdleListener*;
+    miral::IdleListener::on_dim*;
+    miral::IdleListener::on_off*;
+    miral::IdleListener::on_wake*;
+    miral::IdleListener::operator*;
+    miral::WindowManagerTools::move_cursor_to*;
+    typeinfo?for?miral::IdleListener;
+    typeinfo?for?miral::Decorations;
+  };
+} MIRAL_5.0;
