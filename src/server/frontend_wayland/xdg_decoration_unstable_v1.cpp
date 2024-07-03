@@ -202,12 +202,14 @@ auto mir::frontend::XdgToplevelDecorationV1::to_decorations_type(uint32_t mode) 
     case Mode::server_side:
         return DecorationStrategy::DecorationsType::ssd;
     default:
+    {
         pid_t pid;
         wl_client_get_credentials(client->raw_client(), &pid, nullptr, nullptr); // null pointers are allowed
 
         mir::log_warning("Client PID: %d, attempted to set invalid zxdg_toplevel_decoration_v1 mode (%d), defaulting to client side.", pid, mode);
 
         return DecorationStrategy::DecorationsType::csd;
+    }
     }
 }
 
