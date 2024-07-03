@@ -123,6 +123,12 @@ And that's it! Now we are ready to update our symbols automatically.
    cmake --build build --target regenerate-miral-debian-symbols
    ```
 
+If `MIRAL_ABI` needed to be updated, you should also run:
+
+```sh
+./tools/update_package_abis.sh
+```
+
 ## How to update miroil symbols
 
 ### Scenario 1: Adding a new symbol
@@ -158,6 +164,12 @@ And that's it! Now we are ready to update our symbols automatically.
    cmake --build build --target regenerate-miroil-debian-symbols
    ```
 
+If `MIROIL_ABI` needed to be updated, you should also run:
+
+```sh
+./tools/update_package_abis.sh
+```
+
 ## How to update mirserver symbols map
 ### Scenario 1: Adding a new symbol
 1. Make the additive change to the interface (e.g. by adding a new method
@@ -175,6 +187,12 @@ And that's it! Now we are ready to update our symbols automatically.
    git diff src/server/symbols.map
    ```
 
+If `MIRSERVER_ABI` needed to be updated, you should also run:
+
+```sh
+./tools/update_package_abis.sh
+```
+
 ### Scenario 2: Removing or changing a symbol
 1. Make a destructive change to the interface (e.g. remove a parameter from
    a method).
@@ -191,3 +209,9 @@ And that's it! Now we are ready to update our symbols automatically.
    ```sh
    git diff src/server/symbols.map
    ```
+
+If `MIRSERVER_ABI` needed to be updated, you should also run:
+
+```sh
+./tools/update_package_abis.sh
+```
