@@ -54,6 +54,7 @@ public:
 
     struct FormatInfo;
 private:
+    uint32_t fourcc;
     FormatInfo const* info;
 };
 
