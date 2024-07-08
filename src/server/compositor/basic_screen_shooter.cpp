@@ -217,13 +217,16 @@ auto mc::BasicScreenShooter::Self::renderer_for_buffer(std::shared_ptr<mrs::Writ
 }
 
 auto mc::BasicScreenShooter::select_provider(
-    std::span<std::shared_ptr<mg::GLRenderingProvider>> const& providers)
+    std::span<std::shared_ptr<mg::GLRenderingProvider>> const& providers,
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator)
     -> std::shared_ptr<mg::GLRenderingProvider>
 {
     auto display_provider = std::make_shared<Self::OneShotBufferDisplayProvider>();
     OffscreenDisplaySink temp_db{display_provider, geom::Size{640, 480}};
 
-    for (auto const& render_provider : providers)
+    std::pair<mg::probe::Result, std::shared_ptr<mg::GLRenderingProvider>> best_provider = std::make_pair(
+        mg::probe::unsupported, nullptr);
+    for (auto const& provider: providers)
     {
         /* TODO: There might be more sensible ways to select a provider
          * (one in use by at least one DisplaySink, the only one in use, the lowest-powered one,...)
@@ -231,12 +234,20 @@ auto mc::BasicScreenShooter::select_provider(
          *
          * For now, just use the first that claims to work.
          */
-        if (render_provider->suitability_for_display(temp_db) >= mg::probe::supported)
+        auto suitability = provider->suitability_for_display(temp_db);
+        // We also need to make sure that the GLRenderingProvider can access client buffers...
+        if (provider->suitability_for_allocator(buffer_allocator) > mg::probe::unsupported &&
+            suitability > best_provider.first)
         {
-            return render_provider;
+            best_provider = std::make_pair(suitability, provider);
         }
     }
-    BOOST_THROW_EXCEPTION((std::runtime_error{"No rendering provider claims to support a CPU addressable target"}));
+    if (best_provider.first == mg::probe::unsupported)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"No rendering provider claims to support a CPU addressable target"}));
+    }
+
+    return best_provider.second;
 }
 
 mc::BasicScreenShooter::BasicScreenShooter(
@@ -245,8 +256,9 @@ mc::BasicScreenShooter::BasicScreenShooter(
     Executor& executor,
     std::span<std::shared_ptr<mg::GLRenderingProvider>> const& providers,
     std::shared_ptr<mr::RendererFactory> render_factory,
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<mir::graphics::GLConfig> const& config)
-    : self{std::make_shared<Self>(scene, clock, select_provider(providers), std::move(render_factory), config)},
+    : self{std::make_shared<Self>(scene, clock, select_provider(providers, buffer_allocator), std::move(render_factory), config)},
       executor{executor}
 {
 }
