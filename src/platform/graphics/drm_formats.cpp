@@ -24,6 +24,8 @@
 #include <array>
 #include <boost/throw_exception.hpp>
 
+#include "mir/log.h"
+
 #ifdef MIR_HAVE_DRM_GET_MODIFIER_NAME
 #include <xf86drm.h>
 #endif
@@ -480,6 +482,11 @@ auto mg::DRMFormat::info() const -> std::optional<Info const>
     {
         return Info(info);
     }
+    /* TODO: This could fire quite frequently.
+     * Ideally we would have a rate-limited (or once-per-format) logger, but for now, just
+     * throw it in the debug stream.
+     */
+    mir::log_debug("Detailed info for format %s missing; please report so this can be added", name());
     return {};
 }
 
