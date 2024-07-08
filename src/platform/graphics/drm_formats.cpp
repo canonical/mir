@@ -69,7 +69,7 @@ struct mg::DRMFormat::FormatInfo
     bool has_alpha;
     std::optional<uint32_t> opaque_equivalent;
     std::optional<uint32_t> alpha_equivalent;
-    std::optional<mg::DRMFormat::RGBComponentInfo> components;
+    std::optional<Info::RGBComponentInfo> components;
 };
 
 namespace
@@ -80,7 +80,7 @@ constexpr std::array const formats = {
         false,
         DRM_FORMAT_XRGB4444,
         DRM_FORMAT_ARGB4444,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             4, 4, 4, {}
         },
     },
@@ -89,7 +89,7 @@ constexpr std::array const formats = {
         false,
         DRM_FORMAT_XBGR4444,
         DRM_FORMAT_ABGR4444,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             4, 4, 4, {}
         },
     },
@@ -98,7 +98,7 @@ constexpr std::array const formats = {
         false,
         DRM_FORMAT_RGBX4444,
         DRM_FORMAT_RGBA4444,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             4, 4, 4, {}
         },
     },
@@ -107,7 +107,7 @@ constexpr std::array const formats = {
         false,
         DRM_FORMAT_BGRX4444,
         DRM_FORMAT_BGRA4444,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             4, 4, 4, {}
         },
     },
@@ -116,7 +116,7 @@ constexpr std::array const formats = {
         true,
         DRM_FORMAT_XRGB4444,
         DRM_FORMAT_ARGB4444,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             4, 4, 4, 4
         },
     },
@@ -125,7 +125,7 @@ constexpr std::array const formats = {
         true,
         DRM_FORMAT_XBGR4444,
         DRM_FORMAT_ABGR4444,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             4, 4, 4, 4
         },
     },
@@ -134,7 +134,7 @@ constexpr std::array const formats = {
         true,
         DRM_FORMAT_RGBX4444,
         DRM_FORMAT_RGBA4444,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             4, 4, 4, 4
         },
     },
@@ -143,7 +143,7 @@ constexpr std::array const formats = {
         true,
         DRM_FORMAT_BGRX4444,
         DRM_FORMAT_BGRA4444,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             4, 4, 4, 4
         },
     },
@@ -152,7 +152,7 @@ constexpr std::array const formats = {
         false,
         DRM_FORMAT_XRGB1555,
         DRM_FORMAT_ARGB1555,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             5, 5, 5, {}
         },
     },
@@ -161,7 +161,7 @@ constexpr std::array const formats = {
         false,
         DRM_FORMAT_XBGR1555,
         DRM_FORMAT_ABGR1555,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             5, 5, 5, {}
         },
     },
@@ -170,7 +170,7 @@ constexpr std::array const formats = {
         false,
         DRM_FORMAT_RGBX5551,
         DRM_FORMAT_RGBA5551,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             5, 5, 5, {}
         },
     },
@@ -179,7 +179,7 @@ constexpr std::array const formats = {
         false,
         DRM_FORMAT_BGRX5551,
         DRM_FORMAT_BGRA5551,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             5, 5, 5, {}
         },
     },
@@ -188,7 +188,7 @@ constexpr std::array const formats = {
         true,
         DRM_FORMAT_XRGB1555,
         DRM_FORMAT_ARGB1555,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             5, 5, 5, 1
         },
     },
@@ -197,7 +197,7 @@ constexpr std::array const formats = {
         true,
         DRM_FORMAT_XBGR1555,
         DRM_FORMAT_ABGR1555,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             5, 5, 5, 1
         },
     },
@@ -206,7 +206,7 @@ constexpr std::array const formats = {
         true,
         DRM_FORMAT_RGBX5551,
         DRM_FORMAT_RGBA5551,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             5, 5, 5, 1
         },
     },
@@ -215,7 +215,7 @@ constexpr std::array const formats = {
         true,
         DRM_FORMAT_BGRX5551,
         DRM_FORMAT_BGRA5551,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             5, 5, 5, 1
         },
     },
@@ -224,7 +224,7 @@ constexpr std::array const formats = {
         false,
         DRM_FORMAT_RGB565,
         {},
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             5, 6, 5, {}
         },
     },
@@ -233,7 +233,7 @@ constexpr std::array const formats = {
         false,
         DRM_FORMAT_BGR565,
         {},
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             5, 6, 5, {}
         },
     },
@@ -242,7 +242,7 @@ constexpr std::array const formats = {
         false,
         DRM_FORMAT_RGB888,
         {},
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             8, 8, 8, {}
         },
     },
@@ -251,7 +251,7 @@ constexpr std::array const formats = {
         false,
         DRM_FORMAT_BGR888,
         {},
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             8, 8, 8, {}
         },
     },
@@ -260,7 +260,7 @@ constexpr std::array const formats = {
         false,
         DRM_FORMAT_XRGB8888,
         DRM_FORMAT_ARGB8888,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             8, 8, 8, {}
         },
     },
@@ -269,7 +269,7 @@ constexpr std::array const formats = {
         false,
         DRM_FORMAT_XBGR8888,
         DRM_FORMAT_ABGR8888,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             8, 8, 8, {}
         },
     },
@@ -278,7 +278,7 @@ constexpr std::array const formats = {
         false,
         DRM_FORMAT_RGBX8888,
         DRM_FORMAT_RGBA8888,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             8, 8, 8, {}
         },
     },
@@ -287,7 +287,7 @@ constexpr std::array const formats = {
         false,
         DRM_FORMAT_BGRX8888,
         DRM_FORMAT_BGRA8888,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             8, 8, 8, {}
         },
     },
@@ -296,7 +296,7 @@ constexpr std::array const formats = {
         true,
         DRM_FORMAT_XRGB8888,
         DRM_FORMAT_ARGB8888,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             8, 8, 8, 8
         },
     },
@@ -305,7 +305,7 @@ constexpr std::array const formats = {
         true,
         DRM_FORMAT_XBGR8888,
         DRM_FORMAT_ABGR8888,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             8, 8, 8, 8
         },
     },
@@ -314,7 +314,7 @@ constexpr std::array const formats = {
         true,
         DRM_FORMAT_RGBX8888,
         DRM_FORMAT_RGBA8888,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             8, 8, 8, 8
         },
     },
@@ -323,7 +323,7 @@ constexpr std::array const formats = {
         true,
         DRM_FORMAT_BGRX8888,
         DRM_FORMAT_BGRA8888,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             8, 8, 8, 8
         },
     },
@@ -332,7 +332,7 @@ constexpr std::array const formats = {
         false,
         DRM_FORMAT_XRGB2101010,
         DRM_FORMAT_ARGB2101010,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             10, 10, 10, {}
         },
     },
@@ -341,7 +341,7 @@ constexpr std::array const formats = {
         false,
         DRM_FORMAT_XBGR2101010,
         DRM_FORMAT_ABGR2101010,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             10, 10, 10, {}
         },
     },
@@ -350,7 +350,7 @@ constexpr std::array const formats = {
         false,
         DRM_FORMAT_RGBX1010102,
         DRM_FORMAT_RGBA1010102,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             10, 10, 10, {}
         },
     },
@@ -359,7 +359,7 @@ constexpr std::array const formats = {
         false,
         DRM_FORMAT_BGRX1010102,
         DRM_FORMAT_BGRA1010102,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             10, 10, 10, {}
         },
     },
@@ -368,7 +368,7 @@ constexpr std::array const formats = {
         true,
         DRM_FORMAT_XRGB2101010,
         DRM_FORMAT_ARGB2101010,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             10, 10, 10, 2
         },
     },
@@ -377,7 +377,7 @@ constexpr std::array const formats = {
         true,
         DRM_FORMAT_XBGR2101010,
         DRM_FORMAT_ABGR2101010,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             10, 10, 10, 2
         },
     },
@@ -386,7 +386,7 @@ constexpr std::array const formats = {
         true,
         DRM_FORMAT_RGBX1010102,
         DRM_FORMAT_RGBA1010102,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             10, 10, 10, 2
         },
     },
@@ -395,7 +395,7 @@ constexpr std::array const formats = {
         true,
         DRM_FORMAT_BGRX1010102,
         DRM_FORMAT_BGRA1010102,
-        mg::DRMFormat::RGBComponentInfo{
+        mg::DRMFormat::Info::RGBComponentInfo{
             10, 10, 10, 2
         },
     },
@@ -442,24 +442,6 @@ constexpr auto maybe_info_for_format(uint32_t fourcc_format) -> mg::DRMFormat::F
     }
 
 }
-
-constexpr auto info_for_format(uint32_t fourcc_format) -> mg::DRMFormat::FormatInfo const*
-{
-    auto const info = maybe_info_for_format(fourcc_format);
-
-    if (info)
-    {
-        return info;
-    }
-    return nullptr;
-}
-
-}
-
-mg::DRMFormat::DRMFormat(uint32_t fourcc_format)
-    : fourcc{fourcc_format},
-      info{info_for_format(fourcc_format)}
-{
 }
 
 auto mg::DRMFormat::name() const -> const char*
@@ -467,42 +449,38 @@ auto mg::DRMFormat::name() const -> const char*
     return drm_format_to_string(fourcc);
 }
 
-auto mg::DRMFormat::opaque_equivalent() const -> const std::optional<DRMFormat>
+auto mg::DRMFormat::Info::opaque_equivalent() const -> std::optional<DRMFormat>
 {
-    if (info)
+    return info->opaque_equivalent.transform([](auto const& fourcc) { return DRMFormat{fourcc};});
+}
+
+auto mg::DRMFormat::Info::alpha_equivalent() const -> std::optional<DRMFormat>
+{
+    return info->alpha_equivalent.transform([](auto const& fourcc) { return DRMFormat{fourcc};});
+}
+
+bool mg::DRMFormat::Info::has_alpha() const
+{
+    return info->has_alpha;
+}
+
+auto mg::DRMFormat::Info::components() const -> std::optional<Info::RGBComponentInfo> const&
+{
+    return info->components;
+}
+
+mg::DRMFormat::Info::Info(FormatInfo const* info)
+    : info{info}
+{
+}
+
+auto mg::DRMFormat::info() const -> std::optional<Info const>
+{
+    if (auto info = maybe_info_for_format(fourcc))
     {
-        return info->opaque_equivalent.transform([](auto const& fourcc) { return DRMFormat{fourcc};});
+        return Info(info);
     }
     return {};
-}
-
-auto mg::DRMFormat::alpha_equivalent() const -> const std::optional<DRMFormat>
-{
-    if (info)
-    {
-        return info->alpha_equivalent.transform([](auto const& fourcc) { return DRMFormat{fourcc};});
-    }
-    return {};
-}
-
-bool mg::DRMFormat::has_alpha() const
-{
-    if (info)
-    {
-        return info->has_alpha;
-    }
-    // The safe default if we don't know is “true”
-    return true;
-}
-
-auto mg::DRMFormat::components() const -> std::optional<RGBComponentInfo> const&
-{
-    static std::optional<RGBComponentInfo> no_components = std::nullopt;
-    if (info)
-    {
-        return info->components;
-    }
-    return no_components;
 }
 
 mg::DRMFormat::operator uint32_t() const

@@ -10,14 +10,15 @@ MIR_PLATFORM_2.17 {
     mir::graphics::DMABufEGLProvider::DMABufEGLProvider*;
     mir::graphics::DMABufEGLProvider::as_texture*;
     mir::graphics::DRMFormat::DRMFormat*;
-    mir::graphics::DRMFormat::alpha_equivalent*;
+    mir::graphics::DRMFormat::Info::alpha_equivalent*;
     mir::graphics::DRMFormat::as_mir_format*;
-    mir::graphics::DRMFormat::components*;
+    mir::graphics::DRMFormat::Info::components*;
     mir::graphics::DRMFormat::from_mir_format*;
-    mir::graphics::DRMFormat::has_alpha*;
+    mir::graphics::DRMFormat::Info::has_alpha*;
     mir::graphics::DRMFormat::name*;
-    mir::graphics::DRMFormat::opaque_equivalent*;
+    mir::graphics::DRMFormat::Info::opaque_equivalent*;
     mir::graphics::DRMFormat::operator?unsigned?int*; /* Is actually operator uint32_t(), but 🤷 */
+    mir::graphics::DRMFormat::info*;
     mir::graphics::DisplayConfiguration::operator*;
     mir::graphics::DisplayConfiguration::valid*;
     mir::graphics::DisplayConfigurationOutput::extents*;

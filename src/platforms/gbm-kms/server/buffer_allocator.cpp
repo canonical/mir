@@ -350,14 +350,18 @@ private:
 
     static auto egl_config_for_format(EGLDisplay dpy, mg::GLConfig const& config, mg::DRMFormat format) -> std::optional<EGLConfig>
     {
-        mg::DRMFormat::RGBComponentInfo const default_components = { 8, 8, 8, 0};
+        mg::DRMFormat::Info::RGBComponentInfo const default_components = { 8, 8, 8, 0};
+        auto const components =
+            format.info().transform([](auto info) { return info.components(); })
+                .value_or(default_components)    // optional<optional<Components>> -> optional<Components>
+                .value_or(default_components);   // optional<Components> -> Components
 
         EGLint const config_attr[] = {
             EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-            EGL_RED_SIZE, static_cast<EGLint>(format.components().value_or(default_components).red_bits),
-            EGL_GREEN_SIZE, static_cast<EGLint>(format.components().value_or(default_components).green_bits),
-            EGL_BLUE_SIZE, static_cast<EGLint>(format.components().value_or(default_components).blue_bits),
-            EGL_ALPHA_SIZE, static_cast<EGLint>(format.components().value_or(default_components).alpha_bits.value_or(0)),
+            EGL_RED_SIZE, static_cast<EGLint>(components.red_bits),
+            EGL_GREEN_SIZE, static_cast<EGLint>(components.green_bits),
+            EGL_BLUE_SIZE, static_cast<EGLint>(components.blue_bits),
+            EGL_ALPHA_SIZE, static_cast<EGLint>(components.alpha_bits.value_or(0)),
             EGL_DEPTH_SIZE, config.depth_buffer_bits(),
             EGL_STENCIL_SIZE, config.stencil_buffer_bits(),
             EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
@@ -405,11 +409,22 @@ private:
                 auto alternate_format =
                     [&]() -> std::optional<mg::DRMFormat>
                     {
-                        if (format.has_alpha())
+                        if (auto info = format.info())
                         {
-                            return format.opaque_equivalent();
+                            if (info->has_alpha())
+                            {
+                                return info->opaque_equivalent();
+                            }
+                            else
+                            {
+                                return info->alpha_equivalent();
+                            }
                         }
-                        return format.alpha_equivalent();
+                        else
+                        {
+                            // If we don't know about the format, we can't find alternatives
+                            return {};
+                        }
                     }();
 
                 if (alternate_format)
