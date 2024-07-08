@@ -319,7 +319,8 @@ auto mf::get_standard_extensions() -> std::vector<std::string>
         mw::TextInputManagerV1::interface_name,
         mw::TextInputManagerV2::interface_name,
         mw::TextInputManagerV3::interface_name,
-        mw::MirShellV1::interface_name};
+        mw::MirShellV1::interface_name,
+        mw::XdgDecorationManagerV1::interface_name};
 }
 
 auto mf::get_supported_extensions() -> std::vector<std::string>
