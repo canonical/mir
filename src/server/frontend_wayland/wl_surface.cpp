@@ -429,7 +429,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         }
         else
         {
-            src_sample = geom::RectangleD{{0, 0}, geom::SizeD{current_buffer->size()}};
+            src_sample = geom::RectangleD{{0, 0}, current_buffer->size()};
             logical_size = current_buffer->size() / scale;
         }
 
