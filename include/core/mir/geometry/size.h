@@ -20,6 +20,9 @@
 #include "forward.h"
 #include "dimensions.h"
 #include <ostream>
+#include <limits>
+#include <concepts>
+#include <type_traits>
 
 namespace mir
 {
@@ -32,6 +35,13 @@ struct Point;
 template<typename T>
 struct Displacement;
 
+template<typename T, typename U>
+concept is_exactly_representable = requires
+{
+    typename std::enable_if<std::numeric_limits<T>::digits >= std::numeric_limits<U>::digits, U>::type;
+    requires std::floating_point<T>;
+};
+
 template<typename T>
 struct Size
 {
@@ -40,6 +50,14 @@ struct Size
     constexpr Size() noexcept {}
     constexpr Size(Size const&) noexcept = default;
     Size& operator=(Size const&) noexcept = default;
+
+    template<typename U>
+        requires is_exactly_representable<T, U>
+    constexpr Size(Size<U> const& other) noexcept
+        : width{Width<T>{other.width}},
+          height{Height<T>{other.height}}
+    {
+    }
 
     template<typename U>
     explicit constexpr Size(Size<U> const& other) noexcept

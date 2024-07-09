@@ -82,7 +82,7 @@ public:
 
     geom::RectangleD src_bounds() const override
     {
-        return {geom::PointD{0, 0}, geom::SizeD{buffer_->size()}};
+        return {{0, 0}, buffer_->size()};
     }
 
     std::optional<geometry::Rectangle> clip_area() const override

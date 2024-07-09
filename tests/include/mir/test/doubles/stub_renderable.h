@@ -74,7 +74,7 @@ public:
     }
     geometry::RectangleD src_bounds() const override
     {
-        return {{0, 0}, geometry::SizeD{stub_buffer->size()}};
+        return {{0, 0}, stub_buffer->size()};
     }
     std::optional<geometry::Rectangle> clip_area() const override
     {

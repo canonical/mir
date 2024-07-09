@@ -428,7 +428,7 @@ void basic_software_buffer_drawing(
 
         auto src_bounds() const -> mir::geometry::RectangleD override
         {
-            return {{0, 0}, mir::geometry::SizeD{buffer()->size()}};
+            return {{0, 0}, buffer()->size()};
         }
 
         auto alpha() const -> float override

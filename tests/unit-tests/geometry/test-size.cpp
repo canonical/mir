@@ -61,3 +61,10 @@ TEST(geometry, size_can_be_converted_from_float_to_int)
     EXPECT_EQ(Width(1), i.width);
     EXPECT_EQ(Height(3), i.height);
 }
+
+// Test that non-lossy implicit conversions exist
+static_assert(std::convertible_to<geom::Size, geom::SizeD>, "Implicit conversion int->double preserves precision");
+static_assert(std::convertible_to<geom::SizeF, geom::SizeD>, "Implicit conversion float->double preserves precision");
+// Test that lossy implicit conversions fail
+static_assert(!std::convertible_to<geom::Size, geom::SizeF>, "Conversion float->int is lossy");
+static_assert(!std::convertible_to<geom::SizeD, geom::SizeF>, "Conversion double->float is lossy");
