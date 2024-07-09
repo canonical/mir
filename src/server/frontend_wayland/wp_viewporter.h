@@ -51,9 +51,9 @@ public:
     ~Viewport() override;
 
     /**
-     * Have the source or destination values changed since the last call to dirty()?
+     * Have the source or destination values changed since the last `resolve_viewport`?
      */
-    auto dirty() -> bool;
+    auto changed_since_last_resolve() -> bool;
 
     /**
      * Combine the viewport parameters with submitted buffer and scale to produce final parameters
@@ -68,7 +68,7 @@ private:
     void set_source(double x, double y, double width, double height) override;
     void set_destination(int32_t width, int32_t height) override;
 
-    bool dirty_;
+    bool mutable viewport_changed;
     wayland::Weak<wayland::Surface> surface;
     std::optional<geometry::RectangleD> source;
     std::optional<geometry::Size> destination;

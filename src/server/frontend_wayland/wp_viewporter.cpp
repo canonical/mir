@@ -77,9 +77,9 @@ mf::Viewport::~Viewport()
 {
 }
 
-auto mf::Viewport::dirty() -> bool
+auto mf::Viewport::changed_since_last_resolve() -> bool
 {
-    return std::exchange(dirty_, false);
+    return viewport_changed;
 }
 
 namespace
@@ -165,6 +165,7 @@ auto mf::Viewport::resolve_viewport(int32_t scale, geom::Size buffer_size) const
             }
         }();
 
+    viewport_changed = false;
     return std::make_pair(src_bounds, logical_size);
 }
 
@@ -200,7 +201,7 @@ void mf::Viewport::set_source(double x, double y, double width, double height)
     {
         source = geometry::RectangleD{{x, y}, {width, height}};
     }
-    dirty_ = true;
+    viewport_changed = true;
 }
 
 void mf::Viewport::set_destination(int32_t width, int32_t height)
@@ -233,5 +234,5 @@ void mf::Viewport::set_destination(int32_t width, int32_t height)
         destination = geometry::Size{width, height};
     }
 
-    dirty_ = true;
+    viewport_changed = true;
 }
