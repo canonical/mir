@@ -37,10 +37,10 @@ auto tex_coords_from_rect(geom::Size buffer_size, geom::RectangleD sample_rect) 
      * and (1.0, 1.0) is the bottom-right
      */
     SrcTexCoords coords;
-    coords.top = sample_rect.top().as_value() / buffer_size.height.as_uint32_t();
-    coords.bottom = sample_rect.bottom().as_value() / buffer_size.height.as_uint32_t();
-    coords.left = sample_rect.left().as_value() / buffer_size.width.as_uint32_t();
-    coords.right = sample_rect.right().as_value() / buffer_size.width.as_uint32_t();
+    coords.top = sample_rect.top() / buffer_size.height;
+    coords.bottom = sample_rect.bottom() / buffer_size.height;
+    coords.left = sample_rect.left() / buffer_size.width;
+    coords.right = sample_rect.right() / buffer_size.width;
     return coords;
 }
 }

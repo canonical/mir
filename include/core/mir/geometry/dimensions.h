@@ -200,6 +200,12 @@ template<typename T, typename Scalar>
 inline constexpr DeltaX<T> operator/(DeltaX<T> const& dx, Scalar scale) { return DeltaX<T>{dx.as_value() / scale}; }
 template<typename T, typename Scalar>
 inline constexpr DeltaY<T> operator/(DeltaY<T> const& dy, Scalar scale) { return DeltaY<T>{dy.as_value() / scale}; }
+
+// Can divide a coördinate by a distance to get a scalar
+template<typename T, typename U>
+inline constexpr auto operator/(X<T> const& x, Width<U> const& width) { return x.as_value() / width.as_value(); }
+template<typename T, typename U>
+inline constexpr auto operator/(Y<T> const& y, Height<U> const& height) { return y.as_value() / height.as_value(); }
 } // namespace
 
 // Converting between types is fine, as long as they are along the same axis
