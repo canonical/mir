@@ -24,6 +24,9 @@ project(Mir)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
+execute_process(COMMAND "modinfo" "vkms")
+execute_process(COMMAND "modprobe" "vkms")
+
 set(MIR_VERSION_MAJOR 2)
 set(MIR_VERSION_MINOR 18)
 set(MIR_VERSION_PATCH 0)
