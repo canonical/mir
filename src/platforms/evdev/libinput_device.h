@@ -45,7 +45,7 @@ class OutputInfo;
 class InputReport;
 namespace evdev
 {
-class LibInputDevice : public input::InputDevice
+class LibInputDevice : public input::InputDevice, public mir::input::LedObserver
 {
 public:
     LibInputDevice(std::shared_ptr<InputReport> const& report, LibInputDevicePtr dev);
@@ -59,7 +59,8 @@ public:
     void apply_settings(TouchpadSettings const&) override;
     optional_value<TouchscreenSettings> get_touchscreen_settings() const override;
     void apply_settings(TouchscreenSettings const&) override;
-    void associate_to_id(MirInputDeviceId id);
+
+    void leds_set(KeyboardLeds leds) override;
 
     void process_event(libinput_event* event);
     ::libinput_device* device() const;
@@ -104,7 +105,6 @@ private:
     std::map<MirTouchId,ContactData> last_seen_properties;
 
     void update_contact_data(ContactData &data, MirTouchAction action, libinput_event_touch* touch);
-    void try_stop_observing_leds();
 };
 }
 }

@@ -314,7 +314,8 @@ std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_
                the_input_reading_multiplexer(),
                the_clock(),
                the_key_mapper(),
-               the_server_status_listener());
+               the_server_status_listener(),
+               the_led_observer_registrar());
 
            // lp:1675357: KeyRepeatDispatcher must be informed about removed input devices, otherwise
            // pressed keys get repeated indefinitely

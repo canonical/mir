@@ -28,7 +28,6 @@
 
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_report.h"
-#include "mir/input/device.h"
 #include "mir/fd.h"
 #include "mir/raii.h"
 
@@ -431,9 +430,6 @@ void mie::Platform::device_added(libinput_device* dev)
         devices.emplace_back(std::make_shared<mie::LibInputDevice>(report, std::move(device_ptr)));
 
         input_device_registry->add_device(devices.back());
-
-        if (auto device = weak_device.lock())
-            new_device->associate_to_id(device->id());
 
         log_info("Opened device: %s", describe(dev).c_str());
     }

@@ -32,6 +32,8 @@
 #include "mir/log.h"
 
 #include "boost/throw_exception.hpp"
+#include "mir/input/led_observer_registrar.h"
+#include "mir/input/key_mapper.h"
 
 #include <algorithm>
 #include <atomic>
@@ -199,13 +201,15 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
     std::shared_ptr<time::Clock> const& clock,
     std::shared_ptr<mi::KeyMapper> const& key_mapper,
-    std::shared_ptr<mir::ServerStatusListener> const& server_status_listener)
+    std::shared_ptr<mir::ServerStatusListener> const& server_status_listener,
+    std::shared_ptr<LedObserverRegistrar> led_observer_registrar)
     : seat{seat},
       input_dispatchable{input_multiplexer},
       device_queue(std::make_shared<dispatch::ActionQueue>()),
       clock(clock),
       key_mapper(key_mapper),
       server_status_listener(server_status_listener),
+      led_observer_registrar{std::move(led_observer_registrar)},
       device_id_generator{0}
 {
     input_dispatchable->add_watch(device_queue);
@@ -491,6 +495,11 @@ auto mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
 
         seat->add_device(*handle);
         dev->start(seat, input_dispatchable);
+
+        if (auto const observer = std::dynamic_pointer_cast<LedObserver>(device))
+        {
+            led_observer_registrar->register_interest(observer, handle->id());
+        }
 
         return handle;
     }
