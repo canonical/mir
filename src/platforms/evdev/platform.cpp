@@ -129,13 +129,11 @@ mie::Platform::Platform(
         std::shared_ptr<InputDeviceRegistry> const& registry,
         std::shared_ptr<InputReport> const& report,
         std::unique_ptr<udev::Context>&& udev_context,
-        std::shared_ptr<ConsoleServices> const& console,
-        std::shared_ptr<LedObserverRegistrar> const& led_observer_registrar) :
+        std::shared_ptr<ConsoleServices> const& console) :
     report(report),
     udev_context(std::move(udev_context)),
     input_device_registry(registry),
     console{console},
-    led_observer_registrar{led_observer_registrar},
     platform_dispatchable{std::make_shared<md::MultiplexingDispatchable>()}
 {
 }
@@ -430,11 +428,9 @@ void mie::Platform::device_added(libinput_device* dev)
 
     try
     {
-        auto new_device = std::make_shared<mie::LibInputDevice>(
-            report, led_observer_registrar, std::move(device_ptr));
-        devices.emplace_back(new_device);
+        devices.emplace_back(std::make_shared<mie::LibInputDevice>(report, std::move(device_ptr)));
 
-        auto weak_device = input_device_registry->add_device(devices.back());
+        input_device_registry->add_device(devices.back());
 
         if (auto device = weak_device.lock())
             new_device->associate_to_id(device->id());

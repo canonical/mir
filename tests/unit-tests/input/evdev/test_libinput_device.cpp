@@ -30,7 +30,6 @@
 #include "mir/test/doubles/mock_input_seat.h"
 #include "mir/test/doubles/mock_input_sink.h"
 #include "mir/test/doubles/advanceable_clock.h"
-#include "mir/test/doubles/mock_led_observer_registrar.h"
 #include "mir/test/fake_shared.h"
 #include "mir/udev/wrapper.h"
 #include "mir_test_framework/libinput_environment.h"
@@ -188,7 +187,6 @@ struct LibInputDevice : public ::testing::Test
     mtf::LibInputEnvironment env;
     ::testing::NiceMock<mtd::MockInputSink> mock_sink;
     ::testing::NiceMock<MockEventBuilder> mock_builder;
-    ::testing::NiceMock<mtd::MockLedObserverRegistrar> led_observer_registrar;
     std::shared_ptr<libinput> lib;
 
     const uint64_t event_time_1 = 1000;
@@ -307,32 +305,27 @@ struct LibInputDevice : public ::testing::Test
 struct LibInputDeviceOnLaptopKeyboard : public LibInputDevice
 {
     libinput_device*const fake_device = setup_laptop_keyboard();
-    mie::LibInputDevice keyboard{mir::report::null_input_report(), mt::fake_shared(led_observer_registrar),
-                                 mie::make_libinput_device(lib, fake_device)};
+    mie::LibInputDevice keyboard{mir::report::null_input_report(), mie::make_libinput_device(lib, fake_device)};
 };
 
 struct LibInputDeviceOnMouse : public LibInputDevice
 {
     libinput_device*const fake_device = setup_mouse();
-    mie::LibInputDevice mouse{mir::report::null_input_report(), mt::fake_shared(led_observer_registrar),
-                              mie::make_libinput_device(lib, fake_device)};
+    mie::LibInputDevice mouse{mir::report::null_input_report(), mie::make_libinput_device(lib, fake_device)};
 };
 
 struct LibInputDeviceOnLaptopKeyboardAndMouse : public LibInputDevice
 {
     libinput_device*const fake_device = setup_mouse();
     libinput_device*const fake_device_2 = setup_laptop_keyboard();
-    mie::LibInputDevice keyboard{mir::report::null_input_report(), mt::fake_shared(led_observer_registrar),
-                                 mie::make_libinput_device(lib, fake_device_2)};
-    mie::LibInputDevice mouse{mir::report::null_input_report(), mt::fake_shared(led_observer_registrar),
-                              mie::make_libinput_device(lib, fake_device)};
+    mie::LibInputDevice keyboard{mir::report::null_input_report(), mie::make_libinput_device(lib, fake_device_2)};
+    mie::LibInputDevice mouse{mir::report::null_input_report(), mie::make_libinput_device(lib, fake_device)};
 };
 
 struct LibInputDeviceOnTouchScreen : public LibInputDevice
 {
     libinput_device*const fake_device = setup_touchscreen();
-    mie::LibInputDevice touch_screen{mir::report::null_input_report(), mt::fake_shared(led_observer_registrar),
-                                     mie::make_libinput_device(lib, fake_device)};
+    mie::LibInputDevice touch_screen{mir::report::null_input_report(), mie::make_libinput_device(lib, fake_device)};
 
     const float x = 10;
     const float y = 5;
@@ -359,8 +352,7 @@ struct LibInputDeviceOnTouchScreen : public LibInputDevice
 struct LibInputDeviceOnTouchpad : public LibInputDevice
 {
     libinput_device*const fake_device = setup_touchpad();
-    mie::LibInputDevice touchpad{mir::report::null_input_report(), mt::fake_shared(led_observer_registrar),
-                                 mie::make_libinput_device(lib, fake_device)};
+    mie::LibInputDevice touchpad{mir::report::null_input_report(), mie::make_libinput_device(lib, fake_device)};
 };
 }
 
@@ -374,7 +366,7 @@ TEST_F(LibInputDevice, start_creates_and_refs_libinput_device)
     EXPECT_CALL(env.mock_libinput, libinput_device_ref(fake_device))
         .Times(1);
 
-    mie::LibInputDevice dev(mir::report::null_input_report(), mt::fake_shared(led_observer_registrar),
+    mie::LibInputDevice dev(mir::report::null_input_report(),
                             mie::make_libinput_device(lib, fake_device));
     dev.start(&mock_sink, &mock_builder);
 }
@@ -388,7 +380,7 @@ TEST_F(LibInputDevice, unique_id_contains_device_name)
         [](auto){}};
     env.mock_libinput.setup_device(fake_device, fake_dev_group, udev_dev, "Keyboard", "event4", 1, 2);
 
-    mie::LibInputDevice dev(mir::report::null_input_report(), mt::fake_shared(led_observer_registrar),
+    mie::LibInputDevice dev(mir::report::null_input_report(),
                             mie::make_libinput_device(lib, fake_device));
     auto info = dev.get_device_info();
 
@@ -402,8 +394,7 @@ TEST_F(LibInputDevice, removal_unrefs_libinput_device)
     EXPECT_CALL(env.mock_libinput, libinput_device_unref(fake_device))
         .Times(1);
 
-    mie::LibInputDevice dev(mir::report::null_input_report(), mt::fake_shared(led_observer_registrar),
-                            mie::make_libinput_device(lib, fake_device));
+    mie::LibInputDevice dev(mir::report::null_input_report(), mie::make_libinput_device(lib, fake_device));
 }
 
 TEST_F(LibInputDeviceOnLaptopKeyboard, process_event_converts_key_event)

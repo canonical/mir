@@ -25,7 +25,6 @@
 #include "mir/input/pointer_settings.h"
 #include "mir/input/touchpad_settings.h"
 #include "mir/input/input_device_info.h"
-#include "mir/input/led_observer_registrar.h"
 #include "mir/events/event_builders.h"
 #include "mir/geometry/displacement.h"
 #include "mir/dispatch/dispatchable.h"
@@ -129,20 +128,13 @@ private:
 };
 }
 
-mie::LibInputDevice::LibInputDevice(
-    std::shared_ptr<mi::InputReport> const& report,
-    std::shared_ptr<LedObserverRegistrar> const& led_observer_registrar,
-    LibInputDevicePtr dev)
-    : report{report}, led_observer_registrar{led_observer_registrar},
-      device_{std::move(dev)}, pointer_pos{0, 0}, button_state{0}
+mie::LibInputDevice::LibInputDevice(std::shared_ptr<mi::InputReport> const& report, LibInputDevicePtr dev)
+    : report{report}, device_{std::move(dev)}, pointer_pos{0, 0}, button_state{0}
 {
     update_device_info();
 }
 
-mie::LibInputDevice::~LibInputDevice()
-{
-    try_stop_observing_leds();
-}
+mie::LibInputDevice::~LibInputDevice() = default;
 
 void mie::LibInputDevice::start(InputSink* sink, EventBuilder* builder)
 {
@@ -723,22 +715,4 @@ mir::optional_value<mi::TouchscreenSettings> mie::LibInputDevice::get_touchscree
 void mie::LibInputDevice::apply_settings(mi::TouchscreenSettings const& settings)
 {
     touchscreen = settings;
-}
-
-void mie::LibInputDevice::associate_to_id(MirInputDeviceId id)
-{
-    try_stop_observing_leds();
-    led_observer = std::make_shared<LibInputDeviceLedObserver>(this);
-    led_observer_registrar->register_interest(led_observer, id);
-    device_id = id;
-}
-
-void mie::LibInputDevice::try_stop_observing_leds()
-{
-    if (led_observer && device_id)
-    {
-        led_observer_registrar->unregister_interest(*led_observer, device_id.value());
-        led_observer = nullptr;
-        device_id = std::nullopt;
-    }
 }

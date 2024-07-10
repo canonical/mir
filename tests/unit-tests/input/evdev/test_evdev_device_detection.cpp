@@ -46,7 +46,7 @@ TEST_P(EvdevDeviceDetection, evaluates_expected_input_class)
     auto dev = env.setup_device(std::get<0>(param));
     std::shared_ptr<libinput> lib = mie::make_libinput(nullptr);
     NiceMock<mtd::MockLedObserverRegistrar> led_observer_registrar;
-    mie::LibInputDevice device(mir::report::null_input_report(), mt::fake_shared(led_observer_registrar), mie::make_libinput_device(lib, dev));
+    mie::LibInputDevice device(mir::report::null_input_report(), mie::make_libinput_device(lib, dev));
     auto info = device.get_device_info();
     EXPECT_THAT(info.capabilities, Eq(std::get<1>(param)));
 }

@@ -252,8 +252,7 @@ mir::DefaultServerConfiguration::the_input_manager()
                     the_console_services(),
                     input_report,
                     the_platform_libaries(),
-                    *the_shared_library_prober_report(),
-                    the_led_observer_registrar());
+                    *the_shared_library_prober_report());
 
                 return std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer(), std::move(platform));
             }

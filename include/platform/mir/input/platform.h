@@ -41,7 +41,6 @@ namespace input
 class InputDevice;
 class InputReport;
 class InputDeviceRegistry;
-class LedObserverRegistrar;
 
 enum class PlatformPriority : uint32_t
 {
@@ -98,8 +97,7 @@ typedef mir::UniqueModulePtr<Platform>(*CreatePlatform)(
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<ConsoleServices> const& console,
-    std::shared_ptr<InputReport> const& report,
-    std::shared_ptr<LedObserverRegistrar> const& led_observer_registrar);
+    std::shared_ptr<InputReport> const& report);
 
 typedef void(*AddPlatformOptions)(
     boost::program_options::options_description& config);
@@ -139,8 +137,7 @@ mir::UniqueModulePtr<mir::input::Platform> create_input_platform(
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<mir::ConsoleServices> const& console,
-    std::shared_ptr<mir::input::InputReport> const& report,
-    std::shared_ptr<mir::input::LedObserverRegistrar> const& led_observer_registrar);
+    std::shared_ptr<mir::input::InputReport> const& report);
 
 /**
  * Function used to add additional configuration options

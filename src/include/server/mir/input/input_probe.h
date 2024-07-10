@@ -37,7 +37,6 @@ namespace input
 class InputReport;
 class Platform;
 class InputDeviceRegistry;
-class LedObserverRegistrar;
 
 mir::UniqueModulePtr<Platform> probe_input_platforms(
     options::Option const& options,
@@ -46,8 +45,7 @@ mir::UniqueModulePtr<Platform> probe_input_platforms(
     std::shared_ptr<ConsoleServices> const& console,
     std::shared_ptr<InputReport> const& input_report,
     std::vector<std::shared_ptr<SharedLibrary>> const& loaded_platforms,
-    SharedLibraryProberReport & prober_report,
-    std::shared_ptr<LedObserverRegistrar> const& led_observer_registrar);
+    SharedLibraryProberReport & prober_report);
 
 /// Tries to create an input platform from the graphics module, otherwise returns a null pointer
 auto input_platform_from_graphics_module(
@@ -56,8 +54,7 @@ auto input_platform_from_graphics_module(
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup,
     std::shared_ptr<InputDeviceRegistry> const& device_registry,
     std::shared_ptr<ConsoleServices> const& console,
-    std::shared_ptr<InputReport> const& input_report,
-    std::shared_ptr<LedObserverRegistrar> const& led_observer_registrar)
+    std::shared_ptr<InputReport> const& input_report)
 -> mir::UniqueModulePtr<Platform>;
 }
 }

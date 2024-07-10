@@ -49,7 +49,6 @@ class ActionQueue;
 namespace input
 {
 class InputDeviceRegistry;
-class LedObserverRegistrar;
 namespace evdev
 {
 
@@ -62,8 +61,7 @@ public:
         std::shared_ptr<InputDeviceRegistry> const& registry,
         std::shared_ptr<InputReport> const& report,
         std::unique_ptr<udev::Context>&& udev_context,
-        std::shared_ptr<ConsoleServices> const& console,
-        std::shared_ptr<LedObserverRegistrar> const& led_observer_registrar);
+        std::shared_ptr<ConsoleServices> const& console);
     std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() override;
     void start() override;
     void stop() override;
@@ -81,7 +79,6 @@ private:
     std::shared_ptr<udev::Context> const udev_context;
     std::shared_ptr<InputDeviceRegistry> const input_device_registry;
     std::shared_ptr<ConsoleServices> const console;
-    std::shared_ptr<LedObserverRegistrar> const led_observer_registrar;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const platform_dispatchable;
     std::shared_ptr<::libinput> lib;
     std::shared_ptr<dispatch::ReadableFd> libinput_dispatchable;
