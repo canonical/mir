@@ -42,29 +42,11 @@ the arrow depends on the library at the end of the arrow.
 
 There are a few things of note in this diagram:
 
-- `miral` and `miroil` are intended to be the primary user-facing libraries as
-  nothing else depends on them
+- `miral` and `mircore` are intended to be the primary user-facing libraries
+- `miroil` is a special compatibility layer for the Lomiri project is not
+  intended for general consumption
 - `mirserver` depends on the most libraries as it is the brains of the operation
-- `mircore` and `mircommon` provide common functionalities for every other
-  library in the system
+- `mircommon` provide common functionalities for every other library in the
+  system
 - The input and graphics platforms (represented as `input_X` and `graphics_X` in
   the diagram) are dynamically loaded by `mirserver` when the engine starts up33333
-
-## Private Static Libraries
-Mir builds a number of static libraries that are linked to internally by
-`mirserver`. These libraries are:
-
-- `mirrenderergl`
-  - `mirgl`
-- `mircompositor`
-- `mirconsole`
-- `mirfrontend-wayland`
-- `mirfrontend-xwayland`
-- `mirgraphics`
-- `mirinput`
-- `mirreport`
-  - `mirnullreport`
-  - `mirserverlttng`
-  - `mirlogging`
-- `mirscene`
-- `mirshell`
