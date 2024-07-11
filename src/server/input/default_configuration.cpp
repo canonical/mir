@@ -36,8 +36,9 @@
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_probe.h"
 #include "mir/input/platform.h"
-#include "mir/input/xkb_mapper.h"
+#include "mir/input/xkb_mapper_registrar.h"
 #include "mir/input/vt_filter.h"
+#include "mir/input/device.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
@@ -313,7 +314,8 @@ std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_
                the_input_reading_multiplexer(),
                the_clock(),
                the_key_mapper(),
-               the_server_status_listener());
+               the_server_status_listener(),
+               the_led_observer_registrar());
 
            // lp:1675357: KeyRepeatDispatcher must be informed about removed input devices, otherwise
            // pressed keys get repeated indefinitely
@@ -325,11 +327,20 @@ std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_
 
 std::shared_ptr<mi::KeyMapper> mir::DefaultServerConfiguration::the_key_mapper()
 {
-    return key_mapper(
-       []()
+    return xkb_mapper_registrar(
+       [default_executor=the_main_loop()]()
        {
-           return std::make_shared<mi::receiver::XKBMapper>();
+           return std::make_shared<mi::receiver::XKBMapperRegistrar>(*default_executor);
        });
+}
+
+std::shared_ptr<mi::LedObserverRegistrar> mir::DefaultServerConfiguration::the_led_observer_registrar()
+{
+    return xkb_mapper_registrar(
+        [default_executor=the_main_loop()]()
+        {
+            return std::make_shared<mi::receiver::XKBMapperRegistrar>(*default_executor);
+        });
 }
 
 std::shared_ptr<mi::SeatObserver> mir::DefaultServerConfiguration::the_seat_observer()

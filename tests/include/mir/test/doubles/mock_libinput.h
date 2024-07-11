@@ -177,6 +177,7 @@ public:
     MOCK_METHOD2(libinput_device_config_dwt_set_enabled, libinput_config_status(libinput_device*, libinput_config_dwt_state enable));
     MOCK_METHOD1(libinput_device_config_dwt_get_enabled, libinput_config_dwt_state(libinput_device*));
     MOCK_METHOD1(libinput_device_config_dwt_get_default_enabled, libinput_config_dwt_state(libinput_device*));
+    MOCK_METHOD2(libinput_device_led_update, void(libinput_device*, libinput_led));
 
     template<typename PtrT>
     PtrT get_next_fake_ptr()

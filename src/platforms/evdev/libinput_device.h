@@ -23,6 +23,8 @@
 #include "mir/input/event_builder.h"
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
+#include "mir/input/keyboard_leds.h"
+#include "mir/input/led_observer_registrar.h"
 #include "mir/input/touchscreen_settings.h"
 #include "mir/geometry/point.h"
 
@@ -43,7 +45,7 @@ class OutputInfo;
 class InputReport;
 namespace evdev
 {
-class LibInputDevice : public input::InputDevice
+class LibInputDevice : public input::InputDevice, public mir::input::LedObserver
 {
 public:
     LibInputDevice(std::shared_ptr<InputReport> const& report, LibInputDevicePtr dev);
@@ -57,6 +59,8 @@ public:
     void apply_settings(TouchpadSettings const&) override;
     optional_value<TouchscreenSettings> get_touchscreen_settings() const override;
     void apply_settings(TouchscreenSettings const&) override;
+
+    void leds_set(KeyboardLeds leds) override;
 
     void process_event(libinput_event* event);
     ::libinput_device* device() const;

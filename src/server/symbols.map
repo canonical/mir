@@ -1344,6 +1344,7 @@ local: *;
 MIR_SERVER_INTERNAL_2.18 {
 global:
   extern "C++" {
+    mir::DefaultServerConfiguration::the_led_observer_registrar*;
     mir::DecorationStrategy::?DecorationStrategy*;
     mir::DecorationStrategy::DecorationStrategy*;
     mir::DecorationStrategy::operator*;
@@ -1352,8 +1353,39 @@ global:
     mir::Server::set_the_decoration_strategy*;
     mir::Server::the_decoration_strategy*;
     mir::Server::the_idle_handler*;
+    mir::input::make_unique_context*;
+    mir::input::receiver::XKBMapperRegistrar::XKBMapperRegistrar*;
+    mir::input::receiver::XKBMapperRegistrar::clear_all_keymaps*;
+    mir::input::receiver::XKBMapperRegistrar::clear_keymap_for_device*;
+    mir::input::receiver::XKBMapperRegistrar::device_modifiers*;
+    mir::input::receiver::XKBMapperRegistrar::map_event*;
+    mir::input::receiver::XKBMapperRegistrar::modifiers*;
+    mir::input::receiver::XKBMapperRegistrar::operator*;
+    mir::input::receiver::XKBMapperRegistrar::register_interest*;
+    mir::input::receiver::XKBMapperRegistrar::set_key_state*;
+    mir::input::receiver::XKBMapperRegistrar::set_keymap_for_all_devices*;
+    mir::input::receiver::XKBMapperRegistrar::set_keymap_for_device*;
+    mir::input::receiver::XKBMapperRegistrar::unregister_interest*;
+    mir::input::receiver::XKBMapperRegistrar::xkb_modifiers*;
     mir::shell::IdleHandlerObserver::?IdleHandlerObserver*;
     mir::shell::IdleHandlerObserver::IdleHandlerObserver*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_led_observer_registrar*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::clear_all_keymaps*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::clear_keymap_for_device*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::device_modifiers*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::map_event*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::modifiers*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::register_interest*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::set_key_state*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::set_keymap_for_all_devices*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::set_keymap_for_device*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::unregister_interest*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::xkb_modifiers*;
+    non-virtual?thunk?to?mir::shell::IdleHandlerObserver::?IdleHandlerObserver*;
+    typeinfo?for?mir::input::receiver::XKBMapperRegistrar;
+    typeinfo?for?mir::shell::IdleHandlerObserver;
+    vtable?for?mir::input::receiver::XKBMapperRegistrar;
+    vtable?for?mir::shell::IdleHandlerObserver;
     non-virtual?thunk?to?mir::DecorationStrategy::?DecorationStrategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_decoration_strategy*;
@@ -1366,3 +1398,4 @@ global:
     vtable?for?mir::shell::IdleHandlerObserver;
   };
 } MIR_SERVER_INTERNAL_2.17;
+

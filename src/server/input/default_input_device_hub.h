@@ -54,6 +54,7 @@ namespace input
 {
 class InputSink;
 class InputDeviceObserver;
+class LedObserverRegistrar;
 class DefaultDevice;
 class Seat;
 class KeyMapper;
@@ -86,7 +87,8 @@ public:
         std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
         std::shared_ptr<time::Clock> const& clock,
         std::shared_ptr<KeyMapper> const& key_mapper,
-        std::shared_ptr<ServerStatusListener> const& server_status_listener);
+        std::shared_ptr<ServerStatusListener> const& server_status_listener,
+        std::shared_ptr<LedObserverRegistrar> led_observer_registrar);
 
     // InputDeviceRegistry - calls from mi::Platform
     auto add_device(std::shared_ptr<InputDevice> const& device) -> std::weak_ptr<Device> override;
@@ -118,6 +120,7 @@ private:
     std::shared_ptr<time::Clock> const clock;
     std::shared_ptr<KeyMapper> const key_mapper;
     std::shared_ptr<ServerStatusListener> const server_status_listener;
+    std::shared_ptr<LedObserverRegistrar> const led_observer_registrar;
     ThreadSafeList<std::shared_ptr<InputDeviceObserver>> observers;
 
     /// Does not guarantee it's own threadsafety, non-const methods should not be called from multiple threads at once
