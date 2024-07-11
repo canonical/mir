@@ -61,6 +61,11 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "${build_types}")
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(MINIMUM_GNUCXX_COMPILER_VERSION "13.0")
+
+if(${CMAKE_COMPILER_IS_GNUCXX} AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS ${MINIMUM_GNUCXX_COMPILER_VERSION})
+  message(FATAL_ERROR "Insufficent gcc version. Found ${CMAKE_CXX_COMPILER_VERSION}, expected >= ${MINIMUM_GNUCXX_COMPILER_VERSION}")
+endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -g -Wall -pedantic -Wextra -fPIC")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -g -Wall -fno-strict-aliasing -pedantic -Wnon-virtual-dtor -Wextra -fPIC")
