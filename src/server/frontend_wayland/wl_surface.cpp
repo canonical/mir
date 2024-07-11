@@ -16,7 +16,7 @@
 
 #include "wl_surface.h"
 
-#include "mir/geometry/forward.h"
+#include "viewporter_wrapper.h"
 #include "wayland_utils.h"
 #include "wl_surface_role.h"
 #include "wl_subcompositor.h"
@@ -39,9 +39,12 @@
 #include "mir/scene/surface.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/log.h"
+#include "wp_viewporter.h"
 
 #include <chrono>
 #include <boost/throw_exception.hpp>
+#include <cmath>
+#include <limits>
 #include <wayland-server-protocol.h>
 
 namespace mf = mir::frontend;
@@ -71,6 +74,9 @@ void mf::WlSurfaceState::update_from(WlSurfaceState const& source)
     frame_callbacks.insert(end(frame_callbacks),
                            begin(source.frame_callbacks),
                            end(source.frame_callbacks));
+
+    if (source.viewport)
+        viewport = source.viewport;
 
     if (source.surface_data_invalidated)
         surface_data_invalidated = true;
@@ -331,7 +337,19 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         input_shape = state.input_shape.value();
 
     if (state.scale)
-        inv_scale = 1.0f / state.scale.value();
+        scale = state.scale.value();
+
+    if (state.viewport)
+    {
+        viewport = std::move(state.viewport);
+    }
+
+    bool needs_buffer_submission =
+        state.scale ||                                               // If the scale has changed, or...
+        state.viewport ||                                            // ...we've added a viewport, or...
+        (viewport && viewport.value().changed_since_last_resolve()); // ...the viewport has changed...
+                                                                     // ...then we'll need to submit a new frame, even if the client hasn't
+                                                                     // attached a new buffer.
 
     auto const executor_send_frame_callbacks = [executor = wayland_executor, weak_self = mw::make_weak(this)]()
         {
@@ -366,11 +384,10 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                             }
                         });
                 };
-            std::shared_ptr<graphics::Buffer> mir_buffer;
 
             if (auto const shm_buffer = ShmBuffer::from(weak_buffer.value()))
             {
-                mir_buffer = allocator->buffer_from_shm(
+                current_buffer = allocator->buffer_from_shm(
                     shm_buffer->data(),
                     std::move(executor_send_frame_callbacks),
                     std::move(release_buffer));
@@ -378,11 +395,11 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                     mir_server_wayland,
                     sw_buffer_committed,
                     wl_resource_get_client(resource),
-                    mir_buffer->id().as_value());
+                    current_buffer->id().as_value());
             }
             else
             {
-                mir_buffer = allocator->buffer_from_resource(
+                current_buffer = allocator->buffer_from_resource(
                     weak_buffer.value(),
                     std::move(executor_send_frame_callbacks),
                     std::move(release_buffer));
@@ -390,23 +407,40 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                     mir_server_wayland,
                     hw_buffer_committed,
                     wl_resource_get_client(resource),
-                    mir_buffer->id().as_value());
+                    current_buffer->id().as_value());
             }
 
-            stream->submit_buffer(mir_buffer, mir_buffer->size() * inv_scale, {{0, 0}, geom::SizeD{mir_buffer->size()}});
-            auto const new_buffer_size = mir_buffer->size() * inv_scale;
-
-            if (std::make_optional(new_buffer_size) != buffer_size_)
-            {
-                state.invalidate_surface_data(); // input shape needs to be recalculated for the new size
-            }
-
-            buffer_size_ = new_buffer_size;
+            needs_buffer_submission = true;
         }
     }
     else
     {
         frame_callback_executor->spawn(std::move(executor_send_frame_callbacks));
+    }
+
+    if (needs_buffer_submission)
+    {
+        geom::Size logical_size;
+        geom::RectangleD src_sample;
+
+        if (viewport)
+        {
+            std::tie(src_sample, logical_size) = viewport.value().resolve_viewport(scale, current_buffer->size());
+        }
+        else
+        {
+            src_sample = geom::RectangleD{{0, 0}, current_buffer->size()};
+            logical_size = current_buffer->size() / scale;
+        }
+
+        stream->submit_buffer(current_buffer, logical_size, src_sample);
+
+        if (std::make_optional(logical_size) != buffer_size_)
+        {
+            state.invalidate_surface_data(); // input shape needs to be recalculated for the new size
+        }
+
+        buffer_size_ = logical_size;
     }
 
     for (WlSubsurface* child: children)
@@ -466,6 +500,15 @@ auto mf::WlSurface::confine_pointer_state() const -> MirPointerConfinementState
     }
 
     return mir_pointer_unconfined;
+}
+
+void mf::WlSurface::associate_viewport(wayland::Weak<Viewport> viewport)
+{
+    if (this->viewport || pending.viewport)
+    {
+        BOOST_THROW_EXCEPTION((std::logic_error{"Cannot associate a viewport to a window with an existing viewport"}));
+    }
+    pending.viewport = viewport;
 }
 
 void mir::frontend::WlSurface::update_surface_spec(shell::SurfaceSpecification const& spec)

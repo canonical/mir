@@ -31,7 +31,8 @@ WlcsExtensionDescriptor const extensions[] = {
     {"zxdg_shell_unstable_v6",      1},
     {"wlr_layer_shell_unstable_v1", 1},
     {"zwp_pointer_constraints_v1",  1},
-    {"zwp_relative_pointer_manager_v1", 1}
+    {"zwp_relative_pointer_manager_v1", 1},
+    {"wp_viewporter", 1},
 };
 
 WlcsIntegrationDescriptor const descriptor{

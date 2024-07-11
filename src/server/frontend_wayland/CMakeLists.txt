@@ -63,6 +63,7 @@ set(
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/pointer_input_dispatcher.h
   session_credentials.cpp
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/buffer_stream.h
+  wp_viewporter.cpp             wp_viewporter.h
 )
 
 add_custom_command(

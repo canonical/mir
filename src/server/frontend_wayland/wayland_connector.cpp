@@ -28,6 +28,7 @@
 #include "wayland_executor.h"
 #include "desktop_file_manager.h"
 #include "foreign_toplevel_manager_v1.h"
+#include "wp_viewporter.h"
 
 #include "mir/main_loop.h"
 #include "mir/thread_name.h"
@@ -330,6 +331,8 @@ mf::WaylandConnector::WaylandConnector(
         decoration_strategy});
 
     shm_global = std::make_unique<WlShm>(display.get(), executor);
+
+    viewporter = std::make_unique<WpViewporter>(display.get());
 
     char const* wayland_display = nullptr;
 
