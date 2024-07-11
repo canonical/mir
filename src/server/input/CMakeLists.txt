@@ -27,6 +27,7 @@ set(
   seat_observer_multiplexer.h
   idle_poking_dispatcher.cpp
   virtual_input_device.cpp
+  xkb_mapper_registrar.cpp
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/seat_observer.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/input_dispatcher.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/seat.h

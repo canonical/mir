@@ -106,6 +106,19 @@ auto get_axis_source(libinput_event_pointer* pointer) -> MirPointerAxisSource
 }
 }
 
+void mie::LibInputDevice::leds_set(KeyboardLeds leds)
+{
+    int led = 0;
+    if (contains(leds, mir::input::KeyboardLed::caps_lock))
+        led |= LIBINPUT_LED_CAPS_LOCK;
+    if (contains(leds, mir::input::KeyboardLed::num_lock))
+        led |= LIBINPUT_LED_NUM_LOCK;
+    if (contains(leds, mir::input::KeyboardLed::scroll_lock))
+        led |= LIBINPUT_LED_SCROLL_LOCK;
+
+    libinput_device_led_update(device(), static_cast<libinput_led>(led));
+}
+
 mie::LibInputDevice::LibInputDevice(std::shared_ptr<mi::InputReport> const& report, LibInputDevicePtr dev)
     : report{report}, device_{std::move(dev)}, pointer_pos{0, 0}, button_state{0}
 {
