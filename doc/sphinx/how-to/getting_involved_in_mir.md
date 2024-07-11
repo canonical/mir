@@ -67,7 +67,7 @@ Please file bug reports at: [https://github.com/canonical/mir/issues](https://gi
 The Mir Discourse category can be found at: [https://discourse.ubuntu.com/c/mir/15](https://discourse.ubuntu.com/c/mir/15).
 
 ```{raw} html
-The Mir coding guidelines are <a href=../_static/cppguide/>here</a>.
+The Mir coding guidelines are <a href=../../_static/cppguide/>here</a>.
 ```
 
 ## Working on code
