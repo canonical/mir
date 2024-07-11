@@ -377,8 +377,9 @@ void mf::WlrScreencopyManagerV1::capture_output(
 {
     (void)overlay_cursor;
     auto const& output_config = OutputGlobal::from_or_throw(output).current_config();
-    auto const extents = output_config.extents();
-    new WlrScreencopyFrameV1{frame, this, ctx, {output, extents, extents.size}};
+    auto const output_area = output_config.extents();
+    auto const buffer_size = output_config.modes[output_config.current_mode_index].size;
+    new WlrScreencopyFrameV1{frame, this, ctx, {output, output_area, buffer_size}};
 }
 
 void mf::WlrScreencopyManagerV1::capture_output_region(
