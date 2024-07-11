@@ -543,6 +543,11 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
         BOOST_THROW_EXCEPTION(std::logic_error("Input device not managed by server"));
     }
 
+    if (auto const observer = std::dynamic_pointer_cast<LedObserver>(device))
+    {
+        led_observer_registrar->unregister_interest(*observer, (*pos)->id());
+    }
+
     devices.erase(pos, end(devices));
 }
 
