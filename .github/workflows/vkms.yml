@@ -1,4 +1,4 @@
-name: Spread
+name: VKMS
 
 on:
   push:
@@ -17,9 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  BuildAndTest:
-    needs: GetMatrix
-
+  VKMS_Test:
     runs-on: [self-hosted, Linux, X64, large]
 
     steps:
