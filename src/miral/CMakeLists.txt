@@ -55,6 +55,7 @@ add_library(miral-external OBJECT
     application_authorizer.cpp          ${miral_include}/miral/application_authorizer.h
     application_info.cpp                ${miral_include}/miral/application_info.h
     canonical_window_manager.cpp        ${miral_include}/miral/canonical_window_manager.h
+    configuration_data_source.cpp       ${miral_include}/miral/configuration_data_source.h
     configuration_option.cpp            ${miral_include}/miral/configuration_option.h
     ${miral_include}/miral/command_line_option.h
     cursor_theme.cpp                    ${miral_include}/miral/cursor_theme.h

@@ -456,6 +456,8 @@ local: *;
 MIRAL_5.1 {
 global:
   extern "C++" {
+    miral::ConfigurationDataSource::ConfigurationDataSource*;
+    miral::ConfigurationDataSource::operator*;
     miral::Decorations::Decorations*;
     miral::Decorations::always_csd*;
     miral::Decorations::always_ssd*;
@@ -469,7 +471,9 @@ global:
     miral::IdleListener::on_wake*;
     miral::IdleListener::operator*;
     miral::WindowManagerTools::move_cursor_to*;
-    typeinfo?for?miral::IdleListener;
+    typeinfo?for?miral::ConfigurationDataSource;
     typeinfo?for?miral::Decorations;
+    typeinfo?for?miral::IdleListener;
   };
 } MIRAL_5.0;
+

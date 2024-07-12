@@ -119,6 +119,23 @@ void mo::ProgramOption::parse_file(
     po::notify(options);
 }
 
+void mo::ProgramOption::parse_map(
+    po::options_description const& desc,
+    std::map<std::string, std::string> const& map)
+{
+    boost::program_options::parsed_options opts(&desc);
+    for (auto const& [key, val] : map)
+    {
+        boost::program_options::basic_option<char> opt;
+        opt.string_key = key;
+        opt.value.push_back(val);
+        opts.options.push_back(opt);
+    }
+
+    po::store(opts, options);
+    po::notify(options);
+}
+
 bool mo::ProgramOption::is_set(char const* name) const
 {
     return options.count(parse_name(name));

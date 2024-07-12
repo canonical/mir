@@ -45,12 +45,16 @@ public:
     // before the first invocation of the_options() - typically during initialization.
     boost::program_options::options_description_easy_init add_options();
 
+    void set_options_map(std::map<std::string, std::string> const& options);
+
 private:
     // MUST be the first member to ensure it's destroyed last, lest we attempt to
     // call destructors in DSOs we've unloaded.
     std::vector<std::shared_ptr<SharedLibrary>> platform_libraries;
 
     std::string const config_file;
+
+    std::optional<std::map<std::string, std::string>> options_map;
 
     void add_platform_options();
     // accessed via the base interface, when access to add_options() has been "lost"
@@ -67,6 +71,10 @@ private:
         ProgramOption& options) const;
 
     virtual void parse_config_file(
+        boost::program_options::options_description& desc,
+        ProgramOption& options) const;
+
+    virtual void parse_custom(
         boost::program_options::options_description& desc,
         ProgramOption& options) const;
 

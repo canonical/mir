@@ -41,8 +41,19 @@ class LibraryInfo(TypedDict):
     header_directories: list[HeaderDirectory]
     map_file: str
 
+def get_version_from_library_version_str(version: str) -> str:
+    """
+    Given a string like MIR_SERVER_INTERNAL_5.0.0, returns the version
+    string (e.g. 5.0.0)
+    """
+    s = version.split("_")
+    return s[len(s) - 1]
+
 
 def get_major_version_from_str(version: str) -> int:
+    """
+    Given a string like 5.0.0, returns the major version (e.g. 5).
+    """
     return int(version.split('.')[0])
 
 
@@ -482,7 +493,7 @@ def main():
 
         # Remake the stanzas for the previous symbols
         for symbol in previous_symbols:
-            major = get_major_version_from_str(symbol.version)
+            major = get_major_version_from_str(get_version_from_library_version_str(symbol.version))
 
             # If we are going up by a major version, then we should add
             # all existing symbols to the new stanza

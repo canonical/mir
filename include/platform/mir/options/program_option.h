@@ -45,6 +45,10 @@ public:
         boost::program_options::options_description const& description,
         std::string const& filename);
 
+    void parse_map(
+        boost::program_options::options_description const& description,
+        std::map<std::string, std::string> const& map);
+
     bool is_set(char const* name) const override;
     bool get(char const* name, bool default_) const override;
     std::string get(char const*, char const* default_) const override;

@@ -162,6 +162,7 @@ struct mir::Server::Self
         std::make_shared<TemporaryCompositeEventFilter>()};
 
     std::function<void(int argc, char const* const* argv)> command_line_hander{};
+    std::function<std::map<std::string, std::string>()> get_options_map;
 
     /// set a callback to introduce additional configuration options.
     /// this will be invoked by run() before server initialisation starts
@@ -244,7 +245,8 @@ std::shared_ptr<mo::DefaultConfiguration> configuration_options(
     int argc,
     char const** argv,
     std::function<void(int argc, char const* const* argv)> const& command_line_hander,
-    std::string const& config_file)
+    std::string const& config_file,
+    std::function<std::map<std::string, std::string>()> const& get_options_map)
 {
     std::shared_ptr<mo::DefaultConfiguration> result;
 
@@ -252,6 +254,9 @@ std::shared_ptr<mo::DefaultConfiguration> configuration_options(
         result = std::make_shared<mo::DefaultConfiguration>(argc, argv, command_line_hander, config_file);
     else
         result = std::make_shared<mo::DefaultConfiguration>(argc, argv, config_file);
+
+    if (get_options_map)
+        result->set_options_map(get_options_map());
 
     return result;
 }
@@ -342,6 +347,14 @@ void mir::Server::set_config_filename(std::string const& config_file)
     self->config_file = config_file;
 }
 
+/// Set an alternative source for configuration data.
+void mir::Server::set_configuration_data_source(
+    std::function<std::map<std::string, std::string>()> const& get_map)
+{
+    verify_setting_allowed(self->server_config);
+    self->get_options_map = get_map;
+}
+
 auto mir::Server::get_options() const -> std::shared_ptr<options::Option>
 {
     verify_accessing_allowed(self->server_config);
@@ -378,7 +391,8 @@ void mir::Server::apply_settings()
 {
     if (self->server_config) return;
 
-    auto const options = configuration_options(self->argc, self->argv, self->command_line_hander, self->config_file);
+    auto const options = configuration_options(
+        self->argc, self->argv, self->command_line_hander, self->config_file, self->get_options_map);
     self->add_configuration_options(*options);
 
     auto const config = std::make_shared<ServerConfiguration>(options, self);
