@@ -23,6 +23,7 @@ jobs:
     steps:
     - name: Test vkms permissions
       run: |
+        sudo apt install linux-modules-extra-$(uname -r)
         echo "Attempting to modprobe vkms"
         sudo modprobe -v vkms
         lsmod
