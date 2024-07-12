@@ -31,7 +31,7 @@ jobs:
         ls -la /dev/dri
         echo
         echo "Also, how about eglinfo?"
-        eglinfo
+        eglinfo | true
         echo "Huh."
         drm_info
 
@@ -49,6 +49,6 @@ jobs:
         ls -la /dev/dri
         echo
         echo "Also, how about eglinfo?"
-        sudo eglinfo
+        sudo eglinfo | true
         echo "Huh."
         sudo drm_info
