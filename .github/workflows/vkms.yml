@@ -23,12 +23,15 @@ jobs:
     steps:
     - name: Test vkms permissions
       run: |
-        sudo apt-get -y install linux-modules-extra-$(uname -r)
+        sudo apt-get -y install linux-modules-extra-$(uname -r) mesa-utils
         echo "Attempting to modprobe vkms"
         sudo modprobe -v vkms
         lsmod
         echo "So, what's in /dev/dri?"
         ls -la /dev/dri
+        echo
+        echo "Also, how about eglinfo?"
+        eglinfo
 
   VKMS_Test_On_GH_Runners:
     runs-on: ubuntu-latest
@@ -36,9 +39,12 @@ jobs:
     steps:
     - name: Test vkms permissions
       run: |
-        sudo apt-get -y install linux-modules-extra-$(uname -r)
+        sudo apt-get -y install linux-modules-extra-$(uname -r) mesa-utils
         echo "Attempting to modprobe vkms"
         sudo modprobe -v vkms
         lsmod
         echo "So, what's in /dev/dri?"
         ls -la /dev/dri
+        echo
+        echo "Also, how about eglinfo?"
+        eglinfo
