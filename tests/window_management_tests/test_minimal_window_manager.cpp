@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define MIR_LOG_COMPONENT "test_minimal_window_manager"
 #include <miral/minimal_window_manager.h>
 #include <mir/scene/session.h>
 #include <mir/wayland/weak.h>
@@ -23,7 +24,7 @@
 #include <mir/events/pointer_event.h>
 #include <mir/compositor/buffer_stream.h>
 #include <mir/graphics/buffer_basic.h>
-#include <mir/test/doubles/stub_buffer_stream.h>
+#include <mir/log.h>
 
 #include "mir_test_framework/window_management_test_harness.h"
 #include <linux/input.h>
@@ -357,11 +358,14 @@ TEST_F(MinimalWindowManagerTest, can_move_window_with_pointer_even_when_maximize
 
 TEST_F(MinimalWindowManagerTest, can_move_window_with_touch)
 {
+    mir::log_info("can_move_window_with_touch: opening application");
     auto const app = open_application("test");
     msh::SurfaceSpecification spec;
     spec.width = geom::Width {100};
     spec.height = geom::Height{100};
     spec.depth_layer = mir_depth_layer_application;
+
+    mir::log_info("can_move_window_with_touch: creating window");
     auto window = create_window(app, spec);
 
     // Start pointer movement
@@ -381,7 +385,9 @@ TEST_F(MinimalWindowManagerTest, can_move_window_with_touch)
         mir_touch_tooltype_finger,
         start_ptr_pos.x.as_value(), start_ptr_pos.y.as_value(), 1.f, 0.f, 0.f, 0.f);
 
+    mir::log_info("can_move_window_with_touch: requesting move");
     request_move(window, start_event->to_input());
+    mir::log_info("can_move_window_with_touch: move request complete");
 
     // Move pointer right and down
     auto const move_event = mir::events::make_touch_event(
@@ -394,7 +400,10 @@ TEST_F(MinimalWindowManagerTest, can_move_window_with_touch)
         mir_touch_action_change,
         mir_touch_tooltype_finger,
         end_ptr_pos.x.as_value(), end_ptr_pos.y.as_value(), 1.f, 0.f, 0.f, 0.f);
+
+    mir::log_info("can_move_window_with_touch: publishing event");
     publish_event(*move_event);
+    mir::log_info("can_move_window_with_touch: event published");
 
     // Assert that the window is moved
     EXPECT_EQ(window.top_left(), geom::Point(initial_window_position.x.as_int() + 50, initial_window_position.y.as_int() + 50));
