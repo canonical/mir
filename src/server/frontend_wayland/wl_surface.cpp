@@ -418,7 +418,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         frame_callback_executor->spawn(std::move(executor_send_frame_callbacks));
     }
 
-    if (needs_buffer_submission)
+    if (needs_buffer_submission && current_buffer)
     {
         geom::Size logical_size;
         geom::RectangleD src_sample;
