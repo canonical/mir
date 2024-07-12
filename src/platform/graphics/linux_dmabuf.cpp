@@ -948,9 +948,6 @@ namespace
 {
 auto format_has_known_alpha(mg::DRMFormat format) -> std::optional<bool>
 {
-    /* TODO: It would be sensible to log when we don't have Info for the format,
-     * but this will happen a lot, so we would want some ratelimiting in the logger
-     */
     return format.info().transform([](auto const& info) { return info.has_alpha(); });
 }
 }

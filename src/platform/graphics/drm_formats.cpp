@@ -15,6 +15,7 @@
  */
 
 #include "mir/graphics/drm_formats.h"
+#include "mir/synchronised.h"
 #include "mir_toolkit/common.h"
 
 #include <cstdint>
@@ -22,6 +23,7 @@
 #include <stdexcept>
 #include <memory>
 #include <array>
+#include <unordered_set>
 #include <boost/throw_exception.hpp>
 
 #include "mir/log.h"
@@ -482,11 +484,15 @@ auto mg::DRMFormat::info() const -> std::optional<Info const>
     {
         return Info(info);
     }
-    /* TODO: This could fire quite frequently.
-     * Ideally we would have a rate-limited (or once-per-format) logger, but for now, just
-     * throw it in the debug stream.
-     */
-    mir::log_debug("Detailed info for format %s missing; please report so this can be added", name());
+
+    // Actually, we probably want `std::flat_set`, but no libstdc++ support yet.
+    static Synchronised<std::unordered_set<decltype(fourcc)>> unknown_formats_guard;
+    auto unknown_formats = unknown_formats_guard.lock();
+    if (!unknown_formats->contains(fourcc))
+    {
+        mir::log_warning("Detailed info for format %s missing; please report so this can be added", name());
+        unknown_formats->insert(fourcc);
+    }
     return {};
 }
 
