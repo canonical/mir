@@ -2,6 +2,7 @@
 These pages provide additional detail about a number of aspects related to using Mir.
 
 - [Architecture](architecture): an overview of Mir's architecture for contributors
+- [Libraries](libraries): an overview of Mir's libraries and how they depend on one another
 - [Graphics support](mir-graphics-support): what's required to run Mir compositors
 - [What is Wayland anyway?](ok-so-what-is-this-wayland-thing-anyway): so what is it?
 - [Windowing paradigms](window-positions-under-wayland): how are windows managed?
@@ -11,6 +12,7 @@ These pages provide additional detail about a number of aspects related to using
 :hidden:
 
 architecture
+libraries
 mir-graphics-support
 ok-so-what-is-this-wayland-thing-anyway
 window-positions-under-wayland
