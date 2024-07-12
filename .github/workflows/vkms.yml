@@ -1,0 +1,30 @@
+name: Spread
+
+on:
+  push:
+    branches:
+    - main
+    - release/[0-9]+.[0-9]+
+    tags:
+    - v[0-9]+[0-9]+.[0-9]+
+  merge_group:
+    types: [checks_requested]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number && format('pr{0}', github.event.number) || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  BuildAndTest:
+    needs: GetMatrix
+
+    runs-on: [self-hosted, Linux, X64, large]
+
+    steps:
+    - name: Test vkms permissions
+      run: |
+        echo "Attempting to modprobe vkms"
+        sudo modprobe -v vkms
+        lsmod
