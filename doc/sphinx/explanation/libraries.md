@@ -49,4 +49,4 @@ There are a few things of note in this diagram:
 - `mircommon` provide common functionalities for every other library in the
   system
 - The input and graphics platforms (represented as `input_X` and `graphics_X` in
-  the diagram) are dynamically loaded by `mirserver` when the engine starts up33333
+  the diagram) are dynamically loaded by `mirserver` when the engine starts up.
