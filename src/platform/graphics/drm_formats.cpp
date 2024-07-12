@@ -493,7 +493,7 @@ auto mg::DRMFormat::info() const -> std::optional<Info const>
         mir::log_warning("Detailed info for format %s missing; please report so this can be added", name());
         unknown_formats->insert(fourcc);
     }
-    return {};
+    return std::nullopt;
 }
 
 mg::DRMFormat::operator uint32_t() const
