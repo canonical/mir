@@ -27,3 +27,14 @@ jobs:
         echo "Attempting to modprobe vkms"
         sudo modprobe -v vkms
         lsmod
+
+  VKMS_Test_On_GH_Runners:
+      runs-on: ubuntu-latest
+
+      steps:
+      - name: Test vkms permissions
+        run: |
+          sudo apt-get -y install linux-modules-extra-$(uname -r)
+          echo "Attempting to modprobe vkms"
+          sudo modprobe -v vkms
+          lsmod
