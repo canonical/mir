@@ -62,6 +62,17 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+include (cmake/CheckCXXFeature.cmake)
+include (cmake/RequireCXXFeature.cmake)
+# Reference: https://en.cppreference.com/w/cpp/utility/feature_test
+
+# Required C++ features
+require_cxx_feature(__cpp_constexpr)
+
+# Required C++ standard library features
+require_cxx_feature(__cpp_lib_format)
+
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -g -Wall -pedantic -Wextra -fPIC")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -g -Wall -fno-strict-aliasing -pedantic -Wnon-virtual-dtor -Wextra -fPIC")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--as-needed")
