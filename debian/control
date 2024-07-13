@@ -628,3 +628,15 @@ Description: Display server for Ubuntu - generator for Wayland protocol extensio
  .
  This can be useful for implementing Wayland protocol extensions not already
  implemented in Mir.
+
+Package: mir-x11-kiosk
+Architecture: linux-any
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+         inotify-tools,
+         mir-platform-graphics-wayland,
+         xwayland,
+Description: Display server for Ubuntu - kiosk hosting X11 apps
+ .
+ Contains an "X11 kiosk" compositor based on the Mir display server
+
