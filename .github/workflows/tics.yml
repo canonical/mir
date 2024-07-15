@@ -1,15 +1,9 @@
-name: Coverage
+name: TICS
 
 on:
   push:
     branches:
     - main
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.number && format('pr{0}', github.event.number) || github.ref_name }}
-  cancel-in-progress: true
 
 jobs:
   Run:
@@ -94,13 +88,14 @@ jobs:
       timeout-minutes: 10
       run: cmake --build build --target coverage
 
-    - name: Send coverage report
-      uses: codecov/codecov-action@v4
+    - name: Run TICS analysis
+      uses: tiobe/tics-github-action@v3
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        directory: build
-        fail_ci_if_error: true
-        verbose: true
+        mode: qserver
+        project: mir
+        viewerUrl: https://canonical.tiobe.com/tiobeweb/TICS/api/cfg?name=default
+        ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
+        installTics: true
 
     - if: ${{ failure() && runner.debug }}
       name: Setup tmate session
