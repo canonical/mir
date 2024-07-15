@@ -41,7 +41,6 @@ jobs:
                 "lxd:alpine-edge:spread/build/alpine:amd64"
                 "lxd:ubuntu-24.04:spread/build/sbuild:debian_sid"
                 "lxd:ubuntu-24.04:spread/build/sbuild:ubuntu"
-                "lxd:ubuntu-24.04:spread/build/sbuild:ubuntu_mantic"
                 "lxd:ubuntu-24.04:spread/build/sbuild:ubuntu_arm64"
                 "lxd:ubuntu-24.04:spread/build/sbuild:ubuntu_armhf"
                 "lxd:ubuntu-24.04:spread/build/ubuntu:clang"
