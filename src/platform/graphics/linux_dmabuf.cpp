@@ -944,6 +944,14 @@ private:
     std::shared_ptr<mgc::EGLContextExecutor> const egl_delegate;
 };
 
+namespace
+{
+auto format_has_known_alpha(mg::DRMFormat format) -> std::optional<bool>
+{
+    return format.info().transform([](auto const& info) { return info.has_alpha(); });
+}
+}
+
 class DmabufTexBuffer :
     public mg::BufferBasic,
     public mg::DMABufBuffer
@@ -965,7 +973,7 @@ public:
           on_consumed{std::move(on_consumed)},
           on_release{std::move(on_release)},
           size_{dma_buf.size()},
-          has_alpha{dma_buf.format().has_alpha()},
+          has_alpha{format_has_known_alpha(dma_buf.format()).value_or(true)},  // Has-alpha is the safe default for unknown formats
           planes_{dma_buf.planes()},
           modifier_{dma_buf.modifier()},
           format_{dma_buf.format()}

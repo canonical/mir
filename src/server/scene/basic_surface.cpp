@@ -732,7 +732,9 @@ public:
     { return transformation_; }
 
     bool shaped() const override
-    { return entry->pixel_format().has_alpha(); }
+    {
+        return entry->pixel_format().info().transform([](auto info) { return info.has_alpha();}).value_or(true);
+    }
 
     mg::Renderable::ID id() const override
     { return id_; }

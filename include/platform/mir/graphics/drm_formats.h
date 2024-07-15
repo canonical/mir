@@ -27,34 +27,47 @@ namespace mir::graphics
 class DRMFormat
 {
 public:
-    struct RGBComponentInfo
+    struct FormatInfo;
+    class Info
     {
-        uint32_t red_bits;
-        uint32_t green_bits;
-        uint32_t blue_bits;
-        std::optional<uint32_t> alpha_bits;
+    public:
+        struct RGBComponentInfo
+        {
+            uint32_t red_bits;
+            uint32_t green_bits;
+            uint32_t blue_bits;
+            std::optional<uint32_t> alpha_bits;
+        };
+
+        auto opaque_equivalent() const -> std::optional<DRMFormat>;
+        auto alpha_equivalent() const -> std::optional<DRMFormat>;
+
+        bool has_alpha() const;
+
+        auto components() const -> std::optional<RGBComponentInfo> const&;
+    private:
+        friend class DRMFormat;
+        Info(FormatInfo const* info);
+
+        FormatInfo const* info;
     };
 
-    // This could be constexpr, at the cost of moving a bunch of implementation into the header
-    explicit DRMFormat(uint32_t fourcc_format);
+    constexpr explicit DRMFormat(uint32_t fourcc_format)
+        : fourcc{fourcc_format}
+    {
+    }
 
     auto name() const -> char const*;
 
-    auto opaque_equivalent() const -> std::optional<DRMFormat> const;
-    auto alpha_equivalent() const -> std::optional<DRMFormat> const;
-
-    bool has_alpha() const;
-
-    auto components() const -> std::optional<RGBComponentInfo> const&;
+    auto info() const -> std::optional<Info const>;
 
     operator uint32_t() const;
 
     auto as_mir_format() const -> std::optional<MirPixelFormat>;
     static auto from_mir_format(MirPixelFormat format) -> DRMFormat;
 
-    struct FormatInfo;
 private:
-    FormatInfo const* info;
+    uint32_t fourcc;
 };
 
 auto drm_modifier_to_string(uint64_t modifier) -> std::string;
