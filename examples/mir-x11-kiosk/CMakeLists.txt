@@ -11,7 +11,6 @@ add_custom_target(mir-x11-kiosk-launch ALL
 
 install(
     PROGRAMS
-        ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir-x11-kiosk
         ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir-x11-kiosk-launch
     DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
 )
