@@ -19,12 +19,6 @@
 namespace
 {
 template<typename Dest, typename Source>
-void copy_if_set(Dest& dest, mir::optional_value<Source> const& source)
-{
-    if (source.is_set()) dest = source.value();
-}
-
-template<typename Dest, typename Source>
 void copy_if_set(Dest& dest, std::weak_ptr<Source> const& source)
 {
     if (source.lock()) dest = source;
@@ -68,9 +62,9 @@ void copy_if_set(
 
 }
 
-auto miral::make_surface_spec(WindowSpecification const& window_spec) -> mir::shell::SurfaceSpecification
+auto miral::make_surface_spec(WindowSpecification const& miral_spec) -> mir::shell::SurfaceSpecification
 {
-    auto& spec = *window_spec.self;
+    auto& spec = *miral_spec.self;
     mir::shell::SurfaceSpecification result;
     copy_if_set(result.top_left, spec.top_left);
     copy_if_set(result.pixel_format, spec.pixel_format);
