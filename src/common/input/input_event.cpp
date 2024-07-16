@@ -19,12 +19,13 @@
 
 #include "mir/events/event_type_to_string.h"
 #include "mir/events/event_private.h"
+#include "mir/fatal.h"
 #include "mir/log.h"
+#include <mir_toolkit/events/input/pointer_event.h>
 
 #include "../handle_event_exception.h"
 
 #include <string.h>
-#include <mir_toolkit/events/input/pointer_event.h>
 
 
 namespace ml = mir::logging;
@@ -33,29 +34,41 @@ namespace geom = mir::geometry;
 
 namespace
 {
-std::string input_event_type_to_string(MirInputEventType input_event_type)
+// GCC and Clang both ensure the switch is exhaustive.
+// GCC, however, gets a "control reaches end of non-void function" warning without this
+#ifndef __clang__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+#endif
+
+char const* input_event_type_to_c_str(MirInputEventType input_event_type)
 {
     switch (input_event_type)
     {
-        case mir_input_event_type_key:
-            return "mir_input_event_type_key";
-        case mir_input_event_type_touch:
-            return "mir_input_event_type_touch";
-        case mir_input_event_type_pointer:
-            return "mir_input_event_type_pointer";
-        default:
-            abort();
+    case mir_input_event_type_key:
+        return "mir_input_event_type_key";
+    case mir_input_event_type_touch:
+        return "mir_input_event_type_touch";
+    case mir_input_event_type_pointer:
+        return "mir_input_event_type_pointer";
+    case mir_input_event_type_keyboard_resync:
+        return "mir_input_event_type_keyboard_resync";
+    case mir_input_event_types:
+        mir::fatal_error_abort("Sentinel value 'mir_input_event_types' not supported");
     }
 }
+
+#ifndef __clang__
+#pragma GCC diagnostic pop
+#endif
 
 template <typename EventType>
 void expect_event_type(EventType const* ev, MirEventType t) MIR_HANDLE_EVENT_EXCEPTION(
 {
     if (ev->type() != t)
     {
-        mir::log_critical("Expected " + mir::event_type_to_string(t) + " but event is of type " +
-            mir::event_type_to_string(ev->type()));
-        abort();
+        mir::fatal_error_abort("Expected %s but event is of type %s",
+            mir::event_type_to_c_str(t), mir::event_type_to_c_str(ev->type()));
     }
 })
 }
@@ -111,9 +124,8 @@ MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* 
 {
     if (ev->input_type() != mir_input_event_type_key)
     {
-        mir::log_critical("expected key input event but event was of type " +
-            input_event_type_to_string(ev->input_type()));
-        abort();
+        mir::fatal_error_abort("expected key input event but event was of type %s",
+            input_event_type_to_c_str(ev->input_type()));
     }
 
     return reinterpret_cast<MirKeyboardEvent const*>(ev);
@@ -155,9 +167,8 @@ MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev) MI
 {
     if(ev->input_type() != mir_input_event_type_touch)
     {
-        mir::log_critical("expected touch input event but event was of type " +
-            input_event_type_to_string(ev->input_type()));
-        abort();
+        mir::fatal_error_abort("expected touch input event but event was of type %s",
+            input_event_type_to_c_str(ev->input_type()));
     }
 
     return reinterpret_cast<MirTouchEvent const*>(ev);
@@ -172,8 +183,7 @@ MirTouchId mir_touch_event_id(MirTouchEvent const* event, size_t touch_index) MI
 {
     if (touch_index >= event->pointer_count())
     {
-        mir::log_critical("touch index is greater than pointer count");
-        abort();
+        mir::fatal_error_abort("touch index is greater than pointer count");
     }
     return event->id(touch_index);
 
@@ -183,8 +193,7 @@ MirTouchAction mir_touch_event_action(MirTouchEvent const* event, size_t touch_i
 {
     if(touch_index > event->pointer_count())
     {
-        mir::log_critical("touch index is greater than pointer count");
-        abort();
+        mir::fatal_error_abort("touch index is greater than pointer count");
     }
 
     return static_cast<MirTouchAction>(event->action(touch_index));
@@ -195,8 +204,7 @@ MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event,
 {
     if(touch_index > event->pointer_count())
     {
-        mir::log_critical("touch index is greater than pointer count");
-        abort();
+        mir::fatal_error_abort("touch index is greater than pointer count");
     }
 
     return event->tool_type(touch_index);
@@ -207,8 +215,7 @@ float mir_touch_event_axis_value(MirTouchEvent const* event,
 {
     if(touch_index > event->pointer_count())
     {
-        mir::log_critical("touch index is greater than pointer count");
-        abort();
+        mir::fatal_error_abort("touch index is greater than pointer count");
     }
 
     switch (axis)
@@ -238,9 +245,8 @@ MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev
 {
     if(ev->input_type() != mir_input_event_type_pointer)
     {
-        mir::log_critical("expected pointer input event but event was of type " +
-            input_event_type_to_string(ev->input_type()));
-        abort();
+        mir::fatal_error_abort("expected pointer input event but event was of type ",
+            input_event_type_to_c_str(ev->input_type()));
     }
 
     return reinterpret_cast<MirPointerEvent const*>(ev);
@@ -303,8 +309,7 @@ float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis ax
    case mir_pointer_axis_hscroll_value120:
        return pev->h_scroll().value120.as_value();
    default:
-       mir::log_critical("Invalid axis enumeration " + std::to_string(axis));
-       abort();
+       mir::fatal_error_abort("Invalid axis enumeration %d", axis);
    }
 })
 
@@ -326,7 +331,6 @@ bool mir_pointer_event_axis_stop(MirPointerEvent const* pev, MirPointerAxis axis
    case mir_pointer_axis_hscroll_value120:
        return false;
    default:
-       mir::log_critical("Invalid axis enumeration " + std::to_string(axis));
-       abort();
+       mir::fatal_error_abort("Invalid axis enumeration %d", axis);
    }
 })
