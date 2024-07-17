@@ -17,6 +17,7 @@
 #include "desktop_file_manager.h"
 
 #include "mir/main_loop.h"
+#include "mir/log.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/session.h"
 #include <fstream>
@@ -67,20 +68,33 @@ std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface
     // https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/src/shell-window-tracker.c?ref_type=heads#L387
     auto app_id = surface->application_id();
     rtrim(app_id); // Sometimes, the app id has a space at the end
+    mir::log_info("Attempting to resolve app id from app_id=%s", app_id.c_str());
 
     // First, let's see if this is just a WM_CLASS
     auto app = cache->lookup_by_wm_class(app_id);
     if (app)
+    {
+        mir::log_info("Successfully resolved app id from wm_class, id=%s", app->id.c_str());
         return app->id;
+    }
 
     for (auto const& q: app_id_to_desktop_file_quirks)
-        if (q.first == app_id) return q.second;
+    {
+        if (q.first == app_id)
+        {
+            mir::log_info("Successfully resolved app id from quirk, id=%s", q.second.c_str());
+            return q.second;
+        }
+    }
 
     // Second, let's see if we can map it straight to a desktop file
     auto desktop_file = app_id + DESKTOP_FILE_POSTFIX;
     auto found = lookup_basename(desktop_file);
     if (found)
+    {
+        mir::log_info("Successfully resolved app id from basename, id=%s", found->id.c_str());
         return found->id;
+    }
 
     // Third, lowercase it and try again
     auto lowercase_desktop_file = desktop_file;
@@ -89,7 +103,10 @@ std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface
 
     found = lookup_basename(lowercase_desktop_file);
     if (found)
+    {
+        mir::log_info("Successfully resolved app id from lowercase basename, id=%s", found->id.c_str());
         return found->id;
+    }
 
     auto session = surface->session().lock();
     auto pid = session->process_id();
@@ -98,22 +115,32 @@ std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface
     // Fourth, check if the window belongs to snap
     found = resolve_if_snap(pid, socket_fd);
     if (found)
+    {
+        mir::log_info("Successfully resolved app id from snap, id=%s", found->id.c_str());
         return found->id;
+    }
 
     // Fifth, check if the window belongs to flatpak
     found = resolve_if_flatpak(pid);
     if (found)
+    {
+        mir::log_info("Successfully resolved app id from flatpak, id=%s", found->id.c_str());
         return found->id;
+    }
 
     // Sixth, get the exec command from our pid and see if we can match it to a GAppInfo's Exec
     found = resolve_if_executable_matches(pid);
     if (found)
+    {
+        mir::log_info("Successfully resolved app id from executable, id=%s", found->id.c_str());
         return found->id;
+    }
 
     // NOTE: Here is the list of things that we aren't doing, as we don't have a good way of doing it:
     // 1. Resolving from the list of internally running apps using the PID
     // 2. Resolving via a startup notification
     // 3. Resolving from a GApplicationID, which GTK sends over DBUS
+    mir::log_warning("Failed to resolve app id, returning %s", app_id.c_str());
     return app_id;
 }
 
@@ -171,36 +198,59 @@ std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_snap(int pid
 
     if (aa_getpeercon(socket_fd, &label_cstr, &mode_cstr) >= 0)
     {
+        mir::log_info("Attempting to resolve desktop file via AppArmor for pid: %d", pid);
         std::string const label{label_cstr};
         free(label_cstr);
         // mode_cstr should NOT be freed, as it's from the same buffer as label_cstr
-        
+
         auto sandboxed_app_id = parse_snap_security_profile_to_desktop_id(label);
         if (!sandboxed_app_id.empty())
         {
             if (auto file = cache->lookup_by_app_id(sandboxed_app_id))
+            {
+                mir::log_info("Successfully resolved desktop file via AppArmor for pid: %d", pid);
                 return file;
+            }
         }
+    }
+    else
+    {
+        mir::log_info("Unable to connect to AppArmor while resolving snap desktop file");
     }
 #else
     (void)socket_fd;
+    mir::log_warning("Unable to use AppArmor to resolve snap desktop file");
 #endif
 
     // If that fails, try to read /proc/<PID>/attr/current
+    mir::log_info("Attempting to resolve desktop file via proc directory for pid: %d", pid);
     std::string attr_file = "/proc/" + std::to_string(pid) + "/attr/current";
     if (!std::filesystem::exists(attr_file))
+    {
+        mir::log_warning("Failed to resolve desktop file via proc directory for pid %d: %s does not exist", pid, attr_file.c_str());
         return nullptr;
+    }
 
     std::string contents;
     std::getline(std::ifstream(attr_file), contents, '\0');
 
     auto sandboxed_app_id = parse_snap_security_profile_to_desktop_id(contents);
     if (sandboxed_app_id.empty())
+    {
+        mir::log_info("Failed to resolve desktop file from sandboxed_app_id  for pid %d", pid);
         return nullptr;
+    }
 
     // Now we will have something like firefox_firefox, for example.
     // This should match something in the app ID map.
-    return cache->lookup_by_app_id(sandboxed_app_id);
+    auto file = cache->lookup_by_app_id(sandboxed_app_id);
+    if (file)
+    {
+        mir::log_info("Successfully resolved desktop file via proc directory for pid: %d", pid);
+        return file;
+    }
+
+    return nullptr;
 }
 
 std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_flatpak(int pid)
