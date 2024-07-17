@@ -51,11 +51,13 @@ jobs:
         sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
         sudo --preserve-env apt-get install --no-install-recommends \
           dmz-cursor-theme \
+          flake8 \
           glmark2-es2 \
           glmark2-es2-wayland \
           lcov \
           mesa-utils \
           ninja-build \
+          pylint \
           xwayland
 
         sudo --preserve-env apt-get build-dep ./
