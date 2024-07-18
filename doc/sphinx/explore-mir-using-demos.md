@@ -73,3 +73,13 @@ miral-app --window-manager tiling
 `miral-app` doesn't support this flag, so it's sent down to `miral-shell` which
 interprets it. If you add the `-kiosk` option, you'll get an error since the
 kiosk binary doesn't support that flag.
+
+## Running Natively
+
+## Using On-screen Keyboards
+
+## Mixning Wayland and X11 Clients
+
+## Remote Desktop
+
+## Nesting Wayland Compositors
