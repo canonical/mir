@@ -24,6 +24,7 @@
 #include <functional>
 #include <memory>
 #include <vector>
+#include <map>
 
 struct wl_display;
 
@@ -185,6 +186,10 @@ public:
     /// 1. $XDG_CONFIG_HOME (if set, otherwise $HOME/.config (if set))
     /// 2. $XDG_CONFIG_DIRS (if set, otherwise /etc/xdg)
     void set_config_filename(std::string const& config_file);
+
+    /// Set an alternative source for configuration data.
+    void set_configuration_data_source(
+        std::function<std::map<std::string, std::string>()> const&);
 
     /// Returns the configuration options.
     /// This will be null before initialization starts. It will be available

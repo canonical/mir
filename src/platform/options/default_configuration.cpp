@@ -269,6 +269,11 @@ boost::program_options::options_description_easy_init mo::DefaultConfiguration::
     return program_options->add_options();
 }
 
+void mo::DefaultConfiguration::set_options_map(std::map<std::string, std::string> const& options)
+{
+    options_map = options;
+}
+
 std::shared_ptr<mo::Option> mo::DefaultConfiguration::the_options() const
 {
     if (!options)
@@ -277,6 +282,7 @@ std::shared_ptr<mo::Option> mo::DefaultConfiguration::the_options() const
         parse_arguments(*program_options, *options, argc, argv);
         parse_environment(*program_options, *options);
         parse_config_file(*program_options, *options);
+        parse_custom(*program_options, *options);
         this->options = options;
     }
     return options;
@@ -342,4 +348,12 @@ void mo::DefaultConfiguration::parse_config_file(
 {
     if (!config_file.empty())
         options.parse_file(desc, config_file);
+}
+
+void mo::DefaultConfiguration::parse_custom(
+    boost::program_options::options_description& desc,
+    mir::options::ProgramOption& options) const
+{
+    if (options_map)
+        options.parse_map(desc, options_map.value());
 }

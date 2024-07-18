@@ -203,3 +203,10 @@ MIR_PLATFORM_2.18 {
  local: *;
 };
 
+MIR_PLATFORM_2.18 {
+ global:
+  extern "C++" {
+    mir::options::DefaultConfiguration::set_options_map*;
+  };
+ local: *;
+} MIR_PLATFORM_2.17;
