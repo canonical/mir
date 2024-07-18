@@ -83,7 +83,7 @@ void exec_xwayland(
     for (auto const& fd : spawner.socket_fds())
     {
         mf::XWaylandSpawner::set_cloexec(fd, false);
-        args.push_back("-listen");
+        args.push_back("-listenfd");
         // strdup() may look like a leak, but execvp() will trash all resource management
         args.push_back(strdup(std::to_string(fd).c_str()));
     }
