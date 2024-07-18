@@ -19,6 +19,7 @@
 #include "mir/logging/logger.h"
 
 #include <mir/test/doubles/mock_display_configuration.h>
+#include "mir/test/file_utils.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -151,7 +152,9 @@ public:
 
 TEST_F(StaticDisplayConfig, nonexistent_config_file_is_no_error)
 {
-    miral::StaticDisplayConfig{tmpnam(nullptr)};
+    auto filename = mir::test::create_temp_file();
+    unlink(filename.c_str());
+    miral::StaticDisplayConfig{filename};
 }
 
 TEST_F(StaticDisplayConfig, empty_config_input_causes_AbnormalExit)

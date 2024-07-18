@@ -9,6 +9,7 @@ add_library(mir-public-test OBJECT
   display_config_matchers.cpp
   event_factory.cpp
   event_matchers.cpp
+  file_utils.cpp
   pipe.cpp
   popen.cpp
   signal.cpp

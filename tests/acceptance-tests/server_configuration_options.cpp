@@ -18,6 +18,8 @@
 
 #include "mir/options/option.h"
 
+#include "mir/test/file_utils.h"
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -29,15 +31,6 @@ using namespace testing;
 
 namespace
 {
-std::string create_temp_dir()
-{
-    char temp_dir[] = "temp_dir_XXXXXX";
-    if (mkdtemp(temp_dir) == nullptr)
-        throw std::system_error(errno, std::system_category(), "Failed to create temp dir");
-
-    return temp_dir;
-}
-
 struct ServerConfigurationOptions : mir_test_framework::HeadlessTest
 {
     MOCK_METHOD(void, command_line_handler, (std::vector<std::string> const&));
@@ -102,7 +95,7 @@ struct ServerConfigurationOptions : mir_test_framework::HeadlessTest
         remove(temp_dir.c_str());
     }
 
-    std::string const temp_dir = create_temp_dir();
+    std::string const temp_dir = mir::test::create_temp_dir();
     std::string const fake_xdg_config_home = temp_dir + "/fake_xdg_config_home";
     std::string const fake_home = temp_dir + "/fake_home";
     std::string const fake_home_config = temp_dir + "/fake_home/.config";
