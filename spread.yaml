@@ -34,6 +34,8 @@ environment:
     BUILD_TYPE/asan,asan_clang: AddressSanitizer
     BUILD_TYPE/tsan,tsan_clang: ThreadSanitizer
     BUILD_TYPE/ubsan,ubsan_clang: UBSanitizer
+    GCC_VERSION:
+    GCC_VERSION/ubuntu_devel: 14
     DEB_BUILD_EXTRA:
     DEB_BUILD_EXTRA/ubsan,ubsan_clang: nostrip
     DEB_BUILD_EXTRA/asan,asan_clang,tsan,tsan_clang: nostrip nocheck
