@@ -20,6 +20,10 @@ In this documentation
 
 ..  grid:: 1 1 2 2
 
+   ..  grid-item:: :doc:`Tutorial2 <tutorial2>`
+
+       **Start here**: a better hands-on introduction to Mir for new users
+
    ..  grid-item:: :doc:`Tutorial <tutorial>`
 
        **Start here**: a hands-on introduction to Mir for new users
@@ -58,6 +62,7 @@ Mir is a member of the Ubuntu family. It’s an open source project that warmly 
    :maxdepth: 2
 
    tutorial
+   tutorial2
    how-to/index
    explanation/index
    reference/index
