@@ -20,13 +20,13 @@ In this documentation
 
 ..  grid:: 1 1 2 2
 
-   ..  grid-item:: :doc:`Tutorial2 <tutorial2>`
+   ..  grid-item:: :doc:`Explore What Mir Is Capable of Using Mir Demos <explore-mir-using-demos>`
 
-       **Start here**: a better hands-on introduction to Mir for new users
+       **Start here**: An introduction to what Mir can do using example demos
 
-   ..  grid-item:: :doc:`Tutorial <tutorial>`
+   ..  grid-item:: :doc:`Using Mir Libraries to Build Your Own Wayland Compositor <build-your-own-compositor>`
 
-       **Start here**: a hands-on introduction to Mir for new users
+       **Start here**: An introduction to building Wayland compositors with Mir
 
    ..  grid-item:: :doc:`How-to guides <how-to/index>`
 
@@ -61,8 +61,8 @@ Mir is a member of the Ubuntu family. It’s an open source project that warmly 
    :hidden:
    :maxdepth: 2
 
-   tutorial
-   tutorial2
+   explore-mir-using-demos
+   build-your-own-compositor
    how-to/index
    explanation/index
    reference/index

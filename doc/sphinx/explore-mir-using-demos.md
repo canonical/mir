@@ -2,17 +2,13 @@
 discourse: 4911,5164,5603,6756,8037
 ---
 
-# Tutorial 2
-This tutorial will guide you through using Mir demos to see what Mir is capable
-of, and the usage of Mir libraries to build your own Wayland compositor.
-
-## Mir Demos
+# Explore What Mir Is Capable of Using Mir Demos
 Mir comes with a set of demos in its [example
 directory](https://github.com/canonical/mir/tree/main/examples) to showcase its
 abilities. This section will cover the installation and usage of these demos.
 
 
-### Installation
+## Installation
 Mir demos are available on Ubuntu as prebuilt binaries. For distros that don't
 have prebuilt binaries, examples can be built from source.
 
@@ -34,7 +30,7 @@ build them yourself. (See [Getting Involved in
 Mir](how-to/getting_involved_in_mir)).
 </details>
 
-### Running
+## Running
 The main script you'll want to play around with is `miral-app`. It runs a shell
 with some eyecandy by default, but you can run it in kiosk mode if that fits
 your usecase more.
@@ -55,7 +51,7 @@ miral-app -kiosk
 ```
 
 <!--- Likely to get axed, opinions welcome -->
-#### Under The Hood
+### Under The Hood
 In reality, `miral-app` is just a thin wrapper around `miral-shell` and
 `miral-kiosk` that sets things up so they can run properly. You can even run
 those two binaries on their own if you set things up. Do note that the
@@ -70,12 +66,3 @@ miral-app --window-manager tiling
 `miral-app` doesn't support this flag, so it's sent down to `miral-shell` which
 interprets it. If you add the `-kiosk` option, you'll get an error since the
 kiosk binary doesn't support that flag.
-
-## Mir Libraries
-At this point, you're probably taken away by Mir's capabilities and want to use
-it and the supporting libraries to build your own Wayland compositor. This
-section will guide you through the installation and basic usage of Mir.
-
-### Installation
-
-### Usage
