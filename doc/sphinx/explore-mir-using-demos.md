@@ -9,26 +9,33 @@ abilities. This section will cover the installation and usage of these demos.
 
 
 ## Installation
-Mir demos are available on Ubuntu as prebuilt binaries. For distros that don't
-have prebuilt binaries, examples can be built from source.
+Mir demos are available on Debian derivatives, Fedora, and Alpine. For distros
+that don't have prebuilt binaries, examples can be built from source.
 
 <details>
-<summary> Installing Mir Demos on Ubuntu </summary>
+<summary> Installing Mir Demos on Debian and its derivatives </summary>
 
-You can run the following command to install Mir demos and the drivers they
-use.
 ```sh
 sudo apt install mir-demos mir-graphics-drivers-desktop
 ```
 </details>
 
 <details>
-<summary>Building Mir Demos on Other Distros</summary>
+<summary> Installing Mir Demos on Fedora </summary>
 
-For Linux distributions that don't currently package Mir demos you need to
-build them yourself. (See [Getting Involved in
-Mir](how-to/getting_involved_in_mir)).
+```sh
+sudo dnf install mir-demos mir
+```
 </details>
+
+<details>
+<summary> Installing Mir Demos on Alpine </summary>
+
+```sh
+sudo apk add mir-demos mir
+```
+</details>
+
 
 ## Running
 The main script you'll want to play around with is `miral-app`. It runs a shell
