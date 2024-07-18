@@ -75,6 +75,21 @@ interprets it. If you add the `-kiosk` option, you'll get an error since the
 kiosk binary doesn't support that flag.
 
 ## Running Natively
+The previous section showed how you can run Mir demos under an X11 session. But
+Mir compositors can also run "natively" by launching them from a virtual
+terminal or a greeter.
+
+### Launching from a virtual terminal
+To switch to a virtual terminal, you can press CTRL+ALT+F<Number>. You can then
+log in and run:
+```sh 
+miral-shell
+```
+
+### Launching from a greeter
+You can also launch `miral-shell` from your greeter by opening the window
+manager list (bottom right cog on Ubuntu) and choosing "Miral Shell". Once you
+log in, you'll see `miral-shell` running fullscreen!
 
 ## Using On-screen Keyboards
 
