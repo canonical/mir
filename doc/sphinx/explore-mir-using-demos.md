@@ -75,9 +75,9 @@ interprets it. If you add the `-kiosk` option, you'll get an error since the
 kiosk binary doesn't support that flag.
 
 ## Running Natively
-The previous section showed how you can run Mir demos under an X11 session. But
-Mir compositors can also run "natively" by launching them from a virtual
-terminal or a greeter.
+The previous section showed how you can run Mir demos under an X11 or Wayland
+session. But Mir compositors can also run "natively" by launching them from a
+virtual terminal or a greeter.
 
 ### Launching from a virtual terminal
 To switch to a virtual terminal, you can press CTRL+ALT+F<Number>. You can then
@@ -92,6 +92,33 @@ manager list (bottom right cog on Ubuntu) and choosing "Miral Shell". Once you
 log in, you'll see `miral-shell` running fullscreen!
 
 ## Using On-screen Keyboards
+Mir based compositors can easily support on-screen keyboards. Note that due to
+security reasons, the Wayland extensions needed are disabled by default.
+
+For the purpose of demonstation, we'll use `ubuntu-frame-osk`, but you're free
+to use any Wayland compatible on-screen keyboard.
+
+You can install `ubuntu-frame-osk` by running:
+```sh
+sudo snap install ubuntu-frame-osk
+```
+
+If you get errors later on related to connecting to a Wayland compositor, you should run:
+```sh
+sudo snap connect ubuntu-frame-osk:wayland
+```
+
+To test your favourite on-screen keyboard, you can start `miral-shell` as follows:
+```sh
+miral-shell --add-wayland-extensions all
+```
+
+Once `miral-shell` loads, we can run:
+```sh
+ubuntu-frame-osk
+```
+And an on-screen keyboard should pop up!
+
 
 ## Mixing Wayland and X11 Clients
 You can easily run X11 applications inside Mir based compositors. For example,
