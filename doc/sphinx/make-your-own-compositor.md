@@ -31,9 +31,7 @@ sudo apk add mir
 ```
 </details>
 
-### Usage
-
-#### A barebones Mir compositor
+### A barebones Mir compositor
 
 The following code block is the bare minimum you need to run a Mir compositor:
 ```cpp
@@ -54,9 +52,15 @@ int main(int argc, char const* argv[])
 }
 ```
 
-You can se it's barely longer than the usual C++ "Hello, world!" example. This code should give you a minimal compositor with basic window management capabilities such as controlling multiple windows, minimizing and maximizing, handling input, etc... This is done with the help of MirAL (Mir Abstraction Layer) which gives you a high level interface to work with Mir!
+You can se it's barely longer than the usual C++ "Hello, world!" example. This
+code should give you a minimal compositor with basic window management
+capabilities such as controlling multiple windows, minimizing and maximizing,
+handling input, etc... This is done with the help of MirAL (Mir Abstraction
+Layer) which gives you a high level interface to work with Mir!
 
-To compile, you'll need to install `libmircore`, `libmiral`, and `mir-graphics-drivers-desktop` which can be done on Ubuntu (and Debian derivatives) with the following command:
+To compile, you'll need to install `libmircore`, `libmiral`, and
+`mir-graphics-drivers-desktop` which can be done on Ubuntu (and Debian
+derivatives) with the following command:
 ```sh
 sudo apt install libmircore-dev libmiral-dev mir-graphics-drivers-desktop
 ```
@@ -68,11 +72,16 @@ To compile this simple program:
 g++ main.cpp -I/usr/include/mircore -I/usr/include/miral -lmiral -o demo-mir-compositor
 ```
 
-To run, you can run nested in an X or Wayland session, or from a virtual terminal, just like the demo applications in [Explore What Mir Is Capable of Using Mir Demos](explore-mir-using-demos.md). For example, if we were to run inside an existing Wayland session, we'd run the following command:
+To run, you can run nested in an X or Wayland session, or from a virtual
+terminal, just like the demo applications in [Explore What Mir Is Capable of
+Using Mir Demos](explore-mir-using-demos.md). For example, if we were to run
+inside an existing Wayland session, we'd run the following command:
 ```sh
 WAYLAND_DISPLAY=wayland-99 ./demo-mir-compositor 
 ```
-You'll see a window housing the compositor with a black void filling it. To fill this void with some content, you can run the following from another terminal:
+You'll see a window housing the compositor with a black void filling it. To
+fill this void with some content, you can run the following from another
+terminal:
 ```sh
 WAYLAND_DISPLAY=wayland-99 bomber
 ```
