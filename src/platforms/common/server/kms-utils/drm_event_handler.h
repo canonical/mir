@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_PLATFORM_EGLSTREAM_DRM_EVENT_HANDLER_H_
-#define MIR_PLATFORM_EGLSTREAM_DRM_EVENT_HANDLER_H_
+#ifndef MIR_PLATFORM_KMS_DRM_EVENT_HANDLER_H_
+#define MIR_PLATFORM_KMS_DRM_EVENT_HANDLER_H_
 
 #include <future>
 
@@ -23,7 +23,7 @@ namespace mir
 {
 namespace graphics
 {
-namespace eglstream
+namespace kms
 {
 class DRMEventHandler
 {
@@ -55,4 +55,4 @@ public:
 }
 }
 
-#endif //MIR_PLATFORM_EGLSTREAM_DRM_EVENT_HANDLER_H_
+#endif //MIR_PLATFORM_KMS_DRM_EVENT_HANDLER_H_

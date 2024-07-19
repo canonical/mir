@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "src/platforms/eglstream-kms/server/threaded_drm_event_handler.h"
+#include "src/platforms/common/server/kms-utils/threaded_drm_event_handler.h"
 
 #include "mir/test/doubles/mock_drm.h"
 
@@ -24,7 +24,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mge = mir::graphics::eglstream;
+namespace mgk = mir::graphics::kms;
 namespace mtd = mir::test::doubles;
 
 using namespace testing;
@@ -119,8 +119,8 @@ TEST_F(ThreadedDRMEventHandlerTest, flip_completion_handle_becomes_ready_on_flip
 {
     using namespace std::literals::chrono_literals;
 
-    mge::ThreadedDRMEventHandler handler{mock_drm_fd};
-    mge::ThreadedDRMEventHandler::KMSCrtcId const crtc_id{55};
+    mgk::ThreadedDRMEventHandler handler{mock_drm_fd};
+    mgk::ThreadedDRMEventHandler::KMSCrtcId const crtc_id{55};
 
     auto completion_handle = handler.expect_flip_event(crtc_id, [](auto, auto){});
 
@@ -136,8 +136,8 @@ TEST_F(ThreadedDRMEventHandlerTest, calls_frame_callback_on_flip_completion)
 {
     using namespace std::literals::chrono_literals;
 
-    mge::ThreadedDRMEventHandler handler{mock_drm_fd};
-    mge::ThreadedDRMEventHandler::KMSCrtcId const crtc_id{55};
+    mgk::ThreadedDRMEventHandler handler{mock_drm_fd};
+    mgk::ThreadedDRMEventHandler::KMSCrtcId const crtc_id{55};
     int constexpr frame_sec{10};
     int constexpr frame_usec{400};
     unsigned int constexpr expected_frame_no{3441};
@@ -158,8 +158,8 @@ TEST_F(ThreadedDRMEventHandlerTest, handles_spurious_drm_events)
 {
     using namespace std::literals::chrono_literals;
 
-    mge::ThreadedDRMEventHandler handler{mock_drm_fd};
-    mge::ThreadedDRMEventHandler::KMSCrtcId const crtc_id{55};
+    mgk::ThreadedDRMEventHandler handler{mock_drm_fd};
+    mgk::ThreadedDRMEventHandler::KMSCrtcId const crtc_id{55};
     int constexpr frame_sec{10};
     int constexpr frame_usec{400};
     unsigned int constexpr expected_frame_no{3441};
@@ -183,9 +183,9 @@ TEST_F(ThreadedDRMEventHandlerTest, dispatches_event_for_correct_crtc)
 {
     using namespace std::literals::chrono_literals;
 
-    mge::ThreadedDRMEventHandler handler{mock_drm_fd};
-    mge::ThreadedDRMEventHandler::KMSCrtcId const crtc_one{55};
-    mge::ThreadedDRMEventHandler::KMSCrtcId const crtc_two{44};
+    mgk::ThreadedDRMEventHandler handler{mock_drm_fd};
+    mgk::ThreadedDRMEventHandler::KMSCrtcId const crtc_one{55};
+    mgk::ThreadedDRMEventHandler::KMSCrtcId const crtc_two{44};
 
     std::atomic<bool> first_flip_done{false};
     std::atomic<bool> second_flip_done{false};
