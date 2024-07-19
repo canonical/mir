@@ -93,7 +93,16 @@ log in, you'll see `miral-shell` running fullscreen!
 
 ## Using On-screen Keyboards
 
-## Mixning Wayland and X11 Clients
+## Mixing Wayland and X11 Clients
+You can easily run X11 applications inside Mir based compositors. For example,
+to enable x11 support in `miral-shell`, you can run the following command:
+
+```sh
+miral-shell --enable-x11 true
+```
+
+When it loads, you can start a terminal and run `xclock` or any other X11
+application side to side with Wayland applications!
 
 ## Remote Desktop
 
