@@ -24,7 +24,7 @@ In this documentation
 
        **Start here**: An introduction to what Mir can do using example demos
 
-   ..  grid-item:: :doc:`Using Mir Libraries to Build Your Own Wayland Compositor <build-your-own-compositor>`
+   ..  grid-item:: :doc:`Using Mir Libraries to Build Your Own Wayland Compositor <make-your-own-compositor>`
 
        **Start here**: An introduction to building Wayland compositors with Mir
 
@@ -62,7 +62,7 @@ Mir is a member of the Ubuntu family. It’s an open source project that warmly 
    :maxdepth: 2
 
    explore-mir-using-demos
-   build-your-own-compositor
+   make-your-own-compositor
    how-to/index
    explanation/index
    reference/index
