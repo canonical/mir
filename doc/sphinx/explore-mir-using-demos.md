@@ -113,7 +113,7 @@ To test your favourite on-screen keyboard, you can start `miral-shell` as follow
 miral-shell --add-wayland-extensions all
 ```
 
-Once `miral-shell` loads, we can run:
+Once `miral-shell` loads, you can start the terminal, then run:
 ```sh
 ubuntu-frame-osk
 ```
@@ -132,5 +132,25 @@ When it loads, you can start a terminal and run `xclock` or any other X11
 application side to side with Wayland applications!
 
 ## Remote Desktop
+Mir also supports remote desktops via the VNC protocol. To demo this, we'll use
+`wayvnc`. You can install it by running:
+
+```sh
+sudo apt install wayvnc
+```
+
+Then, you can run `miral-shell` with all extensions like so:
+```sh
+miral-shell --add-wayland-extensions all
+```
+
+From inside, you can run the terminal and run `wayvnc`:
+```sh
+wayvnc
+```
+
+This should start `wayvnc` and make it listen to `localhost`. To connect, run
+your favourite VNC viewer and connect to `localhost`. You should see the exact
+same view in both Mir compositor and the VNC viewer.
 
 ## Nesting Wayland Compositors
