@@ -37,13 +37,32 @@ handling input, etc... This is done with the help of MirAL (Mir Abstraction
 Layer) which gives you a high level interface to work with Mir!
 
 To compile, you'll need to install `libmiral`, and
-`mir-graphics-drivers-desktop` which can be done on Ubuntu (and Debian
-derivatives) with the following command:
+`mir-graphics-drivers-desktop` which is can be done on different distros as
+follows:
+
+<details>
+<summary> Installing Dependencies on Debian and its derivatives </summary>
+
 ```sh
 sudo apt install libmiral-dev mir-graphics-drivers-desktop
 ```
+</details>
 
-**Note**: `mir-graphics-drivers-desktop` is only needed for Debian based distros. 
+<details>
+<summary> Installing Dependencies on Fedora </summary>
+
+```sh
+sudo dnf install mir-devel libxkbcommon
+```
+</details>
+
+<details>
+<summary> Installing Dependencies on Alpine </summary>
+
+```sh
+sudo apk add mir-dev
+```
+</details>
 
 To compile this simple program:
 ```sh
