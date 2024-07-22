@@ -57,23 +57,6 @@ for kiosk mode:
 miral-app -kiosk
 ```
 
-<!--- Likely to get axed, opinions welcome -->
-### Under The Hood
-In reality, `miral-app` is just a thin wrapper around `miral-shell` and
-`miral-kiosk` that sets things up so they can run properly. You can even run
-those two binaries on their own if you set things up. Do note that the
-underlying binary might support more options than `miral-app`, so when you pass
-an option that `miral-app` doesn't understand, it'll pass that and any
-following options onto that binary. 
-
-For example, if you run:
-```sh
-miral-app --window-manager tiling
-```
-`miral-app` doesn't support this flag, so it's sent down to `miral-shell` which
-interprets it. If you add the `-kiosk` option, you'll get an error since the
-kiosk binary doesn't support that flag.
-
 ## Running Natively
 The previous section showed how you can run Mir demos under an X11 or Wayland
 session. But Mir compositors can also run "natively" by launching them from a
