@@ -87,7 +87,11 @@ sudo snap install ubuntu-frame-osk
 sudo snap connect ubuntu-frame-osk:wayland
 ```
 
-To test your favourite on-screen keyboard, you can start `miral-app` as follows:
+To test your favourite on-screen keyboard, you can start `miral-app` as
+follows. Note that By default, Mir does not enable Wayland extensions that
+normal applications should not be using. For demonstration purposes we are
+going to override this and allow all supported extensions in this and the
+following demos:
 ```sh
 miral-app --add-wayland-extensions all
 ```
@@ -113,15 +117,14 @@ application side to side with Wayland applications!
 ## Remote Desktop
 Mir also supports remote desktops via the VNC protocol. To demo this, we'll use
 `wayvnc`. You can install it by running:
-
 ```sh
 sudo apt install wayvnc
 ```
 
-By default, Mir does not enable Wayland extensions that normal applications should not be using. For demonstration purposes we are going to override this and allow all supported extensions in the following demos.
-
- ```sh
+Start the shell with all extensions enabled:
+```sh
 miral-app --add-wayland-extensions all
+```
 
 From inside, you can run the terminal and run `wayvnc`:
 ```sh
