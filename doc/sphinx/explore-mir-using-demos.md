@@ -53,6 +53,11 @@ for kiosk mode:
 miral-app -kiosk
 ```
 
+**Note**: By default, Mir does not enable Wayland extensions that normal
+applications should not be using. For demonstration purposes we will override
+this and allow all supported extensions in some of the following examples by
+passing `--add-wayland-extensions all` when running the example.
+
 ## Running Natively
 The previous section showed how you can run Mir demos under an X11 or Wayland
 session. But Mir compositors can also run "natively" by launching them from a
@@ -84,10 +89,7 @@ sudo snap connect ubuntu-frame-osk:wayland
 ```
 
 To test your favourite on-screen keyboard, you can start `miral-app` as
-follows. Note that By default, Mir does not enable Wayland extensions that
-normal applications should not be using. For demonstration purposes we are
-going to override this and allow all supported extensions in this and the
-following demos:
+follows:
 ```sh
 miral-app --add-wayland-extensions all
 ```
