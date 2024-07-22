@@ -21,9 +21,6 @@ add_library(mirplatformgraphicseglstreamkmsobjects OBJECT
   egl_output.cpp
   utils.cpp
   utils.h
-  drm_event_handler.h
-  threaded_drm_event_handler.h
-  threaded_drm_event_handler.cpp
 )
 
 target_link_libraries(mirplatformgraphicseglstreamkmsobjects

@@ -25,7 +25,7 @@
 
 #include "kms-utils/drm_mode_resources.h"
 #include "mir/graphics/platform.h"
-#include "threaded_drm_event_handler.h"
+#include "kms-utils/threaded_drm_event_handler.h"
 
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_policy.h"
@@ -49,6 +49,7 @@
 
 namespace mg = mir::graphics;
 namespace mge = mir::graphics::eglstream;
+namespace mgk = mir::graphics::kms;
 namespace geom = mir::geometry;
 
 #ifndef EGL_NV_output_drm_flip_event
@@ -133,7 +134,7 @@ public:
         EGLDisplay dpy,
         EGLContext ctx,
         EGLConfig config,
-        std::shared_ptr<mge::DRMEventHandler> event_handler,
+        std::shared_ptr<mgk::DRMEventHandler> event_handler,
         std::shared_ptr<mge::kms::EGLOutput> output,
         std::shared_ptr<mg::DisplayReport> display_report)
         : dpy{dpy},
@@ -429,7 +430,7 @@ private:
     std::shared_ptr<mge::kms::EGLOutput> output;
     EGLStreamKHR output_stream;
     mir::Fd const drm_node;
-    std::shared_ptr<mge::DRMEventHandler> const event_handler;
+    std::shared_ptr<mgk::DRMEventHandler> const event_handler;
     std::future<void> pending_flip;
     mg::EGLExtensions::LazyDisplayExtensions<mg::EGLExtensions::NVStreamAttribExtensions> nv_stream;
     std::shared_ptr<mg::DisplayReport> const display_report;
@@ -465,7 +466,7 @@ mge::Display::Display(
       config{choose_config(display, gl_conf)},
       context{create_context(display, config)},
       display_configuration{create_display_configuration(this->drm_node, display, context)},
-      event_handler{std::make_shared<ThreadedDRMEventHandler>(drm_node)},
+      event_handler{std::make_shared<mgk::ThreadedDRMEventHandler>(drm_node)},
       display_report{std::move(display_report)}
 {
     auto ret = drmSetClientCap(drm_node, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);

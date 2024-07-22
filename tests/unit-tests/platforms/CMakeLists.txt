@@ -14,6 +14,7 @@ add_subdirectory(virtual)
 
 set(UNIT_TEST_SOURCES
   ${UNIT_TEST_SOURCES}
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_threaded_drm_event_handler.cpp
 #  ${CMAKE_CURRENT_SOURCE_DIR}/test_rendering_platform.cpp
 #  ${CMAKE_CURRENT_SOURCE_DIR}/test_rendering_platform.h
 )

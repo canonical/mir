@@ -29,7 +29,7 @@
 #include <fcntl.h>
 #include <algorithm>
 
-namespace mge = mir::graphics::eglstream;
+namespace mge = mir::graphics::kms;
 
 
 

@@ -32,9 +32,13 @@ class DisplayConfigurationPolicy;
 class GLConfig;
 class DisplayReport;
 
-namespace eglstream
+namespace kms
 {
 class DRMEventHandler;
+}
+
+namespace eglstream
+{
 
 class Display : public mir::graphics::Display
 {
@@ -72,7 +76,7 @@ private:
     std::mutex mutable configuration_mutex;
     KMSDisplayConfiguration display_configuration;
 
-    std::shared_ptr<DRMEventHandler> const event_handler;
+    std::shared_ptr<graphics::kms::DRMEventHandler> const event_handler;
     std::vector<std::unique_ptr<DisplaySyncGroup>> active_sync_groups;
     std::shared_ptr<DisplayConfigurationPolicy> const configuration_policy;
     std::shared_ptr<DisplayReport> const display_report;
