@@ -3,9 +3,11 @@ discourse: 4911,5164,5603,6756,8037
 ---
 
 # Using Mir Libraries to Build Your Own Wayland Compositor
-At this point, you're probably taken away by Mir's capabilities and want to use
-it and the supporting libraries to build your own Wayland compositor. This
-section will guide you through the installation and basic usage of Mir.
+If you've seen [the demo tutorial](explore-mir-using-demos), you're probably
+taken away by Mir's capabilities and want to use it and the supporting
+libraries to build your own Wayland compositor. This section will guide you
+through the installation and basic usage of Mir. You'll be even more impressed
+by how easy it is to create a Wayland compositor using Mir!
 
 ### A barebones Mir compositor
 
