@@ -64,9 +64,29 @@ sudo apk add mir-dev
 ```
 </details>
 
-To compile this simple program:
+To compile this simple program, you can use this `CMakeLists.txt` file:
+```cmake
+cmake_minimum_required(VERSION 3.5)
+
+project(demo-mir-compositor)
+
+set(CMAKE_CXX_STANDARD 20)
+
+include(FindPkgConfig)
+pkg_check_modules(MIRAL miral REQUIRED)
+pkg_check_modules(XKBCOMMON xkbcommon REQUIRED)
+
+add_executable(demo-mir-compositor main.cpp)
+
+target_include_directories(demo-mir-compositor PUBLIC SYSTEM ${MIRAL_INCLUDE_DIRS})
+target_link_libraries(     demo-mir-compositor               ${MIRAL_LDFLAGS})
+target_link_libraries(     demo-mir-compositor               ${XKBCOMMON_LIBRARIES})
+```
+
+Then to build:
 ```sh
-g++ main.cpp -I/usr/include/mircore -I/usr/include/miral -lmiral -o demo-mir-compositor
+cmake -B build
+cmake --build build
 ```
 
 To run, you can run nested in an X or Wayland session, or from a virtual
@@ -74,7 +94,7 @@ terminal, just like the demo applications in [Explore What Mir Is Capable of
 Using Mir Demos](explore-mir-using-demos.md). For example, if we were to run
 inside an existing Wayland session, we'd run the following command:
 ```sh
-WAYLAND_DISPLAY=wayland-99 ./demo-mir-compositor 
+WAYLAND_DISPLAY=wayland-99 ./build/demo-mir-compositor 
 ```
 You'll see a window housing the compositor with a black void filling it. To
 fill this void with some content, you can run the following from another
@@ -137,7 +157,7 @@ compositor.
 
 Now, to start `kgx` and `bomber` on startup, we can do:
 ```sh
-miral-shell --startup-apps kgx:bomber
+./build/demo-mir-compositor --startup-apps kgx:bomber
 ```
 
 ### Keyboard shortcuts
