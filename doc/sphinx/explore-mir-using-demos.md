@@ -1,7 +1,3 @@
----
-discourse: 4911,5164,5603,6756,8037
----
-
 # Explore What Mir Is Capable of Using Mir Demos
 Mir comes with a set of demos in its [example
 directory](https://github.com/canonical/mir/tree/main/examples) to showcase its
