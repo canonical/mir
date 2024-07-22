@@ -83,7 +83,7 @@ virtual terminal or a greeter.
 To switch to a virtual terminal, you can press CTRL+ALT+F<Number>. You can then
 log in and run:
 ```sh 
-miral-shell
+miral-app
 ```
 
 ### Launching from a greeter
@@ -101,19 +101,15 @@ to use any Wayland compatible on-screen keyboard.
 You can install `ubuntu-frame-osk` by running:
 ```sh
 sudo snap install ubuntu-frame-osk
-```
-
-If you get errors later on related to connecting to a Wayland compositor, you should run:
-```sh
 sudo snap connect ubuntu-frame-osk:wayland
 ```
 
-To test your favourite on-screen keyboard, you can start `miral-shell` as follows:
+To test your favourite on-screen keyboard, you can start `miral-app` as follows:
 ```sh
-miral-shell --add-wayland-extensions all
+miral-app --add-wayland-extensions all
 ```
 
-Once `miral-shell` loads, you can start the terminal, then run:
+Once the shell loads, you can start the terminal, then run:
 ```sh
 ubuntu-frame-osk
 ```
@@ -125,7 +121,7 @@ You can easily run X11 applications inside Mir based compositors. For example,
 to enable x11 support in `miral-shell`, you can run the following command:
 
 ```sh
-miral-shell --enable-x11 true
+miral-app --enable-x11 true
 ```
 
 When it loads, you can start a terminal and run `xclock` or any other X11
@@ -139,10 +135,10 @@ Mir also supports remote desktops via the VNC protocol. To demo this, we'll use
 sudo apt install wayvnc
 ```
 
-Then, you can run `miral-shell` with all extensions like so:
-```sh
-miral-shell --add-wayland-extensions all
-```
+By default, Mir does not enable Wayland extensions that normal applications should not be using. For demonstration purposes we are going to override this and allow all supported extensions in the following demos.
+
+ ```sh
+miral-app --add-wayland-extensions all
 
 From inside, you can run the terminal and run `wayvnc`:
 ```sh
