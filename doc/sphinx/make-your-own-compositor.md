@@ -36,6 +36,7 @@ capabilities such as controlling multiple windows, minimizing and maximizing,
 handling input, etc... This is done with the help of MirAL (Mir Abstraction
 Layer) which gives you a high level interface to work with Mir!
 
+#### Dependencies
 To compile, you'll need to install `libmiral`, and
 `mir-graphics-drivers-desktop` which can be done on different distros as
 follows:
@@ -58,6 +59,7 @@ sudo apk add mir-dev
 ```
 </details>
 
+#### Building
 To compile this simple program, you can use this `CMakeLists.txt` file:
 ```cmake
 cmake_minimum_required(VERSION 3.5)
@@ -83,6 +85,7 @@ cmake -B build
 cmake --build build
 ```
 
+#### Running
 To run, you can run nested in an X or Wayland session, or from a virtual
 terminal, just like the demo applications in [Explore What Mir Is Capable of
 Using Mir Demos](explore-mir-using-demos.md). For example, if we were to run
