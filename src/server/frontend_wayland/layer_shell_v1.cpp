@@ -409,7 +409,10 @@ auto mf::LayerSurfaceV1::vert_padding(Anchors const& anchors, Margin const& marg
 
 auto mf::LayerSurfaceV1::unpadded_requested_size() const -> geom::Size
 {
-    auto size = requested_window_size().value_or(current_size());
+    // client_size can be zero sometimes, that is not an error. In fact,
+    // providing a value in case it is zero will cause applications to flicker
+    // between the default value and the proper value.
+    auto size = requested_window_size().value_or(client_size.committed());
     size.width -= horiz_padding(anchors.committed(), margin.committed());
     size.height -= vert_padding(anchors.committed(), margin.committed());
     return size;
@@ -449,28 +452,8 @@ void mf::LayerSurfaceV1::configure()
 {
     // TODO: Error if told to configure on an axis the window is not streatched along
 
-    OptionalSize configure_size{std::nullopt, std::nullopt};
     auto requested = unpadded_requested_size();
-
-    if (anchors.committed().left && anchors.committed().right)
-    {
-        configure_size.width = requested.width;
-    }
-
-    if (anchors.committed().bottom && anchors.committed().top)
-    {
-        configure_size.height = requested.height;
-    }
-
-    if (width_set_by_client)
-    {
-        configure_size.width = client_size.committed().width;
-    }
-
-    if (height_set_by_client)
-    {
-        configure_size.height = client_size.committed().height;
-    }
+    OptionalSize configure_size = {requested.width, requested.height};
 
     auto const serial = Resource::client->next_serial(nullptr);
     if (!inflight_configures.empty() && serial <= inflight_configures.back().first)
