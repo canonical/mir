@@ -131,4 +131,7 @@ wayvnc
 
 This should start `wayvnc` and make it listen to `localhost`. To connect, run
 your favourite VNC viewer and connect to `localhost`. You should see the exact
-same view in both Mir compositor and the VNC viewer.
+same view in both Mir compositor and the VNC viewer. For example:
+```sh
+gvncviewer localhost
+```
