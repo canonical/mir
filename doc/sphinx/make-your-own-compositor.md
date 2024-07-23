@@ -135,13 +135,11 @@ compositor.
  
 +    miral::ExternalClientLauncher external_client_launcher;
 +    
-+    auto run_startup_apps = [&](std::string const& apps) 
++    auto run_startup_apps = [&](std::vector<std::string> const& apps) 
 +    {
-+        for(auto i = std::begin(apps); i != std::end(apps);)
++        for(auto const& app : apps)
 +        {
-+            auto const j = std::find(i, std::end(apps), ':');
-+            external_client_launcher.launch(std::vector<std::string>{std::string{i, j}});
-+            if((i = j) != std::end(apps)) ++i;
++            external_client_launcher.launch(std::vector<std::string>{app}});
 +        }
 +    };
 +
@@ -150,14 +148,14 @@ compositor.
 -            set_window_management_policy<MinimalWindowManager>()
 +            set_window_management_policy<MinimalWindowManager>(),
 +            external_client_launcher,
-+            miral::ConfigurationOption{run_startup_apps, "startup-apps", "Colon separated list of startup apps", ""},
++            miral::ConfigurationOption{run_startup_apps, "startup-app", "App to run at startup (can be specified multiple times)"},
          });
  }
 ```
 
 Now, to start `kgx` and `bomber` on startup, we can do:
 ```sh
-./build/demo-mir-compositor --startup-apps kgx:bomber
+./build/demo-mir-compositor --startup-app kgx --startup-app bomber
 ```
 
 ### Keyboard shortcuts
