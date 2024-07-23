@@ -64,7 +64,7 @@ session. But Mir compositors can also run "natively" by launching them from a
 virtual terminal or a greeter.
 
 ### Launching from a virtual terminal
-To switch to a virtual terminal, you can press CTRL+ALT+F<Number>. You can then
+To switch to a virtual terminal, you can press CTRL+ALT+F\<Number\>. You can then
 log in and run:
 ```sh 
 miral-app
