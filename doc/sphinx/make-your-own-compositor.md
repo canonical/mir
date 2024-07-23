@@ -30,14 +30,14 @@ int main(int argc, char const* argv[])
 }
 ```
 
-You can se it's barely longer than the usual C++ "Hello, world!" example. This
-code should give you a minimal compositor with basic window management
+You can see it's barely longer than the usual C++ "Hello, world!" example. This
+code gives you a minimal compositor with basic window management
 capabilities such as controlling multiple windows, minimizing and maximizing,
 handling input, etc... This is done with the help of MirAL (Mir Abstraction
 Layer) which gives you a high level interface to work with Mir!
 
 To compile, you'll need to install `libmiral`, and
-`mir-graphics-drivers-desktop` which is can be done on different distros as
+`mir-graphics-drivers-desktop` which can be done on different distros as
 follows:
 
 <details>

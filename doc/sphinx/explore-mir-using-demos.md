@@ -20,7 +20,7 @@ sudo apt install mir-demos mir-graphics-drivers-desktop
 <summary> Installing Mir Demos on Fedora </summary>
 
 ```sh
-sudo dnf install mir-demos mir
+sudo dnf install mir-demos
 ```
 </details>
 
@@ -96,7 +96,7 @@ miral-app --add-wayland-extensions all
 
 Once the shell loads, you can start the terminal, then run:
 ```sh
-ubuntu-frame-osk
+ubuntu-frame-osk&
 ```
 And an on-screen keyboard should pop up!
 
@@ -110,7 +110,7 @@ miral-app --enable-x11 true
 ```
 
 When it loads, you can start a terminal and run `xclock` or any other X11
-application side to side with Wayland applications!
+application alongside Wayland applications!
 
 ## Remote Desktop
 Mir also supports remote desktops via the VNC protocol. To demo this, we'll use
