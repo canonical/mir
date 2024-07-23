@@ -40,25 +40,19 @@ To compile, you'll need to install `libmiral`, and
 `mir-graphics-drivers-desktop` which can be done on different distros as
 follows:
 
-<details>
-<summary> Installing Dependencies on Debian and its derivatives </summary>
-
+Installing dependencies on Debian and its derivatives:
 ```sh
 sudo apt install libmiral-dev mir-graphics-drivers-desktop
 ```
-</details>
 
 <details>
-<summary> Installing Dependencies on Fedora </summary>
+<summary> Installing Dependencies on Other Distros </summary>
 
+Installing dependencies on Fedora 
 ```sh
 sudo dnf install mir-devel libxkbcommon
 ```
-</details>
-
-<details>
-<summary> Installing Dependencies on Alpine </summary>
-
+Installing dependencies on Alpine 
 ```sh
 sudo apk add mir-dev
 ```

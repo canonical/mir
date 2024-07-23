@@ -8,25 +8,21 @@ abilities. This section will cover the installation and usage of these demos.
 Mir demos are available on Debian derivatives, Fedora, and Alpine. For distros
 that don't have prebuilt binaries, examples can be built from source.
 
-<details>
-<summary> Installing Mir Demos on Debian and its derivatives </summary>
+To install Mir demos on Debian and its derivatives:
 
 ```sh
 sudo apt install mir-demos mir-graphics-drivers-desktop
 ```
-</details>
 
 <details>
-<summary> Installing Mir Demos on Fedora </summary>
+<summary> Installing Demos on Other Distros </summary>
 
+Installing Mir demos on Fedora 
 ```sh
 sudo dnf install mir-demos
 ```
-</details>
 
-<details>
-<summary> Installing Mir Demos on Alpine </summary>
-
+ Installing Mir demos on Alpine 
 ```sh
 sudo apk add mir-demos mir
 ```
