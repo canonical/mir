@@ -294,7 +294,7 @@ auto mf::WindowWlSurfaceRole::pending_size() const -> geom::Size
 
 auto mf::WindowWlSurfaceRole::current_size() const -> geom::Size
 {
-    auto size = geom::Size{640, 480};
+    auto size = geom::Size{0, 0};
     if ((!committed_width_set_explicitly || !committed_height_set_explicitly) && surface)
     {
         if (auto const buffer_size = surface.value().buffer_size())

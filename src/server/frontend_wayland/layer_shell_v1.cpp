@@ -409,7 +409,17 @@ auto mf::LayerSurfaceV1::vert_padding(Anchors const& anchors, Margin const& marg
 
 auto mf::LayerSurfaceV1::unpadded_requested_size() const -> geom::Size
 {
-    auto size = requested_window_size().value_or(current_size());
+    auto fallback_size = current_size();
+    if(fallback_size.width.as_int() == 0) 
+    {
+        fallback_size.width = client_size.committed().width;
+    }
+    if(fallback_size.height.as_int() == 0) 
+    {
+        fallback_size.height = client_size.committed().height;
+    }
+
+    auto size = requested_window_size().value_or(fallback_size);
     size.width -= horiz_padding(anchors.committed(), margin.committed());
     size.height -= vert_padding(anchors.committed(), margin.committed());
     return size;
