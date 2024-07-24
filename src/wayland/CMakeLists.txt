@@ -38,6 +38,7 @@ mir_generate_protocol_wrapper(mirwayland "ext_" ext-session-lock-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "zmir_" mir-shell-unstable-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "z" xdg-decoration-unstable-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "wp_" viewporter.xml)
+mir_generate_protocol_wrapper(mirwayland "wp_" fractional-scale-v1.xml)
 
 target_link_libraries(mirwayland
   PUBLIC

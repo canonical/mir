@@ -64,6 +64,7 @@ set(
   session_credentials.cpp
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/buffer_stream.h
   wp_viewporter.cpp             wp_viewporter.h
+  fractional_scale_v1.cpp           fractional_scale_v1.h
 )
 
 add_custom_command(
