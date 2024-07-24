@@ -64,7 +64,6 @@ execute_process(COMMAND uname -m OUTPUT_VARIABLE MIR_ARCH)
 find_program(MIR_DPKG_GENSYMBOLS dpkg-gensymbols)
 if (CMAKE_COMPILER_IS_GNUCXX   AND  # clang generates slightly different symbols (but we don't care)
     MIR_USE_LD STREQUAL "ld"   AND  # lld on 22.04 generates slightly different symbols (but we don't care)
-    MIR_LINK_TIME_OPTIMIZATION AND  # g++ generates slightly different symbols without LTO (but we don't care)
     MIR_ARCH MATCHES 64        AND  # On 32bit platforms int64_t presents as `long long` (but we've `long`)
     MIR_DPKG_GENSYMBOLS)            # Using dpkg-gensymbols only makes sense on Debian based distros
 

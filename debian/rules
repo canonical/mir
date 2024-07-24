@@ -29,7 +29,6 @@ endif
 COMMON_CONFIGURE_OPTIONS = \
   -DCMAKE_INSTALL_LIBEXECDIR="lib/$(DEB_HOST_MULTIARCH)/mir"\
   -DMIR_BUILD_INTERPROCESS_TESTS=OFF\
-  -DMIR_LINK_TIME_OPTIMIZATION=ON\
 
 ifeq ($(filter ppc64el,$(DEB_HOST_ARCH)),ppc64el)
 	# Disable spurious error on GCC-13
@@ -38,16 +37,9 @@ ifeq ($(filter ppc64el,$(DEB_HOST_ARCH)),ppc64el)
 	endif
 endif
 
-# Disable LTO if optimizations are off
-ifeq ($(filter noopt,$(DEB_BUILD_OPTIONS)),noopt)
-	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=OFF
-	DEB_BUILD_MAINT_OPTIONS += optimize=-lto
-endif
-
 # Disable LTO on binutils 2.42.50.20240618
 # https://bugs.launchpad.net/ubuntu/+source/binutils/+bug/2070302
 ifneq ($(shell ld --version | grep '2.42.50.20240710$$'),)
-	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=OFF
 	DEB_BUILD_MAINT_OPTIONS += optimize=-lto
 endif
 

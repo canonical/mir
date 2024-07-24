@@ -55,6 +55,14 @@ execute: |
 
     SCHROOT_NAME="${RELEASE}-${DEB_BUILD_ARCH}"
 
+    if [ -n "${GCC_VERSION}" ]; then
+      MKSBUILD_OPTS+=(
+        --debootstrap-include=ccache,gcc-${GCC_VERSION},g++-${GCC_VERSION}
+      )
+      echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_C_COMPILER=gcc-${GCC_VERSION}" >> debian/opts.mk
+      echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_CXX_COMPILER=g++-${GCC_VERSION}" >> debian/opts.mk
+    fi
+
     [ "${PROPOSED}" == "true" ] || MKSBUILD_OPTS+=("--skip-proposed")
 
     if [[ "${SPREAD_VARIANT}" == *"ubuntu"* ]]; then
