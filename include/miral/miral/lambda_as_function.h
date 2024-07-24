@@ -18,6 +18,7 @@
 #define MIRAL_LAMBDA_AS_FUNCTION_H
 
 #include <functional>
+#include <type_traits>
 
 namespace miral
 {
@@ -33,9 +34,9 @@ struct FunctionType<Return (Lambda::*)(Arg...) const> { using type = std::functi
 }
 
 template<typename Lambda>
-auto lambda_as_function(Lambda&& lambda) -> typename detail::FunctionType<decltype(&Lambda::operator())>::type
+auto lambda_as_function(Lambda&& lambda) -> typename detail::FunctionType<decltype(&std::remove_reference<Lambda>::type::operator())>::type
 {
-    return typename detail::FunctionType<decltype(&Lambda::operator())>::type(std::forward<Lambda>(lambda));
+    return typename detail::FunctionType<decltype(&std::remove_reference<Lambda>::type::operator())>::type(std::forward<Lambda>(lambda));
 }
 }
 
