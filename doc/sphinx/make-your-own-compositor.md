@@ -9,6 +9,11 @@ libraries to build your own Wayland compositor. This section will guide you
 through the installation and basic usage of Mir. You'll be even more impressed
 by how easy it is to create a Wayland compositor using Mir!
 
+### Assumptions
+This tutorial assumes that:
+1. The reader is familiar with C++ and CMake.
+2. The reader has a C++ compiler with C++ 23 support.
+
 ### A barebones Mir compositor
 This section will cover the needed dependencies and how to install them, the
 minimum code needed for a Mir compositor, how to build this code, and finally
