@@ -10,7 +10,35 @@ through the installation and basic usage of Mir. You'll be even more impressed
 by how easy it is to create a Wayland compositor using Mir!
 
 ### A barebones Mir compositor
+This section will cover the needed dependencies and how to install them, the
+minimum code needed for a Mir compositor, how to build this code, and finally
+how to run your compositor.
 
+#### Dependencies
+Before you start coding, you'll need to install `libmiral`, and
+`mir-graphics-drivers-desktop` which can be done on different distros as
+follows:
+
+Installing dependencies on Debian and its derivatives:
+```sh
+sudo apt install libmiral-dev mir-graphics-drivers-desktop
+```
+
+<details>
+<summary> Installing Dependencies on Other Distros </summary>
+
+Installing dependencies on Fedora 
+```sh
+sudo dnf install mir-devel libxkbcommon
+```
+Installing dependencies on Alpine 
+```sh
+sudo apk add mir-dev
+```
+</details>
+
+
+#### Code
 The following code block is the bare minimum you need to run a Mir compositor:
 ```cpp
 #include <miral/runner.h>
@@ -34,29 +62,6 @@ This program creates a floating window manager with basic window management
 capabilities such as controlling multiple windows, minimizing and maximizing,
 and handling mouse input. This is done with the help of MirAL (Mir Abstraction
 Layer) which gives you a high level interface to work with Mir.
-
-#### Dependencies
-To compile, you'll need to install `libmiral`, and
-`mir-graphics-drivers-desktop` which can be done on different distros as
-follows:
-
-Installing dependencies on Debian and its derivatives:
-```sh
-sudo apt install libmiral-dev mir-graphics-drivers-desktop
-```
-
-<details>
-<summary> Installing Dependencies on Other Distros </summary>
-
-Installing dependencies on Fedora 
-```sh
-sudo dnf install mir-devel libxkbcommon
-```
-Installing dependencies on Alpine 
-```sh
-sudo apk add mir-dev
-```
-</details>
 
 #### Building
 To compile this simple program, you can use this `CMakeLists.txt` file:
