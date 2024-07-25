@@ -23,7 +23,7 @@ namespace mir
 {
 namespace frontend
 {
-auto create_fractional_scale_v1() -> std::shared_ptr<wayland::FractionalScaleManagerV1::Global>;
+auto create_fractional_scale_v1(wl_display* display) -> std::shared_ptr<wayland::FractionalScaleManagerV1::Global>;
 }
 }
 

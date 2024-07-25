@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "fractional_scale_v1.h"
 #include "mir/default_server_configuration.h"
 
 #include "mir/frontend/wayland.h"
@@ -217,9 +218,13 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
             return mf::create_mir_shell_v1(ctx.display);
         }),
     make_extension_builder<mw::XdgDecorationManagerV1>([](auto const& ctx)
-	{
-	    return mf::create_xdg_decoration_unstable_v1(ctx.display, ctx.decoration_strategy);
-	})
+        {
+            return mf::create_xdg_decoration_unstable_v1(ctx.display, ctx.decoration_strategy);
+        }),
+    make_extension_builder<mw::FractionalScaleManagerV1>([](auto const& ctx)
+        {
+            return mf::create_fractional_scale_v1(ctx.display);
+        }),
 };
 
 ExtensionBuilder const xwayland_builder {
