@@ -165,7 +165,11 @@ Now, to start `kgx` and `bomber` on startup, we can do:
 ## Keyboard shortcuts
 What if you accidentally close the only open terminal? Or you want to log out?
 Keyboard shortcuts are a good option that give you great flexibility without
-much coding effort. Let's see how they're implemented in Mir.
+much coding effort. Let's see how they're implemented in Mir. 
+
+We'll implement a couple of shortcuts:
+- CTRL + ALT + T / CTRL + ALT + SHIFT + T: To launch a terminal emulator
+- CTRL + ALT + Backspace: To stop the compositor
 
 Since the changes are bigger than usual, we'll split them into three parts:
 headers, code, and options.
