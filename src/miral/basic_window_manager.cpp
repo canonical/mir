@@ -2253,68 +2253,69 @@ auto offset_for(Size const& size, MirPlacementGravity rect_gravity) -> Displacem
     }
 }
 
-auto placement_strategy(
-    Size size,
-    MirPlacementGravity const win_gravity,
-    mir::geometry::
-    Rectangle const placement_bounds, Rectangle const absolute_aux_rect,
-    std::vector<MirPlacementGravity> const rect_gravities,
+auto child_placement_strategy(
+    Size child_size,
+    MirPlacementGravity const child_gravity,
+    Rectangle const anchor_rect,
+    std::vector<MirPlacementGravity> const anchor_gravity,
     Displacement const offset,
     MirPlacementHints const hints,
-    Rectangle const parent_rect) -> mir::optional_value<Rectangle>
+    Rectangle const parent_rect,
+    mir::geometry::
+    Rectangle const placement_bounds) -> mir::optional_value<Rectangle>
 {
     mir::optional_value<Rectangle> default_result;
 
-    for (auto const& rect_gravity : rect_gravities)
+    for (auto const& rect_gravity : anchor_gravity)
     {
         {
-            auto result = constrain_to(parent_rect, anchor_for(absolute_aux_rect, rect_gravity) + offset) +
-                offset_for(size, win_gravity);
+            auto result = constrain_to(parent_rect, anchor_for(anchor_rect, rect_gravity) + offset) +
+                offset_for(child_size, child_gravity);
 
-            if (placement_bounds.contains(Rectangle{result, size}))
-                return Rectangle{result, size};
+            if (placement_bounds.contains(Rectangle{result, child_size}))
+                return Rectangle{result, child_size};
 
             if (!default_result.is_set())
-                default_result = Rectangle{result, size};
+                default_result = Rectangle{result, child_size};
         }
 
         if (hints & mir_placement_hints_flip_x)
         {
-            auto result = constrain_to(parent_rect, anchor_for(absolute_aux_rect, flip_x(rect_gravity)) + flip_x(offset)) +
-                offset_for(size, flip_x(win_gravity));
+            auto result = constrain_to(parent_rect, anchor_for(anchor_rect, flip_x(rect_gravity)) + flip_x(offset)) +
+                offset_for(child_size, flip_x(child_gravity));
 
-            if (placement_bounds.contains(Rectangle{result, size}))
-                return Rectangle{result, size};
+            if (placement_bounds.contains(Rectangle{result, child_size}))
+                return Rectangle{result, child_size};
         }
 
         if (hints & mir_placement_hints_flip_y)
         {
-            auto result = constrain_to(parent_rect, anchor_for(absolute_aux_rect, flip_y(rect_gravity)) + flip_y(offset)) +
-                offset_for(size, flip_y(win_gravity));
+            auto result = constrain_to(parent_rect, anchor_for(anchor_rect, flip_y(rect_gravity)) + flip_y(offset)) +
+                offset_for(child_size, flip_y(child_gravity));
 
-            if (placement_bounds.contains(Rectangle{result, size}))
-                return Rectangle{result, size};
+            if (placement_bounds.contains(Rectangle{result, child_size}))
+                return Rectangle{result, child_size};
         }
 
         if (hints & mir_placement_hints_flip_x && hints & mir_placement_hints_flip_y)
         {
-            auto result = constrain_to(parent_rect, anchor_for(absolute_aux_rect, flip_x(flip_y(rect_gravity))) + flip_x(flip_y(offset))) +
-                offset_for(size, flip_x(flip_y(win_gravity)));
+            auto result = constrain_to(parent_rect, anchor_for(anchor_rect, flip_x(flip_y(rect_gravity))) + flip_x(flip_y(offset))) +
+                offset_for(child_size, flip_x(flip_y(child_gravity)));
 
-            if (placement_bounds.contains(Rectangle{result, size}))
-                return Rectangle{result, size};
+            if (placement_bounds.contains(Rectangle{result, child_size}))
+                return Rectangle{result, child_size};
         }
     }
 
-    for (auto const& rect_gravity : rect_gravities)
+    for (auto const& rect_gravity : anchor_gravity)
     {
-        auto result = constrain_to(parent_rect, anchor_for(absolute_aux_rect, rect_gravity) + offset) +
-            offset_for(size, win_gravity);
+        auto result = constrain_to(parent_rect, anchor_for(anchor_rect, rect_gravity) + offset) +
+            offset_for(child_size, child_gravity);
 
         if (hints & mir_placement_hints_slide_x)
         {
             auto const left_overhang  = result.x - placement_bounds.top_left.x;
-            auto const right_overhang = (result + as_displacement(size)).x - placement_bounds.top_right().x;
+            auto const right_overhang = (result + as_displacement(child_size)).x - placement_bounds.top_right().x;
 
             if (left_overhang < DeltaX{0})
                 result -= left_overhang;
@@ -2325,7 +2326,7 @@ auto placement_strategy(
         if (hints & mir_placement_hints_slide_y)
         {
             auto const top_overhang  = result.y - placement_bounds.top_left.y;
-            auto const bot_overhang = (result + as_displacement(size)).y - placement_bounds.bottom_left().y;
+            auto const bot_overhang = (result + as_displacement(child_size)).y - placement_bounds.bottom_left().y;
 
             if (top_overhang < DeltaY{0})
                 result -= top_overhang;
@@ -2333,51 +2334,51 @@ auto placement_strategy(
                 result -= bot_overhang;
         }
 
-        if (placement_bounds.contains(Rectangle{result, size}))
-            return Rectangle{result, size};
+        if (placement_bounds.contains(Rectangle{result, child_size}))
+            return Rectangle{result, child_size};
     }
 
-    for (auto const& rect_gravity : rect_gravities)
+    for (auto const& rect_gravity : anchor_gravity)
     {
-        auto result = constrain_to(parent_rect, anchor_for(absolute_aux_rect, rect_gravity) + offset) +
-            offset_for(size, win_gravity);
+        auto result = constrain_to(parent_rect, anchor_for(anchor_rect, rect_gravity) + offset) +
+            offset_for(child_size, child_gravity);
 
         if (hints & mir_placement_hints_resize_x)
         {
             auto const left_overhang  = result.x - placement_bounds.top_left.x;
-            auto const right_overhang = (result + as_displacement(size)).x - placement_bounds.top_right().x;
+            auto const right_overhang = (result + as_displacement(child_size)).x - placement_bounds.top_right().x;
 
             if (left_overhang < DeltaX{0})
             {
                 result -= left_overhang;
-                size = Size{size.width + left_overhang, size.height};
+                child_size = Size{child_size.width + left_overhang, child_size.height};
             }
 
             if (right_overhang > DeltaX{0})
             {
-                size = Size{size.width - right_overhang, size.height};
+                child_size = Size{child_size.width - right_overhang, child_size.height};
             }
         }
 
         if (hints & mir_placement_hints_resize_y)
         {
             auto const top_overhang  = result.y - placement_bounds.top_left.y;
-            auto const bot_overhang = (result + as_displacement(size)).y - placement_bounds.bottom_left().y;
+            auto const bot_overhang = (result + as_displacement(child_size)).y - placement_bounds.bottom_left().y;
 
             if (top_overhang < DeltaY{0})
             {
                 result -= top_overhang;
-                size = Size{size.width, size.height + top_overhang};
+                child_size = Size{child_size.width, child_size.height + top_overhang};
             }
 
             if (bot_overhang > DeltaY{0})
             {
-                size = Size{size.width, size.height - bot_overhang};
+                child_size = Size{child_size.width, child_size.height - bot_overhang};
             }
         }
 
-        if (placement_bounds.contains(Rectangle{result, size}))
-            return Rectangle{result, size};
+        if (placement_bounds.contains(Rectangle{result, child_size}))
+            return Rectangle{result, child_size};
     }
 
     return default_result;
@@ -2387,7 +2388,7 @@ auto placement_strategy(
 auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& parent, WindowSpecification const& parameters, Size size)
 -> mir::optional_value<Rectangle>
 {
-    auto const absolute_aux_rect{[&]
+    auto const anchor_rect{[&]
     {
         Rectangle temp = parameters.aux_rect().value();
         temp.top_left = temp.top_left + as_displacement(parent.top_left);
@@ -2396,7 +2397,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
 
     auto const placement_bounds{[&]
     {
-        auto const probable_display_area = display_area_for(absolute_aux_rect);
+        auto const probable_display_area = display_area_for(anchor_rect);
         return probable_display_area ? probable_display_area.value()->area : parent;
     }()};
 
@@ -2404,12 +2405,12 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
         size = parameters.size().value();
 
     auto const hints = parameters.placement_hints().value();
-    auto const win_gravity = parameters.window_placement_gravity().value();
+    auto const gravity = parameters.window_placement_gravity().value();
 
     auto offset = parameters.aux_rect_placement_offset().is_set() ?
                   parameters.aux_rect_placement_offset().value() : Displacement{};
 
-    std::vector<MirPlacementGravity> rect_gravities{parameters.aux_rect_placement_gravity().value()};
+    std::vector<MirPlacementGravity> anchor_gravity{parameters.aux_rect_placement_gravity().value()};
 
     return child_placement_strategy(size, gravity, anchor_rect, anchor_gravity, offset, hints, parent, placement_bounds);
 }
