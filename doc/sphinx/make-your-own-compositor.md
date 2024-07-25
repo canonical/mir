@@ -9,17 +9,17 @@ libraries to build your own Wayland compositor. This section will guide you
 through the installation and basic usage of Mir. You'll be even more impressed
 by how easy it is to create a Wayland compositor using Mir!
 
-### Assumptions
+## Assumptions
 This tutorial assumes that:
 1. The reader is familiar with C++ and CMake.
 2. The reader has a C++ compiler with C++ 23 support.
 
-### A barebones Mir compositor
+## A barebones Mir compositor
 This section will cover the needed dependencies and how to install them, the
 minimum code needed for a Mir compositor, how to build this code, and finally
 how to run your compositor.
 
-#### Dependencies
+### Dependencies
 Before you start coding, you'll need to install `libmiral`, and
 `mir-graphics-drivers-desktop` which can be done on different distros as
 follows:
@@ -43,7 +43,7 @@ sudo apk add mir-dev
 </details>
 
 
-#### Code
+### Code
 The following code block is the bare minimum you need to run a Mir compositor:
 ```cpp
 #include <miral/runner.h>
@@ -68,7 +68,7 @@ capabilities such as controlling multiple windows, minimizing and maximizing,
 and handling mouse input. This is done with the help of MirAL (Mir Abstraction
 Layer) which gives you a high level interface to work with Mir.
 
-#### Building
+### Building
 To compile this simple program, you can use this `CMakeLists.txt` file:
 ```cmake
 cmake_minimum_required(VERSION 3.5)
@@ -94,7 +94,7 @@ cmake -B build
 cmake --build build
 ```
 
-#### Running
+### Running
 To run, you can run nested in an X or Wayland session, or from a virtual
 terminal, just like the demo applications in [Explore What Mir Is Capable of
 Using Mir Demos](explore-mir-using-demos.md). For example, if we were to run
@@ -110,7 +110,7 @@ WAYLAND_DISPLAY=wayland-99 bomber
 ```
 You're free to replace `bomber` with any other Wayland compatible application.
 
-### Startup Applications
+## Startup Applications
 When starting a compositor or display server, you usually want to start a few
 other applications. For example you might want to start a background viewer, a
 terminal, and a status bar. Doing so manually like what we've do would be
@@ -164,7 +164,7 @@ Now, to start `kgx` and `bomber` on startup, we can do:
 ./build/demo-mir-compositor --startup-app kgx --startup-app bomber
 ```
 
-### Keyboard shortcuts
+## Keyboard shortcuts
 What if you accidentally close the only open terminal? Or you want to log out?
 Keyboard shortcuts are a good option that give you great flexibility without
 much coding effort. Let's see how they're implemented in Mir.
@@ -172,7 +172,7 @@ much coding effort. Let's see how they're implemented in Mir.
 Since the changes are bigger than usual, we'll split them into three parts:
 headers, code, and options.
 
-#### Header changes
+### Header changes
 Here we just include `append_event_filter.h` to be able to filter and react to
 certain events and `toolkit_event` to get definitions for event types and
 functions. We import everything from `miral::toolkit` to make the code a bit
@@ -191,7 +191,7 @@ easier to read.
 +using namespace miral::toolkit;
 ```
  
-#### Code changes
+### Code changes
 This big block of code can be broken down into two parts: the filtering of
 Mir events until we obtain a keyboard key down event, and the handling of the
 combinations we want.
@@ -240,7 +240,7 @@ combinations we want.
 +        };
 ```
 
-#### Options changes
+### Options changes
 Here we simply add an event filter that uses the code we specified in the previous subsection.
 
 ```diff
