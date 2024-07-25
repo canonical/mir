@@ -3,9 +3,9 @@ discourse: 4911,5164,5603,6756,8037
 ---
 
 # Write Your First Wayland Compositor
-This tutorial will guide you through writing a simple compositor: the installation of dependencies, building it, and running it. You'll be impressed by how easy it is to create a Wayland compositor using Mir!
-
-As you continue to develop it your compositor has access to all the features of Mir demonstrated in [the demo tutorial](explore-mir-using-demos).
+This tutorial will guide you through writing a simple compositor: the
+installation of dependencies, building it, and running it. You'll be impressed
+by how easy it is to create a Wayland compositor using Mir!
 
 ## Assumptions
 This tutorial assumes that:
@@ -94,9 +94,9 @@ cmake --build build
 
 ### Running
 To run, you can run nested in an X or Wayland session, or from a virtual
-terminal, just like the demo applications in [Explore What Mir Is Capable of
-Using Mir Demos](explore-mir-using-demos.md). For example, if we were to run
-inside an existing Wayland session, we'd run the following command:
+terminal, just like the demo applications in [Learn What Mir Can
+Do](explore-mir-using-demos.md). For example, if we were to run inside an
+existing Wayland session, we'd run the following command:
 ```sh
 WAYLAND_DISPLAY=wayland-99 ./build/demo-mir-compositor 
 ```
@@ -108,152 +108,8 @@ WAYLAND_DISPLAY=wayland-99 bomber
 ```
 You're free to replace `bomber` with any other Wayland compatible application.
 
-## Startup Applications
-When starting a compositor or display server, you usually want to start a few
-other applications. For example you might want to start a background viewer, a
-terminal, and a status bar. Doing so manually like what we've do would be
-immensely annoying, so let's add an option for users to pass a list of startup
-apps!
+## Next steps
+Now that you have your base compositor working, feel free to check out these guides on how to further develop your compositor:
 
-It's up to you how you want your command line interface will be. Let's say
-we'll take a list of colon separated program names, then we'll launch each of
-those individually. 
-
-We'll start by creating an instance of `miral::ExternalClientLauncher`, this
-will provide a way to launch programs by name. Then, we'll create a function
-that will take the colon separated string and launch each application
-separately. Finally, we just need to pass the external client launcher and our
-configuration option to {func}`run_with` so that they're registered with the
-compositor.
-
-```diff
- #include <miral/runner.h>
-+#include <miral/configuration_option.h>
-+#include <miral/external_client.h>
- #include <miral/minimal_window_manager.h>
- #include <miral/set_window_management_policy.h>
- 
-@@ -9,8 +10,22 @@ int main(int argc, char const* argv[])
- {
-     MirRunner runner{argc, argv};
- 
-+    miral::ExternalClientLauncher external_client_launcher;
-+    
-+    auto run_startup_apps = [&](std::vector<std::string> const& apps) 
-+    {
-+        for(auto const& app : apps)
-+        {
-+            external_client_launcher.launch(std::vector<std::string>{app}});
-+        }
-+    };
-+
-     return runner.run_with(
-         {
--            set_window_management_policy<MinimalWindowManager>()
-+            set_window_management_policy<MinimalWindowManager>(),
-+            external_client_launcher,
-+            miral::ConfigurationOption{run_startup_apps, "startup-app", "App to run at startup (can be specified multiple times)"},
-         });
- }
-```
-
-Now, to start `kgx` and `bomber` on startup, we can do:
-```sh
-./build/demo-mir-compositor --startup-app kgx --startup-app bomber
-```
-
-## Keyboard shortcuts
-What if you accidentally close the only open terminal? Or you want to log out?
-Keyboard shortcuts are a good option that give you great flexibility without
-much coding effort. Let's see how they're implemented in Mir. 
-
-We'll implement a couple of shortcuts:
-- CTRL + ALT + T / CTRL + ALT + SHIFT + T: To launch a terminal emulator
-- CTRL + ALT + Backspace: To stop the compositor
-
-Since the changes are bigger than usual, we'll split them into three parts:
-headers, code, and options.
-
-### Header changes
-Here we just include `append_event_filter.h` to be able to filter and react to
-certain events and `toolkit_event` to get definitions for event types and
-functions. We import everything from `miral::toolkit` to make the code a bit
-easier to read.
-```diff
-@@ -1,10 +1,15 @@
- #include <miral/runner.h>
-+#include <miral/append_event_filter.h>
- #include <miral/configuration_option.h>
- #include <miral/external_client.h>
- #include <miral/minimal_window_manager.h>
- #include <miral/set_window_management_policy.h>
-+#include <miral/toolkit_event.h>
- 
- using namespace miral;
-+using namespace miral::toolkit;
-```
- 
-### Code changes
-This big block of code can be broken down into two parts: the filtering of
-Mir events until we obtain a keyboard key down event, and the handling of the
-combinations we want.
-
-```diff
-+    std::string terminal_cmd{"kgx"};
-+
-+    auto const builtin_keybinds = [&](MirEvent const* event)
-+        {
-+            // Skip non-input events
-+            if (mir_event_get_type(event) != mir_event_type_input)
-+                return false;
-+
-+            // Skip non-key input events
-+            MirInputEvent const* input_event = mir_event_get_input_event(event);
-+            if (mir_input_event_get_type(input_event) != mir_input_event_type_key)
-+                return false;
-+
-+            // Skip anything but down presses
-+            MirKeyboardEvent const* kev = mir_input_event_get_keyboard_event(input_event);
-+            if (mir_keyboard_event_action(kev) != mir_keyboard_action_down)
-+                return false;
-+
-+            // CTRL + ALT must be pressed
-+            MirInputEventModifiers mods = mir_keyboard_event_modifiers(kev);
-+            if (!(mods & mir_input_event_modifier_alt) || !(mods & mir_input_event_modifier_ctrl))
-+                return false;
-+
-+            switch (mir_keyboard_event_keysym(kev))
-+            {
-+            // Exit program
-+            case XKB_KEY_BackSpace:
-+                runner.stop();
-+                return true;
-+
-+            // Launch terminal
-+            case XKB_KEY_t:
-+            case XKB_KEY_T:
-+                external_client_launcher.launch({terminal_cmd});
-+                return false;
-+
-+            // Do nothing
-+            default:
-+                return false;
-+            };
-+        };
-```
-
-### Options changes
-Here we simply add an event filter that uses the code we specified in the previous subsection.
-
-```diff
-     return runner.run_with(
-         {
-             set_window_management_policy<MinimalWindowManager>(),
-             external_client_launcher,
-             miral::ConfigurationOption{run_startup_apps, "startup-apps", "Colon separated list of startup apps", ""},
-+            miral::AppendEventFilter{builtin_keybinds}
-         });
- }
-```
-
-Now, even if you closed your startup programs by accident, you can use your compositor. No need to restart!
+- [How to specify start up applications](how-to/how-to-specify-startup-apps.md)
+- [How to handle user input](how-to/how-to-handle-user-input.md)
