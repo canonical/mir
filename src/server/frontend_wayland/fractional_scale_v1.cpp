@@ -15,12 +15,6 @@
  */
 
 #include "fractional_scale_v1.h"
-#include "fractional-scale-v1_wrapper.h"
-#include "mir/frontend/surface.h"
-#include "mir/shell/surface_specification.h"
-#include "wl_surface.h"
-#include <wayland-server.h>
-#include <wlcs/display_server.h>
 
 namespace mir 
 {
