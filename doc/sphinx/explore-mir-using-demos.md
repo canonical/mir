@@ -1,5 +1,7 @@
-# Explore What Mir Is Capable of Using Mir Demos
-This tutorial will guide you through the things that Mir can do using some example programs that showcase Mir's capabilities. Mir makes it easy to write compositors as shown in the [developer tutorial](make-your-own-compositor).
+# Learn What Mir Can Do
+Mir comes with a set of demos in the [example
+directory](https://github.com/canonical/mir/tree/main/examples) to showcase its
+abilities. This section will cover the installation and usage of these demos.
 
 
 ## Installation
@@ -15,12 +17,12 @@ sudo apt install mir-demos mir-graphics-drivers-desktop
 <details>
 <summary> Installing Demos on Other Distros </summary>
 
-Installing Mir demos on Fedora 
+Installing Mir demos on Fedora
 ```sh
 sudo dnf install mir-demos
 ```
 
- Installing Mir demos on Alpine 
+ Installing Mir demos on Alpine
 ```sh
 sudo apk add mir-demos mir
 ```
@@ -60,7 +62,7 @@ virtual terminal or a greeter.
 ### Launching from a virtual terminal
 To switch to a virtual terminal, you can press CTRL+ALT+F\<Number\>. You can then
 log in and run:
-```sh 
+```sh
 miral-app
 ```
 

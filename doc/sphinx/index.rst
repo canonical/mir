@@ -20,11 +20,11 @@ In this documentation
 
 ..  grid:: 1 1 2 2
 
-   ..  grid-item:: :doc:`Explore What Mir Is Capable of Using Mir Demos <explore-mir-using-demos>`
+   ..  grid-item:: :doc:`Learn What Mir Can Do <explore-mir-using-demos>`
 
        **Start here**: An introduction to what Mir can do using example demos
 
-   ..  grid-item:: :doc:`Using Mir Libraries to Build Your Own Wayland Compositor <make-your-own-compositor>`
+   ..  grid-item:: :doc:`Write Your First Wayland Compositor <make-your-own-compositor>`
 
        **Start here**: An introduction to building Wayland compositors with Mir
 
