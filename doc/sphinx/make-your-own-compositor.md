@@ -13,7 +13,7 @@ create a Wayland compositor using Mir!
 ## Assumptions
 This tutorial assumes that:
 1. The reader is familiar with C++ and CMake.
-2. The reader has a C++ compiler with C++ 23 support.
+2. The reader has cmake and a C++ compiler installed
 
 ## A barebones Mir compositor
 This section will cover the needed dependencies and how to install them, the
