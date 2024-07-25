@@ -30,11 +30,10 @@ int main(int argc, char const* argv[])
 }
 ```
 
-You can see it's barely longer than the usual C++ "Hello, world!" example. This
-code gives you a minimal compositor with basic window management
+This program creates a floating window manager with basic window management
 capabilities such as controlling multiple windows, minimizing and maximizing,
-handling input, etc... This is done with the help of MirAL (Mir Abstraction
-Layer) which gives you a high level interface to work with Mir!
+and handling mouse input. This is done with the help of MirAL (Mir Abstraction
+Layer) which gives you a high level interface to work with Mir.
 
 #### Dependencies
 To compile, you'll need to install `libmiral`, and

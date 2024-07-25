@@ -1,5 +1,5 @@
 # Explore What Mir Is Capable of Using Mir Demos
-Mir comes with a set of demos in its [example
+Mir comes with a set of demos in the [example
 directory](https://github.com/canonical/mir/tree/main/examples) to showcase its
 abilities. This section will cover the installation and usage of these demos.
 
