@@ -1,7 +1,9 @@
 # Learn What Mir Can Do
-Mir comes with a set of demos in the [example
-directory](https://github.com/canonical/mir/tree/main/examples) to showcase its
-abilities. This section will cover the installation and usage of these demos.
+This tutorial will guide you through using some example programs that showcase
+Mir's capabilities in different setups. You will see how Mir supports a range
+of capabilities that can be used by Mir based compositors. Mir makes it easy to
+write compositors as shown in the [developer
+tutorial](make-your-own-compositor).
 
 
 ## Installation
