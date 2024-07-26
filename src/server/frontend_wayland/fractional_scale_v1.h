@@ -18,12 +18,32 @@
 #define MIR_FRONTEND_FRACTIONAL_SCALE_V1_H
 
 #include "fractional-scale-v1_wrapper.h"
+#include "output_manager.h"
+#include <unordered_set>
 
 namespace mir
 {
 namespace frontend
 {
-auto create_fractional_scale_v1(wl_display* display) -> std::shared_ptr<wayland::FractionalScaleManagerV1::Global>;
+
+auto create_fractional_scale_v1(wl_display *display)
+    -> std::shared_ptr<wayland::FractionalScaleManagerV1::Global>;
+
+class FractionalScaleV1 : public wayland::FractionalScaleV1
+{
+public:
+  FractionalScaleV1(struct wl_resource *resource);
+
+  void output_entered(OutputInstance* output);
+  void output_left(OutputInstance* output);
+
+private:
+  // Houses a set of outputs the surface occupies
+  std::unordered_set<OutputInstance*> surface_outputs;
+
+  void recompute_scale();
+};
+
 }
 }
 

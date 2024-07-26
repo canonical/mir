@@ -16,6 +16,7 @@
 
 #include "wl_surface.h"
 
+#include "fractional_scale_v1.h"
 #include "viewporter_wrapper.h"
 #include "wayland_utils.h"
 #include "wl_surface_role.h"
@@ -45,6 +46,7 @@
 #include <boost/throw_exception.hpp>
 #include <cmath>
 #include <limits>
+#include <optional>
 #include <wayland-server-protocol.h>
 
 namespace mf = mir::frontend;
@@ -525,6 +527,17 @@ auto mf::NullWlSurfaceRole::scene_surface() const -> std::optional<std::shared_p
 {
     return std::nullopt;
 }
+
+void mf::WlSurface::set_fractional_scale(mir::frontend::FractionalScaleV1* fractional_scale)
+{
+    this->fractional_scale = fractional_scale;
+}
+
+auto mf::WlSurface::get_fractional_scale() const -> FractionalScaleV1*
+{
+    return fractional_scale;
+}
+
 void mf::NullWlSurfaceRole::refresh_surface_data_now() {}
 void mf::NullWlSurfaceRole::commit(WlSurfaceState const& state) { surface->commit(state); }
 void mf::NullWlSurfaceRole::surface_destroyed() {}

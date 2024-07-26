@@ -16,10 +16,17 @@
 
 #include "fractional_scale_v1.h"
 
-namespace mir 
+#include "mir/wayland/protocol_error.h"
+#include "wl_surface.h"
+
+#include <boost/throw_exception.hpp>
+#include <memory>
+
+namespace mir
 {
 namespace frontend
 {
+
 class FractionalScaleManagerV1: public wayland::FractionalScaleManagerV1
 {
     public:
@@ -38,17 +45,12 @@ class FractionalScaleManagerV1: public wayland::FractionalScaleManagerV1
         virtual void get_fractional_scale(struct wl_resource* id, struct wl_resource* surface) override;
 };
 
-class FractionalScaleV1: public wayland::FractionalScaleV1
-{
-    public:
-        FractionalScaleV1(struct wl_resource* resource);
-};
 }
 }
 
 namespace mf = mir::frontend;
 
-auto mf::create_fractional_scale_v1(wl_display* display) 
+auto mf::create_fractional_scale_v1(wl_display* display)
     -> std::shared_ptr<wayland::FractionalScaleManagerV1::Global>
 {
     return std::make_shared<FractionalScaleManagerV1::Global>(display);
@@ -69,14 +71,56 @@ void mf::FractionalScaleManagerV1::Global::bind(wl_resource* new_wp_fractional_s
     new FractionalScaleManagerV1{new_wp_fractional_scale_manager_v1};
 }
 
-void mf::FractionalScaleManagerV1::get_fractional_scale(struct wl_resource* id, struct wl_resource* /*surface*/)
+void mf::FractionalScaleManagerV1::get_fractional_scale(struct wl_resource* id, struct wl_resource* surface)
 {
-    const auto scale = 1.0;
-    auto fractional_scale = new FractionalScaleV1{id};
-    fractional_scale->send_preferred_scale_event(120 * scale);
+    auto surf = WlSurface::from(surface);
+    if (surf->get_fractional_scale() != nullptr)
+    {
+        BOOST_THROW_EXCEPTION(mir::wayland::ProtocolError(
+            resource, Error::fractional_scale_exists, "Surface already has a fractional scale component attached"));
+    }
+
+    surf->set_fractional_scale(new FractionalScaleV1{id});
 }
 
 mf::FractionalScaleV1::FractionalScaleV1(struct wl_resource* resource)
     : mir::wayland::FractionalScaleV1{resource, Version<1>{}}
 {
+}
+
+void mf::FractionalScaleV1::output_entered(OutputInstance* output)
+{
+    surface_outputs.insert(output);
+    recompute_scale();
+}
+
+void mf::FractionalScaleV1::output_left(OutputInstance* output)
+{
+    surface_outputs.erase(output);
+    recompute_scale();
+}
+
+void mf::FractionalScaleV1::recompute_scale()
+{
+    // Should only take an output into account if a "significant" (25%+) area of our
+    // surface resides in that output?
+
+    auto const get_scale = [](auto const* output)
+    {
+        return output->global.value().current_config().scale;
+    };
+
+    auto max_element = std::max_element(
+        surface_outputs.cbegin(),
+        surface_outputs.cend(),
+        [get_scale](OutputInstance const* output1, OutputInstance const* output2)
+        {
+            return get_scale(output1) < get_scale(output2);
+        });
+
+    if (max_element != surface_outputs.end())
+    {
+        auto const preferred_scale = get_scale(*max_element);
+        send_preferred_scale_event(120 * preferred_scale);
+    }
 }
