@@ -20,5 +20,5 @@ how-to-enable-graphics-core22-on-a-device
 how-to-test-mir-for-a-release
 how-to-update-symbols-map
 how-to-specify-startup-apps
-how-to-handle-user-input
+how-to-handle-keyboard-input
 ```

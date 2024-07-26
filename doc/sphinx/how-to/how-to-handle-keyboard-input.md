@@ -1,11 +1,12 @@
-# How to Handle User Input
+# How to Handle Keyboard Input
 
-**Note**: This builds on top of [Write Your First Wayland
-Compositor](../write-your-first-wayland-compositor.md)
+This how-to guide will show you the basics of handling keyboard input in Mir
+based compositors.
 
-What if you accidentally close the only open terminal? Or you want to log out?
-Keyboard shortcuts are a good option that give you great flexibility without
-much coding effort. Let's see how they're implemented in Mir.
+Handling keyboard input allows for great flexibility in your compositor. For
+example, it's widely known that ALT + F4 closes the currently open application.
+Some window managers take this a step further by allowing all navigation
+between windows to be done via the keyboard. 
 
 We'll implement a couple of shortcuts:
 - CTRL + ALT + T / CTRL + ALT + SHIFT + T: To launch a terminal emulator
@@ -14,9 +15,12 @@ We'll implement a couple of shortcuts:
 For ease of reading (and copying), we'll split the changes into three parts:
 headers, code, and options.
 
+**Note**: This builds on top of [Write Your First Wayland
+Compositor](../write-your-first-wayland-compositor.md)
+
 ### Header changes
-Here we just include `append_event_filter.h` to be able to filter and react to
-certain events and `toolkit_event` to get definitions for event types and
+Here we just include `append_event_filter.h` for the declaration of
+`AppendEventFilter` and `toolkit_event` to get definitions for event types and
 functions. We import everything from `miral::toolkit` to make the code a bit
 easier to read.
 ```diff
@@ -32,12 +36,15 @@ easier to read.
 ```
 
 ### Code changes
-This big block of code can be broken down into two parts: the filtering of
-Mir events until we obtain a keyboard key down event, and the handling of the
-combinations we want.
+This big block of code can be broken down into three parts: 
+1. Declaring the name of the terminal we'll use and an external client launcher
+   that we'll use to launch it. 
+2. Filtering Mir events until we obtain a keyboard key down event. 
+3. Handling the combinations we want.
 
 ```diff
 +    std::string terminal_cmd{"kgx"};
++    miral::ExternalClientLauncher external_client_launcher;
 +
 +    auto const builtin_keybinds = [&](MirEvent const* event)
 +        {
@@ -81,17 +88,20 @@ combinations we want.
 ```
 
 ### Options changes
-Here we simply add an event filter that uses the code we specified in the
-previous subsection.
+Here we simply add the external client launcher we declared in the previous
+subsection, and an event filter that uses the code we specified in the previous
+subsection.
 
 ```diff
      return runner.run_with(
          {
              set_window_management_policy<MinimalWindowManager>(),
++            external_client_launcher,
 +            miral::AppendEventFilter{builtin_keybinds}
          });
  }
 ```
 
-Now, even if you closed your startup programs by accident, you can still use
-your compositor. No need to restart!
+This can be easily extended to read keybinds from config files or control
+various other aspects of the compositor. The only limit here is your
+imagination.
