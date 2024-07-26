@@ -21,4 +21,5 @@ how-to-test-mir-for-a-release
 how-to-update-symbols-map
 how-to-specify-startup-apps
 how-to-handle-keyboard-input
+how-to-control-decorations
 ```

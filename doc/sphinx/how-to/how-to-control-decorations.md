@@ -1,4 +1,4 @@
-# Decorations
+# How to Control Decorations
 A big part of writing your own compositor is to be able to customize its looks,
 behaviour, and effects to your own liking. One way of customizing and unifying
 the looks of applications is server side decorations. MirAL allows you to
