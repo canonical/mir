@@ -20,7 +20,7 @@ In this documentation
 
 ..  grid:: 1 1 2 2
 
-   ..  grid-item:: :doc:`Learn What Mir Can Do <explore-mir-using-demos>`
+   ..  grid-item:: :doc:`Learn What Mir Can Do <learn-what-mir-can-do>`
 
        **Start here**: An introduction to what Mir can do using example demos
 
@@ -61,7 +61,7 @@ Mir is a member of the Ubuntu family. It’s an open source project that warmly 
    :hidden:
    :maxdepth: 2
 
-   explore-mir-using-demos
+   learn-what-mir-can-do
    write-your-first-wayland-compositor
    how-to/index
    explanation/index

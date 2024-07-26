@@ -95,7 +95,7 @@ cmake --build build
 ### Running
 To run, you can run nested in an X or Wayland session, or from a virtual
 terminal, just like the demo applications in [Learn What Mir Can
-Do](explore-mir-using-demos.md). For example, if we were to run inside an
+Do](learn-what-mir-can-do.md). For example, if we were to run inside an
 existing Wayland session, we'd run the following command:
 ```sh
 WAYLAND_DISPLAY=wayland-99 ./build/demo-mir-compositor 
