@@ -2412,6 +2412,9 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
 
     std::vector<MirPlacementGravity> anchor_gravity{parameters.aux_rect_placement_gravity().value()};
 
+    if (hints & mir_placement_hints_antipodes)
+        anchor_gravity.push_back(antipodes(parameters.aux_rect_placement_gravity().value()));
+
     return child_placement_strategy(size, gravity, anchor_rect, anchor_gravity, offset, hints, parent, placement_bounds);
 }
 
