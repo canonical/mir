@@ -5,8 +5,9 @@ other applications. For example you might want to start a background viewer, a
 terminal, and a status bar. Doing so manually like what we've do would be
 immensely annoying, so let's add an option for users to specify startup apps.
 
-**Note**: This builds on top of [Write Your First Wayland
-Compositor](../write-your-first-wayland-compositor.md).
+**Note**: [Write Your First Wayland
+Compositor](../write-your-first-wayland-compositor.md) is a prerequisite for
+this how-to.
 
 ---
 

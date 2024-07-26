@@ -15,8 +15,9 @@ We'll implement a couple of shortcuts:
 For ease of reading (and copying), we'll split the changes into three parts:
 headers, code, and options.
 
-**Note**: This builds on top of [Write Your First Wayland
-Compositor](../write-your-first-wayland-compositor.md)
+**Note**: [Write Your First Wayland
+Compositor](../write-your-first-wayland-compositor.md) is a prerequisite for
+this how-to.
 
 ### Header changes
 Here we just include `append_event_filter.h` for the declaration of
