@@ -7,9 +7,9 @@ These how-to guides cover the key aspects of working with Mir.
 - [Using checkbox-mir](how-to-use-checkbox-mir): validating your environment using [checkbox-mir](https://snapcraft.io/checkbox-mir)
 - [Calibrating a touchscreen device](how-to-calibrate-a-touchscreen-device): creating and using a calibration matrix using [the libinput snap](https://snapcraft.io/libinput)
 - [Enabling graphics-core22 on a device](how-to-enable-graphics-core22-on-a-device): creating a `graphics-core22` provider snap for a new board
-- [How to specify start up applications](how-to/how-to-specify-startup-apps.md)
-- [How to handle user input](how-to/how-to-handle-keyboard-input.md)
-- [How to control decorations](how-to/how-to-control-decorations.md)
+- [How to specify start up applications](..//how-to/how-to-specify-startup-apps.md)
+- [How to handle user input](../how-to/how-to-handle-keyboard-input.md)
+- [How to control decorations](../how-to/how-to-control-decorations.md)
 
 ```{toctree}
 :hidden:

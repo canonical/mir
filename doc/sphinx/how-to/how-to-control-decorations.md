@@ -5,7 +5,7 @@ the looks of applications is server side decorations. MirAL allows you to
 customize how the server deals with decoration requests using
 {class}`miral::Decorations`.
 
-**Note**: [How to Specify Startup Apps](../how-to-specify-startup-apps) is a
+**Note**: [How to Specify Startup Apps](how-to-specify-startup-apps) is a
 prerequisite for this how-to.
 
 ---
