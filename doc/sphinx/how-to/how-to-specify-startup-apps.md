@@ -1,7 +1,7 @@
 # How to Specify Startup Applications
 
 **Note**: This builds on top of [Write Your First Wayland
-Compositor](../make-your-own-compositor.md).
+Compositor](../write-your-first-wayland-compositor.md).
 
 When starting a compositor or display server, you usually want to start a few
 other applications. For example you might want to start a background viewer, a

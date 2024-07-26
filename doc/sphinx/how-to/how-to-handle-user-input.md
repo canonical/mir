@@ -1,7 +1,7 @@
 # How to Handle User Input
 
 **Note**: This builds on top of [Write Your First Wayland
-Compositor](../make-your-own-compositor.md).
+Compositor](../write-your-first-wayland-compositor.md)
 
 What if you accidentally close the only open terminal? Or you want to log out?
 Keyboard shortcuts are a good option that give you great flexibility without
