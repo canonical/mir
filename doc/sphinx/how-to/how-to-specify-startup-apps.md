@@ -1,19 +1,21 @@
 # How to Specify Startup Applications
 
-**Note**: This builds on top of [Write Your First Wayland
-Compositor](../write-your-first-wayland-compositor.md).
-
 When starting a compositor or display server, you usually want to start a few
 other applications. For example you might want to start a background viewer, a
 terminal, and a status bar. Doing so manually like what we've do would be
 immensely annoying, so let's add an option for users to specify startup apps.
 
+**Note**: This builds on top of [Write Your First Wayland
+Compositor](../write-your-first-wayland-compositor.md).
+
+---
+
 We'll start by creating an instance of `miral::ExternalClientLauncher`, this
 will provide a way to launch programs by name. Then, we'll create a function
-that will take the colon separated string and launch each application
-separately. Finally, we just need to pass the external client launcher and our
-configuration option to {func}`run_with` so that they're registered with the
-compositor.
+that will take the list of startup apps and launch them. Finally, we just need
+to pass the external client launcher and our configuration option to
+{func}`run_with` so that they're registered with the compositor.
+
 
 ```diff
  #include <miral/runner.h>
