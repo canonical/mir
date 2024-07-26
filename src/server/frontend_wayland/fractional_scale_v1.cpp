@@ -102,9 +102,6 @@ void mf::FractionalScaleV1::output_left(OutputInstance* output)
 
 void mf::FractionalScaleV1::recompute_scale()
 {
-    // Should only take an output into account if a "significant" (25%+) area of our
-    // surface resides in that output?
-
     auto const get_scale = [](auto const* output)
     {
         return output->global.value().current_config().scale;
