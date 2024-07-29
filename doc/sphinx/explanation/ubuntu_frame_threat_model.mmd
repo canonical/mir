@@ -1,0 +1,32 @@
+%%{ init: { 'flowchart': { 'curve': 'monotoneY' } } }%%
+flowchart
+    shell((Mir-based Shell))
+    vnc_server(VNC Server)
+    vnc_client(VNC Client)
+    osk(On-screen Keyboard)
+    snapd(Snapd)
+    operator_app(Operator App)
+    user(User)
+    display(Display)
+    app(App)
+
+    subgraph snap [Snap]
+        vnc_server--input-->shell
+        shell--screen content-->vnc_server
+
+        osk--content/input-->shell
+        shell--input-->osk
+    end
+    
+    shell--contents/configuration--->display
+    snapd--configuration-->shell
+    display--visuals-->user
+    operator_app--help message-->shell
+    user--input events-->shell
+    display--properties-->shell
+    vnc_server<--vnc-->vnc_client
+    app--window contents-->shell
+    shell--input/window management-->app
+
+    classDef boundary fill:none,stroke-dasharray: 5 5
+    snap:::boundary
