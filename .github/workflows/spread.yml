@@ -121,6 +121,6 @@ jobs:
 
     - if: ${{ failure() && runner.debug }}
       name: Setup upterm session
-      uses: lhotari/action-upterm@v1
+      uses: mxschmitt/action-tmate@v3
       with:
         limit-access-to-actor: true
