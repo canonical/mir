@@ -524,13 +524,13 @@ void mf::WindowWlSurfaceRole::handle_enter_output(graphics::DisplayConfiguration
             auto const& config{global->current_config()};
             if (config.id == id)
             {
+                if (auto fractional_scale = surface.value().get_fractional_scale())
+                    fractional_scale->output_entered(config);
+
                 global->for_each_output_bound_by(
                     client,
                     [&](OutputInstance* instance)
                     {
-                        if(auto fractional_scale = surface.value().get_fractional_scale())
-                            fractional_scale->output_entered(instance);
-
                         surface.value().send_enter_event(instance->resource);
                         event_sent = true;
                     });
@@ -552,13 +552,13 @@ void mf::WindowWlSurfaceRole::handle_leave_output(graphics::DisplayConfiguration
             auto const& config{global->current_config()};
             if (config.id == id)
             {
+                if(auto fractional_scale = surface.value().get_fractional_scale())
+                    fractional_scale->output_left(config);
+
                 global->for_each_output_bound_by(
                     client,
                     [&](OutputInstance* instance)
                     {
-                        if(auto fractional_scale = surface.value().get_fractional_scale())
-                            fractional_scale->output_left(instance);
-
                         surface.value().send_leave_event(instance->resource);
                     });
             }

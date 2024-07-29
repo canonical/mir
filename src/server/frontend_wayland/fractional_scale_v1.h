@@ -18,8 +18,9 @@
 #define MIR_FRONTEND_FRACTIONAL_SCALE_V1_H
 
 #include "fractional-scale-v1_wrapper.h"
-#include "output_manager.h"
-#include <unordered_set>
+#include "mir/graphics/display_configuration.h"
+#include <set>
+#include <utility>
 
 namespace mir
 {
@@ -34,12 +35,14 @@ class FractionalScaleV1 : public wayland::FractionalScaleV1
 public:
   FractionalScaleV1(struct wl_resource *resource);
 
-  void output_entered(OutputInstance* output);
-  void output_left(OutputInstance* output);
+
+  void output_entered(mir::graphics::DisplayConfigurationOutput const& config);
+  void output_left(mir::graphics::DisplayConfigurationOutput const& config);
 
 private:
   // Houses a set of outputs the surface occupies
-  std::unordered_set<OutputInstance*> surface_outputs;
+  using Id = mir::graphics::DisplayConfigurationOutputId;
+  std::set<std::pair<Id, float>> surface_outputs;
 
   void recompute_scale();
 };

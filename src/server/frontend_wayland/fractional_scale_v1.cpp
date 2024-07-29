@@ -16,6 +16,7 @@
 
 #include "fractional_scale_v1.h"
 
+#include "mir/graphics/display_configuration.h"
 #include "mir/wayland/protocol_error.h"
 #include "wl_surface.h"
 
@@ -84,40 +85,36 @@ void mf::FractionalScaleManagerV1::get_fractional_scale(struct wl_resource* id, 
 }
 
 mf::FractionalScaleV1::FractionalScaleV1(struct wl_resource* resource)
-    : mir::wayland::FractionalScaleV1{resource, Version<1>{}}
+    : mir::wayland::FractionalScaleV1{resource, Version<1>{}},
+        surface_outputs()
 {
 }
 
-void mf::FractionalScaleV1::output_entered(OutputInstance* output)
+void mf::FractionalScaleV1::output_entered(mir::graphics::DisplayConfigurationOutput const& config)
 {
-    surface_outputs.insert(output);
+    surface_outputs.insert({config.id, config.scale});
     recompute_scale();
 }
 
-void mf::FractionalScaleV1::output_left(OutputInstance* output)
+void mf::FractionalScaleV1::output_left(mir::graphics::DisplayConfigurationOutput const& config)
 {
-    surface_outputs.erase(output);
+    surface_outputs.erase({config.id, config.scale});
     recompute_scale();
 }
 
 void mf::FractionalScaleV1::recompute_scale()
 {
-    auto const get_scale = [](auto const* output)
-    {
-        return output->global.value().current_config().scale;
-    };
-
     auto max_element = std::max_element(
         surface_outputs.cbegin(),
         surface_outputs.cend(),
-        [get_scale](OutputInstance const* output1, OutputInstance const* output2)
+        [](std::pair<Id, float> const& output1, std::pair<Id, float> const& output2)
         {
-            return get_scale(output1) < get_scale(output2);
+            return output1.second < output2.second;
         });
 
     if (max_element != surface_outputs.end())
     {
-        auto const preferred_scale = get_scale(*max_element);
+        auto const preferred_scale = max_element->second;
         send_preferred_scale_event(120 * preferred_scale);
     }
 }
