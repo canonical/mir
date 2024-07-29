@@ -30,8 +30,7 @@ public:
     IoctlVTSwitcher(mir::Fd vt_fd);
 
     void switch_to(
-        int vt_number,
-        std::function<void(std::exception const&)> error_handler) override;
+        int vt_number) override;
 
 private:
     mir::Fd const vt_fd;

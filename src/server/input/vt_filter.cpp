@@ -45,15 +45,7 @@ bool mir::input::VTFilter::handle(MirEvent const& event)
         [this](int vtno)
         {
             switcher->switch_to(
-                vtno,
-                [](std::exception const&)
-                {
-                    mir::log(
-                        mir::logging::Severity::error,
-                        "VT switch key handler",
-                        std::current_exception(),
-                        "Failed to switch to requested VT");
-                });
+                vtno);
         };
 
     if (mir_keyboard_event_action(keyboard_event) == mir_keyboard_action_down &&

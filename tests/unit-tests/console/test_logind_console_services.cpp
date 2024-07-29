@@ -1668,40 +1668,6 @@ TEST_F(LogindConsoleServices, creates_vt_switcher_when_vt_switching_possible)
 
 //TODO: Add test for create_vt_switcher() failing when Logind *can't* switch VTs
 
-TEST_F(LogindConsoleServices, vt_switcher_calls_error_handler_on_error)
-{
-    ensure_mock_logind();
-    add_seat("seat0");
-    add_session(
-        "s1",
-        "seat0",
-        1000,
-        "ubuntu",
-        true,
-        "");
-
-    add_switch_to_to_seat(
-        "/org/freedesktop/login1/seat/seat0",
-        "raise dbus.exceptions.DBusException('No such file or directory (2)', name='System.Error.ENOENT')");
-
-    auto console = mir::LogindConsoleServices::create(the_main_loop(), the_session_lock());
-    auto switcher = console->create_vt_switcher();
-
-    auto error_received = std::make_shared<mt::Signal>();
-
-    switcher->switch_to(
-        7,
-        [error_received](std::exception const& err)
-        {
-            EXPECT_THAT(dynamic_cast<std::runtime_error const*>(&err), NotNull());
-            EXPECT_THAT(err.what(), ContainsRegex(".*No such file or directory.*"));
-            error_received->raise();
-        });
-    EXPECT_TRUE(error_received->wait_for(30s));
-
-    stop_mainloop();
-}
-
 TEST_F(LogindConsoleServices, vt_switcher_calls_switch_to_with_correct_argument)
 {
     ensure_mock_logind();
@@ -1726,8 +1692,7 @@ TEST_F(LogindConsoleServices, vt_switcher_calls_switch_to_with_correct_argument)
         "SwitchTo");
 
     switcher->switch_to(
-        3,
-        [](auto){});
+        3);
 
     ASSERT_THAT(switch_to_future.wait_for(30s), Eq(std::future_status::ready));
     auto switch_to_call = switch_to_future.get();
