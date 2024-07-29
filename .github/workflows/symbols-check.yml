@@ -22,14 +22,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # work around https://github.com/actions/runner-images/issues/8846
-          sudo rm /etc/apt/sources.list.d/microsoft-prod.list
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
           sudo add-apt-repository --update "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy main"
-          sudo apt install libclang1-19
-          sudo apt install python3-clang-19
-          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-19/lib/libclang-19.so.1" >> $GITHUB_ENV
-          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-19/lib" >> $GITHUB_ENV
+          sudo apt install libclang1-20
+          sudo apt install python3-clang-20
+          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-20/lib/libclang-20.so.1" >> $GITHUB_ENV
+          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-20/lib" >> $GITHUB_ENV
           sudo apt-get build-dep ./
 
       - name: Configure
@@ -44,3 +42,9 @@ jobs:
           cmake --build build --target check-mirserver-symbols-map || RET=$?
           cmake --build build --target check-mircommon-symbols-map || RET=$?
           exit $RET
+
+      - if: ${{ failure() && runner.debug }}
+        name: Setup upterm session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true

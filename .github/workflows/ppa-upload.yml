@@ -56,3 +56,9 @@ jobs:
       env:
         RELEASE: ${{ matrix.release }}
       run: tools/ppa-upload.sh ${{ github.workspace }}/../lp_credentials
+
+    - if: ${{ failure() && runner.debug }}
+      name: Setup upterm session
+      uses: mxschmitt/action-tmate@v3
+      with:
+        limit-access-to-actor: true
