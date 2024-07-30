@@ -30,11 +30,11 @@ sudo apt install libmiral-dev mir-graphics-drivers-desktop
 <details>
 <summary> Installing Dependencies on Other Distros </summary>
 
-Installing dependencies on Fedora 
+Installing dependencies on Fedora
 ```sh
 sudo dnf install mir-devel libxkbcommon
 ```
-Installing dependencies on Alpine 
+Installing dependencies on Alpine
 ```sh
 sudo apk add mir-dev
 ```
@@ -98,7 +98,7 @@ terminal, just like the demo applications in [Learn What Mir Can
 Do](learn-what-mir-can-do.md). For example, if we were to run inside an
 existing Wayland session, we'd run the following command:
 ```sh
-WAYLAND_DISPLAY=wayland-99 ./build/demo-mir-compositor 
+WAYLAND_DISPLAY=wayland-99 ./build/demo-mir-compositor
 ```
 You'll see a window housing the compositor with a black void filling it. To
 fill this void with some content, you can run the following from another
@@ -113,4 +113,4 @@ Now that you have your base compositor working, feel free to check out these gui
 
 - [How to specify start up applications](how-to/how-to-specify-startup-apps.md)
 - [How to handle user input](how-to/how-to-handle-keyboard-input.md)
-- [How to control decorations](how-to/how-to-control-decorations.md)
+- [How to Control Compositor Responses to Client Decoration Requests](/doc/sphinx/how-to/how-to-control-compositor-responses-to-client-decoration-requests.md)

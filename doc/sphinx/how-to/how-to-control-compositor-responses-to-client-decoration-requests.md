@@ -1,4 +1,4 @@
-# How to Control Decorations
+# How to Control Compositor Responses to Client Decoration Requests
 This how-to will show you how to specify the behavior of the compositor
 regarding client window decoration requests.
 
