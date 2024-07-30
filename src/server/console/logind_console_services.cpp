@@ -873,18 +873,17 @@ public:
     }
 
     void switch_to(
-        int vt_number,
-        std::function<void(std::exception const&)> error_handler) override
+        int vt_number) override
     {
         ml->run_with_context_as_thread_default(
-            [this, vt_number, error_handler = std::move(error_handler)]()
+            [this, vt_number]()
             {
                 logind_seat_call_switch_to(
                     seat_proxy.get(),
                     vt_number,
                     nullptr,
                     &LogindVTSwitcher::complete_switch_to,
-                    new std::function<void(std::exception const&)>{error_handler});
+                    nullptr);
             }); // No need to wait for this to run; drop the std::future on the floor
     }
 
@@ -892,10 +891,8 @@ private:
     static void complete_switch_to(
         GObject* seat_proxy,
         GAsyncResult* result,
-        gpointer userdata)
+        gpointer)
     {
-        auto const error_handler = std::unique_ptr<std::function<void(std::exception const&)>>{
-            static_cast<std::function<void(std::exception const&)>*>(userdata)};
         GErrorPtr error;
 
         if (!logind_seat_call_switch_to_finish(
@@ -903,15 +900,7 @@ private:
            result,
            &error))
         {
-            auto const err = boost::enable_error_info(
-                std::runtime_error{
-                    std::string{"Logind request to switch vt failed: "} +
-                    error->message})
-                        << boost::throw_file(__FILE__)
-                        << boost::throw_function(__PRETTY_FUNCTION__)
-                        << boost::throw_line(__LINE__);
-
-            (*error_handler)(err);
+            mir::log_error("%s:%d: Logind request to switch vt failed: %s", __FILE__, __LINE__, error->message);
         }
     }
 

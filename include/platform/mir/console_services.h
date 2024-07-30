@@ -99,11 +99,8 @@ public:
      * \note    It is *not* an error to call this with the number of the active VT.
      *          This will be a no-op.
      * \param vt_number     [in] Number of the VT to switch to
-     * \param error_handler [in] Functor to call should an asynchronous error occur.
      */
-    virtual void switch_to(
-        int vt_number,
-        std::function<void(std::exception const&)> error_handler) = 0;
+    virtual void switch_to(int vt_number) = 0;
 
 protected:
     VTSwitcher() = default;

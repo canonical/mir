@@ -15,11 +15,10 @@
  */
 
 #include "ioctl_vt_switcher.h"
-
-#include <boost/exception/enable_error_info.hpp>
-#include <boost/exception/info.hpp>
+#include "mir/log.h"
 
 #include <sys/ioctl.h>
+#include <string.h>
 #include <sys/vt.h>
 
 mir::console::IoctlVTSwitcher::IoctlVTSwitcher(mir::Fd vt_fd)
@@ -28,19 +27,10 @@ mir::console::IoctlVTSwitcher::IoctlVTSwitcher(mir::Fd vt_fd)
 }
 
 void mir::console::IoctlVTSwitcher::switch_to(
-    int vt_number,
-    std::function<void(std::exception const&)> error_handler)
+    int vt_number)
 {
     if (ioctl(vt_fd, VT_ACTIVATE, vt_number) == -1)
     {
-        auto const error = boost::enable_error_info(
-            std::system_error{
-                errno,
-                std::system_category(),
-                "Kernel request to change VT switch failed"})
-                << boost::throw_line(__LINE__)
-                << boost::throw_function(__PRETTY_FUNCTION__)
-                << boost::throw_file(__FILE__);
-        error_handler(error);
+        mir::log_error("%s:%d: Kernel request to change VT switch failed: %s", __FILE__, __LINE__, strerror(errno));
     }
 }
