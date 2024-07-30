@@ -473,7 +473,7 @@ auto mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
 
     auto it = find_if(devices.cbegin(),
                       devices.cend(),
-                      [&device](std::unique_ptr<RegisteredDevice> const& item)
+                      [&device](auto const& item)
                       {
                           return item->device_matches(device);
                       });
@@ -520,10 +520,15 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
     auto pos = remove_if(
         begin(devices),
         end(devices),
-        [&](std::unique_ptr<RegisteredDevice> const& item)
+        [&](auto const& item)
         {
             if (item->device_matches(device))
             {
+                if (auto const observer = std::dynamic_pointer_cast<LedObserver>(device))
+                {
+                    led_observer_registrar->unregister_interest(*observer, item->id());
+                }
+
                 store_device_config(lock, *item->handle);
                 auto seat = item->seat;
                 if (seat)
@@ -541,11 +546,6 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
     {
         log_error("Input device %s not found", device->get_device_info().name.c_str());
         BOOST_THROW_EXCEPTION(std::logic_error("Input device not managed by server"));
-    }
-
-    if (auto const observer = std::dynamic_pointer_cast<LedObserver>(device))
-    {
-        led_observer_registrar->unregister_interest(*observer, (*pos)->id());
     }
 
     devices.erase(pos, end(devices));
