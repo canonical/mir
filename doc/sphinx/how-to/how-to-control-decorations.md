@@ -1,8 +1,10 @@
 # How to Control Decorations
-A big part of writing your own compositor is to be able to customize its looks,
-behaviour, and effects to your own liking. One way of customizing and unifying
-the looks of applications is server side decorations. MirAL allows you to
-customize how the server deals with decoration requests using
+This how-to will show you how to specify the behavior of the compositor
+regarding client window decoration requests.
+
+In general, clients can ask the compositor to choose for them, or request
+server or client side decorations from the compositor excplicilty. MirAL allows
+you to customize how the server deals with these requests using
 {class}`miral::Decorations`.
 
 **Note**: [How to Specify Startup Apps](how-to-specify-startup-apps) is a
