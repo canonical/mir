@@ -37,9 +37,9 @@ ifeq ($(filter ppc64el,$(DEB_HOST_ARCH)),ppc64el)
 	endif
 endif
 
-# Disable LTO on binutils 2.42.50.20240618
+# Disable LTO on broken binutils
 # https://bugs.launchpad.net/ubuntu/+source/binutils/+bug/2070302
-ifneq ($(shell ld --version | grep '2.42.50.20240710$$'),)
+ifneq ($(shell ld --version | grep '2.42.50.20240720$$'),)
 	DEB_BUILD_MAINT_OPTIONS += optimize=-lto
 endif
 
