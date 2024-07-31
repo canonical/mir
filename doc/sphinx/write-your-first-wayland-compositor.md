@@ -113,4 +113,4 @@ Now that you have your base compositor working, feel free to check out these gui
 
 - [How to specify start up applications](how-to/how-to-specify-startup-apps.md)
 - [How to handle user input](how-to/how-to-handle-keyboard-input.md)
-- [How to Control Compositor Responses to Client Decoration Requests](/doc/sphinx/how-to/how-to-control-compositor-responses-to-client-decoration-requests.md)
+- [How to Control Compositor Responses to Client Decoration Requests](how-to/how-to-control-compositor-responses-to-client-decoration-requests.md)

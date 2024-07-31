@@ -1,11 +1,7 @@
 # How to Control Compositor Responses to Client Decoration Requests
-This how-to will show you how to specify the behavior of the compositor
-regarding client window decoration requests.
+Clients can ask the compositor to use server or client side decorations, or request the compositor to choose for them. {class}`miral::Decorations` allows you to customize how the server deals with these requests.
 
-In general, clients can ask the compositor to choose for them, or request
-server or client side decorations from the compositor excplicilty. MirAL allows
-you to customize how the server deals with these requests using
-{class}`miral::Decorations`.
+This how-to will show you how to specify the behavior of the compositor regarding these requests.
 
 **Note**: [How to Specify Startup Apps](how-to-specify-startup-apps) is a
 prerequisite for this how-to.
