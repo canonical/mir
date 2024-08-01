@@ -61,6 +61,7 @@ struct mir_test_framework::WindowManagementTestHarness::Self : public ms::Surfac
 
     void client_surface_close_requested(ms::Surface const* surf) override
     {
+        std::lock_guard lock{mutex};
         auto it = std::find_if(known_surfaces.begin(), known_surfaces.end(), [surf](std::shared_ptr<ms::Surface> const& s)
         {
             return s.get() == surf;
@@ -83,6 +84,7 @@ struct mir_test_framework::WindowManagementTestHarness::Self : public ms::Surfac
     void entered_output(ms::Surface const*, mg::DisplayConfigurationOutputId const&) override {}
     void left_output(ms::Surface const*, mg::DisplayConfigurationOutputId const&) override {}
 
+    std::mutex mutable mutex;
     std::vector<std::shared_ptr<mc::BufferStream>> streams;
     std::vector<std::shared_ptr<ms::Surface>> known_surfaces;
     std::vector<std::shared_ptr<ms::Surface>> surfaces_to_destroy;
@@ -106,7 +108,10 @@ void mir_test_framework::WindowManagementTestHarness::SetUp()
 
 
     auto fake_display = std::make_unique<mtd::FakeDisplay>(get_output_rectangles());
-    self->display = fake_display.get();
+    {
+        std::lock_guard lock{self->mutex};
+        self->display = fake_display.get();
+    }
     preset_display(std::move(fake_display));
 
     mir_test_framework::HeadlessInProcessServer::SetUp();
@@ -132,7 +137,11 @@ auto mir_test_framework::WindowManagementTestHarness::create_window(
     mir::shell::SurfaceSpecification spec) -> miral::Window
 {
     auto stream = std::make_shared<mir::test::doubles::StubBufferStream>();
-    self->streams.push_back(stream);
+
+    {
+        std::lock_guard lock{self->mutex};
+        self->streams.push_back(stream);
+    }
     spec.streams = std::vector<msh::StreamSpecification>();
     spec.streams.value().push_back(msh::StreamSpecification{
         stream,
@@ -158,6 +167,7 @@ auto mir_test_framework::WindowManagementTestHarness::create_window(
 void mir_test_framework::WindowManagementTestHarness::publish_event(MirEvent const& event)
 {
     server.the_shell()->handle(event);
+    std::lock_guard lock{self->mutex};
     for (auto const& surface : self->surfaces_to_destroy)
     {
         server.the_shell()->destroy_surface(surface->session().lock(), surface);
