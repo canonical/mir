@@ -30,22 +30,11 @@ namespace mtf=mir_test_framework;
 
 namespace
 {
-
-bool KilledByInvalidMemoryAccess(int exit_status)
-{
-    return testing::KilledBySignal(SIGSEGV)(exit_status) ||
-           testing::KilledBySignal(SIGBUS)(exit_status) ||
-           testing::KilledBySignal(SIGABRT)(exit_status) ||
-           // It seems that valgrind kills us with SIGKILL
-           testing::KilledBySignal(SIGKILL)(exit_status);
-}
-
 class UdevWrapperTest : public ::testing::Test
 {
 public:
     mtf::UdevEnvironment udev_environment;
 };
-
 }
 
 TEST_F(UdevWrapperTest, IteratesOverCorrectNumberOfDevices)
@@ -314,29 +303,6 @@ TEST_F(UdevWrapperTest, EnumeratorAddMatchSysnameIncludesCorrectDevices)
     }
 }
 
-typedef UdevWrapperTest UdevWrapperDeathTest;
-
-TEST_F(UdevWrapperDeathTest, DereferencingEndReturnsInvalidObject)
-{
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-    udev_environment.add_device("drm", "control64D", NULL, {}, {});
-    udev_environment.add_device("drm", "card1", NULL, {}, {});
-
-    mir::udev::Enumerator devices(std::make_shared<mir::udev::Context>());
-
-    devices.scan_devices();
-
-    MIR_EXPECT_EXIT((*devices.end()).subsystem(), KilledByInvalidMemoryAccess, "");
-
-    auto iter = devices.begin();
-
-    while(iter != devices.end())
-    {
-        iter++;
-    }
-    MIR_EXPECT_EXIT((*iter).subsystem(), KilledByInvalidMemoryAccess, "");
-}
-
 TEST_F(UdevWrapperTest, MemberDereferenceWorks)
 {
     udev_environment.add_device("drm", "control64D", NULL, {}, {});
@@ -349,27 +315,6 @@ TEST_F(UdevWrapperTest, MemberDereferenceWorks)
 
     EXPECT_STREQ("drm", iter->subsystem());
     EXPECT_STREQ("drm", iter->subsystem());
-}
-
-TEST_F(UdevWrapperDeathTest, MemberDereferenceOfEndDies)
-{
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-    udev_environment.add_device("drm", "control64D", NULL, {}, {});
-    udev_environment.add_device("drm", "card1", NULL, {}, {});
-
-    mir::udev::Enumerator devices(std::make_shared<mir::udev::Context>());
-
-    devices.scan_devices();
-
-    MIR_EXPECT_EXIT(devices.end()->subsystem(), KilledByInvalidMemoryAccess, "");
-
-    auto iter = devices.begin();
-
-    while(iter != devices.end())
-    {
-        iter++;
-    }
-    MIR_EXPECT_EXIT(iter->subsystem(), KilledByInvalidMemoryAccess, "");
 }
 
 TEST_F(UdevWrapperTest, UdevMonitorDoesNotTriggerBeforeEnabling)

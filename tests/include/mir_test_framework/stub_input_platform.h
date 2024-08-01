@@ -36,11 +36,22 @@ class InputDevice;
 }
 namespace mir_test_framework
 {
+
+class DeviceStore
+{
+public:
+    virtual ~DeviceStore() = default;
+    virtual void foreach_device(std::function<void(std::weak_ptr<mir::input::InputDevice> const&)> const&) = 0;
+    virtual void clear() = 0;
+};
+
 class FakeInputDevice;
 class StubInputPlatform : public mir::input::Platform
 {
 public:
-    explicit StubInputPlatform(std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry);
+    explicit StubInputPlatform(
+        std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry,
+        std::shared_ptr<DeviceStore> const& device_store);
     ~StubInputPlatform();
 
     std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() override;
@@ -49,18 +60,16 @@ public:
     void pause_for_config() override;
     void continue_after_config() override;
 
-    static void add(std::shared_ptr<mir::input::InputDevice> const& dev);
-    static void remove(std::shared_ptr<mir::input::InputDevice> const& dev);
-    static void register_dispatchable(std::shared_ptr<mir::dispatch::Dispatchable> const& queue);
-    static void unregister_dispatchable(std::shared_ptr<mir::dispatch::Dispatchable> const& queue);
+    void add(std::shared_ptr<mir::input::InputDevice> const& dev);
+    void remove(std::shared_ptr<mir::input::InputDevice> const& dev);
+    void register_dispatchable(std::shared_ptr<mir::dispatch::Dispatchable> const& queue);
+    void unregister_dispatchable(std::shared_ptr<mir::dispatch::Dispatchable> const& queue);
 
 private:
     std::shared_ptr<mir::dispatch::MultiplexingDispatchable> const platform_dispatchable;
     std::shared_ptr<mir::dispatch::ActionQueue> const platform_queue;
     std::shared_ptr<mir::input::InputDeviceRegistry> const registry;
-    static std::atomic<StubInputPlatform*> stub_input_platform;
-    static std::vector<std::weak_ptr<mir::input::InputDevice>> device_store;
-    static std::mutex device_store_guard;
+    std::shared_ptr<DeviceStore> const device_store;
 };
 
 }

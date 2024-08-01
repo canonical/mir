@@ -37,8 +37,8 @@ environment:
     GCC_VERSION:
     GCC_VERSION/ubuntu_devel: 14
     DEB_BUILD_EXTRA:
-    DEB_BUILD_EXTRA/ubsan,ubsan_clang: nostrip
-    DEB_BUILD_EXTRA/asan,asan_clang,tsan,tsan_clang: nostrip nocheck
+    DEB_BUILD_EXTRA/asan,asan_clang,ubsan,ubsan_clang: nostrip optimize=-lto
+    DEB_BUILD_EXTRA/tsan,tsan_clang: nostrip nocheck
     DEBOOTSTRAP_OPTS:
     DEBOOTSTRAP_OPTS/debian_sid,ubuntu_devel: --no-merged-usr
     CTEST_OUTPUT_ON_FAILURE: 1

@@ -42,7 +42,11 @@ set_target_properties(
 # Umockdev uses glib, which uses the deprecated "register" allocation specifier
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 
-set(UMOCK_UNIT_TEST_SOURCES test_udev_wrapper.cpp)
+if(CMAKE_BUILD_TYPE STREQUAL "AddressSanitizer")
+  set(UMOCK_UNIT_TEST_SOURCES test_udev_wrapper.cpp)
+else()
+  set(UMOCK_UNIT_TEST_SOURCES test_udev_wrapper.cpp test_udev_wrapper_asan_skip.cpp)
+endif()
 
 set(
   UNIT_TEST_SOURCES
@@ -133,7 +137,14 @@ set_property(
   SOURCE input/test_logind_console_services.cpp input/test_input_platform_probing.cpp
   SOURCE input/evdev/test_evdev_input_platform.cpp
   SOURCE graphics/test_platform_prober.cpp
+  SOURCE test_udev_wrapper_asan_skip.cpp
   PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
+
+if(NOT CMAKE_BUILD_TYPE STREQUAL "AddressSanitizer")
+  set_property(
+    SOURCE test_udev_wrapper_asan_skip.cpp
+    PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
+endif()
 
 if ("test_touchspot_controller.cpp:array-bounds" IN_LIST MIR_COMPILER_QUIRKS)
   set_property(
@@ -183,7 +194,6 @@ target_link_libraries(
 mir_add_wrapped_executable(mir_umock_unit_tests NOINSTALL
   ${UMOCK_UNIT_TEST_SOURCES}
   $<TARGET_OBJECTS:mir-umock-test-framework>
-  $<TARGET_OBJECTS:mir-test-input-framework>
   ${MIR_SERVER_OBJECTS}
   ${MIR_PLATFORM_OBJECTS}
 )

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_test_framework/stub_input_platform.h"
+#include "mir_test_framework/stub_input_platform_accessor.h"
 #include "fake_input_device_impl.h"
 #include "mir/module_properties.h"
 #include "mir/assert_module_entry_point.h"
@@ -33,7 +33,7 @@ mir::UniqueModulePtr<mi::Platform> create_input_platform(
     std::shared_ptr<mi::InputReport> const& /*report*/)
 {
     mir::assert_entry_point_signature<mi::CreatePlatform>(&create_input_platform);
-    return mir::make_module_ptr<mtf::StubInputPlatform>(input_device_registry);
+    return mtf::StubInputPlatformAccessor::get(input_device_registry);
 }
 
 void add_input_platform_options(

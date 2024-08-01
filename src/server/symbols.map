@@ -1344,12 +1344,12 @@ local: *;
 MIR_SERVER_INTERNAL_2.18 {
 global:
   extern "C++" {
-    mir::DefaultServerConfiguration::the_led_observer_registrar*;
     mir::DecorationStrategy::?DecorationStrategy*;
     mir::DecorationStrategy::DecorationStrategy*;
     mir::DecorationStrategy::operator*;
     mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     mir::DefaultServerConfiguration::the_decoration_strategy*;
+    mir::DefaultServerConfiguration::the_led_observer_registrar*;
     mir::Server::set_the_decoration_strategy*;
     mir::Server::the_decoration_strategy*;
     mir::Server::the_idle_handler*;
@@ -1367,8 +1367,17 @@ global:
     mir::input::receiver::XKBMapperRegistrar::set_keymap_for_device*;
     mir::input::receiver::XKBMapperRegistrar::unregister_interest*;
     mir::input::receiver::XKBMapperRegistrar::xkb_modifiers*;
+    mir::scene::CopyableWlArray::?CopyableWlArray*;
+    mir::scene::CopyableWlArray::CopyableWlArray*;
+    mir::scene::CopyableWlArray::data*;
+    mir::scene::CopyableWlArray::operator*;
+    mir::scene::TextInputChange::?TextInputChange*;
+    mir::scene::TextInputChange::operator*;
     mir::shell::IdleHandlerObserver::?IdleHandlerObserver*;
     mir::shell::IdleHandlerObserver::IdleHandlerObserver*;
+    non-virtual?thunk?to?mir::DecorationStrategy::?DecorationStrategy*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_strategy*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_decoration_strategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_led_observer_registrar*;
     non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::clear_all_keymaps*;
     non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::clear_keymap_for_device*;
@@ -1382,19 +1391,17 @@ global:
     non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::unregister_interest*;
     non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::xkb_modifiers*;
     non-virtual?thunk?to?mir::shell::IdleHandlerObserver::?IdleHandlerObserver*;
-    typeinfo?for?mir::input::receiver::XKBMapperRegistrar;
-    typeinfo?for?mir::shell::IdleHandlerObserver;
-    vtable?for?mir::input::receiver::XKBMapperRegistrar;
-    vtable?for?mir::shell::IdleHandlerObserver;
-    non-virtual?thunk?to?mir::DecorationStrategy::?DecorationStrategy*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_strategy*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_decoration_strategy*;
     non-virtual?thunk?to?mir::shell::IdleHandlerObserver::?IdleHandlerObserver*;
     typeinfo?for?mir::DecorationStrategy;
+    typeinfo?for?mir::input::receiver::XKBMapperRegistrar;
+    typeinfo?for?mir::scene::CopyableWlArray;
+    typeinfo?for?mir::shell::IdleHandlerObserver;
     typeinfo?for?mir::shell::IdleHandlerObserver;
     virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_decoration_strategy*;
     vtable?for?mir::DecorationStrategy;
+    vtable?for?mir::input::receiver::XKBMapperRegistrar;
+    vtable?for?mir::shell::IdleHandlerObserver;
     vtable?for?mir::shell::IdleHandlerObserver;
   };
 } MIR_SERVER_INTERNAL_2.17;

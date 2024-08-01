@@ -493,8 +493,9 @@ TEST(ObserverMultiplexer, multiple_threads_registering_unregistering_and_observi
     multiplexer.register_interest(observer_two);
     multiplexer.register_interest(observer_one);
 
-    std::array<mt::AutoJoinThread, 10> threads;
-    mt::Barrier threads_done(threads.size() + 1);
+    auto const num_threads = 10;
+    mt::Barrier threads_done(num_threads + 1);
+    std::array<mt::AutoJoinThread, num_threads> threads;
 
     for (auto i = 0u; i < threads.size(); ++i)
     {
@@ -542,8 +543,9 @@ TEST(ObserverMultiplexer, multiple_threads_unregistering_same_observer_is_safe)
     multiplexer.register_interest(observer_one);
     multiplexer.register_interest(observer_two);
 
-    std::array<mt::AutoJoinThread, 10> threads;
-    mt::Barrier threads_done(threads.size() + 1);
+    auto const num_threads = 10;
+    mt::Barrier threads_done(num_threads + 1);
+    std::array<mt::AutoJoinThread, num_threads> threads;
 
     for (auto i = 0u; i < threads.size(); ++i)
     {
@@ -580,8 +582,8 @@ TEST(ObserverMultiplexer, registering_is_threadsafe)
         ON_CALL(*observers[i], observation_made(_))
             .WillByDefault(Invoke([notified = &observer_notified[i]](auto) { *notified = true; }));
     }
+    mt::Barrier threads_done(observer_notified.size() + 1);
     std::array<mt::AutoJoinThread, observer_notified.size()> threads;
-    mt::Barrier threads_done(threads.size() + 1);
 
     ThreadedExecutor executor;
     TestObserverMultiplexer multiplexer{executor};
@@ -624,8 +626,9 @@ TEST(ObserverMultiplexer, unregistering_is_threadsafe)
         ON_CALL(*observers[i], observation_made(_))
             .WillByDefault(Invoke([notified = &observer_notified[i]](auto) { *notified = true; }));
     }
+
+    mt::Barrier threads_done(observer_notified.size() + 1);
     std::array<mt::AutoJoinThread, observer_notified.size()> threads;
-    mt::Barrier threads_done(threads.size() + 1);
 
     ThreadedExecutor executor;
     TestObserverMultiplexer multiplexer{executor};

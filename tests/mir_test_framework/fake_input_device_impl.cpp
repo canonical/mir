@@ -15,7 +15,7 @@
  */
 
 #include "fake_input_device_impl.h"
-#include "mir_test_framework/stub_input_platform.h"
+#include "mir_test_framework/stub_input_platform_accessor.h"
 
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
@@ -45,12 +45,12 @@ namespace synthesis = mir::input::synthesis;
 mtf::FakeInputDeviceImpl::FakeInputDeviceImpl(mi::InputDeviceInfo const& info)
     : queue{std::make_shared<md::ActionQueue>()}, device{std::make_shared<InputDevice>(info, queue)}
 {
-    mtf::StubInputPlatform::add(device);
+    mtf::StubInputPlatformAccessor::add(device);
 }
 
 void mtf::FakeInputDeviceImpl::emit_device_removal()
 {
-    mtf::StubInputPlatform::remove(device);
+    mtf::StubInputPlatformAccessor::remove(device);
 }
 
 void mtf::FakeInputDeviceImpl::emit_runtime_error()
@@ -328,14 +328,14 @@ void mtf::FakeInputDeviceImpl::InputDevice::start(mi::InputSink* destination, mi
 {
     sink = destination;
     builder = event_builder;
-    mtf::StubInputPlatform::register_dispatchable(queue);
+    mtf::StubInputPlatformAccessor::register_dispatchable(queue);
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::stop()
 {
     sink = nullptr;
     builder = nullptr;
-    mtf::StubInputPlatform::unregister_dispatchable(queue);
+    mtf::StubInputPlatformAccessor::unregister_dispatchable(queue);
 }
 
 mi::OutputInfo mtf::FakeInputDeviceImpl::InputDevice::get_output_info() const
