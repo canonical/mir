@@ -109,6 +109,7 @@ void mir_test_framework::WindowManagementTestHarness::SetUp()
 
     auto fake_display = std::make_unique<mtd::FakeDisplay>(get_output_rectangles());
     {
+        std::lock_guard lock{self->mutex};
         self->display = fake_display.get();
     }
     preset_display(std::move(fake_display));
