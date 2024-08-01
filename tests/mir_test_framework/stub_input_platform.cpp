@@ -27,31 +27,29 @@ namespace mtf = mir_test_framework;
 namespace mi = mir::input;
 
 mtf::StubInputPlatform::StubInputPlatform(
-    std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry)
+    std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
+    std::shared_ptr<DeviceStore> const& device_store)
     : platform_dispatchable{std::make_shared<mir::dispatch::MultiplexingDispatchable>()},
     platform_queue{std::make_shared<mir::dispatch::ActionQueue>()},
-    registry(input_device_registry)
+    registry(input_device_registry),
+    device_store(device_store)
 {
-    stub_input_platform = this;
     platform_dispatchable->add_watch(platform_queue);
 }
 
 mtf::StubInputPlatform::~StubInputPlatform()
 {
-    std::lock_guard lk{device_store_guard};
-    device_store.clear();
-    stub_input_platform = nullptr;
+    device_store->clear();
 }
 
 void mtf::StubInputPlatform::start()
 {
-    std::lock_guard lk{device_store_guard};
-    for (auto const& dev : device_store)
+    device_store->foreach_device([&](auto const& dev)
     {
         auto device = dev.lock();
         if (device)
             registry->add_device(device);
-    }
+    });
 }
 
 std::shared_ptr<mir::dispatch::Dispatchable> mtf::StubInputPlatform::dispatchable()
@@ -61,13 +59,12 @@ std::shared_ptr<mir::dispatch::Dispatchable> mtf::StubInputPlatform::dispatchabl
 
 void mtf::StubInputPlatform::stop()
 {
-    std::lock_guard lk{device_store_guard};
-    for (auto const& dev : device_store)
+    device_store->foreach_device([&](auto const& dev)
     {
         auto device = dev.lock();
         if (device)
             registry->remove_device(device);
-    }
+    });
 }
 
 void mtf::StubInputPlatform::pause_for_config()
@@ -80,16 +77,8 @@ void mtf::StubInputPlatform::continue_after_config()
 
 void mtf::StubInputPlatform::add(std::shared_ptr<mir::input::InputDevice> const& dev)
 {
-    auto input_platform = stub_input_platform.load();
-    if (!input_platform)
-    {
-        std::lock_guard lk{device_store_guard};
-        device_store.push_back(dev);
-        return;
-    }
-
-    input_platform->platform_queue->enqueue(
-        [registry=input_platform->registry,dev]
+    platform_queue->enqueue(
+        [registry=registry,dev]
         {
             registry->add_device(dev);
         });
@@ -97,21 +86,8 @@ void mtf::StubInputPlatform::add(std::shared_ptr<mir::input::InputDevice> const&
 
 void mtf::StubInputPlatform::remove(std::shared_ptr<mir::input::InputDevice> const& dev)
 {
-    auto input_platform = stub_input_platform.load();
-    if (!input_platform)
-        BOOST_THROW_EXCEPTION(std::runtime_error("No stub input platform available"));
-
-    std::lock_guard lk{device_store_guard};
-    device_store.erase(
-        std::remove_if(begin(device_store),
-                       end(device_store),
-                       [dev](auto weak_dev)
-                       {
-                           return (weak_dev.lock() == dev);
-                       }),
-        end(device_store));
-    input_platform->platform_queue->enqueue(
-        [ registry = input_platform->registry, dev ]
+    platform_queue->enqueue(
+        [ registry = registry, dev ]
         {
             registry->remove_device(dev);
         });
@@ -119,22 +95,10 @@ void mtf::StubInputPlatform::remove(std::shared_ptr<mir::input::InputDevice> con
 
 void mtf::StubInputPlatform::register_dispatchable(std::shared_ptr<mir::dispatch::Dispatchable> const& queue)
 {
-    auto input_platform = stub_input_platform.load();
-    if (!input_platform)
-        BOOST_THROW_EXCEPTION(std::runtime_error("No stub input platform available"));
-
-    input_platform->platform_dispatchable->add_watch(queue);
+    platform_dispatchable->add_watch(queue);
 }
 
 void mtf::StubInputPlatform::unregister_dispatchable(std::shared_ptr<mir::dispatch::Dispatchable> const& queue)
 {
-    auto input_platform = stub_input_platform.load();
-    if (!input_platform)
-        BOOST_THROW_EXCEPTION(std::runtime_error("No stub input platform available"));
-
-    input_platform->platform_dispatchable->remove_watch(queue);
+    platform_dispatchable->remove_watch(queue);
 }
-
-std::atomic<mtf::StubInputPlatform*> mtf::StubInputPlatform::stub_input_platform{nullptr};
-std::vector<std::weak_ptr<mir::input::InputDevice>> mtf::StubInputPlatform::device_store;
-std::mutex mtf::StubInputPlatform::device_store_guard;

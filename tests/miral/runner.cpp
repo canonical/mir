@@ -84,7 +84,10 @@ TEST_F(Runner, x11_socket_is_not_returned_by_default)
 TEST_F(Runner, register_signal_handler_before_setup_invokes_callback_after_setup)
 {
     auto signal = std::make_shared<mt::Signal>();
-    register_signal_handler({signum}, [signal](int){ signal->raise(); });
+
+    // Storing this in a variable fixes an address sanitizer issue
+    std::initializer_list<int> sigs = {signum};
+    register_signal_handler(sigs, [signal](int){ signal->raise(); });
 
     miral::TestServer::SetUp();
 

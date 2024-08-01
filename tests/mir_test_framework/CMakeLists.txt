@@ -21,6 +21,17 @@ add_compile_definitions(
 string (REPLACE " -flto " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 string (REPLACE " -flto " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
+add_library(mir-stub-input-platform OBJECT
+  stub_input_platform.cpp
+)
+
+target_link_libraries(mir-stub-input-platform
+  PUBLIC
+    mirplatform
+    mircommon
+    mircore
+)
+
 add_library(mir-public-test-framework OBJECT
   async_server_runner.cpp
   command_line_server_configuration.cpp
@@ -93,6 +104,7 @@ target_link_libraries(mir-umock-test-framework
 
 add_library(mir-test-framework-static STATIC
   $<TARGET_OBJECTS:mir-public-test-framework>
+  $<TARGET_OBJECTS:mir-stub-input-platform>
   $<TARGET_OBJECTS:mir-protected-test-framework>
   $<TARGET_OBJECTS:mir-public-test>
 )
@@ -115,8 +127,8 @@ add_library(
   mir-test-input-framework OBJECT
 
   stub_input.cpp
+  stub_input_platform_accessor.cpp
   fake_input_device_impl.cpp
-  stub_input_platform.cpp
   )
 
 target_link_libraries(mir-test-input-framework
@@ -129,7 +141,8 @@ target_link_libraries(mir-test-input-framework
 add_library(
   mirplatforminputstub MODULE
   $<TARGET_OBJECTS:mir-test-input-framework>
-  $<TARGET_OBJECTS:mirevdevutilsobjects>)
+  $<TARGET_OBJECTS:mirevdevutilsobjects>
+  $<TARGET_OBJECTS:mir-stub-input-platform>)
 target_link_libraries(mirplatforminputstub mircommon)
 
 set_target_properties(
