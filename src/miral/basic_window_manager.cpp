@@ -2261,7 +2261,6 @@ auto child_placement_strategy(
     Displacement const offset,
     MirPlacementHints const hints,
     Rectangle const parent_rect,
-    mir::geometry::
     Rectangle const placement_bounds) -> mir::optional_value<Rectangle>
 {
     mir::optional_value<Rectangle> default_result;
