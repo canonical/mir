@@ -1,4 +1,4 @@
-# How to Control Compositor Responses to Client Decoration Requests
+# Specifying CSD/SSD Preference
 Clients can ask the compositor to use server or client side decorations, or request the compositor to choose for them. {class}`miral::Decorations` allows you to customize how the server deals with these requests.
 
 This how-to will show you how to specify the behavior of the compositor regarding these requests.
