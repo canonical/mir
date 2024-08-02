@@ -531,7 +531,7 @@ auto mf::NullWlSurfaceRole::scene_surface() const -> std::optional<std::shared_p
 
 void mf::WlSurface::set_fractional_scale(mir::frontend::FractionalScaleV1* fractional_scale)
 {
-    this->fractional_scale = wayland::Weak(fractional_scale);
+    this->fractional_scale = wayland::Weak{fractional_scale};
 }
 
 auto mf::WlSurface::get_fractional_scale() const -> wayland::Weak<FractionalScaleV1>
