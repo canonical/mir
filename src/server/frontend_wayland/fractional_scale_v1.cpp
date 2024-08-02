@@ -75,7 +75,7 @@ void mf::FractionalScaleManagerV1::Global::bind(wl_resource* new_wp_fractional_s
 void mf::FractionalScaleManagerV1::get_fractional_scale(struct wl_resource* id, struct wl_resource* surface)
 {
     auto surf = WlSurface::from(surface);
-    if (surf->get_fractional_scale() != nullptr)
+    if (surf->get_fractional_scale())
     {
         BOOST_THROW_EXCEPTION(mir::wayland::ProtocolError(
             resource, Error::fractional_scale_exists, "Surface already has a fractional scale component attached"));

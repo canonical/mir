@@ -17,6 +17,7 @@
 #include "wl_surface.h"
 
 #include "fractional_scale_v1.h"
+#include "mir/wayland/weak.h"
 #include "viewporter_wrapper.h"
 #include "wayland_utils.h"
 #include "wl_surface_role.h"
@@ -530,10 +531,10 @@ auto mf::NullWlSurfaceRole::scene_surface() const -> std::optional<std::shared_p
 
 void mf::WlSurface::set_fractional_scale(mir::frontend::FractionalScaleV1* fractional_scale)
 {
-    this->fractional_scale = fractional_scale;
+    this->fractional_scale = wayland::Weak(fractional_scale);
 }
 
-auto mf::WlSurface::get_fractional_scale() const -> FractionalScaleV1*
+auto mf::WlSurface::get_fractional_scale() const -> wayland::Weak<FractionalScaleV1>
 {
     return fractional_scale;
 }
