@@ -17,6 +17,7 @@
 #ifndef MIR_FRONTEND_WL_SURFACE_H
 #define MIR_FRONTEND_WL_SURFACE_H
 
+#include "fractional_scale_v1.h"
 #include "mir/geometry/forward.h"
 #include "wayland_wrapper.h"
 #include "mir/wayland/weak.h"
@@ -145,6 +146,9 @@ public:
     void commit(WlSurfaceState const& state);
     auto confine_pointer_state() const -> MirPointerConfinementState;
 
+    void set_fractional_scale(FractionalScaleV1* fractional_scale);
+    auto get_fractional_scale() const -> wayland::Weak<FractionalScaleV1>;
+
     /**
      * Associate a viewport (buffer scale & crop metadata) with this surface
      *
@@ -183,6 +187,7 @@ private:
     std::optional<std::vector<mir::geometry::Rectangle>> input_shape;
     std::vector<SceneSurfaceCreatedCallback> scene_surface_created_callbacks;
     wayland::Weak<Viewport> viewport;
+    wayland::Weak<FractionalScaleV1> fractional_scale;
 
     void send_frame_callbacks();
 

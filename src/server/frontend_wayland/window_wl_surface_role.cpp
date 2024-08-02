@@ -524,6 +524,9 @@ void mf::WindowWlSurfaceRole::handle_enter_output(graphics::DisplayConfiguration
             auto const& config{global->current_config()};
             if (config.id == id)
             {
+                if (auto fractional_scale = surface.value().get_fractional_scale())
+                    fractional_scale.value().output_entered(config);
+
                 global->for_each_output_bound_by(
                     client,
                     [&](OutputInstance* instance)
@@ -549,6 +552,9 @@ void mf::WindowWlSurfaceRole::handle_leave_output(graphics::DisplayConfiguration
             auto const& config{global->current_config()};
             if (config.id == id)
             {
+                if(auto fractional_scale = surface.value().get_fractional_scale())
+                    fractional_scale.value().output_left(config);
+
                 global->for_each_output_bound_by(
                     client,
                     [&](OutputInstance* instance)
