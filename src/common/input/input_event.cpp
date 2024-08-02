@@ -63,14 +63,14 @@ char const* input_event_type_to_c_str(MirInputEventType input_event_type)
 #endif
 
 template <typename EventType>
-void expect_event_type(EventType const* ev, MirEventType t) MIR_HANDLE_EVENT_EXCEPTION(
+void expect_event_type(EventType const* ev, MirEventType expect)
 {
-    if (ev->type() != t)
+    if (auto const actual = ev->type(); actual != expect)
     {
         mir::fatal_error_abort("Expected %s but event is of type %s",
-            mir::event_type_to_c_str(t), mir::event_type_to_c_str(ev->type()));
+            mir::event_type_to_c_str(expect), mir::event_type_to_c_str(actual));
     }
-})
+}
 }
 
 MirInputEventType mir_input_event_get_type(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
