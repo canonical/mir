@@ -19,6 +19,7 @@
 #include "mir/test/doubles/mock_scene_session.h"
 #include "mir/scene/surface_observer.h"
 #include "mir/test/doubles/explicit_executor.h"
+#include "mir/test/file_utils.h"
 #include "mir_test_framework/open_wrapper.h"
 
 #include <filesystem>
@@ -194,7 +195,7 @@ TEST_F(DesktopFileManager, can_resolve_from_valid_flatpak_info)
     std::stringstream flatpak_info_path;
     flatpak_info_path << "/proc/" << PID << "/root/.flatpak-info";
     auto const flatpak_info = flatpak_info_path.str();
-    auto tmp_file_name = std::tmpnam(NULL);
+    auto tmp_file_name = mir::test::create_temp_file().c_str();
     {
         std::ofstream tmp_file;
         tmp_file.open(tmp_file_name);
@@ -228,7 +229,7 @@ TEST_F(DesktopFileManager, app_id_will_not_resolve_from_flatpak_info_when_name_i
     std::stringstream flatpak_info_path;
     flatpak_info_path << "/proc/" << PID << "/root/.flatpak-info";
     auto const flatpak_info = flatpak_info_path.str();
-    auto tmp_file_name = std::tmpnam(NULL);
+    auto tmp_file_name = mir::test::create_temp_file().c_str();
     {
         std::ofstream tmp_file;
         tmp_file.open(tmp_file_name);

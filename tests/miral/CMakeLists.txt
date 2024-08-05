@@ -80,6 +80,9 @@ mir_generate_protocol_wrapper(miral-test "org_kde_kwin_" server-decoration.xml)
 
 set_source_files_properties(server_example_decoration.cpp PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}")
 
+target_include_directories(miral-test
+    PRIVATE ${PROJECT_SOURCE_DIR}/tests/include)
+
 target_link_libraries(miral-test
     mir-test-assist
     PkgConfig::WAYLAND_CLIENT

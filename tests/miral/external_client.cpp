@@ -18,6 +18,8 @@
 #include <miral/external_client.h>
 #include <miral/x11_support.h>
 
+#include "mir/test/file_utils.h"
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <fstream>
@@ -43,7 +45,7 @@ struct ExternalClient : miral::TestServer
     miral::X11Support x11_disabled_by_default{};
     miral::X11Support x11_enabled_by_default{miral::X11Support{}.default_to_enabled()};
 
-    std::string const output = tmpnam(nullptr);
+    std::string const output = mir::test::create_temp_file();
 
     auto client_env_value(std::string const& key) const -> std::string
     {
