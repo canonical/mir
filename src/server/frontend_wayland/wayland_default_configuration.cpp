@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "fractional-scale-v1_wrapper.h"
 #include "fractional_scale_v1.h"
 #include "mir/default_server_configuration.h"
 
@@ -325,7 +326,8 @@ auto mf::get_standard_extensions() -> std::vector<std::string>
         mw::TextInputManagerV2::interface_name,
         mw::TextInputManagerV3::interface_name,
         mw::MirShellV1::interface_name,
-        mw::XdgDecorationManagerV1::interface_name};
+        mw::XdgDecorationManagerV1::interface_name,
+        mw::FractionalScaleManagerV1::interface_name};
 }
 
 auto mf::get_supported_extensions() -> std::vector<std::string>
