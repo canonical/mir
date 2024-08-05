@@ -17,6 +17,7 @@
 #ifndef MIR_GRAPHICS_COMMON_KMS_UTILS_DRM_MODE_RESOURCES_H_
 #define MIR_GRAPHICS_COMMON_KMS_UTILS_DRM_MODE_RESOURCES_H_
 
+#include "mir/fd.h"
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
@@ -163,6 +164,8 @@ private:
     int const drm_fd;
     DRMModeResUPtr const resources;
 };
+
+auto get_cap_checked(mir::Fd const& drm_node, uint64_t cap) -> uint64_t;
 
 }
 }
