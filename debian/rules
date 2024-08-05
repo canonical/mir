@@ -31,8 +31,8 @@ COMMON_CONFIGURE_OPTIONS = \
   -DMIR_BUILD_INTERPROCESS_TESTS=OFF\
 
 ifeq ($(filter ppc64el,$(DEB_HOST_ARCH)),ppc64el)
-	# Disable spurious error on GCC-13
-	ifneq ($(shell gcc --version | grep '13.[[:digit:]]\+.[[:digit:]]\+$$'),)
+	# Disable spurious error on GCC>=12
+	ifneq ($(shell gcc --version | grep '1[34].[[:digit:]]\+.[[:digit:]]\+$$'),)
 		COMMON_CONFIGURE_OPTIONS += -DMIR_COMPILER_QUIRKS="test_touchspot_controller.cpp:array-bounds"
 	endif
 endif
