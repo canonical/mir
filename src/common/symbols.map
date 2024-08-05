@@ -693,5 +693,6 @@ global:
 MIR_COMMON_2.18 {
   global: extern "C++" {
     MirTouchpadConfig::disable_with_external_mouse*;
+    mir::event_type_to_c_str*;
   };
 } MIR_COMMON_2.17;

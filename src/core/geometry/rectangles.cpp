@@ -17,6 +17,7 @@
 #include "mir/geometry/rectangles.h"
 #include "mir/geometry/displacement.h"
 #include <algorithm>
+#include <compare>
 #include <limits>
 #include <ostream>
 

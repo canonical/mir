@@ -19,7 +19,7 @@
 #include "handle_event_exception.h"
 
 #include "mir/events/event_type_to_string.h"
-#include "mir/log.h"
+#include <mir/fatal.h>
 
 #include "mir_toolkit/events/event.h"
 #include "mir/events/event_private.h"
@@ -30,7 +30,6 @@
 #include "mir_toolkit/events/orientation_event.h"
 #include "mir_toolkit/events/input_device_state_event.h"
 
-#include <cstdlib>
 #include <cstring>
 
 namespace ml = mir::logging;
@@ -43,9 +42,8 @@ void expect_event_type(EventType const* ev, MirEventType t) MIR_HANDLE_EVENT_EXC
     auto type = ev->type();
     if (type != t)
     {
-        mir::log_critical("Expected " + mir::event_type_to_string(t) + " but event is of type " +
-            mir::event_type_to_string(type));
-        abort();
+        mir::fatal_error("Expected %s but event is of type %s",
+            mir::event_type_to_c_str(t), mir::event_type_to_c_str(type));
     }
 })
 
@@ -53,13 +51,19 @@ void expect_index_in_range(size_t size, size_t index)
 {
     if (index >= size)
     {
-        mir::log_critical("Index out of range in event data access");
-        abort();
+        mir::fatal_error("Index out of range in event data access");
     }
 }
 }
 
-std::string mir::event_type_to_string(MirEventType t)
+// GCC and Clang both ensure the switch is exhaustive.
+// GCC, however, gets a "control reaches end of non-void function" warning without this
+#ifndef __clang__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+#endif
+
+char const* mir::event_type_to_c_str(MirEventType t)
 {
     switch (t)
     {
@@ -79,9 +83,28 @@ std::string mir::event_type_to_string(MirEventType t)
         return "mir_event_type_input_device_state";
     case mir_event_type_window_output:
         return "mir_event_type_window_output";
-    default:
-        abort();
+    case mir_event_type_window_placement:
+        return "mir_event_type_window_placement";
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    case mir_event_type_key:
+        return "mir_event_type_key";
+    case mir_event_type_motion:
+        return "mir_event_type_motion";
+    case mir_event_type_input_configuration:
+        return "mir_event_type_input_configuration";
+#pragma GCC diagnostic pop
     }
+}
+
+#ifndef __clang__
+#pragma GCC diagnostic pop
+#endif
+
+std::string mir::event_type_to_string(MirEventType t)
+{
+    return event_type_to_c_str(t);
 }
 
 
@@ -95,9 +118,7 @@ MirInputEvent const* mir_event_get_input_event(MirEvent const* ev) MIR_HANDLE_EV
     auto const type = ev->type();
     if (type != mir_event_type_input)
     {
-        mir::log_critical("Expected input event but event is of type " +
-            mir::event_type_to_string(type));
-        abort();
+        mir::fatal_error("Expected input event but event is of type %s", mir::event_type_to_c_str(type));
     }
 
     return ev->to_input();

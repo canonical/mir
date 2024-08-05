@@ -173,6 +173,7 @@ MirWindowPlacementEvent const* mir_event_get_window_placement_event(MirEvent con
  * \param[in] event The event to reference
  * \return          The event pointer to now use
  */
+[[deprecated("Not meaningful: legacy of mirclient API")]]
 MirEvent const* mir_event_ref(MirEvent const* event) __attribute__((warn_unused_result));
 
 /**
@@ -180,6 +181,7 @@ MirEvent const* mir_event_ref(MirEvent const* event) __attribute__((warn_unused_
  *
  * \param[in] event The event to un-reference
  */
+[[deprecated("Not meaningful: legacy of mirclient API")]]
 void mir_event_unref(MirEvent const* event);
 
 #ifdef __cplusplus

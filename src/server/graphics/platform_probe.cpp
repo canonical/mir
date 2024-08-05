@@ -23,10 +23,6 @@
 #include "mir/shared_library_prober_report.h"
 #include "mir/udev/wrapper.h"
 
-#ifndef __clang__
-#include "mir/fatal.h"
-#endif
-
 #include "platform_probe.h"
 
 #include <algorithm>
@@ -140,6 +136,14 @@ bool is_same_device(
 
 }
 
+
+// GCC and Clang both ensure the switch is exhaustive.
+// GCC, however, gets a "control reaches end of non-void function" warning without this
+#ifndef __clang__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
+#endif
+
 auto mg::modules_for_device(
     std::function<std::vector<mg::SupportedDevice>(mir::SharedLibrary const&)> const& probe,
     std::vector<std::shared_ptr<mir::SharedLibrary>> const& modules,
@@ -240,23 +244,6 @@ auto mg::modules_for_device(
 
     switch(nested_selection)
     {
-#ifndef __clang__
-    /* We handle both enum variants below.
-     * GCC does not use this particular UB to provide a better diagnostic,
-     * so we need to provide a default case.
-     *
-     * As normal, leave it guarded by !Clang, so our clang builds will
-     * error out at compile-time if we add a new enum variant.
-     */
-    default:
-        mir::fatal_error("Impossible TypePreference");
-        // We can't get here, either, but sadly we can't mark mir::fatal_error as [[noreturn]]
-        // to get the compiler to enforce that 🤦‍♀️
-        std::terminate();
-    /* We need the default case to be *above* the following cases, or GCC will warn
-     * that we're jumping over the initialiser of nested_vec below
-     */
-#endif
     case TypePreference::prefer_nested:
         if (best_nested && best_nested->first.support_level >= mg::probe::supported)
         {
@@ -275,6 +262,10 @@ auto mg::modules_for_device(
         return nested_vec;
     }
 }
+
+#ifndef __clang__
+#pragma GCC diagnostic push
+#endif
 
 auto mir::graphics::display_modules_for_device(
     std::vector<std::shared_ptr<SharedLibrary>> const& modules,

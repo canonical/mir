@@ -16,7 +16,9 @@
 
 #include "mir/events/window_placement_event.h"
 
-MirWindowPlacementEvent::MirWindowPlacementEvent() : MirEvent(mir_event_type_window_placement)
+MirWindowPlacementEvent::MirWindowPlacementEvent() :
+    MirEvent(mir_event_type_window_placement),
+    placement_{0, 0, 0U, 0U}
 {
 }
 

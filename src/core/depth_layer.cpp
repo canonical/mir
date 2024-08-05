@@ -16,24 +16,27 @@
 
 #include "mir/depth_layer.h"
 
+// GCC and Clang both ensure the switch is exhaustive.
+// GCC, however, gets a "control reaches end of non-void function" warning without this
 #ifndef __clang__
-#include "mir/fatal.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
 #endif
 
-auto mir::mir_depth_layer_get_index(MirDepthLayer depth_layer) -> unsigned int
+auto mir::mir_depth_layer_get_index(MirDepthLayer const depth_layer) -> unsigned int
 {
     switch (depth_layer)
     {
-    case mir_depth_layer_background:        return 0;
-    case mir_depth_layer_below:             return 1;
-    case mir_depth_layer_application:       return 2;
-    case mir_depth_layer_always_on_top:     return 3;
-    case mir_depth_layer_above:             return 4;
-    case mir_depth_layer_overlay:           return 5;
+    case mir_depth_layer_background:
+    case mir_depth_layer_below:
+    case mir_depth_layer_application:
+    case mir_depth_layer_always_on_top:
+    case mir_depth_layer_above:
+    case mir_depth_layer_overlay:
+        return depth_layer;
     }
-    // GCC and Clang both ensure the switch is exhaustive.
-    // GCC, however, gets a "control reaches end of non-void function" warning without this
-#ifndef __clang__
-    fatal_error_abort("Invalid MirDepthLayer in mir::mir_depth_layer_get_index()");
-#endif
 }
+
+#ifndef __clang__
+#pragma GCC diagnostic pop
+#endif

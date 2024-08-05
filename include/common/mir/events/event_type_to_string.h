@@ -23,6 +23,7 @@
 namespace mir
 {
 std::string event_type_to_string(MirEventType t);
+char const* event_type_to_c_str(MirEventType t);
 }
 
 #endif // MIR_EVENT_TYPE_TO_STRING_H_
