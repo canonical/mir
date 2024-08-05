@@ -120,7 +120,12 @@ public:
     std::unordered_map<std::string, Prop>::const_iterator begin() const;
     std::unordered_map<std::string, Prop>::const_iterator end() const;
 
+    /**
+     * The ID of the DRM object these properties relate to
+    */
+    uint32_t parent_id() const;
 private:
+    uint32_t const parent_id_;
     std::unordered_map<std::string, Prop> const properties_table;
 };
 
