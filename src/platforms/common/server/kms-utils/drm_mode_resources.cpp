@@ -271,7 +271,15 @@ mgk::ObjectProperties::ObjectProperties(
     int drm_fd,
     uint32_t object_id,
     uint32_t object_type)
-    : properties_table{extract_properties(drm_fd, get_object_properties(drm_fd, object_id, object_type))}
+    : parent_id_{object_id},
+      properties_table{extract_properties(drm_fd, get_object_properties(drm_fd, object_id, object_type))}
+{
+}
+
+mgk::ObjectProperties::ObjectProperties(
+    int drm_fd,
+    DRMModeCrtcUPtr const& crtc)
+    : ObjectProperties(drm_fd, crtc->crtc_id, DRM_MODE_OBJECT_CRTC)
 {
 }
 
@@ -279,6 +287,13 @@ mgk::ObjectProperties::ObjectProperties(
     int drm_fd,
     DRMModePlaneUPtr const& plane)
     : ObjectProperties(drm_fd, plane->plane_id, DRM_MODE_OBJECT_PLANE)
+{
+}
+
+mgk::ObjectProperties::ObjectProperties(
+    int drm_fd,
+    DRMModeConnectorUPtr const& connector)
+    : ObjectProperties(drm_fd, connector->connector_id, DRM_MODE_OBJECT_CONNECTOR)
 {
 }
 
@@ -295,6 +310,11 @@ uint32_t mgk::ObjectProperties::id_for(char const* property_name) const
 bool mgk::ObjectProperties::has_property(char const* property_name) const
 {
     return properties_table.count(property_name) > 0;
+}
+
+uint32_t mgk::ObjectProperties::parent_id() const
+{
+    return parent_id_;
 }
 
 auto mgk::ObjectProperties::begin() const -> std::unordered_map<std::string, Prop>::const_iterator
