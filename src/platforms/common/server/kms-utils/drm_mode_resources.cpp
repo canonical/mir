@@ -17,7 +17,10 @@
 #include "drm_mode_resources.h"
 
 #include <boost/throw_exception.hpp>
+#include <drm_mode.h>
 #include <system_error>
+#include <format>
+#include <xf86drm.h>
 
 namespace mgk = mir::graphics::kms;
 namespace mgkd = mgk::detail;
@@ -460,3 +463,17 @@ template bool mgkd::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connec
 template bool mgkd::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator!=(iterator const&) const;
 template bool mgkd::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator!=(iterator const&) const;
 template bool mgkd::ObjectCollection<mgk::DRMModePlaneUPtr, &mgk::get_plane>::iterator::operator!=(iterator const&) const;
+
+auto mgk::get_cap_checked(mir::Fd const& drm_node, uint64_t cap) -> uint64_t
+{
+    uint64_t result;
+    if (auto err = drmGetCap(drm_node, cap, &result))
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                -err,
+                std::system_category(),
+                std::format("Failed to query DRM capability {}", cap)}));
+    }
+    return result;
+}
