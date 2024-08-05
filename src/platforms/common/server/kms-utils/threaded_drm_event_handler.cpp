@@ -15,8 +15,6 @@
  */
 
 #include "threaded_drm_event_handler.h"
-#include "mir/log.h"
-#include "mir/logging/logger.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/enable_error_info.hpp>

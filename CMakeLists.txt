@@ -161,18 +161,18 @@ pkg_check_modules(WAYLAND_EGLSTREAM wayland-eglstream IMPORTED_TARGET)
 if (WAYLAND_EGLSTREAM_FOUND)
   set(
     MIR_PLATFORM
-    gbm-kms;x11;eglstream-kms;wayland
+    gbm-kms;atomic-kms;x11;eglstream-kms;wayland
     CACHE
     STRING
-    "a list of graphics backends to build (options are 'gbm-kms', 'x11', 'eglstream-kms', or 'wayland')"
+    "a list of graphics backends to build (options are 'gbm-kms', 'atomic-kms', 'x11', 'eglstream-kms', or 'wayland')"
   )
 else()
   set(
     MIR_PLATFORM
-    gbm-kms;x11;wayland
+    gbm-kms;atomic-kms;x11;wayland
     CACHE
     STRING
-    "a list of graphics backends to build (options are 'gbm-kms', 'x11', 'eglstream-kms', or 'wayland')"
+    "a list of graphics backends to build (options are 'gbm-kms', 'atomic-kms', 'x11', 'eglstream-kms', or 'wayland')"
   )
 endif()
 
@@ -208,6 +208,9 @@ SET(MIR_EXCLUDE_TESTS "" CACHE STRING "Semicolon-separated list of tests to excl
 foreach(platform IN LISTS MIR_PLATFORM)
   if (platform STREQUAL "gbm-kms")
     set(MIR_BUILD_PLATFORM_GBM_KMS TRUE)
+  endif()
+  if (platform STREQUAL "atomic-kms")
+    set(MIR_BUILD_PLATFORM_ATOMIC_KMS TRUE)
   endif()
   if (platform STREQUAL "x11")
      set(MIR_BUILD_PLATFORM_X11 TRUE)
@@ -263,7 +266,7 @@ if (HAVE_SYS_SDT_H)
   add_compile_definitions(LTTNG_UST_HAVE_SDT_INTEGRATION)
 endif()
 
-if (MIR_BUILD_PLATFORM_GBM_KMS)
+if (MIR_BUILD_PLATFORM_GBM_KMS OR MIR_BUILD_PLATFORM_ATOMIC_KMS)
   pkg_check_modules(GBM REQUIRED IMPORTED_TARGET gbm>=11.0.0)
 endif()
 
