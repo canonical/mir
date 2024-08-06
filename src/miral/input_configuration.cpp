@@ -16,31 +16,16 @@
 
 #include "miral/input_configuration.h"
 
+#include "input_config.h"
+
 #include <algorithm>
 
 class miral::InputConfiguration::Mouse::Self : public MouseInputConfiguration
 {
-public:
-    std::optional<MirPointerHandedness> handedness;
-    std::optional<MirPointerAcceleration> acceleration;
-    std::optional<double> acceleration_bias;
-    std::optional<double> vscroll_speed;
-    std::optional<double> hscroll_speed;
-    std::optional<bool> middle_button_emulation;
 };
 
-class miral::InputConfiguration::Touchpad::Self
+class miral::InputConfiguration::Touchpad::Self : public TouchpadInputConfiguration
 {
-public:
-    std::optional<bool> disable_while_typing;
-    std::optional<bool> disable_with_external_mouse;
-    std::optional<MirPointerAcceleration> acceleration;
-    std::optional<double> acceleration_bias;
-    std::optional<double> vscroll_speed;
-    std::optional<double> hscroll_speed;
-    std::optional<MirTouchpadClickMode> click_mode;
-    std::optional<MirTouchpadScrollMode> scroll_mode;
-    std::optional<bool> tap_to_click;
 };
 
 class miral::InputConfiguration::Self
