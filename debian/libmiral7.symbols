@@ -447,4 +447,47 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::IdleListener::on_off(std::function<void ()> const&)@MIRAL_5.1" 5.1.0
  (c++)"miral::IdleListener::on_wake(std::function<void ()> const&)@MIRAL_5.1" 5.1.0
  (c++)"miral::IdleListener::operator()(mir::Server&) const@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::InputConfiguration()@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Mouse::Mouse()@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Mouse::Mouse(miral::InputConfiguration::Mouse const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Mouse::acceleration() const@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Mouse::acceleration(std::optional<MirPointerAcceleration> const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Mouse::acceleration_bias() const@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Mouse::acceleration_bias(std::optional<double> const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Mouse::handedness() const@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Mouse::handedness(std::optional<MirPointerHandedness> const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Mouse::hscroll_speed() const@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Mouse::hscroll_speed(std::optional<double> const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Mouse::operator=(miral::InputConfiguration::Mouse)@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Mouse::vscroll_speed() const@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Mouse::vscroll_speed(std::optional<double> const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Mouse::~Mouse()@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::Touchpad()@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::Touchpad(miral::InputConfiguration::Touchpad const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::acceleration() const@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::acceleration(std::optional<MirPointerAcceleration> const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::acceleration_bias() const@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::acceleration_bias(std::optional<double> const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::click_mode() const@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::click_mode(std::optional<MirTouchpadClickMode> const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::disable_while_typing() const@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::disable_while_typing(std::optional<bool> const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::disable_with_external_mouse() const@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::disable_with_external_mouse(std::optional<bool> const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::hscroll_speed() const@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::hscroll_speed(std::optional<double> const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::operator=(miral::InputConfiguration::Touchpad)@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::scroll_mode() const@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::scroll_mode(std::optional<MirTouchpadScrollMode> const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::tap_to_click() const@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::tap_to_click(std::optional<bool> const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::vscroll_speed() const@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::vscroll_speed(std::optional<double> const&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::Touchpad::~Touchpad()@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::mouse()@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::mouse(miral::InputConfiguration::Mouse)@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::operator()(mir::Server&)@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::touchpad()@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::touchpad(miral::InputConfiguration::Touchpad)@MIRAL_5.1" 5.1.0
+ (c++)"miral::InputConfiguration::~InputConfiguration()@MIRAL_5.1" 5.1.0
  (c++)"miral::WindowManagerTools::move_cursor_to(mir::geometry::generic::Point<float>)@MIRAL_5.1" 5.1.0
