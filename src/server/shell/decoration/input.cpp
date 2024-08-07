@@ -262,11 +262,13 @@ auto msd::InputManager::resize_edge_rect(
     case mir_resize_edge_southeast:
     {
         geom::Point top_left{
-            as_x(window_state.window_size().width) -
-                as_delta(static_geometry.resize_corner_input_size.width),
-            as_y(window_state.window_size().height) -
-                as_delta(static_geometry.resize_corner_input_size.height)};
-        return {top_left, static_geometry.resize_corner_input_size};
+            as_x(
+                (window_state.window_size().width - static_geometry.resize_corner_input_size.width) *
+                window_state.scale()),
+            as_y(
+                (window_state.window_size().height - static_geometry.resize_corner_input_size.height * 2.0) *
+                window_state.scale())};
+        return {top_left, static_geometry.resize_corner_input_size * window_state.scale()};
     }
 
     default: return {};
