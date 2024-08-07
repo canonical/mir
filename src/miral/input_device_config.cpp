@@ -304,44 +304,55 @@ InputDeviceConfig::InputDeviceConfig(std::shared_ptr<mir::options::Option> const
 
 void InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& device)
 {
-    if (contains(device->capabilities(), mi::DeviceCapability::touchpad))
+    touchpad_config.apply_to(*device);
+    mouse_config.apply_to(*device);
+}
+
+void miral::TouchpadInputConfiguration::apply_to(mi::Device& device) const
+{
+    if (contains(device.capabilities(), mi::DeviceCapability::touchpad))
     {
-        mir::log_debug("Configuring touchpad: '%s'", device->name().c_str());
-	    if (auto const optional_pointer_config = device->pointer_configuration(); optional_pointer_config.is_set())
+        mir::log_debug("Configuring touchpad: '%s'", device.name().c_str());
+        if (auto const optional_pointer_config = device.pointer_configuration(); optional_pointer_config.is_set())
         {
             MirPointerConfig pointer_config( optional_pointer_config.value() );
-            if (touchpad_config.acceleration) pointer_config.acceleration(*touchpad_config.acceleration);
-            if (touchpad_config.acceleration_bias) pointer_config.cursor_acceleration_bias(*touchpad_config.acceleration_bias);
-            if (touchpad_config.vscroll_speed) pointer_config.vertical_scroll_scale(*touchpad_config.vscroll_speed);
-            if (touchpad_config.hscroll_speed) pointer_config.horizontal_scroll_scale(*touchpad_config.hscroll_speed);
-            device->apply_pointer_configuration(pointer_config);
+            if (acceleration) pointer_config.acceleration(*acceleration);
+            if (acceleration_bias) pointer_config.cursor_acceleration_bias(*acceleration_bias);
+            if (vscroll_speed) pointer_config.vertical_scroll_scale(*vscroll_speed);
+            if (hscroll_speed) pointer_config.horizontal_scroll_scale(*hscroll_speed);
+            device.apply_pointer_configuration(pointer_config);
         }
 
-	    if (auto const optional_touchpad_config = device->touchpad_configuration(); optional_touchpad_config.is_set())
+        if (auto const optional_touchpad_config = device.touchpad_configuration(); optional_touchpad_config.is_set())
         {
             MirTouchpadConfig touch_config( optional_touchpad_config.value() );
-            if (touchpad_config.disable_while_typing) touch_config.disable_while_typing(*touchpad_config.disable_while_typing);
-            if (touchpad_config.disable_with_external_mouse) touch_config.disable_while_typing(*touchpad_config.disable_with_external_mouse);
-	        if (touchpad_config.click_mode) touch_config.click_mode(*touchpad_config.click_mode);
-            if (touchpad_config.scroll_mode) touch_config.scroll_mode(*touchpad_config.scroll_mode);
-            if (touchpad_config.tap_to_click) touch_config.tap_to_click(*touchpad_config.tap_to_click);
-            if (touchpad_config.middle_button_emulation) touch_config.middle_mouse_button_emulation(*touchpad_config.middle_button_emulation);
+            if (disable_while_typing) touch_config.disable_while_typing(*disable_while_typing);
+            if (disable_with_external_mouse) touch_config.disable_while_typing(*disable_with_external_mouse);
+            if (click_mode) touch_config.click_mode(*click_mode);
+            if (scroll_mode) touch_config.scroll_mode(*scroll_mode);
+            if (tap_to_click) touch_config.tap_to_click(*tap_to_click);
+            if (middle_button_emulation) touch_config.middle_mouse_button_emulation(*middle_button_emulation);
 
-            device->apply_touchpad_configuration(touch_config);
-        }
-    }
-    else if (contains(device->capabilities(), mi::DeviceCapability::pointer))
-    {
-        mir::log_debug("Configuring pointer: '%s'", device->name().c_str());
-        if (auto optional_pointer_config = device->pointer_configuration(); optional_pointer_config.is_set())
-        {
-            MirPointerConfig pointer_config( optional_pointer_config.value() );
-            if (mouse_config.handedness) pointer_config.handedness(*mouse_config.handedness);
-            if (mouse_config.acceleration) pointer_config.acceleration(*mouse_config.acceleration);
-            if (mouse_config.acceleration_bias) pointer_config.cursor_acceleration_bias(*mouse_config.acceleration_bias);
-            if (mouse_config.vscroll_speed) pointer_config.vertical_scroll_scale(*mouse_config.vscroll_speed);
-            if (mouse_config.hscroll_speed) pointer_config.horizontal_scroll_scale(*mouse_config.hscroll_speed);
-            device->apply_pointer_configuration(pointer_config);
+            device.apply_touchpad_configuration(touch_config);
         }
     }
 }
+
+void miral::MouseInputConfiguration::apply_to(mi::Device& device) const
+{
+    if (contains(device.capabilities(), mi::DeviceCapability::pointer))
+    {
+        mir::log_debug("Configuring pointer: '%s'", device.name().c_str());
+        if (auto optional_pointer_config = device.pointer_configuration(); optional_pointer_config.is_set())
+        {
+            MirPointerConfig pointer_config( optional_pointer_config.value() );
+            if (handedness) pointer_config.handedness(*handedness);
+            if (acceleration) pointer_config.acceleration(*acceleration);
+            if (acceleration_bias) pointer_config.cursor_acceleration_bias(*acceleration_bias);
+            if (vscroll_speed) pointer_config.vertical_scroll_scale(*vscroll_speed);
+            if (hscroll_speed) pointer_config.horizontal_scroll_scale(*hscroll_speed);
+            device.apply_pointer_configuration(pointer_config);
+        }
+    }
+}
+

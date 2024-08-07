@@ -19,12 +19,16 @@
 
 #include <mir_toolkit/mir_input_device_types.h>
 
+#include <memory>
 #include <optional>
+
+namespace mir::input { class Device; }
 
 namespace miral
 {
 struct MouseInputConfiguration
 {
+    void apply_to(mir::input::Device& device) const;
     std::optional<MirPointerHandedness> handedness;
     std::optional<MirPointerAcceleration> acceleration;
     std::optional<double> acceleration_bias;
@@ -35,6 +39,7 @@ struct MouseInputConfiguration
 class TouchpadInputConfiguration
 {
 public:
+    void apply_to(mir::input::Device& device) const;
     std::optional<bool> disable_while_typing;
     std::optional<bool> disable_with_external_mouse;
     std::optional<MirPointerAcceleration> acceleration;
