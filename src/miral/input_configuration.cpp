@@ -18,6 +18,9 @@
 
 #include "input_config.h"
 
+#include <mir/server.h>
+#include <mir/input/input_device_hub.h>
+
 #include <algorithm>
 
 class miral::InputConfiguration::Mouse::Self : public MouseInputConfiguration
@@ -30,6 +33,37 @@ class miral::InputConfiguration::Touchpad::Self : public TouchpadInputConfigurat
 
 class miral::InputConfiguration::Self
 {
+public:
+    std::shared_ptr<mir::input::InputDeviceHub> input_device_hub{};
+
+    Mouse mouse;
+    Touchpad touchpad;
+
+    void apply(Mouse const& m)
+    {
+        if (input_device_hub)
+        {
+            input_device_hub->for_each_mutable_input_device([&m](auto& input_device)
+            {
+                m.self->apply_to(input_device);
+            });
+        }
+
+        mouse = m;
+    }
+
+    void apply(Touchpad const& t)
+    {
+        if (input_device_hub)
+        {
+            input_device_hub->for_each_mutable_input_device([&t](auto& input_device)
+            {
+                t.self->apply_to(input_device);
+            });
+        }
+
+        touchpad = t;
+    }
 };
 
 miral::InputConfiguration::InputConfiguration() :
@@ -37,28 +71,34 @@ miral::InputConfiguration::InputConfiguration() :
 {
 }
 
+void miral::InputConfiguration::mouse(Mouse const& m)
+{
+    self->apply(m);
+}
+
 miral::InputConfiguration::~InputConfiguration() = default;
 
-void miral::InputConfiguration::operator()(mir::Server& /*server*/)
+void miral::InputConfiguration::operator()(mir::Server& server)
 {
+    server.add_init_callback([self=self, &server]
+    {
+        self->input_device_hub = server.the_input_device_hub();
+    });
 }
 
 auto miral::InputConfiguration::mouse() -> Mouse
 {
-    return {};
-}
-
-void miral::InputConfiguration::mouse(Mouse)
-{
+    return self->mouse;
 }
 
 auto miral::InputConfiguration::touchpad() -> Touchpad
 {
-    return {};
+    return self->touchpad;
 }
 
-void miral::InputConfiguration::touchpad(Touchpad)
+void miral::InputConfiguration::touchpad(Touchpad const& t)
 {
+    self->apply(t);
 }
 
 miral::InputConfiguration::Mouse::Mouse() :
