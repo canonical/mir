@@ -16,6 +16,7 @@
 
 
 #include "renderer.h"
+#include "mir/logging/logger.h"
 #include "window.h"
 #include "input.h"
 
@@ -26,7 +27,10 @@
 
 #include <boost/throw_exception.hpp>
 #include <boost/filesystem.hpp>
+#include <cassert>
 #include <ft2build.h>
+#include <iostream>
+#include <string>
 #include FT_FREETYPE_H
 
 #include <locale>

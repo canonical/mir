@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <boost/lexical_cast.hpp>
 #include <mir/shell/system_compositor_window_manager.h>
 #include <mir/main_loop.h>
 #include "mir/default_server_configuration.h"
@@ -69,11 +70,14 @@ auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_pt
     return decoration_manager(
         [this]()->std::shared_ptr<msd::Manager>
         {
+            auto options = the_options();
+            auto x11_scale = boost::lexical_cast<float>(options->get<std::string>(options::x11_scale_opt));
             return std::make_shared<msd::BasicManager>(
                 *the_display_configuration_observer_registrar(),
                 [buffer_allocator = the_buffer_allocator(),
                  executor = the_main_loop(),
-                 cursor_images = the_cursor_images()](
+                 cursor_images = the_cursor_images(),
+                 x11_scale](
                     std::shared_ptr<shell::Shell> const& shell,
                     std::shared_ptr<scene::Surface> const& surface) -> std::unique_ptr<msd::Decoration>
                 {
@@ -82,7 +86,8 @@ auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_pt
                         buffer_allocator,
                         executor,
                         cursor_images,
-                        surface);
+                        surface,
+                        x11_scale);
                 });
         });
 }

@@ -112,7 +112,7 @@ auto msd::WindowState::titlebar_width() const -> geom::Width
     {
     case BorderType::Full:
     case BorderType::Titlebar:
-        return window_size().width;
+        return window_size().width;;
     case BorderType::None:
         return {};
     }
