@@ -40,9 +40,9 @@ public:
     class Touchpad;
 
     auto mouse() -> Mouse;
-    void mouse(Mouse);
+    void mouse(Mouse val);
     auto touchpad() -> Touchpad;
-    void touchpad(Touchpad);
+    void touchpad(Touchpad val);
 
 private:
     class Self;
@@ -87,6 +87,7 @@ public:
     void hscroll_speed(std::optional<double>const& val);
 
 private:
+    friend class InputConfiguration::Self;
     class Self;
     std::unique_ptr<Self> self;
 };
@@ -153,6 +154,7 @@ public:
     void tap_to_click(std::optional<bool>const& val);
 
 private:
+    friend class InputConfiguration::Self;
     class Self;
     std::shared_ptr<Self> self;
 };
