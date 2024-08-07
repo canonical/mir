@@ -239,24 +239,28 @@ auto msd::InputManager::resize_edge_rect(
         return window_state.right_border_rect();
 
     case mir_resize_edge_northwest:
+        // No need to scale the size like the other resize edges
         return {{}, static_geometry.resize_corner_input_size};
 
+    // FIXME: Seems like the close button prevents this from being detected.
     case mir_resize_edge_northeast:
     {
         geom::Point top_left{
-            as_x(window_state.window_size().width) -
-                as_delta(static_geometry.resize_corner_input_size.width),
+            as_x(
+                (window_state.window_size().width) *
+                window_state.scale()),
             0};
-        return {top_left, static_geometry.resize_corner_input_size};
+        return {top_left, static_geometry.resize_corner_input_size * 2.0};
     }
 
     case mir_resize_edge_southwest:
     {
         geom::Point top_left{
             0,
-            as_y(window_state.window_size().height) -
-                as_delta(static_geometry.resize_corner_input_size.height)};
-        return {top_left, static_geometry.resize_corner_input_size};
+            as_y(
+                (window_state.window_size().height - static_geometry.resize_corner_input_size.height * 2.0) *
+                window_state.scale())};
+        return {top_left, static_geometry.resize_corner_input_size * 2.0};
     }
 
     case mir_resize_edge_southeast:
@@ -268,7 +272,7 @@ auto msd::InputManager::resize_edge_rect(
             as_y(
                 (window_state.window_size().height - static_geometry.resize_corner_input_size.height * 2.0) *
                 window_state.scale())};
-        return {top_left, static_geometry.resize_corner_input_size * window_state.scale()};
+        return {top_left, static_geometry.resize_corner_input_size * 2.0};
     }
 
     default: return {};
