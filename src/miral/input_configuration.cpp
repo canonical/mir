@@ -71,7 +71,7 @@ miral::InputConfiguration::InputConfiguration() :
 {
 }
 
-void miral::InputConfiguration::mouse(Mouse m)
+void miral::InputConfiguration::mouse(Mouse const& m)
 {
     self->apply(m);
 }
@@ -96,7 +96,7 @@ auto miral::InputConfiguration::touchpad() -> Touchpad
     return self->touchpad;
 }
 
-void miral::InputConfiguration::touchpad(Touchpad t)
+void miral::InputConfiguration::touchpad(Touchpad const& t)
 {
     self->apply(t);
 }
