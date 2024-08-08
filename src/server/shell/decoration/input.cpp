@@ -244,9 +244,7 @@ auto msd::InputManager::resize_edge_rect(
     case mir_resize_edge_northeast:
     {
         geom::Point top_left{
-            as_x(window_state.window_size().width) -
-                as_delta(static_geometry.resize_corner_input_size.width),
-            0};
+            as_x(window_state.titlebar_width() - static_geometry.resize_corner_input_size.width), 0};
         return {top_left, static_geometry.resize_corner_input_size};
     }
 
@@ -254,19 +252,21 @@ auto msd::InputManager::resize_edge_rect(
     {
         geom::Point top_left{
             0,
-            as_y(window_state.window_size().height) -
-                as_delta(static_geometry.resize_corner_input_size.height)};
+            as_y(
+                window_state.side_border_height() + window_state.titlebar_height() +
+                window_state.bottom_border_height() - static_geometry.resize_corner_input_size.height)};
         return {top_left, static_geometry.resize_corner_input_size};
     }
 
     case mir_resize_edge_southeast:
     {
         geom::Point top_left{
-            as_x(window_state.window_size().width) -
-                as_delta(static_geometry.resize_corner_input_size.width),
-            as_y(window_state.window_size().height) -
-                as_delta(static_geometry.resize_corner_input_size.height)};
-        return {top_left, static_geometry.resize_corner_input_size};
+            as_x(window_state.titlebar_width() - static_geometry.resize_corner_input_size.width),
+            as_y(
+                (as_height(window_state.window_size().height - static_geometry.resize_corner_input_size.height * 2.0)) *
+                    window_state.scale() +
+                window_state.titlebar_height())};
+        return {top_left, static_geometry.resize_corner_input_size * 2.0};
     }
 
     default: return {};
