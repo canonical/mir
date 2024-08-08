@@ -22,12 +22,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
-          sudo add-apt-repository --update "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy main"
-          sudo apt install libclang1-20
-          sudo apt install python3-clang-20
-          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-20/lib/libclang-20.so.1" >> $GITHUB_ENV
-          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-20/lib" >> $GITHUB_ENV
+          sudo apt install libclang1-18 python3-clang-18
+          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-18/lib/libclang-18.so.1" >> $GITHUB_ENV
+          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-18/lib" >> $GITHUB_ENV
           sudo apt-get build-dep ./
 
       - name: Configure
