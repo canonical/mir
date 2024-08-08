@@ -66,21 +66,13 @@ jobs:
       matrix:
         snap:
         - MirServer/mir-test-tools
-        - MirServer/confined-shell-wip
         - MirServer/ubuntu-frame
-        - Miriway/Miriway
         architecture: ${{ fromJSON(needs.arches.outputs.arches) }}
         include:
         - snap: MirServer/mir-test-tools
           track: 22
-        - snap: MirServer/confined-shell-wip
-          track: latest
         - snap: MirServer/ubuntu-frame
           track: 22
-        - snap: Miriway/Miriway
-          track: latest
-          review-opts: --allow-classic
-          snapcraft-channel: edge
 
     steps:
     - name: Check out code
