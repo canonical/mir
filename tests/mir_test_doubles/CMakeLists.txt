@@ -75,7 +75,7 @@ if (MIR_BUILD_PLATFORM_X11)
   )
 endif()
 
-if (MIR_BUILD_PLATFORM_GBM_KMS)
+if (MIR_BUILD_PLATFORM_GBM_KMS OR MIR_BUILD_PLATFORM_ATOMIC_KMS)
   include_directories(
           ${PROJECT_SOURCE_DIR}/src/platforms/gbm-kms/server
     ${CMAKE_SOURCE_DIR}

@@ -17,7 +17,10 @@
 #include "drm_mode_resources.h"
 
 #include <boost/throw_exception.hpp>
+#include <drm_mode.h>
 #include <system_error>
+#include <format>
+#include <xf86drm.h>
 
 namespace mgk = mir::graphics::kms;
 namespace mgkd = mgk::detail;
@@ -268,7 +271,15 @@ mgk::ObjectProperties::ObjectProperties(
     int drm_fd,
     uint32_t object_id,
     uint32_t object_type)
-    : properties_table{extract_properties(drm_fd, get_object_properties(drm_fd, object_id, object_type))}
+    : parent_id_{object_id},
+      properties_table{extract_properties(drm_fd, get_object_properties(drm_fd, object_id, object_type))}
+{
+}
+
+mgk::ObjectProperties::ObjectProperties(
+    int drm_fd,
+    DRMModeCrtcUPtr const& crtc)
+    : ObjectProperties(drm_fd, crtc->crtc_id, DRM_MODE_OBJECT_CRTC)
 {
 }
 
@@ -276,6 +287,13 @@ mgk::ObjectProperties::ObjectProperties(
     int drm_fd,
     DRMModePlaneUPtr const& plane)
     : ObjectProperties(drm_fd, plane->plane_id, DRM_MODE_OBJECT_PLANE)
+{
+}
+
+mgk::ObjectProperties::ObjectProperties(
+    int drm_fd,
+    DRMModeConnectorUPtr const& connector)
+    : ObjectProperties(drm_fd, connector->connector_id, DRM_MODE_OBJECT_CONNECTOR)
 {
 }
 
@@ -292,6 +310,11 @@ uint32_t mgk::ObjectProperties::id_for(char const* property_name) const
 bool mgk::ObjectProperties::has_property(char const* property_name) const
 {
     return properties_table.count(property_name) > 0;
+}
+
+uint32_t mgk::ObjectProperties::parent_id() const
+{
+    return parent_id_;
 }
 
 auto mgk::ObjectProperties::begin() const -> std::unordered_map<std::string, Prop>::const_iterator
@@ -460,3 +483,17 @@ template bool mgkd::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connec
 template bool mgkd::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator!=(iterator const&) const;
 template bool mgkd::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator!=(iterator const&) const;
 template bool mgkd::ObjectCollection<mgk::DRMModePlaneUPtr, &mgk::get_plane>::iterator::operator!=(iterator const&) const;
+
+auto mgk::get_cap_checked(mir::Fd const& drm_node, uint64_t cap) -> uint64_t
+{
+    uint64_t result;
+    if (auto err = drmGetCap(drm_node, cap, &result))
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                -err,
+                std::system_category(),
+                std::format("Failed to query DRM capability {}", cap)}));
+    }
+    return result;
+}
