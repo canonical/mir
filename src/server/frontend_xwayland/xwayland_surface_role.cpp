@@ -86,7 +86,7 @@ void mf::XWaylandSurfaceRole::populate_surface_data_scaled(
         for (auto& rect : spec.input_shape.value())
         {
             rect.top_left = as_point(as_displacement(rect.top_left) * inv_scale);
-            rect.size = rect.size * inv_scale;
+            rect.size = rect.size;
         }
     }
 }

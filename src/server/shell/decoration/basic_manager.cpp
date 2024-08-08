@@ -94,7 +94,7 @@ void msd::BasicManager::decorate(std::shared_ptr<ms::Surface> const& surface)
         lock.unlock();
         auto decoration = decoration_builder(locked_shell, surface);
         lock.lock();
-        decoration->set_scale(scale);
+        /* decoration->set_scale(scale); */
         decorations[surface.get()] = std::move(decoration);
     }
 }
