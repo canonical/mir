@@ -112,7 +112,7 @@ auto msd::WindowState::titlebar_width() const -> geom::Width
     {
     case BorderType::Full:
     case BorderType::Titlebar:
-        return window_size().width;;
+        return as_width(window_size().width * scale_ - side_border_width() * (scale() - 1) * 2);
     case BorderType::None:
         return {};
     }
@@ -156,7 +156,7 @@ auto msd::WindowState::side_border_height() const -> geom::Height
     switch (border_type_)
     {
     case BorderType::Full:
-        return window_size().height - as_delta(titlebar_height()) - as_delta(bottom_border_height());
+        return  as_height(window_size().height - (titlebar_height() + bottom_border_height())) * scale_;
     case BorderType::Titlebar:
     case BorderType::None:
         return {};
@@ -199,19 +199,16 @@ auto msd::WindowState::left_border_rect() const -> geom::Rectangle
         {geom::X{}, as_y(titlebar_height())},
         {side_border_width(), side_border_height()}};
 }
-
 auto msd::WindowState::right_border_rect() const -> geom::Rectangle
 {
     return {
-        {as_x(window_size().width - side_border_width()), as_y(titlebar_height())},
+        {as_x(titlebar_width() - side_border_width()), as_y(titlebar_height())},
         {side_border_width(), side_border_height()}};
 }
-
 auto msd::WindowState::bottom_border_rect() const -> geom::Rectangle
 {
     return {
-        {geom::X{}, as_y(window_size().height - bottom_border_height())},
-        {bottom_border_width(), bottom_border_height()}};
+        {geom::X{}, as_y(titlebar_height() + side_border_height())}, {bottom_border_width(), bottom_border_height()}};
 }
 
 auto msd::WindowState::button_rect(unsigned n) const -> geom::Rectangle
