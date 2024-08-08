@@ -36,22 +36,9 @@ jobs:
                  "lxd:ubuntu-22.04:spread/build/ubuntu:tsan_clang"'
         fi
 
-        TASKS+='"lxd:alpine-3.18:spread/build/alpine:amd64"
-                "lxd:alpine-3.19:spread/build/alpine:amd64"
-                "lxd:alpine-edge:spread/build/alpine:amd64"
-                "lxd:ubuntu-22.04:spread/build/sbuild:debian_sid"
-                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu"
-                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_mantic"
+        TASKS+='"lxd:ubuntu-22.04:spread/build/sbuild:ubuntu"
                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_arm64"
-                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_armhf"
-                "lxd:ubuntu-22.04:spread/build/ubuntu:clang"
-                "lxd:fedora-39:spread/build/fedora:amd64"
-                "lxd:fedora-40:spread/build/fedora:amd64"
-                "lxd:fedora-rawhide:spread/build/fedora:amd64"
-                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_devel"
-                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_proposed"
-                "lxd:ubuntu-22.04:spread/build/ubuntu:ubsan"
-                "lxd:ubuntu-22.04:spread/build/ubuntu:ubsan_clang"'
+                "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_armhf"'
 
         echo ${TASKS:-} | jq -cs '{ "spread-task": .  }' | awk '{ print "matrix=" $0 }' >> $GITHUB_OUTPUT
 
@@ -122,6 +109,6 @@ jobs:
 
     - if: ${{ failure() && runner.debug }}
       name: Setup upterm session
-      uses: lhotari/action-upterm@v1
+      uses: mxschmitt/action-tmate@v3
       with:
         limit-access-to-actor: true

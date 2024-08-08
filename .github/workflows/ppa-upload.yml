@@ -15,9 +15,6 @@ jobs:
       matrix:
         release:
         - "22.04"
-        - "23.10"
-        - "24.04"
-        - "devel"
 
     runs-on: ubuntu-latest
 
@@ -56,3 +53,9 @@ jobs:
       env:
         RELEASE: ${{ matrix.release }}
       run: tools/ppa-upload.sh ${{ github.workspace }}/../lp_credentials
+
+    - if: ${{ failure() && runner.debug }}
+      name: Setup upterm session
+      uses: mxschmitt/action-tmate@v3
+      with:
+        limit-access-to-actor: true
