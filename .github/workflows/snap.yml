@@ -20,8 +20,7 @@ jobs:
       run: |
         ARCHES=( amd64 )
         if ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}; then
-        #   ARCHES+=( armhf arm64 ) ## remote-build ...armhf is flaky: Don't risk it
-           ARCHES+=( arm64 )
+           ARCHES+=( armhf arm64 )
         fi
         jq --compact-output --null-input '$ARGS.positional' --args -- "${ARCHES[@]}" | awk '{ print "arches=" $0 }' >> $GITHUB_OUTPUT
 
@@ -35,7 +34,7 @@ jobs:
       fail-fast: false
       matrix:
         architecture: ${{ fromJSON(needs.arches.outputs.arches) }}
-        base: ["22", "24"]
+        base: ["22"]
 
     steps:
     - name: Check out code
@@ -76,27 +75,20 @@ jobs:
       matrix:
         snap:
         - MirServer/mir-test-tools
-        - MirServer/confined-shell-wip
         - MirServer/ubuntu-frame
-        - Miriway/Miriway
         architecture: ${{ fromJSON(needs.arches.outputs.arches) }}
         include:
         - snap: MirServer/mir-test-tools
           track: 22
-        - snap: MirServer/confined-shell-wip
-          track: latest
         - snap: MirServer/ubuntu-frame
           track: 22
-        - snap: Miriway/Miriway
-          track: latest
-          review-opts: --allow-classic
 
     steps:
     - name: Check out code
       uses: actions/checkout@v4
       with:
         repository: ${{ matrix.snap }}
-        ref: mir-libs-build
+        ref: 22/mir-libs-build
         fetch-depth: 0  # needed for version determination
 
     - name: Tweak the stage snap
