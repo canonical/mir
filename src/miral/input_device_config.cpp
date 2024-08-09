@@ -82,18 +82,6 @@ char const* const touchpad_click_mode_area = "area";
 char const* const touchpad_click_mode_clickfinger = "clickfinger";
 char const* const touchpad_middle_mouse_button_emulation_opt= "touchpad-middle-mouse-button-emulation";
 
-class InputDeviceConfig : public mi::InputDeviceObserver
-{
-public:
-    explicit InputDeviceConfig(std::shared_ptr<mir::options::Option> const& options);
-    void device_added(std::shared_ptr<mi::Device> const& device) override;
-    void device_changed(std::shared_ptr<mi::Device> const&) override {}
-    void device_removed(std::shared_ptr<mi::Device> const&) override {}
-    void changes_complete() override {}
-private:
-    miral::MouseInputConfiguration const mouse_config;
-    miral::TouchpadInputConfiguration const touchpad_config;
-};
 
 template<double lo, double hi>
 auto clamp(std::optional<double> opt_val)-> std::optional<double>
@@ -274,12 +262,12 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
 
     server.add_init_callback([&]()
         {
-            auto const input_config = std::make_shared<InputDeviceConfig>(server.get_options());
+            auto const input_config = InputDeviceConfig::the_input_configuration(server.get_options());
             server.the_input_device_hub()->add_observer(input_config);
         });
 }
 
-InputDeviceConfig::InputDeviceConfig(std::shared_ptr<mir::options::Option> const& options) :
+miral::InputDeviceConfig::InputDeviceConfig(std::shared_ptr<mir::options::Option> const& options) :
     mouse_config{
         to_handedness(get_optional<std::string>(options, mouse_handedness_opt)),
         to_acceleration_profile(get_optional<std::string>(options, mouse_cursor_acceleration_opt)),
@@ -302,10 +290,46 @@ InputDeviceConfig::InputDeviceConfig(std::shared_ptr<mir::options::Option> const
 {
 }
 
-void InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& device)
+auto miral::InputDeviceConfig::the_input_configuration(std::shared_ptr<mir::options::Option> const& options)
+-> std::shared_ptr<InputDeviceConfig>
+{
+    // This should only be called in single-threaded phase of startup, so no need for synchronization
+    static std::weak_ptr<InputDeviceConfig> instance;
+
+    if (auto result = instance.lock())
+    {
+        return result;
+    }
+
+    std::shared_ptr<InputDeviceConfig> result{new InputDeviceConfig(options)};
+    instance = result;
+    return result;
+}
+
+void miral::InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& device)
 {
     touchpad_config.apply_to(*device);
     mouse_config.apply_to(*device);
+}
+
+auto miral::InputDeviceConfig::mouse() const -> MouseInputConfiguration
+{
+    return mouse_config;
+}
+
+auto miral::InputDeviceConfig::touchpad() const -> TouchpadInputConfiguration
+{
+    return touchpad_config;
+}
+
+void miral::InputDeviceConfig::mouse(MouseInputConfiguration const& val)
+{
+    mouse_config = val;
+}
+
+void miral::InputDeviceConfig::touchpad(TouchpadInputConfiguration const& val)
+{
+    touchpad_config = val;
 }
 
 void miral::TouchpadInputConfiguration::apply_to(mi::Device& device) const
