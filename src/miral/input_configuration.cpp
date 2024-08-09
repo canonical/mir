@@ -25,19 +25,26 @@
 
 class miral::InputConfiguration::Mouse::Self : public MouseInputConfiguration
 {
+    friend class miral::InputConfiguration::Self;
+    using MouseInputConfiguration::operator=;
 };
 
 class miral::InputConfiguration::Touchpad::Self : public TouchpadInputConfiguration
 {
+    friend class miral::InputConfiguration::Self;
+    using TouchpadInputConfiguration::operator=;
 };
 
 class miral::InputConfiguration::Self
 {
 public:
     std::shared_ptr<mir::input::InputDeviceHub> input_device_hub{};
+    std::shared_ptr<InputDeviceConfig> input_device_config;
 
-    Mouse mouse;
-    Touchpad touchpad;
+    auto mouse() -> Mouse;
+    void mouse(Mouse const& val);
+    auto touchpad() -> Touchpad;
+    void touchpad(Touchpad const& val);
 
     void apply(Mouse const& m)
     {
@@ -49,7 +56,7 @@ public:
             });
         }
 
-        mouse = m;
+        mouse(m);
     }
 
     void apply(Touchpad const& t)
@@ -62,9 +69,45 @@ public:
             });
         }
 
-        touchpad = t;
+        touchpad(t);
     }
 };
+
+auto miral::InputConfiguration::Self::mouse() -> Mouse
+{
+    Mouse result;
+    if (input_device_config)
+    {
+        *result.self = input_device_config->mouse();
+    }
+    return result;
+}
+
+void miral::InputConfiguration::Self::mouse(Mouse const& val)
+{
+    if (input_device_config)
+    {
+        input_device_config->mouse(*val.self);
+    }
+}
+
+auto miral::InputConfiguration::Self::touchpad() -> Touchpad
+{
+    Touchpad result;
+    if (input_device_config)
+    {
+        *result.self = input_device_config->touchpad();
+    }
+    return result;
+}
+
+void miral::InputConfiguration::Self::touchpad(Touchpad const& val)
+{
+    if (input_device_config)
+    {
+        input_device_config->touchpad(*val.self);
+    }
+}
 
 miral::InputConfiguration::InputConfiguration() :
     self{std::make_shared<Self>()}
@@ -83,17 +126,18 @@ void miral::InputConfiguration::operator()(mir::Server& server)
     server.add_init_callback([self=self, &server]
     {
         self->input_device_hub = server.the_input_device_hub();
+        self->input_device_config = InputDeviceConfig::the_input_configuration(server.get_options());
     });
 }
 
 auto miral::InputConfiguration::mouse() -> Mouse
 {
-    return self->mouse;
+    return self->mouse();
 }
 
 auto miral::InputConfiguration::touchpad() -> Touchpad
 {
-    return self->touchpad;
+    return self->touchpad();
 }
 
 void miral::InputConfiguration::touchpad(Touchpad const& t)
