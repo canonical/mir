@@ -20,22 +20,25 @@
 
 #include <miral/cursor_theme.h>
 #include <miral/display_configuration_option.h>
+#include <miral/input_configuration.h>
 #include <miral/minimal_window_manager.h>
+#include <miral/config_file.h>
 #include <miral/runner.h>
 #include <miral/set_window_management_policy.h>
 #include <miral/wayland_extensions.h>
 #include <miral/x11_support.h>
 
 #include "mir/abnormal_exit.h"
-#include "mir/server.h"
 #include "mir/main_loop.h"
-#include "mir/report_exception.h"
 #include "mir/options/option.h"
+#include "mir/report_exception.h"
+#include "mir/server.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 
 #include <chrono>
 #include <cstdlib>
+#include <iostream>
 
 namespace mir { class AbnormalExit; }
 
@@ -116,6 +119,38 @@ try
 {
     miral::MirRunner runner{argc, argv, "mir/mir_demo_server.config"};
 
+    miral::InputConfiguration input_configuration;
+
+    miral::ConfigFile test{runner, "mir_demo_server.input", miral::ConfigFile::Mode::reload_on_change,
+        [&input_configuration](auto& in, auto path)
+    {
+        std::cout << "** Reloading: " << path << std::endl;
+
+        auto mouse = input_configuration.mouse();
+        auto touchpad = input_configuration.touchpad();
+
+        for (std::string line; std::getline(in, line);)
+        {
+            std::cout << line << std::endl;
+
+            if (line == "mir_pointer_handedness_right")
+                mouse.handedness(mir_pointer_handedness_right);
+            if (line == "mir_pointer_handedness_left")
+                mouse.handedness(mir_pointer_handedness_left);
+
+            if (line == "mir_touchpad_scroll_mode_none")
+                touchpad.scroll_mode(mir_touchpad_scroll_mode_none);
+            if (line == "mir_touchpad_scroll_mode_two_finger_scroll")
+                touchpad.scroll_mode(mir_touchpad_scroll_mode_two_finger_scroll);
+            if (line == "mir_touchpad_scroll_mode_edge_scroll")
+                touchpad.scroll_mode(mir_touchpad_scroll_mode_edge_scroll);
+            if (line == "mir_touchpad_scroll_mode_button_down_scroll")
+                touchpad.scroll_mode(mir_touchpad_scroll_mode_button_down_scroll);
+        }
+        input_configuration.mouse(mouse);
+        input_configuration.touchpad(touchpad);
+    }};
+
     runner.set_exception_handler(exception_handler);
 
     std::function<void()> shutdown_hook{[]{}};
@@ -138,7 +173,8 @@ try
         add_timeout_option_to,
         miral::CursorTheme{"default:DMZ-White"},
         input_filters,
-        test_runner
+        test_runner,
+        input_configuration,
     });
 
     // Propagate any test failure
