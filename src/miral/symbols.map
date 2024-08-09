@@ -468,8 +468,12 @@ global:
     miral::IdleListener::on_off*;
     miral::IdleListener::on_wake*;
     miral::IdleListener::operator*;
+    miral::ReloadingConfigFile::?ReloadingConfigFile*;
+    miral::ReloadingConfigFile::ReloadingConfigFile*;
     miral::WindowManagerTools::move_cursor_to*;
-    typeinfo?for?miral::IdleListener;
     typeinfo?for?miral::Decorations;
+    typeinfo?for?miral::IdleListener;
+    typeinfo?for?miral::ReloadingConfigFile;
   };
 } MIRAL_5.0;
+
