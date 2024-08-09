@@ -74,6 +74,7 @@ add_library(miral-external OBJECT
     window_specification.cpp            ${miral_include}/miral/window_specification.h
     internal_client.cpp                 ${miral_include}/miral/internal_client.h
     prepend_event_filter.cpp            ${miral_include}/miral/prepend_event_filter.h
+    reloading_config_file.cpp           ${miral_include}/miral/reloading_config_file.h
     runner.cpp                          ${miral_include}/miral/runner.h
     session_lock_listener.cpp           ${miral_include}/miral/session_lock_listener.h
     set_command_line_handler.cpp        ${miral_include}/miral/set_command_line_handler.h

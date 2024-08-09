@@ -20,9 +20,8 @@
 #include <mir/fd.h>
 
 #include <filesystem>
-#include <fstream>
+#include <istream>
 #include <functional>
-#include <optional>
 
 namespace miral { class MirRunner; class FdHandle; }
 
@@ -33,25 +32,21 @@ namespace miral
  * the XDG Base Directory Specification. Vis:
  * ($XDG_CONFIG_HOME or $HOME/.config followed by $XDG_CONFIG_DIRS)
  * If, instead of a filename, a path is given, then that is used instead
+ * \remark MirAL 5.1
  */
 class ReloadingConfigFile
 {
 public:
     /// Loader functor is passed both the open stream and the actual path (for use in reporting problems)
-    using Loader = std::function<void(std::ifstream& ifstream, std::filesystem::path const& path)>;
+    using Loader = std::function<void(std::istream& istream, std::filesystem::path const& path)>;
 
     ReloadingConfigFile(MirRunner& runner, std::filesystem::path file, Loader load_config);
     ~ReloadingConfigFile();
 
 private:
-    mir::Fd const inotify_fd;
-    Loader const load_config;
-    std::filesystem::path const filename;
-    std::optional<std::filesystem::path> const directory;
-    std::optional<mir::Fd> const directory_watch_fd;
 
-    void register_handler(MirRunner& runner);
-    std::unique_ptr<miral::FdHandle> fd_handle;
+    class Self;
+    std::shared_ptr<Self> self;
 };
 }
 

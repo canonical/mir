@@ -11,7 +11,6 @@ add_library(example-shell-lib STATIC
     wayland_app.cpp             wayland_app.h
     wayland_surface.cpp         wayland_surface.h
     wayland_shm.cpp             wayland_shm.h
-    reloading_config_file.cpp   reloading_config_file.h
 )
 
 target_include_directories(example-shell-lib
