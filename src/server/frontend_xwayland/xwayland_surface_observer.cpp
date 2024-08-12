@@ -152,7 +152,7 @@ void mf::XWaylandSurfaceObserver::input_consumed(ms::Surface const*, std::shared
                 if (local)
                 {
                     // Scale positions based on the XWayland scale
-                    local = as_point(as_displacement(local.value()) * scale);
+                    local = as_point(as_displacement(local.value()));
                 }
                 return std::make_pair(global, local);
             });
