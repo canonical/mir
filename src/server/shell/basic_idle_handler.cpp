@@ -17,6 +17,7 @@
 #include "basic_idle_handler.h"
 #include "mir/fatal.h"
 #include "mir/scene/idle_hub.h"
+#include "mir/scene/session_lock.h"
 #include "mir/graphics/renderable.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/input/scene.h"
@@ -168,22 +169,72 @@ private:
     MirPowerMode const power_mode;
     msh::IdleHandlerObserver& observer;
 };
+
+struct TimeoutRestorer : ms::IdleStateObserver
+{
+    explicit TimeoutRestorer(msh::BasicIdleHandler* idle_handler, mir::time::Duration timeout)
+      : idle_handler{idle_handler}, timeout{timeout}
+    {
+    }
+
+    void active() override
+    {
+        if (!is_active && !restored)
+        {
+            restored = true;
+            idle_handler->set_display_off_timeout(timeout);
+        }
+        is_active = true;
+    }
+
+    void idle() override
+    {
+        is_active = false;
+    }
+
+private:
+    mir::shell::BasicIdleHandler* const idle_handler;
+    mir::time::Duration const timeout;
+
+    bool is_active{true};
+    bool restored{false};
+};
 }
+
+class msh::BasicIdleHandler::SessionLockListener : public ms::SessionLockObserver
+{
+public:
+    explicit SessionLockListener(BasicIdleHandler* idle_handler) : idle_handler{idle_handler} {};
+
+private:
+    void on_lock() override
+    {
+        idle_handler->set_display_off_timeout(time::Duration{});
+    };
+    void on_unlock() override {};
+
+    BasicIdleHandler* const idle_handler;
+};
 
 msh::BasicIdleHandler::BasicIdleHandler(
     std::shared_ptr<ms::IdleHub> const& idle_hub,
     std::shared_ptr<input::Scene> const& input_scene,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<msh::DisplayConfigurationController> const& display_config_controller)
+    std::shared_ptr<msh::DisplayConfigurationController> const& display_config_controller,
+    std::shared_ptr<ms::SessionLock> const& session_lock)
     : idle_hub{idle_hub},
       input_scene{input_scene},
       allocator{allocator},
-      display_config_controller{display_config_controller}
+      display_config_controller{display_config_controller},
+      session_lock{session_lock},
+      session_lock_monitor{std::make_shared<SessionLockListener>(this)}
 {
+    session_lock->register_interest(session_lock_monitor);
 }
 
 msh::BasicIdleHandler::~BasicIdleHandler()
 {
+    session_lock->unregister_interest(*session_lock_monitor);
     std::lock_guard lock{mutex};
     clear_observers(lock);
 }
@@ -195,14 +246,15 @@ void msh::BasicIdleHandler::set_display_off_timeout(std::optional<time::Duration
     {
         return;
     }
+    auto const previous_off_timeout{current_off_timeout};
     current_off_timeout = timeout;
     clear_observers(lock);
     if (timeout)
     {
         auto const off_timeout = timeout.value();
-        if (off_timeout <= time::Duration{})
+        if (off_timeout < time::Duration{})
         {
-            fatal_error("BasicIdleHandler given invalid timeout %d, should be >0", off_timeout.count());
+            fatal_error("BasicIdleHandler given invalid timeout %d, should be >=0", off_timeout.count());
         }
         if (off_timeout >= dim_time_before_off * 2)
         {
@@ -215,6 +267,16 @@ void msh::BasicIdleHandler::set_display_off_timeout(std::optional<time::Duration
             display_config_controller, mir_power_mode_off, multiplexer);
         observers.push_back(power_setter);
         idle_hub->register_interest(power_setter, off_timeout);
+        if (off_timeout == time::Duration{} && previous_off_timeout)
+        {
+            // A zero timeout cannot be set through configuration options. However,
+            // it can be set internally to immediately turn off the display when
+            // the session is locked. In this case, the original timeout from the
+            // config options will be restored the next time Mir wakes from idle.
+            auto const timeout_restorer = std::make_shared<TimeoutRestorer>(this, previous_off_timeout.value());
+            observers.push_back(timeout_restorer);
+            idle_hub->register_interest(timeout_restorer, off_timeout);
+        }
     }
 }
 

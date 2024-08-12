@@ -19,6 +19,7 @@
 #include "mir/test/doubles/mock_idle_hub.h"
 #include "mir/test/doubles/stub_input_scene.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_session_lock.h"
 #include "mir/shell/display_configuration_controller.h"
 #include "mir/test/fake_shared.h"
 
@@ -52,11 +53,13 @@ struct BasicIdleHandler: Test
     mtd::StubInputScene input_scene;
     mtd::StubBufferAllocator allocator;
     NiceMock<MockDisplayConfigurationController> display;
+    mtd::StubSessionLock session_lock;
     msh::BasicIdleHandler handler{
         mt::fake_shared(idle_hub),
         mt::fake_shared(input_scene),
         mt::fake_shared(allocator),
-        mt::fake_shared(display)};
+        mt::fake_shared(display),
+        mt::fake_shared(session_lock)};
     std::map<mir::time::Duration, std::weak_ptr<ms::IdleStateObserver>> observers;
 
     void SetUp()
@@ -95,7 +98,8 @@ TEST_F(BasicIdleHandler, does_not_register_observers_by_default)
         mt::fake_shared(idle_hub),
         mt::fake_shared(input_scene),
         mt::fake_shared(allocator),
-        mt::fake_shared(display)};
+        mt::fake_shared(display),
+        mt::fake_shared(session_lock)};
 }
 
 TEST_F(BasicIdleHandler, turns_display_off_when_idle)
