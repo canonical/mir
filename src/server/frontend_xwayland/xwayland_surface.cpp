@@ -1267,7 +1267,7 @@ void mf::XWaylandSurface::prep_surface_spec(ProofOfMutexLock const&, msh::Surfac
         }
     }
 
-    auto scale_size_clamped = [inv_scale](auto& optional_prop)
+    auto scale_size_clamped = [](auto& optional_prop)
         {
             if (optional_prop)
             {
@@ -1275,7 +1275,7 @@ void mf::XWaylandSurface::prep_surface_spec(ProofOfMutexLock const&, msh::Surfac
                 using UnderlyingType = typename ValueType::ValueType;
                 auto constexpr raw_max = std::numeric_limits<UnderlyingType>::max();
 
-                double const double_value = optional_prop.value().as_value() * inv_scale;
+                double const double_value = optional_prop.value().as_value();
                 optional_prop = std::max(ValueType{1}, ValueType{std::min(double_value, double{raw_max})});
             }
         };
