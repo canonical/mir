@@ -27,7 +27,6 @@ parts:
     - libboost-filesystem-dev
     - libboost-iostreams-dev
     - libboost-program-options-dev
-    - libcapnp-dev
     - libdrm-dev
     - libegl1-mesa-dev
     - libepoxy-dev
@@ -57,7 +56,6 @@ parts:
     - libboost-filesystem1.83.0
     - libboost-iostreams1.83.0
     - libboost-program-options1.83.0
-    - libcapnp-1.0.1
     - libdrm2
     - libegl1
     - libepoxy0
