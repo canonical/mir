@@ -11,3 +11,7 @@ with the outside world.
 
 ```{mermaid} ubuntu_frame_threat_model.mmd
 ```
+
+# Cryptography
+There is no cryptography used in Mir, no direct dependency on en/decryption,
+hashing or digital signatures.
