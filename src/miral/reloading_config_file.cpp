@@ -54,7 +54,7 @@ auto config_directory(path const& file) -> std::optional<path>
     }
 }
 
-auto watch_fd(mir::Fd const& inotify_fd, std::optional<path> const& path) -> std::optional<mir::Fd>
+auto watch_descriptor(mir::Fd const& inotify_fd, std::optional<path> const& path) -> std::optional<int>
 {
     if (!path.has_value())
         return std::nullopt;
@@ -62,7 +62,7 @@ auto watch_fd(mir::Fd const& inotify_fd, std::optional<path> const& path) -> std
     if (inotify_fd < 0)
         BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to initialize inotify_fd"}));
 
-    return mir::Fd{inotify_add_watch(inotify_fd, path.value().c_str(), IN_CLOSE_WRITE | IN_CREATE | IN_MOVED_TO)};
+    return inotify_add_watch(inotify_fd, path.value().c_str(), IN_CLOSE_WRITE | IN_CREATE | IN_MOVED_TO);
 }
 }
 
@@ -76,7 +76,7 @@ private:
     Loader const load_config;
     std::filesystem::path const filename;
     std::optional<std::filesystem::path> const directory;
-    std::optional<mir::Fd> const directory_watch_fd;
+    std::optional<int> const directory_watch_descriptor;
 
     void register_handler(MirRunner& runner);
     std::unique_ptr<miral::FdHandle> fd_handle;
@@ -87,7 +87,7 @@ miral::ReloadingConfigFile::Self::Self(MirRunner& runner, path file, Loader load
     load_config{load_config},
     filename{file.filename()},
     directory{config_directory(file)},
-    directory_watch_fd{watch_fd(inotify_fd, directory)}
+    directory_watch_descriptor{watch_descriptor(inotify_fd, directory)}
 {
     register_handler(runner);
 
@@ -134,7 +134,7 @@ miral::ReloadingConfigFile::~ReloadingConfigFile() = default;
 
 void miral::ReloadingConfigFile::Self::register_handler(MirRunner& runner)
 {
-    if (directory_watch_fd)
+    if (directory_watch_descriptor)
     {
         fd_handle = runner.register_fd_handler(inotify_fd, [icf=inotify_fd, this] (int)
         {
