@@ -627,7 +627,7 @@ auto miral::ReloadingYamlFileDisplayConfig::inotify_config_path() -> std::option
 
     if (!config_path_) return std::nullopt;
 
-    mir::Fd inotify_fd{inotify_init()};
+    mir::Fd inotify_fd{inotify_init1(IN_CLOEXEC)};
 
     if (inotify_fd < 0)
         BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to initialize inotify_fd"}));
