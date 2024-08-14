@@ -26,27 +26,49 @@ using miral::ReloadingConfigFile;
 
 namespace
 {
+char const* const no_such_file = "no/such/file";
+char const* const a_file = "/tmp/a_file";
+
 struct TestReloadingConfigFile : miral::TestServer
 {
     TestReloadingConfigFile();
     MOCK_METHOD(void, load, (std::istream& in, std::filesystem::path path), ());
 
     std::optional<ReloadingConfigFile> reloading_config_file;
-};
 
-char const* const no_such_file = "no/such/file";
-char const* const a_file = "/tmp/a_file";
+    std::atomic<bool> pending_load = false;
+    void write_a_file()
+    {
+        std::ofstream file(a_file);
+        file << "some content";
+        pending_load = true;
+    }
+
+    void wait_for_load()
+    {
+        while (bool const current = pending_load)
+        {
+            pending_load.wait(current);
+        }
+    }
+
+    void notify_load()
+    {
+        pending_load = false; pending_load.notify_one();
+    }
+
+    void SetUp() override
+    {
+        miral::TestServer::SetUp();
+        ON_CALL(*this, load(testing::_, testing::_)).WillByDefault([this]{ notify_load(); });
+    }
+};
 
 TestReloadingConfigFile::TestReloadingConfigFile()
 {
     unlink(a_file);
 }
 
-void write_a_file()
-{
-    std::ofstream file(a_file);
-    file << "some content";
-}
 }
 
 TEST_F(TestReloadingConfigFile, with_no_file_nothing_is_loaded)
@@ -90,8 +112,8 @@ TEST_F(TestReloadingConfigFile, when_a_file_is_written_something_is_loaded)
     EXPECT_CALL(*this, load).Times(1);
 
     write_a_file();
+    wait_for_load();
 }
-
 
 TEST_F(TestReloadingConfigFile, each_time_a_file_is_rewritten_something_is_loaded)
 {
@@ -109,8 +131,11 @@ TEST_F(TestReloadingConfigFile, each_time_a_file_is_rewritten_something_is_loade
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
-    for (auto i = 0; i < times; ++i)
+    for (auto i = 0; i != times; ++i)
     {
+        wait_for_load();
         write_a_file();
     }
+
+    wait_for_load();
 }
