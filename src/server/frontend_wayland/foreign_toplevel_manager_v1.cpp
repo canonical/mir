@@ -501,7 +501,7 @@ void mf::ForeignSurfaceObserver::application_id_set_to(
 // GDesktopFileCache
 mf::GDesktopFileCache::GDesktopFileCache(const std::shared_ptr<MainLoop> &main_loop)
     : main_loop{main_loop},
-      inotify_fd{inotify_init()}
+      inotify_fd{inotify_init1(IN_CLOEXEC)}
 {
     refresh_app_cache();
 
