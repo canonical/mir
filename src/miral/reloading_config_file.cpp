@@ -83,7 +83,7 @@ private:
 };
 
 miral::ReloadingConfigFile::Self::Self(MirRunner& runner, path file, Loader load_config) :
-    inotify_fd{inotify_init()},
+    inotify_fd{inotify_init1(IN_CLOEXEC)},
     load_config{load_config},
     filename{file.filename()},
     directory{config_directory(file)},
