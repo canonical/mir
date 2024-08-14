@@ -139,3 +139,5 @@ TEST_F(TestReloadingConfigFile, each_time_a_file_is_rewritten_something_is_loade
 
     wait_for_load();
 }
+
+// TODO - tests around the XDG Base Directory paths
