@@ -441,6 +441,7 @@ mf::XWaylandSurface::XWaylandSurface(
               })}
 {
     cached.geometry = geometry;
+    cached.geometry.size = cached.geometry.size * scale;
     cached.override_redirect = override_redirect;
 
     uint32_t const value = XCB_EVENT_MASK_PROPERTY_CHANGE | XCB_EVENT_MASK_FOCUS_CHANGE;
