@@ -144,25 +144,35 @@ void miral::ReloadingConfigFile::Self::register_handler(MirRunner& runner)
                 char buffer[sizeof(inotify_event) + NAME_MAX + 1];
             } inotify_buffer;
 
-            if (read(icf, &inotify_buffer, sizeof(inotify_buffer)) < static_cast<ssize_t>(sizeof(inotify_event)))
-                return;
-
-            if (inotify_buffer.event.mask & (IN_CLOSE_WRITE | IN_MOVED_TO))
-            try
+            ssize_t readsize = read(icf, &inotify_buffer, sizeof(inotify_buffer));
+            if (readsize < static_cast<ssize_t>(sizeof(inotify_event)))
             {
-                if (inotify_buffer.event.name == filename)
-                {
-                    auto const& file = directory.value() / filename;
+                return;
+            }
 
-                    if (std::ifstream config_file{file})
+            auto raw_buffer = inotify_buffer.buffer;
+            while (raw_buffer != inotify_buffer.buffer + readsize)
+            {
+                auto& event = reinterpret_cast<inotify_event&>(*raw_buffer);
+                if (event.mask & (IN_CLOSE_WRITE | IN_MOVED_TO))
+                try
+                {
+                    if (event.name == filename)
                     {
-                        load_config(config_file, file);
+                        auto const& file = directory.value() / filename;
+
+                        if (std::ifstream config_file{file})
+                        {
+                            load_config(config_file, file);
+                        }
                     }
                 }
-            }
-            catch (...)
-            {
-                mir::log(mir::logging::Severity::warning, "ReloadingConfigFile", std::current_exception(), "Failed to reload configuration");
+                catch (...)
+                {
+                    mir::log(mir::logging::Severity::warning, "ReloadingConfigFile", std::current_exception(), "Failed to reload configuration");
+                }
+
+                raw_buffer += sizeof(struct inotify_event)+event.len;
             }
         });
     }
