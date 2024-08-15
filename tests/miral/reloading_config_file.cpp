@@ -29,32 +29,53 @@ namespace
 char const* const no_such_file = "no/such/file";
 char const* const a_file = "/tmp/a_file";
 
-struct TestReloadingConfigFile : miral::TestServer
+class PendingLoad
+{
+public:
+    void mark_pending()
+    {
+        std::lock_guard lock{mutex};
+        pending_loads = true;
+    }
+
+    void wait_for_load()
+    {
+        std::unique_lock lock{mutex};
+
+        if (!cv.wait_for(lock, std::chrono::milliseconds{1000}, [this] { return !pending_loads; }))
+        {
+            std::cerr << "wait_for_load() failed" << std::endl;
+        }
+    }
+
+    void notify_load()
+    {
+        {
+            std::lock_guard lock{mutex};
+            pending_loads = false;
+        }
+
+        cv.notify_one();
+    }
+
+private:
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool pending_loads = false;
+};
+
+struct TestReloadingConfigFile : miral::TestServer, PendingLoad
 {
     TestReloadingConfigFile();
     MOCK_METHOD(void, load, (std::istream& in, std::filesystem::path path), ());
 
     std::optional<ReloadingConfigFile> reloading_config_file;
 
-    std::atomic<bool> pending_load = false;
     void write_a_file()
     {
+        mark_pending();
         std::ofstream file(a_file);
         file << "some content";
-        pending_load = true;
-    }
-
-    void wait_for_load()
-    {
-        while (bool const current = pending_load)
-        {
-            pending_load.wait(current);
-        }
-    }
-
-    void notify_load()
-    {
-        pending_load = false; pending_load.notify_one();
     }
 
     void SetUp() override
@@ -97,6 +118,7 @@ TEST_F(TestReloadingConfigFile, with_a_file_something_is_loaded)
             a_file,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    wait_for_load();
 }
 
 TEST_F(TestReloadingConfigFile, when_a_file_is_written_something_is_loaded)
