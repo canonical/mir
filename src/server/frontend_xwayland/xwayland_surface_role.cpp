@@ -125,7 +125,13 @@ void mf::XWaylandSurfaceRole::commit(WlSurfaceState const& state)
         BOOST_THROW_EXCEPTION(std::runtime_error("Got XWaylandSurfaceRole::commit() when the role had no surface"));
     }
 
-    wl_surface->commit(state);
+    // HACK: Some applications might scale up while users don't want them to
+    // `--x11-scale` helps with this by scaling down the application according
+    // to user preference.
+    auto state_copy{state};
+    state_copy.scale = scale;
+
+    wl_surface->commit(state_copy);
 
     auto const surface = this->scene_surface();
     auto const session = surface ? surface.value()->session().lock() : nullptr;
@@ -145,7 +151,7 @@ void mf::XWaylandSurfaceRole::commit(WlSurfaceState const& state)
         }
 
         std::vector<std::shared_ptr<void>> keep_alive_until_spec_is_used;
-        if (state.surface_data_needs_refresh())
+        if (state_copy.surface_data_needs_refresh())
         {
             populate_surface_data_scaled(wl_surface, scale, spec, keep_alive_until_spec_is_used);
         }
