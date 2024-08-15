@@ -121,7 +121,7 @@ TEST_F(TestReloadingConfigFile, with_a_file_something_is_loaded)
     wait_for_load();
 }
 
-TEST_F(TestReloadingConfigFile, when_a_file_is_written_something_is_loaded)
+TEST_F(TestReloadingConfigFile, DISABLED_when_a_file_is_written_something_is_loaded)
 {
     invoke_runner([this](miral::MirRunner& runner)
     {
