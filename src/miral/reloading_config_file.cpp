@@ -136,43 +136,45 @@ void miral::ReloadingConfigFile::Self::register_handler(MirRunner& runner)
 {
     if (directory_watch_descriptor)
     {
-        fd_handle = runner.register_fd_handler(inotify_fd, [icf=inotify_fd, this] (int)
+        fd_handle = runner.register_fd_handler(inotify_fd, [this] (int)
         {
+            static size_t const sizeof_inotify_event = sizeof(inotify_event);
+
+            // A union ensures buffer is aligned for inotify_event
             union
             {
-                inotify_event event;
-                char buffer[sizeof(inotify_event) + NAME_MAX + 1];
-            } inotify_buffer;
+                char buffer[sizeof_inotify_event + NAME_MAX + 1];
+                inotify_event unused [[maybe_unused]];
+            } inotify_magic;
 
-            ssize_t readsize = read(icf, &inotify_buffer, sizeof(inotify_buffer));
-            if (readsize < static_cast<ssize_t>(sizeof(inotify_event)))
+            auto const readsize = read(inotify_fd, &inotify_magic, sizeof(inotify_magic));
+            if (readsize < static_cast<ssize_t>(sizeof_inotify_event))
             {
                 return;
             }
 
-            auto raw_buffer = inotify_buffer.buffer;
-            while (raw_buffer != inotify_buffer.buffer + readsize)
+            auto raw_buffer = inotify_magic.buffer;
+            while (raw_buffer != inotify_magic.buffer + readsize)
             {
+                // This is safe because inotify_magic.buffer is aligned and event.len includes padding for alignment
                 auto& event = reinterpret_cast<inotify_event&>(*raw_buffer);
-                if (event.mask & (IN_CLOSE_WRITE | IN_MOVED_TO))
+                if (event.mask & (IN_CLOSE_WRITE | IN_MOVED_TO) && event.wd == directory_watch_descriptor.value())
                 try
                 {
-                    if (event.name == filename)
-                    {
-                        auto const& file = directory.value() / filename;
+                    auto const& file = directory.value() / filename;
 
-                        if (std::ifstream config_file{file})
-                        {
-                            load_config(config_file, file);
-                        }
+                    if (std::ifstream config_file{file})
+                    {
+                        load_config(config_file, file);
                     }
                 }
                 catch (...)
                 {
-                    mir::log(mir::logging::Severity::warning, "ReloadingConfigFile", std::current_exception(), "Failed to reload configuration");
+                    mir::log(mir::logging::Severity::warning, "ReloadingConfigFile", std::current_exception(),
+                        "Failed to reload configuration");
                 }
 
-                raw_buffer += sizeof(struct inotify_event)+event.len;
+                raw_buffer += sizeof_inotify_event+event.len;
             }
         });
     }
