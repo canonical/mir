@@ -82,7 +82,7 @@ struct WlSurfaceState
     std::optional<wayland::Weak<ResourceLifetimeTracker>> buffer;
 
     shell::SurfaceSpecification surface_spec;
-    std::optional<int> scale;
+    std::optional<float> scale;
     std::optional<geometry::Displacement> offset;
     std::optional<std::optional<std::vector<geometry::Rectangle>>> input_shape;
     std::vector<wayland::Weak<Callback>> frame_callbacks;
@@ -181,7 +181,7 @@ private:
 
     WlSurfaceState pending;
     geometry::Displacement offset_;
-    int32_t scale{1};
+    float scale{1};
     std::optional<geometry::Size> buffer_size_;
     std::vector<wayland::Weak<WlSurfaceState::Callback>> frame_callbacks;
     std::optional<std::vector<mir::geometry::Rectangle>> input_shape;
