@@ -161,11 +161,14 @@ void miral::ReloadingConfigFile::Self::register_handler(MirRunner& runner)
                 if (event.mask & (IN_CLOSE_WRITE | IN_MOVED_TO) && event.wd == directory_watch_descriptor.value())
                 try
                 {
-                    auto const& file = directory.value() / filename;
-
-                    if (std::ifstream config_file{file})
+                    if (event.name == filename)
                     {
-                        load_config(config_file, file);
+                        auto const& file = directory.value() / filename;
+
+                        if (std::ifstream config_file{file})
+                        {
+                            load_config(config_file, file);
+                        }
                     }
                 }
                 catch (...)
