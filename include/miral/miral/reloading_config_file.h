@@ -28,10 +28,14 @@ namespace miral { class MirRunner; class FdHandle; }
 namespace miral
 {
 /**
- * Utility to locate and monitor a config file via
- * the XDG Base Directory Specification. Vis:
- * ($XDG_CONFIG_HOME or $HOME/.config followed by $XDG_CONFIG_DIRS)
- * If, instead of a filename, a path is given, then that is used instead
+ * Utility to locate and monitor a configuration file via the XDG Base Directory
+ * Specification. Vis: ($XDG_CONFIG_HOME or $HOME/.config followed by
+ * $XDG_CONFIG_DIRS).
+ * The user-specific configuration file base ($XDG_CONFIG_HOME or $HOME/.config)
+ * is monitored for subsequent changes (but not directories in $XDG_CONFIG_DIRS)
+ *
+ * If, instead of a filename, a path is given, then the base directories are not
+ * applied and the supplied path monitored for changes.
  * \remark MirAL 5.1
  */
 class ReloadingConfigFile
