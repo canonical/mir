@@ -55,7 +55,7 @@ auto probe_rendering_platform(
     std::span<std::shared_ptr<mg::DisplayPlatform>> const& displays,
     mir::ConsoleServices&,
     std::shared_ptr<mir::udev::Context> const&,
-    mo::ProgramOption const&) -> std::vector<mg::SupportedDevice>
+    mo::Option const&) -> std::vector<mg::SupportedDevice>
 {
     mir::assert_entry_point_signature<mg::RenderProbe>(&probe_rendering_platform);
 

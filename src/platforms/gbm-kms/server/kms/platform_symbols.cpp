@@ -116,7 +116,7 @@ public:
 auto probe_display_platform(
     std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mir::udev::Context> const& udev,
-    mir::options::ProgramOption const& options) -> std::vector<mir::graphics::SupportedDevice>
+    mir::options::Option const& options) -> std::vector<mir::graphics::SupportedDevice>
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
 
@@ -310,7 +310,7 @@ auto probe_rendering_platform(
     std::span<std::shared_ptr<mg::DisplayPlatform>> const& platforms,
     mir::ConsoleServices&,
     std::shared_ptr<mir::udev::Context> const& udev,
-    mir::options::ProgramOption const& options) -> std::vector<mir::graphics::SupportedDevice>
+    mir::options::Option const& options) -> std::vector<mir::graphics::SupportedDevice>
 {
     mir::assert_entry_point_signature<mg::RenderProbe>(&probe_rendering_platform);
 

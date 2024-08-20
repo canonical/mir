@@ -59,7 +59,7 @@ void add_graphics_platform_options(boost::program_options::options_description& 
 }
 
 auto probe_graphics_platform(
-    mo::ProgramOption const& options) -> std::optional<mg::SupportedDevice>
+    mo::Option const& options) -> std::optional<mg::SupportedDevice>
 {
     if (mpw::connection_options_supplied(options))
     {
@@ -75,7 +75,7 @@ auto probe_graphics_platform(
 auto probe_display_platform(
     std::shared_ptr<mir::ConsoleServices> const&,
     std::shared_ptr<mir::udev::Context> const&,
-    mo::ProgramOption const& options) -> std::vector<mg::SupportedDevice>
+    mo::Option const& options) -> std::vector<mg::SupportedDevice>
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
     if (auto probe = probe_graphics_platform(options))

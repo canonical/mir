@@ -235,7 +235,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                         graphics::probe_rendering_module(
                             display_targets,
                             *platform,
-                            dynamic_cast<mir::options::ProgramOption&>(*the_options()),
+                            *the_options(),
                             the_console_services());
 
                     bool found_supported_device{false};
@@ -261,7 +261,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
             }
             else
             {
-                platform_modules = mir::graphics::rendering_modules_for_device(platforms, display_targets, dynamic_cast<mir::options::ProgramOption&>(*the_options()), the_console_services());
+                platform_modules = mir::graphics::rendering_modules_for_device(platforms, display_targets, *the_options(), the_console_services());
             }
 
             for (auto const& [device, platform]: platform_modules)

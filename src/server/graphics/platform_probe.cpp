@@ -84,7 +84,7 @@ auto probe_module(
 
 auto mir::graphics::probe_display_module(
     SharedLibrary const& module,
-    options::ProgramOption const& options,
+    options::Option const& options,
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<SupportedDevice>
 {
     return probe_module(
@@ -102,7 +102,7 @@ auto mir::graphics::probe_display_module(
 auto mir::graphics::probe_rendering_module(
     std::span<std::shared_ptr<mg::DisplayPlatform>> const& platforms,
     SharedLibrary const& module,
-    options::ProgramOption const& options,
+    options::Option const& options,
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<SupportedDevice>
 {
     return probe_module(
@@ -269,7 +269,7 @@ auto mg::modules_for_device(
 
 auto mir::graphics::display_modules_for_device(
     std::vector<std::shared_ptr<SharedLibrary>> const& modules,
-    options::ProgramOption const& options,
+    options::Option const& options,
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>
 {
     return modules_for_device(
@@ -284,7 +284,7 @@ auto mir::graphics::display_modules_for_device(
 auto mir::graphics::rendering_modules_for_device(
     std::vector<std::shared_ptr<SharedLibrary>> const& modules,
     std::span<std::shared_ptr<DisplayPlatform>> const& platforms,
-    options::ProgramOption const& options,
+    options::Option const& options,
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>
 {
     return modules_for_device(
@@ -467,7 +467,7 @@ auto mg::select_display_modules(
             auto supported_devices =
                 graphics::probe_display_module(
                     *platform,
-                    dynamic_cast<mir::options::ProgramOption const&>(options),
+                    options,
                     console);
 
             bool found_supported_device{false};
@@ -513,13 +513,13 @@ auto mg::select_display_modules(
             // We don't need to probe the virtual platform; that is done separately below.
             platforms.erase(virtual_platform_pos);
         }
-        platform_modules = display_modules_for_device(platforms, dynamic_cast<mir::options::ProgramOption const&>(options), console);
+        platform_modules = display_modules_for_device(platforms, options, console);
     }
 
     if (virtual_platform)
     {
         auto virtual_probe = probe_display_module(
-            *virtual_platform, dynamic_cast<mo::ProgramOption const&>(options), console);
+            *virtual_platform, options, console);
         if (virtual_probe.size() && virtual_probe.front().support_level >= mg::probe::supported)
         {
             platform_modules.emplace_back(std::move(virtual_probe.front()), std::move(virtual_platform));
