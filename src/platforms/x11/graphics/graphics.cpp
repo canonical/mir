@@ -100,7 +100,7 @@ auto probe_graphics_platform() -> std::optional<mg::SupportedDevice>
 auto probe_display_platform(
     std::shared_ptr<mir::ConsoleServices> const&,
     std::shared_ptr<mir::udev::Context> const&,
-    mir::options::ProgramOption const&) -> std::vector<mg::SupportedDevice>
+    mir::options::Option const&) -> std::vector<mg::SupportedDevice>
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
     if (auto probe = probe_graphics_platform())

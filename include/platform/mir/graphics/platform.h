@@ -41,7 +41,6 @@ class Surface;
 namespace options
 {
 class Option;
-class ProgramOption;
 }
 namespace renderer::software
 {
@@ -564,13 +563,13 @@ typedef void(*AddPlatformOptions)(
 typedef std::vector<mir::graphics::SupportedDevice>(*PlatformProbe)(
     std::shared_ptr<mir::ConsoleServices> const&,
     std::shared_ptr<mir::udev::Context> const&,
-    mir::options::ProgramOption const& options);
+    mir::options::Option const& options);
 
 typedef std::vector<mir::graphics::SupportedDevice>(*RenderProbe)(
     std::span<std::shared_ptr<mir::graphics::DisplayPlatform>> const&,
     mir::ConsoleServices&,
     std::shared_ptr<mir::udev::Context> const&,
-    mir::options::ProgramOption const&);
+    mir::options::Option const&);
 
 typedef mir::ModuleProperties const*(*DescribeModule)();
 }
@@ -628,13 +627,13 @@ void add_graphics_platform_options(
 auto probe_display_platform(
     std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mir::udev::Context> const& udev,
-    mir::options::ProgramOption const& options) -> std::vector<mir::graphics::SupportedDevice>;
+    mir::options::Option const& options) -> std::vector<mir::graphics::SupportedDevice>;
 
 auto probe_rendering_platform(
     std::span<std::shared_ptr<mir::graphics::DisplayPlatform>> const& targets,
     mir::ConsoleServices& console,
     std::shared_ptr<mir::udev::Context> const& udev,
-    mir::options::ProgramOption const& options) -> std::vector<mir::graphics::SupportedDevice>;
+    mir::options::Option const& options) -> std::vector<mir::graphics::SupportedDevice>;
 
 mir::ModuleProperties const* describe_graphics_module();
 

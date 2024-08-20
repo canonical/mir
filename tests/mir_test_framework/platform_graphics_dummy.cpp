@@ -23,16 +23,12 @@ namespace mg = mir::graphics;
 
 namespace mir
 {
-namespace options
-{
-class ProgramOption;
-}
 }
 
 auto probe_display_platform(
     std::shared_ptr<mir::ConsoleServices> const&,
     std::shared_ptr<mir::udev::Context> const&,
-    mir::options::ProgramOption const&) -> std::vector<mir::graphics::SupportedDevice>
+    mir::options::Option const&) -> std::vector<mir::graphics::SupportedDevice>
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
     std::vector<mg::SupportedDevice> result;
@@ -49,7 +45,7 @@ auto probe_rendering_platform(
     std::span<std::shared_ptr<mg::DisplayPlatform>> const&,
     mir::ConsoleServices&,
     std::shared_ptr<mir::udev::Context> const&,
-    mir::options::ProgramOption const&) -> std::vector<mir::graphics::SupportedDevice>
+    mir::options::Option const&) -> std::vector<mir::graphics::SupportedDevice>
 {
     mir::assert_entry_point_signature<mg::RenderProbe>(&probe_rendering_platform);
     std::vector<mg::SupportedDevice> result;
