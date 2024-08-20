@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIRAL_RELOADING_CONFIG_FILE_H
-#define MIRAL_RELOADING_CONFIG_FILE_H
+#ifndef MIRAL_CONFIG_FILE_H
+#define MIRAL_CONFIG_FILE_H
 
 #include <mir/fd.h>
 
@@ -38,14 +38,14 @@ namespace miral
  * applied and the supplied path monitored for changes.
  * \remark MirAL 5.1
  */
-class ReloadingConfigFile
+class ConfigFile
 {
 public:
     /// Loader functor is passed both the open stream and the actual path (for use in reporting problems)
     using Loader = std::function<void(std::istream& istream, std::filesystem::path const& path)>;
 
-    ReloadingConfigFile(MirRunner& runner, std::filesystem::path file, Loader load_config);
-    ~ReloadingConfigFile();
+    ConfigFile(MirRunner& runner, std::filesystem::path file, Loader load_config);
+    ~ConfigFile();
 
 private:
 
@@ -54,4 +54,4 @@ private:
 };
 }
 
-#endif //MIRAL_RELOADING_CONFIG_FILE_H
+#endif //MIRAL_CONFIG_FILE_H

@@ -15,7 +15,7 @@
  */
 
 #include "miral/test_server.h"
-#include "miral/reloading_config_file.h"
+#include "miral/config_file.h"
 
 #include <wayland_wrapper.h>
 #include <gmock/gmock-function-mocker.h>
@@ -23,7 +23,7 @@
 #include <format>
 #include <fstream>
 
-using miral::ReloadingConfigFile;
+using miral::ConfigFile;
 
 namespace
 {
@@ -71,7 +71,7 @@ struct TestReloadingConfigFile : miral::TestServer, PendingLoad
     TestReloadingConfigFile();
     MOCK_METHOD(void, load, (std::istream& in, std::filesystem::path path), ());
 
-    std::optional<ReloadingConfigFile> reloading_config_file;
+    std::optional<ConfigFile> reloading_config_file;
 
     void write_a_file()
     {
@@ -123,7 +123,7 @@ TEST_F(TestReloadingConfigFile, with_no_file_nothing_is_loaded)
 
     invoke_runner([this](miral::MirRunner& runner)
     {
-        reloading_config_file = ReloadingConfigFile{
+        reloading_config_file = ConfigFile{
             runner,
             no_such_file,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
@@ -138,7 +138,7 @@ TEST_F(TestReloadingConfigFile, with_a_file_something_is_loaded)
 
     invoke_runner([this](miral::MirRunner& runner)
     {
-        reloading_config_file = ReloadingConfigFile{
+        reloading_config_file = ConfigFile{
             runner,
             a_file,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
@@ -150,7 +150,7 @@ TEST_F(TestReloadingConfigFile, when_a_file_is_written_something_is_loaded)
 {
     invoke_runner([this](miral::MirRunner& runner)
     {
-        reloading_config_file = ReloadingConfigFile{
+        reloading_config_file = ConfigFile{
             runner,
             a_file,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
@@ -172,7 +172,7 @@ TEST_F(TestReloadingConfigFile, each_time_a_file_is_rewritten_something_is_loade
 
     invoke_runner([this](miral::MirRunner& runner)
     {
-        reloading_config_file = ReloadingConfigFile{
+        reloading_config_file = ConfigFile{
             runner,
             a_file,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
@@ -198,7 +198,7 @@ TEST_F(TestReloadingConfigFile, when_config_home_unset_a_file_in_home_config_is_
 
     invoke_runner([this](miral::MirRunner& runner)
     {
-        reloading_config_file = ReloadingConfigFile{
+        reloading_config_file = ConfigFile{
             runner,
             config_file,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
@@ -218,7 +218,7 @@ TEST_F(TestReloadingConfigFile, a_file_in_xdg_config_home_is_loaded)
 
     invoke_runner([this](miral::MirRunner& runner)
     {
-        reloading_config_file = ReloadingConfigFile{
+        reloading_config_file = ConfigFile{
             runner,
             config_file,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
@@ -238,7 +238,7 @@ TEST_F(TestReloadingConfigFile, a_file_in_xdg_config_home_is_reloaded)
 
     invoke_runner([this](miral::MirRunner& runner)
     {
-        reloading_config_file = ReloadingConfigFile{
+        reloading_config_file = ConfigFile{
             runner,
             config_file,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
@@ -261,7 +261,7 @@ TEST_F(TestReloadingConfigFile, a_config_in_xdg_conf_dir0_is_loaded)
 
     invoke_runner([this](miral::MirRunner& runner)
     {
-        reloading_config_file = ReloadingConfigFile{
+        reloading_config_file = ConfigFile{
             runner,
             config_file,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
@@ -284,7 +284,7 @@ TEST_F(TestReloadingConfigFile, after_a_config_in_xdg_conf_dir0_is_loaded_a_new_
 
     invoke_runner([this](miral::MirRunner& runner)
     {
-        reloading_config_file = ReloadingConfigFile{
+        reloading_config_file = ConfigFile{
             runner,
             config_file,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
@@ -308,7 +308,7 @@ TEST_F(TestReloadingConfigFile, a_config_in_xdg_conf_dir0_is_loaded_in_preferenc
 
     invoke_runner([this](miral::MirRunner& runner)
     {
-        reloading_config_file = ReloadingConfigFile{
+        reloading_config_file = ConfigFile{
             runner,
             config_file,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
@@ -328,7 +328,7 @@ TEST_F(TestReloadingConfigFile, a_config_in_xdg_conf_dir1_is_loaded_in_preferenc
 
     invoke_runner([this](miral::MirRunner& runner)
     {
-        reloading_config_file = ReloadingConfigFile{
+        reloading_config_file = ConfigFile{
             runner,
             config_file,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
@@ -347,7 +347,7 @@ TEST_F(TestReloadingConfigFile, a_config_in_xdg_conf_dir2_is_loaded)
 
     invoke_runner([this](miral::MirRunner& runner)
     {
-        reloading_config_file = ReloadingConfigFile{
+        reloading_config_file = ConfigFile{
             runner,
             config_file,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};

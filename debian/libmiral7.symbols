@@ -434,6 +434,8 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"vtable for miral::MinimalWindowManager@MIRAL_5.0" 5.0.0
  (c++)"vtable for miral::WindowManagementPolicy@MIRAL_5.0" 5.0.0
  MIRAL_5.1@MIRAL_5.1 5.1.0
+ (c++)"miral::ConfigFile::ConfigFile(miral::MirRunner&, std::filesystem::__cxx11::path, std::function<void (std::basic_istream<char, std::char_traits<char> >&, std::filesystem::__cxx11::path const&)>)@MIRAL_5.1" 5.1.0
+ (c++)"miral::ConfigFile::~ConfigFile()@MIRAL_5.1" 5.1.0
  (c++)"miral::Decorations::Decorations(std::shared_ptr<miral::Decorations::Self>)@MIRAL_5.1" 5.1.0
  (c++)"miral::Decorations::always_csd()@MIRAL_5.1" 5.1.0
  (c++)"miral::Decorations::always_ssd()@MIRAL_5.1" 5.1.0
@@ -445,6 +447,4 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::IdleListener::on_off(std::function<void ()> const&)@MIRAL_5.1" 5.1.0
  (c++)"miral::IdleListener::on_wake(std::function<void ()> const&)@MIRAL_5.1" 5.1.0
  (c++)"miral::IdleListener::operator()(mir::Server&) const@MIRAL_5.1" 5.1.0
- (c++)"miral::ReloadingConfigFile::ReloadingConfigFile(miral::MirRunner&, std::filesystem::__cxx11::path, std::function<void (std::basic_istream<char, std::char_traits<char> >&, std::filesystem::__cxx11::path const&)>)@MIRAL_5.1" 5.1.0
- (c++)"miral::ReloadingConfigFile::~ReloadingConfigFile()@MIRAL_5.1" 5.1.0
  (c++)"miral::WindowManagerTools::move_cursor_to(mir::geometry::generic::Point<float>)@MIRAL_5.1" 5.1.0

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <miral/reloading_config_file.h>
+#include <miral/config_file.h>
 
 #include <miral/runner.h>
 
@@ -67,7 +67,7 @@ auto watch_descriptor(mir::Fd const& inotify_fd, std::optional<path> const& path
 }
 }
 
-class miral::ReloadingConfigFile::Self
+class miral::ConfigFile::Self
 {
 public:
     Self(MirRunner& runner, path file, Loader load_config);
@@ -83,7 +83,7 @@ private:
     std::unique_ptr<miral::FdHandle> fd_handle;
 };
 
-miral::ReloadingConfigFile::Self::Self(MirRunner& runner, path file, Loader load_config) :
+miral::ConfigFile::Self::Self(MirRunner& runner, path file, Loader load_config) :
     inotify_fd{inotify_init1(IN_CLOEXEC)},
     load_config{load_config},
     filename{file.filename()},
@@ -132,14 +132,14 @@ miral::ReloadingConfigFile::Self::Self(MirRunner& runner, path file, Loader load
     }
 }
 
-miral::ReloadingConfigFile::ReloadingConfigFile(MirRunner& runner, path file, Loader load_config) :
+miral::ConfigFile::ConfigFile(MirRunner& runner, path file, Loader load_config) :
     self{std::make_shared<Self>(runner, file, load_config)}
 {
 }
 
-miral::ReloadingConfigFile::~ReloadingConfigFile() = default;
+miral::ConfigFile::~ConfigFile() = default;
 
-void miral::ReloadingConfigFile::Self::register_handler(MirRunner& runner)
+void miral::ConfigFile::Self::register_handler(MirRunner& runner)
 {
     if (directory_watch_descriptor)
     {
