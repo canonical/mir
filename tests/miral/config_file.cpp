@@ -44,9 +44,9 @@ public:
     {
         std::unique_lock lock{mutex};
 
-        if (!cv.wait_for(lock, std::chrono::milliseconds{1000}, [this] { return !pending_loads; }))
+        if (!cv.wait_for(lock, std::chrono::milliseconds{10}, [this] { return !pending_loads; }))
         {
-            std::cerr << "wait_for_load() failed" << std::endl;
+            std::cerr << "wait_for_load() timed out" << std::endl;
         }
     }
 
@@ -66,9 +66,9 @@ private:
     bool pending_loads = false;
 };
 
-struct TestReloadingConfigFile : miral::TestServer, PendingLoad
+struct TestConfigFile : miral::TestServer, PendingLoad
 {
-    TestReloadingConfigFile();
+    TestConfigFile();
     MOCK_METHOD(void, load, (std::istream& in, std::filesystem::path path), ());
 
     std::optional<ConfigFile> reloading_config_file;
@@ -101,7 +101,7 @@ char const* const xdg_conf_dir0 = "/tmp/test_reloading_config_file/xdg_conf_dir_
 char const* const xdg_conf_dir1 = "/tmp/test_reloading_config_file/xdg_conf_dir_one";
 char const* const xdg_conf_dir2 = "/tmp/test_reloading_config_file/xdg_conf_dir_two";
 
-TestReloadingConfigFile::TestReloadingConfigFile()
+TestConfigFile::TestConfigFile()
 {
     std::filesystem::remove_all("/tmp/test_reloading_config_file/");
 
@@ -117,7 +117,7 @@ TestReloadingConfigFile::TestReloadingConfigFile()
 
 }
 
-TEST_F(TestReloadingConfigFile, with_no_file_nothing_is_loaded)
+TEST_F(TestConfigFile, with_reload_on_change_and_no_file_nothing_is_loaded)
 {
     EXPECT_CALL(*this, load).Times(0);
 
@@ -126,11 +126,12 @@ TEST_F(TestReloadingConfigFile, with_no_file_nothing_is_loaded)
         reloading_config_file = ConfigFile{
             runner,
             no_such_file,
+            ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 }
 
-TEST_F(TestReloadingConfigFile, with_a_file_something_is_loaded)
+TEST_F(TestConfigFile, with_reload_on_change_and_a_file_something_is_loaded)
 {
     EXPECT_CALL(*this, load).Times(1);
 
@@ -141,18 +142,20 @@ TEST_F(TestReloadingConfigFile, with_a_file_something_is_loaded)
         reloading_config_file = ConfigFile{
             runner,
             a_file,
+            ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
     wait_for_load();
 }
 
-TEST_F(TestReloadingConfigFile, when_a_file_is_written_something_is_loaded)
+TEST_F(TestConfigFile, with_reload_on_change_when_a_file_is_written_something_is_loaded)
 {
     invoke_runner([this](miral::MirRunner& runner)
     {
         reloading_config_file = ConfigFile{
             runner,
             a_file,
+            ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
@@ -162,7 +165,7 @@ TEST_F(TestReloadingConfigFile, when_a_file_is_written_something_is_loaded)
     wait_for_load();
 }
 
-TEST_F(TestReloadingConfigFile, each_time_a_file_is_rewritten_something_is_loaded)
+TEST_F(TestConfigFile, with_reload_on_change_each_time_a_file_is_rewritten_something_is_loaded)
 {
     auto const times = 42;
 
@@ -175,6 +178,7 @@ TEST_F(TestReloadingConfigFile, each_time_a_file_is_rewritten_something_is_loade
         reloading_config_file = ConfigFile{
             runner,
             a_file,
+            ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
@@ -187,7 +191,7 @@ TEST_F(TestReloadingConfigFile, each_time_a_file_is_rewritten_something_is_loade
     wait_for_load();
 }
 
-TEST_F(TestReloadingConfigFile, when_config_home_unset_a_file_in_home_config_is_loaded)
+TEST_F(TestConfigFile, with_reload_on_change_when_config_home_unset_a_file_in_home_config_is_loaded)
 {
     add_to_environment("XDG_CONFIG_HOME", nullptr);
     using testing::_;
@@ -201,13 +205,14 @@ TEST_F(TestReloadingConfigFile, when_config_home_unset_a_file_in_home_config_is_
         reloading_config_file = ConfigFile{
             runner,
             config_file,
+            ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
     wait_for_load();
 }
 
-TEST_F(TestReloadingConfigFile, a_file_in_xdg_config_home_is_loaded)
+TEST_F(TestConfigFile, with_reload_on_change_a_file_in_xdg_config_home_is_loaded)
 {
     using testing::_;
     EXPECT_CALL(*this, load(_, xdg_conf_home/config_file)).Times(1);
@@ -221,13 +226,14 @@ TEST_F(TestReloadingConfigFile, a_file_in_xdg_config_home_is_loaded)
         reloading_config_file = ConfigFile{
             runner,
             config_file,
+            ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
     wait_for_load();
 }
 
-TEST_F(TestReloadingConfigFile, a_file_in_xdg_config_home_is_reloaded)
+TEST_F(TestConfigFile, with_reload_on_change_a_file_in_xdg_config_home_is_reloaded)
 {
     using testing::_;
     EXPECT_CALL(*this, load(_, xdg_conf_home/config_file)).Times(2);
@@ -241,6 +247,7 @@ TEST_F(TestReloadingConfigFile, a_file_in_xdg_config_home_is_reloaded)
         reloading_config_file = ConfigFile{
             runner,
             config_file,
+            ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
@@ -252,7 +259,7 @@ TEST_F(TestReloadingConfigFile, a_file_in_xdg_config_home_is_reloaded)
     wait_for_load();
 }
 
-TEST_F(TestReloadingConfigFile, a_config_in_xdg_conf_dir0_is_loaded)
+TEST_F(TestConfigFile, with_reload_on_change_a_config_in_xdg_conf_dir0_is_loaded)
 {
     using testing::_;
     EXPECT_CALL(*this, load(_, xdg_conf_dir0/config_file)).Times(1);
@@ -264,13 +271,14 @@ TEST_F(TestReloadingConfigFile, a_config_in_xdg_conf_dir0_is_loaded)
         reloading_config_file = ConfigFile{
             runner,
             config_file,
+            ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
     wait_for_load();
 }
 
-TEST_F(TestReloadingConfigFile, after_a_config_in_xdg_conf_dir0_is_loaded_a_new_config_in_xdg_conf_home_is_loaded)
+TEST_F(TestConfigFile, with_reload_on_change_after_a_config_in_xdg_conf_dir0_is_loaded_a_new_config_in_xdg_conf_home_is_loaded)
 {
     using testing::_;
 
@@ -287,6 +295,7 @@ TEST_F(TestReloadingConfigFile, after_a_config_in_xdg_conf_dir0_is_loaded_a_new_
         reloading_config_file = ConfigFile{
             runner,
             config_file,
+            ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
@@ -296,7 +305,7 @@ TEST_F(TestReloadingConfigFile, after_a_config_in_xdg_conf_dir0_is_loaded_a_new_
     wait_for_load();
 }
 
-TEST_F(TestReloadingConfigFile, a_config_in_xdg_conf_dir0_is_loaded_in_preference_to_dir1_or_2)
+TEST_F(TestConfigFile, with_reload_on_change_a_config_in_xdg_conf_dir0_is_loaded_in_preference_to_dir1_or_2)
 {
     using testing::_;
 
@@ -311,13 +320,14 @@ TEST_F(TestReloadingConfigFile, a_config_in_xdg_conf_dir0_is_loaded_in_preferenc
         reloading_config_file = ConfigFile{
             runner,
             config_file,
+            ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
     wait_for_load();
 }
 
-TEST_F(TestReloadingConfigFile, a_config_in_xdg_conf_dir1_is_loaded_in_preference_to_dir2)
+TEST_F(TestConfigFile, with_reload_on_change_a_config_in_xdg_conf_dir1_is_loaded_in_preference_to_dir2)
 {
     using testing::_;
 
@@ -331,13 +341,14 @@ TEST_F(TestReloadingConfigFile, a_config_in_xdg_conf_dir1_is_loaded_in_preferenc
         reloading_config_file = ConfigFile{
             runner,
             config_file,
+            ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
     wait_for_load();
 }
 
-TEST_F(TestReloadingConfigFile, a_config_in_xdg_conf_dir2_is_loaded)
+TEST_F(TestConfigFile, with_reload_on_change_a_config_in_xdg_conf_dir2_is_loaded)
 {
     using testing::_;
 
@@ -350,6 +361,252 @@ TEST_F(TestReloadingConfigFile, a_config_in_xdg_conf_dir2_is_loaded)
         reloading_config_file = ConfigFile{
             runner,
             config_file,
+            ConfigFile::Mode::reload_on_change,
+            [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
+    });
+
+    wait_for_load();
+}
+
+TEST_F(TestConfigFile, with_no_reloading_and_no_file_nothing_is_loaded)
+{
+    EXPECT_CALL(*this, load).Times(0);
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        reloading_config_file = ConfigFile{
+            runner,
+            no_such_file,
+            ConfigFile::Mode::no_reloading,
+            [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
+    });
+}
+
+TEST_F(TestConfigFile, with_no_reloading_and_a_file_something_is_loaded)
+{
+    EXPECT_CALL(*this, load).Times(1);
+
+    write_a_file();
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        reloading_config_file = ConfigFile{
+            runner,
+            a_file,
+            ConfigFile::Mode::no_reloading,
+            [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
+    });
+    wait_for_load();
+}
+
+TEST_F(TestConfigFile, with_no_reloading_when_a_file_is_written_nothing_is_loaded)
+{
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        reloading_config_file = ConfigFile{
+            runner,
+            a_file,
+            ConfigFile::Mode::no_reloading,
+            [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
+    });
+
+    EXPECT_CALL(*this, load).Times(0);
+
+    write_a_file();
+    wait_for_load();
+}
+
+TEST_F(TestConfigFile, with_no_reloading_when_a_file_is_rewritten_nothing_is_reloaded)
+{
+    EXPECT_CALL(*this, load).Times(1);
+
+    write_a_file(); // Initial write
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        reloading_config_file = ConfigFile{
+            runner,
+            a_file,
+            ConfigFile::Mode::no_reloading,
+            [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
+    });
+
+    wait_for_load();
+    write_a_file();
+    wait_for_load();
+}
+
+TEST_F(TestConfigFile, with_no_reloading_when_config_home_unset_a_file_in_home_config_is_loaded)
+{
+    add_to_environment("XDG_CONFIG_HOME", nullptr);
+    using testing::_;
+    EXPECT_CALL(*this, load(_, home_config/config_file)).Times(1);
+
+    write_config_in(xdg_conf_home);
+    write_config_in(home_config);
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        reloading_config_file = ConfigFile{
+            runner,
+            config_file,
+            ConfigFile::Mode::no_reloading,
+            [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
+    });
+
+    wait_for_load();
+}
+
+TEST_F(TestConfigFile, with_no_reloading_a_file_in_xdg_config_home_is_loaded)
+{
+    using testing::_;
+    EXPECT_CALL(*this, load(_, xdg_conf_home/config_file)).Times(1);
+
+    write_config_in(xdg_conf_dir0);
+    write_config_in(xdg_conf_home);
+    write_config_in(home_config);
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        reloading_config_file = ConfigFile{
+            runner,
+            config_file,
+            ConfigFile::Mode::no_reloading,
+            [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
+    });
+
+    wait_for_load();
+}
+
+TEST_F(TestConfigFile, with_no_reloading_a_file_in_xdg_config_home_is_not_reloaded)
+{
+    using testing::_;
+    EXPECT_CALL(*this, load(_, xdg_conf_home/config_file)).Times(1);
+
+    write_config_in(xdg_conf_dir0);
+    write_config_in(xdg_conf_home);
+    write_config_in(home_config);
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        reloading_config_file = ConfigFile{
+            runner,
+            config_file,
+            ConfigFile::Mode::no_reloading,
+            [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
+    });
+
+    wait_for_load();
+
+    write_config_in(xdg_conf_dir0);
+    write_config_in(xdg_conf_home);
+    write_config_in(home_config);
+    wait_for_load();
+}
+
+TEST_F(TestConfigFile, with_no_reloading_a_config_in_xdg_conf_dir0_is_loaded)
+{
+    using testing::_;
+    EXPECT_CALL(*this, load(_, xdg_conf_dir0/config_file)).Times(1);
+
+    write_config_in(xdg_conf_dir0);
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        reloading_config_file = ConfigFile{
+            runner,
+            config_file,
+            ConfigFile::Mode::no_reloading,
+            [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
+    });
+
+    wait_for_load();
+}
+
+TEST_F(TestConfigFile, with_no_reloading_after_a_config_in_xdg_conf_dir0_is_loaded_a_new_config_in_xdg_conf_home_is_not_loaded)
+{
+    using testing::_;
+
+    testing::InSequence sequence;
+    EXPECT_CALL(*this, load(_, xdg_conf_dir0/config_file)).Times(1);
+    EXPECT_CALL(*this, load(_, xdg_conf_home/config_file)).Times(0);
+
+    write_config_in(xdg_conf_dir2);
+    write_config_in(xdg_conf_dir1);
+    write_config_in(xdg_conf_dir0);
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        reloading_config_file = ConfigFile{
+            runner,
+            config_file,
+            ConfigFile::Mode::no_reloading,
+            [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
+    });
+
+    wait_for_load();
+
+    write_config_in(xdg_conf_home);
+    wait_for_load();
+}
+
+TEST_F(TestConfigFile, with_no_reloading_a_config_in_xdg_conf_dir0_is_loaded_in_preference_to_dir1_or_2)
+{
+    using testing::_;
+
+    EXPECT_CALL(*this, load(_, xdg_conf_dir0/config_file)).Times(1);
+
+    write_config_in(xdg_conf_dir2);
+    write_config_in(xdg_conf_dir1);
+    write_config_in(xdg_conf_dir0);
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        reloading_config_file = ConfigFile{
+            runner,
+            config_file,
+            ConfigFile::Mode::no_reloading,
+            [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
+    });
+
+    wait_for_load();
+}
+
+TEST_F(TestConfigFile, with_no_reloading_a_config_in_xdg_conf_dir1_is_loaded_in_preference_to_dir2)
+{
+    using testing::_;
+
+    EXPECT_CALL(*this, load(_, xdg_conf_dir1/config_file)).Times(1);
+
+    write_config_in(xdg_conf_dir2);
+    write_config_in(xdg_conf_dir1);
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        reloading_config_file = ConfigFile{
+            runner,
+            config_file,
+            ConfigFile::Mode::no_reloading,
+            [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
+    });
+
+    wait_for_load();
+}
+
+TEST_F(TestConfigFile, with_no_reloading_a_config_in_xdg_conf_dir2_is_loaded)
+{
+    using testing::_;
+
+    EXPECT_CALL(*this, load(_, xdg_conf_dir2/config_file)).Times(1);
+
+    write_config_in(xdg_conf_dir2);
+
+    invoke_runner([this](miral::MirRunner& runner)
+    {
+        reloading_config_file = ConfigFile{
+            runner,
+            config_file,
+            ConfigFile::Mode::no_reloading,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 

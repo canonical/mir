@@ -30,12 +30,14 @@ namespace miral
 /**
  * Utility to locate and monitor a configuration file via the XDG Base Directory
  * Specification. Vis: ($XDG_CONFIG_HOME or $HOME/.config followed by
- * $XDG_CONFIG_DIRS).
- * The user-specific configuration file base ($XDG_CONFIG_HOME or $HOME/.config)
- * is monitored for subsequent changes (but not directories in $XDG_CONFIG_DIRS)
+ * $XDG_CONFIG_DIRS). If, instead of a filename, a path is given, then the base
+ * directories are not applied.
  *
- * If, instead of a filename, a path is given, then the base directories are not
- * applied and the supplied path monitored for changes.
+ * If mode is `no_reloading`, then the file is loaded on startup and not reloaded
+ *
+ * If mode is `reload_on_change`, then the file is loaded on startup and either
+ * the user-specific configuration file base ($XDG_CONFIG_HOME or $HOME/.config),
+ * or the supplied path is monitored for changes.
  * \remark MirAL 5.1
  */
 class ConfigFile
@@ -44,7 +46,14 @@ public:
     /// Loader functor is passed both the open stream and the actual path (for use in reporting problems)
     using Loader = std::function<void(std::istream& istream, std::filesystem::path const& path)>;
 
-    ConfigFile(MirRunner& runner, std::filesystem::path file, Loader load_config);
+    /// Mode of reloading
+    enum class Mode
+    {
+        no_reloading,
+        reload_on_change
+    };
+
+    ConfigFile(MirRunner& runner, std::filesystem::path file, Mode mode, Loader load_config);
     ~ConfigFile();
 
 private:

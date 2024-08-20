@@ -65,25 +65,34 @@ auto watch_descriptor(mir::Fd const& inotify_fd, std::optional<path> const& path
 
     return inotify_add_watch(inotify_fd, path.value().c_str(), IN_CLOSE_WRITE | IN_CREATE | IN_MOVED_TO);
 }
+
+class Watcher
+{
+public:
+    using Loader = miral::ConfigFile::Loader;
+    Watcher(miral::MirRunner& runner, path file, miral::ConfigFile::Loader load_config);
+
+    mir::Fd const inotify_fd;
+    Loader const load_config;
+    path const filename;
+    std::optional<path> const directory;
+    std::optional<int> const directory_watch_descriptor;
+
+    void register_handler(miral::MirRunner& runner);
+    std::unique_ptr<miral::FdHandle> fd_handle;
+};
 }
 
 class miral::ConfigFile::Self
 {
 public:
-    Self(MirRunner& runner, path file, Loader load_config);
+    Self(MirRunner& runner, path file, Mode mode, Loader load_config);
 
 private:
-    mir::Fd const inotify_fd;
-    Loader const load_config;
-    std::filesystem::path const filename;
-    std::optional<std::filesystem::path> const directory;
-    std::optional<int> const directory_watch_descriptor;
-
-    void register_handler(MirRunner& runner);
-    std::unique_ptr<miral::FdHandle> fd_handle;
+    std::unique_ptr<Watcher> watcher;
 };
 
-miral::ConfigFile::Self::Self(MirRunner& runner, path file, Loader load_config) :
+Watcher::Watcher(miral::MirRunner& runner, path file, miral::ConfigFile::Loader load_config) :
     inotify_fd{inotify_init1(IN_CLOEXEC)},
     load_config{load_config},
     filename{file.filename()},
@@ -96,6 +105,12 @@ miral::ConfigFile::Self::Self(MirRunner& runner, path file, Loader load_config) 
     {
         mir::log_debug("Monitoring %s for configuration changes", (directory.value()/filename).c_str());
     }
+}
+
+miral::ConfigFile::Self::Self(MirRunner& runner, path file, Mode mode, Loader load_config)
+{
+    auto const filename{file.filename()};
+    auto const directory{config_directory(file)};
 
     // With C++26 we should be able to use the optional directory as a range to
     // initialize config_roots.  Until then, we'll just do it the long way...
@@ -130,16 +145,26 @@ miral::ConfigFile::Self::Self(MirRunner& runner, path file, Loader load_config) 
             break;
         }
     }
+
+    switch (mode)
+    {
+    case Mode::no_reloading:
+        break;
+
+    case Mode::reload_on_change:
+        watcher = std::make_unique<Watcher>(runner, file, std::move(load_config));
+        break;
+    }
 }
 
-miral::ConfigFile::ConfigFile(MirRunner& runner, path file, Loader load_config) :
-    self{std::make_shared<Self>(runner, file, load_config)}
+miral::ConfigFile::ConfigFile(MirRunner& runner, path file, Mode mode, Loader load_config) :
+    self{std::make_shared<Self>(runner, file, mode, load_config)}
 {
 }
 
 miral::ConfigFile::~ConfigFile() = default;
 
-void miral::ConfigFile::Self::register_handler(MirRunner& runner)
+void Watcher::register_handler(miral::MirRunner& runner)
 {
     if (directory_watch_descriptor)
     {
