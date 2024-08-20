@@ -18,6 +18,7 @@
 
 #include <miral/runner.h>
 
+#define MIR_LOG_COMPONENT "ReloadingConfigFile"
 #include <mir/log.h>
 
 #include <boost/throw_exception.hpp>
@@ -91,6 +92,11 @@ miral::ReloadingConfigFile::Self::Self(MirRunner& runner, path file, Loader load
 {
     register_handler(runner);
 
+    if (directory_watch_descriptor.has_value())
+    {
+        mir::log_debug("Monitoring %s for configuration changes", (directory.value()/filename).c_str());
+    }
+
     // With C++26 we should be able to use the optional directory as a range to
     // initialize config_roots.  Until then, we'll just do it the long way...
     std::vector<path> config_roots;
@@ -120,6 +126,7 @@ miral::ReloadingConfigFile::Self::Self(MirRunner& runner, path file, Loader load
         if (std::ifstream config_file{filepath})
         {
             load_config(config_file, filepath);
+            mir::log_debug("Loaded %s", filepath.c_str());
             break;
         }
     }
@@ -168,13 +175,18 @@ void miral::ReloadingConfigFile::Self::register_handler(MirRunner& runner)
                         if (std::ifstream config_file{file})
                         {
                             load_config(config_file, file);
+                            mir::log_debug("(Re)loaded %s", file.c_str());
+                        }
+                        else
+                        {
+                            mir::log_debug("Failed to open %s", file.c_str());
                         }
                     }
                 }
                 catch (...)
                 {
-                    mir::log(mir::logging::Severity::warning, "ReloadingConfigFile", std::current_exception(),
-                        "Failed to reload configuration");
+                    mir::log(mir::logging::Severity::warning, MIR_LOG_COMPONENT, std::current_exception(),
+                             "Failed to reload configuration");
                 }
 
                 raw_buffer += sizeof_inotify_event+event.len;
