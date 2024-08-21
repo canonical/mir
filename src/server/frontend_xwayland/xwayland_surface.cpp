@@ -25,6 +25,7 @@
 
 #include "mir/frontend/wayland.h"
 #include "mir/scene/surface.h"
+#include "mir/shell/decoration.h"
 #include "mir/shell/shell.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/events/input_event.h"
@@ -718,13 +719,19 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
 
         XWaylandSurfaceRole::populate_surface_data_scaled(wl_surface, scale, spec, keep_alive_until_spec_is_used);
 
+        auto const window_type = mir_window_type_freestyle;
+        auto const window_state = state.active_mir_state();
+        auto const corrected_size = mir::shell::decoration::compute_size_with_decorations(
+            cached.geometry.size, window_type, window_state);
+
         // May be overridden by anything in the pending spec
-        spec.width = cached.geometry.size.width;
-        spec.height = cached.geometry.size.height;
+        spec.width = corrected_size.width;
+        spec.height = corrected_size.height;
         spec.top_left = cached.geometry.top_left;
-        spec.type = mir_window_type_freestyle;
-        spec.state = state.active_mir_state();
+        spec.type = window_type;
+        spec.state = window_state;
     }
+
 
     std::vector<std::function<void()>> reply_functions;
 

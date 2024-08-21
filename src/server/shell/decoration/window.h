@@ -63,6 +63,8 @@ struct StaticGeometry
     geometry::Width const icon_line_width;            ///< Width for lines in button icons
 };
 
+extern StaticGeometry const default_geometry;
+
 /// Information about the geometry and type of decorations for a given window
 /// Data is pulled from the surface on construction and immutable after that
 class WindowState
