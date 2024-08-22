@@ -206,6 +206,20 @@ auto msh::AbstractShell::create_surface(
     std::shared_ptr<ms::SurfaceObserver> const& observer,
     Executor* observer_executor) -> std::shared_ptr<ms::Surface>
 {
+    auto wm_visible_spec{spec};
+
+    // When adding decorations we need to resize the window for WM
+    if (wm_visible_spec.server_side_decorated.value_or(false) && wm_visible_spec.width.is_set() && wm_visible_spec.height.is_set())
+    {
+        auto const size = decoration::compute_size_with_decorations(
+            {wm_visible_spec.width.value(), wm_visible_spec.height.value()},
+            wm_visible_spec.type.value(),
+            wm_visible_spec.state.value());
+
+        wm_visible_spec.width = size.width;
+        wm_visible_spec.height = size.height;
+    }
+
     // Instead of a shared pointer, a local variable could be used and the lambda could capture a reference to it
     // This should be safe, but could be the source of nasty bugs and crashes if the wm did something unexpected
     auto const should_decorate = std::make_shared<bool>(false);
@@ -220,7 +234,7 @@ auto msh::AbstractShell::create_surface(
             return session->create_surface(session, wayland_surface, placed_params, observer, observer_executor);
         };
 
-    auto const result = window_manager->add_surface(session, spec, build);
+    auto const result = window_manager->add_surface(session, wm_visible_spec, build);
     report->created_surface(*session, *result);
 
     if (*should_decorate)
