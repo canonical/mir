@@ -81,6 +81,27 @@ auto get_ancestry(std::shared_ptr<ms::Surface> surface) -> std::vector<std::shar
     }
     return result;
 }
+
+void adjust_size_constraints_for_ssd(
+    msh::SurfaceSpecification& wm_relevant_mods,
+    geom::Size const& window_size,
+    geom::Size const& content_size)
+{
+    auto const horiz_frame_padding = window_size.width - content_size.width;
+    auto const vert_frame_padding = window_size.height - content_size.height;
+    if (wm_relevant_mods.width.is_set())
+        wm_relevant_mods.width.value() += horiz_frame_padding;
+    if (wm_relevant_mods.height.is_set())
+        wm_relevant_mods.height.value() += vert_frame_padding;
+    if (wm_relevant_mods.max_width.is_set())
+        wm_relevant_mods.max_width.value() += horiz_frame_padding;
+    if (wm_relevant_mods.max_height.is_set())
+        wm_relevant_mods.max_height.value() += vert_frame_padding;
+    if (wm_relevant_mods.min_width.is_set())
+        wm_relevant_mods.min_width.value() += horiz_frame_padding;
+    if (wm_relevant_mods.min_height.is_set())
+        wm_relevant_mods.min_height.value() += vert_frame_padding;
+}
 }
 
 class msh::AbstractShell::SurfaceConfinementUpdater : public scene::NullSurfaceObserver
@@ -211,13 +232,13 @@ auto msh::AbstractShell::create_surface(
     // When adding decorations we need to resize the window for WM
     if (wm_visible_spec.server_side_decorated.value_or(false) && wm_visible_spec.width.is_set() && wm_visible_spec.height.is_set())
     {
+        geom::Size const content_size{wm_visible_spec.width.value(), wm_visible_spec.height.value()};
         auto const size = decoration::compute_size_with_decorations(
-            {wm_visible_spec.width.value(), wm_visible_spec.height.value()},
+            content_size,
             wm_visible_spec.type.value(),
             wm_visible_spec.state.value());
 
-        wm_visible_spec.width = size.width;
-        wm_visible_spec.height = size.height;
+        adjust_size_constraints_for_ssd(wm_visible_spec, size, content_size);
     }
 
     // Instead of a shared pointer, a local variable could be used and the lambda could capture a reference to it
@@ -258,22 +279,8 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
 {
     auto wm_relevant_mods = modifications;
 
-    auto const window_size{surface->window_size()};
-    auto const content_size{surface->content_size()};
-    auto const horiz_frame_padding = window_size.width - content_size.width;
-    auto const vert_frame_padding = window_size.height - content_size.height;
-    if (wm_relevant_mods.width.is_set())
-        wm_relevant_mods.width.value() += horiz_frame_padding;
-    if (wm_relevant_mods.height.is_set())
-        wm_relevant_mods.height.value() += vert_frame_padding;
-    if (wm_relevant_mods.max_width.is_set())
-        wm_relevant_mods.max_width.value() += horiz_frame_padding;
-    if (wm_relevant_mods.max_height.is_set())
-        wm_relevant_mods.max_height.value() += vert_frame_padding;
-    if (wm_relevant_mods.min_width.is_set())
-        wm_relevant_mods.min_width.value() += horiz_frame_padding;
-    if (wm_relevant_mods.min_height.is_set())
-        wm_relevant_mods.min_height.value() += vert_frame_padding;
+    auto window_size{surface->window_size()};
+    auto content_size{surface->content_size()};
 
     if (wm_relevant_mods.aux_rect.is_set())
         wm_relevant_mods.aux_rect.value().top_left += surface->content_offset();
@@ -284,33 +291,38 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
         {
             decoration_manager->decorate(surface);
 
-            // When adding decorations we need to resize the window for WM
-            auto const size = decoration::compute_size_with_decorations(
+            content_size =
                 {
                     modifications.width.value_or(content_size.width),
                     modifications.height.value_or(content_size.height)
-                },
+                };
+            wm_relevant_mods.width = content_size.width;
+            wm_relevant_mods.height = content_size.height;
+
+            // When adding decorations we need to resize the window for WM
+            window_size = decoration::compute_size_with_decorations(
+                content_size,
                 modifications.type.value_or(surface->type()),
                 modifications.state.value_or(surface->state()));
-
-            wm_relevant_mods.width = size.width;
-            wm_relevant_mods.height = size.height;
         }
         else if (window_size != content_size)
         {
             decoration_manager->undecorate(surface);
 
-            // When removing decorations we need to resize the window for WM
-            geom::Size const size_without_decorations{
-                modifications.width.value_or(content_size.width),
-                modifications.height.value_or(content_size.height)
-            };
-            wm_relevant_mods.width = size_without_decorations.width;
-            wm_relevant_mods.height = size_without_decorations.height;
-        }
+            content_size =
+                {
+                    modifications.width.value_or(content_size.width),
+                    modifications.height.value_or(content_size.height)
+                };
+            wm_relevant_mods.width = content_size.width;
+            wm_relevant_mods.height = content_size.height;
 
-        // TODO reconsider constraints calculated above (that's probably low impact in practice)
+            // When removing decorations we need to resize the window for WM
+            window_size = content_size;
+        }
     }
+
+    adjust_size_constraints_for_ssd(wm_relevant_mods, window_size, content_size);
 
     report->update_surface(*session, *surface, wm_relevant_mods);
 
