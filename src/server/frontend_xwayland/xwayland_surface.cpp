@@ -567,6 +567,16 @@ void mf::XWaylandSurface::take_focus()
     connection->flush();
 }
 
+auto correct_requested_size(geom::Size requested_size, std::weak_ptr<mir::scene::Surface> weak_surface) -> geom::Size
+{
+    if (auto surface = weak_surface.lock())
+    {
+        return mir::shell::decoration::compute_size_with_decorations(requested_size, surface->type(), surface->state());
+    }
+
+    return requested_size;
+}
+
 void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event)
 {
     std::unique_lock lock{mutex};
@@ -580,12 +590,14 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
     // Mir seems to not like it when only one dimension is specified
     if (event->value_mask & XCB_CONFIG_WINDOW_WIDTH || event->value_mask & XCB_CONFIG_WINDOW_HEIGHT)
     {
-        pending_spec(lock).width = event->value_mask & XCB_CONFIG_WINDOW_WIDTH ?
-            geom::Width{event->width} :
-            cached.geometry.size.width;
-        pending_spec(lock).height = event->value_mask & XCB_CONFIG_WINDOW_HEIGHT ?
-            geom::Height{event->height} :
-            cached.geometry.size.height;
+        auto const requested_width =
+            event->value_mask & XCB_CONFIG_WINDOW_WIDTH ? geom::Width{event->width} : cached.geometry.size.width;
+        auto const requested_height =
+            event->value_mask & XCB_CONFIG_WINDOW_HEIGHT ? geom::Height{event->height} : cached.geometry.size.height;
+        auto const corrected_size =
+            correct_requested_size(geom::Size{requested_width, requested_height}, weak_scene_surface);
+        pending_spec(lock).width = corrected_size.width;
+        pending_spec(lock).height = corrected_size.height;
     }
 
     if (!weak_scene_surface.lock())
@@ -621,10 +633,13 @@ void mf::XWaylandSurface::configure_notify(xcb_configure_notify_event_t* event)
         {
             log_debug("Processing configure notify because it came from someone else");
         }
+
+        auto const corrected_size = correct_requested_size(geometry.size, weak_scene_surface);
+
         cached.geometry = geometry;
         pending_spec(lock).top_left = geometry.top_left;
-        pending_spec(lock).width = geometry.size.width;
-        pending_spec(lock).height = geometry.size.height;
+        pending_spec(lock).width = corrected_size.width;
+        pending_spec(lock).height = corrected_size.height;
         lock.unlock();
         apply_any_mods_to_scene_surface();
     }
