@@ -50,6 +50,11 @@ public:
         return value_;
     }
 
+    T value_or(T default_) const
+    {
+        return is_set() ? value() : default_;
+    }
+
     T&& consume()
     {
         die_if_unset();
