@@ -302,6 +302,18 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
             update_confinement_for(surface);
         }
     }
+
+    if (modifications.server_side_decorated.is_set())
+    {
+        if (modifications.server_side_decorated.value())
+        {
+            decoration_manager->decorate(surface);
+        }
+        else
+        {
+            decoration_manager->undecorate(surface);
+        }
+    }
 }
 
 void msh::AbstractShell::destroy_surface(
