@@ -25,7 +25,6 @@
 
 #include "mir/frontend/wayland.h"
 #include "mir/scene/surface.h"
-#include "mir/shell/decoration.h"
 #include "mir/shell/shell.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/events/input_event.h"
@@ -567,16 +566,6 @@ void mf::XWaylandSurface::take_focus()
     connection->flush();
 }
 
-auto correct_requested_size(geom::Size requested_size, std::weak_ptr<mir::scene::Surface> weak_surface) -> geom::Size
-{
-    if (auto surface = weak_surface.lock())
-    {
-        return mir::shell::decoration::compute_size_with_decorations(requested_size, surface->type(), surface->state());
-    }
-
-    return requested_size;
-}
-
 void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event)
 {
     std::unique_lock lock{mutex};
@@ -590,14 +579,12 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
     // Mir seems to not like it when only one dimension is specified
     if (event->value_mask & XCB_CONFIG_WINDOW_WIDTH || event->value_mask & XCB_CONFIG_WINDOW_HEIGHT)
     {
-        auto const requested_width =
-            event->value_mask & XCB_CONFIG_WINDOW_WIDTH ? geom::Width{event->width} : cached.geometry.size.width;
-        auto const requested_height =
-            event->value_mask & XCB_CONFIG_WINDOW_HEIGHT ? geom::Height{event->height} : cached.geometry.size.height;
-        auto const corrected_size =
-            correct_requested_size(geom::Size{requested_width, requested_height}, weak_scene_surface);
-        pending_spec(lock).width = corrected_size.width;
-        pending_spec(lock).height = corrected_size.height;
+        pending_spec(lock).width = event->value_mask & XCB_CONFIG_WINDOW_WIDTH ?
+            geom::Width{event->width} :
+            cached.geometry.size.width;
+        pending_spec(lock).height = event->value_mask & XCB_CONFIG_WINDOW_HEIGHT ?
+            geom::Height{event->height} :
+            cached.geometry.size.height;
     }
 
     if (!weak_scene_surface.lock())
@@ -633,13 +620,10 @@ void mf::XWaylandSurface::configure_notify(xcb_configure_notify_event_t* event)
         {
             log_debug("Processing configure notify because it came from someone else");
         }
-
-        auto const corrected_size = correct_requested_size(geometry.size, weak_scene_surface);
-
         cached.geometry = geometry;
         pending_spec(lock).top_left = geometry.top_left;
-        pending_spec(lock).width = corrected_size.width;
-        pending_spec(lock).height = corrected_size.height;
+        pending_spec(lock).width = geometry.size.width;
+        pending_spec(lock).height = geometry.size.height;
         lock.unlock();
         apply_any_mods_to_scene_surface();
     }
@@ -734,19 +718,13 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
 
         XWaylandSurfaceRole::populate_surface_data_scaled(wl_surface, scale, spec, keep_alive_until_spec_is_used);
 
-        auto const window_type = mir_window_type_freestyle;
-        auto const window_state = state.active_mir_state();
-        auto const corrected_size = mir::shell::decoration::compute_size_with_decorations(
-            cached.geometry.size, window_type, window_state);
-
         // May be overridden by anything in the pending spec
-        spec.width = corrected_size.width;
-        spec.height = corrected_size.height;
+        spec.width = cached.geometry.size.width;
+        spec.height = cached.geometry.size.height;
         spec.top_left = cached.geometry.top_left;
-        spec.type = window_type;
-        spec.state = window_state;
+        spec.type = mir_window_type_freestyle;
+        spec.state = state.active_mir_state();
     }
-
 
     std::vector<std::function<void()>> reply_functions;
 
