@@ -15,6 +15,8 @@
  */
 
 #include "mir/shell/abstract_shell.h"
+
+#include "mir/shell/decoration.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/shell/shell_report.h"
 #include "mir/shell/surface_specification.h"
@@ -262,6 +264,40 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
     if (wm_relevant_mods.aux_rect.is_set())
         wm_relevant_mods.aux_rect.value().top_left += surface->content_offset();
 
+    if (modifications.server_side_decorated.is_set())
+    {
+        if (modifications.server_side_decorated.value())
+        {
+            decoration_manager->decorate(surface);
+
+            // When adding decorations we need to resize the window for WM
+            auto const size = decoration::compute_size_with_decorations(
+                {
+                    modifications.width.value_or(content_size.width),
+                    modifications.height.value_or(content_size.height)
+                },
+                modifications.type.value_or(surface->type()),
+                modifications.state.value_or(surface->state()));
+
+            wm_relevant_mods.width = size.width;
+            wm_relevant_mods.height = size.height;
+        }
+        else if (window_size != content_size)
+        {
+            decoration_manager->undecorate(surface);
+
+            // When removing decorations we need to resize the window for WM
+            geom::Size const size_without_decorations{
+                modifications.width.value_or(content_size.width),
+                modifications.height.value_or(content_size.height)
+            };
+            wm_relevant_mods.width = size_without_decorations.width;
+            wm_relevant_mods.height = size_without_decorations.height;
+        }
+
+        // TODO reconsider constraints calculated above (that's probably low impact in practice)
+    }
+
     report->update_surface(*session, *surface, wm_relevant_mods);
 
     if (wm_relevant_mods.streams.is_set())
@@ -300,18 +336,6 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
         if (focused_surface() == surface)
         {
             update_confinement_for(surface);
-        }
-    }
-
-    if (modifications.server_side_decorated.is_set())
-    {
-        if (modifications.server_side_decorated.value())
-        {
-            decoration_manager->decorate(surface);
-        }
-        else
-        {
-            decoration_manager->undecorate(surface);
         }
     }
 }
