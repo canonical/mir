@@ -15,7 +15,7 @@
  */
 
 #include "input_device_config.h"
-#include "input_config.h"
+#include "input_device_configuration_options.h"
 
 #include "mir/abnormal_exit.h"
 #include "mir/input/device.h"

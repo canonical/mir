@@ -16,7 +16,7 @@
 
 #include "miral/input_configuration.h"
 
-#include "input_config.h"
+#include "input_device_config.h"
 
 #include <mir/server.h>
 #include <mir/input/input_device_hub.h>
