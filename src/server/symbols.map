@@ -1,4 +1,4 @@
-MIR_SERVER_INTERNAL_2.17 {
+MIR_SERVER_INTERNAL_2.18 {
 global:
   extern "C++" {
     VTT?for?mir::DefaultServerConfiguration;
