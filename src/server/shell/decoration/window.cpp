@@ -20,6 +20,7 @@
 
 #include "mir/scene/surface.h"
 #include "mir/scene/null_surface_observer.h"
+#include "mir/shell/decoration.h"
 
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
@@ -27,11 +28,11 @@ namespace msd = mir::shell::decoration;
 
 namespace
 {
-auto border_type_for(std::shared_ptr<ms::Surface> const& surface) -> msd::BorderType
+auto border_type_for(MirWindowType type, MirWindowState state) -> msd::BorderType
 {
     using BorderType = msd::BorderType;
 
-    switch (surface->type())
+    switch (type)
     {
     case mir_window_type_normal:
     case mir_window_type_utility:
@@ -49,7 +50,7 @@ auto border_type_for(std::shared_ptr<ms::Surface> const& surface) -> msd::Border
         return BorderType::None;
     }
 
-    switch (surface->state())
+    switch (state)
     {
     case mir_window_state_unknown:
     case mir_window_state_restored:
@@ -79,7 +80,7 @@ msd::WindowState::WindowState(
     float scale)
     : static_geometry{static_geometry},
       window_size_{surface->window_size()},
-      border_type_{border_type_for(surface)},
+      border_type_{border_type_for(surface->type(), surface->state())},
       focus_state_{surface->focus_state()},
       window_name_{surface->name()},
       scale_{scale}
@@ -296,4 +297,23 @@ msd::WindowSurfaceObserverManager::WindowSurfaceObserverManager(
 msd::WindowSurfaceObserverManager::~WindowSurfaceObserverManager()
 {
     surface_->unregister_interest(*observer);
+}
+
+auto msd::compute_size_with_decorations(geometry::Size content_size, MirWindowType type, MirWindowState state)
+    -> geometry::Size
+{
+    switch (border_type_for(type, state))
+    {
+    case msd::BorderType::Full:
+        content_size.width += msd::default_geometry.side_border_width * 2;
+        content_size.height += msd::default_geometry.titlebar_height + msd::default_geometry.bottom_border_height;
+        break;
+    case msd::BorderType::Titlebar:
+        content_size.height += msd::default_geometry.titlebar_height;
+        break;
+    case msd::BorderType::None:
+        break;
+    }
+
+    return content_size;
 }

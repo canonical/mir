@@ -59,36 +59,26 @@ miral::WindowInfo::AspectRatio const miral::default_min_aspect_ratio{
 miral::WindowInfo::AspectRatio const miral::default_max_aspect_ratio{
     clamp(WindowInfo::AspectRatio{std::numeric_limits<unsigned>::max(), 0U})};
 
-namespace
-{
-template<typename Value>
-auto optional_value_or_default(mir::optional_value<Value> const& optional_value, Value default_ = Value{})
--> Value
-{
-    return optional_value.is_set() ? optional_value.value() : default_;
-}
-}
-
 miral::WindowInfo::Self::Self(Window window, WindowSpecification const& params) :
     window{window},
-    name{optional_value_or_default(params.name(), {""})},
-    type{optional_value_or_default(params.type(), mir_window_type_normal)},
-    state{optional_value_or_default(params.state(), mir_window_state_restored)},
+    name{params.name().value_or({""})},
+    type{params.type().value_or(mir_window_type_normal)},
+    state{params.state().value_or(mir_window_state_restored)},
     restore_rect{},
-    min_width{optional_value_or_default(params.min_width(), miral::default_min_width)},
-    min_height{optional_value_or_default(params.min_height(), miral::default_min_height)},
-    max_width{optional_value_or_default(params.max_width(), miral::default_max_width)},
-    max_height{optional_value_or_default(params.max_height(), miral::default_max_height)},
-    preferred_orientation{optional_value_or_default(params.preferred_orientation(), mir_orientation_mode_any)},
-    confine_pointer(optional_value_or_default(params.confine_pointer(), mir_pointer_unconfined)),
-    width_inc{optional_value_or_default(params.width_inc(), default_width_inc)},
-    height_inc{optional_value_or_default(params.height_inc(), default_height_inc)},
-    min_aspect(optional_value_or_default(params.min_aspect(), default_min_aspect_ratio)),
-    max_aspect(optional_value_or_default(params.max_aspect(), default_max_aspect_ratio)),
-    shell_chrome(optional_value_or_default(params.shell_chrome(), mir_shell_chrome_normal)),
-    depth_layer(optional_value_or_default(params.depth_layer(), mir_depth_layer_application)),
-    attached_edges(optional_value_or_default(params.attached_edges(), mir_placement_gravity_center)),
-    ignore_exclusion_zones{optional_value_or_default(params.ignore_exclusion_zones(), false)}
+    min_width{params.min_width().value_or(miral::default_min_width)},
+    min_height{params.min_height().value_or(miral::default_min_height)},
+    max_width{params.max_width().value_or(miral::default_max_width)},
+    max_height{params.max_height().value_or(miral::default_max_height)},
+    preferred_orientation{params.preferred_orientation().value_or(mir_orientation_mode_any)},
+    confine_pointer(params.confine_pointer().value_or(mir_pointer_unconfined)),
+    width_inc{params.width_inc().value_or(default_width_inc)},
+    height_inc{params.height_inc().value_or(default_height_inc)},
+    min_aspect(params.min_aspect().value_or(default_min_aspect_ratio)),
+    max_aspect(params.max_aspect().value_or(default_max_aspect_ratio)),
+    shell_chrome(params.shell_chrome().value_or(mir_shell_chrome_normal)),
+    depth_layer(params.depth_layer().value_or(mir_depth_layer_application)),
+    attached_edges(params.attached_edges().value_or(mir_placement_gravity_center)),
+    ignore_exclusion_zones{params.ignore_exclusion_zones().value_or(false)}
 {
     if (params.output_id().is_set())
         output_id = params.output_id().value();

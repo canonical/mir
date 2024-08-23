@@ -42,10 +42,10 @@ namespace geom = mir::geometry;
 namespace msh = mir::shell;
 namespace msd = mir::shell::decoration;
 
-namespace
+namespace mir::shell::decoration
 {
 // See src/server/shell/decoration/window.h for a full description of each property
-msd::StaticGeometry const default_geometry{
+StaticGeometry const default_geometry {
     geom::Height{24},   // titlebar_height
     geom::Width{6},     // side_border_width
     geom::Height{6},    // bottom_border_height
@@ -57,7 +57,10 @@ msd::StaticGeometry const default_geometry{
     geom::Displacement{5, 5}, // icon_padding
     geom::Width{1},     // detail_line_width
 };
+}
 
+namespace
+{
 template<typename OBJ>
 struct PropertyComparison
 {

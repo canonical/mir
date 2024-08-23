@@ -1375,6 +1375,7 @@ global:
     mir::scene::TextInputChange::operator*;
     mir::shell::IdleHandlerObserver::?IdleHandlerObserver*;
     mir::shell::IdleHandlerObserver::IdleHandlerObserver*;
+    mir::shell::decoration::compute_size_with_decorations*;
     non-virtual?thunk?to?mir::DecorationStrategy::?DecorationStrategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_decoration_strategy*;
