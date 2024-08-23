@@ -111,6 +111,6 @@ You're free to replace `bomber` with any other Wayland compatible application.
 ## Next steps
 Now that you have your base compositor working, feel free to check out these guides on how to further develop your compositor:
 
-- [How to specify start up applications](how-to/how-to-specify-startup-apps.md)
-- [How to handle user input](how-to/how-to-handle-keyboard-input.md)
-- [Specifying CSD/SSD Preference](how-to/specifying-csd-ssd-preference.md)
+- [How to specify start up applications](/how-to/how-to-specify-startup-apps.md)
+- [How to handle user input](/how-to/how-to-handle-keyboard-input.md)
+- [Specifying CSD/SSD Preference](/how-to/specifying-csd-ssd-preference.md)
