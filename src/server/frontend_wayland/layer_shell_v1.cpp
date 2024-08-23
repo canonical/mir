@@ -585,19 +585,26 @@ void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)
 
 void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
 {
-    while (!inflight_configures.empty() && inflight_configures.front().first < serial)
-    {
-        inflight_configures.pop_front();
-    }
+    auto const acked_event = std::find_if(
+        std::begin(inflight_configures),
+        std::end(inflight_configures),
+        [serial](auto& p) { return p.first == serial; });
 
-    if (inflight_configures.empty() || inflight_configures.front().first != serial)
+    if (acked_event == std::end(inflight_configures))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(
             "Could not find acked configure with serial " + std::to_string(serial)));
     }
 
-    auto const acked_configure_size = inflight_configures.front().second;
-    inflight_configures.pop_front();
+    auto const acked_configure_size = acked_event->second;
+
+    inflight_configures.erase(std::begin(inflight_configures), std::next(acked_event));
+
+    if (!inflight_configures.empty())
+    {
+        // If a stale configure has been acked, we do no more
+        return;
+    }
 
     client_size.set_pending(geom::Size{
         acked_configure_size.width.value_or(client_size.pending().width),
