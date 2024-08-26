@@ -1,4 +1,4 @@
-MIR_SERVER_INTERNAL_2.17 {
+MIR_SERVER_INTERNAL_2.18 {
 global:
   extern "C++" {
     VTT?for?mir::DefaultServerConfiguration;
@@ -10,10 +10,14 @@ global:
     mir::BasicCallback::lock*;
     mir::BasicCallback::operator*;
     mir::BasicCallback::unlock*;
+    mir::DecorationStrategy::?DecorationStrategy*;
+    mir::DecorationStrategy::DecorationStrategy*;
+    mir::DecorationStrategy::operator*;
     mir::DefaultServerConfiguration::DefaultServerConfiguration*;
     mir::DefaultServerConfiguration::add_wayland_extension*;
     mir::DefaultServerConfiguration::default_reports*;
     mir::DefaultServerConfiguration::set_enabled_wayland_extensions*;
+    mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     mir::DefaultServerConfiguration::set_wayland_extension_filter*;
     mir::DefaultServerConfiguration::the_application_not_responding_detector*;
     mir::DefaultServerConfiguration::the_buffer_allocator*;
@@ -26,6 +30,7 @@ global:
     mir::DefaultServerConfiguration::the_cursor_images*;
     mir::DefaultServerConfiguration::the_cursor_listener*;
     mir::DefaultServerConfiguration::the_decoration_manager*;
+    mir::DefaultServerConfiguration::the_decoration_strategy*;
     mir::DefaultServerConfiguration::the_default_cursor_image*;
     mir::DefaultServerConfiguration::the_default_input_device_hub*;
     mir::DefaultServerConfiguration::the_display*;
@@ -57,6 +62,7 @@ global:
     mir::DefaultServerConfiguration::the_input_targeter*;
     mir::DefaultServerConfiguration::the_key_mapper*;
     mir::DefaultServerConfiguration::the_keyboard_observer_registrar*;
+    mir::DefaultServerConfiguration::the_led_observer_registrar*;
     mir::DefaultServerConfiguration::the_logger*;
     mir::DefaultServerConfiguration::the_main_clipboard*;
     mir::DefaultServerConfiguration::the_main_loop*;
@@ -179,6 +185,7 @@ global:
     mir::Server::set_enabled_wayland_extensions*;
     mir::Server::set_exception_handler*;
     mir::Server::set_terminator*;
+    mir::Server::set_the_decoration_strategy*;
     mir::Server::set_wayland_extension_filter*;
     mir::Server::stop*;
     mir::Server::supported_pixel_formats*;
@@ -188,12 +195,14 @@ global:
     mir::Server::the_compositor_report*;
     mir::Server::the_cursor*;
     mir::Server::the_cursor_listener*;
+    mir::Server::the_decoration_strategy*;
     mir::Server::the_display*;
     mir::Server::the_display_configuration_controller*;
     mir::Server::the_display_configuration_observer_registrar*;
     mir::Server::the_display_platforms*;
     mir::Server::the_focus_controller*;
     mir::Server::the_gl_config*;
+    mir::Server::the_idle_handler*;
     mir::Server::the_input_device_hub*;
     mir::Server::the_input_device_registry*;
     mir::Server::the_input_targeter*;
@@ -392,7 +401,21 @@ global:
     mir::input::VirtualInputDevice::if_started_then*;
     mir::input::default_cursor_size*;
     mir::input::input_platform_from_graphics_module*;
+    mir::input::make_unique_context*;
     mir::input::probe_input_platforms*;
+    mir::input::receiver::XKBMapperRegistrar::XKBMapperRegistrar*;
+    mir::input::receiver::XKBMapperRegistrar::clear_all_keymaps*;
+    mir::input::receiver::XKBMapperRegistrar::clear_keymap_for_device*;
+    mir::input::receiver::XKBMapperRegistrar::device_modifiers*;
+    mir::input::receiver::XKBMapperRegistrar::map_event*;
+    mir::input::receiver::XKBMapperRegistrar::modifiers*;
+    mir::input::receiver::XKBMapperRegistrar::operator*;
+    mir::input::receiver::XKBMapperRegistrar::register_interest*;
+    mir::input::receiver::XKBMapperRegistrar::set_key_state*;
+    mir::input::receiver::XKBMapperRegistrar::set_keymap_for_all_devices*;
+    mir::input::receiver::XKBMapperRegistrar::set_keymap_for_device*;
+    mir::input::receiver::XKBMapperRegistrar::unregister_interest*;
+    mir::input::receiver::XKBMapperRegistrar::xkb_modifiers*;
     mir::report_exception*;
     mir::run_mir*;
     mir::scene::ApplicationNotRespondingDetector::?ApplicationNotRespondingDetector*;
@@ -408,6 +431,10 @@ global:
     mir::scene::ApplicationNotRespondingDetectorWrapper::unregister_session*;
     mir::scene::ClipboardObserver::?ClipboardObserver*;
     mir::scene::ClipboardObserver::ClipboardObserver*;
+    mir::scene::CopyableWlArray::?CopyableWlArray*;
+    mir::scene::CopyableWlArray::CopyableWlArray*;
+    mir::scene::CopyableWlArray::data*;
+    mir::scene::CopyableWlArray::operator*;
     mir::scene::DataExchangeSource::?DataExchangeSource*;
     mir::scene::DataExchangeSource::DataExchangeSource*;
     mir::scene::IdleHub::?IdleHub*;
@@ -554,7 +581,9 @@ global:
     mir::scene::SurfaceStateTracker::with*;
     mir::scene::SurfaceStateTracker::with_active_state*;
     mir::scene::SurfaceStateTracker::without*;
+    mir::scene::TextInputChange::?TextInputChange*;
     mir::scene::TextInputChange::TextInputChange*;
+    mir::scene::TextInputChange::operator*;
     mir::scene::TextInputChangeHandler::?TextInputChangeHandler*;
     mir::scene::TextInputChangeHandler::TextInputChangeHandler*;
     mir::scene::TextInputHub::?TextInputHub*;
@@ -602,6 +631,8 @@ global:
     mir::shell::FocusController::operator*;
     mir::shell::IdleHandler::?IdleHandler*;
     mir::shell::IdleHandler::IdleHandler*;
+    mir::shell::IdleHandlerObserver::?IdleHandlerObserver*;
+    mir::shell::IdleHandlerObserver::IdleHandlerObserver*;
     mir::shell::InputTargeter::?InputTargeter*;
     mir::shell::InputTargeter::InputTargeter*;
     mir::shell::InputTargeter::operator*;
@@ -660,6 +691,7 @@ global:
     mir::shell::WindowManager::?WindowManager*;
     mir::shell::WindowManager::WindowManager*;
     mir::shell::WindowManager::operator*;
+    mir::shell::decoration::compute_size_with_decorations*;
     mir::shell::operator*;
     mir::terminate_with_current_exception*;
     mir::time::Alarm::?Alarm*;
@@ -671,8 +703,10 @@ global:
     non-virtual?thunk?to?mir::BasicCallback::lock*;
     non-virtual?thunk?to?mir::BasicCallback::operator*;
     non-virtual?thunk?to?mir::BasicCallback::unlock*;
+    non-virtual?thunk?to?mir::DecorationStrategy::?DecorationStrategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::add_wayland_extension*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_enabled_wayland_extensions*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_wayland_extension_filter*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_application_not_responding_detector*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_buffer_allocator*;
@@ -685,6 +719,7 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_cursor_images*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_cursor_listener*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_decoration_manager*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_decoration_strategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_default_cursor_image*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_display*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_display_buffer_compositor_factory*;
@@ -712,6 +747,7 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_targeter*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_key_mapper*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_keyboard_observer_registrar*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_led_observer_registrar*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_logger*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_main_clipboard*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_main_loop*;
@@ -847,6 +883,17 @@ global:
     non-virtual?thunk?to?mir::input::TouchVisualizer::?TouchVisualizer*;
     non-virtual?thunk?to?mir::input::VTFilter::?VTFilter*;
     non-virtual?thunk?to?mir::input::VTFilter::handle*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::clear_all_keymaps*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::clear_keymap_for_device*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::device_modifiers*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::map_event*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::modifiers*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::register_interest*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::set_key_state*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::set_keymap_for_all_devices*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::set_keymap_for_device*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::unregister_interest*;
+    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::xkb_modifiers*;
     non-virtual?thunk?to?mir::scene::ApplicationNotRespondingDetector::?ApplicationNotRespondingDetector*;
     non-virtual?thunk?to?mir::scene::ApplicationNotRespondingDetector::Observer::?Observer*;
     non-virtual?thunk?to?mir::scene::ApplicationNotRespondingDetectorWrapper::?ApplicationNotRespondingDetectorWrapper*;
@@ -983,6 +1030,8 @@ global:
     non-virtual?thunk?to?mir::shell::DisplayLayout::?DisplayLayout*;
     non-virtual?thunk?to?mir::shell::FocusController::?FocusController*;
     non-virtual?thunk?to?mir::shell::IdleHandler::?IdleHandler*;
+    non-virtual?thunk?to?mir::shell::IdleHandlerObserver::?IdleHandlerObserver*;
+    non-virtual?thunk?to?mir::shell::IdleHandlerObserver::?IdleHandlerObserver*;
     non-virtual?thunk?to?mir::shell::InputTargeter::?InputTargeter*;
     non-virtual?thunk?to?mir::shell::PersistentSurfaceStore::?PersistentSurfaceStore*;
     non-virtual?thunk?to?mir::shell::ShellReport::?ShellReport*;
@@ -1028,6 +1077,7 @@ global:
     non-virtual?thunk?to?mir::time::AlarmFactory::?AlarmFactory*;
     std::hash::operator*;
     typeinfo?for?mir::BasicCallback;
+    typeinfo?for?mir::DecorationStrategy;
     typeinfo?for?mir::DefaultServerConfiguration;
     typeinfo?for?mir::DefaultServerStatusListener;
     typeinfo?for?mir::DisplayChanger;
@@ -1094,11 +1144,13 @@ global:
     typeinfo?for?mir::input::VTFilter;
     typeinfo?for?mir::input::Validator;
     typeinfo?for?mir::input::VirtualInputDevice;
+    typeinfo?for?mir::input::receiver::XKBMapperRegistrar;
     typeinfo?for?mir::scene::ApplicationNotRespondingDetector::Observer;
     typeinfo?for?mir::scene::ApplicationNotRespondingDetector;
     typeinfo?for?mir::scene::ApplicationNotRespondingDetectorWrapper;
     typeinfo?for?mir::scene::Clipboard;
     typeinfo?for?mir::scene::ClipboardObserver;
+    typeinfo?for?mir::scene::CopyableWlArray;
     typeinfo?for?mir::scene::DataExchangeSource;
     typeinfo?for?mir::scene::IdleHub;
     typeinfo?for?mir::scene::IdleStateObserver;
@@ -1144,6 +1196,8 @@ global:
     typeinfo?for?mir::shell::DisplayLayout;
     typeinfo?for?mir::shell::FocusController;
     typeinfo?for?mir::shell::IdleHandler;
+    typeinfo?for?mir::shell::IdleHandlerObserver;
+    typeinfo?for?mir::shell::IdleHandlerObserver;
     typeinfo?for?mir::shell::InputTargeter;
     typeinfo?for?mir::shell::PersistentSurfaceStore::Id;
     typeinfo?for?mir::shell::PersistentSurfaceStore;
@@ -1162,10 +1216,12 @@ global:
     typeinfo?for?std::hash;
     virtual?thunk?to?mir::DefaultServerConfiguration::add_wayland_extension*;
     virtual?thunk?to?mir::DefaultServerConfiguration::set_enabled_wayland_extensions*;
+    virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     virtual?thunk?to?mir::DefaultServerConfiguration::set_wayland_extension_filter*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_application_not_responding_detector*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_compositor*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_console_services*;
+    virtual?thunk?to?mir::DefaultServerConfiguration::the_decoration_strategy*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_display*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_display_changer*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_display_platforms*;
@@ -1231,6 +1287,7 @@ global:
     virtual?thunk?to?mir::shell::ShellWrapper::surface_at*;
     virtual?thunk?to?mir::shell::ShellWrapper::swap_z_order*;
     vtable?for?mir::BasicCallback;
+    vtable?for?mir::DecorationStrategy;
     vtable?for?mir::DefaultServerConfiguration;
     vtable?for?mir::DefaultServerStatusListener;
     vtable?for?mir::DisplayChanger;
@@ -1287,6 +1344,7 @@ global:
     vtable?for?mir::input::TouchVisualizer;
     vtable?for?mir::input::VTFilter;
     vtable?for?mir::input::VirtualInputDevice;
+    vtable?for?mir::input::receiver::XKBMapperRegistrar;
     vtable?for?mir::scene::ApplicationNotRespondingDetector::Observer;
     vtable?for?mir::scene::ApplicationNotRespondingDetector;
     vtable?for?mir::scene::ApplicationNotRespondingDetectorWrapper;
@@ -1326,6 +1384,8 @@ global:
     vtable?for?mir::shell::DisplayLayout;
     vtable?for?mir::shell::FocusController;
     vtable?for?mir::shell::IdleHandler;
+    vtable?for?mir::shell::IdleHandlerObserver;
+    vtable?for?mir::shell::IdleHandlerObserver;
     vtable?for?mir::shell::InputTargeter;
     vtable?for?mir::shell::PersistentSurfaceStore;
     vtable?for?mir::shell::Shell;
@@ -1340,70 +1400,4 @@ global:
   };
 local: *;
 };
-
-MIR_SERVER_INTERNAL_2.18 {
-global:
-  extern "C++" {
-    mir::DecorationStrategy::?DecorationStrategy*;
-    mir::DecorationStrategy::DecorationStrategy*;
-    mir::DecorationStrategy::operator*;
-    mir::DefaultServerConfiguration::set_the_decoration_strategy*;
-    mir::DefaultServerConfiguration::the_decoration_strategy*;
-    mir::DefaultServerConfiguration::the_led_observer_registrar*;
-    mir::Server::set_the_decoration_strategy*;
-    mir::Server::the_decoration_strategy*;
-    mir::Server::the_idle_handler*;
-    mir::input::make_unique_context*;
-    mir::input::receiver::XKBMapperRegistrar::XKBMapperRegistrar*;
-    mir::input::receiver::XKBMapperRegistrar::clear_all_keymaps*;
-    mir::input::receiver::XKBMapperRegistrar::clear_keymap_for_device*;
-    mir::input::receiver::XKBMapperRegistrar::device_modifiers*;
-    mir::input::receiver::XKBMapperRegistrar::map_event*;
-    mir::input::receiver::XKBMapperRegistrar::modifiers*;
-    mir::input::receiver::XKBMapperRegistrar::operator*;
-    mir::input::receiver::XKBMapperRegistrar::register_interest*;
-    mir::input::receiver::XKBMapperRegistrar::set_key_state*;
-    mir::input::receiver::XKBMapperRegistrar::set_keymap_for_all_devices*;
-    mir::input::receiver::XKBMapperRegistrar::set_keymap_for_device*;
-    mir::input::receiver::XKBMapperRegistrar::unregister_interest*;
-    mir::input::receiver::XKBMapperRegistrar::xkb_modifiers*;
-    mir::scene::CopyableWlArray::?CopyableWlArray*;
-    mir::scene::CopyableWlArray::CopyableWlArray*;
-    mir::scene::CopyableWlArray::data*;
-    mir::scene::CopyableWlArray::operator*;
-    mir::scene::TextInputChange::?TextInputChange*;
-    mir::scene::TextInputChange::operator*;
-    mir::shell::IdleHandlerObserver::?IdleHandlerObserver*;
-    mir::shell::IdleHandlerObserver::IdleHandlerObserver*;
-    mir::shell::decoration::compute_size_with_decorations*;
-    non-virtual?thunk?to?mir::DecorationStrategy::?DecorationStrategy*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_strategy*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_decoration_strategy*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_led_observer_registrar*;
-    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::clear_all_keymaps*;
-    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::clear_keymap_for_device*;
-    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::device_modifiers*;
-    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::map_event*;
-    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::modifiers*;
-    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::register_interest*;
-    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::set_key_state*;
-    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::set_keymap_for_all_devices*;
-    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::set_keymap_for_device*;
-    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::unregister_interest*;
-    non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::xkb_modifiers*;
-    non-virtual?thunk?to?mir::shell::IdleHandlerObserver::?IdleHandlerObserver*;
-    non-virtual?thunk?to?mir::shell::IdleHandlerObserver::?IdleHandlerObserver*;
-    typeinfo?for?mir::DecorationStrategy;
-    typeinfo?for?mir::input::receiver::XKBMapperRegistrar;
-    typeinfo?for?mir::scene::CopyableWlArray;
-    typeinfo?for?mir::shell::IdleHandlerObserver;
-    typeinfo?for?mir::shell::IdleHandlerObserver;
-    virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_strategy*;
-    virtual?thunk?to?mir::DefaultServerConfiguration::the_decoration_strategy*;
-    vtable?for?mir::DecorationStrategy;
-    vtable?for?mir::input::receiver::XKBMapperRegistrar;
-    vtable?for?mir::shell::IdleHandlerObserver;
-    vtable?for?mir::shell::IdleHandlerObserver;
-  };
-} MIR_SERVER_INTERNAL_2.17;
 
