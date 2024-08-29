@@ -45,6 +45,9 @@ mir (2.18.0) UNRELEASED; urgency=medium
       . mir_kiosk_x11 crashes when the host platform has no outputs (#3427)
       . Screenshots no longer respect output scale (#3461)
       . Mir should respect flags from DEB_BUILD_MAINT_OPTIONS (LP#2073451)
+      . Fix x11 rendering when scaled fractional scaling (#3508, #3554)
+      . wbg constantly resizing after switching to 2.17.0 (#3450)
+      . Decorations Eat Into Application Area (#3572)
 
  -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 08 Aug 2024 10:35:09 +0200
 
