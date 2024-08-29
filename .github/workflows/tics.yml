@@ -5,6 +5,9 @@ on:
     branches:
     - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
 jobs:
   Run:
     runs-on: ubuntu-24.04
