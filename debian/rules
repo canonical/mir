@@ -39,7 +39,7 @@ endif
 
 # Disable LTO on broken binutils
 # https://bugs.launchpad.net/ubuntu/+source/binutils/+bug/2070302
-ifneq ($(shell ld --version | grep '2.42.90.20240720$$'),)
+ifneq ($(shell ld --version | grep '2.43.1$$'),)
 	DEB_BUILD_MAINT_OPTIONS += optimize=-lto
 endif
 
