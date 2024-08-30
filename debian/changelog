@@ -1,3 +1,15 @@
+mir (2.17.1) UNRELEASED; urgency=medium
+
+  * Enhancements
+    . x11-kiosk (#3460)
+  * Bugs fixed
+    . (#3414) Don't re-send wl_output.geometry if unchanged (#3430)
+    . Screenshots no longer respect output scale (#3461)
+    . wbg constantly resizing after switching to 2.17.0 (#3450)
+    . mir_kiosk_x11 crashes when the host platform has no outputs (#3427)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Fri, 30 Aug 2024 11:31:28 +0200
+
 mir (2.17.0) UNRELEASED; urgency=medium
 
   [ Matthew Kosarek ]
