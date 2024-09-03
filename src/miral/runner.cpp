@@ -17,7 +17,7 @@
 #include "miral/runner.h"
 #include "system_compositor_window_manager.h"
 #include "fd_manager.h"
-#include "input_device_config.h"
+#include "input_device_configuration_options.h"
 #include "join_client_threads.h"
 #include "launch_app.h"
 
