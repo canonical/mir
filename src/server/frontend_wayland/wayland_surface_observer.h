@@ -63,6 +63,7 @@ public:
     void latest_client_size(geometry::Size window_size)
     {
         impl->window_size = window_size;
+        impl->requested_size = {};
     }
 
     /// Should only be called from the Wayland thread
