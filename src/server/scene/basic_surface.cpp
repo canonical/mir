@@ -169,6 +169,11 @@ public:
     {
         for_each_observer(&SurfaceObserver::left_output, surf, id);
     }
+
+    void rescale_output(const Surface* surf, const graphics::DisplayConfigurationOutputId& id) override
+    {
+        for_each_observer(&SurfaceObserver::rescale_output, surf, id);
+    }
 };
 
 namespace
@@ -989,28 +994,34 @@ auto mir::scene::BasicSurface::content_top_left(State const& state) const -> geo
 void mir::scene::BasicSurface::track_outputs()
 {
     auto const state{synchronised_state.lock()};
-    std::set<mg::DisplayConfigurationOutputId> tracked;
+    decltype(tracked_output_scales) tracked;
 
     display_config->for_each_output(
         [&](mg::DisplayConfigurationOutput const& output)
         {
             if (output.valid() && output.used && output.extents().overlaps(state->surface_rect))
             {
-                if (!tracked_outputs.contains(output.id))
+                if (!tracked_output_scales.contains(output.id))
                 {
                     observers->entered_output(this, output.id);
                 }
-                tracked.insert(output.id);
+                tracked.insert({output.id, output.scale});
             }
         });
 
-    // TODO: Once std::views::filter is properly supported across compilers, replace the
-    // creation of `untracked` with iteration over a filtered view of `tracked_outputs`
-    std::vector<mg::DisplayConfigurationOutputId> untracked;
-    std::ranges::set_difference(tracked_outputs, tracked, std::back_inserter(untracked));
-    std::ranges::for_each(untracked, [&](auto const& id) { observers->left_output(this, id); });
+    for (auto const& [id, scale] : tracked_output_scales)
+    {
+        if (auto new_entry = tracked.find(id); new_entry == tracked.end())
+        {
+            observers->left_output(this, id);
+        }
+        else if (new_entry->second != scale)
+        {
+            observers->rescale_output(this, id);
+        }
+    }
 
-    tracked_outputs = std::move(tracked);
+    tracked_output_scales = std::move(tracked);
 }
 
 void mir::scene::BasicSurface::linearised_track_outputs()

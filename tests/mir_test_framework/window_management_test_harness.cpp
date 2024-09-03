@@ -83,7 +83,7 @@ struct mir_test_framework::WindowManagementTestHarness::Self : public ms::Surfac
     void depth_layer_set_to(ms::Surface const*, MirDepthLayer) override {}
     void entered_output(ms::Surface const*, mg::DisplayConfigurationOutputId const&) override {}
     void left_output(ms::Surface const*, mg::DisplayConfigurationOutputId const&) override {}
-
+    void rescale_output(const mir::scene::Surface*, mir::graphics::DisplayConfigurationOutputId const&) override {}
     std::mutex mutable mutex;
     std::vector<std::shared_ptr<mc::BufferStream>> streams;
     std::vector<std::shared_ptr<ms::Surface>> known_surfaces;

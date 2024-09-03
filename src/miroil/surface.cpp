@@ -59,6 +59,7 @@ public:
                          mir::geometry::Size const &window_size) override;
   void entered_output(mir::scene::Surface const* surf, mir::graphics::DisplayConfigurationOutputId const& id) override;
   void left_output(mir::scene::Surface const* surf, mir::graphics::DisplayConfigurationOutputId const& id) override;
+  void rescale_output(mir::scene::Surface const* surf, mir::graphics::DisplayConfigurationOutputId const& id) override;
 
 private:
   std::shared_ptr<miroil::SurfaceObserver> listener;
@@ -166,6 +167,12 @@ void miroil::SurfaceObserverImpl::entered_output(
 }
 
 void miroil::SurfaceObserverImpl::left_output(
+    mir::scene::Surface const* /*surf*/,
+    mir::graphics::DisplayConfigurationOutputId const& /*id*/)
+{
+}
+
+void miroil::SurfaceObserverImpl::rescale_output(
     mir::scene::Surface const* /*surf*/,
     mir::graphics::DisplayConfigurationOutputId const& /*id*/)
 {
