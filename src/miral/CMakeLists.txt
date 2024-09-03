@@ -20,7 +20,7 @@ add_library(miral-internal STATIC
     system_compositor_window_manager.cpp system_compositor_window_manager.h
     display_configuration_listeners.cpp  display_configuration_listeners.h
     fd_manager.cpp                       fd_manager.h
-    input_device_config.cpp              input_device_config.h
+    input_device_config.cpp              input_device_configuration_options.h input_device_config.h
     launch_app.cpp                       launch_app.h
     mru_window_list.cpp                  mru_window_list.h
     open_desktop_entry.cpp               open_desktop_entry.h
@@ -63,6 +63,7 @@ add_library(miral-external OBJECT
     display_configuration.cpp           ${miral_include}/miral/display_configuration.h
     external_client.cpp                 ${miral_include}/miral/external_client.h
     idle_listener.cpp                   ${miral_include}/miral/idle_listener.h
+    input_configuration.cpp             ${miral_include}/miral/input_configuration.h
     keymap.cpp                          ${miral_include}/miral/keymap.h
     minimal_window_manager.cpp          ${miral_include}/miral/minimal_window_manager.h
     display_configuration_option.cpp    ${miral_include}/miral/display_configuration_option.h
