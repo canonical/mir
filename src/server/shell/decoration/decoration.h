@@ -33,16 +33,23 @@ public:
     Decoration() = default;
     virtual ~Decoration() = default;
 
-    virtual void set_scale(float new_scale) = 0;
 
+    // Called whenever the visible aspect of the window changes.
+    // Examples: Scale, title, focus, visibility, size, etc...
     virtual void window_state_updated() = 0;
+
+    // Called whenever decorations receive input events
+    // Mouse up, down, dragging, enter, leave...
     virtual void input_state_updated() = 0;
+
     virtual void request_toggle_maximize() = 0;
     virtual void request_close() = 0;
     virtual void request_minimize() = 0;
     virtual void request_move(MirInputEvent const*) = 0;
     virtual void request_resize(MirInputEvent const*, MirResizeEdge) = 0;
+
     virtual void set_cursor(std::string const& cursor_name) = 0;
+    virtual void set_scale(float new_scale) = 0;
 
 private:
     Decoration(Decoration const&) = delete;

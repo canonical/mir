@@ -72,9 +72,9 @@ public:
         std::shared_ptr<scene::Surface> const& window_surface);
     ~BasicDecoration();
 
+    void window_state_updated() override;
     void input_state_updated() override;
 
-    void set_cursor(std::string const& cursor_image_name) override;
     void request_move(MirInputEvent const* event) override;
     void request_resize(MirInputEvent const* event, MirResizeEdge edge) override;
     void request_toggle_maximize() override;
@@ -82,7 +82,7 @@ public:
     void request_close() override;
 
     void set_scale(float scale) override;
-    void window_state_updated() override;
+    void set_cursor(std::string const& cursor_image_name) override;
 
 protected:
     /// Creates an up-to-date WindowState object

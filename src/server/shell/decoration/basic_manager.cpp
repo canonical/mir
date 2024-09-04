@@ -96,7 +96,8 @@ void msd::BasicManager::decorate(std::shared_ptr<ms::Surface> const& surface)
     {
         decorations[surface.get()] = nullptr;
         lock.unlock();
-        auto decoration = create_decoration(locked_shell, surface);
+        auto decoration =
+            std::make_unique<BasicDecoration>(locked_shell, buffer_allocator, executor, cursor_images, surface);
         lock.lock();
         decoration->set_scale(scale);
         decorations[surface.get()] = std::move(decoration);

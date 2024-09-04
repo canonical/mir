@@ -23,7 +23,6 @@
 #include <memory>
 #include <mir/observer_registrar.h>
 
-#include <functional>
 #include <unordered_map>
 #include <mutex>
 
@@ -57,16 +56,13 @@ public:
 
     ~BasicManager();
 
-    std::unique_ptr<Decoration> create_decoration(
-        std::shared_ptr<shell::Shell> const& shell, std::shared_ptr<scene::Surface> const& surface) override
-    {
-        return std::make_unique<BasicDecoration>(shell, buffer_allocator, executor, cursor_images, surface);
-    }
-
     void init(std::weak_ptr<shell::Shell> const& shell) override;
     void decorate(std::shared_ptr<scene::Surface> const& surface) override;
     void undecorate(std::shared_ptr<scene::Surface> const& surface) override;
     void undecorate_all() override;
+
+protected:
+    std::unordered_map<scene::Surface*, std::unique_ptr<Decoration>> decorations;
 
 private:
     std::shared_ptr<mir::graphics::GraphicBufferAllocator> const buffer_allocator;
@@ -77,7 +73,6 @@ private:
     std::weak_ptr<shell::Shell> shell;
 
     std::mutex mutex;
-    std::unordered_map<scene::Surface*, std::unique_ptr<Decoration>> decorations;
     float scale{1.0f};
 
     void set_scale(float new_scale);
