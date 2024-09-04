@@ -18,12 +18,10 @@
 #define MIR_SHELL_DECORATION_WINDOW_H_
 
 #include "mir/geometry/rectangle.h"
-#include "mir/geometry/displacement.h"
 
 #include <mir_toolkit/common.h>
 
 #include <memory>
-#include <functional>
 #include <string>
 
 namespace mir
@@ -36,6 +34,7 @@ namespace shell
 {
 namespace decoration
 {
+class Decoration;
 class BasicDecoration;
 template<typename T> class ThreadsafeAccess;
 
@@ -117,7 +116,7 @@ class WindowSurfaceObserverManager
 public:
     WindowSurfaceObserverManager(
         std::shared_ptr<scene::Surface> const& window_surface,
-        std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration);
+        std::shared_ptr<ThreadsafeAccess<Decoration>> const& decoration);
     ~WindowSurfaceObserverManager();
 
 private:
