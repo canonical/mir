@@ -17,8 +17,10 @@
 #ifndef MIR_SHELL_DECORATION_BASIC_MANAGER_H_
 #define MIR_SHELL_DECORATION_BASIC_MANAGER_H_
 
+#include "basic_decoration.h"
 #include "manager.h"
 
+#include <memory>
 #include <mir/observer_registrar.h>
 
 #include <functional>
@@ -47,14 +49,19 @@ class BasicManager :
     public Manager
 {
 public:
-    using DecorationBuilder = std::function<std::unique_ptr<Decoration>(
-        std::shared_ptr<shell::Shell> const& shell,
-        std::shared_ptr<scene::Surface> const& surface)>;
-
     BasicManager(
         mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>& display_configuration_observers,
-        DecorationBuilder&& decoration_builder);
+        std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& buffer_allocator,
+        std::shared_ptr<Executor> const& executor,
+        std::shared_ptr<input::CursorImages> const& cursor_images);
+
     ~BasicManager();
+
+    std::unique_ptr<Decoration> create_decoration(
+        std::shared_ptr<shell::Shell> const& shell, std::shared_ptr<scene::Surface> const& surface) override
+    {
+        return std::make_unique<BasicDecoration>(shell, buffer_allocator, executor, cursor_images, surface);
+    }
 
     void init(std::weak_ptr<shell::Shell> const& shell) override;
     void decorate(std::shared_ptr<scene::Surface> const& surface) override;
@@ -62,7 +69,10 @@ public:
     void undecorate_all() override;
 
 private:
-    DecorationBuilder const decoration_builder;
+    std::shared_ptr<mir::graphics::GraphicBufferAllocator> const buffer_allocator;
+    std::shared_ptr<Executor> const executor;
+    std::shared_ptr<input::CursorImages> const cursor_images;
+
     std::shared_ptr<DisplayConfigurationListener> const display_config_monitor;
     std::weak_ptr<shell::Shell> shell;
 

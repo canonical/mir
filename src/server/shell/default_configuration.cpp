@@ -67,23 +67,13 @@ auto mir::DefaultServerConfiguration::the_window_manager_builder() -> shell::Win
 auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_ptr<msd::Manager>
 {
     return decoration_manager(
-        [this]()->std::shared_ptr<msd::Manager>
+        [this] -> std::shared_ptr<msd::Manager>
         {
             return std::make_shared<msd::BasicManager>(
                 *the_display_configuration_observer_registrar(),
-                [buffer_allocator = the_buffer_allocator(),
-                 executor = the_main_loop(),
-                 cursor_images = the_cursor_images()](
-                    std::shared_ptr<shell::Shell> const& shell,
-                    std::shared_ptr<scene::Surface> const& surface) -> std::unique_ptr<msd::Decoration>
-                {
-                    return std::make_unique<msd::BasicDecoration>(
-                        shell,
-                        buffer_allocator,
-                        executor,
-                        cursor_images,
-                        surface);
-                });
+                the_buffer_allocator(),
+                the_main_loop(),
+                the_cursor_images());
         });
 }
 

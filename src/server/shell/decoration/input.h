@@ -23,7 +23,6 @@
 #include <memory>
 #include <vector>
 #include <mutex>
-#include <functional>
 #include <map>
 #include <optional>
 
@@ -44,6 +43,7 @@ namespace shell
 class Shell;
 namespace decoration
 {
+class Decoration;
 class WindowState;
 class BasicDecoration;
 class StaticGeometry;
@@ -108,7 +108,7 @@ public:
         std::shared_ptr<StaticGeometry const> const& static_geometry,
         std::shared_ptr<scene::Surface> const& decoration_surface,
         WindowState const& window_state,
-        std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration);
+        std::shared_ptr<ThreadsafeAccess<Decoration>> const& decoration);
     ~InputManager();
 
     void update_window_state(WindowState const& window_state);
@@ -135,7 +135,7 @@ private:
     std::shared_ptr<StaticGeometry const> const static_geometry;
     std::shared_ptr<scene::Surface> decoration_surface;
     std::shared_ptr<Observer> const observer;
-    std::shared_ptr<ThreadsafeAccess<BasicDecoration>> decoration;
+    std::shared_ptr<ThreadsafeAccess<Decoration>> decoration;
     std::vector<geometry::Rectangle> input_shape;
     /// The most recent event, or the event currently being processed
     std::shared_ptr<MirEvent const> latest_event;

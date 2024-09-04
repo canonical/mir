@@ -159,7 +159,7 @@ msd::BasicDecoration::BasicDecoration(
     std::shared_ptr<Executor> const& executor,
     std::shared_ptr<input::CursorImages> const& cursor_images,
     std::shared_ptr<ms::Surface> const& window_surface)
-    : threadsafe_self{std::make_shared<ThreadsafeAccess<BasicDecoration>>(executor)},
+    : threadsafe_self{std::make_shared<ThreadsafeAccess<Decoration>>(executor)},
       static_geometry{std::make_shared<StaticGeometry>(default_geometry)},
       shell{shell},
       buffer_allocator{buffer_allocator},

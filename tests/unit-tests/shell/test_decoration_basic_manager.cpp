@@ -19,7 +19,9 @@
 
 #include "mir/test/doubles/stub_observer_registrar.h"
 #include "mir/test/doubles/stub_shell.h"
+#include "src/server/shell/decoration/manager.h"
 
+#include <boost/iostreams/detail/buffer.hpp>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -34,7 +36,30 @@ using namespace testing;
 class StubDecoration
     : public msd::Decoration
 {
-    void set_scale(float /*new_scale*/) override {};
+    void set_scale(float) override {}
+    void window_state_updated() override {}
+    void input_state_updated() override {}
+    void request_toggle_maximize() override {}
+    void request_close() override {}
+    void request_minimize() override {}
+    void request_move(const MirInputEvent*) override {}
+    void request_resize(const MirInputEvent*, MirResizeEdge) override {}
+    void set_cursor(const std::string&) override {}
+};
+
+class MockDecorationManager: public msd::BasicManager
+{
+public:
+    MockDecorationManager(auto& registrar) :
+        msd::BasicManager{registrar, nullptr, nullptr, nullptr}
+    {
+    }
+
+    std::unique_ptr<msd::Decoration> create_decoration(
+        std::shared_ptr<mir::shell::Shell> const&, std::shared_ptr<mir::scene::Surface> const&) override
+    {
+        return std::make_unique<StubDecoration>();
+    }
 };
 
 struct DecorationBasicManager
@@ -43,29 +68,21 @@ struct DecorationBasicManager
     void SetUp() override
     {
         manager.init(shell);
-        EXPECT_CALL(*this, build_decoration())
+        EXPECT_CALL(*this, create_decoration())
             .Times(AnyNumber())
-            .WillRepeatedly(Invoke([](){ return new StubDecoration; }));
+            .WillRepeatedly(Invoke([]{ return new StubDecoration; }));
         EXPECT_CALL(*this, decoration_destroyed(_))
             .Times(AnyNumber());
     }
 
     // user needs to wrap the raw pointer in a unique_ptr because GTest is dumb
-    MOCK_METHOD0(build_decoration, msd::Decoration*());
-
-    MOCK_METHOD1(decoration_destroyed, void(msd::Decoration*));
+    MOCK_METHOD(msd::Decoration*, create_decoration, ());
+    MOCK_METHOD(void, decoration_destroyed, (msd::Decoration*));
 
     std::shared_ptr<mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>
         registrar{std::make_shared<mtd::StubObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>()};
 
-    msd::BasicManager manager{
-        *registrar,
-        [this](
-            std::shared_ptr<msh::Shell> const&,
-            std::shared_ptr<ms::Surface> const&) -> std::unique_ptr<msd::Decoration>
-        {
-            return std::unique_ptr<msd::Decoration>(build_decoration());
-        }};
+    MockDecorationManager manager{*registrar};
     std::shared_ptr<msh::Shell> shell{std::make_shared<mtd::StubShell>()};
 };
 
@@ -83,15 +100,23 @@ public:
         mock->decoration_destroyed(this);
     }
 
-    MOCK_METHOD1(set_scale, void(float));
+    MOCK_METHOD(void, set_scale, (float), (override));
+    MOCK_METHOD(void, window_state_updated, (), (override));
+    MOCK_METHOD(void, input_state_updated, (), (override));
+    MOCK_METHOD(void, request_toggle_maximize , (), (override));
+    MOCK_METHOD(void, request_close, (), (override));
+    MOCK_METHOD(void, request_minimize, (), (override));
+    MOCK_METHOD(void, request_move, (const MirInputEvent*), (override));
+    MOCK_METHOD(void, request_resize, (const MirInputEvent*, MirResizeEdge), (override));
+    MOCK_METHOD(void, set_cursor, (const std::string&), (override));
 
     DecorationBasicManager* const mock;
 };
 
-TEST_F(DecorationBasicManager, calls_build_decoration)
+TEST_F(DecorationBasicManager, calls_create_decoration)
 {
     auto const surface = std::make_shared<mtd::StubSurface>();
-    EXPECT_CALL(*this, build_decoration())
+    EXPECT_CALL(*this, create_decoration())
         .Times(1)
         .WillOnce(Invoke([](){ return new StubDecoration; }));
     manager.decorate(surface);
@@ -108,7 +133,7 @@ TEST_F(DecorationBasicManager, decorating_multiple_surfaces_is_fine)
 TEST_F(DecorationBasicManager, decorating_a_surface_is_idempotent)
 {
     auto const surface = std::make_shared<mtd::StubSurface>();
-    EXPECT_CALL(*this, build_decoration())
+    EXPECT_CALL(*this, create_decoration())
         .Times(1)
         .WillOnce(Invoke([](){ return new StubDecoration; }));
     manager.decorate(surface);
@@ -120,7 +145,7 @@ TEST_F(DecorationBasicManager, undecorate_unknown_surface_is_fine)
 {
     auto const surface_a = std::make_shared<mtd::StubSurface>();
     auto const surface_b = std::make_shared<mtd::StubSurface>();
-    EXPECT_CALL(*this, build_decoration())
+    EXPECT_CALL(*this, create_decoration())
         .Times(0);
     manager.undecorate(surface_a);
     manager.undecorate(surface_b);
@@ -148,7 +173,7 @@ TEST_F(DecorationBasicManager, undecorate_works)
         .Times(1);
     EXPECT_CALL(*this, decoration_destroyed(decoration_b.get()))
         .Times(0);
-    EXPECT_CALL(*this, build_decoration())
+    EXPECT_CALL(*this, create_decoration())
         .Times(2)
         .WillOnce(Invoke([&](){ return decoration_a.release(); }))
         .WillOnce(Invoke([&](){ return decoration_b.release(); }));
@@ -170,7 +195,7 @@ TEST_F(DecorationBasicManager, undecorate_all_works)
         .Times(1);
     EXPECT_CALL(*this, decoration_destroyed(decoration_b.get()))
         .Times(1);
-    EXPECT_CALL(*this, build_decoration())
+    EXPECT_CALL(*this, create_decoration())
         .Times(2)
         .WillOnce(Invoke([&](){ return decoration_a.release(); }))
         .WillOnce(Invoke([&](){ return decoration_b.release(); }));
@@ -180,13 +205,13 @@ TEST_F(DecorationBasicManager, undecorate_all_works)
     Mock::VerifyAndClearExpectations(this);
 }
 
-TEST_F(DecorationBasicManager, does_not_build_decorations_while_locked)
+TEST_F(DecorationBasicManager, does_not_create_decorations_while_locked)
 {
     auto decoration_a = std::make_unique<MockDecoration>(this);
     auto decoration_b = std::make_unique<MockDecoration>(this);
     auto const surface_a = std::make_shared<mtd::StubSurface>();
     auto const surface_b = std::make_shared<mtd::StubSurface>();
-    EXPECT_CALL(*this, build_decoration())
+    EXPECT_CALL(*this, create_decoration())
         .Times(2)
         .WillOnce(Invoke([&]()
             {
@@ -203,7 +228,7 @@ TEST_F(DecorationBasicManager, does_not_destroy_decorations_while_locked)
     auto decoration_b = std::make_unique<MockDecoration>(this);
     auto const surface_a = std::make_shared<mtd::StubSurface>();
     auto const surface_b = std::make_shared<mtd::StubSurface>();
-    EXPECT_CALL(*this, build_decoration())
+    EXPECT_CALL(*this, create_decoration())
         .Times(2)
         .WillOnce(Invoke([&](){ return decoration_a.release(); }))
         .WillOnce(Invoke([&](){ return decoration_b.release(); }));
