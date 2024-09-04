@@ -43,9 +43,6 @@ public:
     Manager() = default;
     virtual ~Manager() = default;
 
-    virtual std::unique_ptr<Decoration> create_decoration(
-        std::shared_ptr<shell::Shell> const& shell, std::shared_ptr<scene::Surface> const& surface) = 0;
-
     /// Decorates the window
     virtual void decorate(std::shared_ptr<scene::Surface> const& surface) = 0;
 
