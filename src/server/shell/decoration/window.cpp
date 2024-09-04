@@ -237,7 +237,7 @@ class msd::WindowSurfaceObserverManager::Observer
     : public ms::NullSurfaceObserver
 {
 public:
-    Observer(std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration)
+    Observer(std::shared_ptr<ThreadsafeAccess<Decoration>> const& decoration)
         : decoration{decoration}
     {
     }
@@ -278,16 +278,16 @@ private:
     {
         decoration->spawn([](auto decoration)
             {
-                decoration->window_state_updated();
+                decoration->redraw();
             });
     }
 
-    std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const decoration;
+    std::shared_ptr<ThreadsafeAccess<Decoration>> const decoration;
 };
 
 msd::WindowSurfaceObserverManager::WindowSurfaceObserverManager(
     std::shared_ptr<scene::Surface> const& window_surface,
-    std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration)
+    std::shared_ptr<ThreadsafeAccess<Decoration>> const& decoration)
     : surface_{window_surface},
       observer{std::make_shared<Observer>(decoration)}
 {

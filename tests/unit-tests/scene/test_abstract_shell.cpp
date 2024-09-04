@@ -27,6 +27,7 @@
 #include "src/server/report/null/shell_report.h"
 #include "src/include/server/mir/scene/session_event_sink.h"
 #include "src/server/scene/session_manager.h"
+#include "src/server/shell/decoration/decoration.h"
 #include "src/server/shell/decoration/null_manager.h"
 
 #include "mir/test/doubles/mock_window_manager.h"
@@ -130,6 +131,9 @@ struct MockSurfaceFactory : public ms::SurfaceFactory
 struct MockDecorationManager : public msh::decoration::NullManager
 {
     MOCK_METHOD1(decorate, void(std::shared_ptr<ms::Surface> const&));
+    MOCK_METHOD2(
+        create_decoration,
+        std::unique_ptr<mir::shell::decoration::Decoration>(std::shared_ptr<mir::shell::Shell> const& shell, std::shared_ptr<mir::scene::Surface> const& surface));
 };
 
 using NiceMockWindowManager = NiceMock<mtd::MockWindowManager>;

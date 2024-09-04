@@ -17,11 +17,12 @@
 #ifndef MIR_SHELL_DECORATION_BASIC_MANAGER_H_
 #define MIR_SHELL_DECORATION_BASIC_MANAGER_H_
 
+#include "basic_decoration.h"
 #include "manager.h"
 
+#include <memory>
 #include <mir/observer_registrar.h>
 
-#include <functional>
 #include <unordered_map>
 #include <mutex>
 
@@ -47,13 +48,12 @@ class BasicManager :
     public Manager
 {
 public:
-    using DecorationBuilder = std::function<std::unique_ptr<Decoration>(
-        std::shared_ptr<shell::Shell> const& shell,
-        std::shared_ptr<scene::Surface> const& surface)>;
-
     BasicManager(
         mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>& display_configuration_observers,
-        DecorationBuilder&& decoration_builder);
+        std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& buffer_allocator,
+        std::shared_ptr<Executor> const& executor,
+        std::shared_ptr<input::CursorImages> const& cursor_images);
+
     ~BasicManager();
 
     void init(std::weak_ptr<shell::Shell> const& shell) override;
@@ -61,13 +61,18 @@ public:
     void undecorate(std::shared_ptr<scene::Surface> const& surface) override;
     void undecorate_all() override;
 
+protected:
+    std::unordered_map<scene::Surface*, std::unique_ptr<Decoration>> decorations;
+
 private:
-    DecorationBuilder const decoration_builder;
+    std::shared_ptr<mir::graphics::GraphicBufferAllocator> const buffer_allocator;
+    std::shared_ptr<Executor> const executor;
+    std::shared_ptr<input::CursorImages> const cursor_images;
+
     std::shared_ptr<DisplayConfigurationListener> const display_config_monitor;
     std::weak_ptr<shell::Shell> shell;
 
     std::mutex mutex;
-    std::unordered_map<scene::Surface*, std::unique_ptr<Decoration>> decorations;
     float scale{1.0f};
 
     void set_scale(float new_scale);

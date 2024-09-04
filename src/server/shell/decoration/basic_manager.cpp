@@ -50,8 +50,12 @@ private:
 
 msd::BasicManager::BasicManager(
     ObserverRegistrar<mg::DisplayConfigurationObserver>& display_configuration_observers,
-    DecorationBuilder&& decoration_builder) :
-    decoration_builder{std::move(decoration_builder)},
+    std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& buffer_allocator,
+    std::shared_ptr<Executor> const& executor,
+    std::shared_ptr<input::CursorImages> const& cursor_images) :
+    buffer_allocator{buffer_allocator},
+    executor{executor},
+    cursor_images{cursor_images},
     display_config_monitor{std::make_shared<DisplayConfigurationListener>(
         [&](mg::DisplayConfiguration const& config)
         {
@@ -92,7 +96,8 @@ void msd::BasicManager::decorate(std::shared_ptr<ms::Surface> const& surface)
     {
         decorations[surface.get()] = nullptr;
         lock.unlock();
-        auto decoration = decoration_builder(locked_shell, surface);
+        auto decoration =
+            std::make_unique<BasicDecoration>(locked_shell, buffer_allocator, executor, cursor_images, surface);
         lock.lock();
         decoration->set_scale(scale);
         decorations[surface.get()] = std::move(decoration);

@@ -26,9 +26,7 @@
 #include "mir_toolkit/cursors.h"
 
 namespace ms = mir::scene;
-namespace mi = mir::input;
 namespace geom = mir::geometry;
-namespace msh = mir::shell;
 namespace msd = mir::shell::decoration;
 
 using namespace std::chrono_literals;
@@ -121,7 +119,7 @@ msd::InputManager::InputManager(
     std::shared_ptr<StaticGeometry const> const& static_geometry,
     std::shared_ptr<ms::Surface> const& decoration_surface,
     WindowState const& window_state,
-    std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration)
+    std::shared_ptr<ThreadsafeAccess<Decoration>> const& decoration)
     : static_geometry{static_geometry},
       decoration_surface{decoration_surface},
       observer{std::make_shared<Observer>(this)},
@@ -422,9 +420,9 @@ void msd::InputManager::widget_enter(Widget& widget)
     widget.state = ButtonState::Hovered;
     if (widget.resize_edge)
         set_cursor(widget.resize_edge.value());
-    decoration->spawn([](BasicDecoration* decoration)
+    decoration->spawn([](Decoration* decoration)
         {
-            decoration->input_state_updated();
+            decoration->handle_input();
         });
 }
 
@@ -432,18 +430,18 @@ void msd::InputManager::widget_leave(Widget& widget)
 {
     widget.state = ButtonState::Up;
     set_cursor(mir_resize_edge_none);
-    decoration->spawn([](BasicDecoration* decoration)
+    decoration->spawn([](Decoration* decoration)
         {
-            decoration->input_state_updated();
+            decoration->handle_input();
         });
 }
 
 void msd::InputManager::widget_down(Widget& widget)
 {
     widget.state = ButtonState::Down;
-    decoration->spawn([](BasicDecoration* decoration)
+    decoration->spawn([](Decoration* decoration)
         {
-            decoration->input_state_updated();
+            decoration->handle_input();
         });
 }
 
@@ -461,7 +459,7 @@ void msd::InputManager::widget_up(Widget& widget)
             if (widget.resize_edge && widget.resize_edge == mir_resize_edge_none)
             {
                 // Widget is the titlebar, so we should toggle maximization
-                decoration->spawn([](BasicDecoration* decoration)
+                decoration->spawn([](Decoration* decoration)
                     {
                         decoration->request_toggle_maximize();
                     });
@@ -473,21 +471,21 @@ void msd::InputManager::widget_up(Widget& widget)
             switch (widget.button.value())
             {
             case ButtonFunction::Close:
-                decoration->spawn([](BasicDecoration* decoration)
+                decoration->spawn([](Decoration* decoration)
                     {
                         decoration->request_close();
                     });
                 break;
 
             case ButtonFunction::Maximize:
-                decoration->spawn([](BasicDecoration* decoration)
+                decoration->spawn([](Decoration* decoration)
                     {
                         decoration->request_toggle_maximize();
                     });
                 break;
 
             case ButtonFunction::Minimize:
-                decoration->spawn([](BasicDecoration* decoration)
+                decoration->spawn([](Decoration* decoration)
                     {
                         decoration->request_minimize();
                     });
@@ -496,9 +494,9 @@ void msd::InputManager::widget_up(Widget& widget)
         }
     }
     widget.state = ButtonState::Hovered;
-    decoration->spawn([](BasicDecoration* decoration)
+    decoration->spawn([](Decoration* decoration)
         {
-            decoration->input_state_updated();
+            decoration->handle_input();
         });
 }
 
@@ -512,14 +510,14 @@ void msd::InputManager::widget_drag(Widget& widget)
 
             if (edge == mir_resize_edge_none)
             {
-                decoration->spawn([event = latest_event](BasicDecoration* decoration)
+                decoration->spawn([event = latest_event](Decoration* decoration)
                     {
                         decoration->request_move(mir_event_get_input_event(event.get()));
                     });
             }
             else
             {
-                decoration->spawn([event = latest_event, edge](BasicDecoration* decoration)
+                decoration->spawn([event = latest_event, edge](Decoration* decoration)
                     {
                         decoration->request_resize(mir_event_get_input_event(event.get()), edge);
                     });
@@ -527,16 +525,16 @@ void msd::InputManager::widget_drag(Widget& widget)
         }
         else if (widget.button)
         {
-            decoration->spawn([event = latest_event](BasicDecoration* decoration)
+            decoration->spawn([event = latest_event](Decoration* decoration)
                 {
                     decoration->request_move(mir_event_get_input_event(event.get()));
                 });
         }
         widget.state = ButtonState::Up;
     }
-    decoration->spawn([](BasicDecoration* decoration)
+    decoration->spawn([](Decoration* decoration)
         {
-            decoration->input_state_updated();
+            decoration->handle_input();
         });
 }
 
@@ -572,7 +570,7 @@ void msd::InputManager::set_cursor(MirResizeEdge resize_edge)
     if (cursor_name != current_cursor_name)
     {
         current_cursor_name = cursor_name;
-        decoration->spawn([cursor_name](BasicDecoration* decoration)
+        decoration->spawn([cursor_name](Decoration* decoration)
             {
                 decoration->set_cursor(cursor_name);
             });
