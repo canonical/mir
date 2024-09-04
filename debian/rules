@@ -49,9 +49,10 @@ ifeq ($(filter Ubuntu,$(DEB_VENDOR)),)
 	COMMON_CONFIGURE_OPTIONS += -DMIR_RUN_WLCS_TESTS=OFF
 endif
 
-# Disable miral tests on Launchpad riscv64 (canonical/mir#3443)
+# Disable tests on Launchpad riscv64 (canonical/mir#3443, canonical/mir#3470)
 ifeq ($(USER) $(DEB_HOST_ARCH),buildd riscv64)
   COMMON_CONFIGURE_OPTIONS += -DMIR_RUN_MIRAL_TESTS=OFF
+  COMMON_CONFIGURE_OPTIONS += -DMIR_RUN_WINDOW_MANAGEMENT_TESTS=OFF
 endif
 
 # Disable pre-compiled headers on GCC>=12
