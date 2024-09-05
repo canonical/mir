@@ -29,7 +29,7 @@
 
 namespace
 {
-void strip_mir_env_variables()
+auto mir_env_variables() -> std::vector<std::string>
 {
     static char const mir_prefix[] = "MIR_";
 
@@ -51,10 +51,7 @@ void strip_mir_env_variables()
         }
     }
 
-    for (auto const& var : vars_to_remove)
-    {
-        unsetenv(var.c_str());
-    }
+    return vars_to_remove;
 }
 }  // namespace
 
@@ -64,6 +61,8 @@ auto miral::launch_app_env(
     mir::optional_value<std::string> const& x11_display,
     miral::AppEnvironment const& app_env) -> pid_t
 {
+    static auto const vars_to_remove = mir_env_variables();
+
     pid_t pid = fork();
 
     if (pid < 0)
@@ -73,7 +72,10 @@ auto miral::launch_app_env(
 
     if (pid == 0)
     {
-        strip_mir_env_variables();
+        for (auto const& var : vars_to_remove)
+        {
+            unsetenv(var.c_str());
+        }
 
         if (x11_display)
         {
