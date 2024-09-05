@@ -98,7 +98,7 @@ void mf::FractionalScaleV1::output_entered(mir::graphics::DisplayConfigurationOu
 
 void mf::FractionalScaleV1::output_left(mir::graphics::DisplayConfigurationOutput const& config)
 {
-    surface_outputs.erase({config.id, config.scale});
+    surface_outputs.erase(config.id);
     recompute_scale();
 }
 
