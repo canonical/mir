@@ -41,7 +41,7 @@ struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data)
     static auto const template_filename =
         std::string{getenv("XDG_RUNTIME_DIR")} + "/wayland-cursor-shared-XXXXXX";
 
-    auto const filename = strdup(template_filename.c_str());
+    char* const filename = const_cast<char*>(template_filename.c_str());
     mir::Fd const fd{mkostemp(filename, O_CLOEXEC)};
     unlink(filename);
     free(filename);
