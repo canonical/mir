@@ -310,6 +310,11 @@ auto mf::OutputManager::output_for(graphics::DisplayConfigurationOutputId id) ->
 void mf::OutputManager::add_listener(OutputManagerListener* listener)
 {
     listeners.push_back(listener);
+
+    for (auto const& [_, output_global] : outputs)
+    {
+        listener->output_global_created(output_global.get());
+    }
 }
 
 void mf::OutputManager::remove_listener(OutputManagerListener* listener)
