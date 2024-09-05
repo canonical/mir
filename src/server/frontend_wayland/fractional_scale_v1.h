@@ -19,7 +19,7 @@
 
 #include "fractional-scale-v1_wrapper.h"
 #include "mir/graphics/display_configuration.h"
-#include <set>
+#include <unordered_map>
 #include <utility>
 
 namespace mir
@@ -42,7 +42,7 @@ public:
 private:
   // Houses a set of outputs the surface occupies
   using Id = mir::graphics::DisplayConfigurationOutputId;
-  std::set<std::pair<Id, float>> surface_outputs;
+  std::unordered_map<Id, float> surface_outputs;
 
   void recompute_scale();
 };

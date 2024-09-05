@@ -118,12 +118,20 @@ void mf::WaylandSurfaceObserver::input_consumed(ms::Surface const*, std::shared_
 
 void mf::WaylandSurfaceObserver::entered_output(ms::Surface const*, graphics::DisplayConfigurationOutputId const& id)
 {
-    impl->window.value().handle_enter_output(id);
+    run_on_wayland_thread_unless_window_destroyed(
+        [id](Impl* impl, WindowWlSurfaceRole*)
+        {
+            impl->window.value().handle_enter_output(id);
+        });
 }
 
 void mf::WaylandSurfaceObserver::left_output(ms::Surface const*, graphics::DisplayConfigurationOutputId const& id)
 {
-    impl->window.value().handle_leave_output(id);
+    run_on_wayland_thread_unless_window_destroyed(
+        [id](Impl* impl, WindowWlSurfaceRole*)
+        {
+            impl->window.value().handle_leave_output(id);
+        });
 }
 
 void mf::WaylandSurfaceObserver::run_on_wayland_thread_unless_window_destroyed(
