@@ -1228,13 +1228,12 @@ void mf::XWaylandSurface::apply_any_mods_to_scene_surface()
             spec.value()->top_left.value() == scene_surface->top_left())
             spec.value()->top_left.consume();
 
-        if (spec.value()->width.is_set() &&
-            spec.value()->width.value() == scene_surface->content_size().width)
+        if (spec.value()->width.is_set() && spec.value()->width.value() == scene_surface->content_size().width &&
+            spec.value()->height.is_set() && spec.value()->height.value() == scene_surface->content_size().height)
+        {
             spec.value()->width.consume();
-
-        if (spec.value()->height.is_set() &&
-            spec.value()->height.value() == scene_surface->content_size().height)
             spec.value()->height.consume();
+        }
 
         if (!spec.value()->is_empty())
         {
