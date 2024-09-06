@@ -325,6 +325,9 @@ global:
     mir::SharedLibrary::?SharedLibrary*;
     mir::SharedLibrary::SharedLibrary*;
     mir::SharedLibrary::load_symbol*;
+    mir::SharedLibrary::get_handle*;
+    mir::SharedLibrary::Handle::?Handle*;
+    mir::SharedLibrary::Handle::operator*;
     mir::SharedLibraryProberReport::?SharedLibraryProberReport*;
     mir::SharedLibraryProberReport::SharedLibraryProberReport*;
     mir::SharedLibraryProberReport::operator*;
@@ -500,6 +503,7 @@ global:
     typeinfo?for?mir::NonBlockingExecutor;
     typeinfo?for?mir::PosixRWMutex;
     typeinfo?for?mir::SharedLibrary;
+    typeinfo?for?mir::SharedLibrary::Handle;
     typeinfo?for?mir::SharedLibraryProberReport;
     typeinfo?for?mir::Signal;
     typeinfo?for?mir::ThreadPoolExecutor;

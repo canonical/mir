@@ -15,6 +15,7 @@
  */
 
 #include "mir/shared_library.h"
+#include <compare>
 
 #ifdef MIR_DONT_USE_DLVSYM
 #include <mir/log.h>
@@ -73,4 +74,19 @@ void* mir::SharedLibrary::load_symbol(char const* function_name, char const* ver
         BOOST_THROW_EXCEPTION(std::runtime_error(dlerror()));
     }
 #endif
+}
+
+auto mir::SharedLibrary::get_handle() const -> Handle
+{
+    return Handle{so};
+}
+
+mir::SharedLibrary::Handle::Handle(void* handle)
+    : handle{handle}
+{
+}
+
+auto mir::SharedLibrary::Handle::operator<=>(Handle const& rhs) const -> std::strong_ordering
+{
+    return handle <=> rhs.handle;
 }
