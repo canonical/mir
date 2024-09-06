@@ -102,6 +102,12 @@ void mf::FractionalScaleV1::output_left(mir::graphics::DisplayConfigurationOutpu
     recompute_scale();
 }
 
+void mf::FractionalScaleV1::scale_change_on_output(mir::graphics::DisplayConfigurationOutput const& config)
+{
+    surface_outputs[config.id] = config.scale;
+    recompute_scale();
+}
+
 void mf::FractionalScaleV1::recompute_scale()
 {
     auto max_element = std::max_element(

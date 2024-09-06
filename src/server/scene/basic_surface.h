@@ -239,7 +239,7 @@ private:
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> display_config_registrar;
     std::shared_ptr<DisplayConfigurationEarlyListener> const display_config_monitor;
     std::shared_ptr<graphics::DisplayConfiguration const> display_config;
-    std::set<graphics::DisplayConfigurationOutputId> tracked_outputs;
+    std::unordered_map<graphics::DisplayConfigurationOutputId, float> tracked_output_scales;
 };
 
 }

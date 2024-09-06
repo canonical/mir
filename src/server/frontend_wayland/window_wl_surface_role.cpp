@@ -461,10 +461,19 @@ auto mf::WindowWlSurfaceRole::output_config_changed(graphics::DisplayConfigurati
                     client,
                     [&](OutputInstance* instance)
                     {
+                        if (auto const fractional_scale = surface.value().get_fractional_scale())
+                            fractional_scale.value().output_entered(config);
                         surface.value().send_enter_event(instance->resource);
                         pending_enter_events.erase(id_it);
                     });
             }
+        }
+
+        if (auto id_it{std::ranges::find(pending_rescale_events, config.id)}; id_it != pending_rescale_events.end())
+        {
+            if (auto const fractional_scale = surface.value().get_fractional_scale())
+                fractional_scale.value().scale_change_on_output(config);
+            pending_rescale_events.erase(id_it);
         }
     }
 
@@ -524,7 +533,7 @@ void mf::WindowWlSurfaceRole::handle_enter_output(graphics::DisplayConfiguration
             auto const& config{global->current_config()};
             if (config.id == id)
             {
-                if (auto fractional_scale = surface.value().get_fractional_scale())
+                if (auto const fractional_scale = surface.value().get_fractional_scale())
                     fractional_scale.value().output_entered(config);
 
                 global->for_each_output_bound_by(
@@ -552,7 +561,7 @@ void mf::WindowWlSurfaceRole::handle_leave_output(graphics::DisplayConfiguration
             auto const& config{global->current_config()};
             if (config.id == id)
             {
-                if(auto fractional_scale = surface.value().get_fractional_scale())
+                if(auto const fractional_scale = surface.value().get_fractional_scale())
                     fractional_scale.value().output_left(config);
 
                 global->for_each_output_bound_by(
@@ -563,6 +572,14 @@ void mf::WindowWlSurfaceRole::handle_leave_output(graphics::DisplayConfiguration
                     });
             }
         }
+    }
+}
+
+void mf::WindowWlSurfaceRole::handle_scale_output(graphics::DisplayConfigurationOutputId id)
+{
+    if (surface)
+    {
+        pending_rescale_events.push_back(id);
     }
 }
 

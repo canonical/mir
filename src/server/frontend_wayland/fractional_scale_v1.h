@@ -38,6 +38,7 @@ public:
 
   void output_entered(mir::graphics::DisplayConfigurationOutput const& config);
   void output_left(mir::graphics::DisplayConfigurationOutput const& config);
+  void scale_change_on_output(mir::graphics::DisplayConfigurationOutput const& config);
 
 private:
   // Houses a set of outputs the surface occupies
