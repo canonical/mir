@@ -170,7 +170,7 @@ public:
         for_each_observer(&SurfaceObserver::left_output, surf, id);
     }
 
-    void rescale_output(const Surface* surf, const graphics::DisplayConfigurationOutputId& id) override
+    void rescale_output(Surface const* surf, graphics::DisplayConfigurationOutputId const& id) override
     {
         for_each_observer(&SurfaceObserver::rescale_output, surf, id);
     }
@@ -1005,7 +1005,7 @@ void mir::scene::BasicSurface::track_outputs()
                 {
                     observers->entered_output(this, output.id);
                 }
-                tracked.insert({output.id, output.scale});
+                tracked.emplace(output.id, output.scale);
             }
         });
 
