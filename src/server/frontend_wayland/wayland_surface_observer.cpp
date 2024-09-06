@@ -134,6 +134,15 @@ void mf::WaylandSurfaceObserver::left_output(ms::Surface const*, graphics::Displ
         });
 }
 
+void mf::WaylandSurfaceObserver::rescale_output(ms::Surface const*, graphics::DisplayConfigurationOutputId const& id)
+{
+    run_on_wayland_thread_unless_window_destroyed(
+        [id](Impl* impl, WindowWlSurfaceRole*)
+        {
+            impl->window.value().handle_scale_output(id);
+        });
+}
+
 void mf::WaylandSurfaceObserver::run_on_wayland_thread_unless_window_destroyed(
     std::function<void(Impl* impl, WindowWlSurfaceRole* window)>&& work)
 {

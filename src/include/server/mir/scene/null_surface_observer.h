@@ -49,6 +49,7 @@ public:
     void application_id_set_to(Surface const* surf, std::string const& application_id) override;
     void entered_output(Surface const* surf, graphics::DisplayConfigurationOutputId const& id) override;
     void left_output(Surface const* surf, graphics::DisplayConfigurationOutputId const& id) override;
+    void rescale_output(Surface const* surf, graphics::DisplayConfigurationOutputId const& id) override;
 
 protected:
     NullSurfaceObserver(NullSurfaceObserver const&) = delete;

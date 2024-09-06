@@ -57,6 +57,7 @@ public:
     void input_consumed(scene::Surface const*, std::shared_ptr<MirEvent const> const& event) override;
     void entered_output(scene::Surface const*, graphics::DisplayConfigurationOutputId const& id) override;
     void left_output(scene::Surface const*, graphics::DisplayConfigurationOutputId const& id) override;
+    void rescale_output(scene::Surface const*, graphics::DisplayConfigurationOutputId const& id) override;
     ///@}
 
     /// Should only be called from the Wayland thread

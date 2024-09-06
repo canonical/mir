@@ -64,6 +64,7 @@ public:
     virtual void depth_layer_set_to(Surface const* surf, MirDepthLayer depth_layer) = 0;
     virtual void entered_output(Surface const* surf, graphics::DisplayConfigurationOutputId const& id) = 0;
     virtual void left_output(Surface const* surf, graphics::DisplayConfigurationOutputId const& id) = 0;
+    virtual void rescale_output(Surface const* surf, graphics::DisplayConfigurationOutputId const& id) = 0;
 
 protected:
     SurfaceObserver() = default;

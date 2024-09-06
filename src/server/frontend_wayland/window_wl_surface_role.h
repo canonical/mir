@@ -102,6 +102,7 @@ public:
 
     void handle_enter_output(graphics::DisplayConfigurationOutputId id);
     void handle_leave_output(graphics::DisplayConfigurationOutputId id) const;
+    void handle_scale_output(graphics::DisplayConfigurationOutputId id);
 
     /// Gets called after the surface has committed (so current_size() may return the committed buffer size) but before
     /// the Mir window is modified (so if a pending size is set or a spec is applied those changes will take effect)
@@ -174,6 +175,7 @@ private:
     void apply_client_size(mir::shell::SurfaceSpecification& mods);
 
     std::vector<graphics::DisplayConfigurationOutputId> pending_enter_events;
+    std::vector<graphics::DisplayConfigurationOutputId> pending_rescale_events;
 };
 
 }
