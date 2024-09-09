@@ -22,6 +22,8 @@
 #include "mir/shared_library_prober.h"
 #include "mir/logging/null_shared_library_prober_report.h"
 
+#include <format>
+
 namespace mo = mir::options;
 
 char const* const mo::arw_server_socket_opt       = "arw-file";
