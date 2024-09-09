@@ -29,29 +29,69 @@
 
 namespace
 {
-auto mir_env_variables() -> std::vector<std::string>
+class Environment
+{
+public:
+    Environment();
+
+    void setenv(std::string const& name, std::string const& value);
+    void unsetenv(std::string const& name);
+    auto exec_env() const & -> std::vector<char const*>;
+private:
+    std::vector<std::string> env_strings;
+};
+
+Environment::Environment()
 {
     static char const mir_prefix[] = "MIR_";
-
-    std::vector<std::string> vars_to_remove;
 
     for (auto var = environ; *var; ++var)
     {
         auto const var_begin = *var;
-        if (strncmp(var_begin, mir_prefix, sizeof(mir_prefix) - 1) == 0)
+        if (strncmp(var_begin, mir_prefix, sizeof(mir_prefix) - 1) != 0)
         {
-            if (auto var_end = strchr(var_begin, '='))
-            {
-                vars_to_remove.emplace_back(var_begin, var_end);
-            }
-            else
-            {
-                vars_to_remove.emplace_back(var_begin);
-            }
+            env_strings.emplace_back(var_begin);
+        }
+    }
+}
+
+void Environment::setenv(std::string const& name, std::string const& value)
+{
+    auto const entry = name + "=" + value;
+
+    for (auto it = env_strings.begin(); it != env_strings.end(); ++it)
+    {
+        if (strncmp(it->c_str(), name.c_str(), name.size()) == 0)
+        {
+            *it = entry;
+            return;
         }
     }
 
-    return vars_to_remove;
+    env_strings.emplace_back(entry);
+}
+
+void Environment::unsetenv(std::string const& name)
+{
+    for (auto it = env_strings.begin(); it != env_strings.end(); ++it)
+    {
+        if (strncmp(it->c_str(), name.c_str(), name.size()) == 0)
+        {
+            env_strings.erase(it);
+            return;
+        }
+    }
+}
+
+auto Environment::exec_env() const & -> std::vector<char const*>
+{
+    std::vector<char const*> result;
+
+    for (auto const& arg : env_strings)
+        result.push_back(arg.c_str());
+
+    result.push_back(nullptr);
+    return result;
 }
 }  // namespace
 
@@ -61,7 +101,46 @@ auto miral::launch_app_env(
     mir::optional_value<std::string> const& x11_display,
     miral::AppEnvironment const& app_env) -> pid_t
 {
-    static auto const vars_to_remove = mir_env_variables();
+    Environment application_environment;
+
+    for (auto const& [key, value]: app_env)
+    {
+        if (value)
+        {
+            application_environment.setenv(key, value.value());
+        }
+        else
+        {
+            application_environment.unsetenv(key);
+        }
+    }
+
+    if (wayland_display)
+    {
+        application_environment.setenv("WAYLAND_DISPLAY", wayland_display.value()); // configure Wayland socket
+    }
+    else
+    {
+        unsetenv("WAYLAND_DISPLAY");
+    }
+
+    if (x11_display)
+    {
+        application_environment.setenv("DISPLAY", x11_display.value());   // configure X11 socket
+    }
+    else
+    {
+        unsetenv("DISPLAY");
+    }
+
+    auto const exec_env = application_environment.exec_env();
+
+    std::vector<char const*> exec_args;
+
+    for (auto const& arg : app)
+        exec_args.push_back(arg.c_str());
+
+    exec_args.push_back(nullptr);
 
     pid_t pid = fork();
 
@@ -72,54 +151,12 @@ auto miral::launch_app_env(
 
     if (pid == 0)
     {
-        for (auto const& var : vars_to_remove)
-        {
-            unsetenv(var.c_str());
-        }
-
-        if (x11_display)
-        {
-            setenv("DISPLAY", x11_display.value().c_str(),  true);   // configure X11 socket
-        }
-        else
-        {
-            unsetenv("DISPLAY");
-        }
-
-        if (wayland_display)
-        {
-            setenv("WAYLAND_DISPLAY", wayland_display.value().c_str(),  true);   // configure Wayland socket
-        }
-        else
-        {
-            unsetenv("WAYLAND_DISPLAY");
-        }
-
-        for (auto const& env : app_env)
-        {
-            if (env.second)
-            {
-                setenv(env.first.c_str(), env.second.value().c_str(), true);
-            }
-            else
-            {
-                unsetenv(env.first.c_str());
-            }
-        }
-
-        std::vector<char const*> exec_args;
-
-        for (auto const& arg : app)
-            exec_args.push_back(arg.c_str());
-
-        exec_args.push_back(nullptr);
-
         mir::log_debug("Restoring sigmask");
         sigset_t all_signals;
         sigfillset(&all_signals);
         pthread_sigmask(SIG_UNBLOCK, &all_signals, nullptr);
 
-        execvp(exec_args[0], const_cast<char*const*>(exec_args.data()));
+        execvpe(exec_args[0], const_cast<char*const*>(exec_args.data()), const_cast<char*const*>(exec_env.data()));
 
         mir::log_warning("Failed to execute client (\"%s\") error: %s", exec_args[0], strerror(errno));
         exit(EXIT_FAILURE);
