@@ -18,6 +18,7 @@
 
 #include "mir/options/option.h"
 
+#include <boost/program_options/errors.hpp>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -130,6 +131,39 @@ TEST_F(ServerConfigurationOptions, unknown_command_line_options_are_passed_to_ha
         ElementsAre(StrEq("--hello"), StrEq("world"), StrEq("--answer"), StrEq("42"))));
 
     server.apply_settings();
+}
+
+TEST_F(ServerConfigurationOptions, are_parsed_from_environment)
+{
+    auto const option_name = "test-option";
+    auto const option_env_key = "MIR_SERVER_TEST_OPTION";
+    auto const option_env_value = "a string";
+
+    add_to_environment(option_env_key, option_env_value);
+
+    server.add_configuration_option(option_name, "", mir::OptionType::string);
+
+    server.apply_settings();
+
+    auto const options = server.get_options();
+    EXPECT_THAT(options->get<std::string>(option_name), StrEq(option_env_value));
+}
+
+TEST_F(ServerConfigurationOptions, unknown_environment_options_are_fatal)
+{
+    auto const option_env_key = "MIR_SERVER_NOT_ACTUALLY_AN_OPTION_DEFINED";
+    auto const option_env_value = "a string";
+
+    add_to_environment(option_env_key, option_env_value);
+
+    EXPECT_THROW(
+        {
+            server.apply_settings();
+
+            server.get_options();
+        },
+        boost::program_options::unknown_option
+    );
 }
 
 TEST_F(ServerConfigurationOptions, are_read_from_xdg_config_home)

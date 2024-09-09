@@ -19,15 +19,15 @@
 
 #include "mir/options/configuration.h"
 #include "mir/options/program_option.h"
+#include "mir/shared_library.h"
 #include <boost/program_options/options_description.hpp>
 #include <vector>
 
 namespace mir
 {
-class SharedLibrary;
 namespace options
 {
-class DefaultConfiguration : public Configuration
+class DefaultConfiguration : public OptionsProvider
 {
 public:
     DefaultConfiguration(int argc, char const* argv[]);
@@ -54,7 +54,8 @@ private:
 
     void add_platform_options();
     // accessed via the base interface, when access to add_options() has been "lost"
-    std::shared_ptr<options::Option> the_options() const override;
+    std::shared_ptr<options::Option> global_options() const override;
+    auto the_options_for(SharedLibrary const& module) const -> std::shared_ptr<Option> override;
 
     virtual void parse_arguments(
         boost::program_options::options_description desc,
@@ -74,6 +75,47 @@ private:
     char const** const argv;
     std::function<void(int argc, char const* const* argv)> const unparsed_arguments_handler;
     std::shared_ptr<boost::program_options::options_description> const program_options;
+
+    template<typename Value>
+    class LibraryMap
+    {
+    private:
+        std::vector<std::pair<mir::SharedLibrary::Handle, Value>> values;
+
+        auto find(SharedLibrary const&) -> decltype(values)::iterator;
+        auto find(SharedLibrary const&) const -> decltype(values)::const_iterator;
+    public:
+        LibraryMap() = default;
+        ~LibraryMap() = default;
+
+        auto operator[](SharedLibrary const& lib) -> Value&;
+
+        auto at(SharedLibrary const& lib) const -> Value const&;
+
+        auto begin() const -> decltype(values)::const_iterator;
+        auto end() const -> decltype(values)::const_iterator;
+
+        template<typename ...Args>
+        auto emplace(SharedLibrary const& lib, Args&& ...args) -> std::pair<typename decltype(values)::iterator, bool>
+        {
+            auto existing = find(lib);
+
+            if (existing != values.end())
+            {
+                return {existing, false};
+            }
+
+            values.emplace_back(
+                std::piecewise_construct,
+                std::forward_as_tuple(lib.get_handle()),
+                std::forward<Args>(args)...);
+
+            return {values.end() - 1, true};
+        }
+    };
+
+    LibraryMap<boost::program_options::options_description> module_options_desc;
+    LibraryMap<std::shared_ptr<Option>> mutable module_options;
     std::shared_ptr<Option> mutable options;
 };
 }

@@ -209,28 +209,6 @@ TEST_F(ProgramOption, unparsed_command_line_returns_unprocessed_tokens)
     EXPECT_THAT(po.unparsed_command_line(), ElementsAre("--hello", "world", "--answer", "42"));
 }
 
-TEST(ProgramOptionEnv, parse_environment)
-{
-    // Env variables should be uppercase and "_" delimited
-    char const* name = "some-key";
-    char const* key = "SOME_KEY";
-    char const* value = "test_value";
-    auto const env = std::string(__PRETTY_FUNCTION__) + key;
-    setenv(env.c_str(), value, true);
-
-    bpo::options_description desc;
-    desc.add_options()
-        (name, bpo::value<std::string>());
-
-    mir::options::ProgramOption po;
-    po.parse_environment(desc, __PRETTY_FUNCTION__);
-
-    EXPECT_EQ(value, po.get(name, "default"));
-    EXPECT_EQ("default", po.get("garbage", "default"));
-    EXPECT_TRUE(po.is_set(name));
-    EXPECT_FALSE(po.is_set("garbage"));
-}
-
 // TODO need to parse something
 TEST(ProgramOptionFile, parse_files)
 {

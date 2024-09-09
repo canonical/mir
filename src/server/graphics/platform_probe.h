@@ -20,13 +20,17 @@
 #include <vector>
 #include <memory>
 #include "mir/shared_library.h"
-#include "mir/options/program_option.h"
 #include "mir/graphics/platform.h"
 #include "mir/shared_library_prober_report.h"
 
 namespace mir
 {
 class ConsoleServices;
+
+namespace options
+{
+class OptionsProvider;
+}
 
 namespace graphics
 {
@@ -57,19 +61,19 @@ auto probe_rendering_module(
 
 auto display_modules_for_device(
     std::vector<std::shared_ptr<SharedLibrary>> const& modules,
-    options::Option const& options,
+    options::OptionsProvider const& options,
     std::shared_ptr<ConsoleServices> const& console)
     -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>;
 
 auto rendering_modules_for_device(
     std::vector<std::shared_ptr<SharedLibrary>> const& modules,
     std::span<std::shared_ptr<DisplayPlatform>> const& platforms,
-    options::Option const& options,
+    options::OptionsProvider const& options,
     std::shared_ptr<ConsoleServices> const& console)
     -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>;
 
 auto select_display_modules(
-    options::Option const& options,
+    options::OptionsProvider const& options,
     std::shared_ptr<ConsoleServices> const& console,
     SharedLibraryProberReport& lib_loader_report)
     -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>;

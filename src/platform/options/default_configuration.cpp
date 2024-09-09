@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/options/program_option.h"
 #include "mir/shared_library.h"
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/platform.h"
@@ -66,6 +67,62 @@ char const* const mo::vt_option_name = "vt";
 namespace
 {
 bool const enable_input_default        = true;
+}
+
+template<typename Value>
+auto mo::DefaultConfiguration::LibraryMap<Value>::find(SharedLibrary const& lib) const -> decltype(values)::const_iterator
+{
+    return std::find_if(
+        values.begin(),
+        values.end(),
+        [&lib](auto const& candidate) { return candidate.first == lib.get_handle(); });
+}
+
+template<typename Value>
+auto mo::DefaultConfiguration::LibraryMap<Value>::find(SharedLibrary const& lib) -> decltype(values)::iterator
+{
+    return std::find_if(
+        values.begin(),
+        values.end(),
+        [&lib](auto const& candidate) { return candidate.first == lib.get_handle(); });
+}
+
+template<typename Value>
+auto mo::DefaultConfiguration::LibraryMap<Value>::operator[](SharedLibrary const& lib) -> Value&
+{
+    auto existing = find(lib);
+    if (existing != values.end())
+    {
+        return existing->second;
+    }
+
+    values.emplace_back(std::make_pair(lib.get_handle(), Value{}));
+    return values.back().second;
+}
+
+template<typename Value>
+auto mo::DefaultConfiguration::LibraryMap<Value>::at(SharedLibrary const& lib) const -> Value const&
+{
+    auto existing = find(lib);
+
+    if (existing == values.end())
+    {
+        BOOST_THROW_EXCEPTION((std::out_of_range{"SharedLibrary not in map"}));
+    }
+
+    return existing->second;
+}
+
+template<typename Value>
+auto mo::DefaultConfiguration::LibraryMap<Value>::begin() const -> decltype(values)::const_iterator
+{
+    return values.cbegin();
+}
+
+template<typename Value>
+auto mo::DefaultConfiguration::LibraryMap<Value>::end() const -> decltype(values)::const_iterator
+{
+    return values.cend();
 }
 
 mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
@@ -200,6 +257,17 @@ mo::DefaultConfiguration::DefaultConfiguration(
         add_platform_options();
 }
 
+namespace
+{
+auto option_header_for(mir::SharedLibrary const& module) -> std::string
+{
+    auto const describe_module = module.load_function<mir::graphics::DescribeModule>("describe_graphics_module", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+    auto const description = describe_module();
+
+    return std::format("Options for module {}", description->name);
+}
+}
+
 void mo::DefaultConfiguration::add_platform_options()
 {
     namespace po = boost::program_options;
@@ -226,15 +294,19 @@ void mo::DefaultConfiguration::add_platform_options()
 
         for (auto& platform : platform_libraries)
         {
-            /* Ideally we'd namespace these options with the platform,
-             * and display them in a group as $FOO-platform-specific.
-             */
             try
             {
                 auto add_platform_options = platform->load_function<mir::graphics::AddPlatformOptions>("add_graphics_platform_options", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
-                add_platform_options(*this->program_options);
+                auto [options, inserted] = module_options_desc.emplace(
+                    *platform,
+                    std::forward_as_tuple(option_header_for(*platform)));
+
+                // *Pretty* sure this is impossible, but let's be sure!
+                assert(inserted && "Attempted to add platform options twice for the same module");
+
+                add_platform_options(options->second);
             }
-            catch (std::runtime_error&)
+            catch (std::runtime_error& e)
             {
                 /* We've failed to add the options - probably because it's not a graphics platform,
                  * or because it's got the wrong version - unload it; it's unnecessary.
@@ -269,7 +341,7 @@ boost::program_options::options_description_easy_init mo::DefaultConfiguration::
     return program_options->add_options();
 }
 
-std::shared_ptr<mo::Option> mo::DefaultConfiguration::the_options() const
+std::shared_ptr<mo::Option> mo::DefaultConfiguration::global_options() const
 {
     if (!options)
     {
@@ -282,6 +354,31 @@ std::shared_ptr<mo::Option> mo::DefaultConfiguration::the_options() const
     return options;
 }
 
+auto mo::DefaultConfiguration::the_options_for(SharedLibrary const& module) const -> std::shared_ptr<Option>
+{
+    auto parsed_options = module_options[module];
+    if (!parsed_options)
+    {
+        auto options = std::make_shared<ProgramOption>();
+        auto& module_option_desc = module_options_desc.at(module);
+
+        /* We can't combine the parsed global options with a parse of the module-specific options,
+         * but we *can* combine the global options description with the module options description
+         * and (re)parse everything against that.
+         */
+        boost::program_options::options_description joint_desc;
+        joint_desc.add(*program_options).add(module_option_desc);
+
+        parse_arguments(joint_desc, *options, argc, argv);
+        parse_environment(joint_desc, *options);
+        parse_config_file(joint_desc, *options);
+
+        module_options[module] = options;
+        parsed_options = options;
+    }
+
+    return parsed_options;
+}
 
 void mo::DefaultConfiguration::parse_arguments(
     boost::program_options::options_description desc,
@@ -300,10 +397,25 @@ void mo::DefaultConfiguration::parse_arguments(
 
         options.parse_arguments(desc, argc, argv);
 
-        auto const unparsed_arguments = options.unparsed_command_line();
+        auto unparsed_arguments = options.unparsed_command_line();
         std::vector<char const*> tokens;
         for (auto const& token : unparsed_arguments)
             tokens.push_back(token.c_str());
+
+        // Maybe the unparsed tokens are for a module?
+        for (auto const& [_, module_option_desc] : module_options_desc)
+        {
+            mo::ProgramOption tmp_options;
+            tmp_options.parse_arguments(module_option_desc, tokens.size(), tokens.data());
+
+            tokens.clear();
+            unparsed_arguments = tmp_options.unparsed_command_line();
+            for (auto const& token : unparsed_arguments)
+            {
+                tokens.push_back(token.c_str());
+            }
+        }
+
         if (!tokens.empty()) unparsed_arguments_handler(tokens.size(), tokens.data());
 
         // See the ExitWithOutput documentation for information about its usage.
@@ -311,6 +423,14 @@ void mo::DefaultConfiguration::parse_arguments(
         {
             std::ostringstream help_text;
             help_text << desc;
+            for (auto& [_, module_desc] : module_options_desc)
+            {
+                // We don't want to print out headers for platforms that don't have any options
+                if (!module_desc.options().empty())
+                {
+                    help_text << module_desc;
+                }
+            }
             BOOST_THROW_EXCEPTION(mir::ExitWithOutput(help_text.str()));
         }
 
@@ -329,11 +449,70 @@ void mo::DefaultConfiguration::parse_arguments(
     }
 }
 
+namespace
+{
+auto is_an_option(boost::program_options::options_description const& options, std::string const& name) -> bool
+{
+    return std::find_if(
+        options.options().cbegin(),
+        options.options().cend(),
+        [&name](auto const& option) -> bool
+        {
+            return option->long_name() == name;
+        }) != options.options().cend();
+}
+}
+
 void mo::DefaultConfiguration::parse_environment(
     boost::program_options::options_description& desc,
     mo::ProgramOption& options) const
 {
-    options.parse_environment(desc, "MIR_SERVER_");
+    options.parse_environment(
+        desc,
+        [=, this](std::string const& from) -> std::string
+        {
+            auto const prefix = "MIR_SERVER_";
+            auto const sizeof_prefix = strlen(prefix);
+
+            if (!from.starts_with(prefix))
+            {
+                return std::string{};
+            }
+
+            std::string result(from, sizeof_prefix);
+
+            for(auto& ch : result)
+            {
+                if (ch == '_') ch = '-';
+                else ch = std::tolower(ch, std::locale::classic()); // avoid current locale
+            }
+
+            /* Now, we want to not fail on any options that are module-specific but
+             * not for *this* module (or for the global parse)
+             *
+             * So, we check:
+             * 1. Is the result an option in `desc` (ie: an option we're trying to parse)? Return it. Or,
+             * 2. Is the option in one of the module-specific option descriptors? Ignore it.
+             * 3. Otherwise, return it as normal, and cause a failure
+             */
+
+            if (is_an_option(desc, result))
+            {
+                return result;
+            }
+
+            // Is it an option for a different module?
+            for (auto const& [_, module_opt_desc] : module_options_desc)
+            {
+                if (is_an_option(module_opt_desc, result))
+                {
+                    // We want to ignore this for now, rather than raise an unknown option error
+                    return std::string{};
+                }
+            }
+
+            return result;
+        });
 }
 
 void mo::DefaultConfiguration::parse_config_file(

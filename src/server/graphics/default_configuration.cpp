@@ -140,7 +140,7 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
 
         try
         {
-            auto const platform_modules = mg::select_display_modules(*the_options(), the_console_services(), *the_shared_library_prober_report());
+            auto const platform_modules = mg::select_display_modules(*the_options_provider(), the_console_services(), *the_shared_library_prober_report());
 
             for (auto const& [device, platform]: platform_modules)
             {
@@ -178,7 +178,7 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
                 display_platforms.push_back(
                     create_display_platform(
                         device,
-                        the_options(),
+                        the_options_provider()->the_options_for(*platform),
                         the_emergency_cleanup(),
                         the_console_services(),
                         the_display_report()));
@@ -261,7 +261,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
             }
             else
             {
-                platform_modules = mir::graphics::rendering_modules_for_device(platforms, display_targets, *the_options(), the_console_services());
+                platform_modules = mir::graphics::rendering_modules_for_device(platforms, display_targets, *the_options_provider(), the_console_services());
             }
 
             for (auto const& [device, platform]: platform_modules)
@@ -296,13 +296,15 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                         device.device->devnode());
                 }
 
+                mir::log_info("Hello? Do we see this for %s", description->name);
+
                 // TODO: Do we want to be able to continue on partial failure here?
                 rendering_platform_map.emplace(
                     description->name,
                     create_rendering_platform(
                         device,
                         display_targets,
-                        *the_options(),
+                        *the_options_provider()->the_options_for(*platform),
                         *the_emergency_cleanup()));
                 // Add this module to the list searched by the input stack later
                 // TODO: Come up with a more principled solution for combined input/rendering/output platforms

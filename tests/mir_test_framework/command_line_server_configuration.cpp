@@ -23,7 +23,6 @@
 
 #include <gtest/gtest.h>
 
-#include <algorithm>
 #include <cstring>
 
 namespace mo=mir::options;

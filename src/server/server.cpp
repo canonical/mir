@@ -208,7 +208,7 @@ auto wrap_##name(decltype(Self::name##_wrapper)::result_type const& wrapped)\
 struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
 {
     ServerConfiguration(
-        std::shared_ptr<options::Configuration> const& configuration_options,
+        std::shared_ptr<options::OptionsProvider> const& configuration_options,
         std::shared_ptr<Self> const& self) :
         DefaultServerConfiguration(configuration_options),
         self(self.get())

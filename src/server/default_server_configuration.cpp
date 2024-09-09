@@ -23,6 +23,7 @@
 #include "mir/frontend/wayland.h"
 
 #include "mir/logging/dumb_console_logger.h"
+#include "mir/options/option.h"
 #include "mir/options/program_option.h"
 #include "mir/frontend/session_credentials.h"
 #include "mir/frontend/session_authorizer.h"
@@ -55,7 +56,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
 {
 }
 
-mir::DefaultServerConfiguration::DefaultServerConfiguration(std::shared_ptr<mo::Configuration> const& configuration_options) :
+mir::DefaultServerConfiguration::DefaultServerConfiguration(std::shared_ptr<mo::OptionsProvider> const& configuration_options) :
     configuration_options(configuration_options),
     enabled_wayland_extensions(frontend::get_standard_extensions())
 {
@@ -64,7 +65,13 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(std::shared_ptr<mo::
 auto mir::DefaultServerConfiguration::the_options() const
 ->std::shared_ptr<options::Option>
 {
-    return configuration_options->the_options();
+    return configuration_options->global_options();
+}
+
+auto mir::DefaultServerConfiguration::the_options_provider() const
+    -> std::shared_ptr<mo::OptionsProvider>
+{
+    return configuration_options;
 }
 
 std::shared_ptr<ms::SessionListener>

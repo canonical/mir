@@ -27,6 +27,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/options/configuration.h"
 #include "mir/options/default_configuration.h"
+#include "mir/options/option.h"
 #include "mir/shared_library.h"
 #include "mir/shared_library_prober_report.h"
 #include "mir/test/doubles/fake_display.h"
@@ -181,12 +182,29 @@ public:
 #endif
 };
 
+class StubOptionsProvider : public mo::OptionsProvider
+{
+public:
+    StubOptionsProvider() = default;
+    ~StubOptionsProvider() override = default;
+
+    auto global_options() const -> std::shared_ptr<mo::Option> override
+    {
+        return std::make_shared<mo::ProgramOption>();
+    }
+
+    auto the_options_for(mir::SharedLibrary const& /*module*/) const -> std::shared_ptr<mo::Option> override
+    {
+        return std::make_shared<mo::ProgramOption>();
+    }
+};
+
 }
 
 TEST(ServerPlatformProbe, ConstructingWithNoModulesIsAnError)
 {
     std::vector<std::shared_ptr<mir::SharedLibrary>> empty_modules;
-    mir::options::ProgramOption options;
+    StubOptionsProvider options;
 
     EXPECT_THROW(mir::graphics::display_modules_for_device(empty_modules, options, nullptr),
                  std::runtime_error);
@@ -196,7 +214,7 @@ TEST(ServerPlatformProbe, ConstructingWithNoModulesIsAnError)
 TEST_F(ServerPlatformProbeMockDRM, LoadsMesaPlatformWhenDrmMasterCanBeAcquired)
 {
     using namespace testing;
-    mir::options::ProgramOption options;
+    StubOptionsProvider options;
     auto fake_mesa = ensure_mesa_probing_succeeds();
 
     auto modules = available_platforms();
@@ -220,7 +238,7 @@ TEST_F(ServerPlatformProbeMockDRM, LoadsMesaPlatformWhenDrmMasterCanBeAcquired)
 TEST_F(ServerPlatformProbeMockDRM, DoesNotLoadDummyPlatformWhenBetterPlatformExists)
 {
     using namespace testing;
-    mir::options::ProgramOption options;
+    StubOptionsProvider options;
     auto fake_mesa = ensure_mesa_probing_succeeds();
 
     auto modules = available_platforms();
@@ -243,7 +261,7 @@ TEST_F(ServerPlatformProbeMockDRM, DoesNotLoadDummyPlatformWhenBetterPlatformExi
 TEST(ServerPlatformProbe, ThrowsExceptionWhenNothingProbesSuccessfully)
 {
     using namespace testing;
-    mir::options::ProgramOption options;
+    StubOptionsProvider options;
     auto block_mesa = ensure_mesa_probing_fails();
 
     auto modules = available_platforms();
@@ -260,7 +278,7 @@ TEST(ServerPlatformProbe, ThrowsExceptionWhenNothingProbesSuccessfully)
 TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
 {
     using namespace testing;
-    mir::options::ProgramOption options;
+    StubOptionsProvider options;
     auto block_mesa = ensure_mesa_probing_fails();
 
     auto modules = available_platforms();
@@ -285,7 +303,7 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
 TEST(ServerPlatformProbe, IgnoresNonPlatformModules)
 {
     using namespace testing;
-    mir::options::ProgramOption options;
+    StubOptionsProvider options;
 
     std::vector<std::shared_ptr<mir::SharedLibrary>> modules;
     add_dummy_platform(modules);
@@ -632,7 +650,16 @@ public:
             ((mtd::logging_opt), boost::program_options::value<std::string>()->default_value(""), mtd::logging_descr);
 
         options = std::move(opts);
-        return *(options->the_options());
+        return *(options->global_options());
+    }
+
+    auto the_options_provider() -> mo::OptionsProvider const&
+    {
+        if (!options)
+        {
+            the_options();
+        }
+        return *options;
     }
 
     auto the_console_services() -> std::shared_ptr<mir::ConsoleServices>
@@ -656,7 +683,7 @@ private:
      * would call mo::Configuration::~Configiration and fail, whereas std::make_shared<mo::DefaultConfiguration> will capture
      * mo::DefaultConfiguration::~DefaultConfiguration and compile.
      */
-    std::shared_ptr<mo::Configuration> options;
+    std::shared_ptr<mo::OptionsProvider> options;
     std::shared_ptr<mir::SharedLibraryProberReport> const report;
 
     std::vector<std::unique_ptr<mtf::TemporaryEnvironmentValue>> temporary_env;
@@ -689,7 +716,7 @@ TEST_F(FullProbeStack, select_display_modules_loads_all_available_hardware_when_
         }
     }
 
-    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+    auto devices = mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report());
     EXPECT_THAT(devices.size(), Eq(expected_hardware_count));
 }
 
@@ -747,7 +774,7 @@ TEST_F(FullProbeStack, select_display_modules_loads_virtual_platform_as_well_as_
 
     add_virtual_option();
 
-    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+    auto devices = mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report());
 
     // We expect the Virtual platform to load
     EXPECT_THAT(devices, Contains(Pair(_, ModuleNameMatches(StrEq("mir:virtual")))));
@@ -773,7 +800,7 @@ TEST_F(FullProbeStack, select_display_loads_gbm_platform_for_each_kms_device)
         GTEST_SKIP() << "gbm-kms platform not built";
     }
 
-    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+    auto devices = mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report());
 
     for(auto const& device: udev_devices)
     {
@@ -796,7 +823,7 @@ TEST_F(FullProbeStack, select_display_modules_loads_x11_platform_even_when_gbm_i
         GTEST_SKIP() << "gbm-kms platform not built; cannot test hardware platform probing";
     }
 
-    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+    auto devices = mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report());
 
     // We expect the X11 platform to load
     EXPECT_THAT(devices, Contains(Pair(_, ModuleNameMatches(StrEq("mir:x11")))));
@@ -818,7 +845,7 @@ TEST_F(FullProbeStack, when_all_of_gbm_and_x11_and_virtual_are_available_select_
         GTEST_SKIP() << "gbm-kms platform not built; cannot test hardware platform probing";
     }
 
-    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+    auto devices = mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report());
 
     // We expect the X11 platform to load
     EXPECT_THAT(devices, Contains(Pair(_, ModuleNameMatches(StrEq("mir:x11")))));
@@ -841,7 +868,7 @@ TEST_F(FullProbeStack, select_display_modules_loads_wayland_platform_even_when_g
         GTEST_SKIP() << "gbm-kms platform not built; cannot test hardware platform probing";
     }
 
-    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+    auto devices = mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report());
 
     // We expect the Wayland platform to load
     EXPECT_THAT(devices, Contains(Pair(_, ModuleNameMatches(StrEq("mir:wayland")))));
@@ -863,7 +890,7 @@ TEST_F(FullProbeStack, when_all_of_gbm_and_wayland_and_virtual_are_available_sel
         GTEST_SKIP() << "gbm-kms platform not built; cannot test hardware platform probing";
     }
 
-    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+    auto devices = mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report());
 
     // We expect the Wayland platform to load
     EXPECT_THAT(devices, Contains(Pair(_, ModuleNameMatches(StrEq("mir:wayland")))));
@@ -878,7 +905,7 @@ TEST_F(FullProbeStack, when_both_wayland_and_x11_are_supported_x11_is_chosen)
     enable_host_wayland();
     enable_host_x11();
 
-    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+    auto devices = mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report());
 
     EXPECT_THAT(devices, Not(Contains(Pair(_, ModuleNameMatches(StrEq("mir:wayland"))))));
     EXPECT_THAT(devices, Contains(Pair(_, ModuleNameMatches(StrEq("mir:x11")))));
@@ -907,7 +934,7 @@ TEST_F(FullProbeStack, instantiates_all_manually_selected_platforms)
         set_display_libs_option("mir:x11,mir:wayland");
     }
 
-    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+    auto devices = mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report());
 
     if (expect_kms_device)
     {
@@ -952,7 +979,7 @@ TEST_F(FullProbeStack, instantiates_all_manually_selected_platforms_and_virtual_
         set_display_libs_option("mir:x11,mir:wayland");
     }
 
-    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+    auto devices = mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report());
 
     if (expect_kms_device)
     {
@@ -996,7 +1023,7 @@ TEST_F(FullProbeStack, selects_only_gbm_when_manually_specified_even_if_x11_and_
 
     set_display_libs_option("mir:gbm-kms");
 
-    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+    auto devices = mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report());
 
     EXPECT_THAT(
         devices,
@@ -1015,7 +1042,7 @@ TEST_F(FullProbeStack, doesnt_instantiate_other_platforms_when_manually_selected
 
     set_display_libs_option("mir:gbm-kms");
 
-    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+    auto devices = mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report());
 
     EXPECT_THAT(devices, IsEmpty());
 }
@@ -1029,7 +1056,7 @@ TEST_F(FullProbeStack, manually_selecting_only_virtual_platform_with_no_virtual_
 
     set_display_libs_option("mir:virtual");
 
-    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+    auto devices = mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report());
 
     EXPECT_THAT(devices, IsEmpty());
 }
@@ -1044,7 +1071,7 @@ TEST_F(FullProbeStack, manually_selecting_only_virtual_platform_with_required_op
 
     set_display_libs_option("mir:virtual");
 
-    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+    auto devices = mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report());
 
     ASSERT_THAT(devices.size(), Eq(1));
     EXPECT_THAT(devices.front(), Pair(_, ModuleNameMatches(StrEq("mir:virtual"))));
@@ -1067,7 +1094,7 @@ TEST_F(FullProbeStack, gbm_kms_is_not_selected_for_nvidia_driver_by_default)
     enable_gbm_on_kms_device(*nouveau_device);
     enable_gbm_on_kms_device(*amd_device);
 
-    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+    auto devices = mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report());
 
     EXPECT_THAT(devices, UnorderedElementsAre(
         Pair(IsPlatformForDevice(nouveau_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms"))),
@@ -1094,7 +1121,7 @@ TEST_F(FullProbeStack, gbm_kms_is_selected_for_nvidia_driver_when_quirk_is_allow
 
     mtf::TemporaryEnvironmentValue skip_nvidia_quirk{"MIR_SERVER_DRIVER_QUIRKS", "allow:driver:nvidia"};
 
-    auto devices = mg::select_display_modules(the_options(), the_console_services(), *the_library_prober_report());
+    auto devices = mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report());
 
     EXPECT_THAT(devices, UnorderedElementsAre(
         Pair(IsPlatformForDevice(nvidia_device.get()), ModuleNameMatches(StrEq("mir:gbm-kms"))),

@@ -23,6 +23,8 @@
 
 namespace mir
 {
+class SharedLibrary;
+
 namespace options
 {
 extern char const* const arw_server_socket_opt;
@@ -66,17 +68,24 @@ extern char const* const auto_console;
 
 extern char const* const vt_option_name;
 
-class Configuration
+class OptionsProvider
 {
 public:
-    virtual std::shared_ptr<options::Option> the_options() const = 0;
+    /**
+     * The options not associated with a specific loaded module
+     */
+    virtual std::shared_ptr<options::Option> global_options() const = 0;
+    /**
+     * All options, including those added by the specified module
+     */
+    virtual auto the_options_for(SharedLibrary const& module) const -> std::shared_ptr<options::Option> = 0;
 
 protected:
+    OptionsProvider() = default;
+    virtual ~OptionsProvider() = default;
 
-    Configuration() = default;
-    virtual ~Configuration() = default;
-    Configuration(Configuration const&) = delete;
-    Configuration& operator=(Configuration const&) = delete;
+    OptionsProvider(OptionsProvider const&) = delete;
+    OptionsProvider& operator=(OptionsProvider const&) = delete;
 };
 }
 }

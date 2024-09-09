@@ -39,7 +39,7 @@ public:
 
     void parse_environment(
         boost::program_options::options_description const& description,
-        char const* prefix);
+        std::function<std::string(std::string)> env_var_name_mapper);
 
     void parse_file(
         boost::program_options::options_description const& description,
