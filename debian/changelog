@@ -27,6 +27,7 @@ mir (2.18.0) UNRELEASED; urgency=medium
       . ci: replace codecov with TICS (#3485)
       . ci: enable AddressSanitizer (#3026)
       . Add support for `wp_fractional_scale_v1` (#3509)
+      . Allow servers to dynamically update input configuration
 
     Documentation:
       . Add Mir's CI documentation (#3434)
@@ -48,6 +49,7 @@ mir (2.18.0) UNRELEASED; urgency=medium
       . Fix x11 rendering when scaled fractional scaling (#3508, #3554)
       . wbg constantly resizing after switching to 2.17.0 (#3450)
       . Decorations Eat Into Application Area (#3572)
+      . Fix toplevel window resize pingpong. (Fixes #3573)
 
  -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 08 Aug 2024 10:35:09 +0200
 
