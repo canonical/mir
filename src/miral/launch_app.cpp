@@ -121,7 +121,7 @@ auto miral::launch_app_env(
     }
     else
     {
-        unsetenv("WAYLAND_DISPLAY");
+        application_environment.unsetenv("WAYLAND_DISPLAY");
     }
 
     if (x11_display)
@@ -130,7 +130,7 @@ auto miral::launch_app_env(
     }
     else
     {
-        unsetenv("DISPLAY");
+        application_environment.unsetenv("DISPLAY");
     }
 
     auto const exec_env = application_environment.exec_env();
