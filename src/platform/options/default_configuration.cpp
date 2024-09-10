@@ -408,6 +408,12 @@ void mo::DefaultConfiguration::parse_arguments(
         // Maybe the unparsed tokens are for a module?
         for (auto const& [_, module_option_desc] : module_options_desc)
         {
+            if (tokens.empty())
+            {
+                // There aren't any unparsed arguments, so we're done here
+                break;
+            }
+
             /* We assume that argv[0] is *not* an option; instead, it's the name of the binary
              * So when reparsing, we need to add a fake argv[0]
              */
