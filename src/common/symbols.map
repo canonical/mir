@@ -323,12 +323,11 @@ global:
     mir::RecursiveReadWriteMutex::write_lock*;
     mir::RecursiveReadWriteMutex::write_unlock*;
     mir::SharedLibrary::?SharedLibrary*;
-    mir::SharedLibrary::SharedLibrary*;
-    mir::SharedLibrary::load_symbol*;
-    mir::SharedLibrary::get_handle*;
     mir::SharedLibrary::Handle::?Handle*;
     mir::SharedLibrary::Handle::operator*;
-    std::hash?mir::SharedLibrary::Handle?::operator*;
+    mir::SharedLibrary::SharedLibrary*;
+    mir::SharedLibrary::get_handle*;
+    mir::SharedLibrary::load_symbol*;
     mir::SharedLibraryProberReport::?SharedLibraryProberReport*;
     mir::SharedLibraryProberReport::SharedLibraryProberReport*;
     mir::SharedLibraryProberReport::operator*;
@@ -489,6 +488,7 @@ global:
     non-virtual?thunk?to?mir::logging::Logger::log*;
     non-virtual?thunk?to?mir::logging::MultiLogger::log*;
     operator*;
+    std::hash?mir::SharedLibrary::Handle?::operator*;
     typeinfo?for?MirInputConfig;
     typeinfo?for?MirInputDevice;
     typeinfo?for?MirKeyboardConfig;
@@ -503,8 +503,8 @@ global:
     typeinfo?for?mir::IntOwnedFd;
     typeinfo?for?mir::NonBlockingExecutor;
     typeinfo?for?mir::PosixRWMutex;
-    typeinfo?for?mir::SharedLibrary;
     typeinfo?for?mir::SharedLibrary::Handle;
+    typeinfo?for?mir::SharedLibrary;
     typeinfo?for?mir::SharedLibraryProberReport;
     typeinfo?for?mir::Signal;
     typeinfo?for?mir::ThreadPoolExecutor;
@@ -696,8 +696,12 @@ global:
 };
 
 MIR_COMMON_2.18 {
-  global: extern "C++" {
+global:
+  extern "C++" {
     MirTouchpadConfig::disable_with_external_mouse*;
     mir::event_type_to_c_str*;
+    std::hash::operator*;
+    typeinfo?for?std::hash;
   };
 } MIR_COMMON_2.17;
+
