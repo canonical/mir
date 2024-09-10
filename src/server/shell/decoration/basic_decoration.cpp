@@ -203,7 +203,7 @@ msd::BasicDecoration::~BasicDecoration()
         geom::DeltaX{});
 }
 
-void msd::BasicDecoration::window_state_updated()
+void msd::BasicDecoration::redraw()
 {
     auto previous_window_state = std::move(window_state);
     window_state = new_window_state();
@@ -216,7 +216,7 @@ void msd::BasicDecoration::window_state_updated()
     update(previous_window_state.get(), previous_input_state.get());
 }
 
-void msd::BasicDecoration::input_state_updated()
+void msd::BasicDecoration::handle_input()
 {
     // window_state does not need to be updated
 
@@ -269,7 +269,7 @@ void msd::BasicDecoration::set_cursor(std::string const& cursor_image_name)
 void msd::BasicDecoration::set_scale(float new_scale)
 {
     scale = new_scale;
-    window_state_updated();
+    redraw();
 }
 
 auto msd::BasicDecoration::new_window_state() const -> std::unique_ptr<WindowState>

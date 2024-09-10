@@ -72,8 +72,8 @@ public:
         std::shared_ptr<scene::Surface> const& window_surface);
     ~BasicDecoration();
 
-    void window_state_updated() override;
-    void input_state_updated() override;
+    void redraw() override;
+    void handle_input() override;
 
     void request_move(MirInputEvent const* event) override;
     void request_resize(MirInputEvent const* event, MirResizeEdge edge) override;

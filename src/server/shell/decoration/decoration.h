@@ -33,14 +33,13 @@ public:
     Decoration() = default;
     virtual ~Decoration() = default;
 
-
     // Called whenever the visible aspect of the window changes.
     // Examples: Scale, title, focus, visibility, size, etc...
-    virtual void window_state_updated() = 0;
+    virtual void redraw() = 0;
 
     // Called whenever decorations receive input events
     // Mouse up, down, dragging, enter, leave...
-    virtual void input_state_updated() = 0;
+    virtual void handle_input() = 0;
 
     virtual void request_toggle_maximize() = 0;
     virtual void request_close() = 0;
