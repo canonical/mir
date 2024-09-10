@@ -68,6 +68,7 @@ global:
     mir::DefaultServerConfiguration::the_main_loop*;
     mir::DefaultServerConfiguration::the_mediating_display_changer*;
     mir::DefaultServerConfiguration::the_options*;
+    mir::DefaultServerConfiguration::the_options_provider*;
     mir::DefaultServerConfiguration::the_persistent_surface_store*;
     mir::DefaultServerConfiguration::the_pointer_input_dispatcher*;
     mir::DefaultServerConfiguration::the_primary_selection_clipboard*;
