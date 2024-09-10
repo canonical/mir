@@ -151,7 +151,7 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
                 auto describe_module = platform->load_function<mg::DescribeModule>(
                     "describe_graphics_module",
                     MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
-                
+
                 auto description = describe_module();
                 if (!device.device)
                 {
@@ -295,8 +295,6 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                         device.device->driver(),
                         device.device->devnode());
                 }
-
-                mir::log_info("Hello? Do we see this for %s", description->name);
 
                 // TODO: Do we want to be able to continue on partial failure here?
                 rendering_platform_map.emplace(
