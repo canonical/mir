@@ -59,11 +59,11 @@ void Environment::setenv(std::string const& name, std::string const& value)
 {
     auto const entry = name + "=" + value;
 
-    for (auto it = env_strings.begin(); it != env_strings.end(); ++it)
+    for (auto& e : env_strings)
     {
-        if (strncmp(it->c_str(), name.c_str(), name.size()) == 0)
+        if (strncmp(e.c_str(), name.c_str(), name.size()) == 0)
         {
-            *it = entry;
+            e = entry;
             return;
         }
     }
