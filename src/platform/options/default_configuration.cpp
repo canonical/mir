@@ -404,9 +404,14 @@ void mo::DefaultConfiguration::parse_arguments(
         for (auto const& token : unparsed_arguments)
             tokens.push_back(token.c_str());
 
+        auto const argv0 = argc > 0 ? argv[0] : "fake argv[0]";
         // Maybe the unparsed tokens are for a module?
         for (auto const& [_, module_option_desc] : module_options_desc)
         {
+            /* We assume that argv[0] is *not* an option; instead, it's the name of the binary
+             * So when reparsing, we need to add a fake argv[0]
+             */
+            tokens.insert(tokens.begin(), argv0);
             mo::ProgramOption tmp_options;
             tmp_options.parse_arguments(module_option_desc, tokens.size(), tokens.data());
 
