@@ -22,6 +22,7 @@
 #include "mir/shared_library.h"
 #include <boost/program_options/options_description.hpp>
 #include <vector>
+#include <unordered_map>
 
 namespace mir
 {
@@ -76,46 +77,8 @@ private:
     std::function<void(int argc, char const* const* argv)> const unparsed_arguments_handler;
     std::shared_ptr<boost::program_options::options_description> const program_options;
 
-    template<typename Value>
-    class LibraryMap
-    {
-    private:
-        std::vector<std::pair<mir::SharedLibrary::Handle, Value>> values;
-
-        auto find(SharedLibrary const&) -> decltype(values)::iterator;
-        auto find(SharedLibrary const&) const -> decltype(values)::const_iterator;
-    public:
-        LibraryMap() = default;
-        ~LibraryMap() = default;
-
-        auto operator[](SharedLibrary const& lib) -> Value&;
-
-        auto at(SharedLibrary const& lib) const -> Value const&;
-
-        auto begin() const -> decltype(values)::const_iterator;
-        auto end() const -> decltype(values)::const_iterator;
-
-        template<typename ...Args>
-        auto emplace(SharedLibrary const& lib, Args&& ...args) -> std::pair<typename decltype(values)::iterator, bool>
-        {
-            auto existing = find(lib);
-
-            if (existing != values.end())
-            {
-                return {existing, false};
-            }
-
-            values.emplace_back(
-                std::piecewise_construct,
-                std::forward_as_tuple(lib.get_handle()),
-                std::forward<Args>(args)...);
-
-            return {values.end() - 1, true};
-        }
-    };
-
-    LibraryMap<boost::program_options::options_description> module_options_desc;
-    LibraryMap<std::shared_ptr<Option>> mutable module_options;
+    std::unordered_map<SharedLibrary::Handle, boost::program_options::options_description> module_options_desc;
+    std::unordered_map<SharedLibrary::Handle, std::shared_ptr<Option>> mutable module_options;
     std::shared_ptr<Option> mutable options;
 };
 }

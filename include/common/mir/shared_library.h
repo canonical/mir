@@ -53,12 +53,13 @@ public:
 
     class Handle
     {
-    public:    
+    public:
         auto operator<=>(Handle const& rhs) const -> std::strong_ordering;
         auto operator==(Handle const& rhs) const -> bool = default;
         auto operator!=(Handle const& rhs) const -> bool = default;
     private:
         friend class SharedLibrary;
+        friend struct std::hash<Handle>;
 
         Handle(void* handle);
         void* handle;
@@ -73,5 +74,11 @@ private:
     SharedLibrary& operator=(SharedLibrary const&) = delete;
 };
 }
+
+template<>
+struct std::hash<mir::SharedLibrary::Handle>
+{
+    auto operator()(mir::SharedLibrary::Handle const& h) const noexcept -> std::size_t;
+};
 
 #endif /* MIR_SHARED_LIBRARY_H_ */

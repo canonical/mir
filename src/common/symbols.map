@@ -328,6 +328,7 @@ global:
     mir::SharedLibrary::get_handle*;
     mir::SharedLibrary::Handle::?Handle*;
     mir::SharedLibrary::Handle::operator*;
+    std::hash?mir::SharedLibrary::Handle?::operator*;
     mir::SharedLibraryProberReport::?SharedLibraryProberReport*;
     mir::SharedLibraryProberReport::SharedLibraryProberReport*;
     mir::SharedLibraryProberReport::operator*;

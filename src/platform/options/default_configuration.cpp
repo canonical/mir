@@ -71,62 +71,6 @@ namespace
 bool const enable_input_default        = true;
 }
 
-template<typename Value>
-auto mo::DefaultConfiguration::LibraryMap<Value>::find(SharedLibrary const& lib) const -> decltype(values)::const_iterator
-{
-    return std::find_if(
-        values.begin(),
-        values.end(),
-        [&lib](auto const& candidate) { return candidate.first == lib.get_handle(); });
-}
-
-template<typename Value>
-auto mo::DefaultConfiguration::LibraryMap<Value>::find(SharedLibrary const& lib) -> decltype(values)::iterator
-{
-    return std::find_if(
-        values.begin(),
-        values.end(),
-        [&lib](auto const& candidate) { return candidate.first == lib.get_handle(); });
-}
-
-template<typename Value>
-auto mo::DefaultConfiguration::LibraryMap<Value>::operator[](SharedLibrary const& lib) -> Value&
-{
-    auto existing = find(lib);
-    if (existing != values.end())
-    {
-        return existing->second;
-    }
-
-    values.emplace_back(std::make_pair(lib.get_handle(), Value{}));
-    return values.back().second;
-}
-
-template<typename Value>
-auto mo::DefaultConfiguration::LibraryMap<Value>::at(SharedLibrary const& lib) const -> Value const&
-{
-    auto existing = find(lib);
-
-    if (existing == values.end())
-    {
-        BOOST_THROW_EXCEPTION((std::out_of_range{"SharedLibrary not in map"}));
-    }
-
-    return existing->second;
-}
-
-template<typename Value>
-auto mo::DefaultConfiguration::LibraryMap<Value>::begin() const -> decltype(values)::const_iterator
-{
-    return values.cbegin();
-}
-
-template<typename Value>
-auto mo::DefaultConfiguration::LibraryMap<Value>::end() const -> decltype(values)::const_iterator
-{
-    return values.cend();
-}
-
 mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
     DefaultConfiguration(argc, argv, std::string{})
 {
@@ -300,8 +244,8 @@ void mo::DefaultConfiguration::add_platform_options()
             {
                 auto add_platform_options = platform->load_function<mir::graphics::AddPlatformOptions>("add_graphics_platform_options", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
                 auto [options, inserted] = module_options_desc.emplace(
-                    *platform,
-                    std::forward_as_tuple(option_header_for(*platform)));
+                    platform->get_handle(),
+                    option_header_for(*platform));
 
                 // *Pretty* sure this is impossible, but let's be sure!
                 assert(inserted && "Attempted to add platform options twice for the same module");
@@ -358,11 +302,11 @@ std::shared_ptr<mo::Option> mo::DefaultConfiguration::global_options() const
 
 auto mo::DefaultConfiguration::the_options_for(SharedLibrary const& module) const -> std::shared_ptr<Option>
 {
-    auto parsed_options = module_options[module];
+    auto parsed_options = module_options[module.get_handle()];
     if (!parsed_options)
     {
         auto options = std::make_shared<ProgramOption>();
-        auto& module_option_desc = module_options_desc.at(module);
+        auto& module_option_desc = module_options_desc.at(module.get_handle());
 
         /* We can't combine the parsed global options with a parse of the module-specific options,
          * but we *can* combine the global options description with the module options description
@@ -375,7 +319,7 @@ auto mo::DefaultConfiguration::the_options_for(SharedLibrary const& module) cons
         parse_environment(joint_desc, *options);
         parse_config_file(joint_desc, *options);
 
-        module_options[module] = options;
+        module_options[module.get_handle()] = options;
         parsed_options = options;
     }
 

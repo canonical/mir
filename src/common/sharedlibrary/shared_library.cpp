@@ -16,6 +16,7 @@
 
 #include "mir/shared_library.h"
 #include <compare>
+#include <cstddef>
 
 #ifdef MIR_DONT_USE_DLVSYM
 #include <mir/log.h>
@@ -89,4 +90,10 @@ mir::SharedLibrary::Handle::Handle(void* handle)
 auto mir::SharedLibrary::Handle::operator<=>(Handle const& rhs) const -> std::strong_ordering
 {
     return handle <=> rhs.handle;
+}
+
+auto std::hash<mir::SharedLibrary::Handle>::operator()(mir::SharedLibrary::Handle const& handle) const noexcept
+    -> std::size_t
+{
+    return std::hash<void*>{}(handle.handle);
 }
