@@ -422,7 +422,7 @@ void msd::InputManager::widget_enter(Widget& widget)
         set_cursor(widget.resize_edge.value());
     decoration->spawn([](Decoration* decoration)
         {
-            decoration->input_state_updated();
+            decoration->handle_input();
         });
 }
 
@@ -432,7 +432,7 @@ void msd::InputManager::widget_leave(Widget& widget)
     set_cursor(mir_resize_edge_none);
     decoration->spawn([](Decoration* decoration)
         {
-            decoration->input_state_updated();
+            decoration->handle_input();
         });
 }
 
@@ -441,7 +441,7 @@ void msd::InputManager::widget_down(Widget& widget)
     widget.state = ButtonState::Down;
     decoration->spawn([](Decoration* decoration)
         {
-            decoration->input_state_updated();
+            decoration->handle_input();
         });
 }
 
@@ -496,7 +496,7 @@ void msd::InputManager::widget_up(Widget& widget)
     widget.state = ButtonState::Hovered;
     decoration->spawn([](Decoration* decoration)
         {
-            decoration->input_state_updated();
+            decoration->handle_input();
         });
 }
 
@@ -534,7 +534,7 @@ void msd::InputManager::widget_drag(Widget& widget)
     }
     decoration->spawn([](Decoration* decoration)
         {
-            decoration->input_state_updated();
+            decoration->handle_input();
         });
 }
 

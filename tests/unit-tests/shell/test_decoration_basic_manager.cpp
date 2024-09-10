@@ -40,8 +40,8 @@ class StubDecoration
     : public msd::Decoration
 {
     void set_scale(float) override {}
-    void window_state_updated() override {}
-    void input_state_updated() override {}
+    void redraw() override {}
+    void handle_input() override {}
     void request_toggle_maximize() override {}
     void request_close() override {}
     void request_minimize() override {}
@@ -114,8 +114,8 @@ public:
     }
 
     MOCK_METHOD(void, set_scale, (float), (override));
-    MOCK_METHOD(void, window_state_updated, (), (override));
-    MOCK_METHOD(void, input_state_updated, (), (override));
+    MOCK_METHOD(void, redraw, (), (override));
+    MOCK_METHOD(void, handle_input, (), (override));
     MOCK_METHOD(void, request_toggle_maximize , (), (override));
     MOCK_METHOD(void, request_close, (), (override));
     MOCK_METHOD(void, request_minimize, (), (override));

@@ -278,7 +278,7 @@ private:
     {
         decoration->spawn([](auto decoration)
             {
-                decoration->window_state_updated();
+                decoration->redraw();
             });
     }
 
