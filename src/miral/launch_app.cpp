@@ -151,7 +151,6 @@ auto miral::launch_app_env(
 
     if (pid == 0)
     {
-        mir::log_debug("Restoring sigmask");
         sigset_t all_signals;
         sigfillset(&all_signals);
         pthread_sigmask(SIG_UNBLOCK, &all_signals, nullptr);
