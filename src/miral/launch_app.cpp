@@ -155,6 +155,7 @@ auto miral::launch_app_env(
         sigfillset(&all_signals);
         pthread_sigmask(SIG_UNBLOCK, &all_signals, nullptr);
 
+        // execvpe() isn't listed as being async-signal-safe, but the implementation looks fine and rewriting seems unnecessary
         execvpe(exec_args[0], const_cast<char*const*>(exec_args.data()), const_cast<char*const*>(exec_env.data()));
 
         mir::log_warning("Failed to execute client (\"%s\") error: %s", exec_args[0], strerror(errno));
