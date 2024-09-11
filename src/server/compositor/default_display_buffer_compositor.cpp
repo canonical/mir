@@ -28,8 +28,12 @@
 #include "mir/renderer/renderer.h"
 #include "occlusion.h"
 
+#define MIR_LOG_COMPONENT "compositor"
+#include "mir/log.h"
+
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplaySink& display_sink,
@@ -113,11 +117,14 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
 
     if (framebuffers.size() == renderable_list.size() && display_sink.overlay(framebuffers))
     {
+        mir::log_debug("Bypass path\n");
         report->renderables_in_frame(this, renderable_list);
         renderer->suspend();
     }
     else
     {
+        mir::log_debug("composite path\n");
+
         renderer->set_output_transform(display_sink.transformation());
         renderer->set_viewport(view_area);
         renderer->set_output_filter(output_filter->filter());

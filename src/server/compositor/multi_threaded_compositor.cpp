@@ -254,7 +254,7 @@ public:
     void wait_until_stopped()
     {
         stop();
-        if (stopped_future.wait_for(10s) != std::future_status::ready)
+        if (stopped_future.wait_for(10h) != std::future_status::ready)
             BOOST_THROW_EXCEPTION(std::runtime_error("Compositor thread failed to stop"));
 
         stopped_future.get();

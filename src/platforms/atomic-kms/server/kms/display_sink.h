@@ -25,6 +25,7 @@
 #include "platform_common.h"
 #include "kms_framebuffer.h"
 
+#include <boost/iostreams/detail/buffer.hpp>
 #include <future>
 #include <vector>
 #include <memory>
@@ -49,8 +50,28 @@ namespace atomic
 class Platform;
 class KMSOutput;
 
-class DisplaySink : public graphics::DisplaySink,
-                    public graphics::DisplaySyncGroup
+class DmaBufDisplayAllocator : public graphics::DmaBufDisplayAllocator
+{
+    public:
+        DmaBufDisplayAllocator(mir::Fd drm_fd) : drm_fd_{drm_fd}
+        {
+        }
+
+        virtual auto framebuffer_for(std::shared_ptr<DMABufBuffer> buffer) -> std::unique_ptr<Framebuffer> override;
+
+        auto drm_fd() -> mir::Fd const
+        {
+            return drm_fd_;
+        }
+
+    private:
+        mir::Fd const drm_fd_;
+};
+
+class DisplaySink :
+    public graphics::DisplaySink,
+    public graphics::DisplaySyncGroup,
+    public DmaBufDisplayAllocator
 {
 public:
     DisplaySink(
@@ -94,6 +115,7 @@ private:
 
     std::shared_ptr<KMSOutput> const output;
 
+    std::shared_ptr<DmaBufDisplayAllocator> bypass_allocator;
     std::shared_ptr<CPUAddressableDisplayAllocator> kms_allocator;
     std::unique_ptr<GBMDisplayAllocator> gbm_allocator;
 
