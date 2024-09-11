@@ -47,6 +47,7 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
+#include <memory>
 #include <optional>
 #include <stdexcept>
 #include <cassert>
@@ -545,9 +546,35 @@ auto mgg::GLRenderingProvider::import_syncobj(Fd const& syncobj_fd)
     return std::make_unique<drm::Syncobj>(drm_fd, handle);
 }
 
-auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& /*sink*/)
+auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& sink)
     -> std::unique_ptr<FramebufferProvider>
 {
+    if(auto* allocator = sink.acquire_compatible_allocator<DmaBufDisplayAllocator>())
+    {
+        struct FooFramebufferProvider: public FramebufferProvider
+        {
+        public:
+            FooFramebufferProvider(DmaBufDisplayAllocator* allocator) : allocator{allocator}
+            {
+            }
+
+            auto buffer_to_framebuffer(std::shared_ptr<Buffer> buffer) -> std::unique_ptr<Framebuffer> override
+            {
+                if(auto dma_buf = std::dynamic_pointer_cast<mir::graphics::DMABufBuffer>(buffer))
+                {
+                    return allocator->framebuffer_for(dma_buf);
+                }
+
+                return {};
+            }
+
+        private:
+            DmaBufDisplayAllocator* allocator;
+        };
+
+        return std::make_unique<FooFramebufferProvider>(allocator);
+    }
+
     // TODO: Make this not a null implementation, so bypass/overlays can work again
     class NullFramebufferProvider : public FramebufferProvider
     {

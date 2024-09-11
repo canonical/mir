@@ -37,10 +37,13 @@
 #include <EGL/eglext.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+#include <cstdint>
 #include <drm_fourcc.h>
 
+#include <memory>
 #include <stdexcept>
 #include <chrono>
+#include <xf86drmMode.h>
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::atomic;
@@ -55,7 +58,8 @@ mga::DisplaySink::DisplaySink(
     std::shared_ptr<KMSOutput> output,
     geom::Rectangle const& area,
     glm::mat2 const& transformation)
-    : gbm{std::move(gbm)},
+    : DmaBufDisplayAllocator(drm_fd),
+      gbm{std::move(gbm)},
       listener(listener),
       output{std::move(output)},
       area(area),
@@ -239,6 +243,78 @@ void mga::DisplaySink::set_next_image(std::unique_ptr<Framebuffer> content)
     }
 }
 
+auto mga::DmaBufDisplayAllocator::framebuffer_for(std::shared_ptr<DMABufBuffer> buffer) -> std::unique_ptr<Framebuffer>
+{
+    auto plane_descriptors = buffer->planes();
+
+    assert(plane_descriptors.size() <= 4);
+
+    auto width = buffer->size().width;
+    auto height = buffer->size().height;
+    auto pixel_format = buffer->format();
+
+    uint32_t bo_handles[4] = {0};
+    uint32_t pitches[4] = {0};
+    uint32_t offsets[4] = {0};
+
+    for (std::size_t i = 0; i < std::min(4zu, plane_descriptors.size()); i++)
+    {
+        bo_handles[i] = plane_descriptors[i].dma_buf;
+        pitches[i] = plane_descriptors[i].stride;
+        offsets[i] = plane_descriptors[i].offset;
+    }
+
+    auto fb_id = std::shared_ptr<uint32_t>{
+        new uint32_t{0},
+        [drm_fd = drm_fd()](uint32_t* fb_id)
+        {
+            if (*fb_id)
+            {
+                drmModeRmFB(drm_fd, *fb_id);
+            }
+            delete fb_id;
+        }};
+
+    int ret = drmModeAddFB2(
+        drm_fd(),
+        width.as_uint32_t(),
+        height.as_uint32_t(),
+        pixel_format,
+        bo_handles,
+        pitches,
+        offsets,
+        fb_id.get(),
+        0);
+
+    if (ret)
+        return {};
+
+    struct AtomicKmsFbHandle : public mg::FBHandle
+    {
+        AtomicKmsFbHandle(std::shared_ptr<uint32_t> fb_handle, geometry::Size size) :
+            kms_fb_id{fb_handle},
+            size_{size}
+        {
+        }
+
+        virtual auto size() const -> geometry::Size override
+        {
+            return size_;
+        }
+
+        virtual operator uint32_t() const override
+        {
+            return *kms_fb_id;
+        }
+
+    private:
+        std::shared_ptr<uint32_t> kms_fb_id;
+        geometry::Size size_;
+    };
+
+    return std::make_unique<AtomicKmsFbHandle>(fb_id, buffer->size());
+}
+
 auto mga::DisplaySink::maybe_create_allocator(DisplayAllocator::Tag const& type_tag)
     -> DisplayAllocator*
 {
@@ -257,6 +333,14 @@ auto mga::DisplaySink::maybe_create_allocator(DisplayAllocator::Tag const& type_
             gbm_allocator = std::make_unique<GBMDisplayAllocator>(drm_fd(), gbm, output->size());
         }
         return gbm_allocator.get();
+    }
+    if(dynamic_cast<DmaBufDisplayAllocator::Tag const*>(&type_tag))
+    {
+        if (!bypass_allocator)
+        {
+           bypass_allocator = std::make_shared<DmaBufDisplayAllocator>(drm_fd());
+        }
+        return bypass_allocator.get();
     }
     return nullptr;
 }

@@ -403,7 +403,7 @@ public:
     virtual auto make_surface(DRMFormat format, std::span<uint64_t> modifiers) -> std::unique_ptr<GBMSurface> = 0;
 };
 
-class DmaBufBuffer;
+class DMABufBuffer;
 
 class DmaBufDisplayAllocator : public DisplayAllocator
 {
@@ -412,7 +412,7 @@ public:
     {
     };
 
-    virtual auto framebuffer_for(std::shared_ptr<DmaBufBuffer> buffer)
+    virtual auto framebuffer_for(std::shared_ptr<DMABufBuffer> buffer)
         -> std::unique_ptr<Framebuffer> = 0;
 };
 
