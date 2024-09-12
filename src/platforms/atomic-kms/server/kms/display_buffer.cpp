@@ -21,6 +21,7 @@
 #include "gbm_display_allocator.h"
 #include "mir/fd.h"
 #include "mir/graphics/display_report.h"
+#include "mir/graphics/drm_formats.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/transformation.h"
 #include "bypass.h"
@@ -40,9 +41,12 @@
 #include <cstdint>
 #include <drm_fourcc.h>
 
+#include <drm_mode.h>
+#include <gbm.h>
 #include <memory>
 #include <stdexcept>
 #include <chrono>
+#include <xf86drm.h>
 #include <xf86drmMode.h>
 
 namespace mg = mir::graphics;
@@ -349,13 +353,32 @@ auto mga::DmaBufDisplayAllocator::framebuffer_for(std::shared_ptr<DMABufBuffer> 
     auto height = buffer->size().height;
     auto pixel_format = buffer->format();
 
-    uint32_t bo_handles[4] = {0};
+    uint32_t gem_handles[4] = {0};
     uint32_t pitches[4] = {0};
     uint32_t offsets[4] = {0};
 
-    for (std::size_t i = 0; i < std::min(4zu, plane_descriptors.size()); i++)
+    uint64_t modifiers[4] = {};
+    std::fill_n(modifiers, 4, 0);
+
+    mir::log_debug(
+        "Buffer format %s",
+        mir::graphics::drm_format_to_string(buffer->format())
+        /* mir::graphics::drm_modifier_to_string(buffer->modifier().value_or(0)).c_str(), */
+        /* buffer->modifier().value_or(0) */
+    );
+
+    for (std::size_t i = 0; i < std::min(1zu, plane_descriptors.size()); i++)
     {
-        bo_handles[i] = plane_descriptors[i].dma_buf;
+        uint32_t gem_handle = 0;
+        int ret = drmPrimeFDToHandle(drm_fd(), plane_descriptors[i].dma_buf, &gem_handle);
+
+        if(ret)
+        {
+            mir::log_debug("Failed to convert buffer");
+            return {};
+        }
+
+        gem_handles[i] = gem_handle;
         pitches[i] = plane_descriptors[i].stride;
         offsets[i] = plane_descriptors[i].offset;
     }
@@ -371,19 +394,24 @@ auto mga::DmaBufDisplayAllocator::framebuffer_for(std::shared_ptr<DMABufBuffer> 
             delete fb_id;
         }};
 
-    int ret = drmModeAddFB2(
+
+    int ret = drmModeAddFB2WithModifiers(
         drm_fd(),
         width.as_uint32_t(),
         height.as_uint32_t(),
         pixel_format,
-        bo_handles,
+        gem_handles,
         pitches,
         offsets,
+        modifiers,
         fb_id.get(),
         0);
 
     if (ret)
+    {
+        mir::log_debug("drmModeAddFB2WithModifiers returned an error: %d", ret);
         return {};
+    }
 
     struct AtomicKmsFbHandle : public mg::FBHandle
     {
