@@ -57,7 +57,7 @@ class DmaBufDisplayAllocator : public graphics::DmaBufDisplayAllocator
         {
         }
 
-        virtual auto framebuffer_for(std::shared_ptr<DMABufBuffer> buffer) -> std::unique_ptr<Framebuffer> override;
+        virtual auto framebuffer_for(mir::graphics::DisplaySink& sink, std::shared_ptr<DMABufBuffer> buffer) -> std::unique_ptr<Framebuffer> override;
 
         auto drm_fd() -> mir::Fd const
         {
