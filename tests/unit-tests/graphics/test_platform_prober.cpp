@@ -639,7 +639,7 @@ public:
 
     auto the_options() -> mir::options::Option const&
     {
-        char const* argv0 = "Platform Probing Acceptance Test";
+        static char const* argv0 = "Platform Probing Acceptance Test";
 
         /* We remake options each time the_options() is called as option parsing
          * happens at options->the_options() time and we want to make sure we capture
