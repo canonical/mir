@@ -561,7 +561,7 @@ auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& sink)
         struct FooFramebufferProvider: public FramebufferProvider
         {
         public:
-            FooFramebufferProvider(DmaBufDisplayAllocator* allocator) : allocator{allocator}
+            FooFramebufferProvider(DmaBufDisplayAllocator* allocator, mg::DisplaySink& sink) : allocator{allocator}, sink{sink}
             {
             }
 
@@ -569,7 +569,7 @@ auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& sink)
             {
                 if(auto dma_buf = std::dynamic_pointer_cast<mir::graphics::DMABufBuffer>(buffer))
                 {
-                    return allocator->framebuffer_for(dma_buf);
+                    return allocator->framebuffer_for(sink, dma_buf);
                 }
 
                 return {};
@@ -577,9 +577,10 @@ auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& sink)
 
         private:
             DmaBufDisplayAllocator* allocator;
+            mg::DisplaySink& sink;
         };
 
-        return std::make_unique<FooFramebufferProvider>(allocator);
+        return std::make_unique<FooFramebufferProvider>(allocator, sink);
     }
 
     // TODO: Make this not a null implementation, so bypass/overlays can work again
