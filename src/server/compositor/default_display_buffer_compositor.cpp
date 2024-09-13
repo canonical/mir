@@ -19,6 +19,7 @@
 #include "mir/compositor/compositor_report.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/scene_element.h"
+#include "mir/graphics/dmabuf_buffer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/display_sink.h"
 #include "mir/graphics/buffer.h"
@@ -27,6 +28,7 @@
 #include "mir/compositor/buffer_stream.h"
 #include "mir/renderer/renderer.h"
 #include "occlusion.h"
+#include <memory>
 
 #define MIR_LOG_COMPONENT "compositor"
 #include "mir/log.h"
@@ -119,6 +121,11 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     {
         mir::log_debug("Bypass path\n");
         report->renderables_in_frame(this, renderable_list);
+
+        // TODO: This is ugly, but its here for the purpose of showing more than one or two frames
+        if (auto dmabuf = std::dynamic_pointer_cast<mg::DMABufBuffer>(renderable_list[0]->buffer()))
+            dmabuf->on_consumed();
+
         renderer->suspend();
     }
     else
