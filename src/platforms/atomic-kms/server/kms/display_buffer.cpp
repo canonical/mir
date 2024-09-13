@@ -33,6 +33,7 @@
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/dmabuf_buffer.h"
 
+#include <algorithm>
 #include <boost/throw_exception.hpp>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -343,93 +344,114 @@ void mga::DisplaySink::set_next_image(std::unique_ptr<Framebuffer> content)
     }
 }
 
+namespace {
+    auto const MAX_PLANES = 4zu;
+
+    auto get_import_buffers(std::shared_ptr<mg::DMABufBuffer> buffer)
+        -> std::tuple<std::array<int, 4>, std::array<int, 4>, std::array<int, 4>, std::array<uint64_t, 4>>
+    {
+        auto const plane_descriptors = buffer->planes();
+        assert(plane_descriptors.size() <= MAX_PLANES);
+
+        // std::array becuase we can't really return int[4]
+        std::array<int, 4> dmabuf_fds = {0};
+        std::array<int, 4> pitches = {0};
+        std::array<int, 4> offsets = {0};
+        std::array<uint64_t, 4> modifiers = {0};
+
+        for (std::size_t i = 0; i < std::min(MAX_PLANES, plane_descriptors.size()); i++)
+        {
+            dmabuf_fds[i] = plane_descriptors[i].dma_buf;
+            pitches[i] = plane_descriptors[i].stride;
+            offsets[i] = plane_descriptors[i].offset;
+            modifiers[i] = buffer->modifier().value_or(DRM_FORMAT_MOD_INVALID);
+        }
+
+        return std::make_tuple(dmabuf_fds, pitches, offsets, modifiers);
+    }
+
+    auto import_gbm_bo(
+        mg::DisplaySink const& sink,
+        std::shared_ptr<mg::DMABufBuffer> buffer,
+        std::array<int, 4> dmabuf_fds,
+        std::array<int, 4> pitches,
+        std::array<int, 4> offsets) -> struct gbm_bo*
+    {
+        auto* ds = dynamic_cast<mga::DisplaySink const *>(&sink);
+        if (!ds)
+            return nullptr;
+
+        auto const plane_descriptors = buffer->planes();
+
+        gbm_import_fd_modifier_data import_data = {
+            .width = buffer->size().width.as_uint32_t(),
+            .height = buffer->size().height.as_uint32_t(),
+            .format = buffer->format(),
+            .num_fds = static_cast<uint32_t>(std::min(plane_descriptors.size(), MAX_PLANES)),
+            .fds = {dmabuf_fds[0], dmabuf_fds[1], dmabuf_fds[2], dmabuf_fds[3]},
+            .strides = {pitches[0], pitches[1], pitches[2], pitches[3]},
+            .offsets = {offsets[0], offsets[1], offsets[2], offsets[3]},
+            .modifier = buffer->modifier().value_or(DRM_FORMAT_MOD_NONE),
+        };
+
+        return gbm_bo_import(
+            ds->gbm_device().get(), GBM_BO_IMPORT_FD_MODIFIER, (void*)&import_data, GBM_BO_USE_SCANOUT);
+    }
+
+    auto drm_fb_id_from_dma_buffer(mir::Fd drm_fd, mg::DisplaySink const& sink, std::shared_ptr<mg::DMABufBuffer> buffer)
+        -> std::shared_ptr<uint32_t>
+    {
+
+        auto [dmabuf_fds, pitches, offsets, modifiers] = get_import_buffers(buffer);
+        auto* gbm_bo = import_gbm_bo(sink, buffer, dmabuf_fds, pitches, offsets);
+        if (!gbm_bo)
+        {
+            mir::log_warning("Failed to import buffer");
+            return {};
+        }
+
+        auto const plane_descriptors = buffer->planes();
+        uint32_t gem_handles[MAX_PLANES] = {0};
+        for (std::size_t i = 0; i < std::min(MAX_PLANES, plane_descriptors.size()); i++)
+            gem_handles[i] = gbm_bo_get_handle_for_plane(gbm_bo, i).u32;
+
+        auto fb_id = std::shared_ptr<uint32_t>{
+            new uint32_t{0},
+            [drm_fd](uint32_t* fb_id)
+            {
+                if (*fb_id)
+                {
+                    drmModeRmFB(drm_fd, *fb_id);
+                }
+                delete fb_id;
+            }};
+
+        auto [width, height] = buffer->size();
+        int ret = drmModeAddFB2WithModifiers(
+            drm_fd,
+            width.as_uint32_t(),
+            height.as_uint32_t(),
+            buffer->format(),
+            gem_handles,
+            reinterpret_cast<uint32_t*>(pitches.data()),
+            reinterpret_cast<uint32_t*>(offsets.data()),
+            modifiers.data(),
+            fb_id.get(),
+            DRM_MODE_FB_MODIFIERS);
+
+        if (ret)
+        {
+            mir::log_warning("drmModeAddFB2WithModifiers returned an error: %d", ret);
+            return {};
+        }
+
+        return fb_id;
+    }
+}
+
 auto mga::DmaBufDisplayAllocator::framebuffer_for(mg::DisplaySink& sink, std::shared_ptr<DMABufBuffer> buffer) -> std::unique_ptr<Framebuffer>
 {
-    DisplaySink* ds = dynamic_cast<DisplaySink*>(&sink);
-    if(!ds)
-        return {};
-
-    auto plane_descriptors = buffer->planes();
-
-    auto const max_planes = 4zu;
-    assert(plane_descriptors.size() <= 4);
-
-    auto width = buffer->size().width;
-    auto height = buffer->size().height;
-    auto pixel_format = buffer->format();
-
-    int dmabuf_fds[4] = {0};
-    int pitches[4] = {0};
-    int offsets[4] = {0};
-    uint64_t modifiers[4] = {0};
-
-    mir::log_debug(
-        "Buffer format %s",
-        mir::graphics::drm_format_to_string(buffer->format())
-        /* mir::graphics::drm_modifier_to_string(buffer->modifier().value_or(0)).c_str(), */
-        /* buffer->modifier().value_or(0) */
-    );
-
-    for (std::size_t i = 0; i < std::min(max_planes, plane_descriptors.size()); i++)
-    {
-
-        dmabuf_fds[i] = plane_descriptors[i].dma_buf;
-        pitches[i] = plane_descriptors[i].stride;
-        offsets[i] = plane_descriptors[i].offset;
-        modifiers[i] = buffer->modifier().value_or(DRM_FORMAT_MOD_INVALID);
-    }
-
-    gbm_import_fd_modifier_data import_data = {
-        .width = buffer->size().width.as_uint32_t(),
-        .height = buffer->size().height.as_uint32_t(),
-        .format = buffer->format(),
-        .num_fds = static_cast<uint32_t>(std::min(plane_descriptors.size(), max_planes)),
-        .fds = {dmabuf_fds[0], dmabuf_fds[1], dmabuf_fds[2], dmabuf_fds[3]},
-        .strides = {pitches[0], pitches[1], pitches[2], pitches[3]},
-        .offsets = {offsets[0], pitches[1], pitches[2], pitches[3]},
-        .modifier = buffer->modifier().value_or(DRM_FORMAT_MOD_NONE),
-    };
-    struct gbm_bo* gbm_bo = gbm_bo_import(ds->gbm_device().get(), GBM_BO_IMPORT_FD_MODIFIER, (void*)&import_data, GBM_BO_USE_SCANOUT);
-
-    if(!gbm_bo)
-    {
-        mir::log_debug("Failed to import buffer");
-        return {};
-    }
-
-    uint32_t gem_handles[4] = {0};
-    for (std::size_t i = 0; i < std::min(max_planes, plane_descriptors.size()); i++)
-        gem_handles[i] = gbm_bo_get_handle_for_plane(gbm_bo, i).u32;
-
-    auto fb_id = std::shared_ptr<uint32_t>{
-        new uint32_t{0},
-        [drm_fd = drm_fd()](uint32_t* fb_id)
-        {
-            if (*fb_id)
-            {
-                drmModeRmFB(drm_fd, *fb_id);
-            }
-            delete fb_id;
-        }};
-
-
-    int ret = drmModeAddFB2WithModifiers(
-        drm_fd(),
-        width.as_uint32_t(),
-        height.as_uint32_t(),
-        pixel_format,
-        gem_handles,
-        (uint32_t*)pitches,
-        (uint32_t*)offsets,
-        modifiers,
-        fb_id.get(),
-        DRM_MODE_FB_MODIFIERS);
-
-    if (ret)
-    {
-        mir::log_debug("drmModeAddFB2WithModifiers returned an error: %d", ret);
-        return {};
-    }
+    auto fb_id = drm_fb_id_from_dma_buffer(drm_fd(), sink, buffer);
 
     struct AtomicKmsFbHandle : public mg::FBHandle
     {
