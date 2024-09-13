@@ -265,9 +265,7 @@ auto mga::DmaBufDisplayAllocator::framebuffer_for(mg::DisplaySink& sink, std::sh
     int dmabuf_fds[4] = {0};
     int pitches[4] = {0};
     int offsets[4] = {0};
-
-    uint64_t modifiers[4] = {};
-    std::fill_n(modifiers, 4, buffer->modifier().value_or(DRM_FORMAT_MOD_NONE));
+    uint64_t modifiers[4] = {0};
 
     mir::log_debug(
         "Buffer format %s",
@@ -282,6 +280,7 @@ auto mga::DmaBufDisplayAllocator::framebuffer_for(mg::DisplaySink& sink, std::sh
         dmabuf_fds[i] = plane_descriptors[i].dma_buf;
         pitches[i] = plane_descriptors[i].stride;
         offsets[i] = plane_descriptors[i].offset;
+        modifiers[i] = buffer->modifier().value_or(DRM_FORMAT_MOD_INVALID);
     }
 
     gbm_import_fd_modifier_data import_data = {
@@ -328,7 +327,7 @@ auto mga::DmaBufDisplayAllocator::framebuffer_for(mg::DisplaySink& sink, std::sh
         (uint32_t*)offsets,
         modifiers,
         fb_id.get(),
-        0);
+        DRM_MODE_FB_MODIFIERS);
 
     if (ret)
     {
