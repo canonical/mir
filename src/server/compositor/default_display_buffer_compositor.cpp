@@ -119,7 +119,6 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
 
     if (framebuffers.size() == renderable_list.size() && display_sink.overlay(framebuffers))
     {
-        mir::log_debug("Bypass path\n");
         report->renderables_in_frame(this, renderable_list);
 
         // TODO: This is ugly, but its here for the purpose of showing more than one or two frames
@@ -130,8 +129,6 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     }
     else
     {
-        mir::log_debug("composite path\n");
-
         renderer->set_output_transform(display_sink.transformation());
         renderer->set_viewport(view_area);
         renderer->set_output_filter(output_filter->filter());
