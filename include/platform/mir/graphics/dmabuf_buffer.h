@@ -62,6 +62,8 @@ public:
     virtual auto layout() const -> gl::Texture::Layout = 0;
 
     virtual auto size() const -> geometry::Size = 0;
+
+    virtual void on_consumed() {};
 };
 }
 }
