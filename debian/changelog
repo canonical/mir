@@ -1,3 +1,58 @@
+mir (2.18.0) UNRELEASED; urgency=medium
+
+  * New upstream release 2.18.0
+
+    - ABI summary:
+      . miral ABI unchanged at 7
+      . mircommon ABI bumped to 10
+      . mircore ABI unchanged at 2
+      . miroil ABI unchanged at 5
+      . mirplatform ABI bumped to 29
+      . mirserver ABI unchanged at 60
+      . mirwayland ABI unchanged at 5
+      . mirplatformgraphics ABI unchanged at 22
+      . mirinputplatform ABI unchanged at 9
+
+    Enhancements:
+      . Move to 24.04 as the development focus (#3374)
+      . Implement a more principled `GraphicBufferAllocator` selector (#3402)
+      . Add input configuration options (#3415)
+      . Provide a listener for dim/screen off notifications and wiring it through miral (#3405)
+      . Resolve snap desktop files using app armor as the primary source (#3426)
+      . Wayland server side decorations (#3425)
+      . Add Wayland decorations strategy (#3454)
+      . `wp_viewporter` support (#3445)
+      . Enable keyboard LEDs when the modifier state changes (#3441)
+      . x11-kiosk (#3460)
+      . ci: replace codecov with TICS (#3485)
+      . ci: enable AddressSanitizer (#3026)
+      . Add support for `wp_fractional_scale_v1` (#3509)
+      . Allow servers to dynamically update input configuration
+
+    Documentation:
+      . Add Mir's CI documentation (#3434)
+      . Explanation of how libraries depend on one another (#3469)
+      . Draft a new Mir tutorial (#3496)
+      . Add a threat model diagram for Ubuntu Frame (#3484)
+
+    Bugs fixed:
+      . Alt key sometimes getting stuck after Alt+Tab (#3307)
+      . Alt+` is confusing Firefox (#3379)
+      . Fix cross-GPU imports (#3401)
+      . Alt+Tab restores minimized windows, even if they don't end up focused (#3323)
+      . Don't re-send wl_output.geometry if unchanged (#3414)
+      . Abrupt cursor transition between outputs. (#3449)
+        (thanks @ehopperdietzel!)
+      . mir_kiosk_x11 crashes when the host platform has no outputs (#3427)
+      . Screenshots no longer respect output scale (#3461)
+      . Mir should respect flags from DEB_BUILD_MAINT_OPTIONS (LP#2073451)
+      . Fix x11 rendering when scaled fractional scaling (#3508, #3554)
+      . wbg constantly resizing after switching to 2.17.0 (#3450)
+      . Decorations Eat Into Application Area (#3572)
+      . Fix toplevel window resize pingpong. (Fixes #3573)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 08 Aug 2024 10:35:09 +0200
+
 mir (2.17.0) UNRELEASED; urgency=medium
 
   [ Matthew Kosarek ]
