@@ -21,13 +21,13 @@
 #include "mir/scene/null_session_listener.h"
 #include "mir/scene/session_container.h"
 #include "mir/scene/surface_factory.h"
+#include "mir/shell/decoration.h"
 #include "mir/graphics/display_configuration_observer.h"
 #include "mir/wayland/weak.h"
 
 #include "src/server/report/null/shell_report.h"
 #include "src/include/server/mir/scene/session_event_sink.h"
 #include "src/server/scene/session_manager.h"
-#include "mir/shell/decoration.h"
 #include "src/server/shell/decoration/null_manager.h"
 
 #include "mir/test/doubles/mock_window_manager.h"

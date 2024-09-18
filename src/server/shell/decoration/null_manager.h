@@ -17,7 +17,7 @@
 #ifndef MIR_SHELL_DECORATION_NULL_MANAGER_H_
 #define MIR_SHELL_DECORATION_NULL_MANAGER_H_
 
-#include "manager.h"
+#include "mir/shell/decoration_manager.h"
 
 namespace mir
 {

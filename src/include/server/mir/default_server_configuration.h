@@ -21,6 +21,7 @@
 #include "mir/server_configuration.h"
 #include "mir/shell/window_manager_builder.h"
 
+#include <functional>
 #include <memory>
 #include <string>
 
@@ -346,6 +347,8 @@ public:
     auto the_decoration_strategy() -> std::shared_ptr<DecorationStrategy> override;
     void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy) override;
 
+    void set_the_decoration_manager_init(DecorationManagerInit init_cb) override;
+
 protected:
     std::shared_ptr<options::Option> the_options() const;
     auto the_options_provider() const -> std::shared_ptr<options::Configuration>;
@@ -462,6 +465,8 @@ private:
 
     std::vector<std::shared_ptr<graphics::DisplayPlatform>> display_platforms;
     std::vector<std::shared_ptr<graphics::RenderingPlatform>> rendering_platforms;
+
+    DecorationManagerInit decoration_manager_init;
 };
 }
 

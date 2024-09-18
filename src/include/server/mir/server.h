@@ -17,6 +17,7 @@
 #ifndef MIR_SERVER_H_
 #define MIR_SERVER_H_
 
+#include "mir/server_configuration.h"
 #include "mir/shell/window_manager_builder.h"
 #include "mir/optional_value.h"
 #include "mir_toolkit/common.h"
@@ -51,6 +52,10 @@ class InputTargeter;
 class PersistentSurfaceStore;
 class Shell;
 class SurfaceStack;
+namespace decoration
+{
+class Manager;
+}
 }
 namespace scene
 {
@@ -479,6 +484,9 @@ public:
 
     auto the_decoration_strategy() const -> std::shared_ptr<DecorationStrategy>;
     void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy);
+
+    void set_the_decoration_manager_init(mir::ServerConfiguration::DecorationManagerInit init_cb);
+
 private:
     struct ServerConfiguration;
     struct Self;

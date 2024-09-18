@@ -17,6 +17,7 @@
 #include "mir/shell/abstract_shell.h"
 
 #include "mir/shell/decoration.h"
+#include "mir/shell/decoration_manager.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/shell/shell_report.h"
 #include "mir/shell/surface_specification.h"
@@ -30,7 +31,6 @@
 #include "mir/scene/surface.h"
 #include "mir/input/seat.h"
 #include "mir/wayland/weak.h"
-#include "decoration/manager.h"
 
 #include <algorithm>
 #include <iterator>

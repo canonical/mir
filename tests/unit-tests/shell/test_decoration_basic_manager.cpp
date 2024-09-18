@@ -15,12 +15,12 @@
  */
 
 #include "mir/scene/surface.h"
-#include "src/server/shell/decoration/basic_manager.h"
 #include "mir/shell/decoration.h"
+#include "mir/shell/decoration_manager.h"
+#include "src/server/shell/decoration/basic_manager.h"
 
 #include "mir/test/doubles/stub_observer_registrar.h"
 #include "mir/test/doubles/stub_shell.h"
-#include "src/server/shell/decoration/manager.h"
 
 #include "gmock/gmock.h"
 #include <boost/iostreams/detail/buffer.hpp>
