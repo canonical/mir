@@ -51,6 +51,10 @@ class InputTargeter;
 class PersistentSurfaceStore;
 class Shell;
 class SurfaceStack;
+namespace decoration
+{
+class Manager;
+}
 }
 namespace scene
 {
@@ -479,6 +483,8 @@ public:
 
     auto the_decoration_strategy() const -> std::shared_ptr<DecorationStrategy>;
     void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy);
+
+    void set_the_decoration_manager(std::shared_ptr<mir::shell::decoration::Manager> decoration_manager);
 private:
     struct ServerConfiguration;
     struct Self;

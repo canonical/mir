@@ -220,3 +220,7 @@ void mir::DefaultServerConfiguration::set_the_decoration_strategy(std::shared_pt
 {
     decoration_strategy = strategy;
 }
+
+void mir::DefaultServerConfiguration::set_the_decoration_manager(std::shared_ptr<shell::decoration::Manager> manager) {
+    decoration_manager = manager;;
+}
