@@ -35,6 +35,7 @@
 #include "mir/renderer/renderer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/renderer/renderer_factory.h"
+#include "mir/shell/decoration/manager.h"
 
 #include "frontend_wayland/wayland_connector.h"
 
@@ -766,4 +767,9 @@ void mir::Server::add_configuration_option(
 void mir::Server::set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy)
 {
     self->server_config->set_the_decoration_strategy(strategy);
+}
+
+void mir::Server::set_the_decoration_manager(std::shared_ptr<shell::decoration::Manager> manager)
+{
+    self->server_config->set_the_decoration_manager(manager);
 }
