@@ -182,11 +182,11 @@ void mi::ExternalInputDeviceHub::Internal::changes_complete()
                         observer->changes_complete();
                     });
 
-                auto end_it = handles.end();
                 for (auto const& dev : removed)
-                    end_it = remove(begin(handles), end(handles), dev);
-                if (end_it != handles.end())
-                    handles.erase(end_it, end(handles));
+                {
+                    handles.erase(remove(begin(handles), end(handles), dev), end(handles));
+                }
+
                 for (auto const& dev : added)
                 {
                     if (auto handle = std::dynamic_pointer_cast<DefaultDevice>(dev))
