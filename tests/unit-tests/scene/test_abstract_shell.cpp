@@ -27,7 +27,7 @@
 #include "src/server/report/null/shell_report.h"
 #include "src/include/server/mir/scene/session_event_sink.h"
 #include "src/server/scene/session_manager.h"
-#include "src/server/shell/decoration/decoration.h"
+#include "mir/shell/decoration.h"
 #include "src/server/shell/decoration/null_manager.h"
 
 #include "mir/test/doubles/mock_window_manager.h"
@@ -894,7 +894,7 @@ TEST_F(AbstractShell, makes_parent_active_when_switching_to_child)
     focus_controller.set_focus_to(surface_parent->session().lock(), surface_parent);
     /* window         | expected focus state
      * -----------------------------------------------
-     * surface_parent | mir_window_focus_state_focused 
+     * surface_parent | mir_window_focus_state_focused
      * surface_child  | <don't care>
     */
 

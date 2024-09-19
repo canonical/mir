@@ -15,7 +15,6 @@
  */
 
 #include "basic_manager.h"
-#include "decoration.h"
 
 #include <mir/graphics/display_configuration.h>
 #include <mir/graphics/null_display_configuration_observer.h>

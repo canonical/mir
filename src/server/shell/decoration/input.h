@@ -17,8 +17,6 @@
 #ifndef MIR_SHELL_DECORATION_INPUT_H_
 #define MIR_SHELL_DECORATION_INPUT_H_
 
-#include "decoration.h"
-
 #include "mir/geometry/rectangle.h"
 #include "mir_toolkit/common.h"
 
@@ -109,7 +107,7 @@ public:
     InputManager(
         std::shared_ptr<StaticGeometry const> const& static_geometry,
         WindowState const& window_state,
-        std::shared_ptr<ThreadsafeAccess<Decoration>> const& decoration);
+        std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration);
     ~InputManager();
 
     void update_window_state(WindowState const& window_state);
@@ -135,7 +133,7 @@ private:
 
     std::mutex mutex;
     std::shared_ptr<StaticGeometry const> const static_geometry;
-    std::shared_ptr<ThreadsafeAccess<Decoration>> decoration;
+    std::shared_ptr<ThreadsafeAccess<BasicDecoration>> decoration;
     std::vector<geometry::Rectangle> input_shape;
     /// The most recent event, or the event currently being processed
     std::shared_ptr<MirEvent const> latest_event;

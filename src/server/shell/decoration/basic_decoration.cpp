@@ -184,8 +184,8 @@ msd::BasicDecoration::BasicDecoration(
     std::shared_ptr<Executor> const& executor,
     std::shared_ptr<input::CursorImages> const& cursor_images,
     std::shared_ptr<ms::Surface> const& window_surface) :
-    Decoration{create_surface(window_surface, shell)},
-    threadsafe_self{std::make_shared<ThreadsafeAccess<Decoration>>(executor)},
+    decoration_surface{create_surface(window_surface, shell)},
+    threadsafe_self{std::make_shared<ThreadsafeAccess<BasicDecoration>>(executor)},
     static_geometry{std::make_shared<StaticGeometry>(default_geometry)},
     shell{shell},
     buffer_allocator{buffer_allocator},
@@ -195,9 +195,9 @@ msd::BasicDecoration::BasicDecoration(
     renderer{std::make_unique<Renderer>(buffer_allocator, static_geometry)},
     window_surface{window_surface},
     window_state{new_window_state()},
-    window_surface_observer_manager{std::make_unique<WindowSurfaceObserverManager>(window_surface, threadsafe_self)},
     input_manager{std::make_unique<InputManager>(static_geometry, *window_state, threadsafe_self)},
-    input_state{input_manager->state()}
+    input_state{input_manager->state()},
+    decoration_wrapper{decoration_surface, window_surface, this}
 {
     if (!session)
     {
@@ -233,6 +233,11 @@ void msd::BasicDecoration::redraw()
     input_state = input_manager->state();
 
     update(previous_window_state.get(), previous_input_state.get());
+}
+
+void msd::BasicDecoration::handle_input_event(std::shared_ptr<MirEvent const> const& event)
+{
+    input_manager->handle_input_event(event);
 }
 
 void msd::BasicDecoration::input_state_changed()
@@ -289,6 +294,42 @@ void msd::BasicDecoration::set_scale(float new_scale)
 {
     scale = new_scale;
     redraw();
+}
+
+void msd::BasicDecoration::attrib_changed(mir::scene::Surface const*, MirWindowAttrib attrib, int)
+{
+    switch (attrib)
+    {
+    case mir_window_attrib_type:
+    case mir_window_attrib_state:
+    case mir_window_attrib_focus:
+    case mir_window_attrib_visibility:
+        threadsafe_self->spawn([](auto* decoration) { decoration->redraw(); });
+        break;
+
+    case mir_window_attrib_dpi:
+    case mir_window_attrib_preferred_orientation:
+    case mir_window_attribs:
+        break;
+    }
+}
+
+void msd::BasicDecoration::window_resized_to(mir::scene::Surface const*, geometry::Size const&)
+{
+    threadsafe_self->spawn(
+        [](auto* decoration)
+        {
+            decoration->redraw();
+        });
+}
+
+void msd::BasicDecoration::window_renamed(mir::scene::Surface const*, std::string const&)
+{
+    threadsafe_self->spawn(
+        [](auto* decoration)
+        {
+            decoration->redraw();
+        });
 }
 
 auto msd::BasicDecoration::new_window_state() const -> std::unique_ptr<WindowState>

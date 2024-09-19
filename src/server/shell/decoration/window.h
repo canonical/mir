@@ -116,7 +116,7 @@ class WindowSurfaceObserverManager
 public:
     WindowSurfaceObserverManager(
         std::shared_ptr<scene::Surface> const& window_surface,
-        std::shared_ptr<ThreadsafeAccess<Decoration>> const& decoration);
+        std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration);
     ~WindowSurfaceObserverManager();
 
 private:
