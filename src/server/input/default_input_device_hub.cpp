@@ -182,11 +182,11 @@ void mi::ExternalInputDeviceHub::Internal::changes_complete()
                         observer->changes_complete();
                     });
 
-                auto end_it = handles.end();
                 for (auto const& dev : removed)
-                    end_it = remove(begin(handles), end(handles), dev);
-                if (end_it != handles.end())
-                    handles.erase(end_it, end(handles));
+                {
+                    handles.erase(remove(begin(handles), end(handles), dev), end(handles));
+                }
+
                 for (auto const& dev : added)
                 {
                     if (auto handle = std::dynamic_pointer_cast<DefaultDevice>(dev))
@@ -757,6 +757,13 @@ void mi::DefaultInputDeviceHub::device_changed(Device* dev)
 {
     std::unique_lock lock{mutex};
     auto dev_it = find_if(begin(handles), end(handles), [dev](auto const& ptr){return ptr.get() == dev;});
+
+    if (dev_it == end(handles))
+    {
+        log_debug("Ignoring changes to unknown device (it was likely removed already");
+        return;
+    }
+
     std::shared_ptr<Device> const dev_shared = *dev_it;
     if (pending_changes)
     {
