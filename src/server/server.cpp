@@ -35,7 +35,6 @@
 #include "mir/renderer/renderer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/renderer/renderer_factory.h"
-#include "mir/shell/decoration/manager.h"
 
 #include "frontend_wayland/wayland_connector.h"
 
