@@ -19,6 +19,8 @@
 
 #include "decoration.h"
 
+#include "input.h"
+#include "manager.h"
 #include "mir_toolkit/common.h"
 
 #include <memory>
@@ -73,7 +75,12 @@ public:
     ~BasicDecoration();
 
     void redraw() override;
-    void handle_input() override;
+    void input_state_changed() override;
+
+    virtual void handle_input_event(std::shared_ptr<MirEvent const> const& event) override
+    {
+        input_manager->handle_input_event(event);
+    }
 
     void request_move(MirInputEvent const* event) override;
     void request_resize(MirInputEvent const* event, MirResizeEdge edge) override;
@@ -87,9 +94,6 @@ public:
 protected:
     /// Creates an up-to-date WindowState object
     auto new_window_state() const -> std::unique_ptr<WindowState>;
-
-    /// Returns paramaters to create the decoration surface
-    auto create_surface() const -> std::shared_ptr<scene::Surface>;
 
     /// Draw the decoration buffers and submit them to the surface
     /// Current states are stored int window_state and input_state members
@@ -114,7 +118,6 @@ protected:
     std::unique_ptr<Renderer> const renderer;
 
     std::shared_ptr<scene::Surface> const window_surface;
-    std::shared_ptr<scene::Surface> const decoration_surface;
     std::unique_ptr<WindowState const> window_state;
 
     std::unique_ptr<WindowSurfaceObserverManager> const window_surface_observer_manager;

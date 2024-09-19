@@ -41,7 +41,7 @@ class StubDecoration
 {
     void set_scale(float) override {}
     void redraw() override {}
-    void handle_input() override {}
+    void input_state_changed() override {}
     void request_toggle_maximize() override {}
     void request_close() override {}
     void request_minimize() override {}
@@ -115,7 +115,7 @@ public:
 
     MOCK_METHOD(void, set_scale, (float), (override));
     MOCK_METHOD(void, redraw, (), (override));
-    MOCK_METHOD(void, handle_input, (), (override));
+    MOCK_METHOD(void, input_state_changed, (), (override));
     MOCK_METHOD(void, request_toggle_maximize , (), (override));
     MOCK_METHOD(void, request_close, (), (override));
     MOCK_METHOD(void, request_minimize, (), (override));

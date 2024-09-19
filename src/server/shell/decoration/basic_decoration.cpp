@@ -153,32 +153,51 @@ auto msd::BasicDecoration::BufferStreams::create_buffer_stream() -> std::shared_
     return stream;
 }
 
+auto create_surface(std::shared_ptr<ms::Surface> const& window_surface, std::shared_ptr<msh::Shell> const& shell)
+    -> std::shared_ptr<mir::scene::Surface>
+{
+    auto session = window_surface->session().lock();
+    msh::SurfaceSpecification params;
+    params.type = mir_window_type_decoration;
+    params.parent = window_surface;
+    auto const size = window_surface->window_size();
+    params.width = size.width;
+    params.height = size.height;
+    params.aux_rect = {{}, {}};
+    params.aux_rect_placement_gravity = mir_placement_gravity_northwest;
+    params.surface_placement_gravity = mir_placement_gravity_northwest;
+    params.placement_hints = MirPlacementHints(0);
+    // Will be replaced by initial update
+    params.streams = {{
+        session->create_buffer_stream(mg::BufferProperties{
+            geom::Size{1, 1},
+            mir::shell::decoration::buffer_format,
+            mg::BufferUsage::software}),
+        {},
+        }};
+    return shell->create_surface(session, {}, params, nullptr, nullptr);
+}
+
 msd::BasicDecoration::BasicDecoration(
     std::shared_ptr<msh::Shell> const& shell,
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<Executor> const& executor,
     std::shared_ptr<input::CursorImages> const& cursor_images,
-    std::shared_ptr<ms::Surface> const& window_surface)
-    : threadsafe_self{std::make_shared<ThreadsafeAccess<Decoration>>(executor)},
-      static_geometry{std::make_shared<StaticGeometry>(default_geometry)},
-      shell{shell},
-      buffer_allocator{buffer_allocator},
-      cursor_images{cursor_images},
-      session{window_surface->session().lock()},
-      buffer_streams{std::make_unique<BufferStreams>(session)},
-      renderer{std::make_unique<Renderer>(buffer_allocator, static_geometry)},
-      window_surface{window_surface},
-      decoration_surface{create_surface()},
-      window_state{new_window_state()},
-      window_surface_observer_manager{std::make_unique<WindowSurfaceObserverManager>(
-          window_surface,
-          threadsafe_self)},
-      input_manager{std::make_unique<InputManager>(
-          static_geometry,
-          decoration_surface,
-          *window_state,
-          threadsafe_self)},
-      input_state{input_manager->state()}
+    std::shared_ptr<ms::Surface> const& window_surface) :
+    Decoration{create_surface(window_surface, shell)},
+    threadsafe_self{std::make_shared<ThreadsafeAccess<Decoration>>(executor)},
+    static_geometry{std::make_shared<StaticGeometry>(default_geometry)},
+    shell{shell},
+    buffer_allocator{buffer_allocator},
+    cursor_images{cursor_images},
+    session{window_surface->session().lock()},
+    buffer_streams{std::make_unique<BufferStreams>(session)},
+    renderer{std::make_unique<Renderer>(buffer_allocator, static_geometry)},
+    window_surface{window_surface},
+    window_state{new_window_state()},
+    window_surface_observer_manager{std::make_unique<WindowSurfaceObserverManager>(window_surface, threadsafe_self)},
+    input_manager{std::make_unique<InputManager>(static_geometry, *window_state, threadsafe_self)},
+    input_state{input_manager->state()}
 {
     if (!session)
     {
@@ -216,7 +235,7 @@ void msd::BasicDecoration::redraw()
     update(previous_window_state.get(), previous_input_state.get());
 }
 
-void msd::BasicDecoration::handle_input()
+void msd::BasicDecoration::input_state_changed()
 {
     // window_state does not need to be updated
 
@@ -275,29 +294,6 @@ void msd::BasicDecoration::set_scale(float new_scale)
 auto msd::BasicDecoration::new_window_state() const -> std::unique_ptr<WindowState>
 {
     return std::make_unique<WindowState>(static_geometry, window_surface, scale);
-}
-
-auto msd::BasicDecoration::create_surface() const -> std::shared_ptr<scene::Surface>
-{
-    msh::SurfaceSpecification params;
-    params.type = mir_window_type_decoration;
-    params.parent = window_surface;
-    auto const size = window_surface->window_size();
-    params.width = size.width;
-    params.height = size.height;
-    params.aux_rect = {{}, {}};
-    params.aux_rect_placement_gravity = mir_placement_gravity_northwest;
-    params.surface_placement_gravity = mir_placement_gravity_northwest;
-    params.placement_hints = MirPlacementHints(0);
-    // Will be replaced by initial update
-    params.streams = {{
-        session->create_buffer_stream(mg::BufferProperties{
-            geom::Size{1, 1},
-            buffer_format,
-            mg::BufferUsage::software}),
-        {},
-        }};
-    return shell->create_surface(session, {}, params, nullptr, nullptr);
 }
 
 void msd::BasicDecoration::update(
