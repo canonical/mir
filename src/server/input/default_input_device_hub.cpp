@@ -757,6 +757,13 @@ void mi::DefaultInputDeviceHub::device_changed(Device* dev)
 {
     std::unique_lock lock{mutex};
     auto dev_it = find_if(begin(handles), end(handles), [dev](auto const& ptr){return ptr.get() == dev;});
+
+    if (dev_it == end(handles))
+    {
+        log_debug("Ignoring changes to unknown device (it was likely removed already");
+        return;
+    }
+
     std::shared_ptr<Device> const dev_shared = *dev_it;
     if (pending_changes)
     {
