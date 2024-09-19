@@ -77,6 +77,9 @@ public:
     void redraw() override;
     void handle_input_event(std::shared_ptr<MirEvent const> const& event) override;
     void set_scale(float scale) override;
+    void attrib_changed(mir::scene::Surface const* window_surface, MirWindowAttrib attrib, int value) override;
+    void window_resized_to(mir::scene::Surface const* window_surface, geometry::Size const& window_size) override;
+    void window_renamed(mir::scene::Surface const* window_surface, std::string const& name) override;
 
     void input_state_changed();
     void request_move(MirInputEvent const* event);
@@ -116,7 +119,6 @@ protected:
     std::shared_ptr<scene::Surface> const window_surface;
     std::unique_ptr<WindowState const> window_state;
 
-    std::unique_ptr<WindowSurfaceObserverManager> const window_surface_observer_manager;
     std::unique_ptr<InputManager> const input_manager;
     std::unique_ptr<InputState const> input_state;
 };

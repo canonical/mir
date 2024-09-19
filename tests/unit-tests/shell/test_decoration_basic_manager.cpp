@@ -39,9 +39,24 @@ using namespace testing;
 class StubDecoration
     : public msd::Decoration
 {
-    void redraw() override {}
-    void handle_input_event(std::shared_ptr<MirEvent const> const& /*event*/) override {}
-    void set_scale(float) override {}
+    void redraw() override
+    {
+    }
+    void handle_input_event(std::shared_ptr<MirEvent const> const& /*event*/) override
+    {
+    }
+    void set_scale(float) override
+    {
+    }
+    void attrib_changed(mir::scene::Surface const*, MirWindowAttrib, int) override
+    {
+    }
+    void window_resized_to(mir::scene::Surface const*, mir::geometry::Size const&) override
+    {
+    }
+    void window_renamed(mir::scene::Surface const*, std::string const&) override
+    {
+    }
 };
 
 class MockDecorationManager: public msd::BasicManager
@@ -110,6 +125,9 @@ public:
     MOCK_METHOD(void, redraw, (), (override));
     MOCK_METHOD(void, handle_input_event, (std::shared_ptr<MirEvent const> const& /*event*/), (override));
     MOCK_METHOD(void, set_scale, (float), (override));
+    MOCK_METHOD(void, attrib_changed, (mir::scene::Surface const* window_surface, MirWindowAttrib attrib, int value), (override));
+    MOCK_METHOD(void, window_resized_to, (mir::scene::Surface const* window_surface, mir::geometry::Size const& window_size), (override));
+    MOCK_METHOD(void, window_renamed, (mir::scene::Surface const* window_surface, std::string const& name), (override));
 
     DecorationBasicManager* const mock;
 };
