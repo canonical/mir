@@ -39,15 +39,9 @@ using namespace testing;
 class StubDecoration
     : public msd::Decoration
 {
-    void set_scale(float) override {}
     void redraw() override {}
-    void input_state_changed() override {}
-    void request_toggle_maximize() override {}
-    void request_close() override {}
-    void request_minimize() override {}
-    void request_move(const MirInputEvent*) override {}
-    void request_resize(const MirInputEvent*, MirResizeEdge) override {}
-    void set_cursor(const std::string&) override {}
+    void handle_input_event(std::shared_ptr<MirEvent const> const& /*event*/) override {}
+    void set_scale(float) override {}
 };
 
 class MockDecorationManager: public msd::BasicManager
@@ -113,15 +107,9 @@ public:
         mock->decoration_destroyed(this);
     }
 
-    MOCK_METHOD(void, set_scale, (float), (override));
     MOCK_METHOD(void, redraw, (), (override));
-    MOCK_METHOD(void, input_state_changed, (), (override));
-    MOCK_METHOD(void, request_toggle_maximize , (), (override));
-    MOCK_METHOD(void, request_close, (), (override));
-    MOCK_METHOD(void, request_minimize, (), (override));
-    MOCK_METHOD(void, request_move, (const MirInputEvent*), (override));
-    MOCK_METHOD(void, request_resize, (const MirInputEvent*, MirResizeEdge), (override));
-    MOCK_METHOD(void, set_cursor, (const std::string&), (override));
+    MOCK_METHOD(void, handle_input_event, (std::shared_ptr<MirEvent const> const& /*event*/), (override));
+    MOCK_METHOD(void, set_scale, (float), (override));
 
     DecorationBasicManager* const mock;
 };

@@ -75,20 +75,9 @@ public:
     // Examples: Scale, title, focus, visibility, size, etc...
     virtual void redraw() = 0;
 
-    // Called whenever the input state changes
-    // Mouse up, down, dragging, enter, leave...
-    virtual void input_state_changed() = 0;
-
     // Called whenever the decoration surface receives an input
-    virtual void handle_input_event(std::shared_ptr<MirEvent const> const& /*event*/) { /* Empty for tests */ }
+    virtual void handle_input_event(std::shared_ptr<MirEvent const> const& /*event*/) = 0;
 
-    // Basic functionality that all decorations _should_ have
-    virtual void request_toggle_maximize() = 0;
-    virtual void request_close() = 0;
-    virtual void request_minimize() = 0;
-    virtual void request_move(MirInputEvent const*) = 0;
-    virtual void request_resize(MirInputEvent const*, MirResizeEdge) = 0;
-    virtual void set_cursor(std::string const& cursor_name) = 0;
     virtual void set_scale(float new_scale) = 0;
 
 private:

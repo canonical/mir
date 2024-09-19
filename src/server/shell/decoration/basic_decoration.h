@@ -75,21 +75,17 @@ public:
     ~BasicDecoration();
 
     void redraw() override;
-    void input_state_changed() override;
-
-    virtual void handle_input_event(std::shared_ptr<MirEvent const> const& event) override
-    {
-        input_manager->handle_input_event(event);
-    }
-
-    void request_move(MirInputEvent const* event) override;
-    void request_resize(MirInputEvent const* event, MirResizeEdge edge) override;
-    void request_toggle_maximize() override;
-    void request_minimize() override;
-    void request_close() override;
-
+    void handle_input_event(std::shared_ptr<MirEvent const> const& event) override;
     void set_scale(float scale) override;
-    void set_cursor(std::string const& cursor_image_name) override;
+
+    void input_state_changed();
+    void request_move(MirInputEvent const* event);
+    void request_resize(MirInputEvent const* event, MirResizeEdge edge);
+    void request_toggle_maximize();
+    void request_minimize();
+    void request_close();
+
+    void set_cursor(std::string const& cursor_image_name);
 
 protected:
     /// Creates an up-to-date WindowState object
@@ -103,7 +99,7 @@ protected:
         std::optional<WindowState const*> previous_window_state,
         std::optional<InputState const*> previous_input_state);
 
-    std::shared_ptr<ThreadsafeAccess<Decoration>> const threadsafe_self;
+    std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const threadsafe_self;
     std::shared_ptr<StaticGeometry const> const static_geometry;
 
     std::shared_ptr<shell::Shell> const shell;

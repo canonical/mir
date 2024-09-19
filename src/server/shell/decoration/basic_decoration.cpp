@@ -185,7 +185,7 @@ msd::BasicDecoration::BasicDecoration(
     std::shared_ptr<input::CursorImages> const& cursor_images,
     std::shared_ptr<ms::Surface> const& window_surface) :
     Decoration{create_surface(window_surface, shell)},
-    threadsafe_self{std::make_shared<ThreadsafeAccess<Decoration>>(executor)},
+    threadsafe_self{std::make_shared<ThreadsafeAccess<BasicDecoration>>(executor)},
     static_geometry{std::make_shared<StaticGeometry>(default_geometry)},
     shell{shell},
     buffer_allocator{buffer_allocator},
@@ -233,6 +233,11 @@ void msd::BasicDecoration::redraw()
     input_state = input_manager->state();
 
     update(previous_window_state.get(), previous_input_state.get());
+}
+
+void msd::BasicDecoration::handle_input_event(std::shared_ptr<MirEvent const> const& event)
+{
+    input_manager->handle_input_event(event);
 }
 
 void msd::BasicDecoration::input_state_changed()
