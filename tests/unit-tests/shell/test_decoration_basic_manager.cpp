@@ -24,6 +24,7 @@
 
 #include "gmock/gmock.h"
 #include <boost/iostreams/detail/buffer.hpp>
+#include <functional>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <memory>
@@ -36,52 +37,70 @@ namespace mtd = mir::test::doubles;
 
 using namespace testing;
 
-class StubDecoration
+struct DestructionNotifier
+{
+    virtual ~DestructionNotifier() = default;
+    virtual void decoration_destroyed(msd::Decoration*) = 0;
+};
+
+class MockDecoration
     : public msd::Decoration
 {
-    void redraw() override
+public:
+    MockDecoration(DestructionNotifier* mock)
+        : mock{mock}
     {
     }
-    void handle_input_event(std::shared_ptr<MirEvent const> const& /*event*/) override
+
+    ~MockDecoration()
     {
+        if(mock)
+            mock->decoration_destroyed(this);
     }
-    void set_scale(float) override
-    {
-    }
-    void attrib_changed(mir::scene::Surface const*, MirWindowAttrib, int) override
-    {
-    }
-    void window_resized_to(mir::scene::Surface const*, mir::geometry::Size const&) override
-    {
-    }
-    void window_renamed(mir::scene::Surface const*, std::string const&) override
-    {
-    }
+
+    MOCK_METHOD(void, redraw, (), (override));
+    MOCK_METHOD(void, handle_input_event, (std::shared_ptr<MirEvent const> const& /*event*/), (override));
+    MOCK_METHOD(void, set_scale, (float), (override));
+    MOCK_METHOD(void, attrib_changed, (mir::scene::Surface const* window_surface, MirWindowAttrib attrib, int value), (override));
+    MOCK_METHOD(void, window_resized_to, (mir::scene::Surface const* window_surface, mir::geometry::Size const& window_size), (override));
+    MOCK_METHOD(void, window_renamed, (mir::scene::Surface const* window_surface, std::string const& name), (override));
+
+    DestructionNotifier* const mock;
 };
 
 class MockDecorationManager: public msd::BasicManager
 {
 public:
-    MockDecorationManager(auto& registrar) :
-        msd::BasicManager{registrar, nullptr, nullptr, nullptr}
+    MockDecorationManager(auto& registrar, DestructionNotifier* mock) :
+        msd::BasicManager{registrar, nullptr, nullptr, nullptr}, mock{mock}
     {
     }
 
-    auto decorated() -> std::unordered_map<mir::scene::Surface*, std::unique_ptr<mir::shell::decoration::Decoration>>&
+    auto decorated() -> std::unordered_map<mir::scene::Surface*, std::unique_ptr<msd::Decoration>>&
     {
         return decorations;
     }
 
-    auto add_decoration(std::shared_ptr<mir::scene::Surface> const& surf)
+    auto add_decoration(
+        std::shared_ptr<mir::scene::Surface> const& surf)
     {
-        decorations[surf.get()] = std::make_unique<StubDecoration>();
+        decorations.emplace(surf.get(), std::make_unique<MockDecoration>(mock));
+    }
+
+    auto add_decoration(
+        std::shared_ptr<mir::scene::Surface> const& surf, std::unique_ptr<msd::Decoration> deco)
+    {
+        decorations.emplace(surf.get(), std::move(deco));
     }
 
     MOCK_METHOD(void, decorate, (std::shared_ptr<mir::scene::Surface> const&), (override));
+
+private:
+    DestructionNotifier* const mock;
 };
 
 struct DecorationBasicManager
-    : Test
+    : Test, DestructionNotifier
 {
     void SetUp() override
     {
@@ -99,38 +118,15 @@ struct DecorationBasicManager
 
     // user needs to wrap the raw pointer in a unique_ptr because GTest is dumb
     MOCK_METHOD(msd::Decoration*, create_decoration, ());
-    MOCK_METHOD(void, decoration_destroyed, (msd::Decoration*));
+    MOCK_METHOD(void, decoration_destroyed, (msd::Decoration*), (override));
 
     std::shared_ptr<mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>
         registrar{std::make_shared<mtd::StubObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>()};
 
-    MockDecorationManager manager{*registrar};
+    MockDecorationManager manager{*registrar, this};
     std::shared_ptr<msh::Shell> shell{std::make_shared<mtd::StubShell>()};
 };
 
-class MockDecoration
-    : public msd::Decoration
-{
-public:
-    MockDecoration(DecorationBasicManager* mock)
-        : mock{mock}
-    {
-    }
-
-    ~MockDecoration()
-    {
-        mock->decoration_destroyed(this);
-    }
-
-    MOCK_METHOD(void, redraw, (), (override));
-    MOCK_METHOD(void, handle_input_event, (std::shared_ptr<MirEvent const> const& /*event*/), (override));
-    MOCK_METHOD(void, set_scale, (float), (override));
-    MOCK_METHOD(void, attrib_changed, (mir::scene::Surface const* window_surface, MirWindowAttrib attrib, int value), (override));
-    MOCK_METHOD(void, window_resized_to, (mir::scene::Surface const* window_surface, mir::geometry::Size const& window_size), (override));
-    MOCK_METHOD(void, window_renamed, (mir::scene::Surface const* window_surface, std::string const& name), (override));
-
-    DecorationBasicManager* const mock;
-};
 
 TEST_F(DecorationBasicManager, calls_create_decoration)
 {
@@ -192,13 +188,6 @@ TEST_F(DecorationBasicManager, undecorate_unknown_surface_is_fine_when_there_are
     manager.undecorate(surface_d);
 }
 
-// The next two tests are broken because the manager creates a `StubDecoration`
-// which doesn't call `decoration_destroyed` when its destroyed. Instead, we
-// need to make the manager somehow capable of using both `StubDecoration` and
-// `MockDecoration`.
-//
-// This was achieved before by passing a lambda that controlled decoration
-// creation.
 TEST_F(DecorationBasicManager, undecorate_works)
 {
     auto const surface_a = std::make_shared<mtd::StubSurface>();
@@ -230,10 +219,15 @@ TEST_F(DecorationBasicManager, undecorate_all_works)
         .Times(1);
     EXPECT_CALL(manager, decorate)
         .Times(2)
-        .WillRepeatedly(
+        .WillOnce(
             [&](auto& surface)
             {
-                manager.add_decoration(surface);
+                manager.add_decoration(surface, std::move(decoration_a));
+            })
+        .WillOnce(
+            [&](auto& surface)
+            {
+                manager.add_decoration(surface, std::move(decoration_b));
             });
     manager.decorate(surface_a);
     manager.decorate(surface_b);
