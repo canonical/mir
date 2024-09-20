@@ -101,8 +101,11 @@ public:
 
     virtual ~Decoration()
     {
-        decoration_surface->unregister_interest(*input_observer);
-        window_surface->unregister_interest(*window_observer);
+        if(decoration_surface)
+            decoration_surface->unregister_interest(*input_observer);
+
+        if(window_surface)
+            window_surface->unregister_interest(*window_observer);
     }
 
     // Called whenever the visible aspect of the window changes.
