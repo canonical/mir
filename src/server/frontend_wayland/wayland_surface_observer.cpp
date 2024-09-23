@@ -77,11 +77,21 @@ void mf::WaylandSurfaceObserver::content_resized_to(ms::Surface const*, geom::Si
     run_on_wayland_thread_unless_window_destroyed(
         [content_size](Impl* impl, WindowWlSurfaceRole* window)
         {
-            if (impl->requested_size.value_or(impl->window_size) != content_size)
+            if (impl->requested_size && impl->requested_size == content_size)
             {
-                impl->requested_size = content_size;
-                window->handle_resize(std::nullopt, content_size);
+                // We've already requested this size, no action required
+                return;
             }
+
+            if (content_size == impl->window_size)
+            {
+                // The window manager is accepting the client's window size, no action required
+                return;
+            }
+
+            // The window manager is changing the client's window size, tell the client
+            impl->requested_size = content_size;
+            window->handle_resize(std::nullopt, content_size);
         });
 }
 
