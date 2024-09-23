@@ -17,6 +17,7 @@ packages="\
     libmirplatform:MIRPLATFORM_ABI \
     libmirserver:MIRSERVER_ABI \
     mir-platform-graphics-x:MIR_SERVER_GRAPHICS_PLATFORM_ABI \
+    mir-platform-graphics-atomic-kms:MIR_SERVER_GRAPHICS_PLATFORM_ABI \
     mir-platform-graphics-gbm-kms:MIR_SERVER_GRAPHICS_PLATFORM_ABI \
     mir-platform-graphics-eglstream-kms:MIR_SERVER_GRAPHICS_PLATFORM_ABI \
     mir-platform-input-evdev:MIR_SERVER_INPUT_PLATFORM_ABI\

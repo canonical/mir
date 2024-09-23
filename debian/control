@@ -297,6 +297,20 @@ Description: Display server for Ubuntu - platform library for X11
  Contains the shared libraries required for the Mir server to interact with
  the X11 platform.
 
+Package: mir-platform-graphics-atomic-kms22
+Section: libs
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Display server for Ubuntu - platform library for Atomic KMS
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains the shared libraries required for the Mir server to interact with
+ the hardware platform using the Mesa drivers and Atomic KMS API.
+
 Package: mir-platform-graphics-gbm-kms22
 Section: libs
 Architecture: linux-any
@@ -404,6 +418,7 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
+         mir-platform-graphics-atomic-kms,
          mir-platform-graphics-gbm-kms,
          mir-platform-graphics-x,
          mir-platform-graphics-wayland,
@@ -414,6 +429,22 @@ Description: Display server for Ubuntu - desktop driver metapackage
  robust operation and a well-defined driver model.
  .
  This package depends on a full set of graphics and input drivers for traditional desktop
+ systems.
+
+Package: mir-platform-graphics-atomic-kms
+Section: libs
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         mir-platform-graphics-atomic-kms22,
+         mir-platform-input-evdev10,
+         mir-platform-rendering-egl-generic,
+Description: Display server for Ubuntu - gbm-kms driver metapackage
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ This package depends on a full set of graphics and input drivers for atomic-kms
  systems.
 
 Package: mir-platform-graphics-gbm-kms
