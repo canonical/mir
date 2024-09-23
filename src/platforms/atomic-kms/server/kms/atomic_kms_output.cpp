@@ -449,23 +449,58 @@ void mga::AtomicKMSOutput::wait_for_page_flip()
     pending_page_flip.get();
 }
 
-bool mga::AtomicKMSOutput::set_cursor(gbm_bo*)
+bool mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
 {
-    return false;
+    int result = 0;
+    if (current_crtc)
+    {
+        has_hardware_cursor = true;
+        result = drmModeSetCursor(
+            drm_fd_,
+            current_crtc->crtc_id,
+            gbm_bo_get_handle(buffer).u32,
+            gbm_bo_get_width(buffer),
+            gbm_bo_get_height(buffer));
+        if (result)
+        {
+            has_hardware_cursor = false;
+            mir::log_warning("set_cursor: drmModeSetCursor failed (%s)", strerror(-result));
+        }
+    }
+    return !result;
 }
 
-void mga::AtomicKMSOutput::move_cursor(geometry::Point)
+void mga::AtomicKMSOutput::move_cursor(geometry::Point destination)
 {
+    if (current_crtc)
+    {
+        if (auto result =
+                drmModeMoveCursor(drm_fd_, current_crtc->crtc_id, destination.x.as_int(), destination.y.as_int()))
+        {
+            mir::log_warning("move_cursor: drmModeMoveCursor failed (%s)", strerror(-result));
+        }
+    }
 }
 
 bool mga::AtomicKMSOutput::clear_cursor()
 {
-    return false;
+    int result = 0;
+    if (current_crtc)
+    {
+        result = drmModeSetCursor(drm_fd_, current_crtc->crtc_id, 0, 0, 0);
+
+        if (result)
+            mir::log_warning("clear_cursor: drmModeSetCursor failed (%s)",
+                             strerror(-result));
+        has_hardware_cursor = false;
+    }
+
+    return !result;
 }
 
-bool mga::AtomicKMSOutput::has_cursor() const
+bool mga::AtomicKMSOutput::has_cursor_plane() const
 {
-    return false;
+    return current_cursor_plane != nullptr;
 }
 
 bool mga::AtomicKMSOutput::ensure_crtc()
@@ -481,9 +516,9 @@ bool mga::AtomicKMSOutput::ensure_crtc()
     // Update the connector as we may unexpectedly fail in find_crtc_and_index_for_connector()
     // https://github.com/MirServer/mir/issues/2661
     connector = kms::get_connector(drm_fd_, connector->connector_id);
-    std::tie(current_crtc, current_plane) = mgk::find_crtc_with_primary_plane(drm_fd_, connector);
+    std::tie(current_crtc, current_primary_plane, current_cursor_plane) = mgk::find_crtc_with_primary_plane(drm_fd_, connector);
     crtc_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, current_crtc);
-    plane_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, current_plane);
+    plane_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, current_primary_plane);
 
     return (current_crtc != nullptr);
 }
@@ -829,3 +864,9 @@ int mga::AtomicKMSOutput::drm_fd() const
 {
     return drm_fd_;
 }
+
+bool mga::AtomicKMSOutput::has_cursor() const
+{
+    return has_hardware_cursor;
+}
+

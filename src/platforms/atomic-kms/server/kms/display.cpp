@@ -15,31 +15,28 @@
  */
 
 #include "display.h"
-#include "kms-utils/threaded_drm_event_handler.h"
-#include "kms/egl_helper.h"
-#include "mir/graphics/platform.h"
-#include "platform.h"
+#include "atomic_kms_output.h"
+#include "cursor.h"
 #include "display_sink.h"
+#include "kms-utils/threaded_drm_event_handler.h"
+#include "mir/graphics/platform.h"
 #include "kms_display_configuration.h"
 #include "kms_output.h"
 #include "mir/console_services.h"
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/event_handler_register.h"
 
-#include "kms_framebuffer.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/display_configuration_policy.h"
-#include "mir/graphics/transformation.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/renderer/gl/context.h"
-#include "mir/graphics/drm_formats.h"
-#include "mir/graphics/egl_error.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/get_error_info.hpp>
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <gbm.h>
+#include <iostream>
+#include <memory>
 #include <system_error>
 #include <xf86drm.h>
 #define MIR_LOG_COMPONENT "atomic-kms"
@@ -53,8 +50,6 @@
 #include <sys/mman.h>
 
 #include <stdexcept>
-#include <algorithm>
-#include <unordered_map>
 
 namespace mga = mir::graphics::atomic;
 namespace mg = mir::graphics;
@@ -256,7 +251,62 @@ void mga::Display::resume()
 
 auto mga::Display::create_hardware_cursor() -> std::shared_ptr<graphics::Cursor>
 {
-    return {};
+    auto all_have_hardware_cursors = true;
+    this->output_container->for_each_output(
+        [&all_have_hardware_cursors](auto& kms_output)
+        {
+            if (auto const atomic_kms_output = std::dynamic_pointer_cast<AtomicKMSOutput>(kms_output))
+            {
+                // Would be nice to be able to break here but we can't...
+                // Shouldn't have many outputs anyway
+                if (!atomic_kms_output->has_cursor_plane())
+                    all_have_hardware_cursors = false;
+            }
+            else
+            {
+                all_have_hardware_cursors = false;
+            }
+        });
+
+    if(all_have_hardware_cursors)
+    {
+        std::shared_ptr<mga::Cursor> locked_cursor = cursor.lock();
+        if (!locked_cursor)
+        {
+            class AtomicKmsCurrentConfiguration : public CurrentConfiguration
+            {
+            public:
+                AtomicKmsCurrentConfiguration(Display& display) :
+                    display(display)
+                {
+                }
+
+                void with_current_configuration_do(std::function<void(KMSDisplayConfiguration const&)> const& exec)
+                {
+                    std::lock_guard lg{display.configuration_mutex};
+                    exec(display.current_display_configuration);
+                }
+
+            private:
+                Display& display;
+            };
+
+            try
+            {
+                locked_cursor =
+                    std::make_shared<mga::Cursor>(*output_container, std::make_shared<AtomicKmsCurrentConfiguration>(*this));
+            }
+            catch (std::runtime_error const&)
+            {
+                // That's OK, we don't need a hardware cursor. Returning null
+                // is allowed and will trigger a fallback to software.
+            }
+            cursor = locked_cursor;
+        }
+
+        return locked_cursor;
+    }
+    return nullptr;
 }
 
 void mga::Display::clear_connected_unused_outputs()
