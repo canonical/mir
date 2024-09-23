@@ -15,11 +15,14 @@
  */
 
 #include "kms_connector.h"
+#include "kms-utils/drm_mode_resources.h"
 #include "mir/output_type_names.h"
 
 #include <boost/throw_exception.hpp>
 #include <algorithm>
+#include <iostream>
 #include <stdexcept>
+#include <xf86drmMode.h>
 
 namespace mgk = mir::graphics::kms;
 
@@ -147,7 +150,7 @@ mgk::DRMModeCrtcUPtr mgk::find_crtc_for_connector(int drm_fd, mgk::DRMModeConnec
 
 auto mgk::find_crtc_with_primary_plane(
     int drm_fd,
-    mgk::DRMModeConnectorUPtr const& connector) -> std::pair<DRMModeCrtcUPtr, DRMModePlaneUPtr>
+    mgk::DRMModeConnectorUPtr const& connector) -> std::tuple<DRMModeCrtcUPtr, DRMModePlaneUPtr, DRMModePlaneUPtr>
 {
     /*
      * TODO: This currently has a sequential find-crtc-then-find-primary-plane-for-it algorithm.
@@ -186,7 +189,7 @@ auto mgk::find_crtc_with_primary_plane(
     {
         std::tie(crtc, crtc_index) = find_crtc_and_index_for_connector(resources, connector);
     }
-    
+
     mgk::PlaneResources plane_res{drm_fd};
 
     for (auto& plane : plane_res.planes())
@@ -194,12 +197,32 @@ auto mgk::find_crtc_with_primary_plane(
         if (plane->possible_crtcs & (1 << crtc_index))
         {
             ObjectProperties plane_props{drm_fd, plane->plane_id, DRM_MODE_OBJECT_PLANE};
-            if (plane_props["type"] == DRM_PLANE_TYPE_PRIMARY)
+            std::cerr << "Plane type: " << plane_props["type"] << '\n';
+        }
+    }
+
+    DRMModePlaneUPtr primary_plane, cursor_plane;
+    for (auto& plane : plane_res.planes())
+    {
+        if (plane->possible_crtcs & (1 << crtc_index))
+        {
+            ObjectProperties plane_props{drm_fd, plane->plane_id, DRM_MODE_OBJECT_PLANE};
+            switch(plane_props["type"])
             {
-                return std::make_pair(std::move(crtc), std::move(plane));
+                case DRM_PLANE_TYPE_PRIMARY:
+                    primary_plane = std::move(plane);
+                    break;
+                case DRM_PLANE_TYPE_CURSOR:
+                    cursor_plane = std::move(plane);
+                    break;
+                default:
+                    continue;
             }
         }
     }
 
-    BOOST_THROW_EXCEPTION(std::runtime_error{"Could not find primary plane for CRTC"});
+    if(!primary_plane)
+        BOOST_THROW_EXCEPTION(std::runtime_error{"Could not find primary plane for CRTC"});
+
+    return {std::move(crtc), std::move(primary_plane), std::move(cursor_plane)};
 }

@@ -72,6 +72,7 @@ public:
 
     int drm_fd() const override;
 
+    bool has_cursor_plane() const;
 private:
     bool ensure_crtc();
     void restore_saved_crtc();
@@ -87,13 +88,15 @@ private:
     size_t mode_index;
     geometry::Displacement fb_offset;
     kms::DRMModeCrtcUPtr current_crtc;
-    kms::DRMModePlaneUPtr current_plane;
+    kms::DRMModePlaneUPtr current_primary_plane;
+    kms::DRMModePlaneUPtr current_cursor_plane;
     std::unique_ptr<PropertyBlob> mode;
     std::unique_ptr<kms::ObjectProperties> crtc_props;
     std::unique_ptr<kms::ObjectProperties> plane_props;
     std::unique_ptr<kms::ObjectProperties> connector_props;
     drmModeCrtc saved_crtc;
     bool using_saved_crtc;
+    bool has_hardware_cursor{false};
 };
 
 }
