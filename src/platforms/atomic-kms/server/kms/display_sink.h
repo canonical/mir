@@ -54,11 +54,13 @@ class KMSOutput;
 class DmaBufDisplayAllocator : public graphics::DmaBufDisplayAllocator
 {
     public:
-        DmaBufDisplayAllocator(mir::Fd drm_fd) : drm_fd_{drm_fd}
+        DmaBufDisplayAllocator(std::shared_ptr<struct gbm_device> const gbm, mir::Fd drm_fd) :
+            drm_fd_{drm_fd},
+            gbm{gbm}
         {
         }
 
-        virtual auto framebuffer_for(mir::graphics::DisplaySink& sink, std::shared_ptr<DMABufBuffer> buffer) -> std::unique_ptr<Framebuffer> override;
+        virtual auto framebuffer_for(std::shared_ptr<DMABufBuffer> buffer) -> std::unique_ptr<Framebuffer> override;
 
         auto drm_fd() -> mir::Fd const
         {
@@ -67,6 +69,7 @@ class DmaBufDisplayAllocator : public graphics::DmaBufDisplayAllocator
 
     private:
         mir::Fd const drm_fd_;
+        std::shared_ptr<struct gbm_device> const gbm;
 };
 
 class DisplaySink :
