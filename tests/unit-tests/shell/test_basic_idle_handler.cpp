@@ -47,13 +47,51 @@ public:
     MOCK_METHOD1(set_power_mode, void(MirPowerMode));
 };
 
+class FakeSessionLock : public ms::SessionLock
+{
+public:
+    void lock() override
+    {
+        auto config_observer = observer.lock();
+        EXPECT_THAT(config_observer, testing::NotNull());
+        config_observer->on_lock();
+    }
+    void unlock() override
+    {
+        auto config_observer = observer.lock();
+        EXPECT_THAT(config_observer, testing::NotNull());
+        config_observer->on_unlock();
+    }
+    void register_interest(std::weak_ptr<ms::SessionLockObserver> const& o) override
+    {
+        ASSERT_THAT(observer.lock(), testing::IsNull())
+            << "FakeSessionLock does not support multiple observers";
+        observer = o;
+    }
+    void register_interest(std::weak_ptr<ms::SessionLockObserver> const& o, mir::Executor&) override
+    {
+        register_interest(o);
+    }
+    void register_early_observer(std::weak_ptr<ms::SessionLockObserver> const& o, mir::Executor&) override
+    {
+        register_interest(o);
+    }
+    void unregister_interest(ms::SessionLockObserver const& o) override
+    {
+        ASSERT_THAT(observer.lock().get(), testing::Eq(&o));
+        observer = std::weak_ptr<ms::SessionLockObserver>();
+    }
+private:
+    std::weak_ptr<ms::SessionLockObserver> observer;
+};
+
 struct BasicIdleHandler: Test
 {
     NiceMock<mtd::MockIdleHub> idle_hub;
     mtd::StubInputScene input_scene;
     mtd::StubBufferAllocator allocator;
     NiceMock<MockDisplayConfigurationController> display;
-    mtd::StubSessionLock session_lock;
+    FakeSessionLock session_lock;
     msh::BasicIdleHandler handler{
         mt::fake_shared(idle_hub),
         mt::fake_shared(input_scene),
@@ -94,12 +132,61 @@ TEST_F(BasicIdleHandler, does_not_register_observers_by_default)
 {
     EXPECT_CALL(idle_hub, register_interest(_, _))
         .Times(0);
+    mtd::StubSessionLock session_lock;
     msh::BasicIdleHandler local_handler{
         mt::fake_shared(idle_hub),
         mt::fake_shared(input_scene),
         mt::fake_shared(allocator),
         mt::fake_shared(display),
         mt::fake_shared(session_lock)};
+}
+
+TEST_F(BasicIdleHandler, off_timeout_on_lock_is_used_when_session_is_locked)
+{
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
+        .Times(1);
+    handler.set_display_off_timeout(30s);
+
+    handler.set_display_off_timeout_on_lock(10s);
+
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(10s)))
+        .Times(1);
+    session_lock.lock();
+}
+
+TEST_F(BasicIdleHandler, off_timeout_on_lock_is_not_used_when_session_is_not_locked)
+{
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
+        .Times(1);
+    handler.set_display_off_timeout(30s);
+
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(10s)))
+        .Times(0);
+    handler.set_display_off_timeout_on_lock(10s);
+}
+
+TEST_F(BasicIdleHandler, off_timeout_is_restored_when_locked_session_becomes_active)
+{
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
+        .Times(2);
+    handler.set_display_off_timeout(30s);
+    handler.set_display_off_timeout_on_lock(10s);
+
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(10s)))
+        .Times(1);
+    session_lock.lock();
+
+    auto const observer = observer_for(0s);
+    observer->active();
+}
+
+TEST_F(BasicIdleHandler, off_timeout_on_lock_is_not_used_if_equal_to_off_timeout)
+{
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
+        .Times(1);
+    handler.set_display_off_timeout(30s);
+    handler.set_display_off_timeout_on_lock(30s);
+    session_lock.lock();
 }
 
 TEST_F(BasicIdleHandler, turns_display_off_when_idle)

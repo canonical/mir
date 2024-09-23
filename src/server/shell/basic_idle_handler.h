@@ -59,6 +59,8 @@ public:
 
     void set_display_off_timeout(std::optional<time::Duration> timeout) override;
 
+    void set_display_off_timeout_on_lock(std::optional<time::Duration> timeout) override;
+
     void register_interest(std::weak_ptr<IdleHandlerObserver> const&) override;
 
     void register_interest(
@@ -74,6 +76,7 @@ public:
 private:
     class SessionLockListener;
 
+    void register_observers(ProofOfMutexLock const&);
     void clear_observers(ProofOfMutexLock const&);
 
     std::shared_ptr<scene::IdleHub> const idle_hub;
@@ -85,6 +88,7 @@ private:
 
     std::mutex mutex;
     std::optional<time::Duration> current_off_timeout;
+    std::optional<time::Duration> current_off_timeout_on_lock;
     std::vector<std::shared_ptr<scene::IdleStateObserver>> observers;
 
     class BasicIdleHandlerObserverMultiplexer: public ObserverMultiplexer<IdleHandlerObserver>
