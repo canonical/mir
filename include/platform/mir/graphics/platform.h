@@ -396,7 +396,7 @@ public:
     {
     };
 
-    virtual auto framebuffer_for(mir::graphics::DisplaySink& sink, std::shared_ptr<DMABufBuffer> buffer)
+    virtual auto framebuffer_for(std::shared_ptr<DMABufBuffer> buffer)
         -> std::unique_ptr<Framebuffer> = 0;
 };
 
