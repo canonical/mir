@@ -1,4 +1,4 @@
-MIR_PLATFORM_2.19 {
+MIR_PLATFORM_2.18 {
  global:
   extern "C++" {
     mir::graphics::AtomicFrame::increment*;
@@ -125,7 +125,6 @@ MIR_PLATFORM_2.19 {
     mir::options::enable_key_repeat_opt*;
     mir::options::fatal_except_opt*;
     mir::options::idle_timeout_opt;
-    mir::options::idle_timeout_on_lock_opt;
     mir::options::input_report_opt*;
     mir::options::log_opt_value*;
     mir::options::logind_console;
@@ -201,5 +200,12 @@ MIR_PLATFORM_2.19 {
     vtable?for?mir::options::Option;
     vtable?for?mir::options::ProgramOption;
  };
- local: *;
 };
+
+MIR_PLATFORM_2.19 {
+ global:
+  extern "C++" {
+    mir::options::idle_timeout_on_lock_opt;
+ };
+ local: *;
+} MIR_PLATFORM_2.18;

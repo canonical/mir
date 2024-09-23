@@ -203,11 +203,11 @@ private:
 class msh::BasicIdleHandler::SessionLockListener : public ms::SessionLockObserver
 {
 public:
-    explicit SessionLockListener(std::function<void()> const& on_lock) : on_lock_{on_lock} {};
+    explicit SessionLockListener(std::function<void()> const& on_lock) : on_lock_{on_lock} {}
 
 private:
-    void on_lock() override { on_lock_(); };
-    void on_unlock() override {};
+    void on_lock() override { on_lock_(); }
+    void on_unlock() override {}
 
     std::function<void()> const on_lock_;
 };
