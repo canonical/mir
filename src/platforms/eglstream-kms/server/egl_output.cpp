@@ -28,7 +28,6 @@
 #include <sys/ioctl.h>
 #include <boost/throw_exception.hpp>
 #include <system_error>
-#include <tuple>
 #include <sys/mman.h>
 
 namespace mg = mir::graphics;
@@ -214,9 +213,7 @@ void mgek::EGLOutput::configure(size_t kms_mode_index)
     mode_index = kms_mode_index;
     refresh_connector(drm_fd, connector);
 
-    mgk::DRMModeCrtcUPtr crtc;
-    mgk::DRMModePlaneUPtr plane;
-    std::tie(crtc, plane) = mgk::find_crtc_with_primary_plane(drm_fd, connector);
+    auto [crtc, plane] = mgk::find_crtc_with_primary_plane(drm_fd, connector);
     crtc_id_ = crtc->crtc_id;
     plane_id = plane->plane_id;
     plane_props = std::make_unique<mgk::ObjectProperties>(drm_fd, plane_id, DRM_MODE_OBJECT_PLANE);

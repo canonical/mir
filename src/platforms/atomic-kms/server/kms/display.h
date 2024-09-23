@@ -19,11 +19,11 @@
 
 #include "kms-utils/drm_event_handler.h"
 #include "mir/graphics/display.h"
+#include "mir/graphics/platform.h"
 #include "mir/udev/wrapper.h"
+#include "platform_common.h"
 #include "real_kms_output_container.h"
 #include "real_kms_display_configuration.h"
-#include "platform_common.h"
-#include "mir/graphics/platform.h"
 
 #include <atomic>
 #include <mutex>

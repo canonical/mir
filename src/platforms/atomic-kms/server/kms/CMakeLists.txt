@@ -21,6 +21,7 @@ add_library(
   atomic_kms_output.cpp
   atomic_kms_output.h
   bypass.cpp
+  cursor.cpp
   display.cpp
   display_buffer.cpp
   platform.cpp

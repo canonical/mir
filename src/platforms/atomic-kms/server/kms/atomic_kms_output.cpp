@@ -488,23 +488,50 @@ void mga::AtomicKMSOutput::wait_for_page_flip()
     pending_page_flip.get();
 }
 
-bool mga::AtomicKMSOutput::set_cursor(gbm_bo*)
+bool mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
 {
-    return false;
+    int result = 0;
+    if (configuration.lock()->current_crtc)
+    {
+        result = drmModeSetCursor(
+            drm_fd_,
+            configuration.lock()->current_crtc->crtc_id,
+            gbm_bo_get_handle(buffer).u32,
+            gbm_bo_get_width(buffer),
+            gbm_bo_get_height(buffer));
+        if (result)
+        {
+            mir::log_warning("set_cursor: drmModeSetCursor failed (%s)", strerror(-result));
+        }
+    }
+    return !result;
 }
 
-void mga::AtomicKMSOutput::move_cursor(geometry::Point)
+void mga::AtomicKMSOutput::move_cursor(geometry::Point destination)
 {
+    if (configuration.lock()->current_crtc)
+    {
+        if (auto result =
+                drmModeMoveCursor(drm_fd_, configuration.lock()->current_crtc->crtc_id, destination.x.as_int(), destination.y.as_int()))
+        {
+            mir::log_warning("move_cursor: drmModeMoveCursor failed (%s)", strerror(-result));
+        }
+    }
 }
 
 bool mga::AtomicKMSOutput::clear_cursor()
 {
-    return false;
-}
+    int result = 0;
+    if (configuration.lock()->current_crtc)
+    {
+        result = drmModeSetCursor(drm_fd_, configuration.lock()->current_crtc->crtc_id, 0, 0, 0);
 
-bool mga::AtomicKMSOutput::has_cursor() const
-{
-    return false;
+        if (result)
+            mir::log_warning("clear_cursor: drmModeSetCursor failed (%s)",
+                             strerror(-result));
+    }
+
+    return !result;
 }
 
 bool mga::AtomicKMSOutput::ensure_crtc(Configuration& to_update)
@@ -909,3 +936,16 @@ int mga::AtomicKMSOutput::drm_fd() const
 {
     return drm_fd_;
 }
+
+bool mga::AtomicKMSOutput::has_cursor() const
+{
+    // According to this:
+    // https://github.com/canonical/mir/pull/3665#discussion_r1835985441. The
+    // only point of failure is in the `Cursor` constructor, which throws an
+    // exception, which is caught in `mga::create_hardware_cursor` and signals
+    // to the calling code to use a software cursor instead.
+    //
+    // tldr; If this method is called, we have a cursor.
+    return true;
+}
+
