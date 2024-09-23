@@ -1,12 +1,12 @@
 # Tutorials
 These pages provide first-time introductions to key Mir aspects
 
-- [Learn What Mir Can Do](/tutorial/learn-what-mir-can-do): A showcase of Mir's capabilities
+- [Getting started with Mir](/tutorial/getting-started-with-mir): A showcase of Mir's capabilities
 - [Write Your First Wayland Compositor](/tutorial/write-your-first-wayland-compositor): A guide through writing a simple compositor
 
 ```{toctree}
 :hidden:
 
-/tutorial/learn-what-mir-can-do
+/tutorial/getting-started-with-mir
 /tutorial/write-your-first-wayland-compositor
 ```
