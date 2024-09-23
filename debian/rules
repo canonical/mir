@@ -65,7 +65,7 @@ export DEB_BUILD_MAINT_OPTIONS
 $(info COMMON_CONFIGURE_OPTIONS: ${COMMON_CONFIGURE_OPTIONS})
 $(info DEB_BUILD_MAINT_OPTIONS: ${DEB_BUILD_MAINT_OPTIONS})
 
-AVAILABLE_PLATFORMS=gbm-kms\;x11\;wayland\;eglstream-kms
+AVAILABLE_PLATFORMS=atomic-kms\;gbm-kms\;x11\;wayland\;eglstream-kms
 
 override_dh_auto_configure:
 ifneq ($(filter armhf,$(DEB_HOST_ARCH)),)
