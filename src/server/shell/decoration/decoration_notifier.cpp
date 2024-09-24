@@ -1,6 +1,7 @@
 #include <mir/shell/decoration_notifier.h>
 
 #include "mir/scene/null_surface_observer.h"
+#include "mir/scene/surface.h"
 
 namespace msd = mir::shell::decoration;
 

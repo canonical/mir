@@ -74,8 +74,6 @@ public:
         std::shared_ptr<scene::Surface> const& window_surface);
     ~BasicDecoration();
 
-    void redraw();
-
     void handle_input_event(std::shared_ptr<MirEvent const> const& event) override;
     void set_scale(float scale) override;
     void attrib_changed(mir::scene::Surface const* window_surface, MirWindowAttrib attrib, int value) override;
@@ -91,7 +89,9 @@ public:
 
     void set_cursor(std::string const& cursor_image_name);
 
-protected:
+private:
+    void redraw();
+
     /// Creates an up-to-date WindowState object
     auto new_window_state() const -> std::unique_ptr<WindowState>;
 

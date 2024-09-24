@@ -16,14 +16,26 @@
 
 #include <mir/shell/decoration.h>
 
-#include "mir/scene/surface.h"
-#include "mir/shell/shell.h"
+
+#include <mir/geometry/size.h>
+#include <mir/geometry/forward.h>
 #include <mir/events/event.h>
 #include <mir/geometry/forward.h>
 #include <mir/geometry/size.h>
 
 #include <memory>
 
+namespace mir
+{
+namespace scene
+{
+class Surface;
+}
+namespace shell
+{
+class Shell;
+}
+}
 
 namespace mir::shell::decoration
 {
