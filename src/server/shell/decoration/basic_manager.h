@@ -18,7 +18,7 @@
 #define MIR_SHELL_DECORATION_BASIC_MANAGER_H_
 
 #include "basic_decoration.h"
-#include "manager.h"
+#include "mir/shell/decoration_manager.h"
 
 #include <memory>
 #include <mir/observer_registrar.h>
