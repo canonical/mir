@@ -18,6 +18,7 @@
 #define MIR_SHELL_DECORATION_BASIC_DECORATION_H_
 
 #include "mir/shell/decoration.h"
+#include "mir/shell/decoration_notifier.h"
 
 #include "input.h"
 #include "mir_toolkit/common.h"
@@ -101,6 +102,8 @@ protected:
         std::optional<WindowState const*> previous_window_state,
         std::optional<InputState const*> previous_input_state);
 
+    std::shared_ptr<mir::scene::Surface> decoration_surface;
+
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const threadsafe_self;
     std::shared_ptr<StaticGeometry const> const static_geometry;
 
@@ -120,6 +123,8 @@ protected:
 
     std::unique_ptr<InputManager> const input_manager;
     std::unique_ptr<InputState const> input_state;
+
+    DecorationNotifier decoration_wrapper;
 };
 }
 }
