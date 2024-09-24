@@ -184,7 +184,7 @@ msd::BasicDecoration::BasicDecoration(
     std::shared_ptr<Executor> const& executor,
     std::shared_ptr<input::CursorImages> const& cursor_images,
     std::shared_ptr<ms::Surface> const& window_surface) :
-    Decoration{create_surface(window_surface, shell), window_surface},
+    decoration_surface{create_surface(window_surface, shell)},
     threadsafe_self{std::make_shared<ThreadsafeAccess<BasicDecoration>>(executor)},
     static_geometry{std::make_shared<StaticGeometry>(default_geometry)},
     shell{shell},
@@ -196,7 +196,8 @@ msd::BasicDecoration::BasicDecoration(
     window_surface{window_surface},
     window_state{new_window_state()},
     input_manager{std::make_unique<InputManager>(static_geometry, *window_state, threadsafe_self)},
-    input_state{input_manager->state()}
+    input_state{input_manager->state()},
+    decoration_wrapper{decoration_surface, window_surface, this}
 {
     if (!session)
     {
