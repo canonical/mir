@@ -38,7 +38,7 @@ class miral::InputConfiguration::Touchpad::Self : public TouchpadInputConfigurat
 class miral::InputConfiguration::Self
 {
 public:
-    std::shared_ptr<mir::input::InputDeviceHub> input_device_hub{};
+    std::weak_ptr<mir::input::InputDeviceHub> input_device_hub{};
     std::shared_ptr<InputDeviceConfig> input_device_config;
 
     auto mouse() -> Mouse;
@@ -48,9 +48,9 @@ public:
 
     void apply(Mouse const& m)
     {
-        if (input_device_hub)
+        if (auto const idh = input_device_hub.lock())
         {
-            input_device_hub->for_each_mutable_input_device([&m](auto& input_device)
+            idh->for_each_mutable_input_device([&m](auto& input_device)
             {
                 m.self->apply_to(input_device);
             });
@@ -61,9 +61,9 @@ public:
 
     void apply(Touchpad const& t)
     {
-        if (input_device_hub)
+        if (auto const idh = input_device_hub.lock())
         {
-            input_device_hub->for_each_mutable_input_device([&t](auto& input_device)
+            idh->for_each_mutable_input_device([&t](auto& input_device)
             {
                 t.self->apply_to(input_device);
             });
