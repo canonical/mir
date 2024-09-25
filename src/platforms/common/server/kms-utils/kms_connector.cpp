@@ -197,7 +197,6 @@ auto mgk::find_crtc_with_primary_plane(
         if (plane->possible_crtcs & (1 << crtc_index))
         {
             ObjectProperties plane_props{drm_fd, plane->plane_id, DRM_MODE_OBJECT_PLANE};
-            std::cerr << "Plane type: " << plane_props["type"] << '\n';
         }
     }
 
