@@ -77,6 +77,8 @@ private:
     bool ensure_crtc();
     void restore_saved_crtc();
 
+    std::shared_ptr<uint32_t> cursor_gbm_bo_to_drm_fb_id(gbm_bo* gbm_bo);
+
     mir::Fd const drm_fd_;
     std::shared_ptr<kms::DRMEventHandler> const event_handler;
 
@@ -92,11 +94,18 @@ private:
     kms::DRMModePlaneUPtr current_cursor_plane;
     std::unique_ptr<PropertyBlob> mode;
     std::unique_ptr<kms::ObjectProperties> crtc_props;
-    std::unique_ptr<kms::ObjectProperties> plane_props;
+    std::unique_ptr<kms::ObjectProperties> primary_plane_props;
+    std::unique_ptr<kms::ObjectProperties> cursor_plane_props;
     std::unique_ptr<kms::ObjectProperties> connector_props;
     drmModeCrtc saved_crtc;
     bool using_saved_crtc;
     bool has_hardware_cursor{false};
+
+    struct {
+        std::shared_ptr<uint32_t> fb_id;
+        uint32_t width, height;
+        int crtc_x, crtc_y;
+    } cursor_state;
 };
 
 }
