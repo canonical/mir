@@ -77,7 +77,8 @@ private:
     bool ensure_crtc();
     void restore_saved_crtc();
 
-    std::shared_ptr<uint32_t> cursor_gbm_bo_to_drm_fb_id(gbm_bo* gbm_bo);
+    using CursorFbPtr = std::unique_ptr<uint32_t, std::function<void(uint32_t*)>>;
+    CursorFbPtr cursor_gbm_bo_to_drm_fb_id(gbm_bo* gbm_bo);
 
     mir::Fd const drm_fd_;
     std::shared_ptr<kms::DRMEventHandler> const event_handler;
@@ -102,7 +103,7 @@ private:
     bool has_hardware_cursor{false};
 
     struct {
-        std::shared_ptr<uint32_t> fb_id;
+        CursorFbPtr fb_id;
         uint32_t width, height;
         int crtc_x, crtc_y;
     } cursor_state;
