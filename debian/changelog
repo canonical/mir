@@ -1,3 +1,22 @@
+mir (2.18.2) UNRELEASED; urgency=medium
+
+  * Bugfix release 2.18.2
+
+    Enhancements:
+    . Allow to specify an app id for when running on the wayland platform #3614
+    . Use generic logos for example applications #3617
+
+    Bugs fixed:
+    . SIGSEGV on input device disconnection #3601
+    . Frame fails to enforce fullscreen on wpe-webkit-mir-kiosk #3600
+    . Chromium unmaximises when focus is lost #3592
+    . Apps constantly resizing #3573
+    . Our fork/exec spawning is unsafe #3494
+    . Revert "Fix random leak" #3609
+    . Smoke tests are failing #3610
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 19 Sep 2024 16:17:13 +0200
+
 mir (2.18.0) UNRELEASED; urgency=medium
 
   * New upstream release 2.18.0
