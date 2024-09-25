@@ -54,7 +54,8 @@ class DisplayClient
 public:
     DisplayClient(
         wl_display* display,
-        std::shared_ptr<WlDisplayProvider> provider);
+        std::shared_ptr<WlDisplayProvider> provider,
+        std::optional<std::string> const& app_id);
 
     virtual ~DisplayClient();
 
@@ -62,6 +63,7 @@ protected:
 
     wl_display* const display;
     std::shared_ptr<WlDisplayProvider> const provider;
+    std::optional<std::string> const app_id;
 
     auto display_configuration() const -> std::unique_ptr<DisplayConfiguration>;
     void for_each_display_sync_group(const std::function<void(DisplaySyncGroup&)>& f);

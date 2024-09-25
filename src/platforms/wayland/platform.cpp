@@ -68,9 +68,13 @@ auto make_initialised_egl_display(struct wl_display* wl_display) -> EGLDisplay
 }
 }
 
-mgw::Platform::Platform(struct wl_display* const wl_display, std::shared_ptr<mg::DisplayReport> const& report) :
+mgw::Platform::Platform(
+    struct wl_display* const wl_display,
+    std::shared_ptr<mg::DisplayReport> const& report,
+    std::optional<std::string> const& app_id) :
     wl_display{wl_display},
     report{report},
+    app_id{app_id},
     provider{std::make_shared<WlDisplayProvider>(make_initialised_egl_display(wl_display))}
 {
 }
@@ -79,7 +83,7 @@ mir::UniqueModulePtr<mg::Display> mgw::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const&,
     std::shared_ptr<GLConfig> const& gl_config)
 {
-    return mir::make_module_ptr<mgw::Display>(wl_display, provider, gl_config, report);
+    return mir::make_module_ptr<mgw::Display>(wl_display, provider, gl_config, report, app_id);
 }
 
 auto mgw::Platform::maybe_create_provider(const DisplayProvider::Tag& type_tag) -> std::shared_ptr<DisplayProvider>

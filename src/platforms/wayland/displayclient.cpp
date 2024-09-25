@@ -269,6 +269,8 @@ void mgw::DisplayClient::Output::done()
         xdg_toplevel_add_listener(shell_toplevel, &shell_toplevel_listener, this);
 
         xdg_toplevel_set_fullscreen(shell_toplevel, output);
+        if (owner_->app_id)
+            xdg_toplevel_set_app_id(shell_toplevel, owner_->app_id.value().c_str());
         wl_surface_set_buffer_scale(surface, host_scale);
         wl_surface_commit(surface);
 
@@ -447,9 +449,11 @@ void mgw::DisplayClient::Output::set_next_image(std::unique_ptr<Framebuffer> con
 
 mgw::DisplayClient::DisplayClient(
     wl_display* display,
-    std::shared_ptr<WlDisplayProvider> provider) :
+    std::shared_ptr<WlDisplayProvider> provider,
+    std::optional<std::string> const& app_id) :
     display{display},
     provider{std::move(provider)},
+    app_id{app_id},
     keyboard_context_{xkb_context_new(XKB_CONTEXT_NO_FLAGS)},
     registry{nullptr, [](auto){}}
 {
