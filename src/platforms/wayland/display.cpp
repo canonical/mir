@@ -96,8 +96,9 @@ mgw::Display::Display(
     std::shared_ptr<WlDisplayProvider> provider,
     std::shared_ptr<GLConfig> const&,
     std::shared_ptr<DisplayReport> const& report,
-    std::optional<std::string> const& app_id) :
-    DisplayClient{wl_display, std::move(provider), app_id},
+    std::optional<std::string> const& app_id,
+    std::optional<std::string> const& title) :
+    DisplayClient{wl_display, std::move(provider), app_id, title},
     report{report},
     shutdown_signal{::eventfd(0, EFD_CLOEXEC)},
     flush_signal{::eventfd(0, EFD_SEMAPHORE)},

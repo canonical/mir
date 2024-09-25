@@ -40,8 +40,11 @@ mir::ModuleProperties const description = {
     mir::libname()
 };
 
-char const* wayland_surface_app_id_option{"wayland-surface-app-id"};
-char const* wayland_surface_app_id_option_description{"Defines the XdgToplevel app id on the surface created by the wayland platform"};
+const char* const wayland_surface_app_id_option{"wayland-surface-app-id"};
+const char* const wayland_surface_app_id_option_description{"Defines the XdgToplevel app id on the surface created by the wayland platform"};
+
+const char* const wayland_surface_title_option{"wayland-surface-title"};
+const char* const wayland_surface_title_option_description{"Defines the XdgTopLevel title on the surface created by the wayland platform"};
 }
 
 mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
@@ -55,8 +58,12 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     if (options->is_set(wayland_surface_app_id_option))
         app_id = options->get<std::string>(wayland_surface_app_id_option);
 
+    std::optional<std::string> title;
+    if (options->is_set(wayland_surface_title_option))
+        app_id = options->get<std::string>(wayland_surface_title_option);
+
     mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
-    return mir::make_module_ptr<mgw::Platform>(mpw::connection(*options), report, app_id);
+    return mir::make_module_ptr<mgw::Platform>(mpw::connection(*options), report, app_id, title);
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& config)
@@ -67,6 +74,10 @@ void add_graphics_platform_options(boost::program_options::options_description& 
         (wayland_surface_app_id_option,
          boost::program_options::value<std::string>(),
          wayland_surface_app_id_option_description);
+    config.add_options()
+        (wayland_surface_title_option,
+         boost::program_options::value<std::string>(),
+         wayland_surface_title_option_description);
 }
 
 auto probe_graphics_platform(
