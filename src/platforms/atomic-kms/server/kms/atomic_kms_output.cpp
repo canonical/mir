@@ -483,9 +483,9 @@ void mga::AtomicKMSOutput::wait_for_page_flip()
     pending_page_flip.get();
 }
 
-std::shared_ptr<uint32_t> mga::AtomicKMSOutput::cursor_gbm_bo_to_drm_fb_id(gbm_bo* gbm_bo)
+mga::AtomicKMSOutput::CursorFbPtr mga::AtomicKMSOutput::cursor_gbm_bo_to_drm_fb_id(gbm_bo* gbm_bo)
 {
-    auto fb_id = std::shared_ptr<uint32_t>{
+    auto fb_id = CursorFbPtr{
         new uint32_t{0},
         [drm_fd = this->drm_fd_](uint32_t* fb_id)
         {
