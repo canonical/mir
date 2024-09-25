@@ -66,7 +66,7 @@ private:
     bool pending_loads = false;
 };
 
-struct TestConfigFile : miral::TestServer, PendingLoad
+struct TestConfigFile : PendingLoad, miral::TestServer
 {
     TestConfigFile();
     MOCK_METHOD(void, load, (std::istream& in, std::filesystem::path path), ());
