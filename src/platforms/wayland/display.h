@@ -61,7 +61,9 @@ public:
         wl_display* const wl_display,
         std::shared_ptr<WlDisplayProvider> provider,
         std::shared_ptr<GLConfig> const& gl_config,
-        std::shared_ptr<DisplayReport> const& report);
+        std::shared_ptr<DisplayReport> const& report,
+        std::optional<std::string> const& app_id,
+        std::optional<std::string> const& title);
 
     ~Display();
 
