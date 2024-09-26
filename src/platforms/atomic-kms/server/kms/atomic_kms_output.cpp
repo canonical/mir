@@ -578,7 +578,7 @@ void mga::AtomicKMSOutput::move_cursor(geometry::Point destination)
 
 bool mga::AtomicKMSOutput::clear_cursor()
 {
-    return false;
+    return true;
 }
 
 bool mga::AtomicKMSOutput::has_cursor_plane() const
