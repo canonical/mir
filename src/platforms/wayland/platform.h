@@ -34,7 +34,10 @@ class WlDisplayProvider;
 class Platform : public graphics::DisplayPlatform
 {
 public:
-    Platform(struct wl_display* const wl_display, std::shared_ptr<DisplayReport> const& report);
+    Platform(struct wl_display* const wl_display,
+        std::shared_ptr<DisplayReport> const& report,
+        std::optional<std::string> const& app_id,
+        std::optional<std::string> const& title);
     ~Platform() = default;
 
     UniqueModulePtr<Display> create_display(
@@ -47,6 +50,8 @@ private:
 
     struct wl_display* const wl_display;
     std::shared_ptr<DisplayReport> const report;
+    std::optional<std::string> const app_id;
+    std::optional<std::string> const title;
 
     std::shared_ptr<WlDisplayProvider> const provider;
 };
