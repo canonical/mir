@@ -100,7 +100,7 @@ private:
     std::unique_ptr<kms::ObjectProperties> connector_props;
     drmModeCrtc saved_crtc;
     bool using_saved_crtc;
-    bool has_hardware_cursor{false};
+    bool cursor_enabled{false};
 
     struct {
         CursorFbPtr fb_id;
