@@ -60,7 +60,7 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
 
     std::optional<std::string> title;
     if (options->is_set(wayland_surface_title_option))
-        app_id = options->get<std::string>(wayland_surface_title_option);
+        title = options->get<std::string>(wayland_surface_title_option);
 
     mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
     return mir::make_module_ptr<mgw::Platform>(mpw::connection(*options), report, app_id, title);
