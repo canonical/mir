@@ -557,8 +557,29 @@ bool mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
         cursor_state.fb_id = cursor_gbm_bo_to_drm_fb_id(buffer);
         cursor_state.width = gbm_bo_get_width(buffer);
         cursor_state.height = gbm_bo_get_height(buffer);
+
+        AtomicUpdate update;
+        update.add_property(*cursor_plane_props, "SRC_W", cursor_state.width << 16);
+        update.add_property(*cursor_plane_props, "SRC_H", cursor_state.height << 16);
+        update.add_property(*cursor_plane_props, "CRTC_X", cursor_state.crtc_x);
+        update.add_property(*cursor_plane_props, "CRTC_Y", cursor_state.crtc_y);
+        update.add_property(*cursor_plane_props, "CRTC_W", cursor_state.width);
+        update.add_property(*cursor_plane_props, "CRTC_H", cursor_state.height);
+        update.add_property(*cursor_plane_props, "CRTC_ID", current_crtc->crtc_id);
+        update.add_property(*cursor_plane_props, "FB_ID", *cursor_state.fb_id);
+        auto ret = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET | DRM_MODE_ATOMIC_NONBLOCK, nullptr);
+
+        if(ret && ret != -EBUSY)
+        {
+            mir::log_debug("set_cursor failed: %s (%d)", strerror(-ret), -ret);
+            cursor_enabled = false;
+            return false;
+        }
+
+        return true;
     }
-    return true;
+
+    return false;
 }
 
 void mga::AtomicKMSOutput::move_cursor(geometry::Point destination)
@@ -578,7 +599,26 @@ void mga::AtomicKMSOutput::move_cursor(geometry::Point destination)
 
 bool mga::AtomicKMSOutput::clear_cursor()
 {
-    return true;
+    if(current_crtc)
+    {
+        cursor_enabled = false;
+
+        AtomicUpdate update;
+        update.add_property(*cursor_plane_props, "FB_ID", 0);
+
+        auto ret = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET | DRM_MODE_ATOMIC_NONBLOCK, nullptr);
+
+        if(ret && ret != -EBUSY)
+        {
+            mir::log_debug("clear_cursor failed: %s (%d)", strerror(-ret), -ret);
+            cursor_enabled = false;
+            return false;
+        }
+
+        return true;
+    }
+
+    return false;
 }
 
 bool mga::AtomicKMSOutput::has_cursor_plane() const
