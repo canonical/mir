@@ -1,4 +1,4 @@
-set(ICON_NAME ubuntu-logo)
+set(ICON_NAME spiral-logo)
 
 configure_file(miral-shell.desktop.in ${CMAKE_CURRENT_BINARY_DIR}/miral-shell.desktop @ONLY)
 
