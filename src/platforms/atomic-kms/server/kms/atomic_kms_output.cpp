@@ -164,7 +164,7 @@ public:
         }
     }
 
-    void print_properties()
+    void print_properties() const
     {
         for(auto const& [obj_id, props]: debug_props)
         {
@@ -173,7 +173,7 @@ public:
             {
                 if(prop_name == "SRC_W" || prop_name == "SRC_H")
                 {
-                    mir::log_debug("\t %s = %zu", prop_name.c_str(), prop_value >> 16);
+                    mir::log_debug("\t %s = %zu << 16", prop_name.c_str(), prop_value >> 16);
                     continue;
                 }
 
@@ -482,7 +482,7 @@ bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
     update.add_property(*primary_plane_props, "CRTC_ID", current_crtc->crtc_id);
     update.add_property(*primary_plane_props, "FB_ID", fb);
 
-    if(cursor_state.enabled)
+    if (cursor_state.enabled)
     {
         update_all_cursor_props(update, *cursor_plane_props, cursor_state, current_crtc->crtc_id);
     }
@@ -572,6 +572,8 @@ bool mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
         cursor_state.width = gbm_bo_get_width(buffer);
         cursor_state.height = gbm_bo_get_height(buffer);
 
+        // Need to account for the first call (need to initialize all props)
+        // as well as later updates (don't need all props, but no need for a separate branch as well)
         AtomicUpdate update;
         update_all_cursor_props(update, *cursor_plane_props, cursor_state, current_crtc->crtc_id);
         auto ret =
@@ -597,6 +599,8 @@ void mga::AtomicKMSOutput::move_cursor(geometry::Point destination)
         cursor_state.crtc_x = destination.x.as_int();
         cursor_state.crtc_y = destination.y.as_int();
 
+        // `ser_crtc` is always called before this, so all other properties should be already initialized on the kernel
+        // side.
         AtomicUpdate update;
         update.add_properties(
             *cursor_plane_props,
