@@ -73,11 +73,19 @@ public:
     int drm_fd() const override;
 
     bool has_cursor_plane() const;
+
+    using CursorFbPtr = std::unique_ptr<uint32_t, std::function<void(uint32_t*)>>;
+    struct CursorState {
+        bool enabled{false};
+        CursorFbPtr fb_id;
+        uint32_t width, height;
+        int crtc_x, crtc_y;
+    };
+
 private:
     bool ensure_crtc();
     void restore_saved_crtc();
 
-    using CursorFbPtr = std::unique_ptr<uint32_t, std::function<void(uint32_t*)>>;
     CursorFbPtr cursor_gbm_bo_to_drm_fb_id(gbm_bo* gbm_bo);
 
     mir::Fd const drm_fd_;
@@ -100,13 +108,8 @@ private:
     std::unique_ptr<kms::ObjectProperties> connector_props;
     drmModeCrtc saved_crtc;
     bool using_saved_crtc;
-    bool cursor_enabled{false};
 
-    struct {
-        CursorFbPtr fb_id;
-        uint32_t width, height;
-        int crtc_x, crtc_y;
-    } cursor_state;
+    CursorState cursor_state;
 };
 
 }

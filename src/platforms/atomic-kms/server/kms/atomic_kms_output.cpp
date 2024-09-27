@@ -28,6 +28,7 @@
 #include <drm_fourcc.h>
 #include <drm_mode.h>
 #include <gbm.h>
+#include <initializer_list>
 #include <span>
 #include <string.h> // strcmp
 
@@ -155,6 +156,14 @@ public:
         drmModeAtomicAddProperty(req, properties.parent_id(), properties.id_for(prop_name), value);
     }
 
+    void add_properties(mgk::ObjectProperties const& properties, std::initializer_list<std::pair<char const*, uint64_t>> value_list)
+    {
+        for(auto const& [prop_name, prop_value]: value_list)
+        {
+            add_property(properties, prop_name, prop_value);
+        }
+    }
+
     void print_properties()
     {
         for(auto const& [obj_id, props]: debug_props)
@@ -177,6 +186,26 @@ private:
     drmModeAtomicReqPtr const req;
     std::map<uint32_t, std::map<std::string, uint64_t>> debug_props;
 };
+
+void update_all_cursor_props(
+    AtomicUpdate& update,
+    mgk::ObjectProperties& cursor_plane_props,
+    mga::AtomicKMSOutput::CursorState const& cursor_state,
+    uint32_t crtc_id)
+{
+    update.add_properties(
+        cursor_plane_props,
+        {
+            {"SRC_W", cursor_state.width << 16},
+            {"SRC_H", cursor_state.height << 16},
+            {"CRTC_X", cursor_state.crtc_x},
+            {"CRTC_Y", cursor_state.crtc_y},
+            {"CRTC_W", cursor_state.width},
+            {"CRTC_H", cursor_state.height},
+            {"CRTC_ID", crtc_id},
+            {"FB_ID", *cursor_state.fb_id},
+        });
+}
 }
 
 class mga::AtomicKMSOutput::PropertyBlob
@@ -325,18 +354,10 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
     update.add_property(*primary_plane_props, "CRTC_ID", current_crtc->crtc_id);
     update.add_property(*primary_plane_props, "FB_ID", fb);
 
-    if(cursor_enabled)
+    if (cursor_state.enabled)
     {
-        update.add_property(*cursor_plane_props, "SRC_W", cursor_state.width << 16);
-        update.add_property(*cursor_plane_props, "SRC_H", cursor_state.height << 16);
-        update.add_property(*cursor_plane_props, "CRTC_X", cursor_state.crtc_x);
-        update.add_property(*cursor_plane_props, "CRTC_Y", cursor_state.crtc_y);
-        update.add_property(*cursor_plane_props, "CRTC_W", cursor_state.width);
-        update.add_property(*cursor_plane_props, "CRTC_H", cursor_state.height);
-        update.add_property(*cursor_plane_props, "CRTC_ID", current_crtc->crtc_id);
-        update.add_property(*cursor_plane_props, "FB_ID", *cursor_state.fb_id);
+        update_all_cursor_props(update, *cursor_plane_props, cursor_state, current_crtc->crtc_id);
     }
-
 
     auto ret = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
     if (ret)
@@ -461,16 +482,9 @@ bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
     update.add_property(*primary_plane_props, "CRTC_ID", current_crtc->crtc_id);
     update.add_property(*primary_plane_props, "FB_ID", fb);
 
-    if(cursor_enabled)
+    if(cursor_state.enabled)
     {
-        update.add_property(*cursor_plane_props, "SRC_W", cursor_state.width << 16);
-        update.add_property(*cursor_plane_props, "SRC_H", cursor_state.height << 16);
-        update.add_property(*cursor_plane_props, "CRTC_X", cursor_state.crtc_x);
-        update.add_property(*cursor_plane_props, "CRTC_Y", cursor_state.crtc_y);
-        update.add_property(*cursor_plane_props, "CRTC_W", cursor_state.width);
-        update.add_property(*cursor_plane_props, "CRTC_H", cursor_state.height);
-        update.add_property(*cursor_plane_props, "CRTC_ID", current_crtc->crtc_id);
-        update.add_property(*cursor_plane_props, "FB_ID", *cursor_state.fb_id);
+        update_all_cursor_props(update, *cursor_plane_props, cursor_state, current_crtc->crtc_id);
     }
 
     // Mainly to check if the hardware is busy
@@ -553,26 +567,20 @@ bool mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
 {
     if (current_crtc)
     {
-        cursor_enabled = true;
+        cursor_state.enabled = true;
         cursor_state.fb_id = cursor_gbm_bo_to_drm_fb_id(buffer);
         cursor_state.width = gbm_bo_get_width(buffer);
         cursor_state.height = gbm_bo_get_height(buffer);
 
         AtomicUpdate update;
-        update.add_property(*cursor_plane_props, "SRC_W", cursor_state.width << 16);
-        update.add_property(*cursor_plane_props, "SRC_H", cursor_state.height << 16);
-        update.add_property(*cursor_plane_props, "CRTC_X", cursor_state.crtc_x);
-        update.add_property(*cursor_plane_props, "CRTC_Y", cursor_state.crtc_y);
-        update.add_property(*cursor_plane_props, "CRTC_W", cursor_state.width);
-        update.add_property(*cursor_plane_props, "CRTC_H", cursor_state.height);
-        update.add_property(*cursor_plane_props, "CRTC_ID", current_crtc->crtc_id);
-        update.add_property(*cursor_plane_props, "FB_ID", *cursor_state.fb_id);
-        auto ret = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET | DRM_MODE_ATOMIC_NONBLOCK, nullptr);
+        update_all_cursor_props(update, *cursor_plane_props, cursor_state, current_crtc->crtc_id);
+        auto ret =
+            drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET | DRM_MODE_ATOMIC_NONBLOCK, nullptr);
 
         if(ret && ret != -EBUSY)
         {
             mir::log_debug("set_cursor failed: %s (%d)", strerror(-ret), -ret);
-            cursor_enabled = false;
+            cursor_state.enabled = false;
             return false;
         }
 
@@ -590,8 +598,12 @@ void mga::AtomicKMSOutput::move_cursor(geometry::Point destination)
         cursor_state.crtc_y = destination.y.as_int();
 
         AtomicUpdate update;
-        update.add_property(*cursor_plane_props, "CRTC_X", cursor_state.crtc_x);
-        update.add_property(*cursor_plane_props, "CRTC_Y", cursor_state.crtc_y);
+        update.add_properties(
+            *cursor_plane_props,
+            {
+                {"CRTC_X", cursor_state.crtc_x},
+                {"CRTC_Y", cursor_state.crtc_y}
+            });
 
         drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET | DRM_MODE_ATOMIC_NONBLOCK, nullptr);
     }
@@ -601,7 +613,7 @@ bool mga::AtomicKMSOutput::clear_cursor()
 {
     if(current_crtc)
     {
-        cursor_enabled = false;
+        cursor_state.enabled = false;
 
         AtomicUpdate update;
         update.add_property(*cursor_plane_props, "FB_ID", 0);
@@ -611,7 +623,7 @@ bool mga::AtomicKMSOutput::clear_cursor()
         if(ret && ret != -EBUSY)
         {
             mir::log_debug("clear_cursor failed: %s (%d)", strerror(-ret), -ret);
-            cursor_enabled = false;
+            cursor_state.enabled = false;
             return false;
         }
 
@@ -992,6 +1004,5 @@ int mga::AtomicKMSOutput::drm_fd() const
 
 bool mga::AtomicKMSOutput::has_cursor() const
 {
-    return cursor_enabled;
+    return cursor_state.enabled;
 }
-
