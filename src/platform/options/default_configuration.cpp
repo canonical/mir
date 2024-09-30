@@ -252,7 +252,7 @@ void mo::DefaultConfiguration::add_platform_options()
 
                 add_platform_options(options->second);
             }
-            catch (std::runtime_error& e)
+            catch (std::runtime_error&)
             {
                 /* We've failed to add the options - probably because it's not a graphics platform,
                  * or because it's got the wrong version - unload it; it's unnecessary.
