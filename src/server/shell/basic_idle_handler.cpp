@@ -24,6 +24,7 @@
 #include "mir/shell/display_configuration_controller.h"
 
 #include <mutex>
+#include <utility>
 
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
@@ -34,6 +35,7 @@ namespace msh = mir::shell;
 
 namespace
 {
+auto const min_off_timeout_on_lock = std::chrono::milliseconds{200};
 auto const dim_time_before_off = std::chrono::seconds{10};
 unsigned char const black_pixel_data[4] = {0, 0, 0, 255};
 int const coverage_size = 100000;
@@ -169,47 +171,58 @@ private:
     MirPowerMode const power_mode;
     msh::IdleHandlerObserver& observer;
 };
+}
 
-struct TimeoutRestorer : ms::IdleStateObserver
+class msh::BasicIdleHandler::TimeoutRestorer : public ms::IdleStateObserver
 {
+public:
     explicit TimeoutRestorer(
-        msh::BasicIdleHandler* idle_handler,
-        std::optional<mir::time::Duration> timeout)
-        : idle_handler{idle_handler},
-          timeout{timeout}
+        msh::BasicIdleHandler* idle_handler)
+        : idle_handler{idle_handler}
     {
     }
 
     void active() override {
-        if (!restored)
+        // Since this observer is registered when Mir is already active, this callback is invoked immediately upon
+        // registration. To restore the off timeout, Mir must transition to idle before becoming active again.
+        if (was_idle && !restored)
         {
             restored = true;
-            idle_handler->set_display_off_timeout(timeout);
+            idle_handler->restore_off_timeout();
         }
     }
 
     void idle() override
     {
+        was_idle = true;
     }
 
 private:
-    mir::shell::BasicIdleHandler* const idle_handler;
-    std::optional<mir::time::Duration> const timeout;
+    msh::BasicIdleHandler* const idle_handler;
 
+    bool was_idle{false};
     bool restored{false};
 };
-}
 
 class msh::BasicIdleHandler::SessionLockListener : public ms::SessionLockObserver
 {
 public:
-    explicit SessionLockListener(std::function<void()> const& on_lock) : on_lock_{on_lock} {}
+    explicit SessionLockListener(msh::BasicIdleHandler* idle_handler) : idle_handler{idle_handler}
+    {
+    }
+
+    void on_lock() override
+    {
+        idle_handler->on_lock();
+    }
+
+    void on_unlock() override
+    {
+        idle_handler->on_unlock();
+    }
 
 private:
-    void on_lock() override { on_lock_(); }
-    void on_unlock() override {}
-
-    std::function<void()> const on_lock_;
+    msh::BasicIdleHandler* const idle_handler;
 };
 
 msh::BasicIdleHandler::BasicIdleHandler(
@@ -223,23 +236,7 @@ msh::BasicIdleHandler::BasicIdleHandler(
       allocator{allocator},
       display_config_controller{display_config_controller},
       session_lock{session_lock},
-      session_lock_monitor{std::make_shared<SessionLockListener>([this]
-          {
-              std::lock_guard lock{mutex};
-              if (auto const timeout_on_lock{current_off_timeout_on_lock})
-              {
-                  if (timeout_on_lock != current_off_timeout)
-                  {
-                      auto const previous_off_timeout{current_off_timeout};
-                      current_off_timeout = timeout_on_lock;
-                      clear_observers(lock);
-                      register_observers(lock);
-                      auto const timeout_restorer{std::make_shared<TimeoutRestorer>(this, previous_off_timeout)};
-                      observers.push_back(timeout_restorer);
-                      this->idle_hub->register_interest(timeout_restorer, time::Duration{0});
-                  }
-              }
-          })}
+      session_lock_monitor{std::make_shared<SessionLockListener>(this)}
 {
     session_lock->register_interest(session_lock_monitor);
 }
@@ -268,7 +265,36 @@ void msh::BasicIdleHandler::set_display_off_timeout(std::optional<time::Duration
 void msh::BasicIdleHandler::set_display_off_timeout_on_lock(std::optional<time::Duration> timeout)
 {
     std::lock_guard lock{mutex};
+    if (timeout)
+    {
+        timeout = timeout < min_off_timeout_on_lock ? min_off_timeout_on_lock : timeout;
+    }
     current_off_timeout_on_lock = timeout;
+}
+
+void  msh::BasicIdleHandler::on_lock()
+{
+    std::lock_guard lock{mutex};
+    if (auto const timeout_on_lock{current_off_timeout_on_lock})
+    {
+        if (timeout_on_lock != current_off_timeout)
+        {
+            previous_off_timeout = std::exchange(current_off_timeout, timeout_on_lock);
+            clear_observers(lock);
+            register_observers(lock);
+
+            // Register an observer to restore the off timeout when Mir transitions from idle to active
+            // while the session is locked
+            timeout_restorer = std::make_shared<TimeoutRestorer>(this);
+            observers.push_back(timeout_restorer);
+            idle_hub->register_interest(timeout_restorer, min_off_timeout_on_lock);
+        }
+    }
+
+}
+void  msh::BasicIdleHandler::on_unlock()
+{
+    restore_off_timeout();
 }
 
 void msh::BasicIdleHandler::register_observers(ProofOfMutexLock const&)
@@ -303,6 +329,21 @@ void msh::BasicIdleHandler::clear_observers(ProofOfMutexLock const&)
         idle_hub->unregister_interest(*observer);
     }
     observers.clear();
+}
+
+void msh::BasicIdleHandler::restore_off_timeout()
+{
+    std::lock_guard lock{mutex};
+    if (std::ranges::find(observers, timeout_restorer) != observers.end())
+    {
+        // Remove the timeout observer upfront to prevent it from being activated
+        idle_hub->unregister_interest(*timeout_restorer);
+        std::erase(observers, timeout_restorer);
+
+        current_off_timeout = previous_off_timeout;
+        clear_observers(lock);
+        register_observers(lock);
+    }
 }
 
 void msh::BasicIdleHandler::register_interest(std::weak_ptr<IdleHandlerObserver> const& observer)

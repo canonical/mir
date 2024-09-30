@@ -124,7 +124,11 @@ auto mir::DefaultServerConfiguration::the_idle_handler() -> std::shared_ptr<msh:
             }
 
             int const idle_timeout_on_lock = options->get<int>(options::idle_timeout_on_lock_opt);
-            if (idle_timeout_on_lock >= 0)
+            if (idle_timeout_on_lock < 0)
+            {
+                idle_handler->set_display_off_timeout_on_lock(std::nullopt);
+            }
+            else
             {
                 idle_handler->set_display_off_timeout_on_lock(std::chrono::seconds{idle_timeout_on_lock});
             }

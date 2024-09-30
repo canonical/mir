@@ -145,12 +145,10 @@ TEST_F(BasicIdleHandler, off_timeout_on_lock_is_used_when_session_is_locked)
 {
     EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
         .Times(1);
-    handler.set_display_off_timeout(30s);
-
-    handler.set_display_off_timeout_on_lock(10s);
-
     EXPECT_CALL(idle_hub, register_interest(_, Eq(10s)))
         .Times(1);
+    handler.set_display_off_timeout(30s);
+    handler.set_display_off_timeout_on_lock(10s);
     session_lock.lock();
 }
 
@@ -158,10 +156,9 @@ TEST_F(BasicIdleHandler, off_timeout_on_lock_is_not_used_when_session_is_not_loc
 {
     EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
         .Times(1);
-    handler.set_display_off_timeout(30s);
-
     EXPECT_CALL(idle_hub, register_interest(_, Eq(10s)))
         .Times(0);
+    handler.set_display_off_timeout(30s);
     handler.set_display_off_timeout_on_lock(10s);
 }
 
@@ -169,15 +166,76 @@ TEST_F(BasicIdleHandler, off_timeout_is_restored_when_locked_session_becomes_act
 {
     EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
         .Times(2);
-    handler.set_display_off_timeout(30s);
-    handler.set_display_off_timeout_on_lock(10s);
-
     EXPECT_CALL(idle_hub, register_interest(_, Eq(10s)))
         .Times(1);
+    handler.set_display_off_timeout(30s);
+    handler.set_display_off_timeout_on_lock(10s);
     session_lock.lock();
 
-    auto const observer = observer_for(0s);
+    auto const observer = observer_for(200ms);
+    observer->idle();
     observer->active();
+}
+
+TEST_F(BasicIdleHandler, off_timeout_is_restored_when_session_is_unlocked)
+{
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
+        .Times(2);
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(10s)))
+        .Times(1);
+    handler.set_display_off_timeout(30s);
+    handler.set_display_off_timeout_on_lock(10s);
+    session_lock.lock();
+    session_lock.unlock();
+}
+
+TEST_F(BasicIdleHandler, off_timeout_set_on_session_lock_is_used_when_session_becomes_active)
+{
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
+        .Times(1);
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(10s)))
+        .Times(1);
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(5s)))
+        .Times(1);
+    handler.set_display_off_timeout(30s);
+    handler.set_display_off_timeout_on_lock(10s);
+    session_lock.lock();
+    handler.set_display_off_timeout(5s);
+
+    auto const observer = observer_for(200ms);
+    observer->idle();
+    observer->active();
+}
+
+TEST_F(BasicIdleHandler, off_timeout_set_on_session_lock_is_used_when_session_unlocks)
+{
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
+        .Times(1);
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(10s)))
+        .Times(1);
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(5s)))
+        .Times(1);
+    handler.set_display_off_timeout(30s);
+    handler.set_display_off_timeout_on_lock(10s);
+    session_lock.lock();
+    handler.set_display_off_timeout(5s);
+    session_lock.unlock();
+}
+
+TEST_F(BasicIdleHandler, off_timeout_on_lock_set_on_session_lock_is_used_only_in_the_next_lock)
+{
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
+        .Times(2);
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(10s)))
+        .Times(1);
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(5s)))
+        .Times(1);
+    handler.set_display_off_timeout(30s);
+    handler.set_display_off_timeout_on_lock(10s);
+    session_lock.lock();
+    handler.set_display_off_timeout_on_lock(5s);
+    session_lock.unlock();
+    session_lock.lock();
 }
 
 TEST_F(BasicIdleHandler, off_timeout_on_lock_is_not_used_if_equal_to_off_timeout)
@@ -186,6 +244,21 @@ TEST_F(BasicIdleHandler, off_timeout_on_lock_is_not_used_if_equal_to_off_timeout
         .Times(1);
     handler.set_display_off_timeout(30s);
     handler.set_display_off_timeout_on_lock(30s);
+    session_lock.lock();
+}
+
+TEST_F(BasicIdleHandler, off_timeout_on_lock_can_be_disabled)
+{
+    handler.set_display_off_timeout_on_lock(30s);
+    session_lock.lock();
+    auto const observer = observer_for(30s);
+
+    EXPECT_CALL(idle_hub, unregister_interest(Not(Ref(*observer))))
+        .Times(AnyNumber());
+    EXPECT_CALL(idle_hub, unregister_interest(Ref(*observer)))
+        .Times(1);
+    session_lock.unlock();
+    handler.set_display_off_timeout_on_lock(std::nullopt);
     session_lock.lock();
 }
 
