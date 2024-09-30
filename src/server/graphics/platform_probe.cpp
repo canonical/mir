@@ -288,7 +288,7 @@ auto mir::graphics::display_modules_for_device(
     return modules_for_device(
         [&options, &console](mir::SharedLibrary const& module) -> std::vector<mg::SupportedDevice>
         {
-            return mg::probe_display_module(module, *options.the_options_for(module), console);
+            return mg::probe_display_module(module, *options.options_for(module), console);
         },
         modules,
         TypePreference::prefer_nested);
@@ -305,7 +305,7 @@ auto mir::graphics::rendering_modules_for_device(
         {
             if (is_graphics_module(module))
             {
-                return probe_rendering_module(platforms, module, *options.the_options_for(module), console);
+                return probe_rendering_module(platforms, module, *options.options_for(module), console);
             }
             else
             {
@@ -478,7 +478,7 @@ auto mg::select_display_modules(
             auto supported_devices =
                 graphics::probe_display_module(
                     *platform,
-                    *options.the_options_for(*platform),
+                    *options.options_for(*platform),
                     console);
 
             bool found_supported_device{false};
@@ -530,7 +530,7 @@ auto mg::select_display_modules(
     if (virtual_platform)
     {
         auto virtual_probe = probe_display_module(
-            *virtual_platform, *options.the_options_for(*virtual_platform), console);
+            *virtual_platform, *options.options_for(*virtual_platform), console);
         if (virtual_probe.size() && virtual_probe.front().support_level >= mg::probe::supported)
         {
             platform_modules.emplace_back(std::move(virtual_probe.front()), std::move(virtual_platform));

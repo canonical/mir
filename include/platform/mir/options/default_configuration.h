@@ -56,7 +56,7 @@ private:
     void add_platform_options();
     // accessed via the base interface, when access to add_options() has been "lost"
     std::shared_ptr<options::Option> global_options() const override;
-    auto the_options_for(SharedLibrary const& module) const -> std::shared_ptr<Option> override;
+    auto options_for(SharedLibrary const& module) const -> std::shared_ptr<Option> override;
 
     virtual void parse_arguments(
         boost::program_options::options_description desc,

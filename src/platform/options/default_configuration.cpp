@@ -300,7 +300,7 @@ std::shared_ptr<mo::Option> mo::DefaultConfiguration::global_options() const
     return options;
 }
 
-auto mo::DefaultConfiguration::the_options_for(SharedLibrary const& module) const -> std::shared_ptr<Option>
+auto mo::DefaultConfiguration::options_for(SharedLibrary const& module) const -> std::shared_ptr<Option>
 {
     auto parsed_options = module_options[module.get_handle()];
     if (!parsed_options)

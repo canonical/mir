@@ -178,7 +178,7 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
                 display_platforms.push_back(
                     create_display_platform(
                         device,
-                        the_options_provider()->the_options_for(*platform),
+                        the_options_provider()->options_for(*platform),
                         the_emergency_cleanup(),
                         the_console_services(),
                         the_display_report()));
@@ -302,7 +302,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                     create_rendering_platform(
                         device,
                         display_targets,
-                        *the_options_provider()->the_options_for(*platform),
+                        *the_options_provider()->options_for(*platform),
                         *the_emergency_cleanup()));
                 // Add this module to the list searched by the input stack later
                 // TODO: Come up with a more principled solution for combined input/rendering/output platforms

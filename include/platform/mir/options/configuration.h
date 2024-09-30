@@ -78,7 +78,7 @@ public:
     /**
      * All options, including those added by the specified module
      */
-    virtual auto the_options_for(SharedLibrary const& module) const -> std::shared_ptr<options::Option> = 0;
+    virtual auto options_for(SharedLibrary const& module) const -> std::shared_ptr<options::Option> = 0;
 
 protected:
     Configuration() = default;

@@ -193,7 +193,7 @@ public:
         return std::make_shared<mo::ProgramOption>();
     }
 
-    auto the_options_for(mir::SharedLibrary const& /*module*/) const -> std::shared_ptr<mo::Option> override
+    auto options_for(mir::SharedLibrary const& /*module*/) const -> std::shared_ptr<mo::Option> override
     {
         return std::make_shared<mo::ProgramOption>();
     }
