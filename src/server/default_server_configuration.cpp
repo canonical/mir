@@ -56,7 +56,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
 {
 }
 
-mir::DefaultServerConfiguration::DefaultServerConfiguration(std::shared_ptr<mo::OptionsProvider> const& configuration_options) :
+mir::DefaultServerConfiguration::DefaultServerConfiguration(std::shared_ptr<mo::Configuration> const& configuration_options) :
     configuration_options(configuration_options),
     enabled_wayland_extensions(frontend::get_standard_extensions())
 {
@@ -69,7 +69,7 @@ auto mir::DefaultServerConfiguration::the_options() const
 }
 
 auto mir::DefaultServerConfiguration::the_options_provider() const
-    -> std::shared_ptr<mo::OptionsProvider>
+    -> std::shared_ptr<mo::Configuration>
 {
     return configuration_options;
 }

@@ -28,7 +28,7 @@ namespace mir
 {
 namespace options
 {
-class DefaultConfiguration : public OptionsProvider
+class DefaultConfiguration : public Configuration
 {
 public:
     DefaultConfiguration(int argc, char const* argv[]);

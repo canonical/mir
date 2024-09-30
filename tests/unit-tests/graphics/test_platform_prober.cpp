@@ -182,7 +182,7 @@ public:
 #endif
 };
 
-class StubOptionsProvider : public mo::OptionsProvider
+class StubOptionsProvider : public mo::Configuration
 {
 public:
     StubOptionsProvider() = default;
@@ -653,7 +653,7 @@ public:
         return *(options->global_options());
     }
 
-    auto the_options_provider() -> mo::OptionsProvider const&
+    auto the_options_provider() -> mo::Configuration const&
     {
         if (!options)
         {
@@ -683,7 +683,7 @@ private:
      * would call mo::Configuration::~Configiration and fail, whereas std::make_shared<mo::DefaultConfiguration> will capture
      * mo::DefaultConfiguration::~DefaultConfiguration and compile.
      */
-    std::shared_ptr<mo::OptionsProvider> options;
+    std::shared_ptr<mo::Configuration> options;
     std::shared_ptr<mir::SharedLibraryProberReport> const report;
 
     std::vector<std::unique_ptr<mtf::TemporaryEnvironmentValue>> temporary_env;

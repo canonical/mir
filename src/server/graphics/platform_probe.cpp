@@ -282,7 +282,7 @@ auto mg::modules_for_device(
 
 auto mir::graphics::display_modules_for_device(
     std::vector<std::shared_ptr<SharedLibrary>> const& modules,
-    mo::OptionsProvider const& options,
+    mo::Configuration const& options,
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>
 {
     return modules_for_device(
@@ -297,7 +297,7 @@ auto mir::graphics::display_modules_for_device(
 auto mir::graphics::rendering_modules_for_device(
     std::vector<std::shared_ptr<SharedLibrary>> const& modules,
     std::span<std::shared_ptr<DisplayPlatform>> const& platforms,
-    mo::OptionsProvider const& options,
+    mo::Configuration const& options,
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>
 {
     return modules_for_device(
@@ -392,7 +392,7 @@ auto dso_filename_alphabetically_before(mir::SharedLibrary const& a, mir::Shared
 }
 
 auto mg::select_display_modules(
-    options::OptionsProvider const& options,
+    options::Configuration const& options,
     std::shared_ptr<ConsoleServices> const& console,
     SharedLibraryProberReport& lib_loader_report)
     -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>

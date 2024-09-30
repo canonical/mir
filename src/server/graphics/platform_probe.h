@@ -29,7 +29,7 @@ class ConsoleServices;
 
 namespace options
 {
-class OptionsProvider;
+class Configuration;
 }
 
 namespace graphics
@@ -61,19 +61,19 @@ auto probe_rendering_module(
 
 auto display_modules_for_device(
     std::vector<std::shared_ptr<SharedLibrary>> const& modules,
-    options::OptionsProvider const& options,
+    options::Configuration const& options,
     std::shared_ptr<ConsoleServices> const& console)
     -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>;
 
 auto rendering_modules_for_device(
     std::vector<std::shared_ptr<SharedLibrary>> const& modules,
     std::span<std::shared_ptr<DisplayPlatform>> const& platforms,
-    options::OptionsProvider const& options,
+    options::Configuration const& options,
     std::shared_ptr<ConsoleServices> const& console)
     -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>;
 
 auto select_display_modules(
-    options::OptionsProvider const& options,
+    options::Configuration const& options,
     std::shared_ptr<ConsoleServices> const& console,
     SharedLibraryProberReport& lib_loader_report)
     -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>;

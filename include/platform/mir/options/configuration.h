@@ -68,7 +68,7 @@ extern char const* const auto_console;
 
 extern char const* const vt_option_name;
 
-class OptionsProvider
+class Configuration
 {
 public:
     /**
@@ -81,11 +81,11 @@ public:
     virtual auto the_options_for(SharedLibrary const& module) const -> std::shared_ptr<options::Option> = 0;
 
 protected:
-    OptionsProvider() = default;
-    virtual ~OptionsProvider() = default;
+    Configuration() = default;
+    virtual ~Configuration() = default;
 
-    OptionsProvider(OptionsProvider const&) = delete;
-    OptionsProvider& operator=(OptionsProvider const&) = delete;
+    Configuration(Configuration const&) = delete;
+    Configuration& operator=(Configuration const&) = delete;
 };
 }
 }

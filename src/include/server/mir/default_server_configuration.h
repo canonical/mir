@@ -138,7 +138,7 @@ class Logger;
 namespace options
 {
 class Option;
-class OptionsProvider;
+class Configuration;
 }
 
 namespace report
@@ -161,7 +161,7 @@ class DefaultServerConfiguration : public virtual ServerConfiguration
 {
 public:
     DefaultServerConfiguration(int argc, char const* argv[]);
-    explicit DefaultServerConfiguration(std::shared_ptr<options::OptionsProvider> const& configuration_options);
+    explicit DefaultServerConfiguration(std::shared_ptr<options::Configuration> const& configuration_options);
 
     /** @name DisplayServer dependencies
      * dependencies of DisplayServer on the rest of the Mir
@@ -348,7 +348,7 @@ public:
 
 protected:
     std::shared_ptr<options::Option> the_options() const;
-    auto the_options_provider() const -> std::shared_ptr<options::OptionsProvider>;
+    auto the_options_provider() const -> std::shared_ptr<options::Configuration>;
     std::shared_ptr<input::DefaultInputDeviceHub>  the_default_input_device_hub();
     std::shared_ptr<graphics::DisplayConfigurationObserver> the_display_configuration_observer();
     std::shared_ptr<input::SeatObserver> the_seat_observer();
@@ -436,7 +436,7 @@ protected:
     std::shared_ptr<DecorationStrategy> decoration_strategy;
 
 private:
-    std::shared_ptr<options::OptionsProvider> const configuration_options;
+    std::shared_ptr<options::Configuration> const configuration_options;
     std::shared_ptr<input::EventFilter> default_filter;
     CachedPtr<ObserverMultiplexer<graphics::DisplayConfigurationObserver>>
         display_configuration_observer_multiplexer;
