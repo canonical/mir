@@ -96,6 +96,7 @@ struct TestConfigFile : PendingLoad, miral::TestServer
     void TearDown() override
     {
         testing::Mock::VerifyAndClearExpectations(this);
+        wait_for_load();
         miral::TestServer::TearDown();
     }
 };
