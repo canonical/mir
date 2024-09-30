@@ -92,6 +92,12 @@ struct TestConfigFile : PendingLoad, miral::TestServer
         miral::TestServer::SetUp();
         ON_CALL(*this, load(testing::_, testing::_)).WillByDefault([this]{ notify_load(); });
     }
+
+    void TearDown() override
+    {
+        testing::Mock::VerifyAndClearExpectations(this);
+        miral::TestServer::TearDown();
+    }
 };
 
 char const* const home = "/tmp/test_reloading_config_file/home";
