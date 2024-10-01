@@ -95,9 +95,18 @@ struct TestConfigFile : PendingLoad, miral::TestServer
 
     void TearDown() override
     {
+        puts("====>> Before testing::Mock::VerifyAndClearExpectations() <<====");
         testing::Mock::VerifyAndClearExpectations(this);
+        puts("====>> After testing::Mock::VerifyAndClearExpectations() <<====");
         wait_for_load();
+        puts("====>> Before miral::TestServer::TearDown() <<====");
         miral::TestServer::TearDown();
+        puts("====>> After miral::TestServer::TearDown() <<====");
+    }
+
+    ~TestConfigFile()
+    {
+        puts("====>> TestConfigFile::~TestConfigFile() <<====");
     }
 };
 
