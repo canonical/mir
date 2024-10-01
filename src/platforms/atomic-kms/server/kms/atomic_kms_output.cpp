@@ -19,11 +19,13 @@
 #include "kms-utils/drm_mode_resources.h"
 #include "kms_framebuffer.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/graphics/drm_formats.h"
 #include "mir/graphics/gamma_curves.h"
 #include "mir_toolkit/common.h"
 #include "kms-utils/kms_connector.h"
 #include "mir/fatal.h"
 #include "mir/log.h"
+#include <drm_fourcc.h>
 #include <drm_mode.h>
 #include <span>
 #include <string.h> // strcmp
@@ -113,6 +115,11 @@ public:
          * have copied the data into a suitably-aligned allocation
          */
         return std::span{static_cast<T const*>(ptr->data), ptr->length / sizeof(T)};
+    }
+
+    auto raw() const -> drmModePropertyBlobRes const*
+    {
+        return ptr;
     }
 private:
     drmModePropertyBlobPtr const ptr;
@@ -647,6 +654,42 @@ std::vector<uint8_t> edid_for_connector(mir::Fd const& drm_fd, uint32_t connecto
 
     return edid;
 }
+
+auto formats_for_output(mir::Fd const& drm_fd, mgk::DRMModeConnectorUPtr const& connector) -> std::vector<mg::DRMFormat>
+{
+    auto [_, plane] = mgk::find_crtc_with_primary_plane(drm_fd, connector);
+
+    mgk::ObjectProperties plane_props{drm_fd, plane->plane_id, DRM_MODE_OBJECT_PLANE};
+
+    if (!plane_props.has_property("IN_FORMATS"))
+    {
+        return {mg::DRMFormat{DRM_FORMAT_ARGB8888}, mg::DRMFormat{DRM_FORMAT_XRGB8888} };
+    }
+
+    PropertyBlobData format_blob{drm_fd, static_cast<uint32_t>(plane_props["IN_FORMATS"])};
+    drmModeFormatModifierIterator iter{};
+
+    std::vector<mg::DRMFormat> supported_formats;
+    while (drmModeFormatModifierBlobIterNext(format_blob.raw(), &iter))
+    {
+        /* This will iterate over {format, modifier} pairs, with all the modifiers for a single
+         * format in a block. For example:
+         * {fmt1, mod1}
+         * {fmt1, mod2}
+         * {fmt1, mod3}
+         * {fmt2, mod2}
+         * {fmt2, mod4}
+         * ...
+         *
+         * We only care about the format, so we only add when we see a new format
+         */
+        if (supported_formats.empty() || supported_formats.back() != iter.fmt)
+        {
+            supported_formats.emplace_back(iter.fmt);
+        }
+    }
+    return supported_formats;
+}
 }
 
 void mga::AtomicKMSOutput::update_from_hardware_state(
@@ -660,8 +703,17 @@ void mga::AtomicKMSOutput::update_from_hardware_state(
     uint32_t current_mode_index{invalid_mode_index};
     uint32_t preferred_mode_index{invalid_mode_index};
     std::vector<DisplayConfigurationMode> modes;
-    std::vector<MirPixelFormat> formats{mir_pixel_format_argb_8888, // PULL THESE OUT OF THE PROPERTIES
-                                        mir_pixel_format_xrgb_8888};
+    std::vector<MirPixelFormat> formats;
+
+    auto supported_formats = formats_for_output(drm_fd_, connector);
+    formats.reserve(supported_formats.size());
+    for (auto const& format : supported_formats)
+    {
+        if (auto mir_format = format.as_mir_format())
+        {
+            formats.push_back(*mir_format);
+        }
+    }
 
     std::vector<uint8_t> edid;
     if (connected)
