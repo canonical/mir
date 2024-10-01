@@ -667,8 +667,7 @@ auto formats_for_output(mir::Fd const& drm_fd, mgk::DRMModeConnectorUPtr const& 
     }
 
     PropertyBlobData format_blob{drm_fd, static_cast<uint32_t>(plane_props["IN_FORMATS"])};
-    drmModeFormatModifierIterator iter;
-    memset(&iter, 0, sizeof(iter));
+    drmModeFormatModifierIterator iter{};
 
     std::vector<mg::DRMFormat> supported_formats;
     while (drmModeFormatModifierBlobIterNext(format_blob.raw(), &iter))
@@ -686,7 +685,7 @@ auto formats_for_output(mir::Fd const& drm_fd, mgk::DRMModeConnectorUPtr const& 
          */
         if (supported_formats.empty() || supported_formats.back() != iter.fmt)
         {
-            supported_formats.push_back(mg::DRMFormat{iter.fmt});
+            supported_formats.emplace_back(iter.fmt);
         }
     }
     return supported_formats;
