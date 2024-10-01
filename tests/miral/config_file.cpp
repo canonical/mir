@@ -101,12 +101,12 @@ struct TestConfigFile : PendingLoad, miral::TestServer
         // wait_for_load();
         // puts("====>> Before miral::TestServer::TearDown() <<====");
         miral::TestServer::TearDown();
-        puts("====>> After miral::TestServer::TearDown() <<====");
+        // puts("====>> After miral::TestServer::TearDown() <<====");
     }
 
     ~TestConfigFile()
     {
-        puts("====>> TestConfigFile::~TestConfigFile() <<====");
+        // puts("====>> TestConfigFile::~TestConfigFile() <<====");
     }
 };
 
