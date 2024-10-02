@@ -95,7 +95,7 @@ struct TestConfigFile : PendingLoad, miral::TestServer
 
     void TearDown() override
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds{10});
+        puts("====>> Before testing::Mock::VerifyAndClearExpectations() <<====");
         testing::Mock::VerifyAndClearExpectations(this);
         miral::TestServer::TearDown();
     }
