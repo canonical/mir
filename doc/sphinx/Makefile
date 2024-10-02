@@ -66,6 +66,31 @@ pa11y-install:
 		}
 
 install: $(VENVDIR)
+	sudo apt install -y \
+	cmake \
+	doxygen \
+	libboost-dev \
+	libboost-iostreams-dev \
+	libboost-filesystem-dev \
+	libboost-program-options-dev \
+	libboost-system-dev \
+	libdrm-dev \
+	libegl-dev \
+	libepoxy-dev \
+	libfreetype-dev \
+	libglib2.0-dev \
+	libgles2-mesa-dev \
+	libglm-dev \
+	libinput-dev \
+	liblttng-ust-dev \
+	libwayland-dev \
+	libxcb-composite0-dev \
+	libxcb-randr0-dev \
+	libxcursor-dev \
+	libxkbcommon-dev \
+	libxml++2.6-dev \
+	libyaml-cpp-dev \
+	xsltproc \
 
 run: install
 	. $(VENV); sphinx-autobuild -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
