@@ -99,6 +99,10 @@ struct TestConfigFile : PendingLoad, miral::TestServer
         testing::Mock::VerifyAndClearExpectations(this);
         miral::TestServer::TearDown();
     }
+
+    ~TestConfigFile()
+    {
+    }
 };
 
 char const* const home = "/tmp/test_reloading_config_file/home";
