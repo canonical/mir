@@ -36,6 +36,10 @@ full-help: $(VENVDIR)
 	@echo "\n\033[1;31mNOTE: This help texts shows unsupported targets!\033[0m"
 	@echo "Run 'make help' to see supported targets."
 
+configure:
+	. $(VENV); \
+	cmake ../../ -B ../build_doc -DMIR_ENABLE_TESTS=NO -DMIR_PLATFORM=x11;
+
 # Shouldn't assume that venv is available on Ubuntu by default; discussion here:
 # https://bugs.launchpad.net/ubuntu/+source/python3.4/+bug/1290847
 $(SPHINXDIR)/requirements.txt:
@@ -96,8 +100,8 @@ run: install
 	. $(VENV); sphinx-autobuild -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
 
 # Doesn't depend on $(BUILDDIR) to rebuild properly at every run.
-html: install
-	. $(VENV); $(SPHINXBUILD) -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" -w $(SPHINXDIR)/warnings.txt $(SPHINXOPTS)
+html: install configure
+	@. $(VENV); cd ../build_doc/doc/sphinx; $(SPHINXBUILD) -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" -w $(SPHINXDIR)/warnings.txt $(SPHINXOPTS)
 
 epub: install
 	. $(VENV); $(SPHINXBUILD) -b epub "$(SOURCEDIR)" "$(BUILDDIR)" -w $(SPHINXDIR)/warnings.txt $(SPHINXOPTS)
@@ -116,7 +120,7 @@ clean-doc:
 	rm -rf $(SPHINXDIR)/.doctrees
 
 spelling: html
-	. $(VENV) ; python3 -m pyspelling -c $(SPHINXDIR)/spellingcheck.yaml -j $(shell nproc)
+	. $(VENV) ; cd ../build_doc/doc/sphinx/; python3 -m pyspelling -c $(SPHINXDIR)/spellingcheck.yaml -j $(shell nproc)
 
 linkcheck: install
 	. $(VENV) ; $(SPHINXBUILD) -b linkcheck "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
