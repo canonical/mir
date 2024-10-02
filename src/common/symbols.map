@@ -485,7 +485,6 @@ global:
     non-virtual?thunk?to?mir::logging::Logger::log*;
     non-virtual?thunk?to?mir::logging::MultiLogger::log*;
     operator*;
-    std::hash?mir::SharedLibrary::Handle?::operator*;
     typeinfo?for?MirInputConfig;
     typeinfo?for?MirInputDevice;
     typeinfo?for?MirKeyboardConfig;
@@ -500,7 +499,6 @@ global:
     typeinfo?for?mir::IntOwnedFd;
     typeinfo?for?mir::NonBlockingExecutor;
     typeinfo?for?mir::PosixRWMutex;
-    typeinfo?for?mir::SharedLibrary::Handle;
     typeinfo?for?mir::SharedLibrary;
     typeinfo?for?mir::SharedLibraryProberReport;
     typeinfo?for?mir::Signal;
@@ -704,5 +702,7 @@ MIR_COMMON_2.19 {
     mir::SharedLibrary::Handle::?Handle*;
     mir::SharedLibrary::Handle::operator*;
     mir::SharedLibrary::get_handle*;
+    std::hash?mir::SharedLibrary::Handle?::operator*;
+    typeinfo?for?mir::SharedLibrary::Handle;
   };
 } MIR_COMMON_2.18;
