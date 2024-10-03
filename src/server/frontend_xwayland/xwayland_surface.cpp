@@ -721,7 +721,6 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         // May be overridden by anything in the pending spec
         spec.width = cached.geometry.size.width;
         spec.height = cached.geometry.size.height;
-        spec.top_left = cached.geometry.top_left;
         spec.type = mir_window_type_freestyle;
         spec.state = state.active_mir_state();
     }
