@@ -130,6 +130,7 @@ woke: woke-install
 	    -c https://github.com/canonical/Inclusive-naming/raw/main/config.yml
 
 pa11y: pa11y-install html
+	cd ../build_doc/doc/sphinx; \
 	find $(BUILDDIR) -name *.html -print0 | xargs -n 1 -0 $(PA11Y)
 
 # Catch-all target: route all unknown targets to Sphinx using the new
