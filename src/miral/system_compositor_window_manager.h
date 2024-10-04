@@ -125,12 +125,6 @@ private:
         MirInputEvent const* event,
         MirResizeEdge edge) override;
 
-    int set_surface_attribute(
-        std::shared_ptr<mir::scene::Session> const& session,
-        std::shared_ptr<mir::scene::Surface> const& surface,
-        MirWindowAttrib attrib,
-        int value) override;
-
     void advise_output_create(Output const& output) override;
     void advise_output_update(Output const& updated, Output const& original) override;
     void advise_output_delete(Output const& output) override;

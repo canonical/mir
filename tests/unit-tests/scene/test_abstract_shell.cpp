@@ -471,25 +471,6 @@ TEST_F(AbstractShell, pointer_input_events_are_handled_by_window_manager)
     EXPECT_TRUE(shell.handle(*event));
 }
 
-TEST_F(AbstractShell, setting_surface_state_is_handled_by_window_manager)
-{
-    std::shared_ptr<ms::Session> const session =
-        shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane", std::shared_ptr<mf::EventSink>());
-
-    auto const params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto const surface = shell.create_surface(session, {}, params, nullptr, nullptr);
-
-    MirWindowState const state{mir_window_state_fullscreen};
-
-    EXPECT_CALL(*wm, set_surface_attribute(session, surface, mir_window_attrib_state, state))
-        .WillOnce(WithArg<1>(Invoke([](std::shared_ptr<ms::Surface> const& surface)
-             { surface->configure(mir_window_attrib_state, mir_window_state_maximized); return mir_window_state_maximized; })));
-
-    EXPECT_CALL(mock_surface, configure(mir_window_attrib_state, mir_window_state_maximized));
-
-    shell.set_surface_attribute(session, surface, mir_window_attrib_state, mir_window_state_fullscreen);
-}
-
 TEST_F(AbstractShell, as_focus_controller_set_focus_to_notifies_session_event_sink)
 {
     auto session = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane", std::shared_ptr<mf::EventSink>());

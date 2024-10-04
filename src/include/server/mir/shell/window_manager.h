@@ -67,12 +67,6 @@ public:
 
     virtual bool handle_pointer_event(MirPointerEvent const* event) = 0;
 
-    virtual int set_surface_attribute(
-        std::shared_ptr<scene::Session> const& session,
-        std::shared_ptr<scene::Surface> const& surface,
-        MirWindowAttrib attrib,
-        int value) = 0;
-
     virtual void handle_raise_surface(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,

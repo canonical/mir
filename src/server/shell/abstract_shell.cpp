@@ -399,23 +399,6 @@ void msh::AbstractShell::stop_prompt_session(
     prompt_session_manager->stop_prompt_session(prompt_session);
 }
 
-int msh::AbstractShell::set_surface_attribute(
-    std::shared_ptr<ms::Session> const& session,
-    std::shared_ptr<ms::Surface> const& surface,
-    MirWindowAttrib attrib,
-    int value)
-{
-    report->update_surface(*session, *surface, attrib, value);
-    return window_manager->set_surface_attribute(session, surface, attrib, value);
-}
-
-int msh::AbstractShell::get_surface_attribute(
-    std::shared_ptr<ms::Surface> const& surface,
-    MirWindowAttrib attrib)
-{
-    return surface->query(attrib);
-}
-
 void msh::AbstractShell::raise_surface(
     std::shared_ptr<ms::Session> const& session,
     std::shared_ptr<ms::Surface> const& surface,
