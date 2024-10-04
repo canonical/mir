@@ -36,6 +36,6 @@ int main(int argc, char const* argv[])
             display_config.layout_option(),
             set_window_management_policy<X11KioskWindowManagerPolicy>(),
             Keymap{},
-            X11Support{}
+            X11Support{}.default_to_enabled()
         });
 }
