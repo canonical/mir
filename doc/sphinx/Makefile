@@ -9,11 +9,12 @@ SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
 VENVDIR       = $(SPHINXDIR)/venv
-PA11Y         = $(SPHINXDIR)/node_modules/pa11y/bin/pa11y.js --config $(SPHINXDIR)/pa11y.json
+PA11YCI       = $(SPHINXDIR)/node_modules/pa11y-ci/bin/pa11y-ci.js --config $(SPHINXDIR)/pa11y-ci.json
 VENV          = $(VENVDIR)/bin/activate
+HTML	      := $(shell find $(BUILDDIR) -name *.html -print0)
 
-.PHONY: help full-help woke-install pa11y-install install run html epub serve \
-        clean clean-doc spelling linkcheck woke pa11y Makefile
+.PHONY: help full-help woke-install pa11y-ci-install install run html epub serve \
+        clean clean-doc spelling linkcheck woke pa11y-ci Makefile
 
 # Put it first so that "make" without argument is like "make help".
 help:
@@ -27,7 +28,7 @@ help:
         "* check links: make linkcheck \n" \
         "* check spelling: make spelling \n" \
         "* check inclusive language: make woke \n" \
-        "* check accessibility: make pa11y \n" \
+        "* check accessibility: make pa11y-ci \n" \
         "* other possible targets: make <press TAB twice> \n" \
         "--------------------------------------------------------------- \n"
 
@@ -62,11 +63,11 @@ woke-install:
 	@type woke >/dev/null 2>&1 || \
             { echo "Installing \"woke\" snap... \n"; sudo snap install woke; }
 
-pa11y-install:
-	@type $(PA11Y) >/dev/null 2>&1 || { \
-			echo "Installing \"pa11y\" from npm... \n"; \
+pa11y-ci-install:
+	@type $(PA11YCI) >/dev/null 2>&1 || { \
+			echo "Installing \"pa11y-ci\" from npm... \n"; \
 			mkdir -p $(SPHINXDIR)/node_modules/ ; \
-			npm install --prefix $(SPHINXDIR) pa11y; \
+			npm install --prefix $(SPHINXDIR) pa11y-ci; \
 		}
 
 install: $(VENVDIR)
@@ -102,9 +103,9 @@ run: install
 # Doesn't depend on $(BUILDDIR) to rebuild properly at every run.
 html: install configure
 	# Don't rebuild html if already built
-	if [ -f "../build_doc/doc/sphinx/_build/index.html" ]; then exit 0; fi; \
-	. $(VENV); \
 	cd ../build_doc/doc/sphinx; \
+	. $(VENV); \
+	if [ -f "_build/index.html" ]; then exit 0; fi; \
 	$(SPHINXBUILD) -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" -w $(SPHINXDIR)/warnings.txt $(SPHINXOPTS)
 
 epub: install
@@ -133,9 +134,8 @@ woke: woke-install
 	woke *.rst **/*.rst --exit-1-on-failure \
 	    -c https://github.com/canonical/Inclusive-naming/raw/main/config.yml
 
-pa11y: pa11y-install html
-	cd ../build_doc/doc/sphinx; \
-	find $(BUILDDIR) -name *.html -print0 | xargs -n 1 -0 $(PA11Y)
+pa11y-ci: pa11y-ci-install html
+	$(PA11YCI) $(shell find $(WORKSPHINX)/_build -name *.html -not -path '$(WORKSPHINX)/_build/api/*');
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
