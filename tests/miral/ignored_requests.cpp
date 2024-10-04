@@ -118,12 +118,6 @@ TEST_P(IgnoredRequests, remove_unknown_surface_noops)
     basic_window_manager.remove_surface(session, window);
 }
 
-TEST_P(IgnoredRequests, set_attribute_on_unknown_surface_noops)
-{
-    auto const window = GetParam().window(*this);
-    basic_window_manager.set_surface_attribute(session, window, mir_window_attrib_state, mir_window_state_maximized);
-}
-
 TEST_P(IgnoredRequests, raise_unknown_surface_noops)
 {
     auto const window = GetParam().window(*this);

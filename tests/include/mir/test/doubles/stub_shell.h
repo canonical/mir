@@ -156,22 +156,6 @@ struct StubShell : public shell::Shell
     {
     }
 
-    int set_surface_attribute(
-        std::shared_ptr<scene::Session> const& /*session*/,
-        std::shared_ptr<scene::Surface> const& /*surface*/,
-        MirWindowAttrib /*attrib*/,
-        int value) override
-    {
-        return value;
-    }
-
-    int get_surface_attribute(
-        std::shared_ptr<scene::Surface> const& /*surface*/,
-        MirWindowAttrib /*attrib*/) override
-    {
-        return 0;
-    }
-
     void raise_surface(
         std::shared_ptr<scene::Session> const& /*session*/,
         std::shared_ptr<scene::Surface> const& /*surface*/,

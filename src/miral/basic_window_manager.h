@@ -122,12 +122,6 @@ public:
         MirInputEvent const* event,
         ::MirResizeEdge edge) override;
 
-    int set_surface_attribute(
-        std::shared_ptr<mir::scene::Session> const& /*application*/,
-        std::shared_ptr<mir::scene::Surface> const& surface,
-        MirWindowAttrib attrib,
-        int value) override;
-
     auto create_workspace() -> std::shared_ptr<Workspace> override;
 
     void add_tree_to_workspace(Window const& window, std::shared_ptr<Workspace> const& workspace) override;

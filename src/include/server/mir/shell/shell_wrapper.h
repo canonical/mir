@@ -85,16 +85,6 @@ public:
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface) override;
 
-    int set_surface_attribute(
-        std::shared_ptr<scene::Session> const& session,
-        std::shared_ptr<scene::Surface> const& surface,
-        MirWindowAttrib attrib,
-        int value) override;
-
-    int get_surface_attribute(
-        std::shared_ptr<scene::Surface> const& surface,
-        MirWindowAttrib attrib) override;
-
     void raise_surface(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
