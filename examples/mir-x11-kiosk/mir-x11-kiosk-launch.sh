@@ -9,7 +9,7 @@ unset WAYLAND_DISPLAY
 # ${x11_display_file} will contain the X11 display
 x11_display_file=$(mktemp)
 
-MIR_SERVER_ENABLE_X11=1 "${bindir}"mir-x11-kiosk --x11-displayfd 5 5>"${x11_display_file}"&
+"${bindir}"mir-x11-kiosk --x11-displayfd 5 5>"${x11_display_file}"&
 mir_kiosk_x11_pid=$!
 
 inotifywait --event close_write "${x11_display_file}"
