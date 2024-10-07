@@ -155,8 +155,8 @@ private:
 
     /// If the committed window size was set explicitly, rather than being taken from the buffer size
     /// @{
-    bool committed_width_set_explicitly{false};
-    bool committed_height_set_explicitly{false};
+    std::optional<geometry::Width> committed_width_set_explicitly;
+    std::optional<geometry::Height> committed_height_set_explicitly;
     /// @}
 
     /// The min and max size of the window as of last commit
