@@ -9,7 +9,7 @@ matrix:
     - .custom_wordlist.txt
     output: .sphinx/.wordlist.dic
   sources:
-  - _build/**/*.html|!_build/**/api/**/*.html
+  - _build/**/*.html|!_build/**/api/**/*.html|!_build/genindex/index.html
   pipeline:
   - pyspelling.filters.html:
       comments: false
@@ -27,3 +27,6 @@ matrix:
       - div.visually-hidden
       - img
       - a.p-navigation__link
+      - li:matches(.toctree-l3, .toctree-l2) # ignore table of content tags
+      - div:matches(.mermaid)                # ignore mermaid.js diagrams
+      - div:matches(.brand, .sidebar-sticky) # ignore version hash in desktop and mobile views
