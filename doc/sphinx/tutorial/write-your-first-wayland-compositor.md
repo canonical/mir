@@ -20,8 +20,8 @@ This tutorial assumes that:
 ## Installing dependencies
 
 The example program requires 
-* `libmiral`- a library for Mir abstraction layer
-* `mir-graphics-drivers-desktop` - a display server 
+* `libmiral` - short for "Mir Abstraction Layer". Provides a high level interface to interact with and customize Mir compositors.
+* `mir-graphics-drivers-desktop` - provides drivers so Mir can talk with different graphics drivers
 
 Install dependencies on Debian or derivatives:
 ```sh
@@ -44,7 +44,7 @@ sudo apk add mir-dev
 
 ## Coding a Mir compositor
 
-The following code which defines a barebone Mir compositor:
+The following code defines a barebones Mir compositor:
 
 ```cpp
 #include <miral/runner.h>
@@ -65,9 +65,9 @@ int main(int argc, char const* argv[])
 ```
 
 
-`MirRunner` is a class from the `libmiral` library that that provides a  high level interface for  Mir.
+`MirRunner` is a class from `libmiral` that acts as the "entry point" of your compositor.
 
-`MirRunner runner` calls `run_with()` which specifies different fucntions of the composer. In this example, `run_with()` evokes a function `set_window_management_policy` that applies `MinimalWindowManager` policy to `runner`. The composer is therefore created with basic window management capabilities such as controlling multiple windows, minimizing and maximizing, and handling mouse input. 
+`MirRunner runner` creates a `runner` object that can be used to configure your compositor.  To run the compositor you call `runner.run_with(...)`, passing in different components to customize the behavior of the compositor. In this example, `run_with()` is passed a function `set_window_management_policy` that applies a `MinimalWindowManager` policy to the compositor. The compositor is therefore created with basic window management capabilities such as controlling multiple windows, minimizing and maximizing, and handling mouse input. 
 
 Through the `runner`, you can add different functionality to the composer: enabling onscreen keyboards, screen capture, pointer confinement, and so on. 
 
