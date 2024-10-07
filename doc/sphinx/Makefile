@@ -11,7 +11,17 @@ BUILDDIR      = _build
 VENVDIR       = $(SPHINXDIR)/venv
 PA11YCI       = $(SPHINXDIR)/node_modules/pa11y-ci/bin/pa11y-ci.js --config $(SPHINXDIR)/pa11y-ci.json
 VENV          = $(VENVDIR)/bin/activate
-HTML	      := $(shell find $(BUILDDIR) -name *.html -print0)
+WORKDIR	      = ../build_doc
+WORKSPHINX    = $(WORKDIR)/doc/sphinx
+PROJROOT      = ../..
+DEPS	      = cmake doxygen libboost-dev libboost-iostreams-dev \
+		libboost-filesystem-dev libboost-program-options-dev \
+		libboost-system-dev libdrm-dev libegl-dev libepoxy-dev \
+		libfreetype-dev libglib2.0-dev libgles2-mesa-dev \
+		libglm-dev libinput-dev liblttng-ust-dev libwayland-dev \
+		libxcb-composite0-dev libxcb-randr0-dev libxcursor-dev \
+		libxkbcommon-dev libxml++2.6-dev libyaml-cpp-dev xsltproc
+
 
 .PHONY: help full-help woke-install pa11y-ci-install install run html epub serve \
         clean clean-doc spelling linkcheck woke pa11y-ci Makefile
@@ -39,7 +49,7 @@ full-help: $(VENVDIR)
 
 configure:
 	. $(VENV); \
-	cmake ../../ -B ../build_doc -DMIR_ENABLE_TESTS=NO -DMIR_PLATFORM=x11;
+	cmake $(PROJROOT) -B $(WORKDIR) -DMIR_ENABLE_TESTS=NO -DMIR_PLATFORM=x11;
 
 # Shouldn't assume that venv is available on Ubuntu by default; discussion here:
 # https://bugs.launchpad.net/ubuntu/+source/python3.4/+bug/1290847
@@ -71,45 +81,21 @@ pa11y-ci-install:
 		}
 
 install: $(VENVDIR)
-	sudo apt install -y \
-	cmake \
-	doxygen \
-	libboost-dev \
-	libboost-iostreams-dev \
-	libboost-filesystem-dev \
-	libboost-program-options-dev \
-	libboost-system-dev \
-	libdrm-dev \
-	libegl-dev \
-	libepoxy-dev \
-	libfreetype-dev \
-	libglib2.0-dev \
-	libgles2-mesa-dev \
-	libglm-dev \
-	libinput-dev \
-	liblttng-ust-dev \
-	libwayland-dev \
-	libxcb-composite0-dev \
-	libxcb-randr0-dev \
-	libxcursor-dev \
-	libxkbcommon-dev \
-	libxml++2.6-dev \
-	libyaml-cpp-dev \
-	xsltproc \
+	sudo apt install -y $(DEPS)
 
-run: install
-	. $(VENV); sphinx-autobuild -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
+run: install configure
+	. $(VENV); cd $(WORKSPHINX); sphinx-autobuild -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
 
 # Doesn't depend on $(BUILDDIR) to rebuild properly at every run.
 html: install configure
 	# Don't rebuild html if already built
-	cd ../build_doc/doc/sphinx; \
+	cd $(WORKSPHINX); \
 	. $(VENV); \
 	if [ -f "_build/index.html" ]; then exit 0; fi; \
 	$(SPHINXBUILD) -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" -w $(SPHINXDIR)/warnings.txt $(SPHINXOPTS)
 
-epub: install
-	. $(VENV); $(SPHINXBUILD) -b epub "$(SOURCEDIR)" "$(BUILDDIR)" -w $(SPHINXDIR)/warnings.txt $(SPHINXOPTS)
+epub: install configure
+	. $(VENV); cd $(WORKSPHINX); $(SPHINXBUILD) -b epub "$(SOURCEDIR)" "$(BUILDDIR)" -w $(SPHINXDIR)/warnings.txt $(SPHINXOPTS)
 
 serve: html
 	cd "$(BUILDDIR)"; python3 -m http.server 8000
@@ -119,17 +105,19 @@ clean: clean-doc
 	rm -rf $(VENVDIR)
 	rm -f $(SPHINXDIR)/requirements.txt
 	rm -rf $(SPHINXDIR)/node_modules/
+	rm -r $(WORKDIR)
 
 clean-doc:
 	git clean -fx "$(BUILDDIR)"
 	rm -rf $(SPHINXDIR)/.doctrees
 
 spelling: html
-	. $(VENV) ; cd ../build_doc/doc/sphinx/; python3 -m pyspelling -c $(SPHINXDIR)/spellingcheck.yaml -j $(shell nproc)
+	. $(VENV) ; cd $(WORKSPHINX); python3 -m pyspelling -c $(SPHINXDIR)/spellingcheck.yaml -j $(shell nproc)
 
 linkcheck: install
-	. $(VENV) ; $(SPHINXBUILD) -b linkcheck "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
+	. $(VENV) ; cd $(WORKSPHINX); $(SPHINXBUILD) -b linkcheck "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
 
+# No need to go to $(WORKSPHINX) since it works on raw source files
 woke: woke-install
 	woke *.rst **/*.rst --exit-1-on-failure \
 	    -c https://github.com/canonical/Inclusive-naming/raw/main/config.yml
