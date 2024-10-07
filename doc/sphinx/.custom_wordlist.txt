@@ -65,6 +65,7 @@ GLib
 glibc
 GPUs
 GTK
+hoc
 href
 https
 IdleHub
@@ -72,6 +73,7 @@ Igalia
 IMX
 InputDispatcher
 InputPlatform
+intel
 io
 IoT
 IPC
@@ -142,6 +144,7 @@ renderables
 RenderingPlatform
 replug
 RPi
+runtime
 sanitizer
 Sanitizer
 sanitizers
