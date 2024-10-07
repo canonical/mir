@@ -101,7 +101,11 @@ run: install
 
 # Doesn't depend on $(BUILDDIR) to rebuild properly at every run.
 html: install configure
-	@. $(VENV); cd ../build_doc/doc/sphinx; $(SPHINXBUILD) -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" -w $(SPHINXDIR)/warnings.txt $(SPHINXOPTS)
+	# Don't rebuild html if already built
+	if [ -f "../build_doc/doc/sphinx/_build/index.html" ]; then exit 0; fi; \
+	. $(VENV); \
+	cd ../build_doc/doc/sphinx; \
+	$(SPHINXBUILD) -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" -w $(SPHINXDIR)/warnings.txt $(SPHINXOPTS)
 
 epub: install
 	. $(VENV); $(SPHINXBUILD) -b epub "$(SOURCEDIR)" "$(BUILDDIR)" -w $(SPHINXDIR)/warnings.txt $(SPHINXOPTS)
