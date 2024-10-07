@@ -77,8 +77,8 @@ private:
     std::function<void(int argc, char const* const* argv)> const unparsed_arguments_handler;
     std::shared_ptr<boost::program_options::options_description> const program_options;
 
-    std::unordered_map<SharedLibrary::Handle, boost::program_options::options_description> module_options_desc;
-    std::unordered_map<SharedLibrary::Handle, std::shared_ptr<Option>> mutable module_options;
+    std::unordered_map<SharedLibrary::Handle, boost::program_options::options_description, SharedLibrary::Handle::HandleHash> module_options_desc;
+    std::unordered_map<SharedLibrary::Handle, std::shared_ptr<Option>, SharedLibrary::Handle::HandleHash> mutable module_options;
     std::shared_ptr<Option> mutable options;
 };
 }

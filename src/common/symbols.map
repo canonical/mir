@@ -691,18 +691,23 @@ global:
 };
 
 MIR_COMMON_2.18 {
-  global: extern "C++" {
+global:
+  extern "C++" {
     MirTouchpadConfig::disable_with_external_mouse*;
     mir::event_type_to_c_str*;
   };
 } MIR_COMMON_2.17;
 
 MIR_COMMON_2.19 {
-  global: extern "C++" {
+global:
+  extern "C++" {
     mir::SharedLibrary::Handle::?Handle*;
     mir::SharedLibrary::Handle::operator*;
     mir::SharedLibrary::get_handle*;
+    mir::SharedLibrary::Handle::HandleHash::operator*;
     std::hash?mir::SharedLibrary::Handle?::operator*;
     typeinfo?for?mir::SharedLibrary::Handle;
+    typeinfo?for?mir::SharedLibrary::Handle::HandleHash;
   };
 } MIR_COMMON_2.18;
+
