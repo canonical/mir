@@ -12,5 +12,7 @@ concurrency:
 jobs:
   documentation-checks:
     uses: canonical/documentation-workflows/.github/workflows/documentation-checks.yaml@main
+    env:
+      CI: 1
     with:
       working-directory: doc/sphinx

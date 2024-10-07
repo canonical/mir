@@ -22,6 +22,17 @@ DEPS	      = cmake doxygen libboost-dev libboost-iostreams-dev \
 		libxcb-composite0-dev libxcb-randr0-dev libxcursor-dev \
 		libxkbcommon-dev libxml++2.6-dev libyaml-cpp-dev xsltproc
 
+# If the environment variable `GITHUB_WORKFLOW` is empty, then we're running
+# locally and shouldn't depend on `_build/index.html` to build HTML (so even if
+# it exists, we'll rebuild)
+# On CI where the envvar is set, we should depend on `_build/index.html` so we
+# don't build multiple times (multiple invocations = multiple complete builds
+# even if files didn't change)
+ifeq ($(GITHUB_WORKFLOW), "")
+HTMLINDEX     = ""
+else
+HTMLINDEX     = $(WORKSPHINX)/_build/index.html
+endif
 
 .PHONY: help full-help woke-install pa11y-ci-install install run html epub serve \
         clean clean-doc spelling linkcheck woke pa11y-ci Makefile
@@ -86,13 +97,13 @@ install: $(VENVDIR)
 run: install configure
 	. $(VENV); cd $(WORKSPHINX); sphinx-autobuild -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
 
-# Doesn't depend on $(BUILDDIR) to rebuild properly at every run.
-html: install configure
-	# Don't rebuild html if already built
+$(HTMLINDEX):
 	cd $(WORKSPHINX); \
 	. $(VENV); \
-	if [ -f "_build/index.html" ]; then exit 0; fi; \
 	$(SPHINXBUILD) -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" -w $(SPHINXDIR)/warnings.txt $(SPHINXOPTS)
+
+# Make sure that HTML docs are built at least once
+html: install configure $(HTMLINDEX)
 
 epub: install configure
 	. $(VENV); cd $(WORKSPHINX); $(SPHINXBUILD) -b epub "$(SOURCEDIR)" "$(BUILDDIR)" -w $(SPHINXDIR)/warnings.txt $(SPHINXOPTS)
