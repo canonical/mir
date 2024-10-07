@@ -69,7 +69,7 @@ int main(int argc, char const* argv[])
 
 `MirRunner runner` creates a `runner` object that can be used to configure your compositor.  To run the compositor you call `runner.run_with(...)`, passing in different components to customize the behavior of the compositor. In this example, `run_with()` is passed a function `set_window_management_policy` that applies a `MinimalWindowManager` policy to the compositor. The compositor is therefore created with basic window management capabilities such as controlling multiple windows, minimizing and maximizing, and handling mouse input. 
 
-Through the `runner`, you can add different functionality to the composer: enabling onscreen keyboards, screen capture, pointer confinement, and so on. 
+The runner allows for even more customization: enabling onscreen keyboards, screen capture, pointer confinement, and so on. 
 
 ## Building a Mir composer
 
