@@ -91,9 +91,3 @@ auto mir::SharedLibrary::Handle::operator<=>(Handle const& rhs) const -> std::st
 {
     return handle <=> rhs.handle;
 }
-
-auto std::hash<mir::SharedLibrary::Handle>::operator()(mir::SharedLibrary::Handle const& handle) const noexcept
-    -> std::size_t
-{
-    return std::hash<void*>{}(handle.handle);
-}
