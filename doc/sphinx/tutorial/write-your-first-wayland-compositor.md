@@ -23,7 +23,7 @@ The example program requires
 * `libmiral`- a library for Mir abstraction layer
 * `mir-graphics-drivers-desktop` - a display server 
 
-Install dependecnices on Debian and its derivatives:
+Install dependencies on Debian or derivatives:
 ```sh
 sudo apt install libmiral-dev mir-graphics-drivers-desktop
 ```
@@ -35,7 +35,7 @@ Instal dependencies on Fedora:
 ```sh
 sudo dnf install mir-devel libxkbcommon
 ```
-Instal dependencies on Alpine:
+Install dependencies on Alpine:
 ```sh
 sudo apk add mir-dev
 ```
@@ -69,7 +69,7 @@ int main(int argc, char const* argv[])
 
 `MirRunner runner` calls `run_with()` which specifies different fucntions of the composer. In this example, `run_with()` evokes a function `set_window_management_policy` that applies `MinimalWindowManager` policy to `runner`. The composer is therefore created with basic window management capabilities such as controlling multiple windows, minimizing and maximizing, and handling mouse input. 
 
-Through this syntax, you can add different functionality to the conposer such as different onscreen keyboards, screen capture, pointer confinement, and so on. 
+Through the `runner`, you can add different functionality to the composer: enabling onscreen keyboards, screen capture, pointer confinement, and so on. 
 
 ## Building a Mir composer
 
@@ -106,13 +106,13 @@ For example, to run inside an existing Wayland session:
 ```sh
 WAYLAND_DISPLAY=wayland-99 ./build/demo-mir-compositor
 ```
-An all-black window with the compositor will pop up. Try moving it around the screen, maximizing and minimazing it. This functionality is provided by the `MinimalWindowManager` policy that you have added to your composer. 
+An all-black window with the compositor will pop up.
 
 To change the black background of the window and display some content instead, open another terminal and run:
 ```sh
 WAYLAND_DISPLAY=wayland-99 bomber
 ```
-You can replace `bomber` with any other Wayland-compatible application.
+Try moving it around the screen, maximizing and minimazing it. This functionality is provided by the `MinimalWindowManager` policy that you have added to your composer. You can replace `bomber` with any other Wayland-compatible application.
 
 ## Next steps
 Now that you have your base compositor working, check out these guides on how to further develop your compositor:
