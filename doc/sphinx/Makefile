@@ -97,13 +97,10 @@ install: $(VENVDIR)
 run: install configure
 	. $(VENV); cd $(WORKSPHINX); sphinx-autobuild -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
 
-$(HTMLINDEX):
+html: install configure
 	cd $(WORKSPHINX); \
 	. $(VENV); \
 	$(SPHINXBUILD) -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" -w $(SPHINXDIR)/warnings.txt $(SPHINXOPTS)
-
-# Make sure that HTML docs are built at least once
-html: install configure $(HTMLINDEX)
 
 epub: install configure
 	. $(VENV); cd $(WORKSPHINX); $(SPHINXBUILD) -b epub "$(SOURCEDIR)" "$(BUILDDIR)" -w $(SPHINXDIR)/warnings.txt $(SPHINXOPTS)
