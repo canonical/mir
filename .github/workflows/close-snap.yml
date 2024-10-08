@@ -24,5 +24,5 @@ jobs:
           snapcraft close "$snap" "edge/mir-pr${{ github.event.number }}" || true
         done
         for snap in mir-test-tools ubuntu-frame; do
-          snapcraft close "$snap" "22/edge/mir-pr${{ github.event.number }}" || true
+          snapcraft close "$snap" "24/edge/mir-pr${{ github.event.number }}" || true
         done
