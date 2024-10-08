@@ -31,7 +31,7 @@ sudo apt install libmiral-dev mir-graphics-drivers-desktop
 <details>
 <summary> Installing Dependencies on Other Distros </summary>
 
-Instal dependencies on Fedora:
+Install dependencies on Fedora:
 ```sh
 sudo dnf install mir-devel libxkbcommon
 ```
