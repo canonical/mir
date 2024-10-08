@@ -96,8 +96,6 @@ struct TestConfigFile : PendingLoad, miral::TestServer
     void TearDown() override
     {
         reloading_config_file.reset();
-        stop_server();
-        testing::Mock::VerifyAndClearExpectations(this);
         miral::TestServer::TearDown();
     }
 };
