@@ -120,11 +120,6 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     if (framebuffers.size() == renderable_list.size() && display_sink.overlay(framebuffers))
     {
         report->renderables_in_frame(this, renderable_list);
-
-        // TODO: This is ugly, but its here for the purpose of showing more than one or two frames
-        if (auto dmabuf = std::dynamic_pointer_cast<mg::DMABufBuffer>(renderable_list[0]->buffer()))
-            dmabuf->on_consumed();
-
         renderer->suspend();
     }
     else
