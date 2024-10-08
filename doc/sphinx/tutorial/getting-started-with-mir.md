@@ -126,4 +126,4 @@ wayvnc
 ```
 A `wayvnc` server will start and will listen to `localhost`. 
 
-5. Run your VNC client and connect to `localhost`. You will see the exact view in both Mir compositor and the VNC viewer. 
+5. Run your VNC client and connect to `localhost`. You will see the exact same view in both the Mir compositor and the VNC viewer. 
