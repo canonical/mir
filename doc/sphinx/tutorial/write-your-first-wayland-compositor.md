@@ -71,7 +71,7 @@ int main(int argc, char const* argv[])
 
 The runner allows for even more customization: enabling onscreen keyboards, screen capture, pointer confinement, and so on. 
 
-## Building a Mir composer
+## Building a Mir compositor
 
 To compile this simple program, create a `CMakeLists.txt` file with the following content:
 
@@ -99,8 +99,8 @@ cmake -B build
 cmake --build build
 ```
 
-## Running a Mir composer
-You can run a composer nested in an X or Wayland session, or from a virtual terminal, just like the demo applications in [Getting started with Mir](learn-what-mir-can-do.md). 
+## Running a Mir compositor
+You can run a compositor nested in an X or Wayland session, or from a virtual terminal, just like the demo applications in [Getting started with Mir](getting-started-with-mir.md). 
 
 For example, to run inside an existing Wayland session:
 ```sh
@@ -112,7 +112,7 @@ To change the black background of the window and display some content instead, o
 ```sh
 WAYLAND_DISPLAY=wayland-99 bomber
 ```
-Try moving it around the screen, maximizing and minimazing it. This functionality is provided by the `MinimalWindowManager` policy that you have added to your composer. You can replace `bomber` with any other Wayland-compatible application.
+Try moving it around the screen, maximizing and minimazing it. This functionality is provided by the `MinimalWindowManager` policy that you have added to your compositor. You can replace `bomber` with any other Wayland-compatible application.
 
 ## Next steps
 Now that you have your base compositor working, check out these guides on how to further develop your compositor:
