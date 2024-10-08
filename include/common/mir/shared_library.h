@@ -17,6 +17,7 @@
 #ifndef MIR_SHARED_LIBRARY_H_
 #define MIR_SHARED_LIBRARY_H_
 
+#include <compare>
 #include <string>
 
 namespace mir
@@ -49,6 +50,29 @@ public:
         (void*&)result = load_symbol(function_name.c_str(), version.c_str());
         return result;
     }
+
+    class Handle
+    {
+    public:
+        auto operator<=>(Handle const& rhs) const -> std::strong_ordering;
+        auto operator==(Handle const& rhs) const -> bool = default;
+        auto operator!=(Handle const& rhs) const -> bool = default;
+
+        struct HandleHash
+        {
+            std::size_t operator()(const Handle& h) const noexcept
+            {
+                return std::hash<void*>{}(h.handle);
+            }
+        };
+    private:
+        friend class SharedLibrary;
+
+        Handle(void* handle);
+        void* handle;
+    };
+
+    auto get_handle() const -> Handle;
 private:
     void* const so;
     void* load_symbol(char const* function_name) const;
@@ -57,6 +81,5 @@ private:
     SharedLibrary& operator=(SharedLibrary const&) = delete;
 };
 }
-
 
 #endif /* MIR_SHARED_LIBRARY_H_ */

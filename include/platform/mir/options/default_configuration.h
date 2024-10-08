@@ -19,12 +19,13 @@
 
 #include "mir/options/configuration.h"
 #include "mir/options/program_option.h"
+#include "mir/shared_library.h"
 #include <boost/program_options/options_description.hpp>
 #include <vector>
+#include <unordered_map>
 
 namespace mir
 {
-class SharedLibrary;
 namespace options
 {
 class DefaultConfiguration : public Configuration
@@ -54,7 +55,8 @@ private:
 
     void add_platform_options();
     // accessed via the base interface, when access to add_options() has been "lost"
-    std::shared_ptr<options::Option> the_options() const override;
+    std::shared_ptr<options::Option> global_options() const override;
+    auto options_for(SharedLibrary const& module) const -> std::shared_ptr<Option> override;
 
     virtual void parse_arguments(
         boost::program_options::options_description desc,
@@ -74,6 +76,9 @@ private:
     char const** const argv;
     std::function<void(int argc, char const* const* argv)> const unparsed_arguments_handler;
     std::shared_ptr<boost::program_options::options_description> const program_options;
+
+    std::unordered_map<SharedLibrary::Handle, boost::program_options::options_description, SharedLibrary::Handle::HandleHash> module_options_desc;
+    std::unordered_map<SharedLibrary::Handle, std::shared_ptr<Option>, SharedLibrary::Handle::HandleHash> mutable module_options;
     std::shared_ptr<Option> mutable options;
 };
 }

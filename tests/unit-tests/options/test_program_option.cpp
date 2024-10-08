@@ -215,7 +215,29 @@ TEST(ProgramOptionEnv, parse_environment)
     char const* name = "some-key";
     char const* key = "SOME_KEY";
     char const* value = "test_value";
-    auto const env = std::string(__PRETTY_FUNCTION__) + key;
+    auto const prefix = std::string{__PRETTY_FUNCTION__} + "_";
+
+    auto const mapper = [&prefix](std::string const& from) -> std::string
+    {
+        if (from.starts_with(prefix))
+        {
+            auto result = from.substr(prefix.size());
+
+            for(auto& ch : result)
+            {
+                if (ch == '_') ch = '-';
+                else ch = std::tolower(ch, std::locale::classic());
+            }
+
+            return result;
+        }
+        else
+        {
+            return std::string{};
+        }
+    };
+
+    auto const env = prefix + key;
     setenv(env.c_str(), value, true);
 
     bpo::options_description desc;
@@ -223,7 +245,7 @@ TEST(ProgramOptionEnv, parse_environment)
         (name, bpo::value<std::string>());
 
     mir::options::ProgramOption po;
-    po.parse_environment(desc, __PRETTY_FUNCTION__);
+    po.parse_environment(desc, mapper);
 
     EXPECT_EQ(value, po.get(name, "default"));
     EXPECT_EQ("default", po.get("garbage", "default"));

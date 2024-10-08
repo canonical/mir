@@ -14,6 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+ #include "platform_probe.h"
+
 #include "mir/graphics/display.h"
 #include "mir/log.h"
 #include "mir/graphics/platform.h"
@@ -22,8 +24,6 @@
 #include "mir/shared_library_prober.h"
 #include "mir/shared_library_prober_report.h"
 #include "mir/udev/wrapper.h"
-
-#include "platform_probe.h"
 
 #include <algorithm>
 #include <boost/throw_exception.hpp>
@@ -80,11 +80,24 @@ auto probe_module(
     }
     return supported_devices;
 }
+
+auto is_graphics_module(mir::SharedLibrary const& module) -> bool
+{
+    try
+    {
+        module.load_function<mg::DescribeModule>("describe_graphics_module", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+        return true;
+    }
+    catch (std::exception const&)
+    {
+        return false;
+    }
+}
 }
 
 auto mir::graphics::probe_display_module(
     SharedLibrary const& module,
-    options::Option const& options,
+    mo::Option const& options,
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<SupportedDevice>
 {
     return probe_module(
@@ -102,7 +115,7 @@ auto mir::graphics::probe_display_module(
 auto mir::graphics::probe_rendering_module(
     std::span<std::shared_ptr<mg::DisplayPlatform>> const& platforms,
     SharedLibrary const& module,
-    options::Option const& options,
+    mo::Option const& options,
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<SupportedDevice>
 {
     return probe_module(
@@ -269,13 +282,13 @@ auto mg::modules_for_device(
 
 auto mir::graphics::display_modules_for_device(
     std::vector<std::shared_ptr<SharedLibrary>> const& modules,
-    options::Option const& options,
+    mo::Configuration const& options,
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>
 {
     return modules_for_device(
         [&options, &console](mir::SharedLibrary const& module) -> std::vector<mg::SupportedDevice>
         {
-            return mg::probe_display_module(module, options, console);
+            return mg::probe_display_module(module, *options.options_for(module), console);
         },
         modules,
         TypePreference::prefer_nested);
@@ -284,13 +297,20 @@ auto mir::graphics::display_modules_for_device(
 auto mir::graphics::rendering_modules_for_device(
     std::vector<std::shared_ptr<SharedLibrary>> const& modules,
     std::span<std::shared_ptr<DisplayPlatform>> const& platforms,
-    options::Option const& options,
+    mo::Configuration const& options,
     std::shared_ptr<ConsoleServices> const& console) -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>
 {
     return modules_for_device(
         [&platforms, &options, &console](SharedLibrary const& module) -> std::vector<SupportedDevice>
         {
-            return probe_rendering_module(platforms, module, options, console);
+            if (is_graphics_module(module))
+            {
+                return probe_rendering_module(platforms, module, *options.options_for(module), console);
+            }
+            else
+            {
+                return {};
+            }
         },
         modules,
         TypePreference::prefer_hardware);
@@ -372,14 +392,15 @@ auto dso_filename_alphabetically_before(mir::SharedLibrary const& a, mir::Shared
 }
 
 auto mg::select_display_modules(
-    options::Option const& options,
+    options::Configuration const& options,
     std::shared_ptr<ConsoleServices> const& console,
     SharedLibraryProberReport& lib_loader_report)
     -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>
 {
     std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>> platform_modules;
 
-    auto const& path = options.get<std::string>(options::platform_path);
+    auto const global_options = options.global_options();
+    auto const& path = global_options->get<std::string>(options::platform_path);
     auto platforms = mir::libraries_for_path(path, lib_loader_report);
 
     if (platforms.empty())
@@ -398,17 +419,7 @@ auto mg::select_display_modules(
             platforms.end(),
             [](auto const& module)
             {
-                try
-                {
-                    module->template load_function<mir::graphics::DescribeModule>(
-                        "describe_graphics_module",
-                        MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
-                    return false;
-                }
-                catch (std::runtime_error const&)
-                {
-                    return true;
-                }
+                return !is_graphics_module(*module);
             }),
         platforms.end());
 
@@ -457,17 +468,17 @@ auto mg::select_display_modules(
         });
     auto virtual_platform = virtual_platform_pos != platforms.end() ? *virtual_platform_pos : std::shared_ptr<SharedLibrary>{};
 
-    if (options.is_set(options::platform_display_libs))
+    if (global_options->is_set(options::platform_display_libs))
     {
         auto const manually_selected_platforms =
-            select_platforms_from_list(options.get<std::string>(options::platform_display_libs), platforms);
+            select_platforms_from_list(global_options->get<std::string>(options::platform_display_libs), platforms);
 
         for (auto const& platform : manually_selected_platforms)
         {
             auto supported_devices =
                 graphics::probe_display_module(
                     *platform,
-                    options,
+                    *options.options_for(*platform),
                     console);
 
             bool found_supported_device{false};
@@ -519,7 +530,7 @@ auto mg::select_display_modules(
     if (virtual_platform)
     {
         auto virtual_probe = probe_display_module(
-            *virtual_platform, options, console);
+            *virtual_platform, *options.options_for(*virtual_platform), console);
         if (virtual_probe.size() && virtual_probe.front().support_level >= mg::probe::supported)
         {
             platform_modules.emplace_back(std::move(virtual_probe.front()), std::move(virtual_platform));
