@@ -66,7 +66,7 @@ Open the window manager list, choose **Mir Shell**, log in, and `miral-shell` wi
 ## Using on-screen keyboards
 Mir-based compositors support on-screen keyboards. 
 
-**Note**: Due to security reasons, some Wayland extensions needed by on-screen keyboards are disabled by default. In this tutorial, we override this setting by
+**Note**: Due to security reasons, some Wayland extensions needed by on-screen keyboards are disabled by default. In this tutorial, we override this setting by passing `--add-wayland-extensions all` when launching `miral-app`.
 passing a `--add-wayland-extensions all` flag when launching an example application.
 
 You can use any Wayland compatible on-screen keyboard but as an example, we'll use `ubuntu-frame-osk`. 
