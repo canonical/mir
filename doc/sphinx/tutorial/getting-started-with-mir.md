@@ -61,7 +61,7 @@ miral-app
 
 ### Launching from a login screen
 
-Open the window manager list, start **Mir Shell**, log in and `miral-shell` will be running fullscreen.
+Open the window manager list, choose **Mir Shell**, log in, and `miral-shell` will be running fullscreen.
 
 ## Using on-screen keyboards
 Mir-based compositors support on-screen keyboards. 
