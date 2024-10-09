@@ -29,6 +29,7 @@
 #include <drm_mode.h>
 #include <gbm.h>
 #include <initializer_list>
+#include <mutex>
 #include <span>
 #include <string.h> // strcmp
 
@@ -156,7 +157,7 @@ public:
         drmModeAtomicAddProperty(req, properties.parent_id(), properties.id_for(prop_name), value);
     }
 
-    void add_properties(mgk::ObjectProperties const& properties, std::initializer_list<std::pair<char const*, uint64_t>> value_list)
+    void add_properties(mgk::ObjectProperties const& properties, std::initializer_list<std::pair<char const*, uint64_t>>&& value_list)
     {
         for(auto const& [prop_name, prop_value]: value_list)
         {
@@ -289,6 +290,7 @@ void mga::AtomicKMSOutput::reset()
     }
 
     /* Discard previously current crtc */
+    mir::log_debug("%s: Clearing CRTC", __PRETTY_FUNCTION__);
     current_crtc = nullptr;
 }
 
@@ -321,6 +323,7 @@ void mga::AtomicKMSOutput::configure(geom::Displacement offset, size_t kms_mode_
 
 bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
 {
+    std::lock_guard lg{cursor_mutex};
     if (!ensure_crtc())
     {
         mir::log_error("Output %s has no associated CRTC to set a framebuffer on",
@@ -387,6 +390,7 @@ bool mga::AtomicKMSOutput::has_crtc_mismatch()
 
 void mga::AtomicKMSOutput::clear_crtc()
 {
+    std::lock_guard lg{cursor_mutex};
     try
     {
         ensure_crtc();
@@ -412,6 +416,7 @@ void mga::AtomicKMSOutput::clear_crtc()
     auto result = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
     if (result)
     {
+
         if (result == -EACCES || result == -EPERM)
         {
             /* We don't have modesetting rights.
@@ -433,11 +438,13 @@ void mga::AtomicKMSOutput::clear_crtc()
         }
     }
 
+    mir::log_debug("Clearing CRTC");
     current_crtc = nullptr;
 }
 
 bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
 {
+    std::lock_guard lg{cursor_mutex};
     if (!ensure_crtc())
     {
         mir::log_error("Output %s has no associated CRTC to set a framebuffer on",
@@ -491,7 +498,12 @@ bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
     if (auto err = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_TEST_ONLY, nullptr); err == -EBUSY)
         return false;
 
-    pending_page_flip = event_handler->expect_flip_event(current_crtc->crtc_id, [](auto, auto){});
+    pending_page_flip = event_handler->expect_flip_event(
+        current_crtc->crtc_id,
+        [](auto, auto)
+        {
+        });
+
     auto ret = drmModeAtomicCommit(
         drm_fd_,
         update,
@@ -504,10 +516,12 @@ bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
         {
             mir::log_error("Failed to schedule page flip: %s (%i)", strerror(-ret), -ret);
             update.print_properties();
+            return false;
         }
 
         event_handler->cancel_flip_events(current_crtc->crtc_id);
         current_crtc = nullptr;
+
         return false;
     }
 
@@ -565,6 +579,7 @@ mga::AtomicKMSOutput::CursorFbPtr mga::AtomicKMSOutput::cursor_gbm_bo_to_drm_fb_
 
 bool mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
 {
+    std::lock_guard lg{cursor_mutex};
     if (current_crtc)
     {
         cursor_state.enabled = true;
@@ -574,8 +589,16 @@ bool mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
 
         // Need to account for the first call (need to initialize all props)
         // as well as later updates (don't need all props, but no need for a separate branch as well)
+        auto crtc_id = current_crtc->crtc_id;
         AtomicUpdate update;
-        update_all_cursor_props(update, *cursor_plane_props, cursor_state, current_crtc->crtc_id);
+        update.add_property(*cursor_plane_props, "CRTC_ID", crtc_id);
+        update.add_property(*cursor_plane_props, "SRC_W", cursor_state.width << 16);
+        update.add_property(*cursor_plane_props, "SRC_H", cursor_state.height << 16);
+        update.add_property(*cursor_plane_props, "CRTC_X", cursor_state.crtc_x);
+        update.add_property(*cursor_plane_props, "CRTC_Y", cursor_state.crtc_y);
+        update.add_property(*cursor_plane_props, "CRTC_W", cursor_state.width);
+        update.add_property(*cursor_plane_props, "CRTC_H", cursor_state.height);
+        update.add_property(*cursor_plane_props, "FB_ID", *cursor_state.fb_id);
         auto ret =
             drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET | DRM_MODE_ATOMIC_NONBLOCK, nullptr);
 
@@ -594,6 +617,7 @@ bool mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
 
 void mga::AtomicKMSOutput::move_cursor(geometry::Point destination)
 {
+    std::lock_guard lg{cursor_mutex};
     if (current_crtc)
     {
         cursor_state.crtc_x = destination.x.as_int();
@@ -609,12 +633,14 @@ void mga::AtomicKMSOutput::move_cursor(geometry::Point destination)
                 {"CRTC_Y", cursor_state.crtc_y}
             });
 
+        // Check updates and remove any complete ones
         drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET | DRM_MODE_ATOMIC_NONBLOCK, nullptr);
     }
 }
 
 bool mga::AtomicKMSOutput::clear_cursor()
 {
+    std::lock_guard lg{cursor_mutex};
     if(current_crtc)
     {
         cursor_state.enabled = false;
@@ -622,11 +648,13 @@ bool mga::AtomicKMSOutput::clear_cursor()
         AtomicUpdate update;
         update.add_property(*cursor_plane_props, "FB_ID", 0);
 
-        auto ret = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET | DRM_MODE_ATOMIC_NONBLOCK, nullptr);
+        auto ret =
+            drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET | DRM_MODE_ATOMIC_NONBLOCK, nullptr);
 
         if(ret && ret != -EBUSY)
         {
             mir::log_debug("clear_cursor failed: %s (%d)", strerror(-ret), -ret);
+            update.print_properties();
             cursor_state.enabled = false;
             return false;
         }
@@ -731,6 +759,7 @@ void mga::AtomicKMSOutput::set_gamma(mg::GammaCurves const& gamma)
 void mga::AtomicKMSOutput::refresh_hardware_state()
 {
     connector = kms::get_connector(drm_fd_, connector->connector_id);
+    mir::log_debug("%s: Clearing CRTC", __PRETTY_FUNCTION__);
     current_crtc = nullptr;
 
     if (connector->encoder_id)
