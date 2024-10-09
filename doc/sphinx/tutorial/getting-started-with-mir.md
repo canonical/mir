@@ -4,7 +4,7 @@ This tutorial will guide you through Mir's basic functionality.
 
 By the end of the tutorial, you will install and run a demo application, learn how to use Mir in different environments, and learn about features that Mir provides for Mir-based compositors. 
 
-If you are unfamiliar with Mir, start with this tutorial, and then proceed to a [developer tutorial](write-your-first-wayland-compositor) which will guide you through the process of writing compositors.
+If you are unfamiliar with Mir, start with this tutorial, and then proceed to a [developer tutorial](write-your-first-wayland-compositor) which will guide you through the process of writing a compositor.
 
 
 ## Installing demo applications
