@@ -12,4 +12,3 @@ jobs:
     uses: canonical/documentation-workflows/.github/workflows/documentation-checks.yaml@main
     with:
       working-directory: doc/sphinx
-      pa11y-target: pa11y-ci
