@@ -82,7 +82,7 @@ sudo snap connect ubuntu-frame-osk:wayland
 miral-app --add-wayland-extensions all
 ```
 
-3. Once the shell loads, start the terminal and start your on-screen keyboard:
+3. Once the shell loads, start the terminal (with `Ctrl-Alt-Shift-T`) and start your on-screen keyboard:
 ```sh
 ubuntu-frame-osk&
 ```
