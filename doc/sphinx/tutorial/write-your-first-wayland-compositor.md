@@ -104,7 +104,7 @@ To change the black background of the window and display some content instead, o
 ```sh
 WAYLAND_DISPLAY=wayland-99 bomber
 ```
-Try moving it around the screen, maximizing and minimazing it. This functionality is provided by the `MinimalWindowManager` policy that you have added to your compositor. You can replace `bomber` with any other Wayland-compatible application.
+Try moving it around the screen, maximizing and restoring it. This functionality is provided by the `MinimalWindowManager` policy that you have added to your compositor. You can replace `bomber` with any other Wayland-compatible application.
 
 ## Next steps
 Now that you have your base compositor working, check out these guides on how to further develop your compositor:
