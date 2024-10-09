@@ -283,7 +283,7 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
     AtomicUpdate update;
     update.add_property(*crtc_props, "MODE_ID", mode->handle());
     update.add_property(*connector_props, "CRTC_ID", current_crtc->crtc_id);
-    
+
     /* Source viewport. Coordinates are 16.16 fixed point format */
     update.add_property(*plane_props, "SRC_X", fb_offset.dx.as_uint32_t() << 16);
     update.add_property(*plane_props, "SRC_Y", fb_offset.dy.as_uint32_t() << 16);
@@ -379,24 +379,27 @@ bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
         return false;
     }
 
-    auto const width = current_crtc->width;
-    auto const height = current_crtc->height;
+    auto const crtc_width = current_crtc->width;
+    auto const crtc_height = current_crtc->height;
+
+    auto const fb_width = fb.size().width.as_uint32_t();
+    auto const fb_height = fb.size().height.as_uint32_t();
 
     AtomicUpdate update;
     update.add_property(*crtc_props, "MODE_ID", mode->handle());
     update.add_property(*connector_props, "CRTC_ID", current_crtc->crtc_id);
-    
+
     /* Source viewport. Coordinates are 16.16 fixed point format */
     update.add_property(*plane_props, "SRC_X", fb_offset.dx.as_uint32_t() << 16);
     update.add_property(*plane_props, "SRC_Y", fb_offset.dy.as_uint32_t() << 16);
-    update.add_property(*plane_props, "SRC_W", width << 16);
-    update.add_property(*plane_props, "SRC_H", height << 16);
+    update.add_property(*plane_props, "SRC_W", fb_width << 16);
+    update.add_property(*plane_props, "SRC_H", fb_height << 16);
 
     /* Destination viewport. Coordinates are *not* 16.16 */
     update.add_property(*plane_props, "CRTC_X", 0);
     update.add_property(*plane_props, "CRTC_Y", 0);
-    update.add_property(*plane_props, "CRTC_W", width);
-    update.add_property(*plane_props, "CRTC_H", height);
+    update.add_property(*plane_props, "CRTC_W", crtc_width);
+    update.add_property(*plane_props, "CRTC_H", crtc_height);
 
     /* Set a surface for the plane */
     update.add_property(*plane_props, "CRTC_ID", current_crtc->crtc_id);
