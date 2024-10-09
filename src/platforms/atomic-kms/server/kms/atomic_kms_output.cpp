@@ -316,7 +316,6 @@ void mga::AtomicKMSOutput::configure(geom::Displacement offset, size_t kms_mode_
 
 bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
 {
-    std::lock_guard lg{cursor_mutex};
     if (!ensure_crtc())
     {
         mir::log_error("Output %s has no associated CRTC to set a framebuffer on",
@@ -356,7 +355,10 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
     if (ret)
     {
         mir::log_error("Failed to set CRTC: %s (%i)", strerror(-ret), -ret);
-        current_crtc = nullptr;
+        {
+            std::lock_guard lg{cursor_mutex};
+            current_crtc = nullptr;
+        }
         return false;
     }
 
@@ -377,7 +379,6 @@ bool mga::AtomicKMSOutput::has_crtc_mismatch()
 
 void mga::AtomicKMSOutput::clear_crtc()
 {
-    std::lock_guard lg{cursor_mutex};
     try
     {
         ensure_crtc();
@@ -422,12 +423,14 @@ void mga::AtomicKMSOutput::clear_crtc()
     }
 
     mir::log_debug("Clearing CRTC");
-    current_crtc = nullptr;
+    {
+        std::lock_guard lg{cursor_mutex};
+        current_crtc = nullptr;
+    }
 }
 
 bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
 {
-    std::lock_guard lg{cursor_mutex};
     if (!ensure_crtc())
     {
         mir::log_error("Output %s has no associated CRTC to set a framebuffer on",
@@ -481,15 +484,15 @@ bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
 
     if (ret)
     {
-        if(ret != -EBUSY)
-        {
-            mir::log_error("Failed to schedule page flip: %s (%i)", strerror(-ret), -ret);
-            update.print_properties();
-            return false;
-        }
+        if(ret == -EBUSY) return false;
 
+        mir::log_error("Failed to schedule page flip: %s (%i)", strerror(-ret), -ret);
+        update.print_properties();
         event_handler->cancel_flip_events(current_crtc->crtc_id);
-        current_crtc = nullptr;
+        {
+            std::lock_guard lg{cursor_mutex};
+            current_crtc = nullptr;
+        }
 
         return false;
     }
@@ -549,6 +552,7 @@ mga::AtomicKMSOutput::CursorFbPtr mga::AtomicKMSOutput::cursor_gbm_bo_to_drm_fb_
 bool mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
 {
     std::lock_guard lg{cursor_mutex};
+
     if (current_crtc)
     {
         cursor_state.enabled = true;
@@ -624,7 +628,6 @@ bool mga::AtomicKMSOutput::clear_cursor()
         {
             mir::log_debug("clear_cursor failed: %s (%d)", strerror(-ret), -ret);
             update.print_properties();
-            cursor_state.enabled = false;
             return false;
         }
 
@@ -641,6 +644,7 @@ bool mga::AtomicKMSOutput::has_cursor_plane() const
 
 bool mga::AtomicKMSOutput::ensure_crtc()
 {
+    std::lock_guard lg{cursor_mutex};
     /* Nothing to do if we already have a crtc */
     if (current_crtc)
         return true;
