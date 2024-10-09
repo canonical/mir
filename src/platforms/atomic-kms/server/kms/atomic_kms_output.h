@@ -110,6 +110,7 @@ private:
     bool using_saved_crtc;
 
     CursorState cursor_state;
+    std::mutex cursor_mutex;
 };
 
 }
