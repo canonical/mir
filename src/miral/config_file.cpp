@@ -66,11 +66,11 @@ auto watch_descriptor(mir::Fd const& inotify_fd, std::optional<path> const& path
     return inotify_add_watch(inotify_fd, path.value().c_str(), IN_CLOSE_WRITE | IN_CREATE | IN_MOVED_TO);
 }
 
-class Watcher
+class Watcher : public std::enable_shared_from_this<Watcher>
 {
 public:
     using Loader = miral::ConfigFile::Loader;
-    Watcher(miral::MirRunner& runner, path file, miral::ConfigFile::Loader load_config);
+    Watcher(path file, miral::ConfigFile::Loader load_config);
 
     mir::Fd const inotify_fd;
     Loader const load_config;
@@ -79,6 +79,8 @@ public:
     std::optional<int> const directory_watch_descriptor;
 
     void register_handler(miral::MirRunner& runner);
+    void handler(int) const;
+
     std::unique_ptr<miral::FdHandle> fd_handle;
 };
 }
@@ -89,18 +91,16 @@ public:
     Self(MirRunner& runner, path file, Mode mode, Loader load_config);
 
 private:
-    std::unique_ptr<Watcher> watcher;
+    std::shared_ptr<Watcher> watcher;
 };
 
-Watcher::Watcher(miral::MirRunner& runner, path file, miral::ConfigFile::Loader load_config) :
+Watcher::Watcher(path file, miral::ConfigFile::Loader load_config) :
     inotify_fd{inotify_init1(IN_CLOEXEC)},
     load_config{load_config},
     filename{file.filename()},
     directory{config_directory(file)},
     directory_watch_descriptor{watch_descriptor(inotify_fd, directory)}
 {
-    register_handler(runner);
-
     if (directory_watch_descriptor.has_value())
     {
         mir::log_debug("Monitoring %s for configuration changes", (directory.value()/filename).c_str());
@@ -152,7 +152,8 @@ miral::ConfigFile::Self::Self(MirRunner& runner, path file, Mode mode, Loader lo
         break;
 
     case Mode::reload_on_change:
-        watcher = std::make_unique<Watcher>(runner, file, std::move(load_config));
+        watcher = std::make_shared<Watcher>(file, std::move(load_config));
+        watcher->register_handler(runner);
         break;
     }
 }
@@ -168,54 +169,67 @@ void Watcher::register_handler(miral::MirRunner& runner)
 {
     if (directory_watch_descriptor)
     {
-        fd_handle = runner.register_fd_handler(inotify_fd, [this] (int)
+        auto const weak_this = weak_from_this();
+        fd_handle = runner.register_fd_handler(inotify_fd, [weak_this] (int fd)
         {
-            static size_t const sizeof_inotify_event = sizeof(inotify_event);
-
-            // A union ensures buffer is aligned for inotify_event
-            union
+            if (auto const strong_this = weak_this.lock())
             {
-                char buffer[sizeof_inotify_event + NAME_MAX + 1];
-                inotify_event unused [[maybe_unused]];
-            } inotify_magic;
-
-            auto const readsize = read(inotify_fd, &inotify_magic, sizeof(inotify_magic));
-            if (readsize < static_cast<ssize_t>(sizeof_inotify_event))
-            {
-                return;
+                strong_this->handler(fd);
             }
-
-            auto raw_buffer = inotify_magic.buffer;
-            while (raw_buffer != inotify_magic.buffer + readsize)
+            else
             {
-                // This is safe because inotify_magic.buffer is aligned and event.len includes padding for alignment
-                auto& event = reinterpret_cast<inotify_event&>(*raw_buffer);
-                if (event.mask & (IN_CLOSE_WRITE | IN_MOVED_TO) && event.wd == directory_watch_descriptor.value())
-                try
-                {
-                    if (event.name == filename)
-                    {
-                        auto const& file = directory.value() / filename;
-
-                        if (std::ifstream config_file{file})
-                        {
-                            load_config(config_file, file);
-                            mir::log_debug("(Re)loaded %s", file.c_str());
-                        }
-                        else
-                        {
-                            mir::log_debug("Failed to open %s", file.c_str());
-                        }
-                    }
-                }
-                catch (...)
-                {
-                    mir::log(mir::logging::Severity::warning, MIR_LOG_COMPONENT, std::current_exception(),
-                             "Failed to reload configuration");
-                }
-
-                raw_buffer += sizeof_inotify_event+event.len;
+                mir::log_debug("Watcher has been removed, but handler invoked");
             }
         });
+    }
+}
+
+void Watcher::handler(int) const
+{
+    static size_t const sizeof_inotify_event = sizeof(inotify_event);
+
+    // A union ensures buffer is aligned for inotify_event
+    union
+    {
+        char buffer[sizeof_inotify_event + NAME_MAX + 1];
+        inotify_event unused [[maybe_unused]];
+    } inotify_magic;
+
+    auto const readsize = read(inotify_fd, &inotify_magic, sizeof(inotify_magic));
+    if (readsize < static_cast<ssize_t>(sizeof_inotify_event))
+    {
+        return;
+    }
+
+    auto raw_buffer = inotify_magic.buffer;
+    while (raw_buffer != inotify_magic.buffer + readsize)
+    {
+        // This is safe because inotify_magic.buffer is aligned and event.len includes padding for alignment
+        auto& event = reinterpret_cast<inotify_event&>(*raw_buffer);
+        if (event.mask & (IN_CLOSE_WRITE | IN_MOVED_TO) && event.wd == directory_watch_descriptor.value())
+            try
+            {
+                if (event.name == filename)
+                {
+                    auto const& file = directory.value() / filename;
+
+                    if (std::ifstream config_file{file})
+                    {
+                        load_config(config_file, file);
+                        mir::log_debug("(Re)loaded %s", file.c_str());
+                    }
+                    else
+                    {
+                        mir::log_debug("Failed to open %s", file.c_str());
+                    }
+                }
+            }
+        catch (...)
+        {
+            mir::log(mir::logging::Severity::warning, MIR_LOG_COMPONENT, std::current_exception(),
+                     "Failed to reload configuration");
+        }
+
+        raw_buffer += sizeof_inotify_event+event.len;
     }
 }

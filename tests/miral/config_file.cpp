@@ -66,7 +66,7 @@ private:
     bool pending_loads = false;
 };
 
-struct TestConfigFile : miral::TestServer, PendingLoad
+struct TestConfigFile : PendingLoad, miral::TestServer
 {
     TestConfigFile();
     MOCK_METHOD(void, load, (std::istream& in, std::filesystem::path path), ());
@@ -91,6 +91,12 @@ struct TestConfigFile : miral::TestServer, PendingLoad
     {
         miral::TestServer::SetUp();
         ON_CALL(*this, load(testing::_, testing::_)).WillByDefault([this]{ notify_load(); });
+    }
+
+    void TearDown() override
+    {
+        reloading_config_file.reset();
+        miral::TestServer::TearDown();
     }
 };
 
