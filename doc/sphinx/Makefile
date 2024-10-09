@@ -9,7 +9,7 @@ SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
 VENVDIR       = $(SPHINXDIR)/venv
-PA11YCI       = $(SPHINXDIR)/node_modules/pa11y-ci/bin/pa11y-ci.js --config $(SPHINXDIR)/pa11y-ci.json
+PA11Y         = $(SPHINXDIR)/node_modules/pa11y-ci/bin/pa11y-ci.js --config $(SPHINXDIR)/pa11y-ci.json
 VENV          = $(VENVDIR)/bin/activate
 WORKDIR	      = ../build_doc
 WORKSPHINX    = $(WORKDIR)/doc/sphinx
@@ -34,8 +34,8 @@ else
 HTMLINDEX     = $(WORKSPHINX)/_build/index.html
 endif
 
-.PHONY: help full-help woke-install pa11y-ci-install install run html epub serve \
-        clean clean-doc spelling linkcheck woke pa11y-ci Makefile
+.PHONY: help full-help woke-install pa11y-install install run html epub serve \
+        clean clean-doc spelling linkcheck woke pa11y Makefile
 
 # Put it first so that "make" without argument is like "make help".
 help:
@@ -49,7 +49,7 @@ help:
         "* check links: make linkcheck \n" \
         "* check spelling: make spelling \n" \
         "* check inclusive language: make woke \n" \
-        "* check accessibility: make pa11y-ci \n" \
+        "* check accessibility: make pa11y \n" \
         "* other possible targets: make <press TAB twice> \n" \
         "--------------------------------------------------------------- \n"
 
@@ -84,8 +84,8 @@ woke-install:
 	@type woke >/dev/null 2>&1 || \
             { echo "Installing \"woke\" snap... \n"; sudo snap install woke; }
 
-pa11y-ci-install:
-	@type $(PA11YCI) >/dev/null 2>&1 || { \
+pa11y-install:
+	@type $(PA11Y) >/dev/null 2>&1 || { \
 			echo "Installing \"pa11y-ci\" from npm... \n"; \
 			mkdir -p $(SPHINXDIR)/node_modules/ ; \
 			npm install --prefix $(SPHINXDIR) pa11y-ci; \
@@ -130,8 +130,8 @@ woke: woke-install
 	woke *.rst **/*.rst --exit-1-on-failure \
 	    -c https://github.com/canonical/Inclusive-naming/raw/main/config.yml
 
-pa11y-ci: pa11y-ci-install html
-	$(PA11YCI) $(shell find $(WORKSPHINX)/_build -name *.html -not -path '$(WORKSPHINX)/_build/api/*');
+pa11y: pa11y-install html
+	$(PA11Y) $(shell find $(WORKSPHINX)/_build -name *.html -not -path '$(WORKSPHINX)/_build/api/*');
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
