@@ -20,24 +20,19 @@ The example program requires
 * `libmiral` - short for "Mir Abstraction Layer". Provides a high level interface to interact with and customize Mir compositors.
 * `mir-graphics-drivers-desktop` - provides drivers so Mir can talk with different graphics drivers
 
-Install dependencies on Debian or derivatives:
+### Install dependencies on Debian or derivatives:
 ```sh
 sudo apt install libmiral-dev mir-graphics-drivers-desktop
 ```
 
-<details>
-<summary> Installing Dependencies on Other Distros </summary>
-
-Install dependencies on Fedora:
+### Install dependencies on Fedora:
 ```sh
 sudo dnf install mir-devel libxkbcommon
 ```
-Install dependencies on Alpine:
+### Install dependencies on Alpine:
 ```sh
 sudo apk add mir-dev
 ```
-</details>
-
 
 ## Coding a Mir compositor
 
