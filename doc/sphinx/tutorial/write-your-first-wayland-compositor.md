@@ -6,9 +6,6 @@ discourse: 4911,5164,5603,6756,8037
 This tutorial will guide you through writing a basic Mir compositor. By the end of it, you will create, build, and run a program with basic window management
 capabilities such as controlling multiple windows, minimizing and maximizing, and handling mouse input. 
 
-This section will cover the needed dependencies and how to install them, the
-minimum code needed for a Mir compositor, how to build this code, and finally
-how to run your compositor.
 
 ## Assumptions
 
@@ -18,7 +15,7 @@ This tutorial assumes that:
 * You have `cmake` and a C++ compiler installed.
 
 ## Installing dependencies
-
+This section will cover the needed dependencies and how to install them.
 The example program requires 
 * `libmiral` - short for "Mir Abstraction Layer". Provides a high level interface to interact with and customize Mir compositors.
 * `mir-graphics-drivers-desktop` - provides drivers so Mir can talk with different graphics drivers
