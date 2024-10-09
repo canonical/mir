@@ -27,6 +27,9 @@
 #include "mir/log.h"
 #include <drm_fourcc.h>
 #include <drm_mode.h>
+#include <gbm.h>
+#include <initializer_list>
+#include <mutex>
 #include <span>
 #include <string.h> // strcmp
 
@@ -150,11 +153,60 @@ public:
 
     void add_property(mgk::ObjectProperties const& properties, char const* prop_name, uint64_t value)
     {
+        debug_props[properties.parent_id()][prop_name] = value;
         drmModeAtomicAddProperty(req, properties.parent_id(), properties.id_for(prop_name), value);
     }
+
+    void add_properties(mgk::ObjectProperties const& properties, std::initializer_list<std::pair<char const*, uint64_t>>&& value_list)
+    {
+        for(auto const& [prop_name, prop_value]: value_list)
+        {
+            add_property(properties, prop_name, prop_value);
+        }
+    }
+
+    void print_properties() const
+    {
+        for(auto const& [obj_id, props]: debug_props)
+        {
+            mir::log_debug("DRM Object ID: %d", obj_id);
+            for(auto const& [prop_name, prop_value]: props)
+            {
+                if(prop_name == "SRC_W" || prop_name == "SRC_H")
+                {
+                    mir::log_debug("\t %s = %zu << 16", prop_name.c_str(), prop_value >> 16);
+                    continue;
+                }
+
+                mir::log_debug("\t %s = %zu", prop_name.c_str(), prop_value);
+            }
+        }
+    }
+
 private:
     drmModeAtomicReqPtr const req;
+    std::map<uint32_t, std::map<std::string, uint64_t>> debug_props;
 };
+
+void update_all_cursor_props(
+    AtomicUpdate& update,
+    mgk::ObjectProperties& cursor_plane_props,
+    mga::AtomicKMSOutput::CursorState const& cursor_state,
+    uint32_t crtc_id)
+{
+    update.add_properties(
+        cursor_plane_props,
+        {
+            {"SRC_W", cursor_state.width << 16},
+            {"SRC_H", cursor_state.height << 16},
+            {"CRTC_X", cursor_state.crtc_x},
+            {"CRTC_Y", cursor_state.crtc_y},
+            {"CRTC_W", cursor_state.width},
+            {"CRTC_H", cursor_state.height},
+            {"CRTC_ID", crtc_id},
+            {"FB_ID", *cursor_state.fb_id},
+        });
+}
 }
 
 class mga::AtomicKMSOutput::PropertyBlob
@@ -238,6 +290,7 @@ void mga::AtomicKMSOutput::reset()
     }
 
     /* Discard previously current crtc */
+    mir::log_debug("%s: Clearing CRTC", __PRETTY_FUNCTION__);
     current_crtc = nullptr;
 }
 
@@ -283,28 +336,36 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
     AtomicUpdate update;
     update.add_property(*crtc_props, "MODE_ID", mode->handle());
     update.add_property(*connector_props, "CRTC_ID", current_crtc->crtc_id);
-    
+
     /* Source viewport. Coordinates are 16.16 fixed point format */
-    update.add_property(*plane_props, "SRC_X", fb_offset.dx.as_uint32_t() << 16);
-    update.add_property(*plane_props, "SRC_Y", fb_offset.dy.as_uint32_t() << 16);
-    update.add_property(*plane_props, "SRC_W", width << 16);
-    update.add_property(*plane_props, "SRC_H", height << 16);
+    update.add_property(*primary_plane_props, "SRC_X", fb_offset.dx.as_uint32_t() << 16);
+    update.add_property(*primary_plane_props, "SRC_Y", fb_offset.dy.as_uint32_t() << 16);
+    update.add_property(*primary_plane_props, "SRC_W", width << 16);
+    update.add_property(*primary_plane_props, "SRC_H", height << 16);
 
     /* Destination viewport. Coordinates are *not* 16.16 */
-    update.add_property(*plane_props, "CRTC_X", 0);
-    update.add_property(*plane_props, "CRTC_Y", 0);
-    update.add_property(*plane_props, "CRTC_W", width);
-    update.add_property(*plane_props, "CRTC_H", height);
+    update.add_property(*primary_plane_props, "CRTC_X", 0);
+    update.add_property(*primary_plane_props, "CRTC_Y", 0);
+    update.add_property(*primary_plane_props, "CRTC_W", width);
+    update.add_property(*primary_plane_props, "CRTC_H", height);
 
     /* Set a surface for the plane */
-    update.add_property(*plane_props, "CRTC_ID", current_crtc->crtc_id);
-    update.add_property(*plane_props, "FB_ID", fb);
+    update.add_property(*primary_plane_props, "CRTC_ID", current_crtc->crtc_id);
+    update.add_property(*primary_plane_props, "FB_ID", fb);
+
+    if (cursor_state.enabled)
+    {
+        update_all_cursor_props(update, *cursor_plane_props, cursor_state, current_crtc->crtc_id);
+    }
 
     auto ret = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
     if (ret)
     {
         mir::log_error("Failed to set CRTC: %s (%i)", strerror(-ret), -ret);
-        current_crtc = nullptr;
+        {
+            std::lock_guard lg{cursor_mutex};
+            current_crtc = nullptr;
+        }
         return false;
     }
 
@@ -341,11 +402,12 @@ void mga::AtomicKMSOutput::clear_crtc()
     }
 
     AtomicUpdate update;
-    update.add_property(*plane_props, "FB_ID", 0);
+    update.add_property(*primary_plane_props, "FB_ID", 0);
 
     auto result = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
     if (result)
     {
+
         if (result == -EACCES || result == -EPERM)
         {
             /* We don't have modesetting rights.
@@ -367,7 +429,11 @@ void mga::AtomicKMSOutput::clear_crtc()
         }
     }
 
-    current_crtc = nullptr;
+    mir::log_debug("Clearing CRTC");
+    {
+        std::lock_guard lg{cursor_mutex};
+        current_crtc = nullptr;
+    }
 }
 
 bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
@@ -385,34 +451,56 @@ bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
     AtomicUpdate update;
     update.add_property(*crtc_props, "MODE_ID", mode->handle());
     update.add_property(*connector_props, "CRTC_ID", current_crtc->crtc_id);
-    
+
     /* Source viewport. Coordinates are 16.16 fixed point format */
-    update.add_property(*plane_props, "SRC_X", fb_offset.dx.as_uint32_t() << 16);
-    update.add_property(*plane_props, "SRC_Y", fb_offset.dy.as_uint32_t() << 16);
-    update.add_property(*plane_props, "SRC_W", width << 16);
-    update.add_property(*plane_props, "SRC_H", height << 16);
+    update.add_property(*primary_plane_props, "SRC_X", fb_offset.dx.as_uint32_t() << 16);
+    update.add_property(*primary_plane_props, "SRC_Y", fb_offset.dy.as_uint32_t() << 16);
+    update.add_property(*primary_plane_props, "SRC_W", width << 16);
+    update.add_property(*primary_plane_props, "SRC_H", height << 16);
 
     /* Destination viewport. Coordinates are *not* 16.16 */
-    update.add_property(*plane_props, "CRTC_X", 0);
-    update.add_property(*plane_props, "CRTC_Y", 0);
-    update.add_property(*plane_props, "CRTC_W", width);
-    update.add_property(*plane_props, "CRTC_H", height);
+    update.add_property(*primary_plane_props, "CRTC_X", 0);
+    update.add_property(*primary_plane_props, "CRTC_Y", 0);
+    update.add_property(*primary_plane_props, "CRTC_W", width);
+    update.add_property(*primary_plane_props, "CRTC_H", height);
 
     /* Set a surface for the plane */
-    update.add_property(*plane_props, "CRTC_ID", current_crtc->crtc_id);
-    update.add_property(*plane_props, "FB_ID", fb);
+    update.add_property(*primary_plane_props, "CRTC_ID", current_crtc->crtc_id);
+    update.add_property(*primary_plane_props, "FB_ID", fb);
 
-    pending_page_flip = event_handler->expect_flip_event(current_crtc->crtc_id, [](auto, auto){});
+    if (cursor_state.enabled)
+    {
+        update_all_cursor_props(update, *cursor_plane_props, cursor_state, current_crtc->crtc_id);
+    }
+
+    // Mainly to check if the hardware is busy
+    if (auto err = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_TEST_ONLY, nullptr); err == -EBUSY)
+        return false;
+
+    pending_page_flip = event_handler->expect_flip_event(
+        current_crtc->crtc_id,
+        [](auto, auto)
+        {
+        });
+
     auto ret = drmModeAtomicCommit(
         drm_fd_,
         update,
         DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_PAGE_FLIP_EVENT,
         const_cast<void*>(event_handler->drm_event_data()));
+
     if (ret)
     {
-        mir::log_error("Failed to set CRTC: %s (%i)", strerror(-ret), -ret);
-        current_crtc = nullptr;
+        if(ret == -EBUSY) return false;
+
+        mir::log_error("Failed to schedule page flip: %s (%i)", strerror(-ret), -ret);
+        update.print_properties();
         event_handler->cancel_flip_events(current_crtc->crtc_id);
+        {
+            std::lock_guard lg{cursor_mutex};
+            current_crtc = nullptr;
+        }
+
         return false;
     }
 
@@ -425,27 +513,145 @@ void mga::AtomicKMSOutput::wait_for_page_flip()
     pending_page_flip.get();
 }
 
-bool mga::AtomicKMSOutput::set_cursor(gbm_bo*)
+mga::AtomicKMSOutput::CursorFbPtr mga::AtomicKMSOutput::cursor_gbm_bo_to_drm_fb_id(gbm_bo* gbm_bo)
 {
+    auto fb_id = CursorFbPtr{
+        new uint32_t{0},
+        [drm_fd = this->drm_fd_](uint32_t* fb_id)
+        {
+            if (*fb_id)
+            {
+                drmModeRmFB(drm_fd, *fb_id);
+            }
+            delete fb_id;
+        }};
+
+    auto width = gbm_bo_get_width(gbm_bo);
+    auto height = gbm_bo_get_height(gbm_bo);
+    auto format = gbm_bo_get_format(gbm_bo);
+
+    uint32_t gem_handles[4] = {gbm_bo_get_handle(gbm_bo).u32, 0, 0, 0};
+    uint32_t pitches[4] = {gbm_bo_get_stride(gbm_bo), 0, 0, 0};
+    uint32_t offsets[4] = {gbm_bo_get_offset(gbm_bo, 0), 0, 0, 0};
+    uint64_t modifiers[4] = {gbm_bo_get_modifier(gbm_bo), 0, 0, 0};
+
+    int ret = drmModeAddFB2WithModifiers(
+        drm_fd_,
+        width,
+        height,
+        format,
+        gem_handles,
+        pitches,
+        offsets,
+        modifiers,
+        fb_id.get(),
+        DRM_MODE_FB_MODIFIERS);
+
+    if (ret)
+    {
+        mir::log_warning("drmModeAddFB2WithModifiers returned an error: %d", ret);
+        return {};
+    }
+
+    return fb_id;
+}
+
+bool mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
+{
+    std::lock_guard lg{cursor_mutex};
+
+    if (current_crtc)
+    {
+        cursor_state.enabled = true;
+        cursor_state.fb_id = cursor_gbm_bo_to_drm_fb_id(buffer);
+        cursor_state.width = gbm_bo_get_width(buffer);
+        cursor_state.height = gbm_bo_get_height(buffer);
+
+        // Need to account for the first call (need to initialize all props)
+        // as well as later updates (don't need all props, but no need for a separate branch as well)
+        auto crtc_id = current_crtc->crtc_id;
+        AtomicUpdate update;
+        update.add_property(*cursor_plane_props, "CRTC_ID", crtc_id);
+        update.add_property(*cursor_plane_props, "SRC_W", cursor_state.width << 16);
+        update.add_property(*cursor_plane_props, "SRC_H", cursor_state.height << 16);
+        update.add_property(*cursor_plane_props, "CRTC_X", cursor_state.crtc_x);
+        update.add_property(*cursor_plane_props, "CRTC_Y", cursor_state.crtc_y);
+        update.add_property(*cursor_plane_props, "CRTC_W", cursor_state.width);
+        update.add_property(*cursor_plane_props, "CRTC_H", cursor_state.height);
+        update.add_property(*cursor_plane_props, "FB_ID", *cursor_state.fb_id);
+        auto ret =
+            drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET | DRM_MODE_ATOMIC_NONBLOCK, nullptr);
+
+        if(ret && ret != -EBUSY)
+        {
+            mir::log_debug("set_cursor failed: %s (%d)", strerror(-ret), -ret);
+            cursor_state.enabled = false;
+            return false;
+        }
+
+        return true;
+    }
+
     return false;
 }
 
-void mga::AtomicKMSOutput::move_cursor(geometry::Point)
+void mga::AtomicKMSOutput::move_cursor(geometry::Point destination)
 {
+    std::lock_guard lg{cursor_mutex};
+    if (current_crtc)
+    {
+        cursor_state.crtc_x = destination.x.as_int();
+        cursor_state.crtc_y = destination.y.as_int();
+
+        // `ser_crtc` is always called before this, so all other properties should be already initialized on the kernel
+        // side.
+        AtomicUpdate update;
+        update.add_properties(
+            *cursor_plane_props,
+            {
+                {"CRTC_X", cursor_state.crtc_x},
+                {"CRTC_Y", cursor_state.crtc_y}
+            });
+
+        // Check updates and remove any complete ones
+        drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET | DRM_MODE_ATOMIC_NONBLOCK, nullptr);
+    }
 }
 
 bool mga::AtomicKMSOutput::clear_cursor()
 {
+    std::lock_guard lg{cursor_mutex};
+    if(current_crtc)
+    {
+        cursor_state.enabled = false;
+
+        AtomicUpdate update;
+        update.add_property(*cursor_plane_props, "FB_ID", 0);
+
+        auto ret =
+            drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET | DRM_MODE_ATOMIC_NONBLOCK, nullptr);
+
+        if(ret && ret != -EBUSY)
+        {
+            mir::log_debug("clear_cursor failed: %s (%d)", strerror(-ret), -ret);
+            update.print_properties();
+            return false;
+        }
+
+        return true;
+    }
+
     return false;
 }
 
-bool mga::AtomicKMSOutput::has_cursor() const
+bool mga::AtomicKMSOutput::has_cursor_plane() const
 {
-    return false;
+    return current_cursor_plane != nullptr;
 }
 
 bool mga::AtomicKMSOutput::ensure_crtc()
 {
+    std::lock_guard lg{cursor_mutex};
     /* Nothing to do if we already have a crtc */
     if (current_crtc)
         return true;
@@ -457,9 +663,10 @@ bool mga::AtomicKMSOutput::ensure_crtc()
     // Update the connector as we may unexpectedly fail in find_crtc_and_index_for_connector()
     // https://github.com/MirServer/mir/issues/2661
     connector = kms::get_connector(drm_fd_, connector->connector_id);
-    std::tie(current_crtc, current_plane) = mgk::find_crtc_with_primary_plane(drm_fd_, connector);
+    std::tie(current_crtc, current_primary_plane, current_cursor_plane) = mgk::find_crtc_with_primary_plane(drm_fd_, connector);
     crtc_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, current_crtc);
-    plane_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, current_plane);
+    primary_plane_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, current_primary_plane);
+    cursor_plane_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, current_cursor_plane);
 
     return (current_crtc != nullptr);
 }
@@ -526,6 +733,7 @@ void mga::AtomicKMSOutput::set_gamma(mg::GammaCurves const& gamma)
 void mga::AtomicKMSOutput::refresh_hardware_state()
 {
     connector = kms::get_connector(drm_fd_, connector->connector_id);
+    mir::log_debug("%s: Clearing CRTC", __PRETTY_FUNCTION__);
     current_crtc = nullptr;
 
     if (connector->encoder_id)
@@ -798,4 +1006,9 @@ void mga::AtomicKMSOutput::update_from_hardware_state(
 int mga::AtomicKMSOutput::drm_fd() const
 {
     return drm_fd_;
+}
+
+bool mga::AtomicKMSOutput::has_cursor() const
+{
+    return cursor_state.enabled;
 }

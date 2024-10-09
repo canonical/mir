@@ -14,16 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_GBM_DISPLAY_H_
-#define MIR_GRAPHICS_GBM_DISPLAY_H_
+#ifndef MIR_GRAPHICS_ATOMIC_DISPLAY_H_
+#define MIR_GRAPHICS_ATOMIC_DISPLAY_H_
 
+#include "./platform_common.h"
 #include "kms-utils/drm_event_handler.h"
 #include "mir/graphics/display.h"
+#include "mir/graphics/platform.h"
 #include "mir/udev/wrapper.h"
 #include "real_kms_output_container.h"
 #include "real_kms_display_configuration.h"
-#include "platform_common.h"
-#include "mir/graphics/platform.h"
 
 #include <atomic>
 #include <mutex>
@@ -128,4 +128,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_DISPLAY_H_ */
+#endif /* MIR_GRAPHICS_ATOMIC_DISPLAY_H_ */

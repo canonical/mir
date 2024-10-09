@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_GBM_PLATFORM_COMMON_H_
-#define MIR_GRAPHICS_GBM_PLATFORM_COMMON_H_
+#ifndef MIR_GRAPHICS_ATOMIC_PLATFORM_COMMON_H_
+#define MIR_GRAPHICS_ATOMIC_PLATFORM_COMMON_H_
 
 namespace mir
 {
@@ -33,4 +33,4 @@ enum class BypassOption
 }
 }
 }
-#endif /* MIR_GRAPHICS_GBM_PLATFORM_COMMON_H_ */
+#endif /* MIR_GRAPHICS_ATOMIC_PLATFORM_COMMON_H_ */
