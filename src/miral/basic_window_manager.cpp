@@ -1855,10 +1855,7 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
     if (!parameters.state().is_set())
         parameters.state() = mir_window_state_restored;
 
-    if (!parameters.size().is_set())
-    {
-        parameters.size() = {640, 480};
-    }
+    auto const proposed_size = parameters.size().value_or({640, 480});
 
     std::shared_ptr<DisplayArea> display_area;
     if (parameters.output_id().is_set())
@@ -1890,7 +1887,7 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
             auto const position = place_relative(
                 parent_content_area,
                 parameters,
-                parameters.size().value());
+                proposed_size);
 
             if (position.is_set())
             {
@@ -1911,8 +1908,8 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
             auto const parent = info_for(parameters.parent().value()).window();
             auto const parent_top_left = parent.top_left();
             auto const centred = parent_top_left
-                                 + 0.5*(as_displacement(parent.size()) - as_displacement(parameters.size().value()))
-                                 - (as_delta(parent.size().height) - as_delta(parameters.size().value().height)) / 6;
+                                 + 0.5*(as_displacement(parent.size()) - as_displacement(proposed_size))
+                                 - (as_delta(parent.size().height) - as_delta(proposed_size.height)) / 6;
 
             parameters.top_left() = centred;
             positioned = true;
@@ -1932,8 +1929,8 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
     if (!positioned)
     {
         auto centred = application_zone.top_left
-                       + 0.5*(as_displacement(application_zone.size) - as_displacement(parameters.size().value()))
-                       - (as_delta(application_zone.size.height) - as_delta(parameters.size().value().height)) / 6;
+                       + 0.5*(as_displacement(application_zone.size) - as_displacement(proposed_size))
+                       - (as_delta(application_zone.size.height) - as_delta(proposed_size.height)) / 6;
 
         switch (parameters.state().value())
         {
@@ -1950,13 +1947,13 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
         case mir_window_state_vertmaximized:
             centred.y = application_zone.top_left.y;
             parameters.top_left() = centred;
-            parameters.size() = Size{parameters.size().value().width, application_zone.size.height};
+            parameters.size() = Size{proposed_size.width, application_zone.size.height};
             break;
 
         case mir_window_state_horizmaximized:
             centred.x = application_zone.top_left.x;
             parameters.top_left() = centred;
-            parameters.size() = Size{application_zone.size.width, parameters.size().value().height};
+            parameters.size() = Size{application_zone.size.width, proposed_size.height};
             break;
 
         default:
