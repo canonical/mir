@@ -8,6 +8,10 @@ if (MIR_BUILD_PLATFORM_GBM_KMS)
   add_compile_definitions(MIR_BUILD_PLATFORM_GBM_KMS)
 endif()
 
+if (MIR_BUILD_PLATFORM_ATOMIC_KMS)
+  add_compile_definitions(MIR_BUILD_PLATFORM_ATOMIC_KMS)
+endif()
+
 if (MIR_BUILD_PLATFORM_X11)
   add_compile_definitions(MIR_BUILD_PLATFORM_X11)
 endif()
