@@ -44,9 +44,8 @@ std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
     auto confine = params.confine_pointer.is_set() ? params.confine_pointer.value() : mir_pointer_unconfined;
     auto const name = params.name.is_set() ? params.name.value() : "";
     geom::Rectangle const rect{
-        params.top_left.is_set() ? params.top_left.value() : geom::Point{}, {
-            params.width.is_set() ? params.width.value() : geom::Width{100},
-            params.height.is_set() ? params.height.value() : geom::Height{100}}};
+        params.top_left.value_or(geom::Point{}),
+        {params.width.value_or(geom::Width{0}), params.height.value_or(geom::Height{0})}};
     auto const parent = params.parent.is_set() ? params.parent.value() : std::weak_ptr<scene::Surface>{};
     auto const surface = std::make_shared<BasicSurface>(
         session,
