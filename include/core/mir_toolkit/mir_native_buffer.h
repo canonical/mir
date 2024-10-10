@@ -43,7 +43,7 @@ typedef struct MirBufferPackage
     int stride;
     int age; /**< Number of frames submitted by the client since the client has rendered to this buffer. */
              /**< This has the same semantics as the EGL_EXT_buffer_age extension */
-             /**< \see http://www.khronos.org/registry/egl/extensions/EXT/EGL_EXT_buffer_age.txt */
+             /**< \see https://registry.khronos.org/EGL/extensions/EXT/EGL_EXT_buffer_age.txt */
 } MirBufferPackage;
 
 #ifdef ANDROID

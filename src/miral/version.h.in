@@ -29,7 +29,7 @@
  *
  * The major MirAL API version. This will increase once per API incompatible release.
  *
- * See also: http://semver.org/
+ * See also: https://semver.org/
  */
 #define MIRAL_MAJOR_VERSION (@MIRAL_VERSION_MAJOR@)
 
@@ -39,7 +39,7 @@
  * The minor MirAL API version. This will increase each time new backwards-compatible API
  * is added, and will reset to 0 each time MIRAL_MAJOR_VERSION is incremented.
  *
- * See also: http://semver.org/
+ * See also: https://semver.org/
  */
 #define MIRAL_MINOR_VERSION (@MIRAL_VERSION_MINOR@)
 
@@ -50,7 +50,7 @@
  * This is usually uninteresting for server code, but may be of use in selecting
  * whether to use a feature that has previously been buggy.
  *
- * This corresponds to the PATCH field of http://semver.org/
+ * This corresponds to the PATCH field of https://semver.org/
  */
 #define MIRAL_MICRO_VERSION (@MIRAL_VERSION_PATCH@)
 

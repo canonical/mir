@@ -8,7 +8,7 @@ With the [Mir 1.3 release](https://discourse.ubuntu.com/t/mir-1-3-0-release/1163
 
 ## The worked example
 
-To create a "worked example" the first thing I needed was a downstream shell that plausibly needed an extension writing. For obvious reasons I chose [egmde](https://discourse.ubuntu.com/t/egmde-a-project-that-uses-mir/7129) as the example server. For the extension protocol I chose ["primary selection"](https://github.com/wayland-project/wayland-protocols/blob/master/unstable/primary-selection/primary-selection-unstable-v1.xml). While a protocol that allows every application to "spy" on the clipboard may not meet the security criteria we use for Mir in IoT, for a desktop environment like egmde it is a great convenience.
+To create a "worked example" the first thing I needed was a downstream shell that plausibly needed an extension writing. For obvious reasons I chose [egmde](https://discourse.ubuntu.com/t/egmde-a-project-that-uses-mir/7129) as the example server. For the extension protocol I chose ["primary selection"](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/primary-selection/primary-selection-unstable-v1.xml). While a protocol that allows every application to "spy" on the clipboard may not meet the security criteria we use for Mir in IoT, for a desktop environment like egmde it is a great convenience.
 
 The changes to egmde can be seen in [this pull request](https://github.com/AlanGriffiths/egmde/pull/18). I'll discuss these in more detail below, but for those that want to follow along the following setup is needed to build the code.
 
@@ -22,7 +22,7 @@ The `libmirwayland-dev` provides the tooling needed to implement the protocol in
 
 ## wlcs tests for primary selection
 
-While working on this I proposed adding some ["primary selection" tests](https://github.com/MirServer/wlcs/pull/106) to wlcs and they are included in the 1.1 release of wlcs. Here's an example of what the tests look like:
+While working on this I proposed adding some ["primary selection" tests](https://github.com/canonical/wlcs/pull/106) to wlcs and they are included in the 1.1 release of wlcs. Here's an example of what the tests look like:
 
 ```cpp
 TEST_F(PrimarySelection, source_sees_request)
@@ -72,7 +72,7 @@ add_custom_target(primary-selection-unstable
 ```
 The generator cannot implement the semantics of the protocol: it just provides the "hooks" into which to write the code. The latter can be found in a couple of files `egprimary_selection_device_controller.cpp` and `primary_selection.cpp` (this is only split this way as a lot of logic can be shared with `gtk_primary_selection`.)
 
-All these generated and and-written files are combined into a static library that is used both by egmde and by a new module `egmde-wlcs.so` that provides the wlcs test fixture for egmde. 
+All these generated and and-written files are combined into a static library that is used both by egmde and by a new module `egmde-wlcs.so` that provides the wlcs test fixture for egmde.
 
 ## wlcs test fixture
 

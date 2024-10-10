@@ -6,9 +6,9 @@ discourse: 8484
 
 **Or: things are complicated. Let's see if one more explanation will incrementally reduce the Internet's Wrongness™**
 
-We've recently (ok, recently-ish) released [Mir 1.0](https://github.com/MirServer/mir/releases/tag/v1.0.0) with usable Wayland support. Yay!
+We've recently (ok, recently-ish) released [Mir 1.0](https://github.com/canonical/mir/releases/tag/v1.0.0) with usable Wayland support. Yay!
 
-That brought a bunch of publicity, including on [LWN](https://lwn.net/Articles/766178/). Some of the comments there and elsewhere betray a misunderstanding about what Wayland *is* (and is not), and this still occasionally comes up in ``#wayland``, so I'll dust off an old blog post, polish up the rusty bits, and see if I can make this clearer for people again! 
+That brought a bunch of publicity, including on [LWN](https://lwn.net/Articles/766178/). Some of the comments there and elsewhere betray a misunderstanding about what Wayland *is* (and is not), and this still occasionally comes up in ``#wayland``, so I'll dust off an old blog post, polish up the rusty bits, and see if I can make this clearer for people again!
 
 I'll give a run-down as to what the various projects in this space are and aim to do, throwing in X11 as a reference point.
 

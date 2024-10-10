@@ -129,7 +129,7 @@ struct WindowInfo
     void clip_area(mir::optional_value<mir::geometry::Rectangle> const& area);
 
     /// The D-bus service name and basename of the app's .desktop file
-    /// See http://standards.freedesktop.org/desktop-entry-spec/
+    /// See https://specifications.freedesktop.org/desktop-entry-spec/
     /// \remark Since MirAL 2.8
     ///@{
     auto application_id() const -> std::string;

@@ -18,15 +18,15 @@ Compositor|Description
 --|--
 [Miriway](https://github.com/Miriway/Miriway)|A minimal desktop shell
 [Lomiri](https://lomiri.com/)|The shell used by Ubuntu Touch, aspires to be "convergent": that is work across various form factors (including desktop)
-[Ubuntu Frame](https://github.com/MirServer/ubuntu-frame/tree/main/src)|Runs an app (or apps) fullscreen, intended for embedded/IoT use
-[Miracle](https://github.com/mattkae/miracle)| A tiling window manager much like i3/sway
+[Ubuntu Frame](https://github.com/canonical/ubuntu-frame/tree/main/src)|Runs an app (or apps) fullscreen, intended for embedded/IoT use
+[Miracle](https://github.com/miracle-wm-org/miracle-wm)| A tiling window manager much like i3/sway
 [egmde](https://github.com/AlanGriffiths/egmde)|An example desktop environment used to write tutorials about writing Mir compositors
 [mir_kiosk_x11](https://github.com/MirServer/mir_kiosk_x11)|Minimal compositor to support fullscreen X11 applications
 [lomiri-system-compositor](https://gitlab.com/ubports/development/core/lomiri-system-compositor/)|Owns the display and input hardware and supports a nested shell with fewer permissions
-[miral-kiosk](https://github.com/MirServer/mir/tree/main/examples/miral-kiosk)|Runs an app (or apps) maximized
-[miral-shell](https://github.com/MirServer/mir/tree/main/examples/miral-shell)|Options for "floating" or "tiling" window management and a limited "desktop" experience with workspaces and a keyboard shortcut for launching a terminal
-[mir_demo_server](https://github.com/MirServer/mir/tree/main/examples/mir_demo_server)|"floating" window management, enables by default all the Wayland extensions Mir supports
-[miral-system-compositor](https://github.com/MirServer/mir/tree/main/examples/miral-system-compositor)|Owns the display and input hardware and supports a nested shell with fewer permissions
+[miral-kiosk](https://github.com/canonical/mir/tree/main/examples/miral-kiosk)|Runs an app (or apps) maximized
+[miral-shell](https://github.com/canonical/mir/tree/main/examples/miral-shell)|Options for "floating" or "tiling" window management and a limited "desktop" experience with workspaces and a keyboard shortcut for launching a terminal
+[mir_demo_server](https://github.com/canonical/mir/tree/main/examples/mir_demo_server)|"floating" window management, enables by default all the Wayland extensions Mir supports
+[miral-system-compositor](https://github.com/canonical/mir/tree/main/examples/miral-system-compositor)|Owns the display and input hardware and supports a nested shell with fewer permissions
 [mirco](https://github.com/wmww/mirco)|The basis of experiments moving MATE shell components to Wayland
 
 For all of these examples Mir provides the code and logic connecting the display and input hardware, and the Wayland protocols connecting to the client. Mir also separates out the concerns such as Window Management,  abstracts the graphics  stack, and manages Wayland extensions:
@@ -236,4 +236,4 @@ int main(int argc, char const* argv[])
 ```
 The code in `main()` is written using a mixture of classes defined in the `miral` API (such as `ConfigurationOption` and `X11Support`) and ones written as mart of Miriway (such as `ShellPids` and `CommandIndex`).
 
-For the `miral` API there's [documentation on the Mir website](https://mir-server.io/doc/namespacemiral.html), and for the `miriway` classes are documented in the code.
+For the `miral` API there's [documentation on the Mir website](https://canonical-mir.readthedocs-hosted.com/stable/), and for the `miriway` classes are documented in the code.

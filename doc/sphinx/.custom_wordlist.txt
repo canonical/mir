@@ -6,6 +6,7 @@ appications
 AUR
 backend
 backends
+barebones
 behavior
 Binutils
 Broadcom
@@ -13,14 +14,19 @@ buf
 cgroup
 ci
 classDiagram
+cmake
 CMake
 codebase
 Codecov
 CompositorAuthor
+config
 coreXX
 CRTC
+csd
+CSD
 Ctrl
 customize
+customization
 debian
 deps
 devel
@@ -45,6 +51,7 @@ EGMDE
 EndToEnd
 etnaviv
 Etnaviv
+eyecandy
 favorite
 filesystem
 flavors
@@ -81,6 +88,7 @@ ish
 jenkins
 KDE's
 KDE’s
+keybinds
 KHR
 Khronos
 kms
@@ -99,9 +107,13 @@ lttng
 LTTng
 LWN
 maintainer's
+maximize
+minimizing
 maximized
+maximizing
 Miaspects
 minimalistic
+minimize
 mir
 miral
 MirAL
@@ -118,6 +130,8 @@ mirwayland
 mmal
 Multiarch
 MX
+natively
+Natively
 nouveau
 nvidia
 Nvidia's
@@ -130,6 +144,7 @@ organized
 paltform
 ppa
 PPAs
+prebuilt
 preload
 preselects
 prober
@@ -157,6 +172,8 @@ snapcraft
 snapd
 SONAME
 SpinnerSplash
+ssd
+SSD
 subgraph
 subprocess
 sys
@@ -174,6 +191,7 @@ UBports
 ubuntu
 udev
 UndefinedBehaviourSanitizer
+usecase
 userland
 userspace
 UST

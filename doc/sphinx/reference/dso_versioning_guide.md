@@ -184,8 +184,8 @@ Additionally, there's the complication of passing objects between different
 versions. For the moment, we can not bother trying to make this work.
 
 
-See also: 
+See also:
 ---------
 [Binutils manual](https://sourceware.org/binutils/docs/ld/VERSION.html)
 
-[Former glibc maintainer's DSO guide](http://www.akkadia.org/drepper/dsohowto.pdf)
+[Former glibc maintainer's DSO guide](https://www.akkadia.org/drepper/dsohowto.pdf)
