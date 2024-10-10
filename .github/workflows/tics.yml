@@ -1,9 +1,12 @@
 name: TICS
 
 on:
-  push:
-    branches:
-    - main
+#  push:
+#    branches:
+#    - main
+  schedule:
+  # 5:04 on a Wednesday
+  - cron: 5 4 * * 3
   workflow_dispatch:
 
 concurrency:
