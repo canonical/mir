@@ -21,6 +21,7 @@
 
 #include "input.h"
 
+#include <functional>
 #include <memory>
 #include <map>
 
