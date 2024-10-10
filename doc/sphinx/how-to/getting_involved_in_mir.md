@@ -6,7 +6,7 @@ The Mir project website is <https://mir-server.io/>,
 the code is [hosted on GitHub](https://github.com/canonical/mir)
 
 For announcements and other discussions on Mir see:
-[Mir on community.ubuntu](https://discourse.ubuntu.com/c/mir/15)
+[Mir on discourse.ubuntu](https://discourse.ubuntu.com/c/mir/15)
 
 For other questions and discussion about the Mir project:
 the [\#mir-server](https://web.libera.chat/?channels=#mir-server) IRC channel on Libera.Chat.
