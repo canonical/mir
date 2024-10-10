@@ -52,6 +52,13 @@ public:
     /// is sent the display is never turned off or dimmed, which is the default.
     virtual void set_display_off_timeout(std::optional<time::Duration> timeout) = 0;
 
+    /// Duration Mir will remain idle before the display is turned off after the session is locked. The display may dim
+    /// some time before this. If not nullopt, this idle timeout takes precedence over the timeout set with
+    /// set_display_off_timeout while the session is locked and remains idle. If Mir becomes active after the session
+    /// is locked, this timeout is disabled. If the session is already locked when this function is called, the new
+    /// timeout will only take effect after the next session lock.
+    virtual void set_display_off_timeout_on_lock(std::optional<time::Duration> timeout) = 0;
+
 private:
     IdleHandler(IdleHandler const&) = delete;
     IdleHandler& operator=(IdleHandler const&) = delete;

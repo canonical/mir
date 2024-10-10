@@ -39,6 +39,7 @@ namespace scene
 {
 class IdleHub;
 class IdleStateObserver;
+class SessionLock;
 }
 namespace shell
 {
@@ -51,11 +52,14 @@ public:
         std::shared_ptr<scene::IdleHub> const& idle_hub,
         std::shared_ptr<input::Scene> const& input_scene,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-        std::shared_ptr<shell::DisplayConfigurationController> const& display_config_controller);
+        std::shared_ptr<shell::DisplayConfigurationController> const& display_config_controller,
+        std::shared_ptr<scene::SessionLock> const& session_lock);
 
     ~BasicIdleHandler();
 
     void set_display_off_timeout(std::optional<time::Duration> timeout) override;
+
+    void set_display_off_timeout_on_lock(std::optional<time::Duration> timeout) override;
 
     void register_interest(std::weak_ptr<IdleHandlerObserver> const&) override;
 
@@ -70,16 +74,29 @@ public:
     void unregister_interest(IdleHandlerObserver const&) override;
 
 private:
+    class SessionLockListener;
+    class TimeoutRestorer;
+
+    void on_lock();
+    void on_unlock();
+
+    void register_observers(ProofOfMutexLock const&);
     void clear_observers(ProofOfMutexLock const&);
+    void restore_off_timeout();
 
     std::shared_ptr<scene::IdleHub> const idle_hub;
     std::shared_ptr<input::Scene> const input_scene;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<shell::DisplayConfigurationController> const display_config_controller;
+    std::shared_ptr<scene::SessionLock> const session_lock;
+    std::shared_ptr<SessionLockListener> const session_lock_monitor;
 
     std::mutex mutex;
     std::optional<time::Duration> current_off_timeout;
+    std::optional<time::Duration> previous_off_timeout;
+    std::optional<time::Duration> current_off_timeout_on_lock;
     std::vector<std::shared_ptr<scene::IdleStateObserver>> observers;
+    std::shared_ptr<TimeoutRestorer> timeout_restorer;
 
     class BasicIdleHandlerObserverMultiplexer: public ObserverMultiplexer<IdleHandlerObserver>
     {
