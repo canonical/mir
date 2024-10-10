@@ -34,7 +34,7 @@ private:
     friend void g_object_unref(GDBusConnection*) = delete;
 };
 
-// Desktop File ID (https://standards.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html#desktop-file-id)
+// Desktop File ID (https://specifications.freedesktop.org/desktop-entry-spec/)
 //
 // Each desktop entry representing an application is identified by its desktop file ID, which is based
 // on its filename.

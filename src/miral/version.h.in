@@ -29,7 +29,7 @@
  *
  * The major MirAL API version. This will increase once per API incompatible release.
  *
- * See also: http://semver.org/
+ * See also: https://semver.org/
  */
 #define MIRAL_MAJOR_VERSION (@MIRAL_VERSION_MAJOR@)
 
@@ -50,7 +50,7 @@
  * This is usually uninteresting for server code, but may be of use in selecting
  * whether to use a feature that has previously been buggy.
  *
- * This corresponds to the PATCH field of http://semver.org/
+ * This corresponds to the PATCH field of https://semver.org/
  */
 #define MIRAL_MICRO_VERSION (@MIRAL_VERSION_PATCH@)
 
