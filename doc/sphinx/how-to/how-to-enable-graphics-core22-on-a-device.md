@@ -78,7 +78,7 @@ Node: /dev/dri/card1
 You want to make sure that you have:
 - 1 Node
 - 1 or more Connector(s)
-- 1 or mor CRTC(s)
+- 1 or more CRTC(s)
 - 1 or more Plane(s)
 
 Finally, If you have a display connected, then one of your `Connector`s should read `Status: connected`. This `Connector` will also list many `Modes` that

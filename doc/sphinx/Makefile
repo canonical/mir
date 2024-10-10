@@ -9,8 +9,30 @@ SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
 VENVDIR       = $(SPHINXDIR)/venv
-PA11Y         = $(SPHINXDIR)/node_modules/pa11y/bin/pa11y.js --config $(SPHINXDIR)/pa11y.json
+PA11Y         = $(SPHINXDIR)/node_modules/pa11y-ci/bin/pa11y-ci.js --config $(SPHINXDIR)/pa11y-ci.json
 VENV          = $(VENVDIR)/bin/activate
+WORKDIR	      = ../build_doc
+WORKSPHINX    = $(WORKDIR)/doc/sphinx
+PROJROOT      = ../..
+DEPS	      = cmake doxygen libboost-dev libboost-iostreams-dev \
+		libboost-filesystem-dev libboost-program-options-dev \
+		libboost-system-dev libdrm-dev libegl-dev libepoxy-dev \
+		libfreetype-dev libglib2.0-dev libgles2-mesa-dev \
+		libglm-dev libinput-dev liblttng-ust-dev libwayland-dev \
+		libxcb-composite0-dev libxcb-randr0-dev libxcursor-dev \
+		libxkbcommon-dev libxml++2.6-dev libyaml-cpp-dev xsltproc
+
+# If the environment variable `GITHUB_WORKFLOW` is empty, then we're running
+# locally and shouldn't depend on `_build/index.html` to build HTML (so even if
+# it exists, we'll rebuild)
+# On CI where the envvar is set, we should depend on `_build/index.html` so we
+# don't build multiple times (multiple invocations = multiple complete builds
+# even if files didn't change)
+ifeq ($(GITHUB_WORKFLOW), "")
+HTMLINDEX     = ""
+else
+HTMLINDEX     = $(WORKSPHINX)/_build/index.html
+endif
 
 .PHONY: help full-help woke-install pa11y-install install run html epub serve \
         clean clean-doc spelling linkcheck woke pa11y Makefile
@@ -36,6 +58,10 @@ full-help: $(VENVDIR)
 	@echo "\n\033[1;31mNOTE: This help texts shows unsupported targets!\033[0m"
 	@echo "Run 'make help' to see supported targets."
 
+configure:
+	. $(VENV); \
+	cmake $(PROJROOT) -B $(WORKDIR) -DMIR_ENABLE_TESTS=NO -DMIR_PLATFORM=x11;
+
 # Shouldn't assume that venv is available on Ubuntu by default; discussion here:
 # https://bugs.launchpad.net/ubuntu/+source/python3.4/+bug/1290847
 $(SPHINXDIR)/requirements.txt:
@@ -60,22 +86,24 @@ woke-install:
 
 pa11y-install:
 	@type $(PA11Y) >/dev/null 2>&1 || { \
-			echo "Installing \"pa11y\" from npm... \n"; \
+			echo "Installing \"pa11y-ci\" from npm... \n"; \
 			mkdir -p $(SPHINXDIR)/node_modules/ ; \
-			npm install --prefix $(SPHINXDIR) pa11y; \
+			npm install --prefix $(SPHINXDIR) pa11y-ci; \
 		}
 
 install: $(VENVDIR)
+	sudo apt install -y $(DEPS)
 
-run: install
-	. $(VENV); sphinx-autobuild -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
+run: install configure
+	. $(VENV); cd $(WORKSPHINX); sphinx-autobuild -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
 
-# Doesn't depend on $(BUILDDIR) to rebuild properly at every run.
-html: install
-	. $(VENV); $(SPHINXBUILD) -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" -w $(SPHINXDIR)/warnings.txt $(SPHINXOPTS)
+html: install configure
+	cd $(WORKSPHINX); \
+	. $(VENV); \
+	$(SPHINXBUILD) -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" -w $(SPHINXDIR)/warnings.txt $(SPHINXOPTS)
 
-epub: install
-	. $(VENV); $(SPHINXBUILD) -b epub "$(SOURCEDIR)" "$(BUILDDIR)" -w $(SPHINXDIR)/warnings.txt $(SPHINXOPTS)
+epub: install configure
+	. $(VENV); cd $(WORKSPHINX); $(SPHINXBUILD) -b epub "$(SOURCEDIR)" "$(BUILDDIR)" -w $(SPHINXDIR)/warnings.txt $(SPHINXOPTS)
 
 serve: html
 	cd "$(BUILDDIR)"; python3 -m http.server 8000
@@ -85,23 +113,25 @@ clean: clean-doc
 	rm -rf $(VENVDIR)
 	rm -f $(SPHINXDIR)/requirements.txt
 	rm -rf $(SPHINXDIR)/node_modules/
+	rm -r $(WORKDIR)
 
 clean-doc:
 	git clean -fx "$(BUILDDIR)"
 	rm -rf $(SPHINXDIR)/.doctrees
 
 spelling: html
-	. $(VENV) ; python3 -m pyspelling -c $(SPHINXDIR)/spellingcheck.yaml -j $(shell nproc)
+	. $(VENV) ; cd $(WORKSPHINX); python3 -m pyspelling -c $(SPHINXDIR)/spellingcheck.yaml -j $(shell nproc)
 
 linkcheck: install
-	. $(VENV) ; $(SPHINXBUILD) -b linkcheck "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
+	. $(VENV) ; cd $(WORKSPHINX); $(SPHINXBUILD) -b linkcheck "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
 
+# No need to go to $(WORKSPHINX) since it works on raw source files
 woke: woke-install
 	woke *.rst **/*.rst --exit-1-on-failure \
 	    -c https://github.com/canonical/Inclusive-naming/raw/main/config.yml
 
 pa11y: pa11y-install html
-	find $(BUILDDIR) -name *.html -print0 | xargs -n 1 -0 $(PA11Y)
+	$(PA11Y) $(shell find $(WORKSPHINX)/_build -name *.html -not -path '$(WORKSPHINX)/_build/api/*');
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).

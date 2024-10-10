@@ -54,7 +54,7 @@ terminal you can start apps. For example:
 
     $ gedit
 
-To exit from miral-shell press Ctrl-Alt-BkSp.
+To exit from miral-shell press Ctrl-Alt-Backspace.
 
 You can install the Mir examples, headers and libraries you've built with:
 
