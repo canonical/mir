@@ -155,7 +155,7 @@ public:
     ///@}
 
     /// The D-bus service name and basename of the app's .desktop file
-    /// See http://standards.freedesktop.org/desktop-entry-spec/
+    /// See https://specifications.freedesktop.org/desktop-entry-spec/
     ///@{
     auto application_id() const -> mir::optional_value<std::string> const&;
     auto application_id() -> mir::optional_value<std::string>&;

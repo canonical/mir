@@ -18,7 +18,7 @@ The most widely used and tested platform is “mesa-kms” which works with the 
 
 Platform|Status|Description
 --|--|--
-gbm-kms|Released|Works with any driver providing KMS, `libgbm` and an EGL supporting [EGL_WL_bind_wayland_display](https://www.khronos.org/registry/EGL/extensions/WL/EGL_WL_bind_wayland_display.txt). The open-source Mesa drivers are the obvious example, but other drivers supporting these interfaces should work - for example, the binary MALI drivers provided by ARM have been tested on some devices.
+gbm-kms|Released|Works with any driver providing KMS, `libgbm` and an EGL supporting [EGL_WL_bind_wayland_display](https://registry.khronos.org/EGL/extensions/WL/EGL_WL_bind_wayland_display.txt). The open-source Mesa drivers are the obvious example, but other drivers supporting these interfaces should work - for example, the binary MALI drivers provided by ARM have been tested on some devices.
 x11|Released|Provides “Mir-on-X11” primarily for development.
 eglstream-kms|Released|Works with proprietary Nvidia drivers.
 wayland|Released|Provides “Mir-on-Wayland” both for nested compositors and for development.
@@ -68,7 +68,7 @@ Mesa open-source graphics stack|Proprietary driver
 --|--
 Etnaviv - Full open-source stack, using standard KMS/dma-buf/gbm interfaces. Reverse-engineered.|Vivante - proprietary driver.
 Same comments as etnaviv on i.MX6 apply, but the GPU is newer and the driver support is likewise newer; there may be more missing features/bugs than i.MX6 support.|same comments as i.MX6. <br/>_It’s likely that a Mir vivante platform would work on both i.MX6 and i.MX8; likewise, there is apparently Weston support (again, in the form of out-of-tree patches)_
-Looks like there might not be open-source video decode support (cf: https://community.nxp.com/thread/489829#comment-1160206). Unknown whether we could interface the IMX bits with the etnaviv DRM bits.|Proprietary video decode solution.
+Looks like there might not be open-source video decode support (https://community.nxp.com/t5/i-MX-Processors/i-MX8-Linux-video-decode-support/m-p/796955/highlight/true#M123321). Unknown whether we could interface the IMX bits with the etnaviv DRM bits.|Proprietary video decode solution.
 
 ## Driver requirements
 
@@ -76,10 +76,10 @@ Different Mir platforms require different features of the underlying driver stac
 
 ### gbm-kms
 
-The gbm-kms platform requires a DRM device node with KMS support, a `libgbm` implementation for buffer allocation, and an EGL implementation supporting at least [EGL_KHR_platform_gbm](https://www.khronos.org/registry/EGL/extensions/KHR/EGL_KHR_platform_gbm.txt) (or the equivalent [EGL_MESA_platform_gbm](https://www.khronos.org/registry/EGL/extensions/MESA/EGL_MESA_platform_gbm.txt) extension) and [EGL_WL_bind_wayland_display](https://www.khronos.org/registry/EGL/extensions/WL/EGL_WL_bind_wayland_display.txt).
+The gbm-kms platform requires a DRM device node with KMS support, a `libgbm` implementation for buffer allocation, and an EGL implementation supporting at least [EGL_KHR_platform_gbm](https://registry.khronos.org/EGL/extensions/KHR/EGL_KHR_platform_gbm.txt) (or the equivalent [EGL_MESA_platform_gbm](https://registry.khronos.org/EGL/extensions/MESA/EGL_MESA_platform_gbm.txt) extension) and [EGL_WL_bind_wayland_display](https://registry.khronos.org/EGL/extensions/WL/EGL_WL_bind_wayland_display.txt).
 
-Optionally, the EGL implementation can support [EGL_EXT_image_dma_buf_import](https://www.khronos.org/registry/EGL/extensions/EXT/EGL_EXT_image_dma_buf_import.txt), [EGL_EXT_image_dma_buf_import_modifiers](https://www.khronos.org/registry/EGL/extensions/EXT/EGL_EXT_image_dma_buf_import_modifiers.txt), and use the [zwp_linux_dmabuf_unstable_v1](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/master/unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml) Wayland protocol for client buffer transfer. Support for this was added in Mir 2.3. Composite-bypass support depends on this implementation. Some future performance improvements, such as overlay plane usage, are likely to require this support from the driver stack.
+Optionally, the EGL implementation can support [EGL_EXT_image_dma_buf_import](https://registry.khronos.org/EGL/extensions/EXT/EGL_EXT_image_dma_buf_import.txt), [EGL_EXT_image_dma_buf_import_modifiers](https://registry.khronos.org/EGL/extensions/EXT/EGL_EXT_image_dma_buf_import_modifiers.txt), and use the [zwp_linux_dmabuf_unstable_v1](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/master/unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml) Wayland protocol for client buffer transfer. Support for this was added in Mir 2.3. Composite-bypass support depends on this implementation. Some future performance improvements, such as overlay plane usage, are likely to require this support from the driver stack.
 
 ### eglstream-kms
 
-The eglstream-kms platform requires a DRM device node with Atomic KMS support and an EGL implementation supporting [EGL_EXT_platform_base](https://www.khronos.org/registry/EGL/extensions/EXT/EGL_EXT_platform_base.txt), [EGL_EXT_platform_device](https://www.khronos.org/registry/EGL/extensions/EXT/EGL_EXT_platform_device.txt), [EGL_EXT_device_base](https://www.khronos.org/registry/EGL/extensions/EXT/EGL_EXT_device_base.txt), [EGL_EXT_device_drm](https://www.khronos.org/registry/EGL/extensions/EXT/EGL_EXT_device_drm.txt), and [EGL_EXT_output_base](https://www.khronos.org/registry/EGL/extensions/EXT/EGL_EXT_output_base.txt).
+The eglstream-kms platform requires a DRM device node with Atomic KMS support and an EGL implementation supporting [EGL_EXT_platform_base](https://registry.khronos.org/EGL/extensions/EXT/EGL_EXT_platform_base.txt), [EGL_EXT_platform_device](https://registry.khronos.org/EGL/extensions/EXT/EGL_EXT_platform_device.txt), [EGL_EXT_device_base](https://registry.khronos.org/EGL/extensions/EXT/EGL_EXT_device_base.txt), [EGL_EXT_device_drm](https://registry.khronos.org/EGL/extensions/EXT/EGL_EXT_device_drm.txt), and [EGL_EXT_output_base](https://registry.khronos.org/EGL/extensions/EXT/EGL_EXT_output_base.txt).

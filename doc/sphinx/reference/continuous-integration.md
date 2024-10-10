@@ -17,7 +17,7 @@ breadth of testing. We'll discuss those in more detail below.
 
 When a pull request is opened, updated or merged into `main`, we validate that the contribution
 is correct by building the code and running our test suite. To facilitate this, we use
-[Spread](https://github.com/snapcore/spread) (or rather, our
+[Spread](https://github.com/canonical/spread) (or rather, our
 [lightly patched version](https://snapcraft.io/spread-mir-ci)) to build Mir across a number of
 environments. [`spread.yaml`](https://github.com/canonical/mir/blob/main/spread.yaml) holds
 environment definitions, while the actual build tasks are maintained under
@@ -127,7 +127,7 @@ available in the `edge` or `beta` channels, as appropriate.
 When the snaps get published to the store, we have Jenkins dispatch test runs on a selection of
 hardware, ranging from Raspberry Pis through single-GPU systems all the way up to high performance
 multi-GPU (usually hybrid) ones. We maintain a matrix of test coverage
-[in this spreadsheet](https://docs.google.com/spreadsheets/d/1kUbTSt4zWVpTtgZNJvvxCdugsRUv6C5PK9Xw5dxppCc/edit#gid=893560997).
+[in this spreadsheet](https://docs.google.com/spreadsheets/d/1kUbTSt4zWVpTtgZNJvvxCdugsRUv6C5PK9Xw5dxppCc/edit?usp=sharing).
 
 These tests ultimately verify the full story end-to-end, installing the snaps on a range of
 Ubuntu versions (Core and classic alike) and verify behaviours and visuals through a number of
