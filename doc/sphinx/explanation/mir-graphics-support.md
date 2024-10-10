@@ -18,7 +18,7 @@ The most widely used and tested platform is “mesa-kms” which works with the 
 
 Platform|Status|Description
 --|--|--
-gbm-kms|Released|Works with any driver providing KMS, `libgbm` and an EGL supporting [EGL_WL_bind_wayland_display](https://www.khronos.org/registry/EGL/extensions/WL/EGL_WL_bind_wayland_display.txt). The open-source Mesa drivers are the obvious example, but other drivers supporting these interfaces should work - for example, the binary MALI drivers provided by ARM have been tested on some devices.
+gbm-kms|Released|Works with any driver providing KMS, `libgbm` and an EGL supporting [EGL_WL_bind_wayland_display](https://registry.khronos.org/EGL/extensions/WL/EGL_WL_bind_wayland_display.txt). The open-source Mesa drivers are the obvious example, but other drivers supporting these interfaces should work - for example, the binary MALI drivers provided by ARM have been tested on some devices.
 x11|Released|Provides “Mir-on-X11” primarily for development.
 eglstream-kms|Released|Works with proprietary Nvidia drivers.
 wayland|Released|Provides “Mir-on-Wayland” both for nested compositors and for development.

@@ -39,7 +39,7 @@
  * The minor MirAL API version. This will increase each time new backwards-compatible API
  * is added, and will reset to 0 each time MIRAL_MAJOR_VERSION is incremented.
  *
- * See also: http://semver.org/
+ * See also: https://semver.org/
  */
 #define MIRAL_MINOR_VERSION (@MIRAL_VERSION_MINOR@)
 
