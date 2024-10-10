@@ -296,11 +296,11 @@ auto mf::WindowWlSurfaceRole::current_size() const -> geom::Size
 {
     if (surface)
     {
-        auto const buffer_size = surface.value().buffer_size();
+        auto const buffer_size = surface.value().buffer_size().value_or(geom::Size{});
 
         return {
-            committed_width_set_explicitly.value_or(buffer_size->width),
-            committed_height_set_explicitly.value_or(buffer_size->height)};
+            committed_width_set_explicitly.value_or(buffer_size.width),
+            committed_height_set_explicitly.value_or(buffer_size.height)};
     }
 
     return geom::Size{0, 0};
