@@ -122,7 +122,7 @@ clean-doc:
 spelling: html
 	. $(VENV) ; cd $(WORKSPHINX); python3 -m pyspelling -c $(SPHINXDIR)/spellingcheck.yaml -j $(shell nproc)
 
-linkcheck: install
+linkcheck: install configure
 	. $(VENV) ; cd $(WORKSPHINX); $(SPHINXBUILD) -b linkcheck "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
 
 # No need to go to $(WORKSPHINX) since it works on raw source files
