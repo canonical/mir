@@ -53,8 +53,8 @@ tracking:     latest/stable
 refresh-date: today at 12:04 CEST
 channels:
   latest/stable:    0+git.7970755 2023-07-20 (49) 17MB -
-  latest/candidate: ↑                                  
-  latest/beta:      ↑                                  
+  latest/candidate: ↑
+  latest/beta:      ↑
   latest/edge:      0+git.7970755 2023-07-19 (49) 17MB -
 installed:          0+git.7970755            (49) 17MB devmode
 ```
@@ -88,10 +88,10 @@ Here's a list of the different requirements:
 │                                                                       │
 │                                                                       │
 └───────────────────────────────────────────────────────────────────────┘
- Press <Enter> to continue                                      (H) Help 
+ Press <Enter> to continue                                      (H) Help
 ```
 
-See [Checkbox documentation](https://checkbox.readthedocs.io/en/latest/) for more information on the framework itself and how to interact with it.
+See [Checkbox documentation](https://canonical-checkbox.readthedocs-hosted.com/en/latest/) for more information on the framework itself and how to interact with it.
 
 ### The graphics-core test plan
 
@@ -121,7 +121,7 @@ The graphics-coreXX test plan attempts to verify the graphics-coreXX enablement 
 │                                                                       │
 │                                                                       │
 └───────────────────────────────────────────────────────────────────────┘
- Press (T) to start Testing                                     (H) Help 
+ Press (T) to start Testing                                     (H) Help
 ```
 
 The log results from each of these tests should provide insight into the status of the aspect in question. It's out of scope for this document to discuss the results beyond their success / failure state.
@@ -150,7 +150,7 @@ This test plan runs the smoke and performance tests as found in the [mir-test-to
 │[X]    Run Mir performance test case: GLMark2Xwayland.fullscreen       │
 │                                                                       │
 └───────────────────────────────────────────────────────────────────────┘
- Press (T) to start Testing                                     (H) Help 
+ Press (T) to start Testing                                     (H) Help
 ```
 
 After selecting the tests, there's another step that we use to skip tests we know fail on a given piece of hardware:
@@ -202,13 +202,13 @@ We provide a couple of launchers for automated runs:
 - `checkbox-mir.graphics`: runs the graphics-core test plan
 - `checkbox-mir.mir`: runs the Mir test plan
 
-If you want to integrate checkbox-mir into your CI, these are likely what you want to run after having set your device up. You may also create a custom launcher, see the [Checkbox launchers tutorial](https://checkbox.readthedocs.io/en/latest/reference/launcher.html).
+If you want to integrate checkbox-mir into your CI, these are likely what you want to run after having set your device up. You may also create a custom launcher, see the [Checkbox launchers tutorial](https://canonical-checkbox.readthedocs-hosted.com/en/latest/reference/launcher.html).
 
 `checkbox-mir.snaps` preselects the Snap test plan, but lets you choose which snaps to test.
 
 ### Running remotely
 
-The recommended way to run Checkbox tests is over the network - and using Checkbox itself, rather than a SSH connection (see [Checkbox Remote](https://checkbox.readthedocs.io/en/latest/explanation/remote.html) for more information).
+The recommended way to run Checkbox tests is over the network - and using Checkbox itself, rather than a SSH connection (see [Checkbox Remote](https://canonical-checkbox.readthedocs-hosted.com/en/latest/explanation/remote.html) for more information).
 
 To do this, install checkbox-mir and dependencies on the target device as you would normally, but rather than running the tests there, install Checkbox on your host and issue `checkbox remote <ip.address>`, pointing at the device you want to test.
 
@@ -216,4 +216,4 @@ You'll see the same user interface, be able to run the tests as you would locall
 
 ---
 
-We'd love your feedback, please come to https://github.com/MirServer/checkbox-mir and file issues, pull and enhancement requests. This test suite will grow for sure, and we'd love to know if you think things could be better.
+We'd love your feedback, please come to https://github.com/canonical/checkbox-mir and file issues, pull and enhancement requests. This test suite will grow for sure, and we'd love to know if you think things could be better.

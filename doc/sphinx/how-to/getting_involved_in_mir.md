@@ -3,10 +3,10 @@
 ## Getting involved
 
 The Mir project website is <https://mir-server.io/>,
-the code is [hosted on GitHub](https://github.com/canonical)
+the code is [hosted on GitHub](https://github.com/canonical/mir)
 
 For announcements and other discussions on Mir see:
-[Mir on community.ubuntu](https://community.ubuntu.com/c/mir)
+[Mir on community.ubuntu](https://discourse.ubuntu.com/c/mir/15)
 
 For other questions and discussion about the Mir project:
 the [\#mir-server](https://web.libera.chat/?channels=#mir-server) IRC channel on Libera.Chat.
@@ -48,7 +48,7 @@ With the default options this runs in a window on X (which is convenient for
 development).
 
 The miral-shell example is simple, don’t expect to see a sophisticated launcher
-by default. Within this window you can start a terminal with Ctrl-Alt-Shift-T 
+by default. Within this window you can start a terminal with Ctrl-Alt-Shift-T
 (the "Shift" is needed to avoid Ubuntu's DE intercepting the input). From this
 terminal you can start apps. For example:
 
