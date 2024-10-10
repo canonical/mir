@@ -8,8 +8,8 @@ the code is [hosted on GitHub](https://github.com/canonical/mir)
 For announcements and other discussions on Mir see:
 [Mir on discourse.ubuntu](https://discourse.ubuntu.com/c/mir/15)
 
-For other questions and discussion about the Mir project:
-the [\#mir-server](https://web.libera.chat/?channels=#mir-server) IRC channel on Libera.Chat.
+For other questions and discussion about the Mir project, feel free to join the
+[Matrix channel](https://matrix.to/#/#mir-server:matrix.org).
 
 
 ## Getting Mir source and dependencies
