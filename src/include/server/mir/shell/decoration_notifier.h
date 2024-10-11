@@ -16,17 +16,17 @@
 
 #include <mir/shell/decoration.h>
 
+#include "mir/scene/null_surface_observer.h"
+#include "mir/scene/surface.h"
 #include "mir/shell/shell.h"
 #include "mir_toolkit/common.h"
 
-#include "mir/scene/null_surface_observer.h"
-#include "mir/scene/surface.h"
-#include <memory>
 #include <mir/geometry/size.h>
 #include <mir/geometry/forward.h>
 #include <mir/events/event.h>
 
 #include <string>
+#include <memory>
 
 namespace mir::shell::decoration
 {
