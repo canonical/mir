@@ -208,8 +208,3 @@ add_custom_target(
       --include-dirs "$<JOIN:$<TARGET_PROPERTY:mirserver,INCLUDE_DIRECTORIES>,:>"
       --diff
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
-
-add_custom_target(regenerate-mirserver-internal-debian-symbols
-    COMMAND ${PROJECT_SOURCE_DIR}/tools/symbols_map_generator/run.sh --library mir_server_internal --version ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR} --output_symbols
-    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    VERBATIM)
