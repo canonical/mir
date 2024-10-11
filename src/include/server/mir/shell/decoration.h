@@ -37,10 +37,6 @@ public:
     Decoration() = default;
     virtual ~Decoration() = default;
 
-    // Called whenever the visible aspect of the window changes.
-    // Examples: Scale, title, focus, visibility, size, etc...
-    virtual void redraw() = 0;
-
     // Called whenever the decoration surface receives an input
     virtual void handle_input_event(std::shared_ptr<MirEvent const> const& /*event*/) = 0;
 

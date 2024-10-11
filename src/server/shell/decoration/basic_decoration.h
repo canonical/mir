@@ -74,7 +74,8 @@ public:
         std::shared_ptr<scene::Surface> const& window_surface);
     ~BasicDecoration();
 
-    void redraw() override;
+    void redraw();
+
     void handle_input_event(std::shared_ptr<MirEvent const> const& event) override;
     void set_scale(float scale) override;
     void attrib_changed(mir::scene::Surface const* window_surface, MirWindowAttrib attrib, int value) override;

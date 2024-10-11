@@ -58,7 +58,6 @@ public:
             mock->decoration_destroyed(this);
     }
 
-    MOCK_METHOD(void, redraw, (), (override));
     MOCK_METHOD(void, handle_input_event, (std::shared_ptr<MirEvent const> const& /*event*/), (override));
     MOCK_METHOD(void, set_scale, (float), (override));
     MOCK_METHOD(void, attrib_changed, (mir::scene::Surface const* window_surface, MirWindowAttrib attrib, int value), (override));
