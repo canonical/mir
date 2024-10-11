@@ -8,6 +8,7 @@ set(
   window.h              window.cpp
   input.h               input.cpp
   renderer.h            renderer.cpp
+  decoration_notifier.cpp
 )
 
 add_library(
