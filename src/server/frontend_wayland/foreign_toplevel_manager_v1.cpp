@@ -561,7 +561,7 @@ void mf::GDesktopFileCache::refresh_app_cache()
     {
         GAppInfo *app_info = static_cast<GAppInfo*>(info->data);
 
-        const char* id = g_app_info_get_id(app_info);
+        std::string id = g_app_info_get_id(app_info);
         const char* wm_class = g_desktop_app_info_get_startup_wm_class(G_DESKTOP_APP_INFO(app_info));
         const char* exec = g_app_info_get_executable(app_info);
 
@@ -577,19 +577,24 @@ void mf::GDesktopFileCache::refresh_app_cache()
             continue;
         }
 
-        std::shared_ptr<DesktopFile> file = std::make_shared<DesktopFile>(id, wm_class, exec);
-        const char* app_id = g_app_info_get_id(app_info);
+        // It is likely that [id] ends in a .desktop suffix. If that's the case, we will strip
+        // it out since that isn't useful in this context.
+        const char* const DESKTOP_PREFIX = ".desktop";
+        if (id.ends_with(DESKTOP_PREFIX))
+            id.erase(id.length() - strlen(DESKTOP_PREFIX));
+
+        std::shared_ptr<DesktopFile> file = std::make_shared<DesktopFile>(id.c_str(), wm_class, exec);
         if (g_app_info_should_show(app_info))
         {
-            new_id_to_app[app_id] = file;
+            new_id_to_app[id] = file;
             new_exec_to_app[exec] = file;
         }
         else
         {
-            new_hidden_id_to_app[app_id] = file;
+            new_hidden_id_to_app[id] = file;
         }
 
-        if (wm_class == NULL)
+        if (!wm_class)
             continue;
 
         new_wm_class_to_app_info[wm_class] = file;

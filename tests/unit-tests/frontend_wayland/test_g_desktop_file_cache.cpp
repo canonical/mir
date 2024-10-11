@@ -75,7 +75,7 @@ TEST_F(GDesktopFileCache, when_desktop_file_is_in_directory_then_it_can_be_found
     write_desktop_file(sh_desktop_contents, "mir.test.info.desktop");
     mf::GDesktopFileCache cache(main_loop);
 
-    auto file = cache.lookup_by_app_id("mir.test.info.desktop");
+    auto file = cache.lookup_by_app_id("mir.test.info");
     ASSERT_THAT(file, NotNull());
 }
 
@@ -101,7 +101,7 @@ TEST_F(GDesktopFileCache, when_desktop_file_lacks_exec_then_it_cannot_be_found)
     write_desktop_file(sh_desktop_contents, "mir.test.info.desktop");
     mf::GDesktopFileCache cache(main_loop);
 
-    auto file = cache.lookup_by_app_id("mir.test.info.desktop");
+    auto file = cache.lookup_by_app_id("mir.test.info");
     ASSERT_THAT(file, IsNull());
 }
 
@@ -115,7 +115,7 @@ TEST_F(GDesktopFileCache, when_desktop_file_is_set_to_nodisplay_then_it_can_stil
     write_desktop_file(sh_desktop_contents, "mir.test.info.desktop");
     mf::GDesktopFileCache cache(main_loop);
 
-    auto file = cache.lookup_by_app_id("mir.test.info.desktop");
+    auto file = cache.lookup_by_app_id("mir.test.info");
     ASSERT_THAT(file, NotNull());
 }
 
@@ -129,6 +129,6 @@ TEST_F(GDesktopFileCache, when_a_desktop_has_invald_exec_then_it_cannot_be_found
     write_desktop_file(sh_desktop_contents, "mir.test.info.desktop");
     mf::GDesktopFileCache cache(main_loop);
 
-    auto file = cache.lookup_by_app_id("mir.test.info.desktop");
+    auto file = cache.lookup_by_app_id("mir.test.info");
     ASSERT_THAT(file, IsNull());
 }

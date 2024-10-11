@@ -79,7 +79,7 @@ struct DesktopFileManager : Test
     std::shared_ptr<mtd::MockSceneSession> session;
 
     const char* APPLICATION_ID = "test_app_id";
-    const char* DESKTOP_FILE_APP_ID = "test_app_id.desktop";
+    const char* DESKTOP_FILE_APP_ID = "test_app_id";
     const int PID = -12345; // Negative so it never accidentally works
 
     void SetUp() override
@@ -116,7 +116,7 @@ TEST_F(DesktopFileManager, can_find_gnome_terminal_server)
     ON_CALL(surface, application_id())
         .WillByDefault(testing::Invoke([]() { return "gnome-terminal-server"; }));
     auto app_id = file_manager->resolve_app_id(&surface);
-    EXPECT_THAT(app_id, "org.gnome.Terminal.desktop");
+    EXPECT_THAT(app_id, "org.gnome.Terminal");
 }
 
 TEST_F(DesktopFileManager, can_find_app_when_wm_class_matches)
@@ -177,19 +177,19 @@ TEST_F(DesktopFileManager, when_security_profile_does_not_start_with_prefix_then
 TEST_F(DesktopFileManager, when_security_profile_is_valid_then_desktop_id_is_returned)
 {
     auto result = mf::DesktopFileManager::parse_snap_security_profile_to_desktop_id("snap.firefox.firefox (enforce)");
-    EXPECT_EQ(result, "firefox_firefox.desktop");
+    EXPECT_EQ(result, "firefox_firefox");
 }
 
 TEST_F(DesktopFileManager, when_security_profile_is_valid_and_lacks_protection_indication_then_desktop_id_is_returned)
 {
     auto result = mf::DesktopFileManager::parse_snap_security_profile_to_desktop_id("snap.firefox.firefox");
-    EXPECT_EQ(result, "firefox_firefox.desktop");
+    EXPECT_EQ(result, "firefox_firefox");
 }
 
 TEST_F(DesktopFileManager, can_resolve_from_valid_flatpak_info)
 {
     const char* app_id = "test.application.name";
-    const char* desktop_app_id = "test.application.name.desktop";
+    const char* desktop_app_id = "test.application.name";
 
     std::stringstream flatpak_info_path;
     flatpak_info_path << "/proc/" << PID << "/root/.flatpak-info";
@@ -223,7 +223,7 @@ TEST_F(DesktopFileManager, can_resolve_from_valid_flatpak_info)
 
 TEST_F(DesktopFileManager, app_id_will_not_resolve_from_flatpak_info_when_name_is_missing)
 {
-    const char* desktop_app_id = "test.application.name.desktop";
+    const char* desktop_app_id = "test.application.name";
 
     std::stringstream flatpak_info_path;
     flatpak_info_path << "/proc/" << PID << "/root/.flatpak-info";
