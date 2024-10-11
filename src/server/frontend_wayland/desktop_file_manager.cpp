@@ -31,10 +31,8 @@ namespace mf = mir::frontend;
 
 namespace
 {
-const char* DESKTOP_FILE_POSTFIX = ".desktop";
-
 std::pair<std::string, std::string> const app_id_to_desktop_file_quirks[] = {
-    {"gnome-terminal-server", "org.gnome.Terminal.desktop"} // https://gitlab.gnome.org/GNOME/gnome-terminal/-/issues/8033
+    {"gnome-terminal-server", "org.gnome.Terminal"} // https://gitlab.gnome.org/GNOME/gnome-terminal/-/issues/8033
 };
 
 inline void rtrim(std::string &s) {
@@ -88,8 +86,7 @@ std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface
     }
 
     // Second, let's see if we can map it straight to a desktop file
-    auto desktop_file = app_id + DESKTOP_FILE_POSTFIX;
-    auto found = lookup_basename(desktop_file);
+    auto found = lookup_basename(app_id);
     if (found)
     {
         mir::log_info("Successfully resolved app id from basename, id=%s", found->id.c_str());
@@ -97,7 +94,7 @@ std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface
     }
 
     // Third, lowercase it and try again
-    auto lowercase_desktop_file = desktop_file;
+    auto lowercase_desktop_file = app_id;
     for(char &ch : lowercase_desktop_file)
         ch = std::tolower(ch);
 
@@ -186,7 +183,7 @@ std::string mf::DesktopFileManager::parse_snap_security_profile_to_desktop_id(st
         if (c == '.')
             c = '_';
 
-    return sandboxed_app_id + DESKTOP_FILE_POSTFIX;
+    return sandboxed_app_id;
 }
 
 std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_snap(int pid, mir::Fd const& socket_fd)
@@ -265,7 +262,7 @@ std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_flatpak(int 
     if (!sandboxed_app_id)
         return nullptr;
 
-    return cache->lookup_by_app_id(std::string(sandboxed_app_id) + DESKTOP_FILE_POSTFIX);
+    return cache->lookup_by_app_id(std::string(sandboxed_app_id));
 }
 
 std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_executable_matches(int pid)
