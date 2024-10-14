@@ -272,7 +272,7 @@ auto import_gbm_bo(
     std::shared_ptr<mg::DMABufBuffer> buffer,
     std::array<int, 4> dmabuf_fds,
     std::array<int, 4> pitches,
-    std::array<int, 4> offsets) -> struct gbm_bo*
+    std::array<int, 4> offsets) -> std::shared_ptr<struct gbm_bo>
 {
     auto const plane_descriptors = buffer->planes();
 
@@ -287,7 +287,8 @@ auto import_gbm_bo(
         .modifier = buffer->modifier().value_or(DRM_FORMAT_MOD_NONE),
     };
 
-    return gbm_bo_import(gbm.get(), GBM_BO_IMPORT_FD_MODIFIER, (void*)&import_data, GBM_BO_USE_SCANOUT);
+    auto* gbm_bo = gbm_bo_import(gbm.get(), GBM_BO_IMPORT_FD_MODIFIER, (void*)&import_data, GBM_BO_USE_SCANOUT);
+    return std::shared_ptr<struct gbm_bo>(gbm_bo, &gbm_bo_destroy);
 }
 
 auto drm_fb_id_from_dma_buffer(
@@ -295,7 +296,7 @@ auto drm_fb_id_from_dma_buffer(
     -> std::shared_ptr<uint32_t>
 {
     auto [dmabuf_fds, pitches, offsets, modifiers] = get_import_buffers(buffer);
-    auto* gbm_bo = import_gbm_bo(gbm, buffer, dmabuf_fds, pitches, offsets);
+    auto gbm_bo = import_gbm_bo(gbm, buffer, dmabuf_fds, pitches, offsets);
     if (!gbm_bo)
     {
         mir::log_warning("Failed to import buffer");
@@ -305,16 +306,16 @@ auto drm_fb_id_from_dma_buffer(
     auto const plane_descriptors = buffer->planes();
     uint32_t gem_handles[MAX_PLANES] = {0};
     for (std::size_t i = 0; i < std::min(MAX_PLANES, plane_descriptors.size()); i++)
-        gem_handles[i] = gbm_bo_get_handle_for_plane(gbm_bo, i).u32;
+        gem_handles[i] = gbm_bo_get_handle_for_plane(gbm_bo.get(), i).u32;
 
+    // Note that we capture `gbm_bo` so that its lifetime matches that of the fb_id
     auto fb_id = std::shared_ptr<uint32_t>{
         new uint32_t{0},
-        [drm_fd](uint32_t* fb_id)
+        [drm_fd, gbm_bo](uint32_t* fb_id)
         {
             if (*fb_id)
-            {
                 drmModeRmFB(drm_fd, *fb_id);
-            }
+
             delete fb_id;
         }};
 
