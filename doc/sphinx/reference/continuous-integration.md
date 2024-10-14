@@ -127,7 +127,7 @@ available in the `edge` or `beta` channels, as appropriate.
 When the snaps get published to the store, we have Jenkins dispatch test runs on a selection of
 hardware, ranging from Raspberry Pis through single-GPU systems all the way up to high performance
 multi-GPU (usually hybrid) ones. We maintain a matrix of test coverage
-[in this spreadsheet](https://docs.google.com/spreadsheets/d/1kUbTSt4zWVpTtgZNJvvxCdugsRUv6C5PK9Xw5dxppCc/edit?usp=sharing).
+[in this spreadsheet](https://docs.google.com/spreadsheets/d/1kUbTSt4zWVpTtgZNJvvxCdugsRUv6C5PK9Xw5dxppCc/edit#gid=893560997).
 
 These tests ultimately verify the full story end-to-end, installing the snaps on a range of
 Ubuntu versions (Core and classic alike) and verify behaviours and visuals through a number of
