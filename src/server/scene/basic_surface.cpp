@@ -982,8 +982,8 @@ void mir::scene::BasicSurface::update_frame_posted_callbacks(State& state)
 auto mir::scene::BasicSurface::content_size(State const& state) const -> geometry::Size
 {
     return geom::Size{
-        std::max(state.surface_rect.size.width - state.margins.left - state.margins.right, geom::Width{1}),
-        std::max(state.surface_rect.size.height - state.margins.top - state.margins.bottom, geom::Height{1})};
+        std::max(state.surface_rect.size.width - state.margins.left - state.margins.right, geom::Width{0}),
+        std::max(state.surface_rect.size.height - state.margins.top - state.margins.bottom, geom::Height{0})};
 }
 
 auto mir::scene::BasicSurface::content_top_left(State const& state) const -> geometry::Point
