@@ -17,7 +17,7 @@ breadth of testing. We'll discuss those in more detail below.
 
 When a pull request is opened, updated or merged into `main`, we validate that the contribution
 is correct by building the code and running our test suite. To facilitate this, we use
-[Spread](https://github.com/snapcore/spread) (or rather, our
+[Spread](https://github.com/canonical/spread) (or rather, our
 [lightly patched version](https://snapcraft.io/spread-mir-ci)) to build Mir across a number of
 environments. [`spread.yaml`](https://github.com/canonical/mir/blob/main/spread.yaml) holds
 environment definitions, while the actual build tasks are maintained under
