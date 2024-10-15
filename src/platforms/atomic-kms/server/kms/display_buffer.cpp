@@ -470,6 +470,8 @@ auto mga::DmaBufDisplayAllocator::framebuffer_for(std::shared_ptr<DMABufBuffer> 
         geometry::Size size_;
     };
 
+    buffer->on_consumed();
+
     return std::make_unique<AtomicKmsFbHandle>(fb_id, buffer->size());
 }
 
