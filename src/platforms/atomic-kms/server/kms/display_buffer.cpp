@@ -346,6 +346,11 @@ auto mga::DmaBufDisplayAllocator::framebuffer_for(std::shared_ptr<DMABufBuffer> 
 {
     auto fb_id = drm_fb_id_from_dma_buffer(drm_fd(), gbm, buffer);
 
+    if (!fb_id)
+    {
+        return {};
+    }
+
     struct AtomicKmsFbHandle : public mg::FBHandle
     {
         AtomicKmsFbHandle(std::shared_ptr<uint32_t> fb_handle, geometry::Size size) :
