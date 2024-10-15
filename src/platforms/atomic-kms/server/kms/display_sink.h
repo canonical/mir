@@ -22,12 +22,15 @@
 #include "mir/graphics/display.h"
 #include "display_helpers.h"
 #include "egl_helper.h"
+#include "mir/graphics/dmabuf_buffer.h"
 #include "mir/graphics/platform.h"
 #include "platform_common.h"
 #include "kms_framebuffer.h"
 
 #include <boost/iostreams/detail/buffer.hpp>
 #include <future>
+#include <type_traits>
+#include <unordered_map>
 #include <vector>
 #include <memory>
 #include <atomic>
@@ -66,6 +69,8 @@ class DmaBufDisplayAllocator : public graphics::DmaBufDisplayAllocator
         {
             return drm_fd_;
         }
+
+        std::unordered_map<std::shared_ptr<DMABufBuffer>, std::shared_ptr<struct gbm_bo>> gbm_bos;
 
     private:
         mir::Fd const drm_fd_;

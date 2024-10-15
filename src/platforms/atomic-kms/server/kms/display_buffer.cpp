@@ -16,6 +16,7 @@
 
 #include "display_sink.h"
 #include "kms_cpu_addressable_display_provider.h"
+#include "kms_framebuffer.h"
 #include "kms_output.h"
 #include "cpu_addressable_fb.h"
 #include "gbm_display_allocator.h"
@@ -38,8 +39,10 @@
 #include <drm_mode.h>
 #include <gbm.h>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <chrono>
+#include <utility>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
@@ -384,15 +387,21 @@ auto import_gbm_bo(
     };
 
     auto* gbm_bo = gbm_bo_import(gbm.get(), GBM_BO_IMPORT_FD_MODIFIER, (void*)&import_data, GBM_BO_USE_SCANOUT);
-    return std::shared_ptr<struct gbm_bo>(gbm_bo, &gbm_bo_destroy);
+    return std::shared_ptr<struct gbm_bo>(
+        gbm_bo,
+        [](auto* gbm_bo)
+        {
+            mir::log_debug("destroying gbm_bo");
+            gbm_bo_destroy(gbm_bo);
+        });
 }
 
 auto drm_fb_id_from_dma_buffer(
-    mir::Fd drm_fd, std::shared_ptr<struct gbm_device> const gbm, std::shared_ptr<mg::DMABufBuffer> buffer)
+    mir::Fd drm_fd, std::shared_ptr<struct gbm_bo> const gbm_bo, std::shared_ptr<mg::DMABufBuffer> buffer)
     -> std::shared_ptr<uint32_t>
 {
     auto [dmabuf_fds, pitches, offsets, modifiers] = get_import_buffers(buffer);
-    auto gbm_bo = import_gbm_bo(gbm, buffer, dmabuf_fds, pitches, offsets);
+
     if (!gbm_bo)
     {
         mir::log_warning("Failed to import buffer");
@@ -440,7 +449,16 @@ auto drm_fb_id_from_dma_buffer(
 
 auto mga::DmaBufDisplayAllocator::framebuffer_for(std::shared_ptr<DMABufBuffer> buffer) -> std::unique_ptr<Framebuffer>
 {
-    auto fb_id = drm_fb_id_from_dma_buffer(drm_fd(), gbm, buffer);
+    mir::log_debug("buffer: %p", buffer.get());
+    if(!gbm_bos.contains(buffer))
+    {
+        mir::log_debug("importing gbm_bo");
+        auto [dmabuf_fds, pitches, offsets, modifiers] = get_import_buffers(buffer);
+        gbm_bos.insert({buffer, import_gbm_bo(gbm, buffer, dmabuf_fds, pitches, offsets)});
+    }
+    auto gbm_bo = gbm_bos.at(buffer);
+    mir::log_debug("gbm_bo: %p", gbm_bo.get());
+    auto fb_id = drm_fb_id_from_dma_buffer(drm_fd(), gbm_bo, buffer);
 
     if (!fb_id)
     {
