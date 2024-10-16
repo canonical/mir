@@ -9,7 +9,7 @@ possible to defeat the available efficiencies in such products.
 
 ## GPU acceleration
 
-Mir based compositors default hardware compositing on any available GPU. Mir 
+Mir based compositors default to hardware compositing on any available GPU. Mir 
 includes a "graphics platform" abstraction that allows efficient implementation
 on different software or graphics stacks.
 
@@ -37,20 +37,20 @@ the CPU or the explicit provision of a full frame buffer.
 Historically, Mir development has focussed on hardware with limited capabilities
 for hardware composition. However, both the range of hardware for which Mir is
 considered and the capabilities of "low end" hardware are increasing. As a 
-result, Mir has work in progress to exploit additional of hardware composition 
+result, Mir has work in progress to exploit additional features of hardware composition 
 options where they are available.
 
-At the time of writing (October 2024) Mir uses hardware composition for cursors
+Mir currently uses hardware composition for cursors
 (where supported by the GPU hardware) and can, in some usecases, enable
 "composition bypass" for fullscreen clients.
 
 ### Damage tracking
 
 Damage tracking involves passing information about which parts of buffers have
-been update. That can avoid the need to regenerate parts of the display that
+been updated. That can avoid the need to regenerate parts of the display that
 have not changed.
 
-At the time of writing (October 2024) Mir has not implemented this optimisation.
+Mir has not implemented this optimisation yet.
 
 ## Metrics
 
