@@ -6,6 +6,7 @@ These pages provide additional detail about a number of aspects related to using
 - [Graphics support](mir-graphics-support): what's required to run Mir compositors
 - [Security](security): a deep dive into the security aspects of Mir compositors
 - [Performance](performance): a discussion of the performance aspects of Mir compositors
+- [Energy efficiency](energy-efficiency): a deep dive into the security aspects of Mir compositors
 - [What is Wayland anyway?](ok-so-what-is-this-wayland-thing-anyway): so what is it?
 - [Windowing paradigms](window-positions-under-wayland): how are windows managed?
 - [Component reports](component_reports): information on Mir's debug and performance reporting infrastructure
@@ -18,6 +19,7 @@ libraries
 mir-graphics-support
 security
 performance
+energy-efficiency
 ok-so-what-is-this-wayland-thing-anyway
 window-positions-under-wayland
 component_reports
