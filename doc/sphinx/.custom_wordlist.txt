@@ -140,7 +140,9 @@ Nvidia's
 Nvidia’s
 nxp
 ok
+offscreen
 OMX
+optimizations
 orchestrator
 organized
 paltform
@@ -157,6 +159,7 @@ Qtmir
 radeon
 raspberrypi
 rc
+recomposition
 renderables
 renderer
 RenderingPlatform
@@ -195,6 +198,7 @@ ubuntu
 udev
 UndefinedBehaviourSanitizer
 usecase
+usecases
 userland
 userspace
 UST
