@@ -30,8 +30,8 @@ customization
 debian
 deps
 devel
+DisplayLink's
 DisplayPlatform
-DisplayLink’s
 dispmanx
 Dispmanx
 DispmanX
