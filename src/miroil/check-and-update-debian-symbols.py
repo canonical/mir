@@ -117,7 +117,7 @@ def new_lines_from_unfiltered(unfiltered):
     '''From the unfiltered (mangled) output of dpkg-gensymbols, returns a usable patch'''
     result = Run(['c++filt'], stdin=unfiltered)
     result.assert_success()
-    searched = re.findall('^\+ (.+::.+) ([\.\d]+)$', result.stdout, flags=re.MULTILINE)
+    searched = re.findall(r'^\+ (.+::.+) ([\.\d]+)$', result.stdout, flags=re.MULTILINE)
     if searched:
         filtered = [' (c++)"' + symbol + '" ' + version + '\n' for symbol, version in searched]
         return list(set(filtered))
