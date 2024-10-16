@@ -31,7 +31,7 @@ debian
 deps
 devel
 DisplayPlatform
-DisplayLink
+DisplayLink’s
 dispmanx
 Dispmanx
 DispmanX
