@@ -47,7 +47,7 @@ vary a lot depending on:
 
 * the CPU, GPU and memory characteristics of the system
 
-Part of our test automation is to some test applications (e.g. 
-`glmark2-wayland`) on low-end hardware on which we know Frame has been deployed
-and track the results. These results can be as low as 30fps, but on "normal
-desktop hardware" figures in the 10s of thousand fps are reported.
+Part of our test automation is tracking the results of running some test 
+applications (e.g. `glmark2-wayland`) on low-end hardware on which we know Frame
+has been deployed. These results can be as low as 30fps, but on "normal desktop
+hardware" figures in the 10s of thousand fps are reported.
