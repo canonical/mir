@@ -121,6 +121,15 @@ class StaticDisplayConfig : public ReloadingYamlFileDisplayConfig
 {
 public:
     StaticDisplayConfig(std::string const& filename);
+
+    class InvalidConfig : public std::runtime_error
+    {
+    public:
+        InvalidConfig(std::string const& what) :
+            std::runtime_error(what)
+        {
+        }
+    };
 };
 }
 

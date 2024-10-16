@@ -136,16 +136,17 @@ try
     decltype(config) new_config;
 
     using namespace YAML;
+    using InvalidConfig = miral::StaticDisplayConfig::InvalidConfig;
     using std::begin;
     using std::end;
 
     auto const parsed_config = Load(config_file);
     if (!parsed_config.IsDefined() || !parsed_config.IsMap())
-        throw mir::AbnormalExit{error_prefix(filename) + "unrecognized content"};
+        throw InvalidConfig{error_prefix(filename) + "unrecognized content"};
 
     Node layouts = parsed_config["layouts"];
     if (!layouts.IsDefined() || !layouts.IsMap())
-        throw mir::AbnormalExit{error_prefix(filename) + "no layouts"};
+        throw InvalidConfig{error_prefix(filename) + "no layouts"};
 
     for (auto const& ll : layouts)
     {
@@ -153,7 +154,7 @@ try
 
         if (!layout.IsDefined() || !layout.IsMap())
         {
-            throw mir::AbnormalExit{error_prefix(filename) + "invalid '" + ll.first.as<std::string>() + "' layout"};
+            throw InvalidConfig{error_prefix(filename) + "invalid '" + ll.first.as<std::string>() + "' layout"};
         }
 
         Port2Config layout_config;
@@ -161,7 +162,7 @@ try
         Node cards = layout["cards"];
 
         if (!cards.IsDefined() || !cards.IsSequence())
-            throw mir::AbnormalExit{error_prefix(filename) + "invalid 'cards' in '" + ll.first.as<std::string>() + "' layout"};
+            throw InvalidConfig{error_prefix(filename) + "invalid 'cards' in '" + ll.first.as<std::string>() + "' layout"};
 
         for (Node const& card : cards)
         {
@@ -173,7 +174,7 @@ try
             }
 
             if (!card.IsDefined() || !(card.IsMap() || card.IsNull()))
-                throw mir::AbnormalExit{error_prefix(filename) + "invalid card: " + std::to_string(card_no.as_value())};
+                throw InvalidConfig{error_prefix(filename) + "invalid card: " + std::to_string(card_no.as_value())};
 
             for (std::pair<Node, Node> port : card)
             {
@@ -187,7 +188,7 @@ try
                 if (port_config.IsDefined() && !port_config.IsNull())
                 {
                     if (!port_config.IsMap())
-                        throw mir::AbnormalExit{error_prefix(filename) + "invalid port: " + port_name};
+                        throw InvalidConfig{error_prefix(filename) + "invalid port: " + port_name};
 
                     Config   output_config;
 
@@ -195,7 +196,7 @@ try
                     {
                         auto const state = s.as<std::string>();
                         if (state != state_enabled && state != state_disabled)
-                            throw mir::AbnormalExit{error_prefix(filename) + "invalid 'state' (" + state + ") for port: " + port_name};
+                            throw InvalidConfig{error_prefix(filename) + "invalid 'state' (" + state + ") for port: " + port_name};
                         output_config.disabled = (state == state_disabled);
                     }
 
@@ -248,7 +249,7 @@ try
                         output_config.orientation = as_orientation(orientation);
 
                         if (!output_config.orientation)
-                            throw mir::AbnormalExit{error_prefix(filename) + "invalid 'orientation' (" +
+                            throw InvalidConfig{error_prefix(filename) + "invalid 'orientation' (" +
                                                     orientation + ") for port: " + port_name};
                     }
 
@@ -282,7 +283,7 @@ try
 }
 catch (YAML::Exception const& x)
 {
-    throw mir::AbnormalExit{error_prefix(filename) + x.what()};
+    throw miral::StaticDisplayConfig::InvalidConfig{error_prefix(filename) + x.what()};
 }
 
 void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
