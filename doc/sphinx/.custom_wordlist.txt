@@ -31,6 +31,7 @@ debian
 deps
 devel
 DisplayPlatform
+DisplayLink
 dispmanx
 Dispmanx
 DispmanX
@@ -51,6 +52,7 @@ EGMDE
 EndToEnd
 etnaviv
 Etnaviv
+evdi
 eyecandy
 favorite
 filesystem
@@ -156,6 +158,7 @@ radeon
 raspberrypi
 rc
 renderables
+renderer
 RenderingPlatform
 replug
 RPi
