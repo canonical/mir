@@ -34,7 +34,7 @@ Depending on the capabilities of the GPU composition of visual elements (such as
 cursors and application windows) can be handled without direct intervention of
 the CPU or the explicit provision of a full frame buffer.
 
-Historically, Mir development has focussed on hardware with limited capabilities
+Historically, Mir development has focused on hardware with limited capabilities
 for hardware composition. However, both the range of hardware for which Mir is
 considered and the capabilities of "low end" hardware are increasing. As a 
 result, Mir has work in progress to exploit additional features of hardware composition 
