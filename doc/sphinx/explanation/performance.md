@@ -7,6 +7,9 @@ Note that Mir is a C++ library for building compositors, not a product itself.
 The following applies to all Mir based compositors, but it is theoretically
 possible to defeat the available performance in such products.
 
+Where possible, Mir makes use of the GPU for compositing as this is faster than
+compositing on the CPU.
+
 All measures of performance are affected by the following:
 
 * the number, size and configuration of the displays
@@ -30,7 +33,10 @@ CPU usage is generally low but varies a lot depending on:
 
 * the CPU and GPU characteristics of the system
 
-CPU usage [has been reported](https://github.com/canonical/mir/issues/3230) as 
+Where using the GPU for compositing is not possible, Mir may make use of Mesa's
+software renderer or copy buffers between GPU and display driver. This has a
+cost in CPU use. In particular, CPU usage 
+[has been reported](https://github.com/canonical/mir/issues/3230) as 
 being significantly higher when using DisplayLink's evdi drivers to handle 
 external displays via a "docking station".
 
