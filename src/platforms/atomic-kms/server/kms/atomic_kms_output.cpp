@@ -151,10 +151,31 @@ public:
 
     void add_property(mgk::ObjectProperties const& properties, char const* prop_name, uint64_t value)
     {
+        debug_props[properties.parent_id()][prop_name] = value;
         drmModeAtomicAddProperty(req, properties.parent_id(), properties.id_for(prop_name), value);
     }
+
+    void print_properties()
+    {
+        for(auto const& [obj_id, props]: debug_props)
+        {
+            mir::log_debug("DRM Object ID: %d", obj_id);
+            for(auto const& [prop_name, prop_value]: props)
+            {
+                if(prop_name == "SRC_W" || prop_name == "SRC_H")
+                {
+                    mir::log_debug("\t %s = %zu", prop_name.c_str(), prop_value >> 16);
+                    continue;
+                }
+
+                mir::log_debug("\t %s = %zu", prop_name.c_str(), prop_value);
+            }
+        }
+    }
+
 private:
     drmModeAtomicReqPtr const req;
+    std::map<uint32_t, std::map<std::string, uint64_t>> debug_props;
 };
 }
 
@@ -304,12 +325,8 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
     update.add_property(*primary_plane_props, "CRTC_ID", current_crtc->crtc_id);
     update.add_property(*primary_plane_props, "FB_ID", fb);
 
-    if(has_hardware_cursor)
+    if(cursor_enabled)
     {
-        // TODO offset by hotspot
-        update.add_property(*cursor_plane_props, "SRC_X", 0);
-        update.add_property(*cursor_plane_props, "SRC_Y", 0);
-
         update.add_property(*cursor_plane_props, "SRC_W", cursor_state.width << 16);
         update.add_property(*cursor_plane_props, "SRC_H", cursor_state.height << 16);
         update.add_property(*cursor_plane_props, "CRTC_X", cursor_state.crtc_x);
@@ -444,12 +461,8 @@ bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
     update.add_property(*primary_plane_props, "CRTC_ID", current_crtc->crtc_id);
     update.add_property(*primary_plane_props, "FB_ID", fb);
 
-    if(has_hardware_cursor)
+    if(cursor_enabled)
     {
-        // TODO offset by hotspot
-        update.add_property(*cursor_plane_props, "SRC_X", 0);
-        update.add_property(*cursor_plane_props, "SRC_Y", 0);
-
         update.add_property(*cursor_plane_props, "SRC_W", cursor_state.width << 16);
         update.add_property(*cursor_plane_props, "SRC_H", cursor_state.height << 16);
         update.add_property(*cursor_plane_props, "CRTC_X", cursor_state.crtc_x);
@@ -474,7 +487,11 @@ bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
     if (ret)
     {
         if(ret != -EBUSY)
+        {
             mir::log_error("Failed to schedule page flip: %s (%i)", strerror(-ret), -ret);
+            update.print_properties();
+        }
+
         event_handler->cancel_flip_events(current_crtc->crtc_id);
         current_crtc = nullptr;
         return false;
@@ -536,7 +553,7 @@ bool mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
 {
     if (current_crtc)
     {
-        has_hardware_cursor = true;
+        cursor_enabled = true;
         cursor_state.fb_id = cursor_gbm_bo_to_drm_fb_id(buffer);
         cursor_state.width = gbm_bo_get_width(buffer);
         cursor_state.height = gbm_bo_get_height(buffer);
@@ -561,13 +578,7 @@ void mga::AtomicKMSOutput::move_cursor(geometry::Point destination)
 
 bool mga::AtomicKMSOutput::clear_cursor()
 {
-    if (current_crtc)
-    {
-        has_hardware_cursor = false;
-        cursor_state.fb_id.reset();
-    }
-
-    return true;
+    return false;
 }
 
 bool mga::AtomicKMSOutput::has_cursor_plane() const
@@ -941,6 +952,6 @@ int mga::AtomicKMSOutput::drm_fd() const
 
 bool mga::AtomicKMSOutput::has_cursor() const
 {
-    return has_hardware_cursor;
+    return cursor_enabled;
 }
 
