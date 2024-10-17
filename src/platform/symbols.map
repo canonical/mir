@@ -205,7 +205,7 @@ MIR_PLATFORM_2.18 {
 MIR_PLATFORM_2.19 {
  global:
   extern "C++" {
-    mir::options::idle_timeout_on_lock_opt;
+    mir::options::idle_timeout_when_locked_opt;
  };
  local: *;
 } MIR_PLATFORM_2.18;

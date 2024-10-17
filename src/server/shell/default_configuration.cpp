@@ -123,14 +123,23 @@ auto mir::DefaultServerConfiguration::the_idle_handler() -> std::shared_ptr<msh:
                 idle_handler->set_display_off_timeout(std::chrono::seconds{idle_timeout_seconds});
             }
 
-            int const idle_timeout_on_lock = options->get<int>(options::idle_timeout_on_lock_opt);
-            if (idle_timeout_on_lock < 0)
+            int const idle_timeout_when_locked = options->get<int>(options::idle_timeout_when_locked_opt);
+            if (idle_timeout_when_locked < 0)
             {
-                idle_handler->set_display_off_timeout_on_lock(std::nullopt);
+                throw mir::AbnormalExit(
+                    "Invalid " +
+                    std::string{options::idle_timeout_when_locked_opt} +
+                    " value " +
+                    std::to_string(idle_timeout_when_locked) +
+                    ", must be > 0");
+            }
+            if (idle_timeout_when_locked == 0)
+            {
+                idle_handler->set_display_off_timeout_when_locked(std::nullopt);
             }
             else
             {
-                idle_handler->set_display_off_timeout_on_lock(std::chrono::seconds{idle_timeout_on_lock});
+                idle_handler->set_display_off_timeout_when_locked(std::chrono::seconds{idle_timeout_when_locked});
             }
 
             return idle_handler;
