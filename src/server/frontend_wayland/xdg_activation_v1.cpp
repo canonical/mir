@@ -17,10 +17,12 @@
 #include "xdg_activation_v1.h"
 #include "wl_surface.h"
 #include "wl_seat.h"
+#include "wl_client.h"
 #include "mir/main_loop.h"
 #include "mir/scene/surface.h"
 #include "mir/shell/shell.h"
 #include "mir/shell/focus_controller.h"
+#include "mir/wayland/protocol_error.h"
 #include "mir/log.h"
 #include <random>
 #include <chrono>
@@ -120,6 +122,7 @@ private:
     std::optional<struct wl_resource*> seat;
     std::optional<std::string> app_id;
     std::optional<struct wl_resource*> requesting_surface;
+    bool used = false;
 };
 }
 }
@@ -259,9 +262,18 @@ void mf::XdgActivationTokenV1::set_surface(struct wl_resource* surface)
 
 void mf::XdgActivationTokenV1::commit()
 {
-    // In the event of a failure, we send 'done' with a new, invalid token
-    // which cannot be used later.
+    if (used)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::already_used,
+            "The activation token has already been used"));
+        return;
+    }
 
+    used = true;
+
+    // In the event of a failure, we send 'done' with a new, invalid token which cannot be used later.
     if (seat && serial)
     {
         // First, assert that the seat still exists.
@@ -273,8 +285,13 @@ void mf::XdgActivationTokenV1::commit()
             return;
         }
 
-        // TODO:
-        // Next, verify that the serial belongs to the seat
+        auto event = client->event_for(serial.value());
+        if (!event)
+        {
+            mir::log_error("XdgActivationTokenV1::commit serial not found");
+            send_done_event(generate_token());
+            return;
+        }
     }
 
     if (app_id)
@@ -309,10 +326,9 @@ void mf::XdgActivationTokenV1::commit()
         }
 
         auto const& scene_surface = scene_surface_opt.value();
-
         if (focus_controller->focused_surface() != scene_surface)
         {
-            mir::log_error("XdgActivationTokenV1::commit the focused surface is not the surface that requesteda ctivation");
+            mir::log_error("XdgActivationTokenV1::commit the focused surface is not the surface that requested activation");
             send_done_event(generate_token());
             return;
         }
