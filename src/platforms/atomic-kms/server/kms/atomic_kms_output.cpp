@@ -395,6 +395,17 @@ bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
     auto const fb_width = fb.size().width.as_uint32_t();
     auto const fb_height = fb.size().height.as_uint32_t();
 
+    if ((crtc_width != fb_width) || (crtc_height != fb_height))
+    {
+        /* If the submitted FB isn't the same size as the output, we need
+         * a modeset, which can't be done as a pageflip.
+         *
+         * The calling code should detect a failure to pagefilp, and fall back
+         * on `set_crtc`.
+         */
+        return false;
+    }
+
     AtomicUpdate update;
     update.add_property(*crtc_props, "MODE_ID", mode->handle());
     update.add_property(*connector_props, "CRTC_ID", current_crtc->crtc_id);
