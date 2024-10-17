@@ -96,7 +96,7 @@ private:
     std::shared_ptr<msh::FocusController> const focus_controller;
     std::shared_ptr<MainLoop> main_loop;
     std::vector<Token> pending_tokens;
-    std::mutex lock;
+    std::mutex mutex;
 };
 
 class XdgActivationTokenV1 : public wayland::XdgActivationTokenV1
@@ -159,20 +159,24 @@ std::string const& mf::XdgActivationV1::create_token()
     })};
     token.alarm->reschedule_in(timeout_ms);
 
-    std::lock_guard guard(lock);
-    pending_tokens.emplace_back(std::move(token));
-    return pending_tokens.back().token;
+    {
+        std::lock_guard guard(mutex);
+        pending_tokens.emplace_back(std::move(token));
+        return pending_tokens.back().token;
+    }
 }
 
 bool mf::XdgActivationV1::try_consume_token(std::string const& token)
 {
-    std::lock_guard guard(lock);
-    for (auto it = pending_tokens.begin(); it != pending_tokens.end(); it++)
     {
-        if (it->token == token)
+        std::lock_guard guard(mutex);
+        for (auto it = pending_tokens.begin(); it != pending_tokens.end(); it++)
         {
-            pending_tokens.erase(it);
-            return true;
+            if (it->token == token)
+            {
+                pending_tokens.erase(it);
+                return true;
+            }
         }
     }
 
@@ -246,7 +250,8 @@ mf::XdgActivationTokenV1::XdgActivationTokenV1(
 
 void mf::XdgActivationTokenV1::set_serial(uint32_t serial_, struct wl_resource* seat_)
 {
-    serial = serial_;
+    if (serial_ != 0)
+        serial = serial_;
     seat = seat_;
 }
 
