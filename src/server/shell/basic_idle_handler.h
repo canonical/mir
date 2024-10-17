@@ -39,6 +39,7 @@ namespace scene
 {
 class IdleHub;
 class IdleStateObserver;
+class SessionLock;
 }
 namespace shell
 {
@@ -51,11 +52,14 @@ public:
         std::shared_ptr<scene::IdleHub> const& idle_hub,
         std::shared_ptr<input::Scene> const& input_scene,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-        std::shared_ptr<shell::DisplayConfigurationController> const& display_config_controller);
+        std::shared_ptr<shell::DisplayConfigurationController> const& display_config_controller,
+        std::shared_ptr<scene::SessionLock> const& session_lock);
 
     ~BasicIdleHandler();
 
     void set_display_off_timeout(std::optional<time::Duration> timeout) override;
+
+    void set_display_off_timeout_when_locked(std::optional<time::Duration> timeout) override;
 
     void register_interest(std::weak_ptr<IdleHandlerObserver> const&) override;
 
@@ -70,15 +74,25 @@ public:
     void unregister_interest(IdleHandlerObserver const&) override;
 
 private:
+    class SessionLockListener;
+
+    void on_session_lock();
+    void on_session_unlock();
+
+    void register_observers(ProofOfMutexLock const&);
     void clear_observers(ProofOfMutexLock const&);
 
     std::shared_ptr<scene::IdleHub> const idle_hub;
     std::shared_ptr<input::Scene> const input_scene;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<shell::DisplayConfigurationController> const display_config_controller;
+    std::shared_ptr<scene::SessionLock> const session_lock;
+    std::shared_ptr<SessionLockListener> const session_lock_monitor;
 
     std::mutex mutex;
     std::optional<time::Duration> current_off_timeout;
+    std::optional<time::Duration> current_off_timeout_when_locked;
+    bool session_locked{false};
     std::vector<std::shared_ptr<scene::IdleStateObserver>> observers;
 
     class BasicIdleHandlerObserverMultiplexer: public ObserverMultiplexer<IdleHandlerObserver>

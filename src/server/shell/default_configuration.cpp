@@ -100,7 +100,8 @@ auto mir::DefaultServerConfiguration::the_idle_handler() -> std::shared_ptr<msh:
                 the_idle_hub(),
                 the_input_scene(),
                 the_buffer_allocator(),
-                the_display_configuration_controller());
+                the_display_configuration_controller(),
+                the_session_lock());
 
             auto options = the_options();
             int const idle_timeout_seconds = options->get<int>(options::idle_timeout_opt);
@@ -120,6 +121,25 @@ auto mir::DefaultServerConfiguration::the_idle_handler() -> std::shared_ptr<msh:
             else
             {
                 idle_handler->set_display_off_timeout(std::chrono::seconds{idle_timeout_seconds});
+            }
+
+            int const idle_timeout_when_locked = options->get<int>(options::idle_timeout_when_locked_opt);
+            if (idle_timeout_when_locked < 0)
+            {
+                throw mir::AbnormalExit(
+                    "Invalid " +
+                    std::string{options::idle_timeout_when_locked_opt} +
+                    " value " +
+                    std::to_string(idle_timeout_when_locked) +
+                    ", must be > 0");
+            }
+            if (idle_timeout_when_locked == 0)
+            {
+                idle_handler->set_display_off_timeout_when_locked(std::nullopt);
+            }
+            else
+            {
+                idle_handler->set_display_off_timeout_when_locked(std::chrono::seconds{idle_timeout_when_locked});
             }
 
             return idle_handler;

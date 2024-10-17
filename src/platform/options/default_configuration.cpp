@@ -47,6 +47,7 @@ char const* const mo::wayland_extensions_opt      = "wayland-extensions";
 char const* const mo::add_wayland_extensions_opt  = "add-wayland-extensions";
 char const* const mo::drop_wayland_extensions_opt = "drop-wayland-extensions";
 char const* const mo::idle_timeout_opt            = "idle-timeout";
+char const* const mo::idle_timeout_when_locked_opt = "idle-timeout-when-locked";
 
 char const* const mo::off_opt_value = "off";
 char const* const mo::log_opt_value = "log";
@@ -180,8 +181,11 @@ mo::DefaultConfiguration::DefaultConfiguration(
         (enable_key_repeat_opt, po::value<bool>()->default_value(true),
              "Enable server generated key repeat")
         (idle_timeout_opt, po::value<int>()->default_value(0),
-            "Time (in seconds) Mir will remain idle before turning off the display, "
-            "or 0 to keep display on forever.")
+            "Time (in seconds) Mir will remain idle before turning off the display "
+            "when the session is not locked, or 0 to keep display on forever.")
+        (idle_timeout_when_locked_opt, po::value<int>()->default_value(0),
+            "Time (in seconds) Mir will remain idle before turning off the display "
+            "when the session is locked, or 0 to keep the display on forever.")
         (fatal_except_opt, "On \"fatal error\" conditions [e.g. drivers behaving "
             "in unexpected ways] throw an exception (instead of a core dump)")
         (debug_opt, "Enable extra development debugging. "

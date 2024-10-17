@@ -48,6 +48,7 @@ extern char const* const wayland_extensions_opt;
 extern char const* const add_wayland_extensions_opt;
 extern char const* const drop_wayland_extensions_opt;
 extern char const* const idle_timeout_opt;
+extern char const* const idle_timeout_when_locked_opt;
 
 extern char const* const enable_key_repeat_opt;
 

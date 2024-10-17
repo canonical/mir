@@ -17,6 +17,7 @@
 #include "basic_idle_handler.h"
 #include "mir/fatal.h"
 #include "mir/scene/idle_hub.h"
+#include "mir/scene/session_lock.h"
 #include "mir/graphics/renderable.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/input/scene.h"
@@ -170,20 +171,46 @@ private:
 };
 }
 
+class msh::BasicIdleHandler::SessionLockListener : public ms::SessionLockObserver
+{
+public:
+    explicit SessionLockListener(msh::BasicIdleHandler* idle_handler) : idle_handler{idle_handler}
+    {
+    }
+
+    void on_lock() override
+    {
+        idle_handler->on_session_lock();
+    }
+
+    void on_unlock() override
+    {
+        idle_handler->on_session_unlock();
+    }
+
+private:
+    msh::BasicIdleHandler* const idle_handler;
+};
+
 msh::BasicIdleHandler::BasicIdleHandler(
     std::shared_ptr<ms::IdleHub> const& idle_hub,
     std::shared_ptr<input::Scene> const& input_scene,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<msh::DisplayConfigurationController> const& display_config_controller)
+    std::shared_ptr<msh::DisplayConfigurationController> const& display_config_controller,
+    std::shared_ptr<ms::SessionLock> const& session_lock)
     : idle_hub{idle_hub},
       input_scene{input_scene},
       allocator{allocator},
-      display_config_controller{display_config_controller}
+      display_config_controller{display_config_controller},
+      session_lock{session_lock},
+      session_lock_monitor{std::make_shared<SessionLockListener>(this)}
 {
+    session_lock->register_interest(session_lock_monitor);
 }
 
 msh::BasicIdleHandler::~BasicIdleHandler()
 {
+    session_lock->unregister_interest(*session_lock_monitor);
     std::lock_guard lock{mutex};
     clear_observers(lock);
 }
@@ -191,22 +218,64 @@ msh::BasicIdleHandler::~BasicIdleHandler()
 void msh::BasicIdleHandler::set_display_off_timeout(std::optional<time::Duration> timeout)
 {
     std::lock_guard lock{mutex};
-    if (timeout == current_off_timeout)
+    if (timeout != current_off_timeout)
     {
-        return;
-    }
-    current_off_timeout = timeout;
-    clear_observers(lock);
-    if (timeout)
-    {
-        auto const off_timeout = timeout.value();
-        if (off_timeout <= time::Duration{})
+        current_off_timeout = timeout;
+        if (!session_locked)
         {
-            fatal_error("BasicIdleHandler given invalid timeout %d, should be >0", off_timeout.count());
+            clear_observers(lock);
+            register_observers(lock);
         }
-        if (off_timeout >= dim_time_before_off * 2)
+    }
+}
+
+void msh::BasicIdleHandler::set_display_off_timeout_when_locked(std::optional<time::Duration> timeout)
+{
+    std::lock_guard lock{mutex};
+    if (timeout != current_off_timeout_when_locked)
+    {
+        current_off_timeout_when_locked = timeout;
+        if (session_locked)
         {
-            auto const dim_timeout = off_timeout - dim_time_before_off;
+            clear_observers(lock);
+            register_observers(lock);
+        }
+    }
+}
+
+void  msh::BasicIdleHandler::on_session_lock()
+{
+    std::lock_guard lock{mutex};
+    session_locked = true;
+    if (current_off_timeout_when_locked != current_off_timeout)
+    {
+        clear_observers(lock);
+        register_observers(lock);
+    }
+}
+
+void  msh::BasicIdleHandler::on_session_unlock()
+{
+    std::lock_guard lock{mutex};
+    session_locked = false;
+    if (current_off_timeout_when_locked != current_off_timeout)
+    {
+        clear_observers(lock);
+        register_observers(lock);
+    }
+}
+
+void msh::BasicIdleHandler::register_observers(ProofOfMutexLock const&)
+{
+    if (auto const off_timeout{session_locked ? current_off_timeout_when_locked : current_off_timeout})
+    {
+        if (*off_timeout <= time::Duration{0})
+        {
+            fatal_error("BasicIdleHandler given invalid timeout %d, should be >0", off_timeout->count());
+        }
+        if (*off_timeout >= dim_time_before_off * 2)
+        {
+            auto const dim_timeout = *off_timeout - dim_time_before_off;
             auto const dimmer = std::make_shared<Dimmer>(input_scene, allocator, multiplexer);
             observers.push_back(dimmer);
             idle_hub->register_interest(dimmer, dim_timeout);
@@ -214,7 +283,7 @@ void msh::BasicIdleHandler::set_display_off_timeout(std::optional<time::Duration
         auto const power_setter = std::make_shared<PowerModeSetter>(
             display_config_controller, mir_power_mode_off, multiplexer);
         observers.push_back(power_setter);
-        idle_hub->register_interest(power_setter, off_timeout);
+        idle_hub->register_interest(power_setter, *off_timeout);
     }
 }
 
