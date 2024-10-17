@@ -460,15 +460,21 @@ bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
         update.add_property(*cursor_plane_props, "FB_ID", *cursor_state.fb_id);
     }
 
+    // Mainly to check if the hardware is busy
+    if (auto err = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_TEST_ONLY, nullptr); err == -EBUSY)
+        return false;
+
     pending_page_flip = event_handler->expect_flip_event(current_crtc->crtc_id, [](auto, auto){});
     auto ret = drmModeAtomicCommit(
         drm_fd_,
         update,
         DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_PAGE_FLIP_EVENT,
         const_cast<void*>(event_handler->drm_event_data()));
+
     if (ret)
     {
-        mir::log_error("Failed to schedule page flip: %s (%i)", strerror(-ret), -ret);
+        if(ret != -EBUSY)
+            mir::log_error("Failed to schedule page flip: %s (%i)", strerror(-ret), -ret);
         event_handler->cancel_flip_events(current_crtc->crtc_id);
         current_crtc = nullptr;
         return false;
@@ -549,11 +555,7 @@ void mga::AtomicKMSOutput::move_cursor(geometry::Point destination)
         update.add_property(*cursor_plane_props, "CRTC_X", cursor_state.crtc_x);
         update.add_property(*cursor_plane_props, "CRTC_Y", cursor_state.crtc_y);
 
-        drmModeAtomicCommit(
-            drm_fd_,
-            update,
-            DRM_MODE_ATOMIC_ALLOW_MODESET,
-            nullptr);
+        drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET | DRM_MODE_ATOMIC_NONBLOCK, nullptr);
     }
 }
 
