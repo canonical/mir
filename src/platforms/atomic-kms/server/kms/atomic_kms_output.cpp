@@ -895,7 +895,7 @@ std::vector<uint8_t> edid_for_connector(mir::Fd const& drm_fd, uint32_t connecto
 
 auto formats_for_output(mir::Fd const& drm_fd, mgk::DRMModeConnectorUPtr const& connector) -> std::vector<mg::DRMFormat>
 {
-    // Multiple placeholder supportt is coming in C++26 ...
+    // Multiple placeholder support is coming in C++26 ...
     auto [_, plane, dummy_cursor_plane] = mgk::find_crtc_with_primary_plane(drm_fd, connector);
 
     mgk::ObjectProperties plane_props{drm_fd, plane->plane_id, DRM_MODE_OBJECT_PLANE};
