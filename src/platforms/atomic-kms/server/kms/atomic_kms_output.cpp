@@ -423,7 +423,7 @@ bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
         const_cast<void*>(event_handler->drm_event_data()));
     if (ret)
     {
-        mir::log_error("Failed to set CRTC: %s (%i)", strerror(-ret), -ret);
+        mir::log_error("Failed to schedule page flip: %s (%i)", strerror(-ret), -ret);
         current_crtc = nullptr;
         event_handler->cancel_flip_events(current_crtc->crtc_id);
         return false;
