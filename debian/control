@@ -302,7 +302,8 @@ Section: libs
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: ${misc:Depends},
+Depends: mir-platform-graphics-gbm-kms22,
+         ${misc:Depends},
          ${shlibs:Depends},
 Description: Display server for Ubuntu - platform library for Atomic KMS
  Mir is a display server running on linux systems, with a focus on efficiency,
