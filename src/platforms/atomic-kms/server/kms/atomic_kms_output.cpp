@@ -469,8 +469,8 @@ bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
     if (ret)
     {
         mir::log_error("Failed to schedule page flip: %s (%i)", strerror(-ret), -ret);
-        current_crtc = nullptr;
         event_handler->cancel_flip_events(current_crtc->crtc_id);
+        current_crtc = nullptr;
         return false;
     }
 
@@ -528,7 +528,7 @@ mga::AtomicKMSOutput::CursorFbPtr mga::AtomicKMSOutput::cursor_gbm_bo_to_drm_fb_
 
 bool mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
 {
-    if (current_cursor_plane)
+    if (current_crtc)
     {
         has_hardware_cursor = true;
         cursor_state.fb_id = cursor_gbm_bo_to_drm_fb_id(buffer);
@@ -540,29 +540,26 @@ bool mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
 
 void mga::AtomicKMSOutput::move_cursor(geometry::Point destination)
 {
-    if (current_cursor_plane)
+    if (current_crtc)
     {
         cursor_state.crtc_x = destination.x.as_int();
         cursor_state.crtc_y = destination.y.as_int();
-
-        if(!cursor_state.fb_id)
-            return;
 
         AtomicUpdate update;
         update.add_property(*cursor_plane_props, "CRTC_X", cursor_state.crtc_x);
         update.add_property(*cursor_plane_props, "CRTC_Y", cursor_state.crtc_y);
 
-        auto ret = drmModeAtomicCommit(drm_fd(), update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
-        if (ret)
-        {
-            mir::log_error("Failed to move cursor");
-        }
+        drmModeAtomicCommit(
+            drm_fd_,
+            update,
+            DRM_MODE_ATOMIC_ALLOW_MODESET,
+            nullptr);
     }
 }
 
 bool mga::AtomicKMSOutput::clear_cursor()
 {
-    if (current_cursor_plane)
+    if (current_crtc)
     {
         has_hardware_cursor = false;
         cursor_state.fb_id.reset();
