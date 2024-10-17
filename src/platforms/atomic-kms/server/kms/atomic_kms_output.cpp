@@ -341,7 +341,11 @@ void mga::AtomicKMSOutput::clear_crtc()
     }
 
     AtomicUpdate update;
+    update.add_property(*connector_props, "CRTC_ID", 0);
+    update.add_property(*crtc_props, "ACTIVE", 0);
+    update.add_property(*crtc_props, "MODE_ID", 0);
     update.add_property(*plane_props, "FB_ID", 0);
+    update.add_property(*plane_props, "CRTC_ID", 0);
 
     auto result = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
     if (result)
