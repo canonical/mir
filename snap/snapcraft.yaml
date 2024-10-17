@@ -18,7 +18,7 @@ parts:
     cmake-parameters:
     - -DCMAKE_INSTALL_PREFIX=/usr
     - -DMIR_ENABLE_WLCS_TESTS=OFF
-    - -DMIR_PLATFORM='gbm-kms;eglstream-kms;x11;wayland'
+    - -DMIR_PLATFORM='atomic-kms;gbm-kms;eglstream-kms;x11;wayland'
     build-packages:
     - build-essential
     - eglexternalplatform-dev

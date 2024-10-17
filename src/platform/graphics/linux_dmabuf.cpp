@@ -970,7 +970,7 @@ public:
         : dpy{dpy},
           tex{dpy, extensions, dma_buf, descriptor, std::move(egl_delegate)},
           provider_{std::move(provider)},
-          on_consumed{std::move(on_consumed)},
+          on_consumed_{std::move(on_consumed)},
           on_release{std::move(on_release)},
           size_{dma_buf.size()},
           has_alpha{format_has_known_alpha(dma_buf.format()).value_or(true)},  // Has-alpha is the safe default for unknown formats
@@ -1017,6 +1017,12 @@ public:
         return this;
     }
 
+    void on_consumed() override
+    {
+        on_consumed_();
+        on_consumed_ = [](){};
+    }
+
     auto as_texture() -> DMABufTex*
     {
         /* We only get asked for a texture when the Renderer is about to
@@ -1025,7 +1031,6 @@ public:
          */
         std::lock_guard lock{consumed_mutex};
         on_consumed();
-        on_consumed = [](){};
 
         return &tex;
     }
@@ -1061,7 +1066,7 @@ private:
     std::shared_ptr<mg::DMABufEGLProvider> const provider_;
 
     std::mutex consumed_mutex;
-    std::function<void()> on_consumed;
+    std::function<void()> on_consumed_;
     std::function<void()> const on_release;
 
     geom::Size const size_;
