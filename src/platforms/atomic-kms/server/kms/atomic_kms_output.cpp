@@ -277,8 +277,11 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
         return false;
     }
 
-    auto const width = current_crtc->width;
-    auto const height = current_crtc->height;
+    /* We use the *requested* mode rather than the current_crtc
+     * because we might have been asked to perform a modeset
+     */
+    auto const width = connector->modes[mode_index].hdisplay;
+    auto const height = connector->modes[mode_index].vdisplay;
 
     AtomicUpdate update;
     update.add_property(*crtc_props, "MODE_ID", mode->handle());
@@ -307,6 +310,9 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
         current_crtc = nullptr;
         return false;
     }
+
+    // We might have performed a modeset; update our view of the hardware state accordingly!
+    current_crtc = mgk::get_crtc(drm_fd_, current_crtc->crtc_id);
 
     using_saved_crtc = false;
     return true;
