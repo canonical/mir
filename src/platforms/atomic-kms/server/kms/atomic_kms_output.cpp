@@ -486,13 +486,19 @@ void mga::AtomicKMSOutput::restore_saved_crtc()
 void mga::AtomicKMSOutput::set_power_mode(MirPowerMode mode)
 {
     bool should_be_active = mode == mir_power_mode_on;
-    std::unique_ptr<drmModeAtomicReq, void(*)(drmModeAtomicReqPtr)>
-        request{drmModeAtomicAlloc(), &drmModeAtomicFree};
 
-    drmModeAtomicAddProperty(request.get(), current_crtc->crtc_id, crtc_props->id_for("ACTIVE"), should_be_active);
-    drmModeAtomicCommit(drm_fd(), request.get(), DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
+    if (current_crtc)
+    {
+        AtomicUpdate update;
+        update.add_property(*crtc_props, "ACTIVE", should_be_active);
+        drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
+    }
+    else if (should_be_active)
+    {
+        mir::log_error("Attempted to set mir_power_mode_on for unconfigured output");
+    }
+    // An output which doesn't have a CRTC configured is already off, so that's not an error.
 }
-
 
 void mga::AtomicKMSOutput::set_gamma(mg::GammaCurves const& gamma)
 {
