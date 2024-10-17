@@ -59,6 +59,7 @@ class DisplayConfigurationObserver;
 namespace shell
 {
 class Shell;
+class FocusController;
 }
 namespace scene
 {
@@ -113,6 +114,7 @@ public:
         std::shared_ptr<DesktopFileManager> desktop_file_manager;
         std::shared_ptr<scene::SessionLock> session_lock;
         std::shared_ptr<mir::DecorationStrategy> decoration_strategy;
+        std::shared_ptr<shell::FocusController> focus_controller;
     };
 
     WaylandExtensions() = default;
@@ -165,7 +167,8 @@ public:
         WaylandProtocolExtensionFilter const& extension_filter,
         bool enable_key_repeat,
         std::shared_ptr<scene::SessionLock> const& session_lock,
-        std::shared_ptr<DecorationStrategy> const& decoration_strategy);
+        std::shared_ptr<DecorationStrategy> const& decoration_strategy,
+        std::shared_ptr<shell::FocusController> const& focus_controller);
 
     ~WaylandConnector() override;
 
