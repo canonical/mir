@@ -24,25 +24,29 @@
 #include "mir/log.h"
 #include <random>
 #include <chrono>
+#include <uuid.h>
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 namespace msh = mir::shell;
 
-namespace mir::frontend
+namespace
 {
 /// Time in milliseconds that the compositor will wait before invalidating a token
-auto constexpr TIMEOUT_MS = std::chrono::milliseconds(3000);
+auto constexpr timeout_ms = std::chrono::milliseconds(3000);
 
 std::string generate_token()
 {
-    std::string str("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
-    std::random_device rd;
-    std::mt19937 generator(rd());
-    std::shuffle(str.begin(), str.end(), generator);
-    return str.substr(0, 32);
+    uuid_t uuid;
+    uuid_generate(uuid);
+    return { reinterpret_cast<char*>(uuid), 4 };
+}
 }
 
+namespace mir
+{
+namespace frontend
+{
 class XdgActivationV1 : public wayland::XdgActivationV1::Global
 {
 public:
@@ -53,6 +57,7 @@ public:
         std::shared_ptr<MainLoop> const& main_loop);
 
     std::string const& create_token();
+
     bool try_consume_token(std::string const& token);
 
 private:
@@ -68,6 +73,7 @@ private:
 
     private:
         void get_activation_token(struct wl_resource* id) override;
+
         void activate(std::string const& token, struct wl_resource* surface) override;
 
         mf::XdgActivationV1* xdg_activation_v1;
@@ -101,8 +107,11 @@ public:
 
 private:
     void set_serial(uint32_t serial, struct wl_resource* seat) override;
+
     void set_app_id(std::string const& app_id) override;
+
     void set_surface(struct wl_resource* surface) override;
+
     void commit() override;
 
     std::string token;
@@ -112,6 +121,7 @@ private:
     std::optional<std::string> app_id;
     std::optional<struct wl_resource*> requesting_surface;
 };
+}
 }
 
 auto mf::create_xdg_activation_v1(
@@ -144,11 +154,11 @@ std::string const& mf::XdgActivationV1::create_token()
     {
         try_consume_token(generated);
     })};
-    token.alarm->reschedule_in(TIMEOUT_MS);
+    token.alarm->reschedule_in(timeout_ms);
 
     std::lock_guard guard(lock);
     pending_tokens.emplace_back(std::move(token));
-    return pending_tokens[pending_tokens.size() - 1].token;
+    return pending_tokens.back().token;
 }
 
 bool mf::XdgActivationV1::try_consume_token(std::string const& token)
