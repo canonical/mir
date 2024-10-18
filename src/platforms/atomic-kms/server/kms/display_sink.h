@@ -60,7 +60,7 @@ public:
         std::shared_ptr<kms::DRMEventHandler> event_handler,
         BypassOption bypass_options,
         std::shared_ptr<DisplayReport> const& listener,
-        std::vector<std::shared_ptr<KMSOutput>> const& outputs,
+        std::shared_ptr<KMSOutput> output,
         geometry::Rectangle const& area,
         glm::mat2 const& transformation);
     ~DisplaySink();
@@ -98,8 +98,8 @@ private:
     std::shared_ptr<FBHandle const> bypass_bufobj{nullptr};
     std::shared_ptr<DisplayReport> const listener;
 
-    std::vector<std::shared_ptr<KMSOutput>> const outputs;
-    std::vector<KMSOutput*> pending_flips;
+    std::shared_ptr<KMSOutput> const output;
+    bool page_flip_pending{false};
 
     std::shared_ptr<kms::DRMEventHandler> const event_handler;
 
