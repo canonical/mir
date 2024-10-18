@@ -21,17 +21,21 @@
 
 namespace mir
 {
+
 class DefaultServerConfiguration;
-namespace scene
-{
-class Surface;
-class Session;
-}
+class Executor;
+
+namespace scene { class Surface; class Session; }
+namespace graphics { class GraphicBufferAllocator; }
+namespace input { class CursorImages; }
+
 namespace shell
 {
 class Shell;
 namespace decoration
 {
+class Decoration;
+
 /// Creates server-side decorations (SSDs) for windows upon request
 class Manager
 {

@@ -346,6 +346,7 @@ public:
     auto the_decoration_strategy() -> std::shared_ptr<DecorationStrategy> override;
     void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy) override;
 
+    void set_the_decoration_manager(std::shared_ptr<shell::decoration::Manager> manager) override;
 protected:
     std::shared_ptr<options::Option> the_options() const;
     auto the_options_provider() const -> std::shared_ptr<options::Configuration>;
@@ -428,7 +429,7 @@ protected:
     CachedPtr<SharedLibraryProberReport> shared_library_prober_report;
     CachedPtr<shell::Shell> shell;
     CachedPtr<shell::ShellReport> shell_report;
-    CachedPtr<shell::decoration::Manager> decoration_manager;
+    std::shared_ptr<shell::decoration::Manager> decoration_manager;
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
     CachedPtr<cookie::Authority> cookie_authority;
     CachedPtr<input::receiver::XKBMapperRegistrar> xkb_mapper_registrar;
