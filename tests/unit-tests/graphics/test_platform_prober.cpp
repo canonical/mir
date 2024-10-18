@@ -44,7 +44,7 @@
 #include "mir/test/doubles/null_logger.h"
 
 #include "mir/test/doubles/mock_egl.h"
-#if defined(MIR_BUILD_PLATFORM_GBM_KMS)
+#if defined(MIR_BUILD_PLATFORM_GBM_KMS) || defined(MIR_BUILD_PLATFORM_ATOMIC_KMS)
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir/test/doubles/mock_gl.h"
@@ -70,6 +70,9 @@ std::vector<std::shared_ptr<mir::SharedLibrary>> available_platforms()
 
 #ifdef MIR_BUILD_PLATFORM_GBM_KMS
     modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-gbm-kms")));
+#endif
+#ifdef MIR_BUILD_PLATFORM_ATOMIC_KMS
+    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-atomic-kms")));
 #endif
     return modules;
 }
@@ -97,12 +100,12 @@ std::shared_ptr<void> ensure_mesa_probing_succeeds()
     struct MockEnvironment {
         mtf::UdevEnvironment udev;
         testing::NiceMock<mtd::MockEGL> egl;
-#ifdef MIR_BUILD_PLATFORM_GBM_KMS
+#if defined(MIR_BUILD_PLATFORM_GBM_KMS) || defined(MIR_BUILD_PLATFORM_ATOMIC_KMS)
         testing::NiceMock<mtd::MockGBM> gbm;
         testing::NiceMock<mtd::MockGL> gl;
 #endif
     };
-#ifdef MIR_BUILD_PLATFORM_GBM_KMS
+#if defined (MIR_BUILD_PLATFORM_GBM_KMS) || defined(MIR_BUILD_PLATFORM_ATOMIC_KMS)
     static auto const fake_gbm_device = reinterpret_cast<gbm_device*>(0xa1b2c3d4);
 #endif
     static auto const fake_egl_display = reinterpret_cast<EGLDisplay>(0xeda);
@@ -111,7 +114,7 @@ std::shared_ptr<void> ensure_mesa_probing_succeeds()
     env->udev.add_standard_device("standard-drm-devices");
     ON_CALL(env->egl, eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS))
         .WillByDefault(Return("EGL_MESA_platform_gbm EGL_EXT_platform_base"));
-#ifdef MIR_BUILD_PLATFORM_GBM_KMS
+#if defined(MIR_BUILD_PLATFORM_GBM_KMS) || defined(MIR_BUILD_PLATFORM_ATOMIC_KMS)
     ON_CALL(env->gbm, gbm_create_device(_))
         .WillByDefault(Return(fake_gbm_device));
     ON_CALL(env->egl, eglGetDisplay(fake_gbm_device))
@@ -123,7 +126,7 @@ std::shared_ptr<void> ensure_mesa_probing_succeeds()
                 SetArgPointee<1>(1),
                 SetArgPointee<2>(4),
                 Return(EGL_TRUE)));
-#ifdef MIR_BUILD_PLATFORM_GBM_KMS
+#if defined(MIR_BUILD_PLATFORM_GBM_KMS) || defined(MIR_BUILD_PLATFORM_ATOMIC_KMS)
     ON_CALL(env->egl, eglGetConfigAttrib(_, env->egl.fake_configs[0], EGL_NATIVE_VISUAL_ID, _))
             .WillByDefault(
                 DoAll(
@@ -176,7 +179,7 @@ public:
 
 class ServerPlatformProbeMockDRM : public ::testing::Test
 {
-#if defined(MIR_BUILD_PLATFORM_GBM_KMS)
+#if defined(MIR_BUILD_PLATFORM_GBM_KMS) || defined(MIR_BUILD_PLATFORM_ATOMIC_KMS)
 public:
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
 #endif
@@ -210,7 +213,7 @@ TEST(ServerPlatformProbe, ConstructingWithNoModulesIsAnError)
                  std::runtime_error);
 }
 
-#ifdef MIR_BUILD_PLATFORM_GBM_KMS
+#if defined(MIR_BUILD_PLATFORM_GBM_KMS) || defined(MIR_BUILD_PLATFORM_ATOMIC_KMS)
 TEST_F(ServerPlatformProbeMockDRM, LoadsMesaPlatformWhenDrmMasterCanBeAcquired)
 {
     using namespace testing;
@@ -540,11 +543,11 @@ public:
             .WillByDefault([this](auto, auto) { return egl_client_extensions.c_str(); });
     }
 
-    auto add_kms_device(std::string const& driver_name = "i915") -> std::unique_ptr<mir::udev::Device>
+    auto add_kms_device(std::string const& driver_name [[maybe_unused]] = "i915") -> std::unique_ptr<mir::udev::Device>
     {
         using namespace std::string_literals;
         using namespace testing;
-#ifndef MIR_BUILD_PLATFORM_GBM_KMS
+#if !defined(MIR_BUILD_PLATFORM_GBM_KMS) && !defined(MIR_BUILD_PLATFORM_ATOMIC_KMS)
         return nullptr;
 #else
 
@@ -693,10 +696,8 @@ private:
     testing::NiceMock<mtd::MockX11> x11;
     testing::NiceMock<mtd::MockEGL> egl;
     testing::NiceMock<mtd::MockGL> gl;
-#ifdef MIR_BUILD_PLATFORM_GBM_KMS
+#if defined(MIR_BUILD_PLATFORM_GBM_KMS) || defined(MIR_BUILD_PLATFORM_ATOMIC_KMS)
     testing::NiceMock<mtd::MockGBM> gbm;
-#endif
-#if defined(MIR_BUILD_PLATFORM_GBM_KMS)
     int drm_device_count{0};
     testing::NiceMock<mtd::MockDRM> drm;
 #endif
