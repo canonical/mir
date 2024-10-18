@@ -330,7 +330,8 @@ mf::WaylandConnector::WaylandConnector(
         desktop_file_manager,
         session_lock_,
         decoration_strategy,
-        focus_controller});
+        focus_controller,
+        keyboard_observer_registrar});
 
     shm_global = std::make_unique<WlShm>(display.get(), executor);
 

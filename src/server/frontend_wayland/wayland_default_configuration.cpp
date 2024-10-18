@@ -229,7 +229,13 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
         }),
     make_extension_builder<mw::XdgActivationV1>([](auto const& ctx)
         {
-            return mf::create_xdg_activation_v1(ctx.display, ctx.shell, ctx.focus_controller, ctx.main_loop);
+            return mf::create_xdg_activation_v1(
+                ctx.display,
+                ctx.shell,
+                ctx.focus_controller,
+                ctx.main_loop,
+                ctx.keyboard_observer_registrar,
+                *ctx.wayland_executor);
         }),
 };
 

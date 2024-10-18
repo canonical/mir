@@ -19,6 +19,7 @@
 #include "wl_seat.h"
 #include "wl_client.h"
 #include "mir/main_loop.h"
+#include "mir/input/keyboard_observer.h"
 #include "mir/scene/surface.h"
 #include "mir/shell/shell.h"
 #include "mir/shell/focus_controller.h"
@@ -31,6 +32,7 @@
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 namespace msh = mir::shell;
+namespace mi = mir::input;
 
 namespace
 {
@@ -49,6 +51,27 @@ namespace mir
 {
 namespace frontend
 {
+struct XdgActivationTokenData
+{
+    XdgActivationTokenData(
+        std::string const& token,
+        std::unique_ptr<time::Alarm> alarm_)
+        : token{token},
+        alarm{std::move(alarm_)}
+    {
+        alarm->reschedule_in(timeout_ms);
+    }
+
+    std::string const token;
+    std::unique_ptr<time::Alarm> const alarm;
+
+    std::optional<uint32_t> serial;
+    std::optional<struct wl_resource*> seat;
+    std::optional<std::string> app_id;
+    std::optional<struct wl_resource*> requesting_surface;
+};
+
+
 class XdgActivationV1 : public wayland::XdgActivationV1::Global
 {
 public:
@@ -56,11 +79,14 @@ public:
         struct wl_display* display,
         std::shared_ptr<msh::Shell> const& shell,
         std::shared_ptr<msh::FocusController> const& focus_controller,
-        std::shared_ptr<MainLoop> const& main_loop);
+        std::shared_ptr<MainLoop> const& main_loop,
+        std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
+        Executor& wayland_executor);
+    ~XdgActivationV1();
 
-    std::string const& create_token();
-
-    bool try_consume_token(std::string const& token);
+    std::shared_ptr<XdgActivationTokenData> const& create_token();
+    std::shared_ptr<XdgActivationTokenData> try_consume_token(std::string const& token);
+    void invalidate_all();
 
 private:
     class Instance : public wayland::XdgActivationV1
@@ -84,10 +110,15 @@ private:
         std::shared_ptr<MainLoop> main_loop;
     };
 
-    struct Token
+    class KeyboardObserver: public input::KeyboardObserver
     {
-        std::string token;
-        std::unique_ptr<time::Alarm> alarm;
+    public:
+        KeyboardObserver(XdgActivationV1* xdg_activation_v1);
+        void keyboard_event(std::shared_ptr<MirEvent const> const& event) override;
+        void keyboard_focus_set(std::shared_ptr<mi::Surface> const& surface) override;
+
+    private:
+        XdgActivationV1* xdg_activation_v1;
     };
 
     void bind(wl_resource* resource) override;
@@ -95,8 +126,10 @@ private:
     std::shared_ptr<msh::Shell> shell;
     std::shared_ptr<msh::FocusController> const focus_controller;
     std::shared_ptr<MainLoop> main_loop;
-    std::vector<Token> pending_tokens;
-    std::mutex mutex;
+    std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> keyboard_observer_registrar;
+    std::shared_ptr<KeyboardObserver> keyboard_observer;
+    std::vector<std::shared_ptr<XdgActivationTokenData>> pending_tokens;
+    std::mutex pending_tokens_mutex;
 };
 
 class XdgActivationTokenV1 : public wayland::XdgActivationTokenV1
@@ -104,8 +137,7 @@ class XdgActivationTokenV1 : public wayland::XdgActivationTokenV1
 public:
     XdgActivationTokenV1(
         struct wl_resource* resource,
-        std::string const& token,
-        std::shared_ptr<msh::FocusController> const& focus_controller);
+        std::shared_ptr<XdgActivationTokenData> const& token);
 
 private:
     void set_serial(uint32_t serial, struct wl_resource* seat) override;
@@ -116,12 +148,7 @@ private:
 
     void commit() override;
 
-    std::string token;
-    std::shared_ptr<msh::FocusController> const focus_controller;
-    std::optional<uint32_t> serial;
-    std::optional<struct wl_resource*> seat;
-    std::optional<std::string> app_id;
-    std::optional<struct wl_resource*> requesting_surface;
+    std::shared_ptr<XdgActivationTokenData> token;
     bool used = false;
 };
 }
@@ -131,56 +158,73 @@ auto mf::create_xdg_activation_v1(
     struct wl_display* display,
     std::shared_ptr<msh::Shell> const& shell,
     std::shared_ptr<msh::FocusController> const& focus_controller,
-    std::shared_ptr<MainLoop> const& main_loop)
+    std::shared_ptr<MainLoop> const& main_loop,
+    std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
+    Executor& wayland_executor)
     -> std::shared_ptr<mw::XdgActivationV1::Global>
 {
-    return std::make_shared<mf::XdgActivationV1>(display, shell, focus_controller, main_loop);
+    return std::make_shared<mf::XdgActivationV1>(display, shell, focus_controller, main_loop, keyboard_observer_registrar, wayland_executor);
 }
 
 mf::XdgActivationV1::XdgActivationV1(
     struct wl_display* display,
     std::shared_ptr<msh::Shell> const& shell,
     std::shared_ptr<msh::FocusController> const& focus_controller,
-    std::shared_ptr<MainLoop> const& main_loop)
+    std::shared_ptr<MainLoop> const& main_loop,
+    std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
+    Executor& wayland_executor)
     : Global(display, Version<1>()),
       shell{shell},
       focus_controller{focus_controller},
-      main_loop{main_loop}
+      main_loop{main_loop},
+      keyboard_observer_registrar{keyboard_observer_registrar},
+      keyboard_observer{std::make_shared<KeyboardObserver>(this)}
 {
-
+    keyboard_observer_registrar->register_interest(keyboard_observer, wayland_executor);
 }
 
-std::string const& mf::XdgActivationV1::create_token()
+mf::XdgActivationV1::~XdgActivationV1()
+{
+    keyboard_observer_registrar->unregister_interest(*keyboard_observer);
+}
+
+std::shared_ptr<mf::XdgActivationTokenData> const& mf::XdgActivationV1::create_token()
 {
     auto generated = generate_token();
-    Token token{generated, main_loop->create_alarm([this, generated]()
+    auto token = std::make_shared<XdgActivationTokenData>(generated, main_loop->create_alarm([this, generated]()
     {
         try_consume_token(generated);
-    })};
-    token.alarm->reschedule_in(timeout_ms);
+    }));
 
     {
-        std::lock_guard guard(mutex);
+        std::lock_guard guard(pending_tokens_mutex);
         pending_tokens.emplace_back(std::move(token));
-        return pending_tokens.back().token;
+        return pending_tokens.back();
     }
 }
 
-bool mf::XdgActivationV1::try_consume_token(std::string const& token)
+std::shared_ptr<mf::XdgActivationTokenData> mf::XdgActivationV1::try_consume_token(std::string const& token)
 {
     {
-        std::lock_guard guard(mutex);
+        std::lock_guard guard(pending_tokens_mutex);
         for (auto it = pending_tokens.begin(); it != pending_tokens.end(); it++)
         {
-            if (it->token == token)
+            if (it->get()->token == token)
             {
+                auto result = *it;
                 pending_tokens.erase(it);
-                return true;
+                return result;
             }
         }
     }
 
-    return false;
+    return nullptr;
+}
+
+void mf::XdgActivationV1::invalidate_all()
+{
+    std::lock_guard guard(pending_tokens_mutex);
+    pending_tokens.clear();
 }
 
 void mf::XdgActivationV1::bind(struct wl_resource* resource)
@@ -202,20 +246,39 @@ mf::XdgActivationV1::Instance::Instance(
 {
 }
 
+mf::XdgActivationV1::KeyboardObserver::KeyboardObserver(mir::frontend::XdgActivationV1* xdg_activation_v1)
+    : xdg_activation_v1{xdg_activation_v1}
+{}
+
+void mf::XdgActivationV1::KeyboardObserver::keyboard_event(std::shared_ptr<const MirEvent> const&)
+{
+    xdg_activation_v1->invalidate_all();
+}
+
+void mf::XdgActivationV1::KeyboardObserver::keyboard_focus_set(std::shared_ptr<mi::Surface> const&)
+{
+}
+
 void mf::XdgActivationV1::Instance::get_activation_token(struct wl_resource* id)
 {
-    new XdgActivationTokenV1(id, xdg_activation_v1->create_token(), focus_controller);
+    new XdgActivationTokenV1(id, xdg_activation_v1->create_token());
 }
 
 void mf::XdgActivationV1::Instance::activate(std::string const& token, struct wl_resource* surface)
 {
-    if (!xdg_activation_v1->try_consume_token(token))
+    auto xdg_token = xdg_activation_v1->try_consume_token(token);
+    if (!xdg_token)
     {
         mir::log_error("XdgActivationV1::activate invalid token: %s", token.c_str());
         return;
     }
 
-    main_loop->enqueue(this, [surface=surface, shell=shell]
+    main_loop->enqueue(this, [
+        surface=surface,
+        shell=shell,
+        xdg_token=xdg_token,
+        client=client,
+        focus_controller=focus_controller]
     {
         auto const wl_surface = mf::WlSurface::from(surface);
         if (!wl_surface)
@@ -231,6 +294,55 @@ void mf::XdgActivationV1::Instance::activate(std::string const& token, struct wl
             return;
         }
 
+        // In the event of a failure, we send 'done' with a new, invalid token which cannot be used later.
+        if (xdg_token->seat && xdg_token->serial)
+        {
+            // First, assert that the seat still exists.
+            auto const wl_seat = mf::WlSeat::from(xdg_token->seat.value());
+            if (!wl_seat)
+                mir::log_warning("XdgActivationTokenV1::activate wl_seat not found");
+
+            auto event = client->event_for(xdg_token->serial.value());
+            if (event == std::nullopt)
+                mir::log_warning("XdgActivationTokenV1::activate serial not found");
+        }
+
+        if (xdg_token->app_id)
+        {
+            // Check that the focused application has app_id
+            auto const& focused = focus_controller->focused_surface();
+            if (!focused)
+            {
+                mir::log_error("XdgActivationTokenV1::activate cannot find the focused surface");
+                return;
+            }
+
+            if (focused->application_id() != xdg_token->app_id)
+            {
+                mir::log_error("XdgActivationTokenV1::activate app_id != focused application id");
+                return;
+            }
+        }
+
+        if (xdg_token->requesting_surface)
+        {
+            // Check that the focused surface is the requesting_surface
+            auto const requesting_wl_surface = mf::WlSurface::from(xdg_token->requesting_surface.value());
+            auto const requesting_scene_surface_opt = requesting_wl_surface->scene_surface();
+            if (!requesting_scene_surface_opt)
+            {
+                mir::log_error("XdgActivationTokenV1::commit cannot find the provided scene surface");
+                return;
+            }
+
+            auto const& scene_surface = requesting_scene_surface_opt.value();
+            if (focus_controller->focused_surface() != scene_surface)
+            {
+                mir::log_error("XdgActivationTokenV1::commit the focused surface is not the surface that requested activation");
+                return;
+            }
+        }
+
         auto const& scene_surface = scene_surface_opt.value();
         auto const now = std::chrono::steady_clock::now().time_since_epoch();
         auto ns = std::chrono::duration_cast<std::chrono::nanoseconds >(now).count();
@@ -240,29 +352,26 @@ void mf::XdgActivationV1::Instance::activate(std::string const& token, struct wl
 
 mf::XdgActivationTokenV1::XdgActivationTokenV1(
     struct wl_resource* resource,
-    std::string const& token,
-    std::shared_ptr<msh::FocusController> const& focus_controller)
+    std::shared_ptr<XdgActivationTokenData> const& token)
     : wayland::XdgActivationTokenV1(resource, Version<1>()),
-      token{token},
-      focus_controller{focus_controller}
+      token{token}
 {
 }
 
 void mf::XdgActivationTokenV1::set_serial(uint32_t serial_, struct wl_resource* seat_)
 {
-    if (serial_ != 0)
-        serial = serial_;
-    seat = seat_;
+    token->serial = serial_;
+    token->seat = seat_;
 }
 
 void mf::XdgActivationTokenV1::set_app_id(std::string const& app_id_)
 {
-    app_id = app_id_;
+    token->app_id = app_id_;
 }
 
 void mf::XdgActivationTokenV1::set_surface(struct wl_resource* surface)
 {
-    requesting_surface = surface;
+    token->requesting_surface = surface;
 }
 
 void mf::XdgActivationTokenV1::commit()
@@ -278,66 +387,5 @@ void mf::XdgActivationTokenV1::commit()
 
     used = true;
 
-    // In the event of a failure, we send 'done' with a new, invalid token which cannot be used later.
-    if (seat && serial)
-    {
-        // First, assert that the seat still exists.
-        auto const wl_seat = mf::WlSeat::from(seat.value());
-        if (!wl_seat)
-        {
-            mir::log_error("XdgActivationTokenV1::commit wl_seat not found");
-            send_done_event(generate_token());
-            return;
-        }
-
-        auto event = client->event_for(serial.value());
-        if (!event)
-        {
-            mir::log_error("XdgActivationTokenV1::commit serial not found");
-            send_done_event(generate_token());
-            return;
-        }
-    }
-
-    if (app_id)
-    {
-        // Check that the focused application has app_id
-        auto const& focused = focus_controller->focused_surface();
-        if (!focused)
-        {
-            mir::log_error("XdgActivationTokenV1::commit cannot find the focused surface");
-            send_done_event(generate_token());
-            return;
-        }
-
-        if (focused->application_id() != app_id)
-        {
-            mir::log_error("XdgActivationTokenV1::commit app_id != focused application id");
-            send_done_event(generate_token());
-            return;
-        }
-    }
-
-    if (requesting_surface)
-    {
-        // Check that the focused surface is the requesting_surface
-        auto const wl_surface = mf::WlSurface::from(requesting_surface.value());
-        auto const scene_surface_opt = wl_surface->scene_surface();
-        if (!scene_surface_opt)
-        {
-            mir::log_error("XdgActivationTokenV1::commit cannot find the provided scene surface");
-            send_done_event(generate_token());
-            return;
-        }
-
-        auto const& scene_surface = scene_surface_opt.value();
-        if (focus_controller->focused_surface() != scene_surface)
-        {
-            mir::log_error("XdgActivationTokenV1::commit the focused surface is not the surface that requested activation");
-            send_done_event(generate_token());
-            return;
-        }
-    }
-
-    send_done_event(token);
+    send_done_event(token->token);
 }

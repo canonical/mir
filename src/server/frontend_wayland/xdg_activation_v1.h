@@ -18,6 +18,7 @@
 #define MIR_FRONTEND_XDG_ACTIVATION_UNSTABLE_V1_H
 
 #include "xdg-activation-v1_wrapper.h"
+#include "mir/observer_registrar.h"
 
 struct wl_display;
 
@@ -29,6 +30,10 @@ namespace shell
 class Shell;
 class FocusController;
 }
+namespace input
+{
+class KeyboardObserver;
+}
 
 namespace frontend
 {
@@ -36,7 +41,9 @@ auto create_xdg_activation_v1(
     struct wl_display* display,
     std::shared_ptr<shell::Shell> const&,
     std::shared_ptr<shell::FocusController> const&,
-    std::shared_ptr<MainLoop> const&) ->
+    std::shared_ptr<MainLoop> const&,
+    std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const&,
+    Executor& wayland_executor) ->
     std::shared_ptr<wayland::XdgActivationV1::Global>;
 }
 }

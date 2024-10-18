@@ -115,6 +115,7 @@ public:
         std::shared_ptr<scene::SessionLock> session_lock;
         std::shared_ptr<mir::DecorationStrategy> decoration_strategy;
         std::shared_ptr<shell::FocusController> focus_controller;
+        std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> keyboard_observer_registrar;
     };
 
     WaylandExtensions() = default;
