@@ -15,8 +15,10 @@
  */
 
 #include "basic_manager.h"
+#include "basic_decoration.h"
 #include "mir/shell/decoration.h"
 
+#include <iostream>
 #include <mir/graphics/display_configuration.h>
 #include <mir/graphics/null_display_configuration_observer.h>
 
@@ -96,8 +98,7 @@ void msd::BasicManager::decorate(std::shared_ptr<ms::Surface> const& surface)
     {
         decorations[surface.get()] = nullptr;
         lock.unlock();
-        auto decoration =
-            std::make_unique<BasicDecoration>(locked_shell, buffer_allocator, executor, cursor_images, surface);
+        auto decoration = create_decoration(locked_shell, surface);
         lock.lock();
         decoration->set_scale(scale);
         decorations[surface.get()] = std::move(decoration);
@@ -133,6 +134,12 @@ void msd::BasicManager::undecorate_all()
     to_destroy.clear();
 }
 
+std::unique_ptr<msd::Decoration> msd::BasicManager::create_decoration(
+    std::shared_ptr<Shell> const locked_shell, std::shared_ptr<scene::Surface> surface)
+{
+    return std::make_unique<msd::BasicDecoration>(locked_shell, buffer_allocator, executor, cursor_images, surface);
+}
+
 void msd::BasicManager::set_scale(float new_scale)
 {
     std::lock_guard lock{mutex};
@@ -145,3 +152,15 @@ void msd::BasicManager::set_scale(float new_scale)
         }
     }
 }
+
+void msd::BasicManager::override_decoration(
+    std::shared_ptr<scene::Surface> const& surface, std::unique_ptr<msd::Decoration> decoration)
+{
+    decorations[surface.get()] = std::move(decoration);
+}
+
+std::size_t msd::BasicManager::num_decorations() const
+{
+    return decorations.size();
+}
+
