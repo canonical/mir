@@ -72,9 +72,21 @@ public:
 
     int drm_fd() const override;
 
+    bool has_cursor_plane() const;
+
+    using CursorFbPtr = std::unique_ptr<uint32_t, std::function<void(uint32_t*)>>;
+    struct CursorState {
+        bool enabled{false};
+        CursorFbPtr fb_id;
+        uint32_t width, height;
+        int crtc_x, crtc_y;
+    };
+
 private:
     bool ensure_crtc();
     void restore_saved_crtc();
+
+    CursorFbPtr cursor_gbm_bo_to_drm_fb_id(gbm_bo* gbm_bo);
 
     mir::Fd const drm_fd_;
     std::shared_ptr<kms::DRMEventHandler> const event_handler;
@@ -87,13 +99,18 @@ private:
     size_t mode_index;
     geometry::Displacement fb_offset;
     kms::DRMModeCrtcUPtr current_crtc;
-    kms::DRMModePlaneUPtr current_plane;
+    kms::DRMModePlaneUPtr current_primary_plane;
+    kms::DRMModePlaneUPtr current_cursor_plane;
     std::unique_ptr<PropertyBlob> mode;
     std::unique_ptr<kms::ObjectProperties> crtc_props;
-    std::unique_ptr<kms::ObjectProperties> plane_props;
+    std::unique_ptr<kms::ObjectProperties> primary_plane_props;
+    std::unique_ptr<kms::ObjectProperties> cursor_plane_props;
     std::unique_ptr<kms::ObjectProperties> connector_props;
     drmModeCrtc saved_crtc;
     bool using_saved_crtc;
+
+    CursorState cursor_state;
+    std::mutex cursor_mutex;
 };
 
 }
