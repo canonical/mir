@@ -644,20 +644,29 @@ void miral::ReloadingYamlFileDisplayConfig::auto_reload()
         if (auto const ml = the_main_loop())
         {
             ml->register_fd_handler({icf.value()}, this, [icf=icf.value(), this] (int)
+            {
+                static size_t const sizeof_inotify_event = sizeof(inotify_event);
+
+                // A union ensures buffer is aligned for inotify_event
+                union
                 {
-                    union
-                    {
-                        inotify_event event;
-                        char buffer[sizeof(inotify_event) + NAME_MAX + 1];
-                    } inotify_buffer;
+                    char buffer[sizeof_inotify_event + NAME_MAX + 1];
+                    inotify_event unused [[maybe_unused]];
+                } inotify_magic;
 
-                    if (read(icf, &inotify_buffer, sizeof(inotify_buffer)) < static_cast<ssize_t>(sizeof(inotify_event)))
-                        return;
+                auto const readsize = read(icf, &inotify_magic, sizeof(inotify_magic));
+                if (readsize < static_cast<ssize_t>(sizeof_inotify_event))
+                    return;
 
-                    if (inotify_buffer.event.mask & (IN_CLOSE_WRITE | IN_CREATE | IN_MOVED_TO))
+                auto raw_buffer = inotify_magic.buffer;
+                while (raw_buffer != inotify_magic.buffer + readsize)
+                {
+                    // This is safe because inotify_magic.buffer is aligned and event.len includes padding for alignment
+                    auto& event = reinterpret_cast<inotify_event&>(*raw_buffer);
+                    if (event.mask & (IN_CLOSE_WRITE | IN_MOVED_TO))
                     try
                     {
-                        if (inotify_buffer.event.name == basename)
+                        if (event.name == basename)
                         {
                             std::lock_guard lock{mutex};
                             auto const& filename = config_path_.value() + "/" + basename;
@@ -671,7 +680,7 @@ void miral::ReloadingYamlFileDisplayConfig::auto_reload()
                                 mir::log_warning("Failed to open display configuration: %s", filename.c_str());
                             }
                         }
-                        else if (inotify_buffer.event.name == basename + layout_suffix)
+                        else if (event.name == basename + layout_suffix)
                         {
                             check_for_layout_override();
                         }
@@ -691,7 +700,10 @@ void miral::ReloadingYamlFileDisplayConfig::auto_reload()
                     {
                         mir::log_warning("Failed to reload display configuration: %s", except.what());
                     }
-                });
+
+                    raw_buffer += sizeof_inotify_event+event.len;
+                }
+            });
         }
     }
 }
