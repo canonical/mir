@@ -292,8 +292,12 @@ void msd::BasicDecoration::set_cursor(std::string const& cursor_image_name)
 
 void msd::BasicDecoration::set_scale(float new_scale)
 {
-    scale = new_scale;
-    redraw();
+    threadsafe_self->spawn(
+        [new_scale](auto* deco)
+        {
+            deco->scale = new_scale;
+            deco->redraw();
+        });
 }
 
 void msd::BasicDecoration::attrib_changed(mir::scene::Surface const*, MirWindowAttrib attrib, int)
