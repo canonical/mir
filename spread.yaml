@@ -22,7 +22,8 @@ environment:
     DISTRO/debian_sid: debian
     RELEASE: noble
     RELEASE/ubuntu: noble
-    RELEASE/ubuntu_devel: oracular
+    RELEASE/ubuntu_oracular: oracular
+    RELEASE/ubuntu_devel: plucky
     RELEASE/debian_sid: sid
     PROPOSED: false
     PROPOSED/ubuntu_proposed: true

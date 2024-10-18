@@ -15,6 +15,7 @@ jobs:
       matrix:
         release:
         - "24.04"
+        - "24.10"
         - "devel"
 
     runs-on: ubuntu-latest
