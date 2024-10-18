@@ -24,7 +24,6 @@
 
 #include "gmock/gmock.h"
 #include <boost/iostreams/detail/buffer.hpp>
-#include <functional>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <memory>
@@ -32,7 +31,6 @@
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace msd = mir::shell::decoration;
-namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 using namespace testing;
@@ -75,24 +73,30 @@ public:
     {
     }
 
-    auto decorated() -> std::unordered_map<mir::scene::Surface*, std::unique_ptr<msd::Decoration>>&
+    std::unique_ptr<msd::Decoration> create_decoration_exposed()
     {
-        return decorations;
+        return create_decoration(nullptr, nullptr);
     }
 
-    auto add_decoration(
-        std::shared_ptr<mir::scene::Surface> const& surf)
+    void override_decoration_exposed(
+        std::shared_ptr<ms::Surface> const& surface, std::unique_ptr<msd::Decoration> decoration)
     {
-        decorations.emplace(surf.get(), std::make_unique<MockDecoration>(mock));
+        override_decoration(surface, std::move(decoration));
     }
 
-    auto add_decoration(
-        std::shared_ptr<mir::scene::Surface> const& surf, std::unique_ptr<msd::Decoration> deco)
+    std::size_t num_decorations_exposed() const
     {
-        decorations.emplace(surf.get(), std::move(deco));
+        return num_decorations();
     }
 
     MOCK_METHOD(void, decorate, (std::shared_ptr<mir::scene::Surface> const&), (override));
+
+protected:
+    std::unique_ptr<msd::Decoration> create_decoration(
+        std::shared_ptr<msh::Shell> const, std::shared_ptr<ms::Surface>) override
+    {
+        return std::make_unique<MockDecoration>(mock);
+    }
 
 private:
     DestructionNotifier* const mock;
@@ -109,7 +113,7 @@ struct DecorationBasicManager
             .WillRepeatedly(
                 [&](auto const& surface)
                 {
-                    manager.add_decoration(surface);
+                    manager.override_decoration_exposed(surface, manager.create_decoration_exposed());
                 });
         EXPECT_CALL(*this, decoration_destroyed(_))
             .Times(AnyNumber());
@@ -133,12 +137,12 @@ TEST_F(DecorationBasicManager, calls_create_decoration)
     EXPECT_CALL(manager, decorate)
         .Times(1)
         .WillOnce(
-            [&](auto& surface)
+            [&](auto const& surface)
             {
-                manager.add_decoration(surface);
+                manager.override_decoration_exposed(surface, manager.create_decoration_exposed());
             });
     manager.decorate(surface);
-    EXPECT_EQ(manager.decorated().size(), 1);
+    EXPECT_EQ(manager.num_decorations_exposed(), 1);
 }
 
 TEST_F(DecorationBasicManager, decorating_multiple_surfaces_is_fine)
@@ -155,14 +159,14 @@ TEST_F(DecorationBasicManager, decorating_a_surface_is_idempotent)
     EXPECT_CALL(manager, decorate)
         .Times(3)
         .WillRepeatedly(
-            [&](auto& surface)
+            [&](auto const& surface)
             {
-                manager.add_decoration(surface);
+                manager.override_decoration_exposed(surface, manager.create_decoration_exposed());
             });
     manager.decorate(surface);
     manager.decorate(surface);
     manager.decorate(surface);
-    EXPECT_EQ(manager.decorated().size(), 1);
+    EXPECT_EQ(manager.num_decorations_exposed(), 1);
 }
 
 TEST_F(DecorationBasicManager, undecorate_unknown_surface_is_fine)
@@ -194,10 +198,11 @@ TEST_F(DecorationBasicManager, undecorate_works)
     EXPECT_CALL(manager, decorate)
         .Times(2)
         .WillRepeatedly(
-            [&](auto& surface)
+            [&](auto const& surface)
             {
-                manager.add_decoration(surface);
+                manager.override_decoration_exposed(surface, manager.create_decoration_exposed());
             });
+
     manager.decorate(surface_a);
     manager.decorate(surface_b);
     EXPECT_CALL(*this, decoration_destroyed(_))
@@ -221,12 +226,12 @@ TEST_F(DecorationBasicManager, undecorate_all_works)
         .WillOnce(
             [&](auto& surface)
             {
-                manager.add_decoration(surface, std::move(decoration_a));
+                manager.override_decoration_exposed(surface, std::move(decoration_a));
             })
         .WillOnce(
             [&](auto& surface)
             {
-                manager.add_decoration(surface, std::move(decoration_b));
+                manager.override_decoration_exposed(surface, std::move(decoration_b));
             });
     manager.decorate(surface_a);
     manager.decorate(surface_b);
@@ -246,12 +251,12 @@ TEST_F(DecorationBasicManager, does_not_create_decorations_while_locked)
             [&]()
             {
                 manager.decorate(surface_b); // 2
-                manager.decorated()[surface_a.get()] = std::move(decoration_a);
+                manager.override_decoration_exposed(surface_a, std::move(decoration_a));
             }))
         .WillOnce(Invoke(
             [&]()
             {
-                manager.decorated()[surface_b.get()] = std::move(decoration_b);
+                manager.override_decoration_exposed(surface_b, std::move(decoration_b));
             }));
     manager.decorate(surface_a); // 1
 }
