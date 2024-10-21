@@ -24,9 +24,11 @@
 #include "mir/geometry/displacement.h"
 #include "mir/log.h"
 
+#include <algorithm>
 #include <boost/throw_exception.hpp>
 #include <boost/filesystem.hpp>
 #include <ft2build.h>
+#include <utility>
 #include FT_FREETYPE_H
 
 #include <locale>
@@ -41,23 +43,6 @@ namespace msd = mir::shell::decoration;
 
 namespace
 {
-static constexpr auto color(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 0xFF) -> uint32_t
-{
-    return ((uint32_t)b <<  0) |
-           ((uint32_t)g <<  8) |
-           ((uint32_t)r << 16) |
-           ((uint32_t)a << 24);
-}
-
-uint32_t const default_focused_background   = color(0x32, 0x32, 0x32);
-uint32_t const default_unfocused_background = color(0x80, 0x80, 0x80);
-uint32_t const default_focused_text         = color(0xFF, 0xFF, 0xFF);
-uint32_t const default_unfocused_text       = color(0xA0, 0xA0, 0xA0);
-uint32_t const default_normal_button        = color(0x60, 0x60, 0x60);
-uint32_t const default_active_button        = color(0xA0, 0xA0, 0xA0);
-uint32_t const default_close_normal_button  = color(0xA0, 0x20, 0x20);
-uint32_t const default_close_active_button  = color(0xC0, 0x60, 0x60);
-uint32_t const default_button_icon          = color(0xFF, 0xFF, 0xFF);
 
 /// Font search logic should be kept in sync with examples/example-server-lib/wallpaper_config.cpp
 auto default_font() -> std::string
@@ -464,36 +449,43 @@ auto msd::Renderer::Text::Impl::utf8_to_utf32(std::string const& text) -> std::u
     return utf32_text;
 }
 
+namespace
+{
+auto init_button_drawing_functions(msd::ButtonTheme button_icons)
+{
+    using namespace msd;
+
+    std::map<ButtonFunction, std::pair<msd::Icon const, msd::Icon::DrawingFunction const>> buttons;
+
+    for(auto const& [button_function, icon]: button_icons)
+    {
+        // A little lookup table, more legible than a switch case?
+        static auto const drawing_functions = std::map<ButtonFunction, msd::Icon::DrawingFunction>{
+            {ButtonFunction::Close, render_close_icon},
+            {ButtonFunction::Maximize, render_maximize_icon},
+            {ButtonFunction::Minimize, render_minimize_icon},
+        };
+
+        buttons.emplace(button_function, std::make_pair(icon, drawing_functions.at(button_function)));
+    }
+
+    return buttons;
+}
+}
+
 msd::Renderer::Renderer(
     std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
-    std::shared_ptr<StaticGeometry const> const& static_geometry)
-    : buffer_allocator{buffer_allocator},
-      focused_theme{
-          default_focused_background,
-          default_focused_text},
-      unfocused_theme{
-          default_unfocused_background,
-          default_unfocused_text},
-      current_theme{nullptr},
-      button_icons{
-          {ButtonFunction::Close, {
-              default_close_normal_button,
-              default_close_active_button,
-              default_button_icon,
-              render_close_icon}},
-          {ButtonFunction::Maximize, {
-              default_normal_button,
-              default_active_button,
-              default_button_icon,
-              render_maximize_icon}},
-          {ButtonFunction::Minimize, {
-              default_normal_button,
-              default_active_button,
-              default_button_icon,
-              render_minimize_icon}},
-      },
-      static_geometry{static_geometry},
-      text{Text::instance()}
+    std::shared_ptr<StaticGeometry const> const& static_geometry,
+    Theme focused,
+    Theme unfocused,
+    msd::ButtonTheme const button_theme) :
+    buffer_allocator{buffer_allocator},
+    focused_theme{focused},
+    unfocused_theme{unfocused},
+    current_theme{nullptr},
+    button_icons{init_button_drawing_functions(button_theme)},
+    static_geometry{static_geometry},
+    text{Text::instance()}
 {
 }
 
@@ -620,9 +612,11 @@ auto msd::Renderer::render_titlebar() -> std::optional<std::shared_ptr<mg::Buffe
             auto const icon = button_icons.find(button.function);
             if (icon != button_icons.end())
             {
-                Pixel button_color = icon->second.normal_color;
+                auto const [icon_theme, icon_drawer] = icon->second;
+
+                Pixel button_color = icon_theme.normal_color;
                 if (button.state == ButtonState::Hovered)
-                    button_color = icon->second.active_color;
+                    button_color = icon_theme.active_color;
                 for (geom::Y y{scaled_button_rect.top()}; y < scaled_button_rect.bottom(); y += geom::DeltaY{1})
                 {
                     render_row(
@@ -636,12 +630,12 @@ auto msd::Renderer::render_titlebar() -> std::optional<std::shared_ptr<mg::Buffe
                 scaled_button_rect.top_left + static_geometry->icon_padding * scale, {
                     scaled_button_rect.size.width - static_geometry->icon_padding.dx * scale * 2,
                     scaled_button_rect.size.height - static_geometry->icon_padding.dy * scale * 2}};
-                icon->second.render_icon(
+                icon_drawer(
                     titlebar_pixels.get(),
                     scaled_titlebar_size,
                     icon_rect,
                     static_geometry->icon_line_width * scale,
-                    icon->second.icon_color);
+                    icon_theme.icon_color);
             }
             else
             {
