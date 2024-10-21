@@ -14,6 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef MIRAL_DECORATION_LIGHT_MODE_H
+#define MIRAL_DECORATION_LIGHT_MODE_H
+
 namespace mir { class Server; }
 
 namespace miral::decoration
@@ -24,3 +27,4 @@ struct LightMode
 };
 }
 
+#endif
