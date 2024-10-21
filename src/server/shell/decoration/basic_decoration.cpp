@@ -67,10 +67,31 @@ uint32_t const default_focused_text = msd::color(0xFF, 0xFF, 0xFF);
 uint32_t const default_unfocused_background = msd::color(0x80, 0x80, 0x80);
 uint32_t const default_unfocused_text = msd::color(0xA0, 0xA0, 0xA0);
 
-static mir::shell::decoration::Theme const default_focused{default_focused_background, default_focused_text};
-static mir::shell::decoration::Theme const default_unfocused{default_unfocused_background, default_unfocused_text};
+static msd::Theme const default_focused{default_focused_background, default_focused_text};
+static msd::Theme const default_unfocused{default_unfocused_background, default_unfocused_text};
 
-template<typename OBJ>
+uint32_t const default_normal_button = msd::color(0x60, 0x60, 0x60);
+uint32_t const default_active_button = msd::color(0xA0, 0xA0, 0xA0);
+uint32_t const default_close_normal_button = msd::color(0xA0, 0x20, 0x20);
+uint32_t const default_close_active_button = msd::color(0xC0, 0x60, 0x60);
+uint32_t const default_button_icon = msd::color(0xFF, 0xFF, 0xFF);
+
+static msd::ButtonTheme const default_button_themes = {
+    {
+        msd::ButtonFunction::Close,
+        {default_close_normal_button, default_close_active_button, default_button_icon},
+    },
+    {
+        msd::ButtonFunction::Maximize,
+        {default_normal_button, default_active_button, default_button_icon},
+    },
+    {
+        msd::ButtonFunction::Minimize,
+        {default_normal_button, default_active_button, default_button_icon},
+    },
+};
+
+template <typename OBJ>
 struct PropertyComparison
 {
     template<typename RET>
@@ -193,7 +214,7 @@ msd::BasicDecoration::BasicDecoration(
     std::shared_ptr<Executor> const& executor,
     std::shared_ptr<input::CursorImages> const& cursor_images,
     std::shared_ptr<ms::Surface> const& window_surface) :
-    mir::shell::decoration::BasicDecoration(shell, buffer_allocator, executor, cursor_images, window_surface, default_focused, default_unfocused)
+    BasicDecoration(shell, buffer_allocator, executor, cursor_images, window_surface, default_focused, default_unfocused, default_button_themes)
 {
 }
 
@@ -204,7 +225,8 @@ msd::BasicDecoration::BasicDecoration(
     std::shared_ptr<input::CursorImages> const& cursor_images,
     std::shared_ptr<ms::Surface> const& window_surface,
     Theme focused,
-    Theme unfocused) :
+    Theme unfocused,
+    msd::ButtonTheme const button_theme) :
     decoration_surface{create_surface(window_surface, shell)},
     threadsafe_self{std::make_shared<ThreadsafeAccess<BasicDecoration>>(executor)},
     static_geometry{std::make_shared<StaticGeometry>(default_geometry)},
@@ -213,7 +235,7 @@ msd::BasicDecoration::BasicDecoration(
     cursor_images{cursor_images},
     session{window_surface->session().lock()},
     buffer_streams{std::make_unique<BufferStreams>(session)},
-    renderer{std::make_unique<Renderer>(buffer_allocator, static_geometry, focused, unfocused)},
+    renderer{std::make_unique<Renderer>(buffer_allocator, static_geometry, focused, unfocused, button_theme)},
     window_surface{window_surface},
     window_state{new_window_state()},
     input_manager{std::make_unique<InputManager>(static_geometry, *window_state, threadsafe_self)},

@@ -81,7 +81,8 @@ public:
         std::shared_ptr<input::CursorImages> const& cursor_images,
         std::shared_ptr<scene::Surface> const& window_surface,
         Theme focused,
-        Theme unfocused);
+        Theme unfocused,
+        mir::shell::decoration::ButtonTheme button_theme);
 
     ~BasicDecoration();
 
