@@ -60,19 +60,18 @@ public:
     void undecorate(std::shared_ptr<scene::Surface> const& surface) override;
     void undecorate_all() override;
 
-
 protected:
     virtual std::unique_ptr<Decoration> create_decoration(std::shared_ptr<Shell> const locked_shell, std::shared_ptr<scene::Surface> surface);
 
     // For testing purposes only
     void override_decoration(std::shared_ptr<scene::Surface> const& surface, std::unique_ptr<Decoration> decoration);
     std::size_t num_decorations() const;
-private:
-    std::unordered_map<scene::Surface*, std::unique_ptr<Decoration>> decorations;
 
     std::shared_ptr<mir::graphics::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<Executor> const executor;
     std::shared_ptr<input::CursorImages> const cursor_images;
+private:
+    std::unordered_map<scene::Surface*, std::unique_ptr<Decoration>> decorations;
 
     std::shared_ptr<DisplayConfigurationListener> const display_config_monitor;
     std::weak_ptr<shell::Shell> shell;

@@ -193,10 +193,12 @@ global:
     mir::Server::stop*;
     mir::Server::supported_pixel_formats*;
     mir::Server::the_application_not_responding_detector*;
+    mir::Server::the_buffer_allocator*;
     mir::Server::the_composite_event_filter*;
     mir::Server::the_compositor*;
     mir::Server::the_compositor_report*;
     mir::Server::the_cursor*;
+    mir::Server::the_cursor_images*;
     mir::Server::the_cursor_listener*;
     mir::Server::the_decoration_strategy*;
     mir::Server::the_display*;
