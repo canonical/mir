@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "basic_manager.h"
+#include "mir/decoration/basic_manager.h"
 #include "basic_decoration.h"
 #include "mir/shell/decoration.h"
 
