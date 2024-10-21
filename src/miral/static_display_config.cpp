@@ -647,21 +647,16 @@ void miral::ReloadingYamlFileDisplayConfig::auto_reload()
             {
                 static size_t const sizeof_inotify_event = sizeof(inotify_event);
 
-                // A union ensures buffer is aligned for inotify_event
-                union
-                {
-                    char buffer[sizeof_inotify_event + NAME_MAX + 1];
-                    inotify_event unused [[maybe_unused]];
-                } inotify_magic;
+                alignas(inotify_event) char buffer[sizeof(inotify_event) + NAME_MAX + 1];
 
-                auto const readsize = read(icf, &inotify_magic, sizeof(inotify_magic));
+                auto const readsize = read(icf, buffer, sizeof(buffer));
                 if (readsize < static_cast<ssize_t>(sizeof_inotify_event))
                     return;
 
-                auto raw_buffer = inotify_magic.buffer;
-                while (raw_buffer != inotify_magic.buffer + readsize)
+                auto raw_buffer = buffer;
+                while (raw_buffer != buffer + readsize)
                 {
-                    // This is safe because inotify_magic.buffer is aligned and event.len includes padding for alignment
+                    // This is safe because buffer is aligned and event.len includes padding for alignment
                     auto& event = reinterpret_cast<inotify_event&>(*raw_buffer);
                     if (event.mask & (IN_CLOSE_WRITE | IN_MOVED_TO))
                     try
