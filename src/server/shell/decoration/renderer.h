@@ -19,7 +19,7 @@
 
 #include "mir/geometry/rectangle.h"
 
-#include "input.h"
+#include "mir/decoration/input.h"
 
 #include <functional>
 #include <memory>

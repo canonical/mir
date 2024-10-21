@@ -17,7 +17,7 @@
 
 #include "renderer.h"
 #include "window.h"
-#include "input.h"
+#include "mir/decoration/input.h"
 
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/renderer/sw/pixel_source.h"

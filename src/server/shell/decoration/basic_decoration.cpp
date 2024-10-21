@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "basic_decoration.h"
+#include "mir/decoration/basic_decoration.h"
 #include "mir/graphics/buffer.h"
 #include "window.h"
-#include "input.h"
+#include "mir/decoration/input.h"
 #include "renderer.h"
 #include "threadsafe_access.h"
 

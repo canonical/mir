@@ -17,7 +17,6 @@
 #ifndef MIR_SHELL_DECORATION_BASIC_MANAGER_H_
 #define MIR_SHELL_DECORATION_BASIC_MANAGER_H_
 
-#include "basic_decoration.h"
 #include "mir/shell/decoration_manager.h"
 
 #include <memory>

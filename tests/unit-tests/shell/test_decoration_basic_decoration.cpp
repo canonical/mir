@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "src/server/shell/decoration/basic_decoration.h"
+#include "mir/decoration/basic_decoration.h"
 #include "mir/scene/surface_observer.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/input/cursor_images.h"
