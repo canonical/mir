@@ -26,7 +26,7 @@
 #include "default_persistent_surface_store.h"
 #include "graphics_display_layout.h"
 #include "mir/decoration/basic_manager.h"
-#include "decoration/basic_decoration.h"
+#include "mir/decoration/basic_decoration.h"
 #include "basic_idle_handler.h"
 
 namespace ms = mir::scene;

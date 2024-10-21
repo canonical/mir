@@ -15,7 +15,7 @@
  */
 
 #include "mir/decoration/basic_manager.h"
-#include "basic_decoration.h"
+#include "mir/decoration/basic_decoration.h"
 #include "mir/shell/decoration.h"
 
 #include <iostream>

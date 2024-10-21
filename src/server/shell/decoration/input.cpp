@@ -14,10 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "input.h"
+#include "mir/decoration/input.h"
+
+#include "mir/decoration/basic_decoration.h"
 #include "window.h"
 #include "threadsafe_access.h"
-#include "basic_decoration.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/null_surface_observer.h"
