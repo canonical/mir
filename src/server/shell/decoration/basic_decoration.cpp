@@ -15,6 +15,7 @@
  */
 
 #include "mir/decoration/basic_decoration.h"
+#include "mir/decoration/theme.h"
 #include "mir/graphics/buffer.h"
 #include "window.h"
 #include "mir/decoration/input.h"
@@ -61,6 +62,14 @@ StaticGeometry const default_geometry {
 
 namespace
 {
+uint32_t const default_focused_background = msd::color(0x32, 0x32, 0x32);
+uint32_t const default_focused_text = msd::color(0xFF, 0xFF, 0xFF);
+uint32_t const default_unfocused_background = msd::color(0x80, 0x80, 0x80);
+uint32_t const default_unfocused_text = msd::color(0xA0, 0xA0, 0xA0);
+
+static mir::shell::decoration::Theme const default_focused{default_focused_background, default_focused_text};
+static mir::shell::decoration::Theme const default_unfocused{default_unfocused_background, default_unfocused_text};
+
 template<typename OBJ>
 struct PropertyComparison
 {
@@ -184,6 +193,18 @@ msd::BasicDecoration::BasicDecoration(
     std::shared_ptr<Executor> const& executor,
     std::shared_ptr<input::CursorImages> const& cursor_images,
     std::shared_ptr<ms::Surface> const& window_surface) :
+    mir::shell::decoration::BasicDecoration(shell, buffer_allocator, executor, cursor_images, window_surface, default_focused, default_unfocused)
+{
+}
+
+msd::BasicDecoration::BasicDecoration(
+    std::shared_ptr<msh::Shell> const& shell,
+    std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
+    std::shared_ptr<Executor> const& executor,
+    std::shared_ptr<input::CursorImages> const& cursor_images,
+    std::shared_ptr<ms::Surface> const& window_surface,
+    Theme focused,
+    Theme unfocused) :
     decoration_surface{create_surface(window_surface, shell)},
     threadsafe_self{std::make_shared<ThreadsafeAccess<BasicDecoration>>(executor)},
     static_geometry{std::make_shared<StaticGeometry>(default_geometry)},
@@ -192,7 +213,7 @@ msd::BasicDecoration::BasicDecoration(
     cursor_images{cursor_images},
     session{window_surface->session().lock()},
     buffer_streams{std::make_unique<BufferStreams>(session)},
-    renderer{std::make_unique<Renderer>(buffer_allocator, static_geometry)},
+    renderer{std::make_unique<Renderer>(buffer_allocator, static_geometry, focused, unfocused)},
     window_surface{window_surface},
     window_state{new_window_state()},
     input_manager{std::make_unique<InputManager>(static_geometry, *window_state, threadsafe_self)},

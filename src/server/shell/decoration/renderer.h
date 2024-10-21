@@ -20,6 +20,7 @@
 #include "mir/geometry/rectangle.h"
 
 #include "mir/decoration/input.h"
+#include "mir/decoration/theme.h"
 
 #include <functional>
 #include <memory>
@@ -48,7 +49,9 @@ class Renderer
 public:
     Renderer(
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
-        std::shared_ptr<StaticGeometry const> const& static_geometry);
+        std::shared_ptr<StaticGeometry const> const& static_geometry,
+        Theme focused,
+        Theme unfocused);
 
     void update_state(WindowState const& window_state, InputState const& input_state);
     auto render_titlebar() -> std::optional<std::shared_ptr<graphics::Buffer>>;
@@ -57,8 +60,6 @@ public:
     auto render_bottom_border() -> std::optional<std::shared_ptr<graphics::Buffer>>;
 
 private:
-    using Pixel = uint32_t;
-
     class Text
     {
     public:
@@ -80,14 +81,6 @@ private:
 
         static std::mutex static_mutex;
         static std::weak_ptr<Text> singleton;
-    };
-
-    /// A visual theme for a decoration
-    /// Focused and unfocused windows use a different theme
-    struct Theme
-    {
-        Pixel const background_color;   ///< Color for background of the titlebar and borders
-        Pixel const text_color;         ///< Color the window title is drawn in
     };
 
     // Info needed to render a button icon

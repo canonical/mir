@@ -41,23 +41,11 @@ namespace msd = mir::shell::decoration;
 
 namespace
 {
-static constexpr auto color(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 0xFF) -> uint32_t
-{
-    return ((uint32_t)b <<  0) |
-           ((uint32_t)g <<  8) |
-           ((uint32_t)r << 16) |
-           ((uint32_t)a << 24);
-}
-
-uint32_t const default_focused_background   = color(0x32, 0x32, 0x32);
-uint32_t const default_unfocused_background = color(0x80, 0x80, 0x80);
-uint32_t const default_focused_text         = color(0xFF, 0xFF, 0xFF);
-uint32_t const default_unfocused_text       = color(0xA0, 0xA0, 0xA0);
-uint32_t const default_normal_button        = color(0x60, 0x60, 0x60);
-uint32_t const default_active_button        = color(0xA0, 0xA0, 0xA0);
-uint32_t const default_close_normal_button  = color(0xA0, 0x20, 0x20);
-uint32_t const default_close_active_button  = color(0xC0, 0x60, 0x60);
-uint32_t const default_button_icon          = color(0xFF, 0xFF, 0xFF);
+uint32_t const default_normal_button = msd::color(0x60, 0x60, 0x60);
+uint32_t const default_active_button = msd::color(0xA0, 0xA0, 0xA0);
+uint32_t const default_close_normal_button = msd::color(0xA0, 0x20, 0x20);
+uint32_t const default_close_active_button = msd::color(0xC0, 0x60, 0x60);
+uint32_t const default_button_icon = msd::color(0xFF, 0xFF, 0xFF);
 
 /// Font search logic should be kept in sync with examples/example-server-lib/wallpaper_config.cpp
 auto default_font() -> std::string
@@ -466,14 +454,11 @@ auto msd::Renderer::Text::Impl::utf8_to_utf32(std::string const& text) -> std::u
 
 msd::Renderer::Renderer(
     std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
-    std::shared_ptr<StaticGeometry const> const& static_geometry)
+    std::shared_ptr<StaticGeometry const> const& static_geometry,
+    Theme focused, Theme unfocused)
     : buffer_allocator{buffer_allocator},
-      focused_theme{
-          default_focused_background,
-          default_focused_text},
-      unfocused_theme{
-          default_unfocused_background,
-          default_unfocused_text},
+      focused_theme{focused},
+      unfocused_theme{unfocused},
       current_theme{nullptr},
       button_icons{
           {ButtonFunction::Close, {
