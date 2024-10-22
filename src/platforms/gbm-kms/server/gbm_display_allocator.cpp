@@ -55,7 +55,7 @@ public:
     {
         if (auto cached_fb = static_cast<std::shared_ptr<uint32_t const>*>(gbm_bo_get_user_data(bo.get())))
         {
-            return std::unique_ptr<GBMBoFramebuffer>{new GBMBoFramebuffer{std::move(bo), *cached_fb}};
+            return std::make_unique<GBMBoFramebuffer>(std::move(bo), *cached_fb);
         }
 
         auto fb_id = new std::shared_ptr<uint32_t>{
@@ -85,7 +85,7 @@ public:
 
         gbm_bo_set_user_data(bo.get(), fb_id, [](gbm_bo*, void* fb_ptr) { delete static_cast<std::shared_ptr<uint32_t const>*>(fb_ptr); });
 
-        return std::unique_ptr<GBMBoFramebuffer>{new GBMBoFramebuffer{std::move(bo), *fb_id}};
+        return std::make_unique<GBMBoFramebuffer>(std::move(bo), *fb_id);
     }
 
     operator uint32_t() const override
@@ -100,13 +100,13 @@ public:
                 gbm_bo_get_width(bo.get()),
                 gbm_bo_get_height(bo.get())};
     }
-private:
+
     GBMBoFramebuffer(LockedFrontBuffer bo, std::shared_ptr<uint32_t const> fb)
         : bo{std::move(bo)},
           fb_id{std::move(fb)}
     {
     }
-
+private:
     LockedFrontBuffer const bo;
     std::shared_ptr<uint32_t const> const fb_id;
 };
