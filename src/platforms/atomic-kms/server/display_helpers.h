@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_ATOMIC_DISPLAY_HELPERS_H_
-#define MIR_GRAPHICS_ATOMIC_DISPLAY_HELPERS_H_
+#ifndef MIR_GRAPHICS_GBM_ATOMIC_KMS_DISPLAY_HELPERS_H_
+#define MIR_GRAPHICS_GBM_ATOMIC_KMS_DISPLAY_HELPERS_H_
 
 #include "mir/udev/wrapper.h"
 #include "mir/fd.h"
@@ -86,4 +86,4 @@ public:
 }
 }
 }
-#endif /* MIR_GRAPHICS_ATOMIC_DISPLAY_HELPERS_H_ */
+#endif /* MIR_GRAPHICS_GBM_ATOMIC_KMS_DISPLAY_HELPERS_H_ */

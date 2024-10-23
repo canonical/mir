@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_GBM_ATOMIC_KMS_OUTPUT_H_
-#define MIR_GRAPHICS_GBM_ATOMIC_KMS_OUTPUT_H_
+#ifndef MIR_GRAPHICS_GBM_ATOMIC_KMS_ATOMIC_OUTPUT_H_
+#define MIR_GRAPHICS_GBM_ATOMIC_KMS_ATOMIC_OUTPUT_H_
 
 #include "kms_output.h"
 #include "kms-utils/drm_mode_resources.h"
@@ -100,4 +100,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_ATOMIC_KMS_OUTPUT_H_ */
+#endif /* MIR_GRAPHICS_GBM_ATOMIC_KMS_ATOMIC_OUTPUT_H_ */

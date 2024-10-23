@@ -14,8 +14,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_GBM_KMS_DISPLAY_CONFIGURATION_H_
-#define MIR_GRAPHICS_GBM_KMS_DISPLAY_CONFIGURATION_H_
+#ifndef MIR_GRAPHICS_GBM_ATOMIC_KMS_DISPLAY_CONFIGURATION_H_
+#define MIR_GRAPHICS_GBM_ATOMIC_KMS_DISPLAY_CONFIGURATION_H_
 
 #include "mir/graphics/display_configuration.h"
 #include <memory>
@@ -44,4 +44,4 @@ public:
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_KMS_DISPLAY_CONFIGURATION_H_ */
+#endif /* MIR_GRAPHICS_GBM_ATOMIC_KMS_DISPLAY_CONFIGURATION_H_ */

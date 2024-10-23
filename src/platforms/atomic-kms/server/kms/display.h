@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_GBM_DISPLAY_H_
-#define MIR_GRAPHICS_GBM_DISPLAY_H_
+#ifndef MIR_GRAPHICS_GBM_ATOMIC_KMS_DISPLAY_H_
+#define MIR_GRAPHICS_GBM_ATOMIC_KMS_DISPLAY_H_
 
 #include "kms-utils/drm_event_handler.h"
 #include "mir/graphics/display.h"
@@ -128,4 +128,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_DISPLAY_H_ */
+#endif /* MIR_GRAPHICS_GBM_ATOMIC_KMS_DISPLAY_H_ */

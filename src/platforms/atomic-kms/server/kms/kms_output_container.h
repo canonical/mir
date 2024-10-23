@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_GBM_KMS_OUTPUT_CONTAINER_H_
-#define MIR_GRAPHICS_GBM_KMS_OUTPUT_CONTAINER_H_
+#ifndef MIR_GRAPHICS_GBM_ATOMIC_KMS_OUTPUT_CONTAINER_H_
+#define MIR_GRAPHICS_GBM_ATOMIC_KMS_OUTPUT_CONTAINER_H_
 
 #include <memory>
 #include <functional>
@@ -50,4 +50,4 @@ protected:
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_KMS_OUTPUT_CONTAINER_H_ */
+#endif /* MIR_GRAPHICS_GBM_ATOMIC_KMS_OUTPUT_CONTAINER_H_ */

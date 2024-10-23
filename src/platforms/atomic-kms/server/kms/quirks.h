@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_GBM_KMS_QUIRKS_H_
-#define MIR_GRAPHICS_GBM_KMS_QUIRKS_H_
+#ifndef MIR_GRAPHICS_GBM_ATOMIC_KMS_QUIRKS_H_
+#define MIR_GRAPHICS_GBM_ATOMIC_KMS_QUIRKS_H_
 
 #include <memory>
 #include <boost/program_options.hpp>
@@ -64,4 +64,4 @@ private:
 }
 
 
-#endif //MIR_GRAPHICS_GBM_KMS_QUIRKS_H_
+#endif //MIR_GRAPHICS_GBM_ATOMIC_KMS_QUIRKS_H_

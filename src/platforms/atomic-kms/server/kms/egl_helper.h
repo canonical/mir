@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_GBM_EGL_HELPER_H_
-#define MIR_GRAPHICS_GBM_EGL_HELPER_H_
+#ifndef MIR_GRAPHICS_GBM_ATOMIC_KMS_EGL_HELPER_H_
+#define MIR_GRAPHICS_GBM_ATOMIC_KMS_EGL_HELPER_H_
 
 #include "../display_helpers.h"
 #include "mir/graphics/egl_extensions.h"
@@ -84,4 +84,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_EGL_HELPER_H_ */
+#endif /* MIR_GRAPHICS_GBM_ATOMIC_KMS_EGL_HELPER_H_ */

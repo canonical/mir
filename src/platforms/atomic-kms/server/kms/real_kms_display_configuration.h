@@ -14,8 +14,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_ATOMIC_REAL_KMS_DISPLAY_CONFIGURATION_H_
-#define MIR_GRAPHICS_ATOMIC_REAL_KMS_DISPLAY_CONFIGURATION_H_
+#ifndef MIR_GRAPHICS_GBM_ATOMIC_KMS_REALDISPLAY_CONFIGURATION_H_
+#define MIR_GRAPHICS_GBM_ATOMIC_KMS_REALDISPLAY_CONFIGURATION_H_
 
 #include "kms_display_configuration.h"
 
@@ -62,4 +62,4 @@ bool compatible(RealKMSDisplayConfiguration const& conf1, RealKMSDisplayConfigur
 }
 }
 
-#endif /* MIR_GRAPHICS_ATOMIC_REAL_KMS_DISPLAY_CONFIGURATION_H_ */
+#endif /* MIR_GRAPHICS_GBM_ATOMIC_KMS_REALDISPLAY_CONFIGURATION_H_ */

@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_GBM_BYPASS_H_
-#define MIR_GRAPHICS_GBM_BYPASS_H_
+#ifndef MIR_GRAPHICS_GBM_ATOMIC_KMS_BYPASS_H_
+#define MIR_GRAPHICS_GBM_ATOMIC_KMS_BYPASS_H_
 
 #include "mir/graphics/renderable.h"
 
@@ -41,4 +41,4 @@ private:
 } // namespace graphics
 } // namespace mir
 
-#endif // MIR_GRAPHICS_GBM_BYPASS_H_
+#endif // MIR_GRAPHICS_GBM_ATOMIC_KMS_BYPASS_H_
