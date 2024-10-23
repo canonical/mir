@@ -16,7 +16,6 @@
 
 #include "mir/graphics/platform.h"
 #include <drm.h>
-#define MIR_LOG_COMPONENT "atomic-kms"
 #include "mir/log.h"
 
 #include "platform.h"

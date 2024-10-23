@@ -13,7 +13,6 @@ string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 add_compile_definitions(
   __GBM__
-  MIR_LOG_COMPONENT_FALLBACK="atomic-kms"
 )
 
 add_library(

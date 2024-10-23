@@ -25,7 +25,6 @@
 #include <system_error>
 #include <xf86drm.h>
 
-#define MIR_LOG_COMPONENT "atomic-kms"
 #include "mir/log.h"
 
 namespace mg = mir::graphics;

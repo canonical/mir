@@ -21,7 +21,6 @@
 #include <boost/throw_exception.hpp>
 #include <gbm.h>
 
-#define MIR_LOG_COMPONENT "EGL"
 #include "mir/log.h"
 
 namespace mg = mir::graphics;

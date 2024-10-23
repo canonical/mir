@@ -26,7 +26,6 @@
 
 #include <sys/sysmacros.h>
 
-#define MIR_LOG_COMPONENT "atomic-kms"
 #include "mir/log.h"
 
 #include <boost/exception/errinfo_errno.hpp>
