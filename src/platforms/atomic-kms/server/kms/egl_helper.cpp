@@ -15,13 +15,16 @@
  */
 
 #include "egl_helper.h"
+
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/egl_error.h"
+#include "mir/log.h"
+
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
-#include <gbm.h>
 
-#include "mir/log.h"
+#include <gbm.h>
+#include <format>
 
 namespace mg = mir::graphics;
 namespace mgmh = mir::graphics::atomic::helpers;
@@ -74,8 +77,7 @@ void initialise_egl(EGLDisplay dpy, int minimum_major_version, int minimum_minor
         (major == minimum_major_version && minor < minimum_minor_version))
     {
         BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(std::runtime_error("Incompatible EGL version")));
-        // TODO: Insert egl version major and minor into exception
+            boost::enable_error_info(std::runtime_error(std::format("Incompatible EGL version: {} ({})", major, minor))));
     }
 }
 
