@@ -40,22 +40,13 @@ namespace mga = mg::atomic;
 namespace mgk = mg::kms;
 namespace geom = mir::geometry;
 
-
 namespace
 {
 bool kms_modes_are_equal(drmModeModeInfo const* info1, drmModeModeInfo const* info2)
 {
     return (info1 && info2) &&
-        info1->clock == info2->clock &&
-        info1->hdisplay == info2->hdisplay &&
-        info1->hsync_start == info2->hsync_start &&
-        info1->hsync_end == info2->hsync_end &&
-        info1->htotal == info2->htotal &&
-        info1->hskew == info2->hskew &&
-        info1->vdisplay == info2->vdisplay &&
-        info1->vsync_start == info2->vsync_start &&
-        info1->vsync_end == info2->vsync_end &&
-        info1->vtotal == info2->vtotal;
+        std::tie(info1->clock, info1->hdisplay, info1->hsync_start, info1->hsync_end, info1->htotal, info1->hskew, info1->vdisplay, info1->vsync_start, info1->vsync_end, info1->vtotal) ==
+        std::tie(info2->clock, info2->hdisplay, info2->hsync_start, info2->hsync_end, info2->htotal, info2->hskew, info2->vdisplay, info2->vsync_start, info2->vsync_end, info2->vtotal);
 }
 
 uint32_t create_blob_returning_handle(mir::Fd const& drm_fd, void const* data, size_t len)
