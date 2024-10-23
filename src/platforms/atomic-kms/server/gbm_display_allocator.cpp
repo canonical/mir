@@ -122,12 +122,11 @@ auto create_gbm_surface(gbm_device* gbm, geom::Size size, mg::DRMFormat format, 
             if (modifiers.empty())
             {
                 // If we have no no modifiers don't use the with-modifiers creation path.
-                auto foo = GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT;
                 return gbm_surface_create(
                     gbm,
                     size.width.as_uint32_t(), size.height.as_uint32_t(),
                     format,
-                    foo);
+                    GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT);
             }
             else
             {
