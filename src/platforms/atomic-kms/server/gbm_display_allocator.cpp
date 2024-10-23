@@ -58,7 +58,7 @@ public:
             return std::unique_ptr<GBMBoFramebuffer>{new GBMBoFramebuffer{std::move(bo), *cached_fb}};
         }
 
-        auto fb_id = new std::shared_ptr<uint32_t>{
+        auto fb_id = std::shared_ptr<uint32_t>{
             new uint32_t{0},
             [drm_fd](uint32_t* fb_id)
             {
@@ -79,13 +79,15 @@ public:
 
         /* Create a KMS FB object with the gbm_bo attached to it. */
         auto ret = drmModeAddFB2(drm_fd, width, height, format,
-                                 handles, strides, offsets, fb_id->get(), 0);
+                                 handles, strides, offsets, fb_id.get(), 0);
         if (ret)
             return nullptr;
 
-        gbm_bo_set_user_data(bo.get(), fb_id, [](gbm_bo*, void* fb_ptr) { delete static_cast<std::shared_ptr<uint32_t const>*>(fb_ptr); });
+        // It is weird allocating a smart pointer on the heap, but we delete it
+        // via gbm_bo_set_user_data()'s destroy_user_data parameter.
+        gbm_bo_set_user_data(bo.get(), new std::shared_ptr<uint32_t>(fb_id), [](gbm_bo*, void* fb_ptr) { delete static_cast<std::shared_ptr<uint32_t const>*>(fb_ptr); });
 
-        return std::unique_ptr<GBMBoFramebuffer>{new GBMBoFramebuffer{std::move(bo), *fb_id}};
+        return std::make_unique<GBMBoFramebuffer>(std::move(bo), std::move(fb_id));
     }
 
     operator uint32_t() const override
@@ -100,13 +102,13 @@ public:
                 gbm_bo_get_width(bo.get()),
                 gbm_bo_get_height(bo.get())};
     }
-private:
+
     GBMBoFramebuffer(LockedFrontBuffer bo, std::shared_ptr<uint32_t const> fb)
         : bo{std::move(bo)},
           fb_id{std::move(fb)}
     {
     }
-
+private:
     LockedFrontBuffer const bo;
     std::shared_ptr<uint32_t const> const fb_id;
 };
