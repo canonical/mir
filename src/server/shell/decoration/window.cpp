@@ -16,7 +16,7 @@
 
 #include "window.h"
 #include "threadsafe_access.h"
-#include "basic_decoration.h"
+#include "mir/decoration/basic_decoration.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/null_surface_observer.h"
@@ -231,72 +231,6 @@ auto msd::WindowState::button_rect(unsigned n) const -> geom::Rectangle
 auto msd::WindowState::scale() const -> float
 {
     return scale_;
-}
-
-class msd::WindowSurfaceObserverManager::Observer
-    : public ms::NullSurfaceObserver
-{
-public:
-    Observer(std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration)
-        : decoration{decoration}
-    {
-    }
-
-    /// Overrides from NullSurfaceObserver
-    /// @{
-    void attrib_changed(ms::Surface const*, MirWindowAttrib attrib, int /*value*/) override
-    {
-        switch(attrib)
-        {
-        case mir_window_attrib_type:
-        case mir_window_attrib_state:
-        case mir_window_attrib_focus:
-        case mir_window_attrib_visibility:
-            update();
-            break;
-
-        case mir_window_attrib_dpi:
-        case mir_window_attrib_preferred_orientation:
-        case mir_window_attribs:
-            break;
-        }
-    }
-
-    void window_resized_to(ms::Surface const*, geom::Size const& /*window_size*/) override
-    {
-        update();
-    }
-
-    void renamed(ms::Surface const*, std::string const& /*name*/) override
-    {
-        update();
-    }
-    /// @}
-
-private:
-    void update()
-    {
-        decoration->spawn([](auto decoration)
-            {
-                decoration->window_state_updated();
-            });
-    }
-
-    std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const decoration;
-};
-
-msd::WindowSurfaceObserverManager::WindowSurfaceObserverManager(
-    std::shared_ptr<scene::Surface> const& window_surface,
-    std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration)
-    : surface_{window_surface},
-      observer{std::make_shared<Observer>(decoration)}
-{
-    surface_->register_interest(observer);
-}
-
-msd::WindowSurfaceObserverManager::~WindowSurfaceObserverManager()
-{
-    surface_->unregister_interest(*observer);
 }
 
 auto msd::compute_size_with_decorations(geometry::Size content_size, MirWindowType type, MirWindowState state)

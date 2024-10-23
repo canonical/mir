@@ -14,10 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "input.h"
+#include "mir/decoration/input.h"
+
+#include "mir/decoration/basic_decoration.h"
 #include "window.h"
 #include "threadsafe_access.h"
-#include "basic_decoration.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/null_surface_observer.h"
@@ -26,105 +27,18 @@
 #include "mir_toolkit/cursors.h"
 
 namespace ms = mir::scene;
-namespace mi = mir::input;
 namespace geom = mir::geometry;
-namespace msh = mir::shell;
 namespace msd = mir::shell::decoration;
 
 using namespace std::chrono_literals;
 
 std::chrono::nanoseconds const msd::InputManager::double_click_threshold = 250ms;
 
-struct msd::InputManager::Observer
-    : public ms::NullSurfaceObserver
-{
-    Observer(InputManager* manager)
-        : manager{manager}
-    {
-    }
-
-    /// Overrides from NullSurfaceObserver
-    /// @{
-    void input_consumed(ms::Surface const*, std::shared_ptr<MirEvent const> const& event) override
-    {
-        if (mir_event_get_type(event.get()) != mir_event_type_input)
-            return;
-        MirInputEvent const* const input_ev = mir_event_get_input_event(event.get());
-        switch (mir_input_event_get_type(input_ev))
-        {
-        case mir_input_event_type_pointer:
-        {
-            MirPointerEvent const* const pointer_ev = mir_input_event_get_pointer_event(input_ev);
-            switch (mir_pointer_event_action(pointer_ev))
-            {
-            case mir_pointer_action_button_up:
-            case mir_pointer_action_button_down:
-            case mir_pointer_action_motion:
-            case mir_pointer_action_enter:
-            {
-                if (auto const position = pointer_ev->local_position())
-                {
-                    bool pressed = mir_pointer_event_button_state(pointer_ev, mir_pointer_button_primary);
-                    manager->pointer_event(event, geom::Point{position.value()}, pressed);
-                }
-            }   break;
-
-            case mir_pointer_action_leave:
-            {
-                manager->pointer_leave(event);
-            }   break;
-
-            case mir_pointer_actions:
-                break;
-            }
-        }   break;
-
-        case mir_input_event_type_touch:
-        {
-            MirTouchEvent const* const touch_ev = mir_input_event_get_touch_event(input_ev);
-            for (unsigned int i = 0; i < mir_touch_event_point_count(touch_ev); i++)
-            {
-                auto const id = mir_touch_event_id(touch_ev, i);
-                switch (mir_touch_event_action(touch_ev, i))
-                {
-                case mir_touch_action_down:
-                case mir_touch_action_change:
-                {
-                    if (auto const position = touch_ev->local_position(i))
-                    {
-                        manager->touch_event(event, id, geom::Point{position.value()});
-                    }
-                }   break;
-                case mir_touch_action_up:
-                {
-                    manager->touch_up(event, id);
-                }   break;
-                case mir_touch_actions:
-                    break;
-                }
-            }
-
-        }   break;
-
-        case mir_input_event_type_key:
-        case mir_input_event_type_keyboard_resync:
-        case mir_input_event_types:
-            break;
-        }
-    }
-    /// @}
-
-    InputManager* const manager;
-};
-
 msd::InputManager::InputManager(
     std::shared_ptr<StaticGeometry const> const& static_geometry,
-    std::shared_ptr<ms::Surface> const& decoration_surface,
     WindowState const& window_state,
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration)
     : static_geometry{static_geometry},
-      decoration_surface{decoration_surface},
-      observer{std::make_shared<Observer>(this)},
       decoration{decoration},
       widgets{
           std::make_shared<Widget>(ButtonFunction::Close),
@@ -142,12 +56,10 @@ msd::InputManager::InputManager(
 {
     set_cursor(mir_resize_edge_none);
     update_window_state(window_state);
-    decoration_surface->register_interest(observer);
 }
 
 msd::InputManager::~InputManager()
 {
-    decoration_surface->unregister_interest(*observer);
 }
 
 void msd::InputManager::update_window_state(WindowState const& window_state)
@@ -210,6 +122,75 @@ auto msd::InputManager::state() -> std::unique_ptr<InputState>
     return std::make_unique<InputState>(
         std::move(buttons),
         input_shape);
+}
+
+void msd::InputManager::handle_input_event(std::shared_ptr<MirEvent const> const& event)
+{
+    MirInputEvent const* const input_ev = mir_event_get_input_event(event.get());
+    switch (mir_input_event_get_type(input_ev))
+    {
+    case mir_input_event_type_pointer:
+        {
+            MirPointerEvent const* const pointer_ev = mir_input_event_get_pointer_event(input_ev);
+            switch (mir_pointer_event_action(pointer_ev))
+            {
+            case mir_pointer_action_button_up:
+            case mir_pointer_action_button_down:
+            case mir_pointer_action_motion:
+            case mir_pointer_action_enter:
+                {
+                    if (auto const position = pointer_ev->local_position())
+                    {
+                        bool pressed = mir_pointer_event_button_state(pointer_ev, mir_pointer_button_primary);
+                        pointer_event(event, geometry::Point{position.value()}, pressed);
+                    }
+                }
+                break;
+            case mir_pointer_action_leave:
+                {
+                    pointer_leave(event);
+                }
+                break;
+            case mir_pointer_actions:
+                break;
+            }
+        }
+        break;
+
+    case mir_input_event_type_touch:
+        {
+            MirTouchEvent const* const touch_ev = mir_input_event_get_touch_event(input_ev);
+            for (unsigned int i = 0; i < mir_touch_event_point_count(touch_ev); i++)
+            {
+                auto const id = mir_touch_event_id(touch_ev, i);
+                switch (mir_touch_event_action(touch_ev, i))
+                {
+                case mir_touch_action_down:
+                case mir_touch_action_change:
+                    {
+                        if (auto const position = touch_ev->local_position(i))
+                        {
+                            touch_event(event, id, geometry::Point{position.value()});
+                        }
+                    }
+                    break;
+                case mir_touch_action_up:
+                    {
+                        touch_up(event, id);
+                        break;
+                    }
+                case mir_touch_actions:
+                    break;
+                }
+            }
+        }
+        break;
+
+    case mir_input_event_type_key:
+    case mir_input_event_type_keyboard_resync:
+    case mir_input_event_types:
+        break;
+    }
 }
 
 auto msd::InputManager::resize_edge_rect(
@@ -422,9 +403,9 @@ void msd::InputManager::widget_enter(Widget& widget)
     widget.state = ButtonState::Hovered;
     if (widget.resize_edge)
         set_cursor(widget.resize_edge.value());
-    decoration->spawn([](BasicDecoration* decoration)
+    decoration->spawn([](auto* decoration)
         {
-            decoration->input_state_updated();
+            decoration->input_state_changed();
         });
 }
 
@@ -432,18 +413,18 @@ void msd::InputManager::widget_leave(Widget& widget)
 {
     widget.state = ButtonState::Up;
     set_cursor(mir_resize_edge_none);
-    decoration->spawn([](BasicDecoration* decoration)
+    decoration->spawn([](auto* decoration)
         {
-            decoration->input_state_updated();
+            decoration->input_state_changed();
         });
 }
 
 void msd::InputManager::widget_down(Widget& widget)
 {
     widget.state = ButtonState::Down;
-    decoration->spawn([](BasicDecoration* decoration)
+    decoration->spawn([](auto* decoration)
         {
-            decoration->input_state_updated();
+            decoration->input_state_changed();
         });
 }
 
@@ -461,7 +442,7 @@ void msd::InputManager::widget_up(Widget& widget)
             if (widget.resize_edge && widget.resize_edge == mir_resize_edge_none)
             {
                 // Widget is the titlebar, so we should toggle maximization
-                decoration->spawn([](BasicDecoration* decoration)
+                decoration->spawn([](auto* decoration)
                     {
                         decoration->request_toggle_maximize();
                     });
@@ -473,21 +454,21 @@ void msd::InputManager::widget_up(Widget& widget)
             switch (widget.button.value())
             {
             case ButtonFunction::Close:
-                decoration->spawn([](BasicDecoration* decoration)
+                decoration->spawn([](auto* decoration)
                     {
                         decoration->request_close();
                     });
                 break;
 
             case ButtonFunction::Maximize:
-                decoration->spawn([](BasicDecoration* decoration)
+                decoration->spawn([](auto* decoration)
                     {
                         decoration->request_toggle_maximize();
                     });
                 break;
 
             case ButtonFunction::Minimize:
-                decoration->spawn([](BasicDecoration* decoration)
+                decoration->spawn([](auto* decoration)
                     {
                         decoration->request_minimize();
                     });
@@ -496,9 +477,9 @@ void msd::InputManager::widget_up(Widget& widget)
         }
     }
     widget.state = ButtonState::Hovered;
-    decoration->spawn([](BasicDecoration* decoration)
+    decoration->spawn([](auto* decoration)
         {
-            decoration->input_state_updated();
+            decoration->input_state_changed();
         });
 }
 
@@ -512,14 +493,14 @@ void msd::InputManager::widget_drag(Widget& widget)
 
             if (edge == mir_resize_edge_none)
             {
-                decoration->spawn([event = latest_event](BasicDecoration* decoration)
+                decoration->spawn([event = latest_event](auto* decoration)
                     {
                         decoration->request_move(mir_event_get_input_event(event.get()));
                     });
             }
             else
             {
-                decoration->spawn([event = latest_event, edge](BasicDecoration* decoration)
+                decoration->spawn([event = latest_event, edge](auto* decoration)
                     {
                         decoration->request_resize(mir_event_get_input_event(event.get()), edge);
                     });
@@ -527,16 +508,16 @@ void msd::InputManager::widget_drag(Widget& widget)
         }
         else if (widget.button)
         {
-            decoration->spawn([event = latest_event](BasicDecoration* decoration)
+            decoration->spawn([event = latest_event](auto* decoration)
                 {
                     decoration->request_move(mir_event_get_input_event(event.get()));
                 });
         }
         widget.state = ButtonState::Up;
     }
-    decoration->spawn([](BasicDecoration* decoration)
+    decoration->spawn([](auto* decoration)
         {
-            decoration->input_state_updated();
+            decoration->input_state_changed();
         });
 }
 
@@ -572,7 +553,7 @@ void msd::InputManager::set_cursor(MirResizeEdge resize_edge)
     if (cursor_name != current_cursor_name)
     {
         current_cursor_name = cursor_name;
-        decoration->spawn([cursor_name](BasicDecoration* decoration)
+        decoration->spawn([cursor_name](auto* decoration)
             {
                 decoration->set_cursor(cursor_name);
             });

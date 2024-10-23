@@ -21,6 +21,7 @@
 #include "mir/scene/null_session_listener.h"
 #include "mir/scene/session_container.h"
 #include "mir/scene/surface_factory.h"
+#include "mir/shell/decoration.h"
 #include "mir/graphics/display_configuration_observer.h"
 #include "mir/wayland/weak.h"
 
@@ -130,6 +131,9 @@ struct MockSurfaceFactory : public ms::SurfaceFactory
 struct MockDecorationManager : public msh::decoration::NullManager
 {
     MOCK_METHOD1(decorate, void(std::shared_ptr<ms::Surface> const&));
+    MOCK_METHOD2(
+        create_decoration,
+        std::unique_ptr<mir::shell::decoration::Decoration>(std::shared_ptr<mir::shell::Shell> const& shell, std::shared_ptr<mir::scene::Surface> const& surface));
 };
 
 using NiceMockWindowManager = NiceMock<mtd::MockWindowManager>;
@@ -890,7 +894,7 @@ TEST_F(AbstractShell, makes_parent_active_when_switching_to_child)
     focus_controller.set_focus_to(surface_parent->session().lock(), surface_parent);
     /* window         | expected focus state
      * -----------------------------------------------
-     * surface_parent | mir_window_focus_state_focused 
+     * surface_parent | mir_window_focus_state_focused
      * surface_child  | <don't care>
     */
 

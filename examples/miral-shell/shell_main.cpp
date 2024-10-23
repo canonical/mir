@@ -32,6 +32,7 @@
 #include <miral/toolkit_event.h>
 #include <miral/x11_support.h>
 #include <miral/wayland_extensions.h>
+#include <miral/decoration_light_mode.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -136,6 +137,7 @@ int main(int argc, char const* argv[])
     return runner.run_with(
         {
             CursorTheme{"default:DMZ-White"},
+            miral::decoration::LightMode{},
             WaylandExtensions{},
             X11Support{},
             ConfigureDecorations{},

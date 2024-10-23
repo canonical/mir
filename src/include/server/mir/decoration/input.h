@@ -23,7 +23,6 @@
 #include <memory>
 #include <vector>
 #include <mutex>
-#include <functional>
 #include <map>
 #include <optional>
 
@@ -44,6 +43,7 @@ namespace shell
 class Shell;
 namespace decoration
 {
+class Decoration;
 class WindowState;
 class BasicDecoration;
 class StaticGeometry;
@@ -100,13 +100,12 @@ private:
     std::vector<geometry::Rectangle> const input_shape_;
 };
 
-/// Manages the observer that listens to user input
+/// Manages user input
 class InputManager
 {
 public:
     InputManager(
         std::shared_ptr<StaticGeometry const> const& static_geometry,
-        std::shared_ptr<scene::Surface> const& decoration_surface,
         WindowState const& window_state,
         std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration);
     ~InputManager();
@@ -114,6 +113,7 @@ public:
     void update_window_state(WindowState const& window_state);
     auto state() -> std::unique_ptr<InputState>;
 
+    void handle_input_event(std::shared_ptr<MirEvent const> const& event);
 private:
     static std::chrono::nanoseconds const double_click_threshold;
 
@@ -124,17 +124,15 @@ private:
         WindowState const& window_state,
         StaticGeometry const& static_geometry,
         MirResizeEdge resize_edge) -> geometry::Rectangle;
+
     void pointer_event(std::shared_ptr<MirEvent const> const& event, geometry::Point location, bool pressed);
     void pointer_leave(std::shared_ptr<MirEvent const> const& event);
     void touch_event(std::shared_ptr<MirEvent const> const& event, int32_t id, geometry::Point location);
-    void touch_up(std::shared_ptr<MirEvent const> const& event, int32_t id);
 
-    class Observer;
+    void touch_up(std::shared_ptr<MirEvent const> const& event, int32_t id);
 
     std::mutex mutex;
     std::shared_ptr<StaticGeometry const> const static_geometry;
-    std::shared_ptr<scene::Surface> decoration_surface;
-    std::shared_ptr<Observer> const observer;
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> decoration;
     std::vector<geometry::Rectangle> input_shape;
     /// The most recent event, or the event currently being processed

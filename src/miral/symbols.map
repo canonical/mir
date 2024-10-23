@@ -496,13 +496,15 @@ global:
     miral::InputConfiguration::operator*;
     miral::InputConfiguration::touchpad*;
     miral::WindowManagerTools::move_cursor_to*;
+    miral::decoration::LightMode::operator*;
     typeinfo?for?miral::ConfigFile;
     typeinfo?for?miral::Decorations;
+    typeinfo?for?miral::IdleListener;
     typeinfo?for?miral::IdleListener;
     typeinfo?for?miral::InputConfiguration::Mouse;
     typeinfo?for?miral::InputConfiguration::Touchpad;
     typeinfo?for?miral::InputConfiguration;
-    typeinfo?for?miral::IdleListener;
+    typeinfo?for?miral::decoration::LightMode;
   };
 } MIRAL_5.0;
 
