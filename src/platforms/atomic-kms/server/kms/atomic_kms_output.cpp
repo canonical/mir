@@ -426,8 +426,8 @@ bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
     if (ret)
     {
         mir::log_error("Failed to schedule page flip: %s (%i)", strerror(-ret), -ret);
-        current_crtc = nullptr;
         event_handler->cancel_flip_events(current_crtc->crtc_id);
+        current_crtc = nullptr;
         return false;
     }
 
