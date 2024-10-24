@@ -756,18 +756,25 @@ void mga::AtomicKMSOutput::update_from_hardware_state(
         }();
 
     GammaCurves gamma;
-    if (current_crtc && crtc_props->has_property("GAMMA_LUT") && crtc_props->has_property("GAMMA_LUT_SIZE"))
+    if (connected && current_crtc && crtc_props->has_property("GAMMA_LUT") && crtc_props->has_property("GAMMA_LUT_SIZE"))
     {
-        PropertyBlobData gamma_lut{drm_fd_, static_cast<uint32_t>((*crtc_props)["GAMMA_LUT"])};
-        auto const gamma_size = gamma_lut.data<struct drm_color_lut>().size();
-        gamma.red.reserve(gamma_size);
-        gamma.green.reserve(gamma_size);
-        gamma.blue.reserve(gamma_size);
-        for (auto const& entry : gamma_lut.data<struct drm_color_lut>())
+        try
         {
-            gamma.red.push_back(entry.red);
-            gamma.green.push_back(entry.green);
-            gamma.blue.push_back(entry.blue);
+            PropertyBlobData gamma_lut{drm_fd_, static_cast<uint32_t>((*crtc_props)["GAMMA_LUT"])};
+            auto const gamma_size = gamma_lut.data<struct drm_color_lut>().size();
+            gamma.red.reserve(gamma_size);
+            gamma.green.reserve(gamma_size);
+            gamma.blue.reserve(gamma_size);
+            for (auto const& entry : gamma_lut.data<struct drm_color_lut>())
+            {
+                gamma.red.push_back(entry.red);
+                gamma.green.push_back(entry.green);
+                gamma.blue.push_back(entry.blue);
+            }
+        }
+        catch (...)
+        {
+            log(logging::Severity::warning, MIR_LOG_COMPONENT, std::current_exception(), "Failed to get gamma curves");
         }
     }
 
