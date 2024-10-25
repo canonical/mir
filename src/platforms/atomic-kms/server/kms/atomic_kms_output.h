@@ -20,6 +20,7 @@
 #include "kms_output.h"
 #include "kms-utils/drm_mode_resources.h"
 #include "mir/fd.h"
+#include "mir/synchronised.h"
 
 #include <memory>
 #include <future>
@@ -73,7 +74,22 @@ public:
     int drm_fd() const override;
 
 private:
-    bool ensure_crtc();
+    class PropertyBlob;
+
+    struct Configuration
+    {
+        kms::DRMModeConnectorUPtr connector;
+        size_t mode_index;
+        geometry::Displacement fb_offset;
+        kms::DRMModeCrtcUPtr current_crtc;
+        kms::DRMModePlaneUPtr current_plane;
+        std::unique_ptr<PropertyBlob> mode;
+        std::unique_ptr<kms::ObjectProperties> crtc_props;
+        std::unique_ptr<kms::ObjectProperties> plane_props;
+        std::unique_ptr<kms::ObjectProperties> connector_props;
+    };
+
+    bool ensure_crtc(Configuration& to_update);
     void restore_saved_crtc();
 
     mir::Fd const drm_fd_;
@@ -81,17 +97,7 @@ private:
 
     std::future<void> pending_page_flip;
 
-    class PropertyBlob;
-
-    kms::DRMModeConnectorUPtr connector;
-    size_t mode_index;
-    geometry::Displacement fb_offset;
-    kms::DRMModeCrtcUPtr current_crtc;
-    kms::DRMModePlaneUPtr current_plane;
-    std::unique_ptr<PropertyBlob> mode;
-    std::unique_ptr<kms::ObjectProperties> crtc_props;
-    std::unique_ptr<kms::ObjectProperties> plane_props;
-    std::unique_ptr<kms::ObjectProperties> connector_props;
+    mir::Synchronised<Configuration> configuration;
     drmModeCrtc saved_crtc;
     bool using_saved_crtc;
 };

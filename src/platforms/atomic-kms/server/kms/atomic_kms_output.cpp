@@ -177,15 +177,32 @@ private:
     mir::Fd const drm_fd;
 };
 
+/* Note: 
+ * (At least) Clang includes -Wmissing-designated-field-initializers to -Wextra
+ * This (questionably?) warns when using designated field initialisers but
+ * not explicitly initialising every field member.
+ * (The standard says anything not specified is ~default-initialised)
+ *
+ * That's why the Configuration initialiser contains so many default values here
+ */
 mga::AtomicKMSOutput::AtomicKMSOutput(
     mir::Fd drm_master,
     kms::DRMModeConnectorUPtr connector,
     std::shared_ptr<kms::DRMEventHandler> event_handler)
     : drm_fd_{drm_master},
       event_handler{std::move(event_handler)},
-      connector{std::move(connector)},
-      mode_index{0},
-      current_crtc(),
+      configuration{
+          Configuration {
+          .connector = std::move(connector),
+          .mode_index = 0,
+          .fb_offset = {},
+          .current_crtc = nullptr,
+          .current_plane = nullptr,
+          .mode = nullptr,
+          .crtc_props = nullptr,
+          .plane_props = nullptr,
+          .connector_props = nullptr
+      }},
       saved_crtc(),
       using_saved_crtc{true}
 {
@@ -193,9 +210,10 @@ mga::AtomicKMSOutput::AtomicKMSOutput(
 
     kms::DRMModeResources resources{drm_fd_};
 
-    if (this->connector->encoder_id)
+    auto conf = configuration.lock();
+    if (conf->connector->encoder_id)
     {
-        auto encoder = resources.encoder(this->connector->encoder_id);
+        auto encoder = resources.encoder(conf->connector->encoder_id);
         if (encoder->crtc_id)
         {
             saved_crtc = *resources.crtc(encoder->crtc_id);
@@ -210,7 +228,7 @@ mga::AtomicKMSOutput::~AtomicKMSOutput()
 
 uint32_t mga::AtomicKMSOutput::id() const
 {
-    return connector->connector_id;
+    return configuration.lock()->connector->connector_id;
 }
 
 void mga::AtomicKMSOutput::reset()
@@ -218,10 +236,11 @@ void mga::AtomicKMSOutput::reset()
     kms::DRMModeResources resources{drm_fd_};
 
     /* Update the connector to ensure we have the latest information */
+    auto conf = configuration.lock();
     try
     {
-        connector = resources.connector(connector->connector_id);
-        connector_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, connector);
+        conf->connector = resources.connector(conf->connector->connector_id);
+        conf->connector_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, conf->connector);
     }
     catch (std::exception const& e)
     {
@@ -229,81 +248,88 @@ void mga::AtomicKMSOutput::reset()
     }
 
     /* Discard previously current crtc */
-    current_crtc = nullptr;
+    conf->current_crtc = nullptr;
 }
 
 geom::Size mga::AtomicKMSOutput::size() const
 {
+    auto conf = configuration.lock();
     // Disconnected hardware has no modes: invent a size
-    if (connector->connection == DRM_MODE_DISCONNECTED)
+    if (conf->connector->connection == DRM_MODE_DISCONNECTED)
         return {0, 0};
 
-    drmModeModeInfo const& mode(connector->modes[mode_index]);
+    drmModeModeInfo const& mode(conf->connector->modes[conf->mode_index]);
     return {mode.hdisplay, mode.vdisplay};
 }
 
 int mga::AtomicKMSOutput::max_refresh_rate() const
 {
-    if (connector->connection == DRM_MODE_DISCONNECTED)
+    auto conf = configuration.lock();
+    if (conf->connector->connection == DRM_MODE_DISCONNECTED)
         return 1;
 
-    drmModeModeInfo const& current_mode = connector->modes[mode_index];
+    drmModeModeInfo const& current_mode = conf->connector->modes[conf->mode_index];
     return current_mode.vrefresh;
 }
 
 void mga::AtomicKMSOutput::configure(geom::Displacement offset, size_t kms_mode_index)
 {
-    fb_offset = offset;
-    mode_index = kms_mode_index;
-    mode = std::make_unique<PropertyBlob>(drm_fd_, &connector->modes[mode_index], sizeof(connector->modes[mode_index]));
-    ensure_crtc();
+    auto conf = configuration.lock();
+    conf->fb_offset = offset;
+    conf->mode_index = kms_mode_index;
+    conf->mode = std::make_unique<PropertyBlob>(
+        drm_fd_,
+        &conf->connector->modes[conf->mode_index],
+        sizeof(conf->connector->modes[conf->mode_index]));
+    ensure_crtc(*conf);
 }
 
 bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
 {
-    if (!ensure_crtc())
+    auto conf = configuration.lock();
+    if (!ensure_crtc(*conf))
     {
         mir::log_error("Output %s has no associated CRTC to set a framebuffer on",
-                       mgk::connector_name(connector).c_str());
+                       mgk::connector_name(conf->connector).c_str());
         return false;
     }
 
     /* We use the *requested* mode rather than the current_crtc
      * because we might have been asked to perform a modeset
      */
-    auto const width = connector->modes[mode_index].hdisplay;
-    auto const height = connector->modes[mode_index].vdisplay;
+    auto const width = conf->connector->modes[conf->mode_index].hdisplay;
+    auto const height = conf->connector->modes[conf->mode_index].vdisplay;
 
     AtomicUpdate update;
-    update.add_property(*crtc_props, "MODE_ID", mode->handle());
-    update.add_property(*connector_props, "CRTC_ID", current_crtc->crtc_id);
+    update.add_property(*conf->crtc_props, "MODE_ID", conf->mode->handle());
+    update.add_property(*conf->connector_props, "CRTC_ID", conf->current_crtc->crtc_id);
 
     /* Source viewport. Coordinates are 16.16 fixed point format */
-    update.add_property(*plane_props, "SRC_X", fb_offset.dx.as_uint32_t() << 16);
-    update.add_property(*plane_props, "SRC_Y", fb_offset.dy.as_uint32_t() << 16);
-    update.add_property(*plane_props, "SRC_W", width << 16);
-    update.add_property(*plane_props, "SRC_H", height << 16);
+    update.add_property(*conf->plane_props, "SRC_X", conf->fb_offset.dx.as_uint32_t() << 16);
+    update.add_property(*conf->plane_props, "SRC_Y", conf->fb_offset.dy.as_uint32_t() << 16);
+    update.add_property(*conf->plane_props, "SRC_W", width << 16);
+    update.add_property(*conf->plane_props, "SRC_H", height << 16);
 
     /* Destination viewport. Coordinates are *not* 16.16 */
-    update.add_property(*plane_props, "CRTC_X", 0);
-    update.add_property(*plane_props, "CRTC_Y", 0);
-    update.add_property(*plane_props, "CRTC_W", width);
-    update.add_property(*plane_props, "CRTC_H", height);
+    update.add_property(*conf->plane_props, "CRTC_X", 0);
+    update.add_property(*conf->plane_props, "CRTC_Y", 0);
+    update.add_property(*conf->plane_props, "CRTC_W", width);
+    update.add_property(*conf->plane_props, "CRTC_H", height);
 
     /* Set a surface for the plane */
-    update.add_property(*plane_props, "CRTC_ID", current_crtc->crtc_id);
-    update.add_property(*plane_props, "FB_ID", fb);
+    update.add_property(*conf->plane_props, "CRTC_ID", conf->current_crtc->crtc_id);
+    update.add_property(*conf->plane_props, "FB_ID", fb);
 
     auto ret = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
     if (ret)
     {
         mir::log_error("Failed to set CRTC: %s (%i)", strerror(-ret), -ret);
-        current_crtc = nullptr;
+        conf->current_crtc = nullptr;
         return false;
     }
 
     // We might have performed a modeset; update our view of the hardware state accordingly!
-    current_crtc = mgk::get_crtc(drm_fd_, current_crtc->crtc_id);
+    conf->current_crtc = mgk::get_crtc(drm_fd_, conf->current_crtc->crtc_id);
 
     using_saved_crtc = false;
     return true;
@@ -311,20 +337,22 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
 
 bool mga::AtomicKMSOutput::has_crtc_mismatch()
 {
-    if (!ensure_crtc())
+    auto conf = configuration.lock();
+    if (!ensure_crtc(*conf))
     {
-        mir::log_error("Output %s has no associated CRTC to get ", mgk::connector_name(connector).c_str());
+        mir::log_error("Output %s has no associated CRTC to get ", mgk::connector_name(conf->connector).c_str());
         return true;
     }
 
-    return !kms_modes_are_equal(&current_crtc->mode, &connector->modes[mode_index]);
+    return !kms_modes_are_equal(&conf->current_crtc->mode, &conf->connector->modes[conf->mode_index]);
 }
 
 void mga::AtomicKMSOutput::clear_crtc()
 {
+    auto conf = configuration.lock();
     try
     {
-        ensure_crtc();
+        ensure_crtc(*conf);
     }
     catch (...)
     {
@@ -338,11 +366,11 @@ void mga::AtomicKMSOutput::clear_crtc()
     }
 
     AtomicUpdate update;
-    update.add_property(*connector_props, "CRTC_ID", 0);
-    update.add_property(*crtc_props, "ACTIVE", 0);
-    update.add_property(*crtc_props, "MODE_ID", 0);
-    update.add_property(*plane_props, "FB_ID", 0);
-    update.add_property(*plane_props, "CRTC_ID", 0);
+    update.add_property(*conf->connector_props, "CRTC_ID", 0);
+    update.add_property(*conf->crtc_props, "ACTIVE", 0);
+    update.add_property(*conf->crtc_props, "MODE_ID", 0);
+    update.add_property(*conf->plane_props, "FB_ID", 0);
+    update.add_property(*conf->plane_props, "CRTC_ID", 0);
 
     auto result = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
     if (result)
@@ -357,31 +385,32 @@ void mga::AtomicKMSOutput::clear_crtc()
              * Whatever we're switching to can handle the CRTCs; this should not be fatal.
              */
             mir::log_info("Couldn't clear output %s (drmModeSetCrtc: %s (%i))",
-                mgk::connector_name(connector).c_str(),
+                mgk::connector_name(conf->connector).c_str(),
                 strerror(-result),
                 -result);
         }
         else
         {
             fatal_error("Couldn't clear output %s (drmModeSetCrtc = %d)",
-                        mgk::connector_name(connector).c_str(), result);
+                        mgk::connector_name(conf->connector).c_str(), result);
         }
     }
 
-    current_crtc = nullptr;
+    conf->current_crtc = nullptr;
 }
 
 bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
 {
-    if (!ensure_crtc())
+    auto conf = configuration.lock();
+    if (!ensure_crtc(*conf))
     {
         mir::log_error("Output %s has no associated CRTC to set a framebuffer on",
-                       mgk::connector_name(connector).c_str());
+                       mgk::connector_name(conf->connector).c_str());
         return false;
     }
 
-    auto const crtc_width = current_crtc->width;
-    auto const crtc_height = current_crtc->height;
+    auto const crtc_width = conf->current_crtc->width;
+    auto const crtc_height = conf->current_crtc->height;
 
     auto const fb_width = fb.size().width.as_uint32_t();
     auto const fb_height = fb.size().height.as_uint32_t();
@@ -398,26 +427,26 @@ bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
     }
 
     AtomicUpdate update;
-    update.add_property(*crtc_props, "MODE_ID", mode->handle());
-    update.add_property(*connector_props, "CRTC_ID", current_crtc->crtc_id);
+    update.add_property(*conf->crtc_props, "MODE_ID", conf->mode->handle());
+    update.add_property(*conf->connector_props, "CRTC_ID", conf->current_crtc->crtc_id);
 
     /* Source viewport. Coordinates are 16.16 fixed point format */
-    update.add_property(*plane_props, "SRC_X", fb_offset.dx.as_uint32_t() << 16);
-    update.add_property(*plane_props, "SRC_Y", fb_offset.dy.as_uint32_t() << 16);
-    update.add_property(*plane_props, "SRC_W", fb_width << 16);
-    update.add_property(*plane_props, "SRC_H", fb_height << 16);
+    update.add_property(*conf->plane_props, "SRC_X", conf->fb_offset.dx.as_uint32_t() << 16);
+    update.add_property(*conf->plane_props, "SRC_Y", conf->fb_offset.dy.as_uint32_t() << 16);
+    update.add_property(*conf->plane_props, "SRC_W", fb_width << 16);
+    update.add_property(*conf->plane_props, "SRC_H", fb_height << 16);
 
     /* Destination viewport. Coordinates are *not* 16.16 */
-    update.add_property(*plane_props, "CRTC_X", 0);
-    update.add_property(*plane_props, "CRTC_Y", 0);
-    update.add_property(*plane_props, "CRTC_W", crtc_width);
-    update.add_property(*plane_props, "CRTC_H", crtc_height);
+    update.add_property(*conf->plane_props, "CRTC_X", 0);
+    update.add_property(*conf->plane_props, "CRTC_Y", 0);
+    update.add_property(*conf->plane_props, "CRTC_W", crtc_width);
+    update.add_property(*conf->plane_props, "CRTC_H", crtc_height);
 
     /* Set a surface for the plane */
-    update.add_property(*plane_props, "CRTC_ID", current_crtc->crtc_id);
-    update.add_property(*plane_props, "FB_ID", fb);
+    update.add_property(*conf->plane_props, "CRTC_ID", conf->current_crtc->crtc_id);
+    update.add_property(*conf->plane_props, "FB_ID", fb);
 
-    pending_page_flip = event_handler->expect_flip_event(current_crtc->crtc_id, [](auto, auto){});
+    pending_page_flip = event_handler->expect_flip_event(conf->current_crtc->crtc_id, [](auto, auto){});
     auto ret = drmModeAtomicCommit(
         drm_fd_,
         update,
@@ -426,8 +455,8 @@ bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
     if (ret)
     {
         mir::log_error("Failed to schedule page flip: %s (%i)", strerror(-ret), -ret);
-        event_handler->cancel_flip_events(current_crtc->crtc_id);
-        current_crtc = nullptr;
+        event_handler->cancel_flip_events(conf->current_crtc->crtc_id);
+        conf->current_crtc = nullptr;
         return false;
     }
 
@@ -459,33 +488,39 @@ bool mga::AtomicKMSOutput::has_cursor() const
     return false;
 }
 
-bool mga::AtomicKMSOutput::ensure_crtc()
+bool mga::AtomicKMSOutput::ensure_crtc(Configuration& to_update)
 {
     /* Nothing to do if we already have a crtc */
-    if (current_crtc)
+    if (to_update.current_crtc)
         return true;
 
     /* If the output is not connected there is nothing to do */
-    if (connector->connection != DRM_MODE_CONNECTED)
+    if (to_update.connector->connection != DRM_MODE_CONNECTED)
         return false;
 
     // Update the connector as we may unexpectedly fail in find_crtc_and_index_for_connector()
     // https://github.com/MirServer/mir/issues/2661
-    connector = kms::get_connector(drm_fd_, connector->connector_id);
-    std::tie(current_crtc, current_plane) = mgk::find_crtc_with_primary_plane(drm_fd_, connector);
-    crtc_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, current_crtc);
-    plane_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, current_plane);
+    to_update.connector = kms::get_connector(drm_fd_, to_update.connector->connector_id);
+    std::tie(to_update.current_crtc, to_update.current_plane) = mgk::find_crtc_with_primary_plane(drm_fd_, to_update.connector);
+    if (!to_update.current_crtc || !to_update.current_plane)
+    {
+        return false;
+    }
 
-    return (current_crtc != nullptr);
+    to_update.crtc_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, to_update.current_crtc);
+    to_update.plane_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, to_update.current_plane);
+
+    return true;
 }
 
 void mga::AtomicKMSOutput::restore_saved_crtc()
 {
+    auto conf = configuration.lock();
     if (!using_saved_crtc)
     {
         drmModeSetCrtc(drm_fd_, saved_crtc.crtc_id, saved_crtc.buffer_id,
                        saved_crtc.x, saved_crtc.y,
-                       &connector->connector_id, 1, &saved_crtc.mode);
+                       &conf->connector->connector_id, 1, &saved_crtc.mode);
 
         using_saved_crtc = true;
     }
@@ -495,10 +530,11 @@ void mga::AtomicKMSOutput::set_power_mode(MirPowerMode mode)
 {
     bool should_be_active = mode == mir_power_mode_on;
 
-    if (current_crtc)
+    auto conf = configuration.lock();
+    if (conf->current_crtc)
     {
         AtomicUpdate update;
-        update.add_property(*crtc_props, "ACTIVE", should_be_active);
+        update.add_property(*conf->crtc_props, "ACTIVE", should_be_active);
         drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
     }
     else if (should_be_active)
@@ -516,10 +552,11 @@ void mga::AtomicKMSOutput::set_gamma(mg::GammaCurves const& gamma)
         return;
     }
 
-    if (!ensure_crtc())
+    auto conf = configuration.lock();
+    if (!ensure_crtc(*conf))
     {
         mir::log_warning("Output %s has no associated CRTC to set gamma on",
-                         mgk::connector_name(connector).c_str());
+                         mgk::connector_name(conf->connector).c_str());
         return;
     }
 
@@ -540,22 +577,23 @@ void mga::AtomicKMSOutput::set_gamma(mg::GammaCurves const& gamma)
     PropertyBlob lut{drm_fd_, drm_lut.get(), sizeof(struct drm_color_lut) * gamma.red.size()};
     AtomicUpdate update;
 
-    update.add_property(*crtc_props, "GAMMA_LUT", lut.handle());
+    update.add_property(*conf->crtc_props, "GAMMA_LUT", lut.handle());
     drmModeAtomicCommit(drm_fd(), update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
 }
 
 void mga::AtomicKMSOutput::refresh_hardware_state()
 {
-    connector = kms::get_connector(drm_fd_, connector->connector_id);
-    current_crtc = nullptr;
+    auto conf = configuration.lock();
+    conf->connector = kms::get_connector(drm_fd_, conf->connector->connector_id);
+    conf->current_crtc = nullptr;
 
-    if (connector->encoder_id)
+    if (conf->connector->encoder_id)
     {
-        auto encoder = kms::get_encoder(drm_fd_, connector->encoder_id);
+        auto encoder = kms::get_encoder(drm_fd_, conf->connector->encoder_id);
 
         if (encoder->crtc_id)
         {
-            current_crtc = kms::get_crtc(drm_fd_, encoder->crtc_id);
+            conf->current_crtc = kms::get_crtc(drm_fd_, encoder->crtc_id);
         }
     }
 }
@@ -716,6 +754,12 @@ auto formats_for_output(mir::Fd const& drm_fd, mgk::DRMModeConnectorUPtr const& 
 void mga::AtomicKMSOutput::update_from_hardware_state(
     DisplayConfigurationOutput& output) const
 {
+    auto conf = configuration.lock();
+
+    auto const& connector = conf->connector;
+    auto const& current_crtc = conf->current_crtc;
+    auto const& crtc_props = conf->crtc_props;
+
     DisplayConfigurationOutputType const type{
         kms_connector_type_to_output_type(connector->connector_type)};
     geom::Size physical_size{connector->mmWidth, connector->mmHeight};
