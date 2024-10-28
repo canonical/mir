@@ -324,8 +324,8 @@ void msd::BasicDecoration::update(
     if (window_updated({
             &WindowState::window_size}))
     {
-        spec.width = window_state->window_size().width;
-        spec.height = window_state->window_size().height;
+        if (window_state->window_size().width.as_value()) spec.width = window_state->window_size().width;
+        if (window_state->window_size().height.as_value()) spec.height = window_state->window_size().height;
     }
 
     if (input_updated({
