@@ -31,8 +31,6 @@
 #include <uuid.h>
 #include <mir/events/keyboard_event.h>
 
-#include "../../../examples/client/wayland_runner.h"
-
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 namespace ms = mir::scene;
@@ -411,11 +409,10 @@ void mf::XdgActivationTokenV1::set_app_id(std::string const& app_id)
 
 void mf::XdgActivationTokenV1::set_surface(struct wl_resource* surface)
 {
-    // TODO: This is the application id of the requesting surface.
-    //  Until it presents itself as a problem, we will ignore it or now.
-    //  Instead, we only ensure that the same same session is focused
-    //  between token request and activation. Or we simply ensure
-    //  that focus hasn't changed at all.
+    // TODO: This is the requesting surface. Until it presents itself
+    //  as a problem, we will ignore it or now. Instead, we only ensure
+    //  that the same same session is focused between token request
+    //  and activation. Or we simply ensure that focus hasn't changed at all.
     (void)surface;
 }
 
