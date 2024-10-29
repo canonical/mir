@@ -28,7 +28,10 @@ class MainLoop;
 namespace shell
 {
 class Shell;
-class FocusController;
+}
+namespace scene
+{
+class SessionCoordinator;
 }
 namespace input
 {
@@ -40,7 +43,7 @@ namespace frontend
 auto create_xdg_activation_v1(
     struct wl_display* display,
     std::shared_ptr<shell::Shell> const&,
-    std::shared_ptr<shell::FocusController> const&,
+    std::shared_ptr<scene::SessionCoordinator> const&,
     std::shared_ptr<MainLoop> const&,
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const&,
     Executor& wayland_executor) ->

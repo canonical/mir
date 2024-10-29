@@ -21,16 +21,21 @@
 #include "mir/main_loop.h"
 #include "mir/input/keyboard_observer.h"
 #include "mir/scene/surface.h"
+#include "mir/scene/session_listener.h"
+#include "mir/scene/session_coordinator.h"
 #include "mir/shell/shell.h"
-#include "mir/shell/focus_controller.h"
 #include "mir/wayland/protocol_error.h"
 #include "mir/log.h"
 #include <random>
 #include <chrono>
 #include <uuid.h>
+#include <mir/events/keyboard_event.h>
+
+#include "../../../examples/client/wayland_runner.h"
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
+namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 
@@ -55,20 +60,21 @@ struct XdgActivationTokenData
 {
     XdgActivationTokenData(
         std::string const& token,
-        std::unique_ptr<time::Alarm> alarm_)
+        std::unique_ptr<time::Alarm> alarm_,
+        std::shared_ptr<ms::Session> const& session)
         : token{token},
-        alarm{std::move(alarm_)}
+        alarm{std::move(alarm_)},
+        session{session}
     {
         alarm->reschedule_in(timeout_ms);
     }
 
     std::string const token;
     std::unique_ptr<time::Alarm> const alarm;
+    std::weak_ptr<ms::Session> session;
 
     std::optional<uint32_t> serial;
     std::optional<struct wl_resource*> seat;
-    std::optional<std::string> app_id;
-    std::optional<struct wl_resource*> requesting_surface;
 };
 
 
@@ -78,15 +84,16 @@ public:
     XdgActivationV1(
         struct wl_display* display,
         std::shared_ptr<msh::Shell> const& shell,
-        std::shared_ptr<msh::FocusController> const& focus_controller,
+        std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<MainLoop> const& main_loop,
         std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
         Executor& wayland_executor);
     ~XdgActivationV1();
 
-    std::shared_ptr<XdgActivationTokenData> const& create_token();
+    std::shared_ptr<XdgActivationTokenData> const& create_token(std::shared_ptr<ms::Session> const& session);
     std::shared_ptr<XdgActivationTokenData> try_consume_token(std::string const& token);
     void invalidate_all();
+    void invalidate_if_not_from_session(std::shared_ptr<ms::Session> const&);
 
 private:
     class Instance : public wayland::XdgActivationV1
@@ -96,7 +103,7 @@ private:
             struct wl_resource* resource,
             mf::XdgActivationV1* xdg_activation_v1,
             std::shared_ptr<msh::Shell> const& shell,
-            std::shared_ptr<msh::FocusController> const& focus_controller,
+            std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
             std::shared_ptr<MainLoop> const& main_loop);
 
     private:
@@ -106,7 +113,7 @@ private:
 
         mf::XdgActivationV1* xdg_activation_v1;
         std::shared_ptr<msh::Shell> shell;
-        std::shared_ptr<msh::FocusController> const focus_controller;
+        std::shared_ptr<ms::SessionCoordinator> const session_coordinator;
         std::shared_ptr<MainLoop> main_loop;
     };
 
@@ -121,10 +128,33 @@ private:
         XdgActivationV1* xdg_activation_v1;
     };
 
+    class SessionListener : public ms::SessionListener
+    {
+    public:
+        SessionListener(XdgActivationV1* xdg_activation_v1);
+        void starting(std::shared_ptr<ms::Session> const&) override {}
+        void stopping(std::shared_ptr<ms::Session> const&) override {}
+        void focused(std::shared_ptr<ms::Session> const& session) override;
+        void unfocused() override {}
+
+        void surface_created(ms::Session&, std::shared_ptr<ms::Surface> const&) override {}
+        void destroying_surface(ms::Session&, std::shared_ptr<ms::Surface> const&) override {}
+
+        void buffer_stream_created(
+            ms::Session&,
+            std::shared_ptr<mf::BufferStream> const&) override {}
+        void buffer_stream_destroyed(
+            ms::Session&,
+            std::shared_ptr<mf::BufferStream> const&) override {}
+
+    private:
+        XdgActivationV1* xdg_activation_v1;
+    };
+
     void bind(wl_resource* resource) override;
 
     std::shared_ptr<msh::Shell> shell;
-    std::shared_ptr<msh::FocusController> const focus_controller;
+    std::shared_ptr<ms::SessionCoordinator> const session_coordinator;
     std::shared_ptr<MainLoop> main_loop;
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> keyboard_observer_registrar;
     std::shared_ptr<KeyboardObserver> keyboard_observer;
@@ -157,25 +187,25 @@ private:
 auto mf::create_xdg_activation_v1(
     struct wl_display* display,
     std::shared_ptr<msh::Shell> const& shell,
-    std::shared_ptr<msh::FocusController> const& focus_controller,
+    std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<MainLoop> const& main_loop,
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
     Executor& wayland_executor)
     -> std::shared_ptr<mw::XdgActivationV1::Global>
 {
-    return std::make_shared<mf::XdgActivationV1>(display, shell, focus_controller, main_loop, keyboard_observer_registrar, wayland_executor);
+    return std::make_shared<mf::XdgActivationV1>(display, shell, session_coordinator, main_loop, keyboard_observer_registrar, wayland_executor);
 }
 
 mf::XdgActivationV1::XdgActivationV1(
     struct wl_display* display,
     std::shared_ptr<msh::Shell> const& shell,
-    std::shared_ptr<msh::FocusController> const& focus_controller,
+    std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<MainLoop> const& main_loop,
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
     Executor& wayland_executor)
     : Global(display, Version<1>()),
       shell{shell},
-      focus_controller{focus_controller},
+      session_coordinator{session_coordinator},
       main_loop{main_loop},
       keyboard_observer_registrar{keyboard_observer_registrar},
       keyboard_observer{std::make_shared<KeyboardObserver>(this)}
@@ -188,13 +218,13 @@ mf::XdgActivationV1::~XdgActivationV1()
     keyboard_observer_registrar->unregister_interest(*keyboard_observer);
 }
 
-std::shared_ptr<mf::XdgActivationTokenData> const& mf::XdgActivationV1::create_token()
+std::shared_ptr<mf::XdgActivationTokenData> const& mf::XdgActivationV1::create_token(std::shared_ptr<ms::Session> const& session)
 {
     auto generated = generate_token();
     auto token = std::make_shared<XdgActivationTokenData>(generated, main_loop->create_alarm([this, generated]()
     {
         try_consume_token(generated);
-    }));
+    }), session);
 
     {
         std::lock_guard guard(pending_tokens_mutex);
@@ -227,21 +257,30 @@ void mf::XdgActivationV1::invalidate_all()
     pending_tokens.clear();
 }
 
+void mf::XdgActivationV1::invalidate_if_not_from_session(std::shared_ptr<ms::Session> const& session)
+{
+    std::lock_guard guard(pending_tokens_mutex);
+    std::erase_if(pending_tokens, [&](std::shared_ptr<XdgActivationTokenData> const& token)
+    {
+        return token->session.expired() || token->session.lock() != session;
+    });
+}
+
 void mf::XdgActivationV1::bind(struct wl_resource* resource)
 {
-    new Instance{resource, this, shell, focus_controller, main_loop};
+    new Instance{resource, this, shell, session_coordinator, main_loop};
 }
 
 mf::XdgActivationV1::Instance::Instance(
     struct wl_resource* resource,
     mf::XdgActivationV1* xdg_activation_v1,
     std::shared_ptr<msh::Shell> const& shell,
-    std::shared_ptr<msh::FocusController> const& focus_controller,
+    std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<MainLoop> const& main_loop)
     : XdgActivationV1(resource, Version<1>()),
       xdg_activation_v1{xdg_activation_v1},
       shell{shell},
-      focus_controller{focus_controller},
+      session_coordinator{session_coordinator},
       main_loop{main_loop}
 {
 }
@@ -250,22 +289,48 @@ mf::XdgActivationV1::KeyboardObserver::KeyboardObserver(mir::frontend::XdgActiva
     : xdg_activation_v1{xdg_activation_v1}
 {}
 
-void mf::XdgActivationV1::KeyboardObserver::keyboard_event(std::shared_ptr<const MirEvent> const&)
+void mf::XdgActivationV1::KeyboardObserver::keyboard_event(std::shared_ptr<const MirEvent> const& event)
 {
-    xdg_activation_v1->invalidate_all();
+    // If we encounter a key press event, then we invalidate pending activation tokens
+    if (event->type() != mir_event_type_input)
+        return;
+
+    auto input_event = event->to_input();
+    if (input_event->input_type() != mir_input_event_type_key)
+        return;
+
+    auto keyboard_event = input_event->to_keyboard();
+    if (keyboard_event->action() == mir_keyboard_action_down)
+        xdg_activation_v1->invalidate_all();
 }
 
 void mf::XdgActivationV1::KeyboardObserver::keyboard_focus_set(std::shared_ptr<mi::Surface> const&)
 {
 }
 
+void mf::XdgActivationV1::SessionListener::focused(std::shared_ptr<ms::Session> const& session)
+{
+    xdg_activation_v1->invalidate_if_not_from_session(session);
+}
+
 void mf::XdgActivationV1::Instance::get_activation_token(struct wl_resource* id)
 {
-    new XdgActivationTokenV1(id, xdg_activation_v1->create_token());
+    new XdgActivationTokenV1(id, xdg_activation_v1->create_token(client->client_session()));
 }
 
 void mf::XdgActivationV1::Instance::activate(std::string const& token, struct wl_resource* surface)
 {
+    // This function handles requests from clients for activation.
+    // This will fail if the client cannot find their token in the list.
+    // A client may not be able to find their token in the list if any
+    // of the following are true:
+    //
+    // 1. A surface other than the surface that originally requested the activation token
+    //    received focus in the meantime, unless it was a layer shell surface that
+    //    initially requested the focus.
+    // 2. The surface failed to use the token in the alotted period of time
+    // 3. A key was pressed down between the issuing of the token and the activation
+    //    of the surface with that token
     auto xdg_token = xdg_activation_v1->try_consume_token(token);
     if (!xdg_token)
     {
@@ -278,8 +343,14 @@ void mf::XdgActivationV1::Instance::activate(std::string const& token, struct wl
         shell=shell,
         xdg_token=xdg_token,
         client=client,
-        focus_controller=focus_controller]
+        session_coordinator=session_coordinator]
     {
+        if (xdg_token->session.expired())
+        {
+            mir::log_error("XdgActivationV1::activate requesting session has expired");
+            return;
+        }
+
         auto const wl_surface = mf::WlSurface::from(surface);
         if (!wl_surface)
         {
@@ -307,42 +378,6 @@ void mf::XdgActivationV1::Instance::activate(std::string const& token, struct wl
                 mir::log_warning("XdgActivationTokenV1::activate serial not found");
         }
 
-        if (xdg_token->app_id)
-        {
-            // Check that the focused application has app_id
-            auto const& focused = focus_controller->focused_surface();
-            if (!focused)
-            {
-                mir::log_error("XdgActivationTokenV1::activate cannot find the focused surface");
-                return;
-            }
-
-            if (focused->application_id() != xdg_token->app_id)
-            {
-                mir::log_error("XdgActivationTokenV1::activate app_id != focused application id");
-                return;
-            }
-        }
-
-        if (xdg_token->requesting_surface)
-        {
-            // Check that the focused surface is the requesting_surface
-            auto const requesting_wl_surface = mf::WlSurface::from(xdg_token->requesting_surface.value());
-            auto const requesting_scene_surface_opt = requesting_wl_surface->scene_surface();
-            if (!requesting_scene_surface_opt)
-            {
-                mir::log_error("XdgActivationTokenV1::commit cannot find the provided scene surface");
-                return;
-            }
-
-            auto const& scene_surface = requesting_scene_surface_opt.value();
-            if (focus_controller->focused_surface() != scene_surface)
-            {
-                mir::log_error("XdgActivationTokenV1::commit the focused surface is not the surface that requested activation");
-                return;
-            }
-        }
-
         auto const& scene_surface = scene_surface_opt.value();
         auto const now = std::chrono::steady_clock::now().time_since_epoch();
         auto ns = std::chrono::duration_cast<std::chrono::nanoseconds >(now).count();
@@ -364,14 +399,24 @@ void mf::XdgActivationTokenV1::set_serial(uint32_t serial_, struct wl_resource* 
     token->seat = seat_;
 }
 
-void mf::XdgActivationTokenV1::set_app_id(std::string const& app_id_)
+void mf::XdgActivationTokenV1::set_app_id(std::string const& app_id)
 {
-    token->app_id = app_id_;
+    // TODO: This is the application id of the surface that is coming up.
+    //  Until it presents itself as a problem, we will ignore it for now.
+    //  Most likely this is supposed to be used that the application who
+    //  is using the application token is the application that we intend
+    //  to use that token.
+    (void)app_id;
 }
 
 void mf::XdgActivationTokenV1::set_surface(struct wl_resource* surface)
 {
-    token->requesting_surface = surface;
+    // TODO: This is the application id of the requesting surface.
+    //  Until it presents itself as a problem, we will ignore it or now.
+    //  Instead, we only ensure that the same same session is focused
+    //  between token request and activation. Or we simply ensure
+    //  that focus hasn't changed at all.
+    (void)surface;
 }
 
 void mf::XdgActivationTokenV1::commit()
@@ -386,6 +431,5 @@ void mf::XdgActivationTokenV1::commit()
     }
 
     used = true;
-
     send_done_event(token->token);
 }

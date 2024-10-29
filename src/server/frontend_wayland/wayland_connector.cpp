@@ -242,7 +242,7 @@ mf::WaylandConnector::WaylandConnector(
     bool enable_key_repeat,
     std::shared_ptr<scene::SessionLock> const& session_lock,
     std::shared_ptr<mir::DecorationStrategy> const& decoration_strategy,
-    std::shared_ptr<shell::FocusController> const& focus_controller)
+    std::shared_ptr<scene::SessionCoordinator> const& session_coordinator)
     : extension_filter{extension_filter},
       display{wl_display_create(), &cleanup_display},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
@@ -330,7 +330,7 @@ mf::WaylandConnector::WaylandConnector(
         desktop_file_manager,
         session_lock_,
         decoration_strategy,
-        focus_controller,
+        session_coordinator,
         keyboard_observer_registrar});
 
     shm_global = std::make_unique<WlShm>(display.get(), executor);

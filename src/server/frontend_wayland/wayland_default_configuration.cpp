@@ -232,7 +232,7 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
             return mf::create_xdg_activation_v1(
                 ctx.display,
                 ctx.shell,
-                ctx.focus_controller,
+                ctx.session_coordinator,
                 ctx.main_loop,
                 ctx.keyboard_observer_registrar,
                 *ctx.wayland_executor);
@@ -396,7 +396,7 @@ std::shared_ptr<mf::Connector>
                 enable_repeat,
                 the_session_lock(),
                 the_decoration_strategy(),
-                the_focus_controller());
+                the_session_coordinator());
         });
 }
 
