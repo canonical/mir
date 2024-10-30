@@ -585,6 +585,22 @@ void mga::AtomicKMSOutput::refresh_hardware_state()
 {
     auto conf = configuration.lock();
     conf->connector = kms::get_connector(drm_fd_, conf->connector->connector_id);
+
+    if (conf->current_crtc && (conf->connector->connection != DRM_MODE_CONNECTED))
+    {
+        AtomicUpdate update;
+        update.add_property(*conf->connector_props, "CRTC_ID", 0);
+        update.add_property(*conf->crtc_props, "ACTIVE", 0);
+        update.add_property(*conf->crtc_props, "MODE_ID", 0);
+        update.add_property(*conf->plane_props, "FB_ID", 0);
+        update.add_property(*conf->plane_props, "CRTC_ID", 0);
+
+        drmModeAtomicCommit(drm_fd(), update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
+
+        conf->connector_props = nullptr;
+        conf->crtc_props = nullptr;
+        conf->plane_props = nullptr;
+    }
     conf->current_crtc = nullptr;
 
     if (conf->connector->encoder_id)
