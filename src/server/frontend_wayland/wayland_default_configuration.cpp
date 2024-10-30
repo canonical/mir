@@ -338,6 +338,7 @@ auto mf::get_standard_extensions() -> std::vector<std::string>
         mw::TextInputManagerV3::interface_name,
         mw::MirShellV1::interface_name,
         mw::XdgDecorationManagerV1::interface_name,
+        mw::XdgActivationV1::interface_name,
         mw::FractionalScaleManagerV1::interface_name};
 }
 
