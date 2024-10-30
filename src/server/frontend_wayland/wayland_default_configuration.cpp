@@ -43,6 +43,7 @@
 #include "wl_seat.h"
 #include "wl_shell.h"
 #include "wlr_screencopy_v1.h"
+#include "xdg_activation_v1.h"
 #include "xdg-decoration-unstable-v1_wrapper.h"
 #include "xdg_decoration_unstable_v1.h"
 #include "xdg_output_v1.h"
@@ -226,6 +227,16 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
         {
             return mf::create_fractional_scale_v1(ctx.display);
         }),
+    make_extension_builder<mw::XdgActivationV1>([](auto const& ctx)
+        {
+            return mf::create_xdg_activation_v1(
+                ctx.display,
+                ctx.shell,
+                ctx.session_coordinator,
+                ctx.main_loop,
+                ctx.keyboard_observer_registrar,
+                *ctx.wayland_executor);
+        }),
 };
 
 ExtensionBuilder const xwayland_builder {
@@ -327,6 +338,7 @@ auto mf::get_standard_extensions() -> std::vector<std::string>
         mw::TextInputManagerV3::interface_name,
         mw::MirShellV1::interface_name,
         mw::XdgDecorationManagerV1::interface_name,
+        mw::XdgActivationV1::interface_name,
         mw::FractionalScaleManagerV1::interface_name};
 }
 
@@ -384,7 +396,8 @@ std::shared_ptr<mf::Connector>
                 wayland_extension_filter,
                 enable_repeat,
                 the_session_lock(),
-                the_decoration_strategy());
+                the_decoration_strategy(),
+                the_session_coordinator());
         });
 }
 

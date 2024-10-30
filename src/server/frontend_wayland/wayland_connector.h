@@ -67,6 +67,7 @@ class IdleHub;
 class Surface;
 class TextInputHub;
 class SessionLock;
+class SessionCoordinator;
 }
 namespace time
 {
@@ -113,6 +114,8 @@ public:
         std::shared_ptr<DesktopFileManager> desktop_file_manager;
         std::shared_ptr<scene::SessionLock> session_lock;
         std::shared_ptr<mir::DecorationStrategy> decoration_strategy;
+        std::shared_ptr<scene::SessionCoordinator> session_coordinator;
+        std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> keyboard_observer_registrar;
     };
 
     WaylandExtensions() = default;
@@ -165,7 +168,8 @@ public:
         WaylandProtocolExtensionFilter const& extension_filter,
         bool enable_key_repeat,
         std::shared_ptr<scene::SessionLock> const& session_lock,
-        std::shared_ptr<DecorationStrategy> const& decoration_strategy);
+        std::shared_ptr<DecorationStrategy> const& decoration_strategy,
+        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator);
 
     ~WaylandConnector() override;
 
