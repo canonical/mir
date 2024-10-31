@@ -97,6 +97,11 @@ jobs:
       timeout-minutes: 10
       run: cmake --build build --target coverage
 
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      with:
+        limit-access-to-actor: true
+
     - name: Run TICS analysis
       uses: tiobe/tics-github-action@v3
       with:
