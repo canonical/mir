@@ -15,19 +15,6 @@ Window management is integrated into Mir with useful default behaviour
 and is extremely customisable by shell authors using a simple high-level
 API.
 
-## License
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License version 2 or 3 as
-published by the Free Software Foundation.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 ## Resources
 See the [Mir website](http://mir-server.io).
 
@@ -40,5 +27,17 @@ For announcements and other discussions on Mir see
 Developer documentation, including installation and build instructions
 are hosted [online](https://canonical-mir.readthedocs-hosted.com).
 
-# Copyright
+## Copyright and License
 Copyright © Canonical Ltd.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License version 2 or 3 as
+published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
