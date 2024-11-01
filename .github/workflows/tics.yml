@@ -59,7 +59,6 @@ jobs:
         sudo --preserve-env apt-get install --no-install-recommends \
           dmz-cursor-theme \
           flake8 \
-          gcovr \
           glmark2-es2 \
           glmark2-es2-wayland \
           lcov \
