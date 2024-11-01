@@ -16,17 +16,16 @@ and is extremely customisable by shell authors using a simple high-level
 API.
 
 ## Resources
-The Mir project website is <http://mir-server.io/>,
-the code is [hosted on GitHub](https://github.com/MirServer)
+See the [Mir website](http://mir-server.io).
 
-For announcements and other discussions on Mir see:
-[Mir on community.ubuntu](https://community.ubuntu.com/c/mir)
+Code is [hosted on GitHub](https://github.com/canonical/mir).
 
-For other questions and discussion about the Mir project:
-the [\#mirserver](https://web.libera.chat/?channels=#mir-server) IRC channel on Libera.Chat.
+For announcements and other discussions on Mir see
+[Ubuntu Discourse](https://discourse.ubuntu.com/c/mir) or use
+[Matrix](https://matrix.to/#/#mir-server:matrix.org).
 
-For developer documentation, including installation and build instructions,
-see <https://canonical-mir.readthedocs-hosted.com>.
+Developer documentation, including installation and build instructions
+are hosted [online](https://canonical-mir.readthedocs-hosted.com).
 
 ## Copyright and License
 Copyright © Canonical Ltd.
