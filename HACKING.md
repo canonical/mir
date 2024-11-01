@@ -84,7 +84,7 @@ subdirectory.
 You can configure *Mir* to provide runtime information helpful for debugging
 by enabling component reports:
 
-- *[Component Reports](./doc/component_reports.md)*
+- *[Component Reports](./doc/sphinx/explanation/component_reports.md)*
 
 
 
