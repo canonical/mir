@@ -39,4 +39,5 @@ add_library(
 target_link_libraries(mirevents
   PUBLIC
     mircore
+    PkgConfig::XKBCOMMON
 )

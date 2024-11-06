@@ -187,6 +187,7 @@ target_link_libraries(
   mircommon
 
   Boost::system
+  PkgConfig::LIBINPUT
   PkgConfig::WAYLAND_SERVER
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )

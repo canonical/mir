@@ -13,6 +13,7 @@ target_link_libraries(mirevdevutilsobjects
   PUBLIC
     mircommon
     mircore
+    PkgConfig::LIBINPUT
 )
 
 add_library(mirplatforminputevdevobjects OBJECT
@@ -27,6 +28,7 @@ target_link_libraries(mirplatforminputevdevobjects
     mirplatform
     mircommon
     mircore
+    PkgConfig::LIBINPUT
 )
 
 add_library(mirplatforminputevdev MODULE
