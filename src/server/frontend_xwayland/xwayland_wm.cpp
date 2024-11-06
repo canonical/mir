@@ -771,11 +771,6 @@ void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
     if (connection->is_ours(event->window))
         return;
 
-    // We just ignore the ICCCM 4.1.4 synthetic unmap notify
-    // as it may come in after we've destroyed the window
-    if (event->response_type & ~0x80)
-        return;
-
     if (auto const surface = get_wm_surface(event->window))
     {
         surface.value()->close();
