@@ -241,6 +241,24 @@ void mga::AtomicKMSOutput::reset()
     {
         conf->connector = resources.connector(conf->connector->connector_id);
         conf->connector_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, conf->connector);
+
+        if (conf->current_crtc && (conf->connector->connection != DRM_MODE_CONNECTED))
+        {
+            AtomicUpdate update;
+            update.add_property(*conf->connector_props, "CRTC_ID", 0);
+            update.add_property(*conf->crtc_props, "ACTIVE", 0);
+            update.add_property(*conf->crtc_props, "MODE_ID", 0);
+            update.add_property(*conf->plane_props, "FB_ID", 0);
+            update.add_property(*conf->plane_props, "CRTC_ID", 0);
+
+            if (auto err = drmModeAtomicCommit(drm_fd(), update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr))
+            {
+                mir::log_warning("Failed release resources for disconnected output: %s (%i)", strerror(-err), -err);
+            }
+
+            conf->crtc_props = nullptr;
+            conf->plane_props = nullptr;
+        }
     }
     catch (std::exception const& e)
     {
