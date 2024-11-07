@@ -536,7 +536,10 @@ void mga::AtomicKMSOutput::set_power_mode(MirPowerMode mode)
     {
         AtomicUpdate update;
         update.add_property(*conf->crtc_props, "ACTIVE", should_be_active);
-        drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
+        if (auto err = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr))
+        {
+            mir::log_warning("Failed to set DPMS %s (%s [%i])", should_be_active ? "active" : "off", strerror(-err), -err);
+        }
     }
     else if (should_be_active)
     {
