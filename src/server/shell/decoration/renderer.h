@@ -17,10 +17,9 @@
 #ifndef MIR_SHELL_DECORATION_RENDERER_H_
 #define MIR_SHELL_DECORATION_RENDERER_H_
 
-#include "mir/decoration/input.h"
-#include "mir/decoration/theme.h"
+#include "input.h"
+#include "theme.h"
 
-#include <functional>
 #include <memory>
 #include <map>
 

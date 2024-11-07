@@ -14,7 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/decoration/basic_decoration.h"
+#include "src/server/shell/decoration/basic_decoration.h"
+
 #include "mir/scene/surface_observer.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/input/cursor_images.h"
@@ -37,7 +38,6 @@
 
 namespace ms = mir::scene;
 namespace mi = mir::input;
-namespace mc = mir::compositor;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mev = mir::events;

@@ -15,7 +15,6 @@
  */
 
 #include "window.h"
-#include "mir/decoration/basic_decoration.h"
 
 #include "mir/scene/surface.h"
 #include "mir/shell/decoration.h"

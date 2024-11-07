@@ -14,14 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/decoration/basic_decoration.h"
-#include "mir/decoration/theme.h"
-#include "mir/graphics/buffer.h"
+#include "basic_decoration.h"
+
+#include "theme.h"
 #include "window.h"
-#include "mir/decoration/input.h"
+#include "input.h"
 #include "renderer.h"
 #include "threadsafe_access.h"
 
+#include "mir/graphics/buffer.h"
 #include "mir/executor.h"
 #include "mir/shell/shell.h"
 #include "mir/shell/surface_specification.h"

@@ -1,13 +1,13 @@
 set(
   DECORATION_SOURCES
 
+  basic_manager.h 	basic_manager.cpp
+  basic_decoration.h 	basic_decoration.cpp
+  input.h 		input.cpp
+  renderer.h		renderer.cpp
+  window.h		window.cpp
   null_manager.h
-  basic_manager.cpp
   threadsafe_access.h
-  basic_decoration.cpp
-  window.h              window.cpp
-  input.cpp
-  renderer.h            renderer.cpp
   decoration_notifier.cpp
 )
 

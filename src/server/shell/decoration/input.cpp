@@ -14,19 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/decoration/input.h"
+#include "input.h"
 
-#include "mir/decoration/basic_decoration.h"
+#include "basic_decoration.h"
 #include "window.h"
 #include "threadsafe_access.h"
 
-#include "mir/scene/surface.h"
-#include "mir/scene/null_surface_observer.h"
 #include "mir/events/pointer_event.h"
 #include "mir/events/touch_event.h"
 #include "mir_toolkit/cursors.h"
 
-namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace msd = mir::shell::decoration;
 

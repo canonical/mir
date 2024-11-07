@@ -16,8 +16,9 @@
 
 
 #include "renderer.h"
+
 #include "window.h"
-#include "mir/decoration/input.h"
+#include "input.h"
 
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/renderer/sw/pixel_source.h"
@@ -34,11 +35,9 @@
 #include <locale>
 #include <codecvt>
 
-namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace mrs = mir::renderer::software;
 namespace geom = mir::geometry;
-namespace msh = mir::shell;
 namespace msd = mir::shell::decoration;
 
 namespace
