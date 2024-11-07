@@ -17,6 +17,7 @@
 #ifndef MIR_GRAPHICS_COMMON_KMS_UTILS_DRM_MODE_RESOURCES_H_
 #define MIR_GRAPHICS_COMMON_KMS_UTILS_DRM_MODE_RESOURCES_H_
 
+#include "mir/fd.h"
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
@@ -119,7 +120,12 @@ public:
     std::unordered_map<std::string, Prop>::const_iterator begin() const;
     std::unordered_map<std::string, Prop>::const_iterator end() const;
 
+    /**
+     * The ID of the DRM object these properties relate to
+    */
+    uint32_t parent_id() const;
 private:
+    uint32_t const parent_id_;
     std::unordered_map<std::string, Prop> const properties_table;
 };
 
@@ -163,6 +169,8 @@ private:
     int const drm_fd;
     DRMModeResUPtr const resources;
 };
+
+auto get_cap_checked(mir::Fd const& drm_node, uint64_t cap) -> uint64_t;
 
 }
 }
