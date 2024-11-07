@@ -303,6 +303,7 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
     AtomicUpdate update;
     update.add_property(*conf->crtc_props, "MODE_ID", conf->mode->handle());
     update.add_property(*conf->connector_props, "CRTC_ID", conf->current_crtc->crtc_id);
+    update.add_property(*conf->crtc_props, "ACTIVE", 1);
 
     /* Source viewport. Coordinates are 16.16 fixed point format */
     update.add_property(*conf->plane_props, "SRC_X", conf->fb_offset.dx.as_uint32_t() << 16);
