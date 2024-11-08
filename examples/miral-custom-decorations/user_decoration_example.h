@@ -17,6 +17,7 @@
 #ifndef MIRAL_CUSTOM_DECORATIONS_USER_DECORATION_EXAMPLE_H
 #define MIRAL_CUSTOM_DECORATIONS_USER_DECORATION_EXAMPLE_H
 
+#include "mir/shell/input_resolver.h"
 #include "renderer.h"
 #include "theme.h"
 #include "window.h"

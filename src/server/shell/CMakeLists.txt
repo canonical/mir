@@ -15,6 +15,7 @@ set(
   surface_specification.cpp
   surface_stack_wrapper.cpp ${CMAKE_SOURCE_DIR}/src/include/server/mir/shell/surface_stack_wrapper.h
   basic_idle_handler.cpp ${CMAKE_SOURCE_DIR}/src/include/server/mir/shell/idle_handler.h
+  input_resolver.cpp ${CMAKE_SOURCE_DIR}/src/include/server/mir/shell/input_resolver.h
 )
 
 add_library(

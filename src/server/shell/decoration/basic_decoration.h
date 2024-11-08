@@ -21,7 +21,7 @@
 #include "mir/shell/decoration_notifier.h"
 
 #include "theme.h"
-#include "input.h"
+#include "mir/shell/input_resolver.h"
 #include "mir_toolkit/common.h"
 
 #include <memory>

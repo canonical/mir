@@ -18,7 +18,7 @@
 
 #include "theme.h"
 #include "window.h"
-#include "input.h"
+#include "mir/shell/input_resolver.h"
 #include "renderer.h"
 #include "threadsafe_access.h"
 

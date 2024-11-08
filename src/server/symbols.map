@@ -732,6 +732,10 @@ global:
     mir::shell::decoration::InputManager::handle_input_event*;
     mir::shell::decoration::InputManager::state*;
     mir::shell::decoration::InputManager::update_window_state*;
+    mir::shell::decoration::InputResolver::?InputResolver*;
+    mir::shell::decoration::InputResolver::DeviceEvent::DeviceEvent*;
+    mir::shell::decoration::InputResolver::handle_input_event*;
+    mir::shell::decoration::InputResolver::latest_event*;
     mir::shell::decoration::InputState::InputState*;
     mir::shell::decoration::InputState::buttons*;
     mir::shell::decoration::InputState::input_shape*;
@@ -1135,6 +1139,7 @@ global:
     non-virtual?thunk?to?mir::shell::decoration::BasicManager::undecorate*;
     non-virtual?thunk?to?mir::shell::decoration::BasicManager::undecorate_all*;
     non-virtual?thunk?to?mir::shell::decoration::Decoration::?Decoration*;
+    non-virtual?thunk?to?mir::shell::decoration::InputResolver::?InputResolver*;
     non-virtual?thunk?to?mir::shell::decoration::Manager::?Manager*;
     non-virtual?thunk?to?mir::time::Alarm::?Alarm*;
     non-virtual?thunk?to?mir::time::AlarmFactory::?AlarmFactory*;
@@ -1281,6 +1286,8 @@ global:
     typeinfo?for?mir::shell::decoration::DecorationNotifier;
     typeinfo?for?mir::shell::decoration::Icon;
     typeinfo?for?mir::shell::decoration::InputManager;
+    typeinfo?for?mir::shell::decoration::InputResolver::DeviceEvent;
+    typeinfo?for?mir::shell::decoration::InputResolver;
     typeinfo?for?mir::shell::decoration::InputState;
     typeinfo?for?mir::shell::decoration::Manager;
     typeinfo?for?mir::shell::decoration::Theme;
@@ -1473,6 +1480,7 @@ global:
     vtable?for?mir::shell::decoration::BasicDecoration;
     vtable?for?mir::shell::decoration::BasicManager;
     vtable?for?mir::shell::decoration::Decoration;
+    vtable?for?mir::shell::decoration::InputResolver;
     vtable?for?mir::shell::decoration::Manager;
     vtable?for?mir::time::Alarm;
     vtable?for?mir::time::AlarmFactory;

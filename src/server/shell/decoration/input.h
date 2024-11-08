@@ -17,16 +17,9 @@
 #ifndef MIR_SHELL_DECORATION_INPUT_H_
 #define MIR_SHELL_DECORATION_INPUT_H_
 
-#include "mir/geometry/rectangle.h"
-#include "mir_toolkit/common.h"
+#include "mir/shell/input_resolver.h"
 
-#include <memory>
 #include <vector>
-#include <mutex>
-#include <map>
-#include <optional>
-
-struct MirEvent;
 
 namespace mir
 {
@@ -48,13 +41,6 @@ class WindowState;
 class BasicDecoration;
 class StaticGeometry;
 template<typename T> class ThreadsafeAccess;
-
-enum class ButtonState
-{
-    Up,         ///< The user is not interacting with this button
-    Hovered,    ///< The user is hovering over this button
-    Down,       ///< The user is currently pressing this button
-};
 
 enum class ButtonFunction
 {
@@ -100,8 +86,10 @@ private:
     std::vector<geometry::Rectangle> const input_shape_;
 };
 
+
+
 /// Manages user input
-class InputManager
+class InputManager: public InputResolver
 {
 public:
     InputManager(
@@ -113,7 +101,6 @@ public:
     void update_window_state(WindowState const& window_state);
     auto state() -> std::unique_ptr<InputState>;
 
-    void handle_input_event(std::shared_ptr<MirEvent const> const& event);
 private:
     static std::chrono::nanoseconds const double_click_threshold;
 
@@ -125,18 +112,9 @@ private:
         StaticGeometry const& static_geometry,
         MirResizeEdge resize_edge) -> geometry::Rectangle;
 
-    void pointer_event(std::shared_ptr<MirEvent const> const& event, geometry::Point location, bool pressed);
-    void pointer_leave(std::shared_ptr<MirEvent const> const& event);
-    void touch_event(std::shared_ptr<MirEvent const> const& event, int32_t id, geometry::Point location);
-
-    void touch_up(std::shared_ptr<MirEvent const> const& event, int32_t id);
-
-    std::mutex mutex;
     std::shared_ptr<StaticGeometry const> const static_geometry;
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> decoration;
     std::vector<geometry::Rectangle> input_shape;
-    /// The most recent event, or the event currently being processed
-    std::shared_ptr<MirEvent const> latest_event;
     /// Timestamp of the previous up event (not the one currently being processed)
     std::chrono::nanoseconds previous_up_timestamp{0};
     std::string current_cursor_name{""};
@@ -160,35 +138,12 @@ private:
         std::optional<MirResizeEdge> const resize_edge;
     };
 
-    /// Pointer or touchpoint
-    struct Device
-    {
-        Device(geometry::Point location, bool pressed)
-            : location{location},
-              pressed{pressed}
-
-        {
-        }
-
-        geometry::Point location;
-        bool pressed;
-        std::optional<std::shared_ptr<Widget>> active_widget;
-    };
-
-    /// The input device has entered the surface
-    void process_enter(Device& device);
-    /// The input device has left the surface
-    void process_leave(Device& device);
-    /// The input device has clicked down
-    /// A touch triggers a process_enter() followed by a process_down()
-    void process_down(Device& device);
-    /// The input device has released
-    /// A touch release triggers a process_up() followed by a process_leave()
-    void process_up(Device& device);
-    /// The device has moved while up
-    void process_move(Device& device);
-    /// The device has moved while down
-    void process_drag(Device& device);
+    void process_enter(DeviceEvent& device) override;
+    void process_leave() override;
+    void process_down() override;
+    void process_up() override;
+    void process_move(DeviceEvent& device) override;
+    void process_drag(DeviceEvent& device) override;
 
     auto widget_at(geometry::Point location) -> std::optional<std::shared_ptr<Widget>>;
 
@@ -207,12 +162,11 @@ private:
 
     void set_cursor(MirResizeEdge resize_edge);
 
-    std::optional<Device> pointer;
-    std::map<int32_t, Device> touches;
     std::vector<std::shared_ptr<Widget>> widgets;
+    std::optional<std::shared_ptr<Widget>> active_widget;
 };
 }
 }
 }
 
-#endif // MIR_SHELL_DECORATION_INPUT_H_
+#endif

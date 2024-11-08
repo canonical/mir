@@ -609,7 +609,7 @@ auto Renderer::render_titlebar() -> std::optional<std::shared_ptr<mg::Buffer>>
                 auto const [icon_theme, icon_drawer] = icon->second;
 
                 Pixel button_color = icon_theme.normal_color;
-                if (button.state == ButtonState::Hovered)
+                if (button.state == msd::ButtonState::Hovered)
                     button_color = icon_theme.active_color;
                 for (geom::Y y{scaled_button_rect.top()}; y < scaled_button_rect.bottom(); y += geom::DeltaY{1})
                 {

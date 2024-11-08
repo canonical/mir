@@ -15,13 +15,12 @@
  */
 
 #include "input.h"
+#include "mir/shell/input_resolver.h"
 
 #include "basic_decoration.h"
 #include "window.h"
 #include "threadsafe_access.h"
 
-#include "mir/events/pointer_event.h"
-#include "mir/events/touch_event.h"
 #include "mir_toolkit/cursors.h"
 
 namespace geom = mir::geometry;
@@ -121,74 +120,6 @@ auto msd::InputManager::state() -> std::unique_ptr<InputState>
         input_shape);
 }
 
-void msd::InputManager::handle_input_event(std::shared_ptr<MirEvent const> const& event)
-{
-    MirInputEvent const* const input_ev = mir_event_get_input_event(event.get());
-    switch (mir_input_event_get_type(input_ev))
-    {
-    case mir_input_event_type_pointer:
-        {
-            MirPointerEvent const* const pointer_ev = mir_input_event_get_pointer_event(input_ev);
-            switch (mir_pointer_event_action(pointer_ev))
-            {
-            case mir_pointer_action_button_up:
-            case mir_pointer_action_button_down:
-            case mir_pointer_action_motion:
-            case mir_pointer_action_enter:
-                {
-                    if (auto const position = pointer_ev->local_position())
-                    {
-                        bool pressed = mir_pointer_event_button_state(pointer_ev, mir_pointer_button_primary);
-                        pointer_event(event, geometry::Point{position.value()}, pressed);
-                    }
-                }
-                break;
-            case mir_pointer_action_leave:
-                {
-                    pointer_leave(event);
-                }
-                break;
-            case mir_pointer_actions:
-                break;
-            }
-        }
-        break;
-
-    case mir_input_event_type_touch:
-        {
-            MirTouchEvent const* const touch_ev = mir_input_event_get_touch_event(input_ev);
-            for (unsigned int i = 0; i < mir_touch_event_point_count(touch_ev); i++)
-            {
-                auto const id = mir_touch_event_id(touch_ev, i);
-                switch (mir_touch_event_action(touch_ev, i))
-                {
-                case mir_touch_action_down:
-                case mir_touch_action_change:
-                    {
-                        if (auto const position = touch_ev->local_position(i))
-                        {
-                            touch_event(event, id, geometry::Point{position.value()});
-                        }
-                    }
-                    break;
-                case mir_touch_action_up:
-                    {
-                        touch_up(event, id);
-                        break;
-                    }
-                case mir_touch_actions:
-                    break;
-                }
-            }
-        }
-        break;
-
-    case mir_input_event_type_key:
-    case mir_input_event_type_keyboard_resync:
-    case mir_input_event_types:
-        break;
-    }
-}
 
 auto msd::InputManager::resize_edge_rect(
     WindowState const& window_state,
@@ -251,138 +182,70 @@ auto msd::InputManager::resize_edge_rect(
     }
 }
 
-void msd::InputManager::pointer_event(std::shared_ptr<MirEvent const> const& event, geom::Point location, bool pressed)
+void msd::InputManager::process_enter(DeviceEvent& device)
 {
-    std::lock_guard lock{mutex};
-    latest_event = event;
-    if (!pointer)
+    active_widget = widget_at(device.location);
+    if (active_widget)
+        widget_enter(*active_widget.value());
+}
+
+void msd::InputManager::process_leave()
+{
+    if (active_widget)
     {
-        pointer = Device{location, pressed};
-        process_enter(pointer.value());
-    }
-    if (pointer.value().location != location)
-    {
-        pointer.value().location = location;
-        if (pointer.value().pressed)
-            process_drag(pointer.value());
-        else
-            process_move(pointer.value());
-    }
-    if (pointer.value().pressed != pressed)
-    {
-        pointer.value().pressed = pressed;
-        if (pressed)
-            process_down(pointer.value());
-        else
-            process_up(pointer.value());
+        widget_leave(*active_widget.value());
+        active_widget = std::nullopt;
     }
 }
 
-void msd::InputManager::pointer_leave(std::shared_ptr<MirEvent const> const& event)
+void msd::InputManager::process_down()
 {
-    std::lock_guard lock{mutex};
-    latest_event = event;
-    if (pointer)
-        process_leave(pointer.value());
-    pointer = std::nullopt;
-}
-
-void msd::InputManager::touch_event(std::shared_ptr<MirEvent const> const& event, int32_t id, geom::Point location)
-{
-    std::lock_guard lock{mutex};
-    latest_event = event;
-    auto device = touches.find(id);
-    if (device == touches.end())
+    if (active_widget)
     {
-        device = touches.insert(std::make_pair(id, Device{location, false})).first;
-        process_enter(device->second);
-        device->second.pressed = true;
-        process_down(device->second);
-    }
-    if (device->second.location != location)
-    {
-        device->second.location = location;
-        process_drag(device->second);
+        widget_down(*active_widget.value());
     }
 }
 
-void msd::InputManager::touch_up(std::shared_ptr<MirEvent const> const& event, int32_t id)
+void msd::InputManager::process_up()
 {
-    std::lock_guard lock{mutex};
-    latest_event = event;
-    auto device = touches.find(id);
-    if (device != touches.end())
+    if (active_widget)
     {
-        process_up(device->second);
-        process_leave(device->second);
-        touches.erase(device);
+        widget_up(*active_widget.value());
     }
-}
-
-void msd::InputManager::process_enter(Device& device)
-{
-    device.active_widget = widget_at(device.location);
-    if (device.active_widget)
-        widget_enter(*device.active_widget.value());
-}
-
-void msd::InputManager::process_leave(Device& device)
-{
-    if (device.active_widget)
-    {
-        widget_leave(*device.active_widget.value());
-        device.active_widget = std::nullopt;
-    }
-}
-
-void msd::InputManager::process_down(Device& device)
-{
-    if (device.active_widget)
-    {
-        widget_down(*device.active_widget.value());
-    }
-}
-
-void msd::InputManager::process_up(Device& device)
-{
-    if (device.active_widget)
-    {
-        widget_up(*device.active_widget.value());
-    }
-    auto const input_ev = mir_event_get_input_event(latest_event.get());
+    auto const input_ev = mir_event_get_input_event(latest_event().get());
     previous_up_timestamp = std::chrono::nanoseconds{mir_input_event_get_event_time(input_ev)};
 }
 
-void msd::InputManager::process_move(Device& device)
+void msd::InputManager::process_move(DeviceEvent& device)
 {
     auto const new_widget = widget_at(device.location);
-    if (new_widget != device.active_widget)
+    if (new_widget != active_widget)
     {
-        if (device.active_widget)
-            widget_leave(*device.active_widget.value());
+        if (active_widget)
+            widget_leave(*active_widget.value());
 
-        device.active_widget = new_widget;
+        active_widget = new_widget;
 
-        if (device.active_widget)
-            widget_enter(*device.active_widget.value());
+        if (active_widget)
+            widget_enter(*active_widget.value());
     }
 }
 
-void msd::InputManager::process_drag(Device& device)
+void msd::InputManager::process_drag(DeviceEvent& device)
 {
     auto const new_widget = widget_at(device.location);
 
-    if (device.active_widget)
+    if (active_widget)
     {
-        widget_drag(*device.active_widget.value());
-        if (new_widget != device.active_widget)
-            widget_leave(*device.active_widget.value());
+        widget_drag(*active_widget.value());
+        if (new_widget != active_widget)
+            widget_leave(*active_widget.value());
     }
 
-    bool const enter = new_widget && (device.active_widget != new_widget);
-    device.active_widget = new_widget;
+    bool const enter = new_widget && (active_widget != new_widget);
+    active_widget = new_widget;
     if (enter)
-        widget_enter(*device.active_widget.value());
+        widget_enter(*active_widget.value());
 }
 
 auto msd::InputManager::widget_at(geom::Point location) -> std::optional<std::shared_ptr<Widget>>
@@ -429,7 +292,7 @@ void msd::InputManager::widget_up(Widget& widget)
 {
     if (widget.state == ButtonState::Down)
     {
-        auto const input_ev = mir_event_get_input_event(latest_event.get());
+        auto const input_ev = mir_event_get_input_event(latest_event().get());
         auto const event_timestamp = std::chrono::nanoseconds{mir_input_event_get_event_time(input_ev)};
         if (previous_up_timestamp > 0ns &&
             event_timestamp - previous_up_timestamp <= double_click_threshold)
@@ -490,14 +353,14 @@ void msd::InputManager::widget_drag(Widget& widget)
 
             if (edge == mir_resize_edge_none)
             {
-                decoration->spawn([event = latest_event](auto* decoration)
+                decoration->spawn([event = latest_event()](auto* decoration)
                     {
                         decoration->request_move(mir_event_get_input_event(event.get()));
                     });
             }
             else
             {
-                decoration->spawn([event = latest_event, edge](auto* decoration)
+                decoration->spawn([event = latest_event(), edge](auto* decoration)
                     {
                         decoration->request_resize(mir_event_get_input_event(event.get()), edge);
                     });
@@ -505,7 +368,7 @@ void msd::InputManager::widget_drag(Widget& widget)
         }
         else if (widget.button)
         {
-            decoration->spawn([event = latest_event](auto* decoration)
+            decoration->spawn([event = latest_event()](auto* decoration)
                 {
                     decoration->request_move(mir_event_get_input_event(event.get()));
                 });
