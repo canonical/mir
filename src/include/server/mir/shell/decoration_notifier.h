@@ -25,18 +25,6 @@
 
 #include <memory>
 
-namespace mir
-{
-namespace scene
-{
-class Surface;
-}
-namespace shell
-{
-class Shell;
-}
-}
-
 namespace mir::shell::decoration
 {
 class DecorationNotifier

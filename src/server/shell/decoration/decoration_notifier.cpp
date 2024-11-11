@@ -70,10 +70,7 @@ msd::DecorationNotifier::DecorationNotifier(
 
 msd::DecorationNotifier::~DecorationNotifier()
 {
-    if (decoration_surface)
-        decoration_surface->unregister_interest(*input_observer);
-
-    if (window_surface)
-        window_surface->unregister_interest(*window_observer);
+    decoration_surface->unregister_interest(*input_observer);
+    window_surface->unregister_interest(*window_observer);
 }
 

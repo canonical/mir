@@ -19,6 +19,7 @@
 
 #include "mir/executor.h"
 
+#include <boost/throw_exception.hpp>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -36,15 +37,15 @@ public:
 
     ~ThreadsafeAccess()
     {
-        /* if (target) */
-            /* fatal_error("ThreadsafeAccess never invalidated"); */
+        if (target)
+            BOOST_THROW_EXCEPTION(std::runtime_error("ThreadsafeAccess never invalidated"));
     }
 
     void initialize(T* t)
     {
         std::lock_guard lock{mutex};
         if (target)
-            /* fatal_error("ThreadsafeAccess initialized multiple times"); */
+            BOOST_THROW_EXCEPTION(std::runtime_error("ThreadsafeAccess initialized multiple times"));
         target = t;
     }
 
