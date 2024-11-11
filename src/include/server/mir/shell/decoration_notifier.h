@@ -14,14 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef MIR_SHELL_DECORATION_NOTIFIER_H_
+#define MIR_SHELL_DECORATION_NOTIFIER_H_
+
 #include <mir/shell/decoration.h>
 
-
 #include <mir/geometry/size.h>
 #include <mir/geometry/forward.h>
-#include <mir/events/event.h>
-#include <mir/geometry/forward.h>
-#include <mir/geometry/size.h>
+#include <mircommon/mir_toolkit/event.h>
 
 #include <memory>
 
@@ -59,3 +59,5 @@ private:
     std::shared_ptr<WindowSurfaceObserver> window_observer;
 };
 }
+
+#endif

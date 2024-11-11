@@ -17,13 +17,11 @@
 #ifndef MIRAL_DECORATION_DECORATION_ADAPTER_H
 #define MIRAL_DECORATION_DECORATION_ADAPTER_H
 
-#include "mir/shell/decoration.h"
 #include "mir/shell/decoration_notifier.h"
-#include "miral/decoration/decoration_manager_adapter.h"
 
-#include <algorithm>
 #include <functional>
 #include <memory>
+
 
 namespace miral::decoration
 {

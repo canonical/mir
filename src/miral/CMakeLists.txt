@@ -32,6 +32,8 @@ add_library(miral-internal STATIC
                                          join_client_threads.h
                                          window_info_defaults.h
     window_specification_internal.cpp    window_specification_internal.h
+    decoration/decoration_manager_adapter.cpp
+    decoration/decoration_adapter.cpp
 )
 
 # Already implied by the linker's symbol version script, but can avoid accidents

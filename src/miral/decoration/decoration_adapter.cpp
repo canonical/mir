@@ -16,7 +16,6 @@
  */
 
 #include "miral/decoration/decoration_adapter.h"
-#include "miral/basic_decoration/input.h"
 #include <memory>
 
 namespace md = miral::decoration;
