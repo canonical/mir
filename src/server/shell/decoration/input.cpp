@@ -18,6 +18,7 @@
 #include "mir/shell/input_resolver.h"
 
 #include "basic_decoration.h"
+#include "mir_toolkit/events/event.h"
 #include "window.h"
 #include "threadsafe_access.h"
 

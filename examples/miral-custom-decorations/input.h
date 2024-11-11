@@ -18,21 +18,22 @@
 #define MIRAL_CUSTOM_DECORATIONS_INPUT_H
 
 #include "mir/shell/input_resolver.h"
-#include "mircore/mir/geometry/rectangle.h"
-#include "mircore/mir_toolkit/common.h"
 #include "threadsafe_access.h"
-#include "window.h"
 
 #include <memory>
 #include <vector>
 #include <mutex>
-#include <map>
 #include <optional>
 
 namespace msd = mir::shell::decoration;
 
 struct MirEvent;
 class UserDecorationExample;
+struct StaticGeometry;
+class WindowState;
+
+template<typename T>
+class ThreadsafeAccess;
 
 namespace mir
 {

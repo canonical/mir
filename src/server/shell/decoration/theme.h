@@ -19,8 +19,6 @@
 
 #include "input.h"
 
-#include "mir/geometry/forward.h"
-
 #include <cstdint>
 #include <functional>
 #include <map>

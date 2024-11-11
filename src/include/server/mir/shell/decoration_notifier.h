@@ -21,7 +21,6 @@
 
 #include <mir/geometry/size.h>
 #include <mir/geometry/forward.h>
-#include <mircommon/mir_toolkit/event.h>
 
 #include <memory>
 

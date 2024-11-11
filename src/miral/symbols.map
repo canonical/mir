@@ -509,6 +509,14 @@ global:
     miral::decoration::DecorationManagerAdapter::undecorate_all*;
     miral::decoration::DecorationManagerBuilder::build*;
     miral::decoration::DecorationManagerBuilder::done*;
+    miral::decoration::InputResolverAdapter::process_down*;
+    miral::decoration::InputResolverAdapter::process_drag*;
+    miral::decoration::InputResolverAdapter::process_enter*;
+    miral::decoration::InputResolverAdapter::process_leave*;
+    miral::decoration::InputResolverAdapter::process_move*;
+    miral::decoration::InputResolverAdapter::process_up*;
+    miral::decoration::InputResolverBuilder::build*;
+    miral::decoration::InputResolverBuilder::done*;
     non-virtual?thunk?to?miral::decoration::DecorationAdapter::attrib_changed*;
     non-virtual?thunk?to?miral::decoration::DecorationAdapter::handle_input_event*;
     non-virtual?thunk?to?miral::decoration::DecorationAdapter::set_scale*;
@@ -518,6 +526,12 @@ global:
     non-virtual?thunk?to?miral::decoration::DecorationManagerAdapter::init*;
     non-virtual?thunk?to?miral::decoration::DecorationManagerAdapter::undecorate*;
     non-virtual?thunk?to?miral::decoration::DecorationManagerAdapter::undecorate_all*;
+    non-virtual?thunk?to?miral::decoration::InputResolverAdapter::process_down*;
+    non-virtual?thunk?to?miral::decoration::InputResolverAdapter::process_drag*;
+    non-virtual?thunk?to?miral::decoration::InputResolverAdapter::process_enter*;
+    non-virtual?thunk?to?miral::decoration::InputResolverAdapter::process_leave*;
+    non-virtual?thunk?to?miral::decoration::InputResolverAdapter::process_move*;
+    non-virtual?thunk?to?miral::decoration::InputResolverAdapter::process_up*;
     typeinfo?for?miral::ConfigFile;
     typeinfo?for?miral::Decorations;
     typeinfo?for?miral::IdleListener;
@@ -529,8 +543,11 @@ global:
     typeinfo?for?miral::decoration::DecorationBuilder;
     typeinfo?for?miral::decoration::DecorationManagerAdapter;
     typeinfo?for?miral::decoration::DecorationManagerBuilder;
+    typeinfo?for?miral::decoration::InputResolverAdapter;
+    typeinfo?for?miral::decoration::InputResolverBuilder;
     vtable?for?miral::decoration::DecorationAdapter;
     vtable?for?miral::decoration::DecorationManagerAdapter;
+    vtable?for?miral::decoration::InputResolverAdapter;
   };
 } MIRAL_5.0;
 

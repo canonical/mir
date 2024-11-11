@@ -17,8 +17,6 @@
 #ifndef MIRAL_CUSTOM_DECORATIONS_THEME_H
 #define MIRAL_CUSTOM_DECORATIONS_THEME_H
 
-#include "mircore/mir/geometry/forward.h"
-
 #include "input.h"
 
 #include <cstdint>
