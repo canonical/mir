@@ -22,8 +22,8 @@
 #include "threadsafe_access.h"
 #include "window.h"
 
-#include "mircommon/mir_toolkit/events/event.h"
-#include "mircommon/mir_toolkit/cursors.h"
+#include "mir_toolkit/event.h"
+#include "mir_toolkit/cursors.h"
 
 
 #include <functional>

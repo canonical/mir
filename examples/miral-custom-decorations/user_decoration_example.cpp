@@ -28,7 +28,7 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/input/cursor_images.h"
-#include "mirwayland/mir/wayland/weak.h"
+#include "mir/wayland/weak.h"
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;

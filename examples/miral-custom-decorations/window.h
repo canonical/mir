@@ -17,12 +17,11 @@
 #ifndef MIRAL_CUSTOM_DECORATIONS_WINDOW_H
 #define MIRAL_CUSTOM_DECORATIONS_WINDOW_H
 
-#include "mircore/mir/geometry/forward.h"
-#include "mircore/mir/geometry/dimensions.h"
-#include "mircore/mir/geometry/size.h"
-#include "mircore/mir/geometry/point.h"
-#include "mircore/mir/geometry/displacement.h"
-#include "mircore/mir_toolkit/common.h"
+#include "mir/geometry/forward.h"
+#include "mir/geometry/size.h"
+#include "mir/geometry/point.h"
+#include "mir/geometry/displacement.h"
+#include "mir_toolkit/common.h"
 #include "threadsafe_access.h"
 
 #include <memory>

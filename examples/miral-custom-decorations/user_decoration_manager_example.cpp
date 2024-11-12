@@ -23,7 +23,7 @@
 #include <mir/graphics/display_configuration.h>
 #include <mir/graphics/null_display_configuration_observer.h>
 /* #include <bffoost/throw_exception.hpp> */
-#include "mirserver-internal/mir/observer_registrar.h"
+#include "mir/observer_registrar.h"
 
 
 #include <vector>

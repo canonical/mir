@@ -10,6 +10,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/miral
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/include/platform
+  ${PROJECT_SOURCE_DIR}/include/wayland
 )
 
 mir_add_wrapped_executable(miral-custom-decorations
