@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "decoration/user_decoration_manager_example.h"
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
 #include "wallpaper_config.h"
@@ -32,6 +33,8 @@
 #include <miral/toolkit_event.h>
 #include <miral/x11_support.h>
 #include <miral/wayland_extensions.h>
+
+#include "miral/custom_decorations.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -135,6 +138,7 @@ int main(int argc, char const* argv[])
 
     return runner.run_with(
         {
+            CustomDecorations{UserDecorationManagerExample::get_adapter()},
             CursorTheme{"default:DMZ-White"},
             WaylandExtensions{},
             X11Support{},

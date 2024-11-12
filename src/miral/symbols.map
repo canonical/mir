@@ -458,6 +458,10 @@ global:
   extern "C++" {
     miral::ConfigFile::?ConfigFile*;
     miral::ConfigFile::ConfigFile*;
+    miral::CustomDecorations::CustomDecorations*;
+    miral::CustomDecorations::operator*;
+    miral::DecorationManagerBuilder::build*;
+    miral::DecorationManagerBuilder::done*;
     miral::Decorations::Decorations*;
     miral::Decorations::always_csd*;
     miral::Decorations::always_ssd*;
@@ -497,12 +501,14 @@ global:
     miral::InputConfiguration::touchpad*;
     miral::WindowManagerTools::move_cursor_to*;
     typeinfo?for?miral::ConfigFile;
+    typeinfo?for?miral::CustomDecorations;
+    typeinfo?for?miral::DecorationManagerBuilder;
     typeinfo?for?miral::Decorations;
+    typeinfo?for?miral::IdleListener;
     typeinfo?for?miral::IdleListener;
     typeinfo?for?miral::InputConfiguration::Mouse;
     typeinfo?for?miral::InputConfiguration::Touchpad;
     typeinfo?for?miral::InputConfiguration;
-    typeinfo?for?miral::IdleListener;
   };
 } MIRAL_5.0;
 
