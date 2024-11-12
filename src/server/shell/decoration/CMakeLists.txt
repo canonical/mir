@@ -1,7 +1,6 @@
 set(
   DECORATION_SOURCES
 
-  manager.h
   null_manager.h
   basic_manager.h       basic_manager.cpp
   threadsafe_access.h

@@ -88,6 +88,8 @@ add_library(miral-external OBJECT
     x11_support.cpp                     ${miral_include}/miral/x11_support.h
     zone.cpp                            ${miral_include}/miral/zone.h
     decorations.cpp                     ${miral_include}/miral/decorations.h
+    custom_decorations.cpp		${miral_include}/miral/custom_decorations.h
+    decoration_manager_builder.cpp	${miral_include}/miral/decoration_manager_builder.h
 )
 
 add_library(miral SHARED
