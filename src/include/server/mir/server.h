@@ -20,6 +20,7 @@
 #include "mir/shell/window_manager_builder.h"
 #include "mir/optional_value.h"
 #include "mir_toolkit/common.h"
+#include "mir/server_configuration.h"
 
 #include <functional>
 #include <memory>
@@ -479,6 +480,9 @@ public:
 
     auto the_decoration_strategy() const -> std::shared_ptr<DecorationStrategy>;
     void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy);
+
+    void set_the_decoration_manager_init(mir::ServerConfiguration::DecorationManagerInit init_cb);
+
 private:
     struct ServerConfiguration;
     struct Self;

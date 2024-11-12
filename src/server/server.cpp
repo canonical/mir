@@ -767,3 +767,8 @@ void mir::Server::set_the_decoration_strategy(std::shared_ptr<DecorationStrategy
 {
     self->server_config->set_the_decoration_strategy(strategy);
 }
+
+void mir::Server::set_the_decoration_manager_init(mir::ServerConfiguration::DecorationManagerInit manager)
+{
+    self->server_config->set_the_decoration_manager_init(manager);
+}

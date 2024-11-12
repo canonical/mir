@@ -20,19 +20,17 @@
 #include "mir/abnormal_exit.h"
 
 #include "mir/input/composite_event_filter.h"
+#include "mir/server.h"
 #include "mir/shell/abstract_shell.h"
 #include "mir/options/configuration.h"
-#include "mir/options/option.h"
 #include "default_persistent_surface_store.h"
 #include "graphics_display_layout.h"
 #include "decoration/basic_manager.h"
 #include "decoration/basic_decoration.h"
 #include "basic_idle_handler.h"
 
-namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace msd = mir::shell::decoration;
-namespace mf = mir::frontend;
 
 auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
 {
@@ -67,23 +65,27 @@ auto mir::DefaultServerConfiguration::the_window_manager_builder() -> shell::Win
 auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_ptr<msd::Manager>
 {
     return decoration_manager(
-        [this]()->std::shared_ptr<msd::Manager>
+        [this]
         {
-            return std::make_shared<msd::BasicManager>(
-                *the_display_configuration_observer_registrar(),
-                [buffer_allocator = the_buffer_allocator(),
-                 executor = the_main_loop(),
-                 cursor_images = the_cursor_images()](
-                    std::shared_ptr<shell::Shell> const& shell,
-                    std::shared_ptr<scene::Surface> const& surface) -> std::unique_ptr<msd::Decoration>
+            if (!decoration_manager_init)
+            {
+                decoration_manager_init = [this]
                 {
-                    return std::make_unique<msd::BasicDecoration>(
-                        shell,
-                        buffer_allocator,
-                        executor,
-                        cursor_images,
-                        surface);
-                });
+                    return std::make_shared<msd::BasicManager>(
+                        *the_display_configuration_observer_registrar(),
+                        [buffer_allocator = the_buffer_allocator(),
+                         executor = the_main_loop(),
+                         cursor_images = the_cursor_images()](
+                            std::shared_ptr<shell::Shell> const& shell,
+                            std::shared_ptr<scene::Surface> const& surface) -> std::unique_ptr<msd::Decoration>
+                        {
+                            return std::make_unique<msd::BasicDecoration>(
+                                shell, buffer_allocator, executor, cursor_images, surface);
+                        });
+                };
+            }
+
+            return decoration_manager_init();
         });
 }
 
