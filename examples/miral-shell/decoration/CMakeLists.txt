@@ -22,7 +22,4 @@ add_library(miral-user-decoration-example
   user_decoration_manager_example.cpp
 )
 
-target_include_directories(miral-user-decoration-example
-  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
-  ${PROJECT_SOURCE_DIR}/include/miral # Just so I don't have to install miral on every change of the new files
-)
+target_link_libraries(miral-user-decoration-example PUBLIC miral)
