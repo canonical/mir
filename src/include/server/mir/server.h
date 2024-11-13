@@ -327,6 +327,8 @@ public:
 
     /// Sets a wrapper functor for creating the application not responding detector.
     void wrap_application_not_responding_detector(Wrapper<scene::ApplicationNotRespondingDetector> const & anr_detector);
+
+    void wrap_decoration_manager(Wrapper<shell::decoration::Manager> const& wrapper);
 /** @} */
 
 /** @name Getting access to Mir subsystems
@@ -480,8 +482,6 @@ public:
 
     auto the_decoration_strategy() const -> std::shared_ptr<DecorationStrategy>;
     void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy);
-
-    void set_the_decoration_manager_init(mir::ServerConfiguration::DecorationManagerInit init_cb);
 
 private:
     struct ServerConfiguration;

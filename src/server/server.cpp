@@ -82,7 +82,8 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(display_configuration_policy)\
     MACRO(shell)\
     MACRO(surface_stack)\
-    MACRO(application_not_responding_detector)
+    MACRO(application_not_responding_detector)\
+    MACRO(decoration_manager)
 
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\
@@ -766,9 +767,4 @@ void mir::Server::add_configuration_option(
 void mir::Server::set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy)
 {
     self->server_config->set_the_decoration_strategy(strategy);
-}
-
-void mir::Server::set_the_decoration_manager_init(mir::ServerConfiguration::DecorationManagerInit manager)
-{
-    self->server_config->set_the_decoration_manager_init(manager);
 }

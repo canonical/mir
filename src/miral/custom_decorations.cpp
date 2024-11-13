@@ -17,12 +17,12 @@
 #include "miral/custom_decorations.h"
 #include "decoration_manager_adapter.h"
 
+#include "mir/shell/decoration/manager.h"
 #include "miral/decoration_manager_builder.h"
 
 #include "mir/options/option.h"
-#include "mir/server.h"
-#define MIR_LOG_COMPONENT "CustomDecorations"
 #include "mir/log.h"
+#include "mir/server.h"
 
 #include <memory>
 
@@ -47,18 +47,17 @@ void miral::CustomDecorations::operator()(mir::Server& server) const
         "Enable custom themed decorations [{1|true|on|yes, 0|false|off|no}].",
         should_use_light_decorations);
 
-    server.add_pre_init_callback(
-        [&]
+    server.wrap_decoration_manager(
+        [this, &server](auto deco_man) -> std::shared_ptr<mir::shell::decoration::Manager>
         {
-            auto const options = server.get_options();
-            if (options->is_set(custom_light_decorations_opt))
+            auto const& options = server.get_options();
+            if (!options->is_set(custom_light_decorations_opt) || !options->get<bool>(custom_light_decorations_opt))
             {
-                mir::log_info("Using custom decorations!");
-                server.set_the_decoration_manager_init(
-                    [adapter = self->adapter]
-                    {
-                        return adapter;
-                    });
+                mir::log_info("Using default decorations!");
+                return deco_man;
             }
+
+            mir::log_info("Using custom decorations!");
+            return self->adapter;
         });
 }

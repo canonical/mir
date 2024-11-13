@@ -227,7 +227,3 @@ void mir::DefaultServerConfiguration::set_the_decoration_strategy(std::shared_pt
 {
     decoration_strategy = strategy;
 }
-
-void mir::DefaultServerConfiguration::set_the_decoration_manager_init(DecorationManagerInit init_cb) {
-    decoration_manager_init = init_cb;
-}

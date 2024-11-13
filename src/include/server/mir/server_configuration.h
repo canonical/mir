@@ -116,9 +116,6 @@ public:
     virtual auto the_decoration_strategy() -> std::shared_ptr<DecorationStrategy> = 0;
     virtual void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy) = 0;
 
-    using DecorationManagerInit = std::function<std::shared_ptr<shell::decoration::Manager>()>;
-    virtual void set_the_decoration_manager_init(DecorationManagerInit init_cb) = 0;
-
 protected:
     ServerConfiguration() = default;
     virtual ~ServerConfiguration() = default;

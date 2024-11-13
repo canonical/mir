@@ -293,6 +293,8 @@ public:
     virtual std::shared_ptr<scene::SurfaceFactory>    the_surface_factory();
     virtual std::shared_ptr<shell::SurfaceStack>      the_surface_stack();
     virtual std::shared_ptr<shell::SurfaceStack>      wrap_surface_stack(std::shared_ptr<shell::SurfaceStack> const& wrapped);
+    virtual std::shared_ptr<shell::decoration::Manager> wrap_decoration_manager(
+        std::shared_ptr<shell::decoration::Manager> const& wrapped);
     /** @} */
 
     /** @name scene configuration - dependencies
@@ -346,8 +348,6 @@ public:
 
     auto the_decoration_strategy() -> std::shared_ptr<DecorationStrategy> override;
     void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy) override;
-
-    void set_the_decoration_manager_init(DecorationManagerInit init_cb) override;
 
 protected:
     std::shared_ptr<options::Option> the_options() const;
@@ -465,8 +465,6 @@ private:
 
     std::vector<std::shared_ptr<graphics::DisplayPlatform>> display_platforms;
     std::vector<std::shared_ptr<graphics::RenderingPlatform>> rendering_platforms;
-
-    DecorationManagerInit decoration_manager_init;
 };
 }
 

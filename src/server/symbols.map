@@ -1408,3 +1408,17 @@ global:
 local: *;
 };
 
+MIR_SERVER_INTERNAL_2.19 {
+global:
+  extern "C++" {
+    mir::DefaultServerConfiguration::wrap_decoration_manager*;
+    mir::Server::wrap_decoration_manager*;
+    mir::shell::decoration::Manager::?Manager*;
+    mir::shell::decoration::Manager::Manager*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_decoration_manager*;
+    non-virtual?thunk?to?mir::shell::decoration::Manager::?Manager*;
+    typeinfo?for?mir::shell::decoration::Manager;
+    vtable?for?mir::shell::decoration::Manager;
+  };
+} MIR_SERVER_INTERNAL_2.18;
+
