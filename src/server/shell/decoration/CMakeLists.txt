@@ -9,6 +9,7 @@ set(
   window.h              window.cpp
   input.h               input.cpp
   renderer.h            renderer.cpp
+  input_resolver.cpp
 )
 
 add_library(
