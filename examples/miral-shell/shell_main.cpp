@@ -140,7 +140,7 @@ int main(int argc, char const* argv[])
 
     return runner.run_with(
         {
-            CustomDecorations{UserDecorationManagerExample::get_adapter()},
+            CustomDecorations{miral::Decoration::create_manager},
             CursorTheme{"default:DMZ-White"},
             WaylandExtensions{},
             X11Support{},

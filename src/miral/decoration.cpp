@@ -409,8 +409,6 @@ void miral::Decoration::render()
     }
 }
 
-auto miral::Decoration::create_manager()
-    -> std::shared_ptr<miral::DecorationManagerAdapter>
 {
     miral::Decoration deco(
         [](Decoration::Buffer titlebar_pixels, geometry::Size scaled_titlebar_size)
@@ -451,6 +449,9 @@ auto miral::Decoration::create_manager()
         {
         });
 
+auto miral::Decoration::create_manager(mir::Server&)
+    -> std::shared_ptr<miral::DecorationManagerAdapter>
+{
     return DecorationBasicManager(
                [](auto, auto)
                {

@@ -19,6 +19,7 @@
 
 #include "miral/decoration_manager_builder.h"
 #include <memory>
+
 namespace mir { class Server; }
 
 namespace miral
@@ -26,7 +27,8 @@ namespace miral
 class CustomDecorations
 {
 public:
-    CustomDecorations(std::shared_ptr<miral::DecorationManagerAdapter> manager_adapter);
+    using ManagerAdapterBuilder = std::function<std::shared_ptr<DecorationManagerAdapter>(mir::Server&)>;
+    CustomDecorations(ManagerAdapterBuilder manager_adapter);
 
     void operator()(mir::Server& server) const;
 

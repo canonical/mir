@@ -70,7 +70,7 @@ public:
 
     void render();
 
-    static auto create_manager()
+    static auto create_manager(mir::Server&)
         -> std::shared_ptr<miral::DecorationManagerAdapter>;
 
 private:

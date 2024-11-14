@@ -29,11 +29,11 @@
 
 struct miral::CustomDecorations::Self
 {
-    std::shared_ptr<miral::DecorationManagerAdapter> adapter;
+    ManagerAdapterBuilder adapter;
 };
 
-miral::CustomDecorations::CustomDecorations(std::shared_ptr<miral::DecorationManagerAdapter> manager_adapter) :
-    self{std::make_unique<Self>(manager_adapter)}
+miral::CustomDecorations::CustomDecorations(miral::CustomDecorations::ManagerAdapterBuilder manager_adapter_builder) :
+    self{std::make_unique<Self>(manager_adapter_builder)}
 {
 }
 
@@ -58,6 +58,6 @@ void miral::CustomDecorations::operator()(mir::Server& server) const
             }
 
             mir::log_info("Using custom decorations!");
-            return self->adapter;
+            return self->adapter(server);
         });
 }
