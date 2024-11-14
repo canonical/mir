@@ -160,7 +160,6 @@ private:
     Observers observers;
     /// If not expired the screen is locked (and only surfaces that appear on the lock screen should be shown)
     std::atomic<bool> is_locked = false;
-    std::atomic<bool> scene_changed;
     std::shared_ptr<SurfaceObserver> surface_observer;
     SessionLockObserverMultiplexer multiplexer;
 };

@@ -131,7 +131,6 @@ private:
 
 ms::SurfaceStack::SurfaceStack(std::shared_ptr<SceneReport> const& report) :
     report{report},
-    scene_changed{false},
     surface_observer{std::make_shared<SurfaceDepthLayerObserver>(this)},
     multiplexer(linearising_executor)
 {
@@ -153,7 +152,6 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
 {
     RecursiveReadLock lg(guard);
 
-    scene_changed = false;
     mc::SceneElementSequence elements;
     for (auto const& layer : surface_layers)
     {
@@ -227,10 +225,6 @@ void ms::SurfaceStack::remove_input_visualization(
 
 void ms::SurfaceStack::emit_scene_changed()
 {
-    {
-        RecursiveWriteLock lg(guard);
-        scene_changed = true;
-    }
     observers.scene_changed();
 }
 
