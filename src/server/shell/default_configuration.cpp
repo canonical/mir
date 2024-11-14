@@ -26,10 +26,10 @@
 #include "mir/options/configuration.h"
 #include "default_persistent_surface_store.h"
 #include "graphics_display_layout.h"
-#include "decoration/basic_manager.h"
 #include "decoration/basic_decoration.h"
 #include "basic_idle_handler.h"
 #include "mir/shell/decoration/manager.h"
+#include "mir/shell/decoration/basic_manager.h"
 
 namespace msh = mir::shell;
 namespace msd = mir::shell::decoration;
@@ -70,7 +70,7 @@ auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_pt
         [this]
         {
             return wrap_decoration_manager(std::make_shared<msd::BasicManager>(
-                *the_display_configuration_observer_registrar(),
+                /* *the_display_configuration_observer_registrar(), */
                 [buffer_allocator = the_buffer_allocator(),
                  executor = the_main_loop(),
                  cursor_images = the_cursor_images()](

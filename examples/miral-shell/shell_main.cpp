@@ -15,6 +15,8 @@
  */
 
 #include "decoration/user_decoration_manager_example.h"
+#include "miral/decoration.h"
+#include "miral/decoration_basic_manager.h"
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
 #include "wallpaper_config.h"
@@ -85,6 +87,7 @@ int main(int argc, char const* argv[])
 
     std::string terminal_cmd{"miral-terminal"};
 
+
     auto const quit_on_ctrl_alt_bksp = [&](MirEvent const* event)
         {
             if (mir_event_get_type(event) != mir_event_type_input)
@@ -134,7 +137,6 @@ int main(int argc, char const* argv[])
           if ((i = j) != end(apps)) ++i;
       }
     };
-
 
     return runner.run_with(
         {

@@ -90,6 +90,8 @@ add_library(miral-external OBJECT
     decorations.cpp                     ${miral_include}/miral/decorations.h
     custom_decorations.cpp		${miral_include}/miral/custom_decorations.h
     decoration_manager_builder.cpp	${miral_include}/miral/decoration_manager_builder.h
+    decoration.cpp 			${miral_include}/miral/decoration.h
+    decoration_basic_manager.cpp
 )
 
 add_library(miral SHARED

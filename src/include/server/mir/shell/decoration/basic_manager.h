@@ -52,7 +52,7 @@ public:
         std::shared_ptr<scene::Surface> const& surface)>;
 
     BasicManager(
-        mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>& display_configuration_observers,
+        /* mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>& display_configuration_observers, */
         DecorationBuilder&& decoration_builder);
     ~BasicManager();
 
@@ -61,8 +61,9 @@ public:
     void undecorate(std::shared_ptr<scene::Surface> const& surface) override;
     void undecorate_all() override;
 
-private:
+protected:
     DecorationBuilder const decoration_builder;
+private:
     std::shared_ptr<DisplayConfigurationListener> const display_config_monitor;
     std::weak_ptr<shell::Shell> shell;
 

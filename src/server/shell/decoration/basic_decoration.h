@@ -17,7 +17,7 @@
 #ifndef MIR_SHELL_DECORATION_BASIC_DECORATION_H_
 #define MIR_SHELL_DECORATION_BASIC_DECORATION_H_
 
-#include "decoration.h"
+#include "mir/shell/decoration.h"
 
 #include "mir/geometry/rectangle.h"
 #include "mir_toolkit/common.h"

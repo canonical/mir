@@ -510,9 +510,16 @@ global:
   extern "C++" {
     miral::CustomDecorations::CustomDecorations*;
     miral::CustomDecorations::operator*;
+    miral::Decoration::Decoration*;
+    miral::Decoration::create_manager*;
+    miral::DecorationBasicManager::DecorationBasicManager*;
+    miral::DecorationBasicManager::to_adapter*;
     miral::DecorationManagerBuilder::build*;
     miral::DecorationManagerBuilder::done*;
+    miral::foo*;
     typeinfo?for?miral::CustomDecorations;
+    typeinfo?for?miral::Decoration;
+    typeinfo?for?miral::DecorationBasicManager;
     typeinfo?for?miral::DecorationManagerBuilder;
   };
 } MIRAL_5.1;

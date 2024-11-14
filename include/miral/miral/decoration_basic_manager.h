@@ -14,30 +14,41 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_SHELL_DECORATION_DECORATION_H_
-#define MIR_SHELL_DECORATION_DECORATION_H_
+#ifndef MIRAL_DECORATION_BASIC_MANAGER_H
+#define MIRAL_DECORATION_BASIC_MANAGER_H
+
+#include "miral/decoration.h"
+#include <memory>
 
 namespace mir
 {
 namespace shell
 {
+class Shell;
 namespace decoration
 {
-/// Draws window decorations and provides basic move, resize, close, etc functionality
-class Decoration
+class Decoration;
+}
+}
+namespace scene
+{
+class Surface;
+}
+}
+
+namespace miral
+{
+class DecorationManagerAdapter;
+class DecorationBasicManager
 {
 public:
-    Decoration() = default;
-    virtual ~Decoration() = default;
+    DecorationBasicManager(Decoration::DecorationBuilder);
 
-    virtual void set_scale(float new_scale) = 0;
-
+    auto to_adapter() -> std::shared_ptr<DecorationManagerAdapter>;
 private:
-    Decoration(Decoration const&) = delete;
-    Decoration& operator=(Decoration const&) = delete;
+    struct Self;
+    std::shared_ptr<Self> self;
 };
 }
-}
-}
 
-#endif // MIR_SHELL_DECORATION_DECORATION_H_
+#endif
