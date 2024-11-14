@@ -142,10 +142,9 @@ private:
         std::optional<MirResizeEdge> const resize_edge;
     };
 
-    using Device = mir::shell::decoration::InputResolver::DeviceEvent;
 
     /// The input device has entered the surface
-    void process_enter(Device& device) override;
+    void process_enter(DeviceEvent& device) override;
     /// The input device has left the surface
     void process_leave() override;
     /// The input device has clicked down
@@ -155,9 +154,9 @@ private:
     /// A touch release triggers a process_up() followed by a process_leave()
     void process_up() override;
     /// The device has moved while up
-    void process_move(Device& device) override;
+    void process_move(DeviceEvent& device) override;
     /// The device has moved while down
-    void process_drag(Device& device) override;
+    void process_drag(DeviceEvent& device) override;
 
     auto widget_at(geometry::Point location) -> std::optional<std::shared_ptr<Widget>>;
 

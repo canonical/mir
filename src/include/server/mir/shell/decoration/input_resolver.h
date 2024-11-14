@@ -56,25 +56,26 @@ enum class ButtonState
     Down,       ///< The user is currently pressing this button
 };
 
+/// Pointer or touchpoint
+struct DeviceEvent
+{
+    DeviceEvent(geometry::Point location, bool pressed)
+        : location{location},
+          pressed{pressed}
+
+    {
+    }
+
+    geometry::Point location;
+    bool pressed;
+};
+
 // Given an input event, figures out which decoration callback should be
 // invoked to respond.
 class InputResolver
 {
 public:
 
-    /// Pointer or touchpoint
-    struct DeviceEvent
-    {
-        DeviceEvent(geometry::Point location, bool pressed)
-            : location{location},
-              pressed{pressed}
-
-        {
-        }
-
-        geometry::Point location;
-        bool pressed;
-    };
 
     InputResolver(std::shared_ptr<mir::scene::Surface> const& decoration_surface);
     virtual ~InputResolver();

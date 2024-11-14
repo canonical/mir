@@ -185,7 +185,7 @@ auto msd::InputManager::resize_edge_rect(
 }
 
 
-void msd::InputManager::process_enter(Device& device)
+void msd::InputManager::process_enter(DeviceEvent& device)
 {
     active_widget = widget_at(device.location);
     if (active_widget)
@@ -219,7 +219,7 @@ void msd::InputManager::process_up()
     previous_up_timestamp = std::chrono::nanoseconds{mir_input_event_get_event_time(input_ev)};
 }
 
-void msd::InputManager::process_move(Device& device)
+void msd::InputManager::process_move(DeviceEvent& device)
 {
     auto const new_widget = widget_at(device.location);
     if (new_widget != active_widget)
@@ -234,7 +234,7 @@ void msd::InputManager::process_move(Device& device)
     }
 }
 
-void msd::InputManager::process_drag(Device& device)
+void msd::InputManager::process_drag(DeviceEvent& device)
 {
     auto const new_widget = widget_at(device.location);
 

@@ -1413,6 +1413,7 @@ global:
   extern "C++" {
     mir::DefaultServerConfiguration::wrap_decoration_manager*;
     mir::Server::wrap_decoration_manager*;
+    mir::shell::decoration::DeviceEvent::DeviceEvent*;
     mir::shell::decoration::InputResolver::?InputResolver*;
     mir::shell::decoration::InputResolver::DeviceEvent::DeviceEvent*;
     mir::shell::decoration::InputResolver::InputResolver*;
@@ -1422,6 +1423,7 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_decoration_manager*;
     non-virtual?thunk?to?mir::shell::decoration::InputResolver::?InputResolver*;
     non-virtual?thunk?to?mir::shell::decoration::Manager::?Manager*;
+    typeinfo?for?mir::shell::decoration::DeviceEvent;
     typeinfo?for?mir::shell::decoration::InputResolver::DeviceEvent;
     typeinfo?for?mir::shell::decoration::InputResolver;
     typeinfo?for?mir::shell::decoration::Manager;
