@@ -40,7 +40,7 @@ miral::CustomDecorations::CustomDecorations(std::shared_ptr<miral::DecorationMan
 void miral::CustomDecorations::operator()(mir::Server& server) const
 {
     static auto const custom_light_decorations_opt = "enable-custom-decorations";
-    auto should_use_light_decorations = false;
+    auto should_use_light_decorations = true;
 
     server.add_configuration_option(
         custom_light_decorations_opt,
