@@ -58,7 +58,6 @@ public:
     bool has_crtc_mismatch() override;
     void clear_crtc() override;
     bool schedule_page_flip(FBHandle const& fb) override;
-    void wait_for_page_flip() override;
 
     void set_cursor(gbm_bo* buffer) override;
     void move_cursor(geometry::Point destination) override;

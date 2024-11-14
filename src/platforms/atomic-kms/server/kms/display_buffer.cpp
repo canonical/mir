@@ -154,14 +154,6 @@ void mga::DisplaySink::set_crtc(FBHandle const& forced_frame)
 
 void mga::DisplaySink::post()
 {
-    /*
-     * We might not have waited for the previous frame to page flip yet.
-     * This is good because it maximizes the time available to spend rendering
-     * each frame. Just remember wait_for_page_flip() must be called at some
-     * point before the next schedule_page_flip().
-     */
-    wait_for_page_flip();
-
     if (!next_swap)
     {
         // Hey! No one has given us a next frame yet, so we don't have to change what's onscreen.
@@ -176,7 +168,7 @@ void mga::DisplaySink::post()
 
     /*
      * Try to schedule a page flip as first preference to avoid tearing.
-     * [will complete in a background thread]
+     * We wait synchronously for this to complete.
      */
     if (!needs_set_crtc && !schedule_page_flip(*scheduled_fb))
         needs_set_crtc = true;
@@ -189,18 +181,17 @@ void mga::DisplaySink::post()
     {
         set_crtc(*scheduled_fb);
         // SetCrtc is immediate, so the FB is now visible and we have nothing pending
-        visible_fb = std::move(scheduled_fb);
-        scheduled_fb = nullptr;
 
         needs_set_crtc = false;
     }
+
+    visible_fb = std::move(scheduled_fb);
+    scheduled_fb = nullptr;
 
     using namespace std::chrono_literals;  // For operator""ms()
 
     // Predicted worst case render time for the next frame...
     auto predicted_render_time = 50ms;
-
-    wait_for_page_flip();
 
     /*
      * TODO: Make a sensible predicited_render_time
@@ -229,19 +220,6 @@ bool mga::DisplaySink::schedule_page_flip(FBHandle const& bufobj)
         return true;
     }
     return false;
-}
-
-void mga::DisplaySink::wait_for_page_flip()
-{
-    if (page_flip_pending)
-    {
-        output->wait_for_page_flip();
-
-        // The previously-scheduled FB has been page-flipped, and is now visible
-        visible_fb = std::move(scheduled_fb);
-        scheduled_fb = nullptr;
-        page_flip_pending = false;
-    }
 }
 
 void mga::DisplaySink::schedule_set_crtc()

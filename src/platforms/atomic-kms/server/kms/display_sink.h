@@ -80,7 +80,6 @@ public:
 
     void set_transformation(glm::mat2 const& t, geometry::Rectangle const& a);
     void schedule_set_crtc();
-    void wait_for_page_flip();
 
     auto drm_fd() const -> mir::Fd;
 

@@ -177,7 +177,7 @@ private:
     mir::Fd const drm_fd;
 };
 
-/* Note: 
+/* Note:
  * (At least) Clang includes -Wmissing-designated-field-initializers to -Wextra
  * This (questionably?) warns when using designated field initialisers but
  * not explicitly initialising every field member.
@@ -464,27 +464,20 @@ bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
     update.add_property(*conf->plane_props, "CRTC_ID", conf->current_crtc->crtc_id);
     update.add_property(*conf->plane_props, "FB_ID", fb);
 
-    pending_page_flip = event_handler->expect_flip_event(conf->current_crtc->crtc_id, [](auto, auto){});
     auto ret = drmModeAtomicCommit(
         drm_fd_,
         update,
-        DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_PAGE_FLIP_EVENT,
-        const_cast<void*>(event_handler->drm_event_data()));
+        0,
+        nullptr);
     if (ret)
     {
         mir::log_error("Failed to schedule page flip: %s (%i)", strerror(-ret), -ret);
-        event_handler->cancel_flip_events(conf->current_crtc->crtc_id);
         conf->current_crtc = nullptr;
         return false;
     }
 
     using_saved_crtc = false;
     return true;
-}
-
-void mga::AtomicKMSOutput::wait_for_page_flip()
-{
-    pending_page_flip.get();
 }
 
 void mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
