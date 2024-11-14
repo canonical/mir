@@ -106,13 +106,22 @@ void X11KioskWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, 
             tools.modify_window(window_info, mods);
         }
 
-        specification.state() = mir_window_state_fullscreen;
-        specification.size() = mir::optional_value<Size>{}; // Ignore requested size (if any) when we fullscreen
-        specification.top_left() = mir::optional_value<Point>{}; // Ignore requested position (if any) when we fullscreen
-        tools.place_and_size_for_state(specification, window_info);
+        if (window_info.is_visible() || !modifications.state().is_set() || modifications.state().value() != mir_window_state_restored)
+        {
+            specification.state() = mir_window_state_fullscreen;
+            specification.size() = mir::optional_value<Size>{}; // Ignore requested size (if any) when we fullscreen
+            specification.top_left() = mir::optional_value<Point>{}; // Ignore requested position (if any) when we fullscreen
+            tools.place_and_size_for_state(specification, window_info);
 
-        if (!modifications.state().is_set() || modifications.state().value() != mir_window_state_restored)
-            specification.state() = modifications.state();
+            if (!modifications.state().is_set() || modifications.state().value() != mir_window_state_restored)
+                specification.state() = modifications.state();
+        }
+        else
+        {
+            // We have one X11 application (vmware-view) that doesn't submit any buffers unless it
+            // can first "restore" its window
+            tools.place_and_size_for_state(specification, window_info);
+        }
     }
 
     CanonicalWindowManagerPolicy::handle_modify_window(window_info, specification);
@@ -131,4 +140,22 @@ X11KioskWindowManagerPolicy::confirm_placement_on_display(WindowInfo const& /*wi
     Rectangle const& new_placement)
 {
     return new_placement;
+}
+
+void X11KioskWindowManagerPolicy::handle_window_ready(miral::WindowInfo& window_info)
+{
+    if ((window_info.type() == mir_window_type_normal || window_info.type() == mir_window_type_freestyle) &&
+        !window_info.parent())
+    {
+        // We have one X11 application (vmware-view) that doesn't submit any buffers unless it
+        // can first "restore" its window. We've got a buffer now, so we can fullscreen it
+        if (window_info.state() == mir_window_state_restored)
+        {
+            WindowSpecification specification;
+            specification.state() = mir_window_state_fullscreen;
+            tools.place_and_size_for_state(specification, WindowInfo{});
+            tools.modify_window(window_info, specification);
+        }
+    }
+    CanonicalWindowManagerPolicy::handle_window_ready(window_info);
 }
