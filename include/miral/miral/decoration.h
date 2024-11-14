@@ -52,7 +52,7 @@ public:
         std::shared_ptr<mir::shell::Shell> const& shell, std::shared_ptr<mir::scene::Surface> const& surface)>;
 
     using Pixel = uint32_t;
-    using Buffer = std::unique_ptr<Pixel[]>;
+    using Buffer = Pixel*;
     using DeviceEvent = mir::shell::decoration::DeviceEvent;
     Decoration(
         std::function<void(Buffer, mir::geometry::Size)> render_titlebar,
@@ -67,6 +67,8 @@ public:
         std::function<void(DeviceEvent& device)> process_move,
         std::function<void(DeviceEvent& device)> process_drag
     );
+
+    void render();
 
     static auto create_manager()
         -> std::shared_ptr<miral::DecorationManagerAdapter>;
