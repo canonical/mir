@@ -1412,6 +1412,7 @@ MIR_SERVER_INTERNAL_2.19 {
 global:
   extern "C++" {
     mir::DefaultServerConfiguration::wrap_decoration_manager*;
+    mir::Server::the_buffer_allocator*;
     mir::Server::wrap_decoration_manager*;
     mir::shell::decoration::BasicManager::?BasicManager*;
     mir::shell::decoration::BasicManager::BasicManager*;
