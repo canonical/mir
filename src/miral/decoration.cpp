@@ -15,7 +15,6 @@
  */
 
 #include "mir/geometry/forward.h"
-#include "mir/shell/decoration/input_resolver.h"
 #include "miral/decoration.h"
 
 
@@ -33,6 +32,7 @@
 #include "mir/wayland/weak.h"
 #include "mir/shell/decoration.h"
 #include "decoration_adapter.h"
+#include "mir/log.h"
 
 #include <cstdint>
 #include <memory>
@@ -48,42 +48,8 @@ namespace geometry = mir::geometry;
 namespace geom = mir::geometry;
 
 auto const buffer_format = mir_pixel_format_argb_8888;
+auto const bytes_per_pixel = 4;
 using DeviceEvent = msd::DeviceEvent;
-
-struct InputResolverAdapter: public msd::InputResolver
-{
-    std::function<void(DeviceEvent& device) > on_process_enter;
-    std::function<void() > on_process_leave;
-    std::function<void() > on_process_down;
-    std::function<void() > on_process_up;
-    std::function<void(DeviceEvent& device) > on_process_move;
-    std::function<void(DeviceEvent& device) > on_process_drag;
-
-    void process_enter(DeviceEvent& device) override
-    {
-        on_process_enter(device);
-    }
-    void process_leave() override
-    {
-        on_process_leave();
-    }
-    void process_down() override
-    {
-        on_process_down();
-    }
-    void process_up() override
-    {
-        on_process_up();
-    }
-    void process_move(DeviceEvent& device) override
-    {
-        on_process_move(device);
-    }
-    void process_drag(DeviceEvent& device) override
-    {
-        on_process_drag(device);
-    }
-};
 
 /// Decoration geometry properties that don't change
 struct StaticGeometry
@@ -103,13 +69,23 @@ struct StaticGeometry
     geometry::Width const icon_line_width;         ///< Width for lines in button icons
 };
 
+StaticGeometry const default_geometry{
+    geom::Height{24},         // titlebar_height
+    geom::Width{6},           // side_border_width
+    geom::Height{6},          // bottom_border_height
+    geom::Size{16, 16},       // resize_corner_input_size
+    geom::Width{24},          // button_width
+    geom::Width{6},           // padding_between_buttons
+    geom::Height{14},         // title_font_height
+    geom::Point{8, 2},        // title_font_top_left
+    geom::Displacement{5, 5}, // icon_padding
+    geom::Width{1},           // detail_line_width
+};
+
 class WindowState
 {
 public:
-    WindowState(
-        std::shared_ptr<StaticGeometry const> const& static_geometry,
-        std::shared_ptr<ms::Surface> const& window_surface,
-        float scale);
+    WindowState(StaticGeometry const& static_geometry, ms::Surface const* surface);
 
     auto window_size() const -> geometry::Size;
     auto focused_state() const -> MirWindowFocusState;
@@ -124,12 +100,20 @@ private:
     WindowState(WindowState const&) = delete;
     WindowState& operator=(WindowState const&) = delete;
 
-    std::shared_ptr<StaticGeometry const> const static_geometry;
+    StaticGeometry const static_geometry; // TODO: this can be shared between all instance of a decoration
     geometry::Size const window_size_;
     MirWindowFocusState const focus_state_;
     std::string window_name_;
     float scale_;
 };
+
+WindowState::WindowState(StaticGeometry const& static_geometry, ms::Surface const* surface) :
+    static_geometry{static_geometry},
+    window_size_{surface->window_size()},
+    focus_state_{surface->focus_state()},
+    window_name_{surface->name()}
+{
+}
 
 auto WindowState::titlebar_rect() const -> geom::Rectangle
 {
@@ -145,7 +129,7 @@ auto WindowState::titlebar_width() const -> geom::Width
 
 auto WindowState::titlebar_height() const -> geom::Height
 {
-    return static_geometry->titlebar_height;
+    return static_geometry.titlebar_height;
 }
 
 inline auto area(geometry::Size size) -> size_t
@@ -224,7 +208,7 @@ public:
         if (window_state.titlebar_rect().size != titlebar_size)
         {
             titlebar_size = window_state.titlebar_rect().size;
-            titlebar_pixels.reset(); // force a reallocation next time it's needed
+            titlebar_pixels = std::unique_ptr<uint32_t[]>{new uint32_t[area(titlebar_size) * bytes_per_pixel]};
         }
     }
 
@@ -237,46 +221,6 @@ public:
 
 struct miral::Decoration::Self
 {
-    std::function<void(Buffer, mir::geometry::Size)> render_titlebar;
-    std::function<void(Buffer, mir::geometry::Size)> render_left_border;
-    std::function<void(Buffer, mir::geometry::Size)> render_right_border;
-    std::function<void(Buffer, mir::geometry::Size)> render_bottom_border;
-
-    std::function<void(DeviceEvent& device) > on_process_enter;
-    std::function<void() > on_process_leave;
-    std::function<void() > on_process_down;
-    std::function<void() > on_process_up;
-    std::function<void(DeviceEvent& device) > on_process_move;
-    std::function<void(DeviceEvent& device) > on_process_drag;
-
-    Self() = delete;
-
-    Self(
-        std::function<void(Buffer, mir::geometry::Size)> render_titlebar,
-        std::function<void(Buffer, mir::geometry::Size)> render_left_border,
-        std::function<void(Buffer, mir::geometry::Size)> render_right_border,
-        std::function<void(Buffer, mir::geometry::Size)> render_bottom_border,
-
-        std::function<void(DeviceEvent& device)> process_enter,
-        std::function<void()> process_leave,
-        std::function<void()> process_down,
-        std::function<void()> process_up,
-        std::function<void(DeviceEvent& device)> process_move,
-        std::function<void(DeviceEvent& device)> process_drag) :
-        render_titlebar{render_titlebar},
-        render_left_border{render_left_border},
-        render_right_border{render_right_border},
-        render_bottom_border{render_bottom_border},
-        on_process_enter{process_enter},
-        on_process_leave{process_leave},
-        on_process_down{process_down},
-        on_process_up{process_up},
-        on_process_move{process_move},
-        on_process_drag{process_drag}
-    {
-
-    }
-
     class BufferStreams
     {
         // Must be at top so it can be used by create_buffer_stream() when called in the constructor
@@ -298,16 +242,44 @@ struct miral::Decoration::Self
         BufferStreams& operator=(BufferStreams const&) = delete;
     };
 
-    // TODO: miral::InputResolver or similar
-    std::optional<std::shared_ptr<msd::InputResolver>> input_resolver;
+    void render_titlebar(Buffer titlebar_pixels, mir::geometry::Size scaled_titlebar_size)
+    {
+        for (geometry::Y y{0}; y < as_y(scaled_titlebar_size.height); y += geometry::DeltaY{1})
+        {
+            Renderer::render_row(titlebar_pixels, scaled_titlebar_size, {0, y}, scaled_titlebar_size.width, 0xFF00FFFF);
+        }
+    }
+
+    void window_state_updated(ms::Surface const* window_surface)
+    {
+        window_state = std::make_unique<WindowState>(default_geometry, window_surface);
+    }
+
+    Self(
+        std::shared_ptr<ms::Surface> window_surface,
+        std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator);
+
+    std::shared_ptr<ms::Session> session;
     std::unique_ptr<BufferStreams> buffer_streams;
     std::unique_ptr<WindowState> window_state;
-    std::shared_ptr<msh::Shell> const shell;
-    std::shared_ptr<ms::Session> const session;
-    std::shared_ptr<ms::Surface> const decoration_surface;
+
+    // TODO: make them const
+    std::shared_ptr<msh::Shell> shell;
+    std::shared_ptr<ms::Surface> decoration_surface;
+    std::shared_ptr<ms::Surface> window_surface;
 
     std::unique_ptr<Renderer> renderer;
 };
+
+miral::Decoration::Self::Self(
+    std::shared_ptr<ms::Surface> window_surface,
+    std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator) :
+    session{window_surface->session().lock()},
+    buffer_streams{std::make_unique<BufferStreams>(session)},
+    window_state{std::make_unique<WindowState>(default_geometry, window_surface.get())},
+    renderer{std::make_unique<Renderer>(buffer_allocator)}
+{
+}
 
 miral::Decoration::Self::BufferStreams::BufferStreams(std::shared_ptr<ms::Session> const& session)
     : session{session},
@@ -336,35 +308,25 @@ auto miral::Decoration::Self::BufferStreams::create_buffer_stream() -> std::shar
 }
 
 miral::Decoration::Decoration(
-    std::function<void(Buffer, mir::geometry::Size)> render_titlebar,
-    std::function<void(Buffer, mir::geometry::Size)> render_left_border,
-    std::function<void(Buffer, mir::geometry::Size)> render_right_border,
-    std::function<void(Buffer, mir::geometry::Size)> render_bottom_border,
-
-    std::function<void(DeviceEvent& device)> process_enter,
-    std::function<void()> process_leave,
-    std::function<void()> process_down,
-    std::function<void()> process_up,
-    std::function<void(DeviceEvent& device)> process_move,
-    std::function<void(DeviceEvent& device)> process_drag) :
-    self{std::make_unique<Self>(
-        render_titlebar,
-        render_left_border,
-        render_right_border,
-        render_bottom_border,
-        process_enter,
-        process_leave,
-        process_down,
-        process_up,
-        process_move,
-        process_drag)}
+    std::shared_ptr<mir::scene::Surface> window_surface,
+    std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& buffer_allocator) :
+    self{std::make_unique<Self>(window_surface, buffer_allocator)}
 {
 }
 
 void miral::Decoration::render()
 {
+    auto& buffer_streams = self->buffer_streams;
+    auto& window_state = self->window_state;
+    auto& window_surface = self->window_surface;
+    auto& shell = self->shell;
+    auto& session = self->session;
+    auto& decoration_surface = self->decoration_surface;
+    auto& renderer = self->renderer;
+
     using StreamSpecification = mir::shell::StreamSpecification;
     msh::SurfaceSpecification spec;
+#if 0
 
     spec.streams = std::vector<StreamSpecification>{};
     auto const emplace = [&](std::shared_ptr<mc::BufferStream> stream, geom::Rectangle rect)
@@ -373,12 +335,41 @@ void miral::Decoration::render()
                 spec.streams.value().emplace_back(StreamSpecification{stream, as_displacement(rect.top_left)});
         };
 
-    auto& buffer_streams = self->buffer_streams;
-    auto& window_state = self->window_state;
-    auto& shell = self->shell;
-    auto& session = self->session;
-    auto& decoration_surface = self->decoration_surface;
-    auto& renderer = self->renderer;
+    emplace(buffer_streams->titlebar, window_state->titlebar_rect());
+
+    if (!spec.is_empty())
+    {
+        shell->modify_surface(session, decoration_surface, spec);
+    }
+
+    renderer->update_state(*window_state);
+
+    std::vector<std::pair<
+        std::shared_ptr<mc::BufferStream>,
+        std::optional<std::shared_ptr<mg::Buffer>>>> new_buffers;
+
+
+#endif
+
+    window_surface->set_window_margins(
+        as_delta(window_state->titlebar_height()),
+        geom::DeltaX{},
+        geom::DeltaY{},
+        geom::DeltaX{});
+
+    if (window_state->window_size().width.as_value())
+        spec.width = window_state->window_size().width;
+    if (window_state->window_size().height.as_value())
+        spec.height = window_state->window_size().height;
+
+    spec.input_shape = { window_state->titlebar_rect() };
+
+    spec.streams = std::vector<StreamSpecification>{};
+    auto const emplace = [&](std::shared_ptr<mc::BufferStream> stream, geom::Rectangle rect)
+    {
+        if (rect.size.width > geom::Width{} && rect.size.height > geom::Height{})
+            spec.streams.value().emplace_back(StreamSpecification{stream, as_displacement(rect.top_left)});
+    };
 
     emplace(buffer_streams->titlebar, window_state->titlebar_rect());
 
@@ -409,55 +400,114 @@ void miral::Decoration::render()
     }
 }
 
+auto create_surface(
+    std::shared_ptr<ms::Surface> window_surface,
+    std::shared_ptr<msh::Shell> shell) -> std::shared_ptr<ms::Surface>
 {
-    miral::Decoration deco(
-        [](Decoration::Buffer titlebar_pixels, geometry::Size scaled_titlebar_size)
-        {
-            for (geometry::Y y{0}; y < as_y(scaled_titlebar_size.height); y += geometry::DeltaY{1})
-            {
-                Renderer::render_row(
-                    titlebar_pixels, scaled_titlebar_size, {0, y}, scaled_titlebar_size.width, 0xFF00FFFF);
-            }
-        },
-        [](auto...)
-        {
-            // Need to wire up input events
-            // On any input event -> Decoration::Render
-        },
-        [](auto...)
-        {
-        },
-        [](auto...)
-        {
-        },
-        [](auto...)
-        {
-        },
-        [](auto...)
-        {
-        },
-        [](auto...)
-        {
-        },
-        [](auto...)
-        {
-        },
-        [](auto...)
-        {
-        },
-        [](auto...)
-        {
-        });
+    auto const& session = window_surface->session().lock();
+    msh::SurfaceSpecification params;
+    params.type = mir_window_type_decoration;
+    params.parent = window_surface;
+    auto const size = window_surface->window_size();
+    params.width = size.width;
+    params.height = size.height;
+    params.aux_rect = {{}, {}};
+    params.aux_rect_placement_gravity = mir_placement_gravity_northwest;
+    params.surface_placement_gravity = mir_placement_gravity_northwest;
+    params.placement_hints = MirPlacementHints(0);
+    // Will be replaced by initial update
+    params.streams = {{
+        session->create_buffer_stream(mg::BufferProperties{
+            geom::Size{1, 1},
+            buffer_format,
+            mg::BufferUsage::software}),
+        {},
+        }};
+    return shell->create_surface(session, {}, params, nullptr, nullptr);
+}
 
-auto miral::Decoration::create_manager(mir::Server&)
+auto miral::Decoration::create_manager(mir::Server& server)
     -> std::shared_ptr<miral::DecorationManagerAdapter>
 {
     return DecorationBasicManager(
-               [](auto, auto)
+               [server](auto shell, auto window_surface)
                {
-                   return nullptr;
+                   auto session = window_surface->session().lock();
+                   auto decoration = std::make_shared<Decoration>(window_surface, server.the_buffer_allocator());
+                   auto decoration_surface = create_surface(window_surface, shell);
+                   auto decoration_adapter = std::make_unique<miral::DecorationAdapter>(
+                       [decoration](Decoration::Buffer titlebar_pixels, geometry::Size scaled_titlebar_size)
+                       {
+                           decoration->self->render_titlebar(titlebar_pixels, scaled_titlebar_size);
+                       },
+                       [](auto...)
+                       {
+                       },
+                       [](auto...)
+                       {
+                       },
+                       [](auto...)
+                       {
+                       },
+                       [decoration](auto...)
+                       {
+                           mir::log_debug("process_enter");
+                           decoration->render();
+                       },
+                       [decoration](auto...)
+                       {
+                           mir::log_debug("process_leave");
+                           decoration->render();
+                       },
+                       [decoration](auto...)
+                       {
+                           mir::log_debug("process_down");
+                           decoration->render();
+                       },
+                       [decoration](auto...)
+                       {
+                           mir::log_debug("process_up");
+                           decoration->render();
+                       },
+                       [decoration](auto...)
+                       {
+                           mir::log_debug("process_move");
+                           decoration->render();
+                       },
+                       [decoration](auto...)
+                       {
+                           mir::log_debug("process_drag");
+                           decoration->render();
+                       },
+                       [decoration](auto window_surface, auto...)
+                       {
+                           decoration->window_state_updated(window_surface);
+                       },
+                       [decoration](auto window_surface, auto...)
+                       {
+                           decoration->window_state_updated(window_surface);
+                       },
+                       [decoration](auto window_surface, auto...)
+                       {
+                           decoration->window_state_updated(window_surface);
+                       });
+
+                   decoration_adapter->init_input(decoration_surface);
+                   decoration_adapter->init_window_surface_observer(window_surface);
+                   decoration->self->window_surface = window_surface;
+                   decoration->self->shell = shell;
+                   decoration->self->decoration_surface = decoration_surface;
+
+                   decoration->render();
+
+                   return decoration_adapter;
                })
         .to_adapter();
+}
+
+void miral::Decoration::window_state_updated(ms::Surface const* window_surface)
+{
+    self->window_state_updated(window_surface);
 }
 
 // Bring up BasicManager so we can hook this up to be instantiated: miral::BasicManager

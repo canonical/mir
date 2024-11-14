@@ -18,7 +18,6 @@
 #define MIRAL_DECORATION_H
 
 #include "mir/geometry/forward.h"
-#include "miral/decoration_manager_builder.h"
 
 #include <cstdint>
 #include <memory>
@@ -38,13 +37,19 @@ struct DeviceEvent;
 namespace scene
 {
 class Surface;
+class Session;
 }
 class Server;
+namespace graphics
+{
+class GraphicBufferAllocator;
+}
 }
 
 namespace miral
 {
 class DecorationAdapter;
+class DecorationManagerAdapter;
 class Decoration // Placeholder names
 {
 public:
@@ -55,24 +60,16 @@ public:
     using Buffer = Pixel*;
     using DeviceEvent = mir::shell::decoration::DeviceEvent;
     Decoration(
-        std::function<void(Buffer, mir::geometry::Size)> render_titlebar,
-        std::function<void(Buffer, mir::geometry::Size)> render_left_border,
-        std::function<void(Buffer, mir::geometry::Size)> render_right_border,
-        std::function<void(Buffer, mir::geometry::Size)> render_bottom_border,
-
-        std::function<void(DeviceEvent& device)> process_enter,
-        std::function<void()> process_leave,
-        std::function<void()> process_down,
-        std::function<void()> process_up,
-        std::function<void(DeviceEvent& device)> process_move,
-        std::function<void(DeviceEvent& device)> process_drag
-    );
+        std::shared_ptr<mir::scene::Surface> window_surface,
+        std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& buffer_allocator);
 
     void render();
 
     static auto create_manager(mir::Server&)
         -> std::shared_ptr<miral::DecorationManagerAdapter>;
 
+
+    void window_state_updated(mir::scene::Surface const* window_surface);
 private:
     struct Self;
     std::unique_ptr<Self> self;
