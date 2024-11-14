@@ -491,11 +491,12 @@ void mga::AtomicKMSOutput::wait_for_page_flip()
 bool mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
 {
     int result = 0;
-    if (configuration.lock()->current_crtc)
+    auto conf = configuration.lock();
+    if (conf->current_crtc)
     {
         result = drmModeSetCursor(
             drm_fd_,
-            configuration.lock()->current_crtc->crtc_id,
+            conf->current_crtc->crtc_id,
             gbm_bo_get_handle(buffer).u32,
             gbm_bo_get_width(buffer),
             gbm_bo_get_height(buffer));
@@ -509,10 +510,11 @@ bool mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
 
 void mga::AtomicKMSOutput::move_cursor(geometry::Point destination)
 {
-    if (configuration.lock()->current_crtc)
+    auto conf = configuration.lock();
+    if (conf->current_crtc)
     {
         if (auto result =
-                drmModeMoveCursor(drm_fd_, configuration.lock()->current_crtc->crtc_id, destination.x.as_int(), destination.y.as_int()))
+                drmModeMoveCursor(drm_fd_, conf->current_crtc->crtc_id, destination.x.as_int(), destination.y.as_int()))
         {
             mir::log_warning("move_cursor: drmModeMoveCursor failed (%s)", strerror(-result));
         }
@@ -522,9 +524,10 @@ void mga::AtomicKMSOutput::move_cursor(geometry::Point destination)
 bool mga::AtomicKMSOutput::clear_cursor()
 {
     int result = 0;
-    if (configuration.lock()->current_crtc)
+    auto conf = configuration.lock()
+    if (conf->current_crtc)
     {
-        result = drmModeSetCursor(drm_fd_, configuration.lock()->current_crtc->crtc_id, 0, 0, 0);
+        result = drmModeSetCursor(drm_fd_, conf->current_crtc->crtc_id, 0, 0, 0);
 
         if (result)
             mir::log_warning("clear_cursor: drmModeSetCursor failed (%s)",
