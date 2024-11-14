@@ -17,7 +17,6 @@
 #ifndef MIR_GRAPHICS_GBM_ATOMIC_KMS_DISPLAY_H_
 #define MIR_GRAPHICS_GBM_ATOMIC_KMS_DISPLAY_H_
 
-#include "kms-utils/drm_event_handler.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/udev/wrapper.h"
@@ -39,11 +38,6 @@ class DisplayReport;
 class DisplayConfigurationPolicy;
 class EventHandlerRegister;
 class GLConfig;
-
-namespace kms
-{
-class DRMEventHandler;
-}
 
 namespace atomic
 {
@@ -91,7 +85,6 @@ private:
 
     mutable std::mutex configuration_mutex;
     mir::Fd const drm_fd;
-    std::shared_ptr<kms::DRMEventHandler> const event_handler;
     std::shared_ptr<struct gbm_device> const gbm;
     std::shared_ptr<DisplayReport> const listener;
     mir::udev::Monitor monitor;

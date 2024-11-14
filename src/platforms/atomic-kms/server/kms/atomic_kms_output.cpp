@@ -15,7 +15,6 @@
  */
 
 #include "atomic_kms_output.h"
-#include "kms-utils/drm_event_handler.h"
 #include "kms-utils/drm_mode_resources.h"
 #include "kms_framebuffer.h"
 #include "mir/graphics/display_configuration.h"
@@ -187,10 +186,8 @@ private:
  */
 mga::AtomicKMSOutput::AtomicKMSOutput(
     mir::Fd drm_master,
-    kms::DRMModeConnectorUPtr connector,
-    std::shared_ptr<kms::DRMEventHandler> event_handler)
+    kms::DRMModeConnectorUPtr connector)
     : drm_fd_{drm_master},
-      event_handler{std::move(event_handler)},
       configuration{
           Configuration {
           .connector = std::move(connector),

@@ -50,7 +50,6 @@ namespace mgk = mir::graphics::kms;
 mga::DisplaySink::DisplaySink(
     mir::Fd drm_fd,
     std::shared_ptr<struct gbm_device> gbm,
-    std::shared_ptr<mgk::DRMEventHandler> event_handler,
     mga::BypassOption,
     std::shared_ptr<DisplayReport> const& listener,
     std::shared_ptr<KMSOutput> output,
@@ -59,7 +58,6 @@ mga::DisplaySink::DisplaySink(
     : gbm{std::move(gbm)},
       listener(listener),
       output{std::move(output)},
-      event_handler{std::move(event_handler)},
       area(area),
       transform{transformation},
       needs_set_crtc{false}
@@ -170,7 +168,7 @@ void mga::DisplaySink::post()
      * Try to schedule a page flip as first preference to avoid tearing.
      * We wait synchronously for this to complete.
      */
-    if (!needs_set_crtc && !schedule_page_flip(*scheduled_fb))
+    if (!needs_set_crtc && !output->schedule_page_flip(*scheduled_fb))
         needs_set_crtc = true;
 
     /*
@@ -206,20 +204,6 @@ void mga::DisplaySink::post()
 std::chrono::milliseconds mga::DisplaySink::recommended_sleep() const
 {
     return recommend_sleep;
-}
-
-bool mga::DisplaySink::schedule_page_flip(FBHandle const& bufobj)
-{
-    /*
-     * Schedule the current front buffer object for display. Note that
-     * the page flip is asynchronous and synchronized with vertical refresh.
-     */
-    if (output->schedule_page_flip(bufobj))
-    {
-        page_flip_pending = true;
-        return true;
-    }
-    return false;
 }
 
 void mga::DisplaySink::schedule_set_crtc()

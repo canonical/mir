@@ -25,10 +25,6 @@ namespace mir
 {
 namespace graphics
 {
-namespace kms
-{
-class DRMEventHandler;
-}
 
 namespace atomic
 {
@@ -36,14 +32,13 @@ namespace atomic
 class RealKMSOutputContainer : public KMSOutputContainer
 {
 public:
-    RealKMSOutputContainer(mir::Fd drm_fd, std::shared_ptr<kms::DRMEventHandler> event_handler);
+    RealKMSOutputContainer(mir::Fd drm_fd);
 
     void for_each_output(std::function<void(std::shared_ptr<KMSOutput> const&)> functor) const override;
 
     void update_from_hardware_state() override;
 private:
     mir::Fd const drm_fd;
-    std::shared_ptr<kms::DRMEventHandler> const event_handler;
     std::vector<std::shared_ptr<KMSOutput>> outputs;
 };
 

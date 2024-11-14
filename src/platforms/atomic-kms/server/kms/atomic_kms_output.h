@@ -29,10 +29,6 @@ namespace mir
 {
 namespace graphics
 {
-namespace kms
-{
-class DRMEventHandler;
-}
 namespace atomic
 {
 
@@ -43,8 +39,7 @@ class AtomicKMSOutput : public KMSOutput
 public:
     AtomicKMSOutput(
         mir::Fd drm_master,
-        kms::DRMModeConnectorUPtr connector,
-        std::shared_ptr<kms::DRMEventHandler> event_handler);
+        kms::DRMModeConnectorUPtr connector);
     ~AtomicKMSOutput();
 
     uint32_t id() const override;
@@ -92,7 +87,6 @@ private:
     void restore_saved_crtc();
 
     mir::Fd const drm_fd_;
-    std::shared_ptr<kms::DRMEventHandler> const event_handler;
 
     std::future<void> pending_page_flip;
 
