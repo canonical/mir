@@ -524,7 +524,7 @@ void mga::AtomicKMSOutput::move_cursor(geometry::Point destination)
 bool mga::AtomicKMSOutput::clear_cursor()
 {
     int result = 0;
-    auto conf = configuration.lock()
+    auto conf = configuration.lock();
     if (conf->current_crtc)
     {
         result = drmModeSetCursor(drm_fd_, conf->current_crtc->crtc_id, 0, 0, 0);
