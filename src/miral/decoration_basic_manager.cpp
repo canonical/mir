@@ -40,9 +40,9 @@ miral::DecorationBasicManager::DecorationBasicManager(Decoration::DecorationBuil
 auto miral::DecorationBasicManager::to_adapter() -> std::shared_ptr<DecorationManagerAdapter>
 {
     return DecorationManagerBuilder::build(
-        [this](auto... args) { self->init(args...); },
-        [this](auto... args) { self->decorate(args...); },
-        [this](auto... args) { self->undecorate(args...); },
-        [this]() { self->undecorate_all(); }
+        [self=this->self](auto... args) { self->init(args...); },
+        [self=this->self](auto... args) { self->decorate(args...); },
+        [self=this->self](auto... args) { self->undecorate(args...); },
+        [self=this->self]() { self->undecorate_all(); }
     ).done();
 }
