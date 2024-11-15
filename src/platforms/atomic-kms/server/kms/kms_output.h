@@ -48,7 +48,7 @@ public:
      * this may want to be an opaque class Id + operator== in future.
      */
     virtual uint32_t id() const = 0;
-    
+
     virtual void reset() = 0;
     virtual void configure(geometry::Displacement fb_offset, size_t kms_mode_index) = 0;
     virtual geometry::Size size() const = 0;
@@ -73,7 +73,7 @@ public:
     virtual bool schedule_page_flip(FBHandle const& fb) = 0;
     virtual void wait_for_page_flip() = 0;
 
-    virtual bool set_cursor(gbm_bo* buffer) = 0;
+    virtual void set_cursor(gbm_bo* buffer) = 0;
     virtual void move_cursor(geometry::Point destination) = 0;
     virtual bool clear_cursor() = 0;
     virtual bool has_cursor() const = 0;

@@ -393,7 +393,8 @@ void mga::Cursor::place_cursor_at_locked(
 
             if (force_state || !output.has_cursor() || changed_orientation)
             {
-                if (!output.set_cursor(buffer) || !output.has_cursor())
+                output.set_cursor(buffer);
+                if (!output.has_cursor())
                     set_on_all_outputs = false;
             }
         }

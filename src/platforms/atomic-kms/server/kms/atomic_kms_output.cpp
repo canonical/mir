@@ -487,9 +487,8 @@ void mga::AtomicKMSOutput::wait_for_page_flip()
     pending_page_flip.get();
 }
 
-bool mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
+void mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
 {
-    int result = 0;
     if (auto conf = configuration.lock(); conf->current_crtc)
     {
         if (auto result = drmModeSetCursor(
@@ -502,7 +501,6 @@ bool mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
             mir::log_warning("set_cursor: drmModeSetCursor failed (%s)", strerror(-result));
         }
     }
-    return !result;
 }
 
 void mga::AtomicKMSOutput::move_cursor(geometry::Point destination)
