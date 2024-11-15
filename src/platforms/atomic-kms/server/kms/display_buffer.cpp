@@ -168,7 +168,7 @@ void mga::DisplaySink::post()
      * Try to schedule a page flip as first preference to avoid tearing.
      * We wait synchronously for this to complete.
      */
-    if (!needs_set_crtc && !output->schedule_page_flip(*scheduled_fb))
+    if (!needs_set_crtc && !output->page_flip(*scheduled_fb))
         needs_set_crtc = true;
 
     /*

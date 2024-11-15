@@ -414,7 +414,7 @@ void mga::AtomicKMSOutput::clear_crtc()
     conf->current_crtc = nullptr;
 }
 
-bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
+bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
 {
     auto conf = configuration.lock();
     if (!ensure_crtc(*conf))
