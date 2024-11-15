@@ -20,7 +20,6 @@
 #include "decoration_adapter.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/log.h"
-#include "mir/observer_registrar.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/server.h"
@@ -60,7 +59,7 @@ struct DecorationRedrawNotifier
 
 struct miral::Decoration::Self
 {
-    void render_titlebar(Buffer titlebar_pixels, mir::geometry::Size scaled_titlebar_size)
+    void render_titlebar(Renderer::Buffer titlebar_pixels, mir::geometry::Size scaled_titlebar_size)
     {
         for (geometry::Y y{0}; y < as_y(scaled_titlebar_size.height); y += geometry::DeltaY{1})
         {
@@ -76,34 +75,10 @@ struct miral::Decoration::Self
     DecorationRedrawNotifier redraw_notifier_;
 };
 
-miral::Decoration::Self::Self()
-{
-}
-
+miral::Decoration::Self::Self() = default;
 miral::Decoration::Decoration() :
     self{std::make_unique<Self>()}
 {
-}
-
-auto miral::Decoration::update_state(
-    std::shared_ptr<WindowState> window_state, std::shared_ptr<ms::Surface> window_surface) -> msh::SurfaceSpecification
-{
-    msh::SurfaceSpecification spec;
-
-    window_surface->set_window_margins(
-        as_delta(window_state->titlebar_height()),
-        geom::DeltaX{},
-        geom::DeltaY{},
-        geom::DeltaX{});
-
-    if (window_state->window_size().width.as_value())
-        spec.width = window_state->window_size().width;
-    if (window_state->window_size().height.as_value())
-        spec.height = window_state->window_size().height;
-
-    spec.input_shape = { window_state->titlebar_rect() };
-
-    return spec;
 }
 
 auto create_surface(
@@ -144,7 +119,7 @@ auto miral::Decoration::create_manager(mir::Server& server)
                    // User code
                    auto decoration = std::make_shared<Decoration>();
                    auto decoration_adapter = std::make_shared<miral::DecorationAdapter>(
-                       [decoration](Decoration::Buffer titlebar_pixels, geometry::Size scaled_titlebar_size)
+                       [decoration](Renderer::Buffer titlebar_pixels, geometry::Size scaled_titlebar_size)
                        {
                            decoration->self->render_titlebar(titlebar_pixels, scaled_titlebar_size);
                        },
@@ -211,7 +186,7 @@ auto miral::Decoration::create_manager(mir::Server& server)
                    decoration->self->redraw_notifier().register_listener(
                        [decoration_adapter, decoration]()
                        {
-                           decoration_adapter->update(decoration);
+                           decoration_adapter->update();
                        });
 
                    // Initial redraw to set up the margins and buffers for decorations.

@@ -59,14 +59,8 @@ public:
     using DecorationBuilder = std::function<std::shared_ptr<DecorationAdapter>(
         std::shared_ptr<mir::shell::Shell> const& shell, std::shared_ptr<mir::scene::Surface> const& surface)>;
 
-    using Pixel = uint32_t;
-    using Buffer = Pixel*;
-    using DeviceEvent = mir::shell::decoration::DeviceEvent;
-    Decoration();
 
-    auto update_state(std::shared_ptr<WindowState> window_state, std::shared_ptr<mir::scene::Surface> window_surface)
-        -> mir::shell::SurfaceSpecification;
-    auto window_state() -> std::shared_ptr<WindowState>;
+    Decoration();
 
     static auto create_manager(mir::Server&)
         -> std::shared_ptr<miral::DecorationManagerAdapter>;

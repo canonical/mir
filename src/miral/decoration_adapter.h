@@ -167,6 +167,10 @@ private:
 class Renderer
 {
 public:
+    using Pixel = uint32_t;
+    using Buffer = Pixel*;
+    using DeviceEvent = mir::shell::decoration::DeviceEvent;
+
     class BufferStreams
     {
         // Must be at top so it can be used by create_buffer_stream() when called in the constructor
@@ -189,7 +193,6 @@ public:
     };
 
 
-    using Buffer = miral::Decoration::Buffer;
 
     Renderer(
         std::shared_ptr<ms::Surface> window_surface,
@@ -267,7 +270,6 @@ public:
     std::shared_ptr<mg::GraphicBufferAllocator> buffer_allocator;
     std::unique_ptr<BufferStreams> buffer_streams;
 
-    using Pixel = miral::Decoration::Pixel;
     geometry::Size titlebar_size{};
     std::unique_ptr<Pixel[]> titlebar_pixels; // can be nullptr
 
@@ -278,8 +280,8 @@ public:
 class DecorationAdapter : public mir::shell::decoration::Decoration
 {
 public:
-    using Buffer = miral::Decoration::Buffer;
-    using DeviceEvent = miral::Decoration::DeviceEvent;
+    using Buffer = miral::Renderer::Buffer;
+    using DeviceEvent = miral::Renderer::DeviceEvent;
 
     std::function<void(Buffer, mir::geometry::Size)> render_titlebar;
     std::function<void(Buffer, mir::geometry::Size)> render_left_border;
@@ -376,7 +378,7 @@ public:
         window_surface->register_interest(window_surface_observer);
     }
 
-    void update(std::shared_ptr<miral::Decoration> decoration);
+    void update();
 
     StaticGeometry const default_geometry{
         geom::Height{24},         // titlebar_height

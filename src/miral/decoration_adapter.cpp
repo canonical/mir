@@ -86,14 +86,32 @@ auto miral::Renderer::update_render_submit(std::shared_ptr<WindowState> window_s
     }
 }
 
-void miral::DecorationAdapter::update(std::shared_ptr<miral::Decoration> decoration)
+void miral::DecorationAdapter::update()
 {
-    auto window_spec = decoration->update_state(window_state, window_surface);
+    auto window_spec = [this]
+    {
+        msh::SurfaceSpecification spec;
+
+        window_surface->set_window_margins(
+            as_delta(window_state->titlebar_height()), geom::DeltaX{}, geom::DeltaY{}, geom::DeltaX{});
+
+        if (window_state->window_size().width.as_value())
+            spec.width = window_state->window_size().width;
+        if (window_state->window_size().height.as_value())
+            spec.height = window_state->window_size().height;
+
+        spec.input_shape = {window_state->titlebar_rect()};
+
+        return spec;
+    }();
+
     auto stream_spec = renderer->streams_to_spec(window_state);
     stream_spec.update_from(window_spec);
+
     if (!stream_spec.is_empty())
     {
         shell->modify_surface(session, decoration_surface, stream_spec);
     }
+
     renderer->update_render_submit(window_state);
 }
