@@ -19,16 +19,35 @@
 
 /* #include "mir/shell/decoration_notifier.h" */
 
+#include "decoration_window_state.h"
+#include "mir/compositor/buffer_stream.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/renderer/sw/pixel_source.h"
+#include "mir/scene/session.h"
 #include "mir/scene/surface.h"
+#include "mir/server.h"
 #include "mir/shell/decoration.h"
-#include "miral/decoration.h"
 #include "mir/shell/decoration/input_resolver.h"
+#include "mir/shell/shell.h"
+#include "mir/shell/surface_specification.h"
+#include "miral/decoration.h"
+#include "miral/decoration_basic_manager.h"
+#include "miral/decoration_manager_builder.h"
 
 #include <functional>
 #include <memory>
 
-namespace msd = mir::shell::decoration;
+namespace msh = mir::shell;
+namespace msd = msh::decoration;
+namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace ms = mir::scene;
+namespace mrs = mir::renderer::software;
+namespace geometry = mir::geometry;
+namespace geom = mir::geometry;
+
+auto const buffer_format = mir_pixel_format_argb_8888;
+auto const bytes_per_pixel = 4;
 
 struct MirEvent;
 
@@ -144,6 +163,116 @@ private:
     std::function<void(ms::Surface const* window_surface, std::string const& /*name*/)> on_window_renamed;
 };
 
+class Renderer
+{
+public:
+    class BufferStreams
+    {
+        // Must be at top so it can be used by create_buffer_stream() when called in the constructor
+        std::shared_ptr<ms::Session> const session;
+
+    public:
+        BufferStreams(std::shared_ptr<ms::Session> const& session);
+        ~BufferStreams();
+
+        auto create_buffer_stream() -> std::shared_ptr<mc::BufferStream>;
+
+        std::shared_ptr<mc::BufferStream> const titlebar;
+        std::shared_ptr<mc::BufferStream> const left_border;
+        std::shared_ptr<mc::BufferStream> const right_border;
+        std::shared_ptr<mc::BufferStream> const bottom_border;
+
+    private:
+        BufferStreams(BufferStreams const&) = delete;
+        BufferStreams& operator=(BufferStreams const&) = delete;
+    };
+
+
+    using Buffer = miral::Decoration::Buffer;
+
+    Renderer(
+        std::shared_ptr<ms::Surface> window_surface,
+        std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
+        std::function<void(Buffer, mir::geometry::Size)> render_titlebar) :
+        session{window_surface->session().lock()},
+        buffer_allocator{buffer_allocator},
+        buffer_streams{std::make_unique<BufferStreams>(session)},
+        render_titlebar{render_titlebar}
+    {
+    }
+
+    inline auto area(geometry::Size size) -> size_t
+    {
+        return (size.width > geom::Width{} && size.height > geom::Height{}) ?
+                   size.width.as_int() * size.height.as_int() :
+                   0;
+    }
+
+    auto make_buffer(uint32_t const* pixels, geometry::Size size) -> std::optional<std::shared_ptr<mg::Buffer>>
+    {
+        if (!area(size))
+        {
+            /* log_warning("Failed to draw SSD: tried to create zero size buffer"); */
+            return std::nullopt;
+        }
+
+        try
+        {
+            return mrs::alloc_buffer_with_content(
+                *buffer_allocator,
+                reinterpret_cast<unsigned char const*>(pixels),
+                size,
+                geometry::Stride{size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(buffer_format)},
+                buffer_format);
+        }
+        catch (std::runtime_error const&)
+        {
+            /* log_warning("Failed to draw SSD: software buffer not a pixel source"); */
+            return std::nullopt;
+        }
+    }
+
+    static inline void render_row(
+        uint32_t* const data,
+        geometry::Size buf_size,
+        geometry::Point left,
+        geometry::Width length,
+        uint32_t color)
+    {
+        if (left.y < geometry::Y{} || left.y >= as_y(buf_size.height))
+            return;
+        geometry::X const right = std::min(left.x + as_delta(length), as_x(buf_size.width));
+        left.x = std::max(left.x, geometry::X{});
+        uint32_t* const start = data + (left.y.as_int() * buf_size.width.as_int()) + left.x.as_int();
+        uint32_t* const end = start + right.as_int() - left.x.as_int();
+        for (uint32_t* i = start; i < end; i++)
+            *i = color;
+    }
+
+    void update_state(WindowState const& window_state)
+    {
+        if (window_state.titlebar_rect().size != titlebar_size)
+        {
+            titlebar_size = window_state.titlebar_rect().size;
+            titlebar_pixels = std::unique_ptr<uint32_t[]>{new uint32_t[area(titlebar_size) * bytes_per_pixel]};
+        }
+    }
+
+    auto streams_to_spec(std::shared_ptr<WindowState> window_state) -> msh::SurfaceSpecification;
+
+    auto update_render_submit(std::shared_ptr<WindowState> window_state);
+
+    std::shared_ptr<ms::Session> session;
+    std::shared_ptr<mg::GraphicBufferAllocator> buffer_allocator;
+    std::unique_ptr<BufferStreams> buffer_streams;
+
+    using Pixel = miral::Decoration::Pixel;
+    geometry::Size titlebar_size{};
+    std::unique_ptr<Pixel[]> titlebar_pixels; // can be nullptr
+
+    std::function<void(Buffer, mir::geometry::Size)> render_titlebar;
+};
+
 
 class DecorationAdapter : public mir::shell::decoration::Decoration
 {
@@ -207,8 +336,19 @@ public:
     {
     }
 
-    void init_input(std::shared_ptr<ms::Surface> decoration_surface)
+    void init(
+        std::shared_ptr<ms::Surface> window_surface,
+        std::shared_ptr<ms::Surface> decoration_surface,
+        std::shared_ptr<mg::GraphicBufferAllocator> buffer_allocator,
+        std::shared_ptr<msh::Shell> shell
+    )
     {
+        this->window_surface = window_surface;
+        this->shell = shell;
+        this->session = window_surface->session().lock();
+        this->decoration_surface = decoration_surface;
+
+        renderer = std::make_unique<Renderer>(window_surface, buffer_allocator, render_titlebar);
         input_adapter = std::make_unique<InputResolverAdapter>(
             decoration_surface,
             on_process_enter,
@@ -217,45 +357,26 @@ public:
             on_process_up,
             on_process_move,
             on_process_drag);
-    }
-
-    void init_window_surface_observer(std::shared_ptr<ms::Surface> window_surface)
-    {
-        this->window_surface = window_surface;
 
         window_surface_observer = std::shared_ptr<WindowSurfaceObserver>();
         window_surface->register_interest(window_surface_observer);
     }
+
+    void update(std::shared_ptr<miral::Decoration> decoration);
 
     ~DecorationAdapter()
     {
         window_surface->unregister_interest(*window_surface_observer);
     }
 
-    /* void handle_input_event(std::shared_ptr<MirEvent const> const& event) final override; */
-    /* void set_scale(float new_scale) final override; */
-    /* void attrib_changed(mir::scene::Surface const* window_surface, MirWindowAttrib attrib, int value) final override; */
-    /* void window_resized_to( */
-    /*     mir::scene::Surface const* window_surface, mir::geometry::Size const& window_size) final override; */
-    /* void window_renamed(mir::scene::Surface const* window_surface, std::string const& name) final override; */
-
 private:
-    /* friend DecorationBuilder; */
-    /* DecorationAdapter( */
-    /*     std::shared_ptr<mir::scene::Surface> decoration_surface, std::shared_ptr<mir::scene::Surface> window_surface); */
-
-    /* std::function<void(std::shared_ptr<MirEvent const> const&)> on_handle_input_event; */
-    /* std::function<void(float new_scale)> on_set_scale; */
-    /* std::function<void(mir::scene::Surface const* window_surface, MirWindowAttrib attrib, int value)> on_attrib_changed; */
-    /* std::function<void(mir::scene::Surface const* window_surface, mir::geometry::Size const& window_size)> */
-    /*     on_window_resized_to; */
-    /* std::function<void(mir::scene::Surface const* window_surface, std::string const& name)> on_window_renamed; */
-
-    /* mir::shell::decoration::DecorationNotifier decoration_notifier; */
-
     std::unique_ptr<InputResolverAdapter> input_adapter;
     std::shared_ptr<WindowSurfaceObserver> window_surface_observer;
     std::shared_ptr<ms::Surface> window_surface;
+    std::shared_ptr<ms::Surface> decoration_surface;
+    std::unique_ptr<Renderer> renderer;
+    std::shared_ptr<msh::Shell> shell;
+    std::shared_ptr<ms::Session> session;
 };
 
 }

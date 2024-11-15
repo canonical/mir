@@ -28,6 +28,7 @@ namespace mir
 namespace shell
 {
 class Shell;
+class SurfaceSpecification;
 namespace decoration
 {
 class Decoration;
@@ -46,6 +47,8 @@ class GraphicBufferAllocator;
 }
 }
 
+struct WindowState; // TODO: move to miral namespace
+
 namespace miral
 {
 class DecorationAdapter;
@@ -53,29 +56,27 @@ class DecorationManagerAdapter;
 class Decoration // Placeholder names
 {
 public:
-    using DecorationBuilder = std::function<std::unique_ptr<DecorationAdapter>(
+    using DecorationBuilder = std::function<std::shared_ptr<DecorationAdapter>(
         std::shared_ptr<mir::shell::Shell> const& shell, std::shared_ptr<mir::scene::Surface> const& surface)>;
 
     using Pixel = uint32_t;
     using Buffer = Pixel*;
     using DeviceEvent = mir::shell::decoration::DeviceEvent;
-    Decoration(
-        std::shared_ptr<mir::scene::Surface> window_surface,
-        std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& buffer_allocator);
+    Decoration(std::shared_ptr<mir::scene::Surface> window_surface);
 
-    void render();
+    auto update_state() -> mir::shell::SurfaceSpecification;
+    auto window_state() -> std::shared_ptr<WindowState>;
 
     static auto create_manager(mir::Server&)
         -> std::shared_ptr<miral::DecorationManagerAdapter>;
 
-
     void window_state_updated(mir::scene::Surface const* window_surface);
+
 private:
+    friend class miral::DecorationAdapter;
     struct Self;
     std::unique_ptr<Self> self;
 };
-
-void foo(mir::Server& server); // For testing only
 }
 
 #endif
