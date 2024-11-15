@@ -210,8 +210,7 @@ mga::AtomicKMSOutput::AtomicKMSOutput(
 
     kms::DRMModeResources resources{drm_fd_};
 
-    auto conf = configuration.lock();
-    if (conf->connector->encoder_id)
+    if (auto conf = configuration.lock(); conf->connector->encoder_id)
     {
         auto encoder = resources.encoder(conf->connector->encoder_id);
         if (encoder->crtc_id)
@@ -491,16 +490,14 @@ void mga::AtomicKMSOutput::wait_for_page_flip()
 bool mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
 {
     int result = 0;
-    auto conf = configuration.lock();
-    if (conf->current_crtc)
+    if (auto conf = configuration.lock(); conf->current_crtc)
     {
-        result = drmModeSetCursor(
+        if (auto result = drmModeSetCursor(
             drm_fd_,
             conf->current_crtc->crtc_id,
             gbm_bo_get_handle(buffer).u32,
             gbm_bo_get_width(buffer),
-            gbm_bo_get_height(buffer));
-        if (result)
+            gbm_bo_get_height(buffer)))
         {
             mir::log_warning("set_cursor: drmModeSetCursor failed (%s)", strerror(-result));
         }
@@ -510,8 +507,7 @@ bool mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
 
 void mga::AtomicKMSOutput::move_cursor(geometry::Point destination)
 {
-    auto conf = configuration.lock();
-    if (conf->current_crtc)
+    if (auto conf = configuration.lock(); conf->current_crtc)
     {
         if (auto result =
                 drmModeMoveCursor(drm_fd_, conf->current_crtc->crtc_id, destination.x.as_int(), destination.y.as_int()))
@@ -524,14 +520,12 @@ void mga::AtomicKMSOutput::move_cursor(geometry::Point destination)
 bool mga::AtomicKMSOutput::clear_cursor()
 {
     int result = 0;
-    auto conf = configuration.lock();
-    if (conf->current_crtc)
+    if (auto conf = configuration.lock(); conf->current_crtc)
     {
         result = drmModeSetCursor(drm_fd_, conf->current_crtc->crtc_id, 0, 0, 0);
 
         if (result)
-            mir::log_warning("clear_cursor: drmModeSetCursor failed (%s)",
-                             strerror(-result));
+            mir::log_warning("clear_cursor: drmModeSetCursor failed (%s)", strerror(-result));
     }
 
     return !result;
@@ -564,8 +558,7 @@ bool mga::AtomicKMSOutput::ensure_crtc(Configuration& to_update)
 
 void mga::AtomicKMSOutput::restore_saved_crtc()
 {
-    auto conf = configuration.lock();
-    if (!using_saved_crtc)
+    if (auto conf = configuration.lock(); !using_saved_crtc)
     {
         drmModeSetCrtc(drm_fd_, saved_crtc.crtc_id, saved_crtc.buffer_id,
                        saved_crtc.x, saved_crtc.y,
@@ -579,8 +572,7 @@ void mga::AtomicKMSOutput::set_power_mode(MirPowerMode mode)
 {
     bool should_be_active = mode == mir_power_mode_on;
 
-    auto conf = configuration.lock();
-    if (conf->current_crtc)
+    if (auto conf = configuration.lock(); conf->current_crtc)
     {
         AtomicUpdate update;
         update.add_property(*conf->crtc_props, "ACTIVE", should_be_active);
