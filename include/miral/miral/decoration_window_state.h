@@ -17,8 +17,14 @@
 #ifndef MIRAL_DECORATION_WINDOW_STATE_H
 #define MIRAL_DECORATION_WINDOW_STATE_H
 
+#include "mir/geometry/dimensions.h"
+#include "mir/geometry/displacement.h"
 #include "mir/geometry/forward.h"
-#include "mir/scene/surface.h"
+#include "mir/geometry/point.h"
+#include "mir/geometry/size.h"
+#include "mir_toolkit/common.h"
+
+namespace mir::scene { class Surface; }
 
 namespace ms = mir::scene;
 namespace geometry = mir::geometry;

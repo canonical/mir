@@ -19,7 +19,7 @@ include_directories(
 )
 
 add_library(miral-user-decoration-example
-  user_decoration_manager_example.cpp
+  decoration.cpp
 )
 
 target_link_libraries(miral-user-decoration-example PUBLIC miral)

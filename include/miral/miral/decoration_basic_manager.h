@@ -22,6 +22,7 @@
 
 namespace mir
 {
+class Server;
 namespace shell
 {
 class Shell;
@@ -42,7 +43,7 @@ class DecorationManagerAdapter;
 class DecorationBasicManager
 {
 public:
-    DecorationBasicManager(Decoration::DecorationBuilder);
+    DecorationBasicManager(mir::Server&, Decoration::DecorationBuilder&&);
 
     auto to_adapter() -> std::shared_ptr<DecorationManagerAdapter>;
 private:

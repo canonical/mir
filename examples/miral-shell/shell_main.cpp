@@ -14,9 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "decoration/user_decoration_manager_example.h"
+#include "decoration/decoration.h"
 #include "miral/decoration.h"
-#include "miral/decoration_basic_manager.h"
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
 #include "wallpaper_config.h"
@@ -41,6 +40,8 @@
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <cstring>
+#include <string>
+#include <vector>
 
 namespace
 {
@@ -140,7 +141,7 @@ int main(int argc, char const* argv[])
 
     return runner.run_with(
         {
-            CustomDecorations{miral::Decoration::create_manager},
+            CustomDecorations{UserDecoration::create_manager},
             CursorTheme{"default:DMZ-White"},
             WaylandExtensions{},
             X11Support{},

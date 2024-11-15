@@ -17,9 +17,8 @@
 #ifndef MIRAL_DECORATION_H
 #define MIRAL_DECORATION_H
 
-#include "mir/geometry/forward.h"
 
-#include <cstdint>
+#include "mir/geometry/forward.h"
 #include <memory>
 #include <functional>
 
@@ -28,47 +27,70 @@ namespace mir
 namespace shell
 {
 class Shell;
-class SurfaceSpecification;
 namespace decoration
 {
-class Decoration;
 struct DeviceEvent;
 }
 }
 namespace scene
 {
 class Surface;
-class Session;
-}
-class Server;
-namespace graphics
-{
-class GraphicBufferAllocator;
 }
 }
-
-struct WindowState; // TODO: move to miral namespace
 
 namespace miral
 {
 class DecorationAdapter;
-class DecorationManagerAdapter;
+
+// Maybe it'd be best to move Device event to somewhere common between mir and miral?
+class DeviceEvent
+{
+public:
+    DeviceEvent(mir::shell::decoration::DeviceEvent);
+    operator mir::shell::decoration::DeviceEvent() const;
+
+
+    auto location() const -> mir::geometry::Point;
+    auto pressed() const -> bool;
+
+private:
+    struct Impl;
+    std::shared_ptr<Impl> impl;
+};
+
+struct DecorationRedrawNotifier
+{
+    using OnRedraw = std::function<void()>;
+    void notify()
+    {
+        if (on_redraw)
+            on_redraw();
+    }
+
+    void register_listener(OnRedraw on_redraw)
+    {
+        this->on_redraw = on_redraw;
+    }
+
+    OnRedraw on_redraw;
+};
+
+using Pixel = uint32_t;
+using Buffer = Pixel*;
+
 class Decoration // Placeholder names
 {
 public:
     using DecorationBuilder = std::function<std::shared_ptr<DecorationAdapter>(
         std::shared_ptr<mir::shell::Shell> const& shell, std::shared_ptr<mir::scene::Surface> const& surface)>;
 
-
     Decoration();
 
-    static auto create_manager(mir::Server&)
-        -> std::shared_ptr<miral::DecorationManagerAdapter>;
+    std::shared_ptr<miral::DecorationRedrawNotifier> redraw_notifier();
 
 private:
-    friend class miral::DecorationAdapter;
     struct Self;
-    std::unique_ptr<Self> self;
+    std::shared_ptr<Self> self;
 };
 }
 

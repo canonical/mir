@@ -14,7 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "decoration_window_state.h"
+#include "miral/decoration_window_state.h"
+#include "mir/scene/surface.h"
 
 WindowState::WindowState(StaticGeometry const& static_geometry, ms::Surface const* surface) :
     static_geometry{static_geometry},
