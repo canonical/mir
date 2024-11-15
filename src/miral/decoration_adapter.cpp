@@ -88,12 +88,12 @@ auto miral::Renderer::update_render_submit(std::shared_ptr<WindowState> window_s
 
 void miral::DecorationAdapter::update(std::shared_ptr<miral::Decoration> decoration)
 {
-    auto window_spec = decoration->update_state();
-    auto stream_spec = renderer->streams_to_spec(decoration->window_state());
+    auto window_spec = decoration->update_state(window_state, window_surface);
+    auto stream_spec = renderer->streams_to_spec(window_state);
     stream_spec.update_from(window_spec);
     if (!stream_spec.is_empty())
     {
         shell->modify_surface(session, decoration_surface, stream_spec);
     }
-    renderer->update_render_submit(decoration->window_state());
+    renderer->update_render_submit(window_state);
 }

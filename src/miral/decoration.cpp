@@ -41,19 +41,6 @@ namespace geom = mir::geometry;
 
 using DeviceEvent = msd::DeviceEvent;
 
-StaticGeometry const default_geometry{
-    geom::Height{24},         // titlebar_height
-    geom::Width{6},           // side_border_width
-    geom::Height{6},          // bottom_border_height
-    geom::Size{16, 16},       // resize_corner_input_size
-    geom::Width{24},          // button_width
-    geom::Width{6},           // padding_between_buttons
-    geom::Height{14},         // title_font_height
-    geom::Point{8, 2},        // title_font_top_left
-    geom::Displacement{5, 5}, // icon_padding
-    geom::Width{1},           // detail_line_width
-};
-
 struct DecorationRedrawNotifier
 {
     using OnRedraw = std::function<void()>;
@@ -81,45 +68,26 @@ struct miral::Decoration::Self
         }
     }
 
-    void window_state_updated(ms::Surface const* window_surface)
-    {
-        window_state = std::make_shared<WindowState>(default_geometry, window_surface);
-    }
-
     DecorationRedrawNotifier& redraw_notifier() { return redraw_notifier_; }
 
-    Self(std::shared_ptr<ms::Surface> window_surface);
-
-    std::shared_ptr<WindowState> window_state;
+    Self();
 
     // TODO: make them const
-    std::shared_ptr<ms::Surface> decoration_surface;
-    std::shared_ptr<ms::Surface> window_surface;
     DecorationRedrawNotifier redraw_notifier_;
 };
 
-miral::Decoration::Self::Self(std::shared_ptr<ms::Surface> window_surface) :
-    window_state{std::make_unique<WindowState>(default_geometry, window_surface.get())}
+miral::Decoration::Self::Self()
 {
 }
 
-miral::Decoration::Decoration(
-    std::shared_ptr<mir::scene::Surface> window_surface) :
-    self{std::make_unique<Self>(window_surface)}
+miral::Decoration::Decoration() :
+    self{std::make_unique<Self>()}
 {
 }
 
-
-auto miral::Decoration::window_state() -> std::shared_ptr<WindowState>
+auto miral::Decoration::update_state(
+    std::shared_ptr<WindowState> window_state, std::shared_ptr<ms::Surface> window_surface) -> msh::SurfaceSpecification
 {
-    return self->window_state;
-}
-
-auto miral::Decoration::update_state() -> msh::SurfaceSpecification
-{
-    auto& window_state = self->window_state;
-    auto& window_surface = self->window_surface;
-
     msh::SurfaceSpecification spec;
 
     window_surface->set_window_margins(
@@ -171,8 +139,10 @@ auto miral::Decoration::create_manager(mir::Server& server)
                [server](auto shell, auto window_surface)
                {
                    auto session = window_surface->session().lock();
-                   auto decoration = std::make_shared<Decoration>(window_surface);
                    auto decoration_surface = create_surface(window_surface, shell);
+
+                   // User code
+                   auto decoration = std::make_shared<Decoration>();
                    auto decoration_adapter = std::make_shared<miral::DecorationAdapter>(
                        [decoration](Decoration::Buffer titlebar_pixels, geometry::Size scaled_titlebar_size)
                        {
@@ -189,6 +159,9 @@ auto miral::Decoration::create_manager(mir::Server& server)
                        },
                        [decoration](auto...)
                        {
+                           // Author should figure out if changes require a redraw
+                           // then call DecorationRedrawNotifier::notify()
+                           // Here we just assume we're always redrawing
                            mir::log_debug("process_enter");
                            decoration->self->redraw_notifier().notify();
                        },
@@ -217,46 +190,35 @@ auto miral::Decoration::create_manager(mir::Server& server)
                            mir::log_debug("process_drag");
                            decoration->self->redraw_notifier().notify();
                        },
-                       [decoration](auto window_surface, auto...)
+                       [decoration](auto...)
                        {
-                           decoration->window_state_updated(window_surface);
                            decoration->self->redraw_notifier().notify();
                        },
-                       [decoration](auto window_surface, auto...)
+                       [decoration](auto...)
                        {
-                           decoration->window_state_updated(window_surface);
                            decoration->self->redraw_notifier().notify();
                        },
-                       [decoration](auto window_surface, auto...)
+                       [decoration](auto...)
                        {
-                           decoration->window_state_updated(window_surface);
                            decoration->self->redraw_notifier().notify();
                        });
 
+                   // User code end
+
                    decoration_adapter->init(window_surface, decoration_surface, server.the_buffer_allocator(), shell);
 
-                   decoration->self->window_surface = window_surface;
-                   decoration->self->decoration_surface = decoration_surface;
-
+                   // Rendering events come after this point
                    decoration->self->redraw_notifier().register_listener(
                        [decoration_adapter, decoration]()
                        {
                            decoration_adapter->update(decoration);
                        });
 
+                   // Initial redraw to set up the margins and buffers for decorations.
+                   // Just like BasicDecoration
                    decoration->self->redraw_notifier().notify();
 
                    return decoration_adapter;
                })
         .to_adapter();
 }
-
-void miral::Decoration::window_state_updated(ms::Surface const* window_surface)
-{
-    self->window_state_updated(window_surface);
-}
-
-// On any of the process_* functions or window state updates
-// I need to call DecorationAdapter::update.
-//
-// The key here is to take care of all rendering preparation for the user.

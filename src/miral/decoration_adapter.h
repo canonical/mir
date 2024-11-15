@@ -23,6 +23,7 @@
 #include "mir/compositor/buffer_stream.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/renderer/sw/pixel_source.h"
+#include "mir/scene/null_surface_observer.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/server.h"
@@ -35,6 +36,7 @@
 #include "miral/decoration_manager_builder.h"
 
 #include <functional>
+#include <glm/gtc/constants.hpp>
 #include <memory>
 
 namespace msh = mir::shell;
@@ -156,7 +158,6 @@ public:
     /// @}
 
 private:
-
     std::function<void(ms::Surface const* window_surface, MirWindowAttrib attrib, int /*value*/)> on_attrib_changed;
     std::function<void(ms::Surface const* window_surface, mir::geometry::Size const& /*window_size*/)>
         on_window_resized_to;
@@ -314,8 +315,7 @@ public:
         std::function<void(ms::Surface const* window_surface, MirWindowAttrib attrib, int /*value*/)> attrib_changed,
         std::function<void(ms::Surface const* window_surface, mir::geometry::Size const& /*window_size*/)>
             window_resized_to,
-        std::function<void(ms::Surface const* window_surface, std::string const& /*name*/)> window_renamed
-) :
+        std::function<void(ms::Surface const* window_surface, std::string const& /*name*/)> window_renamed) :
         render_titlebar{render_titlebar},
         render_left_border{render_left_border},
         render_right_border{render_right_border},
@@ -326,9 +326,21 @@ public:
         on_process_up{process_up},
         on_process_move{process_move},
         on_process_drag{process_drag},
-        on_attrib_changed{attrib_changed},
-        on_window_resized_to(window_resized_to),
-        on_window_renamed(window_renamed)
+        on_attrib_changed{[this, attrib_changed](auto... args)
+                          {
+                              window_state_updated(window_surface);
+                              attrib_changed(args...);
+                          }},
+        on_window_resized_to{[this, window_resized_to](auto... args)
+                             {
+                                 window_state_updated(window_surface);
+                                 window_resized_to(args...);
+                             }},
+        on_window_renamed{[this, window_renamed](auto... args)
+                          {
+                              window_state_updated(window_surface);
+                              window_renamed(args...);
+                          }}
     {
     }
 
@@ -347,6 +359,7 @@ public:
         this->shell = shell;
         this->session = window_surface->session().lock();
         this->decoration_surface = decoration_surface;
+        this->window_state = std::make_shared<WindowState>(default_geometry, window_surface.get());
 
         renderer = std::make_unique<Renderer>(window_surface, buffer_allocator, render_titlebar);
         input_adapter = std::make_unique<InputResolverAdapter>(
@@ -358,11 +371,30 @@ public:
             on_process_move,
             on_process_drag);
 
-        window_surface_observer = std::shared_ptr<WindowSurfaceObserver>();
+        window_surface_observer =
+            std::make_shared<WindowSurfaceObserver>(on_attrib_changed, on_window_resized_to, on_window_renamed);
         window_surface->register_interest(window_surface_observer);
     }
 
     void update(std::shared_ptr<miral::Decoration> decoration);
+
+    StaticGeometry const default_geometry{
+        geom::Height{24},         // titlebar_height
+        geom::Width{6},           // side_border_width
+        geom::Height{6},          // bottom_border_height
+        geom::Size{16, 16},       // resize_corner_input_size
+        geom::Width{24},          // button_width
+        geom::Width{6},           // padding_between_buttons
+        geom::Height{14},         // title_font_height
+        geom::Point{8, 2},        // title_font_top_left
+        geom::Displacement{5, 5}, // icon_padding
+        geom::Width{1},           // detail_line_width
+    };
+
+    void window_state_updated(std::shared_ptr<ms::Surface> const window_surface)
+    {
+        window_state = std::make_shared<WindowState>(default_geometry, window_surface.get());
+    }
 
     ~DecorationAdapter()
     {
@@ -377,6 +409,8 @@ private:
     std::unique_ptr<Renderer> renderer;
     std::shared_ptr<msh::Shell> shell;
     std::shared_ptr<ms::Session> session;
+    std::shared_ptr<WindowState> window_state;
+
 };
 
 }
