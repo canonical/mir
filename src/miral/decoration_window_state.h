@@ -55,6 +55,8 @@ public:
 
     auto titlebar_rect() const -> geometry::Rectangle;
 
+    auto geometry() const -> StaticGeometry;
+
 private:
     WindowState(WindowState const&) = delete;
     WindowState& operator=(WindowState const&) = delete;

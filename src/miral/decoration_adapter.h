@@ -51,25 +51,59 @@ namespace geom = mir::geometry;
 auto const buffer_format = mir_pixel_format_argb_8888;
 auto const bytes_per_pixel = 4;
 
+
 struct MirEvent;
 
 namespace miral
 {
-class DecorationBuilder;
-
 using DeviceEvent = msd::DeviceEvent;
+struct InputContext;
+using OnProcessDrag = std::function<void(DeviceEvent& device, InputContext ctx)>;
+
+struct InputContext
+{
+    InputContext(
+        std::shared_ptr<msh::Shell> shell,
+        std::shared_ptr<ms::Session> session,
+        std::shared_ptr<ms::Surface> window_surface,
+        std::shared_ptr<const MirEvent> const latest_event) :
+        shell{shell},
+        session{session},
+        window_surface{window_surface},
+        latest_event{latest_event}
+    {
+    }
+
+    void request_move()
+    {
+        shell->request_move(session, window_surface, mir_event_get_input_event(latest_event.get()));
+    }
+
+private:
+    std::shared_ptr<msh::Shell> const shell;
+    std::shared_ptr<ms::Session> const session;
+    std::shared_ptr<ms::Surface> const window_surface;
+    std::shared_ptr<const MirEvent> const latest_event;
+};
+
 
 struct InputResolverAdapter: public msd::InputResolver
 {
     InputResolverAdapter(
         std::shared_ptr<ms::Surface> decoration_surface,
+        std::shared_ptr<msh::Shell> const shell,
+        std::shared_ptr<ms::Session> const session,
+        std::shared_ptr<ms::Surface> const window_surface,
         std::function<void(DeviceEvent& device)> process_enter,
         std::function<void()> process_leave,
         std::function<void()> process_down,
         std::function<void()> process_up,
         std::function<void(DeviceEvent& device)> process_move,
-        std::function<void(DeviceEvent& device)> process_drag) :
+        OnProcessDrag process_drag) :
         msd::InputResolver(decoration_surface),
+        shell{shell},
+        session{session},
+        window_surface{window_surface},
         on_process_enter{process_enter},
         on_process_leave{process_leave},
         on_process_down{process_down},
@@ -101,15 +135,19 @@ struct InputResolverAdapter: public msd::InputResolver
     }
     void process_drag(DeviceEvent& device) override
     {
-        on_process_drag(device);
+        on_process_drag(device, InputContext(shell, session, window_surface, latest_event()));
     }
 
-    std::function<void(DeviceEvent& device) > on_process_enter;
-    std::function<void() > on_process_leave;
-    std::function<void() > on_process_down;
-    std::function<void() > on_process_up;
-    std::function<void(DeviceEvent& device) > on_process_move;
-    std::function<void(DeviceEvent& device) > on_process_drag;
+    std::shared_ptr<msh::Shell> const shell;
+    std::shared_ptr<ms::Session> const session;
+    std::shared_ptr<ms::Surface> const window_surface;
+
+    std::function<void(DeviceEvent& device)> on_process_enter;
+    std::function<void()> on_process_leave;
+    std::function<void()> on_process_down;
+    std::function<void()> on_process_up;
+    std::function<void(DeviceEvent& device)> on_process_move;
+    OnProcessDrag on_process_drag;
 };
 
 class WindowSurfaceObserver : public ms::NullSurfaceObserver
@@ -191,8 +229,6 @@ public:
         BufferStreams(BufferStreams const&) = delete;
         BufferStreams& operator=(BufferStreams const&) = delete;
     };
-
-
 
     Renderer(
         std::shared_ptr<ms::Surface> window_surface,
@@ -276,29 +312,11 @@ public:
     std::function<void(Buffer, mir::geometry::Size)> render_titlebar;
 };
 
-
 class DecorationAdapter : public mir::shell::decoration::Decoration
 {
 public:
     using Buffer = miral::Renderer::Buffer;
     using DeviceEvent = miral::Renderer::DeviceEvent;
-
-    std::function<void(Buffer, mir::geometry::Size)> render_titlebar;
-    std::function<void(Buffer, mir::geometry::Size)> render_left_border;
-    std::function<void(Buffer, mir::geometry::Size)> render_right_border;
-    std::function<void(Buffer, mir::geometry::Size)> render_bottom_border;
-
-    std::function<void(DeviceEvent& device)> on_process_enter;
-    std::function<void()> on_process_leave;
-    std::function<void()> on_process_down;
-    std::function<void()> on_process_up;
-    std::function<void(DeviceEvent& device)> on_process_move;
-    std::function<void(DeviceEvent& device)> on_process_drag;
-
-    std::function<void(ms::Surface const* window_surface, MirWindowAttrib attrib, int /*value*/)> on_attrib_changed;
-    std::function<void(ms::Surface const* window_surface, mir::geometry::Size const& /*window_size*/)>
-        on_window_resized_to;
-    std::function<void(ms::Surface const* window_surface, std::string const& /*name*/)> on_window_renamed;
 
     DecorationAdapter() = delete;
 
@@ -313,11 +331,12 @@ public:
         std::function<void()> process_down,
         std::function<void()> process_up,
         std::function<void(DeviceEvent& device)> process_move,
-        std::function<void(DeviceEvent& device)> process_drag,
+        OnProcessDrag process_drag,
         std::function<void(ms::Surface const* window_surface, MirWindowAttrib attrib, int /*value*/)> attrib_changed,
         std::function<void(ms::Surface const* window_surface, mir::geometry::Size const& /*window_size*/)>
             window_resized_to,
-        std::function<void(ms::Surface const* window_surface, std::string const& /*name*/)> window_renamed) :
+        std::function<void(ms::Surface const* window_surface, std::string const& /*name*/)> window_renamed,
+        std::function<void(std::shared_ptr<WindowState>)> update_decoration_window_state) :
         render_titlebar{render_titlebar},
         render_left_border{render_left_border},
         render_right_border{render_right_border},
@@ -328,20 +347,24 @@ public:
         on_process_up{process_up},
         on_process_move{process_move},
         on_process_drag{process_drag},
+        on_update_decoration_window_state{update_decoration_window_state},
         on_attrib_changed{[this, attrib_changed](auto... args)
                           {
                               window_state_updated(window_surface);
                               attrib_changed(args...);
+                              on_update_decoration_window_state(window_state);
                           }},
         on_window_resized_to{[this, window_resized_to](auto... args)
                              {
                                  window_state_updated(window_surface);
                                  window_resized_to(args...);
+                              on_update_decoration_window_state(window_state);
                              }},
         on_window_renamed{[this, window_renamed](auto... args)
                           {
                               window_state_updated(window_surface);
                               window_renamed(args...);
+                              on_update_decoration_window_state(window_state);
                           }}
     {
     }
@@ -366,6 +389,9 @@ public:
         renderer = std::make_unique<Renderer>(window_surface, buffer_allocator, render_titlebar);
         input_adapter = std::make_unique<InputResolverAdapter>(
             decoration_surface,
+            shell,
+            session,
+            window_surface,
             on_process_enter,
             on_process_leave,
             on_process_down,
@@ -376,6 +402,9 @@ public:
         window_surface_observer =
             std::make_shared<WindowSurfaceObserver>(on_attrib_changed, on_window_resized_to, on_window_renamed);
         window_surface->register_interest(window_surface_observer);
+
+        // Initialize widget rects
+        on_update_decoration_window_state(window_state);
     }
 
     void update();
@@ -413,6 +442,23 @@ private:
     std::shared_ptr<ms::Session> session;
     std::shared_ptr<WindowState> window_state;
 
+    std::function<void(Buffer, mir::geometry::Size)> render_titlebar;
+    std::function<void(Buffer, mir::geometry::Size)> render_left_border;
+    std::function<void(Buffer, mir::geometry::Size)> render_right_border;
+    std::function<void(Buffer, mir::geometry::Size)> render_bottom_border;
+
+    std::function<void(DeviceEvent& device)> on_process_enter;
+    std::function<void()> on_process_leave;
+    std::function<void()> on_process_down;
+    std::function<void()> on_process_up;
+    std::function<void(DeviceEvent& device)> on_process_move;
+    OnProcessDrag on_process_drag;
+
+    std::function<void(std::shared_ptr<WindowState>)> on_update_decoration_window_state;
+    std::function<void(ms::Surface const* window_surface, MirWindowAttrib attrib, int /*value*/)> on_attrib_changed;
+    std::function<void(ms::Surface const* window_surface, mir::geometry::Size const& /*window_size*/)>
+        on_window_resized_to;
+    std::function<void(ms::Surface const* window_surface, std::string const& /*name*/)> on_window_renamed;
 };
 
 }

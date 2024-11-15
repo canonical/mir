@@ -57,3 +57,7 @@ auto WindowState::window_name() const -> std::string
     return window_name_;
 }
 
+auto WindowState::geometry() const -> StaticGeometry
+{
+    return static_geometry;
+}

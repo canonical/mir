@@ -71,14 +71,175 @@ struct miral::Decoration::Self
 
     Self();
 
-    // TODO: make them const
+    struct InputManager
+    {
+        enum class ButtonState
+        {
+            Up,
+            Hovered,
+            Down,
+        };
+
+        struct Widget
+        {
+            Widget(MirResizeEdge resize_edge) :
+                resize_edge{resize_edge}
+            {
+            }
+
+            geometry::Rectangle rect;
+            ButtonState state{ButtonState::Up};
+            // mir_resize_edge_none is used to mean the widget moves the window
+            std::optional<MirResizeEdge> const resize_edge;
+        };
+
+        auto widget_at(geom::Point location) -> std::optional<std::shared_ptr<Widget>>;
+
+        void process_drag(DeviceEvent& device, InputContext ctx);
+        void process_enter(DeviceEvent& device);
+        void process_leave();
+        void process_down();
+        void process_up();
+
+        void widget_drag(Widget& widget, InputContext ctx);
+        void widget_leave(Widget& widget);
+        void widget_enter(Widget& widget);
+        void widget_down(Widget& widget);
+        void widget_up(Widget& widget);
+
+        void update_window_state(WindowState const& window_state);
+        auto resize_edge_rect(WindowState const& window_state, MirResizeEdge resize_edge) -> geom::Rectangle;
+
+        std::vector<std::shared_ptr<Widget>> widgets = {std::make_shared<Widget>(mir_resize_edge_none)};
+        std::optional<std::shared_ptr<Widget>> active_widget;
+    };
+
     DecorationRedrawNotifier redraw_notifier_;
+    InputManager input_manager;
 };
 
 miral::Decoration::Self::Self() = default;
 miral::Decoration::Decoration() :
     self{std::make_unique<Self>()}
 {
+}
+
+auto miral::Decoration::Self::InputManager::widget_at(geom::Point location) -> std::optional<std::shared_ptr<Widget>>
+{
+    for (auto const& widget : widgets)
+    {
+        if (widget->rect.contains(location))
+            return widget;
+    }
+    return std::nullopt;
+}
+
+void miral::Decoration::Self::InputManager::process_drag(DeviceEvent& device, InputContext ctx)
+{
+    auto const new_widget = widget_at(device.location);
+
+    if (active_widget)
+    {
+        widget_drag(*active_widget.value(), ctx);
+        if (new_widget != active_widget)
+            widget_leave(*active_widget.value());
+    }
+
+    bool const enter = new_widget && (active_widget != new_widget);
+    active_widget = new_widget;
+    if (enter)
+        widget_enter(*active_widget.value());
+}
+
+void miral::Decoration::Self::InputManager::process_enter(DeviceEvent& device)
+{
+    active_widget = widget_at(device.location);
+    if (active_widget)
+        widget_enter(*active_widget.value());
+}
+
+void miral::Decoration::Self::InputManager::process_leave()
+{
+    if (active_widget)
+    {
+        widget_leave(*active_widget.value());
+        active_widget = std::nullopt;
+    }
+}
+
+void miral::Decoration::Self::InputManager::process_down()
+{
+    if (active_widget)
+    {
+        widget_down(*active_widget.value());
+    }
+}
+
+void miral::Decoration::Self::InputManager::process_up()
+{
+    if (active_widget)
+    {
+        widget_up(*active_widget.value());
+    }
+}
+
+void miral::Decoration::Self::InputManager::widget_down(Widget& widget)
+{
+    widget.state = ButtonState::Down;
+}
+
+void miral::Decoration::Self::InputManager::widget_up(Widget& widget)
+{
+    widget.state = ButtonState::Hovered;
+}
+
+void miral::Decoration::Self::InputManager::widget_drag(Widget& widget, InputContext ctx)
+{
+    if (widget.state == ButtonState::Down)
+    {
+        if (widget.resize_edge)
+        {
+            auto edge = widget.resize_edge.value();
+
+            if (edge == mir_resize_edge_none)
+            {
+                ctx.request_move();
+            }
+        }
+        widget.state = ButtonState::Up;
+    }
+
+}
+
+void miral::Decoration::Self::InputManager::widget_leave(Widget& widget) {
+    widget.state = ButtonState::Up;
+}
+
+void miral::Decoration::Self::InputManager::widget_enter(Widget& widget)
+{
+    widget.state = ButtonState::Hovered;
+}
+
+void miral::Decoration::Self::InputManager::update_window_state(WindowState const& window_state)
+{
+    for (auto const& widget : widgets)
+    {
+        widget->rect = resize_edge_rect(window_state, widget->resize_edge.value());
+    }
+}
+
+auto miral::Decoration::Self::InputManager::resize_edge_rect(
+    WindowState const& window_state,
+    MirResizeEdge resize_edge) -> geom::Rectangle
+{
+    switch (resize_edge)
+    {
+    case mir_resize_edge_none:
+        return window_state.titlebar_rect();
+
+    // TODO: the rest
+    default: return {};
+    }
 }
 
 auto create_surface(
@@ -132,27 +293,31 @@ auto miral::Decoration::create_manager(mir::Server& server)
                        [](auto...)
                        {
                        },
-                       [decoration](auto...)
+                       [decoration](auto... args)
                        {
                            // Author should figure out if changes require a redraw
                            // then call DecorationRedrawNotifier::notify()
                            // Here we just assume we're always redrawing
                            mir::log_debug("process_enter");
+                           decoration->self->input_manager.process_enter(args...);
                            decoration->self->redraw_notifier().notify();
                        },
                        [decoration](auto...)
                        {
                            mir::log_debug("process_leave");
+                           decoration->self->input_manager.process_leave();
                            decoration->self->redraw_notifier().notify();
                        },
                        [decoration](auto...)
                        {
                            mir::log_debug("process_down");
+                           decoration->self->input_manager.process_down();
                            decoration->self->redraw_notifier().notify();
                        },
                        [decoration](auto...)
                        {
                            mir::log_debug("process_up");
+                           decoration->self->input_manager.process_up();
                            decoration->self->redraw_notifier().notify();
                        },
                        [decoration](auto...)
@@ -160,9 +325,10 @@ auto miral::Decoration::create_manager(mir::Server& server)
                            mir::log_debug("process_move");
                            decoration->self->redraw_notifier().notify();
                        },
-                       [decoration](auto...)
+                       [decoration](auto... args)
                        {
                            mir::log_debug("process_drag");
+                           decoration->self->input_manager.process_drag(args...);
                            decoration->self->redraw_notifier().notify();
                        },
                        [decoration](auto...)
@@ -176,6 +342,10 @@ auto miral::Decoration::create_manager(mir::Server& server)
                        [decoration](auto...)
                        {
                            decoration->self->redraw_notifier().notify();
+                       },
+                       [decoration](auto window_state)
+                       {
+                           decoration->self->input_manager.update_window_state(*window_state);
                        });
 
                    // User code end
