@@ -119,8 +119,8 @@ protected:
     /// The size the window will be after the next commit
     auto pending_size() const -> geometry::Size;
 
-    /// The size the window currently is (the committed size, or a reasonable default if it has never committed)
-    auto current_size() const -> geometry::Size;
+    /// The size the window currently is (the committed size, or std::nullopt if it has never committed)
+    auto current_size() const -> std::optional<geometry::Size>;
 
     /// Window size requested by Mir
     auto requested_window_size() const -> std::optional<geometry::Size>;

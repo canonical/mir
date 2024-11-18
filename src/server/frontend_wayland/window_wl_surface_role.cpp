@@ -284,7 +284,7 @@ void mf::WindowWlSurfaceRole::remove_state_now(MirWindowState state)
 
 auto mf::WindowWlSurfaceRole::pending_size() const -> geom::Size
 {
-    auto size = current_size();
+    auto size = current_size().value_or(geom::Size{0, 0});
     if (pending_explicit_width)
         size.width = pending_explicit_width.value();
     if (pending_explicit_height)
@@ -292,18 +292,22 @@ auto mf::WindowWlSurfaceRole::pending_size() const -> geom::Size
     return size;
 }
 
-auto mf::WindowWlSurfaceRole::current_size() const -> geom::Size
+auto mf::WindowWlSurfaceRole::current_size() const -> std::optional<geom::Size>
 {
     if (surface)
     {
-        auto const buffer_size = surface.value().buffer_size().value_or(geom::Size{});
-
-        return {
-            committed_width_set_explicitly.value_or(buffer_size.width),
-            committed_height_set_explicitly.value_or(buffer_size.height)};
+        auto buffer_size = surface.value().buffer_size();
+        if (committed_width_set_explicitly || committed_height_set_explicitly)
+        {
+            return geom::Size{
+                committed_width_set_explicitly.value_or(buffer_size ? buffer_size.value().width : geom::Width{0}),
+                committed_height_set_explicitly.value_or(buffer_size ? buffer_size.value().height : geom::Height{0})};
+        }
+        else
+            return buffer_size;
     }
 
-    return geom::Size{0, 0};
+    return std::nullopt;
 }
 
 auto mf::WindowWlSurfaceRole::requested_window_size() const -> std::optional<geom::Size>
