@@ -15,6 +15,7 @@
  */
 
 #include "multi_threaded_compositor.h"
+#include "mir/compositor/scene_element.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_sink.h"
 #include "mir/compositor/display_buffer_compositor.h"
@@ -117,6 +118,23 @@ public:
 
         try
         {
+            /* Ensure we get a fresh frame by consuming any existing stale frame
+             *
+             * This ensures each Compositor is treated as displaying the
+             * “current frame”, so the first time through the composition
+             * loop below we will pull the most recently submitted frame from
+             * each surface (either the “current” frame, or the ”next” frame).
+             */
+            for (auto const& [_, compositor] : compositors)
+            {
+                auto elements = scene->scene_elements_for(compositor.get());
+                for (auto const& element : elements)
+                {
+                    // We need to actually access the buffer in order for it to be marked in use.
+                    element->renderable()->buffer();
+                }
+            }
+
             while (running)
             {
                 /* Wait until compositing has been scheduled or we are stopped */
