@@ -17,7 +17,6 @@
 #ifndef MIR_GRAPHICS_GBM_ATOMIC_KMS_DISPLAY_SINK_H_
 #define MIR_GRAPHICS_GBM_ATOMIC_KMS_DISPLAY_SINK_H_
 
-#include "kms-utils/drm_event_handler.h"
 #include "mir/graphics/display_sink.h"
 #include "mir/graphics/display.h"
 #include "display_helpers.h"
@@ -57,7 +56,6 @@ public:
     DisplaySink(
         mir::Fd drm_fd,
         std::shared_ptr<struct gbm_device> gbm,
-        std::shared_ptr<kms::DRMEventHandler> event_handler,
         BypassOption bypass_options,
         std::shared_ptr<DisplayReport> const& listener,
         std::shared_ptr<KMSOutput> output,
@@ -80,7 +78,6 @@ public:
 
     void set_transformation(glm::mat2 const& t, geometry::Rectangle const& a);
     void schedule_set_crtc();
-    void wait_for_page_flip();
 
     auto drm_fd() const -> mir::Fd;
 
@@ -90,18 +87,12 @@ protected:
     auto maybe_create_allocator(DisplayAllocator::Tag const& type_tag) -> DisplayAllocator* override;
 
 private:
-    bool schedule_page_flip(FBHandle const& bufobj);
     void set_crtc(FBHandle const&);
 
     std::shared_ptr<struct gbm_device> const gbm;
-    bool holding_client_buffers{false};
-    std::shared_ptr<FBHandle const> bypass_bufobj{nullptr};
     std::shared_ptr<DisplayReport> const listener;
 
     std::shared_ptr<KMSOutput> const output;
-    bool page_flip_pending{false};
-
-    std::shared_ptr<kms::DRMEventHandler> const event_handler;
 
     std::shared_ptr<CPUAddressableDisplayAllocator> kms_allocator;
     std::unique_ptr<GBMDisplayAllocator> gbm_allocator;

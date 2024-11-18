@@ -17,16 +17,13 @@
 #include <algorithm>
 #include "real_kms_output_container.h"
 #include "atomic_kms_output.h"
-#include "kms-utils/drm_event_handler.h"
 #include "kms-utils/drm_mode_resources.h"
 
 namespace mga = mir::graphics::atomic;
 
 mga::RealKMSOutputContainer::RealKMSOutputContainer(
-    mir::Fd drm_fd,
-    std::shared_ptr<kms::DRMEventHandler> event_handler)
-    : drm_fd{std::move(drm_fd)},
-      event_handler{std::move(event_handler)}
+    mir::Fd drm_fd)
+    : drm_fd{std::move(drm_fd)}
 {
 }
 
@@ -69,8 +66,7 @@ void mga::RealKMSOutputContainer::update_from_hardware_state()
         {
             new_outputs.push_back(std::make_shared<AtomicKMSOutput>(
                 drm_fd,
-                std::move(connector),
-                event_handler));
+                std::move(connector)));
         }
     }
 

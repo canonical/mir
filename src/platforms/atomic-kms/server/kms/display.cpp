@@ -15,27 +15,24 @@
  */
 
 #include "display.h"
-#include "atomic_kms_output.h"
 #include "cursor.h"
 #include "display_sink.h"
-#include "kms-utils/threaded_drm_event_handler.h"
-#include "mir/graphics/platform.h"
+
 #include "kms_display_configuration.h"
 #include "kms_output.h"
-#include "mir/console_services.h"
-#include "mir/graphics/overlapping_output_grouping.h"
-#include "mir/graphics/event_handler_register.h"
 
-#include "mir/graphics/display_report.h"
+#include "mir/console_services.h"
 #include "mir/graphics/display_configuration_policy.h"
-#include "mir/geometry/rectangle.h"
+#include "mir/graphics/display_report.h"
+#include "mir/graphics/event_handler_register.h"
+#include "mir/graphics/overlapping_output_grouping.h"
+#include "mir/graphics/platform.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/get_error_info.hpp>
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <gbm.h>
-#include <iostream>
 #include <memory>
 #include <system_error>
 #include <xf86drm.h>
@@ -52,7 +49,6 @@
 
 namespace mga = mir::graphics::atomic;
 namespace mg = mir::graphics;
-namespace geom = mir::geometry;
 
 namespace
 {
@@ -142,14 +138,12 @@ mga::Display::Display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<DisplayReport> const& listener)
     : drm_fd{std::move(drm_fd)},
-      event_handler{std::make_shared<kms::ThreadedDRMEventHandler>(this->drm_fd)},
       gbm{std::move(gbm)},
       listener(listener),
       monitor(mir::udev::Context()),
       output_container{
           std::make_shared<RealKMSOutputContainer>(
-            this->drm_fd,
-            event_handler)},
+            this->drm_fd)},
       current_display_configuration{output_container},
       dirty_configuration{false},
       bypass_option(bypass_option)
@@ -339,17 +333,6 @@ void mga::Display::configure_locked(
 
     if (!comp)
     {
-        /*
-         * Notice for a little while here we will have duplicate
-         * DisplayBuffers attached to each output, and the display_buffers_new
-         * will take over the outputs before the old display_sinks are
-         * destroyed. So to avoid page flipping confusion in-between, make
-         * sure we wait for all pending page flips to finish before the
-         * display_buffers_new are created and take control of the outputs.
-         */
-        for (auto& db : display_sinks)
-            db->wait_for_page_flip();
-
         /* Reset the state of all outputs */
         kms_conf.for_each_output(
             [&](DisplayConfigurationOutput const& conf_output)
@@ -406,7 +389,6 @@ void mga::Display::configure_locked(
                 auto db = std::make_unique<DisplaySink>(
                     drm_fd,
                     gbm,
-                    event_handler,
                     bypass_option,
                     listener,
                     std::move(kms_output),

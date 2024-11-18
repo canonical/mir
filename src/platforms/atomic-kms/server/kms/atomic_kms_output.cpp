@@ -15,7 +15,6 @@
  */
 
 #include "atomic_kms_output.h"
-#include "kms-utils/drm_event_handler.h"
 #include "kms-utils/drm_mode_resources.h"
 #include "kms_framebuffer.h"
 #include "mir/graphics/display_configuration.h"
@@ -177,7 +176,7 @@ private:
     mir::Fd const drm_fd;
 };
 
-/* Note: 
+/* Note:
  * (At least) Clang includes -Wmissing-designated-field-initializers to -Wextra
  * This (questionably?) warns when using designated field initialisers but
  * not explicitly initialising every field member.
@@ -187,10 +186,8 @@ private:
  */
 mga::AtomicKMSOutput::AtomicKMSOutput(
     mir::Fd drm_master,
-    kms::DRMModeConnectorUPtr connector,
-    std::shared_ptr<kms::DRMEventHandler> event_handler)
+    kms::DRMModeConnectorUPtr connector)
     : drm_fd_{drm_master},
-      event_handler{std::move(event_handler)},
       configuration{
           Configuration {
           .connector = std::move(connector),
@@ -417,7 +414,7 @@ void mga::AtomicKMSOutput::clear_crtc()
     conf->current_crtc = nullptr;
 }
 
-bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
+bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
 {
     auto conf = configuration.lock();
     if (!ensure_crtc(*conf))
@@ -464,27 +461,20 @@ bool mga::AtomicKMSOutput::schedule_page_flip(FBHandle const& fb)
     update.add_property(*conf->plane_props, "CRTC_ID", conf->current_crtc->crtc_id);
     update.add_property(*conf->plane_props, "FB_ID", fb);
 
-    pending_page_flip = event_handler->expect_flip_event(conf->current_crtc->crtc_id, [](auto, auto){});
     auto ret = drmModeAtomicCommit(
         drm_fd_,
         update,
-        DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_PAGE_FLIP_EVENT,
-        const_cast<void*>(event_handler->drm_event_data()));
+        0,
+        nullptr);
     if (ret)
     {
         mir::log_error("Failed to schedule page flip: %s (%i)", strerror(-ret), -ret);
-        event_handler->cancel_flip_events(conf->current_crtc->crtc_id);
         conf->current_crtc = nullptr;
         return false;
     }
 
     using_saved_crtc = false;
     return true;
-}
-
-void mga::AtomicKMSOutput::wait_for_page_flip()
-{
-    pending_page_flip.get();
 }
 
 void mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
