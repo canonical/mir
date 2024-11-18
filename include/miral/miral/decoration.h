@@ -76,7 +76,7 @@ struct DecorationRedrawNotifier
 };
 
 using Pixel = uint32_t;
-using Buffer = Pixel*;
+using Buffer = Pixel*; // Definitely should be renamed
 
 class Decoration // Placeholder names
 {

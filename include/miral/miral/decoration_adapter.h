@@ -83,7 +83,8 @@ struct InputContext;
 using OnProcessDrag = std::function<void(miral::DeviceEvent device, InputContext ctx)>;
 using OnProcessEnter = std::function<void(miral::DeviceEvent device, InputContext ctx)>;
 using OnProcessLeave = std::function<void(InputContext ctx)>;
-using OnProcessMove = std::function<void(miral::DeviceEvent device)>;
+using OnProcessMove = std::function<void(miral::DeviceEvent device, InputContext ctx)>;
+using OnProcessUp = std::function<void(InputContext ctx)>;
 
 struct InputContext
 {
@@ -108,6 +109,12 @@ struct InputContext
     void request_resize(MirResizeEdge edge);
 
     void set_cursor(std::string const& cursor_image_name);
+
+    void request_close() const;
+
+    void request_toggle_maximize() const;
+
+    void request_minimize() const;
 private:
     std::shared_ptr<msh::Shell> const shell;
     std::shared_ptr<ms::Session> const session;
@@ -129,7 +136,7 @@ struct InputResolverAdapter
         OnProcessEnter process_enter,
         OnProcessLeave process_leave,
         std::function<void()> process_down,
-        std::function<void()> process_up,
+        OnProcessUp process_up,
         OnProcessMove process_move,
         OnProcessDrag process_drag);
 
@@ -224,7 +231,7 @@ struct DecorationAdapter
         OnProcessEnter process_enter,
         OnProcessLeave process_leave,
         std::function<void()> process_down,
-        std::function<void()> process_up,
+        OnProcessUp process_up,
         OnProcessMove process_move,
         OnProcessDrag process_drag,
         std::function<void(ms::Surface const* window_surface, MirWindowAttrib attrib, int /*value*/)> attrib_changed,

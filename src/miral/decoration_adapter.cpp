@@ -25,7 +25,6 @@
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
-#include "mir/server.h"
 #include "mir/shell/decoration.h"
 #include "mir/shell/decoration/input_resolver.h"
 #include "mir/shell/shell.h"
@@ -62,6 +61,27 @@ void miral::InputContext::set_cursor(std::string const& cursor_image_name)
     shell->modify_surface(session, decoration_surface, spec);
 }
 
+
+void miral::InputContext::request_close() const{
+    window_surface->request_client_surface_close();
+}
+
+void miral::InputContext::request_toggle_maximize() const{
+    msh::SurfaceSpecification spec;
+    if (window_surface->state() == mir_window_state_maximized)
+        spec.state = mir_window_state_restored;
+    else
+        spec.state = mir_window_state_maximized;
+    shell->modify_surface(session, window_surface, spec);
+}
+
+void miral::InputContext::request_minimize() const{
+    msh::SurfaceSpecification spec;
+    spec.state = mir_window_state_minimized;
+    shell->modify_surface(session, window_surface, spec);
+}
+
+
 struct miral::InputResolverAdapter::Impl : public msd::InputResolver
 {
     Impl(
@@ -73,7 +93,7 @@ struct miral::InputResolverAdapter::Impl : public msd::InputResolver
         OnProcessEnter process_enter,
         OnProcessLeave process_leave,
         std::function<void()> process_down,
-        std::function<void()> process_up,
+        OnProcessUp process_up,
         OnProcessMove process_move,
         OnProcessDrag process_drag) :
         msd::InputResolver(decoration_surface),
@@ -112,12 +132,12 @@ struct miral::InputResolverAdapter::Impl : public msd::InputResolver
 
     void process_up() override
     {
-        on_process_up();
+        on_process_up(input_ctx());
     }
 
     void process_move(msd::DeviceEvent& device) override
     {
-        on_process_move(device);
+        on_process_move(device, input_ctx());
     }
 
     void process_drag(msd::DeviceEvent& device) override
@@ -134,7 +154,7 @@ struct miral::InputResolverAdapter::Impl : public msd::InputResolver
     OnProcessEnter on_process_enter;
     OnProcessLeave on_process_leave;
     std::function<void()> on_process_down;
-    std::function<void()> on_process_up;
+    OnProcessUp on_process_up;
     OnProcessMove on_process_move;
     OnProcessDrag on_process_drag;
 };
@@ -148,7 +168,7 @@ miral::InputResolverAdapter::InputResolverAdapter(
     OnProcessEnter process_enter,
     OnProcessLeave process_leave,
     std::function<void()> process_down,
-    std::function<void()> process_up,
+    OnProcessUp process_up,
     OnProcessMove process_move,
     OnProcessDrag process_drag) :
     impl{std::make_unique<Impl>(
@@ -365,7 +385,7 @@ public:
         OnProcessEnter process_enter,
         OnProcessLeave process_leave,
         std::function<void()> process_down,
-        std::function<void()> process_up,
+        OnProcessUp process_up,
         OnProcessMove process_move,
         OnProcessDrag process_drag,
         std::function<void(ms::Surface const* window_surface, MirWindowAttrib attrib, int /*value*/)> attrib_changed,
@@ -443,7 +463,7 @@ private:
     OnProcessEnter on_process_enter;
     OnProcessLeave on_process_leave;
     std::function<void()> on_process_down;
-    std::function<void()> on_process_up;
+    OnProcessUp on_process_up;
     OnProcessMove on_process_move;
     OnProcessDrag on_process_drag;
 
@@ -464,7 +484,7 @@ miral::DecorationAdapter::DecorationAdapter(
     OnProcessEnter process_enter,
     OnProcessLeave process_leave,
     std::function<void()> process_down,
-    std::function<void()> process_up,
+    OnProcessUp process_up,
     OnProcessMove process_move,
     OnProcessDrag process_drag,
     std::function<void(ms::Surface const* window_surface, MirWindowAttrib attrib, int /*value*/)> attrib_changed,

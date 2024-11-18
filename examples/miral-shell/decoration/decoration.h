@@ -19,6 +19,7 @@
 #include "mir/geometry/forward.h"
 #include "mir/geometry/rectangle.h"
 #include "miral/decoration.h"
+#include "miral/decoration_adapter.h"
 
 #include <memory>
 #include <optional>
@@ -58,6 +59,13 @@ public:
             Down,
         };
 
+        enum class ButtonFunction
+        {
+            Close,
+            Maximize,
+            Minimize,
+        };
+
         struct Widget
         {
             Widget(MirResizeEdge resize_edge) :
@@ -65,10 +73,16 @@ public:
             {
             }
 
+            Widget(ButtonFunction button)
+                : button{button}
+            {
+            }
+
             mir::geometry::Rectangle rect;
             ButtonState state{ButtonState::Up};
             // mir_resize_edge_none is used to mean the widget moves the window
             std::optional<MirResizeEdge> const resize_edge;
+            std::optional<ButtonFunction> const button;
         };
 
         auto widget_at(mir::geometry::Point location) -> std::optional<std::shared_ptr<Widget>>;
@@ -77,18 +91,23 @@ public:
         void process_enter(miral::DeviceEvent& device, miral::InputContext ctx);
         void process_leave(miral::InputContext ctx);
         void process_down();
-        void process_up();
+        void process_up(miral::InputContext ctx);
+        void process_move(miral::DeviceEvent& device, miral::InputContext ctx);
 
         void widget_drag(Widget& widget, miral::InputContext ctx);
         void widget_leave(Widget& widget, miral::InputContext ctx);
         void widget_enter(Widget& widget, miral::InputContext ctx);
         void widget_down(Widget& widget);
-        void widget_up(Widget& widget);
+        void widget_up(Widget& widget, miral::InputContext ctx);
 
         void update_window_state(WindowState const& window_state);
-        auto resize_edge_rect(WindowState const& window_state, MirResizeEdge resize_edge) -> mir::geometry::Rectangle;
+
+        auto buttons() const -> std::vector<std::shared_ptr<Widget const>>;
 
         std::vector<std::shared_ptr<Widget>> widgets = {
+            std::make_shared<Widget>(ButtonFunction::Close),
+            std::make_shared<Widget>(ButtonFunction::Maximize),
+            std::make_shared<Widget>(ButtonFunction::Minimize),
             std::make_shared<Widget>(mir_resize_edge_northwest),
             std::make_shared<Widget>(mir_resize_edge_northeast),
             std::make_shared<Widget>(mir_resize_edge_southwest),

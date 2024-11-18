@@ -547,8 +547,11 @@ global:
     miral::DeviceEvent::operator*;
     miral::DeviceEvent::pressed*;
     miral::InputContext::InputContext*;
+    miral::InputContext::request_close*;
+    miral::InputContext::request_minimize*;
     miral::InputContext::request_move*;
     miral::InputContext::request_resize*;
+    miral::InputContext::request_toggle_maximize*;
     miral::InputContext::set_cursor*;
     miral::InputResolverAdapter::InputResolverAdapter*;
     miral::Renderer::BufferStreams::?BufferStreams*;

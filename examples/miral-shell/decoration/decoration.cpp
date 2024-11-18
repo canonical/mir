@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/geometry/dimensions.h"
 #include "mir/geometry/forward.h"
 #include "mir/geometry/rectangle.h"
 
@@ -27,7 +28,9 @@
 #include "miral/decoration_basic_manager.h"
 #include "miral/decoration_manager_builder.h"
 
+#include <algorithm>
 #include <memory>
+#include <ranges>
 
 namespace geometry = mir::geometry;
 namespace geom = mir::geometry;
@@ -36,12 +39,61 @@ using miral::InputContext;
 
 UserDecoration::UserDecoration() = default;
 
+auto UserDecoration::InputManager::buttons() const -> std::vector<std::shared_ptr<Widget const>>
+{
+    std::vector<std::shared_ptr<Widget const>> button_rects;
+    for (auto const& widget : widgets)
+    {
+        if (widget->button)
+            button_rects.push_back(widget);
+    }
+
+    return button_rects;
+}
+
 void UserDecoration::render_titlebar(miral::Buffer titlebar_pixels, mir::geometry::Size scaled_titlebar_size)
 {
     for (geometry::Y y{0}; y < as_y(scaled_titlebar_size.height); y += geometry::DeltaY{1})
     {
         miral::Renderer::render_row(
             titlebar_pixels, scaled_titlebar_size, {0, y}, scaled_titlebar_size.width, 0xFF00FFFF);
+    }
+
+    auto const draw_button =
+        [&]( geometry::Rectangle button_rect, miral::Pixel color)
+    {
+        auto start = button_rect.top_left;
+        auto end = button_rect.bottom_right();
+        for(auto y = start.y; y < end.y; y += geometry::DeltaY{1})
+            miral::Renderer::render_row(
+                titlebar_pixels, scaled_titlebar_size, {start.x, y}, geometry::as_width(end.x - start.x), color);
+    };
+
+    auto buttons = input_manager.buttons();
+    for (auto const& button : buttons)
+    {
+        auto button_rect = button->rect;
+        auto color = 0xFFBB4444;
+        switch(button->button.value())
+        {
+        case InputManager::ButtonFunction::Close:
+            color = 0xFFBB4444; // Red
+            break;
+        case InputManager::ButtonFunction::Maximize:
+            color = 0xFF44BB44; // Green
+            break;
+        case InputManager::ButtonFunction::Minimize:
+            color = 0xFFBB8833; // Yellow
+            break;
+        }
+
+        auto const should_highlight =
+            input_manager.active_widget.has_value() && input_manager.active_widget.value()->rect == button_rect;
+
+        if (should_highlight)
+            color += 0x00444444;
+
+        draw_button(button_rect, color);
     }
 }
 
@@ -96,11 +148,26 @@ void UserDecoration::InputManager::process_down()
     }
 }
 
-void UserDecoration::InputManager::process_up()
+void UserDecoration::InputManager::process_up(InputContext ctx)
 {
     if (active_widget)
     {
-        widget_up(*active_widget.value());
+        widget_up(*active_widget.value(), ctx);
+    }
+}
+
+void UserDecoration::InputManager::process_move(miral::DeviceEvent& device, InputContext ctx)
+{
+    auto const new_widget = widget_at(device.location());
+    if (new_widget != active_widget)
+    {
+        if (active_widget)
+            widget_leave(*active_widget.value(), ctx);
+
+        active_widget = new_widget;
+
+        if (active_widget)
+            widget_enter(*active_widget.value(), ctx);
     }
 }
 
@@ -109,9 +176,26 @@ void UserDecoration::InputManager::widget_down(Widget& widget)
     widget.state = ButtonState::Down;
 }
 
-void UserDecoration::InputManager::widget_up(Widget& widget)
+void UserDecoration::InputManager::widget_up(Widget& widget, InputContext ctx)
 {
     widget.state = ButtonState::Hovered;
+    if (widget.button)
+    {
+        switch (widget.button.value())
+        {
+        case ButtonFunction::Close:
+            ctx.request_close();
+            break;
+
+        case ButtonFunction::Maximize:
+            ctx.request_toggle_maximize();
+            break;
+
+        case ButtonFunction::Minimize:
+            ctx.request_minimize();
+            break;
+        }
+    }
 }
 
 void UserDecoration::InputManager::widget_drag(Widget& widget, miral::InputContext ctx)
@@ -133,7 +217,7 @@ void UserDecoration::InputManager::widget_drag(Widget& widget, miral::InputConte
         }
         widget.state = ButtonState::Up;
     }
-
+    widget.state = ButtonState::Hovered;
 }
 
 auto resize_edge_to_cursor_name(MirResizeEdge resize_edge) -> std::string
@@ -180,15 +264,19 @@ void UserDecoration::InputManager::widget_enter(Widget& widget, miral::InputCont
         ctx.set_cursor(resize_edge_to_cursor_name(widget.resize_edge.value()));
 }
 
-void UserDecoration::InputManager::update_window_state(WindowState const& window_state)
+auto button_rect(WindowState const& window_state, unsigned n) -> geom::Rectangle
 {
-    for (auto const& widget : widgets)
-    {
-        widget->rect = resize_edge_rect(window_state, widget->resize_edge.value());
-    }
+    geom::Rectangle titlebar = window_state.titlebar_rect();
+    auto button_width = window_state.geometry().button_width;
+    auto padding_between_buttons = window_state.geometry().padding_between_buttons;
+
+    geom::X x = titlebar.right() - as_delta(window_state.side_border_width()) -
+                n * as_delta(button_width + padding_between_buttons) - as_delta(button_width);
+
+    return geom::Rectangle{{x, titlebar.top()}, {button_width, titlebar.size.height}};
 }
 
-auto UserDecoration::InputManager::resize_edge_rect(
+auto resize_edge_rect(
     WindowState const& window_state,
     MirResizeEdge resize_edge) -> geom::Rectangle
 {
@@ -250,6 +338,20 @@ auto UserDecoration::InputManager::resize_edge_rect(
     }
 }
 
+void UserDecoration::InputManager::update_window_state(WindowState const& window_state)
+{
+    auto button_index = 0;
+    for (auto const& widget : widgets)
+    {
+        if (widget->resize_edge)
+            widget->rect = resize_edge_rect(window_state, widget->resize_edge.value());
+        else
+        {
+            widget->rect = button_rect(window_state, button_index);
+            button_index += 1;
+        }
+    }
+}
 
 auto UserDecoration::create_manager(mir::Server& server)
     -> std::shared_ptr<miral::DecorationManagerAdapter>
@@ -295,15 +397,16 @@ auto UserDecoration::create_manager(mir::Server& server)
                            decoration->input_manager.process_down();
                            decoration->redraw_notifier()->notify();
                        },
-                       [decoration](auto...)
+                       [decoration](auto... args)
                        {
                            /* mir::log_debug("process_up"); */
-                           decoration->input_manager.process_up();
+                           decoration->input_manager.process_up(args...);
                            decoration->redraw_notifier()->notify();
                        },
-                       [decoration](auto...)
+                       [decoration](auto... args)
                        {
                            /* mir::log_debug("process_move"); */
+                           decoration->input_manager.process_move(args...);
                            decoration->redraw_notifier()->notify();
                        },
                        [decoration](auto... args)
@@ -334,3 +437,6 @@ auto UserDecoration::create_manager(mir::Server& server)
         .to_adapter();
 }
 
+// TODO Focus?
+// TODO Render rest of the sides?
+// TODO User defined static_geometry?
