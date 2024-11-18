@@ -332,5 +332,13 @@ mf::Shm::Shm(wl_resource* resource, std::shared_ptr<Executor> wayland_executor)
 
 void mf::Shm::create_pool(wl_resource* id, Fd fd, int32_t size)
 {
+    if (size <= 0)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Invalid requested size"};
+    }
+
     new ShmPool{id, wayland_executor, fd, size};
 }
