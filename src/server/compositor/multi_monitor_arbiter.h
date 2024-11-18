@@ -31,7 +31,6 @@ namespace mir
 namespace graphics { class Buffer; }
 namespace compositor
 {
-class Schedule;
 
 class MultiMonitorArbiter : public std::enable_shared_from_this<MultiMonitorArbiter>
 {
