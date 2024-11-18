@@ -112,8 +112,8 @@ void msd::InputResolver::Observer::input_consumed(
 }
 
 msd::InputResolver::InputResolver(std::shared_ptr<mir::scene::Surface> const& decoration_surface) :
-    input_observer{std::make_shared<Observer>(this)},
-    decoration_surface{decoration_surface}
+    decoration_surface{decoration_surface},
+    input_observer{std::make_shared<Observer>(this)}
 {
     decoration_surface->register_interest(input_observer);
 }

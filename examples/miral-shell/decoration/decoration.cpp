@@ -19,6 +19,7 @@
 
 #include "decoration.h"
 
+#include "mir_toolkit/cursors.h"
 #include "miral/decoration_adapter.h"
 #include "miral/decoration.h"
 #include "miral/decoration_window_state.h"
@@ -28,7 +29,6 @@
 
 #include <memory>
 
-namespace msh = mir::shell;
 namespace geometry = mir::geometry;
 namespace geom = mir::geometry;
 
@@ -63,27 +63,27 @@ void UserDecoration::InputManager::process_drag(miral::DeviceEvent& device, Inpu
     {
         widget_drag(*active_widget.value(), ctx);
         if (new_widget != active_widget)
-            widget_leave(*active_widget.value());
+            widget_leave(*active_widget.value(), ctx);
     }
 
     bool const enter = new_widget && (active_widget != new_widget);
     active_widget = new_widget;
     if (enter)
-        widget_enter(*active_widget.value());
+        widget_enter(*active_widget.value(), ctx);
 }
 
-void UserDecoration::InputManager::process_enter(miral::DeviceEvent& device)
+void UserDecoration::InputManager::process_enter(miral::DeviceEvent& device, InputContext ctx)
 {
     active_widget = widget_at(device.location());
     if (active_widget)
-        widget_enter(*active_widget.value());
+        widget_enter(*active_widget.value(), ctx);
 }
 
-void UserDecoration::InputManager::process_leave()
+void UserDecoration::InputManager::process_leave(InputContext ctx)
 {
     if (active_widget)
     {
-        widget_leave(*active_widget.value());
+        widget_leave(*active_widget.value(), ctx);
         active_widget = std::nullopt;
     }
 }
@@ -126,19 +126,58 @@ void UserDecoration::InputManager::widget_drag(Widget& widget, miral::InputConte
             {
                 ctx.request_move();
             }
+            else
+            {
+                ctx.request_resize(edge);
+            }
         }
         widget.state = ButtonState::Up;
     }
 
 }
 
-void UserDecoration::InputManager::widget_leave(Widget& widget) {
-    widget.state = ButtonState::Up;
+auto resize_edge_to_cursor_name(MirResizeEdge resize_edge) -> std::string
+{
+    std::string cursor_name;
+    switch (resize_edge)
+    {
+    case mir_resize_edge_north:
+    case mir_resize_edge_south:
+        cursor_name = mir_vertical_resize_cursor_name;
+        break;
+
+    case mir_resize_edge_east:
+    case mir_resize_edge_west:
+        cursor_name = mir_horizontal_resize_cursor_name;
+        break;
+
+    case mir_resize_edge_northeast:
+    case mir_resize_edge_southwest:
+        cursor_name = mir_diagonal_resize_bottom_to_top_cursor_name;
+        break;
+
+    case mir_resize_edge_northwest:
+    case mir_resize_edge_southeast:
+        cursor_name = mir_diagonal_resize_top_to_bottom_cursor_name;
+        break;
+
+    default:
+        cursor_name = mir_default_cursor_name;
+    }
+
+    return cursor_name;
 }
 
-void UserDecoration::InputManager::widget_enter(Widget& widget)
+void UserDecoration::InputManager::widget_leave(Widget& widget, miral::InputContext ctx) {
+    widget.state = ButtonState::Up;
+    ctx.set_cursor(resize_edge_to_cursor_name(mir_resize_edge_none));
+}
+
+void UserDecoration::InputManager::widget_enter(Widget& widget, miral::InputContext ctx)
 {
     widget.state = ButtonState::Hovered;
+    if(widget.resize_edge)
+        ctx.set_cursor(resize_edge_to_cursor_name(widget.resize_edge.value()));
 }
 
 void UserDecoration::InputManager::update_window_state(WindowState const& window_state)
@@ -157,6 +196,54 @@ auto UserDecoration::InputManager::resize_edge_rect(
     {
     case mir_resize_edge_none:
         return window_state.titlebar_rect();
+
+    case mir_resize_edge_north:
+    {
+        auto rect = window_state.titlebar_rect();
+        rect.size.height = window_state.bottom_border_height();
+        return rect;
+    }
+
+    case mir_resize_edge_south:
+        return window_state.bottom_border_rect();
+
+    case mir_resize_edge_west:
+        return window_state.left_border_rect();
+
+    case mir_resize_edge_east:
+        return window_state.right_border_rect();
+
+    case mir_resize_edge_northwest:
+        return {{}, window_state.resize_corner_input_size()};
+
+    case mir_resize_edge_northeast:
+    {
+        geom::Point top_left{
+            as_x(window_state.window_size().width) -
+                as_delta(window_state.resize_corner_input_size().width),
+            0};
+        return {top_left, window_state.resize_corner_input_size()};
+    }
+
+    case mir_resize_edge_southwest:
+    {
+        geom::Point top_left{
+            0,
+            as_y(window_state.window_size().height) -
+                as_delta(window_state.resize_corner_input_size().height)};
+        return {top_left, window_state.resize_corner_input_size()};
+    }
+
+    case mir_resize_edge_southeast:
+    {
+        geom::Point top_left{
+            as_x(window_state.window_size().width) -
+                as_delta(window_state.resize_corner_input_size().width),
+            as_y(window_state.window_size().height) -
+                as_delta(window_state.resize_corner_input_size().height)};
+        return {top_left, window_state.resize_corner_input_size()};
+    }
+
 
     // TODO: the rest
     default: return {};
@@ -196,10 +283,10 @@ auto UserDecoration::create_manager(mir::Server& server)
                            decoration->input_manager.process_enter(args...);
                            decoration->redraw_notifier()->notify();
                        },
-                       [decoration](auto...)
+                       [decoration](auto... args)
                        {
                            /* mir::log_debug("process_leave"); */
-                           decoration->input_manager.process_leave();
+                           decoration->input_manager.process_leave(args...);
                            decoration->redraw_notifier()->notify();
                        },
                        [decoration](auto...)

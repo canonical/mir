@@ -39,6 +39,10 @@ auto const bytes_per_pixel = 4;
 
 namespace mir
 {
+namespace input
+{
+class CursorImages;
+}
 namespace shell
 {
 class SurfaceSpecification;
@@ -77,7 +81,8 @@ namespace miral
 {
 struct InputContext;
 using OnProcessDrag = std::function<void(miral::DeviceEvent device, InputContext ctx)>;
-using OnProcessEnter = std::function<void(miral::DeviceEvent device)>;
+using OnProcessEnter = std::function<void(miral::DeviceEvent device, InputContext ctx)>;
+using OnProcessLeave = std::function<void(InputContext ctx)>;
 using OnProcessMove = std::function<void(miral::DeviceEvent device)>;
 
 struct InputContext
@@ -86,21 +91,30 @@ struct InputContext
         std::shared_ptr<msh::Shell> shell,
         std::shared_ptr<ms::Session> session,
         std::shared_ptr<ms::Surface> window_surface,
-        std::shared_ptr<const MirEvent> const latest_event) :
+        std::shared_ptr<const MirEvent> const latest_event,
+        std::shared_ptr<mir::input::CursorImages> const cursor_images,
+        std::shared_ptr<ms::Surface> const decoration_surface) :
         shell{shell},
         session{session},
         window_surface{window_surface},
-        latest_event{latest_event}
+        latest_event{latest_event},
+        cursor_images{cursor_images},
+        decoration_surface{decoration_surface}
     {
     }
 
     void request_move();
 
+    void request_resize(MirResizeEdge edge);
+
+    void set_cursor(std::string const& cursor_image_name);
 private:
     std::shared_ptr<msh::Shell> const shell;
     std::shared_ptr<ms::Session> const session;
     std::shared_ptr<ms::Surface> const window_surface;
     std::shared_ptr<const MirEvent> const latest_event;
+    std::shared_ptr<mir::input::CursorImages> const cursor_images;
+    std::shared_ptr<ms::Surface> const decoration_surface;
 };
 
 
@@ -111,8 +125,9 @@ struct InputResolverAdapter
         std::shared_ptr<msh::Shell> const shell,
         std::shared_ptr<ms::Session> const session,
         std::shared_ptr<ms::Surface> const window_surface,
+        std::shared_ptr<mir::input::CursorImages> const cursor_images,
         OnProcessEnter process_enter,
-        std::function<void()> process_leave,
+        OnProcessLeave process_leave,
         std::function<void()> process_down,
         std::function<void()> process_up,
         OnProcessMove process_move,
@@ -207,7 +222,7 @@ struct DecorationAdapter
         std::function<void(Buffer, mir::geometry::Size)> render_bottom_border,
 
         OnProcessEnter process_enter,
-        std::function<void()> process_leave,
+        OnProcessLeave process_leave,
         std::function<void()> process_down,
         std::function<void()> process_up,
         OnProcessMove process_move,
@@ -224,7 +239,8 @@ struct DecorationAdapter
         std::shared_ptr<ms::Surface> window_surface,
         std::shared_ptr<ms::Surface> decoration_surface,
         std::shared_ptr<mg::GraphicBufferAllocator> buffer_allocator,
-        std::shared_ptr<msh::Shell> shell
+        std::shared_ptr<msh::Shell> shell,
+        std::shared_ptr<mir::input::CursorImages> const cursor_images
     );
 
     void update();

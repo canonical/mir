@@ -69,11 +69,16 @@ struct miral::DecorationBasicManager::Self : public mir::shell::decoration::Basi
                 auto decoration_adapter = decoration_builder(shell, window_surface);
                 auto decoration = decoration_adapter->to_decoration();
 
-                decoration_adapter->init(window_surface, decoration_surface, server.the_buffer_allocator(), shell);
+                decoration_adapter->init(
+                    window_surface,
+                    decoration_surface,
+                    server.the_buffer_allocator(),
+                    shell,
+                    server.the_cursor_images());
 
                 // Rendering events come after this point
                 decoration_adapter->redraw_notifier()->register_listener(
-                    [decoration_adapter, decoration]()
+                    [decoration_adapter]()
                     {
                         decoration_adapter->update();
                     });

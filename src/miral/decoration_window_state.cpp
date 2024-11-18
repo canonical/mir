@@ -15,6 +15,7 @@
  */
 
 #include "miral/decoration_window_state.h"
+#include "mir/geometry/forward.h"
 #include "mir/scene/surface.h"
 
 WindowState::WindowState(StaticGeometry const& static_geometry, ms::Surface const* surface) :
@@ -23,13 +24,6 @@ WindowState::WindowState(StaticGeometry const& static_geometry, ms::Surface cons
     focus_state_{surface->focus_state()},
     window_name_{surface->name()}
 {
-}
-
-auto WindowState::titlebar_rect() const -> geometry::Rectangle
-{
-    return {
-        geometry::Point{},
-        {titlebar_width(), titlebar_height()}};
 }
 
 auto WindowState::titlebar_width() const -> geometry::Width
@@ -42,6 +36,53 @@ auto WindowState::titlebar_height() const -> geometry::Height
     return static_geometry.titlebar_height;
 }
 
+auto WindowState::side_border_width() const -> geometry::Width
+{
+    return static_geometry.side_border_width;
+}
+
+auto WindowState::side_border_height() const -> geometry::Height
+{
+    return window_size().height - as_delta(titlebar_height()) - as_delta(bottom_border_height());
+}
+
+auto WindowState::bottom_border_height() const -> geometry::Height
+{
+    return static_geometry.bottom_border_height;
+}
+
+auto WindowState::bottom_border_width() const -> geometry::Width
+{
+    return titlebar_width();
+}
+
+auto WindowState::titlebar_rect() const -> geometry::Rectangle
+{
+    return {
+        geometry::Point{},
+        {titlebar_width(), titlebar_height()}};
+}
+
+auto WindowState::left_border_rect() const -> geometry::Rectangle
+{
+    return {
+        {geom::X{}, as_y(titlebar_height())},
+        {side_border_width(), side_border_height()}};
+}
+
+auto WindowState::right_border_rect() const -> geometry::Rectangle
+{
+    return {
+        {as_x(window_size().width - side_border_width()), as_y(titlebar_height())},
+        {side_border_width(), side_border_height()}};
+}
+
+auto WindowState::bottom_border_rect() const -> geometry::Rectangle
+{
+    return {
+        {geom::X{}, as_y(window_size().height - bottom_border_height())},
+        {bottom_border_width(), bottom_border_height()}};
+}
 
 auto WindowState::window_size() const -> geometry::Size
 {
@@ -62,3 +103,9 @@ auto WindowState::geometry() const -> StaticGeometry
 {
     return static_geometry;
 }
+
+auto WindowState::resize_corner_input_size() const -> geometry::Size
+{
+    return static_geometry.resize_corner_input_size;
+}
+

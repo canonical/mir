@@ -74,21 +74,31 @@ public:
         auto widget_at(mir::geometry::Point location) -> std::optional<std::shared_ptr<Widget>>;
 
         void process_drag(miral::DeviceEvent& device, miral::InputContext ctx);
-        void process_enter(miral::DeviceEvent& device);
-        void process_leave();
+        void process_enter(miral::DeviceEvent& device, miral::InputContext ctx);
+        void process_leave(miral::InputContext ctx);
         void process_down();
         void process_up();
 
         void widget_drag(Widget& widget, miral::InputContext ctx);
-        void widget_leave(Widget& widget);
-        void widget_enter(Widget& widget);
+        void widget_leave(Widget& widget, miral::InputContext ctx);
+        void widget_enter(Widget& widget, miral::InputContext ctx);
         void widget_down(Widget& widget);
         void widget_up(Widget& widget);
 
         void update_window_state(WindowState const& window_state);
         auto resize_edge_rect(WindowState const& window_state, MirResizeEdge resize_edge) -> mir::geometry::Rectangle;
 
-        std::vector<std::shared_ptr<Widget>> widgets = {std::make_shared<Widget>(mir_resize_edge_none)};
+        std::vector<std::shared_ptr<Widget>> widgets = {
+            std::make_shared<Widget>(mir_resize_edge_northwest),
+            std::make_shared<Widget>(mir_resize_edge_northeast),
+            std::make_shared<Widget>(mir_resize_edge_southwest),
+            std::make_shared<Widget>(mir_resize_edge_southeast),
+            std::make_shared<Widget>(mir_resize_edge_north),
+            std::make_shared<Widget>(mir_resize_edge_south),
+            std::make_shared<Widget>(mir_resize_edge_west),
+            std::make_shared<Widget>(mir_resize_edge_east),
+            std::make_shared<Widget>(mir_resize_edge_none),
+        };
         std::optional<std::shared_ptr<Widget>> active_widget;
     };
 

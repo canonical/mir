@@ -28,6 +28,7 @@ namespace mir::scene { class Surface; }
 
 namespace ms = mir::scene;
 namespace geometry = mir::geometry;
+namespace geom = mir::geometry;
 
 /// Decoration geometry properties that don't change
 struct StaticGeometry
@@ -59,9 +60,19 @@ public:
     auto titlebar_width() const -> geometry::Width;
     auto titlebar_height() const -> geometry::Height;
 
+    auto side_border_width() const -> geometry::Width;
+    auto side_border_height() const -> geometry::Height;
+
+    auto bottom_border_height() const -> geometry::Height;
+    auto bottom_border_width() const -> geometry::Width;
+
     auto titlebar_rect() const -> geometry::Rectangle;
+    auto left_border_rect() const -> geometry::Rectangle;
+    auto right_border_rect() const -> geometry::Rectangle;
+    auto bottom_border_rect() const -> geometry::Rectangle;
 
     auto geometry() const -> StaticGeometry;
+    auto resize_corner_input_size() const -> geometry::Size;
 
 private:
     WindowState(WindowState const&) = delete;

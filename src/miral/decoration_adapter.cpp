@@ -16,19 +16,21 @@
 
 #include "miral/decoration_adapter.h"
 
+#include "mir_toolkit/events/event.h"
 #include "miral/decoration_window_state.h"
 
-#include "mir/shell/decoration.h"
-#include "mir/shell/decoration/input_resolver.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/input/cursor_images.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/server.h"
+#include "mir/shell/decoration.h"
 #include "mir/shell/decoration/input_resolver.h"
 #include "mir/shell/shell.h"
 #include "mir/shell/surface_specification.h"
+
 #include "miral/decoration.h"
 #include "miral/decoration_manager_builder.h"
 
@@ -47,6 +49,19 @@ void miral::InputContext::request_move()
     shell->request_move(session, window_surface, mir_event_get_input_event(latest_event.get()));
 }
 
+void miral::InputContext::request_resize(MirResizeEdge edge)
+{
+    shell->request_resize(session, window_surface, mir_event_get_input_event(latest_event.get()), edge);
+}
+
+void miral::InputContext::set_cursor(std::string const& cursor_image_name)
+{
+    msh::SurfaceSpecification spec;
+    // size is hard-coded because current implementation ignores it
+    spec.cursor_image = cursor_images->image(cursor_image_name, {16, 16});
+    shell->modify_surface(session, decoration_surface, spec);
+}
+
 struct miral::InputResolverAdapter::Impl : public msd::InputResolver
 {
     Impl(
@@ -54,8 +69,9 @@ struct miral::InputResolverAdapter::Impl : public msd::InputResolver
         std::shared_ptr<msh::Shell> const shell,
         std::shared_ptr<ms::Session> const session,
         std::shared_ptr<ms::Surface> const window_surface,
+        std::shared_ptr<mir::input::CursorImages> const cursor_images,
         OnProcessEnter process_enter,
-        std::function<void()> process_leave,
+        OnProcessLeave process_leave,
         std::function<void()> process_down,
         std::function<void()> process_up,
         OnProcessMove process_move,
@@ -64,6 +80,7 @@ struct miral::InputResolverAdapter::Impl : public msd::InputResolver
         shell{shell},
         session{session},
         window_surface{window_surface},
+        cursor_images{cursor_images},
         on_process_enter{process_enter},
         on_process_leave{process_leave},
         on_process_down{process_down},
@@ -73,39 +90,49 @@ struct miral::InputResolverAdapter::Impl : public msd::InputResolver
     {
     }
 
+    auto input_ctx() -> InputContext
+    {
+        return InputContext(shell, session, window_surface, latest_event(), cursor_images, decoration_surface);
+    }
+
     void process_enter(msd::DeviceEvent& device) override
     {
-        on_process_enter(miral::DeviceEvent(device));
+        on_process_enter(miral::DeviceEvent(device), input_ctx());
     }
 
     void process_leave() override
     {
-        on_process_leave();
+        on_process_leave(input_ctx());
     }
 
     void process_down() override
     {
         on_process_down();
     }
+
     void process_up() override
     {
         on_process_up();
     }
+
     void process_move(msd::DeviceEvent& device) override
     {
         on_process_move(device);
     }
+
     void process_drag(msd::DeviceEvent& device) override
     {
-        on_process_drag(device, InputContext(shell, session, window_surface, latest_event()));
+        on_process_drag(
+            device, InputContext(shell, session, window_surface, latest_event(), cursor_images, decoration_surface));
     }
 
     std::shared_ptr<msh::Shell> const shell;
     std::shared_ptr<ms::Session> const session;
     std::shared_ptr<ms::Surface> const window_surface;
+    std::shared_ptr<mir::input::CursorImages> const cursor_images;
 
     OnProcessEnter on_process_enter;
-    std::function<void()> on_process_leave;
+    OnProcessLeave on_process_leave;
     std::function<void()> on_process_down;
     std::function<void()> on_process_up;
     OnProcessMove on_process_move;
@@ -117,8 +144,9 @@ miral::InputResolverAdapter::InputResolverAdapter(
     std::shared_ptr<msh::Shell> const shell,
     std::shared_ptr<ms::Session> const session,
     std::shared_ptr<ms::Surface> const window_surface,
+    std::shared_ptr<mir::input::CursorImages> const cursor_images,
     OnProcessEnter process_enter,
-    std::function<void()> process_leave,
+    OnProcessLeave process_leave,
     std::function<void()> process_down,
     std::function<void()> process_up,
     OnProcessMove process_move,
@@ -128,6 +156,7 @@ miral::InputResolverAdapter::InputResolverAdapter(
         shell,
         session,
         window_surface,
+        cursor_images,
         process_enter,
         process_leave,
         process_down,
@@ -334,7 +363,7 @@ public:
         std::function<void(Buffer, mir::geometry::Size)> render_bottom_border,
 
         OnProcessEnter process_enter,
-        std::function<void()> process_leave,
+        OnProcessLeave process_leave,
         std::function<void()> process_down,
         std::function<void()> process_up,
         OnProcessMove process_move,
@@ -381,8 +410,8 @@ public:
         std::shared_ptr<ms::Surface> window_surface,
         std::shared_ptr<ms::Surface> decoration_surface,
         std::shared_ptr<mg::GraphicBufferAllocator> buffer_allocator,
-        std::shared_ptr<msh::Shell> shell
-    );
+        std::shared_ptr<msh::Shell> shell,
+        std::shared_ptr<mir::input::CursorImages> const cursor_images);
 
     void update();
 
@@ -412,7 +441,7 @@ private:
     std::function<void(Buffer, mir::geometry::Size)> render_bottom_border;
 
     OnProcessEnter on_process_enter;
-    std::function<void()> on_process_leave;
+    OnProcessLeave on_process_leave;
     std::function<void()> on_process_down;
     std::function<void()> on_process_up;
     OnProcessMove on_process_move;
@@ -433,7 +462,7 @@ miral::DecorationAdapter::DecorationAdapter(
     std::function<void(Buffer, mir::geometry::Size)> render_bottom_border,
 
     OnProcessEnter process_enter,
-    std::function<void()> process_leave,
+    OnProcessLeave process_leave,
     std::function<void()> process_down,
     std::function<void()> process_up,
     OnProcessMove process_move,
@@ -471,9 +500,10 @@ void miral::DecorationAdapter::init(
     std::shared_ptr<ms::Surface> window_surface,
     std::shared_ptr<ms::Surface> decoration_surface,
     std::shared_ptr<mg::GraphicBufferAllocator> buffer_allocator,
-    std::shared_ptr<msh::Shell> shell)
+    std::shared_ptr<msh::Shell> shell,
+    std::shared_ptr<mir::input::CursorImages> const cursor_images)
 {
-    impl->init(window_surface, decoration_surface, buffer_allocator, shell);
+    impl->init(window_surface, decoration_surface, buffer_allocator, shell, cursor_images);
 }
 
 void miral::DecorationAdapter::update()
@@ -500,7 +530,14 @@ void miral::DecorationAdapter::Impl::update()
         if (window_state->window_size().height.as_value())
             spec.height = window_state->window_size().height;
 
-        spec.input_shape = {window_state->titlebar_rect()};
+        // Could probably be `decoration->get_input_shape(window_state)`.
+        // This will do for now.
+        spec.input_shape = {
+            window_state->titlebar_rect(),
+            window_state->bottom_border_rect(),
+            window_state->left_border_rect(),
+            window_state->right_border_rect(),
+        };
 
         return spec;
     }();
@@ -520,7 +557,8 @@ void miral::DecorationAdapter::Impl::init(
     std::shared_ptr<ms::Surface> window_surface,
     std::shared_ptr<ms::Surface> decoration_surface,
     std::shared_ptr<mg::GraphicBufferAllocator> buffer_allocator,
-    std::shared_ptr<msh::Shell> shell)
+    std::shared_ptr<msh::Shell> shell,
+    std::shared_ptr<mir::input::CursorImages> const cursor_images)
 {
     this->window_surface = window_surface;
     this->shell = shell;
@@ -534,6 +572,7 @@ void miral::DecorationAdapter::Impl::init(
         shell,
         session,
         window_surface,
+        cursor_images,
         on_process_enter,
         on_process_leave,
         on_process_down,
@@ -545,7 +584,8 @@ void miral::DecorationAdapter::Impl::init(
         std::make_shared<WindowSurfaceObserver>(on_attrib_changed, on_window_resized_to, on_window_renamed);
     window_surface->register_interest(window_surface_observer);
 
-    // Initialize widget rects
+    // Window state initialize, notify/callback into the user decorations to
+    // set themselves up
     on_update_decoration_window_state(window_state);
 }
 

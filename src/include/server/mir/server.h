@@ -441,6 +441,8 @@ public:
     auto the_buffer_allocator() const
         -> std::shared_ptr<graphics::GraphicBufferAllocator>;
 
+    auto the_cursor_images() const
+        -> std::shared_ptr<input::CursorImages>;
 /** @} */
 
 /** @name Client side support

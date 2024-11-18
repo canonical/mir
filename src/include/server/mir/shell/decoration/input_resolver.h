@@ -76,7 +76,6 @@ class InputResolver
 {
 public:
 
-
     InputResolver(std::shared_ptr<mir::scene::Surface> const& decoration_surface);
     virtual ~InputResolver();
 
@@ -102,6 +101,7 @@ protected:
     virtual void process_drag(DeviceEvent& device) = 0;
 
     std::mutex mutex;
+    std::shared_ptr<scene::Surface> decoration_surface;
 private:
     struct Observer;
     friend Observer;
@@ -116,7 +116,6 @@ private:
     std::optional<DeviceEvent> pointer;
     std::map<int32_t, DeviceEvent> touches;
     std::shared_ptr<Observer> input_observer;
-    std::shared_ptr<scene::Surface> decoration_surface;
 };
 }
 }
