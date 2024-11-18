@@ -60,7 +60,7 @@ public:
     bool schedule_page_flip(FBHandle const& fb) override;
     void wait_for_page_flip() override;
 
-    bool set_cursor(gbm_bo* buffer) override;
+    void set_cursor(gbm_bo* buffer) override;
     void move_cursor(geometry::Point destination) override;
     bool clear_cursor() override;
     bool has_cursor() const override;
