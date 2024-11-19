@@ -211,7 +211,10 @@ miral::Renderer::Renderer(
     Renderer::RenderingCallback render_bottom_border) :
     session{window_surface->session().lock()},
     buffer_allocator{buffer_allocator},
-    buffer_streams{std::make_unique<BufferStreams>(session)},
+    titlebar_buffer{session},
+    left_border_buffer{session},
+    right_border_buffer{session},
+    bottom_border_buffer{session},
     render_titlebar{render_titlebar},
     render_left_border{render_left_border},
     render_right_border{render_right_border},
@@ -259,30 +262,15 @@ void miral::Renderer::update_state(WindowState const& window_state)
     conditional_resize(bottom_border_buffer, window_state.bottom_border_rect());
 }
 
-auto miral::Renderer::BufferStreams::create_buffer_stream() -> std::shared_ptr<mc::BufferStream>
-{
-    auto const stream = session->create_buffer_stream(mg::BufferProperties{
-        geom::Size{1, 1},
-        buffer_format,
-        mg::BufferUsage::software});
-    return stream;
-}
-
-miral::Renderer::BufferStreams::BufferStreams(std::shared_ptr<ms::Session> const& session)
-    : session{session},
-      titlebar{create_buffer_stream()},
-      left_border{create_buffer_stream()},
-      right_border{create_buffer_stream()},
-      bottom_border{create_buffer_stream()}
+miral::Renderer::Buffer::Buffer(std::shared_ptr<ms::Session> const& session) :
+    stream_{
+        session->create_buffer_stream(mg::BufferProperties{geom::Size{1, 1}, buffer_format, mg::BufferUsage::software})}
 {
 }
 
-miral::Renderer::BufferStreams::~BufferStreams()
+miral::Renderer::Buffer::~Buffer()
 {
-    session->destroy_buffer_stream(titlebar);
-    session->destroy_buffer_stream(left_border);
-    session->destroy_buffer_stream(right_border);
-    session->destroy_buffer_stream(bottom_border);
+    session->destroy_buffer_stream(stream_);
 }
 
 auto miral::Renderer::streams_to_spec(std::shared_ptr<WindowState> window_state)
@@ -302,13 +290,13 @@ auto miral::Renderer::streams_to_spec(std::shared_ptr<WindowState> window_state)
     switch(window_state->border_type())
     {
     case BorderType::Full:
-        emplace(buffer_streams->titlebar, window_state->titlebar_rect());
-        emplace(buffer_streams->left_border, window_state->left_border_rect());
-        emplace(buffer_streams->right_border, window_state->right_border_rect());
-        emplace(buffer_streams->bottom_border, window_state->bottom_border_rect());
+        emplace(titlebar_buffer.stream(), window_state->titlebar_rect());
+        emplace(left_border_buffer.stream(), window_state->left_border_rect());
+        emplace(right_border_buffer.stream(), window_state->right_border_rect());
+        emplace(bottom_border_buffer.stream(), window_state->bottom_border_rect());
         break;
     case BorderType::Titlebar:
-        emplace(buffer_streams->titlebar, window_state->titlebar_rect());
+        emplace(titlebar_buffer.stream(), window_state->titlebar_rect());
         break;
     case BorderType::None:
         break;
@@ -329,14 +317,14 @@ auto miral::Renderer::update_render_submit(std::shared_ptr<WindowState> window_s
         render_left_border(left_border_buffer);
         render_right_border(right_border_buffer);
         render_bottom_border(bottom_border_buffer);
-        new_buffers.emplace_back(buffer_streams->titlebar, make_graphics_buffer(titlebar_buffer));
-        new_buffers.emplace_back(buffer_streams->left_border, make_graphics_buffer(left_border_buffer));
-        new_buffers.emplace_back(buffer_streams->right_border, make_graphics_buffer(right_border_buffer));
-        new_buffers.emplace_back(buffer_streams->bottom_border, make_graphics_buffer(bottom_border_buffer));
+        new_buffers.emplace_back(titlebar_buffer.stream(), make_graphics_buffer(titlebar_buffer));
+        new_buffers.emplace_back(left_border_buffer.stream(), make_graphics_buffer(left_border_buffer));
+        new_buffers.emplace_back(right_border_buffer.stream(), make_graphics_buffer(right_border_buffer));
+        new_buffers.emplace_back(bottom_border_buffer.stream(), make_graphics_buffer(bottom_border_buffer));
         break;
     case BorderType::Titlebar:
         render_titlebar(titlebar_buffer);
-        new_buffers.emplace_back(buffer_streams->titlebar, make_graphics_buffer(titlebar_buffer));
+        new_buffers.emplace_back(titlebar_buffer.stream(), make_graphics_buffer(titlebar_buffer));
         break;
     case BorderType::None:
         break;

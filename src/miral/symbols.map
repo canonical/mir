@@ -555,9 +555,12 @@ global:
     miral::InputContext::request_toggle_maximize*;
     miral::InputContext::set_cursor*;
     miral::InputResolverAdapter::InputResolverAdapter*;
+    miral::Renderer::Buffer::?Buffer*;
+    miral::Renderer::Buffer::Buffer*;
     miral::Renderer::Buffer::get*;
     miral::Renderer::Buffer::resize*;
     miral::Renderer::Buffer::size*;
+    miral::Renderer::Buffer::stream*;
     miral::Renderer::BufferStreams::?BufferStreams*;
     miral::Renderer::BufferStreams::BufferStreams*;
     miral::Renderer::BufferStreams::create_buffer_stream*;
@@ -568,7 +571,6 @@ global:
     miral::Renderer::streams_to_spec*;
     miral::Renderer::update_render_submit*;
     miral::Renderer::update_state*;
-    miral::foo*;
     typeinfo?for?StaticGeometry;
     typeinfo?for?WindowState;
     typeinfo?for?miral::CustomDecorations;

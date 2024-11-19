@@ -155,6 +155,9 @@ public:
     }
 
     struct Buffer {
+        Buffer(std::shared_ptr<ms::Session> const& session);
+        ~Buffer();
+
         auto size() const -> geometry::Size const { return size_; }
 
         auto get() const -> Pixel*
@@ -168,36 +171,27 @@ public:
             pixels_ = std::unique_ptr<Pixel[]>{new uint32_t[area(new_size) * bytes_per_pixel]};
         }
 
+        auto stream() const -> std::shared_ptr<mc::BufferStream>
+        {
+            return stream_;
+        }
+
     private:
+        Buffer(Buffer const&) = delete;
+        Buffer& operator=(Buffer const&) = delete;
+
         geometry::Size size_{};
         // can be nullptr, but should never be nullptr when passed to user
         // rendering callbacks
         std::unique_ptr<Pixel[]> pixels_;
+
+        std::shared_ptr<ms::Session> const session;
+        std::shared_ptr<mc::BufferStream> const stream_;
     };
 
     using DeviceEvent = mir::shell::decoration::DeviceEvent;
     using RenderingCallback = std::function<void(Buffer&)>;
 
-    class BufferStreams
-    {
-        // Must be at top so it can be used by create_buffer_stream() when called in the constructor
-        std::shared_ptr<ms::Session> const session;
-
-    public:
-        BufferStreams(std::shared_ptr<ms::Session> const& session);
-        ~BufferStreams();
-
-        auto create_buffer_stream() -> std::shared_ptr<mc::BufferStream>;
-
-        std::shared_ptr<mc::BufferStream> const titlebar;
-        std::shared_ptr<mc::BufferStream> const left_border;
-        std::shared_ptr<mc::BufferStream> const right_border;
-        std::shared_ptr<mc::BufferStream> const bottom_border;
-
-    private:
-        BufferStreams(BufferStreams const&) = delete;
-        BufferStreams& operator=(BufferStreams const&) = delete;
-    };
 
     Renderer(
         std::shared_ptr<ms::Surface> window_surface,
@@ -233,7 +227,6 @@ private:
 
     std::shared_ptr<ms::Session> session;
     std::shared_ptr<mg::GraphicBufferAllocator> buffer_allocator;
-    std::unique_ptr<BufferStreams> buffer_streams;
 
     Buffer titlebar_buffer;
     Buffer left_border_buffer;
