@@ -147,7 +147,36 @@ struct InputResolverAdapter
 class Renderer
 {
 public:
+    static inline auto area(geometry::Size const size) -> size_t
+    {
+        return (size.width > geom::Width{} && size.height > geom::Height{}) ?
+                   size.width.as_int() * size.height.as_int() :
+                   0;
+    }
+
+    struct Buffer {
+        auto size() const -> geometry::Size const { return size_; }
+
+        auto get() const -> Pixel*
+        {
+            return pixels_.get();
+        }
+
+        void resize(geometry::Size new_size)
+        {
+            size_ = new_size;
+            pixels_ = std::unique_ptr<Pixel[]>{new uint32_t[area(new_size) * bytes_per_pixel]};
+        }
+
+    private:
+        geometry::Size size_{};
+        // can be nullptr, but should never be nullptr when passed to user
+        // rendering callbacks
+        std::unique_ptr<Pixel[]> pixels_;
+    };
+
     using DeviceEvent = mir::shell::decoration::DeviceEvent;
+    using RenderingCallback = std::function<void(Buffer&)>;
 
     class BufferStreams
     {
@@ -173,60 +202,58 @@ public:
     Renderer(
         std::shared_ptr<ms::Surface> window_surface,
         std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
-        std::function<void(Buffer, mir::geometry::Size)> render_titlebar);
-
-    inline auto area(geometry::Size size) -> size_t
-    {
-        return (size.width > geom::Width{} && size.height > geom::Height{}) ?
-                   size.width.as_int() * size.height.as_int() :
-                   0;
-    }
-
-    auto make_buffer(uint32_t const* pixels, geometry::Size size) -> std::optional<std::shared_ptr<mg::Buffer>>;
+        Renderer::RenderingCallback render_titlebar,
+        Renderer::RenderingCallback render_left_border,
+        Renderer::RenderingCallback render_right_border,
+        Renderer::RenderingCallback render_bottom_border);
 
     static inline void render_row(
-        uint32_t* const data,
-        geometry::Size buf_size,
+        Buffer const& buffer,
         geometry::Point left,
         geometry::Width length,
         uint32_t color)
     {
+        auto buf_size = buffer.size();
         if (left.y < geometry::Y{} || left.y >= as_y(buf_size.height))
             return;
         geometry::X const right = std::min(left.x + as_delta(length), as_x(buf_size.width));
         left.x = std::max(left.x, geometry::X{});
-        uint32_t* const start = data + (left.y.as_int() * buf_size.width.as_int()) + left.x.as_int();
+        uint32_t* const start = buffer.get() + (left.y.as_int() * buf_size.width.as_int()) + left.x.as_int();
         uint32_t* const end = start + right.as_int() - left.x.as_int();
         for (uint32_t* i = start; i < end; i++)
             *i = color;
     }
 
     void update_state(WindowState const& window_state);
-
     auto streams_to_spec(std::shared_ptr<WindowState> window_state) -> msh::SurfaceSpecification;
-
     auto update_render_submit(std::shared_ptr<WindowState> window_state);
+
+private:
+    auto make_graphics_buffer(Buffer const&) -> std::optional<std::shared_ptr<mg::Buffer>>;
 
     std::shared_ptr<ms::Session> session;
     std::shared_ptr<mg::GraphicBufferAllocator> buffer_allocator;
     std::unique_ptr<BufferStreams> buffer_streams;
 
-    geometry::Size titlebar_size{};
-    std::unique_ptr<Pixel[]> titlebar_pixels; // can be nullptr
+    Buffer titlebar_buffer;
+    Buffer left_border_buffer;
+    Buffer right_border_buffer;
+    Buffer bottom_border_buffer;
 
-    std::function<void(Buffer, mir::geometry::Size)> render_titlebar;
+    RenderingCallback render_titlebar;
+    RenderingCallback render_left_border;
+    RenderingCallback render_right_border;
+    RenderingCallback render_bottom_border;
 };
 
 struct DecorationAdapter
 {
-    using Buffer = miral::Buffer;
-
     DecorationAdapter(
         std::shared_ptr<DecorationRedrawNotifier> redraw_notifier,
-        std::function<void(Buffer, mir::geometry::Size)> render_titlebar,
-        std::function<void(Buffer, mir::geometry::Size)> render_left_border,
-        std::function<void(Buffer, mir::geometry::Size)> render_right_border,
-        std::function<void(Buffer, mir::geometry::Size)> render_bottom_border,
+        Renderer::RenderingCallback render_titlebar,
+        Renderer::RenderingCallback render_left_border,
+        Renderer::RenderingCallback render_right_border,
+        Renderer::RenderingCallback render_bottom_border,
 
         OnProcessEnter process_enter,
         OnProcessLeave process_leave,

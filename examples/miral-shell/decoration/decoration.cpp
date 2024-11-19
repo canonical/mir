@@ -50,22 +50,17 @@ auto UserDecoration::InputManager::buttons() const -> std::vector<std::shared_pt
     return button_rects;
 }
 
-void UserDecoration::render_titlebar(miral::Buffer titlebar_pixels, mir::geometry::Size scaled_titlebar_size)
+void UserDecoration::render_titlebar(miral::Renderer::Buffer const& titlebar_buffer)
 {
-    for (geometry::Y y{0}; y < as_y(scaled_titlebar_size.height); y += geometry::DeltaY{1})
-    {
-        miral::Renderer::render_row(
-            titlebar_pixels, scaled_titlebar_size, {0, y}, scaled_titlebar_size.width, current_titlebar_color);
-    }
+    fill_solid_color(titlebar_buffer, current_titlebar_color);
 
     auto const draw_button =
         [&]( geometry::Rectangle button_rect, miral::Pixel color)
     {
         auto start = button_rect.top_left;
         auto end = button_rect.bottom_right();
-        for(auto y = start.y; y < end.y; y += geometry::DeltaY{1})
-            miral::Renderer::render_row(
-                titlebar_pixels, scaled_titlebar_size, {start.x, y}, geometry::as_width(end.x - start.x), color);
+        for (auto y = start.y; y < end.y; y += geometry::DeltaY{1})
+            miral::Renderer::render_row(titlebar_buffer, {start.x, y}, geometry::as_width(end.x - start.x), color);
     };
 
     auto buttons = input_manager.buttons();
@@ -93,6 +88,14 @@ void UserDecoration::render_titlebar(miral::Buffer titlebar_pixels, mir::geometr
             color += 0x00444444;
 
         draw_button(button_rect, color);
+    }
+}
+
+void UserDecoration::fill_solid_color(miral::Renderer::Buffer const& left_border_buffer, miral::Pixel color)
+{
+    for (geometry::Y y{0}; y < as_y(left_border_buffer.size().height); y += geometry::DeltaY{1})
+    {
+        miral::Renderer::render_row(left_border_buffer, {0, y}, left_border_buffer.size().width, color);
     }
 }
 
@@ -373,18 +376,21 @@ auto UserDecoration::create_manager(mir::Server& server)
                    auto decoration = std::make_shared<UserDecoration>();
                    auto decoration_adapter = std::make_shared<miral::DecorationAdapter>(
                        decoration->redraw_notifier(),
-                       [decoration](miral::Buffer titlebar_pixels, geometry::Size scaled_titlebar_size)
+                       [decoration](auto const& titlebar_buffer)
                        {
-                           decoration->render_titlebar(titlebar_pixels, scaled_titlebar_size);
+                           decoration->render_titlebar(titlebar_buffer);
                        },
-                       [](auto...)
+                       [decoration](auto const& left_border_buffer)
                        {
+                            decoration->fill_solid_color(left_border_buffer, 0xFFFF00FF);
                        },
-                       [](auto...)
+                       [decoration](auto const& right_border_buffer)
                        {
+                            decoration->fill_solid_color(right_border_buffer, 0xFF00FFFF);
                        },
-                       [](auto...)
+                       [decoration](auto const& bottom_border_buffer)
                        {
+                            decoration->fill_solid_color(bottom_border_buffer, 0xFFFFFF00);
                        },
                        [decoration](auto... args)
                        {
@@ -455,5 +461,4 @@ auto UserDecoration::create_manager(mir::Server& server)
         .to_adapter();
 }
 
-// TODO Render rest of the sides?
 // TODO User defined static_geometry?

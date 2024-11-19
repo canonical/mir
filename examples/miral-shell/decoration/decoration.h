@@ -45,7 +45,8 @@ class UserDecoration : public miral::Decoration
 public:
     UserDecoration();
 
-    void render_titlebar(miral::Buffer titlebar_pixels, mir::geometry::Size scaled_titlebar_size);
+    void render_titlebar(miral::Renderer::Buffer const& titlebar_buffer);
+    void fill_solid_color(miral::Renderer::Buffer const& left_border_buffer, miral::Pixel color);
 
     static auto create_manager(mir::Server&)
         -> std::shared_ptr<miral::DecorationManagerAdapter>;
@@ -123,6 +124,10 @@ public:
 
     void focused();
     void unfocused();
+
+    void minimized();
+    void maximized();
+    void normal();
 
     InputManager input_manager;
     static miral::Pixel const focused_titlebar_color = 0xFF00FFFF;

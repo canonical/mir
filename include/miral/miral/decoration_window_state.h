@@ -28,7 +28,13 @@ namespace mir::scene { class Surface; }
 
 namespace ms = mir::scene;
 namespace geometry = mir::geometry;
-namespace geom = mir::geometry;
+
+enum class BorderType
+{
+    Full,       ///< Full titlebar and border (for restored windows)
+    Titlebar,   ///< Titlebar only (for maximized windows)
+    None,       ///< No decorations (for fullscreen windows or popups)
+};
 
 /// Decoration geometry properties that don't change
 struct StaticGeometry
@@ -73,6 +79,7 @@ public:
 
     auto geometry() const -> StaticGeometry;
     auto resize_corner_input_size() const -> geometry::Size;
+    auto border_type() const -> BorderType;
 
 private:
     WindowState(WindowState const&) = delete;
@@ -80,6 +87,7 @@ private:
 
     StaticGeometry const static_geometry; // TODO: this can be shared between all instance of a decoration
     geometry::Size const window_size_;
+    BorderType const border_type_;
     MirWindowFocusState const focus_state_;
     std::string window_name_;
 };

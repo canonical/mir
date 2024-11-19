@@ -17,9 +17,13 @@
 #include "miral/decoration_adapter.h"
 
 #include "mir_toolkit/events/event.h"
+#include "mir/geometry/forward.h"
 #include "miral/decoration_window_state.h"
+#include "miral/decoration.h"
+#include "miral/decoration_manager_builder.h"
 
 #include "mir/compositor/buffer_stream.h"
+#include "mir/geometry/displacement.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/input/cursor_images.h"
 #include "mir/renderer/sw/pixel_source.h"
@@ -29,9 +33,7 @@
 #include "mir/shell/decoration/input_resolver.h"
 #include "mir/shell/shell.h"
 #include "mir/shell/surface_specification.h"
-
-#include "miral/decoration.h"
-#include "miral/decoration_manager_builder.h"
+#include "mir/log.h"
 
 #include <memory>
 
@@ -203,20 +205,26 @@ StaticGeometry const default_geometry{
 miral::Renderer::Renderer(
     std::shared_ptr<ms::Surface> window_surface,
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
-    std::function<void(Buffer, mir::geometry::Size)> render_titlebar) :
+    Renderer::RenderingCallback render_titlebar,
+    Renderer::RenderingCallback render_left_border,
+    Renderer::RenderingCallback render_right_border,
+    Renderer::RenderingCallback render_bottom_border) :
     session{window_surface->session().lock()},
     buffer_allocator{buffer_allocator},
     buffer_streams{std::make_unique<BufferStreams>(session)},
-    render_titlebar{render_titlebar}
+    render_titlebar{render_titlebar},
+    render_left_border{render_left_border},
+    render_right_border{render_right_border},
+    render_bottom_border{render_bottom_border}
 {
 }
 
-auto miral::Renderer::make_buffer(uint32_t const* pixels, geometry::Size size)
+auto miral::Renderer::make_graphics_buffer(Buffer const& buffer)
     -> std::optional<std::shared_ptr<mg::Buffer>>
 {
-    if (!area(size))
+    if (!area(buffer.size()))
     {
-        /* log_warning("Failed to draw SSD: tried to create zero size buffer"); */
+        mir::log_warning("Failed to draw SSD: tried to create zero size buffer");
         return std::nullopt;
     }
 
@@ -224,25 +232,31 @@ auto miral::Renderer::make_buffer(uint32_t const* pixels, geometry::Size size)
     {
         return mrs::alloc_buffer_with_content(
             *buffer_allocator,
-            reinterpret_cast<unsigned char const*>(pixels),
-            size,
-            geometry::Stride{size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(buffer_format)},
+            reinterpret_cast<unsigned char const*>(buffer.get()),
+            buffer.size(),
+            geometry::Stride{buffer.size().width.as_uint32_t() * MIR_BYTES_PER_PIXEL(buffer_format)},
             buffer_format);
     }
     catch (std::runtime_error const&)
     {
-        /* log_warning("Failed to draw SSD: software buffer not a pixel source"); */
+        mir::log_warning("Failed to draw SSD: software buffer not a pixel source");
         return std::nullopt;
     }
 }
 
 void miral::Renderer::update_state(WindowState const& window_state)
 {
-    if (window_state.titlebar_rect().size != titlebar_size)
+    auto const conditional_resize =
+        [](auto& buffer, auto const& rect)
     {
-        titlebar_size = window_state.titlebar_rect().size;
-        titlebar_pixels = std::unique_ptr<uint32_t[]>{new uint32_t[area(titlebar_size) * bytes_per_pixel]};
-    }
+        if (rect.size != buffer.size())
+            buffer.resize(rect.size);
+    };
+
+    conditional_resize(titlebar_buffer, window_state.titlebar_rect());
+    conditional_resize(left_border_buffer, window_state.left_border_rect());
+    conditional_resize(right_border_buffer, window_state.right_border_rect());
+    conditional_resize(bottom_border_buffer, window_state.bottom_border_rect());
 }
 
 auto miral::Renderer::BufferStreams::create_buffer_stream() -> std::shared_ptr<mc::BufferStream>
@@ -285,7 +299,20 @@ auto miral::Renderer::streams_to_spec(std::shared_ptr<WindowState> window_state)
             spec.streams.value().emplace_back(StreamSpecification{stream, as_displacement(rect.top_left)});
     };
 
-    emplace(buffer_streams->titlebar, window_state->titlebar_rect());
+    switch(window_state->border_type())
+    {
+    case BorderType::Full:
+        emplace(buffer_streams->titlebar, window_state->titlebar_rect());
+        emplace(buffer_streams->left_border, window_state->left_border_rect());
+        emplace(buffer_streams->right_border, window_state->right_border_rect());
+        emplace(buffer_streams->bottom_border, window_state->bottom_border_rect());
+        break;
+    case BorderType::Titlebar:
+        emplace(buffer_streams->titlebar, window_state->titlebar_rect());
+        break;
+    case BorderType::None:
+        break;
+    }
 
     return spec;
 }
@@ -294,24 +321,35 @@ auto miral::Renderer::update_render_submit(std::shared_ptr<WindowState> window_s
 {
     update_state(*window_state);
 
-    std::vector<std::pair<
-        std::shared_ptr<mc::BufferStream>,
-        std::optional<std::shared_ptr<mg::Buffer>>>> new_buffers;
-
-    render_titlebar(titlebar_pixels.get(), titlebar_size);
-
-    new_buffers.emplace_back(
-        buffer_streams->titlebar,
-        make_buffer(titlebar_pixels.get(), titlebar_size));
+    std::vector<std::pair<std::shared_ptr<mc::BufferStream>, std::optional<std::shared_ptr<mg::Buffer>>>> new_buffers;
+    switch(window_state->border_type())
+    {
+    case BorderType::Full:
+        render_titlebar(titlebar_buffer);
+        render_left_border(left_border_buffer);
+        render_right_border(right_border_buffer);
+        render_bottom_border(bottom_border_buffer);
+        new_buffers.emplace_back(buffer_streams->titlebar, make_graphics_buffer(titlebar_buffer));
+        new_buffers.emplace_back(buffer_streams->left_border, make_graphics_buffer(left_border_buffer));
+        new_buffers.emplace_back(buffer_streams->right_border, make_graphics_buffer(right_border_buffer));
+        new_buffers.emplace_back(buffer_streams->bottom_border, make_graphics_buffer(bottom_border_buffer));
+        break;
+    case BorderType::Titlebar:
+        render_titlebar(titlebar_buffer);
+        new_buffers.emplace_back(buffer_streams->titlebar, make_graphics_buffer(titlebar_buffer));
+        break;
+    case BorderType::None:
+        break;
+    }
 
     float inv_scale = 1.0f; // 1.0f / window_state->scale();
-    for (auto const& pair : new_buffers)
+    for (auto const& [stream, buffer_opt] : new_buffers)
     {
-        if (pair.second)
-            pair.first->submit_buffer(
-                pair.second.value(),
-                pair.second.value()->size() * inv_scale,
-                {{0, 0}, geom::SizeD{pair.second.value()->size()}});
+        if (buffer_opt)
+        {
+            auto& buffer = buffer_opt.value();
+            stream->submit_buffer(buffer, buffer->size() * inv_scale, {{0, 0}, geom::SizeD{buffer->size()}});
+        }
     }
 }
 
@@ -370,17 +408,14 @@ private:
 struct miral::DecorationAdapter::Impl : public msd::Decoration
 {
 public:
-    using Buffer = miral::Buffer;
-    using DeviceEvent = miral::Renderer::DeviceEvent;
-
     Impl() = delete;
 
     Impl(
         std::shared_ptr<DecorationRedrawNotifier> redraw_notifier,
-        std::function<void(Buffer, mir::geometry::Size)> render_titlebar,
-        std::function<void(Buffer, mir::geometry::Size)> render_left_border,
-        std::function<void(Buffer, mir::geometry::Size)> render_right_border,
-        std::function<void(Buffer, mir::geometry::Size)> render_bottom_border,
+        Renderer::RenderingCallback render_titlebar,
+        Renderer::RenderingCallback render_left_border,
+        Renderer::RenderingCallback render_right_border,
+        Renderer::RenderingCallback render_bottom_border,
 
         OnProcessEnter process_enter,
         OnProcessLeave process_leave,
@@ -455,10 +490,10 @@ private:
     std::shared_ptr<ms::Session> session;
     std::shared_ptr<WindowState> window_state;
 
-    std::function<void(Buffer, mir::geometry::Size)> render_titlebar;
-    std::function<void(Buffer, mir::geometry::Size)> render_left_border;
-    std::function<void(Buffer, mir::geometry::Size)> render_right_border;
-    std::function<void(Buffer, mir::geometry::Size)> render_bottom_border;
+    Renderer::RenderingCallback render_titlebar;
+    Renderer::RenderingCallback render_left_border;
+    Renderer::RenderingCallback render_right_border;
+    Renderer::RenderingCallback render_bottom_border;
 
     OnProcessEnter on_process_enter;
     OnProcessLeave on_process_leave;
@@ -476,10 +511,10 @@ private:
 
 miral::DecorationAdapter::DecorationAdapter(
     std::shared_ptr<DecorationRedrawNotifier> redraw_notifier,
-    std::function<void(Buffer, mir::geometry::Size)> render_titlebar,
-    std::function<void(Buffer, mir::geometry::Size)> render_left_border,
-    std::function<void(Buffer, mir::geometry::Size)> render_right_border,
-    std::function<void(Buffer, mir::geometry::Size)> render_bottom_border,
+    Renderer::RenderingCallback render_titlebar,
+    Renderer::RenderingCallback render_left_border,
+    Renderer::RenderingCallback render_right_border,
+    Renderer::RenderingCallback render_bottom_border,
 
     OnProcessEnter process_enter,
     OnProcessLeave process_leave,
@@ -562,6 +597,12 @@ void miral::DecorationAdapter::Impl::update()
         return spec;
     }();
 
+    window_surface->set_window_margins(
+        as_delta(window_state->titlebar_height()),
+        as_delta(window_state->side_border_width()),
+        as_delta(window_state->bottom_border_height()),
+        as_delta(window_state->side_border_width()));
+
     auto stream_spec = renderer->streams_to_spec(window_state);
     stream_spec.update_from(window_spec);
 
@@ -586,7 +627,7 @@ void miral::DecorationAdapter::Impl::init(
     this->decoration_surface = decoration_surface;
     this->window_state = std::make_shared<WindowState>(default_geometry, window_surface.get());
 
-    renderer = std::make_unique<Renderer>(window_surface, buffer_allocator, render_titlebar);
+    renderer = std::make_unique<Renderer>(window_surface, buffer_allocator, render_titlebar, render_left_border, render_right_border, render_bottom_border);
     input_adapter = std::make_unique<InputResolverAdapter>(
         decoration_surface,
         shell,

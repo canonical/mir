@@ -509,6 +509,7 @@ MIRAL_5.2 {
 global:
   extern "C++" {
     WindowState::WindowState*;
+    WindowState::border_type*;
     WindowState::bottom_border_height*;
     WindowState::bottom_border_rect*;
     WindowState::bottom_border_width*;
@@ -554,6 +555,9 @@ global:
     miral::InputContext::request_toggle_maximize*;
     miral::InputContext::set_cursor*;
     miral::InputResolverAdapter::InputResolverAdapter*;
+    miral::Renderer::Buffer::get*;
+    miral::Renderer::Buffer::resize*;
+    miral::Renderer::Buffer::size*;
     miral::Renderer::BufferStreams::?BufferStreams*;
     miral::Renderer::BufferStreams::BufferStreams*;
     miral::Renderer::BufferStreams::create_buffer_stream*;
@@ -576,6 +580,7 @@ global:
     typeinfo?for?miral::DeviceEvent;
     typeinfo?for?miral::InputContext;
     typeinfo?for?miral::InputResolverAdapter;
+    typeinfo?for?miral::Renderer::Buffer;
     typeinfo?for?miral::Renderer::BufferStreams;
     typeinfo?for?miral::Renderer;
   };
