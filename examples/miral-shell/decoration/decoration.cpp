@@ -20,6 +20,7 @@
 
 #include "decoration.h"
 
+#include "mir_toolkit/common.h"
 #include "mir_toolkit/cursors.h"
 #include "miral/decoration_adapter.h"
 #include "miral/decoration.h"
@@ -28,9 +29,7 @@
 #include "miral/decoration_basic_manager.h"
 #include "miral/decoration_manager_builder.h"
 
-#include <algorithm>
 #include <memory>
-#include <ranges>
 
 namespace geometry = mir::geometry;
 namespace geom = mir::geometry;
@@ -56,7 +55,7 @@ void UserDecoration::render_titlebar(miral::Buffer titlebar_pixels, mir::geometr
     for (geometry::Y y{0}; y < as_y(scaled_titlebar_size.height); y += geometry::DeltaY{1})
     {
         miral::Renderer::render_row(
-            titlebar_pixels, scaled_titlebar_size, {0, y}, scaled_titlebar_size.width, 0xFF00FFFF);
+            titlebar_pixels, scaled_titlebar_size, {0, y}, scaled_titlebar_size.width, current_titlebar_color);
     }
 
     auto const draw_button =
@@ -192,6 +191,7 @@ void UserDecoration::InputManager::widget_up(Widget& widget, InputContext ctx)
             break;
 
         case ButtonFunction::Minimize:
+            // For some reason, Mir forces the app window to be visible on click
             ctx.request_minimize();
             break;
         }
@@ -353,6 +353,16 @@ void UserDecoration::InputManager::update_window_state(WindowState const& window
     }
 }
 
+void UserDecoration::unfocused()
+{
+    current_titlebar_color = unfocused_titlebar_color;
+}
+
+void UserDecoration::focused()
+{
+    current_titlebar_color = focused_titlebar_color;
+}
+
 auto UserDecoration::create_manager(mir::Server& server)
     -> std::shared_ptr<miral::DecorationManagerAdapter>
 {
@@ -381,42 +391,50 @@ auto UserDecoration::create_manager(mir::Server& server)
                            // Author should figure out if changes require a redraw
                            // then call DecorationRedrawNotifier::notify()
                            // Here we just assume we're always redrawing
-                           /* mir::log_debug("process_enter"); */
                            decoration->input_manager.process_enter(args...);
                            decoration->redraw_notifier()->notify();
                        },
                        [decoration](auto... args)
                        {
-                           /* mir::log_debug("process_leave"); */
                            decoration->input_manager.process_leave(args...);
                            decoration->redraw_notifier()->notify();
                        },
                        [decoration](auto...)
                        {
-                           /* mir::log_debug("process_down"); */
                            decoration->input_manager.process_down();
-                           decoration->redraw_notifier()->notify();
                        },
                        [decoration](auto... args)
                        {
-                           /* mir::log_debug("process_up"); */
                            decoration->input_manager.process_up(args...);
-                           decoration->redraw_notifier()->notify();
                        },
                        [decoration](auto... args)
                        {
-                           /* mir::log_debug("process_move"); */
                            decoration->input_manager.process_move(args...);
                            decoration->redraw_notifier()->notify();
                        },
                        [decoration](auto... args)
                        {
-                           /* mir::log_debug("process_drag"); */
                            decoration->input_manager.process_drag(args...);
-                           decoration->redraw_notifier()->notify();
                        },
-                       [decoration](auto...)
+                       [decoration](auto*, MirWindowAttrib attrib, auto value)
                        {
+                           switch (attrib)
+                           {
+                           case mir_window_attrib_focus:
+                               switch (value)
+                               {
+                               case mir_window_focus_state_unfocused:
+                                   decoration->unfocused();
+                                   break;
+
+                               default:
+                                   decoration->focused();
+                                   break;
+                               }
+                               break;
+                           default:
+                               break;
+                           }
                            decoration->redraw_notifier()->notify();
                        },
                        [decoration](auto...)
@@ -437,6 +455,5 @@ auto UserDecoration::create_manager(mir::Server& server)
         .to_adapter();
 }
 
-// TODO Focus?
 // TODO Render rest of the sides?
 // TODO User defined static_geometry?

@@ -415,7 +415,7 @@ public:
                              {
                                  window_state_updated(window_surface);
                                  window_resized_to(args...);
-                              on_update_decoration_window_state(window_state);
+                                 on_update_decoration_window_state(window_state);
                              }},
         on_window_renamed{[this, window_renamed](auto... args)
                           {

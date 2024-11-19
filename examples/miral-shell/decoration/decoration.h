@@ -121,5 +121,11 @@ public:
         std::optional<std::shared_ptr<Widget>> active_widget;
     };
 
+    void focused();
+    void unfocused();
+
     InputManager input_manager;
+    static miral::Pixel const focused_titlebar_color = 0xFF00FFFF;
+    static miral::Pixel const unfocused_titlebar_color = 0xBB00BBBB;
+    miral::Pixel current_titlebar_color = focused_titlebar_color;
 };
