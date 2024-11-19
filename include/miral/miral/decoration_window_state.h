@@ -23,6 +23,7 @@
 #include "mir/geometry/point.h"
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
+#include <memory>
 
 namespace mir::scene { class Surface; }
 
@@ -48,16 +49,12 @@ struct StaticGeometry
                                                    ///< surface is considered a resize corner)
     geometry::Width const button_width;            ///< The width of window control buttons
     geometry::Width const padding_between_buttons; ///< The gep between titlebar buttons
-    geometry::Height const title_font_height;      ///< Height of the text used to render the window title
-    geometry::Point const title_font_top_left;     ///< Where to render the window title
-    geometry::Displacement const icon_padding;     ///< Padding inside buttons around icons
-    geometry::Width const icon_line_width;         ///< Width for lines in button icons
 };
 
 class WindowState
 {
 public:
-    WindowState(StaticGeometry const& static_geometry, ms::Surface const* surface);
+    WindowState(std::shared_ptr<StaticGeometry> const& static_geometry, ms::Surface const* surface);
 
     auto window_size() const -> geometry::Size;
     auto focused_state() const -> MirWindowFocusState;
@@ -85,7 +82,7 @@ private:
     WindowState(WindowState const&) = delete;
     WindowState& operator=(WindowState const&) = delete;
 
-    StaticGeometry const static_geometry; // TODO: this can be shared between all instance of a decoration
+    std::shared_ptr<StaticGeometry> const static_geometry; // TODO: this can be shared between all instance of a decoration
     geometry::Size const window_size_;
     BorderType const border_type_;
     MirWindowFocusState const focus_state_;

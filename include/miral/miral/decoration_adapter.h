@@ -22,11 +22,11 @@
 // TODO one more layer of indirection
 #include "mir/geometry/forward.h"
 #include "mir/geometry/size.h"
-#include "mir/geometry/point.h"
 #include "mir_toolkit/common.h"
 
 #include "miral/decoration_basic_manager.h"
 #include "miral/decoration_manager_builder.h"
+#include "miral/decoration_window_state.h"
 
 #include <functional>
 #include <glm/gtc/constants.hpp>
@@ -259,6 +259,8 @@ struct DecorationAdapter
             window_resized_to,
         std::function<void(ms::Surface const* window_surface, std::string const& /*name*/)> window_renamed,
         std::function<void(std::shared_ptr<WindowState>)> update_decoration_window_state);
+
+    void set_custom_geometry(std::shared_ptr<StaticGeometry> geometry);
 
     std::shared_ptr<msd::Decoration> to_decoration() const;
 

@@ -64,7 +64,7 @@ auto border_type_for(MirWindowType type, MirWindowState state) -> BorderType
     return {};
 }
 
-WindowState::WindowState(StaticGeometry const& static_geometry, ms::Surface const* surface) :
+WindowState::WindowState(std::shared_ptr<StaticGeometry> const& static_geometry, ms::Surface const* surface) :
     static_geometry{static_geometry},
     window_size_{surface->window_size()},
     border_type_{border_type_for(surface->type(), surface->state())},
@@ -84,7 +84,7 @@ auto WindowState::titlebar_height() const -> geometry::Height
     {
     case BorderType::Full:
     case BorderType::Titlebar:
-        return static_geometry.titlebar_height;
+        return static_geometry->titlebar_height;
     case BorderType::None:
         return geometry::Height{0};
     }
@@ -98,7 +98,7 @@ auto WindowState::side_border_width() const -> geometry::Width
     switch(border_type_)
     {
     case BorderType::Full:
-        return static_geometry.side_border_width;
+        return static_geometry->side_border_width;
     case BorderType::Titlebar:
     case BorderType::None:
         return geometry::Width{0};
@@ -117,7 +117,7 @@ auto WindowState::bottom_border_height() const -> geometry::Height
     switch(border_type_)
     {
     case BorderType::Full:
-        return static_geometry.bottom_border_height;
+        return static_geometry->bottom_border_height;
     case BorderType::Titlebar:
     case BorderType::None:
         return geometry::Height{0};
@@ -176,12 +176,12 @@ auto WindowState::window_name() const -> std::string
 
 auto WindowState::geometry() const -> StaticGeometry
 {
-    return static_geometry;
+    return *static_geometry;
 }
 
 auto WindowState::resize_corner_input_size() const -> geometry::Size
 {
-    return static_geometry.resize_corner_input_size;
+    return static_geometry->resize_corner_input_size;
 }
 
 auto WindowState::border_type() const -> BorderType

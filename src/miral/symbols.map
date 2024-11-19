@@ -535,6 +535,7 @@ global:
     miral::DecorationAdapter::DecorationAdapter*;
     miral::DecorationAdapter::init*;
     miral::DecorationAdapter::redraw_notifier*;
+    miral::DecorationAdapter::set_custom_geometry*;
     miral::DecorationAdapter::to_decoration*;
     miral::DecorationAdapter::update*;
     miral::DecorationBasicManager::DecorationBasicManager*;

@@ -196,10 +196,6 @@ StaticGeometry const default_geometry{
     geom::Size{16, 16},       // resize_corner_input_size
     geom::Width{24},          // button_width
     geom::Width{6},           // padding_between_buttons
-    geom::Height{14},         // title_font_height
-    geom::Point{8, 2},        // title_font_top_left
-    geom::Displacement{5, 5}, // icon_padding
-    geom::Width{1},           // detail_line_width
 };
 
 miral::Renderer::Renderer(
@@ -445,9 +441,12 @@ public:
                               window_state_updated(window_surface);
                               window_renamed(args...);
                               on_update_decoration_window_state(window_state);
-                          }}
+                          }},
+        geometry{std::make_shared<StaticGeometry>(default_geometry)} // I could use a default parameter, but I don't like those...
     {
     }
+
+    void set_custom_geometry(std::shared_ptr<StaticGeometry> geometry);
 
     void init(
         std::shared_ptr<ms::Surface> window_surface,
@@ -495,6 +494,8 @@ private:
     std::function<void(ms::Surface const* window_surface, mir::geometry::Size const& /*window_size*/)>
         on_window_resized_to;
     std::function<void(ms::Surface const* window_surface, std::string const& /*name*/)> on_window_renamed;
+
+    std::shared_ptr<StaticGeometry> geometry;
 };
 
 miral::DecorationAdapter::DecorationAdapter(
@@ -602,6 +603,16 @@ void miral::DecorationAdapter::Impl::update()
     renderer->update_render_submit(window_state);
 }
 
+void miral::DecorationAdapter::set_custom_geometry(std::shared_ptr<StaticGeometry> geometry)
+{
+    impl->set_custom_geometry(geometry);
+}
+
+void miral::DecorationAdapter::Impl::set_custom_geometry(std::shared_ptr<StaticGeometry> geometry)
+{
+    this->geometry = geometry;
+}
+
 void miral::DecorationAdapter::Impl::init(
     std::shared_ptr<ms::Surface> window_surface,
     std::shared_ptr<ms::Surface> decoration_surface,
@@ -613,7 +624,7 @@ void miral::DecorationAdapter::Impl::init(
     this->shell = shell;
     this->session = window_surface->session().lock();
     this->decoration_surface = decoration_surface;
-    this->window_state = std::make_shared<WindowState>(default_geometry, window_surface.get());
+    this->window_state = std::make_shared<WindowState>(geometry, window_surface.get());
 
     renderer = std::make_unique<Renderer>(window_surface, buffer_allocator, render_titlebar, render_left_border, render_right_border, render_bottom_border);
     input_adapter = std::make_unique<InputResolverAdapter>(
@@ -640,7 +651,7 @@ void miral::DecorationAdapter::Impl::init(
 
 void miral::DecorationAdapter::Impl::window_state_updated(std::shared_ptr<ms::Surface> const window_surface)
 {
-    window_state = std::make_shared<WindowState>(default_geometry, window_surface.get());
+    window_state = std::make_shared<WindowState>(geometry, window_surface.get());
 }
 
 miral::DecorationAdapter::DecorationAdapter::Impl::~Impl()

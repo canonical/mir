@@ -291,7 +291,13 @@ auto resize_edge_rect(
     case mir_resize_edge_north:
     {
         auto rect = window_state.titlebar_rect();
-        rect.size.height = window_state.bottom_border_height();
+
+        // Cap the resize edge to half of the titlebar height
+        auto bottom_height = window_state.bottom_border_height();
+        auto top_height = window_state.titlebar_height();
+        auto const min_titlebar_drag_height = top_height / 2;
+
+        rect.size.height = std::min(min_titlebar_drag_height, bottom_height);
         return rect;
     }
 
@@ -369,10 +375,22 @@ void UserDecoration::focused()
 auto UserDecoration::create_manager(mir::Server& server)
     -> std::shared_ptr<miral::DecorationManagerAdapter>
 {
+    using namespace mir::geometry;
+    // Shared between all decorations.
+    auto const custom_geometry = std::make_shared<StaticGeometry>(StaticGeometry{
+        .titlebar_height = Height{24},
+        .side_border_width = geom::Width{6},
+        .bottom_border_height = geom::Height{6},
+        .resize_corner_input_size = geom::Size{16, 16},
+        .button_width = geom::Width{24},
+        .padding_between_buttons = geom::Width{6},
+    });
+
     return miral::DecorationBasicManager(
                server,
-               [](auto, auto)
+               [custom_geometry](auto, auto)
                {
+
                    auto decoration = std::make_shared<UserDecoration>();
                    auto decoration_adapter = std::make_shared<miral::DecorationAdapter>(
                        decoration->redraw_notifier(),
@@ -456,9 +474,9 @@ auto UserDecoration::create_manager(mir::Server& server)
                            decoration->input_manager.update_window_state(*window_state);
                        });
 
+                   decoration_adapter->set_custom_geometry(custom_geometry);
+
                    return decoration_adapter;
                })
         .to_adapter();
 }
-
-// TODO User defined static_geometry?
