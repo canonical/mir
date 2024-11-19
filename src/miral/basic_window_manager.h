@@ -286,6 +286,7 @@ private:
     auto can_activate_window_for_session_in_workspace(
         miral::Application const& session,
         std::vector<std::shared_ptr<Workspace>> const& workspaces) -> bool;
+    void place_attached(Point& top_left, Size& size, MirPlacementGravity edges, Rectangle application_zone);
 
     auto place_new_surface(WindowSpecification parameters) -> WindowSpecification;
     auto place_relative(mir::geometry::Rectangle const& parent, miral::WindowSpecification const& parameters, Size size)
