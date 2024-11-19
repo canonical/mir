@@ -130,7 +130,7 @@ public:
     void normal();
 
     InputManager input_manager;
-    static miral::Pixel const focused_titlebar_color = 0xFF00FFFF;
-    static miral::Pixel const unfocused_titlebar_color = 0xBB00BBBB;
+    static miral::Pixel const focused_titlebar_color = 0xFF323232;
+    static miral::Pixel const unfocused_titlebar_color = 0xFF525252;
     miral::Pixel current_titlebar_color = focused_titlebar_color;
 };

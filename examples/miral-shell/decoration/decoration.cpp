@@ -382,15 +382,15 @@ auto UserDecoration::create_manager(mir::Server& server)
                        },
                        [decoration](auto const& left_border_buffer)
                        {
-                            decoration->fill_solid_color(left_border_buffer, 0xFFFF00FF);
+                            decoration->fill_solid_color(left_border_buffer, decoration->current_titlebar_color);
                        },
                        [decoration](auto const& right_border_buffer)
                        {
-                            decoration->fill_solid_color(right_border_buffer, 0xFF00FFFF);
+                            decoration->fill_solid_color(right_border_buffer, decoration->current_titlebar_color);
                        },
                        [decoration](auto const& bottom_border_buffer)
                        {
-                            decoration->fill_solid_color(bottom_border_buffer, 0xFFFFFF00);
+                            decoration->fill_solid_color(bottom_border_buffer, decoration->current_titlebar_color);
                        },
                        [decoration](auto... args)
                        {
