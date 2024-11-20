@@ -80,8 +80,7 @@ using Pixel = uint32_t;
 class Decoration // Placeholder names
 {
 public:
-    using DecorationBuilder = std::function<std::shared_ptr<DecorationAdapter>(
-        std::shared_ptr<mir::shell::Shell> const& shell, std::shared_ptr<mir::scene::Surface> const& surface)>;
+    using DecorationBuilder = std::function<std::shared_ptr<DecorationAdapter>()>;
 
     Decoration();
 

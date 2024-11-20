@@ -66,7 +66,7 @@ struct miral::DecorationBasicManager::Self : public mir::shell::decoration::Basi
                 auto session = window_surface->session().lock();
                 auto decoration_surface = create_surface(window_surface, shell);
 
-                auto decoration_adapter = decoration_builder(shell, window_surface);
+                auto decoration_adapter = decoration_builder();
                 auto decoration = decoration_adapter->to_decoration();
 
                 decoration_adapter->init(
