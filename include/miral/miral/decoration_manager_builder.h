@@ -46,10 +46,11 @@ public:
         std::function<void()> on_undecorate_all) -> DecorationManagerBuilder;
 
     auto done() -> std::shared_ptr<DecorationManagerAdapter>;
-
 private:
     DecorationManagerBuilder();
-    std::shared_ptr<DecorationManagerAdapter> adapter;
+
+    struct Self;
+    std::shared_ptr<Self> self;
 };
 }
 

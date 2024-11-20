@@ -20,6 +20,16 @@
 #include "mir/shell/decoration/manager.h"
 #include <memory>
 
+struct miral::DecorationManagerBuilder::Self
+{
+    Self(std::shared_ptr<DecorationManagerAdapter> adapter) :
+        adapter{adapter}
+    {
+    }
+
+    std::shared_ptr<DecorationManagerAdapter> adapter;
+};
+
 miral::DecorationManagerAdapter::DecorationManagerAdapter() = default;
 
 void miral::DecorationManagerAdapter::init(std::weak_ptr<mir::shell::Shell> const& shell)
@@ -43,7 +53,7 @@ void miral::DecorationManagerAdapter::undecorate_all()
 }
 
 miral::DecorationManagerBuilder::DecorationManagerBuilder() :
-    adapter{std::shared_ptr<DecorationManagerAdapter>(new DecorationManagerAdapter{})}
+    self{std::make_shared<Self>(std::shared_ptr<DecorationManagerAdapter>(new DecorationManagerAdapter{}))}
 {
 }
 
@@ -54,7 +64,7 @@ auto miral::DecorationManagerBuilder::build(
         std::function<void()> on_undecorate_all) -> DecorationManagerBuilder
 {
     auto builder = DecorationManagerBuilder{};
-    auto& adapter = builder.adapter;
+    auto& adapter = builder.self->adapter;
 
     adapter->on_init = on_init;
     adapter->on_decorate = on_decorate;
@@ -67,5 +77,5 @@ auto miral::DecorationManagerBuilder::build(
 
 auto miral::DecorationManagerBuilder::done() -> std::shared_ptr<DecorationManagerAdapter>
 {
-    return std::move(adapter);
+    return std::move(self->adapter);
 }
