@@ -101,17 +101,9 @@ struct InputContext
         std::shared_ptr<msh::Shell> const& shell,
         std::shared_ptr<ms::Session> const& session,
         std::shared_ptr<ms::Surface> const& window_surface,
-        std::shared_ptr<const MirEvent> const& latest_event,
+        std::shared_ptr<MirEvent const> const& latest_event,
         std::shared_ptr<mir::input::CursorImages> const& cursor_images,
-        std::shared_ptr<ms::Surface> const& decoration_surface) :
-        shell{shell},
-        session{session},
-        window_surface{window_surface},
-        latest_event{latest_event},
-        cursor_images{cursor_images},
-        decoration_surface{decoration_surface}
-    {
-    }
+        std::shared_ptr<ms::Surface> const& decoration_surface);
 
     void request_move() const;
 
