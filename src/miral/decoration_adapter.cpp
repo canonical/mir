@@ -94,7 +94,7 @@ struct miral::InputResolverAdapter::Impl : public msd::InputResolver
         std::shared_ptr<mir::input::CursorImages> const cursor_images,
         OnProcessEnter process_enter,
         OnProcessLeave process_leave,
-        std::function<void()> process_down,
+        OnProcessDown process_down,
         OnProcessUp process_up,
         OnProcessMove process_move,
         OnProcessDrag process_drag) :
@@ -153,12 +153,12 @@ struct miral::InputResolverAdapter::Impl : public msd::InputResolver
     std::shared_ptr<ms::Surface> const window_surface;
     std::shared_ptr<mir::input::CursorImages> const cursor_images;
 
-    OnProcessEnter on_process_enter;
-    OnProcessLeave on_process_leave;
-    std::function<void()> on_process_down;
-    OnProcessUp on_process_up;
-    OnProcessMove on_process_move;
-    OnProcessDrag on_process_drag;
+    OnProcessEnter const on_process_enter;
+    OnProcessLeave const on_process_leave;
+    OnProcessDown const on_process_down;
+    OnProcessUp const on_process_up;
+    OnProcessMove const on_process_move;
+    OnProcessDrag const on_process_drag;
 };
 
 miral::InputResolverAdapter::InputResolverAdapter(
@@ -169,7 +169,7 @@ miral::InputResolverAdapter::InputResolverAdapter(
     std::shared_ptr<mir::input::CursorImages> const& cursor_images,
     OnProcessEnter process_enter,
     OnProcessLeave process_leave,
-    std::function<void()> process_down,
+    OnProcessDown process_down,
     OnProcessUp process_up,
     OnProcessMove process_move,
     OnProcessDrag process_drag) :
@@ -341,10 +341,9 @@ class WindowSurfaceObserver : public ms::NullSurfaceObserver
 {
 public:
     WindowSurfaceObserver(
-        std::function<void(ms::Surface const* window_surface, MirWindowAttrib attrib, int /*value*/)> attrib_changed,
-        std::function<void(ms::Surface const* window_surface, mir::geometry::Size const& /*window_size*/)>
-            window_resized_to,
-        std::function<void(ms::Surface const* window_surface, std::string const& /*name*/)> window_renamed) :
+        miral::OnWindowAttribChanged attrib_changed,
+        miral::OnWindowResized window_resized_to,
+        miral::OnWindowRenamed window_renamed) :
         on_attrib_changed{attrib_changed},
         on_window_resized_to(window_resized_to),
         on_window_renamed(window_renamed)
@@ -383,10 +382,9 @@ public:
     /// @}
 
 private:
-    std::function<void(ms::Surface const* window_surface, MirWindowAttrib attrib, int /*value*/)> on_attrib_changed;
-    std::function<void(ms::Surface const* window_surface, mir::geometry::Size const& /*window_size*/)>
-        on_window_resized_to;
-    std::function<void(ms::Surface const* window_surface, std::string const& /*name*/)> on_window_renamed;
+    miral::OnWindowAttribChanged const on_attrib_changed;
+    miral::OnWindowResized const on_window_resized_to;
+    miral::OnWindowRenamed const on_window_renamed;
 };
 
 struct miral::DecorationAdapter::Impl : public msd::Decoration
@@ -400,18 +398,16 @@ public:
         Renderer::RenderingCallback render_left_border,
         Renderer::RenderingCallback render_right_border,
         Renderer::RenderingCallback render_bottom_border,
-
         OnProcessEnter process_enter,
         OnProcessLeave process_leave,
-        std::function<void()> process_down,
+        OnProcessDown process_down,
         OnProcessUp process_up,
         OnProcessMove process_move,
         OnProcessDrag process_drag,
-        std::function<void(ms::Surface const* window_surface, MirWindowAttrib attrib, int /*value*/)> attrib_changed,
-        std::function<void(ms::Surface const* window_surface, mir::geometry::Size const& /*window_size*/)>
-            window_resized_to,
-        std::function<void(ms::Surface const* window_surface, std::string const& /*name*/)> window_renamed,
-        std::function<void(std::shared_ptr<WindowState>)> update_decoration_window_state) :
+        OnWindowAttribChanged attrib_changed,
+        OnWindowResized window_resized_to,
+        OnWindowRenamed window_renamed,
+        OnWindowStateUpdated update_decoration_window_state) :
         redraw_notifier_{redraw_notifier},
         render_titlebar{render_titlebar},
         render_left_border{render_left_border},
@@ -482,18 +478,17 @@ private:
     Renderer::RenderingCallback const render_right_border;
     Renderer::RenderingCallback const render_bottom_border;
 
-    OnProcessEnter on_process_enter;
-    OnProcessLeave on_process_leave;
-    std::function<void()> on_process_down;
-    OnProcessUp on_process_up;
-    OnProcessMove on_process_move;
-    OnProcessDrag on_process_drag;
+    OnProcessEnter const on_process_enter;
+    OnProcessLeave const on_process_leave;
+    OnProcessDown const on_process_down;
+    OnProcessUp const on_process_up;
+    OnProcessMove const on_process_move;
+    OnProcessDrag const on_process_drag;
 
-    std::function<void(std::shared_ptr<WindowState>)> on_update_decoration_window_state;
-    std::function<void(ms::Surface const* window_surface, MirWindowAttrib attrib, int /*value*/)> on_attrib_changed;
-    std::function<void(ms::Surface const* window_surface, mir::geometry::Size const& /*window_size*/)>
-        on_window_resized_to;
-    std::function<void(ms::Surface const* window_surface, std::string const& /*name*/)> on_window_renamed;
+    OnWindowStateUpdated on_update_decoration_window_state;
+    OnWindowAttribChanged on_attrib_changed;
+    OnWindowResized on_window_resized_to;
+    OnWindowRenamed on_window_renamed;
 
     std::shared_ptr<StaticGeometry> geometry;
 };
@@ -506,15 +501,14 @@ miral::DecorationAdapter::DecorationAdapter(
     Renderer::RenderingCallback render_bottom_border,
     OnProcessEnter process_enter,
     OnProcessLeave process_leave,
-    std::function<void()> process_down,
+    OnProcessDown process_down,
     OnProcessUp process_up,
     OnProcessMove process_move,
     OnProcessDrag process_drag,
-    std::function<void(ms::Surface const* window_surface, MirWindowAttrib attrib, int /*value*/)> attrib_changed,
-    std::function<void(ms::Surface const* window_surface, mir::geometry::Size const& /*window_size*/)>
-        window_resized_to,
-    std::function<void(ms::Surface const* window_surface, std::string const& /*name*/)> window_renamed,
-    std::function<void(std::shared_ptr<WindowState>)> update_decoration_window_state) :
+    OnWindowAttribChanged attrib_changed,
+    OnWindowResized window_resized_to,
+    OnWindowRenamed window_renamed,
+    OnWindowStateUpdated update_decoration_window_state) :
     impl{std::make_shared<Impl>(
         redraw_notifier,
         render_titlebar,

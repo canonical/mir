@@ -80,11 +80,19 @@ struct WindowState;
 namespace miral
 {
 struct InputContext;
+
 using OnProcessDrag = std::function<void(miral::DeviceEvent device, InputContext ctx)>;
 using OnProcessEnter = std::function<void(miral::DeviceEvent device, InputContext ctx)>;
 using OnProcessLeave = std::function<void(InputContext ctx)>;
 using OnProcessMove = std::function<void(miral::DeviceEvent device, InputContext ctx)>;
 using OnProcessUp = std::function<void(InputContext ctx)>;
+using OnProcessDown = std::function<void()>;
+
+using OnWindowAttribChanged = std::function<void(ms::Surface const* window_surface, MirWindowAttrib attrib, int value)>;
+using OnWindowResized =
+    std::function<void(ms::Surface const* window_surface, mir::geometry::Size const& /*window_size*/)>;
+using OnWindowRenamed = std::function<void(ms::Surface const* window_surface, std::string const& name)>;
+using OnWindowStateUpdated = std::function<void(std::shared_ptr<WindowState>)>;
 
 struct InputContext
 {
@@ -135,7 +143,7 @@ struct InputResolverAdapter
         std::shared_ptr<mir::input::CursorImages> const& cursor_images,
         OnProcessEnter process_enter,
         OnProcessLeave process_leave,
-        std::function<void()> process_down,
+        OnProcessDown process_down,
         OnProcessUp process_up,
         OnProcessMove process_move,
         OnProcessDrag process_drag);
@@ -249,15 +257,14 @@ struct DecorationAdapter
 
         OnProcessEnter process_enter,
         OnProcessLeave process_leave,
-        std::function<void()> process_down,
+        OnProcessDown process_down,
         OnProcessUp process_up,
         OnProcessMove process_move,
         OnProcessDrag process_drag,
-        std::function<void(ms::Surface const* window_surface, MirWindowAttrib attrib, int /*value*/)> attrib_changed,
-        std::function<void(ms::Surface const* window_surface, mir::geometry::Size const& /*window_size*/)>
-            window_resized_to,
-        std::function<void(ms::Surface const* window_surface, std::string const& /*name*/)> window_renamed,
-        std::function<void(std::shared_ptr<WindowState>)> update_decoration_window_state);
+        OnWindowAttribChanged attrib_changed,
+        OnWindowResized window_resized_to,
+        OnWindowRenamed window_renamed,
+        OnWindowStateUpdated update_decoration_window_state);
 
     void set_custom_geometry(std::shared_ptr<StaticGeometry> geometry);
 
