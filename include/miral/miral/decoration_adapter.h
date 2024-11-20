@@ -129,34 +129,20 @@ private:
 class Renderer
 {
 public:
-    static inline auto area(geometry::Size const size) -> size_t
-    {
-        return (size.width > geometry::Width{} && size.height > geometry::Height{}) ?
-                   size.width.as_int() * size.height.as_int() :
-                   0;
-    }
+    static auto area(geometry::Size const size) -> size_t;
 
     struct Buffer {
         Buffer(std::shared_ptr<ms::Session> const& session);
+
         ~Buffer();
 
-        auto size() const -> geometry::Size const { return size_; }
+        auto size() const -> geometry::Size;
 
-        auto get() const -> Pixel*
-        {
-            return pixels_.get();
-        }
+        auto get() const -> Pixel*;
 
-        void resize(geometry::Size new_size)
-        {
-            size_ = new_size;
-            pixels_ = std::unique_ptr<Pixel[]>{new uint32_t[area(new_size) * bytes_per_pixel]};
-        }
+        void resize(geometry::Size new_size);
 
-        auto stream() const -> std::shared_ptr<mc::BufferStream>
-        {
-            return stream_;
-        }
+        auto stream() const -> std::shared_ptr<mc::BufferStream>;
 
     private:
         Buffer(Buffer const&) = delete;
@@ -181,25 +167,11 @@ public:
         Renderer::RenderingCallback render_right_border,
         Renderer::RenderingCallback render_bottom_border);
 
-    static inline void render_row(
-        Buffer const& buffer,
-        geometry::Point left,
-        geometry::Width length,
-        uint32_t color)
-    {
-        auto buf_size = buffer.size();
-        if (left.y < geometry::Y{} || left.y >= as_y(buf_size.height))
-            return;
-        geometry::X const right = std::min(left.x + as_delta(length), as_x(buf_size.width));
-        left.x = std::max(left.x, geometry::X{});
-        uint32_t* const start = buffer.get() + (left.y.as_int() * buf_size.width.as_int()) + left.x.as_int();
-        uint32_t* const end = start + right.as_int() - left.x.as_int();
-        for (uint32_t* i = start; i < end; i++)
-            *i = color;
-    }
+    static void render_row(Buffer const& buffer, geometry::Point left, geometry::Width length, uint32_t color);
 
     void update_state(miral::decoration::WindowState const& window_state);
-    auto streams_to_spec(std::shared_ptr<miral::decoration::WindowState> const&  window_state) const -> msh::SurfaceSpecification;
+    auto streams_to_spec(std::shared_ptr<miral::decoration::WindowState> const& window_state) const
+        -> msh::SurfaceSpecification;
     void update_render_submit(std::shared_ptr<miral::decoration::WindowState> const& window_state);
 
 private:

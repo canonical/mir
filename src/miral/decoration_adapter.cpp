@@ -81,7 +81,6 @@ void miral::InputContext::set_cursor(std::string const& cursor_image_name) const
     shell->modify_surface(session, decoration_surface, spec);
 }
 
-
 void miral::InputContext::request_close() const{
     window_surface->request_client_surface_close();
 }
@@ -204,6 +203,47 @@ miral::Renderer::Renderer(
     render_right_border{render_right_border},
     render_bottom_border{render_bottom_border}
 {
+}
+
+auto miral::Renderer::area(geometry::Size const size) -> size_t
+{
+    return (size.width > geometry::Width{} && size.height > geometry::Height{}) ?
+               size.width.as_int() * size.height.as_int() :
+               0;
+}
+
+auto miral::Renderer::Buffer::size() const -> geometry::Size
+{
+    return size_;
+}
+
+auto miral::Renderer::Buffer::get() const -> Pixel*
+{
+    return pixels_.get();
+}
+
+void miral::Renderer::Buffer::resize(geometry::Size new_size)
+{
+    size_ = new_size;
+    pixels_ = std::unique_ptr<Pixel[]>{new uint32_t[area(new_size) * bytes_per_pixel]};
+}
+
+auto miral::Renderer::Buffer::stream() const -> std::shared_ptr<mc::BufferStream>
+{
+    return stream_;
+}
+
+void miral::Renderer::render_row(Buffer const& buffer, geometry::Point left, geometry::Width length, uint32_t color)
+{
+    auto buf_size = buffer.size();
+    if (left.y < geometry::Y{} || left.y >= as_y(buf_size.height))
+        return;
+    geometry::X const right = std::min(left.x + as_delta(length), as_x(buf_size.width));
+    left.x = std::max(left.x, geometry::X{});
+    uint32_t* const start = buffer.get() + (left.y.as_int() * buf_size.width.as_int()) + left.x.as_int();
+    uint32_t* const end = start + right.as_int() - left.x.as_int();
+    for (uint32_t* i = start; i < end; i++)
+        *i = color;
 }
 
 auto miral::Renderer::make_graphics_buffer(Buffer const& buffer)
