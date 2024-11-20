@@ -45,17 +45,17 @@ namespace mrs = mir::renderer::software;
 namespace geometry = mir::geometry;
 namespace geom = mir::geometry;
 
-void miral::InputContext::request_move()
+void miral::InputContext::request_move() const
 {
     shell->request_move(session, window_surface, mir_event_get_input_event(latest_event.get()));
 }
 
-void miral::InputContext::request_resize(MirResizeEdge edge)
+void miral::InputContext::request_resize(MirResizeEdge edge) const
 {
     shell->request_resize(session, window_surface, mir_event_get_input_event(latest_event.get()), edge);
 }
 
-void miral::InputContext::set_cursor(std::string const& cursor_image_name)
+void miral::InputContext::set_cursor(std::string const& cursor_image_name) const
 {
     msh::SurfaceSpecification spec;
     // size is hard-coded because current implementation ignores it
@@ -87,7 +87,7 @@ void miral::InputContext::request_minimize() const{
 struct miral::InputResolverAdapter::Impl : public msd::InputResolver
 {
     Impl(
-        std::shared_ptr<ms::Surface> decoration_surface,
+        std::shared_ptr<ms::Surface> const decoration_surface,
         std::shared_ptr<msh::Shell> const shell,
         std::shared_ptr<ms::Session> const session,
         std::shared_ptr<ms::Surface> const window_surface,
@@ -162,11 +162,11 @@ struct miral::InputResolverAdapter::Impl : public msd::InputResolver
 };
 
 miral::InputResolverAdapter::InputResolverAdapter(
-    std::shared_ptr<ms::Surface> decoration_surface,
-    std::shared_ptr<msh::Shell> const shell,
-    std::shared_ptr<ms::Session> const session,
-    std::shared_ptr<ms::Surface> const window_surface,
-    std::shared_ptr<mir::input::CursorImages> const cursor_images,
+    std::shared_ptr<ms::Surface> const& decoration_surface,
+    std::shared_ptr<msh::Shell> const& shell,
+    std::shared_ptr<ms::Session> const& session,
+    std::shared_ptr<ms::Surface> const& window_surface,
+    std::shared_ptr<mir::input::CursorImages> const& cursor_images,
     OnProcessEnter process_enter,
     OnProcessLeave process_leave,
     std::function<void()> process_down,
@@ -199,7 +199,7 @@ StaticGeometry const default_geometry{
 };
 
 miral::Renderer::Renderer(
-    std::shared_ptr<ms::Surface> window_surface,
+    std::shared_ptr<ms::Surface> const& window_surface,
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     Renderer::RenderingCallback render_titlebar,
     Renderer::RenderingCallback render_left_border,
@@ -269,7 +269,7 @@ miral::Renderer::Buffer::~Buffer()
     session->destroy_buffer_stream(stream_);
 }
 
-auto miral::Renderer::streams_to_spec(std::shared_ptr<WindowState> window_state)
+auto miral::Renderer::streams_to_spec(std::shared_ptr<WindowState> const& window_state) const
     -> msh::SurfaceSpecification
 {
     using StreamSpecification = mir::shell::StreamSpecification;
@@ -301,7 +301,7 @@ auto miral::Renderer::streams_to_spec(std::shared_ptr<WindowState> window_state)
     return spec;
 }
 
-auto miral::Renderer::update_render_submit(std::shared_ptr<WindowState> window_state)
+void miral::Renderer::update_render_submit(std::shared_ptr<WindowState> const& window_state)
 {
     update_state(*window_state);
 
@@ -442,7 +442,7 @@ public:
                               window_renamed(args...);
                               on_update_decoration_window_state(window_state);
                           }},
-        geometry{std::make_shared<StaticGeometry>(default_geometry)} // I could use a default parameter, but I don't like those...
+        geometry{std::make_shared<StaticGeometry>(default_geometry)}
     {
     }
 
@@ -467,7 +467,7 @@ public:
 
 private:
 
-    std::shared_ptr<DecorationRedrawNotifier> redraw_notifier_;
+    std::shared_ptr<DecorationRedrawNotifier> const redraw_notifier_;
     std::unique_ptr<InputResolverAdapter> input_adapter;
     std::shared_ptr<WindowSurfaceObserver> window_surface_observer;
     std::shared_ptr<ms::Surface> window_surface;
@@ -477,10 +477,10 @@ private:
     std::shared_ptr<ms::Session> session;
     std::shared_ptr<WindowState> window_state;
 
-    Renderer::RenderingCallback render_titlebar;
-    Renderer::RenderingCallback render_left_border;
-    Renderer::RenderingCallback render_right_border;
-    Renderer::RenderingCallback render_bottom_border;
+    Renderer::RenderingCallback const render_titlebar;
+    Renderer::RenderingCallback const render_left_border;
+    Renderer::RenderingCallback const render_right_border;
+    Renderer::RenderingCallback const render_bottom_border;
 
     OnProcessEnter on_process_enter;
     OnProcessLeave on_process_leave;
@@ -499,12 +499,11 @@ private:
 };
 
 miral::DecorationAdapter::DecorationAdapter(
-    std::shared_ptr<DecorationRedrawNotifier> redraw_notifier,
+    std::shared_ptr<DecorationRedrawNotifier> const& redraw_notifier,
     Renderer::RenderingCallback render_titlebar,
     Renderer::RenderingCallback render_left_border,
     Renderer::RenderingCallback render_right_border,
     Renderer::RenderingCallback render_bottom_border,
-
     OnProcessEnter process_enter,
     OnProcessLeave process_leave,
     std::function<void()> process_down,
@@ -541,11 +540,11 @@ auto miral::DecorationAdapter::to_decoration() const -> std::shared_ptr<mir::she
 }
 
 void miral::DecorationAdapter::init(
-    std::shared_ptr<ms::Surface> window_surface,
-    std::shared_ptr<ms::Surface> decoration_surface,
-    std::shared_ptr<mg::GraphicBufferAllocator> buffer_allocator,
-    std::shared_ptr<msh::Shell> shell,
-    std::shared_ptr<mir::input::CursorImages> const cursor_images)
+    std::shared_ptr<ms::Surface> const& window_surface,
+    std::shared_ptr<ms::Surface> const& decoration_surface,
+    std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
+    std::shared_ptr<msh::Shell> const& shell,
+    std::shared_ptr<mir::input::CursorImages> const& cursor_images)
 {
     impl->init(window_surface, decoration_surface, buffer_allocator, shell, cursor_images);
 }
@@ -555,7 +554,7 @@ void miral::DecorationAdapter::update()
     impl->update();
 }
 
-auto miral::DecorationAdapter::redraw_notifier() -> std::shared_ptr<DecorationRedrawNotifier>
+auto miral::DecorationAdapter::redraw_notifier() const -> std::shared_ptr<DecorationRedrawNotifier>
 {
    return impl->redraw_notifier();
 }

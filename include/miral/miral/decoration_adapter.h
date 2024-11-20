@@ -89,12 +89,12 @@ using OnProcessUp = std::function<void(InputContext ctx)>;
 struct InputContext
 {
     InputContext(
-        std::shared_ptr<msh::Shell> shell,
-        std::shared_ptr<ms::Session> session,
-        std::shared_ptr<ms::Surface> window_surface,
-        std::shared_ptr<const MirEvent> const latest_event,
-        std::shared_ptr<mir::input::CursorImages> const cursor_images,
-        std::shared_ptr<ms::Surface> const decoration_surface) :
+        std::shared_ptr<msh::Shell> const& shell,
+        std::shared_ptr<ms::Session> const& session,
+        std::shared_ptr<ms::Surface> const& window_surface,
+        std::shared_ptr<const MirEvent> const& latest_event,
+        std::shared_ptr<mir::input::CursorImages> const& cursor_images,
+        std::shared_ptr<ms::Surface> const& decoration_surface) :
         shell{shell},
         session{session},
         window_surface{window_surface},
@@ -104,11 +104,11 @@ struct InputContext
     {
     }
 
-    void request_move();
+    void request_move() const;
 
-    void request_resize(MirResizeEdge edge);
+    void request_resize(MirResizeEdge edge) const;
 
-    void set_cursor(std::string const& cursor_image_name);
+    void set_cursor(std::string const& cursor_image_name) const;
 
     void request_close() const;
 
@@ -128,11 +128,11 @@ private:
 struct InputResolverAdapter
 {
     InputResolverAdapter(
-        std::shared_ptr<ms::Surface> decoration_surface,
-        std::shared_ptr<msh::Shell> const shell,
-        std::shared_ptr<ms::Session> const session,
-        std::shared_ptr<ms::Surface> const window_surface,
-        std::shared_ptr<mir::input::CursorImages> const cursor_images,
+        std::shared_ptr<ms::Surface> const& decoration_surface,
+        std::shared_ptr<msh::Shell> const& shell,
+        std::shared_ptr<ms::Session> const& session,
+        std::shared_ptr<ms::Surface> const& window_surface,
+        std::shared_ptr<mir::input::CursorImages> const& cursor_images,
         OnProcessEnter process_enter,
         OnProcessLeave process_leave,
         std::function<void()> process_down,
@@ -141,7 +141,7 @@ struct InputResolverAdapter
         OnProcessDrag process_drag);
 
     struct Impl;
-    std::unique_ptr<Impl> impl;
+    std::unique_ptr<Impl> const impl;
 };
 
 class Renderer
@@ -192,9 +192,8 @@ public:
     using DeviceEvent = mir::shell::decoration::DeviceEvent;
     using RenderingCallback = std::function<void(Buffer&)>;
 
-
     Renderer(
-        std::shared_ptr<ms::Surface> window_surface,
+        std::shared_ptr<ms::Surface> const& window_surface,
         std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
         Renderer::RenderingCallback render_titlebar,
         Renderer::RenderingCallback render_left_border,
@@ -219,30 +218,30 @@ public:
     }
 
     void update_state(WindowState const& window_state);
-    auto streams_to_spec(std::shared_ptr<WindowState> window_state) -> msh::SurfaceSpecification;
-    auto update_render_submit(std::shared_ptr<WindowState> window_state);
+    auto streams_to_spec(std::shared_ptr<WindowState> const&  window_state) const -> msh::SurfaceSpecification;
+    void update_render_submit(std::shared_ptr<WindowState> const& window_state);
 
 private:
     auto make_graphics_buffer(Buffer const&) -> std::optional<std::shared_ptr<mg::Buffer>>;
 
-    std::shared_ptr<ms::Session> session;
-    std::shared_ptr<mg::GraphicBufferAllocator> buffer_allocator;
+    std::shared_ptr<ms::Session> const session;
+    std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
 
     Buffer titlebar_buffer;
     Buffer left_border_buffer;
     Buffer right_border_buffer;
     Buffer bottom_border_buffer;
 
-    RenderingCallback render_titlebar;
-    RenderingCallback render_left_border;
-    RenderingCallback render_right_border;
-    RenderingCallback render_bottom_border;
+    RenderingCallback const render_titlebar;
+    RenderingCallback const render_left_border;
+    RenderingCallback const render_right_border;
+    RenderingCallback const render_bottom_border;
 };
 
 struct DecorationAdapter
 {
     DecorationAdapter(
-        std::shared_ptr<DecorationRedrawNotifier> redraw_notifier,
+        std::shared_ptr<DecorationRedrawNotifier> const& redraw_notifier,
         Renderer::RenderingCallback render_titlebar,
         Renderer::RenderingCallback render_left_border,
         Renderer::RenderingCallback render_right_border,
@@ -265,19 +264,19 @@ struct DecorationAdapter
     std::shared_ptr<msd::Decoration> to_decoration() const;
 
     void init(
-        std::shared_ptr<ms::Surface> window_surface,
-        std::shared_ptr<ms::Surface> decoration_surface,
-        std::shared_ptr<mg::GraphicBufferAllocator> buffer_allocator,
-        std::shared_ptr<msh::Shell> shell,
-        std::shared_ptr<mir::input::CursorImages> const cursor_images
+        std::shared_ptr<ms::Surface> const& window_surface,
+        std::shared_ptr<ms::Surface> const& decoration_surface,
+        std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
+        std::shared_ptr<msh::Shell> const& shell,
+        std::shared_ptr<mir::input::CursorImages> const& cursor_images
     );
 
     void update();
 
-    auto redraw_notifier() -> std::shared_ptr<DecorationRedrawNotifier>;
+    auto redraw_notifier() const -> std::shared_ptr<DecorationRedrawNotifier>;
 
     struct Impl;
-    std::shared_ptr<Impl> impl;
+    std::shared_ptr<Impl> const impl;
 };
 
 }
