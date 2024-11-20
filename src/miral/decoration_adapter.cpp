@@ -101,21 +101,20 @@ void miral::InputContext::request_minimize() const{
     shell->modify_surface(session, window_surface, spec);
 }
 
-
-struct miral::InputResolverAdapter::Impl : public msd::InputResolver
+struct InputResolverAdapter: public msd::InputResolver
 {
-    Impl(
+    InputResolverAdapter(
         std::shared_ptr<ms::Surface> const decoration_surface,
         std::shared_ptr<msh::Shell> const shell,
         std::shared_ptr<ms::Session> const session,
         std::shared_ptr<ms::Surface> const window_surface,
         std::shared_ptr<mir::input::CursorImages> const cursor_images,
-        OnProcessEnter process_enter,
-        OnProcessLeave process_leave,
-        OnProcessDown process_down,
-        OnProcessUp process_up,
-        OnProcessMove process_move,
-        OnProcessDrag process_drag) :
+        miral::OnProcessEnter process_enter,
+        miral::OnProcessLeave process_leave,
+        miral::OnProcessDown process_down,
+        miral::OnProcessUp process_up,
+        miral::OnProcessMove process_move,
+        miral::OnProcessDrag process_drag) :
         msd::InputResolver(decoration_surface),
         shell{shell},
         session{session},
@@ -130,9 +129,9 @@ struct miral::InputResolverAdapter::Impl : public msd::InputResolver
     {
     }
 
-    auto input_ctx() -> InputContext
+    auto input_ctx() -> miral::InputContext
     {
-        return InputContext(shell, session, window_surface, latest_event(), cursor_images, decoration_surface);
+        return miral::InputContext(shell, session, window_surface, latest_event(), cursor_images, decoration_surface);
     }
 
     void process_enter(msd::DeviceEvent& device) override
@@ -162,8 +161,7 @@ struct miral::InputResolverAdapter::Impl : public msd::InputResolver
 
     void process_drag(msd::DeviceEvent& device) override
     {
-        on_process_drag(
-            device, InputContext(shell, session, window_surface, latest_event(), cursor_images, decoration_surface));
+        on_process_drag(device, input_ctx());
     }
 
     std::shared_ptr<msh::Shell> const shell;
@@ -171,41 +169,13 @@ struct miral::InputResolverAdapter::Impl : public msd::InputResolver
     std::shared_ptr<ms::Surface> const window_surface;
     std::shared_ptr<mir::input::CursorImages> const cursor_images;
 
-    OnProcessEnter const on_process_enter;
-    OnProcessLeave const on_process_leave;
-    OnProcessDown const on_process_down;
-    OnProcessUp const on_process_up;
-    OnProcessMove const on_process_move;
-    OnProcessDrag const on_process_drag;
+    miral::OnProcessEnter const on_process_enter;
+    miral::OnProcessLeave const on_process_leave;
+    miral::OnProcessDown const on_process_down;
+    miral::OnProcessUp const on_process_up;
+    miral::OnProcessMove const on_process_move;
+    miral::OnProcessDrag const on_process_drag;
 };
-
-miral::InputResolverAdapter::InputResolverAdapter(
-    std::shared_ptr<ms::Surface> const& decoration_surface,
-    std::shared_ptr<msh::Shell> const& shell,
-    std::shared_ptr<ms::Session> const& session,
-    std::shared_ptr<ms::Surface> const& window_surface,
-    std::shared_ptr<mir::input::CursorImages> const& cursor_images,
-    OnProcessEnter process_enter,
-    OnProcessLeave process_leave,
-    OnProcessDown process_down,
-    OnProcessUp process_up,
-    OnProcessMove process_move,
-    OnProcessDrag process_drag) :
-    impl{std::make_unique<Impl>(
-        decoration_surface,
-        shell,
-        session,
-        window_surface,
-        cursor_images,
-        process_enter,
-        process_leave,
-        process_down,
-        process_up,
-        process_move,
-        process_drag)}
-{
-
-}
 
 miral::decoration::StaticGeometry const default_geometry{
     geom::Height{24},         // titlebar_height

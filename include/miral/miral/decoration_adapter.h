@@ -126,25 +126,6 @@ private:
 };
 
 
-struct InputResolverAdapter
-{
-    InputResolverAdapter(
-        std::shared_ptr<ms::Surface> const& decoration_surface,
-        std::shared_ptr<msh::Shell> const& shell,
-        std::shared_ptr<ms::Session> const& session,
-        std::shared_ptr<ms::Surface> const& window_surface,
-        std::shared_ptr<mir::input::CursorImages> const& cursor_images,
-        OnProcessEnter process_enter,
-        OnProcessLeave process_leave,
-        OnProcessDown process_down,
-        OnProcessUp process_up,
-        OnProcessMove process_move,
-        OnProcessDrag process_drag);
-
-    struct Impl;
-    std::unique_ptr<Impl> const impl;
-};
-
 class Renderer
 {
 public:
