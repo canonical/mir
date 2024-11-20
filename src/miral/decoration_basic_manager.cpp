@@ -61,7 +61,8 @@ struct miral::DecorationBasicManager::Self : public mir::shell::decoration::Basi
 {
     Self(mir::Server& server, Decoration::DecorationBuilder&& decoration_builder) :
         mir::shell::decoration::BasicManager(
-            [&server,decoration_builder](auto shell, auto window_surface)
+            *server.the_display_configuration_observer_registrar(),
+            [&server, decoration_builder](auto shell, auto window_surface)
             {
                 auto session = window_surface->session().lock();
                 auto decoration_surface = create_surface(window_surface, shell);

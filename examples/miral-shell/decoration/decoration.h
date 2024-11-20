@@ -49,7 +49,6 @@ public:
 
     using Renderer = miral::decoration::Renderer;
     void render_titlebar(Renderer::Buffer const& titlebar_buffer);
-    void fill_solid_color(Renderer::Buffer const& left_border_buffer, Renderer::Pixel color);
 
     static auto create_manager(mir::Server&)
         -> std::shared_ptr<miral::DecorationManagerAdapter>;
@@ -129,12 +128,11 @@ public:
     void focused();
     void unfocused();
 
-    void minimized();
-    void maximized();
-    void normal();
+    void scale_changed(float new_scale);
 
     InputManager input_manager;
     static Renderer::Pixel const focused_titlebar_color = 0xFF323232;
     static Renderer::Pixel const unfocused_titlebar_color = 0xFF525252;
     Renderer::Pixel current_titlebar_color = focused_titlebar_color;
+    float scale = 1.0;
 };

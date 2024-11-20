@@ -233,7 +233,7 @@ auto md::Renderer::Buffer::stream() const -> std::shared_ptr<mc::BufferStream>
     return stream_;
 }
 
-void md::Renderer::render_row(Buffer const& buffer, geometry::Point left, geometry::Width length, uint32_t color)
+void md::Renderer::render_row_unscaled(Buffer const& buffer, geometry::Point left, geometry::Width length, uint32_t color)
 {
     auto buf_size = buffer.size();
     if (left.y < geometry::Y{} || left.y >= as_y(buf_size.height))
@@ -244,6 +244,26 @@ void md::Renderer::render_row(Buffer const& buffer, geometry::Point left, geomet
     uint32_t* const end = start + right.as_int() - left.x.as_int();
     for (uint32_t* i = start; i < end; i++)
         *i = color;
+}
+
+void md::Renderer::fill_solid_color(Renderer::Buffer const& left_border_buffer, Renderer::Pixel color)
+{
+    for (geometry::Y y{0}; y < as_y(left_border_buffer.size().height); y += geometry::DeltaY{1})
+    {
+        Renderer::render_row_unscaled(left_border_buffer, {0, y}, left_border_buffer.size().width, color);
+    }
+}
+
+void md::Renderer::render_rect_scaled(Buffer const& buffer, geometry::Rectangle unscaled_rect, float scale, Pixel color)
+{
+    auto tl = unscaled_rect.top_left;
+    auto start = mir::geometry::Point{tl.x.as_value() * scale, tl.y.as_value() * scale};
+
+    auto br = unscaled_rect.bottom_right();
+    auto end = mir::geometry::Point{br.x.as_value() * scale, br.y.as_value() * scale};
+
+    for (auto y = start.y; y < end.y; y += geometry::DeltaY{1})
+        Renderer::render_row_unscaled(buffer, {start.x, y}, geometry::as_width(end.x - start.x), color);
 }
 
 auto md::Renderer::make_graphics_buffer(Buffer const& buffer)
@@ -274,10 +294,11 @@ auto md::Renderer::make_graphics_buffer(Buffer const& buffer)
 void md::Renderer::update_state(md::WindowState const& window_state)
 {
     auto const conditional_resize =
-        [](auto& buffer, auto const& rect)
+        [scale = this->scale_](auto& buffer, auto const& rect)
     {
-        if (rect.size != buffer.size())
-            buffer.resize(rect.size);
+        auto scaled_rect_size = rect.size * scale;
+        if (scaled_rect_size != buffer.size())
+            buffer.resize(scaled_rect_size);
     };
 
     conditional_resize(titlebar_buffer, window_state.titlebar_rect());
@@ -356,7 +377,7 @@ void md::Renderer::update_render_submit(std::shared_ptr<md::WindowState> const& 
         break;
     }
 
-    float inv_scale = 1.0f; // 1.0f / window_state->scale();
+    float inv_scale =  1.0f / scale_;
     for (auto const& [stream, buffer_opt] : new_buffers)
     {
         if (buffer_opt)
@@ -365,6 +386,16 @@ void md::Renderer::update_render_submit(std::shared_ptr<md::WindowState> const& 
             stream->submit_buffer(buffer, buffer->size() * inv_scale, {{0, 0}, geom::SizeD{buffer->size()}});
         }
     }
+}
+
+void md::Renderer::scale_changed(float new_scale)
+{
+    scale_ = new_scale;
+}
+
+auto md::Renderer::scale() const -> float
+{
+    return scale_;
 }
 
 class WindowSurfaceObserver : public ms::NullSurfaceObserver
@@ -437,6 +468,7 @@ public:
         OnWindowAttribChanged attrib_changed,
         OnWindowResized window_resized_to,
         OnWindowRenamed window_renamed,
+        OnScaleChanged scale_changed,
         OnWindowStateUpdated update_decoration_window_state) :
         redraw_notifier_{redraw_notifier},
         render_titlebar{render_titlebar},
@@ -468,6 +500,7 @@ public:
                               window_renamed(args...);
                               on_update_decoration_window_state(window_state);
                           }},
+        on_scale_changed{scale_changed},
         geometry{std::make_shared<md::StaticGeometry>(default_geometry)}
     {
     }
@@ -487,7 +520,7 @@ public:
 
     auto redraw_notifier() { return redraw_notifier_; }
 
-    void set_scale(float) override {}
+    void set_scale(float new_scale) override;
 
     ~Impl();
 
@@ -519,6 +552,7 @@ private:
     OnWindowAttribChanged on_attrib_changed;
     OnWindowResized on_window_resized_to;
     OnWindowRenamed on_window_renamed;
+    OnScaleChanged on_scale_changed;
 
     std::shared_ptr<md::StaticGeometry> geometry;
 };
@@ -538,6 +572,7 @@ md::DecorationAdapter::DecorationAdapter(
     OnWindowAttribChanged attrib_changed,
     OnWindowResized window_resized_to,
     OnWindowRenamed window_renamed,
+    OnScaleChanged scale_changed,
     OnWindowStateUpdated update_decoration_window_state) :
     impl{std::make_shared<Impl>(
         redraw_notifier,
@@ -554,6 +589,7 @@ md::DecorationAdapter::DecorationAdapter(
         attrib_changed,
         window_resized_to,
         window_renamed,
+        scale_changed,
         update_decoration_window_state)}
 {
 }
@@ -675,6 +711,15 @@ void md::DecorationAdapter::Impl::init(
 void md::DecorationAdapter::Impl::window_state_updated(std::shared_ptr<ms::Surface> const window_surface)
 {
     window_state = std::make_shared<md::WindowState>(geometry, window_surface.get());
+}
+
+void md::DecorationAdapter::Impl::set_scale(float new_scale)
+{
+    if(new_scale == renderer->scale())
+        return;
+
+    renderer->scale_changed(new_scale);
+    on_scale_changed(new_scale);
 }
 
 md::DecorationAdapter::DecorationAdapter::Impl::~Impl()

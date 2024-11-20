@@ -49,27 +49,26 @@ private:
 };
 
 msd::BasicManager::BasicManager(
-    /* ObserverRegistrar<mg::DisplayConfigurationObserver>& display_configuration_observers, */
+    ObserverRegistrar<mg::DisplayConfigurationObserver>& display_configuration_observers,
     DecorationBuilder&& decoration_builder) :
-    decoration_builder{std::move(decoration_builder)}
-    /* , */
-    /* display_config_monitor{std::make_shared<DisplayConfigurationListener>( */
-    /*     [&](mg::DisplayConfiguration const& config) */
-    /*     { */
-    /*         // Use the maximum scale to ensure sharp-looking decorations on all outputs */
-    /*         auto max_output_scale{0.0f}; */
-    /*         config.for_each_output( */
-    /*             [&](mg::DisplayConfigurationOutput const& output) */
-    /*             { */
-    /*                 if (!output.used || !output.connected) return; */
-    /*                 if (!output.valid() || (output.current_mode_index >= output.modes.size())) return; */
-    /*  */
-    /*                 max_output_scale = std::max(max_output_scale, output.scale); */
-    /*             }); */
-    /*         set_scale(max_output_scale); */
-    /*     })} */
+    decoration_builder{std::move(decoration_builder)},
+    display_config_monitor{std::make_shared<DisplayConfigurationListener>(
+        [&](mg::DisplayConfiguration const& config)
+        {
+            // Use the maximum scale to ensure sharp-looking decorations on all outputs
+            auto max_output_scale{0.0f};
+            config.for_each_output(
+                [&](mg::DisplayConfigurationOutput const& output)
+                {
+                    if (!output.used || !output.connected) return;
+                    if (!output.valid() || (output.current_mode_index >= output.modes.size())) return;
+
+                    max_output_scale = std::max(max_output_scale, output.scale);
+                });
+            set_scale(max_output_scale);
+        })}
 {
-    /* display_configuration_observers.register_interest(display_config_monitor); */
+    display_configuration_observers.register_interest(display_config_monitor);
 }
 
 msd::BasicManager::~BasicManager()

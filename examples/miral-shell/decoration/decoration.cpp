@@ -50,16 +50,7 @@ auto UserDecoration::InputManager::buttons() const -> std::vector<std::shared_pt
 
 void UserDecoration::render_titlebar(Renderer::Buffer const& titlebar_buffer)
 {
-    fill_solid_color(titlebar_buffer, current_titlebar_color);
-
-    auto const draw_button =
-        [&]( geometry::Rectangle button_rect, Renderer::Pixel color)
-    {
-        auto start = button_rect.top_left;
-        auto end = button_rect.bottom_right();
-        for (auto y = start.y; y < end.y; y += geometry::DeltaY{1})
-            Renderer::render_row(titlebar_buffer, {start.x, y}, geometry::as_width(end.x - start.x), color);
-    };
+    Renderer::fill_solid_color(titlebar_buffer, current_titlebar_color);
 
     auto buttons = input_manager.buttons();
     for (auto const& button : buttons)
@@ -85,15 +76,11 @@ void UserDecoration::render_titlebar(Renderer::Buffer const& titlebar_buffer)
         if (should_highlight)
             color += 0x00444444;
 
-        draw_button(button_rect, color);
-    }
-}
-
-void UserDecoration::fill_solid_color(Renderer::Buffer const& left_border_buffer, Renderer::Pixel color)
-{
-    for (geometry::Y y{0}; y < as_y(left_border_buffer.size().height); y += geometry::DeltaY{1})
-    {
-        Renderer::render_row(left_border_buffer, {0, y}, left_border_buffer.size().width, color);
+        // The buffers are automatically scaled with different display scales.
+        // `fill_solid_color` and `render_rect` use the scaled size to properly fill the buffer.
+        //
+        // Anything you draw yourself should be properly scaled with size.
+        Renderer::render_rect_scaled(titlebar_buffer, button_rect, scale, color);
     }
 }
 
@@ -370,6 +357,11 @@ void UserDecoration::focused()
     current_titlebar_color = focused_titlebar_color;
 }
 
+void UserDecoration::scale_changed(float new_scale)
+{
+    scale = new_scale;
+}
+
 auto UserDecoration::create_manager(mir::Server& server)
     -> std::shared_ptr<miral::DecorationManagerAdapter>
 {
@@ -398,15 +390,15 @@ auto UserDecoration::create_manager(mir::Server& server)
                        },
                        [decoration](auto const& left_border_buffer)
                        {
-                            decoration->fill_solid_color(left_border_buffer, decoration->current_titlebar_color);
+                       Renderer::fill_solid_color(left_border_buffer, decoration->current_titlebar_color);
                        },
                        [decoration](auto const& right_border_buffer)
                        {
-                            decoration->fill_solid_color(right_border_buffer, decoration->current_titlebar_color);
+                           Renderer::fill_solid_color(right_border_buffer, decoration->current_titlebar_color);
                        },
                        [decoration](auto const& bottom_border_buffer)
                        {
-                            decoration->fill_solid_color(bottom_border_buffer, decoration->current_titlebar_color);
+                           Renderer::fill_solid_color(bottom_border_buffer, decoration->current_titlebar_color);
                        },
                        [decoration](auto... args)
                        {
@@ -465,6 +457,11 @@ auto UserDecoration::create_manager(mir::Server& server)
                        },
                        [decoration](auto...)
                        {
+                           decoration->redraw_notifier()->notify();
+                       },
+                       [decoration](auto new_scale)
+                       {
+                           decoration->scale_changed(new_scale);
                            decoration->redraw_notifier()->notify();
                        },
                        [decoration](auto window_state)

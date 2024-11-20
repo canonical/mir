@@ -59,7 +59,7 @@ struct DecorationBasicManager
         registrar{std::make_shared<mtd::StubObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>()};
 
     msd::BasicManager manager{
-        /* *registrar, */
+        *registrar,
         [this](
             std::shared_ptr<msh::Shell> const&,
             std::shared_ptr<ms::Surface> const&) -> std::unique_ptr<msd::Decoration>

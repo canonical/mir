@@ -87,6 +87,7 @@ using OnWindowResized =
     std::function<void(ms::Surface const* window_surface, mir::geometry::Size const& /*window_size*/)>;
 using OnWindowRenamed = std::function<void(ms::Surface const* window_surface, std::string const& name)>;
 using OnWindowStateUpdated = std::function<void(std::shared_ptr<miral::decoration::WindowState>)>;
+using OnScaleChanged = std::function<void(float)>;
 
 struct InputContext
 {
@@ -167,15 +168,25 @@ public:
         Renderer::RenderingCallback render_right_border,
         Renderer::RenderingCallback render_bottom_border);
 
-    static void render_row(Buffer const& buffer, geometry::Point left, geometry::Width length, uint32_t color);
+    static void fill_solid_color(Renderer::Buffer const& left_border_buffer, Renderer::Pixel color);
+
+    // Renders in display-scale-space, takes into account the display scale
+    static void render_rect_scaled(Buffer const& buffer, geometry::Rectangle unscaled_rect, float scale, Pixel color);
 
     void update_state(miral::decoration::WindowState const& window_state);
     auto streams_to_spec(std::shared_ptr<miral::decoration::WindowState> const& window_state) const
         -> msh::SurfaceSpecification;
     void update_render_submit(std::shared_ptr<miral::decoration::WindowState> const& window_state);
 
+    void scale_changed(float new_scale);
+    auto scale() const -> float;
+
 private:
     auto make_graphics_buffer(Buffer const&) -> std::optional<std::shared_ptr<mg::Buffer>>;
+
+    // Renders in buffer pixel-scale-space, independent of the actual display scale
+    static void render_row_unscaled(Buffer const& buffer, geometry::Point left, geometry::Width length, uint32_t color);
+
 
     std::shared_ptr<ms::Session> const session;
     std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
@@ -189,26 +200,39 @@ private:
     RenderingCallback const render_left_border;
     RenderingCallback const render_right_border;
     RenderingCallback const render_bottom_border;
+
+    float scale_ = 1.0;
 };
 
 struct DecorationAdapter
 {
     DecorationAdapter(
+        // Notifies Mir that decorations should be redrawn
         std::shared_ptr<DecorationRedrawNotifier> const& redraw_notifier,
+
+        // Called by user code in response to input events
         Renderer::RenderingCallback render_titlebar,
         Renderer::RenderingCallback render_left_border,
         Renderer::RenderingCallback render_right_border,
         Renderer::RenderingCallback render_bottom_border,
 
+        // Called by Mir to inform user code of input events
         OnProcessEnter process_enter,
         OnProcessLeave process_leave,
         OnProcessDown process_down,
         OnProcessUp process_up,
         OnProcessMove process_move,
         OnProcessDrag process_drag,
+
+        // Called by Mir to inform user code of changes to the window being decorated
         OnWindowAttribChanged attrib_changed,
         OnWindowResized window_resized_to,
         OnWindowRenamed window_renamed,
+
+        // Called by Mir to inform user code that the display scale changed
+        OnScaleChanged scale_changed,
+
+        // Called whenever the internal WindowState is updated
         OnWindowStateUpdated update_decoration_window_state);
 
     void set_custom_geometry(std::shared_ptr<miral::decoration::StaticGeometry> geometry);

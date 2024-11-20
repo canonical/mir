@@ -52,7 +52,7 @@ public:
         std::shared_ptr<scene::Surface> const& surface)>;
 
     BasicManager(
-        /* mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>& display_configuration_observers, */
+        mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>& display_configuration_observers,
         DecorationBuilder&& decoration_builder);
     ~BasicManager();
 

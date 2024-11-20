@@ -576,7 +576,12 @@ global:
     miral::decoration::Renderer::area*;
     miral::decoration::Renderer::buffer_format*;
     miral::decoration::Renderer::bytes_per_pixel*;
+    miral::decoration::Renderer::fill_solid_color*;
+    miral::decoration::Renderer::render_rect_scaled*;
     miral::decoration::Renderer::render_row*;
+    miral::decoration::Renderer::render_row_unscaled*;
+    miral::decoration::Renderer::scale*;
+    miral::decoration::Renderer::scale_changed*;
     miral::decoration::Renderer::streams_to_spec*;
     miral::decoration::Renderer::update_render_submit*;
     miral::decoration::Renderer::update_state*;
@@ -590,6 +595,7 @@ global:
     miral::decoration::WindowState::left_border_rect*;
     miral::decoration::WindowState::resize_corner_input_size*;
     miral::decoration::WindowState::right_border_rect*;
+    miral::decoration::WindowState::scale*;
     miral::decoration::WindowState::side_border_height*;
     miral::decoration::WindowState::side_border_width*;
     miral::decoration::WindowState::titlebar_height*;
