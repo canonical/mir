@@ -58,21 +58,12 @@ private:
 
 struct DecorationRedrawNotifier
 {
-    using OnRedraw = std::function<void()>;
-    void notify()
-    {
-        if (on_redraw)
-            on_redraw();
-    }
+    void notify() const;
+    void register_listener(std::function<void()> on_redraw);
 
-    void register_listener(OnRedraw on_redraw)
-    {
-        this->on_redraw = on_redraw;
-    }
-
-    OnRedraw on_redraw;
+private:
+    std::function<void()> on_redraw;
 };
-
 
 class Decoration // Placeholder names
 {

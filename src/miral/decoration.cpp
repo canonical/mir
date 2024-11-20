@@ -42,6 +42,18 @@ auto miral::DeviceEvent::pressed() const -> bool {
     return impl->event.pressed;
 }
 
+void miral::DecorationRedrawNotifier::notify() const
+{
+    if (on_redraw)
+        on_redraw();
+}
+
+void miral::DecorationRedrawNotifier::register_listener(std::function<void()> on_redraw)
+{
+    this->on_redraw = on_redraw;
+}
+
+
 struct miral::Decoration::Self
 {
     Self();
