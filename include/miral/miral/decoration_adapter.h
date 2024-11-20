@@ -18,8 +18,6 @@
 #define MIRAL_DECORATION_DECORATION_ADAPTER_H
 
 #include "mir/geometry/forward.h"
-#include "mir/geometry/size.h"
-#include "mir/geometry/point.h"
 #include "mir_toolkit/common.h"
 
 #include "miral/decoration_basic_manager.h"
@@ -30,8 +28,6 @@
 #include <optional>
 
 
-auto const buffer_format = mir_pixel_format_argb_8888;
-auto const bytes_per_pixel = 4;
 
 namespace mir
 {
@@ -68,25 +64,22 @@ namespace ms = mir::scene;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geometry = mir::geometry;
-namespace geom = mir::geometry;
 
 struct MirEvent;
 
 namespace miral
 {
-struct InputContext;
-
 namespace decoration
 {
 class WindowState;
 class StaticGeometry;
-}
+class InputContext;
 
-using OnProcessDrag = std::function<void(miral::DeviceEvent device, InputContext ctx)>;
-using OnProcessEnter = std::function<void(miral::DeviceEvent device, InputContext ctx)>;
-using OnProcessLeave = std::function<void(InputContext ctx)>;
-using OnProcessMove = std::function<void(miral::DeviceEvent device, InputContext ctx)>;
-using OnProcessUp = std::function<void(InputContext ctx)>;
+using OnProcessDrag = std::function<void(miral::DeviceEvent device, miral::decoration::InputContext ctx)>;
+using OnProcessEnter = std::function<void(miral::DeviceEvent device, miral::decoration::InputContext ctx)>;
+using OnProcessLeave = std::function<void(miral::decoration::InputContext ctx)>;
+using OnProcessMove = std::function<void(miral::DeviceEvent device, miral::decoration::InputContext ctx)>;
+using OnProcessUp = std::function<void(miral::decoration::InputContext ctx)>;
 using OnProcessDown = std::function<void()>;
 
 using OnWindowAttribChanged = std::function<void(ms::Surface const* window_surface, MirWindowAttrib attrib, int value)>;
@@ -130,6 +123,13 @@ class Renderer
 {
 public:
     static auto area(geometry::Size const size) -> size_t;
+
+    using Pixel = uint32_t;
+
+    // Can we use even more keywords?
+    static inline auto const buffer_format = mir_pixel_format_argb_8888;
+    static inline auto const bytes_per_pixel = 4;
+
 
     struct Buffer {
         Buffer(std::shared_ptr<ms::Session> const& session);
@@ -231,5 +231,6 @@ struct DecorationAdapter
     std::shared_ptr<Impl> const impl;
 };
 
+}
 }
 #endif

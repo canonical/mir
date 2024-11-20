@@ -49,8 +49,8 @@ auto create_surface(
     // Will be replaced by initial update
     params.streams = {{
         session->create_buffer_stream(mg::BufferProperties{
-            geom::Size{1, 1},
-            buffer_format,
+            geometry::Size{1, 1},
+            miral::decoration::Renderer::buffer_format,
             mg::BufferUsage::software}),
         {},
         }};

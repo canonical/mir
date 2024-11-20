@@ -47,8 +47,9 @@ class UserDecoration : public miral::Decoration
 public:
     UserDecoration();
 
-    void render_titlebar(miral::Renderer::Buffer const& titlebar_buffer);
-    void fill_solid_color(miral::Renderer::Buffer const& left_border_buffer, miral::Pixel color);
+    using Renderer = miral::decoration::Renderer;
+    void render_titlebar(Renderer::Buffer const& titlebar_buffer);
+    void fill_solid_color(Renderer::Buffer const& left_border_buffer, Renderer::Pixel color);
 
     static auto create_manager(mir::Server&)
         -> std::shared_ptr<miral::DecorationManagerAdapter>;
@@ -90,18 +91,19 @@ public:
 
         auto widget_at(mir::geometry::Point location) -> std::optional<std::shared_ptr<Widget>>;
 
-        void process_drag(miral::DeviceEvent& device, miral::InputContext ctx);
-        void process_enter(miral::DeviceEvent& device, miral::InputContext ctx);
-        void process_leave(miral::InputContext ctx);
+        using InputContext = miral::decoration::InputContext;
+        void process_drag(miral::DeviceEvent& device, InputContext ctx);
+        void process_enter(miral::DeviceEvent& device, InputContext ctx);
+        void process_leave(InputContext ctx);
         void process_down();
-        void process_up(miral::InputContext ctx);
-        void process_move(miral::DeviceEvent& device, miral::InputContext ctx);
+        void process_up(InputContext ctx);
+        void process_move(miral::DeviceEvent& device, InputContext ctx);
 
-        void widget_drag(Widget& widget, miral::InputContext ctx);
-        void widget_leave(Widget& widget, miral::InputContext ctx);
-        void widget_enter(Widget& widget, miral::InputContext ctx);
+        void widget_drag(Widget& widget, InputContext ctx);
+        void widget_leave(Widget& widget, InputContext ctx);
+        void widget_enter(Widget& widget, InputContext ctx);
         void widget_down(Widget& widget);
-        void widget_up(Widget& widget, miral::InputContext ctx);
+        void widget_up(Widget& widget, InputContext ctx);
 
         void update_window_state(miral::decoration::WindowState const& window_state);
 
@@ -132,7 +134,7 @@ public:
     void normal();
 
     InputManager input_manager;
-    static miral::Pixel const focused_titlebar_color = 0xFF323232;
-    static miral::Pixel const unfocused_titlebar_color = 0xFF525252;
-    miral::Pixel current_titlebar_color = focused_titlebar_color;
+    static Renderer::Pixel const focused_titlebar_color = 0xFF323232;
+    static Renderer::Pixel const unfocused_titlebar_color = 0xFF525252;
+    Renderer::Pixel current_titlebar_color = focused_titlebar_color;
 };

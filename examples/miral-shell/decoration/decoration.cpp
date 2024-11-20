@@ -34,9 +34,6 @@ namespace geometry = mir::geometry;
 namespace geom = mir::geometry;
 namespace md = miral::decoration;
 
-
-using miral::InputContext;
-
 UserDecoration::UserDecoration() = default;
 
 auto UserDecoration::InputManager::buttons() const -> std::vector<std::shared_ptr<Widget const>>
@@ -51,17 +48,17 @@ auto UserDecoration::InputManager::buttons() const -> std::vector<std::shared_pt
     return button_rects;
 }
 
-void UserDecoration::render_titlebar(miral::Renderer::Buffer const& titlebar_buffer)
+void UserDecoration::render_titlebar(Renderer::Buffer const& titlebar_buffer)
 {
     fill_solid_color(titlebar_buffer, current_titlebar_color);
 
     auto const draw_button =
-        [&]( geometry::Rectangle button_rect, miral::Pixel color)
+        [&]( geometry::Rectangle button_rect, Renderer::Pixel color)
     {
         auto start = button_rect.top_left;
         auto end = button_rect.bottom_right();
         for (auto y = start.y; y < end.y; y += geometry::DeltaY{1})
-            miral::Renderer::render_row(titlebar_buffer, {start.x, y}, geometry::as_width(end.x - start.x), color);
+            Renderer::render_row(titlebar_buffer, {start.x, y}, geometry::as_width(end.x - start.x), color);
     };
 
     auto buttons = input_manager.buttons();
@@ -92,11 +89,11 @@ void UserDecoration::render_titlebar(miral::Renderer::Buffer const& titlebar_buf
     }
 }
 
-void UserDecoration::fill_solid_color(miral::Renderer::Buffer const& left_border_buffer, miral::Pixel color)
+void UserDecoration::fill_solid_color(Renderer::Buffer const& left_border_buffer, Renderer::Pixel color)
 {
     for (geometry::Y y{0}; y < as_y(left_border_buffer.size().height); y += geometry::DeltaY{1})
     {
-        miral::Renderer::render_row(left_border_buffer, {0, y}, left_border_buffer.size().width, color);
+        Renderer::render_row(left_border_buffer, {0, y}, left_border_buffer.size().width, color);
     }
 }
 
@@ -202,7 +199,7 @@ void UserDecoration::InputManager::widget_up(Widget& widget, InputContext ctx)
     }
 }
 
-void UserDecoration::InputManager::widget_drag(Widget& widget, miral::InputContext ctx)
+void UserDecoration::InputManager::widget_drag(Widget& widget, InputContext ctx)
 {
     if (widget.state == ButtonState::Down)
     {
@@ -256,12 +253,12 @@ auto resize_edge_to_cursor_name(MirResizeEdge resize_edge) -> std::string
     return cursor_name;
 }
 
-void UserDecoration::InputManager::widget_leave(Widget& widget, miral::InputContext ctx) {
+void UserDecoration::InputManager::widget_leave(Widget& widget, InputContext ctx) {
     widget.state = ButtonState::Up;
     ctx.set_cursor(resize_edge_to_cursor_name(mir_resize_edge_none));
 }
 
-void UserDecoration::InputManager::widget_enter(Widget& widget, miral::InputContext ctx)
+void UserDecoration::InputManager::widget_enter(Widget& widget, InputContext ctx)
 {
     widget.state = ButtonState::Hovered;
     if(widget.resize_edge)
@@ -393,7 +390,7 @@ auto UserDecoration::create_manager(mir::Server& server)
                {
 
                    auto decoration = std::make_shared<UserDecoration>();
-                   auto decoration_adapter = std::make_shared<miral::DecorationAdapter>(
+                   auto decoration_adapter = std::make_shared<miral::decoration::DecorationAdapter>(
                        decoration->redraw_notifier(),
                        [decoration](auto const& titlebar_buffer)
                        {

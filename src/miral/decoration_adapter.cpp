@@ -47,7 +47,7 @@ namespace geom = mir::geometry;
 
 namespace md = miral::decoration;
 
-miral::InputContext::InputContext(
+md::InputContext::InputContext(
     std::shared_ptr<msh::Shell> const& shell,
     std::shared_ptr<ms::Session> const& session,
     std::shared_ptr<ms::Surface> const& window_surface,
@@ -63,17 +63,17 @@ miral::InputContext::InputContext(
 {
 }
 
-void miral::InputContext::request_move() const
+void md::InputContext::request_move() const
 {
     shell->request_move(session, window_surface, mir_event_get_input_event(latest_event.get()));
 }
 
-void miral::InputContext::request_resize(MirResizeEdge edge) const
+void md::InputContext::request_resize(MirResizeEdge edge) const
 {
     shell->request_resize(session, window_surface, mir_event_get_input_event(latest_event.get()), edge);
 }
 
-void miral::InputContext::set_cursor(std::string const& cursor_image_name) const
+void md::InputContext::set_cursor(std::string const& cursor_image_name) const
 {
     msh::SurfaceSpecification spec;
     // size is hard-coded because current implementation ignores it
@@ -81,11 +81,11 @@ void miral::InputContext::set_cursor(std::string const& cursor_image_name) const
     shell->modify_surface(session, decoration_surface, spec);
 }
 
-void miral::InputContext::request_close() const{
+void md::InputContext::request_close() const{
     window_surface->request_client_surface_close();
 }
 
-void miral::InputContext::request_toggle_maximize() const{
+void md::InputContext::request_toggle_maximize() const{
     msh::SurfaceSpecification spec;
     if (window_surface->state() == mir_window_state_maximized)
         spec.state = mir_window_state_restored;
@@ -94,7 +94,7 @@ void miral::InputContext::request_toggle_maximize() const{
     shell->modify_surface(session, window_surface, spec);
 }
 
-void miral::InputContext::request_minimize() const{
+void md::InputContext::request_minimize() const{
     msh::SurfaceSpecification spec;
     spec.state = mir_window_state_minimized;
     shell->modify_surface(session, window_surface, spec);
@@ -108,12 +108,12 @@ struct InputResolverAdapter: public msd::InputResolver
         std::shared_ptr<ms::Session> const session,
         std::shared_ptr<ms::Surface> const window_surface,
         std::shared_ptr<mir::input::CursorImages> const cursor_images,
-        miral::OnProcessEnter process_enter,
-        miral::OnProcessLeave process_leave,
-        miral::OnProcessDown process_down,
-        miral::OnProcessUp process_up,
-        miral::OnProcessMove process_move,
-        miral::OnProcessDrag process_drag) :
+        md::OnProcessEnter process_enter,
+        md::OnProcessLeave process_leave,
+        md::OnProcessDown process_down,
+        md::OnProcessUp process_up,
+        md::OnProcessMove process_move,
+        md::OnProcessDrag process_drag) :
         msd::InputResolver(decoration_surface),
         shell{shell},
         session{session},
@@ -128,9 +128,9 @@ struct InputResolverAdapter: public msd::InputResolver
     {
     }
 
-    auto input_ctx() -> miral::InputContext
+    auto input_ctx() -> md::InputContext
     {
-        return miral::InputContext(shell, session, window_surface, latest_event(), cursor_images, decoration_surface);
+        return md::InputContext(shell, session, window_surface, latest_event(), cursor_images, decoration_surface);
     }
 
     void process_enter(msd::DeviceEvent& device) override
@@ -168,15 +168,15 @@ struct InputResolverAdapter: public msd::InputResolver
     std::shared_ptr<ms::Surface> const window_surface;
     std::shared_ptr<mir::input::CursorImages> const cursor_images;
 
-    miral::OnProcessEnter const on_process_enter;
-    miral::OnProcessLeave const on_process_leave;
-    miral::OnProcessDown const on_process_down;
-    miral::OnProcessUp const on_process_up;
-    miral::OnProcessMove const on_process_move;
-    miral::OnProcessDrag const on_process_drag;
+    md::OnProcessEnter const on_process_enter;
+    md::OnProcessLeave const on_process_leave;
+    md::OnProcessDown const on_process_down;
+    md::OnProcessUp const on_process_up;
+    md::OnProcessMove const on_process_move;
+    md::OnProcessDrag const on_process_drag;
 };
 
-miral::decoration::StaticGeometry const default_geometry{
+md::StaticGeometry const default_geometry{
     geom::Height{24},         // titlebar_height
     geom::Width{6},           // side_border_width
     geom::Height{6},          // bottom_border_height
@@ -185,7 +185,7 @@ miral::decoration::StaticGeometry const default_geometry{
     geom::Width{6},           // padding_between_buttons
 };
 
-miral::Renderer::Renderer(
+md::Renderer::Renderer(
     std::shared_ptr<ms::Surface> const& window_surface,
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     Renderer::RenderingCallback render_titlebar,
@@ -205,35 +205,35 @@ miral::Renderer::Renderer(
 {
 }
 
-auto miral::Renderer::area(geometry::Size const size) -> size_t
+auto md::Renderer::area(geometry::Size const size) -> size_t
 {
     return (size.width > geometry::Width{} && size.height > geometry::Height{}) ?
                size.width.as_int() * size.height.as_int() :
                0;
 }
 
-auto miral::Renderer::Buffer::size() const -> geometry::Size
+auto md::Renderer::Buffer::size() const -> geometry::Size
 {
     return size_;
 }
 
-auto miral::Renderer::Buffer::get() const -> Pixel*
+auto md::Renderer::Buffer::get() const -> Pixel*
 {
     return pixels_.get();
 }
 
-void miral::Renderer::Buffer::resize(geometry::Size new_size)
+void md::Renderer::Buffer::resize(geometry::Size new_size)
 {
     size_ = new_size;
     pixels_ = std::unique_ptr<Pixel[]>{new uint32_t[area(new_size) * bytes_per_pixel]};
 }
 
-auto miral::Renderer::Buffer::stream() const -> std::shared_ptr<mc::BufferStream>
+auto md::Renderer::Buffer::stream() const -> std::shared_ptr<mc::BufferStream>
 {
     return stream_;
 }
 
-void miral::Renderer::render_row(Buffer const& buffer, geometry::Point left, geometry::Width length, uint32_t color)
+void md::Renderer::render_row(Buffer const& buffer, geometry::Point left, geometry::Width length, uint32_t color)
 {
     auto buf_size = buffer.size();
     if (left.y < geometry::Y{} || left.y >= as_y(buf_size.height))
@@ -246,7 +246,7 @@ void miral::Renderer::render_row(Buffer const& buffer, geometry::Point left, geo
         *i = color;
 }
 
-auto miral::Renderer::make_graphics_buffer(Buffer const& buffer)
+auto md::Renderer::make_graphics_buffer(Buffer const& buffer)
     -> std::optional<std::shared_ptr<mg::Buffer>>
 {
     if (!area(buffer.size()))
@@ -271,7 +271,7 @@ auto miral::Renderer::make_graphics_buffer(Buffer const& buffer)
     }
 }
 
-void miral::Renderer::update_state(md::WindowState const& window_state)
+void md::Renderer::update_state(md::WindowState const& window_state)
 {
     auto const conditional_resize =
         [](auto& buffer, auto const& rect)
@@ -286,18 +286,18 @@ void miral::Renderer::update_state(md::WindowState const& window_state)
     conditional_resize(bottom_border_buffer, window_state.bottom_border_rect());
 }
 
-miral::Renderer::Buffer::Buffer(std::shared_ptr<ms::Session> const& session) :
+md::Renderer::Buffer::Buffer(std::shared_ptr<ms::Session> const& session) :
     stream_{
         session->create_buffer_stream(mg::BufferProperties{geom::Size{1, 1}, buffer_format, mg::BufferUsage::software})}
 {
 }
 
-miral::Renderer::Buffer::~Buffer()
+md::Renderer::Buffer::~Buffer()
 {
     session->destroy_buffer_stream(stream_);
 }
 
-auto miral::Renderer::streams_to_spec(std::shared_ptr<md::WindowState> const& window_state) const
+auto md::Renderer::streams_to_spec(std::shared_ptr<md::WindowState> const& window_state) const
     -> msh::SurfaceSpecification
 {
     using StreamSpecification = mir::shell::StreamSpecification;
@@ -330,7 +330,7 @@ auto miral::Renderer::streams_to_spec(std::shared_ptr<md::WindowState> const& wi
     return spec;
 }
 
-void miral::Renderer::update_render_submit(std::shared_ptr<md::WindowState> const& window_state)
+void md::Renderer::update_render_submit(std::shared_ptr<md::WindowState> const& window_state)
 {
     update_state(*window_state);
 
@@ -371,9 +371,9 @@ class WindowSurfaceObserver : public ms::NullSurfaceObserver
 {
 public:
     WindowSurfaceObserver(
-        miral::OnWindowAttribChanged attrib_changed,
-        miral::OnWindowResized window_resized_to,
-        miral::OnWindowRenamed window_renamed) :
+        md::OnWindowAttribChanged attrib_changed,
+        md::OnWindowResized window_resized_to,
+        md::OnWindowRenamed window_renamed) :
         on_attrib_changed{attrib_changed},
         on_window_resized_to(window_resized_to),
         on_window_renamed(window_renamed)
@@ -412,12 +412,12 @@ public:
     /// @}
 
 private:
-    miral::OnWindowAttribChanged const on_attrib_changed;
-    miral::OnWindowResized const on_window_resized_to;
-    miral::OnWindowRenamed const on_window_renamed;
+    md::OnWindowAttribChanged const on_attrib_changed;
+    md::OnWindowResized const on_window_resized_to;
+    md::OnWindowRenamed const on_window_renamed;
 };
 
-struct miral::DecorationAdapter::Impl : public msd::Decoration
+struct md::DecorationAdapter::Impl : public msd::Decoration
 {
 public:
     Impl() = delete;
@@ -523,7 +523,7 @@ private:
     std::shared_ptr<md::StaticGeometry> geometry;
 };
 
-miral::DecorationAdapter::DecorationAdapter(
+md::DecorationAdapter::DecorationAdapter(
     std::shared_ptr<DecorationRedrawNotifier> const& redraw_notifier,
     Renderer::RenderingCallback render_titlebar,
     Renderer::RenderingCallback render_left_border,
@@ -558,12 +558,12 @@ miral::DecorationAdapter::DecorationAdapter(
 {
 }
 
-auto miral::DecorationAdapter::to_decoration() const -> std::shared_ptr<mir::shell::decoration::Decoration>
+auto md::DecorationAdapter::to_decoration() const -> std::shared_ptr<mir::shell::decoration::Decoration>
 {
     return impl;
 }
 
-void miral::DecorationAdapter::init(
+void md::DecorationAdapter::init(
     std::shared_ptr<ms::Surface> const& window_surface,
     std::shared_ptr<ms::Surface> const& decoration_surface,
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
@@ -573,17 +573,17 @@ void miral::DecorationAdapter::init(
     impl->init(window_surface, decoration_surface, buffer_allocator, shell, cursor_images);
 }
 
-void miral::DecorationAdapter::update()
+void md::DecorationAdapter::update()
 {
     impl->update();
 }
 
-auto miral::DecorationAdapter::redraw_notifier() const -> std::shared_ptr<DecorationRedrawNotifier>
+auto md::DecorationAdapter::redraw_notifier() const -> std::shared_ptr<DecorationRedrawNotifier>
 {
    return impl->redraw_notifier();
 }
 
-void miral::DecorationAdapter::Impl::update()
+void md::DecorationAdapter::Impl::update()
 {
     auto window_spec = [this]
     {
@@ -626,17 +626,17 @@ void miral::DecorationAdapter::Impl::update()
     renderer->update_render_submit(window_state);
 }
 
-void miral::DecorationAdapter::set_custom_geometry(std::shared_ptr<md::StaticGeometry> geometry)
+void md::DecorationAdapter::set_custom_geometry(std::shared_ptr<md::StaticGeometry> geometry)
 {
     impl->set_custom_geometry(geometry);
 }
 
-void miral::DecorationAdapter::Impl::set_custom_geometry(std::shared_ptr<md::StaticGeometry> geometry)
+void md::DecorationAdapter::Impl::set_custom_geometry(std::shared_ptr<md::StaticGeometry> geometry)
 {
     this->geometry = geometry;
 }
 
-void miral::DecorationAdapter::Impl::init(
+void md::DecorationAdapter::Impl::init(
     std::shared_ptr<ms::Surface> window_surface,
     std::shared_ptr<ms::Surface> decoration_surface,
     std::shared_ptr<mg::GraphicBufferAllocator> buffer_allocator,
@@ -672,12 +672,12 @@ void miral::DecorationAdapter::Impl::init(
     on_update_decoration_window_state(window_state);
 }
 
-void miral::DecorationAdapter::Impl::window_state_updated(std::shared_ptr<ms::Surface> const window_surface)
+void md::DecorationAdapter::Impl::window_state_updated(std::shared_ptr<ms::Surface> const window_surface)
 {
     window_state = std::make_shared<md::WindowState>(geometry, window_surface.get());
 }
 
-miral::DecorationAdapter::DecorationAdapter::Impl::~Impl()
+md::DecorationAdapter::DecorationAdapter::Impl::~Impl()
 {
     window_surface->unregister_interest(*window_surface_observer);
 }

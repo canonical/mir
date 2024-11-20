@@ -26,21 +26,20 @@ namespace mir
 {
 namespace shell
 {
-class Shell;
 namespace decoration
 {
 struct DeviceEvent;
 }
 }
-namespace scene
-{
-class Surface;
-}
 }
 
 namespace miral
 {
+
+namespace decoration
+{
 class DecorationAdapter;
+}
 
 // Maybe it'd be best to move Device event to somewhere common between mir and miral?
 class DeviceEvent
@@ -48,7 +47,6 @@ class DeviceEvent
 public:
     DeviceEvent(mir::shell::decoration::DeviceEvent);
     operator mir::shell::decoration::DeviceEvent() const;
-
 
     auto location() const -> mir::geometry::Point;
     auto pressed() const -> bool;
@@ -75,12 +73,11 @@ struct DecorationRedrawNotifier
     OnRedraw on_redraw;
 };
 
-using Pixel = uint32_t;
 
 class Decoration // Placeholder names
 {
 public:
-    using DecorationBuilder = std::function<std::shared_ptr<DecorationAdapter>()>;
+    using DecorationBuilder = std::function<std::shared_ptr<miral::decoration::DecorationAdapter>()>;
 
     Decoration();
 
