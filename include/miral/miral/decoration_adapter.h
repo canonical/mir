@@ -17,19 +17,15 @@
 #ifndef MIRAL_DECORATION_DECORATION_ADAPTER_H
 #define MIRAL_DECORATION_DECORATION_ADAPTER_H
 
-// TODO: Add a builder to provide API stability
-
-// TODO one more layer of indirection
 #include "mir/geometry/forward.h"
 #include "mir/geometry/size.h"
+#include "mir/geometry/point.h"
 #include "mir_toolkit/common.h"
 
 #include "miral/decoration_basic_manager.h"
-#include "miral/decoration_manager_builder.h"
 #include "miral/decoration_window_state.h"
 
 #include <functional>
-#include <glm/gtc/constants.hpp>
 #include <memory>
 #include <optional>
 
@@ -75,11 +71,16 @@ namespace geometry = mir::geometry;
 namespace geom = mir::geometry;
 
 struct MirEvent;
-struct WindowState;
 
 namespace miral
 {
 struct InputContext;
+
+namespace decoration
+{
+class WindowState;
+class StaticGeometry;
+}
 
 using OnProcessDrag = std::function<void(miral::DeviceEvent device, InputContext ctx)>;
 using OnProcessEnter = std::function<void(miral::DeviceEvent device, InputContext ctx)>;
@@ -92,7 +93,7 @@ using OnWindowAttribChanged = std::function<void(ms::Surface const* window_surfa
 using OnWindowResized =
     std::function<void(ms::Surface const* window_surface, mir::geometry::Size const& /*window_size*/)>;
 using OnWindowRenamed = std::function<void(ms::Surface const* window_surface, std::string const& name)>;
-using OnWindowStateUpdated = std::function<void(std::shared_ptr<WindowState>)>;
+using OnWindowStateUpdated = std::function<void(std::shared_ptr<miral::decoration::WindowState>)>;
 
 struct InputContext
 {
@@ -157,7 +158,7 @@ class Renderer
 public:
     static inline auto area(geometry::Size const size) -> size_t
     {
-        return (size.width > geom::Width{} && size.height > geom::Height{}) ?
+        return (size.width > geometry::Width{} && size.height > geometry::Height{}) ?
                    size.width.as_int() * size.height.as_int() :
                    0;
     }
@@ -197,7 +198,6 @@ public:
         std::shared_ptr<mc::BufferStream> const stream_;
     };
 
-    using DeviceEvent = mir::shell::decoration::DeviceEvent;
     using RenderingCallback = std::function<void(Buffer&)>;
 
     Renderer(
@@ -225,9 +225,9 @@ public:
             *i = color;
     }
 
-    void update_state(WindowState const& window_state);
-    auto streams_to_spec(std::shared_ptr<WindowState> const&  window_state) const -> msh::SurfaceSpecification;
-    void update_render_submit(std::shared_ptr<WindowState> const& window_state);
+    void update_state(miral::decoration::WindowState const& window_state);
+    auto streams_to_spec(std::shared_ptr<miral::decoration::WindowState> const&  window_state) const -> msh::SurfaceSpecification;
+    void update_render_submit(std::shared_ptr<miral::decoration::WindowState> const& window_state);
 
 private:
     auto make_graphics_buffer(Buffer const&) -> std::optional<std::shared_ptr<mg::Buffer>>;
@@ -266,7 +266,7 @@ struct DecorationAdapter
         OnWindowRenamed window_renamed,
         OnWindowStateUpdated update_decoration_window_state);
 
-    void set_custom_geometry(std::shared_ptr<StaticGeometry> geometry);
+    void set_custom_geometry(std::shared_ptr<miral::decoration::StaticGeometry> geometry);
 
     std::shared_ptr<msd::Decoration> to_decoration() const;
 

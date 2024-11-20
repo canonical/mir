@@ -45,6 +45,8 @@ namespace mrs = mir::renderer::software;
 namespace geometry = mir::geometry;
 namespace geom = mir::geometry;
 
+namespace md = miral::decoration;
+
 void miral::InputContext::request_move() const
 {
     shell->request_move(session, window_surface, mir_event_get_input_event(latest_event.get()));
@@ -189,7 +191,7 @@ miral::InputResolverAdapter::InputResolverAdapter(
 
 }
 
-StaticGeometry const default_geometry{
+miral::decoration::StaticGeometry const default_geometry{
     geom::Height{24},         // titlebar_height
     geom::Width{6},           // side_border_width
     geom::Height{6},          // bottom_border_height
@@ -243,7 +245,7 @@ auto miral::Renderer::make_graphics_buffer(Buffer const& buffer)
     }
 }
 
-void miral::Renderer::update_state(WindowState const& window_state)
+void miral::Renderer::update_state(md::WindowState const& window_state)
 {
     auto const conditional_resize =
         [](auto& buffer, auto const& rect)
@@ -269,7 +271,7 @@ miral::Renderer::Buffer::~Buffer()
     session->destroy_buffer_stream(stream_);
 }
 
-auto miral::Renderer::streams_to_spec(std::shared_ptr<WindowState> const& window_state) const
+auto miral::Renderer::streams_to_spec(std::shared_ptr<md::WindowState> const& window_state) const
     -> msh::SurfaceSpecification
 {
     using StreamSpecification = mir::shell::StreamSpecification;
@@ -283,6 +285,7 @@ auto miral::Renderer::streams_to_spec(std::shared_ptr<WindowState> const& window
             spec.streams.value().emplace_back(StreamSpecification{stream, as_displacement(rect.top_left)});
     };
 
+    using md::BorderType;
     switch(window_state->border_type())
     {
     case BorderType::Full:
@@ -301,11 +304,12 @@ auto miral::Renderer::streams_to_spec(std::shared_ptr<WindowState> const& window
     return spec;
 }
 
-void miral::Renderer::update_render_submit(std::shared_ptr<WindowState> const& window_state)
+void miral::Renderer::update_render_submit(std::shared_ptr<md::WindowState> const& window_state)
 {
     update_state(*window_state);
 
     std::vector<std::pair<std::shared_ptr<mc::BufferStream>, std::optional<std::shared_ptr<mg::Buffer>>>> new_buffers;
+    using md::BorderType;
     switch(window_state->border_type())
     {
     case BorderType::Full:
@@ -438,11 +442,11 @@ public:
                               window_renamed(args...);
                               on_update_decoration_window_state(window_state);
                           }},
-        geometry{std::make_shared<StaticGeometry>(default_geometry)}
+        geometry{std::make_shared<md::StaticGeometry>(default_geometry)}
     {
     }
 
-    void set_custom_geometry(std::shared_ptr<StaticGeometry> geometry);
+    void set_custom_geometry(std::shared_ptr<md::StaticGeometry> geometry);
 
     void init(
         std::shared_ptr<ms::Surface> window_surface,
@@ -471,7 +475,7 @@ private:
     std::unique_ptr<Renderer> renderer;
     std::shared_ptr<msh::Shell> shell;
     std::shared_ptr<ms::Session> session;
-    std::shared_ptr<WindowState> window_state;
+    std::shared_ptr<md::WindowState> window_state;
 
     Renderer::RenderingCallback const render_titlebar;
     Renderer::RenderingCallback const render_left_border;
@@ -490,7 +494,7 @@ private:
     OnWindowResized on_window_resized_to;
     OnWindowRenamed on_window_renamed;
 
-    std::shared_ptr<StaticGeometry> geometry;
+    std::shared_ptr<md::StaticGeometry> geometry;
 };
 
 miral::DecorationAdapter::DecorationAdapter(
@@ -596,12 +600,12 @@ void miral::DecorationAdapter::Impl::update()
     renderer->update_render_submit(window_state);
 }
 
-void miral::DecorationAdapter::set_custom_geometry(std::shared_ptr<StaticGeometry> geometry)
+void miral::DecorationAdapter::set_custom_geometry(std::shared_ptr<md::StaticGeometry> geometry)
 {
     impl->set_custom_geometry(geometry);
 }
 
-void miral::DecorationAdapter::Impl::set_custom_geometry(std::shared_ptr<StaticGeometry> geometry)
+void miral::DecorationAdapter::Impl::set_custom_geometry(std::shared_ptr<md::StaticGeometry> geometry)
 {
     this->geometry = geometry;
 }
@@ -617,7 +621,7 @@ void miral::DecorationAdapter::Impl::init(
     this->shell = shell;
     this->session = window_surface->session().lock();
     this->decoration_surface = decoration_surface;
-    this->window_state = std::make_shared<WindowState>(geometry, window_surface.get());
+    this->window_state = std::make_shared<md::WindowState>(geometry, window_surface.get());
 
     renderer = std::make_unique<Renderer>(window_surface, buffer_allocator, render_titlebar, render_left_border, render_right_border, render_bottom_border);
     input_adapter = std::make_unique<InputResolverAdapter>(
@@ -644,7 +648,7 @@ void miral::DecorationAdapter::Impl::init(
 
 void miral::DecorationAdapter::Impl::window_state_updated(std::shared_ptr<ms::Surface> const window_surface)
 {
-    window_state = std::make_shared<WindowState>(geometry, window_surface.get());
+    window_state = std::make_shared<md::WindowState>(geometry, window_surface.get());
 }
 
 miral::DecorationAdapter::DecorationAdapter::Impl::~Impl()

@@ -14,12 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir_toolkit/common.h"
-
-#include "mir/geometry/forward.h"
-#include "mir/geometry/rectangle.h"
 #include "miral/decoration.h"
 #include "miral/decoration_adapter.h"
+
+#include "mir_toolkit/common.h"
+#include "mir/geometry/forward.h"
+#include "mir/geometry/rectangle.h"
 
 #include <memory>
 #include <optional>
@@ -35,9 +35,11 @@ namespace miral
 class DecorationManagerAdapter;
 class InputContext;
 class DeviceEvent;
+namespace decoration
+{
+class WindowState;
 }
-
-class WindowState; //  TODO move to miral
+}
 
 // Placeholder names
 class UserDecoration : public miral::Decoration
@@ -101,7 +103,7 @@ public:
         void widget_down(Widget& widget);
         void widget_up(Widget& widget, miral::InputContext ctx);
 
-        void update_window_state(WindowState const& window_state);
+        void update_window_state(miral::decoration::WindowState const& window_state);
 
         auto buttons() const -> std::vector<std::shared_ptr<Widget const>>;
 

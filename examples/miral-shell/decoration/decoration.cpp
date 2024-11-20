@@ -14,18 +14,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "decoration.h"
+
 #include "mir/geometry/dimensions.h"
 #include "mir/geometry/forward.h"
 #include "mir/geometry/rectangle.h"
-
-#include "decoration.h"
-
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/cursors.h"
+
 #include "miral/decoration_adapter.h"
 #include "miral/decoration.h"
 #include "miral/decoration_window_state.h"
-
 #include "miral/decoration_basic_manager.h"
 #include "miral/decoration_manager_builder.h"
 
@@ -33,6 +32,8 @@
 
 namespace geometry = mir::geometry;
 namespace geom = mir::geometry;
+namespace md = miral::decoration;
+
 
 using miral::InputContext;
 
@@ -267,7 +268,7 @@ void UserDecoration::InputManager::widget_enter(Widget& widget, miral::InputCont
         ctx.set_cursor(resize_edge_to_cursor_name(widget.resize_edge.value()));
 }
 
-auto button_rect(WindowState const& window_state, unsigned n) -> geom::Rectangle
+auto button_rect(md::WindowState const& window_state, unsigned n) -> geom::Rectangle
 {
     geom::Rectangle titlebar = window_state.titlebar_rect();
     auto button_width = window_state.geometry().button_width;
@@ -280,7 +281,7 @@ auto button_rect(WindowState const& window_state, unsigned n) -> geom::Rectangle
 }
 
 auto resize_edge_rect(
-    WindowState const& window_state,
+    md::WindowState const& window_state,
     MirResizeEdge resize_edge) -> geom::Rectangle
 {
     switch (resize_edge)
@@ -347,7 +348,7 @@ auto resize_edge_rect(
     }
 }
 
-void UserDecoration::InputManager::update_window_state(WindowState const& window_state)
+void UserDecoration::InputManager::update_window_state(md::WindowState const& window_state)
 {
     auto button_index = 0;
     for (auto const& widget : widgets)
@@ -377,7 +378,7 @@ auto UserDecoration::create_manager(mir::Server& server)
 {
     using namespace mir::geometry;
     // Shared between all decorations.
-    auto const custom_geometry = std::make_shared<StaticGeometry>(StaticGeometry{
+    auto const custom_geometry = std::make_shared<md::StaticGeometry>(md::StaticGeometry{
         .titlebar_height = Height{24},
         .side_border_width = geom::Width{6},
         .bottom_border_height = geom::Height{6},
@@ -482,3 +483,4 @@ auto UserDecoration::create_manager(mir::Server& server)
 }
 
 // FIXME: XTerm flickers when interacting with decorations (most visible with mouse movement)
+// TODO: Maybe `DecorationAdapter` could be split into two classes. One that does whatever `DecorationAdapter` does on the user side, and another that wraps it to provide all the additional stuff we have `DecorationAdapter` doing

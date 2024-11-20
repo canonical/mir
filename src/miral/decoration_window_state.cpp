@@ -19,9 +19,11 @@
 #include "mir/scene/surface.h"
 #include <utility>
 
-auto border_type_for(MirWindowType type, MirWindowState state) -> BorderType
+namespace md = miral::decoration;
+
+auto border_type_for(MirWindowType type, MirWindowState state) -> md::BorderType
 {
-    using BorderType = BorderType;
+    using BorderType = md::BorderType;
 
     switch (type)
     {
@@ -64,7 +66,7 @@ auto border_type_for(MirWindowType type, MirWindowState state) -> BorderType
     return {};
 }
 
-WindowState::WindowState(std::shared_ptr<StaticGeometry> const& static_geometry, ms::Surface const* surface) :
+md::WindowState::WindowState(std::shared_ptr<md::StaticGeometry> const& static_geometry, ms::Surface const* surface) :
     static_geometry{static_geometry},
     window_size_{surface->window_size()},
     border_type_{border_type_for(surface->type(), surface->state())},
@@ -73,12 +75,12 @@ WindowState::WindowState(std::shared_ptr<StaticGeometry> const& static_geometry,
 {
 }
 
-auto WindowState::titlebar_width() const -> geometry::Width
+auto md::WindowState::titlebar_width() const -> geometry::Width
 {
     return window_size().width;
 }
 
-auto WindowState::titlebar_height() const -> geometry::Height
+auto md::WindowState::titlebar_height() const -> geometry::Height
 {
     switch(border_type_)
     {
@@ -93,7 +95,7 @@ auto WindowState::titlebar_height() const -> geometry::Height
     std::unreachable();
 }
 
-auto WindowState::side_border_width() const -> geometry::Width
+auto md::WindowState::side_border_width() const -> geometry::Width
 {
     switch(border_type_)
     {
@@ -107,12 +109,12 @@ auto WindowState::side_border_width() const -> geometry::Width
     std::unreachable();
 }
 
-auto WindowState::side_border_height() const -> geometry::Height
+auto md::WindowState::side_border_height() const -> geometry::Height
 {
     return window_size().height - as_delta(titlebar_height()) - as_delta(bottom_border_height());
 }
 
-auto WindowState::bottom_border_height() const -> geometry::Height
+auto md::WindowState::bottom_border_height() const -> geometry::Height
 {
     switch(border_type_)
     {
@@ -126,65 +128,65 @@ auto WindowState::bottom_border_height() const -> geometry::Height
     std::unreachable();
 }
 
-auto WindowState::bottom_border_width() const -> geometry::Width
+auto md::WindowState::bottom_border_width() const -> geometry::Width
 {
     return titlebar_width();
 }
 
-auto WindowState::titlebar_rect() const -> geometry::Rectangle
+auto md::WindowState::titlebar_rect() const -> geometry::Rectangle
 {
     return {
         geometry::Point{},
         {titlebar_width(), titlebar_height()}};
 }
 
-auto WindowState::left_border_rect() const -> geometry::Rectangle
+auto md::WindowState::left_border_rect() const -> geometry::Rectangle
 {
     return {
         {geometry::X{}, as_y(titlebar_height())},
         {side_border_width(), side_border_height()}};
 }
 
-auto WindowState::right_border_rect() const -> geometry::Rectangle
+auto md::WindowState::right_border_rect() const -> geometry::Rectangle
 {
     return {
         {as_x(window_size().width - side_border_width()), as_y(titlebar_height())},
         {side_border_width(), side_border_height()}};
 }
 
-auto WindowState::bottom_border_rect() const -> geometry::Rectangle
+auto md::WindowState::bottom_border_rect() const -> geometry::Rectangle
 {
     return {
         {geometry::X{}, as_y(window_size().height - bottom_border_height())},
         {bottom_border_width(), bottom_border_height()}};
 }
 
-auto WindowState::window_size() const -> geometry::Size
+auto md::WindowState::window_size() const -> geometry::Size
 {
     return window_size_;
 }
 
-auto WindowState::focused_state() const -> MirWindowFocusState
+auto md::WindowState::focused_state() const -> MirWindowFocusState
 {
     return focus_state_;
 }
 
-auto WindowState::window_name() const -> std::string
+auto md::WindowState::window_name() const -> std::string
 {
     return window_name_;
 }
 
-auto WindowState::geometry() const -> StaticGeometry
+auto md::WindowState::geometry() const -> md::StaticGeometry
 {
     return *static_geometry;
 }
 
-auto WindowState::resize_corner_input_size() const -> geometry::Size
+auto md::WindowState::resize_corner_input_size() const -> geometry::Size
 {
     return static_geometry->resize_corner_input_size;
 }
 
-auto WindowState::border_type() const -> BorderType
+auto md::WindowState::border_type() const -> BorderType
 {
     return border_type_;
 }

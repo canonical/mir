@@ -23,6 +23,7 @@
 #include "mir/geometry/point.h"
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
+
 #include <memory>
 
 namespace mir::scene { class Surface; }
@@ -30,6 +31,8 @@ namespace mir::scene { class Surface; }
 namespace ms = mir::scene;
 namespace geometry = mir::geometry;
 
+namespace miral::decoration
+{
 enum class BorderType
 {
     Full,       ///< Full titlebar and border (for restored windows)
@@ -54,7 +57,7 @@ struct StaticGeometry
 class WindowState
 {
 public:
-    WindowState(std::shared_ptr<StaticGeometry> const& static_geometry, ms::Surface const* surface);
+    WindowState(std::shared_ptr<miral::decoration::StaticGeometry> const& static_geometry, ms::Surface const* surface);
 
     auto window_size() const -> geometry::Size;
     auto focused_state() const -> MirWindowFocusState;
@@ -88,5 +91,5 @@ private:
     MirWindowFocusState const focus_state_;
     std::string window_name_;
 };
-
+}
 #endif
