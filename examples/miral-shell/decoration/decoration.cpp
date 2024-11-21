@@ -473,6 +473,3 @@ auto UserDecoration::create_manager(mir::Server& server)
                })
         .to_adapter();
 }
-
-// FIXME: XTerm flickers when interacting with decorations (most visible with mouse movement)
-//  Maybe due to setting margins on every update?

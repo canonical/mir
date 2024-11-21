@@ -35,6 +35,7 @@
 #include "mir/shell/surface_specification.h"
 #include "mir/log.h"
 
+#include <iterator>
 #include <memory>
 
 namespace msh = mir::shell;
@@ -491,6 +492,47 @@ struct md::DecorationAdapter::Self
     struct Impl : public msd::Decoration
     {
     public:
+        template <typename OBJ> struct Differ
+        {
+            struct PropertyComparison
+            {
+                template <typename RET>
+                PropertyComparison(RET (OBJ::*getter)() const) :
+                    comp{[=](OBJ const* a, OBJ const* b)
+                         {
+                             return (a->*getter)() == (b->*getter)();
+                         }}
+                {
+                }
+
+                auto operator()(OBJ const* a, OBJ const* b) const -> bool
+                {
+                    return comp(a, b);
+                }
+
+                std::function<bool(OBJ const* a, OBJ const* b)> const comp;
+            };
+
+            Differ(OBJ const* old, OBJ const* current) :
+                old{old},
+                current{current}
+            {
+            }
+
+            auto operator()(std::initializer_list<PropertyComparison> comparisons) -> bool
+            {
+                if (!old)
+                    return true;
+                for (auto const& comparison : comparisons)
+                    if (!comparison(old, current))
+                        return true;
+                return false;
+            }
+
+            OBJ const* const old;
+            OBJ const* const current;
+        };
+
         Impl() = delete;
         ~Impl() override;
 
@@ -570,7 +612,7 @@ struct md::DecorationAdapter::Self
         std::unique_ptr<Renderer> renderer;
         std::shared_ptr<msh::Shell> shell;
         std::shared_ptr<ms::Session> session;
-        std::shared_ptr<md::WindowState> window_state;
+        std::shared_ptr<md::WindowState> window_state, prev_window_state;
 
         Renderer::RenderingCallback const render_titlebar;
         Renderer::RenderingCallback const render_left_border;
@@ -674,11 +716,17 @@ void md::DecorationAdapter::Self::Impl::update()
         return spec;
     }();
 
-    window_surface->set_window_margins(
-        as_delta(window_state->titlebar_height()),
-        as_delta(window_state->side_border_width()),
-        as_delta(window_state->bottom_border_height()),
-        as_delta(window_state->side_border_width()));
+    auto window_state_changed = Differ(prev_window_state.get(), window_state.get());
+    auto margins_changed = window_state_changed(
+        {&WindowState::titlebar_height, &WindowState::side_border_width, &WindowState::bottom_border_height});
+    if (margins_changed)
+    {
+        window_surface->set_window_margins(
+            as_delta(window_state->titlebar_height()),
+            as_delta(window_state->side_border_width()),
+            as_delta(window_state->bottom_border_height()),
+            as_delta(window_state->side_border_width()));
+    }
 
     auto stream_spec = renderer->streams_to_spec(window_state);
     stream_spec.update_from(window_spec);
@@ -750,6 +798,7 @@ void md::DecorationAdapter::Self::Impl::init(
 
 void md::DecorationAdapter::Self::Impl::window_state_updated(std::shared_ptr<ms::Surface> const window_surface)
 {
+    prev_window_state = window_state;
     window_state = std::make_shared<md::WindowState>(geometry, window_surface.get());
 }
 
