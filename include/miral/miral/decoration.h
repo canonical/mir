@@ -59,7 +59,9 @@ private:
 struct DecorationRedrawNotifier
 {
     void notify() const;
+
     void register_listener(std::function<void()> on_redraw);
+    void clear_listener();
 
 private:
     std::function<void()> on_redraw;
@@ -68,7 +70,7 @@ private:
 class Decoration // Placeholder names
 {
 public:
-    using DecorationBuilder = std::function<std::shared_ptr<miral::decoration::DecorationAdapter>()>;
+    using DecorationBuilder = std::function<std::unique_ptr<miral::decoration::DecorationAdapter>()>;
 
     Decoration();
 

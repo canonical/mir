@@ -47,7 +47,7 @@ class BasicManager :
     public Manager
 {
 public:
-    using DecorationBuilder = std::function<std::shared_ptr<Decoration>(
+    using DecorationBuilder = std::function<std::unique_ptr<Decoration>(
         std::shared_ptr<shell::Shell> const& shell,
         std::shared_ptr<scene::Surface> const& surface)>;
 
@@ -68,7 +68,7 @@ private:
     std::weak_ptr<shell::Shell> shell;
 
     std::mutex mutex;
-    std::unordered_map<scene::Surface*, std::shared_ptr<Decoration>> decorations;
+    std::unordered_map<scene::Surface*, std::unique_ptr<Decoration>> decorations;
     float scale{1.0f};
 
     void set_scale(float new_scale);

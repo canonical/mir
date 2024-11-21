@@ -53,6 +53,10 @@ void miral::DecorationRedrawNotifier::register_listener(std::function<void()> on
     this->on_redraw = on_redraw;
 }
 
+void miral::DecorationRedrawNotifier::clear_listener()
+{
+    this->on_redraw = {};
+}
 
 struct miral::Decoration::Self
 {

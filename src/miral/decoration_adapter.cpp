@@ -15,6 +15,7 @@
  */
 
 #include "miral/decoration_adapter.h"
+#include "mir/shell/decoration.h"
 
 #include "mir_toolkit/events/event.h"
 #include "mir/geometry/forward.h"
@@ -29,7 +30,6 @@
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
-#include "mir/shell/decoration.h"
 #include "mir/shell/decoration/input_resolver.h"
 #include "mir/shell/shell.h"
 #include "mir/shell/surface_specification.h"
@@ -192,12 +192,11 @@ md::Renderer::Renderer(
     Renderer::RenderingCallback render_left_border,
     Renderer::RenderingCallback render_right_border,
     Renderer::RenderingCallback render_bottom_border) :
-    session{window_surface->session().lock()},
     buffer_allocator{buffer_allocator},
-    titlebar_buffer{session},
-    left_border_buffer{session},
-    right_border_buffer{session},
-    bottom_border_buffer{session},
+    titlebar_buffer{window_surface->session().lock()},
+    left_border_buffer{window_surface->session().lock()},
+    right_border_buffer{window_surface->session().lock()},
+    bottom_border_buffer{window_surface->session().lock()},
     render_titlebar{render_titlebar},
     render_left_border{render_left_border},
     render_right_border{render_right_border},
@@ -308,6 +307,7 @@ void md::Renderer::update_state(md::WindowState const& window_state)
 }
 
 md::Renderer::Buffer::Buffer(std::shared_ptr<ms::Session> const& session) :
+    session{session},
     stream_{
         session->create_buffer_stream(mg::BufferProperties{geom::Size{1, 1}, buffer_format, mg::BufferUsage::software})}
 {
@@ -448,13 +448,11 @@ private:
     md::OnWindowRenamed const on_window_renamed;
 };
 
-struct md::DecorationAdapter::Impl : public msd::Decoration
+// Exists for exactly one reason: So we can have unique_ptr<Impl>.
+struct md::DecorationAdapter::Self
 {
-public:
-    Impl() = delete;
-
-    Impl(
-        std::shared_ptr<DecorationRedrawNotifier> redraw_notifier,
+    Self(
+        std::shared_ptr<DecorationRedrawNotifier> const& redraw_notifier,
         Renderer::RenderingCallback render_titlebar,
         Renderer::RenderingCallback render_left_border,
         Renderer::RenderingCallback render_right_border,
@@ -470,91 +468,132 @@ public:
         OnWindowRenamed window_renamed,
         OnScaleChanged scale_changed,
         OnWindowStateUpdated update_decoration_window_state) :
-        redraw_notifier_{redraw_notifier},
-        render_titlebar{render_titlebar},
-        render_left_border{render_left_border},
-        render_right_border{render_right_border},
-        render_bottom_border{render_bottom_border},
-        on_process_enter{process_enter},
-        on_process_leave{process_leave},
-        on_process_down{process_down},
-        on_process_up{process_up},
-        on_process_move{process_move},
-        on_process_drag{process_drag},
-        on_update_decoration_window_state{update_decoration_window_state},
-        on_attrib_changed{[this, attrib_changed](auto... args)
-                          {
-                              window_state_updated(window_surface);
-                              attrib_changed(args...);
-                              on_update_decoration_window_state(window_state);
-                          }},
-        on_window_resized_to{[this, window_resized_to](auto... args)
-                             {
-                                 window_state_updated(window_surface);
-                                 window_resized_to(args...);
-                                 on_update_decoration_window_state(window_state);
-                             }},
-        on_window_renamed{[this, window_renamed](auto... args)
-                          {
-                              window_state_updated(window_surface);
-                              window_renamed(args...);
-                              on_update_decoration_window_state(window_state);
-                          }},
-        on_scale_changed{scale_changed},
-        geometry{std::make_shared<md::StaticGeometry>(default_geometry)}
+        impl{std::make_unique<Impl>(
+            redraw_notifier,
+            render_titlebar,
+            render_left_border,
+            render_right_border,
+            render_bottom_border,
+            process_enter,
+            process_leave,
+            process_down,
+            process_up,
+            process_move,
+            process_drag,
+            attrib_changed,
+            window_resized_to,
+            window_renamed,
+            scale_changed,
+            update_decoration_window_state)}
     {
     }
 
-    void set_custom_geometry(std::shared_ptr<md::StaticGeometry> geometry);
+    struct Impl : public msd::Decoration
+    {
+    public:
+        Impl() = delete;
+        ~Impl() override;
 
-    void init(
-        std::shared_ptr<ms::Surface> window_surface,
-        std::shared_ptr<ms::Surface> decoration_surface,
-        std::shared_ptr<mg::GraphicBufferAllocator> buffer_allocator,
-        std::shared_ptr<msh::Shell> shell,
-        std::shared_ptr<mir::input::CursorImages> const cursor_images);
+        Impl(
+            std::shared_ptr<DecorationRedrawNotifier> const& redraw_notifier,
+            Renderer::RenderingCallback render_titlebar,
+            Renderer::RenderingCallback render_left_border,
+            Renderer::RenderingCallback render_right_border,
+            Renderer::RenderingCallback render_bottom_border,
+            OnProcessEnter process_enter,
+            OnProcessLeave process_leave,
+            OnProcessDown process_down,
+            OnProcessUp process_up,
+            OnProcessMove process_move,
+            OnProcessDrag process_drag,
+            OnWindowAttribChanged attrib_changed,
+            OnWindowResized window_resized_to,
+            OnWindowRenamed window_renamed,
+            OnScaleChanged scale_changed,
+            OnWindowStateUpdated update_decoration_window_state) :
+            redraw_notifier{redraw_notifier},
+            render_titlebar{render_titlebar},
+            render_left_border{render_left_border},
+            render_right_border{render_right_border},
+            render_bottom_border{render_bottom_border},
+            on_process_enter{process_enter},
+            on_process_leave{process_leave},
+            on_process_down{process_down},
+            on_process_up{process_up},
+            on_process_move{process_move},
+            on_process_drag{process_drag},
+            on_update_decoration_window_state{update_decoration_window_state},
+            on_attrib_changed{[this, attrib_changed](auto... args)
+                              {
+                                  window_state_updated(window_surface);
+                                  attrib_changed(args...);
+                                  on_update_decoration_window_state(window_state);
+                              }},
+            on_window_resized_to{[this, window_resized_to](auto... args)
+                                 {
+                                     window_state_updated(window_surface);
+                                     window_resized_to(args...);
+                                     on_update_decoration_window_state(window_state);
+                                 }},
+            on_window_renamed{[this, window_renamed](auto... args)
+                              {
+                                  window_state_updated(window_surface);
+                                  window_renamed(args...);
+                                  on_update_decoration_window_state(window_state);
+                              }},
+            on_scale_changed{scale_changed},
+            geometry{std::make_shared<md::StaticGeometry>(default_geometry)}
+        {
+        }
 
-    void update();
+        void set_custom_geometry(std::shared_ptr<md::StaticGeometry> geometry);
 
-    void window_state_updated(std::shared_ptr<ms::Surface> const window_surface);
+        void init(
+            std::shared_ptr<ms::Surface> window_surface,
+            std::shared_ptr<ms::Surface> decoration_surface,
+            std::shared_ptr<mg::GraphicBufferAllocator> buffer_allocator,
+            std::shared_ptr<msh::Shell> shell,
+            std::shared_ptr<mir::input::CursorImages> const cursor_images);
 
-    auto redraw_notifier() { return redraw_notifier_; }
+        void update();
 
-    void set_scale(float new_scale) override;
+        void window_state_updated(std::shared_ptr<ms::Surface> const window_surface);
 
-    ~Impl();
+        void set_scale(float new_scale) override;
 
-private:
+    private:
+        std::shared_ptr<DecorationRedrawNotifier> const redraw_notifier;
+        std::unique_ptr<InputResolverAdapter> input_adapter;
+        std::shared_ptr<WindowSurfaceObserver> window_surface_observer;
+        std::shared_ptr<ms::Surface> window_surface;
+        std::shared_ptr<ms::Surface> decoration_surface;
+        std::unique_ptr<Renderer> renderer;
+        std::shared_ptr<msh::Shell> shell;
+        std::shared_ptr<ms::Session> session;
+        std::shared_ptr<md::WindowState> window_state;
 
-    std::shared_ptr<DecorationRedrawNotifier> const redraw_notifier_;
-    std::unique_ptr<InputResolverAdapter> input_adapter;
-    std::shared_ptr<WindowSurfaceObserver> window_surface_observer;
-    std::shared_ptr<ms::Surface> window_surface;
-    std::shared_ptr<ms::Surface> decoration_surface;
-    std::unique_ptr<Renderer> renderer;
-    std::shared_ptr<msh::Shell> shell;
-    std::shared_ptr<ms::Session> session;
-    std::shared_ptr<md::WindowState> window_state;
+        Renderer::RenderingCallback const render_titlebar;
+        Renderer::RenderingCallback const render_left_border;
+        Renderer::RenderingCallback const render_right_border;
+        Renderer::RenderingCallback const render_bottom_border;
 
-    Renderer::RenderingCallback const render_titlebar;
-    Renderer::RenderingCallback const render_left_border;
-    Renderer::RenderingCallback const render_right_border;
-    Renderer::RenderingCallback const render_bottom_border;
+        OnProcessEnter const on_process_enter;
+        OnProcessLeave const on_process_leave;
+        OnProcessDown const on_process_down;
+        OnProcessUp const on_process_up;
+        OnProcessMove const on_process_move;
+        OnProcessDrag const on_process_drag;
 
-    OnProcessEnter const on_process_enter;
-    OnProcessLeave const on_process_leave;
-    OnProcessDown const on_process_down;
-    OnProcessUp const on_process_up;
-    OnProcessMove const on_process_move;
-    OnProcessDrag const on_process_drag;
+        OnWindowStateUpdated on_update_decoration_window_state;
+        OnWindowAttribChanged on_attrib_changed;
+        OnWindowResized on_window_resized_to;
+        OnWindowRenamed on_window_renamed;
+        OnScaleChanged on_scale_changed;
 
-    OnWindowStateUpdated on_update_decoration_window_state;
-    OnWindowAttribChanged on_attrib_changed;
-    OnWindowResized on_window_resized_to;
-    OnWindowRenamed on_window_renamed;
-    OnScaleChanged on_scale_changed;
+        std::shared_ptr<md::StaticGeometry> geometry;
+    };
 
-    std::shared_ptr<md::StaticGeometry> geometry;
+    std::unique_ptr<Impl> impl;
 };
 
 md::DecorationAdapter::DecorationAdapter(
@@ -574,7 +613,7 @@ md::DecorationAdapter::DecorationAdapter(
     OnWindowRenamed window_renamed,
     OnScaleChanged scale_changed,
     OnWindowStateUpdated update_decoration_window_state) :
-    impl{std::make_shared<Impl>(
+    self{std::make_shared<Self>(
         redraw_notifier,
         render_titlebar,
         render_left_border,
@@ -594,9 +633,9 @@ md::DecorationAdapter::DecorationAdapter(
 {
 }
 
-auto md::DecorationAdapter::to_decoration() const -> std::shared_ptr<mir::shell::decoration::Decoration>
+auto md::DecorationAdapter::to_decoration() -> std::unique_ptr<msd::Decoration>
 {
-    return impl;
+    return std::move(self->impl);
 }
 
 void md::DecorationAdapter::init(
@@ -606,20 +645,10 @@ void md::DecorationAdapter::init(
     std::shared_ptr<msh::Shell> const& shell,
     std::shared_ptr<mir::input::CursorImages> const& cursor_images)
 {
-    impl->init(window_surface, decoration_surface, buffer_allocator, shell, cursor_images);
+    self->impl->init(window_surface, decoration_surface, buffer_allocator, shell, cursor_images);
 }
 
-void md::DecorationAdapter::update()
-{
-    impl->update();
-}
-
-auto md::DecorationAdapter::redraw_notifier() const -> std::shared_ptr<DecorationRedrawNotifier>
-{
-   return impl->redraw_notifier();
-}
-
-void md::DecorationAdapter::Impl::update()
+void md::DecorationAdapter::Self::Impl::update()
 {
     auto window_spec = [this]
     {
@@ -664,15 +693,15 @@ void md::DecorationAdapter::Impl::update()
 
 void md::DecorationAdapter::set_custom_geometry(std::shared_ptr<md::StaticGeometry> geometry)
 {
-    impl->set_custom_geometry(geometry);
+    self->impl->set_custom_geometry(geometry);
 }
 
-void md::DecorationAdapter::Impl::set_custom_geometry(std::shared_ptr<md::StaticGeometry> geometry)
+void md::DecorationAdapter::Self::Impl::set_custom_geometry(std::shared_ptr<md::StaticGeometry> geometry)
 {
     this->geometry = geometry;
 }
 
-void md::DecorationAdapter::Impl::init(
+void md::DecorationAdapter::Self::Impl::init(
     std::shared_ptr<ms::Surface> window_surface,
     std::shared_ptr<ms::Surface> decoration_surface,
     std::shared_ptr<mg::GraphicBufferAllocator> buffer_allocator,
@@ -706,14 +735,25 @@ void md::DecorationAdapter::Impl::init(
     // Window state initialize, notify/callback into the user decorations to
     // set themselves up
     on_update_decoration_window_state(window_state);
+
+    // Initial redraw to set up the margins and buffers for decorations.
+    // Just like BasicDecoration
+    update();
+
+    // After this point, we must be prepared to react to input events
+    redraw_notifier->register_listener(
+        [this]
+        {
+            this->update();
+        });
 }
 
-void md::DecorationAdapter::Impl::window_state_updated(std::shared_ptr<ms::Surface> const window_surface)
+void md::DecorationAdapter::Self::Impl::window_state_updated(std::shared_ptr<ms::Surface> const window_surface)
 {
     window_state = std::make_shared<md::WindowState>(geometry, window_surface.get());
 }
 
-void md::DecorationAdapter::Impl::set_scale(float new_scale)
+void md::DecorationAdapter::Self::Impl::set_scale(float new_scale)
 {
     if(new_scale == renderer->scale())
         return;
@@ -722,7 +762,14 @@ void md::DecorationAdapter::Impl::set_scale(float new_scale)
     on_scale_changed(new_scale);
 }
 
-md::DecorationAdapter::DecorationAdapter::Impl::~Impl()
+md::DecorationAdapter::DecorationAdapter::Self::Impl::~Impl()
 {
     window_surface->unregister_interest(*window_surface_observer);
+    shell->destroy_surface(session, decoration_surface);
+    redraw_notifier->clear_listener();
+    window_surface->set_window_margins(
+        geom::DeltaY{},
+        geom::DeltaX{},
+        geom::DeltaY{},
+        geom::DeltaX{});
 }

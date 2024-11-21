@@ -95,7 +95,7 @@ void msd::BasicManager::decorate(std::shared_ptr<ms::Surface> const& surface)
         auto decoration = decoration_builder(locked_shell, surface);
         lock.lock();
         decoration->set_scale(scale);
-        decorations[surface.get()] = decoration;
+        decorations[surface.get()] = std::move(decoration);
     }
 }
 
@@ -103,13 +103,13 @@ void msd::BasicManager::undecorate(std::shared_ptr<ms::Surface> const& surface)
 {
     // TODO: probably only frees one pointer, but not the whole set of things
     // pointing at the decoration.
-    std::shared_ptr<Decoration> decoration;
+    std::unique_ptr<Decoration> decoration;
     {
         std::lock_guard lock{mutex};
         auto const it = decorations.find(surface.get());
         if (it != decorations.end())
         {
-            decoration = it->second;
+            decoration = std::move(it->second);
             decorations.erase(it);
         }
     }
@@ -119,7 +119,7 @@ void msd::BasicManager::undecorate(std::shared_ptr<ms::Surface> const& surface)
 
 void msd::BasicManager::undecorate_all()
 {
-    std::vector<std::shared_ptr<Decoration>> to_destroy;
+    std::vector<std::unique_ptr<Decoration>> to_destroy;
     {
         std::lock_guard lock{mutex};
         for (auto& it : decorations)

@@ -18,6 +18,7 @@
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/server.h"
+#include "mir/shell/decoration.h"
 #include "mir/shell/decoration/basic_manager.h"
 #include "mir/shell/shell.h"
 #include "mir/shell/surface_specification.h"
@@ -28,6 +29,7 @@
 #include "miral/decoration_adapter.h"
 #include "miral/decoration_manager_builder.h"
 
+#include <boost/multi_index/detail/ord_index_node.hpp>
 #include <memory>
 #include <utility>
 
@@ -66,9 +68,7 @@ struct miral::DecorationBasicManager::Self : public mir::shell::decoration::Basi
             {
                 auto session = window_surface->session().lock();
                 auto decoration_surface = create_surface(window_surface, shell);
-
                 auto decoration_adapter = decoration_builder();
-                auto decoration = decoration_adapter->to_decoration();
 
                 decoration_adapter->init(
                     window_surface,
@@ -77,18 +77,10 @@ struct miral::DecorationBasicManager::Self : public mir::shell::decoration::Basi
                     shell,
                     server.the_cursor_images());
 
-                // Rendering events come after this point
-                decoration_adapter->redraw_notifier()->register_listener(
-                    [decoration_adapter]()
-                    {
-                        decoration_adapter->update();
-                    });
-
-                // Initial redraw to set up the margins and buffers for decorations.
-                // Just like BasicDecoration
-                decoration_adapter->redraw_notifier()->notify();
-
-                return decoration;
+                // After this point, `DecorationAdapter` has done its job
+                // (passing info from the user to the impl) and the the impl is
+                // moved out of it
+                return decoration_adapter->to_decoration();
             })
     {
     }

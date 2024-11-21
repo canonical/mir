@@ -23,6 +23,7 @@
 #include "miral/decoration_basic_manager.h"
 #include "miral/decoration_window_state.h"
 
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -188,7 +189,6 @@ private:
     static void render_row_unscaled(Buffer const& buffer, geometry::Point left, geometry::Width length, uint32_t color);
 
 
-    std::shared_ptr<ms::Session> const session;
     std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
 
     Buffer titlebar_buffer;
@@ -207,7 +207,6 @@ private:
 struct DecorationAdapter
 {
     DecorationAdapter(
-        // Notifies Mir that decorations should be redrawn
         std::shared_ptr<DecorationRedrawNotifier> const& redraw_notifier,
 
         // Called by user code in response to input events
@@ -237,7 +236,7 @@ struct DecorationAdapter
 
     void set_custom_geometry(std::shared_ptr<miral::decoration::StaticGeometry> geometry);
 
-    std::shared_ptr<msd::Decoration> to_decoration() const;
+    auto to_decoration() -> std::unique_ptr<msd::Decoration>;
 
     void init(
         std::shared_ptr<ms::Surface> const& window_surface,
@@ -247,12 +246,9 @@ struct DecorationAdapter
         std::shared_ptr<mir::input::CursorImages> const& cursor_images
     );
 
-    void update();
-
-    auto redraw_notifier() const -> std::shared_ptr<DecorationRedrawNotifier>;
-
-    struct Impl;
-    std::shared_ptr<Impl> const impl;
+private:
+    struct Self;
+    std::shared_ptr<Self> self;
 };
 
 }

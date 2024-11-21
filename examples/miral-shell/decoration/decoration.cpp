@@ -30,7 +30,6 @@
 
 #include <memory>
 
-namespace geometry = mir::geometry;
 namespace geom = mir::geometry;
 namespace md = miral::decoration;
 
@@ -380,9 +379,8 @@ auto UserDecoration::create_manager(mir::Server& server)
                server,
                [custom_geometry]()
                {
-
                    auto decoration = std::make_shared<UserDecoration>();
-                   auto decoration_adapter = std::make_shared<miral::decoration::DecorationAdapter>(
+                   auto decoration_adapter = std::make_unique<miral::decoration::DecorationAdapter>(
                        decoration->redraw_notifier(),
                        [decoration](auto const& titlebar_buffer)
                        {
@@ -477,4 +475,4 @@ auto UserDecoration::create_manager(mir::Server& server)
 }
 
 // FIXME: XTerm flickers when interacting with decorations (most visible with mouse movement)
-// TODO: Maybe `DecorationAdapter` could be split into two classes. One that does whatever `DecorationAdapter` does on the user side, and another that wraps it to provide all the additional stuff we have `DecorationAdapter` doing
+//  Maybe due to setting margins on every update?

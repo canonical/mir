@@ -523,6 +523,7 @@ global:
     miral::DecorationBasicManager::to_adapter*;
     miral::DecorationManagerBuilder::build*;
     miral::DecorationManagerBuilder::done*;
+    miral::DecorationRedrawNotifier::clear_listener*;
     miral::DecorationRedrawNotifier::notify*;
     miral::DecorationRedrawNotifier::register_listener*;
     miral::DeviceEvent::DeviceEvent*;
