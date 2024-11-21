@@ -205,7 +205,7 @@ private:
     /// the client acks a configure.
     DoubleBuffered<geometry::Size> client_size;
     DoubleBuffered<geometry::Displacement> offset;
-    bool configure_on_next_commit{true}; ///< If to send a .configure event at the end of the next or current commit
+    bool configure_on_next_commit{false}; ///< If to send a .configure event at the end of the next or current commit
     MirFocusMode current_focus_mode{mir_focus_mode_disabled};
     std::deque<std::pair<uint32_t, OptionalSize>> inflight_configures;
     std::vector<wayland::Weak<XdgPopupStable>> popups; ///< We have to keep track of popups to adjust their offset
