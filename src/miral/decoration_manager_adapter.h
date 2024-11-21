@@ -32,7 +32,7 @@ class Surface;
 
 namespace miral
 {
-class DecorationManagerBuilder;
+class DecorationBasicManager;
 class DecorationManagerAdapter : public mir::shell::decoration::Manager
 {
 public:
@@ -41,8 +41,9 @@ public:
     void undecorate(std::shared_ptr<mir::scene::Surface> const& surface) override;
     void undecorate_all() override;
 
+    virtual ~DecorationManagerAdapter();
 private:
-    friend DecorationManagerBuilder;
+    friend miral::DecorationBasicManager;
     DecorationManagerAdapter();
 
     std::function<void(std::weak_ptr<mir::shell::Shell> const& shell)> on_init;

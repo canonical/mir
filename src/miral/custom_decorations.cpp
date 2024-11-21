@@ -18,7 +18,6 @@
 #include "decoration_manager_adapter.h"
 
 #include "mir/shell/decoration/manager.h"
-#include "miral/decoration_manager_builder.h"
 
 #include "mir/options/option.h"
 #include "mir/log.h"

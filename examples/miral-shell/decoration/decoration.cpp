@@ -26,7 +26,6 @@
 #include "miral/decoration.h"
 #include "miral/decoration_window_state.h"
 #include "miral/decoration_basic_manager.h"
-#include "miral/decoration_manager_builder.h"
 
 #include <memory>
 

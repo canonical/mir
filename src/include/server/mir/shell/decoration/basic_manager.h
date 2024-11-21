@@ -63,9 +63,10 @@ public:
 
 protected:
     DecorationBuilder const decoration_builder;
+    std::weak_ptr<shell::Shell> shell;
+
 private:
     std::shared_ptr<DisplayConfigurationListener> const display_config_monitor;
-    std::weak_ptr<shell::Shell> shell;
 
     std::mutex mutex;
     std::unordered_map<scene::Surface*, std::unique_ptr<Decoration>> decorations;

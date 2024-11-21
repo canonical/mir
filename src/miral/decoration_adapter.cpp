@@ -21,7 +21,6 @@
 #include "mir/geometry/forward.h"
 #include "miral/decoration_window_state.h"
 #include "miral/decoration.h"
-#include "miral/decoration_manager_builder.h"
 
 #include "mir/compositor/buffer_stream.h"
 #include "mir/geometry/displacement.h"
@@ -35,7 +34,6 @@
 #include "mir/shell/surface_specification.h"
 #include "mir/log.h"
 
-#include <iterator>
 #include <memory>
 
 namespace msh = mir::shell;

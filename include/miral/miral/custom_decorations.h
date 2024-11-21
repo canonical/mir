@@ -17,13 +17,14 @@
 #ifndef MIRAL_CUSTOM_DECORATIONS_H
 #define MIRAL_CUSTOM_DECORATIONS_H
 
-#include "miral/decoration_manager_builder.h"
+#include <functional>
 #include <memory>
 
 namespace mir { class Server; }
 
 namespace miral
 {
+class DecorationManagerAdapter;
 class CustomDecorations
 {
 public:

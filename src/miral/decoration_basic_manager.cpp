@@ -15,6 +15,8 @@
  */
 
 #include "miral/decoration_basic_manager.h"
+#include "mir/compositor/buffer_stream.h"
+#include "mir/optional_value.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/server.h"
@@ -22,14 +24,11 @@
 #include "mir/shell/decoration/basic_manager.h"
 #include "mir/shell/shell.h"
 #include "mir/shell/surface_specification.h"
-#include "mir/optional_value.h"
 #include "mir/wayland/weak.h"
-#include "mir/compositor/buffer_stream.h"
 
 #include "miral/decoration_adapter.h"
-#include "miral/decoration_manager_builder.h"
+#include "decoration_manager_adapter.h"
 
-#include <boost/multi_index/detail/ord_index_node.hpp>
 #include <memory>
 #include <utility>
 
@@ -84,6 +83,11 @@ struct miral::DecorationBasicManager::Self : public mir::shell::decoration::Basi
             })
     {
     }
+
+    void init(std::weak_ptr<mir::shell::Shell> const& shell)
+    {
+        this->shell = shell;
+    }
 };
 
 miral::DecorationBasicManager::DecorationBasicManager(
@@ -94,10 +98,24 @@ miral::DecorationBasicManager::DecorationBasicManager(
 
 auto miral::DecorationBasicManager::to_adapter() -> std::shared_ptr<DecorationManagerAdapter>
 {
-    return DecorationManagerBuilder::build(
-        [self=this->self](auto... args) { self->init(args...); },
-        [self=this->self](auto... args) { self->decorate(args...); },
-        [self=this->self](auto... args) { self->undecorate(args...); },
-        [self=this->self]() { self->undecorate_all(); }
-    ).done();
+    auto adapter = std::shared_ptr<DecorationManagerAdapter>(new DecorationManagerAdapter());
+
+    adapter->on_init = [self = this->self](auto shell)
+    {
+        self->init(shell);
+    };
+    adapter->on_decorate = [self = this->self](auto... args)
+    {
+        self->decorate(args...);
+    };
+    adapter->on_undecorate = [self = this->self](auto... args)
+    {
+        self->undecorate(args...);
+    };
+    adapter->on_undecorate_all = [self = this->self]()
+    {
+        self->undecorate_all();
+    };
+
+    return adapter;
 }
