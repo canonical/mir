@@ -46,6 +46,56 @@ namespace geom = mir::geometry;
 
 namespace md = miral::decoration;
 
+struct md::InputContext::Self
+{
+    std::shared_ptr<msh::Shell> const shell;
+    std::shared_ptr<ms::Session> const session;
+    std::shared_ptr<ms::Surface> const window_surface;
+    std::shared_ptr<const MirEvent> const latest_event;
+    std::shared_ptr<mir::input::CursorImages> const cursor_images;
+    std::shared_ptr<ms::Surface> const decoration_surface;
+
+    void request_move() const
+    {
+        shell->request_move(session, window_surface, mir_event_get_input_event(latest_event.get()));
+    }
+
+    void request_resize(MirResizeEdge edge) const
+    {
+        shell->request_resize(session, window_surface, mir_event_get_input_event(latest_event.get()), edge);
+    }
+
+    void set_cursor(std::string const& cursor_image_name) const
+    {
+        msh::SurfaceSpecification spec;
+        // size is hard-coded because current implementation ignores it
+        spec.cursor_image = cursor_images->image(cursor_image_name, {16, 16});
+        shell->modify_surface(session, decoration_surface, spec);
+    }
+
+    void request_close() const
+    {
+        window_surface->request_client_surface_close();
+    }
+
+    void request_toggle_maximize() const
+    {
+        msh::SurfaceSpecification spec;
+        if (window_surface->state() == mir_window_state_maximized)
+            spec.state = mir_window_state_restored;
+        else
+            spec.state = mir_window_state_maximized;
+        shell->modify_surface(session, window_surface, spec);
+    }
+
+    void request_minimize() const
+    {
+        msh::SurfaceSpecification spec;
+        spec.state = mir_window_state_minimized;
+        shell->modify_surface(session, window_surface, spec);
+    }
+};
+
 md::InputContext::InputContext(
     std::shared_ptr<msh::Shell> const& shell,
     std::shared_ptr<ms::Session> const& session,
@@ -53,50 +103,38 @@ md::InputContext::InputContext(
     std::shared_ptr<MirEvent const> const& latest_event,
     std::shared_ptr<mir::input::CursorImages> const& cursor_images,
     std::shared_ptr<ms::Surface> const& decoration_surface) :
-    shell{shell},
-    session{session},
-    window_surface{window_surface},
-    latest_event{latest_event},
-    cursor_images{cursor_images},
-    decoration_surface{decoration_surface}
+    self{std::make_unique<Self>(shell, session, window_surface, latest_event, cursor_images, decoration_surface)}
 {
 }
 
 void md::InputContext::request_move() const
 {
-    shell->request_move(session, window_surface, mir_event_get_input_event(latest_event.get()));
+    self->request_move();
 }
 
 void md::InputContext::request_resize(MirResizeEdge edge) const
 {
-    shell->request_resize(session, window_surface, mir_event_get_input_event(latest_event.get()), edge);
+    self->request_resize(edge);
 }
 
 void md::InputContext::set_cursor(std::string const& cursor_image_name) const
 {
-    msh::SurfaceSpecification spec;
-    // size is hard-coded because current implementation ignores it
-    spec.cursor_image = cursor_images->image(cursor_image_name, {16, 16});
-    shell->modify_surface(session, decoration_surface, spec);
+    self->set_cursor(cursor_image_name);
 }
 
-void md::InputContext::request_close() const{
-    window_surface->request_client_surface_close();
+void md::InputContext::request_close() const
+{
+    self->request_close();
 }
 
-void md::InputContext::request_toggle_maximize() const{
-    msh::SurfaceSpecification spec;
-    if (window_surface->state() == mir_window_state_maximized)
-        spec.state = mir_window_state_restored;
-    else
-        spec.state = mir_window_state_maximized;
-    shell->modify_surface(session, window_surface, spec);
+void md::InputContext::request_toggle_maximize() const
+{
+    self->request_toggle_maximize();
 }
 
-void md::InputContext::request_minimize() const{
-    msh::SurfaceSpecification spec;
-    spec.state = mir_window_state_minimized;
-    shell->modify_surface(session, window_surface, spec);
+void md::InputContext::request_minimize() const
+{
+    self->request_minimize();
 }
 
 struct InputResolverAdapter: public msd::InputResolver

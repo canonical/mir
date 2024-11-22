@@ -28,8 +28,6 @@
 #include <memory>
 #include <optional>
 
-
-
 namespace mir
 {
 namespace input
@@ -67,6 +65,7 @@ namespace mg = mir::graphics;
 namespace geometry = mir::geometry;
 
 struct MirEvent;
+struct InputResolverAdapter;
 
 namespace miral
 {
@@ -92,6 +91,15 @@ using OnScaleChanged = std::function<void(float)>;
 
 struct InputContext
 {
+    void request_move() const;
+    void request_resize(MirResizeEdge edge) const;
+    void set_cursor(std::string const& cursor_image_name) const;
+    void request_close() const;
+    void request_toggle_maximize() const;
+    void request_minimize() const;
+
+private:
+    friend InputResolverAdapter;
     InputContext(
         std::shared_ptr<msh::Shell> const& shell,
         std::shared_ptr<ms::Session> const& session,
@@ -100,24 +108,8 @@ struct InputContext
         std::shared_ptr<mir::input::CursorImages> const& cursor_images,
         std::shared_ptr<ms::Surface> const& decoration_surface);
 
-    void request_move() const;
-
-    void request_resize(MirResizeEdge edge) const;
-
-    void set_cursor(std::string const& cursor_image_name) const;
-
-    void request_close() const;
-
-    void request_toggle_maximize() const;
-
-    void request_minimize() const;
-private:
-    std::shared_ptr<msh::Shell> const shell;
-    std::shared_ptr<ms::Session> const session;
-    std::shared_ptr<ms::Surface> const window_surface;
-    std::shared_ptr<const MirEvent> const latest_event;
-    std::shared_ptr<mir::input::CursorImages> const cursor_images;
-    std::shared_ptr<ms::Surface> const decoration_surface;
+    struct Self;
+    std::shared_ptr<Self> self;
 };
 
 
