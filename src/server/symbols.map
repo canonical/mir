@@ -17,7 +17,6 @@ global:
     mir::DefaultServerConfiguration::add_wayland_extension*;
     mir::DefaultServerConfiguration::default_reports*;
     mir::DefaultServerConfiguration::set_enabled_wayland_extensions*;
-    mir::DefaultServerConfiguration::set_the_decoration_manager_init*;
     mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     mir::DefaultServerConfiguration::set_wayland_extension_filter*;
     mir::DefaultServerConfiguration::the_application_not_responding_detector*;
@@ -187,7 +186,6 @@ global:
     mir::Server::set_enabled_wayland_extensions*;
     mir::Server::set_exception_handler*;
     mir::Server::set_terminator*;
-    mir::Server::set_the_decoration_manager_init*;
     mir::Server::set_the_decoration_strategy*;
     mir::Server::set_wayland_extension_filter*;
     mir::Server::stop*;
@@ -710,7 +708,6 @@ global:
     non-virtual?thunk?to?mir::DecorationStrategy::?DecorationStrategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::add_wayland_extension*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_enabled_wayland_extensions*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_manager_init*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_wayland_extension_filter*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_application_not_responding_detector*;
@@ -1222,7 +1219,6 @@ global:
     typeinfo?for?std::hash;
     virtual?thunk?to?mir::DefaultServerConfiguration::add_wayland_extension*;
     virtual?thunk?to?mir::DefaultServerConfiguration::set_enabled_wayland_extensions*;
-    virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_manager_init*;
     virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     virtual?thunk?to?mir::DefaultServerConfiguration::set_wayland_extension_filter*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_application_not_responding_detector*;
