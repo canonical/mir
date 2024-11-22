@@ -199,11 +199,9 @@ private:
     DoubleBuffered<int32_t> exclusive_zone{0};
     DoubleBuffered<Anchors> anchors;
     DoubleBuffered<Margin> margin;
-    bool width_set_by_client{false}; ///< If the client gave a width on the last .set_size() request
-    bool height_set_by_client{false}; ///< If the client gave a width on the last .set_size() request
     /// This is the size known to the client. It's pending value is set either by the .set_size() request(), or when
     /// the client acks a configure.
-    DoubleBuffered<geometry::Size> client_size;
+    DoubleBuffered<OptionalSize> client_size;
     DoubleBuffered<geometry::Displacement> offset;
     bool configure_on_next_commit{false}; ///< If to send a .configure event at the end of the next or current commit
     MirFocusMode current_focus_mode{mir_focus_mode_disabled};
@@ -417,8 +415,12 @@ auto mf::LayerSurfaceV1::unpadded_requested_size() const -> geom::Size
 
 auto mf::LayerSurfaceV1::inform_window_role_of_pending_placement()
 {
-    set_pending_width(client_size.pending().width + horiz_padding(anchors.pending(), margin.pending()));
-    set_pending_height(client_size.pending().height + vert_padding(anchors.pending(), margin.pending()));
+    set_pending_width(client_size.pending().width
+        ? client_size.pending().width.value() + horiz_padding(anchors.pending(), margin.pending())
+        : client_size.pending().width);
+    set_pending_height(client_size.pending().height
+        ? client_size.pending().height.value() + vert_padding(anchors.pending(), margin.pending())
+        : client_size.pending().height);
 
     offset.set_pending({
         anchors.pending().left ? margin.pending().left : geom::DeltaX{},
@@ -462,12 +464,12 @@ void mf::LayerSurfaceV1::configure()
         configure_size.height = requested.height;
     }
 
-    if (width_set_by_client)
+    if (client_size.committed().width)
     {
         configure_size.width = client_size.committed().width;
     }
 
-    if (height_set_by_client)
+    if (client_size.committed().height)
     {
         configure_size.height = client_size.committed().height;
     }
@@ -485,17 +487,25 @@ void mf::LayerSurfaceV1::configure()
 
 void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
 {
-    width_set_by_client = width > 0;
-    height_set_by_client = height > 0;
     auto pending = client_size.pending();
     if (width > 0)
     {
         pending.width = geom::Width{width};
     }
+    else
+    {
+        pending.width = std::nullopt;
+    }
+
     if (height > 0)
     {
         pending.height = geom::Height{height};
     }
+    else
+    {
+        pending.height = std::nullopt;
+    }
+
     client_size.set_pending(pending);
     inform_window_role_of_pending_placement();
     configure_on_next_commit = true;
@@ -606,9 +616,13 @@ void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
         return;
     }
 
-    client_size.set_pending(geom::Size{
-        acked_configure_size.width.value_or(client_size.pending().width),
-        acked_configure_size.height.value_or(client_size.pending().height)});
+    auto const& width = acked_configure_size.width
+        ? acked_configure_size.width
+        : client_size.pending().width;
+    auto const& height = acked_configure_size.height
+        ? acked_configure_size.height
+        : client_size.pending().height;
+    client_size.set_pending(OptionalSize{width, height});
 
     // Do NOT set configure_on_next_commit (as we do in the other case when opt_size is set)
     // We don't want to make the client acking one configure result in us sending another
@@ -648,14 +662,14 @@ void mf::LayerSurfaceV1::handle_commit()
     // "You must set your anchor to opposite edges in the dimensions you omit; not doing so is a protocol error."
     bool const horiz_stretched = anchors.committed().left && anchors.committed().right;
     bool const vert_stretched = anchors.committed().top && anchors.committed().bottom;
-    if (!horiz_stretched && !width_set_by_client)
+    if (!horiz_stretched && !client_size.committed().width)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
             resource,
             Error::invalid_size,
             "Width may be unspecified only when surface is anchored to left and right edges"));
     }
-    if (!vert_stretched && !height_set_by_client)
+    if (!vert_stretched && !client_size.committed().height)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
             resource,
