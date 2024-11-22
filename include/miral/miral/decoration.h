@@ -19,6 +19,8 @@
 
 
 #include "mir/geometry/forward.h"
+#include "mir_toolkit/events/enums.h"
+
 #include <memory>
 #include <functional>
 
@@ -49,7 +51,7 @@ public:
     operator mir::shell::decoration::DeviceEvent() const;
 
     auto location() const -> mir::geometry::Point;
-    auto pressed() const -> bool;
+    auto button_down(MirPointerButton button) const -> bool;
 
 private:
     struct Impl;

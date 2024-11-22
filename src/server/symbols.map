@@ -1409,6 +1409,7 @@ global:
   extern "C++" {
     mir::DefaultServerConfiguration::wrap_decoration_manager*;
     mir::Server::the_buffer_allocator*;
+    mir::Server::the_cursor_images*;
     mir::Server::wrap_decoration_manager*;
     mir::shell::decoration::BasicManager::?BasicManager*;
     mir::shell::decoration::BasicManager::BasicManager*;
@@ -1419,6 +1420,8 @@ global:
     mir::shell::decoration::Decoration::?Decoration*;
     mir::shell::decoration::Decoration::Decoration*;
     mir::shell::decoration::DeviceEvent::DeviceEvent*;
+    mir::shell::decoration::DeviceEvent::MouseButtonsState::button_down*;
+    mir::shell::decoration::DeviceEvent::MouseButtonsState::from_mir_event*;
     mir::shell::decoration::InputResolver::?InputResolver*;
     mir::shell::decoration::InputResolver::DeviceEvent::DeviceEvent*;
     mir::shell::decoration::InputResolver::InputResolver*;
@@ -1436,6 +1439,7 @@ global:
     non-virtual?thunk?to?mir::shell::decoration::Manager::?Manager*;
     typeinfo?for?mir::shell::decoration::BasicManager;
     typeinfo?for?mir::shell::decoration::Decoration;
+    typeinfo?for?mir::shell::decoration::DeviceEvent::MouseButtonsState;
     typeinfo?for?mir::shell::decoration::DeviceEvent;
     typeinfo?for?mir::shell::decoration::InputResolver::DeviceEvent;
     typeinfo?for?mir::shell::decoration::InputResolver;

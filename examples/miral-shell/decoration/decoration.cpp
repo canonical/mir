@@ -22,10 +22,14 @@
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/cursors.h"
 
+#include "mir_toolkit/events/enums.h"
 #include "miral/decoration_adapter.h"
 #include "miral/decoration.h"
 #include "miral/decoration_window_state.h"
 #include "miral/decoration_basic_manager.h"
+
+#define MIR_LOG_COMPONENT "UserDecoration"
+#include "mir/log.h"
 
 #include <memory>
 
@@ -125,16 +129,22 @@ void UserDecoration::InputManager::process_leave(InputContext ctx)
     }
 }
 
-void UserDecoration::InputManager::process_down()
+void UserDecoration::InputManager::process_down(MirPointerButton button)
 {
+    if (button != mir_pointer_button_primary)
+        return;
+
     if (active_widget)
     {
         widget_down(*active_widget.value());
     }
 }
 
-void UserDecoration::InputManager::process_up(InputContext ctx)
+void UserDecoration::InputManager::process_up(MirPointerButton button, InputContext ctx)
 {
+    if (button != mir_pointer_button_primary)
+        return;
+
     if (active_widget)
     {
         widget_up(*active_widget.value(), ctx);
@@ -324,8 +334,6 @@ auto resize_edge_rect(
         return {top_left, window_state.resize_corner_input_size()};
     }
 
-
-    // TODO: the rest
     default: return {};
     }
 }
@@ -410,9 +418,9 @@ auto UserDecoration::create_manager(mir::Server& server)
                            decoration->input_manager.process_leave(args...);
                            decoration->redraw_notifier()->notify();
                        },
-                       [decoration](auto...)
+                       [decoration](auto... args)
                        {
-                           decoration->input_manager.process_down();
+                           decoration->input_manager.process_down(args...);
                        },
                        [decoration](auto... args)
                        {

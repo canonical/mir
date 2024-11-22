@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir_toolkit/events/enums.h"
 #include "miral/decoration.h"
 #include "miral/decoration_adapter.h"
 
@@ -94,8 +95,8 @@ public:
         void process_drag(miral::DeviceEvent& device, InputContext ctx);
         void process_enter(miral::DeviceEvent& device, InputContext ctx);
         void process_leave(InputContext ctx);
-        void process_down();
-        void process_up(InputContext ctx);
+        void process_down(MirPointerButton button);
+        void process_up(MirPointerButton button, InputContext ctx);
         void process_move(miral::DeviceEvent& device, InputContext ctx);
 
         void widget_drag(Widget& widget, InputContext ctx);

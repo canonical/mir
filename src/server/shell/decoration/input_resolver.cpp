@@ -20,11 +20,45 @@
 #include "mir/events/touch_event.h"
 #include "mir/scene/null_surface_observer.h"
 #include "mir/scene/surface.h"
+#include "mir_toolkit/events/enums.h"
 #include "mir_toolkit/events/event.h"
+#include "mir_toolkit/events/input/input_event.h"
+#include <cstdint>
+#include <drm_fourcc.h>
 #include <memory>
 
-
 namespace msd = mir::shell::decoration;
+
+static std::array<MirPointerButton, 8> const mouse_buttons = {
+    mir_pointer_button_primary,
+    mir_pointer_button_secondary,
+    mir_pointer_button_tertiary,
+    mir_pointer_button_back,
+    mir_pointer_button_forward,
+    mir_pointer_button_side,
+    mir_pointer_button_extra,
+    mir_pointer_button_task};
+
+msd::DeviceEvent::MouseButtonsState::MouseButtonsState::MouseButtonsState(MirPointerEvent const* const pointer_ev)
+{
+    auto index = 0;
+    for (auto button : mouse_buttons)
+    {
+        buttons |= (mir_pointer_event_button_state(pointer_ev, button) << index);
+        index++;
+    }
+}
+
+bool msd::DeviceEvent::MouseButtonsState::button_down(MirPointerButton button)
+{
+    return buttons & static_cast<MirPointerButtons>(button);
+}
+
+msd::DeviceEvent::DeviceEvent(geometry::Point location, MirPointerEvent const* const event) :
+    location{location},
+    mouse_buttons_state{event}
+{
+}
 
 struct msd::InputResolver::InputResolver::Observer : public mir::scene::NullSurfaceObserver
 {
@@ -59,8 +93,7 @@ void msd::InputResolver::Observer::input_consumed(
                 {
                     if (auto const position = pointer_ev->local_position())
                     {
-                        bool pressed = mir_pointer_event_button_state(pointer_ev, mir_pointer_button_primary);
-                        parent->pointer_event(event, geometry::Point{position.value()}, pressed);
+                        parent->pointer_event(event, geometry::Point{position.value()});
                     }
                 }
                 break;
@@ -69,7 +102,7 @@ void msd::InputResolver::Observer::input_consumed(
                     parent->pointer_leave(event);
                 }
                 break;
-            case mir_pointer_actions:
+            default:
                 break;
             }
         }
@@ -128,31 +161,50 @@ auto msd::InputResolver::latest_event() -> std::shared_ptr<MirEvent const> const
     return latest_event_;
 }
 
-void msd::InputResolver::pointer_event(std::shared_ptr<MirEvent const> const& event, geometry::Point location, bool pressed)
+void msd::InputResolver::pointer_event(std::shared_ptr<MirEvent const> const& event, geometry::Point location)
 {
     std::lock_guard lock{mutex};
+
+    auto pointer_event = mir_input_event_get_pointer_event(mir_event_get_input_event(event.get()));
     latest_event_ = event;
+
     if (!pointer)
     {
-        pointer = DeviceEvent{location, pressed};
+        pointer = DeviceEvent{location, pointer_event};
         process_enter(pointer.value());
+        return;
     }
-    if (pointer.value().location != location)
+
+    auto& ptr = pointer.value();
+    // No need to check if it has a value. The guard branch above ensures that
+    // `mouse_buttons_state` is initialized
+    auto& mouse_buttons_state = ptr.mouse_buttons_state.value();
+    if (ptr.location != location)
     {
-        pointer.value().location = location;
-        if (pointer.value().pressed)
+        ptr.location = location;
+        if (mouse_buttons_state.button_down(mir_pointer_button_primary))
             process_drag(pointer.value());
         else
             process_move(pointer.value());
     }
-    if (pointer.value().pressed != pressed)
+
+    // No need to check here as well since this is surely a pointer event
+    auto new_mouse_buttons_state = DeviceEvent::MouseButtonsState(pointer_event);
+    for (auto button : mouse_buttons)
     {
-        pointer.value().pressed = pressed;
-        if (pressed)
-            process_down();
-        else
-            process_up();
+        auto mir_button = static_cast<MirPointerButton>(button);
+        auto is_down = new_mouse_buttons_state.button_down(mir_button);
+        auto was_down = mouse_buttons_state.button_down(mir_button);
+
+        if (is_down != was_down)
+        {
+            if (is_down)
+                process_down(mir_button);
+            else
+                process_up(mir_button);
+        }
     }
+    mouse_buttons_state = new_mouse_buttons_state;
 }
 
 void msd::InputResolver::pointer_leave(std::shared_ptr<MirEvent const> const& event)
@@ -164,35 +216,35 @@ void msd::InputResolver::pointer_leave(std::shared_ptr<MirEvent const> const& ev
     pointer = std::nullopt;
 }
 
-void msd::InputResolver::touch_event(std::shared_ptr<MirEvent const> const& event, int32_t id, geometry::Point location)
+void msd::InputResolver::touch_event(std::shared_ptr<MirEvent const> const& event, int32_t, geometry::Point)
 {
     std::lock_guard lock{mutex};
     latest_event_ = event;
-    auto device = touches.find(id);
-    if (device == touches.end())
-    {
-        device = touches.insert(std::make_pair(id, DeviceEvent{location, false})).first;
-        process_enter(device->second);
-        device->second.pressed = true;
-        process_down();
-    }
-    if (device->second.location != location)
-    {
-        device->second.location = location;
-        process_drag(device->second);
-    }
+    /* auto device = touches.find(id); */
+    /* if (device == touches.end()) */
+    /* { */
+    /*     device = touches.insert(std::make_pair(id, DeviceEvent{location, false})).first; */
+    /*     process_enter(device->second); */
+    /*     device->second.pressed = true; */
+    /*     process_down(); */
+    /* } */
+    /* if (device->second.location != location) */
+    /* { */
+    /*     device->second.location = location; */
+    /*     process_drag(device->second); */
+    /* } */
 }
 
-void msd::InputResolver::touch_up(std::shared_ptr<MirEvent const> const& event, int32_t id)
+void msd::InputResolver::touch_up(std::shared_ptr<MirEvent const> const& event, int32_t )
 {
     std::lock_guard lock{mutex};
     latest_event_ = event;
-    auto device = touches.find(id);
-    if (device != touches.end())
-    {
-        process_up();
-        process_leave();
-        touches.erase(device);
-    }
+    /* auto device = touches.find(id); */
+    /* if (device != touches.end()) */
+    /* { */
+    /*     process_up(); */
+    /*     process_leave(); */
+    /*     touches.erase(device); */
+    /* } */
 }
 

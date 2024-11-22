@@ -20,6 +20,7 @@
 #include "mir/geometry/forward.h"
 #include "mir_toolkit/common.h"
 
+#include "mir_toolkit/events/enums.h"
 #include "miral/decoration_basic_manager.h"
 #include "miral/decoration_window_state.h"
 
@@ -79,8 +80,8 @@ using OnProcessDrag = std::function<void(miral::DeviceEvent device, miral::decor
 using OnProcessEnter = std::function<void(miral::DeviceEvent device, miral::decoration::InputContext ctx)>;
 using OnProcessLeave = std::function<void(miral::decoration::InputContext ctx)>;
 using OnProcessMove = std::function<void(miral::DeviceEvent device, miral::decoration::InputContext ctx)>;
-using OnProcessUp = std::function<void(miral::decoration::InputContext ctx)>;
-using OnProcessDown = std::function<void()>;
+using OnProcessUp = std::function<void(MirPointerButton, miral::decoration::InputContext ctx)>;
+using OnProcessDown = std::function<void(MirPointerButton)>;
 
 using OnWindowAttribChanged = std::function<void(ms::Surface const* window_surface, MirWindowAttrib attrib, int value)>;
 using OnWindowResized =

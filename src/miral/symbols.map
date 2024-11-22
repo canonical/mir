@@ -518,6 +518,8 @@ global:
     miral::DecorationRedrawNotifier::notify*;
     miral::DecorationRedrawNotifier::register_listener*;
     miral::DeviceEvent::DeviceEvent*;
+    miral::DeviceEvent::button_down*;
+    miral::DeviceEvent::is_down*;
     miral::DeviceEvent::location*;
     miral::DeviceEvent::operator*;
     miral::DeviceEvent::pressed*;

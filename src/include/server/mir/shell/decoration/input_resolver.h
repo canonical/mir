@@ -20,6 +20,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/scene/null_surface_observer.h"
 #include "mir_toolkit/common.h"
+#include "mir_toolkit/events/enums.h"
 
 #include <memory>
 #include <mutex>
@@ -59,15 +60,18 @@ enum class ButtonState
 /// Pointer or touchpoint
 struct DeviceEvent
 {
-    DeviceEvent(geometry::Point location, bool pressed)
-        : location{location},
-          pressed{pressed}
+    DeviceEvent(geometry::Point location, MirPointerEvent const* const event);
+    DeviceEvent(geometry::Point location, MirTouchEvent const* const event);
 
+    struct MouseButtonsState
     {
-    }
+        MirPointerButtons buttons = 0;
+        bool button_down(MirPointerButton);
+        MouseButtonsState(MirPointerEvent const* const event);
+    };
 
     geometry::Point location;
-    bool pressed;
+    std::optional<MouseButtonsState> mouse_buttons_state;
 };
 
 // Given an input event, figures out which decoration callback should be
@@ -75,7 +79,6 @@ struct DeviceEvent
 class InputResolver
 {
 public:
-
     InputResolver(std::shared_ptr<mir::scene::Surface> const& decoration_surface);
     virtual ~InputResolver();
 
@@ -91,10 +94,10 @@ protected:
     virtual void process_leave() = 0;
     /// The input device has clicked down
     /// A touch triggers a process_enter() followed by a process_down()
-    virtual void process_down() = 0;
+    virtual void process_down(MirPointerButton) = 0;
     /// The input device has released
     /// A touch release triggers a process_up() followed by a process_leave()
-    virtual void process_up() = 0;
+    virtual void process_up(MirPointerButton) = 0;
     /// The device has moved while up
     virtual void process_move(DeviceEvent& device) = 0;
     /// The device has moved while down
@@ -106,7 +109,7 @@ private:
     struct Observer;
     friend Observer;
 
-    void pointer_event(std::shared_ptr<MirEvent const> const& event, geometry::Point location, bool pressed);
+    void pointer_event(std::shared_ptr<MirEvent const> const& event, geometry::Point location);
     void pointer_leave(std::shared_ptr<MirEvent const> const& event);
     void touch_event(std::shared_ptr<MirEvent const> const& event, int32_t id, geometry::Point location);
     void touch_up(std::shared_ptr<MirEvent const> const& event, int32_t id);

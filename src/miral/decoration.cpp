@@ -38,8 +38,8 @@ auto miral::DeviceEvent::location() const -> mir::geometry::Point
     return impl->event.location;
 }
 
-auto miral::DeviceEvent::pressed() const -> bool {
-    return impl->event.pressed;
+auto miral::DeviceEvent::button_down(MirPointerButton button) const -> bool {
+    return impl->event.mouse_buttons_state->button_down(button);
 }
 
 void miral::DecorationRedrawNotifier::notify() const

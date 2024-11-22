@@ -17,6 +17,7 @@
 #include "miral/decoration_adapter.h"
 #include "mir/shell/decoration.h"
 
+#include "mir_toolkit/events/enums.h"
 #include "mir_toolkit/events/event.h"
 #include "mir/geometry/forward.h"
 #include "miral/decoration_window_state.h"
@@ -180,14 +181,14 @@ struct InputResolverAdapter: public msd::InputResolver
         on_process_leave(input_ctx());
     }
 
-    void process_down() override
+    void process_down(MirPointerButton button) override
     {
-        on_process_down();
+        on_process_down(button);
     }
 
-    void process_up() override
+    void process_up(MirPointerButton button) override
     {
-        on_process_up(input_ctx());
+        on_process_up(button, input_ctx());
     }
 
     void process_move(msd::DeviceEvent& device) override

@@ -16,6 +16,7 @@
 
 #include "input.h"
 #include "mir/shell/decoration/input_resolver.h"
+#include "mir_toolkit/events/enums.h"
 #include "window.h"
 #include "threadsafe_access.h"
 #include "basic_decoration.h"
@@ -201,16 +202,22 @@ void msd::InputManager::process_leave()
     }
 }
 
-void msd::InputManager::process_down()
+void msd::InputManager::process_down(MirPointerButton button)
 {
+    if(button != mir_pointer_button_primary)
+        return;
+
     if (active_widget)
     {
         widget_down(*active_widget.value());
     }
 }
 
-void msd::InputManager::process_up()
+void msd::InputManager::process_up(MirPointerButton button)
 {
+    if(button != mir_pointer_button_primary)
+        return;
+
     if (active_widget)
     {
         widget_up(*active_widget.value());

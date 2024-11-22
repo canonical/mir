@@ -20,6 +20,7 @@
 #include "mir/shell/decoration/input_resolver.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_toolkit/common.h"
+#include "mir_toolkit/events/enums.h"
 
 #include <memory>
 #include <vector>
@@ -149,10 +150,10 @@ private:
     void process_leave() override;
     /// The input device has clicked down
     /// A touch triggers a process_enter() followed by a process_down()
-    void process_down() override;
+    void process_down(MirPointerButton) override;
     /// The input device has released
     /// A touch release triggers a process_up() followed by a process_leave()
-    void process_up() override;
+    void process_up(MirPointerButton) override;
     /// The device has moved while up
     void process_move(DeviceEvent& device) override;
     /// The device has moved while down
