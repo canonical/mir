@@ -199,6 +199,8 @@ private:
     DoubleBuffered<int32_t> exclusive_zone{0};
     DoubleBuffered<Anchors> anchors;
     DoubleBuffered<Margin> margin;
+    bool width_set_by_client{false}; ///< If the client gave a width on the last .set_size() request
+    bool height_set_by_client{false}; ///< If the client gave a width on the last .set_size() request
     /// This is the size known to the client. It's pending value is set either by the .set_size() request(), or when
     /// the client acks a configure.
     DoubleBuffered<OptionalSize> client_size;
@@ -464,12 +466,12 @@ void mf::LayerSurfaceV1::configure()
         configure_size.height = requested.height;
     }
 
-    if (client_size.committed().width)
+    if (width_set_by_client)
     {
         configure_size.width = client_size.committed().width;
     }
 
-    if (client_size.committed().height)
+    if (height_set_by_client)
     {
         configure_size.height = client_size.committed().height;
     }
@@ -487,6 +489,8 @@ void mf::LayerSurfaceV1::configure()
 
 void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
 {
+    width_set_by_client = width > 0;
+    height_set_by_client = height > 0;
     auto pending = client_size.pending();
     if (width > 0)
     {
@@ -662,14 +666,14 @@ void mf::LayerSurfaceV1::handle_commit()
     // "You must set your anchor to opposite edges in the dimensions you omit; not doing so is a protocol error."
     bool const horiz_stretched = anchors.committed().left && anchors.committed().right;
     bool const vert_stretched = anchors.committed().top && anchors.committed().bottom;
-    if (!horiz_stretched && !client_size.committed().width)
+    if (!horiz_stretched && !width_set_by_client)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
             resource,
             Error::invalid_size,
             "Width may be unspecified only when surface is anchored to left and right edges"));
     }
-    if (!vert_stretched && !client_size.committed().height)
+    if (!vert_stretched && !height_set_by_client)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
             resource,
