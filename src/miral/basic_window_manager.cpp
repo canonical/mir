@@ -1877,7 +1877,9 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
         display_area = active_display_area();
     }
 
-    auto const application_zone = display_area->application_zone.extents();
+    auto const application_zone = parameters.ignore_exclusion_zones().value_or(false)
+        ? display_area->area
+        : display_area->application_zone.extents();
 
     bool positioned = false;
 
