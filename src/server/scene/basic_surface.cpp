@@ -281,6 +281,11 @@ void ms::BasicSurface::unregister_interest(SurfaceObserver const& observer)
     observers->unregister_interest(observer);
 }
 
+void ms::BasicSurface::initial_placement_done()
+{
+    linearised_track_outputs();
+}
+
 std::string ms::BasicSurface::name() const
 {
     return synchronised_state.lock()->surface_name;
