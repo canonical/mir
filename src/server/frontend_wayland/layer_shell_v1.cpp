@@ -203,9 +203,9 @@ private:
     bool height_set_by_client{false}; ///< If the client gave a width on the last .set_size() request
     /// This is the size known to the client. It's pending value is set either by the .set_size() request(), or when
     /// the client acks a configure.
-    DoubleBuffered<geometry::Size> client_size;
+    DoubleBuffered<OptionalSize> client_size;
     DoubleBuffered<geometry::Displacement> offset;
-    bool configure_on_next_commit{true}; ///< If to send a .configure event at the end of the next or current commit
+    bool configure_on_next_commit{false}; ///< If to send a .configure event at the end of the next or current commit
     MirFocusMode current_focus_mode{mir_focus_mode_disabled};
     std::deque<std::pair<uint32_t, OptionalSize>> inflight_configures;
     std::vector<wayland::Weak<XdgPopupStable>> popups; ///< We have to keep track of popups to adjust their offset
@@ -417,8 +417,12 @@ auto mf::LayerSurfaceV1::unpadded_requested_size() const -> geom::Size
 
 auto mf::LayerSurfaceV1::inform_window_role_of_pending_placement()
 {
-    set_pending_width(client_size.pending().width + horiz_padding(anchors.pending(), margin.pending()));
-    set_pending_height(client_size.pending().height + vert_padding(anchors.pending(), margin.pending()));
+    set_pending_width(client_size.pending().width
+        ? client_size.pending().width.value() + horiz_padding(anchors.pending(), margin.pending())
+        : client_size.pending().width);
+    set_pending_height(client_size.pending().height
+        ? client_size.pending().height.value() + vert_padding(anchors.pending(), margin.pending())
+        : client_size.pending().height);
 
     offset.set_pending({
         anchors.pending().left ? margin.pending().left : geom::DeltaX{},
@@ -492,10 +496,20 @@ void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
     {
         pending.width = geom::Width{width};
     }
+    else
+    {
+        pending.width = std::nullopt;
+    }
+
     if (height > 0)
     {
         pending.height = geom::Height{height};
     }
+    else
+    {
+        pending.height = std::nullopt;
+    }
+
     client_size.set_pending(pending);
     inform_window_role_of_pending_placement();
     configure_on_next_commit = true;
@@ -606,9 +620,13 @@ void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
         return;
     }
 
-    client_size.set_pending(geom::Size{
-        acked_configure_size.width.value_or(client_size.pending().width),
-        acked_configure_size.height.value_or(client_size.pending().height)});
+    auto const& width = acked_configure_size.width
+        ? acked_configure_size.width
+        : client_size.pending().width;
+    auto const& height = acked_configure_size.height
+        ? acked_configure_size.height
+        : client_size.pending().height;
+    client_size.set_pending(OptionalSize{width, height});
 
     // Do NOT set configure_on_next_commit (as we do in the other case when opt_size is set)
     // We don't want to make the client acking one configure result in us sending another

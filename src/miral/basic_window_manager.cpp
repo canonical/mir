@@ -1283,38 +1283,7 @@ void miral::BasicWindowManager::place_attached_to_zone(
 
     case mir_window_state_attached:
     {
-        MirPlacementGravity edges = info.attached_edges();
-        Rectangle placement_zone = application_zone;
-
-        if ((edges & mir_placement_gravity_west) &&
-            (edges & mir_placement_gravity_east))
-        {
-            placement_zone.top_left.x = application_zone.top_left.x;
-            placement_zone.size.width = application_zone.size.width;
-            size.width = placement_zone.size.width;
-        }
-
-        if ((edges & mir_placement_gravity_north) &&
-            (edges & mir_placement_gravity_south))
-        {
-            placement_zone.top_left.y = application_zone.top_left.y;
-            placement_zone.size.height = application_zone.size.height;
-            size.height = placement_zone.size.height;
-        }
-
-        if (edges & mir_placement_gravity_west)
-            top_left.x = placement_zone.left();
-        else if (edges & mir_placement_gravity_east)
-            top_left.x = placement_zone.right() - (size.width - Width{0});
-        else
-            top_left.x = placement_zone.top_left.x + (placement_zone.size.width - size.width) * 0.5;
-
-        if (edges & mir_placement_gravity_north)
-            top_left.y = placement_zone.top();
-        else if (edges & mir_placement_gravity_south)
-            top_left.y = placement_zone.bottom() - (size.height - Height{0});
-        else
-            top_left.y = placement_zone.top_left.y + (placement_zone.size.height - size.height) * 0.5;
+        place_attached(top_left, size, info.attached_edges(), application_zone);
         update_window = true;
         break;
     }
@@ -1847,6 +1816,47 @@ auto miral::BasicWindowManager::can_activate_window_for_session_in_workspace(
     return new_focus;
 }
 
+void miral::BasicWindowManager::place_attached(Point& top_left, Size& size, MirPlacementGravity edges, Rectangle const application_zone)
+{
+    if ((edges & mir_placement_gravity_west) &&
+        (edges & mir_placement_gravity_east))
+    {
+        size.width = application_zone.size.width;
+    }
+
+    if ((edges & mir_placement_gravity_north) &&
+        (edges & mir_placement_gravity_south))
+    {
+        size.height = application_zone.size.height;
+    }
+
+    if (edges & mir_placement_gravity_west)
+    {
+        top_left.x = application_zone.left();
+    }
+    else if (edges & mir_placement_gravity_east)
+    {
+        top_left.x = application_zone.right() - (size.width - Width{0});
+    }
+    else
+    {
+        top_left.x = application_zone.top_left.x + (application_zone.size.width - size.width) * 0.5;
+    }
+
+    if (edges & mir_placement_gravity_north)
+    {
+        top_left.y = application_zone.top();
+    }
+    else if (edges & mir_placement_gravity_south)
+    {
+        top_left.y = application_zone.bottom() - (size.height - Height{0});
+    }
+    else
+    {
+        top_left.y = application_zone.top_left.y + (application_zone.size.height - size.height) * 0.5;
+    }
+}
+
 auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters) -> WindowSpecification
 {
     if (!parameters.type().is_set())
@@ -1956,6 +1966,17 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
             parameters.size() = Size{application_zone.size.width, proposed_size.height};
             break;
 
+        case mir_window_state_attached:
+            {
+                auto size = proposed_size;
+                auto top_left = display_area->area.top_left;
+
+                place_attached(top_left, size, parameters.attached_edges().value(), application_zone);
+
+                parameters.top_left() = top_left;
+                parameters.size() = size;
+                break;
+            }
         default:
             parameters.top_left() = centred;
         }
