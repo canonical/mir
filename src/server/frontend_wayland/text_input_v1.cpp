@@ -371,7 +371,7 @@ void TextInputV1::deactivate(wl_resource *seat)
     pending_state.reset();
 }
 
-/// Electron appears to call show_input_panel() when commit_state() should be called. 
+/// Electron appears to call show_input_panel() when commit_state() should be called.
 void TextInputV1::show_input_panel()
 {
     commit_state(0);
@@ -432,10 +432,6 @@ void TextInputV1::commit_state(uint32_t client_serial)
         {
             state_serials.pop_front();
         }
-    }
-    else
-    {
-        ctx->text_input_hub->deactivate_handler(handler);
     }
     on_new_input_field = false;
 }
