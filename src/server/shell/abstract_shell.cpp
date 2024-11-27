@@ -262,6 +262,8 @@ auto msh::AbstractShell::create_surface(
     {
         decoration_manager->decorate(result);
     }
+
+    result->initial_placement_done();
     return result;
 }
 

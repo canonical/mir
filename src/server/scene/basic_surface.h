@@ -87,6 +87,7 @@ public:
     void register_early_observer(std::weak_ptr<SurfaceObserver> const& observer, Executor& executor) override;
     void unregister_interest(SurfaceObserver const& observer) override;
 
+    virtual void initial_placement_done() override;
     std::string name() const override;
     void move_to(geometry::Point const& top_left) override;
 

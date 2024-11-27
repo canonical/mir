@@ -28,6 +28,7 @@ namespace doubles
 // scene::Surface is a horribly wide interface to expose from Mir
 struct StubSurface : scene::Surface
 {
+    void initial_placement_done() override { }
     std::string name() const override { return ""; }
     void move_to(geometry::Point const&) override {}
     geometry::Size window_size() const override { return {}; }

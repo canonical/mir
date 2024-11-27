@@ -49,6 +49,9 @@ class Surface :
     public ObserverRegistrar<SurfaceObserver>
 {
 public:
+    /// Called after the initial position and size has been set for the surface
+    virtual void initial_placement_done() = 0;
+
     // resolve ambiguous member function names
 
     std::string name() const override = 0;
