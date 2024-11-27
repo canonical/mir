@@ -266,7 +266,7 @@ TextInputV1::~TextInputV1()
 void TextInputV1::send_text_change(ms::TextInputChange const& change)
 {
     auto const client_serial = find_client_serial(change.serial);
-    if (!pending_state || !current_surface || !client_serial)
+    if (!current_surface || !client_serial)
     {
         // We are no longer enabled, or we don't have a valid serial
         return;
