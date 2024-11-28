@@ -126,7 +126,7 @@ auto miral::MinimalWindowManager::place_new_window(
 
 void miral::MinimalWindowManager::handle_window_ready(WindowInfo& window_info)
 {
-    if (window_info.can_be_active())
+    if (window_info.can_be_active() && !tools.active_window())
     {
         tools.select_active_window(window_info.window());
     }
