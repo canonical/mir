@@ -32,6 +32,10 @@ public:
         std::shared_ptr<scene::Surface> const&,
         input::InputReceptionMode new_mode) override;
 
+    void add_surface_below_top(
+        std::shared_ptr<scene::Surface> const&,
+        input::InputReceptionMode new_mode) override;
+
     void raise(std::weak_ptr<scene::Surface> const& surface) override;
 
     void raise(scene::SurfaceSet const& surfaces) override;

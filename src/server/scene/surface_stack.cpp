@@ -29,6 +29,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <exception>
 #include <functional>
 #include <memory>
 #include <stdexcept>
@@ -235,6 +236,22 @@ void ms::SurfaceStack::add_surface(
     {
         RecursiveWriteLock lg(guard);
         insert_surface_at_top_of_depth_layer(surface);
+        create_rendering_tracker_for(surface);
+        surface->register_interest(surface_observer, immediate_executor);
+    }
+    surface->set_reception_mode(input_mode);
+    observers.surface_added(surface);
+
+    report->surface_added(surface.get(), surface.get()->name());
+}
+
+void ms::SurfaceStack::add_surface_below_top(
+    std::shared_ptr<Surface> const& surface,
+    mi::InputReceptionMode input_mode)
+{
+    {
+        RecursiveWriteLock lg(guard);
+        insert_surface_below_top(surface);
         create_rendering_tracker_for(surface);
         surface->register_interest(surface_observer, immediate_executor);
     }
@@ -515,17 +532,20 @@ void ms::SurfaceStack::insert_surface_at_top_of_depth_layer(std::shared_ptr<Surf
     unsigned int depth_index = mir_depth_layer_get_index(surface->depth_layer());
     if (surface_layers.size() <= depth_index)
         surface_layers.resize(depth_index + 1);
+    surface_layers[depth_index].push_back(surface);
+}
+
+void ms::SurfaceStack::insert_surface_below_top(std::shared_ptr<Surface> const& surface)
+{
+    unsigned int depth_index = mir_depth_layer_get_index(surface->depth_layer());
+    if (surface_layers.size() <= depth_index)
+        surface_layers.resize(depth_index + 1);
 
     auto& current_layer = surface_layers[depth_index];
-    if (current_layer.size() > 0)
-    {
-        auto before_last = current_layer.begin() + current_layer.size() - 1;
-        current_layer.insert(before_last, surface);
-    }
-    else
-    {
+    if(current_layer.empty())
         current_layer.push_back(surface);
-    }
+    else
+        current_layer.insert(current_layer.end()-1, surface);
 }
 
 auto ms::SurfaceStack::surface_can_be_shown(std::shared_ptr<Surface> const& surface) const -> bool

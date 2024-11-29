@@ -106,7 +106,7 @@ auto ms::ApplicationSession::create_surface(
     auto surface = surface_factory->create_surface(session, wayland_surface, streams, params);
 
     auto const input_mode = params.input_mode.is_set() ? params.input_mode.value() : input::InputReceptionMode::normal;
-    surface_stack->add_surface(surface, input_mode);
+    surface_stack->add_surface_below_top(surface, input_mode);
 
     if (observer && observer_executor)
     {

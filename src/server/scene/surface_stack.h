@@ -106,6 +106,10 @@ public:
         std::shared_ptr<Surface> const& surface,
         input::InputReceptionMode input_mode) override;
 
+    void add_surface_below_top(
+        std::shared_ptr<Surface> const& surface,
+        input::InputReceptionMode input_mode) override;
+
     auto surface_at(geometry::Point) const -> std::shared_ptr<Surface> override;
 
     void add_observer(std::shared_ptr<Observer> const& observer) override;
@@ -138,6 +142,7 @@ private:
     void create_rendering_tracker_for(std::shared_ptr<Surface> const&);
     void update_rendering_tracker_compositors();
     void insert_surface_at_top_of_depth_layer(std::shared_ptr<Surface> const& surface);
+    void insert_surface_below_top(std::shared_ptr<Surface> const& surface);
     auto surface_can_be_shown(std::shared_ptr<Surface> const& surface) const -> bool;
 
     RecursiveReadWriteMutex mutable guard;

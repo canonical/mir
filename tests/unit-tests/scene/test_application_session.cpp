@@ -80,6 +80,9 @@ struct StubSurfaceStack : public msh::SurfaceStack
     void add_surface(std::shared_ptr<ms::Surface> const&, mi::InputReceptionMode) override
     {
     }
+    void add_surface_below_top(std::shared_ptr<ms::Surface> const&, mi::InputReceptionMode) override
+    {
+    }
     void remove_surface(std::weak_ptr<ms::Surface> const&) override
     {
     }

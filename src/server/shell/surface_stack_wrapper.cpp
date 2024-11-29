@@ -33,6 +33,13 @@ void msh::SurfaceStackWrapper::add_surface(
     wrapped->add_surface(surface, new_mode);
 }
 
+void msh::SurfaceStackWrapper::add_surface_below_top(
+    std::shared_ptr<scene::Surface> const& surface,
+    input::InputReceptionMode new_mode)
+{
+    wrapped->add_surface_below_top(surface, new_mode);
+}
+
 void msh::SurfaceStackWrapper::raise(std::weak_ptr<scene::Surface> const& surface)
 {
     wrapped->raise(surface);

@@ -43,6 +43,10 @@ public:
         std::shared_ptr<scene::Surface> const&,
         input::InputReceptionMode new_mode) = 0;
 
+    virtual void add_surface_below_top(
+        std::shared_ptr<scene::Surface> const&,
+        input::InputReceptionMode new_mode) = 0;
+
     virtual void raise(std::weak_ptr<scene::Surface> const& surface) = 0;
 
     virtual void raise(scene::SurfaceSet const& surfaces) = 0;
