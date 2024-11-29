@@ -586,11 +586,20 @@ void TilingWindowManagerPolicy::update_surfaces(ApplicationInfo& info, Rectangle
 void TilingWindowManagerPolicy::clip_to_tile(miral::WindowSpecification& parameters, Rectangle const& tile)
 {
     auto const displacement = parameters.top_left().value() - tile.top_left;
+    auto const width_available = tile.size.width.as_int()-displacement.dx.as_int();
+    auto const height_available = tile.size.height.as_int()-displacement.dy.as_int();
 
-    auto width = std::min(tile.size.width.as_int()-displacement.dx.as_int(), parameters.size().value().width.as_int());
-    auto height = std::min(tile.size.height.as_int()-displacement.dy.as_int(), parameters.size().value().height.as_int());
+    if (parameters.size())
+    {
+        auto width = std::min(width_available, parameters.size().value().width.as_int());
+        auto height = std::min(height_available, parameters.size().value().height.as_int());
 
-    parameters.size() = Size{width, height};
+        parameters.size() = Size{width, height};
+    }
+    else
+    {
+        parameters.size() = Size{width_available, height_available};
+    }
 }
 
 void TilingWindowManagerPolicy::resize(Window window, Point cursor, Point old_cursor, Rectangle bounds)
