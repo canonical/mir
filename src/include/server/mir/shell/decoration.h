@@ -22,7 +22,22 @@
 
 namespace mir::shell::decoration
 {
-    auto compute_size_with_decorations(geometry::Size content_size, MirWindowType type, MirWindowState state) -> geometry::Size;
+/// Draws window decorations and provides basic move, resize, close, etc functionality
+class Decoration
+{
+public:
+    Decoration() = default;
+    virtual ~Decoration() = default;
+
+    virtual void set_scale(float new_scale) = 0;
+
+private:
+    Decoration(Decoration const&) = delete;
+    Decoration& operator=(Decoration const&) = delete;
+};
+
+auto compute_size_with_decorations(geometry::Size content_size, MirWindowType type, MirWindowState state)
+    -> geometry::Size;
 }
 
 #endif

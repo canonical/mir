@@ -42,6 +42,7 @@ namespace shell
 class SessionContainer;
 class Shell;
 class IdleHandler;
+namespace decoration { class Manager; }
 }
 namespace graphics
 {
@@ -114,6 +115,7 @@ public:
 
     virtual auto the_decoration_strategy() -> std::shared_ptr<DecorationStrategy> = 0;
     virtual void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy) = 0;
+
 protected:
     ServerConfiguration() = default;
     virtual ~ServerConfiguration() = default;

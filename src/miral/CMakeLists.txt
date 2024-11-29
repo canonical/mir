@@ -32,6 +32,8 @@ add_library(miral-internal STATIC
                                          join_client_threads.h
                                          window_info_defaults.h
     window_specification_internal.cpp    window_specification_internal.h
+    decoration_window_state.cpp
+    decoration_manager_adapter.cpp
 )
 
 # Already implied by the linker's symbol version script, but can avoid accidents
@@ -88,6 +90,10 @@ add_library(miral-external OBJECT
     x11_support.cpp                     ${miral_include}/miral/x11_support.h
     zone.cpp                            ${miral_include}/miral/zone.h
     decorations.cpp                     ${miral_include}/miral/decorations.h
+    custom_decorations.cpp		${miral_include}/miral/custom_decorations.h
+    decoration_basic_manager.cpp	${miral_include}/miral/decoration_basic_manager.h
+    decoration_adapter.cpp		${miral_include}/miral/decoration_adapter.h
+    decoration.cpp
 )
 
 add_library(miral SHARED

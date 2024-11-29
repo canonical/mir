@@ -1,5 +1,6 @@
 add_subdirectory(desktop)
 add_subdirectory(spinner)
+add_subdirectory(decoration)
 
 add_custom_target(miral-app ALL
     cp ${CMAKE_CURRENT_SOURCE_DIR}/miral-app.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/miral-app
@@ -24,4 +25,5 @@ mir_add_wrapped_executable(miral-shell
 target_link_libraries(miral-shell
     example-shell-lib
     miral-spinner
+    miral-user-decoration-example
 )

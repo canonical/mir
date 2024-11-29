@@ -20,6 +20,7 @@
 #include "mir/shell/window_manager_builder.h"
 #include "mir/optional_value.h"
 #include "mir_toolkit/common.h"
+#include "mir/server_configuration.h"
 
 #include <functional>
 #include <memory>
@@ -33,7 +34,7 @@ template<class Observer>
 class ObserverRegistrar;
 
 namespace compositor { class Compositor; class DisplayBufferCompositorFactory; class CompositorReport; }
-namespace graphics { class Cursor; class DisplayPlatform; class RenderingPlatform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationObserver; }
+namespace graphics { class Cursor; class DisplayPlatform; class RenderingPlatform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationObserver; class GraphicBufferAllocator; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class CursorImages; class TouchVisualizer; class InputDeviceHub; class InputDeviceRegistry;}
 namespace logging { class Logger; }
 namespace options { class Option; }
@@ -326,6 +327,8 @@ public:
 
     /// Sets a wrapper functor for creating the application not responding detector.
     void wrap_application_not_responding_detector(Wrapper<scene::ApplicationNotRespondingDetector> const & anr_detector);
+
+    void wrap_decoration_manager(Wrapper<shell::decoration::Manager> const& wrapper);
 /** @} */
 
 /** @name Getting access to Mir subsystems
@@ -435,6 +438,11 @@ public:
     auto the_idle_handler() const ->
         std::shared_ptr<shell::IdleHandler>;
 
+    auto the_buffer_allocator() const
+        -> std::shared_ptr<graphics::GraphicBufferAllocator>;
+
+    auto the_cursor_images() const
+        -> std::shared_ptr<input::CursorImages>;
 /** @} */
 
 /** @name Client side support
@@ -479,6 +487,7 @@ public:
 
     auto the_decoration_strategy() const -> std::shared_ptr<DecorationStrategy>;
     void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy);
+
 private:
     struct ServerConfiguration;
     struct Self;

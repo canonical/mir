@@ -14,6 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "decoration/decoration.h"
+#include "miral/decoration.h"
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
 #include "wallpaper_config.h"
@@ -33,9 +35,13 @@
 #include <miral/x11_support.h>
 #include <miral/wayland_extensions.h>
 
+#include "miral/custom_decorations.h"
+
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <cstring>
+#include <string>
+#include <vector>
 
 namespace
 {
@@ -81,6 +87,7 @@ int main(int argc, char const* argv[])
     ExternalClientLauncher external_client_launcher;
 
     std::string terminal_cmd{"miral-terminal"};
+
 
     auto const quit_on_ctrl_alt_bksp = [&](MirEvent const* event)
         {
@@ -132,9 +139,9 @@ int main(int argc, char const* argv[])
       }
     };
 
-
     return runner.run_with(
         {
+            CustomDecorations{UserDecoration::create_manager},
             CursorTheme{"default:DMZ-White"},
             WaylandExtensions{},
             X11Support{},

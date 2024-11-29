@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "basic_manager.h"
-#include "decoration.h"
+#include "mir/shell/decoration/basic_manager.h"
+#include "mir/shell/decoration.h"
 
 #include <mir/graphics/display_configuration.h>
 #include <mir/graphics/null_display_configuration_observer.h>
@@ -101,6 +101,8 @@ void msd::BasicManager::decorate(std::shared_ptr<ms::Surface> const& surface)
 
 void msd::BasicManager::undecorate(std::shared_ptr<ms::Surface> const& surface)
 {
+    // TODO: probably only frees one pointer, but not the whole set of things
+    // pointing at the decoration.
     std::unique_ptr<Decoration> decoration;
     {
         std::lock_guard lock{mutex};

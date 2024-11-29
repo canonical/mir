@@ -17,7 +17,7 @@
 #ifndef MIR_SHELL_DECORATION_BASIC_MANAGER_H_
 #define MIR_SHELL_DECORATION_BASIC_MANAGER_H_
 
-#include "manager.h"
+#include "mir/shell/decoration/manager.h"
 
 #include <mir/observer_registrar.h>
 
@@ -61,10 +61,12 @@ public:
     void undecorate(std::shared_ptr<scene::Surface> const& surface) override;
     void undecorate_all() override;
 
-private:
+protected:
     DecorationBuilder const decoration_builder;
-    std::shared_ptr<DisplayConfigurationListener> const display_config_monitor;
     std::weak_ptr<shell::Shell> shell;
+
+private:
+    std::shared_ptr<DisplayConfigurationListener> const display_config_monitor;
 
     std::mutex mutex;
     std::unordered_map<scene::Surface*, std::unique_ptr<Decoration>> decorations;

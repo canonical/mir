@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "src/server/shell/decoration/basic_manager.h"
-#include "src/server/shell/decoration/decoration.h"
+#include "mir/shell/decoration/basic_manager.h"
+#include "mir/shell/decoration.h"
 
 #include "mir/test/doubles/stub_observer_registrar.h"
 #include "mir/test/doubles/stub_shell.h"
