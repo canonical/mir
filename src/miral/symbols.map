@@ -464,6 +464,9 @@ global:
     miral::Decorations::operator*;
     miral::Decorations::prefer_csd*;
     miral::Decorations::prefer_ssd*;
+    miral::ExtensionLookup::ExtensionLookup*;
+    miral::ExtensionLookup::is_wayland_extension_enabled*;
+    miral::ExtensionLookup::operator*;
     miral::IdleListener::?IdleListener*;
     miral::IdleListener::IdleListener*;
     miral::IdleListener::on_dim*;
@@ -496,8 +499,10 @@ global:
     miral::InputConfiguration::operator*;
     miral::InputConfiguration::touchpad*;
     miral::WindowManagerTools::move_cursor_to*;
+    miral::WindowManagerTools::should_raise*;
     typeinfo?for?miral::ConfigFile;
     typeinfo?for?miral::Decorations;
+    typeinfo?for?miral::ExtensionLookup;
     typeinfo?for?miral::IdleListener;
     typeinfo?for?miral::InputConfiguration::Mouse;
     typeinfo?for?miral::InputConfiguration::Touchpad;
