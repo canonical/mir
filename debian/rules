@@ -5,6 +5,12 @@ include debian/opts.mk
 
 export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
 
+# Work around compiler issues
+export DEB_CFLAGS_MAINT_STRIP = "-g -O3 -O2"
+export DEB_CFLAGS_MAINT_PREPEND = "-g -O2"
+export DEB_CXXFLAGS_MAINT_STRIP = "-g -O3 -O2"
+export DEB_CXXFLAGS_MAINT_PREPEND = "-g -O2"
+
 # Needed for ccache to work in case the build directory changed
 # (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=810871)
 export CCACHE_BASEDIR = $(shell pwd)
