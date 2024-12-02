@@ -479,6 +479,8 @@ public:
 
     auto the_decoration_strategy() const -> std::shared_ptr<DecorationStrategy>;
     void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy);
+
+    auto is_wayland_extension_enabled(const std::string& name) const -> bool;
 private:
     struct ServerConfiguration;
     struct Self;

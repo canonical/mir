@@ -420,6 +420,12 @@ void mir::DefaultServerConfiguration::set_enabled_wayland_extensions(std::vector
     enabled_wayland_extensions = extensions;
 }
 
+auto mir::DefaultServerConfiguration::is_wayland_extension_enabled(std::string const& name) const -> bool
+{
+    return std::find(enabled_wayland_extensions.cbegin(), enabled_wayland_extensions.cend(), name) !=
+           enabled_wayland_extensions.cend();
+}
+
 auto mir::frontend::get_window(wl_resource* surface) -> std::shared_ptr<ms::Surface>
 {
     if (auto result = get_wl_shell_window(surface))

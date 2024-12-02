@@ -114,6 +114,7 @@ public:
 
     virtual auto the_decoration_strategy() -> std::shared_ptr<DecorationStrategy> = 0;
     virtual void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy) = 0;
+    virtual bool is_wayland_extension_enabled(std::string const& name) const = 0;
 protected:
     ServerConfiguration() = default;
     virtual ~ServerConfiguration() = default;

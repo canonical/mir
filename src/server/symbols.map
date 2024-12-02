@@ -16,6 +16,7 @@ global:
     mir::DefaultServerConfiguration::DefaultServerConfiguration*;
     mir::DefaultServerConfiguration::add_wayland_extension*;
     mir::DefaultServerConfiguration::default_reports*;
+    mir::DefaultServerConfiguration::is_wayland_extension_enabled*;
     mir::DefaultServerConfiguration::set_enabled_wayland_extensions*;
     mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     mir::DefaultServerConfiguration::set_wayland_extension_filter*;
@@ -158,6 +159,7 @@ global:
     mir::Server::apply_settings*;
     mir::Server::exited_normally*;
     mir::Server::get_options*;
+    mir::Server::is_wayland_extension_enabled*;
     mir::Server::open_client_wayland*;
     mir::Server::open_prompt_socket*;
     mir::Server::open_wayland_client_socket*;
@@ -707,6 +709,7 @@ global:
     non-virtual?thunk?to?mir::BasicCallback::unlock*;
     non-virtual?thunk?to?mir::DecorationStrategy::?DecorationStrategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::add_wayland_extension*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::is_wayland_extension_enabled*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_enabled_wayland_extensions*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_wayland_extension_filter*;
@@ -1218,6 +1221,7 @@ global:
     typeinfo?for?mir::time::AlarmFactory;
     typeinfo?for?std::hash;
     virtual?thunk?to?mir::DefaultServerConfiguration::add_wayland_extension*;
+    virtual?thunk?to?mir::DefaultServerConfiguration::is_wayland_extension_enabled*;
     virtual?thunk?to?mir::DefaultServerConfiguration::set_enabled_wayland_extensions*;
     virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     virtual?thunk?to?mir::DefaultServerConfiguration::set_wayland_extension_filter*;

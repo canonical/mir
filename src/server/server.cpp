@@ -767,3 +767,12 @@ void mir::Server::set_the_decoration_strategy(std::shared_ptr<DecorationStrategy
 {
     self->server_config->set_the_decoration_strategy(strategy);
 }
+
+
+auto mir::Server::is_wayland_extension_enabled(const std::string& name) const -> bool
+{
+    if (auto const config = self->server_config)
+        return config->is_wayland_extension_enabled(name);
+
+    BOOST_THROW_EXCEPTION(std::logic_error("Server config unavailable! (is mir running?)"));
+}

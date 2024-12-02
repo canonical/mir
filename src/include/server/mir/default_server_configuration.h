@@ -346,6 +346,7 @@ public:
     auto the_decoration_strategy() -> std::shared_ptr<DecorationStrategy> override;
     void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy) override;
 
+    auto is_wayland_extension_enabled(std::string const&) const -> bool override;
 protected:
     std::shared_ptr<options::Option> the_options() const;
     auto the_options_provider() const -> std::shared_ptr<options::Configuration>;
