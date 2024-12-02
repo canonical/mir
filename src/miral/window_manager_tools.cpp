@@ -146,3 +146,6 @@ void miral::WindowManagerTools::for_each_window_in_workspace(
 
 void miral::WindowManagerTools::move_cursor_to(mir::geometry::PointF point)
 { tools->move_cursor_to(point); }
+
+auto miral::WindowManagerTools::should_raise() const -> bool
+{ return tools->should_raise(); }

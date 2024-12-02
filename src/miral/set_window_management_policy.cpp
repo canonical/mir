@@ -43,8 +43,9 @@ void miral::SetWindowManagementPolicy::operator()(mir::Server& server) const
         -> std::shared_ptr<msh::WindowManager>
         {
             auto const display_layout = server.the_shell_display_layout();
-
             auto const persistent_surface_store = server.the_persistent_surface_store();
+            ExtensionLookup ext_lookup;
+            ext_lookup(server);
 
             if (server.get_options()->is_set(trace_option))
             {
@@ -59,7 +60,8 @@ void miral::SetWindowManagementPolicy::operator()(mir::Server& server) const
                     persistent_surface_store,
                     *server.the_display_configuration_observer_registrar(),
                     server.the_input_device_registry(),
-                    trace_builder);
+                    trace_builder,
+                    ext_lookup);
             }
 
             return std::make_shared<BasicWindowManager>(
@@ -68,6 +70,7 @@ void miral::SetWindowManagementPolicy::operator()(mir::Server& server) const
                 persistent_surface_store,
                 *server.the_display_configuration_observer_registrar(),
                 server.the_input_device_registry(),
-                builder);
+                builder,
+                ext_lookup);
         });
 }

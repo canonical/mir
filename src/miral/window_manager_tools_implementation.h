@@ -90,6 +90,7 @@ public:
         std::shared_ptr<Workspace> const& workspace,
         std::function<void(Window const& window)> const& callback) = 0;
     virtual void move_cursor_to(mir::geometry::PointF point) = 0;
+    virtual auto should_raise() const -> bool = 0;
 
 /** @} */
 

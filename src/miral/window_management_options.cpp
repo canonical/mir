@@ -17,6 +17,7 @@
 #include "miral/window_management_options.h"
 
 #include "basic_window_manager.h"
+#include "miral/extension_lookup.h"
 #include "window_management_trace.h"
 
 #include <mir/abnormal_exit.h>
@@ -63,6 +64,9 @@ void miral::WindowManagerOptions::operator()(mir::Server& server) const
 
             for (auto const& option : policies)
             {
+                ExtensionLookup ext_lookup;
+                ext_lookup(server); // TODO constructor
+
                 if (selection == option.name)
                 {
                     if (server.get_options()->is_set(trace_option))
@@ -78,7 +82,8 @@ void miral::WindowManagerOptions::operator()(mir::Server& server) const
                             persistent_surface_store,
                             *server.the_display_configuration_observer_registrar(),
                             input_device_registry,
-                            trace_builder);
+                            trace_builder,
+                            ext_lookup);
                     }
 
                     return std::make_shared<BasicWindowManager>
@@ -87,7 +92,8 @@ void miral::WindowManagerOptions::operator()(mir::Server& server) const
                          persistent_surface_store,
                          *server.the_display_configuration_observer_registrar(),
                          input_device_registry,
-                         option.build);
+                         option.build,
+                         ext_lookup);
                 }
             }
 

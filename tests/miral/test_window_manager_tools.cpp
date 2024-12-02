@@ -25,6 +25,7 @@
 #include <mir/shell/focus_controller.h>
 #include <mir/shell/persistent_surface_store.h>
 #include "mir/graphics/display_configuration_observer.h"
+#include "miral/extension_lookup.h"
 #include <mir/wayland/weak.h>
 
 #include <mir/test/doubles/stub_session.h>
@@ -274,7 +275,8 @@ mt::TestWindowManagerTools::TestWindowManagerTools()
                 window_manager_policy = policy.get();
                 window_manager_tools = tools;
                 return policy;
-            }
+            },
+        miral::ExtensionLookup{},
     }
 {
 }

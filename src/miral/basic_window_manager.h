@@ -17,6 +17,7 @@
 #ifndef MIR_ABSTRACTION_BASIC_WINDOW_MANAGER_H_
 #define MIR_ABSTRACTION_BASIC_WINDOW_MANAGER_H_
 
+#include "miral/extension_lookup.h"
 #include "window_manager_tools_implementation.h"
 
 #include "miral/window_management_policy.h"
@@ -69,7 +70,8 @@ public:
         std::shared_ptr<mir::shell::PersistentSurfaceStore> const& persistent_surface_store,
         mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>& display_configuration_observers,
         std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry,
-        WindowManagementPolicyBuilder const& build);
+        WindowManagementPolicyBuilder const& build,
+        ExtensionLookup extension_lookup);
     ~BasicWindowManager();
 
     void add_session(std::shared_ptr<mir::scene::Session> const& session) override;
@@ -189,6 +191,8 @@ public:
     void invoke_under_lock(std::function<void()> const& callback) override;
 
     void move_cursor_to(mir::geometry::PointF point) override;
+
+    auto should_raise() const -> bool override;
 
 private:
     /// An area for windows to be placed in
@@ -332,6 +336,8 @@ private:
     void for_each_descendent_in(WindowInfo const& info, std::function<void(const Window&)> func);
     /// Gathers windows provided WindowInfo
     auto collect_windows(WindowInfo const& info) -> SurfaceSet;
+
+    miral::ExtensionLookup extension_lookup;
 };
 }
 

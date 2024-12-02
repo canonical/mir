@@ -100,14 +100,16 @@ miral::BasicWindowManager::BasicWindowManager(
     std::shared_ptr<mir::shell::PersistentSurfaceStore> const& persistent_surface_store,
     mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>& display_configuration_observers,
     std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry,
-    WindowManagementPolicyBuilder const& build) :
+    WindowManagementPolicyBuilder const& build,
+    ExtensionLookup extension_lookup) :
     focus_controller(focus_controller),
     display_layout(display_layout),
     persistent_surface_store{persistent_surface_store},
     policy(build(WindowManagerTools{this})),
     display_config_monitor{std::make_shared<DisplayConfigurationListeners>()},
     pointer_device{std::make_shared<mir::input::VirtualInputDevice>("basic-window-manager", mir::input::DeviceCapability::pointer)},
-    input_device_registry{input_device_registry}
+    input_device_registry{input_device_registry},
+    extension_lookup{extension_lookup}
 {
     display_config_monitor->add_listener(this);
     display_configuration_observers.register_interest(display_config_monitor);
@@ -2993,4 +2995,14 @@ void miral::BasicWindowManager::move_cursor_to(mir::geometry::PointF point)
             sink->handle_input(std::move(event));
         });
     });
+}
+
+auto miral::BasicWindowManager::should_raise() const -> bool
+{
+    // If xdg_activation_v1 is enabled, then we only raise if no other active windows exist
+    // If xdg_activation_v1 is not enabled, we always raise
+    if(extension_lookup.is_wayland_extension_enabled("xdg_activation_v1"))
+        return !static_cast<bool>(active_window());
+
+    return true;
 }

@@ -134,6 +134,8 @@ private:
 
     void move_cursor_to(mir::geometry::PointF point) override;
 
+    auto should_raise() const -> bool override;
+
 public:
     virtual void advise_begin() override;
 

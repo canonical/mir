@@ -947,3 +947,9 @@ try {
     wrapped.move_cursor_to(point);
 }
 MIRAL_TRACE_EXCEPTION
+
+auto miral::WindowManagementTrace::should_raise() const -> bool
+try {
+    return wrapped.should_raise();
+}
+MIRAL_TRACE_EXCEPTION

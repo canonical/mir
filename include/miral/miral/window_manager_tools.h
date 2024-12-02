@@ -263,6 +263,7 @@ public:
      */
     void move_cursor_to(mir::geometry::PointF point);
 
+    auto should_raise() const -> bool;
 private:
     WindowManagerToolsImplementation* tools;
 };
