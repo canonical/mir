@@ -1,6 +1,10 @@
 mir (2.19.0) UNRELEASED; urgency=medium
 
-  [ Alan Griffiths ]
+  * New upstream release 2.19.1
+
+    - ABI summary:
+      . mirserver ABI bumped to 62
+
   * New upstream release 2.19.0
 
     - ABI summary:
