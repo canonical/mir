@@ -23,6 +23,12 @@
 
 namespace miral
 {
+enum class FocusStealing
+{
+    prevent,
+    allow
+};
+
 /// Minimal implementation of a floating window management policy
 /// \remark Since MirAL 2.5
 class MinimalWindowManager : public WindowManagementPolicy
@@ -30,10 +36,21 @@ class MinimalWindowManager : public WindowManagementPolicy
 public:
     explicit MinimalWindowManager(WindowManagerTools const& tools);
 
+    /// Allows shells to enable or disable focus stealing prevention.
+    /// \remark Since MirAL 5.2
+    explicit MinimalWindowManager(WindowManagerTools const& tools, FocusStealing focus_stealing);
+
     /// Allows shells to change the modifer used to identify a window drag gesture
     /// The default is mir_input_event_modifier_alt
     /// \remark Since MirAL 3.7
     MinimalWindowManager(WindowManagerTools const& tools, MirInputEventModifier pointer_drag_modifier);
+
+    /// Allows shells to to change the modifer used to identify a window drag
+    /// gesture and enable or disable focus stealing prevention.
+    /// The default drag modifier is mir_input_event_modifier_alt.
+    /// \remark Since MirAL 5.2
+    MinimalWindowManager(
+        WindowManagerTools const& tools, MirInputEventModifier pointer_drag_modifier, FocusStealing focus_stealing);
 
     ~MinimalWindowManager();
 
