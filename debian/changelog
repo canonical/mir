@@ -1,3 +1,65 @@
+mir (2.19.2) UNRELEASED; urgency=medium
+
+  * New upstream release 2.19.2
+
+    - Enhancements
+      . Fix changelog
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Tue, 3 Dec 2024 11:48:10 +0000
+
+mir (2.19.1) UNRELEASED; urgency=medium
+
+  * New upstream release 2.19.1
+
+    - ABI summary:
+      . mirserver ABI bumped to 62
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Tue, 3 Dec 2024 10:35:06 +0000
+
+mir (2.19.0) UNRELEASED; urgency=medium
+
+  * New upstream release 2.19.0
+
+    - ABI summary:
+      . miral ABI unchanged at 7
+      . mircommon ABI unchanged at 10
+      . mircore ABI unchanged at 2
+      . miroil ABI unchanged at 5
+      . mirplatform ABI bumped to 30
+      . mirserver ABI bumped to 61
+      . mirwayland ABI unchanged at 5
+      . mirplatformgraphics ABI unchanged at 22
+      . mirinputplatform ABI unchanged at 9
+    - Enhancements:
+      . [x11-kiosk] defer fullscreening of applications until they are placed
+        once (#3670)
+      . [x11-kiosk] Ensure windows are placed and repainted on X11 "CONFIGURE"
+        (#3619)
+      . [x11-kiosk] change enable-x11 default to true
+      . Initial atomic-kms platform
+      . [Wayland] Add support for xdg_activation_v1 (#3639)
+      . Do not default window size (especially to weird values) (#3623)
+      . DesktopFileManager::resolve_app_id no longer returns an app id with a
+        .desktop file suffix (Fixes #3608)
+      . [Configuration] Split options into global and per-module configuration
+        (#3590)
+    - Bugs fixed:
+      . Ensure we always send an initial output enter (#3680)
+      . Fix stuck-frame-after-mode-switch bug (#3673)
+      . Fix rendering of resized XWayland applications with client side
+        decorations (#3587)
+      . Aspect ratios shouldn't contain zero (Fixes: #3663)
+      . Use PkgConfig to find development headers (#3661)
+      . Fix the inotify event handling in
+        ReloadingYamlFileDisplayConfig::auto_reload() (#3636)
+      . The `miral::ConfigFile` "Watcher" can be destroyed before the main loop
+        (Fixes: #3612)
+      . [xwayland] Don't allow clients to place X11 windows (#3622)
+      . Surfaces track scale changes on outputs they appear on. (Fixes: #3552)
+      . New attached windows need to be placed (#3676)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Wed, 27 Nov 2024 17:18:22 +0000
+
 mir (2.18.3) UNRELEASED; urgency=medium
 
   * Hotfix release 2.18.3
