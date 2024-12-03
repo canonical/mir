@@ -36,7 +36,7 @@ mir (2.18.0) UNRELEASED; urgency=medium
       . mircore ABI unchanged at 2
       . miroil ABI unchanged at 5
       . mirplatform ABI bumped to 29
-      . mirserver ABI unchanged at 60
+      . mirserver ABI bumped to 61
       . mirwayland ABI unchanged at 5
       . mirplatformgraphics ABI unchanged at 22
       . mirinputplatform ABI unchanged at 9
