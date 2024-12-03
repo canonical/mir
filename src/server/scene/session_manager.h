@@ -21,9 +21,9 @@
 #include "mir/scene/session_listener.h"
 #include "mir/observer_registrar.h"
 #include "mir/fd.h"
+#include "mir/wayland/extension_lookup.h"
 
 #include <memory>
-#include <vector>
 
 namespace mir
 {
@@ -59,7 +59,8 @@ public:
         std::shared_ptr<graphics::Display const> const& display,
         std::shared_ptr<ApplicationNotRespondingDetector> const& anr_detector,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-        std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar);
+        std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar,
+        wayland::ExtensionLookup extension_lookup);
 
     virtual ~SessionManager() noexcept;
 
@@ -96,6 +97,7 @@ private:
     std::shared_ptr<ApplicationNotRespondingDetector> const anr_detector;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> display_config_registrar;
+    mir::wayland::ExtensionLookup extension_lookup;
 };
 
 }

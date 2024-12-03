@@ -22,6 +22,7 @@
 #include "mir/scene/session_container.h"
 #include "mir/scene/surface_factory.h"
 #include "mir/graphics/display_configuration_observer.h"
+#include "mir/wayland/extension_lookup.h"
 #include "mir/wayland/weak.h"
 
 #include "src/server/report/null/shell_report.h"
@@ -108,7 +109,9 @@ struct MockSessionManager : ms::SessionManager
               display,
               std::make_shared<mtd::NullANRDetector>(),
               std::make_shared<mtd::StubBufferAllocator>(),
-              std::make_shared<mtd::StubObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>()}
+              std::make_shared<mtd::StubObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>(),
+              mw::ExtensionLookup{{}}
+        }
     {
     }
 
@@ -890,7 +893,7 @@ TEST_F(AbstractShell, makes_parent_active_when_switching_to_child)
     focus_controller.set_focus_to(surface_parent->session().lock(), surface_parent);
     /* window         | expected focus state
      * -----------------------------------------------
-     * surface_parent | mir_window_focus_state_focused 
+     * surface_parent | mir_window_focus_state_focused
      * surface_child  | <don't care>
     */
 

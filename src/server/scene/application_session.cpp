@@ -27,6 +27,7 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/scene/surface_observer.h"
+#include "mir/wayland/extension_lookup.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -42,7 +43,6 @@ namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mev = mir::events;
 namespace mc = mir::compositor;
-namespace geom = mir::geometry;
 
 ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<msh::SurfaceStack> const& surface_stack,
@@ -52,7 +52,8 @@ ms::ApplicationSession::ApplicationSession(
     std::string const& session_name,
     std::shared_ptr<SessionListener> const& session_listener,
     std::shared_ptr<mf::EventSink> const& sink,
-    std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc) :
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc,
+    wayland::ExtensionLookup extension_lookup) :
     surface_stack(surface_stack),
     surface_factory(surface_factory),
     pid(pid),
@@ -60,7 +61,8 @@ ms::ApplicationSession::ApplicationSession(
     session_name(session_name),
     session_listener(session_listener),
     event_sink(sink),
-    gralloc(gralloc)
+    gralloc(gralloc),
+    extension_lookup{extension_lookup}
 {
     assert(surface_stack);
 }
@@ -106,7 +108,11 @@ auto ms::ApplicationSession::create_surface(
     auto surface = surface_factory->create_surface(session, wayland_surface, streams, params);
 
     auto const input_mode = params.input_mode.is_set() ? params.input_mode.value() : input::InputReceptionMode::normal;
-    surface_stack->add_surface_below_top(surface, input_mode);
+
+    if (extension_lookup.is_wayland_extension_enabled("xdg_activation_v1"))
+        surface_stack->add_surface_below_top(surface, input_mode);
+    else
+        surface_stack->add_surface(surface, input_mode);
 
     if (observer && observer_executor)
     {
@@ -318,7 +324,7 @@ void ms::ApplicationSession::configure_streams(
         if (auto const s = std::dynamic_pointer_cast<mc::BufferStream>(stream.stream.lock()))
             list.emplace_back(ms::StreamInfo{s, stream.displacement});
     }
-    surface.set_streams(list); 
+    surface.set_streams(list);
 }
 
 auto ms::ApplicationSession::has_buffer_stream(

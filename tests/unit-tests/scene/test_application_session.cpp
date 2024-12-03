@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/wayland/extension_lookup.h"
 #include "src/server/scene/application_session.h"
 #include "mir/events/event_private.h"
 #include "mir/graphics/buffer.h"
@@ -120,9 +121,10 @@ struct ApplicationSession : public testing::Test
            name,
            stub_session_listener,
            event_sink,
-           allocator);
+           allocator,
+           mw::ExtensionLookup{{}});
     }
-    
+
     std::shared_ptr<ms::ApplicationSession> make_application_session(
         std::shared_ptr<ms::SurfaceFactory> const& surface_factory)
     {
@@ -134,7 +136,8 @@ struct ApplicationSession : public testing::Test
            name,
            stub_session_listener,
            event_sink,
-           allocator);
+           allocator,
+           mw::ExtensionLookup{{}});
     }
 
     std::shared_ptr<ms::ApplicationSession> make_application_session(
@@ -149,7 +152,8 @@ struct ApplicationSession : public testing::Test
            name,
            stub_session_listener,
            event_sink,
-           allocator);
+           allocator,
+           mw::ExtensionLookup{{}});
     }
     std::shared_ptr<ms::ApplicationSession> make_application_session_with_coordinator(
         std::shared_ptr<msh::SurfaceStack> const& surface_stack)
@@ -162,9 +166,10 @@ struct ApplicationSession : public testing::Test
            name,
            stub_session_listener,
            event_sink,
-           allocator);
+           allocator,
+           mw::ExtensionLookup{{}});
     }
-    
+
     std::shared_ptr<ms::ApplicationSession> make_application_session_with_listener(
         std::shared_ptr<ms::SessionListener> const& session_listener)
     {
@@ -176,7 +181,8 @@ struct ApplicationSession : public testing::Test
            name,
            session_listener,
            event_sink,
-           allocator);
+           allocator,
+           mw::ExtensionLookup{{}});
     }
 
 
@@ -429,7 +435,8 @@ TEST_F(ApplicationSession, process_id)
         name,
         std::make_shared<ms::NullSessionListener>(),
         event_sink,
-        allocator);
+        allocator,
+        mw::ExtensionLookup{{}});
 
     EXPECT_THAT(app_session.process_id(), Eq(session_pid));
 }
@@ -456,7 +463,7 @@ MATCHER_P(HasSingleStream, value, "")
     using namespace testing;
     EXPECT_THAT(arg.size(), Eq(1));
     if (arg.size() < 1 ) return false;
-    EXPECT_THAT(arg.front().stream.get(), Eq(value.get())); 
+    EXPECT_THAT(arg.front().stream.get(), Eq(value.get()));
     return !(::testing::Test::HasFailure());
 }
 
@@ -498,7 +505,8 @@ struct ApplicationSessionSender : public ApplicationSession
             name,
             stub_session_listener,
             mt::fake_shared(sender),
-            allocator)
+            allocator,
+            mw::ExtensionLookup{{}})
     {
     }
 
@@ -623,7 +631,8 @@ struct ApplicationSessionSurfaceOutput : public ApplicationSession
             name,
             stub_session_listener,
             sender,
-            allocator)
+            allocator,
+            mw::ExtensionLookup{{}})
     {
     }
 

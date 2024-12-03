@@ -27,9 +27,11 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/observer_multiplexer.h"
+#include "mir/wayland/extension_lookup.h"
 
 #include <boost/throw_exception.hpp>
 
+#include <cmath>
 #include <stdexcept>
 #include <memory>
 #include <algorithm>
@@ -89,7 +91,8 @@ ms::SessionManager::SessionManager(
     std::shared_ptr<graphics::Display const> const& display,
     std::shared_ptr<ApplicationNotRespondingDetector> const& anr_detector,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar) :
+    std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar,
+    wayland::ExtensionLookup extension_lookup) :
     observers(std::make_shared<SessionObservers>()),
     surface_stack(surface_stack),
     surface_factory(surface_factory),
@@ -99,7 +102,8 @@ ms::SessionManager::SessionManager(
     display{display},
     anr_detector{anr_detector},
     allocator{allocator},
-    display_config_registrar{display_config_registrar}
+    display_config_registrar{display_config_registrar},
+    extension_lookup{extension_lookup}
 {
     observers->register_interest(session_listener);
 }
@@ -138,7 +142,8 @@ std::shared_ptr<ms::Session> ms::SessionManager::open_session(
         name,
         observers,
         sender,
-        allocator);
+        allocator,
+        extension_lookup);
 
     app_container->insert_session(new_session);
 

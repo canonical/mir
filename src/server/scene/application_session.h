@@ -20,6 +20,7 @@
 #include "mir/scene/session.h"
 
 #include "mir/observer_registrar.h"
+#include "mir/wayland/extension_lookup.h"
 
 #include <atomic>
 #include <set>
@@ -50,7 +51,8 @@ public:
         std::string const& session_name,
         std::shared_ptr<SessionListener> const& session_listener,
         std::shared_ptr<frontend::EventSink> const& sink,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+        wayland::ExtensionLookup extension_lookup);
 
     ~ApplicationSession();
 
@@ -111,6 +113,7 @@ private:
         std::weak_ptr<compositor::BufferStream>,
         std::owner_less<std::weak_ptr<Surface>>> default_content_map;
     std::mutex mutable surfaces_and_streams_mutex;
+    wayland::ExtensionLookup extension_lookup;
 };
 
 }

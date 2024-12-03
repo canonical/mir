@@ -182,7 +182,8 @@ mir::DefaultServerConfiguration::the_session_coordinator()
                 the_display(),
                 the_application_not_responding_detector(),
                 the_buffer_allocator(),
-                the_display_configuration_observer_registrar());
+                the_display_configuration_observer_registrar(),
+                mir::wayland::ExtensionLookup{enabled_wayland_extensions});
         });
 }
 

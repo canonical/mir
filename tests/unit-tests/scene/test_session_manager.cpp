@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/wayland/extension_lookup.h"
 #include "src/server/scene/session_manager.h"
 
 #include "mir/scene/session.h"
@@ -91,7 +92,8 @@ struct SessionManagerSetup : public testing::Test
         mt::fake_shared(display),
         std::make_shared<mtd::NullANRDetector>(),
         mt::fake_shared(allocator),
-        mt::fake_shared(display_config_registrar)};
+        mt::fake_shared(display_config_registrar),
+        mw::ExtensionLookup{{}}};
 };
 
 }
@@ -117,7 +119,8 @@ struct SessionManagerSessionListenerSetup : public testing::Test
         mt::fake_shared(display),
         std::make_shared<mtd::NullANRDetector>(),
         mt::fake_shared(allocator),
-        mt::fake_shared(display_config_registrar)};
+        mt::fake_shared(display_config_registrar),
+        mw::ExtensionLookup{{}}};
 };
 }
 
@@ -197,7 +200,8 @@ struct SessionManagerSessionEventsSetup : public testing::Test
         mt::fake_shared(display),
         std::make_shared<mtd::NullANRDetector>(),
         mt::fake_shared(allocator),
-        mt::fake_shared(display_config_registrar)};
+        mt::fake_shared(display_config_registrar),
+        mw::ExtensionLookup{{}}};
 };
 }
 
