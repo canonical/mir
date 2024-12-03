@@ -10,6 +10,7 @@ set(STANDARD_SOURCES
   global.cpp
   protocol_error.cpp
   client.cpp
+  extension_lookup.cpp
 )
 
 add_library(mirwayland SHARED
