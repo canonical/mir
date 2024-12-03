@@ -5,12 +5,16 @@ mir (2.19.2) UNRELEASED; urgency=medium
     - Enhancements
       . Fix changelog
 
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Tue, 3 Dec 2024 11:48:10 +0000
+
 mir (2.19.1) UNRELEASED; urgency=medium
 
   * New upstream release 2.19.1
 
     - ABI summary:
       . mirserver ABI bumped to 62
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Tue, 3 Dec 2024 10:35:06 +0000
 
 mir (2.19.0) UNRELEASED; urgency=medium
 
