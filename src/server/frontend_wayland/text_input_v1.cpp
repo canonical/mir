@@ -173,6 +173,7 @@ private:
     bool on_new_input_field{false};
     /// nullopt if the state is inactive, otherwise holds the pending and/or committed state
     std::optional<ms::TextInputState> pending_state;
+    bool pending_state_used = false;
 
     struct SerialPair
     {
@@ -266,7 +267,7 @@ TextInputV1::~TextInputV1()
 void TextInputV1::send_text_change(ms::TextInputChange const& change)
 {
     auto const client_serial = find_client_serial(change.serial);
-    if (!pending_state || !current_surface || !client_serial)
+    if (!current_surface || !client_serial)
     {
         // We are no longer enabled, or we don't have a valid serial
         return;
@@ -361,6 +362,7 @@ void TextInputV1::activate(wl_resource *seat_resource, wl_resource *surface)
     {
         on_new_input_field = true;
         pending_state.emplace();
+        pending_state_used = false;
     }
 }
 
@@ -371,7 +373,7 @@ void TextInputV1::deactivate(wl_resource *seat)
     pending_state.reset();
 }
 
-/// Electron appears to call show_input_panel() when commit_state() should be called. 
+/// Electron appears to call show_input_panel() when commit_state() should be called.
 void TextInputV1::show_input_panel()
 {
     commit_state(0);
@@ -386,7 +388,8 @@ void TextInputV1::hide_input_panel()
 
 void TextInputV1::reset()
 {
-    pending_state.reset();
+    if(pending_state_used)
+        pending_state.reset();
 }
 
 void TextInputV1::set_surrounding_text(const std::string &text, uint32_t cursor, uint32_t anchor)
@@ -427,15 +430,12 @@ void TextInputV1::commit_state(uint32_t client_serial)
     if (pending_state && current_surface)
     {
         auto const hub_serial = ctx->text_input_hub->set_handler_state(handler, on_new_input_field, *pending_state);
+        pending_state_used = true;
         state_serials.push_back({client_serial, hub_serial});
         while (state_serials.size() > max_remembered_serials)
         {
             state_serials.pop_front();
         }
-    }
-    else
-    {
-        ctx->text_input_hub->deactivate_handler(handler);
     }
     on_new_input_field = false;
 }
