@@ -297,13 +297,21 @@ auto miral::MinimalWindowManager::confirm_inherited_move(WindowInfo const& windo
 
 void miral::MinimalWindowManager::advise_new_window(miral::WindowInfo const& window_info)
 {
-    self->application_selector.advise_new_window(window_info, self->focus_stealing == FocusStealing::allow);
-
     // If focus stealing prevention is on, swap the old focused window (now in
     // the back) with the new window in the front.
+    //
     // If it's a legitimate window, it'll be focused and raised via
     // xdg-activation.
-    if ((self->focus_stealing == FocusStealing::prevent) && tools.active_window())
+    //
+    // This is limited to a couple of window types, as well as windows in the
+    // "application" layer that don't have a parent.
+    auto in_background =
+        (self->focus_stealing == FocusStealing::prevent) && tools.active_window() &&
+        window_info.depth_layer() == mir_depth_layer_application && !window_info.parent();
+
+    self->application_selector.advise_new_window(window_info, in_background);
+
+    if (in_background)
         tools.swap_tree_order(tools.active_window(), window_info.window());
 }
 
