@@ -297,7 +297,7 @@ auto miral::MinimalWindowManager::confirm_inherited_move(WindowInfo const& windo
 
 void miral::MinimalWindowManager::advise_new_window(miral::WindowInfo const& window_info)
 {
-    self->application_selector.advise_new_window(window_info);
+    self->application_selector.advise_new_window(window_info, self->focus_stealing == FocusStealing::allow);
 
     // If focus stealing prevention is on, swap the old focused window (now in
     // the back) with the new window in the front.
