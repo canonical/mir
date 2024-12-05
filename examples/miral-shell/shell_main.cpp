@@ -34,6 +34,7 @@
 #include <miral/x11_support.h>
 #include <miral/wayland_extensions.h>
 
+#include <stdexcept>
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <cstring>
@@ -69,7 +70,15 @@ int main(int argc, char const* argv[])
 
     SpinnerSplash spinner;
     InternalClientLauncher launcher;
-    auto focus_stealing_prevention = FocusStealing::allow;
+    auto constexpr default_focus_stealing_prevention = false;
+    auto const to_focus_stealing = [](bool focus_stealing_prevention)
+    {
+        if (focus_stealing_prevention)
+            return FocusStealing::prevent;
+        else
+            return FocusStealing::allow;
+    };
+    auto focus_stealing_prevention = to_focus_stealing(default_focus_stealing_prevention);
     WindowManagerOptions window_managers
         {
             add_window_manager_policy<FloatingWindowManagerPolicy>("floating", spinner, launcher, shutdown_hook, focus_stealing_prevention),
@@ -141,6 +150,10 @@ int main(int argc, char const* argv[])
             WaylandExtensions{},
             X11Support{},
             ConfigureDecorations{},
+            pre_init(ConfigurationOption{[&](bool option)
+                    { focus_stealing_prevention = to_focus_stealing(option); },
+                    "focus-stealing-prevention", "allow or prevent focus stealing",
+                    default_focus_stealing_prevention}),
             window_managers,
             display_configuration_options,
             external_client_launcher,
