@@ -197,7 +197,7 @@ inline void render_minimize_icon(
 }
 }
 
-class msd::Renderer::Text::Impl
+class msd::RendererImpl::Text::Impl
     : public Text
 {
 public:
@@ -230,7 +230,7 @@ private:
     static auto utf8_to_utf32(std::string const& text) -> std::u32string;
 };
 
-class msd::Renderer::Text::Null
+class msd::RendererImpl::Text::Null
     : public Text
 {
 public:
@@ -247,10 +247,10 @@ public:
 private:
 };
 
-std::mutex msd::Renderer::Text::static_mutex;
-std::weak_ptr<msd::Renderer::Text> msd::Renderer::Text::singleton;
+std::mutex msd::RendererImpl::Text::static_mutex;
+std::weak_ptr<msd::RendererImpl::Text> msd::RendererImpl::Text::singleton;
 
-auto msd::Renderer::Text::instance() -> std::shared_ptr<Text>
+auto msd::RendererImpl::Text::instance() -> std::shared_ptr<Text>
 {
     std::lock_guard lock{static_mutex};
     auto shared = singleton.lock();
@@ -270,7 +270,7 @@ auto msd::Renderer::Text::instance() -> std::shared_ptr<Text>
     return shared;
 }
 
-msd::Renderer::Text::Impl::Impl()
+msd::RendererImpl::Text::Impl::Impl()
 {
     if (auto const error = FT_Init_FreeType(&library))
         BOOST_THROW_EXCEPTION(std::runtime_error(
@@ -288,7 +288,7 @@ msd::Renderer::Text::Impl::Impl()
     }
 }
 
-msd::Renderer::Text::Impl::~Impl()
+msd::RendererImpl::Text::Impl::~Impl()
 {
     if (auto const error = FT_Done_Face(face))
         log_warning("Failed to uninitialize font face with error %d", error);
@@ -299,7 +299,7 @@ msd::Renderer::Text::Impl::~Impl()
     library = nullptr;
 }
 
-void msd::Renderer::Text::Impl::render(
+void msd::RendererImpl::Text::Impl::render(
     Pixel* buf,
     geom::Size buf_size,
     std::string const& text,
@@ -354,7 +354,7 @@ void msd::Renderer::Text::Impl::render(
     }
 }
 
-void msd::Renderer::Text::Impl::set_char_size(geom::Height height)
+void msd::RendererImpl::Text::Impl::set_char_size(geom::Height height)
 {
     if (auto const error = FT_Set_Pixel_Sizes(face, 0, height.as_int()))
         BOOST_THROW_EXCEPTION(std::runtime_error(
@@ -375,7 +375,7 @@ auto freetype_error_to_string(FT_Error error) -> char const*
 }
 }
 
-void msd::Renderer::Text::Impl::rasterize_glyph(char32_t glyph)
+void msd::RendererImpl::Text::Impl::rasterize_glyph(char32_t glyph)
 {
     auto const glyph_index = FT_Get_Char_Index(face, glyph);
 
@@ -394,7 +394,7 @@ void msd::Renderer::Text::Impl::rasterize_glyph(char32_t glyph)
     }
 }
 
-void msd::Renderer::Text::Impl::render_glyph(
+void msd::RendererImpl::Text::Impl::render_glyph(
     Pixel* buf,
     geom::Size buf_size,
     FT_Bitmap const* glyph,
@@ -434,7 +434,7 @@ void msd::Renderer::Text::Impl::render_glyph(
     }
 }
 
-auto msd::Renderer::Text::Impl::font_path() -> std::string
+auto msd::RendererImpl::Text::Impl::font_path() -> std::string
 {
     auto const path = default_font();
     if (path.empty())
@@ -444,7 +444,7 @@ auto msd::Renderer::Text::Impl::font_path() -> std::string
     return path;
 }
 
-auto msd::Renderer::Text::Impl::utf8_to_utf32(std::string const& text) -> std::u32string
+auto msd::RendererImpl::Text::Impl::utf8_to_utf32(std::string const& text) -> std::u32string
 {
     std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
     std::u32string utf32_text;
@@ -465,39 +465,45 @@ auto msd::Renderer::Text::Impl::utf8_to_utf32(std::string const& text) -> std::u
 }
 
 msd::Renderer::Renderer(
-    std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
-    std::shared_ptr<StaticGeometry const> const& static_geometry)
-    : buffer_allocator{buffer_allocator},
-      focused_theme{
-          default_focused_background,
-          default_focused_text},
-      unfocused_theme{
-          default_unfocused_background,
-          default_unfocused_text},
-      current_theme{nullptr},
-      button_icons{
-          {ButtonFunction::Close, {
-              default_close_normal_button,
-              default_close_active_button,
-              default_button_icon,
-              render_close_icon}},
-          {ButtonFunction::Maximize, {
-              default_normal_button,
-              default_active_button,
-              default_button_icon,
-              render_maximize_icon}},
-          {ButtonFunction::Minimize, {
-              default_normal_button,
-              default_active_button,
-              default_button_icon,
-              render_minimize_icon}},
-      },
-      static_geometry{static_geometry},
-      text{Text::instance()}
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator)
+    : buffer_allocator{buffer_allocator}
 {
 }
 
-void msd::Renderer::update_state(WindowState const& window_state, InputState const& input_state)
+msd::RendererImpl::RendererImpl(
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
+    std::shared_ptr<StaticGeometry const> const& static_geometry) :
+    Renderer{buffer_allocator},
+    static_geometry{static_geometry},
+    focused_theme{
+        default_focused_background,
+        default_focused_text},
+    unfocused_theme{
+        default_unfocused_background,
+        default_unfocused_text},
+    current_theme{nullptr},
+    text{Text::instance()},
+    button_icons{
+        {ButtonFunction::Close, {
+            default_close_normal_button,
+            default_close_active_button,
+            default_button_icon,
+            render_close_icon}},
+        {ButtonFunction::Maximize, {
+            default_normal_button,
+            default_active_button,
+            default_button_icon,
+            render_maximize_icon}},
+        {ButtonFunction::Minimize, {
+            default_normal_button,
+            default_active_button,
+            default_button_icon,
+            render_minimize_icon}},
+      }
+{
+}
+
+void msd::RendererImpl::update_state(WindowState const& window_state, InputState const& input_state)
 {
     if (auto const new_scale{window_state.scale()}; new_scale != scale)
     {
@@ -536,16 +542,8 @@ void msd::Renderer::update_state(WindowState const& window_state, InputState con
         titlebar_pixels.reset(); // force a reallocation next time it's needed
     }
 
-    Theme const* const new_theme = (window_state.focused_state() != mir_window_focus_state_unfocused) ?
-        &focused_theme :
-        &unfocused_theme;
-
-    if (new_theme != current_theme)
-    {
-        current_theme = new_theme;
-        needs_titlebar_redraw = true;
-        needs_solid_color_redraw = true;
-    }
+    auto const focus_state = window_state.focused_state();
+    set_focus_state(focus_state);
 
     if (window_state.window_name() != name)
     {
@@ -574,7 +572,7 @@ void msd::Renderer::update_state(WindowState const& window_state, InputState con
     }
 }
 
-auto msd::Renderer::render_titlebar() -> std::optional<std::shared_ptr<mg::Buffer>>
+auto msd::RendererImpl::render_titlebar() -> std::optional<std::shared_ptr<mg::Buffer>>
 {
     auto const scaled_titlebar_size{titlebar_size * scale};
 
@@ -589,101 +587,50 @@ auto msd::Renderer::render_titlebar() -> std::optional<std::shared_ptr<mg::Buffe
 
     if (needs_titlebar_redraw)
     {
-        for (geom::Y y{0}; y < as_y(scaled_titlebar_size.height); y += geom::DeltaY{1})
-        {
-            render_row(
-                titlebar_pixels.get(), scaled_titlebar_size,
-                {0, y}, scaled_titlebar_size.width,
-                current_theme->background_color);
-        }
+        redraw_titlebar_background(scaled_titlebar_size);
 
-        text->render(
-            titlebar_pixels.get(),
-            scaled_titlebar_size,
-            name,
-            geom::Point{
-                static_geometry->title_font_top_left.x.as_value() * scale,
-                static_geometry->title_font_top_left.y.as_value() * scale},
-            static_geometry->title_font_height * scale,
-            current_theme->text_color);
+        redraw_titlebar_text(scaled_titlebar_size);
     }
 
     if (needs_titlebar_redraw || needs_titlebar_buttons_redraw)
     {
-        for (auto const& button : buttons)
-        {
-            geom::Rectangle scaled_button_rect{
-                geom::Point{
-                    button.rect.left().as_value() * scale,
-                    button.rect.top().as_value() * scale},
-                button.rect.size * scale};
-            auto const icon = button_icons.find(button.function);
-            if (icon != button_icons.end())
-            {
-                Pixel button_color = icon->second.normal_color;
-                if (button.state == ButtonState::Hovered)
-                    button_color = icon->second.active_color;
-                for (geom::Y y{scaled_button_rect.top()}; y < scaled_button_rect.bottom(); y += geom::DeltaY{1})
-                {
-                    render_row(
-                        titlebar_pixels.get(),
-                        scaled_titlebar_size,
-                        {scaled_button_rect.left(), y},
-                        scaled_button_rect.size.width,
-                        button_color);
-                }
-                geom::Rectangle const icon_rect = {
-                scaled_button_rect.top_left + static_geometry->icon_padding * scale, {
-                    scaled_button_rect.size.width - static_geometry->icon_padding.dx * scale * 2,
-                    scaled_button_rect.size.height - static_geometry->icon_padding.dy * scale * 2}};
-                icon->second.render_icon(
-                    titlebar_pixels.get(),
-                    scaled_titlebar_size,
-                    icon_rect,
-                    static_geometry->icon_line_width * scale,
-                    icon->second.icon_color);
-            }
-            else
-            {
-                log_warning("Could not render decoration button with unknown function %d\n", static_cast<int>(button.function));
-            }
-        }
+        redraw_titlebar_buttons(scaled_titlebar_size);
     }
 
     needs_titlebar_redraw = false;
     needs_titlebar_buttons_redraw = false;
 
-    return make_buffer(titlebar_pixels.get(), scaled_titlebar_size);
+    return make_buffer(titlebar_pixels.get(), scaled_titlebar_size, mir_pixel_format_argb_8888);
 }
 
-auto msd::Renderer::render_left_border() -> std::optional<std::shared_ptr<mg::Buffer>>
+auto msd::RendererImpl::render_left_border() -> std::optional<std::shared_ptr<mg::Buffer>>
 {
     auto const scaled_left_border_size{left_border_size * scale};
     if (!area(scaled_left_border_size))
         return std::nullopt;
     update_solid_color_pixels();
-    return make_buffer(solid_color_pixels.get(), scaled_left_border_size);
+    return make_buffer(solid_color_pixels.get(), scaled_left_border_size, mir_pixel_format_argb_8888);
 }
 
-auto msd::Renderer::render_right_border() -> std::optional<std::shared_ptr<mg::Buffer>>
+auto msd::RendererImpl::render_right_border() -> std::optional<std::shared_ptr<mg::Buffer>>
 {
     auto const scaled_right_border_size{right_border_size * scale};
     if (!area(scaled_right_border_size))
         return std::nullopt;
     update_solid_color_pixels();
-    return make_buffer(solid_color_pixels.get(), scaled_right_border_size);
+    return make_buffer(solid_color_pixels.get(), scaled_right_border_size, mir_pixel_format_argb_8888);
 }
 
-auto msd::Renderer::render_bottom_border() -> std::optional<std::shared_ptr<mg::Buffer>>
+auto msd::RendererImpl::render_bottom_border() -> std::optional<std::shared_ptr<mg::Buffer>>
 {
     auto const scaled_bottom_border_size{bottom_border_size * scale};
     if (!area(scaled_bottom_border_size))
         return std::nullopt;
     update_solid_color_pixels();
-    return make_buffer(solid_color_pixels.get(), scaled_bottom_border_size);
+    return make_buffer(solid_color_pixels.get(), scaled_bottom_border_size, mir_pixel_format_argb_8888);
 }
 
-void msd::Renderer::update_solid_color_pixels()
+void msd::RendererImpl::update_solid_color_pixels()
 {
     if (!solid_color_pixels)
     {
@@ -704,7 +651,8 @@ void msd::Renderer::update_solid_color_pixels()
 
 auto msd::Renderer::make_buffer(
     uint32_t const* pixels,
-    geometry::Size size) -> std::optional<std::shared_ptr<mg::Buffer>>
+    geometry::Size size,
+    MirPixelFormat buffer_format) -> std::optional<std::shared_ptr<mg::Buffer>>
 {
     if (!area(size))
     {
@@ -730,9 +678,89 @@ auto msd::Renderer::make_buffer(
 
 auto msd::Renderer::alloc_pixels(geometry::Size size) -> std::unique_ptr<uint32_t[]>
 {
-    size_t const buf_size = area(size) * bytes_per_pixel;
+    size_t const buf_size = area(size) * MIR_BYTES_PER_PIXEL(buffer_format);
     if (buf_size)
         return std::unique_ptr<uint32_t[]>{new uint32_t[buf_size]};
     else
         return nullptr;
+}
+
+void msd::RendererImpl::redraw_titlebar_background(geometry::Size const scaled_titlebar_size)
+{
+    for (geom::Y y{0}; y < as_y(scaled_titlebar_size.height); y += geom::DeltaY{1})
+    {
+        render_row(
+            titlebar_pixels.get(), scaled_titlebar_size,
+            {0, y}, scaled_titlebar_size.width,
+            current_theme->background_color);
+    }
+}
+
+void msd::RendererImpl::redraw_titlebar_text(geometry::Size const scaled_titlebar_size)
+{
+    text->render(
+        titlebar_pixels.get(),
+        scaled_titlebar_size,
+        name,
+        geom::Point{
+            static_geometry->title_font_top_left.x.as_value() * scale,
+            static_geometry->title_font_top_left.y.as_value() * scale},
+        static_geometry->title_font_height * scale,
+        current_theme->text_color);
+}
+
+void msd::RendererImpl::redraw_titlebar_buttons(geometry::Size const scaled_titlebar_size)
+{
+    for (auto const& button : buttons)
+    {
+        geom::Rectangle scaled_button_rect{
+            geom::Point{
+                button.rect.left().as_value() * scale,
+                button.rect.top().as_value() * scale},
+            button.rect.size * scale};
+        auto const icon = button_icons.find(button.function);
+        if (icon != button_icons.end())
+        {
+            Pixel button_color = icon->second.normal_color;
+            if (button.state == ButtonState::Hovered)
+                button_color = icon->second.active_color;
+            for (geom::Y y{scaled_button_rect.top()}; y < scaled_button_rect.bottom(); y += geom::DeltaY{1})
+            {
+                render_row(
+                    titlebar_pixels.get(),
+                    scaled_titlebar_size,
+                    {scaled_button_rect.left(), y},
+                    scaled_button_rect.size.width,
+                    button_color);
+            }
+            geom::Rectangle const icon_rect = {
+                scaled_button_rect.top_left + static_geometry->icon_padding * scale, {
+                    scaled_button_rect.size.width - static_geometry->icon_padding.dx * scale * 2,
+                    scaled_button_rect.size.height - static_geometry->icon_padding.dy * scale * 2}};
+            icon->second.render_icon(
+                titlebar_pixels.get(),
+                scaled_titlebar_size,
+                icon_rect,
+                static_geometry->icon_line_width * scale,
+                icon->second.icon_color);
+        }
+        else
+        {
+            log_warning("Could not render decoration button with unknown function %d\n", static_cast<int>(button.function));
+        }
+    }
+}
+
+void msd::RendererImpl::set_focus_state(MirWindowFocusState focus_state)
+{
+    Theme const* const new_theme = (focus_state != mir_window_focus_state_unfocused) ?
+                                       &focused_theme :
+                                       &unfocused_theme;
+
+    if (new_theme != current_theme)
+    {
+        current_theme = new_theme;
+        needs_titlebar_redraw = true;
+        needs_solid_color_redraw = true;
+    }
 }

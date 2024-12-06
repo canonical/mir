@@ -40,23 +40,53 @@ class InputState;
 struct StaticGeometry;
 
 auto const buffer_format = mir_pixel_format_argb_8888;
-auto const bytes_per_pixel = 4;
 
 class Renderer
 {
 public:
     Renderer(
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator);
+
+    virtual ~Renderer() = default;
+
+    virtual void update_state(WindowState const& window_state, InputState const& input_state) = 0;
+    virtual auto render_titlebar() -> std::optional<std::shared_ptr<graphics::Buffer>> = 0;
+    virtual auto render_left_border() -> std::optional<std::shared_ptr<graphics::Buffer>> = 0;
+    virtual auto render_right_border() -> std::optional<std::shared_ptr<graphics::Buffer>> = 0;
+    virtual auto render_bottom_border() -> std::optional<std::shared_ptr<graphics::Buffer>> = 0;
+
+    using Pixel = uint32_t;
+    static auto alloc_pixels(geometry::Size size) -> std::unique_ptr<Pixel[]>;
+
+    auto make_buffer(
+        Pixel const* pixels,
+        geometry::Size size,
+        MirPixelFormat buffer_format) -> std::optional<std::shared_ptr<graphics::Buffer>>;
+
+private:
+    std::shared_ptr<graphics::GraphicBufferAllocator> buffer_allocator;
+};
+
+class RendererImpl : public Renderer
+{
+public:
+    RendererImpl(
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<StaticGeometry const> const& static_geometry);
 
-    void update_state(WindowState const& window_state, InputState const& input_state);
-    auto render_titlebar() -> std::optional<std::shared_ptr<graphics::Buffer>>;
-    auto render_left_border() -> std::optional<std::shared_ptr<graphics::Buffer>>;
-    auto render_right_border() -> std::optional<std::shared_ptr<graphics::Buffer>>;
-    auto render_bottom_border() -> std::optional<std::shared_ptr<graphics::Buffer>>;
-
 private:
-    using Pixel = uint32_t;
+    std::shared_ptr<StaticGeometry const> const static_geometry;
+
+    /// A visual theme for a decoration
+    /// Focused and unfocused windows use a different theme
+    struct Theme
+    {
+        Pixel const background_color;   ///< Color for background of the titlebar and borders
+        Pixel const text_color;         ///< Color the window title is drawn in
+    };
+    Theme const focused_theme;
+    Theme const unfocused_theme;
+    Theme const* current_theme;
 
     class Text
     {
@@ -80,14 +110,7 @@ private:
         static std::mutex static_mutex;
         static std::weak_ptr<Text> singleton;
     };
-
-    /// A visual theme for a decoration
-    /// Focused and unfocused windows use a different theme
-    struct Theme
-    {
-        Pixel const background_color;   ///< Color for background of the titlebar and borders
-        Pixel const text_color;         ///< Color the window title is drawn in
-    };
+    std::shared_ptr<Text> const text;
 
     // Info needed to render a button icon
     struct Icon
@@ -102,18 +125,16 @@ private:
             geometry::Width line_width,
             Pixel color)> const render_icon; ///< Draws button's icon to the given buffer
     };
-
-    std::shared_ptr<graphics::GraphicBufferAllocator> buffer_allocator;
-    Theme const focused_theme;
-    Theme const unfocused_theme;
-    Theme const* current_theme;
     std::map<ButtonFunction, Icon const> button_icons;
-    std::shared_ptr<StaticGeometry const> const static_geometry;
 
-    bool needs_solid_color_redraw{true};
+    float scale{1.0f};
+    std::string name;
     geometry::Size left_border_size;
     geometry::Size right_border_size;
     geometry::Size bottom_border_size;
+
+    bool needs_solid_color_redraw{true};
+
     size_t solid_color_pixels_length{0};
     size_t scaled_solid_color_pixels_length{0};
     std::unique_ptr<Pixel[]> solid_color_pixels; // can be nullptr
@@ -123,18 +144,22 @@ private:
 
     bool needs_titlebar_redraw{true};
     bool needs_titlebar_buttons_redraw{true};
-    std::string name;
+
     std::vector<ButtonInfo> buttons;
 
-    std::shared_ptr<Text> const text;
-
-    float scale{1.0f};
+    auto render_titlebar() -> std::optional<std::shared_ptr<graphics::Buffer>> override;
+    auto render_left_border() -> std::optional<std::shared_ptr<graphics::Buffer>> override;
+    auto render_right_border() -> std::optional<std::shared_ptr<graphics::Buffer>> override;
+    auto render_bottom_border() -> std::optional<std::shared_ptr<graphics::Buffer>> override;
+    void update_state(WindowState const& window_state, InputState const& input_state) override;
 
     void update_solid_color_pixels();
-    auto make_buffer(
-        Pixel const* pixels,
-        geometry::Size size) -> std::optional<std::shared_ptr<graphics::Buffer>>;
-    static auto alloc_pixels(geometry::Size size) -> std::unique_ptr<Pixel[]>;
+
+    void set_focus_state(MirWindowFocusState focus_state);
+
+    void redraw_titlebar_background(geometry::Size scaled_titlebar_size);
+    void redraw_titlebar_text(geometry::Size scaled_titlebar_size);
+    void redraw_titlebar_buttons(geometry::Size scaled_titlebar_size);
 };
 }
 }
