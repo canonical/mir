@@ -108,7 +108,7 @@ private:
     Theme const unfocused_theme;
     Theme const* current_theme;
     std::map<ButtonFunction, Icon const> button_icons;
-    std::shared_ptr<StaticGeometry const> const static_geometry;
+    std::shared_ptr<StaticGeometry const> const STRATEGY_static_geometry;
 
     bool needs_solid_color_redraw{true};
     geometry::Size left_border_size;
@@ -135,6 +135,10 @@ private:
         Pixel const* pixels,
         geometry::Size size) -> std::optional<std::shared_ptr<graphics::Buffer>>;
     static auto alloc_pixels(geometry::Size size) -> std::unique_ptr<Pixel[]>;
+
+    void STRATEGY_redraw_titlebar_background(Pixel* titlebar_pixels, geometry::Size scaled_titlebar_size);
+    void STRATEGY_redraw_titlebar_text(Pixel* titlebar_pixels, geometry::Size scaled_titlebar_size);
+    void STRATEGY_redraw_titlebar_buttons(Pixel* titlebar_pixels, geometry::Size scaled_titlebar_size);
 };
 }
 }

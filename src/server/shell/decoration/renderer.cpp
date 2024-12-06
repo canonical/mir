@@ -492,7 +492,7 @@ msd::Renderer::Renderer(
               default_button_icon,
               render_minimize_icon}},
       },
-      static_geometry{static_geometry},
+      STRATEGY_static_geometry{static_geometry},
       text{Text::instance()}
 {
 }
@@ -589,65 +589,14 @@ auto msd::Renderer::render_titlebar() -> std::optional<std::shared_ptr<mg::Buffe
 
     if (needs_titlebar_redraw)
     {
-        for (geom::Y y{0}; y < as_y(scaled_titlebar_size.height); y += geom::DeltaY{1})
-        {
-            render_row(
-                titlebar_pixels.get(), scaled_titlebar_size,
-                {0, y}, scaled_titlebar_size.width,
-                current_theme->background_color);
-        }
+        STRATEGY_redraw_titlebar_background(titlebar_pixels.get(), scaled_titlebar_size);
 
-        text->render(
-            titlebar_pixels.get(),
-            scaled_titlebar_size,
-            name,
-            geom::Point{
-                static_geometry->title_font_top_left.x.as_value() * scale,
-                static_geometry->title_font_top_left.y.as_value() * scale},
-            static_geometry->title_font_height * scale,
-            current_theme->text_color);
+        STRATEGY_redraw_titlebar_text(titlebar_pixels.get(), scaled_titlebar_size);
     }
 
     if (needs_titlebar_redraw || needs_titlebar_buttons_redraw)
     {
-        for (auto const& button : buttons)
-        {
-            geom::Rectangle scaled_button_rect{
-                geom::Point{
-                    button.rect.left().as_value() * scale,
-                    button.rect.top().as_value() * scale},
-                button.rect.size * scale};
-            auto const icon = button_icons.find(button.function);
-            if (icon != button_icons.end())
-            {
-                Pixel button_color = icon->second.normal_color;
-                if (button.state == ButtonState::Hovered)
-                    button_color = icon->second.active_color;
-                for (geom::Y y{scaled_button_rect.top()}; y < scaled_button_rect.bottom(); y += geom::DeltaY{1})
-                {
-                    render_row(
-                        titlebar_pixels.get(),
-                        scaled_titlebar_size,
-                        {scaled_button_rect.left(), y},
-                        scaled_button_rect.size.width,
-                        button_color);
-                }
-                geom::Rectangle const icon_rect = {
-                scaled_button_rect.top_left + static_geometry->icon_padding * scale, {
-                    scaled_button_rect.size.width - static_geometry->icon_padding.dx * scale * 2,
-                    scaled_button_rect.size.height - static_geometry->icon_padding.dy * scale * 2}};
-                icon->second.render_icon(
-                    titlebar_pixels.get(),
-                    scaled_titlebar_size,
-                    icon_rect,
-                    static_geometry->icon_line_width * scale,
-                    icon->second.icon_color);
-            }
-            else
-            {
-                log_warning("Could not render decoration button with unknown function %d\n", static_cast<int>(button.function));
-            }
-        }
+        STRATEGY_redraw_titlebar_buttons(titlebar_pixels.get(), scaled_titlebar_size);
     }
 
     needs_titlebar_redraw = false;
@@ -735,4 +684,70 @@ auto msd::Renderer::alloc_pixels(geometry::Size size) -> std::unique_ptr<uint32_
         return std::unique_ptr<uint32_t[]>{new uint32_t[buf_size]};
     else
         return nullptr;
+}
+
+void msd::Renderer::STRATEGY_redraw_titlebar_background(Pixel* titlebar_pixels, geometry::Size const scaled_titlebar_size)
+{
+    for (geom::Y y{0}; y < as_y(scaled_titlebar_size.height); y += geom::DeltaY{1})
+    {
+        render_row(
+            titlebar_pixels, scaled_titlebar_size,
+            {0, y}, scaled_titlebar_size.width,
+            current_theme->background_color);
+    }
+}
+
+void msd::Renderer::STRATEGY_redraw_titlebar_text(Pixel* titlebar_pixels, geometry::Size const scaled_titlebar_size)
+{
+    text->render(
+        titlebar_pixels,
+        scaled_titlebar_size,
+        name,
+        geom::Point{
+            STRATEGY_static_geometry->title_font_top_left.x.as_value() * scale,
+            STRATEGY_static_geometry->title_font_top_left.y.as_value() * scale},
+        STRATEGY_static_geometry->title_font_height * scale,
+        current_theme->text_color);
+}
+
+void msd::Renderer::STRATEGY_redraw_titlebar_buttons(Pixel* titlebar_pixels, geometry::Size const scaled_titlebar_size)
+{
+    for (auto const& button : buttons)
+    {
+        geom::Rectangle scaled_button_rect{
+            geom::Point{
+                button.rect.left().as_value() * scale,
+                button.rect.top().as_value() * scale},
+            button.rect.size * scale};
+        auto const icon = button_icons.find(button.function);
+        if (icon != button_icons.end())
+        {
+            Pixel button_color = icon->second.normal_color;
+            if (button.state == ButtonState::Hovered)
+                button_color = icon->second.active_color;
+            for (geom::Y y{scaled_button_rect.top()}; y < scaled_button_rect.bottom(); y += geom::DeltaY{1})
+            {
+                render_row(
+                    titlebar_pixels,
+                    scaled_titlebar_size,
+                    {scaled_button_rect.left(), y},
+                    scaled_button_rect.size.width,
+                    button_color);
+            }
+            geom::Rectangle const icon_rect = {
+                scaled_button_rect.top_left + STRATEGY_static_geometry->icon_padding * scale, {
+                    scaled_button_rect.size.width - STRATEGY_static_geometry->icon_padding.dx * scale * 2,
+                    scaled_button_rect.size.height - STRATEGY_static_geometry->icon_padding.dy * scale * 2}};
+            icon->second.render_icon(
+                titlebar_pixels,
+                scaled_titlebar_size,
+                icon_rect,
+                STRATEGY_static_geometry->icon_line_width * scale,
+                icon->second.icon_color);
+        }
+        else
+        {
+            log_warning("Could not render decoration button with unknown function %d\n", static_cast<int>(button.function));
+        }
+    }
 }
