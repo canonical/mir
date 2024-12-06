@@ -19,6 +19,7 @@
 #include <miral/application.h>
 #include <mir/log.h>
 #include <mir/scene/session.h>
+#include <unordered_set>
 
 using namespace miral;
 
@@ -212,6 +213,7 @@ auto ApplicationSelector::advance(bool reverse, bool within_app) -> Window
     auto it = find(selected);
 
     std::optional<Window> next_window = std::nullopt;
+    auto should_continue = true;
     do {
         if (reverse)
         {
@@ -236,9 +238,10 @@ auto ApplicationSelector::advance(bool reverse, bool within_app) -> Window
         if (within_app)
         {
             if (it->application() == (*originally_selected_it).application() && tools.can_select_window(*it))
+            {
                 next_window = *it;
-            else
-                next_window = std::nullopt;
+                should_continue = false;
+            }
         }
         else
         {
@@ -251,15 +254,17 @@ auto ApplicationSelector::advance(bool reverse, bool within_app) -> Window
 
                 if (prev_it->application() == it->application())
                 {
-                    next_window = std::nullopt;
                     already_encountered = true;
                     break;
                 }
             }
             if (!already_encountered)
+            {
                 next_window = tools.window_to_select_application(it->application());
+                should_continue = !next_window.has_value();
+            }
         }
-    } while (next_window == std::nullopt);
+    } while (should_continue);
 
     if (next_window == std::nullopt)
         return selected;
