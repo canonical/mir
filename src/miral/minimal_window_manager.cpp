@@ -104,6 +104,8 @@ struct miral::MinimalWindowManager::Impl
 
     void apply_resize_by(Displacement movement);
 
+    bool prevent_focus_stealing(WindowInfo const& info);
+
     MirInputEventModifier const pointer_drag_modifier;
     FocusStealing const focus_stealing;
 };
@@ -147,7 +149,7 @@ void miral::MinimalWindowManager::handle_window_ready(WindowInfo& window_info)
 {
     // If focus stealing prevention isn't enabled, activate on window ready (if
     // possible). Otherwise, only activate the first opened window.
-    if (((self->focus_stealing == FocusStealing::allow) || !tools.active_window()) && window_info.can_be_active())
+    if (!self->prevent_focus_stealing(window_info) && window_info.can_be_active())
     {
         tools.select_active_window(window_info.window());
     }
@@ -305,9 +307,7 @@ void miral::MinimalWindowManager::advise_new_window(miral::WindowInfo const& win
     //
     // This is limited to a couple of window types, as well as windows in the
     // "application" layer that don't have a parent.
-    auto in_background =
-        (self->focus_stealing == FocusStealing::prevent) && tools.active_window() &&
-        window_info.depth_layer() == mir_depth_layer_application && !window_info.parent();
+    auto in_background = self->prevent_focus_stealing(window_info);
 
     self->application_selector.advise_new_window(window_info, in_background);
 
@@ -641,4 +641,12 @@ void miral::MinimalWindowManager::Impl::apply_resize_by(Displacement movement)
     {
         gesture = Gesture::none;
     }
+}
+
+bool miral::MinimalWindowManager::Impl::prevent_focus_stealing(miral::WindowInfo const& info)
+{
+
+    return (focus_stealing == FocusStealing::prevent) && tools.active_window() &&
+           info.depth_layer() == mir_depth_layer_application && !info.parent() &&
+           tools.active_window().application() != info.window().application();
 }
