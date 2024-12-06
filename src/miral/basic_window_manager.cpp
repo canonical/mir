@@ -196,6 +196,16 @@ void miral::BasicWindowManager::surface_ready(std::shared_ptr<scene::Surface> co
 {
     Locker lock{this};
     policy->handle_window_ready(info_for(surface));
+
+    // Need to push onto the MRU list for alt+tab to work correctly.
+    //
+    // Originally, applications were pushed only when selected, but due to
+    // focus stealing prevention, they were not activated and thus weren't
+    // selected nor added to mru_active_windows, breaking alt+tab
+    auto window = info_for(surface).window();
+    auto const top = mru_active_windows.top();
+    if(top && top != window)
+        mru_active_windows.push_unfocused(window);
 }
 
 void miral::BasicWindowManager::modify_surface(
