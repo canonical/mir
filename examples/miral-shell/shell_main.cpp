@@ -34,7 +34,6 @@
 #include <miral/x11_support.h>
 #include <miral/wayland_extensions.h>
 
-#include <stdexcept>
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <cstring>

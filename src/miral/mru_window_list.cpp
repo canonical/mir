@@ -35,7 +35,7 @@ void miral::MRUWindowList::push(Window const& window)
     windows.push_back(window);
 }
 
-void miral::MRUWindowList::push_unfocused(Window const& window)
+void miral::MRUWindowList::insert_below_top(Window const& window)
 {
     windows.erase(remove(begin(windows), end(windows), window), end(windows));
     if(!windows.empty())

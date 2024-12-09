@@ -19,7 +19,6 @@
 #include <miral/application.h>
 #include <mir/log.h>
 #include <mir/scene/session.h>
-#include <unordered_set>
 
 using namespace miral;
 
