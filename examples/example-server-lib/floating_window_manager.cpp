@@ -50,7 +50,17 @@ FloatingWindowManagerPolicy::FloatingWindowManagerPolicy(
     std::shared_ptr<SplashSession> const& spinner,
     miral::InternalClientLauncher const& launcher,
     std::function<void()>& shutdown_hook) :
-    MinimalWindowManager(tools),
+    FloatingWindowManagerPolicy{tools, spinner, launcher, shutdown_hook, FocusStealing::allow}
+{
+}
+
+FloatingWindowManagerPolicy::FloatingWindowManagerPolicy(
+    WindowManagerTools const& tools,
+    std::shared_ptr<SplashSession> const& spinner,
+    miral::InternalClientLauncher const& launcher,
+    std::function<void()>& shutdown_hook,
+    FocusStealing focus_stealing) :
+    MinimalWindowManager(tools, focus_stealing),
     spinner{spinner},
     decoration_provider{std::make_unique<DecorationProvider>()}
 {

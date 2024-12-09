@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "miral/minimal_window_manager.h"
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
 #include "wallpaper_config.h"
@@ -68,9 +69,18 @@ int main(int argc, char const* argv[])
 
     SpinnerSplash spinner;
     InternalClientLauncher launcher;
+    auto constexpr default_focus_stealing_prevention = false;
+    auto const to_focus_stealing = [](bool focus_stealing_prevention)
+    {
+        if (focus_stealing_prevention)
+            return FocusStealing::prevent;
+        else
+            return FocusStealing::allow;
+    };
+    auto focus_stealing_prevention = to_focus_stealing(default_focus_stealing_prevention);
     WindowManagerOptions window_managers
         {
-            add_window_manager_policy<FloatingWindowManagerPolicy>("floating", spinner, launcher, shutdown_hook),
+            add_window_manager_policy<FloatingWindowManagerPolicy>("floating", spinner, launcher, shutdown_hook, focus_stealing_prevention),
             add_window_manager_policy<TilingWindowManagerPolicy>("tiling", spinner, launcher),
         };
 
@@ -139,6 +149,10 @@ int main(int argc, char const* argv[])
             WaylandExtensions{},
             X11Support{},
             ConfigureDecorations{},
+            pre_init(ConfigurationOption{[&](bool option)
+                    { focus_stealing_prevention = to_focus_stealing(option); },
+                    "focus-stealing-prevention", "allow or prevent focus stealing",
+                    default_focus_stealing_prevention}),
             window_managers,
             display_configuration_options,
             external_client_launcher,
