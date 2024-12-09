@@ -147,8 +147,6 @@ auto miral::MinimalWindowManager::place_new_window(
 
 void miral::MinimalWindowManager::handle_window_ready(WindowInfo& window_info)
 {
-    // If focus stealing prevention isn't enabled, activate on window ready (if
-    // possible). Otherwise, only activate the first opened window.
     if (!self->prevent_focus_stealing(window_info) && window_info.can_be_active())
     {
         tools.select_active_window(window_info.window());
@@ -299,14 +297,11 @@ auto miral::MinimalWindowManager::confirm_inherited_move(WindowInfo const& windo
 
 void miral::MinimalWindowManager::advise_new_window(miral::WindowInfo const& window_info)
 {
-    // If focus stealing prevention is on, swap the old focused window (now in
-    // the back) with the new window in the front.
+    // If the window is prevented from stealing focus, swap the old focused
+    // window (now in the back) with the new window in the front.
     //
     // If it's a legitimate window, it'll be focused and raised via
     // xdg-activation.
-    //
-    // This is limited to a couple of window types, as well as windows in the
-    // "application" layer that don't have a parent.
     auto in_background = self->prevent_focus_stealing(window_info);
 
     self->application_selector.advise_new_window(window_info, in_background);

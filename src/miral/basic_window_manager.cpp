@@ -205,7 +205,7 @@ void miral::BasicWindowManager::surface_ready(std::shared_ptr<scene::Surface> co
     auto window = info_for(surface).window();
     auto const top = mru_active_windows.top();
     if(top && top != window)
-        mru_active_windows.push_unfocused(window);
+        mru_active_windows.insert_below_top(window);
 }
 
 void miral::BasicWindowManager::modify_surface(
