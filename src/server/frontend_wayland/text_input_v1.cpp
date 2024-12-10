@@ -371,7 +371,7 @@ void TextInputV1::deactivate(wl_resource *seat)
     pending_state.reset();
 }
 
-/// Electron appears to call show_input_panel() when commit_state() should be called. 
+/// Electron appears to call show_input_panel() when commit_state() should be called.
 void TextInputV1::show_input_panel()
 {
     commit_state(0);
@@ -386,7 +386,7 @@ void TextInputV1::hide_input_panel()
 
 void TextInputV1::reset()
 {
-    pending_state.reset();
+    pending_state.emplace();
 }
 
 void TextInputV1::set_surrounding_text(const std::string &text, uint32_t cursor, uint32_t anchor)
