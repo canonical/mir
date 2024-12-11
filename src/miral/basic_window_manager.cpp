@@ -295,21 +295,28 @@ void miral::BasicWindowManager::refocus(
     {
         miral::Window new_focus;
 
-        mru_active_windows.enumerate([&](miral::Window& window)
-            {
-                // select_active_window() calls set_focus_to() which updates mru_active_windows and changes window
-                auto const w = window;
+        auto workspaces_containing_window_mut = workspaces_containing_window;
+        // Need to sort only once
+        std::sort(workspaces_containing_window_mut.begin(), workspaces_containing_window_mut.end());
 
-                for (auto const& workspace : workspaces_containing(w))
-                {
-                    for (auto const& ww : workspaces_containing_window)
-                    {
-                        if (ww == workspace)
-                        {
-                            return !(new_focus = select_active_window(w));
-                        }
-                    }
-                }
+        mru_active_windows.enumerate([&](miral::Window& other_window)
+            {
+                if(!info_for(other_window).is_visible()) return true;
+
+                auto workspaces_containing_other_window = workspaces_containing(other_window);
+                std::sort(workspaces_containing_other_window.begin(), workspaces_containing_other_window.end());
+
+                auto intersection = std::vector<std::shared_ptr<Workspace>>();
+
+                std::set_intersection(
+                    workspaces_containing_window_mut.begin(),
+                    workspaces_containing_window_mut.end(),
+                    workspaces_containing_other_window.begin(),
+                    workspaces_containing_other_window.end(),
+                    std::back_inserter(intersection));
+
+                if(!intersection.empty())
+                    return !(new_focus = select_active_window(other_window));
 
                 return true;
             });
@@ -328,14 +335,12 @@ void miral::BasicWindowManager::refocus(
             {
                 // select_active_window() calls set_focus_to() which updates mru_active_windows and changes window
                 auto const w = window;
+                if(!info_for(w).is_visible()) return true;
                 return !(new_focus = select_active_window(w));
             });
 
         if (new_focus) return;
     }
-
-    // Fallback to cycling through applications
-    focus_next_application();
 }
 
 void miral::BasicWindowManager::erase(miral::WindowInfo const& info)
