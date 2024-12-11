@@ -95,7 +95,14 @@ jobs:
 
     - name: Measure coverage
       timeout-minutes: 10
-      run: cmake --build build --target coverage
+      run: |
+        cmake --build build --target coverage
+        tree build/coveragereport
+
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      with:
+        limit-access-to-actor: true
 
     - name: Run TICS analysis
       uses: tiobe/tics-github-action@v3
@@ -106,8 +113,7 @@ jobs:
         ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
         installTics: true
 
-    - if: ${{ failure() && runner.debug }}
-      name: Setup tmate session
+    - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3
       with:
         limit-access-to-actor: true
