@@ -329,6 +329,9 @@ void miral::BasicWindowManager::refocus(
 
         if (new_focus) return;
     }
+
+    // Can't focus anything else
+    focus_controller->set_focus_to(nullptr, nullptr);
 }
 
 void miral::BasicWindowManager::erase(miral::WindowInfo const& info)
