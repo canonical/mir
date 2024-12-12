@@ -1487,24 +1487,17 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
 
             if (window == active_window() || !active_window())
             {
-                auto const workspaces_containing_window = workspaces_containing(window);
+                auto workspaces_containing_window = workspaces_containing(window);
+                std::sort(workspaces_containing_window.begin(), workspaces_containing_window.end());
 
                 // Try to activate to recently active window of any application
                 mru_active_windows.enumerate([&](Window& candidate)
                     {
-                        if (candidate == window)
+                        if (candidate == window || !info_for(candidate).is_visible())
                             return true;
-                        auto const w = candidate;
-                        for (auto const& workspace : workspaces_containing(w))
-                        {
-                            for (auto const& ww : workspaces_containing_window)
-                            {
-                                if (ww == workspace)
-                                {
-                                    return !(select_active_window(w));
-                                }
-                            }
-                        }
+
+                        if(window_workspaces_intersect(workspaces_containing_window, candidate))
+                            select_active_window(candidate);
 
                         return true;
                     });
@@ -1514,10 +1507,9 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
             if (window == active_window() || !active_window())
                 mru_active_windows.enumerate([&](Window& candidate)
                 {
-                    if (candidate == window)
+                    if (candidate == window || !info_for(candidate).is_visible())
                         return true;
-                    auto const w = candidate;
-                    return !(select_active_window(w));
+                    return !(select_active_window(candidate));
                 });
 
             if (window == active_window())
