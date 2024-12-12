@@ -223,7 +223,11 @@ auto ApplicationSelector::advance(bool reverse, bool within_app) -> Window
         // This means that there is no other selectable window in the list but
         // the currently selected one, so we don't need to select anything.
         if (*it == selected)
+        {
+            if(!tools.info_for(selected).is_visible())
+                tools.select_active_window(selected);
             return selected;
+        }
 
         if (within_app)
         {
