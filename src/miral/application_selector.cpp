@@ -275,7 +275,13 @@ auto ApplicationSelector::advance(bool reverse, bool within_app) -> Window
 
     auto next_state_to_preserve =  tools.info_for(next_window.value()).state();
     tools.select_active_window(next_window.value());
-    restore_state = next_state_to_preserve;
+
+    // Don't re-minimize windows selected with alt tab on focus loss
+    if(next_state_to_preserve != mir_window_state_minimized)
+        restore_state = next_state_to_preserve;
+    else
+        restore_state.reset();
+
     return next_window.value();
 }
 
