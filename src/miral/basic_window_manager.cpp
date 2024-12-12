@@ -294,28 +294,16 @@ void miral::BasicWindowManager::refocus(
     // Try to activate to recently active window of any application in a shared workspace
     {
         miral::Window new_focus;
-
         auto workspaces_containing_window_mut = workspaces_containing_window;
-        // Need to sort only once
         std::sort(workspaces_containing_window_mut.begin(), workspaces_containing_window_mut.end());
 
-        mru_active_windows.enumerate([&](miral::Window& other_window)
+        mru_active_windows.enumerate(
+            [&](miral::Window& other_window)
             {
-                if(!info_for(other_window).is_visible()) return true;
+                if (!info_for(other_window).is_visible())
+                    return true;
 
-                auto workspaces_containing_other_window = workspaces_containing(other_window);
-                std::sort(workspaces_containing_other_window.begin(), workspaces_containing_other_window.end());
-
-                auto intersection = std::vector<std::shared_ptr<Workspace>>();
-
-                std::set_intersection(
-                    workspaces_containing_window_mut.begin(),
-                    workspaces_containing_window_mut.end(),
-                    workspaces_containing_other_window.begin(),
-                    workspaces_containing_other_window.end(),
-                    std::back_inserter(intersection));
-
-                if(!intersection.empty())
+                if (window_workspaces_intersect(workspaces_containing_window_mut, other_window))
                     return !(new_focus = select_active_window(other_window));
 
                 return true;
@@ -2998,4 +2986,21 @@ void miral::BasicWindowManager::move_cursor_to(mir::geometry::PointF point)
             sink->handle_input(std::move(event));
         });
     });
+}
+
+auto miral::BasicWindowManager::window_workspaces_intersect(std::vector<std::shared_ptr<Workspace>> const& w1_workspaces, Window const& w2) const -> bool
+{
+    auto w2_workspaces = workspaces_containing(w2);
+    std::sort(w2_workspaces.begin(), w2_workspaces.end());
+
+    auto intersection = std::vector<std::shared_ptr<Workspace>>();
+
+    std::set_intersection(
+        w1_workspaces.begin(),
+        w1_workspaces.end(),
+        w2_workspaces.begin(),
+        w2_workspaces.end(),
+        std::back_inserter(intersection));
+
+    return !intersection.empty();
 }
