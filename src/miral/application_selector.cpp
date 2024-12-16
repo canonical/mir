@@ -276,11 +276,12 @@ auto ApplicationSelector::advance(bool reverse, bool within_app) -> Window
     auto next_state_to_preserve =  tools.info_for(next_window.value()).state();
     tools.select_active_window(next_window.value());
 
-    // Don't re-minimize windows selected with alt tab on focus loss
-    if(next_state_to_preserve != mir_window_state_minimized)
-        restore_state = next_state_to_preserve;
-    else
-        restore_state.reset();
+    // When using the application selector, the selection/raising of apps is
+    // more of a "preview" than actually selecting the application.
+    //
+    // So, apps should return to their previous state whenever we move on from
+    // them. Minimized apps should return to being minimized.
+    restore_state = next_state_to_preserve;
 
     return next_window.value();
 }
