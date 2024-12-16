@@ -21,9 +21,6 @@
 #include "mir/executor.h"
 #include "mir/scene/text_input_hub.h"
 
-#define MIR_LOG_COMPONENT "TextInputV1"
-#include "mir/log.h"
-
 #include <memory>
 #include <boost/throw_exception.hpp>
 #include <deque>
@@ -369,6 +366,7 @@ void TextInputV1::activate(wl_resource *seat_resource, wl_resource *surface)
     {
         on_new_input_field = true;
         state = State::active;
+        pending_state = {};
     }
 }
 
@@ -394,11 +392,6 @@ void TextInputV1::hide_input_panel()
 
 void TextInputV1::reset()
 {
-    if(state == State::inactive)
-    {
-        mir::log_warning("Attempted to reset state while inactive");
-        return;
-    }
     pending_state = {};
 }
 
