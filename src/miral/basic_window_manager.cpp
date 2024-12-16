@@ -291,7 +291,7 @@ void miral::BasicWindowManager::refocus(
     if (can_activate_window_for_session_in_workspace(application, workspaces_containing_window))
         return;
 
-    // Try to activate to recently active window of any application in a shared workspace
+    // Try to activate the recently active window of any application in a shared workspace
     {
         miral::Window new_focus;
         auto workspaces_containing_window_mut = workspaces_containing_window;
