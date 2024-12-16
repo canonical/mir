@@ -9,9 +9,7 @@ include_directories(
   ${CMAKE_SOURCE_DIR}
 )
 
-set(
-  TEST_UTILS_SRCS
-
+add_library(mir-protected-test-doubles OBJECT
   mock_input_device.cpp
   triggered_main_loop.cpp
   fake_alarm_factory.cpp
@@ -29,6 +27,13 @@ set(
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/stub_gl_rendering_provider.h
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/mock_gl_rendering_provider.h
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/mock_output_surface.h
+)
+
+target_link_libraries(mir-protected-test-doubles
+  PUBLIC
+    mirplatform
+    mircommon
+    mircore
 )
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -105,7 +110,7 @@ target_link_libraries(mir-public-test-doubles
 
 add_library(mir-test-doubles-static STATIC
   $<TARGET_OBJECTS:mir-public-test-doubles>
-  ${TEST_UTILS_SRCS}
+  $<TARGET_OBJECTS:mir-protected-test-doubles>
 )
 
 target_include_directories(
