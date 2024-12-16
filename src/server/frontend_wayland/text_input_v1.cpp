@@ -20,7 +20,6 @@
 #include "wl_surface.h"
 #include "mir/executor.h"
 #include "mir/scene/text_input_hub.h"
-#include "mir/wayland/client.h"
 
 #include <memory>
 #include <boost/throw_exception.hpp>
@@ -171,8 +170,13 @@ private:
     mw::Weak<mf::WlSurface> current_surface;
     /// Set to true if and only if the text input has been enabled since the last commit
     bool on_new_input_field{false};
-    /// nullopt if the state is inactive, otherwise holds the pending and/or committed state
-    std::optional<ms::TextInputState> pending_state;
+
+    enum class State
+    {
+        active,
+        inactive,
+    } state;
+    ms::TextInputState pending_state;
 
     struct SerialPair
     {
@@ -247,7 +251,8 @@ TextInputV1::TextInputV1(
     std::shared_ptr<TextInputV1Ctx> const& ctx)
     : mw::TextInputV1{resource, Version<1>()},
       ctx{ctx},
-      handler{std::make_shared<Handler>(this, ctx->wayland_executor)}
+      handler{std::make_shared<Handler>(this, ctx->wayland_executor)},
+      state{State::inactive}
 {
 }
 
@@ -258,15 +263,15 @@ TextInputV1::~TextInputV1()
         seat.value()->remove_focus_listener(client, this);
     }
 
+    state = State::inactive;
     on_new_input_field = false;
-    pending_state.reset();
     ctx->text_input_hub->deactivate_handler(handler);
 }
 
 void TextInputV1::send_text_change(ms::TextInputChange const& change)
 {
     auto const client_serial = find_client_serial(change.serial);
-    if (!pending_state || !current_surface || !client_serial)
+    if (state == State::inactive || !current_surface || !client_serial)
     {
         // We are no longer enabled, or we don't have a valid serial
         return;
@@ -360,7 +365,8 @@ void TextInputV1::activate(wl_resource *seat_resource, wl_resource *surface)
     if (current_surface)
     {
         on_new_input_field = true;
-        pending_state.emplace();
+        state = State::active;
+        pending_state = {};
     }
 }
 
@@ -368,10 +374,10 @@ void TextInputV1::deactivate(wl_resource *seat)
 {
     (void)seat;
     on_new_input_field = false;
-    pending_state.reset();
+    state = State::inactive;
 }
 
-/// Electron appears to call show_input_panel() when commit_state() should be called. 
+/// Electron appears to call show_input_panel() when commit_state() should be called.
 void TextInputV1::show_input_panel()
 {
     commit_state(0);
@@ -386,25 +392,25 @@ void TextInputV1::hide_input_panel()
 
 void TextInputV1::reset()
 {
-    pending_state.reset();
+    pending_state = {};
 }
 
 void TextInputV1::set_surrounding_text(const std::string &text, uint32_t cursor, uint32_t anchor)
 {
-    if (pending_state)
+    if (state == State::active)
     {
-        pending_state->surrounding_text = text;
-        pending_state->cursor = cursor;
-        pending_state->anchor = anchor;
+        pending_state.surrounding_text = text;
+        pending_state.cursor = cursor;
+        pending_state.anchor = anchor;
     }
 }
 
 void TextInputV1::set_content_type(uint32_t hint, uint32_t purpose)
 {
-    if (pending_state)
+    if (state == State::active)
     {
-        pending_state->content_hint.emplace(wayland_to_mir_content_hint(hint));
-        pending_state->content_purpose = wayland_to_mir_content_purpose(purpose);
+        pending_state.content_hint.emplace(wayland_to_mir_content_hint(hint));
+        pending_state.content_purpose = wayland_to_mir_content_purpose(purpose);
     }
 }
 
@@ -424,9 +430,9 @@ void TextInputV1::set_preferred_language(const std::string &language)
 
 void TextInputV1::commit_state(uint32_t client_serial)
 {
-    if (pending_state && current_surface)
+    if (state == State::active && current_surface)
     {
-        auto const hub_serial = ctx->text_input_hub->set_handler_state(handler, on_new_input_field, *pending_state);
+        auto const hub_serial = ctx->text_input_hub->set_handler_state(handler, on_new_input_field, pending_state);
         state_serials.push_back({client_serial, hub_serial});
         while (state_serials.size() > max_remembered_serials)
         {
