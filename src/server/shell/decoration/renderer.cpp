@@ -676,11 +676,12 @@ auto msd::Renderer::make_buffer(
     }
 }
 
-auto msd::Renderer::alloc_pixels(geometry::Size size) -> std::unique_ptr<uint32_t[]>
+auto msd::Renderer::alloc_pixels(geometry::Size size) -> std::unique_ptr<Pixel[]>
 {
+    static_assert(sizeof(Pixel) == MIR_BYTES_PER_PIXEL(buffer_format));
     size_t const buf_size = area(size) * MIR_BYTES_PER_PIXEL(buffer_format);
     if (buf_size)
-        return std::unique_ptr<uint32_t[]>{new uint32_t[buf_size]};
+        return std::unique_ptr<Pixel[]>{new Pixel[buf_size]};
     else
         return nullptr;
 }
