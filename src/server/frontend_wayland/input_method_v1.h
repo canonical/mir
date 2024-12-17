@@ -72,7 +72,6 @@ private:
     class Instance;
     void bind(wl_resource* new_zwp_input_panel_v1) override;
 
-    wl_display* display;
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
     WlSeat* seat;
