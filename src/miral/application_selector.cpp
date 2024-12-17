@@ -260,19 +260,6 @@ auto ApplicationSelector::advance(bool reverse, bool within_app) -> Window
     if (next_window == std::nullopt)
         return selected;
 
-    if (it == originally_selected_it)
-    {
-        // Edge case: if we have gone full circle around the list back to the original app
-        // then we will wind up in a situation where the original app is in the 2nd position
-        // in the list, while the last app is in the 1st position. Hence, we send the selected
-        // app to the back of the list.
-        auto application = selected.application();
-        for (auto& window: tools.info_for(application).windows())
-            tools.send_tree_to_back(window);
-    }
-    else
-        tools.swap_tree_order(next_window.value(), selected);
-
     auto next_state_to_preserve =  tools.info_for(next_window.value()).state();
     tools.select_active_window(next_window.value());
 
