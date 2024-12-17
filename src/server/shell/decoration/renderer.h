@@ -39,8 +39,6 @@ class WindowState;
 class InputState;
 struct StaticGeometry;
 
-auto const buffer_format = mir_pixel_format_argb_8888;
-
 class Renderer
 {
 public:
