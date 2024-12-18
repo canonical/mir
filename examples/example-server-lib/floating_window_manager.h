@@ -40,6 +40,14 @@ public:
         std::shared_ptr<SplashSession> const& spinner,
         miral::InternalClientLauncher const& launcher,
         std::function<void()>& shutdown_hook);
+
+    FloatingWindowManagerPolicy(
+        miral::WindowManagerTools const& tools,
+        std::shared_ptr<SplashSession> const& spinner,
+        miral::InternalClientLauncher const& launcher,
+        std::function<void()>& shutdown_hook,
+        miral::FocusStealing focus_stealing);
+
     ~FloatingWindowManagerPolicy();
 
     virtual miral::WindowSpecification place_new_window(

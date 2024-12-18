@@ -29,6 +29,7 @@ class MRUWindowList
 public:
 
     void push(Window const& window);
+    void insert_below_top(Window const& window);
     void erase(Window const& window);
     auto top() const -> Window;
 

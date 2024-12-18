@@ -43,6 +43,8 @@ public:
     /// Called when a window is created
     void advise_new_window(WindowInfo const&);
 
+    void advise_new_window(WindowInfo const&, bool focused);
+
     /// Called when focus is given to a window.
     void advise_focus_gained(WindowInfo const&);
 
