@@ -23,6 +23,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <vector>
 
 struct wl_display;
@@ -472,6 +473,8 @@ public:
 
     /// Get the name of the X11 display usable as a $DISPLAY value
     auto x11_display() const -> optional_value<std::string>;
+
+    auto get_activation_token() const -> std::optional<std::string>;
 
     /// Overrides the standard set of Wayland extensions (mir::frontend::get_standard_extensions()) with a new list
     void set_enabled_wayland_extensions(std::vector<std::string> const& extensions);

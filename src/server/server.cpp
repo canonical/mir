@@ -16,6 +16,7 @@
 
 #include "mir/server.h"
 
+#include "frontend_wayland/xdg_activation_v1.h"
 #include "mir/emergency_cleanup.h"
 #include "mir/fd.h"
 #include "mir/frontend/connector.h"
@@ -37,10 +38,7 @@
 #include "mir/renderer/renderer_factory.h"
 
 #include "frontend_wayland/wayland_connector.h"
-
 #include <iostream>
-#include <mir/server.h>
-
 
 namespace mo = mir::options;
 namespace mi = mir::input;
@@ -476,6 +474,22 @@ auto mir::Server::x11_display() const -> mir::optional_value<std::string>
 {
     if (auto const config = self->server_config)
         return config->the_xwayland_connector()->socket_name();
+
+    BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
+}
+
+auto mir::Server::get_activation_token() const -> std::optional<std::string>
+{
+    if (auto const config = self->server_config)
+    {
+        auto const& connector = std::dynamic_pointer_cast<mir::frontend::WaylandConnector>(config->the_wayland_connector());
+        auto xdg_activation_impl = std::static_pointer_cast<mir::frontend::XdgActivationV1>(connector->get_extension("xdg_activation_v1"));
+
+        if (!xdg_activation_impl)
+            return {};
+
+        return xdg_activation_impl->create_token_string();
+    }
 
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }

@@ -26,7 +26,6 @@
 #include "mir/shell/shell.h"
 #include "mir/wayland/protocol_error.h"
 #include "mir/log.h"
-#include <random>
 #include <chrono>
 #include <uuid.h>
 #include <mir/events/keyboard_event.h>
@@ -75,90 +74,6 @@ struct XdgActivationTokenData
     std::optional<struct wl_resource*> seat;
 };
 
-
-class XdgActivationV1 : public wayland::XdgActivationV1::Global
-{
-public:
-    XdgActivationV1(
-        struct wl_display* display,
-        std::shared_ptr<msh::Shell> const& shell,
-        std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
-        std::shared_ptr<MainLoop> const& main_loop,
-        std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
-        Executor& wayland_executor);
-    ~XdgActivationV1();
-
-    std::shared_ptr<XdgActivationTokenData> const& create_token(std::shared_ptr<ms::Session> const& session);
-    std::shared_ptr<XdgActivationTokenData> try_consume_token(std::string const& token);
-    void invalidate_all();
-    void invalidate_if_not_from_session(std::shared_ptr<ms::Session> const&);
-
-private:
-    class Instance : public wayland::XdgActivationV1
-    {
-    public:
-        Instance(
-            struct wl_resource* resource,
-            mf::XdgActivationV1* xdg_activation_v1,
-            std::shared_ptr<msh::Shell> const& shell,
-            std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
-            std::shared_ptr<MainLoop> const& main_loop);
-
-    private:
-        void get_activation_token(struct wl_resource* id) override;
-
-        void activate(std::string const& token, struct wl_resource* surface) override;
-
-        mf::XdgActivationV1* xdg_activation_v1;
-        std::shared_ptr<msh::Shell> shell;
-        std::shared_ptr<ms::SessionCoordinator> const session_coordinator;
-        std::shared_ptr<MainLoop> main_loop;
-    };
-
-    class KeyboardObserver: public input::KeyboardObserver
-    {
-    public:
-        KeyboardObserver(XdgActivationV1* xdg_activation_v1);
-        void keyboard_event(std::shared_ptr<MirEvent const> const& event) override;
-        void keyboard_focus_set(std::shared_ptr<mi::Surface> const& surface) override;
-
-    private:
-        XdgActivationV1* xdg_activation_v1;
-    };
-
-    class SessionListener : public ms::SessionListener
-    {
-    public:
-        SessionListener(XdgActivationV1* xdg_activation_v1);
-        void starting(std::shared_ptr<ms::Session> const&) override {}
-        void stopping(std::shared_ptr<ms::Session> const&) override {}
-        void focused(std::shared_ptr<ms::Session> const& session) override;
-        void unfocused() override {}
-
-        void surface_created(ms::Session&, std::shared_ptr<ms::Surface> const&) override {}
-        void destroying_surface(ms::Session&, std::shared_ptr<ms::Surface> const&) override {}
-
-        void buffer_stream_created(
-            ms::Session&,
-            std::shared_ptr<mf::BufferStream> const&) override {}
-        void buffer_stream_destroyed(
-            ms::Session&,
-            std::shared_ptr<mf::BufferStream> const&) override {}
-
-    private:
-        XdgActivationV1* xdg_activation_v1;
-    };
-
-    void bind(wl_resource* resource) override;
-
-    std::shared_ptr<msh::Shell> shell;
-    std::shared_ptr<ms::SessionCoordinator> const session_coordinator;
-    std::shared_ptr<MainLoop> main_loop;
-    std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> keyboard_observer_registrar;
-    std::shared_ptr<KeyboardObserver> keyboard_observer;
-    std::vector<std::shared_ptr<XdgActivationTokenData>> pending_tokens;
-    std::mutex pending_tokens_mutex;
-};
 
 class XdgActivationTokenV1 : public wayland::XdgActivationTokenV1
 {
@@ -228,6 +143,21 @@ std::shared_ptr<mf::XdgActivationTokenData> const& mf::XdgActivationV1::create_t
         std::lock_guard guard(pending_tokens_mutex);
         pending_tokens.emplace_back(std::move(token));
         return pending_tokens.back();
+    }
+}
+
+std::string mf::XdgActivationV1::create_token_string()
+{
+    auto generated = generate_token();
+    auto token = std::make_shared<XdgActivationTokenData>(generated, main_loop->create_alarm([this, generated]()
+    {
+        try_consume_token(generated);
+    }), nullptr);
+
+    {
+        std::lock_guard guard(pending_tokens_mutex);
+        pending_tokens.emplace_back(std::move(token));
+        return pending_tokens.back()->token;
     }
 }
 

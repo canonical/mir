@@ -17,6 +17,8 @@
 #ifndef MIR_FRONTEND_XDG_ACTIVATION_UNSTABLE_V1_H
 #define MIR_FRONTEND_XDG_ACTIVATION_UNSTABLE_V1_H
 
+#include "mir/input/keyboard_observer.h"
+#include "mir/scene/session_listener.h"
 #include "xdg-activation-v1_wrapper.h"
 #include "mir/observer_registrar.h"
 
@@ -32,6 +34,7 @@ class Shell;
 namespace scene
 {
 class SessionCoordinator;
+class Session;
 }
 namespace input
 {
@@ -48,6 +51,93 @@ auto create_xdg_activation_v1(
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const&,
     Executor& wayland_executor) ->
     std::shared_ptr<wayland::XdgActivationV1::Global>;
+
+class XdgActivationTokenData;
+class BufferStream;
+class XdgActivationV1 : public wayland::XdgActivationV1::Global
+{
+public:
+    XdgActivationV1(
+        struct wl_display* display,
+        std::shared_ptr<mir::shell::Shell> const& shell,
+        std::shared_ptr<mir::scene::SessionCoordinator> const& session_coordinator,
+        std::shared_ptr<MainLoop> const& main_loop,
+        std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
+        Executor& wayland_executor);
+    ~XdgActivationV1();
+
+    std::shared_ptr<XdgActivationTokenData> const& create_token(std::shared_ptr<mir::scene::Session> const& session);
+    std::string create_token_string();
+    std::shared_ptr<XdgActivationTokenData> try_consume_token(std::string const& token);
+    void invalidate_all();
+    void invalidate_if_not_from_session(std::shared_ptr<mir::scene::Session> const&);
+
+private:
+    class Instance : public wayland::XdgActivationV1
+    {
+    public:
+        Instance(
+            struct wl_resource* resource,
+            mir::frontend::XdgActivationV1* xdg_activation_v1,
+            std::shared_ptr<mir::shell::Shell> const& shell,
+            std::shared_ptr<mir::scene::SessionCoordinator> const& session_coordinator,
+            std::shared_ptr<MainLoop> const& main_loop);
+
+    private:
+        void get_activation_token(struct wl_resource* id) override;
+
+        void activate(std::string const& token, struct wl_resource* surface) override;
+
+        mir::frontend::XdgActivationV1* xdg_activation_v1;
+        std::shared_ptr<mir::shell::Shell> shell;
+        std::shared_ptr<mir::scene::SessionCoordinator> const session_coordinator;
+        std::shared_ptr<MainLoop> main_loop;
+    };
+
+    class KeyboardObserver: public input::KeyboardObserver
+    {
+    public:
+        KeyboardObserver(mir::frontend::XdgActivationV1* xdg_activation_v1);
+        void keyboard_event(std::shared_ptr<MirEvent const> const& event) override;
+        void keyboard_focus_set(std::shared_ptr<mir::input::Surface> const& surface) override;
+
+    private:
+        mir::frontend::XdgActivationV1* xdg_activation_v1;
+    };
+
+    class SessionListener : public mir::scene::SessionListener
+    {
+    public:
+        SessionListener(mir::frontend::XdgActivationV1* xdg_activation_v1);
+        void starting(std::shared_ptr<mir::scene::Session> const&) override {}
+        void stopping(std::shared_ptr<mir::scene::Session> const&) override {}
+        void focused(std::shared_ptr<mir::scene::Session> const& session) override;
+        void unfocused() override {}
+
+        void surface_created(mir::scene::Session&, std::shared_ptr<mir::scene::Surface> const&) override {}
+        void destroying_surface(mir::scene::Session&, std::shared_ptr<mir::scene::Surface> const&) override {}
+
+        void buffer_stream_created(
+            mir::scene::Session&,
+            std::shared_ptr<mir::frontend::BufferStream> const&) override {}
+        void buffer_stream_destroyed(
+            mir::scene::Session&,
+            std::shared_ptr<mir::frontend::BufferStream> const&) override {}
+
+    private:
+        mir::frontend::XdgActivationV1* xdg_activation_v1;
+    };
+
+    void bind(wl_resource* resource) override;
+
+    std::shared_ptr<mir::shell::Shell> shell;
+    std::shared_ptr<mir::scene::SessionCoordinator> const session_coordinator;
+    std::shared_ptr<MainLoop> main_loop;
+    std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> keyboard_observer_registrar;
+    std::shared_ptr<KeyboardObserver> keyboard_observer;
+    std::vector<std::shared_ptr<XdgActivationTokenData>> pending_tokens;
+    std::mutex pending_tokens_mutex;
+};
 }
 }
 
