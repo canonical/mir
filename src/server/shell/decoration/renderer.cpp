@@ -41,8 +41,10 @@ inline auto area(geom::Size size) -> size_t
 }
 
 msd::Renderer::Renderer(
-    std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator)
-    : buffer_allocator{buffer_allocator}
+std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
+    std::unique_ptr<RendererStrategy>  strategy)
+    : buffer_allocator{buffer_allocator},
+    strategy{std::move(strategy)}
 {
 }
 
@@ -73,7 +75,62 @@ auto msd::Renderer::make_buffer(
     }
 }
 
-auto msd::Renderer::alloc_pixels(geometry::Size size) -> std::unique_ptr<Pixel[]>
+auto msd::Renderer::render_titlebar() -> std::optional<std::shared_ptr<mg::Buffer>>
+{
+    if (auto const& rendered_pixels = strategy->render_titlebar())
+    {
+        return make_buffer(rendered_pixels->pixels, rendered_pixels->size, rendered_pixels->format);
+    }
+    else
+    {
+        return std::nullopt;
+    }
+}
+
+auto msd::Renderer::render_left_border() -> std::optional<std::shared_ptr<mg::Buffer>>
+{
+    if (auto const& rendered_pixels = strategy->render_left_border())
+    {
+        return make_buffer(rendered_pixels->pixels, rendered_pixels->size, rendered_pixels->format);
+    }
+    else
+    {
+        return std::nullopt;
+    }
+}
+
+auto msd::Renderer::render_right_border() -> std::optional<std::shared_ptr<mg::Buffer>>
+{
+    if (auto const& rendered_pixels = strategy->render_right_border())
+    {
+        return make_buffer(rendered_pixels->pixels, rendered_pixels->size, rendered_pixels->format);
+    }
+    else
+    {
+        return std::nullopt;
+    }
+}
+
+auto msd::Renderer::render_bottom_border() -> std::optional<std::shared_ptr<mg::Buffer>>
+{
+    if (auto const& rendered_pixels = strategy->render_bottom_border())
+    {
+        return make_buffer(rendered_pixels->pixels, rendered_pixels->size, rendered_pixels->format);
+    }
+    else
+    {
+        return std::nullopt;
+    }
+}
+
+
+void msd::Renderer::update_state(WindowState const& window_state, InputState const& input_state)
+{
+    strategy->update_state(window_state, input_state);
+}
+
+
+auto msd::RendererStrategy::alloc_pixels(geometry::Size size) -> std::unique_ptr<Pixel[]>
 {
     size_t const buf_size = area(size) * sizeof(Pixel);
     if (buf_size)

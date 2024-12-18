@@ -168,7 +168,7 @@ msd::BasicDecoration::BasicDecoration(
       cursor_images{cursor_images},
       session{window_surface->session().lock()},
       buffer_streams{std::make_unique<BufferStreams>(session, static_geometry->buffer_format)},
-      renderer{std::make_unique<RendererImpl>(buffer_allocator, static_geometry)},
+      renderer{std::make_unique<Renderer>(buffer_allocator, RendererStrategy::default_strategy(static_geometry))},
       window_surface{window_surface},
       decoration_surface{create_surface()},
       window_state{new_window_state()},
