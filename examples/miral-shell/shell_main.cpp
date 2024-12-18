@@ -69,15 +69,7 @@ int main(int argc, char const* argv[])
 
     SpinnerSplash spinner;
     InternalClientLauncher launcher;
-    auto constexpr default_focus_stealing_prevention = false;
-    auto const to_focus_stealing = [](bool focus_stealing_prevention)
-    {
-        if (focus_stealing_prevention)
-            return FocusStealing::prevent;
-        else
-            return FocusStealing::allow;
-    };
-    auto focus_stealing_prevention = to_focus_stealing(default_focus_stealing_prevention);
+    auto focus_stealing_prevention = FocusStealing::allow;
     WindowManagerOptions window_managers
         {
             add_window_manager_policy<FloatingWindowManagerPolicy>("floating", spinner, launcher, shutdown_hook, focus_stealing_prevention),
@@ -142,6 +134,13 @@ int main(int argc, char const* argv[])
       }
     };
 
+    auto const to_focus_stealing = [](bool focus_stealing_prevention)
+    {
+        if (focus_stealing_prevention)
+            return FocusStealing::prevent;
+        else
+            return FocusStealing::allow;
+    };
 
     return runner.run_with(
         {
@@ -149,10 +148,9 @@ int main(int argc, char const* argv[])
             WaylandExtensions{},
             X11Support{},
             ConfigureDecorations{},
-            pre_init(ConfigurationOption{[&](bool option)
-                    { focus_stealing_prevention = to_focus_stealing(option); },
-                    "focus-stealing-prevention", "allow or prevent focus stealing",
-                    default_focus_stealing_prevention}),
+            pre_init(ConfigurationOption{[&](bool is_set)
+                    { focus_stealing_prevention = to_focus_stealing(is_set); },
+                    "focus-stealing-prevention", "allow or prevent focus stealing"}),
             window_managers,
             display_configuration_options,
             external_client_launcher,
