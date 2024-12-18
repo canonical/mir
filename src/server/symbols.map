@@ -1404,3 +1404,10 @@ global:
 local: *;
 };
 
+MIR_SERVER_INTERNAL_2.18 {
+global:
+  extern "C++" {
+    mir::Server::get_activation_token*;
+  };
+} MIR_SERVER_INTERNAL_2.19;
+
