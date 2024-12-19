@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <memory>
 #include <mir/shell/system_compositor_window_manager.h>
 #include <mir/main_loop.h>
 #include "mir/default_server_configuration.h"
@@ -28,6 +29,7 @@
 #include "decoration/basic_manager.h"
 #include "decoration/basic_decoration.h"
 #include "basic_idle_handler.h"
+#include "mir/shell/token_authority.h"
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -143,6 +145,14 @@ auto mir::DefaultServerConfiguration::the_idle_handler() -> std::shared_ptr<msh:
             }
 
             return idle_handler;
+        });
+}
+
+auto mir::DefaultServerConfiguration::the_token_authority() -> std::shared_ptr<msh::TokenAuthority>
+{
+    return token_authority([this]()
+        {
+            return std::make_shared<shell::TokenAuthority>(the_main_loop());
         });
 }
 
