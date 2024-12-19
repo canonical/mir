@@ -59,6 +59,12 @@ auto msd::Renderer::make_buffer(
         return std::nullopt;
     }
 
+    if (sizeof(Pixel) != MIR_BYTES_PER_PIXEL(buffer_format))
+    {
+        log_warning("Failed to draw SSD: tried to create buffer with unsupported format: %d", buffer_format);
+        return std::nullopt;
+    }
+
     try
     {
         return mrs::alloc_buffer_with_content(
