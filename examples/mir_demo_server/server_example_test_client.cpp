@@ -159,7 +159,7 @@ void me::TestClientRunner::operator()(mir::Server& server)
                     });
 
                 self->server_stop_action = server.the_main_loop()->create_alarm(
-                    [pid, &server, self, countdown = 100]() mutable
+                    [pid, &server, self, countdown = 200]() mutable
                     {
                         check_exit_status(pid, server, self.get(), countdown);
                     });
