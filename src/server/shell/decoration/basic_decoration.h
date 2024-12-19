@@ -18,6 +18,7 @@
 #define MIR_SHELL_DECORATION_BASIC_DECORATION_H_
 
 #include "decoration.h"
+#include "decoration_strategy.h"
 
 #include "mir/geometry/rectangle.h"
 #include "mir_toolkit/common.h"
@@ -72,7 +73,8 @@ public:
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<Executor> const& executor,
         std::shared_ptr<input::CursorImages> const& cursor_images,
-        std::shared_ptr<scene::Surface> const& window_surface);
+        std::shared_ptr<scene::Surface> const& window_surface,
+        std::shared_ptr<DecorationStrategy> decoration_strategy);
     ~BasicDecoration();
 
     void window_state_updated();
@@ -103,6 +105,7 @@ protected:
         std::optional<InputState const*> previous_input_state);
 
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const threadsafe_self;
+    std::shared_ptr<DecorationStrategy> const decoration_strategy;
     std::shared_ptr<StaticGeometry const> const static_geometry;
 
     std::shared_ptr<shell::Shell> const shell;

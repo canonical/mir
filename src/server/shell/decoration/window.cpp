@@ -17,6 +17,7 @@
 #include "window.h"
 #include "threadsafe_access.h"
 #include "basic_decoration.h"
+#include "decoration_strategy.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/null_surface_observer.h"

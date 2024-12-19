@@ -17,6 +17,7 @@
 #ifndef MIR_SHELL_DECORATION_INPUT_H_
 #define MIR_SHELL_DECORATION_INPUT_H_
 
+#include "decoration_strategy.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_toolkit/common.h"
 
@@ -49,63 +50,12 @@ class BasicDecoration;
 class StaticGeometry;
 template<typename T> class ThreadsafeAccess;
 
-enum class ButtonState
-{
-    Up,         ///< The user is not interacting with this button
-    Hovered,    ///< The user is hovering over this button
-    Down,       ///< The user is currently pressing this button
-};
-
-enum class ButtonFunction
-{
-    Close,
-    Maximize,
-    Minimize,
-};
-
-struct ButtonInfo
-{
-    ButtonFunction function;
-    ButtonState state;
-    geometry::Rectangle rect;
-
-    auto operator==(ButtonInfo const& other) const -> bool
-    {
-        return function == other.function &&
-               state == other.state &&
-               rect == other.rect;
-    }
-};
-
-/// Describes the state of the interface (what buttons are pushed, etc)
-class InputState
-{
-public:
-    InputState(
-        std::vector<ButtonInfo> const& buttons,
-        std::vector<geometry::Rectangle> const& input_shape)
-        : buttons_{buttons},
-          input_shape_{input_shape}
-    {
-    }
-
-    auto buttons() const -> std::vector<ButtonInfo> const& { return buttons_; }
-    auto input_shape() const -> std::vector<geometry::Rectangle> const& { return input_shape_; }
-
-private:
-    InputState(InputState const&) = delete;
-    InputState& operator=(InputState const&) = delete;
-
-    std::vector<ButtonInfo> const buttons_;
-    std::vector<geometry::Rectangle> const input_shape_;
-};
-
 /// Manages the observer that listens to user input
 class InputManager
 {
 public:
     InputManager(
-        std::shared_ptr<StaticGeometry const> const& static_geometry,
+        std::shared_ptr<DecorationStrategy> const& decoration_strategy,
         std::shared_ptr<scene::Surface> const& decoration_surface,
         WindowState const& window_state,
         std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration);
@@ -132,6 +82,7 @@ private:
     class Observer;
 
     std::mutex mutex;
+    std::shared_ptr<DecorationStrategy> const decoration_strategy;
     std::shared_ptr<StaticGeometry const> const static_geometry;
     std::shared_ptr<scene::Surface> decoration_surface;
     std::shared_ptr<Observer> const observer;

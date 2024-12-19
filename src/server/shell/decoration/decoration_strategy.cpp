@@ -15,7 +15,7 @@
  */
 
 
-#include "renderer.h"
+#include "decoration_strategy.h"
 #include "window.h"
 
 #include "mir/geometry/displacement.h"
@@ -28,9 +28,9 @@
 
 #include <locale>
 #include <codecvt>
+#include <map>
 
 namespace ms = mir::scene;
-namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace msh = mir::shell;
 namespace msd = mir::shell::decoration;
@@ -288,12 +288,23 @@ private:
     void redraw_titlebar_text(geom::Size scaled_titlebar_size);
     void redraw_titlebar_buttons(geom::Size scaled_titlebar_size);
 };
+
+class DecorationStrategy : public msd::DecorationStrategy
+{
+public:
+    auto static_geometry() -> std::shared_ptr<StaticGeometry const> override;
+    auto render_strategy() -> std::unique_ptr<mir::shell::decoration::RendererStrategy> override;
+    auto button_placement(unsigned n, const WindowState& ws) const -> mir::geometry::Rectangle override;
+
+private:
+    std::shared_ptr<StaticGeometry> const static_geometry_{std::make_shared<StaticGeometry>(msd::default_geometry)};
+};
 }
 
-auto msd::RendererStrategy::default_strategy(std::shared_ptr<StaticGeometry const> const& static_geometry)
--> std::unique_ptr<RendererStrategy>
+
+auto msd::DecorationStrategy::default_decoration_strategy() -> std::unique_ptr<DecorationStrategy>
 {
-    return std::make_unique<::RendererStrategy>(static_geometry);
+    return std::make_unique<::DecorationStrategy>();
 }
 
 class RendererStrategy::Text::Impl
@@ -817,4 +828,32 @@ void RendererStrategy::set_focus_state(MirWindowFocusState focus_state)
         needs_titlebar_redraw = true;
         needs_solid_color_redraw = true;
     }
+}
+
+
+auto DecorationStrategy::static_geometry() -> std::shared_ptr<StaticGeometry const>
+{
+    return static_geometry_;
+}
+
+auto DecorationStrategy::render_strategy() -> std::unique_ptr<mir::shell::decoration::RendererStrategy>
+{
+    return std::make_unique<::RendererStrategy>(static_geometry_);
+}
+
+auto DecorationStrategy::button_placement(unsigned n, const WindowState& ws) const -> mir::geometry::Rectangle
+{
+    auto const titlebar = ws.titlebar_rect();
+    geom::X x =
+        titlebar.right() -
+        as_delta(ws.side_border_width()) -
+        n * as_delta(static_geometry_->button_width + static_geometry_->padding_between_buttons) -
+        as_delta(static_geometry_->button_width);
+    // geom::X x =
+    //     titlebar.left() +
+    //     as_delta(ws.side_border_width()) +
+    //     n * as_delta(static_geometry->button_width + static_geometry->padding_between_buttons);
+    return geom::Rectangle{
+                    {x, titlebar.top()},
+                    {static_geometry_->button_width, titlebar.size.height}};
 }

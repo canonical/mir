@@ -82,7 +82,8 @@ auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_pt
                         buffer_allocator,
                         executor,
                         cursor_images,
-                        surface);
+                        surface,
+                        msd::DecorationStrategy::default_decoration_strategy());
                 });
         });
 }

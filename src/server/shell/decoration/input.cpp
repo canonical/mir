@@ -118,27 +118,28 @@ struct msd::InputManager::Observer
 };
 
 msd::InputManager::InputManager(
-    std::shared_ptr<StaticGeometry const> const& static_geometry,
+    std::shared_ptr<DecorationStrategy> const& decoration_strategy,
     std::shared_ptr<ms::Surface> const& decoration_surface,
     WindowState const& window_state,
-    std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration)
-    : static_geometry{static_geometry},
-      decoration_surface{decoration_surface},
-      observer{std::make_shared<Observer>(this)},
-      decoration{decoration},
-      widgets{
-          std::make_shared<Widget>(ButtonFunction::Close),
-          std::make_shared<Widget>(ButtonFunction::Maximize),
-          std::make_shared<Widget>(ButtonFunction::Minimize),
-          std::make_shared<Widget>(mir_resize_edge_northwest),
-          std::make_shared<Widget>(mir_resize_edge_northeast),
-          std::make_shared<Widget>(mir_resize_edge_southwest),
-          std::make_shared<Widget>(mir_resize_edge_southeast),
-          std::make_shared<Widget>(mir_resize_edge_north),
-          std::make_shared<Widget>(mir_resize_edge_south),
-          std::make_shared<Widget>(mir_resize_edge_west),
-          std::make_shared<Widget>(mir_resize_edge_east),
-          std::make_shared<Widget>(mir_resize_edge_none)}
+    std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration) :
+    decoration_strategy{decoration_strategy},
+    static_geometry{decoration_strategy->static_geometry()},
+    decoration_surface{decoration_surface},
+    observer{std::make_shared<Observer>(this)},
+    decoration{decoration},
+    widgets{
+        std::make_shared<Widget>(ButtonFunction::Close),
+        std::make_shared<Widget>(ButtonFunction::Maximize),
+        std::make_shared<Widget>(ButtonFunction::Minimize),
+        std::make_shared<Widget>(mir_resize_edge_northwest),
+        std::make_shared<Widget>(mir_resize_edge_northeast),
+        std::make_shared<Widget>(mir_resize_edge_southwest),
+        std::make_shared<Widget>(mir_resize_edge_southeast),
+        std::make_shared<Widget>(mir_resize_edge_north),
+        std::make_shared<Widget>(mir_resize_edge_south),
+        std::make_shared<Widget>(mir_resize_edge_west),
+        std::make_shared<Widget>(mir_resize_edge_east),
+        std::make_shared<Widget>(mir_resize_edge_none)}
 {
     set_cursor(mir_resize_edge_none);
     update_window_state(window_state);
@@ -150,39 +151,6 @@ msd::InputManager::~InputManager()
     decoration_surface->unregister_interest(*observer);
 }
 
-namespace
-{
-class ButtonPlacementStrategy
-{
-    public:
-    ButtonPlacementStrategy(std::shared_ptr<msd::StaticGeometry const> const& static_geometry) :
-        static_geometry{static_geometry}
-    {
-    }
-
-    auto button_placement(unsigned n, msd::WindowState const& ws) const
-    -> geom::Rectangle
-    {
-        auto const titlebar = ws.titlebar_rect();
-        geom::X x =
-            titlebar.right() -
-            as_delta(ws.side_border_width()) -
-            n * as_delta(static_geometry->button_width + static_geometry->padding_between_buttons) -
-            as_delta(static_geometry->button_width);
-        // geom::X x =
-        //     titlebar.left() +
-        //     as_delta(ws.side_border_width()) +
-        //     n * as_delta(static_geometry->button_width + static_geometry->padding_between_buttons);
-        return geom::Rectangle{
-                {x, titlebar.top()},
-                {static_geometry->button_width, titlebar.size.height}};
-    }
-
-private:
-    std::shared_ptr<msd::StaticGeometry const> const static_geometry;
-};
-}
-
 void msd::InputManager::update_window_state(WindowState const& window_state)
 {
     std::lock_guard lock{mutex};
@@ -192,7 +160,7 @@ void msd::InputManager::update_window_state(WindowState const& window_state)
     {
         if (widget->button)
         {
-            widget->rect = ButtonPlacementStrategy{static_geometry}.button_placement(button_index, window_state);
+            widget->rect = decoration_strategy->button_placement(button_index, window_state);
             button_index++;
         }
         else if (widget->resize_edge)

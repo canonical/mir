@@ -17,9 +17,11 @@
 #ifndef MIR_SHELL_DECORATION_RENDERER_H_
 #define MIR_SHELL_DECORATION_RENDERER_H_
 
+#include "decoration_strategy.h"
+#include "input.h"
+
 #include "mir/geometry/rectangle.h"
 
-#include "input.h"
 
 #include <memory>
 #include <map>
@@ -38,32 +40,6 @@ namespace decoration
 class WindowState;
 class InputState;
 struct StaticGeometry;
-
-using Pixel = uint32_t;
-
-
-class RendererStrategy
-{
-public:
-    static auto alloc_pixels(geometry::Size size) -> std::unique_ptr<Pixel[]>;
-    static auto default_strategy(std::shared_ptr<StaticGeometry const> const& static_geometry) -> std::unique_ptr<RendererStrategy>;
-
-    RendererStrategy() = default;
-    virtual ~RendererStrategy() = default;
-
-    struct RenderedPixels
-    {
-        MirPixelFormat const format;
-        geometry::Size const size;
-        Pixel const* const pixels;
-    };
-
-    virtual void update_state(WindowState const& window_state, InputState const& input_state) = 0;
-    virtual auto render_titlebar() -> std::optional<RenderedPixels> = 0;
-    virtual auto render_left_border() -> std::optional<RenderedPixels> = 0;
-    virtual auto render_right_border() -> std::optional<RenderedPixels> = 0;
-    virtual auto render_bottom_border() -> std::optional<RenderedPixels> = 0;
-};
 
 class Renderer
 {
