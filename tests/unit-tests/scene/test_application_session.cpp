@@ -93,6 +93,11 @@ struct StubSurfaceStack : public msh::SurfaceStack
     void send_to_back(ms::SurfaceSet const&) override
     {
     }
+
+    auto z_order(std::weak_ptr<ms::Surface> const&) const -> unsigned int override
+    {
+        return 0;
+    }
 };
 
 struct ApplicationSession : public testing::Test
