@@ -150,9 +150,9 @@ auto mir::DefaultServerConfiguration::the_idle_handler() -> std::shared_ptr<msh:
 
 auto mir::DefaultServerConfiguration::the_token_authority() -> std::shared_ptr<msh::TokenAuthority>
 {
-    return token_authority([]()
+    return token_authority([this]()
         {
-            return std::make_shared<shell::TokenAuthority>();
+            return std::make_shared<shell::TokenAuthority>(the_main_loop());
         });
 }
 

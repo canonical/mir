@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/events/keyboard_event.h"
 #include "mir/shell/token_authority.h"
 #include "xdg_activation_v1.h"
-#include "mir/events/keyboard_event.h"
 #include "mir/input/keyboard_observer.h"
 #include "mir/log.h"
 #include "mir/main_loop.h"
@@ -43,11 +43,6 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 
-namespace
-{
-/// Time in milliseconds that the compositor will wait before invalidating a token
-auto constexpr timeout_ms = std::chrono::seconds(3000);
-}
 
 namespace mir
 {
@@ -57,17 +52,13 @@ struct XdgActivationTokenData
 {
     XdgActivationTokenData(
         std::string const& token,
-        std::unique_ptr<time::Alarm> alarm_,
         std::shared_ptr<ms::Session> const& session)
         : token{token},
-        alarm{std::move(alarm_)},
         session{session}
     {
-        alarm->reschedule_in(timeout_ms);
     }
 
     std::string const token;
-    std::unique_ptr<time::Alarm> const alarm;
     std::weak_ptr<ms::Session> session;
 
     std::optional<uint32_t> serial;
@@ -139,11 +130,13 @@ mf::XdgActivationV1::~XdgActivationV1()
 
 std::shared_ptr<mf::XdgActivationTokenData> const& mf::XdgActivationV1::create_token(std::shared_ptr<ms::Session> const& session)
 {
-    auto generated = token_authority->issue_token();
-    auto token = std::make_shared<XdgActivationTokenData>(generated, main_loop->create_alarm([this, generated]()
-    {
-        try_consume_token(generated);
-    }), session);
+    auto generated = token_authority->issue_token(
+        [this](auto const& token)
+        {
+            this->try_consume_token(token);
+        });
+
+    auto token = std::make_shared<XdgActivationTokenData>(generated, session);
 
     {
         std::lock_guard guard(pending_tokens_mutex);
@@ -168,7 +161,6 @@ std::shared_ptr<mf::XdgActivationTokenData> mf::XdgActivationV1::try_consume_tok
         if (iter != pending_tokens.end())
         {
             auto result = *iter;
-            token_authority->revoke_token(iter->get()->token);
             pending_tokens.erase(iter);
             return result;
         }
@@ -182,7 +174,7 @@ void mf::XdgActivationV1::invalidate_all()
     std::lock_guard guard(pending_tokens_mutex);
     for (auto const& it : pending_tokens)
         token_authority->revoke_token(it->token);
-    pending_tokens.clear();
+    // No need to clear pending_tokens, since revoke_token() erases each token
 }
 
 void mf::XdgActivationV1::invalidate_if_not_from_session(std::shared_ptr<ms::Session> const& session)
@@ -196,8 +188,6 @@ void mf::XdgActivationV1::invalidate_if_not_from_session(std::shared_ptr<ms::Ses
     std::lock_guard guard(pending_tokens_mutex);
     for (auto const& expired_token : pending_tokens | srv::filter(is_invalid))
         token_authority->revoke_token(expired_token->token);
-
-    std::erase_if(pending_tokens, is_invalid);
 }
 
 void mf::XdgActivationV1::bind(struct wl_resource* resource)
@@ -270,12 +260,17 @@ void mf::XdgActivationV1::Instance::activate(std::string const& token, struct wl
     // 2. The surface failed to use the token in the alotted period of time
     // 3. A key was pressed down between the issuing of the token and the activation
     //    of the surface with that token
+    //
     auto xdg_token = xdg_activation_v1->try_consume_token(token);
     if (!xdg_token)
     {
         mir::log_error("XdgActivationV1::activate invalid token: %s", token.c_str());
         return;
     }
+
+    // try_consume_token removes the token from our list of tokens, need to
+    // inform the token authority as well.
+    xdg_activation_v1->token_authority->revoke_token(token);
 
     main_loop->enqueue(this, [
         surface=surface,

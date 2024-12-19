@@ -483,8 +483,7 @@ auto mir::Server::get_activation_token() const -> std::optional<std::string>
 {
     if (auto const config = self->server_config)
     {
-        // TODO We should revoke the token at some time
-        return config->the_token_authority()->issue_token();
+        return config->the_token_authority()->issue_token({});
     }
 
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
