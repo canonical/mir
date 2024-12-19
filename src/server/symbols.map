@@ -100,6 +100,7 @@ global:
     mir::DefaultServerConfiguration::the_surface_input_dispatcher*;
     mir::DefaultServerConfiguration::the_surface_stack*;
     mir::DefaultServerConfiguration::the_text_input_hub*;
+    mir::DefaultServerConfiguration::the_token_authority*;
     mir::DefaultServerConfiguration::the_touch_visualizer*;
     mir::DefaultServerConfiguration::the_wayland_connector*;
     mir::DefaultServerConfiguration::the_window_manager_builder*;
@@ -224,6 +225,7 @@ global:
     mir::Server::the_shell_display_layout*;
     mir::Server::the_surface_factory*;
     mir::Server::the_surface_stack*;
+    mir::Server::the_token_authority*;
     mir::Server::the_touch_visualizer*;
     mir::Server::wayland_display*;
     mir::Server::wrap_application_not_responding_detector*;
@@ -784,6 +786,7 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_surface_input_dispatcher*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_surface_stack*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_text_input_hub*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_token_authority*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_touch_visualizer*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_wayland_connector*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_window_manager_builder*;
@@ -1243,6 +1246,7 @@ global:
     virtual?thunk?to?mir::DefaultServerConfiguration::the_session_lock*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_stop_callback*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_text_input_hub*;
+    virtual?thunk?to?mir::DefaultServerConfiguration::the_token_authority*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_wayland_connector*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_xwayland_connector*;
     virtual?thunk?to?mir::DefaultServerStatusListener::paused*;

@@ -20,6 +20,7 @@
 #include "mir/input/keyboard_observer.h"
 #include "mir/scene/null_session_listener.h"
 #include "mir/scene/session_listener.h"
+#include "mir/server.h"
 #include "xdg-activation-v1_wrapper.h"
 #include "mir/observer_registrar.h"
 
@@ -31,6 +32,7 @@ class MainLoop;
 namespace shell
 {
 class Shell;
+class TokenAuthority;
 }
 namespace scene
 {
@@ -50,7 +52,8 @@ auto create_xdg_activation_v1(
     std::shared_ptr<scene::SessionCoordinator> const&,
     std::shared_ptr<MainLoop> const&,
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const&,
-    Executor& wayland_executor) ->
+    Executor& wayland_executor,
+    std::shared_ptr<shell::TokenAuthority> const&) ->
     std::shared_ptr<wayland::XdgActivationV1::Global>;
 
 class XdgActivationTokenData;
@@ -64,11 +67,11 @@ public:
         std::shared_ptr<mir::scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<MainLoop> const& main_loop,
         std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
-        Executor& wayland_executor);
+        Executor& wayland_executor,
+        std::shared_ptr<shell::TokenAuthority> token_authority);
     ~XdgActivationV1();
 
     std::shared_ptr<XdgActivationTokenData> const& create_token(std::shared_ptr<mir::scene::Session> const& session);
-    std::string create_token_string();
     std::shared_ptr<XdgActivationTokenData> try_consume_token(std::string const& token);
     void invalidate_all();
     void invalidate_if_not_from_session(std::shared_ptr<mir::scene::Session> const&);
@@ -125,6 +128,7 @@ private:
     std::shared_ptr<KeyboardObserver> keyboard_observer;
     std::shared_ptr<SessionListener> session_listener;
     std::vector<std::shared_ptr<XdgActivationTokenData>> pending_tokens;
+    std::shared_ptr<shell::TokenAuthority> token_authority;
     std::mutex pending_tokens_mutex;
 };
 }

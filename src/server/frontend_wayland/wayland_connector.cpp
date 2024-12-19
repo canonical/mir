@@ -16,6 +16,7 @@
 
 #include "wayland_connector.h"
 
+#include "mir/shell/token_authority.h"
 #include "wl_client.h"
 #include "wl_data_device_manager.h"
 #include "wayland_utils.h"
@@ -242,7 +243,8 @@ mf::WaylandConnector::WaylandConnector(
     bool enable_key_repeat,
     std::shared_ptr<scene::SessionLock> const& session_lock,
     std::shared_ptr<mir::DecorationStrategy> const& decoration_strategy,
-    std::shared_ptr<scene::SessionCoordinator> const& session_coordinator)
+    std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
+    std::shared_ptr<shell::TokenAuthority> const& token_authority)
     : extension_filter{extension_filter},
       display{wl_display_create(), &cleanup_display},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
@@ -331,7 +333,8 @@ mf::WaylandConnector::WaylandConnector(
         session_lock_,
         decoration_strategy,
         session_coordinator,
-        keyboard_observer_registrar});
+        keyboard_observer_registrar,
+        token_authority});
 
     shm_global = std::make_unique<WlShm>(display.get(), executor);
 

@@ -48,6 +48,7 @@ class DisplayLayout;
 class DisplayConfigurationController;
 class FocusController;
 class IdleHandler;
+class TokenAuthority;
 class InputTargeter;
 class PersistentSurfaceStore;
 class Shell;
@@ -436,6 +437,8 @@ public:
     auto the_idle_handler() const ->
         std::shared_ptr<shell::IdleHandler>;
 
+    auto the_token_authority() const ->
+        std::shared_ptr<shell::TokenAuthority>;
 /** @} */
 
 /** @name Client side support

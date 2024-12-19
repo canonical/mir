@@ -133,7 +133,8 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(the_renderer_factory)\
     MACRO(the_decoration_strategy)\
     MACRO(the_input_device_registry)\
-    MACRO(the_idle_handler)
+    MACRO(the_idle_handler)\
+    MACRO(the_token_authority)
 
 #define MIR_SERVER_BUILDER(name)\
     std::function<std::invoke_result_t<decltype(&mir::DefaultServerConfiguration::the_##name),mir::DefaultServerConfiguration*>()> name##_builder;
@@ -482,13 +483,8 @@ auto mir::Server::get_activation_token() const -> std::optional<std::string>
 {
     if (auto const config = self->server_config)
     {
-        auto const& connector = std::dynamic_pointer_cast<mir::frontend::WaylandConnector>(config->the_wayland_connector());
-        auto xdg_activation_impl = std::static_pointer_cast<mir::frontend::XdgActivationV1>(connector->get_extension("xdg_activation_v1"));
-
-        if (!xdg_activation_impl)
-            return {};
-
-        return xdg_activation_impl->create_token_string();
+        // TODO We should revoke the token at some time
+        return config->the_token_authority()->issue_token();
     }
 
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
