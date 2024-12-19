@@ -121,14 +121,17 @@ mf::XdgActivationV1::XdgActivationV1(
       session_coordinator{session_coordinator},
       main_loop{main_loop},
       keyboard_observer_registrar{keyboard_observer_registrar},
-      keyboard_observer{std::make_shared<KeyboardObserver>(this)}
+      keyboard_observer{std::make_shared<KeyboardObserver>(this)},
+      session_listener{std::make_shared<SessionListener>(this)}
 {
     keyboard_observer_registrar->register_interest(keyboard_observer, wayland_executor);
+    session_coordinator->add_listener(session_listener);
 }
 
 mf::XdgActivationV1::~XdgActivationV1()
 {
     keyboard_observer_registrar->unregister_interest(*keyboard_observer);
+    session_coordinator->remove_listener(session_listener);
 }
 
 std::shared_ptr<mf::XdgActivationTokenData> const& mf::XdgActivationV1::create_token(std::shared_ptr<ms::Session> const& session)
@@ -233,6 +236,11 @@ void mf::XdgActivationV1::KeyboardObserver::keyboard_event(std::shared_ptr<const
 }
 
 void mf::XdgActivationV1::KeyboardObserver::keyboard_focus_set(std::shared_ptr<mi::Surface> const&)
+{
+}
+
+mf::XdgActivationV1::SessionListener::SessionListener(mf::XdgActivationV1* parent) :
+    xdg_activation_v1{parent}
 {
 }
 

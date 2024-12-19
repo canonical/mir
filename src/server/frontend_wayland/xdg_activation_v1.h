@@ -18,6 +18,7 @@
 #define MIR_FRONTEND_XDG_ACTIVATION_UNSTABLE_V1_H
 
 #include "mir/input/keyboard_observer.h"
+#include "mir/scene/null_session_listener.h"
 #include "mir/scene/session_listener.h"
 #include "xdg-activation-v1_wrapper.h"
 #include "mir/observer_registrar.h"
@@ -105,24 +106,11 @@ private:
         mir::frontend::XdgActivationV1* xdg_activation_v1;
     };
 
-    class SessionListener : public mir::scene::SessionListener
+    class SessionListener : public mir::scene::NullSessionListener
     {
     public:
         SessionListener(mir::frontend::XdgActivationV1* xdg_activation_v1);
-        void starting(std::shared_ptr<mir::scene::Session> const&) override {}
-        void stopping(std::shared_ptr<mir::scene::Session> const&) override {}
         void focused(std::shared_ptr<mir::scene::Session> const& session) override;
-        void unfocused() override {}
-
-        void surface_created(mir::scene::Session&, std::shared_ptr<mir::scene::Surface> const&) override {}
-        void destroying_surface(mir::scene::Session&, std::shared_ptr<mir::scene::Surface> const&) override {}
-
-        void buffer_stream_created(
-            mir::scene::Session&,
-            std::shared_ptr<mir::frontend::BufferStream> const&) override {}
-        void buffer_stream_destroyed(
-            mir::scene::Session&,
-            std::shared_ptr<mir::frontend::BufferStream> const&) override {}
 
     private:
         mir::frontend::XdgActivationV1* xdg_activation_v1;
@@ -135,6 +123,7 @@ private:
     std::shared_ptr<MainLoop> main_loop;
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> keyboard_observer_registrar;
     std::shared_ptr<KeyboardObserver> keyboard_observer;
+    std::shared_ptr<SessionListener> session_listener;
     std::vector<std::shared_ptr<XdgActivationTokenData>> pending_tokens;
     std::mutex pending_tokens_mutex;
 };
