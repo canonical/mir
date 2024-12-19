@@ -96,9 +96,6 @@ public:
     auto right_border_rect() const -> geometry::Rectangle;
     auto bottom_border_rect() const -> geometry::Rectangle;
 
-    /// Returns the rectangle of the nth button
-    auto button_rect(unsigned n) const -> geometry::Rectangle;
-
     auto scale() const -> float;
 
 private:

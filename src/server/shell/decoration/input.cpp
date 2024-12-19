@@ -150,6 +150,39 @@ msd::InputManager::~InputManager()
     decoration_surface->unregister_interest(*observer);
 }
 
+namespace
+{
+class ButtonPlacementStrategy
+{
+    public:
+    ButtonPlacementStrategy(std::shared_ptr<msd::StaticGeometry const> const& static_geometry) :
+        static_geometry{static_geometry}
+    {
+    }
+
+    auto button_placement(unsigned n, msd::WindowState const& ws) const
+    -> geom::Rectangle
+    {
+        auto const titlebar = ws.titlebar_rect();
+        geom::X x =
+            titlebar.right() -
+            as_delta(ws.side_border_width()) -
+            n * as_delta(static_geometry->button_width + static_geometry->padding_between_buttons) -
+            as_delta(static_geometry->button_width);
+        // geom::X x =
+        //     titlebar.left() +
+        //     as_delta(ws.side_border_width()) +
+        //     n * as_delta(static_geometry->button_width + static_geometry->padding_between_buttons);
+        return geom::Rectangle{
+                {x, titlebar.top()},
+                {static_geometry->button_width, titlebar.size.height}};
+    }
+
+private:
+    std::shared_ptr<msd::StaticGeometry const> const static_geometry;
+};
+}
+
 void msd::InputManager::update_window_state(WindowState const& window_state)
 {
     std::lock_guard lock{mutex};
@@ -159,7 +192,7 @@ void msd::InputManager::update_window_state(WindowState const& window_state)
     {
         if (widget->button)
         {
-            widget->rect = window_state.button_rect(button_index);
+            widget->rect = ButtonPlacementStrategy{static_geometry}.button_placement(button_index, window_state);
             button_index++;
         }
         else if (widget->resize_edge)

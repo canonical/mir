@@ -215,19 +215,6 @@ auto msd::WindowState::bottom_border_rect() const -> geom::Rectangle
         {bottom_border_width(), bottom_border_height()}};
 }
 
-auto msd::WindowState::button_rect(unsigned n) const -> geom::Rectangle
-{
-    geom::Rectangle titlebar = titlebar_rect();
-    geom::X x =
-        titlebar.right() -
-        as_delta(side_border_width()) -
-        n * as_delta(static_geometry->button_width + static_geometry->padding_between_buttons) -
-        as_delta(static_geometry->button_width);
-    return geom::Rectangle{
-        {x, titlebar.top()},
-        {static_geometry->button_width, titlebar.size.height}};
-}
-
 auto msd::WindowState::scale() const -> float
 {
     return scale_;
