@@ -44,6 +44,8 @@ public:
 
     void send_to_back(scene::SurfaceSet const& surfaces) override;
 
+    auto z_order(std::weak_ptr<scene::Surface> const& surface) const -> unsigned int override;
+
 protected:
     std::shared_ptr<SurfaceStack> const wrapped;
 };

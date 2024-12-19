@@ -64,6 +64,9 @@ struct StubFocusController : mir::shell::FocusController
     void swap_z_order(mir::shell::SurfaceSet const& /*first*/, mir::shell::SurfaceSet const& /*second*/) override {}
 
     void send_to_back(mir::shell::SurfaceSet const& /*windows*/) override {}
+
+    auto z_order(std::weak_ptr<mir::scene::Surface> const&) const -> unsigned int override
+    { return 0; }
 };
 
 struct StubDisplayLayout : mir::shell::DisplayLayout

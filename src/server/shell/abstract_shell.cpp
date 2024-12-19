@@ -735,3 +735,8 @@ void msh::AbstractShell::send_to_back(const mir::shell::SurfaceSet &surfaces)
 {
     surface_stack->send_to_back(surfaces);
 }
+
+auto msh::AbstractShell::z_order(std::weak_ptr<scene::Surface> const& surface) const -> unsigned int
+{
+    return surface_stack->z_order(surface);
+}

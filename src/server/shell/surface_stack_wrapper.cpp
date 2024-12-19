@@ -63,3 +63,8 @@ void msh::SurfaceStackWrapper::send_to_back(const scene::SurfaceSet &surfaces)
 {
     wrapped->send_to_back(surfaces);
 }
+
+auto msh::SurfaceStackWrapper::z_order(std::weak_ptr<scene::Surface> const& surface) const -> unsigned int
+{
+    return wrapped->z_order(surface);
+}

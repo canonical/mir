@@ -95,6 +95,11 @@ struct StubShell : public shell::Shell
     void send_to_back(shell::SurfaceSet const& /*surfaces*/) override
     {
     }
+
+    auto z_order(std::weak_ptr<scene::Surface> const& /*surface*/) const -> unsigned int override
+    {
+        return 0;
+    }
     /// @}
 
     /// Overrides from shell::Shell

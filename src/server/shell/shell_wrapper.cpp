@@ -181,3 +181,8 @@ void msh::ShellWrapper::send_to_back(const mir::shell::SurfaceSet &surfaces)
 {
     return wrapped->send_to_back(surfaces);
 }
+
+auto msh::ShellWrapper::z_order(std::weak_ptr<scene::Surface> const& surface) const -> unsigned int
+{
+    return wrapped->z_order(surface);
+}
