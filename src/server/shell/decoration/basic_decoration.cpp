@@ -111,7 +111,7 @@ class msd::BasicDecoration::BufferStreams
     std::shared_ptr<scene::Session> const session;
 
 public:
-    BufferStreams(std::shared_ptr<scene::Session> const& session);
+    BufferStreams(std::shared_ptr<scene::Session> const& session, MirPixelFormat buffer_format);
     ~BufferStreams();
 
     auto create_buffer_stream() -> std::shared_ptr<mc::BufferStream>;
@@ -125,14 +125,16 @@ private:
     BufferStreams(BufferStreams const&) = delete;
     BufferStreams& operator=(BufferStreams const&) = delete;
 
+    MirPixelFormat const buffer_format;
 };
 
-msd::BasicDecoration::BufferStreams::BufferStreams(std::shared_ptr<scene::Session> const& session)
+msd::BasicDecoration::BufferStreams::BufferStreams(std::shared_ptr<scene::Session> const& session, MirPixelFormat buffer_format)
     : session{session},
       titlebar{create_buffer_stream()},
       left_border{create_buffer_stream()},
       right_border{create_buffer_stream()},
-      bottom_border{create_buffer_stream()}
+      bottom_border{create_buffer_stream()},
+      buffer_format{buffer_format}
 {
 }
 
@@ -165,8 +167,8 @@ msd::BasicDecoration::BasicDecoration(
       buffer_allocator{buffer_allocator},
       cursor_images{cursor_images},
       session{window_surface->session().lock()},
-      buffer_streams{std::make_unique<BufferStreams>(session)},
-      renderer{std::make_unique<Renderer>(buffer_allocator, static_geometry)},
+      buffer_streams{std::make_unique<BufferStreams>(session, static_geometry->buffer_format)},
+      renderer{std::make_unique<Renderer>(buffer_allocator, RendererStrategy::default_strategy(static_geometry))},
       window_surface{window_surface},
       decoration_surface{create_surface()},
       window_state{new_window_state()},
@@ -293,7 +295,7 @@ auto msd::BasicDecoration::create_surface() const -> std::shared_ptr<scene::Surf
     params.streams = {{
         session->create_buffer_stream(mg::BufferProperties{
             geom::Size{1, 1},
-            buffer_format,
+            static_geometry->buffer_format,
             mg::BufferUsage::software}),
         {},
         }};

@@ -61,6 +61,8 @@ struct StaticGeometry
     geometry::Point const title_font_top_left;        ///< Where to render the window title
     geometry::Displacement const icon_padding;        ///< Padding inside buttons around icons
     geometry::Width const icon_line_width;            ///< Width for lines in button icons
+
+    MirPixelFormat const buffer_format = mir_pixel_format_argb_8888;
 };
 
 extern StaticGeometry const default_geometry;
