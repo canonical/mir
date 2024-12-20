@@ -497,7 +497,10 @@ auto ms::SurfaceStack::z_order(std::weak_ptr<scene::Surface> const& surface) con
 {
     RecursiveReadLock lg(guard);
     if (surface.expired())
+    {
+        mir::log_error("Could not find z_order for surface because surface is expired");
         return 0;
+    }
 
     auto const lock_surface = surface.lock();
     auto const& layer = surface_layers[lock_surface->depth_layer()];
@@ -508,7 +511,9 @@ auto ms::SurfaceStack::z_order(std::weak_ptr<scene::Surface> const& surface) con
             return surface_index;
     }
 
-    return {};
+
+    mir::log_error("Could not find z_order for surface in the stack");
+    return 0;
 }
 
 void ms::SurfaceStack::create_rendering_tracker_for(std::shared_ptr<Surface> const& surface)
