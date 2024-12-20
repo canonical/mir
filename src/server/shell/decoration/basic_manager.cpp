@@ -16,6 +16,7 @@
 
 #include "basic_manager.h"
 #include "decoration.h"
+#include "decoration_strategy.h"
 
 #include <mir/graphics/display_configuration.h>
 #include <mir/graphics/null_display_configuration_observer.h>
@@ -49,8 +50,10 @@ private:
 };
 
 msd::BasicManager::BasicManager(
+    std::shared_ptr<DecorationStrategy> const& decoration_strategy,
     ObserverRegistrar<mg::DisplayConfigurationObserver>& display_configuration_observers,
     DecorationBuilder&& decoration_builder) :
+    decoration_strategy{decoration_strategy},
     decoration_builder{std::move(decoration_builder)},
     display_config_monitor{std::make_shared<DisplayConfigurationListener>(
         [&](mg::DisplayConfiguration const& config)
@@ -92,7 +95,7 @@ void msd::BasicManager::decorate(std::shared_ptr<ms::Surface> const& surface)
     {
         decorations[surface.get()] = nullptr;
         lock.unlock();
-        auto decoration = decoration_builder(locked_shell, surface);
+        auto decoration = decoration_builder(decoration_strategy, locked_shell, surface);
         lock.lock();
         decoration->set_scale(scale);
         decorations[surface.get()] = std::move(decoration);
@@ -126,6 +129,29 @@ void msd::BasicManager::undecorate_all()
     }
     // Destroy the decorations outside the lock
     to_destroy.clear();
+}
+
+using mir::geometry::Size;
+
+auto msd::BasicManager::compute_size_with_decorations(Size content_size,
+    MirWindowType type, MirWindowState state) -> Size
+{
+    auto const geometry = decoration_strategy->static_geometry();
+
+    switch (border_type_for(type, state))
+    {
+    case msd::BorderType::Full:
+        content_size.width += geometry->side_border_width * 2;
+        content_size.height += geometry->titlebar_height + geometry->bottom_border_height;
+        break;
+    case msd::BorderType::Titlebar:
+        content_size.height += geometry->titlebar_height;
+        break;
+    case msd::BorderType::None:
+        break;
+    }
+
+    return content_size;
 }
 
 void msd::BasicManager::set_scale(float new_scale)

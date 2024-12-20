@@ -118,27 +118,28 @@ struct msd::InputManager::Observer
 };
 
 msd::InputManager::InputManager(
-    std::shared_ptr<StaticGeometry const> const& static_geometry,
+    std::shared_ptr<DecorationStrategy> const& decoration_strategy,
     std::shared_ptr<ms::Surface> const& decoration_surface,
     WindowState const& window_state,
-    std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration)
-    : static_geometry{static_geometry},
-      decoration_surface{decoration_surface},
-      observer{std::make_shared<Observer>(this)},
-      decoration{decoration},
-      widgets{
-          std::make_shared<Widget>(ButtonFunction::Close),
-          std::make_shared<Widget>(ButtonFunction::Maximize),
-          std::make_shared<Widget>(ButtonFunction::Minimize),
-          std::make_shared<Widget>(mir_resize_edge_northwest),
-          std::make_shared<Widget>(mir_resize_edge_northeast),
-          std::make_shared<Widget>(mir_resize_edge_southwest),
-          std::make_shared<Widget>(mir_resize_edge_southeast),
-          std::make_shared<Widget>(mir_resize_edge_north),
-          std::make_shared<Widget>(mir_resize_edge_south),
-          std::make_shared<Widget>(mir_resize_edge_west),
-          std::make_shared<Widget>(mir_resize_edge_east),
-          std::make_shared<Widget>(mir_resize_edge_none)}
+    std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration) :
+    decoration_strategy{decoration_strategy},
+    static_geometry{decoration_strategy->static_geometry()},
+    decoration_surface{decoration_surface},
+    observer{std::make_shared<Observer>(this)},
+    decoration{decoration},
+    widgets{
+        std::make_shared<Widget>(ButtonFunction::Close),
+        std::make_shared<Widget>(ButtonFunction::Maximize),
+        std::make_shared<Widget>(ButtonFunction::Minimize),
+        std::make_shared<Widget>(mir_resize_edge_northwest),
+        std::make_shared<Widget>(mir_resize_edge_northeast),
+        std::make_shared<Widget>(mir_resize_edge_southwest),
+        std::make_shared<Widget>(mir_resize_edge_southeast),
+        std::make_shared<Widget>(mir_resize_edge_north),
+        std::make_shared<Widget>(mir_resize_edge_south),
+        std::make_shared<Widget>(mir_resize_edge_west),
+        std::make_shared<Widget>(mir_resize_edge_east),
+        std::make_shared<Widget>(mir_resize_edge_none)}
 {
     set_cursor(mir_resize_edge_none);
     update_window_state(window_state);
@@ -159,7 +160,7 @@ void msd::InputManager::update_window_state(WindowState const& window_state)
     {
         if (widget->button)
         {
-            widget->rect = window_state.button_rect(button_index);
+            widget->rect = decoration_strategy->button_placement(button_index, window_state);
             button_index++;
         }
         else if (widget->resize_edge)

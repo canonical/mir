@@ -40,6 +40,7 @@ class Shell;
 namespace decoration
 {
 class Decoration;
+class DecorationStrategy;
 class DisplayConfigurationListener;
 
 /// Facilitates decorating windows with Mir's built-in server size decorations
@@ -48,10 +49,12 @@ class BasicManager :
 {
 public:
     using DecorationBuilder = std::function<std::unique_ptr<Decoration>(
+        std::shared_ptr<DecorationStrategy> const& decoration_strategy,
         std::shared_ptr<shell::Shell> const& shell,
         std::shared_ptr<scene::Surface> const& surface)>;
 
     BasicManager(
+        std::shared_ptr<DecorationStrategy> const& decoration_strategy,
         mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>& display_configuration_observers,
         DecorationBuilder&& decoration_builder);
     ~BasicManager();
@@ -60,8 +63,11 @@ public:
     void decorate(std::shared_ptr<scene::Surface> const& surface) override;
     void undecorate(std::shared_ptr<scene::Surface> const& surface) override;
     void undecorate_all() override;
+    auto compute_size_with_decorations(geometry::Size content_size, MirWindowType type,
+        MirWindowState state) -> geometry::Size override;
 
 private:
+    std::shared_ptr<DecorationStrategy> const decoration_strategy;
     DecorationBuilder const decoration_builder;
     std::shared_ptr<DisplayConfigurationListener> const display_config_monitor;
     std::weak_ptr<shell::Shell> shell;

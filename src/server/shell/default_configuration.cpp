@@ -70,10 +70,12 @@ auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_pt
         [this]()->std::shared_ptr<msd::Manager>
         {
             return std::make_shared<msd::BasicManager>(
+                msd::DecorationStrategy::default_decoration_strategy(),
                 *the_display_configuration_observer_registrar(),
                 [buffer_allocator = the_buffer_allocator(),
                  executor = the_main_loop(),
                  cursor_images = the_cursor_images()](
+                    std::shared_ptr<msd::DecorationStrategy> const& decoration_strategy,
                     std::shared_ptr<shell::Shell> const& shell,
                     std::shared_ptr<scene::Surface> const& surface) -> std::unique_ptr<msd::Decoration>
                 {
@@ -82,7 +84,8 @@ auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_pt
                         buffer_allocator,
                         executor,
                         cursor_images,
-                        surface);
+                        surface,
+                        decoration_strategy);
                 });
         });
 }

@@ -17,6 +17,9 @@
 #ifndef MIR_SHELL_DECORATION_MANAGER_H_
 #define MIR_SHELL_DECORATION_MANAGER_H_
 
+#include "mir/geometry/size.h"
+#include "mir_toolkit/client_types.h"
+
 #include <memory>
 
 namespace mir
@@ -48,6 +51,10 @@ public:
 
     /// Removes decorations from all currently decorated windows
     virtual void undecorate_all() = 0;
+
+    /// Compute the corresponding size
+    virtual auto compute_size_with_decorations(geometry::Size content_size, MirWindowType type, MirWindowState state)
+    -> geometry::Size = 0;
 
 private:
     Manager(Manager const&) = delete;
