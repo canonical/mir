@@ -23,12 +23,12 @@
 #include "mir/log.h"
 
 #include <boost/throw_exception.hpp>
-#include <boost/filesystem.hpp>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
 #include <locale>
 #include <codecvt>
+#include <filesystem>
 #include <map>
 
 namespace ms = mir::scene;
@@ -95,10 +95,10 @@ auto default_font() -> std::string
         "/usr/share/fonts",             // Fedora/Arch
     };
 
-    std::vector<std::string> usable_search_paths;
+    std::vector<std::filesystem::path> usable_search_paths;
     for (auto const& path : font_path_search_paths)
     {
-        if (boost::filesystem::exists(path))
+        if (std::filesystem::exists(path))
             usable_search_paths.push_back(path);
     }
 
@@ -108,8 +108,8 @@ auto default_font() -> std::string
         {
             for (auto const& path : usable_search_paths)
             {
-                auto const full_font_path = path + '/' + prefix + '/' + font.filename;
-                if (boost::filesystem::exists(full_font_path))
+                auto const full_font_path = path / prefix / font.filename;
+                if (std::filesystem::exists(full_font_path))
                     return full_font_path;
             }
         }
