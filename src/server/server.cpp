@@ -16,7 +16,6 @@
 
 #include "mir/server.h"
 
-#include "frontend_wayland/xdg_activation_v1.h"
 #include "mir/emergency_cleanup.h"
 #include "mir/fd.h"
 #include "mir/frontend/connector.h"

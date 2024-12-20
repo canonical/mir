@@ -21,6 +21,7 @@
 #include "mir/scene/null_session_listener.h"
 #include "mir/scene/session_listener.h"
 #include "mir/server.h"
+#include "mir/shell/token_authority.h"
 #include "xdg-activation-v1_wrapper.h"
 #include "mir/observer_registrar.h"
 
@@ -71,8 +72,8 @@ public:
         std::shared_ptr<shell::TokenAuthority> token_authority);
     ~XdgActivationV1();
 
+    std::shared_ptr<XdgActivationTokenData> get_token_data(std::string const& token);
     std::shared_ptr<XdgActivationTokenData> const& create_token(std::shared_ptr<mir::scene::Session> const& session);
-    std::shared_ptr<XdgActivationTokenData> try_consume_token(std::string const& token);
     void invalidate_all();
     void invalidate_if_not_from_session(std::shared_ptr<mir::scene::Session> const&);
 
@@ -120,6 +121,9 @@ private:
     };
 
     void bind(wl_resource* resource) override;
+    auto find_token_unlocked(std::string const& token) const;
+    void remove_token(std::string const& token);
+
 
     std::shared_ptr<mir::shell::Shell> shell;
     std::shared_ptr<mir::scene::SessionCoordinator> const session_coordinator;

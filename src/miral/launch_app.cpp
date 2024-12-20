@@ -142,22 +142,6 @@ auto execute_with_environment(std::vector<std::string> const app, Environment& a
 }
 }  // namespace
 
-auto miral::launch_app_env(
-    std::vector<std::string> const& app,
-    mir::optional_value<std::string> const& wayland_display,
-    mir::optional_value<std::string> const& x11_display,
-    miral::AppEnvironment const& app_env) -> pid_t
-{
-    Environment application_environment;
-
-    for (auto const& [key, value]: app_env)
-        assign_or_unset(application_environment, key, value);
-
-    assign_or_unset(application_environment, "WAYLAND_DISPLAY", wayland_display); // configure Wayland socket
-    assign_or_unset(application_environment, "DISPLAY", x11_display);             // configure X11 socket
-
-    return execute_with_environment(app, application_environment);
-}
 
 auto miral::launch_app_env(
     std::vector<std::string> const& app,

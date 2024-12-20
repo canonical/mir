@@ -15,6 +15,7 @@
  */
 
 #include "mir/events/keyboard_event.h"
+#include "mir/optional_value.h"
 #include "mir/shell/token_authority.h"
 #include "xdg_activation_v1.h"
 #include "mir/input/keyboard_observer.h"
@@ -35,6 +36,7 @@
 #include <chrono>
 #include <memory>
 #include <ranges>
+#include <string>
 #include <vector>
 
 namespace mf = mir::frontend;
@@ -42,6 +44,7 @@ namespace mw = mir::wayland;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
+namespace sr = std::ranges;
 
 
 namespace mir
@@ -56,6 +59,11 @@ struct XdgActivationTokenData
         : token{token},
         session{session}
     {
+    }
+
+    bool operator==(std::string const& token) const
+    {
+        return this->token == token;
     }
 
     std::string const token;
@@ -128,12 +136,34 @@ mf::XdgActivationV1::~XdgActivationV1()
     session_coordinator->remove_listener(session_listener);
 }
 
+auto mf::XdgActivationV1::find_token_unlocked(std::string const& token) const
+{
+    return sr::find_if(
+        pending_tokens,
+        [&token](auto const& activation_token)
+        {
+            return *activation_token == token;
+        });
+}
+
+std::shared_ptr<mf::XdgActivationTokenData> mf::XdgActivationV1::get_token_data(std::string const& token)
+{
+    std::lock_guard guard(pending_tokens_mutex);
+
+    if (auto iter = find_token_unlocked(token); iter != pending_tokens.end())
+    {
+        return *iter;
+    }
+
+    return nullptr;
+}
+
 std::shared_ptr<mf::XdgActivationTokenData> const& mf::XdgActivationV1::create_token(std::shared_ptr<ms::Session> const& session)
 {
     auto generated = token_authority->issue_token(
         [this](auto const& token)
         {
-            this->try_consume_token(token);
+            this->remove_token(token);
         });
 
     auto token = std::make_shared<XdgActivationTokenData>(generated, session);
@@ -145,28 +175,14 @@ std::shared_ptr<mf::XdgActivationTokenData> const& mf::XdgActivationV1::create_t
     }
 }
 
-std::shared_ptr<mf::XdgActivationTokenData> mf::XdgActivationV1::try_consume_token(std::string const& token)
+void mf::XdgActivationV1::remove_token(std::string const& token)
 {
+    std::lock_guard guard(pending_tokens_mutex);
+
+    if (auto iter = find_token_unlocked(token); iter != pending_tokens.end())
     {
-        std::lock_guard guard(pending_tokens_mutex);
-
-        auto const iter = std::find_if(
-            pending_tokens.begin(),
-            pending_tokens.end(),
-            [&token](auto const& activation_token)
-            {
-                return activation_token->token == token;
-            });
-
-        if (iter != pending_tokens.end())
-        {
-            auto result = *iter;
-            pending_tokens.erase(iter);
-            return result;
-        }
+        pending_tokens.erase(iter);
     }
-
-    return nullptr;
 }
 
 void mf::XdgActivationV1::invalidate_all()
@@ -179,14 +195,13 @@ void mf::XdgActivationV1::invalidate_all()
 
 void mf::XdgActivationV1::invalidate_if_not_from_session(std::shared_ptr<ms::Session> const& session)
 {
-    namespace srv = std::ranges::views;
     auto const is_invalid = [&session](auto const& activation_token)
     {
         return activation_token->session.expired() || activation_token->session.lock() != session;
     };
 
     std::lock_guard guard(pending_tokens_mutex);
-    for (auto const& expired_token : pending_tokens | srv::filter(is_invalid))
+    for (auto const& expired_token : pending_tokens | sr::views::filter(is_invalid))
         token_authority->revoke_token(expired_token->token);
 }
 
@@ -261,15 +276,14 @@ void mf::XdgActivationV1::Instance::activate(std::string const& token, struct wl
     // 3. A key was pressed down between the issuing of the token and the activation
     //    of the surface with that token
     //
-    auto xdg_token = xdg_activation_v1->try_consume_token(token);
+    auto xdg_token = xdg_activation_v1->get_token_data(token);
     if (!xdg_token)
     {
         mir::log_error("XdgActivationV1::activate invalid token: %s", token.c_str());
         return;
     }
 
-    // try_consume_token removes the token from our list of tokens, need to
-    // inform the token authority as well.
+    // Calls `remove_token` since we set that up at token creation time
     xdg_activation_v1->token_authority->revoke_token(token);
 
     main_loop->enqueue(this, [
