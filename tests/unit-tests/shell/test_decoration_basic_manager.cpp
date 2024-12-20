@@ -22,6 +22,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <src/server/shell/decoration/decoration_strategy.h>
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -59,8 +60,10 @@ struct DecorationBasicManager
         registrar{std::make_shared<mtd::StubObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>()};
 
     msd::BasicManager manager{
+        msd::DecorationStrategy::default_decoration_strategy(),
         *registrar,
         [this](
+            std::shared_ptr<msd::DecorationStrategy> const&,
             std::shared_ptr<msh::Shell> const&,
             std::shared_ptr<ms::Surface> const&) -> std::unique_ptr<msd::Decoration>
         {

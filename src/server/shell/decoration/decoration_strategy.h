@@ -51,7 +51,6 @@ struct StaticGeometry
 
     MirPixelFormat const buffer_format = mir_pixel_format_argb_8888;
 };
-extern StaticGeometry const default_geometry;
 
 enum class ButtonState
 {
@@ -73,6 +72,8 @@ enum class BorderType
     Titlebar,   ///< Titlebar only (for maximized windows)
     None,       ///< No decorations (for fullscreen windows or popups)
 };
+
+auto border_type_for(MirWindowType type, MirWindowState state) -> BorderType;
 
 struct ButtonInfo
 {

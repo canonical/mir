@@ -16,7 +16,6 @@
 
 #include "mir/shell/abstract_shell.h"
 
-#include "mir/shell/decoration.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/shell/shell_report.h"
 #include "mir/shell/surface_specification.h"
@@ -233,7 +232,7 @@ auto msh::AbstractShell::create_surface(
     if (wm_visible_spec.server_side_decorated.value_or(false) && wm_visible_spec.width.is_set() && wm_visible_spec.height.is_set())
     {
         geom::Size const content_size{wm_visible_spec.width.value(), wm_visible_spec.height.value()};
-        auto const size = decoration::compute_size_with_decorations(
+        auto const size = decoration_manager->compute_size_with_decorations(
             content_size,
             wm_visible_spec.type.value(),
             wm_visible_spec.state.value());
@@ -302,7 +301,7 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
             wm_relevant_mods.height = content_size.height;
 
             // When adding decorations we need to resize the window for WM
-            window_size = decoration::compute_size_with_decorations(
+            window_size = decoration_manager->compute_size_with_decorations(
                 content_size,
                 modifications.type.value_or(surface->type()),
                 modifications.state.value_or(surface->state()));

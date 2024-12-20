@@ -18,6 +18,7 @@
 #include "decoration_strategy.h"
 #include "window.h"
 
+#include "mir/fatal.h"
 #include "mir/geometry/displacement.h"
 #include "mir/log.h"
 
@@ -297,10 +298,68 @@ public:
     auto button_placement(unsigned n, const WindowState& ws) const -> mir::geometry::Rectangle override;
 
 private:
-    std::shared_ptr<StaticGeometry> const static_geometry_{std::make_shared<StaticGeometry>(msd::default_geometry)};
+    static StaticGeometry const default_geometry;
+    std::shared_ptr<StaticGeometry> const static_geometry_{std::make_shared<StaticGeometry>(default_geometry)};
+};
+
+StaticGeometry const DecorationStrategy::default_geometry {
+    geom::Height{24},   // titlebar_height
+    geom::Width{6},     // side_border_width
+    geom::Height{6},    // bottom_border_height
+    geom::Size{16, 16}, // resize_corner_input_size
+    geom::Width{24},    // button_width
+    geom::Width{6},     // padding_between_buttons
+    geom::Height{14},   // title_font_height
+    geom::Point{8, 2},  // title_font_top_left
+    geom::Displacement{5, 5}, // icon_padding
+    geom::Width{1},     // detail_line_width
 };
 }
 
+auto msd::border_type_for(MirWindowType type, MirWindowState state) -> msd::BorderType
+{
+    using BorderType = msd::BorderType;
+
+    switch (type)
+    {
+    case mir_window_type_normal:
+    case mir_window_type_utility:
+    case mir_window_type_dialog:
+    case mir_window_type_freestyle:
+    case mir_window_type_satellite:
+        break;
+
+    case mir_window_type_gloss:
+    case mir_window_type_menu:
+    case mir_window_type_inputmethod:
+    case mir_window_type_tip:
+    case mir_window_type_decoration:
+    case mir_window_types:
+        return BorderType::None;
+    }
+
+    switch (state)
+    {
+    case mir_window_state_unknown:
+    case mir_window_state_restored:
+        return BorderType::Full;
+
+    case mir_window_state_maximized:
+    case mir_window_state_vertmaximized:
+    case mir_window_state_horizmaximized:
+        return BorderType::Titlebar;
+
+    case mir_window_state_minimized:
+    case mir_window_state_fullscreen:
+    case mir_window_state_hidden:
+    case mir_window_state_attached:
+    case mir_window_states:
+        return BorderType::None;
+    }
+
+    mir::fatal_error("%s:%d: should be unreachable", __FILE__, __LINE__);
+    return {};
+}
 
 auto msd::DecorationStrategy::default_decoration_strategy() -> std::unique_ptr<DecorationStrategy>
 {
