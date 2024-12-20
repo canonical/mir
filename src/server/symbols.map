@@ -1404,3 +1404,22 @@ global:
 local: *;
 };
 
+MIR_SERVER_INTERNAL_2.20 {
+global:
+  extern "C++" {
+    mir::DefaultServerConfiguration::the_token_authority*;
+    mir::Server::get_activation_token*;
+    mir::Server::the_token_authority*;
+    mir::shell::TokenAuthority::Token::Token*;
+    mir::shell::TokenAuthority::Token::hash*;
+    mir::shell::TokenAuthority::Token::operator*;
+    mir::shell::TokenAuthority::TokenAuthority*;
+    mir::shell::TokenAuthority::issue_token*;
+    mir::shell::TokenAuthority::revoke_token*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_token_authority*;
+    typeinfo?for?mir::shell::TokenAuthority::Token;
+    typeinfo?for?mir::shell::TokenAuthority;
+    virtual?thunk?to?mir::DefaultServerConfiguration::the_token_authority*;
+  };
+} MIR_SERVER_INTERNAL_2.19;
+

@@ -185,6 +185,7 @@ public:
     std::shared_ptr<scene::TextInputHub>    the_text_input_hub() override;
     std::shared_ptr<scene::IdleHub>         the_idle_hub() override;
     std::shared_ptr<shell::IdleHandler>     the_idle_handler() override;
+    std::shared_ptr<shell::TokenAuthority>  the_token_authority() override;
     std::function<void()>                   the_stop_callback() override;
     std::shared_ptr<scene::SessionLock>     the_session_lock() override;
     void add_wayland_extension(
@@ -407,6 +408,7 @@ protected:
     CachedPtr<scene::TextInputHub>      text_input_hub;
     CachedPtr<scene::IdleHub>           idle_hub;
     CachedPtr<shell::IdleHandler>       idle_handler;
+    CachedPtr<shell::TokenAuthority>    token_authority;
     CachedPtr<shell::DisplayLayout>     shell_display_layout;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::Compositor> compositor;

@@ -28,10 +28,12 @@ class MainLoop;
 namespace shell
 {
 class Shell;
+class TokenAuthority;
 }
 namespace scene
 {
 class SessionCoordinator;
+class Session;
 }
 namespace input
 {
@@ -46,7 +48,8 @@ auto create_xdg_activation_v1(
     std::shared_ptr<scene::SessionCoordinator> const&,
     std::shared_ptr<MainLoop> const&,
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const&,
-    Executor& wayland_executor) ->
+    Executor& wayland_executor,
+    std::shared_ptr<shell::TokenAuthority> const&) ->
     std::shared_ptr<wayland::XdgActivationV1::Global>;
 }
 }
