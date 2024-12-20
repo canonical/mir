@@ -30,7 +30,7 @@ msh::TokenAuthority::Token::Token(
     alarm{std::move(alarm)},
     revocation_listener{revocation_listener}
 {
-    alarm->reschedule_in(timeout_ms);
+    this->alarm->reschedule_in(timeout_ms);
 }
 
 bool mir::shell::TokenAuthority::Token::operator==(Token const& token) const
