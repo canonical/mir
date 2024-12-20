@@ -14,21 +14,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/events/keyboard_event.h"
-#include "mir/optional_value.h"
-#include "mir/shell/token_authority.h"
 #include "xdg_activation_v1.h"
+
+#include "mir/events/keyboard_event.h"
 #include "mir/input/keyboard_observer.h"
 #include "mir/log.h"
 #include "mir/main_loop.h"
-#include "mir/scene/session.h"
+#include "mir/scene/null_session_listener.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/session_listener.h"
-#include "mir/scene/surface.h"
-#include "mir/server.h"
 #include "mir/shell/shell.h"
+#include "mir/shell/token_authority.h"
+#include "mir/wayland/client.h"
 #include "mir/wayland/protocol_error.h"
-#include "wl_client.h"
 #include "wl_seat.h"
 #include "wl_surface.h"
 
@@ -73,6 +71,82 @@ struct XdgActivationTokenData
     std::optional<struct wl_resource*> seat;
 };
 
+class XdgActivationV1 : public wayland::XdgActivationV1::Global
+{
+public:
+    XdgActivationV1(
+        struct wl_display* display,
+        std::shared_ptr<mir::shell::Shell> const& shell,
+        std::shared_ptr<mir::scene::SessionCoordinator> const& session_coordinator,
+        std::shared_ptr<MainLoop> const& main_loop,
+        std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
+        Executor& wayland_executor,
+        std::shared_ptr<shell::TokenAuthority> token_authority);
+    ~XdgActivationV1();
+
+    std::shared_ptr<XdgActivationTokenData> get_token_data(std::string const& token);
+    std::shared_ptr<XdgActivationTokenData> const& create_token(std::shared_ptr<mir::scene::Session> const& session);
+    void invalidate_all();
+    void invalidate_if_not_from_session(std::shared_ptr<mir::scene::Session> const&);
+
+private:
+    class Instance : public wayland::XdgActivationV1
+    {
+    public:
+        Instance(
+            struct wl_resource* resource,
+            mir::frontend::XdgActivationV1* xdg_activation_v1,
+            std::shared_ptr<mir::shell::Shell> const& shell,
+            std::shared_ptr<mir::scene::SessionCoordinator> const& session_coordinator,
+            std::shared_ptr<MainLoop> const& main_loop);
+
+    private:
+        void get_activation_token(struct wl_resource* id) override;
+
+        void activate(std::string const& token, struct wl_resource* surface) override;
+
+        mir::frontend::XdgActivationV1* xdg_activation_v1;
+        std::shared_ptr<mir::shell::Shell> shell;
+        std::shared_ptr<mir::scene::SessionCoordinator> const session_coordinator;
+        std::shared_ptr<MainLoop> main_loop;
+    };
+
+    class KeyboardObserver: public input::KeyboardObserver
+    {
+    public:
+        KeyboardObserver(mir::frontend::XdgActivationV1* xdg_activation_v1);
+        void keyboard_event(std::shared_ptr<MirEvent const> const& event) override;
+        void keyboard_focus_set(std::shared_ptr<mir::input::Surface> const& surface) override;
+
+    private:
+        mir::frontend::XdgActivationV1* xdg_activation_v1;
+    };
+
+    class SessionListener : public mir::scene::NullSessionListener
+    {
+    public:
+        SessionListener(mir::frontend::XdgActivationV1* xdg_activation_v1);
+        void focused(std::shared_ptr<mir::scene::Session> const& session) override;
+
+    private:
+        mir::frontend::XdgActivationV1* xdg_activation_v1;
+    };
+
+    void bind(wl_resource* resource) override;
+    auto find_token_unlocked(std::string const& token) const;
+    void remove_token(std::string const& token);
+
+
+    std::shared_ptr<mir::shell::Shell> shell;
+    std::shared_ptr<mir::scene::SessionCoordinator> const session_coordinator;
+    std::shared_ptr<MainLoop> main_loop;
+    std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> keyboard_observer_registrar;
+    std::shared_ptr<KeyboardObserver> keyboard_observer;
+    std::shared_ptr<SessionListener> session_listener;
+    std::vector<std::shared_ptr<XdgActivationTokenData>> pending_tokens;
+    std::shared_ptr<shell::TokenAuthority> token_authority;
+    std::mutex pending_tokens_mutex;
+};
 
 class XdgActivationTokenV1 : public wayland::XdgActivationTokenV1
 {
