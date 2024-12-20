@@ -34,6 +34,7 @@
 #include <stdexcept>
 
 namespace ms = mir::scene;
+namespace msh = mir::shell;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
@@ -126,7 +127,6 @@ struct SurfaceDepthLayerObserver : ms::NullSurfaceObserver
 private:
     ms::SurfaceStack* stack;
 };
-
 }
 
 ms::SurfaceStack::SurfaceStack(std::shared_ptr<SceneReport> const& report) :
@@ -491,6 +491,29 @@ void ms::SurfaceStack::send_to_back(const mir::scene::SurfaceSet &ss)
     {
         observers.surfaces_reordered(ss);
     }
+}
+
+auto ms::SurfaceStack::z_order(std::weak_ptr<scene::Surface> const& surface) const -> unsigned int
+{
+    RecursiveReadLock lg(guard);
+    if (surface.expired())
+    {
+        mir::log_error("Could not find z_order for surface because surface is expired");
+        return 0;
+    }
+
+    auto const lock_surface = surface.lock();
+    auto const& layer = surface_layers[lock_surface->depth_layer()];
+    for (size_t surface_index = 0; surface_index < layer.size(); surface_index++)
+    {
+        auto const& other = layer[surface_index];
+        if (surface.lock() == other)
+            return surface_index;
+    }
+
+
+    mir::log_error("Could not find z_order for surface in the stack");
+    return 0;
 }
 
 void ms::SurfaceStack::create_rendering_tracker_for(std::shared_ptr<Surface> const& surface)

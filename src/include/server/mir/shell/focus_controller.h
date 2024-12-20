@@ -59,6 +59,8 @@ public:
 
     virtual void send_to_back(SurfaceSet const& surfaces) = 0;
 
+    virtual auto z_order(std::weak_ptr<scene::Surface> const& surface) const -> unsigned int = 0;
+
 protected:
     FocusController() = default;
     FocusController(FocusController const&) = delete;

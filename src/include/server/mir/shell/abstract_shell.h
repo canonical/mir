@@ -132,6 +132,7 @@ public:
     void raise(SurfaceSet const& surfaces) override;
     void swap_z_order(SurfaceSet const& first, SurfaceSet const& second) override;
     void send_to_back(SurfaceSet const& surfaces) override;
+    auto z_order(std::weak_ptr<scene::Surface> const& surface) const -> unsigned int override;
 /** @} */
 
     void add_display(geometry::Rectangle const& area) override;

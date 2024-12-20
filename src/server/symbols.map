@@ -1404,3 +1404,17 @@ global:
 local: *;
 };
 
+MIR_SERVER_INTERNAL_2.20 {
+global:
+  extern "C++" {
+    mir::shell::AbstractShell::z_order*;
+    mir::shell::ShellWrapper::z_order*;
+    mir::shell::SurfaceStackWrapper::z_order*;
+    non-virtual?thunk?to?mir::shell::AbstractShell::z_order*;
+    non-virtual?thunk?to?mir::shell::ShellWrapper::z_order*;
+    non-virtual?thunk?to?mir::shell::SurfaceStackWrapper::z_order*;
+    virtual?thunk?to?mir::shell::AbstractShell::z_order*;
+    virtual?thunk?to?mir::shell::ShellWrapper::z_order*;
+  };
+} MIR_SERVER_INTERNAL_2.19;
+
