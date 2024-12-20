@@ -27,7 +27,7 @@ namespace geom = mir::geometry;
 namespace msd = mir::shell::decoration;
 
 msd::WindowState::WindowState(
-    std::shared_ptr<StaticGeometry const> const& static_geometry,
+    std::shared_ptr<StaticGeometry> const& static_geometry,
     std::shared_ptr<scene::Surface> const& surface,
     float scale)
     : static_geometry{static_geometry},

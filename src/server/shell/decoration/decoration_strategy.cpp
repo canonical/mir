@@ -200,7 +200,7 @@ inline void render_minimize_icon(
 
 struct RendererStrategy : public msd::RendererStrategy
 {
-    RendererStrategy(std::shared_ptr<StaticGeometry const> const& static_geometry);
+    RendererStrategy(std::shared_ptr<StaticGeometry> const& static_geometry);
 
     void update_state(WindowState const& window_state, InputState const& input_state) override;
     auto render_titlebar() -> std::optional<RenderedPixels> override;
@@ -209,7 +209,7 @@ struct RendererStrategy : public msd::RendererStrategy
     auto render_bottom_border() -> std::optional<RenderedPixels> override;
 
 private:
-    std::shared_ptr<StaticGeometry const> const static_geometry;
+    std::shared_ptr<StaticGeometry> const static_geometry;
 
     /// A visual theme for a decoration
     /// Focused and unfocused windows use a different theme
@@ -293,7 +293,7 @@ private:
 class DecorationStrategy : public msd::DecorationStrategy
 {
 public:
-    auto static_geometry() const -> std::shared_ptr<StaticGeometry const> override;
+    auto static_geometry() const -> std::shared_ptr<StaticGeometry> override;
     auto render_strategy() const -> std::unique_ptr<mir::shell::decoration::RendererStrategy> override;
     auto button_placement(unsigned n, const WindowState& ws) const -> mir::geometry::Rectangle override;
 };
@@ -616,7 +616,7 @@ auto RendererStrategy::Text::Impl::utf8_to_utf32(std::string const& text) -> std
     return utf32_text;
 }
 
-RendererStrategy::RendererStrategy(std::shared_ptr<StaticGeometry const> const& static_geometry) :
+RendererStrategy::RendererStrategy(std::shared_ptr<StaticGeometry> const& static_geometry) :
     static_geometry{static_geometry},
     focused_theme{
         default_focused_background,
@@ -873,9 +873,9 @@ void RendererStrategy::set_focus_state(MirWindowFocusState focus_state)
 }
 
 
-auto DecorationStrategy::static_geometry() const -> std::shared_ptr<StaticGeometry const>
+auto DecorationStrategy::static_geometry() const -> std::shared_ptr<StaticGeometry>
 {
-    static auto const geometry{std::make_shared<StaticGeometry const>(
+    static auto const geometry{std::make_shared<StaticGeometry>(
         geom::Height{24},   // titlebar_height
         geom::Width{6},     // side_border_width
         geom::Height{6},    // bottom_border_height
@@ -886,7 +886,7 @@ auto DecorationStrategy::static_geometry() const -> std::shared_ptr<StaticGeomet
         geom::Point{8, 2},  // title_font_top_left
         geom::Displacement{5, 5}, // icon_padding
         geom::Width{1},     // detail_line_width
-        mir_pixel_format_argb_8888
+        mir_pixel_format_argb_8888  // buffer_format
     )};
     return geometry;
 }
@@ -906,10 +906,6 @@ auto DecorationStrategy::button_placement(unsigned n, const WindowState& ws) con
         as_delta(ws.side_border_width()) -
         n * as_delta(geometry->button_width + geometry->padding_between_buttons) -
         as_delta(geometry->button_width);
-    // geom::X x =
-    //     titlebar.left() +
-    //     as_delta(ws.side_border_width()) +
-    //     n * as_delta(geometry->button_width + geometry->padding_between_buttons);
     return geom::Rectangle{
                     {x, titlebar.top()},
                     {geometry->button_width, titlebar.size.height}};

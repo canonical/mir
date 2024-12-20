@@ -83,7 +83,7 @@ private:
 
     std::mutex mutex;
     std::shared_ptr<DecorationStrategy> const decoration_strategy;
-    std::shared_ptr<StaticGeometry const> const static_geometry;
+    std::shared_ptr<StaticGeometry> const static_geometry;
     std::shared_ptr<scene::Surface> decoration_surface;
     std::shared_ptr<Observer> const observer;
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> decoration;

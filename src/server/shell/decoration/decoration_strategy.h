@@ -118,7 +118,7 @@ class WindowState
 {
 public:
     WindowState(
-        std::shared_ptr<StaticGeometry const> const& static_geometry,
+        std::shared_ptr<StaticGeometry> const& static_geometry,
         std::shared_ptr<scene::Surface> const& window_surface,
         float scale);
 
@@ -147,7 +147,7 @@ private:
     WindowState(WindowState const&) = delete;
     WindowState& operator=(WindowState const&) = delete;
 
-    std::shared_ptr<StaticGeometry const> const static_geometry;
+    std::shared_ptr<StaticGeometry> const static_geometry;
     geometry::Size const window_size_;
     BorderType const border_type_;
     MirWindowFocusState const focus_state_;
@@ -183,7 +183,7 @@ public:
 
     static auto default_decoration_strategy() -> std::unique_ptr<DecorationStrategy>;
 
-    virtual auto static_geometry() const -> std::shared_ptr<StaticGeometry const> = 0;
+    virtual auto static_geometry() const -> std::shared_ptr<StaticGeometry> = 0;
     virtual auto render_strategy() const -> std::unique_ptr<RendererStrategy> = 0;
     virtual auto button_placement(unsigned n, WindowState const& ws) const -> geometry::Rectangle = 0;
 
