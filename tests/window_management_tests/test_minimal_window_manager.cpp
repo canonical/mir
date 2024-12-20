@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/geometry/forward.h"
 #define MIR_LOG_COMPONENT "test_minimal_window_manager"
 #include <miral/minimal_window_manager.h>
 #include <mir/scene/session.h>
@@ -498,3 +499,106 @@ TEST_F(MinimalWindowManagerTest, can_resize_south_east_with_touch)
     // Assert that the window is resized
     EXPECT_EQ(window.size(), geom::Size(50, 50));
 }
+
+struct SurfacePlacementCase
+{
+    struct SurfacePlacement
+    {
+        /// The gravity that the window will be placed with
+        MirPlacementGravity gravity;
+
+        geom::Point position;
+
+        /// If set to std::nullopt, we expect to take up the full width of the output
+        std::optional<geom::Width> width;
+
+        /// If set to std::nullopt, we expect to take up the full height of the output
+        std::optional<geom::Height> height;
+
+        /// Given the rectangle of the output, returns the expected rectangle
+        std::function<geom::Rectangle(geom::Size const&)> expected;
+    };
+
+
+    std::vector<SurfacePlacement> placements;
+};
+
+class MinimalWindowManagerAttachedTest
+    : public MinimalWindowManagerTest,
+      public ::testing::WithParamInterface<SurfacePlacementCase>
+{
+};
+
+TEST_P(MinimalWindowManagerAttachedTest, attached_window_positioning)
+{
+    auto const app = open_application("test");
+    auto const placements = GetParam();
+    auto const output_rectangles = get_output_rectangles();
+
+    std::vector<miral::Window> windows;
+    auto const output_width = output_rectangles[0].size.width;
+    auto const output_height = output_rectangles[0].size.height;
+    for (auto const& item : placements.placements)
+    {
+        msh::SurfaceSpecification spec;
+        spec.width = item.width ? item.width.value() : output_width;
+        spec.height = item.height ? item.height.value() : output_height;
+        spec.top_left = item.position;
+        spec.exclusive_rect = mir::optional_value(geom::Rectangle{
+            item.position,
+            geom::Size{
+                item.width ? item.width.value() : output_width,
+                item.height ? item.height.value() : output_height}});
+        spec.state = mir_window_state_attached;
+        spec.attached_edges = item.gravity;
+        spec.depth_layer = mir_depth_layer_application;
+        auto window = create_window(app, spec);
+        windows.push_back(window);
+    }
+
+    EXPECT_EQ(windows.size(), placements.placements.size());
+    for (size_t i = 0; i < windows.size(); i++)
+    {
+        auto const& window = windows[i];
+        auto const& data = placements.placements[i];
+
+        auto const expected = data.expected(output_rectangles[0].size);
+        EXPECT_EQ(window.top_left(), expected.top_left);
+        EXPECT_EQ(window.size(), expected.size);
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerAttachedTestPlacement, MinimalWindowManagerAttachedTest, ::testing::Values(
+    SurfacePlacementCase{
+        .placements={
+            // Top
+            SurfacePlacementCase::SurfacePlacement{
+                .gravity=MirPlacementGravity(mir_placement_gravity_north | mir_placement_gravity_east | mir_placement_gravity_west),
+                .position=geom::Point{0, 0},
+                .width=std::nullopt,
+                .height=geom::Height{50},
+                .expected=[](geom::Size const& output_size)
+                {
+                    return geom::Rectangle{
+                        geom::Point{0, 0},
+                        geom::Size{output_size.width, geom::Height{50}}
+                    };
+                }
+            },
+            // Left
+            SurfacePlacementCase::SurfacePlacement{
+                .gravity=MirPlacementGravity(mir_placement_gravity_north | mir_placement_gravity_south | mir_placement_gravity_west),
+                .position=geom::Point{0, 0},
+                .width=geom::Width{50},
+                .height=std::nullopt,
+                .expected=[](geom::Size const& output_size)
+                {
+                    return geom::Rectangle{
+                        geom::Point{0, 50},
+                        geom::Size{geom::Width{50}, geom::Height{output_size.height.as_int() - 50}}
+                    };
+                }
+            }
+        }
+    }
+));
