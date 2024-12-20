@@ -25,6 +25,7 @@
 #include <boost/throw_exception.hpp>
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include <endian.h>
 
 #include <locale>
 #include <codecvt>
@@ -45,21 +46,30 @@ namespace
 {
 static constexpr auto color(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 0xFF) -> uint32_t
 {
+#if __BYTE_ORDER == __LITTLE_ENDIAN
     return ((uint32_t)b <<  0) |
            ((uint32_t)g <<  8) |
            ((uint32_t)r << 16) |
            ((uint32_t)a << 24);
+#elif __BYTE_ORDER == __BIG_ENDIAN
+    return ((uint32_t)b << 24) |
+           ((uint32_t)g << 16) |
+           ((uint32_t)r <<  8) |
+           ((uint32_t)a <<  0);
+#else
+#error unsupported byte order
+#endif
 }
 
-uint32_t const default_focused_background   = color(0x32, 0x32, 0x32);
-uint32_t const default_unfocused_background = color(0x80, 0x80, 0x80);
-uint32_t const default_focused_text         = color(0xFF, 0xFF, 0xFF);
-uint32_t const default_unfocused_text       = color(0xA0, 0xA0, 0xA0);
-uint32_t const default_normal_button        = color(0x60, 0x60, 0x60);
-uint32_t const default_active_button        = color(0xA0, 0xA0, 0xA0);
-uint32_t const default_close_normal_button  = color(0xA0, 0x20, 0x20);
-uint32_t const default_close_active_button  = color(0xC0, 0x60, 0x60);
-uint32_t const default_button_icon          = color(0xFF, 0xFF, 0xFF);
+uint32_t constexpr default_focused_background   = color(0x32, 0x32, 0x32);
+uint32_t constexpr default_unfocused_background = color(0x80, 0x80, 0x80);
+uint32_t constexpr default_focused_text         = color(0xFF, 0xFF, 0xFF);
+uint32_t constexpr default_unfocused_text       = color(0xA0, 0xA0, 0xA0);
+uint32_t constexpr default_normal_button        = color(0x60, 0x60, 0x60);
+uint32_t constexpr default_active_button        = color(0xA0, 0xA0, 0xA0);
+uint32_t constexpr default_close_normal_button  = color(0xA0, 0x20, 0x20);
+uint32_t constexpr default_close_active_button  = color(0xC0, 0x60, 0x60);
+uint32_t constexpr default_button_icon          = color(0xFF, 0xFF, 0xFF);
 
 /// Font search logic should be kept in sync with examples/example-server-lib/wallpaper_config.cpp
 auto default_font() -> std::string
