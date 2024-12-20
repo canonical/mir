@@ -183,8 +183,8 @@ public:
 
     static auto default_decoration_strategy() -> std::unique_ptr<DecorationStrategy>;
 
-    virtual auto static_geometry() -> std::shared_ptr<StaticGeometry const> = 0;
-    virtual auto render_strategy() -> std::unique_ptr<RendererStrategy> = 0;
+    virtual auto static_geometry() const -> std::shared_ptr<StaticGeometry const> = 0;
+    virtual auto render_strategy() const -> std::unique_ptr<RendererStrategy> = 0;
     virtual auto button_placement(unsigned n, WindowState const& ws) const -> geometry::Rectangle = 0;
 
     DecorationStrategy() = default;

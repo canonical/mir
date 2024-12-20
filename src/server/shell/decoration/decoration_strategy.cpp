@@ -293,26 +293,9 @@ private:
 class DecorationStrategy : public msd::DecorationStrategy
 {
 public:
-    auto static_geometry() -> std::shared_ptr<StaticGeometry const> override;
-    auto render_strategy() -> std::unique_ptr<mir::shell::decoration::RendererStrategy> override;
+    auto static_geometry() const -> std::shared_ptr<StaticGeometry const> override;
+    auto render_strategy() const -> std::unique_ptr<mir::shell::decoration::RendererStrategy> override;
     auto button_placement(unsigned n, const WindowState& ws) const -> mir::geometry::Rectangle override;
-
-private:
-    static StaticGeometry const default_geometry;
-    std::shared_ptr<StaticGeometry> const static_geometry_{std::make_shared<StaticGeometry>(default_geometry)};
-};
-
-StaticGeometry const DecorationStrategy::default_geometry {
-    geom::Height{24},   // titlebar_height
-    geom::Width{6},     // side_border_width
-    geom::Height{6},    // bottom_border_height
-    geom::Size{16, 16}, // resize_corner_input_size
-    geom::Width{24},    // button_width
-    geom::Width{6},     // padding_between_buttons
-    geom::Height{14},   // title_font_height
-    geom::Point{8, 2},  // title_font_top_left
-    geom::Displacement{5, 5}, // icon_padding
-    geom::Width{1},     // detail_line_width
 };
 }
 
@@ -890,29 +873,44 @@ void RendererStrategy::set_focus_state(MirWindowFocusState focus_state)
 }
 
 
-auto DecorationStrategy::static_geometry() -> std::shared_ptr<StaticGeometry const>
+auto DecorationStrategy::static_geometry() const -> std::shared_ptr<StaticGeometry const>
 {
-    return static_geometry_;
+    static auto const geometry{std::make_shared<StaticGeometry const>(
+        geom::Height{24},   // titlebar_height
+        geom::Width{6},     // side_border_width
+        geom::Height{6},    // bottom_border_height
+        geom::Size{16, 16}, // resize_corner_input_size
+        geom::Width{24},    // button_width
+        geom::Width{6},     // padding_between_buttons
+        geom::Height{14},   // title_font_height
+        geom::Point{8, 2},  // title_font_top_left
+        geom::Displacement{5, 5}, // icon_padding
+        geom::Width{1},     // detail_line_width
+        mir_pixel_format_argb_8888
+    )};
+    return geometry;
 }
 
-auto DecorationStrategy::render_strategy() -> std::unique_ptr<mir::shell::decoration::RendererStrategy>
+auto DecorationStrategy::render_strategy() const -> std::unique_ptr<mir::shell::decoration::RendererStrategy>
 {
-    return std::make_unique<::RendererStrategy>(static_geometry_);
+    return std::make_unique<::RendererStrategy>(static_geometry());
 }
 
 auto DecorationStrategy::button_placement(unsigned n, const WindowState& ws) const -> mir::geometry::Rectangle
 {
     auto const titlebar = ws.titlebar_rect();
+    auto const geometry = static_geometry();
+
     geom::X x =
         titlebar.right() -
         as_delta(ws.side_border_width()) -
-        n * as_delta(static_geometry_->button_width + static_geometry_->padding_between_buttons) -
-        as_delta(static_geometry_->button_width);
+        n * as_delta(geometry->button_width + geometry->padding_between_buttons) -
+        as_delta(geometry->button_width);
     // geom::X x =
     //     titlebar.left() +
     //     as_delta(ws.side_border_width()) +
-    //     n * as_delta(static_geometry->button_width + static_geometry->padding_between_buttons);
+    //     n * as_delta(geometry->button_width + geometry->padding_between_buttons);
     return geom::Rectangle{
                     {x, titlebar.top()},
-                    {static_geometry_->button_width, titlebar.size.height}};
+                    {geometry->button_width, titlebar.size.height}};
 }
