@@ -50,6 +50,14 @@ void ApplicationSelector::advise_new_window(WindowInfo const& window_info)
     focus_list.push_back(window_info.window());
 }
 
+void ApplicationSelector::advise_new_window(WindowInfo const& window_info, bool focused)
+{
+    if(!focused && !focus_list.empty())
+        focus_list.insert(focus_list.end() - 1, window_info.window());
+    else
+        advise_new_window(window_info);
+}
+
 void ApplicationSelector::select(miral::Window const& window)
 {
     if (selected)
