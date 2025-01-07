@@ -33,25 +33,6 @@ namespace mir::shell::decoration
 {
 using Pixel = uint32_t;
 
-/// Decoration geometry properties that don't change
-struct StaticGeometry
-{
-    geometry::Height const titlebar_height;           ///< Visible height of the top titlebar with the window's name and buttons
-    geometry::Width const side_border_width;          ///< Visible width of the side borders
-    geometry::Height const bottom_border_height;      ///< Visible height of the bottom border
-    geometry::Size const resize_corner_input_size;    ///< The size of the input area of a resizable corner
-    ///< (does not effect surface input area, only where in the surface is
-    ///< considered a resize corner)
-    geometry::Width const button_width;               ///< The width of window control buttons
-    geometry::Width const padding_between_buttons;    ///< The gep between titlebar buttons
-    geometry::Height const title_font_height;         ///< Height of the text used to render the window title
-    geometry::Point const title_font_top_left;        ///< Where to render the window title
-    geometry::Displacement const icon_padding;        ///< Padding inside buttons around icons
-    geometry::Width const icon_line_width;            ///< Width for lines in button icons
-
-    MirPixelFormat const buffer_format = mir_pixel_format_argb_8888;
-};
-
 enum class ButtonState
 {
     Up,         ///< The user is not interacting with this button
@@ -112,13 +93,15 @@ private:
     std::vector<geometry::Rectangle> const input_shape_;
 };
 
+class DecorationStrategy;
+
 /// Information about the geometry and type of decorations for a given window
 /// Data is pulled from the surface on construction and immutable after that
 class WindowState
 {
 public:
     WindowState(
-        std::shared_ptr<StaticGeometry> const& static_geometry,
+        std::shared_ptr<const DecorationStrategy>&& decoration_strategy,
         std::shared_ptr<scene::Surface> const& window_surface,
         float scale);
 
@@ -147,7 +130,7 @@ private:
     WindowState(WindowState const&) = delete;
     WindowState& operator=(WindowState const&) = delete;
 
-    std::shared_ptr<StaticGeometry> const static_geometry;
+    std::shared_ptr<const DecorationStrategy> const decoration_strategy;
     geometry::Size const window_size_;
     BorderType const border_type_;
     MirWindowFocusState const focus_state_;
@@ -181,7 +164,7 @@ class DecorationStrategy
 {
 public:
 
-    static auto default_decoration_strategy() -> std::unique_ptr<DecorationStrategy>;
+    static auto default_decoration_strategy() -> std::shared_ptr<DecorationStrategy>;
 
     virtual auto render_strategy() const -> std::unique_ptr<RendererStrategy> = 0;
     virtual auto button_placement(unsigned n, WindowState const& ws) const -> geometry::Rectangle = 0;
@@ -191,6 +174,9 @@ public:
         std::shared_ptr<scene::Surface> const& window_surface, float scale) const -> std::unique_ptr<WindowState> = 0;
     virtual auto buffer_format() const -> MirPixelFormat = 0;
     virtual auto resize_corner_input_size() const -> geometry::Size = 0;
+    virtual auto titlebar_height() const -> geometry::Height = 0;
+    virtual auto side_border_width() const -> geometry::Width = 0;
+    virtual auto bottom_border_height() const -> geometry::Height = 0;
 
     DecorationStrategy() = default;
     virtual ~DecorationStrategy() = default;

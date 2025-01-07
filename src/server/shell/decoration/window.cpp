@@ -27,10 +27,10 @@ namespace geom = mir::geometry;
 namespace msd = mir::shell::decoration;
 
 msd::WindowState::WindowState(
-    std::shared_ptr<StaticGeometry> const& static_geometry,
+    std::shared_ptr<const DecorationStrategy>&& decoration_strategy,
     std::shared_ptr<scene::Surface> const& surface,
     float scale)
-    : static_geometry{static_geometry},
+    : decoration_strategy{std::move(decoration_strategy)},
       window_size_{surface->window_size()},
       border_type_{border_type_for(surface->type(), surface->state())},
       focus_state_{surface->focus_state()},
@@ -80,7 +80,7 @@ auto msd::WindowState::titlebar_height() const -> geom::Height
     {
     case BorderType::Full:
     case BorderType::Titlebar:
-        return static_geometry->titlebar_height;
+        return decoration_strategy->titlebar_height();
     case BorderType::None:
         return {};
     }
@@ -94,7 +94,7 @@ auto msd::WindowState::side_border_width() const -> geom::Width
     switch (border_type_)
     {
     case BorderType::Full:
-        return static_geometry->side_border_width;
+        return decoration_strategy->side_border_width();
     case BorderType::Titlebar:
     case BorderType::None:
         return {};
@@ -129,7 +129,7 @@ auto msd::WindowState::bottom_border_height() const -> geom::Height
     switch (border_type_)
     {
     case BorderType::Full:
-        return static_geometry->bottom_border_height;
+        return decoration_strategy->bottom_border_height();
     case BorderType::Titlebar:
     case BorderType::None:
         return {};

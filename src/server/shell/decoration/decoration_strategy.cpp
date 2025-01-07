@@ -37,13 +37,31 @@ namespace geom = mir::geometry;
 namespace msh = mir::shell;
 namespace msd = mir::shell::decoration;
 
-using msd::StaticGeometry;
 using msd::WindowState;
 using msd::Pixel;
 using msd::InputState;
 
 namespace
 {
+/// Decoration geometry properties that don't change
+struct StaticGeometry
+{
+    geom::Height const titlebar_height;           ///< Visible height of the top titlebar with the window's name and buttons
+    geom::Width const side_border_width;          ///< Visible width of the side borders
+    geom::Height const bottom_border_height;      ///< Visible height of the bottom border
+    geom::Size const resize_corner_input_size;    ///< The size of the input area of a resizable corner
+    ///< (does not effect surface input area, only where in the surface is
+    ///< considered a resize corner)
+    geom::Width const button_width;               ///< The width of window control buttons
+    geom::Width const padding_between_buttons;    ///< The gep between titlebar buttons
+    geom::Height const title_font_height;         ///< Height of the text used to render the window title
+    geom::Point const title_font_top_left;        ///< Where to render the window title
+    geom::Displacement const icon_padding;        ///< Padding inside buttons around icons
+    geom::Width const icon_line_width;            ///< Width for lines in button icons
+
+    MirPixelFormat const buffer_format = mir_pixel_format_argb_8888;
+};
+
 static constexpr auto color(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 0xFF) -> uint32_t
 {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
@@ -300,22 +318,41 @@ private:
     void redraw_titlebar_buttons(geom::Size scaled_titlebar_size);
 };
 
-class DecorationStrategy : public msd::DecorationStrategy
+class DecorationStrategy : public msd::DecorationStrategy, public std::enable_shared_from_this<DecorationStrategy>
 {
 public:
+    ~DecorationStrategy() override = default;
 
     auto static_geometry() const -> std::shared_ptr<StaticGeometry>;
     auto render_strategy() const -> std::unique_ptr<mir::shell::decoration::RendererStrategy> override;
-    auto button_placement(unsigned n, const WindowState& ws) const -> mir::geometry::Rectangle override;
+    auto button_placement(unsigned n, const WindowState& ws) const -> geom::Rectangle override;
     auto compute_size_with_decorations(geom::Size content_size, MirWindowType type, MirWindowState state) const
         -> geom::Size override;
     auto buffer_format() const -> MirPixelFormat override;
     auto new_window_state(const std::shared_ptr<mir::scene::Surface>& window_surface,
                           float scale) const -> std::unique_ptr<WindowState> override;
-    auto resize_corner_input_size() const -> mir::geometry::Size override;
+    auto resize_corner_input_size() const -> geom::Size override;
+    auto titlebar_height() const -> geom::Height override;
+    auto side_border_width() const -> geom::Width override;
+    auto bottom_border_height() const -> geom::Height override;
 };
 
-auto DecorationStrategy::resize_corner_input_size() const -> mir::geometry::Size
+auto DecorationStrategy::titlebar_height() const -> geom::Height
+{
+    return static_geometry()->titlebar_height;
+}
+
+auto DecorationStrategy::side_border_width() const -> geom::Width
+{
+    return static_geometry()->side_border_width;
+}
+
+auto DecorationStrategy::bottom_border_height() const -> geom::Height
+{
+    return static_geometry()->bottom_border_height;
+}
+
+auto DecorationStrategy::resize_corner_input_size() const -> geom::Size
 {
     return static_geometry()->resize_corner_input_size;
 }
@@ -327,8 +364,9 @@ auto DecorationStrategy::buffer_format() const -> MirPixelFormat
 
 auto DecorationStrategy::new_window_state(const std::shared_ptr<mir::scene::Surface>& window_surface,
                                           float scale) const -> std::unique_ptr<WindowState>
+
 {
-    return std::make_unique<WindowState>(static_geometry(), window_surface, scale);
+    return std::make_unique<WindowState>(shared_from_this(), window_surface, scale);
 }
 
 auto DecorationStrategy::compute_size_with_decorations(
@@ -396,9 +434,9 @@ auto msd::border_type_for(MirWindowType type, MirWindowState state) -> msd::Bord
     return {};
 }
 
-auto msd::DecorationStrategy::default_decoration_strategy() -> std::unique_ptr<DecorationStrategy>
+auto msd::DecorationStrategy::default_decoration_strategy() -> std::shared_ptr<DecorationStrategy>
 {
-    return std::make_unique<::DecorationStrategy>();
+    return std::make_shared<::DecorationStrategy>();
 }
 
 class RendererStrategy::Text::Impl
@@ -948,7 +986,7 @@ auto DecorationStrategy::render_strategy() const -> std::unique_ptr<mir::shell::
     return std::make_unique<::RendererStrategy>(static_geometry());
 }
 
-auto DecorationStrategy::button_placement(unsigned n, const WindowState& ws) const -> mir::geometry::Rectangle
+auto DecorationStrategy::button_placement(unsigned n, const WindowState& ws) const -> geom::Rectangle
 {
     auto const titlebar = ws.titlebar_rect();
     auto const geometry = static_geometry();
