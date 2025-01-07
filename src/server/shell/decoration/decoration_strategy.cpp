@@ -308,12 +308,18 @@ public:
     auto button_placement(unsigned n, const WindowState& ws) const -> mir::geometry::Rectangle override;
     auto compute_size_with_decorations(geom::Size content_size, MirWindowType type, MirWindowState state) const
         -> geom::Size override;
+    auto buffer_format() const -> MirPixelFormat override;
     auto new_window_state(const std::shared_ptr<mir::scene::Surface>& window_surface,
-        float scale) const -> std::unique_ptr<WindowState> override;
+                          float scale) const -> std::unique_ptr<WindowState> override;
 };
 
+auto DecorationStrategy::buffer_format() const -> MirPixelFormat
+{
+    return static_geometry()->buffer_format;
+}
+
 auto DecorationStrategy::new_window_state(const std::shared_ptr<mir::scene::Surface>& window_surface,
-    float scale) const -> std::unique_ptr<WindowState>
+                                          float scale) const -> std::unique_ptr<WindowState>
 {
     return std::make_unique<WindowState>(static_geometry(), window_surface, scale);
 }

@@ -190,6 +190,7 @@ public:
         geometry::Size content_size, MirWindowType type, MirWindowState state) const -> geometry::Size = 0;
     virtual auto new_window_state(
         std::shared_ptr<scene::Surface> const& window_surface, float scale) const -> std::unique_ptr<WindowState> = 0;
+    virtual auto buffer_format() const -> MirPixelFormat = 0;
 
     DecorationStrategy() = default;
     virtual ~DecorationStrategy() = default;

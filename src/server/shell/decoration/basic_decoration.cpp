@@ -138,12 +138,11 @@ msd::BasicDecoration::BasicDecoration(
     std::shared_ptr<DecorationStrategy> decoration_strategy)
     : threadsafe_self{std::make_shared<ThreadsafeAccess<BasicDecoration>>(executor)},
       decoration_strategy{decoration_strategy},
-      static_geometry{decoration_strategy->static_geometry()},
       shell{shell},
       buffer_allocator{buffer_allocator},
       cursor_images{cursor_images},
       session{window_surface->session().lock()},
-      buffer_streams{std::make_unique<BufferStreams>(session, static_geometry->buffer_format)},
+      buffer_streams{std::make_unique<BufferStreams>(session, decoration_strategy->buffer_format())},
       renderer{std::make_unique<Renderer>(buffer_allocator, decoration_strategy->render_strategy())},
       window_surface{window_surface},
       decoration_surface{create_surface()},
@@ -275,7 +274,7 @@ auto msd::BasicDecoration::create_surface() const -> std::shared_ptr<scene::Surf
     params.streams = {{
         session->create_buffer_stream(mg::BufferProperties{
             geom::Size{1, 1},
-            static_geometry->buffer_format,
+            decoration_strategy->buffer_format(),
             mg::BufferUsage::software}),
         {},
         }};
