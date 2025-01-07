@@ -303,7 +303,8 @@ private:
 class DecorationStrategy : public msd::DecorationStrategy
 {
 public:
-    auto static_geometry() const -> std::shared_ptr<StaticGeometry> override;
+
+    auto static_geometry() const -> std::shared_ptr<StaticGeometry>;
     auto render_strategy() const -> std::unique_ptr<mir::shell::decoration::RendererStrategy> override;
     auto button_placement(unsigned n, const WindowState& ws) const -> mir::geometry::Rectangle override;
     auto compute_size_with_decorations(geom::Size content_size, MirWindowType type, MirWindowState state) const
@@ -311,7 +312,13 @@ public:
     auto buffer_format() const -> MirPixelFormat override;
     auto new_window_state(const std::shared_ptr<mir::scene::Surface>& window_surface,
                           float scale) const -> std::unique_ptr<WindowState> override;
+    auto resize_corner_input_size() const -> mir::geometry::Size override;
 };
+
+auto DecorationStrategy::resize_corner_input_size() const -> mir::geometry::Size
+{
+    return static_geometry()->resize_corner_input_size;
+}
 
 auto DecorationStrategy::buffer_format() const -> MirPixelFormat
 {

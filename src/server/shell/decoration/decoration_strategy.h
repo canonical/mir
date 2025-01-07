@@ -183,7 +183,6 @@ public:
 
     static auto default_decoration_strategy() -> std::unique_ptr<DecorationStrategy>;
 
-    virtual auto static_geometry() const -> std::shared_ptr<StaticGeometry> = 0;
     virtual auto render_strategy() const -> std::unique_ptr<RendererStrategy> = 0;
     virtual auto button_placement(unsigned n, WindowState const& ws) const -> geometry::Rectangle = 0;
     virtual auto compute_size_with_decorations(
@@ -191,6 +190,7 @@ public:
     virtual auto new_window_state(
         std::shared_ptr<scene::Surface> const& window_surface, float scale) const -> std::unique_ptr<WindowState> = 0;
     virtual auto buffer_format() const -> MirPixelFormat = 0;
+    virtual auto resize_corner_input_size() const -> geometry::Size = 0;
 
     DecorationStrategy() = default;
     virtual ~DecorationStrategy() = default;

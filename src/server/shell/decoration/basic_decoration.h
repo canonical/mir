@@ -57,7 +57,6 @@ class StreamSpecification;
 namespace decoration
 {
 template<typename T> class ThreadsafeAccess;
-class StaticGeometry;
 class WindowState;
 class WindowSurfaceObserverManager;
 class InputManager;
