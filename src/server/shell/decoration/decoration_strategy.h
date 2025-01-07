@@ -151,8 +151,8 @@ private:
     geometry::Size const window_size_;
     BorderType const border_type_;
     MirWindowFocusState const focus_state_;
-    std::string window_name_;
-    float scale_;
+    std::string const window_name_;
+    float const scale_;
 };
 
 class RendererStrategy
