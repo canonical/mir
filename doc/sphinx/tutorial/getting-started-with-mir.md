@@ -27,6 +27,11 @@ sudo dnf install mir-demos
 sudo apk add mir-demos mir
 ```
 
+### On Arch Linux (AUR)
+```
+https://aur.archlinux.org/packages/mir
+```
+
 ## Running applications on X11 or Wayland
 
 We'll work with `miral-app`, a script that handles running a Mir shell with a basic GUI.
@@ -126,4 +131,4 @@ wayvnc
 ```
 A `wayvnc` server will start and will listen to `localhost`. 
 
-5. Run your VNC client and connect to `localhost`. You will see the exact same view in both the Mir compositor and the VNC viewer. 
+5. Run your VNC client and connect to `localhost`. You will see the exact same view in both the Mir compositor and the VNC viewer.
