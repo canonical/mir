@@ -186,6 +186,8 @@ public:
     virtual auto static_geometry() const -> std::shared_ptr<StaticGeometry> = 0;
     virtual auto render_strategy() const -> std::unique_ptr<RendererStrategy> = 0;
     virtual auto button_placement(unsigned n, WindowState const& ws) const -> geometry::Rectangle = 0;
+    virtual auto compute_size_with_decorations(
+        geometry::Size content_size, MirWindowType type, MirWindowState state) const -> geometry::Size = 0;
 
     DecorationStrategy() = default;
     virtual ~DecorationStrategy() = default;

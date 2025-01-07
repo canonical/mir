@@ -306,7 +306,28 @@ public:
     auto static_geometry() const -> std::shared_ptr<StaticGeometry> override;
     auto render_strategy() const -> std::unique_ptr<mir::shell::decoration::RendererStrategy> override;
     auto button_placement(unsigned n, const WindowState& ws) const -> mir::geometry::Rectangle override;
+    auto compute_size_with_decorations(geom::Size content_size, MirWindowType type, MirWindowState state) const
+        -> geom::Size override;
 };
+
+auto DecorationStrategy::compute_size_with_decorations(
+    geom::Size content_size, MirWindowType type, MirWindowState state) const -> geom::Size
+{
+    switch (msd::border_type_for(type, state))
+    {
+    case msd::BorderType::Full:
+        content_size.width += static_geometry()->side_border_width * 2;
+        content_size.height += static_geometry()->titlebar_height + static_geometry()->bottom_border_height;
+        break;
+    case msd::BorderType::Titlebar:
+        content_size.height += static_geometry()->titlebar_height;
+        break;
+    case msd::BorderType::None:
+        break;
+    }
+
+    return content_size;
+}
 }
 
 auto msd::border_type_for(MirWindowType type, MirWindowState state) -> msd::BorderType
