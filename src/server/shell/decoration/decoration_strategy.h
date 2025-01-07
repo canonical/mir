@@ -42,24 +42,24 @@ enum class BorderType
 
 auto border_type_for(MirWindowType type, MirWindowState state) -> BorderType;
 
+/// Minimize, maximize, and close buttons
 struct Button
 {
-    enum class State
-    {
-        Up,         ///< The user is not interacting with this button
-        Hovered,    ///< The user is hovering over this button
-        Down,       ///< The user is currently pressing this button
-    };
-
     enum class Function
     {
         Close,
         Maximize,
         Minimize,
     };
-
-    using enum State;
     using enum Function;
+
+    enum class State
+    {
+        Up,         ///< The user is not interacting with this button
+        Hovered,    ///< The user is hovering over this button
+        Down,       ///< The user is currently pressing this button
+    };
+    using enum State;
 
     Function function;
     State state;
@@ -141,6 +141,7 @@ private:
     float const scale_;
 };
 
+/// Customization point for rendering
 class RendererStrategy
 {
 public:
@@ -163,6 +164,7 @@ public:
     virtual auto render_bottom_border() -> std::optional<RenderedPixels> = 0;
 };
 
+/// Customization point for decorations
 class DecorationStrategy
 {
 public:
@@ -177,14 +179,16 @@ public:
         std::shared_ptr<scene::Surface> const& window_surface, float scale) const -> std::unique_ptr<WindowState> = 0;
     virtual auto buffer_format() const -> MirPixelFormat = 0;
     virtual auto resize_corner_input_size() const -> geometry::Size = 0;
-    virtual auto titlebar_height() const -> geometry::Height = 0;
-    virtual auto side_border_width() const -> geometry::Width = 0;
-    virtual auto bottom_border_height() const -> geometry::Height = 0;
 
     DecorationStrategy() = default;
     virtual ~DecorationStrategy() = default;
 
 private:
+    virtual auto titlebar_height() const -> geometry::Height = 0;
+    virtual auto side_border_width() const -> geometry::Width = 0;
+    virtual auto bottom_border_height() const -> geometry::Height = 0;
+    friend class WindowState;
+
     DecorationStrategy(DecorationStrategy const&) = delete;
     DecorationStrategy& operator=(DecorationStrategy const&) = delete;
 };
