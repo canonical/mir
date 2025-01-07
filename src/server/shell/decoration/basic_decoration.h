@@ -90,9 +90,6 @@ public:
     void set_scale(float scale) override;
 
 protected:
-    /// Creates an up-to-date WindowState object
-    auto new_window_state() const -> std::unique_ptr<WindowState>;
-
     /// Returns paramaters to create the decoration surface
     auto create_surface() const -> std::shared_ptr<scene::Surface>;
 

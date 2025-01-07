@@ -147,7 +147,7 @@ msd::BasicDecoration::BasicDecoration(
       renderer{std::make_unique<Renderer>(buffer_allocator, decoration_strategy->render_strategy())},
       window_surface{window_surface},
       decoration_surface{create_surface()},
-      window_state{new_window_state()},
+      window_state{decoration_strategy->new_window_state(window_surface, scale)},
       window_surface_observer_manager{std::make_unique<WindowSurfaceObserverManager>(
           window_surface,
           threadsafe_self)},
@@ -193,7 +193,7 @@ msd::BasicDecoration::~BasicDecoration()
 void msd::BasicDecoration::window_state_updated()
 {
     auto previous_window_state = std::move(window_state);
-    window_state = new_window_state();
+    window_state = decoration_strategy->new_window_state(window_surface, scale);
 
     input_manager->update_window_state(*window_state);
 
@@ -257,11 +257,6 @@ void msd::BasicDecoration::set_scale(float new_scale)
 {
     scale = new_scale;
     window_state_updated();
-}
-
-auto msd::BasicDecoration::new_window_state() const -> std::unique_ptr<WindowState>
-{
-    return std::make_unique<WindowState>(static_geometry, window_surface, scale);
 }
 
 auto msd::BasicDecoration::create_surface() const -> std::shared_ptr<scene::Surface>
