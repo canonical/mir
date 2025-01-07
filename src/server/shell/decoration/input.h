@@ -94,7 +94,7 @@ private:
 
     struct Widget
     {
-        Widget(ButtonFunction button)
+        Widget(Button::Function button)
             : button{button}
         {
         }
@@ -105,8 +105,8 @@ private:
         }
 
         geometry::Rectangle rect;
-        ButtonState state{ButtonState::Up};
-        std::optional<ButtonFunction> const button;
+        Button::State state{Button::Up};
+        std::optional<Button::Function> const button;
         // mir_resize_edge_none is used to mean the widget moves the window
         std::optional<MirResizeEdge> const resize_edge;
     };

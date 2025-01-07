@@ -287,7 +287,7 @@ private:
             geom::Width line_width,
             Pixel color)> const render_icon; ///< Draws button's icon to the given buffer
     };
-    std::map<msd::ButtonFunction, Icon const> button_icons;
+    std::map<msd::Button::Function, Icon const> button_icons;
 
     float scale{1.0f};
     std::string name;
@@ -307,7 +307,7 @@ private:
     bool needs_titlebar_redraw{true};
     bool needs_titlebar_buttons_redraw{true};
 
-    std::vector<msd::ButtonInfo> buttons;
+    std::vector<msd::Button> buttons;
 
     void update_solid_color_pixels();
 
@@ -717,17 +717,17 @@ RendererStrategy::RendererStrategy(std::shared_ptr<StaticGeometry> const& static
     current_theme{nullptr},
     text{Text::instance()},
     button_icons{
-        {msd::ButtonFunction::Close, {
+        {msd::Button::Close, {
             default_close_normal_button,
             default_close_active_button,
             default_button_icon,
             render_close_icon}},
-        {msd::ButtonFunction::Maximize, {
+        {msd::Button::Maximize, {
             default_normal_button,
             default_active_button,
             default_button_icon,
             render_maximize_icon}},
-        {msd::ButtonFunction::Minimize, {
+        {msd::Button::Minimize, {
             default_normal_button,
             default_active_button,
             default_button_icon,
@@ -919,7 +919,7 @@ void RendererStrategy::redraw_titlebar_buttons(geom::Size const scaled_titlebar_
         if (icon != button_icons.end())
         {
             Pixel button_color = icon->second.normal_color;
-            if (button.state == msd::ButtonState::Hovered)
+            if (button.state == msd::Button::Hovered)
                 button_color = icon->second.active_color;
             for (geom::Y y{scaled_button_rect.top()}; y < scaled_button_rect.bottom(); y += geom::DeltaY{1})
             {

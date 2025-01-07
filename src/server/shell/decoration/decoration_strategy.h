@@ -33,20 +33,6 @@ namespace mir::shell::decoration
 {
 using Pixel = uint32_t;
 
-enum class ButtonState
-{
-    Up,         ///< The user is not interacting with this button
-    Hovered,    ///< The user is hovering over this button
-    Down,       ///< The user is currently pressing this button
-};
-
-enum class ButtonFunction
-{
-    Close,
-    Maximize,
-    Minimize,
-};
-
 enum class BorderType
 {
     Full,       ///< Full titlebar and border (for restored windows)
@@ -56,13 +42,30 @@ enum class BorderType
 
 auto border_type_for(MirWindowType type, MirWindowState state) -> BorderType;
 
-struct ButtonInfo
+struct Button
 {
-    ButtonFunction function;
-    ButtonState state;
+    enum class State
+    {
+        Up,         ///< The user is not interacting with this button
+        Hovered,    ///< The user is hovering over this button
+        Down,       ///< The user is currently pressing this button
+    };
+
+    enum class Function
+    {
+        Close,
+        Maximize,
+        Minimize,
+    };
+
+    using enum State;
+    using enum Function;
+
+    Function function;
+    State state;
     geometry::Rectangle rect;
 
-    auto operator==(ButtonInfo const& other) const -> bool
+    auto operator==(Button const& other) const -> bool
     {
         return function == other.function &&
                state == other.state &&
@@ -75,21 +78,21 @@ class InputState
 {
 public:
     InputState(
-        std::vector<ButtonInfo> const& buttons,
+        std::vector<Button> const& buttons,
         std::vector<geometry::Rectangle> const& input_shape)
         : buttons_{buttons},
           input_shape_{input_shape}
     {
     }
 
-    auto buttons() const -> std::vector<ButtonInfo> const& { return buttons_; }
+    auto buttons() const -> std::vector<Button> const& { return buttons_; }
     auto input_shape() const -> std::vector<geometry::Rectangle> const& { return input_shape_; }
 
 private:
     InputState(InputState const&) = delete;
     InputState& operator=(InputState const&) = delete;
 
-    std::vector<ButtonInfo> const buttons_;
+    std::vector<Button> const buttons_;
     std::vector<geometry::Rectangle> const input_shape_;
 };
 
