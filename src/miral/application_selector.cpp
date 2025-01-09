@@ -200,6 +200,10 @@ auto ApplicationSelector::advance(bool reverse, bool within_app) -> Window
         is_active_ = true;
     }
 
+    // If nothing is selected, start from the begining of the list.
+    if(!selected)
+        selected = *focus_list.begin();
+
     // Attempt to focus the next application after the selected application.
     auto it = find(selected);
 
