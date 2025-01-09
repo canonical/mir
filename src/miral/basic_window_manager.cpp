@@ -296,6 +296,8 @@ void miral::BasicWindowManager::refocus(
             {
                 // select_active_window() calls set_focus_to() which updates mru_active_windows and changes window
                 auto const w = window;
+                if (!info_for(w).is_visible())
+                    return true;
 
                 for (auto const& workspace : workspaces_containing(w))
                 {
@@ -325,14 +327,15 @@ void miral::BasicWindowManager::refocus(
             {
                 // select_active_window() calls set_focus_to() which updates mru_active_windows and changes window
                 auto const w = window;
+                if(!info_for(w).is_visible()) return true;
                 return !(new_focus = select_active_window(w));
             });
 
         if (new_focus) return;
     }
 
-    // Fallback to cycling through applications
-    focus_next_application();
+    // Can't focus anything else
+    focus_controller->set_focus_to(nullptr, nullptr);
 }
 
 void miral::BasicWindowManager::erase(miral::WindowInfo const& info)
@@ -1496,7 +1499,7 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
                 // Try to activate to recently active window of any application
                 mru_active_windows.enumerate([&](Window& candidate)
                     {
-                        if (candidate == window)
+                        if (candidate == window || !info_for(candidate).is_visible())
                             return true;
                         auto const w = candidate;
                         for (auto const& workspace : workspaces_containing(w))
@@ -1518,7 +1521,7 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
             if (window == active_window() || !active_window())
                 mru_active_windows.enumerate([&](Window& candidate)
                 {
-                    if (candidate == window)
+                    if (candidate == window || !info_for(candidate).is_visible())
                         return true;
                     auto const w = candidate;
                     return !(select_active_window(w));
