@@ -291,24 +291,18 @@ void miral::BasicWindowManager::refocus(
     // Try to activate to recently active window of any application in a shared workspace
     {
         miral::Window new_focus;
+        auto workspaces_containing_window_mut = workspaces_containing_window;
+        std::sort(workspaces_containing_window_mut.begin(), workspaces_containing_window_mut.end());
 
-        mru_active_windows.enumerate([&](miral::Window& window)
+        mru_active_windows.enumerate(
+            [&](miral::Window& other_window)
             {
-                // select_active_window() calls set_focus_to() which updates mru_active_windows and changes window
-                auto const w = window;
-                if (!info_for(w).is_visible())
+                if (!info_for(other_window).is_visible())
                     return true;
 
-                for (auto const& workspace : workspaces_containing(w))
-                {
-                    for (auto const& ww : workspaces_containing_window)
-                    {
-                        if (ww == workspace)
-                        {
-                            return !(new_focus = select_active_window(w));
-                        }
-                    }
-                }
+                // select_active_window() calls set_focus_to() which updates mru_active_windows and changes window
+                if (window_workspaces_intersect(workspaces_containing_window_mut, other_window))
+                    return !(new_focus = select_active_window(other_window));
 
                 return true;
             });
@@ -319,7 +313,7 @@ void miral::BasicWindowManager::refocus(
     if (can_activate_window_for_session(application))
         return;
 
-    // Try to activate to recently active window of any application
+    // Try to activate the recently active window of any application
     {
         miral::Window new_focus;
 
@@ -1494,24 +1488,17 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
 
             if (window == active_window() || !active_window())
             {
-                auto const workspaces_containing_window = workspaces_containing(window);
+                auto workspaces_containing_window = workspaces_containing(window);
+                std::sort(workspaces_containing_window.begin(), workspaces_containing_window.end());
 
                 // Try to activate to recently active window of any application
                 mru_active_windows.enumerate([&](Window& candidate)
                     {
                         if (candidate == window || !info_for(candidate).is_visible())
                             return true;
-                        auto const w = candidate;
-                        for (auto const& workspace : workspaces_containing(w))
-                        {
-                            for (auto const& ww : workspaces_containing_window)
-                            {
-                                if (ww == workspace)
-                                {
-                                    return !(select_active_window(w));
-                                }
-                            }
-                        }
+
+                        if(window_workspaces_intersect(workspaces_containing_window, candidate))
+                            select_active_window(candidate);
 
                         return true;
                     });
@@ -1523,8 +1510,7 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
                 {
                     if (candidate == window || !info_for(candidate).is_visible())
                         return true;
-                    auto const w = candidate;
-                    return !(select_active_window(w));
+                    return !(select_active_window(candidate));
                 });
 
             if (window == active_window())
@@ -2994,3 +2980,21 @@ void miral::BasicWindowManager::move_cursor_to(mir::geometry::PointF point)
         });
     });
 }
+
+auto miral::BasicWindowManager::window_workspaces_intersect(std::vector<std::shared_ptr<Workspace>> const& w1_workspaces, Window const& w2) const -> bool
+{
+    auto w2_workspaces = workspaces_containing(w2);
+    std::sort(w2_workspaces.begin(), w2_workspaces.end());
+
+    auto intersection = std::vector<std::shared_ptr<Workspace>>();
+
+    std::set_intersection(
+        w1_workspaces.begin(),
+        w1_workspaces.end(),
+        w2_workspaces.begin(),
+        w2_workspaces.end(),
+        std::back_inserter(intersection));
+
+    return !intersection.empty();
+}
+
