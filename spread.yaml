@@ -7,9 +7,9 @@ backends:
         systems:
             - alpine-3.19
             - alpine-3.20
+            - alpine-3.21
             - alpine-edge
             - ubuntu-24.04
-            - fedora-39
             - fedora-40
             - fedora-rawhide:
                 image: images:fedora/40
