@@ -255,7 +255,7 @@ public:
     ~Impl()
     {
         // Ensure EGL resources are cleaned up in the right context
-        egl_delegate->spawn([state = state]() mutable { state = nullptr; });
+        egl_delegate->spawn([state = std::move(state)]() mutable { state = nullptr; });
     }
 
     auto blit(EGLImage from, EGLImage to, geometry::Size size) -> std::optional<mir::Fd>
