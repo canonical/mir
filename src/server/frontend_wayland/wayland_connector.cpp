@@ -16,6 +16,7 @@
 
 #include "wayland_connector.h"
 
+#include "mir/graphics/platform.h"
 #include "wl_client.h"
 #include "wl_data_device_manager.h"
 #include "wayland_utils.h"
@@ -29,6 +30,7 @@
 #include "desktop_file_manager.h"
 #include "foreign_toplevel_manager_v1.h"
 #include "wp_viewporter.h"
+#include "linux_drm_syncobj.h"
 
 #include "mir/main_loop.h"
 #include "mir/thread_name.h"
@@ -242,7 +244,8 @@ mf::WaylandConnector::WaylandConnector(
     bool enable_key_repeat,
     std::shared_ptr<scene::SessionLock> const& session_lock,
     std::shared_ptr<mir::DecorationStrategy> const& decoration_strategy,
-    std::shared_ptr<scene::SessionCoordinator> const& session_coordinator)
+    std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
+    std::vector<std::shared_ptr<mg::RenderingPlatform>> const& render_platforms)
     : extension_filter{extension_filter},
       display{wl_display_create(), &cleanup_display},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
@@ -336,6 +339,22 @@ mf::WaylandConnector::WaylandConnector(
     shm_global = std::make_unique<WlShm>(display.get(), executor);
 
     viewporter = std::make_unique<WpViewporter>(display.get());
+
+    {
+        std::vector<std::shared_ptr<mg::DRMRenderingProvider>> providers;
+        for (auto platform : render_platforms)
+        {
+            if (auto provider = mg::RenderingPlatform::acquire_provider<mg::DRMRenderingProvider>(platform))
+            {
+                providers.push_back(std::move(provider));
+            }
+        }
+        if (!providers.empty())
+        {
+            mir::log_debug("Detected DRM Syncobj capable rendering platform. Enabling linux_drm_syncobj_v1 explicit sync support.");
+            drm_syncobj = std::make_unique<LinuxDRMSyncobjManager>(display.get(), providers);
+        }
+    }
 
     char const* wayland_display = nullptr;
 

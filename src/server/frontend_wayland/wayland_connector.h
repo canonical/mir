@@ -55,6 +55,7 @@ namespace graphics
 {
 class GraphicBufferAllocator;
 class DisplayConfigurationObserver;
+class RenderingPlatform;
 }
 namespace shell
 {
@@ -87,6 +88,7 @@ class WlShm;
 class WlSubcompositor;
 class WlSurface;
 class WpViewporter;
+class LinuxDRMSyncobjManager;
 class DesktopFileManager;
 
 class WaylandExtensions
@@ -169,7 +171,8 @@ public:
         bool enable_key_repeat,
         std::shared_ptr<scene::SessionLock> const& session_lock,
         std::shared_ptr<DecorationStrategy> const& decoration_strategy,
-        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator);
+        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
+        std::vector<std::shared_ptr<graphics::RenderingPlatform>> const& render_platforms);
 
     ~WaylandConnector() override;
 
@@ -216,6 +219,7 @@ private:
     std::unique_ptr<WlDataDeviceManager> data_device_manager_global;
     std::unique_ptr<WlShm> shm_global;
     std::unique_ptr<WpViewporter> viewporter;
+    std::unique_ptr<LinuxDRMSyncobjManager> drm_syncobj;
     std::shared_ptr<Executor> const executor;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<shell::Shell> const shell;
