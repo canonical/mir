@@ -86,10 +86,11 @@ private:
     bool egl_display_bound{false};
 };
 
-class GLRenderingProvider : public graphics::GLRenderingProvider
+class GLRenderingProvider : public graphics::DRMRenderingProvider
 {
 public:
     GLRenderingProvider(
+        Fd drm_fd,
         std::shared_ptr<GBMDisplayProvider> associated_display,
         std::shared_ptr<common::EGLContextExecutor> egl_delegate,
         std::shared_ptr<DMABufEGLProvider> dmabuf_provider,
@@ -109,7 +110,10 @@ public:
         DisplaySink& sink,
         GLConfig const& config) -> std::unique_ptr<gl::OutputSurface> override;
 
+    auto import_syncobj(Fd const& syncobj_fd) -> std::unique_ptr<drm::Syncobj> override;
+
 private:
+    Fd const drm_fd;
     std::shared_ptr<GBMDisplayProvider> const bound_display;    ///< Associated Display provider (if any - null is valid)
     EGLDisplay const dpy;
     EGLContext const ctx;
