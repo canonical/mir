@@ -26,6 +26,7 @@
 #include "mir/module_properties.h"
 #include "mir/module_deleter.h"
 #include "mir/renderer/sw/pixel_source.h"
+#include "mir/fd.h"
 
 #include <EGL/egl.h>
 
@@ -165,6 +166,21 @@ public:
     virtual auto surface_for_sink(
         DisplaySink& sink,
         GLConfig const& config) -> std::unique_ptr<gl::OutputSurface> = 0;
+};
+
+namespace drm
+{
+class Syncobj;
+}
+
+class DRMRenderingProvider : public GLRenderingProvider
+{
+public:
+    class Tag : public RenderingProvider::Tag
+    {
+    };
+
+    virtual auto import_syncobj(mir::Fd const& syncobj_fd) -> std::unique_ptr<drm::Syncobj> = 0;
 };
 
 /**
