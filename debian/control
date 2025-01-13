@@ -214,7 +214,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: mirtest-dev
+Depends: mirtest-dev,
          libmirserver-dev (= ${binary:Version}),
          libboost-filesystem-dev,
          libboost-system-dev,
