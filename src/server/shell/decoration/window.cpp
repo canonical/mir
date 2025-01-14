@@ -17,65 +17,17 @@
 #include "window.h"
 #include "threadsafe_access.h"
 #include "basic_decoration.h"
+#include "decoration_strategy.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/null_surface_observer.h"
-#include "mir/shell/decoration.h"
 
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace msd = mir::shell::decoration;
 
-namespace
-{
-auto border_type_for(MirWindowType type, MirWindowState state) -> msd::BorderType
-{
-    using BorderType = msd::BorderType;
-
-    switch (type)
-    {
-    case mir_window_type_normal:
-    case mir_window_type_utility:
-    case mir_window_type_dialog:
-    case mir_window_type_freestyle:
-    case mir_window_type_satellite:
-        break;
-
-    case mir_window_type_gloss:
-    case mir_window_type_menu:
-    case mir_window_type_inputmethod:
-    case mir_window_type_tip:
-    case mir_window_type_decoration:
-    case mir_window_types:
-        return BorderType::None;
-    }
-
-    switch (state)
-    {
-    case mir_window_state_unknown:
-    case mir_window_state_restored:
-        return BorderType::Full;
-
-    case mir_window_state_maximized:
-    case mir_window_state_vertmaximized:
-    case mir_window_state_horizmaximized:
-        return BorderType::Titlebar;
-
-    case mir_window_state_minimized:
-    case mir_window_state_fullscreen:
-    case mir_window_state_hidden:
-    case mir_window_state_attached:
-    case mir_window_states:
-        return BorderType::None;
-    }
-
-    mir::fatal_error("%s:%d: should be unreachable", __FILE__, __LINE__);
-    return {};
-}
-}
-
 msd::WindowState::WindowState(
-    std::shared_ptr<StaticGeometry const> const& static_geometry,
+    std::shared_ptr<StaticGeometry> const& static_geometry,
     std::shared_ptr<scene::Surface> const& surface,
     float scale)
     : static_geometry{static_geometry},
@@ -215,19 +167,6 @@ auto msd::WindowState::bottom_border_rect() const -> geom::Rectangle
         {bottom_border_width(), bottom_border_height()}};
 }
 
-auto msd::WindowState::button_rect(unsigned n) const -> geom::Rectangle
-{
-    geom::Rectangle titlebar = titlebar_rect();
-    geom::X x =
-        titlebar.right() -
-        as_delta(side_border_width()) -
-        n * as_delta(static_geometry->button_width + static_geometry->padding_between_buttons) -
-        as_delta(static_geometry->button_width);
-    return geom::Rectangle{
-        {x, titlebar.top()},
-        {static_geometry->button_width, titlebar.size.height}};
-}
-
 auto msd::WindowState::scale() const -> float
 {
     return scale_;
@@ -297,23 +236,4 @@ msd::WindowSurfaceObserverManager::WindowSurfaceObserverManager(
 msd::WindowSurfaceObserverManager::~WindowSurfaceObserverManager()
 {
     surface_->unregister_interest(*observer);
-}
-
-auto msd::compute_size_with_decorations(geometry::Size content_size, MirWindowType type, MirWindowState state)
-    -> geometry::Size
-{
-    switch (border_type_for(type, state))
-    {
-    case msd::BorderType::Full:
-        content_size.width += msd::default_geometry.side_border_width * 2;
-        content_size.height += msd::default_geometry.titlebar_height + msd::default_geometry.bottom_border_height;
-        break;
-    case msd::BorderType::Titlebar:
-        content_size.height += msd::default_geometry.titlebar_height;
-        break;
-    case msd::BorderType::None:
-        break;
-    }
-
-    return content_size;
 }

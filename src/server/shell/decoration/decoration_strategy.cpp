@@ -15,22 +15,24 @@
  */
 
 
-#include "renderer.h"
+#include "decoration_strategy.h"
 #include "window.h"
 
+#include "mir/fatal.h"
 #include "mir/geometry/displacement.h"
 #include "mir/log.h"
 
 #include <boost/throw_exception.hpp>
-#include <boost/filesystem.hpp>
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include <endian.h>
 
 #include <locale>
 #include <codecvt>
+#include <filesystem>
+#include <map>
 
 namespace ms = mir::scene;
-namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace msh = mir::shell;
 namespace msd = mir::shell::decoration;
@@ -44,21 +46,30 @@ namespace
 {
 static constexpr auto color(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 0xFF) -> uint32_t
 {
+#if __BYTE_ORDER == __LITTLE_ENDIAN
     return ((uint32_t)b <<  0) |
            ((uint32_t)g <<  8) |
            ((uint32_t)r << 16) |
            ((uint32_t)a << 24);
+#elif __BYTE_ORDER == __BIG_ENDIAN
+    return ((uint32_t)b << 24) |
+           ((uint32_t)g << 16) |
+           ((uint32_t)r <<  8) |
+           ((uint32_t)a <<  0);
+#else
+#error unsupported byte order
+#endif
 }
 
-uint32_t const default_focused_background   = color(0x32, 0x32, 0x32);
-uint32_t const default_unfocused_background = color(0x80, 0x80, 0x80);
-uint32_t const default_focused_text         = color(0xFF, 0xFF, 0xFF);
-uint32_t const default_unfocused_text       = color(0xA0, 0xA0, 0xA0);
-uint32_t const default_normal_button        = color(0x60, 0x60, 0x60);
-uint32_t const default_active_button        = color(0xA0, 0xA0, 0xA0);
-uint32_t const default_close_normal_button  = color(0xA0, 0x20, 0x20);
-uint32_t const default_close_active_button  = color(0xC0, 0x60, 0x60);
-uint32_t const default_button_icon          = color(0xFF, 0xFF, 0xFF);
+uint32_t constexpr default_focused_background   = color(0x32, 0x32, 0x32);
+uint32_t constexpr default_unfocused_background = color(0x80, 0x80, 0x80);
+uint32_t constexpr default_focused_text         = color(0xFF, 0xFF, 0xFF);
+uint32_t constexpr default_unfocused_text       = color(0xA0, 0xA0, 0xA0);
+uint32_t constexpr default_normal_button        = color(0x60, 0x60, 0x60);
+uint32_t constexpr default_active_button        = color(0xA0, 0xA0, 0xA0);
+uint32_t constexpr default_close_normal_button  = color(0xA0, 0x20, 0x20);
+uint32_t constexpr default_close_active_button  = color(0xC0, 0x60, 0x60);
+uint32_t constexpr default_button_icon          = color(0xFF, 0xFF, 0xFF);
 
 /// Font search logic should be kept in sync with examples/example-server-lib/wallpaper_config.cpp
 auto default_font() -> std::string
@@ -94,10 +105,10 @@ auto default_font() -> std::string
         "/usr/share/fonts",             // Fedora/Arch
     };
 
-    std::vector<std::string> usable_search_paths;
+    std::vector<std::filesystem::path> usable_search_paths;
     for (auto const& path : font_path_search_paths)
     {
-        if (boost::filesystem::exists(path))
+        if (std::filesystem::exists(path))
             usable_search_paths.push_back(path);
     }
 
@@ -107,8 +118,8 @@ auto default_font() -> std::string
         {
             for (auto const& path : usable_search_paths)
             {
-                auto const full_font_path = path + '/' + prefix + '/' + font.filename;
-                if (boost::filesystem::exists(full_font_path))
+                auto const full_font_path = path / prefix / font.filename;
+                if (std::filesystem::exists(full_font_path))
                     return full_font_path;
             }
         }
@@ -199,7 +210,7 @@ inline void render_minimize_icon(
 
 struct RendererStrategy : public msd::RendererStrategy
 {
-    RendererStrategy(std::shared_ptr<StaticGeometry const> const& static_geometry);
+    RendererStrategy(std::shared_ptr<StaticGeometry> const& static_geometry);
 
     void update_state(WindowState const& window_state, InputState const& input_state) override;
     auto render_titlebar() -> std::optional<RenderedPixels> override;
@@ -208,7 +219,7 @@ struct RendererStrategy : public msd::RendererStrategy
     auto render_bottom_border() -> std::optional<RenderedPixels> override;
 
 private:
-    std::shared_ptr<StaticGeometry const> const static_geometry;
+    std::shared_ptr<StaticGeometry> const static_geometry;
 
     /// A visual theme for a decoration
     /// Focused and unfocused windows use a different theme
@@ -288,12 +299,64 @@ private:
     void redraw_titlebar_text(geom::Size scaled_titlebar_size);
     void redraw_titlebar_buttons(geom::Size scaled_titlebar_size);
 };
+
+class DecorationStrategy : public msd::DecorationStrategy
+{
+public:
+    auto static_geometry() const -> std::shared_ptr<StaticGeometry> override;
+    auto render_strategy() const -> std::unique_ptr<mir::shell::decoration::RendererStrategy> override;
+    auto button_placement(unsigned n, const WindowState& ws) const -> mir::geometry::Rectangle override;
+};
 }
 
-auto msd::RendererStrategy::default_strategy(std::shared_ptr<StaticGeometry const> const& static_geometry)
--> std::unique_ptr<RendererStrategy>
+auto msd::border_type_for(MirWindowType type, MirWindowState state) -> msd::BorderType
 {
-    return std::make_unique<::RendererStrategy>(static_geometry);
+    using BorderType = msd::BorderType;
+
+    switch (type)
+    {
+    case mir_window_type_normal:
+    case mir_window_type_utility:
+    case mir_window_type_dialog:
+    case mir_window_type_freestyle:
+    case mir_window_type_satellite:
+        break;
+
+    case mir_window_type_gloss:
+    case mir_window_type_menu:
+    case mir_window_type_inputmethod:
+    case mir_window_type_tip:
+    case mir_window_type_decoration:
+    case mir_window_types:
+        return BorderType::None;
+    }
+
+    switch (state)
+    {
+    case mir_window_state_unknown:
+    case mir_window_state_restored:
+        return BorderType::Full;
+
+    case mir_window_state_maximized:
+    case mir_window_state_vertmaximized:
+    case mir_window_state_horizmaximized:
+        return BorderType::Titlebar;
+
+    case mir_window_state_minimized:
+    case mir_window_state_fullscreen:
+    case mir_window_state_hidden:
+    case mir_window_state_attached:
+    case mir_window_states:
+        return BorderType::None;
+    }
+
+    mir::fatal_error("%s:%d: should be unreachable", __FILE__, __LINE__);
+    return {};
+}
+
+auto msd::DecorationStrategy::default_decoration_strategy() -> std::unique_ptr<DecorationStrategy>
+{
+    return std::make_unique<::DecorationStrategy>();
 }
 
 class RendererStrategy::Text::Impl
@@ -563,7 +626,7 @@ auto RendererStrategy::Text::Impl::utf8_to_utf32(std::string const& text) -> std
     return utf32_text;
 }
 
-RendererStrategy::RendererStrategy(std::shared_ptr<StaticGeometry const> const& static_geometry) :
+RendererStrategy::RendererStrategy(std::shared_ptr<StaticGeometry> const& static_geometry) :
     static_geometry{static_geometry},
     focused_theme{
         default_focused_background,
@@ -817,4 +880,43 @@ void RendererStrategy::set_focus_state(MirWindowFocusState focus_state)
         needs_titlebar_redraw = true;
         needs_solid_color_redraw = true;
     }
+}
+
+
+auto DecorationStrategy::static_geometry() const -> std::shared_ptr<StaticGeometry>
+{
+    static auto const geometry{std::make_shared<StaticGeometry>(
+        geom::Height{24},   // titlebar_height
+        geom::Width{6},     // side_border_width
+        geom::Height{6},    // bottom_border_height
+        geom::Size{16, 16}, // resize_corner_input_size
+        geom::Width{24},    // button_width
+        geom::Width{6},     // padding_between_buttons
+        geom::Height{14},   // title_font_height
+        geom::Point{8, 2},  // title_font_top_left
+        geom::Displacement{5, 5}, // icon_padding
+        geom::Width{1},     // detail_line_width
+        mir_pixel_format_argb_8888  // buffer_format
+    )};
+    return geometry;
+}
+
+auto DecorationStrategy::render_strategy() const -> std::unique_ptr<mir::shell::decoration::RendererStrategy>
+{
+    return std::make_unique<::RendererStrategy>(static_geometry());
+}
+
+auto DecorationStrategy::button_placement(unsigned n, const WindowState& ws) const -> mir::geometry::Rectangle
+{
+    auto const titlebar = ws.titlebar_rect();
+    auto const geometry = static_geometry();
+
+    geom::X x =
+        titlebar.right() -
+        as_delta(ws.side_border_width()) -
+        n * as_delta(geometry->button_width + geometry->padding_between_buttons) -
+        as_delta(geometry->button_width);
+    return geom::Rectangle{
+                    {x, titlebar.top()},
+                    {geometry->button_width, titlebar.size.height}};
 }
