@@ -1,3 +1,13 @@
+mir (2.19.3) UNRELEASED; urgency=medium
+
+  * New upstream release 2.19.3
+
+    - Bug fixes:
+      . Don't leak VirtualInputDevice keyboards (#3720)
+      . kms: skip `simple-framebuffer` devices (#3721)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 16 Jan 2025 15:07:09 +0100
+
 mir (2.19.2) UNRELEASED; urgency=medium
 
   * New upstream release 2.19.2
