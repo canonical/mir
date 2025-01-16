@@ -60,7 +60,6 @@ miral::TestDisplayServer::TestDisplayServer(int argc, char const** argv) :
     unsetenv("WAYLAND_DISPLAY");    // We don't want to conflict with any existing server
     add_to_environment("MIR_SERVER_PLATFORM_PATH", mtf::server_platform_path().c_str());
     add_to_environment("MIR_SERVER_PLATFORM_DISPLAY_LIBS", "mir:stub-graphics");
-    add_to_environment("MIR_SERVER_PLATFORM_RENDERING_LIBS", "mir:stub-graphics");
     add_to_environment("MIR_SERVER_PLATFORM_INPUT_LIB", "mir:stub-input");
     add_to_environment("MIR_SERVER_CONSOLE_PROVIDER", "none");
 }
@@ -103,24 +102,6 @@ void miral::TestDisplayServer::start_server()
                                     started.notify_one();
                                 });
                         });
-
-
-                    server.override_the_display_buffer_compositor_factory(
-                        [&server]() -> std::shared_ptr<mir::compositor::DisplayBufferCompositorFactory>
-                        {
-                            auto first_rendering_platform = server.the_rendering_platforms().front();
-                            auto gl_provider =
-                                mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(
-                                    std::move(first_rendering_platform));
-                            if (gl_provider)
-                            {
-                                return std::make_shared<mtf::HeadlessDisplayBufferCompositorFactory>(
-                                    std::move(gl_provider),
-                                    server.the_gl_config());
-                            }
-                            BOOST_THROW_EXCEPTION((std::runtime_error{"Platform does not support GL interface"}));
-                        });
-
 
                     server.override_the_logger([&]()
                         {

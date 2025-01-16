@@ -701,6 +701,8 @@ global:
 MIR_COMMON_2.19 {
 global:
   extern "C++" {
+    mir::time::clock_gettime_checked*;
+    mir::time::is_steady_specialisation::is_steady*;
     mir::SharedLibrary::Handle::?Handle*;
     mir::SharedLibrary::Handle::operator*;
     mir::SharedLibrary::get_handle*;
@@ -708,6 +710,7 @@ global:
     std::hash?mir::SharedLibrary::Handle?::operator*;
     typeinfo?for?mir::SharedLibrary::Handle;
     typeinfo?for?mir::SharedLibrary::Handle::HandleHash;
+    typeinfo?for?mir::time::is_steady_specialisation;
   };
 } MIR_COMMON_2.18;
 
