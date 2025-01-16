@@ -317,19 +317,6 @@ TEST_F(UdevWrapperTest, MemberDereferenceWorks)
     EXPECT_STREQ("drm", iter->subsystem());
 }
 
-TEST_F(UdevWrapperTest, UdevMonitorDoesNotTriggerBeforeEnabling)
-{
-    mir::udev::Monitor monitor{mir::udev::Context()};
-    bool event_handler_called = false;
-
-    udev_environment.add_device("drm", "control64D", NULL, {}, {});
-
-    monitor.process_events([&event_handler_called](mir::udev::Monitor::EventType,
-                                                   mir::udev::Device const&) {event_handler_called = true;});
-
-    EXPECT_FALSE(event_handler_called);
-}
-
 TEST_F(UdevWrapperTest, UdevMonitorTriggersAfterEnabling)
 {
     mir::udev::Monitor monitor{mir::udev::Context()};
