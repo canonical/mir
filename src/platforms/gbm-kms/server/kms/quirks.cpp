@@ -158,8 +158,12 @@ private:
      *
      * At least as of drivers ≤ version 550, the NVIDIA gbm implementation is buggy in a way that prevents
      * Mir from working. Quirk off gbm-kms on NVIDIA.
+     *
+     * Simple-framebuffer should be evicted before Mir even gets there.
+     * https://bugs.launchpad.net/ubuntu/+source/linux/+bug/2084046
+     * https://github.com/canonical/mir/issues/3710
      */
-    std::unordered_set<std::string> drivers_to_skip = { "nvidia", "ast" };
+    std::unordered_set<std::string> drivers_to_skip = { "nvidia", "ast", "simple-framebuffer"};
     std::unordered_set<std::string> devnodes_to_skip;
     // We know this is currently useful for virtio_gpu, vc4-drm and v3d
     std::unordered_set<std::string> skip_modesetting_support = { "virtio_gpu", "vc4-drm", "v3d" };
