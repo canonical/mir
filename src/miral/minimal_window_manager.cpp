@@ -643,10 +643,8 @@ void miral::MinimalWindowManager::Impl::apply_resize_by(Displacement movement)
 
 bool miral::MinimalWindowManager::Impl::should_prevent_focus(miral::WindowInfo const& info)
 {
-    auto const without_parent = !info.parent();
-    auto const decoration_surface = info.type() == mir_window_type_decoration;
     return (focus_stealing == FocusStealing::prevent) && tools.active_window() &&
-           (without_parent || decoration_surface) && info.depth_layer() == mir_depth_layer_application &&
+           info.depth_layer() == mir_depth_layer_application &&
            tools.active_window().application() != info.window().application();
 }
 
