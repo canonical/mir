@@ -333,6 +333,7 @@ mf::TextInputV3::TextInputV3(
 mf::TextInputV3::~TextInputV3()
 {
     seat.remove_focus_listener(client, this);
+    ctx->device_registry->remove_device(keyboard_device);
     ctx->text_input_hub->deactivate_handler(handler);
 }
 

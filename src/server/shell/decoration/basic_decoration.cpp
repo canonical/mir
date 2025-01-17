@@ -42,23 +42,6 @@ namespace geom = mir::geometry;
 namespace msh = mir::shell;
 namespace msd = mir::shell::decoration;
 
-namespace mir::shell::decoration
-{
-// See src/server/shell/decoration/window.h for a full description of each property
-StaticGeometry const default_geometry {
-    geom::Height{24},   // titlebar_height
-    geom::Width{6},     // side_border_width
-    geom::Height{6},    // bottom_border_height
-    geom::Size{16, 16}, // resize_corner_input_size
-    geom::Width{24},    // button_width
-    geom::Width{6},     // padding_between_buttons
-    geom::Height{14},   // title_font_height
-    geom::Point{8, 2},  // title_font_top_left
-    geom::Displacement{5, 5}, // icon_padding
-    geom::Width{1},     // detail_line_width
-};
-}
-
 namespace
 {
 template<typename OBJ>
@@ -146,29 +129,22 @@ msd::BasicDecoration::BufferStreams::~BufferStreams()
     session->destroy_buffer_stream(bottom_border);
 }
 
-auto msd::BasicDecoration::BufferStreams::create_buffer_stream() -> std::shared_ptr<mc::BufferStream>
-{
-    auto const stream = session->create_buffer_stream(mg::BufferProperties{
-        geom::Size{1, 1},
-        buffer_format,
-        mg::BufferUsage::software});
-    return stream;
-}
-
 msd::BasicDecoration::BasicDecoration(
     std::shared_ptr<msh::Shell> const& shell,
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<Executor> const& executor,
     std::shared_ptr<input::CursorImages> const& cursor_images,
-    std::shared_ptr<ms::Surface> const& window_surface)
+    std::shared_ptr<ms::Surface> const& window_surface,
+    std::shared_ptr<DecorationStrategy> decoration_strategy)
     : threadsafe_self{std::make_shared<ThreadsafeAccess<BasicDecoration>>(executor)},
-      static_geometry{std::make_shared<StaticGeometry>(default_geometry)},
+      decoration_strategy{decoration_strategy},
+      static_geometry{decoration_strategy->static_geometry()},
       shell{shell},
       buffer_allocator{buffer_allocator},
       cursor_images{cursor_images},
       session{window_surface->session().lock()},
       buffer_streams{std::make_unique<BufferStreams>(session, static_geometry->buffer_format)},
-      renderer{std::make_unique<Renderer>(buffer_allocator, RendererStrategy::default_strategy(static_geometry))},
+      renderer{std::make_unique<Renderer>(buffer_allocator, decoration_strategy->render_strategy())},
       window_surface{window_surface},
       decoration_surface{create_surface()},
       window_state{new_window_state()},
@@ -176,7 +152,7 @@ msd::BasicDecoration::BasicDecoration(
           window_surface,
           threadsafe_self)},
       input_manager{std::make_unique<InputManager>(
-          static_geometry,
+          decoration_strategy,
           decoration_surface,
           *window_state,
           threadsafe_self)},
@@ -192,6 +168,15 @@ msd::BasicDecoration::BasicDecoration(
 
     // Calls from the executor thread can come in at any point after this
     threadsafe_self->initialize(this);
+}
+
+auto msd::BasicDecoration::BufferStreams::create_buffer_stream() -> std::shared_ptr<mc::BufferStream>
+{
+    auto const stream = session->create_buffer_stream(mg::BufferProperties{
+        geom::Size{1, 1},
+        buffer_format,
+        mg::BufferUsage::software});
+    return stream;
 }
 
 msd::BasicDecoration::~BasicDecoration()

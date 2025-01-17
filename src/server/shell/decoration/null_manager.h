@@ -33,6 +33,8 @@ public:
     void decorate(std::shared_ptr<scene::Surface> const&) override {}
     void undecorate(std::shared_ptr<scene::Surface> const&) override {}
     void undecorate_all() override {}
+    auto compute_size_with_decorations(geometry::Size sz, MirWindowType, MirWindowState) -> geometry::Size override
+        { return sz; }
 };
 }
 }
