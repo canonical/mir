@@ -56,9 +56,12 @@ public:
     void publish_event(MirEvent const& event);
     void request_resize(miral::Window const&, MirInputEvent const*, MirResizeEdge);
     void request_move(miral::Window const&, MirInputEvent const*);
+    void request_focus(miral::Window const&);
 
     auto focused_surface() -> std::shared_ptr<mir::scene::Surface>;
     auto tools() -> miral::WindowManagerTools const&;
+    auto is_above(miral::Window const& a, miral::Window const& b) const -> bool;
+
     virtual auto get_builder() -> WindowManagementPolicyBuilder = 0;
     virtual auto get_output_rectangles() -> std::vector<mir::geometry::Rectangle> = 0;
 

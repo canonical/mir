@@ -95,6 +95,11 @@ struct StubShell : public shell::Shell
     void send_to_back(shell::SurfaceSet const& /*surfaces*/) override
     {
     }
+
+    auto is_above(std::weak_ptr<scene::Surface> const& /*a*/, std::weak_ptr<scene::Surface> const& /*b*/) const -> bool override
+    {
+        return false;
+    }
     /// @}
 
     /// Overrides from shell::Shell

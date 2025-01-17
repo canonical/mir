@@ -126,7 +126,6 @@ struct SurfaceDepthLayerObserver : ms::NullSurfaceObserver
 private:
     ms::SurfaceStack* stack;
 };
-
 }
 
 ms::SurfaceStack::SurfaceStack(std::shared_ptr<SceneReport> const& report) :
@@ -491,6 +490,32 @@ void ms::SurfaceStack::send_to_back(const mir::scene::SurfaceSet &ss)
     {
         observers.surfaces_reordered(ss);
     }
+}
+
+auto ms::SurfaceStack::is_above(std::weak_ptr<scene::Surface> const& a, std::weak_ptr<scene::Surface> const& b) const -> bool
+{
+    RecursiveReadLock lg(guard);
+    if (a.expired())
+        return false;
+    else if (b.expired())
+        return true;
+
+    auto const shared_a = a.lock();
+    auto const shared_b = b.lock();
+    if (shared_a->depth_layer() < shared_b->depth_layer())
+        return false;
+    else if (shared_a->depth_layer() > shared_b->depth_layer())
+        return true;
+
+    auto const& layer = surface_layers[shared_a->depth_layer()];
+    bool found_b = false;
+    for (auto const& entry : layer)
+    {
+        if (entry == shared_b) found_b = true;
+        if (entry == shared_a) return found_b;
+    }
+
+    return false;
 }
 
 void ms::SurfaceStack::create_rendering_tracker_for(std::shared_ptr<Surface> const& surface)

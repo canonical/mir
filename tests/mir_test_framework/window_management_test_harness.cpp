@@ -190,6 +190,11 @@ void mir_test_framework::WindowManagementTestHarness::request_move(
     server.the_shell()->request_move(surface->session().lock(), surface, event);
 }
 
+void mir_test_framework::WindowManagementTestHarness::request_focus(miral::Window const& window)
+{
+    self->tools.select_active_window(window);
+}
+
 auto mir_test_framework::WindowManagementTestHarness::focused_surface() -> std::shared_ptr<ms::Surface>
 {
     return server.the_shell()->focused_surface();
@@ -198,4 +203,10 @@ auto mir_test_framework::WindowManagementTestHarness::focused_surface() -> std::
 auto mir_test_framework::WindowManagementTestHarness::tools() -> miral::WindowManagerTools const&
 {
     return self->tools;
+}
+
+auto mir_test_framework::WindowManagementTestHarness::is_above(
+    miral::Window const& a, miral::Window const& b) const -> bool
+{
+    return server.the_shell()->is_above(a.operator std::shared_ptr<ms::Surface>(), b.operator std::shared_ptr<ms::Surface>());
 }
