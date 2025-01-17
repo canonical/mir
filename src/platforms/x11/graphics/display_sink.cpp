@@ -113,6 +113,9 @@ void mgx::DisplaySink::set_transformation(glm::mat2 const& t)
 
 void mgx::DisplaySink::for_each_display_sink(std::function<void(graphics::DisplaySink & )> const& f)
 {
+    if (!is_active())
+        return;
+
     f(*this);
 }
 
@@ -144,4 +147,14 @@ auto mgx::DisplaySink::maybe_create_allocator(mg::DisplayAllocator::Tag const& t
         return egl_allocator.get();
     }
     return nullptr;
+}
+
+void mgx::DisplaySink::deactivate()
+{
+    is_active_ = false;
+}
+
+bool mgx::DisplaySink::is_active() const
+{
+    return is_active_;
 }

@@ -479,11 +479,13 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
     // TODO: watch for changes in the keymap?
 
     case XCB_CLIENT_MESSAGE:
+    {
         // Assume this is a WM_DELETE_WINDOW message
-        log_info("Exiting");
-        kill(getpid(), SIGTERM);
+        log_info("Received a WM_DELETE_WINDOW event");
+        auto const client_msg_ev = reinterpret_cast<xcb_client_message_event_t*>(event);
+        x11_resources->delete_window(client_msg_ev->window);
         break;
-
+    }
     default:
         break;
     }

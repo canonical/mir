@@ -75,6 +75,13 @@ public:
     virtual auto connection() const -> xcb_connection_t* = 0;
 };
 
+class X11EventsListener
+{
+public:
+    virtual ~X11EventsListener() = default;
+    virtual void on_delete_window(xcb_window_t win) = 0;
+};
+
 class X11Resources
 {
 public:
@@ -99,6 +106,9 @@ public:
     void clear_output_for_window(xcb_window_t win);
     /// X11Resources's mutex stays locked while the provided function runs
     void with_output_for_window(xcb_window_t win, std::function<void(std::optional<VirtualOutput*> output)> fn);
+    void delete_window(xcb_window_t win);
+    void register_interest(X11EventsListener* listener);
+    void unregister_interest(X11EventsListener* listener);
 
     std::unique_ptr<XCBConnection> const conn;
     ::Display* const xlib_dpy; ///< Needed for EGL
@@ -113,6 +123,7 @@ private:
 
     std::mutex outputs_mutex;
     std::unordered_map<xcb_window_t, VirtualOutput*> outputs;
+    std::vector<X11EventsListener*> listeners;
 
     static std::mutex instance_mutex;
     static std::weak_ptr<X11Resources> instance_;

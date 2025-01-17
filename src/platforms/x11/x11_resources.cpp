@@ -276,3 +276,19 @@ void mx::X11Resources::with_output_for_window(
         return fn(std::nullopt);
     }
 }
+
+void mx::X11Resources::delete_window(xcb_window_t win)
+{
+    for (auto listener : listeners)
+        listener->on_delete_window(win);
+}
+
+void mx::X11Resources::register_interest(X11EventsListener* listener)
+{
+    listeners.push_back(listener);
+}
+
+void mx::X11Resources::unregister_interest(X11EventsListener* listener)
+{
+    listeners.erase(std::remove(listeners.begin(), listeners.end(), listener), listeners.end());
+}

@@ -28,6 +28,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <algorithm>
+#include <csignal>
 
 #define MIR_LOG_COMPONENT "display"
 #include "mir/log.h"
@@ -116,6 +117,8 @@ mgx::Display::Display(
 {
     geom::Point top_left{0, 0};
 
+    x11_resources.get()->register_interest(this);
+
     for (auto const& requested_size : requested_sizes)
     {
         auto actual_size = requested_size.size;
@@ -157,6 +160,7 @@ mgx::Display::Display(
 
 mgx::Display::~Display() noexcept
 {
+    x11_resources.get()->unregister_interest(this);
 }
 
 void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f)
@@ -164,6 +168,9 @@ void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
     std::lock_guard lock{mutex};
     for (auto const& output : outputs)
     {
+        if (!output->display_sink->is_active())
+            continue;
+
         f(*output->display_sink);
     }
 }
@@ -174,6 +181,9 @@ std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
     std::vector<DisplayConfigurationOutput> output_configurations;
     for (auto const& output : outputs)
     {
+        if (!output->display_sink->is_active())
+            continue;
+
         output_configurations.push_back(*output->config);
     }
     return std::make_unique<mgx::DisplayConfiguration>(output_configurations);
@@ -195,6 +205,9 @@ void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
 
         for (auto& output : outputs)
         {
+            if (!output->display_sink->is_active())
+                continue;
+
             if (output->config->id == conf_output.id)
             {
                 *output->config = conf_output;
@@ -220,6 +233,11 @@ void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
         if (!found_info)
             mir::log_error("Could not find info for output %d", conf_output.id.as_value());
     });
+
+    for (auto const& handler : config_change_handlers)
+    {
+        handler();
+    }
 }
 
 void mgx::Display::register_configuration_change_handler(
@@ -243,6 +261,28 @@ void mgx::Display::resume()
 auto mgx::Display::create_hardware_cursor() -> std::shared_ptr<Cursor>
 {
     return nullptr;
+}
+
+void mgx::Display::on_delete_window(xcb_window_t win)
+{
+    bool should_close = true;
+    {
+        std::lock_guard lock{mutex};
+        for (auto& output : outputs)
+        {
+            if (output->window->operator xcb_window_t() == win)
+                output->display_sink->deactivate();
+
+            if (output->display_sink->is_active())
+                should_close = false;
+        }
+    }
+
+    auto const display_config = configuration();
+    configure(*display_config);
+
+    if (should_close)
+        kill(getpid(), SIGTERM);
 }
 
 bool mgx::Display::apply_if_configuration_preserves_display_buffers(

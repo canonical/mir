@@ -60,7 +60,7 @@ private:
     xcb_window_t win;
 };
 
-class Display : public graphics::Display
+class Display : public graphics::Display, public mir::X::X11EventsListener
 {
 public:
     Display(
@@ -88,6 +88,8 @@ public:
     void resume() override;
 
     std::shared_ptr<Cursor> create_hardware_cursor() override;
+
+    void on_delete_window(xcb_window_t win) override;
 
 private:
     struct OutputInfo : ::mir::X::X11Resources::VirtualOutput

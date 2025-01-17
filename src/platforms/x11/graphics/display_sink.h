@@ -58,6 +58,9 @@ public:
 
     glm::mat2 transformation() const override;
 
+    void deactivate();
+    bool is_active() const;
+
 protected:
     auto maybe_create_allocator(DisplayAllocator::Tag const& type_tag) -> DisplayAllocator* override;
 
@@ -83,6 +86,7 @@ private:
     std::shared_ptr<helpers::EGLHelper> egl;
     xcb_connection_t* const x11_connection;
     xcb_window_t const x_win;
+    bool is_active_ = true;
 };
 
 }
