@@ -150,7 +150,7 @@ int main(int argc, char const* argv[])
             ConfigureDecorations{},
             pre_init(ConfigurationOption{[&](bool is_set)
                     { focus_stealing_prevention = to_focus_stealing(is_set); },
-                    "focus-stealing-prevention", "allow or prevent focus stealing"}),
+                    "focus-stealing-prevention", "prevent focus stealing", false}),
             window_managers,
             display_configuration_options,
             external_client_launcher,
