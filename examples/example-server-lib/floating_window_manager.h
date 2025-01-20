@@ -19,6 +19,7 @@
 
 #include <miral/minimal_window_manager.h>
 
+#include "miral/window_specification.h"
 #include "splash_session.h"
 
 #include <mir_toolkit/events/enums.h>
@@ -120,12 +121,15 @@ private:
     std::shared_ptr<miral::Workspace> active_workspace;
     std::map<int, std::shared_ptr<miral::Workspace>> key_to_workspace;
     std::map<std::shared_ptr<miral::Workspace>, miral::Window> workspace_to_active;
+    miral::FocusStealing const focus_stealing;
 
     void apply_workspace_visible_to(miral::Window const& window);
 
     void apply_workspace_hidden_to(miral::Window const& window);
 
     void keep_spinner_on_top();
+
+    void try_place_new_window_and_account_for_occlusion(miral::WindowSpecification&);
 };
 
 #endif //MIRAL_SHELL_FLOATING_WINDOW_MANAGER_H
