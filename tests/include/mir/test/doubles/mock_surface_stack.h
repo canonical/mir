@@ -40,6 +40,7 @@ struct MockSurfaceStack : public shell::SurfaceStack
     MOCK_CONST_METHOD1(surface_at, std::shared_ptr<scene::Surface>(geometry::Point));
     MOCK_METHOD2(swap_z_order, void(scene::SurfaceSet const&, scene::SurfaceSet const&));
     MOCK_METHOD1(send_to_back, void(scene::SurfaceSet const&));
+    MOCK_CONST_METHOD2(is_above, bool(std::weak_ptr<scene::Surface> const& a, std::weak_ptr<scene::Surface> const& b));
 };
 
 }

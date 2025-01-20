@@ -500,6 +500,45 @@ TEST_F(MinimalWindowManagerTest, can_resize_south_east_with_touch)
     EXPECT_EQ(window.size(), geom::Size(50, 50));
 }
 
+TEST_F(MinimalWindowManagerTest,  new_windows_are_inserted_above_older_windows)
+{
+    auto const app1 = open_application("app1");
+    auto const app2 = open_application("app2");
+    auto const app3 = open_application("app3");
+    msh::SurfaceSpecification spec;
+    spec.width = geom::Width {100};
+    spec.height = geom::Height{100};
+    spec.depth_layer = mir_depth_layer_application;
+    auto window1 = create_window(app1, spec);
+    auto window2 = create_window(app2, spec);
+    auto window3 = create_window(app3, spec);
+
+    EXPECT_TRUE(is_above(window3, window2));
+    EXPECT_TRUE(is_above(window2, window1));
+}
+
+TEST_F(MinimalWindowManagerTest,  when_a_window_is_focused_then_it_appears_above_other_windows)
+{
+    auto const app1 = open_application("app1");
+    auto const app2 = open_application("app2");
+    auto const app3 = open_application("app3");
+    msh::SurfaceSpecification spec;
+    spec.width = geom::Width {100};
+    spec.height = geom::Height{100};
+    spec.depth_layer = mir_depth_layer_application;
+    auto window1 = create_window(app1, spec);
+    auto window2 = create_window(app2, spec);
+    auto window3 = create_window(app3, spec);
+
+    request_focus(window1);
+
+    auto surface1 = window1.operator std::shared_ptr<ms::Surface>();
+    EXPECT_EQ(focused_surface(), surface1);
+
+    EXPECT_TRUE(is_above(window1, window3));
+    EXPECT_TRUE(is_above(window3, window2));
+}
+
 struct SurfacePlacementCase
 {
     struct SurfacePlacement

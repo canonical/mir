@@ -59,6 +59,10 @@ public:
 
     virtual void send_to_back(SurfaceSet const& surfaces) = 0;
 
+    /// Returns true if surface [a] is above surface [b].
+    virtual auto is_above(std::weak_ptr<scene::Surface> const& a, std::weak_ptr<scene::Surface> const& b) const
+        -> bool = 0;
+
 protected:
     FocusController() = default;
     FocusController(FocusController const&) = delete;
