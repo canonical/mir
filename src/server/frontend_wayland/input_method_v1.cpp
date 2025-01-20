@@ -576,7 +576,6 @@ mf::InputPanelV1::InputPanelV1(
     OutputManager* const output_manager,
     std::shared_ptr<scene::TextInputHub> const text_input_hub)
     : Global(display, Version<1>()),
-      display{display},
       wayland_executor{wayland_executor},
       shell{shell},
       seat{seat},
