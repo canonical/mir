@@ -1,0 +1,3 @@
+usr/include/mirtest-internal
+usr/lib/*/pkgconfig/mirtest-internal.pc
+usr/lib/*/libmir-test-assist-internal.a

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "test_wlcs_display_server.h"
+#include <miral/test_wlcs_display_server.h>
 #include <miral/wayland_extensions.h>
 
 namespace
