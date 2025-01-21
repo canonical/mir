@@ -66,6 +66,7 @@ set(
   wp_viewporter.cpp             wp_viewporter.h
   fractional_scale_v1.cpp           fractional_scale_v1.h
   xdg_activation_v1.cpp         xdg_activation_v1.h
+  linux_drm_syncobj.cpp         linux_drm_syncobj.h
 )
 
 add_custom_command(

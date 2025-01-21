@@ -29,7 +29,9 @@
 #include "mir/geometry/point.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/shell/surface_specification.h"
+#include "linux_drm_syncobj.h"
 
+#include <atomic>
 #include <vector>
 #include <map>
 
@@ -60,6 +62,7 @@ class WlSurface;
 class WlSubsurface;
 class ResourceLifetimeTracker;
 class Viewport;
+class SyncTimeline;
 
 struct WlSurfaceState
 {
@@ -87,6 +90,8 @@ struct WlSurfaceState
     std::optional<std::optional<std::vector<geometry::Rectangle>>> input_shape;
     std::vector<wayland::Weak<Callback>> frame_callbacks;
     wayland::Weak<Viewport> viewport;
+
+    std::optional<SyncPoint> release_fence;
 
 private:
     // only set to true if invalidate_surface_data() is called
@@ -156,6 +161,26 @@ public:
      */
     void associate_viewport(wayland::Weak<Viewport> viewport);
 
+    /**
+     * Associate a DRM Syncobj timeline with this surface
+     *
+     * This associates explicit synchronisation fences with the surface's
+     * buffer submissions.
+     * See linux-drm-syncobj-v1 protocol for more details
+     *
+     * \throws A TimelineAlreadyAssociated if the surface already has a timeline associated
+     */
+    void associate_sync_timeline(wayland::Weak<SyncTimeline> timeline);
+
+    class TimelineAlreadyAssociated : public std::logic_error
+    {
+    public:
+        TimelineAlreadyAssociated()
+            : std::logic_error("Surface already has a sync timeline associated")
+        {
+        }
+    };
+
     std::shared_ptr<scene::Session> const session;
     std::shared_ptr<compositor::BufferStream> const stream;
 
@@ -179,6 +204,14 @@ private:
      */
     std::shared_ptr<graphics::Buffer> current_buffer;
 
+    /* State for when a buffer update is waiting for a client fence to signal
+     */
+    struct PendingBufferState;
+    std::unique_ptr<PendingBufferState> pending_context;
+    struct wl_event_source* buffer_ready_source{nullptr};
+
+    static void complete_commit(WlSurface* surf);
+
     WlSurfaceState pending;
     geometry::Displacement offset_;
     float scale{1};
@@ -188,6 +221,7 @@ private:
     std::vector<SceneSurfaceCreatedCallback> scene_surface_created_callbacks;
     wayland::Weak<Viewport> viewport;
     wayland::Weak<FractionalScaleV1> fractional_scale;
+    wayland::Weak<SyncTimeline> sync_timeline;
 
     void send_frame_callbacks();
 
