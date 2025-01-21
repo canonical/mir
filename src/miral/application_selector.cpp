@@ -208,6 +208,10 @@ auto ApplicationSelector::advance(bool reverse, bool within_app) -> Window
         is_active_ = true;
     }
 
+    // If nothing is selected, start from the begining of the list.
+    if(!selected)
+        selected = *focus_list.begin();
+
     // Attempt to focus the next application after the selected application.
     auto it = find(selected);
 
@@ -231,7 +235,11 @@ auto ApplicationSelector::advance(bool reverse, bool within_app) -> Window
         // This means that there is no other selectable window in the list but
         // the currently selected one, so we don't need to select anything.
         if (*it == selected)
+        {
+            if(!tools.info_for(selected).is_visible())
+                tools.select_active_window(selected);
             return selected;
+        }
 
         if (within_app)
         {
@@ -279,7 +287,14 @@ auto ApplicationSelector::advance(bool reverse, bool within_app) -> Window
 
     auto next_state_to_preserve =  tools.info_for(next_window.value()).state();
     tools.select_active_window(next_window.value());
+
+    // When using the application selector, the selection/raising of apps is
+    // more of a "preview" than actually selecting the application.
+    //
+    // So, apps should return to their previous state whenever we move on from
+    // them. Minimized apps should return to being minimized.
     restore_state = next_state_to_preserve;
+
     return next_window.value();
 }
 
