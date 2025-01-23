@@ -15,25 +15,28 @@
  */
 
 #include "xdg_activation_v1.h"
-#include "wl_surface.h"
-#include "wl_seat.h"
-#include "wl_client.h"
-#include "mir/main_loop.h"
+
+#include "mir/events/keyboard_event.h"
 #include "mir/input/keyboard_observer.h"
-#include "mir/scene/surface.h"
-#include "mir/scene/session_listener.h"
+#include "mir/main_loop.h"
 #include "mir/scene/null_session_listener.h"
 #include "mir/scene/session.h"
 #include "mir/scene/session_coordinator.h"
+#include "mir/scene/session_listener.h"
 #include "mir/shell/shell.h"
 #include "mir/shell/token_authority.h"
+#include "mir/wayland/client.h"
 #include "mir/wayland/protocol_error.h"
 #include "mir/log.h"
+#include "wl_seat.h"
+#include "wl_surface.h"
+
 #include <algorithm>
-#include <random>
 #include <chrono>
-#include <mir/events/keyboard_event.h>
+#include <memory>
 #include <ranges>
+#include <string>
+#include <vector>
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
@@ -131,13 +134,14 @@ private:
     void bind(wl_resource* resource) override;
     void remove_token(Token const& token);
 
-    std::shared_ptr<msh::Shell> shell;
+    std::shared_ptr<msh::Shell> const shell;
     std::shared_ptr<ms::SessionCoordinator> const session_coordinator;
-    std::shared_ptr<MainLoop> main_loop;
-    std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> keyboard_observer_registrar;
-    std::shared_ptr<KeyboardObserver> keyboard_observer;
+    std::shared_ptr<MainLoop> const main_loop;
+    std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const keyboard_observer_registrar;
+    std::shared_ptr<KeyboardObserver> const keyboard_observer;
     std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<msh::TokenAuthority> const token_authority;
+
     std::vector<std::shared_ptr<XdgActivationTokenData>> pending_tokens;
     std::mutex pending_tokens_mutex;
 };
