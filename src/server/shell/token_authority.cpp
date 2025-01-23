@@ -103,7 +103,7 @@ auto msh::TokenAuthority::is_token_valid(Token const& token) const -> bool
 
 auto msh::TokenAuthority::get_bogus_token() const -> Token
 {
-    return Token{"I AM A TEAPOT", {}};
+    return Token{generate_token(), {}};
 }
 
 void msh::TokenAuthority::revoke_token(Token to_remove)

@@ -229,14 +229,7 @@ std::shared_ptr<mf::XdgActivationTokenData> mf::XdgActivationV1::get_token_data(
 std::shared_ptr<mf::XdgActivationTokenData> const mf::XdgActivationV1::create_token(std::shared_ptr<ms::Session> const& session)
 {
     if (!session_listener->is_focused_session(session))
-    {
-        mir::log_warning(
-            "Client from a different session trying to create a token. Session name: %s, PID: %d. Returning bogus "
-            "token",
-            session->name().c_str(),
-            session->process_id());
         return std::make_shared<XdgActivationTokenData>(token_authority->get_bogus_token(), session);
-    }
 
     auto generated = token_authority->issue_token(
         [this](auto const& token)
@@ -367,11 +360,10 @@ void mf::XdgActivationV1::Instance::activate(std::string const& string_token, st
     //
 
     auto token = xdg_activation_v1->token_authority->get_token_for_string(string_token);
+
+    // Invalid token, ignore it
     if(!token)
-    {
-        mir::log_error("XdgActivationV1::activate invalid token: %s", string_token.c_str());
         return;
-    }
 
     // Grab a reference to the token data before removing it
     //
