@@ -235,7 +235,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 ctx.session_coordinator,
                 ctx.main_loop,
                 ctx.keyboard_observer_registrar,
-                *ctx.wayland_executor);
+                *ctx.wayland_executor,
+                ctx.token_authority);
         }),
 };
 

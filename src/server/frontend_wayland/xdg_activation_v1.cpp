@@ -24,12 +24,14 @@
 #include "mir/scene/session_listener.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/shell/shell.h"
+#include "mir/shell/token_authority.h"
 #include "mir/wayland/protocol_error.h"
 #include "mir/log.h"
+#include <algorithm>
 #include <random>
 #include <chrono>
-#include <uuid.h>
 #include <mir/events/keyboard_event.h>
+#include <ranges>
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
@@ -37,18 +39,7 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 
-namespace
-{
-/// Time in milliseconds that the compositor will wait before invalidating a token
-auto constexpr timeout_ms = std::chrono::milliseconds(3000);
-
-std::string generate_token()
-{
-    uuid_t uuid;
-    uuid_generate(uuid);
-    return { reinterpret_cast<char*>(uuid), 4 };
-}
-}
+using Token = msh::TokenAuthority::Token;
 
 namespace mir
 {
@@ -57,24 +48,18 @@ namespace frontend
 struct XdgActivationTokenData
 {
     XdgActivationTokenData(
-        std::string const& token,
-        std::unique_ptr<time::Alarm> alarm_,
+        Token const& token,
         std::shared_ptr<ms::Session> const& session)
         : token{token},
-        alarm{std::move(alarm_)},
         session{session}
     {
-        alarm->reschedule_in(timeout_ms);
     }
 
-    std::string const token;
-    std::unique_ptr<time::Alarm> const alarm;
+    Token const token;
     std::weak_ptr<ms::Session> session;
-
     std::optional<uint32_t> serial;
     std::optional<struct wl_resource*> seat;
 };
-
 
 class XdgActivationV1 : public wayland::XdgActivationV1::Global
 {
@@ -85,11 +70,12 @@ public:
         std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<MainLoop> const& main_loop,
         std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
-        Executor& wayland_executor);
+        Executor& wayland_executor,
+        std::shared_ptr<msh::TokenAuthority> token_authority);
     ~XdgActivationV1();
 
-    std::shared_ptr<XdgActivationTokenData> const& create_token(std::shared_ptr<ms::Session> const& session);
-    std::shared_ptr<XdgActivationTokenData> try_consume_token(std::string const& token);
+    std::shared_ptr<XdgActivationTokenData> get_token_data(Token const& token);
+    std::shared_ptr<XdgActivationTokenData> const create_token(std::shared_ptr<ms::Session> const& session);
     void invalidate_all();
     void invalidate_if_not_from_session(std::shared_ptr<ms::Session> const&);
 
@@ -150,12 +136,14 @@ private:
     };
 
     void bind(wl_resource* resource) override;
+    void remove_token(Token const& token);
 
     std::shared_ptr<msh::Shell> shell;
     std::shared_ptr<ms::SessionCoordinator> const session_coordinator;
     std::shared_ptr<MainLoop> main_loop;
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> keyboard_observer_registrar;
     std::shared_ptr<KeyboardObserver> keyboard_observer;
+    std::shared_ptr<msh::TokenAuthority> const token_authority;
     std::vector<std::shared_ptr<XdgActivationTokenData>> pending_tokens;
     std::mutex pending_tokens_mutex;
 };
@@ -165,7 +153,8 @@ class XdgActivationTokenV1 : public wayland::XdgActivationTokenV1
 public:
     XdgActivationTokenV1(
         struct wl_resource* resource,
-        std::shared_ptr<XdgActivationTokenData> const& token);
+        std::shared_ptr<XdgActivationTokenData> const& token,
+        std::shared_ptr<msh::TokenAuthority> const& token_authority);
 
 private:
     void set_serial(uint32_t serial, struct wl_resource* seat) override;
@@ -177,7 +166,7 @@ private:
     void commit() override;
 
     std::shared_ptr<XdgActivationTokenData> token;
-    bool used = false;
+    std::shared_ptr<msh::TokenAuthority> const token_authority;
 };
 }
 }
@@ -188,10 +177,11 @@ auto mf::create_xdg_activation_v1(
     std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<MainLoop> const& main_loop,
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
-    Executor& wayland_executor)
+    Executor& wayland_executor,
+    std::shared_ptr<msh::TokenAuthority> const& token_authority)
     -> std::shared_ptr<mw::XdgActivationV1::Global>
 {
-    return std::make_shared<mf::XdgActivationV1>(display, shell, session_coordinator, main_loop, keyboard_observer_registrar, wayland_executor);
+    return std::make_shared<mf::XdgActivationV1>(display, shell, session_coordinator, main_loop, keyboard_observer_registrar, wayland_executor, token_authority);
 }
 
 mf::XdgActivationV1::XdgActivationV1(
@@ -200,13 +190,15 @@ mf::XdgActivationV1::XdgActivationV1(
     std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<MainLoop> const& main_loop,
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
-    Executor& wayland_executor)
+    Executor& wayland_executor,
+    std::shared_ptr<msh::TokenAuthority> token_authority)
     : Global(display, Version<1>()),
       shell{shell},
       session_coordinator{session_coordinator},
       main_loop{main_loop},
       keyboard_observer_registrar{keyboard_observer_registrar},
-      keyboard_observer{std::make_shared<KeyboardObserver>(this)}
+      keyboard_observer{std::make_shared<KeyboardObserver>(this)},
+      token_authority{token_authority}
 {
     keyboard_observer_registrar->register_interest(keyboard_observer, wayland_executor);
 }
@@ -216,52 +208,66 @@ mf::XdgActivationV1::~XdgActivationV1()
     keyboard_observer_registrar->unregister_interest(*keyboard_observer);
 }
 
-std::shared_ptr<mf::XdgActivationTokenData> const& mf::XdgActivationV1::create_token(std::shared_ptr<ms::Session> const& session)
+std::shared_ptr<mf::XdgActivationTokenData> mf::XdgActivationV1::get_token_data(Token const& token)
 {
-    auto generated = generate_token();
-    auto token = std::make_shared<XdgActivationTokenData>(generated, main_loop->create_alarm([this, generated]()
-    {
-        try_consume_token(generated);
-    }), session);
+    std::lock_guard guard(pending_tokens_mutex);
 
-    {
-        std::lock_guard guard(pending_tokens_mutex);
-        pending_tokens.emplace_back(std::move(token));
-        return pending_tokens.back();
-    }
-}
-
-std::shared_ptr<mf::XdgActivationTokenData> mf::XdgActivationV1::try_consume_token(std::string const& token)
-{
-    {
-        std::lock_guard guard(pending_tokens_mutex);
-        for (auto it = pending_tokens.begin(); it != pending_tokens.end(); it++)
+    auto iter = std::ranges::find_if(
+        pending_tokens,
+        [&](auto const& pending_token)
         {
-            if (it->get()->token == token)
-            {
-                auto result = *it;
-                pending_tokens.erase(it);
-                return result;
-            }
-        }
-    }
+            return pending_token->token == token;
+        });
+
+    if (iter != pending_tokens.end())
+        return *iter;
 
     return nullptr;
 }
 
-void mf::XdgActivationV1::invalidate_all()
+std::shared_ptr<mf::XdgActivationTokenData> const mf::XdgActivationV1::create_token(std::shared_ptr<ms::Session> const& session)
+{
+    auto generated = token_authority->issue_token(
+        [this](auto const& token)
+        {
+            this->remove_token(token);
+        });
+
+    auto token = std::make_shared<XdgActivationTokenData>(generated, session);
+
+    {
+        std::lock_guard guard(pending_tokens_mutex);
+        return pending_tokens.emplace_back(token);
+    }
+}
+
+void mf::XdgActivationV1::remove_token(Token const& token)
 {
     std::lock_guard guard(pending_tokens_mutex);
-    pending_tokens.clear();
+
+    std::ranges::remove_if(
+        pending_tokens,
+        [&](auto const& pending_token)
+        {
+            return pending_token->token == token;
+        });
+}
+
+void mf::XdgActivationV1::invalidate_all()
+{
+    token_authority->revoke_all_tokens();
 }
 
 void mf::XdgActivationV1::invalidate_if_not_from_session(std::shared_ptr<ms::Session> const& session)
 {
-    std::lock_guard guard(pending_tokens_mutex);
-    std::erase_if(pending_tokens, [&](std::shared_ptr<XdgActivationTokenData> const& token)
+    auto const invalid_session = [&session](auto const& token_data)
     {
-        return token->session.expired() || token->session.lock() != session;
-    });
+        return token_data->session.expired() || token_data->session.lock() != session;
+    };
+
+    std::lock_guard guard(pending_tokens_mutex);
+    for (auto const& pending_token : pending_tokens | std::ranges::views::filter(invalid_session))
+        token_authority->revoke_token(pending_token->token);
 }
 
 void mf::XdgActivationV1::bind(struct wl_resource* resource)
@@ -313,10 +319,11 @@ void mf::XdgActivationV1::SessionListener::focused(std::shared_ptr<ms::Session> 
 
 void mf::XdgActivationV1::Instance::get_activation_token(struct wl_resource* id)
 {
-    new XdgActivationTokenV1(id, xdg_activation_v1->create_token(client->client_session()));
+    new XdgActivationTokenV1(
+        id, xdg_activation_v1->create_token(client->client_session()), xdg_activation_v1->token_authority);
 }
 
-void mf::XdgActivationV1::Instance::activate(std::string const& token, struct wl_resource* surface)
+void mf::XdgActivationV1::Instance::activate(std::string const& string_token, struct wl_resource* surface)
 {
     // This function handles requests from clients for activation.
     // This will fail if the client cannot find their token in the list.
@@ -329,21 +336,32 @@ void mf::XdgActivationV1::Instance::activate(std::string const& token, struct wl
     // 2. The surface failed to use the token in the alotted period of time
     // 3. A key was pressed down between the issuing of the token and the activation
     //    of the surface with that token
-    auto xdg_token = xdg_activation_v1->try_consume_token(token);
-    if (!xdg_token)
+    //
+
+    auto token = xdg_activation_v1->token_authority->get_token_for_string(string_token);
+    if(!token)
     {
-        mir::log_error("XdgActivationV1::activate invalid token: %s", token.c_str());
+        mir::log_error("XdgActivationV1::activate invalid token: %s", string_token.c_str());
         return;
     }
+
+    // Grab a reference to the token data before removing it
+    //
+    // token_data can be null if the token was issued by something other
+    // than `XdgActivationV1` (`ExternalClientLauncher` for example)
+    auto token_data = xdg_activation_v1->get_token_data(*token);
+
+    // Calls `remove_token` since we set that up at token creation time
+    xdg_activation_v1->token_authority->revoke_token(*token);
 
     main_loop->enqueue(this, [
         surface=surface,
         shell=shell,
-        xdg_token=xdg_token,
+        xdg_token=token_data,
         client=client,
         session_coordinator=session_coordinator]
     {
-        if (xdg_token->session.expired())
+        if (xdg_token && xdg_token->session.expired())
         {
             mir::log_error("XdgActivationV1::activate requesting session has expired");
             return;
@@ -364,7 +382,7 @@ void mf::XdgActivationV1::Instance::activate(std::string const& token, struct wl
         }
 
         // In the event of a failure, we send 'done' with a new, invalid token which cannot be used later.
-        if (xdg_token->seat && xdg_token->serial)
+        if (xdg_token && xdg_token->seat && xdg_token->serial)
         {
             // First, assert that the seat still exists.
             auto const wl_seat = mf::WlSeat::from(xdg_token->seat.value());
@@ -385,9 +403,11 @@ void mf::XdgActivationV1::Instance::activate(std::string const& token, struct wl
 
 mf::XdgActivationTokenV1::XdgActivationTokenV1(
     struct wl_resource* resource,
-    std::shared_ptr<XdgActivationTokenData> const& token)
-    : wayland::XdgActivationTokenV1(resource, Version<1>()),
-      token{token}
+    std::shared_ptr<XdgActivationTokenData> const& token,
+    std::shared_ptr<msh::TokenAuthority> const& token_authority) :
+    wayland::XdgActivationTokenV1(resource, Version<1>()),
+    token{token},
+    token_authority{token_authority}
 {
 }
 
@@ -418,15 +438,14 @@ void mf::XdgActivationTokenV1::set_surface(struct wl_resource* surface)
 
 void mf::XdgActivationTokenV1::commit()
 {
-    if (used)
+    if (!token_authority->is_token_valid(token->token))
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
             resource,
             Error::already_used,
-            "The activation token has already been used"));
+            "The activation token has already been used or expired"));
         return;
     }
 
-    used = true;
-    send_done_event(token->token);
+    send_done_event(std::string(token->token));
 }
