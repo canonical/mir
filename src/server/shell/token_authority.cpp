@@ -58,6 +58,10 @@ msh::TokenAuthority::TokenAuthority(std::shared_ptr<MainLoop>&& main_loop) :
 
 auto msh::TokenAuthority::issue_token(std::optional<Token::RevocationListener> revocation_listener) -> Token
 {
+    std::scoped_lock lock{mutex};
+
+
+    // Not sure if libuuid is thread safe
     auto token = Token{generate_token(),  revocation_listener};
 
     auto alarm = main_loop->create_alarm(
@@ -68,7 +72,6 @@ auto msh::TokenAuthority::issue_token(std::optional<Token::RevocationListener> r
     alarm->reschedule_in(::timeout_ms);
 
     {
-        std::scoped_lock lock{mutex};
 
         revocation_alarms.emplace_back(std::move(alarm));
         issued_tokens.insert(token);

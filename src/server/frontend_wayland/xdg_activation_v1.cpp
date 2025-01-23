@@ -25,6 +25,7 @@
 #include "mir/scene/session_listener.h"
 #include "mir/shell/shell.h"
 #include "mir/shell/token_authority.h"
+#include "mir/time/alarm.h"
 #include "mir/wayland/client.h"
 #include "mir/wayland/protocol_error.h"
 #include "mir/log.h"
@@ -37,6 +38,7 @@
 #include <ranges>
 #include <string>
 #include <vector>
+#include <atomic>
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
@@ -50,6 +52,9 @@ namespace mir
 {
 namespace frontend
 {
+
+auto constexpr token_creation_delay = std::chrono::milliseconds{100};
+
 struct XdgActivationTokenData
 {
     XdgActivationTokenData(
@@ -81,6 +86,7 @@ public:
 
     std::shared_ptr<XdgActivationTokenData> get_token_data(Token const& token);
     std::shared_ptr<XdgActivationTokenData> const create_token(std::shared_ptr<ms::Session> const& session);
+    std::atomic<bool> can_create_tokens{true};
     void invalidate_all();
     void invalidate_if_not_from_session(std::shared_ptr<ms::Session> const&);
 
@@ -141,6 +147,7 @@ private:
     std::shared_ptr<KeyboardObserver> const keyboard_observer;
     std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<msh::TokenAuthority> const token_authority;
+    std::unique_ptr<time::Alarm> token_creation_enable;
 
     std::vector<std::shared_ptr<XdgActivationTokenData>> pending_tokens;
     std::mutex pending_tokens_mutex;
@@ -197,7 +204,12 @@ mf::XdgActivationV1::XdgActivationV1(
       keyboard_observer_registrar{keyboard_observer_registrar},
       keyboard_observer{std::make_shared<KeyboardObserver>(this)},
       session_listener{std::make_shared<SessionListener>(this)},
-      token_authority{token_authority}
+      token_authority{token_authority},
+      token_creation_enable{main_loop->create_alarm(
+          [this]
+          {
+              this->can_create_tokens = true;
+          })}
 {
     keyboard_observer_registrar->register_interest(keyboard_observer, wayland_executor);
     session_coordinator->add_listener(session_listener);
@@ -228,7 +240,7 @@ std::shared_ptr<mf::XdgActivationTokenData> mf::XdgActivationV1::get_token_data(
 
 std::shared_ptr<mf::XdgActivationTokenData> const mf::XdgActivationV1::create_token(std::shared_ptr<ms::Session> const& session)
 {
-    if (!session_listener->is_focused_session(session))
+    if (!can_create_tokens || !session_listener->is_focused_session(session))
     {
         mir::log_warning(
             "Client from a different session trying to create a token. Session name: %s, PID: %d. Returning bogus "
@@ -316,7 +328,11 @@ void mf::XdgActivationV1::KeyboardObserver::keyboard_event(std::shared_ptr<const
 
     auto keyboard_event = input_event->to_keyboard();
     if (keyboard_event->action() == mir_keyboard_action_down)
+    {
+        xdg_activation_v1->can_create_tokens = false;
+        xdg_activation_v1->token_creation_enable->reschedule_in(token_creation_delay);
         xdg_activation_v1->invalidate_all();
+    }
 }
 
 void mf::XdgActivationV1::KeyboardObserver::keyboard_focus_set(std::shared_ptr<mi::Surface> const&)
