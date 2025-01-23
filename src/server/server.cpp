@@ -37,10 +37,8 @@
 #include "mir/renderer/renderer_factory.h"
 
 #include "frontend_wayland/wayland_connector.h"
-
 #include <iostream>
-#include <mir/server.h>
-
+#include <optional>
 
 namespace mo = mir::options;
 namespace mi = mir::input;
@@ -465,7 +463,7 @@ auto mir::Server::open_wayland_client_socket() -> Fd
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }
 
-auto mir::Server::wayland_display() const -> optional_value<std::string>
+auto mir::Server::wayland_display() const -> std::optional<std::string>
 {
     if (auto const config = self->server_config)
         return config->the_wayland_connector()->socket_name();
@@ -473,7 +471,7 @@ auto mir::Server::wayland_display() const -> optional_value<std::string>
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }
 
-auto mir::Server::x11_display() const -> mir::optional_value<std::string>
+auto mir::Server::x11_display() const -> std::optional<std::string>
 {
     if (auto const config = self->server_config)
         return config->the_xwayland_connector()->socket_name();

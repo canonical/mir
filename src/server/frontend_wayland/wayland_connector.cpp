@@ -37,6 +37,7 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/wayland.h"
 
+#include <optional>
 #include <sys/eventfd.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
@@ -525,7 +526,7 @@ void mf::WaylandConnector::on_surface_created(
     compositor_global->on_surface_created(client, id, callback);
 }
 
-auto mf::WaylandConnector::socket_name() const -> optional_value<std::string>
+auto mf::WaylandConnector::socket_name() const -> std::optional<std::string>
 {
     return wayland_display;
 }

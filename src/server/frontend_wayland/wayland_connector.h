@@ -190,7 +190,7 @@ public:
     /// Callback is never called if a wl_surface with the id is never created
     void on_surface_created(wl_client* client, uint32_t id, std::function<void(WlSurface*)> const& callback);
 
-    auto socket_name() const -> optional_value<std::string> override;
+    auto socket_name() const -> std::optional<std::string> override;
 
     auto get_extension(std::string const& name) const -> std::shared_ptr<void>;
 

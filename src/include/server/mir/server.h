@@ -18,11 +18,11 @@
 #define MIR_SERVER_H_
 
 #include "mir/shell/window_manager_builder.h"
-#include "mir/optional_value.h"
 #include "mir_toolkit/common.h"
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <vector>
 
 struct wl_display;
@@ -471,10 +471,10 @@ public:
         std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const& extension_filter);
 
     /// Get the name of the Wayland endpoint (if any) usable as a $WAYLAND_DISPLAY value
-    auto wayland_display() const -> optional_value<std::string>;
+    auto wayland_display() const -> std::optional<std::string>;
 
     /// Get the name of the X11 display usable as a $DISPLAY value
-    auto x11_display() const -> optional_value<std::string>;
+    auto x11_display() const -> std::optional<std::string>;
 
     auto get_activation_token() const -> std::string;
 
