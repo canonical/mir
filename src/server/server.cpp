@@ -135,7 +135,8 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(the_renderer_factory)\
     MACRO(the_decoration_strategy)\
     MACRO(the_input_device_registry)\
-    MACRO(the_idle_handler)
+    MACRO(the_idle_handler)\
+    MACRO(the_token_authority)
 
 #define MIR_SERVER_BUILDER(name)\
     std::function<std::invoke_result_t<decltype(&mir::DefaultServerConfiguration::the_##name),mir::DefaultServerConfiguration*>()> name##_builder;
@@ -476,6 +477,16 @@ auto mir::Server::x11_display() const -> mir::optional_value<std::string>
 {
     if (auto const config = self->server_config)
         return config->the_xwayland_connector()->socket_name();
+
+    BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
+}
+
+auto mir::Server::get_activation_token() const -> std::string
+{
+    if (auto const config = self->server_config)
+    {
+        return std::string(config->the_token_authority()->issue_token({}));
+    }
 
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }

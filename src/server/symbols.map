@@ -1407,12 +1407,27 @@ local: *;
 MIR_SERVER_INTERNAL_2.20 {
 global:
   extern "C++" {
+    mir::DefaultServerConfiguration::the_token_authority*;
+    mir::Server::get_activation_token*;
+    mir::Server::the_token_authority*;
     mir::shell::AbstractShell::is_above*;
     mir::shell::ShellWrapper::is_above*;
     mir::shell::SurfaceStackWrapper::is_above*;
+    mir::shell::TokenAuthority::Token::operator*;
+    mir::shell::TokenAuthority::TokenAuthority*;
+    mir::shell::TokenAuthority::get_bogus_token*;
+    mir::shell::TokenAuthority::get_token_for_string*;
+    mir::shell::TokenAuthority::is_token_valid*;
+    mir::shell::TokenAuthority::issue_token*;
+    mir::shell::TokenAuthority::revoke_all_tokens*;
+    mir::shell::TokenAuthority::revoke_token*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_token_authority*;
     non-virtual?thunk?to?mir::shell::AbstractShell::is_above*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::is_above*;
     non-virtual?thunk?to?mir::shell::SurfaceStackWrapper::is_above*;
+    typeinfo?for?mir::shell::TokenAuthority::Token;
+    typeinfo?for?mir::shell::TokenAuthority;
+    virtual?thunk?to?mir::DefaultServerConfiguration::the_token_authority*;
     virtual?thunk?to?mir::shell::AbstractShell::is_above*;
     virtual?thunk?to?mir::shell::ShellWrapper::is_above*;
   };

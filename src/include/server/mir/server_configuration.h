@@ -42,6 +42,7 @@ namespace shell
 class SessionContainer;
 class Shell;
 class IdleHandler;
+class TokenAuthority;
 }
 namespace graphics
 {
@@ -100,6 +101,7 @@ public:
     virtual std::shared_ptr<scene::TextInputHub> the_text_input_hub() = 0;
     virtual std::shared_ptr<scene::IdleHub> the_idle_hub() = 0;
     virtual std::shared_ptr<shell::IdleHandler> the_idle_handler() = 0;
+    virtual std::shared_ptr<shell::TokenAuthority> the_token_authority() = 0;
     virtual std::function<void()> the_stop_callback() = 0;
     virtual void add_wayland_extension(
         std::string const& name,

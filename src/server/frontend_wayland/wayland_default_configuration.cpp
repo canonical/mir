@@ -397,7 +397,8 @@ std::shared_ptr<mf::Connector>
                 enable_repeat,
                 the_session_lock(),
                 the_decoration_strategy(),
-                the_session_coordinator());
+                the_session_coordinator(),
+                the_token_authority());
         });
 }
 

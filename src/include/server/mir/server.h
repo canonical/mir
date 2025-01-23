@@ -47,6 +47,7 @@ class DisplayLayout;
 class DisplayConfigurationController;
 class FocusController;
 class IdleHandler;
+class TokenAuthority;
 class InputTargeter;
 class PersistentSurfaceStore;
 class Shell;
@@ -435,6 +436,8 @@ public:
     auto the_idle_handler() const ->
         std::shared_ptr<shell::IdleHandler>;
 
+    auto the_token_authority() const ->
+        std::shared_ptr<shell::TokenAuthority>;
 /** @} */
 
 /** @name Client side support
@@ -472,6 +475,8 @@ public:
 
     /// Get the name of the X11 display usable as a $DISPLAY value
     auto x11_display() const -> optional_value<std::string>;
+
+    auto get_activation_token() const -> std::string;
 
     /// Overrides the standard set of Wayland extensions (mir::frontend::get_standard_extensions()) with a new list
     void set_enabled_wayland_extensions(std::vector<std::string> const& extensions);
