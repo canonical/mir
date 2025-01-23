@@ -22,6 +22,8 @@
 #include "mir/input/keyboard_observer.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/session_listener.h"
+#include "mir/scene/null_session_listener.h"
+#include "mir/scene/session.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/shell/shell.h"
 #include "mir/shell/token_authority.h"
@@ -112,27 +114,18 @@ private:
         XdgActivationV1* xdg_activation_v1;
     };
 
-    class SessionListener : public ms::SessionListener
+    class SessionListener : public ms::NullSessionListener
     {
     public:
         SessionListener(XdgActivationV1* xdg_activation_v1);
-        void starting(std::shared_ptr<ms::Session> const&) override {}
-        void stopping(std::shared_ptr<ms::Session> const&) override {}
         void focused(std::shared_ptr<ms::Session> const& session) override;
-        void unfocused() override {}
+        void unfocused() override;
 
-        void surface_created(ms::Session&, std::shared_ptr<ms::Surface> const&) override {}
-        void destroying_surface(ms::Session&, std::shared_ptr<ms::Surface> const&) override {}
-
-        void buffer_stream_created(
-            ms::Session&,
-            std::shared_ptr<mf::BufferStream> const&) override {}
-        void buffer_stream_destroyed(
-            ms::Session&,
-            std::shared_ptr<mf::BufferStream> const&) override {}
+        bool is_focused_session(std::shared_ptr<ms::Session> const& other) const;
 
     private:
         XdgActivationV1* xdg_activation_v1;
+        std::shared_ptr<ms::Session> focused_session;
     };
 
     void bind(wl_resource* resource) override;
@@ -143,6 +136,7 @@ private:
     std::shared_ptr<MainLoop> main_loop;
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> keyboard_observer_registrar;
     std::shared_ptr<KeyboardObserver> keyboard_observer;
+    std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<msh::TokenAuthority> const token_authority;
     std::vector<std::shared_ptr<XdgActivationTokenData>> pending_tokens;
     std::mutex pending_tokens_mutex;
@@ -198,14 +192,17 @@ mf::XdgActivationV1::XdgActivationV1(
       main_loop{main_loop},
       keyboard_observer_registrar{keyboard_observer_registrar},
       keyboard_observer{std::make_shared<KeyboardObserver>(this)},
+      session_listener{std::make_shared<SessionListener>(this)},
       token_authority{token_authority}
 {
     keyboard_observer_registrar->register_interest(keyboard_observer, wayland_executor);
+    session_coordinator->add_listener(session_listener);
 }
 
 mf::XdgActivationV1::~XdgActivationV1()
 {
     keyboard_observer_registrar->unregister_interest(*keyboard_observer);
+    session_coordinator->remove_listener(session_listener);
 }
 
 std::shared_ptr<mf::XdgActivationTokenData> mf::XdgActivationV1::get_token_data(Token const& token)
@@ -227,6 +224,16 @@ std::shared_ptr<mf::XdgActivationTokenData> mf::XdgActivationV1::get_token_data(
 
 std::shared_ptr<mf::XdgActivationTokenData> const mf::XdgActivationV1::create_token(std::shared_ptr<ms::Session> const& session)
 {
+    if (!session_listener->is_focused_session(session))
+    {
+        mir::log_warning(
+            "Client from a different session trying to create a token. Session name: %s, PID: %d. Returning bogus "
+            "token",
+            session->name().c_str(),
+            session->process_id());
+        return std::make_shared<XdgActivationTokenData>(token_authority->get_bogus_token(), session);
+    }
+
     auto generated = token_authority->issue_token(
         [this](auto const& token)
         {
@@ -312,9 +319,26 @@ void mf::XdgActivationV1::KeyboardObserver::keyboard_focus_set(std::shared_ptr<m
 {
 }
 
+mf::XdgActivationV1::SessionListener::SessionListener(mf::XdgActivationV1* parent) :
+    xdg_activation_v1{parent}
+{
+}
+
 void mf::XdgActivationV1::SessionListener::focused(std::shared_ptr<ms::Session> const& session)
 {
+    focused_session = session;
     xdg_activation_v1->invalidate_if_not_from_session(session);
+}
+
+void mf::XdgActivationV1::SessionListener::unfocused()
+{
+    focused_session = nullptr;
+    xdg_activation_v1->invalidate_all();
+}
+
+bool mf::XdgActivationV1::SessionListener::is_focused_session(std::shared_ptr<ms::Session> const& session) const
+{
+    return focused_session == session;
 }
 
 void mf::XdgActivationV1::Instance::get_activation_token(struct wl_resource* id)
