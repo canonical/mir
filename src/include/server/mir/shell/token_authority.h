@@ -52,7 +52,6 @@ public:
 
     auto issue_token(std::optional<Token::RevocationListener> revocation_listener) -> Token;
     auto get_token_for_string(std::string const& string_token) const -> std::optional<Token>;
-    auto is_token_valid(Token const& token) const -> bool;
     auto get_bogus_token() const -> Token;
 
     void revoke_token(Token to_remove);

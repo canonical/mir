@@ -90,12 +90,6 @@ auto msh::TokenAuthority::get_token_for_string(std::string const& string_token) 
     return *iter;
 }
 
-auto msh::TokenAuthority::is_token_valid(Token const& token) const -> bool
-{
-    std::scoped_lock lock{mutex};
-    return issued_tokens.contains(token);
-}
-
 auto msh::TokenAuthority::get_bogus_token() const -> Token
 {
     return Token{generate_token(), {}};

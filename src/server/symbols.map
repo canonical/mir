@@ -1417,7 +1417,6 @@ global:
     mir::shell::TokenAuthority::TokenAuthority*;
     mir::shell::TokenAuthority::get_bogus_token*;
     mir::shell::TokenAuthority::get_token_for_string*;
-    mir::shell::TokenAuthority::is_token_valid*;
     mir::shell::TokenAuthority::issue_token*;
     mir::shell::TokenAuthority::revoke_all_tokens*;
     mir::shell::TokenAuthority::revoke_token*;
