@@ -41,6 +41,7 @@ class Seat;
 
 namespace frontend
 {
+class WlSeat;
 class KeyboardCallbacks
 {
 public:
@@ -60,12 +61,6 @@ private:
 class KeyboardHelper
 {
 public:
-    KeyboardHelper(
-        KeyboardCallbacks* keybaord_impl,
-        std::shared_ptr<mir::input::Keymap> const& initial_keymap,
-        std::shared_ptr<input::Seat> const& seat,
-        bool enable_key_repeat);
-
     void handle_event(std::shared_ptr<MirEvent const> const& event);
 
     /// Returns the scancodes of pressed keys
@@ -74,6 +69,13 @@ public:
     void refresh_modifiers();
 
 private:
+    friend class mir::frontend::WlSeat;
+    KeyboardHelper(
+        KeyboardCallbacks* keybaord_impl,
+        std::shared_ptr<mir::input::Keymap> const& initial_keymap,
+        std::shared_ptr<input::Seat> const& seat,
+        bool enable_key_repeat);
+
     void handle_keyboard_event(std::shared_ptr<MirKeyboardEvent const> const& event);
     void set_keymap(std::shared_ptr<mir::input::Keymap> const& new_keymap);
     void set_modifiers(MirXkbModifiers const& new_modifiers);

@@ -252,7 +252,7 @@ void mf::WlSeat::for_each_listener(mw::Client* client, std::function<void(WlTouc
 
 auto mf::WlSeat::make_keyboard_helper(KeyboardCallbacks* callbacks) -> std::unique_ptr<KeyboardHelper>
 {
-    return std::make_unique<KeyboardHelper>(callbacks, keymap, seat, enable_key_repeat);
+    return std::unique_ptr<KeyboardHelper>(new KeyboardHelper(callbacks, keymap, seat, enable_key_repeat));
 }
 
 void mf::WlSeat::bind(wl_resource* new_wl_seat)
