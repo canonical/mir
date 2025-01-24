@@ -65,12 +65,7 @@ struct Button
     State state;
     geometry::Rectangle rect;
 
-    auto operator==(Button const& other) const -> bool
-    {
-        return function == other.function &&
-               state == other.state &&
-               rect == other.rect;
-    }
+    auto operator==(Button const& other) const -> bool = default;
 };
 
 /// Describes the state of the interface (what buttons are pushed, etc)
@@ -131,7 +126,6 @@ public:
 
 private:
     WindowState(WindowState const&) = delete;
-    WindowState& operator=(WindowState const&) = delete;
 
     std::shared_ptr<const DecorationStrategy> const decoration_strategy;
     geometry::Size const window_size_;
@@ -145,8 +139,6 @@ private:
 class RendererStrategy
 {
 public:
-    static auto alloc_pixels(geometry::Size size) -> std::unique_ptr<Pixel[]>;
-
     RendererStrategy() = default;
     virtual ~RendererStrategy() = default;
 

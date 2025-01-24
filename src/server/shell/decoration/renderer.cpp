@@ -134,13 +134,3 @@ void msd::Renderer::update_state(WindowState const& window_state, InputState con
 {
     strategy->update_state(window_state, input_state);
 }
-
-
-auto msd::RendererStrategy::alloc_pixels(geometry::Size size) -> std::unique_ptr<Pixel[]>
-{
-    size_t const buf_size = area(size) * sizeof(Pixel);
-    if (buf_size)
-        return std::unique_ptr<Pixel[]>{new Pixel[buf_size]};
-    else
-        return nullptr;
-}

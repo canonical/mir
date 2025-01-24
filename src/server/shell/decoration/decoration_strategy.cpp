@@ -387,6 +387,15 @@ auto DecorationStrategy::compute_size_with_decorations(
 
     return content_size;
 }
+
+auto alloc_pixels(geom::Size size) -> std::unique_ptr<Pixel[]>
+{
+    size_t const buf_size = area(size) * sizeof(Pixel);
+    if (buf_size)
+        return std::unique_ptr<Pixel[]>{new Pixel[buf_size]};
+    else
+        return nullptr;
+}
 }
 
 auto msd::border_type_for(MirWindowType type, MirWindowState state) -> msd::BorderType
