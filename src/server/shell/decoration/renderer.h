@@ -58,10 +58,7 @@ private:
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
     std::unique_ptr<RendererStrategy> const strategy;
 
-    auto make_buffer(
-        Pixel const* pixels,
-        geometry::Size size,
-        MirPixelFormat buffer_format) -> std::optional<std::shared_ptr<graphics::Buffer>>;
+    auto make_buffer(RendererStrategy::RenderedPixels const&) const -> std::optional<std::shared_ptr<graphics::Buffer>>;
 };
 }
 }

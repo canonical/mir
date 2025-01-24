@@ -57,7 +57,6 @@ class StreamSpecification;
 namespace decoration
 {
 template<typename T> class ThreadsafeAccess;
-class StaticGeometry;
 class WindowState;
 class WindowSurfaceObserverManager;
 class InputManager;
@@ -90,9 +89,6 @@ public:
     void set_scale(float scale) override;
 
 protected:
-    /// Creates an up-to-date WindowState object
-    auto new_window_state() const -> std::unique_ptr<WindowState>;
-
     /// Returns paramaters to create the decoration surface
     auto create_surface() const -> std::shared_ptr<scene::Surface>;
 
@@ -106,7 +102,6 @@ protected:
 
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const threadsafe_self;
     std::shared_ptr<DecorationStrategy> const decoration_strategy;
-    std::shared_ptr<StaticGeometry> const static_geometry;
 
     std::shared_ptr<shell::Shell> const shell;
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
