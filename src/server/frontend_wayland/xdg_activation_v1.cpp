@@ -60,6 +60,7 @@ struct XdgActivationTokenData
     {
     }
 
+    bool used{false};
     Token const token;
     std::weak_ptr<ms::Session> session;
     std::optional<uint32_t> serial;
@@ -458,14 +459,15 @@ void mf::XdgActivationTokenV1::set_surface(struct wl_resource* surface)
 
 void mf::XdgActivationTokenV1::commit()
 {
-    if (!token_authority->is_token_valid(token->token))
+    if (token->used)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
             resource,
             Error::already_used,
-            "The activation token has already been used or expired"));
+            "The activation token has already been used"));
         return;
     }
 
+    token->used = true;
     send_done_event(std::string(token->token));
 }
