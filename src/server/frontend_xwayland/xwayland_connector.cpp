@@ -101,7 +101,7 @@ int mf::XWaylandConnector::client_socket_fd(
     return -1;
 }
 
-auto mf::XWaylandConnector::socket_name() const -> optional_value<std::string>
+auto mf::XWaylandConnector::socket_name() const -> std::optional<std::string>
 {
     std::lock_guard lock{mutex};
 
@@ -111,7 +111,7 @@ auto mf::XWaylandConnector::socket_name() const -> optional_value<std::string>
     }
     else
     {
-        return optional_value<std::string>();
+        return std::nullopt;
     }
 }
 

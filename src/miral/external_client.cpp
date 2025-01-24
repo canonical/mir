@@ -21,6 +21,7 @@
 
 #include <mir/options/option.h>
 #include <mir/server.h>
+#include <mir/log.h>
 
 #include <algorithm>
 #include <stdexcept>
@@ -117,8 +118,9 @@ auto miral::ExternalClientLauncher::launch(std::vector<std::string> const& comma
 
     auto const wayland_display = self->server->wayland_display();
     auto const x11_display = self->server->x11_display();
+    auto const activation_token = self->server->get_activation_token();
 
-    return launch_app_env(command_line, wayland_display, x11_display, self->env);
+    return launch_app_env(command_line, wayland_display, x11_display, activation_token, self->env);
 }
 
 miral::ExternalClientLauncher::ExternalClientLauncher() : self{std::make_shared<Self>()} {}
@@ -133,7 +135,8 @@ auto  miral::ExternalClientLauncher::launch_using_x11(std::vector<std::string> c
     if (auto const x11_display = self->server->x11_display())
     {
         auto const wayland_display = self->server->wayland_display();
-        return launch_app_env(command_line, wayland_display, x11_display, self->x11_env);
+        return launch_app_env(
+            command_line, wayland_display, x11_display, self->server->get_activation_token(), self->x11_env);
     }
 
     return -1;

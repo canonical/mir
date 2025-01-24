@@ -110,12 +110,12 @@ int main(int argc, char const* argv[])
             case XKB_KEY_t:
             case XKB_KEY_T:
                 external_client_launcher.launch({terminal_cmd});
-                return false;
+                return true;
 
             case XKB_KEY_x:
             case XKB_KEY_X:
                 external_client_launcher.launch_using_x11({"xterm"});
-                return false;
+                return true;
 
             default:
                 return false;

@@ -17,9 +17,9 @@
 #ifndef MIR_FRONTEND_CONNECTOR_H_
 #define MIR_FRONTEND_CONNECTOR_H_
 
-#include <mir/optional_value.h>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace mir
@@ -41,7 +41,7 @@ public:
 
     virtual int client_socket_fd(std::function<void(std::shared_ptr<scene::Session> const& session)> const& connect_handler) const = 0;
 
-    virtual auto socket_name() const -> optional_value<std::string> = 0;
+    virtual auto socket_name() const -> std::optional<std::string> = 0;
 
 protected:
     Connector() = default;

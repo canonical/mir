@@ -17,6 +17,7 @@
 #ifndef MIR_FRONTEND_WAYLAND_CONNECTOR_H_
 #define MIR_FRONTEND_WAYLAND_CONNECTOR_H_
 
+#include "mir/shell/token_authority.h"
 #include "wayland_wrapper.h"
 
 #include "mir/fd.h"
@@ -116,6 +117,7 @@ public:
         std::shared_ptr<mir::DecorationStrategy> decoration_strategy;
         std::shared_ptr<scene::SessionCoordinator> session_coordinator;
         std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> keyboard_observer_registrar;
+        std::shared_ptr<shell::TokenAuthority> token_authority;
     };
 
     WaylandExtensions() = default;
@@ -169,7 +171,8 @@ public:
         bool enable_key_repeat,
         std::shared_ptr<scene::SessionLock> const& session_lock,
         std::shared_ptr<DecorationStrategy> const& decoration_strategy,
-        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator);
+        std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
+        std::shared_ptr<shell::TokenAuthority> const& token_authority);
 
     ~WaylandConnector() override;
 
@@ -187,7 +190,7 @@ public:
     /// Callback is never called if a wl_surface with the id is never created
     void on_surface_created(wl_client* client, uint32_t id, std::function<void(WlSurface*)> const& callback);
 
-    auto socket_name() const -> optional_value<std::string> override;
+    auto socket_name() const -> std::optional<std::string> override;
 
     auto get_extension(std::string const& name) const -> std::shared_ptr<void>;
 

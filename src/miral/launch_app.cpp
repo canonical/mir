@@ -19,11 +19,11 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <string>
 #include <unistd.h>
 #include <signal.h>
 
 #include <cstring>
-#include <stdexcept>
 #include <system_error>
 #include <vector>
 
@@ -93,46 +93,21 @@ auto Environment::exec_env() const & -> std::vector<char const*>
     result.push_back(nullptr);
     return result;
 }
-}  // namespace
 
-auto miral::launch_app_env(
-    std::vector<std::string> const& app,
-    mir::optional_value<std::string> const& wayland_display,
-    mir::optional_value<std::string> const& x11_display,
-    miral::AppEnvironment const& app_env) -> pid_t
+void assign_or_unset(Environment& env, std::string const& key, auto optional_value)
 {
-    Environment application_environment;
-
-    for (auto const& [key, value]: app_env)
+    if (optional_value)
     {
-        if (value)
-        {
-            application_environment.setenv(key, value.value());
-        }
-        else
-        {
-            application_environment.unsetenv(key);
-        }
-    }
-
-    if (wayland_display)
-    {
-        application_environment.setenv("WAYLAND_DISPLAY", wayland_display.value()); // configure Wayland socket
+        env.setenv(key, optional_value.value());
     }
     else
     {
-        application_environment.unsetenv("WAYLAND_DISPLAY");
+        env.unsetenv(key);
     }
+}
 
-    if (x11_display)
-    {
-        application_environment.setenv("DISPLAY", x11_display.value());   // configure X11 socket
-    }
-    else
-    {
-        application_environment.unsetenv("DISPLAY");
-    }
-
+auto execute_with_environment(std::vector<std::string> const app, Environment& application_environment) -> pid_t
+{
     auto const exec_env = application_environment.exec_env();
 
     std::vector<char const*> exec_args;
@@ -155,12 +130,35 @@ auto miral::launch_app_env(
         sigfillset(&all_signals);
         pthread_sigmask(SIG_UNBLOCK, &all_signals, nullptr);
 
-        // execvpe() isn't listed as being async-signal-safe, but the implementation looks fine and rewriting seems unnecessary
-        execvpe(exec_args[0], const_cast<char*const*>(exec_args.data()), const_cast<char*const*>(exec_env.data()));
+        // execvpe() isn't listed as being async-signal-safe, but the implementation looks fine and rewriting seems
+        // unnecessary
+        execvpe(exec_args[0], const_cast<char* const*>(exec_args.data()), const_cast<char* const*>(exec_env.data()));
 
         mir::log_warning("Failed to execute client (\"%s\") error: %s", exec_args[0], strerror(errno));
         exit(EXIT_FAILURE);
     }
 
     return pid;
+}
+}  // namespace
+
+
+auto miral::launch_app_env(
+    std::vector<std::string> const& app,
+    std::optional<std::string> const& wayland_display,
+    std::optional<std::string> const& x11_display,
+    std::optional<std::string> const& xdg_activation_token,
+    miral::AppEnvironment const& app_env) -> pid_t
+{
+    Environment application_environment;
+
+    for (auto const& [key, value]: app_env)
+        assign_or_unset(application_environment, key, value);
+
+    assign_or_unset(application_environment, "WAYLAND_DISPLAY", wayland_display);           // configure Wayland socket
+    assign_or_unset(application_environment, "DISPLAY", x11_display);                       // configure X11 socket
+    assign_or_unset(application_environment, "XDG_ACTIVATION_TOKEN", xdg_activation_token);
+    assign_or_unset(application_environment, "DESKTOP_STARTUP_ID", xdg_activation_token);
+
+    return execute_with_environment(app, application_environment);
 }

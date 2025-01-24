@@ -24,6 +24,7 @@
 
 #include <boost/lexical_cast.hpp>
 
+#include <optional>
 #include <string>
 #include <cstdlib>
 
@@ -53,9 +54,9 @@ struct NullConnector : mf::Connector
         return -1;
     }
 
-    mir::optional_value<std::string> socket_name() const override
+    std::optional<std::string> socket_name() const override
     {
-        return mir::optional_value<std::string>();
+        return std::optional<std::string>();
     }
 };
 }
