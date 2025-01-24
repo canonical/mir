@@ -48,11 +48,10 @@ std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
 {
 }
 
-auto msd::Renderer::make_buffer(
-    uint32_t const* pixels,
-    geometry::Size size,
-    MirPixelFormat buffer_format) -> std::optional<std::shared_ptr<mg::Buffer>>
+auto mir::shell::decoration::Renderer::make_buffer(const MirPixelFormat format, const geometry::Size size,
+    Pixel const* const pixels) const -> std::optional<std::shared_ptr<graphics::Buffer>>
 {
+    MirPixelFormat buffer_format = format;
     if (!area(size))
     {
         log_warning("Failed to draw SSD: tried to create zero size buffer");
@@ -83,50 +82,22 @@ auto msd::Renderer::make_buffer(
 
 auto msd::Renderer::render_titlebar() -> std::optional<std::shared_ptr<mg::Buffer>>
 {
-    if (auto const& rendered_pixels = strategy->render_titlebar())
-    {
-        return make_buffer(rendered_pixels->pixels, rendered_pixels->size, rendered_pixels->format);
-    }
-    else
-    {
-        return std::nullopt;
-    }
+    return strategy->render_titlebar(this);
 }
 
 auto msd::Renderer::render_left_border() -> std::optional<std::shared_ptr<mg::Buffer>>
 {
-    if (auto const& rendered_pixels = strategy->render_left_border())
-    {
-        return make_buffer(rendered_pixels->pixels, rendered_pixels->size, rendered_pixels->format);
-    }
-    else
-    {
-        return std::nullopt;
-    }
+    return strategy->render_left_border(this);
 }
 
 auto msd::Renderer::render_right_border() -> std::optional<std::shared_ptr<mg::Buffer>>
 {
-    if (auto const& rendered_pixels = strategy->render_right_border())
-    {
-        return make_buffer(rendered_pixels->pixels, rendered_pixels->size, rendered_pixels->format);
-    }
-    else
-    {
-        return std::nullopt;
-    }
+    return strategy->render_right_border(this);
 }
 
 auto msd::Renderer::render_bottom_border() -> std::optional<std::shared_ptr<mg::Buffer>>
 {
-    if (auto const& rendered_pixels = strategy->render_bottom_border())
-    {
-        return make_buffer(rendered_pixels->pixels, rendered_pixels->size, rendered_pixels->format);
-    }
-    else
-    {
-        return std::nullopt;
-    }
+    return strategy->render_bottom_border(this);
 }
 
 

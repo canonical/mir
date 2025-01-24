@@ -231,10 +231,10 @@ struct RendererStrategy : public msd::RendererStrategy
     RendererStrategy(std::shared_ptr<StaticGeometry> const& static_geometry);
 
     void update_state(WindowState const& window_state, InputState const& input_state) override;
-    auto render_titlebar() -> std::optional<RenderedPixels> override;
-    auto render_left_border() -> std::optional<RenderedPixels> override;
-    auto render_right_border() -> std::optional<RenderedPixels> override;
-    auto render_bottom_border() -> std::optional<RenderedPixels> override;
+    auto render_titlebar(msd::BufferMaker const* buffer_maker) -> std::optional<std::shared_ptr<mir::graphics::Buffer>> override;
+    auto render_left_border(msd::BufferMaker const* buffer_maker) -> std::optional<std::shared_ptr<mir::graphics::Buffer>> override;
+    auto render_right_border(msd::BufferMaker const* buffer_maker) -> std::optional<std::shared_ptr<mir::graphics::Buffer>> override;
+    auto render_bottom_border(msd::BufferMaker const* buffer_maker) -> std::optional<std::shared_ptr<mir::graphics::Buffer>> override;
 
 private:
     std::shared_ptr<StaticGeometry> const static_geometry;
@@ -814,7 +814,7 @@ void RendererStrategy::update_state(WindowState const& window_state, InputState 
     }
 }
 
-auto RendererStrategy::render_titlebar() -> std::optional<RenderedPixels>
+auto RendererStrategy::render_titlebar(msd::BufferMaker const* maker) -> std::optional<std::shared_ptr<mir::graphics::Buffer>>
 {
     auto const scaled_titlebar_size{titlebar_size * scale};
 
@@ -842,34 +842,34 @@ auto RendererStrategy::render_titlebar() -> std::optional<RenderedPixels>
     needs_titlebar_redraw = false;
     needs_titlebar_buttons_redraw = false;
 
-    return RenderedPixels{static_geometry->buffer_format, scaled_titlebar_size, titlebar_pixels.get()};
+    return maker->make_buffer(static_geometry->buffer_format, scaled_titlebar_size, titlebar_pixels.get());
 }
 
-auto RendererStrategy::render_left_border() -> std::optional<RenderedPixels>
+auto RendererStrategy::render_left_border(msd::BufferMaker const* maker) -> std::optional<std::shared_ptr<mir::graphics::Buffer>>
 {
     auto const scaled_left_border_size{left_border_size * scale};
     if (!area(scaled_left_border_size))
         return std::nullopt;
     update_solid_color_pixels();
-    return RenderedPixels{static_geometry->buffer_format, scaled_left_border_size, solid_color_pixels.get()};
+    return maker->make_buffer(static_geometry->buffer_format, scaled_left_border_size, solid_color_pixels.get());
 }
 
-auto RendererStrategy::render_right_border() -> std::optional<RenderedPixels>
+auto RendererStrategy::render_right_border(msd::BufferMaker const* maker) -> std::optional<std::shared_ptr<mir::graphics::Buffer>>
 {
     auto const scaled_right_border_size{right_border_size * scale};
     if (!area(scaled_right_border_size))
         return std::nullopt;
     update_solid_color_pixels();
-    return RenderedPixels{static_geometry->buffer_format, scaled_right_border_size, solid_color_pixels.get()};
+    return maker->make_buffer(static_geometry->buffer_format, scaled_right_border_size, solid_color_pixels.get());
 }
 
-auto RendererStrategy::render_bottom_border() -> std::optional<RenderedPixels>
+auto RendererStrategy::render_bottom_border(msd::BufferMaker const* maker) -> std::optional<std::shared_ptr<mir::graphics::Buffer>>
 {
     auto const scaled_bottom_border_size{bottom_border_size * scale};
     if (!area(scaled_bottom_border_size))
         return std::nullopt;
     update_solid_color_pixels();
-    return RenderedPixels{static_geometry->buffer_format, scaled_bottom_border_size, solid_color_pixels.get()};
+    return maker->make_buffer(static_geometry->buffer_format, scaled_bottom_border_size, solid_color_pixels.get());
 }
 
 void RendererStrategy::update_solid_color_pixels()

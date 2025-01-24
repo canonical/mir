@@ -135,6 +135,20 @@ private:
     float const scale_;
 };
 
+/// Mixin for creating graphics buffers from raw pixels
+class BufferMaker
+{
+public:
+    virtual auto make_buffer(MirPixelFormat const format, geometry::Size const size, Pixel const* const pixels) const
+    -> std::optional<std::shared_ptr<graphics::Buffer>> = 0;
+
+protected:
+    BufferMaker() = default;
+    virtual ~BufferMaker() = default;
+    BufferMaker(BufferMaker&) = delete;
+    BufferMaker& operator=(BufferMaker const&) = delete;
+};
+
 /// Customization point for rendering
 class RendererStrategy
 {
@@ -142,18 +156,11 @@ public:
     RendererStrategy() = default;
     virtual ~RendererStrategy() = default;
 
-    struct RenderedPixels
-    {
-        MirPixelFormat const format;
-        geometry::Size const size;
-        Pixel const* const pixels;
-    };
-
     virtual void update_state(WindowState const& window_state, InputState const& input_state) = 0;
-    virtual auto render_titlebar() -> std::optional<RenderedPixels> = 0;
-    virtual auto render_left_border() -> std::optional<RenderedPixels> = 0;
-    virtual auto render_right_border() -> std::optional<RenderedPixels> = 0;
-    virtual auto render_bottom_border() -> std::optional<RenderedPixels> = 0;
+    virtual auto render_titlebar(BufferMaker const* buffer_maker) -> std::optional<std::shared_ptr<graphics::Buffer>> = 0;
+    virtual auto render_left_border(BufferMaker const* buffer_maker) -> std::optional<std::shared_ptr<graphics::Buffer>> = 0;
+    virtual auto render_right_border(BufferMaker const* buffer_maker) -> std::optional<std::shared_ptr<graphics::Buffer>> = 0;
+    virtual auto render_bottom_border(BufferMaker const* buffer_maker) -> std::optional<std::shared_ptr<graphics::Buffer>> = 0;
 };
 
 /// Customization point for decorations
