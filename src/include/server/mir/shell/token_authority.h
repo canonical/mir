@@ -60,13 +60,17 @@ public:
 private:
     static auto generate_token() -> std::string;
 
-    struct TokenHash
+    using TimedToken = std::pair<Token, std::unique_ptr<time::Alarm>>;
+    struct TimedTokenHash
     {
-        std::size_t operator()(Token const& s) const noexcept;
+        std::size_t operator()(TimedToken const& s) const noexcept;
+    };
+    struct TimedTokenEq
+    {
+        bool operator()(TimedToken const& s1, TimedToken const& s2) const noexcept;
     };
     std::mutex mutable mutex;
-    std::unordered_set<Token, TokenHash> issued_tokens;
-    std::vector<std::unique_ptr<time::Alarm>> revocation_alarms;
+    std::unordered_set<TimedToken, TimedTokenHash, TimedTokenEq> issued_tokens;
 
     std::shared_ptr<MainLoop> const main_loop;
 };

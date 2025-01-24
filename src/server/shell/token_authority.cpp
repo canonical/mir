@@ -20,7 +20,6 @@
 #include "mir/time/alarm.h"
 #include "mir/log.h"
 
-#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <mutex>
@@ -69,9 +68,7 @@ auto msh::TokenAuthority::issue_token(std::optional<Token::RevocationListener> r
 
     {
         std::scoped_lock lock{mutex};
-
-        revocation_alarms.emplace_back(std::move(alarm));
-        issued_tokens.insert(token);
+        issued_tokens.insert({token, std::move(alarm)});
     }
 
     return token;
@@ -82,12 +79,12 @@ auto msh::TokenAuthority::get_token_for_string(std::string const& string_token) 
     std::scoped_lock lock{mutex};
 
     // Incoming string doesn't have null terminator, just like the one leaving Mir
-    auto iter = issued_tokens.find(Token{string_token, {}});
+    auto iter = issued_tokens.find(TimedToken(Token{string_token, {}}, nullptr));
 
     if (iter == issued_tokens.end())
         return std::nullopt;
 
-    return *iter;
+    return iter->first;
 }
 
 auto msh::TokenAuthority::get_bogus_token() const -> Token
@@ -99,40 +96,27 @@ void msh::TokenAuthority::revoke_token(Token to_remove)
 {
     std::scoped_lock lock{mutex};
 
-    auto const iter = issued_tokens.find(Token{to_remove});
+    auto const iter = issued_tokens.find(TimedToken{to_remove, nullptr});
     if (iter != issued_tokens.end())
     {
-        if (auto cb = iter->revocation_listener)
-            (*cb)(*iter);
+        auto& token = iter->first;
+        if (auto cb = token.revocation_listener)
+            (*cb)(token);
         issued_tokens.erase(iter);
     }
-
-    // Remove the alarm that triggered this revocation, if any
-    //
-    // Note to self: remove_if actually moves the "removed" elements to the end
-    // of the container and gives you a range to remove them yourself. Thanks
-    // C++.
-    auto removed = std::ranges::remove_if(
-        revocation_alarms,
-        [](auto const& alarm)
-        {
-            return alarm->state() == time::Alarm::triggered;
-        });
-    revocation_alarms.erase(removed.begin(), removed.end());
 }
 
 void msh::TokenAuthority::revoke_all_tokens()
 {
     std::scoped_lock guard{mutex};
 
-    for (auto const& iter : issued_tokens)
+    for (auto const& [iter, _]: issued_tokens)
     {
         if (auto cb = iter.revocation_listener; cb)
             (*cb)(iter);
     }
 
     issued_tokens.clear();
-    revocation_alarms.clear();
 }
 
 auto msh::TokenAuthority::generate_token() -> std::string
@@ -149,7 +133,12 @@ auto msh::TokenAuthority::generate_token() -> std::string
     return unparsed.substr(0, UUID_STR_LEN-1);
 }
 
-std::size_t msh::TokenAuthority::TokenHash::operator()(Token const& s) const noexcept
+std::size_t msh::TokenAuthority::TimedTokenHash::operator()(TimedToken const& s) const noexcept
 {
-    return std::hash<std::string>{}(s.token);
+    return std::hash<std::string>{}(s.first.token);
+}
+
+bool msh::TokenAuthority::TimedTokenEq::operator()(TimedToken const& s1, TimedToken const& s2) const noexcept
+{
+    return s1.first == s2.first;
 }
