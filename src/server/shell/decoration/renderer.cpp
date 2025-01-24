@@ -48,12 +48,12 @@ std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
 {
 }
 
-auto msd::Renderer::make_buffer(
-    uint32_t const* pixels,
-    geometry::Size size,
-    MirPixelFormat buffer_format) -> std::optional<std::shared_ptr<mg::Buffer>>
+auto msd::Renderer::make_buffer(RendererStrategy::RenderedPixels const& rendered_pixels) const
+-> std::optional<std::shared_ptr<graphics::Buffer>>
+
 {
-    if (!area(size))
+    MirPixelFormat buffer_format = rendered_pixels.format;
+    if (!area(rendered_pixels.size))
     {
         log_warning("Failed to draw SSD: tried to create zero size buffer");
         return std::nullopt;
@@ -69,9 +69,9 @@ auto msd::Renderer::make_buffer(
     {
         return mrs::alloc_buffer_with_content(
             *buffer_allocator,
-            reinterpret_cast<unsigned char const*>(pixels),
-            size,
-            geom::Stride{size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(buffer_format)},
+            reinterpret_cast<unsigned char const*>(rendered_pixels.pixels),
+            rendered_pixels.size,
+            geom::Stride{rendered_pixels.size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(buffer_format)},
             buffer_format);
     }
     catch (std::runtime_error const&)
@@ -85,7 +85,7 @@ auto msd::Renderer::render_titlebar() -> std::optional<std::shared_ptr<mg::Buffe
 {
     if (auto const& rendered_pixels = strategy->render_titlebar())
     {
-        return make_buffer(rendered_pixels->pixels, rendered_pixels->size, rendered_pixels->format);
+        return make_buffer(*rendered_pixels);
     }
     else
     {
@@ -97,7 +97,7 @@ auto msd::Renderer::render_left_border() -> std::optional<std::shared_ptr<mg::Bu
 {
     if (auto const& rendered_pixels = strategy->render_left_border())
     {
-        return make_buffer(rendered_pixels->pixels, rendered_pixels->size, rendered_pixels->format);
+        return make_buffer(*rendered_pixels);
     }
     else
     {
@@ -109,7 +109,7 @@ auto msd::Renderer::render_right_border() -> std::optional<std::shared_ptr<mg::B
 {
     if (auto const& rendered_pixels = strategy->render_right_border())
     {
-        return make_buffer(rendered_pixels->pixels, rendered_pixels->size, rendered_pixels->format);
+        return make_buffer(*rendered_pixels);
     }
     else
     {
@@ -121,7 +121,7 @@ auto msd::Renderer::render_bottom_border() -> std::optional<std::shared_ptr<mg::
 {
     if (auto const& rendered_pixels = strategy->render_bottom_border())
     {
-        return make_buffer(rendered_pixels->pixels, rendered_pixels->size, rendered_pixels->format);
+        return make_buffer(*rendered_pixels);
     }
     else
     {
