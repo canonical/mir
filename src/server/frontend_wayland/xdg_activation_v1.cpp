@@ -54,13 +54,16 @@ struct XdgActivationTokenData
 {
     XdgActivationTokenData(
         Token const& token,
-        std::shared_ptr<ms::Session> const& session)
-        : token{token},
-        session{session}
+        std::shared_ptr<ms::Session> session,
+        std::optional<uint32_t> serial,
+        std::optional<struct wl_resource*> seat) :
+        token{token},
+        session{session},
+        serial{serial},
+        seat{seat}
     {
     }
 
-    bool used{false};
     Token const token;
     std::weak_ptr<ms::Session> session;
     std::optional<uint32_t> serial;
@@ -81,7 +84,7 @@ public:
     ~XdgActivationV1();
 
     std::shared_ptr<XdgActivationTokenData> get_token_data(Token const& token);
-    std::shared_ptr<XdgActivationTokenData> const create_token(std::shared_ptr<ms::Session> const& session);
+    std::shared_ptr<XdgActivationTokenData> const create_token(struct XdgActivationTokenV1* owner, std::shared_ptr<ms::Session> session);
     void invalidate_all();
     void invalidate_if_not_from_session(std::shared_ptr<ms::Session> const&);
 
@@ -150,11 +153,10 @@ private:
 class XdgActivationTokenV1 : public wayland::XdgActivationTokenV1
 {
 public:
-    XdgActivationTokenV1(
-        struct wl_resource* resource,
-        std::shared_ptr<XdgActivationTokenData> const& token,
-        std::shared_ptr<msh::TokenAuthority> const& token_authority);
+    XdgActivationTokenV1(struct wl_resource* resource, XdgActivationV1* xdg_activation);
 
+    std::optional<uint32_t> serial;
+    std::optional<struct wl_resource*> seat;
 private:
     void set_serial(uint32_t serial, struct wl_resource* seat) override;
 
@@ -164,8 +166,10 @@ private:
 
     void commit() override;
 
+    bool used{false};
     std::shared_ptr<XdgActivationTokenData> token;
-    std::shared_ptr<msh::TokenAuthority> const token_authority;
+    XdgActivationV1* const xdg_activation;
+    std::shared_ptr<ms::Session> session;
 };
 }
 }
@@ -227,10 +231,12 @@ std::shared_ptr<mf::XdgActivationTokenData> mf::XdgActivationV1::get_token_data(
     return nullptr;
 }
 
-std::shared_ptr<mf::XdgActivationTokenData> const mf::XdgActivationV1::create_token(std::shared_ptr<ms::Session> const& session)
+std::shared_ptr<mf::XdgActivationTokenData> const mf::XdgActivationV1::create_token(
+    XdgActivationTokenV1* owner, std::shared_ptr<ms::Session> session)
 {
     if (!session_listener->is_focused_session(session))
-        return std::make_shared<XdgActivationTokenData>(token_authority->get_bogus_token(), session);
+        return std::make_shared<XdgActivationTokenData>(
+            token_authority->get_bogus_token(), session, owner->serial, owner->seat);
 
     auto generated = token_authority->issue_token(
         [this](auto const& token)
@@ -238,7 +244,7 @@ std::shared_ptr<mf::XdgActivationTokenData> const mf::XdgActivationV1::create_to
             this->remove_token(token);
         });
 
-    auto token = std::make_shared<XdgActivationTokenData>(generated, session);
+    auto token = std::make_shared<XdgActivationTokenData>(generated, session, owner->serial, owner->seat);
 
     {
         std::lock_guard guard(pending_tokens_mutex);
@@ -341,8 +347,7 @@ bool mf::XdgActivationV1::SessionListener::is_focused_session(std::shared_ptr<ms
 
 void mf::XdgActivationV1::Instance::get_activation_token(struct wl_resource* id)
 {
-    new XdgActivationTokenV1(
-        id, xdg_activation_v1->create_token(client->client_session()), xdg_activation_v1->token_authority);
+    new XdgActivationTokenV1(id, this->xdg_activation_v1);
 }
 
 void mf::XdgActivationV1::Instance::activate(std::string const& string_token, struct wl_resource* surface)
@@ -359,6 +364,7 @@ void mf::XdgActivationV1::Instance::activate(std::string const& string_token, st
     // 3. A key was pressed down between the issuing of the token and the activation
     //    of the surface with that token
     //
+
 
     auto token = xdg_activation_v1->token_authority->get_token_for_string(string_token);
 
@@ -422,20 +428,17 @@ void mf::XdgActivationV1::Instance::activate(std::string const& string_token, st
     });
 }
 
-mf::XdgActivationTokenV1::XdgActivationTokenV1(
-    struct wl_resource* resource,
-    std::shared_ptr<XdgActivationTokenData> const& token,
-    std::shared_ptr<msh::TokenAuthority> const& token_authority) :
+mf::XdgActivationTokenV1::XdgActivationTokenV1(struct wl_resource* resource, XdgActivationV1* xdg_activation) :
     wayland::XdgActivationTokenV1(resource, Version<1>()),
-    token{token},
-    token_authority{token_authority}
+    xdg_activation{xdg_activation},
+    session{client->client_session()}
 {
 }
 
 void mf::XdgActivationTokenV1::set_serial(uint32_t serial_, struct wl_resource* seat_)
 {
-    token->serial = serial_;
-    token->seat = seat_;
+    serial = serial_;
+    seat = seat_;
 }
 
 void mf::XdgActivationTokenV1::set_app_id(std::string const& app_id)
@@ -459,7 +462,7 @@ void mf::XdgActivationTokenV1::set_surface(struct wl_resource* surface)
 
 void mf::XdgActivationTokenV1::commit()
 {
-    if (token->used)
+    if (used)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
             resource,
@@ -468,6 +471,7 @@ void mf::XdgActivationTokenV1::commit()
         return;
     }
 
-    token->used = true;
+    used = true;
+    token = xdg_activation->create_token(this, session);
     send_done_event(std::string(token->token));
 }
