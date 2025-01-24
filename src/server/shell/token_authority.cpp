@@ -114,12 +114,17 @@ void msh::TokenAuthority::revoke_token(Token to_remove)
     }
 
     // Remove the alarm that triggered this revocation, if any
-    std::ranges::remove_if(
+    //
+    // Note to self: remove_if actually moves the "removed" elements to the end
+    // of the container and gives you a range to remove them yourself. Thanks
+    // C++.
+    auto removed = std::ranges::remove_if(
         revocation_alarms,
         [](auto const& alarm)
         {
             return alarm->state() == time::Alarm::triggered;
         });
+    revocation_alarms.erase(removed.begin(), removed.end());
 }
 
 void msh::TokenAuthority::revoke_all_tokens()
