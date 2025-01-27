@@ -86,6 +86,8 @@ public:
         std::shared_ptr<scene::Surface> const& window_surface,
         float scale);
 
+    ~WindowState();
+
     auto window_size() const -> geometry::Size;
     auto border_type() const -> BorderType;
     auto focused_state() const -> MirWindowFocusState;
@@ -110,12 +112,8 @@ public:
 private:
     WindowState(WindowState const&) = delete;
 
-    std::shared_ptr<const DecorationStrategy> const decoration_strategy;
-    geometry::Size const window_size_;
-    BorderType const border_type_;
-    MirWindowFocusState const focus_state_;
-    std::string const window_name_;
-    float const scale_;
+    class Self;
+    std::unique_ptr<Self> const self;
 };
 
 /// Mixin for creating graphics buffers from raw pixels
