@@ -51,7 +51,7 @@ bool msh::TokenAuthority::Token::operator==(Token const& token) const
 }
 
 msh::TokenAuthority::TokenAuthority(std::shared_ptr<MainLoop>&& main_loop) :
-    main_loop{std::move(main_loop)}
+    main_loop{main_loop}
 {
 }
 
