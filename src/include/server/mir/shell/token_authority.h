@@ -48,7 +48,7 @@ public:
         std::optional<RevocationListener> revocation_listener;
     };
 
-    TokenAuthority(std::shared_ptr<MainLoop>&& main_loop);
+    explicit TokenAuthority(std::shared_ptr<MainLoop>&& main_loop);
 
     auto issue_token(std::optional<Token::RevocationListener> revocation_listener) -> Token;
     auto get_token_for_string(std::string const& string_token) const -> std::optional<Token>;
