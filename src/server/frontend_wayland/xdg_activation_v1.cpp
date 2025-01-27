@@ -84,7 +84,7 @@ public:
     ~XdgActivationV1();
 
     std::shared_ptr<XdgActivationTokenData> get_token_data(Token const& token);
-    std::shared_ptr<XdgActivationTokenData> const create_token(struct XdgActivationTokenV1* owner, std::shared_ptr<ms::Session> session);
+    std::shared_ptr<XdgActivationTokenData> create_token(struct XdgActivationTokenV1* owner, std::shared_ptr<ms::Session> session);
     void invalidate_all();
     void invalidate_if_not_from_session(std::shared_ptr<ms::Session> const&);
 
@@ -231,7 +231,7 @@ std::shared_ptr<mf::XdgActivationTokenData> mf::XdgActivationV1::get_token_data(
     return nullptr;
 }
 
-std::shared_ptr<mf::XdgActivationTokenData> const mf::XdgActivationV1::create_token(
+std::shared_ptr<mf::XdgActivationTokenData> mf::XdgActivationV1::create_token(
     XdgActivationTokenV1* owner, std::shared_ptr<ms::Session> session)
 {
     if (!session_listener->is_focused_session(session))
