@@ -16,6 +16,7 @@
 
 #include "floating_window_manager.h"
 #include "decoration_provider.h"
+#include "mir_toolkit/common.h"
 #include "miral/minimal_window_manager.h"
 #include "miral/window_specification.h"
 
@@ -675,17 +676,17 @@ void FloatingWindowManagerPolicy::try_place_new_window_and_account_for_occlusion
             return std::vector(valid_rects.cbegin(), valid_rects.cend());
         };
 
-        auto const occluded_by_visible_windows =
-            [subtract_rectangles](geometry::Rectangle initial_test_rect, std::vector<geometry::Rectangle> window_rects)
-        {
-            using RectangleSet = std::unordered_set<
+        using RectangleSet = std::unordered_set<
                     geometry::Rectangle,
                     decltype([](geometry::Rectangle const& s) {
                         return std::hash<int>{}(s.size.height.as_int() * 31 + s.size.width.as_int());
                     })>;
 
+        auto const get_visible_rects =
+            [subtract_rectangles](geometry::Rectangle initial_test_rect, std::vector<geometry::Rectangle> window_rects)
+        {
             if (window_rects.empty())
-                return false;
+                return RectangleSet{initial_test_rect};
 
             // Starting with rectangle we're trying to place, repeatedly
             // subtract all visible rectangles from it, accumulating
@@ -707,10 +708,25 @@ void FloatingWindowManagerPolicy::try_place_new_window_and_account_for_occlusion
                 test_rects = std::move(iter_output_rects);
 
                 if (test_rects.empty())
-                    return true;
+                    return test_rects;
             }
 
-            return test_rects.empty();
+            return test_rects;
+        };
+
+        auto const visible_area_large_enough = [](RectangleSet const& visible_rects)
+        {
+            auto constexpr min_visible_width = 50;
+            auto constexpr min_visible_height = 50;
+
+            return std::ranges::any_of(
+                visible_rects,
+                [min_visible_width, min_visible_height](auto const& rect)
+                {
+                    return rect.size.width.as_int() >= min_visible_width &&
+                           rect.size.height.as_int() >= min_visible_height;
+                });
+
         };
 
         // Try place the window around the suggested position
@@ -744,7 +760,8 @@ void FloatingWindowManagerPolicy::try_place_new_window_and_account_for_occlusion
                 if (!tools.active_output().overlaps(test_rect))
                     continue;
 
-                if (!occluded_by_visible_windows(test_rect, window_rects))
+                auto const visible_rects = get_visible_rects(test_rect, window_rects);
+                if (!visible_rects.empty() && visible_area_large_enough(visible_rects))
                 {
                     parameters.top_left().value() = position;
                     return;
