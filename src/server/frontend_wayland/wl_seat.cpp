@@ -250,9 +250,10 @@ void mf::WlSeat::for_each_listener(mw::Client* client, std::function<void(WlTouc
     touch_listeners->for_each(client, func);
 }
 
-auto mf::WlSeat::make_keyboard_helper(KeyboardCallbacks* callbacks) -> std::unique_ptr<KeyboardHelper>
+auto mf::WlSeat::make_keyboard_helper(KeyboardCallbacks* callbacks) -> std::shared_ptr<KeyboardHelper>
 {
-    return std::unique_ptr<KeyboardHelper>(new KeyboardHelper(callbacks, keymap, seat, enable_key_repeat));
+    auto const keyboard_helper = std::shared_ptr<KeyboardHelper>(new KeyboardHelper(callbacks, keymap, seat, enable_key_repeat));
+    return keyboard_helper;
 }
 
 void mf::WlSeat::bind(wl_resource* new_wl_seat)

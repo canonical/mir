@@ -20,8 +20,6 @@
 #include "wayland_wrapper.h"
 #include "mir/wayland/weak.h"
 
-#include <unordered_map>
-#include <vector>
 #include <functional>
 
 struct MirPointerEvent;
@@ -99,7 +97,7 @@ public:
         FocusListener& operator=(FocusListener const&) = delete;
     };
 
-    auto make_keyboard_helper(KeyboardCallbacks* callbacks) -> std::unique_ptr<KeyboardHelper>;
+    auto make_keyboard_helper(KeyboardCallbacks* callbacks) -> std::shared_ptr<KeyboardHelper>;
 
     /// Adds the listener for future use, and makes a call into it to inform of initial state
     void add_focus_listener(wayland::Client* client, FocusListener* listener);

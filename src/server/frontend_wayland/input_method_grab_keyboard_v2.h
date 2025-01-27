@@ -54,7 +54,7 @@ private:
     class Handler;
 
     std::shared_ptr<Handler> const handler;
-    std::unique_ptr<KeyboardHelper> const helper;
+    std::shared_ptr<KeyboardHelper> const helper;
     wayland::Weak<wayland::Client> wl_client;
 
     /// KeyboardImpl overrides
