@@ -80,7 +80,7 @@ public:
         std::shared_ptr<MainLoop> const& main_loop,
         std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
         Executor& wayland_executor,
-        std::shared_ptr<msh::TokenAuthority> token_authority);
+        std::shared_ptr<msh::TokenAuthority> const& token_authority);
     ~XdgActivationV1();
 
     std::shared_ptr<XdgActivationTokenData> get_token_data(Token const& token);
@@ -194,7 +194,7 @@ mf::XdgActivationV1::XdgActivationV1(
     std::shared_ptr<MainLoop> const& main_loop,
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
     Executor& wayland_executor,
-    std::shared_ptr<msh::TokenAuthority> token_authority)
+    std::shared_ptr<msh::TokenAuthority> const& token_authority)
     : Global(display, Version<1>()),
       shell{shell},
       session_coordinator{session_coordinator},
