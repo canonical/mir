@@ -627,8 +627,10 @@ void FloatingWindowManagerPolicy::try_place_new_window_and_account_for_occlusion
             active_workspace,
             [this, &window_rects](Window const& window)
             {
+                auto const& info = tools.info_for(window);
+
                 // Skip invisible windows
-                if (!tools.info_for(window).is_visible())
+                if (!info.is_visible() || info.depth_layer() != mir_depth_layer_application)
                     return;
 
                 window_rects.emplace_back(window.top_left(), window.size());
