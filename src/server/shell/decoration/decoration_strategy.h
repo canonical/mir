@@ -68,26 +68,10 @@ struct Button
 };
 
 /// Describes the state of the interface (what buttons are pushed, etc)
-class InputState
+struct InputState
 {
-public:
-    InputState(
-        std::vector<Button> const& buttons,
-        std::vector<geometry::Rectangle> const& input_shape)
-        : buttons_{buttons},
-          input_shape_{input_shape}
-    {
-    }
-
-    auto buttons() const -> std::vector<Button> const& { return buttons_; }
-    auto input_shape() const -> std::vector<geometry::Rectangle> const& { return input_shape_; }
-
-private:
-    InputState(InputState const&) = delete;
-    InputState& operator=(InputState const&) = delete;
-
-    std::vector<Button> const buttons_;
-    std::vector<geometry::Rectangle> const input_shape_;
+    std::vector<Button> const buttons;
+    std::vector<geometry::Rectangle> const input_shape;
 };
 
 class DecorationStrategy;

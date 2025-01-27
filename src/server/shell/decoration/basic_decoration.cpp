@@ -56,6 +56,15 @@ struct PropertyComparison
     {
     }
 
+    template<typename TYPE>
+    PropertyComparison(TYPE (OBJ::*member))
+        : comp{[=](OBJ const* a, OBJ const* b)
+        {
+            return (a->*member) == (b->*member);
+        }}
+    {
+    }
+
     auto operator()(OBJ const* a, OBJ const* b) const -> bool
     {
         return comp(a, b);
@@ -312,7 +321,7 @@ void msd::BasicDecoration::update(
     if (input_updated({
             &InputState::input_shape}))
     {
-        spec.input_shape = input_state->input_shape();
+        spec.input_shape = input_state->input_shape;
     }
 
     if (window_updated({

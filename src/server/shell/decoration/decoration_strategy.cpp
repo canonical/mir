@@ -795,11 +795,11 @@ void RendererStrategy::update_state(WindowState const& window_state, InputState 
         needs_titlebar_redraw = true;
     }
 
-    if (input_state.buttons() != buttons)
+    if (input_state.buttons != buttons)
     {
         // If the number of buttons or their location changed, redraw the whole titlebar
         // Otherwise if the buttons are in the same place, just redraw them
-        if (input_state.buttons().size() != buttons.size())
+        if (input_state.buttons.size() != buttons.size())
         {
             needs_titlebar_redraw = true;
         }
@@ -807,11 +807,11 @@ void RendererStrategy::update_state(WindowState const& window_state, InputState 
         {
             for (unsigned i = 0; i < buttons.size(); i++)
             {
-                if (input_state.buttons()[i].rect != buttons[i].rect)
+                if (input_state.buttons[i].rect != buttons[i].rect)
                     needs_titlebar_redraw = true;
             }
         }
-        buttons = input_state.buttons();
+        buttons = input_state.buttons;
         needs_titlebar_buttons_redraw = true;
     }
 }
