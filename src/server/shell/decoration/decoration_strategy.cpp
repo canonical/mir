@@ -38,7 +38,6 @@ namespace msh = mir::shell;
 namespace msd = mir::shell::decoration;
 
 using msd::WindowState;
-using msd::Pixel;
 using msd::InputState;
 
 namespace
@@ -237,6 +236,8 @@ struct RendererStrategy : public msd::RendererStrategy
     auto render_bottom_border(msd::BufferMaker const* buffer_maker) -> std::optional<std::shared_ptr<mir::graphics::Buffer>> override;
 
 private:
+    using Pixel = msd::BufferMaker::Pixel;
+
     std::shared_ptr<StaticGeometry> const static_geometry;
 
     /// A visual theme for a decoration
@@ -316,6 +317,8 @@ private:
     void redraw_titlebar_background(geom::Size scaled_titlebar_size);
     void redraw_titlebar_text(geom::Size scaled_titlebar_size);
     void redraw_titlebar_buttons(geom::Size scaled_titlebar_size);
+
+    static auto alloc_pixels(geom::Size size) -> std::unique_ptr<Pixel[]>;
 };
 
 class DecorationStrategy : public msd::DecorationStrategy, public std::enable_shared_from_this<DecorationStrategy>
@@ -388,13 +391,12 @@ auto DecorationStrategy::compute_size_with_decorations(
     return content_size;
 }
 
-auto alloc_pixels(geom::Size size) -> std::unique_ptr<Pixel[]>
+auto RendererStrategy::alloc_pixels(geom::Size size) -> std::unique_ptr<Pixel[]>
 {
-    size_t const buf_size = area(size) * sizeof(Pixel);
-    if (buf_size)
+    if (size_t const buf_size = area(size) * sizeof(Pixel))
         return std::unique_ptr<Pixel[]>{new Pixel[buf_size]};
     else
-        return nullptr;
+        return {};
 }
 }
 

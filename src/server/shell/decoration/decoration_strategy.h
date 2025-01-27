@@ -28,11 +28,10 @@
 #include <vector>
 
 namespace mir::scene { class Surface; }
+namespace mir::graphics { class Buffer; }
 
 namespace mir::shell::decoration
 {
-using Pixel = uint32_t;
-
 enum class BorderType
 {
     Full,       ///< Full titlebar and border (for restored windows)
@@ -139,6 +138,8 @@ private:
 class BufferMaker
 {
 public:
+    using Pixel = uint32_t;
+
     virtual auto make_buffer(MirPixelFormat const format, geometry::Size const size, Pixel const* const pixels) const
     -> std::optional<std::shared_ptr<graphics::Buffer>> = 0;
 
