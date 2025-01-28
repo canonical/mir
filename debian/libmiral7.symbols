@@ -492,6 +492,14 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::InputConfiguration::~InputConfiguration()@MIRAL_5.1" 5.1.0
  (c++)"miral::WindowManagerTools::move_cursor_to(mir::geometry::generic::Point<float>)@MIRAL_5.1" 5.1.0
  MIRAL_5.2@MIRAL_5.2 5.2.0
+ (c++)"miral::InputConfiguration::Keyboard::Keyboard()@MIRAL_5.2" 5.2.0
+ (c++)"miral::InputConfiguration::Keyboard::Keyboard(miral::InputConfiguration::Keyboard const&)@MIRAL_5.2" 5.2.0
+ (c++)"miral::InputConfiguration::Keyboard::operator=(miral::InputConfiguration::Keyboard)@MIRAL_5.2" 5.2.0
+ (c++)"miral::InputConfiguration::Keyboard::set_repeat_delay(int)@MIRAL_5.2" 5.2.0
+ (c++)"miral::InputConfiguration::Keyboard::set_repeat_rate(int)@MIRAL_5.2" 5.2.0
+ (c++)"miral::InputConfiguration::Keyboard::~Keyboard()@MIRAL_5.2" 5.2.0
+ (c++)"miral::InputConfiguration::keyboard()@MIRAL_5.2" 5.2.0
+ (c++)"miral::InputConfiguration::keyboard(miral::InputConfiguration::Keyboard const&)@MIRAL_5.2" 5.2.0
  (c++)"miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&, MirInputEventModifier, miral::FocusStealing)@MIRAL_5.0" 5.2.0
  (c++)"miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&, miral::FocusStealing)@MIRAL_5.0" 5.2.0
  (c++)"miral::WindowManagementPolicy::~WindowManagementPolicy()@MIRAL_5.0" 5.2.0

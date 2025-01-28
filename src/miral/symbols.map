@@ -506,3 +506,16 @@ global:
   };
 } MIRAL_5.0;
 
+MIRAL_5.2 {
+global:
+  extern "C++" {
+    miral::InputConfiguration::Keyboard::?Keyboard*;
+    miral::InputConfiguration::Keyboard::Keyboard*;
+    miral::InputConfiguration::Keyboard::config_changed*;
+    miral::InputConfiguration::Keyboard::operator*;
+    miral::InputConfiguration::Keyboard::set_repeat_delay*;
+    miral::InputConfiguration::Keyboard::set_repeat_rate*;
+    miral::InputConfiguration::keyboard*;
+    typeinfo?for?miral::InputConfiguration::Keyboard;
+  };
+} MIRAL_5.1;

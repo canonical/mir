@@ -322,6 +322,11 @@ auto miral::InputDeviceConfig::touchpad() const -> TouchpadInputConfiguration
     return touchpad_config;
 }
 
+auto miral::InputDeviceConfig::keyboard() const -> KeyboardInputConfiguration
+{
+    return keyboard_config;
+}
+
 void miral::InputDeviceConfig::mouse(MouseInputConfiguration const& val)
 {
     mouse_config = val;
@@ -330,6 +335,11 @@ void miral::InputDeviceConfig::mouse(MouseInputConfiguration const& val)
 void miral::InputDeviceConfig::touchpad(TouchpadInputConfiguration const& val)
 {
     touchpad_config = val;
+}
+
+void miral::InputDeviceConfig::keyboard(KeyboardInputConfiguration const& val)
+{
+    keyboard_config = val;
 }
 
 void miral::TouchpadInputConfiguration::apply_to(mi::Device& device) const

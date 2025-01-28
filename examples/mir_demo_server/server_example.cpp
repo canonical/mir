@@ -33,6 +33,7 @@
 #include "mir/options/option.h"
 #include "mir/report_exception.h"
 #include "mir/server.h"
+#include "mir/log.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 
@@ -128,6 +129,7 @@ try
 
         auto mouse = input_configuration.mouse();
         auto touchpad = input_configuration.touchpad();
+        auto keyboard = input_configuration.keyboard();
 
         for (std::string line; std::getline(in, line);)
         {
@@ -146,9 +148,46 @@ try
                 touchpad.scroll_mode(mir_touchpad_scroll_mode_edge_scroll);
             if (line == "mir_touchpad_scroll_mode_button_down_scroll")
                 touchpad.scroll_mode(mir_touchpad_scroll_mode_button_down_scroll);
+
+            if (line.contains("="))
+            {
+                auto const eq = line.find_first_of("=");
+                auto const key = line.substr(0, eq);
+                auto const value = line.substr(eq+1);
+
+                auto const parse_and_validate = [](std::string const& key, std::string_view val) -> std::optional<int>
+                {
+                    auto const int_val = std::atoi(val.data());
+                    if (int_val < 0)
+                    {
+                        mir::log_warning(
+                            "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
+                            key.c_str(), int_val);
+                        return std::nullopt;
+                    }
+
+                    return int_val;
+                };
+
+                if (key == "repeat_rate")
+                {
+                    auto const parsed = parse_and_validate(key, value);
+                    if (parsed)
+                        keyboard.set_repeat_rate(*parsed);
+                }
+
+                if (key == "repeat_delay")
+                {
+                    auto const parsed = parse_and_validate(key, value);
+                    if (parsed)
+                        keyboard.set_repeat_delay(*parsed);
+                }
+            }
         }
+
         input_configuration.mouse(mouse);
         input_configuration.touchpad(touchpad);
+        input_configuration.keyboard(keyboard);
     }};
 
     runner.set_exception_handler(exception_handler);

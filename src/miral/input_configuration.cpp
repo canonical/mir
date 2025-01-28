@@ -17,7 +17,9 @@
 #include "miral/input_configuration.h"
 
 #include "input_device_config.h"
+#include "mir/shell/accessibility_manager.h"
 
+#include <memory>
 #include <mir/server.h>
 #include <mir/input/input_device_hub.h>
 
@@ -35,16 +37,25 @@ class miral::InputConfiguration::Touchpad::Self : public TouchpadInputConfigurat
     using TouchpadInputConfiguration::operator=;
 };
 
+class miral::InputConfiguration::Keyboard::Self : public KeyboardInputConfiguration
+{
+    friend class miral::InputConfiguration::Self;
+    using KeyboardInputConfiguration::operator=;
+};
+
 class miral::InputConfiguration::Self
 {
 public:
     std::weak_ptr<mir::input::InputDeviceHub> input_device_hub{};
     std::shared_ptr<InputDeviceConfig> input_device_config;
+    std::shared_ptr<mir::shell::AccessibilityManager> accessibility_manager;
 
     auto mouse() -> Mouse;
     void mouse(Mouse const& val);
     auto touchpad() -> Touchpad;
     void touchpad(Touchpad const& val);
+    auto keyboard() -> Keyboard;
+    void keyboard(Keyboard const& val);
 
     void apply(Mouse const& m)
     {
@@ -70,6 +81,20 @@ public:
         }
 
         touchpad(t);
+    }
+
+    void apply(Keyboard const& k)
+    {
+        if(accessibility_manager)
+        {
+            if (k.self->repeat_rate)
+                accessibility_manager->repeat_rate(*k.self->repeat_rate);
+            if (k.self->repeat_delay)
+                accessibility_manager->repeat_delay(*k.self->repeat_delay);
+
+            accessibility_manager->notify_helpers();
+        }
+        keyboard(k);
     }
 };
 
@@ -109,6 +134,23 @@ void miral::InputConfiguration::Self::touchpad(Touchpad const& val)
     }
 }
 
+auto miral::InputConfiguration::Self::keyboard() -> Keyboard {
+    Keyboard result;
+    if (input_device_config)
+    {
+        *result.self = input_device_config->keyboard();
+    }
+    return result;
+}
+
+void miral::InputConfiguration::Self::keyboard(Keyboard const& val)
+{
+    if (input_device_config)
+    {
+        input_device_config->keyboard(*val.self);
+    }
+}
+
 miral::InputConfiguration::InputConfiguration() :
     self{std::make_shared<Self>()}
 {
@@ -127,6 +169,7 @@ void miral::InputConfiguration::operator()(mir::Server& server)
     {
         self->input_device_hub = server.the_input_device_hub();
         self->input_device_config = InputDeviceConfig::the_input_configuration(server.get_options());
+        self->accessibility_manager = server.the_accessibility_manager();
     });
 }
 
@@ -143,6 +186,16 @@ auto miral::InputConfiguration::touchpad() -> Touchpad
 void miral::InputConfiguration::touchpad(Touchpad const& t)
 {
     self->apply(t);
+}
+
+auto miral::InputConfiguration::keyboard() -> Keyboard
+{
+    return self->keyboard();
+}
+
+void miral::InputConfiguration::keyboard(Keyboard const& k)
+{
+    self->apply(k);
 }
 
 miral::InputConfiguration::Mouse::Mouse() :
@@ -320,4 +373,30 @@ void miral::InputConfiguration::Touchpad::scroll_mode(std::optional<MirTouchpadS
 void miral::InputConfiguration::Touchpad::tap_to_click(std::optional<bool> const& val)
 {
     self->tap_to_click = val;
+}
+
+miral::InputConfiguration::Keyboard::Keyboard() :
+    self{std::make_unique<Self>()}
+{
+}
+
+miral::InputConfiguration::Keyboard::~Keyboard() = default;
+
+miral::InputConfiguration::Keyboard::Keyboard(Keyboard const& that) :
+    self{std::make_unique<Self>(*that.self)}
+{
+}
+
+auto miral::InputConfiguration::Keyboard::operator=(Keyboard that) -> Keyboard&
+{
+    std::swap(self, that.self);
+    return *this;
+}
+
+void miral::InputConfiguration::Keyboard::set_repeat_rate(int new_rate) {
+    self->repeat_rate = new_rate;
+}
+
+void miral::InputConfiguration::Keyboard::set_repeat_delay(int new_delay) {
+    self->repeat_delay = new_delay;
 }
