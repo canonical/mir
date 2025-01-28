@@ -20,6 +20,7 @@
 #include "mir/time/alarm.h"
 #include "mir/log.h"
 
+#include <chrono>
 #include <cmath>
 #include <memory>
 #include <mutex>
@@ -28,7 +29,7 @@
 namespace
 {
 /// Time in milliseconds that the compositor will wait before invalidating a token
-static auto constexpr timeout_ms = std::chrono::milliseconds(3000);
+static auto constexpr token_invalidation_timeout = std::chrono::seconds(3);
 }
 
 namespace msh = mir::shell;
@@ -64,7 +65,7 @@ auto msh::TokenAuthority::issue_token(std::optional<Token::RevocationListener> r
         {
             revoke_token(token);
         });
-    alarm->reschedule_in(::timeout_ms);
+    alarm->reschedule_in(::token_invalidation_timeout);
 
     {
         std::scoped_lock lock{mutex};
@@ -78,7 +79,6 @@ auto msh::TokenAuthority::get_token_for_string(std::string const& string_token) 
 {
     std::scoped_lock lock{mutex};
 
-    // Incoming string doesn't have null terminator, just like the one leaving Mir
     auto iter = issued_tokens.find(TimedToken(Token{string_token, {}}, nullptr));
 
     if (iter == issued_tokens.end())
@@ -96,11 +96,9 @@ void msh::TokenAuthority::revoke_token(Token to_remove)
 {
     std::scoped_lock lock{mutex};
 
-    auto const iter = issued_tokens.find(TimedToken{to_remove, nullptr});
-    if (iter != issued_tokens.end())
+    if (auto const iter = issued_tokens.find(TimedToken{to_remove, nullptr}); iter != issued_tokens.end())
     {
-        auto& token = iter->first;
-        if (auto cb = token.revocation_listener)
+        if (auto& token = iter->first; auto cb = token.revocation_listener)
             (*cb)(token);
         issued_tokens.erase(iter);
     }
@@ -129,7 +127,9 @@ auto msh::TokenAuthority::generate_token() -> std::string
 
     uuid_clear(uuid);
 
-    // Don't need the null terminator
+    // UUIDs are 36 characters + 1 null terminator.
+    // If we pass the string with the extra null to clients, they will strip it
+    // anyway some time before passing it back to `get_token_for_string`
     return unparsed.substr(0, UUID_STR_LEN-1);
 }
 
