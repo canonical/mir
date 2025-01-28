@@ -34,7 +34,7 @@ struct TestTokenAuthority : testing::Test
     TestTokenAuthority() :
         clock{std::make_shared<mir::time::SteadyClock>()},
         main_loop{std::make_shared<mir::GLibMainLoop>(clock)},
-        token_authority{std::forward<std::shared_ptr<mir::MainLoop>>(main_loop)},
+        token_authority{std::shared_ptr<mir::MainLoop>(main_loop)},
         main_loop_thread{
             [this]()
             {
@@ -47,8 +47,8 @@ struct TestTokenAuthority : testing::Test
     {
     }
 
-    std::shared_ptr<mir::time::SteadyClock> clock;
-    std::shared_ptr<mir::MainLoop> main_loop;
+    std::shared_ptr<mir::time::SteadyClock> const clock;
+    std::shared_ptr<mir::MainLoop> const main_loop;
     mir::shell::TokenAuthority token_authority;
     mir::test::AutoUnblockThread main_loop_thread;
 };
