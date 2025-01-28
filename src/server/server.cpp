@@ -37,10 +37,8 @@
 #include "mir/renderer/renderer_factory.h"
 
 #include "frontend_wayland/wayland_connector.h"
-
 #include <iostream>
-#include <mir/server.h>
-
+#include <optional>
 
 namespace mo = mir::options;
 namespace mi = mir::input;
@@ -135,7 +133,8 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(the_renderer_factory)\
     MACRO(the_decoration_strategy)\
     MACRO(the_input_device_registry)\
-    MACRO(the_idle_handler)
+    MACRO(the_idle_handler)\
+    MACRO(the_token_authority)
 
 #define MIR_SERVER_BUILDER(name)\
     std::function<std::invoke_result_t<decltype(&mir::DefaultServerConfiguration::the_##name),mir::DefaultServerConfiguration*>()> name##_builder;
@@ -464,7 +463,7 @@ auto mir::Server::open_wayland_client_socket() -> Fd
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }
 
-auto mir::Server::wayland_display() const -> optional_value<std::string>
+auto mir::Server::wayland_display() const -> std::optional<std::string>
 {
     if (auto const config = self->server_config)
         return config->the_wayland_connector()->socket_name();
@@ -472,10 +471,20 @@ auto mir::Server::wayland_display() const -> optional_value<std::string>
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }
 
-auto mir::Server::x11_display() const -> mir::optional_value<std::string>
+auto mir::Server::x11_display() const -> std::optional<std::string>
 {
     if (auto const config = self->server_config)
         return config->the_xwayland_connector()->socket_name();
+
+    BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
+}
+
+auto mir::Server::get_activation_token() const -> std::string
+{
+    if (auto const config = self->server_config)
+    {
+        return std::string(config->the_token_authority()->issue_token({}));
+    }
 
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }

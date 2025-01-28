@@ -60,7 +60,7 @@ public:
     int client_socket_fd(
         std::function<void(std::shared_ptr<scene::Session> const& session)> const& connect_handler) const override;
 
-    auto socket_name() const -> optional_value<std::string> override;
+    auto socket_name() const -> std::optional<std::string> override;
 
 private:
     std::shared_ptr<Executor> const main_loop;

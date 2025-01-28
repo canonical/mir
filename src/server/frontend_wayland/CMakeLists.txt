@@ -114,6 +114,5 @@ target_link_libraries(mirfrontend-wayland
     mircore
   PRIVATE
     PkgConfig::GIOUnix
-    PkgConfig::UUID
 )
 

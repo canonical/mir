@@ -235,7 +235,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 ctx.session_coordinator,
                 ctx.main_loop,
                 ctx.keyboard_observer_registrar,
-                *ctx.wayland_executor);
+                *ctx.wayland_executor,
+                ctx.token_authority);
         }),
 };
 
@@ -397,7 +398,8 @@ std::shared_ptr<mf::Connector>
                 enable_repeat,
                 the_session_lock(),
                 the_decoration_strategy(),
-                the_session_coordinator());
+                the_session_coordinator(),
+                the_token_authority());
         });
 }
 

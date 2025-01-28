@@ -21,6 +21,7 @@
 #include <mir/options/configuration.h>
 #include <mir/main_loop.h>
 #include <mir/fd.h>
+#include <mir/fatal.h>
 
 namespace mo = mir::options;
 

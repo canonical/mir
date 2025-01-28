@@ -18,11 +18,11 @@
 #define MIR_SERVER_H_
 
 #include "mir/shell/window_manager_builder.h"
-#include "mir/optional_value.h"
 #include "mir_toolkit/common.h"
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <vector>
 
 struct wl_display;
@@ -47,6 +47,7 @@ class DisplayLayout;
 class DisplayConfigurationController;
 class FocusController;
 class IdleHandler;
+class TokenAuthority;
 class InputTargeter;
 class PersistentSurfaceStore;
 class Shell;
@@ -435,6 +436,8 @@ public:
     auto the_idle_handler() const ->
         std::shared_ptr<shell::IdleHandler>;
 
+    auto the_token_authority() const ->
+        std::shared_ptr<shell::TokenAuthority>;
 /** @} */
 
 /** @name Client side support
@@ -468,10 +471,12 @@ public:
         std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const& extension_filter);
 
     /// Get the name of the Wayland endpoint (if any) usable as a $WAYLAND_DISPLAY value
-    auto wayland_display() const -> optional_value<std::string>;
+    auto wayland_display() const -> std::optional<std::string>;
 
     /// Get the name of the X11 display usable as a $DISPLAY value
-    auto x11_display() const -> optional_value<std::string>;
+    auto x11_display() const -> std::optional<std::string>;
+
+    auto get_activation_token() const -> std::string;
 
     /// Overrides the standard set of Wayland extensions (mir::frontend::get_standard_extensions()) with a new list
     void set_enabled_wayland_extensions(std::vector<std::string> const& extensions);
