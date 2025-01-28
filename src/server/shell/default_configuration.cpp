@@ -14,20 +14,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mir/shell/system_compositor_window_manager.h>
-#include <mir/main_loop.h>
 #include "mir/default_server_configuration.h"
-#include "mir/abnormal_exit.h"
 
-#include "mir/input/composite_event_filter.h"
-#include "mir/shell/abstract_shell.h"
-#include "mir/options/configuration.h"
-#include "mir/options/option.h"
+#include "basic_idle_handler.h"
+#include "decoration/basic_decoration.h"
+#include "decoration/basic_manager.h"
 #include "default_persistent_surface_store.h"
 #include "graphics_display_layout.h"
-#include "decoration/basic_manager.h"
-#include "decoration/basic_decoration.h"
-#include "basic_idle_handler.h"
+
+#include "mir/abnormal_exit.h"
+#include "mir/input/composite_event_filter.h"
+#include "mir/main_loop.h"
+#include "mir/options/configuration.h"
+#include "mir/options/option.h"
+#include "mir/shell/abstract_shell.h"
+#include "mir/shell/accessibility_manager.h"
+#include "mir/shell/system_compositor_window_manager.h"
 #include "mir/shell/token_authority.h"
 
 namespace ms = mir::scene;
@@ -182,3 +184,13 @@ mir::DefaultServerConfiguration::the_shell_display_layout()
             return std::make_shared<msh::GraphicsDisplayLayout>(the_display());
         });
 }
+
+auto mir::DefaultServerConfiguration::the_accessibility_manager() -> std::shared_ptr<shell::AccessibilityManager>
+{
+    return accessibility_manager(
+        []
+        {
+            return std::make_shared<shell::AccessibilityManager>();
+        });
+}
+
