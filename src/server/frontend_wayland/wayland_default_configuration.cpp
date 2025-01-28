@@ -29,6 +29,7 @@
 #include "input_method_v1.h"
 #include "input_method_v2.h"
 #include "layer_shell_v1.h"
+#include "mir/shell/accessibility_manager.h"
 #include "mir_shell.h"
 #include "pointer_constraints_unstable_v1.h"
 #include "primary_selection_v1.h"
@@ -366,8 +367,9 @@ std::shared_ptr<mf::Connector>
                 enabled_wayland_extensions.begin(),
                 enabled_wayland_extensions.end()};
 
-            // TODO pass this to the accessibility manager
-            /* auto const enable_repeat = options->get<bool>(options::enable_key_repeat_opt); */
+            auto const enable_repeat = options->get<bool>(options::enable_key_repeat_opt);
+            the_accessibility_manager()->override_key_repeat_settings(enable_repeat);
+
             auto const x11_enabled = options->is_set(mo::x11_display_opt) && options->get<bool>(mo::x11_display_opt);
 
             return std::make_shared<mf::WaylandConnector>(

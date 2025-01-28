@@ -17,12 +17,16 @@
 #include "mir/shell/accessibility_manager.h"
 #include "mir/shell/keyboard_helper.h"
 
+#include <optional>
+
 void mir::shell::AccessibilityManager::register_keyboard_helper(std::shared_ptr<KeyboardHelper> helper)
 {
     keyboard_helpers.push_back(helper);
 }
 
-int mir::shell::AccessibilityManager::repeat_rate() const {
+std::optional<int> mir::shell::AccessibilityManager::repeat_rate() const {
+    if(!enable_key_repeat)
+        return {};
     return repeat_rate_;
 }
 
@@ -36,6 +40,11 @@ void mir::shell::AccessibilityManager::repeat_rate(int new_rate) {
 
 void mir::shell::AccessibilityManager::repeat_delay(int new_delay) {
     repeat_delay_ = new_delay;
+}
+
+void mir::shell::AccessibilityManager::override_key_repeat_settings(bool enable)
+{
+    enable_key_repeat = enable;
 }
 
 void mir::shell::AccessibilityManager::notify_helpers() const {

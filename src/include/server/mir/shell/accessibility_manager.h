@@ -18,6 +18,7 @@
 #define MIR_SHELL_ACCESSIBILITY_MANAGER_H
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace mir
@@ -30,11 +31,12 @@ class AccessibilityManager
 public:
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper>);
 
-    int repeat_rate() const;
+    std::optional<int> repeat_rate() const;
     int repeat_delay() const;
 
     void repeat_rate(int new_rate);
     void repeat_delay(int new_rate);
+    void override_key_repeat_settings(bool enable);
 
     void notify_helpers() const;
 
@@ -44,6 +46,7 @@ private:
     // 25 rate and 600 delay are the default in Weston and Sway
     int repeat_rate_{25};
     int repeat_delay_{600};
+    bool enable_key_repeat{true};
 };
 }
 }

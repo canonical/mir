@@ -624,6 +624,7 @@ global:
     mir::shell::AbstractShell::surface_ready*;
     mir::shell::AbstractShell::swap_z_order*;
     mir::shell::AccessibilityManager::notify_helpers*;
+    mir::shell::AccessibilityManager::override_key_repeat_settings*;
     mir::shell::AccessibilityManager::register_keyboard_helper*;
     mir::shell::AccessibilityManager::repeat_delay*;
     mir::shell::AccessibilityManager::repeat_rate*;

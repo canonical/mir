@@ -253,7 +253,10 @@ void mf::WlSeat::for_each_listener(mw::Client* client, std::function<void(WlTouc
 
 auto mf::WlSeat::make_keyboard_helper(KeyboardCallbacks* callbacks) -> std::shared_ptr<KeyboardHelper>
 {
-    auto const default_repeat_rate = accessibility_manager->repeat_rate();
+    // https://wayland.app/protocols/wayland#wl_keyboard:event:repeat_info
+    // " A rate of zero will disable any repeating (regardless of the value of
+    // delay)."
+    auto const default_repeat_rate = accessibility_manager->repeat_rate().value_or(0);
     auto const default_repeat_delay = accessibility_manager->repeat_delay();
     auto const keyboard_helper = std::shared_ptr<KeyboardHelper>(new KeyboardHelper(callbacks, keymap, seat, default_repeat_rate, default_repeat_delay));
     accessibility_manager->register_keyboard_helper(keyboard_helper);
