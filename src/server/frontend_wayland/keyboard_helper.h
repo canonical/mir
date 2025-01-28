@@ -39,6 +39,10 @@ namespace input
 class Keymap;
 class Seat;
 }
+namespace shell
+{
+class AccessibilityManager;
+}
 
 namespace frontend
 {
@@ -75,6 +79,7 @@ public:
 
 private:
     friend class mir::frontend::WlSeat;
+    friend class mir::shell::AccessibilityManager;
     KeyboardHelper(
         KeyboardCallbacks* keybaord_impl,
         std::shared_ptr<mir::input::Keymap> const& initial_keymap,
