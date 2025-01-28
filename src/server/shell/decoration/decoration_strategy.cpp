@@ -321,7 +321,7 @@ private:
     static auto alloc_pixels(geom::Size size) -> std::unique_ptr<Pixel[]>;
 };
 
-class DecorationStrategy : public msd::DecorationStrategy, public std::enable_shared_from_this<DecorationStrategy>
+class DecorationStrategy : public msd::DecorationStrategy
 {
 public:
     ~DecorationStrategy() override = default;
@@ -335,25 +335,7 @@ public:
     auto new_window_state(const std::shared_ptr<mir::scene::Surface>& window_surface,
                           float scale) const -> std::unique_ptr<WindowState> override;
     auto resize_corner_input_size() const -> geom::Size override;
-    auto titlebar_height() const -> geom::Height override;
-    auto side_border_width() const -> geom::Width override;
-    auto bottom_border_height() const -> geom::Height override;
 };
-
-auto DecorationStrategy::titlebar_height() const -> geom::Height
-{
-    return static_geometry()->titlebar_height;
-}
-
-auto DecorationStrategy::side_border_width() const -> geom::Width
-{
-    return static_geometry()->side_border_width;
-}
-
-auto DecorationStrategy::bottom_border_height() const -> geom::Height
-{
-    return static_geometry()->bottom_border_height;
-}
 
 auto DecorationStrategy::resize_corner_input_size() const -> geom::Size
 {
@@ -369,7 +351,12 @@ auto DecorationStrategy::new_window_state(const std::shared_ptr<mir::scene::Surf
                                           float scale) const -> std::unique_ptr<WindowState>
 
 {
-    return std::make_unique<WindowState>(shared_from_this(), window_surface, scale);
+    return std::make_unique<WindowState>(
+        window_surface,
+        static_geometry()->titlebar_height,
+        static_geometry()->side_border_width,
+        static_geometry()->bottom_border_height,
+        scale);
 }
 
 auto DecorationStrategy::compute_size_with_decorations(

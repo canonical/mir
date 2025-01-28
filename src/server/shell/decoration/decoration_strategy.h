@@ -82,8 +82,10 @@ class WindowState
 {
 public:
     WindowState(
-        std::shared_ptr<const DecorationStrategy>&& decoration_strategy,
         std::shared_ptr<scene::Surface> const& window_surface,
+        geometry::Height fixed_titlebar_height,
+        geometry::Width fixed_side_border_width,
+        geometry::Height fixed_bottom_border_height,
         float scale);
 
     ~WindowState();
@@ -166,11 +168,6 @@ public:
     virtual ~DecorationStrategy() = default;
 
 private:
-    virtual auto titlebar_height() const -> geometry::Height = 0;
-    virtual auto side_border_width() const -> geometry::Width = 0;
-    virtual auto bottom_border_height() const -> geometry::Height = 0;
-    friend class WindowState;
-
     DecorationStrategy(DecorationStrategy const&) = delete;
     DecorationStrategy& operator=(DecorationStrategy const&) = delete;
 };
