@@ -35,6 +35,7 @@
 #include "mir/input/mir_keyboard_config.h"
 #include "mir/input/keyboard_observer.h"
 #include "mir/scene/surface.h"
+#include "mir/shell/accessibility_manager.h"
 #include "mir_toolkit/events/input/pointer_event.h"
 
 #include <mutex>
@@ -194,7 +195,7 @@ mf::WlSeat::WlSeat(
     std::shared_ptr<mi::InputDeviceHub> const& input_hub,
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
     std::shared_ptr<mi::Seat> const& seat,
-    bool enable_key_repeat)
+    std::shared_ptr<shell::AccessibilityManager> const& accessibility_manager)
     :   Global(display, Version<8>()),
         keymap{std::make_shared<input::ParameterKeymap>()},
         config_observer{
@@ -213,7 +214,7 @@ mf::WlSeat::WlSeat(
         clock{clock},
         input_hub{input_hub},
         seat{seat},
-        enable_key_repeat{enable_key_repeat}
+        accessibility_manager{accessibility_manager}
 {
     input_hub->add_observer(config_observer);
     keyboard_observer_registrar->register_interest(keyboard_observer, wayland_executor);
@@ -252,7 +253,10 @@ void mf::WlSeat::for_each_listener(mw::Client* client, std::function<void(WlTouc
 
 auto mf::WlSeat::make_keyboard_helper(KeyboardCallbacks* callbacks) -> std::shared_ptr<KeyboardHelper>
 {
-    auto const keyboard_helper = std::shared_ptr<KeyboardHelper>(new KeyboardHelper(callbacks, keymap, seat, enable_key_repeat));
+    auto const default_repeat_rate = accessibility_manager->repeat_rate();
+    auto const default_repeat_delay = accessibility_manager->repeat_delay();
+    auto const keyboard_helper = std::shared_ptr<KeyboardHelper>(new KeyboardHelper(callbacks, keymap, seat, default_repeat_rate, default_repeat_delay));
+    accessibility_manager->register_keyboard_helper(keyboard_helper);
     return keyboard_helper;
 }
 

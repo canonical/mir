@@ -36,6 +36,10 @@ class Seat;
 class Keymap;
 class KeyboardObserver;
 }
+namespace shell
+{
+class AccessibilityManager;
+}
 namespace time
 {
 class Clock;
@@ -74,7 +78,7 @@ public:
         std::shared_ptr<mir::input::InputDeviceHub> const& input_hub,
         std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
         std::shared_ptr<mir::input::Seat> const& seat,
-        bool enable_key_repeat);
+        std::shared_ptr<shell::AccessibilityManager> const& accessibility_manager);
 
     ~WlSeat();
 
@@ -131,7 +135,8 @@ private:
     std::shared_ptr<time::Clock> const clock;
     std::shared_ptr<input::InputDeviceHub> const input_hub;
     std::shared_ptr<input::Seat> const seat;
-    bool const enable_key_repeat;
+
+    std::shared_ptr<shell::AccessibilityManager> const accessibility_manager;
 
     void bind(wl_resource* new_wl_seat) override;
 };

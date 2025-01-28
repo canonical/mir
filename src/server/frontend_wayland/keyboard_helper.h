@@ -84,7 +84,8 @@ private:
         KeyboardCallbacks* keybaord_impl,
         std::shared_ptr<mir::input::Keymap> const& initial_keymap,
         std::shared_ptr<input::Seat> const& seat,
-        bool enable_key_repeat);
+        int default_repeat_rate,
+        int default_repeat_delay);
 
     void handle_keyboard_event(std::shared_ptr<MirKeyboardEvent const> const& event);
     void set_keymap(std::shared_ptr<mir::input::Keymap> const& new_keymap);

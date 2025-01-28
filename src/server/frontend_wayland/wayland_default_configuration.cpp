@@ -366,7 +366,8 @@ std::shared_ptr<mf::Connector>
                 enabled_wayland_extensions.begin(),
                 enabled_wayland_extensions.end()};
 
-            auto const enable_repeat = options->get<bool>(options::enable_key_repeat_opt);
+            // TODO pass this to the accessibility manager
+            /* auto const enable_repeat = options->get<bool>(options::enable_key_repeat_opt); */
             auto const x11_enabled = options->is_set(mo::x11_display_opt) && options->get<bool>(mo::x11_display_opt);
 
             return std::make_shared<mf::WaylandConnector>(
@@ -395,7 +396,7 @@ std::shared_ptr<mf::Connector>
                     x11_enabled,
                     wayland_extension_hooks),
                 wayland_extension_filter,
-                enable_repeat,
+                the_accessibility_manager(),
                 the_session_lock(),
                 the_decoration_strategy(),
                 the_session_coordinator(),

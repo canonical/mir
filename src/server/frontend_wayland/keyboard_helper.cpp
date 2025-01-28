@@ -33,7 +33,8 @@ mf::KeyboardHelper::KeyboardHelper(
     KeyboardCallbacks* callbacks,
     std::shared_ptr<mi::Keymap> const& initial_keymap,
     std::shared_ptr<input::Seat> const& seat,
-    bool enable_key_repeat)
+    int default_repeat_rate,
+    int default_repeat_delay)
     : callbacks{callbacks},
       mir_seat{seat},
       current_keymap{nullptr}, // will be set later in the constructor by set_keymap()
@@ -51,9 +52,7 @@ mf::KeyboardHelper::KeyboardHelper(
      */
     set_keymap(initial_keymap);
 
-    // 25 rate and 600 delay are the default in Weston and Sway
-    // At some point we will want to make this configurable
-    callbacks->send_repeat_info(enable_key_repeat ? 25 : 0, 600);
+    callbacks->send_repeat_info(default_repeat_rate, default_repeat_delay);
 }
 
 mf::KeyboardHelper::~KeyboardHelper() = default;

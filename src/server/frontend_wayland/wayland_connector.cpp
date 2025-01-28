@@ -241,7 +241,7 @@ mf::WaylandConnector::WaylandConnector(
     bool arw_socket,
     std::unique_ptr<WaylandExtensions> extensions_,
     WaylandProtocolExtensionFilter const& extension_filter,
-    bool enable_key_repeat,
+    std::shared_ptr<shell::AccessibilityManager> const& accessibility_manager,
     std::shared_ptr<scene::SessionLock> const& session_lock,
     std::shared_ptr<mir::DecorationStrategy> const& decoration_strategy,
     std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
@@ -297,7 +297,7 @@ mf::WaylandConnector::WaylandConnector(
         input_hub,
         keyboard_observer_registrar,
         seat,
-        enable_key_repeat);
+        accessibility_manager);
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),
         executor,
