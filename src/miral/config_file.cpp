@@ -109,53 +109,57 @@ Watcher::Watcher(path file, miral::ConfigFile::Loader load_config) :
 
 miral::ConfigFile::Self::Self(MirRunner& runner, path file, Mode mode, Loader load_config)
 {
-    auto const filename{file.filename()};
-    auto const directory{config_directory(file)};
-
-    // With C++26 we should be able to use the optional directory as a range to
-    // initialize config_roots.  Until then, we'll just do it the long way...
-    std::vector<path> config_roots;
-
-    if (directory)
-    {
-        config_roots.push_back(directory.value());
-    }
-
-    if (auto config_dirs = getenv("XDG_CONFIG_DIRS"))
-    {
-        std::istringstream config_stream{config_dirs};
-        for (std::string config_root; getline(config_stream, config_root, ':');)
+    runner.add_start_callback(
+        [file, load_config=std::move(load_config), mode, this, &runner]
         {
-            config_roots.push_back(config_root);
-        }
-    }
-    else
-    {
-        config_roots.push_back("/etc/xdg");
-    }
+            auto const filename{file.filename()};
+            auto const directory{config_directory(file)};
 
-    /* Read config file */
-    for (auto const& config_root : config_roots)
-    {
-        auto filepath = config_root / filename;
-        if (std::ifstream config_file{filepath})
-        {
-            load_config(config_file, filepath);
-            mir::log_debug("Loaded %s", filepath.c_str());
-            break;
-        }
-    }
+            // With C++26 we should be able to use the optional directory as a range to
+            // initialize config_roots.  Until then, we'll just do it the long way...
+            std::vector<path> config_roots;
 
-    switch (mode)
-    {
-    case Mode::no_reloading:
-        break;
+            if (directory)
+            {
+                config_roots.push_back(directory.value());
+            }
 
-    case Mode::reload_on_change:
-        watcher = std::make_shared<Watcher>(file, std::move(load_config));
-        watcher->register_handler(runner);
-        break;
-    }
+            if (auto config_dirs = getenv("XDG_CONFIG_DIRS"))
+            {
+                std::istringstream config_stream{config_dirs};
+                for (std::string config_root; getline(config_stream, config_root, ':');)
+                {
+                    config_roots.push_back(config_root);
+                }
+            }
+            else
+            {
+                config_roots.push_back("/etc/xdg");
+            }
+
+            /* Read config file */
+            for (auto const& config_root : config_roots)
+            {
+                auto filepath = config_root / filename;
+                if (std::ifstream config_file{filepath})
+                {
+                    load_config(config_file, filepath);
+                    mir::log_debug("Loaded %s", filepath.c_str());
+                    break;
+                }
+            }
+
+            switch (mode)
+            {
+            case Mode::no_reloading:
+                break;
+
+            case Mode::reload_on_change:
+                watcher = std::make_shared<Watcher>(file, std::move(load_config));
+                watcher->register_handler(runner);
+                break;
+            }
+        });
 }
 
 miral::ConfigFile::ConfigFile(MirRunner& runner, path file, Mode mode, Loader load_config) :
