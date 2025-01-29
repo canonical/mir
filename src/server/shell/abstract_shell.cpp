@@ -734,3 +734,9 @@ void msh::AbstractShell::send_to_back(const mir::shell::SurfaceSet &surfaces)
 {
     surface_stack->send_to_back(surfaces);
 }
+
+auto msh::AbstractShell::is_above(std::weak_ptr<scene::Surface> const& a, std::weak_ptr<scene::Surface> const& b) const
+    -> bool
+{
+   return surface_stack->is_above(a, b);
+}

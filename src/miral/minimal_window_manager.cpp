@@ -67,8 +67,14 @@ auto touch_center(MirTouchEvent const* event) -> mir::geometry::Point
 
 struct miral::MinimalWindowManager::Impl
 {
-    Impl(WindowManagerTools const& tools, MirInputEventModifier pointer_drag_modifier) :
-        tools{tools}, application_selector(tools), pointer_drag_modifier{pointer_drag_modifier} {}
+    Impl(WindowManagerTools const& tools, MirInputEventModifier pointer_drag_modifier, FocusStealing focus_stealing) :
+        tools{tools},
+        application_selector(tools),
+        pointer_drag_modifier{pointer_drag_modifier},
+        focus_stealing{focus_stealing}
+    {
+    }
+
     WindowManagerTools tools;
 
     Gesture gesture = Gesture::none;
@@ -98,7 +104,15 @@ struct miral::MinimalWindowManager::Impl
 
     void apply_resize_by(Displacement movement);
 
+    // Returns true if the window should NOT be in focus
+    // Relevant for focus stealing prevention where windows are focused on
+    // launch in specific circumstances.
+    bool should_prevent_focus(WindowInfo const& info);
+
+    bool advise_new_window(WindowInfo const& info);
+
     MirInputEventModifier const pointer_drag_modifier;
+    FocusStealing const focus_stealing;
 };
 
 miral::MinimalWindowManager::MinimalWindowManager(WindowManagerTools const& tools) :
@@ -106,9 +120,21 @@ miral::MinimalWindowManager::MinimalWindowManager(WindowManagerTools const& tool
 {
 }
 
+miral::MinimalWindowManager::MinimalWindowManager(WindowManagerTools const& tools, FocusStealing focus_stealing) :
+    tools{tools},
+    self{new Impl{tools, mir_input_event_modifier_alt, focus_stealing}}
+{
+}
+
 miral::MinimalWindowManager::MinimalWindowManager(WindowManagerTools const& tools, MirInputEventModifier pointer_drag_modifier):
     tools{tools},
-    self{new Impl{tools, pointer_drag_modifier}}
+    self{new Impl{tools, pointer_drag_modifier, FocusStealing::allow}}
+{
+}
+
+miral::MinimalWindowManager::MinimalWindowManager(WindowManagerTools const& tools, MirInputEventModifier pointer_drag_modifier, FocusStealing focus_stealing):
+    tools{tools},
+    self{new Impl{tools, pointer_drag_modifier, focus_stealing}}
 {
 }
 
@@ -126,7 +152,7 @@ auto miral::MinimalWindowManager::place_new_window(
 
 void miral::MinimalWindowManager::handle_window_ready(WindowInfo& window_info)
 {
-    if (window_info.can_be_active())
+    if (!self->should_prevent_focus(window_info) && window_info.can_be_active())
     {
         tools.select_active_window(window_info.window());
     }
@@ -276,7 +302,15 @@ auto miral::MinimalWindowManager::confirm_inherited_move(WindowInfo const& windo
 
 void miral::MinimalWindowManager::advise_new_window(miral::WindowInfo const& window_info)
 {
-    self->application_selector.advise_new_window(window_info);
+    auto should_receive_focus = self->advise_new_window(window_info);
+
+    // If the window is prevented from stealing focus, swap the old focused
+    // window (now in the back) with the new window in the front.
+    //
+    // If it's a legitimate window, it'll be focused and raised via
+    // xdg-activation later on.
+    if (!should_receive_focus)
+        tools.swap_tree_order(tools.active_window(), window_info.window());
 }
 
 void miral::MinimalWindowManager::advise_focus_gained(WindowInfo const& window_info)
@@ -605,4 +639,19 @@ void miral::MinimalWindowManager::Impl::apply_resize_by(Displacement movement)
     {
         gesture = Gesture::none;
     }
+}
+
+bool miral::MinimalWindowManager::Impl::should_prevent_focus(miral::WindowInfo const& info)
+{
+    return (focus_stealing == FocusStealing::prevent) && tools.active_window() &&
+           info.depth_layer() == mir_depth_layer_application &&
+           tools.active_window().application() != info.window().application();
+}
+
+bool miral::MinimalWindowManager::Impl::advise_new_window(WindowInfo const& info)
+{
+    auto should_receive_focus = !should_prevent_focus(info);
+    application_selector.advise_new_window(info, should_receive_focus);
+
+    return should_receive_focus;
 }

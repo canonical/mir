@@ -63,3 +63,10 @@ void msh::SurfaceStackWrapper::send_to_back(const scene::SurfaceSet &surfaces)
 {
     wrapped->send_to_back(surfaces);
 }
+
+auto msh::SurfaceStackWrapper::is_above(
+    std::weak_ptr<scene::Surface> const& a,
+    std::weak_ptr<scene::Surface> const& b) const -> bool
+{
+    return wrapped->is_above(a, b);
+}

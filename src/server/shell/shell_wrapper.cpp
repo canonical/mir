@@ -181,3 +181,9 @@ void msh::ShellWrapper::send_to_back(const mir::shell::SurfaceSet &surfaces)
 {
     return wrapped->send_to_back(surfaces);
 }
+
+auto msh::ShellWrapper::is_above(std::weak_ptr<scene::Surface> const& a, std::weak_ptr<scene::Surface> const& b) const
+    -> bool
+{
+    return wrapped->is_above(a, b);
+}

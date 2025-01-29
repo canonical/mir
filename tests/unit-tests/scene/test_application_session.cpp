@@ -93,6 +93,11 @@ struct StubSurfaceStack : public msh::SurfaceStack
     void send_to_back(ms::SurfaceSet const&) override
     {
     }
+
+    auto is_above(std::weak_ptr<ms::Surface> const& /*a*/, std::weak_ptr<ms::Surface> const& /*b*/) const -> bool override
+    {
+        return false;
+    }
 };
 
 struct ApplicationSession : public testing::Test

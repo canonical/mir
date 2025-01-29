@@ -274,13 +274,23 @@ auto miral::MirRunner::display_config_file() const -> std::string
     return self->display_config_file;
 }
 
+namespace
+{
+auto optional_to_mir_optional(std::optional<std::string> const& opt) -> mir::optional_value<std::string>
+{
+    if (!opt)
+        return {};
+    return mir::optional_value{*opt};
+}
+}
+
 auto miral::MirRunner::wayland_display() const -> mir::optional_value<std::string>
 {
     std::lock_guard lock{self->mutex};
 
     if (auto const server = self->weak_server.lock())
     {
-        return server->wayland_display();
+        return optional_to_mir_optional(server->wayland_display());
     }
 
     return {};
@@ -292,7 +302,7 @@ auto miral::MirRunner::x11_display() const -> mir::optional_value<std::string>
 
     if (auto const server = self->weak_server.lock())
     {
-        return server->x11_display();
+        return optional_to_mir_optional(server->x11_display());
     }
 
     return {};

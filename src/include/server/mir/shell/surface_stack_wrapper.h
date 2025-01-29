@@ -44,6 +44,8 @@ public:
 
     void send_to_back(scene::SurfaceSet const& surfaces) override;
 
+    auto is_above(std::weak_ptr<scene::Surface> const& a, std::weak_ptr<scene::Surface> const& b) const -> bool override;
+
 protected:
     std::shared_ptr<SurfaceStack> const wrapped;
 };

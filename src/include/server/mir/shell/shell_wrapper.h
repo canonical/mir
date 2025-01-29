@@ -49,6 +49,8 @@ public:
 
     void send_to_back(SurfaceSet const& surfaces) override;
 
+    auto is_above(std::weak_ptr<scene::Surface> const& a, std::weak_ptr<scene::Surface> const& b) const -> bool override;
+
     auto open_session(
         pid_t client_pid,
         Fd socket_fd,
