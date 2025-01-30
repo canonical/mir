@@ -89,8 +89,9 @@ class miral::ConfigFile::Self
 {
 public:
     Self(MirRunner& runner, path file, Mode mode, Loader load_config);
-
+    ~Self() { std::lock_guard lock{mutex}; watcher.reset(); }
 private:
+    std::mutex mutex;
     std::shared_ptr<Watcher> watcher;
 };
 
@@ -155,8 +156,11 @@ miral::ConfigFile::Self::Self(MirRunner& runner, path file, Mode mode, Loader lo
                 break;
 
             case Mode::reload_on_change:
-                watcher = std::make_shared<Watcher>(file, std::move(load_config));
-                watcher->register_handler(runner);
+                {
+                    std::lock_guard lock{mutex};
+                    watcher = std::make_shared<Watcher>(file, std::move(load_config));
+                    watcher->register_handler(runner);
+                }
                 break;
             }
         });
