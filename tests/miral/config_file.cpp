@@ -44,7 +44,7 @@ public:
     {
         std::unique_lock lock{mutex};
 
-        if (!cv.wait_for(lock, std::chrono::milliseconds{10}, [this] { return !pending_loads; }))
+        if (!cv.wait_for(lock, std::chrono::milliseconds{100}, [this] { return !pending_loads; }))
         {
             std::cerr << "wait_for_load() timed out" << std::endl;
         }
