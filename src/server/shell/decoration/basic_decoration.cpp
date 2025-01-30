@@ -56,6 +56,15 @@ struct PropertyComparison
     {
     }
 
+    template<typename TYPE>
+    PropertyComparison(TYPE (OBJ::*member))
+        : comp{[=](OBJ const* a, OBJ const* b)
+        {
+            return (a->*member) == (b->*member);
+        }}
+    {
+    }
+
     auto operator()(OBJ const* a, OBJ const* b) const -> bool
     {
         return comp(a, b);
@@ -138,16 +147,15 @@ msd::BasicDecoration::BasicDecoration(
     std::shared_ptr<DecorationStrategy> decoration_strategy)
     : threadsafe_self{std::make_shared<ThreadsafeAccess<BasicDecoration>>(executor)},
       decoration_strategy{decoration_strategy},
-      static_geometry{decoration_strategy->static_geometry()},
       shell{shell},
       buffer_allocator{buffer_allocator},
       cursor_images{cursor_images},
       session{window_surface->session().lock()},
-      buffer_streams{std::make_unique<BufferStreams>(session, static_geometry->buffer_format)},
+      buffer_streams{std::make_unique<BufferStreams>(session, decoration_strategy->buffer_format())},
       renderer{std::make_unique<Renderer>(buffer_allocator, decoration_strategy->render_strategy())},
       window_surface{window_surface},
       decoration_surface{create_surface()},
-      window_state{new_window_state()},
+      window_state{decoration_strategy->new_window_state(window_surface, scale)},
       window_surface_observer_manager{std::make_unique<WindowSurfaceObserverManager>(
           window_surface,
           threadsafe_self)},
@@ -193,7 +201,7 @@ msd::BasicDecoration::~BasicDecoration()
 void msd::BasicDecoration::window_state_updated()
 {
     auto previous_window_state = std::move(window_state);
-    window_state = new_window_state();
+    window_state = decoration_strategy->new_window_state(window_surface, scale);
 
     input_manager->update_window_state(*window_state);
 
@@ -259,11 +267,6 @@ void msd::BasicDecoration::set_scale(float new_scale)
     window_state_updated();
 }
 
-auto msd::BasicDecoration::new_window_state() const -> std::unique_ptr<WindowState>
-{
-    return std::make_unique<WindowState>(static_geometry, window_surface, scale);
-}
-
 auto msd::BasicDecoration::create_surface() const -> std::shared_ptr<scene::Surface>
 {
     msh::SurfaceSpecification params;
@@ -280,7 +283,7 @@ auto msd::BasicDecoration::create_surface() const -> std::shared_ptr<scene::Surf
     params.streams = {{
         session->create_buffer_stream(mg::BufferProperties{
             geom::Size{1, 1},
-            static_geometry->buffer_format,
+            decoration_strategy->buffer_format(),
             mg::BufferUsage::software}),
         {},
         }};
@@ -318,7 +321,7 @@ void msd::BasicDecoration::update(
     if (input_updated({
             &InputState::input_shape}))
     {
-        spec.input_shape = input_state->input_shape();
+        spec.input_shape = input_state->input_shape;
     }
 
     if (window_updated({

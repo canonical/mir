@@ -136,22 +136,7 @@ using mir::geometry::Size;
 auto msd::BasicManager::compute_size_with_decorations(Size content_size,
     MirWindowType type, MirWindowState state) -> Size
 {
-    auto const geometry = decoration_strategy->static_geometry();
-
-    switch (border_type_for(type, state))
-    {
-    case msd::BorderType::Full:
-        content_size.width += geometry->side_border_width * 2;
-        content_size.height += geometry->titlebar_height + geometry->bottom_border_height;
-        break;
-    case msd::BorderType::Titlebar:
-        content_size.height += geometry->titlebar_height;
-        break;
-    case msd::BorderType::None:
-        break;
-    }
-
-    return content_size;
+    return decoration_strategy->compute_size_with_decorations(content_size, type, state);
 }
 
 void msd::BasicManager::set_scale(float new_scale)

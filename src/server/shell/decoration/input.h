@@ -47,7 +47,6 @@ namespace decoration
 {
 class WindowState;
 class BasicDecoration;
-class StaticGeometry;
 template<typename T> class ThreadsafeAccess;
 
 /// Manages the observer that listens to user input
@@ -72,7 +71,7 @@ private:
 
     static auto resize_edge_rect(
         WindowState const& window_state,
-        StaticGeometry const& static_geometry,
+        geometry::Size const& resize_corner_input_size,
         MirResizeEdge resize_edge) -> geometry::Rectangle;
     void pointer_event(std::shared_ptr<MirEvent const> const& event, geometry::Point location, bool pressed);
     void pointer_leave(std::shared_ptr<MirEvent const> const& event);
@@ -83,7 +82,6 @@ private:
 
     std::mutex mutex;
     std::shared_ptr<DecorationStrategy> const decoration_strategy;
-    std::shared_ptr<StaticGeometry> const static_geometry;
     std::shared_ptr<scene::Surface> decoration_surface;
     std::shared_ptr<Observer> const observer;
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> decoration;
@@ -96,7 +94,7 @@ private:
 
     struct Widget
     {
-        Widget(ButtonFunction button)
+        Widget(Button::Function button)
             : button{button}
         {
         }
@@ -107,8 +105,8 @@ private:
         }
 
         geometry::Rectangle rect;
-        ButtonState state{ButtonState::Up};
-        std::optional<ButtonFunction> const button;
+        Button::State state{Button::Up};
+        std::optional<Button::Function> const button;
         // mir_resize_edge_none is used to mean the widget moves the window
         std::optional<MirResizeEdge> const resize_edge;
     };

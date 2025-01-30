@@ -123,14 +123,13 @@ msd::InputManager::InputManager(
     WindowState const& window_state,
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration) :
     decoration_strategy{decoration_strategy},
-    static_geometry{decoration_strategy->static_geometry()},
     decoration_surface{decoration_surface},
     observer{std::make_shared<Observer>(this)},
     decoration{decoration},
     widgets{
-        std::make_shared<Widget>(ButtonFunction::Close),
-        std::make_shared<Widget>(ButtonFunction::Maximize),
-        std::make_shared<Widget>(ButtonFunction::Minimize),
+        std::make_shared<Widget>(Button::Close),
+        std::make_shared<Widget>(Button::Maximize),
+        std::make_shared<Widget>(Button::Minimize),
         std::make_shared<Widget>(mir_resize_edge_northwest),
         std::make_shared<Widget>(mir_resize_edge_northeast),
         std::make_shared<Widget>(mir_resize_edge_southwest),
@@ -165,7 +164,8 @@ void msd::InputManager::update_window_state(WindowState const& window_state)
         }
         else if (widget->resize_edge)
         {
-            widget->rect = resize_edge_rect(window_state, *static_geometry, widget->resize_edge.value());
+            widget->rect = resize_edge_rect(window_state,
+                decoration_strategy->resize_corner_input_size(), widget->resize_edge.value());
         }
         else
         {
@@ -199,11 +199,11 @@ void msd::InputManager::update_window_state(WindowState const& window_state)
 auto msd::InputManager::state() -> std::unique_ptr<InputState>
 {
     std::lock_guard lock{mutex};
-    std::vector<ButtonInfo> buttons;
+    std::vector<Button> buttons;
     for (auto const& widget : widgets)
     {
         if (widget->button)
-            buttons.push_back(ButtonInfo{
+            buttons.push_back(Button{
                 widget->button.value(),
                 widget->state,
                 widget->rect});
@@ -215,7 +215,7 @@ auto msd::InputManager::state() -> std::unique_ptr<InputState>
 
 auto msd::InputManager::resize_edge_rect(
     WindowState const& window_state,
-    StaticGeometry const& static_geometry,
+    geom::Size const& resize_corner_input_size,
     MirResizeEdge resize_edge) -> geom::Rectangle
 {
     switch (resize_edge)
@@ -240,15 +240,15 @@ auto msd::InputManager::resize_edge_rect(
         return window_state.right_border_rect();
 
     case mir_resize_edge_northwest:
-        return {{}, static_geometry.resize_corner_input_size};
+        return {{}, resize_corner_input_size};
 
     case mir_resize_edge_northeast:
     {
         geom::Point top_left{
             as_x(window_state.window_size().width) -
-                as_delta(static_geometry.resize_corner_input_size.width),
+                as_delta(resize_corner_input_size.width),
             0};
-        return {top_left, static_geometry.resize_corner_input_size};
+        return {top_left, resize_corner_input_size};
     }
 
     case mir_resize_edge_southwest:
@@ -256,18 +256,18 @@ auto msd::InputManager::resize_edge_rect(
         geom::Point top_left{
             0,
             as_y(window_state.window_size().height) -
-                as_delta(static_geometry.resize_corner_input_size.height)};
-        return {top_left, static_geometry.resize_corner_input_size};
+                as_delta(resize_corner_input_size.height)};
+        return {top_left, resize_corner_input_size};
     }
 
     case mir_resize_edge_southeast:
     {
         geom::Point top_left{
             as_x(window_state.window_size().width) -
-                as_delta(static_geometry.resize_corner_input_size.width),
+                as_delta(resize_corner_input_size.width),
             as_y(window_state.window_size().height) -
-                as_delta(static_geometry.resize_corner_input_size.height)};
-        return {top_left, static_geometry.resize_corner_input_size};
+                as_delta(resize_corner_input_size.height)};
+        return {top_left, resize_corner_input_size};
     }
 
     default: return {};
@@ -420,7 +420,7 @@ auto msd::InputManager::widget_at(geom::Point location) -> std::optional<std::sh
 
 void msd::InputManager::widget_enter(Widget& widget)
 {
-    widget.state = ButtonState::Hovered;
+    widget.state = Button::Hovered;
     if (widget.resize_edge)
         set_cursor(widget.resize_edge.value());
     decoration->spawn([](BasicDecoration* decoration)
@@ -431,7 +431,7 @@ void msd::InputManager::widget_enter(Widget& widget)
 
 void msd::InputManager::widget_leave(Widget& widget)
 {
-    widget.state = ButtonState::Up;
+    widget.state = Button::Up;
     set_cursor(mir_resize_edge_none);
     decoration->spawn([](BasicDecoration* decoration)
         {
@@ -441,7 +441,7 @@ void msd::InputManager::widget_leave(Widget& widget)
 
 void msd::InputManager::widget_down(Widget& widget)
 {
-    widget.state = ButtonState::Down;
+    widget.state = Button::Down;
     decoration->spawn([](BasicDecoration* decoration)
         {
             decoration->input_state_updated();
@@ -450,7 +450,7 @@ void msd::InputManager::widget_down(Widget& widget)
 
 void msd::InputManager::widget_up(Widget& widget)
 {
-    if (widget.state == ButtonState::Down)
+    if (widget.state == Button::Down)
     {
         auto const input_ev = mir_event_get_input_event(latest_event.get());
         auto const event_timestamp = std::chrono::nanoseconds{mir_input_event_get_event_time(input_ev)};
@@ -473,21 +473,21 @@ void msd::InputManager::widget_up(Widget& widget)
         {
             switch (widget.button.value())
             {
-            case ButtonFunction::Close:
+            case Button::Close:
                 decoration->spawn([](BasicDecoration* decoration)
                     {
                         decoration->request_close();
                     });
                 break;
 
-            case ButtonFunction::Maximize:
+            case Button::Maximize:
                 decoration->spawn([](BasicDecoration* decoration)
                     {
                         decoration->request_toggle_maximize();
                     });
                 break;
 
-            case ButtonFunction::Minimize:
+            case Button::Minimize:
                 decoration->spawn([](BasicDecoration* decoration)
                     {
                         decoration->request_minimize();
@@ -496,7 +496,7 @@ void msd::InputManager::widget_up(Widget& widget)
             }
         }
     }
-    widget.state = ButtonState::Hovered;
+    widget.state = Button::Hovered;
     decoration->spawn([](BasicDecoration* decoration)
         {
             decoration->input_state_updated();
@@ -505,7 +505,7 @@ void msd::InputManager::widget_up(Widget& widget)
 
 void msd::InputManager::widget_drag(Widget& widget)
 {
-    if (widget.state == ButtonState::Down)
+    if (widget.state == Button::Down)
     {
         if (widget.resize_edge)
         {
@@ -533,7 +533,7 @@ void msd::InputManager::widget_drag(Widget& widget)
                     decoration->request_move(mir_event_get_input_event(event.get()));
                 });
         }
-        widget.state = ButtonState::Up;
+        widget.state = Button::Up;
     }
     decoration->spawn([](BasicDecoration* decoration)
         {

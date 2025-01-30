@@ -26,42 +26,83 @@ namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace msd = mir::shell::decoration;
 
-msd::WindowState::WindowState(
-    std::shared_ptr<StaticGeometry> const& static_geometry,
+class msd::WindowState::Self
+{
+public:
+    Self(
+        std::shared_ptr<scene::Surface> const& surface,
+        geometry::Height fixed_titlebar_height,
+        geometry::Width fixed_side_border_width,
+        geometry::Height fixed_bottom_border_height,
+        float scale);
+
+    geometry::Height const fixed_titlebar_height;
+    geometry::Width const fixed_side_border_width;
+    geometry::Height const fixed_bottom_border_height;
+    geometry::Size const window_size;
+    BorderType const border_type;
+    MirWindowFocusState const focus_state;
+    std::string const window_name;
+    float const scale;
+};
+
+msd::WindowState::Self::Self(
     std::shared_ptr<scene::Surface> const& surface,
+    geometry::Height fixed_titlebar_height,
+    geometry::Width fixed_side_border_width,
+    geometry::Height fixed_bottom_border_height,
     float scale)
-    : static_geometry{static_geometry},
-      window_size_{surface->window_size()},
-      border_type_{border_type_for(surface->type(), surface->state())},
-      focus_state_{surface->focus_state()},
-      window_name_{surface->name()},
-      scale_{scale}
+    : fixed_titlebar_height(fixed_titlebar_height),
+      fixed_side_border_width(fixed_side_border_width),
+      fixed_bottom_border_height(fixed_bottom_border_height),
+      window_size{surface->window_size()},
+      border_type{border_type_for(surface->type(), surface->state())},
+      focus_state{surface->focus_state()},
+      window_name{surface->name()},
+      scale{scale}
 {
 }
 
+msd::WindowState::WindowState(
+    std::shared_ptr<scene::Surface> const& surface,
+    geometry::Height fixed_titlebar_height,
+    geometry::Width fixed_side_border_width,
+    geometry::Height fixed_bottom_border_height,
+    float scale)
+    : self{std::make_unique<Self>(
+        surface,
+        fixed_titlebar_height,
+        fixed_side_border_width,
+        fixed_bottom_border_height,
+        scale)}
+{
+}
+
+mir::shell::decoration::WindowState::~WindowState() = default;
+
 auto msd::WindowState::window_size() const -> geom::Size
 {
-    return window_size_;
+    return self->window_size;
 }
 
 auto msd::WindowState::border_type() const -> BorderType
 {
-    return border_type_;
+    return self->border_type;
 }
 
 auto msd::WindowState::focused_state() const -> MirWindowFocusState
 {
-    return focus_state_;
+    return self->focus_state;
 }
 
 auto msd::WindowState::window_name() const -> std::string
 {
-    return window_name_;
+    return self->window_name;
 }
 
 auto msd::WindowState::titlebar_width() const -> geom::Width
 {
-    switch (border_type_)
+    switch (self->border_type)
     {
     case BorderType::Full:
     case BorderType::Titlebar:
@@ -76,11 +117,11 @@ auto msd::WindowState::titlebar_width() const -> geom::Width
 
 auto msd::WindowState::titlebar_height() const -> geom::Height
 {
-    switch (border_type_)
+    switch (self->border_type)
     {
     case BorderType::Full:
     case BorderType::Titlebar:
-        return static_geometry->titlebar_height;
+        return self->fixed_titlebar_height;
     case BorderType::None:
         return {};
     }
@@ -91,10 +132,10 @@ auto msd::WindowState::titlebar_height() const -> geom::Height
 
 auto msd::WindowState::side_border_width() const -> geom::Width
 {
-    switch (border_type_)
+    switch (self->border_type)
     {
     case BorderType::Full:
-        return static_geometry->side_border_width;
+        return self->fixed_side_border_width;
     case BorderType::Titlebar:
     case BorderType::None:
         return {};
@@ -106,7 +147,7 @@ auto msd::WindowState::side_border_width() const -> geom::Width
 
 auto msd::WindowState::side_border_height() const -> geom::Height
 {
-    switch (border_type_)
+    switch (self->border_type)
     {
     case BorderType::Full:
         return window_size().height - as_delta(titlebar_height()) - as_delta(bottom_border_height());
@@ -126,10 +167,10 @@ auto msd::WindowState::bottom_border_width() const -> geom::Width
 
 auto msd::WindowState::bottom_border_height() const -> geom::Height
 {
-    switch (border_type_)
+    switch (self->border_type)
     {
     case BorderType::Full:
-        return static_geometry->bottom_border_height;
+        return self->fixed_bottom_border_height;
     case BorderType::Titlebar:
     case BorderType::None:
         return {};
@@ -169,7 +210,7 @@ auto msd::WindowState::bottom_border_rect() const -> geom::Rectangle
 
 auto msd::WindowState::scale() const -> float
 {
-    return scale_;
+    return self->scale;
 }
 
 class msd::WindowSurfaceObserverManager::Observer
