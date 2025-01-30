@@ -111,7 +111,14 @@ struct TestConfigFile : PendingLoad, miral::TestServer
         invoke_runner(f);
         invoke_runner([&](miral::MirRunner& runner)
         {
-            runner.add_start_callback([&]() { std::lock_guard lock{mutex}; started = true; });
+            runner.add_start_callback([&]()
+            {
+                {
+                    std::lock_guard lock{mutex};
+                    started = true;
+                }
+                cv.notify_one();
+            });
         });
 
         start_server();
