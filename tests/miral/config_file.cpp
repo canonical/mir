@@ -92,6 +92,7 @@ struct TestConfigFile : PendingLoad, miral::TestServer
 
     void SetUp() override
     {
+        start_server_in_setup = false;
         miral::TestServer::SetUp();
         ON_CALL(*this, load(testing::_, testing::_)).WillByDefault([this]{ notify_load(); });
     }
@@ -138,6 +139,8 @@ TEST_F(TestConfigFile, with_reload_on_change_and_no_file_nothing_is_loaded)
             ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+
+    start_server();
 }
 
 TEST_F(TestConfigFile, with_reload_on_change_and_a_file_something_is_loaded)
@@ -154,6 +157,7 @@ TEST_F(TestConfigFile, with_reload_on_change_and_a_file_something_is_loaded)
             ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    start_server();
     wait_for_load();
 }
 
@@ -170,6 +174,7 @@ TEST_F(TestConfigFile, with_reload_on_change_when_a_file_is_written_something_is
 
     EXPECT_CALL(*this, load).Times(1);
 
+    start_server();
     write_a_file();
     wait_for_load();
 }
@@ -190,6 +195,7 @@ TEST_F(TestConfigFile, with_reload_on_change_each_time_a_file_is_rewritten_somet
             ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    start_server();
 
     for (auto i = 0; i != times; ++i)
     {
@@ -217,6 +223,7 @@ TEST_F(TestConfigFile, with_reload_on_change_when_config_home_unset_a_file_in_ho
             ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    start_server();
 
     wait_for_load();
 }
@@ -238,6 +245,7 @@ TEST_F(TestConfigFile, with_reload_on_change_a_file_in_xdg_config_home_is_loaded
             ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    start_server();
 
     wait_for_load();
 }
@@ -259,6 +267,7 @@ TEST_F(TestConfigFile, with_reload_on_change_a_file_in_xdg_config_home_is_reload
             ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    start_server();
 
     wait_for_load();
 
@@ -283,6 +292,7 @@ TEST_F(TestConfigFile, with_reload_on_change_a_config_in_xdg_conf_dir0_is_loaded
             ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    start_server();
 
     wait_for_load();
 }
@@ -307,6 +317,7 @@ TEST_F(TestConfigFile, with_reload_on_change_after_a_config_in_xdg_conf_dir0_is_
             ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    start_server();
 
     wait_for_load();
 
@@ -332,6 +343,7 @@ TEST_F(TestConfigFile, with_reload_on_change_a_config_in_xdg_conf_dir0_is_loaded
             ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    start_server();
 
     wait_for_load();
 }
@@ -353,6 +365,7 @@ TEST_F(TestConfigFile, with_reload_on_change_a_config_in_xdg_conf_dir1_is_loaded
             ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    start_server();
 
     wait_for_load();
 }
@@ -373,6 +386,7 @@ TEST_F(TestConfigFile, with_reload_on_change_a_config_in_xdg_conf_dir2_is_loaded
             ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    start_server();
 
     wait_for_load();
 }
@@ -389,6 +403,7 @@ TEST_F(TestConfigFile, with_no_reloading_and_no_file_nothing_is_loaded)
             ConfigFile::Mode::no_reloading,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    start_server();
 }
 
 TEST_F(TestConfigFile, with_no_reloading_and_a_file_something_is_loaded)
@@ -405,6 +420,7 @@ TEST_F(TestConfigFile, with_no_reloading_and_a_file_something_is_loaded)
             ConfigFile::Mode::no_reloading,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    start_server();
     wait_for_load();
 }
 
@@ -418,6 +434,7 @@ TEST_F(TestConfigFile, with_no_reloading_when_a_file_is_written_nothing_is_loade
             ConfigFile::Mode::no_reloading,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    start_server();
 
     EXPECT_CALL(*this, load).Times(0);
 
@@ -440,6 +457,7 @@ TEST_F(TestConfigFile, with_no_reloading_when_a_file_is_rewritten_nothing_is_rel
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
+    start_server();
     wait_for_load(OnTimeout::fail);
     write_a_file();
     wait_for_load(OnTimeout::pass);
@@ -462,6 +480,7 @@ TEST_F(TestConfigFile, with_no_reloading_when_config_home_unset_a_file_in_home_c
             ConfigFile::Mode::no_reloading,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    start_server();
 
     wait_for_load();
 }
@@ -483,6 +502,7 @@ TEST_F(TestConfigFile, with_no_reloading_a_file_in_xdg_config_home_is_loaded)
             ConfigFile::Mode::no_reloading,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    start_server();
 
     wait_for_load();
 }
@@ -504,6 +524,7 @@ TEST_F(TestConfigFile, with_no_reloading_a_file_in_xdg_config_home_is_not_reload
             ConfigFile::Mode::no_reloading,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    start_server();
 
     wait_for_load();
 
@@ -528,6 +549,7 @@ TEST_F(TestConfigFile, with_no_reloading_a_config_in_xdg_conf_dir0_is_loaded)
             ConfigFile::Mode::no_reloading,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    start_server();
 
     wait_for_load();
 }
@@ -552,6 +574,7 @@ TEST_F(TestConfigFile, with_no_reloading_after_a_config_in_xdg_conf_dir0_is_load
             ConfigFile::Mode::no_reloading,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    start_server();
 
     wait_for_load(OnTimeout::fail);
 
@@ -577,6 +600,7 @@ TEST_F(TestConfigFile, with_no_reloading_a_config_in_xdg_conf_dir0_is_loaded_in_
             ConfigFile::Mode::no_reloading,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    start_server();
 
     wait_for_load();
 }
@@ -598,6 +622,7 @@ TEST_F(TestConfigFile, with_no_reloading_a_config_in_xdg_conf_dir1_is_loaded_in_
             ConfigFile::Mode::no_reloading,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    start_server();
 
     wait_for_load();
 }
@@ -618,6 +643,7 @@ TEST_F(TestConfigFile, with_no_reloading_a_config_in_xdg_conf_dir2_is_loaded)
             ConfigFile::Mode::no_reloading,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
+    start_server();
 
     wait_for_load();
 }
