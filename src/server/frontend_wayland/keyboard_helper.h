@@ -17,6 +17,7 @@
 #ifndef MIR_FRONTEND_KEYBOARD_HELPER_H
 #define MIR_FRONTEND_KEYBOARD_HELPER_H
 
+#include "mir/shell/keyboard_helper.h"
 #include "wayland_wrapper.h"
 #include "mir/events/xkb_modifiers.h"
 
@@ -58,15 +59,19 @@ private:
     KeyboardCallbacks& operator=(KeyboardCallbacks const&) = delete;
 };
 
-class KeyboardHelper
+class KeyboardHelper : public mir::shell::KeyboardHelper
 {
 public:
+    ~KeyboardHelper() override;
+
     void handle_event(std::shared_ptr<MirEvent const> const& event);
 
     /// Returns the scancodes of pressed keys
     auto pressed_key_scancodes() const -> std::vector<uint32_t>;
     /// Updates the modifiers from the seat
     void refresh_modifiers();
+
+    void repeat_info_changed(int rate, int delay) const override;
 
 private:
     friend class mir::frontend::WlSeat;

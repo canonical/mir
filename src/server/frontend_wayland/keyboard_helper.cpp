@@ -56,6 +56,8 @@ mf::KeyboardHelper::KeyboardHelper(
     callbacks->send_repeat_info(enable_key_repeat ? 25 : 0, 600);
 }
 
+mf::KeyboardHelper::~KeyboardHelper() = default;
+
 void mf::KeyboardHelper::handle_event(std::shared_ptr<MirEvent const> const& event)
 {
     switch (mir_input_event_get_type(mir_event_get_input_event(event.get())))
@@ -100,6 +102,11 @@ auto mf::KeyboardHelper::pressed_key_scancodes() const -> std::vector<uint32_t>
 void mf::KeyboardHelper::refresh_modifiers()
 {
     set_modifiers(mir_seat->xkb_modifiers());
+}
+
+void mf::KeyboardHelper::repeat_info_changed(int rate, int delay) const
+{
+    callbacks->send_repeat_info(rate, delay);
 }
 
 void mf::KeyboardHelper::handle_keyboard_event(std::shared_ptr<MirKeyboardEvent const> const& event)
