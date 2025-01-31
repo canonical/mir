@@ -21,6 +21,7 @@
 #include "wayland_wrapper.h"
 #include "mir/events/xkb_modifiers.h"
 
+#include <optional>
 #include <vector>
 #include <functional>
 
@@ -75,7 +76,7 @@ public:
     /// Updates the modifiers from the seat
     void refresh_modifiers();
 
-    void repeat_info_changed(int rate, int delay) const override;
+    void repeat_info_changed(std::optional<int> rate, int delay) const override;
 
 private:
     friend class mir::frontend::WlSeat;
@@ -84,7 +85,7 @@ private:
         KeyboardCallbacks* keybaord_impl,
         std::shared_ptr<mir::input::Keymap> const& initial_keymap,
         std::shared_ptr<input::Seat> const& seat,
-        int default_repeat_rate,
+        std::optional<int> default_repeat_rate,
         int default_repeat_delay);
 
     void handle_keyboard_event(std::shared_ptr<MirKeyboardEvent const> const& event);

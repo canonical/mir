@@ -49,5 +49,5 @@ void mir::shell::AccessibilityManager::override_key_repeat_settings(bool enable)
 
 void mir::shell::AccessibilityManager::notify_helpers() const {
     for(auto const& helper: keyboard_helpers)
-        helper->repeat_info_changed(repeat_rate_, repeat_delay_);
+        helper->repeat_info_changed(repeat_rate(), repeat_delay());
 }

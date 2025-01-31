@@ -17,6 +17,7 @@
 #ifndef MIR_SHELL_KEYBOARD_HELPER_
 #define MIR_SHELL_KEYBOARD_HELPER_
 
+#include <optional>
 namespace mir
 {
 namespace shell
@@ -25,7 +26,7 @@ class KeyboardHelper
 {
 public:
     virtual ~KeyboardHelper() = default;
-    virtual void repeat_info_changed(int rate, int delay) const = 0;
+    virtual void repeat_info_changed(std::optional<int> rate, int delay) const = 0;
 };
 }
 }

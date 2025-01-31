@@ -33,7 +33,7 @@ mf::KeyboardHelper::KeyboardHelper(
     KeyboardCallbacks* callbacks,
     std::shared_ptr<mi::Keymap> const& initial_keymap,
     std::shared_ptr<input::Seat> const& seat,
-    int default_repeat_rate,
+    std::optional<int> default_repeat_rate,
     int default_repeat_delay)
     : callbacks{callbacks},
       mir_seat{seat},
@@ -52,7 +52,7 @@ mf::KeyboardHelper::KeyboardHelper(
      */
     set_keymap(initial_keymap);
 
-    callbacks->send_repeat_info(default_repeat_rate, default_repeat_delay);
+    repeat_info_changed(default_repeat_rate, default_repeat_delay);
 }
 
 mf::KeyboardHelper::~KeyboardHelper() = default;
@@ -103,9 +103,9 @@ void mf::KeyboardHelper::refresh_modifiers()
     set_modifiers(mir_seat->xkb_modifiers());
 }
 
-void mf::KeyboardHelper::repeat_info_changed(int rate, int delay) const
+void mf::KeyboardHelper::repeat_info_changed(std::optional<int> rate, int delay) const
 {
-    callbacks->send_repeat_info(rate, delay);
+    callbacks->send_repeat_info(rate.value_or(0), delay);
 }
 
 void mf::KeyboardHelper::handle_keyboard_event(std::shared_ptr<MirKeyboardEvent const> const& event)
