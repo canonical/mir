@@ -19,7 +19,7 @@
 
 #include <optional>
 
-void mir::shell::AccessibilityManager::register_keyboard_helper(std::shared_ptr<KeyboardHelper> helper)
+void mir::shell::AccessibilityManager::register_keyboard_helper(std::shared_ptr<KeyboardHelper> const& helper)
 {
     keyboard_helpers.push_back(helper);
 }

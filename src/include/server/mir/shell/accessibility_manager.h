@@ -29,7 +29,7 @@ class KeyboardHelper;
 class AccessibilityManager
 {
 public:
-    void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper>);
+    void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&);
 
     std::optional<int> repeat_rate() const;
     int repeat_delay() const;
