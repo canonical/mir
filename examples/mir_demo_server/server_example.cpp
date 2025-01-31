@@ -121,15 +121,15 @@ try
     miral::MirRunner runner{argc, argv, "mir/mir_demo_server.config"};
 
     miral::InputConfiguration input_configuration;
+    auto mouse = input_configuration.mouse();
+    auto touchpad = input_configuration.touchpad();
+    auto keyboard = input_configuration.keyboard();
 
     miral::ConfigFile test{runner, "mir_demo_server.input", miral::ConfigFile::Mode::reload_on_change,
-        [&input_configuration](auto& in, auto path)
+        [&](auto& in, auto path)
     {
         std::cout << "** Reloading: " << path << std::endl;
 
-        auto mouse = input_configuration.mouse();
-        auto touchpad = input_configuration.touchpad();
-        auto keyboard = input_configuration.keyboard();
 
         for (std::string line; std::getline(in, line);)
         {
@@ -189,6 +189,14 @@ try
         input_configuration.touchpad(touchpad);
         input_configuration.keyboard(keyboard);
     }};
+
+    runner.add_start_callback(
+        [&]
+        {
+            input_configuration.mouse(mouse);
+            input_configuration.touchpad(touchpad);
+            input_configuration.keyboard(keyboard);
+        });
 
     runner.set_exception_handler(exception_handler);
 
