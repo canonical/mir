@@ -23,7 +23,7 @@
 #include <miral/application.h>
 #include <miral/window_manager_tools.h>
 #include <mir/shell/surface_specification.h>
-#include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
+#include <mir/events/event.h>
 #include "mir_test_framework/headless_in_process_server.h"
 
 namespace mir::scene

@@ -46,7 +46,9 @@ execute: |
         yaml-cpp-devel\
         egl-wayland-devel \
         systemtap-sdt-devel \
-        libdrm-devel
+        libdrm-devel \
+        wlcs-devel \
+        gmp-devel
 
     BUILD_DIR=$PWD/../build
     cmake \

@@ -4,7 +4,6 @@ add_library(
   miral_wlcs_integration MODULE
 
   miral_integration.cpp
-  test_wlcs_display_server.cpp test_wlcs_display_server.h
 )
 
 target_link_libraries(

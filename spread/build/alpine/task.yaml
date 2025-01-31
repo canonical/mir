@@ -32,7 +32,8 @@ execute: |
         umockdev-dev \
         wayland-dev \
         yaml-cpp-dev \
-        libapparmor-dev
+        libapparmor-dev \
+        wlcs-dev
 
     BUILD_DIR=$PWD/../build
     cmake \
