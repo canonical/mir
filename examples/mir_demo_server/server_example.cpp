@@ -18,6 +18,7 @@
 #include "server_example_input_filter.h"
 #include "server_example_test_client.h"
 
+#include <functional>
 #include <miral/cursor_theme.h>
 #include <miral/display_configuration_option.h>
 #include <miral/input_configuration.h>
@@ -40,6 +41,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
+#include <mutex>
 
 namespace mir { class AbnormalExit; }
 
@@ -124,12 +126,21 @@ try
     auto mouse = input_configuration.mouse();
     auto touchpad = input_configuration.touchpad();
     auto keyboard = input_configuration.keyboard();
+    std::mutex config_mutex;
+
+    auto config_applier = [&] mutable
+    {
+        input_configuration.mouse(mouse);
+        input_configuration.touchpad(touchpad);
+        input_configuration.keyboard(keyboard);
+    };
 
     miral::ConfigFile test{runner, "mir_demo_server.input", miral::ConfigFile::Mode::reload_on_change,
         [&](auto& in, auto path)
     {
         std::cout << "** Reloading: " << path << std::endl;
 
+        std::lock_guard lock{config_mutex};
 
         for (std::string line; std::getline(in, line);)
         {
@@ -185,17 +196,14 @@ try
             }
         }
 
-        input_configuration.mouse(mouse);
-        input_configuration.touchpad(touchpad);
-        input_configuration.keyboard(keyboard);
+        config_applier();
     }};
 
     runner.add_start_callback(
         [&]
         {
-            input_configuration.mouse(mouse);
-            input_configuration.touchpad(touchpad);
-            input_configuration.keyboard(keyboard);
+            std::lock_guard lock{config_mutex};
+            config_applier();
         });
 
     runner.set_exception_handler(exception_handler);
