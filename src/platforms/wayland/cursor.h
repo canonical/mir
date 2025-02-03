@@ -48,6 +48,10 @@ public:
     void enter(wl_pointer* pointer);
     void leave(wl_pointer* pointer);
 
+    void set_scale(float) override
+    {
+    }
+
 private:
     wl_shm* const shm;
     std::function<void()> const flush_wl;
