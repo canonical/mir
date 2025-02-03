@@ -76,6 +76,10 @@ public:
     void suspend();
     void resume();
 
+    void set_scale(float) override
+    {
+    }
+
 private:
     enum ForceCursorState { UpdateState, ForceState };
     struct GBMBOWrapper;

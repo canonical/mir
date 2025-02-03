@@ -32,6 +32,10 @@ public:
     void hide() override;
     void move_to(geometry::Point position) override;
 
+    void set_scale(float) override
+    {
+    }
+
 private:
     std::vector<std::shared_ptr<Cursor>> const platform_cursors;
 };
