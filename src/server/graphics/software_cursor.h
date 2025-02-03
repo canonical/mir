@@ -20,6 +20,7 @@
 #include "mir/graphics/cursor.h"
 #include "mir_toolkit/client_types.h"
 #include "mir/geometry/displacement.h"
+
 #include <mutex>
 
 namespace mir
@@ -48,6 +49,8 @@ public:
     void show(CursorImage const& cursor_image) override;
     void hide() override;
     void move_to(geometry::Point position) override;
+
+    void set_scale(float) override {}
 
 private:
     std::shared_ptr<detail::CursorRenderable> create_renderable_for(
