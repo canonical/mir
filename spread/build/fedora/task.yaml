@@ -48,7 +48,8 @@ execute: |
         systemtap-sdt-devel \
         libdrm-devel \
         wlcs-devel \
-        gmp-devel
+        gmp-devel \
+        pixman-devel
 
     BUILD_DIR=$PWD/../build
     cmake \
