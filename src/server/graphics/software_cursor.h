@@ -18,6 +18,7 @@
 #define MIR_GRAPHICS_SOFTWARE_CURSOR_H_
 
 #include "mir/graphics/cursor.h"
+#include "mir/graphics/cursor_image.h"
 #include "mir_toolkit/client_types.h"
 #include "mir/geometry/displacement.h"
 
@@ -49,8 +50,7 @@ public:
     void show(CursorImage const& cursor_image) override;
     void hide() override;
     void move_to(geometry::Point position) override;
-
-    void set_scale(float) override {}
+    void set_scale(float) override;
 
 private:
     std::shared_ptr<detail::CursorRenderable> create_renderable_for(
@@ -68,6 +68,8 @@ private:
     std::shared_ptr<detail::CursorRenderable> renderable;
     bool visible;
     geometry::Displacement hotspot;
+
+    graphics::CursorImage const * current_cursor_image;
 };
 
 }
