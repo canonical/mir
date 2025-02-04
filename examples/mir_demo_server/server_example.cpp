@@ -18,7 +18,6 @@
 #include "server_example_input_filter.h"
 #include "server_example_test_client.h"
 
-#include <functional>
 #include <miral/cursor_theme.h>
 #include <miral/display_configuration_option.h>
 #include <miral/input_configuration.h>
@@ -115,28 +114,45 @@ catch (std::exception const& error)
 catch (...)
 {
 }
-}
 
-int main(int argc, char const* argv[])
-try
+class InputConfigFile
 {
-    miral::MirRunner runner{argc, argv, "mir/mir_demo_server.config"};
+public:
+    InputConfigFile(miral::MirRunner& runner, std::filesystem::path file) :
+        config_file{
+            runner,
+            file,
+            miral::ConfigFile::Mode::reload_on_change,
+            [this](std::istream& istream, std::filesystem::path const& path) {loader(istream, path); }}
+    {
+        runner.add_start_callback([this]
+            {
+                std::lock_guard lock{config_mutex};
+                apply_config();
+            });
+    }
 
+    void operator()(mir::Server& server)
+    {
+        input_configuration(server);
+    }
+
+private:
     miral::InputConfiguration input_configuration;
-    auto mouse = input_configuration.mouse();
-    auto touchpad = input_configuration.touchpad();
-    auto keyboard = input_configuration.keyboard();
+    miral::InputConfiguration::Mouse mouse = input_configuration.mouse();
+    miral::InputConfiguration::Touchpad touchpad = input_configuration.touchpad();
+    miral::InputConfiguration::Keyboard keyboard = input_configuration.keyboard();
+    miral::ConfigFile config_file;
     std::mutex config_mutex;
 
-    auto config_applier = [&] mutable
+    void apply_config()
     {
         input_configuration.mouse(mouse);
         input_configuration.touchpad(touchpad);
         input_configuration.keyboard(keyboard);
     };
 
-    miral::ConfigFile test{runner, "mir_demo_server.input", miral::ConfigFile::Mode::reload_on_change,
-        [&](auto& in, auto path)
+    void loader(std::istream& in, std::filesystem::path const& path)
     {
         std::cout << "** Reloading: " << path << std::endl;
 
@@ -196,16 +212,17 @@ try
             }
         }
 
-        config_applier();
-    }};
+        apply_config();
+    }
+};
+}
 
-    runner.add_start_callback(
-        [&]
-        {
-            std::lock_guard lock{config_mutex};
-            config_applier();
-        });
+int main(int argc, char const* argv[])
+try
+{
+    miral::MirRunner runner{argc, argv, "mir/mir_demo_server.config"};
 
+    InputConfigFile input_configuration{runner, "mir_demo_server.input"};
     runner.set_exception_handler(exception_handler);
 
     std::function<void()> shutdown_hook{[]{}};
@@ -229,7 +246,7 @@ try
         miral::CursorTheme{"default:DMZ-White"},
         input_filters,
         test_runner,
-        input_configuration,
+        std::ref(input_configuration),
     });
 
     // Propagate any test failure
