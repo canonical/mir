@@ -17,9 +17,11 @@
 #ifndef MIR_FRONTEND_KEYBOARD_HELPER_H
 #define MIR_FRONTEND_KEYBOARD_HELPER_H
 
+#include "mir/shell/keyboard_helper.h"
 #include "wayland_wrapper.h"
 #include "mir/events/xkb_modifiers.h"
 
+#include <optional>
 #include <vector>
 #include <functional>
 
@@ -38,9 +40,14 @@ namespace input
 class Keymap;
 class Seat;
 }
+namespace shell
+{
+class AccessibilityManager;
+}
 
 namespace frontend
 {
+class WlSeat;
 class KeyboardCallbacks
 {
 public:
@@ -57,14 +64,10 @@ private:
     KeyboardCallbacks& operator=(KeyboardCallbacks const&) = delete;
 };
 
-class KeyboardHelper
+class KeyboardHelper : public mir::shell::KeyboardHelper
 {
 public:
-    KeyboardHelper(
-        KeyboardCallbacks* keybaord_impl,
-        std::shared_ptr<mir::input::Keymap> const& initial_keymap,
-        std::shared_ptr<input::Seat> const& seat,
-        bool enable_key_repeat);
+    ~KeyboardHelper() override;
 
     void handle_event(std::shared_ptr<MirEvent const> const& event);
 
@@ -73,7 +76,18 @@ public:
     /// Updates the modifiers from the seat
     void refresh_modifiers();
 
+    void repeat_info_changed(std::optional<int> rate, int delay) const override;
+
 private:
+    friend class mir::frontend::WlSeat;
+    friend class mir::shell::AccessibilityManager;
+    KeyboardHelper(
+        KeyboardCallbacks* keybaord_impl,
+        std::shared_ptr<mir::input::Keymap> const& initial_keymap,
+        std::shared_ptr<input::Seat> const& seat,
+        std::optional<int> default_repeat_rate,
+        int default_repeat_delay);
+
     void handle_keyboard_event(std::shared_ptr<MirKeyboardEvent const> const& event);
     void set_keymap(std::shared_ptr<mir::input::Keymap> const& new_keymap);
     void set_modifiers(MirXkbModifiers const& new_modifiers);

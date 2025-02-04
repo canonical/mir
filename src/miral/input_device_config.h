@@ -54,6 +54,13 @@ public:
     std::optional<bool> middle_button_emulation;
 };
 
+class KeyboardInputConfiguration
+{
+public:
+    std::optional<int> repeat_rate;
+    std::optional<int> repeat_delay;
+};
+
 class InputDeviceConfig : public mir::input::InputDeviceObserver
 {
 public:
@@ -67,14 +74,17 @@ public:
 
     auto mouse() const -> MouseInputConfiguration;
     auto touchpad() const -> TouchpadInputConfiguration;
+    auto keyboard() const -> KeyboardInputConfiguration;
 
     void mouse(MouseInputConfiguration const& val);
     void touchpad(TouchpadInputConfiguration const& val);
+    void keyboard(KeyboardInputConfiguration const& val);
 private:
     explicit InputDeviceConfig(std::shared_ptr<mir::options::Option> const& options);
 
     MouseInputConfiguration mouse_config;
     TouchpadInputConfiguration touchpad_config;
+    KeyboardInputConfiguration keyboard_config;
 };
 
 }

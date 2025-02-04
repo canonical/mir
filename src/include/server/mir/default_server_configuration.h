@@ -64,6 +64,7 @@ class SurfaceStack;
 
 namespace shell
 {
+class AccessibilityManager;
 class DisplayConfigurationController;
 class InputTargeter;
 class FocusController;
@@ -281,6 +282,7 @@ public:
 
     virtual std::shared_ptr<shell::PersistentSurfaceStore> the_persistent_surface_store();
     virtual std::shared_ptr<shell::ShellReport>         the_shell_report();
+    virtual std::shared_ptr<shell::AccessibilityManager> the_accessibility_manager();
     /** @} */
 
     /** @name internal scene configuration
@@ -430,6 +432,7 @@ protected:
     CachedPtr<SharedLibraryProberReport> shared_library_prober_report;
     CachedPtr<shell::Shell> shell;
     CachedPtr<shell::ShellReport> shell_report;
+    CachedPtr<shell::AccessibilityManager> accessibility_manager;
     CachedPtr<shell::decoration::Manager> decoration_manager;
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
     CachedPtr<cookie::Authority> cookie_authority;

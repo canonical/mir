@@ -40,11 +40,14 @@ public:
 
     class Mouse;
     class Touchpad;
+    class Keyboard;
 
     auto mouse() -> Mouse;
     void mouse(Mouse const& val);
     auto touchpad() -> Touchpad;
     void touchpad(Touchpad const& val);
+    auto keyboard() -> Keyboard;
+    void keyboard(Keyboard const& val);
 
 private:
     class Self;
@@ -114,6 +117,27 @@ public:
     void click_mode(std::optional<MirTouchpadClickMode>const& val);
     void scroll_mode(std::optional<MirTouchpadScrollMode>const& val);
     void tap_to_click(std::optional<bool>const& val);
+
+private:
+    friend class InputConfiguration::Self;
+    class Self;
+    std::shared_ptr<Self> self;
+};
+
+/** Input configuration for keyboard devices
+ * \remark Since MirAL 5.3
+ */
+class InputConfiguration::Keyboard
+{
+public:
+    Keyboard();
+    ~Keyboard();
+
+    Keyboard(Keyboard const& that);
+    auto operator=(Keyboard that) -> Keyboard&;
+
+    void set_repeat_rate(int new_rate);
+    void set_repeat_delay(int new_delay);
 
 private:
     friend class InputConfiguration::Self;

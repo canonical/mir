@@ -20,8 +20,6 @@
 #include "wayland_wrapper.h"
 #include "mir/wayland/weak.h"
 
-#include <unordered_map>
-#include <vector>
 #include <functional>
 
 struct MirPointerEvent;
@@ -37,6 +35,10 @@ class InputDeviceHub;
 class Seat;
 class Keymap;
 class KeyboardObserver;
+}
+namespace shell
+{
+class AccessibilityManager;
 }
 namespace time
 {
@@ -76,7 +78,7 @@ public:
         std::shared_ptr<mir::input::InputDeviceHub> const& input_hub,
         std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
         std::shared_ptr<mir::input::Seat> const& seat,
-        bool enable_key_repeat);
+        std::shared_ptr<shell::AccessibilityManager> const& accessibility_manager);
 
     ~WlSeat();
 
@@ -99,7 +101,7 @@ public:
         FocusListener& operator=(FocusListener const&) = delete;
     };
 
-    auto make_keyboard_helper(KeyboardCallbacks* callbacks) -> std::unique_ptr<KeyboardHelper>;
+    auto make_keyboard_helper(KeyboardCallbacks* callbacks) -> std::shared_ptr<KeyboardHelper>;
 
     /// Adds the listener for future use, and makes a call into it to inform of initial state
     void add_focus_listener(wayland::Client* client, FocusListener* listener);
@@ -133,7 +135,8 @@ private:
     std::shared_ptr<time::Clock> const clock;
     std::shared_ptr<input::InputDeviceHub> const input_hub;
     std::shared_ptr<input::Seat> const seat;
-    bool const enable_key_repeat;
+
+    std::shared_ptr<shell::AccessibilityManager> const accessibility_manager;
 
     void bind(wl_resource* new_wl_seat) override;
 };

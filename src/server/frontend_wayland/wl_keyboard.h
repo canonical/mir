@@ -44,7 +44,7 @@ public:
     void focus_on(WlSurface* surface);
 
 private:
-    std::unique_ptr<KeyboardHelper> const helper;
+    std::shared_ptr<KeyboardHelper> const helper;
     wayland::Weak<WlSurface> focused_surface;
 
     /// KeyboardCallbacks overrides

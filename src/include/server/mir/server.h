@@ -43,6 +43,7 @@ class SessionAuthorizer;
 }
 namespace shell
 {
+class AccessibilityManager;
 class DisplayLayout;
 class DisplayConfigurationController;
 class FocusController;
@@ -438,6 +439,9 @@ public:
 
     auto the_token_authority() const ->
         std::shared_ptr<shell::TokenAuthority>;
+
+    auto the_accessibility_manager() const ->
+        std::shared_ptr<shell::AccessibilityManager>;
 /** @} */
 
 /** @name Client side support
