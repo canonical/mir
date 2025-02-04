@@ -56,7 +56,8 @@ Build-Depends: cmake,
                eglexternalplatform-dev,
                systemtap-sdt-dev,
                wlcs,
-               libapparmor-dev
+               libapparmor-dev,
+               libpixman-1-dev
 Standards-Version: 4.6.1
 Homepage: https://mir-server.io/
 Vcs-Browser: https://github.com/MirServer/mir/
@@ -480,7 +481,7 @@ Description: Display server for Ubuntu - gbm-kms driver metapackage
  .
  This package depends on a full set of graphics and input drivers for gbm-kms
  systems.
- 
+
 Package: mir-platform-graphics-eglstream-kms
 Section: libs
 Architecture: linux-any
