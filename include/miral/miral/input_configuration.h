@@ -80,6 +80,10 @@ public:
     void hscroll_speed(std::optional<double>const& val);
     void scale(std::optional<double>const& val);
 
+    /// Copies the corresponding value from `other` for all unset fields.
+    /// \remark Since MirAL 5.2
+    void merge_settings_from(InputConfiguration::Mouse const& other);
+
 private:
     friend class InputConfiguration::Self;
     class Self;
@@ -119,6 +123,10 @@ public:
     void scroll_mode(std::optional<MirTouchpadScrollMode>const& val);
     void tap_to_click(std::optional<bool>const& val);
 
+    /// Copies the corresponding value from `other` for all unset fields.
+    /// \remark Since MirAL 5.2
+    void merge_settings_from(InputConfiguration::Touchpad const& other);
+
 private:
     friend class InputConfiguration::Self;
     class Self;
@@ -139,6 +147,10 @@ public:
 
     void set_repeat_rate(int new_rate);
     void set_repeat_delay(int new_delay);
+
+    /// Copies the corresponding value from `other` for all unset fields.
+    /// \remark Since MirAL 5.2
+    void merge_settings_from(InputConfiguration::Keyboard const& other);
 
 private:
     friend class InputConfiguration::Self;

@@ -31,6 +31,7 @@ namespace miral
 struct MouseInputConfiguration
 {
     void apply_to(mir::input::Device& device) const;
+    void merge_settings_from(MouseInputConfiguration const&);
     std::optional<MirPointerHandedness> handedness;
     std::optional<MirPointerAcceleration> acceleration;
     std::optional<double> acceleration_bias;
@@ -43,6 +44,7 @@ class TouchpadInputConfiguration
 {
 public:
     void apply_to(mir::input::Device& device) const;
+    void merge_settings_from(TouchpadInputConfiguration const&);
     std::optional<bool> disable_while_typing;
     std::optional<bool> disable_with_external_mouse;
     std::optional<MirPointerAcceleration> acceleration;
@@ -58,6 +60,7 @@ public:
 class KeyboardInputConfiguration
 {
 public:
+    void merge_settings_from(KeyboardInputConfiguration const&);
     std::optional<int> repeat_rate;
     std::optional<int> repeat_delay;
 };
