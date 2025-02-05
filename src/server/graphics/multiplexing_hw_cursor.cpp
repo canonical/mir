@@ -66,3 +66,10 @@ void mg::MultiplexingCursor::move_to(geometry::Point position)
         cursor->move_to(position);
     }
 }
+
+void mir::graphics::MultiplexingCursor::set_scale(float new_scale)
+{
+    for(auto& cursor: platform_cursors)
+        cursor->set_scale(new_scale);
+}
+
