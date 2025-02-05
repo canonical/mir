@@ -395,3 +395,51 @@ void miral::MouseInputConfiguration::apply_to(mi::Device& device) const
     }
 }
 
+void miral::MouseInputConfiguration::merge_settings_from(MouseInputConfiguration const& other)
+{
+    if (!acceleration)
+        acceleration = other.acceleration;
+    if (!acceleration_bias)
+        acceleration_bias = other.acceleration_bias;
+    if (!handedness)
+        handedness = other.handedness;
+    if (!hscroll_speed)
+        hscroll_speed = other.hscroll_speed;
+    if (!vscroll_speed)
+        vscroll_speed = other.vscroll_speed;
+    if (!scale)
+        scale = other.scale;
+}
+
+void miral::TouchpadInputConfiguration::merge_settings_from(TouchpadInputConfiguration const& other)
+{
+    if (!disable_while_typing)
+        disable_while_typing = other.disable_while_typing;
+    if (!disable_with_external_mouse)
+        disable_with_external_mouse = other.disable_with_external_mouse;
+    if (!acceleration)
+        acceleration = other.acceleration;
+    if (!acceleration_bias)
+        acceleration_bias = other.acceleration_bias;
+    if (!vscroll_speed)
+        vscroll_speed = other.vscroll_speed;
+    if (!hscroll_speed)
+        hscroll_speed = other.hscroll_speed;
+    if (!click_mode)
+        click_mode = other.click_mode;
+    if (!scroll_mode)
+        scroll_mode = other.scroll_mode;
+    if (!tap_to_click)
+        tap_to_click = other.tap_to_click;
+    if (!middle_button_emulation)
+        middle_button_emulation = other.middle_button_emulation;
+}
+
+void miral::KeyboardInputConfiguration::merge_settings_from(KeyboardInputConfiguration const& other)
+{
+    if (!repeat_rate)
+        repeat_rate = other.repeat_rate;
+    if (!repeat_delay)
+        repeat_delay = other.repeat_delay;
+}
+
