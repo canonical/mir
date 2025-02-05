@@ -512,10 +512,13 @@ global:
     miral::InputConfiguration::Keyboard::?Keyboard*;
     miral::InputConfiguration::Keyboard::Keyboard*;
     miral::InputConfiguration::Keyboard::config_changed*;
+    miral::InputConfiguration::Keyboard::merge_settings_from*;
     miral::InputConfiguration::Keyboard::operator*;
     miral::InputConfiguration::Keyboard::set_repeat_delay*;
     miral::InputConfiguration::Keyboard::set_repeat_rate*;
+    miral::InputConfiguration::Mouse::merge_settings_from*;
     miral::InputConfiguration::Mouse::scale*;
+    miral::InputConfiguration::Touchpad::merge_settings_from*;
     miral::InputConfiguration::keyboard*;
     typeinfo?for?miral::InputConfiguration::Keyboard;
   };
