@@ -153,11 +153,9 @@ void mg::SoftwareCursor::show(CursorImage const& cursor_image)
     // Store the cursor image for later use with `set_scale`
     this->current_cursor_image = &cursor_image;
 
-    // TODO Make this user configurable
-    set_scale(1.75);
-
-    visible = true;
+    set_scale(current_scale);
 }
+
 
 std::shared_ptr<mg::detail::CursorRenderable>
 mg::SoftwareCursor::create_renderable_for(CursorImage const& cursor_image, geom::Point position)
@@ -212,6 +210,31 @@ void mg::SoftwareCursor::move_to(geometry::Point position)
 
 void mir::graphics::SoftwareCursor::set_scale(float new_scale)
 {
+    std::lock_guard lg{guard};
+
+    if(renderable && new_scale == current_scale)
+        return;
+
+    current_scale = new_scale;
+    auto const to_remove = renderable? renderable: nullptr;
+    renderable = create_scaled_renderable_for_current_cursor(new_scale);
+    hotspot = current_cursor_image->hotspot() * new_scale;
+
+    scene_executor->spawn(
+        [scene = scene, to_remove = to_remove, to_add = renderable]()
+        {
+            // Add the new renderable first, then remove the old one to avoid visual glitches
+            scene->add_input_visualization(to_add);
+
+            if (to_remove)
+            {
+                scene->remove_input_visualization(to_remove);
+            }
+        });
+}
+
+std::shared_ptr<mg::detail::CursorRenderable> mg::SoftwareCursor::create_scaled_renderable_for_current_cursor(float new_scale)
+{
     using UniquePixmanImage = std::unique_ptr<pixman_image_t, decltype(&pixman_image_unref)>;
 
     auto const [width, height] = current_cursor_image->size();
@@ -255,24 +278,9 @@ void mir::graphics::SoftwareCursor::set_scale(float new_scale)
         geom::Stride{scaled_width * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888)},
         mir_pixel_format_argb_8888);
 
-    auto const to_remove = visible ? renderable : nullptr;
     auto const position = renderable ? renderable->screen_position().top_left : geom::Point{0, 0};
-
     renderable = std::make_shared<detail::CursorRenderable>(
         std::move(buffer), position + hotspot - current_cursor_image->hotspot());
 
-    hotspot = current_cursor_image->hotspot() * new_scale;
-
-    scene_executor->spawn(
-        [scene = scene, to_remove = to_remove, to_add = renderable]()
-        {
-            // Add the new renderable first, then remove the old one to avoid visual glitches
-            scene->add_input_visualization(to_add);
-
-            if (to_remove)
-            {
-                scene->remove_input_visualization(to_remove);
-            }
-        });
-
+    return renderable;
 }
