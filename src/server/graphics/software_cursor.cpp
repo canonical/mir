@@ -222,8 +222,7 @@ void mir::graphics::SoftwareCursor::set_scale(float new_scale)
     // Counter-intuitively, you use the INVERSE transform, not the "normal" one
     pixman_transform_scale(NULL, &transform, pixman_double_to_fixed(new_scale), pixman_double_to_fixed(new_scale));
     pixman_image_set_transform(original_image, &transform);
-
-    // TODO filtering?
+    pixman_image_set_filter(original_image, PIXMAN_FILTER_BILINEAR, NULL, 0);
 
     auto const scaled_width = width.as_value() * new_scale;
     auto const scaled_height = height.as_value() * new_scale;
