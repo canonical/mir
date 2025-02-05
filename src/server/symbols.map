@@ -1427,6 +1427,8 @@ global:
     mir::shell::AccessibilityManager::register_keyboard_helper*;
     mir::shell::AccessibilityManager::repeat_delay*;
     mir::shell::AccessibilityManager::repeat_rate*;
+    mir::shell::AccessibilityManager::cursor_scale_changed*;
+    mir::shell::AccessibilityManager::set_cursor*;
     mir::shell::ShellWrapper::is_above*;
     mir::shell::SurfaceStackWrapper::is_above*;
     mir::shell::TokenAuthority::Token::operator*;

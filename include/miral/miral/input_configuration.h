@@ -78,6 +78,7 @@ public:
     void acceleration_bias(std::optional<double>const& val);
     void vscroll_speed(std::optional<double>const& val);
     void hscroll_speed(std::optional<double>const& val);
+    void scale(std::optional<double>const& val);
 
 private:
     friend class InputConfiguration::Self;

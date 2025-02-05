@@ -16,7 +16,7 @@
 
 #include "mir/shell/accessibility_manager.h"
 
-#include "mir/input/event_builder.h"
+#include "mir/graphics/cursor.h"
 #include "mir/input/input_sink.h"
 #include "mir/options/configuration.h"
 #include "mir/shell/keyboard_helper.h"
@@ -122,4 +122,25 @@ mir::shell::AccessibilityManager::AccessibilityManager(
 {
     if (enable_mouse_keys)
         event_transformer->append(transformer);
+}
+
+void mir::shell::AccessibilityManager::set_cursor(std::shared_ptr<graphics::Cursor> const& cursor)
+{
+    auto state = mutable_state.lock();
+    state->cursor = cursor;
+
+    // Apply any cached scale changes
+    if (state->cursor_scale != 1.0)
+        cursor->set_scale(state->cursor_scale);
+}
+
+void mir::shell::AccessibilityManager::cursor_scale_changed(float new_scale)
+{
+    auto state = mutable_state.lock();
+
+    // Store the cursor scale in case the cursor hasn't been set yet
+    state->cursor_scale = new_scale;
+
+    if(state->cursor)
+        state->cursor->set_scale(new_scale);
 }

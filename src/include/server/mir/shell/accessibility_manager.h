@@ -30,6 +30,10 @@ namespace options
 {
 class Option;
 }
+namespace graphics
+{
+class Cursor;
+}
 namespace shell
 {
 class KeyboardHelper;
@@ -50,6 +54,9 @@ public:
 
     void notify_helpers() const;
 
+    void set_cursor(std::shared_ptr<graphics::Cursor> const& cursor);
+    void cursor_scale_changed(float new_scale);
+
 private:
 
     struct MutableState {
@@ -58,6 +65,9 @@ private:
         int repeat_delay{600};
 
         std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
+
+        std::shared_ptr<graphics::Cursor> cursor;
+        float cursor_scale{1};
     };
 
     Synchronised<MutableState> mutable_state;
