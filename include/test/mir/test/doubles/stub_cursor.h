@@ -31,10 +31,7 @@ struct StubCursor : public graphics::Cursor
     void show(graphics::CursorImage const&) override {}
     void hide() override {}
     void move_to(geometry::Point) override {}
-
-    void set_scale(float) override
-    {
-    }
+    void set_scale(float) override {}
 };
 
 }
