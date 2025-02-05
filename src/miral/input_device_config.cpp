@@ -63,6 +63,7 @@ char const* const mouse_cursor_acceleration_bias_opt = "mouse-cursor-acceleratio
 char const* const mouse_scroll_speed_opt = "mouse-scroll-speed";
 char const* const mouse_hscroll_speed_override_opt = "mouse-horizontal-scroll-speed-override";
 char const* const mouse_vscroll_speed_override_opt = "mouse-vertical-scroll-speed-override";
+char const* const mouse_cursor_scale_override_opt = "mouse-cursor-scale-override";
 char const* const touchpad_cursor_acceleration_opt = "touchpad-cursor-acceleration";
 char const* const touchpad_cursor_acceleration_bias_opt = "touchpad-cursor-acceleration-bias";
 char const* const touchpad_scroll_speed_opt = "touchpad-scroll-speed";
@@ -216,6 +217,9 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
     server.add_configuration_option(mouse_vscroll_speed_override_opt,
                                     "Scales mouse vertical scroll. Use negative values for natural scrolling",
                                     mir::OptionType::real);
+    server.add_configuration_option(mouse_cursor_scale_override_opt,
+                                    "Scales the mouse cursor visually. Accepts any value greater than zero",
+                                    mir::OptionType::real);
     server.add_configuration_option(disable_while_typing_opt,
                                     "Disable touchpad while typing on keyboard configuration [true, false]",
                                     mir::OptionType::boolean);
@@ -273,7 +277,8 @@ miral::InputDeviceConfig::InputDeviceConfig(std::shared_ptr<mir::options::Option
         to_acceleration_profile(get_optional<std::string>(options, mouse_cursor_acceleration_opt)),
         clamp<-1.0, 1.0>(get_optional<double>(options, mouse_cursor_acceleration_bias_opt)),
         get_optional<double>(options, mouse_vscroll_speed_override_opt, mouse_scroll_speed_opt),
-        get_optional<double>(options, mouse_hscroll_speed_override_opt, mouse_scroll_speed_opt)
+        get_optional<double>(options, mouse_hscroll_speed_override_opt, mouse_scroll_speed_opt),
+        get_optional<double>(options, mouse_cursor_scale_override_opt)
     },
     touchpad_config{
         get_optional<bool>(options, disable_while_typing_opt),

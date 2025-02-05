@@ -28,6 +28,10 @@ namespace options
 {
 class Option;
 }
+namespace graphics
+{
+class Cursor;
+}
 namespace shell
 {
 class KeyboardHelper;
@@ -48,6 +52,9 @@ public:
 
     void notify_helpers() const;
 
+    void set_cursor(std::shared_ptr<graphics::Cursor> const& cursor);
+    void cursor_scale_changed(float new_scale);
+
 private:
     std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
 
@@ -57,9 +64,11 @@ private:
     bool enable_key_repeat;
 
     bool enable_mouse_keys;
-
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
     std::shared_ptr<mir::input::InputEventTransformer::Transformer> const transformer;
+
+    std::shared_ptr<graphics::Cursor> cursor;
+    float cursor_scale{1};
 };
 }
 }
