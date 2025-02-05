@@ -86,8 +86,8 @@ MirInputEventType mir_input_event_get_type(MirInputEvent const* event);
  * Retrieve the MirKeyboardEvent associated with a given input event.
  *
  * \param[in] event The input event
- * \return          The MirKeyboardEvent or NULL if event type is not
- *                  mir_input_event_type_key
+ * \return          The MirKeyboardEvent
+ * \pre             The event type is mir_input_event_type_key 
  */
 MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* event);
 
@@ -95,8 +95,8 @@ MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* 
  * Retrieve the MirTouchEvent associated with a given input event.
  *
  * \param[in] event The input event
- * \return          The MirTouchEvent or NULL if event type is not
- *                  mir_input_event_type_touch
+ * \return          The MirTouchEvent
+ * \pre             The event type is mir_input_event_type_touch
  */
 MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* event);
 
@@ -104,8 +104,8 @@ MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* event)
  * Retrieve the MirPointerEvent associated with a given input event.
  *
  * \param[in] event The input event
- * \return          The MirPointerEvent or NULL if event type is not
- *                  mir_input_event_type_pointer
+ * \return          The MirPointerEvent
+ * \pre             The event type is mir_input_event_type_pointer
  */
 MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* event);
 
