@@ -400,3 +400,19 @@ void miral::InputConfiguration::Keyboard::set_repeat_rate(int new_rate) {
 void miral::InputConfiguration::Keyboard::set_repeat_delay(int new_delay) {
     self->repeat_delay = new_delay;
 }
+
+void miral::InputConfiguration::Mouse::merge_settings_from(InputConfiguration::Mouse const& other)
+{
+    self->merge_settings_from(*other.self);
+}
+
+void miral::InputConfiguration::Touchpad::merge_settings_from(InputConfiguration::Touchpad const& other)
+{
+    self->merge_settings_from(*other.self);
+}
+
+void miral::InputConfiguration::Keyboard::merge_settings_from(InputConfiguration::Keyboard const& other)
+{
+    self->merge_settings_from(*other.self);
+}
+
