@@ -15,6 +15,7 @@
  */
 
 #include "mir/shell/accessibility_manager.h"
+#include "mir/graphics/cursor.h"
 #include "mir/shell/keyboard_helper.h"
 
 #include <optional>
@@ -51,3 +52,22 @@ void mir::shell::AccessibilityManager::notify_helpers() const {
     for(auto const& helper: keyboard_helpers)
         helper->repeat_info_changed(repeat_rate(), repeat_delay());
 }
+
+void mir::shell::AccessibilityManager::set_cursor(std::shared_ptr<graphics::Cursor> const& cursor)
+{
+    this->cursor = cursor;
+
+    // Apply any cached scale changes
+    if (cursor_scale != 1.0)
+        cursor->set_scale(cursor_scale);
+}
+
+void mir::shell::AccessibilityManager::cursor_scale_changed(float new_scale)
+{
+    // Store the cursor scale in case the cursor hasn't been set yet
+    cursor_scale = new_scale;
+
+    if(cursor)
+        cursor->set_scale(new_scale);
+}
+

@@ -1420,6 +1420,8 @@ global:
     mir::Server::get_activation_token*;
     mir::Server::the_token_authority*;
     mir::shell::AbstractShell::is_above*;
+    mir::shell::AccessibilityManager::cursor_scale_changed*;
+    mir::shell::AccessibilityManager::set_cursor*;
     mir::shell::ShellWrapper::is_above*;
     mir::shell::SurfaceStackWrapper::is_above*;
     mir::shell::TokenAuthority::Token::operator*;
