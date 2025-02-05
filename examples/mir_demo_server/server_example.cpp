@@ -142,8 +142,8 @@ private:
     miral::InputConfiguration::Mouse mouse = input_configuration.mouse();
     miral::InputConfiguration::Touchpad touchpad = input_configuration.touchpad();
     miral::InputConfiguration::Keyboard keyboard = input_configuration.keyboard();
-    miral::ConfigFile config_file;
     std::mutex config_mutex;
+    miral::ConfigFile config_file;
 
     void apply_config()
     {
@@ -182,7 +182,7 @@ private:
                 auto const key = line.substr(0, eq);
                 auto const value = line.substr(eq+1);
 
-                auto const parse_and_validate = [](std::string const& key, std::string_view val) -> std::optional<int>
+                auto const parse_and_validate_int = [](std::string const& key, std::string_view val) -> std::optional<int>
                 {
                     auto const int_val = std::atoi(val.data());
                     if (int_val < 0)
@@ -196,18 +196,39 @@ private:
                     return int_val;
                 };
 
+                auto const parse_and_validate_float = [](std::string const& key, std::string_view val) -> std::optional<int>
+                {
+                    auto const float_val = std::atof(val.data());
+                    if (float_val < 0)
+                    {
+                        mir::log_warning(
+                            "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
+                            key.c_str(), float_val);
+                        return std::nullopt;
+                    }
+
+                    return float_val;
+                };
+
                 if (key == "repeat_rate")
                 {
-                    auto const parsed = parse_and_validate(key, value);
+                    auto const parsed = parse_and_validate_int(key, value);
                     if (parsed)
                         keyboard.set_repeat_rate(*parsed);
                 }
 
                 if (key == "repeat_delay")
                 {
-                    auto const parsed = parse_and_validate(key, value);
+                    auto const parsed = parse_and_validate_int(key, value);
                     if (parsed)
                         keyboard.set_repeat_delay(*parsed);
+                }
+
+                if (key == "cursor_scale")
+                {
+                    auto const parsed = parse_and_validate_float(key, value);
+                    if(parsed)
+                        mouse.scale(parsed);
                 }
             }
         }
