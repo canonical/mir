@@ -79,7 +79,7 @@ This big block of code can be broken down into three parts:
 +            case XKB_KEY_t:
 +            case XKB_KEY_T:
 +                external_client_launcher.launch({terminal_cmd});
-+                return false;
++                return true;
 +
 +            // Do nothing
 +            default:
