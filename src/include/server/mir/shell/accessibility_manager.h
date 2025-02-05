@@ -23,6 +23,10 @@
 
 namespace mir
 {
+namespace graphics
+{
+class Cursor;
+}
 namespace shell
 {
 class KeyboardHelper;
@@ -40,6 +44,9 @@ public:
 
     void notify_helpers() const;
 
+    void set_cursor(std::shared_ptr<graphics::Cursor> const& cursor);
+    void cursor_scale_changed(float new_scale);
+
 private:
     std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
 
@@ -47,6 +54,9 @@ private:
     int repeat_rate_{25};
     int repeat_delay_{600};
     bool enable_key_repeat{true};
+
+    std::shared_ptr<graphics::Cursor> cursor;
+    float cursor_scale{1};
 };
 }
 }
