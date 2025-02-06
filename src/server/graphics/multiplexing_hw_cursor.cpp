@@ -43,7 +43,7 @@ mg::MultiplexingCursor::MultiplexingCursor(std::span<Display*> platform_displays
 {
 }
 
-void mg::MultiplexingCursor::show(CursorImage const& image)
+void mg::MultiplexingCursor::show(std::shared_ptr<CursorImage> const& image)
 {
     for (auto& cursor : platform_cursors)
     {
