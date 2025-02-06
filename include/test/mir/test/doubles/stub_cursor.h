@@ -18,6 +18,7 @@
 #define MIR_TEST_DOUBLES_STUB_CURSOR_H_
 
 #include "mir/graphics/cursor.h"
+#include <memory>
 
 namespace mir
 {
@@ -28,7 +29,7 @@ namespace doubles
 
 struct StubCursor : public graphics::Cursor
 {
-    void show(graphics::CursorImage const&) override {}
+    void show(std::shared_ptr<graphics::CursorImage> const&) override {}
     void hide() override {}
     void move_to(geometry::Point) override {}
     void set_scale(float) override {}

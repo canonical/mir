@@ -83,19 +83,19 @@ void mpw::Cursor::move_to(geometry::Point)
 {
 }
 
-void mpw::Cursor::show(graphics::CursorImage const& cursor_image)
+void mpw::Cursor::show(std::shared_ptr<graphics::CursorImage> const& cursor_image)
 {
     {
         std::lock_guard lock{mutex};
         if (buffer) wl_buffer_destroy(buffer);
 
-        auto const width = cursor_image.size().width.as_uint32_t();
-        auto const height = cursor_image.size().height.as_uint32_t();
-        auto const hotspot_x = cursor_image.hotspot().dx.as_uint32_t();
-        auto const hotspot_y = cursor_image.hotspot().dy.as_uint32_t();
+        auto const width = cursor_image->size().width.as_uint32_t();
+        auto const height = cursor_image->size().height.as_uint32_t();
+        auto const hotspot_x = cursor_image->hotspot().dx.as_uint32_t();
+        auto const hotspot_y = cursor_image->hotspot().dy.as_uint32_t();
         void* data_buffer;
         auto const shm_pool = make_shm_pool(shm, 4 * width * height, &data_buffer);
-        memcpy(data_buffer, cursor_image.as_argb_8888(), 4 * width * height);
+        memcpy(data_buffer, cursor_image->as_argb_8888(), 4 * width * height);
         buffer = wl_shm_pool_create_buffer(shm_pool, 0, width, height, 4 * width, WL_SHM_FORMAT_ARGB8888);
         wl_surface_attach(surface, buffer, 0, 0);
         wl_surface_commit(surface);

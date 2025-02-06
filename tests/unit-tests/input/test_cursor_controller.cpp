@@ -35,6 +35,7 @@
 #include <gmock/gmock.h>
 
 #include <initializer_list>
+#include <memory>
 #include <mutex>
 #include <algorithm>
 
@@ -73,9 +74,9 @@ struct ZeroSizedCursorImage : public mg::CursorImage
     geom::Displacement hotspot() const override { return geom::Displacement{0, 0}; }
 };
 
-bool cursor_is_named(mg::CursorImage const& i, std::string const& name)
+bool cursor_is_named(std::shared_ptr<mg::CursorImage> const& i, std::string const& name)
 {
-    auto image = dynamic_cast<NamedCursorImage const*>(&i);
+    auto image = std::dynamic_pointer_cast<NamedCursorImage const>(i);
     assert(image);
 
     return image->cursor_name == name;
@@ -94,7 +95,7 @@ MATCHER_P(CursorNamed, name, "")
 struct MockCursor : public mg::Cursor
 {
     MOCK_METHOD0(show, void());
-    MOCK_METHOD1(show, void(mg::CursorImage const&));
+    MOCK_METHOD1(show, void(std::shared_ptr<mg::CursorImage> const&));
     MOCK_METHOD0(hide, void());
 
     MOCK_METHOD1(move_to, void(geom::Point));

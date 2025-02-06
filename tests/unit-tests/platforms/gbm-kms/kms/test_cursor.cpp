@@ -21,6 +21,7 @@
 
 #include "mir/graphics/cursor_image.h"
 
+#include <memory>
 #include <xf86drm.h>
 
 #include "mir/test/doubles/mock_gbm.h"
@@ -321,7 +322,7 @@ struct MesaCursorTest : ::testing::Test
     }
 
     testing::NiceMock<mtd::MockDRM> mock_drm;
-    StubCursorImage stub_image;
+    std::shared_ptr<StubCursorImage> stub_image = std::make_shared<StubCursorImage>();
     StubKMSOutputContainer output_container;
     StubCurrentConfiguration current_configuration{output_container};
     mgg::Cursor cursor;
@@ -387,7 +388,7 @@ TEST_F(MesaCursorTest, show_cursor_writes_to_bo)
 {
     using namespace testing;
 
-    StubCursorImage image;
+    auto image = std::make_shared<StubCursorImage>();
     geom::Size const cursor_size{cursor_side, cursor_side};
     size_t const cursor_size_bytes{cursor_side * cursor_side * sizeof(uint32_t)};
 
@@ -422,7 +423,7 @@ TEST_F(MesaCursorTest, show_cursor_pads_missing_data)
         .WillByDefault(Return(stride));
     EXPECT_CALL(mock_gbm, gbm_bo_write(mock_gbm.fake_gbm.bo, ContainsASingleWhitePixel(width*height), buffer_size_bytes));
 
-    cursor.show(SinglePixelCursorImage());
+    cursor.show(std::make_shared<SinglePixelCursorImage>());
 }
 
 TEST_F(MesaCursorTest, pads_missing_data_when_buffer_size_differs)
@@ -445,7 +446,7 @@ TEST_F(MesaCursorTest, pads_missing_data_when_buffer_size_differs)
 
     mgg::Cursor cursor_tmp{output_container,
         std::make_shared<StubCurrentConfiguration>(output_container)};
-    cursor_tmp.show(SinglePixelCursorImage());
+    cursor_tmp.show(std::make_shared<SinglePixelCursorImage>());
 }
 
 TEST_F(MesaCursorTest, does_not_throw_when_images_are_too_large)
@@ -462,7 +463,7 @@ TEST_F(MesaCursorTest, does_not_throw_when_images_are_too_large)
         geom::Size const large_cursor_size{cursor_side, cursor_side};
     };
 
-    cursor.show(LargeCursorImage());
+    cursor.show(std::make_shared<LargeCursorImage>());
 }
 
 TEST_F(MesaCursorTest, clears_cursor_state_on_construction)
@@ -772,7 +773,7 @@ TEST_F(MesaCursorTest, show_cursor_sets_cursor_with_hotspot)
         EXPECT_CALL(*output_container.outputs[0], move_cursor(expected_buffer_location_2));
     }
 
-    cursor.show(HotspotCursor());
+    cursor.show(std::make_shared<HotspotCursor>());
     cursor.move_to(cursor_location_1);
     cursor.move_to(cursor_location_2);
 }
