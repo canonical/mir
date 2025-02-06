@@ -1,0 +1,63 @@
+/*
+ * Copyright © Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 or 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "mir/graphics/pixman_image_scaling.h"
+
+#include "mir/graphics/cursor_image.h"
+#include "mir_toolkit/common.h"
+#include "pixman-1/pixman.h"
+
+mir::graphics::PixBuffer mir::graphics::scale_cursor_image(
+    std::shared_ptr<mir::graphics::CursorImage> const& cursor_image, float new_scale)
+{
+    using UniquePixmanImage = std::unique_ptr<pixman_image_t, decltype(&pixman_image_unref)>;
+
+    auto const [width, height] = cursor_image->size();
+
+    auto original_image = UniquePixmanImage(
+        pixman_image_create_bits(
+            PIXMAN_a8r8g8b8,
+            width.as_int(),
+            height.as_int(),
+            (uint32_t*)(cursor_image->as_argb_8888()),
+            width.as_int() * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888)),
+        &pixman_image_unref);
+
+    pixman_transform_t transform;
+    pixman_transform_init_identity(&transform);
+    // Counter-intuitively, you use the INVERSE transform, not the "normal" one
+    pixman_transform_scale(NULL, &transform, pixman_double_to_fixed(new_scale), pixman_double_to_fixed(new_scale));
+    pixman_image_set_transform(original_image.get(), &transform);
+    pixman_image_set_filter(original_image.get(), PIXMAN_FILTER_BILINEAR, NULL, 0);
+
+    auto const scaled_width = width.as_value() * new_scale;
+    auto const scaled_height = height.as_value() * new_scale;
+    auto buf = std::make_unique<uint32_t[]>(scaled_width * scaled_height);
+    auto scaled_image = UniquePixmanImage(
+        pixman_image_create_bits(
+            PIXMAN_a8r8g8b8,
+            scaled_width,
+            scaled_height,
+            buf.get(),
+            scaled_width * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888)),
+        &pixman_image_unref);
+
+    // Copy over the pixels into the larger image
+    pixman_image_composite(
+        PIXMAN_OP_SRC, original_image.get(), NULL, scaled_image.get(), 0, 0, 0, 0, 0, 0, scaled_width, scaled_height);
+
+    return {std::move(buf), {scaled_width, scaled_height}};
+}

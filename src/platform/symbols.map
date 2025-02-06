@@ -84,6 +84,7 @@ MIR_PLATFORM_2.19 {
     mir::graphics::initialise_egl_logger*;
     mir::graphics::operator*;
     mir::graphics::red_channel_depth*;
+    mir::graphics::scale_cursor_image*;
     mir::graphics::tessellate_renderable_into_rectangle*;
     mir::graphics::wayland::bind_display*;
     mir::graphics::wayland::buffer_from_resource*;
