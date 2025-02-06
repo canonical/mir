@@ -27,6 +27,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <memory>
 
 namespace mg = mir::graphics;
 namespace mtd = mir::test::doubles;
@@ -131,8 +132,8 @@ public:
 
 struct SoftwareCursor : testing::Test
 {
-    StubCursorImage stub_cursor_image{{3,4}};
-    StubCursorImage another_stub_cursor_image{{10,9}};
+    std::shared_ptr<StubCursorImage> stub_cursor_image = std::make_shared<StubCursorImage>(geom::Displacement{3, 4});
+    std::shared_ptr<StubCursorImage> another_stub_cursor_image = std::make_shared<StubCursorImage>(geom::Displacement{10, 9});
     testing::NiceMock<MockBufferAllocator> mock_buffer_allocator;
     testing::NiceMock<MockInputScene> mock_input_scene;
     ExplicitExecutor executor;
@@ -251,7 +252,7 @@ TEST_F(SoftwareCursor, renderable_has_cursor_size)
 
     EXPECT_CALL(mock_input_scene,
                 add_input_visualization(
-                    RenderableWithSize(stub_cursor_image.size())));
+                    RenderableWithSize(stub_cursor_image->size())));
 
     cursor.show(stub_cursor_image);
 }
@@ -260,7 +261,7 @@ TEST_F(SoftwareCursor, places_renderable_at_origin_offset_by_hotspot)
 {
     using namespace testing;
 
-    auto const pos = geom::Point{0,0} - stub_cursor_image.hotspot();
+    auto const pos = geom::Point{0,0} - stub_cursor_image->hotspot();
 
     EXPECT_CALL(mock_input_scene,
                 add_input_visualization(RenderableWithPosition(pos)));
@@ -285,7 +286,7 @@ TEST_F(SoftwareCursor, moves_scene_renderable_offset_by_hotspot_when_moved)
     executor.execute();
 
     EXPECT_THAT(cursor_renderable->screen_position().top_left,
-                Eq(new_position - stub_cursor_image.hotspot()));
+                Eq(new_position - stub_cursor_image->hotspot()));
 }
 
 TEST_F(SoftwareCursor, notifies_scene_when_moving)
@@ -304,10 +305,10 @@ TEST_F(SoftwareCursor, creates_renderable_with_filled_buffer)
     using namespace testing;
 
     size_t const image_size =
-        4 * stub_cursor_image.size().width.as_uint32_t() *
-        stub_cursor_image.size().height.as_uint32_t();
+        4 * stub_cursor_image->size().width.as_uint32_t() *
+        stub_cursor_image->size().height.as_uint32_t();
     auto const image_data =
-        static_cast<unsigned char const*>(stub_cursor_image.as_argb_8888());
+        static_cast<unsigned char const*>(stub_cursor_image->as_argb_8888());
 
     std::shared_ptr<mg::Renderable> cursor_renderable;
 
@@ -374,7 +375,7 @@ TEST_F(SoftwareCursor, places_new_cursor_renderable_at_correct_position)
     Mock::VerifyAndClearExpectations(&mock_input_scene);
 
     auto const renderable_position =
-        cursor_position - another_stub_cursor_image.hotspot();
+        cursor_position - another_stub_cursor_image->hotspot();
     EXPECT_CALL(mock_input_scene,
                 add_input_visualization(RenderableWithPosition(renderable_position)));
 
@@ -424,12 +425,12 @@ TEST_F(SoftwareCursor, handles_argb_8888_cursor_surface)
     ON_CALL(mock_buffer_allocator, supported_pixel_formats())
         .WillByDefault(Return(std::vector<MirPixelFormat>{ mir_pixel_format_argb_8888 }));
 
-    StubCursorImage test_image{{8, 8}};
+    auto test_image = std::make_shared<StubCursorImage>(geom::Displacement{8, 8});
     unsigned char const r = 0x11;
     unsigned char const g = 0x55;
     unsigned char const b = 0xbb;
     unsigned char const a = 0xaa;
-    test_image.fill_with(r, g, b, a);
+    test_image->fill_with(r, g, b, a);
 
     std::shared_ptr<mrs::ReadMappableBuffer> cursor_buffer;
     EXPECT_CALL(mock_buffer_allocator, alloc_software_buffer(_,mir_pixel_format_argb_8888))
@@ -478,12 +479,12 @@ TEST_F(SoftwareCursor, handles_argb_8888_buffer_with_stride)
     ON_CALL(mock_buffer_allocator, supported_pixel_formats())
         .WillByDefault(Return(std::vector<MirPixelFormat>{ mir_pixel_format_argb_8888 }));
 
-    StubCursorImage test_image{{8, 8}};
+    auto test_image = std::make_shared<StubCursorImage>(geom::Displacement{8, 8});
     unsigned char const r = 0x42;
     unsigned char const g = 0x39;
     unsigned char const b = 0xce;
     unsigned char const a = 0xdf;
-    test_image.fill_with(r, g, b, a);
+    test_image->fill_with(r, g, b, a);
 
     std::shared_ptr<mrs::ReadMappableBuffer> cursor_buffer;
     EXPECT_CALL(mock_buffer_allocator, alloc_software_buffer(_,mir_pixel_format_argb_8888))

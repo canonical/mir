@@ -39,7 +39,7 @@ public:
 
     ~Cursor();
 
-    void show(graphics::CursorImage const& image) override;
+    void show(std::shared_ptr<graphics::CursorImage> const& image) override;
 
     void hide() override;
 

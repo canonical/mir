@@ -28,7 +28,7 @@ class MultiplexingCursor : public Cursor
 public:
     explicit MultiplexingCursor(std::span<Display*> platform_displays);
 
-    void show(CursorImage const& image) override;
+    void show(std::shared_ptr<CursorImage> const& image) override;
     void hide() override;
     void move_to(geometry::Point position) override;
 
