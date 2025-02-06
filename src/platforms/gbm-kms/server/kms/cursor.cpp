@@ -428,9 +428,6 @@ void mir::graphics::gbm::Cursor::set_scale(float new_scale)
 {
     std::lock_guard lg(guard);
 
-    if(!argb8888.empty() && new_scale == current_scale)
-        return;
-
     current_scale = new_scale;
     size = current_cursor_image->size() * new_scale;
     auto const scaled_cursor_buf = mg::scale_cursor_image(current_cursor_image, new_scale);
