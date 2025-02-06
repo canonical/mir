@@ -48,18 +48,19 @@ public:
     void enter(wl_pointer* pointer);
     void leave(wl_pointer* pointer);
 
-    void set_scale(float) override
-    {
-    }
+    void set_scale(float) override;
 
 private:
     wl_shm* const shm;
     std::function<void()> const flush_wl;
     wl_surface* surface;
 
-    std::mutex mutable mutex;
+    std::recursive_mutex mutable mutex;
     wl_buffer* buffer{nullptr};
     wl_pointer* pointer{nullptr};
+
+    std::shared_ptr<mir::graphics::CursorImage> current_cursor_image;
+    float current_scale{1.0};
 };
 }
 }
