@@ -76,29 +76,28 @@ public:
     void suspend();
     void resume();
 
-    void set_scale(float) override
-    {
-    }
+    void set_scale(float) override;
 
 private:
     enum ForceCursorState { UpdateState, ForceState };
     struct GBMBOWrapper;
+    using mutex_type = std::recursive_mutex;
     void for_each_used_output(std::function<void(KMSOutput& output, DisplayConfigurationOutput const& conf)> const& f);
     void place_cursor_at(geometry::Point position, ForceCursorState force_state);
-    void place_cursor_at_locked(std::lock_guard<std::mutex> const&, geometry::Point position, ForceCursorState force_state);
+    void place_cursor_at_locked(std::lock_guard<mutex_type> const&, geometry::Point position, ForceCursorState force_state);
     void write_buffer_data_locked(
-        std::lock_guard<std::mutex> const&,
+        std::lock_guard<mutex_type> const&,
         gbm_bo* buffer,
         void const* data,
         size_t count);
     void pad_and_write_image_data_locked(
-        std::lock_guard<std::mutex> const&,
+        std::lock_guard<mutex_type> const&,
         GBMBOWrapper& buffer);
-    void clear(std::lock_guard<std::mutex> const&);
+    void clear(std::lock_guard<mutex_type> const&);
 
     GBMBOWrapper& buffer_for_output(KMSOutput const& output);
 
-    std::mutex guard;
+    mutex_type guard;
 
     KMSOutputContainer& output_container;
     geometry::Point current_position;
@@ -135,6 +134,9 @@ private:
     uint32_t min_buffer_height;
 
     std::shared_ptr<CurrentConfiguration> const current_configuration;
+
+    std::shared_ptr<CursorImage> current_cursor_image;
+    float current_scale{1.0};
 };
 }
 }
