@@ -354,7 +354,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                                                                      // ...then we'll need to submit a new frame, even if the client hasn't
                                                                      // attached a new buffer.
 
-    auto const executor_send_frame_callbacks = [executor = wayland_executor, weak_self = mw::make_weak(this)]()
+    auto executor_send_frame_callbacks = [executor = wayland_executor, weak_self = mw::make_weak(this)]()
         {
             executor->spawn([weak_self]()
                 {
