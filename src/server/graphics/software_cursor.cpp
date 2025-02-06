@@ -22,8 +22,8 @@
 #include "mir/input/scene.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/executor.h"
+#include "mir/graphics/pixman_image_scaling.h"
 
-#include <pixman-1/pixman.h>
 #include <boost/throw_exception.hpp>
 
 #include <memory>
@@ -231,47 +231,12 @@ void mir::graphics::SoftwareCursor::set_scale(float new_scale)
 
 std::shared_ptr<mg::detail::CursorRenderable> mg::SoftwareCursor::create_scaled_renderable_for_current_cursor(float new_scale)
 {
-    using UniquePixmanImage = std::unique_ptr<pixman_image_t, decltype(&pixman_image_unref)>;
-
-    auto const [width, height] = current_cursor_image->size();
-
-    auto original_image = UniquePixmanImage(
-        pixman_image_create_bits(
-            PIXMAN_a8r8g8b8,
-            width.as_int(),
-            height.as_int(),
-            (uint32_t*)(current_cursor_image->as_argb_8888()),
-            width.as_int() * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888)),
-        &pixman_image_unref);
-
-    pixman_transform_t transform;
-    pixman_transform_init_identity(&transform);
-    // Counter-intuitively, you use the INVERSE transform, not the "normal" one
-    pixman_transform_scale(NULL, &transform, pixman_double_to_fixed(new_scale), pixman_double_to_fixed(new_scale));
-    pixman_image_set_transform(original_image.get(), &transform);
-    pixman_image_set_filter(original_image.get(), PIXMAN_FILTER_BILINEAR, NULL, 0);
-
-    auto const scaled_width = width.as_value() * new_scale;
-    auto const scaled_height = height.as_value() * new_scale;
-    auto buf = std::make_unique<uint32_t[]>(scaled_width * scaled_height);
-    auto scaled_image = UniquePixmanImage(
-        pixman_image_create_bits(
-            PIXMAN_a8r8g8b8,
-            scaled_width,
-            scaled_height,
-            buf.get(),
-            scaled_width * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888)),
-        &pixman_image_unref);
-
-    // Copy over the pixels into the larger image
-    pixman_image_composite(
-        PIXMAN_OP_SRC, original_image.get(), NULL, scaled_image.get(), 0, 0, 0, 0, 0, 0, scaled_width, scaled_height);
-
+    auto scaled_image_buffer = scale_cursor_image(current_cursor_image, new_scale);
     auto buffer = mrs::alloc_buffer_with_content(
         *allocator,
-        reinterpret_cast<unsigned char*>(pixman_image_get_data(scaled_image.get())),
-        {scaled_width, scaled_height},
-        geom::Stride{scaled_width * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888)},
+        reinterpret_cast<unsigned char const*>(scaled_image_buffer.data.get()),
+        scaled_image_buffer.size,
+        geom::Stride{scaled_image_buffer.size.width.as_value() * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888)},
         mir_pixel_format_argb_8888);
 
     auto const position = renderable ? renderable->screen_position().top_left : geom::Point{0, 0};

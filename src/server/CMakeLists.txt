@@ -1,5 +1,4 @@
 pkg_check_modules(FREETYPE freetype2 REQUIRED IMPORTED_TARGET) # For rendering decorated window titles
-pkg_check_modules(PIXMAN pixman-1 REQUIRED IMPORTED_TARGET)
 
 add_compile_definitions(
   MIR_LOG_COMPONENT_FALLBACK="mirserver"
@@ -15,7 +14,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/wayland
-  ${PIXMAN_INCLUDE_DIRS}
 )
 add_compile_definitions(MIR_SERVER_INPUT_PLATFORM_VERSION="${MIR_SERVER_INPUT_PLATFORM_VERSION}")
 
@@ -149,7 +147,6 @@ target_link_libraries(mirserver
     PkgConfig::LTTNG_UST
     PkgConfig::FREETYPE
     atomic
-    PkgConfig::PIXMAN
 )
 
 if (MIR_USE_APPARMOR)
