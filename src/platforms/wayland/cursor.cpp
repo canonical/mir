@@ -115,9 +115,6 @@ void mir::platform::wayland::Cursor::set_scale(float new_scale)
     {
         std::lock_guard lock{mutex};
 
-        if(buffer && new_scale == current_scale)
-            return;
-
         current_scale = new_scale;
 
         if (buffer) wl_buffer_destroy(buffer);
