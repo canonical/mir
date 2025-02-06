@@ -452,13 +452,17 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                 end(state.frame_callbacks));
 
             frame_callback_executor->spawn(
-                [weak_self = mw::make_weak(this)]
+                [executor = wayland_executor, weak_self = mw::make_weak(this)]
                 {
-                    if (weak_self)
-                    {
-                        auto& self = weak_self.value();
-                        self.send_frame_callbacks(self.heartbeat_quirk_frame_callbacks);
-                    }
+                    executor->spawn(
+                        [weak_self]()
+                        {
+                            if (weak_self)
+                            {
+                                auto& self = weak_self.value();
+                                self.send_frame_callbacks(self.heartbeat_quirk_frame_callbacks);
+                            }
+                        });
                 }
             );
         }
