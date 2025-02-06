@@ -21,11 +21,9 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/pixel_format_utils.h"
 #include "mir/graphics/renderable.h"
-#include "mir/graphics/buffer_properties.h"
 #include "mir/input/scene.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/executor.h"
-#include "mir/log.h"
 
 #include <cstdint>
 #include <memory>
@@ -146,12 +144,12 @@ mg::SoftwareCursor::~SoftwareCursor()
     hide();
 }
 
-void mg::SoftwareCursor::show(CursorImage const& cursor_image)
+void mg::SoftwareCursor::show(std::shared_ptr<CursorImage> const& cursor_image)
 {
     std::lock_guard lg{guard};
 
     // Store the cursor image for later use with `set_scale`
-    this->current_cursor_image = &cursor_image;
+    this->current_cursor_image = cursor_image;
 
     set_scale(current_scale);
 }

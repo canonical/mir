@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <memory>
 #include <miroil/mir_server_hooks.h>
 
 // mir
@@ -67,7 +68,7 @@ struct HiddenCursorWrapper : mg::Cursor
 {
     HiddenCursorWrapper(std::shared_ptr<mg::Cursor> const& wrapped) :
         wrapped{wrapped} { wrapped->hide(); }
-    void show(mg::CursorImage const&) override { }
+    void show(std::shared_ptr<mg::CursorImage> const&) override { }
     void hide() override { wrapped->hide(); }
 
     void move_to(mir::geometry::Point position) override { wrapped->move_to(position); }

@@ -253,16 +253,16 @@ void mgg::Cursor::pad_and_write_image_data_locked(
     write_buffer_data_locked(lg, buffer, &padded[0], padded_size);
 }
 
-void mgg::Cursor::show(CursorImage const& cursor_image)
+void mgg::Cursor::show(std::shared_ptr<CursorImage> const& cursor_image)
 {
     std::lock_guard lg(guard);
 
-    size = cursor_image.size();
+    size = cursor_image->size();
 
     argb8888.resize(size.width.as_uint32_t() * size.height.as_uint32_t() * 4);
-    memcpy(argb8888.data(), cursor_image.as_argb_8888(), argb8888.size());
+    memcpy(argb8888.data(), cursor_image->as_argb_8888(), argb8888.size());
 
-    hotspot = cursor_image.hotspot();
+    hotspot = cursor_image->hotspot();
     {
         auto locked_buffers = buffers.lock();
         for (auto& tuple : *locked_buffers)

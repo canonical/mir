@@ -47,7 +47,7 @@ public:
         std::shared_ptr<input::Scene> const& scene);
     ~SoftwareCursor();
 
-    void show(CursorImage const& cursor_image) override;
+    void show(std::shared_ptr<CursorImage> const& cursor_image) override;
     void hide() override;
     void move_to(geometry::Point position) override;
     void set_scale(float) override;
@@ -72,7 +72,7 @@ private:
     geometry::Displacement hotspot;
 
     float current_scale{1.0};
-    graphics::CursorImage const * current_cursor_image;
+    std::shared_ptr<graphics::CursorImage> current_cursor_image;
 };
 
 }

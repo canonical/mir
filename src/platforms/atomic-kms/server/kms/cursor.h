@@ -68,7 +68,7 @@ public:
 
     ~Cursor() noexcept;
 
-    void show(CursorImage const& cursor_image) override;
+    void show(std::shared_ptr<CursorImage> const& cursor_image) override;
     void hide() override;
 
     void move_to(geometry::Point position) override;
