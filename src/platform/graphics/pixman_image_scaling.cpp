@@ -19,13 +19,23 @@
 #include "mir/graphics/cursor_image.h"
 #include "mir_toolkit/common.h"
 #include "pixman-1/pixman.h"
+#include <cstring>
 
 mir::graphics::PixBuffer mir::graphics::scale_cursor_image(
     std::shared_ptr<mir::graphics::CursorImage> const& cursor_image, float new_scale)
 {
-    using UniquePixmanImage = std::unique_ptr<pixman_image_t, decltype(&pixman_image_unref)>;
-
     auto const [width, height] = cursor_image->size();
+
+    // Special case: no resizing. Just copy the data.
+    if(new_scale == 1)
+    {
+        auto const pixel_count = width.as_value() * height.as_value();
+        auto buf = std::make_unique<uint32_t[]>(pixel_count);
+        std::memcpy(buf.get(), cursor_image->as_argb_8888(), pixel_count * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888));
+        return {std::move(buf), {width, height}};
+    }
+
+    using UniquePixmanImage = std::unique_ptr<pixman_image_t, decltype(&pixman_image_unref)>;
 
     auto original_image = UniquePixmanImage(
         pixman_image_create_bits(
