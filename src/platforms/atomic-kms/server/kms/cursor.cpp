@@ -21,6 +21,7 @@
 #include "kms_display_configuration.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/cursor_image.h"
+#include "mir/graphics/pixman_image_scaling.h"
 
 #include <xf86drm.h>
 
@@ -155,7 +156,7 @@ mga::Cursor::~Cursor() noexcept
 }
 
 void mga::Cursor::write_buffer_data_locked(
-    std::lock_guard<std::mutex> const&,
+    std::lock_guard<mutex_type> const&,
     gbm_bo* buffer,
     void const* data,
     size_t count)
@@ -169,7 +170,7 @@ void mga::Cursor::write_buffer_data_locked(
 }
 
 void mga::Cursor::pad_and_write_image_data_locked(
-    std::lock_guard<std::mutex> const& lg,
+    std::lock_guard<mutex_type> const& lg,
     GBMBOWrapper& buffer)
 {
     auto const orientation = buffer.orientation();
@@ -257,24 +258,8 @@ void mga::Cursor::show(std::shared_ptr<CursorImage> const& cursor_image)
 {
     std::lock_guard lg(guard);
 
-    size = cursor_image->size();
-
-    argb8888.resize(size.width.as_uint32_t() * size.height.as_uint32_t() * 4);
-    memcpy(argb8888.data(), cursor_image->as_argb_8888(), argb8888.size());
-
-    hotspot = cursor_image->hotspot();
-    {
-        auto locked_buffers = buffers.lock();
-        for (auto& tuple : *locked_buffers)
-        {
-            pad_and_write_image_data_locked(lg, std::get<2>(tuple));
-        }
-    }
-
-    // Writing the data could throw an exception so let's
-    // hold off on setting visible until after we have succeeded.
-    visible = true;
-    place_cursor_at_locked(lg, current_position, ForceState);
+    current_cursor_image = cursor_image;
+    set_scale(current_scale);
 }
 
 void mga::Cursor::move_to(geometry::Point position)
@@ -288,7 +273,7 @@ void mga::Cursor::suspend()
     clear(lg);
 }
 
-void mga::Cursor::clear(std::lock_guard<std::mutex> const&)
+void mga::Cursor::clear(std::lock_guard<mutex_type> const&)
 {
     last_set_failed = false;
     output_container.for_each_output([&](std::shared_ptr<KMSOutput> const& output)
@@ -336,7 +321,7 @@ void mga::Cursor::place_cursor_at(
 }
 
 void mga::Cursor::place_cursor_at_locked(
-    std::lock_guard<std::mutex> const& lg,
+    std::lock_guard<mutex_type> const& lg,
     geometry::Point position,
     ForceCursorState force_state)
 {
@@ -437,3 +422,34 @@ mga::Cursor::GBMBOWrapper& mga::Cursor::buffer_for_output(KMSOutput const& outpu
 
     return bo;
 }
+
+void mir::graphics::atomic::Cursor::set_scale(float new_scale)
+{
+    std::lock_guard lg(guard);
+
+    if(!argb8888.empty() && new_scale == current_scale)
+        return;
+
+    current_scale = new_scale;
+    size = current_cursor_image->size() * new_scale;
+    auto const scaled_cursor_buf = mg::scale_cursor_image(current_cursor_image, new_scale);
+    auto const buf_size_bytes = scaled_cursor_buf.size.width.as_value() * scaled_cursor_buf.size.height.as_value() * 4;
+
+    argb8888.resize(buf_size_bytes);
+    memcpy(argb8888.data(), scaled_cursor_buf.data.get(), buf_size_bytes);
+
+    hotspot = current_cursor_image->hotspot() * new_scale;
+    {
+        auto locked_buffers = buffers.lock();
+        for (auto& tuple : *locked_buffers)
+        {
+            pad_and_write_image_data_locked(lg, std::get<2>(tuple));
+        }
+    }
+
+    // Writing the data could throw an exception so let's
+    // hold off on setting visible until after we have succeeded.
+    visible = true;
+    place_cursor_at_locked(lg, current_position, ForceState);
+}
+
