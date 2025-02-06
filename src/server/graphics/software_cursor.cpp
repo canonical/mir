@@ -242,7 +242,7 @@ std::shared_ptr<mg::detail::CursorRenderable> mg::SoftwareCursor::create_scaled_
 
     auto const position = renderable ? renderable->screen_position().top_left : geom::Point{0, 0};
     renderable = std::make_shared<detail::CursorRenderable>(
-        std::move(buffer), position + hotspot - current_cursor_image->hotspot());
+        std::move(buffer), position + hotspot - current_cursor_image->hotspot() * new_scale);
 
     return renderable;
 }
