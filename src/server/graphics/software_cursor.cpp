@@ -152,6 +152,8 @@ void mg::SoftwareCursor::show(std::shared_ptr<CursorImage> const& cursor_image)
     this->current_cursor_image = cursor_image;
 
     set_scale(current_scale);
+
+    visible = true;
 }
 
 
@@ -211,7 +213,7 @@ void mir::graphics::SoftwareCursor::set_scale(float new_scale)
     std::lock_guard lg{guard};
 
     current_scale = new_scale;
-    auto const to_remove = renderable? renderable: nullptr;
+    auto const to_remove = visible? renderable: nullptr;
     renderable = create_scaled_renderable_for_current_cursor(new_scale);
     hotspot = current_cursor_image->hotspot() * new_scale;
 
