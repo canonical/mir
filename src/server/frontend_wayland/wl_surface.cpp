@@ -328,7 +328,6 @@ void mf::WlSurface::set_input_region(std::optional<wl_resource*> const& region)
 
 void mf::WlSurface::commit(WlSurfaceState const& state)
 {
-
     if (state.offset)
         offset_ = state.offset.value();
 
