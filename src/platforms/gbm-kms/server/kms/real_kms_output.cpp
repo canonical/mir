@@ -256,7 +256,7 @@ void mgg::RealKMSOutput::wait_for_page_flip()
     page_flipper->wait_for_flip(current_crtc->crtc_id);
 }
 
-bool mgg::RealKMSOutput::set_cursor(gbm_bo* buffer)
+bool mgg::RealKMSOutput::set_cursor_image(gbm_bo* buffer)
 {
     int result = 0;
     if (current_crtc)
@@ -308,7 +308,7 @@ bool mgg::RealKMSOutput::clear_cursor()
     return !result;
 }
 
-bool mgg::RealKMSOutput::has_cursor() const
+bool mgg::RealKMSOutput::has_cursor_image() const
 {
     return has_cursor_;
 }

@@ -418,7 +418,7 @@ TEST_F(RealKMSOutputTest, cursor_set_permission_failure_is_non_fatal)
     EXPECT_TRUE(output.set_crtc(*fb));
     struct gbm_bo *dummy = reinterpret_cast<struct gbm_bo*>(0x1234567);
     EXPECT_NO_THROW({
-        output.set_cursor(dummy);
+        output.set_cursor_image(dummy);
     });
 }
 
@@ -446,8 +446,8 @@ TEST_F(RealKMSOutputTest, has_no_cursor_if_no_hardware_support)
 
     EXPECT_TRUE(output.set_crtc(*fb));
     struct gbm_bo *dummy = reinterpret_cast<struct gbm_bo*>(0x1234567);
-    output.set_cursor(dummy);
-    EXPECT_FALSE(output.has_cursor());
+    output.set_cursor_image(dummy);
+    EXPECT_FALSE(output.has_cursor_image());
 }
 
 TEST_F(RealKMSOutputTest, clear_crtc_is_non_fatal_on_permission_error)

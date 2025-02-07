@@ -52,10 +52,10 @@ struct MockKMSOutput : public graphics::gbm::KMSOutput
 
     MOCK_CONST_METHOD0(last_frame, graphics::Frame());
 
-    MOCK_METHOD1(set_cursor, bool(gbm_bo*));
+    MOCK_METHOD1(set_cursor_image, bool(gbm_bo*));
     MOCK_METHOD1(move_cursor, void(geometry::Point));
     MOCK_METHOD0(clear_cursor, bool());
-    MOCK_CONST_METHOD0(has_cursor, bool());
+    MOCK_CONST_METHOD0(has_cursor_image, bool());
 
     MOCK_METHOD1(set_power_mode, void(MirPowerMode));
     MOCK_METHOD1(set_gamma, void(mir::graphics::GammaCurves const&));

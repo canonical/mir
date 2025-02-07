@@ -54,10 +54,10 @@ public:
     bool schedule_page_flip(FBHandle const& fb) override;
     void wait_for_page_flip() override;
 
-    bool set_cursor(gbm_bo* buffer) override;
+    bool set_cursor_image(gbm_bo* buffer) override;
     void move_cursor(geometry::Point destination) override;
     bool clear_cursor() override;
-    bool has_cursor() const override;
+    bool has_cursor_image() const override;
 
     void set_power_mode(MirPowerMode mode) override;
     void set_gamma(GammaCurves const& gamma) override;
