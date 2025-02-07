@@ -70,9 +70,6 @@ private:
     std::shared_ptr<detail::CursorRenderable> renderable;
     bool visible;
     geometry::Displacement hotspot;
-
-    float current_scale{1.0};
-    std::shared_ptr<graphics::CursorImage> current_cursor_image;
 };
 
 }
