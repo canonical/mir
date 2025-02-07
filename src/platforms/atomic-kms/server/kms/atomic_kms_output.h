@@ -54,10 +54,10 @@ public:
     void clear_crtc() override;
     bool page_flip(FBHandle const& fb) override;
 
-    void set_cursor(gbm_bo* buffer) override;
+    void set_cursor_image(gbm_bo* buffer) override;
     void move_cursor(geometry::Point destination) override;
     bool clear_cursor() override;
-    bool has_cursor() const override;
+    bool has_cursor_image() const override;
 
     void set_power_mode(MirPowerMode mode) override;
     void set_gamma(GammaCurves const& gamma) override;
@@ -93,6 +93,7 @@ private:
     mir::Synchronised<Configuration> configuration;
     drmModeCrtc saved_crtc;
     bool using_saved_crtc;
+    std::atomic<bool> cursor_image_set{false};
 };
 
 }
