@@ -79,7 +79,7 @@ public:
     geom::Rectangle screen_position() const override
     {
         std::lock_guard lock{position_mutex};
-        return {position, buffer_->size()};
+        return {position, buffer_->size() * scale};
     }
 
     geom::RectangleD src_bounds() const override
@@ -119,10 +119,16 @@ public:
         position = new_position;
     }
 
+    void set_scale(float new_scale)
+    {
+        scale = new_scale;
+    }
+
 private:
     std::shared_ptr<mg::Buffer> const buffer_;
     mutable std::mutex position_mutex;
     geom::Point position;
+    float scale;
 };
 
 mg::SoftwareCursor::SoftwareCursor(
@@ -156,7 +162,7 @@ void mg::SoftwareCursor::show(std::shared_ptr<CursorImage> const& cursor_image)
 
 
 std::shared_ptr<mg::detail::CursorRenderable>
-mg::SoftwareCursor::create_renderable_for(CursorImage const& cursor_image, geom::Point position)
+mg::SoftwareCursor::create_scaled_renderable_for(CursorImage const& cursor_image, geom::Point position)
 {
     if (cursor_image.size().width.as_uint32_t() == 0 || cursor_image.size().height.as_uint32_t() == 0)
         BOOST_THROW_EXCEPTION(std::logic_error("zero sized software cursor image is invalid"));
@@ -171,7 +177,9 @@ mg::SoftwareCursor::create_renderable_for(CursorImage const& cursor_image, geom:
 
     auto new_renderable = std::make_shared<detail::CursorRenderable>(
         std::move(buffer),
-        position + hotspot - cursor_image.hotspot());
+        position + hotspot - cursor_image.hotspot() * current_scale);
+
+    new_renderable->set_scale(current_scale);
 
     return new_renderable;
 }
@@ -212,32 +220,20 @@ void mir::graphics::SoftwareCursor::set_scale(float new_scale)
     set_scale_unlocked(new_scale);
 }
 
-std::shared_ptr<mg::detail::CursorRenderable> mg::SoftwareCursor::create_scaled_renderable_for_current_cursor(float new_scale)
-{
-    auto scaled_image_buffer = scale_cursor_image(current_cursor_image, new_scale);
-    auto buffer = mrs::alloc_buffer_with_content(
-        *allocator,
-        reinterpret_cast<unsigned char const*>(scaled_image_buffer.data.get()),
-        scaled_image_buffer.size,
-        geom::Stride{scaled_image_buffer.size.width.as_value() * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888)},
-        mir_pixel_format_argb_8888);
-
-    auto const position = renderable ? renderable->screen_position().top_left : geom::Point{0, 0};
-    renderable = std::make_shared<detail::CursorRenderable>(
-        std::move(buffer), position + hotspot - current_cursor_image->hotspot() * new_scale);
-
-    return renderable;
-}
-
 void mir::graphics::SoftwareCursor::set_scale_unlocked(float new_scale)
 {
-    current_scale = new_scale;
     auto const to_remove = visible ? renderable : nullptr;
-    renderable = create_scaled_renderable_for_current_cursor(new_scale);
-    hotspot = current_cursor_image->hotspot() * new_scale;
 
-    scene_executor->spawn(
-        [scene = scene, to_remove = to_remove, to_add = renderable]()
+    geom::Point position{0,0};
+    if (renderable)
+        position = renderable->screen_position().top_left;
+
+    current_scale = new_scale;
+    hotspot = current_cursor_image->hotspot() * new_scale;
+    renderable = create_scaled_renderable_for(*current_cursor_image, position);
+    visible = true;
+
+    scene_executor->spawn([scene = scene, to_remove = to_remove, to_add = renderable]()
         {
             // Add the new renderable first, then remove the old one to avoid visual glitches
             scene->add_input_visualization(to_add);
