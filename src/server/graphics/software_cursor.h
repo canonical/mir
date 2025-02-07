@@ -58,6 +58,8 @@ private:
 
     std::shared_ptr<detail::CursorRenderable> create_scaled_renderable_for_current_cursor(float new_scale);
 
+    void set_scale_unlocked(float new_scale);
+
     std::shared_ptr<GraphicBufferAllocator> const allocator;
     std::shared_ptr<input::Scene> const scene;
     MirPixelFormat const format;
@@ -66,7 +68,7 @@ private:
     /// We don't want to call into the scene under lock, so we make these calls on with an executor
     std::shared_ptr<Executor> const scene_executor;
 
-    std::recursive_mutex guard;
+    std::mutex guard;
     std::shared_ptr<detail::CursorRenderable> renderable;
     bool visible;
     geometry::Displacement hotspot;

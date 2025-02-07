@@ -157,7 +157,7 @@ mgg::Cursor::~Cursor() noexcept
 }
 
 void mgg::Cursor::write_buffer_data_locked(
-    std::lock_guard<mutex_type> const&,
+    std::lock_guard<std::mutex> const&,
     gbm_bo* buffer,
     void const* data,
     size_t count)
@@ -171,7 +171,7 @@ void mgg::Cursor::write_buffer_data_locked(
 }
 
 void mgg::Cursor::pad_and_write_image_data_locked(
-    std::lock_guard<mutex_type> const& lg,
+    std::lock_guard<std::mutex> const& lg,
     GBMBOWrapper& buffer)
 {
     auto const orientation = buffer.orientation();
@@ -261,7 +261,7 @@ void mgg::Cursor::show(std::shared_ptr<CursorImage> const& cursor_image)
 
     this->current_cursor_image = cursor_image;
 
-    set_scale(current_scale);
+    set_scale_unlocked(lg, current_scale);
 }
 
 void mgg::Cursor::move_to(geometry::Point position)
@@ -275,7 +275,7 @@ void mir::graphics::gbm::Cursor::suspend()
     clear(lg);
 }
 
-void mir::graphics::gbm::Cursor::clear(std::lock_guard<mutex_type> const&)
+void mir::graphics::gbm::Cursor::clear(std::lock_guard<std::mutex> const&)
 {
     last_set_failed = false;
     output_container.for_each_output([&](std::shared_ptr<KMSOutput> const& output)
@@ -323,7 +323,7 @@ void mgg::Cursor::place_cursor_at(
 }
 
 void mgg::Cursor::place_cursor_at_locked(
-    std::lock_guard<mutex_type> const& lg,
+    std::lock_guard<std::mutex> const& lg,
     geometry::Point position,
     ForceCursorState force_state)
 {
@@ -427,7 +427,11 @@ mgg::Cursor::GBMBOWrapper& mgg::Cursor::buffer_for_output(KMSOutput const& outpu
 void mir::graphics::gbm::Cursor::set_scale(float new_scale)
 {
     std::lock_guard lg(guard);
+    set_scale_unlocked(lg, new_scale);
+}
 
+void mir::graphics::gbm::Cursor::set_scale_unlocked(std::lock_guard<std::mutex> const& lg, float new_scale)
+{
     current_scale = new_scale;
     size = current_cursor_image->size() * new_scale;
     auto const scaled_cursor_buf = mg::scale_cursor_image(current_cursor_image, new_scale);
