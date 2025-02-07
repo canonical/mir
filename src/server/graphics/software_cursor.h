@@ -53,10 +53,8 @@ public:
     void set_scale(float) override;
 
 private:
-    std::shared_ptr<detail::CursorRenderable> create_renderable_for(
+    std::shared_ptr<detail::CursorRenderable> create_scaled_renderable_for(
         CursorImage const& cursor_image, geometry::Point position);
-
-    std::shared_ptr<detail::CursorRenderable> create_scaled_renderable_for_current_cursor(float new_scale);
 
     void set_scale_unlocked(float new_scale);
 
