@@ -89,7 +89,7 @@ void mpw::Cursor::show(std::shared_ptr<graphics::CursorImage> const& cursor_imag
     {
         std::lock_guard lock{mutex};
         current_cursor_image = cursor_image;
-        set_scale(current_scale);
+        set_scale_unlocked(current_scale);
     }
     flush_wl();
 }
@@ -114,27 +114,32 @@ void mir::platform::wayland::Cursor::set_scale(float new_scale)
 {
     {
         std::lock_guard lock{mutex};
-
-        current_scale = new_scale;
-
-        if (buffer) wl_buffer_destroy(buffer);
-
-        auto const scaled_cursor_buf = mir::graphics::scale_cursor_image(current_cursor_image, new_scale);
-
-        auto const width = scaled_cursor_buf.size.width.as_uint32_t();
-        auto const height = scaled_cursor_buf.size.height.as_uint32_t();
-        auto const hotspot_x = current_cursor_image->hotspot().dx.as_uint32_t() * new_scale;
-        auto const hotspot_y = current_cursor_image->hotspot().dy.as_uint32_t() * new_scale;
-        void* data_buffer;
-        auto const shm_pool = make_shm_pool(shm, 4 * width * height, &data_buffer);
-        memcpy(data_buffer, scaled_cursor_buf.data.get(), 4 * width * height);
-        buffer = wl_shm_pool_create_buffer(shm_pool, 0, width, height, 4 * width, WL_SHM_FORMAT_ARGB8888);
-        wl_surface_attach(surface, buffer, 0, 0);
-        wl_surface_commit(surface);
-        wl_shm_pool_destroy(shm_pool);
-        if (pointer) wl_pointer_set_cursor(pointer, 0, surface, hotspot_x, hotspot_y);
+        set_scale_unlocked(new_scale);
     }
 
     flush_wl();
 }
 
+void mir::platform::wayland::Cursor::set_scale_unlocked(float new_scale)
+{
+    current_scale = new_scale;
+
+    if (buffer)
+        wl_buffer_destroy(buffer);
+
+    auto const scaled_cursor_buf = mir::graphics::scale_cursor_image(current_cursor_image, new_scale);
+
+    auto const width = scaled_cursor_buf.size.width.as_uint32_t();
+    auto const height = scaled_cursor_buf.size.height.as_uint32_t();
+    auto const hotspot_x = current_cursor_image->hotspot().dx.as_uint32_t() * new_scale;
+    auto const hotspot_y = current_cursor_image->hotspot().dy.as_uint32_t() * new_scale;
+    void* data_buffer;
+    auto const shm_pool = make_shm_pool(shm, 4 * width * height, &data_buffer);
+    memcpy(data_buffer, scaled_cursor_buf.data.get(), 4 * width * height);
+    buffer = wl_shm_pool_create_buffer(shm_pool, 0, width, height, 4 * width, WL_SHM_FORMAT_ARGB8888);
+    wl_surface_attach(surface, buffer, 0, 0);
+    wl_surface_commit(surface);
+    wl_shm_pool_destroy(shm_pool);
+    if (pointer)
+        wl_pointer_set_cursor(pointer, 0, surface, hotspot_x, hotspot_y);
+}
