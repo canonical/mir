@@ -183,13 +183,16 @@ private:
     geometry::Displacement offset_;
     float scale{1};
     std::optional<geometry::Size> buffer_size_;
-    std::vector<wayland::Weak<WlSurfaceState::Callback>> frame_callbacks;
+
+    using CallbackList = std::vector<wayland::Weak<WlSurfaceState::Callback>>;
+    CallbackList frame_callbacks;
+    CallbackList heartbeat_quirk_frame_callbacks;
     std::optional<std::vector<mir::geometry::Rectangle>> input_shape;
     std::vector<SceneSurfaceCreatedCallback> scene_surface_created_callbacks;
     wayland::Weak<Viewport> viewport;
     wayland::Weak<FractionalScaleV1> fractional_scale;
 
-    void send_frame_callbacks();
+    void send_frame_callbacks(CallbackList& list);
 
     void attach(std::optional<wl_resource*> const& buffer, int32_t x, int32_t y) override;
     void damage(int32_t x, int32_t y, int32_t width, int32_t height) override;

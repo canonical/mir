@@ -256,9 +256,9 @@ mf::WlSurface* mf::WlSurface::from(wl_resource* resource)
     return static_cast<WlSurface*>(static_cast<wayland::Surface*>(raw_surface));
 }
 
-void mf::WlSurface::send_frame_callbacks()
+void mf::WlSurface::send_frame_callbacks(CallbackList& list)
 {
-    for (auto const& frame : frame_callbacks)
+    for (auto const& frame : list)
     {
         if (frame)
         {
@@ -268,7 +268,7 @@ void mf::WlSurface::send_frame_callbacks()
             frame.value().destroy_and_delete();
         }
     }
-    frame_callbacks.clear();
+    list.clear();
 }
 
 void mf::WlSurface::attach(std::optional<wl_resource*> const& buffer, int32_t x, int32_t y)
@@ -328,11 +328,6 @@ void mf::WlSurface::set_input_region(std::optional<wl_resource*> const& region)
 
 void mf::WlSurface::commit(WlSurfaceState const& state)
 {
-    // We're going to lose the value of state, so copy the frame_callbacks first. We have to maintain a list of
-    // callbacks in wl_surface because if a client commits multiple times before the first buffer is handled, all the
-    // callbacks should be sent at once.
-    frame_callbacks.insert(end(frame_callbacks), begin(state.frame_callbacks), end(state.frame_callbacks));
-
     if (state.offset)
         offset_ = state.offset.value();
 
@@ -354,26 +349,21 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                                                                      // ...then we'll need to submit a new frame, even if the client hasn't
                                                                      // attached a new buffer.
 
-    auto const executor_send_frame_callbacks = [executor = wayland_executor, weak_self = mw::make_weak(this)]()
-        {
-            executor->spawn([weak_self]()
-                {
-                    if (weak_self)
-                    {
-                        weak_self.value().send_frame_callbacks();
-                    }
-                });
-        };
 
     if (state.buffer)
     {
+        // We're going to lose the value of state, so copy the frame_callbacks first. We have to maintain a list of
+        // callbacks in wl_surface because if a client commits multiple times before the first buffer is handled, all the
+        // callbacks should be sent at once.
+        frame_callbacks.insert(end(frame_callbacks), begin(state.frame_callbacks), end(state.frame_callbacks));
+
         mw::Weak<ResourceLifetimeTracker> const& weak_buffer = state.buffer.value();
 
         if (!weak_buffer)
         {
             // TODO: unmap surface, and unmap all subsurfaces
             buffer_size_ = std::nullopt;
-            send_frame_callbacks();
+            send_frame_callbacks(frame_callbacks);
         }
         else
         {
@@ -384,6 +374,17 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                             if (weak_buffer)
                             {
                                 wl_resource_post_event(weak_buffer.value(), wayland::Buffer::Opcode::release);
+                            }
+                        });
+                };
+            auto executor_send_frame_callbacks = [executor = wayland_executor, weak_self = mw::make_weak(this)]()
+                {
+                    executor->spawn([weak_self]()
+                        {
+                            if (weak_self)
+                            {
+                                auto& self = weak_self.value();
+                                self.send_frame_callbacks(self.frame_callbacks);
                             }
                         });
                 };
@@ -418,7 +419,52 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
     }
     else
     {
-        frame_callback_executor->spawn(std::move(executor_send_frame_callbacks));
+        /*
+         * Frame request committed with no associated buffer.
+         * The Wayland protocol says that
+         *
+         * > When a client is animating on a wl_surface, it can use the 'frame'
+         * > request to get notified when it is a good time to draw and commit
+         * > the next frame of animation.
+         *
+         * If there's no *current* frame, then “now” is a good time to draw and
+         * commit the next frame.
+         *
+         * Unfortunately, Firefox uses frame events as a heartbeat of sorts
+         * (see issue #1967), so we can't send these callbacks immediately,
+         * nor can we wait until Firefox sends us a frame to trigger them.
+         *
+         * A 60Hz (ish) timer for these was implemented in PR #2006, but this
+         * triggered sending *all* current frame events when the 16ms timer elapsed,
+         * resulting us sending frame events at suboptimal times and (eventually) breaking
+         * WLCS tests which rely on the frame events for synchronisation.
+         *
+         * Rather than sending *all* frame events that have become pending after
+         * 16ms, capture the current set of requested frame events. Then, after
+         * the delay, send all these quirk frame callbacks.
+         */
+        if (!state.frame_callbacks.empty())
+        {
+            heartbeat_quirk_frame_callbacks.insert(
+                end(heartbeat_quirk_frame_callbacks),
+                begin(state.frame_callbacks),
+                end(state.frame_callbacks));
+
+            frame_callback_executor->spawn(
+                [executor = wayland_executor, weak_self = mw::make_weak(this)]
+                {
+                    executor->spawn(
+                        [weak_self]()
+                        {
+                            if (weak_self)
+                            {
+                                auto& self = weak_self.value();
+                                self.send_frame_callbacks(self.heartbeat_quirk_frame_callbacks);
+                            }
+                        });
+                }
+            );
+        }
     }
 
     if (needs_buffer_submission && current_buffer)
