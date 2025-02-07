@@ -270,7 +270,7 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
         drm_device,
         connector1_id,
         DRM_MODE_CONNECTOR_Unknown,
-        DRM_MODE_DISCONNECTED,
+        DRM_MODE_CONNECTED,
         invalid_id,
         modes_empty,
         possible_encoder_ids_empty,
@@ -279,7 +279,7 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
         drm_device,
         connector2_id,
         DRM_MODE_CONNECTOR_eDP,
-        DRM_MODE_DISCONNECTED,
+        DRM_MODE_CONNECTED,
         encoder1_id,
         modes_empty,
         possible_encoder_ids_empty,
@@ -362,6 +362,108 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             {}
         }
     };
+
+    /* Test body */
+    auto display = create_display(create_platform());
+
+    auto conf = display->configuration();
+
+    EXPECT_THAT(conf, DisplayConfigsAreEquivalent(expected_outputs));
+}
+
+TEST_F(MesaDisplayConfigurationTest, disconnected_connector_is_ignored)
+{
+    using namespace ::testing;
+
+    /* Set up DRM resources */
+    uint32_t const invalid_id{0};
+    uint32_t const crtc0_id{10};
+    uint32_t const encoder0_id{20};
+    uint32_t const encoder1_id{21};
+    uint32_t const connector0_id{30};
+    uint32_t const connector1_id{31};
+    uint32_t const connector2_id{32};
+    geom::Size const connector0_physical_size_mm{480, 270};
+    geom::Size const connector1_physical_size_mm{};
+    geom::Size const connector2_physical_size_mm{};
+    std::vector<uint32_t> possible_encoder_ids_empty;
+    uint32_t const possible_crtcs_mask_empty{0};
+
+    mock_drm.reset(drm_device);
+
+    mock_drm.add_crtc(
+        drm_device,
+        crtc0_id,
+        modes0[1]);
+
+    mock_drm.add_encoder(
+        drm_device,
+        encoder0_id,
+        crtc0_id,
+        possible_crtcs_mask_empty);
+    mock_drm.add_encoder(
+        drm_device,
+        encoder1_id,
+        invalid_id,
+        possible_crtcs_mask_empty);
+
+    mock_drm.add_connector(
+        drm_device,
+        connector0_id,
+        DRM_MODE_CONNECTOR_HDMIA,
+        DRM_MODE_CONNECTED,
+        encoder0_id,
+        modes0,
+        possible_encoder_ids_empty,
+        connector0_physical_size_mm);
+    mock_drm.add_connector(
+        drm_device,
+        connector1_id,
+        DRM_MODE_CONNECTOR_Unknown,
+        DRM_MODE_DISCONNECTED,
+        invalid_id,
+        modes_empty,
+        possible_encoder_ids_empty,
+        connector1_physical_size_mm);
+    mock_drm.add_connector(
+        drm_device,
+        connector2_id,
+        DRM_MODE_CONNECTOR_eDP,
+        DRM_MODE_DISCONNECTED,
+        encoder1_id,
+        modes_empty,
+        possible_encoder_ids_empty,
+        connector2_physical_size_mm);
+
+    mock_drm.prepare(drm_device);
+
+    std::vector<mg::DisplayConfigurationOutput> const expected_outputs =
+        {
+            {
+                mg::DisplayConfigurationOutputId{0},
+                mg::DisplayConfigurationCardId{0},
+                mg::DisplayConfigurationLogicalGroupId{0},
+                mg::DisplayConfigurationOutputType::hdmia,
+                {},
+                conf_modes0,
+                1,
+                connector0_physical_size_mm,
+                true,
+                true,
+                geom::Point(),
+                1,
+                mir_pixel_format_invalid,
+                mir_power_mode_on,
+                mir_orientation_normal,
+                1.0f,
+                mir_form_factor_monitor,
+                mir_subpixel_arrangement_unknown,
+                {},
+                mir_output_gamma_unsupported,
+                {},
+                {}
+            }
+        };
 
     /* Test body */
     auto display = create_display(create_platform());
@@ -718,7 +820,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
         drm_device,
         connector_ids[1],
         DRM_MODE_CONNECTOR_VGA,
-        DRM_MODE_DISCONNECTED,
+        DRM_MODE_CONNECTED,
         invalid_id,
         modes_empty,
         possible_encoder_ids_empty,
@@ -755,7 +857,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
         drm_device,
         connector_ids[0],
         DRM_MODE_CONNECTOR_Composite,
-        DRM_MODE_DISCONNECTED,
+        DRM_MODE_CONNECTED,
         invalid_id,
         modes_empty,
         possible_encoder_ids_empty,

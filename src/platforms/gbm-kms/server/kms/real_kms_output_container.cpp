@@ -18,6 +18,7 @@
 #include "real_kms_output_container.h"
 #include "real_kms_output.h"
 #include "kms-utils/drm_mode_resources.h"
+#include <mir/log.h>
 
 namespace mgg = mir::graphics::gbm;
 
@@ -54,6 +55,12 @@ void mgg::RealKMSOutputContainer::update_from_hardware_state()
                     connector->connector_id == candidate->id() &&
                     drm_fd == candidate->drm_fd();
             });
+
+        if (connector->connection != DRM_MODE_CONNECTED)
+        {
+            mir::log_info("Connector is not connected, so not adding this output to the list.");
+            continue;
+        }
 
         if (existing_output != outputs.end())
         {
