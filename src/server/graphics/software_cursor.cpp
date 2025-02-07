@@ -149,7 +149,7 @@ void mg::SoftwareCursor::show(std::shared_ptr<CursorImage> const& cursor_image)
     // Store the cursor image for later use with `set_scale`
     this->current_cursor_image = cursor_image;
 
-    set_scale(current_scale);
+    set_scale_unlocked(current_scale);
 
     visible = true;
 }
@@ -209,23 +209,7 @@ void mg::SoftwareCursor::move_to(geometry::Point position)
 void mir::graphics::SoftwareCursor::set_scale(float new_scale)
 {
     std::lock_guard lg{guard};
-
-    current_scale = new_scale;
-    auto const to_remove = visible? renderable: nullptr;
-    renderable = create_scaled_renderable_for_current_cursor(new_scale);
-    hotspot = current_cursor_image->hotspot() * new_scale;
-
-    scene_executor->spawn(
-        [scene = scene, to_remove = to_remove, to_add = renderable]()
-        {
-            // Add the new renderable first, then remove the old one to avoid visual glitches
-            scene->add_input_visualization(to_add);
-
-            if (to_remove)
-            {
-                scene->remove_input_visualization(to_remove);
-            }
-        });
+    set_scale_unlocked(new_scale);
 }
 
 std::shared_ptr<mg::detail::CursorRenderable> mg::SoftwareCursor::create_scaled_renderable_for_current_cursor(float new_scale)
@@ -244,3 +228,24 @@ std::shared_ptr<mg::detail::CursorRenderable> mg::SoftwareCursor::create_scaled_
 
     return renderable;
 }
+
+void mir::graphics::SoftwareCursor::set_scale_unlocked(float new_scale)
+{
+    current_scale = new_scale;
+    auto const to_remove = visible ? renderable : nullptr;
+    renderable = create_scaled_renderable_for_current_cursor(new_scale);
+    hotspot = current_cursor_image->hotspot() * new_scale;
+
+    scene_executor->spawn(
+        [scene = scene, to_remove = to_remove, to_add = renderable]()
+        {
+            // Add the new renderable first, then remove the old one to avoid visual glitches
+            scene->add_input_visualization(to_add);
+
+            if (to_remove)
+            {
+                scene->remove_input_visualization(to_remove);
+            }
+        });
+}
+
