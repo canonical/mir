@@ -72,10 +72,10 @@ public:
     virtual bool schedule_page_flip(FBHandle const& fb) = 0;
     virtual void wait_for_page_flip() = 0;
 
-    virtual bool set_cursor(gbm_bo* buffer) = 0;
+    virtual bool set_cursor_image(gbm_bo* buffer) = 0;
     virtual void move_cursor(geometry::Point destination) = 0;
     virtual bool clear_cursor() = 0;
-    virtual bool has_cursor() const = 0;
+    virtual bool has_cursor_image() const = 0;
 
     virtual void set_power_mode(MirPowerMode mode) = 0;
     virtual void set_gamma(GammaCurves const& gamma) = 0;

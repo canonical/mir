@@ -391,15 +391,15 @@ void mgg::Cursor::place_cursor_at_locked(
             if (changed_orientation)
                 pad_and_write_image_data_locked(lg, buffer);
 
-            if (force_state || !output.has_cursor() || changed_orientation)
+            if (force_state || !output.has_cursor_image() || changed_orientation)
             {
-                if (!output.set_cursor(buffer) || !output.has_cursor())
+                if (!output.set_cursor_image(buffer) || !output.has_cursor_image())
                     set_on_all_outputs = false;
             }
         }
         else
         {
-            if (force_state || output.has_cursor())
+            if (force_state || output.has_cursor_image())
             {
                 output.clear_cursor();
             }
