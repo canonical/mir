@@ -419,7 +419,6 @@ mir::DefaultServerConfiguration::the_cursor()
             }
 
             primary_cursor->show(the_default_cursor_image());
-            the_accessibility_manager()->set_cursor(primary_cursor);
             return wrap_cursor(primary_cursor);
         });
 }
