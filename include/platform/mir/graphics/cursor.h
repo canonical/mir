@@ -42,6 +42,9 @@ protected:
     virtual ~Cursor() = default;
     Cursor(Cursor const&) = delete;
     Cursor& operator=(Cursor const&) = delete;
+
+    std::shared_ptr<CursorImage> current_cursor_image;
+    float current_scale{1.0};
 };
 }
 }
