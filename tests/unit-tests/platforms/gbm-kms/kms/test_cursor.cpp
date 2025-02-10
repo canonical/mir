@@ -322,7 +322,7 @@ struct MesaCursorTest : ::testing::Test
     }
 
     testing::NiceMock<mtd::MockDRM> mock_drm;
-    std::shared_ptr<StubCursorImage> stub_image = std::make_shared<StubCursorImage>();
+    std::shared_ptr<StubCursorImage> const stub_image = std::make_shared<StubCursorImage>();
     StubKMSOutputContainer output_container;
     StubCurrentConfiguration current_configuration{output_container};
     mgg::Cursor cursor;
