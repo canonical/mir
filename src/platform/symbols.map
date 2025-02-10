@@ -1,4 +1,4 @@
-MIR_PLATFORM_2.19 {
+MIR_PLATFORM_2.20 {
  global:
   extern "C++" {
     mir::graphics::AtomicFrame::increment*;
