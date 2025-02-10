@@ -23,11 +23,12 @@
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
-#include <memory>
-#include <optional>
-
 void mir::shell::AccessibilityManager::register_keyboard_helper(std::shared_ptr<KeyboardHelper> const& helper)
 {
+    // Update the keyboard help's rate and delay in case they changed before it
+    // registered
+    helper->repeat_info_changed(repeat_rate(), repeat_delay());
+
     keyboard_helpers.push_back(helper);
 }
 

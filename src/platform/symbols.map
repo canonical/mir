@@ -129,6 +129,8 @@ MIR_PLATFORM_2.20 {
     mir::options::idle_timeout_opt;
     mir::options::idle_timeout_when_locked_opt;
     mir::options::input_report_opt*;
+    mir::options::key_repeat_rate_opt*;
+    mir::options::key_repeat_delay_opt*;
     mir::options::log_opt_value*;
     mir::options::logind_console;
     mir::options::lttng_opt_value*;
