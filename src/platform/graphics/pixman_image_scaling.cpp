@@ -18,7 +18,10 @@
 
 #include "mir/graphics/cursor_image.h"
 #include "mir_toolkit/common.h"
+
 #include "pixman-1/pixman.h"
+
+#include <cmath>
 #include <cstring>
 
 mir::graphics::PixBuffer mir::graphics::scale_cursor_image(
@@ -53,8 +56,13 @@ mir::graphics::PixBuffer mir::graphics::scale_cursor_image(
     pixman_image_set_transform(original_image.get(), &transform);
     pixman_image_set_filter(original_image.get(), PIXMAN_FILTER_BILINEAR, NULL, 0);
 
-    auto const scaled_width = width.as_value() * new_scale;
-    auto const scaled_height = height.as_value() * new_scale;
+    // Round the width and height up/down to the nearest integer. If the width
+    // stays as a float, the stride might be computed as not a value of 4
+    // depending on the scale. Causing the assert linked below to blow up.
+    // https://gitlab.freedesktop.org/pixman/pixman/-/blob/master/pixman/pixman-bits-image.c#L1339
+    int const scaled_width = std::round(width.as_value() * new_scale);
+    int const scaled_height = std::round(height.as_value() * new_scale);
+
     auto buf = std::make_unique<uint32_t[]>(scaled_width * scaled_height);
     auto scaled_image = UniquePixmanImage(
         pixman_image_create_bits(
