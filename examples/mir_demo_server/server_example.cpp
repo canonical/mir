@@ -207,7 +207,7 @@ private:
                     return int_val;
                 };
 
-                auto const parse_and_validate_float = [](std::string const& key, std::string_view val) -> std::optional<int>
+                auto const parse_and_validate_float = [](std::string const& key, std::string_view val) -> std::optional<float>
                 {
                     auto const float_val = std::atof(val.data());
                     if (float_val < 0)
