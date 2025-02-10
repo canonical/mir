@@ -142,8 +142,8 @@ private:
     miral::InputConfiguration::Mouse mouse = input_configuration.mouse();
     miral::InputConfiguration::Touchpad touchpad = input_configuration.touchpad();
     miral::InputConfiguration::Keyboard keyboard = input_configuration.keyboard();
-    miral::ConfigFile config_file;
     std::mutex config_mutex;
+    miral::ConfigFile config_file;
 
     void apply_config()
     {
