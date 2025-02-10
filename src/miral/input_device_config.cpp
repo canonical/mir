@@ -83,6 +83,9 @@ char const* const touchpad_click_mode_area = "area";
 char const* const touchpad_click_mode_clickfinger = "clickfinger";
 char const* const touchpad_middle_mouse_button_emulation_opt= "touchpad-middle-mouse-button-emulation";
 
+char const* const keyboard_repeat_rate_opt = "keyboard-repeat-rate";
+char const* const keyboard_repeat_delay_opt = "keyboard-repeat-delay";
+
 
 template<double lo, double hi>
 auto clamp(std::optional<double> opt_val)-> std::optional<double>
@@ -264,6 +267,13 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
                                     "Converts a simultaneous left and right button click into a middle button",
                                     mir::OptionType::boolean);
 
+    server.add_configuration_option(keyboard_repeat_rate_opt,
+                                    "The repeat rate for key presses",
+                                    mir::OptionType::integer);
+    server.add_configuration_option(keyboard_repeat_delay_opt,
+                                    "The repeat delay for key presses",
+                                    mir::OptionType::integer);
+
     server.add_init_callback([&]()
         {
             auto const input_config = InputDeviceConfig::the_input_configuration(server.get_options());
@@ -291,6 +301,10 @@ miral::InputDeviceConfig::InputDeviceConfig(std::shared_ptr<mir::options::Option
         convert_to_scroll_mode(get_optional<std::string>(options, touchpad_scroll_mode_opt)),
         get_optional<bool>(options, touchpad_tap_to_click_opt),
         get_optional<bool>(options, touchpad_middle_mouse_button_emulation_opt)
+    },
+    keyboard_config{
+        get_optional<int>(options, keyboard_repeat_rate_opt),
+        get_optional<int>(options, keyboard_repeat_delay_opt)
     }
 {
 }
