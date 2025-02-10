@@ -53,8 +53,18 @@ mir::graphics::PixBuffer mir::graphics::scale_cursor_image(
     pixman_image_set_transform(original_image.get(), &transform);
     pixman_image_set_filter(original_image.get(), PIXMAN_FILTER_BILINEAR, NULL, 0);
 
-    auto const scaled_width = width.as_value() * new_scale;
-    auto const scaled_height = height.as_value() * new_scale;
+    auto const to_closest_multiple_of = [](float in_value, int multiple)
+    {
+        return static_cast<int>(in_value / multiple) * multiple;
+    };
+
+    // Round everything to the closest multiple of four since pixman expects
+    // the stride to be a multiple of 4. Should also work with any number of
+    // bytes per pixel even.
+    // https://gitlab.freedesktop.org/pixman/pixman/-/blob/master/pixman/pixman-bits-image.c#L1339
+    auto const scaled_width = to_closest_multiple_of(width.as_value() * new_scale, 4);
+    auto const scaled_height = to_closest_multiple_of(height.as_value() * new_scale, 4);
+
     auto buf = std::make_unique<uint32_t[]>(scaled_width * scaled_height);
     auto scaled_image = UniquePixmanImage(
         pixman_image_create_bits(
