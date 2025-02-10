@@ -42,6 +42,8 @@ extern char const* const fatal_except_opt;
 extern char const* const debug_opt;
 extern char const* const composite_delay_opt;
 extern char const* const enable_key_repeat_opt;
+extern char const* const key_repeat_rate_opt;
+extern char const* const key_repeat_delay_opt;
 extern char const* const x11_display_opt;
 extern char const* const x11_scale_opt;
 extern char const* const wayland_extensions_opt;

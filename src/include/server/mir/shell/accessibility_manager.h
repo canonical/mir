@@ -27,13 +27,18 @@ namespace graphics
 {
 class Cursor;
 }
+namespace options
+{
+class Option;
+}
 namespace shell
 {
 class KeyboardHelper;
 class AccessibilityManager
 {
 public:
-    AccessibilityManager(std::shared_ptr<mir::graphics::Cursor> const& cursor);
+    AccessibilityManager(
+        std::shared_ptr<mir::graphics::Cursor> const& cursor, std::shared_ptr<mir::options::Option> const& options);
 
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&);
 
@@ -51,9 +56,8 @@ public:
 private:
     std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
 
-    // 25 rate and 600 delay are the default in Weston and Sway
-    int repeat_rate_{25};
-    int repeat_delay_{600};
+    int repeat_rate_;
+    int repeat_delay_;
     bool enable_key_repeat{true};
 
     std::shared_ptr<graphics::Cursor> cursor;

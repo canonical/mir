@@ -16,17 +16,25 @@
 
 #include "mir/shell/accessibility_manager.h"
 #include "mir/graphics/cursor.h"
+#include "mir/options/configuration.h"
 #include "mir/shell/keyboard_helper.h"
 
 #include <optional>
 
-mir::shell::AccessibilityManager::AccessibilityManager(std::shared_ptr<mir::graphics::Cursor> const& cursor) :
+mir::shell::AccessibilityManager::AccessibilityManager(
+    std::shared_ptr<mir::graphics::Cursor> const& cursor, std::shared_ptr<mir::options::Option> const& options) :
+    repeat_rate_{options->get<int>(mir::options::key_repeat_rate_opt)},
+    repeat_delay_{options->get<int>(mir::options::key_repeat_delay_opt)},
     cursor{cursor}
 {
 }
 
 void mir::shell::AccessibilityManager::register_keyboard_helper(std::shared_ptr<KeyboardHelper> const& helper)
 {
+    // Update the keyboard help's rate and delay in case they changed before it
+    // registered
+    helper->repeat_info_changed(repeat_rate(), repeat_delay());
+
     keyboard_helpers.push_back(helper);
 }
 

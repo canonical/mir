@@ -291,7 +291,8 @@ miral::InputDeviceConfig::InputDeviceConfig(std::shared_ptr<mir::options::Option
         convert_to_scroll_mode(get_optional<std::string>(options, touchpad_scroll_mode_opt)),
         get_optional<bool>(options, touchpad_tap_to_click_opt),
         get_optional<bool>(options, touchpad_middle_mouse_button_emulation_opt)
-    }
+    },
+    keyboard_config{}
 {
 }
 
