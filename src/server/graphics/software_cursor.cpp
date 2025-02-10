@@ -231,8 +231,10 @@ void mir::graphics::SoftwareCursor::set_scale_unlocked(float new_scale)
         position = renderable->screen_position().top_left;
 
     current_scale = new_scale;
-    hotspot = current_cursor_image->hotspot() * new_scale;
+
     renderable = create_scaled_renderable_for(*current_cursor_image, position);
+
+    hotspot = current_cursor_image->hotspot() * new_scale;
     visible = true;
 
     scene_executor->spawn([scene = scene, to_remove = to_remove, to_add = renderable]()
