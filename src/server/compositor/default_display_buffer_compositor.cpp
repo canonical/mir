@@ -25,6 +25,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/renderer/renderer.h"
+#include "mir/log.h"
 #include "occlusion.h"
 
 namespace mc = mir::compositor;
@@ -118,7 +119,16 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
         renderer->set_output_transform(display_sink.transformation());
         renderer->set_viewport(view_area);
 
-        display_sink.set_next_image(renderer->render(renderable_list));
+        try
+        {
+            display_sink.set_next_image(renderer->render(renderable_list));
+        }
+        catch (std::exception const& e)
+        {
+            // An exception may be thrown by the underlying platform during render.
+            // While bad, we do not want this to crash the compositor entirely.
+            log(logging::Severity::error, MIR_LOG_COMPONENT, std::current_exception(), "Encountered exception while rendering");
+        }
 
         report->renderables_in_frame(this, renderable_list);
         report->rendered_frame(this);
