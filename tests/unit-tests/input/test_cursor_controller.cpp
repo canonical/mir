@@ -76,7 +76,7 @@ struct ZeroSizedCursorImage : public mg::CursorImage
 
 bool cursor_is_named(std::shared_ptr<mg::CursorImage> const& i, std::string const& name)
 {
-    auto image = std::dynamic_pointer_cast<NamedCursorImage const>(i);
+    auto const image = std::dynamic_pointer_cast<NamedCursorImage const>(i);
     assert(image);
 
     return image->cursor_name == name;

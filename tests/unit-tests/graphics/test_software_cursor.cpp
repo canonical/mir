@@ -425,7 +425,7 @@ TEST_F(SoftwareCursor, handles_argb_8888_cursor_surface)
     ON_CALL(mock_buffer_allocator, supported_pixel_formats())
         .WillByDefault(Return(std::vector<MirPixelFormat>{ mir_pixel_format_argb_8888 }));
 
-    auto test_image = std::make_shared<StubCursorImage>(geom::Displacement{8, 8});
+    auto const test_image = std::make_shared<StubCursorImage>(geom::Displacement{8, 8});
     unsigned char const r = 0x11;
     unsigned char const g = 0x55;
     unsigned char const b = 0xbb;
@@ -479,7 +479,7 @@ TEST_F(SoftwareCursor, handles_argb_8888_buffer_with_stride)
     ON_CALL(mock_buffer_allocator, supported_pixel_formats())
         .WillByDefault(Return(std::vector<MirPixelFormat>{ mir_pixel_format_argb_8888 }));
 
-    auto test_image = std::make_shared<StubCursorImage>(geom::Displacement{8, 8});
+    auto const test_image = std::make_shared<StubCursorImage>(geom::Displacement{8, 8});
     unsigned char const r = 0x42;
     unsigned char const g = 0x39;
     unsigned char const b = 0xce;
