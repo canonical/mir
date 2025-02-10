@@ -477,7 +477,7 @@ bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
     return true;
 }
 
-void mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
+void mga::AtomicKMSOutput::set_cursor_image(gbm_bo* buffer)
 {
     if (auto conf = configuration.lock(); conf->current_crtc)
     {
@@ -490,6 +490,7 @@ void mga::AtomicKMSOutput::set_cursor(gbm_bo* buffer)
         {
             mir::log_warning("set_cursor: drmModeSetCursor failed (%s)", strerror(-result));
         }
+        cursor_image_set = true;
     }
 }
 
@@ -515,6 +516,8 @@ bool mga::AtomicKMSOutput::clear_cursor()
         if (result)
             mir::log_warning("clear_cursor: drmModeSetCursor failed (%s)", strerror(-result));
     }
+
+    cursor_image_set = false;
 
     return !result;
 }
@@ -920,15 +923,8 @@ int mga::AtomicKMSOutput::drm_fd() const
     return drm_fd_;
 }
 
-bool mga::AtomicKMSOutput::has_cursor() const
+bool mga::AtomicKMSOutput::has_cursor_image() const
 {
-    // According to this:
-    // https://github.com/canonical/mir/pull/3665#discussion_r1835985441. The
-    // only point of failure is in the `Cursor` constructor, which throws an
-    // exception, which is caught in `mga::create_hardware_cursor` and signals
-    // to the calling code to use a software cursor instead.
-    //
-    // tldr; If this method is called, we have a cursor.
-    return true;
+    return cursor_image_set;
 }
 
