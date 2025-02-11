@@ -28,10 +28,12 @@ set(
   idle_poking_dispatcher.cpp
   virtual_input_device.cpp
   xkb_mapper_registrar.cpp
+  input_event_transformer.cpp
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/seat_observer.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/input_dispatcher.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/seat.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/input_probe.h
+  ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/input_event_transformer.h
 )
 
 set_property(
