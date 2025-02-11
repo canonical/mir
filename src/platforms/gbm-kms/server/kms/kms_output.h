@@ -96,6 +96,9 @@ public:
     virtual void update_from_hardware_state(DisplayConfigurationOutput& to_update) const = 0;
 
     virtual int drm_fd() const = 0;
+
+    /// Returns true if the connector is connected, otherwise false.
+    virtual bool connected() const = 0;
 protected:
     KMSOutput() = default;
     KMSOutput(const KMSOutput&) = delete;

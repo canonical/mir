@@ -66,6 +66,7 @@ public:
     void update_from_hardware_state(DisplayConfigurationOutput& output) const override;
 
     int drm_fd() const override;
+    bool connected() const override;
 
 private:
     bool ensure_crtc();
