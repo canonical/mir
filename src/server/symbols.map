@@ -1420,6 +1420,7 @@ global:
     mir::input::InputEventTransformer::handle*;
     mir::input::InputEventTransformer::prepend*;
     mir::shell::AbstractShell::is_above*;
+    mir::shell::AccessibilityManager::AccessibilityManager*;
     mir::shell::AccessibilityManager::notify_helpers*;
     mir::shell::AccessibilityManager::override_key_repeat_settings*;
     mir::shell::AccessibilityManager::register_keyboard_helper*;
