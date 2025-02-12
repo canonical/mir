@@ -21,7 +21,9 @@
 #include "kms_display_configuration.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/cursor_image.h"
+#include "mir/graphics/pixman_image_scaling.h"
 
+#include <mutex>
 #include <xf86drm.h>
 
 #include <boost/exception/errinfo_errno.hpp>
@@ -253,28 +255,13 @@ void mgg::Cursor::pad_and_write_image_data_locked(
     write_buffer_data_locked(lg, buffer, &padded[0], padded_size);
 }
 
-void mgg::Cursor::show(CursorImage const& cursor_image)
+void mgg::Cursor::show(std::shared_ptr<CursorImage> const& cursor_image)
 {
     std::lock_guard lg(guard);
 
-    size = cursor_image.size();
+    this->current_cursor_image = cursor_image;
 
-    argb8888.resize(size.width.as_uint32_t() * size.height.as_uint32_t() * 4);
-    memcpy(argb8888.data(), cursor_image.as_argb_8888(), argb8888.size());
-
-    hotspot = cursor_image.hotspot();
-    {
-        auto locked_buffers = buffers.lock();
-        for (auto& tuple : *locked_buffers)
-        {
-            pad_and_write_image_data_locked(lg, std::get<2>(tuple));
-        }
-    }
-
-    // Writing the data could throw an exception so let's
-    // hold off on setting visible until after we have succeeded.
-    visible = true;
-    place_cursor_at_locked(lg, current_position, ForceState);
+    set_scale_unlocked(lg, current_scale);
 }
 
 void mgg::Cursor::move_to(geometry::Point position)
@@ -436,3 +423,35 @@ mgg::Cursor::GBMBOWrapper& mgg::Cursor::buffer_for_output(KMSOutput const& outpu
 
     return bo;
 }
+
+void mir::graphics::gbm::Cursor::set_scale(float new_scale)
+{
+    std::lock_guard lg(guard);
+    set_scale_unlocked(lg, new_scale);
+}
+
+void mir::graphics::gbm::Cursor::set_scale_unlocked(std::lock_guard<std::mutex> const& lg, float new_scale)
+{
+    current_scale = new_scale;
+    size = current_cursor_image->size() * new_scale;
+    auto const scaled_cursor_buf = mg::scale_cursor_image(current_cursor_image, new_scale);
+    auto const buf_size_bytes = scaled_cursor_buf.size.width.as_value() * scaled_cursor_buf.size.height.as_value() * 4;
+
+    argb8888.resize(buf_size_bytes);
+    memcpy(argb8888.data(), scaled_cursor_buf.data.get(), buf_size_bytes);
+
+    hotspot = current_cursor_image->hotspot() * new_scale;
+    {
+        auto locked_buffers = buffers.lock();
+        for (auto& tuple : *locked_buffers)
+        {
+            pad_and_write_image_data_locked(lg, std::get<2>(tuple));
+        }
+    }
+
+    // Writing the data could throw an exception so let's
+    // hold off on setting visible until after we have succeeded.
+    visible = true;
+    place_cursor_at_locked(lg, current_position, ForceState);
+}
+
