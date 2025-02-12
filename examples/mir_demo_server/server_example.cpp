@@ -138,12 +138,12 @@ public:
     }
 
 private:
+    std::mutex config_mutex;
     miral::InputConfiguration input_configuration;
     miral::InputConfiguration::Mouse mouse = input_configuration.mouse();
     miral::InputConfiguration::Touchpad touchpad = input_configuration.touchpad();
     miral::InputConfiguration::Keyboard keyboard = input_configuration.keyboard();
     miral::ConfigFile config_file;
-    std::mutex config_mutex;
 
     void apply_config()
     {
