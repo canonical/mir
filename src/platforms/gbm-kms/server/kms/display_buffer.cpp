@@ -146,6 +146,14 @@ bool mgg::DisplaySink::overlay(std::vector<DisplayElement> const& renderable_lis
 
 void mgg::DisplaySink::for_each_display_sink(std::function<void(graphics::DisplaySink&)> const& f)
 {
+    // When an output is disconnected, its sink will have a size of 0x0.
+    // This may cause us to allocate a buffer of zero size, which leads
+    // to all sorts of problems (e.g. an error during eglSwapBuffers
+    // because the back buffer is empty). To avoid this, we don't iterate
+    // over display sinks that refer to disconnected outputs.
+    if (!outputs.front()->connected())
+        return;
+
     f(*this);
 }
 

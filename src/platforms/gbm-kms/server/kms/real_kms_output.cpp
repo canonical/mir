@@ -612,3 +612,9 @@ int mgg::RealKMSOutput::drm_fd() const
 {
     return drm_fd_;
 }
+
+bool mgg::RealKMSOutput::connected() const
+{
+    return connector->connection == DRM_MODE_CONNECTED;
+}
+
