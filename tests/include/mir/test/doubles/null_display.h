@@ -18,8 +18,6 @@
 #define MIR_TEST_DOUBLES_NULL_DISPLAY_H_
 
 #include "mir/graphics/display.h"
-#include "mir/renderer/gl/context_source.h"
-#include "mir/test/doubles/null_gl_context.h"
 #include "mir/test/doubles/null_display_configuration.h"
 #include "mir/test/doubles/null_display_sync_group.h"
 
