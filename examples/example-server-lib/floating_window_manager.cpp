@@ -16,9 +16,6 @@
 
 #include "floating_window_manager.h"
 #include "decoration_provider.h"
-#include "mir_toolkit/common.h"
-#include "miral/minimal_window_manager.h"
-#include "miral/window_specification.h"
 
 #include <miral/application_info.h>
 #include <miral/internal_client.h>
@@ -26,14 +23,9 @@
 #include <miral/window_info.h>
 #include <miral/window_manager_tools.h>
 #include <miral/zone.h>
-#include <mir/geometry/rectangle.h>
 
 #include <linux/input.h>
 #include <csignal>
-#include <algorithm>
-#include <ranges>
-#include <unordered_set>
-#include <functional>
 
 using namespace miral;
 using namespace miral::toolkit;
@@ -480,8 +472,6 @@ WindowSpecification FloatingWindowManagerPolicy::place_new_window(
 {
     auto parameters = MinimalWindowManager::place_new_window(app_info, request_parameters);
 
-    try_place_new_window_and_account_for_occlusion(parameters);
-
     if (app_info.application() == decoration_provider->session())
     {
         parameters.type() = mir_window_type_decoration;
@@ -614,151 +604,4 @@ void FloatingWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, 
         pdata.old_state = mods.state().consume();
 
     MinimalWindowManager::handle_modify_window(window_info, mods);
-}
-
-void FloatingWindowManagerPolicy::try_place_new_window_and_account_for_occlusion(WindowSpecification& parameters)
-{
-    namespace geom = mir::geometry;
-
-    if (parameters.state() != mir_window_state_restored)
-        return;
-
-    std::vector<geom::Rectangle> window_rects;
-    tools.for_each_window_in_workspace(
-        active_workspace,
-        [this, &window_rects](Window const& window)
-        {
-            auto const& info = tools.info_for(window);
-
-            // Skip invisible windows
-            if (!info.is_visible() || info.depth_layer() != mir_depth_layer_application)
-                return;
-
-            window_rects.emplace_back(window.top_left(), window.size());
-        });
-
-    // Worst case scenario: you try taking a hole out of the middle of
-    // a rect, results in 4 rectangles. Every other case is a special
-    // case of this one where the width or height of the resulting
-    // rects are < 0.
-    auto const subtract_rectangles = [](geom::Rectangle rect,
-                                        geom::Rectangle hole) -> std::vector<geom::Rectangle>
-    {
-        if (!rect.overlaps(hole))
-            return {rect};
-
-        if (hole.size == geom::Size{0, 0})
-            return {};
-
-        auto const rect_a =
-            geom::Rectangle{rect.top_left, geom::Size{rect.size.width, (hole.top() - rect.top()).as_int()}};
-
-        auto const rect_b = geom::Rectangle{
-            geom::Point{rect.left(), rect.top()},
-            geom::Size{(hole.left() - rect.left()).as_int(), rect.size.height}};
-
-        auto const rect_c = geom::Rectangle{
-            geom::Point{hole.right(), rect.top()},
-            geom::Size{(rect.right() - hole.right()).as_int(), rect.size.height}};
-
-        auto const rect_d = geom::Rectangle{
-            geom::Point{rect.left(), hole.bottom()},
-            geom::Size{rect.size.width, (rect.bottom() - hole.bottom()).as_int()}};
-
-        auto const valid_rect = [](auto const rect)
-        {
-            return rect.size.width.as_int() > 0 && rect.size.height.as_int() > 0;
-        };
-        // Funny, you can't have valid_rects be const and use `.cbegin`
-        auto valid_rects = std::vector{rect_a, rect_b, rect_c, rect_d} | std::ranges::views::filter(valid_rect);
-
-        return std::vector(valid_rects.cbegin(), valid_rects.cend());
-    };
-
-    using RectangleSet = std::unordered_set<
-                    geom::Rectangle,
-                    decltype([](geom::Rectangle const& s) {
-                        return std::hash<int>{}(s.size.height.as_int() * 31 + s.size.width.as_int());
-                    })>;
-
-    auto const get_visible_rects =
-        [subtract_rectangles](geom::Rectangle initial_test_rect, std::vector<geom::Rectangle> const& window_rects)
-    {
-        if (window_rects.empty())
-            return RectangleSet{initial_test_rect};
-
-        // Starting with rectangle we're trying to place, repeatedly
-        // subtract all visible rectangles from it, accumulating
-        // subtractions as we go.
-        //
-        // In the end, if no rectangles remain, then the window is
-        // fully occluded. Otherwise, whatever rectangles remain are
-        // the visible part.
-        RectangleSet test_rects{initial_test_rect};
-        for (auto const& window_rect : window_rects)
-        {
-            RectangleSet iter_output_rects;
-            for (auto const& test_rect : test_rects)
-            {
-                auto const window_output_rects = subtract_rectangles(test_rect, window_rect);
-                iter_output_rects.insert(window_output_rects.begin(), window_output_rects.end());
-            }
-
-            test_rects = std::move(iter_output_rects);
-
-            if (test_rects.empty())
-                return test_rects;
-        }
-
-        return test_rects;
-    };
-
-    auto const visible_area_large_enough = [](RectangleSet const& visible_rects)
-    {
-        auto constexpr min_visible_width = 50;
-        auto constexpr min_visible_height = 50;
-
-        return std::ranges::any_of(
-            visible_rects,
-            [min_visible_width, min_visible_height](auto const& rect)
-            {
-                return rect.size.width.as_int() >= min_visible_width && rect.size.height.as_int() >= min_visible_height;
-            });
-    };
-
-    // Try place the window around the suggested position
-    auto constexpr max_iterations{16};
-    auto constexpr base_offset{48};
-    for (auto multiplier = 1; multiplier < max_iterations; multiplier++)
-    {
-        auto const offset{base_offset * multiplier};
-        auto const top_left = parameters.top_left().value();
-        auto const size = parameters.size().value_or({});
-        std::array const test_rects{
-            geom::Rectangle{top_left, size},
-            geom::Rectangle{top_left + Displacement(offset, offset), size},
-            geom::Rectangle{top_left + Displacement(-offset, offset), size},
-            geom::Rectangle{top_left + Displacement(-offset, -offset), size},
-            geom::Rectangle{top_left + Displacement(offset, -offset), size}};
-
-        auto valid_test_rects = std::ranges::filter_view(
-            test_rects,
-            [this](auto const rectangle)
-            {
-                return tools.active_output().overlaps(rectangle);
-            });
-
-        for (auto const& test_rect : valid_test_rects)
-        {
-            auto const visible_rects = get_visible_rects(test_rect, window_rects);
-            if (!visible_rects.empty() && visible_area_large_enough(visible_rects))
-            {
-                parameters.top_left().value() = test_rect.top_left;
-                return;
-            }
-        }
-    }
-
-    // If we can't find any valid offset position, we use the original
-    // one, possibly occluding / being occluded by another window.
 }
