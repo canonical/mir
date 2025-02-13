@@ -121,7 +121,6 @@ private:
     std::shared_ptr<miral::Workspace> active_workspace;
     std::map<int, std::shared_ptr<miral::Workspace>> key_to_workspace;
     std::map<std::shared_ptr<miral::Workspace>, miral::Window> workspace_to_active;
-    miral::FocusStealing const focus_stealing;
 
     void apply_workspace_visible_to(miral::Window const& window);
 
