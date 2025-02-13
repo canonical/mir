@@ -70,8 +70,7 @@ FloatingWindowManagerPolicy::FloatingWindowManagerPolicy(
     FocusStealing focus_stealing) :
     MinimalWindowManager(tools, focus_stealing),
     spinner{spinner},
-    decoration_provider{std::make_unique<DecorationProvider>()},
-    focus_stealing{focus_stealing}
+    decoration_provider{std::make_unique<DecorationProvider>()}
 {
     launcher.launch(*decoration_provider);
     shutdown_hook = [this] { decoration_provider->stop(); };
@@ -481,8 +480,7 @@ WindowSpecification FloatingWindowManagerPolicy::place_new_window(
 {
     auto parameters = MinimalWindowManager::place_new_window(app_info, request_parameters);
 
-    if(focus_stealing == FocusStealing::prevent)
-        try_place_new_window_and_account_for_occlusion(parameters);
+    try_place_new_window_and_account_for_occlusion(parameters);
 
     if (app_info.application() == decoration_provider->session())
     {
