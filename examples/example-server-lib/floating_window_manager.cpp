@@ -734,36 +734,28 @@ void FloatingWindowManagerPolicy::try_place_new_window_and_account_for_occlusion
     for (auto multiplier = 1; multiplier < max_iterations; multiplier++)
     {
         auto const offset{base_offset * multiplier};
-        std::array const positions{
-            parameters.top_left().value(),
-            parameters.top_left().value() + Displacement(offset, offset),
-            parameters.top_left().value() + Displacement(-offset, offset),
-            parameters.top_left().value() + Displacement(-offset, -offset),
-            parameters.top_left().value() + Displacement(offset, -offset)};
+        auto const top_left = parameters.top_left().value();
+        auto const size = parameters.size().value_or({});
+        std::array const test_rects{
+            geom::Rectangle{top_left, size},
+            geom::Rectangle{top_left + Displacement(offset, offset), size},
+            geom::Rectangle{top_left + Displacement(-offset, offset), size},
+            geom::Rectangle{top_left + Displacement(-offset, -offset), size},
+            geom::Rectangle{top_left + Displacement(offset, -offset), size}};
 
-        // Make sure the active output contains any test point
-        auto const all_positions_invalid = std::ranges::all_of(
-            positions,
-            [this](auto const position)
+        auto valid_test_rects = std::ranges::filter_view(
+            test_rects,
+            [this](auto const rectangle)
             {
-                return !tools.active_output().contains(position);
+                return tools.active_output().overlaps(rectangle);
             });
 
-        if (all_positions_invalid)
-            return;
-
-        for (auto const& position : positions)
+        for (auto const& test_rect : valid_test_rects)
         {
-            auto const test_rect = geom::Rectangle{position, parameters.size().value_or({})};
-
-            // Make sure the test rectangle overlaps with the current output
-            if (!tools.active_output().overlaps(test_rect))
-                continue;
-
             auto const visible_rects = get_visible_rects(test_rect, window_rects);
             if (!visible_rects.empty() && visible_area_large_enough(visible_rects))
             {
-                parameters.top_left().value() = position;
+                parameters.top_left().value() = test_rect.top_left;
                 return;
             }
         }
