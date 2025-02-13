@@ -19,7 +19,6 @@
 
 #include <miral/minimal_window_manager.h>
 
-#include "miral/window_specification.h"
 #include "splash_session.h"
 
 #include <mir_toolkit/events/enums.h>
@@ -127,8 +126,6 @@ private:
     void apply_workspace_hidden_to(miral::Window const& window);
 
     void keep_spinner_on_top();
-
-    void try_place_new_window_and_account_for_occlusion(miral::WindowSpecification&);
 };
 
 #endif //MIRAL_SHELL_FLOATING_WINDOW_MANAGER_H
