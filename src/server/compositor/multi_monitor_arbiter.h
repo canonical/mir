@@ -75,7 +75,6 @@ public:
     ~MultiMonitorArbiter();
 
     auto compositor_acquire(compositor::CompositorID id) -> std::shared_ptr<BufferStream::Submission>;
-    bool buffer_ready_for(compositor::CompositorID id);
 
     void submit_buffer(
         std::shared_ptr<graphics::Buffer> buffer,
