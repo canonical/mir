@@ -14,10 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <miral/minimal_window_manager.h>
 #include <miral/toolkit_event.h>
 #include <miral/application_info.h>
 #include "application_selector.h"
+#include "mir/geometry/forward.h"
 
 #include <linux/input.h>
 #include <gmpxx.h>
@@ -677,28 +679,29 @@ void miral::MinimalWindowManager::Impl::try_place_new_window_and_account_for_occ
     if (parameters.state() != mir_window_state_restored)
         return;
 
-    // Assumption, we're opening the new window in the same workspace as the
-    // active window
-    //
-    // Use RectangleSet to account for other windows that might span multiple
-    // workspaces
     RectangleSet window_rects;
-    tools.for_each_workspace_containing(
-        tools.active_window(),
-        [this, &window_rects](auto active_window_workspace)
+    tools.for_each_application(
+        [&window_rects, this](ApplicationInfo& app_info)
         {
-            tools.for_each_window_in_workspace(
-                active_window_workspace,
-                [this, &window_rects](Window const& window)
-                {
-                    auto const& info = tools.info_for(window);
+            auto& app_windows = app_info.windows();
+            auto rectangles_to_consider =
+                app_windows |
+                std::ranges::views::filter(
+                    [this](auto& window)
+                    {
+                        auto const& info = tools.info_for(window);
+                        // Skip invisible or non-application layer windows
+                        if (!info.is_visible() || info.depth_layer() != mir_depth_layer_application)
+                            return false;
 
-                    // Skip invisible windows
-                    if (!info.is_visible() || info.depth_layer() != mir_depth_layer_application)
-                        return;
-
-                    window_rects.emplace(window.top_left(), window.size());
-                });
+                        return true;
+                    }) |
+                std::ranges::views::transform(
+                    [](Window& window)
+                    {
+                        return geom::Rectangle{window.top_left(), window.size()};
+                    });
+            window_rects.insert(rectangles_to_consider.begin(), rectangles_to_consider.end());
         });
 
     // Worst case scenario: you try taking a hole out of the middle of
