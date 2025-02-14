@@ -14,16 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
+#include "application_selector.h"
+
 #include <miral/minimal_window_manager.h>
 #include <miral/toolkit_event.h>
 #include <miral/application_info.h>
-#include "application_selector.h"
-#include "mir/geometry/forward.h"
 
 #include <linux/input.h>
 #include <gmpxx.h>
 
+#include <algorithm>
 #include <ranges>
 #include <unordered_set>
 
