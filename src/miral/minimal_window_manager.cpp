@@ -15,6 +15,7 @@
  */
 
 #include "application_selector.h"
+#include "mir/geometry/forward.h"
 
 #include <miral/minimal_window_manager.h>
 #include <miral/toolkit_event.h>
@@ -787,20 +788,25 @@ void miral::MinimalWindowManager::Impl::try_place_new_window_and_account_for_occ
             });
     };
 
+    // First, check if the given rectangle (if any) is good enough
+    auto const initial_top_left = parameters.top_left().value_or({});
+    auto const size = parameters.size().value_or({});
+    auto const initial_rectangle = geom::Rectangle{initial_top_left, size};
+    if (auto initial_position_visible_rects = get_visible_rects(initial_rectangle, window_rects);
+        !initial_position_visible_rects.empty() && visible_area_large_enough(initial_position_visible_rects))
+        return;
+
     // Try place the window around the suggested position
     auto constexpr max_iterations{16};
     auto constexpr base_offset{48};
     for (auto multiplier = 1; multiplier < max_iterations; multiplier++)
     {
         auto const offset{base_offset * multiplier};
-        auto const top_left = parameters.top_left().value();
-        auto const size = parameters.size().value_or({});
         std::array const test_rects{
-            geom::Rectangle{top_left, size},
-            geom::Rectangle{top_left + Displacement(offset, offset), size},
-            geom::Rectangle{top_left + Displacement(-offset, offset), size},
-            geom::Rectangle{top_left + Displacement(-offset, -offset), size},
-            geom::Rectangle{top_left + Displacement(offset, -offset), size}};
+            geom::Rectangle{initial_top_left + Displacement(offset, offset), size},
+            geom::Rectangle{initial_top_left + Displacement(-offset, offset), size},
+            geom::Rectangle{initial_top_left + Displacement(-offset, -offset), size},
+            geom::Rectangle{initial_top_left + Displacement(offset, -offset), size}};
 
         auto valid_test_rects = std::ranges::filter_view(
             test_rects,
