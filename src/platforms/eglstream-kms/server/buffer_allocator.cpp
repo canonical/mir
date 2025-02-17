@@ -211,6 +211,11 @@ struct BoundEGLStream
             this->sync->set_consumer_sync(sync);
         }
 
+        auto tex_id() const -> GLuint
+        {
+            return provider->texture;
+        }
+
         TextureHandle(TextureHandle&&) = default;
     private:
         friend class BoundEGLStream;
@@ -462,6 +467,11 @@ public:
     {
         tex.reserve_sync();
         tex.bind();
+    }
+
+    auto tex_id() const -> GLuint override
+    {
+        return tex.tex_id();
     }
 
     void add_syncpoint() override
