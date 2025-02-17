@@ -190,8 +190,7 @@ auto mir::DefaultServerConfiguration::the_accessibility_manager() -> std::shared
     return accessibility_manager(
         [this]
         {
-            return std::make_shared<shell::AccessibilityManager>(
-                the_options(), the_input_event_transformer(), the_main_loop());
+            return std::make_shared<shell::AccessibilityManager>(the_options(), the_input_event_transformer());
         });
 }
 
