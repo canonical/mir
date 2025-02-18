@@ -22,6 +22,7 @@
 #include "mir/options/configuration.h"
 #include "mir/shell/keyboard_helper.h"
 #include "mir/time/alarm.h"
+#include "mir_toolkit/events/input/keyboard_event.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -86,6 +87,10 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
             if (handle_change_pointer_button(kev))
                 return true;
             if (handle_double_click(kev, dispatcher, builder))
+                return true;
+            if (handle_drag_start(kev, dispatcher))
+                return true;
+            if (handle_drag_end(kev, dispatcher))
                 return true;
         }
 
@@ -319,6 +324,55 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
 
         return false;
     }
+
+    bool handle_drag_start(MirKeyboardEvent const* kev, std::shared_ptr<Dispatcher> const& dispatcher)
+    {
+        if (mir_keyboard_event_keysym(kev) == XKB_KEY_KP_0)
+        {
+            if (mir_keyboard_event_action(kev) == mir_keyboard_action_down ||
+                mir_keyboard_event_action(kev) == mir_keyboard_action_repeat)
+                return true;
+
+            dispatcher->dispatch_pointer_event(
+                std::nullopt,
+                mir_pointer_action_button_down,
+                current_button,
+                std::nullopt,
+                {0, 0},
+                mir_pointer_axis_source_none,
+                mir::events::ScrollAxisH{},
+                mir::events::ScrollAxisV{});
+
+            return true;
+        }
+
+        return false;
+    }
+
+    bool handle_drag_end(MirKeyboardEvent const* kev, std::shared_ptr<Dispatcher> const& dispatcher)
+    {
+        if (mir_keyboard_event_keysym(kev) == XKB_KEY_KP_Decimal)
+        {
+            if (mir_keyboard_event_action(kev) == mir_keyboard_action_down ||
+                mir_keyboard_event_action(kev) == mir_keyboard_action_repeat)
+                return true;
+
+            dispatcher->dispatch_pointer_event(
+                std::nullopt,
+                mir_pointer_action_button_up,
+                0,
+                std::nullopt,
+                {0, 0},
+                mir_pointer_axis_source_none,
+                mir::events::ScrollAxisH{},
+                mir::events::ScrollAxisV{});
+
+            return true;
+        }
+
+        return false;
+    }
+
 
     std::shared_ptr<mir::MainLoop> const main_loop;
 
