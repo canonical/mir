@@ -173,39 +173,49 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
     {
         auto const action = mir_keyboard_event_action(kev);
 
-        if(action != mir_keyboard_action_up)
-            return false;
-
         switch (mir_keyboard_event_keysym(kev))
         {
         case XKB_KEY_KP_5:
-            dispatcher(builder->pointer_event(
-                std::nullopt,
-                mir_pointer_action_button_down,
-                current_button,
-                std::nullopt,
-                {0, 0},
-                mir_pointer_axis_source_none,
-                mir::events::ScrollAxisH{},
-                mir::events::ScrollAxisV{}));
-
-            click_event_generator = main_loop->create_alarm(
-                [dispatcher, this, builder]
+            switch (action)
+            {
+            case mir_keyboard_action_up:
                 {
+                    if (click_event_generator)
+                        click_event_generator.reset();
+
                     dispatcher(builder->pointer_event(
                         std::nullopt,
-                        mir_pointer_action_button_up,
+                        mir_pointer_action_button_down,
                         current_button,
                         std::nullopt,
                         {0, 0},
                         mir_pointer_axis_source_none,
                         mir::events::ScrollAxisH{},
                         mir::events::ScrollAxisV{}));
-                });
-            click_event_generator->reschedule_in(std::chrono::milliseconds(100));
 
-            return true;
-            break;
+                    click_event_generator = main_loop->create_alarm(
+                        [dispatcher, this, builder]
+                        {
+                            dispatcher(builder->pointer_event(
+                                std::nullopt,
+                                mir_pointer_action_button_up,
+                                current_button,
+                                std::nullopt,
+                                {0, 0},
+                                mir_pointer_axis_source_none,
+                                mir::events::ScrollAxisH{},
+                                mir::events::ScrollAxisV{}));
+                        });
+                    click_event_generator->reschedule_in(std::chrono::milliseconds(100));
+
+                    return true;
+                }
+            case mir_keyboard_action_down:
+            case mir_keyboard_action_repeat:
+                return true;
+            default:
+                return false;
+            }
         default:
             break;
         }
