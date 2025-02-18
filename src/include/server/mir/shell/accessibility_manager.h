@@ -36,6 +36,7 @@ class AccessibilityManager
 {
 public:
     AccessibilityManager(
+        std::shared_ptr<MainLoop> const& main_loop,
         std::shared_ptr<mir::options::Option> const&,
         std::shared_ptr<input::InputEventTransformer> const&);
 
