@@ -41,7 +41,6 @@ char const* const mo::fatal_except_opt            = "on-fatal-error-except";
 char const* const mo::debug_opt                   = "debug";
 char const* const mo::composite_delay_opt         = "composite-delay";
 char const* const mo::enable_key_repeat_opt       = "enable-key-repeat";
-char const* const mo::enable_mouse_keys_opt       = "enable-mouse-keys";
 char const* const mo::x11_display_opt             = "enable-x11";
 char const* const mo::x11_scale_opt               = "x11-scale";
 char const* const mo::wayland_extensions_opt      = "wayland-extensions";
@@ -49,6 +48,11 @@ char const* const mo::add_wayland_extensions_opt  = "add-wayland-extensions";
 char const* const mo::drop_wayland_extensions_opt = "drop-wayland-extensions";
 char const* const mo::idle_timeout_opt            = "idle-timeout";
 char const* const mo::idle_timeout_when_locked_opt = "idle-timeout-when-locked";
+
+char const* const mo::enable_mouse_keys_opt = "enable-mouse-keys";
+char const* const mo::mouse_keys_acceleration_constant_factor = "mouse-keys-acceleration-constant-factor";
+char const* const mo::mouse_keys_acceleration_linear_factor = "mouse-keys-acceleration-linear-factor";
+char const* const mo::mouse_keys_acceleration_quadratic_factor = "mouse-keys-acceleration-quadratic-factor";
 
 char const* const mo::off_opt_value = "off";
 char const* const mo::log_opt_value = "log";
@@ -183,6 +187,12 @@ mo::DefaultConfiguration::DefaultConfiguration(
              "Enable server generated key repeat")
         (enable_mouse_keys_opt, po::value<bool>()->default_value(false),
              "Enable mousekeys (controlling the mouse with the numpad)")
+        (mouse_keys_acceleration_constant_factor, po::value<double>()->default_value(5.0),
+             "The base speed for mousekey pointer motion")
+        (mouse_keys_acceleration_linear_factor, po::value<double>()->default_value(1.0),
+             "The linear speed increase for mousekey pointer motion")
+        (mouse_keys_acceleration_quadratic_factor, po::value<double>()->default_value(0.1),
+             "The quadratic speed increase for mousekey pointer motion")
         (idle_timeout_opt, po::value<int>()->default_value(0),
             "Time (in seconds) Mir will remain idle before turning off the display "
             "when the session is not locked, or 0 to keep display on forever.")

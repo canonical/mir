@@ -131,6 +131,9 @@ MIR_PLATFORM_2.20 {
     mir::options::log_opt_value*;
     mir::options::logind_console;
     mir::options::lttng_opt_value*;
+    mir::options::mouse_keys_acceleration_constant_factor*;
+    mir::options::mouse_keys_acceleration_linear_factor*;
+    mir::options::mouse_keys_acceleration_quadratic_factor*;
     mir::options::nested_passthrough_opt*;
     mir::options::null_console;
     mir::options::off_opt_value*;
