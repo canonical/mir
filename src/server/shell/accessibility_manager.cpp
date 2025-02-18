@@ -69,8 +69,7 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
 
     bool transform_input_event(std::shared_ptr<Dispatcher> const& dispatcher, MirEvent const& event) override
     {
-        using namespace mir; // For operator<<
-
+        /* using namespace mir; // For operator<< */
         /* std::stringstream ss; */
         /* ss << event; */
         /* mir::log_debug("%s", ss.str().c_str()); */
@@ -181,41 +180,34 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
         case XKB_KEY_KP_5:
             switch (action)
             {
+            case mir_keyboard_action_down:
+                dispatcher->dispatch_pointer_event(
+                    std::nullopt,
+                    mir_pointer_action_button_down,
+                    current_button,
+                    std::nullopt,
+                    {0, 0},
+                    mir_pointer_axis_source_none,
+                    mir::events::ScrollAxisH{},
+                    mir::events::ScrollAxisV{});
+                mir::log_debug("Click down");
+                return true;
             case mir_keyboard_action_up:
                 {
-                    if (click_event_generator)
-                        click_event_generator.reset();
-
                     dispatcher->dispatch_pointer_event(
                         std::nullopt,
-                        mir_pointer_action_button_down,
-                        current_button,
+                        mir_pointer_action_button_up,
+                        0,
                         std::nullopt,
                         {0, 0},
                         mir_pointer_axis_source_none,
                         mir::events::ScrollAxisH{},
                         mir::events::ScrollAxisV{});
-                    mir::log_debug("Click down");
 
-                    click_event_generator = main_loop->create_alarm(
-                        [dispatcher, this]
-                        {
-                            dispatcher->dispatch_pointer_event(
-                                std::nullopt,
-                                mir_pointer_action_button_up,
-                                current_button,
-                                std::nullopt,
-                                {0, 0},
-                                mir_pointer_axis_source_none,
-                                mir::events::ScrollAxisH{},
-                                mir::events::ScrollAxisV{});
-                            mir::log_debug("Click up");
-                        });
-                    click_event_generator->reschedule_in(std::chrono::milliseconds(100));
+                    mir::log_debug("Click up");
 
                     return true;
                 }
-            case mir_keyboard_action_down:
             case mir_keyboard_action_repeat:
                 return true;
             default:
