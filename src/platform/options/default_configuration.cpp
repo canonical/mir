@@ -187,11 +187,11 @@ mo::DefaultConfiguration::DefaultConfiguration(
              "Enable server generated key repeat")
         (enable_mouse_keys_opt, po::value<bool>()->default_value(false),
              "Enable mousekeys (controlling the mouse with the numpad)")
-        (mouse_keys_acceleration_constant_factor, po::value<double>()->default_value(5.0),
+        (mouse_keys_acceleration_constant_factor, po::value<double>()->default_value(100),
              "The base speed for mousekey pointer motion")
-        (mouse_keys_acceleration_linear_factor, po::value<double>()->default_value(1.0),
+        (mouse_keys_acceleration_linear_factor, po::value<double>()->default_value(100),
              "The linear speed increase for mousekey pointer motion")
-        (mouse_keys_acceleration_quadratic_factor, po::value<double>()->default_value(0.1),
+        (mouse_keys_acceleration_quadratic_factor, po::value<double>()->default_value(30),
              "The quadratic speed increase for mousekey pointer motion")
         (idle_timeout_opt, po::value<int>()->default_value(0),
             "Time (in seconds) Mir will remain idle before turning off the display "
