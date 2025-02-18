@@ -152,10 +152,20 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
                              motion_start_time = std::chrono::steady_clock::now(),
                              weak_self = shared_weak_alarm] mutable
                             {
+                                using SecondF = std::chrono::duration<float>;
+                                auto constexpr repeat_delay = std::chrono::milliseconds(2); // 500 Hz rate
+
                                 auto const motion_step_time = std::chrono::steady_clock::now();
-                                auto const t = std::chrono::duration_cast<std::chrono::seconds>(
-                                    motion_step_time - motion_start_time);
-                                auto const speed = acceleration_curve.evaluate(t.count());
+                                auto const t =
+                                    std::chrono::duration_cast<SecondF>(motion_step_time - motion_start_time);
+
+                                // duration_cast is not constexpr yet
+                                float const dt = std::chrono::duration_cast<SecondF>(repeat_delay).count();
+
+                                // Normalize the speed so it's in
+                                // pixels/second, and not pixels/alarm
+                                // invocation
+                                auto const speed = acceleration_curve.evaluate(t.count()) * dt;
 
                             motion_direction = {0, 0};
                             if (buttons_down & up)
@@ -185,7 +195,7 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
                                 mir::events::ScrollAxisV{}));
 
                                 if (auto const& repeat_alarm = weak_self->lock())
-                                    repeat_alarm->reschedule_in(std::chrono::milliseconds(2));
+                                    repeat_alarm->reschedule_in(repeat_delay);
                             });
 
                     *shared_weak_alarm = motion_event_generator;
