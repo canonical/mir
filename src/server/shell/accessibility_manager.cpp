@@ -79,9 +79,11 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
         {
             MirKeyboardEvent const* kev = mir_input_event_get_keyboard_event(input_event);
 
-            if(handle_motion(kev, dispatcher, builder))
+            if (handle_motion(kev, dispatcher, builder))
                 return true;
-            if(handle_click(kev, dispatcher, builder))
+            if (handle_click(kev, dispatcher, builder))
+                return true;
+            if (handle_change_pointer_button(kev))
                 return true;
         }
 
@@ -231,6 +233,32 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
 
         return false;
     }
+
+    bool handle_change_pointer_button(MirKeyboardEvent const* kev)
+    {
+        auto const repeat_or_down = mir_keyboard_event_action(kev) == mir_keyboard_action_down ||
+                                    mir_keyboard_event_action(kev) == mir_keyboard_action_repeat;
+
+        // Up events
+        switch (mir_keyboard_event_keysym(kev))
+        {
+        case XKB_KEY_KP_Divide:
+            if (!repeat_or_down)
+                current_button = mir_pointer_button_primary;
+            return true;
+        case XKB_KEY_KP_Multiply:
+            if (!repeat_or_down)
+                current_button = mir_pointer_button_tertiary;
+            return true;
+        case XKB_KEY_KP_Subtract:
+            if (!repeat_or_down)
+                current_button = mir_pointer_button_secondary;
+            return true;
+        default:
+            return false;
+        }
+    }
+
 
     std::shared_ptr<mir::MainLoop> const main_loop;
 
