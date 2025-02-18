@@ -20,13 +20,14 @@
 #include "mir/log.h"
 #include "mir/main_loop.h"
 #include "mir/options/configuration.h"
+#include "mir/options/option.h"
 #include "mir/shell/keyboard_helper.h"
 #include "mir/time/alarm.h"
-#include "mir_toolkit/events/input/keyboard_event.h"
+#include "mir/event_printer.h"
+#include "mir/time/types.h"
 
 #include <chrono>
 #include <cstdint>
-#include <ratio>
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <memory>
@@ -64,17 +65,19 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
 {
     using Dispatcher = mir::input::InputEventTransformer::EventDispatcher;
 
-    MouseKeysTransformer(std::shared_ptr<mir::MainLoop> const& main_loop)
-        : main_loop{main_loop}
+    MouseKeysTransformer(
+        std::shared_ptr<mir::MainLoop> const& main_loop, std::shared_ptr<mir::options::Option> const& options) :
+        main_loop{main_loop},
+        acceleration_curve(options)
     {
     }
 
     bool transform_input_event(std::shared_ptr<Dispatcher> const& dispatcher, MirEvent const& event) override
     {
-        /* using namespace mir; // For operator<< */
-        /* std::stringstream ss; */
-        /* ss << event; */
-        /* mir::log_debug("%s", ss.str().c_str()); */
+        using namespace mir; // For operator<<
+        std::stringstream ss;
+        ss << event;
+        mir::log_debug("%s", ss.str().c_str());
 
         if (mir_event_get_type(&event) != mir_event_type_input)
             return false;
@@ -133,16 +136,6 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
             return false;
         }
 
-        motion_direction = {0, 0};
-        if (buttons_down & up)
-            motion_direction.dy += geom::DeltaYF{-10};
-        if (buttons_down & down)
-            motion_direction.dy += geom::DeltaYF{10};
-        if (buttons_down & left)
-            motion_direction.dx += geom::DeltaXF{-10};
-        if (buttons_down & right)
-            motion_direction.dx += geom::DeltaXF{10};
-
         switch (mir_keyboard_event_action(kev))
         {
         case mir_keyboard_action_up:
@@ -155,8 +148,30 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
                 {
                     motion_event_generator =
                         main_loop->create_alarm(
-                            [dispatcher, this]
+                            [dispatcher, this, motion_start_time = std::chrono::steady_clock::now()] mutable
                             {
+                                auto const motion_step_time = std::chrono::steady_clock::now();
+                                auto const t = std::chrono::duration_cast<std::chrono::seconds>(
+                                    motion_step_time - motion_start_time);
+                                auto const speed = acceleration_curve.evaluate(t.count());
+
+                                motion_direction = {0, 0};
+                                if (buttons_down & up)
+                                    motion_direction.dy += geom::DeltaYF{-speed};
+                                if (buttons_down & down)
+                                    motion_direction.dy += geom::DeltaYF{speed};
+                                if (buttons_down & left)
+                                    motion_direction.dx += geom::DeltaXF{-speed};
+                                if (buttons_down & right)
+                                    motion_direction.dx += geom::DeltaXF{speed};
+
+                                // If the cursor stops moving without releasing
+                                // all buttons (if for example you press two
+                                // opposite directions), reset the time for
+                                // acceleration.
+                                if(motion_direction.length_squared() == 0)
+                                    motion_start_time = motion_step_time;
+
                                 dispatcher->dispatch_pointer_event(
                                     std::nullopt,
                                     mir_pointer_action_motion,
@@ -167,7 +182,7 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
                                     mir::events::ScrollAxisH{},
                                     mir::events::ScrollAxisV{});
 
-                                motion_event_generator->reschedule_in(std::chrono::milliseconds(10));
+                                motion_event_generator->reschedule_in(std::chrono::milliseconds(2));
                             });
 
                     motion_event_generator->reschedule_in(std::chrono::milliseconds(0));
@@ -381,6 +396,27 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
     };
 
     uint32_t buttons_down{none};
+
+    struct AccelerationCurve
+    {
+        // Quadratic, linear, and constant factors repsectively
+        // ax^2 + bx + c
+        float const a, b, c;
+
+        AccelerationCurve(std::shared_ptr<mir::options::Option> const& options) :
+            a(options->get<double>(mir::options::mouse_keys_acceleration_quadratic_factor)),
+            b(options->get<double>(mir::options::mouse_keys_acceleration_linear_factor)),
+            c(options->get<double>(mir::options::mouse_keys_acceleration_constant_factor))
+        {
+        }
+
+        float evaluate(float t) const
+        {
+            return a * t * t + b * t + c;
+        }
+    };
+
+    AccelerationCurve const acceleration_curve;
 };
 
 mir::shell::AccessibilityManager::AccessibilityManager(
@@ -390,7 +426,7 @@ mir::shell::AccessibilityManager::AccessibilityManager(
     enable_key_repeat{options->get<bool>(options::enable_key_repeat_opt)},
     enable_mouse_keys{options->get<bool>(options::enable_mouse_keys_opt)},
     event_transformer{event_transformer},
-    transformer{std::make_shared<MouseKeysTransformer>(main_loop)}
+    transformer{std::make_shared<MouseKeysTransformer>(main_loop, options)}
 {
     if (enable_mouse_keys)
         event_transformer->append(transformer);
