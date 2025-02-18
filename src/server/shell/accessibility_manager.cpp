@@ -104,6 +104,7 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
     {
         namespace geom = mir::geometry;
 
+
         auto const action = mir_keyboard_event_action(kev);
         auto const set_or_clear = [](uint32_t& buttons_down, DirectionalButtons button, MirKeyboardAction action)
         {
@@ -136,18 +137,25 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
         case mir_keyboard_action_up:
             if (buttons_down == none)
                 motion_event_generator.reset();
+
             return true;
         case mir_keyboard_action_down:
             {
                 if (!motion_event_generator)
                 {
-                    motion_event_generator = main_loop->create_alarm(
-                        [dispatcher, this, builder, motion_start_time = std::chrono::steady_clock::now()] mutable
-                        {
-                            auto const motion_step_time = std::chrono::steady_clock::now();
-                            auto const t =
-                                std::chrono::duration_cast<std::chrono::seconds>(motion_step_time - motion_start_time);
-                            auto const speed = acceleration_curve.evaluate(t.count());
+                    auto const shared_weak_alarm = std::make_shared<std::weak_ptr<mir::time::Alarm>>();
+                    motion_event_generator =
+                        main_loop->create_alarm(
+                            [dispatcher,
+                             this,
+                             builder,
+                             motion_start_time = std::chrono::steady_clock::now(),
+                             weak_self = shared_weak_alarm] mutable
+                            {
+                                auto const motion_step_time = std::chrono::steady_clock::now();
+                                auto const t = std::chrono::duration_cast<std::chrono::seconds>(
+                                    motion_step_time - motion_start_time);
+                                auto const speed = acceleration_curve.evaluate(t.count());
 
                             motion_direction = {0, 0};
                             if (buttons_down & up)
@@ -176,9 +184,11 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
                                 mir::events::ScrollAxisH{},
                                 mir::events::ScrollAxisV{}));
 
-                            motion_event_generator->reschedule_in(std::chrono::milliseconds(2));
-                        });
+                                if (auto const& repeat_alarm = weak_self->lock())
+                                    repeat_alarm->reschedule_in(std::chrono::milliseconds(2));
+                            });
 
+                    *shared_weak_alarm = motion_event_generator;
                     motion_event_generator->reschedule_in(std::chrono::milliseconds(0));
                 }
             }
@@ -391,7 +401,7 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
 
     std::shared_ptr<mir::MainLoop> const main_loop;
 
-    std::unique_ptr<mir::time::Alarm> motion_event_generator;
+    std::shared_ptr<mir::time::Alarm> motion_event_generator; // shared_ptr so we can get a weak ptr to it
     std::unique_ptr<mir::time::Alarm> click_event_generator;
     std::unique_ptr<mir::time::Alarm> double_click_event_generator;
 
