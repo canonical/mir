@@ -85,6 +85,8 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
                 return true;
             if (handle_change_pointer_button(kev))
                 return true;
+            if (handle_double_click(kev, dispatcher, builder))
+                return true;
         }
 
         return false;
@@ -259,11 +261,70 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
         }
     }
 
+    bool handle_double_click(
+        MirKeyboardEvent const* kev, Dispatcher const& dispatcher, mir::input::EventBuilder* const builder)
+    {
+        if (mir_keyboard_event_keysym(kev) == XKB_KEY_KP_Add)
+        {
+            if (mir_keyboard_event_action(kev) == mir_keyboard_action_down ||
+                mir_keyboard_event_action(kev) == mir_keyboard_action_repeat)
+                return true;
+
+            dispatcher(builder->pointer_event(
+                std::nullopt,
+                mir_pointer_action_button_down,
+                current_button,
+                std::nullopt,
+                {0, 0},
+                mir_pointer_axis_source_none,
+                mir::events::ScrollAxisH{},
+                mir::events::ScrollAxisV{}));
+
+            dispatcher(builder->pointer_event(
+                std::nullopt,
+                mir_pointer_action_button_up,
+                0,
+                std::nullopt,
+                {0, 0},
+                mir_pointer_axis_source_none,
+                mir::events::ScrollAxisH{},
+                mir::events::ScrollAxisV{}));
+
+            double_click_event_generator = main_loop->create_alarm(
+                [dispatcher, current_button = this->current_button, builder]
+                {
+                    dispatcher(builder->pointer_event(
+                        std::nullopt,
+                        mir_pointer_action_button_down,
+                        current_button,
+                        std::nullopt,
+                        {0, 0},
+                        mir_pointer_axis_source_none,
+                        mir::events::ScrollAxisH{},
+                        mir::events::ScrollAxisV{}));
+
+                    dispatcher(builder->pointer_event(
+                        std::nullopt,
+                        mir_pointer_action_button_up,
+                        0,
+                        std::nullopt,
+                        {0, 0},
+                        mir_pointer_axis_source_none,
+                        mir::events::ScrollAxisH{},
+                        mir::events::ScrollAxisV{}));
+                });
+
+            double_click_event_generator->reschedule_in(std::chrono::milliseconds(100));
+        }
+
+        return false;
+    }
 
     std::shared_ptr<mir::MainLoop> const main_loop;
 
     std::unique_ptr<mir::time::Alarm> motion_event_generator;
     std::unique_ptr<mir::time::Alarm> click_event_generator;
+    std::unique_ptr<mir::time::Alarm> double_click_event_generator;
 
     mir::geometry::DisplacementF motion_direction;
     MirPointerButtons current_button{mir_pointer_button_primary};
