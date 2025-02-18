@@ -65,10 +65,11 @@ bool mi::InputEventTransformer::handle(MirEvent const& event)
                 }
 
                 if (t->transform_input_event(dispatcher, event))
+                {
                     handled = true;
+                    break;
+                }
             }
-
-            handled = false;
         });
 
     return handled;
