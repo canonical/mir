@@ -17,6 +17,7 @@
 #include "application_selector.h"
 #include "mir/geometry/forward.h"
 
+#include <limits>
 #include <miral/minimal_window_manager.h>
 #include <miral/toolkit_event.h>
 #include <miral/application_info.h>
@@ -760,13 +761,32 @@ auto miral::is_occluded(
         auto const rect_a =
             geom::Rectangle{rect.top_left, geom::Size{rect.size.width, (hole.top() - rect.top()).as_int()}};
 
+        auto const positive_or_inf = [](int val)
+        {
+            return val >= 0 ? val : std::numeric_limits<int>::max();
+        };
+
         auto const rect_b = geom::Rectangle{
             geom::Point{rect.left(), rect.top()},
-            geom::Size{(hole.left() - rect.left()).as_int(), rect.size.height}};
+            geom::Size{
+                (hole.left() - rect.left()).as_int(),
+                std::min({
+                    hole.size.height.as_int(),
+                    rect.size.height.as_int(),
+                    positive_or_inf((hole.bottom() - rect.top()).as_int()),
+                    positive_or_inf((hole.top() - rect.bottom()).as_int()),
+                })}};
 
         auto const rect_c = geom::Rectangle{
             geom::Point{hole.right(), rect.top()},
-            geom::Size{(rect.right() - hole.right()).as_int(), rect.size.height}};
+            geom::Size{
+                (rect.right() - hole.right()).as_int(),
+                std::min({
+                    hole.size.height.as_int(),
+                    rect.size.height.as_int(),
+                    positive_or_inf((hole.bottom() - rect.top()).as_int()),
+                    positive_or_inf((hole.top() - rect.bottom()).as_int()),
+                })}};
 
         auto const rect_d = geom::Rectangle{
             geom::Point{rect.left(), hole.bottom()},
