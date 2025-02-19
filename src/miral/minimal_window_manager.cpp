@@ -691,8 +691,11 @@ void miral::MinimalWindowManager::Impl::try_place_new_window_and_account_for_occ
                     [this](auto& window)
                     {
                         auto const& info = tools.info_for(window);
-                        // Skip invisible or non-application layer windows
-                        if (!info.is_visible() || info.depth_layer() != mir_depth_layer_application)
+                        // Skip invisible, windows not in the application
+                        // layers, and non-floating (fullscreened or maximized)
+                        // windows
+                        if (!info.is_visible() || info.depth_layer() != mir_depth_layer_application ||
+                            info.state() != mir_window_state_restored)
                             return false;
 
                         return true;
@@ -714,9 +717,6 @@ void miral::MinimalWindowManager::Impl::try_place_new_window_and_account_for_occ
     {
         if (!rect.overlaps(hole))
             return {rect};
-
-        if (hole.size == geom::Size{0, 0})
-            return {};
 
         auto const rect_a =
             geom::Rectangle{rect.top_left, geom::Size{rect.size.width, (hole.top() - rect.top()).as_int()}};
@@ -759,14 +759,14 @@ void miral::MinimalWindowManager::Impl::try_place_new_window_and_account_for_occ
         RectangleSet test_rects{initial_test_rect};
         for (auto const& window_rect : window_rects)
         {
-            RectangleSet iter_output_rects;
+            RectangleSet iter_unoccluded_areas;
             for (auto const& test_rect : test_rects)
             {
-                auto const window_output_rects = subtract_rectangles(test_rect, window_rect);
-                iter_output_rects.insert(window_output_rects.begin(), window_output_rects.end());
+                auto const unoccluded_areas = subtract_rectangles(test_rect, window_rect);
+                iter_unoccluded_areas.insert(unoccluded_areas.begin(), unoccluded_areas.end());
             }
 
-            test_rects = std::move(iter_output_rects);
+            test_rects = std::move(iter_unoccluded_areas);
 
             if (test_rects.empty())
                 return test_rects;
