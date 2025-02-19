@@ -2118,6 +2118,13 @@ auto antipodes(MirPlacementGravity rect_gravity) -> MirPlacementGravity
 
 auto constrain_to(mir::geometry::Rectangle const& rect, Point point) -> Point
 {
+    // The LXQt panel items sets anchor rects outside their window geometry,
+    // conditionally allow this as a workaround
+    if (getenv("MIR_ANCHOR_RECTANGLE_UNCONSTRAINED") != nullptr)
+    {
+        return point;
+    }
+
     if (point.x < rect.top_left.x)
         point.x = rect.top_left.x;
 
