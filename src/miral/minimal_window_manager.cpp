@@ -29,6 +29,7 @@
 #include <unordered_set>
 
 using namespace miral::toolkit;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -669,18 +670,10 @@ bool miral::MinimalWindowManager::Impl::advise_new_window(WindowInfo const& info
 
 void miral::MinimalWindowManager::Impl::try_place_new_window_and_account_for_occlusion(WindowSpecification& parameters)
 {
-    namespace geom = mir::geometry;
-
-    using RectangleSet = std::unordered_set<
-                    geom::Rectangle,
-                    decltype([](geom::Rectangle const& s) {
-                        return std::hash<int>{}(s.size.height.as_int() * 31 + s.size.width.as_int());
-                    })>;
-
     if (parameters.state() != mir_window_state_restored)
         return;
 
-    RectangleSet window_rects;
+    std::vector<geom::Rectangle> window_rects;
     tools.for_each_application(
         [&window_rects, this](ApplicationInfo& app_info)
         {
@@ -705,9 +698,55 @@ void miral::MinimalWindowManager::Impl::try_place_new_window_and_account_for_occ
                     {
                         return geom::Rectangle{window.top_left(), window.size()};
                     });
-            window_rects.insert(rectangles_to_consider.begin(), rectangles_to_consider.end());
+            window_rects.insert(window_rects.end(), rectangles_to_consider.begin(), rectangles_to_consider.end());
         });
 
+    // First, check if the given rectangle (if any) is good enough
+    auto const initial_top_left = parameters.top_left().value_or({});
+    auto const size = parameters.size().value_or({});
+    auto const initial_rectangle = geom::Rectangle{initial_top_left, size};
+    auto const min_area = geom::Size{50, 50};
+    if (!is_occluded(initial_rectangle, window_rects, min_area))
+        return;
+
+    // Try place the window around the suggested position
+    auto constexpr max_iterations{16};
+    auto constexpr base_offset{48};
+    for (auto multiplier = 1; multiplier < max_iterations; multiplier++)
+    {
+        auto const offset{base_offset * multiplier};
+        std::array const test_rects{
+            geom::Rectangle{initial_top_left + Displacement(offset, offset), size},
+            geom::Rectangle{initial_top_left + Displacement(-offset, offset), size},
+            geom::Rectangle{initial_top_left + Displacement(-offset, -offset), size},
+            geom::Rectangle{initial_top_left + Displacement(offset, -offset), size}};
+
+        auto valid_test_rects = std::ranges::filter_view(
+            test_rects,
+            [this](auto const rectangle)
+            {
+                return tools.active_output().overlaps(rectangle);
+            });
+
+        for (auto const& test_rect : valid_test_rects)
+        {
+            if (!is_occluded(test_rect, window_rects, min_area))
+            {
+                parameters.top_left().value() = test_rect.top_left;
+                return;
+            }
+        }
+    }
+
+    // If we can't find any valid offset position, we use the original
+    // one, possibly occluding / being occluded by another window.
+}
+
+auto miral::is_occluded(
+    mir::geometry::Rectangle test_rectangle,
+    std::vector<mir::geometry::Rectangle> const& occluding_rectangles,
+    mir::geometry::Size min_visible_size) -> bool
+{
     // Worst case scenario: you try taking a hole out of the middle of
     // a rect, results in 4 rectangles. Every other case is a special
     // case of this one where the width or height of the resulting
@@ -743,11 +782,12 @@ void miral::MinimalWindowManager::Impl::try_place_new_window_and_account_for_occ
         return std::vector(valid_rects.cbegin(), valid_rects.cend());
     };
 
-    auto const get_visible_rects =
-        [subtract_rectangles](geom::Rectangle initial_test_rect, RectangleSet const& window_rects)
+    auto const get_visible_rects = [subtract_rectangles](
+                                       geom::Rectangle initial_test_rect,
+                                       std::vector<geom::Rectangle> const& window_rects) -> std::vector<geom::Rectangle>
     {
         if (window_rects.empty())
-            return RectangleSet{initial_test_rect};
+            return {initial_test_rect};
 
         // Starting with rectangle we're trying to place, repeatedly
         // subtract all visible rectangles from it, accumulating
@@ -756,76 +796,40 @@ void miral::MinimalWindowManager::Impl::try_place_new_window_and_account_for_occ
         // In the end, if no rectangles remain, then the window is
         // fully occluded. Otherwise, whatever rectangles remain are
         // the visible part.
-        RectangleSet test_rects{initial_test_rect};
+        std::vector test_rects{initial_test_rect};
         for (auto const& window_rect : window_rects)
         {
-            RectangleSet iter_unoccluded_areas;
+            std::vector<geom::Rectangle> iter_unoccluded_areas;
             for (auto const& test_rect : test_rects)
             {
                 auto const unoccluded_areas = subtract_rectangles(test_rect, window_rect);
-                iter_unoccluded_areas.insert(unoccluded_areas.begin(), unoccluded_areas.end());
+                iter_unoccluded_areas.insert(
+                    iter_unoccluded_areas.end(), unoccluded_areas.begin(), unoccluded_areas.end());
             }
 
             test_rects = std::move(iter_unoccluded_areas);
 
             if (test_rects.empty())
-                return test_rects;
+                return {};
         }
 
         return test_rects;
     };
 
-    auto const visible_area_large_enough = [](RectangleSet const& visible_rects)
+    auto const visible_area_large_enough =
+        [](std::vector<geom::Rectangle> const& visible_rects, geom::Size min_visible_size)
     {
-        auto constexpr min_visible_width = 50;
-        auto constexpr min_visible_height = 50;
+        auto const min_visible_width = min_visible_size.width;
+        auto const min_visible_height = min_visible_size.height;
 
         return std::ranges::any_of(
             visible_rects,
             [min_visible_width, min_visible_height](auto const& rect)
             {
-                return rect.size.width.as_int() >= min_visible_width && rect.size.height.as_int() >= min_visible_height;
+                return rect.size.width >= min_visible_width && rect.size.height >= min_visible_height;
             });
     };
 
-    // First, check if the given rectangle (if any) is good enough
-    auto const initial_top_left = parameters.top_left().value_or({});
-    auto const size = parameters.size().value_or({});
-    auto const initial_rectangle = geom::Rectangle{initial_top_left, size};
-    if (auto initial_position_visible_rects = get_visible_rects(initial_rectangle, window_rects);
-        !initial_position_visible_rects.empty() && visible_area_large_enough(initial_position_visible_rects))
-        return;
-
-    // Try place the window around the suggested position
-    auto constexpr max_iterations{16};
-    auto constexpr base_offset{48};
-    for (auto multiplier = 1; multiplier < max_iterations; multiplier++)
-    {
-        auto const offset{base_offset * multiplier};
-        std::array const test_rects{
-            geom::Rectangle{initial_top_left + Displacement(offset, offset), size},
-            geom::Rectangle{initial_top_left + Displacement(-offset, offset), size},
-            geom::Rectangle{initial_top_left + Displacement(-offset, -offset), size},
-            geom::Rectangle{initial_top_left + Displacement(offset, -offset), size}};
-
-        auto valid_test_rects = std::ranges::filter_view(
-            test_rects,
-            [this](auto const rectangle)
-            {
-                return tools.active_output().overlaps(rectangle);
-            });
-
-        for (auto const& test_rect : valid_test_rects)
-        {
-            auto const visible_rects = get_visible_rects(test_rect, window_rects);
-            if (!visible_rects.empty() && visible_area_large_enough(visible_rects))
-            {
-                parameters.top_left().value() = test_rect.top_left;
-                return;
-            }
-        }
-    }
-
-    // If we can't find any valid offset position, we use the original
-    // one, possibly occluding / being occluded by another window.
+    auto visible_areas = get_visible_rects(test_rectangle, occluding_rectangles);
+    return visible_areas.empty() || !visible_area_large_enough(visible_areas, min_visible_size);
 }

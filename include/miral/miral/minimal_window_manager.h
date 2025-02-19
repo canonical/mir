@@ -118,6 +118,11 @@ private:
     struct Impl;
     Impl* const self;
 };
+
+auto is_occluded(
+    mir::geometry::Rectangle test_rectangle,
+    std::vector<mir::geometry::Rectangle> const& occluding_rectangles,
+    mir::geometry::Size min_visible_size) -> bool;
 }
 
 #endif //MIRAL_MINIMAL_WINDOW_MANAGER_H

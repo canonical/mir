@@ -516,6 +516,7 @@ global:
     miral::InputConfiguration::Keyboard::set_repeat_delay*;
     miral::InputConfiguration::Keyboard::set_repeat_rate*;
     miral::InputConfiguration::keyboard*;
+    miral::is_occluded*;
     typeinfo?for?miral::InputConfiguration::Keyboard;
   };
 } MIRAL_5.1;
