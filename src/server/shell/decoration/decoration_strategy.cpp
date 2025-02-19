@@ -686,7 +686,12 @@ auto RendererStrategy::Text::Impl::font_path() -> std::string
 
 auto RendererStrategy::Text::Impl::utf8_to_utf32(std::string const& text) -> std::u32string
 {
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
+#pragma GCC diagnostic pop
+
     std::u32string utf32_text;
     try {
         utf32_text = converter.from_bytes(text);

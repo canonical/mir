@@ -59,7 +59,10 @@ struct Printer
     void printhelp(BackgroundInfo const& region);
 
 private:
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     std::wstring_convert<preferred_codecvt> converter;
+#pragma GCC diagnostic pop
 
     bool working = false;
     FT_Library lib;
