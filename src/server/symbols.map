@@ -1414,6 +1414,7 @@ global:
     mir::Server::the_token_authority*;
     mir::shell::AbstractShell::is_above*;
     mir::shell::AccessibilityManager::notify_helpers*;
+    mir::shell::AccessibilityManager::override_key_repeat_settings*;
     mir::shell::AccessibilityManager::register_keyboard_helper*;
     mir::shell::AccessibilityManager::repeat_delay*;
     mir::shell::AccessibilityManager::repeat_rate*;
