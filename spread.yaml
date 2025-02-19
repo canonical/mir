@@ -11,8 +11,9 @@ backends:
             - alpine-edge
             - ubuntu-24.04
             - fedora-40
+            - fedora-41
             - fedora-rawhide:
-                image: images:fedora/40
+                image: images:fedora/41
 
 environment:
     ARCH: amd64
