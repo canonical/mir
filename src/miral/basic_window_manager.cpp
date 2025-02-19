@@ -2219,6 +2219,9 @@ auto child_placement_strategy(
 {
     mir::optional_value<Rectangle> default_result;
 
+    log_debug("=====> child_placement_strategy by %d to {%d, %d, %d, %d}", child_gravity,
+        parent_rect.left().as_int(), parent_rect.top().as_int(), parent_rect.size.width.as_int(), parent_rect.size.height.as_int());
+
     for (auto const& rect_gravity : anchor_gravity)
     {
         {
@@ -2226,7 +2229,11 @@ auto child_placement_strategy(
                 offset_for(child_size, child_gravity);
 
             if (placement_bounds.contains(Rectangle{result, child_size}))
+            {
+                log_debug("=====> Placed by %d to {%d, %d, %d, %d}",
+                    rect_gravity, result.x.as_int(), result.y.as_int(), child_size.width.as_int(), child_size.height.as_int());
                 return Rectangle{result, child_size};
+            }
 
             if (!default_result.is_set())
                 default_result = Rectangle{result, child_size};
@@ -2238,7 +2245,11 @@ auto child_placement_strategy(
                 offset_for(child_size, flip_x(child_gravity));
 
             if (placement_bounds.contains(Rectangle{result, child_size}))
+            {
+                log_debug("=====> Placed by mir_placement_hints_flip_x to {%d, %d, %d, %d}",
+                    result.x.as_int(), result.y.as_int(), child_size.width.as_int(), child_size.height.as_int());
                 return Rectangle{result, child_size};
+            }
         }
 
         if (hints & mir_placement_hints_flip_y)
@@ -2247,7 +2258,11 @@ auto child_placement_strategy(
                 offset_for(child_size, flip_y(child_gravity));
 
             if (placement_bounds.contains(Rectangle{result, child_size}))
+            {
+                log_debug("=====> Placed by mir_placement_hints_flip_y to {%d, %d, %d, %d}",
+                    result.x.as_int(), result.y.as_int(), child_size.width.as_int(), child_size.height.as_int());
                 return Rectangle{result, child_size};
+            }
         }
 
         if (hints & mir_placement_hints_flip_x && hints & mir_placement_hints_flip_y)
@@ -2256,7 +2271,11 @@ auto child_placement_strategy(
                 offset_for(child_size, flip_x(flip_y(child_gravity)));
 
             if (placement_bounds.contains(Rectangle{result, child_size}))
+            {
+                log_debug("=====> Placed by mir_placement_hints_flip_x & mir_placement_hints_flip_y to {%d, %d, %d, %d}",
+                    result.x.as_int(), result.y.as_int(), child_size.width.as_int(), child_size.height.as_int());
                 return Rectangle{result, child_size};
+            }
         }
     }
 
@@ -2288,7 +2307,11 @@ auto child_placement_strategy(
         }
 
         if (placement_bounds.contains(Rectangle{result, child_size}))
+        {
+            log_debug("=====> Placed by %d and %d to {%d, %d, %d, %d}",
+                rect_gravity, hints, result.x.as_int(), result.y.as_int(), child_size.width.as_int(), child_size.height.as_int());
             return Rectangle{result, child_size};
+        }
     }
 
     for (auto const& rect_gravity : anchor_gravity)
@@ -2331,7 +2354,11 @@ auto child_placement_strategy(
         }
 
         if (placement_bounds.contains(Rectangle{result, child_size}))
+        {
+            log_debug("=====> Placed by %d and %d to {%d, %d, %d, %d}",
+                rect_gravity, hints, result.x.as_int(), result.y.as_int(), child_size.width.as_int(), child_size.height.as_int());
             return Rectangle{result, child_size};
+        }
     }
 
     return default_result;
