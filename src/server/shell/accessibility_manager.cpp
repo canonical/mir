@@ -86,7 +86,7 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
                 return true;
             if (handle_click(kev, dispatcher, builder))
                 return true;
-            if (handle_change_pointer_button(kev))
+            if (handle_change_pointer_button(kev, dispatcher))
                 return true;
             if (handle_double_click(kev, dispatcher, builder))
                 return true;
@@ -235,10 +235,11 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
         return false;
     }
 
-    bool handle_change_pointer_button(MirKeyboardEvent const* kev)
+    bool handle_change_pointer_button(MirKeyboardEvent const* kev, std::shared_ptr<Dispatcher> const& dispatcher)
     {
         auto const repeat_or_down = mir_keyboard_event_action(kev) == mir_keyboard_action_down ||
                                     mir_keyboard_event_action(kev) == mir_keyboard_action_repeat;
+
 
         // Up events
         switch (mir_keyboard_event_keysym(kev))
@@ -246,18 +247,23 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
         case XKB_KEY_KP_Divide:
             if (!repeat_or_down)
                 current_button = mir_pointer_button_primary;
-            return true;
+            break;
         case XKB_KEY_KP_Multiply:
             if (!repeat_or_down)
                 current_button = mir_pointer_button_tertiary;
-            return true;
+            break;
         case XKB_KEY_KP_Subtract:
             if (!repeat_or_down)
                 current_button = mir_pointer_button_secondary;
-            return true;
+            break;
         default:
             return false;
         }
+
+        if(current_button)
+            release_current_cursor_button(dispatcher);
+
+        return true;
     }
 
     bool handle_double_click(
