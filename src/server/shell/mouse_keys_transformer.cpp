@@ -23,12 +23,16 @@
 #include "mir/time/alarm.h"
 
 #include <chrono>
+#include <cmath>
 #include <cstdint>
 
 mir::input::MouseKeysTransformer::MouseKeysTransformer(
     std::shared_ptr<mir::MainLoop> const& main_loop, std::shared_ptr<mir::options::Option> const& options) :
     main_loop{main_loop},
-    acceleration_curve{options}
+    acceleration_curve{options},
+    max_speed{
+        options->get<double>(mir::options::mouse_keys_max_speed_x),
+        options->get<double>(mir::options::mouse_keys_max_speed_y)}
 {
 }
 
@@ -124,8 +128,7 @@ bool mir::input::MouseKeysTransformer::handle_motion(
                         float const dt = std::chrono::duration_cast<SecondF>(repeat_delay).count();
 
                         // Normalize the speed so it's in
-                        // pixels/second, and not pixels/alarm
-                        // invocation
+                        // pixels/alarm_invocation, and not pixels/second
                         auto const speed = acceleration_curve.evaluate(t.count()) * dt;
 
                         motion_direction = {0, 0};
@@ -137,6 +140,24 @@ bool mir::input::MouseKeysTransformer::handle_motion(
                             motion_direction.dx += geom::DeltaXF{-speed};
                         if (buttons_down & right)
                             motion_direction.dx += geom::DeltaXF{speed};
+
+                        auto const fabs = [](auto delta)
+                        {
+                            return decltype(delta){std::fabs(delta.as_value())};
+                        };
+
+                        auto const sign = [](auto delta)
+                        {
+                            return delta.as_value() > 0 ? 1 : -1;
+                        };
+
+                        if(max_speed.dx.as_value() > 0)
+                            motion_direction.dx =
+                                sign(motion_direction.dx) * std::min(fabs(motion_direction.dx), max_speed.dx * dt);
+
+                        if(max_speed.dy.as_value() > 0)
+                            motion_direction.dy =
+                                sign(motion_direction.dy) * std::min(fabs(motion_direction.dy), max_speed.dy * dt);
 
                         // If the cursor stops moving without releasing
                         // all buttons (if for example you press two
