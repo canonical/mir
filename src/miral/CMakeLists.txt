@@ -88,6 +88,7 @@ add_library(miral-external OBJECT
     x11_support.cpp                     ${miral_include}/miral/x11_support.h
     zone.cpp                            ${miral_include}/miral/zone.h
     decorations.cpp                     ${miral_include}/miral/decorations.h
+    enable_mousekeys.cpp                ${miral_include}/miral/enable_mousekeys.h
 )
 
 add_library(miral SHARED
