@@ -61,6 +61,8 @@ bool mi::InputEventTransformer::handle(MirEvent const& event)
                 if (!t)
                 {
                     it = input_transformers.erase(it);
+                    if(it == input_transformers.end())
+                        return;
                     continue;
                 }
 
