@@ -16,8 +16,8 @@
 
 #include "mir/shell/accessibility_manager.h"
 
-#include "mir/geometry/displacement.h"
 #include "mir/input/event_builder.h"
+#include "mir/input/input_sink.h"
 #include "mir/main_loop.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
@@ -72,7 +72,6 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
         mir::input::EventBuilder* builder,
         MirEvent const& event) override
     {
-
         if (mir_event_get_type(&event) != mir_event_type_input)
             return false;
 
@@ -86,7 +85,7 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
                 return true;
             if (handle_click(kev, dispatcher, builder))
                 return true;
-            if (handle_change_pointer_button(kev, dispatcher))
+            if (handle_change_pointer_button(kev, dispatcher, builder))
                 return true;
             if (handle_double_click(kev, dispatcher, builder))
                 return true;
@@ -235,7 +234,8 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
         return false;
     }
 
-    bool handle_change_pointer_button(MirKeyboardEvent const* kev, std::shared_ptr<Dispatcher> const& dispatcher)
+    bool handle_change_pointer_button(
+        MirKeyboardEvent const* kev, Dispatcher const& dispatcher, mir::input::EventBuilder* const builder)
     {
         auto const repeat_or_down = mir_keyboard_event_action(kev) == mir_keyboard_action_down ||
                                     mir_keyboard_event_action(kev) == mir_keyboard_action_repeat;
@@ -261,7 +261,7 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
         }
 
         if(current_button)
-            release_current_cursor_button(dispatcher);
+            release_current_cursor_button(dispatcher, builder);
 
         return true;
     }
@@ -329,16 +329,6 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
         return false;
     }
 
-
-    std::shared_ptr<mir::MainLoop> const main_loop;
-
-    std::shared_ptr<mir::time::Alarm> motion_event_generator; // shared_ptr so we can get a weak ptr to it
-    std::unique_ptr<mir::time::Alarm> click_event_generator;
-    std::unique_ptr<mir::time::Alarm> double_click_event_generator;
-
-    mir::geometry::DisplacementF motion_direction;
-    MirPointerButtons current_button{mir_pointer_button_primary};
-
     enum DirectionalButtons
     {
         none = 0,
@@ -347,8 +337,6 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
         left = 1 << 2,
         right = 1 << 3
     };
-
-    uint32_t buttons_down{none};
 
     struct AccelerationCurve
     {
@@ -368,6 +356,17 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
             return a * t * t + b * t + c;
         }
     };
+
+    std::shared_ptr<mir::MainLoop> const main_loop;
+
+    std::shared_ptr<mir::time::Alarm> motion_event_generator; // shared_ptr so we can get a weak ptr to it
+    std::unique_ptr<mir::time::Alarm> click_event_generator;
+    std::unique_ptr<mir::time::Alarm> double_click_event_generator;
+
+    mir::geometry::DisplacementF motion_direction;
+    MirPointerButtons current_button{mir_pointer_button_primary};
+
+    uint32_t buttons_down{none};
 
     AccelerationCurve const acceleration_curve;
 
