@@ -28,7 +28,7 @@
 mir::input::MouseKeysTransformer::MouseKeysTransformer(
     std::shared_ptr<mir::MainLoop> const& main_loop, std::shared_ptr<mir::options::Option> const& options) :
     main_loop{main_loop},
-    acceleration_curve(options)
+    acceleration_curve{options}
 {
 }
 
@@ -295,13 +295,13 @@ bool mir::input::MouseKeysTransformer::handle_drag_end(
 
 mir::input::MouseKeysTransformer::AccelerationCurve::AccelerationCurve(
     std::shared_ptr<mir::options::Option> const& options) :
-    a(options->get<double>(mir::options::mouse_keys_acceleration_quadratic_factor)),
-    b(options->get<double>(mir::options::mouse_keys_acceleration_linear_factor)),
-    c(options->get<double>(mir::options::mouse_keys_acceleration_constant_factor))
+    a{options->get<double>(mir::options::mouse_keys_acceleration_quadratic_factor)},
+    b{options->get<double>(mir::options::mouse_keys_acceleration_linear_factor)},
+    c{options->get<double>(mir::options::mouse_keys_acceleration_constant_factor)}
 {
 }
 
-float mir::input::MouseKeysTransformer::AccelerationCurve::evaluate(float t) const
+double mir::input::MouseKeysTransformer::AccelerationCurve::evaluate(double t) const
 {
     return a * t * t + b * t + c;
 }
