@@ -62,11 +62,11 @@ private:
     {
         // Quadratic, linear, and constant factors repsectively
         // ax^2 + bx + c
-        float const a, b, c;
+        double const a, b, c;
 
         AccelerationCurve(std::shared_ptr<mir::options::Option> const& options);
 
-        float evaluate(float t) const
+        double evaluate(double t) const
         {
             return a * t * t + b * t + c;
         }
