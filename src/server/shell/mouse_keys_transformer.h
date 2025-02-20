@@ -86,6 +86,7 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
     uint32_t buttons_down{none};
 
     AccelerationCurve const acceleration_curve;
+    geometry::DisplacementF max_speed;
 
     bool is_dragging{false};
 
