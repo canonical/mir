@@ -18,6 +18,7 @@
 #define MIR_SHELL_ACCESSIBILITY_MANAGER_H
 
 #include "mir/input/input_event_transformer.h"
+
 #include <memory>
 #include <optional>
 #include <vector>
@@ -25,6 +26,11 @@
 namespace mir
 {
 class MainLoop;
+namespace input
+{
+class EventFilter;
+class CompositeEventFilter;
+}
 namespace options
 {
 class Option;
@@ -50,6 +56,8 @@ public:
 
     void notify_helpers() const;
 
+    void toggle_mousekeys(bool on);
+
 private:
     std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
 
@@ -58,10 +66,11 @@ private:
     int repeat_delay_{600};
     bool enable_key_repeat;
 
-    bool enable_mouse_keys;
-
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
-    std::shared_ptr<mir::input::InputEventTransformer::Transformer> const transformer;
+    std::shared_ptr<mir::MainLoop> const main_loop;
+    std::shared_ptr<mir::options::Option> const options;
+
+    std::shared_ptr<mir::input::InputEventTransformer::Transformer> transformer;
 };
 }
 }
