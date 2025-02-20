@@ -192,7 +192,7 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
                                 dispatcher->dispatch_pointer_event(
                                     std::nullopt,
                                     mir_pointer_action_motion,
-                                    0,
+                                    is_dragging ? current_button : 0,
                                     std::nullopt,
                                     motion_direction,
                                     mir_pointer_axis_source_none,
@@ -225,33 +225,11 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
             switch (action)
             {
             case mir_keyboard_action_down:
-                dispatcher->dispatch_pointer_event(
-                    std::nullopt,
-                    mir_pointer_action_button_down,
-                    current_button,
-                    std::nullopt,
-                    {0, 0},
-                    mir_pointer_axis_source_none,
-                    mir::events::ScrollAxisH{},
-                    mir::events::ScrollAxisV{});
-                mir::log_debug("Click down");
+                press_current_cursor_button(dispatcher);
                 return true;
             case mir_keyboard_action_up:
-                {
-                    dispatcher->dispatch_pointer_event(
-                        std::nullopt,
-                        mir_pointer_action_button_up,
-                        0,
-                        std::nullopt,
-                        {0, 0},
-                        mir_pointer_axis_source_none,
-                        mir::events::ScrollAxisH{},
-                        mir::events::ScrollAxisV{});
-
-                    mir::log_debug("Click up");
-
-                    return true;
-                }
+                release_current_cursor_button(dispatcher);
+                return true;
             case mir_keyboard_action_repeat:
                 return true;
             default:
@@ -297,51 +275,19 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
                 mir_keyboard_event_action(kev) == mir_keyboard_action_repeat)
                 return true;
 
-            dispatcher->dispatch_pointer_event(
-                std::nullopt,
-                mir_pointer_action_button_down,
-                current_button,
-                std::nullopt,
-                {0, 0},
-                mir_pointer_axis_source_none,
-                mir::events::ScrollAxisH{},
-                mir::events::ScrollAxisV{});
-
-            dispatcher->dispatch_pointer_event(
-                std::nullopt,
-                mir_pointer_action_button_up,
-                0,
-                std::nullopt,
-                {0, 0},
-                mir_pointer_axis_source_none,
-                mir::events::ScrollAxisH{},
-                mir::events::ScrollAxisV{});
+            press_current_cursor_button(dispatcher);
+            release_current_cursor_button(dispatcher);
 
             double_click_event_generator = main_loop->create_alarm(
-                [dispatcher, current_button = this->current_button]
+                [dispatcher, this]
                 {
-                    dispatcher->dispatch_pointer_event(
-                        std::nullopt,
-                        mir_pointer_action_button_down,
-                        current_button,
-                        std::nullopt,
-                        {0, 0},
-                        mir_pointer_axis_source_none,
-                        mir::events::ScrollAxisH{},
-                        mir::events::ScrollAxisV{});
-
-                    dispatcher->dispatch_pointer_event(
-                        std::nullopt,
-                        mir_pointer_action_button_up,
-                        0,
-                        std::nullopt,
-                        {0, 0},
-                        mir_pointer_axis_source_none,
-                        mir::events::ScrollAxisH{},
-                        mir::events::ScrollAxisV{});
+                    press_current_cursor_button(dispatcher);
+                    release_current_cursor_button(dispatcher);
                 });
 
             double_click_event_generator->reschedule_in(std::chrono::milliseconds(100));
+
+            return true;
         }
 
         return false;
@@ -355,15 +301,8 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
                 mir_keyboard_event_action(kev) == mir_keyboard_action_repeat)
                 return true;
 
-            dispatcher->dispatch_pointer_event(
-                std::nullopt,
-                mir_pointer_action_button_down,
-                current_button,
-                std::nullopt,
-                {0, 0},
-                mir_pointer_axis_source_none,
-                mir::events::ScrollAxisH{},
-                mir::events::ScrollAxisV{});
+            press_current_cursor_button(dispatcher);
+            is_dragging = true;
 
             return true;
         }
@@ -379,15 +318,8 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
                 mir_keyboard_event_action(kev) == mir_keyboard_action_repeat)
                 return true;
 
-            dispatcher->dispatch_pointer_event(
-                std::nullopt,
-                mir_pointer_action_button_up,
-                0,
-                std::nullopt,
-                {0, 0},
-                mir_pointer_axis_source_none,
-                mir::events::ScrollAxisH{},
-                mir::events::ScrollAxisV{});
+            release_current_cursor_button(dispatcher);
+            is_dragging = false;
 
             return true;
         }
@@ -436,6 +368,36 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
     };
 
     AccelerationCurve const acceleration_curve;
+
+    bool is_dragging{false};
+
+    void press_current_cursor_button(std::shared_ptr<Dispatcher> const& dispatcher)
+    {
+        dispatcher->dispatch_pointer_event(
+            std::nullopt,
+            mir_pointer_action_button_down,
+            current_button,
+            std::nullopt,
+            {0, 0},
+            mir_pointer_axis_source_none,
+            mir::events::ScrollAxisH{},
+            mir::events::ScrollAxisV{});
+    }
+
+    void release_current_cursor_button(std::shared_ptr<Dispatcher> const& dispatcher)
+    {
+        dispatcher->dispatch_pointer_event(
+            std::nullopt,
+            mir_pointer_action_button_up,
+            0,
+            std::nullopt,
+            {0, 0},
+            mir_pointer_axis_source_none,
+            mir::events::ScrollAxisH{},
+            mir::events::ScrollAxisV{});
+
+        is_dragging = false;
+    }
 };
 
 mir::shell::AccessibilityManager::AccessibilityManager(
