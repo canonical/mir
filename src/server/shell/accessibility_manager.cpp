@@ -13,13 +13,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#include "mir/shell/accessibility_manager.h"
 #include "mouse_keys_transformer.h"
 
+#include "mir/input/input_event_transformer.h"
 #include "mir/main_loop.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
+#include "mir/shell/accessibility_manager.h"
 #include "mir/shell/keyboard_helper.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
@@ -55,15 +55,29 @@ void mir::shell::AccessibilityManager::notify_helpers() const {
         helper->repeat_info_changed(repeat_rate(), repeat_delay());
 }
 
+void mir::shell::AccessibilityManager::toggle_mousekeys(bool on)
+{
+    if (on)
+    {
+        if (transformer)
+            return;
+
+        transformer = std::make_shared<mir::input::MouseKeysTransformer>(main_loop, options);
+        event_transformer->append(transformer);
+    } else {
+        transformer.reset();
+    }
+}
+
 mir::shell::AccessibilityManager::AccessibilityManager(
     std::shared_ptr<MainLoop> const& main_loop,
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<input::InputEventTransformer> const& event_transformer) :
     enable_key_repeat{options->get<bool>(options::enable_key_repeat_opt)},
-    enable_mouse_keys{options->get<bool>(options::enable_mouse_keys_opt)},
     event_transformer{event_transformer},
-    transformer{std::make_shared<mir::input::MouseKeysTransformer>(main_loop, options)}
+    main_loop{main_loop},
+    options{options}
 {
-    if (enable_mouse_keys)
-        event_transformer->append(transformer);
+    if (options->get<bool>(options::enable_mouse_keys_opt))
+        toggle_mousekeys(true);
 }
