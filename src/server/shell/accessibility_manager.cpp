@@ -144,28 +144,26 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
                 if (!motion_event_generator)
                 {
                     auto const shared_weak_alarm = std::make_shared<std::weak_ptr<mir::time::Alarm>>();
-                    motion_event_generator =
-                        main_loop->create_alarm(
-                            [dispatcher,
-                             this,
-                             builder,
-                             motion_start_time = std::chrono::steady_clock::now(),
-                             weak_self = shared_weak_alarm] mutable
-                            {
-                                using SecondF = std::chrono::duration<float>;
-                                auto constexpr repeat_delay = std::chrono::milliseconds(2); // 500 Hz rate
+                    motion_event_generator = main_loop->create_alarm(
+                        [dispatcher,
+                         this,
+                         builder,
+                         motion_start_time = std::chrono::steady_clock::now(),
+                         weak_self = shared_weak_alarm] mutable
+                        {
+                            using SecondF = std::chrono::duration<float>;
+                            auto constexpr repeat_delay = std::chrono::milliseconds(2); // 500 Hz rate
 
-                                auto const motion_step_time = std::chrono::steady_clock::now();
-                                auto const t =
-                                    std::chrono::duration_cast<SecondF>(motion_step_time - motion_start_time);
+                            auto const motion_step_time = std::chrono::steady_clock::now();
+                            auto const t = std::chrono::duration_cast<SecondF>(motion_step_time - motion_start_time);
 
-                                // duration_cast is not constexpr yet
-                                float const dt = std::chrono::duration_cast<SecondF>(repeat_delay).count();
+                            // duration_cast is not constexpr yet
+                            float const dt = std::chrono::duration_cast<SecondF>(repeat_delay).count();
 
-                                // Normalize the speed so it's in
-                                // pixels/second, and not pixels/alarm
-                                // invocation
-                                auto const speed = acceleration_curve.evaluate(t.count()) * dt;
+                            // Normalize the speed so it's in
+                            // pixels/second, and not pixels/alarm
+                            // invocation
+                            auto const speed = acceleration_curve.evaluate(t.count()) * dt;
 
                             motion_direction = {0, 0};
                             if (buttons_down & up)
@@ -187,16 +185,16 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
                             dispatcher(builder->pointer_event(
                                 std::nullopt,
                                 mir_pointer_action_motion,
-                                0,
+                                is_dragging ? current_button : 0,
                                 std::nullopt,
                                 motion_direction,
                                 mir_pointer_axis_source_none,
                                 mir::events::ScrollAxisH{},
                                 mir::events::ScrollAxisV{}));
 
-                                if (auto const& repeat_alarm = weak_self->lock())
-                                    repeat_alarm->reschedule_in(repeat_delay);
-                            });
+                            if (auto const& repeat_alarm = weak_self->lock())
+                                repeat_alarm->reschedule_in(repeat_delay);
+                        });
 
                     *shared_weak_alarm = motion_event_generator;
                     motion_event_generator->reschedule_in(std::chrono::milliseconds(0));
@@ -220,48 +218,11 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
             switch (action)
             {
             case mir_keyboard_action_down:
-                dispatcher(builder->pointer_event(
-                    std::nullopt,
-                    mir_pointer_action_button_down,
-                    current_button,
-                    std::nullopt,
-                    {0, 0},
-                    mir_pointer_axis_source_none,
-                    mir::events::ScrollAxisH{},
-                    mir::events::ScrollAxisV{}));
+                press_current_cursor_button(dispatcher, builder);
                 return true;
             case mir_keyboard_action_up:
-                {
-                    if (click_event_generator)
-                        click_event_generator.reset();
-
-                    dispatcher(builder->pointer_event(
-                        std::nullopt,
-                        mir_pointer_action_button_up,
-                        0,
-                        std::nullopt,
-                        {0, 0},
-                        mir_pointer_axis_source_none,
-                        mir::events::ScrollAxisH{},
-                        mir::events::ScrollAxisV{}));
-
-                    click_event_generator = main_loop->create_alarm(
-                        [dispatcher, this, builder]
-                        {
-                            dispatcher(builder->pointer_event(
-                                std::nullopt,
-                                mir_pointer_action_button_up,
-                                current_button,
-                                std::nullopt,
-                                {0, 0},
-                                mir_pointer_axis_source_none,
-                                mir::events::ScrollAxisH{},
-                                mir::events::ScrollAxisV{}));
-                        });
-                    click_event_generator->reschedule_in(std::chrono::milliseconds(100));
-
-                    return true;
-                }
+                release_current_cursor_button(dispatcher, builder);
+                return true;
             case mir_keyboard_action_repeat:
                 return true;
             default:
@@ -308,51 +269,19 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
                 mir_keyboard_event_action(kev) == mir_keyboard_action_repeat)
                 return true;
 
-            dispatcher(builder->pointer_event(
-                std::nullopt,
-                mir_pointer_action_button_down,
-                current_button,
-                std::nullopt,
-                {0, 0},
-                mir_pointer_axis_source_none,
-                mir::events::ScrollAxisH{},
-                mir::events::ScrollAxisV{}));
-
-            dispatcher(builder->pointer_event(
-                std::nullopt,
-                mir_pointer_action_button_up,
-                0,
-                std::nullopt,
-                {0, 0},
-                mir_pointer_axis_source_none,
-                mir::events::ScrollAxisH{},
-                mir::events::ScrollAxisV{}));
+            press_current_cursor_button(dispatcher, builder);
+            release_current_cursor_button(dispatcher, builder);
 
             double_click_event_generator = main_loop->create_alarm(
-                [dispatcher, current_button = this->current_button, builder]
+                [dispatcher, this, builder]
                 {
-                    dispatcher(builder->pointer_event(
-                        std::nullopt,
-                        mir_pointer_action_button_down,
-                        current_button,
-                        std::nullopt,
-                        {0, 0},
-                        mir_pointer_axis_source_none,
-                        mir::events::ScrollAxisH{},
-                        mir::events::ScrollAxisV{}));
-
-                    dispatcher(builder->pointer_event(
-                        std::nullopt,
-                        mir_pointer_action_button_up,
-                        0,
-                        std::nullopt,
-                        {0, 0},
-                        mir_pointer_axis_source_none,
-                        mir::events::ScrollAxisH{},
-                        mir::events::ScrollAxisV{}));
+                    press_current_cursor_button(dispatcher, builder);
+                    release_current_cursor_button(dispatcher, builder);
                 });
 
             double_click_event_generator->reschedule_in(std::chrono::milliseconds(100));
+
+            return true;
         }
 
         return false;
@@ -367,15 +296,8 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
                 mir_keyboard_event_action(kev) == mir_keyboard_action_repeat)
                 return true;
 
-            dispatcher(builder->pointer_event(
-                std::nullopt,
-                mir_pointer_action_button_down,
-                current_button,
-                std::nullopt,
-                {0, 0},
-                mir_pointer_axis_source_none,
-                mir::events::ScrollAxisH{},
-                mir::events::ScrollAxisV{}));
+            press_current_cursor_button(dispatcher, builder);
+            is_dragging = true;
 
             return true;
         }
@@ -392,15 +314,8 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
                 mir_keyboard_event_action(kev) == mir_keyboard_action_repeat)
                 return true;
 
-            dispatcher(builder->pointer_event(
-                std::nullopt,
-                mir_pointer_action_button_up,
-                0,
-                std::nullopt,
-                {0, 0},
-                mir_pointer_axis_source_none,
-                mir::events::ScrollAxisH{},
-                mir::events::ScrollAxisV{}));
+            release_current_cursor_button(dispatcher, builder);
+            is_dragging = false;
 
             return true;
         }
@@ -449,6 +364,36 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
     };
 
     AccelerationCurve const acceleration_curve;
+
+    bool is_dragging{false};
+
+    void press_current_cursor_button(Dispatcher const& dispatcher, mir::input::EventBuilder* const builder)
+    {
+        dispatcher(builder->pointer_event(
+            std::nullopt,
+            mir_pointer_action_button_down,
+            current_button,
+            std::nullopt,
+            {0, 0},
+            mir_pointer_axis_source_none,
+            mir::events::ScrollAxisH{},
+            mir::events::ScrollAxisV{}));
+    }
+
+    void release_current_cursor_button(Dispatcher const& dispatcher, mir::input::EventBuilder* const builder)
+    {
+        dispatcher(builder->pointer_event(
+            std::nullopt,
+            mir_pointer_action_button_up,
+            0,
+            std::nullopt,
+            {0, 0},
+            mir_pointer_axis_source_none,
+            mir::events::ScrollAxisH{},
+            mir::events::ScrollAxisV{}));
+
+        is_dragging = false;
+    }
 };
 
 mir::shell::AccessibilityManager::AccessibilityManager(
