@@ -17,6 +17,7 @@ set(
   basic_idle_handler.cpp ${CMAKE_SOURCE_DIR}/src/include/server/mir/shell/idle_handler.h
   token_authority.cpp ${CMAKE_SOURCE_DIR}/src/include/server/mir/shell/token_authority.h
   accessibility_manager.cpp ${CMAKE_SOURCE_DIR}/src/include/server/mir/shell/accessibility_manager.h
+  mouse_keys_transformer.cpp mouse_keys_transformer.h
 )
 
 add_library(
