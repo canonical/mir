@@ -53,6 +53,8 @@ char const* const mo::enable_mouse_keys_opt = "enable-mouse-keys";
 char const* const mo::mouse_keys_acceleration_constant_factor = "mouse-keys-acceleration-constant-factor";
 char const* const mo::mouse_keys_acceleration_linear_factor = "mouse-keys-acceleration-linear-factor";
 char const* const mo::mouse_keys_acceleration_quadratic_factor = "mouse-keys-acceleration-quadratic-factor";
+char const* const mo::mouse_keys_max_speed_x = "mouse-keys-max-speed-x";
+char const* const mo::mouse_keys_max_speed_y = "mouse-keys-max-speed-y";
 
 char const* const mo::off_opt_value = "off";
 char const* const mo::log_opt_value = "log";
@@ -193,6 +195,12 @@ mo::DefaultConfiguration::DefaultConfiguration(
              "The linear speed increase for mousekey pointer motion")
         (mouse_keys_acceleration_quadratic_factor, po::value<double>()->default_value(30),
              "The quadratic speed increase for mousekey pointer motion")
+        (mouse_keys_max_speed_x, po::value<double>()->default_value(400),
+             "The maximum speed in pixels/second the mousekeys pointer can "
+             "reach on the x axis. Pass zero to disable the speed limit")
+        (mouse_keys_max_speed_y, po::value<double>()->default_value(400),
+             "The maximum speed in pixels/second the mousekeys pointer can "
+             "reach on the y axis. Pass zero to disable the speed limit")
         (idle_timeout_opt, po::value<int>()->default_value(0),
             "Time (in seconds) Mir will remain idle before turning off the display "
             "when the session is not locked, or 0 to keep display on forever.")

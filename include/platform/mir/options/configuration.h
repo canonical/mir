@@ -46,6 +46,8 @@ extern char const* const enable_mouse_keys_opt;
 extern char const* const mouse_keys_acceleration_constant_factor;
 extern char const* const mouse_keys_acceleration_linear_factor;
 extern char const* const mouse_keys_acceleration_quadratic_factor;
+extern char const* const mouse_keys_max_speed_x;
+extern char const* const mouse_keys_max_speed_y;
 extern char const* const x11_display_opt;
 extern char const* const x11_scale_opt;
 extern char const* const wayland_extensions_opt;
