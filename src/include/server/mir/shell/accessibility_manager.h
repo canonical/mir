@@ -27,6 +27,11 @@
 namespace mir
 {
 class MainLoop;
+namespace input
+{
+class EventFilter;
+class CompositeEventFilter;
+}
 namespace options
 {
 class Option;
@@ -52,6 +57,8 @@ public:
 
     void notify_helpers() const;
 
+    void toggle_mousekeys(bool on);
+
 private:
 
     struct MutableState {
@@ -64,11 +71,13 @@ private:
 
     Synchronised<MutableState> mutable_state;
 
-    bool const enable_key_repeat;
-    bool const enable_mouse_keys;
+    bool const enable_key_repeat{true};
 
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
-    std::shared_ptr<mir::input::InputEventTransformer::Transformer> const transformer;
+    std::shared_ptr<mir::MainLoop> const main_loop;
+    std::shared_ptr<mir::options::Option> const options;
+
+    std::shared_ptr<mir::input::InputEventTransformer::Transformer> transformer;
 };
 }
 }
