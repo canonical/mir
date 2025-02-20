@@ -374,8 +374,11 @@ mf::WlDataDevice::DragIconSurface::DragIconSurface(WlSurface* icon, std::shared_
     icon->set_role(this);
 
     auto spec = shell::SurfaceSpecification();
-    spec.width = surface.value().buffer_size()->width;
-    spec.height = surface.value().buffer_size()->height;
+    if (auto const size = surface.value().buffer_size())
+    {
+        spec.width = size->width;
+        spec.height = size->height;
+    }
     spec.streams = std::vector<shell::StreamSpecification>{};
     spec.input_shape = std::vector<Rectangle>{};
     spec.depth_layer = mir_depth_layer_overlay;
