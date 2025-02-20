@@ -15,9 +15,7 @@
  */
 
 #include "application_selector.h"
-#include "mir/geometry/forward.h"
 
-#include <limits>
 #include <miral/minimal_window_manager.h>
 #include <miral/toolkit_event.h>
 #include <miral/application_info.h>
@@ -27,7 +25,7 @@
 
 #include <algorithm>
 #include <ranges>
-#include <unordered_set>
+#include <limits>
 
 using namespace miral::toolkit;
 namespace geom = mir::geometry;
