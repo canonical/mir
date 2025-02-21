@@ -199,12 +199,18 @@ bool mir::input::MouseKeysTransformer::handle_click(
     case XKB_KEY_KP_5:
         switch (action)
         {
-        case mir_keyboard_action_down:
-            press_current_cursor_button(dispatcher);
-            return true;
         case mir_keyboard_action_up:
-            release_current_cursor_button(dispatcher);
+            press_current_cursor_button(dispatcher);
+
+            click_event_generator = main_loop->create_alarm(
+                [dispatcher, this]
+                {
+                    release_current_cursor_button(dispatcher);
+                });
+
+            click_event_generator->reschedule_in(std::chrono::milliseconds(50));
             return true;
+        case mir_keyboard_action_down:
         case mir_keyboard_action_repeat:
             return true;
         default:
