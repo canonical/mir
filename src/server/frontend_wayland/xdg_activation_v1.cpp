@@ -256,12 +256,12 @@ void mf::XdgActivationV1::remove_token(Token const& token)
 {
     std::lock_guard guard(pending_tokens_mutex);
 
-    std::ranges::remove_if(
-        pending_tokens,
+    pending_tokens.erase(std::remove_if(pending_tokens.begin(), pending_tokens.end(),
         [&](auto const& pending_token)
         {
             return pending_token->token == token;
-        });
+        }),
+        pending_tokens.end());
 }
 
 void mf::XdgActivationV1::invalidate_all()
