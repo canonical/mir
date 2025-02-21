@@ -183,11 +183,11 @@ void mf::WlDataDevice::start_drag(
     std::optional<wl_resource*> const& icon,
     uint32_t serial)
 {
-    // "The [origin surface] and client must have an active implicit grab that matches the serial"
-    if (!weak_surface || weak_surface.value().resource != origin)
+    // "The client must have an active implicit grab that matches the serial"
+    if (!weak_surface || weak_surface.value().client != client || WlSurface::from(origin)->client != client)
     {
         BOOST_THROW_EXCEPTION(
-            mw::ProtocolError(resource, Error::role, "Origin surface does have input focus"));
+            mw::ProtocolError(resource, Error::role, "The client must have an active implicit grab"));
     }
 
     validate_pointer_event(client->event_for(serial));
