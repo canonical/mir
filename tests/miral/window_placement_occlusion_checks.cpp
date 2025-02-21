@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/minimal_window_manager.h"
 #include "mir/geometry/rectangle.h"
+#include "is_occluded.h"
 
 #include <gtest/gtest.h>
 
