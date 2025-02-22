@@ -27,7 +27,7 @@
 
 #include <GLES2/gl2.h>
 
-#include <mutex>
+#include <future>
 
 namespace mir
 {
@@ -57,6 +57,7 @@ public:
     gl::Program const& shader(gl::ProgramFactory& cache) const override;
     Layout layout() const override;
     void add_syncpoint() override;
+    auto tex_id() const -> GLuint override;
 protected:
     ShmBuffer(
         geometry::Size const& size,
@@ -69,8 +70,7 @@ private:
     geometry::Size const size_;
     MirPixelFormat const pixel_format_;
     std::shared_ptr<EGLContextExecutor> const egl_delegate;
-    std::mutex tex_id_mutex;
-    GLuint tex_id{0};
+    std::shared_future<GLuint> const tex;
 };
 
 class MemoryBackedShmBuffer :

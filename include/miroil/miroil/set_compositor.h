@@ -20,7 +20,7 @@
 #include <functional>
 
 namespace mir { class Server; }
-namespace mir { namespace graphics { class Display; } }
+namespace mir { namespace graphics { class Display; class GLRenderingProvider; } }
 namespace mir { namespace compositor { class DisplayListener; } } 
 
 namespace miroil
@@ -31,6 +31,7 @@ namespace miroil
 class SetCompositor
 {
     using InitFunction = std::function<void(const std::shared_ptr<mir::graphics::Display>& display,
+                       const std::vector<std::shared_ptr<mir::graphics::GLRenderingProvider>> gl_providers,
                        const std::shared_ptr<Compositor> & compositor,
                        const std::shared_ptr<mir::compositor::DisplayListener>& displayListener)>;
                        

@@ -131,19 +131,6 @@ void mc::MultiMonitorArbiter::submit_buffer(
     state.lock()->next_submission = std::make_shared<Submission>(std::move(buffer), output_size, source);
 }
 
-bool mc::MultiMonitorArbiter::buffer_ready_for(mc::CompositorID id)
-{
-    auto current_state = state.lock();
-    // If there are scheduled buffers then there is one ready for any compositor
-    if (current_state->next_submission)
-        return true;
-    // If we have a current buffer that the compositor isn't yet using, it is ready
-    else if (current_state->current_submission && !is_user_of_current_buffer(*current_state, id))
-        return true;
-    // There are no scheduled buffers and either no current buffer, or a current buffer already used by this compositor
-    else
-        return false;
-}
 
 void mc::MultiMonitorArbiter::add_current_buffer_user(State& state, mc::CompositorID id)
 {

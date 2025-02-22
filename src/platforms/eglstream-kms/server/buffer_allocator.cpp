@@ -27,7 +27,6 @@
 #include "mir/graphics/platform.h"
 #include "shm_buffer.h"
 #include "mir/graphics/buffer_properties.h"
-#include "mir/renderer/gl/context_source.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/graphics/display.h"
 #include "wayland-eglstream-controller.h"
@@ -36,7 +35,6 @@
 #include "mir/graphics/program_factory.h"
 #include "mir/graphics/program.h"
 #include "mir/graphics/display.h"
-#include "mir/renderer/gl/context_source.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/raii.h"
 #include "mir/wayland/protocol_error.h"
@@ -211,6 +209,11 @@ struct BoundEGLStream
         void set_consumer_sync(GLsync sync)
         {
             this->sync->set_consumer_sync(sync);
+        }
+
+        auto tex_id() const -> GLuint
+        {
+            return provider->texture;
         }
 
         TextureHandle(TextureHandle&&) = default;
@@ -464,6 +467,11 @@ public:
     {
         tex.reserve_sync();
         tex.bind();
+    }
+
+    auto tex_id() const -> GLuint override
+    {
+        return tex.tex_id();
     }
 
     void add_syncpoint() override

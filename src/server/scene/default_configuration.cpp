@@ -22,7 +22,6 @@
 #include "mir/input/scene.h"
 #include "mir/main_loop.h"
 #include "mir/renderer/gl/context.h"
-#include "mir/renderer/gl/context_source.h"
 #include "mir/scene/session.h"
 #include "mir/scene/session_container.h"
 #include "mir/shell/display_configuration_controller.h"

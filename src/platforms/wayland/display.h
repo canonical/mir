@@ -24,7 +24,6 @@
 #include <mir/events/touch_contact.h>
 #include <mir/graphics/display.h>
 #include <mir/graphics/display_report.h>
-#include <mir/renderer/gl/context_source.h>
 
 #include <xkbcommon/xkbcommon.h>
 

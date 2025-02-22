@@ -20,6 +20,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
+#include "mir/renderer/gl/context.h"
 #include "mir/fd.h"
 
 #include <EGL/egl.h>
