@@ -1,4 +1,4 @@
-MIR_SERVER_INTERNAL_2.19 {
+MIR_SERVER_INTERNAL_2.20 {
 global:
   extern "C++" {
     VTT?for?mir::DefaultServerConfiguration;
@@ -19,6 +19,7 @@ global:
     mir::DefaultServerConfiguration::set_enabled_wayland_extensions*;
     mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     mir::DefaultServerConfiguration::set_wayland_extension_filter*;
+    mir::DefaultServerConfiguration::the_accessibility_manager*;
     mir::DefaultServerConfiguration::the_application_not_responding_detector*;
     mir::DefaultServerConfiguration::the_buffer_allocator*;
     mir::DefaultServerConfiguration::the_clock*;
@@ -55,6 +56,7 @@ global:
     mir::DefaultServerConfiguration::the_input_device_hub*;
     mir::DefaultServerConfiguration::the_input_device_registry*;
     mir::DefaultServerConfiguration::the_input_dispatcher*;
+    mir::DefaultServerConfiguration::the_input_event_transformer*;
     mir::DefaultServerConfiguration::the_input_manager*;
     mir::DefaultServerConfiguration::the_input_reading_multiplexer*;
     mir::DefaultServerConfiguration::the_input_report*;
@@ -100,6 +102,7 @@ global:
     mir::DefaultServerConfiguration::the_surface_input_dispatcher*;
     mir::DefaultServerConfiguration::the_surface_stack*;
     mir::DefaultServerConfiguration::the_text_input_hub*;
+    mir::DefaultServerConfiguration::the_token_authority*;
     mir::DefaultServerConfiguration::the_touch_visualizer*;
     mir::DefaultServerConfiguration::the_wayland_connector*;
     mir::DefaultServerConfiguration::the_window_manager_builder*;
@@ -157,6 +160,7 @@ global:
     mir::Server::add_wayland_extension*;
     mir::Server::apply_settings*;
     mir::Server::exited_normally*;
+    mir::Server::get_activation_token*;
     mir::Server::get_options*;
     mir::Server::open_client_wayland*;
     mir::Server::open_prompt_socket*;
@@ -190,6 +194,7 @@ global:
     mir::Server::set_wayland_extension_filter*;
     mir::Server::stop*;
     mir::Server::supported_pixel_formats*;
+    mir::Server::the_accessibility_manager*;
     mir::Server::the_application_not_responding_detector*;
     mir::Server::the_composite_event_filter*;
     mir::Server::the_compositor*;
@@ -224,6 +229,7 @@ global:
     mir::Server::the_shell_display_layout*;
     mir::Server::the_surface_factory*;
     mir::Server::the_surface_stack*;
+    mir::Server::the_token_authority*;
     mir::Server::the_touch_visualizer*;
     mir::Server::wayland_display*;
     mir::Server::wrap_application_not_responding_detector*;
@@ -375,6 +381,12 @@ global:
     mir::input::InputDeviceObserver::InputDeviceObserver*;
     mir::input::InputDeviceObserver::operator*;
     mir::input::InputDispatcher::?InputDispatcher*;
+    mir::input::InputEventTransformer::?InputEventTransformer*;
+    mir::input::InputEventTransformer::InputEventTransformer*;
+    mir::input::InputEventTransformer::Transformer::?Transformer*;
+    mir::input::InputEventTransformer::append*;
+    mir::input::InputEventTransformer::handle*;
+    mir::input::InputEventTransformer::remove*;
     mir::input::InputManager::?InputManager*;
     mir::input::InputManager::InputManager*;
     mir::input::InputManager::operator*;
@@ -605,6 +617,7 @@ global:
     mir::shell::AbstractShell::focused_surface*;
     mir::shell::AbstractShell::get_surface_attribute*;
     mir::shell::AbstractShell::handle*;
+    mir::shell::AbstractShell::is_above*;
     mir::shell::AbstractShell::modify_surface*;
     mir::shell::AbstractShell::open_session*;
     mir::shell::AbstractShell::raise*;
@@ -621,6 +634,14 @@ global:
     mir::shell::AbstractShell::surface_at*;
     mir::shell::AbstractShell::surface_ready*;
     mir::shell::AbstractShell::swap_z_order*;
+    mir::shell::AccessibilityManager::AccessibilityManager*;
+    mir::shell::AccessibilityManager::cursor_scale_changed*;
+    mir::shell::AccessibilityManager::notify_helpers*;
+    mir::shell::AccessibilityManager::override_key_repeat_settings*;
+    mir::shell::AccessibilityManager::register_keyboard_helper*;
+    mir::shell::AccessibilityManager::repeat_delay*;
+    mir::shell::AccessibilityManager::repeat_rate*;
+    mir::shell::AccessibilityManager::set_cursor*;
     mir::shell::DefaultWindowManager::handle_keyboard_event*;
     mir::shell::DisplayConfigurationController::?DisplayConfigurationController*;
     mir::shell::DisplayConfigurationController::DisplayConfigurationController*;
@@ -657,6 +678,7 @@ global:
     mir::shell::ShellWrapper::focused_surface*;
     mir::shell::ShellWrapper::get_surface_attribute*;
     mir::shell::ShellWrapper::handle*;
+    mir::shell::ShellWrapper::is_above*;
     mir::shell::ShellWrapper::modify_surface*;
     mir::shell::ShellWrapper::open_session*;
     mir::shell::ShellWrapper::raise*;
@@ -681,6 +703,7 @@ global:
     mir::shell::SurfaceStack::operator*;
     mir::shell::SurfaceStackWrapper::SurfaceStackWrapper*;
     mir::shell::SurfaceStackWrapper::add_surface*;
+    mir::shell::SurfaceStackWrapper::is_above*;
     mir::shell::SurfaceStackWrapper::raise*;
     mir::shell::SurfaceStackWrapper::remove_surface*;
     mir::shell::SurfaceStackWrapper::send_to_back*;
@@ -690,6 +713,13 @@ global:
     mir::shell::SystemCompositorWindowManager::on_session_added*;
     mir::shell::SystemCompositorWindowManager::on_session_ready*;
     mir::shell::SystemCompositorWindowManager::on_session_removed*;
+    mir::shell::TokenAuthority::Token::operator*;
+    mir::shell::TokenAuthority::TokenAuthority*;
+    mir::shell::TokenAuthority::get_bogus_token*;
+    mir::shell::TokenAuthority::get_token_for_string*;
+    mir::shell::TokenAuthority::issue_token*;
+    mir::shell::TokenAuthority::revoke_all_tokens*;
+    mir::shell::TokenAuthority::revoke_token*;
     mir::shell::WindowManager::?WindowManager*;
     mir::shell::WindowManager::WindowManager*;
     mir::shell::WindowManager::operator*;
@@ -710,6 +740,7 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_enabled_wayland_extensions*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_wayland_extension_filter*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_accessibility_manager*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_application_not_responding_detector*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_buffer_allocator*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_clock*;
@@ -742,6 +773,7 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_device_hub*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_device_registry*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_dispatcher*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_event_transformer*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_manager*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_reading_multiplexer*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_report*;
@@ -784,6 +816,7 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_surface_input_dispatcher*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_surface_stack*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_text_input_hub*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_token_authority*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_touch_visualizer*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_wayland_connector*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_window_manager_builder*;
@@ -876,6 +909,9 @@ global:
     non-virtual?thunk?to?mir::input::InputDeviceHub::?InputDeviceHub*;
     non-virtual?thunk?to?mir::input::InputDeviceObserver::?InputDeviceObserver*;
     non-virtual?thunk?to?mir::input::InputDispatcher::?InputDispatcher*;
+    non-virtual?thunk?to?mir::input::InputEventTransformer::?InputEventTransformer*;
+    non-virtual?thunk?to?mir::input::InputEventTransformer::Transformer::?Transformer*;
+    non-virtual?thunk?to?mir::input::InputEventTransformer::handle*;
     non-virtual?thunk?to?mir::input::InputManager::?InputManager*;
     non-virtual?thunk?to?mir::input::KeyboardObserver::?KeyboardObserver*;
     non-virtual?thunk?to?mir::input::Scene::?Scene*;
@@ -1012,6 +1048,7 @@ global:
     non-virtual?thunk?to?mir::shell::AbstractShell::focused_surface*;
     non-virtual?thunk?to?mir::shell::AbstractShell::get_surface_attribute*;
     non-virtual?thunk?to?mir::shell::AbstractShell::handle*;
+    non-virtual?thunk?to?mir::shell::AbstractShell::is_above*;
     non-virtual?thunk?to?mir::shell::AbstractShell::modify_surface*;
     non-virtual?thunk?to?mir::shell::AbstractShell::open_session*;
     non-virtual?thunk?to?mir::shell::AbstractShell::raise*;
@@ -1049,6 +1086,7 @@ global:
     non-virtual?thunk?to?mir::shell::ShellWrapper::focused_surface*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::get_surface_attribute*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::handle*;
+    non-virtual?thunk?to?mir::shell::ShellWrapper::is_above*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::modify_surface*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::open_session*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::raise*;
@@ -1067,6 +1105,7 @@ global:
     non-virtual?thunk?to?mir::shell::ShellWrapper::swap_z_order*;
     non-virtual?thunk?to?mir::shell::SurfaceStack::?SurfaceStack*;
     non-virtual?thunk?to?mir::shell::SurfaceStackWrapper::add_surface*;
+    non-virtual?thunk?to?mir::shell::SurfaceStackWrapper::is_above*;
     non-virtual?thunk?to?mir::shell::SurfaceStackWrapper::raise*;
     non-virtual?thunk?to?mir::shell::SurfaceStackWrapper::remove_surface*;
     non-virtual?thunk?to?mir::shell::SurfaceStackWrapper::send_to_back*;
@@ -1136,6 +1175,8 @@ global:
     typeinfo?for?mir::input::InputDeviceHub;
     typeinfo?for?mir::input::InputDeviceObserver;
     typeinfo?for?mir::input::InputDispatcher;
+    typeinfo?for?mir::input::InputEventTransformer::Transformer;
+    typeinfo?for?mir::input::InputEventTransformer;
     typeinfo?for?mir::input::InputManager;
     typeinfo?for?mir::input::KeyboardObserver;
     typeinfo?for?mir::input::Scene;
@@ -1194,6 +1235,7 @@ global:
     typeinfo?for?mir::scene::TextInputState;
     typeinfo?for?mir::scene::TextInputStateObserver;
     typeinfo?for?mir::shell::AbstractShell;
+    typeinfo?for?mir::shell::AccessibilityManager;
     typeinfo?for?mir::shell::DefaultWindowManager;
     typeinfo?for?mir::shell::DisplayConfigurationController;
     typeinfo?for?mir::shell::DisplayLayout;
@@ -1213,6 +1255,8 @@ global:
     typeinfo?for?mir::shell::SurfaceStack;
     typeinfo?for?mir::shell::SurfaceStackWrapper;
     typeinfo?for?mir::shell::SystemCompositorWindowManager;
+    typeinfo?for?mir::shell::TokenAuthority::Token;
+    typeinfo?for?mir::shell::TokenAuthority;
     typeinfo?for?mir::shell::WindowManager;
     typeinfo?for?mir::time::Alarm;
     typeinfo?for?mir::time::AlarmFactory;
@@ -1243,6 +1287,7 @@ global:
     virtual?thunk?to?mir::DefaultServerConfiguration::the_session_lock*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_stop_callback*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_text_input_hub*;
+    virtual?thunk?to?mir::DefaultServerConfiguration::the_token_authority*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_wayland_connector*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_xwayland_connector*;
     virtual?thunk?to?mir::DefaultServerStatusListener::paused*;
@@ -1261,6 +1306,7 @@ global:
     virtual?thunk?to?mir::shell::AbstractShell::focused_surface*;
     virtual?thunk?to?mir::shell::AbstractShell::get_surface_attribute*;
     virtual?thunk?to?mir::shell::AbstractShell::handle*;
+    virtual?thunk?to?mir::shell::AbstractShell::is_above*;
     virtual?thunk?to?mir::shell::AbstractShell::open_session*;
     virtual?thunk?to?mir::shell::AbstractShell::raise*;
     virtual?thunk?to?mir::shell::AbstractShell::raise_surface*;
@@ -1282,6 +1328,7 @@ global:
     virtual?thunk?to?mir::shell::ShellWrapper::focused_session*;
     virtual?thunk?to?mir::shell::ShellWrapper::focused_surface*;
     virtual?thunk?to?mir::shell::ShellWrapper::handle*;
+    virtual?thunk?to?mir::shell::ShellWrapper::is_above*;
     virtual?thunk?to?mir::shell::ShellWrapper::raise*;
     virtual?thunk?to?mir::shell::ShellWrapper::remove_display*;
     virtual?thunk?to?mir::shell::ShellWrapper::send_to_back*;
@@ -1338,6 +1385,8 @@ global:
     vtable?for?mir::input::InputDeviceHub;
     vtable?for?mir::input::InputDeviceObserver;
     vtable?for?mir::input::InputDispatcher;
+    vtable?for?mir::input::InputEventTransformer::Transformer;
+    vtable?for?mir::input::InputEventTransformer;
     vtable?for?mir::input::InputManager;
     vtable?for?mir::input::KeyboardObserver;
     vtable?for?mir::input::Scene;
@@ -1403,60 +1452,3 @@ global:
   };
 local: *;
 };
-
-MIR_SERVER_INTERNAL_2.20 {
-global:
-  extern "C++" {
-    mir::DefaultServerConfiguration::the_accessibility_manager*;
-    mir::DefaultServerConfiguration::the_input_event_transformer*;
-    mir::DefaultServerConfiguration::the_token_authority*;
-    mir::Server::get_activation_token*;
-    mir::Server::the_accessibility_manager*;
-    mir::Server::the_token_authority*;
-    mir::input::InputEventTransformer::?InputEventTransformer*;
-    mir::input::InputEventTransformer::InputEventTransformer*;
-    mir::input::InputEventTransformer::Transformer::?Transformer*;
-    mir::input::InputEventTransformer::append*;
-    mir::input::InputEventTransformer::handle*;
-    mir::input::InputEventTransformer::prepend*;
-    mir::input::InputEventTransformer::remove*;
-    mir::shell::AbstractShell::is_above*;
-    mir::shell::AccessibilityManager::AccessibilityManager*;
-    mir::shell::AccessibilityManager::notify_helpers*;
-    mir::shell::AccessibilityManager::override_key_repeat_settings*;
-    mir::shell::AccessibilityManager::register_keyboard_helper*;
-    mir::shell::AccessibilityManager::repeat_delay*;
-    mir::shell::AccessibilityManager::repeat_rate*;
-    mir::shell::AccessibilityManager::cursor_scale_changed*;
-    mir::shell::AccessibilityManager::set_cursor*;
-    mir::shell::ShellWrapper::is_above*;
-    mir::shell::SurfaceStackWrapper::is_above*;
-    mir::shell::TokenAuthority::Token::operator*;
-    mir::shell::TokenAuthority::TokenAuthority*;
-    mir::shell::TokenAuthority::get_bogus_token*;
-    mir::shell::TokenAuthority::get_token_for_string*;
-    mir::shell::TokenAuthority::issue_token*;
-    mir::shell::TokenAuthority::revoke_all_tokens*;
-    mir::shell::TokenAuthority::revoke_token*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_accessibility_manager*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_event_transformer*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_token_authority*;
-    non-virtual?thunk?to?mir::input::InputEventTransformer::?InputEventTransformer*;
-    non-virtual?thunk?to?mir::input::InputEventTransformer::Transformer::?Transformer*;
-    non-virtual?thunk?to?mir::input::InputEventTransformer::handle*;
-    non-virtual?thunk?to?mir::shell::AbstractShell::is_above*;
-    non-virtual?thunk?to?mir::shell::ShellWrapper::is_above*;
-    non-virtual?thunk?to?mir::shell::SurfaceStackWrapper::is_above*;
-    typeinfo?for?mir::input::InputEventTransformer::Transformer;
-    typeinfo?for?mir::input::InputEventTransformer;
-    typeinfo?for?mir::shell::AccessibilityManager;
-    typeinfo?for?mir::shell::TokenAuthority::Token;
-    typeinfo?for?mir::shell::TokenAuthority;
-    virtual?thunk?to?mir::DefaultServerConfiguration::the_token_authority*;
-    virtual?thunk?to?mir::shell::AbstractShell::is_above*;
-    virtual?thunk?to?mir::shell::ShellWrapper::is_above*;
-    vtable?for?mir::input::InputEventTransformer::Transformer;
-    vtable?for?mir::input::InputEventTransformer;
-  };
-} MIR_SERVER_INTERNAL_2.19;
-
