@@ -28,7 +28,7 @@ namespace miral
 /// not exist a visible area of [test_rectangle] that is bigger
 /// than [min_visible_size] in both width and height.
 auto is_occluded(
-    mir::geometry::Rectangle test_rectangle,
+    mir::geometry::Rectangle const& test_rectangle,
     std::vector<mir::geometry::Rectangle> const& occluding_rectangles,
     mir::geometry::Size min_visible_size) -> bool;
 }

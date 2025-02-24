@@ -118,7 +118,7 @@ struct miral::MinimalWindowManager::Impl
 
     bool advise_new_window(WindowInfo const& info);
 
-    void try_place_new_window_and_account_for_occlusion(miral::WindowSpecification&);
+    WindowSpecification try_place_new_window_and_account_for_occlusion(miral::WindowSpecification const&);
 
     MirInputEventModifier const pointer_drag_modifier;
     FocusStealing const focus_stealing;
@@ -156,9 +156,7 @@ auto miral::MinimalWindowManager::place_new_window(
     ApplicationInfo const& /*app_info*/, WindowSpecification const& requested_specification)
     -> WindowSpecification
 {
-    auto spec_copy = requested_specification;
-    self->try_place_new_window_and_account_for_occlusion(spec_copy);
-    return spec_copy;
+    return self->try_place_new_window_and_account_for_occlusion(requested_specification);
 }
 
 void miral::MinimalWindowManager::handle_window_ready(WindowInfo& window_info)
@@ -667,20 +665,21 @@ bool miral::MinimalWindowManager::Impl::advise_new_window(WindowInfo const& info
     return should_receive_focus;
 }
 
-void miral::MinimalWindowManager::Impl::try_place_new_window_and_account_for_occlusion(WindowSpecification& parameters)
+miral::WindowSpecification miral::MinimalWindowManager::Impl::try_place_new_window_and_account_for_occlusion(
+    WindowSpecification const& parameters)
 {
     if (parameters.state() != mir_window_state_restored)
-        return;
+        return parameters;
 
     std::vector<geom::Rectangle> window_rects;
     tools.for_each_application(
         [&window_rects, this](ApplicationInfo& app_info)
         {
-            auto& app_windows = app_info.windows();
+            auto const& app_windows = app_info.windows();
             auto rectangles_to_consider =
                 app_windows |
                 std::ranges::views::filter(
-                    [this](auto& window)
+                    [this](auto const& window)
                     {
                         auto const& info = tools.info_for(window);
                         // Skip invisible, windows not in the application
@@ -693,7 +692,7 @@ void miral::MinimalWindowManager::Impl::try_place_new_window_and_account_for_occ
                         return true;
                     }) |
                 std::ranges::views::transform(
-                    [](Window& window)
+                    [](Window const& window)
                     {
                         return geom::Rectangle{window.top_left(), window.size()};
                     });
@@ -706,8 +705,9 @@ void miral::MinimalWindowManager::Impl::try_place_new_window_and_account_for_occ
     auto const initial_rectangle = geom::Rectangle{initial_top_left, size};
     auto const min_area = geom::Size{50, 50};
     if (!is_occluded(initial_rectangle, window_rects, min_area))
-        return;
+        return parameters;
 
+    auto spec_copy = parameters;
     // Try place the window around the suggested position
     auto constexpr max_iterations{16};
     auto constexpr base_offset{48};
@@ -731,12 +731,13 @@ void miral::MinimalWindowManager::Impl::try_place_new_window_and_account_for_occ
         {
             if (!is_occluded(test_rect, window_rects, min_area))
             {
-                parameters.top_left().value() = test_rect.top_left;
-                return;
+                spec_copy.top_left().value() = test_rect.top_left;
+                return spec_copy;
             }
         }
     }
 
     // If we can't find any valid offset position, we use the original
     // one, possibly occluding / being occluded by another window.
+    return parameters;
 }
