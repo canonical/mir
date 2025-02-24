@@ -23,6 +23,10 @@
 
 namespace miral
 {
+/// Returns true if [test_rectangle] is hidden by the provided list
+/// of [occluding_rectangles]. By "hidden", we mean that there does
+/// not exist a visible area of [test_rectangle] that is bigger
+/// than [min_visible_size] in both width and height.
 auto is_occluded(
     mir::geometry::Rectangle test_rectangle,
     std::vector<mir::geometry::Rectangle> const& occluding_rectangles,
