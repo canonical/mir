@@ -435,7 +435,7 @@ protected:
     CachedPtr<SharedLibraryProberReport> shared_library_prober_report;
     CachedPtr<shell::Shell> shell;
     CachedPtr<shell::ShellReport> shell_report;
-    std::shared_ptr<shell::AccessibilityManager> accessibility_manager;
+    CachedPtr<shell::AccessibilityManager> accessibility_manager;
     CachedPtr<shell::decoration::Manager> decoration_manager;
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
     CachedPtr<cookie::Authority> cookie_authority;

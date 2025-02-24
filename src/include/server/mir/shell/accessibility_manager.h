@@ -40,7 +40,8 @@ class AccessibilityManager
 public:
     AccessibilityManager(
         std::shared_ptr<mir::options::Option> const&,
-        std::shared_ptr<input::InputEventTransformer> const& event_transformer);
+        std::shared_ptr<input::InputEventTransformer> const& event_transformer,
+        std::shared_ptr<mir::graphics::Cursor> const& cursor);
 
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&);
 
@@ -52,7 +53,6 @@ public:
 
     void notify_helpers() const;
 
-    void set_cursor(std::shared_ptr<graphics::Cursor> const& cursor);
     void cursor_scale_changed(float new_scale);
 
 private:
