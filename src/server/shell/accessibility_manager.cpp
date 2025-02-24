@@ -114,24 +114,20 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
 
 mir::shell::AccessibilityManager::AccessibilityManager(
     std::shared_ptr<mir::options::Option> const& options,
-    std::shared_ptr<input::InputEventTransformer> const& event_transformer) :
+    std::shared_ptr<input::InputEventTransformer> const& event_transformer,
+    std::shared_ptr<mir::graphics::Cursor> const& cursor) :
     enable_key_repeat{options->get<bool>(options::enable_key_repeat_opt)},
     enable_mouse_keys{options->get<bool>(options::enable_mouse_keys_opt)},
     event_transformer{event_transformer},
-    transformer{std::make_shared<MouseKeysTransformer>()}
-{
-    if (enable_mouse_keys)
-        event_transformer->append(transformer);
-}
-
-void mir::shell::AccessibilityManager::set_cursor(std::shared_ptr<graphics::Cursor> const& cursor)
+    transformer{std::make_shared<MouseKeysTransformer>()},
+    cursor{cursor}
 {
     auto state = mutable_state.lock();
-    state->cursor = cursor;
-
-    // Apply any cached scale changes
     if (state->cursor_scale != 1.0)
         cursor->set_scale(state->cursor_scale);
+
+    if (enable_mouse_keys)
+        event_transformer->append(transformer);
 }
 
 void mir::shell::AccessibilityManager::cursor_scale_changed(float new_scale)
@@ -141,6 +137,6 @@ void mir::shell::AccessibilityManager::cursor_scale_changed(float new_scale)
     // Store the cursor scale in case the cursor hasn't been set yet
     state->cursor_scale = new_scale;
 
-    if(state->cursor)
-        state->cursor->set_scale(new_scale);
+    if(cursor)
+        cursor->set_scale(new_scale);
 }
