@@ -33,6 +33,8 @@ class KeyboardHelper;
 class AccessibilityManager
 {
 public:
+    AccessibilityManager(std::shared_ptr<mir::graphics::Cursor> const& cursor);
+
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&);
 
     std::optional<int> repeat_rate() const;
@@ -44,7 +46,6 @@ public:
 
     void notify_helpers() const;
 
-    void set_cursor(std::shared_ptr<graphics::Cursor> const& cursor);
     void cursor_scale_changed(float new_scale);
 
 private:

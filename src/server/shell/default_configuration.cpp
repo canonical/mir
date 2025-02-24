@@ -187,8 +187,9 @@ mir::DefaultServerConfiguration::the_shell_display_layout()
 
 auto mir::DefaultServerConfiguration::the_accessibility_manager() -> std::shared_ptr<shell::AccessibilityManager>
 {
-    if (!accessibility_manager)
-        accessibility_manager = std::make_shared<shell::AccessibilityManager>();
-
-    return accessibility_manager;
+    return accessibility_manager(
+        [this]
+        {
+            return std::make_shared<shell::AccessibilityManager>(the_cursor());
+        });
 }
