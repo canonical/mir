@@ -24,6 +24,7 @@
 #include "null_cursor.h"
 #include "software_cursor.h"
 #include "platform_probe.h"
+#include "mir/shell/accessibility_manager.h"
 
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/platform.h"
@@ -417,7 +418,7 @@ mir::DefaultServerConfiguration::the_cursor()
                     the_input_scene());
             }
 
-            primary_cursor->show(*the_default_cursor_image());
+            primary_cursor->show(the_default_cursor_image());
             return wrap_cursor(primary_cursor);
         });
 }

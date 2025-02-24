@@ -67,6 +67,12 @@ public:
             });
         }
 
+        if(accessibility_manager)
+        {
+            if (m.self->scale)
+                accessibility_manager->cursor_scale_changed(*m.self->scale);
+        }
+
         mouse(m);
     }
 
@@ -266,6 +272,11 @@ void miral::InputConfiguration::Mouse::hscroll_speed(std::optional<double> const
     self->hscroll_speed = val;
 }
 
+void miral::InputConfiguration::Mouse::scale(std::optional<double> const& val)
+{
+    self->scale = val;
+}
+
 miral::InputConfiguration::Touchpad::Touchpad() :
     self{std::make_unique<Self>()}
 {
@@ -400,3 +411,19 @@ void miral::InputConfiguration::Keyboard::set_repeat_rate(int new_rate) {
 void miral::InputConfiguration::Keyboard::set_repeat_delay(int new_delay) {
     self->repeat_delay = new_delay;
 }
+
+void miral::InputConfiguration::Mouse::merge_settings_from(InputConfiguration::Mouse const& other)
+{
+    self->merge_settings_from(*other.self);
+}
+
+void miral::InputConfiguration::Touchpad::merge_settings_from(InputConfiguration::Touchpad const& other)
+{
+    self->merge_settings_from(*other.self);
+}
+
+void miral::InputConfiguration::Keyboard::merge_settings_from(InputConfiguration::Keyboard const& other)
+{
+    self->merge_settings_from(*other.self);
+}
+
