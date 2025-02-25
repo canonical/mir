@@ -17,6 +17,8 @@
 #include "application_selector.h"
 #include "is_occluded.h"
 #include "mir_toolkit/common.h"
+#include "miral/window_info.h"
+#include "miral/window_specification.h"
 
 #define MIR_LOG_COMPONENT "minimal-window-manager"
 #include "mir/log.h"
@@ -122,7 +124,7 @@ struct miral::MinimalWindowManager::Impl
 
     bool advise_new_window(WindowInfo const& info);
 
-    WindowSpecification try_place_new_window_and_account_for_occlusion(miral::WindowSpecification const&);
+    WindowSpecification try_place_new_window_and_account_for_occlusion(WindowInfo const&, miral::WindowSpecification const&);
 
     MirInputEventModifier const pointer_drag_modifier;
     FocusStealing const focus_stealing;
@@ -159,9 +161,6 @@ auto miral::MinimalWindowManager::place_new_window(
     ApplicationInfo const& /*app_info*/, WindowSpecification const& requested_specification)
     -> WindowSpecification
 {
-    if(requested_specification.size().is_set())
-        return self->try_place_new_window_and_account_for_occlusion(requested_specification);
-
     return requested_specification;
 }
 
@@ -171,18 +170,31 @@ void miral::MinimalWindowManager::handle_window_ready(WindowInfo& window_info)
     {
         tools.select_active_window(window_info.window());
     }
+
+    // Handle windows that specify their size during creation
+    miral::WindowSpecification spec;
+    spec.top_left() = window_info.window().top_left();
+    spec.size() = window_info.window().size();
+    spec.type() = window_info.type();
+    spec.state() = window_info.state();
+    auto possibly_different_spec = self->try_place_new_window_and_account_for_occlusion(window_info, spec);
+    if (spec.top_left() != possibly_different_spec.top_left() || spec.size() != possibly_different_spec.size())
+    {
+        tools.modify_window(window_info, possibly_different_spec);
+    }
 }
 
 void miral::MinimalWindowManager::handle_modify_window(
     WindowInfo& window_info, miral::WindowSpecification const& modifications)
 {
+    // Handle windows that specify their size after they're created
     auto const needs_placement = modifications.size().is_set() && window_info.window().size() == geom::Size{0, 0};
 
     auto modifications_copy = modifications;
     if (needs_placement)
     {
         modifications_copy.top_left() = window_info.window().top_left();
-        modifications_copy = self->try_place_new_window_and_account_for_occlusion(modifications_copy);
+        modifications_copy = self->try_place_new_window_and_account_for_occlusion(window_info, modifications_copy);
     }
 
     tools.modify_window(window_info, modifications_copy);
@@ -681,6 +693,7 @@ bool miral::MinimalWindowManager::Impl::advise_new_window(WindowInfo const& info
 }
 
 miral::WindowSpecification miral::MinimalWindowManager::Impl::try_place_new_window_and_account_for_occlusion(
+    miral::WindowInfo const& window_info,
     WindowSpecification const& parameters)
 {
     if(parameters.type() != mir_window_type_normal && parameters.type() != mir_window_type_freestyle)
@@ -691,15 +704,20 @@ miral::WindowSpecification miral::MinimalWindowManager::Impl::try_place_new_wind
 
     std::vector<geom::Rectangle> window_rects;
     tools.for_each_application(
-        [&window_rects, this](ApplicationInfo& app_info)
+        [&window_rects, this, &window_info](ApplicationInfo& app_info)
         {
             auto const& app_windows = app_info.windows();
             auto rectangles_to_consider =
                 app_windows |
                 std::ranges::views::filter(
-                    [this](auto const& window)
+                    [this, &window_info](auto const& window)
                     {
-                        auto const& info = tools.info_for(window);
+                        auto& info = tools.info_for(window);
+
+                        // Skip the window we're trying to fix the placement for
+                        if(window == window_info.window())
+                            return false;
+
                         // Skip invisible, windows not in the application
                         // layers, and non-floating (fullscreened or maximized)
                         // windows
