@@ -16,6 +16,10 @@
 
 #include "application_selector.h"
 #include "is_occluded.h"
+#include "mir_toolkit/common.h"
+
+#define MIR_LOG_COMPONENT "minimal-window-manager"
+#include "mir/log.h"
 
 #include <miral/minimal_window_manager.h>
 #include <miral/toolkit_event.h>
@@ -123,7 +127,6 @@ struct miral::MinimalWindowManager::Impl
     MirInputEventModifier const pointer_drag_modifier;
     FocusStealing const focus_stealing;
 };
-
 miral::MinimalWindowManager::MinimalWindowManager(WindowManagerTools const& tools) :
     MinimalWindowManager{tools, mir_input_event_modifier_alt}
 {
@@ -156,7 +159,10 @@ auto miral::MinimalWindowManager::place_new_window(
     ApplicationInfo const& /*app_info*/, WindowSpecification const& requested_specification)
     -> WindowSpecification
 {
-    return self->try_place_new_window_and_account_for_occlusion(requested_specification);
+    if(requested_specification.size().is_set())
+        return self->try_place_new_window_and_account_for_occlusion(requested_specification);
+
+    return requested_specification;
 }
 
 void miral::MinimalWindowManager::handle_window_ready(WindowInfo& window_info)
@@ -170,7 +176,16 @@ void miral::MinimalWindowManager::handle_window_ready(WindowInfo& window_info)
 void miral::MinimalWindowManager::handle_modify_window(
     WindowInfo& window_info, miral::WindowSpecification const& modifications)
 {
-    tools.modify_window(window_info, modifications);
+    auto const needs_placement = modifications.size().is_set() && window_info.window().size() == geom::Size{0, 0};
+
+    auto modifications_copy = modifications;
+    if (needs_placement)
+    {
+        modifications_copy.top_left() = window_info.window().top_left();
+        modifications_copy = self->try_place_new_window_and_account_for_occlusion(modifications_copy);
+    }
+
+    tools.modify_window(window_info, modifications_copy);
 }
 
 void miral::MinimalWindowManager::handle_raise_window(WindowInfo& window_info)
@@ -668,7 +683,7 @@ bool miral::MinimalWindowManager::Impl::advise_new_window(WindowInfo const& info
 miral::WindowSpecification miral::MinimalWindowManager::Impl::try_place_new_window_and_account_for_occlusion(
     WindowSpecification const& parameters)
 {
-    if (parameters.state() != mir_window_state_restored)
+    if (parameters.state().is_set() && parameters.state() != mir_window_state_restored)
         return parameters;
 
     std::vector<geom::Rectangle> window_rects;
