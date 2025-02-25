@@ -557,11 +557,17 @@ void msd::InputManager::set_cursor(MirResizeEdge resize_edge)
         break;
 
     case mir_resize_edge_northeast:
-    case mir_resize_edge_southwest:
         cursor_name = mir_diagonal_resize_bottom_to_top_cursor_name;
         break;
 
+    case mir_resize_edge_southwest:
+        cursor_name = "bottom_left_corner";
+        break;
+
     case mir_resize_edge_northwest:
+        cursor_name = "top_left_corner";
+        break;
+
     case mir_resize_edge_southeast:
         cursor_name = mir_diagonal_resize_top_to_bottom_cursor_name;
         break;
