@@ -14,14 +14,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "application_selector.h"
+#include "is_occluded.h"
+#include "mir_toolkit/common.h"
+#include "miral/window_info.h"
+#include "miral/window_specification.h"
+
+#define MIR_LOG_COMPONENT "minimal-window-manager"
+#include "mir/log.h"
+
 #include <miral/minimal_window_manager.h>
 #include <miral/toolkit_event.h>
 #include <miral/application_info.h>
-#include "application_selector.h"
+
 #include <linux/input.h>
 #include <gmpxx.h>
 
+#include <algorithm>
+#include <ranges>
+
 using namespace miral::toolkit;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -111,10 +124,11 @@ struct miral::MinimalWindowManager::Impl
 
     bool advise_new_window(WindowInfo const& info);
 
+    WindowSpecification try_place_new_window_and_account_for_occlusion(WindowInfo const&, miral::WindowSpecification const&);
+
     MirInputEventModifier const pointer_drag_modifier;
     FocusStealing const focus_stealing;
 };
-
 miral::MinimalWindowManager::MinimalWindowManager(WindowManagerTools const& tools) :
     MinimalWindowManager{tools, mir_input_event_modifier_alt}
 {
@@ -156,12 +170,34 @@ void miral::MinimalWindowManager::handle_window_ready(WindowInfo& window_info)
     {
         tools.select_active_window(window_info.window());
     }
+
+    // Handle windows that specify their size during creation
+    miral::WindowSpecification spec;
+    spec.top_left() = window_info.window().top_left();
+    spec.size() = window_info.window().size();
+    spec.type() = window_info.type();
+    spec.state() = window_info.state();
+    auto possibly_different_spec = self->try_place_new_window_and_account_for_occlusion(window_info, spec);
+    if (spec.top_left() != possibly_different_spec.top_left() || spec.size() != possibly_different_spec.size())
+    {
+        tools.modify_window(window_info, possibly_different_spec);
+    }
 }
 
 void miral::MinimalWindowManager::handle_modify_window(
     WindowInfo& window_info, miral::WindowSpecification const& modifications)
 {
-    tools.modify_window(window_info, modifications);
+    // Handle windows that specify their size after they're created
+    auto const needs_placement = modifications.size().is_set() && window_info.window().size() == geom::Size{0, 0};
+
+    auto modifications_copy = modifications;
+    if (needs_placement)
+    {
+        modifications_copy.top_left() = window_info.window().top_left();
+        modifications_copy = self->try_place_new_window_and_account_for_occlusion(window_info, modifications_copy);
+    }
+
+    tools.modify_window(window_info, modifications_copy);
 }
 
 void miral::MinimalWindowManager::handle_raise_window(WindowInfo& window_info)
@@ -654,4 +690,90 @@ bool miral::MinimalWindowManager::Impl::advise_new_window(WindowInfo const& info
     application_selector.advise_new_window(info, should_receive_focus);
 
     return should_receive_focus;
+}
+
+miral::WindowSpecification miral::MinimalWindowManager::Impl::try_place_new_window_and_account_for_occlusion(
+    miral::WindowInfo const& window_info,
+    WindowSpecification const& parameters)
+{
+    if(parameters.type() != mir_window_type_normal && parameters.type() != mir_window_type_freestyle)
+        return parameters;
+
+    if (parameters.state().is_set() && parameters.state() != mir_window_state_restored)
+        return parameters;
+
+    std::vector<geom::Rectangle> window_rects;
+    tools.for_each_application(
+        [&window_rects, this, &window_info](ApplicationInfo& app_info)
+        {
+            auto const& app_windows = app_info.windows();
+            auto rectangles_to_consider =
+                app_windows |
+                std::ranges::views::filter(
+                    [this, &window_info](auto const& window)
+                    {
+                        auto& info = tools.info_for(window);
+
+                        // Skip the window we're trying to fix the placement for
+                        if(window == window_info.window())
+                            return false;
+
+                        // Skip invisible, windows not in the application
+                        // layers, and non-floating (fullscreened or maximized)
+                        // windows
+                        if (!info.is_visible() || info.depth_layer() != mir_depth_layer_application ||
+                            info.state() != mir_window_state_restored)
+                            return false;
+
+                        return true;
+                    }) |
+                std::ranges::views::transform(
+                    [](Window const& window)
+                    {
+                        return geom::Rectangle{window.top_left(), window.size()};
+                    });
+            window_rects.insert(window_rects.end(), rectangles_to_consider.begin(), rectangles_to_consider.end());
+        });
+
+    // First, check if the given rectangle (if any) is good enough
+    auto const initial_top_left = parameters.top_left().value_or({});
+    auto const size = parameters.size().value_or({});
+    auto const initial_rectangle = geom::Rectangle{initial_top_left, size};
+    auto const min_area = geom::Size{50, 50};
+    if (!is_occluded(initial_rectangle, window_rects, min_area))
+        return parameters;
+
+    auto spec_copy = parameters;
+    // Try place the window around the suggested position
+    auto constexpr max_iterations{16};
+    auto constexpr base_offset{48};
+    for (auto multiplier = 1; multiplier < max_iterations; multiplier++)
+    {
+        auto const offset{base_offset * multiplier};
+        std::array const test_rects{
+            geom::Rectangle{initial_top_left + Displacement(offset, offset), size},
+            geom::Rectangle{initial_top_left + Displacement(-offset, offset), size},
+            geom::Rectangle{initial_top_left + Displacement(-offset, -offset), size},
+            geom::Rectangle{initial_top_left + Displacement(offset, -offset), size}};
+
+        auto valid_test_rects = std::ranges::filter_view(
+            test_rects,
+            [this](auto const rectangle)
+            {
+                return tools.active_output().overlaps(rectangle);
+            });
+
+        for (auto const& test_rect : valid_test_rects)
+        {
+            if (!is_occluded(test_rect, window_rects, min_area))
+            {
+                spec_copy.top_left().value() = test_rect.top_left;
+                return spec_copy;
+            }
+        }
+    }
+
+    // If we can't find any valid offset position, we use the original
+    // one, possibly occluding / being occluded by another window.
+    return parameters;
 }
