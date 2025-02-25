@@ -683,6 +683,9 @@ bool miral::MinimalWindowManager::Impl::advise_new_window(WindowInfo const& info
 miral::WindowSpecification miral::MinimalWindowManager::Impl::try_place_new_window_and_account_for_occlusion(
     WindowSpecification const& parameters)
 {
+    if(parameters.type() != mir_window_type_normal && parameters.type() != mir_window_type_freestyle)
+        return parameters;
+
     if (parameters.state().is_set() && parameters.state() != mir_window_state_restored)
         return parameters;
 
