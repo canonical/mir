@@ -237,7 +237,7 @@ auto msh::AbstractShell::create_surface(
             wm_visible_spec.height.value_or(geom::Height{480})};
         auto const size = decoration_manager->compute_size_with_decorations(
             content_size,
-            wm_visible_spec.type.value(),
+            wm_visible_spec.type.value_or(mir_window_type_normal),
             wm_visible_spec.state.value_or(mir_window_state_restored));
 
         adjust_size_constraints_for_ssd(wm_visible_spec, size, content_size);
