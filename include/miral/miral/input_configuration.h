@@ -80,7 +80,7 @@ public:
     void hscroll_speed(std::optional<double>const& val);
 
     /// Copies the corresponding value from `other` for all unset fields.
-    /// \remark Since MirAL 5.2
+    /// \remark Since MirAL 5.3
     void merge_settings_from(InputConfiguration::Mouse const& other);
 
 private:
@@ -123,7 +123,7 @@ public:
     void tap_to_click(std::optional<bool>const& val);
 
     /// Copies the corresponding value from `other` for all unset fields.
-    /// \remark Since MirAL 5.2
+    /// \remark Since MirAL 5.3
     void merge_settings_from(InputConfiguration::Touchpad const& other);
 
 private:
@@ -147,8 +147,6 @@ public:
     void set_repeat_rate(int new_rate);
     void set_repeat_delay(int new_delay);
 
-    /// Copies the corresponding value from `other` for all unset fields.
-    /// \remark Since MirAL 5.2
     void merge_settings_from(InputConfiguration::Keyboard const& other);
 
 private:
