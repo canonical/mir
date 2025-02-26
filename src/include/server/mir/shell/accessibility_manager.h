@@ -37,7 +37,7 @@ class KeyboardHelper;
 class AccessibilityManager
 {
 public:
-    AccessibilityManager(
+    explicit AccessibilityManager(
         std::shared_ptr<mir::graphics::Cursor> const& cursor, std::shared_ptr<mir::options::Option> const& options);
 
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&);
