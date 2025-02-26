@@ -276,7 +276,7 @@ public:
     virtual void advise_application_zone_delete(Zone const& application_zone);
     /** @} */
 
-    virtual ~WindowManagementPolicy() = default;
+    virtual ~WindowManagementPolicy();
     WindowManagementPolicy() = default;
     WindowManagementPolicy(WindowManagementPolicy const&) = delete;
     WindowManagementPolicy& operator=(WindowManagementPolicy const&) = delete;
