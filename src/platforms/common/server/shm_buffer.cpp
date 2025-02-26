@@ -96,12 +96,20 @@ namespace
 auto get_tex_id_on_context(mgc::EGLContextExecutor& egl_executor) -> std::shared_future<GLuint>
 {
     auto tex_promise = std::make_shared<std::promise<GLuint>>();
+    /* We don't guarantee that the ShmBuffer constructor will be called on a thread with
+     * an EGL context current, but allocating a GL texture ID and tex parameter setup
+     * requires a current context.
+     *
+     * We do have a *way* of running code with an EGL context current: the EGLContextExecutor.
+     * Delegate this setup there.
+     */
     egl_executor.spawn(
         [tex_promise]()
         {
             GLuint tex;
             glGenTextures(1, &tex);
 
+            // Paranoia: Save the current value for the GL state that we're modifying...
             GLint previous_texture;
             glGetIntegerv(GL_TEXTURE_2D, &previous_texture);
 
@@ -112,6 +120,7 @@ auto get_tex_id_on_context(mgc::EGLContextExecutor& egl_executor) -> std::shared
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+            // ...and then restore the previous GL state.
             glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(previous_texture));
             tex_promise->set_value(tex);
         });
