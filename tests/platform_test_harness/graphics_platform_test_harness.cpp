@@ -239,22 +239,6 @@ auto test_display_has_at_least_one_enabled_output(mg::Display& display) -> bool
     return output_count > 0;
 }
 
-// auto dump_egl_config(mg::Display& display) -> bool
-// {
-//     auto& context_source = dynamic_cast<mir::renderer::gl::ContextSource&>(display);
-//     auto ctx = context_source.create_gl_context();
-    
-//     ctx->make_current();
-
-//     auto const dpy = eglGetCurrentDisplay();
-//     std::cout << "EGL Information: " << std::endl;
-//     std::cout << "EGL Client APIs: " << eglQueryString(dpy, EGL_CLIENT_APIS) << std::endl;
-//     std::cout << "EGL Vendor: " << eglQueryString(dpy, EGL_VENDOR) << std::endl;
-//     std::cout << "EGL Version: " << eglQueryString(dpy, EGL_VERSION) << std::endl;
-//     std::cout << "EGL Extensions: " << eglQueryString(dpy, EGL_EXTENSIONS) << std::endl;
-
-//     return true;
-// }
 /*
 auto hex_to_gl(unsigned char colour) -> GLclampf
 {
@@ -552,7 +536,6 @@ int main(int argc, char const** argv)
         {
             if (auto display = test_display_construction(*platform, config))
             {
-//                success &= dump_egl_config(*display);
                 success &= test_display_has_at_least_one_enabled_output(*display);
 //                success &= test_display_buffers_support_gl(*display);
 //                basic_display_swapping(*display);
