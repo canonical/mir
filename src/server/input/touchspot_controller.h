@@ -56,6 +56,17 @@ protected:
     TouchspotController& operator=(TouchspotController const&) = delete;
 
 private:
+    // Need to keep a reference to the allocator because that keeps the
+    // graphics module loaded in memory. Otherwise, the module gets unloaded
+    // before `touchspot_buffer` gets deallocated, and it tries to call into it
+    // when the application is shutting down, casing a crash. This is a
+    // temporary workaround until we fix up how things reference graphics
+    // modules.
+    //
+    // See
+    //  https://github.com/canonical/mir/issues/3768
+    //  https://github.com/canonical/mir/issues/3779
+    std::shared_ptr<graphics::GraphicBufferAllocator> const workaround_allocator;
     std::shared_ptr<graphics::Buffer> touchspot_buffer;
     std::shared_ptr<Scene> scene;
     
