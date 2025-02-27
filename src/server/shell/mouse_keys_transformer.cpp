@@ -20,15 +20,18 @@
 #include "mir/main_loop.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
+#include "mir/synchronised.h"
 #include "mir/time/alarm.h"
 
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <memory>
 
 mir::input::MouseKeysTransformer::MouseKeysTransformer(
     std::shared_ptr<mir::MainLoop> const& main_loop, std::shared_ptr<mir::options::Option> const& options) :
     main_loop{main_loop},
+    motion_event_generator{std::make_shared<Synchronised<AlarmPtr>>()},
     acceleration_curve{options},
     max_speed{
         options->get<double>(mir::options::mouse_keys_max_speed_x),
@@ -101,20 +104,29 @@ bool mir::input::MouseKeysTransformer::handle_motion(
     {
     case mir_keyboard_action_up:
         if (buttons_down == none)
-            motion_event_generator.reset();
+        {
+            auto mev = motion_event_generator->lock();
+            (*mev)->cancel();
+            (*mev).reset();
+        }
 
         return true;
     case mir_keyboard_action_down:
         {
-            if (!motion_event_generator)
+            auto locked_motion_event_generator = motion_event_generator->lock();
+            auto& mev = *locked_motion_event_generator;
+
+            if (!mev)
             {
-                auto const shared_weak_alarm = std::make_shared<std::weak_ptr<mir::time::Alarm>>();
-                motion_event_generator = main_loop->create_alarm(
-                    [dispatcher,
+                mev = main_loop->create_alarm(
+                    [&dispatcher,
                      this,
                      motion_start_time = std::chrono::steady_clock::now(),
-                     weak_self = shared_weak_alarm] mutable
+                     locked_self = motion_event_generator] mutable
                     {
+                        // Lock to prevent ourselves from being destroyed while executing
+                        auto lock = locked_self->lock();
+
                         using SecondF = std::chrono::duration<float>;
                         auto constexpr repeat_delay = std::chrono::milliseconds(2); // 500 Hz rate
 
@@ -173,12 +185,10 @@ bool mir::input::MouseKeysTransformer::handle_motion(
                             mir::events::ScrollAxisH{},
                             mir::events::ScrollAxisV{});
 
-                        if (auto const& repeat_alarm = weak_self->lock())
-                            repeat_alarm->reschedule_in(repeat_delay);
+                        (*lock)->reschedule_in(repeat_delay);
                     });
 
-                *shared_weak_alarm = motion_event_generator;
-                motion_event_generator->reschedule_in(std::chrono::milliseconds(0));
+                mev->reschedule_in(std::chrono::milliseconds(0));
             }
         }
         return true;

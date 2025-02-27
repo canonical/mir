@@ -18,8 +18,12 @@
 
 #include "mir/geometry/displacement.h"
 
+#include <memory>
+
 namespace mir
 {
+template<typename T>
+class Synchronised;
 namespace options
 {
 class Option;
@@ -74,7 +78,9 @@ private:
 
     std::shared_ptr<mir::MainLoop> const main_loop;
 
-    std::shared_ptr<mir::time::Alarm> motion_event_generator; // shared_ptr so we can get a weak ptr to it
+    using AlarmPtr = std::unique_ptr<mir::time::Alarm>;                   // So we can use the alarm interface
+    using SynchronisedAlarmPtr = std::shared_ptr<Synchronised<AlarmPtr>>; // So we can share synchronized alarms
+    SynchronisedAlarmPtr motion_event_generator;
     std::unique_ptr<mir::time::Alarm> click_event_generator;
     std::unique_ptr<mir::time::Alarm> double_click_event_generator;
 
