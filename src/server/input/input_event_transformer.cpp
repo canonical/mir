@@ -30,9 +30,13 @@ namespace mi = mir::input;
 
 mi::InputEventTransformer::InputEventTransformer(
     std::shared_ptr<InputDeviceRegistry> const& device_registry, std::shared_ptr<MainLoop> const& main_loop) :
+    virtual_pointer{
+        std::make_shared<input::VirtualInputDevice>("mousekey-pointer", mir::input::DeviceCapability::pointer)},
     input_device_registry{device_registry},
     main_loop{main_loop}
+
 {
+    input_device_registry->add_device(virtual_pointer);
 }
 
 mir::input::InputEventTransformer::~InputEventTransformer()
@@ -44,9 +48,6 @@ mir::input::InputEventTransformer::~InputEventTransformer()
 bool mi::InputEventTransformer::handle(MirEvent const& event)
 {
     std::lock_guard lock{mutex};
-
-    if(!virtual_pointer)
-        return false;
 
     auto handled = false;
     virtual_pointer->if_started_then(
@@ -73,31 +74,13 @@ bool mi::InputEventTransformer::handle(MirEvent const& event)
             }
         });
 
-    // Remove the input device if the last transformer was removed.
-    if (input_transformers.empty())
-    {
-        input_device_registry->remove_device(virtual_pointer);
-        virtual_pointer.reset();
-    }
-
     return handled;
 }
 
 void mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::Transformer> const& transformer)
 {
     std::lock_guard lock{mutex};
-    lazily_init_virtual_input_device();
     input_transformers.push_back(transformer);
-}
-
-void mi::InputEventTransformer::lazily_init_virtual_input_device()
-{
-    if (input_transformers.empty())
-    {
-        virtual_pointer =
-            std::make_shared<input::VirtualInputDevice>("mousekey-pointer", mir::input::DeviceCapability::pointer);
-        input_device_registry->add_device(virtual_pointer);
-    }
 }
 
 mir::input::InputEventTransformer::EventDispatcher::EventDispatcher(
