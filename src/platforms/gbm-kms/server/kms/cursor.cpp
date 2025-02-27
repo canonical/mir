@@ -434,7 +434,7 @@ void mir::graphics::gbm::Cursor::set_scale_unlocked(std::lock_guard<std::mutex> 
 {
     current_scale = new_scale;
     size = current_cursor_image->size() * new_scale;
-    auto const scaled_cursor_buf = mg::scale_cursor_image(current_cursor_image, new_scale);
+    auto const scaled_cursor_buf = mg::scale_cursor_image(*current_cursor_image, new_scale);
     auto const buf_size_bytes = scaled_cursor_buf.size.width.as_value() * scaled_cursor_buf.size.height.as_value() * 4;
 
     argb8888.resize(buf_size_bytes);

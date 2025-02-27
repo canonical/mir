@@ -127,7 +127,7 @@ void mir::platform::wayland::Cursor::set_scale_unlocked(float new_scale)
     if (buffer)
         wl_buffer_destroy(buffer);
 
-    auto const scaled_cursor_buf = mir::graphics::scale_cursor_image(current_cursor_image, new_scale);
+    auto const scaled_cursor_buf = mir::graphics::scale_cursor_image(*current_cursor_image, new_scale);
 
     auto const width = scaled_cursor_buf.size.width.as_uint32_t();
     auto const height = scaled_cursor_buf.size.height.as_uint32_t();
