@@ -1408,10 +1408,17 @@ MIR_SERVER_INTERNAL_2.20 {
 global:
   extern "C++" {
     mir::DefaultServerConfiguration::the_accessibility_manager*;
+    mir::DefaultServerConfiguration::the_input_event_transformer*;
     mir::DefaultServerConfiguration::the_token_authority*;
     mir::Server::get_activation_token*;
     mir::Server::the_accessibility_manager*;
     mir::Server::the_token_authority*;
+    mir::input::InputEventTransformer::?InputEventTransformer*;
+    mir::input::InputEventTransformer::InputEventTransformer*;
+    mir::input::InputEventTransformer::Transformer::?Transformer*;
+    mir::input::InputEventTransformer::append*;
+    mir::input::InputEventTransformer::handle*;
+    mir::input::InputEventTransformer::prepend*;
     mir::shell::AbstractShell::is_above*;
     mir::shell::AccessibilityManager::notify_helpers*;
     mir::shell::AccessibilityManager::override_key_repeat_settings*;
@@ -1428,16 +1435,24 @@ global:
     mir::shell::TokenAuthority::revoke_all_tokens*;
     mir::shell::TokenAuthority::revoke_token*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_accessibility_manager*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_event_transformer*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_token_authority*;
+    non-virtual?thunk?to?mir::input::InputEventTransformer::?InputEventTransformer*;
+    non-virtual?thunk?to?mir::input::InputEventTransformer::Transformer::?Transformer*;
+    non-virtual?thunk?to?mir::input::InputEventTransformer::handle*;
     non-virtual?thunk?to?mir::shell::AbstractShell::is_above*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::is_above*;
     non-virtual?thunk?to?mir::shell::SurfaceStackWrapper::is_above*;
     typeinfo?for?mir::shell::AccessibilityManager;
+    typeinfo?for?mir::input::InputEventTransformer::Transformer;
+    typeinfo?for?mir::input::InputEventTransformer;
     typeinfo?for?mir::shell::TokenAuthority::Token;
     typeinfo?for?mir::shell::TokenAuthority;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_token_authority*;
     virtual?thunk?to?mir::shell::AbstractShell::is_above*;
     virtual?thunk?to?mir::shell::ShellWrapper::is_above*;
+    vtable?for?mir::input::InputEventTransformer::Transformer;
+    vtable?for?mir::input::InputEventTransformer;
   };
 } MIR_SERVER_INTERNAL_2.19;
 

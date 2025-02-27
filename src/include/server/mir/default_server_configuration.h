@@ -124,6 +124,7 @@ class CursorImages;
 class Seat;
 class KeyMapper;
 class LedObserverRegistrar;
+class InputEventTransformer;
 namespace receiver
 {
 class XKBMapperRegistrar;
@@ -317,6 +318,7 @@ public:
     virtual std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter();
 
     virtual std::shared_ptr<input::EventFilterChainDispatcher> the_event_filter_chain_dispatcher();
+    virtual std::shared_ptr<input::InputEventTransformer> the_input_event_transformer();
 
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
     virtual std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> the_keyboard_observer_registrar();
@@ -379,6 +381,7 @@ protected:
 
     CachedPtr<input::InputReport> input_report;
     CachedPtr<input::EventFilterChainDispatcher> event_filter_chain_dispatcher;
+    CachedPtr<input::InputEventTransformer> input_event_transformer;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<input::SurfaceInputDispatcher>    surface_input_dispatcher;
