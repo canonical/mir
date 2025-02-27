@@ -56,6 +56,8 @@ bool mi::InputEventTransformer::handle(MirEvent const& event)
             if (!dispatcher)
                 dispatcher = std::make_shared<EventDispatcher>(main_loop, sink, builder);
 
+            dispatcher->maybe_update(sink, builder);
+
             for (auto it = input_transformers.begin(); it != input_transformers.end();)
             {
                 auto const& t = it->lock();
@@ -103,6 +105,8 @@ void mir::input::InputEventTransformer::EventDispatcher::dispatch(mir::EventUPtr
 void mir::input::InputEventTransformer::EventDispatcher::dispatch_key_event(
     std::optional<std::chrono::nanoseconds> timestamp, MirKeyboardAction action, xkb_keysym_t keysym, int scan_code)
 {
+
+    std::lock_guard guard{mutex};
     dispatch(builder->key_event(timestamp, action, keysym, scan_code));
 }
 
@@ -116,5 +120,18 @@ void mir::input::InputEventTransformer::EventDispatcher::dispatch_pointer_event(
     events::ScrollAxisH h_scroll,
     events::ScrollAxisV v_scroll)
 {
+    std::lock_guard guard{mutex};
     dispatch(builder->pointer_event(timestamp, action, buttons, position, motion, axis_source, h_scroll, v_scroll));
 }
+
+void mir::input::InputEventTransformer::EventDispatcher::maybe_update(
+    InputSink* maybe_new_sink, EventBuilder* maybe_new_builder)
+{
+    if(sink == maybe_new_sink && builder == maybe_new_builder)
+        return;
+
+    std::lock_guard guard{mutex};
+    sink = maybe_new_sink;
+    builder = maybe_new_builder;
+}
+
