@@ -88,7 +88,6 @@ public:
     void append(std::weak_ptr<Transformer> const&);
 
 private:
-    void lazily_init_virtual_input_device();
 
     std::mutex mutex;
     std::vector<std::weak_ptr<Transformer>> input_transformers;
