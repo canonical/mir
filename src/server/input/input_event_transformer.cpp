@@ -55,14 +55,12 @@ bool mi::InputEventTransformer::handle(MirEvent const& event)
             if (!dispatcher)
                 dispatcher = std::make_shared<EventDispatcher>(main_loop, sink, builder);
 
-            for (auto it = input_transformers.begin(); it != input_transformers.end(); ++it)
+            for (auto it = input_transformers.begin(); it != input_transformers.end();)
             {
                 auto const& t = it->lock();
                 if (!t)
                 {
                     it = input_transformers.erase(it);
-                    if(it == input_transformers.end())
-                        return;
                     continue;
                 }
 
@@ -71,6 +69,7 @@ bool mi::InputEventTransformer::handle(MirEvent const& event)
                     handled = true;
                     break;
                 }
+                ++it;
             }
         });
 
@@ -84,13 +83,6 @@ void mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::
     input_transformers.push_back(transformer);
 }
 
-void mi::InputEventTransformer::prepend(std::weak_ptr<mi::InputEventTransformer::Transformer> const& transformer)
-{
-    std::lock_guard lock{mutex};
-    lazily_init_virtual_input_device();
-    input_transformers.insert(input_transformers.begin(),transformer);
-}
-
 void mi::InputEventTransformer::lazily_init_virtual_input_device()
 {
     if (input_transformers.empty())
@@ -99,6 +91,14 @@ void mi::InputEventTransformer::lazily_init_virtual_input_device()
             std::make_shared<input::VirtualInputDevice>("mousekey-pointer", mir::input::DeviceCapability::pointer);
         input_device_registry->add_device(virtual_pointer);
     }
+}
+
+mir::input::InputEventTransformer::EventDispatcher::EventDispatcher(
+    std::shared_ptr<MainLoop> const main_loop, input::InputSink* const sink, input::EventBuilder* const builder) :
+    main_loop{main_loop},
+    sink{sink},
+    builder{builder}
+{
 }
 
 void mir::input::InputEventTransformer::EventDispatcher::dispatch(mir::EventUPtr e)
@@ -128,4 +128,3 @@ void mir::input::InputEventTransformer::EventDispatcher::dispatch_pointer_event(
 {
     dispatch(builder->pointer_event(timestamp, action, buttons, position, motion, axis_source, h_scroll, v_scroll));
 }
-

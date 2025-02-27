@@ -36,17 +36,13 @@ class EventBuilder;
 class InputEventTransformer : public EventFilter
 {
 public:
-    struct EventDispatcher
+    class EventDispatcher
     {
+    public:
         EventDispatcher(
             std::shared_ptr<MainLoop> const main_loop,
             input::InputSink* const sink,
-            input::EventBuilder* const builder) :
-            main_loop{main_loop},
-            sink{sink},
-            builder{builder}
-        {
-        }
+            input::EventBuilder* const builder);
 
         void dispatch_key_event(
             std::optional<std::chrono::nanoseconds> timestamp,
@@ -72,8 +68,9 @@ public:
         input::EventBuilder* const builder;
     };
 
-    struct Transformer
+    class Transformer
     {
+    public:
         virtual ~Transformer() = default;
 
         // Returning true means that the event has been successfully processed and
@@ -89,7 +86,6 @@ public:
     bool handle(MirEvent const&) override;
 
     void append(std::weak_ptr<Transformer> const&);
-    void prepend(std::weak_ptr<Transformer> const&);
 
 private:
     void lazily_init_virtual_input_device();
