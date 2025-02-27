@@ -21,6 +21,7 @@
 #include "mir/input/event_builder.h"
 
 #include <chrono>
+#include <mutex>
 #include <vector>
 #include <memory>
 
@@ -60,12 +61,21 @@ public:
             events::ScrollAxisH h_scroll,
             events::ScrollAxisV v_scroll);
 
+        void maybe_update(InputSink* maybe_new_sink, EventBuilder* maybe_new_builder);
+
     private:
         void dispatch(mir::EventUPtr e);
 
         std::shared_ptr<MainLoop> const main_loop;
-        input::InputSink* const sink;
-        input::EventBuilder* const builder;
+
+        // Since dispatchers are handed down to transformers which might keep a
+        // reference to them, then we should be careful to not change the
+        // builder as they dispatch an event.
+        std::mutex mutex;
+
+        // Sinks and/or builders are not constant for one virtual device.
+        input::InputSink* sink;
+        input::EventBuilder* builder;
     };
 
     class Transformer
