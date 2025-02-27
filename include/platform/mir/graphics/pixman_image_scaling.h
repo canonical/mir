@@ -29,7 +29,7 @@ struct PixBuffer
 };
 
 class CursorImage;
-PixBuffer scale_cursor_image(std::shared_ptr<CursorImage> const& cursor_image, float new_scale);
+PixBuffer scale_cursor_image(CursorImage const& cursor_image, float new_scale);
 }
 
 #endif
