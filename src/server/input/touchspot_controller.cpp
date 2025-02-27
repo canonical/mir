@@ -112,7 +112,8 @@ private:
 
 mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<mi::Scene> const& scene)
-    : touchspot_buffer{
+    : workaround_allocator{allocator},
+      touchspot_buffer{
           mrs::alloc_buffer_with_content(
               *allocator,
               touchspot_image.pixel_data,
