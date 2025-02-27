@@ -73,6 +73,13 @@ bool mi::InputEventTransformer::handle(MirEvent const& event)
             }
         });
 
+    // Remove the input device if the last transformer was removed.
+    if (input_transformers.empty())
+    {
+        input_device_registry->remove_device(virtual_pointer);
+        virtual_pointer.reset();
+    }
+
     return handled;
 }
 
