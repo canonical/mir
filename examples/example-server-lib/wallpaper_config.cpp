@@ -45,7 +45,11 @@ auto default_font() -> std::string
         }},
         FontPath{"LiberationSans-Bold.ttf", {
             "liberation-sans",      // Fedora
-            "liberation",           // Arch
+            "liberation-sans-fonts",// Fedora >= 42
+            "liberation",           // Arch/Ubuntu
+        }},
+        FontPath{"OpenSans-Bold.ttf", {
+            "open-sans",            // Fedora/Ubuntu
         }},
     };
 
