@@ -1,4 +1,4 @@
-set(MIROIL_ABI 6)
+set(MIROIL_ABI 7)
 set(MIROIL_VERSION_MAJOR ${MIROIL_ABI})
 set(MIROIL_VERSION_MINOR 0)
 set(MIROIL_VERSION_PATCH 0)
@@ -13,7 +13,6 @@ add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="miroil" -DMIROIL_ENABLE_DEPRECATIO
 add_library(miroil SHARED
     compositor.cpp ${miroil_include}/miroil/compositor.h    
     edid.cpp ${miroil_include}/miroil/edid.h
-    mirbuffer.cpp ${miroil_include}/miroil/mirbuffer.h
     persist_display_config.cpp ${miroil_include}/miroil/persist_display_config.h
     display_configuration_policy.cpp ${miroil_include}/miroil/display_configuration_policy.h
     display_configuration_controller_wrapper.cpp ${miroil_include}/miroil/display_configuration_controller_wrapper.h
