@@ -403,7 +403,8 @@ std::shared_ptr<mf::Connector>
                 the_session_lock(),
                 the_decoration_strategy(),
                 the_session_coordinator(),
-                the_token_authority());
+                the_token_authority(),
+                the_rendering_platforms());
         });
 }
 
