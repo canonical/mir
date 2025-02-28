@@ -67,6 +67,7 @@ class SessionLock;
 }
 namespace input
 {
+class Scene;
 class SeatObserver;
 }
 namespace renderer
@@ -424,6 +425,10 @@ public:
     /// \return a registrar to add and remove SeatObservers
     auto the_seat_observer_registrar() const ->
         std::shared_ptr<ObserverRegistrar<input::SeatObserver>>;
+
+    /// \return the input scene
+    auto the_input_scene() const ->
+        std::shared_ptr<input::Scene>;
 
     auto the_session_lock() const ->
         std::shared_ptr<scene::SessionLock>;

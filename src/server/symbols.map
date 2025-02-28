@@ -1411,6 +1411,7 @@ global:
     mir::DefaultServerConfiguration::the_token_authority*;
     mir::Server::get_activation_token*;
     mir::Server::the_accessibility_manager*;
+    mir::Server::the_input_scene*;
     mir::Server::the_token_authority*;
     mir::shell::AbstractShell::is_above*;
     mir::shell::AccessibilityManager::notify_helpers*;
