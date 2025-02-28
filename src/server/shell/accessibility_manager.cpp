@@ -125,7 +125,8 @@ mir::shell::AccessibilityManager::AccessibilityManager(
     enable_mouse_keys{options->get<bool>(options::enable_mouse_keys_opt)},
     event_transformer{event_transformer},
     transformer{std::make_shared<MouseKeysTransformer>()},
-    cursor{cursor}
+    cursor{cursor},
+    cursor_scale{static_cast<float>(options->get<double>(mir::options::cursor_scale_override_opt))}
 {
     if (cursor_scale != 1.0)
         cursor->set_scale(cursor_scale);
