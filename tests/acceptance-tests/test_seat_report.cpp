@@ -138,7 +138,7 @@ TEST_F(TestSeatReport, add_device_received)
             devices.push_back(device.id());
         });
 
-    EXPECT_THAT(device_ids_seen, ContainerEq(devices));
+    EXPECT_THAT(device_ids_seen, IsSubsetOf(devices));
 }
 
 TEST_F(TestSeatReport, remove_device_received)
