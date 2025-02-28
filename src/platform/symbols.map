@@ -208,6 +208,11 @@ MIR_PLATFORM_2.20 {
  global:
   extern "C++" {
     mir::options::enable_mouse_keys_opt*;
+    mir::options::mouse_keys_acceleration_constant_factor*;
+    mir::options::mouse_keys_acceleration_linear_factor*;
+    mir::options::mouse_keys_acceleration_quadratic_factor*;
+    mir::options::mouse_keys_max_speed_x*;
+    mir::options::mouse_keys_max_speed_y*;
  };
  local: *;
 } MIR_PLATFORM_2.19 ;

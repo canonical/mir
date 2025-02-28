@@ -33,6 +33,7 @@
 #include <miral/toolkit_event.h>
 #include <miral/x11_support.h>
 #include <miral/wayland_extensions.h>
+#include <miral/enable_mousekeys.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -162,6 +163,7 @@ int main(int argc, char const* argv[])
             pre_init(ConfigurationOption{[&](std::string const& typeface) { ::wallpaper::font_file(typeface); },
                                          "shell-wallpaper-font", "font file to use for wallpaper", ::wallpaper::font_file()}),
             ConfigurationOption{[&](std::string const& cmd) { terminal_cmd = cmd; },
-                                "shell-terminal-emulator", "terminal emulator to use", terminal_cmd}
+                                "shell-terminal-emulator", "terminal emulator to use", terminal_cmd},
+            miral::EnableMouseKeys{},
         });
 }
