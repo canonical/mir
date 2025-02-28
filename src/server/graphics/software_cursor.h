@@ -18,8 +18,10 @@
 #define MIR_GRAPHICS_SOFTWARE_CURSOR_H_
 
 #include "mir/graphics/cursor.h"
+#include "mir/graphics/cursor_image.h"
 #include "mir_toolkit/client_types.h"
 #include "mir/geometry/displacement.h"
+
 #include <mutex>
 
 namespace mir
@@ -45,13 +47,16 @@ public:
         std::shared_ptr<input::Scene> const& scene);
     ~SoftwareCursor();
 
-    void show(CursorImage const& cursor_image) override;
+    void show(std::shared_ptr<CursorImage> const& cursor_image) override;
     void hide() override;
     void move_to(geometry::Point position) override;
+    void set_scale(float) override;
 
 private:
-    std::shared_ptr<detail::CursorRenderable> create_renderable_for(
+    std::shared_ptr<detail::CursorRenderable> create_scaled_renderable_for(
         CursorImage const& cursor_image, geometry::Point position);
+
+    void set_scale_unlocked(float new_scale);
 
     std::shared_ptr<GraphicBufferAllocator> const allocator;
     std::shared_ptr<input::Scene> const scene;
