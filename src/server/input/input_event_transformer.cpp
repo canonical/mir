@@ -23,18 +23,18 @@
 #include "mir/input/virtual_input_device.h"
 #include "mir/main_loop.h"
 
+#include <cassert>
 #include <memory>
 #include <mutex>
 
 namespace mi = mir::input;
 
 mi::InputEventTransformer::InputEventTransformer(
-    std::shared_ptr<InputDeviceRegistry> const& device_registry, std::shared_ptr<MainLoop> const& main_loop) :
+    std::shared_ptr<InputDeviceRegistry> const& input_device_registry, std::shared_ptr<MainLoop> const& main_loop) :
     virtual_pointer{
-        std::make_shared<input::VirtualInputDevice>("mousekey-pointer", mir::input::DeviceCapability::pointer)},
-    input_device_registry{device_registry},
+        std::make_shared<mir::input::VirtualInputDevice>("mousekey-pointer", mir::input::DeviceCapability::pointer)},
+    input_device_registry{input_device_registry},
     main_loop{main_loop}
-
 {
     input_device_registry->add_device(virtual_pointer);
 }
@@ -51,12 +51,16 @@ bool mi::InputEventTransformer::handle(MirEvent const& event)
 
     auto handled = false;
     virtual_pointer->if_started_then(
-        [this, &event, &handled](mir::input::InputSink* sink, mir::input::EventBuilder* builder)
+        [this, &event, &handled](auto* sink, auto* builder)
         {
-            if (!dispatcher)
-                dispatcher = std::make_shared<EventDispatcher>(main_loop, sink, builder);
-
-            dispatcher->maybe_update(sink, builder);
+            auto const dispatcher = [main_loop = this->main_loop, sink](auto event)
+            {
+                main_loop->spawn(
+                    [sink, event]
+                    {
+                        sink->handle_input(event);
+                    });
+            };
 
             for (auto it = input_transformers.begin(); it != input_transformers.end();)
             {
@@ -67,7 +71,7 @@ bool mi::InputEventTransformer::handle(MirEvent const& event)
                     continue;
                 }
 
-                if (t->transform_input_event(dispatcher, event))
+                if (t->transform_input_event(dispatcher, builder, event))
                 {
                     handled = true;
                     break;
@@ -84,54 +88,3 @@ void mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::
     std::lock_guard lock{mutex};
     input_transformers.push_back(transformer);
 }
-
-mir::input::InputEventTransformer::EventDispatcher::EventDispatcher(
-    std::shared_ptr<MainLoop> const main_loop, input::InputSink* const sink, input::EventBuilder* const builder) :
-    main_loop{main_loop},
-    sink{sink},
-    builder{builder}
-{
-}
-
-void mir::input::InputEventTransformer::EventDispatcher::dispatch(mir::EventUPtr e)
-{
-    main_loop->spawn(
-        [e = std::shared_ptr(std::move(e)), this]
-        {
-            sink->handle_input(e);
-        });
-}
-
-void mir::input::InputEventTransformer::EventDispatcher::dispatch_key_event(
-    std::optional<std::chrono::nanoseconds> timestamp, MirKeyboardAction action, xkb_keysym_t keysym, int scan_code)
-{
-
-    std::lock_guard guard{mutex};
-    dispatch(builder->key_event(timestamp, action, keysym, scan_code));
-}
-
-void mir::input::InputEventTransformer::EventDispatcher::dispatch_pointer_event(
-    std::optional<std::chrono::nanoseconds> timestamp,
-    MirPointerAction action,
-    MirPointerButtons buttons,
-    std::optional<mir::geometry::PointF> position,
-    mir::geometry::DisplacementF motion,
-    MirPointerAxisSource axis_source,
-    events::ScrollAxisH h_scroll,
-    events::ScrollAxisV v_scroll)
-{
-    std::lock_guard guard{mutex};
-    dispatch(builder->pointer_event(timestamp, action, buttons, position, motion, axis_source, h_scroll, v_scroll));
-}
-
-void mir::input::InputEventTransformer::EventDispatcher::maybe_update(
-    InputSink* maybe_new_sink, EventBuilder* maybe_new_builder)
-{
-    if(sink == maybe_new_sink && builder == maybe_new_builder)
-        return;
-
-    std::lock_guard guard{mutex};
-    sink = maybe_new_sink;
-    builder = maybe_new_builder;
-}
-

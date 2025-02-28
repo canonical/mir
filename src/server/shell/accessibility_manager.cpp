@@ -17,6 +17,7 @@
 #include "mir/shell/accessibility_manager.h"
 
 #include "mir/event_printer.h"
+#include "mir/input/event_builder.h"
 #include "mir/input/input_sink.h"
 #include "mir/log.h"
 #include "mir/options/configuration.h"
@@ -59,7 +60,8 @@ void mir::shell::AccessibilityManager::notify_helpers() const {
 struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transformer
 {
     bool transform_input_event(
-        std::shared_ptr<mir::input::InputEventTransformer::EventDispatcher> const& dispatcher,
+        mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
+        mir::input::EventBuilder* builder,
         MirEvent const& event) override
     {
         using namespace mir; // For operator<<
@@ -100,7 +102,7 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
                 return false;
             }
 
-            dispatcher->dispatch_pointer_event(
+            dispatcher(builder->pointer_event(
                 std::nullopt,
                 mir_pointer_action_motion,
                 0,
@@ -108,7 +110,7 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
                 offset,
                 mir_pointer_axis_source_none,
                 mir::events::ScrollAxisH{},
-                mir::events::ScrollAxisV{});
+                mir::events::ScrollAxisV{}));
 
             return true;
         }
