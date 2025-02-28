@@ -26,6 +26,7 @@
 
 namespace mir
 {
+class MainLoop;
 namespace options
 {
 class Option;
@@ -38,7 +39,8 @@ class AccessibilityManager
 public:
     AccessibilityManager(
         std::shared_ptr<mir::options::Option> const&,
-        std::shared_ptr<input::InputEventTransformer> const& event_transformer);
+        std::shared_ptr<input::InputEventTransformer> const&,
+        std::shared_ptr<MainLoop> const&);
 
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&);
 

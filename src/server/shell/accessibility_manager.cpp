@@ -16,10 +16,11 @@
 
 #include "mir/shell/accessibility_manager.h"
 
-#include "mir/input/event_builder.h"
-#include "mir/input/input_sink.h"
+#include "mir/geometry/displacement.h"
+#include "mir/main_loop.h"
 #include "mir/options/configuration.h"
 #include "mir/shell/keyboard_helper.h"
+#include "mir/time/alarm.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -56,6 +57,11 @@ void mir::shell::AccessibilityManager::notify_helpers() const {
 
 struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transformer
 {
+    MouseKeysTransformer(std::shared_ptr<mir::MainLoop> const& main_loop)
+        : main_loop{main_loop}
+    {
+    }
+
     bool transform_input_event(
         mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
         mir::input::EventBuilder* builder,
@@ -71,54 +77,110 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
         if (mir_input_event_get_type(input_event) == mir_input_event_type_key)
         {
             MirKeyboardEvent const* kev = mir_input_event_get_keyboard_event(input_event);
-            if (mir_keyboard_event_action(kev) != mir_keyboard_action_down &&
-                mir_keyboard_event_action(kev) != mir_keyboard_action_repeat)
-                return false;
+            auto const action = mir_keyboard_event_action(kev);
 
-            auto offset = geometry::DisplacementF{};
+            auto const set_or_clear = [](uint32_t& buttons_down, DirectionalButtons button, MirKeyboardAction action)
+            {
+                if(action == mir_keyboard_action_down)
+                    buttons_down |= button;
+                else if (action==mir_keyboard_action_up)
+                    buttons_down &= ~(button);
+            };
+
             switch (mir_keyboard_event_keysym(kev))
             {
             case XKB_KEY_KP_2:
-                offset = geometry::DisplacementF{0, 10};
+                set_or_clear(buttons_down, down, action);
                 break;
             case XKB_KEY_KP_4:
-                offset = geometry::DisplacementF{-10, 0};
+                set_or_clear(buttons_down, left, action);
                 break;
             case XKB_KEY_KP_6:
-                offset = geometry::DisplacementF{10, 0};
+                set_or_clear(buttons_down, right, action);
                 break;
             case XKB_KEY_KP_8:
-                offset = geometry::DisplacementF{0, -10};
+                set_or_clear(buttons_down, up, action);
                 break;
-
             default:
                 return false;
             }
 
-            dispatcher(builder->pointer_event(
-                std::nullopt,
-                mir_pointer_action_motion,
-                0,
-                std::nullopt,
-                offset,
-                mir_pointer_axis_source_none,
-                mir::events::ScrollAxisH{},
-                mir::events::ScrollAxisV{}));
+            motion_direction = {0, 0};
+            if (buttons_down & up)
+                motion_direction.dy += geometry::DeltaYF{-10};
+            if (buttons_down & down)
+                motion_direction.dy += geometry::DeltaYF{10};
+            if (buttons_down & left)
+                motion_direction.dx += geometry::DeltaXF{-10};
+            if (buttons_down & right)
+                motion_direction.dx += geometry::DeltaXF{10};
 
-            return true;
+            switch (mir_keyboard_event_action(kev))
+            {
+            case mir_keyboard_action_up:
+                if(buttons_down == none)
+                    motion_event_generator.reset();
+                return true;
+            case mir_keyboard_action_down:
+                {
+                    if (!motion_event_generator)
+                    {
+                        motion_event_generator = main_loop->create_alarm(
+                            [dispatcher, this, builder]
+                            {
+                                dispatcher(builder->pointer_event(
+                                    std::nullopt,
+                                    mir_pointer_action_motion,
+                                    0,
+                                    std::nullopt,
+                                    motion_direction,
+                                    mir_pointer_axis_source_none,
+                                    mir::events::ScrollAxisH{},
+                                    mir::events::ScrollAxisV{}));
+
+                                motion_event_generator->reschedule_in(std::chrono::milliseconds(10));
+                            });
+
+                        motion_event_generator->reschedule_in(std::chrono::milliseconds(0));
+                    }
+                }
+                return true;
+            case mir_keyboard_action_repeat:
+                return true;
+            default:
+                return false;
+            }
         }
 
         return false;
     }
+
+    std::shared_ptr<mir::MainLoop> const main_loop;
+
+    std::unique_ptr<mir::time::Alarm> motion_event_generator;
+
+    mir::geometry::DisplacementF motion_direction;
+
+    enum DirectionalButtons
+    {
+        none = 0,
+        up = 1 << 0,
+        down = 1 << 1,
+        left = 1 << 2,
+        right = 1 << 3
+    };
+
+    uint32_t buttons_down{none};
 };
 
 mir::shell::AccessibilityManager::AccessibilityManager(
     std::shared_ptr<mir::options::Option> const& options,
-    std::shared_ptr<input::InputEventTransformer> const& event_transformer) :
+    std::shared_ptr<input::InputEventTransformer> const& event_transformer,
+    std::shared_ptr<MainLoop> const& main_loop) :
     enable_key_repeat{options->get<bool>(options::enable_key_repeat_opt)},
     enable_mouse_keys{options->get<bool>(options::enable_mouse_keys_opt)},
     event_transformer{event_transformer},
-    transformer{std::make_shared<MouseKeysTransformer>()}
+    transformer{std::make_shared<MouseKeysTransformer>(main_loop)}
 {
     if (enable_mouse_keys)
         event_transformer->append(transformer);

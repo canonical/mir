@@ -26,6 +26,7 @@
 #include "mir/input/composite_event_filter.h"
 #include "mir/main_loop.h"
 #include "mir/options/configuration.h"
+#include "mir/options/option.h"
 #include "mir/shell/abstract_shell.h"
 #include "mir/shell/accessibility_manager.h"
 #include "mir/shell/system_compositor_window_manager.h"
@@ -189,7 +190,8 @@ auto mir::DefaultServerConfiguration::the_accessibility_manager() -> std::shared
     return accessibility_manager(
         [this]
         {
-            return std::make_shared<shell::AccessibilityManager>(the_options(), the_input_event_transformer());
+            return std::make_shared<shell::AccessibilityManager>(
+                the_options(), the_input_event_transformer(), the_main_loop());
         });
 }
 
