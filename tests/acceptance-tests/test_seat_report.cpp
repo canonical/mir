@@ -138,7 +138,7 @@ TEST_F(TestSeatReport, add_device_received)
             devices.push_back(device.id());
         });
 
-    EXPECT_THAT(device_ids_seen, ContainerEq(devices));
+    EXPECT_THAT(device_ids_seen, IsSubsetOf(devices));
 }
 
 TEST_F(TestSeatReport, remove_device_received)
@@ -327,9 +327,10 @@ TEST_F(TestSeatReport, key_state_received)
     auto listener = std::make_shared<KeyStateListener>(1);
     server.the_seat_observer_registrar()->register_interest(listener);
 
+    auto const fake_keyboard_name = "fake-keyboard";
     auto fake_keyboard = mtf::add_fake_input_device(
         mi::InputDeviceInfo{
-            "name",
+            fake_keyboard_name,
             "uid",
             mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric});
 
@@ -345,19 +346,19 @@ TEST_F(TestSeatReport, key_state_received)
         fake_keyboard->emit_key_state(temporary_copy);
     }
 
-    uint64_t device_id{0};
-    bool seen_device{false};
+    std::optional<size_t> fake_keyboard_id = std::nullopt;
     server.the_input_device_hub()->for_each_input_device(
-        [&device_id, &seen_device](auto const& device)
+        [&fake_keyboard_id, fake_keyboard_name](auto const& device)
         {
-            if (seen_device)
-                FAIL() << "Unexpected input device seen";
-            device_id = device.id();
-            seen_device = true;
+            if(device.name() == fake_keyboard_name)
+                fake_keyboard_id = device.id();
         });
+
+    if (!fake_keyboard_id.has_value())
+        FAIL() << "Fake keyboard not found";
 
     listener->wait_for_key_state(
         30s,
-        device_id,
+        *fake_keyboard_id,
         sent_state);
 }

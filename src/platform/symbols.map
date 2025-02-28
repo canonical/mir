@@ -203,3 +203,11 @@ MIR_PLATFORM_2.20 {
  };
  local: *;
 };
+
+MIR_PLATFORM_2.20 {
+ global:
+  extern "C++" {
+    mir::options::enable_mouse_keys_opt*;
+ };
+ local: *;
+} MIR_PLATFORM_2.19 ;
