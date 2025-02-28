@@ -1417,6 +1417,7 @@ global:
     mir::input::InputEventTransformer::EventDispatcher::EventDispatcher*;
     mir::input::InputEventTransformer::EventDispatcher::dispatch_key_event*;
     mir::input::InputEventTransformer::EventDispatcher::dispatch_pointer_event*;
+    mir::input::InputEventTransformer::EventDispatcher::maybe_update*;
     mir::input::InputEventTransformer::InputEventTransformer*;
     mir::input::InputEventTransformer::Transformer::?Transformer*;
     mir::input::InputEventTransformer::append*;
