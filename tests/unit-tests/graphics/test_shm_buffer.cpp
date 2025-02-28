@@ -98,11 +98,6 @@ struct ShmBufferTest : public testing::Test
           pixel_format{mir_pixel_format_bgr_888},
           egl_delegate{
             std::make_shared<mgc::EGLContextExecutor>(
-                std::make_unique<DumbGLContext>(dummy))},
-          shm_buffer{
-            size,
-            pixel_format,
-            std::make_shared<mgc::EGLContextExecutor>(
                 std::make_unique<DumbGLContext>(dummy))}
     {
     }
@@ -114,8 +109,6 @@ struct ShmBufferTest : public testing::Test
     MirPixelFormat const pixel_format;
     EGLContext const dummy{reinterpret_cast<void*>(0x0011223344)};
     std::shared_ptr<mgc::EGLContextExecutor> const egl_delegate;
-
-    PlatformlessShmBuffer shm_buffer;
 };
 
 }
@@ -124,6 +117,8 @@ TEST_F(ShmBufferTest, has_correct_properties)
 {
     size_t const bytes_per_pixel = MIR_BYTES_PER_PIXEL(pixel_format);
     size_t const expected_stride{bytes_per_pixel * size.width.as_uint32_t()};
+
+    PlatformlessShmBuffer shm_buffer(size, pixel_format, egl_delegate);
 
     EXPECT_EQ(size, shm_buffer.size());
     EXPECT_EQ(geom::Stride{expected_stride}, shm_buffer.map_readable()->stride());
