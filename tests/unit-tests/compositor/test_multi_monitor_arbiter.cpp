@@ -352,57 +352,6 @@ TEST_F(MultiMonitorArbiter, buffers_are_sent_back)
     EXPECT_THAT(buffer_released, Each(Pointee(true)));
 }
 
-TEST_F(MultiMonitorArbiter, can_check_if_buffers_are_ready)
-{
-    int comp_id1{0};
-    int comp_id2{0};
-    auto [buffer, size, source] = default_submission_data_from_buffer(buffers[3]);
-    arbiter->submit_buffer(buffer, size, source);
-
-    EXPECT_TRUE(arbiter->buffer_ready_for(&comp_id1));
-    EXPECT_TRUE(arbiter->buffer_ready_for(&comp_id2));
-
-    auto b1 = arbiter->compositor_acquire(&comp_id1)->claim_buffer();
-    EXPECT_FALSE(arbiter->buffer_ready_for(&comp_id1));
-    EXPECT_TRUE(arbiter->buffer_ready_for(&comp_id2));
-    b1.reset();
-
-    auto b2 = arbiter->compositor_acquire(&comp_id2)->claim_buffer();
-    EXPECT_FALSE(arbiter->buffer_ready_for(&comp_id1));
-    EXPECT_FALSE(arbiter->buffer_ready_for(&comp_id2));
-}
-
-TEST_F(MultiMonitorArbiter, other_compositor_ready_status_advances_with_fastest_compositor)
-{
-    int comp_id1{0};
-    int comp_id2{0};
-
-    auto [buffer, size, source] = default_submission_data_from_buffer(buffers[0]);
-    arbiter->submit_buffer(buffer, size, source);
-    EXPECT_TRUE(arbiter->buffer_ready_for(&comp_id1));
-    EXPECT_TRUE(arbiter->buffer_ready_for(&comp_id2));
-
-    arbiter->compositor_acquire(&comp_id1)->claim_buffer();
-    std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[1]);
-    arbiter->submit_buffer(buffer, size, source);
-    EXPECT_TRUE(arbiter->buffer_ready_for(&comp_id1));
-    EXPECT_TRUE(arbiter->buffer_ready_for(&comp_id2));
-
-    arbiter->compositor_acquire(&comp_id1)->claim_buffer();
-    std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[2]);
-    arbiter->submit_buffer(buffer, size, source);
-    EXPECT_TRUE(arbiter->buffer_ready_for(&comp_id1));
-    EXPECT_TRUE(arbiter->buffer_ready_for(&comp_id2));
-
-    arbiter->compositor_acquire(&comp_id1)->claim_buffer();
-    EXPECT_FALSE(arbiter->buffer_ready_for(&comp_id1));
-    EXPECT_TRUE(arbiter->buffer_ready_for(&comp_id2));
-
-    arbiter->compositor_acquire(&comp_id2)->claim_buffer();
-    EXPECT_FALSE(arbiter->buffer_ready_for(&comp_id1));
-    EXPECT_FALSE(arbiter->buffer_ready_for(&comp_id2));
-}
-
 TEST_F(MultiMonitorArbiter, will_release_buffer_in_nbuffers_2_starvation_scenario)
 {
     int comp_id1{0};

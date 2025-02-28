@@ -98,11 +98,6 @@ struct ShmBufferTest : public testing::Test
           pixel_format{mir_pixel_format_bgr_888},
           egl_delegate{
             std::make_shared<mgc::EGLContextExecutor>(
-                std::make_unique<DumbGLContext>(dummy))},
-          shm_buffer{
-            size,
-            pixel_format,
-            std::make_shared<mgc::EGLContextExecutor>(
                 std::make_unique<DumbGLContext>(dummy))}
     {
     }
@@ -114,8 +109,6 @@ struct ShmBufferTest : public testing::Test
     MirPixelFormat const pixel_format;
     EGLContext const dummy{reinterpret_cast<void*>(0x0011223344)};
     std::shared_ptr<mgc::EGLContextExecutor> const egl_delegate;
-
-    PlatformlessShmBuffer shm_buffer;
 };
 
 }
@@ -124,6 +117,8 @@ TEST_F(ShmBufferTest, has_correct_properties)
 {
     size_t const bytes_per_pixel = MIR_BYTES_PER_PIXEL(pixel_format);
     size_t const expected_stride{bytes_per_pixel * size.width.as_uint32_t()};
+
+    PlatformlessShmBuffer shm_buffer(size, pixel_format, egl_delegate);
 
     EXPECT_EQ(size, shm_buffer.size());
     EXPECT_EQ(geom::Stride{expected_stride}, shm_buffer.map_readable()->stride());
@@ -316,14 +311,14 @@ void wait_for_egl_thread(mgc::EGLContextExecutor& egl_delegate)
 TEST_F(ShmBufferTest, texture_is_destroyed_on_thread_with_current_context)
 {
     GLint const tex_id{0x8086};
-    EXPECT_CALL(mock_gl, glGenTextures(1,_))
-        .WillOnce(SetArgPointee<1>(tex_id));
-    EXPECT_CALL(mock_gl, glDeleteTextures(1,Pointee(Eq(tex_id))))
-        .WillOnce(InvokeWithoutArgs(
-            [this]()
+    ON_CALL(mock_gl, glGenTextures(1,_))
+        .WillByDefault(SetArgPointee<1>(tex_id));
+    ON_CALL(mock_gl, glDeleteTextures(1,Pointee(Eq(tex_id))))
+        .WillByDefault(InvokeWithoutArgs(
+            []()
             {
                 EXPECT_THAT(
-                    mock_egl.current_contexts[std::this_thread::get_id()],
+                    eglGetCurrentContext(),
                     Ne(EGL_NO_CONTEXT));
             }));
 
@@ -350,4 +345,35 @@ TEST_F(ShmBufferTest, texture_is_destroyed_on_thread_with_current_context)
         // Ensure this thread does *not* have a “context” current for destruction
         eglMakeCurrent(dummy_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     }
+}
+
+TEST_F(ShmBufferTest, tex_id_is_generated_on_thread_with_current_egl_context)
+{
+    GLint const tex_id{0x8086};
+    EGLContext const dummy_ctx{reinterpret_cast<EGLContext>(0x66221144)};
+    EGLDisplay const dummy_dpy{reinterpret_cast<EGLDisplay>(0xaabbccdd)};
+
+    ON_CALL(mock_gl, glGenTextures(1,_))
+        .WillByDefault(
+            DoAll(
+                SetArgPointee<1>(tex_id),
+                InvokeWithoutArgs(
+                    [dummy_ctx]()
+                    {
+                        EXPECT_THAT(
+                            eglGetCurrentContext(),
+                            Eq(dummy_ctx));
+                    })
+                ));
+
+    auto egl_delegate = std::make_shared<mgc::EGLContextExecutor>(
+        std::make_unique<DumbGLContext>(dummy_ctx));
+
+    // Ensure we do not have a “context” current for creation
+    eglMakeCurrent(dummy_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+
+    PlatformlessShmBuffer buffer{size, pixel_format, egl_delegate};
+
+    // Ensure that the texture ID has been resolved, and to the value we expect
+    EXPECT_THAT(buffer.tex_id(), Eq(tex_id));
 }

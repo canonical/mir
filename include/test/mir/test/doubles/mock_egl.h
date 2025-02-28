@@ -17,6 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_EGL_H_
 #define MIR_TEST_DOUBLES_MOCK_EGL_H_
 
+#include "mir/synchronised.h"
 #include <gmock/gmock.h>
 
 #include <mutex>
@@ -179,8 +180,7 @@ public:
     EGLContext const fake_egl_context;
     EGLImageKHR const fake_egl_image;
     int const fake_visual_id;
-    std::mutex mutable current_contexts_mutex;
-    std::unordered_map<std::thread::id,EGLContext> current_contexts;
+    Synchronised<std::unordered_map<std::thread::id,EGLContext>> current_contexts;
 };
 
 }
