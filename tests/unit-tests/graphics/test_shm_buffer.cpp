@@ -316,10 +316,10 @@ void wait_for_egl_thread(mgc::EGLContextExecutor& egl_delegate)
 TEST_F(ShmBufferTest, texture_is_destroyed_on_thread_with_current_context)
 {
     GLint const tex_id{0x8086};
-    EXPECT_CALL(mock_gl, glGenTextures(1,_))
-        .WillOnce(SetArgPointee<1>(tex_id));
-    EXPECT_CALL(mock_gl, glDeleteTextures(1,Pointee(Eq(tex_id))))
-        .WillOnce(InvokeWithoutArgs(
+    ON_CALL(mock_gl, glGenTextures(1,_))
+        .WillByDefault(SetArgPointee<1>(tex_id));
+    ON_CALL(mock_gl, glDeleteTextures(1,Pointee(Eq(tex_id))))
+        .WillByDefault(InvokeWithoutArgs(
             [this]()
             {
                 EXPECT_THAT(
