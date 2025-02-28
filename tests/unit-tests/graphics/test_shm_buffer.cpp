@@ -315,10 +315,10 @@ TEST_F(ShmBufferTest, texture_is_destroyed_on_thread_with_current_context)
         .WillByDefault(SetArgPointee<1>(tex_id));
     ON_CALL(mock_gl, glDeleteTextures(1,Pointee(Eq(tex_id))))
         .WillByDefault(InvokeWithoutArgs(
-            [this]()
+            []()
             {
                 EXPECT_THAT(
-                    mock_egl.current_contexts[std::this_thread::get_id()],
+                    eglGetCurrentContext(),
                     Ne(EGL_NO_CONTEXT));
             }));
 
