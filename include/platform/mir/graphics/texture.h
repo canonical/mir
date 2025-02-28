@@ -17,6 +17,8 @@
 #ifndef MIR_PLATFORM_TEXTURE_H_
 #define MIR_PLATFORM_TEXTURE_H_
 
+#include <GL/gl.h>
+
 namespace mir
 {
 namespace graphics
@@ -69,6 +71,11 @@ public:
      * shader program.
      */
     virtual void bind() = 0;
+
+    /**
+     * Get the GL ID of the texture
+     */
+    virtual auto tex_id() const -> GLuint = 0;
 
     /**
      * Called by the renderer immediately *after* the texture has been used in a GL call.

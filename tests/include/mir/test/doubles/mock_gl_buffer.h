@@ -39,6 +39,7 @@ public:
     MOCK_METHOD(Layout, layout, (), (const override));
     MOCK_METHOD(void, bind, (), (override));
     MOCK_METHOD(void, add_syncpoint, (), (override));
+    MOCK_METHOD(GLuint, tex_id, (), (const override));
 };
 }
 }

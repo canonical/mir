@@ -28,7 +28,6 @@
 #include "mir/raii.h"
 #include "mir/graphics/display.h"
 #include "mir/renderer/gl/context.h"
-#include "mir/renderer/gl/context_source.h"
 #include "mir/graphics/egl_wayland_allocator.h"
 #include "mir/executor.h"
 #include "mir/renderer/gl/gl_surface.h"

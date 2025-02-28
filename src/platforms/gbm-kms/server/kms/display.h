@@ -18,7 +18,6 @@
 #define MIR_GRAPHICS_GBM_DISPLAY_H_
 
 #include "mir/graphics/display.h"
-#include "mir/renderer/gl/context_source.h"
 #include "real_kms_output_container.h"
 #include "real_kms_display_configuration.h"
 #include "display_helpers.h"

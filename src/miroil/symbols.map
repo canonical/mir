@@ -1,4 +1,4 @@
-MIROIL_5.0 {
+MIROIL_7.0 {
 global:
   extern "C++" {
     miroil::Compositor::?Compositor*;
@@ -26,14 +26,6 @@ global:
     miroil::EventBuilder::make_pointer_event*;
     miroil::EventBuilder::make_touch_event*;
     miroil::EventBuilder::store*;
-    miroil::GLBuffer::?GLBuffer*;
-    miroil::GLBuffer::GLBuffer*;
-    miroil::GLBuffer::bind*;
-    miroil::GLBuffer::empty*;
-    miroil::GLBuffer::from_mir_buffer*;
-    miroil::GLBuffer::has_alpha_channel*;
-    miroil::GLBuffer::reset*;
-    miroil::GLBuffer::size*;
     miroil::InputDevice::?InputDevice*;
     miroil::InputDevice::InputDevice*;
     miroil::InputDevice::apply_keymap*;
@@ -115,7 +107,6 @@ global:
     typeinfo?for?miroil::Edid;
     typeinfo?for?miroil::EventBuilder::EventInfo;
     typeinfo?for?miroil::EventBuilder;
-    typeinfo?for?miroil::GLBuffer;
     typeinfo?for?miroil::InputDevice;
     typeinfo?for?miroil::InputDeviceObserver;
     typeinfo?for?miroil::MirPromptSession;

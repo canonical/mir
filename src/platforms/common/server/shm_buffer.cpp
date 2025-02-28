@@ -91,13 +91,51 @@ bool mgc::ShmBuffer::supports(MirPixelFormat mir_format)
     return mg::get_gl_pixel_format(mir_format, gl_format, gl_type);
 }
 
+namespace
+{
+auto get_tex_id_on_context(mgc::EGLContextExecutor& egl_executor) -> std::shared_future<GLuint>
+{
+    auto tex_promise = std::make_shared<std::promise<GLuint>>();
+    /* We don't guarantee that the ShmBuffer constructor will be called on a thread with
+     * an EGL context current, but allocating a GL texture ID and tex parameter setup
+     * requires a current context.
+     *
+     * We do have a *way* of running code with an EGL context current: the EGLContextExecutor.
+     * Delegate this setup there.
+     */
+    egl_executor.spawn(
+        [tex_promise]()
+        {
+            GLuint tex;
+            glGenTextures(1, &tex);
+
+            // Paranoia: Save the current value for the GL state that we're modifying...
+            GLint previous_texture;
+            glGetIntegerv(GL_TEXTURE_2D, &previous_texture);
+
+            glBindTexture(GL_TEXTURE_2D, tex);
+            // The ShmBuffer *should* be immutable, so we can just set up the properties once
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            // ...and then restore the previous GL state.
+            glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(previous_texture));
+            tex_promise->set_value(tex);
+        });
+    return tex_promise->get_future();
+}
+}
+
 mgc::ShmBuffer::ShmBuffer(
     geom::Size const& size,
     MirPixelFormat const& format,
     std::shared_ptr<EGLContextExecutor> egl_delegate)
     : size_{size},
       pixel_format_{format},
-      egl_delegate{std::move(egl_delegate)}
+      egl_delegate{std::move(egl_delegate)},
+      tex{get_tex_id_on_context(*this->egl_delegate)}
 {
 }
 
@@ -113,10 +151,10 @@ mgc::MemoryBackedShmBuffer::MemoryBackedShmBuffer(
 
 mgc::ShmBuffer::~ShmBuffer() noexcept
 {
-    if (tex_id != 0)
+    if (auto id = tex_id())
     {
         egl_delegate->spawn(
-            [id = tex_id]()
+            [id]()
             {
                 glDeleteTextures(1, &id);
             });
@@ -184,21 +222,12 @@ mg::NativeBufferBase* mgc::ShmBuffer::native_buffer_base()
 
 void mgc::ShmBuffer::bind()
 {
-    std::lock_guard lock{tex_id_mutex};
-    bool const needs_initialisation = tex_id == 0;
-    if (needs_initialisation)
-    {
-        glGenTextures(1, &tex_id);
-    }
-    glBindTexture(GL_TEXTURE_2D, tex_id);
-    if (needs_initialisation)
-    {
-        // The ShmBuffer *should* be immutable, so we can just upload once.
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    }
+    glBindTexture(GL_TEXTURE_2D, tex_id());
+}
+
+auto mgc::ShmBuffer::tex_id() const -> GLuint
+{
+    return tex.get();
 }
 
 void mgc::MemoryBackedShmBuffer::bind()

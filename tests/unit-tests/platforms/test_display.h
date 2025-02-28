@@ -19,7 +19,6 @@
 
 #include "mir/test/doubles/mock_display_configuration.h"
 #include "mir/renderer/gl/context.h"
-#include "mir/renderer/gl/context_source.h"
 #include "mir/test/display_config_matchers.h"
 
 TEST_F(DisplayTestGeneric, configure_disallows_invalid_configuration)

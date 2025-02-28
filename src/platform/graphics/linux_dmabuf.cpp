@@ -934,6 +934,11 @@ public:
         glBindTexture(desc.target, tex);
     }
 
+    auto tex_id() const -> GLuint override
+    {
+        return tex;
+    }
+
     void add_syncpoint() override
     {
     }

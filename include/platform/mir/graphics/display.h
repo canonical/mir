@@ -18,7 +18,6 @@
 #define MIR_GRAPHICS_DISPLAY_H_
 
 #include "mir/graphics/frame.h"
-#include "mir/renderer/gl/context_source.h"
 #include <memory>
 #include <functional>
 #include <chrono>
