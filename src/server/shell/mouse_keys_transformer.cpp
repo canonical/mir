@@ -103,7 +103,10 @@ bool mir::input::MouseKeysTransformer::handle_motion(
     {
     case mir_keyboard_action_up:
         if (buttons_down == none)
+        {
+            motion_event_generator->cancel();
             motion_event_generator.reset();
+        }
 
         return true;
     case mir_keyboard_action_down:
