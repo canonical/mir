@@ -509,8 +509,6 @@ global:
 MIRAL_5.2 {
 global:
   extern "C++" {
-    miral::EnableMouseKeys::EnableMouseKeys*;
-    miral::EnableMouseKeys::operator*;
     miral::InputConfiguration::Keyboard::?Keyboard*;
     miral::InputConfiguration::Keyboard::Keyboard*;
     miral::InputConfiguration::Keyboard::config_changed*;
@@ -518,8 +516,16 @@ global:
     miral::InputConfiguration::Keyboard::set_repeat_delay*;
     miral::InputConfiguration::Keyboard::set_repeat_rate*;
     miral::InputConfiguration::keyboard*;
-    typeinfo?for?miral::EnableMouseKeys;
     typeinfo?for?miral::InputConfiguration::Keyboard;
   };
 } MIRAL_5.1;
+
+MIRAL_5.3 {
+global:
+  extern "C++" {
+    miral::EnableMouseKeys::EnableMouseKeys*;
+    miral::EnableMouseKeys::operator*;
+    typeinfo?for?miral::EnableMouseKeys;
+  };
+} MIRAL_5.2;
 
