@@ -60,6 +60,9 @@ private:
     std::mutex mutable mutex;
     wl_buffer* buffer{nullptr};
     wl_pointer* pointer{nullptr};
+
+    std::shared_ptr<graphics::CursorImage> current_cursor_image;
+    float current_scale{1.0};
 };
 }
 }
