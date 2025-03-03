@@ -362,7 +362,7 @@ TEST(MultiThreadedCompositor, compositing_happens_in_different_threads)
     auto display = std::make_shared<mtd::StubDisplay>(nbuffers);
     auto scene = std::make_shared<StubScene>();
     auto db_compositor_factory = std::make_shared<RecordingDisplayBufferCompositorFactory>();
-    mc::MultiThreadedCompositor compositor{display, scene, db_compositor_factory, null_display_listener, null_report, default_delay, true};
+    mc::MultiThreadedCompositor compositor{display, db_compositor_factory, scene, null_display_listener, null_report, default_delay, true};
 
     compositor.start();
 
@@ -399,8 +399,8 @@ TEST(MultiThreadedCompositor, does_not_deadlock_itself)
 
     mc::MultiThreadedCompositor compositor{
         std::make_shared<mtd::StubDisplay>(3),
-        scene,
         std::make_shared<mtd::NullDisplayBufferCompositorFactory>(),
+        scene,
         std::make_shared<ReentrantDisplayListener>(scene),
         null_report,
         default_delay,
@@ -424,8 +424,9 @@ TEST(MultiThreadedCompositor, reports_in_the_right_places)
     auto db_compositor_factory =
         std::make_shared<RecordingDisplayBufferCompositorFactory>();
     auto mock_report = std::make_shared<mtd::MockCompositorReport>();
-    mc::MultiThreadedCompositor compositor{display, scene,
+    mc::MultiThreadedCompositor compositor{display,
                                            db_compositor_factory,
+                                           scene,
                                            null_display_listener,
                                            mock_report,
                                            default_delay,
@@ -473,7 +474,7 @@ TEST(MultiThreadedCompositor, composites_only_on_demand)
     auto display = std::make_shared<mtd::StubDisplay>(nbuffers);
     auto scene = std::make_shared<StubScene>();
     auto db_compositor_factory = std::make_shared<RecordingDisplayBufferCompositorFactory>();
-    mc::MultiThreadedCompositor compositor{display, scene, db_compositor_factory, null_display_listener, null_report, default_delay, true};
+    mc::MultiThreadedCompositor compositor{display, db_compositor_factory, scene, null_display_listener, null_report, default_delay, true};
 
     // Verify we're actually starting at zero frames
     EXPECT_TRUE(db_compositor_factory->check_record_count_for_each_buffer(nbuffers, 0, 0));
@@ -535,7 +536,7 @@ TEST(MultiThreadedCompositor, recommended_sleep_throttles_compositor_loop)
     auto display = std::make_shared<mtd::StubDisplay>(nbuffers);
     auto scene = std::make_shared<StubScene>();
     auto factory = std::make_shared<RecordingDisplayBufferCompositorFactory>();
-    mc::MultiThreadedCompositor compositor{display, scene, factory,
+    mc::MultiThreadedCompositor compositor{display, factory, scene,
                                            null_display_listener, null_report,
                                            recommendation, false};
 
@@ -585,7 +586,7 @@ TEST(MultiThreadedCompositor, when_no_initial_composite_is_needed_there_is_none)
     auto display = std::make_shared<mtd::StubDisplay>(nbuffers);
     auto scene = std::make_shared<StubScene>();
     auto db_compositor_factory = std::make_shared<RecordingDisplayBufferCompositorFactory>();
-    mc::MultiThreadedCompositor compositor{display, scene, db_compositor_factory, null_display_listener, null_report, default_delay, false};
+    mc::MultiThreadedCompositor compositor{display, db_compositor_factory, scene, null_display_listener, null_report, default_delay, false};
 
     // Verify we're actually starting at zero frames
     ASSERT_TRUE(db_compositor_factory->check_record_count_for_each_buffer(nbuffers, 0, 0));
@@ -609,7 +610,7 @@ TEST(MultiThreadedCompositor, initial_composite_is_requested_we_composite_exactl
     auto display = std::make_shared<mtd::StubDisplay>(nbuffers);
     auto scene = std::make_shared<StubScene>();
     auto db_compositor_factory = std::make_shared<RecordingDisplayBufferCompositorFactory>();
-    mc::MultiThreadedCompositor compositor{display, scene, db_compositor_factory, null_display_listener, null_report, default_delay, true};
+    mc::MultiThreadedCompositor compositor{display, db_compositor_factory, scene, null_display_listener, null_report, default_delay, true};
 
     // Verify we're actually starting at zero frames
     ASSERT_TRUE(db_compositor_factory->check_record_count_for_each_buffer(nbuffers, 0, 0));
@@ -632,7 +633,7 @@ TEST(MultiThreadedCompositor, when_no_initial_composite_is_needed_we_still_compo
     auto display = std::make_shared<mtd::StubDisplay>(nbuffers);
     auto scene = std::make_shared<StubScene>();
     auto db_compositor_factory = std::make_shared<RecordingDisplayBufferCompositorFactory>();
-    mc::MultiThreadedCompositor compositor{display, scene, db_compositor_factory, null_display_listener, null_report, default_delay, false};
+    mc::MultiThreadedCompositor compositor{display, db_compositor_factory, scene, null_display_listener, null_report, default_delay, false};
 
     compositor.start();
 
@@ -667,7 +668,7 @@ TEST(MultiThreadedCompositor, surface_update_from_render_doesnt_deadlock)
     auto display = std::make_shared<mtd::StubDisplay>(nbuffers);
     auto scene = std::make_shared<StubScene>();
     auto db_compositor_factory = std::make_shared<SurfaceUpdatingDisplayBufferCompositorFactory>(scene);
-    mc::MultiThreadedCompositor compositor{display, scene, db_compositor_factory, null_display_listener, null_report, default_delay, true};
+    mc::MultiThreadedCompositor compositor{display, db_compositor_factory, scene, null_display_listener, null_report, default_delay, true};
 
     compositor.start();
 
@@ -699,7 +700,7 @@ TEST(MultiThreadedCompositor, double_start_or_stop_ignored)
         .Times(AtLeast(0))
         .WillRepeatedly(Return(mc::SceneElementSequence{}));
 
-    mc::MultiThreadedCompositor compositor{display, mock_scene, db_compositor_factory, null_display_listener, mock_report, default_delay, true};
+    mc::MultiThreadedCompositor compositor{display, db_compositor_factory, mock_scene, null_display_listener, mock_report, default_delay, true};
 
     compositor.start();
     compositor.start();
@@ -714,7 +715,7 @@ TEST(MultiThreadedCompositor, cleans_up_after_throw_in_start)
     auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
     auto scene = std::make_shared<StubScene>();
     auto db_compositor_factory = std::make_shared<RecordingDisplayBufferCompositorFactory>();
-    mc::MultiThreadedCompositor compositor{display, scene, db_compositor_factory, null_display_listener, null_report, default_delay, true};
+    mc::MultiThreadedCompositor compositor{display, db_compositor_factory, scene, null_display_listener, null_report, default_delay, true};
 
     scene->throw_on_add_observer(true);
 
@@ -768,7 +769,7 @@ TEST(MultiThreadedCompositor, DISABLED_names_compositor_threads)
     auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
     auto scene = std::make_shared<StubScene>();
     auto db_compositor_factory = std::make_shared<ThreadNameDisplayBufferCompositorFactory>();
-    mc::MultiThreadedCompositor compositor{display, scene, db_compositor_factory, null_display_listener, null_report, default_delay, true};
+    mc::MultiThreadedCompositor compositor{display, db_compositor_factory, scene, null_display_listener, null_report, default_delay, true};
 
     compositor.start();
 
@@ -797,7 +798,7 @@ TEST(MultiThreadedCompositor, registers_and_unregisters_with_scene)
     EXPECT_CALL(*mock_scene, register_compositor(_))
         .Times(nbuffers);
     mc::MultiThreadedCompositor compositor{
-        display, mock_scene, db_compositor_factory, null_display_listener, mock_report, default_delay, true};
+        display, db_compositor_factory, mock_scene, null_display_listener, mock_report, default_delay, true};
 
     compositor.start();
 
@@ -820,7 +821,7 @@ TEST(MultiThreadedCompositor, notifies_about_display_additions_and_removals)
     auto mock_report = std::make_shared<testing::NiceMock<mtd::MockCompositorReport>>();
 
     mc::MultiThreadedCompositor compositor{
-        display, stub_scene, db_compositor_factory, mock_display_listener, mock_report, default_delay, true};
+        display, db_compositor_factory, stub_scene, mock_display_listener, mock_report, default_delay, true};
 
     EXPECT_CALL(*mock_display_listener, add_display(_)).Times(nbuffers);
 
@@ -842,7 +843,7 @@ TEST(MultiThreadedCompositor, when_compositor_thread_fails_start_reports_error)
     auto mock_report = std::make_shared<testing::NiceMock<mtd::MockCompositorReport>>();
 
     mc::MultiThreadedCompositor compositor{
-        display, stub_scene, db_compositor_factory, mock_display_listener, mock_report, default_delay, true};
+        display, db_compositor_factory, stub_scene, mock_display_listener, mock_report, default_delay, true};
 
     EXPECT_CALL(*mock_display_listener, add_display(_))
         .WillRepeatedly(Throw(std::runtime_error("Failed to add display")));
@@ -865,7 +866,7 @@ TEST(MultiThreadedCompositor, can_schedule_from_display_observer_when_adding_dis
         .WillByDefault(InvokeWithoutArgs([&]{ stub_scene->emit_change_event(); }));
 
     mc::MultiThreadedCompositor compositor{
-        display, stub_scene, db_compositor_factory, mock_display_listener, mock_report, default_delay, true};
+        display, db_compositor_factory, stub_scene, mock_display_listener, mock_report, default_delay, true};
     compositor.start();
 }
 
@@ -883,6 +884,6 @@ TEST(MultiThreadedCompositor, can_schedule_from_display_observer_when_removing_d
         .WillByDefault(InvokeWithoutArgs([&]{ stub_scene->emit_change_event(); }));
 
     mc::MultiThreadedCompositor compositor{
-        display, stub_scene, db_compositor_factory, mock_display_listener, mock_report, default_delay, true};
+        display, db_compositor_factory, stub_scene, mock_display_listener, mock_report, default_delay, true};
     compositor.start();
 }

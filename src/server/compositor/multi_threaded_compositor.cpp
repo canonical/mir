@@ -241,8 +241,8 @@ private:
 
 mc::MultiThreadedCompositor::MultiThreadedCompositor(
     std::shared_ptr<mg::Display> const& display,
-    std::shared_ptr<mc::Scene> const& scene,
     std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory,
+    std::shared_ptr<mc::Scene> const& scene,
     std::shared_ptr<DisplayListener> const& display_listener,
     std::shared_ptr<CompositorReport> const& compositor_report,
     std::chrono::milliseconds fixed_composite_delay,
