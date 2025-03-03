@@ -123,6 +123,7 @@ MIR_PLATFORM_2.20 {
     mir::options::drop_wayland_extensions_opt;
     mir::options::enable_input_opt*;
     mir::options::enable_key_repeat_opt*;
+    mir::options::enable_mouse_keys_opt*;
     mir::options::fatal_except_opt*;
     mir::options::idle_timeout_opt;
     mir::options::idle_timeout_when_locked_opt;
@@ -203,11 +204,3 @@ MIR_PLATFORM_2.20 {
  };
  local: *;
 };
-
-MIR_PLATFORM_2.20 {
- global:
-  extern "C++" {
-    mir::options::enable_mouse_keys_opt*;
- };
- local: *;
-} MIR_PLATFORM_2.19;
