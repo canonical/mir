@@ -21,8 +21,6 @@
 #include "mir/options/configuration.h"
 #include "mir/shell/keyboard_helper.h"
 
-#include <xkbcommon/xkbcommon-keysyms.h>
-
 void mir::shell::AccessibilityManager::register_keyboard_helper(std::shared_ptr<KeyboardHelper> const& helper)
 {
     // Update the keyboard help's rate and delay in case they changed before it
@@ -125,9 +123,9 @@ mir::shell::AccessibilityManager::AccessibilityManager(
     enable_mouse_keys{options->get<bool>(options::enable_mouse_keys_opt)},
     event_transformer{event_transformer},
     transformer{std::make_shared<MouseKeysTransformer>()},
-    cursor{cursor},
-    cursor_scale{static_cast<float>(options->get<double>(mir::options::cursor_scale_override_opt))}
+    cursor{cursor}
 {
+    auto const cursor_scale = static_cast<float>(options->get<double>(mir::options::cursor_scale_override_opt));
     if (cursor_scale != 1.0)
         cursor->set_scale(cursor_scale);
 
@@ -137,9 +135,6 @@ mir::shell::AccessibilityManager::AccessibilityManager(
 
 void mir::shell::AccessibilityManager::cursor_scale_changed(float new_scale)
 {
-    // Store the cursor scale in case the cursor hasn't been set yet
-    cursor_scale = new_scale;
-
     if(cursor)
         cursor->set_scale(new_scale);
 }

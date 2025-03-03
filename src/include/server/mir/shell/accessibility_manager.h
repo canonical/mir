@@ -71,7 +71,6 @@ private:
     std::shared_ptr<mir::input::InputEventTransformer::Transformer> const transformer;
 
     std::shared_ptr<graphics::Cursor> cursor;
-    float cursor_scale{1};
 };
 }
 }
