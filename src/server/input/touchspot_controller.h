@@ -66,9 +66,8 @@ private:
     // See
     //  https://github.com/canonical/mir/issues/3768
     //  https://github.com/canonical/mir/issues/3779
-    std::shared_ptr<graphics::GraphicBufferAllocator> const workaround_allocator;
-    std::shared_ptr<graphics::Buffer> touchspot_buffer;
-    std::shared_ptr<Scene> scene;
+    std::shared_ptr<graphics::Buffer> const touchspot_buffer;
+    std::shared_ptr<Scene> const scene;
     
     std::mutex guard;
 
