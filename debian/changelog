@@ -2,6 +2,42 @@ mir (2.20.0) UNRELEASED; urgency=medium
 
   * New upstream release 2.20.0
 
+    - ABI summary:
+      . miral ABI unchanged at 7
+      . mircommon ABI bunped to 11
+      . mircore ABI unchanged at 2
+      . miroil ABI bumped to 7
+      . mirplatform ABI unchanged at 30
+      . mirserver ABI bumped to 63
+      . mirwayland ABI unchanged at 5
+      . mirplatformgraphics ABI bumped to 23
+      . mirinputplatform ABI bumped to 10
+
+    - Enhancements:
+      . Extract rendering strategy for decorations (#3706 #3708 #3712)
+      . MirOIL updates for post-new-Platform-API QtMir (#3767)
+      . feature: adding an is_above method to the SurfaceStack (#3707)
+      . Implement focus stealing prevention (#2586)
+        Turn it on with `--focus-stealing-prevention true` on supported compositors.
+      . Pass XDG_ACTIVATION_TOKEN to apps launched via launch_app_env (#3703)
+      . Publish mir*-internal libraries (#3283)
+      . Make key repeat and delay configurable (#3730)
+      . Improve Firefox surface.frame event quirk (#3740)
+      . Workaround for LXQt panel (#3764)
+      . Fix SSD text (#3785)
+
+    - Bugs fixed:
+      . TilingWindowManagerPolicy assumes that window size is always specified (#3689)
+      . OSK hides a half second after popping up on some input fields with zwp_text_input_v1 (Electron) (#3580)
+      . Closing a window brings one of the remaining windows of the same client to the front (#3309)
+      . Closing a window causes minimized windows to be focused (#3408)
+      . atomic-kms: hardware cursor disappears crossing screen boundaries (#3677)
+      . Crash on display unplug (#3729)
+      . Crash when pcmanfm-qt does DnD (#3765)
+      . The check for "implicit grab" for drag-and-drop is too strict (#3769)
+      . The cursor icons for top-left and bottom-left resize are wrong for server-side decorations (#3776)
+      . Incorrectly sizes some windows with server-side decorations (#3778)
+
  -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 27 Feb 2025 10:50:00 +0100
 
 mir (2.19.3) UNRELEASED; urgency=medium
