@@ -248,8 +248,8 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
     std::chrono::milliseconds fixed_composite_delay,
     bool compose_on_start)
     : display{display},
-      scene{scene},
       display_buffer_compositor_factory{db_compositor_factory},
+      scene{scene},
       display_listener{display_listener},
       report{compositor_report},
       state{CompositorState::stopped},
