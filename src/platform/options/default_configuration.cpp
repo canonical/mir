@@ -41,6 +41,7 @@ char const* const mo::fatal_except_opt            = "on-fatal-error-except";
 char const* const mo::debug_opt                   = "debug";
 char const* const mo::composite_delay_opt         = "composite-delay";
 char const* const mo::enable_key_repeat_opt       = "enable-key-repeat";
+char const* const mo::enable_mouse_keys_opt       = "enable-mouse-keys";
 char const* const mo::x11_display_opt             = "enable-x11";
 char const* const mo::x11_scale_opt               = "x11-scale";
 char const* const mo::wayland_extensions_opt      = "wayland-extensions";
@@ -180,6 +181,8 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Cursor (mouse pointer) to use [{auto,null,software}]")
         (enable_key_repeat_opt, po::value<bool>()->default_value(true),
              "Enable server generated key repeat")
+        (enable_mouse_keys_opt, po::value<bool>()->default_value(false),
+             "Enable mousekeys (controlling the mouse with the numpad)")
         (idle_timeout_opt, po::value<int>()->default_value(0),
             "Time (in seconds) Mir will remain idle before turning off the display "
             "when the session is not locked, or 0 to keep display on forever.")

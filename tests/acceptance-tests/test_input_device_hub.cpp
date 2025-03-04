@@ -67,6 +67,8 @@ TEST_F(TestInputDeviceHub, notifies_input_device_observer_about_available_device
 {
     using namespace testing;
     InSequence seq;
+    EXPECT_CALL(observer, device_added(_)); // Account for "mousekey-pointer"
+
     EXPECT_CALL(observer, changes_complete())
         .WillOnce(mt::WakeUp(&observer_registered));
 
