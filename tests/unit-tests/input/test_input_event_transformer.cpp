@@ -33,6 +33,7 @@
 #include <gtest/gtest.h>
 
 #include <memory>
+#include <stdexcept>
 #include <xkbcommon/xkbcommon-compat.h>
 
 namespace mt = mir::test;
@@ -182,8 +183,41 @@ TEST_F(TestInputEventTransformer, transformer_not_called_after_removal)
     ASSERT_TRUE(stub_transformer->called);
 
     external_called = false;
-    stub_transformer.reset();
+    input_event_transformer.remove(stub_transformer);
 
     input_event_transformer.handle(*make_key_event());
     ASSERT_FALSE(external_called);
+}
+
+TEST_F(TestInputEventTransformer, removing_a_valid_transformer_returns_true)
+{
+    auto stub_transformer_1 = std::make_shared<StubTransformer>(
+        []
+        {
+            return false;
+        });
+    auto stub_transformer_2 = std::make_shared<StubTransformer>(
+        []
+        {
+            return false;
+        });
+
+    input_event_transformer.append(stub_transformer_1);
+    input_event_transformer.append(stub_transformer_2);
+
+    ASSERT_TRUE(input_event_transformer.remove(stub_transformer_1));
+
+    input_event_transformer.handle(*make_key_event());
+    ASSERT_TRUE(stub_transformer_2->called && !stub_transformer_1->called);
+}
+
+TEST_F(TestInputEventTransformer, removing_a_transformer_that_was_not_returns_false)
+{
+    auto stub_transformer = std::make_shared<StubTransformer>(
+        []
+        {
+            return false;
+        });
+
+    ASSERT_FALSE(input_event_transformer.remove(stub_transformer));
 }

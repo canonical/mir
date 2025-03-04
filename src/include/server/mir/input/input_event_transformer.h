@@ -58,6 +58,7 @@ public:
     bool handle(MirEvent const&) override;
 
     void append(std::weak_ptr<Transformer> const&);
+    bool remove(std::shared_ptr<Transformer> const&);
 
 private:
     std::mutex mutex;

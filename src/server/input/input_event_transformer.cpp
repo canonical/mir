@@ -17,12 +17,14 @@
 #include "mir/input/input_event_transformer.h"
 
 #include "mir/input/device_capability.h"
-#include "mir/input/event_builder.h"
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_sink.h"
 #include "mir/input/virtual_input_device.h"
 #include "mir/main_loop.h"
+#include "mir/log.h"
 
+#include <algorithm>
+#include <boost/throw_exception.hpp>
 #include <cassert>
 #include <memory>
 #include <mutex>
@@ -87,4 +89,25 @@ void mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::
 {
     std::lock_guard lock{mutex};
     input_transformers.push_back(transformer);
+}
+
+bool mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer::Transformer> const& transformer)
+{
+    std::lock_guard lock{mutex};
+    auto [remove_start, remove_end] = std::ranges::remove(
+        input_transformers,
+        transformer,
+        [](auto const& list_element)
+        {
+            return list_element.lock();
+        });
+
+    if (remove_start == input_transformers.end())
+    {
+        mir::log_error("Attempted to remove a transformer that doesn't exist in `input_transformers`");
+        return false;
+    }
+
+    input_transformers.erase(remove_start, remove_end);
+    return true;
 }
