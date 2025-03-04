@@ -86,15 +86,17 @@ void adjust_size_constraints_for_ssd(
     geom::Size const& window_size,
     geom::Size const& content_size)
 {
+    static int const int_max = std::numeric_limits<int>::max();
+
     auto const horiz_frame_padding = window_size.width - content_size.width;
     auto const vert_frame_padding = window_size.height - content_size.height;
     if (wm_relevant_mods.width.is_set())
         wm_relevant_mods.width.value() += horiz_frame_padding;
     if (wm_relevant_mods.height.is_set())
         wm_relevant_mods.height.value() += vert_frame_padding;
-    if (wm_relevant_mods.max_width.is_set())
+    if (wm_relevant_mods.max_width.is_set() && wm_relevant_mods.max_width.value() < geom::Width{int_max} - horiz_frame_padding)
         wm_relevant_mods.max_width.value() += horiz_frame_padding;
-    if (wm_relevant_mods.max_height.is_set())
+    if (wm_relevant_mods.max_height.is_set() && wm_relevant_mods.max_height.value() < geom::Height{int_max} - vert_frame_padding)
         wm_relevant_mods.max_height.value() += vert_frame_padding;
     if (wm_relevant_mods.min_width.is_set())
         wm_relevant_mods.min_width.value() += horiz_frame_padding;
