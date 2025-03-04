@@ -78,22 +78,13 @@ struct TestInputEventTransformer : testing::Test
     mir::input::InputEventTransformer input_event_transformer;
 };
 
-struct StubTransformer : public mir::input::InputEventTransformer::Transformer
+struct MockTransformer : public mir::input::InputEventTransformer::Transformer
 {
-    std::function<bool()> const on_event;
-    bool called{false};
-
-    StubTransformer(std::function<bool()> on_event) :
-        on_event{on_event}
-    {
-    }
-
-    virtual bool transform_input_event(
-        mir::input::InputEventTransformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&) override
-    {
-        called = true;
-        return on_event();
-    }
+    MOCK_METHOD(
+        (bool),
+        transform_input_event,
+        (mir::input::InputEventTransformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
+        (override));
 };
 
 TEST_F(TestInputEventTransformer, virtual_input_device_exists)
@@ -111,113 +102,84 @@ TEST_F(TestInputEventTransformer, virtual_input_device_exists)
 
 TEST_F(TestInputEventTransformer, transformer_gets_called)
 {
-    auto stub_transformer = std::make_shared<StubTransformer>(
-        []
-        {
-            return false;
-        });
+    auto mock_transformer = std::make_shared<MockTransformer>();
+    EXPECT_CALL(*mock_transformer, transform_input_event(_, _,_));
 
-    input_event_transformer.append(stub_transformer);
+    input_event_transformer.append(mock_transformer);
 
     input_event_transformer.handle(*make_key_event());
-    ASSERT_TRUE(stub_transformer->called);
 }
 
 TEST_F(TestInputEventTransformer, events_block_correctly)
 {
-    auto stub_transformer_1 = std::make_shared<StubTransformer>(
-        []
-        {
-            return true;
-        });
-    auto stub_transformer_2 = std::make_shared<StubTransformer>(
-        []
-        {
-            // Wont get called since stub_transformer_1 returns `true`,
-            // signalling that it handled the event and no other transformers
-            // should run
-            return true;
-        });
+    auto mock_transformer_1 = std::make_shared<MockTransformer>();
+    EXPECT_CALL(*mock_transformer_1, transform_input_event(_, _, _))
+        .WillOnce(
+            [](auto*...)
+            {
+                return true;
+            });
 
-    input_event_transformer.append(stub_transformer_1);
-    input_event_transformer.append(stub_transformer_2);
+    auto mock_transformer_2 = std::make_shared<MockTransformer>();
+    EXPECT_CALL(*mock_transformer_2, transform_input_event(_, _, _)).Times(0);
+
+    input_event_transformer.append(mock_transformer_1);
+    input_event_transformer.append(mock_transformer_2);
 
     input_event_transformer.handle(*make_key_event());
-    ASSERT_TRUE(stub_transformer_1->called && !stub_transformer_2->called);
 }
 
 TEST_F(TestInputEventTransformer, events_cascade_correctly)
 {
-    auto stub_transformer_1 = std::make_shared<StubTransformer>(
-        []
-        {
-            return false;
-        });
-    auto stub_transformer_2 = std::make_shared<StubTransformer>(
-        []
-        {
-            return true;
-        });
+    auto mock_transformer_1 = std::make_shared<MockTransformer>();
+    EXPECT_CALL(*mock_transformer_1, transform_input_event(_, _, _))
+        .WillOnce(
+            [](auto*...)
+            {
+                return false;
+            });
 
-    input_event_transformer.append(stub_transformer_1);
-    input_event_transformer.append(stub_transformer_2);
+    auto mock_transformer_2 = std::make_shared<MockTransformer>();
+    EXPECT_CALL(*mock_transformer_2, transform_input_event(_, _, _));
+
+    input_event_transformer.append(mock_transformer_1);
+    input_event_transformer.append(mock_transformer_2);
 
     input_event_transformer.handle(*make_key_event());
-    ASSERT_TRUE(stub_transformer_1->called && stub_transformer_2->called);
 }
 
 TEST_F(TestInputEventTransformer, transformer_not_called_after_removal)
 {
-    // Gotta use an external variable for this one since we're clearing the
-    // shared pointer
-    auto external_called = false;
-    auto stub_transformer = std::make_shared<StubTransformer>(
-        [&external_called]
-        {
-        external_called = true;
-            return false;
-        });
+    auto mock_transformer = std::make_shared<MockTransformer>();
+    EXPECT_CALL(*mock_transformer, transform_input_event(_, _, _))
+        .Times(1)
+        .WillOnce(
+            [](auto*...)
+            {
+                return true;
+            });
 
-    input_event_transformer.append(stub_transformer);
+    input_event_transformer.append(mock_transformer);
     input_event_transformer.handle(*make_key_event());
-    ASSERT_TRUE(stub_transformer->called);
-
-    external_called = false;
-    input_event_transformer.remove(stub_transformer);
-
+    input_event_transformer.remove(mock_transformer);
     input_event_transformer.handle(*make_key_event());
-    ASSERT_FALSE(external_called);
 }
 
 TEST_F(TestInputEventTransformer, removing_a_valid_transformer_returns_true)
 {
-    auto stub_transformer_1 = std::make_shared<StubTransformer>(
-        []
-        {
-            return false;
-        });
-    auto stub_transformer_2 = std::make_shared<StubTransformer>(
-        []
-        {
-            return false;
-        });
+    auto mock_transformer_1 = std::make_shared<MockTransformer>();
+    EXPECT_CALL(*mock_transformer_1, transform_input_event(_, _, _)).Times(0);
+    auto mock_transformer_2 = std::make_shared<MockTransformer>();
+    EXPECT_CALL(*mock_transformer_2, transform_input_event(_, _, _));
 
-    input_event_transformer.append(stub_transformer_1);
-    input_event_transformer.append(stub_transformer_2);
-
-    ASSERT_TRUE(input_event_transformer.remove(stub_transformer_1));
-
+    input_event_transformer.append(mock_transformer_1);
+    input_event_transformer.append(mock_transformer_2);
+    ASSERT_TRUE(input_event_transformer.remove(mock_transformer_1));
     input_event_transformer.handle(*make_key_event());
-    ASSERT_TRUE(stub_transformer_2->called && !stub_transformer_1->called);
 }
 
 TEST_F(TestInputEventTransformer, removing_a_transformer_that_was_not_returns_false)
 {
-    auto stub_transformer = std::make_shared<StubTransformer>(
-        []
-        {
-            return false;
-        });
-
-    ASSERT_FALSE(input_event_transformer.remove(stub_transformer));
+    auto mock_transformer = std::make_shared<MockTransformer>();
+    ASSERT_FALSE(input_event_transformer.remove(mock_transformer));
 }
