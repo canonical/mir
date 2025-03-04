@@ -58,8 +58,8 @@ class MultiThreadedCompositor : public Compositor
 public:
     MultiThreadedCompositor(
         std::shared_ptr<graphics::Display> const& display,
-        std::shared_ptr<Scene> const& scene,
         std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory,
+        std::shared_ptr<Scene> const& scene,
         std::shared_ptr<DisplayListener> const& display_listener,
         std::shared_ptr<CompositorReport> const& compositor_report,
         std::chrono::milliseconds fixed_composite_delay,  // -1 = automatic
@@ -74,8 +74,8 @@ private:
     void destroy_compositing_threads();
 
     std::shared_ptr<graphics::Display> const display;
-    std::shared_ptr<Scene> const scene;
     std::shared_ptr<DisplayBufferCompositorFactory> const display_buffer_compositor_factory;
+    std::shared_ptr<Scene> const scene;
     std::shared_ptr<DisplayListener> const display_listener;
     std::shared_ptr<CompositorReport> const report;
 
