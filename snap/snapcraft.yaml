@@ -100,3 +100,4 @@ parts:
     - libxrender1
     - libyaml-cpp0.8
     - libapparmor1
+    - libpixman-1-0
