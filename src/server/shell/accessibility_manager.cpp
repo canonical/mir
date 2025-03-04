@@ -16,10 +16,8 @@
 
 #include "mir/shell/accessibility_manager.h"
 
-#include "mir/event_printer.h"
 #include "mir/input/event_builder.h"
 #include "mir/input/input_sink.h"
-#include "mir/log.h"
 #include "mir/options/configuration.h"
 #include "mir/shell/keyboard_helper.h"
 
@@ -27,7 +25,6 @@
 
 #include <memory>
 #include <optional>
-#include <sstream>
 
 void mir::shell::AccessibilityManager::register_keyboard_helper(std::shared_ptr<KeyboardHelper> const& helper)
 {
@@ -65,10 +62,6 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
         MirEvent const& event) override
     {
         using namespace mir; // For operator<<
-
-        std::stringstream ss;
-        ss << const_cast<MirEvent&>(event);
-        mir::log_debug("%s", ss.str().c_str());
 
         if (mir_event_get_type(&event) != mir_event_type_input)
             return false;
