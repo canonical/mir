@@ -47,8 +47,8 @@ class miral::InputConfiguration::Self
 {
 public:
     std::weak_ptr<mir::input::InputDeviceHub> input_device_hub{};
-    std::shared_ptr<InputDeviceConfig> input_device_config;
-    std::shared_ptr<mir::shell::AccessibilityManager> accessibility_manager;
+    std::weak_ptr<InputDeviceConfig> input_device_config;
+    std::weak_ptr<mir::shell::AccessibilityManager> accessibility_manager;
 
     auto mouse() -> Mouse;
     void mouse(Mouse const& val);
@@ -85,14 +85,14 @@ public:
 
     void apply(Keyboard const& k)
     {
-        if(accessibility_manager)
+        if(auto const& am = accessibility_manager.lock())
         {
             if (k.self->repeat_rate)
-                accessibility_manager->repeat_rate(*k.self->repeat_rate);
+                am->repeat_rate(*k.self->repeat_rate);
             if (k.self->repeat_delay)
-                accessibility_manager->repeat_delay(*k.self->repeat_delay);
+                am->repeat_delay(*k.self->repeat_delay);
 
-            accessibility_manager->notify_helpers();
+            am->notify_helpers();
         }
         keyboard(k);
     }
@@ -101,53 +101,53 @@ public:
 auto miral::InputConfiguration::Self::mouse() -> Mouse
 {
     Mouse result;
-    if (input_device_config)
+    if (auto const& idc = input_device_config.lock())
     {
-        *result.self = input_device_config->mouse();
+        *result.self = idc->mouse();
     }
     return result;
 }
 
 void miral::InputConfiguration::Self::mouse(Mouse const& val)
 {
-    if (input_device_config)
+    if (auto const& idc = input_device_config.lock())
     {
-        input_device_config->mouse(*val.self);
+        idc->mouse(*val.self);
     }
 }
 
 auto miral::InputConfiguration::Self::touchpad() -> Touchpad
 {
     Touchpad result;
-    if (input_device_config)
+    if (auto const& idc = input_device_config.lock())
     {
-        *result.self = input_device_config->touchpad();
+        *result.self = idc->touchpad();
     }
     return result;
 }
 
 void miral::InputConfiguration::Self::touchpad(Touchpad const& val)
 {
-    if (input_device_config)
+    if (auto const& idc = input_device_config.lock())
     {
-        input_device_config->touchpad(*val.self);
+        idc->touchpad(*val.self);
     }
 }
 
 auto miral::InputConfiguration::Self::keyboard() -> Keyboard {
     Keyboard result;
-    if (input_device_config)
+    if (auto const& idc = input_device_config.lock())
     {
-        *result.self = input_device_config->keyboard();
+        *result.self = idc->keyboard();
     }
     return result;
 }
 
 void miral::InputConfiguration::Self::keyboard(Keyboard const& val)
 {
-    if (input_device_config)
+    if (auto const& idc = input_device_config.lock())
     {
-        input_device_config->keyboard(*val.self);
+        idc->keyboard(*val.self);
     }
 }
 
