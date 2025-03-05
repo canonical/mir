@@ -1414,10 +1414,6 @@ global:
     mir::Server::the_accessibility_manager*;
     mir::Server::the_token_authority*;
     mir::input::InputEventTransformer::?InputEventTransformer*;
-    mir::input::InputEventTransformer::EventDispatcher::EventDispatcher*;
-    mir::input::InputEventTransformer::EventDispatcher::dispatch_key_event*;
-    mir::input::InputEventTransformer::EventDispatcher::dispatch_pointer_event*;
-    mir::input::InputEventTransformer::EventDispatcher::maybe_update*;
     mir::input::InputEventTransformer::InputEventTransformer*;
     mir::input::InputEventTransformer::Transformer::?Transformer*;
     mir::input::InputEventTransformer::append*;
@@ -1449,8 +1445,6 @@ global:
     non-virtual?thunk?to?mir::shell::AbstractShell::is_above*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::is_above*;
     non-virtual?thunk?to?mir::shell::SurfaceStackWrapper::is_above*;
-    typeinfo?for?mir::shell::AccessibilityManager;
-    typeinfo?for?mir::input::InputEventTransformer::EventDispatcher;
     typeinfo?for?mir::input::InputEventTransformer::Transformer;
     typeinfo?for?mir::input::InputEventTransformer;
     typeinfo?for?mir::shell::AccessibilityManager;
@@ -1459,7 +1453,6 @@ global:
     virtual?thunk?to?mir::DefaultServerConfiguration::the_token_authority*;
     virtual?thunk?to?mir::shell::AbstractShell::is_above*;
     virtual?thunk?to?mir::shell::ShellWrapper::is_above*;
-    vtable?for?mir::input::InputEventTransformer::EventDispatcher;
     vtable?for?mir::input::InputEventTransformer::Transformer;
     vtable?for?mir::input::InputEventTransformer;
   };
