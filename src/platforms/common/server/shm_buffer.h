@@ -70,10 +70,9 @@ private:
     geometry::Size const size_;
     MirPixelFormat const pixel_format_;
     std::shared_ptr<EGLContextExecutor> const egl_delegate;
-    std::shared_future<GLuint> const tex;
 
-    std::mutex tex_id_mutex;
-    GLuint tex_id_{0};
+    std::mutex mutable tex_id_mutex;
+    GLuint mutable tex_id_{0};
 };
 
 class MemoryBackedShmBuffer :

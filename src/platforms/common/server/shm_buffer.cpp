@@ -26,6 +26,7 @@
 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+#include <EGL/egl.h>
 
 #include <boost/throw_exception.hpp>
 
@@ -134,8 +135,7 @@ mgc::ShmBuffer::ShmBuffer(
     std::shared_ptr<EGLContextExecutor> egl_delegate)
     : size_{size},
       pixel_format_{format},
-      egl_delegate{std::move(egl_delegate)},
-      tex{get_tex_id_on_context(*this->egl_delegate)}
+      egl_delegate{std::move(egl_delegate)}
 {
 }
 
@@ -222,26 +222,31 @@ mg::NativeBufferBase* mgc::ShmBuffer::native_buffer_base()
 
 void mgc::ShmBuffer::bind()
 {
-    std::lock_guard lock{tex_id_mutex};
-    bool const needs_initialisation = tex_id_ == 0;
-    if (needs_initialisation)
-    {
-        glGenTextures(1, &tex_id_);
-    }
-    glBindTexture(GL_TEXTURE_2D, tex_id_);
-    if (needs_initialisation)
-    {
-        // The ShmBuffer *should* be immutable, so we can just upload once.
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    }
+    glBindTexture(GL_TEXTURE_2D, tex_id());
 }
 
 auto mgc::ShmBuffer::tex_id() const -> GLuint
 {
-    return tex.get();
+    std::lock_guard lock{tex_id_mutex};
+    if (tex_id_ == 0)
+    {
+        if (eglGetCurrentContext())
+        {
+            glGenTextures(1, &tex_id_);
+            glBindTexture(GL_TEXTURE_2D, tex_id_);
+            // The ShmBuffer *should* be immutable, so we can just upload once.
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        }
+        else
+        {
+            auto const tex = get_tex_id_on_context(*egl_delegate);
+            tex_id_ = tex.get();
+        }
+    }
+    return tex_id_;
 }
 
 void mgc::MemoryBackedShmBuffer::bind()
