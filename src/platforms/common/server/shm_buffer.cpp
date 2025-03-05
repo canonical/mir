@@ -110,7 +110,7 @@ auto get_tex_id_on_context(mgc::EGLContextExecutor& egl_executor) -> std::shared
             glGenTextures(1, &tex);
 
             // Paranoia: Save the current value for the GL state that we're modifying...
-            GLint previous_texture;
+            GLint previous_texture = 0;
             glGetIntegerv(GL_TEXTURE_2D, &previous_texture);
 
             glBindTexture(GL_TEXTURE_2D, tex);
@@ -121,7 +121,7 @@ auto get_tex_id_on_context(mgc::EGLContextExecutor& egl_executor) -> std::shared
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
             // ...and then restore the previous GL state.
-            glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(previous_texture));
+            if (previous_texture) glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(previous_texture));
             tex_promise->set_value(tex);
         });
     return tex_promise->get_future();
