@@ -71,6 +71,9 @@ private:
     MirPixelFormat const pixel_format_;
     std::shared_ptr<EGLContextExecutor> const egl_delegate;
     std::shared_future<GLuint> const tex;
+
+    std::mutex tex_id_mutex;
+    GLuint tex_id_{0};
 };
 
 class MemoryBackedShmBuffer :

@@ -222,7 +222,21 @@ mg::NativeBufferBase* mgc::ShmBuffer::native_buffer_base()
 
 void mgc::ShmBuffer::bind()
 {
-    glBindTexture(GL_TEXTURE_2D, tex_id());
+    std::lock_guard lock{tex_id_mutex};
+    bool const needs_initialisation = tex_id_ == 0;
+    if (needs_initialisation)
+    {
+        glGenTextures(1, &tex_id_);
+    }
+    glBindTexture(GL_TEXTURE_2D, tex_id_);
+    if (needs_initialisation)
+    {
+        // The ShmBuffer *should* be immutable, so we can just upload once.
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
 }
 
 auto mgc::ShmBuffer::tex_id() const -> GLuint
