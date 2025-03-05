@@ -20,6 +20,7 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <unordered_set>
 
 namespace mir

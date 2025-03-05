@@ -17,6 +17,7 @@
 #ifndef MIR_PLATFORM_KMS_DRM_EVENT_HANDLER_H_
 #define MIR_PLATFORM_KMS_DRM_EVENT_HANDLER_H_
 
+#include <functional>
 #include <future>
 
 namespace mir
