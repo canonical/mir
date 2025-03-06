@@ -139,7 +139,6 @@ msd::BasicDecoration::BufferStreams::~BufferStreams()
 
 msd::BasicDecoration::BasicDecoration(
     std::shared_ptr<msh::Shell> const& shell,
-    std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<Executor> const& executor,
     std::shared_ptr<input::CursorImages> const& cursor_images,
     std::shared_ptr<ms::Surface> const& window_surface,
@@ -148,7 +147,6 @@ msd::BasicDecoration::BasicDecoration(
       decoration_strategy{decoration_strategy},
       renderer_strategy{decoration_strategy->render_strategy()},
       shell{shell},
-      buffer_allocator{buffer_allocator},
       cursor_images{cursor_images},
       session{window_surface->session().lock()},
       buffer_streams{std::make_unique<BufferStreams>(session, decoration_strategy->buffer_format())},

@@ -83,7 +83,6 @@ auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_pt
                 {
                     return std::make_unique<msd::BasicDecoration>(
                         shell,
-                        buffer_allocator,
                         executor,
                         cursor_images,
                         surface,
