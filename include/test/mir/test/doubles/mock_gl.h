@@ -65,6 +65,7 @@ public:
     MOCK_METHOD(void, glEnable, (GLenum));
     MOCK_METHOD(void, glEnableVertexAttribArray, (GLuint));
     MOCK_METHOD(void, glFinish, ());
+    MOCK_METHOD(void, glFlush, ());
     MOCK_METHOD(void, glFramebufferRenderbuffer,
                  (GLenum, GLenum, GLenum, GLuint));
     MOCK_METHOD(void, glFramebufferTexture2D,
