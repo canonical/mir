@@ -18,7 +18,6 @@
 #include "mir/graphics/buffer.h"
 #include "window.h"
 #include "input.h"
-#include "renderer.h"
 #include "threadsafe_access.h"
 
 #include "mir/executor.h"
@@ -147,12 +146,12 @@ msd::BasicDecoration::BasicDecoration(
     std::shared_ptr<DecorationStrategy> decoration_strategy)
     : threadsafe_self{std::make_shared<ThreadsafeAccess<BasicDecoration>>(executor)},
       decoration_strategy{decoration_strategy},
+      renderer_strategy{decoration_strategy->render_strategy()},
       shell{shell},
       buffer_allocator{buffer_allocator},
       cursor_images{cursor_images},
       session{window_surface->session().lock()},
       buffer_streams{std::make_unique<BufferStreams>(session, decoration_strategy->buffer_format())},
-      renderer{std::make_unique<Renderer>(buffer_allocator, decoration_strategy->render_strategy())},
       window_surface{window_surface},
       decoration_surface{create_surface()},
       window_state{decoration_strategy->new_window_state(window_surface, scale)},
@@ -370,7 +369,7 @@ void msd::BasicDecoration::update(
         input_updated({
             &InputState::buttons}))
     {
-        renderer->update_state(*window_state, *input_state);
+        renderer_strategy->update_state(*window_state, *input_state);
     }
 
     std::vector<std::pair<
@@ -385,10 +384,10 @@ void msd::BasicDecoration::update(
     {
         new_buffers.emplace_back(
             buffer_streams->left_border,
-            renderer->render_left_border());
+            renderer_strategy->render_left_border());
         new_buffers.emplace_back(
             buffer_streams->right_border,
-            renderer->render_right_border());
+            renderer_strategy->render_right_border());
     }
 
     if (window_updated({
@@ -399,7 +398,7 @@ void msd::BasicDecoration::update(
     {
         new_buffers.emplace_back(
             buffer_streams->bottom_border,
-            renderer->render_bottom_border());
+            renderer_strategy->render_bottom_border());
     }
 
     if (window_updated({
@@ -412,7 +411,7 @@ void msd::BasicDecoration::update(
     {
         new_buffers.emplace_back(
             buffer_streams->titlebar,
-            renderer->render_titlebar());
+            renderer_strategy->render_titlebar());
     }
 
     float inv_scale = 1.0f / window_state->scale();
