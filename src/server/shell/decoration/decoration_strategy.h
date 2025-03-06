@@ -74,8 +74,6 @@ struct InputState
     std::vector<geometry::Rectangle> const input_shape;
 };
 
-class DecorationStrategy;
-
 /// Information about the geometry and type of decorations for a given window
 /// Data is pulled from the surface on construction and immutable after that
 class WindowState
