@@ -31,6 +31,7 @@
 #include <codecvt>
 #include <filesystem>
 #include <map>
+#include <mutex>
 
 namespace ms = mir::scene;
 namespace geom = mir::geometry;

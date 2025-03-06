@@ -6,6 +6,7 @@
 #include <EGL/egl.h>
 #include <wayland-egl-core.h>
 
+#include <mutex>
 #include <optional>
 
 namespace mg = mir::graphics;

@@ -22,6 +22,8 @@
 
 #include "mir_toolkit/common.h"
 
+#include <unistd.h>
+
 #include <memory>
 
 namespace mir
