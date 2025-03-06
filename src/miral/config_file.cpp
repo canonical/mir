@@ -29,6 +29,7 @@
 #include <fstream>
 #include <optional>
 #include <string>
+#include <sstream>
 #include <vector>
 
 using namespace std::filesystem;
