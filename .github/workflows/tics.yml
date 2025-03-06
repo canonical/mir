@@ -21,7 +21,7 @@ jobs:
       NEEDRESTART_SUSPEND: yes
       DEBIAN_FRONTEND: noninteractive
 
-    timeout-minutes: 360
+    timeout-minutes: 480
     steps:
     - name: Check out code
       uses: actions/checkout@v4
@@ -97,6 +97,11 @@ jobs:
       timeout-minutes: 10
       run: cmake --build build --target coverage
 
+    - uses: mxschmitt/action-tmate@v3
+      with:
+        limit-access-to-actor: true
+        detached: true
+
     - name: Run TICS analysis
       uses: tiobe/tics-github-action@v3
       with:
@@ -105,6 +110,15 @@ jobs:
         viewerUrl: https://canonical.tiobe.com/tiobeweb/TICS/api/cfg?name=default
         ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
         installTics: true
+        tmpdir: /tmp/ticstmp
+
+    - uses: actions/upload-artifact@v4
+      if: ${{ always() }}
+      with:
+        name: ticstmp
+        path: /tmp/ticstmp
+        retention-days: 5
+        overwrite: true
 
     - if: ${{ failure() && runner.debug }}
       name: Setup tmate session
