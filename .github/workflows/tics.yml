@@ -21,7 +21,7 @@ jobs:
       NEEDRESTART_SUSPEND: yes
       DEBIAN_FRONTEND: noninteractive
 
-    timeout-minutes: 360
+    timeout-minutes: 480
     steps:
     - name: Check out code
       uses: actions/checkout@v4
