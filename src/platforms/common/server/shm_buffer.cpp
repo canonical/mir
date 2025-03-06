@@ -111,7 +111,7 @@ auto get_tex_id_on_context(mgc::EGLContextExecutor& egl_executor) -> std::shared
 
             // Paranoia: Save the current value for the GL state that we're modifying...
             GLint previous_texture;
-            glGetIntegerv(GL_TEXTURE_2D, &previous_texture);
+            glGetIntegerv(GL_TEXTURE_BINDING_2D, &previous_texture);
 
             glBindTexture(GL_TEXTURE_2D, tex);
             // The ShmBuffer *should* be immutable, so we can just set up the properties once
