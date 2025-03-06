@@ -111,7 +111,7 @@ auto get_tex_id_on_context(mgc::EGLContextExecutor& egl_executor) -> std::shared
 
             // Paranoia: Save the current value for the GL state that we're modifying...
             GLint previous_texture;
-            glGetIntegerv(GL_TEXTURE_2D, &previous_texture);
+            glGetIntegerv(GL_TEXTURE_BINDING_2D, &previous_texture);
 
             glBindTexture(GL_TEXTURE_2D, tex);
             // The ShmBuffer *should* be immutable, so we can just set up the properties once
@@ -122,6 +122,16 @@ auto get_tex_id_on_context(mgc::EGLContextExecutor& egl_executor) -> std::shared
 
             // ...and then restore the previous GL state.
             glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(previous_texture));
+
+            /* We need these commands to be in the driver command stream before
+             * anything which uses them can be executed (which will likely be
+             * on another thread, in another EGLContext).
+             *
+             * glFlush() before the promise synchronisation point will ensure
+             * those commands are visible to the driver before we try and use
+             * their results.
+             */
+            glFlush();
             tex_promise->set_value(tex);
         });
     return tex_promise->get_future();
