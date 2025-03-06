@@ -188,7 +188,7 @@ struct DecorationBasicDecoration
             mt::fake_shared(executor),
             mt::fake_shared(cursor_images),
             mt::fake_shared(window_surface),
-            msd::DecorationStrategy::default_decoration_strategy());
+            msd::DecorationStrategy::default_decoration_strategy(mt::fake_shared(buffer_allocator)));
         executor.execute();
     }
 

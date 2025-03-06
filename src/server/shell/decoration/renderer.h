@@ -41,7 +41,7 @@ class WindowState;
 class InputState;
 struct StaticGeometry;
 
-class Renderer : BufferMaker
+class Renderer
 {
 public:
     Renderer(
@@ -58,8 +58,8 @@ private:
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
     std::unique_ptr<RendererStrategy> const strategy;
 
-    auto make_buffer(const MirPixelFormat format, const geometry::Size size,
-        Pixel const* const pixels) const -> std::optional<std::shared_ptr<graphics::Buffer>> override;
+    auto make_buffer(MirPixelFormat const format, geometry::Size const size, Pixel const* const pixels) const
+        -> std::optional<std::shared_ptr<graphics::Buffer>>;
 };
 }
 }

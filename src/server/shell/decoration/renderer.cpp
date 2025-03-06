@@ -82,22 +82,22 @@ auto mir::shell::decoration::Renderer::make_buffer(const MirPixelFormat format, 
 
 auto msd::Renderer::render_titlebar() -> std::optional<std::shared_ptr<mg::Buffer>>
 {
-    return strategy->render_titlebar(this);
+    return strategy->render_titlebar();
 }
 
 auto msd::Renderer::render_left_border() -> std::optional<std::shared_ptr<mg::Buffer>>
 {
-    return strategy->render_left_border(this);
+    return strategy->render_left_border();
 }
 
 auto msd::Renderer::render_right_border() -> std::optional<std::shared_ptr<mg::Buffer>>
 {
-    return strategy->render_right_border(this);
+    return strategy->render_right_border();
 }
 
 auto msd::Renderer::render_bottom_border() -> std::optional<std::shared_ptr<mg::Buffer>>
 {
-    return strategy->render_bottom_border(this);
+    return strategy->render_bottom_border();
 }
 
 

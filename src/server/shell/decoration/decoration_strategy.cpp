@@ -21,9 +21,11 @@
 #include "mir/fatal.h"
 #include "mir/geometry/displacement.h"
 #include "mir/log.h"
+#include "mir/renderer/sw/pixel_source.h"
 
 #include <boost/throw_exception.hpp>
 #include <ft2build.h>
+#include <memory>
 #include FT_FREETYPE_H
 #include <endian.h>
 
@@ -231,16 +233,18 @@ inline void render_minimize_icon(
 
 struct RendererStrategy : public msd::RendererStrategy
 {
-    RendererStrategy(std::shared_ptr<StaticGeometry> const& static_geometry);
+    RendererStrategy(
+        std::shared_ptr<StaticGeometry> const& static_geometry,
+        std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& allocator);
 
     void update_state(WindowState const& window_state, InputState const& input_state) override;
-    auto render_titlebar(msd::BufferMaker const* buffer_maker) -> std::optional<std::shared_ptr<mir::graphics::Buffer>> override;
-    auto render_left_border(msd::BufferMaker const* buffer_maker) -> std::optional<std::shared_ptr<mir::graphics::Buffer>> override;
-    auto render_right_border(msd::BufferMaker const* buffer_maker) -> std::optional<std::shared_ptr<mir::graphics::Buffer>> override;
-    auto render_bottom_border(msd::BufferMaker const* buffer_maker) -> std::optional<std::shared_ptr<mir::graphics::Buffer>> override;
+    auto render_titlebar() -> std::optional<std::shared_ptr<mir::graphics::Buffer>> override;
+    auto render_left_border() -> std::optional<std::shared_ptr<mir::graphics::Buffer>> override;
+    auto render_right_border() -> std::optional<std::shared_ptr<mir::graphics::Buffer>> override;
+    auto render_bottom_border() -> std::optional<std::shared_ptr<mir::graphics::Buffer>> override;
 
 private:
-    using Pixel = msd::BufferMaker::Pixel;
+    using Pixel = msd::Pixel;
 
     std::shared_ptr<StaticGeometry> const static_geometry;
 
@@ -323,11 +327,16 @@ private:
     void redraw_titlebar_buttons(geom::Size scaled_titlebar_size);
 
     static auto alloc_pixels(geom::Size size) -> std::unique_ptr<Pixel[]>;
+    auto make_buffer(MirPixelFormat, mir::geometry::Size, Pixel const* pixels) const
+        -> std::optional<std::shared_ptr<mir::graphics::Buffer>>;
+    std::shared_ptr<mir::graphics::GraphicBufferAllocator> const allocator;
 };
 
 class DecorationStrategy : public msd::DecorationStrategy
 {
 public:
+    DecorationStrategy(std::shared_ptr<mir::graphics::GraphicBufferAllocator> const&);
+
     ~DecorationStrategy() override = default;
 
     auto static_geometry() const -> std::shared_ptr<StaticGeometry>;
@@ -339,6 +348,9 @@ public:
     auto new_window_state(const std::shared_ptr<mir::scene::Surface>& window_surface,
                           float scale) const -> std::unique_ptr<WindowState> override;
     auto resize_corner_input_size() const -> geom::Size override;
+
+private:
+    std::shared_ptr<mir::graphics::GraphicBufferAllocator> const allocator;
 };
 
 auto DecorationStrategy::resize_corner_input_size() const -> geom::Size
@@ -436,9 +448,9 @@ auto msd::border_type_for(MirWindowType type, MirWindowState state) -> msd::Bord
     return {};
 }
 
-auto msd::DecorationStrategy::default_decoration_strategy() -> std::shared_ptr<DecorationStrategy>
+auto msd::DecorationStrategy::default_decoration_strategy(std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& allocator) -> std::shared_ptr<DecorationStrategy>
 {
-    return std::make_shared<::DecorationStrategy>();
+    return std::make_shared<::DecorationStrategy>(allocator);
 }
 
 class RendererStrategy::Text::Impl
@@ -713,7 +725,9 @@ auto RendererStrategy::Text::Impl::utf8_to_utf32(std::string const& text) -> std
     return utf32_text;
 }
 
-RendererStrategy::RendererStrategy(std::shared_ptr<StaticGeometry> const& static_geometry) :
+RendererStrategy::RendererStrategy(
+    std::shared_ptr<StaticGeometry> const& static_geometry,
+    std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& allocator) :
     static_geometry{static_geometry},
     focused_theme{
         default_focused_background,
@@ -739,7 +753,8 @@ RendererStrategy::RendererStrategy(std::shared_ptr<StaticGeometry> const& static
             default_active_button,
             default_button_icon,
             render_minimize_icon}},
-      }
+      },
+    allocator{allocator}
 {
 }
 
@@ -812,7 +827,7 @@ void RendererStrategy::update_state(WindowState const& window_state, InputState 
     }
 }
 
-auto RendererStrategy::render_titlebar(msd::BufferMaker const* maker) -> std::optional<std::shared_ptr<mir::graphics::Buffer>>
+auto RendererStrategy::render_titlebar() -> std::optional<std::shared_ptr<mir::graphics::Buffer>>
 {
     auto const scaled_titlebar_size{titlebar_size * scale};
 
@@ -840,34 +855,34 @@ auto RendererStrategy::render_titlebar(msd::BufferMaker const* maker) -> std::op
     needs_titlebar_redraw = false;
     needs_titlebar_buttons_redraw = false;
 
-    return maker->make_buffer(static_geometry->buffer_format, scaled_titlebar_size, titlebar_pixels.get());
+    return make_buffer(static_geometry->buffer_format, scaled_titlebar_size, titlebar_pixels.get());
 }
 
-auto RendererStrategy::render_left_border(msd::BufferMaker const* maker) -> std::optional<std::shared_ptr<mir::graphics::Buffer>>
+auto RendererStrategy::render_left_border() -> std::optional<std::shared_ptr<mir::graphics::Buffer>>
 {
     auto const scaled_left_border_size{left_border_size * scale};
     if (!area(scaled_left_border_size))
         return std::nullopt;
     update_solid_color_pixels();
-    return maker->make_buffer(static_geometry->buffer_format, scaled_left_border_size, solid_color_pixels.get());
+    return make_buffer(static_geometry->buffer_format, scaled_left_border_size, solid_color_pixels.get());
 }
 
-auto RendererStrategy::render_right_border(msd::BufferMaker const* maker) -> std::optional<std::shared_ptr<mir::graphics::Buffer>>
+auto RendererStrategy::render_right_border() -> std::optional<std::shared_ptr<mir::graphics::Buffer>>
 {
     auto const scaled_right_border_size{right_border_size * scale};
     if (!area(scaled_right_border_size))
         return std::nullopt;
     update_solid_color_pixels();
-    return maker->make_buffer(static_geometry->buffer_format, scaled_right_border_size, solid_color_pixels.get());
+    return make_buffer(static_geometry->buffer_format, scaled_right_border_size, solid_color_pixels.get());
 }
 
-auto RendererStrategy::render_bottom_border(msd::BufferMaker const* maker) -> std::optional<std::shared_ptr<mir::graphics::Buffer>>
+auto RendererStrategy::render_bottom_border() -> std::optional<std::shared_ptr<mir::graphics::Buffer>>
 {
     auto const scaled_bottom_border_size{bottom_border_size * scale};
     if (!area(scaled_bottom_border_size))
         return std::nullopt;
     update_solid_color_pixels();
-    return maker->make_buffer(static_geometry->buffer_format, scaled_bottom_border_size, solid_color_pixels.get());
+    return make_buffer(static_geometry->buffer_format, scaled_bottom_border_size, solid_color_pixels.get());
 }
 
 void RendererStrategy::update_solid_color_pixels()
@@ -969,6 +984,42 @@ void RendererStrategy::set_focus_state(MirWindowFocusState focus_state)
     }
 }
 
+auto RendererStrategy::make_buffer(MirPixelFormat format, mir::geometry::Size size, Pixel const* pixels) const
+    -> std::optional<std::shared_ptr<mir::graphics::Buffer>>
+{
+    MirPixelFormat buffer_format = format;
+    if (!area(size))
+    {
+        mir::log_warning("Failed to draw SSD: tried to create zero size buffer");
+        return std::nullopt;
+    }
+
+    if (sizeof(Pixel) != MIR_BYTES_PER_PIXEL(buffer_format))
+    {
+        mir::log_warning("Failed to draw SSD: tried to create buffer with unsupported format: %d", buffer_format);
+        return std::nullopt;
+    }
+
+    try
+    {
+        return mir::renderer::software::alloc_buffer_with_content(
+            *allocator,
+            reinterpret_cast<unsigned char const*>(pixels),
+            size,
+            geom::Stride{size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(format)},
+            format);
+    }
+    catch (std::runtime_error const&)
+    {
+        mir::log_warning("Failed to draw SSD: software buffer not a pixel source");
+        return std::nullopt;
+    }
+}
+
+DecorationStrategy::DecorationStrategy(std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& allocator)
+    : allocator{allocator}
+{
+}
 
 auto DecorationStrategy::static_geometry() const -> std::shared_ptr<StaticGeometry>
 {
@@ -990,7 +1041,7 @@ auto DecorationStrategy::static_geometry() const -> std::shared_ptr<StaticGeomet
 
 auto DecorationStrategy::render_strategy() const -> std::unique_ptr<mir::shell::decoration::RendererStrategy>
 {
-    return std::make_unique<::RendererStrategy>(static_geometry());
+    return std::make_unique<::RendererStrategy>(static_geometry(), allocator);
 }
 
 auto DecorationStrategy::button_placement(unsigned n, const WindowState& ws) const -> geom::Rectangle
