@@ -39,7 +39,7 @@ mir (2.20.0) UNRELEASED; urgency=medium
       . Incorrectly sizes some windows with server-side decorations (#3778)
       . doc: fix threat model diagram (#3795)
 
- -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 27 Feb 2025 10:50:00 +0100
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 6 Mar 2025 13:00:00 +0100
 
 mir (2.19.3) UNRELEASED; urgency=medium
 
