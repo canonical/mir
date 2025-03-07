@@ -523,9 +523,10 @@ global:
 MIRAL_5.3 {
 global:
   extern "C++" {
-    miral::EnableMouseKeys::EnableMouseKeys*;
-    miral::EnableMouseKeys::operator*;
-    typeinfo?for?miral::EnableMouseKeys;
+    miral::ToggleMouseKeys::ToggleMouseKeys*;
+    miral::ToggleMouseKeys::operator*;
+    miral::ToggleMouseKeys::toggle_mousekeys*;
+    typeinfo?for?miral::ToggleMouseKeys;
   };
 } MIRAL_5.2;
 
