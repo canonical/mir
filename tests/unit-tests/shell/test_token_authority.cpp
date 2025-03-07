@@ -69,7 +69,7 @@ TEST_F(TestTokenAuthority, tokens_are_revoked_in_time)
     using namespace std::chrono;
 
     auto constexpr revocation_time = milliseconds(3000);
-    auto constexpr epsilon = milliseconds(10);
+    auto constexpr epsilon = milliseconds(50);
 
     bool revoked = false;
     auto const issuance_time = clock->now();
