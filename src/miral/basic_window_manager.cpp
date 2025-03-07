@@ -1984,41 +1984,6 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
         if (parameters.top_left().value().y < display_area.top_left.y)
             parameters.top_left() = Point{parameters.top_left().value().x, display_area.top_left.y};
 
-        if (parameters.state() == mir_window_state_restored)
-        {
-            auto const offset{48};
-            std::array const positions {
-                parameters.top_left().value(),
-                parameters.top_left().value() + Displacement( offset,  offset),
-                parameters.top_left().value() + Displacement(-offset,  offset),
-                parameters.top_left().value() + Displacement( offset, -offset),
-                parameters.top_left().value() + Displacement(-offset, -offset)};
-
-            for (auto const& position : positions)
-            {
-                auto const window{window_at(position)};
-
-                static auto const ignored_state_or_type = [](WindowInfo const& info)
-                    {
-                        switch (info.type())
-                        {
-                        case mir_window_type_normal:
-                        case mir_window_type_decoration:
-                        case mir_window_type_freestyle:
-                            return info.state() != mir_window_state_restored;
-
-                        default:
-                            return true;
-                        }
-                    };
-
-                if (!window || ignored_state_or_type(info_for(window)) || window.top_left() != position)
-                {
-                    parameters.top_left().value() = position;
-                    break;
-                }
-            }
-        }
     }
 
     return parameters;
