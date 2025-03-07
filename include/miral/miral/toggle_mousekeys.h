@@ -26,12 +26,14 @@ namespace mir { class Server; }
 /// \remark Since MirAL 5.3
 namespace miral
 {
-class EnableMouseKeys
+class ToggleMouseKeys
 {
 public:
-    EnableMouseKeys();
+    ToggleMouseKeys();
     void operator()(mir::Server& server) const;
 
+    // Toggles mousekeys on or off depending on the passed parameter.
+    void toggle_mousekeys(bool enabled) const;
 private:
     struct Self;
     std::shared_ptr<Self> self;
