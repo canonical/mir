@@ -4,7 +4,7 @@ mir (2.20.0) UNRELEASED; urgency=medium
 
     - ABI summary:
       . miral ABI unchanged at 7
-      . mircommon ABI bunped to 11
+      . mircommon ABI bumped to 11
       . mircore ABI unchanged at 2
       . miroil ABI bumped to 7
       . mirplatform ABI unchanged at 30
