@@ -128,6 +128,17 @@ public:
         runner.add_start_callback([this]
             {
                 std::lock_guard lock{config_mutex};
+
+                // Merge the input options collected from the command line,
+                // environment, and default `.config` file with the options we
+                // read from the `.input` file.
+                //
+                // In this case, the `.input` file takes precedence. You can
+                // reverse the arguments to de-prioritize it.
+                mouse.merge_settings_from(input_configuration.mouse());
+                keyboard.merge_settings_from(input_configuration.keyboard());
+                touchpad.merge_settings_from(input_configuration.touchpad());
+
                 apply_config();
             });
     }
@@ -182,7 +193,7 @@ private:
                 auto const key = line.substr(0, eq);
                 auto const value = line.substr(eq+1);
 
-                auto const parse_and_validate = [](std::string const& key, std::string_view val) -> std::optional<int>
+                auto const parse_and_validate_int = [](std::string const& key, std::string_view val) -> std::optional<int>
                 {
                     auto const int_val = std::atoi(val.data());
                     if (int_val < 0)
@@ -196,18 +207,39 @@ private:
                     return int_val;
                 };
 
+                auto const parse_and_validate_float = [](std::string const& key, std::string_view val) -> std::optional<float>
+                {
+                    auto const float_val = std::atof(val.data());
+                    if (float_val < 0)
+                    {
+                        mir::log_warning(
+                            "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
+                            key.c_str(), float_val);
+                        return std::nullopt;
+                    }
+
+                    return float_val;
+                };
+
                 if (key == "repeat_rate")
                 {
-                    auto const parsed = parse_and_validate(key, value);
+                    auto const parsed = parse_and_validate_int(key, value);
                     if (parsed)
                         keyboard.set_repeat_rate(*parsed);
                 }
 
                 if (key == "repeat_delay")
                 {
-                    auto const parsed = parse_and_validate(key, value);
+                    auto const parsed = parse_and_validate_int(key, value);
                     if (parsed)
                         keyboard.set_repeat_delay(*parsed);
+                }
+
+                if (key == "cursor_scale")
+                {
+                    auto const parsed = parse_and_validate_float(key, value);
+                    if(parsed)
+                        mouse.scale(parsed);
                 }
             }
         }
