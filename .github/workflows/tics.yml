@@ -111,6 +111,7 @@ jobs:
         ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
         installTics: true
         tmpdir: /tmp/ticstmp
+        calc: DEADCODE
 
     - uses: actions/upload-artifact@v4
       if: ${{ always() }}
