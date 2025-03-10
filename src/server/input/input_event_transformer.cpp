@@ -24,8 +24,6 @@
 #include "mir/log.h"
 
 #include <algorithm>
-#include <boost/throw_exception.hpp>
-#include <cassert>
 #include <memory>
 #include <mutex>
 
