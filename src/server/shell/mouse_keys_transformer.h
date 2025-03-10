@@ -31,16 +31,20 @@ class Alarm;
 namespace input
 {
 
-struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transformer
+class MouseKeysTransformer: public mir::input::InputEventTransformer::Transformer
 {
-    using Dispatcher = mir::input::InputEventTransformer::EventDispatcher;
+public:
 
     MouseKeysTransformer(
         std::shared_ptr<mir::MainLoop> const& main_loop, std::shared_ptr<mir::options::Option> const& options);
+
     bool transform_input_event(
         mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
         mir::input::EventBuilder* builder,
         MirEvent const& event) override;
+
+private:
+    using Dispatcher = mir::input::InputEventTransformer::EventDispatcher;
     bool handle_motion(
         MirKeyboardEvent const* kev, Dispatcher const& dispatcher, mir::input::EventBuilder* const builder);
     bool handle_click(
