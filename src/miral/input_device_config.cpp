@@ -24,6 +24,7 @@
 #include "mir/input/input_device_observer.h"
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_touchpad_config.h"
+#include "mir/options/configuration.h"
 #include "mir/options/option.h"
 #include "mir/server.h"
 #include "mir_toolkit/mir_input_device_types.h"
@@ -273,7 +274,8 @@ miral::InputDeviceConfig::InputDeviceConfig(std::shared_ptr<mir::options::Option
         to_acceleration_profile(get_optional<std::string>(options, mouse_cursor_acceleration_opt)),
         clamp<-1.0, 1.0>(get_optional<double>(options, mouse_cursor_acceleration_bias_opt)),
         get_optional<double>(options, mouse_vscroll_speed_override_opt, mouse_scroll_speed_opt),
-        get_optional<double>(options, mouse_hscroll_speed_override_opt, mouse_scroll_speed_opt)
+        get_optional<double>(options, mouse_hscroll_speed_override_opt, mouse_scroll_speed_opt),
+        std::nullopt
     },
     touchpad_config{
         get_optional<bool>(options, disable_while_typing_opt),
@@ -286,7 +288,8 @@ miral::InputDeviceConfig::InputDeviceConfig(std::shared_ptr<mir::options::Option
         convert_to_scroll_mode(get_optional<std::string>(options, touchpad_scroll_mode_opt)),
         get_optional<bool>(options, touchpad_tap_to_click_opt),
         get_optional<bool>(options, touchpad_middle_mouse_button_emulation_opt)
-    }
+    },
+    keyboard_config{}
 {
 }
 
@@ -388,5 +391,53 @@ void miral::MouseInputConfiguration::apply_to(mi::Device& device) const
             device.apply_pointer_configuration(pointer_config);
         }
     }
+}
+
+void miral::MouseInputConfiguration::merge_settings_from(MouseInputConfiguration const& other)
+{
+    if (!acceleration)
+        acceleration = other.acceleration;
+    if (!acceleration_bias)
+        acceleration_bias = other.acceleration_bias;
+    if (!handedness)
+        handedness = other.handedness;
+    if (!hscroll_speed)
+        hscroll_speed = other.hscroll_speed;
+    if (!vscroll_speed)
+        vscroll_speed = other.vscroll_speed;
+    if (!scale)
+        scale = other.scale;
+}
+
+void miral::TouchpadInputConfiguration::merge_settings_from(TouchpadInputConfiguration const& other)
+{
+    if (!disable_while_typing)
+        disable_while_typing = other.disable_while_typing;
+    if (!disable_with_external_mouse)
+        disable_with_external_mouse = other.disable_with_external_mouse;
+    if (!acceleration)
+        acceleration = other.acceleration;
+    if (!acceleration_bias)
+        acceleration_bias = other.acceleration_bias;
+    if (!vscroll_speed)
+        vscroll_speed = other.vscroll_speed;
+    if (!hscroll_speed)
+        hscroll_speed = other.hscroll_speed;
+    if (!click_mode)
+        click_mode = other.click_mode;
+    if (!scroll_mode)
+        scroll_mode = other.scroll_mode;
+    if (!tap_to_click)
+        tap_to_click = other.tap_to_click;
+    if (!middle_button_emulation)
+        middle_button_emulation = other.middle_button_emulation;
+}
+
+void miral::KeyboardInputConfiguration::merge_settings_from(KeyboardInputConfiguration const& other)
+{
+    if (!repeat_rate)
+        repeat_rate = other.repeat_rate;
+    if (!repeat_delay)
+        repeat_delay = other.repeat_delay;
 }
 
