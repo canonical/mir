@@ -332,10 +332,6 @@ private:
     void for_each_descendent_in(WindowInfo const& info, std::function<void(const Window&)> func);
     /// Gathers windows provided WindowInfo
     auto collect_windows(WindowInfo const& info) -> SurfaceSet;
-
-    // w1_workspaces must be sorted
-    auto window_workspaces_intersect(
-        std::vector<std::shared_ptr<Workspace>> const& w1_workspaces, Window const& w2) const -> bool;
 };
 }
 
