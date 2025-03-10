@@ -17,6 +17,7 @@
 #include "mouse_keys_transformer.h"
 
 #include "mir/input/input_sink.h"
+#include "mir/log.h"
 #include "mir/main_loop.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
@@ -29,11 +30,24 @@
 mir::input::MouseKeysTransformer::MouseKeysTransformer(
     std::shared_ptr<mir::MainLoop> const& main_loop, std::shared_ptr<mir::options::Option> const& options) :
     main_loop{main_loop},
-    acceleration_curve{options},
-    max_speed{
-        options->get<double>(mir::options::mouse_keys_max_speed_x),
-        options->get<double>(mir::options::mouse_keys_max_speed_y)}
+    acceleration_curve{options}
 {
+    auto max_x_speed = options->get<double>(mir::options::mouse_keys_max_speed_x);
+    auto max_y_speed = options->get<double>(mir::options::mouse_keys_max_speed_y);
+
+    if (max_x_speed < 0)
+    {
+        mir::log_warning("%s set to a value less than zero, clamping to zero", mir::options::mouse_keys_max_speed_x);
+        max_x_speed = std::max(max_x_speed, 0.0);
+    }
+
+    if (max_y_speed < 0)
+    {
+        mir::log_warning("%s set to a value less than zero, clamping to zero", mir::options::mouse_keys_max_speed_y);
+        max_y_speed = std::max(max_y_speed, 0.0);
+    }
+
+    max_speed = {max_x_speed, max_y_speed};
 }
 
 bool mir::input::MouseKeysTransformer::transform_input_event(
