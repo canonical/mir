@@ -30,7 +30,6 @@ mir (2.20.0) UNRELEASED; urgency=medium
       . TilingWindowManagerPolicy assumes that window size is always specified (#3689)
       . OSK hides a half second after popping up on some input fields with zwp_text_input_v1 (Electron) (#3580)
       . Closing a window brings one of the remaining windows of the same client to the front (#3309)
-      . Closing a window causes minimized windows to be focused (#3408)
       . atomic-kms: hardware cursor disappears crossing screen boundaries (#3677)
       . Crash on display unplug (#3729)
       . Crash when pcmanfm-qt does DnD (#3765)
