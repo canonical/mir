@@ -64,7 +64,10 @@ void mir::shell::AccessibilityManager::toggle_mousekeys(bool on)
 
         transformer = std::make_shared<mir::input::MouseKeysTransformer>(main_loop, options);
         event_transformer->append(transformer);
-    } else {
+    }
+    else
+    {
+        event_transformer->remove(transformer);
         transformer.reset();
     }
 }
