@@ -53,7 +53,10 @@ public:
         hdmia,
         hdmib,
         tv,
-        edp
+        edp,
+        virt,
+        dsi,
+        dpi
     };
 
     explicit Output(const mir::graphics::DisplayConfigurationOutput &output);
