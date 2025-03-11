@@ -20,15 +20,6 @@ libmiroil.so.7 libmiroil7 #MINVER#
  (c++)"miroil::EventBuilder::make_touch_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, unsigned int)@MIROIL_7.0" 2.20.0
  (c++)"miroil::EventBuilder::store(MirInputEvent const*, unsigned long)@MIROIL_7.0" 2.20.0
  (c++)"miroil::EventBuilder::~EventBuilder()@MIROIL_7.0" 2.20.0
- (c++)"miroil::GLBuffer::GLBuffer(std::shared_ptr<mir::graphics::Buffer> const&)@MIROIL_7.0" 2.20.0
- (c++)"miroil::GLBuffer::bind()@MIROIL_7.0" 2.20.0
- (c++)"miroil::GLBuffer::empty()@MIROIL_7.0" 2.20.0
- (c++)"miroil::GLBuffer::from_mir_buffer(std::shared_ptr<mir::graphics::Buffer> const&)@MIROIL_7.0" 2.20.0
- (c++)"miroil::GLBuffer::has_alpha_channel() const@MIROIL_7.0" 2.20.0
- (c++)"miroil::GLBuffer::reset()@MIROIL_7.0" 2.20.0
- (c++)"miroil::GLBuffer::reset(std::shared_ptr<mir::graphics::Buffer> const&)@MIROIL_7.0" 2.20.0
- (c++)"miroil::GLBuffer::size() const@MIROIL_7.0" 2.20.0
- (c++)"miroil::GLBuffer::~GLBuffer()@MIROIL_7.0" 2.20.0
  (c++)"miroil::InputDevice::InputDevice()@MIROIL_7.0" 2.20.0
  (c++)"miroil::InputDevice::InputDevice(miroil::InputDevice const&)@MIROIL_7.0" 2.20.0
  (c++)"miroil::InputDevice::InputDevice(miroil::InputDevice&&)@MIROIL_7.0" 2.20.0
