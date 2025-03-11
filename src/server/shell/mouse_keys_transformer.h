@@ -34,9 +34,14 @@ namespace input
 class MouseKeysTransformer: public mir::input::InputEventTransformer::Transformer
 {
 public:
+    // Quadratic, linear, and constant factors repsectively
+    // ax^2 + bx + c
+    struct AccelerationParameters { double const a, b, c; };
 
     MouseKeysTransformer(
-        std::shared_ptr<mir::MainLoop> const& main_loop, std::shared_ptr<mir::options::Option> const& options);
+        std::shared_ptr<mir::MainLoop> const& main_loop,
+        geometry::Displacement max_speed,
+        AccelerationParameters const& params);
 
     bool transform_input_event(
         mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
@@ -69,11 +74,9 @@ private:
 
     struct AccelerationCurve
     {
-        // Quadratic, linear, and constant factors repsectively
-        // ax^2 + bx + c
-        double const a, b, c;
+        AccelerationParameters params;
 
-        AccelerationCurve(std::shared_ptr<mir::options::Option> const& options);
+        AccelerationCurve(AccelerationParameters const& params);
 
         double evaluate(double t) const;
     };

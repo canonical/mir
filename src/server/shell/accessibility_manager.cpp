@@ -62,7 +62,17 @@ void mir::shell::AccessibilityManager::toggle_mousekeys(bool on)
         if (transformer)
             return;
 
-        transformer = std::make_shared<mir::input::MouseKeysTransformer>(main_loop, options);
+        transformer = std::make_shared<mir::input::MouseKeysTransformer>(
+            main_loop,
+            geometry::Displacement{
+                options->get<double>(mir::options::mouse_keys_max_speed_x),
+                options->get<double>(mir::options::mouse_keys_max_speed_y),
+            },
+            input::MouseKeysTransformer::AccelerationParameters{
+                options->get<double>(mir::options::mouse_keys_acceleration_quadratic_factor),
+                options->get<double>(mir::options::mouse_keys_acceleration_linear_factor),
+                options->get<double>(mir::options::mouse_keys_acceleration_constant_factor),
+            });
         event_transformer->append(transformer);
     }
     else

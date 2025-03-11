@@ -16,11 +16,10 @@
 
 #include "mouse_keys_transformer.h"
 
-#include "mir/input/input_sink.h"
+#include "mir/geometry/forward.h"
 #include "mir/log.h"
 #include "mir/main_loop.h"
 #include "mir/options/configuration.h"
-#include "mir/options/option.h"
 #include "mir/time/alarm.h"
 
 #include <chrono>
@@ -28,26 +27,30 @@
 #include <cstdint>
 
 mir::input::MouseKeysTransformer::MouseKeysTransformer(
-    std::shared_ptr<mir::MainLoop> const& main_loop, std::shared_ptr<mir::options::Option> const& options) :
+    std::shared_ptr<mir::MainLoop> const& main_loop,
+    geometry::Displacement max_speed,
+    AccelerationParameters const& params) :
     main_loop{main_loop},
-    acceleration_curve{options}
+    acceleration_curve{params},
+    max_speed{[&]
+              {
+                  if (max_speed.dx < geometry::DeltaX{0})
+                  {
+                      mir::log_warning(
+                          "%s set to a value less than zero, clamping to zero", mir::options::mouse_keys_max_speed_x);
+                      max_speed.dx = std::max(max_speed.dx, geometry::DeltaX{0.0});
+                  }
+
+                  if (max_speed.dy < geometry::DeltaY{0})
+                  {
+                      mir::log_warning(
+                          "%s set to a value less than zero, clamping to zero", mir::options::mouse_keys_max_speed_y);
+                      max_speed.dy = std::max(max_speed.dy, geometry::DeltaY{0.0});
+                  }
+
+                  return max_speed;
+              }()}
 {
-    auto max_x_speed = options->get<double>(mir::options::mouse_keys_max_speed_x);
-    auto max_y_speed = options->get<double>(mir::options::mouse_keys_max_speed_y);
-
-    if (max_x_speed < 0)
-    {
-        mir::log_warning("%s set to a value less than zero, clamping to zero", mir::options::mouse_keys_max_speed_x);
-        max_x_speed = std::max(max_x_speed, 0.0);
-    }
-
-    if (max_y_speed < 0)
-    {
-        mir::log_warning("%s set to a value less than zero, clamping to zero", mir::options::mouse_keys_max_speed_y);
-        max_y_speed = std::max(max_y_speed, 0.0);
-    }
-
-    max_speed = {max_x_speed, max_y_speed};
 }
 
 bool mir::input::MouseKeysTransformer::transform_input_event(
@@ -337,17 +340,14 @@ bool mir::input::MouseKeysTransformer::handle_drag_end(
     return false;
 }
 
-mir::input::MouseKeysTransformer::AccelerationCurve::AccelerationCurve(
-    std::shared_ptr<mir::options::Option> const& options) :
-    a{options->get<double>(mir::options::mouse_keys_acceleration_quadratic_factor)},
-    b{options->get<double>(mir::options::mouse_keys_acceleration_linear_factor)},
-    c{options->get<double>(mir::options::mouse_keys_acceleration_constant_factor)}
+mir::input::MouseKeysTransformer::AccelerationCurve::AccelerationCurve(AccelerationParameters const& params) :
+    params(params)
 {
 }
 
 double mir::input::MouseKeysTransformer::AccelerationCurve::evaluate(double t) const
 {
-    return a * t * t + b * t + c;
+    return params.a * t * t + params.b * t + params.c;
 }
 
 void mir::input::MouseKeysTransformer::press_current_cursor_button(
