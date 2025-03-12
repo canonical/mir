@@ -90,6 +90,12 @@ struct TestMouseKeysTransformer : testing::Test
     std::shared_ptr<mi::MouseKeysTransformer> const transformer;
     mt::AutoUnblockThread main_loop_thread;
 
+    enum class State
+    {
+        waiting_for_down,
+        waiting_for_up
+    };
+
     auto down_event(int button) const -> mir::EventUPtr
     {
         return mev::make_key_event(
@@ -231,18 +237,13 @@ TEST_F(TestMouseKeysTransformer, clicks_dispatch_pointer_down_and_up_events)
 {
     for (auto switching_button : {XKB_KEY_KP_Divide, XKB_KEY_KP_Multiply, XKB_KEY_KP_Subtract})
     {
-        enum class State
-        {
-            waiting_for_down,
-            waiting_for_up
-        };
-
+        auto state = State::waiting_for_up;
         mt::Signal finished;
 
         EXPECT_CALL(mock_seat, dispatch_event(_))
             .Times(3) // up (switching), down, up
             .WillRepeatedly(
-                [state = State::waiting_for_down, &finished, switching_button](
+                [&state , &finished, switching_button](
                     std::shared_ptr<MirEvent> const& event) mutable
                 {
                     auto* const pointer_event = event->to_input()->to_pointer();
@@ -293,12 +294,6 @@ TEST_F(TestMouseKeysTransformer, clicks_dispatch_pointer_down_and_up_events)
 
 TEST_F(TestMouseKeysTransformer, double_click_dispatch_four_events)
 {
-    enum class State
-    {
-        waiting_for_down,
-        waiting_for_up
-    };
-
     auto state = State::waiting_for_down;
     mt::Signal finished;
 
@@ -338,12 +333,6 @@ TEST_F(TestMouseKeysTransformer, double_click_dispatch_four_events)
 
 TEST_F(TestMouseKeysTransformer, drag_start_and_end_dispatch_down_and_up_events)
 {
-    enum class State
-    {
-        waiting_for_down,
-        waiting_for_up
-    };
-
     auto state = State::waiting_for_down;
     mt::Signal finished;
 
