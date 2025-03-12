@@ -15,15 +15,14 @@
  */
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/events/event.h"
 #include "mir/events/event_builders.h"
-#include "mir/events/input_event.h"
 #include "mir/events/pointer_event.h"
 #include "mir/geometry/forward.h"
 #include "mir/glib_main_loop.h"
 #include "mir/input/input_event_transformer.h"
 #include "mir/main_loop.h"
 #include "mir/test/auto_unblock_thread.h"
+#include "mir/test/signal.h"
 #include "mir/test/spin_wait.h"
 #include "src/server/input/default_input_device_hub.h"
 #include "src/server/shell/mouse_keys_transformer.h"
@@ -37,10 +36,10 @@
 
 #include "gmock/gmock.h"
 #include <chrono>
-#include <future>
 #include <gtest/gtest.h>
 #include <memory>
 #include <pthread.h>
+#include <xkbcommon/xkbcommon-keysyms.h>
 
 namespace mev = mir::events;
 namespace mi = mir::input;
@@ -225,5 +224,69 @@ TEST_F(TestMouseKeysTransformer, multiple_keys_result_in_diagonal_movement)
         input_event_transformer.handle(*up_event(key2));
 
         ASSERT_GT(count_diagonal, 0);
+    }
+}
+
+TEST_F(TestMouseKeysTransformer, clicks_dispatch_pointer_down_and_up_events)
+{
+    for (auto switching_button : {XKB_KEY_KP_Divide, XKB_KEY_KP_Multiply, XKB_KEY_KP_Subtract})
+    {
+        enum class State
+        {
+            waiting_for_down,
+            waiting_for_up
+        };
+
+        mt::Signal finished;
+
+        EXPECT_CALL(mock_seat, dispatch_event(_))
+            .Times(3) // up (switching), down, up
+            .WillRepeatedly(
+                [state = State::waiting_for_down, &finished, switching_button](
+                    std::shared_ptr<MirEvent> const& event) mutable
+                {
+                    auto* const pointer_event = event->to_input()->to_pointer();
+
+                    auto const pointer_action = pointer_event->action();
+                    auto const pointer_buttons = pointer_event->buttons();
+                    switch (state)
+                    {
+                    case State::waiting_for_down:
+
+                        // Skip the first up event that is dispatched when we switch buttons
+                        if (pointer_action == mir_pointer_action_button_up)
+                            return;
+
+                        ASSERT_EQ(pointer_action, mir_pointer_action_button_down);
+                        switch (switching_button)
+                        {
+                        case XKB_KEY_KP_Divide:
+                            ASSERT_EQ(pointer_buttons, mir_pointer_button_primary);
+                            break;
+                        case XKB_KEY_KP_Multiply:
+                            ASSERT_EQ(pointer_buttons, mir_pointer_button_tertiary);
+                            break;
+                        case XKB_KEY_KP_Subtract:
+                            ASSERT_EQ(pointer_buttons, mir_pointer_button_secondary);
+                            break;
+                        }
+
+                        state = State::waiting_for_up;
+                        break;
+                    case State::waiting_for_up:
+                        ASSERT_EQ(pointer_action, mir_pointer_action_button_up);
+                        ASSERT_EQ(pointer_buttons, 0);
+                        finished.raise();
+                        break;
+                    }
+                });
+
+        input_event_transformer.handle(*up_event(switching_button));
+        input_event_transformer.handle(*up_event(XKB_KEY_KP_5));
+
+        // Advance so that the up event can be processed
+        clock.advance_by(std::chrono::milliseconds(50));
+
+        finished.wait_for(std::chrono::milliseconds(10));
     }
 }
