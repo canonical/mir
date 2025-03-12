@@ -335,3 +335,44 @@ TEST_F(TestMouseKeysTransformer, double_click_dispatch_four_events)
             finished.reset();
     }
 }
+
+TEST_F(TestMouseKeysTransformer, drag_start_and_end_dispatch_down_and_up_events)
+{
+    enum class State
+    {
+        waiting_for_down,
+        waiting_for_up
+    };
+
+    auto state = State::waiting_for_down;
+    mt::Signal finished;
+
+    EXPECT_CALL(mock_seat, dispatch_event(_))
+        .Times(2) // down, up
+        .WillRepeatedly(
+            [&state, &finished](std::shared_ptr<MirEvent> const& event)
+            {
+                auto* const pointer_event = event->to_input()->to_pointer();
+
+                auto const pointer_action = pointer_event->action();
+                auto const pointer_buttons = pointer_event->buttons();
+                switch (state)
+                {
+                case State::waiting_for_down:
+                    ASSERT_EQ(pointer_action, mir_pointer_action_button_down);
+                    state = State::waiting_for_up;
+                    break;
+                case State::waiting_for_up:
+                    ASSERT_EQ(pointer_action, mir_pointer_action_button_up);
+                    ASSERT_EQ(pointer_buttons, 0);
+                    state = State::waiting_for_down;
+                    finished.raise();
+                    break;
+                }
+            });
+
+    input_event_transformer.handle(*up_event(XKB_KEY_KP_0));
+    input_event_transformer.handle(*up_event(XKB_KEY_KP_Decimal));
+
+    finished.wait_for(std::chrono::milliseconds(10));
+}
