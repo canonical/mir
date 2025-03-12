@@ -290,3 +290,48 @@ TEST_F(TestMouseKeysTransformer, clicks_dispatch_pointer_down_and_up_events)
         finished.wait_for(std::chrono::milliseconds(10));
     }
 }
+
+TEST_F(TestMouseKeysTransformer, double_click_dispatch_four_events)
+{
+    enum class State
+    {
+        waiting_for_down,
+        waiting_for_up
+    };
+
+    auto state = State::waiting_for_down;
+    mt::Signal finished;
+
+    EXPECT_CALL(mock_seat, dispatch_event(_))
+        .Times(4) // down, up, down, up
+        .WillRepeatedly(
+            [&state, &finished](std::shared_ptr<MirEvent> const& event)
+            {
+                auto* const pointer_event = event->to_input()->to_pointer();
+
+                auto const pointer_action = pointer_event->action();
+                auto const pointer_buttons = pointer_event->buttons();
+                switch (state)
+                {
+                case State::waiting_for_down:
+                    ASSERT_EQ(pointer_action, mir_pointer_action_button_down);
+                    state = State::waiting_for_up;
+                    break;
+                case State::waiting_for_up:
+                    ASSERT_EQ(pointer_action, mir_pointer_action_button_up);
+                    ASSERT_EQ(pointer_buttons, 0);
+                    state = State::waiting_for_down;
+                    finished.raise();
+                    break;
+                }
+            });
+
+    input_event_transformer.handle(*up_event(XKB_KEY_KP_Add));
+
+    for (auto i = 0; i < 2; i++)
+    {
+        clock.advance_by(std::chrono::milliseconds(100));
+        if(finished.wait_for(std::chrono::milliseconds(10)))
+            finished.reset();
+    }
+}
