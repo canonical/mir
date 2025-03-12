@@ -17,15 +17,32 @@ jobs:
     uses: ./.github/workflows/tics-run.yml
     secrets: inherit
     with:
-      step: prepare
-      calc: PREPARE,CHANGEDFILES,BUILDRELATIONS,INCLUDERELATIONS,LOC
+      calc-matrix: |
+        ["PREPARE,CHANGEDFILES,BUILDRELATIONS,INCLUDERELATIONS,LOC"]
 
-  Finalize:
-    if: ${{ always() }}
+  Run:
     needs:
     - Prepare
     uses: ./.github/workflows/tics-run.yml
     secrets: inherit
     with:
-      step: finalize
-      calc: FINALIZE,POSTANA
+      calc-matrix: |
+        [
+          "CODINGSTANDARD,COMPILERWARNING,FANOUT,CYCLOMATICCOMPLEXITY",
+          "PREPARE,ABSTRACTINTERPRETATION,SECURITY",
+          "UNITTESTCOVERAGE,SYSTEMTESTCOVERAGE,INTEGRATIONTESTCOVERAGE,TOTALTESTCOVERAGE"
+        ]
+      parallel: true
+      timeout-minutes: 240
+
+  Finalize:
+    if: ${{ always() }}
+    needs:
+    - Prepare
+    - Run
+    uses: ./.github/workflows/tics-run.yml
+    secrets: inherit
+    with:
+      calc-matrix: |
+        ["FINALIZE,POSTANA"]
+      parallel: true
