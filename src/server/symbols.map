@@ -1448,6 +1448,7 @@ global:
     non-virtual?thunk?to?mir::shell::SurfaceStackWrapper::is_above*;
     typeinfo?for?mir::input::InputEventTransformer::Transformer;
     typeinfo?for?mir::input::InputEventTransformer;
+    typeinfo?for?mir::shell::AccessibilityManager;
     typeinfo?for?mir::shell::TokenAuthority::Token;
     typeinfo?for?mir::shell::TokenAuthority;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_token_authority*;
