@@ -13,101 +13,19 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  Run:
-    runs-on: ubuntu-24.04
+  Prepare:
+    uses: ./.github/workflows/tics-run.yml
+    secrets: inherit
+    with:
+      step: prepare
+      calc: PREPARE,CHANGEDFILES,BUILDRELATIONS,INCLUDERELATIONS,LOC
 
-    env:
-      CCACHE_DIR: "/tmp/ccache"
-      NEEDRESTART_SUSPEND: yes
-      DEBIAN_FRONTEND: noninteractive
-
-    timeout-minutes: 360
-    steps:
-    - name: Check out code
-      uses: actions/checkout@v4
-      with:
-        # So we can determine the merge base
-        fetch-depth: 0
-
-    - name: Set up CCache
-      id: setup-ccache
-      run: |
-        sudo apt-get install ccache
-        mkdir --parents ${CCACHE_DIR}
-
-        # Find the merge base to avoid populating the cache with short lived cache entries
-        # and evicting those we care for - from `main`
-        echo "merge-base=$( git merge-base origin/main ${{ github.sha }} )" >> $GITHUB_OUTPUT
-
-    - name: CCache
-      uses: actions/cache@v4
-      with:
-        key: ccache-coverage-${{ steps.setup-ccache.outputs.merge-base }}
-        # if exact match isn't found, use the most recent entry for the task
-        restore-keys: |
-          ccache-coverage-
-        path: ${{ env.CCACHE_DIR }}
-
-    - name: Ensure ccache size
-      run: |
-        # a full build yielded 180M cache
-        echo "max_size = 250M" > ${CCACHE_DIR}/ccache.conf
-
-    - name: Install dependencies
-      run: |
-        sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
-        sudo --preserve-env apt-get install --no-install-recommends \
-          dmz-cursor-theme \
-          flake8 \
-          glmark2-es2 \
-          glmark2-es2-wayland \
-          lcov \
-          mesa-utils \
-          ninja-build \
-          pylint \
-          xwayland
-
-        sudo --preserve-env apt-get build-dep ./
-
-    - name: Configure
-      run: >
-        cmake
-        -DCMAKE_BUILD_TYPE=Coverage
-        -DMIR_RUN_PERFORMANCE_TESTS=ON
-        -DCMAKE_C_COMPILER_LAUNCHER=ccache
-        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-        -GNinja
-        -B build
-        ${{ github.workspace }}
-
-    - name: Build
-      run: cmake --build build
-
-    - name: Clear CCache stats
-      run: ccache --show-stats --zero-stats
-
-    - name: Test
-      timeout-minutes: 10
-      env:
-        CTEST_OUTPUT_ON_FAILURE: 1
-        XDG_RUNTIME_DIR: /tmp
-      run: cmake --build build --target test
-
-    - name: Measure coverage
-      timeout-minutes: 10
-      run: cmake --build build --target coverage
-
-    - name: Run TICS analysis
-      uses: tiobe/tics-github-action@v3
-      with:
-        mode: qserver
-        project: mir
-        viewerUrl: https://canonical.tiobe.com/tiobeweb/TICS/api/cfg?name=default
-        ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
-        installTics: true
-
-    - if: ${{ failure() && runner.debug }}
-      name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
-      with:
-        limit-access-to-actor: true
+  Finalize:
+    if: ${{ always() }}
+    needs:
+    - Prepare
+    uses: ./.github/workflows/tics-run.yml
+    secrets: inherit
+    with:
+      step: finalize
+      calc: FINALIZE,POSTANA
