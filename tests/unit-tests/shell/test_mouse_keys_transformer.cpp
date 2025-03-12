@@ -237,8 +237,8 @@ TEST_F(TestMouseKeysTransformer, clicks_dispatch_pointer_down_and_up_events)
 {
     for (auto switching_button : {XKB_KEY_KP_Divide, XKB_KEY_KP_Multiply, XKB_KEY_KP_Subtract})
     {
-        auto state = State::waiting_for_up;
         mt::Signal finished;
+        auto state = State::waiting_for_up;
 
         EXPECT_CALL(mock_seat, dispatch_event(_))
             .Times(3) // up (switching), down, up
@@ -253,10 +253,6 @@ TEST_F(TestMouseKeysTransformer, clicks_dispatch_pointer_down_and_up_events)
                     switch (state)
                     {
                     case State::waiting_for_down:
-
-                        // Skip the first up event that is dispatched when we switch buttons
-                        if (pointer_action == mir_pointer_action_button_up)
-                            return;
 
                         ASSERT_EQ(pointer_action, mir_pointer_action_button_down);
                         switch (switching_button)
@@ -277,6 +273,7 @@ TEST_F(TestMouseKeysTransformer, clicks_dispatch_pointer_down_and_up_events)
                     case State::waiting_for_up:
                         ASSERT_EQ(pointer_action, mir_pointer_action_button_up);
                         ASSERT_EQ(pointer_buttons, 0);
+                        state = State::waiting_for_down;
                         finished.raise();
                         break;
                     }
@@ -285,10 +282,15 @@ TEST_F(TestMouseKeysTransformer, clicks_dispatch_pointer_down_and_up_events)
         input_event_transformer.handle(*up_event(switching_button));
         input_event_transformer.handle(*up_event(XKB_KEY_KP_5));
 
-        // Advance so that the up event can be processed
+        // Advance so that the up portion of the click can be processed
         clock.advance_by(std::chrono::milliseconds(50));
 
-        finished.wait_for(std::chrono::milliseconds(10));
+        auto constexpr num_expected_up_events = 2;
+        for(auto i = 0; i < num_expected_up_events; i++)
+        {
+            if(finished.wait_for(std::chrono::milliseconds(10)))
+                finished.reset();
+        }
     }
 }
 
