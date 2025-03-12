@@ -1,0 +1,170 @@
+name: TICS
+
+on:
+  workflow_call:
+    inputs:
+      timeout-minutes:
+        type: number
+        default: 60
+      step:
+        description: "prepare, run or finalize"
+        type: string
+        required: true
+      calc:
+        type: string
+        required: true
+
+jobs:
+  Run:
+    runs-on: ubuntu-24.04
+
+    env:
+      CCACHE_DIR: "/tmp/ccache"
+      NEEDRESTART_SUSPEND: yes
+      DEBIAN_FRONTEND: noninteractive
+      TICSINSTALLDIR: "/tmp/tics"
+
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v4
+      with:
+        # So we can determine the merge base
+        fetch-depth: 0
+
+    - name: Set up CCache
+      id: setup-ccache
+      run: |
+        sudo apt-get install ccache
+        mkdir --parents ${CCACHE_DIR}
+
+        # Find the merge base to avoid populating the cache with short lived cache entries
+        # and evicting those we care for - from `main`
+        echo "merge-base=$( git merge-base origin/main ${{ github.sha }} )" >> $GITHUB_OUTPUT
+
+    - name: CCache
+      uses: actions/cache@v4
+      with:
+        key: ccache-coverage-${{ steps.setup-ccache.outputs.merge-base }}
+        # if exact match isn't found, use the most recent entry for the task
+        restore-keys: |
+          ccache-coverage-
+        path: ${{ env.CCACHE_DIR }}
+
+    - name: Ensure ccache size
+      run: |
+        # a full build yielded 180M cache
+        echo "max_size = 250M" > ${CCACHE_DIR}/ccache.conf
+
+    - name: Install dependencies
+      run: |
+        sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
+        sudo --preserve-env apt-get install --no-install-recommends \
+          dmz-cursor-theme \
+          flake8 \
+          glmark2-es2 \
+          glmark2-es2-wayland \
+          lcov \
+          mesa-utils \
+          ninja-build \
+          pylint \
+          xwayland
+
+        sudo --preserve-env apt-get build-dep ./
+
+    - name: Configure
+      if: ${{ inputs.step == 'prepare' }}
+      run: >
+        cmake
+        -DCMAKE_BUILD_TYPE=Coverage
+        -DMIR_RUN_PERFORMANCE_TESTS=ON
+        -DCMAKE_C_COMPILER_LAUNCHER=ccache
+        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        -GNinja
+        -B build
+        ${{ github.workspace }}
+
+    - name: Build
+      if: ${{ inputs.step == 'prepare' }}
+      run: cmake --build build
+
+    - name: Clear CCache stats
+      if: ${{ inputs.step == 'prepare' }}
+      run: ccache --show-stats --zero-stats
+
+    - name: Test
+      if: ${{ inputs.step == 'prepare' }}
+      timeout-minutes: 10
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
+        XDG_RUNTIME_DIR: /tmp
+      run: cmake --build build --target test
+
+    - name: Measure coverage
+      if: ${{ inputs.step == 'prepare' }}
+      timeout-minutes: 10
+      run: cmake --build build --target coverage
+
+    - name: Archive the build
+      if: ${{ inputs.step == 'prepare' }}
+      run: tar -C build -cvf build.tar .
+
+    - name: Store the build
+      if: ${{ inputs.step == 'prepare' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: build
+        path: build.tar
+        if-no-files-found: error
+        retention-days: 1
+
+    - name: Retrieve the build
+      if: ${{ inputs.step != 'prepare' }}
+      uses: actions/download-artifact@v4
+      with:
+        name: build
+        path: build.tar
+
+    - name: Unarchive the build
+      if: ${{ inputs.step != 'prepare' }}
+      run: |
+        mkdir build
+        tar -C build -xvf build.tar .
+
+    - name: Install TICS
+      env:
+        TICSAUTHTOKEN: ${{ secrets.TICSAUTHTOKEN }}
+      run: |
+        curl -o /tmp/install_tics.sh -L "https://canonical.tiobe.com/tiobeweb/TICS/api/public/v1/fapi/installtics/Script?cfg=default&platform=linux&url=https://canonical.tiobe.com/tiobeweb/TICS/"
+        chmod +x /tmp/install_tics.sh
+        /tmp/install_tics.sh
+
+        # Update the environment to include TICS variables and PATH
+        source ~/.profile
+
+        # Run additional TiCS maintenance commands
+        TICSMaintenance -checkchk
+
+    - name: Run TICS analysis
+      env:
+        TICSAUTHTOKEN: ${{ secrets.TICSAUTHTOKEN }}
+      run: |
+        # Update the environment to include TICS variables and PATH
+        source ~/.profile
+
+        TICSQServer \
+          -calc ${{ inputs.calc }} \
+          -overviews \
+          -project=mir \
+          -results \
+          -showsynopsis \
+          -timeinfo \
+          -totaloverviews \
+          ${{ inputs.step != 'prepare' && '-nobackup -parallel' }} \
+          -branchdir .
+
+    - if: ${{ failure() && runner.debug }}
+      name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      with:
+        limit-access-to-actor: true
