@@ -143,7 +143,7 @@ int main(int argc, char const* argv[])
             return FocusStealing::allow;
     };
 
-    miral::ToggleMouseKeys toggle_mousekeys;
+    miral::ToggleMouseKeys toggle_mousekeys{false};
 
     // Initial mousekeys state can be queried by through
     // `mir::options::enable_mouse_keys_opt`. For simplicity, we'll assume

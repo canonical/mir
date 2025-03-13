@@ -91,6 +91,6 @@ mir::shell::AccessibilityManager::AccessibilityManager(
     main_loop{main_loop},
     options{options}
 {
-    if (options->get<bool>(options::enable_mouse_keys_opt))
+    if (options->is_set(options::enable_mouse_keys_opt) && options->get<bool>(options::enable_mouse_keys_opt))
         toggle_mousekeys(true);
 }
