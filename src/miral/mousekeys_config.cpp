@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/toggle_mousekeys.h"
+#include "miral/mousekeys_config.h"
 #include "mir/options/configuration.h"
 
 #include <mir/server.h>
@@ -23,7 +23,7 @@
 
 #include <memory>
 
-struct miral::ToggleMouseKeys::Self
+struct miral::MouseKeysConfig::Self
 {
     Self(bool enabled_by_default) :
         enabled_by_default{enabled_by_default}
@@ -34,12 +34,12 @@ struct miral::ToggleMouseKeys::Self
     bool const enabled_by_default;
 };
 
-miral::ToggleMouseKeys::ToggleMouseKeys(bool enabled_by_default) :
-    self{std::make_shared<miral::ToggleMouseKeys::Self>(enabled_by_default)}
+miral::MouseKeysConfig::MouseKeysConfig(bool enabled_by_default) :
+    self{std::make_shared<miral::MouseKeysConfig::Self>(enabled_by_default)}
 {
 }
 
-void miral::ToggleMouseKeys::toggle_mousekeys(bool enabled) const
+void miral::MouseKeysConfig::toggle_mousekeys(bool enabled) const
 {
     if (auto const am = self->accessibility_manager.lock())
         am->toggle_mousekeys(enabled);
@@ -47,7 +47,7 @@ void miral::ToggleMouseKeys::toggle_mousekeys(bool enabled) const
         mir::log_error("AccessibilityManager not initialized. Will not toggle mousekeys.");
 }
 
-void miral::ToggleMouseKeys::operator()(mir::Server& server) const
+void miral::MouseKeysConfig::operator()(mir::Server& server) const
 {
     server.add_init_callback(
         [this, self = this->self, &server]
