@@ -140,11 +140,15 @@ TEST_F(TestMouseKeysTransformer, single_keyboard_event_to_single_pointer_motion_
                     ASSERT_EQ(pointer_action, mir_pointer_action_motion);
 
                     // Make sure the movement is on one axis
-                    if(pointer_relative_motion.dx.as_value() != 0.0f)
+                    if (pointer_relative_motion.dx.as_value() != 0.0f)
+                    {
                         ASSERT_EQ(pointer_relative_motion.dy.as_value(), 0.0f);
+                    }
 
-                    if(pointer_relative_motion.dy.as_value() != 0.0f)
+                    if (pointer_relative_motion.dy.as_value() != 0.0f)
+                    {
                         ASSERT_EQ(pointer_relative_motion.dx.as_value(), 0.0f);
+                    }
                 });
 
         auto down = down_event(button);
@@ -179,7 +183,7 @@ TEST_F(TestMouseKeysTransformer, multiple_keys_result_in_diagonal_movement)
         std::pair{XKB_KEY_KP_8, XKB_KEY_KP_6},
     };
 
-    for(auto const[key1, key2]: combinations)
+    for (auto const& [key1, key2] : combinations)
     {
         auto const timeout = std::chrono::milliseconds(20);
         auto const repeat_delay = std::chrono::milliseconds(2);
