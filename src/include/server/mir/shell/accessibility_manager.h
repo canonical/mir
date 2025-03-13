@@ -36,6 +36,11 @@ namespace options
 {
 class Option;
 }
+namespace input
+{
+class MouseKeysKeymap;
+class MouseKeysTransformer;
+}
 namespace shell
 {
 class KeyboardHelper;
@@ -58,6 +63,7 @@ public:
     void notify_helpers() const;
 
     void toggle_mousekeys(bool on);
+    void update_mousekeys_keymap(input::MouseKeysKeymap const& new_keymap) const;
 
 private:
 
@@ -77,7 +83,7 @@ private:
     std::shared_ptr<mir::MainLoop> const main_loop;
     std::shared_ptr<mir::options::Option> const options;
 
-    std::shared_ptr<mir::input::InputEventTransformer::Transformer> transformer;
+    std::shared_ptr<mir::input::MouseKeysTransformer> transformer;
 };
 }
 }
