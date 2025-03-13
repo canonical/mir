@@ -21,8 +21,7 @@
 
 namespace mir { class Server; }
 
-/// Enable toggling mousekeys via a keyboard shortcut (Shift+Ctrl+Numlock) at
-/// runtime.
+/// Enable toggling mousekeys  at runtime.
 /// \remark Since MirAL 5.3
 namespace miral
 {
@@ -32,7 +31,8 @@ public:
     ToggleMouseKeys();
     void operator()(mir::Server& server) const;
 
-    // Toggles mousekeys on or off depending on the passed parameter.
+    /// Toggles mousekeys on or off depending on the passed parameter.
+    /// \note Can only be called after the server is initialized.
     void toggle_mousekeys(bool enabled) const;
 private:
     struct Self;
