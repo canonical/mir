@@ -535,6 +535,12 @@ bool mga::AtomicKMSOutput::ensure_crtc(Configuration& to_update)
     // Update the connector as we may unexpectedly fail in find_crtc_and_index_for_connector()
     // https://github.com/MirServer/mir/issues/2661
     to_update.connector = kms::get_connector(drm_fd_, to_update.connector->connector_id);
+
+    if (to_update.connector->connection != DRM_MODE_CONNECTED)
+    {
+        return false;
+    }
+
     std::tie(to_update.current_crtc, to_update.current_plane) = mgk::find_crtc_with_primary_plane(drm_fd_, to_update.connector);
     if (!to_update.current_crtc || !to_update.current_plane)
     {
