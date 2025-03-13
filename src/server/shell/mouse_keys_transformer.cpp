@@ -21,20 +21,21 @@
 #include "mir/main_loop.h"
 #include "mir/options/configuration.h"
 #include "mir/time/alarm.h"
+#include "mir/input/mousekeys_common.h"
+
 #include "mir_toolkit/events/enums.h"
 #include "mir_toolkit/events/input/keyboard_event.h"
 
-
 #include <cmath>
 #include <cstdint>
+#include <memory>
 #include <mutex>
 #include <utility>
 
 mir::input::MouseKeysTransformer::MouseKeysTransformer(
     std::shared_ptr<mir::MainLoop> const& main_loop,
     geometry::Displacement configured_max_speed,
-    AccelerationParameters const& params,
-    MouseKeysKeymap keymap) :
+    AccelerationParameters const& params) :
     main_loop{main_loop},
     acceleration_curve{params},
     max_speed{[configured_max_speed]
@@ -56,7 +57,18 @@ mir::input::MouseKeysTransformer::MouseKeysTransformer(
 
                   return clamped_max_speed;
               }()},
-    keymap{keymap}
+    keymap{std::make_shared<MouseKeysKeymap>(MouseKeysKeymap{
+        {XKB_KEY_KP_2, MouseKeysAction::move_down},
+        {XKB_KEY_KP_4, MouseKeysAction::move_left},
+        {XKB_KEY_KP_6, MouseKeysAction::move_right},
+        {XKB_KEY_KP_8, MouseKeysAction::move_up},
+        {XKB_KEY_KP_5, MouseKeysAction::click},
+        {XKB_KEY_KP_Add, MouseKeysAction::double_click},
+        {XKB_KEY_KP_0, MouseKeysAction::drag_start},
+        {XKB_KEY_KP_Decimal, MouseKeysAction::drag_end},
+        {XKB_KEY_KP_Divide, MouseKeysAction::button_primary},
+        {XKB_KEY_KP_Multiply, MouseKeysAction::button_tertiary},
+        {XKB_KEY_KP_Subtract, MouseKeysAction::button_secondary}})}
 {
 }
 
@@ -78,10 +90,10 @@ bool mir::input::MouseKeysTransformer::transform_input_event(
         auto const keysym = mir_keyboard_event_keysym(kev);
         auto const keyboard_action = mir_keyboard_event_action(kev);
 
-        if (!keymap.contains(keysym))
+        if (!keymap->contains(keysym))
             return false;
 
-        auto mousekey_action = keymap.at(keysym);
+        auto mousekey_action = keymap->at(keysym);
         switch (mousekey_action)
         {
         case MouseKeysAction::move_left:
@@ -106,10 +118,10 @@ bool mir::input::MouseKeysTransformer::transform_input_event(
     return false;
 }
 
-void mir::input::MouseKeysTransformer::update_keymap(MouseKeysKeymap const& new_keymap)
+void mir::input::MouseKeysTransformer::set_keymap(MouseKeysKeymap const& new_keymap)
 {
     std::lock_guard guard{state_mutex};
-    keymap = new_keymap;
+    keymap = std::make_unique<MouseKeysKeymap>(new_keymap);
 }
 
 bool mir::input::MouseKeysTransformer::handle_motion(

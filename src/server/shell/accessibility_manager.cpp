@@ -82,9 +82,9 @@ void mir::shell::AccessibilityManager::toggle_mousekeys(bool on)
     }
 }
 
-void mir::shell::AccessibilityManager::update_mousekeys_keymap(input::MouseKeysKeymap const& new_keymap) const
+void mir::shell::AccessibilityManager::set_mousekeys_keymap(input::MouseKeysKeymap const& new_keymap) const
 {
-    transformer->update_keymap(new_keymap);
+    transformer->set_keymap(new_keymap);
 }
 
 mir::shell::AccessibilityManager::AccessibilityManager(

@@ -526,6 +526,7 @@ global:
     miral::MouseKeysConfig::MouseKeysConfig*;
     miral::MouseKeysConfig::operator*;
     miral::MouseKeysConfig::toggle_mousekeys*;
+    miral::MouseKeysConfig::set_keymap*;
     typeinfo?for?miral::MouseKeysConfig;
   };
 } MIRAL_5.2;

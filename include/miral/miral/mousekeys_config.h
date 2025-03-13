@@ -19,7 +19,14 @@
 
 #include <memory>
 
-namespace mir { class Server; }
+namespace mir
+{
+class Server;
+namespace input
+{
+class MouseKeysKeymap;
+}
+}
 
 /// Enable toggling mousekeys  at runtime.
 /// \remark Since MirAL 5.3
@@ -36,6 +43,9 @@ public:
     /// Toggles mousekeys on or off depending on the passed parameter.
     /// \note Can only be called after the server is initialized.
     void toggle_mousekeys(bool enabled) const;
+
+    void set_keymap(mir::input::MouseKeysKeymap const& new_keymap) const;
+
 private:
     struct Self;
     std::shared_ptr<Self> self;
