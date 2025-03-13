@@ -15,6 +15,7 @@
  */
 
 #include "miral/toggle_mousekeys.h"
+#include "mir/options/configuration.h"
 
 #include <mir/server.h>
 #include <mir/shell/accessibility_manager.h>
@@ -24,11 +25,17 @@
 
 struct miral::ToggleMouseKeys::Self
 {
+    Self(bool enabled_by_default) :
+        enabled_by_default{enabled_by_default}
+    {
+    }
+
     std::weak_ptr<mir::shell::AccessibilityManager> accessibility_manager;
+    bool const enabled_by_default;
 };
 
-miral::ToggleMouseKeys::ToggleMouseKeys() :
-    self{std::make_shared<miral::ToggleMouseKeys::Self>()}
+miral::ToggleMouseKeys::ToggleMouseKeys(bool enabled_by_default) :
+    self{std::make_shared<miral::ToggleMouseKeys::Self>(enabled_by_default)}
 {
 }
 
@@ -43,8 +50,15 @@ void miral::ToggleMouseKeys::toggle_mousekeys(bool enabled) const
 void miral::ToggleMouseKeys::operator()(mir::Server& server) const
 {
     server.add_init_callback(
-        [self = this->self, &server]
+        [this, self = this->self, &server]
         {
             self->accessibility_manager = server.the_accessibility_manager();
+            auto options = server.get_options();
+
+            auto enable = self->enabled_by_default;
+            if (options->is_set(mir::options::enable_mouse_keys_opt))
+                enable = options->get<bool>(mir::options::enable_mouse_keys_opt);
+
+            toggle_mousekeys(enable);
         });
 }

@@ -187,7 +187,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Cursor (mouse pointer) to use [{auto,null,software}]")
         (enable_key_repeat_opt, po::value<bool>()->default_value(true),
              "Enable server generated key repeat")
-        (enable_mouse_keys_opt, po::value<bool>()->default_value(false),
+        (enable_mouse_keys_opt, po::value<bool>(),
              "Enable mousekeys (controlling the mouse with the numpad)")
         (mouse_keys_acceleration_constant_factor, po::value<double>()->default_value(100),
              "The base speed for mousekey pointer motion")
