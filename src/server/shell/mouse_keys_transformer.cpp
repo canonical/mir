@@ -28,27 +28,28 @@
 
 mir::input::MouseKeysTransformer::MouseKeysTransformer(
     std::shared_ptr<mir::MainLoop> const& main_loop,
-    geometry::Displacement max_speed,
+    geometry::Displacement configured_max_speed,
     AccelerationParameters const& params) :
     main_loop{main_loop},
     acceleration_curve{params},
-    max_speed{[&]
+    max_speed{[configured_max_speed]
               {
-                  if (max_speed.dx < geometry::DeltaX{0})
+                  auto clamped_max_speed = configured_max_speed;
+                  if (configured_max_speed.dx < geometry::DeltaX{0})
                   {
                       mir::log_warning(
                           "%s set to a value less than zero, clamping to zero", mir::options::mouse_keys_max_speed_x);
-                      max_speed.dx = std::max(max_speed.dx, geometry::DeltaX{0.0});
+                      clamped_max_speed.dx = std::max(configured_max_speed.dx, geometry::DeltaX{0.0});
                   }
 
-                  if (max_speed.dy < geometry::DeltaY{0})
+                  if (configured_max_speed.dy < geometry::DeltaY{0})
                   {
                       mir::log_warning(
                           "%s set to a value less than zero, clamping to zero", mir::options::mouse_keys_max_speed_y);
-                      max_speed.dy = std::max(max_speed.dy, geometry::DeltaY{0.0});
+                      clamped_max_speed.dy = std::max(configured_max_speed.dy, geometry::DeltaY{0.0});
                   }
 
-                  return max_speed;
+                  return clamped_max_speed;
               }()}
 {
 }
