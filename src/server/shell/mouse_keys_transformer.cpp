@@ -21,15 +21,19 @@
 #include "mir/main_loop.h"
 #include "mir/options/configuration.h"
 #include "mir/time/alarm.h"
+#include "mir_toolkit/events/enums.h"
+#include "mir_toolkit/events/input/keyboard_event.h"
 
-#include <chrono>
+
 #include <cmath>
 #include <cstdint>
+#include <utility>
 
 mir::input::MouseKeysTransformer::MouseKeysTransformer(
     std::shared_ptr<mir::MainLoop> const& main_loop,
     geometry::Displacement configured_max_speed,
-    AccelerationParameters const& params) :
+    AccelerationParameters const& params,
+    Keymap keymap) :
     main_loop{main_loop},
     acceleration_curve{params},
     max_speed{[configured_max_speed]
@@ -50,7 +54,8 @@ mir::input::MouseKeysTransformer::MouseKeysTransformer(
                   }
 
                   return clamped_max_speed;
-              }()}
+              }()},
+    keymap{keymap}
 {
 }
 
@@ -67,30 +72,45 @@ bool mir::input::MouseKeysTransformer::transform_input_event(
     if (mir_input_event_get_type(input_event) == mir_input_event_type_key)
     {
         MirKeyboardEvent const* kev = mir_input_event_get_keyboard_event(input_event);
+        auto const keysym = mir_keyboard_event_keysym(kev);
+        auto const keyboard_action = mir_keyboard_event_action(kev);
 
-        if (handle_motion(kev, dispatcher, builder))
-            return true;
-        if (handle_click(kev, dispatcher, builder))
-            return true;
-        if (handle_change_pointer_button(kev, dispatcher, builder))
-            return true;
-        if (handle_double_click(kev, dispatcher, builder))
-            return true;
-        if (handle_drag_start(kev, dispatcher, builder))
-            return true;
-        if (handle_drag_end(kev, dispatcher, builder))
-            return true;
+        if (!keymap.contains(keysym))
+            return false;
+
+        auto mousekey_action = keymap.at(keysym);
+        switch (mousekey_action)
+        {
+        case Action::move_left:
+        case Action::move_right:
+        case Action::move_up:
+        case Action::move_down:
+            return handle_motion(keyboard_action, mousekey_action, dispatcher, builder);
+        case Action::click:
+            return (handle_click(keyboard_action, dispatcher, builder));
+        case Action::double_click:
+            return handle_double_click(keyboard_action, dispatcher, builder);
+        case Action::drag_start:
+        case Action::drag_end:
+            return handle_drag(keyboard_action, mousekey_action, dispatcher, builder);
+        case Action::button_primary:
+        case Action::button_secondary:
+        case Action::button_tertiary:
+            return handle_change_pointer_button(keyboard_action, mousekey_action, dispatcher, builder);
+        }
     }
 
     return false;
 }
 
 bool mir::input::MouseKeysTransformer::handle_motion(
-    MirKeyboardEvent const* kev, Dispatcher const& dispatcher, mir::input::EventBuilder* const builder)
+    MirKeyboardAction keyboard_action,
+    Action mousekey_action,
+    Dispatcher const& dispatcher,
+    mir::input::EventBuilder* const builder)
 {
     namespace geom = mir::geometry;
 
-    auto const action = mir_keyboard_event_action(kev);
     auto const set_or_clear = [](uint32_t& buttons_down, DirectionalButtons button, MirKeyboardAction action)
     {
         if (action == mir_keyboard_action_down)
@@ -99,25 +119,25 @@ bool mir::input::MouseKeysTransformer::handle_motion(
             buttons_down &= ~(button);
     };
 
-    switch (mir_keyboard_event_keysym(kev))
+    switch (mousekey_action)
     {
-    case XKB_KEY_KP_2:
-        set_or_clear(buttons_down, down, action);
+    case Action::move_down:
+        set_or_clear(buttons_down, down, keyboard_action);
         break;
-    case XKB_KEY_KP_4:
-        set_or_clear(buttons_down, left, action);
+    case Action::move_left:
+        set_or_clear(buttons_down, left, keyboard_action);
         break;
-    case XKB_KEY_KP_6:
-        set_or_clear(buttons_down, right, action);
+    case Action::move_right:
+        set_or_clear(buttons_down, right, keyboard_action);
         break;
-    case XKB_KEY_KP_8:
-        set_or_clear(buttons_down, up, action);
+    case Action::move_up:
+        set_or_clear(buttons_down, up, keyboard_action);
         break;
     default:
-        return false;
+        std::unreachable();
     }
 
-    switch (mir_keyboard_event_action(kev))
+    switch (keyboard_action)
     {
     case mir_keyboard_action_up:
         if (buttons_down == none)
@@ -213,62 +233,46 @@ bool mir::input::MouseKeysTransformer::handle_motion(
 }
 
 bool mir::input::MouseKeysTransformer::handle_click(
-    MirKeyboardEvent const* kev, Dispatcher const& dispatcher, mir::input::EventBuilder* const builder)
+    MirKeyboardAction keyboard_action, Dispatcher const& dispatcher, mir::input::EventBuilder* const builder)
 {
-    auto const action = mir_keyboard_event_action(kev);
+    if (keyboard_action == mir_keyboard_action_repeat || keyboard_action== mir_keyboard_action_down)
+        return true;
 
-    switch (mir_keyboard_event_keysym(kev))
-    {
-    case XKB_KEY_KP_5:
-        switch (action)
+    press_current_cursor_button(dispatcher, builder);
+
+    click_event_generator = main_loop->create_alarm(
+        [dispatcher, this, builder]
         {
-        case mir_keyboard_action_up:
-            press_current_cursor_button(dispatcher, builder);
+            release_current_cursor_button(dispatcher, builder);
+        });
 
-            click_event_generator = main_loop->create_alarm(
-                [dispatcher, this, builder]
-                {
-                    release_current_cursor_button(dispatcher, builder);
-                });
-
-            click_event_generator->reschedule_in(std::chrono::milliseconds(50));
-            return true;
-        case mir_keyboard_action_down:
-        case mir_keyboard_action_repeat:
-            return true;
-        default:
-            return false;
-        }
-    default:
-        break;
-    }
-
-    return false;
+    click_event_generator->reschedule_in(std::chrono::milliseconds(50));
+    return true;
 }
 
 bool mir::input::MouseKeysTransformer::handle_change_pointer_button(
-    MirKeyboardEvent const* kev, Dispatcher const& dispatcher, mir::input::EventBuilder* const builder)
+    MirKeyboardAction keyboard_action,
+    Action mousekeys_action,
+    Dispatcher const& dispatcher,
+    mir::input::EventBuilder* const builder)
 {
-    auto const repeat_or_down = mir_keyboard_event_action(kev) == mir_keyboard_action_down ||
-                                mir_keyboard_event_action(kev) == mir_keyboard_action_repeat;
+    if (keyboard_action == mir_keyboard_action_down || keyboard_action == mir_keyboard_action_repeat)
+        return true;
 
     // Up events
-    switch (mir_keyboard_event_keysym(kev))
+    switch (mousekeys_action)
     {
-    case XKB_KEY_KP_Divide:
-        if (!repeat_or_down)
-            current_button = mir_pointer_button_primary;
+    case Action::button_primary:
+        current_button = mir_pointer_button_primary;
         break;
-    case XKB_KEY_KP_Multiply:
-        if (!repeat_or_down)
-            current_button = mir_pointer_button_tertiary;
+    case Action::button_tertiary:
+        current_button = mir_pointer_button_tertiary;
         break;
-    case XKB_KEY_KP_Subtract:
-        if (!repeat_or_down)
-            current_button = mir_pointer_button_secondary;
+    case Action::button_secondary:
+        current_button = mir_pointer_button_secondary;
         break;
     default:
-        return false;
+        std::unreachable();
     }
 
     if (current_button)
@@ -278,66 +282,47 @@ bool mir::input::MouseKeysTransformer::handle_change_pointer_button(
 }
 
 bool mir::input::MouseKeysTransformer::handle_double_click(
-    MirKeyboardEvent const* kev, Dispatcher const& dispatcher, mir::input::EventBuilder* const builder)
+    MirKeyboardAction keyboard_action, Dispatcher const& dispatcher, mir::input::EventBuilder* const builder)
 {
-    if (mir_keyboard_event_keysym(kev) == XKB_KEY_KP_Add)
-    {
-        if (mir_keyboard_event_action(kev) == mir_keyboard_action_down ||
-            mir_keyboard_event_action(kev) == mir_keyboard_action_repeat)
-            return true;
-
-        press_current_cursor_button(dispatcher, builder);
-        release_current_cursor_button(dispatcher, builder);
-
-        double_click_event_generator = main_loop->create_alarm(
-            [dispatcher, this, builder]
-            {
-                press_current_cursor_button(dispatcher, builder);
-                release_current_cursor_button(dispatcher, builder);
-            });
-
-        double_click_event_generator->reschedule_in(std::chrono::milliseconds(100));
-
+    if (keyboard_action == mir_keyboard_action_down || keyboard_action == mir_keyboard_action_repeat)
         return true;
-    }
 
-    return false;
+    press_current_cursor_button(dispatcher, builder);
+    release_current_cursor_button(dispatcher, builder);
+
+    double_click_event_generator = main_loop->create_alarm(
+        [dispatcher, this, builder]
+        {
+            press_current_cursor_button(dispatcher, builder);
+            release_current_cursor_button(dispatcher, builder);
+        });
+
+    double_click_event_generator->reschedule_in(std::chrono::milliseconds(100));
+
+    return true;
 }
 
-bool mir::input::MouseKeysTransformer::handle_drag_start(
-    MirKeyboardEvent const* kev, Dispatcher const& dispatcher, mir::input::EventBuilder* const builder)
+bool mir::input::MouseKeysTransformer::handle_drag(
+    MirKeyboardAction keyboard_action,
+    Action mousekeys_action,
+    Dispatcher const& dispatcher,
+    mir::input::EventBuilder* const builder)
 {
-    if (mir_keyboard_event_keysym(kev) == XKB_KEY_KP_0)
-    {
-        if (mir_keyboard_event_action(kev) == mir_keyboard_action_down ||
-            mir_keyboard_event_action(kev) == mir_keyboard_action_repeat)
-            return true;
+    if (keyboard_action == mir_keyboard_action_down || keyboard_action == mir_keyboard_action_repeat)
+        return true;
 
+    if (mousekeys_action == Action::drag_start)
+    {
         press_current_cursor_button(dispatcher, builder);
         is_dragging = true;
-
-        return true;
     }
-
-    return false;
-}
-
-bool mir::input::MouseKeysTransformer::handle_drag_end(
-    MirKeyboardEvent const* kev, Dispatcher const& dispatcher, mir::input::EventBuilder* const builder)
-{
-    if (mir_keyboard_event_keysym(kev) == XKB_KEY_KP_Decimal)
+    else
     {
-        if (mir_keyboard_event_action(kev) == mir_keyboard_action_down ||
-            mir_keyboard_event_action(kev) == mir_keyboard_action_repeat)
-            return true;
-
         release_current_cursor_button(dispatcher, builder);
         is_dragging = false;
-
-        return true;
     }
 
-    return false;
+    return true;
 }
 
 mir::input::MouseKeysTransformer::AccelerationCurve::AccelerationCurve(AccelerationParameters const& params) :
