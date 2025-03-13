@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   Run:
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, reactive, amd64, tiobe, noble]
 
     env:
       CCACHE_DIR: "/tmp/ccache"
@@ -32,7 +32,7 @@ jobs:
     - name: Set up CCache
       id: setup-ccache
       run: |
-        sudo apt-get install ccache
+        sudo apt-get --yes install ccache
         mkdir --parents ${CCACHE_DIR}
 
         # Find the merge base to avoid populating the cache with short lived cache entries
@@ -56,7 +56,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
-        sudo --preserve-env apt-get install --no-install-recommends \
+        sudo --preserve-env apt-get install --yes --no-install-recommends \
           dmz-cursor-theme \
           flake8 \
           glmark2-es2 \
@@ -67,7 +67,7 @@ jobs:
           pylint \
           xwayland
 
-        sudo --preserve-env apt-get build-dep ./
+        sudo --preserve-env apt-get build-dep --yes ./
 
     - name: Configure
       run: >
@@ -94,7 +94,7 @@ jobs:
       run: cmake --build build --target test
 
     - name: Measure coverage
-      timeout-minutes: 10
+      timeout-minutes: 20
       run: cmake --build build --target coverage
 
     - name: Run TICS analysis
@@ -105,9 +105,10 @@ jobs:
         viewerUrl: https://canonical.tiobe.com/tiobeweb/TICS/api/cfg?name=default
         ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
         installTics: true
+        branchdir: ${{ github.workspace }}
 
     - if: ${{ failure() && runner.debug }}
       name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
+      uses: canonical/action-tmate@main
       with:
         limit-access-to-actor: true
