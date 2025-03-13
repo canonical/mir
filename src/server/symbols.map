@@ -1427,8 +1427,6 @@ global:
     mir::shell::AccessibilityManager::register_keyboard_helper*;
     mir::shell::AccessibilityManager::repeat_delay*;
     mir::shell::AccessibilityManager::repeat_rate*;
-    mir::shell::AccessibilityManager::toggle_mousekeys*;
-    mir::shell::AccessibilityManager::set_mousekeys_keymap*;
     mir::shell::ShellWrapper::is_above*;
     mir::shell::SurfaceStackWrapper::is_above*;
     mir::shell::TokenAuthority::Token::operator*;
@@ -1459,4 +1457,12 @@ global:
     vtable?for?mir::input::InputEventTransformer;
   };
 } MIR_SERVER_INTERNAL_2.19;
+
+MIR_SERVER_INTERNAL_2.21 {
+global:
+  extern "C++" {
+    mir::shell::AccessibilityManager::toggle_mousekeys*;
+    mir::shell::AccessibilityManager::set_mousekeys_keymap*;
+  };
+} MIR_SERVER_INTERNAL_2.20;
 
