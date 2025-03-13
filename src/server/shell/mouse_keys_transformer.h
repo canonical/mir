@@ -62,6 +62,8 @@ private:
         MirKeyboardEvent const* kev, Dispatcher const& dispatcher, mir::input::EventBuilder* const builder);
     bool handle_drag_end(
         MirKeyboardEvent const* kev, Dispatcher const& dispatcher, mir::input::EventBuilder* const builder);
+    void press_current_cursor_button(Dispatcher const& dispatcher, mir::input::EventBuilder* const builder);
+    void release_current_cursor_button(Dispatcher const& dispatcher, mir::input::EventBuilder* const builder);
 
     enum DirectionalButtons
     {
@@ -96,9 +98,6 @@ private:
     geometry::DisplacementF max_speed;
 
     bool is_dragging{false};
-
-    void press_current_cursor_button(Dispatcher const& dispatcher, mir::input::EventBuilder* const builder);
-    void release_current_cursor_button(Dispatcher const& dispatcher, mir::input::EventBuilder* const builder);
 };
 }
 }
