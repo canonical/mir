@@ -18,6 +18,7 @@
 
 #include <mir/server.h>
 #include <mir/shell/accessibility_manager.h>
+#include <mir/log.h>
 
 #include <memory>
 
@@ -33,10 +34,10 @@ miral::ToggleMouseKeys::ToggleMouseKeys() :
 
 void miral::ToggleMouseKeys::toggle_mousekeys(bool enabled) const
 {
-    if(auto const am = self->accessibility_manager.lock())
-    {
+    if (auto const am = self->accessibility_manager.lock())
         am->toggle_mousekeys(enabled);
-    }
+    else
+        mir::log_error("AccessibilityManager not initialized. Will not toggle mousekeys.");
 }
 
 void miral::ToggleMouseKeys::operator()(mir::Server& server) const
