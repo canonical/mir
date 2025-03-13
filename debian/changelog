@@ -1,3 +1,13 @@
+mir (2.20.1) UNRELEASED; urgency=medium
+
+  * New upstream release 2.20.1
+
+    - Bugs fixed:
+      . miroil::GLBuffer was dropped in 2.20 (#3813)
+      . Do not mutate a container whilst iterating over it (#3819)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 13 Mar 2025 18:21:00 +0100
+
 mir (2.20.0) UNRELEASED; urgency=medium
 
   * New upstream release 2.20.0
