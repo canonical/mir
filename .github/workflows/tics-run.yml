@@ -30,6 +30,13 @@ jobs:
         calc: ${{ fromJson(inputs.calc-matrix) }}
 
     steps:
+    - name: Setup tmate session
+      if: ${{ contains(matrix.calc, 'SECURITY') }}
+      uses: mxschmitt/action-tmate@v3
+      with:
+        detached: true
+        limit-access-to-actor: true
+
     - name: Check out code
       uses: actions/checkout@v4
       with:
