@@ -27,6 +27,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <mutex>
 #include <utility>
 
 mir::input::MouseKeysTransformer::MouseKeysTransformer(
@@ -71,6 +72,8 @@ bool mir::input::MouseKeysTransformer::transform_input_event(
 
     if (mir_input_event_get_type(input_event) == mir_input_event_type_key)
     {
+        std::lock_guard guard{state_mutex};
+
         MirKeyboardEvent const* kev = mir_input_event_get_keyboard_event(input_event);
         auto const keysym = mir_keyboard_event_keysym(kev);
         auto const keyboard_action = mir_keyboard_event_action(kev);
@@ -101,6 +104,12 @@ bool mir::input::MouseKeysTransformer::transform_input_event(
     }
 
     return false;
+}
+
+void mir::input::MouseKeysTransformer::update_keymap(Keymap const& new_keymap)
+{
+    std::lock_guard guard{state_mutex};
+    keymap = new_keymap;
 }
 
 bool mir::input::MouseKeysTransformer::handle_motion(
@@ -364,4 +373,3 @@ void mir::input::MouseKeysTransformer::release_current_cursor_button(
 
     is_dragging = false;
 }
-

@@ -84,6 +84,8 @@ public:
         mir::input::EventBuilder* builder,
         MirEvent const& event) override;
 
+    void update_keymap(Keymap const& new_keymap);
+
 private:
     using Dispatcher = mir::input::InputEventTransformer::EventDispatcher;
 
@@ -148,7 +150,8 @@ private:
 
     bool is_dragging{false};
 
-    Keymap const keymap;
+    std::mutex state_mutex;
+    Keymap keymap;
 };
 }
 }
