@@ -276,9 +276,16 @@ void mf::XdgActivationV1::invalidate_if_not_from_session(std::shared_ptr<ms::Ses
         return token_data->session.expired() || token_data->session.lock() != session;
     };
 
-    std::lock_guard guard(pending_tokens_mutex);
-    for (auto const& pending_token : pending_tokens | std::ranges::views::filter(invalid_session))
-        token_authority->revoke_token(pending_token->token);
+    decltype(pending_tokens) to_invalidate;
+
+    {
+        std::lock_guard guard(pending_tokens_mutex);
+        for (auto const& token : pending_tokens | std::ranges::views::filter(invalid_session))
+            to_invalidate.push_back(token);
+    }
+
+    for (auto const& token : to_invalidate)
+        token_authority->revoke_token(token->token);
 }
 
 void mf::XdgActivationV1::bind(struct wl_resource* resource)
