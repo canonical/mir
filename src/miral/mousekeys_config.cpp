@@ -47,6 +47,15 @@ void miral::MouseKeysConfig::toggle_mousekeys(bool enabled) const
         mir::log_error("AccessibilityManager not initialized. Will not toggle mousekeys.");
 }
 
+void miral::MouseKeysConfig::set_keymap(mir::input::MouseKeysKeymap const& new_keymap) const
+{
+    if (auto const am = self->accessibility_manager.lock())
+        am->set_mousekeys_keymap(new_keymap);
+    else
+        mir::log_error("AccessibilityManager not initialized. Will not update keymap.");
+}
+
+
 void miral::MouseKeysConfig::operator()(mir::Server& server) const
 {
     server.add_init_callback(

@@ -1428,6 +1428,7 @@ global:
     mir::shell::AccessibilityManager::repeat_delay*;
     mir::shell::AccessibilityManager::repeat_rate*;
     mir::shell::AccessibilityManager::toggle_mousekeys*;
+    mir::shell::AccessibilityManager::set_mousekeys_keymap*;
     mir::shell::ShellWrapper::is_above*;
     mir::shell::SurfaceStackWrapper::is_above*;
     mir::shell::TokenAuthority::Token::operator*;
