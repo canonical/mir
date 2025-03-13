@@ -33,7 +33,7 @@
 #include <miral/toolkit_event.h>
 #include <miral/x11_support.h>
 #include <miral/wayland_extensions.h>
-#include <miral/toggle_mousekeys.h>
+#include <miral/mousekeys_config.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -143,12 +143,10 @@ int main(int argc, char const* argv[])
             return FocusStealing::allow;
     };
 
-    miral::ToggleMouseKeys toggle_mousekeys{false};
+    auto const initial_mousekeys_state = false;
+    miral::MouseKeysConfig mousekeys_config{initial_mousekeys_state};
 
-    // Initial mousekeys state can be queried by through
-    // `mir::options::enable_mouse_keys_opt`. For simplicity, we'll assume
-    // they're initially not disabled.
-    auto toggle_mousekeys_filter = [mousekeys_on = false, &toggle_mousekeys](MirEvent const* event) mutable {
+    auto toggle_mousekeys_filter = [mousekeys_on = initial_mousekeys_state, &mousekeys_config](MirEvent const* event) mutable {
 
         if(mir_event_get_type(event) != mir_event_type_input)
             return false;
@@ -169,7 +167,7 @@ int main(int argc, char const* argv[])
                 return true;
 
             mousekeys_on = !mousekeys_on;
-            toggle_mousekeys.toggle_mousekeys(mousekeys_on);
+            mousekeys_config.toggle_mousekeys(mousekeys_on);
             return true;
         }
 
@@ -197,7 +195,7 @@ int main(int argc, char const* argv[])
                                          "shell-wallpaper-font", "font file to use for wallpaper", ::wallpaper::font_file()}),
             ConfigurationOption{[&](std::string const& cmd) { terminal_cmd = cmd; },
                                 "shell-terminal-emulator", "terminal emulator to use", terminal_cmd},
-            toggle_mousekeys,
+            mousekeys_config,
             AppendEventFilter{toggle_mousekeys_filter}
         });
 }

@@ -25,12 +25,12 @@ namespace mir { class Server; }
 /// \remark Since MirAL 5.3
 namespace miral
 {
-class ToggleMouseKeys
+class MouseKeysConfig
 {
 public:
     /// \note `--enable-mouse-keys` has higher precedence than
     /// [enabled_by_default]
-    explicit ToggleMouseKeys(bool enabled_by_default);
+    explicit MouseKeysConfig(bool enabled_by_default);
     void operator()(mir::Server& server) const;
 
     /// Toggles mousekeys on or off depending on the passed parameter.
