@@ -28,7 +28,7 @@ class MouseKeysKeymap;
 }
 }
 
-/// Enable toggling mousekeys  at runtime.
+/// Enables configuring mousekeys at runtime.
 /// \remark Since MirAL 5.3
 namespace miral
 {
@@ -44,6 +44,9 @@ public:
     /// \note Can only be called after the server is initialized.
     void toggle_mousekeys(bool enabled) const;
 
+    /// Changes the keymap for various mousekeys actions
+    /// \note Can only be called after the server is initialized.
+    /// \note The keymap _must_ cover all actions found in [MouseKeysActions].
     void set_keymap(mir::input::MouseKeysKeymap const& new_keymap) const;
 
 private:
