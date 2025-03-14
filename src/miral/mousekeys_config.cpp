@@ -39,10 +39,10 @@ miral::MouseKeysConfig::MouseKeysConfig(bool enabled_by_default) :
 {
 }
 
-void miral::MouseKeysConfig::toggle_mousekeys(bool enabled) const
+void miral::MouseKeysConfig::set_mousekeys_enabled(bool enabled) const
 {
     if (auto const am = self->accessibility_manager.lock())
-        am->toggle_mousekeys(enabled);
+        am->set_mousekeys_enabled(enabled);
     else
         mir::log_error("AccessibilityManager not initialized. Will not toggle mousekeys.");
 }
@@ -68,6 +68,6 @@ void miral::MouseKeysConfig::operator()(mir::Server& server) const
             if (options->is_set(mir::options::enable_mouse_keys_opt))
                 enable = options->get<bool>(mir::options::enable_mouse_keys_opt);
 
-            toggle_mousekeys(enable);
+            set_mousekeys_enabled(enable);
         });
 }

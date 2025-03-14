@@ -40,9 +40,9 @@ public:
     explicit MouseKeysConfig(bool enabled_by_default);
     void operator()(mir::Server& server) const;
 
-    /// Toggles mousekeys on or off depending on the passed parameter.
+    /// Enables or disables mousekeys depending on the passed parameter.
     /// \note Can only be called after the server is initialized.
-    void toggle_mousekeys(bool enabled) const;
+    void set_mousekeys_enabled(bool enabled) const;
 
     /// Changes the keymap for various mousekeys actions
     /// \note Can only be called after the server is initialized.

@@ -167,7 +167,7 @@ int main(int argc, char const* argv[])
                 return true;
 
             mousekeys_on = !mousekeys_on;
-            mousekeys_config.toggle_mousekeys(mousekeys_on);
+            mousekeys_config.set_mousekeys_enabled(mousekeys_on);
             return true;
         }
 

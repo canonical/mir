@@ -55,7 +55,7 @@ void mir::shell::AccessibilityManager::notify_helpers() const {
         helper->repeat_info_changed(repeat_rate(), repeat_delay());
 }
 
-void mir::shell::AccessibilityManager::toggle_mousekeys(bool on)
+void mir::shell::AccessibilityManager::set_mousekeys_enabled(bool on)
 {
     if (on)
     {
@@ -97,5 +97,5 @@ mir::shell::AccessibilityManager::AccessibilityManager(
     options{options}
 {
     if (options->is_set(options::enable_mouse_keys_opt) && options->get<bool>(options::enable_mouse_keys_opt))
-        toggle_mousekeys(true);
+        set_mousekeys_enabled(true);
 }
