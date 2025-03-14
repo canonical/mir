@@ -70,7 +70,10 @@ struct TestMouseKeysTransformer : testing::Test
             mt::fake_shared(led_observer_registrar))},
         input_event_transformer{input_device_hub, main_loop},
         transformer{std::make_shared<mi::MouseKeysTransformer>(
-            main_loop, mir::geometry::Displacement{0, 0}, AccelerationParameters{1, 1, 1})},
+            main_loop,
+            mir::geometry::DisplacementF{0, 0},
+            AccelerationParameters{1, 1, 1},
+            mir::input::MouseKeysTransformer::default_keymap)},
         main_loop_thread{
             [this]()
             {

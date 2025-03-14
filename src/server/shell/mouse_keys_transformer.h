@@ -40,12 +40,15 @@ class MouseKeysTransformer: public mir::input::InputEventTransformer::Transforme
 public:
     // Quadratic, linear, and constant factors repsectively
     // ax^2 + bx + c
-    struct AccelerationParameters { double const a, b, c; };
+    struct AccelerationParameters { double a, b, c; };
+
+    static MouseKeysKeymap const default_keymap;
 
     MouseKeysTransformer(
         std::shared_ptr<mir::MainLoop> const& main_loop,
-        geometry::Displacement max_speed,
-        AccelerationParameters const& params);
+        geometry::DisplacementF max_speed,
+        AccelerationParameters const& params,
+        MouseKeysKeymap keymap);
 
     bool transform_input_event(
         mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
@@ -53,6 +56,8 @@ public:
         MirEvent const& event) override;
 
     void set_keymap(MouseKeysKeymap const& new_keymap);
+    void set_acceleration_factors(double constant, double linear, double quadratic);
+    void set_max_speed(double x_axis, double y_axis);
 
 private:
     using Dispatcher = mir::input::InputEventTransformer::EventDispatcher;
@@ -116,12 +121,11 @@ private:
 
     uint32_t buttons_down{directional_buttons_none};
 
-    AccelerationCurve const acceleration_curve;
-    geometry::DisplacementF const max_speed;
-
     bool is_dragging{false};
 
     std::mutex state_mutex;
+    AccelerationCurve acceleration_curve;
+    geometry::DisplacementF max_speed;
     MouseKeysKeymap keymap;
 };
 }

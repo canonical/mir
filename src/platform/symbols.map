@@ -123,7 +123,6 @@ MIR_PLATFORM_2.20 {
     mir::options::drop_wayland_extensions_opt;
     mir::options::enable_input_opt*;
     mir::options::enable_key_repeat_opt*;
-    mir::options::enable_mouse_keys_opt*;
     mir::options::fatal_except_opt*;
     mir::options::idle_timeout_opt;
     mir::options::idle_timeout_when_locked_opt;
@@ -131,11 +130,6 @@ MIR_PLATFORM_2.20 {
     mir::options::log_opt_value*;
     mir::options::logind_console;
     mir::options::lttng_opt_value*;
-    mir::options::mouse_keys_acceleration_constant_factor*;
-    mir::options::mouse_keys_acceleration_linear_factor*;
-    mir::options::mouse_keys_acceleration_quadratic_factor*;
-    mir::options::mouse_keys_max_speed_x*;
-    mir::options::mouse_keys_max_speed_y*;
     mir::options::nested_passthrough_opt*;
     mir::options::null_console;
     mir::options::off_opt_value*;

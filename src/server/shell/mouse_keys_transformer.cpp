@@ -34,49 +34,51 @@
 
 using enum mir::input::MouseKeysKeymap::Action;
 
+mir::input::MouseKeysKeymap const mir::input::MouseKeysTransformer::default_keymap = []
+{
+    auto keymap = mir::input::MouseKeysKeymap();
+
+    keymap.set_action(XKB_KEY_KP_2, move_down);
+    keymap.set_action(XKB_KEY_KP_4, move_left);
+    keymap.set_action(XKB_KEY_KP_6, move_right);
+    keymap.set_action(XKB_KEY_KP_8, move_up);
+    keymap.set_action(XKB_KEY_KP_5, click);
+    keymap.set_action(XKB_KEY_KP_Add, double_click);
+    keymap.set_action(XKB_KEY_KP_0, drag_start);
+    keymap.set_action(XKB_KEY_KP_Decimal, drag_end);
+    keymap.set_action(XKB_KEY_KP_Divide, button_primary);
+    keymap.set_action(XKB_KEY_KP_Multiply, button_tertiary);
+    keymap.set_action(XKB_KEY_KP_Subtract, button_secondary);
+
+    return keymap;
+}();
+
 mir::input::MouseKeysTransformer::MouseKeysTransformer(
     std::shared_ptr<mir::MainLoop> const& main_loop,
-    geometry::Displacement configured_max_speed,
-    AccelerationParameters const& params) :
+    geometry::DisplacementF configured_max_speed,
+    AccelerationParameters const& params,
+    MouseKeysKeymap keymap) :
     main_loop{main_loop},
     acceleration_curve{params},
     max_speed{[configured_max_speed]
               {
                   auto clamped_max_speed = configured_max_speed;
-                  if (configured_max_speed.dx < geometry::DeltaX{0})
+                  if (configured_max_speed.dx < geometry::DeltaXF{0})
                   {
-                      mir::log_warning(
-                          "%s set to a value less than zero, clamping to zero", mir::options::mouse_keys_max_speed_x);
-                      clamped_max_speed.dx = std::max(configured_max_speed.dx, geometry::DeltaX{0.0});
+                      mir::log_warning("max speed x set to a value less than zero, clamping to zero");
+                      clamped_max_speed.dx = std::max(configured_max_speed.dx, geometry::DeltaXF{0.0});
                   }
 
-                  if (configured_max_speed.dy < geometry::DeltaY{0})
+                  if (configured_max_speed.dy < geometry::DeltaYF{0})
                   {
                       mir::log_warning(
-                          "%s set to a value less than zero, clamping to zero", mir::options::mouse_keys_max_speed_y);
-                      clamped_max_speed.dy = std::max(configured_max_speed.dy, geometry::DeltaY{0.0});
+                          "max speed y set to a value less than zero, clamping to zero");
+                      clamped_max_speed.dy = std::max(configured_max_speed.dy, geometry::DeltaYF{0.0});
                   }
 
                   return clamped_max_speed;
               }()},
-    keymap{[&]
-           {
-               auto keymap = mir::input::MouseKeysKeymap();
-
-               keymap.set_action(XKB_KEY_KP_2, move_down);
-               keymap.set_action(XKB_KEY_KP_4, move_left);
-               keymap.set_action(XKB_KEY_KP_6, move_right);
-               keymap.set_action(XKB_KEY_KP_8, move_up);
-               keymap.set_action(XKB_KEY_KP_5, click);
-               keymap.set_action(XKB_KEY_KP_Add, double_click);
-               keymap.set_action(XKB_KEY_KP_0, drag_start);
-               keymap.set_action(XKB_KEY_KP_Decimal, drag_end);
-               keymap.set_action(XKB_KEY_KP_Divide, button_primary);
-               keymap.set_action(XKB_KEY_KP_Multiply, button_tertiary);
-               keymap.set_action(XKB_KEY_KP_Subtract, button_secondary);
-
-               return keymap;
-           }()}
+    keymap{keymap}
 {
 }
 
@@ -186,6 +188,8 @@ bool mir::input::MouseKeysTransformer::handle_motion(
                      motion_start_time = std::chrono::steady_clock::now(),
                      weak_self = shared_weak_alarm] mutable
                     {
+                        std::lock_guard guard{state_mutex};
+
                         using SecondF = std::chrono::duration<float>;
                         auto constexpr repeat_delay = std::chrono::milliseconds(2); // 500 Hz rate
 
@@ -392,3 +396,16 @@ void mir::input::MouseKeysTransformer::release_current_cursor_button(
 
     is_dragging = false;
 }
+
+void mir::input::MouseKeysTransformer::set_acceleration_factors(double constant, double linear, double quadratic)
+{
+    std::lock_guard guard{state_mutex};
+    acceleration_curve.params = {quadratic, linear, constant};
+}
+
+void mir::input::MouseKeysTransformer::set_max_speed(double x_axis, double y_axis)
+{
+    std::lock_guard guard{state_mutex};
+    max_speed = geometry::DisplacementF{x_axis, y_axis};
+}
+
