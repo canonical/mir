@@ -29,6 +29,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <mir/abnormal_exit.h>
 
 using namespace testing;
 
@@ -422,6 +423,40 @@ TEST_F(WaylandExtensions, disable_can_disable_bespoke_extension)
     run_as_client(enumerator_client);
 
     EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq(mir::examples::server_decoration_extension().name))));
+}
+
+TEST_F(WaylandExtensions, cannot_duplicate_existing_extension)
+{
+    miral::WaylandExtensions::Builder duplicate_extension{
+        "zwlr_layer_shell_v1",
+        [&](auto const&){ return std::shared_ptr<void>{};}};
+
+    miral::WaylandExtensions extensions;
+    ClientGlobalEnumerator enumerator_client;
+
+    EXPECT_THROW(
+        extensions.add_extension(duplicate_extension),
+        mir::AbnormalExit);
+
+    EXPECT_THROW(
+        extensions.add_extension_disabled_by_default(duplicate_extension),
+        mir::AbnormalExit);
+}
+
+TEST_F(WaylandExtensions, cannot_duplicate_bespoke_extension)
+{
+    miral::WaylandExtensions extensions;
+    ClientGlobalEnumerator enumerator_client;
+
+    extensions.add_extension(mir::examples::server_decoration_extension());
+
+    EXPECT_THROW(
+        extensions.add_extension(mir::examples::server_decoration_extension()),
+        mir::AbnormalExit);
+
+    EXPECT_THROW(
+        extensions.add_extension_disabled_by_default(mir::examples::server_decoration_extension()),
+        mir::AbnormalExit);
 }
 
 TEST_F(WaylandExtensions, wayland_extensions_option_sets_extensions)
