@@ -641,7 +641,6 @@ global:
     mir::shell::AccessibilityManager::register_keyboard_helper*;
     mir::shell::AccessibilityManager::repeat_delay*;
     mir::shell::AccessibilityManager::repeat_rate*;
-    mir::shell::AccessibilityManager::set_cursor*;
     mir::shell::DefaultWindowManager::handle_keyboard_event*;
     mir::shell::DisplayConfigurationController::?DisplayConfigurationController*;
     mir::shell::DisplayConfigurationController::DisplayConfigurationController*;
