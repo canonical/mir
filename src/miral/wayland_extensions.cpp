@@ -217,6 +217,10 @@ struct miral::WaylandExtensions::Self
 
     void add_extension(Builder const& builder)
     {
+        if (supported_extensions.find(builder.name) != supported_extensions.end())
+        {
+            throw mir::AbnormalExit{"Attempt to duplicate wayland extensions: " + builder.name};
+        }
         wayland_extension_hooks.push_back(builder);
         supported_extensions.insert(builder.name);
         printf("%s = %s\n", __PRETTY_FUNCTION__, builder.name.c_str());
