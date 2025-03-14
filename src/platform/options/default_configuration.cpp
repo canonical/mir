@@ -43,8 +43,6 @@ char const* const mo::debug_opt                   = "debug";
 char const* const mo::composite_delay_opt         = "composite-delay";
 char const* const mo::enable_mouse_keys_opt       = "enable-mouse-keys";
 char const* const mo::enable_key_repeat_opt       = "enable-key-repeat";
-char const* const mo::key_repeat_rate_opt         = "key-repeat-rate";
-char const* const mo::key_repeat_delay_opt        = "key-repeat-delay";
 char const* const mo::x11_display_opt             = "enable-x11";
 char const* const mo::x11_scale_opt               = "x11-scale";
 char const* const mo::wayland_extensions_opt      = "wayland-extensions";
@@ -189,13 +187,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Scales the mouse cursor visually. Accepts any value greater than zero")
         (enable_key_repeat_opt, po::value<bool>()->default_value(true),
              "Enable server generated key repeat")
-        // 25 rate and 600 delay are the default in Weston and Sway
-        (key_repeat_rate_opt,
-                po::value<int>()->default_value(25),
-                "The repeat rate for key presses")
-        (key_repeat_delay_opt,
-                po::value<int>()->default_value(600),
-                "The repeat delay for key presses")
         (idle_timeout_opt, po::value<int>()->default_value(0),
             "Time (in seconds) Mir will remain idle before turning off the display "
             "when the session is not locked, or 0 to keep display on forever.")
