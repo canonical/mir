@@ -104,7 +104,10 @@ private:
 
     std::shared_ptr<mir::MainLoop> const main_loop;
 
-    std::shared_ptr<mir::time::Alarm> motion_event_generator; // shared_ptr so we can get a weak ptr to it
+    // shared_ptr as opposed to unique_ptr like its siblings so we can get a
+    // weak ptr to it
+    std::shared_ptr<mir::time::Alarm> motion_event_generator;
+
     std::unique_ptr<mir::time::Alarm> click_event_generator;
     std::unique_ptr<mir::time::Alarm> double_click_event_generator;
 
