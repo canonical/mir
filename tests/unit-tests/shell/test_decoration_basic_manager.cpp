@@ -14,6 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
 #include "src/server/shell/decoration/basic_manager.h"
 #include "src/server/shell/decoration/decoration.h"
 
@@ -59,8 +61,9 @@ struct DecorationBasicManager
     std::shared_ptr<mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>
         registrar{std::make_shared<mtd::StubObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>()};
 
+    std::shared_ptr<mir::graphics::GraphicBufferAllocator> allocator{std::make_shared<mtd::StubBufferAllocator>()};
     msd::BasicManager manager{
-        msd::DecorationStrategy::default_decoration_strategy(),
+        msd::DecorationStrategy::default_decoration_strategy(allocator),
         *registrar,
         [this](
             std::shared_ptr<msd::DecorationStrategy> const&,
