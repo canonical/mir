@@ -37,7 +37,6 @@ jobs:
         fetch-depth: 0
 
     - name: Set up CCache
-      if: ${{ contains(matrix.calc, 'PREPARE') }}
       id: setup-ccache
       run: |
         sudo apt-get install ccache
@@ -48,7 +47,6 @@ jobs:
         echo "merge-base=$( git merge-base origin/main ${{ github.sha }} )" >> $GITHUB_OUTPUT
 
     - name: CCache
-      if: ${{ contains(matrix.calc, 'PREPARE') }}
       uses: actions/cache@v4
       with:
         key: ccache-coverage-${{ steps.setup-ccache.outputs.merge-base }}
@@ -58,13 +56,11 @@ jobs:
         path: ${{ env.CCACHE_DIR }}
 
     - name: Ensure ccache size
-      if: ${{ contains(matrix.calc, 'PREPARE') }}
       run: |
-        # a full build yielded 180M cache, but there's two
-        echo "max_size = 500M" > ${CCACHE_DIR}/ccache.conf
+        # a full build yielded 180M cache, but there's multiple builds
+        echo "max_size = 600M" > ${CCACHE_DIR}/ccache.conf
 
-    - name: Install dependencies
-      if: ${{ contains(matrix.calc, 'PREPARE') }}
+    - name: Install build dependencies
       run: |
         sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
         sudo --preserve-env apt-get install --no-install-recommends \
@@ -81,7 +77,7 @@ jobs:
         sudo --preserve-env apt-get build-dep ./
 
     - name: Configure
-      if: ${{ contains(matrix.calc, 'PREPARE') }}
+      if: ${{ contains(matrix.calc, 'COVERAGE') }}
       run: >
         cmake
         -DCMAKE_BUILD_TYPE=Coverage
@@ -93,11 +89,11 @@ jobs:
         ${{ github.workspace }}
 
     - name: Build
-      if: ${{ contains(matrix.calc, 'PREPARE') }}
+      if: ${{ contains(matrix.calc, 'COVERAGE') }}
       run: cmake --build build
 
     - name: Test
-      if: ${{ contains(matrix.calc, 'PREPARE') }}
+      if: ${{ contains(matrix.calc, 'COVERAGE') }}
       timeout-minutes: 10
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
@@ -105,35 +101,9 @@ jobs:
       run: cmake --build build --target test
 
     - name: Measure coverage
-      if: ${{ contains(matrix.calc, 'PREPARE') }}
+      if: ${{ contains(matrix.calc, 'COVERAGE') }}
       timeout-minutes: 10
       run: cmake --build build --target coverage
-
-    - name: Archive the build
-      if: ${{ contains(matrix.calc, 'PREPARE') }}
-      run: tar -C build -cvf build.tar .
-
-    - name: Store the build
-      if: ${{ contains(matrix.calc, 'PREPARE') }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: build
-        path: build.tar
-        if-no-files-found: error
-        retention-days: 1
-
-    - name: Retrieve the build
-      if: ${{ contains(matrix.calc, 'COVERAGE') }}
-      uses: actions/download-artifact@v4
-      with:
-        name: build
-        path: .
-
-    - name: Unarchive the build
-      if: ${{ contains(matrix.calc, 'COVERAGE') }}
-      run: |
-        mkdir build
-        tar -C build -xvf build.tar .
 
     - name: Install TICS
       env:
