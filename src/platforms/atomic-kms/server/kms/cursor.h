@@ -68,13 +68,15 @@ public:
 
     ~Cursor() noexcept;
 
-    void show(CursorImage const& cursor_image) override;
+    void show(std::shared_ptr<CursorImage> const& cursor_image) override;
     void hide() override;
 
     void move_to(geometry::Point position) override;
 
     void suspend();
     void resume();
+
+    void set_scale(float) override;
 
 private:
     enum ForceCursorState { UpdateState, ForceState };
@@ -93,6 +95,8 @@ private:
     void clear(std::lock_guard<std::mutex> const&);
 
     GBMBOWrapper& buffer_for_output(KMSOutput const& output);
+
+    void set_scale_unlocked(std::lock_guard<std::mutex> const& lg, float new_scale);
 
     std::mutex guard;
 
@@ -131,6 +135,9 @@ private:
     uint32_t min_buffer_height;
 
     std::shared_ptr<CurrentConfiguration> const current_configuration;
+
+    std::shared_ptr<CursorImage> current_cursor_image;
+    float current_scale{1.0};
 };
 }
 }

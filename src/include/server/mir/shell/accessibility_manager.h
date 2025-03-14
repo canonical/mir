@@ -28,6 +28,14 @@ namespace options
 {
 class Option;
 }
+namespace graphics
+{
+class Cursor;
+}
+namespace options
+{
+class Option;
+}
 namespace shell
 {
 class KeyboardHelper;
@@ -36,7 +44,8 @@ class AccessibilityManager
 public:
     AccessibilityManager(
         std::shared_ptr<mir::options::Option> const&,
-        std::shared_ptr<input::InputEventTransformer> const& event_transformer);
+        std::shared_ptr<input::InputEventTransformer> const& event_transformer,
+        std::shared_ptr<mir::graphics::Cursor> const& cursor);
 
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&);
 
@@ -48,18 +57,24 @@ public:
 
     void notify_helpers() const;
 
+    void cursor_scale_changed(float new_scale);
+
 private:
     std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
 
-    // 25 rate and 600 delay are the default in Weston and Sway
+    // Initialized via `repeat_{delay,rate}`
+    // Keep initial values in case nothing calls them.
     int repeat_rate_{25};
     int repeat_delay_{600};
-    bool enable_key_repeat;
 
+    // Always have a value supplied by platform options
+    bool enable_key_repeat;
     bool enable_mouse_keys;
 
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
     std::shared_ptr<mir::input::InputEventTransformer::Transformer> const transformer;
+
+    std::shared_ptr<graphics::Cursor> cursor;
 };
 }
 }

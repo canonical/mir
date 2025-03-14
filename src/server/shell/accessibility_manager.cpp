@@ -16,36 +16,39 @@
 
 #include "mir/shell/accessibility_manager.h"
 
-#include "mir/input/event_builder.h"
+#include "mir/graphics/cursor.h"
 #include "mir/input/input_sink.h"
 #include "mir/options/configuration.h"
 #include "mir/shell/keyboard_helper.h"
 
-#include <xkbcommon/xkbcommon-keysyms.h>
-
-#include <memory>
-#include <optional>
-
 void mir::shell::AccessibilityManager::register_keyboard_helper(std::shared_ptr<KeyboardHelper> const& helper)
 {
+    // Update the keyboard help's rate and delay in case they changed before it
+    // registered
+    helper->repeat_info_changed(repeat_rate(), repeat_delay());
+
     keyboard_helpers.push_back(helper);
 }
 
-std::optional<int> mir::shell::AccessibilityManager::repeat_rate() const {
-    if(!enable_key_repeat)
+std::optional<int> mir::shell::AccessibilityManager::repeat_rate() const
+{
+    if (!enable_key_repeat)
         return {};
     return repeat_rate_;
 }
 
-int mir::shell::AccessibilityManager::repeat_delay() const {
+int mir::shell::AccessibilityManager::repeat_delay() const
+{
     return repeat_delay_;
 }
 
-void mir::shell::AccessibilityManager::repeat_rate(int new_rate) {
+void mir::shell::AccessibilityManager::repeat_rate(int new_rate)
+{
     repeat_rate_ = new_rate;
 }
 
-void mir::shell::AccessibilityManager::repeat_delay(int new_delay) {
+void mir::shell::AccessibilityManager::repeat_delay(int new_delay)
+{
     repeat_delay_ = new_delay;
 }
 
@@ -114,12 +117,24 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
 
 mir::shell::AccessibilityManager::AccessibilityManager(
     std::shared_ptr<mir::options::Option> const& options,
-    std::shared_ptr<input::InputEventTransformer> const& event_transformer) :
+    std::shared_ptr<input::InputEventTransformer> const& event_transformer,
+    std::shared_ptr<mir::graphics::Cursor> const& cursor) :
     enable_key_repeat{options->get<bool>(options::enable_key_repeat_opt)},
     enable_mouse_keys{options->get<bool>(options::enable_mouse_keys_opt)},
     event_transformer{event_transformer},
-    transformer{std::make_shared<MouseKeysTransformer>()}
+    transformer{std::make_shared<MouseKeysTransformer>()},
+    cursor{cursor}
 {
+    auto const cursor_scale = static_cast<float>(options->get<double>(mir::options::cursor_scale_override_opt));
+    if (cursor_scale != 1.0)
+        cursor->set_scale(cursor_scale);
+
     if (enable_mouse_keys)
         event_transformer->append(transformer);
+}
+
+void mir::shell::AccessibilityManager::cursor_scale_changed(float new_scale)
+{
+    if(cursor)
+        cursor->set_scale(new_scale);
 }
