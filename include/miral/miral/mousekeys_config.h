@@ -32,6 +32,7 @@ class MouseKeysKeymap;
 
 /// Enables configuring mousekeys at runtime.
 /// \remark Since MirAL 5.3
+/// \note All methods can only be called after the server is initialized.
 namespace miral
 {
 class MouseKeysConfig
@@ -43,14 +44,21 @@ public:
     void operator()(mir::Server& server) const;
 
     /// Enables or disables mousekeys depending on the passed parameter.
-    /// \note Can only be called after the server is initialized.
     void set_mousekeys_enabled(bool enabled) const;
 
     /// Changes the keymap for the various mousekeys actions defined in
     /// [MouseKeysKeymap::Action]
-    /// \note Can only be called after the server is initialized.
     /// \note If a certain action not mapped to any key, it will be disabled.
     void set_keymap(mir::input::MouseKeysKeymap const& new_keymap) const;
+
+    /// Sets the factors used to accelerate the pointer during motion. Follows
+    /// the equation: constant + linear * time + quadratic * time^2. Where time
+    /// is the time since the cursor has started moving.
+    void set_acceleration_factors(double constant, double linear, double quadratic) const;
+
+    /// Sets the maximum speed in pixels/s for the pointer on the x and y axes
+    /// respectively.
+    void set_max_speed(double x_axis, double y_axis) const;
 
 private:
     struct Self;

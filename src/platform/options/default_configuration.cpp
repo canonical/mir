@@ -49,13 +49,6 @@ char const* const mo::drop_wayland_extensions_opt = "drop-wayland-extensions";
 char const* const mo::idle_timeout_opt            = "idle-timeout";
 char const* const mo::idle_timeout_when_locked_opt = "idle-timeout-when-locked";
 
-char const* const mo::enable_mouse_keys_opt = "enable-mouse-keys";
-char const* const mo::mouse_keys_acceleration_constant_factor = "mouse-keys-acceleration-constant-factor";
-char const* const mo::mouse_keys_acceleration_linear_factor = "mouse-keys-acceleration-linear-factor";
-char const* const mo::mouse_keys_acceleration_quadratic_factor = "mouse-keys-acceleration-quadratic-factor";
-char const* const mo::mouse_keys_max_speed_x = "mouse-keys-max-speed-x";
-char const* const mo::mouse_keys_max_speed_y = "mouse-keys-max-speed-y";
-
 char const* const mo::off_opt_value = "off";
 char const* const mo::log_opt_value = "log";
 char const* const mo::lttng_opt_value = "lttng";
@@ -187,20 +180,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Cursor (mouse pointer) to use [{auto,null,software}]")
         (enable_key_repeat_opt, po::value<bool>()->default_value(true),
              "Enable server generated key repeat")
-        (enable_mouse_keys_opt, po::value<bool>(),
-             "Enable mousekeys (controlling the mouse with the numpad)")
-        (mouse_keys_acceleration_constant_factor, po::value<double>()->default_value(100),
-             "The base speed for mousekey pointer motion")
-        (mouse_keys_acceleration_linear_factor, po::value<double>()->default_value(100),
-             "The linear speed increase for mousekey pointer motion")
-        (mouse_keys_acceleration_quadratic_factor, po::value<double>()->default_value(30),
-             "The quadratic speed increase for mousekey pointer motion")
-        (mouse_keys_max_speed_x, po::value<double>()->default_value(400),
-             "The maximum speed in pixels/second the mousekeys pointer can "
-             "reach on the x axis. Pass zero to disable the speed limit")
-        (mouse_keys_max_speed_y, po::value<double>()->default_value(400),
-             "The maximum speed in pixels/second the mousekeys pointer can "
-             "reach on the y axis. Pass zero to disable the speed limit")
         (idle_timeout_opt, po::value<int>()->default_value(0),
             "Time (in seconds) Mir will remain idle before turning off the display "
             "when the session is not locked, or 0 to keep display on forever.")
