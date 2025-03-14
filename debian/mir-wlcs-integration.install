@@ -1,3 +1,4 @@
 usr/lib/*/mir/miral_wlcs_integration.so
 usr/lib/*/mir/server-platform/graphics-dummy.so
 usr/lib/*/mir/server-platform/input-stub.so
+usr/share/mir/expected_wlcs_failures.list
