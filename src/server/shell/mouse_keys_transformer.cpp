@@ -32,6 +32,8 @@
 #include <mutex>
 #include <utility>
 
+using enum mir::input::MouseKeysKeymap::Action;
+
 mir::input::MouseKeysTransformer::MouseKeysTransformer(
     std::shared_ptr<mir::MainLoop> const& main_loop,
     geometry::Displacement configured_max_speed,
@@ -57,18 +59,24 @@ mir::input::MouseKeysTransformer::MouseKeysTransformer(
 
                   return clamped_max_speed;
               }()},
-    keymap{std::make_shared<MouseKeysKeymap>(MouseKeysKeymap{
-        {XKB_KEY_KP_2, MouseKeysAction::move_down},
-        {XKB_KEY_KP_4, MouseKeysAction::move_left},
-        {XKB_KEY_KP_6, MouseKeysAction::move_right},
-        {XKB_KEY_KP_8, MouseKeysAction::move_up},
-        {XKB_KEY_KP_5, MouseKeysAction::click},
-        {XKB_KEY_KP_Add, MouseKeysAction::double_click},
-        {XKB_KEY_KP_0, MouseKeysAction::drag_start},
-        {XKB_KEY_KP_Decimal, MouseKeysAction::drag_end},
-        {XKB_KEY_KP_Divide, MouseKeysAction::button_primary},
-        {XKB_KEY_KP_Multiply, MouseKeysAction::button_tertiary},
-        {XKB_KEY_KP_Subtract, MouseKeysAction::button_secondary}})}
+    keymap{[&]
+           {
+               auto keymap = mir::input::MouseKeysKeymap();
+
+               keymap.set_action(XKB_KEY_KP_2, move_down);
+               keymap.set_action(XKB_KEY_KP_4, move_left);
+               keymap.set_action(XKB_KEY_KP_6, move_right);
+               keymap.set_action(XKB_KEY_KP_8, move_up);
+               keymap.set_action(XKB_KEY_KP_5, click);
+               keymap.set_action(XKB_KEY_KP_Add, double_click);
+               keymap.set_action(XKB_KEY_KP_0, drag_start);
+               keymap.set_action(XKB_KEY_KP_Decimal, drag_end);
+               keymap.set_action(XKB_KEY_KP_Divide, button_primary);
+               keymap.set_action(XKB_KEY_KP_Multiply, button_tertiary);
+               keymap.set_action(XKB_KEY_KP_Subtract, button_secondary);
+
+               return keymap;
+           }()}
 {
 }
 
@@ -90,28 +98,27 @@ bool mir::input::MouseKeysTransformer::transform_input_event(
         auto const keysym = mir_keyboard_event_keysym(kev);
         auto const keyboard_action = mir_keyboard_event_action(kev);
 
-        if (!keymap->contains(keysym))
-            return false;
-
-        auto mousekey_action = keymap->at(keysym);
-        switch (mousekey_action)
+        if (auto const mousekey_action = keymap.get_action(keysym))
         {
-        case MouseKeysAction::move_left:
-        case MouseKeysAction::move_right:
-        case MouseKeysAction::move_up:
-        case MouseKeysAction::move_down:
-            return handle_motion(keyboard_action, mousekey_action, dispatcher, builder);
-        case MouseKeysAction::click:
-            return (handle_click(keyboard_action, dispatcher, builder));
-        case MouseKeysAction::double_click:
-            return handle_double_click(keyboard_action, dispatcher, builder);
-        case MouseKeysAction::drag_start:
-        case MouseKeysAction::drag_end:
-            return handle_drag(keyboard_action, mousekey_action, dispatcher, builder);
-        case MouseKeysAction::button_primary:
-        case MouseKeysAction::button_secondary:
-        case MouseKeysAction::button_tertiary:
-            return handle_change_pointer_button(keyboard_action, mousekey_action, dispatcher, builder);
+            switch (*mousekey_action)
+            {
+            case move_left:
+            case move_right:
+            case move_up:
+            case move_down:
+                return handle_motion(keyboard_action, *mousekey_action, dispatcher, builder);
+            case click:
+                return (handle_click(keyboard_action, dispatcher, builder));
+            case double_click:
+                return handle_double_click(keyboard_action, dispatcher, builder);
+            case drag_start:
+            case drag_end:
+                return handle_drag(keyboard_action, *mousekey_action, dispatcher, builder);
+            case button_primary:
+            case button_secondary:
+            case button_tertiary:
+                return handle_change_pointer_button(keyboard_action, *mousekey_action, dispatcher, builder);
+            }
         }
     }
 
@@ -121,12 +128,12 @@ bool mir::input::MouseKeysTransformer::transform_input_event(
 void mir::input::MouseKeysTransformer::set_keymap(MouseKeysKeymap const& new_keymap)
 {
     std::lock_guard guard{state_mutex};
-    keymap = std::make_unique<MouseKeysKeymap>(new_keymap);
+    keymap = new_keymap;
 }
 
 bool mir::input::MouseKeysTransformer::handle_motion(
     MirKeyboardAction keyboard_action,
-    MouseKeysAction mousekey_action,
+    mir::input::MouseKeysKeymap::Action mousekey_action,
     Dispatcher const& dispatcher,
     mir::input::EventBuilder* const builder)
 {
@@ -142,16 +149,16 @@ bool mir::input::MouseKeysTransformer::handle_motion(
 
     switch (mousekey_action)
     {
-    case MouseKeysAction::move_down:
+    case move_down:
         set_or_clear(buttons_down, directional_buttons_down, keyboard_action);
         break;
-    case MouseKeysAction::move_left:
+    case move_left:
         set_or_clear(buttons_down, directional_buttons_left, keyboard_action);
         break;
-    case MouseKeysAction::move_right:
+    case move_right:
         set_or_clear(buttons_down, directional_buttons_right, keyboard_action);
         break;
-    case MouseKeysAction::move_up:
+    case move_up:
         set_or_clear(buttons_down, directional_buttons_up, keyboard_action);
         break;
     default:
@@ -273,7 +280,7 @@ bool mir::input::MouseKeysTransformer::handle_click(
 
 bool mir::input::MouseKeysTransformer::handle_change_pointer_button(
     MirKeyboardAction keyboard_action,
-    MouseKeysAction mousekeys_action,
+    MouseKeysKeymap::Action mousekeys_action,
     Dispatcher const& dispatcher,
     mir::input::EventBuilder* const builder)
 {
@@ -283,13 +290,13 @@ bool mir::input::MouseKeysTransformer::handle_change_pointer_button(
     // Up events
     switch (mousekeys_action)
     {
-    case MouseKeysAction::button_primary:
+    case button_primary:
         current_button = mir_pointer_button_primary;
         break;
-    case MouseKeysAction::button_tertiary:
+    case button_tertiary:
         current_button = mir_pointer_button_tertiary;
         break;
-    case MouseKeysAction::button_secondary:
+    case button_secondary:
         current_button = mir_pointer_button_secondary;
         break;
     default:
@@ -325,14 +332,14 @@ bool mir::input::MouseKeysTransformer::handle_double_click(
 
 bool mir::input::MouseKeysTransformer::handle_drag(
     MirKeyboardAction keyboard_action,
-    MouseKeysAction mousekeys_action,
+    MouseKeysKeymap::Action mousekeys_action,
     Dispatcher const& dispatcher,
     mir::input::EventBuilder* const builder)
 {
     if (keyboard_action == mir_keyboard_action_down || keyboard_action == mir_keyboard_action_repeat)
         return true;
 
-    if (mousekeys_action == MouseKeysAction::drag_start)
+    if (mousekeys_action == drag_start)
     {
         press_current_cursor_button(dispatcher, builder);
         is_dragging = true;

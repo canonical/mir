@@ -38,8 +38,8 @@ class Option;
 }
 namespace input
 {
-class MouseKeysKeymap;
 class MouseKeysTransformer;
+class MouseKeysKeymap;
 }
 namespace shell
 {
