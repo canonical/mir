@@ -15,39 +15,40 @@
  */
 
 
-#include <unordered_map>
+#include <memory>
+#include <optional>
 
-#ifndef MIR_INPUT_MOUSE_KEYS_COMMON_
-#define MIR_INPUT_MOUSE_KEYS_COMMON_
+#ifndef MIR_MOUSE_KEYS_COMMON_
+#define MIR_MOUSE_KEYS_COMMON_
 
 namespace mir
 {
 namespace input
 {
-enum class MouseKeysAction
-{
-    move_left,
-    move_right,
-    move_up,
-    move_down,
-    click,
-    double_click,
-    drag_start,
-    drag_end,
-    button_primary,
-    button_secondary,
-    button_tertiary
-};
-
 using XkbSymkey = unsigned int;
-class MouseKeysKeymap : std::unordered_map<XkbSymkey, MouseKeysAction>
+class MouseKeysKeymap
 {
 public:
-    using std::unordered_map<XkbSymkey, MouseKeysAction>::unordered_map;
-    using std::unordered_map<XkbSymkey, MouseKeysAction>::contains;
-    using std::unordered_map<XkbSymkey, MouseKeysAction>::at;
+    enum class Action
+    {
+        move_left,
+        move_right,
+        move_up,
+        move_down,
+        click,
+        double_click,
+        drag_start,
+        drag_end,
+        button_primary,
+        button_secondary,
+        button_tertiary
+    };
 
-    ~MouseKeysKeymap() = default;
+    void set_action(XkbSymkey key, std::optional<Action> action);
+    std::optional<Action> get_action(XkbSymkey key);
+private:
+    struct Self;
+    std::shared_ptr<Self> self;
 };
 }
 }

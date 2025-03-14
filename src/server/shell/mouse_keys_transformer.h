@@ -17,6 +17,7 @@
 #include "mir/input/input_event_transformer.h"
 
 #include "mir/geometry/displacement.h"
+#include "mir/input/mousekeys_common.h"
 
 #include <memory>
 #include <xkbcommon/xkbcommon-keysyms.h>
@@ -34,7 +35,6 @@ class Alarm;
 namespace input
 {
 class MouseKeysKeymap;
-enum class MouseKeysAction;
 class MouseKeysTransformer: public mir::input::InputEventTransformer::Transformer
 {
 public:
@@ -59,7 +59,7 @@ private:
 
     bool handle_motion(
         MirKeyboardAction keyboard_action,
-        MouseKeysAction mousekey_action,
+        MouseKeysKeymap::Action mousekey_action,
         Dispatcher const& dispatcher,
         mir::input::EventBuilder* const builder);
 
@@ -68,7 +68,7 @@ private:
 
     bool handle_change_pointer_button(
         MirKeyboardAction keyboard_action,
-        MouseKeysAction mousekeys_action,
+        MouseKeysKeymap::Action mousekeys_action,
         Dispatcher const& dispatcher,
         mir::input::EventBuilder* const builder);
 
@@ -77,7 +77,7 @@ private:
 
     bool handle_drag(
         MirKeyboardAction keyboard_action,
-        MouseKeysAction mousekeys_action,
+        MouseKeysKeymap::Action mousekeys_action,
         Dispatcher const& dispatcher,
         mir::input::EventBuilder* const builder);
 
@@ -122,7 +122,7 @@ private:
     bool is_dragging{false};
 
     std::mutex state_mutex;
-    std::shared_ptr<MouseKeysKeymap> keymap;
+    MouseKeysKeymap keymap;
 };
 }
 }

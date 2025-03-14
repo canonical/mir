@@ -18,6 +18,7 @@
 #define MIR_SHELL_ACCESSIBILITY_MANAGER_H
 
 #include "mir/input/input_event_transformer.h"
+#include "mir/input/mousekeys_common.h"
 
 #include <memory>
 #include <optional>
@@ -37,7 +38,6 @@ class Option;
 }
 namespace input
 {
-class MouseKeysKeymap;
 class MouseKeysTransformer;
 }
 namespace shell
