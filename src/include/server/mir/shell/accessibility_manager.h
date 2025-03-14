@@ -62,8 +62,12 @@ public:
 private:
     std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
 
-    int repeat_rate_;
-    int repeat_delay_;
+    // Initialized via `repeat_{delay,rate}`
+    // Keep initial values in case nothing calls them.
+    int repeat_rate_{25};
+    int repeat_delay_{600};
+
+    // Always have a value supplied by platform options
     bool enable_key_repeat;
     bool enable_mouse_keys;
 
