@@ -63,17 +63,11 @@ jobs:
     - name: Install build dependencies
       run: |
         sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
-        sudo --preserve-env apt-get install --no-install-recommends \
-          dmz-cursor-theme \
+        sudo --preserve-env apt-get install --yes --no-install-recommends \
           flake8 \
-          glmark2-es2 \
-          glmark2-es2-wayland \
           lcov \
-          mesa-utils \
           ninja-build \
-          pylint \
-          xwayland
-
+          pylint
         sudo --preserve-env apt-get build-dep ./
 
     - name: Configure
@@ -98,7 +92,15 @@ jobs:
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
         XDG_RUNTIME_DIR: /tmp
-      run: cmake --build build --target test
+      run: |
+        sudo --preserve-env apt-get install --yes --no-install-recommends \
+          dmz-cursor-theme \
+          glmark2-es2 \
+          glmark2-es2-wayland \
+          mesa-utils \
+          xwayland
+
+        cmake --build build --target test
 
     - name: Measure coverage
       if: ${{ contains(matrix.calc, 'COVERAGE') }}
