@@ -18,15 +18,28 @@
 #define MIR_SHELL_ACCESSIBILITY_MANAGER_H
 
 #include "mir/input/input_event_transformer.h"
+#include "mir/input/mousekeys_common.h"
+#include "mir/geometry/displacement.h"
+
 #include <memory>
 #include <optional>
 #include <vector>
 
 namespace mir
 {
+class MainLoop;
+namespace input
+{
+class EventFilter;
+class CompositeEventFilter;
+}
 namespace options
 {
 class Option;
+}
+namespace input
+{
+class MouseKeysTransformer;
 }
 namespace shell
 {
@@ -35,8 +48,9 @@ class AccessibilityManager
 {
 public:
     AccessibilityManager(
+        std::shared_ptr<MainLoop> const& main_loop,
         std::shared_ptr<mir::options::Option> const&,
-        std::shared_ptr<input::InputEventTransformer> const& event_transformer);
+        std::shared_ptr<input::InputEventTransformer> const&);
 
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&);
 
@@ -48,6 +62,11 @@ public:
 
     void notify_helpers() const;
 
+    void set_mousekeys_enabled(bool on);
+    void set_mousekeys_keymap(input::MouseKeysKeymap const& new_keymap);
+    void set_acceleration_factors(double constant, double linear, double quadratic);
+    void set_max_speed(double x_axis, double y_axis);
+
 private:
     std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
 
@@ -56,10 +75,17 @@ private:
     int repeat_delay_{600};
     bool enable_key_repeat;
 
-    bool enable_mouse_keys;
-
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
-    std::shared_ptr<mir::input::InputEventTransformer::Transformer> const transformer;
+    std::shared_ptr<mir::MainLoop> const main_loop;
+    std::shared_ptr<mir::options::Option> const options;
+
+    std::shared_ptr<mir::input::MouseKeysTransformer> transformer;
+
+    // Need to be cached in case values are changed, then mousekeys were
+    // disabled and re-enabled.
+    input::MouseKeysKeymap keymap;
+    double acceleration_constant, acceleration_linear, acceleration_quadratic;
+    geometry::DisplacementF max_speed;
 };
 }
 }

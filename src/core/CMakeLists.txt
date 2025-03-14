@@ -9,6 +9,7 @@ add_library(mircore SHARED
     fd.cpp
     depth_layer.cpp
     geometry/rectangles.cpp
+    input/mousekeys_common.cpp
     ${PROJECT_SOURCE_DIR}/include/core/mir/anonymous_shm_file.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/int_wrapper.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/optional_value.h
@@ -26,6 +27,7 @@ add_library(mircore SHARED
     ${PROJECT_SOURCE_DIR}/include/core/mir_toolkit/common.h
     ${PROJECT_SOURCE_DIR}/include/core/mir_toolkit/mir_version_number.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/synchronised.h
+    ${PROJECT_SOURCE_DIR}/include/core/mir/input/mousekeys_common.h
 )
 
 target_include_directories(mircore
