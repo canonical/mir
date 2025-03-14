@@ -22,6 +22,9 @@ MIR_CORE_2.9 {
     mir::geometry::Rectangles::remove*;
     mir::geometry::Rectangles::size*;
     mir::geometry::operator*;
+    mir::input::MouseKeysKeymap*;
+    mir::input::MouseKeysKeymap::set_action*;
+    mir::input::MouseKeysKeymap::get_action*;
     mir::mir_depth_layer_get_index?MirDepthLayer?;
     typeinfo?for?mir::AnonymousShmFile;
     typeinfo?for?mir::ShmFile;

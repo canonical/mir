@@ -17,6 +17,8 @@
 #ifndef MIRAL_ENABLE_MOUSEKEYS_H
 #define MIRAL_ENABLE_MOUSEKEYS_H
 
+#include "mir/input/mousekeys_common.h"
+
 #include <memory>
 
 namespace mir
@@ -44,9 +46,10 @@ public:
     /// \note Can only be called after the server is initialized.
     void set_mousekeys_enabled(bool enabled) const;
 
-    /// Changes the keymap for various mousekeys actions
+    /// Changes the keymap for the various mousekeys actions defined in
+    /// [MouseKeysKeymap::Action]
     /// \note Can only be called after the server is initialized.
-    /// \note The keymap _must_ cover all actions found in [MouseKeysActions].
+    /// \note If a certain action not mapped to any key, it will be disabled.
     void set_keymap(mir::input::MouseKeysKeymap const& new_keymap) const;
 
 private:
