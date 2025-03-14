@@ -60,8 +60,8 @@ jobs:
     - name: Ensure ccache size
       if: ${{ contains(matrix.calc, 'PREPARE') }}
       run: |
-        # a full build yielded 180M cache
-        echo "max_size = 250M" > ${CCACHE_DIR}/ccache.conf
+        # a full build yielded 180M cache, but there's two
+        echo "max_size = 500M" > ${CCACHE_DIR}/ccache.conf
 
     - name: Install dependencies
       if: ${{ contains(matrix.calc, 'PREPARE') }}
@@ -95,10 +95,6 @@ jobs:
     - name: Build
       if: ${{ contains(matrix.calc, 'PREPARE') }}
       run: cmake --build build
-
-    - name: Clear CCache stats
-      if: ${{ contains(matrix.calc, 'PREPARE') }}
-      run: ccache --show-stats --zero-stats
 
     - name: Test
       if: ${{ contains(matrix.calc, 'PREPARE') }}
@@ -170,6 +166,9 @@ jobs:
           -totaloverviews \
           ${{ inputs.parallel && '-nobackup -parallel' || '' }} \
           -branchdir .
+
+    - name: Clear CCache stats
+      run: ccache --show-stats --zero-stats
 
     - if: ${{ failure() && runner.debug }}
       name: Setup tmate session
