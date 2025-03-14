@@ -5,6 +5,7 @@ mir (2.20.1) UNRELEASED; urgency=medium
     - Bugs fixed:
       . miroil::GLBuffer was dropped in 2.20 (#3813)
       . Do not mutate a container whilst iterating over it (#3819)
+      . Crash when disconnecting monitors (#3816)
 
  -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 13 Mar 2025 18:21:00 +0100
 
