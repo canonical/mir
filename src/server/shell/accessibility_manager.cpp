@@ -64,15 +64,13 @@ void mir::shell::AccessibilityManager::set_mousekeys_enabled(bool on)
 
         transformer = std::make_shared<mir::input::MouseKeysTransformer>(
             main_loop,
-            geometry::Displacement{
-                options->get<double>(mir::options::mouse_keys_max_speed_x),
-                options->get<double>(mir::options::mouse_keys_max_speed_y),
-            },
+            max_speed,
             input::MouseKeysTransformer::AccelerationParameters{
-                options->get<double>(mir::options::mouse_keys_acceleration_quadratic_factor),
-                options->get<double>(mir::options::mouse_keys_acceleration_linear_factor),
-                options->get<double>(mir::options::mouse_keys_acceleration_constant_factor),
-            });
+                acceleration_quadratic,
+                acceleration_linear,
+                acceleration_constant,
+            },
+            keymap);
         event_transformer->append(transformer);
     }
     else
@@ -82,8 +80,9 @@ void mir::shell::AccessibilityManager::set_mousekeys_enabled(bool on)
     }
 }
 
-void mir::shell::AccessibilityManager::set_mousekeys_keymap(input::MouseKeysKeymap const& new_keymap) const
+void mir::shell::AccessibilityManager::set_mousekeys_keymap(input::MouseKeysKeymap const& new_keymap)
 {
+    keymap = new_keymap;
     transformer->set_keymap(new_keymap);
 }
 
@@ -94,8 +93,22 @@ mir::shell::AccessibilityManager::AccessibilityManager(
     enable_key_repeat{options->get<bool>(options::enable_key_repeat_opt)},
     event_transformer{event_transformer},
     main_loop{main_loop},
-    options{options}
+    options{options},
+    keymap{input::MouseKeysTransformer::default_keymap}
 {
-    if (options->is_set(options::enable_mouse_keys_opt) && options->get<bool>(options::enable_mouse_keys_opt))
-        set_mousekeys_enabled(true);
 }
+
+void mir::shell::AccessibilityManager::set_acceleration_factors(double constant, double linear, double quadratic)
+{
+    acceleration_constant = constant;
+    acceleration_linear = linear;
+    acceleration_quadratic = quadratic;
+    transformer->set_acceleration_factors(constant, linear, quadratic);
+}
+
+void mir::shell::AccessibilityManager::set_max_speed(double x_axis, double y_axis)
+{
+    max_speed = {x_axis, y_axis};
+    transformer->set_max_speed(x_axis, y_axis);
+}
+

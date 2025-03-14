@@ -17,7 +17,9 @@
 #ifndef MIR_SHELL_ACCESSIBILITY_MANAGER_H
 #define MIR_SHELL_ACCESSIBILITY_MANAGER_H
 
+#include "mir/geometry/displacement.h"
 #include "mir/input/input_event_transformer.h"
+#include "mir/input/mousekeys_common.h"
 #include "mir/synchronised.h"
 
 #include <memory>
@@ -63,7 +65,9 @@ public:
     void notify_helpers() const;
 
     void set_mousekeys_enabled(bool on);
-    void set_mousekeys_keymap(input::MouseKeysKeymap const& new_keymap) const;
+    void set_mousekeys_keymap(input::MouseKeysKeymap const& new_keymap);
+    void set_acceleration_factors(double constant, double linear, double quadratic);
+    void set_max_speed(double x_axis, double y_axis);
 
 private:
 
@@ -84,6 +88,12 @@ private:
     std::shared_ptr<mir::options::Option> const options;
 
     std::shared_ptr<mir::input::MouseKeysTransformer> transformer;
+
+    // Need to be cached in case values are changed, then mousekeys were
+    // disabled and re-enabled.
+    input::MouseKeysKeymap keymap;
+    double acceleration_constant, acceleration_linear, acceleration_quadratic;
+    geometry::DisplacementF max_speed;
 };
 }
 }
