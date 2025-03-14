@@ -61,7 +61,7 @@ public:
 
     void notify_helpers() const;
 
-    void toggle_mousekeys(bool on);
+    void set_mousekeys_enabled(bool on);
     void set_mousekeys_keymap(input::MouseKeysKeymap const& new_keymap) const;
 
 private:
