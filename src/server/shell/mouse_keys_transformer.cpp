@@ -143,16 +143,16 @@ bool mir::input::MouseKeysTransformer::handle_motion(
     switch (mousekey_action)
     {
     case MouseKeysAction::move_down:
-        set_or_clear(buttons_down, down, keyboard_action);
+        set_or_clear(buttons_down, directional_buttons_down, keyboard_action);
         break;
     case MouseKeysAction::move_left:
-        set_or_clear(buttons_down, left, keyboard_action);
+        set_or_clear(buttons_down, directional_buttons_left, keyboard_action);
         break;
     case MouseKeysAction::move_right:
-        set_or_clear(buttons_down, right, keyboard_action);
+        set_or_clear(buttons_down, directional_buttons_right, keyboard_action);
         break;
     case MouseKeysAction::move_up:
-        set_or_clear(buttons_down, up, keyboard_action);
+        set_or_clear(buttons_down, directional_buttons_up, keyboard_action);
         break;
     default:
         std::unreachable();
@@ -161,7 +161,7 @@ bool mir::input::MouseKeysTransformer::handle_motion(
     switch (keyboard_action)
     {
     case mir_keyboard_action_up:
-        if (buttons_down == none)
+        if (buttons_down == directional_buttons_none)
         {
             motion_event_generator.reset();
         }
@@ -193,13 +193,13 @@ bool mir::input::MouseKeysTransformer::handle_motion(
                         auto const speed = acceleration_curve.evaluate(t.count()) * dt;
 
                         motion_direction = {0, 0};
-                        if (buttons_down & up)
+                        if (buttons_down & directional_buttons_up)
                             motion_direction.dy += geom::DeltaYF{-speed};
-                        if (buttons_down & down)
+                        if (buttons_down & directional_buttons_down)
                             motion_direction.dy += geom::DeltaYF{speed};
-                        if (buttons_down & left)
+                        if (buttons_down & directional_buttons_left)
                             motion_direction.dx += geom::DeltaXF{-speed};
-                        if (buttons_down & right)
+                        if (buttons_down & directional_buttons_right)
                             motion_direction.dx += geom::DeltaXF{speed};
 
                         auto const fabs = [](auto delta)

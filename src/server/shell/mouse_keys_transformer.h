@@ -86,11 +86,11 @@ private:
 
     enum DirectionalButtons
     {
-        none = 0,
-        up = 1 << 0,
-        down = 1 << 1,
-        left = 1 << 2,
-        right = 1 << 3
+        directional_buttons_none = 0,
+        directional_buttons_up = 1 << 0,
+        directional_buttons_down = 1 << 1,
+        directional_buttons_left = 1 << 2,
+        directional_buttons_right = 1 << 3
     };
 
     struct AccelerationCurve
@@ -111,7 +111,7 @@ private:
     mir::geometry::DisplacementF motion_direction;
     MirPointerButtons current_button{mir_pointer_button_primary};
 
-    uint32_t buttons_down{none};
+    uint32_t buttons_down{directional_buttons_none};
 
     AccelerationCurve const acceleration_curve;
     geometry::DisplacementF const max_speed;
