@@ -474,12 +474,24 @@ auto miral::BasicWindowManager::find_application(std::function<bool(ApplicationI
 auto miral::BasicWindowManager::info_for(std::weak_ptr<scene::Session> const& session) const
 -> ApplicationInfo&
 {
+    if (app_info.find(session) == app_info.end())
+    {
+        static ApplicationInfo const null_app_info;
+        return const_cast<ApplicationInfo&>(null_app_info);
+    }
+
     return const_cast<ApplicationInfo&>(app_info.at(session));
 }
 
 auto miral::BasicWindowManager::info_for(std::weak_ptr<scene::Surface> const& surface) const
 -> WindowInfo&
 {
+    if (window_info.find(surface) == window_info.end())
+    {
+        static WindowInfo const null_surface_info;
+        return const_cast<WindowInfo&>(null_surface_info);
+    }
+
     return const_cast<WindowInfo&>(window_info.at(surface));
 }
 
