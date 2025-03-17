@@ -42,7 +42,7 @@ struct mir::input::MouseKeysKeymap::Self
 
     std::optional<Action> get_action(XkbSymkey key)
     {
-        if(keymap.contains(key))
+        if(!keymap.contains(key))
             return {};
 
         return keymap.at(key);
