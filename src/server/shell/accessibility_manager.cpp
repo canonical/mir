@@ -117,9 +117,10 @@ mir::shell::AccessibilityManager::AccessibilityManager(
     transformer{std::make_shared<MouseKeysTransformer>()},
     cursor{cursor}
 {
-    auto const cursor_scale = static_cast<float>(options->get<double>(mir::options::cursor_scale_override_opt));
-    if (cursor_scale != 1.0)
-        cursor->set_scale(cursor_scale);
+    auto const cursor_scale = std::clamp(0.0f, 100.0f,
+            static_cast<float>(options->get<double>(mir::options::cursor_scale_opt)));
+
+    cursor->set_scale(cursor_scale);
 
     if (enable_mouse_keys)
         event_transformer->append(transformer);
