@@ -20,6 +20,7 @@
 #include <initializer_list>
 #include <memory>
 #include <optional>
+#include <functional>
 
 
 namespace mir
@@ -50,6 +51,9 @@ public:
 
     void set_action(XkbSymkey key, std::optional<Action> action);
     std::optional<Action> get_action(XkbSymkey key);
+
+    void for_each_key_action_pair(std::function<void(XkbSymkey, Action)>&&) const;
+
 private:
     struct Self;
     std::shared_ptr<Self> self;

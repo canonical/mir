@@ -15,6 +15,7 @@
  */
 
 #include "mir/input/mousekeys_common.h"
+#include <functional>
 #include <initializer_list>
 #include <memory>
 #include <unordered_map>
@@ -48,6 +49,12 @@ struct mir::input::MouseKeysKeymap::Self
         return keymap.at(key);
     }
 
+    void for_each_key_action_pair(std::function<void(XkbSymkey, Action)>&& f) const
+    {
+        for (auto const& [key, action] : keymap)
+            f(key, action);
+    }
+
     std::unordered_map<XkbSymkey, Action> keymap;
 };
 
@@ -69,4 +76,9 @@ void mir::input::MouseKeysKeymap::set_action(XkbSymkey key, std::optional<Action
 std::optional<mir::input::MouseKeysKeymap::Action> mir::input::MouseKeysKeymap::get_action(XkbSymkey key)
 {
     return self->get_action(key);
+}
+
+void mir::input::MouseKeysKeymap::for_each_key_action_pair(std::function<void(XkbSymkey, Action)>&& f) const
+{
+    self->for_each_key_action_pair(std::move(f));
 }
