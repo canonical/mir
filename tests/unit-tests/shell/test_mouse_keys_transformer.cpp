@@ -432,11 +432,14 @@ TEST_F(TestMouseKeysTransformer, acceleration_curve_constants_evaluate_properly)
 
     for(auto const& param: parameters)
     {
-        input_event_transformer.handle(*up_event(XKB_KEY_KP_6));
         transformer->set_acceleration_factors(param.c, param.b, param.a);
         input_event_transformer.handle(*down_event(XKB_KEY_KP_6));
 
         clock.advance_by(std::chrono::milliseconds(2));
         std::this_thread::sleep_for(std::chrono::milliseconds(2));
+
+        input_event_transformer.handle(*up_event(XKB_KEY_KP_6));
+    }
+}
     }
 }
