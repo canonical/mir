@@ -31,8 +31,11 @@ struct mir::input::MouseKeysKeymap::Self
 
     void set_action(XkbSymkey key, std::optional<Action> action)
     {
-        if(!action)
+        if (!action)
+        {
             keymap.erase(key);
+            return;
+        }
 
         keymap.insert_or_assign(key, *action);
     }
