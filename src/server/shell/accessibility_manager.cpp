@@ -70,6 +70,7 @@ void mir::shell::AccessibilityManager::set_mousekeys_enabled(bool on)
                 acceleration_linear,
                 acceleration_constant,
             },
+            clock,
             keymap);
         event_transformer->append(transformer);
     }
@@ -90,11 +91,13 @@ void mir::shell::AccessibilityManager::set_mousekeys_keymap(input::MouseKeysKeym
 mir::shell::AccessibilityManager::AccessibilityManager(
     std::shared_ptr<MainLoop> const& main_loop,
     std::shared_ptr<mir::options::Option> const& options,
-    std::shared_ptr<input::InputEventTransformer> const& event_transformer) :
+    std::shared_ptr<input::InputEventTransformer> const& event_transformer,
+    std::shared_ptr<time::Clock> const& clock) :
     enable_key_repeat{options->get<bool>(options::enable_key_repeat_opt)},
     event_transformer{event_transformer},
     main_loop{main_loop},
     options{options},
+    clock{clock},
     keymap{input::MouseKeysTransformer::default_keymap}
 {
 }

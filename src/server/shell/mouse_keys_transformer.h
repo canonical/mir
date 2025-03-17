@@ -31,6 +31,7 @@ class Option;
 namespace time
 {
 class Alarm;
+class Clock;
 }
 namespace input
 {
@@ -47,12 +48,14 @@ public:
         std::shared_ptr<mir::MainLoop> const& main_loop,
         geometry::DisplacementF max_speed,
         AccelerationParameters const& params,
+        std::shared_ptr<time::Clock> const& clock,
         MouseKeysKeymap keymap);
 
     MouseKeysTransformer(
         std::shared_ptr<mir::MainLoop> const& main_loop,
         geometry::DisplacementF max_speed,
-        AccelerationParameters const& params);
+        AccelerationParameters const& params,
+        std::shared_ptr<time::Clock> const& clock);
 
     bool transform_input_event(
         mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
@@ -112,6 +115,7 @@ private:
     };
 
     std::shared_ptr<mir::MainLoop> const main_loop;
+    std::shared_ptr<time::Clock> const clock;
 
     // shared_ptr as opposed to unique_ptr like its siblings so we can get a
     // weak ptr to it

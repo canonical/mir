@@ -19,10 +19,10 @@
 #include "mir/geometry/forward.h"
 #include "mir/log.h"
 #include "mir/main_loop.h"
-#include "mir/options/configuration.h"
 #include "mir/time/alarm.h"
 #include "mir/input/mousekeys_common.h"
 
+#include "mir/time/clock.h"
 #include "mir_toolkit/events/enums.h"
 #include "mir_toolkit/events/input/keyboard_event.h"
 
@@ -51,8 +51,9 @@ mir::input::MouseKeysKeymap const mir::input::MouseKeysTransformer::default_keym
 mir::input::MouseKeysTransformer::MouseKeysTransformer(
     std::shared_ptr<mir::MainLoop> const& main_loop,
     geometry::DisplacementF configured_max_speed,
-    AccelerationParameters const& params) :
-    MouseKeysTransformer(main_loop, configured_max_speed, params, MouseKeysTransformer::default_keymap)
+    AccelerationParameters const& params,
+    std::shared_ptr<time::Clock> const& clock) :
+    MouseKeysTransformer(main_loop, configured_max_speed, params, clock, MouseKeysTransformer::default_keymap)
 {
 }
 
@@ -60,8 +61,10 @@ mir::input::MouseKeysTransformer::MouseKeysTransformer(
     std::shared_ptr<mir::MainLoop> const& main_loop,
     geometry::DisplacementF configured_max_speed,
     AccelerationParameters const& params,
+    std::shared_ptr<time::Clock> const& clock,
     MouseKeysKeymap keymap) :
     main_loop{main_loop},
+    clock{clock},
     acceleration_curve{params},
     max_speed{[configured_max_speed]
               {
@@ -188,7 +191,7 @@ bool mir::input::MouseKeysTransformer::handle_motion(
                     [dispatcher,
                      this,
                      builder,
-                     motion_start_time = std::chrono::steady_clock::now(),
+                     motion_start_time = clock->now(),
                      weak_self = shared_weak_alarm] mutable
                     {
                         std::lock_guard guard{state_mutex};
@@ -196,7 +199,7 @@ bool mir::input::MouseKeysTransformer::handle_motion(
                         using SecondF = std::chrono::duration<float>;
                         auto constexpr repeat_delay = std::chrono::milliseconds(2); // 500 Hz rate
 
-                        auto const motion_step_time = std::chrono::steady_clock::now();
+                        auto const motion_step_time = clock->now();
                         auto const t = std::chrono::duration_cast<SecondF>(motion_step_time - motion_start_time);
 
                         // duration_cast is not constexpr yet
