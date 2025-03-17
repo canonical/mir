@@ -72,8 +72,7 @@ struct TestMouseKeysTransformer : testing::Test
         transformer{std::make_shared<mi::MouseKeysTransformer>(
             main_loop,
             mir::geometry::DisplacementF{0, 0},
-            AccelerationParameters{1, 1, 1},
-            mir::input::MouseKeysTransformer::default_keymap)},
+            AccelerationParameters{1, 1, 1})},
         main_loop_thread{
             [this]()
             {

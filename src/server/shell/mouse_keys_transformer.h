@@ -34,7 +34,6 @@ class Alarm;
 }
 namespace input
 {
-class MouseKeysKeymap;
 class MouseKeysTransformer: public mir::input::InputEventTransformer::Transformer
 {
 public:
@@ -49,6 +48,11 @@ public:
         geometry::DisplacementF max_speed,
         AccelerationParameters const& params,
         MouseKeysKeymap keymap);
+
+    MouseKeysTransformer(
+        std::shared_ptr<mir::MainLoop> const& main_loop,
+        geometry::DisplacementF max_speed,
+        AccelerationParameters const& params);
 
     bool transform_input_event(
         mir::input::InputEventTransformer::EventDispatcher const& dispatcher,

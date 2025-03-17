@@ -34,24 +34,27 @@
 
 using enum mir::input::MouseKeysKeymap::Action;
 
-mir::input::MouseKeysKeymap const mir::input::MouseKeysTransformer::default_keymap = []
+mir::input::MouseKeysKeymap const mir::input::MouseKeysTransformer::default_keymap = {
+    {XKB_KEY_KP_2, move_down},
+    {XKB_KEY_KP_4, move_left},
+    {XKB_KEY_KP_6, move_right},
+    {XKB_KEY_KP_8, move_up},
+    {XKB_KEY_KP_5, click},
+    {XKB_KEY_KP_Add, double_click},
+    {XKB_KEY_KP_0, drag_start},
+    {XKB_KEY_KP_Decimal, drag_end},
+    {XKB_KEY_KP_Divide, button_primary},
+    {XKB_KEY_KP_Multiply, button_tertiary},
+    {XKB_KEY_KP_Subtract, button_secondary},
+};
+
+mir::input::MouseKeysTransformer::MouseKeysTransformer(
+    std::shared_ptr<mir::MainLoop> const& main_loop,
+    geometry::DisplacementF configured_max_speed,
+    AccelerationParameters const& params) :
+    MouseKeysTransformer(main_loop, configured_max_speed, params, MouseKeysTransformer::default_keymap)
 {
-    auto keymap = mir::input::MouseKeysKeymap();
-
-    keymap.set_action(XKB_KEY_KP_2, move_down);
-    keymap.set_action(XKB_KEY_KP_4, move_left);
-    keymap.set_action(XKB_KEY_KP_6, move_right);
-    keymap.set_action(XKB_KEY_KP_8, move_up);
-    keymap.set_action(XKB_KEY_KP_5, click);
-    keymap.set_action(XKB_KEY_KP_Add, double_click);
-    keymap.set_action(XKB_KEY_KP_0, drag_start);
-    keymap.set_action(XKB_KEY_KP_Decimal, drag_end);
-    keymap.set_action(XKB_KEY_KP_Divide, button_primary);
-    keymap.set_action(XKB_KEY_KP_Multiply, button_tertiary);
-    keymap.set_action(XKB_KEY_KP_Subtract, button_secondary);
-
-    return keymap;
-}();
+}
 
 mir::input::MouseKeysTransformer::MouseKeysTransformer(
     std::shared_ptr<mir::MainLoop> const& main_loop,
