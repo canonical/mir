@@ -385,3 +385,58 @@ TEST_F(TestMouseKeysTransformer, receiving_a_key_not_in_keymap_doesnt_dispatch_e
             input_event_transformer.handle(*down_event(key));
         });
 }
+
+TEST_F(TestMouseKeysTransformer, acceleration_curve_constants_evaluate_properly)
+{
+    EXPECT_CALL(mock_seat, dispatch_event(_))
+        .Times(4)
+        .WillOnce(
+            [](std::shared_ptr<MirEvent> const& event)
+            {
+                ASSERT_EQ(event->to_input()->to_pointer()->motion().length_squared(), 0.0);
+            })
+        .WillOnce(
+            [](std::shared_ptr<MirEvent> const& event)
+            {
+                ASSERT_EQ(event->to_input()->to_pointer()->motion().length_squared(), 1);
+            })
+        .WillOnce(
+            [](std::shared_ptr<MirEvent> const& event)
+            {
+                // Speed is computed as:
+                //              (
+                //              constant factor
+                //              + linear factor * time since motion start
+                //              + quadratic factor * time since motion started ^ 2
+                //              )  * time between alarm invocations
+                //
+                // time between alarm invocations is hardcoded as 2ms
+                // time since motion start is also 2ms
+                // So the speed should be the linear factor (500) * 2ms * 2ms
+                EXPECT_FLOAT_EQ(std::sqrt(event->to_input()->to_pointer()->motion().length_squared()), (500 * 0.002 * 0.002));
+            })
+        .WillOnce(
+            [](std::shared_ptr<MirEvent> const& event)
+            {
+                EXPECT_FLOAT_EQ(
+                    std::sqrt(event->to_input()->to_pointer()->motion().length_squared()),
+                    (500 * (0.002 * 0.002) * 0.002));
+            });
+
+    auto const parameters = {
+        AccelerationParameters{0, 0, 0}, // a, b, c
+        {0, 0, 500},
+        {0, 500, 0},
+        {500, 0, 0},
+    };
+
+    for(auto const& param: parameters)
+    {
+        input_event_transformer.handle(*up_event(XKB_KEY_KP_6));
+        transformer->set_acceleration_factors(param.c, param.b, param.a);
+        input_event_transformer.handle(*down_event(XKB_KEY_KP_6));
+
+        clock.advance_by(std::chrono::milliseconds(2));
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    }
+}
