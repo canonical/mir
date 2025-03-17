@@ -394,6 +394,8 @@ mf::WaylandConnector::WaylandConnector(
 
 mf::WaylandConnector::~WaylandConnector()
 {
+    wl_display_destroy_clients(display.get());
+
     try
     {
         allocator->unbind_display(display.get());
