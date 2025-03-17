@@ -15,15 +15,22 @@
  */
 
 #include "mir/input/mousekeys_common.h"
+#include <initializer_list>
+#include <memory>
 #include <unordered_map>
 
-struct mir::input::MouseKeysKeymap::Self: public std::unordered_map<XkbSymkey, Action>
+struct mir::input::MouseKeysKeymap::Self
 {
+    Self() = default;
+
+    Self(std::initializer_list<std::pair<XkbSymkey, Action>> keymap)
+    {
+        for(auto const& [symkey, action]: keymap)
+            set_action(symkey, action);
+    }
+
     void set_action(XkbSymkey key, std::optional<Action> action)
     {
-        if(!keymap.contains(key))
-            return;
-
         if(!action)
             keymap.erase(key);
 
@@ -40,6 +47,16 @@ struct mir::input::MouseKeysKeymap::Self: public std::unordered_map<XkbSymkey, A
 
     std::unordered_map<XkbSymkey, Action> keymap;
 };
+
+mir::input::MouseKeysKeymap::MouseKeysKeymap()
+    : self{std::make_shared<Self>()}
+{
+}
+
+mir::input::MouseKeysKeymap::MouseKeysKeymap(std::initializer_list<std::pair<XkbSymkey, Action>> keymap) :
+    self{std::make_shared<Self>(keymap)}
+{
+}
 
 void mir::input::MouseKeysKeymap::set_action(XkbSymkey key, std::optional<Action> action)
 {

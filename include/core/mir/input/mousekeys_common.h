@@ -15,6 +15,7 @@
  */
 
 
+#include <initializer_list>
 #include <memory>
 #include <optional>
 
@@ -43,6 +44,9 @@ public:
         button_secondary,
         button_tertiary
     };
+
+    MouseKeysKeymap();
+    MouseKeysKeymap(std::initializer_list<std::pair<XkbSymkey, Action>>);
 
     void set_action(XkbSymkey key, std::optional<Action> action);
     std::optional<Action> get_action(XkbSymkey key);
