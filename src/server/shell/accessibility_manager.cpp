@@ -83,7 +83,8 @@ void mir::shell::AccessibilityManager::set_mousekeys_enabled(bool on)
 void mir::shell::AccessibilityManager::set_mousekeys_keymap(input::MouseKeysKeymap const& new_keymap)
 {
     keymap = new_keymap;
-    transformer->set_keymap(new_keymap);
+    if(transformer)
+        transformer->set_keymap(new_keymap);
 }
 
 mir::shell::AccessibilityManager::AccessibilityManager(
@@ -103,12 +104,14 @@ void mir::shell::AccessibilityManager::set_acceleration_factors(double constant,
     acceleration_constant = constant;
     acceleration_linear = linear;
     acceleration_quadratic = quadratic;
-    transformer->set_acceleration_factors(constant, linear, quadratic);
+    if(transformer)
+        transformer->set_acceleration_factors(constant, linear, quadratic);
 }
 
 void mir::shell::AccessibilityManager::set_max_speed(double x_axis, double y_axis)
 {
     max_speed = {x_axis, y_axis};
-    transformer->set_max_speed(x_axis, y_axis);
+    if(transformer)
+        transformer->set_max_speed(x_axis, y_axis);
 }
 
