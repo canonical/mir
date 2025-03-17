@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIRAL_ENABLE_MOUSEKEYS_H
-#define MIRAL_ENABLE_MOUSEKEYS_H
+#ifndef MIRAL_MOUSE_KEYS_CONFIG_H
+#define MIRAL_MOUSE_KEYS_CONFIG_H
 
 #include "mir/input/mousekeys_common.h"
 
@@ -24,10 +24,6 @@
 namespace mir
 {
 class Server;
-namespace input
-{
-class MouseKeysKeymap;
-}
 }
 
 /// Enables configuring mousekeys at runtime.
