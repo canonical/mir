@@ -85,21 +85,21 @@ void miral::MouseKeysConfig::operator()(mir::Server& server) const
     server.add_configuration_option(
         enable_mouse_keys_opt, "Enable mousekeys (controlling the mouse with the numpad)", mir::OptionType::boolean);
     server.add_configuration_option(
-        mouse_keys_acceleration_constant_factor, "The base speed for mousekey pointer motion", 100);
+        mouse_keys_acceleration_constant_factor, "The base speed for mousekey pointer motion", 100.0);
     server.add_configuration_option(
-        mouse_keys_acceleration_linear_factor, "The linear speed increase for mousekey pointer motion", 100);
+        mouse_keys_acceleration_linear_factor, "The linear speed increase for mousekey pointer motion", 100.0);
     server.add_configuration_option(
-        mouse_keys_acceleration_quadratic_factor, "The quadratic speed increase for mousekey pointer motion", 30);
+        mouse_keys_acceleration_quadratic_factor, "The quadratic speed increase for mousekey pointer motion", 30.0);
     server.add_configuration_option(
         mouse_keys_max_speed_x,
         "The maximum speed in pixels/second the mousekeys pointer can "
         "reach on the x axis. Pass zero to disable the speed limit",
-        400);
+        400.0);
     server.add_configuration_option(
         mouse_keys_max_speed_y,
         "The maximum speed in pixels/second the mousekeys pointer can "
         "reach on the y axis. Pass zero to disable the speed limit",
-        400);
+        400.0);
 
     server.add_init_callback(
         [this, self = this->self, &server]
