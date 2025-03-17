@@ -105,6 +105,7 @@ class Cursor;
 class CursorImage;
 class GLConfig;
 class OutputFilter;
+class AnimationDriver;
 }
 namespace input
 {
@@ -230,6 +231,7 @@ public:
      * dependencies of graphics on the rest of the Mir
      *  @{ */
     virtual std::shared_ptr<graphics::DisplayReport> the_display_report();
+    virtual std::shared_ptr<graphics::AnimationDriver> the_animation_driver();
     virtual std::shared_ptr<graphics::Cursor> the_cursor();
     virtual std::shared_ptr<graphics::Cursor> wrap_cursor(std::shared_ptr<graphics::Cursor> const& wrapped);
     virtual std::shared_ptr<graphics::CursorImage> the_default_cursor_image();
@@ -427,6 +429,7 @@ protected:
     CachedPtr<compositor::ScreenShooterFactory> screen_shooter_factory;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
+    CachedPtr<graphics::AnimationDriver> animation_driver;
     CachedPtr<time::Clock> clock;
     CachedPtr<MainLoop> main_loop;
     CachedPtr<ServerStatusListener> server_status_listener;
