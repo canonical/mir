@@ -441,5 +441,57 @@ TEST_F(TestMouseKeysTransformer, acceleration_curve_constants_evaluate_properly)
         input_event_transformer.handle(*up_event(XKB_KEY_KP_6));
     }
 }
+
+TEST_F(TestMouseKeysTransformer, max_speed_caps_speed_properly)
+{
+    auto constexpr dt = 0.002;
+
+    EXPECT_CALL(mock_seat, dispatch_event(_))
+        .Times(3)
+        .WillOnce(
+            [](std::shared_ptr<MirEvent> const& event)
+            {
+                // Motion events are in pixels/alarm invocation
+                // Which occurs about every 2ms
+                auto const motion = event->to_input()->to_pointer()->motion();
+                ASSERT_EQ(motion.dx, mir::geometry::DeltaXF{100} * dt);
+                ASSERT_EQ(motion.dy, mir::geometry::DeltaYF{1} * dt);
+            })
+        .WillOnce(
+            [](std::shared_ptr<MirEvent> const& event)
+            {
+                auto const motion = event->to_input()->to_pointer()->motion();
+                ASSERT_EQ(motion.dx, mir::geometry::DeltaXF{1} * dt);
+                ASSERT_EQ(motion.dy, mir::geometry::DeltaYF{100} * dt);
+            })
+        .WillOnce(
+            [](std::shared_ptr<MirEvent> const& event)
+            {
+                auto const motion = event->to_input()->to_pointer()->motion();
+                ASSERT_EQ(motion.dx, mir::geometry::DeltaXF{100} * dt);
+                ASSERT_EQ(motion.dy, mir::geometry::DeltaYF{100} * dt);
+            });
+
+    // Immediately force clamping
+    transformer->set_acceleration_factors(1000000, 1000000, 1000000);
+
+    // Limits in pixels/second
+    auto const parameters = {
+        std::pair{100, 1},
+        {1, 100},
+        {100, 100},
+    };
+
+    for(auto const& param: parameters)
+    {
+        transformer->set_max_speed(param.first, param.second);
+        input_event_transformer.handle(*down_event(XKB_KEY_KP_6));
+        input_event_transformer.handle(*down_event(XKB_KEY_KP_2));
+
+        clock.advance_by(std::chrono::seconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+
+        input_event_transformer.handle(*up_event(XKB_KEY_KP_6));
+        input_event_transformer.handle(*up_event(XKB_KEY_KP_2));
     }
 }
