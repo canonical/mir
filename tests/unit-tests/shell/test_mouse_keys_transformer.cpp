@@ -373,3 +373,15 @@ TEST_F(TestMouseKeysTransformer, drag_start_and_end_dispatch_down_and_up_events)
 
     finished.wait_for(std::chrono::milliseconds(10));
 }
+
+TEST_F(TestMouseKeysTransformer, receiving_a_key_not_in_keymap_doesnt_dispatch_event)
+{
+    EXPECT_CALL(mock_seat, dispatch_event(_)).Times(0);
+    transformer->set_keymap(mir::input::MouseKeysKeymap{});
+
+    mir::input::MouseKeysTransformer::default_keymap.for_each_key_action_pair(
+        [&](auto key, auto)
+        {
+            input_event_transformer.handle(*down_event(key));
+        });
+}
