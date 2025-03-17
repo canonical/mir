@@ -14,13 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef MIR_MOUSE_KEYS_COMMON_
+#define MIR_MOUSE_KEYS_COMMON_
 
 #include <initializer_list>
 #include <memory>
 #include <optional>
 
-#ifndef MIR_MOUSE_KEYS_COMMON_
-#define MIR_MOUSE_KEYS_COMMON_
 
 namespace mir
 {
