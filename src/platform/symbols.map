@@ -119,7 +119,7 @@ MIR_PLATFORM_2.21 {
     mir::options::compositor_report_opt*;
     mir::options::console_provider;
     mir::options::cursor_opt*;
-    mir::options::cursor_scale_override_opt*;
+    mir::options::cursor_scale_opt*;
     mir::options::debug_opt*;
     mir::options::display_report_opt*;
     mir::options::drop_wayland_extensions_opt;
