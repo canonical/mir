@@ -33,15 +33,15 @@ namespace input
 {
 class EventFilter;
 class CompositeEventFilter;
+class MouseKeysTransformer;
 }
 namespace options
 {
 class Option;
 }
-namespace input
+namespace time
 {
-class MouseKeysTransformer;
-class MouseKeysKeymap;
+class Clock;
 }
 namespace shell
 {
@@ -52,7 +52,8 @@ public:
     AccessibilityManager(
         std::shared_ptr<MainLoop> const& main_loop,
         std::shared_ptr<mir::options::Option> const&,
-        std::shared_ptr<input::InputEventTransformer> const&);
+        std::shared_ptr<input::InputEventTransformer> const&,
+        std::shared_ptr<time::Clock> const& clock);
 
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&);
 
@@ -86,6 +87,7 @@ private:
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
     std::shared_ptr<mir::MainLoop> const main_loop;
     std::shared_ptr<mir::options::Option> const options;
+    std::shared_ptr<time::Clock> const clock;
 
     std::shared_ptr<mir::input::MouseKeysTransformer> transformer;
 
