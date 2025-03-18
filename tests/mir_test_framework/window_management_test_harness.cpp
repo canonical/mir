@@ -200,7 +200,7 @@ auto mir_test_framework::WindowManagementTestHarness::focused_surface() -> std::
     return server.the_shell()->focused_surface();
 }
 
-auto mir_test_framework::WindowManagementTestHarness::tools() -> miral::WindowManagerTools const&
+auto mir_test_framework::WindowManagementTestHarness::tools() -> miral::WindowManagerTools&
 {
     return self->tools;
 }
