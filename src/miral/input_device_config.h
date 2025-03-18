@@ -36,7 +36,6 @@ struct MouseInputConfiguration
     std::optional<double> acceleration_bias;
     std::optional<double> vscroll_speed;
     std::optional<double> hscroll_speed;
-    std::optional<double> scale;
 };
 
 class TouchpadInputConfiguration

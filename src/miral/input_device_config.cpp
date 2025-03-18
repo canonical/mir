@@ -275,7 +275,6 @@ miral::InputDeviceConfig::InputDeviceConfig(std::shared_ptr<mir::options::Option
         clamp<-1.0, 1.0>(get_optional<double>(options, mouse_cursor_acceleration_bias_opt)),
         get_optional<double>(options, mouse_vscroll_speed_override_opt, mouse_scroll_speed_opt),
         get_optional<double>(options, mouse_hscroll_speed_override_opt, mouse_scroll_speed_opt),
-        std::nullopt
     },
     touchpad_config{
         get_optional<bool>(options, disable_while_typing_opt),
