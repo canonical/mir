@@ -329,6 +329,11 @@ auto miral::InputConfiguration::Touchpad::tap_to_click() const -> std::optional<
     return self->tap_to_click;
 }
 
+auto miral::InputConfiguration::Touchpad::middle_mouse_button_emulation() const -> std::optional<bool>
+{
+    return self->middle_button_emulation;
+}
+
 void miral::InputConfiguration::Touchpad::disable_while_typing(std::optional<bool> const& val)
 {
     self->disable_while_typing = val;
@@ -373,6 +378,11 @@ void miral::InputConfiguration::Touchpad::scroll_mode(std::optional<MirTouchpadS
 void miral::InputConfiguration::Touchpad::tap_to_click(std::optional<bool> const& val)
 {
     self->tap_to_click = val;
+}
+
+void miral::InputConfiguration::Touchpad::middle_mouse_button_emulation(std::optional<bool> const& val)
+{
+    self->middle_button_emulation = val;
 }
 
 miral::InputConfiguration::Keyboard::Keyboard() :

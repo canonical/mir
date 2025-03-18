@@ -112,6 +112,8 @@ public:
     auto click_mode() const -> std::optional<MirTouchpadClickMode>;
     auto scroll_mode() const -> std::optional<MirTouchpadScrollMode>;
     auto tap_to_click() const -> std::optional<bool>;
+    /// \remark Since MirAL 5.3
+    auto middle_mouse_button_emulation() const -> std::optional<bool>;
 
     void disable_while_typing(std::optional<bool>const& val);
     void disable_with_external_mouse(std::optional<bool>const& val);
@@ -123,6 +125,8 @@ public:
     void click_mode(std::optional<MirTouchpadClickMode>const& val);
     void scroll_mode(std::optional<MirTouchpadScrollMode>const& val);
     void tap_to_click(std::optional<bool>const& val);
+    /// \remark Since MirAL 5.3
+    void middle_mouse_button_emulation(std::optional<bool>const& val);
 
     /// Copies the corresponding value from `other` for all unset fields.
     /// \remark Since MirAL 5.3
