@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "miral/cursor_scale.h"
 #include "server_example_input_event_filter.h"
 #include "server_example_input_filter.h"
 #include "server_example_test_client.h"
@@ -118,7 +119,8 @@ catch (...)
 class InputConfigFile
 {
 public:
-    InputConfigFile(miral::MirRunner& runner, std::filesystem::path file) :
+    InputConfigFile(miral::MirRunner& runner, std::filesystem::path file, miral::CursorScale& cursor_scale) :
+        cursor_scale{cursor_scale},
         config_file{
             runner,
             file,
@@ -143,6 +145,7 @@ private:
     miral::InputConfiguration::Touchpad touchpad = input_configuration.touchpad();
     miral::InputConfiguration::Keyboard keyboard = input_configuration.keyboard();
     std::mutex config_mutex;
+    miral::CursorScale& cursor_scale;
     miral::ConfigFile config_file;
 
     void apply_config()
@@ -150,6 +153,7 @@ private:
         input_configuration.mouse(mouse);
         input_configuration.touchpad(touchpad);
         input_configuration.keyboard(keyboard);
+        cursor_scale.apply_scale();
     };
 
     void loader(std::istream& in, std::filesystem::path const& path)
@@ -203,13 +207,13 @@ private:
                     {
                         mir::log_warning(
                             "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
-                            key.c_str(), float_val);
+                            key.c_str(),
+                            float_val);
                         return std::nullopt;
                     }
 
                     return float_val;
                 };
-
                 if (key == "repeat_rate")
                 {
                     auto const parsed = parse_and_validate_int(key, value);
@@ -228,7 +232,7 @@ private:
                 {
                     auto const parsed = parse_and_validate_float(key, value);
                     if(parsed)
-                        mouse.scale(parsed);
+                        cursor_scale.set_scale(*parsed);
                 }
             }
         }
@@ -243,7 +247,8 @@ try
 {
     miral::MirRunner runner{argc, argv, "mir/mir_demo_server.config"};
 
-    InputConfigFile input_configuration{runner, "mir_demo_server.input"};
+    miral::CursorScale cursor_scale;
+    InputConfigFile input_configuration{runner, "mir_demo_server.input", cursor_scale};
     runner.set_exception_handler(exception_handler);
 
     std::function<void()> shutdown_hook{[]{}};
@@ -268,6 +273,7 @@ try
         input_filters,
         test_runner,
         std::ref(input_configuration),
+        cursor_scale,
     });
 
     // Propagate any test failure

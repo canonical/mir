@@ -67,12 +67,6 @@ public:
             });
         }
 
-        if(auto const& am = accessibility_manager.lock())
-        {
-            if (m.self->scale)
-                am->cursor_scale_changed(*m.self->scale);
-        }
-
         mouse(m);
     }
 
@@ -270,11 +264,6 @@ void miral::InputConfiguration::Mouse::vscroll_speed(std::optional<double> const
 void miral::InputConfiguration::Mouse::hscroll_speed(std::optional<double> const& val)
 {
     self->hscroll_speed = val;
-}
-
-void miral::InputConfiguration::Mouse::scale(std::optional<double> const& val)
-{
-    self->scale = val;
 }
 
 miral::InputConfiguration::Touchpad::Touchpad() :
