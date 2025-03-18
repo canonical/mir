@@ -32,20 +32,24 @@ void mir::shell::AccessibilityManager::register_keyboard_helper(std::shared_ptr<
 }
 
 std::optional<int> mir::shell::AccessibilityManager::repeat_rate() const {
+    std::lock_guard guard{state_mutex};
     if(!enable_key_repeat)
         return {};
     return repeat_rate_;
 }
 
 int mir::shell::AccessibilityManager::repeat_delay() const {
+    std::lock_guard guard{state_mutex};
     return repeat_delay_;
 }
 
 void mir::shell::AccessibilityManager::repeat_rate(int new_rate) {
+    std::lock_guard guard{state_mutex};
     repeat_rate_ = new_rate;
 }
 
 void mir::shell::AccessibilityManager::repeat_delay(int new_delay) {
+    std::lock_guard guard{state_mutex};
     repeat_delay_ = new_delay;
 }
 
