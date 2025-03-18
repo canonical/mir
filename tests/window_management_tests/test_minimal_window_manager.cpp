@@ -24,7 +24,6 @@
 #include <mir/events/event_builders.h>
 #include <mir/events/pointer_event.h>
 #include <mir/compositor/buffer_stream.h>
-#include <mir/graphics/buffer_basic.h>
 #include <mir/log.h>
 
 #include "mir_test_framework/window_management_test_harness.h"
@@ -36,6 +35,88 @@ namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace mev = mir::events;
 using namespace testing;
+
+namespace
+{
+constexpr int EXCLUSIVE_SURFACE_SIZE = 50;
+typedef std::function<msh::SurfaceSpecification(geom::Size const& output_size)> CreateSurfaceSpecFunc;
+
+CreateSurfaceSpecFunc create_top_attached()
+{
+    return [](geom::Size const& output_size)
+    {
+        msh::SurfaceSpecification spec;
+        spec.width = output_size.width;
+        spec.height = geom::Height{EXCLUSIVE_SURFACE_SIZE};
+        spec.top_left = geom::Point{0, 0};
+        spec.exclusive_rect = geom::Rectangle{
+            geom::Point{0, 0},
+            geom::Size{spec.width.value(), spec.height.value()}
+        };
+        spec.attached_edges = static_cast<MirPlacementGravity>(mir_placement_gravity_north | mir_placement_gravity_east | mir_placement_gravity_west);
+        spec.state = mir_window_state_attached;
+        spec.depth_layer = mir_depth_layer_application;
+        return spec;
+    };
+}
+
+CreateSurfaceSpecFunc create_left_attached()
+{
+    return [](geom::Size const& output_size)
+    {
+        msh::SurfaceSpecification spec;
+        spec.width = geom::Width{EXCLUSIVE_SURFACE_SIZE};
+        spec.height = output_size.height;
+        spec.top_left = geom::Point{0, 0};
+        spec.exclusive_rect = geom::Rectangle{
+            geom::Point{0, 0},
+            geom::Size{spec.width.value(), spec.height.value()}
+        };
+        spec.attached_edges = static_cast<MirPlacementGravity>(mir_placement_gravity_north | mir_placement_gravity_south | mir_placement_gravity_west);
+        spec.state = mir_window_state_attached;
+        spec.depth_layer = mir_depth_layer_application;
+        return spec;
+    };
+}
+
+CreateSurfaceSpecFunc create_right_attached()
+{
+    return [](geom::Size const& output_size)
+    {
+        msh::SurfaceSpecification spec;
+        spec.width = geom::Width{EXCLUSIVE_SURFACE_SIZE};
+        spec.height = output_size.height;
+        spec.top_left = geom::Point{output_size.width.as_int() - spec.width.value().as_int(), 0};
+        spec.exclusive_rect = geom::Rectangle{
+            geom::Point{0, 0},
+            geom::Size{spec.width.value(), spec.height.value()}
+        };
+        spec.attached_edges = static_cast<MirPlacementGravity>(mir_placement_gravity_north | mir_placement_gravity_south | mir_placement_gravity_east);
+        spec.state = mir_window_state_attached;
+        spec.depth_layer = mir_depth_layer_application;
+        return spec;
+    };
+}
+
+CreateSurfaceSpecFunc create_bottom_attached()
+{
+    return [](geom::Size const& output_size)
+    {
+        msh::SurfaceSpecification spec;
+        spec.width = output_size.width;
+        spec.height = geom::Height{EXCLUSIVE_SURFACE_SIZE};
+        spec.top_left = geom::Point{0, output_size.height.as_int() - spec.height.value().as_int()};
+        spec.exclusive_rect = geom::Rectangle{
+            geom::Point{0, 0},
+            geom::Size{spec.width.value(), spec.height.value()}
+        };
+        spec.attached_edges = static_cast<MirPlacementGravity>(mir_placement_gravity_south | mir_placement_gravity_east | mir_placement_gravity_west);
+        spec.state = mir_window_state_attached;
+        spec.depth_layer = mir_depth_layer_application;
+        return spec;
+    };
+}
+}
 
 MATCHER_P(LockedEq, value, "")
 {
@@ -539,105 +620,266 @@ TEST_F(MinimalWindowManagerTest,  when_a_window_is_focused_then_it_appears_above
     EXPECT_TRUE(is_above(window3, window2));
 }
 
-struct SurfacePlacementCase
+/// Represents a collection of attached surfaces (i.e. wlr layer shell surfaces)
+/// that will be placed on the first output to confirm how they are placed
+/// relative to one another.
+struct AttachedSurfacePlacementCase
 {
-    struct SurfacePlacement
+    struct AttachedSurfacePlacement
     {
-        /// The gravity that the window will be placed with
-        MirPlacementGravity gravity;
-
-        geom::Point position;
-
-        /// If set to std::nullopt, we expect to take up the full width of the output
-        std::optional<geom::Width> width;
-
-        /// If set to std::nullopt, we expect to take up the full height of the output
-        std::optional<geom::Height> height;
-
-        /// Given the rectangle of the output, returns the expected rectangle
-        std::function<geom::Rectangle(geom::Size const&)> expected;
+        CreateSurfaceSpecFunc create;
+        std::function<geom::Rectangle(geom::Size const&)> expected_rect;
     };
 
+    std::string name;
+    std::vector<AttachedSurfacePlacement> placements;
+};
 
-    std::vector<SurfacePlacement> placements;
+struct AttachedSurfacePlacementCaseToString {
+    std::string operator()(const TestParamInfo<AttachedSurfacePlacementCase>& info) const {
+        return info.param.name;
+    }
 };
 
 class MinimalWindowManagerAttachedTest
     : public MinimalWindowManagerTest,
-      public ::testing::WithParamInterface<SurfacePlacementCase>
+      public ::testing::WithParamInterface<AttachedSurfacePlacementCase>
 {
 };
 
 TEST_P(MinimalWindowManagerAttachedTest, attached_window_positioning)
 {
     auto const app = open_application("test");
-    auto const placements = GetParam();
+    auto const& placements = GetParam().placements;
     auto const output_rectangles = get_output_rectangles();
 
     std::vector<miral::Window> windows;
-    auto const output_width = output_rectangles[0].size.width;
-    auto const output_height = output_rectangles[0].size.height;
-    for (auto const& item : placements.placements)
-    {
-        msh::SurfaceSpecification spec;
-        spec.width = item.width ? item.width.value() : output_width;
-        spec.height = item.height ? item.height.value() : output_height;
-        spec.top_left = item.position;
-        spec.exclusive_rect = mir::optional_value(geom::Rectangle{
-            item.position,
-            geom::Size{
-                item.width ? item.width.value() : output_width,
-                item.height ? item.height.value() : output_height}});
-        spec.state = mir_window_state_attached;
-        spec.attached_edges = item.gravity;
-        spec.depth_layer = mir_depth_layer_application;
-        auto window = create_window(app, spec);
-        windows.push_back(window);
-    }
+    auto const& output_rectangle = output_rectangles[0];
+    for (const auto& placement : placements)
+        windows.push_back(create_window(app, placement.create(output_rectangle.size)));
 
-    EXPECT_EQ(windows.size(), placements.placements.size());
+    EXPECT_EQ(windows.size(), placements.size());
     for (size_t i = 0; i < windows.size(); i++)
     {
         auto const& window = windows[i];
-        auto const& data = placements.placements[i];
+        const auto& expected_rect = placements[i].expected_rect;
 
-        auto const expected = data.expected(output_rectangles[0].size);
+        auto const expected = expected_rect(output_rectangle.size);
         EXPECT_EQ(window.top_left(), expected.top_left);
         EXPECT_EQ(window.size(), expected.size);
     }
 }
 
 INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerAttachedTestPlacement, MinimalWindowManagerAttachedTest, ::testing::Values(
-    SurfacePlacementCase{
+    AttachedSurfacePlacementCase{
+        .name="Top_Left",
         .placements={
-            // Top
-            SurfacePlacementCase::SurfacePlacement{
-                .gravity=MirPlacementGravity(mir_placement_gravity_north | mir_placement_gravity_east | mir_placement_gravity_west),
-                .position=geom::Point{0, 0},
-                .width=std::nullopt,
-                .height=geom::Height{50},
-                .expected=[](geom::Size const& output_size)
+            AttachedSurfacePlacementCase::AttachedSurfacePlacement{
+                .create=create_top_attached(),
+                .expected_rect=[](geom::Size const& output_size)
                 {
+                    // Expect that the top surface does not change at all
                     return geom::Rectangle{
                         geom::Point{0, 0},
-                        geom::Size{output_size.width, geom::Height{50}}
+                        geom::Size{output_size.width.as_int(), EXCLUSIVE_SURFACE_SIZE}
                     };
                 }
             },
-            // Left
-            SurfacePlacementCase::SurfacePlacement{
-                .gravity=MirPlacementGravity(mir_placement_gravity_north | mir_placement_gravity_south | mir_placement_gravity_west),
-                .position=geom::Point{0, 0},
-                .width=geom::Width{50},
-                .height=std::nullopt,
-                .expected=[](geom::Size const& output_size)
+            AttachedSurfacePlacementCase::AttachedSurfacePlacement{
+                .create=create_left_attached(),
+                .expected_rect=[](geom::Size const& output_size)
                 {
+                    // Expect that the left surface is moved down by [EXCLUSIVE_SURFACE_SIZE] in the y-dimension
                     return geom::Rectangle{
-                        geom::Point{0, 50},
-                        geom::Size{geom::Width{50}, geom::Height{output_size.height.as_int() - 50}}
+                        geom::Point{0, EXCLUSIVE_SURFACE_SIZE},
+                        geom::Size{EXCLUSIVE_SURFACE_SIZE, output_size.height.as_int() - EXCLUSIVE_SURFACE_SIZE}
+                    };
+                }
+            }
+        }
+    },
+    AttachedSurfacePlacementCase{
+        .name="Top_Right",
+        .placements={
+            AttachedSurfacePlacementCase::AttachedSurfacePlacement{
+                .create=create_top_attached(),
+                .expected_rect=[](geom::Size const& output_size)
+                {
+                    // Expect that the top surface does not change at all
+                    return geom::Rectangle{
+                        geom::Point{0, 0},
+                        geom::Size{output_size.width.as_int(), EXCLUSIVE_SURFACE_SIZE}
+                    };
+                }
+            },
+            AttachedSurfacePlacementCase::AttachedSurfacePlacement{
+                .create=create_right_attached(),
+                .expected_rect=[](geom::Size const& output_size)
+                {
+                    // Expect that the right surface is moved down by [EXCLUSIVE_SURFACE_SIZE] in the y-dimension
+                    return geom::Rectangle{
+                        geom::Point{output_size.width.as_int() - EXCLUSIVE_SURFACE_SIZE, EXCLUSIVE_SURFACE_SIZE},
+                        geom::Size{EXCLUSIVE_SURFACE_SIZE, output_size.height.as_int() - EXCLUSIVE_SURFACE_SIZE}
+                    };
+                }
+            }
+        }
+    },
+    AttachedSurfacePlacementCase{
+        .name="Bottom_Left",
+        .placements={
+            AttachedSurfacePlacementCase::AttachedSurfacePlacement{
+                .create=create_bottom_attached(),
+                .expected_rect=[](geom::Size const& output_size)
+                {
+                    // Expect that the bottom surface does not change at all
+                    return geom::Rectangle{
+                        geom::Point{0, output_size.height.as_int() - EXCLUSIVE_SURFACE_SIZE},
+                        geom::Size{output_size.width, EXCLUSIVE_SURFACE_SIZE}
+                    };
+                }
+            },
+            AttachedSurfacePlacementCase::AttachedSurfacePlacement{
+                .create=create_left_attached(),
+                .expected_rect=[](geom::Size const& output_size)
+                {
+                    // Expect that the left surface shrinks its height by [EXCLUSIVE_SURFACE_SIZE]
+                    return geom::Rectangle{
+                        geom::Point{0, 0},
+                        geom::Size{EXCLUSIVE_SURFACE_SIZE, output_size.height.as_int() - EXCLUSIVE_SURFACE_SIZE}
+                    };
+                }
+            }
+        }
+    },
+    AttachedSurfacePlacementCase{
+        .name="Bottom_Right",
+        .placements={
+            AttachedSurfacePlacementCase::AttachedSurfacePlacement{
+                .create=create_bottom_attached(),
+                .expected_rect=[](geom::Size const& output_size)
+                {
+                    // Expect that the bottom surface does not change at all
+                    return geom::Rectangle{
+                        geom::Point{0, output_size.height.as_int() - EXCLUSIVE_SURFACE_SIZE},
+                        geom::Size{output_size.width, EXCLUSIVE_SURFACE_SIZE}
+                    };
+                }
+            },
+            AttachedSurfacePlacementCase::AttachedSurfacePlacement{
+                .create=create_right_attached(),
+                .expected_rect=[](geom::Size const& output_size)
+                {
+                    // Expect that the right surface shrinks its height by [EXCLUSIVE_SURFACE_SIZE]
+                    return geom::Rectangle{
+                        geom::Point{output_size.width.as_int() - EXCLUSIVE_SURFACE_SIZE, 0},
+                        geom::Size{EXCLUSIVE_SURFACE_SIZE, output_size.height.as_int() - EXCLUSIVE_SURFACE_SIZE}
+                    };
+                }
+            }
+        }
+    },
+    AttachedSurfacePlacementCase{
+        .name="All",
+        .placements={
+            AttachedSurfacePlacementCase::AttachedSurfacePlacement{
+                .create=create_top_attached(),
+                .expected_rect=[](geom::Size const& output_size)
+                {
+                    // Expect that the top surface does not change at all
+                    return geom::Rectangle{
+                        geom::Point{0, 0},
+                        geom::Size{output_size.width, EXCLUSIVE_SURFACE_SIZE}
+                    };
+                }
+            },
+            AttachedSurfacePlacementCase::AttachedSurfacePlacement{
+                .create=create_bottom_attached(),
+                .expected_rect=[](geom::Size const& output_size)
+                {
+                    // Expect that the bottom surface does not change at all
+                    return geom::Rectangle{
+                        geom::Point{0, output_size.height.as_int() - EXCLUSIVE_SURFACE_SIZE},
+                        geom::Size{output_size.width, EXCLUSIVE_SURFACE_SIZE}
+                    };
+                }
+            },
+            AttachedSurfacePlacementCase::AttachedSurfacePlacement{
+                .create=create_left_attached(),
+                .expected_rect=[](geom::Size const& output_size)
+                {
+                    // Expect that the left surface shrinks its height by 2 * [EXCLUSIVE_SURFACE_SIZE]
+                    return geom::Rectangle{
+                        geom::Point{0, EXCLUSIVE_SURFACE_SIZE},
+                        geom::Size{EXCLUSIVE_SURFACE_SIZE, output_size.height.as_int() - 2 * EXCLUSIVE_SURFACE_SIZE}
+                    };
+                }
+            },
+            AttachedSurfacePlacementCase::AttachedSurfacePlacement{
+                .create=create_right_attached(),
+                .expected_rect=[](geom::Size const& output_size)
+                {
+                    // Expect that the right surface shrinks its height by 2 * [EXCLUSIVE_SURFACE_SIZE]
+                    return geom::Rectangle{
+                        geom::Point{output_size.width.as_int() - EXCLUSIVE_SURFACE_SIZE, EXCLUSIVE_SURFACE_SIZE},
+                        geom::Size{EXCLUSIVE_SURFACE_SIZE, output_size.height.as_int() - 2 * EXCLUSIVE_SURFACE_SIZE}
+                    };
+                }
+            }
+        }
+    },
+    AttachedSurfacePlacementCase{
+        .name="Left_Right",
+        .placements={
+            AttachedSurfacePlacementCase::AttachedSurfacePlacement{
+                .create=create_left_attached(),
+                .expected_rect=[](geom::Size const& output_size)
+                {
+                    // Expect that the left surface does not change at all
+                    return geom::Rectangle{
+                        geom::Point{0, 0},
+                        geom::Size{EXCLUSIVE_SURFACE_SIZE, output_size.height.as_int()}
+                    };
+                }
+            },
+            AttachedSurfacePlacementCase::AttachedSurfacePlacement{
+                .create=create_right_attached(),
+                .expected_rect=[](geom::Size const& output_size)
+                {
+                    // Expect that the right surface does not change at all
+                    return geom::Rectangle{
+                        geom::Point{output_size.width.as_int() - EXCLUSIVE_SURFACE_SIZE, 0},
+                        geom::Size{EXCLUSIVE_SURFACE_SIZE, output_size.height.as_int()}
+                    };
+                }
+            }
+        }
+    },
+    AttachedSurfacePlacementCase{
+        .name="Top_Bottom",
+        .placements={
+            AttachedSurfacePlacementCase::AttachedSurfacePlacement{
+                .create=create_top_attached(),
+                .expected_rect=[](geom::Size const& output_size)
+                {
+                    // Expect that the top surface does not change at all
+                    return geom::Rectangle{
+                        geom::Point{0, 0},
+                        geom::Size{output_size.width, EXCLUSIVE_SURFACE_SIZE}
+                    };
+                }
+            },
+            AttachedSurfacePlacementCase::AttachedSurfacePlacement{
+                .create=create_bottom_attached(),
+                .expected_rect=[](geom::Size const& output_size)
+                {
+                    // Expect that the bottom surface does not change at all
+                    return geom::Rectangle{
+                        geom::Point{0, output_size.height.as_int() - EXCLUSIVE_SURFACE_SIZE},
+                        geom::Size{output_size.width, EXCLUSIVE_SURFACE_SIZE}
                     };
                 }
             }
         }
     }
-));
+), AttachedSurfacePlacementCaseToString());
