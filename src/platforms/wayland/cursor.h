@@ -51,8 +51,6 @@ public:
     void set_scale(float) override;
 
 private:
-    void set_scale_unlocked(float new_scale);
-
     wl_shm* const shm;
     std::function<void()> const flush_wl;
     wl_surface* surface;
