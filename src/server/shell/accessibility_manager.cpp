@@ -21,11 +21,6 @@
 #include "mir/options/configuration.h"
 #include "mir/shell/keyboard_helper.h"
 
-#include <xkbcommon/xkbcommon-keysyms.h>
-
-#include <memory>
-#include <optional>
-
 void mir::shell::AccessibilityManager::register_keyboard_helper(std::shared_ptr<KeyboardHelper> const& helper)
 {
     mutable_state.lock()->keyboard_helpers.push_back(helper);
@@ -120,12 +115,11 @@ mir::shell::AccessibilityManager::AccessibilityManager(
     enable_mouse_keys{options->get<bool>(options::enable_mouse_keys_opt)},
     event_transformer{event_transformer},
     transformer{std::make_shared<MouseKeysTransformer>()},
-    cursor{cursor},
-    cursor_scale{static_cast<float>(options->get<double>(mir::options::cursor_scale_override_opt))}
+    cursor{cursor}
 {
-    auto state = mutable_state.lock();
-    if (state->cursor_scale != 1.0)
-        cursor->set_scale(state->cursor_scale);
+    auto const cursor_scale = static_cast<float>(options->get<double>(mir::options::cursor_scale_override_opt));
+    if (cursor_scale != 1.0)
+        cursor->set_scale(cursor_scale);
 
     if (enable_mouse_keys)
         event_transformer->append(transformer);
@@ -133,11 +127,6 @@ mir::shell::AccessibilityManager::AccessibilityManager(
 
 void mir::shell::AccessibilityManager::cursor_scale_changed(float new_scale)
 {
-    auto state = mutable_state.lock();
-
-    // Store the cursor scale in case the cursor hasn't been set yet
-    state->cursor_scale = new_scale;
-
     if(cursor)
         cursor->set_scale(new_scale);
 }

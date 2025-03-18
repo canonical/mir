@@ -65,8 +65,6 @@ private:
         int repeat_delay{600};
 
         std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
-
-        float cursor_scale{1};
     };
 
     Synchronised<MutableState> mutable_state;
