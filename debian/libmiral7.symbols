@@ -504,6 +504,6 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&, miral::FocusStealing)@MIRAL_5.0" 5.2.0
  (c++)"miral::WindowManagementPolicy::~WindowManagementPolicy()@MIRAL_5.0" 5.2.0
  MIRAL_5.3@MIRAL_5.3 5.3.0
- (c++)"miral::InputConfiguration::Keyboard::merge_settings_from(miral::InputConfiguration::Keyboard const&)@MIRAL_5.3" 5.3.0
- (c++)"miral::InputConfiguration::Mouse::merge_settings_from(miral::InputConfiguration::Mouse const&)@MIRAL_5.3" 5.3.0
- (c++)"miral::InputConfiguration::Touchpad::merge_settings_from(miral::InputConfiguration::Touchpad const&)@MIRAL_5.3" 5.3.0
+ (c++)"miral::InputConfiguration::Keyboard::merge_from(miral::InputConfiguration::Keyboard const&)@MIRAL_5.3" 5.3.0
+ (c++)"miral::InputConfiguration::Mouse::merge_from(miral::InputConfiguration::Mouse const&)@MIRAL_5.3" 5.3.0
+ (c++)"miral::InputConfiguration::Touchpad::merge_from(miral::InputConfiguration::Touchpad const&)@MIRAL_5.3" 5.3.0

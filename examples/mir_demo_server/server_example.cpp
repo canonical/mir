@@ -135,9 +135,9 @@ public:
                 //
                 // In this case, the `.input` file takes precedence. You can
                 // reverse the arguments to de-prioritize it.
-                mouse.merge_settings_from(input_configuration.mouse());
-                keyboard.merge_settings_from(input_configuration.keyboard());
-                touchpad.merge_settings_from(input_configuration.touchpad());
+                mouse.merge_from(input_configuration.mouse());
+                keyboard.merge_from(input_configuration.keyboard());
+                touchpad.merge_from(input_configuration.touchpad());
 
                 apply_config();
             });
