@@ -401,7 +401,7 @@ void miral::MouseInputConfiguration::apply_to(mi::Device& device) const
     }
 }
 
-void miral::MouseInputConfiguration::merge_settings_from(MouseInputConfiguration const& other)
+void miral::MouseInputConfiguration::merge_from(MouseInputConfiguration const& other)
 {
     if (!acceleration)
         acceleration = other.acceleration;
@@ -415,7 +415,7 @@ void miral::MouseInputConfiguration::merge_settings_from(MouseInputConfiguration
         vscroll_speed = other.vscroll_speed;
 }
 
-void miral::TouchpadInputConfiguration::merge_settings_from(TouchpadInputConfiguration const& other)
+void miral::TouchpadInputConfiguration::merge_from(TouchpadInputConfiguration const& other)
 {
     if (!disable_while_typing)
         disable_while_typing = other.disable_while_typing;
@@ -439,7 +439,7 @@ void miral::TouchpadInputConfiguration::merge_settings_from(TouchpadInputConfigu
         middle_button_emulation = other.middle_button_emulation;
 }
 
-void miral::KeyboardInputConfiguration::merge_settings_from(KeyboardInputConfiguration const& other)
+void miral::KeyboardInputConfiguration::merge_from(KeyboardInputConfiguration const& other)
 {
     if (!repeat_rate)
         repeat_rate = other.repeat_rate;
