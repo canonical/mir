@@ -96,8 +96,6 @@ private:
 
     GBMBOWrapper& buffer_for_output(KMSOutput const& output);
 
-    void set_scale_unlocked(std::lock_guard<std::mutex> const& lg, float new_scale);
-
     std::mutex guard;
 
     KMSOutputContainer& output_container;

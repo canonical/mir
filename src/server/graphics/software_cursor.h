@@ -56,8 +56,6 @@ private:
     std::shared_ptr<detail::CursorRenderable> create_scaled_renderable_for(
         CursorImage const& cursor_image, geometry::Point position);
 
-    void set_scale_unlocked(float new_scale);
-
     std::shared_ptr<GraphicBufferAllocator> const allocator;
     std::shared_ptr<input::Scene> const scene;
     MirPixelFormat const format;

@@ -155,9 +155,28 @@ void mg::SoftwareCursor::show(std::shared_ptr<CursorImage> const& cursor_image)
     // Store the cursor image for later use with `set_scale`
     this->current_cursor_image = cursor_image;
 
-    set_scale_unlocked(current_scale);
+    auto const to_remove = visible ? renderable : nullptr;
 
+    geom::Point position{0, 0};
+    if (renderable)
+        position = renderable->screen_position().top_left;
+
+    renderable = create_scaled_renderable_for(*current_cursor_image, position);
+
+    hotspot = current_cursor_image->hotspot() * current_scale;
     visible = true;
+
+    scene_executor->spawn(
+        [scene = scene, to_remove = to_remove, to_add = renderable]()
+        {
+            // Add the new renderable first, then remove the old one to avoid visual glitches
+            scene->add_input_visualization(to_add);
+
+            if (to_remove)
+            {
+                scene->remove_input_visualization(to_remove);
+            }
+        });
 }
 
 
@@ -216,34 +235,10 @@ void mg::SoftwareCursor::move_to(geometry::Point position)
 
 void mir::graphics::SoftwareCursor::set_scale(float new_scale)
 {
-    std::lock_guard lg{guard};
-    set_scale_unlocked(new_scale);
+    {
+        std::lock_guard lg{guard};
+        current_scale = new_scale;
+    }
+
+    show(current_cursor_image);
 }
-
-void mir::graphics::SoftwareCursor::set_scale_unlocked(float new_scale)
-{
-    auto const to_remove = visible ? renderable : nullptr;
-
-    geom::Point position{0,0};
-    if (renderable)
-        position = renderable->screen_position().top_left;
-
-    current_scale = new_scale;
-
-    renderable = create_scaled_renderable_for(*current_cursor_image, position);
-
-    hotspot = current_cursor_image->hotspot() * new_scale;
-    visible = true;
-
-    scene_executor->spawn([scene = scene, to_remove = to_remove, to_add = renderable]()
-        {
-            // Add the new renderable first, then remove the old one to avoid visual glitches
-            scene->add_input_visualization(to_add);
-
-            if (to_remove)
-            {
-                scene->remove_input_visualization(to_remove);
-            }
-        });
-}
-
