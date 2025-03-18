@@ -128,6 +128,5 @@ mir::shell::AccessibilityManager::AccessibilityManager(
 
 void mir::shell::AccessibilityManager::cursor_scale_changed(float new_scale)
 {
-    if(cursor)
-        cursor->set_scale(new_scale);
+    cursor->set_scale(new_scale);
 }
