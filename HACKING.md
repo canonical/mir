@@ -3,7 +3,7 @@
 ## Building & running
 
 For build instructions, and a brief guide describing how to run the *Mir binaries* please see:
-- *[Getting and Using Mir](./doc/getting_and_using_mir.md)*.
+- *[Getting and Using Mir](./doc/sphinx/tutorial/getting-started-with-mir.md)*.
 _You might think it's obvious but there are some important things you need to know to get it working,
 and also to prevent your existing *X server* from dying at the same time!_
 
