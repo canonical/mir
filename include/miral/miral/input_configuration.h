@@ -65,7 +65,7 @@ public:
 
     Mouse(Mouse const& that);
     auto operator=(Mouse that) -> Mouse&;
-    auto operator==(Mouse that) const -> bool;
+    auto operator==(Mouse const& that) const -> bool;
 
     auto handedness() const -> std::optional<MirPointerHandedness>;
     auto acceleration() const -> std::optional<MirPointerAcceleration>;
@@ -101,7 +101,7 @@ public:
 
     Touchpad(Touchpad const& that);
     auto operator=(Touchpad that) -> Touchpad&;
-    auto operator==(Touchpad that) const -> bool;
+    auto operator==(Touchpad const& that) const -> bool;
 
     auto disable_while_typing() const -> std::optional<bool>;
     auto disable_with_external_mouse() const -> std::optional<bool>;
@@ -149,7 +149,7 @@ public:
 
     Keyboard(Keyboard const& that);
     auto operator=(Keyboard that) -> Keyboard&;
-    auto operator==(Keyboard that) const -> bool;
+    auto operator==(Keyboard const& that) const -> bool;
 
     void set_repeat_rate(int new_rate);
     void set_repeat_delay(int new_delay);
