@@ -426,14 +426,14 @@ void miral::InputConfiguration::Keyboard::merge_from(InputConfiguration::Keyboar
     self->merge_from(*other.self);
 }
 
-auto miral::InputConfiguration::Mouse::operator==(Mouse that) const -> bool
+auto miral::InputConfiguration::Mouse::operator==(Mouse const& that) const -> bool
 {
     return self->handedness == that.self->handedness && self->acceleration == that.self->acceleration &&
            self->acceleration_bias == that.self->acceleration_bias && self->vscroll_speed == that.self->vscroll_speed &&
            self->hscroll_speed == that.self->hscroll_speed;
 }
 
-auto miral::InputConfiguration::Touchpad::operator==(Touchpad that) const -> bool
+auto miral::InputConfiguration::Touchpad::operator==(Touchpad const& that) const -> bool
 {
     return self->disable_while_typing == that.self->disable_while_typing &&
            self->disable_with_external_mouse == that.self->disable_with_external_mouse &&
@@ -444,7 +444,7 @@ auto miral::InputConfiguration::Touchpad::operator==(Touchpad that) const -> boo
            self->middle_button_emulation == that.self->middle_button_emulation;
 }
 
-auto miral::InputConfiguration::Keyboard::operator==(Keyboard that) const -> bool
+auto miral::InputConfiguration::Keyboard::operator==(Keyboard const& that) const -> bool
 {
     return self->repeat_rate == that.self->repeat_rate && self->repeat_delay == that.self->repeat_delay;
 }
