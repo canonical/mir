@@ -28,29 +28,29 @@
 
 void mir::shell::AccessibilityManager::register_keyboard_helper(std::shared_ptr<KeyboardHelper> const& helper)
 {
-    keyboard_helpers.push_back(helper);
+    mutable_state.lock()->keyboard_helpers.push_back(helper);
 }
 
 std::optional<int> mir::shell::AccessibilityManager::repeat_rate() const {
     if(!enable_key_repeat)
         return {};
-    return repeat_rate_;
+    return mutable_state.lock()->repeat_rate;
 }
 
 int mir::shell::AccessibilityManager::repeat_delay() const {
-    return repeat_delay_;
+    return mutable_state.lock()->repeat_delay;
 }
 
 void mir::shell::AccessibilityManager::repeat_rate(int new_rate) {
-    repeat_rate_ = new_rate;
+    mutable_state.lock()->repeat_rate = new_rate;
 }
 
 void mir::shell::AccessibilityManager::repeat_delay(int new_delay) {
-    repeat_delay_ = new_delay;
+    mutable_state.lock()->repeat_delay = new_delay;
 }
 
 void mir::shell::AccessibilityManager::notify_helpers() const {
-    for(auto const& helper: keyboard_helpers)
+    for(auto const& helper: mutable_state.lock()->keyboard_helpers)
         helper->repeat_info_changed(repeat_rate(), repeat_delay());
 }
 

@@ -18,6 +18,8 @@
 #define MIR_SHELL_ACCESSIBILITY_MANAGER_H
 
 #include "mir/input/input_event_transformer.h"
+#include "mir/synchronised.h"
+
 #include <memory>
 #include <optional>
 #include <vector>
@@ -49,14 +51,19 @@ public:
     void notify_helpers() const;
 
 private:
-    std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
 
-    // 25 rate and 600 delay are the default in Weston and Sway
-    int repeat_rate_{25};
-    int repeat_delay_{600};
-    bool enable_key_repeat;
+    struct MutableState {
+        // 25 rate and 600 delay are the default in Weston and Sway
+        int repeat_rate{25};
+        int repeat_delay{600};
 
-    bool enable_mouse_keys;
+        std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
+    };
+
+    Synchronised<MutableState> mutable_state;
+
+    bool const enable_key_repeat;
+    bool const enable_mouse_keys;
 
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
     std::shared_ptr<mir::input::InputEventTransformer::Transformer> const transformer;
