@@ -50,7 +50,10 @@ miral::MouseKeysConfig::MouseKeysConfig(bool enabled_by_default) :
 void miral::MouseKeysConfig::set_mousekeys_enabled(bool enabled) const
 {
     if(self->accessibility_manager.expired())
+    {
         mir::log_error("AccessibilityManager not initialized. Will not toggle mousekeys.");
+        return;
+    }
 
     self->accessibility_manager.lock()->set_mousekeys_enabled(enabled);
 }
@@ -58,7 +61,10 @@ void miral::MouseKeysConfig::set_mousekeys_enabled(bool enabled) const
 void miral::MouseKeysConfig::set_keymap(mir::input::MouseKeysKeymap const& new_keymap) const
 {
     if (self->accessibility_manager.expired())
+    {
         mir::log_error("AccessibilityManager not initialized. Will not update keymap.");
+        return;
+    }
 
     self->accessibility_manager.lock()->set_mousekeys_keymap(new_keymap);
 }
@@ -66,7 +72,10 @@ void miral::MouseKeysConfig::set_keymap(mir::input::MouseKeysKeymap const& new_k
 void miral::MouseKeysConfig::set_acceleration_factors(double constant, double linear, double quadratic) const
 {
     if (self->accessibility_manager.expired())
+    {
         mir::log_error("AccessibilityManager not initialized. Will not set acceleration factors.");
+        return;
+    }
 
     self->accessibility_manager.lock()->set_acceleration_factors(constant, linear, quadratic);
 }
@@ -75,7 +84,10 @@ void miral::MouseKeysConfig::set_acceleration_factors(double constant, double li
 void miral::MouseKeysConfig::set_max_speed(double x_axis, double y_axis) const
 {
     if (self->accessibility_manager.expired())
+    {
         mir::log_error("AccessibilityManager not initialized. Will not set max speed.");
+        return;
+    }
 
     self->accessibility_manager.lock()->set_max_speed(x_axis, y_axis);
 }
