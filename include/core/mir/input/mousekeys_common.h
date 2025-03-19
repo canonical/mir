@@ -50,7 +50,7 @@ public:
     MouseKeysKeymap(std::initializer_list<std::pair<XkbSymkey, Action>>);
 
     void set_action(XkbSymkey key, std::optional<Action> action);
-    std::optional<Action> get_action(XkbSymkey key);
+    std::optional<Action> get_action(XkbSymkey key) const;
 
     void for_each_key_action_pair(std::function<void(XkbSymkey, Action)>&&) const;
 

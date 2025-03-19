@@ -41,7 +41,7 @@ struct mir::input::MouseKeysKeymap::Self
         keymap.insert_or_assign(key, *action);
     }
 
-    std::optional<Action> get_action(XkbSymkey key)
+    std::optional<Action> get_action(XkbSymkey key) const
     {
         if(!keymap.contains(key))
             return {};
@@ -73,7 +73,7 @@ void mir::input::MouseKeysKeymap::set_action(XkbSymkey key, std::optional<Action
     self->set_action(key, action);
 }
 
-std::optional<mir::input::MouseKeysKeymap::Action> mir::input::MouseKeysKeymap::get_action(XkbSymkey key)
+std::optional<mir::input::MouseKeysKeymap::Action> mir::input::MouseKeysKeymap::get_action(XkbSymkey key) const
 {
     return self->get_action(key);
 }
