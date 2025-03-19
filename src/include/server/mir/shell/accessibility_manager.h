@@ -55,9 +55,9 @@ private:
     std::mutex mutable state_mutex;
     int repeat_rate_{25};
     int repeat_delay_{600};
-    bool enable_key_repeat;
 
-    bool enable_mouse_keys;
+    bool const enable_key_repeat;
+    bool const enable_mouse_keys;
 
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
     std::shared_ptr<mir::input::InputEventTransformer::Transformer> const transformer;
