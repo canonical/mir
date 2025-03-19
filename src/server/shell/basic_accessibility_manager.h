@@ -24,10 +24,19 @@
 
 namespace mir
 {
+class MainLoop;
 namespace input
 {
 class InputEventTransformer;
-class MouseKeysKeymap;
+class MouseKeysTransformer;
+}
+namespace options
+{
+class Option;
+}
+namespace time
+{
+class Clock;
 }
 namespace shell
 {
