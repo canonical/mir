@@ -523,9 +523,9 @@ global:
 MIRAL_5.3 {
 global:
   extern "C++" {
-    miral::InputConfiguration::Keyboard::merge_from*;
-    miral::InputConfiguration::Mouse::merge_from*;
-    miral::InputConfiguration::Touchpad::merge_from*;
+    miral::InputConfiguration::Keyboard::merge*;
+    miral::InputConfiguration::Mouse::merge*;
+    miral::InputConfiguration::Touchpad::merge*;
     miral::InputConfiguration::Touchpad::middle_mouse_button_emulation*;
   };
 } MIRAL_5.2;

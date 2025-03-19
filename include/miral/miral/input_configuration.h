@@ -82,7 +82,7 @@ public:
 
     /// Copies the corresponding value from `other` for all unset fields.
     /// \remark Since MirAL 5.3
-    void merge_from(InputConfiguration::Mouse const& other);
+    void merge(InputConfiguration::Mouse const& other);
 
 private:
     friend class InputConfiguration::Self;
@@ -130,7 +130,7 @@ public:
 
     /// Copies the corresponding value from `other` for all unset fields.
     /// \remark Since MirAL 5.3
-    void merge_from(InputConfiguration::Touchpad const& other);
+    void merge(InputConfiguration::Touchpad const& other);
 
 private:
     friend class InputConfiguration::Self;
@@ -154,7 +154,7 @@ public:
     void set_repeat_rate(int new_rate);
     void set_repeat_delay(int new_delay);
 
-    void merge_from(InputConfiguration::Keyboard const& other);
+    void merge(InputConfiguration::Keyboard const& other);
 
 private:
     friend class InputConfiguration::Self;

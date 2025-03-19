@@ -66,7 +66,7 @@ TEST_F(TestInputConfiguration, mouse_merge_from_partial_set_changes_only_set_val
         setter(modified);
 
         Mouse merged;
-        merged.merge_from(modified);
+        merged.merge(modified);
         ASSERT_EQ(merged, expected);
     }
 }
@@ -124,7 +124,7 @@ TEST_F(TestInputConfiguration, touchpad_merge_from_partial_set_changes_only_set_
         setter(modified);
 
         Touchpad merged;
-        merged.merge_from(modified);
+        merged.merge(modified);
         ASSERT_EQ(merged, expected);
     }
 }
@@ -151,7 +151,7 @@ TEST_F(TestInputConfiguration, keyboard_merge_from_partial_set_changes_only_set_
         setter(modified);
 
         Keyboard merged;
-        merged.merge_from(modified);
+        merged.merge(modified);
         ASSERT_EQ(merged, expected);
     }
 }
