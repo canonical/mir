@@ -147,14 +147,12 @@ int main(int argc, char const* argv[])
     miral::MouseKeysConfig mousekeys_config{initial_mousekeys_state};
 
     auto toggle_mousekeys_filter = [mousekeys_on = initial_mousekeys_state, &mousekeys_config](MirEvent const* event) mutable {
-
         if(mir_event_get_type(event) != mir_event_type_input)
             return false;
 
         auto const* input_event = mir_event_get_input_event(event);
         if(mir_input_event_get_type(input_event) != mir_input_event_type_key)
             return false;
-
 
         auto const* key_event = mir_input_event_get_keyboard_event(input_event);
         auto const modifiers = mir_keyboard_event_modifiers(key_event);
