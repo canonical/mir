@@ -28,6 +28,8 @@ namespace mir
 namespace input
 {
 using XkbSymkey = unsigned int;
+
+/// Maps between XKB keysyms and mousekeys actions.
 class MouseKeysKeymap
 {
 public:
@@ -46,12 +48,20 @@ public:
         button_tertiary
     };
 
+    /// Default constructor, creates a keymap with no mapping set up.
     MouseKeysKeymap();
+
+    /// Creates a keymap with only the specified mappings.
     MouseKeysKeymap(std::initializer_list<std::pair<XkbSymkey, Action>>);
 
+    /// Sets up a mapping between a keysym and an action. Pass std::nullopt to
+    /// disable an action.
     void set_action(XkbSymkey key, std::optional<Action> action);
+
+    /// Returns the action corresponding to the passed keysym, if any.
     std::optional<Action> get_action(XkbSymkey key) const;
 
+    /// Allows introspection of the current key-action mappings.
     void for_each_key_action_pair(std::function<void(XkbSymkey, Action)>&&) const;
 
 private:
