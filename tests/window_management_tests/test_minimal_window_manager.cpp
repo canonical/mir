@@ -620,6 +620,67 @@ TEST_F(MinimalWindowManagerTest,  when_a_window_is_focused_then_it_appears_above
     EXPECT_TRUE(is_above(window3, window2));
 }
 
+class MinimalWindowManagerStartMoveStateChangeTest
+    : public MinimalWindowManagerTest,
+      public ::testing::WithParamInterface<MirWindowState>
+{
+};
+
+TEST_P(MinimalWindowManagerStartMoveStateChangeTest, maximized_windows_that_are_moved_get_restored)
+{
+    auto const state = GetParam();
+
+    // Open a regular window at point (200, 200) with size (100, 100)
+    // We do not start in the maximized state so that the restore_rect of the
+    // window has been calculated properly.
+    auto const app = open_application("app");
+    msh::SurfaceSpecification spec;
+    spec.width = geom::Width {100};
+    spec.height = geom::Height{100};
+    spec.top_left = geom::Point{200, 200};
+    spec.depth_layer = mir_depth_layer_application;
+    spec.state = mir_window_state_restored;
+    auto const window = create_window(app, spec);
+
+    // Then maximize the window.
+    miral::WindowSpecification new_spec;
+    new_spec.state() = state;
+    tools().modify_window(window, new_spec);
+
+    // Next, start the movement
+    int constexpr pointer_x = 150;
+    int constexpr pointer_y = 150;
+    auto const start_event = mir::events::make_touch_event(
+        0,
+        std::chrono::system_clock::now().time_since_epoch(),
+        mir_input_event_modifier_shift);
+    mir::events::add_touch(
+        *start_event,
+        static_cast<int>(std::chrono::system_clock::now().time_since_epoch().count()),
+        mir_touch_action_down,
+        mir_touch_tooltype_finger,
+        pointer_x, pointer_y, 1.f, 0.f, 0.f, 0.f);
+
+    // Finally, assert that we are in the maximized state before the window is moved,
+    // and that we exit the maximized state afterward.
+    auto const& info = tools().info_for(window);
+    ASSERT_EQ(info.state(), state);
+    request_move(window, start_event->to_input());
+    ASSERT_EQ(info.state(), mir_window_state_restored);
+    ASSERT_EQ(window.top_left(), geom::Point(pointer_x, pointer_y));
+    ASSERT_EQ(window.size(), geom::Size(spec.width.value(), spec.height.value()));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    MinimalWindowManagerStartMoveStateChangeTest,
+    MinimalWindowManagerStartMoveStateChangeTest,
+    ::testing::Values(
+        mir_window_state_maximized,
+        mir_window_state_vertmaximized,
+        mir_window_state_horizmaximized,
+        mir_window_state_attached)
+);
+
 /// Represents a collection of attached surfaces (i.e. wlr layer shell surfaces)
 /// that will be placed on the first output to confirm how they are placed
 /// relative to one another.

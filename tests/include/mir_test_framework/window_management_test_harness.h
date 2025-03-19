@@ -59,7 +59,7 @@ public:
     void request_focus(miral::Window const&);
 
     auto focused_surface() -> std::shared_ptr<mir::scene::Surface>;
-    auto tools() -> miral::WindowManagerTools const&;
+    auto tools() -> miral::WindowManagerTools&;
     auto is_above(miral::Window const& a, miral::Window const& b) const -> bool;
 
     virtual auto get_builder() -> WindowManagementPolicyBuilder = 0;
