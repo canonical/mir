@@ -411,19 +411,19 @@ void miral::InputConfiguration::Keyboard::set_repeat_delay(int new_delay) {
     self->repeat_delay = new_delay;
 }
 
-void miral::InputConfiguration::Mouse::merge_from(InputConfiguration::Mouse const& other)
+void miral::InputConfiguration::Mouse::merge(InputConfiguration::Mouse const& other)
 {
-    self->merge_from(*other.self);
+    self->merge(*other.self);
 }
 
-void miral::InputConfiguration::Touchpad::merge_from(InputConfiguration::Touchpad const& other)
+void miral::InputConfiguration::Touchpad::merge(InputConfiguration::Touchpad const& other)
 {
-    self->merge_from(*other.self);
+    self->merge(*other.self);
 }
 
-void miral::InputConfiguration::Keyboard::merge_from(InputConfiguration::Keyboard const& other)
+void miral::InputConfiguration::Keyboard::merge(InputConfiguration::Keyboard const& other)
 {
-    self->merge_from(*other.self);
+    self->merge(*other.self);
 }
 
 auto miral::InputConfiguration::Mouse::operator==(Mouse const& that) const -> bool
