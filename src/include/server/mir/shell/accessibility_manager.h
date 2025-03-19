@@ -22,21 +22,9 @@
 
 namespace mir
 {
-class MainLoop;
 namespace input
 {
-class EventFilter;
-class CompositeEventFilter;
-class MouseKeysTransformer;
 class MouseKeysKeymap;
-}
-namespace options
-{
-class Option;
-}
-namespace time
-{
-class Clock;
 }
 namespace shell
 {
