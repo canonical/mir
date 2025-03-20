@@ -18,6 +18,7 @@
 #include "mir_toolkit/mir_input_device_types.h"
 #include "miral/input_configuration.h"
 #include <gtest/gtest.h>
+#include <tuple>
 
 using Mouse = miral::InputConfiguration::Mouse;
 using Keyboard = miral::InputConfiguration::Keyboard;
@@ -26,6 +27,51 @@ using Touchpad = miral::InputConfiguration::Touchpad;
 struct TestInputConfiguration: testing::Test
 {
 };
+
+namespace miral
+{
+auto operator==(Mouse const& lhs, Mouse const& rhs) -> bool
+{
+    auto const left = std::tuple{
+        lhs.handedness(), lhs.acceleration(), lhs.acceleration_bias(), lhs.vscroll_speed(), lhs.hscroll_speed()};
+    auto const right = std::tuple{
+        rhs.handedness(), rhs.acceleration(), rhs.acceleration_bias(), rhs.vscroll_speed(), rhs.hscroll_speed()};
+
+    return left == right;
+}
+auto operator==(Touchpad const& lhs, Touchpad const& rhs) -> bool
+{
+    auto const left = std::tuple{
+        lhs.acceleration(),
+        lhs.acceleration_bias(),
+        lhs.hscroll_speed(),
+        lhs.vscroll_speed(),
+        lhs.click_mode(),
+        lhs.disable_while_typing(),
+        lhs.disable_with_external_mouse(),
+        lhs.middle_mouse_button_emulation(),
+        lhs.scroll_mode(),
+        lhs.tap_to_click()};
+
+    auto const right = std::tuple{
+        rhs.acceleration(),
+        rhs.acceleration_bias(),
+        rhs.hscroll_speed(),
+        rhs.vscroll_speed(),
+        rhs.click_mode(),
+        rhs.disable_while_typing(),
+        rhs.disable_with_external_mouse(),
+        rhs.middle_mouse_button_emulation(),
+        rhs.scroll_mode(),
+        rhs.tap_to_click()};
+
+    return left == right;
+}
+auto operator==(miral::InputConfiguration::Keyboard const& lhs, miral::InputConfiguration::Keyboard const& rhs) -> bool
+{
+    return std::tuple{lhs.repeat_rate(), rhs.repeat_delay()} == std::tuple{rhs.repeat_rate(), rhs.repeat_delay()};
+}
+}
 
 // Make sure that when merging, each data member is assigned to the correct
 // corresponding one.
