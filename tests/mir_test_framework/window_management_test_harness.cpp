@@ -25,11 +25,13 @@
 #include <mir/shell/surface_specification.h>
 #include <mir/shell/shell.h>
 #include <mir/wayland/weak.h>
-#include <miral/window_manager_tools.h>
-#include <miral/set_window_management_policy.h>
 #include <mir/log.h>
 #include <mir/main_loop.h>
-#include <future>
+#include <miral/window_manager_tools.h>
+#include <miral/set_window_management_policy.h>
+#include <miral/zone.h>
+
+#include "src/miral/window_manager_tools_implementation.h"
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -62,7 +64,7 @@ public:
 class mir_test_framework::WindowManagementTestHarness::Self final : public ms::SurfaceObserver
 {
 public:
-    explicit Self(mir::Server& server) : server(server), tools{nullptr}
+    explicit Self(mir::Server& server) : server(server), tools(nullptr)
     {
     }
 
@@ -103,8 +105,8 @@ public:
             mir::log_error("client_surface_close_requested: Unable to find surface in known_surfaces");
             return;
         }
-        
-        pending_actions.push_back([
+
+        pending_actions.emplace_back([
             shell=server.the_shell(),
             to_destroy=to_destroy]
         {
@@ -160,6 +162,16 @@ public:
 mir_test_framework::WindowManagementTestHarness::WindowManagementTestHarness()
     : self{std::make_shared<Self>(server)}
 {
+}
+
+mir_test_framework::WindowManagementTestHarness::~WindowManagementTestHarness()
+{
+    if (!self->pending_actions.empty())
+    {
+        mir::fatal_error("WARNING: Mir runs some operations asynchronously, as that is the nature of wayland.\n"
+            "    If you're seeing this error, you should be running WindowManagementTestHarness::process_pending_actions before shutting down.\n"
+            "    If your test is failing, this may very well be the reason");
+    }
 }
 
 void mir_test_framework::WindowManagementTestHarness::SetUp()
@@ -274,4 +286,9 @@ auto mir_test_framework::WindowManagementTestHarness::is_above(
     miral::Window const& a, miral::Window const& b) const -> bool
 {
     return server.the_shell()->is_above(a.operator std::shared_ptr<ms::Surface>(), b.operator std::shared_ptr<ms::Surface>());
+}
+
+void mir_test_framework::WindowManagementTestHarness::process_pending_actions() const
+{
+    self->process_pending();
 }

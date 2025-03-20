@@ -41,6 +41,8 @@ class WindowManagementTestHarness : public HeadlessInProcessServer
 {
 public:
     WindowManagementTestHarness();
+    virtual ~WindowManagementTestHarness() override;
+
     void SetUp() override;
     void TearDown() override;
 
@@ -59,6 +61,7 @@ public:
     auto focused(miral::Window const&) const -> bool;
     auto tools() const -> miral::WindowManagerTools&;
     auto is_above(miral::Window const& a, miral::Window const& b) const -> bool;
+    void process_pending_actions() const;
 
     virtual auto get_builder() -> WindowManagementPolicyBuilder = 0;
     virtual auto get_output_rectangles() -> std::vector<mir::geometry::Rectangle> = 0;

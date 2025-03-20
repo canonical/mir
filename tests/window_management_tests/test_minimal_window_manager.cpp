@@ -28,6 +28,7 @@
 
 #include "mir_test_framework/window_management_test_harness.h"
 #include <linux/input.h>
+#include <mir/shell/shell.h>
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -588,6 +589,171 @@ TEST_F(MinimalWindowManagerTest,  when_a_window_is_focused_then_it_appears_above
 
     EXPECT_TRUE(is_above(window1, window3));
     EXPECT_TRUE(is_above(window3, window2));
+}
+
+TEST_F(MinimalWindowManagerTest, if_active_window_is_removed_then_last_focused_window_is_focused)
+{
+    // Setup: Create three apps with a window for each app
+    auto const app1 = open_application("app1");
+    auto const app2 = open_application("app2");
+    auto const app3 = open_application("app3");
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width {100}, geom::Height{100} };
+    spec.depth_layer() = mir_depth_layer_application;
+    auto const window1 = create_window(app1, spec);
+    auto const window2 = create_window(app2, spec);
+    auto const window3 = create_window(app3, spec);
+    EXPECT_TRUE(focused(window3));
+
+    // Act: Close the focused window
+    tools().ask_client_to_close(window3);
+
+    // Expect: window2 to have focus
+    EXPECT_TRUE(focused(window2));
+    EXPECT_TRUE(is_above(window2, window1));
+}
+
+TEST_F(MinimalWindowManagerTest, if_active_window_is_removed_then_parent_has_focus_priority)
+{
+    // Setup: Create two apps with two windows on app1 and one window on app2
+    auto const app1 = open_application("app1");
+    auto const app2 = open_application("app2");
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width {100}, geom::Height{100} };
+    spec.depth_layer() = mir_depth_layer_application;
+    auto const window1 = create_window(app1, spec);
+    auto const window2 = create_window(app2, spec);
+    spec.parent() = window1;
+    auto const window3 = create_window(app1, spec);
+    EXPECT_TRUE(focused(window3));
+
+    // Act: Close the focused window
+    tools().ask_client_to_close(window3);
+
+    // Expect: window1 to have focus since that is the parent
+    EXPECT_TRUE(focused(window1));
+    EXPECT_TRUE(is_above(window1, window2));
+}
+
+TEST_F(MinimalWindowManagerTest,
+    if_active_window_is_removed_and_we_cannot_focus_any_window_on_closing_window_workspaces_then_try_focus_within_app)
+{
+    // Setup: Create two apps with two windows on app1 and one window on app2
+    // The second window on app1 will be on a new workspace.
+    auto const app1 = open_application("app1");
+    auto const app2 = open_application("app2");
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width {100}, geom::Height{100} };
+    spec.depth_layer() = mir_depth_layer_application;
+    auto const window1 = create_window(app1, spec);
+    auto const window2 = create_window(app2, spec);
+
+    auto const workspace = tools().create_workspace();
+    auto const window3 = create_window(app1, spec);
+    tools().add_tree_to_workspace(window3, workspace);
+    EXPECT_TRUE(focused(window3));
+
+    // Act: Close the focused window
+    tools().ask_client_to_close(window3);
+
+    // Expect: window1 to have focus since it is within our app but on another workspace
+    EXPECT_TRUE(focused(window1));
+    EXPECT_TRUE(is_above(window1, window2));
+}
+
+TEST_F(MinimalWindowManagerTest,
+    if_active_window_is_removed_and_we_cannot_focus_any_window_on_closing_window_workspaces_and_there_are_no_other_windows_in_this_app_then_focus_other_app)
+{
+    // Setup: Create three apps with three windows on three different workspaces
+    auto const app1 = open_application("app1");
+    auto const app2 = open_application("app2");
+    auto const app3 = open_application("app3");
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width {100}, geom::Height{100} };
+    spec.depth_layer() = mir_depth_layer_application;
+    auto const window1 = create_window(app1, spec);
+    auto const window2 = create_window(app2, spec);
+    auto const window3 = create_window(app3, spec);
+
+    auto const workspace1 = tools().create_workspace();
+    tools().add_tree_to_workspace(window2, workspace1);
+
+    auto const workspace2 = tools().create_workspace();
+    tools().add_tree_to_workspace(window3, workspace2);
+
+    EXPECT_TRUE(focused(window3));
+
+    // Act: Close the focused window
+    tools().ask_client_to_close(window3);
+
+    // Expect: window2 to have focus even though it's on another workspace
+    EXPECT_TRUE(focused(window2));
+    EXPECT_TRUE(is_above(window2, window1));
+}
+
+TEST_F(MinimalWindowManagerTest, if_active_window_is_removed_and_it_is_only_window_then_nothing_is_focused)
+{
+    // Setup: Create one app with one window
+    auto const app = open_application("app1");
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width {100}, geom::Height{100} };
+    spec.depth_layer() = mir_depth_layer_application;
+    auto const window = create_window(app, spec);
+
+    EXPECT_TRUE(focused(window));
+
+    // Act: Close the focused window
+    tools().ask_client_to_close(window);
+
+    // Expect: no window to have focus
+    EXPECT_TRUE(focused({}));
+}
+
+TEST_F(MinimalWindowManagerTest,
+    if_active_windows_session_closes_and_there_is_nothing_to_select_then_focused_is_emtpy)
+{
+    // Setup: Create one app with one window
+    auto const app = open_application("app1");
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width {100}, geom::Height{100} };
+    spec.depth_layer() = mir_depth_layer_application;
+    auto const window = create_window(app, spec);
+
+    // Act: Close the session
+    server.the_shell()->close_session(app);
+
+    // Expect: no window to have focus
+    EXPECT_TRUE(focused({}));
+}
+
+TEST_F(MinimalWindowManagerTest, closing_attached_window_causes_maximized_to_resize)
+{
+    // Setup: Create one app with a maximized window and one app with a top attached window
+    auto const output_rectangle =  get_output_rectangles()[0];
+    auto const app = open_application("app1");
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width {100}, geom::Height{100} };
+    spec.depth_layer() = mir_depth_layer_application;
+    spec.state() = mir_window_state_maximized;
+    auto const window = create_window(app, spec);
+
+    auto const top_spec = create_top_attached();
+    auto const attached = create_window(app, top_spec(output_rectangle.size));
+    EXPECT_EQ(window.size(), geom::Size(
+        output_rectangle.size.width.as_int(),
+        output_rectangle.size.height.as_int() - EXCLUSIVE_SURFACE_SIZE
+    ));
+
+    // Act: Close the attached window
+    tools().ask_client_to_close(attached);
+
+    process_pending_actions();
+
+    // Expect: the window now takes up the full dimensions
+    EXPECT_EQ(window.size(), geom::Size(
+        output_rectangle.size.width.as_int(),
+        output_rectangle.size.height.as_int()
+    ));
 }
 
 class MinimalWindowManagerStartMoveStateChangeTest
