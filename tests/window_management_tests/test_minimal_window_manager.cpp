@@ -944,3 +944,139 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerAttachedTestPlacement, MinimalWindo
         }
     }
 ), AttachedSurfacePlacementCaseToString());
+
+struct MaximizedSurfaceExclusionZonesCase
+{
+    std::vector<CreateSurfaceSpecFunc> exclusive_surface_create_func;
+    std::function<geom::Rectangle(geom::Rectangle const&)> expected_rectangle;
+};
+
+class MinimalWindowManagerMaximizedSurfaceExclusionZoneTest
+    : public MinimalWindowManagerTest,
+      public ::testing::WithParamInterface<MaximizedSurfaceExclusionZonesCase>
+{
+};
+
+TEST_P(MinimalWindowManagerMaximizedSurfaceExclusionZoneTest, maximized_windows_respect_exclusive_areas)
+{
+    auto const app = open_application("test");
+    auto const param = GetParam();
+    auto const output_rectangles = get_output_rectangles();
+
+    std::vector<miral::Window> windows;
+    auto const& output_rectangle = output_rectangles[0];
+    for (const auto& create : param.exclusive_surface_create_func)
+        windows.push_back(create_window(app, create(output_rectangle.size)));
+
+    EXPECT_EQ(windows.size(), param.exclusive_surface_create_func.size());
+    msh::SurfaceSpecification spec;
+    spec.state = mir_window_state_maximized;
+    spec.depth_layer = mir_depth_layer_application;
+    auto const window = create_window(app, spec);
+    auto const expected = param.expected_rectangle(output_rectangle);
+
+    EXPECT_EQ(window.top_left(), expected.top_left);
+    EXPECT_EQ(window.size(), expected.size);
+}
+
+INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerMaximizedSurfaceExclusionZoneTest,
+    MinimalWindowManagerMaximizedSurfaceExclusionZoneTest,
+    ::testing::Values(
+        MaximizedSurfaceExclusionZonesCase{
+            .exclusive_surface_create_func={create_top_attached()},
+            .expected_rectangle=[](geom::Rectangle const& ouput_rect)
+            {
+                return geom::Rectangle{
+                    geom::Point(0, EXCLUSIVE_SURFACE_SIZE),
+                    geom::Size(
+                        ouput_rect.size.width,
+                        ouput_rect.size.height.as_int() - EXCLUSIVE_SURFACE_SIZE)
+                };
+            }
+        },
+        MaximizedSurfaceExclusionZonesCase{
+            .exclusive_surface_create_func={create_left_attached()},
+            .expected_rectangle=[](geom::Rectangle const& ouput_rect)
+            {
+                return geom::Rectangle{
+                    geom::Point(EXCLUSIVE_SURFACE_SIZE, 0),
+                    geom::Size(
+                        ouput_rect.size.width.as_int() - EXCLUSIVE_SURFACE_SIZE,
+                        ouput_rect.size.height.as_int())
+                };
+            }
+        },
+        MaximizedSurfaceExclusionZonesCase{
+            .exclusive_surface_create_func={create_right_attached()},
+            .expected_rectangle=[](geom::Rectangle const& ouput_rect)
+            {
+                return geom::Rectangle{
+                    geom::Point(0, 0),
+                    geom::Size(
+                        ouput_rect.size.width.as_int() - EXCLUSIVE_SURFACE_SIZE,
+                        ouput_rect.size.height.as_int())
+                };
+            }
+        },
+        MaximizedSurfaceExclusionZonesCase{
+            .exclusive_surface_create_func={create_bottom_attached()},
+            .expected_rectangle=[](geom::Rectangle const& ouput_rect)
+            {
+                return geom::Rectangle{
+                    geom::Point(0, 0),
+                    geom::Size(
+                        ouput_rect.size.width.as_int(),
+                        ouput_rect.size.height.as_int() - EXCLUSIVE_SURFACE_SIZE)
+                };
+            }
+        },
+        MaximizedSurfaceExclusionZonesCase{
+            .exclusive_surface_create_func={create_top_attached(), create_bottom_attached()},
+            .expected_rectangle=[](geom::Rectangle const& ouput_rect)
+            {
+                return geom::Rectangle{
+                    geom::Point(0, EXCLUSIVE_SURFACE_SIZE),
+                    geom::Size(
+                        ouput_rect.size.width.as_int(),
+                        ouput_rect.size.height.as_int() - 2 * EXCLUSIVE_SURFACE_SIZE)
+                };
+            }
+        },
+        MaximizedSurfaceExclusionZonesCase{
+            .exclusive_surface_create_func={create_left_attached(), create_right_attached()},
+            .expected_rectangle=[](geom::Rectangle const& ouput_rect)
+            {
+                return geom::Rectangle{
+                    geom::Point(EXCLUSIVE_SURFACE_SIZE, 0),
+                    geom::Size(
+                        ouput_rect.size.width.as_int() - 2 * EXCLUSIVE_SURFACE_SIZE,
+                        ouput_rect.size.height.as_int())
+                };
+            }
+        },
+        MaximizedSurfaceExclusionZonesCase{
+            .exclusive_surface_create_func={create_left_attached(), create_top_attached()},
+            .expected_rectangle=[](geom::Rectangle const& ouput_rect)
+            {
+                return geom::Rectangle{
+                    geom::Point(EXCLUSIVE_SURFACE_SIZE, EXCLUSIVE_SURFACE_SIZE),
+                    geom::Size(
+                        ouput_rect.size.width.as_int() - EXCLUSIVE_SURFACE_SIZE,
+                        ouput_rect.size.height.as_int() - EXCLUSIVE_SURFACE_SIZE)
+                };
+            }
+        },
+        MaximizedSurfaceExclusionZonesCase{
+            .exclusive_surface_create_func={create_right_attached(), create_bottom_attached()},
+            .expected_rectangle=[](geom::Rectangle const& ouput_rect)
+            {
+                return geom::Rectangle{
+                    geom::Point(0, 0),
+                    geom::Size(
+                        ouput_rect.size.width.as_int() - EXCLUSIVE_SURFACE_SIZE,
+                        ouput_rect.size.height.as_int() - EXCLUSIVE_SURFACE_SIZE)
+                };
+            }
+        }
+    )
+);
