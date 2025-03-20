@@ -26,7 +26,44 @@ using Touchpad = miral::InputConfiguration::Touchpad;
 
 struct TestInputConfiguration: testing::Test
 {
+    inline static auto const unclamped_test_values = {-1.0, -0.5, 0.0, 0.5, 1.0};
+    inline static auto const clamped_test_values = {std::pair{-10.0, -1.0}, {-1.1, -1.0}, {1.1, 1.0}, {12.0, 1.0}};
 };
+
+TEST_F(TestInputConfiguration, mouse_acceleration_bias_is_set_and_clamped)
+{
+    Mouse mouse;
+    ASSERT_FALSE(mouse.acceleration_bias().has_value());
+
+    // No clamping in the range [-1, 1]
+    for (auto const value : unclamped_test_values)
+    {
+        mouse.acceleration_bias(value);
+        ASSERT_EQ(mouse.acceleration_bias(), value);
+    }
+    for (auto const [value, expected] : clamped_test_values)
+    {
+        mouse.acceleration_bias(value);
+        ASSERT_EQ(mouse.acceleration_bias(), expected);
+    }
+}
+
+TEST_F(TestInputConfiguration, touchpad_acceleration_bias_is_set_and_clamped)
+{
+    Touchpad touch;
+    ASSERT_FALSE(touch.acceleration_bias().has_value());
+
+    for (auto const value : unclamped_test_values)
+    {
+        touch.acceleration_bias(value);
+        ASSERT_EQ(touch.acceleration_bias(), value);
+    }
+    for (auto const [value, expected] : clamped_test_values)
+    {
+        touch.acceleration_bias(value);
+        ASSERT_EQ(touch.acceleration_bias(), expected);
+    }
+}
 
 namespace miral
 {
