@@ -960,7 +960,7 @@ class MinimalWindowManagerMaximizedSurfaceExclusionZoneTest
 TEST_P(MinimalWindowManagerMaximizedSurfaceExclusionZoneTest, maximized_windows_respect_exclusive_areas)
 {
     auto const app = open_application("test");
-    const auto param = GetParam();
+    auto const param = GetParam();
     auto const output_rectangles = get_output_rectangles();
 
     std::vector<miral::Window> windows;
@@ -972,8 +972,8 @@ TEST_P(MinimalWindowManagerMaximizedSurfaceExclusionZoneTest, maximized_windows_
     msh::SurfaceSpecification spec;
     spec.state = mir_window_state_maximized;
     spec.depth_layer = mir_depth_layer_application;
-    auto window = create_window(app, spec);
-    auto expected = param.expected_rectangle(output_rectangle);
+    auto const window = create_window(app, spec);
+    auto const expected = param.expected_rectangle(output_rectangle);
 
     EXPECT_EQ(window.top_left(), expected.top_left);
     EXPECT_EQ(window.size(), expected.size);
