@@ -18,11 +18,9 @@
 #define MIR_TEST_FRAMEWORK_WINDOW_MANAGEMENT_TEST_HARNESS_H
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 #include <miral/window_management_policy.h>
 #include <miral/application.h>
 #include <miral/window_manager_tools.h>
-#include <mir/shell/surface_specification.h>
 #include <mir/events/event.h>
 #include "mir_test_framework/headless_in_process_server.h"
 
@@ -39,33 +37,33 @@ using WindowManagementPolicyBuilder =
 
 /// A harness for window management testing. To use, extend this class and provide the
 /// necessary virtual methods.
-class WindowManagementTestHarness : public mir_test_framework::HeadlessInProcessServer
+class WindowManagementTestHarness : public HeadlessInProcessServer
 {
 public:
     WindowManagementTestHarness();
     void SetUp() override;
     void TearDown() override;
 
-    auto open_application(std::string const& name) -> miral::Application;
+    auto open_application(std::string const& name) const -> miral::Application;
 
     /// Create a window with the provided spec
     auto create_window(
         miral::Application const&,
-        mir::shell::SurfaceSpecification spec) -> miral::Window;
+        miral::WindowSpecification const& window_spec) const -> miral::Window;
 
-    void publish_event(MirEvent const& event);
-    void request_resize(miral::Window const&, MirInputEvent const*, MirResizeEdge);
-    void request_move(miral::Window const&, MirInputEvent const*);
-    void request_focus(miral::Window const&);
+    void publish_event(MirEvent const& event) const;
+    void request_resize(miral::Window const&, MirInputEvent const*, MirResizeEdge) const;
+    void request_move(miral::Window const&, MirInputEvent const*) const;
+    void request_focus(miral::Window const&) const;
 
-    auto focused_surface() -> std::shared_ptr<mir::scene::Surface>;
-    auto tools() -> miral::WindowManagerTools&;
+    auto focused(miral::Window const&) const -> bool;
+    auto tools() const -> miral::WindowManagerTools&;
     auto is_above(miral::Window const& a, miral::Window const& b) const -> bool;
 
     virtual auto get_builder() -> WindowManagementPolicyBuilder = 0;
     virtual auto get_output_rectangles() -> std::vector<mir::geometry::Rectangle> = 0;
 
-    struct Self;
+    class Self;
     std::shared_ptr<Self> self;
 };
 
