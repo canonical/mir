@@ -59,71 +59,237 @@ public:
     std::shared_ptr<mc::BufferStream> stream;
     std::shared_ptr<ms::Surface> surface;
 };
-}
 
-class mir_test_framework::WindowManagementTestHarness::Self final : public ms::SurfaceObserver
+/// Wraps a [miral::WindowManagerTools] and calls [on_change] whenever an action on the
+/// tools would cause a change to the underlying system. This is important in this context
+/// as it allows us to synchronously process work that has been triggered from other requests
+/// which would have otherwise causes a deadlock.
+class NotifyingWindowManagerToolsImplementation final : public miral::WindowManagerToolsImplementation
 {
 public:
-    explicit Self(mir::Server& server) : server(server), tools(nullptr)
+    NotifyingWindowManagerToolsImplementation(
+        miral::WindowManagerTools const& tools,
+        std::function<void()> const& on_change)
+        : tools(tools), on_change(on_change) {}
+
+    auto count_applications() const -> unsigned int override
     {
+        return tools.count_applications();
     }
 
-    void attrib_changed(ms::Surface const*, MirWindowAttrib, int) override {}
-    void window_resized_to(ms::Surface const*, geom::Size const&) override {}
-    void content_resized_to(ms::Surface const*, geom::Size const&) override {}
-    void moved_to(ms::Surface const*, geom::Point const&) override {}
-    void hidden_set_to(ms::Surface const*, bool) override {}
-    void frame_posted(ms::Surface const*, geom::Rectangle const&) override {}
-    void alpha_set_to(ms::Surface const*, float) override {}
-    void orientation_set_to(ms::Surface const*, MirOrientation) override {}
-    void transformation_set_to(ms::Surface const*, glm::mat4 const&) override {}
-    void reception_mode_set_to(ms::Surface const*, mir::input::InputReceptionMode) override {}
-
-    void cursor_image_set_to(
-        ms::Surface const*,
-        std::weak_ptr<mg::CursorImage> const&) override {}
-
-    void client_surface_close_requested(ms::Surface const* surf) override
+    void for_each_application(std::function<void(miral::ApplicationInfo& info)> const& func) override
     {
-        std::shared_ptr<ms::Surface> to_destroy = nullptr;
-        {
-            std::lock_guard lock{mutex};
-            auto const it = std::find_if(surface_cache.begin(), surface_cache.end(),
-                [surf](CachedSurfaceData const& data)
-                {
-                    return data.surface.get() == surf;
-                });
-            if (it != surface_cache.end())
-            {
-                to_destroy = it->surface;
-                surface_cache.erase(it);
-            }
-        }
-
-        if (to_destroy == nullptr)
-        {
-            mir::log_error("client_surface_close_requested: Unable to find surface in known_surfaces");
-            return;
-        }
-
-        pending_actions.emplace_back([
-            shell=server.the_shell(),
-            to_destroy=to_destroy]
-        {
-            shell->destroy_surface(to_destroy->session().lock(), to_destroy);
-        });
+        tools.for_each_application(func);
     }
 
-    void renamed(ms::Surface const*, std::string const&) override {}
+    auto find_application(std::function<bool(miral::ApplicationInfo const& info)> const& predicate) -> miral::Application override
+    {
+        return tools.find_application(predicate);
+    }
 
-    void cursor_image_removed(ms::Surface const*) override {}
-    void placed_relative(ms::Surface const*, geom::Rectangle const&) override {}
-    void input_consumed(ms::Surface const*, std::shared_ptr<MirEvent const> const&) override {}
-    void application_id_set_to(ms::Surface const*, std::string const&) override {}
-    void depth_layer_set_to(ms::Surface const*, MirDepthLayer) override {}
-    void entered_output(ms::Surface const*, mg::DisplayConfigurationOutputId const&) override {}
-    void left_output(ms::Surface const*, mg::DisplayConfigurationOutputId const&) override {}
-    void rescale_output(ms::Surface const*, mg::DisplayConfigurationOutputId const&) override {}
+    auto info_for(std::weak_ptr<mir::scene::Session> const& session) const -> miral::ApplicationInfo& override
+    {
+        return tools.info_for(session);
+    }
+
+    auto info_for(std::weak_ptr<mir::scene::Surface> const& surface) const -> miral::WindowInfo& override
+    {
+        return tools.info_for(surface);
+    }
+
+    auto info_for(miral::Window const& window) const -> miral::WindowInfo& override
+    {
+        return tools.info_for(window);
+    }
+
+    auto info_for_window_id(std::string const& id) const -> miral::WindowInfo& override
+    {
+        return tools.info_for_window_id(id);
+    }
+
+    auto id_for_window(miral::Window const& window) const -> std::string override
+    {
+        return tools.id_for_window(window);
+    }
+
+    void ask_client_to_close(miral::Window const& window) override
+    {
+        tools.ask_client_to_close(window);
+        on_change();
+    }
+
+    auto active_window() const -> miral::Window override
+    {
+        return tools.active_window();
+    }
+
+    auto select_active_window(miral::Window const& hint) -> miral::Window override
+    {
+        auto window = tools.select_active_window(hint);
+        on_change();
+        return window;
+    }
+
+    void drag_active_window(mir::geometry::Displacement movement) override
+    {
+        tools.drag_active_window(movement);
+        on_change();
+    }
+
+    void focus_next_application() override
+    {
+        tools.focus_next_application();
+        on_change();
+    }
+
+    void focus_prev_application() override
+    {
+        tools.focus_prev_application();
+        on_change();
+    }
+
+    void focus_next_within_application() override
+    {
+        tools.focus_next_within_application();
+        on_change();
+    }
+
+    void focus_prev_within_application() override
+    {
+        tools.focus_prev_within_application();
+        on_change();
+    }
+
+    auto window_to_select_application(const miral::Application app) const -> std::optional<miral::Window> override
+    {
+        auto window = tools.window_to_select_application(app);
+        on_change();
+        return window;
+    }
+
+    auto can_select_window(miral::Window const& window) const -> bool override
+    {
+        return tools.can_select_window(window);
+    }
+
+    auto window_at(mir::geometry::Point cursor) const -> miral::Window override
+    {
+        return tools.window_at(cursor);
+    }
+
+    auto active_output() -> mir::geometry::Rectangle const override
+    {
+        return tools.active_output();
+    }
+
+    void raise_tree(miral::Window const& root) override
+    {
+        tools.raise_tree(root);
+        on_change();
+    }
+
+    void swap_tree_order(miral::Window const& first, miral::Window const& second) override
+    {
+        tools.swap_tree_order(first, second);
+        on_change();
+    }
+
+    void send_tree_to_back(miral::Window const& root) override
+    {
+        tools.send_tree_to_back(root);
+        on_change();
+    }
+
+    void modify_window(miral::WindowInfo& window_info, miral::WindowSpecification const& modifications) override
+    {
+        tools.modify_window(window_info, modifications);
+        on_change();
+    }
+
+    void place_and_size_for_state(miral::WindowSpecification& modifications, miral::WindowInfo const& window_info) const override
+    {
+        tools.place_and_size_for_state(modifications, window_info);
+        on_change();
+    }
+
+    auto create_workspace() -> std::shared_ptr<miral::Workspace> override
+    {
+        auto workspace = tools.create_workspace();
+        on_change();
+        return workspace;
+    }
+
+    void add_tree_to_workspace(miral::Window const& window, std::shared_ptr<miral::Workspace> const& workspace) override
+    {
+        tools.add_tree_to_workspace(window, workspace);
+        on_change();
+    }
+
+    void remove_tree_from_workspace(miral::Window const& window, std::shared_ptr<miral::Workspace> const& workspace) override
+    {
+        tools.remove_tree_from_workspace(window, workspace);
+        on_change();
+    }
+
+    void move_workspace_content_to_workspace(
+        std::shared_ptr<miral::Workspace> const& to_workspace,
+        std::shared_ptr<miral::Workspace> const& from_workspace) override
+    {
+        tools.move_workspace_content_to_workspace(to_workspace, from_workspace);
+        on_change();
+    }
+
+    void for_each_workspace_containing(
+        miral::Window const& window,
+        std::function<void(std::shared_ptr<miral::Workspace> const&)> const& callback) override
+    {
+        tools.for_each_workspace_containing(window, callback);
+    }
+
+    void for_each_window_in_workspace(
+        std::shared_ptr<miral::Workspace> const& workspace,
+        std::function<void(miral::Window const& window)> const& callback) override
+    {
+        tools.for_each_window_in_workspace(workspace, callback);
+    }
+
+    void invoke_under_lock(std::function<void()> const& callback) override
+    {
+        tools.invoke_under_lock(callback);
+    }
+
+    void move_cursor_to(mir::geometry::PointF point) override
+    {
+        tools.move_cursor_to(point);
+        on_change();
+    }
+
+    void drag_window(
+        miral::Window const& window, mir::geometry::Displacement& movement) override
+    {
+        tools.drag_window(window, movement);
+        on_change();
+    }
+
+    auto active_application_zone() -> miral::Zone override
+    {
+        return tools.active_application_zone();
+    }
+private:
+    miral::WindowManagerTools tools;
+    std::function<void()> on_change;
+};
+}
+
+
+class mir_test_framework::WindowManagementTestHarness::Self
+{
+public:
+    explicit Self(mir::Server& server)
+        : server(server),
+          surface_observer(std::make_shared<SurfaceObserver>(this))
+    {
+    }
 
     void process_pending()
     {
@@ -132,12 +298,72 @@ public:
         pending_actions.clear();
     }
 
+    class SurfaceObserver final : public ms::SurfaceObserver
+    {
+    public:
+        explicit SurfaceObserver(Self* self)
+            : self(self) {}
+
+        void attrib_changed(ms::Surface const*, MirWindowAttrib, int) override {}
+        void window_resized_to(ms::Surface const*, geom::Size const&) override {}
+        void content_resized_to(ms::Surface const*, geom::Size const&) override {}
+        void moved_to(ms::Surface const*, geom::Point const&) override {}
+        void hidden_set_to(ms::Surface const*, bool) override {}
+        void frame_posted(ms::Surface const*, geom::Rectangle const&) override {}
+        void alpha_set_to(ms::Surface const*, float) override {}
+        void orientation_set_to(ms::Surface const*, MirOrientation) override {}
+        void transformation_set_to(ms::Surface const*, glm::mat4 const&) override {}
+        void reception_mode_set_to(ms::Surface const*, mir::input::InputReceptionMode) override {}
+        void cursor_image_set_to(
+            ms::Surface const*,
+            std::weak_ptr<mg::CursorImage> const&) override {}
+        void renamed(ms::Surface const*, std::string const&) override {}
+        void cursor_image_removed(ms::Surface const*) override {}
+        void placed_relative(ms::Surface const*, geom::Rectangle const&) override {}
+        void input_consumed(ms::Surface const*, std::shared_ptr<MirEvent const> const&) override {}
+        void application_id_set_to(ms::Surface const*, std::string const&) override {}
+        void depth_layer_set_to(ms::Surface const*, MirDepthLayer) override {}
+        void entered_output(ms::Surface const*, mg::DisplayConfigurationOutputId const&) override {}
+        void left_output(ms::Surface const*, mg::DisplayConfigurationOutputId const&) override {}
+        void rescale_output(ms::Surface const*, mg::DisplayConfigurationOutputId const&) override {}
+
+        void client_surface_close_requested(ms::Surface const* surf) override
+        {
+            std::shared_ptr<ms::Surface> to_destroy = nullptr;
+            auto const it = std::find_if(self->surface_cache.begin(), self->surface_cache.end(),
+                [surf](CachedSurfaceData const& data)
+                {
+                    return data.surface.get() == surf;
+                });
+            if (it != self->surface_cache.end())
+            {
+                to_destroy = it->surface;
+                self->surface_cache.erase(it);
+            }
+
+            if (to_destroy == nullptr)
+            {
+                mir::log_error("client_surface_close_requested: Unable to find surface in known_surfaces");
+                return;
+            }
+
+            self->pending_actions.emplace_back([
+                shell=self->server.the_shell(),
+                to_destroy=to_destroy]
+            {
+                shell->destroy_surface(to_destroy->session().lock(), to_destroy);
+            });
+        }
+
+    private:
+        Self* self;
+    };
+
     mir::Server& server;
-
-    /// Lazily loaded window manager tools.
-    miral::WindowManagerTools tools;
-
-    std::mutex mutable mutex;
+    std::unique_ptr<miral::WindowManagerTools> tools;
+    std::unique_ptr<NotifyingWindowManagerToolsImplementation> impl;
+    mtd::FakeDisplay* display = nullptr;
+    std::shared_ptr<SurfaceObserver> surface_observer;
 
     /// A cache of the data associated with each surface. This is used for
     /// both discoverability of the surface and to ensure that the reference
@@ -156,39 +382,31 @@ public:
     /// after each action.
     std::vector<std::function<void()>> pending_actions;
 
-    mtd::FakeDisplay* display = nullptr;
 };
 
 mir_test_framework::WindowManagementTestHarness::WindowManagementTestHarness()
-    : self{std::make_shared<Self>(server)}
+    : self{std::make_unique<Self>(server)}
 {
 }
 
-mir_test_framework::WindowManagementTestHarness::~WindowManagementTestHarness()
-{
-    if (!self->pending_actions.empty())
-    {
-        mir::fatal_error("WARNING: Mir runs some operations asynchronously, as that is the nature of wayland.\n"
-            "    If you're seeing this error, you should be running WindowManagementTestHarness::process_pending_actions before shutting down.\n"
-            "    If your test is failing, this may very well be the reason");
-    }
-}
+mir_test_framework::WindowManagementTestHarness::~WindowManagementTestHarness() = default;
 
 void mir_test_framework::WindowManagementTestHarness::SetUp()
 {
     miral::SetWindowManagementPolicy const policy(
         [&](miral::WindowManagerTools const& tools)
         {
-            self->tools = tools;
+            self->impl = std::make_unique<NotifyingWindowManagerToolsImplementation>(tools, [self=self.get()]
+            {
+                self->process_pending();
+            });
+            self->tools = std::make_unique<miral::WindowManagerTools>(self->impl.get());
             return get_builder()(tools);
         });
     policy(server);
 
     auto fake_display = std::make_unique<mtd::FakeDisplay>(get_output_rectangles());
-    {
-        std::lock_guard lock{self->mutex};
-        self->display = fake_display.get();
-    }
+    self->display = fake_display.get();
     preset_display(std::move(fake_display));
 
     HeadlessInProcessServer::SetUp();
@@ -229,12 +447,9 @@ auto mir_test_framework::WindowManagementTestHarness::create_window(
         session,
         {},
         spec,
-        self,
+        self->surface_observer,
         &mir::immediate_executor);
-    {
-        std::lock_guard lock{self->mutex};
-        self->surface_cache.emplace_back(stream, surface);
-    }
+    self->surface_cache.emplace_back(stream, surface);
     server.the_shell()->surface_ready(surface);
 
     return {session, surface};
@@ -264,13 +479,6 @@ void mir_test_framework::WindowManagementTestHarness::request_move(
     self->process_pending();
 }
 
-void mir_test_framework::WindowManagementTestHarness::request_focus(
-    miral::Window const& window) const
-{
-    self->tools.select_active_window(window);
-    self->process_pending();
-}
-
 auto mir_test_framework::WindowManagementTestHarness::focused(miral::Window const& window) const -> bool
 {
     self->process_pending();
@@ -279,16 +487,11 @@ auto mir_test_framework::WindowManagementTestHarness::focused(miral::Window cons
 
 auto mir_test_framework::WindowManagementTestHarness::tools() const -> miral::WindowManagerTools&
 {
-    return self->tools;
+    return *self->tools;
 }
 
 auto mir_test_framework::WindowManagementTestHarness::is_above(
     miral::Window const& a, miral::Window const& b) const -> bool
 {
     return server.the_shell()->is_above(a.operator std::shared_ptr<ms::Surface>(), b.operator std::shared_ptr<ms::Surface>());
-}
-
-void mir_test_framework::WindowManagementTestHarness::process_pending_actions() const
-{
-    self->process_pending();
 }

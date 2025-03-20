@@ -583,7 +583,7 @@ TEST_F(MinimalWindowManagerTest,  when_a_window_is_focused_then_it_appears_above
     auto window2 = create_window(app2, spec);
     auto window3 = create_window(app3, spec);
 
-    request_focus(window1);
+    tools().select_active_window(window1);
 
     EXPECT_TRUE(focused(window1));
 
@@ -747,7 +747,7 @@ TEST_F(MinimalWindowManagerTest, closing_attached_window_causes_maximized_to_res
     // Act: Close the attached window
     tools().ask_client_to_close(attached);
 
-    process_pending_actions();
+    // process_pending_actions();
 
     // Expect: the window now takes up the full dimensions
     EXPECT_EQ(window.size(), geom::Size(
