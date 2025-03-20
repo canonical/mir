@@ -41,7 +41,7 @@ TEST_F(TestInputConfiguration, mouse_acceleration_bias_is_set_and_clamped)
         mouse.acceleration_bias(value);
         ASSERT_EQ(mouse.acceleration_bias(), value);
     }
-    for (auto const [value, expected] : clamped_test_values)
+    for (auto const& [value, expected] : clamped_test_values)
     {
         mouse.acceleration_bias(value);
         ASSERT_EQ(mouse.acceleration_bias(), expected);
@@ -58,7 +58,7 @@ TEST_F(TestInputConfiguration, touchpad_acceleration_bias_is_set_and_clamped)
         touch.acceleration_bias(value);
         ASSERT_EQ(touch.acceleration_bias(), value);
     }
-    for (auto const [value, expected] : clamped_test_values)
+    for (auto const& [value, expected] : clamped_test_values)
     {
         touch.acceleration_bias(value);
         ASSERT_EQ(touch.acceleration_bias(), expected);
