@@ -527,5 +527,7 @@ global:
     miral::InputConfiguration::Mouse::merge*;
     miral::InputConfiguration::Touchpad::merge*;
     miral::InputConfiguration::Touchpad::middle_mouse_button_emulation*;
+    miral::InputConfiguration::Keyboard::repeat_delay*;
+    miral::InputConfiguration::Keyboard::repeat_rate*;
   };
 } MIRAL_5.2;

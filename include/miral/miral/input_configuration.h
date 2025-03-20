@@ -151,6 +151,9 @@ public:
     void set_repeat_rate(int new_rate);
     void set_repeat_delay(int new_delay);
 
+    auto repeat_rate() const -> std::optional<int>;
+    auto repeat_delay()  const-> std::optional<int>;
+
     void merge(InputConfiguration::Keyboard const& other);
 
 private:

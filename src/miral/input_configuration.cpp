@@ -411,10 +411,14 @@ void miral::InputConfiguration::Keyboard::set_repeat_delay(int new_delay) {
     self->repeat_delay = new_delay;
 }
 
+auto miral::InputConfiguration::Keyboard::repeat_rate() const -> std::optional<int>
 {
+    return self->repeat_rate;
 }
 
+auto miral::InputConfiguration::Keyboard::repeat_delay() const -> std::optional<int>
 {
+    return self->repeat_delay;
 }
 
 void miral::InputConfiguration::Mouse::merge(InputConfiguration::Mouse const& other)
