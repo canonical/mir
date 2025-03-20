@@ -39,23 +39,22 @@ using namespace testing;
 namespace
 {
 constexpr int EXCLUSIVE_SURFACE_SIZE = 50;
-typedef std::function<msh::SurfaceSpecification(geom::Size const& output_size)> CreateSurfaceSpecFunc;
+typedef std::function<miral::WindowSpecification(geom::Size const& output_size)> CreateSurfaceSpecFunc;
 
 CreateSurfaceSpecFunc create_top_attached()
 {
     return [](geom::Size const& output_size)
     {
-        msh::SurfaceSpecification spec;
-        spec.width = output_size.width;
-        spec.height = geom::Height{EXCLUSIVE_SURFACE_SIZE};
-        spec.top_left = geom::Point{0, 0};
-        spec.exclusive_rect = geom::Rectangle{
+        miral::WindowSpecification spec;
+        spec.size() = geom::Size(output_size.width, geom::Height{EXCLUSIVE_SURFACE_SIZE});
+        spec.top_left() = geom::Point{0, 0};
+        spec.exclusive_rect() = geom::Rectangle{
             geom::Point{0, 0},
-            geom::Size{spec.width.value(), spec.height.value()}
+            spec.size().value()
         };
-        spec.attached_edges = static_cast<MirPlacementGravity>(mir_placement_gravity_north | mir_placement_gravity_east | mir_placement_gravity_west);
-        spec.state = mir_window_state_attached;
-        spec.depth_layer = mir_depth_layer_application;
+        spec.attached_edges() = static_cast<MirPlacementGravity>(mir_placement_gravity_north | mir_placement_gravity_east | mir_placement_gravity_west);
+        spec.state() = mir_window_state_attached;
+        spec.depth_layer() = mir_depth_layer_application;
         return spec;
     };
 }
@@ -64,17 +63,16 @@ CreateSurfaceSpecFunc create_left_attached()
 {
     return [](geom::Size const& output_size)
     {
-        msh::SurfaceSpecification spec;
-        spec.width = geom::Width{EXCLUSIVE_SURFACE_SIZE};
-        spec.height = output_size.height;
-        spec.top_left = geom::Point{0, 0};
-        spec.exclusive_rect = geom::Rectangle{
+        miral::WindowSpecification spec;
+        spec.size() = { geom::Width{EXCLUSIVE_SURFACE_SIZE}, output_size.height };
+        spec.top_left() = geom::Point{0, 0};
+        spec.exclusive_rect() = geom::Rectangle{
             geom::Point{0, 0},
-            geom::Size{spec.width.value(), spec.height.value()}
+            spec.size().value()
         };
-        spec.attached_edges = static_cast<MirPlacementGravity>(mir_placement_gravity_north | mir_placement_gravity_south | mir_placement_gravity_west);
-        spec.state = mir_window_state_attached;
-        spec.depth_layer = mir_depth_layer_application;
+        spec.attached_edges() = static_cast<MirPlacementGravity>(mir_placement_gravity_north | mir_placement_gravity_south | mir_placement_gravity_west);
+        spec.state() = mir_window_state_attached;
+        spec.depth_layer() = mir_depth_layer_application;
         return spec;
     };
 }
@@ -83,17 +81,16 @@ CreateSurfaceSpecFunc create_right_attached()
 {
     return [](geom::Size const& output_size)
     {
-        msh::SurfaceSpecification spec;
-        spec.width = geom::Width{EXCLUSIVE_SURFACE_SIZE};
-        spec.height = output_size.height;
-        spec.top_left = geom::Point{output_size.width.as_int() - spec.width.value().as_int(), 0};
-        spec.exclusive_rect = geom::Rectangle{
+        miral::WindowSpecification spec;
+        spec.size() = { geom::Width{EXCLUSIVE_SURFACE_SIZE}, output_size.height };
+        spec.top_left() = geom::Point{output_size.width.as_int() - spec.size().value().width.as_int(), 0};
+        spec.exclusive_rect() = geom::Rectangle{
             geom::Point{0, 0},
-            geom::Size{spec.width.value(), spec.height.value()}
+            spec.size().value()
         };
-        spec.attached_edges = static_cast<MirPlacementGravity>(mir_placement_gravity_north | mir_placement_gravity_south | mir_placement_gravity_east);
-        spec.state = mir_window_state_attached;
-        spec.depth_layer = mir_depth_layer_application;
+        spec.attached_edges() = static_cast<MirPlacementGravity>(mir_placement_gravity_north | mir_placement_gravity_south | mir_placement_gravity_east);
+        spec.state() = mir_window_state_attached;
+        spec.depth_layer() = mir_depth_layer_application;
         return spec;
     };
 }
@@ -102,25 +99,19 @@ CreateSurfaceSpecFunc create_bottom_attached()
 {
     return [](geom::Size const& output_size)
     {
-        msh::SurfaceSpecification spec;
-        spec.width = output_size.width;
-        spec.height = geom::Height{EXCLUSIVE_SURFACE_SIZE};
-        spec.top_left = geom::Point{0, output_size.height.as_int() - spec.height.value().as_int()};
-        spec.exclusive_rect = geom::Rectangle{
+        miral::WindowSpecification spec;
+        spec.size() = { output_size.width, geom::Height{EXCLUSIVE_SURFACE_SIZE} };
+        spec.top_left() = geom::Point{0, output_size.height.as_int() - spec.size().value().height.as_int()};
+        spec.exclusive_rect() = geom::Rectangle{
             geom::Point{0, 0},
-            geom::Size{spec.width.value(), spec.height.value()}
+            spec.size().value()
         };
-        spec.attached_edges = static_cast<MirPlacementGravity>(mir_placement_gravity_south | mir_placement_gravity_east | mir_placement_gravity_west);
-        spec.state = mir_window_state_attached;
-        spec.depth_layer = mir_depth_layer_application;
+        spec.attached_edges() = static_cast<MirPlacementGravity>(mir_placement_gravity_south | mir_placement_gravity_east | mir_placement_gravity_west);
+        spec.state() = mir_window_state_attached;
+        spec.depth_layer() = mir_depth_layer_application;
         return spec;
     };
 }
-}
-
-MATCHER_P(LockedEq, value, "")
-{
-    return arg.lock() == value;
 }
 
 class MinimalWindowManagerTest : public mir_test_framework::WindowManagementTestHarness
@@ -146,24 +137,21 @@ public:
 TEST_F(MinimalWindowManagerTest, new_window_has_focus)
 {
     auto const app = open_application("test");
-    msh::SurfaceSpecification spec;
-    spec.width = geom::Width {100};
-    spec.height = geom::Height{100};
-    spec.depth_layer = mir_depth_layer_application;
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width {100}, geom::Height{100} };
+    spec.depth_layer() = mir_depth_layer_application;
     auto window = create_window(app, spec);
-    EXPECT_EQ(focused_surface(), window.operator std::shared_ptr<ms::Surface>());
+    EXPECT_TRUE(focused(window));
 }
 
 TEST_F(MinimalWindowManagerTest, alt_f4_closes_active_window)
 {
     auto const app = open_application("test");
-    msh::SurfaceSpecification spec;
-    spec.width = geom::Width {100};
-    spec.height = geom::Height{100};
-    spec.depth_layer = mir_depth_layer_application;
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width {100}, geom::Height{100} };
+    spec.depth_layer() = mir_depth_layer_application;
     auto window = create_window(app, spec);
-    auto surface = window.operator std::shared_ptr<ms::Surface>();
-    EXPECT_EQ(focused_surface(), surface);
+    EXPECT_TRUE(focused(window));
 
     // Process an alt + f4 input
     std::chrono::nanoseconds const event_timestamp = std::chrono::system_clock::now().time_since_epoch();
@@ -180,26 +168,24 @@ TEST_F(MinimalWindowManagerTest, alt_f4_closes_active_window)
         modifiers);
     publish_event(*event);
 
-    EXPECT_EQ(focused_surface(), nullptr);
+    EXPECT_TRUE(focused(miral::Window()));
 }
 
 TEST_F(MinimalWindowManagerTest, can_navigate_between_apps_using_alt_tab)
 {
     // Create two apps, each with a single window
     auto const app1 = open_application("test");
-    msh::SurfaceSpecification spec1;
-    spec1.width = geom::Width {100};
-    spec1.height = geom::Height{100};
-    spec1.depth_layer = mir_depth_layer_application;
+    miral::WindowSpecification spec1;
+    spec1.size() = { geom::Width {100}, geom::Height{100} };
+    spec1.depth_layer() = mir_depth_layer_application;
     auto window1 = create_window(app1, spec1);
     auto const app2 = open_application("test-1");
-    msh::SurfaceSpecification spec2;
-    spec2.width = geom::Width {100};
-    spec2.height = geom::Height{100};
-    spec2.depth_layer = mir_depth_layer_application;
+    miral::WindowSpecification spec2;
+    spec2.size() = { geom::Width {100}, geom::Height{100} };
+    spec2.depth_layer() = mir_depth_layer_application;
     auto window2 = create_window(app2, spec2);
 
-    EXPECT_EQ(focused_surface(), window2.operator std::shared_ptr<ms::Surface>());
+    EXPECT_TRUE(focused(window2));
 
     // Process an alt + tab input
     auto const alt_tab_down_event = mir::events::make_key_event(
@@ -212,8 +198,7 @@ TEST_F(MinimalWindowManagerTest, can_navigate_between_apps_using_alt_tab)
     publish_event(*alt_tab_down_event);
 
     // Assert that the focused window is window1
-    auto surface1 = window1.operator std::shared_ptr<ms::Surface>();
-    EXPECT_EQ(focused_surface(), surface1);
+    EXPECT_TRUE(focused(window1));
 
     // Finish an alt + tab input
     auto const alt_tab_upevent = mir::events::make_key_event(
@@ -226,26 +211,24 @@ TEST_F(MinimalWindowManagerTest, can_navigate_between_apps_using_alt_tab)
     publish_event(*alt_tab_upevent);
 
     // Assert that the focused window is window1
-    EXPECT_EQ(focused_surface(), surface1);
+    EXPECT_TRUE(focused(window1));
 }
 
 TEST_F(MinimalWindowManagerTest, can_navigate_within_an_app_using_alt_grave)
 {
     // Create two windows on the same app
     auto const app1 = open_application("test");
-    msh::SurfaceSpecification spec1;
-    spec1.width = geom::Width {100};
-    spec1.height = geom::Height{100};
-    spec1.depth_layer = mir_depth_layer_application;
+    miral::WindowSpecification spec1;
+    spec1.size() = { geom::Width {100}, geom::Height{100} };
+    spec1.depth_layer() = mir_depth_layer_application;
     auto window1 = create_window(app1, spec1);
 
-    msh::SurfaceSpecification spec2;
-    spec2.width = geom::Width {100};
-    spec2.height = geom::Height{100};
-    spec2.depth_layer = mir_depth_layer_application;
+    miral::WindowSpecification spec2;
+    spec2.size() = { geom::Width {100}, geom::Height{100} };
+    spec2.depth_layer() = mir_depth_layer_application;
     auto window2 = create_window(app1, spec2);
 
-    EXPECT_EQ(focused_surface(), window2.operator std::shared_ptr<ms::Surface>());
+    EXPECT_TRUE(focused(window2));
 
     // Process an alt + grave input
     auto const alt_grave_down_event = mir::events::make_key_event(
@@ -258,8 +241,7 @@ TEST_F(MinimalWindowManagerTest, can_navigate_within_an_app_using_alt_grave)
     publish_event(*alt_grave_down_event);
 
     // Assert that the focused window is window1
-    auto surface1 = window1.operator std::shared_ptr<ms::Surface>();
-    EXPECT_EQ(focused_surface(), surface1);
+    EXPECT_TRUE(focused(window1));
 
     // Finish an alt + grave input
     auto const alt_grave_upevent = mir::events::make_key_event(
@@ -272,26 +254,24 @@ TEST_F(MinimalWindowManagerTest, can_navigate_within_an_app_using_alt_grave)
     publish_event(*alt_grave_upevent);
 
     // Assert that the focused window is window1
-    EXPECT_EQ(focused_surface(), surface1);
+    EXPECT_TRUE(focused(window1));
 }
 
 TEST_F(MinimalWindowManagerTest, can_select_window_with_pointer)
 {
     // Create two apps, each with a single window
     auto const app1 = open_application("test");
-    msh::SurfaceSpecification spec1;
-    spec1.width = geom::Width {100};
-    spec1.height = geom::Height{100};
-    spec1.depth_layer = mir_depth_layer_application;
+    miral::WindowSpecification spec1;
+    spec1.size() = { geom::Width {100}, geom::Height{100} };
+    spec1.depth_layer() = mir_depth_layer_application;
     auto window1 = create_window(app1, spec1);
     auto const app2 = open_application("test-1");
-    msh::SurfaceSpecification spec2;
-    spec2.width = geom::Width {50};
-    spec2.height = geom::Height{50};
-    spec2.depth_layer = mir_depth_layer_application;
+    miral::WindowSpecification spec2;
+    spec2.size() = { geom::Width {50}, geom::Height{50} };
+    spec2.depth_layer() = mir_depth_layer_application;
     auto window2 = create_window(app2, spec2);
 
-    EXPECT_EQ(focused_surface(), window2.operator std::shared_ptr<ms::Surface>());
+    EXPECT_TRUE(focused(window2));
 
     auto const select_event = mir::events::make_pointer_event(
         0,
@@ -308,25 +288,23 @@ TEST_F(MinimalWindowManagerTest, can_select_window_with_pointer)
         {});
     publish_event(*select_event);
 
-    EXPECT_EQ(focused_surface(), window1.operator std::shared_ptr<ms::Surface>());
+    EXPECT_TRUE(focused(window1));
 }
 
 TEST_F(MinimalWindowManagerTest, can_select_window_with_touch)
 {
     // Create two apps, each with a single window
     auto const app1 = open_application("test");
-    msh::SurfaceSpecification spec1;
-    spec1.width = geom::Width {100};
-    spec1.height = geom::Height{100};
-    spec1.depth_layer = mir_depth_layer_application;
+    miral::WindowSpecification spec1;
+    spec1.size() = { geom::Width {100}, geom::Height{100} };
+    spec1.depth_layer() = mir_depth_layer_application;
     auto window1 = create_window(app1, spec1);
-    msh::SurfaceSpecification spec2;
-    spec2.width = geom::Width {50};
-    spec2.height = geom::Height{50};
-    spec2.depth_layer = mir_depth_layer_application;
+    miral::WindowSpecification spec2;
+    spec2.size() = { geom::Width {50}, geom::Height{50} };
+    spec2.depth_layer() = mir_depth_layer_application;
     auto window2 = create_window(app1, spec2);
 
-    EXPECT_EQ(focused_surface(), window2.operator std::shared_ptr<ms::Surface>());
+    EXPECT_TRUE(focused(window2));
 
     auto const select_event = mir::events::make_touch_event(
         0,
@@ -342,16 +320,15 @@ TEST_F(MinimalWindowManagerTest, can_select_window_with_touch)
         1.f, 0.f, 0.f, 0.f);
     publish_event(*select_event);
 
-    EXPECT_EQ(focused_surface(), window1.operator std::shared_ptr<ms::Surface>());
+    EXPECT_TRUE(focused(window1));
 }
 
 TEST_F(MinimalWindowManagerTest, can_move_window_with_pointer)
 {
     auto const app = open_application("test");
-    msh::SurfaceSpecification spec;
-    spec.width = geom::Width {100};
-    spec.height = geom::Height{100};
-    spec.depth_layer = mir_depth_layer_application;
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width {100}, geom::Height{100} };
+    spec.depth_layer() = mir_depth_layer_application;
     auto window = create_window(app, spec);
 
     // Start pointer movement
@@ -392,12 +369,11 @@ TEST_F(MinimalWindowManagerTest, can_move_window_with_pointer)
 TEST_F(MinimalWindowManagerTest, can_move_window_with_pointer_even_when_maximized)
 {
     auto const app = open_application("test");
-    mir::shell::SurfaceSpecification spec;
-    spec.state = mir_window_state_maximized;
-    spec.depth_layer = mir_depth_layer_application;
-    spec.width = geom::Width{100};
-    spec.height = geom::Height{100};
-    spec.top_left = geom::Point{0, 0};
+    miral::WindowSpecification spec;
+    spec.state() = mir_window_state_maximized;
+    spec.depth_layer() = mir_depth_layer_application;
+    spec.size() = { geom::Width {100}, geom::Height{100} };
+    spec.top_left() = geom::Point{0, 0};
     auto window = create_window(app, spec);
 
     // Start pointer movement
@@ -442,10 +418,9 @@ TEST_F(MinimalWindowManagerTest, can_move_window_with_touch)
 {
     mir::log_info("can_move_window_with_touch: opening application");
     auto const app = open_application("test");
-    msh::SurfaceSpecification spec;
-    spec.width = geom::Width {100};
-    spec.height = geom::Height{100};
-    spec.depth_layer = mir_depth_layer_application;
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width {100}, geom::Height{100} };
+    spec.depth_layer() = mir_depth_layer_application;
 
     mir::log_info("can_move_window_with_touch: creating window");
     auto window = create_window(app, spec);
@@ -494,10 +469,9 @@ TEST_F(MinimalWindowManagerTest, can_move_window_with_touch)
 TEST_F(MinimalWindowManagerTest, can_resize_south_east_with_pointer)
 {
     auto const app = open_application("test");
-    msh::SurfaceSpecification spec;
-    spec.width = geom::Width {100};
-    spec.height = geom::Height{100};
-    spec.depth_layer = mir_depth_layer_application;
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width {100}, geom::Height{100} };
+    spec.depth_layer() = mir_depth_layer_application;
     auto window = create_window(app, spec);
 
     // Move pointer to edge of surface to simulate starting a resize from the right edge
@@ -542,10 +516,9 @@ TEST_F(MinimalWindowManagerTest, can_resize_south_east_with_pointer)
 TEST_F(MinimalWindowManagerTest, can_resize_south_east_with_touch)
 {
     auto const app = open_application("test");
-    msh::SurfaceSpecification spec;
-    spec.width = geom::Width {100};
-    spec.height = geom::Height{100};
-    spec.depth_layer = mir_depth_layer_application;
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width {100}, geom::Height{100} };
+    spec.depth_layer() = mir_depth_layer_application;
     auto window = create_window(app, spec);
 
     // Initiate the resize
@@ -586,10 +559,9 @@ TEST_F(MinimalWindowManagerTest,  new_windows_are_inserted_above_older_windows)
     auto const app1 = open_application("app1");
     auto const app2 = open_application("app2");
     auto const app3 = open_application("app3");
-    msh::SurfaceSpecification spec;
-    spec.width = geom::Width {100};
-    spec.height = geom::Height{100};
-    spec.depth_layer = mir_depth_layer_application;
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width {100}, geom::Height{100} };
+    spec.depth_layer() = mir_depth_layer_application;
     auto window1 = create_window(app1, spec);
     auto window2 = create_window(app2, spec);
     auto window3 = create_window(app3, spec);
@@ -603,18 +575,16 @@ TEST_F(MinimalWindowManagerTest,  when_a_window_is_focused_then_it_appears_above
     auto const app1 = open_application("app1");
     auto const app2 = open_application("app2");
     auto const app3 = open_application("app3");
-    msh::SurfaceSpecification spec;
-    spec.width = geom::Width {100};
-    spec.height = geom::Height{100};
-    spec.depth_layer = mir_depth_layer_application;
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width {100}, geom::Height{100} };
+    spec.depth_layer() = mir_depth_layer_application;
     auto window1 = create_window(app1, spec);
     auto window2 = create_window(app2, spec);
     auto window3 = create_window(app3, spec);
 
     request_focus(window1);
 
-    auto surface1 = window1.operator std::shared_ptr<ms::Surface>();
-    EXPECT_EQ(focused_surface(), surface1);
+    EXPECT_TRUE(focused(window1));
 
     EXPECT_TRUE(is_above(window1, window3));
     EXPECT_TRUE(is_above(window3, window2));
@@ -634,12 +604,11 @@ TEST_P(MinimalWindowManagerStartMoveStateChangeTest, maximized_windows_that_are_
     // We do not start in the maximized state so that the restore_rect of the
     // window has been calculated properly.
     auto const app = open_application("app");
-    msh::SurfaceSpecification spec;
-    spec.width = geom::Width {100};
-    spec.height = geom::Height{100};
-    spec.top_left = geom::Point{200, 200};
-    spec.depth_layer = mir_depth_layer_application;
-    spec.state = mir_window_state_restored;
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width {100}, geom::Height{100} };
+    spec.top_left() = geom::Point{200, 200};
+    spec.depth_layer() = mir_depth_layer_application;
+    spec.state() = mir_window_state_restored;
     auto const window = create_window(app, spec);
 
     // Then maximize the window.
@@ -668,7 +637,7 @@ TEST_P(MinimalWindowManagerStartMoveStateChangeTest, maximized_windows_that_are_
     request_move(window, start_event->to_input());
     ASSERT_EQ(info.state(), mir_window_state_restored);
     ASSERT_EQ(window.top_left(), geom::Point(pointer_x, pointer_y));
-    ASSERT_EQ(window.size(), geom::Size(spec.width.value(), spec.height.value()));
+    ASSERT_EQ(window.size(), geom::Size(spec.size().value().width, spec.size().value().height));
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -969,9 +938,9 @@ TEST_P(MinimalWindowManagerMaximizedSurfaceExclusionZoneTest, maximized_windows_
         windows.push_back(create_window(app, create(output_rectangle.size)));
 
     EXPECT_EQ(windows.size(), param.exclusive_surface_create_func.size());
-    msh::SurfaceSpecification spec;
-    spec.state = mir_window_state_maximized;
-    spec.depth_layer = mir_depth_layer_application;
+    miral::WindowSpecification spec;
+    spec.state() = mir_window_state_maximized;
+    spec.depth_layer() = mir_depth_layer_application;
     auto const window = create_window(app, spec);
     auto const expected = param.expected_rectangle(output_rectangle);
 

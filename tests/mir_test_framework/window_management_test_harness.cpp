@@ -14,6 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define MIR_LOG_COMPONENT "WindowManagementTestHarness"
+
 #include "mir/test/doubles/fake_display.h"
 #include "mir/test/doubles/stub_buffer_stream.h"
 #include "mir_test_framework/window_management_test_harness.h"
@@ -25,8 +27,9 @@
 #include <mir/wayland/weak.h>
 #include <miral/window_manager_tools.h>
 #include <miral/set_window_management_policy.h>
-
-#include <queue>
+#include <mir/log.h>
+#include <mir/main_loop.h>
+#include <future>
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -38,9 +41,28 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 using namespace testing;
 
-struct mir_test_framework::WindowManagementTestHarness::Self : public ms::SurfaceObserver
+namespace
 {
-    explicit Self() : tools{nullptr}
+class CachedSurfaceData
+{
+public:
+    CachedSurfaceData(
+        std::shared_ptr<mc::BufferStream> const& stream,
+        std::shared_ptr<ms::Surface> const& surface)
+        : stream(stream),
+          surface(surface)
+    {
+    }
+
+    std::shared_ptr<mc::BufferStream> stream;
+    std::shared_ptr<ms::Surface> surface;
+};
+}
+
+class mir_test_framework::WindowManagementTestHarness::Self final : public ms::SurfaceObserver
+{
+public:
+    explicit Self(mir::Server& server) : server(server), tools{nullptr}
     {
     }
 
@@ -61,17 +83,33 @@ struct mir_test_framework::WindowManagementTestHarness::Self : public ms::Surfac
 
     void client_surface_close_requested(ms::Surface const* surf) override
     {
-        std::lock_guard lock{mutex};
-        auto it = std::find_if(known_surfaces.begin(), known_surfaces.end(), [surf](std::shared_ptr<ms::Surface> const& s)
+        std::shared_ptr<ms::Surface> to_destroy = nullptr;
         {
-            return s.get() == surf;
-        });
-
-        if (it != known_surfaces.end())
-        {
-            surfaces_to_destroy.push_back(*it);
-            known_surfaces.erase(it);
+            std::lock_guard lock{mutex};
+            auto const it = std::find_if(surface_cache.begin(), surface_cache.end(),
+                [surf](CachedSurfaceData const& data)
+                {
+                    return data.surface.get() == surf;
+                });
+            if (it != surface_cache.end())
+            {
+                to_destroy = it->surface;
+                surface_cache.erase(it);
+            }
         }
+
+        if (to_destroy == nullptr)
+        {
+            mir::log_error("client_surface_close_requested: Unable to find surface in known_surfaces");
+            return;
+        }
+        
+        pending_actions.push_back([
+            shell=server.the_shell(),
+            to_destroy=to_destroy]
+        {
+            shell->destroy_surface(to_destroy->session().lock(), to_destroy);
+        });
     }
 
     void renamed(ms::Surface const*, std::string const&) override {}
@@ -84,28 +122,55 @@ struct mir_test_framework::WindowManagementTestHarness::Self : public ms::Surfac
     void entered_output(ms::Surface const*, mg::DisplayConfigurationOutputId const&) override {}
     void left_output(ms::Surface const*, mg::DisplayConfigurationOutputId const&) override {}
     void rescale_output(ms::Surface const*, mg::DisplayConfigurationOutputId const&) override {}
-    std::mutex mutable mutex;
-    std::vector<std::shared_ptr<mc::BufferStream>> streams;
-    std::vector<std::shared_ptr<ms::Surface>> known_surfaces;
-    std::vector<std::shared_ptr<ms::Surface>> surfaces_to_destroy;
-    mtd::FakeDisplay* display = nullptr;
+
+    void process_pending()
+    {
+        for (auto const& action : pending_actions)
+            action();
+        pending_actions.clear();
+    }
+
+    mir::Server& server;
+
+    /// Lazily loaded window manager tools.
     miral::WindowManagerTools tools;
+
+    std::mutex mutable mutex;
+
+    /// A cache of the data associated with each surface. This is used for
+    /// both discoverability of the surface and to ensure that the reference
+    /// count of certain objects (e.g. the stream) do not drop below 0 until
+    /// we want them to.
+    std::vector<CachedSurfaceData> surface_cache;
+
+    /// The BasicWindowManager expects some calls to be triggered asynchronously,
+    /// specifically when they are in response to an input event. For example,
+    /// dispatching an input event that would close a surface takes the internal
+    /// lock of the BasicWindowManager. This action asks the BasicWindowManager
+    /// to close the surface, which also wants to take the same lock.
+    /// Hence, a deadlock when this code is run synchronously.
+    ///
+    /// The solution is to push this action to a processing queue that will be cleared
+    /// after each action.
+    std::vector<std::function<void()>> pending_actions;
+
+    mtd::FakeDisplay* display = nullptr;
 };
 
 mir_test_framework::WindowManagementTestHarness::WindowManagementTestHarness()
-    : self{std::make_shared<Self>()}
+    : self{std::make_shared<Self>(server)}
 {
 }
 
 void mir_test_framework::WindowManagementTestHarness::SetUp()
 {
-    miral::SetWindowManagementPolicy policy([&](miral::WindowManagerTools const& tools)
-    {
-        self->tools = tools;
-        return get_builder()(tools);
-    });
+    miral::SetWindowManagementPolicy const policy(
+        [&](miral::WindowManagerTools const& tools)
+        {
+            self->tools = tools;
+            return get_builder()(tools);
+        });
     policy(server);
-
 
     auto fake_display = std::make_unique<mtd::FakeDisplay>(get_output_rectangles());
     {
@@ -114,34 +179,30 @@ void mir_test_framework::WindowManagementTestHarness::SetUp()
     }
     preset_display(std::move(fake_display));
 
-    mir_test_framework::HeadlessInProcessServer::SetUp();
+    HeadlessInProcessServer::SetUp();
 }
 
 void mir_test_framework::WindowManagementTestHarness::TearDown()
 {
-    mir_test_framework::HeadlessInProcessServer::TearDown();
+    HeadlessInProcessServer::TearDown();
 }
 
 auto mir_test_framework::WindowManagementTestHarness::open_application(
-    std::string const& name) -> miral::Application
+    std::string const& name) const -> miral::Application
 {
     return server.the_shell()->open_session(
         __LINE__,
         mir::Fd{mir::Fd::invalid},
         name,
-        std::shared_ptr<mir::frontend::EventSink>());;
+        std::shared_ptr<mir::frontend::EventSink>());
 }
 
 auto mir_test_framework::WindowManagementTestHarness::create_window(
     miral::Application const& session,
-    mir::shell::SurfaceSpecification spec) -> miral::Window
+    miral::WindowSpecification const& window_spec) const -> miral::Window
 {
-    auto stream = std::make_shared<mir::test::doubles::StubBufferStream>();
-
-    {
-        std::lock_guard lock{self->mutex};
-        self->streams.push_back(stream);
-    }
+    msh::SurfaceSpecification spec = make_surface_spec(window_spec);
+    auto const stream = std::make_shared<mir::test::doubles::StubBufferStream>();
     spec.streams = std::vector<msh::StreamSpecification>();
     spec.streams.value().push_back(msh::StreamSpecification{
         stream,
@@ -158,49 +219,53 @@ auto mir_test_framework::WindowManagementTestHarness::create_window(
         spec,
         self,
         &mir::immediate_executor);
-    self->known_surfaces.push_back(surface);
+    {
+        std::lock_guard lock{self->mutex};
+        self->surface_cache.emplace_back(stream, surface);
+    }
     server.the_shell()->surface_ready(surface);
 
     return {session, surface};
 }
 
-void mir_test_framework::WindowManagementTestHarness::publish_event(MirEvent const& event)
+void mir_test_framework::WindowManagementTestHarness::publish_event(MirEvent const& event) const
 {
     server.the_shell()->handle(event);
-    std::lock_guard lock{self->mutex};
-    for (auto const& surface : self->surfaces_to_destroy)
-    {
-        server.the_shell()->destroy_surface(surface->session().lock(), surface);
-    }
+    self->process_pending();
 }
 
 void mir_test_framework::WindowManagementTestHarness::request_resize(
     miral::Window const& window,
     MirInputEvent const* event,
-    MirResizeEdge edge)
+    MirResizeEdge edge) const
 {
-    auto surface = window.operator std::shared_ptr<ms::Surface>();
+    auto const surface = window.operator std::shared_ptr<ms::Surface>();
     server.the_shell()->request_resize(surface->session().lock(), surface, event, edge);
+    self->process_pending();
 }
 
 void mir_test_framework::WindowManagementTestHarness::request_move(
-    miral::Window const& window, MirInputEvent const* event)
+    miral::Window const& window, MirInputEvent const* event) const
 {
-    auto surface = window.operator std::shared_ptr<ms::Surface>();
+    auto const surface = window.operator std::shared_ptr<ms::Surface>();
     server.the_shell()->request_move(surface->session().lock(), surface, event);
+    self->process_pending();
 }
 
-void mir_test_framework::WindowManagementTestHarness::request_focus(miral::Window const& window)
+void mir_test_framework::WindowManagementTestHarness::request_focus(
+    miral::Window const& window) const
 {
     self->tools.select_active_window(window);
+    self->process_pending();
 }
 
-auto mir_test_framework::WindowManagementTestHarness::focused_surface() -> std::shared_ptr<ms::Surface>
+auto mir_test_framework::WindowManagementTestHarness::focused(miral::Window const& window) const -> bool
 {
-    return server.the_shell()->focused_surface();
+    self->process_pending();
+    return window.operator std::shared_ptr<ms::Surface>() == tools().active_window().operator std::shared_ptr<ms::Surface>();
 }
 
-auto mir_test_framework::WindowManagementTestHarness::tools() -> miral::WindowManagerTools&
+auto mir_test_framework::WindowManagementTestHarness::tools() const -> miral::WindowManagerTools&
 {
     return self->tools;
 }
