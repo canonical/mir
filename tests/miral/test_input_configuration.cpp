@@ -18,6 +18,7 @@
 #include "mir_toolkit/mir_input_device_types.h"
 #include "miral/input_configuration.h"
 #include <gtest/gtest.h>
+#include <ranges>
 #include <tuple>
 
 using Mouse = miral::InputConfiguration::Mouse;
@@ -28,6 +29,83 @@ struct TestInputConfiguration: testing::Test
 {
     inline static auto const unclamped_test_values = {-1.0, -0.5, 0.0, 0.5, 1.0};
     inline static auto const clamped_test_values = {std::pair{-10.0, -1.0}, {-1.1, -1.0}, {1.1, 1.0}, {12.0, 1.0}};
+
+
+    inline static std::initializer_list<std::function<void(Mouse&)>> const mouse_setters = {
+        [](auto& mouse_config)
+        {
+            mouse_config.handedness(mir_pointer_handedness_right);
+        },
+        [](auto& mouse_config)
+        {
+            mouse_config.acceleration(mir_pointer_acceleration_adaptive);
+        },
+        [](auto& mouse_config)
+        {
+            mouse_config.acceleration_bias(-1);
+        },
+        [](auto& mouse_config)
+        {
+            mouse_config.vscroll_speed(2.0);
+        },
+        [](auto& mouse_config)
+        {
+            mouse_config.hscroll_speed(3.0);
+        },
+    };
+
+    inline static std::initializer_list<std::function<void(Touchpad&)>> const touchpad_setters = {
+        [](Touchpad& touch)
+        {
+            touch.disable_while_typing(true);
+        },
+        [](Touchpad& touch)
+        {
+            touch.disable_with_external_mouse(false);
+        },
+        [](Touchpad& touch)
+        {
+            touch.acceleration(mir_pointer_acceleration_none);
+        },
+        [](Touchpad& touch)
+        {
+            touch.acceleration_bias(1.0);
+        },
+        [](Touchpad& touch)
+        {
+            touch.vscroll_speed(-13.0);
+        },
+        [](Touchpad& touch)
+        {
+            touch.hscroll_speed(-0.4);
+        },
+        [](Touchpad& touch)
+        {
+            touch.click_mode(mir_touchpad_click_mode_finger_count);
+        },
+        [](Touchpad& touch)
+        {
+            touch.scroll_mode(mir_touchpad_scroll_mode_two_finger_scroll);
+        },
+        [](Touchpad& touch)
+        {
+            touch.tap_to_click(true);
+        },
+        [](Touchpad& touch)
+        {
+            touch.middle_mouse_button_emulation(false);
+        }};
+
+    inline static std::initializer_list<std::function<void(Keyboard&)>> const keyboard_setters = {
+        [](Keyboard& key)
+        {
+            key.set_repeat_rate(18);
+        },
+        [](Keyboard& key)
+        {
+            key.set_repeat_delay(1337);
+        },
+    };
 };
 
 TEST_F(TestInputConfiguration, mouse_acceleration_bias_is_set_and_clamped)
@@ -117,30 +195,7 @@ auto operator==(miral::InputConfiguration::Keyboard const& lhs, miral::InputConf
 // will work.
 TEST_F(TestInputConfiguration, mouse_merge_from_partial_set_changes_only_set_values)
 {
-    std::initializer_list<std::function<void(Mouse&)>> const setters = {
-        [](auto& mouse_config)
-        {
-            mouse_config.handedness(mir_pointer_handedness_right);
-        },
-        [](auto& mouse_config)
-        {
-            mouse_config.acceleration(mir_pointer_acceleration_adaptive);
-        },
-        [](auto& mouse_config)
-        {
-            mouse_config.acceleration_bias(-1);
-        },
-        [](auto& mouse_config)
-        {
-            mouse_config.vscroll_speed(2.0);
-        },
-        [](auto& mouse_config)
-        {
-            mouse_config.hscroll_speed(3.0);
-        },
-    };
-
-    for(auto const& setter: setters)
+    for(auto const& setter: mouse_setters)
     {
         Mouse expected;
         setter(expected);
@@ -157,21 +212,19 @@ TEST_F(TestInputConfiguration, mouse_merge_from_partial_set_changes_only_set_val
 // Make sure tht merging does not alter other data members
 TEST_F(TestInputConfiguration, mouse_merge_does_not_overwrite_values)
 {
-    enum SettingToTest {
+    enum SettingToTest
+    {
         handedness,
         acceleration,
         acceleration_bias,
         vscroll_speed,
-        hscroll_speed,
+        hscroll_speed
     };
 
-    std::initializer_list<std::pair<std::function<void(Mouse&)>, SettingToTest>> const setters = {
-        {[](auto& mouse_config) { mouse_config.handedness(mir_pointer_handedness_right);        }, handedness},
-        {[](auto& mouse_config) { mouse_config.acceleration(mir_pointer_acceleration_adaptive); }, acceleration},
-        {[](auto& mouse_config) { mouse_config.acceleration_bias(-1);                           }, acceleration_bias},
-        {[](auto& mouse_config) { mouse_config.vscroll_speed(2.0);                              }, vscroll_speed},
-        {[](auto& mouse_config) { mouse_config.hscroll_speed(3.0);                              }, hscroll_speed}};
+    // Must be in the same order as the setters defined at the top of the file
+    auto const settings_to_test = {handedness, acceleration, acceleration_bias, vscroll_speed, hscroll_speed};
 
+    // Target settings must be different from the values set by setters at the top of the file.
     auto const target_settings = [](auto& mouse_config, SettingToTest setting_to_test)
     {
         if (setting_to_test != handedness)
@@ -190,7 +243,7 @@ TEST_F(TestInputConfiguration, mouse_merge_does_not_overwrite_values)
             mouse_config.hscroll_speed(2.0);
     };
 
-    for(auto const& [setter, setting_to_test]: setters)
+    for (auto const& [setter, setting_to_test] : std::ranges::zip_view(mouse_setters, settings_to_test))
     {
         // Initialize all members, overwrite the one we're testing
         Mouse expected;
@@ -214,49 +267,7 @@ TEST_F(TestInputConfiguration, mouse_merge_does_not_overwrite_values)
 
 TEST_F(TestInputConfiguration, touchpad_merge_from_partial_set_changes_only_set_values)
 {
-    std::initializer_list<std::function<void(Touchpad&)>> const setters = {
-        [](Touchpad& touch)
-        {
-            touch.disable_while_typing(true);
-        },
-        [](Touchpad& touch)
-        {
-            touch.disable_with_external_mouse(false);
-        },
-        [](Touchpad& touch)
-        {
-            touch.acceleration(mir_pointer_acceleration_none);
-        },
-        [](Touchpad& touch)
-        {
-            touch.acceleration_bias(1.0);
-        },
-        [](Touchpad& touch)
-        {
-            touch.vscroll_speed(-13.0);
-        },
-        [](Touchpad& touch)
-        {
-            touch.hscroll_speed(-0.4);
-        },
-        [](Touchpad& touch)
-        {
-            touch.click_mode(mir_touchpad_click_mode_finger_count);
-        },
-        [](Touchpad& touch)
-        {
-            touch.scroll_mode(mir_touchpad_scroll_mode_two_finger_scroll);
-        },
-        [](Touchpad& touch)
-        {
-            touch.tap_to_click(true);
-        },
-        [](Touchpad& touch)
-        {
-            touch.middle_mouse_button_emulation(false);
-        }};
-
-    for(auto const& setter: setters)
+    for(auto const& setter: touchpad_setters)
     {
         Touchpad expected;
         setter(expected);
@@ -272,7 +283,8 @@ TEST_F(TestInputConfiguration, touchpad_merge_from_partial_set_changes_only_set_
 
 TEST_F(TestInputConfiguration, touchapd_merge_does_not_overwrite_values)
 {
-    enum SettingToTest {
+    enum SettingToTest
+    {
         disable_while_typing,
         disable_with_external_mouse,
         acceleration,
@@ -285,17 +297,18 @@ TEST_F(TestInputConfiguration, touchapd_merge_does_not_overwrite_values)
         middle_mouse_button_emulation
     };
 
-    std::initializer_list<std::pair<std::function<void(Touchpad&)>, SettingToTest>> const setters = {
-        {[](Touchpad& touch) { touch.disable_while_typing(true);                              }, disable_while_typing},
-        {[](Touchpad& touch) { touch.disable_with_external_mouse(false);                      }, disable_with_external_mouse},
-        {[](Touchpad& touch) { touch.acceleration(mir_pointer_acceleration_adaptive);         }, acceleration},
-        {[](Touchpad& touch) { touch.acceleration_bias(1.0);                                  }, acceleration_bias},
-        {[](Touchpad& touch) { touch.vscroll_speed(-13.0);                                    }, vscroll_speed},
-        {[](Touchpad& touch) { touch.hscroll_speed(-0.4);                                     }, hscroll_speed},
-        {[](Touchpad& touch) { touch.click_mode(mir_touchpad_click_mode_finger_count);        }, click_mode},
-        {[](Touchpad& touch) { touch.scroll_mode(mir_touchpad_scroll_mode_two_finger_scroll); }, scroll_mode},
-        {[](Touchpad& touch) { touch.tap_to_click(true);                                      }, tap_to_click},
-        {[](Touchpad& touch) { touch.middle_mouse_button_emulation(false);                    }, middle_mouse_button_emulation}};
+    auto const settings_to_test = {
+        disable_while_typing,
+        disable_with_external_mouse,
+        acceleration,
+        acceleration_bias,
+        vscroll_speed,
+        hscroll_speed,
+        click_mode,
+        scroll_mode,
+        tap_to_click,
+        middle_mouse_button_emulation,
+    };
 
     auto const target_settings = [](auto& touchpad_config, SettingToTest setting_to_test)
     {
@@ -327,7 +340,7 @@ TEST_F(TestInputConfiguration, touchapd_merge_does_not_overwrite_values)
             touchpad_config.middle_mouse_button_emulation(true);
     };
 
-    for(auto const& [setter, setting_to_test]: setters)
+    for (auto const& [setter, setting_to_test] : std::ranges::zip_view(touchpad_setters, settings_to_test))
     {
         Touchpad expected;
         target_settings(expected, setting_to_test);
@@ -347,18 +360,7 @@ TEST_F(TestInputConfiguration, touchapd_merge_does_not_overwrite_values)
 
 TEST_F(TestInputConfiguration, keyboard_merge_from_partial_set_changes_only_set_values)
 {
-    std::initializer_list<std::function<void(Keyboard&)>> const setters = {
-        [](Keyboard& key)
-        {
-            key.set_repeat_rate(18);
-        },
-        [](Keyboard& key)
-        {
-            key.set_repeat_delay(1337);
-        },
-        };
-
-    for(auto const& setter: setters)
+    for(auto const& setter: keyboard_setters)
     {
         Keyboard expected;
         setter(expected);
@@ -375,18 +377,7 @@ TEST_F(TestInputConfiguration, keyboard_merge_from_partial_set_changes_only_set_
 TEST_F(TestInputConfiguration, keyboard_merge_does_not_overwrite_values)
 {
     enum SettingToTest { repeat_rate, repeat_delay };
-    std::initializer_list<std::pair<std::function<void(Keyboard&)>, SettingToTest>> const setters = {
-        {[](Keyboard& key)
-         {
-             key.set_repeat_rate(18);
-         },
-         repeat_rate},
-        {[](Keyboard& key)
-         {
-             key.set_repeat_delay(1337);
-         },
-         repeat_delay},
-    };
+    auto const settings_to_test = { repeat_rate, repeat_delay  };
 
     auto const target_settings = [](auto& keyboard_config, SettingToTest setting_to_test)
     {
@@ -397,7 +388,7 @@ TEST_F(TestInputConfiguration, keyboard_merge_does_not_overwrite_values)
             keyboard_config.set_repeat_delay(500);
     };
 
-    for(auto const& [setter, setting_to_test]: setters)
+    for (auto const& [setter, setting_to_test] : std::ranges::zip_view(keyboard_setters, settings_to_test))
     {
         Keyboard expected;
         target_settings(expected, setting_to_test);
