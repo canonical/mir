@@ -40,7 +40,7 @@ public:
     void operator()(mir::Server& server) const;
 
     /// Enables or disables mousekeys depending on the passed parameter.
-    void set_mousekeys_enabled(bool enabled) const;
+    void enabled(bool enabled) const;
 
     /// Changes the keymap for the various mousekeys actions defined in
     /// [MouseKeysKeymap::Action]

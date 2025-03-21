@@ -47,7 +47,7 @@ miral::MouseKeysConfig::MouseKeysConfig(bool enabled_by_default) :
 {
 }
 
-void miral::MouseKeysConfig::set_mousekeys_enabled(bool enabled) const
+void miral::MouseKeysConfig::enabled(bool enabled) const
 {
     if(self->accessibility_manager.expired())
     {
@@ -130,6 +130,6 @@ void miral::MouseKeysConfig::operator()(mir::Server& server) const
                 options->get<double>(mouse_keys_acceleration_linear_factor),
                 options->get<double>(mouse_keys_acceleration_quadratic_factor));
             set_max_speed(options->get<double>(mouse_keys_max_speed_x), options->get<double>(mouse_keys_max_speed_y));
-            set_mousekeys_enabled(enable);
+            enabled(enable);
         });
 }
