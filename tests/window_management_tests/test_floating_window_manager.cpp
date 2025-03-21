@@ -196,3 +196,33 @@ TEST_F(FloatingWindowManagerTest, switching_workspaces_changes_window_focus)
 
     EXPECT_TRUE(focused(window1));
 }
+
+TEST_F(FloatingWindowManagerTest, child_windows_are_hidden_if_parent_is_on_hidden_workspace)
+{
+    auto const app = open_application("app");
+    miral::WindowSpecification spec;
+    spec.size() = geom::Size(100, 100);
+    spec.top_left() = geom::Point(50, 50);
+    auto const parent = create_window(app, spec);
+
+    // Dispatch an f2 event
+    std::chrono::nanoseconds const event_timestamp = std::chrono::system_clock::now().time_since_epoch();
+    MirKeyboardAction const action{mir_keyboard_action_down};
+    xkb_keysym_t const keysym{0};
+    int const scan_code{KEY_F2};
+    MirInputEventModifiers const modifiers{mir_input_event_modifier_alt | mir_input_event_modifier_meta};
+    auto const event = mir::events::make_key_event(
+        mir_input_event_type_key,
+        event_timestamp,
+        action,
+        keysym,
+        scan_code,
+        modifiers);
+    publish_event(*event);
+    ASSERT_EQ(tools().info_for(parent).state(), mir_window_state_hidden);
+
+    // Assert [child] is also hidden
+    spec.parent() = parent;
+    auto const child = create_window(app, spec);
+    ASSERT_EQ(tools().info_for(child).state(), mir_window_state_hidden);
+}
