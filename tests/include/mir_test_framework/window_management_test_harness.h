@@ -23,7 +23,6 @@
 #include <miral/window_manager_tools.h>
 #include <mir/events/event.h>
 #include "mir_test_framework/headless_in_process_server.h"
-#include "src/miral/window_manager_tools_implementation.h"
 
 namespace mir
 {
