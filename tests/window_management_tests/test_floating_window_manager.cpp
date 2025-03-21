@@ -17,6 +17,7 @@
 #include <miral/internal_client.h>
 #include <examples/example-server-lib/floating_window_manager.h>
 #include <examples/example-server-lib/splash_session.h>
+#include <linux/input-event-codes.h>
 #include <mir_test_framework/window_management_test_harness.h>
 
 namespace geom = mir::geometry;
@@ -33,6 +34,12 @@ public:
 class FloatingWindowManagerTest : public mir_test_framework::WindowManagementTestHarness
 {
 public:
+    void SetUp() override
+    {
+        launcher(server);
+        WindowManagementTestHarness::SetUp();
+    }
+
     auto get_builder() -> mir_test_framework::WindowManagementPolicyBuilder override
     {
         return [&](miral::WindowManagerTools const& tools)
@@ -59,15 +66,52 @@ private:
     std::function<void()> shutdown_hook = []{};
 };
 
-TEST_F(FloatingWindowManagerTest, can_switch_workspace)
+TEST_F(FloatingWindowManagerTest, switching_workspaces_causes_windows_to_be_hidden_and_shown)
 {
-    auto app = open_application("app");
+    auto const app = open_application("app");
     miral::WindowSpecification spec;
     spec.size() = geom::Size(100, 100);
     spec.top_left() = geom::Point(50, 50);
-    auto window = create_window(app, spec);
-    tools().for_each_workspace_containing(window, [](std::shared_ptr<miral::Workspace> const& workspace)
+    auto const window = create_window(app, spec);
+
+    // Dispatch an f2 event
     {
-        EXPECT_TRUE(workspace->)
-    });
+        std::chrono::nanoseconds const event_timestamp = std::chrono::system_clock::now().time_since_epoch();
+        MirKeyboardAction const action{mir_keyboard_action_down};
+        xkb_keysym_t const keysym{0};
+        int const scan_code{KEY_F2};
+        MirInputEventModifiers const modifiers{mir_input_event_modifier_alt | mir_input_event_modifier_meta};
+        auto const event = mir::events::make_key_event(
+            mir_input_event_type_key,
+            event_timestamp,
+            action,
+            keysym,
+            scan_code,
+            modifiers);
+        publish_event(*event);
+    }
+
+    // Assert [window] is hidden
+    auto const& info = tools().info_for(window);
+    ASSERT_EQ(info.state(), mir_window_state_hidden);
+
+    // Dispatch an f1 event
+    {
+        std::chrono::nanoseconds const event_timestamp = std::chrono::system_clock::now().time_since_epoch();
+        MirKeyboardAction const action{mir_keyboard_action_down};
+        xkb_keysym_t const keysym{0};
+        int const scan_code{KEY_F1};
+        MirInputEventModifiers const modifiers{mir_input_event_modifier_alt | mir_input_event_modifier_meta};
+        auto const event = mir::events::make_key_event(
+            mir_input_event_type_key,
+            event_timestamp,
+            action,
+            keysym,
+            scan_code,
+            modifiers);
+        publish_event(*event);
+    }
+
+    // Assert [window] is restored
+    ASSERT_EQ(info.state(), mir_window_state_restored);
 }
