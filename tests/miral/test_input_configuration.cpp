@@ -17,6 +17,7 @@
 #include "input_device_config.h"
 #include "mir_toolkit/mir_input_device_types.h"
 #include "miral/input_configuration.h"
+#include <functional>
 #include <gtest/gtest.h>
 #include <ranges>
 #include <tuple>
@@ -188,6 +189,44 @@ auto operator==(miral::InputConfiguration::Keyboard const& lhs, miral::InputConf
 }
 }
 
+TEST_F(TestInputConfiguration, mouse_getters_return_expected_values)
+{
+    {
+        Mouse mouse_config;
+        auto const value = mir_pointer_acceleration_adaptive;
+        mouse_config.acceleration(value);
+        ASSERT_EQ(mouse_config.acceleration(), value);
+    }
+
+    {
+        Mouse mouse_config;
+        auto const value = -1;
+        mouse_config.acceleration_bias(value);
+        ASSERT_EQ(mouse_config.acceleration_bias(), value);
+    }
+
+    {
+        Mouse mouse_config;
+        auto const value = mir_pointer_handedness_right;
+        mouse_config.handedness(value);
+        ASSERT_EQ(mouse_config.handedness(), value);
+    }
+
+    {
+        Mouse mouse_config;
+        auto const value = -5;
+        mouse_config.hscroll_speed(value);
+        ASSERT_EQ(mouse_config.hscroll_speed(), value);
+    }
+
+    {
+        Mouse mouse_config;
+        auto const value = 5;
+        mouse_config.vscroll_speed(value);
+        ASSERT_EQ(mouse_config.vscroll_speed(), value);
+    }
+}
+
 // Make sure that when merging, each data member is assigned to the correct
 // corresponding one.
 //
@@ -262,6 +301,79 @@ TEST_F(TestInputConfiguration, mouse_merge_does_not_overwrite_values)
         target.merge(modified);
 
         ASSERT_EQ(target, expected);
+    }
+}
+
+TEST_F(TestInputConfiguration, touchpad_getters_return_expected_values)
+{
+    {
+        Touchpad touch_config;
+        auto const value = false;
+        touch_config.disable_while_typing(value);
+        ASSERT_EQ(touch_config.disable_while_typing(), value);
+    }
+
+    {
+        Touchpad touch_config;
+        auto const value = true;
+        touch_config.disable_with_external_mouse(value);
+        ASSERT_EQ(touch_config.disable_with_external_mouse(), value);
+    }
+
+    {
+        Touchpad touch_config;
+        auto const value = mir_pointer_acceleration_adaptive;
+        touch_config.acceleration(value);
+        ASSERT_EQ(touch_config.acceleration(), value);
+    }
+
+    {
+        Touchpad touch_config;
+        auto const value = -1;
+        touch_config.acceleration_bias(value);
+        ASSERT_EQ(touch_config.acceleration_bias(), value);
+    }
+
+    {
+        Touchpad touch_config;
+        auto const value = -5;
+        touch_config.hscroll_speed(value);
+        ASSERT_EQ(touch_config.hscroll_speed(), value);
+    }
+
+    {
+        Touchpad touch_config;
+        auto const value = 5;
+        touch_config.vscroll_speed(value);
+        ASSERT_EQ(touch_config.vscroll_speed(), value);
+    }
+
+    {
+        Touchpad touch_config;
+        auto const value = mir_touchpad_click_mode_area_to_click;
+        touch_config.click_mode(value);
+        ASSERT_EQ(touch_config.click_mode(), value);
+    }
+
+    {
+        Touchpad touch_config;
+        auto const value = mir_touchpad_scroll_mode_edge_scroll;
+        touch_config.scroll_mode(value);
+        ASSERT_EQ(touch_config.scroll_mode(), value);
+    }
+
+    {
+        Touchpad touch_config;
+        auto const value = false;
+        touch_config.tap_to_click(value);
+        ASSERT_EQ(touch_config.tap_to_click(), value);
+    }
+
+    {
+        Touchpad touch_config;
+        auto const value = true;
+        touch_config.middle_mouse_button_emulation(value);
+        ASSERT_EQ(touch_config.middle_mouse_button_emulation(), value);
     }
 }
 
@@ -357,6 +469,25 @@ TEST_F(TestInputConfiguration, touchapd_merge_does_not_overwrite_values)
         ASSERT_EQ(target, expected);
     }
 }
+
+
+TEST_F(TestInputConfiguration, keyboard_getters_return_expected_values)
+{
+    {
+        Keyboard keyboard_config;
+        auto const value = 731;
+        keyboard_config.set_repeat_rate(value);
+        ASSERT_EQ(keyboard_config.repeat_rate(), value);
+    }
+
+    {
+        Keyboard keyboard_config;
+        auto const value = 2371;
+        keyboard_config.set_repeat_delay(value);
+        ASSERT_EQ(keyboard_config.repeat_delay(), value);
+    }
+}
+
 
 TEST_F(TestInputConfiguration, keyboard_merge_from_partial_set_changes_only_set_values)
 {
