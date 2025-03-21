@@ -68,7 +68,7 @@ public:
     virtual auto get_output_rectangles() -> std::vector<mir::geometry::Rectangle> = 0;
 private:
     class Self;
-    std::unique_ptr<Self> self;
+    std::unique_ptr<Self> const self;
 };
 
 }
