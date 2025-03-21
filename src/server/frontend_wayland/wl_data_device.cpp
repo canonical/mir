@@ -192,10 +192,7 @@ void mf::WlDataDevice::start_drag(
 
     validate_pointer_event(client->event_for(serial));
 
-    pointer_input_dispatcher->disable_dispatch_to_gesture_owner([this]
-        {
-            end_of_gesture_callback();
-        });
+    pointer_input_dispatcher->disable_dispatch_to_gesture_owner(end_of_gesture_callback);
 
     seat.for_each_listener(client, [this](PointerEventDispatcher* pointer)
         {
