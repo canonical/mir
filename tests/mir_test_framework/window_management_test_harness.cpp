@@ -281,7 +281,6 @@ private:
 };
 }
 
-
 class mir_test_framework::WindowManagementTestHarness::Self
 {
 public:
