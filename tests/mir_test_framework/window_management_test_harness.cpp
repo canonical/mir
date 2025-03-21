@@ -63,7 +63,7 @@ public:
 /// Wraps a [miral::WindowManagerTools] and calls [on_change] whenever an action on the
 /// tools would cause a change to the underlying system. This is important in this context
 /// as it allows us to synchronously process work that has been triggered from other requests
-/// which would have otherwise causes a deadlock.
+/// which would have otherwise caused a deadlock.
 class NotifyingWindowManagerToolsImplementation final : public miral::WindowManagerToolsImplementation
 {
 public:
