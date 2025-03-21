@@ -15,6 +15,7 @@ include_directories(
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 mir_add_wrapped_executable(mir_window_management_tests NOINSTALL
   test_minimal_window_manager.cpp
+  test_floating_window_manager.cpp
 )
 
 if (MIR_USE_PRECOMPILED_HEADERS)
@@ -41,6 +42,7 @@ target_link_libraries(
 
   mircommon
   miral
+  example-shell-lib
 
   Boost::system
 
