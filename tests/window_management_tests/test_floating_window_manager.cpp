@@ -143,3 +143,56 @@ TEST_F(FloatingWindowManagerTest, can_switch_workspaces_and_bring_window_with_us
     auto const& info = tools().info_for(window);
     ASSERT_EQ(info.state(), mir_window_state_restored);
 }
+
+TEST_F(FloatingWindowManagerTest, switching_workspaces_changes_window_focus)
+{
+    // Create the first window on workspace f1
+    auto const app1 = open_application("app1");
+    miral::WindowSpecification spec;
+    spec.size() = geom::Size(100, 100);
+    spec.top_left() = geom::Point(50, 50);
+    auto const window1 = create_window(app1, spec);
+    EXPECT_TRUE(focused(window1));
+
+    // Dispatch an f2 event
+    {
+        std::chrono::nanoseconds const event_timestamp = std::chrono::system_clock::now().time_since_epoch();
+        MirKeyboardAction const action{mir_keyboard_action_down};
+        xkb_keysym_t const keysym{0};
+        int const scan_code{KEY_F2};
+        MirInputEventModifiers const modifiers{mir_input_event_modifier_alt | mir_input_event_modifier_meta};
+        auto const event = mir::events::make_key_event(
+            mir_input_event_type_key,
+            event_timestamp,
+            action,
+            keysym,
+            scan_code,
+            modifiers);
+        publish_event(*event);
+    }
+    EXPECT_TRUE(focused({}));
+
+    // Create the second window on workspace f2
+    auto const app2 = open_application("app2");
+    auto const window2 = create_window(app2, spec);
+    EXPECT_TRUE(focused(window2));
+
+    // Dispatch an f1 event
+    {
+        std::chrono::nanoseconds const event_timestamp = std::chrono::system_clock::now().time_since_epoch();
+        MirKeyboardAction const action{mir_keyboard_action_down};
+        xkb_keysym_t const keysym{0};
+        int const scan_code{KEY_F1};
+        MirInputEventModifiers const modifiers{mir_input_event_modifier_alt | mir_input_event_modifier_meta};
+        auto const event = mir::events::make_key_event(
+            mir_input_event_type_key,
+            event_timestamp,
+            action,
+            keysym,
+            scan_code,
+            modifiers);
+        publish_event(*event);
+    }
+
+    EXPECT_TRUE(focused(window1));
+}
