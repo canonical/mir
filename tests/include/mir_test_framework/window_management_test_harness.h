@@ -24,10 +24,13 @@
 #include <mir/events/event.h>
 #include "mir_test_framework/headless_in_process_server.h"
 
-namespace mir::scene
+namespace mir
+{
+namespace scene
 {
 class Surface;
 class Session;
+}
 }
 
 namespace mir_test_framework
@@ -41,6 +44,8 @@ class WindowManagementTestHarness : public HeadlessInProcessServer
 {
 public:
     WindowManagementTestHarness();
+    ~WindowManagementTestHarness() override;
+
     void SetUp() override;
     void TearDown() override;
 
@@ -54,7 +59,6 @@ public:
     void publish_event(MirEvent const& event) const;
     void request_resize(miral::Window const&, MirInputEvent const*, MirResizeEdge) const;
     void request_move(miral::Window const&, MirInputEvent const*) const;
-    void request_focus(miral::Window const&) const;
 
     auto focused(miral::Window const&) const -> bool;
     auto tools() const -> miral::WindowManagerTools&;
@@ -62,9 +66,9 @@ public:
 
     virtual auto get_builder() -> WindowManagementPolicyBuilder = 0;
     virtual auto get_output_rectangles() -> std::vector<mir::geometry::Rectangle> = 0;
-
+private:
     class Self;
-    std::shared_ptr<Self> self;
+    std::unique_ptr<Self> const self;
 };
 
 }
