@@ -15,6 +15,9 @@
  */
 
 #include "miroil/eventdispatch.h"
+
+#include "gesture_ender.h"
+
 #include <miral/window.h>
 #include <mir/scene/surface.h>
 #include <mir/events/event_builders.h>
@@ -24,7 +27,40 @@
 namespace mev = mir::events;
 namespace geom = mir::geometry;
 
-void miroil::dispatch_input_event(const miral::Window& window, const MirInputEvent* event)
+namespace
+{
+void for_pressed_buttons(MirPointerEvent const* pev, std::function<void(MirPointerButton)> const& exec)
+{
+    auto const buttons = {
+        mir_pointer_button_primary,
+        mir_pointer_button_secondary,
+        mir_pointer_button_tertiary,
+        mir_pointer_button_back,
+        mir_pointer_button_forward
+    };
+    for (auto button : buttons)
+        if (mir_pointer_event_button_state(pev, button)) exec(button);
+}
+
+bool is_gesture_terminator(MirInputEvent const* event)
+{
+    if (mir_event_get_type(event) != mir_event_type_input)
+    {
+        auto const* iev = mir_event_get_input_event(event);
+
+        if (auto const* pev = mir_input_event_get_pointer_event(iev))
+        {
+            bool any_pressed = false;
+            for_pressed_buttons(pev, [&any_pressed](MirPointerButton){ any_pressed = true; });
+            return !any_pressed && mir_pointer_event_action(pev) == mir_pointer_action_button_up;
+        }
+    }
+
+    return false;
+}
+}
+
+void miroil::dispatch_input_event(const miral::Window& window, MirInputEvent const* event)
 {
     if (auto surface = std::shared_ptr<mir::scene::Surface>(window))
     {
@@ -45,4 +81,6 @@ void miroil::dispatch_input_event(const miral::Window& window, const MirInputEve
             });
         surface->consume(clone);
     }
+
+    if (is_gesture_terminator(event)) end_gesture();
 }
