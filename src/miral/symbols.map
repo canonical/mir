@@ -528,7 +528,7 @@ global:
     miral::MouseKeysConfig::set_acceleration_factors*;
     miral::MouseKeysConfig::set_keymap*;
     miral::MouseKeysConfig::set_max_speed*;
-    miral::MouseKeysConfig::set_mousekeys_enabled*;
+    miral::MouseKeysConfig::enabled*;
     typeinfo?for?miral::MouseKeysConfig;
   };
 } MIRAL_5.2;
