@@ -17,6 +17,7 @@
 #ifndef MIR_FRONTEND_POINTER_INPUT_DISPATCHER_H_
 #define MIR_FRONTEND_POINTER_INPUT_DISPATCHER_H_
 
+#include <functional>
 #include <memory>
 
 namespace mir
