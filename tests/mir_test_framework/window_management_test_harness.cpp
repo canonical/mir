@@ -401,6 +401,10 @@ void mir_test_framework::WindowManagementTestHarness::SetUp()
                 self->process_pending();
             });
             self->tools = std::make_unique<miral::WindowManagerTools>(self->impl.get());
+
+            // Note that we provide [tools] instead of [self->tools] here. This is because we
+            // only want the [NotifyingWindowManagerToolsImplementation::on_change] callback to
+            // be triggered at the toplevel caller function, instead of down the call stack.
             return get_builder()(tools);
         });
     policy(server);
