@@ -44,7 +44,7 @@ void for_pressed_buttons(MirPointerEvent const* pev, std::function<void(MirPoint
 
 bool is_gesture_terminator(MirInputEvent const* event)
 {
-    if (mir_event_get_type(event) != mir_event_type_input)
+    if (mir_event_get_type(event) == mir_event_type_input)
     {
         auto const* iev = mir_event_get_input_event(event);
 
