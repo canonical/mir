@@ -24,6 +24,7 @@
 #include "mir/input/input_device_observer.h"
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_touchpad_config.h"
+#include "mir/options/configuration.h"
 #include "mir/options/option.h"
 #include "mir/server.h"
 #include "mir_toolkit/mir_input_device_types.h"
@@ -273,7 +274,7 @@ miral::InputDeviceConfig::InputDeviceConfig(std::shared_ptr<mir::options::Option
         to_acceleration_profile(get_optional<std::string>(options, mouse_cursor_acceleration_opt)),
         clamp<-1.0, 1.0>(get_optional<double>(options, mouse_cursor_acceleration_bias_opt)),
         get_optional<double>(options, mouse_vscroll_speed_override_opt, mouse_scroll_speed_opt),
-        get_optional<double>(options, mouse_hscroll_speed_override_opt, mouse_scroll_speed_opt)
+        get_optional<double>(options, mouse_hscroll_speed_override_opt, mouse_scroll_speed_opt),
     },
     touchpad_config{
         get_optional<bool>(options, disable_while_typing_opt),

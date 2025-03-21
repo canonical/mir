@@ -228,7 +228,7 @@ void mi::CursorController::set_cursor_image_locked(std::unique_lock<std::mutex>&
     if (image && !is_empty(image))
     {
         if (usable)
-            cursor->show(*image);
+            cursor->show(image);
     }
     else
         cursor->hide();
@@ -291,7 +291,7 @@ void mir::input::CursorController::pointer_usable()
     if (became_usable)
     {
         if (image && !is_empty(image))
-            cursor->show(*image);
+            cursor->show(image);
         if (di)
         {
             di->show();

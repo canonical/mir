@@ -179,6 +179,8 @@ mo::DefaultConfiguration::DefaultConfiguration(
         (cursor_opt,
             po::value<std::string>()->default_value("auto"),
             "Cursor (mouse pointer) to use [{auto,null,software}]")
+        (enable_mouse_keys_opt, po::value<bool>()->default_value(false),
+             "Enable mousekeys (controlling the mouse with the numpad)")
         (enable_key_repeat_opt, po::value<bool>()->default_value(true),
              "Enable server generated key repeat")
         (enable_mouse_keys_opt, po::value<bool>()->default_value(false),

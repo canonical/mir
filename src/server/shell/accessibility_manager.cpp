@@ -16,15 +16,10 @@
 
 #include "mir/shell/accessibility_manager.h"
 
-#include "mir/input/event_builder.h"
+#include "mir/graphics/cursor.h"
 #include "mir/input/input_sink.h"
 #include "mir/options/configuration.h"
 #include "mir/shell/keyboard_helper.h"
-
-#include <xkbcommon/xkbcommon-keysyms.h>
-
-#include <memory>
-#include <optional>
 
 void mir::shell::AccessibilityManager::register_keyboard_helper(std::shared_ptr<KeyboardHelper> const& helper)
 {
@@ -114,12 +109,19 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
 
 mir::shell::AccessibilityManager::AccessibilityManager(
     std::shared_ptr<mir::options::Option> const& options,
-    std::shared_ptr<input::InputEventTransformer> const& event_transformer) :
+    std::shared_ptr<input::InputEventTransformer> const& event_transformer,
+    std::shared_ptr<mir::graphics::Cursor> const& cursor) :
     enable_key_repeat{options->get<bool>(options::enable_key_repeat_opt)},
     enable_mouse_keys{options->get<bool>(options::enable_mouse_keys_opt)},
     event_transformer{event_transformer},
-    transformer{std::make_shared<MouseKeysTransformer>()}
+    transformer{std::make_shared<MouseKeysTransformer>()},
+    cursor{cursor}
 {
     if (enable_mouse_keys)
         event_transformer->append(transformer);
+}
+
+void mir::shell::AccessibilityManager::cursor_scale_changed(float new_scale)
+{
+    cursor->set_scale(std::clamp(0.0f, 100.0f, new_scale));
 }
