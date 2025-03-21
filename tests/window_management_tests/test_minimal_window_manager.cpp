@@ -747,8 +747,6 @@ TEST_F(MinimalWindowManagerTest, closing_attached_window_causes_maximized_to_res
     // Act: Close the attached window
     tools().ask_client_to_close(attached);
 
-    // process_pending_actions();
-
     // Expect: the window now takes up the full dimensions
     EXPECT_EQ(window.size(), geom::Size(
         output_rectangle.size.width.as_int(),
