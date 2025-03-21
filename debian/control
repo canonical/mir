@@ -64,7 +64,7 @@ Vcs-Git: https://github.com/MirServer/mir
 
 #TODO: Packaging infrastructure for better dependency generation,
 #      ala pkg-xorg's xviddriver:Provides and ABI detection.
-Package: libmirserver63
+Package: libmirserver64
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -158,7 +158,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver63 (= ${binary:Version}),
+Depends: libmirserver64 (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libglm-dev,
@@ -175,7 +175,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver63 (= ${binary:Version}),
+Depends: libmirserver64 (= ${binary:Version}),
       libmirplatform-dev (= ${binary:Version}),
       libmircommon-dev (= ${binary:Version}),
       libmircore-dev (= ${binary:Version}),
@@ -480,7 +480,7 @@ Description: Display server for Ubuntu - gbm-kms driver metapackage
  .
  This package depends on a full set of graphics and input drivers for gbm-kms
  systems.
- 
+
 Package: mir-platform-graphics-eglstream-kms
 Section: libs
 Architecture: linux-any
