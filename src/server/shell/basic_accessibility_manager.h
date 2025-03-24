@@ -43,11 +43,20 @@ namespace shell
 class BasicAccessibilityManager : public AccessibilityManager
 {
 public:
+    using MouseKeysTransformerBuilder =std::function<std::shared_ptr<input::MouseKeysTransformer>()>;
+
     BasicAccessibilityManager(
         std::shared_ptr<MainLoop> const& main_loop,
-        std::shared_ptr<input::InputEventTransformer> const&,
+        std::shared_ptr<input::InputEventTransformer> const& event_transformer,
         std::shared_ptr<time::Clock> const& clock,
         bool enable_key_repeat);
+
+    BasicAccessibilityManager(
+        std::shared_ptr<MainLoop> const& main_loop,
+        std::shared_ptr<input::InputEventTransformer> const& event_transformer,
+        std::shared_ptr<time::Clock> const& clock,
+        bool enable_key_repeat,
+        MouseKeysTransformerBuilder&& builder);
 
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&) override;
 
@@ -82,6 +91,8 @@ private:
     input::MouseKeysKeymap keymap;
     double acceleration_constant, acceleration_linear, acceleration_quadratic;
     geometry::DisplacementF max_speed;
+
+    MouseKeysTransformerBuilder mousekeys_transformer_builder;
 };
 }
 }

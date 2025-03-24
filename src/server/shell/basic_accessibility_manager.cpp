@@ -63,16 +63,7 @@ void mir::shell::BasicAccessibilityManager::set_mousekeys_enabled(bool on)
         if (transformer)
             return;
 
-        transformer = std::make_shared<mir::input::MouseKeysTransformer>(
-            main_loop,
-            max_speed,
-            input::MouseKeysTransformer::AccelerationParameters{
-                acceleration_quadratic,
-                acceleration_linear,
-                acceleration_constant,
-            },
-            clock,
-            keymap);
+        transformer = mousekeys_transformer_builder();
         event_transformer->append(transformer);
     }
     else
@@ -94,11 +85,24 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<input::InputEventTransformer> const& event_transformer,
     std::shared_ptr<time::Clock> const& clock,
     bool enable_key_repeat) :
-    enable_key_repeat{enable_key_repeat},
-    event_transformer{event_transformer},
-    main_loop{main_loop},
-    clock{clock},
-    keymap{input::MouseKeysTransformer::default_keymap}
+    mir::shell::BasicAccessibilityManager(
+        main_loop,
+        event_transformer,
+        clock,
+        enable_key_repeat,
+        [&]
+        {
+            return std::make_shared<mir::input::MouseKeysTransformer>(
+                main_loop,
+                max_speed,
+                input::MouseKeysTransformer::AccelerationParameters{
+                    acceleration_quadratic,
+                    acceleration_linear,
+                    acceleration_constant,
+                },
+                clock,
+                keymap);
+        })
 {
 }
 
@@ -118,3 +122,17 @@ void mir::shell::BasicAccessibilityManager::set_max_speed(double x_axis, double 
         transformer->set_max_speed(x_axis, y_axis);
 }
 
+mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
+    std::shared_ptr<MainLoop> const& main_loop,
+    std::shared_ptr<input::InputEventTransformer> const& event_transformer,
+    std::shared_ptr<time::Clock> const& clock,
+    bool enable_key_repeat,
+    MouseKeysTransformerBuilder&& builder) :
+    enable_key_repeat{enable_key_repeat},
+    event_transformer{event_transformer},
+    main_loop{main_loop},
+    clock{clock},
+    keymap{input::MouseKeysTransformer::default_keymap},
+    mousekeys_transformer_builder{std::move(builder)}
+{
+}
