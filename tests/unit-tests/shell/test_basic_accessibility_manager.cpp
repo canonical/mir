@@ -17,12 +17,13 @@
 #include "include/server/mir/shell/keyboard_helper.h"
 #include "src/server/input/default_input_device_hub.h"
 #include "src/server/shell/basic_accessibility_manager.h"
+#include "src/server/shell/mouse_keys_transformer.h"
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/time/steady_clock.h"
 #include "mir/glib_main_loop.h"
 #include "mir/test/fake_shared.h"
 #include "mir/input/input_event_transformer.h"
+#include "mir/input/mousekeys_common.h"
 
 #include "mir/test/doubles/mock_input_seat.h"
 #include "mir/test/doubles/mock_key_mapper.h"
@@ -47,6 +48,20 @@ struct MockKeyboardHelper: public mir::shell::KeyboardHelper
     MOCK_METHOD(void, repeat_info_changed, (std::optional<int> rate, int delay), (const override));
 };
 
+struct MockMouseKeysTransformer : public mir::input::MouseKeysTransformer
+{
+    MockMouseKeysTransformer() = default;
+
+    MOCK_METHOD(void, set_keymap, (mir::input::MouseKeysKeymap const& new_keymap), (override));
+    MOCK_METHOD(void, set_acceleration_factors, (double constant, double linear, double quadratic), (override));
+    MOCK_METHOD(void, set_max_speed, (double x_axis, double y_axis), (override));
+    MOCK_METHOD(
+        bool,
+        transform_input_event,
+        (mir::input::InputEventTransformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
+        (override));
+};
+
 struct TestBasicAccessibilityManager : Test
 {
     TestBasicAccessibilityManager() :
@@ -59,10 +74,25 @@ struct TestBasicAccessibilityManager : Test
             mt::fake_shared(mock_server_status_listener),
             mt::fake_shared(led_observer_registrar))},
         input_event_transformer{std::make_shared<mir::input::InputEventTransformer>(input_device_hub, main_loop)},
-        basic_accessibility_manager{main_loop, input_event_transformer, mt::fake_shared(clock), true}
+        basic_accessibility_manager{
+            main_loop,
+            input_event_transformer,
+            mt::fake_shared(clock),
+            true,
+            [&]
+            {
+                return create_transformer();
+            }}
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
     }
+
+    void SetUp() override
+    {
+        ON_CALL(*this, create_transformer()).WillByDefault(Return(std::make_shared<MockMouseKeysTransformer>()));
+    }
+
+    MOCK_METHOD(std::shared_ptr<mir::input::MouseKeysTransformer>, create_transformer, (), ());
 
     mtd::AdvanceableClock clock;
     mir::dispatch::MultiplexingDispatchable multiplexer;
@@ -116,4 +146,28 @@ TEST_F(TestBasicAccessibilityManager, set_repeat_delay_value_is_the_same_as_the_
     basic_accessibility_manager.repeat_delay(expected);
 
     ASSERT_EQ(basic_accessibility_manager.repeat_delay(), expected);
+}
+
+TEST_F(TestBasicAccessibilityManager, set_mousekeys_enabled_creates_a_transformer)
+{
+    EXPECT_CALL(*this, create_transformer());
+
+    basic_accessibility_manager.set_mousekeys_enabled(true);
+}
+
+TEST_F(TestBasicAccessibilityManager, multiple_set_mousekeys_enabled_create_only_one_transformer)
+{
+    EXPECT_CALL(*this, create_transformer());
+
+    for(auto i = 0; i < 5; i++)
+        basic_accessibility_manager.set_mousekeys_enabled(true);
+}
+
+TEST_F(TestBasicAccessibilityManager, set_mousekeys_enabled_followed_by_a_disable_followed_by_an_enable_creates_two_transformers)
+{
+    EXPECT_CALL(*this, create_transformer()).Times(2);
+
+    basic_accessibility_manager.set_mousekeys_enabled(true);
+    basic_accessibility_manager.set_mousekeys_enabled(false);
+    basic_accessibility_manager.set_mousekeys_enabled(true);
 }
