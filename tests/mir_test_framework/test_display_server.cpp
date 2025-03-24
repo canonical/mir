@@ -24,6 +24,7 @@
 #include <mir_test_framework/executable_path.h>
 #include <mir_test_framework/headless_display_buffer_compositor_factory.h>
 #include <mir/test/doubles/null_logger.h>
+#include <mir/test/doubles/stub_gl_rendering_provider.h>
 
 #include <mir/fd.h>
 #include <mir/main_loop.h>
@@ -102,6 +103,36 @@ void miral::TestDisplayServer::start_server()
                                     started.notify_one();
                                 });
                         });
+
+
+                    server.wrap_display_buffer_compositor_factory(
+                        [&server](auto default_factory) -> std::shared_ptr<mir::compositor::DisplayBufferCompositorFactory>
+                        {
+                            auto first_rendering_platform = server.the_rendering_platforms().front();
+                            auto gl_provider =
+                                mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(
+                                    std::move(first_rendering_platform));
+                            if (gl_provider)
+                            {
+                                // Use the real compositor if we've got a real platform,
+                                // or a headless one if we don't.
+                                if (std::dynamic_pointer_cast<mtd::StubGlRenderingProvider>(gl_provider))
+                                {
+                                    // This is a stub provider; we'd only have loaded it if no other
+                                    // platforms work, so do headless testing
+                                    return std::make_shared<mtf::HeadlessDisplayBufferCompositorFactory>(
+                                        std::move(gl_provider),
+                                        server.the_gl_config());
+                                }
+                                else
+                                {
+                                    // It's *not* a stub provider; let's use the real Compositor path.
+                                    return default_factory;
+                                }
+                            }
+                            BOOST_THROW_EXCEPTION((std::runtime_error{"Platform does not support GL interface"}));
+                        });
+
 
                     server.override_the_logger([&]()
                         {
