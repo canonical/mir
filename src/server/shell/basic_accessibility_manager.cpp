@@ -63,7 +63,13 @@ void mir::shell::BasicAccessibilityManager::set_mousekeys_enabled(bool on)
         if (transformer)
             return;
 
-        transformer = mousekeys_transformer_builder();
+        transformer = mousekeys_transformer_builder(
+            keymap,
+            acceleration_constant,
+            acceleration_linear,
+            acceleration_quadratic,
+            max_speed.dx.as_value(),
+            max_speed.dy.as_value());
         event_transformer->append(transformer);
     }
     else
@@ -90,15 +96,20 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
         event_transformer,
         clock,
         enable_key_repeat,
-        [&]
+        [&](input::MouseKeysKeymap const& keymap,
+            double acceleration_constant_factor,
+            double acceleration_linear_factor,
+            double acceleration_quadratic_factor,
+            double max_speed_x,
+            double max_speed_y)
         {
             return std::make_shared<mir::input::BasicMouseKeysTransformer>(
                 main_loop,
-                max_speed,
+                mir::geometry::DisplacementF{max_speed_x, max_speed_y},
                 input::BasicMouseKeysTransformer::AccelerationParameters{
-                    acceleration_quadratic,
-                    acceleration_linear,
-                    acceleration_constant,
+                    acceleration_quadratic_factor,
+                    acceleration_linear_factor,
+                    acceleration_constant_factor,
                 },
                 clock,
                 keymap);

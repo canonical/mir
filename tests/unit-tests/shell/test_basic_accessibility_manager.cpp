@@ -79,9 +79,20 @@ struct TestBasicAccessibilityManager : Test
             input_event_transformer,
             mt::fake_shared(clock),
             true,
-            [&]
+            [&](mir::input::MouseKeysKeymap const& keymap,
+                double acceleration_constant_factor,
+                double acceleration_linear_factor,
+                double acceleration_quadratic_factor,
+                double max_speed_x,
+                double max_speed_y)
             {
-                return create_transformer();
+                return create_transformer(
+                    keymap,
+                    acceleration_constant_factor,
+                    acceleration_linear_factor,
+                    acceleration_quadratic_factor,
+                    max_speed_x,
+                    max_speed_y);
             }}
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
@@ -89,10 +100,19 @@ struct TestBasicAccessibilityManager : Test
 
     void SetUp() override
     {
-        ON_CALL(*this, create_transformer()).WillByDefault(Return(mock_mousekeys_transformer));
+        ON_CALL(*this, create_transformer(_, _, _, _, _, _)).WillByDefault(Return(mock_mousekeys_transformer));
     }
 
-    MOCK_METHOD(std::shared_ptr<mir::input::MouseKeysTransformer>, create_transformer, (), ());
+    MOCK_METHOD(
+        std::shared_ptr<mir::input::MouseKeysTransformer>,
+        create_transformer,
+        (mir::input::MouseKeysKeymap const& keymap,
+         double acceleration_constant_factor,
+         double acceleration_linear_factor,
+         double acceleration_quadratic_factor,
+         double max_speed_x,
+         double max_speed_y),
+        ());
 
     mtd::AdvanceableClock clock;
     mir::dispatch::MultiplexingDispatchable multiplexer;
@@ -152,14 +172,14 @@ TEST_F(TestBasicAccessibilityManager, set_repeat_delay_value_is_the_same_as_the_
 
 TEST_F(TestBasicAccessibilityManager, set_mousekeys_enabled_creates_a_transformer)
 {
-    EXPECT_CALL(*this, create_transformer());
+    EXPECT_CALL(*this, create_transformer(_, _, _, _, _, _));
 
     basic_accessibility_manager.set_mousekeys_enabled(true);
 }
 
 TEST_F(TestBasicAccessibilityManager, multiple_set_mousekeys_enabled_create_only_one_transformer)
 {
-    EXPECT_CALL(*this, create_transformer());
+    EXPECT_CALL(*this, create_transformer(_, _, _, _, _, _));
 
     for(auto i = 0; i < 5; i++)
         basic_accessibility_manager.set_mousekeys_enabled(true);
@@ -167,7 +187,7 @@ TEST_F(TestBasicAccessibilityManager, multiple_set_mousekeys_enabled_create_only
 
 TEST_F(TestBasicAccessibilityManager, set_mousekeys_enabled_followed_by_a_disable_followed_by_an_enable_creates_two_transformers)
 {
-    EXPECT_CALL(*this, create_transformer()).Times(2);
+    EXPECT_CALL(*this, create_transformer(_, _, _, _, _, _)).Times(2);
 
     basic_accessibility_manager.set_mousekeys_enabled(true);
     basic_accessibility_manager.set_mousekeys_enabled(false);

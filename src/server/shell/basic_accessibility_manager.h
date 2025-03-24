@@ -43,7 +43,13 @@ namespace shell
 class BasicAccessibilityManager : public AccessibilityManager
 {
 public:
-    using MouseKeysTransformerBuilder =std::function<std::shared_ptr<input::MouseKeysTransformer>()>;
+    using MouseKeysTransformerBuilder = std::function<std::shared_ptr<input::MouseKeysTransformer>(
+        input::MouseKeysKeymap const& keymap,
+        double acceleration_constant_factor,
+        double acceleration_linear_factor,
+        double acceleration_quadratic_factor,
+        double max_speed_x,
+        double max_speed_y)>;
 
     BasicAccessibilityManager(
         std::shared_ptr<MainLoop> const& main_loop,
