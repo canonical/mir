@@ -50,7 +50,7 @@ using namespace ::testing;
 
 struct TestMouseKeysTransformer : testing::Test
 {
-    using AccelerationParameters = mir::input::MouseKeysTransformer::AccelerationParameters;
+    using AccelerationParameters = mir::input::BasicMouseKeysTransformer::AccelerationParameters;
 
     mir::dispatch::MultiplexingDispatchable multiplexer;
     NiceMock<mtd::MockLedObserverRegistrar> led_observer_registrar;
@@ -70,7 +70,7 @@ struct TestMouseKeysTransformer : testing::Test
             mt::fake_shared(led_observer_registrar))},
         input_event_transformer{input_device_hub, main_loop},
         transformer{
-            std::make_shared<mi::MouseKeysTransformer>(
+            std::make_shared<mi::BasicMouseKeysTransformer>(
                 main_loop, mir::geometry::DisplacementF{0, 0}, AccelerationParameters{1, 1, 1}, mt::fake_shared(clock)),
         },
         main_loop_thread{
@@ -379,7 +379,7 @@ TEST_F(TestMouseKeysTransformer, receiving_a_key_not_in_keymap_doesnt_dispatch_e
     EXPECT_CALL(mock_seat, dispatch_event(_)).Times(0);
     transformer->set_keymap(mir::input::MouseKeysKeymap{});
 
-    mir::input::MouseKeysTransformer::default_keymap.for_each_key_action_pair(
+    mir::input::BasicMouseKeysTransformer::default_keymap.for_each_key_action_pair(
         [&](auto key, auto)
         {
             input_event_transformer.handle(*down_event(key));

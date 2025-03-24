@@ -38,20 +38,28 @@ namespace input
 class MouseKeysTransformer: public mir::input::InputEventTransformer::Transformer
 {
 public:
+    virtual void set_keymap(MouseKeysKeymap const& new_keymap) = 0;
+    virtual void set_acceleration_factors(double constant, double linear, double quadratic) = 0;
+    virtual void set_max_speed(double x_axis, double y_axis) = 0;
+};
+
+class BasicMouseKeysTransformer: public MouseKeysTransformer
+{
+public:
     // Quadratic, linear, and constant factors repsectively
     // ax^2 + bx + c
     struct AccelerationParameters { double a, b, c; };
 
     static MouseKeysKeymap const default_keymap;
 
-    MouseKeysTransformer(
+    BasicMouseKeysTransformer(
         std::shared_ptr<mir::MainLoop> const& main_loop,
         geometry::DisplacementF max_speed,
         AccelerationParameters const& params,
         std::shared_ptr<time::Clock> const& clock,
         MouseKeysKeymap keymap);
 
-    MouseKeysTransformer(
+    BasicMouseKeysTransformer(
         std::shared_ptr<mir::MainLoop> const& main_loop,
         geometry::DisplacementF max_speed,
         AccelerationParameters const& params,
@@ -62,9 +70,9 @@ public:
         mir::input::EventBuilder* builder,
         MirEvent const& event) override;
 
-    void set_keymap(MouseKeysKeymap const& new_keymap);
-    void set_acceleration_factors(double constant, double linear, double quadratic);
-    void set_max_speed(double x_axis, double y_axis);
+    void set_keymap(MouseKeysKeymap const& new_keymap) override;
+    void set_acceleration_factors(double constant, double linear, double quadratic) override;
+    void set_max_speed(double x_axis, double y_axis) override;
 
 private:
     using Dispatcher = mir::input::InputEventTransformer::EventDispatcher;

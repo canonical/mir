@@ -34,7 +34,7 @@
 
 using enum mir::input::MouseKeysKeymap::Action;
 
-mir::input::MouseKeysKeymap const mir::input::MouseKeysTransformer::default_keymap = {
+mir::input::MouseKeysKeymap const mir::input::BasicMouseKeysTransformer::default_keymap = {
     {XKB_KEY_KP_2, move_down},
     {XKB_KEY_KP_4, move_left},
     {XKB_KEY_KP_6, move_right},
@@ -48,16 +48,16 @@ mir::input::MouseKeysKeymap const mir::input::MouseKeysTransformer::default_keym
     {XKB_KEY_KP_Subtract, button_secondary},
 };
 
-mir::input::MouseKeysTransformer::MouseKeysTransformer(
+mir::input::BasicMouseKeysTransformer::BasicMouseKeysTransformer(
     std::shared_ptr<mir::MainLoop> const& main_loop,
     geometry::DisplacementF configured_max_speed,
     AccelerationParameters const& params,
     std::shared_ptr<time::Clock> const& clock) :
-    MouseKeysTransformer(main_loop, configured_max_speed, params, clock, MouseKeysTransformer::default_keymap)
+    BasicMouseKeysTransformer(main_loop, configured_max_speed, params, clock, BasicMouseKeysTransformer::default_keymap)
 {
 }
 
-mir::input::MouseKeysTransformer::MouseKeysTransformer(
+mir::input::BasicMouseKeysTransformer::BasicMouseKeysTransformer(
     std::shared_ptr<mir::MainLoop> const& main_loop,
     geometry::DisplacementF configured_max_speed,
     AccelerationParameters const& params,
@@ -88,7 +88,7 @@ mir::input::MouseKeysTransformer::MouseKeysTransformer(
 {
 }
 
-bool mir::input::MouseKeysTransformer::transform_input_event(
+bool mir::input::BasicMouseKeysTransformer::transform_input_event(
     mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
     mir::input::EventBuilder* builder,
     MirEvent const& event)
@@ -133,13 +133,13 @@ bool mir::input::MouseKeysTransformer::transform_input_event(
     return false;
 }
 
-void mir::input::MouseKeysTransformer::set_keymap(MouseKeysKeymap const& new_keymap)
+void mir::input::BasicMouseKeysTransformer::set_keymap(MouseKeysKeymap const& new_keymap)
 {
     std::lock_guard guard{state_mutex};
     keymap = new_keymap;
 }
 
-bool mir::input::MouseKeysTransformer::handle_motion(
+bool mir::input::BasicMouseKeysTransformer::handle_motion(
     MirKeyboardAction keyboard_action,
     mir::input::MouseKeysKeymap::Action mousekey_action,
     Dispatcher const& dispatcher,
@@ -270,7 +270,7 @@ bool mir::input::MouseKeysTransformer::handle_motion(
     }
 }
 
-bool mir::input::MouseKeysTransformer::handle_click(
+bool mir::input::BasicMouseKeysTransformer::handle_click(
     MirKeyboardAction keyboard_action, Dispatcher const& dispatcher, mir::input::EventBuilder* const builder)
 {
     if (keyboard_action == mir_keyboard_action_repeat || keyboard_action== mir_keyboard_action_down)
@@ -288,7 +288,7 @@ bool mir::input::MouseKeysTransformer::handle_click(
     return true;
 }
 
-bool mir::input::MouseKeysTransformer::handle_change_pointer_button(
+bool mir::input::BasicMouseKeysTransformer::handle_change_pointer_button(
     MirKeyboardAction keyboard_action,
     MouseKeysKeymap::Action mousekeys_action,
     Dispatcher const& dispatcher,
@@ -319,7 +319,7 @@ bool mir::input::MouseKeysTransformer::handle_change_pointer_button(
     return true;
 }
 
-bool mir::input::MouseKeysTransformer::handle_double_click(
+bool mir::input::BasicMouseKeysTransformer::handle_double_click(
     MirKeyboardAction keyboard_action, Dispatcher const& dispatcher, mir::input::EventBuilder* const builder)
 {
     if (keyboard_action == mir_keyboard_action_down || keyboard_action == mir_keyboard_action_repeat)
@@ -340,7 +340,7 @@ bool mir::input::MouseKeysTransformer::handle_double_click(
     return true;
 }
 
-bool mir::input::MouseKeysTransformer::handle_drag(
+bool mir::input::BasicMouseKeysTransformer::handle_drag(
     MirKeyboardAction keyboard_action,
     MouseKeysKeymap::Action mousekeys_action,
     Dispatcher const& dispatcher,
@@ -363,17 +363,17 @@ bool mir::input::MouseKeysTransformer::handle_drag(
     return true;
 }
 
-mir::input::MouseKeysTransformer::AccelerationCurve::AccelerationCurve(AccelerationParameters const& params) :
+mir::input::BasicMouseKeysTransformer::AccelerationCurve::AccelerationCurve(AccelerationParameters const& params) :
     params(params)
 {
 }
 
-double mir::input::MouseKeysTransformer::AccelerationCurve::evaluate(double t) const
+double mir::input::BasicMouseKeysTransformer::AccelerationCurve::evaluate(double t) const
 {
     return params.a * t * t + params.b * t + params.c;
 }
 
-void mir::input::MouseKeysTransformer::press_current_cursor_button(
+void mir::input::BasicMouseKeysTransformer::press_current_cursor_button(
     Dispatcher const& dispatcher, mir::input::EventBuilder* const builder)
 {
     dispatcher(builder->pointer_event(
@@ -387,7 +387,7 @@ void mir::input::MouseKeysTransformer::press_current_cursor_button(
         mir::events::ScrollAxisV{}));
 }
 
-void mir::input::MouseKeysTransformer::release_current_cursor_button(
+void mir::input::BasicMouseKeysTransformer::release_current_cursor_button(
     Dispatcher const& dispatcher, mir::input::EventBuilder* const builder)
 {
     dispatcher(builder->pointer_event(
@@ -403,13 +403,13 @@ void mir::input::MouseKeysTransformer::release_current_cursor_button(
     is_dragging = false;
 }
 
-void mir::input::MouseKeysTransformer::set_acceleration_factors(double constant, double linear, double quadratic)
+void mir::input::BasicMouseKeysTransformer::set_acceleration_factors(double constant, double linear, double quadratic)
 {
     std::lock_guard guard{state_mutex};
     acceleration_curve.params = {quadratic, linear, constant};
 }
 
-void mir::input::MouseKeysTransformer::set_max_speed(double x_axis, double y_axis)
+void mir::input::BasicMouseKeysTransformer::set_max_speed(double x_axis, double y_axis)
 {
     std::lock_guard guard{state_mutex};
     max_speed = geometry::DisplacementF{x_axis, y_axis};

@@ -92,10 +92,10 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
         enable_key_repeat,
         [&]
         {
-            return std::make_shared<mir::input::MouseKeysTransformer>(
+            return std::make_shared<mir::input::BasicMouseKeysTransformer>(
                 main_loop,
                 max_speed,
-                input::MouseKeysTransformer::AccelerationParameters{
+                input::BasicMouseKeysTransformer::AccelerationParameters{
                     acceleration_quadratic,
                     acceleration_linear,
                     acceleration_constant,
@@ -132,7 +132,7 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     event_transformer{event_transformer},
     main_loop{main_loop},
     clock{clock},
-    keymap{input::MouseKeysTransformer::default_keymap},
+    keymap{input::BasicMouseKeysTransformer::default_keymap},
     mousekeys_transformer_builder{std::move(builder)}
 {
 }
