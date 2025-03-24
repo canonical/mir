@@ -300,27 +300,18 @@ public:
         pending_actions.clear();
     }
 
-    void add_surface(std::shared_ptr<mc::BufferStream> const& stream, std::shared_ptr<ms::Surface> const& surface)
-    {
-        std::lock_guard lock{surface_cache_mutex};
-        surface_cache.emplace_back(stream, surface);
-    }
-
     void on_surface_closed(ms::Surface const* surf)
     {
         std::shared_ptr<ms::Surface> to_destroy = nullptr;
-        {
-            std::lock_guard lock{surface_cache_mutex};
-            auto const it = std::find_if(surface_cache.begin(), surface_cache.end(),
-                [surf](CachedSurfaceData const& data)
-                {
-                    return data.surface.get() == surf;
-                });
-            if (it != surface_cache.end())
+        auto const it = std::find_if(surface_cache.begin(), surface_cache.end(),
+            [surf](CachedSurfaceData const& data)
             {
-                to_destroy = it->surface;
-                surface_cache.erase(it);
-            }
+                return data.surface.get() == surf;
+            });
+        if (it != surface_cache.end())
+        {
+            to_destroy = it->surface;
+            surface_cache.erase(it);
         }
 
         if (to_destroy == nullptr)
@@ -357,13 +348,6 @@ public:
     std::unique_ptr<NotifyingWindowManagerToolsImplementation> impl;
     mtd::FakeDisplay* display = nullptr;
     std::shared_ptr<SurfaceCloseRequestedObserver> surface_observer;
-
-    /// Mutex guarding access to the surface cache. While not true at the moment,
-    /// testers should be able to open surfaces from external clients in the future.
-    /// These external clients would submit their surfaces and buffer streams
-    /// from the wayland thread. To preempt this, we should use this mutex in the
-    /// meantime.
-    std::mutex surface_cache_mutex;
 
     /// A cache of the data associated with each surface. This is used for
     /// both discoverability of the surface and to ensure that the reference
@@ -453,7 +437,7 @@ auto mir_test_framework::WindowManagementTestHarness::create_window(
         spec,
         self->surface_observer,
         &mir::immediate_executor);
-    self->add_surface(stream, surface);
+    self->surface_cache.emplace_back(stream, surface);
     server.the_shell()->surface_ready(surface);
 
     return {session, surface};
