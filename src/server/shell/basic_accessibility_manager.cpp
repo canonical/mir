@@ -91,13 +91,12 @@ void mir::shell::BasicAccessibilityManager::set_mousekeys_keymap(input::MouseKey
 
 mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<MainLoop> const& main_loop,
-    std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<input::InputEventTransformer> const& event_transformer,
-    std::shared_ptr<time::Clock> const& clock) :
-    enable_key_repeat{options->get<bool>(options::enable_key_repeat_opt)},
+    std::shared_ptr<time::Clock> const& clock,
+    bool enable_key_repeat) :
+    enable_key_repeat{enable_key_repeat},
     event_transformer{event_transformer},
     main_loop{main_loop},
-    options{options},
     clock{clock},
     keymap{input::MouseKeysTransformer::default_keymap}
 {

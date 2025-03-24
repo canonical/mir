@@ -191,7 +191,10 @@ auto mir::DefaultServerConfiguration::the_accessibility_manager() -> std::shared
         [this]
         {
             return std::make_shared<shell::BasicAccessibilityManager>(
-                the_main_loop(), the_options(), the_input_event_transformer(), the_clock());
+                the_main_loop(),
+                the_input_event_transformer(),
+                the_clock(),
+                the_options()->get<bool>(mir::options::enable_key_repeat_opt));
         });
 }
 
