@@ -239,3 +239,53 @@ TEST_F(TestBasicAccessibilityManager, calling_set_max_speed_calls_set_max_speed_
     basic_accessibility_manager.set_mousekeys_enabled(true);
     basic_accessibility_manager.set_max_speed(max_x, max_y);
 }
+
+TEST_F(TestBasicAccessibilityManager, calling_set_mousekeys_keymap_then_toggling_mouskeys_preserves_keymap)
+{
+    using enum mir::input::MouseKeysKeymap::Action;
+    auto const keymap = mir::input::MouseKeysKeymap{{
+        {XKB_KEY_w, move_up},
+        {XKB_KEY_s, move_down},
+        {XKB_KEY_a, move_left},
+        {XKB_KEY_d, move_right},
+    }};
+
+    Sequence seq;
+    EXPECT_CALL(*this, create_transformer(_, _, _, _, _, _));      // For when the transformer is first created
+    EXPECT_CALL(*this, create_transformer(keymap, _, _, _, _, _)); // For the second creation
+
+    basic_accessibility_manager.set_mousekeys_enabled(true);
+    basic_accessibility_manager.set_mousekeys_keymap(keymap);
+    basic_accessibility_manager.set_mousekeys_enabled(false);
+    basic_accessibility_manager.set_mousekeys_enabled(true);
+}
+
+TEST_F(
+    TestBasicAccessibilityManager,
+    calling_set_acceleration_factors_then_toggling_mousekeys_preserves_acceleration_factors)
+{
+    auto const constant = 12.9, linear = 3737.0, quadratic = 111.0;
+
+    Sequence seq;
+    EXPECT_CALL(*this, create_transformer(_, _, _, _, _, _));
+    EXPECT_CALL(*this, create_transformer(_, constant, linear, quadratic, _, _));
+
+    basic_accessibility_manager.set_mousekeys_enabled(true);
+    basic_accessibility_manager.set_acceleration_factors(constant, linear, quadratic);
+    basic_accessibility_manager.set_mousekeys_enabled(false);
+    basic_accessibility_manager.set_mousekeys_enabled(true);
+}
+
+TEST_F(TestBasicAccessibilityManager, calling_set_max_speed_then_toggling_mousekeys_preservers_max_speeds)
+{
+    auto const max_x = 100, max_y = 10710;
+
+    Sequence seq;
+    EXPECT_CALL(*this, create_transformer(_, _, _, _, _, _));
+    EXPECT_CALL(*this, create_transformer(_, _, _, _, max_x, max_y));
+
+    basic_accessibility_manager.set_mousekeys_enabled(true);
+    basic_accessibility_manager.set_max_speed(max_x, max_y);
+    basic_accessibility_manager.set_mousekeys_enabled(false);
+    basic_accessibility_manager.set_mousekeys_enabled(true);
+}
