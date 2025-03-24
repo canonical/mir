@@ -353,6 +353,10 @@ public:
     /// both discoverability of the surface and to ensure that the reference
     /// count of certain objects (e.g. the stream) do not drop below 0 until
     /// we want them to.
+    ///
+    /// Access to this cache is not guarded by a lock as this cache can only
+    /// ever be accessed by the testing thread during surface creation or
+    /// deletion.
     std::vector<CachedSurfaceData> surface_cache;
 
     /// The BasicWindowManager expects some calls to be triggered asynchronously,
