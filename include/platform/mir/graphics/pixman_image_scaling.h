@@ -22,14 +22,14 @@
 
 namespace mir::graphics
 {
-struct PixBuffer
+struct ARGB8888Buffer
 {
-    std::unique_ptr<uint32_t[]> data;
-    geometry::Size size;
+    std::unique_ptr<uint32_t[]> const data;
+    geometry::Size const size;
 };
 
 class CursorImage;
-PixBuffer scale_cursor_image(CursorImage const& cursor_image, float new_scale);
+ARGB8888Buffer scale_cursor_image(CursorImage const& cursor_image, float new_scale);
 }
 
 #endif
