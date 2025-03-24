@@ -89,7 +89,7 @@ struct TestBasicAccessibilityManager : Test
 
     void SetUp() override
     {
-        ON_CALL(*this, create_transformer()).WillByDefault(Return(std::make_shared<MockMouseKeysTransformer>()));
+        ON_CALL(*this, create_transformer()).WillByDefault(Return(mock_mousekeys_transformer));
     }
 
     MOCK_METHOD(std::shared_ptr<mir::input::MouseKeysTransformer>, create_transformer, (), ());
@@ -101,6 +101,8 @@ struct TestBasicAccessibilityManager : Test
     NiceMock<mtd::MockKeyMapper> mock_key_mapper;
     NiceMock<mtd::MockServerStatusListener> mock_server_status_listener;
     std::shared_ptr<NiceMock<MockKeyboardHelper>> mock_key_helper{std::make_shared<NiceMock<MockKeyboardHelper>>()};
+    std::shared_ptr<NiceMock<MockMouseKeysTransformer>> mock_mousekeys_transformer{
+        std::make_shared<NiceMock<MockMouseKeysTransformer>>()};
 
     std::shared_ptr<mir::MainLoop> const main_loop;
     std::shared_ptr<mir::input::DefaultInputDeviceHub> const input_device_hub;
@@ -170,4 +172,50 @@ TEST_F(TestBasicAccessibilityManager, set_mousekeys_enabled_followed_by_a_disabl
     basic_accessibility_manager.set_mousekeys_enabled(true);
     basic_accessibility_manager.set_mousekeys_enabled(false);
     basic_accessibility_manager.set_mousekeys_enabled(true);
+}
+
+namespace mir::input
+{
+    bool operator==(MouseKeysKeymap const& left, MouseKeysKeymap const& right)
+    {
+        std::vector<std::pair<XkbSymkey, MouseKeysKeymap::Action>> leftPairs, rightPairs;
+        left.for_each_key_action_pair([&leftPairs](auto key, auto action){ leftPairs.emplace_back(key, action); });
+        right.for_each_key_action_pair([&rightPairs](auto key, auto action){ rightPairs.emplace_back(key, action); });
+
+        return leftPairs == rightPairs;
+    }
+}
+
+TEST_F(TestBasicAccessibilityManager, calling_set_mousekeys_keymap_calls_set_keymap_on_transformer)
+{
+    using enum mir::input::MouseKeysKeymap::Action;
+    auto const keymap = mir::input::MouseKeysKeymap{{
+        {XKB_KEY_w, move_up},
+        {XKB_KEY_s, move_down},
+        {XKB_KEY_a, move_left},
+        {XKB_KEY_d, move_right},
+    }};
+
+    EXPECT_CALL(*mock_mousekeys_transformer, set_keymap(keymap));
+
+    basic_accessibility_manager.set_mousekeys_enabled(true);
+    basic_accessibility_manager.set_mousekeys_keymap(keymap);
+}
+
+TEST_F(TestBasicAccessibilityManager, calling_set_acceleration_factors_calls_set_acceleration_factors_on_transformer)
+{
+    auto const constant = 12.9, linear = 3737.0, quadratic = 111.0;
+    EXPECT_CALL(*mock_mousekeys_transformer, set_acceleration_factors(constant, linear, quadratic));
+
+    basic_accessibility_manager.set_mousekeys_enabled(true);
+    basic_accessibility_manager.set_acceleration_factors(constant, linear, quadratic);
+}
+
+TEST_F(TestBasicAccessibilityManager, calling_set_max_speed_calls_set_max_speed_on_transformer)
+{
+    auto const max_x = 100, max_y = 10710;
+    EXPECT_CALL(*mock_mousekeys_transformer, set_max_speed(max_x, max_y));
+
+    basic_accessibility_manager.set_mousekeys_enabled(true);
+    basic_accessibility_manager.set_max_speed(max_x, max_y);
 }
