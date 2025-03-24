@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/cursor_scale.h"
 #include "server_example_input_event_filter.h"
 #include "server_example_input_filter.h"
 #include "server_example_test_client.h"
@@ -28,6 +27,7 @@
 #include <miral/set_window_management_policy.h>
 #include <miral/wayland_extensions.h>
 #include <miral/x11_support.h>
+#include <miral/cursor_scale.h>
 
 #include "mir/abnormal_exit.h"
 #include "mir/main_loop.h"

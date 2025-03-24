@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <memory>
 #include <miroil/mir_server_hooks.h>
 
 // mir
@@ -25,6 +24,8 @@
 #include <mir/input/input_device_observer.h>
 #include <mir/input/cursor_images.h>
 #include <mir/version.h>
+
+#include <memory>
 
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
