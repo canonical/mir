@@ -95,10 +95,10 @@ private:
     // Need to be cached in case values are changed, then mousekeys were
     // disabled and re-enabled.
     input::MouseKeysKeymap keymap;
-    double acceleration_constant, acceleration_linear, acceleration_quadratic;
-    geometry::DisplacementF max_speed;
+    double acceleration_constant{100}, acceleration_linear{100}, acceleration_quadratic{30};
+    geometry::DisplacementF max_speed = {400, 400};
 
-    MouseKeysTransformerBuilder mousekeys_transformer_builder;
+    MouseKeysTransformerBuilder const mousekeys_transformer_builder;
 };
 }
 }
