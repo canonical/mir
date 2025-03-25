@@ -32,7 +32,7 @@ class KeyboardHelper;
 class AccessibilityManager
 {
 public:
-    virtual ~AccessibilityManager();
+    virtual ~AccessibilityManager() = default;
     virtual void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&) = 0;
 
     virtual std::optional<int> repeat_rate() const = 0;
