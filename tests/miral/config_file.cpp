@@ -44,9 +44,19 @@ public:
     {
         std::unique_lock lock{mutex};
 
-        if (!cv.wait_for(lock, std::chrono::milliseconds{10}, [this] { return !pending_loads; }))
+        if (!cv.wait_for(lock, std::chrono::milliseconds{100}, [this] { return !pending_loads; }))
         {
             std::cerr << "wait_for_load() timed out" << std::endl;
+        }
+    }
+
+    void wait_for_nothing()
+    {
+        std::unique_lock lock{mutex};
+
+        if (!cv.wait_for(lock, std::chrono::milliseconds{10}, [this] { return !pending_loads; }))
+        {
+            std::cerr << "wait_for_nothing() timed out" << std::endl;
         }
     }
 
@@ -419,7 +429,7 @@ TEST_F(TestConfigFile, with_no_reloading_when_a_file_is_written_nothing_is_loade
     EXPECT_CALL(*this, load).Times(0);
 
     write_a_file();
-    wait_for_load();
+    wait_for_nothing();
 }
 
 TEST_F(TestConfigFile, with_no_reloading_when_a_file_is_rewritten_nothing_is_reloaded)
@@ -439,7 +449,7 @@ TEST_F(TestConfigFile, with_no_reloading_when_a_file_is_rewritten_nothing_is_rel
 
     wait_for_load();
     write_a_file();
-    wait_for_load();
+    wait_for_nothing();
 }
 
 TEST_F(TestConfigFile, with_no_reloading_when_config_home_unset_a_file_in_home_config_is_loaded)
@@ -507,7 +517,7 @@ TEST_F(TestConfigFile, with_no_reloading_a_file_in_xdg_config_home_is_not_reload
     write_config_in(xdg_conf_dir0);
     write_config_in(xdg_conf_home);
     write_config_in(home_config);
-    wait_for_load();
+    wait_for_nothing();
 }
 
 TEST_F(TestConfigFile, with_no_reloading_a_config_in_xdg_conf_dir0_is_loaded)
@@ -553,7 +563,7 @@ TEST_F(TestConfigFile, with_no_reloading_after_a_config_in_xdg_conf_dir0_is_load
     wait_for_load();
 
     write_config_in(xdg_conf_home);
-    wait_for_load();
+    wait_for_nothing();
 }
 
 TEST_F(TestConfigFile, with_no_reloading_a_config_in_xdg_conf_dir0_is_loaded_in_preference_to_dir1_or_2)
