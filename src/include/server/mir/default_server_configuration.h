@@ -385,7 +385,8 @@ protected:
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<input::SurfaceInputDispatcher>    surface_input_dispatcher;
-    CachedPtr<frontend::PointerInputDispatcher> pointer_input_dispatcher;
+    // "static inline" is an ugly hack to preserve mirserver ABI (TODO remove after changes are "cherry-picked")
+    static inline CachedPtr<frontend::PointerInputDispatcher> pointer_input_dispatcher;
     CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub;
     CachedPtr<input::InputDeviceHub>    input_device_hub;
     CachedPtr<dispatch::MultiplexingDispatchable> input_reading_multiplexer;
