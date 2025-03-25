@@ -49,42 +49,9 @@ mir::input::MouseKeysKeymap const mir::input::BasicMouseKeysTransformer::default
 };
 
 mir::input::BasicMouseKeysTransformer::BasicMouseKeysTransformer(
-    std::shared_ptr<mir::MainLoop> const& main_loop,
-    geometry::DisplacementF configured_max_speed,
-    AccelerationParameters const& params,
-    std::shared_ptr<time::Clock> const& clock) :
-    BasicMouseKeysTransformer(main_loop, configured_max_speed, params, clock, BasicMouseKeysTransformer::default_keymap)
-{
-}
-
-mir::input::BasicMouseKeysTransformer::BasicMouseKeysTransformer(
-    std::shared_ptr<mir::MainLoop> const& main_loop,
-    geometry::DisplacementF configured_max_speed,
-    AccelerationParameters const& params,
-    std::shared_ptr<time::Clock> const& clock,
-    MouseKeysKeymap keymap) :
+    std::shared_ptr<mir::MainLoop> const& main_loop, std::shared_ptr<time::Clock> const& clock) :
     main_loop{main_loop},
-    clock{clock},
-    acceleration_curve{params},
-    max_speed{[configured_max_speed]
-              {
-                  auto clamped_max_speed = configured_max_speed;
-                  if (configured_max_speed.dx < geometry::DeltaXF{0})
-                  {
-                      mir::log_warning("max speed x set to a value less than zero, clamping to zero");
-                      clamped_max_speed.dx = std::max(configured_max_speed.dx, geometry::DeltaXF{0.0});
-                  }
-
-                  if (configured_max_speed.dy < geometry::DeltaYF{0})
-                  {
-                      mir::log_warning(
-                          "max speed y set to a value less than zero, clamping to zero");
-                      clamped_max_speed.dy = std::max(configured_max_speed.dy, geometry::DeltaYF{0.0});
-                  }
-
-                  return clamped_max_speed;
-              }()},
-    keymap{keymap}
+    clock{clock}
 {
 }
 
@@ -131,12 +98,6 @@ bool mir::input::BasicMouseKeysTransformer::transform_input_event(
     }
 
     return false;
-}
-
-void mir::input::BasicMouseKeysTransformer::set_keymap(MouseKeysKeymap const& new_keymap)
-{
-    std::lock_guard guard{state_mutex};
-    keymap = new_keymap;
 }
 
 bool mir::input::BasicMouseKeysTransformer::handle_motion(
@@ -403,6 +364,12 @@ void mir::input::BasicMouseKeysTransformer::release_current_cursor_button(
     is_dragging = false;
 }
 
+void mir::input::BasicMouseKeysTransformer::set_keymap(MouseKeysKeymap const& new_keymap)
+{
+    std::lock_guard guard{state_mutex};
+    keymap = new_keymap;
+}
+
 void mir::input::BasicMouseKeysTransformer::set_acceleration_factors(double constant, double linear, double quadratic)
 {
     std::lock_guard guard{state_mutex};
@@ -412,6 +379,24 @@ void mir::input::BasicMouseKeysTransformer::set_acceleration_factors(double cons
 void mir::input::BasicMouseKeysTransformer::set_max_speed(double x_axis, double y_axis)
 {
     std::lock_guard guard{state_mutex};
-    max_speed = geometry::DisplacementF{x_axis, y_axis};
+    auto const clamp_max_speed = [](auto configured_max_speed)
+    {
+        auto clamped_max_speed = configured_max_speed;
+        if (configured_max_speed.dx < geometry::DeltaXF{0})
+        {
+            mir::log_warning("max speed x set to a value less than zero, clamping to zero");
+            clamped_max_speed.dx = std::max(configured_max_speed.dx, geometry::DeltaXF{0.0});
+        }
+
+        if (configured_max_speed.dy < geometry::DeltaYF{0})
+        {
+            mir::log_warning("max speed y set to a value less than zero, clamping to zero");
+            clamped_max_speed.dy = std::max(configured_max_speed.dy, geometry::DeltaYF{0.0});
+        }
+
+        return clamped_max_speed;
+    };
+
+    max_speed = clamp_max_speed(geometry::DisplacementF{x_axis, y_axis});
 }
 

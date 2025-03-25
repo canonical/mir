@@ -79,40 +79,10 @@ struct TestBasicAccessibilityManager : Test
             input_event_transformer,
             mt::fake_shared(clock),
             true,
-            [&](mir::input::MouseKeysKeymap const& keymap,
-                double acceleration_constant_factor,
-                double acceleration_linear_factor,
-                double acceleration_quadratic_factor,
-                double max_speed_x,
-                double max_speed_y)
-            {
-                return create_transformer(
-                    keymap,
-                    acceleration_constant_factor,
-                    acceleration_linear_factor,
-                    acceleration_quadratic_factor,
-                    max_speed_x,
-                    max_speed_y);
-            }}
+            mock_mousekeys_transformer}
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
     }
-
-    void SetUp() override
-    {
-        ON_CALL(*this, create_transformer(_, _, _, _, _, _)).WillByDefault(Return(mock_mousekeys_transformer));
-    }
-
-    MOCK_METHOD(
-        std::shared_ptr<mir::input::MouseKeysTransformer>,
-        create_transformer,
-        (mir::input::MouseKeysKeymap const& keymap,
-         double acceleration_constant_factor,
-         double acceleration_linear_factor,
-         double acceleration_quadratic_factor,
-         double max_speed_x,
-         double max_speed_y),
-        ());
 
     mtd::AdvanceableClock clock;
     mir::dispatch::MultiplexingDispatchable multiplexer;
@@ -170,30 +140,6 @@ TEST_F(TestBasicAccessibilityManager, set_repeat_delay_value_is_the_same_as_the_
     ASSERT_EQ(basic_accessibility_manager.repeat_delay(), expected);
 }
 
-TEST_F(TestBasicAccessibilityManager, set_mousekeys_enabled_creates_a_transformer)
-{
-    EXPECT_CALL(*this, create_transformer(_, _, _, _, _, _));
-
-    basic_accessibility_manager.mousekeys_enabled(true);
-}
-
-TEST_F(TestBasicAccessibilityManager, multiple_set_mousekeys_enabled_create_only_one_transformer)
-{
-    EXPECT_CALL(*this, create_transformer(_, _, _, _, _, _));
-
-    for(auto i = 0; i < 5; i++)
-        basic_accessibility_manager.mousekeys_enabled(true);
-}
-
-TEST_F(TestBasicAccessibilityManager, set_mousekeys_enabled_followed_by_a_disable_followed_by_an_enable_creates_two_transformers)
-{
-    EXPECT_CALL(*this, create_transformer(_, _, _, _, _, _)).Times(2);
-
-    basic_accessibility_manager.mousekeys_enabled(true);
-    basic_accessibility_manager.mousekeys_enabled(false);
-    basic_accessibility_manager.mousekeys_enabled(true);
-}
-
 namespace mir::input
 {
     bool operator==(MouseKeysKeymap const& left, MouseKeysKeymap const& right)
@@ -238,54 +184,4 @@ TEST_F(TestBasicAccessibilityManager, calling_set_max_speed_calls_set_max_speed_
 
     basic_accessibility_manager.mousekeys_enabled(true);
     basic_accessibility_manager.max_speed(max_x, max_y);
-}
-
-TEST_F(TestBasicAccessibilityManager, calling_set_mousekeys_keymap_then_toggling_mouskeys_preserves_keymap)
-{
-    using enum mir::input::MouseKeysKeymap::Action;
-    auto const keymap = mir::input::MouseKeysKeymap{{
-        {XKB_KEY_w, move_up},
-        {XKB_KEY_s, move_down},
-        {XKB_KEY_a, move_left},
-        {XKB_KEY_d, move_right},
-    }};
-
-    Sequence seq;
-    EXPECT_CALL(*this, create_transformer(_, _, _, _, _, _));      // For when the transformer is first created
-    EXPECT_CALL(*this, create_transformer(keymap, _, _, _, _, _)); // For the second creation
-
-    basic_accessibility_manager.mousekeys_enabled(true);
-    basic_accessibility_manager.mousekeys_keymap(keymap);
-    basic_accessibility_manager.mousekeys_enabled(false);
-    basic_accessibility_manager.mousekeys_enabled(true);
-}
-
-TEST_F(
-    TestBasicAccessibilityManager,
-    calling_set_acceleration_factors_then_toggling_mousekeys_preserves_acceleration_factors)
-{
-    auto const constant = 12.9, linear = 3737.0, quadratic = 111.0;
-
-    Sequence seq;
-    EXPECT_CALL(*this, create_transformer(_, _, _, _, _, _));
-    EXPECT_CALL(*this, create_transformer(_, constant, linear, quadratic, _, _));
-
-    basic_accessibility_manager.mousekeys_enabled(true);
-    basic_accessibility_manager.acceleration_factors(constant, linear, quadratic);
-    basic_accessibility_manager.mousekeys_enabled(false);
-    basic_accessibility_manager.mousekeys_enabled(true);
-}
-
-TEST_F(TestBasicAccessibilityManager, calling_set_max_speed_then_toggling_mousekeys_preservers_max_speeds)
-{
-    auto const max_x = 100, max_y = 10710;
-
-    Sequence seq;
-    EXPECT_CALL(*this, create_transformer(_, _, _, _, _, _));
-    EXPECT_CALL(*this, create_transformer(_, _, _, _, max_x, max_y));
-
-    basic_accessibility_manager.mousekeys_enabled(true);
-    basic_accessibility_manager.max_speed(max_x, max_y);
-    basic_accessibility_manager.mousekeys_enabled(false);
-    basic_accessibility_manager.mousekeys_enabled(true);
 }

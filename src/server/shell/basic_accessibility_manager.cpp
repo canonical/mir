@@ -19,8 +19,6 @@
 
 #include "mir/input/input_event_transformer.h"
 #include "mir/main_loop.h"
-#include "mir/options/configuration.h"
-#include "mir/options/option.h"
 #include "mir/shell/keyboard_helper.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
@@ -63,25 +61,16 @@ void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
         if (transformer)
             return;
 
-        transformer = mousekeys_transformer_builder(
-            keymap,
-            acceleration_constant,
-            acceleration_linear,
-            acceleration_quadratic,
-            _max_speed.dx.as_value(),
-            _max_speed.dy.as_value());
         event_transformer->append(transformer);
     }
     else
     {
         event_transformer->remove(transformer);
-        transformer.reset();
     }
 }
 
 void mir::shell::BasicAccessibilityManager::mousekeys_keymap(input::MouseKeysKeymap const& new_keymap)
 {
-    keymap = new_keymap;
     if(transformer)
         transformer->set_keymap(new_keymap);
 }
@@ -91,46 +80,12 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<input::InputEventTransformer> const& event_transformer,
     std::shared_ptr<time::Clock> const& clock,
     bool enable_key_repeat) :
-    mir::shell::BasicAccessibilityManager(
-        main_loop,
-        event_transformer,
-        clock,
-        enable_key_repeat,
-        [&](input::MouseKeysKeymap const& keymap,
-            double acceleration_constant_factor,
-            double acceleration_linear_factor,
-            double acceleration_quadratic_factor,
-            double max_speed_x,
-            double max_speed_y)
-        {
-            return std::make_shared<mir::input::BasicMouseKeysTransformer>(
-                main_loop,
-                mir::geometry::DisplacementF{max_speed_x, max_speed_y},
-                input::BasicMouseKeysTransformer::AccelerationParameters{
-                    acceleration_quadratic_factor,
-                    acceleration_linear_factor,
-                    acceleration_constant_factor,
-                },
-                clock,
-                keymap);
-        })
+    enable_key_repeat{enable_key_repeat},
+    event_transformer{event_transformer},
+    main_loop{main_loop},
+    clock{clock},
+    transformer{std::make_shared<mir::input::BasicMouseKeysTransformer>(main_loop, clock)}
 {
-}
-
-void mir::shell::BasicAccessibilityManager::acceleration_factors(double constant, double linear, double quadratic)
-{
-    acceleration_constant = constant;
-    acceleration_linear = linear;
-    acceleration_quadratic = quadratic;
-    if(transformer)
-        transformer->set_acceleration_factors(constant, linear, quadratic);
-}
-
-void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_axis)
-{
-    _max_speed = {x_axis, y_axis};
-    if(transformer)
-        transformer->set_max_speed(x_axis, y_axis);
 }
 
 mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
@@ -138,12 +93,23 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<input::InputEventTransformer> const& event_transformer,
     std::shared_ptr<time::Clock> const& clock,
     bool enable_key_repeat,
-    MouseKeysTransformerBuilder&& builder) :
+    std::shared_ptr<input::MouseKeysTransformer> const& mousekeys_transformer) :
     enable_key_repeat{enable_key_repeat},
     event_transformer{event_transformer},
     main_loop{main_loop},
     clock{clock},
-    keymap{input::BasicMouseKeysTransformer::default_keymap},
-    mousekeys_transformer_builder{std::move(builder)}
+    transformer{mousekeys_transformer}
 {
+}
+
+void mir::shell::BasicAccessibilityManager::acceleration_factors(double constant, double linear, double quadratic)
+{
+    if(transformer)
+        transformer->set_acceleration_factors(constant, linear, quadratic);
+}
+
+void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_axis)
+{
+    if(transformer)
+        transformer->set_max_speed(x_axis, y_axis);
 }

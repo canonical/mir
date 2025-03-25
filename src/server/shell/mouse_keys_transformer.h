@@ -53,17 +53,7 @@ public:
     static MouseKeysKeymap const default_keymap;
 
     BasicMouseKeysTransformer(
-        std::shared_ptr<mir::MainLoop> const& main_loop,
-        geometry::DisplacementF max_speed,
-        AccelerationParameters const& params,
-        std::shared_ptr<time::Clock> const& clock,
-        MouseKeysKeymap keymap);
-
-    BasicMouseKeysTransformer(
-        std::shared_ptr<mir::MainLoop> const& main_loop,
-        geometry::DisplacementF max_speed,
-        AccelerationParameters const& params,
-        std::shared_ptr<time::Clock> const& clock);
+        std::shared_ptr<mir::MainLoop> const& main_loop, std::shared_ptr<time::Clock> const& clock);
 
     bool transform_input_event(
         mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
@@ -140,9 +130,9 @@ private:
     bool is_dragging{false};
 
     std::mutex state_mutex;
-    AccelerationCurve acceleration_curve;
-    geometry::DisplacementF max_speed;
-    MouseKeysKeymap keymap;
+    AccelerationCurve acceleration_curve{{30, 100, 100}};
+    geometry::DisplacementF max_speed{400, 400};
+    MouseKeysKeymap keymap{default_keymap};
 };
 }
 }

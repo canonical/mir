@@ -43,14 +43,6 @@ namespace shell
 class BasicAccessibilityManager : public AccessibilityManager
 {
 public:
-    using MouseKeysTransformerBuilder = std::function<std::shared_ptr<input::MouseKeysTransformer>(
-        input::MouseKeysKeymap const& keymap,
-        double acceleration_constant_factor,
-        double acceleration_linear_factor,
-        double acceleration_quadratic_factor,
-        double max_speed_x,
-        double max_speed_y)>;
-
     BasicAccessibilityManager(
         std::shared_ptr<MainLoop> const& main_loop,
         std::shared_ptr<input::InputEventTransformer> const& event_transformer,
@@ -62,7 +54,7 @@ public:
         std::shared_ptr<input::InputEventTransformer> const& event_transformer,
         std::shared_ptr<time::Clock> const& clock,
         bool enable_key_repeat,
-        MouseKeysTransformerBuilder&& builder);
+        std::shared_ptr<input::MouseKeysTransformer> const& mousekeys_transformer);
 
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&) override;
 
@@ -90,15 +82,7 @@ private:
     std::shared_ptr<mir::MainLoop> const main_loop;
     std::shared_ptr<time::Clock> const clock;
 
-    std::shared_ptr<mir::input::MouseKeysTransformer> transformer;
-
-    // Need to be cached in case values are changed, then mousekeys were
-    // disabled and re-enabled.
-    input::MouseKeysKeymap keymap;
-    double acceleration_constant{100}, acceleration_linear{100}, acceleration_quadratic{30};
-    geometry::DisplacementF _max_speed = {400, 400};
-
-    MouseKeysTransformerBuilder const mousekeys_transformer_builder;
+    std::shared_ptr<mir::input::MouseKeysTransformer> const transformer;
 };
 }
 }
