@@ -52,9 +52,9 @@ struct MockMouseKeysTransformer : public mir::input::MouseKeysTransformer
 {
     MockMouseKeysTransformer() = default;
 
-    MOCK_METHOD(void, set_keymap, (mir::input::MouseKeysKeymap const& new_keymap), (override));
-    MOCK_METHOD(void, set_acceleration_factors, (double constant, double linear, double quadratic), (override));
-    MOCK_METHOD(void, set_max_speed, (double x_axis, double y_axis), (override));
+    MOCK_METHOD(void, keymap, (mir::input::MouseKeysKeymap const& new_keymap), (override));
+    MOCK_METHOD(void, acceleration_factors, (double constant, double linear, double quadratic), (override));
+    MOCK_METHOD(void, max_speed, (double x_axis, double y_axis), (override));
     MOCK_METHOD(
         bool,
         transform_input_event,
@@ -162,7 +162,7 @@ TEST_F(TestBasicAccessibilityManager, calling_set_mousekeys_keymap_calls_set_key
         {XKB_KEY_d, move_right},
     }};
 
-    EXPECT_CALL(*mock_mousekeys_transformer, set_keymap(keymap));
+    EXPECT_CALL(*mock_mousekeys_transformer, keymap(keymap));
 
     basic_accessibility_manager.mousekeys_enabled(true);
     basic_accessibility_manager.mousekeys_keymap(keymap);
@@ -171,7 +171,7 @@ TEST_F(TestBasicAccessibilityManager, calling_set_mousekeys_keymap_calls_set_key
 TEST_F(TestBasicAccessibilityManager, calling_set_acceleration_factors_calls_set_acceleration_factors_on_transformer)
 {
     auto const constant = 12.9, linear = 3737.0, quadratic = 111.0;
-    EXPECT_CALL(*mock_mousekeys_transformer, set_acceleration_factors(constant, linear, quadratic));
+    EXPECT_CALL(*mock_mousekeys_transformer, acceleration_factors(constant, linear, quadratic));
 
     basic_accessibility_manager.mousekeys_enabled(true);
     basic_accessibility_manager.acceleration_factors(constant, linear, quadratic);
@@ -180,7 +180,7 @@ TEST_F(TestBasicAccessibilityManager, calling_set_acceleration_factors_calls_set
 TEST_F(TestBasicAccessibilityManager, calling_set_max_speed_calls_set_max_speed_on_transformer)
 {
     auto const max_x = 100, max_y = 10710;
-    EXPECT_CALL(*mock_mousekeys_transformer, set_max_speed(max_x, max_y));
+    EXPECT_CALL(*mock_mousekeys_transformer, max_speed(max_x, max_y));
 
     basic_accessibility_manager.mousekeys_enabled(true);
     basic_accessibility_manager.max_speed(max_x, max_y);

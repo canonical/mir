@@ -376,7 +376,7 @@ TEST_F(TestMouseKeysTransformer, drag_start_and_end_dispatch_down_and_up_events)
 TEST_F(TestMouseKeysTransformer, receiving_a_key_not_in_keymap_doesnt_dispatch_event)
 {
     EXPECT_CALL(mock_seat, dispatch_event(_)).Times(0);
-    transformer->set_keymap(mir::input::MouseKeysKeymap{});
+    transformer->keymap(mir::input::MouseKeysKeymap{});
 
     mir::input::BasicMouseKeysTransformer::default_keymap.for_each_key_action_pair(
         [&](auto key, auto)
@@ -431,7 +431,7 @@ TEST_F(TestMouseKeysTransformer, acceleration_curve_constants_evaluate_properly)
 
     for(auto const& param: parameters)
     {
-        transformer->set_acceleration_factors(param.c, param.b, param.a);
+        transformer->acceleration_factors(param.c, param.b, param.a);
         input_event_transformer.handle(*down_event(XKB_KEY_KP_6));
 
         clock.advance_by(std::chrono::milliseconds(2));
@@ -472,7 +472,7 @@ TEST_F(TestMouseKeysTransformer, max_speed_caps_speed_properly)
             });
 
     // Immediately force clamping
-    transformer->set_acceleration_factors(1000000, 1000000, 1000000);
+    transformer->acceleration_factors(1000000, 1000000, 1000000);
 
     // Limits in pixels/second
     auto const parameters = {
@@ -483,7 +483,7 @@ TEST_F(TestMouseKeysTransformer, max_speed_caps_speed_properly)
 
     for(auto const& param: parameters)
     {
-        transformer->set_max_speed(param.first, param.second);
+        transformer->max_speed(param.first, param.second);
         input_event_transformer.handle(*down_event(XKB_KEY_KP_6));
         input_event_transformer.handle(*down_event(XKB_KEY_KP_2));
 

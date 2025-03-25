@@ -38,9 +38,9 @@ namespace input
 class MouseKeysTransformer: public mir::input::InputEventTransformer::Transformer
 {
 public:
-    virtual void set_keymap(MouseKeysKeymap const& new_keymap) = 0;
-    virtual void set_acceleration_factors(double constant, double linear, double quadratic) = 0;
-    virtual void set_max_speed(double x_axis, double y_axis) = 0;
+    virtual void keymap(MouseKeysKeymap const& new_keymap) = 0;
+    virtual void acceleration_factors(double constant, double linear, double quadratic) = 0;
+    virtual void max_speed(double x_axis, double y_axis) = 0;
 };
 
 class BasicMouseKeysTransformer: public MouseKeysTransformer
@@ -60,9 +60,9 @@ public:
         mir::input::EventBuilder* builder,
         MirEvent const& event) override;
 
-    void set_keymap(MouseKeysKeymap const& new_keymap) override;
-    void set_acceleration_factors(double constant, double linear, double quadratic) override;
-    void set_max_speed(double x_axis, double y_axis) override;
+    void keymap(MouseKeysKeymap const& new_keymap) override;
+    void acceleration_factors(double constant, double linear, double quadratic) override;
+    void max_speed(double x_axis, double y_axis) override;
 
 private:
     using Dispatcher = mir::input::InputEventTransformer::EventDispatcher;
@@ -131,8 +131,8 @@ private:
 
     std::mutex state_mutex;
     AccelerationCurve acceleration_curve{{30, 100, 100}};
-    geometry::DisplacementF max_speed{400, 400};
-    MouseKeysKeymap keymap{default_keymap};
+    geometry::DisplacementF _max_speed{400, 400};
+    MouseKeysKeymap _keymap{default_keymap};
 };
 }
 }

@@ -73,7 +73,7 @@ bool mir::input::BasicMouseKeysTransformer::transform_input_event(
         auto const keysym = mir_keyboard_event_keysym(kev);
         auto const keyboard_action = mir_keyboard_event_action(kev);
 
-        if (auto const mousekey_action = keymap.get_action(keysym))
+        if (auto const mousekey_action = _keymap.get_action(keysym))
         {
             switch (*mousekey_action)
             {
@@ -190,13 +190,13 @@ bool mir::input::BasicMouseKeysTransformer::handle_motion(
                             return delta.as_value() > 0 ? 1 : -1;
                         };
 
-                        if(max_speed.dx.as_value() > 0)
+                        if(_max_speed.dx.as_value() > 0)
                             motion_direction.dx =
-                                sign(motion_direction.dx) * std::min(fabs(motion_direction.dx), max_speed.dx * dt);
+                                sign(motion_direction.dx) * std::min(fabs(motion_direction.dx), _max_speed.dx * dt);
 
-                        if(max_speed.dy.as_value() > 0)
+                        if(_max_speed.dy.as_value() > 0)
                             motion_direction.dy =
-                                sign(motion_direction.dy) * std::min(fabs(motion_direction.dy), max_speed.dy * dt);
+                                sign(motion_direction.dy) * std::min(fabs(motion_direction.dy), _max_speed.dy * dt);
 
                         // If the cursor stops moving without releasing
                         // all buttons (if for example you press two
@@ -364,19 +364,19 @@ void mir::input::BasicMouseKeysTransformer::release_current_cursor_button(
     is_dragging = false;
 }
 
-void mir::input::BasicMouseKeysTransformer::set_keymap(MouseKeysKeymap const& new_keymap)
+void mir::input::BasicMouseKeysTransformer::keymap(MouseKeysKeymap const& new_keymap)
 {
     std::lock_guard guard{state_mutex};
-    keymap = new_keymap;
+    _keymap = new_keymap;
 }
 
-void mir::input::BasicMouseKeysTransformer::set_acceleration_factors(double constant, double linear, double quadratic)
+void mir::input::BasicMouseKeysTransformer::acceleration_factors(double constant, double linear, double quadratic)
 {
     std::lock_guard guard{state_mutex};
     acceleration_curve.params = {quadratic, linear, constant};
 }
 
-void mir::input::BasicMouseKeysTransformer::set_max_speed(double x_axis, double y_axis)
+void mir::input::BasicMouseKeysTransformer::max_speed(double x_axis, double y_axis)
 {
     std::lock_guard guard{state_mutex};
     auto const clamp_max_speed = [](auto configured_max_speed)
@@ -397,6 +397,6 @@ void mir::input::BasicMouseKeysTransformer::set_max_speed(double x_axis, double 
         return clamped_max_speed;
     };
 
-    max_speed = clamp_max_speed(geometry::DisplacementF{x_axis, y_axis});
+    _max_speed = clamp_max_speed(geometry::DisplacementF{x_axis, y_axis});
 }
 
