@@ -131,8 +131,8 @@ private:
 
     std::mutex state_mutex;
     AccelerationCurve acceleration_curve{{30, 100, 100}};
-    geometry::DisplacementF _max_speed{400, 400};
-    MouseKeysKeymap _keymap{default_keymap};
+    geometry::DisplacementF max_speed_{400, 400};
+    MouseKeysKeymap keymap_{default_keymap};
 };
 }
 }
