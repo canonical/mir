@@ -55,7 +55,7 @@ void miral::MouseKeysConfig::enabled(bool enabled) const
         return;
     }
 
-    self->accessibility_manager.lock()->set_mousekeys_enabled(enabled);
+    self->accessibility_manager.lock()->mousekeys_enabled(enabled);
 }
 
 void miral::MouseKeysConfig::set_keymap(mir::input::MouseKeysKeymap const& new_keymap) const
@@ -66,7 +66,7 @@ void miral::MouseKeysConfig::set_keymap(mir::input::MouseKeysKeymap const& new_k
         return;
     }
 
-    self->accessibility_manager.lock()->set_mousekeys_keymap(new_keymap);
+    self->accessibility_manager.lock()->mousekeys_keymap(new_keymap);
 }
 
 void miral::MouseKeysConfig::set_acceleration_factors(double constant, double linear, double quadratic) const
@@ -77,7 +77,7 @@ void miral::MouseKeysConfig::set_acceleration_factors(double constant, double li
         return;
     }
 
-    self->accessibility_manager.lock()->set_acceleration_factors(constant, linear, quadratic);
+    self->accessibility_manager.lock()->acceleration_factors(constant, linear, quadratic);
 }
 
 
@@ -89,7 +89,7 @@ void miral::MouseKeysConfig::set_max_speed(double x_axis, double y_axis) const
         return;
     }
 
-    self->accessibility_manager.lock()->set_max_speed(x_axis, y_axis);
+    self->accessibility_manager.lock()->max_speed(x_axis, y_axis);
 }
 
 void miral::MouseKeysConfig::operator()(mir::Server& server) const

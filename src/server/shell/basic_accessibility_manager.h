@@ -73,10 +73,10 @@ public:
 
     void notify_helpers() const override;
 
-    void set_mousekeys_enabled(bool on) override;
-    void set_mousekeys_keymap(input::MouseKeysKeymap const& new_keymap) override;
-    void set_acceleration_factors(double constant, double linear, double quadratic) override;
-    void set_max_speed(double x_axis, double y_axis) override;
+    void mousekeys_enabled(bool on) override;
+    void mousekeys_keymap(input::MouseKeysKeymap const& new_keymap) override;
+    void acceleration_factors(double constant, double linear, double quadratic) override;
+    void max_speed(double x_axis, double y_axis) override;
 
 private:
     std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
@@ -96,7 +96,7 @@ private:
     // disabled and re-enabled.
     input::MouseKeysKeymap keymap;
     double acceleration_constant{100}, acceleration_linear{100}, acceleration_quadratic{30};
-    geometry::DisplacementF max_speed = {400, 400};
+    geometry::DisplacementF _max_speed = {400, 400};
 
     MouseKeysTransformerBuilder const mousekeys_transformer_builder;
 };

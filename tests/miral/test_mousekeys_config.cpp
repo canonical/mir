@@ -36,10 +36,10 @@ public:
     MOCK_METHOD(void, repeat_rate, (int new_rate), (override));
     MOCK_METHOD(void, repeat_delay, (int new_rate), (override));
     MOCK_METHOD(void, notify_helpers, (), (const override));
-    MOCK_METHOD(void, set_mousekeys_enabled, (bool on), (override));
-    MOCK_METHOD(void, set_mousekeys_keymap, (mir::input::MouseKeysKeymap const& new_keymap), (override));
-    MOCK_METHOD(void, set_acceleration_factors, (double constant, double linear, double quadratic), (override));
-    MOCK_METHOD(void, set_max_speed, (double x_axis, double y_axis), (override));
+    MOCK_METHOD(void, mousekeys_enabled, (bool on), (override));
+    MOCK_METHOD(void, mousekeys_keymap, (mir::input::MouseKeysKeymap const& new_keymap), (override));
+    MOCK_METHOD(void, acceleration_factors, (double constant, double linear, double quadratic), (override));
+    MOCK_METHOD(void, max_speed, (double x_axis, double y_axis), (override));
 };
 
 struct TestMouseKeysConfig : miral::TestServer
@@ -66,7 +66,7 @@ struct TestMouseKeysConfig : miral::TestServer
 TEST_F(TestMouseKeysConfig, mousekeys_config_enabled_calls_accessibility_manager_set_mousekeys_enabled)
 {
     // Once at startup, and twice when we call `set_keymap` below
-    EXPECT_CALL(*accessibility_manager, set_mousekeys_enabled(_))
+    EXPECT_CALL(*accessibility_manager, mousekeys_enabled(_))
         .Times(3)
         .WillOnce(
             [](auto enabled)
@@ -96,7 +96,7 @@ TEST_F(TestMouseKeysConfig, mousekeys_config_enabled_calls_accessibility_manager
 TEST_F(TestMouseKeysConfig, mousekeys_config_set_keymap_calls_accessibility_manager_set_mousekeys_keymap)
 {
     // We don't call `set_keymap` at startup
-    EXPECT_CALL(*accessibility_manager, set_mousekeys_keymap(_));
+    EXPECT_CALL(*accessibility_manager, mousekeys_keymap(_));
 
     add_server_init(config);
     start_server();
@@ -105,7 +105,7 @@ TEST_F(TestMouseKeysConfig, mousekeys_config_set_keymap_calls_accessibility_mana
 
 TEST_F(TestMouseKeysConfig, mousekeys_config_set_acceleration_factors_calls_accessibility_manager_set_acceleration_factors)
 {
-    EXPECT_CALL(*accessibility_manager, set_acceleration_factors(_, _, _)).Times(2);
+    EXPECT_CALL(*accessibility_manager, acceleration_factors(_, _, _)).Times(2);
 
     add_server_init(config);
     start_server();
@@ -114,7 +114,7 @@ TEST_F(TestMouseKeysConfig, mousekeys_config_set_acceleration_factors_calls_acce
 
 TEST_F(TestMouseKeysConfig, mousekeys_config_set_max_speed_calls_accessibility_manager_set_max_speed)
 {
-    EXPECT_CALL(*accessibility_manager, set_max_speed(_, _)).Times(2);
+    EXPECT_CALL(*accessibility_manager, max_speed(_, _)).Times(2);
 
     add_server_init(config);
     start_server();

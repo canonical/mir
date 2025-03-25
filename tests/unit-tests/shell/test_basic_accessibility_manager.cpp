@@ -174,7 +174,7 @@ TEST_F(TestBasicAccessibilityManager, set_mousekeys_enabled_creates_a_transforme
 {
     EXPECT_CALL(*this, create_transformer(_, _, _, _, _, _));
 
-    basic_accessibility_manager.set_mousekeys_enabled(true);
+    basic_accessibility_manager.mousekeys_enabled(true);
 }
 
 TEST_F(TestBasicAccessibilityManager, multiple_set_mousekeys_enabled_create_only_one_transformer)
@@ -182,16 +182,16 @@ TEST_F(TestBasicAccessibilityManager, multiple_set_mousekeys_enabled_create_only
     EXPECT_CALL(*this, create_transformer(_, _, _, _, _, _));
 
     for(auto i = 0; i < 5; i++)
-        basic_accessibility_manager.set_mousekeys_enabled(true);
+        basic_accessibility_manager.mousekeys_enabled(true);
 }
 
 TEST_F(TestBasicAccessibilityManager, set_mousekeys_enabled_followed_by_a_disable_followed_by_an_enable_creates_two_transformers)
 {
     EXPECT_CALL(*this, create_transformer(_, _, _, _, _, _)).Times(2);
 
-    basic_accessibility_manager.set_mousekeys_enabled(true);
-    basic_accessibility_manager.set_mousekeys_enabled(false);
-    basic_accessibility_manager.set_mousekeys_enabled(true);
+    basic_accessibility_manager.mousekeys_enabled(true);
+    basic_accessibility_manager.mousekeys_enabled(false);
+    basic_accessibility_manager.mousekeys_enabled(true);
 }
 
 namespace mir::input
@@ -218,8 +218,8 @@ TEST_F(TestBasicAccessibilityManager, calling_set_mousekeys_keymap_calls_set_key
 
     EXPECT_CALL(*mock_mousekeys_transformer, set_keymap(keymap));
 
-    basic_accessibility_manager.set_mousekeys_enabled(true);
-    basic_accessibility_manager.set_mousekeys_keymap(keymap);
+    basic_accessibility_manager.mousekeys_enabled(true);
+    basic_accessibility_manager.mousekeys_keymap(keymap);
 }
 
 TEST_F(TestBasicAccessibilityManager, calling_set_acceleration_factors_calls_set_acceleration_factors_on_transformer)
@@ -227,8 +227,8 @@ TEST_F(TestBasicAccessibilityManager, calling_set_acceleration_factors_calls_set
     auto const constant = 12.9, linear = 3737.0, quadratic = 111.0;
     EXPECT_CALL(*mock_mousekeys_transformer, set_acceleration_factors(constant, linear, quadratic));
 
-    basic_accessibility_manager.set_mousekeys_enabled(true);
-    basic_accessibility_manager.set_acceleration_factors(constant, linear, quadratic);
+    basic_accessibility_manager.mousekeys_enabled(true);
+    basic_accessibility_manager.acceleration_factors(constant, linear, quadratic);
 }
 
 TEST_F(TestBasicAccessibilityManager, calling_set_max_speed_calls_set_max_speed_on_transformer)
@@ -236,8 +236,8 @@ TEST_F(TestBasicAccessibilityManager, calling_set_max_speed_calls_set_max_speed_
     auto const max_x = 100, max_y = 10710;
     EXPECT_CALL(*mock_mousekeys_transformer, set_max_speed(max_x, max_y));
 
-    basic_accessibility_manager.set_mousekeys_enabled(true);
-    basic_accessibility_manager.set_max_speed(max_x, max_y);
+    basic_accessibility_manager.mousekeys_enabled(true);
+    basic_accessibility_manager.max_speed(max_x, max_y);
 }
 
 TEST_F(TestBasicAccessibilityManager, calling_set_mousekeys_keymap_then_toggling_mouskeys_preserves_keymap)
@@ -254,10 +254,10 @@ TEST_F(TestBasicAccessibilityManager, calling_set_mousekeys_keymap_then_toggling
     EXPECT_CALL(*this, create_transformer(_, _, _, _, _, _));      // For when the transformer is first created
     EXPECT_CALL(*this, create_transformer(keymap, _, _, _, _, _)); // For the second creation
 
-    basic_accessibility_manager.set_mousekeys_enabled(true);
-    basic_accessibility_manager.set_mousekeys_keymap(keymap);
-    basic_accessibility_manager.set_mousekeys_enabled(false);
-    basic_accessibility_manager.set_mousekeys_enabled(true);
+    basic_accessibility_manager.mousekeys_enabled(true);
+    basic_accessibility_manager.mousekeys_keymap(keymap);
+    basic_accessibility_manager.mousekeys_enabled(false);
+    basic_accessibility_manager.mousekeys_enabled(true);
 }
 
 TEST_F(
@@ -270,10 +270,10 @@ TEST_F(
     EXPECT_CALL(*this, create_transformer(_, _, _, _, _, _));
     EXPECT_CALL(*this, create_transformer(_, constant, linear, quadratic, _, _));
 
-    basic_accessibility_manager.set_mousekeys_enabled(true);
-    basic_accessibility_manager.set_acceleration_factors(constant, linear, quadratic);
-    basic_accessibility_manager.set_mousekeys_enabled(false);
-    basic_accessibility_manager.set_mousekeys_enabled(true);
+    basic_accessibility_manager.mousekeys_enabled(true);
+    basic_accessibility_manager.acceleration_factors(constant, linear, quadratic);
+    basic_accessibility_manager.mousekeys_enabled(false);
+    basic_accessibility_manager.mousekeys_enabled(true);
 }
 
 TEST_F(TestBasicAccessibilityManager, calling_set_max_speed_then_toggling_mousekeys_preservers_max_speeds)
@@ -284,8 +284,8 @@ TEST_F(TestBasicAccessibilityManager, calling_set_max_speed_then_toggling_mousek
     EXPECT_CALL(*this, create_transformer(_, _, _, _, _, _));
     EXPECT_CALL(*this, create_transformer(_, _, _, _, max_x, max_y));
 
-    basic_accessibility_manager.set_mousekeys_enabled(true);
-    basic_accessibility_manager.set_max_speed(max_x, max_y);
-    basic_accessibility_manager.set_mousekeys_enabled(false);
-    basic_accessibility_manager.set_mousekeys_enabled(true);
+    basic_accessibility_manager.mousekeys_enabled(true);
+    basic_accessibility_manager.max_speed(max_x, max_y);
+    basic_accessibility_manager.mousekeys_enabled(false);
+    basic_accessibility_manager.mousekeys_enabled(true);
 }

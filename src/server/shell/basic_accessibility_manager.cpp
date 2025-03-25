@@ -56,7 +56,7 @@ void mir::shell::BasicAccessibilityManager::notify_helpers() const {
         helper->repeat_info_changed(repeat_rate(), repeat_delay());
 }
 
-void mir::shell::BasicAccessibilityManager::set_mousekeys_enabled(bool on)
+void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
     if (on)
     {
@@ -68,8 +68,8 @@ void mir::shell::BasicAccessibilityManager::set_mousekeys_enabled(bool on)
             acceleration_constant,
             acceleration_linear,
             acceleration_quadratic,
-            max_speed.dx.as_value(),
-            max_speed.dy.as_value());
+            _max_speed.dx.as_value(),
+            _max_speed.dy.as_value());
         event_transformer->append(transformer);
     }
     else
@@ -79,7 +79,7 @@ void mir::shell::BasicAccessibilityManager::set_mousekeys_enabled(bool on)
     }
 }
 
-void mir::shell::BasicAccessibilityManager::set_mousekeys_keymap(input::MouseKeysKeymap const& new_keymap)
+void mir::shell::BasicAccessibilityManager::mousekeys_keymap(input::MouseKeysKeymap const& new_keymap)
 {
     keymap = new_keymap;
     if(transformer)
@@ -117,7 +117,7 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
 {
 }
 
-void mir::shell::BasicAccessibilityManager::set_acceleration_factors(double constant, double linear, double quadratic)
+void mir::shell::BasicAccessibilityManager::acceleration_factors(double constant, double linear, double quadratic)
 {
     acceleration_constant = constant;
     acceleration_linear = linear;
@@ -126,9 +126,9 @@ void mir::shell::BasicAccessibilityManager::set_acceleration_factors(double cons
         transformer->set_acceleration_factors(constant, linear, quadratic);
 }
 
-void mir::shell::BasicAccessibilityManager::set_max_speed(double x_axis, double y_axis)
+void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_axis)
 {
-    max_speed = {x_axis, y_axis};
+    _max_speed = {x_axis, y_axis};
     if(transformer)
         transformer->set_max_speed(x_axis, y_axis);
 }

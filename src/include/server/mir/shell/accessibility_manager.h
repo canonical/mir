@@ -43,10 +43,10 @@ public:
 
     virtual void notify_helpers() const = 0;
 
-    virtual void set_mousekeys_enabled(bool on) = 0;
-    virtual void set_mousekeys_keymap(input::MouseKeysKeymap const& new_keymap) = 0;
-    virtual void set_acceleration_factors(double constant, double linear, double quadratic) = 0;
-    virtual void set_max_speed(double x_axis, double y_axis) = 0;
+    virtual void mousekeys_enabled(bool on) = 0;
+    virtual void mousekeys_keymap(input::MouseKeysKeymap const& new_keymap) = 0;
+    virtual void acceleration_factors(double constant, double linear, double quadratic) = 0;
+    virtual void max_speed(double x_axis, double y_axis) = 0;
 };
 }
 }
