@@ -32,8 +32,10 @@ COMMON_CONFIGURE_OPTIONS = \
 
 # Disable LTO on broken binutils
 # https://bugs.launchpad.net/ubuntu/+source/binutils/+bug/2070302
-ifneq ($(shell ld --version | grep '2.43.1$$'),)
-	DEB_BUILD_MAINT_OPTIONS += optimize=-lto
+ifeq ($(filter arm64,$(DEB_HOST_ARCH)),arm64)
+	ifneq ($(shell ld --version | grep -E '2.4(4|3.1)$$'),)
+		DEB_BUILD_MAINT_OPTIONS += optimize=-lto
+	endif
 endif
 
 # We can't guarantee non-Ubuntu builds will build against WLCS packages we
