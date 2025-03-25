@@ -49,8 +49,20 @@ protected:
 private:
     explicit RenderingPlatform(std::tuple<EGLDisplay, bool> dpy);
 
-    EGLDisplay const dpy;
-    bool const owns_dpy;
+    class EGLDisplayHandle
+    {
+    public:
+        EGLDisplayHandle(EGLDisplay dpy, bool owns_dpy);
+        ~EGLDisplayHandle();
+
+        operator EGLDisplay() const;
+
+    private:
+        EGLDisplay const dpy;
+        bool const owns_dpy;
+    };
+
+    EGLDisplayHandle dpy;
     std::unique_ptr<renderer::gl::Context> const ctx;
     std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
 };
