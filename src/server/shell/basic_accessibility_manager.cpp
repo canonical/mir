@@ -69,12 +69,6 @@ void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
     }
 }
 
-void mir::shell::BasicAccessibilityManager::mousekeys_keymap(input::MouseKeysKeymap const& new_keymap)
-{
-    if(transformer)
-        transformer->keymap(new_keymap);
-}
-
 mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<input::InputEventTransformer> const& event_transformer,
     bool enable_key_repeat,
@@ -85,14 +79,17 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
 {
 }
 
+void mir::shell::BasicAccessibilityManager::mousekeys_keymap(input::MouseKeysKeymap const& new_keymap)
+{
+    transformer->keymap(new_keymap);
+}
+
 void mir::shell::BasicAccessibilityManager::acceleration_factors(double constant, double linear, double quadratic)
 {
-    if(transformer)
-        transformer->acceleration_factors(constant, linear, quadratic);
+    transformer->acceleration_factors(constant, linear, quadratic);
 }
 
 void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_axis)
 {
-    if(transformer)
-        transformer->max_speed(x_axis, y_axis);
+    transformer->max_speed(x_axis, y_axis);
 }
