@@ -30,13 +30,6 @@ COMMON_CONFIGURE_OPTIONS = \
   -DCMAKE_INSTALL_LIBEXECDIR="lib/$(DEB_HOST_MULTIARCH)/mir"\
   -DMIR_BUILD_INTERPROCESS_TESTS=OFF\
 
-ifeq ($(filter ppc64el,$(DEB_HOST_ARCH)),ppc64el)
-	# Disable spurious error on GCC>=12
-	ifneq ($(shell gcc --version | grep '1[34].[[:digit:]]\+.[[:digit:]]\+$$'),)
-		COMMON_CONFIGURE_OPTIONS += -DMIR_COMPILER_QUIRKS="test_touchspot_controller.cpp:array-bounds"
-	endif
-endif
-
 # Disable LTO on broken binutils
 # https://bugs.launchpad.net/ubuntu/+source/binutils/+bug/2070302
 ifneq ($(shell ld --version | grep '2.43.1$$'),)
