@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/test/doubles/stub_gl_rendering_provider.h"
 #include "src/server/compositor/default_display_buffer_compositor_factory.h"
 #include <miral/test_display_server.h>
 
@@ -104,24 +105,29 @@ void miral::TestDisplayServer::start_server()
                                 });
                         });
 
-
-                    server.override_the_display_buffer_compositor_factory(
-                        [&server]() -> std::shared_ptr<mir::compositor::DisplayBufferCompositorFactory>
+                    // We want to use the native RenderingPlatform if available, but if not we
+                    // need to stub out the DisplayBufferCompositorFactory. While it would be
+                    // possible to set up a full set of MockGL/MockEGL dummies, doing so across
+                    // the DSO loader is sufficiently annoying that we should just use a dummy,
+                    // non-GL DisplayBufferCompositor.
+                    server.wrap_display_buffer_compositor_factory(
+                        [&server](auto default_impl) -> std::shared_ptr<mir::compositor::DisplayBufferCompositorFactory>
                         {
                             auto first_rendering_platform = server.the_rendering_platforms().front();
                             auto gl_provider =
                                 mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(
                                     std::move(first_rendering_platform));
-                            if (gl_provider)
+                            if (gl_provider && std::dynamic_pointer_cast<mtd::StubGlRenderingProvider>(gl_provider))
                             {
                                 return std::make_shared<mtf::HeadlessDisplayBufferCompositorFactory>(
                                     std::move(gl_provider),
                                     server.the_gl_config());
                             }
-                            BOOST_THROW_EXCEPTION((std::runtime_error{"Platform does not support GL interface"}));
+                            else
+                            {
+                                return default_impl;
+                            }
                         });
-
-
                     server.override_the_logger([&]()
                         {
                             std::shared_ptr<ml::Logger> result{};
