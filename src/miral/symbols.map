@@ -526,9 +526,8 @@ global:
   extern "C++" {
     miral::CursorScale::?CursorScale*;
     miral::CursorScale::CursorScale*;
-    miral::CursorScale::apply_scale*;
+    miral::CursorScale::scale*;
     miral::CursorScale::operator*;
-    miral::CursorScale::set_scale*;
     typeinfo?for?miral::CursorScale;
   };
 } MIRAL_5.2;

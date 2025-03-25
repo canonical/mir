@@ -19,7 +19,6 @@
 #include "mir/options/option.h"
 #include "mir/server.h"
 #include "mir/shell/accessibility_manager.h"
-#include "mir/log.h"
 
 #include <memory>
 
@@ -27,31 +26,19 @@ struct miral::CursorScale::Self
 {
     Self() {}
 
-    Self(float default_scale): scale{default_scale} {}
+    Self(float default_scale): _scale{default_scale} {}
 
-    void set_scale(float new_scale)
+    void scale(float new_scale)
     {
-        scale = new_scale;
-    }
+        _scale = new_scale;
 
-    void apply_scale() const
-    {
         if(accessibility_manager.expired())
-        {
-            mir::log_warning("AccessibilityManager not available. Will not set cursor scale");
             return;
-        }
 
-        if(!scale)
-        {
-            mir::log_warning("No scale value set. Will not set cursor scale");
-            return;
-        }
-
-        accessibility_manager.lock()->cursor_scale_changed(*scale);
+        accessibility_manager.lock()->cursor_scale_changed(*_scale);
     }
 
-    std::optional<float> scale;
+    std::optional<float> _scale;
     std::weak_ptr<mir::shell::AccessibilityManager> accessibility_manager;
 };
 
@@ -67,14 +54,9 @@ miral::CursorScale::CursorScale(float default_scale)
 
 miral::CursorScale::~CursorScale() = default;
 
-void miral::CursorScale::set_scale(float new_scale) const
+void miral::CursorScale::scale(float new_scale) const
 {
-    self->set_scale(new_scale);
-}
-
-void miral::CursorScale::apply_scale() const
-{
-    self->apply_scale();
+    self->scale(new_scale);
 }
 
 void miral::CursorScale::operator()(mir::Server& server) const
@@ -88,8 +70,8 @@ void miral::CursorScale::operator()(mir::Server& server) const
         {
             self->accessibility_manager = server.the_accessibility_manager();
             auto const& options = server.get_options();
-            auto const scale = self->scale.value_or(options->get<double>(cursor_scale_opt));
+            auto const scale = self->_scale.value_or(options->get<double>(cursor_scale_opt));
 
-            self->set_scale(scale);
+            self->scale(scale);
         });
 }

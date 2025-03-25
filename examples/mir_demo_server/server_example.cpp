@@ -153,7 +153,6 @@ private:
         input_configuration.mouse(mouse);
         input_configuration.touchpad(touchpad);
         input_configuration.keyboard(keyboard);
-        cursor_scale.apply_scale();
     };
 
     void loader(std::istream& in, std::filesystem::path const& path)
@@ -232,7 +231,7 @@ private:
                 {
                     auto const parsed = parse_and_validate_float(key, value);
                     if(parsed)
-                        cursor_scale.set_scale(*parsed);
+                        cursor_scale.scale(*parsed);
                 }
             }
         }

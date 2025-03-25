@@ -32,14 +32,8 @@ public:
     explicit CursorScale(float default_scale);
     ~CursorScale();
 
-    /// Stores the value passed.
-    /// \note Does not set the scale immediately. You need to call
-    /// [apply_scale] for that
-    void set_scale(float new_scale) const;
-
-    /// Applies the set scale
-    /// \note Cannot be called before the server is started.
-    void apply_scale() const;
+    /// Applies the new scale. (Either immediately or when the server starts)
+    void scale(float new_scale) const;
 
     void operator()(mir::Server& server) const;
 private:
