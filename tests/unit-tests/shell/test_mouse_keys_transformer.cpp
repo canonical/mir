@@ -429,6 +429,9 @@ TEST_F(TestMouseKeysTransformer, acceleration_curve_constants_evaluate_properly)
         {500, 0, 0},
     };
 
+    // Don't want speed limits interfering with our test case
+    transformer->max_speed(0, 0);
+
     for(auto const& param: parameters)
     {
         transformer->acceleration_factors(param.c, param.b, param.a);
