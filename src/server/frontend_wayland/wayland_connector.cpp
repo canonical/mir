@@ -37,6 +37,7 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/wayland.h"
 
+#include <future>
 #include <optional>
 #include <sys/eventfd.h>
 #include <sys/stat.h>
@@ -392,26 +393,46 @@ mf::WaylandConnector::WaylandConnector(
     pause_source = wl_event_loop_add_fd(wayland_loop, pause_signal, WL_EVENT_READABLE, &halt_eventloop, display.get());
 }
 
-mf::WaylandConnector::~WaylandConnector()
+namespace
 {
-    wl_display_destroy_clients(display.get());
-
+void unbind_display(mg::GraphicBufferAllocator& allocator, wl_display* display) noexcept
+{
     try
-    {
-        allocator->unbind_display(display.get());
+    {   
+        allocator.unbind_display(display);
     }
     catch (...)
     {
-        log(
-            logging::Severity::warning,
+        mir::log(
+            mir::logging::Severity::warning,
             MIR_LOG_COMPONENT,
             std::current_exception(),
             "Failed to unbind EGL display");
     }
+}
+}
+
+mf::WaylandConnector::~WaylandConnector()
+{
+    wl_display_destroy_clients(display.get());
 
     if (dispatch_thread.joinable())
     {
+        auto cleanup_promise = std::make_shared<std::promise<void>>();
+        auto cleanup_done = cleanup_promise->get_future();
+        executor->spawn(
+            [cleanup_promise, this]()
+            {
+                unbind_display(*allocator, display.get());
+                cleanup_promise->set_value();
+            });
+        cleanup_done.get();
+        
         stop();
+    }
+    else
+    {
+        unbind_display(*allocator, display.get());
     }
     wl_event_source_remove(pause_source);
 }
