@@ -115,14 +115,18 @@ public:
      * @param id        the persistent surface id
      * @return          the metadata
      * @throw           invalid_argument or runtime_error if the id is badly formatted/doesn't identify a current window
+     * \deprecated      'Persistent' surface IDs were part of mirclient API
      */
+    [[deprecated("'Persistent' surface IDs were part of mirclient API")]]
     auto info_for_window_id(std::string const& id) const -> WindowInfo&;
 
     /** retrieve the persistent surface id for a window
      *
      * @param window    the window
      * @return          the persistent surface id
+     * \deprecated      'Persistent' surface IDs were part of mirclient API
      */
+    [[deprecated("'Persistent' surface IDs were part of mirclient API")]]
     auto id_for_window(Window const& window) const -> std::string;
 
     /// Send close request to the window
