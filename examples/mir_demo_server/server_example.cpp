@@ -119,8 +119,7 @@ catch (...)
 class InputConfigFile
 {
 public:
-    InputConfigFile(miral::MirRunner& runner, std::filesystem::path file, miral::CursorScale& cursor_scale) :
-        cursor_scale{cursor_scale},
+    InputConfigFile(miral::MirRunner& runner, std::filesystem::path file) :
         config_file{
             runner,
             file,
@@ -137,6 +136,7 @@ public:
     void operator()(mir::Server& server)
     {
         input_configuration(server);
+        cursor_scale(server);
     }
 
 private:
@@ -145,7 +145,7 @@ private:
     miral::InputConfiguration::Touchpad touchpad = input_configuration.touchpad();
     miral::InputConfiguration::Keyboard keyboard = input_configuration.keyboard();
     std::mutex config_mutex;
-    miral::CursorScale& cursor_scale;
+    miral::CursorScale cursor_scale;
     miral::ConfigFile config_file;
 
     void apply_config()
@@ -247,7 +247,7 @@ try
     miral::MirRunner runner{argc, argv, "mir/mir_demo_server.config"};
 
     miral::CursorScale cursor_scale;
-    InputConfigFile input_configuration{runner, "mir_demo_server.input", cursor_scale};
+    InputConfigFile input_configuration{runner, "mir_demo_server.input"};
     runner.set_exception_handler(exception_handler);
 
     std::function<void()> shutdown_hook{[]{}};
@@ -272,7 +272,6 @@ try
         input_filters,
         test_runner,
         std::ref(input_configuration),
-        cursor_scale,
     });
 
     // Propagate any test failure
