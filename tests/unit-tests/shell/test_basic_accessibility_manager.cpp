@@ -75,9 +75,7 @@ struct TestBasicAccessibilityManager : Test
             mt::fake_shared(led_observer_registrar))},
         input_event_transformer{std::make_shared<mir::input::InputEventTransformer>(input_device_hub, main_loop)},
         basic_accessibility_manager{
-            main_loop,
             input_event_transformer,
-            mt::fake_shared(clock),
             true,
             mock_mousekeys_transformer}
     {

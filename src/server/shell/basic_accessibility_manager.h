@@ -44,15 +44,7 @@ class BasicAccessibilityManager : public AccessibilityManager
 {
 public:
     BasicAccessibilityManager(
-        std::shared_ptr<MainLoop> const& main_loop,
         std::shared_ptr<input::InputEventTransformer> const& event_transformer,
-        std::shared_ptr<time::Clock> const& clock,
-        bool enable_key_repeat);
-
-    BasicAccessibilityManager(
-        std::shared_ptr<MainLoop> const& main_loop,
-        std::shared_ptr<input::InputEventTransformer> const& event_transformer,
-        std::shared_ptr<time::Clock> const& clock,
         bool enable_key_repeat,
         std::shared_ptr<input::MouseKeysTransformer> const& mousekeys_transformer);
 
@@ -79,9 +71,6 @@ private:
     bool enable_key_repeat;
 
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
-    std::shared_ptr<mir::MainLoop> const main_loop;
-    std::shared_ptr<time::Clock> const clock;
-
     std::shared_ptr<mir::input::MouseKeysTransformer> const transformer;
 };
 }

@@ -76,28 +76,11 @@ void mir::shell::BasicAccessibilityManager::mousekeys_keymap(input::MouseKeysKey
 }
 
 mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
-    std::shared_ptr<MainLoop> const& main_loop,
     std::shared_ptr<input::InputEventTransformer> const& event_transformer,
-    std::shared_ptr<time::Clock> const& clock,
-    bool enable_key_repeat) :
-    enable_key_repeat{enable_key_repeat},
-    event_transformer{event_transformer},
-    main_loop{main_loop},
-    clock{clock},
-    transformer{std::make_shared<mir::input::BasicMouseKeysTransformer>(main_loop, clock)}
-{
-}
-
-mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
-    std::shared_ptr<MainLoop> const& main_loop,
-    std::shared_ptr<input::InputEventTransformer> const& event_transformer,
-    std::shared_ptr<time::Clock> const& clock,
     bool enable_key_repeat,
     std::shared_ptr<input::MouseKeysTransformer> const& mousekeys_transformer) :
     enable_key_repeat{enable_key_repeat},
     event_transformer{event_transformer},
-    main_loop{main_loop},
-    clock{clock},
     transformer{mousekeys_transformer}
 {
 }
