@@ -144,9 +144,9 @@ TEST_F(TestInputConfiguration, touchpad_acceleration_bias_is_set_and_clamped)
     }
 }
 
-namespace miral
+namespace
 {
-auto operator==(Mouse const& lhs, Mouse const& rhs) -> bool
+auto mouse_equal(Mouse const& lhs, Mouse const& rhs) -> bool
 {
     auto const left = std::tuple{
         lhs.handedness(), lhs.acceleration(), lhs.acceleration_bias(), lhs.vscroll_speed(), lhs.hscroll_speed()};
@@ -155,7 +155,8 @@ auto operator==(Mouse const& lhs, Mouse const& rhs) -> bool
 
     return left == right;
 }
-auto operator==(Touchpad const& lhs, Touchpad const& rhs) -> bool
+
+auto touchpad_equal(Touchpad const& lhs, Touchpad const& rhs) -> bool
 {
     auto const left = std::tuple{
         lhs.acceleration(),
@@ -183,7 +184,8 @@ auto operator==(Touchpad const& lhs, Touchpad const& rhs) -> bool
 
     return left == right;
 }
-auto operator==(miral::InputConfiguration::Keyboard const& lhs, miral::InputConfiguration::Keyboard const& rhs) -> bool
+
+auto keyboard_equal(Keyboard const& lhs, Keyboard const& rhs) -> bool
 {
     return std::tuple{lhs.repeat_rate(), rhs.repeat_delay()} == std::tuple{rhs.repeat_rate(), rhs.repeat_delay()};
 }
@@ -244,7 +246,7 @@ TEST_F(TestInputConfiguration, mouse_merge_from_partial_set_changes_only_set_val
 
         Mouse merged;
         merged.merge(modified);
-        EXPECT_EQ(merged, expected);
+        EXPECT_PRED2(mouse_equal, merged, expected);
     }
 }
 
@@ -300,7 +302,7 @@ TEST_F(TestInputConfiguration, mouse_merge_does_not_overwrite_values)
         // This merge should only modify the variable we're testing
         target.merge(modified);
 
-        EXPECT_EQ(target, expected);
+        EXPECT_PRED2(mouse_equal, target, expected);
     }
 }
 
@@ -389,7 +391,7 @@ TEST_F(TestInputConfiguration, touchpad_merge_from_partial_set_changes_only_set_
 
         Touchpad merged;
         merged.merge(modified);
-        EXPECT_EQ(merged, expected);
+        EXPECT_PRED2(touchpad_equal, merged, expected);
     }
 }
 
@@ -466,7 +468,7 @@ TEST_F(TestInputConfiguration, touchapd_merge_does_not_overwrite_values)
 
         target.merge(modified);
 
-        EXPECT_EQ(target, expected);
+        EXPECT_PRED2(touchpad_equal, target, expected);
     }
 }
 
@@ -501,7 +503,7 @@ TEST_F(TestInputConfiguration, keyboard_merge_from_partial_set_changes_only_set_
 
         Keyboard merged;
         merged.merge(modified);
-        EXPECT_EQ(merged, expected);
+        EXPECT_PRED2(keyboard_equal, merged, expected);
     }
 }
 
@@ -533,6 +535,6 @@ TEST_F(TestInputConfiguration, keyboard_merge_does_not_overwrite_values)
 
         target.merge(modified);
 
-        EXPECT_EQ(target, expected);
+        EXPECT_PRED2(keyboard_equal, target, expected);
     }
 }
