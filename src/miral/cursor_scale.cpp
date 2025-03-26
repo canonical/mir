@@ -20,34 +20,30 @@
 #include "mir/server.h"
 #include "mir/shell/accessibility_manager.h"
 
+#include <atomic>
 #include <memory>
 
 struct miral::CursorScale::Self
 {
     Self(float default_scale) :
-        default_scale{default_scale}
+        scale_(default_scale)
     {
     }
 
     void scale(float new_scale)
     {
-        auto const locked_state = state.lock();
-        locked_state->scale.emplace(new_scale);
+        scale_ = new_scale;
 
-        if(locked_state->accessibility_manager.expired())
+        if(accessibility_manager.expired())
             return;
 
-        locked_state->accessibility_manager.lock()->cursor_scale_changed(*locked_state->scale);
+        accessibility_manager.lock()->cursor_scale_changed(scale_);
     }
 
-    float const default_scale;
+    std::atomic<float> scale_;
 
-    struct State {
-        std::optional<float> scale;
-        std::weak_ptr<mir::shell::AccessibilityManager> accessibility_manager;
-    };
-
-    mir::Synchronised<State> state;
+    // accessibility_manager is only updated during the single-threaded initialization phase of startup
+    std::weak_ptr<mir::shell::AccessibilityManager> accessibility_manager;
 };
 
 miral::CursorScale::CursorScale()
@@ -71,18 +67,15 @@ void miral::CursorScale::operator()(mir::Server& server) const
 {
     auto const* const cursor_scale_opt = "cursor-scale";
     server.add_configuration_option(
-        cursor_scale_opt, "Scales the mouse cursor visually. Accepts any value in the range [0, 100]", self->default_scale);
+        cursor_scale_opt, "Scales the mouse cursor visually. Accepts any value in the range [0, 100]", self->scale_);
 
     server.add_init_callback(
         [&server, this, cursor_scale_opt]
         {
             auto const& options = server.get_options();
 
-            auto const scale = [&]{
-                auto const locked_state = self->state.lock();
-                locked_state->accessibility_manager = server.the_accessibility_manager();
-                return locked_state->scale.value_or(options->get<double>(cursor_scale_opt));
-            }();
+            self->accessibility_manager = server.the_accessibility_manager();
+            auto const scale = options->get<double>(cursor_scale_opt);
 
             self->scale(scale);
         });
