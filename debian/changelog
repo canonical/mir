@@ -1,3 +1,15 @@
+mir (2.20.1) UNRELEASED; urgency=medium
+
+  * New upstream release 2.20.1
+
+    - Bugs fixed:
+      . miroil::GLBuffer was dropped in 2.20 (#3813)
+      . Do not mutate a container whilst iterating over it (#3819)
+      . Crash when disconnecting monitors (#3816)
+      . Policy destructors do not get called when a surface has been launched on the desktop (#3823)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 18 Mar 2025 11:44:00 +0100
+
 mir (2.20.0) UNRELEASED; urgency=medium
 
   * New upstream release 2.20.0
