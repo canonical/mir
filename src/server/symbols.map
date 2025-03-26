@@ -216,6 +216,7 @@ global:
     mir::Server::the_rendering_platforms*;
     mir::Server::the_seat_observer_registrar*;
     mir::Server::the_server_action_queue*;
+    mir::Server::the_server_status_listener*;
     mir::Server::the_session_authorizer*;
     mir::Server::the_session_coordinator*;
     mir::Server::the_session_listener*;

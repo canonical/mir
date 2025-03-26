@@ -65,28 +65,6 @@ void mtf::TestingServerConfiguration::on_exit()
 std::shared_ptr<mir::ServerStatusListener>
 mtf::TestingServerConfiguration::the_server_status_listener()
 {
-    struct TestingServerStatusListener : public mir::ServerStatusListener
-    {
-        TestingServerStatusListener(mt::CrossProcessSync const& sync,
-                                    std::function<void(void)> const& on_start)
-            : server_started_sync{sync},
-              on_start{on_start}
-        {
-        }
-
-        void paused() {}
-        void resumed() {}
-        void started()
-        {
-            server_started_sync.try_signal_ready_for();
-            on_start();
-        }
-        void ready_for_user_input() {}
-        void stop_receiving_input() {}
-
-        mt::CrossProcessSync server_started_sync;
-        std::function<void(void)> const on_start;
-    };
 
     return server_status_listener(
         [this]

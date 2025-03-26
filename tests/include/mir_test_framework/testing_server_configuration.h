@@ -18,6 +18,7 @@
 #ifndef MIR_TEST_TESTING_SERVER_CONFIGURATION_H_
 #define MIR_TEST_TESTING_SERVER_CONFIGURATION_H_
 
+#include "mir/server_status_listener.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
 
 #include "mir/test/cross_process_sync.h"
@@ -27,6 +28,29 @@ namespace mir_test_framework
 using namespace mir;
 
 class TemporaryEnvironmentValue;
+
+struct TestingServerStatusListener : public mir::ServerStatusListener
+{
+    TestingServerStatusListener(mir::test::CrossProcessSync const& sync,
+                                std::function<void(void)> const& on_start)
+        : server_started_sync{sync},
+          on_start{on_start}
+    {
+    }
+
+    void paused() {}
+    void resumed() {}
+    void started()
+    {
+        server_started_sync.try_signal_ready_for();
+        on_start();
+    }
+    void ready_for_user_input() {}
+    void stop_receiving_input() {}
+
+    mir::test::CrossProcessSync server_started_sync;
+    std::function<void(void)> const on_start;
+};
 
 class TestingServerConfiguration : public StubbedServerConfiguration
 {

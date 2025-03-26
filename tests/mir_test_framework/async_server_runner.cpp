@@ -26,6 +26,7 @@
 #include <mir/report_exception.h>
 #include <mir/thread_name.h>
 #include "mir/test/doubles/null_logger.h"
+#include "mir_test_framework/testing_server_configuration.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -98,6 +99,18 @@ void mtf::AsyncServerRunner::add_to_environment(char const* key, char const* val
 
 void mtf::AsyncServerRunner::start_server()
 {
+
+    mir::test::CrossProcessSync cross_process_sync;
+    server.override_the_server_status_listener(
+        [cross_process_sync = std::move(cross_process_sync)]
+        {
+            return std::make_shared<TestingServerStatusListener>(
+                cross_process_sync,
+                []
+                {
+                });
+        });
+
     mt::AutoJoinThread t([this]
         {
             try
@@ -140,6 +153,9 @@ void mtf::AsyncServerRunner::start_server()
 
     std::unique_lock lock(mutex);
     started.wait_for(lock, timeout, [this] { return server_running; });
+
+    std::dynamic_pointer_cast<TestingServerStatusListener>(server.the_server_status_listener())
+        ->server_started_sync.wait_for_signal_ready_for(timeout);
 
     if (!server_running)
     {

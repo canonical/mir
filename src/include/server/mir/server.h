@@ -442,6 +442,9 @@ public:
 
     auto the_accessibility_manager() const ->
         std::shared_ptr<shell::AccessibilityManager>;
+
+    auto the_server_status_listener() const ->
+        std::shared_ptr<ServerStatusListener>;
 /** @} */
 
 /** @name Client side support
