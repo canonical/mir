@@ -440,56 +440,46 @@ INSTANTIATE_TEST_SUITE_P(
         TestAccelerationCurveParams{{0, 500, 0}, 500 * 0.002 * 0.002},
         TestAccelerationCurveParams{{500, 0, 0}, 500 * (0.002 * 0.002) * 0.002}));
 
-TEST_F(TestMouseKeysTransformer, max_speed_caps_speed_properly)
+using TestMaxSpeedParams = std::pair<mir::geometry::Displacement, mir::geometry::DisplacementF>;
+struct TestMaxSpeed : public TestMouseKeysTransformer, WithParamInterface<TestMaxSpeedParams>
+{
+};
+
+TEST_P(TestMaxSpeed, max_speed_caps_speed_properly)
 {
     auto constexpr dt = 0.002;
+    auto const [max_speed, expected_speed] = GetParam();
 
     EXPECT_CALL(mock_seat, dispatch_event(_))
-        .Times(3)
+        .Times(1)
         .WillOnce(
-            [](std::shared_ptr<MirEvent> const& event)
+            [expected_speed](std::shared_ptr<MirEvent> const& event)
             {
                 // Motion events are in pixels/alarm invocation
                 // Which occurs about every 2ms
                 auto const motion = event->to_input()->to_pointer()->motion();
-                ASSERT_EQ(motion.dx, mir::geometry::DeltaXF{100} * dt);
-                ASSERT_EQ(motion.dy, mir::geometry::DeltaYF{1} * dt);
-            })
-        .WillOnce(
-            [](std::shared_ptr<MirEvent> const& event)
-            {
-                auto const motion = event->to_input()->to_pointer()->motion();
-                ASSERT_EQ(motion.dx, mir::geometry::DeltaXF{1} * dt);
-                ASSERT_EQ(motion.dy, mir::geometry::DeltaYF{100} * dt);
-            })
-        .WillOnce(
-            [](std::shared_ptr<MirEvent> const& event)
-            {
-                auto const motion = event->to_input()->to_pointer()->motion();
-                ASSERT_EQ(motion.dx, mir::geometry::DeltaXF{100} * dt);
-                ASSERT_EQ(motion.dy, mir::geometry::DeltaYF{100} * dt);
+                ASSERT_EQ(motion.dx, expected_speed.dx * dt);
+                ASSERT_EQ(motion.dy, expected_speed.dy * dt);
             });
 
     // Immediately force clamping
     transformer->acceleration_factors(1000000, 1000000, 1000000);
 
-    // Limits in pixels/second
-    auto const parameters = {
-        std::pair{100, 1},
-        {1, 100},
-        {100, 100},
-    };
+    transformer->max_speed(max_speed.dx.as_value(), max_speed.dy.as_value());
+    input_event_transformer.handle(*down_event(XKB_KEY_KP_6));
+    input_event_transformer.handle(*down_event(XKB_KEY_KP_2));
 
-    for(auto const& param: parameters)
-    {
-        transformer->max_speed(param.first, param.second);
-        input_event_transformer.handle(*down_event(XKB_KEY_KP_6));
-        input_event_transformer.handle(*down_event(XKB_KEY_KP_2));
+    clock.advance_by(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-        clock.advance_by(std::chrono::seconds(1));
-        std::this_thread::sleep_for(std::chrono::milliseconds(2));
-
-        input_event_transformer.handle(*up_event(XKB_KEY_KP_6));
-        input_event_transformer.handle(*up_event(XKB_KEY_KP_2));
-    }
+    input_event_transformer.handle(*up_event(XKB_KEY_KP_6));
+    input_event_transformer.handle(*up_event(XKB_KEY_KP_2));
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    TestMouseKeysTransformer,
+    TestMaxSpeed,
+    ::Values(
+        TestMaxSpeedParams{{100, 1}, {100, 1}},
+        TestMaxSpeedParams{{1, 100}, {1, 100}},
+        TestMaxSpeedParams{{100, 100}, {100, 100}}));
