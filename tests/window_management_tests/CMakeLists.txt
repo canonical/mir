@@ -1,3 +1,13 @@
+# We can't tell which version of gtest we're building against and INSTANTIATE_TEST_SUITE_P changed in
+# a way that relies on a gcc extension to support backward-compatible code, So...
+check_cxx_compiler_flag(-Wno-gnu-zero-variadic-macro-arguments MIRAL_COMPILE_WITH_W_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
+check_cxx_compiler_flag(-Wno-pedantic MIRAL_COMPILE_WITH_W_NO_PEDANTIC)
+if ("${CMAKE_CXX_COMPILER}" MATCHES ".*clang.*" AND MIRAL_COMPILE_WITH_W_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-zero-variadic-macro-arguments") # clang
+elseif(MIRAL_COMPILE_WITH_W_NO_PEDANTIC)
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-pedantic") #gcc
+endif()
+
 include(CMakeDependentOption)
 
 include_directories(
@@ -10,9 +20,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/src/include/gl
   ${PROJECT_SOURCE_DIR}/include/renderers/sw
-)
-
-include_directories(
   ${GMOCK_INCLUDE_DIR}
   ${GTEST_INCLUDE_DIR}
 )
@@ -21,19 +28,6 @@ link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 mir_add_wrapped_executable(mir_window_management_tests NOINSTALL
   test_minimal_window_manager.cpp
 )
-
-if (MIR_USE_PRECOMPILED_HEADERS)
-  target_precompile_headers(
-    mir_window_management_tests
-    PRIVATE
-    <gmock/gmock.h>
-    <gtest/gtest.h>
-    <vector>
-    <string>
-    <exception>
-    <memory>
-  )
-endif()
 
 target_link_libraries(
   mir_window_management_tests
