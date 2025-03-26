@@ -14,8 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/geometry/forward.h"
 #define MIR_LOG_COMPONENT "test_minimal_window_manager"
+
+#include "mir/geometry/forward.h"
+#include "mir_test_framework/window_management_test_harness.h"
 #include <miral/minimal_window_manager.h>
 #include <mir/scene/session.h>
 #include <mir/wayland/weak.h>
@@ -25,10 +27,9 @@
 #include <mir/events/pointer_event.h>
 #include <mir/compositor/buffer_stream.h>
 #include <mir/log.h>
-
-#include "mir_test_framework/window_management_test_harness.h"
-#include <linux/input.h>
+#include <mir/graphics/default_display_configuration_policy.h>
 #include <mir/shell/shell.h>
+#include <linux/input.h>
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -118,6 +119,15 @@ CreateSurfaceSpecFunc create_bottom_attached()
 class MinimalWindowManagerTest : public mir_test_framework::WindowManagementTestHarness
 {
 public:
+    MinimalWindowManagerTest() : WindowManagementTestHarness()
+    {
+        server.wrap_display_configuration_policy([&](std::shared_ptr<mg::DisplayConfigurationPolicy> const&)
+            -> std::shared_ptr<mg::DisplayConfigurationPolicy>
+        {
+            return std::make_shared<mir::graphics::SideBySideDisplayConfigurationPolicy>();
+        });
+    }
+
     auto get_builder() -> mir_test_framework::WindowManagementPolicyBuilder override
     {
         return [&](miral::WindowManagerTools const& tools)
@@ -130,7 +140,7 @@ public:
     {
         return output_configs_from_output_rectangles({
             mir::geometry::Rectangle{{0, 0}, {800, 600}},
-            mir::geometry::Rectangle{{800, 0}, {800, 600}}
+            mir::geometry::Rectangle{{800, 0}, {1000, 600}}
         });
     }
 };
@@ -1213,3 +1223,30 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerMaximizedSurfaceExclusionZoneTest,
         }
     )
 );
+
+TEST_F(MinimalWindowManagerTest, when_no_surface_is_focused_then_window_is_placed_on_output_of_cursor)
+{
+    // Move the cursor to the second rectangle
+    auto const second_rectangle = get_initial_output_configs()[1].extents();
+    geom::PointF const new_cursor_position{
+        second_rectangle.top_left.x.as_int() + static_cast<int>(
+            static_cast<float>(second_rectangle.size.width.as_int()) / 2.f),
+        second_rectangle.top_left.y.as_int() + static_cast<int>(
+            static_cast<float>(second_rectangle.size.height.as_int()) / 2.f)
+    };
+    tools().move_cursor_to(new_cursor_position);
+    EXPECT_THAT(tools().active_output(), second_rectangle);
+
+    auto const app = open_application("test");
+    miral::WindowSpecification spec;
+    spec.size() = geom::Size(100, 100);
+    auto const window = create_window(app, spec);
+
+    // Expect that the new window is centered on the second rectangle
+    EXPECT_THAT(window.top_left(), Eq(
+        mir::geometry::Point(
+            second_rectangle.top_left.x.as_int() + (second_rectangle.size.width.as_int() - spec.size().value().width.as_int()) / 2.f,
+            second_rectangle.top_left.y.as_int() + (second_rectangle.size.height.as_int() - spec.size().value().height.as_int()) / 2.f
+        )
+    ));
+}

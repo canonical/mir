@@ -433,10 +433,6 @@ auto mir_test_framework::WindowManagementTestHarness::create_window(
         geom::Displacement{},
     });
 
-    self->display->configuration()->for_each_output([&](mg::DisplayConfigurationOutput const& output)
-    {
-        spec.output_id = output.id;
-    });
     auto surface = server.the_shell()->create_surface(
         session,
         {},
