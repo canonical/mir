@@ -26,19 +26,19 @@ struct miral::CursorScale::Self
 {
     Self() {}
 
-    Self(float default_scale): _scale{default_scale} {}
+    Self(float default_scale): scale_{default_scale} {}
 
     void scale(float new_scale)
     {
-        _scale = new_scale;
+        scale_ = new_scale;
 
         if(accessibility_manager.expired())
             return;
 
-        accessibility_manager.lock()->cursor_scale_changed(*_scale);
+        accessibility_manager.lock()->cursor_scale_changed(*scale_);
     }
 
-    std::optional<float> _scale;
+    std::optional<float> scale_;
     std::weak_ptr<mir::shell::AccessibilityManager> accessibility_manager;
 };
 
@@ -70,7 +70,7 @@ void miral::CursorScale::operator()(mir::Server& server) const
         {
             self->accessibility_manager = server.the_accessibility_manager();
             auto const& options = server.get_options();
-            auto const scale = self->_scale.value_or(options->get<double>(cursor_scale_opt));
+            auto const scale = self->scale_.value_or(options->get<double>(cursor_scale_opt));
 
             self->scale(scale);
         });
