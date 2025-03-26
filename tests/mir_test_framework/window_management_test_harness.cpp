@@ -277,7 +277,7 @@ public:
     }
 private:
     miral::WindowManagerTools tools;
-    std::function<void()> on_change;
+    std::function<void()> const on_change;
 };
 }
 
@@ -295,9 +295,13 @@ public:
 
     void process_pending()
     {
-        for (auto const& action : pending_actions)
-            action();
-        pending_actions.clear();
+        while (!pending_actions.empty())
+        {
+            decltype(pending_actions) actions;
+            actions.swap(pending_actions);
+            for (auto const& action : actions)
+                action();
+        }
     }
 
     void on_surface_closed(ms::Surface const* surf)
