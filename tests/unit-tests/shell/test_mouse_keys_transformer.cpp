@@ -48,10 +48,10 @@ namespace mtd = mt::doubles;
 
 using namespace ::testing;
 
+using AccelerationParameters = mir::input::BasicMouseKeysTransformer::AccelerationParameters;
+
 struct TestMouseKeysTransformer : testing::Test
 {
-    using AccelerationParameters = mir::input::BasicMouseKeysTransformer::AccelerationParameters;
-
     mir::dispatch::MultiplexingDispatchable multiplexer;
     NiceMock<mtd::MockLedObserverRegistrar> led_observer_registrar;
     NiceMock<mtd::MockInputSeat> mock_seat;
@@ -394,64 +394,51 @@ TEST_F(TestMouseKeysTransformer, receiving_a_key_not_in_keymap_doesnt_dispatch_e
         });
 }
 
-TEST_F(TestMouseKeysTransformer, acceleration_curve_constants_evaluate_properly)
+using TestAccelerationCurveParams = std::pair<AccelerationParameters, float>;
+struct TestAccelerationCurve: public TestMouseKeysTransformer, WithParamInterface<TestAccelerationCurveParams>
 {
-    EXPECT_CALL(mock_seat, dispatch_event(_))
-        .Times(4)
-        .WillOnce(
-            [](std::shared_ptr<MirEvent> const& event)
-            {
-                ASSERT_EQ(event->to_input()->to_pointer()->motion().length_squared(), 0.0);
-            })
-        .WillOnce(
-            [](std::shared_ptr<MirEvent> const& event)
-            {
-                ASSERT_EQ(event->to_input()->to_pointer()->motion().length_squared(), 1);
-            })
-        .WillOnce(
-            [](std::shared_ptr<MirEvent> const& event)
-            {
-                // Speed is computed as:
-                //              (
-                //              constant factor
-                //              + linear factor * time since motion start
-                //              + quadratic factor * time since motion started ^ 2
-                //              )  * time between alarm invocations
-                //
-                // time between alarm invocations is hardcoded as 2ms
-                // time since motion start is also 2ms
-                // So the speed should be the linear factor (500) * 2ms * 2ms
-                EXPECT_FLOAT_EQ(std::sqrt(event->to_input()->to_pointer()->motion().length_squared()), (500 * 0.002 * 0.002));
-            })
-        .WillOnce(
-            [](std::shared_ptr<MirEvent> const& event)
-            {
-                EXPECT_FLOAT_EQ(
-                    std::sqrt(event->to_input()->to_pointer()->motion().length_squared()),
-                    (500 * (0.002 * 0.002) * 0.002));
-            });
+};
 
-    auto const parameters = {
-        AccelerationParameters{0, 0, 0}, // a, b, c
-        {0, 0, 500},
-        {0, 500, 0},
-        {500, 0, 0},
-    };
+TEST_P(TestAccelerationCurve, acceleration_curve_constants_evaluate_properly)
+{
+    auto const [curve, expected_speed_squared] = GetParam();
+    EXPECT_CALL(mock_seat, dispatch_event(_))
+        .Times(1)
+        .WillOnce(
+            [expected_speed_squared](std::shared_ptr<MirEvent> const& event)
+            {
+                ASSERT_FLOAT_EQ(std::sqrt(event->to_input()->to_pointer()->motion().length_squared()), expected_speed_squared);
+            });
 
     // Don't want speed limits interfering with our test case
     transformer->max_speed(0, 0);
 
-    for(auto const& param: parameters)
-    {
-        transformer->acceleration_factors(param.c, param.b, param.a);
-        input_event_transformer.handle(*down_event(XKB_KEY_KP_6));
+    transformer->acceleration_factors(curve.c, curve.b, curve.a);
+    input_event_transformer.handle(*down_event(XKB_KEY_KP_6));
 
-        clock.advance_by(std::chrono::milliseconds(2));
-        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    clock.advance_by(std::chrono::milliseconds(2));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-        input_event_transformer.handle(*up_event(XKB_KEY_KP_6));
-    }
+    input_event_transformer.handle(*up_event(XKB_KEY_KP_6));
 }
+
+// Speed is computed as:
+//              (
+//              constant factor
+//              + linear factor * time since motion start
+//              + quadratic factor * time since motion started ^ 2
+//              )  * time between alarm invocations
+//
+// time between alarm invocations is hardcoded as 2ms
+// time since motion start is also 2ms
+INSTANTIATE_TEST_SUITE_P(
+    TestMouseKeysTransformer,
+    TestAccelerationCurve,
+    ::Values(
+        TestAccelerationCurveParams{AccelerationParameters{0, 0, 0}, 0.0},
+        TestAccelerationCurveParams{{0, 0, 500}, 1.0},
+        TestAccelerationCurveParams{{0, 500, 0}, 500 * 0.002 * 0.002},
+        TestAccelerationCurveParams{{500, 0, 0}, 500 * (0.002 * 0.002) * 0.002}));
 
 TEST_F(TestMouseKeysTransformer, max_speed_caps_speed_properly)
 {
