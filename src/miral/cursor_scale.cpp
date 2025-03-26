@@ -24,9 +24,7 @@
 
 struct miral::CursorScale::Self
 {
-    Self() {}
-
-    Self(float default_scale): scale_{default_scale} {}
+    Self(float default_scale): default_scale{default_scale} {}
 
     void scale(float new_scale)
     {
@@ -39,11 +37,13 @@ struct miral::CursorScale::Self
     }
 
     std::optional<float> scale_;
+    float const default_scale;
+
     std::weak_ptr<mir::shell::AccessibilityManager> accessibility_manager;
 };
 
 miral::CursorScale::CursorScale()
-    : self{std::make_shared<Self>()}
+    : self{std::make_shared<Self>(1.0)}
 {
 }
 
@@ -63,7 +63,7 @@ void miral::CursorScale::operator()(mir::Server& server) const
 {
     auto const* const cursor_scale_opt = "cursor-scale";
     server.add_configuration_option(
-        cursor_scale_opt, "Scales the mouse cursor visually. Accepts any value in the range [0, 100]", 1.0);
+        cursor_scale_opt, "Scales the mouse cursor visually. Accepts any value in the range [0, 100]", self->default_scale);
 
     server.add_init_callback(
         [&server, this, cursor_scale_opt]
