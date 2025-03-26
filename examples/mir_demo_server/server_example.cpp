@@ -247,7 +247,7 @@ try
     miral::MirRunner runner{argc, argv, "mir/mir_demo_server.config"};
 
     miral::CursorScale cursor_scale;
-    DemoConfigFile input_configuration{runner, "mir_demo_server.input"};
+    DemoConfigFile input_configuration{runner, "mir_demo_server.live-config"};
     runner.set_exception_handler(exception_handler);
 
     std::function<void()> shutdown_hook{[]{}};
