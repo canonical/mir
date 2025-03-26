@@ -24,7 +24,7 @@
 #include <cmath>
 #include <cstring>
 
-mir::graphics::ARGB8888Buffer mir::graphics::scale_cursor_image(
+mir::graphics::ARGB8Buffer mir::graphics::scale_cursor_image(
     mir::graphics::CursorImage const& cursor_image, float new_scale)
 {
     auto const [width, height] = cursor_image.size();
