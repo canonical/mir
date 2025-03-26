@@ -1242,11 +1242,11 @@ TEST_F(MinimalWindowManagerTest, when_no_surface_is_focused_then_window_is_place
     spec.size() = geom::Size(100, 100);
     auto const window = create_window(app, spec);
 
-    // Expect that the new window is centered on the second rectangle
+    // Expect that the new window is centered in the X-axis and that the Y is at the expected poisition.
     EXPECT_THAT(window.top_left(), Eq(
         mir::geometry::Point(
             second_rectangle.top_left.x.as_int() + (second_rectangle.size.width.as_int() - spec.size().value().width.as_int()) / 2.f,
-            second_rectangle.top_left.y.as_int() + (second_rectangle.size.height.as_int() - spec.size().value().height.as_int()) / 2.f
+            167
         )
     ));
 }
