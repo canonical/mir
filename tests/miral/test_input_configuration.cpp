@@ -646,3 +646,8 @@ TEST_P(TestKeyboardConfiguration, keyboard_merge_does_not_overwrite_values)
 
     EXPECT_PRED2(keyboard_equal, target, expected);
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    TestInputConfiguration,
+    TestKeyboardConfiguration,
+    ::testing::Values(KeyboardProperty::repeat_rate, KeyboardProperty::repeat_delay));
