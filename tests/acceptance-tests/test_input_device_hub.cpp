@@ -55,6 +55,7 @@ struct TestInputDeviceHub : mtf::HeadlessInProcessServer
 TEST_F(TestInputDeviceHub, calls_observers_with_changes_complete_on_registry)
 {
     using namespace testing;
+    EXPECT_CALL(observer, device_added(_)); // Account for "mousekey-pointer"
     EXPECT_CALL(observer, changes_complete())
         .WillOnce(mt::WakeUp(&observer_registered));
 
