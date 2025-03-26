@@ -104,6 +104,8 @@ public:
         return tools.info_for(window);
     }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto info_for_window_id(std::string const& id) const -> miral::WindowInfo& override
     {
         return tools.info_for_window_id(id);
@@ -113,6 +115,7 @@ public:
     {
         return tools.id_for_window(window);
     }
+#pragma GCC diagnostic pop
 
     void ask_client_to_close(miral::Window const& window) override
     {
@@ -299,7 +302,7 @@ public:
     }
 private:
     miral::WindowManagerTools tools;
-    std::function<void()> on_change;
+    std::function<void()> const on_change;
 };
 }
 
@@ -317,9 +320,13 @@ public:
 
     void process_pending()
     {
-        for (auto const& action : pending_actions)
-            action();
-        pending_actions.clear();
+        while (!pending_actions.empty())
+        {
+            decltype(pending_actions) actions;
+            actions.swap(pending_actions);
+            for (auto const& action : actions)
+                action();
+        }
     }
 
     void on_surface_closed(ms::Surface const* surf)

@@ -233,12 +233,12 @@ auto miral::InputConfiguration::Mouse::acceleration_bias() const -> std::optiona
 
 auto miral::InputConfiguration::Mouse::vscroll_speed() const -> std::optional<double>
 {
-    return self->acceleration_bias;
+    return self->vscroll_speed;
 }
 
 auto miral::InputConfiguration::Mouse::hscroll_speed() const -> std::optional<double>
 {
-    return self->acceleration_bias;
+    return self->hscroll_speed;
 }
 
 void miral::InputConfiguration::Mouse::handedness(std::optional<MirPointerHandedness> const& val)
