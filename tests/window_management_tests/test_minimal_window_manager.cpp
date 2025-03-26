@@ -126,12 +126,12 @@ public:
         };
     }
 
-    auto get_output_rectangles() -> std::vector<mir::geometry::Rectangle> override
+    auto get_initial_output_configs() -> std::vector<mir::graphics::DisplayConfigurationOutput> override
     {
-        return {
+        return output_configs_from_output_rectangles({
             mir::geometry::Rectangle{{0, 0}, {800, 600}},
             mir::geometry::Rectangle{{800, 0}, {800, 600}}
-        };
+        });
     }
 };
 
@@ -729,7 +729,7 @@ TEST_F(MinimalWindowManagerTest,
 TEST_F(MinimalWindowManagerTest, closing_attached_window_causes_maximized_to_resize)
 {
     // Setup: Create one app with a maximized window and one app with a top attached window
-    auto const output_rectangle =  get_output_rectangles()[0];
+    auto const output_rectangle =  get_initial_output_configs()[0];
     auto const app = open_application("app1");
     miral::WindowSpecification spec;
     spec.size() = { geom::Width {100}, geom::Height{100} };
@@ -738,10 +738,10 @@ TEST_F(MinimalWindowManagerTest, closing_attached_window_causes_maximized_to_res
     auto const window = create_window(app, spec);
 
     auto const top_spec = create_top_attached();
-    auto const attached = create_window(app, top_spec(output_rectangle.size));
+    auto const attached = create_window(app, top_spec(output_rectangle.extents().size));
     EXPECT_THAT(window.size(), Eq(geom::Size(
-        output_rectangle.size.width.as_int(),
-        output_rectangle.size.height.as_int() - EXCLUSIVE_SURFACE_SIZE
+        output_rectangle.extents().size.width.as_int(),
+        output_rectangle.extents().size.height.as_int() - EXCLUSIVE_SURFACE_SIZE
     )));
 
     // Act: Close the attached window
@@ -749,8 +749,8 @@ TEST_F(MinimalWindowManagerTest, closing_attached_window_causes_maximized_to_res
 
     // Expect: the window now takes up the full dimensions
     EXPECT_THAT(window.size(), Eq(geom::Size(
-        output_rectangle.size.width.as_int(),
-        output_rectangle.size.height.as_int()
+        output_rectangle.extents().size.width.as_int(),
+        output_rectangle.extents().size.height.as_int()
     )));
 }
 
@@ -845,12 +845,12 @@ TEST_P(MinimalWindowManagerAttachedTest, attached_window_positioning)
 {
     auto const app = open_application("test");
     auto const& placements = GetParam().placements;
-    auto const output_rectangles = get_output_rectangles();
+    auto const output_rectangles = get_initial_output_configs();
 
     std::vector<miral::Window> windows;
     auto const& output_rectangle = output_rectangles[0];
     for (const auto& placement : placements)
-        windows.push_back(create_window(app, placement.create(output_rectangle.size)));
+        windows.push_back(create_window(app, placement.create(output_rectangle.extents().size)));
 
     EXPECT_EQ(windows.size(), placements.size());
     for (size_t i = 0; i < windows.size(); i++)
@@ -858,7 +858,7 @@ TEST_P(MinimalWindowManagerAttachedTest, attached_window_positioning)
         auto const& window = windows[i];
         const auto& expected_rect = placements[i].expected_rect;
 
-        auto const expected = expected_rect(output_rectangle.size);
+        auto const expected = expected_rect(output_rectangle.extents().size);
         EXPECT_EQ(window.top_left(), expected.top_left);
         EXPECT_EQ(window.size(), expected.size);
     }
@@ -1094,19 +1094,19 @@ TEST_P(MinimalWindowManagerMaximizedSurfaceExclusionZoneTest, maximized_windows_
 {
     auto const app = open_application("test");
     auto const param = GetParam();
-    auto const output_rectangles = get_output_rectangles();
+    auto const output_rectangles = get_initial_output_configs();
 
     std::vector<miral::Window> windows;
     auto const& output_rectangle = output_rectangles[0];
     for (const auto& create : param.exclusive_surface_create_func)
-        windows.push_back(create_window(app, create(output_rectangle.size)));
+        windows.push_back(create_window(app, create(output_rectangle.extents().size)));
 
     EXPECT_EQ(windows.size(), param.exclusive_surface_create_func.size());
     miral::WindowSpecification spec;
     spec.state() = mir_window_state_maximized;
     spec.depth_layer() = mir_depth_layer_application;
     auto const window = create_window(app, spec);
-    auto const expected = param.expected_rectangle(output_rectangle);
+    auto const expected = param.expected_rectangle(output_rectangle.extents());
 
     EXPECT_EQ(window.top_left(), expected.top_left);
     EXPECT_EQ(window.size(), expected.size);

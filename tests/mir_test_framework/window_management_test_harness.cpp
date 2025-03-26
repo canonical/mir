@@ -30,7 +30,9 @@
 #include <miral/window_manager_tools.h>
 #include <miral/set_window_management_policy.h>
 #include <miral/zone.h>
+#include <mir/test/doubles/stub_display_configuration.h>
 
+#include "miral/output.h"
 #include "src/miral/window_manager_tools_implementation.h"
 
 namespace ms = mir::scene;
@@ -397,7 +399,7 @@ void mir_test_framework::WindowManagementTestHarness::SetUp()
         });
     policy(server);
 
-    auto fake_display = std::make_unique<mtd::FakeDisplay>(get_output_rectangles());
+    auto fake_display = std::make_unique<mtd::FakeDisplay>(get_initial_output_configs());
     self->display = fake_display.get();
     preset_display(std::move(fake_display));
 
@@ -492,8 +494,56 @@ auto mir_test_framework::WindowManagementTestHarness::tools() const -> miral::Wi
     return *self->tools;
 }
 
+void mir_test_framework::WindowManagementTestHarness::for_each_output(std::function<void(miral::Output const&)> const& f) const
+{
+    self->display->configuration()->for_each_output([&](mir::graphics::DisplayConfigurationOutput const& output)
+    {
+        f(miral::Output(output));
+    });
+}
+
+void mir_test_framework::WindowManagementTestHarness::update_outputs(
+    std::vector<mir::graphics::DisplayConfigurationOutput> const& outputs) const
+{
+    self->display->configure(mir::test::doubles::StubDisplayConfig(outputs));
+}
+
 auto mir_test_framework::WindowManagementTestHarness::is_above(
     miral::Window const& a, miral::Window const& b) const -> bool
 {
     return server.the_shell()->is_above(a.operator std::shared_ptr<ms::Surface>(), b.operator std::shared_ptr<ms::Surface>());
+}
+
+auto mir_test_framework::WindowManagementTestHarness::output_configs_from_output_rectangles(
+    std::vector<mir::geometry::Rectangle> const& output_rects) -> std::vector<mir::graphics::DisplayConfigurationOutput>
+{
+    std::vector<mir::graphics::DisplayConfigurationOutput> outputs;
+    int id = 1;
+    for (auto const& rect : output_rects)
+    {
+        mir::graphics::DisplayConfigurationOutput output
+            {
+                mir::graphics::DisplayConfigurationOutputId{id},
+                mir::graphics::DisplayConfigurationCardId{0},
+                mir::graphics::DisplayConfigurationLogicalGroupId{0},
+                mir::graphics::DisplayConfigurationOutputType::vga,
+                std::vector<MirPixelFormat>{mir_pixel_format_abgr_8888},
+                {{rect.size, 60.0}},
+                0, mir::geometry::Size{}, true, true, rect.top_left, 0,
+                mir_pixel_format_abgr_8888, mir_power_mode_on,
+                mir_orientation_normal,
+                1.0f,
+                mir_form_factor_monitor,
+                mir_subpixel_arrangement_unknown,
+                {},
+                mir_output_gamma_unsupported,
+                {},
+                {}
+            };
+
+        outputs.push_back(output);
+        ++id;
+    }
+
+    return outputs;
 }
