@@ -24,22 +24,30 @@
 
 struct miral::CursorScale::Self
 {
-    Self(float default_scale): default_scale{default_scale} {}
+    Self(float default_scale) :
+        default_scale{default_scale}
+    {
+    }
 
     void scale(float new_scale)
     {
-        scale_ = new_scale;
+        auto const locked_state = state.lock();
+        locked_state->scale.emplace(new_scale);
 
-        if(accessibility_manager.expired())
+        if(locked_state->accessibility_manager.expired())
             return;
 
-        accessibility_manager.lock()->cursor_scale_changed(*scale_);
+        locked_state->accessibility_manager.lock()->cursor_scale_changed(*locked_state->scale);
     }
 
-    std::optional<float> scale_;
     float const default_scale;
 
-    std::weak_ptr<mir::shell::AccessibilityManager> accessibility_manager;
+    struct State {
+        std::optional<float> scale;
+        std::weak_ptr<mir::shell::AccessibilityManager> accessibility_manager;
+    };
+
+    mir::Synchronised<State> state;
 };
 
 miral::CursorScale::CursorScale()
@@ -68,9 +76,13 @@ void miral::CursorScale::operator()(mir::Server& server) const
     server.add_init_callback(
         [&server, this, cursor_scale_opt]
         {
-            self->accessibility_manager = server.the_accessibility_manager();
             auto const& options = server.get_options();
-            auto const scale = self->scale_.value_or(options->get<double>(cursor_scale_opt));
+
+            auto const scale = [&]{
+                auto const locked_state = self->state.lock();
+                locked_state->accessibility_manager = server.the_accessibility_manager();
+                return locked_state->scale.value_or(options->get<double>(cursor_scale_opt));
+            }();
 
             self->scale(scale);
         });
