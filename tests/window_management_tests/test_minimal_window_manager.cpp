@@ -30,6 +30,9 @@
 #include <linux/input.h>
 #include <mir/shell/shell.h>
 
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
