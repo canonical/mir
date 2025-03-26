@@ -14,13 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "input_device_config.h"
 #include "mir_toolkit/mir_input_device_types.h"
 #include "miral/input_configuration.h"
+
 #include <functional>
-#include <gtest/gtest.h>
-#include <ranges>
 #include <tuple>
+
+#include <gtest/gtest.h>
 
 using Mouse = miral::InputConfiguration::Mouse;
 using Keyboard = miral::InputConfiguration::Keyboard;
@@ -227,8 +227,19 @@ TEST_F(TestInputConfiguration, touchpad_acceleration_bias_is_set_and_clamped)
 
 namespace
 {
+void mouse_expect_equal(Mouse const& lhs, Mouse const& rhs)
+{
+    EXPECT_EQ(lhs.handedness(), rhs.handedness());
+    EXPECT_EQ(lhs.acceleration(), rhs.acceleration());
+    EXPECT_EQ(lhs.acceleration_bias(), rhs.acceleration_bias());
+    EXPECT_EQ(lhs.vscroll_speed(), rhs.vscroll_speed());
+    EXPECT_EQ(lhs.hscroll_speed(), rhs.hscroll_speed());
+}
+
 auto mouse_equal(Mouse const& lhs, Mouse const& rhs) -> bool
 {
+    mouse_expect_equal(lhs, rhs);
+
     auto const left = std::tuple{
         lhs.handedness(), lhs.acceleration(), lhs.acceleration_bias(), lhs.vscroll_speed(), lhs.hscroll_speed()};
     auto const right = std::tuple{
@@ -237,8 +248,24 @@ auto mouse_equal(Mouse const& lhs, Mouse const& rhs) -> bool
     return left == right;
 }
 
+void touchpad_expect_equal(Touchpad const& lhs, Touchpad const& rhs)
+{
+    EXPECT_EQ(lhs.acceleration(), rhs.acceleration());
+    EXPECT_EQ(lhs.acceleration_bias(), rhs.acceleration_bias());
+    EXPECT_EQ(lhs.hscroll_speed(), rhs.hscroll_speed());
+    EXPECT_EQ(lhs.vscroll_speed(), rhs.vscroll_speed());
+    EXPECT_EQ(lhs.click_mode(), rhs.click_mode());
+    EXPECT_EQ(lhs.disable_while_typing(), rhs.disable_while_typing());
+    EXPECT_EQ(lhs.disable_with_external_mouse(), rhs.disable_with_external_mouse());
+    EXPECT_EQ(lhs.middle_mouse_button_emulation(), rhs.middle_mouse_button_emulation());
+    EXPECT_EQ(lhs.scroll_mode(), rhs.scroll_mode());
+    EXPECT_EQ(lhs.tap_to_click(), rhs.tap_to_click());
+}
+
 auto touchpad_equal(Touchpad const& lhs, Touchpad const& rhs) -> bool
 {
+    touchpad_expect_equal(lhs, rhs);
+
     auto const left = std::tuple{
         lhs.acceleration(),
         lhs.acceleration_bias(),
@@ -266,8 +293,15 @@ auto touchpad_equal(Touchpad const& lhs, Touchpad const& rhs) -> bool
     return left == right;
 }
 
+void keyboard_expect_equal(Keyboard const& lhs, Keyboard const& rhs)
+{
+    EXPECT_EQ(lhs.repeat_rate(), rhs.repeat_rate());
+    EXPECT_EQ(lhs.repeat_delay(), rhs.repeat_delay());
+}
+
 auto keyboard_equal(Keyboard const& lhs, Keyboard const& rhs) -> bool
 {
+    keyboard_expect_equal(lhs, rhs);
     return std::tuple{lhs.repeat_rate(), rhs.repeat_delay()} == std::tuple{rhs.repeat_rate(), rhs.repeat_delay()};
 }
 }
