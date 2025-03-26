@@ -95,6 +95,8 @@ struct TestConfigFile : PendingLoad, miral::TestServer
         mark_pending();
         std::ofstream file(path/config_file);
         file << "some content";
+
+        std::cout << "write_config_in: wrote config file to: " << path << std::endl;
     }
 
     void SetUp() override
