@@ -24,13 +24,10 @@
 #include <mir/events/event.h>
 #include "mir_test_framework/headless_in_process_server.h"
 
-namespace mir
-{
-namespace scene
+namespace mir::scene
 {
 class Surface;
 class Session;
-}
 }
 
 namespace mir_test_framework

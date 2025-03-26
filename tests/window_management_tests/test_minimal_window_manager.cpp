@@ -739,19 +739,19 @@ TEST_F(MinimalWindowManagerTest, closing_attached_window_causes_maximized_to_res
 
     auto const top_spec = create_top_attached();
     auto const attached = create_window(app, top_spec(output_rectangle.size));
-    EXPECT_EQ(window.size(), geom::Size(
+    EXPECT_THAT(window.size(), Eq(geom::Size(
         output_rectangle.size.width.as_int(),
         output_rectangle.size.height.as_int() - EXCLUSIVE_SURFACE_SIZE
-    ));
+    )));
 
     // Act: Close the attached window
     tools().ask_client_to_close(attached);
 
     // Expect: the window now takes up the full dimensions
-    EXPECT_EQ(window.size(), geom::Size(
+    EXPECT_THAT(window.size(), Eq(geom::Size(
         output_rectangle.size.width.as_int(),
         output_rectangle.size.height.as_int()
-    ));
+    )));
 }
 
 class MinimalWindowManagerStartMoveStateChangeTest
