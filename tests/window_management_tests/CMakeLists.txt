@@ -12,6 +12,11 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/renderers/sw
 )
 
+include_directories(
+  ${GMOCK_INCLUDE_DIR}
+  ${GTEST_INCLUDE_DIR}
+)
+
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 mir_add_wrapped_executable(mir_window_management_tests NOINSTALL
   test_minimal_window_manager.cpp
@@ -30,8 +35,6 @@ if (MIR_USE_PRECOMPILED_HEADERS)
   )
 endif()
 
-add_dependencies(mir_window_management_tests GMock)
-
 target_link_libraries(
   mir_window_management_tests
 
@@ -43,6 +46,9 @@ target_link_libraries(
   miral
 
   Boost::system
+
+  ${GTEST_BOTH_LIBRARIES}
+  ${GMOCK_LIBRARIES}
 
   # GBM platform dependencies
   PkgConfig::DRM
