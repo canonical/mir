@@ -116,10 +116,10 @@ catch (...)
 {
 }
 
-class InputConfigFile
+class DemoConfigFile
 {
 public:
-    InputConfigFile(miral::MirRunner& runner, std::filesystem::path file) :
+    DemoConfigFile(miral::MirRunner& runner, std::filesystem::path file) :
         config_file{
             runner,
             file,
@@ -247,7 +247,7 @@ try
     miral::MirRunner runner{argc, argv, "mir/mir_demo_server.config"};
 
     miral::CursorScale cursor_scale;
-    InputConfigFile input_configuration{runner, "mir_demo_server.input"};
+    DemoConfigFile input_configuration{runner, "mir_demo_server.input"};
     runner.set_exception_handler(exception_handler);
 
     std::function<void()> shutdown_hook{[]{}};
