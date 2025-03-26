@@ -26,87 +26,168 @@ using Mouse = miral::InputConfiguration::Mouse;
 using Keyboard = miral::InputConfiguration::Keyboard;
 using Touchpad = miral::InputConfiguration::Touchpad;
 
+template <typename T> using PropertySetter = std::function<void(T&)>;
+
+enum class MouseProperty
+{
+    handedness,
+    acceleration,
+    acceleration_bias,
+    vscroll_speed,
+    hscroll_speed
+};
+
+enum class TouchpadProperty
+{
+    disable_while_typing,
+    disable_with_external_mouse,
+    acceleration,
+    acceleration_bias,
+    vscroll_speed,
+    hscroll_speed,
+    click_mode,
+    scroll_mode,
+    tap_to_click,
+    middle_mouse_button_emulation
+};
+
+enum class KeyboardProperty
+{
+    repeat_rate,
+    repeat_delay
+};
+
 struct TestInputConfiguration: testing::Test
 {
     inline static auto const unclamped_test_values = {-1.0, -0.5, 0.0, 0.5, 1.0};
     inline static auto const clamped_test_values = {std::pair{-10.0, -1.0}, {-1.1, -1.0}, {1.1, 1.0}, {12.0, 1.0}};
 
-
-    inline static std::initializer_list<std::function<void(Mouse&)>> const mouse_setters = {
-        [](auto& mouse_config)
+    inline static std::unordered_map<MouseProperty, PropertySetter<Mouse>> mouse_setters = {
         {
-            mouse_config.handedness(mir_pointer_handedness_right);
+            MouseProperty::handedness,
+            [](auto& mouse_config)
+            {
+                mouse_config.handedness(mir_pointer_handedness_right);
+            },
         },
-        [](auto& mouse_config)
         {
-            mouse_config.acceleration(mir_pointer_acceleration_adaptive);
+            MouseProperty::acceleration,
+            [](auto& mouse_config)
+            {
+                mouse_config.acceleration(mir_pointer_acceleration_adaptive);
+            },
         },
-        [](auto& mouse_config)
         {
-            mouse_config.acceleration_bias(-1);
+            MouseProperty::acceleration_bias,
+            [](auto& mouse_config)
+            {
+                mouse_config.acceleration_bias(-1);
+            },
         },
-        [](auto& mouse_config)
         {
-            mouse_config.vscroll_speed(2.0);
+            MouseProperty::vscroll_speed,
+            [](auto& mouse_config)
+            {
+                mouse_config.vscroll_speed(2.0);
+            },
         },
-        [](auto& mouse_config)
         {
-            mouse_config.hscroll_speed(3.0);
+            MouseProperty::hscroll_speed,
+            [](auto& mouse_config)
+            {
+                mouse_config.hscroll_speed(3.0);
+            },
         },
     };
 
-    inline static std::initializer_list<std::function<void(Touchpad&)>> const touchpad_setters = {
-        [](Touchpad& touch)
+    inline static std::unordered_map<TouchpadProperty, PropertySetter<Touchpad>> const touchpad_setters = {
         {
-            touch.disable_while_typing(true);
+            TouchpadProperty::disable_while_typing,
+            [](Touchpad& touch)
+            {
+                touch.disable_while_typing(true);
+            },
         },
-        [](Touchpad& touch)
         {
-            touch.disable_with_external_mouse(false);
+            TouchpadProperty::disable_with_external_mouse,
+            [](Touchpad& touch)
+            {
+                touch.disable_with_external_mouse(false);
+            },
         },
-        [](Touchpad& touch)
         {
-            touch.acceleration(mir_pointer_acceleration_none);
+            TouchpadProperty::acceleration,
+            [](Touchpad& touch)
+            {
+                touch.acceleration(mir_pointer_acceleration_none);
+            },
         },
-        [](Touchpad& touch)
         {
-            touch.acceleration_bias(1.0);
+            TouchpadProperty::acceleration_bias,
+            [](Touchpad& touch)
+            {
+                touch.acceleration_bias(1.0);
+            },
         },
-        [](Touchpad& touch)
         {
-            touch.vscroll_speed(-13.0);
+            TouchpadProperty::vscroll_speed,
+            [](Touchpad& touch)
+            {
+                touch.vscroll_speed(-13.0);
+            },
         },
-        [](Touchpad& touch)
         {
-            touch.hscroll_speed(-0.4);
+            TouchpadProperty::hscroll_speed,
+            [](Touchpad& touch)
+            {
+                touch.hscroll_speed(-0.4);
+            },
         },
-        [](Touchpad& touch)
         {
-            touch.click_mode(mir_touchpad_click_mode_finger_count);
+            TouchpadProperty::click_mode,
+            [](Touchpad& touch)
+            {
+                touch.click_mode(mir_touchpad_click_mode_finger_count);
+            },
         },
-        [](Touchpad& touch)
         {
-            touch.scroll_mode(mir_touchpad_scroll_mode_two_finger_scroll);
+            TouchpadProperty::scroll_mode,
+            [](Touchpad& touch)
+            {
+                touch.scroll_mode(mir_touchpad_scroll_mode_two_finger_scroll);
+            },
         },
-        [](Touchpad& touch)
         {
-            touch.tap_to_click(true);
+            TouchpadProperty::tap_to_click,
+            [](Touchpad& touch)
+            {
+                touch.tap_to_click(true);
+            },
         },
-        [](Touchpad& touch)
         {
-            touch.middle_mouse_button_emulation(false);
+            TouchpadProperty::middle_mouse_button_emulation,
+            [](Touchpad& touch)
+            {
+                touch.middle_mouse_button_emulation(false);
+            },
+        },
+    };
+
+    inline static std::unordered_map<KeyboardProperty, PropertySetter<Keyboard>> const keyboard_setters = {
+        {
+            KeyboardProperty::repeat_rate,
+            [](Keyboard& key)
+            {
+                key.set_repeat_rate(18);
+            },
+        },
+        {
+            KeyboardProperty::repeat_delay,
+            [](Keyboard& key)
+            {
+                key.set_repeat_delay(1337);
+            },
         }};
-
-    inline static std::initializer_list<std::function<void(Keyboard&)>> const keyboard_setters = {
-        [](Keyboard& key)
-        {
-            key.set_repeat_rate(18);
-        },
-        [](Keyboard& key)
-        {
-            key.set_repeat_delay(1337);
-        },
-    };
 };
 
 TEST_F(TestInputConfiguration, mouse_acceleration_bias_is_set_and_clamped)
@@ -229,82 +310,84 @@ TEST_F(TestInputConfiguration, mouse_getters_return_expected_values)
     }
 }
 
+struct TestMouseConfiguration : public TestInputConfiguration, testing::WithParamInterface<MouseProperty>
+{
+};
+
 // Make sure that when merging, each data member is assigned to the correct
 // corresponding one.
 //
 // If each individual data member is merged correctly, then all combinations
 // will work.
-TEST_F(TestInputConfiguration, mouse_merge_from_partial_set_changes_only_set_values)
+TEST_F(TestMouseConfiguration, mouse_merge_from_partial_set_changes_only_set_values)
 {
-    for(auto const& setter: mouse_setters)
-    {
-        Mouse expected;
-        setter(expected);
+    auto const property = GetParam();
+    auto const setter = mouse_setters.at(property);
 
-        Mouse modified;
-        setter(modified);
+    Mouse expected;
+    setter(expected);
 
-        Mouse merged;
-        merged.merge(modified);
-        EXPECT_PRED2(mouse_equal, merged, expected);
-    }
+    Mouse modified;
+    setter(modified);
+
+    Mouse merged;
+    merged.merge(modified);
+    EXPECT_PRED2(mouse_equal, merged, expected);
 }
 
 // Make sure tht merging does not alter other data members
-TEST_F(TestInputConfiguration, mouse_merge_does_not_overwrite_values)
+TEST_P(TestMouseConfiguration, mouse_merge_does_not_overwrite_values)
 {
-    enum SettingToTest
-    {
-        handedness,
-        acceleration,
-        acceleration_bias,
-        vscroll_speed,
-        hscroll_speed
-    };
-
-    // Must be in the same order as the setters defined at the top of the file
-    auto const settings_to_test = {handedness, acceleration, acceleration_bias, vscroll_speed, hscroll_speed};
-
     // Target settings must be different from the values set by setters at the top of the file.
-    auto const target_settings = [](auto& mouse_config, SettingToTest setting_to_test)
+    auto const target_settings = [](auto& mouse_config, MouseProperty property)
     {
-        if (setting_to_test != handedness)
+        if (property != MouseProperty::handedness)
             mouse_config.handedness(mir_pointer_handedness_left);
 
-        if (setting_to_test != acceleration)
+        if (property != MouseProperty::acceleration)
             mouse_config.acceleration(mir_pointer_acceleration_none);
 
-        if (setting_to_test != acceleration_bias)
+        if (property != MouseProperty::acceleration_bias)
             mouse_config.acceleration_bias(1);
 
-        if (setting_to_test != vscroll_speed)
+        if (property != MouseProperty::vscroll_speed)
             mouse_config.vscroll_speed(3.0);
 
-        if (setting_to_test != hscroll_speed)
+        if (property != MouseProperty::hscroll_speed)
             mouse_config.hscroll_speed(2.0);
     };
 
-    for (auto const& [setter, setting_to_test] : std::ranges::zip_view(mouse_setters, settings_to_test))
-    {
-        // Initialize all members, overwrite the one we're testing
-        Mouse expected;
-        target_settings(expected, setting_to_test);
-        setter(expected);
+    auto const property = GetParam();
+    auto const setter = mouse_setters.at(property);
 
-        // Set the value of member we're testing
-        Mouse modified;
-        setter(modified);
+    // Initialize all members, overwrite the one we're testing
+    Mouse expected;
+    target_settings(expected, property);
+    setter(expected);
 
-        // Initialize all members, _except_ the one we're testing
-        Mouse target;
-        target_settings(target, setting_to_test);
+    // Set the value of member we're testing
+    Mouse modified;
+    setter(modified);
 
-        // This merge should only modify the variable we're testing
-        target.merge(modified);
+    // Initialize all members, _except_ the one we're testing
+    Mouse target;
+    target_settings(target, property);
 
-        EXPECT_PRED2(mouse_equal, target, expected);
-    }
+    // This merge should only modify the variable we're testing
+    target.merge(modified);
+
+    EXPECT_PRED2(mouse_equal, target, expected);
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    TestInputConfiguration,
+    TestMouseConfiguration,
+    ::testing::Values(
+        MouseProperty::handedness,
+        MouseProperty::acceleration,
+        MouseProperty::acceleration_bias,
+        MouseProperty::vscroll_speed,
+        MouseProperty::hscroll_speed));
 
 TEST_F(TestInputConfiguration, touchpad_getters_return_expected_values)
 {
@@ -379,99 +462,90 @@ TEST_F(TestInputConfiguration, touchpad_getters_return_expected_values)
     }
 }
 
-TEST_F(TestInputConfiguration, touchpad_merge_from_partial_set_changes_only_set_values)
+struct TestTouchpadConfiguration : public TestInputConfiguration, testing::WithParamInterface<TouchpadProperty>
 {
-    for(auto const& setter: touchpad_setters)
-    {
-        Touchpad expected;
-        setter(expected);
+};
 
-        Touchpad modified;
-        setter(modified);
+TEST_P(TestTouchpadConfiguration, touchpad_merge_from_partial_set_changes_only_set_values)
+{
+    auto const property = GetParam();
+    auto const setter = touchpad_setters.at(property);
 
-        Touchpad merged;
-        merged.merge(modified);
-        EXPECT_PRED2(touchpad_equal, merged, expected);
-    }
+    Touchpad expected;
+    setter(expected);
+
+    Touchpad modified;
+    setter(modified);
+
+    Touchpad merged;
+    merged.merge(modified);
+    EXPECT_PRED2(touchpad_equal, merged, expected);
 }
 
-TEST_F(TestInputConfiguration, touchapd_merge_does_not_overwrite_values)
+TEST_P(TestTouchpadConfiguration, touchapd_merge_does_not_overwrite_values)
 {
-    enum SettingToTest
+    auto const target_settings = [](auto& touchpad_config, TouchpadProperty property)
     {
-        disable_while_typing,
-        disable_with_external_mouse,
-        acceleration,
-        acceleration_bias,
-        vscroll_speed,
-        hscroll_speed,
-        click_mode,
-        scroll_mode,
-        tap_to_click,
-        middle_mouse_button_emulation
-    };
-
-    auto const settings_to_test = {
-        disable_while_typing,
-        disable_with_external_mouse,
-        acceleration,
-        acceleration_bias,
-        vscroll_speed,
-        hscroll_speed,
-        click_mode,
-        scroll_mode,
-        tap_to_click,
-        middle_mouse_button_emulation,
-    };
-
-    auto const target_settings = [](auto& touchpad_config, SettingToTest setting_to_test)
-    {
-        if (setting_to_test != disable_while_typing)
+        if (property != TouchpadProperty::disable_while_typing)
             touchpad_config.disable_while_typing(false);
 
-        if (setting_to_test != acceleration)
+        if (property != TouchpadProperty::acceleration)
             touchpad_config.acceleration(mir_pointer_acceleration_none);
 
-        if (setting_to_test != acceleration_bias)
+        if (property != TouchpadProperty::acceleration_bias)
             touchpad_config.acceleration_bias(1);
 
-        if (setting_to_test != vscroll_speed)
+        if (property != TouchpadProperty::vscroll_speed)
             touchpad_config.vscroll_speed(3.0);
 
-        if (setting_to_test != hscroll_speed)
+        if (property != TouchpadProperty::hscroll_speed)
             touchpad_config.hscroll_speed(2.0);
 
-        if (setting_to_test != click_mode)
+        if (property != TouchpadProperty::click_mode)
             touchpad_config.click_mode(mir_touchpad_click_mode_none);
 
-        if (setting_to_test != scroll_mode)
+        if (property != TouchpadProperty::scroll_mode)
             touchpad_config.scroll_mode(mir_touchpad_scroll_mode_none);
 
-        if (setting_to_test != tap_to_click)
+        if (property != TouchpadProperty::tap_to_click)
             touchpad_config.tap_to_click(false);
 
-        if (setting_to_test != middle_mouse_button_emulation)
+        if (property != TouchpadProperty::middle_mouse_button_emulation)
             touchpad_config.middle_mouse_button_emulation(true);
     };
 
-    for (auto const& [setter, setting_to_test] : std::ranges::zip_view(touchpad_setters, settings_to_test))
-    {
-        Touchpad expected;
-        target_settings(expected, setting_to_test);
-        setter(expected);
+    auto const property = GetParam();
+    auto const setter = touchpad_setters.at(property);
 
-        Touchpad modified;
-        setter(modified);
+    Touchpad expected;
+    target_settings(expected, property);
+    setter(expected);
 
-        Touchpad target;
-        target_settings(target, setting_to_test);
+    Touchpad modified;
+    setter(modified);
 
-        target.merge(modified);
+    Touchpad target;
+    target_settings(target, property);
 
-        EXPECT_PRED2(touchpad_equal, target, expected);
-    }
+    target.merge(modified);
+
+    EXPECT_PRED2(touchpad_equal, target, expected);
 }
 
+INSTANTIATE_TEST_SUITE_P(
+    TestInputConfiguration,
+    TestTouchpadConfiguration,
+    ::testing::Values(
+        TouchpadProperty::disable_while_typing,
+        TouchpadProperty::disable_with_external_mouse,
+        TouchpadProperty::acceleration,
+        TouchpadProperty::acceleration_bias,
+        TouchpadProperty::vscroll_speed,
+        TouchpadProperty::hscroll_speed,
+        TouchpadProperty::click_mode,
+        TouchpadProperty::scroll_mode,
+        TouchpadProperty::tap_to_click,
+        TouchpadProperty::middle_mouse_button_emulation));
 
 TEST_F(TestInputConfiguration, keyboard_getters_return_expected_values)
 {
@@ -490,51 +564,51 @@ TEST_F(TestInputConfiguration, keyboard_getters_return_expected_values)
     }
 }
 
-
-TEST_F(TestInputConfiguration, keyboard_merge_from_partial_set_changes_only_set_values)
+struct TestKeyboardConfiguration : public TestInputConfiguration, testing::WithParamInterface<KeyboardProperty>
 {
-    for(auto const& setter: keyboard_setters)
-    {
-        Keyboard expected;
-        setter(expected);
+};
 
-        Keyboard modified;
-        setter(modified);
+TEST_P(TestKeyboardConfiguration, keyboard_merge_from_partial_set_changes_only_set_values)
+{
+    auto const property = GetParam();
+    auto const setter = keyboard_setters.at(property);
 
-        Keyboard merged;
-        merged.merge(modified);
-        EXPECT_PRED2(keyboard_equal, merged, expected);
-    }
+    Keyboard expected;
+    setter(expected);
+
+    Keyboard modified;
+    setter(modified);
+
+    Keyboard merged;
+    merged.merge(modified);
+    EXPECT_PRED2(keyboard_equal, merged, expected);
 }
 
-TEST_F(TestInputConfiguration, keyboard_merge_does_not_overwrite_values)
+TEST_P(TestKeyboardConfiguration, keyboard_merge_does_not_overwrite_values)
 {
-    enum SettingToTest { repeat_rate, repeat_delay };
-    auto const settings_to_test = { repeat_rate, repeat_delay  };
-
-    auto const target_settings = [](auto& keyboard_config, SettingToTest setting_to_test)
+    auto const target_settings = [](auto& keyboard_config, KeyboardProperty property)
     {
-        if (setting_to_test != repeat_rate)
+        if (property != KeyboardProperty::repeat_rate)
             keyboard_config.set_repeat_rate(4);
 
-        if (setting_to_test != repeat_delay)
+        if (property != KeyboardProperty::repeat_delay)
             keyboard_config.set_repeat_delay(500);
     };
 
-    for (auto const& [setter, setting_to_test] : std::ranges::zip_view(keyboard_setters, settings_to_test))
-    {
-        Keyboard expected;
-        target_settings(expected, setting_to_test);
-        setter(expected);
+    auto const property = GetParam();
+    auto const setter = keyboard_setters.at(property);
 
-        Keyboard modified;
-        setter(modified);
+    Keyboard expected;
+    target_settings(expected, property);
+    setter(expected);
 
-        Keyboard target;
-        target_settings(target, setting_to_test);
+    Keyboard modified;
+    setter(modified);
 
-        target.merge(modified);
+    Keyboard target;
+    target_settings(target, property);
 
-        EXPECT_PRED2(keyboard_equal, target, expected);
-    }
+    target.merge(modified);
+
+    EXPECT_PRED2(keyboard_equal, target, expected);
 }
