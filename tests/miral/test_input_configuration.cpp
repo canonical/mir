@@ -353,7 +353,7 @@ struct TestMouseConfiguration : public TestInputConfiguration, testing::WithPara
 //
 // If each individual data member is merged correctly, then all combinations
 // will work.
-TEST_F(TestMouseConfiguration, mouse_merge_from_partial_set_changes_only_set_values)
+TEST_P(TestMouseConfiguration, mouse_merge_from_partial_set_changes_only_set_values)
 {
     auto const property = GetParam();
     auto const setter = mouse_setters.at(property);
