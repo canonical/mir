@@ -26,7 +26,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 2)
 set(MIR_VERSION_MINOR 20)
-set(MIR_VERSION_PATCH 0)
+set(MIR_VERSION_PATCH 1)
 
 add_compile_definitions(MIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
 add_compile_definitions(MIR_VERSION_MINOR=${MIR_VERSION_MINOR})
@@ -68,13 +68,23 @@ set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--as-needed")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--as-needed")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--as-needed")
 
+
 set(MIR_FATAL_COMPILE_WARNINGS ON CACHE BOOL "Should compiler warnings fail the build")
 if(MIR_FATAL_COMPILE_WARNINGS)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+  # Disable maybe-uninitialized errors on GCC when optimisation is enabled
+  # They are notorious for false-positives
+  # Also, disable array-bounds errors, they are likewise significantly
+  # false-positivey
+  # (We particularly hit https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111415)
+  if ((CMAKE_C_COMPILER_ID MATCHES "GNU") AND NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error=maybe-uninitialized -Wno-error=array-bounds")
+  endif()
+  if ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") AND NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=maybe-uninitialized -Wno-error=array-bounds")
+  endif()
 endif()
-
-set(MIR_COMPILER_QUIRKS "" CACHE STRING "Semicolon-separated list of compiler quirks to enable")
 
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag(-Wmismatched-tags HAS_W_MISMATCHED_TAGS)

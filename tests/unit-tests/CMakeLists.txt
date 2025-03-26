@@ -150,13 +150,6 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "AddressSanitizer")
     PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
 endif()
 
-if ("test_touchspot_controller.cpp:array-bounds" IN_LIST MIR_COMPILER_QUIRKS)
-  set_property(
-    SOURCE input/test_touchspot_controller.cpp
-    PROPERTY COMPILE_OPTIONS -Wno-error=array-bounds    # ppc64el spuriously warns here
-  )
-endif()
-
 if (MIR_USE_PRECOMPILED_HEADERS)
   target_precompile_headers(
     mir_unit_tests
