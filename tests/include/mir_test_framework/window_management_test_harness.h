@@ -23,15 +23,11 @@
 #include <miral/window_manager_tools.h>
 #include <mir/events/event.h>
 #include "mir_test_framework/headless_in_process_server.h"
-#include "src/miral/window_manager_tools_implementation.h"
 
-namespace mir
-{
-namespace scene
+namespace mir::scene
 {
 class Surface;
 class Session;
-}
 }
 
 namespace mir_test_framework
@@ -72,7 +68,7 @@ public:
     virtual auto get_output_rectangles() -> std::vector<mir::geometry::Rectangle> = 0;
 private:
     class Self;
-    std::unique_ptr<Self> self;
+    std::unique_ptr<Self> const self;
 };
 
 }

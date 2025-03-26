@@ -21,7 +21,7 @@
 #include "mir_test_framework/window_management_test_harness.h"
 #include <mir/executor.h>
 #include <mir/scene/surface.h>
-#include <mir/scene/surface_observer.h>
+#include <mir/scene/null_surface_observer.h>
 #include <mir/shell/surface_specification.h>
 #include <mir/shell/shell.h>
 #include <mir/wayland/weak.h>
@@ -64,7 +64,7 @@ public:
 /// tools would cause a change to the underlying system. This is important in this context
 /// as it allows us to synchronously process work that has been triggered from other requests
 /// which would have otherwise caused a deadlock.
-class NotifyingWindowManagerToolsImplementation final : public miral::WindowManagerToolsImplementation
+class NotifyingWindowManagerToolsImplementation : public miral::WindowManagerToolsImplementation
 {
 public:
     NotifyingWindowManagerToolsImplementation(
@@ -286,7 +286,10 @@ class mir_test_framework::WindowManagementTestHarness::Self
 public:
     explicit Self(mir::Server& server)
         : server(server),
-          surface_observer(std::make_shared<SurfaceObserver>(this))
+          surface_observer(std::make_shared<SurfaceCloseRequestedObserver>([this](ms::Surface const* surf)
+          {
+              on_surface_closed(surf);
+          }))
     {
     }
 
@@ -297,77 +300,63 @@ public:
         pending_actions.clear();
     }
 
-    class SurfaceObserver final : public ms::SurfaceObserver
+    void on_surface_closed(ms::Surface const* surf)
+    {
+        std::shared_ptr<ms::Surface> to_destroy = nullptr;
+        auto const it = std::find_if(surface_cache.begin(), surface_cache.end(),
+            [surf](CachedSurfaceData const& data)
+            {
+                return data.surface.get() == surf;
+            });
+        if (it != surface_cache.end())
+        {
+            to_destroy = it->surface;
+            surface_cache.erase(it);
+        }
+
+        if (to_destroy == nullptr)
+        {
+            mir::log_error("client_surface_close_requested: Unable to find surface in known_surfaces");
+            return;
+        }
+
+        pending_actions.emplace_back([
+            shell=server.the_shell(),
+            to_destroy=to_destroy]
+        {
+            shell->destroy_surface(to_destroy->session().lock(), to_destroy);
+        });
+    }
+
+    class SurfaceCloseRequestedObserver : public ms::NullSurfaceObserver
     {
     public:
-        explicit SurfaceObserver(Self* self)
-            : self(self) {}
-
-        void attrib_changed(ms::Surface const*, MirWindowAttrib, int) override {}
-        void window_resized_to(ms::Surface const*, geom::Size const&) override {}
-        void content_resized_to(ms::Surface const*, geom::Size const&) override {}
-        void moved_to(ms::Surface const*, geom::Point const&) override {}
-        void hidden_set_to(ms::Surface const*, bool) override {}
-        void frame_posted(ms::Surface const*, geom::Rectangle const&) override {}
-        void alpha_set_to(ms::Surface const*, float) override {}
-        void orientation_set_to(ms::Surface const*, MirOrientation) override {}
-        void transformation_set_to(ms::Surface const*, glm::mat4 const&) override {}
-        void reception_mode_set_to(ms::Surface const*, mir::input::InputReceptionMode) override {}
-        void cursor_image_set_to(
-            ms::Surface const*,
-            std::weak_ptr<mg::CursorImage> const&) override {}
-        void renamed(ms::Surface const*, std::string const&) override {}
-        void cursor_image_removed(ms::Surface const*) override {}
-        void placed_relative(ms::Surface const*, geom::Rectangle const&) override {}
-        void input_consumed(ms::Surface const*, std::shared_ptr<MirEvent const> const&) override {}
-        void application_id_set_to(ms::Surface const*, std::string const&) override {}
-        void depth_layer_set_to(ms::Surface const*, MirDepthLayer) override {}
-        void entered_output(ms::Surface const*, mg::DisplayConfigurationOutputId const&) override {}
-        void left_output(ms::Surface const*, mg::DisplayConfigurationOutputId const&) override {}
-        void rescale_output(ms::Surface const*, mg::DisplayConfigurationOutputId const&) override {}
+        explicit SurfaceCloseRequestedObserver(std::function<void(ms::Surface const* surf)> const& on_close_requested)
+            : on_close_requested(on_close_requested) {}
 
         void client_surface_close_requested(ms::Surface const* surf) override
         {
-            std::shared_ptr<ms::Surface> to_destroy = nullptr;
-            auto const it = std::find_if(self->surface_cache.begin(), self->surface_cache.end(),
-                [surf](CachedSurfaceData const& data)
-                {
-                    return data.surface.get() == surf;
-                });
-            if (it != self->surface_cache.end())
-            {
-                to_destroy = it->surface;
-                self->surface_cache.erase(it);
-            }
-
-            if (to_destroy == nullptr)
-            {
-                mir::log_error("client_surface_close_requested: Unable to find surface in known_surfaces");
-                return;
-            }
-
-            self->pending_actions.emplace_back([
-                shell=self->server.the_shell(),
-                to_destroy=to_destroy]
-            {
-                shell->destroy_surface(to_destroy->session().lock(), to_destroy);
-            });
+            on_close_requested(surf);
         }
 
     private:
-        Self* self;
+        std::function<void(ms::Surface const* surf)> on_close_requested;
     };
 
     mir::Server& server;
     std::unique_ptr<miral::WindowManagerTools> tools;
     std::unique_ptr<NotifyingWindowManagerToolsImplementation> impl;
     mtd::FakeDisplay* display = nullptr;
-    std::shared_ptr<SurfaceObserver> surface_observer;
+    std::shared_ptr<SurfaceCloseRequestedObserver> surface_observer;
 
     /// A cache of the data associated with each surface. This is used for
     /// both discoverability of the surface and to ensure that the reference
     /// count of certain objects (e.g. the stream) do not drop below 0 until
     /// we want them to.
+    ///
+    /// Access to this cache is not guarded by a lock as this cache can only
+    /// ever be accessed by the testing thread during surface creation or
+    /// deletion.
     std::vector<CachedSurfaceData> surface_cache;
 
     /// The BasicWindowManager expects some calls to be triggered asynchronously,
