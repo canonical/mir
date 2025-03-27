@@ -89,12 +89,6 @@ struct TestMouseKeysTransformer : testing::Test
     std::shared_ptr<mi::MouseKeysTransformer> const transformer;
     mt::AutoUnblockThread main_loop_thread;
 
-    enum class State
-    {
-        waiting_for_down,
-        waiting_for_up
-    };
-
     auto down_event(int button) const -> mir::EventUPtr
     {
         return mev::make_key_event(
