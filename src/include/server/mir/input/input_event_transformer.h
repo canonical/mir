@@ -67,6 +67,8 @@ private:
     std::shared_ptr<input::VirtualInputDevice> const virtual_pointer;
     std::shared_ptr<input::InputDeviceRegistry> const input_device_registry;
     std::shared_ptr<MainLoop> const main_loop;
+
+    bool virtual_pointer_registered{false};
 };
 }
 }
