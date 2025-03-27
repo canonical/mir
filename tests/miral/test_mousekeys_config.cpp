@@ -66,26 +66,10 @@ struct TestMouseKeysConfig : miral::TestServer
 TEST_F(TestMouseKeysConfig, mousekeys_config_enabled_calls_accessibility_manager_set_mousekeys_enabled)
 {
     // Once at startup, and twice when we call `set_keymap` below
-    EXPECT_CALL(*accessibility_manager, mousekeys_enabled(_))
-        .Times(3)
-        .WillOnce(
-            [](auto enabled)
-            {
-                // `true` passed to config where its defined
-                ASSERT_TRUE(enabled);
-            })
-        .WillOnce(
-            [](auto enabled)
-            {
-                // First call below
-                ASSERT_TRUE(enabled);
-            })
-        .WillOnce(
-            [](auto enabled)
-            {
-                // Second call below
-                ASSERT_FALSE(enabled);
-            });
+    InSequence seq;
+    EXPECT_CALL(*accessibility_manager, mousekeys_enabled(true));  // `true` passed to config where its defined
+    EXPECT_CALL(*accessibility_manager, mousekeys_enabled(true));  // First call below
+    EXPECT_CALL(*accessibility_manager, mousekeys_enabled(false)); // Second call below
 
     add_server_init(config);
     start_server();
