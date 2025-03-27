@@ -349,28 +349,23 @@ TEST_F(TestMouseKeysTransformer, double_click_dispatch_four_events)
 
 TEST_F(TestMouseKeysTransformer, drag_start_and_end_dispatch_down_and_up_events)
 {
-    auto state = State::waiting_for_down;
     mt::Signal finished;
 
     EXPECT_CALL(mock_seat, dispatch_event(_))
-        .Times(2) // down, up
-        .WillRepeatedly(
-            [&state, &finished](std::shared_ptr<MirEvent> const& event)
+        .Times(2)
+        .WillOnce(
+            [](auto const& event)
+            {
+                auto const [pointer_action, _, __] = data_from_pointer_event(event);
+                EXPECT_EQ(pointer_action, mir_pointer_action_button_down);
+            })
+        .WillOnce(
+            [&finished](auto const& event)
             {
                 auto const [pointer_action, _, pointer_buttons] = data_from_pointer_event(event);
-                switch (state)
-                {
-                case State::waiting_for_down:
-                    EXPECT_EQ(pointer_action, mir_pointer_action_button_down);
-                    state = State::waiting_for_up;
-                    break;
-                case State::waiting_for_up:
-                    EXPECT_EQ(pointer_action, mir_pointer_action_button_up);
-                    EXPECT_EQ(pointer_buttons, 0);
-                    state = State::waiting_for_down;
-                    finished.raise();
-                    break;
-                }
+                EXPECT_EQ(pointer_action, mir_pointer_action_button_up);
+                EXPECT_EQ(pointer_buttons, 0);
+                finished.raise();
             });
 
     input_event_transformer.handle(*up_event(XKB_KEY_KP_0));
