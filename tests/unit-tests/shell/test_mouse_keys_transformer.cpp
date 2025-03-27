@@ -269,6 +269,34 @@ INSTANTIATE_TEST_SUITE_P(
     TestOppositeDiagonalMovement,
     ::Values(std::pair{XKB_KEY_KP_2, XKB_KEY_KP_8}, std::pair{XKB_KEY_KP_4, XKB_KEY_KP_6}));
 
+TEST_F(TestMouseKeysTransformer, pressing_all_movement_buttons_generates_no_motion)
+{
+    EXPECT_CALL(mock_seat, dispatch_event(_))
+        .Times(AtLeast(num_invocations / 2)) // Account for various timing inconsistencies
+        .WillOnce(Return())
+        .WillOnce(Return())
+        .WillOnce(Return())
+        .WillRepeatedly(
+            [&](std::shared_ptr<MirEvent> const& event)
+            {
+                auto const [pointer_action, pointer_relative_motion, _] = data_from_pointer_event(event);
+
+                ASSERT_EQ(pointer_action, mir_pointer_action_motion);
+
+                // Make sure there is no movement
+                EXPECT_FLOAT_EQ(pointer_relative_motion.length_squared(), 0.0);
+            });
+
+    for (auto key : {XKB_KEY_KP_2, XKB_KEY_KP_4, XKB_KEY_KP_6, XKB_KEY_KP_8})
+    {
+        auto down = down_event(key);
+        input_event_transformer.handle(*down);
+    }
+    clock.advance_by(step);
+
+    wait();
+}
+
 struct ClicksDispatchDownAndUpEvents :
     public TestMouseKeysTransformer,
     public WithParamInterface<std::pair<mir::input::XkbSymkey, MirPointerButton>>
