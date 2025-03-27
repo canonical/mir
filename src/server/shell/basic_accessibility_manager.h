@@ -19,7 +19,7 @@
 
 #include "mir/shell/accessibility_manager.h"
 
-#include "mir/input/mousekeys_common.h"
+#include "mir/input/mousekeys_keymap.h"
 #include "mir/geometry/displacement.h"
 
 namespace mir

@@ -17,7 +17,7 @@
 #ifndef MIRAL_MOUSE_KEYS_CONFIG_H
 #define MIRAL_MOUSE_KEYS_CONFIG_H
 
-#include "mir/input/mousekeys_common.h"
+#include "mir/input/mousekeys_keymap.h"
 
 #include <memory>
 

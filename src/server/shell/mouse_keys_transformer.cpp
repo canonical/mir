@@ -20,7 +20,7 @@
 #include "mir/log.h"
 #include "mir/main_loop.h"
 #include "mir/time/alarm.h"
-#include "mir/input/mousekeys_common.h"
+#include "mir/input/mousekeys_keymap.h"
 
 #include "mir/time/clock.h"
 #include "mir_toolkit/events/enums.h"

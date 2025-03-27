@@ -17,7 +17,7 @@
 #include "mir/input/input_event_transformer.h"
 
 #include "mir/geometry/displacement.h"
-#include "mir/input/mousekeys_common.h"
+#include "mir/input/mousekeys_keymap.h"
 
 #include <memory>
 #include <xkbcommon/xkbcommon-keysyms.h>

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/input/mousekeys_common.h"
+#include "mir/input/mousekeys_keymap.h"
 #include "mir/server.h"
 #include "mir/shell/accessibility_manager.h"
 

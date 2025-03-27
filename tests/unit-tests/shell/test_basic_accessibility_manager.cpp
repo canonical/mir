@@ -23,7 +23,7 @@
 #include "mir/glib_main_loop.h"
 #include "mir/test/fake_shared.h"
 #include "mir/input/input_event_transformer.h"
-#include "mir/input/mousekeys_common.h"
+#include "mir/input/mousekeys_keymap.h"
 
 #include "mir/test/doubles/mock_input_seat.h"
 #include "mir/test/doubles/mock_key_mapper.h"
