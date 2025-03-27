@@ -21,6 +21,9 @@
 #include <tuple>
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
+using namespace testing;
 
 using Mouse = miral::InputConfiguration::Mouse;
 using Keyboard = miral::InputConfiguration::Keyboard;
@@ -227,13 +230,13 @@ TEST_F(TestInputConfiguration, touchpad_acceleration_bias_is_set_and_clamped)
 
 namespace
 {
-void mouse_expect_equal(Mouse const& lhs, Mouse const& rhs)
+void mouse_expect_equal(Mouse const& actual, Mouse const& expected)
 {
-    EXPECT_EQ(lhs.handedness(), rhs.handedness());
-    EXPECT_EQ(lhs.acceleration(), rhs.acceleration());
-    EXPECT_EQ(lhs.acceleration_bias(), rhs.acceleration_bias());
-    EXPECT_EQ(lhs.vscroll_speed(), rhs.vscroll_speed());
-    EXPECT_EQ(lhs.hscroll_speed(), rhs.hscroll_speed());
+    EXPECT_THAT(actual.handedness(), Eq(expected.handedness()));
+    EXPECT_THAT(actual.acceleration(), Eq(expected.acceleration()));
+    EXPECT_THAT(actual.acceleration_bias(), Eq(expected.acceleration_bias()));
+    EXPECT_THAT(actual.vscroll_speed(), Eq(expected.vscroll_speed()));
+    EXPECT_THAT(actual.hscroll_speed(), Eq(expected.hscroll_speed()));
 }
 
 auto mouse_equal(Mouse const& lhs, Mouse const& rhs) -> bool
@@ -248,18 +251,18 @@ auto mouse_equal(Mouse const& lhs, Mouse const& rhs) -> bool
     return left == right;
 }
 
-void touchpad_expect_equal(Touchpad const& lhs, Touchpad const& rhs)
+void touchpad_expect_equal(Touchpad const& actual, Touchpad const& expected)
 {
-    EXPECT_EQ(lhs.acceleration(), rhs.acceleration());
-    EXPECT_EQ(lhs.acceleration_bias(), rhs.acceleration_bias());
-    EXPECT_EQ(lhs.hscroll_speed(), rhs.hscroll_speed());
-    EXPECT_EQ(lhs.vscroll_speed(), rhs.vscroll_speed());
-    EXPECT_EQ(lhs.click_mode(), rhs.click_mode());
-    EXPECT_EQ(lhs.disable_while_typing(), rhs.disable_while_typing());
-    EXPECT_EQ(lhs.disable_with_external_mouse(), rhs.disable_with_external_mouse());
-    EXPECT_EQ(lhs.middle_mouse_button_emulation(), rhs.middle_mouse_button_emulation());
-    EXPECT_EQ(lhs.scroll_mode(), rhs.scroll_mode());
-    EXPECT_EQ(lhs.tap_to_click(), rhs.tap_to_click());
+    EXPECT_THAT(actual.acceleration(), Eq(expected.acceleration()));
+    EXPECT_THAT(actual.acceleration_bias(), Eq(expected.acceleration_bias()));
+    EXPECT_THAT(actual.hscroll_speed(), Eq(expected.hscroll_speed()));
+    EXPECT_THAT(actual.vscroll_speed(), Eq(expected.vscroll_speed()));
+    EXPECT_THAT(actual.click_mode(), Eq(expected.click_mode()));
+    EXPECT_THAT(actual.disable_while_typing(), Eq(expected.disable_while_typing()));
+    EXPECT_THAT(actual.disable_with_external_mouse(), Eq(expected.disable_with_external_mouse()));
+    EXPECT_THAT(actual.middle_mouse_button_emulation(), Eq(expected.middle_mouse_button_emulation()));
+    EXPECT_THAT(actual.scroll_mode(), Eq(expected.scroll_mode()));
+    EXPECT_THAT(actual.tap_to_click(), Eq(expected.tap_to_click()));
 }
 
 auto touchpad_equal(Touchpad const& lhs, Touchpad const& rhs) -> bool
@@ -295,8 +298,8 @@ auto touchpad_equal(Touchpad const& lhs, Touchpad const& rhs) -> bool
 
 void keyboard_expect_equal(Keyboard const& lhs, Keyboard const& rhs)
 {
-    EXPECT_EQ(lhs.repeat_rate(), rhs.repeat_rate());
-    EXPECT_EQ(lhs.repeat_delay(), rhs.repeat_delay());
+    EXPECT_THAT(lhs.repeat_rate(), Eq(rhs.repeat_rate()));
+    EXPECT_THAT(lhs.repeat_delay(), Eq(rhs.repeat_delay()));
 }
 
 auto keyboard_equal(Keyboard const& lhs, Keyboard const& rhs) -> bool
