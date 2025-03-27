@@ -252,47 +252,52 @@ struct ClicksDispatchDownAndUpEvents : public TestMouseKeysTransformer, public W
 TEST_P(ClicksDispatchDownAndUpEvents, clicks_dispatch_pointer_down_and_up_events)
 {
     auto const switching_button = GetParam();
-
     mt::Signal finished;
-    auto state = State::waiting_for_up;
+
+    auto const check_up = [&finished](auto const& event)
+    {
+        auto* const pointer_event = event->to_input()->to_pointer();
+        auto const pointer_action = pointer_event->action();
+        auto const pointer_buttons = pointer_event->buttons();
+
+        ASSERT_EQ(pointer_action, mir_pointer_action_button_up);
+        ASSERT_EQ(pointer_buttons, 0);
+        finished.raise();
+    };
 
     EXPECT_CALL(mock_seat, dispatch_event(_))
         .Times(3) // up (switching), down, up
-        .WillRepeatedly(
-            [&state , &finished, switching_button](
-                std::shared_ptr<MirEvent> const& event) mutable
+        .WillOnce(
+            [&check_up](std::shared_ptr<MirEvent> const& event)
+            {
+                check_up(event);
+            })
+        .WillOnce(
+            [switching_button](std::shared_ptr<MirEvent> const& event)
             {
                 auto* const pointer_event = event->to_input()->to_pointer();
-
                 auto const pointer_action = pointer_event->action();
                 auto const pointer_buttons = pointer_event->buttons();
-                switch (state)
+                ASSERT_EQ(pointer_action, mir_pointer_action_button_down);
+                switch (switching_button)
                 {
-                case State::waiting_for_down:
-
-                    ASSERT_EQ(pointer_action, mir_pointer_action_button_down);
-                    switch (switching_button)
-                    {
-                    case XKB_KEY_KP_Divide:
-                        ASSERT_EQ(pointer_buttons, mir_pointer_button_primary);
-                        break;
-                    case XKB_KEY_KP_Multiply:
-                        ASSERT_EQ(pointer_buttons, mir_pointer_button_tertiary);
-                        break;
-                    case XKB_KEY_KP_Subtract:
-                        ASSERT_EQ(pointer_buttons, mir_pointer_button_secondary);
-                        break;
-                    }
-
-                    state = State::waiting_for_up;
+                case XKB_KEY_KP_Divide:
+                    ASSERT_EQ(pointer_buttons, mir_pointer_button_primary);
                     break;
-                case State::waiting_for_up:
-                    ASSERT_EQ(pointer_action, mir_pointer_action_button_up);
-                    ASSERT_EQ(pointer_buttons, 0);
-                    state = State::waiting_for_down;
-                    finished.raise();
+                case XKB_KEY_KP_Multiply:
+                    ASSERT_EQ(pointer_buttons, mir_pointer_button_tertiary);
+                    break;
+                case XKB_KEY_KP_Subtract:
+                    ASSERT_EQ(pointer_buttons, mir_pointer_button_secondary);
                     break;
                 }
+            }
+
+            )
+        .WillOnce(
+            [&check_up](std::shared_ptr<MirEvent> const& event) mutable
+            {
+                check_up(event);
             });
 
     input_event_transformer.handle(*up_event(switching_button));
