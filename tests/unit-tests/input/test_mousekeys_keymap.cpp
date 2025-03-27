@@ -25,6 +25,11 @@ using XkbSymkey = mi::XkbSymkey;
 
 struct TestMouseKeysKeymap : testing::Test
 {
+    inline static std::initializer_list<std::pair<XkbSymkey, Action>> const wasd_key_action = {
+        std::pair{XKB_KEY_w, Action::move_up},
+        std::pair{XKB_KEY_a, Action::move_left},
+        std::pair{XKB_KEY_s, Action::move_down},
+        std::pair{XKB_KEY_d, Action::move_right}};
 };
 
 TEST_F(TestMouseKeysKeymap, default_keymaps_have_no_key_action_pairs)
@@ -42,19 +47,13 @@ TEST_F(TestMouseKeysKeymap, default_keymaps_have_no_key_action_pairs)
 
 TEST_F(TestMouseKeysKeymap, initializer_list_constructor_add_passed_key_action_pairs)
 {
-    auto const key_action_pairs = {
-        std::pair<XkbSymkey, Action>{XKB_KEY_w, Action::move_up},
-        {XKB_KEY_a, Action::move_left},
-        {XKB_KEY_s, Action::move_down},
-        {XKB_KEY_d, Action::move_right}};
-
-    auto const keymap = mi::MouseKeysKeymap(key_action_pairs);
+    auto const keymap = mi::MouseKeysKeymap(wasd_key_action);
 
     keymap.for_each_key_action_pair(
         [&](auto const key, auto const action)
         {
             auto const iter = std::ranges::find(
-                    key_action_pairs,
+                    wasd_key_action,
                     key,
                     [](auto const key_action)
                     {
@@ -66,36 +65,39 @@ TEST_F(TestMouseKeysKeymap, initializer_list_constructor_add_passed_key_action_p
         });
 }
 
-TEST_F(TestMouseKeysKeymap, get_action_returns_the_appropriate_action)
+struct TestMouseKeysKeymapGetAction :
+    public TestMouseKeysKeymap,
+    public testing::WithParamInterface<std::pair<XkbSymkey, Action>>
 {
-    auto const key_action_pairs = {
-        std::pair<XkbSymkey, Action>{XKB_KEY_w, Action::move_up},
-        {XKB_KEY_a, Action::move_left},
-        {XKB_KEY_s, Action::move_down},
-        {XKB_KEY_d, Action::move_right}};
+};
 
-    auto const keymap = mi::MouseKeysKeymap{key_action_pairs};
-    for(auto const& [key, action]: key_action_pairs)
-    {
-        ASSERT_EQ(keymap.get_action(key), action);
-    }
+TEST_P(TestMouseKeysKeymapGetAction, get_action_returns_the_appropriate_action)
+{
+    auto [symkey, action] = GetParam();
+    auto const keymap = mi::MouseKeysKeymap{{symkey, action}};
+    ASSERT_EQ(keymap.get_action(symkey), action);
 }
 
-TEST_F(TestMouseKeysKeymap, set_action_sets_the_appropriate_action_and_clears_it_correctly)
-{
-    auto const key_action_pairs = {
-        std::pair<XkbSymkey, Action>{XKB_KEY_w, Action::move_up},
-        {XKB_KEY_a, Action::move_left},
-        {XKB_KEY_s, Action::move_down},
-        {XKB_KEY_d, Action::move_right}};
+INSTANTIATE_TEST_SUITE_P(
+    TestMouseKeysKeymap, TestMouseKeysKeymapGetAction, testing::ValuesIn(TestMouseKeysKeymap::wasd_key_action));
 
+struct TestMouseKeysKeymapSetAction :
+    public TestMouseKeysKeymap,
+    public testing::WithParamInterface<std::pair<XkbSymkey, Action>>
+{
+};
+
+TEST_P(TestMouseKeysKeymapSetAction, set_action_sets_the_appropriate_action_and_clears_it_correctly)
+{
+    auto const [key, action] = GetParam();
     auto keymap = mi::MouseKeysKeymap{};
-    for(auto const& [key, action]: key_action_pairs)
-    {
-        keymap.set_action(key, action);
-        ASSERT_EQ(keymap.get_action(key), action);
 
-        keymap.set_action(key, {});
-        ASSERT_EQ(keymap.get_action(key), std::nullopt);
-    }
+    keymap.set_action(key,action);
+    ASSERT_EQ(keymap.get_action(key), action);
+
+    keymap.set_action(key, {});
+    ASSERT_EQ(keymap.get_action(key), std::nullopt);
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    TestMouseKeysKeymap, TestMouseKeysKeymapSetAction, testing::ValuesIn(TestMouseKeysKeymap::wasd_key_action));
