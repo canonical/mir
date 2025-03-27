@@ -40,6 +40,8 @@ public:
         std::shared_ptr<mir::options::Option> const&,
         std::shared_ptr<input::InputEventTransformer> const& event_transformer);
 
+    ~AccessibilityManager();
+
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&);
 
     std::optional<int> repeat_rate() const;

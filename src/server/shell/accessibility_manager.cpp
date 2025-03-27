@@ -125,3 +125,9 @@ mir::shell::AccessibilityManager::AccessibilityManager(
         event_transformer->append(transformer);
     }
 }
+
+mir::shell::AccessibilityManager::~AccessibilityManager()
+{
+    if(transformer)
+        event_transformer->remove(transformer);
+}
