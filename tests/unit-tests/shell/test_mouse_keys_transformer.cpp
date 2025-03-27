@@ -243,6 +243,62 @@ INSTANTIATE_TEST_SUITE_P(
         std::pair{XKB_KEY_KP_8, XKB_KEY_KP_4},
         std::pair{XKB_KEY_KP_8, XKB_KEY_KP_6}));
 
+struct TestOppositeDiagonalMovement :
+    public TestMouseKeysTransformer,
+    public WithParamInterface<std::pair<mir::input::XkbSymkey, mir::input::XkbSymkey>>
+{
+};
+
+TEST_P(TestOppositeDiagonalMovement, opposite_keys_result_in_no_movement)
+{
+    auto const [key1, key2] = GetParam();
+    auto const timeout = std::chrono::milliseconds(20);
+    auto const repeat_delay = std::chrono::milliseconds(2);
+    auto const num_invocations = timeout / repeat_delay;
+
+    EXPECT_CALL(mock_seat, dispatch_event(_))
+        .Times(AtLeast(num_invocations / 2)) // Account for various timing inconsistencies
+        .WillRepeatedly(
+            [&](std::shared_ptr<MirEvent> const& event)
+            {
+                auto const [pointer_action, pointer_relative_motion, _] = data_from_pointer_event(event);
+
+                ASSERT_EQ(pointer_action, mir_pointer_action_motion);
+
+                // Make sure there is no movement
+                EXPECT_FLOAT_EQ(pointer_relative_motion.length_squared(), 0.0);
+            });
+
+    auto const step = std::chrono::milliseconds(1);
+
+    auto down1 = down_event(key1);
+    input_event_transformer.handle(*down1);
+    clock.advance_by(step);
+
+    auto down2 = down_event(key2);
+    input_event_transformer.handle(*down2);
+    clock.advance_by(step);
+
+    // Should generate a bunch of motion events until we handle the up
+    // event
+    mt::spin_wait_for_condition_or_timeout(
+        [&]
+        {
+            clock.advance_by(step);
+            return false;
+        },
+        timeout,
+        step);
+
+    input_event_transformer.handle(*up_event(key1));
+    input_event_transformer.handle(*up_event(key2));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    TestMouseKeysTransformer,
+    TestOppositeDiagonalMovement,
+    ::Values(std::pair{XKB_KEY_KP_2, XKB_KEY_KP_8}, std::pair{XKB_KEY_KP_4, XKB_KEY_KP_6}));
+
 struct ClicksDispatchDownAndUpEvents :
     public TestMouseKeysTransformer,
     public WithParamInterface<std::pair<mir::input::XkbSymkey, MirPointerButton>>
