@@ -58,6 +58,7 @@ enum class KeyboardProperty
     repeat_rate,
     repeat_delay
 };
+static std::initializer_list all_keyboard_props = {KeyboardProperty::repeat_rate, KeyboardProperty::repeat_delay};
 
 struct TestInputConfiguration: testing::Test
 {
@@ -191,6 +192,28 @@ struct TestInputConfiguration: testing::Test
             },
         }};
 };
+
+namespace
+{
+auto get_keyboard_config_with_properties(std::initializer_list<KeyboardProperty> properties) -> Keyboard
+{
+    Keyboard keyboard_config;
+    for (auto const property : properties)
+    {
+        auto const property_setter = TestInputConfiguration::keyboard_setters.at(property);
+        property_setter(keyboard_config);
+    }
+
+    return keyboard_config;
+}
+
+auto get_keyboard_config_with_all_properties_except(KeyboardProperty property) -> Keyboard
+{
+    std::vector<KeyboardProperty> all_props{all_keyboard_props};
+    all_props.erase(std::remove(all_props.begin(), all_props.end(), property));
+    return get_keyboard_config_with_properties(all_keyboard_props);
+}
+}
 
 TEST_F(TestInputConfiguration, mouse_acceleration_bias_is_set_and_clamped)
 {
@@ -561,49 +584,41 @@ TEST_F(TestKeyboardInputConfiguration, keyboard_repeat_delay_return_expected_val
     EXPECT_EQ(keyboard_config.repeat_delay(), value);
 }
 
-struct TestKeyboardConfiguration : public TestInputConfiguration, testing::WithParamInterface<KeyboardProperty>
+struct TestKeyboardMergeOneProperty : public TestInputConfiguration, testing::WithParamInterface<KeyboardProperty>
+{
+    Keyboard target;
+};
+
+TEST_P(TestKeyboardMergeOneProperty, keyboard_merge_from_partial_set_changes_only_set_values)
+{
+    auto const property = GetParam();
+
+    auto const expected = get_keyboard_config_with_properties({property});
+    auto const to_merge = get_keyboard_config_with_properties({property});
+
+    target.merge(to_merge);
+
+    keyboard_expect_equal(target, expected);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    TestInputConfiguration,
+    TestKeyboardMergeOneProperty,
+    ::Values(KeyboardProperty::repeat_rate, KeyboardProperty::repeat_delay));
+
+struct TestKeyboardMergeOnePropertyWithoutOverwrite :
+    public TestInputConfiguration,
+    testing::WithParamInterface<KeyboardProperty>
 {
 };
 
-TEST_P(TestKeyboardConfiguration, keyboard_merge_from_partial_set_changes_only_set_values)
+TEST_P(TestKeyboardMergeOnePropertyWithoutOverwrite, keyboard_merge_does_not_overwrite_values)
 {
     auto const property = GetParam();
-    auto const setter = keyboard_setters.at(property);
 
-    Keyboard expected;
-    setter(expected);
-
-    Keyboard modified;
-    setter(modified);
-
-    Keyboard merged;
-    merged.merge(modified);
-    keyboard_expect_equal(merged, expected);
-}
-
-TEST_P(TestKeyboardConfiguration, keyboard_merge_does_not_overwrite_values)
-{
-    auto const target_settings = [](auto& keyboard_config, KeyboardProperty property)
-    {
-        if (property != KeyboardProperty::repeat_rate)
-            keyboard_config.set_repeat_rate(4);
-
-        if (property != KeyboardProperty::repeat_delay)
-            keyboard_config.set_repeat_delay(500);
-    };
-
-    auto const property = GetParam();
-    auto const setter = keyboard_setters.at(property);
-
-    Keyboard expected;
-    target_settings(expected, property);
-    setter(expected);
-
-    Keyboard modified;
-    setter(modified);
-
-    Keyboard target;
-    target_settings(target, property);
+    auto const expected = get_keyboard_config_with_properties(all_keyboard_props);
+    auto const modified = get_keyboard_config_with_properties({property});
+    auto target = get_keyboard_config_with_all_properties_except(property);
 
     target.merge(modified);
 
@@ -612,5 +627,5 @@ TEST_P(TestKeyboardConfiguration, keyboard_merge_does_not_overwrite_values)
 
 INSTANTIATE_TEST_SUITE_P(
     TestInputConfiguration,
-    TestKeyboardConfiguration,
+    TestKeyboardMergeOnePropertyWithoutOverwrite,
     ::testing::Values(KeyboardProperty::repeat_rate, KeyboardProperty::repeat_delay));
