@@ -60,8 +60,8 @@ TEST_F(TestMouseKeysKeymap, initializer_list_constructor_add_passed_key_action_p
                         return key_action.first;
                     });
 
-            ASSERT_TRUE(iter != key_action_pairs.end());
-            ASSERT_EQ(action, iter->second);
+            EXPECT_TRUE(iter != wasd_key_action.end());
+            EXPECT_EQ(action, iter->second);
         });
 }
 
