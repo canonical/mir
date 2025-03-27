@@ -22,12 +22,14 @@
 #include "mir/input/input_event_transformer.h"
 #include "src/server/input/default_input_device_hub.h"
 
+#include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/doubles/mock_input_seat.h"
 #include "mir/test/doubles/mock_key_mapper.h"
 #include "mir/test/doubles/mock_led_observer_registrar.h"
 #include "mir/test/doubles/mock_server_status_listener.h"
-#include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/fake_shared.h"
+#include "mir/test/fd_utils.h"
+#include "mir/test/signal.h"
 
 #include <functional>
 #include <gtest/gtest.h>
@@ -63,6 +65,18 @@ struct TestInputEventTransformer : testing::Test
     {
     }
 
+    void SetUp() override
+    {
+        expect_and_execute_multiplexer();
+    }
+
+    // Borrowed from `test_single_seat_setup.cpp`
+    void expect_and_execute_multiplexer()
+    {
+        mt::fd_becomes_readable(multiplexer.watch_fd(), std::chrono::milliseconds(100));
+        multiplexer.dispatch(mir::dispatch::FdEvent::readable);
+    }
+
     mir::EventUPtr make_key_event()
     {
         return mev::make_key_event(
@@ -87,17 +101,39 @@ struct MockTransformer : public mir::input::InputEventTransformer::Transformer
         (override));
 };
 
-TEST_F(TestInputEventTransformer, virtual_input_device_exists)
+TEST_F(TestInputEventTransformer, virtual_input_device_is_added_after_transformer_is_added)
 {
-    auto mousekey_pointer_found = false;
-    input_device_hub->for_each_input_device(
-        [&mousekey_pointer_found](mir::input::Device const& dev)
+    // No null observer :(
+    struct VirtualPointerObserver : public mir::input::InputDeviceObserver
+    {
+        mir::test::Signal mousekey_pointer_found;
+        void device_added(std::shared_ptr<mir::input::Device> const& device) override
         {
-            if (dev.name() == "mousekey-pointer")
-                mousekey_pointer_found = true;
-        });
+            if (device->name() == "mousekey-pointer")
+                mousekey_pointer_found.raise();
+        }
 
-    ASSERT_TRUE(mousekey_pointer_found);
+        void device_changed(std::shared_ptr<mir::input::Device> const&) override
+        {
+        }
+        void device_removed(std::shared_ptr<mir::input::Device> const&) override
+        {
+        }
+        void changes_complete() override
+        {
+        }
+    };
+
+    auto observer = std::make_shared<VirtualPointerObserver>();
+    input_device_hub->add_observer(observer);
+    expect_and_execute_multiplexer();
+
+    auto mock_transformer = std::make_shared<MockTransformer>();
+    input_event_transformer.append(mock_transformer);
+
+    observer->mousekey_pointer_found.wait_for(std::chrono::seconds{5});
+
+    ASSERT_TRUE(observer->mousekey_pointer_found.raised());
 }
 
 TEST_F(TestInputEventTransformer, transformer_gets_called)
