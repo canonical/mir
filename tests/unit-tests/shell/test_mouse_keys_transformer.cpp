@@ -118,6 +118,16 @@ struct TestMouseKeysTransformer : testing::Test
     }
 };
 
+namespace
+{
+auto data_from_pointer_event(std::shared_ptr<MirEvent const> const& event)
+    -> std::tuple<MirPointerAction, mir::geometry::DisplacementF, MirPointerButtons>
+{
+    auto* const pointer_event = event->to_input()->to_pointer();
+    return {pointer_event->action(), pointer_event->motion(), pointer_event->buttons()};
+}
+}
+
 struct TestOneAxisMovement : public TestMouseKeysTransformer, public WithParamInterface<mir::input::XkbSymkey>
 {
 };
@@ -133,10 +143,7 @@ TEST_P(TestOneAxisMovement, single_keyboard_event_to_single_pointer_motion_event
         .WillRepeatedly(
             [](std::shared_ptr<MirEvent> const& event)
             {
-                auto* const pointer_event = event->to_input()->to_pointer();
-
-                auto const pointer_action = pointer_event->action();
-                auto const pointer_relative_motion = pointer_event->motion();
+                auto const [pointer_action, pointer_relative_motion, _] = data_from_pointer_event(event);
 
                 ASSERT_EQ(pointer_action, mir_pointer_action_motion);
 
@@ -192,10 +199,7 @@ TEST_P(TestDiagonalMovement, multiple_keys_result_in_diagonal_movement)
         .WillRepeatedly(
             [&](std::shared_ptr<MirEvent> const& event)
             {
-                auto* const pointer_event = event->to_input()->to_pointer();
-
-                auto const pointer_action = pointer_event->action();
-                auto const pointer_relative_motion = pointer_event->motion();
+                auto const [pointer_action, pointer_relative_motion, _] = data_from_pointer_event(event);
 
                 ASSERT_EQ(pointer_action, mir_pointer_action_motion);
 
@@ -258,9 +262,7 @@ TEST_P(ClicksDispatchDownAndUpEvents, clicks_dispatch_pointer_down_and_up_events
 
     auto const check_up = [&finished](auto const& event)
     {
-        auto* const pointer_event = event->to_input()->to_pointer();
-        auto const pointer_action = pointer_event->action();
-        auto const pointer_buttons = pointer_event->buttons();
+        auto const [pointer_action, _, pointer_buttons] = data_from_pointer_event(event);
 
         ASSERT_EQ(pointer_action, mir_pointer_action_button_up);
         ASSERT_EQ(pointer_buttons, 0);
@@ -277,9 +279,7 @@ TEST_P(ClicksDispatchDownAndUpEvents, clicks_dispatch_pointer_down_and_up_events
         .WillOnce(
             [expected_action](std::shared_ptr<MirEvent> const& event)
             {
-                auto* const pointer_event = event->to_input()->to_pointer();
-                auto const pointer_action = pointer_event->action();
-                auto const pointer_buttons = pointer_event->buttons();
+                auto const [pointer_action, _, pointer_buttons] = data_from_pointer_event(event);
                 ASSERT_EQ(pointer_action, mir_pointer_action_button_down);
                 ASSERT_EQ(pointer_buttons, expected_action);
             })
@@ -321,10 +321,7 @@ TEST_F(TestMouseKeysTransformer, double_click_dispatch_four_events)
         .WillRepeatedly(
             [&state, &finished](std::shared_ptr<MirEvent> const& event)
             {
-                auto* const pointer_event = event->to_input()->to_pointer();
-
-                auto const pointer_action = pointer_event->action();
-                auto const pointer_buttons = pointer_event->buttons();
+                auto const [pointer_action, _, pointer_buttons] = data_from_pointer_event(event);
                 switch (state)
                 {
                 case State::waiting_for_down:
@@ -360,10 +357,7 @@ TEST_F(TestMouseKeysTransformer, drag_start_and_end_dispatch_down_and_up_events)
         .WillRepeatedly(
             [&state, &finished](std::shared_ptr<MirEvent> const& event)
             {
-                auto* const pointer_event = event->to_input()->to_pointer();
-
-                auto const pointer_action = pointer_event->action();
-                auto const pointer_buttons = pointer_event->buttons();
+                auto const [pointer_action, _, pointer_buttons] = data_from_pointer_event(event);
                 switch (state)
                 {
                 case State::waiting_for_down:
@@ -417,7 +411,8 @@ TEST_P(TestAccelerationCurve, acceleration_curve_constants_evaluate_properly)
         .WillOnce(
             [expected_speed_squared](std::shared_ptr<MirEvent> const& event)
             {
-                ASSERT_FLOAT_EQ(std::sqrt(event->to_input()->to_pointer()->motion().length_squared()), expected_speed_squared);
+                auto [_, pointer_motion, __] = data_from_pointer_event(event);
+                ASSERT_FLOAT_EQ(std::sqrt(pointer_motion.length_squared()), expected_speed_squared);
             });
 
     // Don't want speed limits interfering with our test case
