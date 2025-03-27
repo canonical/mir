@@ -245,66 +245,74 @@ INSTANTIATE_TEST_SUITE_P(
         std::pair{XKB_KEY_KP_8, XKB_KEY_KP_4},
         std::pair{XKB_KEY_KP_8, XKB_KEY_KP_6}));
 
-TEST_F(TestMouseKeysTransformer, clicks_dispatch_pointer_down_and_up_events)
+struct ClicksDispatchDownAndUpEvents : public TestMouseKeysTransformer, public WithParamInterface<mir::input::XkbSymkey>
 {
-    for (auto switching_button : {XKB_KEY_KP_Divide, XKB_KEY_KP_Multiply, XKB_KEY_KP_Subtract})
-    {
-        mt::Signal finished;
-        auto state = State::waiting_for_up;
+};
 
-        EXPECT_CALL(mock_seat, dispatch_event(_))
-            .Times(3) // up (switching), down, up
-            .WillRepeatedly(
-                [&state , &finished, switching_button](
-                    std::shared_ptr<MirEvent> const& event) mutable
+TEST_P(ClicksDispatchDownAndUpEvents, clicks_dispatch_pointer_down_and_up_events)
+{
+    auto const switching_button = GetParam();
+
+    mt::Signal finished;
+    auto state = State::waiting_for_up;
+
+    EXPECT_CALL(mock_seat, dispatch_event(_))
+        .Times(3) // up (switching), down, up
+        .WillRepeatedly(
+            [&state , &finished, switching_button](
+                std::shared_ptr<MirEvent> const& event) mutable
+            {
+                auto* const pointer_event = event->to_input()->to_pointer();
+
+                auto const pointer_action = pointer_event->action();
+                auto const pointer_buttons = pointer_event->buttons();
+                switch (state)
                 {
-                    auto* const pointer_event = event->to_input()->to_pointer();
+                case State::waiting_for_down:
 
-                    auto const pointer_action = pointer_event->action();
-                    auto const pointer_buttons = pointer_event->buttons();
-                    switch (state)
+                    ASSERT_EQ(pointer_action, mir_pointer_action_button_down);
+                    switch (switching_button)
                     {
-                    case State::waiting_for_down:
-
-                        ASSERT_EQ(pointer_action, mir_pointer_action_button_down);
-                        switch (switching_button)
-                        {
-                        case XKB_KEY_KP_Divide:
-                            ASSERT_EQ(pointer_buttons, mir_pointer_button_primary);
-                            break;
-                        case XKB_KEY_KP_Multiply:
-                            ASSERT_EQ(pointer_buttons, mir_pointer_button_tertiary);
-                            break;
-                        case XKB_KEY_KP_Subtract:
-                            ASSERT_EQ(pointer_buttons, mir_pointer_button_secondary);
-                            break;
-                        }
-
-                        state = State::waiting_for_up;
+                    case XKB_KEY_KP_Divide:
+                        ASSERT_EQ(pointer_buttons, mir_pointer_button_primary);
                         break;
-                    case State::waiting_for_up:
-                        ASSERT_EQ(pointer_action, mir_pointer_action_button_up);
-                        ASSERT_EQ(pointer_buttons, 0);
-                        state = State::waiting_for_down;
-                        finished.raise();
+                    case XKB_KEY_KP_Multiply:
+                        ASSERT_EQ(pointer_buttons, mir_pointer_button_tertiary);
+                        break;
+                    case XKB_KEY_KP_Subtract:
+                        ASSERT_EQ(pointer_buttons, mir_pointer_button_secondary);
                         break;
                     }
-                });
 
-        input_event_transformer.handle(*up_event(switching_button));
-        input_event_transformer.handle(*up_event(XKB_KEY_KP_5));
+                    state = State::waiting_for_up;
+                    break;
+                case State::waiting_for_up:
+                    ASSERT_EQ(pointer_action, mir_pointer_action_button_up);
+                    ASSERT_EQ(pointer_buttons, 0);
+                    state = State::waiting_for_down;
+                    finished.raise();
+                    break;
+                }
+            });
 
-        // Advance so that the up portion of the click can be processed
-        clock.advance_by(std::chrono::milliseconds(50));
+    input_event_transformer.handle(*up_event(switching_button));
+    input_event_transformer.handle(*up_event(XKB_KEY_KP_5));
 
-        auto constexpr num_expected_up_events = 2;
-        for(auto i = 0; i < num_expected_up_events; i++)
-        {
-            if(finished.wait_for(std::chrono::milliseconds(10)))
-                finished.reset();
-        }
+    // Advance so that the up portion of the click can be processed
+    clock.advance_by(std::chrono::milliseconds(50));
+
+    auto constexpr num_expected_up_events = 2;
+    for(auto i = 0; i < num_expected_up_events; i++)
+    {
+        if(finished.wait_for(std::chrono::milliseconds(10)))
+            finished.reset();
     }
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    TestMouseKeysTransformer,
+    ClicksDispatchDownAndUpEvents,
+    ::Values(XKB_KEY_KP_Divide, XKB_KEY_KP_Multiply, XKB_KEY_KP_Subtract));
 
 TEST_F(TestMouseKeysTransformer, double_click_dispatch_four_events)
 {
