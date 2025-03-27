@@ -27,11 +27,13 @@
 #include <mir/wayland/weak.h>
 #include <mir/log.h>
 #include <mir/main_loop.h>
+#include <mir/compositor/compositor.h>
 #include <miral/window_manager_tools.h>
 #include <miral/set_window_management_policy.h>
 #include <miral/zone.h>
 #include <mir/test/doubles/stub_display_configuration.h>
 
+#include "mir/shell/display_configuration_controller.h"
 #include "miral/output.h"
 #include "src/miral/window_manager_tools_implementation.h"
 
@@ -528,7 +530,12 @@ void mir_test_framework::WindowManagementTestHarness::for_each_output(std::funct
 void mir_test_framework::WindowManagementTestHarness::update_outputs(
     std::vector<mir::graphics::DisplayConfigurationOutput> const& outputs) const
 {
-    self->display->configure(mir::test::doubles::StubDisplayConfig(outputs));
+    server.the_compositor()->stop();
+    auto const new_display_config = std::make_shared<mir::test::doubles::StubDisplayConfig>(outputs);
+    auto controller = server.the_display_configuration_controller();
+    controller->set_base_configuration(new_display_config);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    server.the_compositor()->start();
 }
 
 auto mir_test_framework::WindowManagementTestHarness::is_above(

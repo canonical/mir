@@ -19,6 +19,7 @@
 #include "mir/geometry/forward.h"
 #include "mir_test_framework/window_management_test_harness.h"
 #include <miral/minimal_window_manager.h>
+#include <miral/output.h>
 #include <mir/scene/session.h>
 #include <mir/wayland/weak.h>
 #include <mir/scene/surface.h>
@@ -1229,7 +1230,7 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerMaximizedSurfaceExclusionZoneTest,
 
 TEST_F(MinimalWindowManagerTest, when_no_surface_is_focused_then_window_is_placed_on_output_of_cursor)
 {
-    // Move the cursor to the second rectangle
+    // Move the cursor to the second output
     auto const second_rectangle = get_initial_output_configs()[1].extents();
     geom::PointF const new_cursor_position{
         second_rectangle.top_left.x.as_int() + static_cast<int>(
@@ -1252,4 +1253,42 @@ TEST_F(MinimalWindowManagerTest, when_no_surface_is_focused_then_window_is_place
             167
         )
     ));
+}
+
+TEST_F(MinimalWindowManagerTest, window_can_be_maximized_on_new_output)
+{
+    // Add a third output
+    auto const new_output_configs = output_configs_from_output_rectangles({
+        mir::geometry::Rectangle{{0, 0}, {800, 600}},
+        mir::geometry::Rectangle{{800, 0}, {1000, 600}},
+        mir::geometry::Rectangle{{1800, 0}, {500, 500}},
+    });
+
+    update_outputs(new_output_configs);
+    std::vector<miral::Output> outputs;
+    for_each_output([&](miral::Output const& output)
+    {
+        outputs.push_back(output);
+    });
+
+    EXPECT_THAT(outputs.size(), Eq(3));
+
+    // Move the cursor to the third output
+    geom::PointF const new_cursor_position{
+        outputs[2].extents().top_left.x.as_int() + static_cast<int>(
+            static_cast<float>(outputs[2].extents().size.width.as_int()) / 2.f),
+        outputs[2].extents().top_left.y.as_int() + static_cast<int>(
+            static_cast<float>(outputs[2].extents().size.height.as_int()) / 2.f)
+    };
+    tools().move_cursor_to(new_cursor_position);
+    EXPECT_THAT(tools().active_output(), outputs[2].extents());
+
+    auto const app = open_application("test");
+    miral::WindowSpecification spec;
+    spec.state() = mir_window_state_maximized;
+    spec.size() = geom::Size(100, 100);
+    auto const window = create_window(app, spec);
+
+    // Expect that the new window is on the third output
+    EXPECT_THAT(window.top_left(), Eq(outputs[2].extents().top_left));
 }
