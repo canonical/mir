@@ -117,3 +117,52 @@ TEST_P(TestMouseKeysKeymapClearAction, clear_action_clears_the_appropriate_actio
 INSTANTIATE_TEST_SUITE_P(
     TestMouseKeysKeymap, TestMouseKeysKeymapClearAction, testing::ValuesIn(TestMouseKeysKeymap::wasd_key_action));
 
+struct TestMouseKeysKeymapSetActionDoesntModifyOtherActions :
+    public TestMouseKeysKeymap,
+    public testing::WithParamInterface<std::pair<XkbSymkey, Action>>
+{
+};
+
+TEST_P(TestMouseKeysKeymapSetActionDoesntModifyOtherActions, set_action_doesnt_set_other_actions)
+{
+    auto const [test_key, test_action] = GetParam();
+    auto keymap = mi::MouseKeysKeymap{TestMouseKeysKeymap::wasd_key_action};
+
+    keymap.set_action(test_key, {});
+
+    for (auto const [key, action] : TestMouseKeysKeymap::wasd_key_action)
+    {
+        if(key == test_key) continue;
+        EXPECT_NE(keymap.get_action(key), test_action);
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    TestMouseKeysKeymap,
+    TestMouseKeysKeymapSetActionDoesntModifyOtherActions,
+    testing::ValuesIn(TestMouseKeysKeymap::wasd_key_action));
+
+struct TestMouseKeysKeymapClearActionDoesntModifyOtherActions :
+    public TestMouseKeysKeymap,
+    public testing::WithParamInterface<std::pair<XkbSymkey, Action>>
+{
+};
+
+TEST_P(TestMouseKeysKeymapClearActionDoesntModifyOtherActions, clear_action_doesnt_clear_other_actions)
+{
+    auto const [test_key, _] = GetParam();
+    auto keymap = mi::MouseKeysKeymap{TestMouseKeysKeymap::wasd_key_action};
+
+    keymap.set_action(test_key, {});
+
+    for (auto const [key, action] : TestMouseKeysKeymap::wasd_key_action)
+    {
+        if(key == test_key) continue;
+        EXPECT_NE(keymap.get_action(key), std::nullopt);
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    TestMouseKeysKeymap,
+    TestMouseKeysKeymapClearActionDoesntModifyOtherActions,
+    testing::ValuesIn(TestMouseKeysKeymap::wasd_key_action));
