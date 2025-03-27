@@ -107,7 +107,7 @@ struct TestMouseKeysKeymapClearAction :
 
 TEST_P(TestMouseKeysKeymapClearAction, clear_action_clears_the_appropriate_action)
 {
-    auto const [key, action] = GetParam();
+    auto const [key, _] = GetParam();
     auto keymap = mi::MouseKeysKeymap{};
 
     keymap.set_action(key, {});
