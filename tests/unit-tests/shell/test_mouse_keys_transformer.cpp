@@ -145,17 +145,17 @@ TEST_P(TestOneAxisMovement, single_keyboard_event_to_single_pointer_motion_event
             {
                 auto const [pointer_action, pointer_relative_motion, _] = data_from_pointer_event(event);
 
-                ASSERT_EQ(pointer_action, mir_pointer_action_motion);
+                EXPECT_EQ(pointer_action, mir_pointer_action_motion);
 
                 // Make sure the movement is on one axis
                 if (pointer_relative_motion.dx.as_value() != 0.0f)
                 {
-                    ASSERT_EQ(pointer_relative_motion.dy.as_value(), 0.0f);
+                    EXPECT_EQ(pointer_relative_motion.dy.as_value(), 0.0f);
                 }
 
                 if (pointer_relative_motion.dy.as_value() != 0.0f)
                 {
-                    ASSERT_EQ(pointer_relative_motion.dx.as_value(), 0.0f);
+                    EXPECT_EQ(pointer_relative_motion.dx.as_value(), 0.0f);
                 }
             });
 
@@ -264,8 +264,8 @@ TEST_P(ClicksDispatchDownAndUpEvents, clicks_dispatch_pointer_down_and_up_events
     {
         auto const [pointer_action, _, pointer_buttons] = data_from_pointer_event(event);
 
-        ASSERT_EQ(pointer_action, mir_pointer_action_button_up);
-        ASSERT_EQ(pointer_buttons, 0);
+        EXPECT_EQ(pointer_action, mir_pointer_action_button_up);
+        EXPECT_EQ(pointer_buttons, 0);
         finished.raise();
     };
 
@@ -280,8 +280,8 @@ TEST_P(ClicksDispatchDownAndUpEvents, clicks_dispatch_pointer_down_and_up_events
             [expected_action](std::shared_ptr<MirEvent> const& event)
             {
                 auto const [pointer_action, _, pointer_buttons] = data_from_pointer_event(event);
-                ASSERT_EQ(pointer_action, mir_pointer_action_button_down);
-                ASSERT_EQ(pointer_buttons, expected_action);
+                EXPECT_EQ(pointer_action, mir_pointer_action_button_down);
+                EXPECT_EQ(pointer_buttons, expected_action);
             })
         .WillOnce(
             [&check_up](std::shared_ptr<MirEvent> const& event) mutable
@@ -325,12 +325,12 @@ TEST_F(TestMouseKeysTransformer, double_click_dispatch_four_events)
                 switch (state)
                 {
                 case State::waiting_for_down:
-                    ASSERT_EQ(pointer_action, mir_pointer_action_button_down);
+                    EXPECT_EQ(pointer_action, mir_pointer_action_button_down);
                     state = State::waiting_for_up;
                     break;
                 case State::waiting_for_up:
-                    ASSERT_EQ(pointer_action, mir_pointer_action_button_up);
-                    ASSERT_EQ(pointer_buttons, 0);
+                    EXPECT_EQ(pointer_action, mir_pointer_action_button_up);
+                    EXPECT_EQ(pointer_buttons, 0);
                     state = State::waiting_for_down;
                     finished.raise();
                     break;
@@ -361,12 +361,12 @@ TEST_F(TestMouseKeysTransformer, drag_start_and_end_dispatch_down_and_up_events)
                 switch (state)
                 {
                 case State::waiting_for_down:
-                    ASSERT_EQ(pointer_action, mir_pointer_action_button_down);
+                    EXPECT_EQ(pointer_action, mir_pointer_action_button_down);
                     state = State::waiting_for_up;
                     break;
                 case State::waiting_for_up:
-                    ASSERT_EQ(pointer_action, mir_pointer_action_button_up);
-                    ASSERT_EQ(pointer_buttons, 0);
+                    EXPECT_EQ(pointer_action, mir_pointer_action_button_up);
+                    EXPECT_EQ(pointer_buttons, 0);
                     state = State::waiting_for_down;
                     finished.raise();
                     break;
@@ -463,8 +463,8 @@ TEST_P(TestMaxSpeed, max_speed_caps_speed_properly)
                 // Motion events are in pixels/alarm invocation
                 // Which occurs about every 2ms
                 auto const motion = event->to_input()->to_pointer()->motion();
-                ASSERT_EQ(motion.dx, expected_speed.dx * dt);
-                ASSERT_EQ(motion.dy, expected_speed.dy * dt);
+                EXPECT_EQ(motion.dx, expected_speed.dx * dt);
+                EXPECT_EQ(motion.dy, expected_speed.dy * dt);
             });
 
     // Immediately force clamping
