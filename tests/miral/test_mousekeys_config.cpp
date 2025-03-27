@@ -89,7 +89,9 @@ TEST_F(TestMouseKeysConfig, mousekeys_config_set_keymap_calls_accessibility_mana
 
 TEST_F(TestMouseKeysConfig, mousekeys_config_set_acceleration_factors_calls_accessibility_manager_set_acceleration_factors)
 {
-    EXPECT_CALL(*accessibility_manager, acceleration_factors(_, _, _)).Times(2);
+    InSequence seq;
+    EXPECT_CALL(*accessibility_manager, acceleration_factors(100.0, 100.0, 30.0)); // Defaults, called on server init
+    EXPECT_CALL(*accessibility_manager, acceleration_factors(1.0, 1.0, 1.0));
 
     add_server_init(config);
     start_server();
@@ -98,7 +100,9 @@ TEST_F(TestMouseKeysConfig, mousekeys_config_set_acceleration_factors_calls_acce
 
 TEST_F(TestMouseKeysConfig, mousekeys_config_set_max_speed_calls_accessibility_manager_set_max_speed)
 {
-    EXPECT_CALL(*accessibility_manager, max_speed(_, _)).Times(2);
+    InSequence seq;
+    EXPECT_CALL(*accessibility_manager, max_speed(400.0, 400.0));
+    EXPECT_CALL(*accessibility_manager, max_speed(1.0, 1.0));
 
     add_server_init(config);
     start_server();
