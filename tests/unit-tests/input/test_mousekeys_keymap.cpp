@@ -87,17 +87,33 @@ struct TestMouseKeysKeymapSetAction :
 {
 };
 
-TEST_P(TestMouseKeysKeymapSetAction, set_action_sets_the_appropriate_action_and_clears_it_correctly)
+TEST_P(TestMouseKeysKeymapSetAction, set_action_sets_the_appropriate_action)
 {
     auto const [key, action] = GetParam();
     auto keymap = mi::MouseKeysKeymap{};
 
     keymap.set_action(key,action);
     ASSERT_EQ(keymap.get_action(key), action);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    TestMouseKeysKeymap, TestMouseKeysKeymapSetAction, testing::ValuesIn(TestMouseKeysKeymap::wasd_key_action));
+
+struct TestMouseKeysKeymapClearAction :
+    public TestMouseKeysKeymap,
+    public testing::WithParamInterface<std::pair<XkbSymkey, Action>>
+{
+};
+
+TEST_P(TestMouseKeysKeymapClearAction, clear_action_clears_the_appropriate_action)
+{
+    auto const [key, action] = GetParam();
+    auto keymap = mi::MouseKeysKeymap{};
 
     keymap.set_action(key, {});
     ASSERT_EQ(keymap.get_action(key), std::nullopt);
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    TestMouseKeysKeymap, TestMouseKeysKeymapSetAction, testing::ValuesIn(TestMouseKeysKeymap::wasd_key_action));
+    TestMouseKeysKeymap, TestMouseKeysKeymapClearAction, testing::ValuesIn(TestMouseKeysKeymap::wasd_key_action));
+
