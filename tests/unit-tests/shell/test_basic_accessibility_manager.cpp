@@ -138,16 +138,26 @@ TEST_F(TestBasicAccessibilityManager, set_repeat_delay_value_is_the_same_as_the_
     ASSERT_EQ(basic_accessibility_manager.repeat_delay(), expected);
 }
 
-namespace mir::input
+namespace
 {
-    bool operator==(MouseKeysKeymap const& left, MouseKeysKeymap const& right)
-    {
-        std::vector<std::pair<XkbSymkey, MouseKeysKeymap::Action>> leftPairs, rightPairs;
-        left.for_each_key_action_pair([&leftPairs](auto key, auto action){ leftPairs.emplace_back(key, action); });
-        right.for_each_key_action_pair([&rightPairs](auto key, auto action){ rightPairs.emplace_back(key, action); });
+MATCHER_P(KeymapMatches, expected, "")
+{
+    std::vector<std::pair<mir::input::XkbSymkey, mir::input::MouseKeysKeymap::Action>> expectedPairs, actualPairs;
 
-        return leftPairs == rightPairs;
-    }
+    expected.for_each_key_action_pair(
+        [&expectedPairs](auto key, auto action)
+        {
+            expectedPairs.emplace_back(key, action);
+        });
+
+    arg.for_each_key_action_pair(
+        [&actualPairs](auto key, auto action)
+        {
+            actualPairs.emplace_back(key, action);
+        });
+
+    return expectedPairs == actualPairs;
+}
 }
 
 TEST_F(TestBasicAccessibilityManager, calling_set_mousekeys_keymap_calls_set_keymap_on_transformer)
@@ -160,7 +170,7 @@ TEST_F(TestBasicAccessibilityManager, calling_set_mousekeys_keymap_calls_set_key
         {XKB_KEY_d, move_right},
     }};
 
-    EXPECT_CALL(*mock_mousekeys_transformer, keymap(keymap));
+    EXPECT_CALL(*mock_mousekeys_transformer, keymap(KeymapMatches(keymap)));
 
     basic_accessibility_manager.mousekeys_enabled(true);
     basic_accessibility_manager.mousekeys_keymap(keymap);
