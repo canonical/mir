@@ -313,29 +313,29 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_F(TestMouseKeysTransformer, double_click_dispatch_four_events)
 {
-    auto state = State::waiting_for_down;
     mt::Signal finished;
 
+    auto const expect_down =
+        [](auto const& event)
+    {
+        auto const [pointer_action, _, __] = data_from_pointer_event(event);
+        EXPECT_EQ(pointer_action, mir_pointer_action_button_down);
+    };
+
+    auto const expect_up = [&finished](auto const& event)
+    {
+        auto const [pointer_action, _, pointer_buttons] = data_from_pointer_event(event);
+        EXPECT_EQ(pointer_action, mir_pointer_action_button_up);
+        EXPECT_EQ(pointer_buttons, 0);
+        finished.raise();
+    };
+
     EXPECT_CALL(mock_seat, dispatch_event(_))
-        .Times(4) // down, up, down, up
-        .WillRepeatedly(
-            [&state, &finished](std::shared_ptr<MirEvent> const& event)
-            {
-                auto const [pointer_action, _, pointer_buttons] = data_from_pointer_event(event);
-                switch (state)
-                {
-                case State::waiting_for_down:
-                    EXPECT_EQ(pointer_action, mir_pointer_action_button_down);
-                    state = State::waiting_for_up;
-                    break;
-                case State::waiting_for_up:
-                    EXPECT_EQ(pointer_action, mir_pointer_action_button_up);
-                    EXPECT_EQ(pointer_buttons, 0);
-                    state = State::waiting_for_down;
-                    finished.raise();
-                    break;
-                }
-            });
+        .Times(4)
+        .WillOnce(expect_down)
+        .WillOnce(expect_up)
+        .WillOnce(expect_down)
+        .WillOnce(expect_up);
 
     input_event_transformer.handle(*up_event(XKB_KEY_KP_Add));
 
