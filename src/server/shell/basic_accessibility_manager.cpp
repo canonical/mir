@@ -32,7 +32,7 @@ void mir::shell::BasicAccessibilityManager::register_keyboard_helper(std::shared
 }
 
 std::optional<int> mir::shell::BasicAccessibilityManager::repeat_rate() const {
-    if(!enable_key_repeat)
+    if (!enable_key_repeat)
         return {};
     return repeat_rate_;
 }
@@ -50,7 +50,7 @@ void mir::shell::BasicAccessibilityManager::repeat_delay(int new_delay) {
 }
 
 void mir::shell::BasicAccessibilityManager::notify_helpers() const {
-    for(auto const& helper: keyboard_helpers)
+    for (auto const& helper: keyboard_helpers)
         helper->repeat_info_changed(repeat_rate(), repeat_delay());
 }
 
