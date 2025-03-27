@@ -58,7 +58,7 @@ enum class KeyboardProperty
     repeat_rate,
     repeat_delay
 };
-static std::initializer_list all_keyboard_props = {KeyboardProperty::repeat_rate, KeyboardProperty::repeat_delay};
+static std::vector all_keyboard_props = {KeyboardProperty::repeat_rate, KeyboardProperty::repeat_delay};
 
 struct TestInputConfiguration: testing::Test
 {
@@ -195,7 +195,7 @@ struct TestInputConfiguration: testing::Test
 
 namespace
 {
-auto get_keyboard_config_with_properties(std::initializer_list<KeyboardProperty> properties) -> Keyboard
+auto get_keyboard_config_with_properties(std::vector<KeyboardProperty> properties) -> Keyboard
 {
     Keyboard keyboard_config;
     for (auto const property : properties)
@@ -209,9 +209,9 @@ auto get_keyboard_config_with_properties(std::initializer_list<KeyboardProperty>
 
 auto get_keyboard_config_with_all_properties_except(KeyboardProperty property) -> Keyboard
 {
-    std::vector<KeyboardProperty> all_props{all_keyboard_props};
+    std::vector<KeyboardProperty> all_props{all_keyboard_props.begin(), all_keyboard_props.end()};
     all_props.erase(std::remove(all_props.begin(), all_props.end(), property));
-    return get_keyboard_config_with_properties(all_keyboard_props);
+    return get_keyboard_config_with_properties(all_props);
 }
 }
 
