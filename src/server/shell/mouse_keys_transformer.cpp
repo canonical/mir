@@ -324,14 +324,17 @@ bool mir::input::BasicMouseKeysTransformer::handle_drag(
     return true;
 }
 
-mir::input::BasicMouseKeysTransformer::AccelerationCurve::AccelerationCurve(AccelerationParameters const& params) :
-    params(params)
+mir::input::BasicMouseKeysTransformer::AccelerationCurve::AccelerationCurve(
+    double quadratic_factor, double linear_factor, double constant_factor) :
+    quadratic_factor{quadratic_factor},
+    linear_factor{linear_factor},
+    constant_factor{constant_factor}
 {
 }
 
 double mir::input::BasicMouseKeysTransformer::AccelerationCurve::evaluate(double t) const
 {
-    return params.a * t * t + params.b * t + params.c;
+    return quadratic_factor * t * t + linear_factor * t + constant_factor;
 }
 
 void mir::input::BasicMouseKeysTransformer::press_current_cursor_button(
@@ -373,7 +376,7 @@ void mir::input::BasicMouseKeysTransformer::keymap(MouseKeysKeymap const& new_ke
 void mir::input::BasicMouseKeysTransformer::acceleration_factors(double constant, double linear, double quadratic)
 {
     std::lock_guard guard{state_mutex};
-    acceleration_curve.params = {quadratic, linear, constant};
+    acceleration_curve = {quadratic, linear, constant};
 }
 
 void mir::input::BasicMouseKeysTransformer::max_speed(double x_axis, double y_axis)

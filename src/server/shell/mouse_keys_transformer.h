@@ -46,10 +46,6 @@ public:
 class BasicMouseKeysTransformer: public MouseKeysTransformer
 {
 public:
-    // Quadratic, linear, and constant factors repsectively
-    // ax^2 + bx + c
-    struct AccelerationParameters { double a, b, c; };
-
     static MouseKeysKeymap const default_keymap;
 
     BasicMouseKeysTransformer(
@@ -105,9 +101,9 @@ private:
 
     struct AccelerationCurve
     {
-        AccelerationParameters params;
+        double quadratic_factor, linear_factor, constant_factor;
 
-        AccelerationCurve(AccelerationParameters const& params);
+        AccelerationCurve(double quadratic_factor, double linear_factor, double constant_factor);
 
         double evaluate(double t) const;
     };
@@ -130,7 +126,7 @@ private:
     bool is_dragging{false};
 
     std::mutex state_mutex;
-    AccelerationCurve acceleration_curve{{30, 100, 100}};
+    AccelerationCurve acceleration_curve{30, 100, 100};
     geometry::DisplacementF max_speed_{400, 400};
     MouseKeysKeymap keymap_{default_keymap};
 };

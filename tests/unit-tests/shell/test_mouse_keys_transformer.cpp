@@ -48,8 +48,6 @@ namespace mtd = mt::doubles;
 
 using namespace ::testing;
 
-using AccelerationParameters = mir::input::BasicMouseKeysTransformer::AccelerationParameters;
-
 struct TestMouseKeysTransformer : testing::Test
 {
     mir::dispatch::MultiplexingDispatchable multiplexer;
@@ -394,7 +392,14 @@ TEST_F(TestMouseKeysTransformer, receiving_a_key_not_in_keymap_doesnt_dispatch_e
         });
 }
 
-using TestAccelerationCurveParams = std::pair<AccelerationParameters, float>;
+struct TestAccelerationCurveParams
+{
+    struct
+    {
+        double quadratic, linear, constant;
+    } curve;
+    double expected_speed;
+};
 struct TestAccelerationCurve: public TestMouseKeysTransformer, WithParamInterface<TestAccelerationCurveParams>
 {
 };
@@ -413,7 +418,7 @@ TEST_P(TestAccelerationCurve, acceleration_curve_constants_evaluate_properly)
     // Don't want speed limits interfering with our test case
     transformer->max_speed(0, 0);
 
-    transformer->acceleration_factors(curve.c, curve.b, curve.a);
+    transformer->acceleration_factors(curve.constant, curve.linear, curve.quadratic);
     input_event_transformer.handle(*down_event(XKB_KEY_KP_6));
 
     clock.advance_by(std::chrono::milliseconds(2));
@@ -435,7 +440,7 @@ INSTANTIATE_TEST_SUITE_P(
     TestMouseKeysTransformer,
     TestAccelerationCurve,
     ::Values(
-        TestAccelerationCurveParams{AccelerationParameters{0, 0, 0}, 0.0},
+        TestAccelerationCurveParams{{0, 0, 0}, 0.0},
         TestAccelerationCurveParams{{0, 0, 500}, 1.0},
         TestAccelerationCurveParams{{0, 500, 0}, 500 * 0.002 * 0.002},
         TestAccelerationCurveParams{{500, 0, 0}, 500 * (0.002 * 0.002) * 0.002}));
