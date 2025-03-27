@@ -259,42 +259,44 @@ void keyboard_expect_equal(Keyboard const& lhs, Keyboard const& rhs)
 }
 }
 
-TEST_F(TestInputConfiguration, mouse_getters_return_expected_values)
+struct TestMouseInputConfiguration: public TestInputConfiguration
 {
-    {
-        Mouse mouse_config;
-        auto const value = mir_pointer_acceleration_adaptive;
-        mouse_config.acceleration(value);
-        EXPECT_EQ(mouse_config.acceleration(), value);
-    }
+    Mouse mouse_config;
+};
 
-    {
-        Mouse mouse_config;
-        auto const value = -1;
-        mouse_config.acceleration_bias(value);
-        EXPECT_EQ(mouse_config.acceleration_bias(), value);
-    }
+TEST_F(TestMouseInputConfiguration, mouse_acceleration_return_expected_value)
+{
+    auto const value = mir_pointer_acceleration_adaptive;
+    mouse_config.acceleration(value);
+    EXPECT_EQ(mouse_config.acceleration(), value);
+}
 
-    {
-        Mouse mouse_config;
-        auto const value = mir_pointer_handedness_right;
-        mouse_config.handedness(value);
-        EXPECT_EQ(mouse_config.handedness(), value);
-    }
+TEST_F(TestMouseInputConfiguration, mouse_acceleration_bias_returns_expected_value)
+{
+    auto const value = -1;
+    mouse_config.acceleration_bias(value);
+    EXPECT_EQ(mouse_config.acceleration_bias(), value);
+}
 
-    {
-        Mouse mouse_config;
-        auto const value = -5;
-        mouse_config.hscroll_speed(value);
-        EXPECT_EQ(mouse_config.hscroll_speed(), value);
-    }
+TEST_F(TestMouseInputConfiguration, mouse_handedness_returns_expected_value)
+{
+    auto const value = mir_pointer_handedness_right;
+    mouse_config.handedness(value);
+    EXPECT_EQ(mouse_config.handedness(), value);
+}
 
-    {
-        Mouse mouse_config;
-        auto const value = 5;
-        mouse_config.vscroll_speed(value);
-        EXPECT_EQ(mouse_config.vscroll_speed(), value);
-    }
+TEST_F(TestMouseInputConfiguration, mouse_hscroll_speed_returns_expected_value)
+{
+    auto const value = -5;
+    mouse_config.hscroll_speed(value);
+    EXPECT_EQ(mouse_config.hscroll_speed(), value);
+}
+
+TEST_F(TestMouseInputConfiguration, mouse_vscroll_speed_returns_expected_value)
+{
+    auto const value = 5;
+    mouse_config.vscroll_speed(value);
+    EXPECT_EQ(mouse_config.vscroll_speed(), value);
 }
 
 struct TestMouseConfiguration : public TestInputConfiguration, testing::WithParamInterface<MouseProperty>
