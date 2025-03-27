@@ -245,13 +245,15 @@ INSTANTIATE_TEST_SUITE_P(
         std::pair{XKB_KEY_KP_8, XKB_KEY_KP_4},
         std::pair{XKB_KEY_KP_8, XKB_KEY_KP_6}));
 
-struct ClicksDispatchDownAndUpEvents : public TestMouseKeysTransformer, public WithParamInterface<mir::input::XkbSymkey>
+struct ClicksDispatchDownAndUpEvents :
+    public TestMouseKeysTransformer,
+    public WithParamInterface<std::pair<mir::input::XkbSymkey, MirPointerButton>>
 {
 };
 
 TEST_P(ClicksDispatchDownAndUpEvents, clicks_dispatch_pointer_down_and_up_events)
 {
-    auto const switching_button = GetParam();
+    auto const [switching_button, expected_action] = GetParam();
     mt::Signal finished;
 
     auto const check_up = [&finished](auto const& event)
@@ -273,27 +275,14 @@ TEST_P(ClicksDispatchDownAndUpEvents, clicks_dispatch_pointer_down_and_up_events
                 check_up(event);
             })
         .WillOnce(
-            [switching_button](std::shared_ptr<MirEvent> const& event)
+            [expected_action](std::shared_ptr<MirEvent> const& event)
             {
                 auto* const pointer_event = event->to_input()->to_pointer();
                 auto const pointer_action = pointer_event->action();
                 auto const pointer_buttons = pointer_event->buttons();
                 ASSERT_EQ(pointer_action, mir_pointer_action_button_down);
-                switch (switching_button)
-                {
-                case XKB_KEY_KP_Divide:
-                    ASSERT_EQ(pointer_buttons, mir_pointer_button_primary);
-                    break;
-                case XKB_KEY_KP_Multiply:
-                    ASSERT_EQ(pointer_buttons, mir_pointer_button_tertiary);
-                    break;
-                case XKB_KEY_KP_Subtract:
-                    ASSERT_EQ(pointer_buttons, mir_pointer_button_secondary);
-                    break;
-                }
-            }
-
-            )
+                ASSERT_EQ(pointer_buttons, expected_action);
+            })
         .WillOnce(
             [&check_up](std::shared_ptr<MirEvent> const& event) mutable
             {
@@ -317,7 +306,10 @@ TEST_P(ClicksDispatchDownAndUpEvents, clicks_dispatch_pointer_down_and_up_events
 INSTANTIATE_TEST_SUITE_P(
     TestMouseKeysTransformer,
     ClicksDispatchDownAndUpEvents,
-    ::Values(XKB_KEY_KP_Divide, XKB_KEY_KP_Multiply, XKB_KEY_KP_Subtract));
+    ::Values(
+        std::pair{XKB_KEY_KP_Divide, mir_pointer_button_primary},
+        std::pair{XKB_KEY_KP_Multiply, mir_pointer_button_tertiary},
+        std::pair{XKB_KEY_KP_Subtract, mir_pointer_button_secondary}));
 
 TEST_F(TestMouseKeysTransformer, double_click_dispatch_four_events)
 {
