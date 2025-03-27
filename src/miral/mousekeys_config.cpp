@@ -33,7 +33,7 @@ char const* const mouse_keys_max_speed_y = "mouse-keys-max-speed-y";
 
 struct miral::MouseKeysConfig::Self
 {
-    Self(bool enabled_by_default) :
+    explicit Self(bool enabled_by_default) :
         enabled_by_default{enabled_by_default}
     {
     }
