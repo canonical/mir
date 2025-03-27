@@ -378,77 +378,81 @@ INSTANTIATE_TEST_SUITE_P(
         MouseProperty::vscroll_speed,
         MouseProperty::hscroll_speed));
 
-TEST_F(TestInputConfiguration, touchpad_getters_return_expected_values)
+struct TestTouchpadInputConfiguration: public TestInputConfiguration
 {
-    {
-        Touchpad touch_config;
-        auto const value = false;
-        touch_config.disable_while_typing(value);
-        EXPECT_EQ(touch_config.disable_while_typing(), value);
-    }
+    Touchpad touch_config;
+};
 
-    {
-        Touchpad touch_config;
-        auto const value = true;
-        touch_config.disable_with_external_mouse(value);
-        EXPECT_EQ(touch_config.disable_with_external_mouse(), value);
-    }
+TEST_F(TestTouchpadInputConfiguration, touchpad_disable_while_typing_returns_expected_value)
+{
+    auto const value = false;
+    touch_config.disable_while_typing(value);
+    EXPECT_EQ(touch_config.disable_while_typing(), value);
+}
 
-    {
-        Touchpad touch_config;
-        auto const value = mir_pointer_acceleration_adaptive;
-        touch_config.acceleration(value);
-        EXPECT_EQ(touch_config.acceleration(), value);
-    }
+TEST_F(TestTouchpadInputConfiguration, touchpad_disable_with_external_mouse_returns_expected_value)
+{
+    auto const value = true;
+    touch_config.disable_with_external_mouse(value);
 
-    {
-        Touchpad touch_config;
-        auto const value = -1;
-        touch_config.acceleration_bias(value);
-        EXPECT_EQ(touch_config.acceleration_bias(), value);
-    }
+    EXPECT_EQ(touch_config.disable_with_external_mouse(), value);
+}
 
-    {
-        Touchpad touch_config;
-        auto const value = -5;
-        touch_config.hscroll_speed(value);
-        EXPECT_EQ(touch_config.hscroll_speed(), value);
-    }
+TEST_F(TestTouchpadInputConfiguration, touchpad_acceleration_returns_expected_value)
+{
+    auto const value = mir_pointer_acceleration_adaptive;
+    touch_config.acceleration(value);
+    EXPECT_EQ(touch_config.acceleration(), value);
+}
 
-    {
-        Touchpad touch_config;
-        auto const value = 5;
-        touch_config.vscroll_speed(value);
-        EXPECT_EQ(touch_config.vscroll_speed(), value);
-    }
+TEST_F(TestTouchpadInputConfiguration, touchpad_acceleration_bias_returns_expected_value)
+{
+    auto const value = -1;
+    touch_config.acceleration_bias(value);
+    EXPECT_EQ(touch_config.acceleration_bias(), value);
+}
 
-    {
-        Touchpad touch_config;
-        auto const value = mir_touchpad_click_mode_area_to_click;
-        touch_config.click_mode(value);
-        EXPECT_EQ(touch_config.click_mode(), value);
-    }
+TEST_F(TestTouchpadInputConfiguration, touchpad_hscroll_speed_returns_expected_value)
+{
+    auto const value = -5;
+    touch_config.hscroll_speed(value);
+    EXPECT_EQ(touch_config.hscroll_speed(), value);
+}
 
-    {
-        Touchpad touch_config;
-        auto const value = mir_touchpad_scroll_mode_edge_scroll;
-        touch_config.scroll_mode(value);
-        EXPECT_EQ(touch_config.scroll_mode(), value);
-    }
+TEST_F(TestTouchpadInputConfiguration, touchpad_vscroll_speed_returns_expected_value)
+{
+    auto const value = 5;
+    touch_config.vscroll_speed(value);
+    EXPECT_EQ(touch_config.vscroll_speed(), value);
+}
 
-    {
-        Touchpad touch_config;
-        auto const value = false;
-        touch_config.tap_to_click(value);
-        EXPECT_EQ(touch_config.tap_to_click(), value);
-    }
+TEST_F(TestTouchpadInputConfiguration, touchpad_click_mode_returns_expected_value)
+{
+    auto const value = mir_touchpad_click_mode_area_to_click;
+    touch_config.click_mode(value);
+    EXPECT_EQ(touch_config.click_mode(), value);
+}
 
-    {
-        Touchpad touch_config;
-        auto const value = true;
-        touch_config.middle_mouse_button_emulation(value);
-        EXPECT_EQ(touch_config.middle_mouse_button_emulation(), value);
-    }
+
+TEST_F(TestTouchpadInputConfiguration, touchpad_scroll_mode_returns_expected_value)
+{
+    auto const value = mir_touchpad_scroll_mode_edge_scroll;
+    touch_config.scroll_mode(value);
+    EXPECT_EQ(touch_config.scroll_mode(), value);
+}
+
+TEST_F(TestTouchpadInputConfiguration, touchpad_tap_to_click_returns_expected_value)
+{
+    auto const value = false;
+    touch_config.tap_to_click(value);
+    EXPECT_EQ(touch_config.tap_to_click(), value);
+}
+
+TEST_F(TestTouchpadInputConfiguration, touchpad_middle_mouse_button_emulation_returns_expected_value)
+{
+    auto const value = true;
+    touch_config.middle_mouse_button_emulation(value);
+    EXPECT_EQ(touch_config.middle_mouse_button_emulation(), value);
 }
 
 struct TestTouchpadConfiguration : public TestInputConfiguration, testing::WithParamInterface<TouchpadProperty>
