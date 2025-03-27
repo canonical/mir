@@ -18,7 +18,6 @@
 #include "miral/input_configuration.h"
 
 #include <functional>
-#include <tuple>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -239,18 +238,6 @@ void mouse_expect_equal(Mouse const& actual, Mouse const& expected)
     EXPECT_THAT(actual.hscroll_speed(), Eq(expected.hscroll_speed()));
 }
 
-auto mouse_equal(Mouse const& lhs, Mouse const& rhs) -> bool
-{
-    mouse_expect_equal(lhs, rhs);
-
-    auto const left = std::tuple{
-        lhs.handedness(), lhs.acceleration(), lhs.acceleration_bias(), lhs.vscroll_speed(), lhs.hscroll_speed()};
-    auto const right = std::tuple{
-        rhs.handedness(), rhs.acceleration(), rhs.acceleration_bias(), rhs.vscroll_speed(), rhs.hscroll_speed()};
-
-    return left == right;
-}
-
 void touchpad_expect_equal(Touchpad const& actual, Touchpad const& expected)
 {
     EXPECT_THAT(actual.acceleration(), Eq(expected.acceleration()));
@@ -265,47 +252,10 @@ void touchpad_expect_equal(Touchpad const& actual, Touchpad const& expected)
     EXPECT_THAT(actual.tap_to_click(), Eq(expected.tap_to_click()));
 }
 
-auto touchpad_equal(Touchpad const& lhs, Touchpad const& rhs) -> bool
-{
-    touchpad_expect_equal(lhs, rhs);
-
-    auto const left = std::tuple{
-        lhs.acceleration(),
-        lhs.acceleration_bias(),
-        lhs.hscroll_speed(),
-        lhs.vscroll_speed(),
-        lhs.click_mode(),
-        lhs.disable_while_typing(),
-        lhs.disable_with_external_mouse(),
-        lhs.middle_mouse_button_emulation(),
-        lhs.scroll_mode(),
-        lhs.tap_to_click()};
-
-    auto const right = std::tuple{
-        rhs.acceleration(),
-        rhs.acceleration_bias(),
-        rhs.hscroll_speed(),
-        rhs.vscroll_speed(),
-        rhs.click_mode(),
-        rhs.disable_while_typing(),
-        rhs.disable_with_external_mouse(),
-        rhs.middle_mouse_button_emulation(),
-        rhs.scroll_mode(),
-        rhs.tap_to_click()};
-
-    return left == right;
-}
-
 void keyboard_expect_equal(Keyboard const& lhs, Keyboard const& rhs)
 {
     EXPECT_THAT(lhs.repeat_rate(), Eq(rhs.repeat_rate()));
     EXPECT_THAT(lhs.repeat_delay(), Eq(rhs.repeat_delay()));
-}
-
-auto keyboard_equal(Keyboard const& lhs, Keyboard const& rhs) -> bool
-{
-    keyboard_expect_equal(lhs, rhs);
-    return std::tuple{lhs.repeat_rate(), rhs.repeat_delay()} == std::tuple{rhs.repeat_rate(), rhs.repeat_delay()};
 }
 }
 
@@ -369,7 +319,7 @@ TEST_P(TestMouseConfiguration, mouse_merge_from_partial_set_changes_only_set_val
 
     Mouse merged;
     merged.merge(modified);
-    EXPECT_PRED2(mouse_equal, merged, expected);
+    mouse_expect_equal(merged, expected);
 }
 
 // Make sure tht merging does not alter other data members
@@ -413,7 +363,7 @@ TEST_P(TestMouseConfiguration, mouse_merge_does_not_overwrite_values)
     // This merge should only modify the variable we're testing
     target.merge(modified);
 
-    EXPECT_PRED2(mouse_equal, target, expected);
+    mouse_expect_equal(target, expected);
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -516,7 +466,7 @@ TEST_P(TestTouchpadConfiguration, touchpad_merge_from_partial_set_changes_only_s
 
     Touchpad merged;
     merged.merge(modified);
-    EXPECT_PRED2(touchpad_equal, merged, expected);
+    touchpad_expect_equal(merged, expected);
 }
 
 TEST_P(TestTouchpadConfiguration, touchapd_merge_does_not_overwrite_values)
@@ -566,7 +516,7 @@ TEST_P(TestTouchpadConfiguration, touchapd_merge_does_not_overwrite_values)
 
     target.merge(modified);
 
-    EXPECT_PRED2(touchpad_equal, target, expected);
+    touchpad_expect_equal(target, expected);
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -618,7 +568,7 @@ TEST_P(TestKeyboardConfiguration, keyboard_merge_from_partial_set_changes_only_s
 
     Keyboard merged;
     merged.merge(modified);
-    EXPECT_PRED2(keyboard_equal, merged, expected);
+    keyboard_expect_equal(merged, expected);
 }
 
 TEST_P(TestKeyboardConfiguration, keyboard_merge_does_not_overwrite_values)
@@ -647,7 +597,7 @@ TEST_P(TestKeyboardConfiguration, keyboard_merge_does_not_overwrite_values)
 
     target.merge(modified);
 
-    EXPECT_PRED2(keyboard_equal, target, expected);
+    keyboard_expect_equal(target, expected);
 }
 
 INSTANTIATE_TEST_SUITE_P(
