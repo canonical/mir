@@ -540,21 +540,25 @@ INSTANTIATE_TEST_SUITE_P(
         TouchpadProperty::tap_to_click,
         TouchpadProperty::middle_mouse_button_emulation));
 
-TEST_F(TestInputConfiguration, keyboard_getters_return_expected_values)
+struct TestKeyboardInputConfiguration: public TestInputConfiguration
 {
-    {
-        Keyboard keyboard_config;
-        auto const value = 731;
-        keyboard_config.set_repeat_rate(value);
-        EXPECT_EQ(keyboard_config.repeat_rate(), value);
-    }
+    Keyboard keyboard_config;
+};
 
-    {
-        Keyboard keyboard_config;
-        auto const value = 2371;
-        keyboard_config.set_repeat_delay(value);
-        EXPECT_EQ(keyboard_config.repeat_delay(), value);
-    }
+TEST_F(TestKeyboardInputConfiguration, keyboard_repeat_rate_return_expected_values)
+{
+    Keyboard keyboard_config;
+    auto const value = 731;
+    keyboard_config.set_repeat_rate(value);
+    EXPECT_EQ(keyboard_config.repeat_rate(), value);
+}
+
+TEST_F(TestKeyboardInputConfiguration, keyboard_repeat_delay_return_expected_values)
+{
+    Keyboard keyboard_config;
+    auto const value = 2371;
+    keyboard_config.set_repeat_delay(value);
+    EXPECT_EQ(keyboard_config.repeat_delay(), value);
 }
 
 struct TestKeyboardConfiguration : public TestInputConfiguration, testing::WithParamInterface<KeyboardProperty>
