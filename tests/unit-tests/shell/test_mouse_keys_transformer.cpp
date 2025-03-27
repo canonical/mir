@@ -89,6 +89,11 @@ struct TestMouseKeysTransformer : testing::Test
     std::shared_ptr<mi::MouseKeysTransformer> const transformer;
     mt::AutoUnblockThread main_loop_thread;
 
+    std::chrono::milliseconds const step{1};
+    std::chrono::milliseconds const timeout{100};
+    std::chrono::milliseconds const repeat_delay{2};
+    int const num_invocations{static_cast<int>(timeout / repeat_delay)};
+
     auto down_event(int button) const -> mir::EventUPtr
     {
         return mev::make_key_event(
@@ -110,6 +115,18 @@ struct TestMouseKeysTransformer : testing::Test
             0,
             mir_input_event_modifier_none);
     }
+
+    void wait()
+    {
+        mt::spin_wait_for_condition_or_timeout(
+            [&]
+            {
+                this->clock.advance_by(step);
+                return false;
+            },
+            timeout,
+            step);
+    }
 };
 
 namespace
@@ -128,10 +145,6 @@ struct TestOneAxisMovement : public TestMouseKeysTransformer, public WithParamIn
 
 TEST_P(TestOneAxisMovement, single_keyboard_event_to_single_pointer_motion_event)
 {
-    auto const timeout = std::chrono::milliseconds(20);
-    auto const repeat_delay = std::chrono::milliseconds(2);
-    auto const num_invocations = timeout / repeat_delay;
-
     EXPECT_CALL(mock_seat, dispatch_event(_))
         .Times(AtLeast(num_invocations / 2))
         .WillRepeatedly(
@@ -158,15 +171,7 @@ TEST_P(TestOneAxisMovement, single_keyboard_event_to_single_pointer_motion_event
 
     // Should generate a bunch of motion events until we handle the up
     // event
-    auto const step = std::chrono::milliseconds(1);
-    mt::spin_wait_for_condition_or_timeout(
-        [&]
-        {
-            clock.advance_by(step);
-            return false;
-        },
-        timeout,
-        step);
+    wait();
 
     input_event_transformer.handle(*up_event(button));
 }
@@ -174,22 +179,33 @@ TEST_P(TestOneAxisMovement, single_keyboard_event_to_single_pointer_motion_event
 INSTANTIATE_TEST_SUITE_P(
     TestMouseKeysTransformer, TestOneAxisMovement, ::Values(XKB_KEY_KP_2, XKB_KEY_KP_4, XKB_KEY_KP_6, XKB_KEY_KP_8));
 
-struct TestDiagonalMovement :
+struct TestTwoKeyMovement :
     public TestMouseKeysTransformer,
     public WithParamInterface<std::pair<mir::input::XkbSymkey, mir::input::XkbSymkey>>
+{
+    void press_keys()
+    {
+        auto const [key1, key2] = GetParam();
+
+        for (auto key : {key1, key2})
+        {
+            auto down = down_event(key);
+            input_event_transformer.handle(*down);
+        }
+        clock.advance_by(step);
+    }
+};
+
+struct TestDiagonalMovement: public TestTwoKeyMovement
 {
 };
 
 TEST_P(TestDiagonalMovement, multiple_keys_result_in_diagonal_movement)
 {
-    auto const [key1, key2] = GetParam();
-    auto const timeout = std::chrono::milliseconds(20);
-    auto const repeat_delay = std::chrono::milliseconds(2);
-    auto const num_invocations = timeout / repeat_delay;
-
     auto count_diagonal = 0;
     EXPECT_CALL(mock_seat, dispatch_event(_))
         .Times(AtLeast(num_invocations / 2)) // Account for various timing inconsistencies
+        .WillOnce(Return()) // Skip the first event where one button is pressed
         .WillRepeatedly(
             [&](std::shared_ptr<MirEvent> const& event)
             {
@@ -203,29 +219,9 @@ TEST_P(TestDiagonalMovement, multiple_keys_result_in_diagonal_movement)
                     count_diagonal += 1;
             });
 
-    auto const step = std::chrono::milliseconds(1);
+    press_keys();
 
-    auto down1 = down_event(key1);
-    input_event_transformer.handle(*down1);
-    clock.advance_by(step);
-
-    auto down2 = down_event(key2);
-    input_event_transformer.handle(*down2);
-    clock.advance_by(step);
-
-    // Should generate a bunch of motion events until we handle the up
-    // event
-    mt::spin_wait_for_condition_or_timeout(
-        [&]
-        {
-            clock.advance_by(step);
-            return false;
-        },
-        timeout,
-        step);
-
-    input_event_transformer.handle(*up_event(key1));
-    input_event_transformer.handle(*up_event(key2));
+    wait();
 
     ASSERT_GT(count_diagonal, 0);
 }
@@ -244,20 +240,15 @@ INSTANTIATE_TEST_SUITE_P(
         std::pair{XKB_KEY_KP_8, XKB_KEY_KP_6}));
 
 struct TestOppositeDiagonalMovement :
-    public TestMouseKeysTransformer,
-    public WithParamInterface<std::pair<mir::input::XkbSymkey, mir::input::XkbSymkey>>
+    TestTwoKeyMovement
 {
 };
 
 TEST_P(TestOppositeDiagonalMovement, opposite_keys_result_in_no_movement)
 {
-    auto const [key1, key2] = GetParam();
-    auto const timeout = std::chrono::milliseconds(20);
-    auto const repeat_delay = std::chrono::milliseconds(2);
-    auto const num_invocations = timeout / repeat_delay;
-
     EXPECT_CALL(mock_seat, dispatch_event(_))
         .Times(AtLeast(num_invocations / 2)) // Account for various timing inconsistencies
+        .WillOnce(Return())
         .WillRepeatedly(
             [&](std::shared_ptr<MirEvent> const& event)
             {
@@ -269,29 +260,8 @@ TEST_P(TestOppositeDiagonalMovement, opposite_keys_result_in_no_movement)
                 EXPECT_FLOAT_EQ(pointer_relative_motion.length_squared(), 0.0);
             });
 
-    auto const step = std::chrono::milliseconds(1);
-
-    auto down1 = down_event(key1);
-    input_event_transformer.handle(*down1);
-    clock.advance_by(step);
-
-    auto down2 = down_event(key2);
-    input_event_transformer.handle(*down2);
-    clock.advance_by(step);
-
-    // Should generate a bunch of motion events until we handle the up
-    // event
-    mt::spin_wait_for_condition_or_timeout(
-        [&]
-        {
-            clock.advance_by(step);
-            return false;
-        },
-        timeout,
-        step);
-
-    input_event_transformer.handle(*up_event(key1));
-    input_event_transformer.handle(*up_event(key2));
+    press_keys();
+    wait();
 }
 
 INSTANTIATE_TEST_SUITE_P(
