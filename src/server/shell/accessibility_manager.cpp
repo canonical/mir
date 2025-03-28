@@ -132,6 +132,6 @@ mir::shell::AccessibilityManager::AccessibilityManager(
 
 mir::shell::AccessibilityManager::~AccessibilityManager()
 {
-    if(transformer)
+    if (transformer)
         event_transformer->remove(transformer);
 }
