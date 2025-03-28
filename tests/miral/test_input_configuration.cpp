@@ -59,7 +59,7 @@ enum class KeyboardProperty
     repeat_rate,
     repeat_delay
 };
-static std::vector const all_keyboard_props = {KeyboardProperty::repeat_rate, KeyboardProperty::repeat_delay};
+static auto const all_keyboard_props = {KeyboardProperty::repeat_rate, KeyboardProperty::repeat_delay};
 
 struct TestInputConfiguration: testing::Test
 {
