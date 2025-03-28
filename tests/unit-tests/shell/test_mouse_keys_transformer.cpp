@@ -194,6 +194,21 @@ struct TestTwoKeyMovement :
         }
         clock.advance_by(step);
     }
+
+    void release_keys()
+    {
+        auto const [key1, key2] = GetParam();
+
+        for (auto key : {key1, key2})
+        {
+            auto up = up_event(key);
+            input_event_transformer.handle(*up);
+        }
+        clock.advance_by(step);
+
+        // Give the main loop a bit of time to execute
+        std::this_thread::sleep_for(std::chrono::milliseconds{100});
+    }
 };
 
 struct TestDiagonalMovement: public TestTwoKeyMovement
@@ -224,6 +239,8 @@ TEST_P(TestDiagonalMovement, multiple_keys_result_in_diagonal_movement)
     wait();
 
     ASSERT_GT(count_diagonal, 0);
+
+    release_keys();
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -262,6 +279,7 @@ TEST_P(TestOppositeDiagonalMovement, opposite_keys_result_in_no_movement)
 
     press_keys();
     wait();
+    release_keys();
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -287,7 +305,8 @@ TEST_F(TestMouseKeysTransformer, pressing_all_movement_buttons_generates_no_moti
                 EXPECT_FLOAT_EQ(pointer_relative_motion.length_squared(), 0.0);
             });
 
-    for (auto key : {XKB_KEY_KP_2, XKB_KEY_KP_4, XKB_KEY_KP_6, XKB_KEY_KP_8})
+    auto const all_movement_keys = {XKB_KEY_KP_2, XKB_KEY_KP_4, XKB_KEY_KP_6, XKB_KEY_KP_8};
+    for (auto key : all_movement_keys)
     {
         auto down = down_event(key);
         input_event_transformer.handle(*down);
@@ -295,6 +314,15 @@ TEST_F(TestMouseKeysTransformer, pressing_all_movement_buttons_generates_no_moti
     clock.advance_by(step);
 
     wait();
+
+    for (auto key : all_movement_keys)
+    {
+        auto up = up_event(key);
+        input_event_transformer.handle(*up);
+    }
+    clock.advance_by(step);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds{100});
 }
 
 struct ClicksDispatchDownAndUpEvents :
