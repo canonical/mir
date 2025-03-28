@@ -184,6 +184,14 @@ bool mir::input::BasicMouseKeysTransformer::handle_motion(
                         if (buttons_down & directional_buttons_right)
                             motion_direction.dx += geom::DeltaXF{speed};
 
+
+                        // Handle two opposite buttons being pressed
+                        if(buttons_down & (directional_buttons_left | directional_buttons_right))
+                            motion_direction.dx = geom::DeltaXF{0};
+
+                        if (buttons_down & (directional_buttons_up | directional_buttons_down))
+                            motion_direction.dy = geom::DeltaYF{0};
+
                         auto const fabs = [](auto delta)
                         {
                             return decltype(delta){std::fabs(delta.as_value())};
