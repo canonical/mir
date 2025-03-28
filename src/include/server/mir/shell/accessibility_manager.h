@@ -65,7 +65,6 @@ private:
     Synchronised<MutableState> mutable_state;
 
     bool const enable_key_repeat;
-    bool const enable_mouse_keys;
 
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
     std::shared_ptr<mir::input::InputEventTransformer::Transformer> const transformer;

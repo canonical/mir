@@ -116,22 +116,18 @@ mir::shell::AccessibilityManager::AccessibilityManager(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<input::InputEventTransformer> const& event_transformer) :
     enable_key_repeat{options->get<bool>(options::enable_key_repeat_opt)},
-    enable_mouse_keys{options->get<bool>(options::enable_mouse_keys_opt)},
     event_transformer{event_transformer},
     transformer{[&]
                 {
-                    if (enable_mouse_keys)
-                    {
-                        auto const t = std::make_shared<MouseKeysTransformer>();
-                        event_transformer->append(transformer);
-                        return t;
-                    }
-
-                    return std::shared_ptr<MouseKeysTransformer>{};
+                    return (options->get<bool>(options::enable_mouse_keys_opt)) ?
+                               std::make_shared<MouseKeysTransformer>() :
+                               std::shared_ptr<MouseKeysTransformer>{};
                 }()
 
     }
 {
+    if (transformer)
+        event_transformer->append(transformer);
 }
 
 mir::shell::AccessibilityManager::~AccessibilityManager()
