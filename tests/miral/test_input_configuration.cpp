@@ -58,14 +58,14 @@ enum class KeyboardProperty
     repeat_rate,
     repeat_delay
 };
-static std::vector all_keyboard_props = {KeyboardProperty::repeat_rate, KeyboardProperty::repeat_delay};
+static std::vector const all_keyboard_props = {KeyboardProperty::repeat_rate, KeyboardProperty::repeat_delay};
 
 struct TestInputConfiguration: testing::Test
 {
     inline static auto const unclamped_test_values = {-1.0, -0.5, 0.0, 0.5, 1.0};
     inline static auto const clamped_test_values = {std::pair{-10.0, -1.0}, {-1.1, -1.0}, {1.1, 1.0}, {12.0, 1.0}};
 
-    inline static std::unordered_map<MouseProperty, PropertySetter<Mouse>> mouse_setters = {
+    inline static std::unordered_map<MouseProperty, PropertySetter<Mouse>> const mouse_setters = {
         {
             MouseProperty::handedness,
             [](auto& mouse_config)
