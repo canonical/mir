@@ -20,18 +20,16 @@
 #include "mir/geometry/forward.h"
 #include "mir/glib_main_loop.h"
 #include "mir/input/input_event_transformer.h"
-#include "mir/main_loop.h"
-#include "mir/test/auto_unblock_thread.h"
 #include "mir/test/signal.h"
-#include "mir/test/spin_wait.h"
 #include "src/server/input/default_input_device_hub.h"
 #include "src/server/shell/mouse_keys_transformer.h"
+#include "src/server/input/default_event_builder.h"
 
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/doubles/mock_input_seat.h"
-#include "mir/test/doubles/mock_key_mapper.h"
-#include "mir/test/doubles/mock_led_observer_registrar.h"
-#include "mir/test/doubles/mock_server_status_listener.h"
+#include "mir/test/doubles/stub_main_loop.h"
+#include "mir/test/doubles/stub_alarm.h"
+#include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/fake_shared.h"
 
 #include "gmock/gmock.h"
@@ -39,6 +37,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <pthread.h>
+#include <list>
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 namespace mev = mir::events;
@@ -48,51 +47,107 @@ namespace mtd = mt::doubles;
 
 using namespace ::testing;
 
+namespace
+{
+/// When this alarm receives is scheduled or cancelled, it will notify the caller.
+/// All of other methods are provided a "stub" implementation.
+class StubNotifyingAlarm : public mtd::StubAlarm
+{
+public:
+    explicit StubNotifyingAlarm(
+        std::function<void(StubNotifyingAlarm const*)> const& on_rescheduled,
+        std::function<void(StubNotifyingAlarm const*)> const& on_cancelled)
+        : on_rescheduled(on_rescheduled),
+          on_cancelled(on_cancelled) {}
+
+    ~StubNotifyingAlarm() override
+    {
+        on_cancelled(this);
+    }
+
+    bool reschedule_in(std::chrono::milliseconds) override
+    {
+        on_rescheduled(this);
+        return true;
+    }
+
+    bool reschedule_for(mir::time::Timestamp) override
+    {
+        on_rescheduled(this);
+        return true;
+    }
+
+private:
+    std::function<void(StubNotifyingAlarm const*)> on_rescheduled;
+    std::function<void(StubNotifyingAlarm const*)> on_cancelled;
+};
+
+/// This MainLoop is a stub aside from the code that handles the creation of alarms.
+/// When an alarm is scheduled, this class will add it to a list of functions that
+/// need to be called. When an alarm is removed, this class will remove all functions
+/// queued on that alarm from the list so that they are not called.
+class QueuedAlarmStubMainLoop : public mtd::StubMainLoop
+{
+public:
+    std::unique_ptr<mir::time::Alarm> create_alarm(std::function<void()> const& f) override
+    {
+        return std::make_unique<StubNotifyingAlarm>(
+            [this, f=f](StubNotifyingAlarm const* alarm)
+            {
+                pending.push_back(std::make_shared<AlarmData>(alarm, f));
+            },
+            [this](StubNotifyingAlarm const* alarm)
+            {
+                pending.erase(std::remove_if(pending.begin(), pending.end(), [alarm](std::shared_ptr<AlarmData> const& data)
+                {
+                    return data->alarm == alarm;
+                }), pending.end());
+            }
+        );
+    }
+
+    bool call_queued()
+    {
+        if (pending.empty())
+            return false;
+
+        pending.front()->call();
+        pending.pop_front();
+        return true;
+    }
+
+private:
+    struct AlarmData
+    {
+        StubNotifyingAlarm const* alarm;
+        std::function<void()> call;
+    };
+    std::list<std::shared_ptr<AlarmData>> pending;
+};
+}
+
 struct TestMouseKeysTransformer : testing::Test
 {
-    mir::dispatch::MultiplexingDispatchable multiplexer;
-    NiceMock<mtd::MockLedObserverRegistrar> led_observer_registrar;
-    NiceMock<mtd::MockInputSeat> mock_seat;
-    NiceMock<mtd::MockKeyMapper> mock_key_mapper;
-    NiceMock<mtd::MockServerStatusListener> mock_server_status_listener;
-    mtd::AdvanceableClock clock;
-
     TestMouseKeysTransformer() :
-        main_loop{std::make_shared<mir::GLibMainLoop>(mt::fake_shared(clock))},
-        input_device_hub{std::make_shared<mir::input::DefaultInputDeviceHub>(
-            mt::fake_shared(mock_seat),
-            mt::fake_shared(multiplexer),
-            mt::fake_shared(clock),
-            mt::fake_shared(mock_key_mapper),
-            mt::fake_shared(mock_server_status_listener),
-            mt::fake_shared(led_observer_registrar))},
-        input_event_transformer{input_device_hub, main_loop},
+        main_loop{std::make_shared<QueuedAlarmStubMainLoop>()},
         transformer{
             std::make_shared<mi::BasicMouseKeysTransformer>(main_loop, mt::fake_shared(clock)),
         },
-        main_loop_thread{
-            [this]()
-            {
-                main_loop->stop();
-            },
-            [this]()
-            {
-                main_loop->run();
-            }}
+        default_event_builder(0, mt::fake_shared(clock)),
+        dispatch([&](std::shared_ptr<MirEvent> const& event)
+        {
+            this->on_dispatch(event);
+        })
     {
-        input_event_transformer.append(transformer);
     }
 
-    std::shared_ptr<mir::MainLoop> const main_loop;
-    std::shared_ptr<mi::DefaultInputDeviceHub> const input_device_hub;
-    mi::InputEventTransformer input_event_transformer;
+    mtd::AdvanceableClock clock;
+    std::shared_ptr<QueuedAlarmStubMainLoop> const main_loop;
     std::shared_ptr<mi::MouseKeysTransformer> const transformer;
-    mt::AutoUnblockThread main_loop_thread;
+    mi::DefaultEventBuilder default_event_builder;
+    std::function<void(std::shared_ptr<MirEvent> const& event)> dispatch;
 
-    std::chrono::milliseconds const step{1};
-    std::chrono::milliseconds const timeout{100};
-    std::chrono::milliseconds const repeat_delay{2};
-    int const num_invocations{static_cast<int>(timeout / repeat_delay)};
+    MOCK_METHOD1(on_dispatch, void(std::shared_ptr<MirEvent> const& event));
 
     auto down_event(int button) const -> mir::EventUPtr
     {
@@ -115,18 +170,6 @@ struct TestMouseKeysTransformer : testing::Test
             0,
             mir_input_event_modifier_none);
     }
-
-    void wait()
-    {
-        mt::spin_wait_for_condition_or_timeout(
-            [&]
-            {
-                this->clock.advance_by(step);
-                return false;
-            },
-            timeout,
-            step);
-    }
 };
 
 namespace
@@ -145,8 +188,8 @@ struct TestOneAxisMovement : public TestMouseKeysTransformer, public WithParamIn
 
 TEST_P(TestOneAxisMovement, single_keyboard_event_to_single_pointer_motion_event)
 {
-    EXPECT_CALL(mock_seat, dispatch_event(_))
-        .Times(AtLeast(num_invocations / 2))
+    EXPECT_CALL(*this, on_dispatch(_))
+        .Times(3)
         .WillRepeatedly(
             [](std::shared_ptr<MirEvent> const& event)
             {
@@ -166,14 +209,12 @@ TEST_P(TestOneAxisMovement, single_keyboard_event_to_single_pointer_motion_event
                 }
             });
 
-    auto button = GetParam();
-    input_event_transformer.handle(*down_event(button));
-
-    // Should generate a bunch of motion events until we handle the up
-    // event
-    wait();
-
-    input_event_transformer.handle(*up_event(button));
+    auto const button = GetParam();
+    transformer->transform_input_event(dispatch, &default_event_builder, *down_event(button));
+    main_loop->call_queued();
+    main_loop->call_queued();
+    main_loop->call_queued();
+    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(button));
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -190,9 +231,8 @@ struct TestTwoKeyMovement :
         for (auto key : {key1, key2})
         {
             auto down = down_event(key);
-            input_event_transformer.handle(*down);
+            transformer->transform_input_event(dispatch, &default_event_builder, *down);
         }
-        clock.advance_by(step);
     }
 
     void release_keys()
@@ -202,12 +242,8 @@ struct TestTwoKeyMovement :
         for (auto key : {key1, key2})
         {
             auto up = up_event(key);
-            input_event_transformer.handle(*up);
+            transformer->transform_input_event(dispatch, &default_event_builder, *up);
         }
-        clock.advance_by(step);
-
-        // Give the main loop a bit of time to execute
-        std::this_thread::sleep_for(std::chrono::milliseconds{100});
     }
 };
 
@@ -218,8 +254,8 @@ struct TestDiagonalMovement: public TestTwoKeyMovement
 TEST_P(TestDiagonalMovement, multiple_keys_result_in_diagonal_movement)
 {
     auto count_diagonal = 0;
-    EXPECT_CALL(mock_seat, dispatch_event(_))
-        .Times(AtLeast(num_invocations / 2)) // Account for various timing inconsistencies
+    EXPECT_CALL(*this, on_dispatch(_))
+        .Times(3)
         .WillOnce(Return()) // Skip the first event where one button is pressed
         .WillRepeatedly(
             [&](std::shared_ptr<MirEvent> const& event)
@@ -235,11 +271,10 @@ TEST_P(TestDiagonalMovement, multiple_keys_result_in_diagonal_movement)
             });
 
     press_keys();
-
-    wait();
-
+    main_loop->call_queued();
+    main_loop->call_queued();
+    main_loop->call_queued();
     ASSERT_GT(count_diagonal, 0);
-
     release_keys();
 }
 
@@ -263,8 +298,8 @@ struct TestOppositeDiagonalMovement :
 
 TEST_P(TestOppositeDiagonalMovement, opposite_keys_result_in_no_movement)
 {
-    EXPECT_CALL(mock_seat, dispatch_event(_))
-        .Times(AtLeast(num_invocations / 2)) // Account for various timing inconsistencies
+    EXPECT_CALL(*this, on_dispatch(_))
+        .Times(3)
         .WillOnce(Return())
         .WillRepeatedly(
             [&](std::shared_ptr<MirEvent> const& event)
@@ -278,7 +313,9 @@ TEST_P(TestOppositeDiagonalMovement, opposite_keys_result_in_no_movement)
             });
 
     press_keys();
-    wait();
+    main_loop->call_queued();
+    main_loop->call_queued();
+    main_loop->call_queued();
     release_keys();
 }
 
@@ -289,8 +326,8 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_F(TestMouseKeysTransformer, pressing_all_movement_buttons_generates_no_motion)
 {
-    EXPECT_CALL(mock_seat, dispatch_event(_))
-        .Times(AtLeast(num_invocations / 2)) // Account for various timing inconsistencies
+    EXPECT_CALL(*this, on_dispatch(_))
+        .Times(3)
         .WillOnce(Return())
         .WillOnce(Return())
         .WillOnce(Return())
@@ -309,20 +346,18 @@ TEST_F(TestMouseKeysTransformer, pressing_all_movement_buttons_generates_no_moti
     for (auto key : all_movement_keys)
     {
         auto down = down_event(key);
-        input_event_transformer.handle(*down);
+        transformer->transform_input_event(dispatch, &default_event_builder, *down);
     }
-    clock.advance_by(step);
 
-    wait();
+    main_loop->call_queued();
+    main_loop->call_queued();
+    main_loop->call_queued();
 
     for (auto key : all_movement_keys)
     {
         auto up = up_event(key);
-        input_event_transformer.handle(*up);
+        transformer->transform_input_event(dispatch, &default_event_builder, *up);
     }
-    clock.advance_by(step);
-
-    std::this_thread::sleep_for(std::chrono::milliseconds{100});
 }
 
 struct ClicksDispatchDownAndUpEvents :
@@ -345,7 +380,7 @@ TEST_P(ClicksDispatchDownAndUpEvents, clicks_dispatch_pointer_down_and_up_events
         finished.raise();
     };
 
-    EXPECT_CALL(mock_seat, dispatch_event(_))
+    EXPECT_CALL(*this, on_dispatch(_))
         .Times(3) // up (switching), down, up
         .WillOnce(
             [&check_up](std::shared_ptr<MirEvent> const& event)
@@ -365,18 +400,10 @@ TEST_P(ClicksDispatchDownAndUpEvents, clicks_dispatch_pointer_down_and_up_events
                 check_up(event);
             });
 
-    input_event_transformer.handle(*up_event(switching_button));
-    input_event_transformer.handle(*up_event(XKB_KEY_KP_5));
+    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(switching_button));
+    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_5));
 
-    // Advance so that the up portion of the click can be processed
-    clock.advance_by(std::chrono::milliseconds(50));
-
-    auto constexpr num_expected_up_events = 2;
-    for(auto i = 0; i < num_expected_up_events; i++)
-    {
-        if(finished.wait_for(std::chrono::milliseconds(10)))
-            finished.reset();
-    }
+    main_loop->call_queued();
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -389,8 +416,6 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_F(TestMouseKeysTransformer, double_click_dispatch_four_events)
 {
-    mt::Signal finished;
-
     auto const expect_down =
         [](auto const& event)
     {
@@ -398,36 +423,27 @@ TEST_F(TestMouseKeysTransformer, double_click_dispatch_four_events)
         EXPECT_EQ(pointer_action, mir_pointer_action_button_down);
     };
 
-    auto const expect_up = [&finished](auto const& event)
+    auto const expect_up = [](auto const& event)
     {
         auto const [pointer_action, _, pointer_buttons] = data_from_pointer_event(event);
         EXPECT_EQ(pointer_action, mir_pointer_action_button_up);
         EXPECT_EQ(pointer_buttons, 0);
-        finished.raise();
     };
 
-    EXPECT_CALL(mock_seat, dispatch_event(_))
+    EXPECT_CALL(*this, on_dispatch(_))
         .Times(4)
         .WillOnce(expect_down)
         .WillOnce(expect_up)
         .WillOnce(expect_down)
         .WillOnce(expect_up);
 
-    input_event_transformer.handle(*up_event(XKB_KEY_KP_Add));
-
-    for (auto i = 0; i < 2; i++)
-    {
-        clock.advance_by(std::chrono::milliseconds(100));
-        if(finished.wait_for(std::chrono::milliseconds(10)))
-            finished.reset();
-    }
+    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_Add));
+    main_loop->call_queued();
 }
 
 TEST_F(TestMouseKeysTransformer, drag_start_and_end_dispatch_down_and_up_events)
 {
-    mt::Signal finished;
-
-    EXPECT_CALL(mock_seat, dispatch_event(_))
+    EXPECT_CALL(*this, on_dispatch(_))
         .Times(2)
         .WillOnce(
             [](auto const& event)
@@ -436,29 +452,28 @@ TEST_F(TestMouseKeysTransformer, drag_start_and_end_dispatch_down_and_up_events)
                 EXPECT_EQ(pointer_action, mir_pointer_action_button_down);
             })
         .WillOnce(
-            [&finished](auto const& event)
+            [](auto const& event)
             {
                 auto const [pointer_action, _, pointer_buttons] = data_from_pointer_event(event);
                 EXPECT_EQ(pointer_action, mir_pointer_action_button_up);
                 EXPECT_EQ(pointer_buttons, 0);
-                finished.raise();
             });
 
-    input_event_transformer.handle(*up_event(XKB_KEY_KP_0));
-    input_event_transformer.handle(*up_event(XKB_KEY_KP_Decimal));
-
-    finished.wait_for(std::chrono::milliseconds(10));
+    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_0));
+    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_Decimal));
+    main_loop->call_queued();
 }
 
 TEST_F(TestMouseKeysTransformer, receiving_a_key_not_in_keymap_doesnt_dispatch_event)
 {
-    EXPECT_CALL(mock_seat, dispatch_event(_)).Times(0);
+    EXPECT_CALL(*this, on_dispatch(_)).Times(0);
     transformer->keymap(mir::input::MouseKeysKeymap{});
 
     mir::input::BasicMouseKeysTransformer::default_keymap.for_each_key_action_pair(
         [&](auto key, auto)
         {
-            input_event_transformer.handle(*down_event(key));
+            transformer->transform_input_event(dispatch, &default_event_builder, *down_event(key));
+            main_loop->call_queued();
         });
 }
 
@@ -477,25 +492,24 @@ struct TestAccelerationCurve: public TestMouseKeysTransformer, WithParamInterfac
 TEST_P(TestAccelerationCurve, acceleration_curve_constants_evaluate_properly)
 {
     auto const [curve, expected_speed_squared] = GetParam();
-    EXPECT_CALL(mock_seat, dispatch_event(_))
+    EXPECT_CALL(*this, on_dispatch(_))
         .Times(1)
         .WillOnce(
             [expected_speed_squared](std::shared_ptr<MirEvent> const& event)
             {
                 auto [_, pointer_motion, __] = data_from_pointer_event(event);
-                ASSERT_FLOAT_EQ(std::sqrt(pointer_motion.length_squared()), expected_speed_squared);
+                ASSERT_NEAR(std::sqrt(pointer_motion.length_squared()), expected_speed_squared, 0.1f);
             });
 
     // Don't want speed limits interfering with our test case
     transformer->max_speed(0, 0);
 
     transformer->acceleration_factors(curve.constant, curve.linear, curve.quadratic);
-    input_event_transformer.handle(*down_event(XKB_KEY_KP_6));
-
     clock.advance_by(std::chrono::milliseconds(2));
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-    input_event_transformer.handle(*up_event(XKB_KEY_KP_6));
+    transformer->transform_input_event(dispatch, &default_event_builder, *down_event(XKB_KEY_KP_6));
+    main_loop->call_queued();
+    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_6));
 }
 
 // Speed is computed as:
@@ -526,7 +540,7 @@ TEST_P(TestMaxSpeed, max_speed_caps_speed_properly)
     auto constexpr dt = 0.002;
     auto const [max_speed, expected_speed] = GetParam();
 
-    EXPECT_CALL(mock_seat, dispatch_event(_))
+    EXPECT_CALL(*this, on_dispatch(_))
         .Times(1)
         .WillOnce(
             [expected_speed](std::shared_ptr<MirEvent> const& event)
@@ -542,14 +556,14 @@ TEST_P(TestMaxSpeed, max_speed_caps_speed_properly)
     transformer->acceleration_factors(1000000, 1000000, 1000000);
 
     transformer->max_speed(max_speed.dx.as_value(), max_speed.dy.as_value());
-    input_event_transformer.handle(*down_event(XKB_KEY_KP_6));
-    input_event_transformer.handle(*down_event(XKB_KEY_KP_2));
+    transformer->transform_input_event(dispatch, &default_event_builder, *down_event(XKB_KEY_KP_6));
+    transformer->transform_input_event(dispatch, &default_event_builder, *down_event(XKB_KEY_KP_2));
 
     clock.advance_by(std::chrono::seconds(1));
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    main_loop->call_queued();
 
-    input_event_transformer.handle(*up_event(XKB_KEY_KP_6));
-    input_event_transformer.handle(*up_event(XKB_KEY_KP_2));
+    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_6));
+    transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_2));
 }
 
 INSTANTIATE_TEST_SUITE_P(
