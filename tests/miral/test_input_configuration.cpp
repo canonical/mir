@@ -219,35 +219,35 @@ auto get_keyboard_config_with_all_properties_except(KeyboardProperty property) -
 TEST_F(TestInputConfiguration, mouse_acceleration_bias_is_set_and_clamped)
 {
     Mouse mouse;
-    ASSERT_FALSE(mouse.acceleration_bias().has_value());
+    ASSERT_THAT(mouse.acceleration_bias(), Eq(std::nullopt));
 
     // No clamping in the range [-1, 1]
     for (auto const value : unclamped_test_values)
     {
         mouse.acceleration_bias(value);
-        EXPECT_EQ(mouse.acceleration_bias(), value);
+        EXPECT_THAT(mouse.acceleration_bias(), Eq(value));
     }
     for (auto const& [value, expected] : clamped_test_values)
     {
         mouse.acceleration_bias(value);
-        EXPECT_EQ(mouse.acceleration_bias(), expected);
+        EXPECT_THAT(mouse.acceleration_bias(), Eq(expected));
     }
 }
 
 TEST_F(TestInputConfiguration, touchpad_acceleration_bias_is_set_and_clamped)
 {
     Touchpad touch;
-    ASSERT_FALSE(touch.acceleration_bias().has_value());
+    ASSERT_THAT(touch.acceleration_bias(), Eq(std::nullopt));
 
     for (auto const value : unclamped_test_values)
     {
         touch.acceleration_bias(value);
-        EXPECT_EQ(touch.acceleration_bias(), value);
+        EXPECT_THAT(touch.acceleration_bias(), Eq(value));
     }
     for (auto const& [value, expected] : clamped_test_values)
     {
         touch.acceleration_bias(value);
-        EXPECT_EQ(touch.acceleration_bias(), expected);
+        EXPECT_THAT(touch.acceleration_bias(), Eq(expected));
     }
 }
 
@@ -292,35 +292,35 @@ TEST_F(TestMouseInputConfiguration, mouse_acceleration_return_expected_value)
 {
     auto const value = mir_pointer_acceleration_adaptive;
     mouse_config.acceleration(value);
-    EXPECT_EQ(mouse_config.acceleration(), value);
+    EXPECT_THAT(mouse_config.acceleration(), Eq(value));
 }
 
 TEST_F(TestMouseInputConfiguration, mouse_acceleration_bias_returns_expected_value)
 {
     auto const value = -1;
     mouse_config.acceleration_bias(value);
-    EXPECT_EQ(mouse_config.acceleration_bias(), value);
+    EXPECT_THAT(mouse_config.acceleration_bias(), Eq(value));
 }
 
 TEST_F(TestMouseInputConfiguration, mouse_handedness_returns_expected_value)
 {
     auto const value = mir_pointer_handedness_right;
     mouse_config.handedness(value);
-    EXPECT_EQ(mouse_config.handedness(), value);
+    EXPECT_THAT(mouse_config.handedness(), Eq(value));
 }
 
 TEST_F(TestMouseInputConfiguration, mouse_hscroll_speed_returns_expected_value)
 {
     auto const value = -5;
     mouse_config.hscroll_speed(value);
-    EXPECT_EQ(mouse_config.hscroll_speed(), value);
+    EXPECT_THAT(mouse_config.hscroll_speed(), Eq(value));
 }
 
 TEST_F(TestMouseInputConfiguration, mouse_vscroll_speed_returns_expected_value)
 {
     auto const value = 5;
     mouse_config.vscroll_speed(value);
-    EXPECT_EQ(mouse_config.vscroll_speed(), value);
+    EXPECT_THAT(mouse_config.vscroll_speed(), Eq(value));
 }
 
 struct TestMouseConfiguration : public TestInputConfiguration, testing::WithParamInterface<MouseProperty>
@@ -411,7 +411,7 @@ TEST_F(TestTouchpadInputConfiguration, touchpad_disable_while_typing_returns_exp
 {
     auto const value = false;
     touch_config.disable_while_typing(value);
-    EXPECT_EQ(touch_config.disable_while_typing(), value);
+    EXPECT_THAT(touch_config.disable_while_typing(), Eq(value));
 }
 
 TEST_F(TestTouchpadInputConfiguration, touchpad_disable_with_external_mouse_returns_expected_value)
@@ -419,42 +419,42 @@ TEST_F(TestTouchpadInputConfiguration, touchpad_disable_with_external_mouse_retu
     auto const value = true;
     touch_config.disable_with_external_mouse(value);
 
-    EXPECT_EQ(touch_config.disable_with_external_mouse(), value);
+    EXPECT_THAT(touch_config.disable_with_external_mouse(), Eq(value));
 }
 
 TEST_F(TestTouchpadInputConfiguration, touchpad_acceleration_returns_expected_value)
 {
     auto const value = mir_pointer_acceleration_adaptive;
     touch_config.acceleration(value);
-    EXPECT_EQ(touch_config.acceleration(), value);
+    EXPECT_THAT(touch_config.acceleration(), Eq(value));
 }
 
 TEST_F(TestTouchpadInputConfiguration, touchpad_acceleration_bias_returns_expected_value)
 {
     auto const value = -1;
     touch_config.acceleration_bias(value);
-    EXPECT_EQ(touch_config.acceleration_bias(), value);
+    EXPECT_THAT(touch_config.acceleration_bias(), Eq(value));
 }
 
 TEST_F(TestTouchpadInputConfiguration, touchpad_hscroll_speed_returns_expected_value)
 {
     auto const value = -5;
     touch_config.hscroll_speed(value);
-    EXPECT_EQ(touch_config.hscroll_speed(), value);
+    EXPECT_THAT(touch_config.hscroll_speed(), Eq(value));
 }
 
 TEST_F(TestTouchpadInputConfiguration, touchpad_vscroll_speed_returns_expected_value)
 {
     auto const value = 5;
     touch_config.vscroll_speed(value);
-    EXPECT_EQ(touch_config.vscroll_speed(), value);
+    EXPECT_THAT(touch_config.vscroll_speed(), Eq(value));
 }
 
 TEST_F(TestTouchpadInputConfiguration, touchpad_click_mode_returns_expected_value)
 {
     auto const value = mir_touchpad_click_mode_area_to_click;
     touch_config.click_mode(value);
-    EXPECT_EQ(touch_config.click_mode(), value);
+    EXPECT_THAT(touch_config.click_mode(), Eq(value));
 }
 
 
@@ -462,21 +462,21 @@ TEST_F(TestTouchpadInputConfiguration, touchpad_scroll_mode_returns_expected_val
 {
     auto const value = mir_touchpad_scroll_mode_edge_scroll;
     touch_config.scroll_mode(value);
-    EXPECT_EQ(touch_config.scroll_mode(), value);
+    EXPECT_THAT(touch_config.scroll_mode(), Eq(value));
 }
 
 TEST_F(TestTouchpadInputConfiguration, touchpad_tap_to_click_returns_expected_value)
 {
     auto const value = false;
     touch_config.tap_to_click(value);
-    EXPECT_EQ(touch_config.tap_to_click(), value);
+    EXPECT_THAT(touch_config.tap_to_click(), Eq(value));
 }
 
 TEST_F(TestTouchpadInputConfiguration, touchpad_middle_mouse_button_emulation_returns_expected_value)
 {
     auto const value = true;
     touch_config.middle_mouse_button_emulation(value);
-    EXPECT_EQ(touch_config.middle_mouse_button_emulation(), value);
+    EXPECT_THAT(touch_config.middle_mouse_button_emulation(), Eq(value));
 }
 
 struct TestTouchpadConfiguration : public TestInputConfiguration, testing::WithParamInterface<TouchpadProperty>
@@ -574,7 +574,7 @@ TEST_F(TestKeyboardInputConfiguration, keyboard_repeat_rate_return_expected_valu
     Keyboard keyboard_config;
     auto const value = 731;
     keyboard_config.set_repeat_rate(value);
-    EXPECT_EQ(keyboard_config.repeat_rate(), value);
+    EXPECT_THAT(keyboard_config.repeat_rate(), Eq(value));
 }
 
 TEST_F(TestKeyboardInputConfiguration, keyboard_repeat_delay_return_expected_values)
@@ -582,7 +582,7 @@ TEST_F(TestKeyboardInputConfiguration, keyboard_repeat_delay_return_expected_val
     Keyboard keyboard_config;
     auto const value = 2371;
     keyboard_config.set_repeat_delay(value);
-    EXPECT_EQ(keyboard_config.repeat_delay(), value);
+    EXPECT_THAT(keyboard_config.repeat_delay(), Eq(value));
 }
 
 struct TestKeyboardMergeOneProperty : public TestInputConfiguration, testing::WithParamInterface<KeyboardProperty>
