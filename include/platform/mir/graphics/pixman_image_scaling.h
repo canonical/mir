@@ -14,26 +14,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_NULL_CURSOR_H_
-#define MIR_GRAPHICS_NULL_CURSOR_H_
+#ifndef MIR_GRAPHICS_PIXMAN_IMAGE_SCALING_H_
+#define MIR_GRAPHICS_PIXMAN_IMAGE_SCALING_H_
 
-#include "mir/graphics/cursor.h"
+#include "mir/geometry/size.h"
+#include <memory>
 
-namespace mir
+namespace mir::graphics
 {
-namespace graphics
+struct ARGB8Buffer
 {
-
-class NullCursor : public Cursor
-{
-public:
-    void show(std::shared_ptr<CursorImage> const&) override {}
-    void hide() override {}
-    void move_to(geometry::Point) override {}
-    void set_scale(float) override {}
+    std::unique_ptr<uint32_t[]> const data;
+    geometry::Size const size;
 };
 
-}
+class CursorImage;
+ARGB8Buffer scale_cursor_image(CursorImage const& cursor_image, float new_scale);
 }
 
 #endif
