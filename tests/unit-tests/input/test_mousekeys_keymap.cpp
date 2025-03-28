@@ -155,7 +155,7 @@ TEST_P(TestMouseKeysKeymapClearActionDoesntModifyOtherActions, clear_action_does
 
     keymap.set_action(test_key, {});
 
-    for (auto const [key, action] : TestMouseKeysKeymap::wasd_key_action)
+    for (auto const& [key, action] : TestMouseKeysKeymap::wasd_key_action)
     {
         if(key == test_key) continue;
         EXPECT_NE(keymap.get_action(key), std::nullopt);
