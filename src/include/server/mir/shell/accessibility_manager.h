@@ -68,7 +68,7 @@ private:
     bool const enable_mouse_keys;
 
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
-    std::shared_ptr<mir::input::InputEventTransformer::Transformer> transformer;
+    std::shared_ptr<mir::input::InputEventTransformer::Transformer> const transformer;
 };
 }
 }
