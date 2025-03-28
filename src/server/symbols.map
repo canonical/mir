@@ -1412,6 +1412,7 @@ global:
     mir::DefaultServerConfiguration::the_token_authority*;
     mir::Server::get_activation_token*;
     mir::Server::the_accessibility_manager*;
+    mir::Server::the_display_configuration_observer*;
     mir::Server::the_token_authority*;
     mir::input::InputEventTransformer::?InputEventTransformer*;
     mir::input::InputEventTransformer::InputEventTransformer*;

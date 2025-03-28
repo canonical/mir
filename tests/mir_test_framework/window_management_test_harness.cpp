@@ -33,6 +33,7 @@
 #include <miral/zone.h>
 #include <mir/test/doubles/stub_display_configuration.h>
 
+#include "mir/graphics/display_configuration_observer.h"
 #include "mir/shell/display_configuration_controller.h"
 #include "miral/output.h"
 #include "src/miral/window_manager_tools_implementation.h"
@@ -531,10 +532,11 @@ void mir_test_framework::WindowManagementTestHarness::update_outputs(
     std::vector<mir::graphics::DisplayConfigurationOutput> const& outputs) const
 {
     server.the_compositor()->stop();
-    auto const new_display_config = std::make_shared<mir::test::doubles::StubDisplayConfig>(outputs);
-    auto controller = server.the_display_configuration_controller();
-    controller->set_base_configuration(new_display_config);
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    mtd::StubDisplayConfig const config(outputs);
+    self->display->configure(config);
+    self->display->emit_configuration_change_event(self->display->configuration());
+    self->display->wait_for_configuration_change_handler();
+    server.the_display_configuration_observer()->configuration_applied(self->display->configuration());
     server.the_compositor()->start();
 }
 
