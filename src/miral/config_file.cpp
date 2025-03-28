@@ -170,11 +170,13 @@ void Watcher::register_handler(miral::MirRunner& runner)
 {
     if (directory_watch_descriptor)
     {
+        mir::log_debug("Registering the signal handler for %d", directory_watch_descriptor.value());
         auto const weak_this = weak_from_this();
         fd_handle = runner.register_fd_handler(inotify_fd, [weak_this] (int fd)
         {
             if (auto const strong_this = weak_this.lock())
             {
+                mir::log_debug("Calling signal handler callback for %d", fd);
                 strong_this->handler(fd);
             }
             else
@@ -183,6 +185,8 @@ void Watcher::register_handler(miral::MirRunner& runner)
             }
         });
     }
+    else
+        mir::log_debug("Not registering the signal handler for %d", directory_watch_descriptor.value());
 }
 
 void Watcher::handler(int) const
