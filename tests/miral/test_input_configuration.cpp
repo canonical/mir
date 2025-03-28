@@ -53,6 +53,17 @@ enum class TouchpadProperty
     tap_to_click,
     middle_mouse_button_emulation
 };
+static auto const all_touchpad_props = {
+    TouchpadProperty::disable_while_typing,
+    TouchpadProperty::disable_with_external_mouse,
+    TouchpadProperty::acceleration,
+    TouchpadProperty::acceleration_bias,
+    TouchpadProperty::vscroll_speed,
+    TouchpadProperty::hscroll_speed,
+    TouchpadProperty::click_mode,
+    TouchpadProperty::scroll_mode,
+    TouchpadProperty::tap_to_click,
+    TouchpadProperty::middle_mouse_button_emulation};
 
 enum class KeyboardProperty
 {
@@ -196,6 +207,25 @@ struct TestInputConfiguration: testing::Test
 
 namespace
 {
+auto get_touchpad_config_with_properties(std::span<const TouchpadProperty> properties) -> Touchpad
+{
+    Touchpad touchpad_config;
+    for (auto const property : properties)
+    {
+        auto const property_setter = TestInputConfiguration::touchpad_setters.at(property);
+        property_setter(touchpad_config);
+    }
+
+    return touchpad_config;
+}
+
+auto get_touchpad_config_with_all_properties_except(TouchpadProperty property) -> Touchpad
+{
+    std::vector<TouchpadProperty> all_props{all_touchpad_props.begin(), all_touchpad_props.end()};
+    all_props.erase(std::remove(all_props.begin(), all_props.end(), property));
+    return get_touchpad_config_with_properties(all_props);
+}
+
 auto get_keyboard_config_with_properties(std::span<const KeyboardProperty> properties) -> Keyboard
 {
     Keyboard keyboard_config;
@@ -486,70 +516,39 @@ TEST_F(TestTouchpadInputConfiguration, touchpad_middle_mouse_button_emulation_re
     EXPECT_THAT(touch_config.middle_mouse_button_emulation(), Eq(value));
 }
 
-struct TestTouchpadConfiguration : public TestInputConfiguration, testing::WithParamInterface<TouchpadProperty>
+struct TestTouchpadMergeOneProperty : public TestInputConfiguration, testing::WithParamInterface<TouchpadProperty>
+{
+    Touchpad target;
+};
+
+TEST_P(TestTouchpadMergeOneProperty, touchpad_merge_from_partial_set_changes_only_set_values)
+{
+    auto const property = GetParam();
+
+    auto const expected = get_touchpad_config_with_properties(all_touchpad_props);
+    auto const modified = get_touchpad_config_with_properties(std::array{property});
+    target = get_touchpad_config_with_all_properties_except(property);
+
+    target.merge(modified);
+
+    touchpad_expect_equal(target, expected);
+}
+
+INSTANTIATE_TEST_SUITE_P(TestInputConfiguration, TestTouchpadMergeOneProperty, ::testing::ValuesIn(all_touchpad_props));
+
+struct TestTouchpadMergeOnePropertyWithoutOverwrite :
+    public TestInputConfiguration,
+    testing::WithParamInterface<TouchpadProperty>
 {
 };
 
-TEST_P(TestTouchpadConfiguration, touchpad_merge_from_partial_set_changes_only_set_values)
+TEST_P(TestTouchpadMergeOnePropertyWithoutOverwrite, touchapd_merge_does_not_overwrite_values)
 {
     auto const property = GetParam();
-    auto const setter = touchpad_setters.at(property);
 
-    Touchpad expected;
-    setter(expected);
-
-    Touchpad modified;
-    setter(modified);
-
-    Touchpad merged;
-    merged.merge(modified);
-    touchpad_expect_equal(merged, expected);
-}
-
-TEST_P(TestTouchpadConfiguration, touchapd_merge_does_not_overwrite_values)
-{
-    auto const target_settings = [](auto& touchpad_config, TouchpadProperty property)
-    {
-        if (property != TouchpadProperty::disable_while_typing)
-            touchpad_config.disable_while_typing(false);
-
-        if (property != TouchpadProperty::acceleration)
-            touchpad_config.acceleration(mir_pointer_acceleration_none);
-
-        if (property != TouchpadProperty::acceleration_bias)
-            touchpad_config.acceleration_bias(1);
-
-        if (property != TouchpadProperty::vscroll_speed)
-            touchpad_config.vscroll_speed(3.0);
-
-        if (property != TouchpadProperty::hscroll_speed)
-            touchpad_config.hscroll_speed(2.0);
-
-        if (property != TouchpadProperty::click_mode)
-            touchpad_config.click_mode(mir_touchpad_click_mode_none);
-
-        if (property != TouchpadProperty::scroll_mode)
-            touchpad_config.scroll_mode(mir_touchpad_scroll_mode_none);
-
-        if (property != TouchpadProperty::tap_to_click)
-            touchpad_config.tap_to_click(false);
-
-        if (property != TouchpadProperty::middle_mouse_button_emulation)
-            touchpad_config.middle_mouse_button_emulation(true);
-    };
-
-    auto const property = GetParam();
-    auto const setter = touchpad_setters.at(property);
-
-    Touchpad expected;
-    target_settings(expected, property);
-    setter(expected);
-
-    Touchpad modified;
-    setter(modified);
-
-    Touchpad target;
-    target_settings(target, property);
+    auto const expected = get_touchpad_config_with_properties(all_touchpad_props);
+    auto const modified = get_touchpad_config_with_properties(std::array{property});
+    auto target = get_touchpad_config_with_all_properties_except(property);
 
     target.merge(modified);
 
@@ -557,19 +556,7 @@ TEST_P(TestTouchpadConfiguration, touchapd_merge_does_not_overwrite_values)
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    TestInputConfiguration,
-    TestTouchpadConfiguration,
-    ::testing::Values(
-        TouchpadProperty::disable_while_typing,
-        TouchpadProperty::disable_with_external_mouse,
-        TouchpadProperty::acceleration,
-        TouchpadProperty::acceleration_bias,
-        TouchpadProperty::vscroll_speed,
-        TouchpadProperty::hscroll_speed,
-        TouchpadProperty::click_mode,
-        TouchpadProperty::scroll_mode,
-        TouchpadProperty::tap_to_click,
-        TouchpadProperty::middle_mouse_button_emulation));
+    TestInputConfiguration, TestTouchpadMergeOnePropertyWithoutOverwrite, ::testing::ValuesIn(all_touchpad_props));
 
 struct TestKeyboardInputConfiguration: public TestInputConfiguration
 {
