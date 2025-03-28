@@ -218,6 +218,7 @@ struct TestDiagonalMovement: public TestTwoKeyMovement
 TEST_P(TestDiagonalMovement, multiple_keys_result_in_diagonal_movement)
 {
     auto count_diagonal = 0;
+    InSequence seq;
     EXPECT_CALL(mock_seat, dispatch_event(_))
         .Times(AtLeast(num_invocations / 2)) // Account for various timing inconsistencies
         .WillOnce(Return()) // Skip the first event where one button is pressed
@@ -263,6 +264,7 @@ struct TestOppositeDiagonalMovement :
 
 TEST_P(TestOppositeDiagonalMovement, opposite_keys_result_in_no_movement)
 {
+    InSequence seq;
     EXPECT_CALL(mock_seat, dispatch_event(_))
         .Times(AtLeast(num_invocations / 2)) // Account for various timing inconsistencies
         .WillOnce(Return())
@@ -289,6 +291,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_F(TestMouseKeysTransformer, pressing_all_movement_buttons_generates_no_motion)
 {
+    InSequence seq;
     EXPECT_CALL(mock_seat, dispatch_event(_))
         .Times(AtLeast(num_invocations / 2)) // Account for various timing inconsistencies
         .WillOnce(Return())
@@ -345,6 +348,7 @@ TEST_P(ClicksDispatchDownAndUpEvents, clicks_dispatch_pointer_down_and_up_events
         finished.raise();
     };
 
+    InSequence seq;
     EXPECT_CALL(mock_seat, dispatch_event(_))
         .Times(3) // up (switching), down, up
         .WillOnce(
@@ -406,6 +410,7 @@ TEST_F(TestMouseKeysTransformer, double_click_dispatch_four_events)
         finished.raise();
     };
 
+    InSequence seq;
     EXPECT_CALL(mock_seat, dispatch_event(_))
         .Times(4)
         .WillOnce(expect_down)
@@ -427,6 +432,7 @@ TEST_F(TestMouseKeysTransformer, drag_start_and_end_dispatch_down_and_up_events)
 {
     mt::Signal finished;
 
+    InSequence seq;
     EXPECT_CALL(mock_seat, dispatch_event(_))
         .Times(2)
         .WillOnce(
