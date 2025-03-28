@@ -290,9 +290,13 @@ struct TestMouseInputConfiguration: public TestInputConfiguration
 
 TEST_F(TestMouseInputConfiguration, mouse_acceleration_return_expected_value)
 {
-    auto const value = mir_pointer_acceleration_adaptive;
-    mouse_config.acceleration(value);
-    EXPECT_THAT(mouse_config.acceleration(), Eq(value));
+    std::optional<MirPointerAcceleration> const values[] = {
+        mir_pointer_acceleration_none, mir_pointer_acceleration_adaptive, std::nullopt};
+    for (auto const value : values)
+    {
+        mouse_config.acceleration(value);
+        EXPECT_THAT(mouse_config.acceleration(), Eq(value));
+    }
 }
 
 TEST_F(TestMouseInputConfiguration, mouse_acceleration_bias_returns_expected_value)
