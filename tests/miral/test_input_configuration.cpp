@@ -288,7 +288,7 @@ struct TestMouseInputConfiguration: public TestInputConfiguration
     Mouse mouse_config;
 };
 
-TEST_F(TestMouseInputConfiguration, mouse_acceleration_return_expected_value)
+TEST_F(TestMouseInputConfiguration, mouse_acceleration_returns_expected_value)
 {
     std::optional<MirPointerAcceleration> const values[] = {
         mir_pointer_acceleration_none, mir_pointer_acceleration_adaptive, std::nullopt};
