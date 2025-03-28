@@ -590,10 +590,7 @@ TEST_P(TestKeyboardMergeOneProperty, keyboard_merge_from_partial_set_changes_onl
     keyboard_expect_equal(target, expected);
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    TestInputConfiguration,
-    TestKeyboardMergeOneProperty,
-    ::Values(KeyboardProperty::repeat_rate, KeyboardProperty::repeat_delay));
+INSTANTIATE_TEST_SUITE_P(TestInputConfiguration, TestKeyboardMergeOneProperty, ::ValuesIn(all_keyboard_props));
 
 struct TestKeyboardMergeOnePropertyWithoutOverwrite :
     public TestInputConfiguration,
@@ -615,6 +612,4 @@ TEST_P(TestKeyboardMergeOnePropertyWithoutOverwrite, keyboard_merge_does_not_ove
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    TestInputConfiguration,
-    TestKeyboardMergeOnePropertyWithoutOverwrite,
-    ::testing::Values(KeyboardProperty::repeat_rate, KeyboardProperty::repeat_delay));
+    TestInputConfiguration, TestKeyboardMergeOnePropertyWithoutOverwrite, ::testing::ValuesIn(all_keyboard_props));
