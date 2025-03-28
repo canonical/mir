@@ -17,10 +17,11 @@
 #include "mir_toolkit/mir_input_device_types.h"
 #include "miral/input_configuration.h"
 
-#include <functional>
-
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+
+#include <functional>
+#include <span>
 
 using namespace testing;
 
@@ -195,7 +196,7 @@ struct TestInputConfiguration: testing::Test
 
 namespace
 {
-auto get_keyboard_config_with_properties(std::vector<KeyboardProperty> properties) -> Keyboard
+auto get_keyboard_config_with_properties(std::span<const KeyboardProperty> properties) -> Keyboard
 {
     Keyboard keyboard_config;
     for (auto const property : properties)
@@ -593,8 +594,8 @@ TEST_P(TestKeyboardMergeOneProperty, keyboard_merge_from_partial_set_changes_onl
 {
     auto const property = GetParam();
 
-    auto const expected = get_keyboard_config_with_properties({property});
-    auto const to_merge = get_keyboard_config_with_properties({property});
+    auto const expected = get_keyboard_config_with_properties(std::array{property});
+    auto const to_merge = get_keyboard_config_with_properties(std::array{property});
 
     target.merge(to_merge);
 
@@ -617,7 +618,7 @@ TEST_P(TestKeyboardMergeOnePropertyWithoutOverwrite, keyboard_merge_does_not_ove
     auto const property = GetParam();
 
     auto const expected = get_keyboard_config_with_properties(all_keyboard_props);
-    auto const modified = get_keyboard_config_with_properties({property});
+    auto const modified = get_keyboard_config_with_properties(std::array{property});
     auto target = get_keyboard_config_with_all_properties_except(property);
 
     target.merge(modified);
