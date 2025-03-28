@@ -39,6 +39,13 @@ enum class MouseProperty
     vscroll_speed,
     hscroll_speed
 };
+static auto const all_mouse_props = {
+    MouseProperty::handedness,
+    MouseProperty::acceleration,
+    MouseProperty::acceleration_bias,
+    MouseProperty::vscroll_speed,
+    MouseProperty::hscroll_speed,
+};
 
 enum class TouchpadProperty
 {
@@ -207,6 +214,25 @@ struct TestInputConfiguration: testing::Test
 
 namespace
 {
+auto get_mouse_config_with_properties(std::span<const MouseProperty> properties) -> Mouse
+{
+    Mouse mouse_config;
+    for (auto const property : properties)
+    {
+        auto const property_setter = TestInputConfiguration::mouse_setters.at(property);
+        property_setter(mouse_config);
+    }
+
+    return mouse_config;
+}
+
+auto get_mouse_config_with_all_properties_except(MouseProperty property) -> Mouse
+{
+    std::vector<MouseProperty> all_props{all_mouse_props.begin(), all_mouse_props.end()};
+    all_props.erase(std::remove(all_props.begin(), all_props.end(), property));
+    return get_mouse_config_with_properties(all_props);
+}
+
 auto get_touchpad_config_with_properties(std::span<const TouchpadProperty> properties) -> Touchpad
 {
     Touchpad touchpad_config;
@@ -360,8 +386,9 @@ TEST_F(TestMouseInputConfiguration, mouse_vscroll_speed_returns_expected_value)
     EXPECT_THAT(mouse_config.vscroll_speed(), Eq(value));
 }
 
-struct TestMouseConfiguration : public TestInputConfiguration, testing::WithParamInterface<MouseProperty>
+struct TestMouseMergeOneProperty : public TestInputConfiguration, testing::WithParamInterface<MouseProperty>
 {
+    Mouse target;
 };
 
 // Make sure that when merging, each data member is assigned to the correct
@@ -369,75 +396,42 @@ struct TestMouseConfiguration : public TestInputConfiguration, testing::WithPara
 //
 // If each individual data member is merged correctly, then all combinations
 // will work.
-TEST_P(TestMouseConfiguration, mouse_merge_from_partial_set_changes_only_set_values)
+TEST_P(TestMouseMergeOneProperty, mouse_merge_from_partial_set_changes_only_set_values)
 {
     auto const property = GetParam();
-    auto const setter = mouse_setters.at(property);
 
-    Mouse expected;
-    setter(expected);
+    auto const expected = get_mouse_config_with_properties(std::array{property});
+    auto const to_merge = get_mouse_config_with_properties(std::array{property});
 
-    Mouse modified;
-    setter(modified);
+    target.merge(to_merge);
 
-    Mouse merged;
-    merged.merge(modified);
-    mouse_expect_equal(merged, expected);
+    mouse_expect_equal(target, expected);
 }
 
-// Make sure tht merging does not alter other data members
-TEST_P(TestMouseConfiguration, mouse_merge_does_not_overwrite_values)
+INSTANTIATE_TEST_SUITE_P(TestInputConfiguration, TestMouseMergeOneProperty, ::testing::ValuesIn(all_mouse_props));
+
+struct TestMouseMergeOnePropertyWithoutOverwrite :
+    public TestInputConfiguration,
+    testing::WithParamInterface<MouseProperty>
 {
-    // Target settings must be different from the values set by setters at the top of the file.
-    auto const target_settings = [](auto& mouse_config, MouseProperty property)
-    {
-        if (property != MouseProperty::handedness)
-            mouse_config.handedness(mir_pointer_handedness_left);
+};
 
-        if (property != MouseProperty::acceleration)
-            mouse_config.acceleration(mir_pointer_acceleration_none);
-
-        if (property != MouseProperty::acceleration_bias)
-            mouse_config.acceleration_bias(1);
-
-        if (property != MouseProperty::vscroll_speed)
-            mouse_config.vscroll_speed(3.0);
-
-        if (property != MouseProperty::hscroll_speed)
-            mouse_config.hscroll_speed(2.0);
-    };
-
+// Make sure tht merging does not alter other data members
+TEST_P(TestMouseMergeOnePropertyWithoutOverwrite, mouse_merge_does_not_overwrite_values)
+{
     auto const property = GetParam();
-    auto const setter = mouse_setters.at(property);
 
-    // Initialize all members, overwrite the one we're testing
-    Mouse expected;
-    target_settings(expected, property);
-    setter(expected);
+    auto const expected = get_mouse_config_with_properties(all_mouse_props);
+    auto const modified = get_mouse_config_with_properties(std::array{property});
+    auto target = get_mouse_config_with_all_properties_except(property);
 
-    // Set the value of member we're testing
-    Mouse modified;
-    setter(modified);
-
-    // Initialize all members, _except_ the one we're testing
-    Mouse target;
-    target_settings(target, property);
-
-    // This merge should only modify the variable we're testing
     target.merge(modified);
 
     mouse_expect_equal(target, expected);
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    TestInputConfiguration,
-    TestMouseConfiguration,
-    ::testing::Values(
-        MouseProperty::handedness,
-        MouseProperty::acceleration,
-        MouseProperty::acceleration_bias,
-        MouseProperty::vscroll_speed,
-        MouseProperty::hscroll_speed));
+    TestInputConfiguration, TestMouseMergeOnePropertyWithoutOverwrite, ::testing::ValuesIn(all_mouse_props));
 
 struct TestTouchpadInputConfiguration: public TestInputConfiguration
 {
