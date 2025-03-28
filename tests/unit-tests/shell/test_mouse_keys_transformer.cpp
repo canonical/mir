@@ -254,6 +254,7 @@ struct TestDiagonalMovement: public TestTwoKeyMovement
 TEST_P(TestDiagonalMovement, multiple_keys_result_in_diagonal_movement)
 {
     auto count_diagonal = 0;
+    InSequence seq;
     EXPECT_CALL(*this, on_dispatch(_))
         .Times(3)
         .WillOnce(Return()) // Skip the first event where one button is pressed
@@ -298,6 +299,7 @@ struct TestOppositeDiagonalMovement :
 
 TEST_P(TestOppositeDiagonalMovement, opposite_keys_result_in_no_movement)
 {
+    InSequence seq;
     EXPECT_CALL(*this, on_dispatch(_))
         .Times(3)
         .WillOnce(Return())
@@ -326,6 +328,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_F(TestMouseKeysTransformer, pressing_all_movement_buttons_generates_no_motion)
 {
+    InSequence seq;
     EXPECT_CALL(*this, on_dispatch(_))
         .Times(3)
         .WillOnce(Return())
@@ -369,17 +372,16 @@ struct ClicksDispatchDownAndUpEvents :
 TEST_P(ClicksDispatchDownAndUpEvents, clicks_dispatch_pointer_down_and_up_events)
 {
     auto const [switching_button, expected_action] = GetParam();
-    mt::Signal finished;
 
-    auto const check_up = [&finished](auto const& event)
+    auto const check_up = [](auto const& event)
     {
         auto const [pointer_action, _, pointer_buttons] = data_from_pointer_event(event);
 
         EXPECT_EQ(pointer_action, mir_pointer_action_button_up);
         EXPECT_EQ(pointer_buttons, 0);
-        finished.raise();
     };
 
+    InSequence seq;
     EXPECT_CALL(*this, on_dispatch(_))
         .Times(3) // up (switching), down, up
         .WillOnce(
@@ -430,6 +432,7 @@ TEST_F(TestMouseKeysTransformer, double_click_dispatch_four_events)
         EXPECT_EQ(pointer_buttons, 0);
     };
 
+    InSequence seq;
     EXPECT_CALL(*this, on_dispatch(_))
         .Times(4)
         .WillOnce(expect_down)
@@ -443,6 +446,7 @@ TEST_F(TestMouseKeysTransformer, double_click_dispatch_four_events)
 
 TEST_F(TestMouseKeysTransformer, drag_start_and_end_dispatch_down_and_up_events)
 {
+    InSequence seq;
     EXPECT_CALL(*this, on_dispatch(_))
         .Times(2)
         .WillOnce(
@@ -469,7 +473,18 @@ TEST_F(TestMouseKeysTransformer, receiving_a_key_not_in_keymap_doesnt_dispatch_e
     EXPECT_CALL(*this, on_dispatch(_)).Times(0);
     transformer->keymap(mir::input::MouseKeysKeymap{});
 
-    mir::input::BasicMouseKeysTransformer::default_keymap.for_each_key_action_pair(
+    using enum mir::input::MouseKeysKeymap::Action;
+    auto const test_keymap = mir::input::MouseKeysKeymap{
+        {XKB_KEY_w, move_up},
+        {XKB_KEY_s, move_down},
+        {XKB_KEY_a, move_left},
+        {XKB_KEY_d, move_right},
+        {XKB_KEY_y, button_primary},
+        {XKB_KEY_u, button_tertiary},
+        {XKB_KEY_i, button_secondary},
+        {XKB_KEY_j, click},
+    };
+    test_keymap.for_each_key_action_pair(
         [&](auto key, auto)
         {
             transformer->transform_input_event(dispatch, &default_event_builder, *down_event(key));
