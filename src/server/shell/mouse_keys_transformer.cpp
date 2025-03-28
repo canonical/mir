@@ -34,7 +34,9 @@
 
 using enum mir::input::MouseKeysKeymap::Action;
 
-mir::input::MouseKeysKeymap const mir::input::BasicMouseKeysTransformer::default_keymap = {
+namespace
+{
+mir::input::MouseKeysKeymap const default_keymap = {
     {XKB_KEY_KP_2, move_down},
     {XKB_KEY_KP_4, move_left},
     {XKB_KEY_KP_6, move_right},
@@ -47,11 +49,13 @@ mir::input::MouseKeysKeymap const mir::input::BasicMouseKeysTransformer::default
     {XKB_KEY_KP_Multiply, button_tertiary},
     {XKB_KEY_KP_Subtract, button_secondary},
 };
+}
 
 mir::input::BasicMouseKeysTransformer::BasicMouseKeysTransformer(
     std::shared_ptr<mir::MainLoop> const& main_loop, std::shared_ptr<time::Clock> const& clock) :
     main_loop{main_loop},
-    clock{clock}
+    clock{clock},
+    keymap_{::default_keymap}
 {
 }
 

@@ -46,8 +46,6 @@ public:
 class BasicMouseKeysTransformer: public MouseKeysTransformer
 {
 public:
-    static MouseKeysKeymap const default_keymap;
-
     BasicMouseKeysTransformer(
         std::shared_ptr<mir::MainLoop> const& main_loop, std::shared_ptr<time::Clock> const& clock);
 
@@ -128,7 +126,7 @@ private:
     std::mutex state_mutex;
     AccelerationCurve acceleration_curve{30, 100, 100};
     geometry::DisplacementF max_speed_{400, 400};
-    MouseKeysKeymap keymap_{default_keymap};
+    MouseKeysKeymap keymap_;
 };
 }
 }

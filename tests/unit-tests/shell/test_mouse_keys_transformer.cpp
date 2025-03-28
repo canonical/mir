@@ -461,7 +461,18 @@ TEST_F(TestMouseKeysTransformer, receiving_a_key_not_in_keymap_doesnt_dispatch_e
     EXPECT_CALL(mock_seat, dispatch_event(_)).Times(0);
     transformer->keymap(mir::input::MouseKeysKeymap{});
 
-    mir::input::BasicMouseKeysTransformer::default_keymap.for_each_key_action_pair(
+    using enum mir::input::MouseKeysKeymap::Action;
+    auto const test_keymap = mir::input::MouseKeysKeymap{
+        {XKB_KEY_w, move_up},
+        {XKB_KEY_s, move_down},
+        {XKB_KEY_a, move_left},
+        {XKB_KEY_d, move_right},
+        {XKB_KEY_y, button_primary},
+        {XKB_KEY_u, button_tertiary},
+        {XKB_KEY_i, button_secondary},
+        {XKB_KEY_j, click},
+    };
+    test_keymap.for_each_key_action_pair(
         [&](auto key, auto)
         {
             input_event_transformer.handle(*down_event(key));
