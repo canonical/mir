@@ -308,9 +308,12 @@ TEST_F(TestMouseInputConfiguration, mouse_acceleration_bias_returns_expected_val
 
 TEST_F(TestMouseInputConfiguration, mouse_handedness_returns_expected_value)
 {
-    auto const value = mir_pointer_handedness_right;
-    mouse_config.handedness(value);
-    EXPECT_THAT(mouse_config.handedness(), Eq(value));
+    auto const values = {mir_pointer_handedness_left, mir_pointer_handedness_right};
+    for(auto const value: values)
+    {
+        mouse_config.handedness(value);
+        EXPECT_THAT(mouse_config.handedness(), Eq(value));
+    }
 }
 
 TEST_F(TestMouseInputConfiguration, mouse_hscroll_speed_returns_expected_value)
