@@ -1458,13 +1458,3 @@ global:
   };
 } MIR_SERVER_INTERNAL_2.19;
 
-MIR_SERVER_INTERNAL_2.21 {
-global:
-  extern "C++" {
-    mir::Server::override_the_accessibility_manager*;
-    mir::shell::AccessibilityManager::?AccessibilityManager*;
-    non-virtual?thunk?to?mir::shell::AccessibilityManager::?AccessibilityManager*;
-    vtable?for?mir::shell::AccessibilityManager;
-  };
-} MIR_SERVER_INTERNAL_2.20;
-
