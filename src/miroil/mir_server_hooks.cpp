@@ -16,6 +16,8 @@
 
 #include <miroil/mir_server_hooks.h>
 
+#include "gesture_ender.h"
+
 // mir
 #include <mir/server.h>
 #include <mir/graphics/cursor.h>
@@ -118,6 +120,9 @@ miroil::MirServerHooks::MirServerHooks() :
 
 void miroil::MirServerHooks::operator()(mir::Server& server)
 {
+    server.override_the_pointer_input_dispatcher([&server]
+        { return the_pointer_input_dispatcher(server); });
+
     if (self->create_cursor) {
         server.override_the_cursor_images([this]
             { return std::make_shared<MirCursorImages>(self->create_cursor); });
