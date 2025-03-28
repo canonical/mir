@@ -40,6 +40,7 @@ namespace options { class Option; }
 namespace frontend
 {
 class SessionAuthorizer;
+class PointerInputDispatcher;
 }
 namespace shell
 {
@@ -272,6 +273,9 @@ public:
     void override_the_logger(Builder<logging::Logger> const& logger_builder);
 
     /// Sets an override functor for creating the prompt session listener.
+    void override_the_pointer_input_dispatcher(Builder<frontend::PointerInputDispatcher> const& pointer_input_dispatcher_builder);
+
+    /// Sets an override functor for creating the prompt session listener.
     void override_the_prompt_session_listener(Builder<scene::PromptSessionListener> const& prompt_session_listener_builder);
 
     /// Sets an override functor for creating the prompt session manager.
@@ -376,6 +380,9 @@ public:
 
     /// \return the main loop.
     auto the_main_loop() const -> std::shared_ptr<MainLoop>;
+
+    /// \return the pointer input dispatcher.
+    auto the_pointer_input_dispatcher() const -> std::shared_ptr<frontend::PointerInputDispatcher>;
 
     /// \return the prompt session listener.
     auto the_prompt_session_listener() const -> std::shared_ptr<scene::PromptSessionListener>;
