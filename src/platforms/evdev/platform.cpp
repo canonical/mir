@@ -352,6 +352,10 @@ void mie::Platform::start()
                             }
                         }
                     }
+                    /* we clean up device from watchers here as when we get libinput REMOVED event
+                     * we do not have a valid udev_device attached to it.
+                     */
+                    device_watchers.erase(device.devnum());
                     break;
                 }
                 default:
@@ -446,18 +450,8 @@ void mie::Platform::device_removed(libinput_device* dev)
     if (known_device_pos == end(devices))
         return;
 
-    auto const udev_device = libinput_device_get_udev_device(dev);
     input_device_registry->remove_device(*known_device_pos);
     devices.erase(known_device_pos);
-    if (udev_device)
-    {
-        /* libinput documents that input devices might not have udev devices
-         * In practise all our devices *will*, because we only add devices from udev events,
-         * but let's not crash if not!
-         */
-        device_watchers.erase(udev_device_get_devnum(udev_device));
-        udev_device_unref(udev_device);
-    }
 
     log_info("Removed device: %s", describe(dev).c_str());
 }
