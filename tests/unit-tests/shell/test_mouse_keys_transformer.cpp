@@ -49,7 +49,7 @@ using namespace ::testing;
 
 namespace
 {
-/// When this alarm receives is scheduled or cancelled, it will notify the caller.
+/// When this alarm is scheduled or cancelled, it will notify the caller.
 /// All of other methods are provided a "stub" implementation.
 class StubNotifyingAlarm : public mtd::StubAlarm
 {
