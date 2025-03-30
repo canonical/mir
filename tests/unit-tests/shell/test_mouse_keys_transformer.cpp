@@ -56,9 +56,11 @@ class StubNotifyingAlarm : public mtd::StubAlarm
 public:
     explicit StubNotifyingAlarm(
         std::function<void(StubNotifyingAlarm const*)> const& on_rescheduled,
-        std::function<void(StubNotifyingAlarm const*)> const& on_cancelled)
-        : on_rescheduled(on_rescheduled),
-          on_cancelled(on_cancelled) {}
+        std::function<void(StubNotifyingAlarm const*)> const& on_cancelled) :
+        on_rescheduled{on_rescheduled},
+        on_cancelled{on_cancelled}
+    {
+    }
 
     ~StubNotifyingAlarm() override
     {
@@ -133,11 +135,11 @@ struct TestMouseKeysTransformer : testing::Test
         transformer{
             std::make_shared<mi::BasicMouseKeysTransformer>(main_loop, mt::fake_shared(clock)),
         },
-        default_event_builder(0, mt::fake_shared(clock)),
-        dispatch([&](std::shared_ptr<MirEvent> const& event)
+        default_event_builder{0, mt::fake_shared(clock)},
+        dispatch{[&](std::shared_ptr<MirEvent> const& event)
         {
             this->on_dispatch(event);
-        })
+        }}
     {
     }
 
