@@ -513,17 +513,18 @@ TEST_P(TestAccelerationCurve, acceleration_curve_constants_evaluate_properly)
             [expected_speed_squared](std::shared_ptr<MirEvent> const& event)
             {
                 auto [_, pointer_motion, __] = data_from_pointer_event(event);
-                ASSERT_NEAR(std::sqrt(pointer_motion.length_squared()), expected_speed_squared, 0.1f);
+                ASSERT_FLOAT_EQ(std::sqrt(pointer_motion.length_squared()), expected_speed_squared);
             });
 
     // Don't want speed limits interfering with our test case
     transformer->max_speed(0, 0);
 
     transformer->acceleration_factors(curve.constant, curve.linear, curve.quadratic);
-    clock.advance_by(std::chrono::milliseconds(2));
-
     transformer->transform_input_event(dispatch, &default_event_builder, *down_event(XKB_KEY_KP_6));
+
+    clock.advance_by(std::chrono::milliseconds(2));
     main_loop->call_queued();
+
     transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_6));
 }
 
