@@ -1,13 +1,3 @@
-# We can't tell which version of gtest we're building against and INSTANTIATE_TEST_SUITE_P changed in
-# a way that relies on a gcc extension to support backward-compatible code, So...
-check_cxx_compiler_flag(-Wno-gnu-zero-variadic-macro-arguments MIRAL_COMPILE_WITH_W_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
-check_cxx_compiler_flag(-Wno-pedantic MIRAL_COMPILE_WITH_W_NO_PEDANTIC)
-if ("${CMAKE_CXX_COMPILER}" MATCHES ".*clang.*" AND MIRAL_COMPILE_WITH_W_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-zero-variadic-macro-arguments") # clang
-elseif(MIRAL_COMPILE_WITH_W_NO_PEDANTIC)
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-pedantic") #gcc
-endif()
-
 include_directories(
   ${GMOCK_INCLUDE_DIR}
   ${GTEST_INCLUDE_DIR}

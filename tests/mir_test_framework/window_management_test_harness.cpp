@@ -451,7 +451,7 @@ auto mir_test_framework::WindowManagementTestHarness::create_window(
     self->surface_cache.emplace_back(stream, surface);
     server.the_shell()->surface_ready(surface);
 
-    return {session, surface};
+    return tools().info_for(surface).window();
 }
 
 void mir_test_framework::WindowManagementTestHarness::publish_event(MirEvent const& event) const

@@ -604,7 +604,6 @@ auto miral::BasicWindowManager::workspaces_containing(Window const& window) cons
 -> std::vector<std::shared_ptr<Workspace>>
 {
     auto const iter_pair = workspaces_to_windows.right.equal_range(window);
-
     std::vector<std::shared_ptr<Workspace>> workspaces_containing_window;
     for (auto kv = iter_pair.first; kv != iter_pair.second; ++kv)
     {
