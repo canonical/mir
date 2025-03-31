@@ -576,7 +576,7 @@ public:
 
         for (uint i = 0; i < N; i++)
         {
-            apps[i] = open_application("app" + i);
+            apps[i] = open_application("app" + std::to_string(i));
             windows[i] = create_window(apps[i], spec);
         }
     }
