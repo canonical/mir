@@ -184,11 +184,10 @@ struct DecorationBasicDecoration
         window_surface.resize(default_window_size);
         basic_decoration = std::make_shared<msd::BasicDecoration>(
             mt::fake_shared(shell),
-            mt::fake_shared(buffer_allocator),
             mt::fake_shared(executor),
             mt::fake_shared(cursor_images),
             mt::fake_shared(window_surface),
-            msd::DecorationStrategy::default_decoration_strategy());
+            msd::DecorationStrategy::default_decoration_strategy(mt::fake_shared(buffer_allocator)));
         executor.execute();
     }
 
