@@ -35,7 +35,7 @@ to pass the external client launcher and our configuration option to
 +    {
 +        for(auto const& app : apps)
 +        {
-+            external_client_launcher.launch(std::vector<std::string>{app}});
++            external_client_launcher.launch(std::vector<std::string>{app});
 +        }
 +    };
 +
