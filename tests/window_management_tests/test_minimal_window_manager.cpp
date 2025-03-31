@@ -125,7 +125,7 @@ public:
     {
         return [&](miral::WindowManagerTools const& tools)
         {
-            return std::make_unique<miral::MinimalWindowManager>(tools);
+            return std::make_unique<miral::MinimalWindowManager>(tools, focus_stealing());
         };
     }
 
@@ -135,6 +135,11 @@ public:
             mir::geometry::Rectangle{{0, 0}, {800, 600}},
             mir::geometry::Rectangle{{800, 0}, {800, 600}}
         };
+    }
+
+    virtual miral::FocusStealing focus_stealing() const
+    {
+        return miral::FocusStealing::allow;
     }
 };
 
@@ -571,7 +576,7 @@ public:
 
         for (uint i = 0; i < N; i++)
         {
-            apps[i] = open_application("app" + i);
+            apps[i] = open_application("app" + std::to_string(i));
             windows[i] = create_window(apps[i], spec);
         }
     }
@@ -580,16 +585,27 @@ public:
     miral::Window windows[N];
 };
 
-using TwoWindowsMinimalWindowManagerTest = MultipleWindowsMinimalWindowManagerTest<2>;
-using ThreeWindowsMinimalWindowManagerTest = MultipleWindowsMinimalWindowManagerTest<3>;
+template <uint N>
+class MultipleWindowsMinimalWindowManagerPreventFocusStealingTest : public MultipleWindowsMinimalWindowManagerTest<N>
+{
+public:
+    miral::FocusStealing focus_stealing() const override
+    {
+        return miral::FocusStealing::prevent;
+    }
+};
 
-TEST_F(ThreeWindowsMinimalWindowManagerTest, new_windows_are_inserted_above_older_windows)
+using MinimalWindowManagerWithTwoWindows = MultipleWindowsMinimalWindowManagerTest<2>;
+using MinimalWindowManagerWithThreeWindows = MultipleWindowsMinimalWindowManagerTest<3>;
+using MinimalWindowManagerWithThreeWindowsPreventFocusStealing = MultipleWindowsMinimalWindowManagerPreventFocusStealingTest<3>;
+
+TEST_F(MinimalWindowManagerWithThreeWindows, new_windows_are_inserted_above_older_windows)
 {
     EXPECT_TRUE(is_above(windows[2], windows[1]));
     EXPECT_TRUE(is_above(windows[1], windows[0]));
 }
 
-TEST_F(ThreeWindowsMinimalWindowManagerTest, when_a_window_is_focused_then_it_appears_above_other_windows)
+TEST_F(MinimalWindowManagerWithThreeWindows, when_a_window_is_focused_then_it_appears_above_other_windows)
 {
     tools().select_active_window(windows[0]);
     EXPECT_TRUE(focused(windows[0]));
@@ -597,7 +613,15 @@ TEST_F(ThreeWindowsMinimalWindowManagerTest, when_a_window_is_focused_then_it_ap
     EXPECT_TRUE(is_above(windows[2], windows[1]));
 }
 
-TEST_F(TwoWindowsMinimalWindowManagerTest, if_active_window_is_removed_then_parent_has_focus_priority)
+TEST_F(MinimalWindowManagerWithThreeWindowsPreventFocusStealing,
+    when_a_window_is_opened_with_prevent_focus_stealing_then_it_does_not_appears_above_other_windows)
+{
+    EXPECT_TRUE(focused(windows[0]));
+    EXPECT_TRUE(is_above(windows[0], windows[2]));
+    EXPECT_TRUE(is_above(windows[2], windows[1]));
+}
+
+TEST_F(MinimalWindowManagerWithTwoWindows, if_active_window_is_removed_then_parent_has_focus_priority)
 {
     miral::WindowSpecification spec;
     spec.size() = { geom::Width {100}, geom::Height{100} };
@@ -609,14 +633,25 @@ TEST_F(TwoWindowsMinimalWindowManagerTest, if_active_window_is_removed_then_pare
     EXPECT_TRUE(is_above(windows[0], windows[1]));
 }
 
-TEST_F(ThreeWindowsMinimalWindowManagerTest, if_active_window_is_removed_then_last_focused_window_on_same_workspace_is_focused)
+TEST_F(MinimalWindowManagerWithThreeWindows, if_active_window_is_removed_then_last_focused_window_is_focused)
 {
     tools().ask_client_to_close(windows[2]);
     EXPECT_TRUE(focused(windows[1]));
     EXPECT_TRUE(is_above(windows[1], windows[0]));
 }
 
-TEST_F(TwoWindowsMinimalWindowManagerTest,
+TEST_F(MinimalWindowManagerWithThreeWindows, when_active_window_is_closed_then_we_focus_a_window_in_same_workspaces)
+{
+    auto const workspace = tools().create_workspace();
+    tools().add_tree_to_workspace(windows[0], workspace);
+    tools().add_tree_to_workspace(windows[2], workspace);
+
+    tools().ask_client_to_close(windows[2]);
+    EXPECT_TRUE(focused(windows[0]));
+    EXPECT_TRUE(is_above(windows[0], windows[1]));
+}
+
+TEST_F(MinimalWindowManagerWithTwoWindows,
     if_active_window_is_removed_and_we_cannot_focus_any_window_on_closing_window_workspaces_then_try_focus_within_app)
 {
     auto const workspace = tools().create_workspace();
@@ -630,7 +665,7 @@ TEST_F(TwoWindowsMinimalWindowManagerTest,
     EXPECT_TRUE(is_above(windows[0], windows[1]));
 }
 
-TEST_F(ThreeWindowsMinimalWindowManagerTest,
+TEST_F(MinimalWindowManagerWithThreeWindows,
     if_active_window_is_removed_and_we_cannot_focus_any_window_on_closing_window_workspaces_and_there_are_no_other_windows_in_this_app_then_focus_other_app)
 {
     auto const workspace1 = tools().create_workspace();
@@ -662,7 +697,7 @@ TEST_F(MinimalWindowManagerTest, if_active_window_is_removed_and_it_is_only_wind
 }
 
 TEST_F(MinimalWindowManagerTest,
-    if_active_windows_session_closes_and_there_is_nothing_to_select_then_focused_is_emtpy)
+    if_active_windows_session_closes_and_there_is_nothing_to_select_then_focused_is_empty)
 {
     // Setup: Create one app with one window
     auto const app = open_application("app1");

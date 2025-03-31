@@ -69,7 +69,6 @@ class BasicDecoration
 public:
     BasicDecoration(
         std::shared_ptr<shell::Shell> const& shell,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<Executor> const& executor,
         std::shared_ptr<input::CursorImages> const& cursor_images,
         std::shared_ptr<scene::Surface> const& window_surface,
@@ -102,9 +101,9 @@ protected:
 
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const threadsafe_self;
     std::shared_ptr<DecorationStrategy> const decoration_strategy;
+    std::unique_ptr<RendererStrategy> const renderer_strategy;
 
     std::shared_ptr<shell::Shell> const shell;
-    std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<input::CursorImages> const cursor_images;
     std::shared_ptr<scene::Session> const session;
 
@@ -112,7 +111,6 @@ protected:
 
     class BufferStreams;
     std::unique_ptr<BufferStreams> const buffer_streams;
-    std::unique_ptr<Renderer> const renderer;
 
     std::shared_ptr<scene::Surface> const window_surface;
     std::shared_ptr<scene::Surface> const decoration_surface;
