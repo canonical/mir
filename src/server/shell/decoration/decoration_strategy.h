@@ -28,7 +28,7 @@
 #include <vector>
 
 namespace mir::scene { class Surface; }
-namespace mir::graphics { class Buffer; }
+namespace mir::graphics { class Buffer; class GraphicBufferAllocator; }
 
 namespace mir::shell::decoration
 {
@@ -74,8 +74,6 @@ struct InputState
     std::vector<geometry::Rectangle> const input_shape;
 };
 
-class DecorationStrategy;
-
 /// Information about the geometry and type of decorations for a given window
 /// Data is pulled from the surface on construction and immutable after that
 class WindowState
@@ -118,21 +116,8 @@ private:
     std::unique_ptr<Self> const self;
 };
 
-/// Mixin for creating graphics buffers from raw pixels
-class BufferMaker
-{
-public:
-    using Pixel = uint32_t;
 
-    virtual auto make_buffer(MirPixelFormat const format, geometry::Size const size, Pixel const* const pixels) const
-    -> std::optional<std::shared_ptr<graphics::Buffer>> = 0;
-
-protected:
-    BufferMaker() = default;
-    virtual ~BufferMaker() = default;
-    BufferMaker(BufferMaker&) = delete;
-    BufferMaker& operator=(BufferMaker const&) = delete;
-};
+using Pixel = uint32_t;
 
 /// Customization point for rendering
 class RendererStrategy
@@ -142,10 +127,10 @@ public:
     virtual ~RendererStrategy() = default;
 
     virtual void update_state(WindowState const& window_state, InputState const& input_state) = 0;
-    virtual auto render_titlebar(BufferMaker const* buffer_maker) -> std::optional<std::shared_ptr<graphics::Buffer>> = 0;
-    virtual auto render_left_border(BufferMaker const* buffer_maker) -> std::optional<std::shared_ptr<graphics::Buffer>> = 0;
-    virtual auto render_right_border(BufferMaker const* buffer_maker) -> std::optional<std::shared_ptr<graphics::Buffer>> = 0;
-    virtual auto render_bottom_border(BufferMaker const* buffer_maker) -> std::optional<std::shared_ptr<graphics::Buffer>> = 0;
+    virtual auto render_titlebar() -> std::optional<std::shared_ptr<graphics::Buffer>> = 0;
+    virtual auto render_left_border() -> std::optional<std::shared_ptr<graphics::Buffer>> = 0;
+    virtual auto render_right_border() -> std::optional<std::shared_ptr<graphics::Buffer>> = 0;
+    virtual auto render_bottom_border() -> std::optional<std::shared_ptr<graphics::Buffer>> = 0;
 };
 
 /// Customization point for decorations
@@ -153,7 +138,7 @@ class DecorationStrategy
 {
 public:
 
-    static auto default_decoration_strategy() -> std::shared_ptr<DecorationStrategy>;
+    static auto default_decoration_strategy(std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& allocator) -> std::shared_ptr<DecorationStrategy>;
 
     virtual auto render_strategy() const -> std::unique_ptr<RendererStrategy> = 0;
     virtual auto button_placement(unsigned n, WindowState const& ws) const -> geometry::Rectangle = 0;
