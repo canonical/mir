@@ -250,14 +250,8 @@ bool mir::input::BasicMouseKeysTransformer::handle_click(
         return true;
 
     press_current_cursor_button(dispatcher, builder);
+    release_current_cursor_button(dispatcher, builder);
 
-    click_event_generator = main_loop->create_alarm(
-        [dispatcher, this, builder]
-        {
-            release_current_cursor_button(dispatcher, builder);
-        });
-
-    click_event_generator->reschedule_in(std::chrono::milliseconds(50));
     return true;
 }
 
@@ -298,17 +292,11 @@ bool mir::input::BasicMouseKeysTransformer::handle_double_click(
     if (keyboard_action == mir_keyboard_action_down || keyboard_action == mir_keyboard_action_repeat)
         return true;
 
-    press_current_cursor_button(dispatcher, builder);
-    release_current_cursor_button(dispatcher, builder);
-
-    double_click_event_generator = main_loop->create_alarm(
-        [dispatcher, this, builder]
-        {
-            press_current_cursor_button(dispatcher, builder);
-            release_current_cursor_button(dispatcher, builder);
-        });
-
-    double_click_event_generator->reschedule_in(std::chrono::milliseconds(100));
+    for(auto i = 0; i < 2; i++)
+    {
+        press_current_cursor_button(dispatcher, builder);
+        release_current_cursor_button(dispatcher, builder);
+    }
 
     return true;
 }

@@ -113,9 +113,6 @@ private:
     // weak ptr to it
     std::shared_ptr<mir::time::Alarm> motion_event_generator;
 
-    std::unique_ptr<mir::time::Alarm> click_event_generator;
-    std::unique_ptr<mir::time::Alarm> double_click_event_generator;
-
     mir::geometry::DisplacementF motion_direction;
     MirPointerButtons current_button{mir_pointer_button_primary};
 
