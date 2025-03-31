@@ -57,16 +57,9 @@ void mir::shell::BasicAccessibilityManager::notify_helpers() const {
 void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
     if (on)
-    {
-        if (transformer)
-            return;
-
         event_transformer->append(transformer);
-    }
     else
-    {
         event_transformer->remove(transformer);
-    }
 }
 
 mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
