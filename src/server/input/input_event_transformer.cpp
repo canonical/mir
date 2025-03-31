@@ -88,6 +88,18 @@ bool mi::InputEventTransformer::handle(MirEvent const& event)
 void mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::Transformer> const& transformer)
 {
     std::lock_guard lock{mutex};
+
+    auto const duplicate_iter = std::ranges::find(
+            input_transformers,
+            transformer.lock().get(),
+            [](auto const& other_transformer)
+            {
+                return other_transformer.lock().get();
+            });
+
+    if (duplicate_iter != input_transformers.end())
+        return;
+
     input_transformers.push_back(transformer);
 }
 
