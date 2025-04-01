@@ -20,6 +20,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <functional>
+#include <optional>
 
 namespace mir { class Server; }
 
@@ -27,6 +29,21 @@ namespace miral
 {
 class MirRunner;
 class ConfigurationOption;
+
+/// A class providing access to an arbitrary piece of data from the [DisplayConfiguration].
+/// This is specifically useful when a user wants to extend the based display configuration
+/// with some sort of custom payload (e.g. a user may want to extend the layout configuration
+/// with information describing the position and size of specific applications).
+/// \remark Since MirAL 5.3
+class DisplayConfigurationNode
+{
+public:
+    virtual ~DisplayConfigurationNode() = default;
+    virtual void for_each(std::function<void(std::unique_ptr<DisplayConfigurationNode>)> const& f) const = 0;
+    virtual std::optional<std::string> as_string() const = 0;
+    virtual std::optional<int> as_int() const = 0;
+    virtual std::optional<std::unique_ptr<DisplayConfigurationNode>> at(std::string const& key) const = 0;
+};
 
 /// Enable display configuration.
 /// The config file (miral::MirRunner::display_config_file()) is located via
@@ -52,9 +69,22 @@ public:
     /// List all layouts found in the config file
     auto list_layouts() -> std::vector<std::string>;
 
+    /// Retrieve the user data of the active layout.
+    /// \remark Since MirAL 5.3
+    auto layout_userdata() const -> std::shared_ptr<void>;
+
     /// Enable a custom output attribute in the .display YAML
     /// \remark Since MirAL 3.8
     void add_output_attribute(std::string const& key);
+
+    /// Provides a function that will build an opaque shared pointer containing
+    /// the user data for a particular layout based off of the information
+    /// contained in that layouts configuration. Callers must include yaml-cpp
+    /// in their project to meaningfully use this.
+    /// \remark Since MirAL 5.3
+    void set_layout_userdata_builder(std::function<std::shared_ptr<void>(
+        std::string const& layout,
+        std::unique_ptr<DisplayConfigurationNode> value)> const& builder) const;
 
     void operator()(mir::Server& server) const;
 

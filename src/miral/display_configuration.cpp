@@ -25,8 +25,62 @@
 
 #include <fstream>
 #include <sstream>
+#include <yaml-cpp/yaml.h>
 
 using namespace std::string_literals;
+
+namespace
+{
+class YamlDisplayConfigurationNode : public miral::DisplayConfigurationNode
+{
+public:
+    explicit YamlDisplayConfigurationNode(YAML::Node const& node)
+        : node(node)
+    {
+    }
+
+    void for_each(std::function<void(std::unique_ptr<DisplayConfigurationNode>)> const& f) const override
+    {
+        if (!node.IsSequence())
+            return;
+
+        for (auto const& item : node)
+            f(std::make_unique<YamlDisplayConfigurationNode>(item));
+    }
+
+    std::optional<std::string> as_string() const override
+    {
+        if (node.IsScalar())
+            return node.Scalar();
+
+
+        return std::nullopt;
+    }
+
+    std::optional<int> as_int() const override
+    {
+        try
+        {
+            return node.as<int>();
+        }
+        catch (YAML::Exception const&)
+        {
+            return std::nullopt;
+        }
+    }
+
+    std::optional<std::unique_ptr<DisplayConfigurationNode>> at(std::string const& key) const override
+    {
+        if (!node[key])
+            return std::nullopt;
+
+        return std::make_unique<YamlDisplayConfigurationNode>(node[key]);
+    }
+
+private:
+    YAML::Node node;
+};
+}
 
 class miral::DisplayConfiguration::Self : public ReloadingYamlFileDisplayConfig
 {
@@ -115,9 +169,24 @@ auto miral::DisplayConfiguration::list_layouts() -> std::vector<std::string>
     return self->list_layouts();
 }
 
+auto miral::DisplayConfiguration::layout_userdata() const -> std::shared_ptr<void>
+{
+    return self->layout_userdata();
+}
+
 void miral::DisplayConfiguration::add_output_attribute(std::string const& key)
 {
     self->add_output_attribute(key);
+}
+
+void miral::DisplayConfiguration::set_layout_userdata_builder(std::function<std::shared_ptr<void>(
+    std::string const& layout,
+    std::unique_ptr<DisplayConfigurationNode> value)> const& builder) const
+{
+    self->set_layout_userdata_builder([builder=builder](std::string const& layout, YAML::Node const& data)
+    {
+        return builder(layout, std::make_unique<YamlDisplayConfigurationNode>(data));
+    });
 }
 
 miral::DisplayConfiguration::~DisplayConfiguration() = default;
