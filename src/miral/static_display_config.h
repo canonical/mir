@@ -72,9 +72,15 @@ private:
         std::map<std::string, std::optional<std::string>> custom_attribute;
     };
 
-    using Port2Config = std::map<std::string, Config>;
-    using Layout2Port2Config = std::map<std::string, Port2Config>;
-    Layout2Port2Config config;
+    enum class Property
+    {
+        Port,
+    };
+
+    using Matchers = std::map<Property, std::string>;
+    using Matchers2Config = std::vector<std::pair<Matchers, Config>>;
+    using Layout2Matchers2Config = std::map<std::string, Matchers2Config>;
+    Layout2Matchers2Config config;
 
     std::set<std::string> custom_output_attributes;
 

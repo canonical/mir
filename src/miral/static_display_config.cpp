@@ -156,7 +156,7 @@ try
             throw mir::AbnormalExit{error_prefix(filename) + "invalid '" + ll.first.as<std::string>() + "' layout"};
         }
 
-        Port2Config layout_config;
+        Matchers2Config layout_config;
 
         Node cards = layout["cards"];
 
@@ -269,7 +269,8 @@ try
                         }
                     }
 
-                    layout_config[port_name] = output_config;
+                    Matchers const port_matcher{{Property::Port, port_name}};
+                    layout_config.emplace_back(port_matcher, output_config);
                 }
             }
         }
@@ -304,7 +305,22 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
 
         conf.for_each_output([&config=current_config->second](mg::UserDisplayConfigurationOutput& conf_output)
             {
-                apply_to_output(conf_output, config[conf_output.name]);
+                for (auto const& matcher : config)
+                {
+                    auto const& matchers = matcher.first;
+                    auto const& conf = matcher.second;
+
+                    if (matchers.find(Property::Port) != end(matchers))
+                    {
+                        if (conf_output.name != matchers.at(Property::Port))
+                        {
+                            continue;
+                        }
+                    }
+                    // If we get here, all matchers applied to this output
+                    apply_to_output(conf_output, conf);
+                    return;
+                }
             });
     }
     else
