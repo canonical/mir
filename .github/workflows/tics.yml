@@ -13,8 +13,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  Run:
-    runs-on: [self-hosted, reactive, amd64, tiobe, noble]
+  TICS:
+    runs-on: [self-hosted, reactive, amd64, large-tiobe, noble]
 
     env:
       CCACHE_DIR: "/tmp/ccache"
