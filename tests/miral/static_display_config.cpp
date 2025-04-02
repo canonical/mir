@@ -175,6 +175,47 @@ TEST_F(StaticDisplayConfig, well_formed_non_config_input_causes_AbnormalExit)
     EXPECT_THROW((sdc.load_config(well_formed, "")), mir::AbnormalExit);
 }
 
+TEST_F(StaticDisplayConfig, empty_layout_is_error)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"};
+
+    EXPECT_THROW((sdc.load_config(stream, "")), mir::AbnormalExit);
+}
+
+TEST_F(StaticDisplayConfig, empty_cards_is_error)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    cards:\n"};
+
+    EXPECT_THROW((sdc.load_config(stream, "")), mir::AbnormalExit);
+}
+
+TEST_F(StaticDisplayConfig, empty_card_is_no_error)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    cards:\n"
+        "    - \n"};
+
+    sdc.load_config(stream, "");
+}
+
+TEST_F(StaticDisplayConfig, empty_output_is_no_error)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    cards:\n"
+        "    - VGA-1:\n"};
+
+    sdc.load_config(stream, "");
+}
+
 TEST_F(StaticDisplayConfig, valid_config_input_is_no_error)
 {
     std::istringstream valid_config_stream{valid_input};
