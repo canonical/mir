@@ -54,9 +54,9 @@ mir::input::MouseKeysKeymap const default_keymap = {
 mir::input::BasicMouseKeysTransformer::BasicMouseKeysTransformer(
     std::shared_ptr<mir::MainLoop> const& main_loop, std::shared_ptr<time::Clock> const& clock) :
     main_loop{main_loop},
-    clock{clock},
-    keymap_{::default_keymap}
+    clock{clock}
 {
+    state.lock()->keymap_ = ::default_keymap;
 }
 
 bool mir::input::BasicMouseKeysTransformer::transform_input_event(
@@ -71,13 +71,11 @@ bool mir::input::BasicMouseKeysTransformer::transform_input_event(
 
     if (mir_input_event_get_type(input_event) == mir_input_event_type_key)
     {
-        std::lock_guard guard{state_mutex};
-
         MirKeyboardEvent const* kev = mir_input_event_get_keyboard_event(input_event);
         auto const keysym = mir_keyboard_event_keysym(kev);
         auto const keyboard_action = mir_keyboard_event_action(kev);
 
-        if (auto const mousekey_action = keymap_.get_action(keysym))
+        if (auto const mousekey_action = state.lock()->keymap_.get_action(keysym))
         {
             switch (*mousekey_action)
             {
@@ -87,7 +85,7 @@ bool mir::input::BasicMouseKeysTransformer::transform_input_event(
             case move_down:
                 return handle_motion(keyboard_action, *mousekey_action, dispatcher, builder);
             case click:
-                return (handle_click(keyboard_action, dispatcher, builder));
+                return handle_click(keyboard_action, dispatcher, builder);
             case double_click:
                 return handle_double_click(keyboard_action, dispatcher, builder);
             case drag_start:
@@ -120,28 +118,32 @@ bool mir::input::BasicMouseKeysTransformer::handle_motion(
             buttons_down &= ~(button);
     };
 
-    switch (mousekey_action)
     {
-    case move_down:
-        set_or_clear(buttons_down, directional_buttons_down, keyboard_action);
-        break;
-    case move_left:
-        set_or_clear(buttons_down, directional_buttons_left, keyboard_action);
-        break;
-    case move_right:
-        set_or_clear(buttons_down, directional_buttons_right, keyboard_action);
-        break;
-    case move_up:
-        set_or_clear(buttons_down, directional_buttons_up, keyboard_action);
-        break;
-    default:
-        std::unreachable();
+        auto const locked_state = state.lock();
+        auto& buttons_down = locked_state->buttons_down;
+        switch (mousekey_action)
+        {
+        case move_down:
+            set_or_clear(buttons_down, directional_buttons_down, keyboard_action);
+            break;
+        case move_left:
+            set_or_clear(buttons_down, directional_buttons_left, keyboard_action);
+            break;
+        case move_right:
+            set_or_clear(buttons_down, directional_buttons_right, keyboard_action);
+            break;
+        case move_up:
+            set_or_clear(buttons_down, directional_buttons_up, keyboard_action);
+            break;
+        default:
+            std::unreachable();
+        }
     }
 
     switch (keyboard_action)
     {
     case mir_keyboard_action_up:
-        if (buttons_down == directional_buttons_none)
+        if (state.lock()->buttons_down == directional_buttons_none)
         {
             motion_event_generator.reset();
         }
@@ -160,8 +162,6 @@ bool mir::input::BasicMouseKeysTransformer::handle_motion(
                      weak_self = shared_weak_alarm,
                      motion_direction = mir::geometry::DisplacementF{0, 0}] mutable
                     {
-                        std::lock_guard guard{state_mutex};
-
                         using SecondF = std::chrono::duration<float>;
                         auto constexpr repeat_delay = std::chrono::milliseconds(2); // 500 Hz rate
 
@@ -171,11 +171,14 @@ bool mir::input::BasicMouseKeysTransformer::handle_motion(
                         // duration_cast is not constexpr yet
                         float const dt = std::chrono::duration_cast<SecondF>(repeat_delay).count();
 
+                        auto const state_copy = *state.lock();
+
                         // Normalize the speed so it's in
                         // pixels/alarm_invocation, and not pixels/second
-                        auto const speed = acceleration_curve.evaluate(t.count()) * dt;
+                        auto const speed = state_copy.acceleration_curve.evaluate(t.count()) * dt;
 
                         motion_direction = {0, 0};
+                        auto const buttons_down = state_copy.buttons_down;
                         if (buttons_down & directional_buttons_up)
                             motion_direction.dy += geom::DeltaYF{-speed};
                         if (buttons_down & directional_buttons_down)
@@ -203,6 +206,7 @@ bool mir::input::BasicMouseKeysTransformer::handle_motion(
                             return delta.as_value() > 0 ? 1 : -1;
                         };
 
+                        auto const max_speed_ = state_copy.max_speed_;
                         if(max_speed_.dx.as_value() > 0)
                             motion_direction.dx =
                                 sign(motion_direction.dx) * std::min(fabs(motion_direction.dx), max_speed_.dx * dt);
@@ -221,7 +225,7 @@ bool mir::input::BasicMouseKeysTransformer::handle_motion(
                         dispatcher(builder->pointer_event(
                             std::nullopt,
                             mir_pointer_action_motion,
-                            is_dragging ? current_button : 0,
+                            state_copy.is_dragging ? state_copy.current_button : 0,
                             std::nullopt,
                             motion_direction,
                             mir_pointer_axis_source_none,
@@ -265,23 +269,27 @@ bool mir::input::BasicMouseKeysTransformer::handle_change_pointer_button(
     if (keyboard_action == mir_keyboard_action_down || keyboard_action == mir_keyboard_action_repeat)
         return true;
 
-    // Up events
-    switch (mousekeys_action)
     {
-    case button_primary:
-        current_button = mir_pointer_button_primary;
-        break;
-    case button_tertiary:
-        current_button = mir_pointer_button_tertiary;
-        break;
-    case button_secondary:
-        current_button = mir_pointer_button_secondary;
-        break;
-    default:
-        std::unreachable();
+        auto const locked_state = state.lock();
+        auto& current_button = locked_state->current_button;
+        // Up events
+        switch (mousekeys_action)
+        {
+        case button_primary:
+            current_button = mir_pointer_button_primary;
+            break;
+        case button_tertiary:
+            current_button = mir_pointer_button_tertiary;
+            break;
+        case button_secondary:
+            current_button = mir_pointer_button_secondary;
+            break;
+        default:
+            std::unreachable();
+        }
     }
 
-    if (current_button)
+    if (state.lock()->current_button)
         release_current_cursor_button(dispatcher, builder);
 
     return true;
@@ -314,12 +322,12 @@ bool mir::input::BasicMouseKeysTransformer::handle_drag(
     if (mousekeys_action == drag_start)
     {
         press_current_cursor_button(dispatcher, builder);
-        is_dragging = true;
+        state.lock()->is_dragging = true;
     }
     else
     {
+        // Automatically releases
         release_current_cursor_button(dispatcher, builder);
-        is_dragging = false;
     }
 
     return true;
@@ -344,7 +352,7 @@ void mir::input::BasicMouseKeysTransformer::press_current_cursor_button(
     dispatcher(builder->pointer_event(
         std::nullopt,
         mir_pointer_action_button_down,
-        current_button,
+        state.lock()->current_button,
         std::nullopt,
         {0, 0},
         mir_pointer_axis_source_none,
@@ -365,24 +373,22 @@ void mir::input::BasicMouseKeysTransformer::release_current_cursor_button(
         mir::events::ScrollAxisH{},
         mir::events::ScrollAxisV{}));
 
-    is_dragging = false;
+
+    state.lock()->is_dragging = false;
 }
 
 void mir::input::BasicMouseKeysTransformer::keymap(MouseKeysKeymap const& new_keymap)
 {
-    std::lock_guard guard{state_mutex};
-    keymap_ = new_keymap;
+    state.lock()->keymap_ = new_keymap;
 }
 
 void mir::input::BasicMouseKeysTransformer::acceleration_factors(double constant, double linear, double quadratic)
 {
-    std::lock_guard guard{state_mutex};
-    acceleration_curve = {quadratic, linear, constant};
+    state.lock()->acceleration_curve = {quadratic, linear, constant};
 }
 
 void mir::input::BasicMouseKeysTransformer::max_speed(double x_axis, double y_axis)
 {
-    std::lock_guard guard{state_mutex};
     auto const clamp_max_speed = [](auto configured_max_speed)
     {
         auto clamped_max_speed = configured_max_speed;
@@ -401,6 +407,6 @@ void mir::input::BasicMouseKeysTransformer::max_speed(double x_axis, double y_ax
         return clamped_max_speed;
     };
 
-    max_speed_ = clamp_max_speed(geometry::DisplacementF{x_axis, y_axis});
+    state.lock()->max_speed_ = clamp_max_speed(geometry::DisplacementF{x_axis, y_axis});
 }
 

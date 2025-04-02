@@ -18,6 +18,7 @@
 
 #include "mir/geometry/displacement.h"
 #include "mir/input/mousekeys_keymap.h"
+#include "mir/synchronised.h"
 
 #include <memory>
 #include <xkbcommon/xkbcommon-keysyms.h>
@@ -113,16 +114,16 @@ private:
     // weak ptr to it
     std::shared_ptr<mir::time::Alarm> motion_event_generator;
 
-    MirPointerButtons current_button{mir_pointer_button_primary};
+    struct State {
+        MirPointerButtons current_button{mir_pointer_button_primary};
+        uint32_t buttons_down{directional_buttons_none};
+        bool is_dragging{false};
+        AccelerationCurve acceleration_curve{30, 100, 100};
+        geometry::DisplacementF max_speed_{400, 400};
+        MouseKeysKeymap keymap_;
+    };
 
-    uint32_t buttons_down{directional_buttons_none};
-
-    bool is_dragging{false};
-
-    std::mutex state_mutex;
-    AccelerationCurve acceleration_curve{30, 100, 100};
-    geometry::DisplacementF max_speed_{400, 400};
-    MouseKeysKeymap keymap_;
+    mir::Synchronised<State> state;
 };
 }
 }
