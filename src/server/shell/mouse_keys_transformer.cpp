@@ -157,7 +157,8 @@ bool mir::input::BasicMouseKeysTransformer::handle_motion(
                      this,
                      builder,
                      motion_start_time = clock->now(),
-                     weak_self = shared_weak_alarm] mutable
+                     weak_self = shared_weak_alarm,
+                     motion_direction = mir::geometry::DisplacementF{0, 0}] mutable
                     {
                         std::lock_guard guard{state_mutex};
 
