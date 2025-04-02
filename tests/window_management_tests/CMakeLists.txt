@@ -9,6 +9,8 @@ string(REPLACE "-fno-lto" "" NO_NO_LTO_FLAGS ${CMAKE_CXX_FLAGS})
 set(CMAKE_CXX_FLAGS ${NO_NO_LTO_FLAGS})
 
 mir_add_wrapped_executable(mir_window_management_tests NOINSTALL
+  test_minimal_window_manager.cpp
+  test_floating_window_manager.cpp
   test_minimal_window_manager.cpp)
 
 target_include_directories(mir_window_management_tests
@@ -29,6 +31,7 @@ target_link_libraries(mir_window_management_tests
   mir-test-doubles-static
   mircommon
   miral
+  example-shell-lib
 
   Boost::system
   # GBM platform dependencies
