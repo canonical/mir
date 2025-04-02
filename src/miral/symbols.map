@@ -499,10 +499,10 @@ global:
     typeinfo?for?miral::ConfigFile;
     typeinfo?for?miral::Decorations;
     typeinfo?for?miral::IdleListener;
+    typeinfo?for?miral::IdleListener;
     typeinfo?for?miral::InputConfiguration::Mouse;
     typeinfo?for?miral::InputConfiguration::Touchpad;
     typeinfo?for?miral::InputConfiguration;
-    typeinfo?for?miral::IdleListener;
   };
 } MIRAL_5.0;
 
@@ -519,3 +519,16 @@ global:
     typeinfo?for?miral::InputConfiguration::Keyboard;
   };
 } MIRAL_5.1;
+
+MIRAL_5.3 {
+global:
+  extern "C++" {
+    miral::DisplayConfiguration::layout_userdata*;
+    miral::DisplayConfiguration::set_layout_userdata_builder*;
+    miral::DisplayConfigurationNode::?DisplayConfigurationNode*;
+    non-virtual?thunk?to?miral::DisplayConfigurationNode::?DisplayConfigurationNode*;
+    typeinfo?for?miral::DisplayConfigurationNode;
+    vtable?for?miral::DisplayConfigurationNode;
+  };
+} MIRAL_5.2;
+

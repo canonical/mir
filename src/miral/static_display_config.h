@@ -37,6 +37,8 @@ class Server;
 namespace shell { class DisplayConfigurationController; }
 }
 
+namespace YAML { class Node; }
+
 namespace miral
 {
 class YamlFileDisplayConfig : public mir::graphics::DisplayConfigurationPolicy
@@ -51,7 +53,13 @@ public:
 
     auto list_layouts() const -> std::vector<std::string>;
 
+    auto layout_userdata() -> std::shared_ptr<void>;
+
     void add_output_attribute(std::string const& key);
+
+    void set_layout_userdata_builder(std::function<std::shared_ptr<void>(
+            std::string const& layout,
+            YAML::Node const& value)> const& builder);
 
     static void serialize_configuration(std::ostream& out, mir::graphics::DisplayConfiguration& conf);
 
@@ -73,10 +81,20 @@ private:
     };
 
     using Port2Config = std::map<std::string, Config>;
-    using Layout2Port2Config = std::map<std::string, Port2Config>;
-    Layout2Port2Config config;
+    struct LayoutConfig
+    {
+        Port2Config port2config;
+        std::shared_ptr<void> userdata;
+    };
+
+    std::map<std::string, LayoutConfig> config;
 
     std::set<std::string> custom_output_attributes;
+
+    using LayoutUserDataBuilder = std::function<std::shared_ptr<void>(
+            std::string const& layout,
+            YAML::Node const& value)>;
+    std::optional<LayoutUserDataBuilder> layout_userdata_builder_func;
 
     static void apply_to_output(mir::graphics::UserDisplayConfigurationOutput& conf_output, Config const& conf);
 

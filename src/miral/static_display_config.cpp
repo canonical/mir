@@ -273,7 +273,14 @@ try
                 }
             }
         }
-        new_config[ll.first.Scalar()] = layout_config;
+
+        // Users may provide a function that returns a custom user data on a layout
+        // based off of its configuration in YAML.
+        std::shared_ptr<void> userdata = nullptr;
+        if (layout_userdata_builder_func)
+            userdata = (*layout_userdata_builder_func)(ll.first.Scalar(), layout);
+
+        new_config[ll.first.Scalar()] = { layout_config, userdata };
     }
 
     std::lock_guard lock{mutex};
@@ -302,7 +309,7 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
     {
         mir::log_debug("Display config using layout: '%s'", layout.c_str());
 
-        conf.for_each_output([&config=current_config->second](mg::UserDisplayConfigurationOutput& conf_output)
+        conf.for_each_output([&config=current_config->second.port2config](mg::UserDisplayConfigurationOutput& conf_output)
             {
                 apply_to_output(conf_output, config[conf_output.name]);
             });
@@ -529,9 +536,29 @@ auto miral::YamlFileDisplayConfig::list_layouts() const -> std::vector<std::stri
     return result;
 }
 
+auto miral::YamlFileDisplayConfig::layout_userdata() -> std::shared_ptr<void>
+{
+    std::lock_guard lock{mutex};
+    for (auto const& [first, second]: config)
+    {
+        if (first == layout)
+            return second.userdata;
+    }
+
+    mir::log_error("Cannot find layout: %s", layout.c_str());
+    return nullptr;
+}
+
 void miral::YamlFileDisplayConfig::add_output_attribute(std::string const& key)
 {
     custom_output_attributes.insert(key);
+}
+
+void miral::YamlFileDisplayConfig::set_layout_userdata_builder(std::function<std::shared_ptr<void>(
+    std::string const& layout,
+    YAML::Node const& value)> const& builder)
+{
+    layout_userdata_builder_func = builder;
 }
 
 miral::ReloadingYamlFileDisplayConfig::ReloadingYamlFileDisplayConfig(std::string basename) :
