@@ -17,6 +17,7 @@
 #ifndef MIR_SHELL_BASIC_ACCESSIBILITY_MANAGER_H
 #define MIR_SHELL_BASIC_ACCESSIBILITY_MANAGER_H
 
+#include "mir/input/input_event_transformer.h"
 #include "mir/shell/accessibility_manager.h"
 
 #include "mir/input/mousekeys_keymap.h"
@@ -87,6 +88,8 @@ private:
     std::shared_ptr<graphics::Cursor> const cursor;
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
     std::shared_ptr<mir::shell::MouseKeysTransformer> const transformer;
+
+    std::optional<input::InputEventTransformer::Registration> transformer_registration;
 };
 }
 }

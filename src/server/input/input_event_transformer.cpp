@@ -85,7 +85,8 @@ bool mi::InputEventTransformer::handle(MirEvent const& event)
     return handled;
 }
 
-void mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::Transformer> const& transformer)
+auto mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::Transformer> const& transformer)
+    -> std::optional<Registration>
 {
     std::lock_guard lock{mutex};
 
@@ -98,9 +99,11 @@ void mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::
             });
 
     if (duplicate_iter != input_transformers.end())
-        return;
+        return std::nullopt;
 
     input_transformers.push_back(transformer);
+
+    return Registration(this, transformer.lock());
 }
 
 bool mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer::Transformer> const& transformer)
@@ -122,4 +125,20 @@ bool mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer
 
     input_transformers.erase(remove_start, remove_end);
     return true;
+}
+
+mir::input::InputEventTransformer::Registration::Registration(
+    InputEventTransformer* event_transformer,
+    std::shared_ptr<mir::input::InputEventTransformer::Transformer> transformer) :
+    unregister(
+        [event_transformer, transformer]()
+        {
+            event_transformer->remove(transformer);
+        })
+{
+}
+
+mir::input::InputEventTransformer::Registration::~Registration()
+{
+    unregister();
 }

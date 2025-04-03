@@ -33,7 +33,6 @@
 #include <gtest/gtest.h>
 
 #include <memory>
-#include <stdexcept>
 #include <xkbcommon/xkbcommon-compat.h>
 
 namespace mt = mir::test;
@@ -105,7 +104,7 @@ TEST_F(TestInputEventTransformer, transformer_gets_called)
     auto mock_transformer = std::make_shared<MockTransformer>();
     EXPECT_CALL(*mock_transformer, transform_input_event(_, _,_));
 
-    input_event_transformer.append(mock_transformer);
+    auto const registration = input_event_transformer.append(mock_transformer);
 
     input_event_transformer.handle(*make_key_event());
 }
@@ -123,8 +122,8 @@ TEST_F(TestInputEventTransformer, events_block_correctly)
     auto mock_transformer_2 = std::make_shared<MockTransformer>();
     EXPECT_CALL(*mock_transformer_2, transform_input_event(_, _, _)).Times(0);
 
-    input_event_transformer.append(mock_transformer_1);
-    input_event_transformer.append(mock_transformer_2);
+    auto const reg1 = input_event_transformer.append(mock_transformer_1);
+    auto const reg2 = input_event_transformer.append(mock_transformer_2);
 
     input_event_transformer.handle(*make_key_event());
 }
@@ -142,8 +141,8 @@ TEST_F(TestInputEventTransformer, events_cascade_correctly)
     auto mock_transformer_2 = std::make_shared<MockTransformer>();
     EXPECT_CALL(*mock_transformer_2, transform_input_event(_, _, _));
 
-    input_event_transformer.append(mock_transformer_1);
-    input_event_transformer.append(mock_transformer_2);
+    auto const reg1 = input_event_transformer.append(mock_transformer_1);
+    auto const reg2 = input_event_transformer.append(mock_transformer_2);
 
     input_event_transformer.handle(*make_key_event());
 }
@@ -159,9 +158,10 @@ TEST_F(TestInputEventTransformer, transformer_not_called_after_removal)
                 return true;
             });
 
-    input_event_transformer.append(mock_transformer);
-    input_event_transformer.handle(*make_key_event());
-    input_event_transformer.remove(mock_transformer);
+    {
+        auto const registration = input_event_transformer.append(mock_transformer);
+        input_event_transformer.handle(*make_key_event());
+    }  // mock_transformer_1 unregisters here
     input_event_transformer.handle(*make_key_event());
 }
 
@@ -172,25 +172,30 @@ TEST_F(TestInputEventTransformer, removing_a_valid_transformer_returns_true)
     auto mock_transformer_2 = std::make_shared<MockTransformer>();
     EXPECT_CALL(*mock_transformer_2, transform_input_event(_, _, _));
 
-    input_event_transformer.append(mock_transformer_1);
-    input_event_transformer.append(mock_transformer_2);
-    ASSERT_TRUE(input_event_transformer.remove(mock_transformer_1));
+    {
+        auto const reg = input_event_transformer.append(mock_transformer_1);
+    }
+
+    auto const reg2 = input_event_transformer.append(mock_transformer_2);
     input_event_transformer.handle(*make_key_event());
 }
 
-TEST_F(TestInputEventTransformer, removing_a_transformer_that_was_not_returns_false)
-{
-    auto mock_transformer = std::make_shared<MockTransformer>();
-    ASSERT_FALSE(input_event_transformer.remove(mock_transformer));
-}
-
-TEST_F(TestInputEventTransformer, adding_transformer_twice_has_no_effect_on_expected_handling_of_events)
+TEST_F(TestInputEventTransformer, appending_a_transformer_twice_returns_a_nullopt_registration_the_second_time)
 {
     auto mock_transformer_1 = std::make_shared<MockTransformer>();
-    EXPECT_CALL(*mock_transformer_1, transform_input_event(_, _, _)).Times(1);
-
-    input_event_transformer.append(mock_transformer_1);
-    input_event_transformer.append(mock_transformer_1);
-    input_event_transformer.handle(*make_key_event());
+    auto const reg1 = input_event_transformer.append(mock_transformer_1);
+    auto const reg2 = input_event_transformer.append(mock_transformer_1);
+    EXPECT_THAT(reg1, Ne(std::nullopt));
+    EXPECT_THAT(reg2, Eq(std::nullopt));
 }
 
+TEST_F(TestInputEventTransformer, foo)
+{
+    auto mock_transformer_1 = std::make_shared<MockTransformer>();
+    {
+        EXPECT_THAT(input_event_transformer.append(mock_transformer_1), Ne(std::nullopt));
+    } // Destroyed, can append again
+    {
+        EXPECT_THAT(input_event_transformer.append(mock_transformer_1), Ne(std::nullopt));
+    } // Destroyed, can append again
+}
