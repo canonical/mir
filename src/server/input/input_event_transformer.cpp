@@ -38,13 +38,15 @@ mi::InputEventTransformer::InputEventTransformer(
     input_device_registry{input_device_registry},
     main_loop{main_loop}
 {
-    input_device_registry->add_device(virtual_pointer);
 }
 
 mir::input::InputEventTransformer::~InputEventTransformer()
 {
-    if(virtual_pointer)
+    if (virtual_pointer_registered && !input_transformers.empty())
+    {
         input_device_registry->remove_device(virtual_pointer);
+        virtual_pointer_registered = false;
+    }
 }
 
 bool mi::InputEventTransformer::handle(MirEvent const& event)
@@ -89,6 +91,12 @@ void mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::
 {
     std::lock_guard lock{mutex};
     input_transformers.push_back(transformer);
+
+    if (!virtual_pointer_registered)
+    {
+        input_device_registry->add_device(virtual_pointer);
+        virtual_pointer_registered = true;
+    }
 }
 
 bool mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer::Transformer> const& transformer)
@@ -109,5 +117,12 @@ bool mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer
     }
 
     input_transformers.erase(remove_start, remove_end);
+
+    if (virtual_pointer_registered && input_transformers.empty())
+    {
+        input_device_registry->remove_device(virtual_pointer);
+        virtual_pointer_registered = false;
+    }
+
     return true;
 }
