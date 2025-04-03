@@ -91,6 +91,8 @@ jenkins
 KDE's
 KDE’s
 keybinds
+keymap
+Keymap
 KHR
 Khronos
 kms
@@ -130,11 +132,17 @@ MirServer
 mirserverlttng
 mirwayland
 mmal
+mousekeys
+Mousekeys
+MouseKeys
 Multiarch
 MX
 natively
 Natively
 nouveau
+numlock
+Numlock
+numpad
 nvidia
 Nvidia's
 Nvidia’s
