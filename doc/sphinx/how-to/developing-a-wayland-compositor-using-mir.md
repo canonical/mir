@@ -236,4 +236,4 @@ int main(int argc, char const* argv[])
 ```
 The code in `main()` is written using a mixture of classes defined in the `miral` API (such as `ConfigurationOption` and `X11Support`) and ones written as mart of Miriway (such as `ShellPids` and `CommandIndex`).
 
-For the `miral` API there's [documentation on the Mir website](https://canonical-mir.readthedocs-hosted.com/stable/), and for the `miriway` classes are documented in the code.
+For the `miral` API there's [documentation on the Mir website](../reference/introducing_the_miral_api.md), and for the `miriway` classes are documented in the code.
