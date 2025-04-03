@@ -92,6 +92,7 @@ pa11y-install:
 		}
 
 install: $(VENVDIR)
+	sudo apt update
 	sudo apt install -y $(DEPS)
 
 run: install configure

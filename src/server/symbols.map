@@ -545,6 +545,7 @@ global:
     mir::scene::SessionLockObserver::?SessionLockObserver*;
     mir::scene::SessionLockObserver::SessionLockObserver*;
     mir::scene::SessionLockObserver::operator*;
+    mir::scene::Surface::get_input_region*;
     mir::scene::SurfaceEventSource::SurfaceEventSource*;
     mir::scene::SurfaceEventSource::attrib_changed*;
     mir::scene::SurfaceEventSource::client_surface_close_requested*;
