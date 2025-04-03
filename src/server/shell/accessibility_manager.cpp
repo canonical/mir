@@ -122,16 +122,15 @@ mir::shell::AccessibilityManager::AccessibilityManager(
                     return (options->get<bool>(options::enable_mouse_keys_opt)) ?
                                std::make_shared<MouseKeysTransformer>() :
                                std::shared_ptr<MouseKeysTransformer>{};
-                }()
-
-    }
+                }()},
+    transformer_registration{
+        [&] -> std::optional<mir::input::InputEventTransformer::Registration>
+        {
+            return transformer != nullptr ? std::optional(event_transformer->append(transformer)) : std::nullopt;
+        }()}
 {
-    if (transformer)
-        event_transformer->append(transformer);
 }
 
 mir::shell::AccessibilityManager::~AccessibilityManager()
 {
-    if (transformer)
-        event_transformer->remove(transformer);
 }
