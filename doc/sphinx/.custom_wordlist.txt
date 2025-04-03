@@ -27,6 +27,10 @@ CSD
 Ctrl
 customize
 customization
+customizing
+customized
+customization
+customizability
 debian
 deps
 devel
@@ -132,6 +136,7 @@ MirServer
 mirserverlttng
 mirwayland
 mmal
+modularity
 mousekeys
 Mousekeys
 MouseKeys
