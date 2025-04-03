@@ -1,7 +1,7 @@
 # Mousekeys API
 
 ## Introduction
-To facilitate modularity and cutomizability, mousekeys support has been wrapped
+To facilitate modularity and customizability, mousekeys support has been wrapped
 in `miral::MouseKeysConfig`. ***Mousekeys are not enabled by default***.
 Passing an object of this type to the runner will enable mousekeys and add
 configuration options to control various aspects of mousekeys.
