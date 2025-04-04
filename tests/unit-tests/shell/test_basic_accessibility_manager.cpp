@@ -79,7 +79,8 @@ struct TestBasicAccessibilityManager : Test
             input_event_transformer,
             true,
             std::make_shared<mir::test::doubles::StubCursor>(),
-            mock_mousekeys_transformer}
+            mock_mousekeys_transformer,
+            main_loop}
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
     }
