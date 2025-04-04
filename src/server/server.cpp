@@ -90,6 +90,7 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(input_dispatcher)\
     MACRO(input_targeter)\
     MACRO(logger)\
+    MACRO(pointer_input_dispatcher)\
     MACRO(prompt_session_listener)\
     MACRO(prompt_session_manager)\
     MACRO(server_status_listener)\
@@ -119,6 +120,7 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(the_session_coordinator)\
     MACRO(the_session_listener)\
     MACRO(the_surface_factory)\
+    MACRO(the_pointer_input_dispatcher)\
     MACRO(the_prompt_session_manager)\
     MACRO(the_shell)\
     MACRO(the_shell_display_layout)\
