@@ -16,11 +16,11 @@
 
 #include "basic_accessibility_manager.h"
 #include "mouse_keys_transformer.h"
+#include "simulated_secondary_click_transformer.h"
 
 #include "mir/graphics/cursor.h"
-#include "mir/input/composite_event_filter.h"
-#include "mir/input/event_filter.h"
-#include "mir/input/input_device_registry.h"
+#include "mir/input/input_event_transformer.h"
+#include "mir/main_loop.h"
 #include "mir/shell/keyboard_helper.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
@@ -76,12 +76,22 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<input::InputEventTransformer> const& event_transformer,
     bool enable_key_repeat,
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
-    std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer) :
+    std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
+    std::shared_ptr<mir::MainLoop> const& main_loop) :
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},
-    transformer{mousekeys_transformer}
+    transformer{mousekeys_transformer},
+    simulated_secondary_click_transformer{
+        std::make_shared<SimulatedSecondaryClickTransformer>(main_loop),
+    }
 {
+    event_transformer->append(simulated_secondary_click_transformer);
+}
+
+mir::shell::BasicAccessibilityManager::~BasicAccessibilityManager()
+{
+    event_transformer->remove(simulated_secondary_click_transformer);
 }
 
 void mir::shell::BasicAccessibilityManager::cursor_scale(float new_scale)
