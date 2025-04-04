@@ -80,6 +80,21 @@ private:
     enum class Property
     {
         Port,
+        Vendor,
+        Model,
+        Product,
+        Serial,
+    };
+    // Workaround for not allowing static initialization in class
+    static std::map<Property, std::string const> const display_matching_properties()
+    {
+        static std::map<Property, std::string const> const display_matching_properties{
+            {Property::Vendor, "vendor"},
+            {Property::Model, "model"},
+            {Property::Product, "product"},
+            {Property::Serial, "serial"},
+        };
+        return display_matching_properties;
     };
 
     using Matchers = std::map<Property, std::string>;

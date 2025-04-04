@@ -16,6 +16,7 @@
 
 #include "static_display_config.h"
 
+#include <mir/graphics/edid.h>
 #include <mir/output_type_names.h>
 #include <mir/log.h>
 #include <mir/main_loop.h>
@@ -233,19 +234,59 @@ try
 
     for (auto const& ll : layouts)
     {
+        auto const& layout_name = ll.first.as<std::string>();
         auto const& layout = ll.second;
 
         if (!layout.IsDefined() || !layout.IsMap())
         {
-            throw mir::AbnormalExit{error_prefix(filename) + "invalid '" + ll.first.as<std::string>() + "' layout"};
+            throw mir::AbnormalExit{error_prefix(filename) + "invalid '" + layout_name + "' layout"};
         }
 
         Matchers2Config layout_config;
 
         Node cards = layout["cards"];
+        Node displays = layout["displays"];
 
-        if (!cards.IsDefined() || !cards.IsSequence())
-            throw mir::AbnormalExit{error_prefix(filename) + "invalid 'cards' in '" + ll.first.as<std::string>() + "' layout"};
+        if (!cards.IsDefined() && !displays.IsDefined())
+            throw mir::AbnormalExit{error_prefix(filename) + "neither 'cards' or 'displays' defined in '" + layout_name + "' layout"};
+
+        if (cards.IsDefined() && !cards.IsSequence())
+            throw mir::AbnormalExit{error_prefix(filename) + "invalid 'cards' in '" + layout_name + "' layout"};
+
+        if (displays.IsDefined())
+        {
+            if(!displays.IsSequence())
+            {
+                throw mir::AbnormalExit{error_prefix(filename) + "invalid 'displays' in '" + layout_name + "' layout"};
+            }
+
+            for (size_t n = 0; n < displays.size(); n++)
+            {
+                auto const identifier = "displays['" + std::to_string(n) + "']";
+                auto const& display = displays[n];
+                if (!display.IsDefined() || !display.IsMap() || !display.size())
+                    throw mir::AbnormalExit{error_prefix(filename) + "invalid '" + identifier + "' in '" + layout_name + "' layout"};
+
+                Matchers matchers;
+
+                for (auto const& [property, key] : display_matching_properties())
+                {
+                    auto const value = display[key];
+                    if (value.IsDefined() && (!value.IsScalar() || value.as<std::string>().empty()))
+                    {
+                        throw mir::AbnormalExit{error_prefix(filename) + "invalid '" + key + "' in '" + identifier + "' in '" + layout_name + "' layout"};
+                    }
+                    else if (value)
+                    {
+                        matchers[property] = value.as<std::string>();
+                    }
+                }
+
+                Config output_config;
+                parse_configuration(display, output_config, error_prefix(filename), identifier);
+                layout_config.emplace_back(matchers, output_config);
+            }
+        }
 
         for (Node const& card : cards)
         {
@@ -308,21 +349,71 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
 
         conf.for_each_output([&config=current_config->second](mg::UserDisplayConfigurationOutput& conf_output)
             {
-                for (auto const& matcher : config)
+                for (auto const& [matchers, conf] : config)
                 {
-                    auto const& matchers = matcher.first;
-                    auto const& conf = matcher.second;
-
-                    if (matchers.find(Property::Port) != end(matchers))
+                    using mir::graphics::Edid;
+                    std::optional<Edid const*> edid;
+                    if (conf_output.edid.size() >= Edid::minimum_size)
                     {
-                        if (conf_output.name != matchers.at(Property::Port))
+                        edid = reinterpret_cast<Edid const*>(conf_output.edid.data());
+                    }
+
+                    for (auto const& [property, value] : matchers)
+                    {
+                        if (property == Property::Port && conf_output.name != value)
                         {
-                            continue;
+                            goto failed_match;
+                        }
+
+                        static auto const props = StaticDisplayConfig::display_matching_properties();
+                        if (!edid && props.find(property) != props.end())
+                        {
+                            goto failed_match;
+                        }
+
+                        if (property == Property::Vendor)
+                        {
+                            Edid::Manufacturer man;
+                            edid.value()->get_manufacturer(man);
+                            if (man != value)
+                            {
+                                goto failed_match;
+                            }
+                        }
+
+                        if (property == Property::Model)
+                        {
+                            Edid::MonitorName name;
+                            edid.value()->get_monitor_name(name);
+                            if (name != value)
+                            {
+                                goto failed_match;
+                            }
+                        }
+
+                        if (property == Property::Product)
+                        {
+                            if (std::to_string(edid.value()->product_code()) != value)
+                            {
+                                goto failed_match;
+                            }
+                        }
+
+                        if (property == Property::Serial)
+                        {
+                            if (std::to_string(edid.value()->serial_number()) != value)
+                            {
+                                goto failed_match;
+                            }
                         }
                     }
+
                     // If we get here, all matchers applied to this output
                     apply_to_output(conf_output, conf);
                     return;
+
+                    // But here we failed to match
+                    failed_match:;
                 }
             });
     }
