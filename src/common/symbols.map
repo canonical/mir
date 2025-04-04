@@ -711,3 +711,9 @@ global:
   };
 } MIR_COMMON_2.18;
 
+MIR_COMMON_2.21 {
+global:
+  extern "C++" {
+    mir::graphics::Edid::serial_number*;
+  };
+} MIR_COMMON_2.19;

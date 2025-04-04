@@ -121,6 +121,8 @@ void mrl::DisplayConfigurationReport::log_configuration(
                             "%sEDID manufacturer: %s", indent, man);
                 logger->log(component, severity,
                             "%sEDID product code: %hu", indent, edid->product_code());
+                logger->log(component, severity,
+                            "%sEDID serial number: %hu", indent, edid->serial_number());
             }
 
             int width_mm = out.physical_size_mm.width.as_int();
