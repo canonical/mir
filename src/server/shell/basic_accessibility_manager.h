@@ -17,6 +17,7 @@
 #ifndef MIR_SHELL_BASIC_ACCESSIBILITY_MANAGER_H
 #define MIR_SHELL_BASIC_ACCESSIBILITY_MANAGER_H
 
+#include "mir/input/input_event_transformer.h"
 #include "mir/shell/accessibility_manager.h"
 
 #include "mir/input/mousekeys_keymap.h"
@@ -54,7 +55,9 @@ public:
         std::shared_ptr<input::InputEventTransformer> const& event_transformer,
         bool enable_key_repeat,
         std::shared_ptr<mir::graphics::Cursor> const& cursor,
-        std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer);
+        std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
+        std::shared_ptr<MainLoop> const& main_loop);
+    ~BasicAccessibilityManager();
 
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&) override;
 
@@ -104,6 +107,7 @@ private:
     bool const enable_key_repeat;
     std::shared_ptr<graphics::Cursor> const cursor;
     Registration<MouseKeysTransformer> const transformer;
+    Registration<input::InputEventTransformer::Transformer> const simulated_secondary_click_transformer;
 };
 }
 }

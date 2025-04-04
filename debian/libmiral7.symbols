@@ -541,3 +541,11 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::OutputFilter::~OutputFilter()@MIRAL_5.3" 5.3.0
  (c++)"miral::OutputFilter::filter(MirOutputFilter) const@MIRAL_5.3" 5.3.0
  (c++)"miral::OutputFilter::operator()(mir::Server&) const@MIRAL_5.3" 5.3.0
+ (c++)"miral::SimulatedSecondaryClickConfig::SimulatedSecondaryClickConfig(bool)@MIRAL_5.3" 5.3.0
+ (c++)"miral::SimulatedSecondaryClickConfig::enabled(bool) const@MIRAL_5.3" 5.3.0
+ (c++)"miral::SimulatedSecondaryClickConfig::hold_cancel(std::function<void ()>&&) const@MIRAL_5.3" 5.3.0
+ (c++)"miral::SimulatedSecondaryClickConfig::hold_duration(std::chrono::duration<long, std::ratio<1l, 1000l> >) const@MIRAL_5.3" 5.3.0
+ (c++)"miral::SimulatedSecondaryClickConfig::hold_duration(std::chrono::duration<long long, std::ratio<1ll, 1000ll> >) const@MIRAL_5.3" 5.3.0
+ (c++)"miral::SimulatedSecondaryClickConfig::hold_start(std::function<void ()>&&) const@MIRAL_5.3" 5.3.0
+ (c++)"miral::SimulatedSecondaryClickConfig::operator()(mir::Server&) const@MIRAL_5.3" 5.3.0
+ (c++)"miral::SimulatedSecondaryClickConfig::secondary_click(std::function<void ()>&&) const@MIRAL_5.3" 5.3.0
