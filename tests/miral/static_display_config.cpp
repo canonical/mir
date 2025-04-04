@@ -580,3 +580,103 @@ TEST_F(StaticDisplayConfig, given_no_custom_attributes_when_they_are_added_exist
 
     EXPECT_THAT(hdmi1.custom_attribute, ElementsAre());
 }
+
+TEST_F(StaticDisplayConfig, empty_displays_is_error)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    displays:\n"};
+
+    EXPECT_THROW((sdc.load_config(stream, "")), mir::AbnormalExit);
+}
+
+TEST_F(StaticDisplayConfig, null_display_is_error)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    displays:\n"
+        "    - \n"};
+
+    EXPECT_THROW((sdc.load_config(stream, "")), mir::AbnormalExit);
+}
+
+TEST_F(StaticDisplayConfig, empty_display_is_error)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    displays:\n"
+        "    - {}\n"};
+
+    EXPECT_THROW((sdc.load_config(stream, "")), mir::AbnormalExit);
+}
+
+struct PropertyValueTest : public StaticDisplayConfig, public WithParamInterface<std::string>
+{
+};
+
+TEST_P(PropertyValueTest, invalid_display_property_value_is_error)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    displays:\n"
+        "    - " + GetParam() + ": null\n"};
+
+    EXPECT_THROW((sdc.load_config(stream, "")), mir::AbnormalExit);
+}
+
+TEST_P(PropertyValueTest, empty_display_property_value_is_error)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    displays:\n"
+        "    - " + GetParam() + ": ""\n"};
+
+    EXPECT_THROW((sdc.load_config(stream, "")), mir::AbnormalExit);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    EDIDValues,
+    PropertyValueTest,
+    Values("vendor", "product", "model", "serial"));
+
+TEST_F(StaticDisplayConfig, disabling_displays_disables_all)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    displays:\n"
+        "    - state: disabled\n"};
+
+    sdc.load_config(stream, "");
+
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(vga1.used, Eq(false));
+    EXPECT_THAT(vga1.power_mode, Eq(mir_power_mode_off));
+    EXPECT_THAT(hdmi1.used, Eq(false));
+    EXPECT_THAT(hdmi1.power_mode, Eq(mir_power_mode_off));
+}
+
+TEST_F(StaticDisplayConfig, unmatched_displays_stay_put)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    displays:\n"
+        "    - vendor: unmatched\n"
+        "      state: disabled\n"};
+
+    sdc.load_config(stream, "");
+
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(vga1.used, Eq(true));
+    EXPECT_THAT(vga1.power_mode, Eq(mir_power_mode_on));
+    EXPECT_THAT(hdmi1.used, Eq(true));
+    EXPECT_THAT(hdmi1.power_mode, Eq(mir_power_mode_on));
+}
