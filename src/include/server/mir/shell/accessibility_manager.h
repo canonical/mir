@@ -38,7 +38,8 @@ class AccessibilityManager
 public:
     AccessibilityManager(
         std::shared_ptr<mir::options::Option> const&,
-        std::shared_ptr<input::InputEventTransformer> const& event_transformer);
+        std::shared_ptr<input::InputEventTransformer> const& event_transformer,
+        std::shared_ptr<mir::MainLoop> const& main_loop);
 
     ~AccessibilityManager();
 
@@ -68,6 +69,7 @@ private:
 
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
     std::shared_ptr<mir::input::InputEventTransformer::Transformer> const transformer;
+    std::shared_ptr<mir::input::InputEventTransformer::Transformer> const simulated_secondary_click_transformer;
 };
 }
 }

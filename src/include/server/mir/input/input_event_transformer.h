@@ -21,7 +21,6 @@
 #include "mir/input/event_builder.h"
 #include "mir_toolkit/events/event.h"
 
-#include <chrono>
 #include <functional>
 #include <mutex>
 #include <vector>
