@@ -47,6 +47,11 @@ uint16_t Edid::product_code() const
     return le16toh(product_code_le);
 }
 
+uint32_t Edid::serial_number() const
+{
+    return le32toh(serial_number_le);
+}
+
 size_t Edid::get_string(StringDescriptorType type, char str[14]) const
 {
     size_t len = 0;

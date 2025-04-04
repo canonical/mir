@@ -321,7 +321,7 @@ mg::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput(
         subpixel_arrangement(main.subpixel_arrangement),
         gamma(main.gamma),
         gamma_supported(main.gamma_supported),
-        edid(*reinterpret_cast<std::vector<uint8_t const>*>(&main.edid)),
+        edid(main.edid),
         custom_logical_size(main.custom_logical_size),
         name(main.name),
         custom_attribute{main.custom_attribute}

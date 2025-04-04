@@ -192,7 +192,7 @@ struct UserDisplayConfigurationOutput
     MirSubpixelArrangement& subpixel_arrangement;
     GammaCurves& gamma;
     MirOutputGammaSupported const& gamma_supported;
-    std::vector<uint8_t const> const& edid;
+    std::vector<uint8_t> const& edid;
     mir::optional_value<geometry::Size>& custom_logical_size;
     std::string const& name;
     /// Custom attributes (typically set by the .display configuration file
