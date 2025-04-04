@@ -30,6 +30,11 @@
 #include <optional>
 #include <set>
 
+namespace YAML
+{
+class Node;
+}
+
 namespace mir
 {
 class MainLoop;
@@ -83,6 +88,8 @@ private:
     Layout2Matchers2Config config;
 
     std::set<std::string> custom_output_attributes;
+
+    void parse_configuration(YAML::Node const& node, Config& config, std::string const& error_prefix, std::string const& identifier);
 
     static void apply_to_output(mir::graphics::UserDisplayConfigurationOutput& conf_output, Config const& conf);
 

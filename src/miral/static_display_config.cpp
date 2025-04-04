@@ -130,6 +130,90 @@ namespace
     }
 }
 
+void miral::YamlFileDisplayConfig::parse_configuration(YAML::Node const& node, Config& output_config, std::string const& error_prefix, std::string const& identifier)
+{
+    if (!node.IsMap())
+        throw mir::AbnormalExit{error_prefix + "invalid configuration for " + identifier};
+
+    if (auto const s = node[state])
+    {
+        auto const state = s.as<std::string>();
+        if (state != state_enabled && state != state_disabled)
+            throw mir::AbnormalExit{error_prefix + "invalid 'state' (" + state + ") for " + identifier};
+        output_config.disabled = (state == state_disabled);
+    }
+
+    if (auto const pos = node[position])
+    {
+        output_config.position = Point{pos[0].as<int>(), pos[1].as<int>()};
+    }
+
+    if (auto const group_id = node[group])
+    {
+        output_config.group_id = group_id.as<int>();
+    }
+
+    if (auto const m = node[mode])
+    {
+        std::istringstream in{m.as<std::string>()};
+
+        char delimiter = '\0';
+        int width;
+        int height;
+
+        if (!(in >> width))
+            goto mode_error;
+
+        if (!(in >> delimiter) || delimiter != 'x')
+            goto mode_error;
+
+        if (!(in >> height))
+            goto mode_error;
+
+        output_config.size = Size{width, height};
+
+        if (in.peek() == '@')
+        {
+            double refresh;
+            if (!(in >> delimiter) || delimiter != '@')
+                goto mode_error;
+
+            if (!(in >> refresh))
+                goto mode_error;
+
+            output_config.refresh = refresh;
+        }
+    }
+    mode_error: // TODO better error handling
+
+    if (auto const o = node[orientation])
+    {
+        std::string const orientation = o.as<std::string>();
+        output_config.orientation = as_orientation(orientation);
+
+        if (!output_config.orientation)
+            throw mir::AbnormalExit{error_prefix + "invalid 'orientation' (" +
+                                    orientation + ") for " + identifier};
+    }
+
+    if (auto const s = node[scale])
+    {
+        output_config.scale = s.as<float>();
+    }
+
+    for (auto const& key : custom_output_attributes)
+    {
+        if (auto const value = node[key])
+        {
+            output_config.custom_attribute[key] = value.Scalar();
+        }
+        else
+        {
+            output_config.custom_attribute[key] = std::nullopt;
+        }
+    }
+}
+
 void miral::YamlFileDisplayConfig::load_config(std::istream& config_file, std::string const& filename)
 try
 {
@@ -186,89 +270,8 @@ try
 
                 if (port_config.IsDefined() && !port_config.IsNull())
                 {
-                    if (!port_config.IsMap())
-                        throw mir::AbnormalExit{error_prefix(filename) + "invalid port: " + port_name};
-
-                    Config   output_config;
-
-                    if (auto const s = port_config[state])
-                    {
-                        auto const state = s.as<std::string>();
-                        if (state != state_enabled && state != state_disabled)
-                            throw mir::AbnormalExit{error_prefix(filename) + "invalid 'state' (" + state + ") for port: " + port_name};
-                        output_config.disabled = (state == state_disabled);
-                    }
-
-                    if (auto const pos = port_config[position])
-                    {
-                        output_config.position = Point{pos[0].as<int>(), pos[1].as<int>()};
-                    }
-
-                    if (auto const group_id = port_config[group])
-                    {
-                        output_config.group_id = group_id.as<int>();
-                    }
-
-                    if (auto const m = port_config[mode])
-                    {
-                        std::istringstream in{m.as<std::string>()};
-
-                        char delimiter = '\0';
-                        int width;
-                        int height;
-
-                        if (!(in >> width))
-                            goto mode_error;
-
-                        if (!(in >> delimiter) || delimiter != 'x')
-                            goto mode_error;
-
-                        if (!(in >> height))
-                            goto mode_error;
-
-                        output_config.size = Size{width, height};
-
-                        if (in.peek() == '@')
-                        {
-                            double refresh;
-                            if (!(in >> delimiter) || delimiter != '@')
-                                goto mode_error;
-
-                            if (!(in >> refresh))
-                                goto mode_error;
-
-                            output_config.refresh = refresh;
-                        }
-                    }
-                    mode_error: // TODO better error handling
-
-                    if (auto const o = port_config[orientation])
-                    {
-                        std::string const orientation = o.as<std::string>();
-                        output_config.orientation = as_orientation(orientation);
-
-                        if (!output_config.orientation)
-                            throw mir::AbnormalExit{error_prefix(filename) + "invalid 'orientation' (" +
-                                                    orientation + ") for port: " + port_name};
-                    }
-
-                    if (auto const s = port_config[scale])
-                    {
-                        output_config.scale = s.as<float>();
-                    }
-
-                    for (auto const& key : custom_output_attributes)
-                    {
-                        if (auto const value = port_config[key])
-                        {
-                            output_config.custom_attribute[key] = value.Scalar();
-                        }
-                        else
-                        {
-                            output_config.custom_attribute[key] = std::nullopt;
-                        }
-                    }
-
+                    Config output_config;
+                    parse_configuration(port_config, output_config, error_prefix(filename), port_name);
                     Matchers const port_matcher{{Property::Port, port_name}};
                     layout_config.emplace_back(port_matcher, output_config);
                 }
