@@ -20,6 +20,7 @@
 #include "mir/input/input_sink.h"
 #include "mir/options/configuration.h"
 #include "mir/shell/keyboard_helper.h"
+#include "simulated_secondary_click_transformer.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -114,7 +115,8 @@ struct MouseKeysTransformer: public mir::input::InputEventTransformer::Transform
 
 mir::shell::AccessibilityManager::AccessibilityManager(
     std::shared_ptr<mir::options::Option> const& options,
-    std::shared_ptr<input::InputEventTransformer> const& event_transformer) :
+    std::shared_ptr<input::InputEventTransformer> const& event_transformer,
+    std::shared_ptr<mir::MainLoop> const& main_loop) :
     enable_key_repeat{options->get<bool>(options::enable_key_repeat_opt)},
     event_transformer{event_transformer},
     transformer{[&]
@@ -122,16 +124,21 @@ mir::shell::AccessibilityManager::AccessibilityManager(
                     return (options->get<bool>(options::enable_mouse_keys_opt)) ?
                                std::make_shared<MouseKeysTransformer>() :
                                std::shared_ptr<MouseKeysTransformer>{};
-                }()
-
+                }()},
+    simulated_secondary_click_transformer{
+        std::make_shared<SimulatedSecondaryClickTransformer>(main_loop),
     }
 {
     if (transformer)
         event_transformer->append(transformer);
+
+    event_transformer->append(simulated_secondary_click_transformer);
 }
 
 mir::shell::AccessibilityManager::~AccessibilityManager()
 {
     if (transformer)
         event_transformer->remove(transformer);
+
+    event_transformer->remove(simulated_secondary_click_transformer);
 }
