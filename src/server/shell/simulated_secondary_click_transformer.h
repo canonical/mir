@@ -39,28 +39,18 @@ private:
     std::shared_ptr<mir::MainLoop> const main_loop;
     std::unique_ptr<time::Alarm> secondary_click_dispatcher;
 
-    MirPointerButton waiting_for_button{mir_pointer_button_primary};
-
-    enum class MicroState
+    enum class State
     {
-        waiting_for_synth_down,
-        waiting_for_synth_up,
-    } micro_state{MicroState::waiting_for_synth_down};
+        waiting_for_real_left_down,
 
-    enum class MacroState
-    {
-        waiting_for_left_down,
-        synthesizing_left_or_right_click,
-        // -> synthesize left click (down, up) if we get an up before the
-        // alarm is triggered
-        // (waiting_for_button=mir_pointer_button_primary), then back to
-        // `waiting_for_left_down`
-        //
-        // -> synthesize right click (down, up) otherwise
-        // (waiting_for_button=mir_pointer_button_secondary), then wait for the
-        // user to release their left button
-        waiting_for_left_up
-    } macro_state{MacroState::waiting_for_left_down};
+        waiting_for_synthesized_right_down,
+        waiting_for_synthesized_right_up,
+
+        waiting_for_real_left_up,
+
+        waiting_for_synthesized_left_down,
+        waiting_for_synthesized_left_up,
+    } state{State::waiting_for_real_left_down};
 };
 }
 }
