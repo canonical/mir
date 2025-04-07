@@ -45,6 +45,8 @@ public:
         std::shared_ptr<input::InputEventTransformer> const& event_transformer,
         std::shared_ptr<mir::graphics::Cursor> const& cursor);
 
+    ~AccessibilityManager();
+
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&);
 
     std::optional<int> repeat_rate() const;
@@ -70,7 +72,6 @@ private:
     Synchronised<MutableState> mutable_state;
 
     bool const enable_key_repeat;
-    bool const enable_mouse_keys;
 
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
     std::shared_ptr<mir::input::InputEventTransformer::Transformer> const transformer;

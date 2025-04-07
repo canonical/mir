@@ -112,13 +112,25 @@ mir::shell::AccessibilityManager::AccessibilityManager(
     std::shared_ptr<input::InputEventTransformer> const& event_transformer,
     std::shared_ptr<mir::graphics::Cursor> const& cursor) :
     enable_key_repeat{options->get<bool>(options::enable_key_repeat_opt)},
-    enable_mouse_keys{options->get<bool>(options::enable_mouse_keys_opt)},
     event_transformer{event_transformer},
-    transformer{std::make_shared<MouseKeysTransformer>()},
+    transformer{[&]
+                {
+                    return (options->get<bool>(options::enable_mouse_keys_opt)) ?
+                               std::make_shared<MouseKeysTransformer>() :
+                               std::shared_ptr<MouseKeysTransformer>{};
+                }()
+
+    },
     cursor{cursor}
 {
-    if (enable_mouse_keys)
+    if (transformer)
         event_transformer->append(transformer);
+}
+
+mir::shell::AccessibilityManager::~AccessibilityManager()
+{
+    if (transformer)
+        event_transformer->remove(transformer);
 }
 
 void mir::shell::AccessibilityManager::cursor_scale(float new_scale)

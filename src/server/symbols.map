@@ -634,6 +634,7 @@ global:
     mir::shell::AbstractShell::surface_at*;
     mir::shell::AbstractShell::surface_ready*;
     mir::shell::AbstractShell::swap_z_order*;
+    mir::shell::AccessibilityManager::?AccessibilityManager*;
     mir::shell::AccessibilityManager::AccessibilityManager*;
     mir::shell::AccessibilityManager::cursor_scale*;
     mir::shell::AccessibilityManager::notify_helpers*;
