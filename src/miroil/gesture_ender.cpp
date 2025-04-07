@@ -20,7 +20,7 @@
 
 namespace
 {
-struct PointerInputDispatcher : mir::frontend::PointerInputDispatcher
+struct PointerGestureEnder : mir::frontend::PointerInputDispatcher
 {
     void disable_dispatch_to_gesture_owner(std::function<void()> on_end_gesture) override;
 };
@@ -31,7 +31,7 @@ std::weak_ptr<mir::frontend::PointerInputDispatcher> pointer_input_dispatcher;
 std::function<void()> on_end_gesture = []{};
 
 
-void PointerInputDispatcher::disable_dispatch_to_gesture_owner(std::function<void()> on_end_gesture)
+void PointerGestureEnder::disable_dispatch_to_gesture_owner(std::function<void()> on_end_gesture)
 {
     std::lock_guard lock{mutex};
     ::on_end_gesture = on_end_gesture;
@@ -61,7 +61,7 @@ auto miroil::the_pointer_input_dispatcher() -> std::shared_ptr<mir::frontend::Po
     }
     else
     {
-        result = std::make_shared<PointerInputDispatcher>();
+        result = std::make_shared<PointerGestureEnder>();
         pointer_input_dispatcher = result;
         return result;
     }

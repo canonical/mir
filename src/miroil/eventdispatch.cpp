@@ -58,7 +58,7 @@ bool is_gesture_terminator(MirInputEvent const* event)
 }
 }
 
-void miroil::dispatch_input_event(const miral::Window& window, MirInputEvent const* event)
+void miroil::dispatch_input_event(miral::Window const& window, MirInputEvent const* event)
 {
     if (auto surface = std::shared_ptr<mir::scene::Surface>(window))
     {

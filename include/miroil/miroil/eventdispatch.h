@@ -23,7 +23,7 @@ struct MirInputEvent;
 
 namespace miroil
 {
-void dispatch_input_event(const miral::Window& window, const MirInputEvent* event);
+void dispatch_input_event(miral::Window const& window, MirInputEvent const* event);
 }
 
 #endif //MIROIL_EVENTDISPATCH_H
