@@ -528,7 +528,14 @@ global:
     miral::CursorScale::CursorScale*;
     miral::CursorScale::scale*;
     miral::CursorScale::operator*;
+    miral::MouseKeysConfig::MouseKeysConfig*;
+    miral::MouseKeysConfig::operator*;
+    miral::MouseKeysConfig::set_acceleration_factors*;
+    miral::MouseKeysConfig::set_keymap*;
+    miral::MouseKeysConfig::set_max_speed*;
+    miral::MouseKeysConfig::enabled*;
     typeinfo?for?miral::CursorScale;
+    typeinfo?for?miral::MouseKeysConfig;
   };
 } MIRAL_5.2;
 

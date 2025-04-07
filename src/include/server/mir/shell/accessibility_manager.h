@@ -1,5 +1,5 @@
 /*
- * Copyright © Canonical Ltd.
+* Copyright © Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -17,22 +17,14 @@
 #ifndef MIR_SHELL_ACCESSIBILITY_MANAGER_H
 #define MIR_SHELL_ACCESSIBILITY_MANAGER_H
 
-#include "mir/input/input_event_transformer.h"
-#include "mir/synchronised.h"
-
 #include <memory>
 #include <optional>
-#include <vector>
 
 namespace mir
 {
-namespace options
+namespace input
 {
-class Option;
-}
-namespace graphics
-{
-class Cursor;
+class MouseKeysKeymap;
 }
 namespace shell
 {
@@ -40,42 +32,23 @@ class KeyboardHelper;
 class AccessibilityManager
 {
 public:
-    AccessibilityManager(
-        std::shared_ptr<mir::options::Option> const&,
-        std::shared_ptr<input::InputEventTransformer> const& event_transformer,
-        std::shared_ptr<mir::graphics::Cursor> const& cursor);
+    virtual ~AccessibilityManager() = default;
+    virtual void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&) = 0;
 
-    ~AccessibilityManager();
+    virtual std::optional<int> repeat_rate() const = 0;
+    virtual int repeat_delay() const = 0;
 
-    void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&);
+    virtual void repeat_rate(int new_rate) = 0;
+    virtual void repeat_delay(int new_rate) = 0;
 
-    std::optional<int> repeat_rate() const;
-    int repeat_delay() const;
+    virtual void notify_helpers() const = 0;
 
-    void repeat_rate(int new_rate);
-    void repeat_delay(int new_rate);
+    virtual void cursor_scale(float new_scale) = 0;
 
-    void notify_helpers() const;
-
-    void cursor_scale(float new_scale);
-
-private:
-
-    struct MutableState {
-        // 25 rate and 600 delay are the default in Weston and Sway
-        int repeat_rate{25};
-        int repeat_delay{600};
-
-        std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
-    };
-
-    Synchronised<MutableState> mutable_state;
-
-    bool const enable_key_repeat;
-
-    std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
-    std::shared_ptr<mir::input::InputEventTransformer::Transformer> const transformer;
-    std::shared_ptr<graphics::Cursor> const cursor;
+    virtual void mousekeys_enabled(bool on) = 0;
+    virtual void mousekeys_keymap(input::MouseKeysKeymap const& new_keymap) = 0;
+    virtual void acceleration_factors(double constant, double linear, double quadratic) = 0;
+    virtual void max_speed(double x_axis, double y_axis) = 0;
 };
 }
 }
