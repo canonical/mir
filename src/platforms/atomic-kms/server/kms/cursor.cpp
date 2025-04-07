@@ -443,7 +443,7 @@ mga::Cursor::GBMBOWrapper& mga::Cursor::buffer_for_output(KMSOutput const& outpu
     return bo;
 }
 
-void mir::graphics::atomic::Cursor::set_scale(float new_scale)
+void mir::graphics::atomic::Cursor::scale(float new_scale)
 {
     {
         std::lock_guard lg(guard);

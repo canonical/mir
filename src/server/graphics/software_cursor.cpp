@@ -233,7 +233,7 @@ void mg::SoftwareCursor::move_to(geometry::Point position)
     scene->emit_scene_changed();
 }
 
-void mir::graphics::SoftwareCursor::set_scale(float new_scale)
+void mir::graphics::SoftwareCursor::scale(float new_scale)
 {
     {
         std::lock_guard lg{guard};

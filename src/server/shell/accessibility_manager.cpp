@@ -123,5 +123,5 @@ mir::shell::AccessibilityManager::AccessibilityManager(
 
 void mir::shell::AccessibilityManager::cursor_scale(float new_scale)
 {
-    cursor->set_scale(std::clamp(0.0f, 100.0f, new_scale));
+    cursor->scale(std::clamp(0.0f, 100.0f, new_scale));
 }

@@ -48,7 +48,7 @@ public:
     void enter(wl_pointer* pointer);
     void leave(wl_pointer* pointer);
 
-    void set_scale(float) override;
+    void scale(float) override;
 
 private:
     wl_shm* const shm;

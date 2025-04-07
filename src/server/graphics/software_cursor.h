@@ -50,7 +50,7 @@ public:
     void show(std::shared_ptr<CursorImage> const& cursor_image) override;
     void hide() override;
     void move_to(geometry::Point position) override;
-    void set_scale(float) override;
+    void scale(float) override;
 
 private:
     std::shared_ptr<detail::CursorRenderable> create_scaled_renderable_for(

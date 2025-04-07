@@ -30,7 +30,7 @@ public:
     void show(std::shared_ptr<CursorImage> const&) override {}
     void hide() override {}
     void move_to(geometry::Point) override {}
-    void set_scale(float) override {}
+    void scale(float) override {}
 };
 
 }

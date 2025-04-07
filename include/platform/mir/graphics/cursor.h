@@ -36,7 +36,7 @@ public:
 
     virtual void move_to(geometry::Point position) = 0;
 
-    virtual void set_scale(float new_scale) = 0;
+    virtual void scale(float new_scale) = 0;
 protected:
     Cursor() = default;
     virtual ~Cursor() = default;

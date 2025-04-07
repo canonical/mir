@@ -129,7 +129,7 @@ void mir::platform::wayland::Cursor::leave(wl_pointer* /*pointer*/)
     pointer = nullptr;
 }
 
-void mir::platform::wayland::Cursor::set_scale(float new_scale)
+void mir::platform::wayland::Cursor::scale(float new_scale)
 {
     {
         std::lock_guard lock{mutex};

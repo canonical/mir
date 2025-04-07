@@ -77,7 +77,7 @@ public:
     void suspend();
     void resume();
 
-    void set_scale(float) override;
+    void scale(float) override;
 
 private:
     enum ForceCursorState { UpdateState, ForceState };

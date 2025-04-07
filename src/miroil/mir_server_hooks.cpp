@@ -74,7 +74,7 @@ struct HiddenCursorWrapper : mg::Cursor
 
     void move_to(mir::geometry::Point position) override { wrapped->move_to(position); }
 
-    void set_scale(float new_scale) override { wrapped->set_scale(new_scale); }
+    void scale(float new_scale) override { wrapped->scale(new_scale); }
 
 private:
     std::shared_ptr<mg::Cursor> const wrapped;
