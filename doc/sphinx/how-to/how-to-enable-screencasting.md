@@ -32,7 +32,7 @@ chooser_cmd=slurp -f %o -or
 Where `chooser_type=simple` runs the given `chooser_cmd`. `chooser_cmd` in this case should return the name of the output that's going to be shared. In the example above, `slurp -f %o -or` uses a transparent white overlay to indicate that its running, if you click on a specific output, then it will return the name of that output.
 
 3. The following script should run automatically when your compositor starts up. For testing purposes, you can run the script after you start your compositor.
-```
+```sh
 export XDG_CURRENT_DESKTOP=my-mir-compositor                            # Refer to step 1
 export XDG_DESKTOP_PORTAL_DIR=/usr/share/xdg-desktop-portal/portals     # Tells `xdg-desktop-portal` where custom configurations are stored
 
