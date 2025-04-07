@@ -37,7 +37,7 @@ struct miral::CursorScale::Self
         if(accessibility_manager.expired())
             return;
 
-        accessibility_manager.lock()->cursor_scale_changed(scale_);
+        accessibility_manager.lock()->cursor_scale(scale_);
     }
 
     std::atomic<float> scale_;

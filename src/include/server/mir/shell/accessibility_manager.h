@@ -55,7 +55,7 @@ public:
 
     void notify_helpers() const;
 
-    void cursor_scale_changed(float new_scale);
+    void cursor_scale(float new_scale);
 
 private:
 

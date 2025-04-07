@@ -121,7 +121,7 @@ mir::shell::AccessibilityManager::AccessibilityManager(
         event_transformer->append(transformer);
 }
 
-void mir::shell::AccessibilityManager::cursor_scale_changed(float new_scale)
+void mir::shell::AccessibilityManager::cursor_scale(float new_scale)
 {
     cursor->set_scale(std::clamp(0.0f, 100.0f, new_scale));
 }
