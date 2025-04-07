@@ -169,23 +169,24 @@ auto miral::DisplayConfiguration::list_layouts() -> std::vector<std::string>
     return self->list_layouts();
 }
 
-auto miral::DisplayConfiguration::layout_userdata() const -> std::shared_ptr<void>
-{
-    return self->layout_userdata();
-}
-
 void miral::DisplayConfiguration::add_output_attribute(std::string const& key)
 {
     self->add_output_attribute(key);
 }
 
-void miral::DisplayConfiguration::set_layout_userdata_builder(std::function<std::shared_ptr<void>(
-    std::string const& layout,
-    std::unique_ptr<DisplayConfigurationNode> value)> const& builder) const
+auto miral::DisplayConfiguration::layout_userdata(std::string const& key) const
+    -> std::optional<std::any const>
 {
-    self->set_layout_userdata_builder([builder=builder](std::string const& layout, YAML::Node const& data)
+    return self->layout_userdata(key);
+}
+
+void miral::DisplayConfiguration::set_layout_userdata_builder(
+    std::string const& key,
+    std::function<std::any(std::unique_ptr<DisplayConfigurationNode> value)> const& builder) const
+{
+    self->set_layout_userdata_builder(key, [builder=builder](YAML::Node const& data)
     {
-        return builder(layout, std::make_unique<YamlDisplayConfigurationNode>(data));
+        return builder(std::make_unique<YamlDisplayConfigurationNode>(data));
     });
 }
 

@@ -543,11 +543,6 @@ TEST_F(StaticDisplayConfig, given_no_custom_attributes_when_they_are_added_exist
 
 TEST_F(StaticDisplayConfig, can_set_and_retrieve_custom_data_on_layouts)
 {
-    struct CustomData
-    {
-        std::string value;
-    };
-
     std::istringstream stream{
         "layouts:\n"
         "  another:\n"
@@ -564,20 +559,16 @@ TEST_F(StaticDisplayConfig, can_set_and_retrieve_custom_data_on_layouts)
         "    - HDMI-A-1:\n"
         "        position: [1280, 0]\n"};
 
-    sdc.set_layout_userdata_builder([](std::string const& layout, YAML::Node const& node) -> std::shared_ptr<void>
+    sdc.set_layout_userdata_builder("custom_data",  [](YAML::Node const& node) -> std::any
     {
-        if (layout == "another")
-        {
-            EXPECT_THAT(node["custom_data"].Scalar(), Eq("value"));
-            return std::make_shared<CustomData>(node["custom_data"].Scalar());
-        }
-
-        return nullptr;
+        EXPECT_THAT(node.Scalar(), Eq("value"));
+        return node.Scalar();
     });
 
     sdc.load_config(stream, "");
+    EXPECT_THAT(sdc.layout_userdata("custom_data"), Eq(std::nullopt));
     sdc.select_layout("another");
-    auto const other_data = std::static_pointer_cast<CustomData>(sdc.layout_userdata());
-    EXPECT_THAT(other_data, Ne(nullptr));
-    EXPECT_THAT(other_data->value, Eq("value"));
+    auto const other_data = sdc.layout_userdata("custom_data");
+    EXPECT_THAT(other_data, Ne(std::nullopt));
+    EXPECT_THAT(std::any_cast<std::string>(other_data.value()), Eq("value"));
 }

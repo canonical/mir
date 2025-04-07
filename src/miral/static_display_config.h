@@ -29,6 +29,7 @@
 #include <mutex>
 #include <optional>
 #include <set>
+#include <any>
 
 namespace mir
 {
@@ -53,13 +54,13 @@ public:
 
     auto list_layouts() const -> std::vector<std::string>;
 
-    auto layout_userdata() -> std::shared_ptr<void>;
+    auto layout_userdata(std::string const& key) -> std::optional<std::any const>;
 
     void add_output_attribute(std::string const& key);
 
-    void set_layout_userdata_builder(std::function<std::shared_ptr<void>(
-            std::string const& layout,
-            YAML::Node const& value)> const& builder);
+    void set_layout_userdata_builder(
+        std::string const& key,
+        std::function<std::any(YAML::Node const&)> const& builder);
 
     static void serialize_configuration(std::ostream& out, mir::graphics::DisplayConfiguration& conf);
 
@@ -84,17 +85,15 @@ private:
     struct LayoutConfig
     {
         Port2Config port2config;
-        std::shared_ptr<void> userdata;
+        std::map<std::string, std::any> userdata;
     };
 
     std::map<std::string, LayoutConfig> config;
 
     std::set<std::string> custom_output_attributes;
 
-    using LayoutUserDataBuilder = std::function<std::shared_ptr<void>(
-            std::string const& layout,
-            YAML::Node const& value)>;
-    std::optional<LayoutUserDataBuilder> layout_userdata_builder_func;
+    using LayoutUserDataBuilder = std::function<std::any(YAML::Node const& value)>;
+    std::map<std::string, LayoutUserDataBuilder> layout_userdata_builder_funcs;
 
     static void apply_to_output(mir::graphics::UserDisplayConfigurationOutput& conf_output, Config const& conf);
 

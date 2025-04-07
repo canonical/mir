@@ -276,11 +276,14 @@ try
 
         // Users may provide a function that returns a custom user data on a layout
         // based off of its configuration in YAML.
-        std::shared_ptr<void> userdata = nullptr;
-        if (layout_userdata_builder_func)
-            userdata = (*layout_userdata_builder_func)(ll.first.Scalar(), layout);
+        std::map<std::string, std::any> userdata_map;
+        for (auto const& [key, builder] : layout_userdata_builder_funcs)
+        {
+            if (layout[key])
+                userdata_map[key] = builder(layout[key]);
+        }
 
-        new_config[ll.first.Scalar()] = { layout_config, userdata };
+        new_config[ll.first.Scalar()] = { layout_config, userdata_map };
     }
 
     std::lock_guard lock{mutex};
@@ -536,17 +539,23 @@ auto miral::YamlFileDisplayConfig::list_layouts() const -> std::vector<std::stri
     return result;
 }
 
-auto miral::YamlFileDisplayConfig::layout_userdata() -> std::shared_ptr<void>
+auto miral::YamlFileDisplayConfig::layout_userdata(std::string const& key) -> std::optional<std::any const>
 {
     std::lock_guard lock{mutex};
     for (auto const& [first, second]: config)
     {
         if (first == layout)
-            return second.userdata;
+        {
+            if (second.userdata.contains(key))
+                return second.userdata.at(key);
+
+            mir::log_warning("No user data on layout=%s for key=%s", layout.c_str(), key.c_str());
+            return std::nullopt;
+        }
     }
 
     mir::log_error("Cannot find layout: %s", layout.c_str());
-    return nullptr;
+    return std::nullopt;
 }
 
 void miral::YamlFileDisplayConfig::add_output_attribute(std::string const& key)
@@ -554,11 +563,11 @@ void miral::YamlFileDisplayConfig::add_output_attribute(std::string const& key)
     custom_output_attributes.insert(key);
 }
 
-void miral::YamlFileDisplayConfig::set_layout_userdata_builder(std::function<std::shared_ptr<void>(
-    std::string const& layout,
-    YAML::Node const& value)> const& builder)
+void miral::YamlFileDisplayConfig::set_layout_userdata_builder(
+    std::string const& key,
+    std::function<std::any(YAML::Node const&)> const& builder)
 {
-    layout_userdata_builder_func = builder;
+    layout_userdata_builder_funcs[key] = builder;
 }
 
 miral::ReloadingYamlFileDisplayConfig::ReloadingYamlFileDisplayConfig(std::string basename) :
