@@ -247,7 +247,7 @@ try
     miral::MirRunner runner{argc, argv, "mir/mir_demo_server.config"};
 
     miral::CursorScale cursor_scale;
-    DemoConfigFile input_configuration{runner, "mir_demo_server.live-config"};
+    DemoConfigFile demo_configuration{runner, "mir_demo_server.live-config"};
     runner.set_exception_handler(exception_handler);
 
     std::function<void()> shutdown_hook{[]{}};
@@ -271,7 +271,7 @@ try
         miral::CursorTheme{"default:DMZ-White"},
         input_filters,
         test_runner,
-        std::ref(input_configuration),
+        std::ref(demo_configuration),
     });
 
     // Propagate any test failure
