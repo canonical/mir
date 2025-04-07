@@ -385,6 +385,13 @@ protected:
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<input::SurfaceInputDispatcher>    surface_input_dispatcher;
+    static inline // Hack to preserve ABI
+#if defined __has_attribute
+#   if (__has_attribute(visibility))
+    __attribute__ ((visibility("hidden")))
+#   endif
+#endif
+    CachedPtr<frontend::PointerInputDispatcher> pointer_input_dispatcher;
     CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub;
     CachedPtr<input::InputDeviceHub>    input_device_hub;
     CachedPtr<dispatch::MultiplexingDispatchable> input_reading_multiplexer;

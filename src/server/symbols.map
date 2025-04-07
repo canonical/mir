@@ -1458,3 +1458,10 @@ global:
   };
 } MIR_SERVER_INTERNAL_2.19;
 
+MIR_SERVER_INTERNAL_2.20.2 {
+global:
+  extern "C++" {
+    mir::Server::override_the_pointer_input_dispatcher*;
+    mir::Server::the_pointer_input_dispatcher*;
+  };
+} MIR_SERVER_INTERNAL_2.20;
