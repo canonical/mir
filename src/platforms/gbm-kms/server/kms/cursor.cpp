@@ -259,7 +259,7 @@ void mgg::Cursor::show(std::shared_ptr<CursorImage> const& cursor_image)
 {
     std::lock_guard lg(guard);
 
-    this->current_cursor_image = cursor_image;
+    current_cursor_image = cursor_image;
 
     size = current_cursor_image->size() * current_scale;
     auto const scaled_cursor_buf = mg::scale_cursor_image(*current_cursor_image, current_scale);

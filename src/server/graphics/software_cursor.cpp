@@ -153,7 +153,7 @@ void mg::SoftwareCursor::show(std::shared_ptr<CursorImage> const& cursor_image)
     std::lock_guard lg{guard};
 
     // Store the cursor image for later use with `set_scale`
-    this->current_cursor_image = cursor_image;
+    current_cursor_image = cursor_image;
 
     auto const to_remove = visible ? renderable : nullptr;
 
