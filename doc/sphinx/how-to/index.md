@@ -10,6 +10,7 @@ These how-to guides cover the key aspects of working with Mir.
 - [How to specify start up applications](how-to-specify-startup-apps.md)
 - [How to handle user input](how-to-handle-keyboard-input.md)
 - [Specifying CSD/SSD Preference](specifying-csd-ssd-preference.md)
+- [Enable screencasting](how-to-enable-screencasting.md)
 
 ```{toctree}
 :hidden:
@@ -25,4 +26,5 @@ how-to-update-symbols-map
 how-to-specify-startup-apps
 how-to-handle-keyboard-input
 specifying-csd-ssd-preference
+hot-to-enable-screencasting
 ```
