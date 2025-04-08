@@ -435,6 +435,29 @@ TEST_P(
 INSTANTIATE_TEST_SUITE_P(
     TestInputConfiguration, TestMouseMergeOnePropertyWithoutOverwrite, ::testing::ValuesIn(all_mouse_props));
 
+// Make sure tht merging with properties already set results in no change.
+TEST_F(TestMouseMergeOnePropertyWithoutOverwrite, mouse_merge_with_properties_already_set_does_not_change_target)
+{
+    auto const expected = get_mouse_config_with_properties(all_mouse_props);
+    auto const shouldnt_modify_target = []
+    {
+        Mouse different_set_of_values;
+
+        different_set_of_values.handedness(mir_pointer_handedness_left);
+        different_set_of_values.acceleration(mir_pointer_acceleration_none);
+        different_set_of_values.acceleration_bias(1.0);
+        different_set_of_values.vscroll_speed(37.0);
+        different_set_of_values.hscroll_speed(-19.0);
+
+        return different_set_of_values;
+    }();
+    auto target = get_mouse_config_with_properties(all_mouse_props);
+
+    target.merge(shouldnt_modify_target);
+
+    mouse_expect_equal(target, expected);
+}
+
 struct TestTouchpadInputConfiguration: public TestInputConfiguration
 {
     Touchpad touch_config;
@@ -556,6 +579,33 @@ TEST_P(
 INSTANTIATE_TEST_SUITE_P(
     TestInputConfiguration, TestTouchpadMergeOnePropertyWithoutOverwrite, ::testing::ValuesIn(all_touchpad_props));
 
+TEST_F(TestTouchpadMergeOnePropertyWithoutOverwrite, touchpad_merge_with_properties_already_set_does_not_change_target)
+{
+    auto const expected = get_touchpad_config_with_properties(all_touchpad_props);
+    auto const shouldnt_modify_target = []
+    {
+        Touchpad different_set_of_values;
+
+        different_set_of_values.disable_while_typing(false);
+        different_set_of_values.disable_with_external_mouse(true);
+        different_set_of_values.acceleration(mir_pointer_acceleration_adaptive);
+        different_set_of_values.acceleration_bias(-1.0);
+        different_set_of_values.vscroll_speed(-9.0);
+        different_set_of_values.hscroll_speed(29.0);
+        different_set_of_values.click_mode(mir_touchpad_click_mode_area_to_click);
+        different_set_of_values.scroll_mode(mir_touchpad_scroll_mode_button_down_scroll);
+        different_set_of_values.tap_to_click(false);
+        different_set_of_values.middle_mouse_button_emulation(true);
+
+        return different_set_of_values;
+    }();
+    auto target = get_touchpad_config_with_properties(all_touchpad_props);
+
+    target.merge(shouldnt_modify_target);
+
+    touchpad_expect_equal(target, expected);
+}
+
 struct TestKeyboardInputConfiguration: public TestInputConfiguration
 {
     Keyboard keyboard_config;
@@ -619,3 +669,22 @@ TEST_P(
 
 INSTANTIATE_TEST_SUITE_P(
     TestInputConfiguration, TestKeyboardMergeOnePropertyWithoutOverwrite, ::testing::ValuesIn(all_keyboard_props));
+
+TEST_F(TestKeyboardMergeOnePropertyWithoutOverwrite, keyboard_merge_with_properties_already_set_does_not_change_target)
+{
+    auto const expected = get_keyboard_config_with_properties(all_keyboard_props);
+    auto const shouldnt_modify_target = []
+    {
+        Keyboard different_set_of_values;
+
+        different_set_of_values.set_repeat_rate(-23.0);
+        different_set_of_values.set_repeat_delay(-5.0);
+
+        return different_set_of_values;
+    }();
+    auto target = get_keyboard_config_with_properties(all_keyboard_props);
+
+    target.merge(shouldnt_modify_target);
+
+    keyboard_expect_equal(target, expected);
+}
