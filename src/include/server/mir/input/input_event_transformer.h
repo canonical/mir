@@ -65,7 +65,7 @@ public:
         auto operator=(Registration&& other) noexcept -> Registration&;
 
     private:
-        Registration();
+        Registration() noexcept;
         Registration(Registration const&) = delete;
 
         std::function<void()> unregister;

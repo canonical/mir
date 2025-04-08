@@ -160,10 +160,9 @@ auto mir::input::InputEventTransformer::Registration::operator=(Registration&& o
     return *this;
 }
 
-mir::input::InputEventTransformer::Registration::Registration() :
-    unregister(
-        []
-        {
-        })
+mir::input::InputEventTransformer::Registration::Registration() noexcept :
+    unregister{[]
+               {
+               }}
 {
 }
