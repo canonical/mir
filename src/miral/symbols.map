@@ -515,7 +515,27 @@ global:
     miral::InputConfiguration::Keyboard::operator*;
     miral::InputConfiguration::Keyboard::set_repeat_delay*;
     miral::InputConfiguration::Keyboard::set_repeat_rate*;
+    miral::InputConfiguration::Mouse::scale*;
     miral::InputConfiguration::keyboard*;
     typeinfo?for?miral::InputConfiguration::Keyboard;
   };
 } MIRAL_5.1;
+
+MIRAL_5.3 {
+global:
+  extern "C++" {
+    miral::CursorScale::?CursorScale*;
+    miral::CursorScale::CursorScale*;
+    miral::CursorScale::scale*;
+    miral::CursorScale::operator*;
+    miral::MouseKeysConfig::MouseKeysConfig*;
+    miral::MouseKeysConfig::operator*;
+    miral::MouseKeysConfig::set_acceleration_factors*;
+    miral::MouseKeysConfig::set_keymap*;
+    miral::MouseKeysConfig::set_max_speed*;
+    miral::MouseKeysConfig::enabled*;
+    typeinfo?for?miral::CursorScale;
+    typeinfo?for?miral::MouseKeysConfig;
+  };
+} MIRAL_5.2;
+

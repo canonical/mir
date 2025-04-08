@@ -28,6 +28,10 @@
 
 #include "mir_test_framework/window_management_test_harness.h"
 #include <linux/input.h>
+#include <mir/shell/shell.h>
+
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -38,7 +42,7 @@ using namespace testing;
 
 namespace
 {
-constexpr int EXCLUSIVE_SURFACE_SIZE = 50;
+constexpr int exclusive_surface_size = 50;
 typedef std::function<miral::WindowSpecification(geom::Size const& output_size)> CreateSurfaceSpecFunc;
 
 CreateSurfaceSpecFunc create_top_attached()
@@ -46,7 +50,7 @@ CreateSurfaceSpecFunc create_top_attached()
     return [](geom::Size const& output_size)
     {
         miral::WindowSpecification spec;
-        spec.size() = geom::Size(output_size.width, geom::Height{EXCLUSIVE_SURFACE_SIZE});
+        spec.size() = geom::Size(output_size.width, geom::Height{exclusive_surface_size});
         spec.top_left() = geom::Point{0, 0};
         spec.exclusive_rect() = geom::Rectangle{
             geom::Point{0, 0},
@@ -64,7 +68,7 @@ CreateSurfaceSpecFunc create_left_attached()
     return [](geom::Size const& output_size)
     {
         miral::WindowSpecification spec;
-        spec.size() = { geom::Width{EXCLUSIVE_SURFACE_SIZE}, output_size.height };
+        spec.size() = { geom::Width{exclusive_surface_size}, output_size.height };
         spec.top_left() = geom::Point{0, 0};
         spec.exclusive_rect() = geom::Rectangle{
             geom::Point{0, 0},
@@ -82,7 +86,7 @@ CreateSurfaceSpecFunc create_right_attached()
     return [](geom::Size const& output_size)
     {
         miral::WindowSpecification spec;
-        spec.size() = { geom::Width{EXCLUSIVE_SURFACE_SIZE}, output_size.height };
+        spec.size() = { geom::Width{exclusive_surface_size}, output_size.height };
         spec.top_left() = geom::Point{output_size.width.as_int() - spec.size().value().width.as_int(), 0};
         spec.exclusive_rect() = geom::Rectangle{
             geom::Point{0, 0},
@@ -100,7 +104,7 @@ CreateSurfaceSpecFunc create_bottom_attached()
     return [](geom::Size const& output_size)
     {
         miral::WindowSpecification spec;
-        spec.size() = { output_size.width, geom::Height{EXCLUSIVE_SURFACE_SIZE} };
+        spec.size() = { output_size.width, geom::Height{exclusive_surface_size} };
         spec.top_left() = geom::Point{0, output_size.height.as_int() - spec.size().value().height.as_int()};
         spec.exclusive_rect() = geom::Rectangle{
             geom::Point{0, 0},
@@ -121,7 +125,7 @@ public:
     {
         return [&](miral::WindowManagerTools const& tools)
         {
-            return std::make_unique<miral::MinimalWindowManager>(tools);
+            return std::make_unique<miral::MinimalWindowManager>(tools, focus_stealing());
         };
     }
 
@@ -131,6 +135,11 @@ public:
             mir::geometry::Rectangle{{0, 0}, {800, 600}},
             mir::geometry::Rectangle{{800, 0}, {800, 600}}
         };
+    }
+
+    virtual miral::FocusStealing focus_stealing() const
+    {
+        return miral::FocusStealing::allow;
     }
 };
 
@@ -554,40 +563,182 @@ TEST_F(MinimalWindowManagerTest, can_resize_south_east_with_touch)
     EXPECT_EQ(window.size(), geom::Size(50, 50));
 }
 
-TEST_F(MinimalWindowManagerTest,  new_windows_are_inserted_above_older_windows)
+template <uint N>
+class MultipleWindowsMinimalWindowManagerTest : public MinimalWindowManagerTest
 {
-    auto const app1 = open_application("app1");
-    auto const app2 = open_application("app2");
-    auto const app3 = open_application("app3");
-    miral::WindowSpecification spec;
-    spec.size() = { geom::Width {100}, geom::Height{100} };
-    spec.depth_layer() = mir_depth_layer_application;
-    auto window1 = create_window(app1, spec);
-    auto window2 = create_window(app2, spec);
-    auto window3 = create_window(app3, spec);
+public:
+    void SetUp() override
+    {
+        MinimalWindowManagerTest::SetUp();
+        miral::WindowSpecification spec;
+        spec.size() = { geom::Width {100}, geom::Height{100} };
+        spec.depth_layer() = mir_depth_layer_application;
 
-    EXPECT_TRUE(is_above(window3, window2));
-    EXPECT_TRUE(is_above(window2, window1));
+        for (uint i = 0; i < N; i++)
+        {
+            apps[i] = open_application("app" + std::to_string(i));
+            windows[i] = create_window(apps[i], spec);
+        }
+    }
+
+    miral::Application apps[N];
+    miral::Window windows[N];
+};
+
+template <uint N>
+class MultipleWindowsMinimalWindowManagerPreventFocusStealingTest : public MultipleWindowsMinimalWindowManagerTest<N>
+{
+public:
+    miral::FocusStealing focus_stealing() const override
+    {
+        return miral::FocusStealing::prevent;
+    }
+};
+
+using MinimalWindowManagerWithTwoWindows = MultipleWindowsMinimalWindowManagerTest<2>;
+using MinimalWindowManagerWithThreeWindows = MultipleWindowsMinimalWindowManagerTest<3>;
+using MinimalWindowManagerWithThreeWindowsPreventFocusStealing = MultipleWindowsMinimalWindowManagerPreventFocusStealingTest<3>;
+
+TEST_F(MinimalWindowManagerWithThreeWindows, new_windows_are_inserted_above_older_windows)
+{
+    EXPECT_TRUE(is_above(windows[2], windows[1]));
+    EXPECT_TRUE(is_above(windows[1], windows[0]));
 }
 
-TEST_F(MinimalWindowManagerTest,  when_a_window_is_focused_then_it_appears_above_other_windows)
+TEST_F(MinimalWindowManagerWithThreeWindows, when_a_window_is_focused_then_it_appears_above_other_windows)
 {
-    auto const app1 = open_application("app1");
-    auto const app2 = open_application("app2");
-    auto const app3 = open_application("app3");
+    tools().select_active_window(windows[0]);
+    EXPECT_TRUE(focused(windows[0]));
+    EXPECT_TRUE(is_above(windows[0], windows[2]));
+    EXPECT_TRUE(is_above(windows[2], windows[1]));
+}
+
+TEST_F(MinimalWindowManagerWithThreeWindowsPreventFocusStealing,
+    when_a_window_is_opened_with_prevent_focus_stealing_then_it_does_not_appears_above_other_windows)
+{
+    EXPECT_TRUE(focused(windows[0]));
+    EXPECT_TRUE(is_above(windows[0], windows[2]));
+    EXPECT_TRUE(is_above(windows[2], windows[1]));
+}
+
+TEST_F(MinimalWindowManagerWithTwoWindows, if_active_window_is_removed_then_parent_has_focus_priority)
+{
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width {100}, geom::Height{100} };
+    spec.parent() = windows[0];
+    auto const child_window = create_window(apps[0], spec);
+
+    tools().ask_client_to_close(child_window);
+    EXPECT_TRUE(focused(windows[0]));
+    EXPECT_TRUE(is_above(windows[0], windows[1]));
+}
+
+TEST_F(MinimalWindowManagerWithThreeWindows, if_active_window_is_removed_then_last_focused_window_is_focused)
+{
+    tools().ask_client_to_close(windows[2]);
+    EXPECT_TRUE(focused(windows[1]));
+    EXPECT_TRUE(is_above(windows[1], windows[0]));
+}
+
+TEST_F(MinimalWindowManagerWithThreeWindows, when_active_window_is_closed_then_we_focus_a_window_in_same_workspaces)
+{
+    auto const workspace = tools().create_workspace();
+    tools().add_tree_to_workspace(windows[0], workspace);
+    tools().add_tree_to_workspace(windows[2], workspace);
+
+    tools().ask_client_to_close(windows[2]);
+    EXPECT_TRUE(focused(windows[0]));
+    EXPECT_TRUE(is_above(windows[0], windows[1]));
+}
+
+TEST_F(MinimalWindowManagerWithTwoWindows,
+    if_active_window_is_removed_and_we_cannot_focus_any_window_on_closing_window_workspaces_then_try_focus_within_app)
+{
+    auto const workspace = tools().create_workspace();
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width {100}, geom::Height{100} };
+    auto const window_on_first_app = create_window(apps[0], spec);
+    tools().add_tree_to_workspace(window_on_first_app, workspace);
+
+    tools().ask_client_to_close(window_on_first_app);
+    EXPECT_TRUE(focused(windows[0]));
+    EXPECT_TRUE(is_above(windows[0], windows[1]));
+}
+
+TEST_F(MinimalWindowManagerWithThreeWindows,
+    if_active_window_is_removed_and_we_cannot_focus_any_window_on_closing_window_workspaces_and_there_are_no_other_windows_in_this_app_then_focus_other_app)
+{
+    auto const workspace1 = tools().create_workspace();
+    tools().add_tree_to_workspace(windows[1], workspace1);
+    auto const workspace2 = tools().create_workspace();
+    tools().add_tree_to_workspace(windows[2], workspace2);
+
+    tools().ask_client_to_close(windows[2]);
+    EXPECT_TRUE(focused(windows[1]));
+    EXPECT_TRUE(is_above(windows[1], windows[0]));
+}
+
+TEST_F(MinimalWindowManagerTest, if_active_window_is_removed_and_it_is_only_window_then_nothing_is_focused)
+{
+    // Setup: Create one app with one window
+    auto const app = open_application("app1");
     miral::WindowSpecification spec;
     spec.size() = { geom::Width {100}, geom::Height{100} };
     spec.depth_layer() = mir_depth_layer_application;
-    auto window1 = create_window(app1, spec);
-    auto window2 = create_window(app2, spec);
-    auto window3 = create_window(app3, spec);
+    auto const window = create_window(app, spec);
 
-    request_focus(window1);
+    EXPECT_TRUE(focused(window));
 
-    EXPECT_TRUE(focused(window1));
+    // Act: Close the focused window
+    tools().ask_client_to_close(window);
 
-    EXPECT_TRUE(is_above(window1, window3));
-    EXPECT_TRUE(is_above(window3, window2));
+    // Expect: no window to have focus
+    EXPECT_TRUE(focused({}));
+}
+
+TEST_F(MinimalWindowManagerTest,
+    if_active_windows_session_closes_and_there_is_nothing_to_select_then_focused_is_empty)
+{
+    // Setup: Create one app with one window
+    auto const app = open_application("app1");
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width {100}, geom::Height{100} };
+    spec.depth_layer() = mir_depth_layer_application;
+    auto const window = create_window(app, spec);
+
+    // Act: Close the session
+    server.the_shell()->close_session(app);
+
+    // Expect: no window to have focus
+    EXPECT_TRUE(focused({}));
+}
+
+TEST_F(MinimalWindowManagerTest, closing_attached_window_causes_maximized_to_resize)
+{
+    // Setup: Create one app with a maximized window and one app with a top attached window
+    auto const output_rectangle =  get_output_rectangles()[0];
+    auto const app = open_application("app1");
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width {100}, geom::Height{100} };
+    spec.depth_layer() = mir_depth_layer_application;
+    spec.state() = mir_window_state_maximized;
+    auto const window = create_window(app, spec);
+
+    auto const top_spec = create_top_attached();
+    auto const attached = create_window(app, top_spec(output_rectangle.size));
+    EXPECT_THAT(window.size(), Eq(geom::Size(
+        output_rectangle.size.width.as_int(),
+        output_rectangle.size.height.as_int() - exclusive_surface_size
+    )));
+
+    // Act: Close the attached window
+    tools().ask_client_to_close(attached);
+
+    // Expect: the window now takes up the full dimensions
+    EXPECT_THAT(window.size(), Eq(geom::Size(
+        output_rectangle.size.width.as_int(),
+        output_rectangle.size.height.as_int()
+    )));
 }
 
 class MinimalWindowManagerStartMoveStateChangeTest
@@ -711,7 +862,7 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerAttachedTestPlacement, MinimalWindo
                     // Expect that the top surface does not change at all
                     return geom::Rectangle{
                         geom::Point{0, 0},
-                        geom::Size{output_size.width.as_int(), EXCLUSIVE_SURFACE_SIZE}
+                        geom::Size{output_size.width.as_int(), exclusive_surface_size}
                     };
                 }
             },
@@ -719,10 +870,10 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerAttachedTestPlacement, MinimalWindo
                 .create=create_left_attached(),
                 .expected_rect=[](geom::Size const& output_size)
                 {
-                    // Expect that the left surface is moved down by [EXCLUSIVE_SURFACE_SIZE] in the y-dimension
+                    // Expect that the left surface is moved down by [exclusive_surface_size] in the y-dimension
                     return geom::Rectangle{
-                        geom::Point{0, EXCLUSIVE_SURFACE_SIZE},
-                        geom::Size{EXCLUSIVE_SURFACE_SIZE, output_size.height.as_int() - EXCLUSIVE_SURFACE_SIZE}
+                        geom::Point{0, exclusive_surface_size},
+                        geom::Size{exclusive_surface_size, output_size.height.as_int() - exclusive_surface_size}
                     };
                 }
             }
@@ -738,7 +889,7 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerAttachedTestPlacement, MinimalWindo
                     // Expect that the top surface does not change at all
                     return geom::Rectangle{
                         geom::Point{0, 0},
-                        geom::Size{output_size.width.as_int(), EXCLUSIVE_SURFACE_SIZE}
+                        geom::Size{output_size.width.as_int(), exclusive_surface_size}
                     };
                 }
             },
@@ -746,10 +897,10 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerAttachedTestPlacement, MinimalWindo
                 .create=create_right_attached(),
                 .expected_rect=[](geom::Size const& output_size)
                 {
-                    // Expect that the right surface is moved down by [EXCLUSIVE_SURFACE_SIZE] in the y-dimension
+                    // Expect that the right surface is moved down by [exclusive_surface_size] in the y-dimension
                     return geom::Rectangle{
-                        geom::Point{output_size.width.as_int() - EXCLUSIVE_SURFACE_SIZE, EXCLUSIVE_SURFACE_SIZE},
-                        geom::Size{EXCLUSIVE_SURFACE_SIZE, output_size.height.as_int() - EXCLUSIVE_SURFACE_SIZE}
+                        geom::Point{output_size.width.as_int() - exclusive_surface_size, exclusive_surface_size},
+                        geom::Size{exclusive_surface_size, output_size.height.as_int() - exclusive_surface_size}
                     };
                 }
             }
@@ -764,8 +915,8 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerAttachedTestPlacement, MinimalWindo
                 {
                     // Expect that the bottom surface does not change at all
                     return geom::Rectangle{
-                        geom::Point{0, output_size.height.as_int() - EXCLUSIVE_SURFACE_SIZE},
-                        geom::Size{output_size.width, EXCLUSIVE_SURFACE_SIZE}
+                        geom::Point{0, output_size.height.as_int() - exclusive_surface_size},
+                        geom::Size{output_size.width, exclusive_surface_size}
                     };
                 }
             },
@@ -773,10 +924,10 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerAttachedTestPlacement, MinimalWindo
                 .create=create_left_attached(),
                 .expected_rect=[](geom::Size const& output_size)
                 {
-                    // Expect that the left surface shrinks its height by [EXCLUSIVE_SURFACE_SIZE]
+                    // Expect that the left surface shrinks its height by [exclusive_surface_size]
                     return geom::Rectangle{
                         geom::Point{0, 0},
-                        geom::Size{EXCLUSIVE_SURFACE_SIZE, output_size.height.as_int() - EXCLUSIVE_SURFACE_SIZE}
+                        geom::Size{exclusive_surface_size, output_size.height.as_int() - exclusive_surface_size}
                     };
                 }
             }
@@ -791,8 +942,8 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerAttachedTestPlacement, MinimalWindo
                 {
                     // Expect that the bottom surface does not change at all
                     return geom::Rectangle{
-                        geom::Point{0, output_size.height.as_int() - EXCLUSIVE_SURFACE_SIZE},
-                        geom::Size{output_size.width, EXCLUSIVE_SURFACE_SIZE}
+                        geom::Point{0, output_size.height.as_int() - exclusive_surface_size},
+                        geom::Size{output_size.width, exclusive_surface_size}
                     };
                 }
             },
@@ -800,10 +951,10 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerAttachedTestPlacement, MinimalWindo
                 .create=create_right_attached(),
                 .expected_rect=[](geom::Size const& output_size)
                 {
-                    // Expect that the right surface shrinks its height by [EXCLUSIVE_SURFACE_SIZE]
+                    // Expect that the right surface shrinks its height by [exclusive_surface_size]
                     return geom::Rectangle{
-                        geom::Point{output_size.width.as_int() - EXCLUSIVE_SURFACE_SIZE, 0},
-                        geom::Size{EXCLUSIVE_SURFACE_SIZE, output_size.height.as_int() - EXCLUSIVE_SURFACE_SIZE}
+                        geom::Point{output_size.width.as_int() - exclusive_surface_size, 0},
+                        geom::Size{exclusive_surface_size, output_size.height.as_int() - exclusive_surface_size}
                     };
                 }
             }
@@ -819,7 +970,7 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerAttachedTestPlacement, MinimalWindo
                     // Expect that the top surface does not change at all
                     return geom::Rectangle{
                         geom::Point{0, 0},
-                        geom::Size{output_size.width, EXCLUSIVE_SURFACE_SIZE}
+                        geom::Size{output_size.width, exclusive_surface_size}
                     };
                 }
             },
@@ -829,8 +980,8 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerAttachedTestPlacement, MinimalWindo
                 {
                     // Expect that the bottom surface does not change at all
                     return geom::Rectangle{
-                        geom::Point{0, output_size.height.as_int() - EXCLUSIVE_SURFACE_SIZE},
-                        geom::Size{output_size.width, EXCLUSIVE_SURFACE_SIZE}
+                        geom::Point{0, output_size.height.as_int() - exclusive_surface_size},
+                        geom::Size{output_size.width, exclusive_surface_size}
                     };
                 }
             },
@@ -838,10 +989,10 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerAttachedTestPlacement, MinimalWindo
                 .create=create_left_attached(),
                 .expected_rect=[](geom::Size const& output_size)
                 {
-                    // Expect that the left surface shrinks its height by 2 * [EXCLUSIVE_SURFACE_SIZE]
+                    // Expect that the left surface shrinks its height by 2 * [exclusive_surface_size]
                     return geom::Rectangle{
-                        geom::Point{0, EXCLUSIVE_SURFACE_SIZE},
-                        geom::Size{EXCLUSIVE_SURFACE_SIZE, output_size.height.as_int() - 2 * EXCLUSIVE_SURFACE_SIZE}
+                        geom::Point{0, exclusive_surface_size},
+                        geom::Size{exclusive_surface_size, output_size.height.as_int() - 2 * exclusive_surface_size}
                     };
                 }
             },
@@ -849,10 +1000,10 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerAttachedTestPlacement, MinimalWindo
                 .create=create_right_attached(),
                 .expected_rect=[](geom::Size const& output_size)
                 {
-                    // Expect that the right surface shrinks its height by 2 * [EXCLUSIVE_SURFACE_SIZE]
+                    // Expect that the right surface shrinks its height by 2 * [exclusive_surface_size]
                     return geom::Rectangle{
-                        geom::Point{output_size.width.as_int() - EXCLUSIVE_SURFACE_SIZE, EXCLUSIVE_SURFACE_SIZE},
-                        geom::Size{EXCLUSIVE_SURFACE_SIZE, output_size.height.as_int() - 2 * EXCLUSIVE_SURFACE_SIZE}
+                        geom::Point{output_size.width.as_int() - exclusive_surface_size, exclusive_surface_size},
+                        geom::Size{exclusive_surface_size, output_size.height.as_int() - 2 * exclusive_surface_size}
                     };
                 }
             }
@@ -868,7 +1019,7 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerAttachedTestPlacement, MinimalWindo
                     // Expect that the left surface does not change at all
                     return geom::Rectangle{
                         geom::Point{0, 0},
-                        geom::Size{EXCLUSIVE_SURFACE_SIZE, output_size.height.as_int()}
+                        geom::Size{exclusive_surface_size, output_size.height.as_int()}
                     };
                 }
             },
@@ -878,8 +1029,8 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerAttachedTestPlacement, MinimalWindo
                 {
                     // Expect that the right surface does not change at all
                     return geom::Rectangle{
-                        geom::Point{output_size.width.as_int() - EXCLUSIVE_SURFACE_SIZE, 0},
-                        geom::Size{EXCLUSIVE_SURFACE_SIZE, output_size.height.as_int()}
+                        geom::Point{output_size.width.as_int() - exclusive_surface_size, 0},
+                        geom::Size{exclusive_surface_size, output_size.height.as_int()}
                     };
                 }
             }
@@ -895,7 +1046,7 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerAttachedTestPlacement, MinimalWindo
                     // Expect that the top surface does not change at all
                     return geom::Rectangle{
                         geom::Point{0, 0},
-                        geom::Size{output_size.width, EXCLUSIVE_SURFACE_SIZE}
+                        geom::Size{output_size.width, exclusive_surface_size}
                     };
                 }
             },
@@ -905,8 +1056,8 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerAttachedTestPlacement, MinimalWindo
                 {
                     // Expect that the bottom surface does not change at all
                     return geom::Rectangle{
-                        geom::Point{0, output_size.height.as_int() - EXCLUSIVE_SURFACE_SIZE},
-                        geom::Size{output_size.width, EXCLUSIVE_SURFACE_SIZE}
+                        geom::Point{0, output_size.height.as_int() - exclusive_surface_size},
+                        geom::Size{output_size.width, exclusive_surface_size}
                     };
                 }
             }
@@ -956,10 +1107,10 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerMaximizedSurfaceExclusionZoneTest,
             .expected_rectangle=[](geom::Rectangle const& ouput_rect)
             {
                 return geom::Rectangle{
-                    geom::Point(0, EXCLUSIVE_SURFACE_SIZE),
+                    geom::Point(0, exclusive_surface_size),
                     geom::Size(
                         ouput_rect.size.width,
-                        ouput_rect.size.height.as_int() - EXCLUSIVE_SURFACE_SIZE)
+                        ouput_rect.size.height.as_int() - exclusive_surface_size)
                 };
             }
         },
@@ -968,9 +1119,9 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerMaximizedSurfaceExclusionZoneTest,
             .expected_rectangle=[](geom::Rectangle const& ouput_rect)
             {
                 return geom::Rectangle{
-                    geom::Point(EXCLUSIVE_SURFACE_SIZE, 0),
+                    geom::Point(exclusive_surface_size, 0),
                     geom::Size(
-                        ouput_rect.size.width.as_int() - EXCLUSIVE_SURFACE_SIZE,
+                        ouput_rect.size.width.as_int() - exclusive_surface_size,
                         ouput_rect.size.height.as_int())
                 };
             }
@@ -982,7 +1133,7 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerMaximizedSurfaceExclusionZoneTest,
                 return geom::Rectangle{
                     geom::Point(0, 0),
                     geom::Size(
-                        ouput_rect.size.width.as_int() - EXCLUSIVE_SURFACE_SIZE,
+                        ouput_rect.size.width.as_int() - exclusive_surface_size,
                         ouput_rect.size.height.as_int())
                 };
             }
@@ -995,7 +1146,7 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerMaximizedSurfaceExclusionZoneTest,
                     geom::Point(0, 0),
                     geom::Size(
                         ouput_rect.size.width.as_int(),
-                        ouput_rect.size.height.as_int() - EXCLUSIVE_SURFACE_SIZE)
+                        ouput_rect.size.height.as_int() - exclusive_surface_size)
                 };
             }
         },
@@ -1004,10 +1155,10 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerMaximizedSurfaceExclusionZoneTest,
             .expected_rectangle=[](geom::Rectangle const& ouput_rect)
             {
                 return geom::Rectangle{
-                    geom::Point(0, EXCLUSIVE_SURFACE_SIZE),
+                    geom::Point(0, exclusive_surface_size),
                     geom::Size(
                         ouput_rect.size.width.as_int(),
-                        ouput_rect.size.height.as_int() - 2 * EXCLUSIVE_SURFACE_SIZE)
+                        ouput_rect.size.height.as_int() - 2 * exclusive_surface_size)
                 };
             }
         },
@@ -1016,9 +1167,9 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerMaximizedSurfaceExclusionZoneTest,
             .expected_rectangle=[](geom::Rectangle const& ouput_rect)
             {
                 return geom::Rectangle{
-                    geom::Point(EXCLUSIVE_SURFACE_SIZE, 0),
+                    geom::Point(exclusive_surface_size, 0),
                     geom::Size(
-                        ouput_rect.size.width.as_int() - 2 * EXCLUSIVE_SURFACE_SIZE,
+                        ouput_rect.size.width.as_int() - 2 * exclusive_surface_size,
                         ouput_rect.size.height.as_int())
                 };
             }
@@ -1028,10 +1179,10 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerMaximizedSurfaceExclusionZoneTest,
             .expected_rectangle=[](geom::Rectangle const& ouput_rect)
             {
                 return geom::Rectangle{
-                    geom::Point(EXCLUSIVE_SURFACE_SIZE, EXCLUSIVE_SURFACE_SIZE),
+                    geom::Point(exclusive_surface_size, exclusive_surface_size),
                     geom::Size(
-                        ouput_rect.size.width.as_int() - EXCLUSIVE_SURFACE_SIZE,
-                        ouput_rect.size.height.as_int() - EXCLUSIVE_SURFACE_SIZE)
+                        ouput_rect.size.width.as_int() - exclusive_surface_size,
+                        ouput_rect.size.height.as_int() - exclusive_surface_size)
                 };
             }
         },
@@ -1042,8 +1193,8 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerMaximizedSurfaceExclusionZoneTest,
                 return geom::Rectangle{
                     geom::Point(0, 0),
                     geom::Size(
-                        ouput_rect.size.width.as_int() - EXCLUSIVE_SURFACE_SIZE,
-                        ouput_rect.size.height.as_int() - EXCLUSIVE_SURFACE_SIZE)
+                        ouput_rect.size.width.as_int() - exclusive_surface_size,
+                        ouput_rect.size.height.as_int() - exclusive_surface_size)
                 };
             }
         }

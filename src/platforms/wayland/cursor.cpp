@@ -16,6 +16,7 @@
 
 #include "cursor.h"
 #include "displayclient.h"
+#include "mir/graphics/pixman_image_scaling.h"
 
 #include <mir/fd.h>
 
@@ -83,25 +84,32 @@ void mpw::Cursor::move_to(geometry::Point)
 {
 }
 
-void mpw::Cursor::show(graphics::CursorImage const& cursor_image)
+void mpw::Cursor::show(std::shared_ptr<graphics::CursorImage> const& cursor_image)
 {
     {
         std::lock_guard lock{mutex};
-        if (buffer) wl_buffer_destroy(buffer);
+        current_cursor_image = cursor_image;
 
-        auto const width = cursor_image.size().width.as_uint32_t();
-        auto const height = cursor_image.size().height.as_uint32_t();
-        auto const hotspot_x = cursor_image.hotspot().dx.as_uint32_t();
-        auto const hotspot_y = cursor_image.hotspot().dy.as_uint32_t();
+        if (buffer)
+            wl_buffer_destroy(buffer);
+
+        auto const scaled_cursor_buf = mir::graphics::scale_cursor_image(*current_cursor_image, current_scale);
+
+        auto const width = scaled_cursor_buf.size.width.as_uint32_t();
+        auto const height = scaled_cursor_buf.size.height.as_uint32_t();
+        auto const hotspot_x = current_cursor_image->hotspot().dx.as_uint32_t() * current_scale;
+        auto const hotspot_y = current_cursor_image->hotspot().dy.as_uint32_t() * current_scale;
         void* data_buffer;
         auto const shm_pool = make_shm_pool(shm, 4 * width * height, &data_buffer);
-        memcpy(data_buffer, cursor_image.as_argb_8888(), 4 * width * height);
+        memcpy(data_buffer, scaled_cursor_buf.data.get(), 4 * width * height);
         buffer = wl_shm_pool_create_buffer(shm_pool, 0, width, height, 4 * width, WL_SHM_FORMAT_ARGB8888);
         wl_surface_attach(surface, buffer, 0, 0);
         wl_surface_commit(surface);
         wl_shm_pool_destroy(shm_pool);
-        if (pointer) wl_pointer_set_cursor(pointer, 0, surface, hotspot_x, hotspot_y);
+        if (pointer)
+            wl_pointer_set_cursor(pointer, 0, surface, hotspot_x, hotspot_y);
     }
+
     flush_wl();
 }
 
@@ -119,4 +127,14 @@ void mir::platform::wayland::Cursor::leave(wl_pointer* /*pointer*/)
 {
     std::lock_guard lock{mutex};
     pointer = nullptr;
+}
+
+void mir::platform::wayland::Cursor::scale(float new_scale)
+{
+    {
+        std::lock_guard lock{mutex};
+        current_scale = new_scale;
+    }
+
+    show(current_cursor_image);
 }
