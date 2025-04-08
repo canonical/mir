@@ -29,3 +29,13 @@ MIR_CORE_2.9 {
   };
 local: *;
 };
+
+MIR_CORE_2.21 {
+ global:
+  extern "C++" {
+    mir::input::MouseKeysKeymap*;
+    mir::input::MouseKeysKeymap::set_action*;
+    mir::input::MouseKeysKeymap::get_action*;
+  };
+local: *;
+};

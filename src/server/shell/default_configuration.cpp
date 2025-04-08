@@ -21,13 +21,15 @@
 #include "decoration/basic_manager.h"
 #include "default_persistent_surface_store.h"
 #include "graphics_display_layout.h"
+#include "basic_accessibility_manager.h"
+#include "mouse_keys_transformer.h"
 
 #include "mir/abnormal_exit.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/main_loop.h"
 #include "mir/options/configuration.h"
+#include "mir/options/option.h"
 #include "mir/shell/abstract_shell.h"
-#include "mir/shell/accessibility_manager.h"
 #include "mir/shell/system_compositor_window_manager.h"
 #include "mir/shell/token_authority.h"
 
@@ -72,7 +74,7 @@ auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_pt
         [this]()->std::shared_ptr<msd::Manager>
         {
             return std::make_shared<msd::BasicManager>(
-                msd::DecorationStrategy::default_decoration_strategy(),
+                msd::DecorationStrategy::default_decoration_strategy(the_buffer_allocator()),
                 *the_display_configuration_observer_registrar(),
                 [buffer_allocator = the_buffer_allocator(),
                  executor = the_main_loop(),
@@ -83,7 +85,6 @@ auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_pt
                 {
                     return std::make_unique<msd::BasicDecoration>(
                         shell,
-                        buffer_allocator,
                         executor,
                         cursor_images,
                         surface,
@@ -189,7 +190,10 @@ auto mir::DefaultServerConfiguration::the_accessibility_manager() -> std::shared
     return accessibility_manager(
         [this]
         {
-            return std::make_shared<shell::AccessibilityManager>(the_options(), the_input_event_transformer());
+            return std::make_shared<shell::BasicAccessibilityManager>(
+                the_input_event_transformer(),
+                the_options()->get<bool>(mir::options::enable_key_repeat_opt),
+                the_cursor(),
+                std::make_shared<shell::BasicMouseKeysTransformer>(the_main_loop(), the_clock()));
         });
 }
-

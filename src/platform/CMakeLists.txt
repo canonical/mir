@@ -1,3 +1,5 @@
+pkg_check_modules(PIXMAN REQUIRED IMPORTED_TARGET pixman-1)
+
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mirplatform")
 
 include_directories(

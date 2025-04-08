@@ -27,6 +27,7 @@
 #include <miral/set_window_management_policy.h>
 #include <miral/wayland_extensions.h>
 #include <miral/x11_support.h>
+#include <miral/cursor_scale.h>
 
 #include "mir/abnormal_exit.h"
 #include "mir/main_loop.h"
@@ -115,10 +116,10 @@ catch (...)
 {
 }
 
-class InputConfigFile
+class DemoConfigFile
 {
 public:
-    InputConfigFile(miral::MirRunner& runner, std::filesystem::path file) :
+    DemoConfigFile(miral::MirRunner& runner, std::filesystem::path file) :
         config_file{
             runner,
             file,
@@ -146,6 +147,7 @@ public:
     void operator()(mir::Server& server)
     {
         input_configuration(server);
+        cursor_scale(server);
     }
 
 private:
@@ -154,6 +156,7 @@ private:
     miral::InputConfiguration::Touchpad touchpad = input_configuration.touchpad();
     miral::InputConfiguration::Keyboard keyboard = input_configuration.keyboard();
     std::mutex config_mutex;
+    miral::CursorScale cursor_scale;
     miral::ConfigFile config_file;
 
     void apply_config()
@@ -193,7 +196,7 @@ private:
                 auto const key = line.substr(0, eq);
                 auto const value = line.substr(eq+1);
 
-                auto const parse_and_validate = [](std::string const& key, std::string_view val) -> std::optional<int>
+                auto const parse_and_validate_int = [](std::string const& key, std::string_view val) -> std::optional<int>
                 {
                     auto const int_val = std::atoi(val.data());
                     if (int_val < 0)
@@ -207,18 +210,39 @@ private:
                     return int_val;
                 };
 
+                auto const parse_and_validate_float = [](std::string const& key, std::string_view val) -> std::optional<float>
+                {
+                    auto const float_val = std::atof(val.data());
+                    if (float_val < 0)
+                    {
+                        mir::log_warning(
+                            "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
+                            key.c_str(),
+                            float_val);
+                        return std::nullopt;
+                    }
+
+                    return float_val;
+                };
                 if (key == "repeat_rate")
                 {
-                    auto const parsed = parse_and_validate(key, value);
+                    auto const parsed = parse_and_validate_int(key, value);
                     if (parsed)
                         keyboard.set_repeat_rate(*parsed);
                 }
 
                 if (key == "repeat_delay")
                 {
-                    auto const parsed = parse_and_validate(key, value);
+                    auto const parsed = parse_and_validate_int(key, value);
                     if (parsed)
                         keyboard.set_repeat_delay(*parsed);
+                }
+
+                if(key == "cursor_scale")
+                {
+                    auto const parsed = parse_and_validate_float(key, value);
+                    if(parsed)
+                        cursor_scale.scale(*parsed);
                 }
             }
         }
@@ -233,7 +257,8 @@ try
 {
     miral::MirRunner runner{argc, argv, "mir/mir_demo_server.config"};
 
-    InputConfigFile input_configuration{runner, "mir_demo_server.input"};
+    miral::CursorScale cursor_scale;
+    DemoConfigFile demo_configuration{runner, "mir_demo_server.live-config"};
     runner.set_exception_handler(exception_handler);
 
     std::function<void()> shutdown_hook{[]{}};
@@ -257,7 +282,7 @@ try
         miral::CursorTheme{"default:DMZ-White"},
         input_filters,
         test_runner,
-        std::ref(input_configuration),
+        std::ref(demo_configuration),
     });
 
     // Propagate any test failure
