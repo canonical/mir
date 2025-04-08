@@ -77,14 +77,12 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     bool enable_key_repeat,
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
     std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
-    std::shared_ptr<mir::MainLoop> const& main_loop) :
+    std::shared_ptr<input::InputEventTransformer::Transformer> const& simulated_secondary_click_transformer) :
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},
     transformer{mousekeys_transformer},
-    simulated_secondary_click_transformer{
-        std::make_shared<SimulatedSecondaryClickTransformer>(main_loop),
-    }
+    simulated_secondary_click_transformer{simulated_secondary_click_transformer}
 {
     event_transformer->append(simulated_secondary_click_transformer);
 }
