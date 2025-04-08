@@ -57,6 +57,9 @@ public:
     void request_resize(miral::Window const&, MirInputEvent const*, MirResizeEdge) const;
     void request_move(miral::Window const&, MirInputEvent const*) const;
 
+    /// Simulates a wayland client requesting some modification from the compositor.
+    void request_modify(miral::Window const&, miral::WindowSpecification const& spec);
+
     auto focused(miral::Window const&) const -> bool;
     auto tools() const -> miral::WindowManagerTools&;
     auto is_above(miral::Window const& a, miral::Window const& b) const -> bool;
