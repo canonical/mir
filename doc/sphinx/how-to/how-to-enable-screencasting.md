@@ -34,14 +34,13 @@ Where `chooser_type=simple` runs the given `chooser_cmd`. `chooser_cmd` in this 
 3. The following script should run automatically when your compositor starts up. For testing purposes, you can run the script after you start your compositor.
 ```sh
 export XDG_CURRENT_DESKTOP=my-mir-compositor                            # Refer to step 1
-export XDG_DESKTOP_PORTAL_DIR=/usr/share/xdg-desktop-portal/portals     # Tells `xdg-desktop-portal` where custom configurations are stored
 
 # DBus has its own separate environment. For the sake of hygiene, we only copy over `XDG_CURRENT_DESKTOP` and `WAYLAND_DISPLAY`
 VARIABLES="XDG_CURRENT_DESKTOP WAYLAND_DISPLAY"
 dbus-update-activation-environment --systemd $VARIABLES
 
 # Run `xdg-desktop-portal`, using the configuration above, it will take care of starting `xdg-desktop-portal-wlr`
-systemd-run --user --setenv=XDG_DESKTOP_PORTAL_DIR=${XDG_DESKTOP_PORTAL_DIR} /usr/libexec/xdg-desktop-portal --replace
+systemd-run --user /usr/libexec/xdg-desktop-portal --replace
 ```
 
 4. Try recording your screen with OBS, or sharing it with google meet. You should get a transparent white overlay to indicate that you're picking an output to share. Once you click on an output, screencasting should automatically work from there.
