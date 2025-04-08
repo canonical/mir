@@ -58,7 +58,7 @@ public:
 
     void add_output_attribute(std::string const& key);
 
-    void set_layout_userdata_builder(
+    void layout_userdata_builder(
         std::string const& key,
         std::function<std::any(YAML::Node const&)> const& builder);
 

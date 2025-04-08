@@ -24,27 +24,13 @@
 #include <optional>
 #include <any>
 
+namespace YAML { class Node; }
 namespace mir { class Server; }
 
 namespace miral
 {
 class MirRunner;
 class ConfigurationOption;
-
-/// A class providing access to an arbitrary piece of data from the [DisplayConfiguration].
-/// This is specifically useful when a user wants to extend the based display configuration
-/// with some sort of custom payload (e.g. a user may want to extend the layout configuration
-/// with information describing the position and size of specific applications).
-/// \remark Since MirAL 5.3
-class DisplayConfigurationNode
-{
-public:
-    virtual ~DisplayConfigurationNode() = default;
-    virtual void for_each(std::function<void(std::unique_ptr<DisplayConfigurationNode>)> const& f) const = 0;
-    virtual auto as_string() const -> std::optional<std::string> = 0;
-    virtual auto as_int() const -> std::optional<int> = 0;
-    virtual auto at(std::string const& key) const -> std::optional<std::unique_ptr<DisplayConfigurationNode>> = 0;
-};
 
 /// Enable display configuration.
 /// The config file (miral::MirRunner::display_config_file()) is located via
@@ -59,6 +45,25 @@ public:
 class DisplayConfiguration
 {
 public:
+    /// A class providing access to an arbitrary piece of data from the [DisplayConfiguration].
+    /// This is specifically useful when a user wants to extend the based display configuration
+    /// with some sort of custom payload (e.g. a user may want to extend the layout configuration
+    /// with information describing the position and size of specific applications).
+    /// \remark Since MirAL 5.3
+    class Node
+    {
+    public:
+        explicit Node(YAML::Node const& node);
+        auto as_string() const -> std::optional<std::string>;
+        auto as_int() const -> std::optional<int>;
+        void for_each(std::function<void(Node const&)> const& f) const;
+        auto at(std::string const& key) const -> std::optional<Node>;
+
+    private:
+        struct Self;
+        std::shared_ptr<Self> self;
+    };
+
     explicit DisplayConfiguration(MirRunner const& mir_runner);
 
     /// Provide the default 'display-layout' configuration option
@@ -76,7 +81,7 @@ public:
 
     /// Retrieve the user data associated with the active layout
     /// for this provided key. Callers should provide this user data
-    /// via [set_layout_userdata_builder].
+    /// via [layout_userdata_builder].
     /// \remark Since MirAL 5.3
     auto layout_userdata(std::string const& key) const -> std::optional<std::any const>;
 
@@ -88,9 +93,9 @@ public:
     /// The function must return any piece of data that may later be
     /// retrieved via [layout_userdata].
     /// \remark Since MirAL 5.3
-    void set_layout_userdata_builder(
+    void layout_userdata_builder(
         std::string const& key,
-        std::function<std::any(std::unique_ptr<DisplayConfigurationNode> value)> const& builder) const;
+        std::function<std::any(Node const& value)> const& builder) const;
 
     void operator()(mir::Server& server) const;
 

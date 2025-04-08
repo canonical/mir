@@ -559,7 +559,7 @@ TEST_F(StaticDisplayConfig, can_set_and_retrieve_custom_data_on_layouts)
         "    - HDMI-A-1:\n"
         "        position: [1280, 0]\n"};
 
-    sdc.set_layout_userdata_builder("custom_data",  [](YAML::Node const& node) -> std::any
+    sdc.layout_userdata_builder("custom_data",  [](YAML::Node const& node) -> std::any
     {
         EXPECT_THAT(node.Scalar(), Eq("value"));
         return node.Scalar();

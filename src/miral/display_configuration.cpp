@@ -29,59 +29,6 @@
 
 using namespace std::string_literals;
 
-namespace
-{
-class YamlDisplayConfigurationNode : public miral::DisplayConfigurationNode
-{
-public:
-    explicit YamlDisplayConfigurationNode(YAML::Node const& node)
-        : node(node)
-    {
-    }
-
-    void for_each(std::function<void(std::unique_ptr<DisplayConfigurationNode>)> const& f) const override
-    {
-        if (!node.IsSequence())
-            return;
-
-        for (auto const& item : node)
-            f(std::make_unique<YamlDisplayConfigurationNode>(item));
-    }
-
-    std::optional<std::string> as_string() const override
-    {
-        if (node.IsScalar())
-            return node.Scalar();
-
-
-        return std::nullopt;
-    }
-
-    std::optional<int> as_int() const override
-    {
-        try
-        {
-            return node.as<int>();
-        }
-        catch (YAML::Exception const&)
-        {
-            return std::nullopt;
-        }
-    }
-
-    std::optional<std::unique_ptr<DisplayConfigurationNode>> at(std::string const& key) const override
-    {
-        if (!node[key])
-            return std::nullopt;
-
-        return std::make_unique<YamlDisplayConfigurationNode>(node[key]);
-    }
-
-private:
-    YAML::Node node;
-};
-}
-
 class miral::DisplayConfiguration::Self : public ReloadingYamlFileDisplayConfig
 {
 public:
@@ -180,13 +127,70 @@ auto miral::DisplayConfiguration::layout_userdata(std::string const& key) const
     return self->layout_userdata(key);
 }
 
-void miral::DisplayConfiguration::set_layout_userdata_builder(
-    std::string const& key,
-    std::function<std::any(std::unique_ptr<DisplayConfigurationNode> value)> const& builder) const
+struct miral::DisplayConfiguration::Node::Self
 {
-    self->set_layout_userdata_builder(key, [builder=builder](YAML::Node const& data)
+    explicit Self(YAML::Node const& node)
+        : node(node)
     {
-        return builder(std::make_unique<YamlDisplayConfigurationNode>(data));
+    }
+
+    template <typename T>
+    auto as() const -> std::optional<T>
+    {
+        try
+        {
+            return node.as<T>();
+        }
+        catch (YAML::Exception const&)
+        {
+            return std::nullopt;
+        }
+    }
+
+    YAML::Node const node;
+};
+
+miral::DisplayConfiguration::Node::Node(YAML::Node const& node)
+    : self(std::make_shared<Self>(node))
+{
+}
+
+auto miral::DisplayConfiguration::Node::as_string() const -> std::optional<std::string>
+{
+    return self->as<std::string>();
+}
+
+auto miral::DisplayConfiguration::Node::as_int() const -> std::optional<int>
+{
+    return self->as<int>();
+}
+
+void miral::DisplayConfiguration::Node::for_each(std::function<void(Node const&)> const& f) const
+{
+    if (!self->node.IsSequence())
+        return;
+
+    for (auto const& item : self->node)
+        f(Node(item));
+}
+
+
+
+std::optional<miral::DisplayConfiguration::Node> miral::DisplayConfiguration::Node::at(std::string const& key) const
+{
+    if (!self->node[key])
+        return std::nullopt;
+
+    return Node(self->node[key]);
+}
+
+void miral::DisplayConfiguration::layout_userdata_builder(
+    std::string const& key,
+    std::function<std::any(Node const& value)> const& builder) const
+{
+    self->layout_userdata_builder(key, [builder=builder](YAML::Node const& data)
+    {
+        return builder(Node(data));
     });
 }
 

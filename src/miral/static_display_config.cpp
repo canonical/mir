@@ -563,7 +563,7 @@ void miral::YamlFileDisplayConfig::add_output_attribute(std::string const& key)
     custom_output_attributes.insert(key);
 }
 
-void miral::YamlFileDisplayConfig::set_layout_userdata_builder(
+void miral::YamlFileDisplayConfig::layout_userdata_builder(
     std::string const& key,
     std::function<std::any(YAML::Node const&)> const& builder)
 {
