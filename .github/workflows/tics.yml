@@ -1,16 +1,19 @@
 name: TICS
 
 on:
-#  push:
-#    branches:
-#    - main
-  schedule:
-  # 5:04 on a Wednesday
-  - cron: 5 4 * * 3
+  push:
+    branches:
+    - main
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  merge_group:
+    types: [checks_requested]
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.number && format('pr{0}', github.event.number) || github.ref }}
+  # Don't interrupt QServer runs as that can corrupt the TICS database
+  cancel-in-progress: ${{ github.event_name != 'push' }}
 
 jobs:
   TICS:
@@ -100,12 +103,13 @@ jobs:
     - name: Run TICS analysis
       uses: tiobe/tics-github-action@v3
       with:
-        mode: qserver
+        mode: ${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) && 'client' || 'qserver' }}
         project: mir
         viewerUrl: https://canonical.tiobe.com/tiobeweb/TICS/api/cfg?name=default
         ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
         installTics: true
-        branchdir: ${{ github.workspace }}
+        # FIXME: workaround for a TICS bug
+        additionalFlags: ${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event.number) && '-resultdir build' || '' }}
 
     - if: ${{ failure() && runner.debug }}
       name: Setup tmate session
