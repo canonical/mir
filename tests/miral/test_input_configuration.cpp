@@ -416,8 +416,10 @@ struct TestMouseMergeOnePropertyWithoutOverwrite :
 {
 };
 
-// Make sure tht merging does not alter other data members
-TEST_P(TestMouseMergeOnePropertyWithoutOverwrite, mouse_merge_does_not_overwrite_values)
+// Make sure tht merging does not alter other data members with the same typ
+TEST_P(
+    TestMouseMergeOnePropertyWithoutOverwrite,
+    mouse_merge_source_property_does_not_override_different_properties_with_the_same_type)
 {
     auto const property = GetParam();
 
@@ -536,7 +538,9 @@ struct TestTouchpadMergeOnePropertyWithoutOverwrite :
 {
 };
 
-TEST_P(TestTouchpadMergeOnePropertyWithoutOverwrite, touchapd_merge_does_not_overwrite_values)
+TEST_P(
+    TestTouchpadMergeOnePropertyWithoutOverwrite,
+    touchpad_merge_source_property_does_not_override_different_properties_with_the_same_type)
 {
     auto const property = GetParam();
 
@@ -598,7 +602,9 @@ struct TestKeyboardMergeOnePropertyWithoutOverwrite :
 {
 };
 
-TEST_P(TestKeyboardMergeOnePropertyWithoutOverwrite, keyboard_merge_does_not_overwrite_values)
+TEST_P(
+    TestKeyboardMergeOnePropertyWithoutOverwrite,
+    keyboard_merge_source_property_does_not_override_different_properties_with_the_same_type)
 {
     auto const property = GetParam();
 
