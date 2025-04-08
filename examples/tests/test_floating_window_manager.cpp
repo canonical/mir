@@ -14,12 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <miral/internal_client.h>
 #include <examples/example-server-lib/floating_window_manager.h>
 #include <examples/example-server-lib/splash_session.h>
-#include <gmock/gmock-matchers.h>
-#include <linux/input-event-codes.h>
+
+#include <miral/internal_client.h>
 #include <mir_test_framework/window_management_test_harness.h>
+
+#include <gmock/gmock-matchers.h>
+
+#include <linux/input-event-codes.h>
 
 namespace geom = mir::geometry;
 using namespace testing;
