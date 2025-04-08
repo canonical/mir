@@ -1,4 +1,4 @@
-MIR_SERVER_INTERNAL_2.20 {
+MIR_SERVER_INTERNAL_2.21 {
 global:
   extern "C++" {
     VTT?for?mir::DefaultServerConfiguration;
@@ -11,8 +11,6 @@ global:
     mir::BasicCallback::operator*;
     mir::BasicCallback::unlock*;
     mir::DecorationStrategy::?DecorationStrategy*;
-    mir::DecorationStrategy::DecorationStrategy*;
-    mir::DecorationStrategy::operator*;
     mir::DefaultServerConfiguration::DefaultServerConfiguration*;
     mir::DefaultServerConfiguration::add_wayland_extension*;
     mir::DefaultServerConfiguration::default_reports*;
@@ -165,6 +163,7 @@ global:
     mir::Server::open_client_wayland*;
     mir::Server::open_prompt_socket*;
     mir::Server::open_wayland_client_socket*;
+    mir::Server::override_the_accessibility_manager*;
     mir::Server::override_the_application_not_responding_detector*;
     mir::Server::override_the_compositor*;
     mir::Server::override_the_cursor_images*;
@@ -220,7 +219,6 @@ global:
     mir::Server::the_renderer_factory*;
     mir::Server::the_rendering_platforms*;
     mir::Server::the_seat_observer_registrar*;
-    mir::Server::the_server_action_queue*;
     mir::Server::the_session_authorizer*;
     mir::Server::the_session_coordinator*;
     mir::Server::the_session_listener*;
@@ -253,7 +251,6 @@ global:
     mir::clear_termination_exception*;
     mir::compositor::BufferStream::?BufferStream*;
     mir::compositor::BufferStream::Submission::?Submission*;
-    mir::compositor::BufferStream::Submission::Submission*;
     mir::compositor::Compositor::?Compositor*;
     mir::compositor::Compositor::Compositor*;
     mir::compositor::Compositor::operator*;
@@ -279,12 +276,8 @@ global:
     mir::compositor::Stream::?Stream*;
     mir::compositor::Stream::Stream*;
     mir::compositor::Stream::has_submitted_buffer*;
-    mir::compositor::Stream::lock_compositor_buffer*;
     mir::compositor::Stream::next_submission_for_compositor*;
-    mir::compositor::Stream::pixel_format*;
     mir::compositor::Stream::set_frame_posted_callback*;
-    mir::compositor::Stream::set_scale*;
-    mir::compositor::Stream::stream_size*;
     mir::compositor::Stream::submit_buffer*;
     mir::detail::FdSources::?FdSources*;
     mir::detail::FdSources::FdSources*;
@@ -303,9 +296,6 @@ global:
     mir::detail::add_idle_gsource*;
     mir::detail::add_server_action_gsource*;
     mir::detail::add_timer_gsource*;
-    mir::frontend::BufferSink::?BufferSink*;
-    mir::frontend::BufferSink::BufferSink*;
-    mir::frontend::BufferSink::operator*;
     mir::frontend::BufferStream::?BufferStream*;
     mir::frontend::BufferStream::BufferStream*;
     mir::frontend::BufferStream::operator*;
@@ -595,9 +585,7 @@ global:
     mir::scene::SurfaceStateTracker::with*;
     mir::scene::SurfaceStateTracker::with_active_state*;
     mir::scene::SurfaceStateTracker::without*;
-    mir::scene::TextInputChange::?TextInputChange*;
     mir::scene::TextInputChange::TextInputChange*;
-    mir::scene::TextInputChange::operator*;
     mir::scene::TextInputChangeHandler::?TextInputChangeHandler*;
     mir::scene::TextInputChangeHandler::TextInputChangeHandler*;
     mir::scene::TextInputHub::?TextInputHub*;
@@ -615,7 +603,6 @@ global:
     mir::shell::AbstractShell::focus_prev_session*;
     mir::shell::AbstractShell::focused_session*;
     mir::shell::AbstractShell::focused_surface*;
-    mir::shell::AbstractShell::get_surface_attribute*;
     mir::shell::AbstractShell::handle*;
     mir::shell::AbstractShell::is_above*;
     mir::shell::AbstractShell::modify_surface*;
@@ -628,20 +615,12 @@ global:
     mir::shell::AbstractShell::send_to_back*;
     mir::shell::AbstractShell::set_focus_to*;
     mir::shell::AbstractShell::set_popup_grab_tree*;
-    mir::shell::AbstractShell::set_surface_attribute*;
     mir::shell::AbstractShell::start_prompt_session_for*;
     mir::shell::AbstractShell::stop_prompt_session*;
     mir::shell::AbstractShell::surface_at*;
     mir::shell::AbstractShell::surface_ready*;
     mir::shell::AbstractShell::swap_z_order*;
     mir::shell::AccessibilityManager::?AccessibilityManager*;
-    mir::shell::AccessibilityManager::AccessibilityManager*;
-    mir::shell::AccessibilityManager::cursor_scale*;
-    mir::shell::AccessibilityManager::notify_helpers*;
-    mir::shell::AccessibilityManager::override_key_repeat_settings*;
-    mir::shell::AccessibilityManager::register_keyboard_helper*;
-    mir::shell::AccessibilityManager::repeat_delay*;
-    mir::shell::AccessibilityManager::repeat_rate*;
     mir::shell::DefaultWindowManager::handle_keyboard_event*;
     mir::shell::DisplayConfigurationController::?DisplayConfigurationController*;
     mir::shell::DisplayConfigurationController::DisplayConfigurationController*;
@@ -676,7 +655,6 @@ global:
     mir::shell::ShellWrapper::focus_prev_session*;
     mir::shell::ShellWrapper::focused_session*;
     mir::shell::ShellWrapper::focused_surface*;
-    mir::shell::ShellWrapper::get_surface_attribute*;
     mir::shell::ShellWrapper::handle*;
     mir::shell::ShellWrapper::is_above*;
     mir::shell::ShellWrapper::modify_surface*;
@@ -689,7 +667,6 @@ global:
     mir::shell::ShellWrapper::send_to_back*;
     mir::shell::ShellWrapper::set_focus_to*;
     mir::shell::ShellWrapper::set_popup_grab_tree*;
-    mir::shell::ShellWrapper::set_surface_attribute*;
     mir::shell::ShellWrapper::start_prompt_session_for*;
     mir::shell::ShellWrapper::stop_prompt_session*;
     mir::shell::ShellWrapper::surface_at*;
@@ -723,7 +700,6 @@ global:
     mir::shell::WindowManager::?WindowManager*;
     mir::shell::WindowManager::WindowManager*;
     mir::shell::WindowManager::operator*;
-    mir::shell::decoration::compute_size_with_decorations*;
     mir::shell::operator*;
     mir::terminate_with_current_exception*;
     mir::time::Alarm::?Alarm*;
@@ -868,14 +844,9 @@ global:
     non-virtual?thunk?to?mir::compositor::ScreenShooter::?ScreenShooter*;
     non-virtual?thunk?to?mir::compositor::Stream::?Stream*;
     non-virtual?thunk?to?mir::compositor::Stream::has_submitted_buffer*;
-    non-virtual?thunk?to?mir::compositor::Stream::lock_compositor_buffer*;
     non-virtual?thunk?to?mir::compositor::Stream::next_submission_for_compositor*;
-    non-virtual?thunk?to?mir::compositor::Stream::pixel_format*;
     non-virtual?thunk?to?mir::compositor::Stream::set_frame_posted_callback*;
-    non-virtual?thunk?to?mir::compositor::Stream::set_scale*;
-    non-virtual?thunk?to?mir::compositor::Stream::stream_size*;
     non-virtual?thunk?to?mir::compositor::Stream::submit_buffer*;
-    non-virtual?thunk?to?mir::frontend::BufferSink::?BufferSink*;
     non-virtual?thunk?to?mir::frontend::BufferStream::?BufferStream*;
     non-virtual?thunk?to?mir::frontend::Connector::?Connector*;
     non-virtual?thunk?to?mir::frontend::DisplayChanger::?DisplayChanger*;
@@ -1046,7 +1017,6 @@ global:
     non-virtual?thunk?to?mir::shell::AbstractShell::focus_prev_session*;
     non-virtual?thunk?to?mir::shell::AbstractShell::focused_session*;
     non-virtual?thunk?to?mir::shell::AbstractShell::focused_surface*;
-    non-virtual?thunk?to?mir::shell::AbstractShell::get_surface_attribute*;
     non-virtual?thunk?to?mir::shell::AbstractShell::handle*;
     non-virtual?thunk?to?mir::shell::AbstractShell::is_above*;
     non-virtual?thunk?to?mir::shell::AbstractShell::modify_surface*;
@@ -1059,18 +1029,17 @@ global:
     non-virtual?thunk?to?mir::shell::AbstractShell::send_to_back*;
     non-virtual?thunk?to?mir::shell::AbstractShell::set_focus_to*;
     non-virtual?thunk?to?mir::shell::AbstractShell::set_popup_grab_tree*;
-    non-virtual?thunk?to?mir::shell::AbstractShell::set_surface_attribute*;
     non-virtual?thunk?to?mir::shell::AbstractShell::start_prompt_session_for*;
     non-virtual?thunk?to?mir::shell::AbstractShell::stop_prompt_session*;
     non-virtual?thunk?to?mir::shell::AbstractShell::surface_at*;
     non-virtual?thunk?to?mir::shell::AbstractShell::surface_ready*;
     non-virtual?thunk?to?mir::shell::AbstractShell::swap_z_order*;
+    non-virtual?thunk?to?mir::shell::AccessibilityManager::?AccessibilityManager*;
     non-virtual?thunk?to?mir::shell::DefaultWindowManager::handle_keyboard_event*;
     non-virtual?thunk?to?mir::shell::DisplayConfigurationController::?DisplayConfigurationController*;
     non-virtual?thunk?to?mir::shell::DisplayLayout::?DisplayLayout*;
     non-virtual?thunk?to?mir::shell::FocusController::?FocusController*;
     non-virtual?thunk?to?mir::shell::IdleHandler::?IdleHandler*;
-    non-virtual?thunk?to?mir::shell::IdleHandlerObserver::?IdleHandlerObserver*;
     non-virtual?thunk?to?mir::shell::IdleHandlerObserver::?IdleHandlerObserver*;
     non-virtual?thunk?to?mir::shell::InputTargeter::?InputTargeter*;
     non-virtual?thunk?to?mir::shell::PersistentSurfaceStore::?PersistentSurfaceStore*;
@@ -1084,7 +1053,6 @@ global:
     non-virtual?thunk?to?mir::shell::ShellWrapper::focus_prev_session*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::focused_session*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::focused_surface*;
-    non-virtual?thunk?to?mir::shell::ShellWrapper::get_surface_attribute*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::handle*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::is_above*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::modify_surface*;
@@ -1097,7 +1065,6 @@ global:
     non-virtual?thunk?to?mir::shell::ShellWrapper::send_to_back*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::set_focus_to*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::set_popup_grab_tree*;
-    non-virtual?thunk?to?mir::shell::ShellWrapper::set_surface_attribute*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::start_prompt_session_for*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::stop_prompt_session*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::surface_at*;
@@ -1149,7 +1116,6 @@ global:
     typeinfo?for?mir::detail::GMainContextHandle;
     typeinfo?for?mir::detail::GSourceHandle;
     typeinfo?for?mir::detail::SignalSources;
-    typeinfo?for?mir::frontend::BufferSink;
     typeinfo?for?mir::frontend::BufferStream;
     typeinfo?for?mir::frontend::Connector;
     typeinfo?for?mir::frontend::DisplayChanger;
@@ -1242,7 +1208,6 @@ global:
     typeinfo?for?mir::shell::FocusController;
     typeinfo?for?mir::shell::IdleHandler;
     typeinfo?for?mir::shell::IdleHandlerObserver;
-    typeinfo?for?mir::shell::IdleHandlerObserver;
     typeinfo?for?mir::shell::InputTargeter;
     typeinfo?for?mir::shell::PersistentSurfaceStore::Id;
     typeinfo?for?mir::shell::PersistentSurfaceStore;
@@ -1304,7 +1269,6 @@ global:
     virtual?thunk?to?mir::shell::AbstractShell::focus_prev_session*;
     virtual?thunk?to?mir::shell::AbstractShell::focused_session*;
     virtual?thunk?to?mir::shell::AbstractShell::focused_surface*;
-    virtual?thunk?to?mir::shell::AbstractShell::get_surface_attribute*;
     virtual?thunk?to?mir::shell::AbstractShell::handle*;
     virtual?thunk?to?mir::shell::AbstractShell::is_above*;
     virtual?thunk?to?mir::shell::AbstractShell::open_session*;
@@ -1316,7 +1280,6 @@ global:
     virtual?thunk?to?mir::shell::AbstractShell::send_to_back*;
     virtual?thunk?to?mir::shell::AbstractShell::set_focus_to*;
     virtual?thunk?to?mir::shell::AbstractShell::set_popup_grab_tree*;
-    virtual?thunk?to?mir::shell::AbstractShell::set_surface_attribute*;
     virtual?thunk?to?mir::shell::AbstractShell::start_prompt_session_for*;
     virtual?thunk?to?mir::shell::AbstractShell::stop_prompt_session*;
     virtual?thunk?to?mir::shell::AbstractShell::surface_at*;
@@ -1360,7 +1323,6 @@ global:
     vtable?for?mir::compositor::SceneElement;
     vtable?for?mir::compositor::ScreenShooter;
     vtable?for?mir::compositor::Stream;
-    vtable?for?mir::frontend::BufferSink;
     vtable?for?mir::frontend::BufferStream;
     vtable?for?mir::frontend::Connector;
     vtable?for?mir::frontend::DisplayChanger;
@@ -1431,12 +1393,12 @@ global:
     vtable?for?mir::scene::TextInputHub;
     vtable?for?mir::scene::TextInputStateObserver;
     vtable?for?mir::shell::AbstractShell;
+    vtable?for?mir::shell::AccessibilityManager;
     vtable?for?mir::shell::DefaultWindowManager;
     vtable?for?mir::shell::DisplayConfigurationController;
     vtable?for?mir::shell::DisplayLayout;
     vtable?for?mir::shell::FocusController;
     vtable?for?mir::shell::IdleHandler;
-    vtable?for?mir::shell::IdleHandlerObserver;
     vtable?for?mir::shell::IdleHandlerObserver;
     vtable?for?mir::shell::InputTargeter;
     vtable?for?mir::shell::PersistentSurfaceStore;

@@ -125,7 +125,6 @@ MIR_PLATFORM_2.21 {
     mir::options::drop_wayland_extensions_opt;
     mir::options::enable_input_opt*;
     mir::options::enable_key_repeat_opt*;
-    mir::options::enable_mouse_keys_opt*;
     mir::options::fatal_except_opt*;
     mir::options::idle_timeout_opt;
     mir::options::idle_timeout_when_locked_opt;

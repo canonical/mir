@@ -89,6 +89,7 @@ add_library(miral-external OBJECT
     zone.cpp                            ${miral_include}/miral/zone.h
     decorations.cpp                     ${miral_include}/miral/decorations.h
     cursor_scale.cpp                    ${miral_include}/miral/cursor_scale.h
+    mousekeys_config.cpp                ${miral_include}/miral/mousekeys_config.h
 )
 
 add_library(miral SHARED
