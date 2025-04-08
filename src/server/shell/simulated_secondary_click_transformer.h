@@ -19,7 +19,9 @@
 
 #include "mir/input/input_event_transformer.h"
 
+#include "mir/synchronised.h"
 #include "mir/time/alarm.h"
+
 
 namespace mir
 {
@@ -29,12 +31,26 @@ namespace shell
 class SimulatedSecondaryClickTransformer : public mir::input::InputEventTransformer::Transformer
 {
 public:
-    SimulatedSecondaryClickTransformer(std::shared_ptr<mir::MainLoop> const& main_loop);
+    virtual void hold_duration(std::chrono::milliseconds delay) = 0;
+    virtual void hold_start(std::function<void()>&& on_hold_start) = 0;
+    virtual void hold_cancel(std::function<void()>&& on_hold_cancel) = 0;
+    virtual void secondary_click(std::function<void()>&& on_secondary_click) = 0;
+};
+
+class BasicSimulatedSecondaryClickTransformer : public SimulatedSecondaryClickTransformer
+{
+public:
+    BasicSimulatedSecondaryClickTransformer(std::shared_ptr<mir::MainLoop> const& main_loop);
 
     bool transform_input_event(
         input::InputEventTransformer::EventDispatcher const& dispatcher,
         input::EventBuilder*,
         MirEvent const&) override;
+
+    void hold_duration(std::chrono::milliseconds delay) override;
+    void hold_start(std::function<void()>&& on_hold_start) override;
+    void hold_cancel(std::function<void()>&& on_hold_cancel) override;
+    void secondary_click(std::function<void()>&& on_secondary_click) override;
 
 private:
     std::shared_ptr<mir::MainLoop> const main_loop;
@@ -52,6 +68,17 @@ private:
         waiting_for_synthesized_left_down,
         waiting_for_synthesized_left_up,
     } state{State::waiting_for_real_left_down};
+
+    struct MutableState
+    {
+        std::chrono::milliseconds hold_duration{1000};
+
+        std::function<void()> on_hold_start{[]{}};
+        std::function<void()> on_hold_cancel{[]{}};
+        std::function<void()> on_secondary_click{[]{}};
+    };
+
+    mir::Synchronised<MutableState> mutable_state;
 };
 }
 }
