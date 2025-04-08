@@ -56,7 +56,7 @@ public:
         bool enable_key_repeat,
         std::shared_ptr<mir::graphics::Cursor> const& cursor,
         std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
-        std::shared_ptr<MainLoop> const& main_loop);
+        std::shared_ptr<input::InputEventTransformer::Transformer> const& simulated_secondary_click_transformer);
     ~BasicAccessibilityManager();
 
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&) override;
@@ -106,7 +106,7 @@ private:
 
     bool const enable_key_repeat;
     std::shared_ptr<graphics::Cursor> const cursor;
-    Registration<MouseKeysTransformer> const transformer;
+    Registration<MouseKeysTransformer> const mouse_keys_transformer;
     Registration<input::InputEventTransformer::Transformer> const simulated_secondary_click_transformer;
 };
 }

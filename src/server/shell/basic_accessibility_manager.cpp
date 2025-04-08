@@ -104,9 +104,9 @@ void mir::shell::BasicAccessibilityManager::repeat_rate_and_delay(
 void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
     if (on)
-        transformer.add_registration();
+        mouse_keys_transformer.add_registration();
     else
-        transformer.remove_registration();
+        mouse_keys_transformer.remove_registration();
 }
 
 mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
@@ -114,14 +114,13 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     bool enable_key_repeat,
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
     std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
-    std::shared_ptr<mir::MainLoop> const& main_loop) :
+    std::shared_ptr<input::InputEventTransformer::Transformer> const& simulated_secondary_click_transformer) :
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
-    transformer{mousekeys_transformer, event_transformer},
-    simulated_secondary_click_transformer{
-        std::make_shared<BasicSimulatedSecondaryClickTransformer>(main_loop), event_transformer}
+    mouse_keys_transformer{mousekeys_transformer, event_transformer},
+    simulated_secondary_click_transformer{simulated_secondary_click_transformer, event_transformer}
 {
-    simulated_secondary_click_transformer.add_registration();
+    this->simulated_secondary_click_transformer.add_registration();
 }
 
 mir::shell::BasicAccessibilityManager::~BasicAccessibilityManager()
@@ -136,15 +135,15 @@ void mir::shell::BasicAccessibilityManager::cursor_scale(float new_scale)
 
 void mir::shell::BasicAccessibilityManager::mousekeys_keymap(input::MouseKeysKeymap const& new_keymap)
 {
-    transformer->keymap(new_keymap);
+    mouse_keys_transformer->keymap(new_keymap);
 }
 
 void mir::shell::BasicAccessibilityManager::acceleration_factors(double constant, double linear, double quadratic)
 {
-    transformer->acceleration_factors(constant, linear, quadratic);
+    mouse_keys_transformer->acceleration_factors(constant, linear, quadratic);
 }
 
 void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_axis)
 {
-    transformer->max_speed(x_axis, y_axis);
+    mouse_keys_transformer->max_speed(x_axis, y_axis);
 }

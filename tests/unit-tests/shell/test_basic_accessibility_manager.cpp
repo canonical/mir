@@ -18,6 +18,7 @@
 #include "src/server/input/default_input_device_hub.h"
 #include "src/server/shell/basic_accessibility_manager.h"
 #include "src/server/shell/mouse_keys_transformer.h"
+#include "src/server/shell/simulated_secondary_click_transformer.h"
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/glib_main_loop.h"
@@ -93,7 +94,7 @@ struct TestBasicAccessibilityManager : Test
             true,
             std::make_shared<mir::test::doubles::StubCursor>(),
             mock_mousekeys_transformer,
-            main_loop}
+            nullptr} // TODO stub this out
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
     }
