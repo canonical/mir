@@ -106,6 +106,17 @@ auto select_mode_index(size_t mode_index, std::vector<mg::DisplayConfigurationMo
 extern "C" { char const* basename(char const*); }
 #endif
 
+std::map<miral::YamlFileDisplayConfig::Property, std::string const> const miral::YamlFileDisplayConfig::display_matching_properties()
+{
+    static std::map<miral::YamlFileDisplayConfig::Property, std::string const> const display_matching_properties{
+        {miral::YamlFileDisplayConfig::Property::Vendor, "vendor"},
+        {miral::YamlFileDisplayConfig::Property::Model, "model"},
+        {miral::YamlFileDisplayConfig::Property::Product, "product"},
+        {miral::YamlFileDisplayConfig::Property::Serial, "serial"},
+    };
+    return display_matching_properties;
+};
+
 miral::StaticDisplayConfig::StaticDisplayConfig(std::string const& filename) :
     ReloadingYamlFileDisplayConfig(::basename(filename.c_str()))
 {
@@ -360,51 +371,52 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
 
                     for (auto const& [property, value] : matchers)
                     {
-                        if (property == Property::Port && conf_output.name != value)
-                        {
-                            goto failed_match;
-                        }
-
                         static auto const props = StaticDisplayConfig::display_matching_properties();
                         if (!edid && props.find(property) != props.end())
                         {
                             goto failed_match;
                         }
 
-                        if (property == Property::Vendor)
+                        switch (property)
                         {
-                            Edid::Manufacturer man;
-                            edid.value()->get_manufacturer(man);
-                            if (man != value)
-                            {
-                                goto failed_match;
-                            }
-                        }
+                            case Property::Port:
+                                if (conf_output.name != value)
+                                {
+                                    goto failed_match;
+                                }
+                                break;
 
-                        if (property == Property::Model)
-                        {
-                            Edid::MonitorName name;
-                            edid.value()->get_monitor_name(name);
-                            if (name != value)
-                            {
-                                goto failed_match;
-                            }
-                        }
+                            case Property::Vendor:
+                                Edid::Manufacturer man;
+                                edid.value()->get_manufacturer(man);
+                                if (man != value)
+                                {
+                                    goto failed_match;
+                                }
+                                break;
 
-                        if (property == Property::Product)
-                        {
-                            if (std::to_string(edid.value()->product_code()) != value)
-                            {
-                                goto failed_match;
-                            }
-                        }
+                            case Property::Model:
+                                Edid::MonitorName name;
+                                edid.value()->get_monitor_name(name);
+                                if (name != value)
+                                {
+                                    goto failed_match;
+                                }
+                                break;
 
-                        if (property == Property::Serial)
-                        {
-                            if (std::to_string(edid.value()->serial_number()) != value)
-                            {
-                                goto failed_match;
-                            }
+                            case Property::Product:
+                                if (std::to_string(edid.value()->product_code()) != value)
+                                {
+                                    goto failed_match;
+                                }
+                                break;
+
+                            case Property::Serial:
+                                if (std::to_string(edid.value()->serial_number()) != value)
+                                {
+                                    goto failed_match;
+                                }
+                                break;
                         }
                     }
 
