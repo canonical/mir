@@ -83,8 +83,13 @@ struct TestInputConfiguration: testing::Test
 {
     inline static auto const unclamped_test_values = {-1.0, -0.5, 0.0, 0.5, 1.0};
     inline static auto const clamped_test_values = {std::pair{-10.0, -1.0}, {-1.1, -1.0}, {1.1, 1.0}, {12.0, 1.0}};
+};
 
-    inline static std::unordered_map<MouseProperty, PropertySetter<Mouse>> const mouse_setters = {
+namespace
+{
+auto get_mouse_config_with_properties(std::span<const MouseProperty> properties) -> Mouse
+{
+    static std::unordered_map<MouseProperty, PropertySetter<Mouse>> const mouse_setters = {
         {
             MouseProperty::handedness,
             [](auto& mouse_config)
@@ -122,7 +127,26 @@ struct TestInputConfiguration: testing::Test
         },
     };
 
-    inline static std::unordered_map<TouchpadProperty, PropertySetter<Touchpad>> const touchpad_setters = {
+    Mouse mouse_config;
+    for (auto const property : properties)
+    {
+        auto const property_setter = mouse_setters.at(property);
+        property_setter(mouse_config);
+    }
+
+    return mouse_config;
+}
+
+auto get_mouse_config_with_all_properties_except(MouseProperty property) -> Mouse
+{
+    std::vector<MouseProperty> all_props{all_mouse_props.begin(), all_mouse_props.end()};
+    all_props.erase(std::remove(all_props.begin(), all_props.end(), property));
+    return get_mouse_config_with_properties(all_props);
+}
+
+auto get_touchpad_config_with_properties(std::span<const TouchpadProperty> properties) -> Touchpad
+{
+    static std::unordered_map<TouchpadProperty, PropertySetter<Touchpad>> const touchpad_setters = {
         {
             TouchpadProperty::disable_while_typing,
             [](Touchpad& touch)
@@ -195,50 +219,10 @@ struct TestInputConfiguration: testing::Test
         },
     };
 
-    inline static std::unordered_map<KeyboardProperty, PropertySetter<Keyboard>> const keyboard_setters = {
-        {
-            KeyboardProperty::repeat_rate,
-            [](Keyboard& key)
-            {
-                key.set_repeat_rate(18);
-            },
-        },
-        {
-            KeyboardProperty::repeat_delay,
-            [](Keyboard& key)
-            {
-                key.set_repeat_delay(1337);
-            },
-        }};
-};
-
-namespace
-{
-auto get_mouse_config_with_properties(std::span<const MouseProperty> properties) -> Mouse
-{
-    Mouse mouse_config;
-    for (auto const property : properties)
-    {
-        auto const property_setter = TestInputConfiguration::mouse_setters.at(property);
-        property_setter(mouse_config);
-    }
-
-    return mouse_config;
-}
-
-auto get_mouse_config_with_all_properties_except(MouseProperty property) -> Mouse
-{
-    std::vector<MouseProperty> all_props{all_mouse_props.begin(), all_mouse_props.end()};
-    all_props.erase(std::remove(all_props.begin(), all_props.end(), property));
-    return get_mouse_config_with_properties(all_props);
-}
-
-auto get_touchpad_config_with_properties(std::span<const TouchpadProperty> properties) -> Touchpad
-{
     Touchpad touchpad_config;
     for (auto const property : properties)
     {
-        auto const property_setter = TestInputConfiguration::touchpad_setters.at(property);
+        auto const property_setter = touchpad_setters.at(property);
         property_setter(touchpad_config);
     }
 
@@ -254,10 +238,26 @@ auto get_touchpad_config_with_all_properties_except(TouchpadProperty property) -
 
 auto get_keyboard_config_with_properties(std::span<const KeyboardProperty> properties) -> Keyboard
 {
+    static std::unordered_map<KeyboardProperty, PropertySetter<Keyboard>> const keyboard_setters = {
+        {
+            KeyboardProperty::repeat_rate,
+            [](Keyboard& key)
+            {
+                key.set_repeat_rate(18);
+            },
+        },
+        {
+            KeyboardProperty::repeat_delay,
+            [](Keyboard& key)
+            {
+                key.set_repeat_delay(1337);
+            },
+        }};
+
     Keyboard keyboard_config;
     for (auto const property : properties)
     {
-        auto const property_setter = TestInputConfiguration::keyboard_setters.at(property);
+        auto const property_setter = keyboard_setters.at(property);
         property_setter(keyboard_config);
     }
 
