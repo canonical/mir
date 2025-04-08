@@ -43,7 +43,7 @@ mg::MultiplexingCursor::MultiplexingCursor(std::span<Display*> platform_displays
 {
 }
 
-void mg::MultiplexingCursor::show(CursorImage const& image)
+void mg::MultiplexingCursor::show(std::shared_ptr<CursorImage> const& image)
 {
     for (auto& cursor : platform_cursors)
     {
@@ -66,3 +66,10 @@ void mg::MultiplexingCursor::move_to(geometry::Point position)
         cursor->move_to(position);
     }
 }
+
+void mir::graphics::MultiplexingCursor::scale(float new_scale)
+{
+    for(auto& cursor: platform_cursors)
+        cursor->scale(new_scale);
+}
+

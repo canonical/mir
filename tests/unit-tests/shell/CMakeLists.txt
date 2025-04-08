@@ -6,6 +6,8 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_decoration_basic_manager.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_decoration_basic_decoration.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_token_authority.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_mouse_keys_transformer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_basic_accessibility_manager.cpp
 )
 
 set(

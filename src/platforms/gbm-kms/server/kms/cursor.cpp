@@ -21,7 +21,9 @@
 #include "kms_display_configuration.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/cursor_image.h"
+#include "mir/graphics/pixman_image_scaling.h"
 
+#include <mutex>
 #include <xf86drm.h>
 
 #include <boost/exception/errinfo_errno.hpp>
@@ -253,16 +255,20 @@ void mgg::Cursor::pad_and_write_image_data_locked(
     write_buffer_data_locked(lg, buffer, &padded[0], padded_size);
 }
 
-void mgg::Cursor::show(CursorImage const& cursor_image)
+void mgg::Cursor::show(std::shared_ptr<CursorImage> const& cursor_image)
 {
     std::lock_guard lg(guard);
 
-    size = cursor_image.size();
+    current_cursor_image = cursor_image;
 
-    argb8888.resize(size.width.as_uint32_t() * size.height.as_uint32_t() * 4);
-    memcpy(argb8888.data(), cursor_image.as_argb_8888(), argb8888.size());
+    size = current_cursor_image->size() * current_scale;
+    auto const scaled_cursor_buf = mg::scale_cursor_image(*current_cursor_image, current_scale);
+    auto const buf_size_bytes = scaled_cursor_buf.size.width.as_value() * scaled_cursor_buf.size.height.as_value() * 4;
 
-    hotspot = cursor_image.hotspot();
+    argb8888.resize(buf_size_bytes);
+    memcpy(argb8888.data(), scaled_cursor_buf.data.get(), buf_size_bytes);
+
+    hotspot = current_cursor_image->hotspot() * current_scale;
     {
         auto locked_buffers = buffers.lock();
         for (auto& tuple : *locked_buffers)
@@ -435,4 +441,14 @@ mgg::Cursor::GBMBOWrapper& mgg::Cursor::buffer_for_output(KMSOutput const& outpu
     }
 
     return bo;
+}
+
+void mir::graphics::gbm::Cursor::scale(float new_scale)
+{
+    {
+        std::lock_guard lg(guard);
+        current_scale = new_scale;
+    }
+
+    show(current_cursor_image);
 }
