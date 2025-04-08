@@ -17,10 +17,12 @@
 #include <miral/internal_client.h>
 #include <examples/example-server-lib/floating_window_manager.h>
 #include <examples/example-server-lib/splash_session.h>
+#include <gmock/gmock-matchers.h>
 #include <linux/input-event-codes.h>
 #include <mir_test_framework/window_management_test_harness.h>
 
 namespace geom = mir::geometry;
+using namespace testing;
 
 class StubSplashSession : public SplashSession
 {
@@ -93,7 +95,7 @@ TEST_F(FloatingWindowManagerTest, switching_workspaces_causes_windows_to_be_hidd
 
     // Assert [window] is hidden
     auto const& info = tools().info_for(window);
-    ASSERT_EQ(info.state(), mir_window_state_hidden);
+    EXPECT_THAT(info.state(), Eq(mir_window_state_hidden));
 
     // Dispatch an f1 event
     {
@@ -113,7 +115,7 @@ TEST_F(FloatingWindowManagerTest, switching_workspaces_causes_windows_to_be_hidd
     }
 
     // Assert [window] is restored
-    ASSERT_EQ(info.state(), mir_window_state_restored);
+    EXPECT_THAT(info.state(), Eq(mir_window_state_restored));
 }
 
 TEST_F(FloatingWindowManagerTest, can_switch_workspaces_and_bring_window_with_us)
@@ -141,7 +143,7 @@ TEST_F(FloatingWindowManagerTest, can_switch_workspaces_and_bring_window_with_us
 
     // Assert [window] is still shown
     auto const& info = tools().info_for(window);
-    ASSERT_EQ(info.state(), mir_window_state_restored);
+    EXPECT_THAT(info.state(), Eq(mir_window_state_restored));
 }
 
 TEST_F(FloatingWindowManagerTest, switching_workspaces_changes_window_focus)
@@ -152,7 +154,7 @@ TEST_F(FloatingWindowManagerTest, switching_workspaces_changes_window_focus)
     spec.size() = geom::Size(100, 100);
     spec.top_left() = geom::Point(50, 50);
     auto const window1 = create_window(app1, spec);
-    EXPECT_TRUE(focused(window1));
+    EXPECT_THAT(focused(window1), Eq(true));
 
     // Dispatch an f2 event
     {
@@ -170,12 +172,12 @@ TEST_F(FloatingWindowManagerTest, switching_workspaces_changes_window_focus)
             modifiers);
         publish_event(*event);
     }
-    EXPECT_TRUE(focused({}));
+    EXPECT_THAT(focused({}), Eq(true));
 
     // Create the second window on workspace f2
     auto const app2 = open_application("app2");
     auto const window2 = create_window(app2, spec);
-    EXPECT_TRUE(focused(window2));
+    EXPECT_THAT(focused(window2), Eq(true));
 
     // Dispatch an f1 event
     {
@@ -194,7 +196,7 @@ TEST_F(FloatingWindowManagerTest, switching_workspaces_changes_window_focus)
         publish_event(*event);
     }
 
-    EXPECT_TRUE(focused(window1));
+    EXPECT_THAT(focused(window1), Eq(true));
 }
 
 TEST_F(FloatingWindowManagerTest, child_windows_are_hidden_if_parent_is_on_hidden_workspace)
@@ -219,12 +221,12 @@ TEST_F(FloatingWindowManagerTest, child_windows_are_hidden_if_parent_is_on_hidde
         scan_code,
         modifiers);
     publish_event(*event);
-    ASSERT_EQ(tools().info_for(parent).state(), mir_window_state_hidden);
+    EXPECT_THAT(tools().info_for(parent).state(), Eq(mir_window_state_hidden));
 
     // Assert [child] is also hidden
     spec.parent() = parent;
     auto const child = create_window(app, spec);
-    ASSERT_EQ(tools().info_for(child).state(), mir_window_state_hidden);
+    EXPECT_THAT(tools().info_for(child).state(), Eq(mir_window_state_hidden));
 }
 
 TEST_F(FloatingWindowManagerTest, cannot_modify_state_of_window_on_different_workspace)
@@ -249,10 +251,10 @@ TEST_F(FloatingWindowManagerTest, cannot_modify_state_of_window_on_different_wor
         scan_code,
         modifiers);
     publish_event(*event);
-    ASSERT_EQ(tools().info_for(window).state(), mir_window_state_hidden);
+    EXPECT_THAT(tools().info_for(window).state(), Eq(mir_window_state_hidden));
 
     miral::WindowSpecification new_spec;
     new_spec.state() = mir_window_state_restored;
     request_modify(window, new_spec);
-    ASSERT_EQ(tools().info_for(window).state(), mir_window_state_hidden);
+    EXPECT_THAT(tools().info_for(window).state(), Eq(mir_window_state_hidden));
 }
