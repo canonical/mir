@@ -30,6 +30,10 @@ namespace options
 {
 class Option;
 }
+namespace graphics
+{
+class Cursor;
+}
 namespace shell
 {
 class KeyboardHelper;
@@ -38,7 +42,8 @@ class AccessibilityManager
 public:
     AccessibilityManager(
         std::shared_ptr<mir::options::Option> const&,
-        std::shared_ptr<input::InputEventTransformer> const& event_transformer);
+        std::shared_ptr<input::InputEventTransformer> const& event_transformer,
+        std::shared_ptr<mir::graphics::Cursor> const& cursor);
 
     ~AccessibilityManager();
 
@@ -51,6 +56,8 @@ public:
     void repeat_delay(int new_rate);
 
     void notify_helpers() const;
+
+    void cursor_scale(float new_scale);
 
 private:
 
@@ -68,6 +75,7 @@ private:
 
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
     std::shared_ptr<mir::input::InputEventTransformer::Transformer> const transformer;
+    std::shared_ptr<graphics::Cursor> const cursor;
 };
 }
 }

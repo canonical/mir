@@ -14,27 +14,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <vector>
-#include <span>
+#ifndef MIR_GRAPHICS_PIXMAN_IMAGE_SCALING_H_
+#define MIR_GRAPHICS_PIXMAN_IMAGE_SCALING_H_
 
-#include "mir/graphics/cursor.h"
+#include "mir/geometry/size.h"
+#include <memory>
 
 namespace mir::graphics
 {
-class Display;
-
-class MultiplexingCursor : public Cursor
+struct ARGB8Buffer
 {
-public:
-    explicit MultiplexingCursor(std::span<Display*> platform_displays);
-
-    void show(std::shared_ptr<CursorImage> const& image) override;
-    void hide() override;
-    void move_to(geometry::Point position) override;
-
-    void scale(float) override;
-
-private:
-    std::vector<std::shared_ptr<Cursor>> const platform_cursors;
+    std::unique_ptr<uint32_t[]> const data;
+    geometry::Size const size;
 };
+
+class CursorImage;
+ARGB8Buffer scale_cursor_image(CursorImage const& cursor_image, float new_scale);
 }
+
+#endif

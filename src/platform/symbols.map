@@ -1,4 +1,4 @@
-MIR_PLATFORM_2.20 {
+MIR_PLATFORM_2.21 {
  global:
   extern "C++" {
     mir::graphics::AtomicFrame::increment*;
@@ -84,6 +84,7 @@ MIR_PLATFORM_2.20 {
     mir::graphics::initialise_egl_logger*;
     mir::graphics::operator*;
     mir::graphics::red_channel_depth*;
+    mir::graphics::scale_cursor_image*;
     mir::graphics::tessellate_renderable_into_rectangle*;
     mir::graphics::wayland::bind_display*;
     mir::graphics::wayland::buffer_from_resource*;
@@ -118,6 +119,7 @@ MIR_PLATFORM_2.20 {
     mir::options::compositor_report_opt*;
     mir::options::console_provider;
     mir::options::cursor_opt*;
+    mir::options::cursor_scale_opt*;
     mir::options::debug_opt*;
     mir::options::display_report_opt*;
     mir::options::drop_wayland_extensions_opt;

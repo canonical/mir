@@ -34,6 +34,8 @@ add_library(mirplatformgraphicscommon OBJECT
   egl_context_executor.cpp
   egl_buffer_copy.h
   egl_buffer_copy.cpp
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/pixman_image_scaling.h
+  pixman_image_scaling.cpp
 )
 
 mir_generate_protocol_wrapper(mirplatformgraphicscommon "zwp_" linux-dmabuf-unstable-v1.xml)
@@ -116,6 +118,7 @@ target_link_libraries(
     PkgConfig::EGL
   PRIVATE
     mircommon
+    PkgConfig::PIXMAN
 )
 
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)

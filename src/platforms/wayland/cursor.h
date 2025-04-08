@@ -39,7 +39,7 @@ public:
 
     ~Cursor();
 
-    void show(graphics::CursorImage const& image) override;
+    void show(std::shared_ptr<graphics::CursorImage> const& image) override;
 
     void hide() override;
 
@@ -47,6 +47,8 @@ public:
 
     void enter(wl_pointer* pointer);
     void leave(wl_pointer* pointer);
+
+    void scale(float) override;
 
 private:
     wl_shm* const shm;
@@ -56,6 +58,9 @@ private:
     std::mutex mutable mutex;
     wl_buffer* buffer{nullptr};
     wl_pointer* pointer{nullptr};
+
+    std::shared_ptr<mir::graphics::CursorImage> current_cursor_image;
+    float current_scale{1.0};
 };
 }
 }
