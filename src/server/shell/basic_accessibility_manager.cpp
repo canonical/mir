@@ -69,19 +69,17 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     bool enable_key_repeat,
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
     std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
-    std::shared_ptr<input::InputEventTransformer::Transformer> const& simulated_secondary_click_transformer) :
+    std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer) :
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},
     transformer{mousekeys_transformer},
     simulated_secondary_click_transformer{simulated_secondary_click_transformer}
 {
-    event_transformer->append(simulated_secondary_click_transformer);
 }
 
 mir::shell::BasicAccessibilityManager::~BasicAccessibilityManager()
 {
-    event_transformer->remove(simulated_secondary_click_transformer);
 }
 
 void mir::shell::BasicAccessibilityManager::cursor_scale(float new_scale)
@@ -102,4 +100,18 @@ void mir::shell::BasicAccessibilityManager::acceleration_factors(double constant
 void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_axis)
 {
     transformer->max_speed(x_axis, y_axis);
+}
+
+void mir::shell::BasicAccessibilityManager::simulated_secondary_click_enabled(bool enabled)
+{
+    if(enabled)
+        event_transformer->append(simulated_secondary_click_transformer);
+    else
+        event_transformer->remove(simulated_secondary_click_transformer);
+}
+
+void mir::shell::BasicAccessibilityManager::simulated_secondary_click_hold_duration(
+    std::chrono::milliseconds hold_duration)
+{
+    simulated_secondary_click_transformer->hold_duration(hold_duration);
 }

@@ -64,6 +64,19 @@ struct MockMouseKeysTransformer : public mir::shell::MouseKeysTransformer
         (override));
 };
 
+struct StubSimulatedSecondaryClickTransformer : public mir::shell::SimulatedSecondaryClickTransformer
+{
+    bool transform_input_event(
+        mir::input::InputEventTransformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&)
+    {
+        return false;
+    }
+
+    void hold_duration(std::chrono::milliseconds) override
+    {
+    }
+};
+
 struct TestBasicAccessibilityManager : Test
 {
     TestBasicAccessibilityManager() :
@@ -81,7 +94,7 @@ struct TestBasicAccessibilityManager : Test
             true,
             std::make_shared<mir::test::doubles::StubCursor>(),
             mock_mousekeys_transformer,
-            nullptr} // TODO stub this out
+            std::shared_ptr<StubSimulatedSecondaryClickTransformer>()}
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
     }

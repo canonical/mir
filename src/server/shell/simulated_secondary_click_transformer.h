@@ -21,6 +21,8 @@
 
 #include "mir/time/alarm.h"
 
+#include <atomic>
+
 namespace mir
 {
 namespace shell
@@ -28,12 +30,20 @@ namespace shell
 class SimulatedSecondaryClickTransformer : public mir::input::InputEventTransformer::Transformer
 {
 public:
-    SimulatedSecondaryClickTransformer(std::shared_ptr<mir::MainLoop> const& main_loop);
+    virtual void hold_duration(std::chrono::milliseconds delay) = 0;
+};
+
+class BasicSimulatedSecondaryClickTransformer : public SimulatedSecondaryClickTransformer
+{
+public:
+    BasicSimulatedSecondaryClickTransformer(std::shared_ptr<mir::MainLoop> const& main_loop);
 
     bool transform_input_event(
         input::InputEventTransformer::EventDispatcher const& dispatcher,
         input::EventBuilder*,
         MirEvent const&) override;
+
+    void hold_duration(std::chrono::milliseconds delay) override;
 
 private:
     std::shared_ptr<mir::MainLoop> const main_loop;
@@ -51,6 +61,8 @@ private:
         waiting_for_synthesized_left_down,
         waiting_for_synthesized_left_up,
     } state{State::waiting_for_real_left_down};
+
+    std::atomic<std::chrono::milliseconds> hold_duration_{std::chrono::milliseconds{1000}};
 };
 }
 }

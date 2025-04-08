@@ -51,13 +51,13 @@ void click(
 }
 } // namespace
 
-mir::shell::SimulatedSecondaryClickTransformer::SimulatedSecondaryClickTransformer(
+mir::shell::BasicSimulatedSecondaryClickTransformer::BasicSimulatedSecondaryClickTransformer(
     std::shared_ptr<mir::MainLoop> const& main_loop) :
     main_loop{main_loop}
 {
 }
 
-bool mir::shell::SimulatedSecondaryClickTransformer::transform_input_event(
+bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
     input::InputEventTransformer::EventDispatcher const& dispatcher,
     input::EventBuilder* builder,
     MirEvent const& event)
@@ -90,7 +90,7 @@ bool mir::shell::SimulatedSecondaryClickTransformer::transform_input_event(
                 }
 
                 secondary_click_dispatcher->cancel();
-                secondary_click_dispatcher->reschedule_in(std::chrono::seconds(1));
+                secondary_click_dispatcher->reschedule_in(hold_duration_);
 
                 state = State::waiting_for_synthesized_right_down;
 
@@ -163,3 +163,9 @@ bool mir::shell::SimulatedSecondaryClickTransformer::transform_input_event(
 
     std::unreachable();
 }
+
+void mir::shell::BasicSimulatedSecondaryClickTransformer::hold_duration(std::chrono::milliseconds delay)
+{
+    hold_duration_ = delay;
+}
+
