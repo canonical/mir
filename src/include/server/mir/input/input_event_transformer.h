@@ -60,13 +60,14 @@ public:
 
         ~Registration();
 
-        void swap(Registration& other) noexcept;
         Registration(Registration&& other) noexcept;
         auto operator=(Registration&& other) noexcept -> Registration&;
 
     private:
         Registration() noexcept;
         Registration(Registration const&) = delete;
+
+        void swap(Registration& other) noexcept;
 
         std::function<void()> unregister;
     };
