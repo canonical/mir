@@ -58,17 +58,22 @@ struct MockMouseKeysTransformer : public mir::shell::MouseKeysTransformer
         (override));
 };
 
-struct StubSimulatedSecondaryClickTransformer : public mir::shell::SimulatedSecondaryClickTransformer
+struct MockSimulatedSecondaryClickTransformer : public mir::shell::SimulatedSecondaryClickTransformer
 {
-    bool transform_input_event(
-        mir::input::InputEventTransformer::EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&)
-    {
-        return false;
-    }
+    MockSimulatedSecondaryClickTransformer() = default;
 
-    void hold_duration(std::chrono::milliseconds) override
-    {
-    }
+    MOCK_METHOD(
+        bool,
+        transform_input_event,
+        (mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
+         mir::input::EventBuilder*,
+         MirEvent const&),
+        (override));
+
+    MOCK_METHOD(void, hold_duration, (std::chrono::milliseconds delay), (override));
+    MOCK_METHOD(void, hold_start, (std::function<void()>&& on_hold_start), (override));
+    MOCK_METHOD(void, hold_cancel, (std::function<void()>&& on_hold_cancel), (override));
+    MOCK_METHOD(void, secondary_click, (std::function<void()>&& on_secondary_click), (override));
 };
 
 struct TestBasicAccessibilityManager : Test
@@ -79,7 +84,7 @@ struct TestBasicAccessibilityManager : Test
             true,
             std::make_shared<mir::test::doubles::StubCursor>(),
             mock_mousekeys_transformer,
-            std::shared_ptr<StubSimulatedSecondaryClickTransformer>()}
+            mock_simulated_secondary_click_transformer}
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
     }
@@ -90,6 +95,8 @@ struct TestBasicAccessibilityManager : Test
     std::shared_ptr<NiceMock<MockKeyboardHelper>> mock_key_helper{std::make_shared<NiceMock<MockKeyboardHelper>>()};
     std::shared_ptr<NiceMock<MockMouseKeysTransformer>> mock_mousekeys_transformer{
         std::make_shared<NiceMock<MockMouseKeysTransformer>>()};
+    std::shared_ptr<NiceMock<MockSimulatedSecondaryClickTransformer>> mock_simulated_secondary_click_transformer{
+        std::make_shared<NiceMock<MockSimulatedSecondaryClickTransformer>>()};
 
     mir::input::InputEventTransformer input_event_transformer{mt::fake_shared(mock_seat), mt::fake_shared(clock)};
     mir::shell::BasicAccessibilityManager basic_accessibility_manager;
@@ -225,4 +232,51 @@ TEST_F(TestBasicAccessibilityManager, calling_set_max_speed_calls_set_max_speed_
 
     basic_accessibility_manager.mousekeys_enabled(true);
     basic_accessibility_manager.max_speed(max_x, max_y);
+}
+
+TEST_F(TestBasicAccessibilityManager, calling_simulated_secondary_click_hold_duration_calls_the_corresponding_method_on_transformer)
+{
+    auto const expected_duration = std::chrono::milliseconds{333};
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, hold_duration(expected_duration));
+
+    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+    basic_accessibility_manager.simulated_secondary_click_hold_duration(expected_duration);
+}
+
+
+// There must be a better way than having three duplicated tests...
+TEST_F(TestBasicAccessibilityManager, setting_on_hold_start_sets_it_on_transformer)
+{
+    auto const expected_on_hold_start = []
+    {
+    };
+
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, hold_start(_));
+
+    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+    basic_accessibility_manager.simulated_secondary_click_hold_start(expected_on_hold_start);
+}
+
+TEST_F(TestBasicAccessibilityManager, setting_on_hold_cancel_sets_it_on_transformer)
+{
+    auto const expected_on_hold_cancel = []
+    {
+    };
+
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, hold_cancel(_));
+
+    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+    basic_accessibility_manager.simulated_secondary_click_hold_cancel(expected_on_hold_cancel);
+}
+
+TEST_F(TestBasicAccessibilityManager, setting_on_secondary_click_sets_it_on_transformer)
+{
+    auto const expected_on_secondary_click = []
+    {
+    };
+
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, secondary_click(_));
+
+    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+    basic_accessibility_manager.simulated_secondary_click_secondary_click(expected_on_secondary_click);
 }
