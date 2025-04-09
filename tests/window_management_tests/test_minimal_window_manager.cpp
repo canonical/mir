@@ -1263,13 +1263,13 @@ TEST_F(MinimalWindowManagerTest, window_can_be_maximized_on_new_output)
 
     // Move the cursor to the third output
     geom::PointF const new_cursor_position{
-        outputs[2].extents().top_left.x.as_int() + static_cast<int>(
+        new_output_configs[2].extents().top_left.x.as_int() + static_cast<int>(
             static_cast<float>(outputs[2].extents().size.width.as_int()) / 2.f),
-        outputs[2].extents().top_left.y.as_int() + static_cast<int>(
-            static_cast<float>(outputs[2].extents().size.height.as_int()) / 2.f)
+        new_output_configs[2].extents().top_left.y.as_int() + static_cast<int>(
+            static_cast<float>(new_output_configs[2].extents().size.height.as_int()) / 2.f)
     };
     tools().move_cursor_to(new_cursor_position);
-    EXPECT_THAT(tools().active_output(), outputs[2].extents());
+    EXPECT_THAT(tools().active_output(), new_output_configs[2].extents());
 
     auto const app = open_application("test");
     miral::WindowSpecification spec;
@@ -1278,5 +1278,5 @@ TEST_F(MinimalWindowManagerTest, window_can_be_maximized_on_new_output)
     auto const window = create_window(app, spec);
 
     // Expect that the new window is on the third output
-    EXPECT_THAT(window.top_left(), Eq(outputs[2].extents().top_left));
+    EXPECT_THAT(window.top_left(), Eq(new_output_configs[2].extents().top_left));
 }
