@@ -1262,12 +1262,7 @@ TEST_F(MinimalWindowManagerTest, window_can_be_maximized_on_new_output)
     EXPECT_THAT(outputs.size(), Eq(3));
 
     // Move the cursor to the third output
-    geom::PointF const new_cursor_position{
-        new_output_configs[2].extents().top_left.x.as_int() + static_cast<int>(
-            static_cast<float>(outputs[2].extents().size.width.as_int()) / 2.f),
-        new_output_configs[2].extents().top_left.y.as_int() + static_cast<int>(
-            static_cast<float>(new_output_configs[2].extents().size.height.as_int()) / 2.f)
-    };
+    geom::PointF const new_cursor_position(1900, 100);
     tools().move_cursor_to(new_cursor_position);
     EXPECT_THAT(tools().active_output(), new_output_configs[2].extents());
 

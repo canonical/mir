@@ -269,8 +269,8 @@ public:
     {
         // move_cursor_to will queue work onto the linearising_executor.
         // Because that work is guaranteed to be linear, we can safely
-        // queue another piece of work and wait for that complete before
-        // returning form this method.
+        // queue another piece of work and wait for that to complete before
+        // returning from this method.
         tools.move_cursor_to(point);
         std::mutex mtx;
         bool cursor_change_processed = false;
