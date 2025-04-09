@@ -423,6 +423,10 @@ public:
     auto the_display_configuration_observer_registrar() const ->
         std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>>;
 
+    /// \return the DisplayConfigurationObserver
+    auto the_display_configuration_observer() const ->
+        std::shared_ptr<graphics::DisplayConfigurationObserver>;
+
     /// \return a registrar to add and remove SeatObservers
     auto the_seat_observer_registrar() const ->
         std::shared_ptr<ObserverRegistrar<input::SeatObserver>>;
