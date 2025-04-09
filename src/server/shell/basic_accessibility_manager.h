@@ -74,6 +74,9 @@ public:
 
     void simulated_secondary_click_enabled(bool enabled) override;
     void simulated_secondary_click_hold_duration(std::chrono::milliseconds hold_duration) override;
+    void simulated_secondary_click_hold_start(std::function<void()>&&) override;
+    void simulated_secondary_click_hold_cancel(std::function<void()>&&) override;
+    void simulated_secondary_click_secondary_click(std::function<void()>&&) override;
 
 private:
     struct MutableState {

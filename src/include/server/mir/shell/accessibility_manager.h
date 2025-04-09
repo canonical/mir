@@ -18,6 +18,7 @@
 #define MIR_SHELL_ACCESSIBILITY_MANAGER_H
 
 #include <chrono>
+#include <functional>
 #include <memory>
 #include <optional>
 
@@ -54,6 +55,9 @@ public:
 
     virtual void simulated_secondary_click_enabled(bool enabled) = 0;
     virtual void simulated_secondary_click_hold_duration(std::chrono::milliseconds hold_duration) = 0;
+    virtual void simulated_secondary_click_hold_start(std::function<void()>&&) = 0;
+    virtual void simulated_secondary_click_hold_cancel(std::function<void()>&&) = 0;
+    virtual void simulated_secondary_click_secondary_click(std::function<void()>&&) = 0;
 };
 }
 }

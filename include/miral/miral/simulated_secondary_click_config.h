@@ -18,6 +18,7 @@
 #define MIRAL_SIMULATED_SECONDARY_CLICK_CONFIG
 
 #include <chrono>
+#include <functional>
 #include <memory>
 
 namespace mir
@@ -36,6 +37,10 @@ public:
 
     void enabled(bool enabled) const;
     void hold_duration(std::chrono::milliseconds hold_duration) const;
+
+    void hold_start(std::function<void()>&& on_hold_start) const;
+    void hold_cancel(std::function<void()>&& on_hold_cancel) const;
+    void secondary_click(std::function<void()>&& on_secondary_click) const;
 
 private:
     struct Self;

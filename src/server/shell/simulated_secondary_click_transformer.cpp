@@ -83,16 +83,19 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
                 if (!secondary_click_dispatcher)
                 {
                     secondary_click_dispatcher = main_loop->create_alarm(
-                        [dispatcher, builder]
+                        [dispatcher, builder, this]
                         {
+                            mutable_state.lock()->on_secondary_click();
                             click(dispatcher, builder, mir_pointer_button_secondary);
                         });
                 }
 
                 secondary_click_dispatcher->cancel();
-                secondary_click_dispatcher->reschedule_in(hold_duration_);
+                secondary_click_dispatcher->reschedule_in(mutable_state.lock()->hold_duration);
 
                 state = State::waiting_for_synthesized_right_down;
+
+                mutable_state.lock()->on_hold_start();
 
                 return true;
             }
@@ -110,6 +113,9 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
                 secondary_click_dispatcher->cancel();
                 state = State::waiting_for_synthesized_left_down;
                 click(dispatcher, builder, mir_pointer_button_primary);
+
+                mutable_state.lock()->on_hold_cancel();
+
                 return false;
             }
 
@@ -166,6 +172,20 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
 
 void mir::shell::BasicSimulatedSecondaryClickTransformer::hold_duration(std::chrono::milliseconds delay)
 {
-    hold_duration_ = delay;
+    mutable_state.lock()->hold_duration = delay;
 }
 
+void mir::shell::BasicSimulatedSecondaryClickTransformer::hold_start(std::function<void()>&& on_hold_start)
+{
+    mutable_state.lock()->on_hold_start = std::move(on_hold_start);
+}
+
+void mir::shell::BasicSimulatedSecondaryClickTransformer::hold_cancel(std::function<void()>&& on_hold_cancel)
+{
+    mutable_state.lock()->on_hold_cancel = std::move(on_hold_cancel);
+}
+
+void mir::shell::BasicSimulatedSecondaryClickTransformer::secondary_click(std::function<void()>&& on_secondary_click)
+{
+    mutable_state.lock()->on_secondary_click = std::move(on_secondary_click);
+}

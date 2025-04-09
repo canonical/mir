@@ -115,3 +115,20 @@ void mir::shell::BasicAccessibilityManager::simulated_secondary_click_hold_durat
 {
     simulated_secondary_click_transformer->hold_duration(hold_duration);
 }
+
+void mir::shell::BasicAccessibilityManager::simulated_secondary_click_hold_start(std::function<void()>&& on_hold_start)
+{
+    simulated_secondary_click_transformer->hold_start(std::move(on_hold_start));
+}
+
+void mir::shell::BasicAccessibilityManager::simulated_secondary_click_hold_cancel(
+    std::function<void()>&& on_hold_cancel)
+{
+    simulated_secondary_click_transformer->hold_cancel(std::move(on_hold_cancel));
+}
+
+void mir::shell::BasicAccessibilityManager::simulated_secondary_click_secondary_click(
+    std::function<void()>&& on_secondary_click)
+{
+    simulated_secondary_click_transformer->secondary_click(std::move(on_secondary_click));
+}

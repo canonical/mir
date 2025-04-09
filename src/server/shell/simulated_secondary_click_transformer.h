@@ -19,6 +19,7 @@
 
 #include "mir/input/input_event_transformer.h"
 
+#include "mir/synchronised.h"
 #include "mir/time/alarm.h"
 
 #include <atomic>
@@ -31,6 +32,9 @@ class SimulatedSecondaryClickTransformer : public mir::input::InputEventTransfor
 {
 public:
     virtual void hold_duration(std::chrono::milliseconds delay) = 0;
+    virtual void hold_start(std::function<void()>&& on_hold_start) = 0;
+    virtual void hold_cancel(std::function<void()>&& on_hold_cancel) = 0;
+    virtual void secondary_click(std::function<void()>&& on_secondary_click) = 0;
 };
 
 class BasicSimulatedSecondaryClickTransformer : public SimulatedSecondaryClickTransformer
@@ -44,6 +48,9 @@ public:
         MirEvent const&) override;
 
     void hold_duration(std::chrono::milliseconds delay) override;
+    void hold_start(std::function<void()>&& on_hold_start) override;
+    void hold_cancel(std::function<void()>&& on_hold_cancel) override;
+    void secondary_click(std::function<void()>&& on_secondary_click) override;
 
 private:
     std::shared_ptr<mir::MainLoop> const main_loop;
@@ -62,7 +69,18 @@ private:
         waiting_for_synthesized_left_up,
     } state{State::waiting_for_real_left_down};
 
-    std::atomic<std::chrono::milliseconds> hold_duration_{std::chrono::milliseconds{1000}};
+    struct MutableState
+    {
+        std::chrono::milliseconds hold_duration{1000};
+
+        auto static inline constexpr do_nothing = []
+        {
+        };
+
+        std::function<void()> on_hold_start{do_nothing}, on_hold_cancel{do_nothing}, on_secondary_click{do_nothing};
+    };
+
+    mir::Synchronised<MutableState> mutable_state;
 };
 }
 }
