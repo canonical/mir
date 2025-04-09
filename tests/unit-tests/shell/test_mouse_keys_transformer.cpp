@@ -14,6 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "transformer_common.h"
+
 #include "mir/events/event_builders.h"
 #include "mir/events/pointer_event.h"
 #include "mir/geometry/forward.h"
@@ -22,8 +24,6 @@
 #include "src/server/input/default_event_builder.h"
 
 #include "mir/test/doubles/advanceable_clock.h"
-#include "mir/test/doubles/queued_alarm_stub_main_loop.h"
-#include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/fake_shared.h"
 
 #include <gmock/gmock.h>
@@ -31,7 +31,6 @@
 #include <pthread.h>
 #include <xkbcommon/xkbcommon-keysyms.h>
 
-#include <chrono>
 #include <memory>
 
 namespace mev = mir::events;
@@ -42,11 +41,10 @@ namespace mtd = mt::doubles;
 using namespace ::testing;
 using namespace std::chrono_literals;
 
-
 struct TestMouseKeysTransformer : testing::Test
 {
     TestMouseKeysTransformer() :
-        main_loop{std::make_shared<mtd::QueuedAlarmStubMainLoop>(mt::fake_shared(clock))},
+        main_loop{std::make_shared<mtd::QueuedAlarmStubMainLoop>()},
         transformer{
             std::make_shared<mir::shell::BasicMouseKeysTransformer>(main_loop, mt::fake_shared(clock)),
         },
