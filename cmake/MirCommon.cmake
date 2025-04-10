@@ -54,7 +54,7 @@ function (list_to_string LIST_VAR PREFIX STR_VAR)
   set(${STR_VAR} "${tmp_str}" PARENT_SCOPE)
 endfunction()
 
-function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAKS )
+function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAKS GTEST_FILTER )
   # Set vars
   set(test_cmd_no_memcheck "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXECUTABLE}")
   set(test_cmd "${test_cmd_no_memcheck}")
@@ -67,6 +67,7 @@ function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAK
   endif()
   set(test_no_memcheck_filter)
   list(APPEND test_exclusion_filter ${MIR_EXCLUDE_TESTS})
+  list(APPEND test_exclusion_filter ${GTEST_FILTER})
 
   if(ENABLE_MEMCHECK_OPTION)
     set(test_cmd ${VALGRIND_CMD} ${test_cmd_no_memcheck})
@@ -169,11 +170,22 @@ function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAK
 endfunction ()
 
 function (mir_discover_tests EXECUTABLE)
-  mir_discover_tests_internal(${EXECUTABLE} "" FALSE ${ARGN})
+  set(options)
+  set(oneValueArgs GTEST_FILTER)
+  set(multiValueArgs)
+  cmake_parse_arguments(MIR_DISCOVER_TESTS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  if(MIR_DISCOVER_TESTS_GTEST_FILTER)
+    set(gtest_filter "${MIR_DISCOVER_TESTS_GTEST_FILTER}")
+  else()
+    set(gtest_filter "default_name")
+  endif()
+
+  mir_discover_tests_internal(${EXECUTABLE} "" FALSE ${gtest_filter} ${MIR_DISCOVER_TESTS_UNPARSED_ARGUMENTS})
 endfunction()
 
 function (mir_discover_tests_with_fd_leak_detection EXECUTABLE)
-  mir_discover_tests_internal(${EXECUTABLE} "" TRUE ${ARGN})
+  mir_discover_tests_internal(${EXECUTABLE} "" TRUE "" ${ARGN})
 endfunction()
 
 function (mir_discover_external_gtests)
