@@ -44,7 +44,7 @@ using namespace std::chrono_literals;
 struct TestMouseKeysTransformer : testing::Test
 {
     TestMouseKeysTransformer() :
-        main_loop{std::make_shared<mtd::QueuedAlarmStubMainLoop>()},
+        main_loop{std::make_shared<mtd::QueuedAlarmStubMainLoop>(mt::fake_shared(clock))},
         transformer{
             std::make_shared<mir::shell::BasicMouseKeysTransformer>(main_loop, mt::fake_shared(clock)),
         },
