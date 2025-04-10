@@ -59,14 +59,8 @@ private:
     enum class State
     {
         waiting_for_real_left_down,
-
-        waiting_for_synthesized_right_down,
-        waiting_for_synthesized_right_up,
-
         waiting_for_real_left_up,
-
-        waiting_for_synthesized_left_down,
-        waiting_for_synthesized_left_up,
+        waiting_for_drag_end_left_up,
     } state{State::waiting_for_real_left_down};
 
     struct MutableState
