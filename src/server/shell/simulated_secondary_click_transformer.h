@@ -59,7 +59,7 @@ private:
     enum class State
     {
         waiting_for_real_left_down,
-        waiting_for_real_left_up,
+        waiting_for_motion_or_real_left_up,
         waiting_for_drag_end_left_up,
     } state{State::waiting_for_real_left_down};
 

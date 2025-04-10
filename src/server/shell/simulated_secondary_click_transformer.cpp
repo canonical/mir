@@ -92,15 +92,60 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
                 }
 
                 secondary_click_dispatcher->reschedule_in(mutable_state.lock()->hold_duration);
-                state = State::waiting_for_real_left_up;
+                state = State::waiting_for_motion_or_real_left_up;
                 mutable_state.lock()->on_hold_start();
 
                 return true; // Consume event
             }
         }
         break;
-    case State::waiting_for_real_left_up:
+    case State::waiting_for_motion_or_real_left_up: // This state implies that the left button was pressed down
         {
+            if (action == mir_pointer_action_motion)
+            {
+                if (secondary_click_dispatcher->state() == time::Alarm::pending)
+                {
+                    secondary_click_dispatcher->cancel();
+                    mutable_state.lock()->on_hold_cancel();
+                }
+
+                // Down event instead of the one we consumed the last time around
+                dispatcher(
+                    mir::events::make_pointer_event(
+                        pointer_event->device_id(),
+                        pointer_event->event_time(),
+                        pointer_event->modifiers(),
+                        mir_pointer_action_button_down,
+                        pointer_event->buttons() | mir_pointer_button_primary,
+                        pointer_event->position(),
+                        pointer_event->motion(),
+                        pointer_event->axis_source(),
+                        pointer_event->h_scroll(),
+                        pointer_event->v_scroll()));
+
+                // Re-dispatch the event we're currently handling in the proper
+                // order. If we return `false`, the motion event we're handling
+                // right now will be processed before the down event.
+                //
+                // It will be in the order: motion (you are here), "fake" down
+                // event, "fake" motion event.
+                dispatcher(
+                    mir::events::make_pointer_event(
+                        pointer_event->device_id(),
+                        pointer_event->event_time(),
+                        pointer_event->modifiers(),
+                        pointer_event->action(),
+                        pointer_event->buttons() | mir_pointer_button_primary,
+                        pointer_event->position(),
+                        pointer_event->motion(),
+                        pointer_event->axis_source(),
+                        pointer_event->h_scroll(),
+                        pointer_event->v_scroll()));
+
+                state = State::waiting_for_drag_end_left_up;
+                return true;
+            }
+
             // `pointer_event->buttons()` contains the _current_ button state.
             // Since we're in this state machine state, it's implicitly known
             // that the left button was pressed, so we just need to make sure
@@ -120,17 +165,7 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
                 // machine and the alarm, and consume the event.
                 state = State::waiting_for_real_left_down;
                 secondary_click_dispatcher->cancel();
-                return true;
-            }
-
-            if (action == mir_pointer_action_motion)
-            {
-                if (secondary_click_dispatcher->state() == time::Alarm::pending)
-                {
-                    secondary_click_dispatcher->cancel();
-                    mutable_state.lock()->on_hold_cancel();
-                }
-                state = State::waiting_for_real_left_down;
+                return false;
             }
         }
         break;
@@ -139,7 +174,7 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
             // Let it through, just change state iff its an up event.
             // Motion events should stay in this state.
             if (action == mir_pointer_action_button_up)
-                state = State::waiting_for_real_left_up;
+                state = State::waiting_for_real_left_down;
         }
         break;
     }
