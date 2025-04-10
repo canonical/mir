@@ -24,7 +24,6 @@
 #include <optional>
 #include <any>
 
-namespace YAML { class Node; }
 namespace mir { class Server; }
 
 namespace miral
@@ -53,15 +52,30 @@ public:
     class Node
     {
     public:
-        explicit Node(YAML::Node const& node);
-        auto as_string() const -> std::optional<std::string>;
-        auto as_int() const -> std::optional<int>;
+        ~Node();
+
+        enum class NodeType
+        {
+            integer,
+            string,
+            sequence,
+            map,
+            unknown
+        };
+
+        auto type() const -> NodeType;
+        auto as_string() const -> std::string;
+        auto as_int() const -> int;
         void for_each(std::function<void(Node const&)> const& f) const;
-        auto at(std::string const& key) const -> std::optional<Node>;
+        auto has(std::string const& key) const -> bool;
+        auto at(std::string const& key) const -> Node;
 
     private:
+        friend DisplayConfiguration;
         struct Self;
-        std::shared_ptr<Self> self;
+
+        explicit Node(std::unique_ptr<Self> self);
+        std::unique_ptr<Self> self;
     };
 
     explicit DisplayConfiguration(MirRunner const& mir_runner);

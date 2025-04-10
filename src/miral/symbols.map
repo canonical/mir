@@ -528,11 +528,14 @@ global:
     miral::CursorScale::CursorScale*;
     miral::CursorScale::operator*;
     miral::CursorScale::scale*;
+    miral::DisplayConfiguration::Node::?Node*;
     miral::DisplayConfiguration::Node::Node*;
     miral::DisplayConfiguration::Node::as_int*;
     miral::DisplayConfiguration::Node::as_string*;
     miral::DisplayConfiguration::Node::at*;
     miral::DisplayConfiguration::Node::for_each*;
+    miral::DisplayConfiguration::Node::has*;
+    miral::DisplayConfiguration::Node::type*;
     miral::DisplayConfiguration::layout_userdata*;
     miral::DisplayConfiguration::layout_userdata_builder*;
     miral::MouseKeysConfig::MouseKeysConfig*;

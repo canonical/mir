@@ -94,24 +94,29 @@ struct TestCustomLayoutKeysDisplayConfiguration : BaseTestDisplayConfiguration
         // Next, establish all of the expected keys
         configuration->layout_userdata_builder("custom_string", [](DisplayConfiguration::Node const& node)
         {
-            return node.as_string().value();
+            EXPECT_THAT(node.type(), Eq(miral::DisplayConfiguration::Node::NodeType::string));
+            return node.as_string();
         });
         configuration->layout_userdata_builder("custom_int", [](DisplayConfiguration::Node const& node)
         {
-            return node.as_int().value();
+            EXPECT_THAT(node.type(), Eq(miral::DisplayConfiguration::Node::NodeType::integer));
+            return node.as_int();
         });
         configuration->layout_userdata_builder("custom_sequence", [](DisplayConfiguration::Node const& node)
         {
+            EXPECT_THAT(node.type(), Eq(miral::DisplayConfiguration::Node::NodeType::sequence));
             std::string value;
             node.for_each([&](DisplayConfiguration::Node const& sub_node)
             {
-                value = sub_node.as_string().value();
+                value = sub_node.as_string();
             });
             return value;
         });
         configuration->layout_userdata_builder("custom_map", [](DisplayConfiguration::Node const& node)
         {
-            return node.at("key").value().as_string().value();
+            EXPECT_THAT(node.type(), Eq(miral::DisplayConfiguration::Node::NodeType::map));
+            EXPECT_TRUE(node.has("key"));
+            return node.at("key").as_string();
         });
     }
 };
