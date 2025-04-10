@@ -20,7 +20,9 @@
 #include "mir/test/doubles/stub_main_loop.h"
 #include "mir/test/doubles/stub_alarm.h"
 
-#include <list>
+#include <mir/time/clock.h>
+
+#include <deque>
 
 namespace mir
 {
@@ -34,11 +36,19 @@ class StubNotifyingAlarm : public StubAlarm
 {
 public:
     explicit StubNotifyingAlarm(
-        std::function<void(StubNotifyingAlarm const*)> const& on_rescheduled,
+        std::shared_ptr<time::Clock> const& clock,
+        std::function<void(StubNotifyingAlarm*, time::Timestamp)> const& on_rescheduled,
         std::function<void(StubNotifyingAlarm const*)> const& on_cancelled) :
+        clock{clock},
         on_rescheduled{on_rescheduled},
-        on_cancelled{on_cancelled}
+        on_cancelled{on_cancelled},
+        state_{cancelled}
     {
+    }
+
+    State state() const override
+    {
+        return state_;
     }
 
     ~StubNotifyingAlarm() override
@@ -46,21 +56,35 @@ public:
         on_cancelled(this);
     }
 
-    bool reschedule_in(std::chrono::milliseconds) override
+    bool reschedule_in(std::chrono::milliseconds offset) override
     {
-        on_rescheduled(this);
+        return reschedule_for(clock->now() + offset);
+    }
+
+    bool reschedule_for(mir::time::Timestamp timestamp) override
+    {
+        on_rescheduled(this, timestamp);
+        state_ = pending;
         return true;
     }
 
-    bool reschedule_for(mir::time::Timestamp) override
+    bool cancel() override
     {
-        on_rescheduled(this);
+        on_cancelled(this);
+        state_ = cancelled;
         return true;
+    }
+
+    void about_to_be_called()
+    {
+        state_ = triggered;
     }
 
 private:
-    std::function<void(StubNotifyingAlarm const*)> on_rescheduled;
+    std::shared_ptr<time::Clock> const clock;
+    std::function<void(StubNotifyingAlarm*, time::Timestamp)> on_rescheduled;
     std::function<void(StubNotifyingAlarm const*)> on_cancelled;
+    State state_;
 };
 
 /// This MainLoop is a stub aside from the code that handles the creation of alarms.
@@ -70,21 +94,40 @@ private:
 class QueuedAlarmStubMainLoop : public StubMainLoop
 {
 public:
+    QueuedAlarmStubMainLoop(std::shared_ptr<time::Clock> const& clock) :
+        clock{clock}
+    {
+
+    }
+
     std::unique_ptr<mir::time::Alarm> create_alarm(std::function<void()> const& f) override
     {
         return std::make_unique<StubNotifyingAlarm>(
-            [this, f=f](StubNotifyingAlarm const* alarm)
+            clock,
+            [this, f = f](StubNotifyingAlarm* alarm, time::Timestamp execution_time)
             {
-                pending.push_back(std::make_shared<AlarmData>(alarm, f));
+                pending.push_back(
+                    std::make_shared<AlarmData>(
+                        execution_time,
+                        alarm,
+                        [f=std::move(f), alarm]
+                        {
+                            alarm->about_to_be_called();
+                            f();
+                        }));
             },
             [this](StubNotifyingAlarm const* alarm)
             {
-                pending.erase(std::remove_if(pending.begin(), pending.end(), [alarm](std::shared_ptr<AlarmData> const& data)
-                {
-                    return data->alarm == alarm;
-                }), pending.end());
-            }
-        );
+                pending.erase(
+                    std::remove_if(
+                        pending.begin(),
+                        pending.end(),
+                        [alarm](std::shared_ptr<AlarmData> const& data)
+                        {
+                            return data->alarm == alarm;
+                        }),
+                    pending.end());
+            });
     }
 
     bool call_queued()
@@ -92,18 +135,37 @@ public:
         if (pending.empty())
             return false;
 
-        pending.front()->call();
-        pending.pop_front();
+        if (pending.front()->execution_time > clock->now())
+            return false;
+
+        while (!pending.empty() && pending.front()->execution_time <= clock->now())
+        {
+            pending.front()->call();
+            pending.pop_front();
+        }
+
         return true;
     }
 
 private:
     struct AlarmData
     {
+        time::Timestamp const execution_time;
         StubNotifyingAlarm const* alarm;
         std::function<void()> call;
+
+        std::strong_ordering operator<=>(AlarmData const& other)
+        {
+            if (execution_time < other.execution_time)
+                return std::strong_ordering::less;
+            else if (execution_time > other.execution_time)
+                return std::strong_ordering::greater;
+            else
+                return std::strong_ordering::equal;
+        }
     };
-    std::list<std::shared_ptr<AlarmData>> pending;
+    std::shared_ptr<time::Clock> const clock;
+    std::deque<std::shared_ptr<AlarmData>> pending;
 };
 }
 }
