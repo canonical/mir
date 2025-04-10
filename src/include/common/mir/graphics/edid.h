@@ -35,6 +35,7 @@ struct Edid
     size_t get_monitor_name(MonitorName str) const;
     size_t get_manufacturer(Manufacturer str) const;
     uint16_t product_code() const;
+    uint32_t serial_number() const;
 
 private:
     /* Pretty much every field in an EDID requires some kind of conversion
