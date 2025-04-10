@@ -40,6 +40,7 @@ namespace mt = mir::test;
 namespace mtd = mt::doubles;
 
 using namespace ::testing;
+using namespace std::chrono_literals;
 
 
 struct TestMouseKeysTransformer : testing::Test
@@ -127,9 +128,13 @@ TEST_P(TestOneAxisMovement, single_keyboard_event_to_single_pointer_motion_event
 
     auto const button = GetParam();
     transformer->transform_input_event(dispatch, &default_event_builder, *down_event(button));
-    main_loop->call_queued();
-    main_loop->call_queued();
-    main_loop->call_queued();
+
+    for (auto i = 0; i < 3; i++)
+    {
+        clock.advance_by(2ms);
+        main_loop->call_queued();
+    }
+
     transformer->transform_input_event(dispatch, &default_event_builder, *up_event(button));
 }
 
@@ -188,9 +193,13 @@ TEST_P(TestDiagonalMovement, multiple_keys_result_in_diagonal_movement)
             });
 
     press_keys();
-    main_loop->call_queued();
-    main_loop->call_queued();
-    main_loop->call_queued();
+
+    for (auto i = 0; i < 3; i++)
+    {
+        clock.advance_by(2ms);
+        main_loop->call_queued();
+    }
+
     ASSERT_GT(count_diagonal, 0);
     release_keys();
 }
@@ -231,9 +240,13 @@ TEST_P(TestOppositeDiagonalMovement, opposite_keys_result_in_no_movement)
             });
 
     press_keys();
-    main_loop->call_queued();
-    main_loop->call_queued();
-    main_loop->call_queued();
+
+    for (auto i = 0; i < 3; i++)
+    {
+        clock.advance_by(2ms);
+        main_loop->call_queued();
+    }
+
     release_keys();
 }
 
@@ -246,7 +259,7 @@ TEST_F(TestMouseKeysTransformer, pressing_all_movement_buttons_generates_no_moti
 {
     InSequence seq;
     EXPECT_CALL(*this, on_dispatch(_))
-        .Times(3)
+        .Times(10)
         .WillOnce(Return())
         .WillOnce(Return())
         .WillOnce(Return())
@@ -268,9 +281,14 @@ TEST_F(TestMouseKeysTransformer, pressing_all_movement_buttons_generates_no_moti
         transformer->transform_input_event(dispatch, &default_event_builder, *down);
     }
 
-    main_loop->call_queued();
-    main_loop->call_queued();
-    main_loop->call_queued();
+
+    // 3 iterations with the keys partially down, followed by 7 iterations
+    // where all the keys are down
+    for(auto i = 0; i < 10; i++)
+    {
+        clock.advance_by(2ms);
+        main_loop->call_queued();
+    }
 
     for (auto key : all_movement_keys)
     {
@@ -438,7 +456,7 @@ TEST_P(TestAccelerationCurve, acceleration_curve_constants_evaluate_properly)
     transformer->acceleration_factors(curve.constant, curve.linear, curve.quadratic);
     transformer->transform_input_event(dispatch, &default_event_builder, *down_event(XKB_KEY_KP_6));
 
-    clock.advance_by(std::chrono::milliseconds(2));
+    clock.advance_by(2ms);
     main_loop->call_queued();
 
     transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_6));
@@ -491,7 +509,7 @@ TEST_P(TestMaxSpeed, max_speed_caps_speed_properly)
     transformer->transform_input_event(dispatch, &default_event_builder, *down_event(XKB_KEY_KP_6));
     transformer->transform_input_event(dispatch, &default_event_builder, *down_event(XKB_KEY_KP_2));
 
-    clock.advance_by(std::chrono::seconds(1));
+    clock.advance_by(1s);
     main_loop->call_queued();
 
     transformer->transform_input_event(dispatch, &default_event_builder, *up_event(XKB_KEY_KP_6));
