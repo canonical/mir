@@ -16,7 +16,9 @@
 
 #include "mir/input/input_event_transformer.h"
 
+#include "mir/input/device.h"
 #include "mir/input/device_capability.h"
+#include "mir/input/input_device_hub.h"
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_sink.h"
 #include "mir/input/virtual_input_device.h"
@@ -32,13 +34,31 @@
 namespace mi = mir::input;
 
 mi::InputEventTransformer::InputEventTransformer(
-    std::shared_ptr<InputDeviceRegistry> const& input_device_registry, std::shared_ptr<MainLoop> const& main_loop) :
+    std::shared_ptr<InputDeviceRegistry> const& input_device_registry,
+    std::shared_ptr<MainLoop> const& main_loop,
+    std::shared_ptr<InputDeviceHub> const& input_device_hub) :
     virtual_pointer{
         std::make_shared<mir::input::VirtualInputDevice>("mousekey-pointer", mir::input::DeviceCapability::pointer)},
     input_device_registry{input_device_registry},
-    main_loop{main_loop}
+    main_loop{main_loop},
+    virtual_device_id_{[this, &input_device_registry, &input_device_hub]
+                       {
+                           input_device_registry->add_device(virtual_pointer);
+                           MirInputDeviceId id = -1;
+                           input_device_hub->for_each_input_device(
+                               [this, &id](Device const& dev)
+                               {
+                                   if (dev.unique_id() == virtual_pointer->get_device_info().unique_id)
+                                   {
+                                       id = dev.id();
+                                   }
+                               });
+
+                           assert(id != -1);
+
+                           return id;
+                       }()}
 {
-    input_device_registry->add_device(virtual_pointer);
 }
 
 mir::input::InputEventTransformer::~InputEventTransformer()
@@ -122,4 +142,9 @@ bool mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer
 
     input_transformers.erase(remove_start, remove_end);
     return true;
+}
+
+auto mi::InputEventTransformer::virtual_device_id() const -> MirInputDeviceId
+{
+    return virtual_device_id_;
 }
