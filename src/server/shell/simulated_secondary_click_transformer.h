@@ -40,7 +40,8 @@ public:
 class BasicSimulatedSecondaryClickTransformer : public SimulatedSecondaryClickTransformer
 {
 public:
-    BasicSimulatedSecondaryClickTransformer(std::shared_ptr<mir::MainLoop> const& main_loop);
+    BasicSimulatedSecondaryClickTransformer(
+        std::shared_ptr<mir::MainLoop> const& main_loop, MirInputDeviceId virtual_device_id);
 
     bool transform_input_event(
         input::InputEventTransformer::EventDispatcher const& dispatcher,
@@ -53,20 +54,17 @@ public:
     void secondary_click(std::function<void()>&& on_secondary_click) override;
 
 private:
+    std::mutex reentrance_mutex;
+
     std::shared_ptr<mir::MainLoop> const main_loop;
+    MirInputDeviceId const virtual_device_id;
     std::unique_ptr<time::Alarm> secondary_click_dispatcher;
 
     enum class State
     {
         waiting_for_real_left_down,
-
-        waiting_for_synthesized_right_down,
-        waiting_for_synthesized_right_up,
-
         waiting_for_real_left_up,
-
-        waiting_for_synthesized_left_down,
-        waiting_for_synthesized_left_up,
+        waiting_for_drag_end_left_up,
     } state{State::waiting_for_real_left_down};
 
     struct MutableState

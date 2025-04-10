@@ -196,6 +196,7 @@ auto mir::DefaultServerConfiguration::the_accessibility_manager() -> std::shared
                 the_options()->get<bool>(mir::options::enable_key_repeat_opt),
                 the_cursor(),
                 std::make_shared<shell::BasicMouseKeysTransformer>(the_main_loop(), the_clock()),
-                std::make_shared<shell::BasicSimulatedSecondaryClickTransformer>(the_main_loop()));
+                std::make_shared<shell::BasicSimulatedSecondaryClickTransformer>(
+                    the_main_loop(), the_input_event_transformer()->virtual_device_id()));
         });
 }
