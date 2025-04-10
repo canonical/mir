@@ -139,30 +139,7 @@ void mgg::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
         if (dmabuf_provider)
         {
             mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
-            dmabuf_extension =
-                std::unique_ptr<LinuxDmaBufUnstable, std::function<void(LinuxDmaBufUnstable*)>>(
-                    new LinuxDmaBufUnstable{
-                        display,
-                        dmabuf_provider,
-                    },
-                    [wayland_executor](LinuxDmaBufUnstable* global)
-                    {
-                        // The global must be destroyed on the Wayland thread
-                        wayland_executor->spawn(
-                            [global]()
-                            {
-                                /* This is safe against double-frees, as the WaylandExecutor
-                                 * guarantees that work scheduled will only run while the Wayland
-                                 * event loop is running, and the main loop is stopped before
-                                 * wl_display_destroy() frees any globals
-                                 *
-                                 * This will, however, leak the global if the main loop is destroyed
-                                 * before the buffer allocator. Fixing that requires work in the
-                                 * wrapper generator.
-                                 */
-                                delete global;
-                            });
-                    });
+            dmabuf_extension = std::make_unique<LinuxDmaBufUnstable>(display, dmabuf_provider);
             mir::log_info("Enabled linux-dmabuf import support");
         }
     }
@@ -182,15 +159,16 @@ void mgg::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
 
 void mgg::BufferAllocator::unbind_display(wl_display* display)
 {
+    auto context_guard = mir::raii::paired_calls(
+        [this]() { ctx->make_current(); },
+        [this]() { ctx->release_current(); });
+    auto dpy = eglGetCurrentDisplay();
+
     if (egl_display_bound)
     {
-        auto context_guard = mir::raii::paired_calls(
-            [this]() { ctx->make_current(); },
-            [this]() { ctx->release_current(); });
-        auto dpy = eglGetCurrentDisplay();
-
         mg::wayland::unbind_display(dpy, display, *egl_extensions);
     }
+    dmabuf_extension.reset();
 }
 
 std::shared_ptr<mg::Buffer> mgg::BufferAllocator::buffer_from_resource(
