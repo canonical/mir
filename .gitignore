@@ -1,5 +1,6 @@
 .idea
 .project
+.cache
 benchmarks/mir_perf_framework_setup.py
 debian/*.log
 include/server/mir/version.h
@@ -9,5 +10,6 @@ build-*
 cmake-*
 build
 benchmarks/build
+compile_commands.json
 
 tools/bot-data.tar.xz
