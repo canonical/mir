@@ -167,7 +167,7 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
                 // machine and the alarm, and consume the event.
                 state = State::waiting_for_real_left_down;
                 secondary_click_dispatcher->cancel();
-                return true;
+                return false;
             }
         }
         break;
