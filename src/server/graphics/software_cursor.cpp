@@ -145,7 +145,16 @@ mg::SoftwareCursor::SoftwareCursor(
 
 mg::SoftwareCursor::~SoftwareCursor()
 {
-    hide();
+    /* We don't have to worry about locking here, so we can directly
+     * call into the scene.
+     *
+     * This also avoids punting cleanup work to the executor that
+     * might be already stopped
+     */
+    if (visible && renderable)
+    {
+        scene->remove_input_visualization(renderable);
+    }
 }
 
 void mg::SoftwareCursor::show(std::shared_ptr<CursorImage> const& cursor_image)
