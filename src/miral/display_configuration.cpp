@@ -159,31 +159,31 @@ miral::DisplayConfiguration::Node::Node(std::unique_ptr<Self> self)
 
 miral::DisplayConfiguration::Node::~Node() = default;
 
-auto miral::DisplayConfiguration::Node::type() const -> NodeType
+auto miral::DisplayConfiguration::Node::type() const -> Type
 {
     if (self->node.IsScalar())
     {
         try {
             (void)self->node.as<int>();
-            return NodeType::integer;
+            return Type::integer;
         } catch (const YAML::BadConversion& e) {
-            return NodeType::string;
+            return Type::string;
         }
     }
     else if (self->node.IsMap())
-        return NodeType::map;
+        return Type::map;
     else if (self->node.IsSequence())
-        return NodeType::sequence;
+        return Type::sequence;
     else
     {
         mir::log_error("Checked type is none of the supported types");
-        return NodeType::unknown;
+        return Type::unknown;
     }
 }
 
 auto miral::DisplayConfiguration::Node::as_string() const -> std::string
 {
-    if (type() != NodeType::string)
+    if (type() != Type::string)
         mir::fatal_error("Attempting to access a Node of type %d as a string", type());
 
     return self->as<std::string>();
@@ -191,7 +191,7 @@ auto miral::DisplayConfiguration::Node::as_string() const -> std::string
 
 auto miral::DisplayConfiguration::Node::as_int() const -> int
 {
-    if (type() != NodeType::integer)
+    if (type() != Type::integer)
         mir::fatal_error("Attempting to access a Node of type %d as an integer", type());
 
     return self->as<int>();
@@ -199,7 +199,7 @@ auto miral::DisplayConfiguration::Node::as_int() const -> int
 
 void miral::DisplayConfiguration::Node::for_each(std::function<void(Node const&)> const& f) const
 {
-    if (type() != NodeType::sequence)
+    if (type() != Type::sequence)
         mir::fatal_error("Attempting to access a Node of type as a sequence", type());
 
     for (auto const& item : self->node)
@@ -208,7 +208,7 @@ void miral::DisplayConfiguration::Node::for_each(std::function<void(Node const&)
 
 auto miral::DisplayConfiguration::Node::has(std::string const& key) const -> bool
 {
-    if (type() != NodeType::map)
+    if (type() != Type::map)
         mir::fatal_error("Attempting to access a Node of type as a map", type());
 
     return self->node[key].operator bool();

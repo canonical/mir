@@ -54,7 +54,7 @@ public:
     public:
         ~Node();
 
-        enum class NodeType
+        enum class Type
         {
             integer,
             string,
@@ -63,7 +63,7 @@ public:
             unknown
         };
 
-        auto type() const -> NodeType;
+        auto type() const -> Type;
         auto as_string() const -> std::string;
         auto as_int() const -> int;
         void for_each(std::function<void(Node const&)> const& f) const;
