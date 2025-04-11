@@ -60,10 +60,7 @@ public:
 
     std::optional<int> repeat_rate() const override;
     int repeat_delay() const override;
-    void repeat_rate(int new_rate) override;
-    void repeat_delay(int new_rate) override;
-
-    void notify_helpers() const override;
+    void repeat_rate_and_delay(std::optional<int> new_rate, std::optional<int> new_delay) override;
 
     void cursor_scale(float new_scale) override;
 

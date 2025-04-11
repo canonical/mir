@@ -42,17 +42,25 @@ int mir::shell::BasicAccessibilityManager::repeat_delay() const {
     return mutable_state.lock()->repeat_delay;
 }
 
-void mir::shell::BasicAccessibilityManager::repeat_rate(int new_rate) {
-    mutable_state.lock()->repeat_rate = new_rate;
-}
+void mir::shell::BasicAccessibilityManager::repeat_rate_and_delay(
+    std::optional<int> new_rate, std::optional<int> new_delay)
+{
+    auto const state = mutable_state.lock();
 
-void mir::shell::BasicAccessibilityManager::repeat_delay(int new_delay) {
-    mutable_state.lock()->repeat_delay = new_delay;
-}
+    auto const maybe_new_rate = new_rate.value_or(state->repeat_rate);
+    auto const maybe_new_delay = new_delay.value_or(state->repeat_delay);
 
-void mir::shell::BasicAccessibilityManager::notify_helpers() const {
-    for (auto const& helper: mutable_state.lock()->keyboard_helpers)
-        helper->repeat_info_changed(repeat_rate(), repeat_delay());
+    auto const changed = maybe_new_rate != state->repeat_rate || maybe_new_delay != state->repeat_delay;
+
+    state->repeat_rate = maybe_new_rate;
+    state->repeat_delay = maybe_new_delay;
+
+    if (changed)
+    {
+        for (auto const& helper : state->keyboard_helpers)
+            helper->repeat_info_changed(
+                enable_key_repeat ? state->repeat_rate : std::optional<int>{}, state->repeat_delay);
+    }
 }
 
 void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
