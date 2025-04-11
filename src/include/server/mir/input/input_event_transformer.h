@@ -60,11 +60,11 @@ public:
 
         ~Registration();
 
-        Registration(Registration&& other) noexcept;
+        Registration(Registration&& other);
         auto operator=(Registration&& other) noexcept -> Registration&;
 
     private:
-        Registration() noexcept;
+        Registration();
         Registration(Registration const&) = delete;
 
         void swap(Registration& other) noexcept;

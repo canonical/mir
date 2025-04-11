@@ -148,7 +148,7 @@ void mir::input::InputEventTransformer::Registration::swap(Registration& other) 
     unregister.swap(other.unregister);
 }
 
-mir::input::InputEventTransformer::Registration::Registration(Registration&& other) noexcept :
+mir::input::InputEventTransformer::Registration::Registration(Registration&& other):
     Registration()
 {
     other.swap(*this);
@@ -160,7 +160,7 @@ auto mir::input::InputEventTransformer::Registration::operator=(Registration&& o
     return *this;
 }
 
-mir::input::InputEventTransformer::Registration::Registration() noexcept :
+mir::input::InputEventTransformer::Registration::Registration() :
     unregister{[]
                {
                }}
