@@ -57,7 +57,6 @@ public:
         bool enable_key_repeat,
         std::shared_ptr<mir::graphics::Cursor> const& cursor,
         std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
-        std::shared_ptr<input::VirtualInputDevice> const& virtual_input_device,
         std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry);
 
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&) override;

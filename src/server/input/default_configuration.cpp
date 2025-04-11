@@ -40,7 +40,6 @@
 #include "mir/input/vt_filter.h"
 #include "mir/input/device.h"
 #include "mir/input/input_event_transformer.h"
-#include "mir/input/virtual_input_device.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
@@ -101,16 +100,6 @@ mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher()
             return std::make_shared<mi::EventFilterChainDispatcher>(
                 make_default_filter_list(),
                 the_surface_input_dispatcher());
-        });
-}
-
-std::shared_ptr<mi::VirtualInputDevice> mir::DefaultServerConfiguration::the_virtual_input_device()
-{
-    return virtual_input_device(
-        []
-        {
-            return std::make_shared<mir::input::VirtualInputDevice>(
-                "mousekey-pointer", mir::input::DeviceCapability::pointer);
         });
 }
 

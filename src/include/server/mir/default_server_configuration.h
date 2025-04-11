@@ -471,9 +471,6 @@ private:
 
     std::vector<std::shared_ptr<graphics::DisplayPlatform>> display_platforms;
     std::vector<std::shared_ptr<graphics::RenderingPlatform>> rendering_platforms;
-
-    CachedPtr<input::VirtualInputDevice> virtual_input_device;
-    auto the_virtual_input_device() -> std::shared_ptr<input::VirtualInputDevice>;
 };
 }
 

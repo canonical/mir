@@ -76,13 +76,13 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     bool enable_key_repeat,
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
     std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
-    std::shared_ptr<input::VirtualInputDevice> const& virtual_input_device,
     std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry) :
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},
     transformer{mousekeys_transformer},
-    virtual_input_device{virtual_input_device},
+    virtual_input_device{
+        std::make_shared<mir::input::VirtualInputDevice>("mousekey-pointer", mir::input::DeviceCapability::pointer)},
     input_device_registry{input_device_registry}
 {
 }

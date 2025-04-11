@@ -81,7 +81,6 @@ struct TestBasicAccessibilityManager : Test
             true,
             std::make_shared<mir::test::doubles::StubCursor>(),
             mock_mousekeys_transformer,
-            virtual_input_device,
             input_device_hub}
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
@@ -99,8 +98,6 @@ struct TestBasicAccessibilityManager : Test
 
     std::shared_ptr<mir::MainLoop> const main_loop;
     std::shared_ptr<mir::input::DefaultInputDeviceHub> const input_device_hub;
-    std::shared_ptr<mir::input::VirtualInputDevice> const virtual_input_device{
-        std::make_shared<mir::input::VirtualInputDevice>("mousekey-pointer", mir::input::DeviceCapability::pointer)};
     std::shared_ptr<mir::input::InputEventTransformer> const input_event_transformer;
 
     mir::shell::BasicAccessibilityManager basic_accessibility_manager;
