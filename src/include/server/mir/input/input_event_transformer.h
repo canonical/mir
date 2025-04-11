@@ -77,13 +77,13 @@ public:
 
     bool handle(MirEvent const&) override;
 
-    [[nodiscard]] auto append(std::weak_ptr<Transformer> const&) -> std::optional<Registration>;
+    [[nodiscard]] auto append(std::shared_ptr<Transformer> const&) -> std::optional<Registration>;
 
 private:
     bool remove(std::shared_ptr<Transformer> const&);
 
     std::mutex mutex;
-    std::vector<std::weak_ptr<Transformer>> input_transformers;
+    std::vector<std::shared_ptr<Transformer>> input_transformers;
 
     std::shared_ptr<input::VirtualInputDevice> const virtual_pointer;
     std::shared_ptr<input::InputDeviceRegistry> const input_device_registry;

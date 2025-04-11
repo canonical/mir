@@ -64,38 +64,30 @@ bool mi::InputEventTransformer::handle(MirEvent const& event)
                     });
             };
 
-            for (auto it = input_transformers.begin(); it != input_transformers.end();)
+            for (auto transformer : input_transformers)
             {
-                auto const& t = it->lock();
-                if (!t)
-                {
-                    it = input_transformers.erase(it);
-                    continue;
-                }
-
-                if (t->transform_input_event(dispatcher, builder, event))
+                if (transformer->transform_input_event(dispatcher, builder, event))
                 {
                     handled = true;
                     break;
                 }
-                ++it;
             }
         });
 
     return handled;
 }
 
-auto mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::Transformer> const& transformer)
+auto mi::InputEventTransformer::append(std::shared_ptr<mi::InputEventTransformer::Transformer> const& transformer)
     -> std::optional<Registration>
 {
     std::lock_guard lock{mutex};
 
     auto const duplicate_iter = std::ranges::find(
             input_transformers,
-            transformer.lock().get(),
+            transformer.get(),
             [](auto const& other_transformer)
             {
-                return other_transformer.lock().get();
+                return other_transformer.get();
             });
 
     if (duplicate_iter != input_transformers.end())
@@ -103,26 +95,13 @@ auto mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::
 
     input_transformers.push_back(transformer);
 
-    return Registration(this, transformer.lock());
+    return Registration(this, transformer);
 }
 
 bool mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer::Transformer> const& transformer)
 {
     std::lock_guard lock{mutex};
-    auto [remove_start, remove_end] = std::ranges::remove(
-        input_transformers,
-        transformer,
-        [](auto const& list_element)
-        {
-            return list_element.lock();
-        });
-
-    if (remove_start == input_transformers.end())
-    {
-        mir::log_error("Attempted to remove a transformer that doesn't exist in `input_transformers`");
-        return false;
-    }
-
+    auto [remove_start, remove_end] = std::ranges::remove(input_transformers, transformer);
     input_transformers.erase(remove_start, remove_end);
     return true;
 }
