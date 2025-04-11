@@ -32,22 +32,16 @@
 namespace mi = mir::input;
 
 mi::InputEventTransformer::InputEventTransformer(
-    std::shared_ptr<InputDeviceRegistry> const& input_device_registry, std::shared_ptr<MainLoop> const& main_loop) :
-    virtual_pointer{
-        std::make_shared<mir::input::VirtualInputDevice>("mousekey-pointer", mir::input::DeviceCapability::pointer)},
+    std::shared_ptr<InputDeviceRegistry> const& input_device_registry,
+    std::shared_ptr<MainLoop> const& main_loop,
+    std::shared_ptr<VirtualInputDevice> const& virtual_pointer) :
+    virtual_pointer{virtual_pointer},
     input_device_registry{input_device_registry},
     main_loop{main_loop}
 {
 }
 
-mir::input::InputEventTransformer::~InputEventTransformer()
-{
-    if (virtual_pointer_registered && !input_transformers.empty())
-    {
-        input_device_registry->remove_device(virtual_pointer);
-        virtual_pointer_registered = false;
-    }
-}
+mir::input::InputEventTransformer::~InputEventTransformer() = default;
 
 bool mi::InputEventTransformer::handle(MirEvent const& event)
 {
@@ -103,12 +97,6 @@ void mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::
         return;
 
     input_transformers.push_back(transformer);
-
-    if (!virtual_pointer_registered)
-    {
-        input_device_registry->add_device(virtual_pointer);
-        virtual_pointer_registered = true;
-    }
 }
 
 bool mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer::Transformer> const& transformer)
@@ -129,12 +117,6 @@ bool mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer
     }
 
     input_transformers.erase(remove_start, remove_end);
-
-    if (virtual_pointer_registered && input_transformers.empty())
-    {
-        input_device_registry->remove_device(virtual_pointer);
-        virtual_pointer_registered = false;
-    }
 
     return true;
 }

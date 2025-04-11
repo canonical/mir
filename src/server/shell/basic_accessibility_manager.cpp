@@ -15,11 +15,12 @@
  */
 
 #include "basic_accessibility_manager.h"
-#include "mir/graphics/cursor.h"
 #include "mouse_keys_transformer.h"
 
+#include "mir/graphics/cursor.h"
+#include "mir/input/input_device_registry.h"
 #include "mir/input/input_event_transformer.h"
-#include "mir/main_loop.h"
+#include "mir/input/virtual_input_device.h"
 #include "mir/shell/keyboard_helper.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
@@ -58,20 +59,30 @@ void mir::shell::BasicAccessibilityManager::notify_helpers() const {
 void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
     if (on)
+    {
+        input_device_registry->add_device(virtual_input_device);
         event_transformer->append(transformer);
+    }
     else
+    {
         event_transformer->remove(transformer);
+        input_device_registry->remove_device(virtual_input_device);
+    }
 }
 
 mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<input::InputEventTransformer> const& event_transformer,
     bool enable_key_repeat,
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
-    std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer) :
+    std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
+    std::shared_ptr<input::VirtualInputDevice> const& virtual_input_device,
+    std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry) :
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},
-    transformer{mousekeys_transformer}
+    transformer{mousekeys_transformer},
+    virtual_input_device{virtual_input_device},
+    input_device_registry{input_device_registry}
 {
 }
 

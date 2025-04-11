@@ -20,6 +20,7 @@
 #include "mir/input/input_device_hub.h"
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_event_transformer.h"
+#include "mir/input/virtual_input_device.h"
 #include "src/server/input/default_input_device_hub.h"
 
 #include "mir/test/doubles/advanceable_clock.h"
@@ -61,13 +62,20 @@ struct TestInputEventTransformer : testing::Test
             mt::fake_shared(mock_key_mapper),
             mt::fake_shared(mock_server_status_listener),
             mt::fake_shared(led_observer_registrar))},
-        input_event_transformer{input_device_hub, std::make_shared<mir::GLibMainLoop>(mt::fake_shared(clock))}
+        input_event_transformer{
+            input_device_hub, std::make_shared<mir::GLibMainLoop>(mt::fake_shared(clock)), virtual_input_device}
     {
     }
 
     void SetUp() override
     {
+        input_device_hub->add_device(virtual_input_device);
         expect_and_execute_multiplexer();
+    }
+
+    void TearDown() override
+    {
+        input_device_hub->remove_device(virtual_input_device);
     }
 
     // Borrowed from `test_single_seat_setup.cpp`
@@ -89,6 +97,8 @@ struct TestInputEventTransformer : testing::Test
     }
 
     std::shared_ptr<mir::input::DefaultInputDeviceHub> const input_device_hub;
+    std::shared_ptr<mir::input::VirtualInputDevice> const virtual_input_device{
+        std::make_shared<mir::input::VirtualInputDevice>("mousekey-pointer", mir::input::DeviceCapability::pointer)};
     mir::input::InputEventTransformer input_event_transformer;
 };
 
@@ -135,7 +145,6 @@ TEST_F(TestInputEventTransformer, virtual_input_device_is_added_after_transforme
 
     ASSERT_TRUE(observer->mousekey_pointer_found.raised());
 }
-
 TEST_F(TestInputEventTransformer, transformer_gets_called)
 {
     auto mock_transformer = std::make_shared<MockTransformer>();
