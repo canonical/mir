@@ -17,6 +17,7 @@
 #ifndef MIR_SHELL_BASIC_ACCESSIBILITY_MANAGER_H
 #define MIR_SHELL_BASIC_ACCESSIBILITY_MANAGER_H
 
+#include "mir/input/input_event_transformer.h"
 #include "mir/shell/accessibility_manager.h"
 
 #include "mir/input/mousekeys_keymap.h"
@@ -33,10 +34,6 @@ namespace input
 {
 class InputEventTransformer;
 }
-namespace shell
-{
-class MouseKeysTransformer;
-}
 namespace options
 {
 class Option;
@@ -47,6 +44,7 @@ class Clock;
 }
 namespace shell
 {
+class MouseKeysTransformer;
 class BasicAccessibilityManager : public AccessibilityManager
 {
 public:
@@ -54,7 +52,9 @@ public:
         std::shared_ptr<input::InputEventTransformer> const& event_transformer,
         bool enable_key_repeat,
         std::shared_ptr<mir::graphics::Cursor> const& cursor,
-        std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer);
+        std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
+        std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer);
+    ~BasicAccessibilityManager();
 
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&) override;
 
@@ -72,6 +72,12 @@ public:
     void acceleration_factors(double constant, double linear, double quadratic) override;
     void max_speed(double x_axis, double y_axis) override;
 
+    void simulated_secondary_click_enabled(bool enabled) override;
+    void simulated_secondary_click_hold_duration(std::chrono::milliseconds hold_duration) override;
+    void simulated_secondary_click_hold_start(std::function<void()>&&) override;
+    void simulated_secondary_click_hold_cancel(std::function<void()>&&) override;
+    void simulated_secondary_click_secondary_click(std::function<void()>&&) override;
+
 private:
     struct MutableState {
         // 25 rate and 600 delay are the default in Weston and Sway
@@ -87,6 +93,7 @@ private:
     std::shared_ptr<graphics::Cursor> const cursor;
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
     std::shared_ptr<mir::shell::MouseKeysTransformer> const transformer;
+    std::shared_ptr<SimulatedSecondaryClickTransformer> const simulated_secondary_click_transformer;
 };
 }
 }

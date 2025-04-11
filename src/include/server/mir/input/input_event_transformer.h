@@ -33,6 +33,7 @@ class MainLoop;
 namespace input
 {
 class VirtualInputDevice;
+class InputDeviceHub;
 class InputDeviceRegistry;
 class InputSink;
 class EventBuilder;
@@ -52,7 +53,11 @@ public:
         virtual bool transform_input_event(EventDispatcher const&, EventBuilder*,  MirEvent const&) = 0;
     };
 
-    InputEventTransformer(std::shared_ptr<InputDeviceRegistry> const&, std::shared_ptr<MainLoop> const&);
+    InputEventTransformer(
+        std::shared_ptr<InputDeviceRegistry> const&,
+        std::shared_ptr<MainLoop> const&,
+        std::shared_ptr<InputDeviceHub> const&);
+
     ~InputEventTransformer();
 
     bool handle(MirEvent const&) override;
@@ -60,6 +65,7 @@ public:
     void append(std::weak_ptr<Transformer> const&);
     bool remove(std::shared_ptr<Transformer> const&);
 
+    MirInputDeviceId virtual_device_id() const;
 private:
     std::mutex mutex;
     std::vector<std::weak_ptr<Transformer>> input_transformers;
@@ -67,6 +73,7 @@ private:
     std::shared_ptr<input::VirtualInputDevice> const virtual_pointer;
     std::shared_ptr<input::InputDeviceRegistry> const input_device_registry;
     std::shared_ptr<MainLoop> const main_loop;
+    MirInputDeviceId const virtual_device_id_;
 };
 }
 }

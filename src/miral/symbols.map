@@ -540,7 +540,15 @@ global:
     miral::MouseKeysConfig::set_keymap*;
     miral::MouseKeysConfig::set_max_speed*;
     miral::MouseKeysConfig::enabled*;
+    miral::SimulatedSecondaryClickConfig::SimulatedSecondaryClickConfig*;
+    miral::SimulatedSecondaryClickConfig::enabled*;
+    miral::SimulatedSecondaryClickConfig::hold_cancel*;
+    miral::SimulatedSecondaryClickConfig::hold_duration*;
+    miral::SimulatedSecondaryClickConfig::hold_start*;
+    miral::SimulatedSecondaryClickConfig::operator*;
+    miral::SimulatedSecondaryClickConfig::secondary_click*;
     typeinfo?for?miral::CursorScale;
     typeinfo?for?miral::MouseKeysConfig;
+    typeinfo?for?miral::SimulatedSecondaryClickConfig;
   };
 } MIRAL_5.2;
