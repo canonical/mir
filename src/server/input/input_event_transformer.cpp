@@ -16,8 +16,6 @@
 
 #include "mir/input/input_event_transformer.h"
 
-#include "mir/input/device_capability.h"
-#include "mir/input/input_device_registry.h"
 #include "mir/input/input_sink.h"
 #include "mir/input/virtual_input_device.h"
 #include "mir/main_loop.h"
@@ -31,12 +29,7 @@
 
 namespace mi = mir::input;
 
-mi::InputEventTransformer::InputEventTransformer(
-    std::shared_ptr<InputDeviceRegistry> const& input_device_registry,
-    std::shared_ptr<MainLoop> const& main_loop,
-    std::shared_ptr<VirtualInputDevice> const& virtual_pointer) :
-    virtual_pointer{virtual_pointer},
-    input_device_registry{input_device_registry},
+mi::InputEventTransformer::InputEventTransformer(std::shared_ptr<MainLoop> const& main_loop) :
     main_loop{main_loop}
 {
 }
@@ -46,6 +39,9 @@ mir::input::InputEventTransformer::~InputEventTransformer() = default;
 bool mi::InputEventTransformer::handle(MirEvent const& event)
 {
     std::lock_guard lock{mutex};
+
+    if(!virtual_pointer)
+        return false;
 
     auto handled = false;
     virtual_pointer->if_started_then(
@@ -120,3 +116,10 @@ bool mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer
 
     return true;
 }
+
+void mir::input::InputEventTransformer::virtual_device(std::shared_ptr<input::VirtualInputDevice> const& virtual_device)
+{
+    std::lock_guard lock{mutex};
+    virtual_pointer = virtual_device;
+}
+

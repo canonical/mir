@@ -62,14 +62,14 @@ struct TestInputEventTransformer : testing::Test
             mt::fake_shared(mock_key_mapper),
             mt::fake_shared(mock_server_status_listener),
             mt::fake_shared(led_observer_registrar))},
-        input_event_transformer{
-            input_device_hub, std::make_shared<mir::GLibMainLoop>(mt::fake_shared(clock)), virtual_input_device}
+        input_event_transformer{std::make_shared<mir::GLibMainLoop>(mt::fake_shared(clock))}
     {
     }
 
     void SetUp() override
     {
         input_device_hub->add_device(virtual_input_device);
+        input_event_transformer.virtual_device(virtual_input_device);
         expect_and_execute_multiplexer();
     }
 

@@ -52,10 +52,7 @@ public:
         virtual bool transform_input_event(EventDispatcher const&, EventBuilder*,  MirEvent const&) = 0;
     };
 
-    InputEventTransformer(
-        std::shared_ptr<InputDeviceRegistry> const&,
-        std::shared_ptr<MainLoop> const&,
-        std::shared_ptr<VirtualInputDevice> const&);
+    InputEventTransformer(std::shared_ptr<MainLoop> const&);
     ~InputEventTransformer();
 
     bool handle(MirEvent const&) override;
@@ -63,12 +60,12 @@ public:
     void append(std::weak_ptr<Transformer> const&);
     bool remove(std::shared_ptr<Transformer> const&);
 
+    void virtual_device(std::shared_ptr<input::VirtualInputDevice> const&);
 private:
     std::mutex mutex;
     std::vector<std::weak_ptr<Transformer>> input_transformers;
+    std::shared_ptr<input::VirtualInputDevice> virtual_pointer;
 
-    std::shared_ptr<input::VirtualInputDevice> const virtual_pointer;
-    std::shared_ptr<input::InputDeviceRegistry> const input_device_registry;
     std::shared_ptr<MainLoop> const main_loop;
 };
 }
