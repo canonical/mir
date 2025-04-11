@@ -286,6 +286,7 @@ TEST_F(TestConfigFile, with_reload_on_change_a_config_in_xdg_conf_dir0_is_loaded
 
 TEST_F(TestConfigFile, with_reload_on_change_after_a_config_in_xdg_conf_dir0_is_loaded_a_new_config_in_xdg_conf_home_is_loaded)
 {
+    EXPECT_TRUE(false);
     using testing::_;
 
     testing::InSequence sequence;
