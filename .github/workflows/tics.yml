@@ -109,7 +109,7 @@ jobs:
         ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
         installTics: true
         # FIXME: workaround for a TICS bug
-        additionalFlags: ${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event.number) && '-resultdir build' || '' }}
+        additionalFlags: ${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) && '-resultdir build' || '' }}
 
     - if: ${{ failure() && runner.debug }}
       name: Setup tmate session

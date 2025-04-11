@@ -31,6 +31,11 @@
 #include <set>
 #include <any>
 
+namespace YAML
+{
+class Node;
+}
+
 namespace mir
 {
 class MainLoop;
@@ -81,10 +86,23 @@ private:
         std::map<std::string, std::optional<std::string>> custom_attribute;
     };
 
-    using Port2Config = std::map<std::string, Config>;
+    enum class Property
+    {
+        Port,
+        Vendor,
+        Model,
+        Product,
+        Serial,
+    };
+
+    // Workaround for not allowing static initialization in class
+    static std::map<Property, std::string const> const display_matching_properties();
+
+    using Matchers = std::map<Property, std::string>;
+    using Matchers2Config = std::vector<std::pair<Matchers, Config>>;
     struct LayoutConfig
     {
-        Port2Config port2config;
+        Matchers2Config matchers2config;
         std::map<std::string, std::any> userdata;
     };
 
@@ -94,6 +112,8 @@ private:
 
     using LayoutUserDataBuilder = std::function<std::any(YAML::Node const& value)>;
     std::map<std::string, LayoutUserDataBuilder> layout_userdata_builder_funcs;
+
+    void parse_configuration(YAML::Node const& node, Config& config, std::string const& error_prefix, std::string const& identifier);
 
     static void apply_to_output(mir::graphics::UserDisplayConfigurationOutput& conf_output, Config const& conf);
 
