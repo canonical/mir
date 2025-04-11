@@ -125,6 +125,7 @@ class Seat;
 class KeyMapper;
 class LedObserverRegistrar;
 class InputEventTransformer;
+class VirtualInputDevice;
 namespace receiver
 {
 class XKBMapperRegistrar;
