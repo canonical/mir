@@ -528,6 +528,12 @@ global:
     miral::CursorScale::CursorScale*;
     miral::CursorScale::scale*;
     miral::CursorScale::operator*;
+    miral::InputConfiguration::Keyboard::merge*;
+    miral::InputConfiguration::Mouse::merge*;
+    miral::InputConfiguration::Touchpad::merge*;
+    miral::InputConfiguration::Touchpad::middle_mouse_button_emulation*;
+    miral::InputConfiguration::Keyboard::repeat_delay*;
+    miral::InputConfiguration::Keyboard::repeat_rate*;
     miral::MouseKeysConfig::MouseKeysConfig*;
     miral::MouseKeysConfig::operator*;
     miral::MouseKeysConfig::set_acceleration_factors*;
@@ -538,4 +544,3 @@ global:
     typeinfo?for?miral::MouseKeysConfig;
   };
 } MIRAL_5.2;
-

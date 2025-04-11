@@ -504,6 +504,13 @@ libmiral.so.7 libmiral7 #MINVER#
  (c++)"miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&, miral::FocusStealing)@MIRAL_5.0" 5.2.0
  (c++)"miral::WindowManagementPolicy::~WindowManagementPolicy()@MIRAL_5.0" 5.2.0
  MIRAL_5.3@MIRAL_5.3 5.3.0
+ (c++)"miral::InputConfiguration::Keyboard::merge(miral::InputConfiguration::Keyboard const&)@MIRAL_5.3" 5.3.0
+ (c++)"miral::InputConfiguration::Keyboard::repeat_delay() const@MIRAL_5.3" 5.3.0
+ (c++)"miral::InputConfiguration::Keyboard::repeat_rate() const@MIRAL_5.3" 5.3.0
+ (c++)"miral::InputConfiguration::Mouse::merge(miral::InputConfiguration::Mouse const&)@MIRAL_5.3" 5.3.0
+ (c++)"miral::InputConfiguration::Touchpad::merge(miral::InputConfiguration::Touchpad const&)@MIRAL_5.3" 5.3.0
+ (c++)"miral::InputConfiguration::Touchpad::middle_mouse_button_emulation() const@MIRAL_5.3" 5.3.0
+ (c++)"miral::InputConfiguration::Touchpad::middle_mouse_button_emulation(std::optional<bool> const&)@MIRAL_5.3" 5.3.0
  (c++)"miral::CursorScale::CursorScale()@MIRAL_5.3" 5.3.0
  (c++)"miral::CursorScale::CursorScale(float)@MIRAL_5.3" 5.3.0
  (c++)"miral::CursorScale::apply_scale() const@MIRAL_5.3" 5.3.0
