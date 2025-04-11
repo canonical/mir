@@ -65,7 +65,9 @@ public:
 
     private:
         Registration();
+
         Registration(Registration const&) = delete;
+        auto operator=(Registration const&) noexcept -> Registration& = delete;
 
         void swap(Registration& other) noexcept;
 
