@@ -75,6 +75,19 @@ mtd::FakeDisplay::FakeDisplay(std::vector<geometry::Rectangle> const& output_rec
         groups.emplace_back(new StubDisplaySyncGroup({rect}));
 }
 
+mtd::FakeDisplay::FakeDisplay(std::vector<mir::graphics::DisplayConfigurationOutput> const& output_configs) :
+    config{std::make_shared<StubDisplayConfig>(output_configs)},
+    wakeup_trigger{::eventfd(0, EFD_CLOEXEC)},
+    handler_called{false}
+{
+    if (wakeup_trigger == Fd::invalid)
+    {
+        BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Failed to create wakeup FD"));
+    }
+    for (auto const& config : output_configs)
+        groups.emplace_back(new StubDisplaySyncGroup({config.extents()}));
+}
+
 void mtd::FakeDisplay::for_each_display_sync_group(std::function<void(mir::graphics::DisplaySyncGroup&)> const& f)
 {
     std::lock_guard lock{configuration_mutex};

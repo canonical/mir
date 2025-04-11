@@ -350,12 +350,12 @@ public:
 
     auto the_decoration_strategy() -> std::shared_ptr<DecorationStrategy> override;
     void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy) override;
+    auto the_display_configuration_observer() -> std::shared_ptr<graphics::DisplayConfigurationObserver>;
 
 protected:
     std::shared_ptr<options::Option> the_options() const;
     auto the_options_provider() const -> std::shared_ptr<options::Configuration>;
     std::shared_ptr<input::DefaultInputDeviceHub>  the_default_input_device_hub();
-    std::shared_ptr<graphics::DisplayConfigurationObserver> the_display_configuration_observer();
     std::shared_ptr<input::SeatObserver> the_seat_observer();
 
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
