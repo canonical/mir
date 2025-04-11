@@ -52,8 +52,6 @@ public:
     class Node
     {
     public:
-        ~Node();
-
         enum class Type
         {
             integer,
@@ -67,14 +65,19 @@ public:
         auto as_string() const -> std::string;
         auto as_int() const -> int;
         void for_each(std::function<void(Node const&)> const& f) const;
-        auto has(std::string const& key) const -> bool;
-        auto at(std::string const& key) const -> Node;
+        auto has(std::string_view key) const -> bool;
+        auto at(std::string_view key) const -> std::optional<Node>;
+        Node(Node&&) noexcept = default;
+        Node& operator=(Node&&) noexcept = default;
+        Node(Node const&) = delete;
+        Node& operator=(Node const&) = delete;
+        ~Node();
 
     private:
         friend DisplayConfiguration;
         struct Self;
+        explicit Node(std::unique_ptr<Self>&& self);
 
-        explicit Node(std::unique_ptr<Self> self);
         std::unique_ptr<Self> self;
     };
 

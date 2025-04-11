@@ -116,7 +116,7 @@ struct TestCustomLayoutKeysDisplayConfiguration : BaseTestDisplayConfiguration
         {
             EXPECT_THAT(node.type(), Eq(miral::DisplayConfiguration::Node::Type::map));
             EXPECT_TRUE(node.has("key"));
-            return node.at("key").as_string();
+            return node.at("key").value().as_string();
         });
     }
 };

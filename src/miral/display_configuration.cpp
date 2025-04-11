@@ -21,13 +21,33 @@
 
 #include <mir/server.h>
 
+#include <yaml-cpp/yaml.h>
 #include <boost/throw_exception.hpp>
 
 #include <fstream>
 #include <sstream>
-#include <yaml-cpp/yaml.h>
 
 using namespace std::string_literals;
+
+namespace
+{
+const char* node_type_to_string(miral::DisplayConfiguration::Node::Type type)
+{
+    switch (type)
+    {
+        case miral::DisplayConfiguration::Node::Type::integer:
+            return "integer";
+        case miral::DisplayConfiguration::Node::Type::string:
+            return "string";
+        case miral::DisplayConfiguration::Node::Type::sequence:
+            return "sequence";
+        case miral::DisplayConfiguration::Node::Type::map:
+            return "map";
+        default:
+            return "unknown";
+    }
+}
+}
 
 class miral::DisplayConfiguration::Self : public ReloadingYamlFileDisplayConfig
 {
@@ -152,7 +172,7 @@ struct miral::DisplayConfiguration::Node::Self
     YAML::Node const node;
 };
 
-miral::DisplayConfiguration::Node::Node(std::unique_ptr<Self> self)
+miral::DisplayConfiguration::Node::Node(std::unique_ptr<Self>&& self)
     : self(std::move(self))
 {
 }
@@ -176,7 +196,7 @@ auto miral::DisplayConfiguration::Node::type() const -> Type
         return Type::sequence;
     else
     {
-        mir::log_error("Checked type is none of the supported types");
+        mir::log_warning("Parsing custom display configuration node: Checked type is none of the supported types");
         return Type::unknown;
     }
 }
@@ -184,7 +204,7 @@ auto miral::DisplayConfiguration::Node::type() const -> Type
 auto miral::DisplayConfiguration::Node::as_string() const -> std::string
 {
     if (type() != Type::string)
-        mir::fatal_error("Attempting to access a Node of type %d as a string", type());
+        mir::fatal_error("Attempting to access a Node of type %s as a string", node_type_to_string(type()));
 
     return self->as<std::string>();
 }
@@ -192,7 +212,7 @@ auto miral::DisplayConfiguration::Node::as_string() const -> std::string
 auto miral::DisplayConfiguration::Node::as_int() const -> int
 {
     if (type() != Type::integer)
-        mir::fatal_error("Attempting to access a Node of type %d as an integer", type());
+        mir::fatal_error("Attempting to access a Node of type %s as an integer", node_type_to_string(type()));
 
     return self->as<int>();
 }
@@ -200,24 +220,24 @@ auto miral::DisplayConfiguration::Node::as_int() const -> int
 void miral::DisplayConfiguration::Node::for_each(std::function<void(Node const&)> const& f) const
 {
     if (type() != Type::sequence)
-        mir::fatal_error("Attempting to access a Node of type as a sequence", type());
+        mir::fatal_error("Attempting to access a Node of type %s as a sequence", node_type_to_string(type()));
 
     for (auto const& item : self->node)
         f(Node(std::make_unique<Self>(item)));
 }
 
-auto miral::DisplayConfiguration::Node::has(std::string const& key) const -> bool
+auto miral::DisplayConfiguration::Node::has(std::string_view key) const -> bool
 {
     if (type() != Type::map)
-        mir::fatal_error("Attempting to access a Node of type as a map", type());
+        mir::fatal_error("Attempting to access a Node of type %s as a map", node_type_to_string(type()));
 
     return self->node[key].operator bool();
 }
 
-auto miral::DisplayConfiguration::Node::at(std::string const& key) const -> Node
+auto miral::DisplayConfiguration::Node::at(std::string_view key) const -> std::optional<Node>
 {
     if (!has(key))
-        mir::fatal_error("Attempting to access key that does not exist in the map: %s is missing", key.c_str());
+        return std::nullopt;
 
     return Node(std::make_unique<Self>(self->node[key]));
 }

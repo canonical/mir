@@ -549,12 +549,12 @@ auto miral::YamlFileDisplayConfig::layout_userdata(std::string const& key) -> st
             if (second.userdata.contains(key))
                 return second.userdata.at(key);
 
-            mir::log_warning("No user data on layout=%s for key=%s", layout.c_str(), key.c_str());
+            mir::log_info("Parsing display configuration: No user data on layout=%s for key=%s", layout.c_str(), key.c_str());
             return std::nullopt;
         }
     }
 
-    mir::log_error("Cannot find layout: %s", layout.c_str());
+    mir::log_warning("Parsing display configuration: Cannot find layout: %s", layout.c_str());
     return std::nullopt;
 }
 
