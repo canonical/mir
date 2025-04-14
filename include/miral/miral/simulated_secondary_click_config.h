@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIRAL_SIMULATED_SECONDARY_CLICK_CONFIG
-#define MIRAL_SIMULATED_SECONDARY_CLICK_CONFIG
+#ifndef MIRAL_SIMULATED_SECONDARY_CLICK_CONFIG_H
+#define MIRAL_SIMULATED_SECONDARY_CLICK_CONFIG_H
 
 #include <chrono>
 #include <functional>
@@ -48,4 +48,4 @@ private:
 };
 }
 
-#endif // MIRAL_SIMULATED_SECONDARY_CLICK_CONFIG
+#endif // MIRAL_SIMULATED_SECONDARY_CLICK_CONFIG_H
