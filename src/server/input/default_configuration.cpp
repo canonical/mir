@@ -214,7 +214,7 @@ mir::DefaultServerConfiguration::the_touch_visualizer()
             {
                 visualizer->enable();
             }
-
+            
             return visualizer;
         });
 }
