@@ -35,11 +35,11 @@ class VirtualInputDevice : public InputDevice
 public:
     VirtualInputDevice(std::string const& name, DeviceCapabilities capabilities);
     void if_started_then(std::function<void(InputSink*, EventBuilder*)> const& fn);
-    auto get_device_info() -> InputDeviceInfo override { return info; }
 
 private:
     void start(InputSink* sink, EventBuilder* builder) override;
     void stop() override;
+    auto get_device_info() -> InputDeviceInfo override { return info; }
     auto get_pointer_settings() const -> optional_value<PointerSettings> override;
     void apply_settings(PointerSettings const&) override {};
     auto get_touchpad_settings() const -> optional_value<TouchpadSettings> override;

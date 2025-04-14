@@ -402,7 +402,6 @@ global:
     mir::input::Validator::Validator*;
     mir::input::Validator::validate_and_dispatch*;
     mir::input::VirtualInputDevice::VirtualInputDevice*;
-    mir::input::VirtualInputDevice::get_device_info*;
     mir::input::VirtualInputDevice::if_started_then*;
     mir::input::default_cursor_size*;
     mir::input::input_platform_from_graphics_module*;
@@ -894,7 +893,6 @@ global:
     non-virtual?thunk?to?mir::input::TouchVisualizer::?TouchVisualizer*;
     non-virtual?thunk?to?mir::input::VTFilter::?VTFilter*;
     non-virtual?thunk?to?mir::input::VTFilter::handle*;
-    non-virtual?thunk?to?mir::input::VirtualInputDevice::get_device_info*;
     non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::clear_all_keymaps*;
     non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::clear_keymap_for_device*;
     non-virtual?thunk?to?mir::input::receiver::XKBMapperRegistrar::device_modifiers*;
