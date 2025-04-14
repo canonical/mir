@@ -129,9 +129,12 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
                         pointer_event->h_scroll(),
                         pointer_event->v_scroll()));
 
-                // Re-dispatch the event we're currently handling in the
-                // proper order. If we return `false`, the motion event will
-                // be processed before the down event.
+                // Re-dispatch the event we're currently handling in the proper
+                // order. If we return `false`, the motion event we're handling
+                // right now will be processed before the down event.
+                //
+                // It will be in the order: motion (you are here), "fake" down
+                // event, "fake" motion event.
                 dispatcher(
                     mir::events::make_pointer_event(
                         pointer_event->device_id(),
