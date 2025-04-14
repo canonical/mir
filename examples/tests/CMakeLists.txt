@@ -1,8 +1,3 @@
-include_directories(
-  ${GMOCK_INCLUDE_DIR}
-  ${GTEST_INCLUDE_DIR}
-)
-
 string(REPLACE "-fno-lto" "" NO_NO_LTO_FLAGS ${CMAKE_C_FLAGS})
 set(CMAKE_C_FLAGS ${NO_NO_LTO_FLAGS})
 string(REPLACE "-fno-lto" "" NO_NO_LTO_FLAGS ${CMAKE_CXX_FLAGS})
@@ -18,7 +13,9 @@ target_include_directories(mir_examples_tests
   ${PROJECT_SOURCE_DIR}/tests/include
   ${PROJECT_SOURCE_DIR}/include/test
   ${PROJECT_SOURCE_DIR}/src/include/common
-  ${PROJECT_SOURCE_DIR}/src/include/server)
+  ${PROJECT_SOURCE_DIR}/src/include/server
+  ${GMOCK_INCLUDE_DIR}
+  ${GTEST_INCLUDE_DIR})
 
 target_link_libraries(mir_examples_tests
   mir-test-static
@@ -28,7 +25,6 @@ target_link_libraries(mir_examples_tests
   mircommon
   miral
   example-shell-lib
-
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES})
 
