@@ -60,7 +60,7 @@ void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
     if (on)
     {
-        auto const foo = input_device_registry->add_device(virtual_input_device);
+        input_device_registry->add_device(virtual_input_device);
         event_transformer->virtual_device(virtual_input_device);
         event_transformer->append(transformer);
     }
