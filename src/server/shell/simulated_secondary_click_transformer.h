@@ -54,8 +54,6 @@ public:
     void secondary_click(std::function<void()>&& on_secondary_click) override;
 
 private:
-    std::mutex reentrance_mutex;
-
     std::shared_ptr<mir::MainLoop> const main_loop;
     MirInputDeviceId const virtual_device_id;
     std::unique_ptr<time::Alarm> secondary_click_dispatcher;

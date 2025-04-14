@@ -68,8 +68,6 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
     input::EventBuilder* builder,
     MirEvent const& event)
 {
-    std::lock_guard guard{reentrance_mutex};
-
     if (event.type() != mir_event_type_input)
         return false;
 
