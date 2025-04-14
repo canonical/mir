@@ -123,11 +123,37 @@ TEST_P(
                 EXPECT_THAT(event->to_input()->to_pointer()->buttons() & expected_button, Eq(0));
             });
 
+
+    bool hold_start_called = false;
+    bool hold_cancel_called = false;
+    bool secondary_click_called = false;
+
+    transformer->hold_start(
+        [&hold_start_called]
+        {
+            hold_start_called = true;
+        });
+    transformer->hold_cancel(
+        [&hold_cancel_called]
+        {
+            hold_cancel_called = true;
+        });
+    transformer->secondary_click(
+        [&secondary_click_called]
+        {
+            secondary_click_called = true;
+        });
+
     transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_down_event());
     clock.advance_by(release_delay);
     main_loop->call_queued();
     transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_up_event());
     main_loop->call_queued();
+
+    auto const should_be_cancelled = release_delay < 1000ms;
+    EXPECT_THAT(hold_start_called, Eq(true));
+    EXPECT_THAT(hold_cancel_called, Eq(should_be_cancelled));
+    EXPECT_THAT(secondary_click_called, Eq(!should_be_cancelled));
 }
 
 INSTANTIATE_TEST_SUITE_P(
