@@ -52,8 +52,7 @@ void mir::shell::BasicAccessibilityManager::repeat_delay(int new_delay) {
 }
 
 void mir::shell::BasicAccessibilityManager::notify_helpers() const {
-    auto const keyboard_helpers = mutable_state.lock()->keyboard_helpers;
-    for (auto const& helper: keyboard_helpers)
+    for (auto const& helper: mutable_state.lock()->keyboard_helpers)
         helper->repeat_info_changed(repeat_rate(), repeat_delay());
 }
 
