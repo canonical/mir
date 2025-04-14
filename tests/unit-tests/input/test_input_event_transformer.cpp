@@ -59,7 +59,7 @@ struct TestInputEventTransformer : testing::Test
             mt::fake_shared(mock_key_mapper),
             mt::fake_shared(mock_server_status_listener),
             mt::fake_shared(led_observer_registrar))},
-        input_event_transformer{input_device_hub, std::make_shared<mir::GLibMainLoop>(mt::fake_shared(clock)), input_device_hub}
+        input_event_transformer{input_device_hub, std::make_shared<mir::GLibMainLoop>(mt::fake_shared(clock))}
     {
     }
 

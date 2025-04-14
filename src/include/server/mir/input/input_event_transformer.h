@@ -53,10 +53,7 @@ public:
         virtual bool transform_input_event(EventDispatcher const&, EventBuilder*,  MirEvent const&) = 0;
     };
 
-    InputEventTransformer(
-        std::shared_ptr<InputDeviceRegistry> const&,
-        std::shared_ptr<MainLoop> const&,
-        std::shared_ptr<InputDeviceHub> const&);
+    InputEventTransformer(std::shared_ptr<InputDeviceRegistry> const&, std::shared_ptr<MainLoop> const&);
 
     ~InputEventTransformer();
 

@@ -108,8 +108,8 @@ std::shared_ptr<mi::InputEventTransformer> mir::DefaultServerConfiguration::the_
     return input_event_transformer(
         [this]
         {
-            auto event_transformer = std::make_shared<input::InputEventTransformer>(
-                the_input_device_registry(), the_main_loop(), the_input_device_hub());
+            auto event_transformer =
+                std::make_shared<input::InputEventTransformer>(the_input_device_registry(), the_main_loop());
             the_composite_event_filter()->prepend(event_transformer);
             return event_transformer;
         });
