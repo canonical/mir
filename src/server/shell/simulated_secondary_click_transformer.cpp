@@ -152,8 +152,11 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
                 return true;
             }
 
-            // Can't check `pointer_event->buttons()` because that's 0 for button up events
-            if (action == mir_pointer_action_button_up)
+            // `pointer_event->buttons()` contains the _current_ button state.
+            // Since we're in this state machine state, it's implicitly known
+            // that the left button was pressed, so we just need to make sure
+            // it's not pressed now.
+            if (action == mir_pointer_action_button_up && !(pointer_event->buttons() & mir_pointer_button_primary))
             {
                 // If we get an up event BEFORE the alarm is triggered, that means
                 // the user let go of the _left_ mouse button, we should cancel the
