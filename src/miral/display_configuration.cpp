@@ -21,12 +21,33 @@
 
 #include <mir/server.h>
 
+#include <yaml-cpp/yaml.h>
 #include <boost/throw_exception.hpp>
 
 #include <fstream>
 #include <sstream>
 
 using namespace std::string_literals;
+
+namespace
+{
+const char* node_type_to_string(miral::DisplayConfiguration::Node::Type type)
+{
+    switch (type)
+    {
+        case miral::DisplayConfiguration::Node::Type::integer:
+            return "integer";
+        case miral::DisplayConfiguration::Node::Type::string:
+            return "string";
+        case miral::DisplayConfiguration::Node::Type::sequence:
+            return "sequence";
+        case miral::DisplayConfiguration::Node::Type::map:
+            return "map";
+        default:
+            return "unknown";
+    }
+}
+}
 
 class miral::DisplayConfiguration::Self : public ReloadingYamlFileDisplayConfig
 {
@@ -118,6 +139,120 @@ auto miral::DisplayConfiguration::list_layouts() -> std::vector<std::string>
 void miral::DisplayConfiguration::add_output_attribute(std::string const& key)
 {
     self->add_output_attribute(key);
+}
+
+auto miral::DisplayConfiguration::layout_userdata(std::string const& key) const
+    -> std::optional<std::any const>
+{
+    return self->layout_userdata(key);
+}
+
+struct miral::DisplayConfiguration::Node::Self
+{
+    explicit Self(YAML::Node const& node)
+        : node(node)
+    {
+    }
+
+    ~Self() = default;
+
+    template <typename T>
+    auto as() const -> T
+    {
+        try
+        {
+            return node.as<T>();
+        }
+        catch (YAML::Exception const&)
+        {
+            return T();
+        }
+    }
+
+    YAML::Node const node;
+};
+
+miral::DisplayConfiguration::Node::Node(std::unique_ptr<Self>&& self)
+    : self(std::move(self))
+{
+}
+
+miral::DisplayConfiguration::Node::~Node() = default;
+
+auto miral::DisplayConfiguration::Node::type() const -> Type
+{
+    if (self->node.IsScalar())
+    {
+        try {
+            (void)self->node.as<int>();
+            return Type::integer;
+        } catch (const YAML::BadConversion& e) {
+            return Type::string;
+        }
+    }
+    else if (self->node.IsMap())
+        return Type::map;
+    else if (self->node.IsSequence())
+        return Type::sequence;
+    else
+    {
+        mir::log_warning("Parsing custom display configuration node: Checked type is none of the supported types");
+        return Type::unknown;
+    }
+}
+
+auto miral::DisplayConfiguration::Node::as_string() const -> std::string
+{
+    if (type() != Type::string)
+        mir::fatal_error("Attempting to access a Node of type %s as a string", node_type_to_string(type()));
+
+    return self->as<std::string>();
+}
+
+auto miral::DisplayConfiguration::Node::as_int() const -> int
+{
+    if (type() != Type::integer)
+        mir::fatal_error("Attempting to access a Node of type %s as an integer", node_type_to_string(type()));
+
+    return self->as<int>();
+}
+
+void miral::DisplayConfiguration::Node::for_each(std::function<void(Node const&)> const& f) const
+{
+    if (type() != Type::sequence)
+        mir::fatal_error("Attempting to access a Node of type %s as a sequence", node_type_to_string(type()));
+
+    for (auto const& item : self->node)
+        f(Node(std::make_unique<Self>(item)));
+}
+
+auto miral::DisplayConfiguration::Node::has(std::string const& key) const -> bool
+{
+    if (type() != Type::map)
+        mir::fatal_error("Attempting to access a Node of type %s as a map", node_type_to_string(type()));
+
+    if (self->node[key])
+        return true;
+
+    return false;
+}
+
+auto miral::DisplayConfiguration::Node::at(std::string const& key) const -> std::optional<Node>
+{
+    if (!has(key))
+        return std::nullopt;
+
+    return Node(std::make_unique<Self>(self->node[key]));
+}
+
+void miral::DisplayConfiguration::layout_userdata_builder(
+    std::string const& key,
+    std::function<std::any(Node const& value)> const& builder) const
+{
+    self->layout_userdata_builder(key, [builder=builder](YAML::Node const& data)
+    {
+        return builder(Node(std::make_unique<Node::Self>(data)));
+    });
 }
 
 miral::DisplayConfiguration::~DisplayConfiguration() = default;
