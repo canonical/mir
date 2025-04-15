@@ -41,6 +41,9 @@ public:
     MOCK_METHOD(void, mousekeys_keymap, (mir::input::MouseKeysKeymap const& new_keymap), (override));
     MOCK_METHOD(void, acceleration_factors, (double constant, double linear, double quadratic), (override));
     MOCK_METHOD(void, max_speed, (double x_axis, double y_axis), (override));
+    MOCK_METHOD(void, locate_pointer_delay, (std::chrono::milliseconds delay), (override));
+    MOCK_METHOD(void, on_locate_pointer, (std::function<void(float x, float y)> && on_locate_pointer), (override));
+    MOCK_METHOD(void, locate_pointer_enabled, (bool on), (override));
 };
 
 struct TestMouseKeysConfig : miral::TestServer

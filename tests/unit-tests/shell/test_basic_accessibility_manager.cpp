@@ -15,8 +15,10 @@
  */
 
 #include "include/server/mir/shell/keyboard_helper.h"
+#include "mir/input/composite_event_filter.h"
 #include "src/server/input/default_input_device_hub.h"
 #include "src/server/shell/basic_accessibility_manager.h"
+#include "src/server/shell/locate_pointer_filter.h"
 #include "src/server/shell/mouse_keys_transformer.h"
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
@@ -63,6 +65,32 @@ struct MockMouseKeysTransformer : public mir::shell::MouseKeysTransformer
         (override));
 };
 
+struct MockLocatePointerFilter : public mir::shell::LocatePointerFilter
+{
+    MockLocatePointerFilter(std::shared_ptr<mir::MainLoop> const& main_loop, State& state) :
+        mir::shell::LocatePointerFilter(main_loop, state)
+    {
+    }
+
+    MOCK_METHOD(bool, handle, (MirEvent const&), (override));
+};
+
+struct StubCompositeEventFilter : public mir::input::CompositeEventFilter
+{
+    void append(std::weak_ptr<EventFilter> const&) override
+    {
+    }
+
+    void prepend(std::weak_ptr<EventFilter> const&) override
+    {
+    }
+
+    auto handle(MirEvent const&) -> bool override
+    {
+        return false;
+    }
+};
+
 struct TestBasicAccessibilityManager : Test
 {
     TestBasicAccessibilityManager() :
@@ -77,9 +105,15 @@ struct TestBasicAccessibilityManager : Test
         input_event_transformer{std::make_shared<mir::input::InputEventTransformer>(input_device_hub, main_loop)},
         basic_accessibility_manager{
             input_event_transformer,
+            mt::fake_shared(composite_filter),
             true,
             std::make_shared<mir::test::doubles::StubCursor>(),
-            mock_mousekeys_transformer}
+            mock_mousekeys_transformer,
+            [this](auto& state)
+            {
+                return std::make_shared<MockLocatePointerFilter>(main_loop, state);
+            },
+        }
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
     }
@@ -97,6 +131,8 @@ struct TestBasicAccessibilityManager : Test
     std::shared_ptr<mir::MainLoop> const main_loop;
     std::shared_ptr<mir::input::DefaultInputDeviceHub> const input_device_hub;
     std::shared_ptr<mir::input::InputEventTransformer> const input_event_transformer;
+
+    StubCompositeEventFilter composite_filter;
 
     mir::shell::BasicAccessibilityManager basic_accessibility_manager;
 };

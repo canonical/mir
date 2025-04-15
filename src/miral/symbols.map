@@ -534,6 +534,11 @@ global:
     miral::InputConfiguration::Touchpad::middle_mouse_button_emulation*;
     miral::InputConfiguration::Keyboard::repeat_delay*;
     miral::InputConfiguration::Keyboard::repeat_rate*;
+    miral::LocatePointerConfig::LocatePointerConfig*;
+    miral::LocatePointerConfig::delay*;
+    miral::LocatePointerConfig::enabled*;
+    miral::LocatePointerConfig::on_locate_pointer*;
+    miral::LocatePointerConfig::operator*;
     miral::MouseKeysConfig::MouseKeysConfig*;
     miral::MouseKeysConfig::operator*;
     miral::MouseKeysConfig::set_acceleration_factors*;
@@ -541,6 +546,8 @@ global:
     miral::MouseKeysConfig::set_max_speed*;
     miral::MouseKeysConfig::enabled*;
     typeinfo?for?miral::CursorScale;
+    typeinfo?for?miral::LocatePointerConfig;
     typeinfo?for?miral::MouseKeysConfig;
   };
 } MIRAL_5.2;
+

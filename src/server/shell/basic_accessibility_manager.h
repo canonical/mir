@@ -18,6 +18,7 @@
 #define MIR_SHELL_BASIC_ACCESSIBILITY_MANAGER_H
 
 #include "mir/shell/accessibility_manager.h"
+#include "locate_pointer_filter.h"
 
 #include "mir/input/mousekeys_keymap.h"
 #include "mir/synchronised.h"
@@ -32,10 +33,7 @@ class Cursor;
 namespace input
 {
 class InputEventTransformer;
-}
-namespace shell
-{
-class MouseKeysTransformer;
+class CompositeEventFilter;
 }
 namespace options
 {
@@ -47,14 +45,20 @@ class Clock;
 }
 namespace shell
 {
+class MouseKeysTransformer;
+class LocatePointerFilter;
 class BasicAccessibilityManager : public AccessibilityManager
 {
 public:
+    using LocatePointerFilterBuilder =
+        std::function<std::shared_ptr<shell::LocatePointerFilter>(LocatePointerFilter::State&)>;
     BasicAccessibilityManager(
         std::shared_ptr<input::InputEventTransformer> const& event_transformer,
+        std::shared_ptr<input::CompositeEventFilter> const& composite_filter,
         bool enable_key_repeat,
         std::shared_ptr<mir::graphics::Cursor> const& cursor,
-        std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer);
+        std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
+        LocatePointerFilterBuilder&& locate_pointer_filter_builder);
 
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&) override;
 
@@ -72,6 +76,9 @@ public:
     void acceleration_factors(double constant, double linear, double quadratic) override;
     void max_speed(double x_axis, double y_axis) override;
 
+    void locate_pointer_delay(std::chrono::milliseconds delay) override;
+    void on_locate_pointer(std::function<void(float x, float y)>&& on_locate_pointer) override;
+    void locate_pointer_enabled(bool on) override;
 private:
     struct MutableState {
         // 25 rate and 600 delay are the default in Weston and Sway
@@ -85,8 +92,15 @@ private:
 
     bool const enable_key_repeat;
     std::shared_ptr<graphics::Cursor> const cursor;
+
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
+    std::shared_ptr<input::CompositeEventFilter> const composite_filter;
+
     std::shared_ptr<mir::shell::MouseKeysTransformer> const transformer;
+    // Smelly
+    shell::LocatePointerFilter::State locate_pointer_filter_state;
+    LocatePointerFilterBuilder const locate_pointer_filter_builder;
+    std::shared_ptr<shell::LocatePointerFilter> locate_pointer_filter;
 };
 }
 }

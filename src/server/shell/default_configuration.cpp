@@ -23,6 +23,7 @@
 #include "graphics_display_layout.h"
 #include "basic_accessibility_manager.h"
 #include "mouse_keys_transformer.h"
+#include "locate_pointer_filter.h"
 
 #include "mir/abnormal_exit.h"
 #include "mir/input/composite_event_filter.h"
@@ -192,8 +193,13 @@ auto mir::DefaultServerConfiguration::the_accessibility_manager() -> std::shared
         {
             return std::make_shared<shell::BasicAccessibilityManager>(
                 the_input_event_transformer(),
+                the_composite_event_filter(),
                 the_options()->get<bool>(mir::options::enable_key_repeat_opt),
                 the_cursor(),
-                std::make_shared<shell::BasicMouseKeysTransformer>(the_main_loop(), the_clock()));
+                std::make_shared<shell::BasicMouseKeysTransformer>(the_main_loop(), the_clock()),
+                [this](auto& state)
+                {
+                    return std::make_shared<shell::LocatePointerFilter>(the_main_loop(), state);
+                });
         });
 }

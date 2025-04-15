@@ -15,11 +15,12 @@
  */
 
 #include "basic_accessibility_manager.h"
-#include "mir/graphics/cursor.h"
 #include "mouse_keys_transformer.h"
+#include "locate_pointer_filter.h"
 
+#include "mir/graphics/cursor.h"
+#include "mir/input/composite_event_filter.h"
 #include "mir/input/input_event_transformer.h"
-#include "mir/main_loop.h"
 #include "mir/shell/keyboard_helper.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
@@ -65,13 +66,17 @@ void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 
 mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<input::InputEventTransformer> const& event_transformer,
+    std::shared_ptr<input::CompositeEventFilter> const& composite_filter,
     bool enable_key_repeat,
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
-    std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer) :
+    std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
+    LocatePointerFilterBuilder&& locate_pointer_filter_builder) :
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},
-    transformer{mousekeys_transformer}
+    composite_filter{composite_filter},
+    transformer{mousekeys_transformer},
+    locate_pointer_filter_builder{std::move(locate_pointer_filter_builder)}
 {
 }
 
@@ -93,4 +98,27 @@ void mir::shell::BasicAccessibilityManager::acceleration_factors(double constant
 void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_axis)
 {
     transformer->max_speed(x_axis, y_axis);
+}
+
+void mir::shell::BasicAccessibilityManager::locate_pointer_delay(std::chrono::milliseconds delay)
+{
+    locate_pointer_filter_state.delay = delay;
+}
+
+void mir::shell::BasicAccessibilityManager::on_locate_pointer(std::function<void(float x, float y)>&& on_locate_pointer)
+{
+    locate_pointer_filter_state.on_locate_pointer = std::move(on_locate_pointer);
+}
+
+void mir::shell::BasicAccessibilityManager::locate_pointer_enabled(bool on)
+{
+    if (on)
+    {
+        locate_pointer_filter = locate_pointer_filter_builder(locate_pointer_filter_state);
+        composite_filter->append(locate_pointer_filter);
+    }
+    else if (locate_pointer_filter)
+    {
+        locate_pointer_filter.reset();
+    };
 }
