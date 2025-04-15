@@ -104,6 +104,9 @@ private:
     bool const enable_key_repeat;
     std::shared_ptr<graphics::Cursor> const cursor;
     Registration<MouseKeysTransformer> const transformer;
+
+    std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
+    std::shared_ptr<input::CompositeEventFilter> const composite_filter;
 };
 }
 }
