@@ -97,6 +97,7 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
                         });
                 }
 
+                consumed_left_down = std::unique_ptr<MirPointerEvent>(pointer_event->clone());
                 secondary_click_dispatcher->reschedule_in(mutable_state.lock()->hold_duration);
                 state = State::waiting_for_motion_or_real_left_up;
                 mutable_state.lock()->on_hold_start();
@@ -116,18 +117,8 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
                 }
 
                 // Down event instead of the one we consumed the last time around
-                dispatcher(
-                    mir::events::make_pointer_event(
-                        pointer_event->device_id(),
-                        pointer_event->event_time(),
-                        pointer_event->modifiers(),
-                        mir_pointer_action_button_down,
-                        pointer_event->buttons() | mir_pointer_button_primary,
-                        pointer_event->position(),
-                        pointer_event->motion(),
-                        pointer_event->axis_source(),
-                        pointer_event->h_scroll(),
-                        pointer_event->v_scroll()));
+                consumed_left_down->set_event_time(pointer_event->event_time());
+                dispatcher(std::move(consumed_left_down));
 
                 // Re-dispatch the event we're currently handling in the proper
                 // order. If we return `false`, the motion event we're handling
@@ -141,7 +132,7 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
                         pointer_event->event_time(),
                         pointer_event->modifiers(),
                         pointer_event->action(),
-                        pointer_event->buttons() | mir_pointer_button_primary,
+                        pointer_event->buttons(),
                         pointer_event->position(),
                         pointer_event->motion(),
                         pointer_event->axis_source(),
