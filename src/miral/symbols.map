@@ -644,6 +644,19 @@ global:
     miral::StickyKeys::on_modifier_clicked*;
     miral::StickyKeys::operator*;
     miral::StickyKeys::should_disable_if_two_keys_are_pressed_together*;
+    "miral::CursorScale::CursorScale(miral::live_config::Store&)";
+    "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
+    miral::LocatePointer::LocatePointer*;
+    miral::LocatePointer::delay*;
+    miral::LocatePointer::disable*;
+    miral::LocatePointer::enable*;
+    miral::LocatePointer::enabled*;
+    miral::LocatePointer::key_combination*;
+    miral::LocatePointer::on_disabled*;
+    miral::LocatePointer::on_enabled*;
+    miral::LocatePointer::on_locate_pointer*;
+    miral::LocatePointer::operator*;
+    "miral::OutputFilter::OutputFilter(miral::live_config::Store&)";
     miral::WaylandTools::?WaylandTools*;
     miral::WaylandTools::WaylandTools*;
     miral::WaylandTools::for_each_binding*;
@@ -683,6 +696,7 @@ global:
     typeinfo?for?miral::SimulatedSecondaryClick;
     typeinfo?for?miral::SlowKeys;
     typeinfo?for?miral::StickyKeys;
+    typeinfo?for?miral::LocatePointer;
     typeinfo?for?miral::WaylandTools;
     typeinfo?for?miral::live_config::IniFile;
     typeinfo?for?miral::live_config::Key;
