@@ -15,6 +15,7 @@
  */
 
 #include "include/server/mir/shell/keyboard_helper.h"
+#include "mir/input/composite_event_filter.h"
 #include "src/server/input/default_input_device_hub.h"
 #include "src/server/shell/basic_accessibility_manager.h"
 #include "src/server/shell/mouse_keys_transformer.h"
@@ -24,7 +25,6 @@
 #include "mir/input/composite_event_filter.h"
 #include "mir/input/input_event_transformer.h"
 #include "mir/input/mousekeys_keymap.h"
-#include "mir/input/virtual_input_device.h"
 #include "mir/test/fake_shared.h"
 
 #include "mir/test/doubles/mock_input_seat.h"
