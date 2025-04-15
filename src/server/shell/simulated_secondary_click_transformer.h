@@ -21,7 +21,7 @@
 
 #include "mir/synchronised.h"
 #include "mir/time/alarm.h"
-
+#include "mir/events/pointer_event.h"
 
 namespace mir
 {
@@ -55,6 +55,7 @@ public:
 private:
     std::shared_ptr<mir::MainLoop> const main_loop;
     std::unique_ptr<time::Alarm> secondary_click_dispatcher;
+    std::unique_ptr<MirPointerEvent> consumed_left_down;
 
     enum class State
     {
