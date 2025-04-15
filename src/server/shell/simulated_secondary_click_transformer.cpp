@@ -23,9 +23,6 @@
 #include "mir/events/event_builders.h"
 
 #include <cassert>
-#include <mir/log.h>
-#include <mir/event_printer.h>
-
 #include <utility>
 
 namespace
