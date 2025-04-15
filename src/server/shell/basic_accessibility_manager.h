@@ -20,7 +20,6 @@
 #include "mir/input/input_event_transformer.h"
 #include "mir/shell/accessibility_manager.h"
 
-#include "mir/input/mousekeys_keymap.h"
 #include "mir/synchronised.h"
 
 namespace mir

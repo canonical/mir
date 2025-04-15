@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "miral/locate_pointer.h"
 #include "miral/minimal_window_manager.h"
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
@@ -40,6 +41,8 @@
 #include <miral/sticky_keys.h>
 #include <miral/magnifier.h>
 
+#define MIR_LOG_COMPONENT "miral-shell"
+#include <mir/log.h>
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <cstring>
@@ -304,6 +307,10 @@ int main(int argc, char const* argv[])
         return false;
     };
 
+    auto locate_pointer = miral::LocatePointer{false}
+                              .on_locate_pointer([](auto, auto) { mir::log_debug("Locate pointer!"); })
+                              .delay(std::chrono::milliseconds{1000});
+
     return runner.run_with(
         {
             CursorTheme{"default:DMZ-White"},
@@ -334,6 +341,7 @@ int main(int argc, char const* argv[])
             sticky_keys,
             magnifier,
             AppendKeyboardEventFilter{magnifier_filter},
-            AppendKeyboardEventFilter{sticky_keys_filter}
+            AppendKeyboardEventFilter{sticky_keys_filter},
+            locate_pointer
         });
 }
