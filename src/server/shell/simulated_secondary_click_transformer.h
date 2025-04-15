@@ -22,7 +22,6 @@
 #include "mir/synchronised.h"
 #include "mir/time/alarm.h"
 
-#include <atomic>
 
 namespace mir
 {
