@@ -69,11 +69,9 @@ private:
     {
         std::chrono::milliseconds hold_duration{1000};
 
-        auto static inline constexpr do_nothing = []
-        {
-        };
-
-        std::function<void()> on_hold_start{do_nothing}, on_hold_cancel{do_nothing}, on_secondary_click{do_nothing};
+        std::function<void()> on_hold_start{[]{}};
+        std::function<void()> on_hold_cancel{[]{}};
+        std::function<void()> on_secondary_click{[]{}};
     };
 
     mir::Synchronised<MutableState> mutable_state;
