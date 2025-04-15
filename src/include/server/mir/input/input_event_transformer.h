@@ -54,7 +54,6 @@ public:
     };
 
     InputEventTransformer(std::shared_ptr<InputDeviceRegistry> const&, std::shared_ptr<MainLoop> const&);
-
     ~InputEventTransformer();
 
     bool handle(MirEvent const&) override;
