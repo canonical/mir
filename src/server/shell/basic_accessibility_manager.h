@@ -36,6 +36,7 @@ class InputEventTransformer;
 namespace shell
 {
 class MouseKeysTransformer;
+class MagnificationManager;
 }
 namespace options
 {
@@ -54,7 +55,8 @@ public:
         std::shared_ptr<input::InputEventTransformer> const& event_transformer,
         bool enable_key_repeat,
         std::shared_ptr<mir::graphics::Cursor> const& cursor,
-        std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer);
+        std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
+        std::shared_ptr<MagnificationManager> const& magnification_manager);
 
     void register_keyboard_helper(std::shared_ptr<shell::KeyboardHelper> const&) override;
 
@@ -72,6 +74,9 @@ public:
     void acceleration_factors(double constant, double linear, double quadratic) override;
     void max_speed(double x_axis, double y_axis) override;
 
+    void magnification_enabled(bool on) override;
+    void magnification_factor(float factor) override;
+
 private:
     struct MutableState {
         // 25 rate and 600 delay are the default in Weston and Sway
@@ -87,6 +92,7 @@ private:
     std::shared_ptr<graphics::Cursor> const cursor;
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
     std::shared_ptr<mir::shell::MouseKeysTransformer> const transformer;
+    std::shared_ptr<MagnificationManager> const magnification_manager;
 };
 }
 }

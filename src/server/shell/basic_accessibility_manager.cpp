@@ -17,6 +17,7 @@
 #include "basic_accessibility_manager.h"
 #include "mir/graphics/cursor.h"
 #include "mouse_keys_transformer.h"
+#include "magnification_manager.h"
 
 #include "mir/input/input_event_transformer.h"
 #include "mir/main_loop.h"
@@ -67,11 +68,13 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<input::InputEventTransformer> const& event_transformer,
     bool enable_key_repeat,
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
-    std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer) :
+    std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
+    std::shared_ptr<MagnificationManager> const& magnification_manager) :
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},
-    transformer{mousekeys_transformer}
+    transformer{mousekeys_transformer},
+    magnification_manager{magnification_manager}
 {
 }
 
@@ -93,4 +96,14 @@ void mir::shell::BasicAccessibilityManager::acceleration_factors(double constant
 void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_axis)
 {
     transformer->max_speed(x_axis, y_axis);
+}
+
+void mir::shell::BasicAccessibilityManager::magnification_enabled(bool on)
+{
+    magnification_manager->enabled(on);
+}
+
+void mir::shell::BasicAccessibilityManager::magnification_factor(float factor)
+{
+    magnification_manager->magnification(factor);
 }
