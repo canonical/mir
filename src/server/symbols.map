@@ -204,6 +204,7 @@ global:
     mir::Server::the_decoration_strategy*;
     mir::Server::the_display*;
     mir::Server::the_display_configuration_controller*;
+    mir::Server::the_display_configuration_observer*;
     mir::Server::the_display_configuration_observer_registrar*;
     mir::Server::the_display_platforms*;
     mir::Server::the_focus_controller*;
@@ -1416,3 +1417,4 @@ global:
   };
 local: *;
 };
+
