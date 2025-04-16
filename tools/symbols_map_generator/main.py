@@ -30,6 +30,7 @@ HIDDEN_SYMBOLS = {
     "miral::WaylandExtensions::Context::?Context*;",
     "miral::WaylandExtensions::Context::Context*;",
     "vtable?for?miral::WaylandExtensions::Context;",
+    "mir::DefaultServerConfiguration::pointer_input_dispatcher*;",
 }
 
 class HeaderDirectory(TypedDict):
