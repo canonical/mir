@@ -308,6 +308,8 @@ public:
     /// Sets an override functor for the renderer_factory
     void override_the_renderer_factory(Builder<renderer::RendererFactory> const& renderer_factory_builder);
 
+    void override_the_accessibility_manager(Builder<shell::AccessibilityManager> const& accessibility_manager_factory_builder);
+
     /// Each of the wrap functions takes a wrapper functor of the same form
     template<typename T> using Wrapper = std::function<std::shared_ptr<T>(std::shared_ptr<T> const&)>;
 

@@ -31,11 +31,12 @@ class CursorImage;
 class Cursor
 {
 public:
-    virtual void show(CursorImage const& cursor_image) = 0;
+    virtual void show(std::shared_ptr<CursorImage> const& cursor_image) = 0;
     virtual void hide() = 0;
 
     virtual void move_to(geometry::Point position) = 0;
 
+    virtual void scale(float new_scale) = 0;
 protected:
     Cursor() = default;
     virtual ~Cursor() = default;

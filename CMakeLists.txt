@@ -25,8 +25,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 2)
-set(MIR_VERSION_MINOR 20)
-set(MIR_VERSION_PATCH 2)
+set(MIR_VERSION_MINOR 21)
+set(MIR_VERSION_PATCH 0)
 
 add_compile_definitions(MIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
 add_compile_definitions(MIR_VERSION_MINOR=${MIR_VERSION_MINOR})
@@ -85,8 +85,6 @@ if(MIR_FATAL_COMPILE_WARNINGS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=maybe-uninitialized -Wno-error=array-bounds")
   endif()
 endif()
-
-set(MIR_COMPILER_QUIRKS "" CACHE STRING "Semicolon-separated list of compiler quirks to enable")
 
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag(-Wmismatched-tags HAS_W_MISMATCHED_TAGS)
@@ -301,6 +299,7 @@ if (MIR_ENABLE_TESTS)
   pkg_check_modules(LIBEVDEV REQUIRED IMPORTED_TARGET libevdev)
   include_directories(${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
   add_subdirectory(tests/)
+  add_subdirectory(examples/tests/)
 
   # There's no nice way to format this. Thanks CMake.
   mir_add_test(NAME LGPL-required

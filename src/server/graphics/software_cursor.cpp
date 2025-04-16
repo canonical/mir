@@ -19,12 +19,14 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/pixel_format_utils.h"
 #include "mir/graphics/renderable.h"
-#include "mir/graphics/buffer_properties.h"
 #include "mir/input/scene.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/executor.h"
+#include "mir/graphics/pixman_image_scaling.h"
 
 #include <boost/throw_exception.hpp>
+
+#include <memory>
 #include <stdexcept>
 #include <mutex>
 
@@ -77,7 +79,7 @@ public:
     geom::Rectangle screen_position() const override
     {
         std::lock_guard lock{position_mutex};
-        return {position, buffer_->size()};
+        return {position, buffer_->size() * scale};
     }
 
     geom::RectangleD src_bounds() const override
@@ -117,18 +119,23 @@ public:
         position = new_position;
     }
 
+    void set_scale(float new_scale)
+    {
+        scale = new_scale;
+    }
+
 private:
     std::shared_ptr<mg::Buffer> const buffer_;
     mutable std::mutex position_mutex;
     geom::Point position;
+    float scale;
 };
 
 mg::SoftwareCursor::SoftwareCursor(
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<Executor> const& scene_executor,
     std::shared_ptr<mi::Scene> const& scene)
-    : allocator{allocator},
-      scene{scene},
+    : allocator{allocator}, scene{scene},
       format{get_8888_format(allocator->supported_pixel_formats())},
       scene_executor{scene_executor},
       visible(false),
@@ -136,26 +143,28 @@ mg::SoftwareCursor::SoftwareCursor(
 {
 }
 
-mg::SoftwareCursor::~SoftwareCursor()
-{
-    hide();
-}
+mg::SoftwareCursor::~SoftwareCursor() = default;
 
-void mg::SoftwareCursor::show(CursorImage const& cursor_image)
+void mg::SoftwareCursor::show(std::shared_ptr<CursorImage> const& cursor_image)
 {
     std::lock_guard lg{guard};
 
+    // Store the cursor image for later use with `set_scale`
+    current_cursor_image = cursor_image;
+
     auto const to_remove = visible ? renderable : nullptr;
 
-    geom::Point position{0,0};
+    geom::Point position{0, 0};
     if (renderable)
         position = renderable->screen_position().top_left;
 
-    renderable = create_renderable_for(cursor_image, position);
-    hotspot = cursor_image.hotspot();
+    renderable = create_scaled_renderable_for(*current_cursor_image, position);
+
+    hotspot = current_cursor_image->hotspot() * current_scale;
     visible = true;
 
-    scene_executor->spawn([scene = scene, to_remove = to_remove, to_add = renderable]()
+    scene_executor->spawn(
+        [scene = scene, to_remove = to_remove, to_add = renderable]()
         {
             // Add the new renderable first, then remove the old one to avoid visual glitches
             scene->add_input_visualization(to_add);
@@ -167,8 +176,9 @@ void mg::SoftwareCursor::show(CursorImage const& cursor_image)
         });
 }
 
+
 std::shared_ptr<mg::detail::CursorRenderable>
-mg::SoftwareCursor::create_renderable_for(CursorImage const& cursor_image, geom::Point position)
+mg::SoftwareCursor::create_scaled_renderable_for(CursorImage const& cursor_image, geom::Point position)
 {
     if (cursor_image.size().width.as_uint32_t() == 0 || cursor_image.size().height.as_uint32_t() == 0)
         BOOST_THROW_EXCEPTION(std::logic_error("zero sized software cursor image is invalid"));
@@ -183,7 +193,9 @@ mg::SoftwareCursor::create_renderable_for(CursorImage const& cursor_image, geom:
 
     auto new_renderable = std::make_shared<detail::CursorRenderable>(
         std::move(buffer),
-        position + hotspot - cursor_image.hotspot());
+        position + hotspot - cursor_image.hotspot() * current_scale);
+
+    new_renderable->set_scale(current_scale);
 
     return new_renderable;
 }
@@ -216,4 +228,14 @@ void mg::SoftwareCursor::move_to(geometry::Point position)
 
     // This doesn't need to be called in a specific order with other potential calls, so it doesn't go on the executor
     scene->emit_scene_changed();
+}
+
+void mir::graphics::SoftwareCursor::scale(float new_scale)
+{
+    {
+        std::lock_guard lg{guard};
+        current_scale = new_scale;
+    }
+
+    show(current_cursor_image);
 }

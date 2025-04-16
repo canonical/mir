@@ -27,6 +27,8 @@
 #include <mir/input/cursor_images.h>
 #include <mir/version.h>
 
+#include <memory>
+
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 
@@ -69,10 +71,12 @@ struct HiddenCursorWrapper : mg::Cursor
 {
     HiddenCursorWrapper(std::shared_ptr<mg::Cursor> const& wrapped) :
         wrapped{wrapped} { wrapped->hide(); }
-    void show(mg::CursorImage const&) override { }
+    void show(std::shared_ptr<mg::CursorImage> const&) override { }
     void hide() override { wrapped->hide(); }
 
     void move_to(mir::geometry::Point position) override { wrapped->move_to(position); }
+
+    void scale(float new_scale) override { wrapped->scale(new_scale); }
 
 private:
     std::shared_ptr<mg::Cursor> const wrapped;

@@ -27,9 +27,10 @@ namespace graphics
 class NullCursor : public Cursor
 {
 public:
-    void show(CursorImage const&) override {}
+    void show(std::shared_ptr<CursorImage> const&) override {}
     void hide() override {}
     void move_to(geometry::Point) override {}
+    void scale(float) override {}
 };
 
 }

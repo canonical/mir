@@ -31,3 +31,11 @@ libmircore.so.2 libmircore2 #MINVER#
  (c++)"typeinfo for mir::AnonymousShmFile@MIR_CORE_2.9" 2.8.0
  (c++)"typeinfo for mir::ShmFile@MIR_CORE_2.9" 2.8.0
  (c++)"vtable for mir::AnonymousShmFile@MIR_CORE_2.9" 2.8.0
+ MIR_CORE_2.21@MIR_CORE_2.21 2.21.0
+ (c++)"mir::input::MouseKeysKeymap::MouseKeysKeymap(std::initializer_list<std::pair<unsigned int, mir::input::MouseKeysKeymap::Action> >)@MIR_CORE_2.21" 2.21.0
+ (c++)"mir::input::MouseKeysKeymap::MouseKeysKeymap()@MIR_CORE_2.21"
+ (c++)"mir::input::MouseKeysKeymap::MouseKeysKeymap(std::initializer_list<std::pair<unsigned int, mir::input::MouseKeysKeymap::Action> >)@MIR_CORE_2.21" 2.21.0
+ (c++)"mir::input::MouseKeysKeymap::MouseKeysKeymap()@MIR_CORE_2.21" 2.21.0
+ (c++)"mir::input::MouseKeysKeymap::set_action(unsigned int, std::optional<mir::input::MouseKeysKeymap::Action>)@MIR_CORE_2.21" 2.21.0
+ (c++)"mir::input::MouseKeysKeymap::get_action(unsigned int) const@MIR_CORE_2.21" 2.21.0
+ (c++)"mir::input::MouseKeysKeymap::for_each_key_action_pair(std::function<void (unsigned int, mir::input::MouseKeysKeymap::Action)>&&) const@MIR_CORE_2.21" 2.21.0
