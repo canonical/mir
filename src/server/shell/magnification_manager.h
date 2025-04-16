@@ -25,6 +25,10 @@ namespace input
 {
 class CompositeEventFilter;
 }
+namespace graphics
+{
+class Display;
+}
 
 namespace shell
 {
@@ -32,6 +36,7 @@ namespace shell
 class MagnificationManager
 {
 public:
+    virtual ~MagnificationManager() = default;
     virtual void magnification(float magnification) = 0;
     virtual void enabled(bool enabled) = 0;
 };
@@ -39,7 +44,9 @@ public:
 class BasicMagnificationManager : public MagnificationManager
 {
 public:
-    BasicMagnificationManager(std::shared_ptr<input::CompositeEventFilter> const& filter);
+    BasicMagnificationManager(
+        std::shared_ptr<input::CompositeEventFilter> const& filter,
+        std::shared_ptr<graphics::Display> const& display);
     void enabled(bool enabled) override;
     void magnification(float magnification) override;
 

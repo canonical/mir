@@ -19,15 +19,20 @@
 #include "mir/events/event.h"
 #include "mir/events/input_event.h"
 #include "mir/events/pointer_event.h"
+#include "mir/graphics/display.h"
 #include "mir/input/composite_event_filter.h"
 
-namespace msh = mir::shell;
+namespace mg = mir::graphics;
 namespace mi = mir::input;
+namespace msh = mir::shell;
 namespace geom = mir::geometry;
 
 class msh::BasicMagnificationManager::Self : public mi::EventFilter
 {
 public:
+    explicit Self(std::shared_ptr<graphics::Display> const& display)
+        : display(display) {}
+
     bool handle(MirEvent const& event) override
     {
         if (!enabled)
@@ -49,33 +54,45 @@ public:
             return false;
 
         position = position_opt.value();
-
+        update();
         return false;
     }
 
+    void update()
+    {
+        display->for_each_display_sync_group([this](mg::DisplaySyncGroup& group)
+        {
+            group.for_each_display_sink([this](mg::DisplaySink& sink)
+            {
+                (void)sink;
+            });
+        });
+    }
+
+    std::shared_ptr<graphics::Display> const display;
     bool enabled = false;
     float magnification = 1.f;
     geom::PointF position;
 };
 
 msh::BasicMagnificationManager::BasicMagnificationManager(
-    std::shared_ptr<input::CompositeEventFilter> const& filter)
-    : self(std::make_shared<Self>())
+    std::shared_ptr<input::CompositeEventFilter> const& filter,
+    std::shared_ptr<graphics::Display> const& display)
+    : self(std::make_shared<Self>(display))
 {
     filter->prepend(self);
 }
 
 void mir::shell::BasicMagnificationManager::enabled(bool enabled)
 {
-    if (!self->enabled && enabled)
-    {
-        // TODO: Reset the zoom
-    }
+    bool const last_enabled = self->enabled;
     self->enabled = enabled;
+    if (self->enabled != last_enabled)
+        self->update();
 }
 
 void mir::shell::BasicMagnificationManager::magnification(float magnification)
 {
     self->magnification = magnification;
-    // TODO: Update the zoom
+    self->update();
 }
