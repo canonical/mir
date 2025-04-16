@@ -60,6 +60,9 @@ public:
 
     void update()
     {
+        // I believe that we actually want to scale the scene elements themselves so that
+        // the renderables resolve to the correct compositor (BasicSurface::generate_renderables).
+
         display->for_each_display_sync_group([this](mg::DisplaySyncGroup& group)
         {
             group.for_each_display_sink([this](mg::DisplaySink& sink)
