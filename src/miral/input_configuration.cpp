@@ -87,12 +87,7 @@ public:
     {
         if(auto const& am = accessibility_manager.lock())
         {
-            if (k.self->repeat_rate)
-                am->repeat_rate(*k.self->repeat_rate);
-            if (k.self->repeat_delay)
-                am->repeat_delay(*k.self->repeat_delay);
-
-            am->notify_helpers();
+            am->repeat_rate_and_delay(k.self->repeat_rate, k.self->repeat_delay);
         }
         keyboard(k);
     }

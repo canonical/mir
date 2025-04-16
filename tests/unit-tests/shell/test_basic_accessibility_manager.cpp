@@ -104,30 +104,67 @@ struct TestBasicAccessibilityManager : Test
 TEST_F(TestBasicAccessibilityManager, changing_repeat_rate_and_notifying_calls_repeat_info_changed)
 {
     EXPECT_CALL(*mock_key_helper, repeat_info_changed({70}, _));
-    basic_accessibility_manager.repeat_rate(70);
-    basic_accessibility_manager.notify_helpers();
+    basic_accessibility_manager.repeat_rate_and_delay(70, {});
 }
 
 TEST_F(TestBasicAccessibilityManager, changing_repeat_delay_and_notifying_calls_repeat_info_changed)
 {
     EXPECT_CALL(*mock_key_helper, repeat_info_changed(_, 1337));
-    basic_accessibility_manager.repeat_delay(1337);
-    basic_accessibility_manager.notify_helpers();
+    basic_accessibility_manager.repeat_rate_and_delay({}, 1337);
 }
 
-TEST_F(
-    TestBasicAccessibilityManager,
-    changing_repeat_rate_to_nullopt_and_notifying_calls_repeat_info_changed_with_zero_rate)
+struct RepeatRateAndDelayParams {
+    std::optional<int> input_rate;
+    std::optional<int> input_delay;
+
+    std::optional<std::pair<int, int>> expected_rate_and_delay;
+};
+
+struct TestRepeatRateAndDelaySetter :
+    public TestBasicAccessibilityManager,
+    public WithParamInterface<RepeatRateAndDelayParams>
 {
-    EXPECT_CALL(*mock_key_helper, repeat_info_changed(std::optional(0), _));
-    basic_accessibility_manager.repeat_rate({});
-    basic_accessibility_manager.notify_helpers();
+};
+
+TEST_P(
+    TestRepeatRateAndDelaySetter,
+    nullopt_repeat_rate_and_delay_dont_notify_helpers)
+{
+    auto const [input_rate, input_delay, expected] = GetParam();
+
+    auto const number_of_calls = expected.has_value() ? 1 : 0;
+    constexpr auto dont_care = std::pair<int, int>(0, 0);
+    EXPECT_CALL(
+        *mock_key_helper,
+        repeat_info_changed({expected.value_or(dont_care).first}, expected.value_or(dont_care).second))
+        .Times(number_of_calls);
+
+    basic_accessibility_manager.repeat_rate_and_delay(input_rate, input_delay);
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    TestBasicAccessibilityManager,
+    TestRepeatRateAndDelaySetter,
+    ::Values(
+        // Setting the rate only uses the new rate and the default delay
+        RepeatRateAndDelayParams{{53}, {}, {{53, 600}}},
+        // Setting the delay only uses the new delay and the default rate
+        RepeatRateAndDelayParams{{}, {2353}, {{25, 2353}}},
+        RepeatRateAndDelayParams{{43}, {2107}, {{43, 2107}}},
+
+        // Setting neither should not call `repeat_info_changed`
+        // don't care about the last two parameters since the method is not called anyway
+        RepeatRateAndDelayParams{{}, {}, {}},
+        // Setting both to the default values shouldn't also call it ^
+        RepeatRateAndDelayParams{{25}, {600}, {}},
+        // Setting one or the other to default values shouldn't call it ^^
+        RepeatRateAndDelayParams{{}, {600}, {}},
+        RepeatRateAndDelayParams{{25}, {}, {}}));
 
 TEST_F(TestBasicAccessibilityManager, set_repeat_rate_value_is_the_same_as_the_get_value)
 {
     auto const expected = 12;
-    basic_accessibility_manager.repeat_rate(expected);
+    basic_accessibility_manager.repeat_rate_and_delay(expected, {});
 
     ASSERT_EQ(basic_accessibility_manager.repeat_rate(), expected);
 }
@@ -135,7 +172,7 @@ TEST_F(TestBasicAccessibilityManager, set_repeat_rate_value_is_the_same_as_the_g
 TEST_F(TestBasicAccessibilityManager, set_repeat_delay_value_is_the_same_as_the_get_value)
 {
     auto const expected = 9001;
-    basic_accessibility_manager.repeat_delay(expected);
+    basic_accessibility_manager.repeat_rate_and_delay({}, expected);
 
     ASSERT_EQ(basic_accessibility_manager.repeat_delay(), expected);
 }
