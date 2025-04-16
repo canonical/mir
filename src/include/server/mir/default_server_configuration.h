@@ -385,7 +385,6 @@ protected:
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<input::SurfaceInputDispatcher>    surface_input_dispatcher;
-    static inline // Hack to preserve ABI
     CachedPtr<frontend::PointerInputDispatcher> pointer_input_dispatcher;
     CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub;
     CachedPtr<input::InputDeviceHub>    input_device_hub;
