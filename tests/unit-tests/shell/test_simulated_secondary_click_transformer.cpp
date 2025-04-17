@@ -28,10 +28,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#define MIR_LOG_COMPONENT "test-ssc"
-#include <mir/log.h>
-#include <mir/event_printer.h>
-
 namespace mi = mir::input;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
