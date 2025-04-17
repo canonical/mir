@@ -14,10 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "simulated_secondary_click_transformer.h"
+#include "basic_simulated_secondary_click_transformer.h"
 
-#include "mir/events/event.h"
-#include "mir/events/input_event.h"
 #include "mir/events/pointer_event.h"
 #include "mir/input/event_builder.h"
 #include "mir/main_loop.h"

@@ -23,7 +23,7 @@
 #include "default_persistent_surface_store.h"
 #include "graphics_display_layout.h"
 #include "mouse_keys_transformer.h"
-#include "simulated_secondary_click_transformer.h"
+#include "basic_simulated_secondary_click_transformer.h"
 
 #include "mir/abnormal_exit.h"
 #include "mir/input/composite_event_filter.h"

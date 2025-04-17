@@ -16,7 +16,7 @@
 
 #include "basic_accessibility_manager.h"
 #include "mouse_keys_transformer.h"
-#include "simulated_secondary_click_transformer.h"
+#include "basic_simulated_secondary_click_transformer.h"
 
 #include "mir/graphics/cursor.h"
 #include "mir/shell/keyboard_helper.h"
@@ -152,25 +152,8 @@ void mir::shell::BasicAccessibilityManager::simulated_secondary_click_enabled(bo
         simulated_secondary_click_transformer.remove_registration();
 }
 
-void mir::shell::BasicAccessibilityManager::simulated_secondary_click_hold_duration(
-    std::chrono::milliseconds hold_duration)
+auto mir::shell::BasicAccessibilityManager::simulated_secondary_click()
+    -> SimulatedSecondaryClickTransformer&
 {
-    simulated_secondary_click_transformer->hold_duration(hold_duration);
-}
-
-void mir::shell::BasicAccessibilityManager::simulated_secondary_click_hold_start(std::function<void()>&& on_hold_start)
-{
-    simulated_secondary_click_transformer->hold_start(std::move(on_hold_start));
-}
-
-void mir::shell::BasicAccessibilityManager::simulated_secondary_click_hold_cancel(
-    std::function<void()>&& on_hold_cancel)
-{
-    simulated_secondary_click_transformer->hold_cancel(std::move(on_hold_cancel));
-}
-
-void mir::shell::BasicAccessibilityManager::simulated_secondary_click_secondary_click(
-    std::function<void()>&& on_secondary_click)
-{
-    simulated_secondary_click_transformer->secondary_click(std::move(on_secondary_click));
+    return *simulated_secondary_click_transformer;
 }

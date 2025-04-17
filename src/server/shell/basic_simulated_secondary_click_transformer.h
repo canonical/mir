@@ -14,29 +14,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_SHELL_SIMULATED_SECONDARY_CLICK_TRANSFORMER_H
-#define MIR_SHELL_SIMULATED_SECONDARY_CLICK_TRANSFORMER_H
+#ifndef MIR_SHELL_BASIC_SIMULATED_SECONDARY_CLICK_TRANSFORMER_H
+#define MIR_SHELL_BASIC_SIMULATED_SECONDARY_CLICK_TRANSFORMER_H
 
-#include "mir/input/input_event_transformer.h"
+#include "mir/shell/simulated_secondary_click_transformer.h"
 
 #include "mir/synchronised.h"
 #include "mir/time/alarm.h"
 #include "mir/events/pointer_event.h"
+
+#include <memory>
 
 namespace mir
 {
 class MainLoop;
 namespace shell
 {
-class SimulatedSecondaryClickTransformer : public mir::input::InputEventTransformer::Transformer
-{
-public:
-    virtual void hold_duration(std::chrono::milliseconds delay) = 0;
-    virtual void hold_start(std::function<void()>&& on_hold_start) = 0;
-    virtual void hold_cancel(std::function<void()>&& on_hold_cancel) = 0;
-    virtual void secondary_click(std::function<void()>&& on_secondary_click) = 0;
-};
-
 class BasicSimulatedSecondaryClickTransformer : public SimulatedSecondaryClickTransformer
 {
 public:
@@ -81,4 +74,4 @@ private:
 }
 }
 
-#endif // MIR_SHELL_SIMULATED_SECONDARY_CLICK_TRANSFORMER_H
+#endif // MIR_SHELL_BASIC_SIMULATED_SECONDARY_CLICK_TRANSFORMER_H

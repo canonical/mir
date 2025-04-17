@@ -17,7 +17,7 @@
 #include "include/server/mir/shell/keyboard_helper.h"
 #include "src/server/shell/basic_accessibility_manager.h"
 #include "src/server/shell/mouse_keys_transformer.h"
-#include "src/server/shell/simulated_secondary_click_transformer.h"
+#include "src/server/shell/basic_simulated_secondary_click_transformer.h"
 
 #include "mir/input/input_event_transformer.h"
 #include "mir/input/mousekeys_keymap.h"
@@ -240,7 +240,7 @@ TEST_F(TestBasicAccessibilityManager, calling_simulated_secondary_click_hold_dur
     EXPECT_CALL(*mock_simulated_secondary_click_transformer, hold_duration(expected_duration));
 
     basic_accessibility_manager.simulated_secondary_click_enabled(true);
-    basic_accessibility_manager.simulated_secondary_click_hold_duration(expected_duration);
+    basic_accessibility_manager.simulated_secondary_click().hold_duration(expected_duration);
 }
 
 
@@ -254,7 +254,7 @@ TEST_F(TestBasicAccessibilityManager, setting_on_hold_start_sets_it_on_transform
     EXPECT_CALL(*mock_simulated_secondary_click_transformer, hold_start(_));
 
     basic_accessibility_manager.simulated_secondary_click_enabled(true);
-    basic_accessibility_manager.simulated_secondary_click_hold_start(expected_on_hold_start);
+    basic_accessibility_manager.simulated_secondary_click().hold_start(expected_on_hold_start);
 }
 
 TEST_F(TestBasicAccessibilityManager, setting_on_hold_cancel_sets_it_on_transformer)
@@ -266,7 +266,7 @@ TEST_F(TestBasicAccessibilityManager, setting_on_hold_cancel_sets_it_on_transfor
     EXPECT_CALL(*mock_simulated_secondary_click_transformer, hold_cancel(_));
 
     basic_accessibility_manager.simulated_secondary_click_enabled(true);
-    basic_accessibility_manager.simulated_secondary_click_hold_cancel(expected_on_hold_cancel);
+    basic_accessibility_manager.simulated_secondary_click().hold_cancel(expected_on_hold_cancel);
 }
 
 TEST_F(TestBasicAccessibilityManager, setting_on_secondary_click_sets_it_on_transformer)
@@ -278,5 +278,5 @@ TEST_F(TestBasicAccessibilityManager, setting_on_secondary_click_sets_it_on_tran
     EXPECT_CALL(*mock_simulated_secondary_click_transformer, secondary_click(_));
 
     basic_accessibility_manager.simulated_secondary_click_enabled(true);
-    basic_accessibility_manager.simulated_secondary_click_secondary_click(expected_on_secondary_click);
+    basic_accessibility_manager.simulated_secondary_click().secondary_click(expected_on_secondary_click);
 }
