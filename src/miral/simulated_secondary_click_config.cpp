@@ -16,7 +16,6 @@
 
 #include "miral/simulated_secondary_click_config.h"
 
-#include "mir/log.h"
 #include "mir/options/option.h"
 #include "mir/server.h"
 #include "mir/shell/accessibility_manager.h"
@@ -30,7 +29,10 @@ struct miral::SimulatedSecondaryClickConfig::Self
     }
 
     std::weak_ptr<mir::shell::AccessibilityManager> accessibility_manager;
-    bool const enabled_by_default;
+
+    bool enabled_by_default;
+    std::chrono::milliseconds hold_duration;
+    std::function<void()> on_hold_start, on_hold_cancel, on_secondary_click;
 };
 
 miral::SimulatedSecondaryClickConfig::SimulatedSecondaryClickConfig(bool enabled_by_default) :
@@ -40,70 +42,37 @@ miral::SimulatedSecondaryClickConfig::SimulatedSecondaryClickConfig(bool enabled
 
 void miral::SimulatedSecondaryClickConfig::enabled(bool enabled) const
 {
+    self->enabled_by_default = enabled;
     if (auto const accessibility_manager = self->accessibility_manager.lock())
-    {
         self->accessibility_manager.lock()->simulated_secondary_click_enabled(enabled);
-    }
-    else
-    {
-        mir::log_error("AccessibilityManager not initialized. Will not toggle simulated secondary click");
-        return;
-    }
 }
 
-void miral::SimulatedSecondaryClickConfig::hold_duration(std::chrono::milliseconds delay) const
+void miral::SimulatedSecondaryClickConfig::hold_duration(std::chrono::milliseconds hold_duration) const
 {
+    self->hold_duration = hold_duration;
     if (auto const accessibility_manager = self->accessibility_manager.lock())
-    {
-        accessibility_manager->simulated_secondary_click().hold_duration(delay);
-    }
-    else
-    {
-        mir::log_error("AccessibilityManager not initialized. Will not update simulated secondary click hold duration");
-        return;
-    }
+        accessibility_manager->simulated_secondary_click().hold_duration(hold_duration);
 }
 
 void miral::SimulatedSecondaryClickConfig::hold_start(std::function<void()>&& on_hold_start) const
 {
+    self->on_hold_start = std::move(on_hold_start);
     if (auto const accessibility_manager = self->accessibility_manager.lock())
-    {
-        accessibility_manager->simulated_secondary_click().hold_start(std::move(on_hold_start));
-    }
-    else
-    {
-        mir::log_error(
-            "AccessibilityManager not initialized. Will not update simulated secondary click hold start callback");
-        return;
-    }
+        accessibility_manager->simulated_secondary_click().hold_start(std::move(self->on_hold_start));
 }
 
 void miral::SimulatedSecondaryClickConfig::hold_cancel(std::function<void()>&& on_hold_cancel) const
 {
+    self->on_hold_cancel = std::move(on_hold_cancel);
     if (auto const accessibility_manager = self->accessibility_manager.lock())
-    {
-        accessibility_manager->simulated_secondary_click().hold_cancel(std::move(on_hold_cancel));
-    }
-    else
-    {
-        mir::log_error(
-            "AccessibilityManager not initialized. Will not update simulated secondary click hold cancel callback");
-        return;
-    }
+        accessibility_manager->simulated_secondary_click().hold_cancel(std::move(self->on_hold_cancel));
 }
 
 void miral::SimulatedSecondaryClickConfig::secondary_click(std::function<void()>&& on_secondary_click) const
 {
+    self->on_secondary_click = std::move(on_secondary_click);
     if (auto const accessibility_manager = self->accessibility_manager.lock())
-    {
-        accessibility_manager->simulated_secondary_click().secondary_click(std::move(on_secondary_click));
-    }
-    else
-    {
-        mir::log_error(
-            "AccessibilityManager not initialized. Will not update simulated secondary click secondary click callback");
-        return;
-    }
+        accessibility_manager->simulated_secondary_click().secondary_click(std::move(self->on_secondary_click));
 }
 
 void miral::SimulatedSecondaryClickConfig::operator()(mir::Server& server) const
@@ -124,8 +93,16 @@ void miral::SimulatedSecondaryClickConfig::operator()(mir::Server& server) const
         [&server, this]
         {
             self->accessibility_manager = server.the_accessibility_manager();
+
             hold_duration(
                 std::chrono::milliseconds(server.get_options()->get<int>(simulated_secondary_click_delay_opt)));
+            if (self->on_hold_start)
+                hold_start(std::move(self->on_hold_start));
+            if (self->on_hold_cancel)
+                hold_cancel(std::move(self->on_hold_cancel));
+            if (self->on_secondary_click)
+                secondary_click(std::move(self->on_secondary_click));
+
             enabled(server.get_options()->get<bool>(enable_simulated_secondary_click_opt));
         });
 }
