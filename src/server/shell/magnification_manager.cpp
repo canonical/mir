@@ -16,15 +16,19 @@
 
 #include "magnification_manager.h"
 
+#include "mir/compositor/screen_shooter.h"
 #include "mir/events/event.h"
 #include "mir/events/input_event.h"
 #include "mir/events/pointer_event.h"
 #include "mir/graphics/renderable.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/input/scene.h"
+#include "mir/renderer/sw/pixel_source.h"
 
 namespace mg = mir::graphics;
 namespace mi = mir::input;
+namespace mrs = mir::renderer::software;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 
@@ -33,35 +37,35 @@ namespace
 class MagnificationRenderable : public mg::Renderable
 {
 public:
+    explicit MagnificationRenderable(std::shared_ptr<mg::Buffer> const& buffer)
+        : buffer_(buffer) {}
+
     ID id() const override
     {
-        return "magnification";
+        return this;
     }
 
-    std::shared_ptr<mir::graphics::Buffer> buffer() const override
+    std::shared_ptr<mg::Buffer> buffer() const override
     {
-        return nullptr;
+        return buffer_;
     }
 
-    mir::geometry::Rectangle screen_position() const override
+    geom::Rectangle screen_position() const override
     {
         return {
             geom::Point{0.f, 0.f},
-            geom::Size{100.f, 100.f}
+            buffer_->size()
         };
     }
 
-    mir::geometry::RectangleD src_bounds() const override
+    geom::RectangleD src_bounds() const override
     {
-        return {
-            geom::PointD{0.f, 0.f},
-            geom::SizeD{100.f, 100.f}
-        };
+        return {{0, 0}, buffer_->size()};
     }
 
-    std::optional<mir::geometry::Rectangle> clip_area() const override
+    std::optional<geom::Rectangle> clip_area() const override
     {
-        return std::nullopt;
+        return std::optional<geom::Rectangle>();
     }
 
     glm::mat4 transformation() const override
@@ -71,7 +75,7 @@ public:
 
     float alpha() const override
     {
-        return 1.f;
+        return 1.0;
     }
 
     bool shaped() const override
@@ -83,14 +87,40 @@ public:
     {
         return std::nullopt;
     }
+
+private:
+    std::shared_ptr<mg::Buffer> buffer_;
 };
 }
 
 class msh::BasicMagnificationManager::Self : public mi::EventFilter
 {
 public:
-    explicit Self(std::shared_ptr<mi::Scene> const& scene)
-        : scene(scene) {}
+    Self(std::shared_ptr<mi::Scene> const& scene,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+        std::shared_ptr<compositor::ScreenShooter> const& screen_shooter)
+        : scene(scene),
+          allocator{allocator},
+          screen_shooter{screen_shooter},
+          buffer(allocator->alloc_software_buffer({300, 300}, mir_pixel_format_argb_8888)),
+          renderable(std::make_shared<MagnificationRenderable>(buffer))
+    {
+        auto x = renderer::software::as_write_mappable_buffer(buffer);
+        auto mapping = x->map_writeable();
+        auto i = mapping->stride();
+        (void)i;
+        for (auto y = 0u; y < 300; y++)
+        {
+            for (auto x = 0u; x < 300; x++)
+            {
+                auto r = x * 4;
+                mapping->data()[y * i.as_value() + r] = (unsigned)0xff;
+                mapping->data()[y * i.as_value() + r + 1] = (unsigned)0xff;
+                mapping->data()[y * i.as_value() + r + 2] = (unsigned)0x00;
+                mapping->data()[y * i.as_value() + r + 3] = (unsigned)0xff;
+            }
+        }
+    }
 
     bool handle(MirEvent const& event) override
     {
@@ -119,13 +149,31 @@ public:
 
     void update()
     {
-        // First, render the scene into the virtual display, which is backed by a framebuffer
-
-        // Then,
+        geom::Rectangle r(
+            geom::Point{300.f, 300.f},
+            geom::Size{300.f, 300.f});
+        auto x = renderer::software::as_write_mappable_buffer(buffer);
+        screen_shooter->capture(x, r, [](auto) {});
+        // auto mapping = x->map_writeable();
+        // auto i = mapping->stride();
+        // for (auto y = 0u; y < 300; y++)
+        // {
+        //     for (auto x = 0u; x < 300; x++)
+        //     {
+        //         auto r = x * 4;
+        //         mapping->data()[y * i.as_value() + r] = (unsigned)0x00;
+        //         mapping->data()[y * i.as_value() + r + 1] = (unsigned)0xff;
+        //         mapping->data()[y * i.as_value() + r + 2] = (unsigned)0x00;
+        //         mapping->data()[y * i.as_value() + r + 3] = (unsigned)0xff;
+        //     }
+        // }
     }
 
     std::shared_ptr<mi::Scene> const scene;
-    std::shared_ptr<MagnificationRenderable> renderable = std::make_shared<MagnificationRenderable>();
+    std::shared_ptr<graphics::GraphicBufferAllocator> allocator;
+    std::shared_ptr<compositor::ScreenShooter> screen_shooter;
+    std::shared_ptr<mg::Buffer> buffer;
+    std::shared_ptr<MagnificationRenderable> renderable;
     bool enabled = false;
     float magnification = 1.f;
     geom::PointF position;
@@ -133,8 +181,10 @@ public:
 
 msh::BasicMagnificationManager::BasicMagnificationManager(
     std::shared_ptr<input::CompositeEventFilter> const& filter,
-    std::shared_ptr<input::Scene> const& scene)
-    : self(std::make_shared<Self>(scene))
+    std::shared_ptr<input::Scene> const& scene,
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+    std::shared_ptr<compositor::ScreenShooter> const& screen_shooter)
+    : self(std::make_shared<Self>(scene, allocator, screen_shooter))
 {
     filter->prepend(self);
 

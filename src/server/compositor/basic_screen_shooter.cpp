@@ -179,6 +179,9 @@ auto mc::BasicScreenShooter::Self::render(
     renderable_list.reserve(scene_elements.size());
     for (auto const& element : scene_elements)
     {
+        if (!element->renderable()->surface_if_any())
+            continue;
+
         renderable_list.push_back(element->renderable());
     }
     scene_elements.clear();

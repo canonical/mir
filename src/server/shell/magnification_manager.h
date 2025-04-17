@@ -28,7 +28,11 @@ class Scene;
 }
 namespace graphics
 {
-class Display;
+class GraphicBufferAllocator;
+}
+namespace compositor
+{
+class ScreenShooter;
 }
 
 namespace shell
@@ -47,7 +51,9 @@ class BasicMagnificationManager : public MagnificationManager
 public:
     BasicMagnificationManager(
         std::shared_ptr<input::CompositeEventFilter> const& filter,
-        std::shared_ptr<input::Scene> const& scene);
+        std::shared_ptr<input::Scene> const& scene,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+        std::shared_ptr<compositor::ScreenShooter> const& screen_shooter);
     void enabled(bool enabled) override;
     void magnification(float magnification) override;
 

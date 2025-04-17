@@ -196,6 +196,10 @@ auto mir::DefaultServerConfiguration::the_accessibility_manager() -> std::shared
                 the_options()->get<bool>(mir::options::enable_key_repeat_opt),
                 the_cursor(),
                 std::make_shared<shell::BasicMouseKeysTransformer>(the_main_loop(), the_clock()),
-                std::make_shared<shell::BasicMagnificationManager>(the_composite_event_filter(), the_input_scene()));
+                std::make_shared<shell::BasicMagnificationManager>(
+                    the_composite_event_filter(),
+                    the_input_scene(),
+                    the_buffer_allocator(),
+                    the_screen_shooter()));
         });
 }
