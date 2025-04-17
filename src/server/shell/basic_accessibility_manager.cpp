@@ -71,14 +71,7 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},
-    transformer{mousekeys_transformer},
-    transformer_registration{[&]
-                             {
-                                 using Registration = input::InputEventTransformer::Registration;
-                                 return transformer != nullptr ?
-                                            std::optional<Registration>{event_transformer->append(transformer)} :
-                                            std::optional<Registration>{};
-                             }()}
+    transformer{mousekeys_transformer}
 {
 }
 
