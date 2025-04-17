@@ -52,10 +52,7 @@ public:
     virtual void max_speed(double x_axis, double y_axis) = 0;
 
     virtual void simulated_secondary_click_enabled(bool enabled) = 0;
-    virtual void simulated_secondary_click_hold_duration(std::chrono::milliseconds hold_duration) = 0;
-    virtual void simulated_secondary_click_hold_start(std::function<void()>&&) = 0;
-    virtual void simulated_secondary_click_hold_cancel(std::function<void()>&&) = 0;
-    virtual void simulated_secondary_click_secondary_click(std::function<void()>&&) = 0;
+    virtual auto simulated_secondary_click() -> SimulatedSecondaryClickTransformer& = 0;
 };
 }
 }
