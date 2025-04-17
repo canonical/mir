@@ -73,10 +73,7 @@ public:
     void max_speed(double x_axis, double y_axis) override;
 
     void simulated_secondary_click_enabled(bool enabled) override;
-    void simulated_secondary_click_hold_duration(std::chrono::milliseconds hold_duration) override;
-    void simulated_secondary_click_hold_start(std::function<void()>&&) override;
-    void simulated_secondary_click_hold_cancel(std::function<void()>&&) override;
-    void simulated_secondary_click_secondary_click(std::function<void()>&&) override;
+    auto simulated_secondary_click() -> SimulatedSecondaryClickTransformer& override;
 
 private:
     struct MutableState {

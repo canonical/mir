@@ -20,6 +20,7 @@
 #include "mir/options/option.h"
 #include "mir/server.h"
 #include "mir/shell/accessibility_manager.h"
+#include "mir/shell/simulated_secondary_click_transformer.h"
 
 struct miral::SimulatedSecondaryClickConfig::Self
 {
@@ -54,7 +55,7 @@ void miral::SimulatedSecondaryClickConfig::hold_duration(std::chrono::millisecon
 {
     if (auto const accessibility_manager = self->accessibility_manager.lock())
     {
-        accessibility_manager->simulated_secondary_click_hold_duration(delay);
+        accessibility_manager->simulated_secondary_click().hold_duration(delay);
     }
     else
     {
@@ -67,7 +68,7 @@ void miral::SimulatedSecondaryClickConfig::hold_start(std::function<void()>&& on
 {
     if (auto const accessibility_manager = self->accessibility_manager.lock())
     {
-        accessibility_manager->simulated_secondary_click_hold_start(std::move(on_hold_start));
+        accessibility_manager->simulated_secondary_click().hold_start(std::move(on_hold_start));
     }
     else
     {
@@ -81,7 +82,7 @@ void miral::SimulatedSecondaryClickConfig::hold_cancel(std::function<void()>&& o
 {
     if (auto const accessibility_manager = self->accessibility_manager.lock())
     {
-        accessibility_manager->simulated_secondary_click_hold_cancel(std::move(on_hold_cancel));
+        accessibility_manager->simulated_secondary_click().hold_cancel(std::move(on_hold_cancel));
     }
     else
     {
@@ -95,7 +96,7 @@ void miral::SimulatedSecondaryClickConfig::secondary_click(std::function<void()>
 {
     if (auto const accessibility_manager = self->accessibility_manager.lock())
     {
-        accessibility_manager->simulated_secondary_click_secondary_click(std::move(on_secondary_click));
+        accessibility_manager->simulated_secondary_click().secondary_click(std::move(on_secondary_click));
     }
     else
     {
