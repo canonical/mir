@@ -35,7 +35,8 @@ public:
 
     void operator()(mir::Server& server) const;
 
-    void enabled(bool enabled) const;
+    void enable() const;
+    void disable() const;
     void hold_duration(std::chrono::milliseconds hold_duration) const;
 
     void hold_start(std::function<void()>&& on_hold_start) const;

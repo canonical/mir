@@ -40,11 +40,18 @@ miral::SimulatedSecondaryClickConfig::SimulatedSecondaryClickConfig(bool enabled
 {
 }
 
-void miral::SimulatedSecondaryClickConfig::enabled(bool enabled) const
+void miral::SimulatedSecondaryClickConfig::enable() const
 {
-    self->enabled_by_default = enabled;
+    self->enabled_by_default = true;
     if (auto const accessibility_manager = self->accessibility_manager.lock())
-        self->accessibility_manager.lock()->simulated_secondary_click_enabled(enabled);
+        accessibility_manager->simulated_secondary_click_enabled(true);
+}
+
+void miral::SimulatedSecondaryClickConfig::disable() const
+{
+    self->enabled_by_default = false;
+    if (auto const accessibility_manager = self->accessibility_manager.lock())
+        accessibility_manager->simulated_secondary_click_enabled(false);
 }
 
 void miral::SimulatedSecondaryClickConfig::hold_duration(std::chrono::milliseconds hold_duration) const
@@ -103,6 +110,7 @@ void miral::SimulatedSecondaryClickConfig::operator()(mir::Server& server) const
             if (self->on_secondary_click)
                 secondary_click(std::move(self->on_secondary_click));
 
-            enabled(server.get_options()->get<bool>(enable_simulated_secondary_click_opt));
+            if(server.get_options()->get<bool>(enable_simulated_secondary_click_opt))
+                enable();
         });
 }
