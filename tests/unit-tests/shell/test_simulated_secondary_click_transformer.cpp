@@ -39,6 +39,11 @@ namespace mtd = mt::doubles;
 using namespace ::testing;
 using namespace std::chrono_literals;
 
+namespace
+{
+static auto constexpr test_hold_time = 1000ms;
+}
+
 struct TestSimulatedSecondaryClickTransformer : Test
 {
     static auto constexpr virtual_event_builder_device_id = 1;
@@ -56,7 +61,7 @@ struct TestSimulatedSecondaryClickTransformer : Test
                      this->on_dispatch(event);
                  }}
     {
-        transformer->hold_duration(1000ms);
+        transformer->hold_duration(test_hold_time);
     }
 
     MOCK_METHOD1(on_dispatch, void(std::shared_ptr<MirEvent> const& event));
@@ -139,10 +144,8 @@ INSTANTIATE_TEST_SUITE_P(
     TestSimulatedSecondaryClickTransformer,
     TestDifferentReleaseTimings,
     ::Values(
-        std::tuple(500ms, mir_pointer_button_primary),
-        std::tuple(999ms, mir_pointer_button_primary),
-        std::tuple(1001ms, mir_pointer_button_secondary),
-        std::tuple(1500ms, mir_pointer_button_secondary)));
+        std::tuple(test_hold_time - 1ms, mir_pointer_button_primary),
+        std::tuple(test_hold_time + 1ms, mir_pointer_button_secondary)));
 
 struct TestCallbacksParameters
 {
@@ -185,10 +188,8 @@ INSTANTIATE_TEST_SUITE_P(
     TestSimulatedSecondaryClickTransformer,
     TestCallbacks,
     ::Values(
-        TestCallbacksParameters{500ms, true, true},
-        TestCallbacksParameters{999ms, true, true},
-        TestCallbacksParameters{1001ms, true, false},
-        TestCallbacksParameters{1500ms, true, false}));
+        TestCallbacksParameters{test_hold_time - 1ms, true, true},
+        TestCallbacksParameters{test_hold_time + 1ms, true, false}));
 
 struct TestInterferenceParameters {
     std::chrono::milliseconds hold_duration;
@@ -239,11 +240,11 @@ INSTANTIATE_TEST_SUITE_P(
     TestSimulatedSecondaryClickTransformer,
     TestInterference,
     ::Values(
-        TestInterferenceParameters{999ms, mir_pointer_button_primary},
-        TestInterferenceParameters{1001ms, mir_pointer_button_primary},
+        TestInterferenceParameters{test_hold_time - 1ms, mir_pointer_button_primary},
+        TestInterferenceParameters{test_hold_time + 1ms, mir_pointer_button_primary},
 
-        TestInterferenceParameters{999ms, mir_pointer_button_secondary},
-        TestInterferenceParameters{1001ms, mir_pointer_button_secondary},
+        TestInterferenceParameters{test_hold_time - 1ms, mir_pointer_button_secondary},
+        TestInterferenceParameters{test_hold_time + 1ms, mir_pointer_button_secondary},
 
-        TestInterferenceParameters{999ms, mir_pointer_button_tertiary},
-        TestInterferenceParameters{1001ms, mir_pointer_button_tertiary}));
+        TestInterferenceParameters{test_hold_time - 1ms, mir_pointer_button_tertiary},
+        TestInterferenceParameters{test_hold_time + 1ms, mir_pointer_button_tertiary}));
