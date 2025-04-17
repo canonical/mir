@@ -70,9 +70,12 @@ public:
 
     bool cancel() override
     {
-        on_cancelled(this);
-        state_ = cancelled;
-        return true;
+        if (state_ == pending)
+        {
+            on_cancelled(this);
+            state_ = cancelled;
+        }
+        return state_ == cancelled;
     }
 
     void about_to_be_called()
