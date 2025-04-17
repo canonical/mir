@@ -19,7 +19,6 @@
 
 #include "mir_toolkit/events/event.h"
 
-#include <chrono>
 #include <functional>
 #include <mutex>
 #include <vector>
@@ -30,9 +29,6 @@ namespace mir
 class MainLoop;
 namespace input
 {
-class VirtualInputDevice;
-class InputDeviceRegistry;
-class InputSink;
 class EventBuilder;
 class InputEventTransformer
 {

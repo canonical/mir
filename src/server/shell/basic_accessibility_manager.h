@@ -33,7 +33,6 @@ namespace input
 {
 class CompositeEventFilter;
 class InputEventTransformer;
-class VirtualInputDevice;
 class InputDeviceRegistry;
 }
 namespace shell

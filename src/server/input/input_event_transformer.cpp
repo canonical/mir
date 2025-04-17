@@ -16,15 +16,9 @@
 
 #include "mir/input/input_event_transformer.h"
 
-#include "mir/input/input_sink.h"
-#include "mir/input/virtual_input_device.h"
 #include "mir/log.h"
 
 #include <algorithm>
-#include <boost/throw_exception.hpp>
-#include <cassert>
-#include <memory>
-#include <mutex>
 
 namespace mi = mir::input;
 
