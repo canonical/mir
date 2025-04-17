@@ -144,9 +144,19 @@ mgmh::DRMHelper::open_all_devices(
 
                 [[fallthrough]];
             case EINVAL:
+                // Trying fallback
                 mir::log_warning(
-                    "Failed to detect whether device %s supports KMS, but continuing anyway",
+                    "Failed to detect whether device %s supports KMS, checking using fallback method",
                     device.devnode());
+
+                using UniqueDrmMode = std::unique_ptr<drmModeRes, decltype(&drmModeFreeResources)>;
+
+                if (UniqueDrmMode const drmDev{drmModeGetResources(tmp_fd), &drmModeFreeResources};
+                    !drmDev && getenv("MIR_MESA_KMS_DISABLE_MODESET_PROBE") == nullptr)
+                {
+                    mir::log_info("Ignoring non-KMS DRM device %s", device.devnode());
+                    continue;
+                }
                 break;
 
             default:
