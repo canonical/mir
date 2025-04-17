@@ -56,6 +56,7 @@ struct TestSimulatedSecondaryClickTransformer : Test
                      this->on_dispatch(event);
                  }}
     {
+        transformer->hold_duration(1000ms);
     }
 
     MOCK_METHOD1(on_dispatch, void(std::shared_ptr<MirEvent> const& event));
@@ -66,12 +67,15 @@ struct TestSimulatedSecondaryClickTransformer : Test
     mi::DefaultEventBuilder real_event_builder, virtual_event_builder;
     std::function<void(std::shared_ptr<MirEvent> const& event)> dispatch;
 
-    auto pointer_down_event() -> mir::EventUPtr
+    MirPointerButtons buttons{0};
+
+    auto pointer_down_event(MirPointerButton button) -> mir::EventUPtr
     {
+        buttons |= button;
         return real_event_builder.pointer_event(
             std::nullopt,
             mir_pointer_action_button_down,
-            MirPointerButtons{mir_pointer_button_primary},
+            buttons,
             0.0f,
             0.0f,
             0.0f,
@@ -80,12 +84,13 @@ struct TestSimulatedSecondaryClickTransformer : Test
             0.0f);
     }
 
-    auto pointer_up_event() -> mir::EventUPtr
+    auto pointer_up_event(MirPointerButton button) -> mir::EventUPtr
     {
+        buttons &= ~button;
         return real_event_builder.pointer_event(
             std::nullopt,
             mir_pointer_action_button_up,
-            MirPointerButtons{0},
+            buttons,
             0.0f,
             0.0f,
             0.0f,
@@ -123,10 +128,10 @@ TEST_P(
                 EXPECT_THAT(event->to_input()->to_pointer()->buttons() & expected_button, Eq(0));
             });
 
-    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_down_event());
+    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_down_event(mir_pointer_button_primary));
     clock.advance_by(release_delay);
     main_loop->call_queued();
-    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_up_event());
+    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_up_event(mir_pointer_button_primary));
     main_loop->call_queued();
 }
 
@@ -165,10 +170,10 @@ TEST_P(TestCallbacks, releasing_left_pointer_button_at_different_times_calls_the
 
     auto const [release_delay, start_called, cancel_called] = GetParam();
 
-    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_down_event());
+    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_down_event(mir_pointer_button_primary));
     clock.advance_by(release_delay);
     main_loop->call_queued();
-    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_up_event());
+    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_up_event(mir_pointer_button_primary));
     main_loop->call_queued();
 
     EXPECT_THAT(hold_start_called, Eq(start_called));
@@ -184,3 +189,61 @@ INSTANTIATE_TEST_SUITE_P(
         TestCallbacksParameters{999ms, true, true},
         TestCallbacksParameters{1001ms, true, false},
         TestCallbacksParameters{1500ms, true, false}));
+
+struct TestInterferenceParameters {
+    std::chrono::milliseconds hold_duration;
+    MirPointerButton interfering_button;
+};
+
+struct TestInterference :
+    public TestSimulatedSecondaryClickTransformer,
+    public WithParamInterface<TestInterferenceParameters>
+{
+};
+
+TEST_P(TestInterference, pressing_other_buttons_during_simulated_secondary_click_does_not_interfere)
+{
+    auto const [release_delay, interfering_button] = GetParam();
+    auto const expected_button =
+        release_delay < 1000ms ? mir_pointer_button_primary : mir_pointer_button_secondary;
+
+    // If we cancel a simulated secondary click, we dispatch a synthesized primary click. The original primary click is
+    // consumed and should not be forwarded to `dispatch`
+    EXPECT_CALL(*this, on_dispatch(_))
+        .WillOnce(
+            [expected_button](auto const& event)
+            {
+                EXPECT_THAT(event->to_input()->to_pointer()->action(), Eq(mir_pointer_action_button_down));
+                EXPECT_THAT(event->to_input()->to_pointer()->buttons() & expected_button, Ne(0));
+            })
+        .WillOnce(
+            [expected_button](auto const& event)
+            {
+                EXPECT_THAT(event->to_input()->to_pointer()->action(), Eq(mir_pointer_action_button_up));
+                EXPECT_THAT(event->to_input()->to_pointer()->buttons() & expected_button, Eq(0));
+            });
+
+    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_down_event(mir_pointer_button_primary));
+    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_down_event(interfering_button));
+
+    clock.advance_by(release_delay);
+    main_loop->call_queued();
+
+    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_up_event(interfering_button));
+    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_up_event(mir_pointer_button_primary));
+
+    main_loop->call_queued();
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    TestSimulatedSecondaryClickTransformer,
+    TestInterference,
+    ::Values(
+        TestInterferenceParameters{999ms, mir_pointer_button_primary},
+        TestInterferenceParameters{1001ms, mir_pointer_button_primary},
+
+        TestInterferenceParameters{999ms, mir_pointer_button_secondary},
+        TestInterferenceParameters{1001ms, mir_pointer_button_secondary},
+
+        TestInterferenceParameters{999ms, mir_pointer_button_tertiary},
+        TestInterferenceParameters{1001ms, mir_pointer_button_tertiary}));
