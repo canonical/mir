@@ -535,7 +535,8 @@ global:
     miral::MouseKeysConfig::set_max_speed*;
     miral::MouseKeysConfig::enabled*;
     miral::SimulatedSecondaryClickConfig::SimulatedSecondaryClickConfig*;
-    miral::SimulatedSecondaryClickConfig::enabled*;
+    miral::SimulatedSecondaryClickConfig::disable*;
+    miral::SimulatedSecondaryClickConfig::enable*;
     miral::SimulatedSecondaryClickConfig::hold_cancel*;
     miral::SimulatedSecondaryClickConfig::hold_duration*;
     miral::SimulatedSecondaryClickConfig::hold_start*;
