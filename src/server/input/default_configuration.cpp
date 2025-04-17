@@ -106,7 +106,7 @@ mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher()
 std::shared_ptr<mi::InputEventTransformer> mir::DefaultServerConfiguration::the_input_event_transformer()
 {
     return input_event_transformer(
-        [this]
+        []
         {
             return std::make_shared<input::InputEventTransformer>();
         });
