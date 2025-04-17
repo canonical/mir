@@ -28,7 +28,6 @@ class Server;
 
 /// Enables configuring mousekeys at runtime.
 /// \remark Since MirAL 5.3
-/// \note All methods can only be called after the server is initialized.
 namespace miral
 {
 class MouseKeysConfig
