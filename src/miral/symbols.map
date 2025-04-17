@@ -559,7 +559,8 @@ global:
     miral::WindowSpecification::tiled_edges*;
     miral::WindowSpecification::to_surface_specification*;
     miral::SimulatedSecondaryClickConfig::SimulatedSecondaryClickConfig*;
-    miral::SimulatedSecondaryClickConfig::enabled*;
+    miral::SimulatedSecondaryClickConfig::disable*;
+    miral::SimulatedSecondaryClickConfig::enable*;
     miral::SimulatedSecondaryClickConfig::hold_cancel*;
     miral::SimulatedSecondaryClickConfig::hold_duration*;
     miral::SimulatedSecondaryClickConfig::hold_start*;
