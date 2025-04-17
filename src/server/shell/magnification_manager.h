@@ -24,6 +24,7 @@ namespace mir
 namespace input
 {
 class CompositeEventFilter;
+class Scene;
 }
 namespace graphics
 {
@@ -46,7 +47,7 @@ class BasicMagnificationManager : public MagnificationManager
 public:
     BasicMagnificationManager(
         std::shared_ptr<input::CompositeEventFilter> const& filter,
-        std::shared_ptr<graphics::Display> const& display);
+        std::shared_ptr<input::Scene> const& scene);
     void enabled(bool enabled) override;
     void magnification(float magnification) override;
 
