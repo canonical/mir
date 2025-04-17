@@ -18,13 +18,13 @@
 #define MIROIL_MIRSERVERHOOKS_H
 #include <miroil/input_device_observer.h>
 #include <miroil/prompt_session_listener.h>
-#include <mir/graphics/cursor_image.h>
+
 #include <functional>
 #include <memory>
 
 namespace mir { class Server; }
 namespace mir { namespace scene { class PromptSessionManager; }}
-namespace mir { namespace graphics { class Display; }}
+namespace mir { namespace graphics { class Display; class CursorImage; }}
 namespace mir { namespace shell { class DisplayConfigurationController; } }
 
 namespace miroil

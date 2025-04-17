@@ -478,6 +478,16 @@ void mir_test_framework::WindowManagementTestHarness::request_move(
     self->process_pending();
 }
 
+void mir_test_framework::WindowManagementTestHarness::request_modify(
+    miral::Window const& window,
+    miral::WindowSpecification const& spec)
+{
+    server.the_shell()->modify_surface(
+        window.application(),
+        window.operator std::shared_ptr<ms::Surface>(),
+        make_surface_spec(spec));
+}
+
 auto mir_test_framework::WindowManagementTestHarness::focused(miral::Window const& window) const -> bool
 {
     self->process_pending();

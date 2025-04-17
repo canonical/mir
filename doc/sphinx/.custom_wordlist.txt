@@ -131,6 +131,7 @@ mircore
 Miriway
 miroil
 mirplatform
+mir's
 mirserver
 MirServer
 mirserverlttng
@@ -185,6 +186,9 @@ sanitizers
 Sanitizers
 SBCs
 SceneChangeNotifiers
+screencast
+screencasting
+Screencasting
 SDL
 SHM
 snapcraft
@@ -233,8 +237,10 @@ WindowManagerTools
 WL
 wlcs
 WLCS
+wlr
 workspaces
 XCB
+xdg
 Xlib
 XLib
 Xorg

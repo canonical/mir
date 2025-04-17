@@ -20,6 +20,9 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <functional>
+#include <optional>
+#include <any>
 
 namespace mir { class Server; }
 
@@ -41,6 +44,43 @@ class ConfigurationOption;
 class DisplayConfiguration
 {
 public:
+    /// A class providing access to an arbitrary piece of data from the [DisplayConfiguration].
+    /// This is specifically useful when a user wants to extend the based display configuration
+    /// with some sort of custom payload (e.g. a user may want to extend the layout configuration
+    /// with information describing the position and size of specific applications).
+    /// \remark Since MirAL 5.3
+    class Node
+    {
+    public:
+        enum class Type
+        {
+            integer,
+            string,
+            sequence,
+            map,
+            unknown
+        };
+
+        auto type() const -> Type;
+        auto as_string() const -> std::string;
+        auto as_int() const -> int;
+        void for_each(std::function<void(Node const&)> const& f) const;
+        auto has(std::string const& key) const -> bool;
+        auto at(std::string const& key) const -> std::optional<Node>;
+        Node(Node&&) noexcept = default;
+        Node& operator=(Node&&) noexcept = default;
+        Node(Node const&) = delete;
+        Node& operator=(Node const&) = delete;
+        ~Node();
+
+    private:
+        friend DisplayConfiguration;
+        struct Self;
+        explicit Node(std::unique_ptr<Self>&& self);
+
+        std::unique_ptr<Self> self;
+    };
+
     explicit DisplayConfiguration(MirRunner const& mir_runner);
 
     /// Provide the default 'display-layout' configuration option
@@ -55,6 +95,24 @@ public:
     /// Enable a custom output attribute in the .display YAML
     /// \remark Since MirAL 3.8
     void add_output_attribute(std::string const& key);
+
+    /// Retrieve the user data associated with the active layout
+    /// for this provided key. Callers should provide this user data
+    /// via [layout_userdata_builder].
+    /// \remark Since MirAL 5.3
+    auto layout_userdata(std::string const& key) const -> std::optional<std::any const>;
+
+    /// Enable a custom layout attribute in the .display YAML.
+    /// The caller must provides the key of this custom attribute in
+    /// addition to a function that will be used to build the custom
+    /// payload that is associated with the layer. This function is
+    /// provided with the raw details of the node at the provided key.
+    /// The function must return any piece of data that may later be
+    /// retrieved via [layout_userdata].
+    /// \remark Since MirAL 5.3
+    void layout_userdata_builder(
+        std::string const& key,
+        std::function<std::any(Node const& value)> const& builder) const;
 
     void operator()(mir::Server& server) const;
 

@@ -29,6 +29,8 @@
 #include "mir/graphics/egl_error.h"
 #include "mir/renderer/gl/context.h"
 
+#include "mir/log.h"
+
 #include <sys/sysmacros.h>
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_file_name.hpp>
@@ -91,6 +93,14 @@ public:
         : dpy{dpy},
           ctx{duplicate_context(dpy, copy_from)}
     {
+    }
+
+    ~BasicEGLContext() override
+    {
+        if (eglDestroyContext(dpy, ctx) != EGL_TRUE)
+        {
+            mir::log_critical("Failed to destroy EGLContext: %s", mg::egl_category().message(eglGetError()).c_str());
+        }
     }
 
     void make_current() const override

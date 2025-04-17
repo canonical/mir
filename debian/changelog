@@ -1,3 +1,12 @@
+mir (2.20.2) UNRELEASED; urgency=medium
+
+  * New upstream release 2.20.2
+
+    - Bugs fixed:
+      . Add ending gestures to miroil (Fixes #3845)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Mon, 7 Apr 2025 15:58:12 +0000
+
 mir (2.20.1) UNRELEASED; urgency=medium
 
   * New upstream release 2.20.1

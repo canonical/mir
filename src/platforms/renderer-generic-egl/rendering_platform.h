@@ -49,8 +49,27 @@ protected:
 private:
     explicit RenderingPlatform(std::tuple<EGLDisplay, bool> dpy);
 
-    EGLDisplay const dpy;
-    bool const owns_dpy;
+    /* 
+     * We (sometimes) need to clean up the EGLDisplay with eglTerminate,
+     * but this should happen after cleanup of `ctx` and `dmabuf_provider`
+     * (which both wrap resources on the EGLDisplay).
+     *
+     * Use a trivial handle class to handle cleanup on destruction.
+     */
+    class EGLDisplayHandle
+    {
+    public:
+        EGLDisplayHandle(EGLDisplay dpy, bool owns_dpy);
+        ~EGLDisplayHandle();
+
+        operator EGLDisplay() const;
+
+    private:
+        EGLDisplay const dpy;
+        bool const owns_dpy;
+    };
+
+    EGLDisplayHandle dpy;
     std::unique_ptr<renderer::gl::Context> const ctx;
     std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
 };

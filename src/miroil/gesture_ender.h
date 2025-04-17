@@ -1,9 +1,9 @@
 /*
- * Copyright © Canonical Ltd.
+* Copyright © Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
- * as published by the Free Software Foundation.
+ * under the terms of the GNU General Public License version 2 or 3 as
+ * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -14,16 +14,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIROIL_EVENTDISPATCH_H
-#define MIROIL_EVENTDISPATCH_H
+#ifndef MIROIL_GESTURE_ENDER_H
+#define MIROIL_GESTURE_ENDER_H
 
-namespace miral { class Window; }
+#include <memory>
 
-struct MirInputEvent;
+namespace mir::frontend { class PointerInputDispatcher; }
 
 namespace miroil
 {
-void dispatch_input_event(miral::Window const& window, MirInputEvent const* event);
+void end_gesture();
+
+auto the_pointer_input_dispatcher() -> std::shared_ptr<mir::frontend::PointerInputDispatcher>;
 }
 
-#endif //MIROIL_EVENTDISPATCH_H
+#endif // MIROIL_GESTURE_ENDER_H
