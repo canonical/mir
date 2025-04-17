@@ -78,7 +78,7 @@ bool mi::InputEventTransformer::handle(MirEvent const& event)
 }
 
 auto mi::InputEventTransformer::append(std::shared_ptr<mi::InputEventTransformer::Transformer> const& transformer)
-    -> std::optional<Registration>
+    -> Registration
 {
     std::lock_guard lock{mutex};
 
@@ -91,7 +91,7 @@ auto mi::InputEventTransformer::append(std::shared_ptr<mi::InputEventTransformer
             });
 
     if (duplicate_iter != input_transformers.end())
-        return std::nullopt;
+        BOOST_THROW_EXCEPTION(std::runtime_error("Transformer already registered"));
 
     input_transformers.push_back(transformer);
 
@@ -131,12 +131,6 @@ mir::input::InputEventTransformer::Registration::Registration(Registration&& oth
     Registration()
 {
     other.swap(*this);
-}
-
-auto mir::input::InputEventTransformer::Registration::operator=(Registration&& other) noexcept -> Registration&
-{
-    other.swap(*this);
-    return *this;
 }
 
 mir::input::InputEventTransformer::Registration::Registration() :

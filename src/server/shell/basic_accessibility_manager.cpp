@@ -58,14 +58,9 @@ void mir::shell::BasicAccessibilityManager::notify_helpers() const {
 void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
     if (on)
-    {
-        if (auto registration = event_transformer->append(transformer))
-            transformer_registration.swap(registration);
-    }
+        transformer_registration.emplace(event_transformer->append(transformer));
     else
-    {
         transformer_registration.reset();
-    }
 }
 
 mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
@@ -77,11 +72,13 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     cursor{cursor},
     event_transformer{event_transformer},
     transformer{mousekeys_transformer},
-    transformer_registration{
-        [&] -> std::optional<mir::input::InputEventTransformer::Registration>
-        {
-            return transformer != nullptr ? std::optional(event_transformer->append(transformer)) : std::nullopt;
-        }()}
+    transformer_registration{[&]
+                             {
+                                 using Registration = input::InputEventTransformer::Registration;
+                                 return transformer != nullptr ?
+                                            std::optional<Registration>{event_transformer->append(transformer)} :
+                                            std::optional<Registration>{};
+                             }()}
 {
 }
 

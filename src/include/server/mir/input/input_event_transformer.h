@@ -61,13 +61,13 @@ public:
         ~Registration();
 
         Registration(Registration&& other);
-        auto operator=(Registration&& other) noexcept -> Registration&;
 
     private:
         Registration();
 
         Registration(Registration const&) = delete;
         auto operator=(Registration const&) noexcept -> Registration& = delete;
+        auto operator=(Registration&&) noexcept -> Registration& = delete;
 
         void swap(Registration& other) noexcept;
 
@@ -79,7 +79,12 @@ public:
 
     bool handle(MirEvent const&) override;
 
-    [[nodiscard]] auto append(std::shared_ptr<Transformer> const&) -> std::optional<Registration>;
+    /// Appends the transformer to a list. It is assumed that only the only
+    /// owners of this transformer are the managing object, and the
+    /// `InputEventTransformer` that it's registered to.
+    ///
+    /// Duplicate appends will throw.
+    [[nodiscard]] auto append(std::shared_ptr<Transformer> const&) -> Registration;
 
 private:
     bool remove(std::shared_ptr<Transformer> const&);

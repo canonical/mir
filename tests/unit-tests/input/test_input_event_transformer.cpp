@@ -180,22 +180,23 @@ TEST_F(TestInputEventTransformer, removing_a_valid_transformer_returns_true)
     input_event_transformer.handle(*make_key_event());
 }
 
-TEST_F(TestInputEventTransformer, appending_a_transformer_twice_returns_a_nullopt_registration_the_second_time)
+TEST_F(TestInputEventTransformer, appending_a_transformer_twice_throws_the_second_time)
 {
-    auto mock_transformer_1 = std::make_shared<MockTransformer>();
-    auto const reg1 = input_event_transformer.append(mock_transformer_1);
-    auto const reg2 = input_event_transformer.append(mock_transformer_1);
-    EXPECT_THAT(reg1, Ne(std::nullopt));
-    EXPECT_THAT(reg2, Eq(std::nullopt));
+    auto mock_transformer = std::make_shared<MockTransformer>();
+
+    std::optional<mir::input::InputEventTransformer::Registration> reg1, reg2;
+
+    EXPECT_NO_THROW(reg1.emplace(input_event_transformer.append(mock_transformer)));
+    EXPECT_THROW(reg2.emplace(input_event_transformer.append(mock_transformer)), std::runtime_error);
 }
 
-TEST_F(TestInputEventTransformer, foo)
+TEST_F(TestInputEventTransformer, registrations_unregister_on_destruction)
 {
     auto mock_transformer_1 = std::make_shared<MockTransformer>();
     {
-        EXPECT_THAT(input_event_transformer.append(mock_transformer_1), Ne(std::nullopt));
+        EXPECT_NO_THROW(auto _ = input_event_transformer.append(mock_transformer_1));
     } // Destroyed, can append again
     {
-        EXPECT_THAT(input_event_transformer.append(mock_transformer_1), Ne(std::nullopt));
+        EXPECT_NO_THROW(auto _ = input_event_transformer.append(mock_transformer_1));
     } // Destroyed, can append again
 }
