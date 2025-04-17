@@ -379,6 +379,7 @@ global:
     mir::input::InputEventTransformer::append*;
     mir::input::InputEventTransformer::handle*;
     mir::input::InputEventTransformer::remove*;
+    mir::input::InputEventTransformer::transform*;
     mir::input::InputManager::?InputManager*;
     mir::input::InputManager::InputManager*;
     mir::input::InputManager::operator*;
@@ -1416,3 +1417,4 @@ global:
   };
 local: *;
 };
+
