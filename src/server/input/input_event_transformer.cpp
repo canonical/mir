@@ -98,12 +98,12 @@ auto mi::InputEventTransformer::append(std::shared_ptr<mi::InputEventTransformer
     return Registration(this, transformer);
 }
 
-bool mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer::Transformer> const& transformer)
+void mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer::Transformer> const& transformer)
 {
     std::lock_guard lock{mutex};
+
     auto [remove_start, remove_end] = std::ranges::remove(input_transformers, transformer);
     input_transformers.erase(remove_start, remove_end);
-    return true;
 }
 
 mir::input::InputEventTransformer::Registration::Registration(

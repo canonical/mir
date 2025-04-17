@@ -87,7 +87,7 @@ public:
     [[nodiscard]] auto append(std::shared_ptr<Transformer> const&) -> Registration;
 
 private:
-    bool remove(std::shared_ptr<Transformer> const&);
+    void remove(std::shared_ptr<Transformer> const&);
 
     std::mutex mutex;
     std::vector<std::shared_ptr<Transformer>> input_transformers;
