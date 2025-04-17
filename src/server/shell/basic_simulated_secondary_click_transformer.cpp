@@ -102,11 +102,8 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
         {
             if (action == mir_pointer_action_motion)
             {
-                if (secondary_click_dispatcher->state() == time::Alarm::pending)
-                {
-                    secondary_click_dispatcher->cancel();
+                if (secondary_click_dispatcher->cancel())
                     mutable_state.lock()->on_hold_cancel();
-                }
 
                 // Down event instead of the one we consumed the last time around
                 consumed_left_down->set_event_time(pointer_event->event_time());
@@ -141,19 +138,16 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
             // it's not pressed now.
             if (action == mir_pointer_action_button_up && !(pointer_event->buttons() & mir_pointer_button_primary))
             {
-                auto const alarm_state = secondary_click_dispatcher->state();
-                secondary_click_dispatcher->cancel();
-                state = State::waiting_for_real_left_down;
-
                 // If we get an up event BEFORE the alarm is triggered, that means
                 // the user let go of the _left_ mouse button, we should cancel the
                 // pending right click and issue a left click.
-                if (alarm_state == time::Alarm::State::pending)
+                if (secondary_click_dispatcher->cancel())
                 {
                     mutable_state.lock()->on_hold_cancel();
                     click(dispatcher, builder, mir_pointer_button_primary);
                 }
 
+                state = State::waiting_for_real_left_down;
                 return false;
             }
         }
