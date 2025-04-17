@@ -423,4 +423,14 @@ typedef enum MirFocusMode
                                       leaving it as long as it has this mode */
 } MirFocusMode;
 
+/**
+ * Filters that can be applied to output.
+ */
+typedef enum MirOutputFilter
+{
+    mir_output_filter_none,      /**< No filter applied */
+    mir_output_filter_grayscale, /**< Colors are converted to grayscale */
+    mir_output_filter_invert,    /**< Colors are inverted */
+} MirOutputFilter;
+
 #endif

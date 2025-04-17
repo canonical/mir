@@ -19,6 +19,7 @@
 
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/compositor_report.h"
+#include <mir_toolkit/common.h>
 
 namespace mir
 {
@@ -49,7 +50,8 @@ public:
         std::shared_ptr<graphics::GLConfig> gl_config,
         std::shared_ptr<renderer::RendererFactory> const& renderer_factory,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
-        std::shared_ptr<CompositorReport> const& report);
+        std::shared_ptr<CompositorReport> const& report,
+        MirOutputFilter output_filter);
 
     std::unique_ptr<DisplayBufferCompositor> create_compositor_for(graphics::DisplaySink& display_sink) override;
 
@@ -59,6 +61,7 @@ private:
     std::shared_ptr<renderer::RendererFactory> const renderer_factory;
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<CompositorReport> const report;
+    MirOutputFilter output_filter;
 };
 
 }

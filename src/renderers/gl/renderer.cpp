@@ -85,6 +85,43 @@ private:
 using ProgramHandle = GLHandle<&glDeleteProgram>;
 using ShaderHandle = GLHandle<&glDeleteShader>;
 
+template<void (* deleter)(GLsizei, const GLuint*)>
+class GLMultiHandle
+{
+public:
+    explicit GLMultiHandle(GLuint id)
+        : id{id}
+    {
+    }
+
+    ~GLMultiHandle()
+    {
+        if (id)
+            (*deleter)(1, &id);
+    }
+
+    GLMultiHandle(GLMultiHandle const&) = delete;
+
+    GLMultiHandle& operator=(GLMultiHandle const&) = delete;
+
+    GLMultiHandle(GLMultiHandle&& from)
+        : id{from.id}
+    {
+        from.id = 0;
+    }
+
+    operator GLuint() const
+    {
+        return id;
+    }
+
+private:
+    GLuint id;
+};
+
+using TextureHandle = GLMultiHandle<&glDeleteTextures>;
+using FramebufferHandle = GLMultiHandle<&glDeleteFramebuffers>;
+
 struct Program : public mir::graphics::gl::Program
 {
 public:
@@ -252,6 +289,166 @@ private:
     std::mutex compilation_mutex;
 };
 
+class mrg::Renderer::OutputFilterShader
+{
+public:
+    // NOTE: This must be called with a current GL context
+    OutputFilterShader(GLsizei width, GLsizei height, GLchar const* src)
+        : vertex_shader{compile_vertex_shader()},
+        fragment_shader{compile_fragment_shader(src)},
+        program{link_shader(vertex_shader, fragment_shader)},
+        texture{make_texture(width, height)},
+        framebuffer{make_framebuffer(texture)}
+    {
+        position_attrib = glGetAttribLocation(program, "position");
+        texcoord_attrib = glGetAttribLocation(program, "texcoord");
+        tex_uniform = glGetUniformLocation(program, "tex");
+    }
+
+    GLuint get_framebuffer()
+    {
+        return framebuffer;
+    }
+
+    void render()
+    {
+        glUseProgram(program);
+        glUniform1i(tex_uniform, 0);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture);
+
+        // Draw a sigle right angle triangle that covers the whole output.
+        GLfloat vertices[] = {-1, -1, 4, -1, -1, 4};
+        GLfloat tex_coords[] = {0, 0, 2, 0, 0, 2};
+        glEnableVertexAttribArray(position_attrib);
+        glVertexAttribPointer(position_attrib, 2, GL_FLOAT, GL_FALSE, 0, vertices);
+        glEnableVertexAttribArray(texcoord_attrib);
+        glVertexAttribPointer(texcoord_attrib, 2, GL_FLOAT, GL_FALSE, 0, tex_coords);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+    }
+
+private:
+    static GLuint compile_vertex_shader()
+    {
+        const GLchar* src =
+            "attribute vec2 position;\n"
+            "attribute vec2 texcoord;\n"
+            "varying vec2 v_texcoord;\n"
+            "void main() {\n"
+            "   gl_Position = vec4(position, 0, 1); \n"
+            "   v_texcoord = texcoord;\n"
+            "}\n";
+
+        return compile_shader(GL_VERTEX_SHADER, src);
+    }
+
+    static GLuint compile_fragment_shader(GLchar const* fragment)
+    {
+        std::stringstream src;
+        src
+            <<
+            "#ifdef GL_ES\n"
+            "precision mediump float;\n"
+            "#endif\n"
+            << "\n"
+            << fragment
+            << "\n"
+            <<
+            "varying vec2 v_texcoord;\n"
+            "void main() {\n"
+            "    gl_FragColor = sample_to_rgba(v_texcoord);\n"
+            "}\n";
+
+        return compile_shader(GL_FRAGMENT_SHADER, src.str().c_str());
+    }
+
+    static GLuint compile_shader(GLenum type, GLchar const* src)
+    {
+        GLuint id = glCreateShader(type);
+        if (!id)
+        {
+            BOOST_THROW_EXCEPTION(mg::gl_error("Failed to create shader"));
+        }
+
+        glShaderSource(id, 1, &src, NULL);
+        glCompileShader(id);
+        GLint ok;
+        glGetShaderiv(id, GL_COMPILE_STATUS, &ok);
+        if (!ok)
+        {
+            GLchar log[1024] = "(No log info)";
+            glGetShaderInfoLog(id, sizeof log, NULL, log);
+            glDeleteShader(id);
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error(
+                    std::string("Compile failed: ") + log + " for:\n" + src));
+        }
+        return id;
+    }
+
+    static ProgramHandle link_shader(
+        ShaderHandle const& vertex_shader,
+        ShaderHandle const& fragment_shader)
+    {
+        ProgramHandle program{glCreateProgram()};
+        glAttachShader(program, fragment_shader);
+        glAttachShader(program, vertex_shader);
+        glLinkProgram(program);
+        GLint ok;
+        glGetProgramiv(program, GL_LINK_STATUS, &ok);
+        if (!ok)
+        {
+            GLchar log[1024];
+            glGetProgramInfoLog(program, sizeof log - 1, NULL, log);
+            log[sizeof log - 1] = '\0';
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error(
+                    std::string("Linking GL shader failed: ") + log));
+        }
+
+        return program;
+    }
+
+    static GLuint make_texture(GLsizei width, GLsizei height)
+    {
+        GLuint tex;
+        glGenTextures(1, &tex);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glTexImage2D(GL_TEXTURE_2D, 0,
+                     GL_RGBA,
+                     width,
+                     height,
+                     0,
+                     GL_RGBA,
+                     GL_UNSIGNED_BYTE,
+                     NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        return tex;
+    }
+
+    static GLuint make_framebuffer(GLuint tex)
+    {
+        GLuint fb;
+        glGenFramebuffers(1, &fb);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        return fb;
+    }
+
+    ShaderHandle const vertex_shader;
+    ShaderHandle const fragment_shader;
+    ProgramHandle const program;
+    GLint position_attrib;
+    GLint texcoord_attrib;
+    GLint tex_uniform;
+    TextureHandle const texture;
+    FramebufferHandle const framebuffer;
+};
+
 mrg::Renderer::Program::Program(GLuint program_id)
 {
     id = program_id;
@@ -353,17 +550,24 @@ void mrg::Renderer::tessellate(std::vector<mgl::Primitive>& primitives,
 
 auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> std::unique_ptr<mg::Framebuffer>
 {
-    output_surface->make_current();
-    output_surface->bind();
-
-    glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    ++frameno;
-    for (auto const& r : renderables)
+    if (output_filter_shader)
     {
-        draw(*r);
+        // Filter required, first render to a framebuffer...
+        output_surface->make_current();
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, output_filter_shader->get_framebuffer());
+        draw(renderables);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+        // ...then render to the output using the filter.
+        output_surface->bind();
+        output_filter_shader->render();
+    }
+    else
+    {
+        // No filter required, render directly to the output.
+        output_surface->make_current();
+        output_surface->bind();
+        draw(renderables);
     }
 
     auto output = output_surface->commit();
@@ -373,6 +577,19 @@ auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> std::
         mir::log_debug("GL error: %d", gl_error);
 
     return output;
+}
+
+void mrg::Renderer::draw(mg::RenderableList const& renderables) const
+{
+    glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    ++frameno;
+    for (auto const& r : renderables)
+    {
+        draw(*r);
+    }
 }
 
 void mrg::Renderer::draw(mg::Renderable const& renderable) const
@@ -640,6 +857,42 @@ void mrg::Renderer::set_output_transform(glm::mat2 const& t)
         display_transform = new_display_transform;
         update_gl_viewport();
     }
+}
+
+// Shader that converts colors to grayscale.
+const GLchar* grayscale_src =
+    "uniform sampler2D tex;\n"
+    "vec4 sample_to_rgba(in vec2 texcoord) {\n"
+    "   vec4 col = texture2D(tex, texcoord);\n"
+    "   float s = (col[0] + col[1] + col[2]) / 3.0;\n"
+    "   return vec4(s, s, s, col[3]);\n"
+    "}\n";
+
+// Shader that inverts colors.
+const GLchar* invert_src =
+    "uniform sampler2D tex;\n"
+    "vec4 sample_to_rgba(in vec2 texcoord) {\n"
+    "   vec4 col = texture2D(tex, texcoord);\n"
+    "   return vec4(1.0 - col[0], 1.0 - col[1], 1.0 - col[2], col[3]);\n"
+    "}\n";
+
+void mrg::Renderer::set_output_filter(MirOutputFilter filter)
+{
+    GLchar const * filter_src;
+    switch (filter)
+    {
+    default:
+    case mir_output_filter_none:
+        output_filter_shader = nullptr;
+        return;
+    case mir_output_filter_grayscale:
+        filter_src = grayscale_src;
+        break;
+    case mir_output_filter_invert:
+        filter_src = invert_src;
+        break;
+    }
+    output_filter_shader = std::make_unique<OutputFilterShader>(output_surface->size().width.as_value(), output_surface->size().height.as_value(), filter_src);
 }
 
 void mrg::Renderer::suspend()
