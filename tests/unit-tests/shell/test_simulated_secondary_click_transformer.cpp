@@ -123,37 +123,11 @@ TEST_P(
                 EXPECT_THAT(event->to_input()->to_pointer()->buttons() & expected_button, Eq(0));
             });
 
-
-    bool hold_start_called = false;
-    bool hold_cancel_called = false;
-    bool secondary_click_called = false;
-
-    transformer->hold_start(
-        [&hold_start_called]
-        {
-            hold_start_called = true;
-        });
-    transformer->hold_cancel(
-        [&hold_cancel_called]
-        {
-            hold_cancel_called = true;
-        });
-    transformer->secondary_click(
-        [&secondary_click_called]
-        {
-            secondary_click_called = true;
-        });
-
     transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_down_event());
     clock.advance_by(release_delay);
     main_loop->call_queued();
     transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_up_event());
     main_loop->call_queued();
-
-    auto const should_be_cancelled = release_delay < 1000ms;
-    EXPECT_THAT(hold_start_called, Eq(true));
-    EXPECT_THAT(hold_cancel_called, Eq(should_be_cancelled));
-    EXPECT_THAT(secondary_click_called, Eq(!should_be_cancelled));
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -165,3 +139,48 @@ INSTANTIATE_TEST_SUITE_P(
         std::tuple(1001ms, mir_pointer_button_secondary),
         std::tuple(1500ms, mir_pointer_button_secondary)));
 
+struct TestCallbacksParameters
+{
+    std::chrono::milliseconds hold_duration;
+    // The secondary click succeeding implies that it wasn't cancelled.
+    // Thus, the cancel callback will not be called.
+    bool start_called{false}, secondary_click_called{false};
+};
+
+struct TestCallbacks :
+    public TestSimulatedSecondaryClickTransformer,
+    public WithParamInterface<TestCallbacksParameters>
+{
+};
+
+TEST_P(TestCallbacks, releasing_left_pointer_button_at_different_times_calls_the_expected_callbacks)
+{
+    bool hold_start_called = false;
+    bool hold_cancel_called = false;
+    bool secondary_click_called = false;
+
+    transformer->hold_start([&hold_start_called] { hold_start_called = true; });
+    transformer->hold_cancel([&hold_cancel_called] { hold_cancel_called = true; });
+    transformer->secondary_click([&secondary_click_called] { secondary_click_called = true; });
+
+    auto const [release_delay, start_called, cancel_called] = GetParam();
+
+    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_down_event());
+    clock.advance_by(release_delay);
+    main_loop->call_queued();
+    transformer->transform_input_event(dispatch, &virtual_event_builder, *pointer_up_event());
+    main_loop->call_queued();
+
+    EXPECT_THAT(hold_start_called, Eq(start_called));
+    EXPECT_THAT(hold_cancel_called, Eq(cancel_called));
+    EXPECT_THAT(secondary_click_called, Ne(cancel_called));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    TestSimulatedSecondaryClickTransformer,
+    TestCallbacks,
+    ::Values(
+        TestCallbacksParameters{500ms, true, true},
+        TestCallbacksParameters{999ms, true, true},
+        TestCallbacksParameters{1001ms, true, false},
+        TestCallbacksParameters{1500ms, true, false}));
