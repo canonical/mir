@@ -31,16 +31,9 @@
 #include <mir/graphics/default_display_configuration_policy.h>
 #include <mir/shell/shell.h>
 #include <linux/input.h>
-#include <mir/shell/shell.h>
 
 #include <gtest/gtest.h>
 #include <gtest/gtest-spi.h>
-#include <gmock/gmock.h>
-
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
-#include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace ms = mir::scene;
