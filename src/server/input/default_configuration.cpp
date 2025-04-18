@@ -21,7 +21,6 @@
 #include "event_filter_chain_dispatcher.h"
 #include "config_changer.h"
 #include "cursor_controller.h"
-#include "mir/input/input_event_transformer.h"
 #include "touchspot_controller.h"
 #include "null_input_manager.h"
 #include "null_input_dispatcher.h"
@@ -40,6 +39,7 @@
 #include "mir/input/xkb_mapper_registrar.h"
 #include "mir/input/vt_filter.h"
 #include "mir/input/device.h"
+#include "mir/input/input_event_transformer.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
@@ -106,12 +106,9 @@ mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher()
 std::shared_ptr<mi::InputEventTransformer> mir::DefaultServerConfiguration::the_input_event_transformer()
 {
     return input_event_transformer(
-        [this]
+        []
         {
-            auto event_transformer =
-                std::make_shared<input::InputEventTransformer>(the_input_device_registry(), the_main_loop());
-            the_composite_event_filter()->prepend(event_transformer);
-            return event_transformer;
+            return std::make_shared<input::InputEventTransformer>();
         });
 }
 
