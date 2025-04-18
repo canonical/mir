@@ -21,9 +21,10 @@
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/glib_main_loop.h"
-#include "mir/test/fake_shared.h"
 #include "mir/input/input_event_transformer.h"
 #include "mir/input/mousekeys_keymap.h"
+#include "mir/input/virtual_input_device.h"
+#include "mir/test/fake_shared.h"
 
 #include "mir/test/doubles/mock_input_seat.h"
 #include "mir/test/doubles/mock_key_mapper.h"
@@ -74,12 +75,13 @@ struct TestBasicAccessibilityManager : Test
             mt::fake_shared(mock_key_mapper),
             mt::fake_shared(mock_server_status_listener),
             mt::fake_shared(led_observer_registrar))},
-        input_event_transformer{std::make_shared<mir::input::InputEventTransformer>(input_device_hub, main_loop)},
+        input_event_transformer{std::make_shared<mir::input::InputEventTransformer>(main_loop)},
         basic_accessibility_manager{
             input_event_transformer,
             true,
             std::make_shared<mir::test::doubles::StubCursor>(),
-            mock_mousekeys_transformer}
+            mock_mousekeys_transformer,
+            input_device_hub}
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
     }
