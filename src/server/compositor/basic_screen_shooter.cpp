@@ -169,7 +169,8 @@ mc::BasicScreenShooter::Self::Self(
 
 auto mc::BasicScreenShooter::Self::render(
     std::shared_ptr<mrs::WriteMappableBuffer> const& buffer,
-    geom::Rectangle const& area) -> time::Timestamp
+    geom::Rectangle const& area,
+    std::function<bool(std::shared_ptr<SceneElement const> const&)> const& filter) -> time::Timestamp
 {
     std::lock_guard lock{mutex};
 
@@ -179,7 +180,7 @@ auto mc::BasicScreenShooter::Self::render(
     renderable_list.reserve(scene_elements.size());
     for (auto const& element : scene_elements)
     {
-        if (!element->renderable()->surface_if_any())
+        if (!filter(element))
             continue;
 
         renderable_list.push_back(element->renderable());
@@ -271,15 +272,24 @@ void mc::BasicScreenShooter::capture(
     geom::Rectangle const& area,
     std::function<void(std::optional<time::Timestamp>)>&& callback)
 {
+    capture(buffer, area, [](std::shared_ptr<SceneElement const> const&) { return true; }, std::move(callback));
+}
+
+void mc::BasicScreenShooter::capture(
+    std::shared_ptr<mrs::WriteMappableBuffer> const& buffer,
+    geom::Rectangle const& area,
+    std::function<bool(std::shared_ptr<SceneElement const> const&)> const& filter,
+    std::function<void(std::optional<time::Timestamp>)>&& callback)
+{
     // TODO: use an atomic to keep track of number of in-flight captures, and error if it's too many
 
-    executor.spawn([weak_self=std::weak_ptr{self}, buffer, area, callback=std::move(callback)]
+    executor.spawn([weak_self=std::weak_ptr{self}, buffer, area, callback=std::move(callback), filter=std::move(filter)]
         {
             if (auto const self = weak_self.lock())
             {
                 try
                 {
-                    callback(self->render(buffer, area));
+                    callback(self->render(buffer, area, filter));
                     return;
                 }
                 catch (...)

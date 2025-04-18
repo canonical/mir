@@ -17,6 +17,7 @@
 #include "magnification_manager.h"
 
 #include "mir/fatal.h"
+#include "mir/compositor/scene_element.h"
 #include "mir/compositor/screen_shooter.h"
 #include "mir/events/event.h"
 #include "mir/events/input_event.h"
@@ -158,11 +159,16 @@ public:
             renderable->position,
             renderable->buffer()->size());
         is_updating = true;
-        screen_shooter->capture(write_buffer, r, [&](auto const)
-        {
-            scene->emit_scene_changed();
-            is_updating = false;
-        });
+        screen_shooter->capture(write_buffer, r,
+            [renderable=renderable](std::shared_ptr<compositor::SceneElement const> const& scene_element)
+            {
+                return scene_element->renderable() != renderable;
+            },
+            [&](auto const)
+            {
+                scene->emit_scene_changed();
+                is_updating = false;
+            });
     }
 
     std::shared_ptr<mi::Scene> const scene;

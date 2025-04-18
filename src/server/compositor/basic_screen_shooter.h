@@ -54,6 +54,12 @@ public:
         geometry::Rectangle const& area,
         std::function<void(std::optional<time::Timestamp>)>&& callback) override;
 
+    void capture(
+        std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
+        geometry::Rectangle const& area,
+        std::function<bool(std::shared_ptr<SceneElement const> const&)> const& filter,
+        std::function<void(std::optional<time::Timestamp>)>&& callback) override;
+
 private:
     struct Self
     {
@@ -68,7 +74,8 @@ private:
 
         auto render(
             std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
-            geometry::Rectangle const& area) -> time::Timestamp;
+            geometry::Rectangle const& area,
+            std::function<bool(std::shared_ptr<SceneElement const> const&)> const& filter) -> time::Timestamp;
 
         auto renderer_for_buffer(std::shared_ptr<renderer::software::WriteMappableBuffer> buffer)
             -> renderer::Renderer&;

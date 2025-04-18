@@ -36,6 +36,12 @@ public:
         geometry::Rectangle const& area,
         std::function<void(std::optional<time::Timestamp>)>&& callback) override;
 
+    void capture(
+        std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
+        geometry::Rectangle const& area,
+        std::function<bool(std::shared_ptr<SceneElement const> const&)> const& filter,
+        std::function<void(std::optional<time::Timestamp>)>&& callback) override;
+
 private:
     Executor& executor;
 };
