@@ -19,7 +19,6 @@
 #include "mir/events/pointer_event.h"
 #include "mir/input/event_builder.h"
 #include "mir/main_loop.h"
-#include "mir/events/event_builders.h"
 
 #include <cassert>
 #include <utility>
@@ -115,18 +114,7 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
                 //
                 // It will be in the order: motion (you are here), "fake" down
                 // event, "fake" motion event.
-                dispatcher(
-                    mir::events::make_pointer_event(
-                        pointer_event->device_id(),
-                        pointer_event->event_time(),
-                        pointer_event->modifiers(),
-                        pointer_event->action(),
-                        pointer_event->buttons(),
-                        pointer_event->position(),
-                        pointer_event->motion(),
-                        pointer_event->axis_source(),
-                        pointer_event->h_scroll(),
-                        pointer_event->v_scroll()));
+                dispatcher(std::make_shared<MirPointerEvent>(*pointer_event));
 
                 state = State::waiting_for_drag_end_left_up;
                 return true;
