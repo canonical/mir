@@ -53,6 +53,11 @@ public:
     /// the simulated secondary click is cancelled.
     void displacement_threshold(float displacement) const;
 
+    /// Configures the callbacks invoked when simulated secondary click is
+    /// enabled or disabled
+    void enabled(std::function<void()>&& on_enabled) const;
+    void disabled(std::function<void()>&& on_disabled) const;
+
     /// Configures the callback to invoke when the user clicks _down_ the left
     /// mouse button
     void hold_start(std::function<void()>&& on_hold_start) const;

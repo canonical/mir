@@ -56,7 +56,7 @@ public:
 
     bool handle(MirEvent const&) override;
 
-    void append(std::weak_ptr<Transformer> const&);
+    bool append(std::weak_ptr<Transformer> const&);
     bool remove(std::shared_ptr<Transformer> const&);
 
     MirInputDeviceId virtual_device_id() const;
