@@ -31,8 +31,8 @@ struct miral::SimulatedSecondaryClickConfig::Self
     std::weak_ptr<mir::shell::AccessibilityManager> accessibility_manager;
 
     bool enabled_by_default;
-    std::chrono::milliseconds hold_duration;
-    float displacement_threshold;
+    std::chrono::milliseconds hold_duration{1000};
+    float displacement_threshold{20.0f};
     std::function<void()> on_enabled, on_disabled, on_hold_start, on_hold_cancel, on_secondary_click;
 };
 
@@ -141,11 +141,11 @@ void miral::SimulatedSecondaryClickConfig::operator()(mir::Server& server)
     server.add_configuration_option(
         simulated_secondary_click_delay_opt,
         "delay required before a left click hold registers as a right click in milliseconds",
-        1000);
+        static_cast<int>(self->hold_duration.count()));
     server.add_configuration_option(
         simulated_secondary_click_displacement_threshold_opt,
         "The displacement the cursor pointer is allowed before the simulated secondary click is cancelled",
-        20.0f);
+        self->displacement_threshold);
 
     server.add_init_callback(
         [&server, this]
