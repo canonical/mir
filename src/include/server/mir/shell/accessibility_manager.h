@@ -17,8 +17,6 @@
 #ifndef MIR_SHELL_ACCESSIBILITY_MANAGER_H
 #define MIR_SHELL_ACCESSIBILITY_MANAGER_H
 
-#include <chrono>
-#include <functional>
 #include <memory>
 #include <optional>
 
