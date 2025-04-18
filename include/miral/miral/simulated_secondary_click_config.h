@@ -28,19 +28,38 @@ class Server;
 
 namespace miral
 {
+/// Enables configuring simulated secondary click at runtime.
+/// \remark Since MirAL 5.3
 class SimulatedSecondaryClickConfig
 {
 public:
+    /// \note `--enable-simulated-secondary-click` has higher precedence than
+    /// [enabled_by_default]
     SimulatedSecondaryClickConfig(bool enabled_by_default);
 
     void operator()(mir::Server& server) const;
 
+    /// Enables simulated secondary click
     void enable() const;
+
+    /// Disables simulated secondary click
     void disable() const;
+
+    /// Configures the duration users have to keep the left mouse button down
+    /// to dispatch a secondary click
     void hold_duration(std::chrono::milliseconds hold_duration) const;
 
+    /// Configures the callback to invoke when the user clicks _down_ the left
+    /// mouse button
     void hold_start(std::function<void()>&& on_hold_start) const;
+
+    /// Configures the callback to invoke when the user cancels a simulated
+    /// secondary click either by letting go of the left button before the
+    /// hold duration is up or moving the cursor
     void hold_cancel(std::function<void()>&& on_hold_cancel) const;
+
+    /// Configures the callback to invoke when the user successfully
+    /// dispatches a simulated secondary click
     void secondary_click(std::function<void()>&& on_secondary_click) const;
 
 private:
