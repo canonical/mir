@@ -15,6 +15,7 @@
  */
 
 #include "miral/minimal_window_manager.h"
+#include "miral/simulated_secondary_click_config.h"
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
 #include "wallpaper_config.h"
@@ -202,6 +203,10 @@ int main(int argc, char const* argv[])
         return false;
     };
 
+    auto const ssc_config = miral::SimulatedSecondaryClickConfig{false}
+                                .displacement_threshold(30)
+                                .hold_duration(std::chrono::milliseconds{2000});
+
     return runner.run_with(
         {
             CursorTheme{"default:DMZ-White"},
@@ -226,6 +231,7 @@ int main(int argc, char const* argv[])
             mousekeys_config,
             AppendEventFilter{toggle_mousekeys_filter},
             output_filter,
-            AppendEventFilter{toggle_output_filter_filter}
+            AppendEventFilter{toggle_output_filter_filter},
+            ssc_config
         });
 }
