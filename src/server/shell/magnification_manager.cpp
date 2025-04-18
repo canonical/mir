@@ -16,15 +16,16 @@
 
 #include "magnification_manager.h"
 
-#include "mir/fatal.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/compositor/screen_shooter.h"
 #include "mir/events/event.h"
 #include "mir/events/input_event.h"
 #include "mir/events/pointer_event.h"
 #include "mir/frontend/surface_stack.h"
-#include "mir/graphics/renderable.h"
+#include "mir/graphics/cursor.h"
+#include "mir/graphics/cursor_image.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/graphics/renderable.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/input/scene.h"
 #include "mir/scene/null_observer.h"
@@ -59,7 +60,7 @@ public:
     {
         return {
             position,
-            buffer_->size() * 1.5f
+            buffer_->size()
         };
     }
 
@@ -76,9 +77,9 @@ public:
     glm::mat4 transformation() const override
     {
         return glm::mat4{
-            1.0, 0.0, 0.0, 0.0,
-            0.0, -1.0, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0,
+            magnification, 0.0, 0.0, 0.0,
+            0.0, -magnification, 0.0, 0.0,
+            0.0, 0.0, magnification, 0.0,
             0.0, 0.0, 0.0, 1.0
         };
     }
@@ -99,6 +100,7 @@ public:
     }
 
     geom::Point position;
+    float magnification = 1.5f;
 private:
     std::shared_ptr<mg::Buffer> buffer_;
 };
@@ -109,10 +111,14 @@ class msh::BasicMagnificationManager::Self : public ms::NullObserver, public mi:
 public:
     Self(std::shared_ptr<mi::Scene> const& scene,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-        std::shared_ptr<compositor::ScreenShooter> const& screen_shooter)
+        std::shared_ptr<compositor::ScreenShooter> const& screen_shooter,
+        std::shared_ptr<graphics::Cursor> const& cursor,
+        std::shared_ptr<graphics::CursorImage> const& cursor_image)
         : scene(scene),
           allocator{allocator},
           screen_shooter{screen_shooter},
+          cursor{cursor},
+          cursor_image{cursor_image},
           size{geom::Size(300, 300)},
           buffer(allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888)),
           write_buffer(mrs::as_write_mappable_buffer(buffer)),
@@ -155,6 +161,9 @@ public:
 
     void update()
     {
+        if (!enabled)
+            return;
+
         geom::Rectangle r(
             renderable->position,
             renderable->buffer()->size());
@@ -174,12 +183,13 @@ public:
     std::shared_ptr<mi::Scene> const scene;
     std::shared_ptr<graphics::GraphicBufferAllocator> allocator;
     std::shared_ptr<compositor::ScreenShooter> screen_shooter;
+    std::shared_ptr<graphics::Cursor> cursor;
+    std::shared_ptr<graphics::CursorImage> cursor_image;
     geom::Size size;
     std::shared_ptr<mg::Buffer> buffer;
     std::shared_ptr<mrs::WriteMappableBuffer> write_buffer;
     std::shared_ptr<MagnificationRenderable> renderable;
     bool enabled = false;
-    float magnification = 1.5f;
     bool is_updating = false;
 };
 
@@ -188,8 +198,10 @@ msh::BasicMagnificationManager::BasicMagnificationManager(
     std::shared_ptr<input::Scene> const& scene,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<compositor::ScreenShooter> const& screen_shooter,
-    std::shared_ptr<frontend::SurfaceStack> const& surface_stack)
-    : self(std::make_shared<Self>(scene, allocator, screen_shooter))
+    std::shared_ptr<frontend::SurfaceStack> const& surface_stack,
+    std::shared_ptr<graphics::Cursor> const& cursor,
+    std::shared_ptr<graphics::CursorImage> const& cursor_image)
+    : self(std::make_shared<Self>(scene, allocator, screen_shooter, cursor, cursor_image))
 {
     filter->prepend(self);
 
@@ -204,9 +216,15 @@ void mir::shell::BasicMagnificationManager::enabled(bool enabled)
     if (self->enabled != last_enabled)
     {
         if (self->enabled)
+        {
             self->scene->add_input_visualization(self->renderable);
+            self->cursor->scale(self->renderable->magnification);
+        }
         else
+        {
             self->scene->remove_input_visualization(self->renderable);
+            // self->cursor->show(self->cursor_image);
+        }
 
         self->update();
     }
@@ -214,6 +232,6 @@ void mir::shell::BasicMagnificationManager::enabled(bool enabled)
 
 void mir::shell::BasicMagnificationManager::magnification(float magnification)
 {
-    self->magnification = magnification;
+    self->renderable->magnification = magnification;
     self->update();
 }

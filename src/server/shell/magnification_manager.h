@@ -29,6 +29,8 @@ class Scene;
 namespace graphics
 {
 class GraphicBufferAllocator;
+class Cursor;
+class CursorImage;
 }
 namespace compositor
 {
@@ -58,7 +60,9 @@ public:
         std::shared_ptr<input::Scene> const& scene,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
         std::shared_ptr<compositor::ScreenShooter> const& screen_shooter,
-        std::shared_ptr<frontend::SurfaceStack> const& surface_stack);
+        std::shared_ptr<frontend::SurfaceStack> const& surface_stack,
+        std::shared_ptr<graphics::Cursor> const& cursor,
+        std::shared_ptr<graphics::CursorImage> const& cursor_image);
     void enabled(bool enabled) override;
     void magnification(float magnification) override;
 
