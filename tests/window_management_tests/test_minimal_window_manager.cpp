@@ -31,13 +31,9 @@
 #include <mir/graphics/default_display_configuration_policy.h>
 #include <mir/shell/shell.h>
 #include <linux/input.h>
-#include <mir/shell/shell.h>
 
 #include <gtest/gtest.h>
 #include <gtest/gtest-spi.h>
-#include <gmock/gmock.h>
-
-#include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace ms = mir::scene;
@@ -611,6 +607,7 @@ public:
     }
 };
 
+using MinimalWindowManagerWithOneWindow = MultipleWindowsMinimalWindowManagerTest<1>;
 using MinimalWindowManagerWithTwoWindows = MultipleWindowsMinimalWindowManagerTest<2>;
 using MinimalWindowManagerWithThreeWindows = MultipleWindowsMinimalWindowManagerTest<3>;
 using MinimalWindowManagerWithThreeWindowsPreventFocusStealing = MultipleWindowsMinimalWindowManagerPreventFocusStealingTest<3>;
@@ -692,6 +689,80 @@ TEST_F(MinimalWindowManagerWithThreeWindows,
     tools().ask_client_to_close(windows[2]);
     EXPECT_TRUE(focused(windows[1]));
     EXPECT_TRUE(is_above(windows[1], windows[0]));
+}
+
+TEST_F(MinimalWindowManagerWithOneWindow, minimized_window_returns_to_previous_state_on_focus)
+{
+    miral::WindowSpecification spec;
+    spec.state() = mir_window_state_minimized;
+    request_modify(windows[0], spec);
+    EXPECT_THAT(tools().info_for(windows[0]).state(), Eq(mir_window_state_minimized));
+
+    tools().select_active_window(windows[0]);
+    EXPECT_THAT(tools().info_for(windows[0]).state(), Eq(mir_window_state_restored));
+}
+
+TEST_F(MinimalWindowManagerWithOneWindow, restoring_a_minimized_window_with_no_active_window_focuses_the_restored_window)
+{
+    miral::WindowSpecification spec;
+    spec.state() = mir_window_state_minimized;
+    request_modify(windows[0], spec);
+    EXPECT_THAT(focused(windows[0]), Eq(false));
+
+    spec.state() = mir_window_state_restored;
+    request_modify(windows[0], spec);
+    EXPECT_THAT(focused(windows[0]), Eq(true));
+}
+
+TEST_F(MinimalWindowManagerWithThreeWindows, minimizing_an_inactive_window_maintains_its_place_in_the_z_order)
+{
+    miral::WindowSpecification spec;
+    spec.state() = mir_window_state_minimized;
+    request_modify(windows[1], spec);
+
+    EXPECT_THAT(is_above(windows[2], windows[1]), Eq(true));
+    EXPECT_THAT(is_above(windows[1], windows[0]), Eq(true));
+}
+
+TEST_F(MinimalWindowManagerWithThreeWindows,
+    minimizing_the_active_window_selects_a_new_window_and_moves_the_minimized_down_in_the_z_order)
+{
+    miral::WindowSpecification spec;
+    spec.state() = mir_window_state_minimized;
+    request_modify(windows[2], spec);
+
+    EXPECT_THAT(is_above(windows[1], windows[2]), Eq(true));
+    EXPECT_THAT(is_above(windows[2], windows[0]), Eq(true));
+}
+
+TEST_F(MinimalWindowManagerWithThreeWindows,
+    minimizing_the_active_window_selects_window_in_same_workspace_if_avalable)
+{
+    auto const workspace1 = tools().create_workspace();
+    auto const workspace2 = tools().create_workspace();
+    tools().add_tree_to_workspace(windows[2], workspace1);
+    tools().add_tree_to_workspace(windows[0], workspace1);
+    tools().add_tree_to_workspace(windows[1], workspace2);
+
+    miral::WindowSpecification spec;
+    spec.state() = mir_window_state_minimized;
+    request_modify(windows[2], spec);
+    EXPECT_THAT(focused(windows[0]), Eq(true));
+}
+
+TEST_F(MinimalWindowManagerWithThreeWindows,
+    minimizing_the_active_window_selects_window_on_any_workspace_if_none_exist_on_current_workspace)
+{
+    auto const workspace1 = tools().create_workspace();
+    auto const workspace2 = tools().create_workspace();
+    tools().add_tree_to_workspace(windows[2], workspace1);
+    tools().add_tree_to_workspace(windows[0], workspace2);
+    tools().add_tree_to_workspace(windows[1], workspace2);
+
+    miral::WindowSpecification spec;
+    spec.state() = mir_window_state_minimized;
+    request_modify(windows[2], spec);
+    EXPECT_THAT(focused(windows[1]), Eq(true));
 }
 
 TEST_F(MinimalWindowManagerTest, if_active_window_is_removed_and_it_is_only_window_then_nothing_is_focused)
