@@ -71,6 +71,7 @@ struct MockSimulatedSecondaryClickTransformer : public mir::shell::SimulatedSeco
         (override));
 
     MOCK_METHOD(void, hold_duration, (std::chrono::milliseconds delay), (override));
+    MOCK_METHOD(void, displacement_threshold, (float), (override));
     MOCK_METHOD(void, hold_start, (std::function<void()>&& on_hold_start), (override));
     MOCK_METHOD(void, hold_cancel, (std::function<void()>&& on_hold_cancel), (override));
     MOCK_METHOD(void, secondary_click, (std::function<void()>&& on_secondary_click), (override));
