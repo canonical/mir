@@ -66,9 +66,9 @@ void mir::shell::BasicAccessibilityManager::repeat_rate_and_delay(
 void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
     if (on)
-        event_transformer->append(transformer);
+        transformer_registration.emplace(event_transformer->append(transformer));
     else
-        event_transformer->remove(transformer);
+        transformer_registration.reset();
 }
 
 mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
