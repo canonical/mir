@@ -41,6 +41,7 @@ public:
         MirEvent const&) override;
 
     void hold_duration(std::chrono::milliseconds delay) override;
+    void displacement_threshold(float displacement) override;
     void hold_start(std::function<void()>&& on_hold_start) override;
     void hold_cancel(std::function<void()>&& on_hold_cancel) override;
     void secondary_click(std::function<void()>&& on_secondary_click) override;
@@ -49,6 +50,7 @@ private:
     std::shared_ptr<mir::MainLoop> const main_loop;
     std::unique_ptr<time::Alarm> secondary_click_dispatcher;
     std::unique_ptr<MirPointerEvent> consumed_left_down;
+    mir::geometry::PointF initial_position;
 
     enum class State
     {
@@ -63,6 +65,7 @@ private:
         State state{State::waiting_for_real_left_down};
 
         std::chrono::milliseconds hold_duration{1000};
+        float displacement_threshold{20};
 
         std::function<void()> on_hold_start{[]{}};
         std::function<void()> on_hold_cancel{[]{}};

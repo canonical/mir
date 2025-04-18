@@ -49,6 +49,10 @@ public:
     /// to dispatch a secondary click
     void hold_duration(std::chrono::milliseconds hold_duration) const;
 
+    /// Configures the maximum displacement the mouse pointer can move before
+    /// the simulated secondary click is cancelled.
+    void displacement_threshold(float displacement) const;
+
     /// Configures the callback to invoke when the user clicks _down_ the left
     /// mouse button
     void hold_start(std::function<void()>&& on_hold_start) const;

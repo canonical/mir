@@ -32,6 +32,7 @@ struct miral::SimulatedSecondaryClickConfig::Self
 
     bool enabled_by_default;
     std::chrono::milliseconds hold_duration;
+    float displacement_threshold;
     std::function<void()> on_hold_start, on_hold_cancel, on_secondary_click;
 };
 
@@ -61,6 +62,12 @@ void miral::SimulatedSecondaryClickConfig::hold_duration(std::chrono::millisecon
         accessibility_manager->simulated_secondary_click().hold_duration(hold_duration);
 }
 
+void miral::SimulatedSecondaryClickConfig::displacement_threshold(float displacement) const
+{
+    self->displacement_threshold = displacement;
+    if (auto const accessibility_manager = self->accessibility_manager.lock())
+        accessibility_manager->simulated_secondary_click().displacement_threshold(displacement);
+}
 void miral::SimulatedSecondaryClickConfig::hold_start(std::function<void()>&& on_hold_start) const
 {
     self->on_hold_start = std::move(on_hold_start);
@@ -86,6 +93,8 @@ void miral::SimulatedSecondaryClickConfig::operator()(mir::Server& server) const
 {
     constexpr auto* enable_simulated_secondary_click_opt = "enable-simulated-secondary-click";
     constexpr auto* simulated_secondary_click_delay_opt = "simulated-secondary-click-delay";
+    constexpr auto* simulated_secondary_click_displacement_threshold_opt =
+        "simulated-secondary-click-displacement-threshold";
 
     server.add_configuration_option(
         enable_simulated_secondary_click_opt,
@@ -95,6 +104,10 @@ void miral::SimulatedSecondaryClickConfig::operator()(mir::Server& server) const
         simulated_secondary_click_delay_opt,
         "delay required before a left click hold registers as a right click in milliseconds",
         1000);
+    server.add_configuration_option(
+        simulated_secondary_click_displacement_threshold_opt,
+        "The displacement the cursor pointer is allowed before the simulated secondary click is cancelled",
+        20.0f);
 
     server.add_init_callback(
         [&server, this]
@@ -103,6 +116,8 @@ void miral::SimulatedSecondaryClickConfig::operator()(mir::Server& server) const
 
             hold_duration(
                 std::chrono::milliseconds(server.get_options()->get<int>(simulated_secondary_click_delay_opt)));
+            displacement_threshold(server.get_options()->get<double>(simulated_secondary_click_displacement_threshold_opt));
+
             if (self->on_hold_start)
                 hold_start(std::move(self->on_hold_start));
             if (self->on_hold_cancel)

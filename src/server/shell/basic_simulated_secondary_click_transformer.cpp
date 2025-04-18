@@ -21,6 +21,7 @@
 #include "mir/main_loop.h"
 
 #include <cassert>
+#include <cmath>
 #include <utility>
 
 namespace
@@ -96,6 +97,7 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
 
                 consumed_left_down = std::unique_ptr<MirPointerEvent>(pointer_event->clone());
                 secondary_click_dispatcher->reschedule_in(mutable_state.lock()->hold_duration);
+                initial_position = pointer_event->position().value_or(initial_position);
                 {
                     auto const state = mutable_state.lock();
                     state->state = State::waiting_for_motion_or_real_left_up;
@@ -110,6 +112,12 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
         {
             if (action == mir_pointer_action_motion)
             {
+                auto const motion_threshold_squared = std::pow(mutable_state.lock()->displacement_threshold, 2);
+                auto const displacement =
+                    (pointer_event->position().value_or(initial_position) - initial_position).length_squared();
+                if (displacement <= motion_threshold_squared)
+                    return true;
+
                 auto const state = mutable_state.lock();
                 if (secondary_click_dispatcher->cancel())
                     state->on_hold_cancel();
@@ -178,6 +186,11 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
 void mir::shell::BasicSimulatedSecondaryClickTransformer::hold_duration(std::chrono::milliseconds delay)
 {
     mutable_state.lock()->hold_duration = delay;
+}
+
+void mir::shell::BasicSimulatedSecondaryClickTransformer::displacement_threshold(float displacement)
+{
+    mutable_state.lock()->displacement_threshold = displacement;
 }
 
 void mir::shell::BasicSimulatedSecondaryClickTransformer::hold_start(std::function<void()>&& on_hold_start)

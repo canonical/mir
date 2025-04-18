@@ -560,6 +560,7 @@ global:
     miral::WindowSpecification::to_surface_specification*;
     miral::SimulatedSecondaryClickConfig::SimulatedSecondaryClickConfig*;
     miral::SimulatedSecondaryClickConfig::disable*;
+    miral::SimulatedSecondaryClickConfig::displacement_threshold*;
     miral::SimulatedSecondaryClickConfig::enable*;
     miral::SimulatedSecondaryClickConfig::hold_cancel*;
     miral::SimulatedSecondaryClickConfig::hold_duration*;
