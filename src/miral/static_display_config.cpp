@@ -489,10 +489,12 @@ void miral::YamlFileDisplayConfig::serialize_configuration(std::ostream& out, mg
            "\n    # a list of cards (currently matched by card-id)";
 
     std::map<mg::DisplayConfigurationCardId, std::ostringstream> card_map;
+    std::ostringstream displays;
 
-    conf.for_each_output([&card_map](mg::UserDisplayConfigurationOutput const& conf_output)
+    conf.for_each_output([&card_map, &displays](mg::UserDisplayConfigurationOutput const& conf_output)
         {
             serialize_output_configuration(card_map[conf_output.card_id], conf_output);
+            serialize_display_info(displays, conf_output);
         });
 
     for (auto const& co : card_map)
@@ -500,6 +502,24 @@ void miral::YamlFileDisplayConfig::serialize_configuration(std::ostream& out, mg
         out << "\n"
                "\n    - card-id: " << co.first.as_value()
             << co.second.str();
+    }
+
+    out << "\n"
+           "\n    # displays:"
+           "\n    # A list of display configurations matched by the displays' properties"
+           "\n    #"
+           "\n    # These take the same display options as above,"
+           "\n    # and take precedence over the port-based configuration."
+           "\n    #";
+
+    if (displays.str().empty())
+    {
+        out << "\n    # No display properties could be determined."
+               "\n";
+    }
+    else
+    {
+        out << displays.str() << "\n";
     }
 }
 
@@ -552,6 +572,26 @@ void miral::YamlFileDisplayConfig::serialize_output_configuration(
     }
 
     out << "\n";
+}
+
+void miral::YamlFileDisplayConfig::serialize_display_info(
+    std::ostream& out, mg::UserDisplayConfigurationOutput const& conf_output)
+{
+    using mir::graphics::Edid;
+    if (conf_output.edid.size() >= Edid::minimum_size)
+    {
+        auto const edid = reinterpret_cast<Edid const*>(conf_output.edid.data());
+        Edid::Manufacturer man;
+        edid->get_manufacturer(man);
+        Edid::MonitorName name;
+        edid->get_monitor_name(name);
+
+        out << "\n    # - vendor: " << man
+            << "\n    #   model: " << name
+            << "\n    #   product: " << edid->product_code()
+            << "\n    #   serial: " << edid->serial_number()
+            << "\n    #";
+    }
 }
 
 void miral::YamlFileDisplayConfig::apply_to_output(mg::UserDisplayConfigurationOutput& conf_output, Config const& conf)
