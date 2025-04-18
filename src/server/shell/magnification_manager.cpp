@@ -23,12 +23,12 @@
 #include "mir/events/pointer_event.h"
 #include "mir/frontend/surface_stack.h"
 #include "mir/graphics/cursor.h"
-#include "mir/graphics/cursor_image.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/renderable.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/input/scene.h"
 #include "mir/scene/null_observer.h"
+#include "mir/scene/scene_change_notification.h"
 #include "mir/renderer/sw/pixel_source.h"
 
 namespace mg = mir::graphics;
@@ -100,24 +100,37 @@ public:
     }
 
     geom::Point position;
-    float magnification = 1.5f;
+    float magnification = 2.f;
 private:
     std::shared_ptr<mg::Buffer> buffer_;
 };
 }
 
-class msh::BasicMagnificationManager::Self : public ms::NullObserver, public mi::EventFilter
+class msh::BasicMagnificationManager::Self : public mi::EventFilter
 {
 public:
     Self(std::shared_ptr<mi::Scene> const& scene,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
         std::shared_ptr<compositor::ScreenShooter> const& screen_shooter,
+        std::shared_ptr<frontend::SurfaceStack> const& surface_stack,
         std::shared_ptr<graphics::Cursor> const& cursor)
-        : scene(scene),
+        : scene_change_notification(std::make_shared<ms::SceneChangeNotification>(
+            [this]{ update(); },
+            [this](geom::Rectangle const& damage)
+            {
+                geom::Rectangle const r(
+                   renderable->position,
+                   renderable->buffer()->size());
+                if (r.overlaps(damage))
+                    update();
+            }
+          )),
+          scene(scene),
           allocator{allocator},
           screen_shooter{screen_shooter},
+          surface_stack{surface_stack},
           cursor{cursor},
-          size{geom::Size(300, 300)},
+          size{geom::Size(400, 300)},
           buffer(allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888)),
           write_buffer(mrs::as_write_mappable_buffer(buffer)),
           renderable(std::make_shared<MagnificationRenderable>(buffer))
@@ -148,24 +161,18 @@ public:
         return false;
     }
 
-    void scene_changed() override
-    {
-        if (!enabled)
-            return;
-
-        if (!is_updating)
-            update();
-    }
-
     void update()
     {
         if (!enabled)
             return;
 
-        geom::Rectangle r(
+        if (is_updating)
+            return;
+
+        is_updating = true;
+        geom::Rectangle const r(
             renderable->position,
             renderable->buffer()->size());
-        is_updating = true;
         screen_shooter->capture_with_filter(write_buffer, r,
             [renderable=renderable, cursor=cursor](std::shared_ptr<compositor::SceneElement const> const& scene_element)
             {
@@ -181,9 +188,11 @@ public:
             });
     }
 
+    std::shared_ptr<scene::SceneChangeNotification> scene_change_notification;
     std::shared_ptr<mi::Scene> const scene;
     std::shared_ptr<graphics::GraphicBufferAllocator> allocator;
     std::shared_ptr<compositor::ScreenShooter> screen_shooter;
+    std::shared_ptr<frontend::SurfaceStack> surface_stack;
     std::shared_ptr<graphics::Cursor> cursor;
     geom::Size size;
     std::shared_ptr<mg::Buffer> buffer;
@@ -200,12 +209,17 @@ msh::BasicMagnificationManager::BasicMagnificationManager(
     std::shared_ptr<compositor::ScreenShooter> const& screen_shooter,
     std::shared_ptr<frontend::SurfaceStack> const& surface_stack,
     std::shared_ptr<graphics::Cursor> const& cursor)
-    : self(std::make_shared<Self>(scene, allocator, screen_shooter, cursor))
+    : self(std::make_shared<Self>(scene, allocator, screen_shooter, surface_stack, cursor))
 {
     filter->prepend(self);
 
-    surface_stack->add_observer(self);
+    surface_stack->add_observer(self->scene_change_notification);
     enabled(true); // TODO: Do not assume enabled
+}
+
+msh::BasicMagnificationManager::~BasicMagnificationManager()
+{
+    self->surface_stack->remove_observer(self->scene_change_notification);
 }
 
 void mir::shell::BasicMagnificationManager::enabled(bool enabled)

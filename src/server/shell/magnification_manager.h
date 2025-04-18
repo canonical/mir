@@ -61,6 +61,7 @@ public:
         std::shared_ptr<compositor::ScreenShooter> const& screen_shooter,
         std::shared_ptr<frontend::SurfaceStack> const& surface_stack,
         std::shared_ptr<graphics::Cursor> const& cursor);
+    ~BasicMagnificationManager() override;
     void enabled(bool enabled) override;
     void magnification(float magnification) override;
 
