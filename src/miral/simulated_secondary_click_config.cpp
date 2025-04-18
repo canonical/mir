@@ -44,14 +44,14 @@ void miral::SimulatedSecondaryClickConfig::enable() const
 {
     self->enabled_by_default = true;
     if (auto const accessibility_manager = self->accessibility_manager.lock())
-        self->accessibility_manager.lock()->simulated_secondary_click_enabled(true);
+        accessibility_manager->simulated_secondary_click_enabled(true);
 }
 
 void miral::SimulatedSecondaryClickConfig::disable() const
 {
     self->enabled_by_default = false;
     if (auto const accessibility_manager = self->accessibility_manager.lock())
-        self->accessibility_manager.lock()->simulated_secondary_click_enabled(false);
+        accessibility_manager->simulated_secondary_click_enabled(false);
 }
 
 void miral::SimulatedSecondaryClickConfig::hold_duration(std::chrono::milliseconds hold_duration) const
