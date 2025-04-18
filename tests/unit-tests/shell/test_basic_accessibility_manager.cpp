@@ -18,6 +18,7 @@
 #include "src/server/input/default_input_device_hub.h"
 #include "src/server/shell/basic_accessibility_manager.h"
 #include "src/server/shell/mouse_keys_transformer.h"
+#include "src/server/shell/basic_simulated_secondary_click_transformer.h"
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/glib_main_loop.h"
@@ -63,6 +64,29 @@ struct MockMouseKeysTransformer : public mir::shell::MouseKeysTransformer
         (override));
 };
 
+struct MockSimulatedSecondaryClickTransformer : public mir::shell::SimulatedSecondaryClickTransformer
+{
+    MockSimulatedSecondaryClickTransformer() = default;
+
+    MOCK_METHOD(
+        bool,
+        transform_input_event,
+        (mir::input::InputEventTransformer::EventDispatcher const& dispatcher,
+         mir::input::EventBuilder*,
+         MirEvent const&),
+        (override));
+
+    MOCK_METHOD(void, hold_duration, (std::chrono::milliseconds delay), (override));
+    MOCK_METHOD(void, displacement_threshold, (float), (override));
+    MOCK_METHOD(void, enabled, (), (override));
+    MOCK_METHOD(void, disabled, (), (override));
+    MOCK_METHOD(void, enabled, (std::function<void()>&& on_enabled), (override));
+    MOCK_METHOD(void, disabled, (std::function<void()>&& on_disabled), (override));
+    MOCK_METHOD(void, hold_start, (std::function<void()>&& on_hold_start), (override));
+    MOCK_METHOD(void, hold_cancel, (std::function<void()>&& on_hold_cancel), (override));
+    MOCK_METHOD(void, secondary_click, (std::function<void()>&& on_secondary_click), (override));
+};
+
 struct TestBasicAccessibilityManager : Test
 {
     TestBasicAccessibilityManager() :
@@ -79,7 +103,8 @@ struct TestBasicAccessibilityManager : Test
             input_event_transformer,
             true,
             std::make_shared<mir::test::doubles::StubCursor>(),
-            mock_mousekeys_transformer}
+            mock_mousekeys_transformer,
+            mock_simulated_secondary_click_transformer}
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
     }
@@ -93,6 +118,8 @@ struct TestBasicAccessibilityManager : Test
     std::shared_ptr<NiceMock<MockKeyboardHelper>> mock_key_helper{std::make_shared<NiceMock<MockKeyboardHelper>>()};
     std::shared_ptr<NiceMock<MockMouseKeysTransformer>> mock_mousekeys_transformer{
         std::make_shared<NiceMock<MockMouseKeysTransformer>>()};
+    std::shared_ptr<NiceMock<MockSimulatedSecondaryClickTransformer>> mock_simulated_secondary_click_transformer{
+        std::make_shared<NiceMock<MockSimulatedSecondaryClickTransformer>>()};
 
     std::shared_ptr<mir::MainLoop> const main_loop;
     std::shared_ptr<mir::input::DefaultInputDeviceHub> const input_device_hub;
@@ -231,4 +258,115 @@ TEST_F(TestBasicAccessibilityManager, calling_set_max_speed_calls_set_max_speed_
 
     basic_accessibility_manager.mousekeys_enabled(true);
     basic_accessibility_manager.max_speed(max_x, max_y);
+}
+
+TEST_F(TestBasicAccessibilityManager, calling_simulated_secondary_click_hold_duration_calls_the_corresponding_method_on_transformer)
+{
+    auto const expected_duration = std::chrono::milliseconds{333};
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, hold_duration(expected_duration));
+
+    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+    basic_accessibility_manager.simulated_secondary_click().hold_duration(expected_duration);
+}
+
+// There must be a better way than having five duplicated tests...
+TEST_F(TestBasicAccessibilityManager, setting_on_enabled_start_sets_it_on_transformer)
+{
+    auto const expected_on_enabled = []
+    {
+    };
+
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, enabled(_));
+    basic_accessibility_manager.simulated_secondary_click().enabled(expected_on_enabled);
+}
+
+TEST_F(TestBasicAccessibilityManager, setting_on_disabled_start_sets_it_on_transformer)
+{
+    auto const expected_on_disabled = []
+    {
+    };
+
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, disabled(_));
+    basic_accessibility_manager.simulated_secondary_click().disabled(expected_on_disabled);
+}
+
+TEST_F(TestBasicAccessibilityManager, setting_on_hold_start_sets_it_on_transformer)
+{
+    auto const expected_on_hold_start = []
+    {
+    };
+
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, hold_start(_));
+
+    basic_accessibility_manager.simulated_secondary_click().hold_start(expected_on_hold_start);
+}
+
+TEST_F(TestBasicAccessibilityManager, setting_on_hold_cancel_sets_it_on_transformer)
+{
+    auto const expected_on_hold_cancel = []
+    {
+    };
+
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, hold_cancel(_));
+
+    basic_accessibility_manager.simulated_secondary_click().hold_cancel(expected_on_hold_cancel);
+}
+
+TEST_F(TestBasicAccessibilityManager, setting_on_secondary_click_sets_it_on_transformer)
+{
+    auto const expected_on_secondary_click = []
+    {
+    };
+
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, secondary_click(_));
+
+    basic_accessibility_manager.simulated_secondary_click().secondary_click(expected_on_secondary_click);
+}
+
+
+TEST_F(TestBasicAccessibilityManager, enabling_simulated_secondary_click_twice_calls_enabled_once)
+{
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, enabled()).Times(1);
+
+    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+}
+
+TEST_F(
+    TestBasicAccessibilityManager, enabling_simulated_secondary_click_then_disabling_then_enabling_calls_enabled_twice)
+{
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, enabled()).Times(2);
+
+    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+}
+
+
+TEST_F(TestBasicAccessibilityManager, disabling_simulated_secondary_click_twice_calls_enabled_once)
+{
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, disabled()).Times(1);
+
+    basic_accessibility_manager.simulated_secondary_click_enabled(true); // Have to enable to be able to disable
+    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+}
+
+TEST_F(
+    TestBasicAccessibilityManager, disabling_simulated_secondary_click_then_enabling_then_disabling_calls_disabled_twice)
+{
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, disabled()).Times(2);
+
+    basic_accessibility_manager.simulated_secondary_click_enabled(true); // Have to enable to be able to disable
+    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+}
+
+TEST_F(
+    TestBasicAccessibilityManager, disabling_simulated_secondary_click_before_enabling_it_doesnt_call_disabled)
+{
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, disabled()).Times(0);
+    basic_accessibility_manager.simulated_secondary_click_enabled(false);
 }

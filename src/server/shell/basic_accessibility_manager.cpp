@@ -15,9 +15,10 @@
  */
 
 #include "basic_accessibility_manager.h"
-#include "mir/graphics/cursor.h"
 #include "mouse_keys_transformer.h"
+#include "basic_simulated_secondary_click_transformer.h"
 
+#include "mir/graphics/cursor.h"
 #include "mir/input/input_event_transformer.h"
 #include "mir/main_loop.h"
 #include "mir/shell/keyboard_helper.h"
@@ -75,11 +76,17 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<input::InputEventTransformer> const& event_transformer,
     bool enable_key_repeat,
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
-    std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer) :
+    std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
+    std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer) :
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},
-    transformer{mousekeys_transformer}
+    transformer{mousekeys_transformer},
+    simulated_secondary_click_transformer{simulated_secondary_click_transformer}
+{
+}
+
+mir::shell::BasicAccessibilityManager::~BasicAccessibilityManager()
 {
 }
 
@@ -101,4 +108,24 @@ void mir::shell::BasicAccessibilityManager::acceleration_factors(double constant
 void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_axis)
 {
     transformer->max_speed(x_axis, y_axis);
+}
+
+void mir::shell::BasicAccessibilityManager::simulated_secondary_click_enabled(bool enabled)
+{
+    if (enabled)
+    {
+        if (event_transformer->append(simulated_secondary_click_transformer))
+            simulated_secondary_click_transformer->enabled();
+    }
+    else
+    {
+        if (event_transformer->remove(simulated_secondary_click_transformer))
+            simulated_secondary_click_transformer->disabled();
+    }
+}
+
+auto mir::shell::BasicAccessibilityManager::simulated_secondary_click()
+    -> SimulatedSecondaryClickTransformer&
+{
+    return *simulated_secondary_click_transformer;
 }

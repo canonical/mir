@@ -34,7 +34,6 @@ namespace input
 {
 class VirtualInputDevice;
 class InputDeviceRegistry;
-class InputSink;
 class EventBuilder;
 class InputEventTransformer : public EventFilter
 {
@@ -57,9 +56,10 @@ public:
 
     bool handle(MirEvent const&) override;
 
-    void append(std::weak_ptr<Transformer> const&);
+    bool append(std::weak_ptr<Transformer> const&);
     bool remove(std::shared_ptr<Transformer> const&);
 
+    MirInputDeviceId virtual_device_id() const;
 private:
     std::mutex mutex;
     std::vector<std::weak_ptr<Transformer>> input_transformers;
@@ -67,6 +67,7 @@ private:
     std::shared_ptr<input::VirtualInputDevice> const virtual_pointer;
     std::shared_ptr<input::InputDeviceRegistry> const input_device_registry;
     std::shared_ptr<MainLoop> const main_loop;
+    MirInputDeviceId const virtual_device_id_;
 };
 }
 }

@@ -16,7 +16,9 @@
 
 #include "mir/input/input_event_transformer.h"
 
+#include "mir/input/device.h"
 #include "mir/input/device_capability.h"
+#include "mir/input/input_device_hub.h"
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_sink.h"
 #include "mir/input/virtual_input_device.h"
@@ -36,9 +38,9 @@ mi::InputEventTransformer::InputEventTransformer(
     virtual_pointer{
         std::make_shared<mir::input::VirtualInputDevice>("mousekey-pointer", mir::input::DeviceCapability::pointer)},
     input_device_registry{input_device_registry},
-    main_loop{main_loop}
+    main_loop{main_loop},
+    virtual_device_id_{input_device_registry->add_device(virtual_pointer).lock()->id()}
 {
-    input_device_registry->add_device(virtual_pointer);
 }
 
 mir::input::InputEventTransformer::~InputEventTransformer()
@@ -85,7 +87,7 @@ bool mi::InputEventTransformer::handle(MirEvent const& event)
     return handled;
 }
 
-void mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::Transformer> const& transformer)
+bool mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::Transformer> const& transformer)
 {
     std::lock_guard lock{mutex};
 
@@ -98,9 +100,10 @@ void mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::
             });
 
     if (duplicate_iter != input_transformers.end())
-        return;
+        return false;
 
     input_transformers.push_back(transformer);
+    return true;
 }
 
 bool mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer::Transformer> const& transformer)
@@ -122,4 +125,9 @@ bool mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer
 
     input_transformers.erase(remove_start, remove_end);
     return true;
+}
+
+auto mi::InputEventTransformer::virtual_device_id() const -> MirInputDeviceId
+{
+    return virtual_device_id_;
 }

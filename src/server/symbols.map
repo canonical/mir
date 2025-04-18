@@ -380,6 +380,7 @@ global:
     mir::input::InputEventTransformer::append*;
     mir::input::InputEventTransformer::handle*;
     mir::input::InputEventTransformer::remove*;
+    mir::input::InputEventTransformer::virtual_device_id*;
     mir::input::InputManager::?InputManager*;
     mir::input::InputManager::InputManager*;
     mir::input::InputManager::operator*;
@@ -1217,6 +1218,7 @@ global:
     typeinfo?for?mir::shell::Shell;
     typeinfo?for?mir::shell::ShellReport;
     typeinfo?for?mir::shell::ShellWrapper;
+    typeinfo?for?mir::shell::SimulatedSecondaryClickTransformer;
     typeinfo?for?mir::shell::StreamSpecification;
     typeinfo?for?mir::shell::SurfaceAspectRatio;
     typeinfo?for?mir::shell::SurfaceSpecification;
@@ -1408,6 +1410,7 @@ global:
     vtable?for?mir::shell::Shell;
     vtable?for?mir::shell::ShellReport;
     vtable?for?mir::shell::ShellWrapper;
+    vtable?for?mir::shell::SimulatedSecondaryClickTransformer;
     vtable?for?mir::shell::SurfaceStack;
     vtable?for?mir::shell::SurfaceStackWrapper;
     vtable?for?mir::shell::SystemCompositorWindowManager;
