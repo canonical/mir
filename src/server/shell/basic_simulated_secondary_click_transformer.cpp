@@ -193,6 +193,26 @@ void mir::shell::BasicSimulatedSecondaryClickTransformer::displacement_threshold
     mutable_state.lock()->displacement_threshold = displacement;
 }
 
+void mir::shell::BasicSimulatedSecondaryClickTransformer::enabled()
+{
+    mutable_state.lock()->on_enabled();
+}
+
+void mir::shell::BasicSimulatedSecondaryClickTransformer::disabled()
+{
+    mutable_state.lock()->on_disabled();
+}
+
+void mir::shell::BasicSimulatedSecondaryClickTransformer::enabled(std::function<void()>&& on_enabled)
+{
+    mutable_state.lock()->on_enabled = std::move(on_enabled);
+}
+
+void mir::shell::BasicSimulatedSecondaryClickTransformer::disabled(std::function<void()>&& on_disabled)
+{
+    mutable_state.lock()->on_disabled = std::move(on_disabled);
+}
+
 void mir::shell::BasicSimulatedSecondaryClickTransformer::hold_start(std::function<void()>&& on_hold_start)
 {
     mutable_state.lock()->on_hold_start = std::move(on_hold_start);

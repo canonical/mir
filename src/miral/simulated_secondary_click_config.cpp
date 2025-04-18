@@ -33,7 +33,7 @@ struct miral::SimulatedSecondaryClickConfig::Self
     bool enabled_by_default;
     std::chrono::milliseconds hold_duration;
     float displacement_threshold;
-    std::function<void()> on_hold_start, on_hold_cancel, on_secondary_click;
+    std::function<void()> on_enabled, on_disabled, on_hold_start, on_hold_cancel, on_secondary_click;
 };
 
 miral::SimulatedSecondaryClickConfig::SimulatedSecondaryClickConfig(bool enabled_by_default) :
@@ -68,6 +68,21 @@ void miral::SimulatedSecondaryClickConfig::displacement_threshold(float displace
     if (auto const accessibility_manager = self->accessibility_manager.lock())
         accessibility_manager->simulated_secondary_click().displacement_threshold(displacement);
 }
+
+void miral::SimulatedSecondaryClickConfig::enabled(std::function<void()>&& on_enabled) const
+{
+    self->on_enabled = std::move(on_enabled);
+    if (auto const accessibility_manager = self->accessibility_manager.lock())
+        accessibility_manager->simulated_secondary_click().enabled(std::move(self->on_enabled));
+}
+
+void miral::SimulatedSecondaryClickConfig::disabled(std::function<void()>&& on_disabled) const
+{
+    self->on_disabled = std::move(on_disabled);
+    if (auto const accessibility_manager = self->accessibility_manager.lock())
+        accessibility_manager->simulated_secondary_click().disabled(std::move(self->on_disabled));
+}
+
 void miral::SimulatedSecondaryClickConfig::hold_start(std::function<void()>&& on_hold_start) const
 {
     self->on_hold_start = std::move(on_hold_start);
@@ -118,6 +133,10 @@ void miral::SimulatedSecondaryClickConfig::operator()(mir::Server& server) const
                 std::chrono::milliseconds(server.get_options()->get<int>(simulated_secondary_click_delay_opt)));
             displacement_threshold(server.get_options()->get<double>(simulated_secondary_click_displacement_threshold_opt));
 
+            if (self->on_enabled)
+                enabled(std::move(self->on_enabled));
+            if (self->on_disabled)
+                disabled(std::move(self->on_disabled));
             if (self->on_hold_start)
                 hold_start(std::move(self->on_hold_start));
             if (self->on_hold_cancel)

@@ -147,13 +147,19 @@ void mir::shell::BasicAccessibilityManager::max_speed(double x_axis, double y_ax
 void mir::shell::BasicAccessibilityManager::simulated_secondary_click_enabled(bool enabled)
 {
     if(enabled)
+    {
         simulated_secondary_click_transformer.add_registration();
+        simulated_secondary_click_transformer->enabled();
+    }
     else
+    {
         simulated_secondary_click_transformer.remove_registration();
+        simulated_secondary_click_transformer->disabled();
+    }
 }
 
 auto mir::shell::BasicAccessibilityManager::simulated_secondary_click()
     -> SimulatedSecondaryClickTransformer&
 {
-    return *simulated_secondary_click_transformer;
+    return *simulated_secondary_click_transformer.operator->();
 }

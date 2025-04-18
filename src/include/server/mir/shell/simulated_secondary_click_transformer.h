@@ -28,6 +28,10 @@ class SimulatedSecondaryClickTransformer : public mir::input::InputEventTransfor
 public:
     virtual void hold_duration(std::chrono::milliseconds delay) = 0;
     virtual void displacement_threshold(float displacement) = 0;
+    virtual void enabled() = 0;
+    virtual void disabled() = 0;
+    virtual void enabled(std::function<void()>&& on_enabled) = 0;
+    virtual void disabled(std::function<void()>&& on_disabled) = 0;
     virtual void hold_start(std::function<void()>&& on_hold_start) = 0;
     virtual void hold_cancel(std::function<void()>&& on_hold_cancel) = 0;
     virtual void secondary_click(std::function<void()>&& on_secondary_click) = 0;

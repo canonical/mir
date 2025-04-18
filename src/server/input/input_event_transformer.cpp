@@ -145,7 +145,7 @@ bool mi::InputEventTransformer::transform(
     return handled;
 }
 
-void mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::Transformer> const& transformer)
+bool mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::Transformer> const& transformer)
 {
     std::lock_guard lock{mutex};
 
@@ -158,9 +158,10 @@ void mi::InputEventTransformer::append(std::weak_ptr<mi::InputEventTransformer::
             });
 
     if (duplicate_iter != input_transformers.end())
-        return;
+        return false;
 
     input_transformers.push_back(transformer);
+    return true;
 }
 
 bool mi::InputEventTransformer::remove(std::shared_ptr<mi::InputEventTransformer::Transformer> const& transformer)

@@ -72,6 +72,10 @@ struct MockSimulatedSecondaryClickTransformer : public mir::shell::SimulatedSeco
 
     MOCK_METHOD(void, hold_duration, (std::chrono::milliseconds delay), (override));
     MOCK_METHOD(void, displacement_threshold, (float), (override));
+    MOCK_METHOD(void, enabled, (), (override));
+    MOCK_METHOD(void, disabled, (), (override));
+    MOCK_METHOD(void, enabled, (std::function<void()>&& on_enabled), (override));
+    MOCK_METHOD(void, disabled, (std::function<void()>&& on_disabled), (override));
     MOCK_METHOD(void, hold_start, (std::function<void()>&& on_hold_start), (override));
     MOCK_METHOD(void, hold_cancel, (std::function<void()>&& on_hold_cancel), (override));
     MOCK_METHOD(void, secondary_click, (std::function<void()>&& on_secondary_click), (override));
@@ -244,8 +248,27 @@ TEST_F(TestBasicAccessibilityManager, calling_simulated_secondary_click_hold_dur
     basic_accessibility_manager.simulated_secondary_click().hold_duration(expected_duration);
 }
 
+// There must be a better way than having five duplicated tests...
+TEST_F(TestBasicAccessibilityManager, setting_on_enabled_start_sets_it_on_transformer)
+{
+    auto const expected_on_enabled = []
+    {
+    };
 
-// There must be a better way than having three duplicated tests...
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, enabled(_));
+    basic_accessibility_manager.simulated_secondary_click().enabled(expected_on_enabled);
+}
+
+TEST_F(TestBasicAccessibilityManager, setting_on_disabled_start_sets_it_on_transformer)
+{
+    auto const expected_on_disabled = []
+    {
+    };
+
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, disabled(_));
+    basic_accessibility_manager.simulated_secondary_click().disabled(expected_on_disabled);
+}
+
 TEST_F(TestBasicAccessibilityManager, setting_on_hold_start_sets_it_on_transformer)
 {
     auto const expected_on_hold_start = []
@@ -254,7 +277,6 @@ TEST_F(TestBasicAccessibilityManager, setting_on_hold_start_sets_it_on_transform
 
     EXPECT_CALL(*mock_simulated_secondary_click_transformer, hold_start(_));
 
-    basic_accessibility_manager.simulated_secondary_click_enabled(true);
     basic_accessibility_manager.simulated_secondary_click().hold_start(expected_on_hold_start);
 }
 
@@ -266,7 +288,6 @@ TEST_F(TestBasicAccessibilityManager, setting_on_hold_cancel_sets_it_on_transfor
 
     EXPECT_CALL(*mock_simulated_secondary_click_transformer, hold_cancel(_));
 
-    basic_accessibility_manager.simulated_secondary_click_enabled(true);
     basic_accessibility_manager.simulated_secondary_click().hold_cancel(expected_on_hold_cancel);
 }
 
@@ -278,6 +299,53 @@ TEST_F(TestBasicAccessibilityManager, setting_on_secondary_click_sets_it_on_tran
 
     EXPECT_CALL(*mock_simulated_secondary_click_transformer, secondary_click(_));
 
-    basic_accessibility_manager.simulated_secondary_click_enabled(true);
     basic_accessibility_manager.simulated_secondary_click().secondary_click(expected_on_secondary_click);
+}
+
+
+TEST_F(TestBasicAccessibilityManager, enabling_simulated_secondary_click_twice_calls_enabled_once)
+{
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, enabled()).Times(1);
+
+    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+}
+
+TEST_F(
+    TestBasicAccessibilityManager, enabling_simulated_secondary_click_then_disabling_then_enabling_calls_enabled_twice)
+{
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, enabled()).Times(2);
+
+    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+}
+
+
+TEST_F(TestBasicAccessibilityManager, disabling_simulated_secondary_click_twice_calls_disabled_once)
+{
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, disabled()).Times(1);
+
+    basic_accessibility_manager.simulated_secondary_click_enabled(true); // Have to enable to be able to disable
+    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+}
+
+TEST_F(
+    TestBasicAccessibilityManager, disabling_simulated_secondary_click_then_enabling_then_disabling_calls_disabled_twice)
+{
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, disabled()).Times(2);
+
+    basic_accessibility_manager.simulated_secondary_click_enabled(true); // Have to enable to be able to disable
+    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+    basic_accessibility_manager.simulated_secondary_click_enabled(true);
+    basic_accessibility_manager.simulated_secondary_click_enabled(false);
+}
+
+TEST_F(
+    TestBasicAccessibilityManager, disabling_simulated_secondary_click_before_enabling_it_doesnt_call_disabled)
+{
+    EXPECT_CALL(*mock_simulated_secondary_click_transformer, disabled()).Times(0);
+    basic_accessibility_manager.simulated_secondary_click_enabled(false);
 }
