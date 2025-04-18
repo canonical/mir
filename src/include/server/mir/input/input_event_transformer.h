@@ -33,9 +33,7 @@ class MainLoop;
 namespace input
 {
 class VirtualInputDevice;
-class InputDeviceHub;
 class InputDeviceRegistry;
-class InputSink;
 class EventBuilder;
 class InputEventTransformer : public EventFilter
 {
