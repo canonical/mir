@@ -21,15 +21,18 @@
 #include "mir/events/event.h"
 #include "mir/events/input_event.h"
 #include "mir/events/pointer_event.h"
+#include "mir/frontend/surface_stack.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/input/scene.h"
+#include "mir/scene/null_observer.h"
 #include "mir/renderer/sw/pixel_source.h"
 
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mrs = mir::renderer::software;
+namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 
@@ -54,8 +57,8 @@ public:
     geom::Rectangle screen_position() const override
     {
         return {
-            geom::Point{0.f, 0.f},
-            buffer_->size()
+            position,
+            buffer_->size() * 1.5f
         };
     }
 
@@ -71,7 +74,12 @@ public:
 
     glm::mat4 transformation() const override
     {
-        return glm::mat4(1.f);
+        return glm::mat4{
+            1.0, 0.0, 0.0, 0.0,
+            0.0, -1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0
+        };
     }
 
     float alpha() const override
@@ -89,12 +97,13 @@ public:
         return std::nullopt;
     }
 
+    geom::Point position;
 private:
     std::shared_ptr<mg::Buffer> buffer_;
 };
 }
 
-class msh::BasicMagnificationManager::Self : public mi::EventFilter
+class msh::BasicMagnificationManager::Self : public ms::NullObserver, public mi::EventFilter
 {
 public:
     Self(std::shared_ptr<mi::Scene> const& scene,
@@ -103,7 +112,8 @@ public:
         : scene(scene),
           allocator{allocator},
           screen_shooter{screen_shooter},
-          buffer(allocator->alloc_software_buffer({300, 300}, mir_pixel_format_argb_8888)),
+          size{geom::Size(300, 300)},
+          buffer(allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888)),
           write_buffer(mrs::as_write_mappable_buffer(buffer)),
           renderable(std::make_shared<MagnificationRenderable>(buffer))
     {
@@ -111,9 +121,6 @@ public:
 
     bool handle(MirEvent const& event) override
     {
-        if (!enabled)
-            return false;
-
         auto const* input_event = event.to_input();
         if (!input_event)
             return false;
@@ -129,42 +136,58 @@ public:
         if (!position_opt)
             return false;
 
-        position = position_opt.value();
-        update();
+        renderable->position = {
+            (position_opt->x.as_value() - size.width.as_int() / 2.f),
+            (position_opt->y.as_value() - size.height.as_int() / 2.f)
+        };
         return false;
+    }
+
+    void scene_changed() override
+    {
+        if (!enabled)
+            return;
+
+        if (!is_updating)
+            update();
     }
 
     void update()
     {
         geom::Rectangle r(
-            geom::Point{300.f, 300.f},
-            geom::Size{300.f, 300.f});
+            renderable->position,
+            renderable->buffer()->size());
+        is_updating = true;
         screen_shooter->capture(write_buffer, r, [&](auto const)
         {
             scene->emit_scene_changed();
+            is_updating = false;
         });
     }
 
     std::shared_ptr<mi::Scene> const scene;
     std::shared_ptr<graphics::GraphicBufferAllocator> allocator;
     std::shared_ptr<compositor::ScreenShooter> screen_shooter;
+    geom::Size size;
     std::shared_ptr<mg::Buffer> buffer;
     std::shared_ptr<mrs::WriteMappableBuffer> write_buffer;
     std::shared_ptr<MagnificationRenderable> renderable;
     bool enabled = false;
-    float magnification = 1.f;
-    geom::PointF position;
+    float magnification = 1.5f;
+    bool is_updating = false;
 };
 
 msh::BasicMagnificationManager::BasicMagnificationManager(
     std::shared_ptr<input::CompositeEventFilter> const& filter,
     std::shared_ptr<input::Scene> const& scene,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<compositor::ScreenShooter> const& screen_shooter)
+    std::shared_ptr<compositor::ScreenShooter> const& screen_shooter,
+    std::shared_ptr<frontend::SurfaceStack> const& surface_stack)
     : self(std::make_shared<Self>(scene, allocator, screen_shooter))
 {
     filter->prepend(self);
 
+    surface_stack->add_observer(self);
     enabled(true); // TODO: Do not assume enabled
 }
 

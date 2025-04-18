@@ -200,6 +200,7 @@ auto mir::DefaultServerConfiguration::the_accessibility_manager() -> std::shared
                     the_composite_event_filter(),
                     the_input_scene(),
                     the_buffer_allocator(),
-                    the_screen_shooter()));
+                    the_screen_shooter(),
+                    the_frontend_surface_stack()));
         });
 }

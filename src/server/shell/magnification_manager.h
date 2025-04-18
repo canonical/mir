@@ -34,6 +34,10 @@ namespace compositor
 {
 class ScreenShooter;
 }
+namespace frontend
+{
+class SurfaceStack;
+}
 
 namespace shell
 {
@@ -53,7 +57,8 @@ public:
         std::shared_ptr<input::CompositeEventFilter> const& filter,
         std::shared_ptr<input::Scene> const& scene,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-        std::shared_ptr<compositor::ScreenShooter> const& screen_shooter);
+        std::shared_ptr<compositor::ScreenShooter> const& screen_shooter,
+        std::shared_ptr<frontend::SurfaceStack> const& surface_stack);
     void enabled(bool enabled) override;
     void magnification(float magnification) override;
 
