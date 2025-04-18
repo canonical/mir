@@ -272,10 +272,10 @@ void mc::BasicScreenShooter::capture(
     geom::Rectangle const& area,
     std::function<void(std::optional<time::Timestamp>)>&& callback)
 {
-    capture(buffer, area, [](std::shared_ptr<SceneElement const> const&) { return true; }, std::move(callback));
+    capture_with_filter(buffer, area, [](std::shared_ptr<SceneElement const> const&) { return true; }, std::move(callback));
 }
 
-void mc::BasicScreenShooter::capture(
+void mc::BasicScreenShooter::capture_with_filter(
     std::shared_ptr<mrs::WriteMappableBuffer> const& buffer,
     geom::Rectangle const& area,
     std::function<bool(std::shared_ptr<SceneElement const> const&)> const& filter,

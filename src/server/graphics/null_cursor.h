@@ -31,6 +31,7 @@ public:
     void hide() override {}
     void move_to(geometry::Point) override {}
     void scale(float) override {}
+    bool is(std::shared_ptr<Renderable> const&) const override { return false; }
 };
 
 }

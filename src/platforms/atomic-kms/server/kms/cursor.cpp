@@ -452,3 +452,8 @@ void mir::graphics::atomic::Cursor::scale(float new_scale)
 
     show(current_cursor_image);
 }
+
+bool mir::graphics::atomic::Cursor::is(std::shared_ptr<Renderable> const&) const
+{
+    return false;
+}

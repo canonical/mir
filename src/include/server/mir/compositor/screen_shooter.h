@@ -50,7 +50,7 @@ public:
         mir::geometry::Rectangle const& area,
         std::function<void(std::optional<time::Timestamp>)>&& callback) = 0;
 
-    virtual void capture(
+    virtual void capture_with_filter(
         std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
         geometry::Rectangle const& area,
         std::function<bool(std::shared_ptr<SceneElement const> const&)> const& filter,

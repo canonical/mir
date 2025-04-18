@@ -39,7 +39,7 @@ void mc::NullScreenShooter::capture(
         });
 }
 
-void mc::NullScreenShooter::capture(
+void mc::NullScreenShooter::capture_with_filter(
     std::shared_ptr<mrs::WriteMappableBuffer> const&,
     geom::Rectangle const&,
     std::function<bool(std::shared_ptr<SceneElement const> const&)> const&,

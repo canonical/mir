@@ -202,7 +202,6 @@ auto mir::DefaultServerConfiguration::the_accessibility_manager() -> std::shared
                     the_buffer_allocator(),
                     the_screen_shooter(),
                     the_frontend_surface_stack(),
-                    the_cursor(),
-                    the_default_cursor_image()));
+                    the_cursor()));
         });
 }

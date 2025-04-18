@@ -112,13 +112,11 @@ public:
     Self(std::shared_ptr<mi::Scene> const& scene,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
         std::shared_ptr<compositor::ScreenShooter> const& screen_shooter,
-        std::shared_ptr<graphics::Cursor> const& cursor,
-        std::shared_ptr<graphics::CursorImage> const& cursor_image)
+        std::shared_ptr<graphics::Cursor> const& cursor)
         : scene(scene),
           allocator{allocator},
           screen_shooter{screen_shooter},
           cursor{cursor},
-          cursor_image{cursor_image},
           size{geom::Size(300, 300)},
           buffer(allocator->alloc_software_buffer(size, mir_pixel_format_argb_8888)),
           write_buffer(mrs::as_write_mappable_buffer(buffer)),
@@ -168,9 +166,12 @@ public:
             renderable->position,
             renderable->buffer()->size());
         is_updating = true;
-        screen_shooter->capture(write_buffer, r,
-            [renderable=renderable](std::shared_ptr<compositor::SceneElement const> const& scene_element)
+        screen_shooter->capture_with_filter(write_buffer, r,
+            [renderable=renderable, cursor=cursor](std::shared_ptr<compositor::SceneElement const> const& scene_element)
             {
+                if (cursor->is(scene_element->renderable()))
+                    return false;
+
                 return scene_element->renderable() != renderable;
             },
             [&](auto const)
@@ -184,7 +185,6 @@ public:
     std::shared_ptr<graphics::GraphicBufferAllocator> allocator;
     std::shared_ptr<compositor::ScreenShooter> screen_shooter;
     std::shared_ptr<graphics::Cursor> cursor;
-    std::shared_ptr<graphics::CursorImage> cursor_image;
     geom::Size size;
     std::shared_ptr<mg::Buffer> buffer;
     std::shared_ptr<mrs::WriteMappableBuffer> write_buffer;
@@ -199,9 +199,8 @@ msh::BasicMagnificationManager::BasicMagnificationManager(
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<compositor::ScreenShooter> const& screen_shooter,
     std::shared_ptr<frontend::SurfaceStack> const& surface_stack,
-    std::shared_ptr<graphics::Cursor> const& cursor,
-    std::shared_ptr<graphics::CursorImage> const& cursor_image)
-    : self(std::make_shared<Self>(scene, allocator, screen_shooter, cursor, cursor_image))
+    std::shared_ptr<graphics::Cursor> const& cursor)
+    : self(std::make_shared<Self>(scene, allocator, screen_shooter, cursor))
 {
     filter->prepend(self);
 
@@ -223,7 +222,8 @@ void mir::shell::BasicMagnificationManager::enabled(bool enabled)
         else
         {
             self->scene->remove_input_visualization(self->renderable);
-            // self->cursor->show(self->cursor_image);
+            // TODO: Should we return the cursor back to a pre-magnified scale, or is 1.0 ok?
+            self->cursor->scale(1.0f);
         }
 
         self->update();
