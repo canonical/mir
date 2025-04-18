@@ -22,6 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include "yaml-cpp/yaml.h"
 
 using namespace testing;
 using namespace mir::geometry;
@@ -35,6 +36,16 @@ namespace
 static constexpr Point default_top_left{0, 0};
 static constexpr mg::DisplayConfigurationMode default_mode{{648, 480}, 60.0};
 static constexpr mg::DisplayConfigurationMode another_mode{{1280, 1024}, 75.0};
+static const std::vector<uint8_t> basic_edid{
+    0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x06, 0x10, 0xF2, 0x9C, 0x00, 0x00, 0x00, 0x00,
+    0x1A, 0x15, 0x01, 0x04, 0x95, 0x1A, 0x0E, 0x78, 0x02, 0xEF, 0x05, 0x97, 0x57, 0x54, 0x92, 0x27,
+    0x22, 0x50, 0x54, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x20, 0x1C, 0x56, 0x86, 0x50, 0x00, 0x20, 0x30, 0x0E, 0x38,
+    0x13, 0x00, 0x00, 0x90, 0x10, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFE, 0x00, 0x4C,
+    0x50, 0x31, 0x31, 0x36, 0x57, 0x48, 0x34, 0x2D, 0x54, 0x4A, 0x41, 0x33, 0x00, 0x00, 0x00, 0xFC,
+    0x00, 0x43, 0x6F, 0x6C, 0x6F, 0x72, 0x20, 0x4C, 0x43, 0x44, 0x0A, 0x20, 0x20, 0x20, 0x00, 0xBD,
+};
 
 struct MockLogger : ml::Logger
 {
@@ -173,6 +184,47 @@ TEST_F(StaticDisplayConfig, well_formed_non_config_input_causes_AbnormalExit)
     std::istringstream well_formed{"well-formed: error"};
 
     EXPECT_THROW((sdc.load_config(well_formed, "")), mir::AbnormalExit);
+}
+
+TEST_F(StaticDisplayConfig, empty_layout_is_error)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"};
+
+    EXPECT_THROW((sdc.load_config(stream, "")), mir::AbnormalExit);
+}
+
+TEST_F(StaticDisplayConfig, empty_cards_is_error)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    cards:\n"};
+
+    EXPECT_THROW((sdc.load_config(stream, "")), mir::AbnormalExit);
+}
+
+TEST_F(StaticDisplayConfig, empty_card_is_no_error)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    cards:\n"
+        "    - \n"};
+
+    sdc.load_config(stream, "");
+}
+
+TEST_F(StaticDisplayConfig, empty_output_is_no_error)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    cards:\n"
+        "    - VGA-1:\n"};
+
+    sdc.load_config(stream, "");
 }
 
 TEST_F(StaticDisplayConfig, valid_config_input_is_no_error)
@@ -538,4 +590,302 @@ TEST_F(StaticDisplayConfig, given_no_custom_attributes_when_they_are_added_exist
     sdc.apply_to(dc);
 
     EXPECT_THAT(hdmi1.custom_attribute, ElementsAre());
+}
+
+TEST_F(StaticDisplayConfig, can_set_and_retrieve_custom_data_on_layouts)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  another:\n"
+        "    cards:\n"
+        "    - VGA-1:\n"
+        "        state: disabled\n"
+        "    - HDMI-A-1:\n"
+        "        state: disabled\n"
+        "    custom_data: value\n"
+        "  expected:\n"
+        "    cards:\n"
+        "    - VGA-1:\n"
+        "        orientation: inverted\n"
+        "    - HDMI-A-1:\n"
+        "        position: [1280, 0]\n"};
+
+    sdc.layout_userdata_builder("custom_data",  [](YAML::Node const& node) -> std::any
+    {
+        EXPECT_THAT(node.Scalar(), Eq("value"));
+        return node.Scalar();
+    });
+
+    sdc.load_config(stream, "");
+    EXPECT_THAT(sdc.layout_userdata("custom_data"), Eq(std::nullopt));
+    sdc.select_layout("another");
+    auto const other_data = sdc.layout_userdata("custom_data");
+    EXPECT_THAT(other_data, Ne(std::nullopt));
+    EXPECT_THAT(std::any_cast<std::string>(other_data.value()), Eq("value"));
+}
+
+TEST_F(StaticDisplayConfig, empty_displays_is_error)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    displays:\n"};
+
+    EXPECT_THROW((sdc.load_config(stream, "")), mir::AbnormalExit);
+}
+
+TEST_F(StaticDisplayConfig, null_display_is_error)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    displays:\n"
+        "    - \n"};
+
+    EXPECT_THROW((sdc.load_config(stream, "")), mir::AbnormalExit);
+}
+
+TEST_F(StaticDisplayConfig, empty_display_is_error)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    displays:\n"
+        "    - {}\n"};
+
+    EXPECT_THROW((sdc.load_config(stream, "")), mir::AbnormalExit);
+}
+
+struct PropertyValueTest : public StaticDisplayConfig, public WithParamInterface<std::string>
+{
+};
+
+TEST_P(PropertyValueTest, invalid_display_property_value_is_error)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    displays:\n"
+        "    - " + GetParam() + ": null\n"};
+
+    EXPECT_THROW((sdc.load_config(stream, "")), mir::AbnormalExit);
+}
+
+TEST_P(PropertyValueTest, empty_display_property_value_is_error)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    displays:\n"
+        "    - " + GetParam() + ": ""\n"};
+
+    EXPECT_THROW((sdc.load_config(stream, "")), mir::AbnormalExit);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    EDIDValues,
+    PropertyValueTest,
+    Values("vendor", "product", "model", "serial"));
+
+TEST_F(StaticDisplayConfig, no_matcher_matches_all)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    displays:\n"
+        "    - state: disabled\n"};
+
+    sdc.load_config(stream, "");
+
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(vga1.used, Eq(false));
+    EXPECT_THAT(vga1.power_mode, Eq(mir_power_mode_off));
+    EXPECT_THAT(hdmi1.used, Eq(false));
+    EXPECT_THAT(hdmi1.power_mode, Eq(mir_power_mode_off));
+}
+
+TEST_F(StaticDisplayConfig, unmatched_displays_dont_change)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    displays:\n"
+        "    - vendor: unmatched\n"
+        "      state: disabled\n"};
+
+    sdc.load_config(stream, "");
+
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(vga1.used, Eq(true));
+    EXPECT_THAT(vga1.power_mode, Eq(mir_power_mode_on));
+    EXPECT_THAT(hdmi1.used, Eq(true));
+    EXPECT_THAT(hdmi1.power_mode, Eq(mir_power_mode_on));
+}
+
+TEST_F(StaticDisplayConfig, displays_are_matched_by_vendor)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    displays:\n"
+        "    - vendor: APP\n"
+        "      group: 1\n"};
+
+    hdmi1.edid = basic_edid;
+
+    sdc.load_config(stream, "");
+
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(hdmi1.logical_group_id, Eq(mg::DisplayConfigurationLogicalGroupId{1}));
+    EXPECT_THAT(vga1.logical_group_id, Eq(mg::DisplayConfigurationLogicalGroupId{0}));
+}
+
+TEST_F(StaticDisplayConfig, displays_are_matched_by_model)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    displays:\n"
+        "    - model: Color LCD\n"
+        "      orientation: left\n"};
+
+    hdmi1.edid = basic_edid;
+
+    sdc.load_config(stream, "");
+
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(hdmi1.orientation, Eq(mir_orientation_left));
+    EXPECT_THAT(vga1.orientation, Eq(mir_orientation_normal));
+}
+
+TEST_F(StaticDisplayConfig, displays_are_matched_by_product)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    displays:\n"
+        "    - product: 40178\n"
+        "      position: [100, 100]\n"};
+
+    hdmi1.edid = basic_edid;
+
+    sdc.load_config(stream, "");
+
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(hdmi1.top_left, Eq(Point{100, 100}));
+    EXPECT_THAT(vga1.top_left, Eq(Point{0, 0}));
+}
+
+TEST_F(StaticDisplayConfig, displays_are_matched_by_serial)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    displays:\n"
+        "    - serial: 0\n"
+        "      state: disabled\n"};
+
+    hdmi1.edid = basic_edid;
+
+    sdc.load_config(stream, "");
+
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(vga1.used, Eq(true));
+    EXPECT_THAT(vga1.power_mode, Eq(mir_power_mode_on));
+    EXPECT_THAT(hdmi1.used, Eq(false));
+    EXPECT_THAT(hdmi1.power_mode, Eq(mir_power_mode_off));
+}
+
+TEST_F(StaticDisplayConfig, displays_are_matched_by_multiple_properties)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    displays:\n"
+        "    - vendor: APP\n"
+        "      model: Color LCD\n"
+        "      product: 40178\n"
+        "      serial: 0\n"
+        "      orientation: left\n"};
+
+    hdmi1.edid = basic_edid;
+
+    sdc.load_config(stream, "");
+
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(hdmi1.orientation, Eq(mir_orientation_left));
+    EXPECT_THAT(vga1.orientation, Eq(mir_orientation_normal));
+}
+
+TEST_F(StaticDisplayConfig, displays_need_full_match)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    displays:\n"
+        "    - vendor: APP\n"
+        "      model: Color LCD\n"
+        "      product: 40178\n"
+        "      serial: 1\n"  // incorrect serial
+        "      orientation: left\n"};
+
+    hdmi1.edid = basic_edid;
+
+    sdc.load_config(stream, "");
+
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(hdmi1.orientation, Eq(mir_orientation_normal));
+    EXPECT_THAT(vga1.orientation, Eq(mir_orientation_normal));
+}
+
+TEST_F(StaticDisplayConfig, displays_precede_cards)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    cards:\n"
+        "    - HDMI-A-1:\n"
+        "        orientation: right\n"
+        "    displays:\n"
+        "    - vendor: APP\n"
+        "      orientation: left\n"};
+
+    hdmi1.edid = basic_edid;
+
+    sdc.load_config(stream, "");
+
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(hdmi1.orientation, Eq(mir_orientation_left));
+    EXPECT_THAT(vga1.orientation, Eq(mir_orientation_normal));
+}
+
+TEST_F(StaticDisplayConfig, cards_apply_on_unmatched_displays)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    cards:\n"
+        "    - VGA-1:\n"
+        "        orientation: right\n"
+        "    displays:\n"
+        "    - vendor: APP\n"
+        "      orientation: left\n"};
+
+    hdmi1.edid = basic_edid;
+
+    sdc.load_config(stream, "");
+
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(hdmi1.orientation, Eq(mir_orientation_left));
+    EXPECT_THAT(vga1.orientation, Eq(mir_orientation_right));
 }

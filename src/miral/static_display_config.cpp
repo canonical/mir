@@ -16,6 +16,7 @@
 
 #include "static_display_config.h"
 
+#include <mir/graphics/edid.h>
 #include <mir/output_type_names.h>
 #include <mir/log.h>
 #include <mir/main_loop.h>
@@ -105,6 +106,17 @@ auto select_mode_index(size_t mode_index, std::vector<mg::DisplayConfigurationMo
 extern "C" { char const* basename(char const*); }
 #endif
 
+std::map<miral::YamlFileDisplayConfig::Property, std::string const> const miral::YamlFileDisplayConfig::display_matching_properties()
+{
+    static std::map<miral::YamlFileDisplayConfig::Property, std::string const> const display_matching_properties{
+        {miral::YamlFileDisplayConfig::Property::Vendor, "vendor"},
+        {miral::YamlFileDisplayConfig::Property::Model, "model"},
+        {miral::YamlFileDisplayConfig::Property::Product, "product"},
+        {miral::YamlFileDisplayConfig::Property::Serial, "serial"},
+    };
+    return display_matching_properties;
+};
+
 miral::StaticDisplayConfig::StaticDisplayConfig(std::string const& filename) :
     ReloadingYamlFileDisplayConfig(::basename(filename.c_str()))
 {
@@ -130,6 +142,90 @@ namespace
     }
 }
 
+void miral::YamlFileDisplayConfig::parse_configuration(YAML::Node const& node, Config& output_config, std::string const& error_prefix, std::string const& identifier)
+{
+    if (!node.IsMap())
+        throw mir::AbnormalExit{error_prefix + "invalid configuration for " + identifier};
+
+    if (auto const s = node[state])
+    {
+        auto const state = s.as<std::string>();
+        if (state != state_enabled && state != state_disabled)
+            throw mir::AbnormalExit{error_prefix + "invalid 'state' (" + state + ") for " + identifier};
+        output_config.disabled = (state == state_disabled);
+    }
+
+    if (auto const pos = node[position])
+    {
+        output_config.position = Point{pos[0].as<int>(), pos[1].as<int>()};
+    }
+
+    if (auto const group_id = node[group])
+    {
+        output_config.group_id = group_id.as<int>();
+    }
+
+    if (auto const m = node[mode])
+    {
+        std::istringstream in{m.as<std::string>()};
+
+        char delimiter = '\0';
+        int width;
+        int height;
+
+        if (!(in >> width))
+            goto mode_error;
+
+        if (!(in >> delimiter) || delimiter != 'x')
+            goto mode_error;
+
+        if (!(in >> height))
+            goto mode_error;
+
+        output_config.size = Size{width, height};
+
+        if (in.peek() == '@')
+        {
+            double refresh;
+            if (!(in >> delimiter) || delimiter != '@')
+                goto mode_error;
+
+            if (!(in >> refresh))
+                goto mode_error;
+
+            output_config.refresh = refresh;
+        }
+    }
+    mode_error: // TODO better error handling
+
+    if (auto const o = node[orientation])
+    {
+        std::string const orientation = o.as<std::string>();
+        output_config.orientation = as_orientation(orientation);
+
+        if (!output_config.orientation)
+            throw mir::AbnormalExit{error_prefix + "invalid 'orientation' (" +
+                                    orientation + ") for " + identifier};
+    }
+
+    if (auto const s = node[scale])
+    {
+        output_config.scale = s.as<float>();
+    }
+
+    for (auto const& key : custom_output_attributes)
+    {
+        if (auto const value = node[key])
+        {
+            output_config.custom_attribute[key] = value.Scalar();
+        }
+        else
+        {
+            output_config.custom_attribute[key] = std::nullopt;
+        }
+    }
+}
+
 void miral::YamlFileDisplayConfig::load_config(std::istream& config_file, std::string const& filename)
 try
 {
@@ -149,19 +245,59 @@ try
 
     for (auto const& ll : layouts)
     {
+        auto const& layout_name = ll.first.as<std::string>();
         auto const& layout = ll.second;
 
         if (!layout.IsDefined() || !layout.IsMap())
         {
-            throw mir::AbnormalExit{error_prefix(filename) + "invalid '" + ll.first.as<std::string>() + "' layout"};
+            throw mir::AbnormalExit{error_prefix(filename) + "invalid '" + layout_name + "' layout"};
         }
 
-        Port2Config layout_config;
+        Matchers2Config layout_config;
 
         Node cards = layout["cards"];
+        Node displays = layout["displays"];
 
-        if (!cards.IsDefined() || !cards.IsSequence())
-            throw mir::AbnormalExit{error_prefix(filename) + "invalid 'cards' in '" + ll.first.as<std::string>() + "' layout"};
+        if (!cards.IsDefined() && !displays.IsDefined())
+            throw mir::AbnormalExit{error_prefix(filename) + "neither 'cards' or 'displays' defined in '" + layout_name + "' layout"};
+
+        if (cards.IsDefined() && !cards.IsSequence())
+            throw mir::AbnormalExit{error_prefix(filename) + "invalid 'cards' in '" + layout_name + "' layout"};
+
+        if (displays.IsDefined())
+        {
+            if(!displays.IsSequence())
+            {
+                throw mir::AbnormalExit{error_prefix(filename) + "invalid 'displays' in '" + layout_name + "' layout"};
+            }
+
+            for (size_t n = 0; n < displays.size(); n++)
+            {
+                auto const identifier = "displays['" + std::to_string(n) + "']";
+                auto const& display = displays[n];
+                if (!display.IsDefined() || !display.IsMap() || !display.size())
+                    throw mir::AbnormalExit{error_prefix(filename) + "invalid '" + identifier + "' in '" + layout_name + "' layout"};
+
+                Matchers matchers;
+
+                for (auto const& [property, key] : display_matching_properties())
+                {
+                    auto const value = display[key];
+                    if (value.IsDefined() && (!value.IsScalar() || value.as<std::string>().empty()))
+                    {
+                        throw mir::AbnormalExit{error_prefix(filename) + "invalid '" + key + "' in '" + identifier + "' in '" + layout_name + "' layout"};
+                    }
+                    else if (value)
+                    {
+                        matchers[property] = value.as<std::string>();
+                    }
+                }
+
+                Config output_config;
+                parse_configuration(display, output_config, error_prefix(filename), identifier);
+                layout_config.emplace_back(matchers, output_config);
+            }
+        }
 
         for (Node const& card : cards)
         {
@@ -186,94 +322,24 @@ try
 
                 if (port_config.IsDefined() && !port_config.IsNull())
                 {
-                    if (!port_config.IsMap())
-                        throw mir::AbnormalExit{error_prefix(filename) + "invalid port: " + port_name};
-
-                    Config   output_config;
-
-                    if (auto const s = port_config[state])
-                    {
-                        auto const state = s.as<std::string>();
-                        if (state != state_enabled && state != state_disabled)
-                            throw mir::AbnormalExit{error_prefix(filename) + "invalid 'state' (" + state + ") for port: " + port_name};
-                        output_config.disabled = (state == state_disabled);
-                    }
-
-                    if (auto const pos = port_config[position])
-                    {
-                        output_config.position = Point{pos[0].as<int>(), pos[1].as<int>()};
-                    }
-
-                    if (auto const group_id = port_config[group])
-                    {
-                        output_config.group_id = group_id.as<int>();
-                    }
-
-                    if (auto const m = port_config[mode])
-                    {
-                        std::istringstream in{m.as<std::string>()};
-
-                        char delimiter = '\0';
-                        int width;
-                        int height;
-
-                        if (!(in >> width))
-                            goto mode_error;
-
-                        if (!(in >> delimiter) || delimiter != 'x')
-                            goto mode_error;
-
-                        if (!(in >> height))
-                            goto mode_error;
-
-                        output_config.size = Size{width, height};
-
-                        if (in.peek() == '@')
-                        {
-                            double refresh;
-                            if (!(in >> delimiter) || delimiter != '@')
-                                goto mode_error;
-
-                            if (!(in >> refresh))
-                                goto mode_error;
-
-                            output_config.refresh = refresh;
-                        }
-                    }
-                    mode_error: // TODO better error handling
-
-                    if (auto const o = port_config[orientation])
-                    {
-                        std::string const orientation = o.as<std::string>();
-                        output_config.orientation = as_orientation(orientation);
-
-                        if (!output_config.orientation)
-                            throw mir::AbnormalExit{error_prefix(filename) + "invalid 'orientation' (" +
-                                                    orientation + ") for port: " + port_name};
-                    }
-
-                    if (auto const s = port_config[scale])
-                    {
-                        output_config.scale = s.as<float>();
-                    }
-
-                    for (auto const& key : custom_output_attributes)
-                    {
-                        if (auto const value = port_config[key])
-                        {
-                            output_config.custom_attribute[key] = value.Scalar();
-                        }
-                        else
-                        {
-                            output_config.custom_attribute[key] = std::nullopt;
-                        }
-                    }
-
-                    layout_config[port_name] = output_config;
+                    Config output_config;
+                    parse_configuration(port_config, output_config, error_prefix(filename), port_name);
+                    Matchers const port_matcher{{Property::Port, port_name}};
+                    layout_config.emplace_back(port_matcher, output_config);
                 }
             }
         }
-        new_config[ll.first.Scalar()] = layout_config;
+
+        // Users may provide a function that returns a custom user data on a layout
+        // based off of its configuration in YAML.
+        std::map<std::string, std::any> userdata_map;
+        for (auto const& [key, builder] : layout_userdata_builder_funcs)
+        {
+            if (layout[key])
+                userdata_map[key] = builder(layout[key]);
+        }
+
+        new_config[ll.first.Scalar()] = { layout_config, userdata_map };
     }
 
     std::lock_guard lock{mutex};
@@ -302,9 +368,75 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
     {
         mir::log_debug("Display config using layout: '%s'", layout.c_str());
 
-        conf.for_each_output([&config=current_config->second](mg::UserDisplayConfigurationOutput& conf_output)
+        conf.for_each_output([&config=current_config->second.matchers2config](mg::UserDisplayConfigurationOutput& conf_output)
             {
-                apply_to_output(conf_output, config[conf_output.name]);
+                for (auto const& [matchers, conf] : config)
+                {
+                    using mir::graphics::Edid;
+                    std::optional<Edid const*> edid;
+                    if (conf_output.edid.size() >= Edid::minimum_size)
+                    {
+                        edid = reinterpret_cast<Edid const*>(conf_output.edid.data());
+                    }
+
+                    for (auto const& [property, value] : matchers)
+                    {
+                        static auto const props = StaticDisplayConfig::display_matching_properties();
+                        if (!edid && props.find(property) != props.end())
+                        {
+                            goto failed_match;
+                        }
+
+                        switch (property)
+                        {
+                            case Property::Port:
+                                if (conf_output.name != value)
+                                {
+                                    goto failed_match;
+                                }
+                                break;
+
+                            case Property::Vendor:
+                                Edid::Manufacturer man;
+                                edid.value()->get_manufacturer(man);
+                                if (man != value)
+                                {
+                                    goto failed_match;
+                                }
+                                break;
+
+                            case Property::Model:
+                                Edid::MonitorName name;
+                                edid.value()->get_monitor_name(name);
+                                if (name != value)
+                                {
+                                    goto failed_match;
+                                }
+                                break;
+
+                            case Property::Product:
+                                if (std::to_string(edid.value()->product_code()) != value)
+                                {
+                                    goto failed_match;
+                                }
+                                break;
+
+                            case Property::Serial:
+                                if (std::to_string(edid.value()->serial_number()) != value)
+                                {
+                                    goto failed_match;
+                                }
+                                break;
+                        }
+                    }
+
+                    // If we get here, all matchers applied to this output
+                    apply_to_output(conf_output, conf);
+                    return;
+
+                    // But here we failed to match
+                    failed_match:;
+                }
             });
     }
     else
@@ -529,9 +661,35 @@ auto miral::YamlFileDisplayConfig::list_layouts() const -> std::vector<std::stri
     return result;
 }
 
+auto miral::YamlFileDisplayConfig::layout_userdata(std::string const& key) -> std::optional<std::any const>
+{
+    std::lock_guard lock{mutex};
+    for (auto const& [first, second]: config)
+    {
+        if (first == layout)
+        {
+            if (second.userdata.contains(key))
+                return second.userdata.at(key);
+
+            mir::log_info("Parsing display configuration: No user data on layout=%s for key=%s", layout.c_str(), key.c_str());
+            return std::nullopt;
+        }
+    }
+
+    mir::log_warning("Parsing display configuration: Cannot find layout: %s", layout.c_str());
+    return std::nullopt;
+}
+
 void miral::YamlFileDisplayConfig::add_output_attribute(std::string const& key)
 {
     custom_output_attributes.insert(key);
+}
+
+void miral::YamlFileDisplayConfig::layout_userdata_builder(
+    std::string const& key,
+    std::function<std::any(YAML::Node const&)> const& builder)
+{
+    layout_userdata_builder_funcs[key] = builder;
 }
 
 miral::ReloadingYamlFileDisplayConfig::ReloadingYamlFileDisplayConfig(std::string basename) :

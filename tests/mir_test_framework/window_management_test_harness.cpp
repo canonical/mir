@@ -33,7 +33,7 @@
 #include <miral/zone.h>
 #include <mir/test/doubles/stub_display_configuration.h>
 #include "mir/graphics/display_configuration_observer.h"
-#include "mir/shell/display_configuration_controller.h"
+#include "mir/graphics/null_display_configuration_observer.h"
 #include "miral/output.h"
 #include "src/miral/window_manager_tools_implementation.h"
 
@@ -269,8 +269,8 @@ public:
     {
         // move_cursor_to will queue work onto the linearising_executor.
         // Because that work is guaranteed to be linear, we can safely
-        // queue another piece of work and wait for that complete before
-        // returning form this method.
+        // queue another piece of work and wait for that to complete before
+        // returning from this method.
         tools.move_cursor_to(point);
         std::mutex mtx;
         bool cursor_change_processed = false;
@@ -529,12 +529,51 @@ void mir_test_framework::WindowManagementTestHarness::for_each_output(std::funct
 void mir_test_framework::WindowManagementTestHarness::update_outputs(
     std::vector<mir::graphics::DisplayConfigurationOutput> const& outputs) const
 {
+    class Observer : public mg::NullDisplayConfigurationObserver
+    {
+    public:
+        void configuration_applied(std::shared_ptr<mg::DisplayConfiguration const> const&) override
+        {
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                config_applied = true;
+            }
+
+            cv.notify_one();
+        }
+
+        void wait()
+        {
+            std::unique_lock<std::mutex> lock(mtx);
+            cv.wait(lock, [&]{ return config_applied; });
+        }
+
+    private:
+        std::condition_variable cv;
+        std::mutex mtx;
+        bool config_applied = false;
+    };
+
     server.the_compositor()->stop();
     mtd::StubDisplayConfig const config(outputs);
     self->display->configure(config);
     self->display->emit_configuration_change_event(self->display->configuration());
     self->display->wait_for_configuration_change_handler();
+
+    // We need to notify the display configuration observer so that
+    // classes are made aware of the new rectangle. For example,
+    // [SeatInputDeviceTracker] will update its bounds in response
+    // to a reconfigure, which is required in order to move our pointer
+    // into those outputs.
+    //
+    // The notifications are triggered asynchronously, so we add our
+    // own listener to the end, thus guaranteeing that all notifications
+    // have been triggered before we continue.
+    auto const observer = std::make_shared<Observer>();
+    server.the_display_configuration_observer_registrar()->register_interest(observer);
     server.the_display_configuration_observer()->configuration_applied(self->display->configuration());
+    observer->wait();
+    server.the_display_configuration_observer_registrar()->unregister_interest(*observer);
     server.the_compositor()->start();
 }
 

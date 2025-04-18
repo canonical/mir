@@ -71,7 +71,7 @@ public:
     void update_outputs(std::vector<mir::graphics::DisplayConfigurationOutput> const&) const;
 
     /// Helper method that transforms a list of output rectangles into a list of display configurations.
-    /// This is useful for creating a list of simple, connected outptus quickly.
+    /// This is useful for creating a list of simple, connected outputs quickly.
     static auto output_configs_from_output_rectangles(std::vector<mir::geometry::Rectangle> const& output_rects)
         -> std::vector<mir::graphics::DisplayConfigurationOutput>;
 

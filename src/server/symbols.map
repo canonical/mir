@@ -173,6 +173,7 @@ global:
     mir::Server::override_the_input_targeter*;
     mir::Server::override_the_logger*;
     mir::Server::override_the_persistent_surface_store*;
+    mir::Server::override_the_pointer_input_dispatcher*;
     mir::Server::override_the_prompt_session_listener*;
     mir::Server::override_the_prompt_session_manager*;
     mir::Server::override_the_renderer_factory*;
@@ -215,6 +216,7 @@ global:
     mir::Server::the_logger*;
     mir::Server::the_main_loop*;
     mir::Server::the_persistent_surface_store*;
+    mir::Server::the_pointer_input_dispatcher*;
     mir::Server::the_prompt_session_listener*;
     mir::Server::the_prompt_session_manager*;
     mir::Server::the_renderer_factory*;

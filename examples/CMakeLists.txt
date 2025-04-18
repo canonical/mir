@@ -7,4 +7,3 @@ add_subdirectory(mir_demo_server)
 add_subdirectory(mir-x11-kiosk)
 
 add_subdirectory(client)
-add_subdirectory(tests)

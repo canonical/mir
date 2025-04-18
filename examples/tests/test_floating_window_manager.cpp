@@ -20,7 +20,7 @@
 #include <miral/internal_client.h>
 #include <mir_test_framework/window_management_test_harness.h>
 
-#include <gmock/gmock-matchers.h>
+#include <gmock/gmock.h>
 
 #include <linux/input-event-codes.h>
 

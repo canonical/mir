@@ -33,8 +33,7 @@ public:
     MOCK_METHOD(void, register_keyboard_helper, (std::shared_ptr<mir::shell::KeyboardHelper> const&), (override));
     MOCK_METHOD(std::optional<int>, repeat_rate, (), (const override));
     MOCK_METHOD(int, repeat_delay, (), (const override));
-    MOCK_METHOD(void, repeat_rate, (int new_rate), (override));
-    MOCK_METHOD(void, repeat_delay, (int new_rate), (override));
+    MOCK_METHOD(void, repeat_rate_and_delay, (std::optional<int> new_rate, std::optional<int> new_delay), (override));
     MOCK_METHOD(void, notify_helpers, (), (const override));
     MOCK_METHOD(void, cursor_scale, (float), (override));
     MOCK_METHOD(void, mousekeys_enabled, (bool on), (override));

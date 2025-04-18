@@ -143,10 +143,7 @@ mg::SoftwareCursor::SoftwareCursor(
 {
 }
 
-mg::SoftwareCursor::~SoftwareCursor()
-{
-    hide();
-}
+mg::SoftwareCursor::~SoftwareCursor() = default;
 
 void mg::SoftwareCursor::show(std::shared_ptr<CursorImage> const& cursor_image)
 {

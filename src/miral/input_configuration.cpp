@@ -87,12 +87,7 @@ public:
     {
         if(auto const& am = accessibility_manager.lock())
         {
-            if (k.self->repeat_rate)
-                am->repeat_rate(*k.self->repeat_rate);
-            if (k.self->repeat_delay)
-                am->repeat_delay(*k.self->repeat_delay);
-
-            am->notify_helpers();
+            am->repeat_rate_and_delay(k.self->repeat_rate, k.self->repeat_delay);
         }
         keyboard(k);
     }
@@ -329,6 +324,11 @@ auto miral::InputConfiguration::Touchpad::tap_to_click() const -> std::optional<
     return self->tap_to_click;
 }
 
+auto miral::InputConfiguration::Touchpad::middle_mouse_button_emulation() const -> std::optional<bool>
+{
+    return self->middle_button_emulation;
+}
+
 void miral::InputConfiguration::Touchpad::disable_while_typing(std::optional<bool> const& val)
 {
     self->disable_while_typing = val;
@@ -375,6 +375,11 @@ void miral::InputConfiguration::Touchpad::tap_to_click(std::optional<bool> const
     self->tap_to_click = val;
 }
 
+void miral::InputConfiguration::Touchpad::middle_mouse_button_emulation(std::optional<bool> const& val)
+{
+    self->middle_button_emulation = val;
+}
+
 miral::InputConfiguration::Keyboard::Keyboard() :
     self{std::make_unique<Self>()}
 {
@@ -399,4 +404,29 @@ void miral::InputConfiguration::Keyboard::set_repeat_rate(int new_rate) {
 
 void miral::InputConfiguration::Keyboard::set_repeat_delay(int new_delay) {
     self->repeat_delay = new_delay;
+}
+
+auto miral::InputConfiguration::Keyboard::repeat_rate() const -> std::optional<int>
+{
+    return self->repeat_rate;
+}
+
+auto miral::InputConfiguration::Keyboard::repeat_delay() const -> std::optional<int>
+{
+    return self->repeat_delay;
+}
+
+void miral::InputConfiguration::Mouse::merge(InputConfiguration::Mouse const& other)
+{
+    self->merge(*other.self);
+}
+
+void miral::InputConfiguration::Touchpad::merge(InputConfiguration::Touchpad const& other)
+{
+    self->merge(*other.self);
+}
+
+void miral::InputConfiguration::Keyboard::merge(InputConfiguration::Keyboard const& other)
+{
+    self->merge(*other.self);
 }

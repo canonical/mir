@@ -499,10 +499,10 @@ global:
     typeinfo?for?miral::ConfigFile;
     typeinfo?for?miral::Decorations;
     typeinfo?for?miral::IdleListener;
+    typeinfo?for?miral::IdleListener;
     typeinfo?for?miral::InputConfiguration::Mouse;
     typeinfo?for?miral::InputConfiguration::Touchpad;
     typeinfo?for?miral::InputConfiguration;
-    typeinfo?for?miral::IdleListener;
   };
 } MIRAL_5.0;
 
@@ -526,15 +526,33 @@ global:
   extern "C++" {
     miral::CursorScale::?CursorScale*;
     miral::CursorScale::CursorScale*;
-    miral::CursorScale::scale*;
     miral::CursorScale::operator*;
+    miral::CursorScale::scale*;
+    miral::DisplayConfiguration::Node::?Node*;
+    miral::DisplayConfiguration::Node::Node*;
+    miral::DisplayConfiguration::Node::as_int*;
+    miral::DisplayConfiguration::Node::as_string*;
+    miral::DisplayConfiguration::Node::at*;
+    miral::DisplayConfiguration::Node::for_each*;
+    miral::DisplayConfiguration::Node::has*;
+    miral::DisplayConfiguration::Node::operator*;
+    miral::DisplayConfiguration::Node::type*;
+    miral::DisplayConfiguration::layout_userdata*;
+    miral::DisplayConfiguration::layout_userdata_builder*;
+    miral::InputConfiguration::Keyboard::merge*;
+    miral::InputConfiguration::Keyboard::repeat_delay*;
+    miral::InputConfiguration::Keyboard::repeat_rate*;
+    miral::InputConfiguration::Mouse::merge*;
+    miral::InputConfiguration::Touchpad::merge*;
+    miral::InputConfiguration::Touchpad::middle_mouse_button_emulation*;
     miral::MouseKeysConfig::MouseKeysConfig*;
+    miral::MouseKeysConfig::enabled*;
     miral::MouseKeysConfig::operator*;
     miral::MouseKeysConfig::set_acceleration_factors*;
     miral::MouseKeysConfig::set_keymap*;
     miral::MouseKeysConfig::set_max_speed*;
-    miral::MouseKeysConfig::enabled*;
     typeinfo?for?miral::CursorScale;
+    typeinfo?for?miral::DisplayConfiguration::Node;
     typeinfo?for?miral::MouseKeysConfig;
   };
 } MIRAL_5.2;
