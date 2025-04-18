@@ -37,39 +37,39 @@ public:
     /// [enabled_by_default]
     SimulatedSecondaryClickConfig(bool enabled_by_default);
 
-    void operator()(mir::Server& server) const;
+    void operator()(mir::Server& server);
 
     /// Enables simulated secondary click
-    void enable() const;
+    SimulatedSecondaryClickConfig& enable();
 
     /// Disables simulated secondary click
-    void disable() const;
+    SimulatedSecondaryClickConfig& disable();
 
     /// Configures the duration users have to keep the left mouse button down
     /// to dispatch a secondary click
-    void hold_duration(std::chrono::milliseconds hold_duration) const;
+    SimulatedSecondaryClickConfig& hold_duration(std::chrono::milliseconds hold_duration);
 
     /// Configures the maximum displacement the mouse pointer can move before
     /// the simulated secondary click is cancelled.
-    void displacement_threshold(float displacement) const;
+    SimulatedSecondaryClickConfig& displacement_threshold(float displacement);
 
     /// Configures the callbacks invoked when simulated secondary click is
     /// enabled or disabled
-    void enabled(std::function<void()>&& on_enabled) const;
-    void disabled(std::function<void()>&& on_disabled) const;
+    SimulatedSecondaryClickConfig& enabled(std::function<void()>&& on_enabled);
+    SimulatedSecondaryClickConfig& disabled(std::function<void()>&& on_disabled);
 
     /// Configures the callback to invoke when the user clicks _down_ the left
     /// mouse button
-    void hold_start(std::function<void()>&& on_hold_start) const;
+    SimulatedSecondaryClickConfig& hold_start(std::function<void()>&& on_hold_start);
 
     /// Configures the callback to invoke when the user cancels a simulated
     /// secondary click either by letting go of the left button before the
     /// hold duration is up or moving the cursor
-    void hold_cancel(std::function<void()>&& on_hold_cancel) const;
+    SimulatedSecondaryClickConfig& hold_cancel(std::function<void()>&& on_hold_cancel);
 
     /// Configures the callback to invoke when the user successfully
     /// dispatches a simulated secondary click
-    void secondary_click(std::function<void()>&& on_secondary_click) const;
+    SimulatedSecondaryClickConfig& secondary_click(std::function<void()>&& on_secondary_click);
 
 private:
     struct Self;
