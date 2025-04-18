@@ -16,6 +16,7 @@
 
 #include "magnification_manager.h"
 
+#include "mir/fatal.h"
 #include "mir/compositor/screen_shooter.h"
 #include "mir/events/event.h"
 #include "mir/events/input_event.h"
@@ -80,7 +81,7 @@ public:
 
     bool shaped() const override
     {
-        return false;
+        return true;
     }
 
     auto surface_if_any() const -> std::optional<mir::scene::Surface const*> override
@@ -103,23 +104,9 @@ public:
           allocator{allocator},
           screen_shooter{screen_shooter},
           buffer(allocator->alloc_software_buffer({300, 300}, mir_pixel_format_argb_8888)),
+          write_buffer(mrs::as_write_mappable_buffer(buffer)),
           renderable(std::make_shared<MagnificationRenderable>(buffer))
     {
-        auto x = renderer::software::as_write_mappable_buffer(buffer);
-        auto mapping = x->map_writeable();
-        auto i = mapping->stride();
-        (void)i;
-        for (auto y = 0u; y < 300; y++)
-        {
-            for (auto x = 0u; x < 300; x++)
-            {
-                auto r = x * 4;
-                mapping->data()[y * i.as_value() + r] = (unsigned)0xff;
-                mapping->data()[y * i.as_value() + r + 1] = (unsigned)0xff;
-                mapping->data()[y * i.as_value() + r + 2] = (unsigned)0x00;
-                mapping->data()[y * i.as_value() + r + 3] = (unsigned)0xff;
-            }
-        }
     }
 
     bool handle(MirEvent const& event) override
@@ -152,27 +139,17 @@ public:
         geom::Rectangle r(
             geom::Point{300.f, 300.f},
             geom::Size{300.f, 300.f});
-        auto x = renderer::software::as_write_mappable_buffer(buffer);
-        screen_shooter->capture(x, r, [](auto) {});
-        // auto mapping = x->map_writeable();
-        // auto i = mapping->stride();
-        // for (auto y = 0u; y < 300; y++)
-        // {
-        //     for (auto x = 0u; x < 300; x++)
-        //     {
-        //         auto r = x * 4;
-        //         mapping->data()[y * i.as_value() + r] = (unsigned)0x00;
-        //         mapping->data()[y * i.as_value() + r + 1] = (unsigned)0xff;
-        //         mapping->data()[y * i.as_value() + r + 2] = (unsigned)0x00;
-        //         mapping->data()[y * i.as_value() + r + 3] = (unsigned)0xff;
-        //     }
-        // }
+        screen_shooter->capture(write_buffer, r, [&](auto const)
+        {
+            scene->emit_scene_changed();
+        });
     }
 
     std::shared_ptr<mi::Scene> const scene;
     std::shared_ptr<graphics::GraphicBufferAllocator> allocator;
     std::shared_ptr<compositor::ScreenShooter> screen_shooter;
     std::shared_ptr<mg::Buffer> buffer;
+    std::shared_ptr<mrs::WriteMappableBuffer> write_buffer;
     std::shared_ptr<MagnificationRenderable> renderable;
     bool enabled = false;
     float magnification = 1.f;

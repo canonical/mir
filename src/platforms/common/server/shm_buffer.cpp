@@ -225,6 +225,49 @@ void mgc::ShmBuffer::upload_to_texture(void const* pixels, geom::Stride const& s
     }
 }
 
+// TODO: Should this only be called when things change?
+void mgc::ShmBuffer::update_texture(void const* pixels, geometry::Stride const& stride)
+{
+    GLenum format, type;
+
+    if (mg::get_gl_pixel_format(pixel_format_, format, type))
+    {
+        auto const stride_in_px =
+            stride.as_int() / MIR_BYTES_PER_PIXEL(pixel_format());
+        /*
+         * We assume (as does Weston, AFAICT) that stride is
+         * a multiple of whole pixels, but it need not be.
+         *
+         * TODO: Handle non-pixel-multiple strides.
+         * This should be possible by calculating GL_UNPACK_ALIGNMENT
+         * to match the size of the partial-pixel-stride().
+         */
+
+        glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, stride_in_px);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTexSubImage2D(
+        GL_TEXTURE_2D,
+            0,
+            0, 0,
+            size().width.as_int(), size().height.as_int(),
+            format,
+            type,
+            pixels);
+
+        glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, 0);     // 0 is default, meaning “use width”
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);          // 4 is default; word alignment.
+        glFinish();
+    }
+    else
+    {
+        mir::log_error(
+            "Buffer %i has non-GL-compatible pixel format %i; rendering will be incomplete",
+            id().as_value(),
+            pixel_format());
+    }
+}
+
+
 mg::NativeBufferBase* mgc::ShmBuffer::native_buffer_base()
 {
     return this;
@@ -249,6 +292,8 @@ void mgc::MemoryBackedShmBuffer::bind()
         upload_to_texture(pixels.get(), stride_);
         uploaded = true;
     }
+    else
+        update_texture(pixels.get(), stride_);
 }
 
 template<typename T>
@@ -353,12 +398,14 @@ void mgc::MappableBackedShmBuffer::bind()
 {
     mgc::ShmBuffer::bind();
     std::lock_guard lock{uploaded_mutex};
+    auto mapping = data->map_readable();
     if (!uploaded)
     {
-        auto mapping = data->map_readable();
         upload_to_texture(mapping->data(), mapping->stride());
         uploaded = true;
     }
+    else
+        update_texture(mapping->data(), mapping->stride());
 }
 
 auto mgc::MappableBackedShmBuffer::format() const -> MirPixelFormat

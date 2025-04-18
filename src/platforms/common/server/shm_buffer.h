@@ -66,6 +66,9 @@ protected:
 
     /// \note This must be called with a current GL context
     void upload_to_texture(void const* pixels, geometry::Stride const& stride);
+
+    /// \note This must be called with a current GL context
+    void update_texture(void const* pixels, geometry::Stride const& stride);
 private:
     geometry::Size const size_;
     MirPixelFormat const pixel_format_;
