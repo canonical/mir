@@ -27,10 +27,14 @@
 #include <mir/wayland/weak.h>
 #include <mir/log.h>
 #include <mir/main_loop.h>
+#include <mir/compositor/compositor.h>
 #include <miral/window_manager_tools.h>
 #include <miral/set_window_management_policy.h>
 #include <miral/zone.h>
-
+#include <mir/test/doubles/stub_display_configuration.h>
+#include "mir/graphics/display_configuration_observer.h"
+#include "mir/graphics/null_display_configuration_observer.h"
+#include "miral/output.h"
 #include "src/miral/window_manager_tools_implementation.h"
 
 namespace ms = mir::scene;
@@ -263,7 +267,26 @@ public:
 
     void move_cursor_to(mir::geometry::PointF point) override
     {
+        // move_cursor_to will queue work onto the linearising_executor.
+        // Because that work is guaranteed to be linear, we can safely
+        // queue another piece of work and wait for that to complete before
+        // returning from this method.
         tools.move_cursor_to(point);
+        std::mutex mtx;
+        bool cursor_change_processed = false;
+        std::condition_variable cv;
+        mir::linearising_executor.spawn([&]
+        {
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                cursor_change_processed = true;
+            }
+
+            cv.notify_one();
+        });
+
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.wait(lock, [&]{ return cursor_change_processed; });
         on_change();
     }
 
@@ -347,7 +370,7 @@ public:
         }
 
     private:
-        std::function<void(ms::Surface const* surf)> const on_close_requested;
+        std::function<void(ms::Surface const* surf)> on_close_requested;
     };
 
     mir::Server& server;
@@ -404,7 +427,7 @@ void mir_test_framework::WindowManagementTestHarness::SetUp()
         });
     policy(server);
 
-    auto fake_display = std::make_unique<mtd::FakeDisplay>(get_output_rectangles());
+    auto fake_display = std::make_unique<mtd::FakeDisplay>(get_initial_output_configs());
     self->display = fake_display.get();
     preset_display(std::move(fake_display));
 
@@ -438,10 +461,6 @@ auto mir_test_framework::WindowManagementTestHarness::create_window(
         geom::Displacement{},
     });
 
-    self->display->configuration()->for_each_output([&](mg::DisplayConfigurationOutput const& output)
-    {
-        spec.output_id = output.id;
-    });
     auto surface = server.the_shell()->create_surface(
         session,
         {},
@@ -499,8 +518,101 @@ auto mir_test_framework::WindowManagementTestHarness::tools() const -> miral::Wi
     return *self->tools;
 }
 
+void mir_test_framework::WindowManagementTestHarness::for_each_output(std::function<void(miral::Output const&)> const& f) const
+{
+    self->display->configuration()->for_each_output([&](mir::graphics::DisplayConfigurationOutput const& output)
+    {
+        f(miral::Output(output));
+    });
+}
+
+void mir_test_framework::WindowManagementTestHarness::update_outputs(
+    std::vector<mir::graphics::DisplayConfigurationOutput> const& outputs) const
+{
+    class Observer : public mg::NullDisplayConfigurationObserver
+    {
+    public:
+        void configuration_applied(std::shared_ptr<mg::DisplayConfiguration const> const&) override
+        {
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                config_applied = true;
+            }
+
+            cv.notify_one();
+        }
+
+        void wait()
+        {
+            std::unique_lock<std::mutex> lock(mtx);
+            cv.wait(lock, [&]{ return config_applied; });
+        }
+
+    private:
+        std::condition_variable cv;
+        std::mutex mtx;
+        bool config_applied = false;
+    };
+
+    server.the_compositor()->stop();
+    mtd::StubDisplayConfig const config(outputs);
+    self->display->configure(config);
+    self->display->emit_configuration_change_event(self->display->configuration());
+    self->display->wait_for_configuration_change_handler();
+
+    // We need to notify the display configuration observer so that
+    // classes are made aware of the new rectangle. For example,
+    // [SeatInputDeviceTracker] will update its bounds in response
+    // to a reconfigure, which is required in order to move our pointer
+    // into those outputs.
+    //
+    // The notifications are triggered asynchronously, so we add our
+    // own listener to the end, thus guaranteeing that all notifications
+    // have been triggered before we continue.
+    auto const observer = std::make_shared<Observer>();
+    server.the_display_configuration_observer_registrar()->register_interest(observer);
+    server.the_display_configuration_observer()->configuration_applied(self->display->configuration());
+    observer->wait();
+    server.the_display_configuration_observer_registrar()->unregister_interest(*observer);
+    server.the_compositor()->start();
+}
+
 auto mir_test_framework::WindowManagementTestHarness::is_above(
     miral::Window const& a, miral::Window const& b) const -> bool
 {
     return server.the_shell()->is_above(a.operator std::shared_ptr<ms::Surface>(), b.operator std::shared_ptr<ms::Surface>());
+}
+
+auto mir_test_framework::WindowManagementTestHarness::output_configs_from_output_rectangles(
+    std::vector<mir::geometry::Rectangle> const& output_rects) -> std::vector<mir::graphics::DisplayConfigurationOutput>
+{
+    std::vector<mir::graphics::DisplayConfigurationOutput> outputs;
+    int id = 1;
+    for (auto const& rect : output_rects)
+    {
+        mir::graphics::DisplayConfigurationOutput output
+            {
+                mir::graphics::DisplayConfigurationOutputId{id},
+                mir::graphics::DisplayConfigurationCardId{0},
+                mir::graphics::DisplayConfigurationLogicalGroupId{0},
+                mir::graphics::DisplayConfigurationOutputType::vga,
+                std::vector<MirPixelFormat>{mir_pixel_format_abgr_8888},
+                {{rect.size, 60.0}},
+                0, mir::geometry::Size{}, true, true, rect.top_left, 0,
+                mir_pixel_format_abgr_8888, mir_power_mode_on,
+                mir_orientation_normal,
+                1.0f,
+                mir_form_factor_monitor,
+                mir_subpixel_arrangement_unknown,
+                {},
+                mir_output_gamma_unsupported,
+                {},
+                {}
+            };
+
+        outputs.push_back(output);
+        ++id;
+    }
+
+    return outputs;
 }
