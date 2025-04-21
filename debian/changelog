@@ -16,7 +16,6 @@ mir (2.21.0) UNRELEASED; urgency=medium
     - Enhancements:
       . Cursor Scaling Support (#3735)
       . Implement mousekeys (#3757)
-      . static_config_display: add property-based display config support (#3872)
       . Add key repeat rate/delay config options and properly merge config settings (#3830)
       . feature: add the ability to associate a layout with custom user data (#3869)
       . static_display_config: add display properties to output (#3903)
