@@ -176,7 +176,7 @@ int main(int argc, char const* argv[])
         return false;
     };
 
-    auto const ssc_config = miral::SimulatedSecondaryClickConfig{true}
+    auto const ssc_config = miral::SimulatedSecondaryClickConfig{false}
                                 .displacement_threshold(30)
                                 .hold_duration(std::chrono::milliseconds{2000})
                                 .secondary_click([] { mir::log_info("Simulated secondary click dispatched!"); });
