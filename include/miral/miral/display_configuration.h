@@ -48,7 +48,7 @@ public:
     /// This is specifically useful when a user wants to extend the based display configuration
     /// with some sort of custom payload (e.g. a user may want to extend the layout configuration
     /// with information describing the position and size of specific applications).
-    /// \remark Since MirAL 5.3
+    /// \remark Since MirAL 5.4
     class Node
     {
     public:
@@ -99,7 +99,7 @@ public:
     /// Retrieve the user data associated with the active layout
     /// for this provided key. Callers should provide this user data
     /// via [layout_userdata_builder].
-    /// \remark Since MirAL 5.3
+    /// \remark Since MirAL 5.4
     auto layout_userdata(std::string const& key) const -> std::optional<std::any const>;
 
     /// Enable a custom layout attribute in the .display YAML.
@@ -109,7 +109,7 @@ public:
     /// provided with the raw details of the node at the provided key.
     /// The function must return any piece of data that may later be
     /// retrieved via [layout_userdata].
-    /// \remark Since MirAL 5.3
+    /// \remark Since MirAL 5.4
     void layout_userdata_builder(
         std::string const& key,
         std::function<std::any(Node const& value)> const& builder) const;

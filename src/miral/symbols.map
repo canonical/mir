@@ -526,19 +526,8 @@ global:
   extern "C++" {
     miral::CursorScale::?CursorScale*;
     miral::CursorScale::CursorScale*;
-    miral::CursorScale::operator*;
     miral::CursorScale::scale*;
-    miral::DisplayConfiguration::Node::?Node*;
-    miral::DisplayConfiguration::Node::Node*;
-    miral::DisplayConfiguration::Node::as_int*;
-    miral::DisplayConfiguration::Node::as_string*;
-    miral::DisplayConfiguration::Node::at*;
-    miral::DisplayConfiguration::Node::for_each*;
-    miral::DisplayConfiguration::Node::has*;
-    miral::DisplayConfiguration::Node::operator*;
-    miral::DisplayConfiguration::Node::type*;
-    miral::DisplayConfiguration::layout_userdata*;
-    miral::DisplayConfiguration::layout_userdata_builder*;
+    miral::CursorScale::operator*;
     miral::InputConfiguration::Keyboard::merge*;
     miral::InputConfiguration::Keyboard::repeat_delay*;
     miral::InputConfiguration::Keyboard::repeat_rate*;
@@ -552,8 +541,24 @@ global:
     miral::MouseKeysConfig::set_keymap*;
     miral::MouseKeysConfig::set_max_speed*;
     typeinfo?for?miral::CursorScale;
-    typeinfo?for?miral::DisplayConfiguration::Node;
     typeinfo?for?miral::MouseKeysConfig;
   };
 } MIRAL_5.2;
 
+MIRAL_5.4 {
+global:
+  extern "C++" {
+    miral::DisplayConfiguration::Node::?Node*;
+    miral::DisplayConfiguration::Node::Node*;
+    miral::DisplayConfiguration::Node::as_int*;
+    miral::DisplayConfiguration::Node::as_string*;
+    miral::DisplayConfiguration::Node::at*;
+    miral::DisplayConfiguration::Node::for_each*;
+    miral::DisplayConfiguration::Node::has*;
+    miral::DisplayConfiguration::Node::operator*;
+    miral::DisplayConfiguration::Node::type*;
+    miral::DisplayConfiguration::layout_userdata*;
+    miral::DisplayConfiguration::layout_userdata_builder*;
+    typeinfo?for?miral::DisplayConfiguration::Node;
+  };
+} MIRAL_5.3;
