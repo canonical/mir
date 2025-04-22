@@ -56,7 +56,6 @@ public:
     bool append(std::weak_ptr<Transformer> const&);
     bool remove(std::shared_ptr<Transformer> const&);
 
-    MirInputDeviceId virtual_device_id() const;
 private:
     std::mutex mutex;
     std::vector<std::weak_ptr<Transformer>> input_transformers;

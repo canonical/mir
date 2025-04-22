@@ -67,6 +67,7 @@ global:
     mir::DefaultServerConfiguration::the_main_clipboard*;
     mir::DefaultServerConfiguration::the_main_loop*;
     mir::DefaultServerConfiguration::the_mediating_display_changer*;
+    mir::DefaultServerConfiguration::the_mousekey_pointer*;
     mir::DefaultServerConfiguration::the_options*;
     mir::DefaultServerConfiguration::the_options_provider*;
     mir::DefaultServerConfiguration::the_persistent_surface_store*;
@@ -765,6 +766,7 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_main_clipboard*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_main_loop*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_mediating_display_changer*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_mousekey_pointer*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_persistent_surface_store*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_pointer_input_dispatcher*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_primary_selection_clipboard*;

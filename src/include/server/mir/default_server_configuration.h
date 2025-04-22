@@ -129,6 +129,7 @@ namespace receiver
 {
 class XKBMapperRegistrar;
 }
+class MousekeyPointer;
 }
 
 
@@ -329,6 +330,7 @@ public:
 
     virtual std::shared_ptr<input::KeyMapper> the_key_mapper();
     virtual std::shared_ptr<input::LedObserverRegistrar> the_led_observer_registrar();
+    virtual std::shared_ptr<input::MousekeyPointer> the_mousekey_pointer();
 
     // new input reading related parts:
     virtual std::shared_ptr<dispatch::MultiplexingDispatchable> the_input_reading_multiplexer();
@@ -442,6 +444,7 @@ protected:
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
     CachedPtr<cookie::Authority> cookie_authority;
     CachedPtr<input::receiver::XKBMapperRegistrar> xkb_mapper_registrar;
+    CachedPtr<input::MousekeyPointer> mousekey_pointer;
     std::shared_ptr<ConsoleServices> console_services;
     std::shared_ptr<DecorationStrategy> decoration_strategy;
 

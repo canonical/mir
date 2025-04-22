@@ -19,12 +19,6 @@
 #include "basic_simulated_secondary_click_transformer.h"
 
 #include "mir/graphics/cursor.h"
-#include "mir/input/composite_event_filter.h"
-#include "mir/input/event_filter.h"
-#include "mir/input/input_device_registry.h"
-#include "mir/input/input_event_transformer.h"
-#include "mir/input/input_sink.h"
-#include "mir/input/virtual_input_device.h"
 #include "mir/main_loop.h"
 #include "mir/shell/keyboard_helper.h"
 
@@ -32,34 +26,6 @@
 
 #include <memory>
 #include <optional>
-
-class mir::shell::BasicAccessibilityManager::MousekeyPointer : public mir::input::VirtualInputDevice, public input::EventFilter
-{
-public:
-    MousekeyPointer(std::shared_ptr<MainLoop> main_loop, std::shared_ptr<input::InputEventTransformer> iet) :
-        mir::input::VirtualInputDevice{"mousekey-pointer", mir::input::DeviceCapability::pointer},
-        main_loop{std::move(main_loop)},
-        iet{std::move(iet)}
-    {
-    }
-
-    bool handle(MirEvent const& event) override
-    {
-        auto handled = false;
-        if_started_then([this, &event, &handled](auto* sink, auto* builder)
-        {
-            handled = iet->transform(event, builder, [this, sink](auto event)
-                {
-                    main_loop->spawn([sink, event]{ sink->handle_input(event); });
-                });
-        });
-        return handled;
-    }
-
-private:
-    std::shared_ptr<MainLoop> const main_loop;
-    std::shared_ptr<input::InputEventTransformer> const iet;
-};
 
 void mir::shell::BasicAccessibilityManager::register_keyboard_helper(std::shared_ptr<KeyboardHelper> const& helper)
 {
@@ -100,51 +66,23 @@ void mir::shell::BasicAccessibilityManager::repeat_rate_and_delay(
 void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
     if (on)
-    {
-        main_loop->spawn([this]
-        {
-            auto state = this->mutable_state.lock();
-            if (!state->mousekey_pointer)
-            {
-                state->mousekey_pointer = std::make_shared<MousekeyPointer>(main_loop, event_transformer);
-
-                event_transformer->append(transformer);
-                input_device_registry->add_device(state->mousekey_pointer);
-                the_composite_event_filter->prepend(state->mousekey_pointer);
-            }
-        });
-    }
+        event_transformer->append(transformer);
     else
-    {
-        main_loop->spawn([this]
-        {
-            auto state = this->mutable_state.lock();
-            if (state->mousekey_pointer)
-            {
-                input_device_registry->remove_device(state->mousekey_pointer);
-                event_transformer->remove(transformer);
-                state->mousekey_pointer.reset();
-            }
-        });
-    }
+        event_transformer->remove(transformer);
 }
 
 mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<MainLoop> main_loop,
-    std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter,
     std::shared_ptr<input::InputEventTransformer> const& event_transformer,
     bool enable_key_repeat,
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
     std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
-    std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer) :
     main_loop{std::move(main_loop)},
-    the_composite_event_filter{std::move(the_composite_event_filter)},
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},
     transformer{mousekeys_transformer},
-    input_device_registry{input_device_registry},
     simulated_secondary_click_transformer{simulated_secondary_click_transformer}
 {
 }
@@ -192,3 +130,4 @@ auto mir::shell::BasicAccessibilityManager::simulated_secondary_click()
 {
     return *simulated_secondary_click_transformer;
 }
+

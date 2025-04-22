@@ -17,8 +17,11 @@
 #ifndef MIR_SHELL_BASIC_ACCESSIBILITY_MANAGER_H
 #define MIR_SHELL_BASIC_ACCESSIBILITY_MANAGER_H
 
-#include "mir/input/input_event_transformer.h"
 #include "mir/shell/accessibility_manager.h"
+
+#include "mir/input/event_filter.h"
+#include "mir/input/input_event_transformer.h"
+#include "mir/input/virtual_input_device.h"
 
 #include "mir/input/mousekeys_keymap.h"
 #include "mir/synchronised.h"
@@ -35,6 +38,7 @@ namespace input
 class CompositeEventFilter;
 class InputEventTransformer;
 class InputDeviceRegistry;
+class MousekeyPointer;
 }
 namespace options
 {
@@ -47,17 +51,16 @@ class Clock;
 namespace shell
 {
 class MouseKeysTransformer;
+
 class BasicAccessibilityManager : public AccessibilityManager
 {
 public:
     BasicAccessibilityManager(
         std::shared_ptr<MainLoop> main_loop,
-        std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter,
         std::shared_ptr<input::InputEventTransformer> const& event_transformer,
         bool enable_key_repeat,
         std::shared_ptr<mir::graphics::Cursor> const& cursor,
         std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
-        std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry,
         std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer);
 
     ~BasicAccessibilityManager();
@@ -79,21 +82,17 @@ public:
     auto simulated_secondary_click() -> SimulatedSecondaryClickTransformer& override;
 
 private:
-    class MousekeyPointer;
-
     struct MutableState {
         // 25 rate and 600 delay are the default in Weston and Sway
         int repeat_rate{25};
         int repeat_delay{600};
 
         std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
-        std::shared_ptr<MousekeyPointer> mousekey_pointer;
     };
 
     Synchronised<MutableState> mutable_state;
 
     std::shared_ptr<MainLoop> const main_loop;
-    std::shared_ptr<input::CompositeEventFilter> const the_composite_event_filter;
     bool const enable_key_repeat;
     std::shared_ptr<graphics::Cursor> const cursor;
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;

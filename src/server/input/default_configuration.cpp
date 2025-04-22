@@ -21,6 +21,7 @@
 #include "event_filter_chain_dispatcher.h"
 #include "config_changer.h"
 #include "cursor_controller.h"
+#include "mousekey_pointer.h"
 #include "touchspot_controller.h"
 #include "null_input_manager.h"
 #include "null_input_dispatcher.h"
@@ -293,7 +294,8 @@ std::shared_ptr<mi::Seat> mir::DefaultServerConfiguration::the_seat()
                     the_display_configuration_observer_registrar(),
                     the_key_mapper(),
                     the_clock(),
-                    the_seat_observer());
+                    the_seat_observer(),
+                    the_mousekey_pointer());
         });
 }
 
@@ -331,6 +333,9 @@ std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_
            // pressed keys get repeated indefinitely
            if (key_repeater)
                key_repeater->set_input_device_hub(hub);
+
+           hub->add_device(the_mousekey_pointer());
+
            return hub;
        });
 }
@@ -370,4 +375,10 @@ mir::DefaultServerConfiguration::the_seat_observer_registrar()
         {
             return std::make_shared<mi::SeatObserverMultiplexer>(default_executor);
         });
+}
+
+auto mir::DefaultServerConfiguration::the_mousekey_pointer() -> std::shared_ptr<input::MousekeyPointer>
+{
+    return mousekey_pointer(
+        [this] { return std::make_shared<input::MousekeyPointer>(the_main_loop(), the_input_event_transformer()); });
 }
