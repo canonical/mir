@@ -26,7 +26,6 @@
 
 namespace mir
 {
-class MainLoop;
 namespace input
 {
 class EventBuilder;

@@ -377,7 +377,6 @@ global:
     mir::input::InputEventTransformer::InputEventTransformer*;
     mir::input::InputEventTransformer::Transformer::?Transformer*;
     mir::input::InputEventTransformer::append*;
-    mir::input::InputEventTransformer::handle*;
     mir::input::InputEventTransformer::remove*;
     mir::input::InputEventTransformer::transform*;
     mir::input::InputManager::?InputManager*;
@@ -885,7 +884,6 @@ global:
     non-virtual?thunk?to?mir::input::InputDispatcher::?InputDispatcher*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::?InputEventTransformer*;
     non-virtual?thunk?to?mir::input::InputEventTransformer::Transformer::?Transformer*;
-    non-virtual?thunk?to?mir::input::InputEventTransformer::handle*;
     non-virtual?thunk?to?mir::input::InputManager::?InputManager*;
     non-virtual?thunk?to?mir::input::KeyboardObserver::?KeyboardObserver*;
     non-virtual?thunk?to?mir::input::Scene::?Scene*;
