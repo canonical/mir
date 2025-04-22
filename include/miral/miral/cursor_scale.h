@@ -33,7 +33,11 @@ public:
     ~CursorScale();
 
     /// Applies the new scale. (Either immediately or when the server starts)
+    /// \remark Since MirAL 5.4
     void scale(float new_scale) const;
+
+    void set_scale(float new_scale) const [[deprecated("Use scale instead")]];
+    void apply_scale() const [[deprecated("Use scale instead")]];
 
     void operator()(mir::Server& server) const;
 private:

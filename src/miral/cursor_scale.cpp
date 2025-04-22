@@ -63,6 +63,15 @@ void miral::CursorScale::scale(float new_scale) const
     self->scale(new_scale);
 }
 
+void miral::CursorScale::set_scale(float new_scale) const
+{
+    scale(new_scale);
+}
+
+void miral::CursorScale::apply_scale() const
+{
+}
+
 void miral::CursorScale::operator()(mir::Server& server) const
 {
     auto const* const cursor_scale_opt = "cursor-scale";
