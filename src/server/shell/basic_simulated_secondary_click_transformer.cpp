@@ -98,8 +98,8 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
                                 auto const state = mutable_state.lock();
                                 state->on_secondary_click();
 
-                                // Reset the state machine
-                                state->state = State::waiting_for_real_left_down;
+                                // Consume the upcoming _real_ up event
+                                state->state = State::waiting_for_ssc_end_left_up;
                             }
                             click(dispatcher, builder, mir_pointer_button_secondary);
                         });
@@ -166,6 +166,15 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
                 }
 
                 state->state = State::waiting_for_real_left_down;
+                return true;
+            }
+        }
+        break;
+    case State::waiting_for_ssc_end_left_up:
+        {
+            if (action == mir_pointer_action_button_up)
+            {
+                mutable_state.lock()->state = State::waiting_for_real_left_down;
                 return true;
             }
         }

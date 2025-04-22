@@ -65,7 +65,8 @@ private:
     {
         waiting_for_real_left_down,
         waiting_for_motion_or_real_left_up,
-        waiting_for_drag_end_left_up,
+        waiting_for_ssc_end_left_up,  // For SSC, cosumes the up event
+        waiting_for_drag_end_left_up, // For dragging, doesn't consume the up event
     };
 
     struct MutableState
