@@ -98,26 +98,33 @@ void mir::shell::BasicAccessibilityManager::repeat_rate_and_delay(
 
 void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
-    auto state = this->mutable_state.lock();
     if (on)
     {
-        if (!state->mousekey_pointer)
+        main_loop->spawn([this]
         {
-            state->mousekey_pointer = std::make_shared<MousekeyPointer>(main_loop, event_transformer);
+            auto state = this->mutable_state.lock();
+            if (!state->mousekey_pointer)
+            {
+                state->mousekey_pointer = std::make_shared<MousekeyPointer>(main_loop, event_transformer);
 
-            event_transformer->append(transformer);
-            input_device_registry->add_device(state->mousekey_pointer);
-            the_composite_event_filter->prepend(state->mousekey_pointer);
-        }
+                event_transformer->append(transformer);
+                input_device_registry->add_device(state->mousekey_pointer);
+                the_composite_event_filter->prepend(state->mousekey_pointer);
+            }
+        });
     }
     else
     {
-        if (state->mousekey_pointer)
+        main_loop->spawn([this]
         {
-            input_device_registry->remove_device(state->mousekey_pointer);
-            event_transformer->remove(transformer);
-            state->mousekey_pointer.reset();
-        }
+            auto state = this->mutable_state.lock();
+            if (state->mousekey_pointer)
+            {
+                input_device_registry->remove_device(state->mousekey_pointer);
+                event_transformer->remove(transformer);
+                state->mousekey_pointer.reset();
+            }
+        });
     }
 }
 
