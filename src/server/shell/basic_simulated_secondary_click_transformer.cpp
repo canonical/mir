@@ -17,6 +17,7 @@
 #include "basic_simulated_secondary_click_transformer.h"
 
 #include "mir/events/pointer_event.h"
+#include "mir/input/event_builder.h"
 #include "mir/main_loop.h"
 
 #include <cassert>
@@ -30,7 +31,7 @@ void click(
     mir::input::EventBuilder* builder,
     MirPointerButton button)
 {
-    dispatcher(builder->pointer_event(
+    auto down = builder->pointer_event(
         std::nullopt,
         mir_pointer_action_button_down,
         button,
@@ -38,8 +39,12 @@ void click(
         {0, 0},
         mir_pointer_axis_source_none,
         mir::events::ScrollAxisH{},
-        mir::events::ScrollAxisV{}));
-    dispatcher(builder->pointer_event(
+        mir::events::ScrollAxisV{});
+
+    down->to_input()->set_synthesized(true);
+    dispatcher(std::move(down));
+
+    auto up = builder->pointer_event(
         std::nullopt,
         mir_pointer_action_button_up,
         0,
@@ -47,14 +52,16 @@ void click(
         {0, 0},
         mir_pointer_axis_source_none,
         mir::events::ScrollAxisH{},
-        mir::events::ScrollAxisV{}));
+        mir::events::ScrollAxisV{});
+
+    up->to_input()->set_synthesized(true);
+    dispatcher(std::move(up));
 }
 } // namespace
 
 mir::shell::BasicSimulatedSecondaryClickTransformer::BasicSimulatedSecondaryClickTransformer(
-    std::shared_ptr<mir::MainLoop> const& main_loop, MirInputDeviceId virtual_device_id) :
-    main_loop{main_loop},
-    virtual_device_id{virtual_device_id}
+    std::shared_ptr<mir::MainLoop> const& main_loop) :
+    main_loop{main_loop}
 {
 }
 
@@ -71,8 +78,8 @@ bool mir::shell::BasicSimulatedSecondaryClickTransformer::transform_input_event(
         return false;
 
     auto const pointer_event = input_event->to_pointer();
-    // Skip events dispatched from transformers using the virtual device
-    if(pointer_event->device_id() == virtual_device_id)
+
+    if(pointer_event->is_synthesized())
         return false;
 
     auto const action = pointer_event->action();

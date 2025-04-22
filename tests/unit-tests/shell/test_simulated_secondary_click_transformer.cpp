@@ -48,8 +48,7 @@ struct TestSimulatedSecondaryClickTransformer : Test
     TestSimulatedSecondaryClickTransformer() :
         main_loop{std::make_shared<mtd::QueuedAlarmStubMainLoop>(mt::fake_shared(clock))},
         transformer{
-            std::make_shared<mir::shell::BasicSimulatedSecondaryClickTransformer>(
-                main_loop, virtual_event_builder_device_id),
+            std::make_shared<mir::shell::BasicSimulatedSecondaryClickTransformer>(main_loop),
         },
         real_event_builder{0, mt::fake_shared(clock)},
         virtual_event_builder{virtual_event_builder_device_id, mt::fake_shared(clock)},

@@ -37,8 +37,7 @@ namespace shell
 class BasicSimulatedSecondaryClickTransformer : public SimulatedSecondaryClickTransformer
 {
 public:
-    BasicSimulatedSecondaryClickTransformer(
-        std::shared_ptr<mir::MainLoop> const& main_loop, MirInputDeviceId virtual_device_id);
+    BasicSimulatedSecondaryClickTransformer(std::shared_ptr<mir::MainLoop> const& main_loop);
 
     bool transform_input_event(
         input::InputEventTransformer::EventDispatcher const& dispatcher,
@@ -58,7 +57,6 @@ public:
 
 private:
     std::shared_ptr<mir::MainLoop> const main_loop;
-    MirInputDeviceId const virtual_device_id;
     std::unique_ptr<time::Alarm> secondary_click_dispatcher;
     std::unique_ptr<MirPointerEvent> consumed_left_down;
     mir::geometry::PointF initial_position;

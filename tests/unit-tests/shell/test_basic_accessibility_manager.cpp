@@ -22,9 +22,11 @@
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/glib_main_loop.h"
-#include "mir/test/fake_shared.h"
+#include "mir/input/composite_event_filter.h"
 #include "mir/input/input_event_transformer.h"
 #include "mir/input/mousekeys_keymap.h"
+#include "mir/input/virtual_input_device.h"
+#include "mir/test/fake_shared.h"
 
 #include "mir/test/doubles/mock_input_seat.h"
 #include "mir/test/doubles/mock_key_mapper.h"
@@ -87,23 +89,37 @@ struct MockSimulatedSecondaryClickTransformer : public mir::shell::SimulatedSeco
     MOCK_METHOD(void, secondary_click, (std::function<void()>&& on_secondary_click), (override));
 };
 
+struct StubCompositeEventFilter : mir::input::CompositeEventFilter
+{
+    bool handle(const MirEvent& event) override;
+    void append(const std::weak_ptr<EventFilter>& filter) override;
+    void prepend(const std::weak_ptr<EventFilter>& filter) override;
+};
+
+bool StubCompositeEventFilter::handle(const MirEvent& /*event*/)
+{
+    return false;
+}
+
+void StubCompositeEventFilter::append(const std::weak_ptr<EventFilter>& /*filter*/)
+{
+}
+
+void StubCompositeEventFilter::prepend(const std::weak_ptr<EventFilter>& /*filter*/)
+{
+}
+
 struct TestBasicAccessibilityManager : Test
 {
     TestBasicAccessibilityManager() :
-        main_loop{std::make_shared<mir::GLibMainLoop>(mt::fake_shared(clock))},
-        input_device_hub{std::make_shared<mir::input::DefaultInputDeviceHub>(
-            mt::fake_shared(mock_seat),
-            mt::fake_shared(multiplexer),
-            mt::fake_shared(clock),
-            mt::fake_shared(mock_key_mapper),
-            mt::fake_shared(mock_server_status_listener),
-            mt::fake_shared(led_observer_registrar))},
-        input_event_transformer{std::make_shared<mir::input::InputEventTransformer>(input_device_hub, main_loop)},
         basic_accessibility_manager{
+            main_loop,
+            composite_filter,
             input_event_transformer,
             true,
             std::make_shared<mir::test::doubles::StubCursor>(),
             mock_mousekeys_transformer,
+            input_device_hub,
             mock_simulated_secondary_click_transformer}
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
@@ -121,9 +137,18 @@ struct TestBasicAccessibilityManager : Test
     std::shared_ptr<NiceMock<MockSimulatedSecondaryClickTransformer>> mock_simulated_secondary_click_transformer{
         std::make_shared<NiceMock<MockSimulatedSecondaryClickTransformer>>()};
 
-    std::shared_ptr<mir::MainLoop> const main_loop;
-    std::shared_ptr<mir::input::DefaultInputDeviceHub> const input_device_hub;
-    std::shared_ptr<mir::input::InputEventTransformer> const input_event_transformer;
+    std::shared_ptr<mir::MainLoop> const main_loop{std::make_shared<mir::GLibMainLoop>(mt::fake_shared(clock))};
+    std::shared_ptr<mir::input::CompositeEventFilter> const composite_filter{std::make_shared<StubCompositeEventFilter>()};
+    std::shared_ptr<mir::input::DefaultInputDeviceHub> const input_device_hub{
+        std::make_shared<mir::input::DefaultInputDeviceHub>(
+            mt::fake_shared(mock_seat),
+            mt::fake_shared(multiplexer),
+            mt::fake_shared(clock),
+            mt::fake_shared(mock_key_mapper),
+            mt::fake_shared(mock_server_status_listener),
+            mt::fake_shared(led_observer_registrar))};
+    std::shared_ptr<mir::input::InputEventTransformer> const input_event_transformer
+        {std::make_shared<mir::input::InputEventTransformer>()};
 
     mir::shell::BasicAccessibilityManager basic_accessibility_manager;
 };

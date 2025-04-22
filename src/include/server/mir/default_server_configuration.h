@@ -326,6 +326,7 @@ public:
     virtual std::shared_ptr<input::CursorListener> the_cursor_listener();
     virtual std::shared_ptr<input::TouchVisualizer> the_touch_visualizer();
     virtual std::shared_ptr<input::Seat> the_seat();
+
     virtual std::shared_ptr<input::KeyMapper> the_key_mapper();
     virtual std::shared_ptr<input::LedObserverRegistrar> the_led_observer_registrar();
 
@@ -350,12 +351,12 @@ public:
 
     auto the_decoration_strategy() -> std::shared_ptr<DecorationStrategy> override;
     void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy) override;
+    std::shared_ptr<graphics::DisplayConfigurationObserver> the_display_configuration_observer();
 
 protected:
     std::shared_ptr<options::Option> the_options() const;
     auto the_options_provider() const -> std::shared_ptr<options::Configuration>;
     std::shared_ptr<input::DefaultInputDeviceHub>  the_default_input_device_hub();
-    std::shared_ptr<graphics::DisplayConfigurationObserver> the_display_configuration_observer();
     std::shared_ptr<input::SeatObserver> the_seat_observer();
 
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();

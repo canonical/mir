@@ -42,7 +42,7 @@ endif()
 
 # Pull list of expected failures
 file(STRINGS
-  expected_wlcs_failures.list
+  ${CMAKE_SOURCE_DIR}/tests/acceptance-tests/wayland/expected_wlcs_failures.list
   RAW_EXPECTED_FAILURES
 )
 

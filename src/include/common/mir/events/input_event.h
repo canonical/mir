@@ -21,6 +21,8 @@
 
 struct MirInputEvent : MirEvent
 {
+    MirInputEvent(MirInputEvent&&) = delete;
+    MirInputEvent& operator=(MirInputEvent&&) = delete;
     MirInputEventType input_type() const;
 
     int window_id() const;
@@ -44,6 +46,9 @@ struct MirInputEvent : MirEvent
     MirTouchEvent* to_touch();
     MirTouchEvent const* to_touch() const;
 
+    bool is_synthesized() const;
+    void set_synthesized(bool synthesized);
+
 protected:
     MirInputEvent(MirInputEventType input_type,
                   MirInputDeviceId dev,
@@ -60,6 +65,7 @@ private:
     MirInputDeviceId device_id_ = 0;
     std::chrono::nanoseconds event_time_ = {};
     MirInputEventModifiers modifiers_ = 0;
+    bool is_synthesized_ = false;
 };
 
 #endif /* MIR_COMMON_INPUT_EVENT_H_ */

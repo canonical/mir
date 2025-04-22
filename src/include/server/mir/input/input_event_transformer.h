@@ -17,11 +17,8 @@
 #ifndef MIR_INPUT_INPUT_EVENT_TRANSFORMER_H_
 #define MIR_INPUT_INPUT_EVENT_TRANSFORMER_H_
 
-#include "mir/input/event_filter.h"
-#include "mir/input/event_builder.h"
 #include "mir_toolkit/events/event.h"
 
-#include <chrono>
 #include <functional>
 #include <mutex>
 #include <vector>
@@ -29,13 +26,10 @@
 
 namespace mir
 {
-class MainLoop;
 namespace input
 {
-class VirtualInputDevice;
-class InputDeviceRegistry;
 class EventBuilder;
-class InputEventTransformer : public EventFilter
+class InputEventTransformer
 {
 public:
     using EventDispatcher = std::function<void(std::shared_ptr<MirEvent>)>;
@@ -51,10 +45,13 @@ public:
         virtual bool transform_input_event(EventDispatcher const&, EventBuilder*,  MirEvent const&) = 0;
     };
 
-    InputEventTransformer(std::shared_ptr<InputDeviceRegistry> const&, std::shared_ptr<MainLoop> const&);
+    InputEventTransformer();
     ~InputEventTransformer();
 
-    bool handle(MirEvent const&) override;
+    bool transform(
+        MirEvent const& event,
+        EventBuilder* builder,
+        EventDispatcher const& dispatcher);
 
     bool append(std::weak_ptr<Transformer> const&);
     bool remove(std::shared_ptr<Transformer> const&);
@@ -63,11 +60,6 @@ public:
 private:
     std::mutex mutex;
     std::vector<std::weak_ptr<Transformer>> input_transformers;
-
-    std::shared_ptr<input::VirtualInputDevice> const virtual_pointer;
-    std::shared_ptr<input::InputDeviceRegistry> const input_device_registry;
-    std::shared_ptr<MainLoop> const main_loop;
-    MirInputDeviceId const virtual_device_id_;
 };
 }
 }
