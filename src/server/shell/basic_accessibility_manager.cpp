@@ -24,6 +24,7 @@
 #include "mir/shell/keyboard_helper.h"
 #include "mir/input/mousekey_pointer.h"
 
+#include <algorithm>
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <memory>
@@ -69,13 +70,19 @@ void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
     if (on)
     {
-        input_device_registry->add_device(mousekey_pointer);
-        event_transformer->append(transformer);
+        if (event_transformer->append(transformer))
+        {
+            mousekeys_on = true;
+            ensure_mousekey_pointer_added();
+        }
     }
     else
     {
-        event_transformer->remove(transformer);
-        input_device_registry->remove_device(mousekey_pointer);
+        if (event_transformer->remove(transformer))
+        {
+            mousekeys_on = false;
+            ensure_mousekey_pointer_removed();
+        }
     }
 }
 
@@ -92,9 +99,9 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},
-    transformer{mousekeys_transformer},
     input_device_registry{input_device_registry},
     mousekey_pointer{mousekey_pointer},
+    transformer{mousekeys_transformer},
     simulated_secondary_click_transformer{simulated_secondary_click_transformer}
 {
 }
@@ -128,12 +135,22 @@ void mir::shell::BasicAccessibilityManager::simulated_secondary_click_enabled(bo
     if (enabled)
     {
         if (event_transformer->append(simulated_secondary_click_transformer))
+        {
+            ssc_on = true;
+            ensure_mousekey_pointer_added();
+
             simulated_secondary_click_transformer->enabled();
+        }
     }
     else
     {
         if (event_transformer->remove(simulated_secondary_click_transformer))
+        {
+            ssc_on = false;
+            ensure_mousekey_pointer_removed();
+
             simulated_secondary_click_transformer->disabled();
+        }
     }
 }
 
@@ -141,5 +158,17 @@ auto mir::shell::BasicAccessibilityManager::simulated_secondary_click()
     -> SimulatedSecondaryClickTransformer&
 {
     return *simulated_secondary_click_transformer;
+}
+
+void mir::shell::BasicAccessibilityManager::ensure_mousekey_pointer_added()
+{
+    if (std::ranges::any_of(std::initializer_list{mousekeys_on, ssc_on}, std::identity{}))
+        input_device_registry->add_device(mousekey_pointer);
+}
+
+void mir::shell::BasicAccessibilityManager::ensure_mousekey_pointer_removed()
+{
+    if (std::ranges::none_of(std::initializer_list{mousekeys_on, ssc_on}, std::identity{}))
+        input_device_registry->remove_device(mousekey_pointer);
 }
 

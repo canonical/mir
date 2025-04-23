@@ -91,16 +91,22 @@ private:
         std::vector<std::shared_ptr<shell::KeyboardHelper>> keyboard_helpers;
     };
 
+    void ensure_mousekey_pointer_added();
+    void ensure_mousekey_pointer_removed();
+
     Synchronised<MutableState> mutable_state;
 
     std::shared_ptr<MainLoop> const main_loop;
     bool const enable_key_repeat;
     std::shared_ptr<graphics::Cursor> const cursor;
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
-    std::shared_ptr<mir::shell::MouseKeysTransformer> const transformer;
     std::shared_ptr<mir::input::InputDeviceRegistry> const input_device_registry;
     std::shared_ptr<input::MousekeyPointer> const mousekey_pointer;
+
+    std::shared_ptr<mir::shell::MouseKeysTransformer> const transformer;
     std::shared_ptr<SimulatedSecondaryClickTransformer> const simulated_secondary_click_transformer;
+
+    bool mousekeys_on{false}, ssc_on{false};
 };
 }
 }
