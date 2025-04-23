@@ -17,14 +17,19 @@
 #include "mir/input/mousekey_pointer.h"
 #include "mir/input/device.h"
 #include "mir/input/input_device_registry.h"
+#include "mir/input/input_event_transformer.h"
 #include "mir/input/input_sink.h"
+#include "mir/input/virtual_input_device.h"
+#include "mir/main_loop.h"
 
 mir::input::MousekeyPointer::MousekeyPointer(
     std::shared_ptr<MainLoop> main_loop, std::shared_ptr<input::InputEventTransformer> iet) :
     main_loop{std::move(main_loop)},
     iet{std::move(iet)},
     virtual_device{
+
         std::make_shared<mir::input::VirtualInputDevice>("mousekey-pointer", mir::input::DeviceCapability::pointer)}
+
 {
 }
 

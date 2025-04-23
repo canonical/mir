@@ -19,15 +19,17 @@
 #define MIR_INPUT_MOUSEKEY_POINTER
 
 #include "mir/input/event_filter.h"
-#include "mir/input/input_event_transformer.h"
-#include "mir/input/virtual_input_device.h"
-#include "mir/main_loop.h"
+
+#include <memory>
 
 namespace mir
 {
+class MainLoop;
 namespace input
 {
+class InputEventTransformer;
 class InputDeviceRegistry;
+class VirtualInputDevice;
 class MousekeyPointer : public EventFilter
 {
 public:
