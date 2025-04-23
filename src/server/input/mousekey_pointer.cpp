@@ -50,11 +50,15 @@ bool mir::input::MousekeyPointer::handle(MirEvent const& event)
 
 void mir::input::MousekeyPointer::add_to_registry(std::shared_ptr<InputDeviceRegistry> const& registry)
 {
-   auto const weak_device = registry->add_device(virtual_device);
-   device_id = weak_device.lock()->id();
+    if(!weak_device.expired()) return; // Already registered
+
+    weak_device = registry->add_device(virtual_device);
+    device_id = weak_device.lock()->id();
 }
 
 void mir::input::MousekeyPointer::remove_from_registry(std::shared_ptr<InputDeviceRegistry> const& registry)
 {
+    if(weak_device.expired()) return; // Already unregistered
     registry->remove_device(virtual_device);
+    weak_device.reset();
 }

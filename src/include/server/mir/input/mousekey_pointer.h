@@ -30,6 +30,7 @@ namespace input
 class InputEventTransformer;
 class InputDeviceRegistry;
 class VirtualInputDevice;
+class Device;
 class MousekeyPointer : public EventFilter
 {
 public:
@@ -44,6 +45,8 @@ private:
     std::shared_ptr<input::InputEventTransformer> const iet;
     std::shared_ptr<VirtualInputDevice> const virtual_device;
     MirInputDeviceId device_id;
+
+    std::weak_ptr<Device> weak_device;
 };
 
 }
