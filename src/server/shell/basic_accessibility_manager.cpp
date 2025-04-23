@@ -18,15 +18,53 @@
 #include "mouse_keys_transformer.h"
 
 #include "mir/graphics/cursor.h"
-#include "mir/input/composite_event_filter.h"
-#include "mir/input/event_filter.h"
-#include "mir/input/input_device_registry.h"
 #include "mir/shell/keyboard_helper.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <memory>
 #include <optional>
+
+template <typename Transformer>
+inline bool mir::shell::BasicAccessibilityManager::Registration<Transformer>::is_registered() const noexcept
+{
+    return registered;
+}
+
+template <typename Transformer>
+inline Transformer* mir::shell::BasicAccessibilityManager::Registration<Transformer>::operator->() const noexcept
+{
+    return transformer.get();
+}
+
+template <typename Transformer>
+inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::remove_registration()
+{
+    if(registered)
+    {
+        event_transformer->remove(transformer);
+        registered = false;
+    }
+}
+
+template <typename Transformer>
+inline void mir::shell::BasicAccessibilityManager::Registration<Transformer>::add_registration()
+{
+    if(!registered)
+    {
+        event_transformer->append(transformer);
+        registered = true;
+    }
+}
+
+template <typename Transformer>
+inline mir::shell::BasicAccessibilityManager::Registration<Transformer>::Registration(
+    std::shared_ptr<Transformer> const& transformer,
+    std::shared_ptr<input::InputEventTransformer> const& event_transformer) :
+    transformer{transformer},
+    event_transformer{event_transformer}
+{
+}
 
 void mir::shell::BasicAccessibilityManager::register_keyboard_helper(std::shared_ptr<KeyboardHelper> const& helper)
 {
@@ -67,9 +105,9 @@ void mir::shell::BasicAccessibilityManager::repeat_rate_and_delay(
 void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
     if (on)
-        event_transformer->append(transformer);
+        transformer.add_registration();
     else
-        event_transformer->remove(transformer);
+        transformer.remove_registration();
 }
 
 mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
@@ -79,8 +117,7 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer) :
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
-    event_transformer{event_transformer},
-    transformer{mousekeys_transformer}
+    transformer{mousekeys_transformer, event_transformer}
 {
 }
 
