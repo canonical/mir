@@ -15,12 +15,14 @@
  */
 
 #include "basic_accessibility_manager.h"
+#include "mir/input/input_device_registry.h"
 #include "mouse_keys_transformer.h"
 #include "basic_simulated_secondary_click_transformer.h"
 
 #include "mir/graphics/cursor.h"
 #include "mir/main_loop.h"
 #include "mir/shell/keyboard_helper.h"
+#include "mir/input/mousekey_pointer.h"
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -66,9 +68,15 @@ void mir::shell::BasicAccessibilityManager::repeat_rate_and_delay(
 void mir::shell::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
     if (on)
+    {
+        input_device_registry->add_device(mousekey_pointer);
         event_transformer->append(transformer);
+    }
     else
+    {
         event_transformer->remove(transformer);
+        input_device_registry->remove_device(mousekey_pointer);
+    }
 }
 
 mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
@@ -77,12 +85,16 @@ mir::shell::BasicAccessibilityManager::BasicAccessibilityManager(
     bool enable_key_repeat,
     std::shared_ptr<mir::graphics::Cursor> const& cursor,
     std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
-    std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer) :
+    std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer,
+    std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry,
+    std::shared_ptr<input::MousekeyPointer> const& mousekey_pointer) :
     main_loop{std::move(main_loop)},
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},
     transformer{mousekeys_transformer},
+    input_device_registry{input_device_registry},
+    mousekey_pointer{mousekey_pointer},
     simulated_secondary_click_transformer{simulated_secondary_click_transformer}
 {
 }

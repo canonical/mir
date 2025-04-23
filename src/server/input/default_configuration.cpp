@@ -21,7 +21,6 @@
 #include "event_filter_chain_dispatcher.h"
 #include "config_changer.h"
 #include "cursor_controller.h"
-#include "mousekey_pointer.h"
 #include "touchspot_controller.h"
 #include "null_input_manager.h"
 #include "null_input_dispatcher.h"
@@ -41,6 +40,7 @@
 #include "mir/input/vt_filter.h"
 #include "mir/input/device.h"
 #include "mir/input/input_event_transformer.h"
+#include "mir/input/mousekey_pointer.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
@@ -212,7 +212,7 @@ mir::DefaultServerConfiguration::the_touch_visualizer()
             {
                 visualizer->enable();
             }
-            
+
             return visualizer;
         });
 }
@@ -333,8 +333,6 @@ std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_
            // pressed keys get repeated indefinitely
            if (key_repeater)
                key_repeater->set_input_device_hub(hub);
-
-           hub->add_device(the_mousekey_pointer());
 
            return hub;
        });

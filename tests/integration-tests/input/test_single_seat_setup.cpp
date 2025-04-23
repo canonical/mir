@@ -18,7 +18,6 @@
 #include "src/server/input/default_input_device_hub.h"
 #include "src/server/input/basic_seat.h"
 #include "src/server/input/config_changer.h"
-#include "src/server/input/mousekey_pointer.h"
 #include "src/server/scene/broadcasting_session_event_sink.h"
 
 #include "mir/test/doubles/fake_display_configuration_observer_registrar.h"
@@ -51,6 +50,7 @@
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_device_info.h"
 #include "mir/input/input_event_transformer.h"
+#include "mir/input/mousekey_pointer.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/test/input_config_matchers.h"
 #include "mir/test/fd_utils.h"

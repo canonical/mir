@@ -15,6 +15,7 @@
  */
 
 #include "include/server/mir/shell/keyboard_helper.h"
+#include "mir/input/mousekey_pointer.h"
 #include "src/server/input/default_input_device_hub.h"
 #include "src/server/shell/basic_accessibility_manager.h"
 #include "src/server/shell/mouse_keys_transformer.h"
@@ -34,6 +35,7 @@
 #include "mir/test/doubles/mock_server_status_listener.h"
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/doubles/stub_cursor.h"
+#include "mir/test/doubles/stub_input_device_registry.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -118,11 +120,14 @@ struct TestBasicAccessibilityManager : Test
             true,
             std::make_shared<mir::test::doubles::StubCursor>(),
             mock_mousekeys_transformer,
-            mock_simulated_secondary_click_transformer}
+            mock_simulated_secondary_click_transformer,
+            mt::fake_shared(input_device_registry),
+            mt::fake_shared(mousekey_pointer)}
     {
         basic_accessibility_manager.register_keyboard_helper(mock_key_helper);
     }
 
+    mtd::StubInputDeviceRegistry input_device_registry;
     mtd::AdvanceableClock clock;
     mir::dispatch::MultiplexingDispatchable multiplexer;
     NiceMock<mtd::MockLedObserverRegistrar> led_observer_registrar;
@@ -139,6 +144,7 @@ struct TestBasicAccessibilityManager : Test
     std::shared_ptr<mir::input::CompositeEventFilter> const composite_filter{std::make_shared<StubCompositeEventFilter>()};
     std::shared_ptr<mir::input::InputEventTransformer> const input_event_transformer
         {std::make_shared<mir::input::InputEventTransformer>()};
+    mir::input::MousekeyPointer mousekey_pointer{main_loop, input_event_transformer};
 
     mir::shell::BasicAccessibilityManager basic_accessibility_manager;
 };

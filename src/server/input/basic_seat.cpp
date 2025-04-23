@@ -17,10 +17,10 @@
 #include "basic_seat.h"
 #include "mir/input/device.h"
 #include "mir/input/input_sink.h"
+#include "mir/input/mousekey_pointer.h"
 #include "mir/graphics/display_configuration_observer.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir_toolkit/common.h"
-#include "mousekey_pointer.h"
 
 #include <array>
 #include <map>

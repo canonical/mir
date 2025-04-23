@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mousekey_pointer.h"
+#include "mir/input/mousekey_pointer.h"
 #include "mir/input/input_sink.h"
 
 

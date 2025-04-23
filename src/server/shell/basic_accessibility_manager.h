@@ -36,7 +36,6 @@ class Cursor;
 namespace input
 {
 class CompositeEventFilter;
-class InputEventTransformer;
 class InputDeviceRegistry;
 class MousekeyPointer;
 }
@@ -61,7 +60,9 @@ public:
         bool enable_key_repeat,
         std::shared_ptr<mir::graphics::Cursor> const& cursor,
         std::shared_ptr<shell::MouseKeysTransformer> const& mousekeys_transformer,
-        std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer);
+        std::shared_ptr<SimulatedSecondaryClickTransformer> const& simulated_secondary_click_transformer,
+        std::shared_ptr<input::InputDeviceRegistry> const& input_device_hub,
+        std::shared_ptr<input::MousekeyPointer> const& mousekey_pointer);
 
     ~BasicAccessibilityManager();
 
@@ -98,6 +99,7 @@ private:
     std::shared_ptr<mir::input::InputEventTransformer> const event_transformer;
     std::shared_ptr<mir::shell::MouseKeysTransformer> const transformer;
     std::shared_ptr<mir::input::InputDeviceRegistry> const input_device_registry;
+    std::shared_ptr<input::MousekeyPointer> const mousekey_pointer;
     std::shared_ptr<SimulatedSecondaryClickTransformer> const simulated_secondary_click_transformer;
 };
 }
