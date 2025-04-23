@@ -353,7 +353,7 @@ public:
 
     auto the_decoration_strategy() -> std::shared_ptr<DecorationStrategy> override;
     void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy) override;
-    std::shared_ptr<graphics::DisplayConfigurationObserver> the_display_configuration_observer();
+    auto the_display_configuration_observer() -> std::shared_ptr<graphics::DisplayConfigurationObserver>;
 
 protected:
     std::shared_ptr<options::Option> the_options() const;
