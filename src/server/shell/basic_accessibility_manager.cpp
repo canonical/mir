@@ -15,18 +15,18 @@
  */
 
 #include "basic_accessibility_manager.h"
-#include "mir/input/input_device_registry.h"
 #include "mouse_keys_transformer.h"
 #include "basic_simulated_secondary_click_transformer.h"
 
 #include "mir/graphics/cursor.h"
+#include "mir/input/input_device_registry.h"
+#include "mir/input/mousekey_pointer.h"
 #include "mir/main_loop.h"
 #include "mir/shell/keyboard_helper.h"
-#include "mir/input/mousekey_pointer.h"
 
-#include <algorithm>
 #include <xkbcommon/xkbcommon-keysyms.h>
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 
