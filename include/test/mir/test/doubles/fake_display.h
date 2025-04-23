@@ -40,6 +40,8 @@ public:
 
     explicit FakeDisplay(std::vector<geometry::Rectangle> const& output_rects);
 
+    explicit FakeDisplay(std::vector<mir::graphics::DisplayConfigurationOutput> const& output_configs);
+
     void for_each_display_sync_group(std::function<void(mir::graphics::DisplaySyncGroup&)> const& f) override;
 
     std::unique_ptr<mir::graphics::DisplayConfiguration> configuration() const override;

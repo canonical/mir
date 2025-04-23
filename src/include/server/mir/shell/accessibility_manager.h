@@ -38,10 +38,8 @@ public:
     virtual std::optional<int> repeat_rate() const = 0;
     virtual int repeat_delay() const = 0;
 
-    virtual void repeat_rate(int new_rate) = 0;
-    virtual void repeat_delay(int new_rate) = 0;
-
-    virtual void notify_helpers() const = 0;
+    // Setting one option to `std::nullopt` signals that it didn't change.
+    virtual void repeat_rate_and_delay(std::optional<int> new_rate, std::optional<int> new_delay) = 0;
 
     virtual void cursor_scale(float new_scale) = 0;
 

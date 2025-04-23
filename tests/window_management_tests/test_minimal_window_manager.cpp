@@ -14,9 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/geometry/forward.h"
 #define MIR_LOG_COMPONENT "test_minimal_window_manager"
+
+#include "mir/geometry/forward.h"
+#include "mir_test_framework/window_management_test_harness.h"
 #include <miral/minimal_window_manager.h>
+#include <miral/output.h>
 #include <mir/scene/session.h>
 #include <mir/wayland/weak.h>
 #include <mir/scene/surface.h>
@@ -25,12 +28,12 @@
 #include <mir/events/pointer_event.h>
 #include <mir/compositor/buffer_stream.h>
 #include <mir/log.h>
-
-#include "mir_test_framework/window_management_test_harness.h"
-#include <linux/input.h>
+#include <mir/graphics/default_display_configuration_policy.h>
 #include <mir/shell/shell.h>
+#include <linux/input.h>
 
 #include <gtest/gtest.h>
+#include <gtest/gtest-spi.h>
 #include <gmock/gmock.h>
 
 namespace ms = mir::scene;
@@ -121,6 +124,15 @@ CreateSurfaceSpecFunc create_bottom_attached()
 class MinimalWindowManagerTest : public mir_test_framework::WindowManagementTestHarness
 {
 public:
+    MinimalWindowManagerTest() : WindowManagementTestHarness()
+    {
+        server.wrap_display_configuration_policy([&](std::shared_ptr<mg::DisplayConfigurationPolicy> const&)
+            -> std::shared_ptr<mg::DisplayConfigurationPolicy>
+        {
+            return std::make_shared<mir::graphics::SideBySideDisplayConfigurationPolicy>();
+        });
+    }
+
     auto get_builder() -> mir_test_framework::WindowManagementPolicyBuilder override
     {
         return [&](miral::WindowManagerTools const& tools)
@@ -129,12 +141,12 @@ public:
         };
     }
 
-    auto get_output_rectangles() -> std::vector<mir::geometry::Rectangle> override
+    auto get_initial_output_configs() -> std::vector<mir::graphics::DisplayConfigurationOutput> override
     {
-        return {
+        return output_configs_from_output_rectangles({
             mir::geometry::Rectangle{{0, 0}, {800, 600}},
-            mir::geometry::Rectangle{{800, 0}, {800, 600}}
-        };
+            mir::geometry::Rectangle{{800, 0}, {1000, 600}}
+        });
     }
 
     virtual miral::FocusStealing focus_stealing() const
@@ -595,6 +607,7 @@ public:
     }
 };
 
+using MinimalWindowManagerWithOneWindow = MultipleWindowsMinimalWindowManagerTest<1>;
 using MinimalWindowManagerWithTwoWindows = MultipleWindowsMinimalWindowManagerTest<2>;
 using MinimalWindowManagerWithThreeWindows = MultipleWindowsMinimalWindowManagerTest<3>;
 using MinimalWindowManagerWithThreeWindowsPreventFocusStealing = MultipleWindowsMinimalWindowManagerPreventFocusStealingTest<3>;
@@ -678,6 +691,80 @@ TEST_F(MinimalWindowManagerWithThreeWindows,
     EXPECT_TRUE(is_above(windows[1], windows[0]));
 }
 
+TEST_F(MinimalWindowManagerWithOneWindow, minimized_window_returns_to_previous_state_on_focus)
+{
+    miral::WindowSpecification spec;
+    spec.state() = mir_window_state_minimized;
+    request_modify(windows[0], spec);
+    EXPECT_THAT(tools().info_for(windows[0]).state(), Eq(mir_window_state_minimized));
+
+    tools().select_active_window(windows[0]);
+    EXPECT_THAT(tools().info_for(windows[0]).state(), Eq(mir_window_state_restored));
+}
+
+TEST_F(MinimalWindowManagerWithOneWindow, restoring_a_minimized_window_with_no_active_window_focuses_the_restored_window)
+{
+    miral::WindowSpecification spec;
+    spec.state() = mir_window_state_minimized;
+    request_modify(windows[0], spec);
+    EXPECT_THAT(focused(windows[0]), Eq(false));
+
+    spec.state() = mir_window_state_restored;
+    request_modify(windows[0], spec);
+    EXPECT_THAT(focused(windows[0]), Eq(true));
+}
+
+TEST_F(MinimalWindowManagerWithThreeWindows, minimizing_an_inactive_window_maintains_its_place_in_the_z_order)
+{
+    miral::WindowSpecification spec;
+    spec.state() = mir_window_state_minimized;
+    request_modify(windows[1], spec);
+
+    EXPECT_THAT(is_above(windows[2], windows[1]), Eq(true));
+    EXPECT_THAT(is_above(windows[1], windows[0]), Eq(true));
+}
+
+TEST_F(MinimalWindowManagerWithThreeWindows,
+    minimizing_the_active_window_selects_a_new_window_and_moves_the_minimized_down_in_the_z_order)
+{
+    miral::WindowSpecification spec;
+    spec.state() = mir_window_state_minimized;
+    request_modify(windows[2], spec);
+
+    EXPECT_THAT(is_above(windows[1], windows[2]), Eq(true));
+    EXPECT_THAT(is_above(windows[2], windows[0]), Eq(true));
+}
+
+TEST_F(MinimalWindowManagerWithThreeWindows,
+    minimizing_the_active_window_selects_window_in_same_workspace_if_avalable)
+{
+    auto const workspace1 = tools().create_workspace();
+    auto const workspace2 = tools().create_workspace();
+    tools().add_tree_to_workspace(windows[2], workspace1);
+    tools().add_tree_to_workspace(windows[0], workspace1);
+    tools().add_tree_to_workspace(windows[1], workspace2);
+
+    miral::WindowSpecification spec;
+    spec.state() = mir_window_state_minimized;
+    request_modify(windows[2], spec);
+    EXPECT_THAT(focused(windows[0]), Eq(true));
+}
+
+TEST_F(MinimalWindowManagerWithThreeWindows,
+    minimizing_the_active_window_selects_window_on_any_workspace_if_none_exist_on_current_workspace)
+{
+    auto const workspace1 = tools().create_workspace();
+    auto const workspace2 = tools().create_workspace();
+    tools().add_tree_to_workspace(windows[2], workspace1);
+    tools().add_tree_to_workspace(windows[0], workspace2);
+    tools().add_tree_to_workspace(windows[1], workspace2);
+
+    miral::WindowSpecification spec;
+    spec.state() = mir_window_state_minimized;
+    request_modify(windows[2], spec);
+    EXPECT_THAT(focused(windows[1]), Eq(true));
+}
+
 TEST_F(MinimalWindowManagerTest, if_active_window_is_removed_and_it_is_only_window_then_nothing_is_focused)
 {
     // Setup: Create one app with one window
@@ -716,7 +803,7 @@ TEST_F(MinimalWindowManagerTest,
 TEST_F(MinimalWindowManagerTest, closing_attached_window_causes_maximized_to_resize)
 {
     // Setup: Create one app with a maximized window and one app with a top attached window
-    auto const output_rectangle =  get_output_rectangles()[0];
+    auto const output_rectangle =  get_initial_output_configs()[0];
     auto const app = open_application("app1");
     miral::WindowSpecification spec;
     spec.size() = { geom::Width {100}, geom::Height{100} };
@@ -725,10 +812,10 @@ TEST_F(MinimalWindowManagerTest, closing_attached_window_causes_maximized_to_res
     auto const window = create_window(app, spec);
 
     auto const top_spec = create_top_attached();
-    auto const attached = create_window(app, top_spec(output_rectangle.size));
+    auto const attached = create_window(app, top_spec(output_rectangle.extents().size));
     EXPECT_THAT(window.size(), Eq(geom::Size(
-        output_rectangle.size.width.as_int(),
-        output_rectangle.size.height.as_int() - exclusive_surface_size
+        output_rectangle.extents().size.width.as_int(),
+        output_rectangle.extents().size.height.as_int() - exclusive_surface_size
     )));
 
     // Act: Close the attached window
@@ -736,8 +823,8 @@ TEST_F(MinimalWindowManagerTest, closing_attached_window_causes_maximized_to_res
 
     // Expect: the window now takes up the full dimensions
     EXPECT_THAT(window.size(), Eq(geom::Size(
-        output_rectangle.size.width.as_int(),
-        output_rectangle.size.height.as_int()
+        output_rectangle.extents().size.width.as_int(),
+        output_rectangle.extents().size.height.as_int()
     )));
 }
 
@@ -832,12 +919,12 @@ TEST_P(MinimalWindowManagerAttachedTest, attached_window_positioning)
 {
     auto const app = open_application("test");
     auto const& placements = GetParam().placements;
-    auto const output_rectangles = get_output_rectangles();
+    auto const output_rectangles = get_initial_output_configs();
 
     std::vector<miral::Window> windows;
     auto const& output_rectangle = output_rectangles[0];
     for (const auto& placement : placements)
-        windows.push_back(create_window(app, placement.create(output_rectangle.size)));
+        windows.push_back(create_window(app, placement.create(output_rectangle.extents().size)));
 
     EXPECT_EQ(windows.size(), placements.size());
     for (size_t i = 0; i < windows.size(); i++)
@@ -845,7 +932,7 @@ TEST_P(MinimalWindowManagerAttachedTest, attached_window_positioning)
         auto const& window = windows[i];
         const auto& expected_rect = placements[i].expected_rect;
 
-        auto const expected = expected_rect(output_rectangle.size);
+        auto const expected = expected_rect(output_rectangle.extents().size);
         EXPECT_EQ(window.top_left(), expected.top_left);
         EXPECT_EQ(window.size(), expected.size);
     }
@@ -1081,19 +1168,19 @@ TEST_P(MinimalWindowManagerMaximizedSurfaceExclusionZoneTest, maximized_windows_
 {
     auto const app = open_application("test");
     auto const param = GetParam();
-    auto const output_rectangles = get_output_rectangles();
+    auto const output_rectangles = get_initial_output_configs();
 
     std::vector<miral::Window> windows;
     auto const& output_rectangle = output_rectangles[0];
     for (const auto& create : param.exclusive_surface_create_func)
-        windows.push_back(create_window(app, create(output_rectangle.size)));
+        windows.push_back(create_window(app, create(output_rectangle.extents().size)));
 
     EXPECT_EQ(windows.size(), param.exclusive_surface_create_func.size());
     miral::WindowSpecification spec;
     spec.state() = mir_window_state_maximized;
     spec.depth_layer() = mir_depth_layer_application;
     auto const window = create_window(app, spec);
-    auto const expected = param.expected_rectangle(output_rectangle);
+    auto const expected = param.expected_rectangle(output_rectangle.extents());
 
     EXPECT_EQ(window.top_left(), expected.top_left);
     EXPECT_EQ(window.size(), expected.size);
@@ -1200,3 +1287,158 @@ INSTANTIATE_TEST_SUITE_P(MinimalWindowManagerMaximizedSurfaceExclusionZoneTest,
         }
     )
 );
+
+TEST_F(MinimalWindowManagerTest, when_no_surface_is_focused_then_window_is_placed_on_output_of_cursor)
+{
+    // Move the cursor to the second output
+    auto const second_rectangle = get_initial_output_configs()[1].extents();
+    geom::PointF const new_cursor_position{
+        second_rectangle.top_left.x.as_int() + static_cast<int>(
+            static_cast<float>(second_rectangle.size.width.as_int()) / 2.f),
+        second_rectangle.top_left.y.as_int() + static_cast<int>(
+            static_cast<float>(second_rectangle.size.height.as_int()) / 2.f)
+    };
+    tools().move_cursor_to(new_cursor_position);
+    EXPECT_THAT(tools().active_output(), second_rectangle);
+
+    auto const app = open_application("test");
+    miral::WindowSpecification spec;
+    spec.size() = geom::Size(100, 100);
+    auto const window = create_window(app, spec);
+
+    // Expect that the new window is centered in the X-axis and that the Y is at the expected poisition.
+    EXPECT_THAT(window.top_left(), Eq(
+        mir::geometry::Point(
+            second_rectangle.top_left.x.as_int() + (second_rectangle.size.width.as_int() - spec.size().value().width.as_int()) / 2.f,
+            167
+        )
+    ));
+}
+
+TEST_F(MinimalWindowManagerTest, window_can_be_maximized_on_new_output)
+{
+    // Add a third output
+    auto const new_output_configs = output_configs_from_output_rectangles({
+        mir::geometry::Rectangle{{0, 0}, {800, 600}},
+        mir::geometry::Rectangle{{800, 0}, {1000, 600}},
+        mir::geometry::Rectangle{{1800, 0}, {500, 500}},
+    });
+
+    update_outputs(new_output_configs);
+    std::vector<miral::Output> outputs;
+    for_each_output([&](miral::Output const& output)
+    {
+        outputs.push_back(output);
+    });
+
+    EXPECT_THAT(outputs.size(), Eq(3));
+
+    // Move the cursor to the third output
+    geom::PointF const new_cursor_position(1900, 100);
+    tools().move_cursor_to(new_cursor_position);
+    EXPECT_THAT(tools().active_output(), new_output_configs[2].extents());
+
+    auto const app = open_application("test");
+    miral::WindowSpecification spec;
+    spec.state() = mir_window_state_maximized;
+    spec.size() = geom::Size(100, 100);
+    auto const window = create_window(app, spec);
+
+    // Expect that the new window is on the third output
+    EXPECT_THAT(window.top_left(), Eq(new_output_configs[2].extents().top_left));
+}
+
+TEST_F(MinimalWindowManagerTest, maximized_window_respects_output_resize)
+{
+    auto const app = open_application("test");
+    miral::WindowSpecification spec;
+    spec.state() = mir_window_state_maximized;
+    spec.size() = geom::Size(100, 100);
+    auto const window = create_window(app, spec);
+
+    auto const new_output_configs = output_configs_from_output_rectangles({
+        mir::geometry::Rectangle{{0, 0}, {1000, 1000}},
+        mir::geometry::Rectangle{{1000, 0}, {1000, 600}}
+    });
+    update_outputs(new_output_configs);
+    EXPECT_THAT(window.top_left(), Eq(new_output_configs[0].extents().top_left));
+    EXPECT_THAT(window.size(), Eq(new_output_configs[0].extents().size));
+}
+
+TEST_F(MinimalWindowManagerTest, maximized_window_respects_output_removal)
+{
+    tools().move_cursor_to(geom::PointF(900, 100));
+
+    auto const app = open_application("test");
+    miral::WindowSpecification spec;
+    spec.state() = mir_window_state_maximized;
+    spec.size() = geom::Size(100, 100);
+    auto const window = create_window(app, spec);
+
+    auto const outputs = get_initial_output_configs();
+    EXPECT_THAT(window.top_left(), Eq(outputs[1].extents().top_left));
+    EXPECT_THAT(window.size(), Eq(outputs[1].extents().size));
+
+    auto const new_output_configs = output_configs_from_output_rectangles({
+        mir::geometry::Rectangle{{0, 0}, {1000, 1000}}
+    });
+    update_outputs(new_output_configs);
+    EXPECT_THAT(window.top_left(), Eq(new_output_configs[0].extents().top_left));
+    EXPECT_THAT(window.size(), Eq(new_output_configs[0].extents().size));
+}
+
+TEST_F(MinimalWindowManagerTest, maximized_window_respects_output_unused)
+{
+    EXPECT_NONFATAL_FAILURE({
+        this->tools().move_cursor_to(geom::PointF(0, 0));
+        auto const app = this->open_application("test");
+        miral::WindowSpecification spec;
+        spec.state() = mir_window_state_maximized;
+        spec.size() = geom::Size(100, 100);
+        auto const window = this->create_window(app, spec);
+
+        auto new_output_configs = this->get_initial_output_configs();
+        new_output_configs[0].used = false;
+        this->update_outputs(new_output_configs);
+        geom::Rectangle const window_rect(window.top_left(), window.size());
+        EXPECT_THAT(window_rect, Eq(new_output_configs[1].extents()));
+    }, "");
+}
+
+TEST_F(MinimalWindowManagerTest, maximized_window_respects_output_disconnected)
+{
+    EXPECT_NONFATAL_FAILURE({
+        this->tools().move_cursor_to(geom::PointF(0, 0));
+        auto const app = this->open_application("test");
+        miral::WindowSpecification spec;
+        spec.state() = mir_window_state_maximized;
+        spec.size() = geom::Size(100, 100);
+        auto const window = this->create_window(app, spec);
+
+        auto new_output_configs = this->get_initial_output_configs();
+        new_output_configs[0].connected = false;
+        this->update_outputs(new_output_configs);
+
+        geom::Rectangle const window_rect(window.top_left(), window.size());
+        EXPECT_THAT(window_rect, Eq(new_output_configs[1].extents()));
+    }, "");
+}
+
+TEST_F(MinimalWindowManagerTest, windows_on_removed_output_are_placed_on_next_available_output)
+{
+    EXPECT_NONFATAL_FAILURE({
+        this->tools().move_cursor_to(geom::PointF(900, 100));
+
+        auto const app = this->open_application("test");
+        miral::WindowSpecification spec;
+        spec.size() = geom::Size(100, 100);
+        auto const window = this->create_window(app, spec);
+
+        auto const new_output_configs = this->output_configs_from_output_rectangles({
+            mir::geometry::Rectangle{{0, 0}, {1000, 1000}}
+        });
+        this->update_outputs(new_output_configs);
+        geom::Rectangle const window_rect(window.top_left(), window.size());
+        EXPECT_THAT(window_rect.overlaps(new_output_configs[0].extents()), Eq(true));
+    }, "");
+}

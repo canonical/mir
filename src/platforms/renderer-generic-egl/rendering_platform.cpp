@@ -202,8 +202,7 @@ mge::RenderingPlatform::RenderingPlatform(std::vector<std::shared_ptr<DisplayPla
 }
 
 mge::RenderingPlatform::RenderingPlatform(std::tuple<EGLDisplay, bool> display)
-    : dpy{std::get<0>(display)},
-      owns_dpy{std::get<1>(display)},
+    : dpy{std::get<0>(display), std::get<1>(display)},
       ctx{std::make_unique<SurfacelessEGLContext>(dpy)},
       dmabuf_provider{
           maybe_make_dmabuf_provider(
@@ -213,13 +212,7 @@ mge::RenderingPlatform::RenderingPlatform(std::tuple<EGLDisplay, bool> display)
 {
 }
 
-mge::RenderingPlatform::~RenderingPlatform()
-{
-    if (owns_dpy)
-    {
-        eglTerminate(dpy);
-    }
-}
+mge::RenderingPlatform::~RenderingPlatform() = default;
 
 auto mge::RenderingPlatform::create_buffer_allocator(
     mg::Display const& /*output*/) -> mir::UniqueModulePtr<mg::GraphicBufferAllocator>
@@ -235,4 +228,23 @@ auto mge::RenderingPlatform::maybe_create_provider(RenderingProvider::Tag const&
         return std::make_shared<mge::GLRenderingProvider>(dpy, static_cast<EGLContext>(*ctx), dmabuf_provider);
     }
     return nullptr;
+}
+
+mge::RenderingPlatform::EGLDisplayHandle::EGLDisplayHandle(EGLDisplay dpy, bool owns_dpy)
+    : dpy{dpy},
+      owns_dpy{owns_dpy}
+{
+}
+
+mge::RenderingPlatform::EGLDisplayHandle::~EGLDisplayHandle()
+{
+    if (owns_dpy)
+    {
+        eglTerminate(dpy);
+    }
+}
+
+mge::RenderingPlatform::EGLDisplayHandle::operator EGLDisplay() const
+{
+    return dpy;
 }
