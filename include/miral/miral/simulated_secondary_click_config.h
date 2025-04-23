@@ -26,10 +26,10 @@ namespace mir
 class Server;
 }
 
-/// Enables configuring simulated secondary click at runtime.
-/// \remark Since MirAL 5.3
 namespace miral
 {
+/// Enables configuring simulated secondary click at runtime.
+/// \remark Since MirAL 5.3
 class SimulatedSecondaryClickConfig
 {
 public:
