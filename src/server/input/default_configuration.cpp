@@ -212,7 +212,7 @@ mir::DefaultServerConfiguration::the_touch_visualizer()
             {
                 visualizer->enable();
             }
-
+            
             return visualizer;
         });
 }
@@ -333,7 +333,6 @@ std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_
            // pressed keys get repeated indefinitely
            if (key_repeater)
                key_repeater->set_input_device_hub(hub);
-
            return hub;
        });
 }
